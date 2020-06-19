@@ -9,21 +9,27 @@ assurance, and cartographic refinement.
 ## Dependencies
 
 - [ArcGIS][arcgis] to various levels depending on project
-- [log4net][] for logging (switch to [NLog][nlog] pending)
+- [log4net][] for logging
 - [NHibernate 5][nhibernate] as Object-Relational Mapper
 - [NUnit 3][nunit] for unit testing
+- [.NET][dotnet] Framework 4.6.1 or later (controlled by env vars) (waiting for .NET 5)
 
 ## Contributing
 
 See the [Contributing Guidelines](CONTRIBUTING.md)
 
+## Authors
+
+The ProSuite Authors.
+
 ## License
 
 ![License Badge](https://img.shields.io/github/license/ProSuite/ProSuite)
+This project is available under the [MIT License](LICENSE).
 
 [arcgis]: https://developers.arcgis.com/
 [nlog]: https://nlog-project.org/
 [nhibernate]: https://nhibernate.info/
 [nunit]: https://nunit.org/
 [log4net]: https://logging.apache.org/log4net/
-
+[dotnet]: https://dotnet.microsoft.com/
