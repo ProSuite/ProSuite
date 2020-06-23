@@ -1,6 +1,6 @@
 # Contributing Guidelines
 
-ProSuite is maintained by the ProSuite Authors.
+ProSuite is maintained by The ProSuite Authors.
 
 ## Committing
 
@@ -23,4 +23,3 @@ Avoid company names, in identifiers as well as in comments.
 Utility methods should not log except at DEBUG level.
 
 When an error is logged, an exception should be thrown.
-
