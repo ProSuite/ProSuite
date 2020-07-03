@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.Logging", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.Logging.Test", "ProSuite.Commons.Logging.Test\ProSuite.Commons.Logging.Test.csproj", "{2497991A-EE91-4355-864A-DB6DB9782096}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons", "ProSuite.Commons\ProSuite.Commons.csproj", "{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.Test", "ProSuite.Commons.Test\ProSuite.Commons.Test.csproj", "{5B741064-38D8-4BEE-87C0-3F8E1C0247BF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +31,14 @@ Global
 		{2497991A-EE91-4355-864A-DB6DB9782096}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2497991A-EE91-4355-864A-DB6DB9782096}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2497991A-EE91-4355-864A-DB6DB9782096}.Release|Any CPU.Build.0 = Release|Any CPU
+		{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5B741064-38D8-4BEE-87C0-3F8E1C0247BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5B741064-38D8-4BEE-87C0-3F8E1C0247BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5B741064-38D8-4BEE-87C0-3F8E1C0247BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5B741064-38D8-4BEE-87C0-3F8E1C0247BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
