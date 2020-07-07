@@ -13,6 +13,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons", "ProSuit
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.Test", "ProSuite.Commons.Test\ProSuite.Commons.Test.csproj", "{5B741064-38D8-4BEE-87C0-3F8E1C0247BF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.UI", "ProSuite.Commons.UI\ProSuite.Commons.UI.csproj", "{FDA8452C-41F0-404C-A17D-FBA8CB56B935}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.UI.Test", "ProSuite.Commons.UI.Test\ProSuite.Commons.UI.Test.csproj", "{510D9436-E3AC-465F-9A8B-24F2093C6214}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +43,14 @@ Global
 		{5B741064-38D8-4BEE-87C0-3F8E1C0247BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B741064-38D8-4BEE-87C0-3F8E1C0247BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5B741064-38D8-4BEE-87C0-3F8E1C0247BF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDA8452C-41F0-404C-A17D-FBA8CB56B935}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDA8452C-41F0-404C-A17D-FBA8CB56B935}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDA8452C-41F0-404C-A17D-FBA8CB56B935}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDA8452C-41F0-404C-A17D-FBA8CB56B935}.Release|Any CPU.Build.0 = Release|Any CPU
+		{510D9436-E3AC-465F-9A8B-24F2093C6214}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{510D9436-E3AC-465F-9A8B-24F2093C6214}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{510D9436-E3AC-465F-9A8B-24F2093C6214}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{510D9436-E3AC-465F-9A8B-24F2093C6214}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
