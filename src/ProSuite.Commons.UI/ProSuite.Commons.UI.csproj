@@ -52,6 +52,9 @@
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="Dialogs\PendingChangesAction.cs" />
     <Compile Include="Dialogs\PendingChangesDialog.cs" />
     <Compile Include="Dialogs\PendingChangesOption.cs" />

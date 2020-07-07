@@ -41,7 +41,6 @@
   <ItemGroup>
     <Compile Include="Keyboard\KeyboardUtilsTest.cs" />
     <Compile Include="Keyboard\KeyTranslatorTest.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.UI\ProSuite.Commons.UI.csproj">

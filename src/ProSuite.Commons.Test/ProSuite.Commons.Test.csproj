@@ -68,7 +68,6 @@
     <Compile Include="IO\CsvTest.cs" />
     <Compile Include="IO\FileSystemUtilsTest.cs" />
     <Compile Include="NamedValuesExpressions\NamedValuesParserTest.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Collections\SimpleSetTest.cs" />
     <Compile Include="Reflection\ReflectionUtilsTest.cs" />
     <Compile Include="RegistryUtilsTest.cs" />

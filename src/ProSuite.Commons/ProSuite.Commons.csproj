@@ -47,6 +47,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="$(ProSuiteEncryptorFactoryDir)\EncryptorFactory.cs">
       <Link Condition=" '$(ProSuiteEncryptorFactoryDir)' != 'Cryptography' ">Cryptography\EncryptorFactory.cs</Link>
     </Compile>
