@@ -23,12 +23,15 @@ Avoid company names, in identifiers as well as in comments.
 The following properties of the csproj files can be changed using environment variables. As an example, the [bat file](src/ProSuite_VS19_net48.bat) next to the solution can be used to open the solution in Visual Studio 2019 with a .NET target framework 4.8 and the output directory being ProSuite/bin.
 
 ### Target Framework
+
 The default (and minimum) .NET target framework can be overridden using the environment variable **TargetFrameworkVersion**.
 
 ### Output directory
-In order to facilitate using these projects in a git subtree configuration in other repositories, the default output directory is ..\..\..\bin which is outside of this repository. However, it can be changed using the environment variable **OutputDirectory**.
+
+In order to facilitate using these projects in a git subtree configuration in other repositories, the default output directory is ..\\..\\..\bin which is outside of this repository. However, it can be changed using the environment variable **OutputDirectory**.
 
 ### Key Pair File for Strong Naming
+
 In order to compile the solution with a different identity, the environment variable **ProSuiteKeyFile** can be adapted.
 
 ### Symmetric Encryption
