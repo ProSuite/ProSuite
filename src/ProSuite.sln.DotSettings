@@ -2,4 +2,5 @@
 	<s:String x:Key="/Default/Environment/InjectedLayers/FileInjectedLayer/=07F3CB60D0E3B84BB3B670844D13F302/RelativePath/@EntryValue">..\ProSuite.Commons.DotSettings</s:String>
 	<s:Boolean x:Key="/Default/Environment/InjectedLayers/FileInjectedLayer/=07F3CB60D0E3B84BB3B670844D13F302/@KeyIndexDefined">True</s:Boolean>
 	<s:Boolean x:Key="/Default/Environment/InjectedLayers/InjectedLayerCustomization/=File07F3CB60D0E3B84BB3B670844D13F302/@KeyIndexDefined">True</s:Boolean>
-	<s:Double x:Key="/Default/Environment/InjectedLayers/InjectedLayerCustomization/=File07F3CB60D0E3B84BB3B670844D13F302/RelativePriority/@EntryValue">1</s:Double></wpf:ResourceDictionary>
+	<s:Double x:Key="/Default/Environment/InjectedLayers/InjectedLayerCustomization/=File07F3CB60D0E3B84BB3B670844D13F302/RelativePriority/@EntryValue">1</s:Double>
+	<s:Boolean x:Key="/Default/UserDictionary/Words/=datastore/@EntryIndexedValue">True</s:Boolean></wpf:ResourceDictionary>
