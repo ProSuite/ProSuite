@@ -21,9 +21,9 @@ namespace ProSuite.AGP.WorkList.Service
 		//	a) FileGDB workspace, use path
 		//	b) SDE, use connection string incl. version info.
 		// (Is it possible to edit different sde versions within the same ArcGIS Pro map?)
-		private readonly Dictionary<GdbRowReference, IWorkItem> _itemMap = new Dictionary<GdbRowReference, IWorkItem>(_initialCapacity);
+		private readonly Dictionary<GdbRowReference, WorkItem> _itemMap = new Dictionary<GdbRowReference, WorkItem>(_initialCapacity);
 
-		private readonly List<IWorkItem> _workItems = new List<IWorkItem>(_initialCapacity);
+		private readonly List<WorkItem> _workItems = new List<WorkItem>(_initialCapacity);
 
 		private readonly IWorkItemRepository _repository;
 		private readonly SpatialReference _spatialReference;
@@ -33,9 +33,9 @@ namespace ProSuite.AGP.WorkList.Service
 			_repository = repository;
 			_spatialReference = spatialReference;
 
-			foreach (IWorkItem item in _repository.GetAll())
+			foreach (WorkItem item in _repository.GetAll())
 			{
-				_itemMap.Add(item.Reference, item);
+				_itemMap.Add(item.Proxy, item);
 
 				_workItems.Add(item);
 			}
@@ -43,29 +43,30 @@ namespace ProSuite.AGP.WorkList.Service
 
 		public IEnumerable<object[]> GetRowValues(QueryFilter filter, bool recycle)
 		{
-			foreach (KeyValuePair<IWorkItem, IReadOnlyList<Coordinate3D>> pair in _repository.GetItems(filter, recycle))
-			{
-				IWorkItem item = pair.Key;
-				GdbRowReference reference = item.Reference;
+			yield break;
+			//foreach (KeyValuePair<WorkItem, IReadOnlyList<Coordinate3D>> pair in _repository.GetItems(filter, recycle))
+			//{
+			//	WorkItem item = pair.Key;
+			//	GdbRowReference reference = item.Proxy;
 
-				// todo daro: fill item map initially? In a explicit method?
+			//	// todo daro: fill item map initially? In a explicit method?
 
-				if (!_itemMap.TryGetValue(reference, out IWorkItem cachedItem))
-				{
-					// todo daro: what if I don't find items?
-					continue;
-				}
+			//	if (!_itemMap.TryGetValue(reference, out WorkItem cachedItem))
+			//	{
+			//		// todo daro: what if I don't find items?
+			//		continue;
+			//	}
 
-				IReadOnlyList<Coordinate3D> coordinates = pair.Value;
-				object shape = CreateShape(coordinates);
+			//	IReadOnlyList<Coordinate3D> coordinates = pair.Value;
+			//	object shape = CreateShape(coordinates);
 
-				object[] values =
-				{
-					(int) cachedItem.Oid, (int) cachedItem.Visited
-				};
+			//	object[] values =
+			//	{
+			//		(int) cachedItem.OID, (int) cachedItem.Visited
+			//	};
 
-				yield return values;
-			}
+			//	yield return values;
+			//}
 		}
 
 		public Envelope GetExtent()

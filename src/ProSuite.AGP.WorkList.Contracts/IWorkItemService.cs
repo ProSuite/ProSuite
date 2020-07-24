@@ -5,7 +5,7 @@ using ProSuite.Commons.AG.Gdb;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
-	public interface IWorkItemService<T> where T : class, IWorkItem
+	public interface IWorkItemService<T> where T : WorkItem
 	{
 		T GetItem(GdbRowReference reference);
 

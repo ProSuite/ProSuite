@@ -1,7 +1,6 @@
 using System;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using EsriDE.ProSuite.AGP.WorkLists;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AG.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
@@ -10,7 +9,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.AGP.WorkList
 {
 	[CLSCompliant(false)]
-	public abstract class WorkItem : IWorkItem
+	public abstract class WorkItem2 //: IWorkItem
 	{
 		private readonly double _extentExpansionFactor;
 		private readonly double _minimumSizeDegrees;
@@ -24,7 +23,7 @@ namespace ProSuite.AGP.WorkList
 		private double _zmin;
 		private bool _isZAware;
 
-		protected WorkItem([NotNull] Row row,
+		protected WorkItem2([NotNull] Row row,
 		                   double extentExpansionFactor = 1.1,
 		                   double minimumSizeDegrees = 15,
 		                   double minimumSizeProjected = 0.001) :
@@ -39,32 +38,32 @@ namespace ProSuite.AGP.WorkList
 			_minimumSizeProjected = minimumSizeProjected;
 		}
 
-		private WorkItem(GdbRowReference reference)
+		private WorkItem2(GdbRowReference reference)
 		{
-			Reference = reference;
+			Proxy = reference;
 
 			Visited = WorkItemVisited.NotVisited;
 			Status = WorkItemStatus.Todo;
 		}
 
-		public long Oid { get; set;  }
+		public long OID { get; set;  }
 
 		public WorkItemVisited Visited { get; }
 
 		public WorkItemStatus Status { get; }
 
-		public GdbRowReference Reference { get; }
+		public GdbRowReference Proxy { get; }
 
 		public bool HasGeometry { get; set; }
 
 		public bool IsBasedOn([NotNull] Row row)
 		{
-			return Reference.References(row);
+			return Proxy.References(row);
 		}
 
 		public bool IsBasedOn(Table table)
 		{
-			return Reference.References(table);
+			return Proxy.References(table);
 		}
 
 		[NotNull]
@@ -90,7 +89,7 @@ namespace ProSuite.AGP.WorkList
 		[CanBeNull]
 		public Row GetRow()
 		{
-			return Reference.GetRow();
+			return Proxy.GetRow();
 		}
 
 		[CanBeNull]
@@ -110,7 +109,7 @@ namespace ProSuite.AGP.WorkList
 
 		public override string ToString()
 		{
-			return $"{Reference}: {Status}, {Visited}";
+			return $"{Proxy}: {Status}, {Visited}";
 		}
 
 		[CanBeNull]

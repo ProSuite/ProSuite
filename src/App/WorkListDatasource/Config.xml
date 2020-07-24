@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ESRI.Configuration xmlns="http://schemas.esri.com/DADF/Registry" 
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
+  <Name>WorkListDatasource</Name>
+  <AddInID>{208c6584-f646-42e0-bcd1-5a6e2cf6b3dc}</AddInID>
+  <Description>The ProSuite WorkList plugin for ArcGIS Pro</Description>
+  <Version>1.0</Version>
+  <Author>The ProSuite Authors</Author>
+  <Company>Acme</Company>
+  <Date>2020-07-24</Date>
+  <Targets>
+    <Target name="ArcGISPro" version="2.5" />
+  </Targets>
+  <!-- CLR should be set to the 4.8 set in the .csproj -->
+  <AddIn language="CLR4.8" library="ProSuite.AGP.WorkListDatasource.dll" namespace="ProSuite.AGP.WorkListDatasource">
+    <ArcGISPro>
+      <PluginDatasources>
+        <PluginDatasource id="ProSuite_WorkList_Datasource" class="WorkListDatasource"/>
+      </PluginDatasources>
+    </ArcGISPro>
+  </AddIn>
+</ESRI.Configuration>

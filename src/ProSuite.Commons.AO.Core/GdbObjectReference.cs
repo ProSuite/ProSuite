@@ -4,6 +4,7 @@ namespace ProSuite.Commons.AO.Core
 {
 	/// <summary>
 	/// A lightweight proxy for a Geodatabase object
+	/// (a table row or a feature class row).
 	/// </summary>
 	public struct GdbObjectReference : IEquatable<GdbObjectReference>
 	{

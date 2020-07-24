@@ -1,4 +1,4 @@
-namespace EsriDE.ProSuite.AGP.WorkLists
+namespace ProSuite.AGP.WorkList.Contracts
 {
 	public enum WorkItemStatus
 	{

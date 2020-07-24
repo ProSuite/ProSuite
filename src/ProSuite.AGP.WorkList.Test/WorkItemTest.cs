@@ -86,27 +86,27 @@ namespace ProSuite.AGP.WorkList.Test
 			}
 		}
 
-		[Test]
-		public void Can_Query_WorkItem_Extent()
-		{
-			Table table = OpenTable(out Geodatabase geodatabase);
-			try
-			{
-				Feature feature = GdbRowUtils.GetRows<Feature>(table, null, true).FirstOrDefault();
-				Assert.NotNull(feature);
+		//[Test]
+		//public void Can_Query_WorkItem_Extent()
+		//{
+		//	Table table = OpenTable(out Geodatabase geodatabase);
+		//	try
+		//	{
+		//		Feature feature = GdbRowUtils.GetRows<Feature>(table, null, true).FirstOrDefault();
+		//		Assert.NotNull(feature);
 
-				var errorItem = new ErrorItem(feature);
-				Envelope current = errorItem.GetExtent();
+		//		var errorItem = new ErrorItem(feature);
+		//		Envelope current = errorItem.GetExtent();
 
-				Envelope expected = feature.GetShape().Extent;
+		//		Envelope expected = feature.GetShape().Extent;
 
-				Assert.True(expected.IsEqual(current));
-			}
-			finally
-			{
-				table.Dispose();
-				geodatabase.Dispose();
-			}
-		}
+		//		Assert.True(expected.IsEqual(current));
+		//	}
+		//	finally
+		//	{
+		//		table.Dispose();
+		//		geodatabase.Dispose();
+		//	}
+		//}
 	}
 }

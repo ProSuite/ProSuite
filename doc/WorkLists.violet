@@ -96,7 +96,7 @@ Created, Modified, Deleted, Undo, Redo:
       <string>x</string>
       <void method="set">
        <object idref="Rectangle2D$Double1"/>
-       <double>680.0</double>
+       <double>710.0</double>
       </void>
      </void>
      <void class="java.awt.geom.Rectangle2D$Double" method="getField">
@@ -138,7 +138,7 @@ Navigation to change current.</string>
      <string>x</string>
      <void method="set">
       <object idref="Point2D$Double1"/>
-      <double>680.0</double>
+      <double>710.0</double>
      </void>
     </void>
     <void class="java.awt.geom.Point2D$Double" method="getField">
@@ -149,7 +149,7 @@ Navigation to change current.</string>
      </void>
     </void>
     <void method="setLocation">
-     <double>680.0</double>
+     <double>710.0</double>
      <double>360.0</double>
     </void>
    </object>
@@ -360,13 +360,13 @@ Subscribe()</string>
       <void property="methods">
        <void property="text">
         <string>Get(name): WorkList
-Set(name, WorkList)</string>
+Add(WorkList)
+Remove(name|WorkList)</string>
        </void>
       </void>
       <void property="name">
        <void property="text">
-        <string>Registry&lt;br&gt;
-or Service?</string>
+        <string>WorkListRegistry</string>
        </void>
       </void>
      </object>
@@ -408,7 +408,7 @@ or Service?</string>
       <string>width</string>
       <void method="set">
        <object idref="Rectangle2D$Double4"/>
-       <double>520.0</double>
+       <double>560.0</double>
       </void>
      </void>
      <void class="java.awt.geom.Rectangle2D$Double" method="getField">

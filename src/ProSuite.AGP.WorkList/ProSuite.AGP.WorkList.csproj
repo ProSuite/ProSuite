@@ -51,6 +51,7 @@
     <Compile Include="DbStatusSourceClass.cs" />
     <Compile Include="ErrorItem.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TestWorkList.cs" />
     <Compile Include="WorkItem.cs" />
   </ItemGroup>
   <ItemGroup>

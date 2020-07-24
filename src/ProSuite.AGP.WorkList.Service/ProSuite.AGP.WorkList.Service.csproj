@@ -79,10 +79,6 @@
       <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
       <Name>ProSuite.Commons.Essentials</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ProSuite.DomainModel\ProSuite.DomainModel.csproj">
-      <Project>{824DDBE3-EDAF-460B-B513-386A4260C1FF}</Project>
-      <Name>ProSuite.DomainModel</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

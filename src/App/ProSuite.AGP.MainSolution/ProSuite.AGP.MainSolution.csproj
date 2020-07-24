@@ -5,39 +5,37 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{90F49E0F-E7E9-47FF-82E5-F964441CA2E3}</ProjectGuid>
+    <ProjectGuid>{0285C877-CD40-48CA-AB29-398A29D2F914}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProSuite.AGP.WorkList.PluginDatasource</RootNamespace>
-    <AssemblyName>ProSuite.AGP.WorkList.PluginDatasource</AssemblyName>
-    <SignAssembly>true</SignAssembly>
-    <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
-    <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.6.1</TargetFrameworkVersion>
-    <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\..\bin</OutputDirectory>
+    <RootNamespace>ProSuite.AGP.MainSolution</RootNamespace>
+    <AssemblyName>ProSuite.AGP.MainSolution</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>$(OutputDirectory)\Debug\</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <UseVSHostingProcess>false</UseVSHostingProcess>
-    <NoWarn>1591</NoWarn>
     <StartAction>Program</StartAction>
     <StartProgram>C:\Program Files\ArcGIS\Pro\bin\ArcGISPro.exe</StartProgram>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>$(OutputDirectory)\Release\</OutputPath>
+    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <StartAction>Program</StartAction>
     <StartProgram>C:\Program Files\ArcGIS\Pro\bin\ArcGISPro.exe</StartProgram>
+    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup>
     <ArcGISFolder>$([MSBuild]::GetRegistryValueFromView('HKEY_LOCAL_MACHINE\SOFTWARE\ESRI\ArcGISPro', 'InstallDir', null, RegistryView.Registry64))</ArcGISFolder>
@@ -46,50 +44,61 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
-    <Reference Include="ArcGIS.Core">
-      <HintPath>C:\Program Files\ArcGIS\Pro\bin\ArcGIS.Core.dll</HintPath>
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="ArcGIS.Desktop.Resources">
+      <HintPath>C:\Program Files\ArcGIS\Pro\bin\ArcGIS.Desktop.Resources.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="ArcGIS.CoreHost">
-      <HintPath>C:\Program Files\ArcGIS\Pro\bin\ArcGIS.CoreHost.dll</HintPath>
+    <Reference Include="ESRI.ArcGIS.ItemIndex">
+      <HintPath>C:\Program Files\ArcGIS\Pro\bin\ESRI.ArcGIS.ItemIndex.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\SharedAssemblyInfo.cs">
+    <AddInContent Include="Config.daml" />
+    <AddInContent Include="Images\AddInDesktop16.png" />
+    <AddInContent Include="Images\AddInDesktop32.png" />
+    <AddInContent Include="DarkImages\AddInDesktop16.png" />
+    <AddInContent Include="DarkImages\AddInDesktop32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="ButtonCreateTestList.cs" />
+    <Compile Include="Module1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WorkItemCursor.cs" />
-    <Compile Include="WorkListDatasource.cs" />
-    <Compile Include="WorkItemTable.cs" />
   </ItemGroup>
   <ItemGroup>
-    <AddInContent Include="Config.xml">
-      <!--<SubType>Designer</SubType>-->
-    </AddInContent>
+    <AddInContent Include="Images\GenericButtonBlue16.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj">
+    <AddInContent Include="Images\GenericButtonBlue32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="DarkImages\GenericButtonBlue16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="DarkImages\GenericButtonBlue32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Esri.ArcGISPro.Extensions">
+      <Version>2.5.0.22081</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj">
       <Project>{47e134c6-b803-451e-8c33-7c71b158b2ac}</Project>
       <Name>ProSuite.AGP.WorkList.Contracts</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ProSuite.AGP.WorkList.Service\ProSuite.AGP.WorkList.Service.csproj">
-      <Project>{e5b77010-6af1-4a75-afe1-1385394914db}</Project>
-      <Name>ProSuite.AGP.WorkList.Service</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
-      <Project>{384763d9-f7a1-4aa2-9abd-ee338cd8d4c1}</Project>
-      <Name>ProSuite.Commons.Essentials</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
-      <Project>{a227d52c-0536-498f-acf2-2a5a67c3d9ff}</Project>
-      <Name>ProSuite.Commons.Logging</Name>
+    <ProjectReference Include="..\..\ProSuite.AGP.WorkList\ProSuite.AGP.WorkList.csproj">
+      <Project>{2efe37c6-29a4-4e51-8c9f-d7b895f9ce6d}</Project>
+      <Name>ProSuite.AGP.WorkList</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -105,15 +114,11 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <PackageAction>BuildDefault</PackageAction>
   </PropertyGroup>
-  <PropertyGroup>
-    <PackageType>Plugin</PackageType>
-  </PropertyGroup>
-  <!--<Import Project="Esri.ArcGISPro.Extensions.targets" 
-          Condition="Exists('Esri.ArcGISPro.Extensions.targets')" />-->
+  <UsingTask AssemblyFile="C:\Program Files\ArcGIS\Pro\bin\proapp-sdk-MSBuild.dll" TaskName="proapp_sdk_MSBuild.PackageAddIn" />
+  <UsingTask AssemblyFile="C:\Program Files\ArcGIS\Pro\bin\proapp-sdk-MSBuild.dll" TaskName="proapp_sdk_MSBuild.CleanAddIn" />
+  <UsingTask AssemblyFile="C:\Program Files\ArcGIS\Pro\bin\proapp-sdk-MSBuild.dll" TaskName="proapp_sdk_MSBuild.ConvertToRelativePath" />
+  <!--<Import Project="Esri.ArcGISPro.Extensions.targets" Condition="Exists('Esri.ArcGISPro.Extensions.targets')" />-->
   <Import Project="C:\Program Files\ArcGIS\Pro\bin\Esri.ProApp.SDK.Desktop.targets" Condition="Exists('C:\Program Files\ArcGIS\Pro\bin\Esri.ProApp.SDK.Desktop.targets') AND !Exists('Esri.ArcGISPro.Extensions.targets')" />
-  <!--
-  <Import Project="E:\Data\SDK\Test\PluginTemplate\Esri.ProApp.SDK.Desktop_x.targets" Condition="Exists('E:\Data\SDK\Test\PluginTemplate\Esri.ProApp.SDK.Desktop_x.targets')" />
-  -->
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
@@ -121,4 +126,7 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <!--<Target Name="BeforeBuild">
+    <Error Text="C:\Program Files\ArcGIS\Pro\bin\Esri.ProApp.SDK.Desktop.targets not found." Condition="!Exists('C:\Program Files\ArcGIS\Pro\bin\Esri.ProApp.SDK.Desktop.targets') AND !Exists('Esri.ArcGISPro.Extensions.targets')" />
+  </Target>-->
 </Project>

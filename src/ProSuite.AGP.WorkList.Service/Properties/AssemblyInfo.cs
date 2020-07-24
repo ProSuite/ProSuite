@@ -7,6 +7,6 @@ using System.Runtime.InteropServices;
 [assembly : AssemblyCulture("")]
 
 [assembly : ComVisible(false)]
-[assembly : CLSCompliant(true)]
+[assembly : CLSCompliant(false)]
 
 [assembly : Guid("e5b77010-6af1-4a75-afe1-1385394914db")]
