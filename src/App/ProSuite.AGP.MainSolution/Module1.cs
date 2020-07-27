@@ -1,27 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Windows.Input;
-using System.Threading.Tasks;
-using ArcGIS.Core.CIM;
-using ArcGIS.Core.Data;
-using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Catalog;
-using ArcGIS.Desktop.Core;
-using ArcGIS.Desktop.Editing;
-using ArcGIS.Desktop.Extensions;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
-using ArcGIS.Desktop.Framework.Dialogs;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.WorkList;
+using ProSuite.AGP.WorkList.Contracts;
 
 namespace ProSuite.AGP.MainSolution
 {
 	internal class Module1 : Module
 	{
-		private static Module1 _this = null;
+		private static Module1 _singleton;
 
 		/// <summary>
 		/// Retrieve the singleton instance to this module here
@@ -30,23 +17,42 @@ namespace ProSuite.AGP.MainSolution
 		{
 			get
 			{
-				return _this ?? (_this = (Module1)FrameworkApplication.FindModule("ProSuite.AGP.MainSolution_Module"));
+				return _singleton ?? (_singleton = (Module1)FrameworkApplication.FindModule("ProSuite.AGP.MainSolution_Module"));
 			}
 		}
 
+		public WorkList.Contracts.WorkList GetTestWorklist()
+		{
+			const string workListName = "Test Items";
+
+			var workList = WorkListRegistry.Instance.Get(workListName);
+			if (workList == null)
+			{
+				workList = TestWorkList.Create(workListName);
+				WorkListRegistry.Instance.Add(workList);
+			}
+
+			return workList;
+		}
+
+		public void RedrawMap()
+		{
+			// TODO Should redraw only if ActiveMap has WorkList lyrs and only as little as possible
+			const bool clearCache = true;
+			MapView.Active?.Redraw(clearCache);
+		}
+
 		#region Overrides
+
 		/// <summary>
 		/// Called by Framework when ArcGIS Pro is closing
 		/// </summary>
 		/// <returns>False to prevent Pro from closing, otherwise True</returns>
 		protected override bool CanUnload()
 		{
-			//TODO - add your business logic
-			//return false to ~cancel~ Application close
 			return true;
 		}
 
-		#endregion Overrides
-
+		#endregion
 	}
 }

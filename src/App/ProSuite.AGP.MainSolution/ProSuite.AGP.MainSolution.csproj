@@ -71,8 +71,10 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="ButtonCreateTestList.cs" />
+    <Compile Include="ButtonTestItemDone.cs" />
     <Compile Include="Module1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SplitButtonTestListNav.cs" />
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="Images\GenericButtonBlue16.png" />
@@ -100,6 +102,18 @@
       <Project>{2efe37c6-29a4-4e51-8c9f-d7b895f9ce6d}</Project>
       <Name>ProSuite.AGP.WorkList</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\GenericButtonBlack16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\GenericButtonBlack32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="DarkImages\GenericButtonBlack16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="DarkImages\GenericButtonBlack32.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--

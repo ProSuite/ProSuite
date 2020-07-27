@@ -4,8 +4,6 @@ using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.WorkList;
-using ProSuite.AGP.WorkList.Contracts;
 
 namespace ProSuite.AGP.MainSolution
 {
@@ -18,20 +16,15 @@ namespace ProSuite.AGP.MainSolution
 
 		private void CreateTestList()
 		{
-			const string workListName = "Test Items";
 			const string pluginIdentifier = "ProSuite_WorkList_Datasource";
 
-			var workList = WorkListRegistry.Instance.Get(workListName);
-			if (workList == null)
-			{
-				workList = TestWorkList.Create(workListName);
-				WorkListRegistry.Instance.Add(workList);
-			}
+			var workList = Module1.Current.GetTestWorklist();
+			var workListName = workList.Name;
 
-			workList.GoFirst();
-			workList.Current?.SetVisited(true);
-			workList.GoNext();
-			workList.Current?.SetStatus(WorkItemStatus.Done);
+			//workList.GoFirst();
+			//workList.Current?.SetVisited(true);
+			//workList.GoNext();
+			//workList.Current?.SetStatus(WorkItemStatus.Done);
 
 			var datasourcePath = new Uri(new Uri("worklist://localhost/"), workListName);
 			var connector = new PluginDatasourceConnectionPath(pluginIdentifier, datasourcePath);

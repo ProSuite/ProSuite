@@ -14,31 +14,21 @@ namespace ProSuite.AGP.WorkListDatasource
 	{
 		private readonly WorkList.Contracts.WorkList _workList;
 		private readonly WorkItemLayer _itemLayer;
+		private readonly string _tableName;
 		private readonly IReadOnlyList<PluginField> _fields;
 
 		// todo daro: how many times invoked?
-		public WorkItemTable(WorkList.Contracts.WorkList workList, WorkItemLayer itemLayer)
+		public WorkItemTable(WorkList.Contracts.WorkList workList, WorkItemLayer itemLayer, string tableName)
 		{
-			_workList = workList;
+			_workList = workList ?? throw new ArgumentNullException(nameof(workList));
 			_itemLayer = itemLayer;
-
+			_tableName = tableName ?? throw new ArgumentNullException(nameof(tableName));
 			_fields = new ReadOnlyCollection<PluginField>(GetSchema());
-
-			//_fields = new ReadOnlyCollection<PluginField>(
-			//	new[]
-			//	{
-			//		CreateField("OBJECTID", FieldType.OID),
-			//		CreateField("ORIGINAL_OID", FieldType.Integer),
-			//		CreateField("CURRENT", FieldType.Integer),
-			//		CreateField("STATUS", FieldType.Integer),
-			//		CreateField("VISITED", FieldType.Integer),
-			//		CreateField("SHAPE", FieldType.Geometry)
-			//	});
 		}
 
 		public override string GetName()
 		{
-			return $"{_workList.Name}:${_itemLayer}";
+			return _tableName;
 		}
 
 		/// <summary>
@@ -87,8 +77,6 @@ namespace ProSuite.AGP.WorkListDatasource
 
 		public override PluginCursorTemplate Search(QueryFilter queryFilter)
 		{
-			// TODO for now we ignore the (spatial) queryFilter
-
 			IEnumerable<WorkItem> query = _workList.Items;
 
 			if (_workList.Visibility == WorkItemVisibility.Todo)
@@ -96,12 +84,24 @@ namespace ProSuite.AGP.WorkListDatasource
 				query = query.Where(item => item.Status == WorkItemStatus.Todo);
 			}
 
+			if (queryFilter.ObjectIDs != null && queryFilter.ObjectIDs.Count > 0)
+			{
+				var oids = queryFilter.ObjectIDs.OrderBy(oid => oid).ToList();
+				query = query.Where(item => oids.BinarySearch(item.OID) >= 0);
+			}
+
 			if (_workList.AreaOfInterest != null)
 			{
 				query = query.Where(item => GeometryEngine.Instance.Intersects(_workList.AreaOfInterest, item.Extent));
 			}
 
-			return new WorkItemCursor(query.Select(item => GetValues(item, _workList.Current)));
+			// TODO for now we ignore the FilterGeometry and the WhereClause
+			// TODO search should be done by WorkList (which might optimize)
+
+			//return new WorkItemCursor(query.Select(item => GetValues(item, _workList.Current)));
+
+			var list = query.Select(item => GetValues(item, _workList.Current)).ToList();
+			return new WorkItemCursor(list);
 		}
 
 		public override PluginCursorTemplate Search(SpatialQueryFilter spatialQueryFilter)
@@ -113,11 +113,13 @@ namespace ProSuite.AGP.WorkListDatasource
 		{
 			var values = new object[6];
 			values[0] = item.OID;
-			values[1] = _itemLayer == WorkItemLayer.Extent ? item.Extent : item.Shape;
+			values[1] = item.Description;
 			values[2] = item.Status == WorkItemStatus.Done ? 1 : 0;
 			values[3] = item.Visited == WorkItemVisited.Visited ? 1 : 0;
 			values[4] = item == current ? 1 : 0;
-			values[5] = item.Description;
+			values[5] = _itemLayer == WorkItemLayer.Extent
+				            ? CreatePolygon(item.Extent)
+				            : item.Shape;
 			return values;
 		}
 
@@ -125,12 +127,17 @@ namespace ProSuite.AGP.WorkListDatasource
 		{
 			var fields = new List<PluginField>(8);
 			fields.Add(new PluginField("OBJECTID", "ObjectID", FieldType.OID));
-			fields.Add(new PluginField("SHAPE", "Shape", FieldType.Geometry));
+			fields.Add(new PluginField("TEXT", "Text", FieldType.String));
 			fields.Add(new PluginField("STATUS", "Status", FieldType.Integer));
 			fields.Add(new PluginField("VISITED", "Visited", FieldType.Integer));
 			fields.Add(new PluginField("CURRENT", "Is Current", FieldType.Integer));
-			fields.Add(new PluginField("TEXT", "Text", FieldType.String));
+			fields.Add(new PluginField("SHAPE", "Shape", FieldType.Geometry));
 			return fields.ToArray();
+		}
+
+		private static Polygon CreatePolygon(Envelope envelope)
+		{
+			return PolygonBuilder.CreatePolygon(envelope, envelope.SpatialReference);
 		}
 	}
 }

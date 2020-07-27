@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Reflection;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
@@ -13,6 +15,7 @@ namespace ProSuite.AGP.WorkListDatasource
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		private WorkList.Contracts.WorkList _workList;
+		private IReadOnlyList<string> _tableNames;
 
 		public override void Open(Uri connectionPath) // "open workspace"
 		{
@@ -35,6 +38,13 @@ namespace ProSuite.AGP.WorkListDatasource
 
 			if (_workList == null)
 				throw new ArgumentException($"No such work list: {connectionPath}");
+
+			_tableNames = new ReadOnlyCollection<string>(
+				new List<string>
+				{
+					FormatTableName(_workList.Name, WorkItemLayer.Extent),
+					FormatTableName(_workList.Name, WorkItemLayer.Shape)
+				});
 		}
 
 		public override void Close()
@@ -48,7 +58,7 @@ namespace ProSuite.AGP.WorkListDatasource
 
 			_msg.DebugFormat("{0}: OpenTable '{1}'", nameof(WorkListDatasource), name);
 
-			var layer = GetWorkItemLayer(name);
+			var layer = ParseLayer(name);
 
 			if (layer == WorkItemLayer.None)
 			{
@@ -57,12 +67,13 @@ namespace ProSuite.AGP.WorkListDatasource
 
 			if (_workList == null)
 				throw new InvalidOperationException("Datasource is not open");
-			return new WorkItemTable(_workList, layer);
+
+			return new WorkItemTable(_workList, layer, name);
 		}
 
 		public override IReadOnlyList<string> GetTableNames()
 		{
-			return new List<string> {"Extent", "Shape"};
+			return _tableNames ?? new string[0];
 		}
 
 		public override bool IsQueryLanguageSupported()
@@ -70,9 +81,21 @@ namespace ProSuite.AGP.WorkListDatasource
 			return false; // TODO consider supporting it, but not today
 		}
 
-		private static WorkItemLayer GetWorkItemLayer(string name)
+		private static string FormatTableName(string listName, WorkItemLayer layer)
 		{
-			switch (name?.ToLowerInvariant())
+			return string.Format(CultureInfo.InvariantCulture, "{0} {1}", listName, layer);
+		}
+
+		private static WorkItemLayer ParseLayer(string tableName)
+		{
+			if (tableName == null) return WorkItemLayer.None;
+
+			const char blank = ' ';
+			int index = tableName.LastIndexOf(blank);
+			if (index < 0) return WorkItemLayer.None;
+
+			var suffix = tableName.Substring(index + 1).ToLowerInvariant();
+			switch (suffix)
 			{
 				case "extent":
 				case "envelope":
