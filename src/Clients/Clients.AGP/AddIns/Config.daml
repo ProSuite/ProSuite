@@ -1,0 +1,61 @@
+<ArcGIS defaultAssembly="ProSuiteSolution.dll" defaultNamespace="Clients.AGP.ProSuiteSolution" xmlns="http://schemas.esri.com/DADF/Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
+  <AddInInfo id="{aca43c2a-8357-4476-8660-e8bc28bdf848}" version="1.0" desktopVersion="2.5.22081">
+    <Name>ProSuiteTools</Name>
+    <Description>ProSuiteTools description</Description>
+    <Image>Images\AddinDesktop32.png</Image>
+    <Author>algr</Author>
+    <Company>Esri CH</Company>
+    <Date>4/19/2020 3:48:30 PM, 2020</Date>
+    <Subject>Framework</Subject>
+    <!-- Note subject can be one or more of these topics:
+                    Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
+  </AddInInfo>
+  <modules>
+    <insertModule id="ProSuiteTools_Module" className="ProSuiteToolsModule" autoLoad="false" caption="ProSuiteToolsModule">
+      <tabs>
+        <tab id="ProSuiteTools_Tab" caption="ProSuite Tools">
+          <group refID="ProSuiteTools_Commons" />
+          <group refID="ProSuiteTools_QA" />
+        </tab>
+      </tabs>
+      <groups>
+        <group id="ProSuiteTools_Commons" caption="Commons" keytip="G1">
+          <button refID="ProSuiteTools_Commons_ShowLog" size="large" />
+          <button refID="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" size="large" />
+        </group>
+        <group id="ProSuiteTools_QA" caption="QA" keytip="G1">
+          <button refID="ProSuiteTools_QA_StartErrorsDockPane" size="large" />
+          <button refID="ProSuiteTools_QA_StartGPServer" size="middle" />
+          <button refID="ProSuiteTools_QA_StartExtent" size="middle" />          
+          <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />        
+        </group>
+      </groups>
+      <controls>
+        <button id="ProSuiteTools_Commons_ShowLog" caption="Configuration" className="ShowLogWindow" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GeodatabaseFeatureDataset16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GeodatabaseFeatureDataset32.png" keytip="B1">
+          <tooltip heading="Show Config">ProSuite Configuration<disabledText /></tooltip>
+        </button>
+        <button id="ProSuiteTools_QA_StartErrorsDockPane" caption="QA Error Processing" className="StartQAErrorsDockPane" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerSession16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerSession32.png" keytip="B1">
+          <tooltip heading="QA GP Tool">Show QA error worklist<disabledText /></tooltip>
+        </button>
+        <button id="ProSuiteTools_QA_StartGPServer" caption="Start QA GPService" className="StartQAGPTool" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerConnection16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerConnection32.png" keytip="B1">
+          <tooltip heading="QA GP Tool">Execute QA GP Tool on Server with XML<disabledText /></tooltip>
+        </button>
+        <button id="ProSuiteTools_QA_StartExtent" caption="Start QA" className="StartQAGPExtent" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerBatchJobFile16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerBatchJobFile32.png" keytip="B1">
+          <tooltip heading="QA GP Tool">Check QA for local selection<disabledText />
+          </tooltip>
+        </button>
+        <comboBox id="ProSuiteTools_QA_SpecsComboBox" caption=" Specification" className="QASpecListComboBox" itemWidth="90" extendedCaption="Extended Caption" isEditable="false" isReadOnly="true" resizable="true">
+          <tooltip heading="Tooltip Heading">QA specifications<disabledText /></tooltip>
+        </comboBox>        
+        <button id="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" caption="Logs" className="Clients.AGP.ProSuiteSolution.LoggerUI.ProSuiteLogPane_ShowButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation32.png">
+          <tooltip heading="Show Logs Window">Show Logs Window<disabledText /></tooltip>
+        </button>
+      </controls>
+      <dockPanes>
+        <dockPane id="ProSuiteTools_Logger_ProSuiteLogPane" caption="ProSuite Logs" className="Clients.AGP.ProSuiteSolution.LoggerUI.ProSuiteLogPaneViewModel" dock="group" dockWith="esri_core_contentsDockPane">
+          <content className="Clients.AGP.ProSuiteSolution.LoggerUI.ProSuiteLogPaneView" />
+        </dockPane>
+      </dockPanes>
+    </insertModule>
+  </modules>
+</ArcGIS>
