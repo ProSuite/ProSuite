@@ -44,5 +44,19 @@
     <Compile Include="QAConfiguration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ProSuite.Commons.QA\QAServiceManager\QAServiceManager.csproj">
+      <Project>{7FD1D803-F43F-4530-82F5-44D6F705959F}</Project>
+      <Name>QAServiceManager</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.QA\ServiceProviders\QAServiceProviderGP\QAServiceProviderArcGIS.csproj">
+      <Project>{C2F802E1-FC0F-49CA-A876-126725F8D8C2}</Project>
+      <Name>QAServiceProviderArcGIS</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.QA\SpeficationsProviders\QASpecificationProviderFile\QASpecificationProviderFile.csproj">
+      <Project>{42CFA8DC-9A4F-4549-B740-400C57D08D09}</Project>
+      <Name>QASpecificationProviderFile</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

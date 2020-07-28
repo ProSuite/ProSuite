@@ -1,4 +1,8 @@
-using System;
+using ProSuite.Commons.QA.ServiceManager;
+using ProSuite.Commons.QA.ServiceManager.Interfaces;
+using ProSuite.Commons.QA.ServiceManager.Types;
+using ProSuite.Commons.QA.ServiceProviderArcGIS;
+using ProSuite.Commons.QA.SpecificationProviderFile;
 using System.Collections.Generic;
 
 
@@ -6,7 +10,7 @@ namespace QAConfigurator
 {
     public class QAConfiguration
     {
-		public event EventHandler<ProSuiteConfigurationEventArgs> OnConfigurationChanged;
+		//public event EventHandler<ProSuiteConfigurationEventArgs> OnConfigurationChanged;
 
 		private static QAConfiguration _configuration = null;
 		public static QAConfiguration Current
