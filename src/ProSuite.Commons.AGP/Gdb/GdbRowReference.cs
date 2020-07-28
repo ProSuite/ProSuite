@@ -3,7 +3,7 @@ using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Commons.AG.Gdb
+namespace ProSuite.Commons.AGP.Gdb
 {
 	/// <summary>
 	///     Represents a lightweight reference to a geodatabase object.

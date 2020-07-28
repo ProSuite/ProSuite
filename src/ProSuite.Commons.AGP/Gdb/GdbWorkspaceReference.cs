@@ -3,7 +3,7 @@ using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Commons.AG.Gdb
+namespace ProSuite.Commons.AGP.Gdb
 {
 	// todo daro: check correct handle / instantiation of Uri
 	[CLSCompliant(false)]

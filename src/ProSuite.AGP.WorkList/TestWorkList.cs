@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.Commons.AG.Gdb;
+using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.AGP.WorkList
 {

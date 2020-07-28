@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
-using ProSuite.AGP.WorkList.Contracts;
 
 namespace ProSuite.AGP.WorkList.PluginDatasource
 {

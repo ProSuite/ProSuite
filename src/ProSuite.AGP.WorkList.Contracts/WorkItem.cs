@@ -1,5 +1,5 @@
 using ArcGIS.Core.Geometry;
-using ProSuite.Commons.AG.Gdb;
+using ProSuite.Commons.AGP.Gdb;
 using Envelope = ArcGIS.Core.Geometry.Envelope;
 
 namespace ProSuite.AGP.WorkList.Contracts
