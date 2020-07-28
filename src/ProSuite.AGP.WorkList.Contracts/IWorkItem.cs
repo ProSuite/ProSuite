@@ -9,7 +9,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 	/// </summary>
 	public interface IWorkItem
 	{
-		long OID { get; }
+		int OID { get; }
 		string Description { get; }
 		WorkItemStatus Status { get; }
 		WorkItemVisited Visited { get; } // TODO bool

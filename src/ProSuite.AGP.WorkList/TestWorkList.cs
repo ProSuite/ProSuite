@@ -2,10 +2,12 @@ using System.Collections.Generic;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
-using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.AGP.WorkList
 {
+	/// <summary>
+	/// A Work List for testing: the 26 Swiss canton capitals in WGS84.
+	/// </summary>
 	public class TestWorkList : Domain.WorkList
 	{
 		#region Factory
@@ -81,7 +83,6 @@ namespace ProSuite.AGP.WorkList
 			public TestItem(int oid, double x, double y, string name)
 			{
 				OID = oid;
-				//Proxy = new GdbRowReference();
 				Description = name ?? string.Empty;
 				Status = WorkItemStatus.Todo;
 				Visited = WorkItemVisited.NotVisited;
@@ -89,13 +90,12 @@ namespace ProSuite.AGP.WorkList
 				Extent = CreateExtent(x, y);
 			}
 
-			public override long OID { get; }
+			public override int OID { get; }
 			public override string Description { get; }
 			public override WorkItemStatus Status { get; protected set; }
 			public override WorkItemVisited Visited { get; protected set; }
 			public override Geometry Shape { get; }
 			public override Envelope Extent { get; }
-			//public override GdbRowReference Proxy { get; }
 
 			public override void SetDone(bool done = true)
 			{

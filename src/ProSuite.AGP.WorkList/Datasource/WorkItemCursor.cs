@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.WorkList
+namespace ProSuite.AGP.WorkList.Datasource
 {
 	public class WorkItemCursor : PluginCursorTemplate
 	{

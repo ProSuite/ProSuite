@@ -6,10 +6,9 @@ using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.WorkList
+namespace ProSuite.AGP.WorkList.Domain
 {
-	[CLSCompliant(false)]
-	public abstract class WorkItem2 //: IWorkItem
+	public abstract class WorkItemDaro //: IWorkItem
 	{
 		private readonly double _extentExpansionFactor;
 		private readonly double _minimumSizeDegrees;
@@ -23,7 +22,7 @@ namespace ProSuite.AGP.WorkList
 		private double _zmin;
 		private bool _isZAware;
 
-		protected WorkItem2([NotNull] Row row,
+		protected WorkItemDaro([NotNull] Row row,
 		                   double extentExpansionFactor = 1.1,
 		                   double minimumSizeDegrees = 15,
 		                   double minimumSizeProjected = 0.001) :
@@ -38,7 +37,7 @@ namespace ProSuite.AGP.WorkList
 			_minimumSizeProjected = minimumSizeProjected;
 		}
 
-		private WorkItem2(GdbRowReference reference)
+		private WorkItemDaro(GdbRowReference reference)
 		{
 			Proxy = reference;
 
@@ -46,7 +45,7 @@ namespace ProSuite.AGP.WorkList
 			Status = WorkItemStatus.Todo;
 		}
 
-		public long OID { get; set;  }
+		public int OID { get; set;  }
 
 		public WorkItemVisited Visited { get; }
 
