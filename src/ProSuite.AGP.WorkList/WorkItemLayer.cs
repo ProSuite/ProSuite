@@ -1,4 +1,4 @@
-namespace ProSuite.AGP.WorkListDatasource
+namespace ProSuite.AGP.WorkList
 {
 	public enum WorkItemLayer
 	{
