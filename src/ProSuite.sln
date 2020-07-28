@@ -66,6 +66,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QASpecificationProviderFile
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QAServiceManager", "ProSuite.Commons.QA\QAServiceManager\QAServiceManager.csproj", "{7FD1D803-F43F-4530-82F5-44D6F705959F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QAConfigurator", "QAConfigurator\QAConfigurator.csproj", "{28148B16-138E-4056-8EF3-0288AC8A58C7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -142,6 +144,10 @@ Global
 		{7FD1D803-F43F-4530-82F5-44D6F705959F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7FD1D803-F43F-4530-82F5-44D6F705959F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7FD1D803-F43F-4530-82F5-44D6F705959F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28148B16-138E-4056-8EF3-0288AC8A58C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28148B16-138E-4056-8EF3-0288AC8A58C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28148B16-138E-4056-8EF3-0288AC8A58C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28148B16-138E-4056-8EF3-0288AC8A58C7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -157,6 +163,7 @@ Global
 		{C2F802E1-FC0F-49CA-A876-126725F8D8C2} = {7189DE21-1321-40D3-B6D1-107831EE7D26}
 		{42CFA8DC-9A4F-4549-B740-400C57D08D09} = {E38031A7-BA83-4CE1-BB84-D437D6085D88}
 		{7FD1D803-F43F-4530-82F5-44D6F705959F} = {E0B979DF-5A2A-4C13-A690-966568F58776}
+		{28148B16-138E-4056-8EF3-0288AC8A58C7} = {E0B979DF-5A2A-4C13-A690-966568F58776}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {C6B4D725-3081-4767-ABAB-959C058633C0}
