@@ -46,17 +46,10 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="ArcGIS.Core">
       <HintPath>C:\Program Files\ArcGIS\Pro\bin\ArcGIS.Core.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="ArcGIS.CoreHost">
-      <HintPath>C:\Program Files\ArcGIS\Pro\bin\ArcGIS.CoreHost.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
@@ -75,14 +68,6 @@
     </AddInContent>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj">
-      <Project>{47e134c6-b803-451e-8c33-7c71b158b2ac}</Project>
-      <Name>ProSuite.AGP.WorkList.Contracts</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.AGP.WorkList.Service\ProSuite.AGP.WorkList.Service.csproj">
-      <Project>{e5b77010-6af1-4a75-afe1-1385394914db}</Project>
-      <Name>ProSuite.AGP.WorkList.Service</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
       <Project>{384763d9-f7a1-4aa2-9abd-ee338cd8d4c1}</Project>
       <Name>ProSuite.Commons.Essentials</Name>

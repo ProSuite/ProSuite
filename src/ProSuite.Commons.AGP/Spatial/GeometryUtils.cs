@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 
-namespace ProSuite.Commons.AG.Spatial
+namespace ProSuite.Commons.AGP.Spatial
 {
 	[CLSCompliant(false)]
 	public static class GeometryUtils

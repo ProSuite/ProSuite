@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
-using ProSuite.AGP.WorkList.Contracts;
 
 namespace ProSuite.AGP.WorkList.PluginDatasource
 {

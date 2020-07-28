@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -11,7 +11,7 @@
     <RootNamespace>ProSuite.AGP.WorkList.PluginDatasource</RootNamespace>
     <AssemblyName>ProSuite.AGP.WorkList.PluginDatasource</AssemblyName>
     <SignAssembly>true</SignAssembly>
-    <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
+    <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\..\..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.6.1</TargetFrameworkVersion>
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\..\bin</OutputDirectory>
@@ -61,7 +61,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\SharedAssemblyInfo.cs">
+    <Compile Include="..\..\..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />

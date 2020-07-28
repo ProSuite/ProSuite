@@ -2,7 +2,7 @@ using System;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Commons.AG.Gdb
+namespace ProSuite.Commons.AGP.Gdb
 {
 	[CLSCompliant(false)]
 	public static class DatasetUtils

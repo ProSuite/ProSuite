@@ -44,24 +44,6 @@
     <ArcGISFolder Condition="'$(ArcGISFolder)' == ''">$(registry:HKEY_CURRENT_USER\SOFTWARE\ESRI\ArcGISPro@InstallDir)</ArcGISFolder>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ArcGIS.Core">
-      <HintPath>..\..\..\..\..\..\Program Files\ArcGIS\Pro\bin\ArcGIS.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="ArcGIS.Desktop.Catalog">
-      <HintPath>..\..\..\..\..\..\Program Files\ArcGIS\Pro\bin\Extensions\Catalog\ArcGIS.Desktop.Catalog.dll</HintPath>
-    </Reference>
-    <Reference Include="ArcGIS.Desktop.Core">
-      <HintPath>..\..\..\ProSuite.Commons.QA\ServiceProviders\QAServiceProviderGP\bin\Debug\ArcGIS.Desktop.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="ArcGIS.Desktop.Extensions">
-      <HintPath>..\..\..\..\..\..\Program Files\ArcGIS\Pro\bin\Extensions\DesktopExtensions\ArcGIS.Desktop.Extensions.dll</HintPath>
-    </Reference>
-    <Reference Include="ArcGIS.Desktop.Framework">
-      <HintPath>..\..\..\..\..\..\Program Files\ArcGIS\Pro\bin\ArcGIS.Desktop.Framework.dll</HintPath>
-    </Reference>
-    <Reference Include="ArcGIS.Desktop.Mapping">
-      <HintPath>..\..\..\..\..\..\Program Files\ArcGIS\Pro\bin\Extensions\Mapping\ArcGIS.Desktop.Mapping.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression" />
@@ -77,14 +59,6 @@
     <Reference Include="PresentationFramework" />
     <Reference Include="WindowsBase" />
     <Reference Include="System.Xaml" />
-    <Reference Include="ArcGIS.Desktop.Resources">
-      <HintPath>C:\Program Files\ArcGIS\Pro\bin\ArcGIS.Desktop.Resources.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="ESRI.ArcGIS.ItemIndex">
-      <HintPath>C:\Program Files\ArcGIS\Pro\bin\ESRI.ArcGIS.ItemIndex.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="Config.daml" />
@@ -175,6 +149,11 @@
       <Project>{7FD1D803-F43F-4530-82F5-44D6F705959F}</Project>
       <Name>QAServiceManager</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Esri.ArcGISPro.Extensions">
+      <Version>2.5.0.22081</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--

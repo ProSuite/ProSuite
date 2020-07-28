@@ -38,12 +38,6 @@
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="EsriDE.Commons">
-      <HintPath>..\..\lib\EsriDE.Commons.dll</HintPath>
-    </Reference>
-    <Reference Include="EsriDE.ProSuite.DomainModel.Core">
-      <HintPath>..\..\lib\EsriDE.ProSuite.DomainModel.Core.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
@@ -71,9 +65,9 @@
       <Project>{2EFE37C6-29A4-4E51-8C9F-D7B895F9CE6D}</Project>
       <Name>ProSuite.AGP.WorkList</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.AG\ProSuite.Commons.AG.csproj">
-      <Project>{00B2B5DC-5297-4744-B021-6FA78555FC08}</Project>
-      <Name>ProSuite.Commons.AG</Name>
+    <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">
+      <Project>{89f2c583-3022-43f8-9b69-27123836625f}</Project>
+      <Name>ProSuite.Commons.AGP</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
       <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
