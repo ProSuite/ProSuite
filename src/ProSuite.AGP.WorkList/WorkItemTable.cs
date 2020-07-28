@@ -8,17 +8,17 @@ using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.WorkListDatasource
+namespace ProSuite.AGP.WorkList
 {
 	public class WorkItemTable : PluginTableTemplate
 	{
-		private readonly WorkList.Contracts.WorkList _workList;
+		private readonly Contracts.WorkList _workList;
 		private readonly WorkItemLayer _itemLayer;
 		private readonly string _tableName;
 		private readonly IReadOnlyList<PluginField> _fields;
 
 		// todo daro: how many times invoked?
-		public WorkItemTable(WorkList.Contracts.WorkList workList, WorkItemLayer itemLayer, string tableName)
+		public WorkItemTable(Contracts.WorkList workList, WorkItemLayer itemLayer, string tableName)
 		{
 			_workList = workList ?? throw new ArgumentNullException(nameof(workList));
 			_itemLayer = itemLayer;

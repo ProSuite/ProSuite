@@ -164,6 +164,10 @@
       <Project>{7FD1D803-F43F-4530-82F5-44D6F705959F}</Project>
       <Name>QAServiceManager</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\QAConfigurator\QAConfigurator.csproj">
+      <Project>{28148B16-138E-4056-8EF3-0288AC8A58C7}</Project>
+      <Name>QAConfigurator</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Esri.ArcGISPro.Extensions">

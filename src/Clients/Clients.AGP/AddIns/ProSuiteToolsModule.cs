@@ -18,6 +18,7 @@ using ProSuite.Commons.QA.ServiceManager;
 using ProSuite.Commons.QA.ServiceManager.Types;
 //using ArcGIS.Desktop.Core;
 using Clients.AGP.ProSuiteSolution.Layers;
+using QAConfigurator;
 
 namespace Clients.AGP.ProSuiteSolution
 {
@@ -40,9 +41,8 @@ namespace Clients.AGP.ProSuiteSolution
 			{
 				if( _qaManager == null )
 				{
-					// TODO initialize QA manager singleton from config
-					//_qaManager = ProSuitePro.ProSuiteManager.QAManager;
-					//_qaManager.OnStatusChanged += QAManager_OnStatusChanged;
+					_qaManager = QAConfiguration.QAManager;
+					_qaManager.OnStatusChanged += QAManager_OnStatusChanged;
 				}
 				return _qaManager;
 			}
