@@ -9,16 +9,12 @@ using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Mapping.Events;
-//using QA.QAServiceManager;
-//using Commons.Logger;
-//using QAServiceManager.Types;
-//using Clients.ArcGISProAddin.Layers;
 using System.Collections.Generic;
 using ProSuite.Commons.QA.ServiceManager;
 using ProSuite.Commons.QA.ServiceManager.Types;
-//using ArcGIS.Desktop.Core;
 using Clients.AGP.ProSuiteSolution.Layers;
 using QAConfigurator;
+using ProSuite.Commons.Logging;
 
 namespace Clients.AGP.ProSuiteSolution
 {
@@ -92,6 +88,9 @@ namespace Clients.AGP.ProSuiteSolution
 
 		private static ProSuiteToolsModule _this = null;
 
+		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		private const string _loggingConfigFile = "prosuite.logging.gp.xml";
+
 		/// <summary>
 		/// Retrieve the singleton instance to this module here
 		/// </summary>
@@ -110,12 +109,22 @@ namespace Clients.AGP.ProSuiteSolution
 		/// <returns></returns>
 		protected override bool Initialize()
 		{
+			InitLoggerConfiguration();
+
 			//ProSuitePro.ProSuiteManager.QAManager.OnStatusChanged += QAManager_OnStatusChanged;
 
 			//ProjectItemsChangedEvent.Subscribe(OnProjectItemsChanged);
 			//LayersAddedEvent.Subscribe(OnLayerAdded);
 
 			return base.Initialize();
+		}
+		private void InitLoggerConfiguration()
+		{
+			LoggingConfigurator.UsePrivateConfiguration = false;
+			LoggingConfigurator.Configure(_loggingConfigFile);
+
+			_msg.ReportMemoryConsumptionOnError = true;
+			_msg.Debug("Logging configured");
 		}
 
 		/// <summary>

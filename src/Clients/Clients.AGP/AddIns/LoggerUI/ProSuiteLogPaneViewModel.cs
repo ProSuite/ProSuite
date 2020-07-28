@@ -1,5 +1,6 @@
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
+using ProSuite.Commons.Logging;
 using System;
 using System.Collections.ObjectModel;
 using System.Windows.Data;
@@ -10,16 +11,18 @@ using Button = ArcGIS.Desktop.Framework.Contracts.Button;
 
 namespace Clients.AGP.ProSuiteSolution.LoggerUI
 {
-    public class ProSuiteLogPaneViewModel : DockPane
+    public class ProSuiteLogPaneViewModel : DockPane, IDisposable
     {
         private const string _dockPaneID = "ProSuiteTools_Logger_ProSuiteLogPane";
 
         public ObservableCollection<LogMessage> LogMessageList { get; set; }
         public object _lockLogMessages = new object();
 
-        #region Clear messages
+		private AppenderDelegate _appenderDelegate = new AppenderDelegate();
 
-        private RelayCommand _clearLogEntries;
+		#region Clear messages
+
+		private RelayCommand _clearLogEntries;
         public RelayCommand ClearLogEntries =>
             _clearLogEntries ?? (_clearLogEntries = new RelayCommand(
                 ClearAllLogEntries,
@@ -112,8 +115,10 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
             LogMessageList = new ObservableCollection<LogMessage>();
             BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
 
-            //ProSuiteLogger.Logger.OnNewLogMessage += this.Logger_OnNewLogMessage;
-        }
+			_appenderDelegate.OnNewLogMessage += this.Logger_OnNewLogMessage;
+
+			//ProSuiteLogger.Logger.OnNewLogMessage += this.Logger_OnNewLogMessage;
+		}
 
         private void BindingOperations_CollectionRegistering(object sender, CollectionRegisteringEventArgs e)
         {
@@ -124,13 +129,17 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
             }
         }
 
-        private void Logger_OnNewLogMessage(object sender, ProSuiteQALogEventArgs e)
+        private void Logger_OnNewLogMessage(object sender, LoggingEventArgs e)
         {
             if(!(e is null))
             {
                 lock (_lockLogMessages)
                 {
-                    LogMessageList.Add(e.logMessage);
+					// TODO convert LoggingEvent to for text window relevant info (LogMessage?)
+					var logMessage = new LogMessage(LogType.Info, DateTime.Now, "LoggingEvent");//e.logMessage.
+
+					// TODO save messages to buffer(?)
+                    LogMessageList.Add(logMessage);
                 }
             }
         }
@@ -149,7 +158,11 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
             pane.Activate();
         }
 
-    }
+		public void Dispose()
+		{
+			_appenderDelegate.OnNewLogMessage -= this.Logger_OnNewLogMessage;
+		}
+	}
 
     /// <summary>
     /// Button implementation to show the DockPane.
