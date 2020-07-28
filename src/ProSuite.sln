@@ -36,8 +36,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.WorkList", "Pr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.WorkList.Test", "ProSuite.AGP.WorkList.Test\ProSuite.AGP.WorkList.Test.csproj", "{AF816619-A110-435B-A575-53A511593422}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.WorkList.PluginDatasource", "ProSuite.AGP.WorkList.PluginDatasource\ProSuite.AGP.WorkList.PluginDatasource.csproj", "{90F49E0F-E7E9-47FF-82E5-F964441CA2E3}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "App", "App", "{95867996-3761-4E73-A951-90B895B3D8DA}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.WorkListDatasource", "App\WorkListDatasource\ProSuite.AGP.WorkListDatasource.csproj", "{208C6584-F646-42E0-BCD1-5A6E2CF6B3DC}"
@@ -124,10 +122,6 @@ Global
 		{AF816619-A110-435B-A575-53A511593422}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF816619-A110-435B-A575-53A511593422}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF816619-A110-435B-A575-53A511593422}.Release|Any CPU.Build.0 = Release|Any CPU
-		{90F49E0F-E7E9-47FF-82E5-F964441CA2E3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{90F49E0F-E7E9-47FF-82E5-F964441CA2E3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{90F49E0F-E7E9-47FF-82E5-F964441CA2E3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{90F49E0F-E7E9-47FF-82E5-F964441CA2E3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{208C6584-F646-42E0-BCD1-5A6E2CF6B3DC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{208C6584-F646-42E0-BCD1-5A6E2CF6B3DC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{208C6584-F646-42E0-BCD1-5A6E2CF6B3DC}.Release|Any CPU.ActiveCfg = Release|Any CPU

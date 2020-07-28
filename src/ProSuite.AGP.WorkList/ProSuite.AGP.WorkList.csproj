@@ -49,6 +49,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestWorkList.cs" />
     <Compile Include="WorkItem.cs" />
+    <Compile Include="WorkItemCursor.cs" />
+    <Compile Include="WorkItemLayer.cs" />
+    <Compile Include="WorkItemTable.cs" />
+    <Compile Include="WorkListDatasourceBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj">
@@ -62,6 +66,10 @@
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
       <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
       <Name>ProSuite.Commons.Essentials</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
+      <Project>{a227d52c-0536-498f-acf2-2a5a67c3d9ff}</Project>
+      <Name>ProSuite.Commons.Logging</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
