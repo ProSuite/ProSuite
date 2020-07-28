@@ -44,15 +44,10 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="Microsoft.CSharp" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="WindowsBase" />
     <Reference Include="System.Xaml" />
-    <Reference Include="ArcGIS.Desktop.Resources">
-      <HintPath>C:\Program Files\ArcGIS\Pro\bin\ArcGIS.Desktop.Resources.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="Config.daml" />
@@ -67,7 +62,7 @@
     </Compile>
     <Compile Include="ButtonCreateTestList.cs" />
     <Compile Include="ButtonTestItemDone.cs" />
-    <Compile Include="Module1.cs" />
+    <Compile Include="WorkListTrialsModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SplitButtonTestListNav.cs" />
   </ItemGroup>

@@ -1,27 +1,40 @@
+using System;
+using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 
 namespace ProSuite.AGP.MainSolution
 {
-	internal class Module1 : Module
+	internal class WorkListTrialsModule : Module
 	{
-		private static Module1 _singleton;
+		private static WorkListTrialsModule _singleton;
 
 		/// <summary>
 		/// Retrieve the singleton instance to this module here
 		/// </summary>
-		public static Module1 Current
+		public static WorkListTrialsModule Current
 		{
 			get
 			{
-				return _singleton ?? (_singleton = (Module1)FrameworkApplication.FindModule("ProSuite.AGP.MainSolution_Module"));
+				return _singleton ?? (_singleton = (WorkListTrialsModule)FrameworkApplication.FindModule("ProSuiteSolution_WorkListTrialsModule"));
 			}
 		}
 
-		public WorkList.Contracts.WorkList GetTestWorklist()
+		public PluginDatasourceConnectionPath GetWorkListConnectionPath(string workListName)
+		{
+			const string pluginIdentifier = "ProSuite_WorkListDatasource";
+
+			var baseUri = new Uri("worklist://localhost/");
+			var datasourcePath = new Uri(baseUri, workListName);
+
+			return new PluginDatasourceConnectionPath(pluginIdentifier, datasourcePath);
+		}
+
+		public IWorkList GetTestWorkList()
 		{
 			const string workListName = "Test Items";
 

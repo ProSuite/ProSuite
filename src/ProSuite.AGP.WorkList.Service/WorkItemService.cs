@@ -10,7 +10,7 @@ namespace ProSuite.AGP.WorkList.Service
 {
 	// todo daro: separate geometry processing code
 	// todo daro: separate QueuedTask code
-	public class WorkItemService : IWorkItemService<WorkItem>
+	public class WorkItemService : IWorkItemService<IWorkItem>
 	{
 		private const int _initialCapacity = 1000;
 
@@ -21,9 +21,9 @@ namespace ProSuite.AGP.WorkList.Service
 		//	a) FileGDB workspace, use path
 		//	b) SDE, use connection string incl. version info.
 		// (Is it possible to edit different sde versions within the same ArcGIS Pro map?)
-		private readonly Dictionary<GdbRowReference, WorkItem> _itemMap = new Dictionary<GdbRowReference, WorkItem>(_initialCapacity);
+		private readonly Dictionary<GdbRowReference, IWorkItem> _itemMap = new Dictionary<GdbRowReference, IWorkItem>(_initialCapacity);
 
-		private readonly List<WorkItem> _workItems = new List<WorkItem>(_initialCapacity);
+		private readonly List<IWorkItem> _workItems = new List<IWorkItem>(_initialCapacity);
 
 		private readonly IWorkItemRepository _repository;
 		private readonly SpatialReference _spatialReference;
@@ -33,9 +33,9 @@ namespace ProSuite.AGP.WorkList.Service
 			_repository = repository;
 			_spatialReference = spatialReference;
 
-			foreach (WorkItem item in _repository.GetAll())
+			foreach (IWorkItem item in _repository.GetAll())
 			{
-				_itemMap.Add(item.Proxy, item);
+				//_itemMap.Add(item.Proxy, item);
 
 				_workItems.Add(item);
 			}
@@ -86,7 +86,7 @@ namespace ProSuite.AGP.WorkList.Service
 			throw new NotImplementedException();
 		}
 
-		public WorkItem GetItem(GdbRowReference reference)
+		public IWorkItem GetItem(GdbRowReference reference)
 		{
 			throw new NotImplementedException();
 		}

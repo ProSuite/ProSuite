@@ -7,10 +7,10 @@ namespace ProSuite.AGP.MainSolution
 	{
 		protected override void OnClick()
 		{
-			var workList = Module1.Current.GetTestWorklist();
+			var workList = WorkListTrialsModule.Current.GetTestWorkList();
 			workList.GoNext();
-			workList.Current?.SetVisited(true);
-			QueuedTask.Run(() => Module1.Current.RedrawMap());
+			workList.Current?.SetVisited();
+			QueuedTask.Run(() => WorkListTrialsModule.Current.RedrawMap());
 		}
 	}
 
@@ -18,10 +18,10 @@ namespace ProSuite.AGP.MainSolution
 	{
 		protected override void OnClick()
 		{
-			var workList = Module1.Current.GetTestWorklist();
+			var workList = WorkListTrialsModule.Current.GetTestWorkList();
 			workList.GoPrevious();
-			workList.Current?.SetVisited(true);
-			QueuedTask.Run(() => Module1.Current.RedrawMap());
+			workList.Current?.SetVisited();
+			QueuedTask.Run(() => WorkListTrialsModule.Current.RedrawMap());
 		}
 	}
 
@@ -29,10 +29,10 @@ namespace ProSuite.AGP.MainSolution
 	{
 		protected override void OnClick()
 		{
-			var workList = Module1.Current.GetTestWorklist();
+			var workList = WorkListTrialsModule.Current.GetTestWorkList();
 			workList.GoFirst();
-			workList.Current?.SetVisited(true);
-			QueuedTask.Run(() => Module1.Current.RedrawMap());
+			workList.Current?.SetVisited();
+			QueuedTask.Run(() => WorkListTrialsModule.Current.RedrawMap());
 		}
 	}
 }

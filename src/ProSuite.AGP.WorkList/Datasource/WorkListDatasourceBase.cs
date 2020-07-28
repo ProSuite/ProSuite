@@ -6,8 +6,9 @@ using System.Reflection;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Logging;
+using WorkListRegistry = ProSuite.AGP.WorkList.Domain.WorkListRegistry;
 
-namespace ProSuite.AGP.WorkList
+namespace ProSuite.AGP.WorkList.Datasource
 {
 	/// <summary>
 	/// Create a subclass in the Plugin project (with the Config.xml file).
@@ -19,7 +20,7 @@ namespace ProSuite.AGP.WorkList
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-		private Contracts.WorkList _workList;
+		private IWorkList _workList;
 		private IReadOnlyList<string> _tableNames;
 
 		public override void Open(Uri connectionPath) // "open workspace"

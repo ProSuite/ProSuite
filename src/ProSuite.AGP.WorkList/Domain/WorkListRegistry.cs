@@ -1,27 +1,28 @@
 using System;
 using System.Collections.Generic;
+using ProSuite.AGP.WorkList.Contracts;
 
-namespace ProSuite.AGP.WorkList.Contracts
+namespace ProSuite.AGP.WorkList.Domain
 {
 	/// <summary>
 	/// This singleton class serves as a registry for WorkLists:
 	/// you can add, lookup, and remove Work Lists by name.
 	/// This class is thread-safe.
 	/// </summary>
-	public sealed class WorkListRegistry
+	public sealed class WorkListRegistry : IWorkListRegistry
 	{
 		private static volatile WorkListRegistry _instance;
 		private static readonly object _singletonLock = new object();
 		private static readonly object _registryLock = new object();
 
-		private readonly IDictionary<string, WorkList> _map;
+		private readonly IDictionary<string, IWorkList> _map;
 
 		private WorkListRegistry()
 		{
-			_map = new Dictionary<string, WorkList>();
+			_map = new Dictionary<string, IWorkList>();
 		}
 
-		public WorkList Get(string name)
+		public IWorkList Get(string name)
 		{
 			if (name == null) return null;
 
@@ -31,7 +32,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 			}
 		}
 
-		public void Add(WorkList workList)
+		public void Add(IWorkList workList)
 		{
 			if (workList == null)
 				throw new ArgumentNullException(nameof(workList));
@@ -45,25 +46,22 @@ namespace ProSuite.AGP.WorkList.Contracts
 			}
 		}
 
-		public void Remove(WorkList workList)
+		public bool Remove(IWorkList workList)
 		{
 			if (workList == null)
 				throw new ArgumentNullException(nameof(workList));
 
-			Remove(workList.Name);
+			return Remove(workList.Name);
 		}
 
-		public void Remove(string name)
+		public bool Remove(string name)
 		{
 			if (name == null)
 				throw new ArgumentNullException(nameof(name));
 
 			lock (_registryLock)
 			{
-				if (!_map.Remove(name))
-				{
-					throw new InvalidOperationException($"No such WorkList: '{name}'");
-				}
+				return _map.Remove(name);
 			}
 		}
 

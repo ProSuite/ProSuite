@@ -1,4 +1,3 @@
-using System;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Framework.Contracts;
@@ -16,18 +15,10 @@ namespace ProSuite.AGP.MainSolution
 
 		private void CreateTestList()
 		{
-			const string pluginIdentifier = "ProSuite_WorkList_Datasource";
-
-			var workList = Module1.Current.GetTestWorklist();
+			var workList = WorkListTrialsModule.Current.GetTestWorkList();
 			var workListName = workList.Name;
 
-			//workList.GoFirst();
-			//workList.Current?.SetVisited(true);
-			//workList.GoNext();
-			//workList.Current?.SetStatus(WorkItemStatus.Done);
-
-			var datasourcePath = new Uri(new Uri("worklist://localhost/"), workListName);
-			var connector = new PluginDatasourceConnectionPath(pluginIdentifier, datasourcePath);
+			var connector = WorkListTrialsModule.Current.GetWorkListConnectionPath(workListName);
 
 			using (var datastore = new PluginDatastore(connector))
 			{
