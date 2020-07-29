@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
@@ -17,7 +16,6 @@ namespace ProSuite.AGP.WorkList.Datasource
 		private readonly string _tableName;
 		private readonly IReadOnlyList<PluginField> _fields;
 
-		// todo daro: how many times invoked?
 		public WorkItemTable(IWorkList workList, string tableName)
 		{
 			_workList = workList ?? throw new ArgumentNullException(nameof(workList));
@@ -68,11 +66,6 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		public override PluginCursorTemplate Search(QueryFilter queryFilter)
 		{
-			Trace.WriteLine("Hello from Search (Trace)");
-			Debug.WriteLine("Hello from Search (Debug)");
-
-
-
 			var list = _workList.GetItems(queryFilter)
 			                    .Select(item => GetValues(item, _workList.Current))
 			                    .ToList(); // TODO drop ToList, inline

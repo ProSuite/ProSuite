@@ -25,12 +25,14 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		bool QueryLanguageSupported { get; }
 
+		/// <summary>Yield all work items subject to list settings and the given filter.</summary>
+		/// <param name="filter">optional QueryFilter or SpatialQueryFilter</param>
+		/// <param name="ignoreListSettings">if true, ignore Visibility and AreaOfInterest</param>
+		/// <returns></returns>
 		[NotNull]
 		IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool ignoreListSettings = false);
 
-		/// <summary>Equivalent to GetItems(filter).Count()</summary>
-		/// <param name="filter">optional QueryFilter or SpatialQueryFilter</param>
-		/// <param name="ignoreListSettings">if true, ignore Visibility and AreaOfInterest</param>
+		/// <summary>Equivalent to GetItems(filter).Count(), but may be faster</summary>
 		int CountItems(QueryFilter filter = null, bool ignoreListSettings = false);
 
 		/* Navigation */

@@ -31,15 +31,15 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public string Name { get; }
 
-		public Envelope Extent { get; protected set; }
+		public virtual Envelope Extent { get; protected set; }
 
 		public WorkItemVisibility Visibility { get; set; }
 
 		public Polygon AreaOfInterest { get; set; }
 
-		public bool QueryLanguageSupported { get; } = false;
+		public virtual bool QueryLanguageSupported { get; } = false;
 
-		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool ignoreListSettings = false)
+		public virtual IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool ignoreListSettings = false)
 		{
 			// Subclass should provide more efficient implementation (e.g. pass filter on to database)
 
@@ -58,9 +58,10 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			// filter should never have a WhereClause since we say QueryLanguageSupported = false
 
-			if (filter is SpatialQueryFilter sf)
+			if (filter is SpatialQueryFilter sf && sf.FilterGeometry != null)
 			{
-				int bar = 42; // TODO honour spatial filter
+				query = query.Where(
+					item => Relates(sf.FilterGeometry, sf.SpatialRelationship, item.Extent));
 			}
 
 			if (!ignoreListSettings && AreaOfInterest != null)
@@ -71,12 +72,37 @@ namespace ProSuite.AGP.WorkList.Domain
 			return query;
 		}
 
-		public int CountItems(QueryFilter filter = null, bool ignoreListSettings = false)
+		public virtual int CountItems(QueryFilter filter = null, bool ignoreListSettings = false)
 		{
 			lock (_syncLock)
 			{
 				return GetItems(filter, ignoreListSettings).Count();
 			}
+		}
+
+		private static bool Relates(Geometry a, SpatialRelationship rel, Geometry b)
+		{
+			if (a == null || b == null) return false;
+
+			switch (rel)
+			{
+				case SpatialRelationship.EnvelopeIntersects:
+				case SpatialRelationship.IndexIntersects:
+				case SpatialRelationship.Intersects:
+					return GeometryEngine.Instance.Intersects(a, b);
+				case SpatialRelationship.Touches:
+					return GeometryEngine.Instance.Touches(a, b);
+				case SpatialRelationship.Overlaps:
+					return GeometryEngine.Instance.Overlaps(a, b);
+				case SpatialRelationship.Crosses:
+					return GeometryEngine.Instance.Crosses(a, b);
+				case SpatialRelationship.Within:
+					return GeometryEngine.Instance.Within(a, b);
+				case SpatialRelationship.Contains:
+					return GeometryEngine.Instance.Contains(a, b);
+			}
+
+			return false;
 		}
 
 		private static bool StatusVisible(WorkItemStatus status, WorkItemVisibility visibility)
@@ -126,7 +152,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual void GoNearest()
 		{
-			throw new System.NotImplementedException();
+			throw new NotImplementedException();
 		}
 
 		public virtual bool CanGoNext()

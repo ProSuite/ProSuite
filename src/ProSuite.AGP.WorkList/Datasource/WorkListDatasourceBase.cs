@@ -4,9 +4,9 @@ using System.Collections.ObjectModel;
 using System.Reflection;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
-using WorkListRegistry = ProSuite.AGP.WorkList.Domain.WorkListRegistry;
 
 namespace ProSuite.AGP.WorkList.Datasource
 {
@@ -25,7 +25,9 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		public override void Open(Uri connectionPath) // "open workspace"
 		{
-			_msg.DebugFormat("{0}: Open {1}", nameof(WorkListDatasourceBase), connectionPath);
+			_msg.DebugFormat("Open {0}", connectionPath);
+
+			// TODO when opening a project (.aprx), our connectionPath will be prepended with "file:///ProjectDirectory/" and twice URL-escaped!
 
 			if (connectionPath == null)
 				throw new ArgumentNullException(nameof(connectionPath));
@@ -61,7 +63,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			// The given name is one of those returned by GetTableNames()
 
-			_msg.WarnFormat("{0}: OpenTable '{1}'", nameof(WorkListDatasourceBase), name);
+			_msg.DebugFormat("OpenTable '{0}'", name);
 
 			ParseLayer(name, out string listName);
 
@@ -78,6 +80,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		public override bool IsQueryLanguageSupported()
 		{
+			// TODO Pro calls this before Open(), i.e., when _workList is still null!
 			return _workList?.QueryLanguageSupported ?? false;
 		}
 

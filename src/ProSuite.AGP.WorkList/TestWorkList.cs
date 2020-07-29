@@ -52,8 +52,8 @@ namespace ProSuite.AGP.WorkList
 		{
 			var sref = SpatialReferenceBuilder.CreateSpatialReference(4326);
 
-			const double dx = 0.005;
-			const double dy = 0.005;
+			const double dx = 0.03;
+			const double dy = 0.03;
 			var min = new Coordinate2D(x - dx, y - dy);
 			var max = new Coordinate2D(x + dx, y + dy);
 			return EnvelopeBuilder.CreateEnvelope(min, max, sref);
