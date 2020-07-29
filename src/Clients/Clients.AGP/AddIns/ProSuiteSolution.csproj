@@ -168,6 +168,10 @@
       <Project>{2efe37c6-29a4-4e51-8c9f-d7b895f9ce6d}</Project>
       <Name>ProSuite.AGP.WorkList</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
+      <Project>{a227d52c-0536-498f-acf2-2a5a67c3d9ff}</Project>
+      <Name>ProSuite.Commons.Logging</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\ProSuite.Commons.QA\QAServiceManager\QAServiceManager.csproj">
       <Project>{7FD1D803-F43F-4530-82F5-44D6F705959F}</Project>
       <Name>QAServiceManager</Name>
