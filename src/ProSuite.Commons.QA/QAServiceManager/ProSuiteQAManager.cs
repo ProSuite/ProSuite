@@ -33,7 +33,7 @@ namespace ProSuite.Commons.QA.ServiceManager
 
         private void Service_OnStatusChanged(object sender, ProSuiteQAServiceEventArgs e)
         {
-            _msg.Info($"QAGPServiceProvider: {e.State}");
+            //_msg.Info($"QAGPServiceProvider: {e.State}");
             OnStatusChanged?.Invoke(this, e);
         }
 

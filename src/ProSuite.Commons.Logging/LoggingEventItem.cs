@@ -18,7 +18,7 @@ namespace ProSuite.Commons.Logging
 		{
 			Type = LogType.Info;//  Info logEvent.Level.DisplayName;
 			Time = logEvent.TimeStamp;
-			Message = logEvent.RenderedMessage;
+			Message = $"{logEvent.LoggerName}: {logEvent.RenderedMessage}";
 			// TODO how to provide hyperlink?
 			//LinkMessage = linkMessage;
 		}

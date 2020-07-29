@@ -35,7 +35,7 @@ namespace Clients.AGP.ProSuiteSolution
 		{
 			get
 			{
-				if( _qaManager == null )
+				if (_qaManager == null)
 				{
 					_qaManager = QAConfiguration.QAManager;
 					_qaManager.OnStatusChanged += QAManager_OnStatusChanged;
@@ -88,7 +88,17 @@ namespace Clients.AGP.ProSuiteSolution
 
 		private static ProSuiteToolsModule _this = null;
 
-		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		private static IMsg msg = null;
+		private static IMsg _msg
+		{
+			get
+			{
+				if (msg == null)
+					msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+				return msg;
+			}
+			set => msg = value;
+		}
 		private const string _loggingConfigFile = "prosuite.logging.agp.xml";
 
 		/// <summary>
@@ -114,7 +124,7 @@ namespace Clients.AGP.ProSuiteSolution
 			//ProSuitePro.ProSuiteManager.QAManager.OnStatusChanged += QAManager_OnStatusChanged;
 
 			//ProjectItemsChangedEvent.Subscribe(OnProjectItemsChanged);
-			//LayersAddedEvent.Subscribe(OnLayerAdded);
+			LayersAddedEvent.Subscribe(OnLayerAdded);
 
 			return base.Initialize();
 		}
@@ -123,8 +133,9 @@ namespace Clients.AGP.ProSuiteSolution
 			LoggingConfigurator.UsePrivateConfiguration = false;
 			LoggingConfigurator.Configure(_loggingConfigFile);
 
-			_msg.ReportMemoryConsumptionOnError = true;
+			// this will instantiate IMsg (should be after log4net configuration) 
 			_msg.Debug("Logging configured");
+
 		}
 
 		/// <summary>
@@ -136,7 +147,7 @@ namespace Clients.AGP.ProSuiteSolution
 
 			//ProSuitePro.ProSuiteManager.QAManager.OnStatusChanged -= QAManager_OnStatusChanged;
 			//ProjectItemsChangedEvent.Unsubscribe(OnProjectItemsChanged);
-			//LayersAddedEvent.Unsubscribe(OnLayerAdded);
+			LayersAddedEvent.Unsubscribe(OnLayerAdded);
 		}
 
 		/// <summary>
@@ -163,7 +174,7 @@ namespace Clients.AGP.ProSuiteSolution
 		private void OnProjectItemsChanged(ProjectItemsChangedEventArgs obj)
 		{
 			//_msg.Info($"OnProjectItemsChanged Name: {obj.ProjectItem.Name} Action: {obj.Action}");
-	
+
 			var agsItem = obj?.ProjectItem as ServerConnectionProjectItem;
 			if (agsItem != null)
 			{
@@ -191,8 +202,8 @@ namespace Clients.AGP.ProSuiteSolution
 		internal static async Task StartQAGPServerAsync(ProSuiteQAServiceType type)
 		{
 			_msg.Info($"StartQAGPServerAsync is called");
-			// TODO get envelope, selected data, selected QA spec
 
+			// TODO get envelope, selected data, selected QA spec
 			var response = await QAManager.StartQATestingAsync(new ProSuiteQARequest(type));
 			if (response.Error == ProSuiteQAError.None)
 			{
@@ -201,10 +212,10 @@ namespace Clients.AGP.ProSuiteSolution
 				if (response?.ResponseData != null)
 				{
 					// TODO response data can be not only string
-					ErrorLayers = LayerUtils.AddFeaturesToMap("QA Error issues", 
-						response?.ResponseData.ToString(), 
-						"issues.gdb", 
-						new List<string>() { "IssuePoints", "IssueLines", "IssueMultiPatches", "IssuePolygons" }, 
+					ErrorLayers = LayerUtils.AddFeaturesToMap("QA Error issues",
+						response?.ResponseData.ToString(),
+						"issues.gdb",
+						new List<string>() { "IssuePoints", "IssueLines", "IssueMultiPatches", "IssuePolygons" },
 						true);
 				}
 			}

@@ -7,9 +7,7 @@ using ArcGIS.Desktop.Core.Geoprocessing;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.QA.ServiceManager.Interfaces;
 using ProSuite.Commons.QA.ServiceManager.Types;
-//using Commons.Logger;
-//using QAServiceManager.Interfaces;
-//using QAServiceManager.Types;
+
 
 namespace ProSuite.Commons.QA.ServiceProviderArcGIS
 {
