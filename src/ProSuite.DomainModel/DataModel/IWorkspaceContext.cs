@@ -1,7 +1,11 @@
-using System;
+using ArcGIS.Core.Data;
 
 namespace ProSuite.DomainModel.DataModel
 {
-	[CLSCompliant(false)]
-	public interface IWorkspaceContext : IDatasetContext { }
+	public interface IWorkspaceContext : IDatasetContext
+	{
+		FeatureClass OpenFeatureClass(IVectorDataset dataset);
+
+		Table OpenTable(IObjectDataset dataset);
+	}
 }

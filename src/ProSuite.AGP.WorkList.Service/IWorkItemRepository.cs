@@ -7,5 +7,6 @@ namespace ProSuite.AGP.WorkList.Service
 	{
 		IEnumerable<IWorkItem> GetAll();
 
+		// alternativ: IWorkList GetWorkList(); // list.Name, list.Extent
 	}
 }

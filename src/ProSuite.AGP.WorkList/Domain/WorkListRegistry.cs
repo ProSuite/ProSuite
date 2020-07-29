@@ -65,6 +65,11 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
+		public ICollection<IWorkList> GetAll()
+		{
+			return _map.Values;
+		}
+
 		public static WorkListRegistry Instance
 		{
 			get

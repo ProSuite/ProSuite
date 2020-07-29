@@ -22,12 +22,13 @@
         <group id="ProSuiteTools_Commons" caption="Commons" keytip="G1">
           <button refID="ProSuiteTools_Commons_ShowLog" size="large" />
           <button refID="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" size="large" />
+          <button refID="Clients_AGP_ProSuiteSolution_CreateErrorWorkList" size="large" />
         </group>
         <group id="ProSuiteTools_QA" caption="QA" keytip="G1">
           <button refID="ProSuiteTools_QA_StartErrorsDockPane" size="large" />
           <button refID="ProSuiteTools_QA_StartGPServer" size="middle" />
-          <button refID="ProSuiteTools_QA_StartExtent" size="middle" />          
-          <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />        
+          <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
+          <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
         </group>
       </groups>
       <controls>
@@ -41,14 +42,16 @@
           <tooltip heading="QA GP Tool">Execute QA GP Tool on Server with XML<disabledText /></tooltip>
         </button>
         <button id="ProSuiteTools_QA_StartExtent" caption="Start QA" className="StartQAGPExtent" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerBatchJobFile16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerBatchJobFile32.png" keytip="B1">
-          <tooltip heading="QA GP Tool">Check QA for local selection<disabledText />
-          </tooltip>
+          <tooltip heading="QA GP Tool">Check QA for local selection<disabledText /></tooltip>
         </button>
         <comboBox id="ProSuiteTools_QA_SpecsComboBox" caption=" Specification" className="QASpecListComboBox" itemWidth="90" extendedCaption="Extended Caption" isEditable="false" isReadOnly="true" resizable="true">
           <tooltip heading="Tooltip Heading">QA specifications<disabledText /></tooltip>
-        </comboBox>        
+        </comboBox>
         <button id="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" caption="Logs" className="Clients.AGP.ProSuiteSolution.LoggerUI.ProSuiteLogPane_ShowButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation32.png">
           <tooltip heading="Show Logs Window">Show Logs Window<disabledText /></tooltip>
+        </button>
+        <button id="Clients_AGP_ProSuiteSolution_CreateErrorWorkList" caption="CreateErrorWorkList" className="CreateErrorWorkList" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
+          <tooltip heading="Tooltip Heading">Tooltip text<disabledText /></tooltip>
         </button>
       </controls>
       <dockPanes>
@@ -57,7 +60,6 @@
         </dockPane>
       </dockPanes>
     </insertModule>
-
     <insertModule id="ProSuiteSolution_WorkListTrialsModule" className="WorkListTrials.WorkListTrialsModule" autoLoad="false" caption="WorkList Trials Module">
       <tabs></tabs>
       <groups>

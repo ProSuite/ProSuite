@@ -15,8 +15,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 		[NotNull]
 		string Name { get; }
 
-		GeometryType GeometryType { get; }
-
 		[CanBeNull]
 		Envelope Extent { get; }
 
@@ -24,6 +22,8 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		[CanBeNull]
 		Polygon AreaOfInterest { get; set; }
+
+		bool QueryLanguageSupported { get; }
 
 		[NotNull]
 		IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool ignoreListSettings = false);
