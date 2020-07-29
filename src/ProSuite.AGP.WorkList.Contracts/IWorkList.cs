@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -10,7 +11,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 	/// It maintains a current item and provides
 	/// navigation to change the current item.
 	/// </summary>
-	public interface IWorkList
+	public interface IWorkList : IDisposable
 	{
 		[NotNull]
 		string Name { get; }

@@ -12,10 +12,12 @@ namespace ProSuite.AGP.WorkList
 	{
 		#region Factory
 
+		public static readonly string Name = "Test Items";
+
 		public static Domain.WorkList Create(string name = null)
 		{
 			var items = CreateWorkItems();
-			return new TestWorkList(name ?? "Test Items", items);
+			return new TestWorkList(name ?? Name, items);
 		}
 
 		private static IEnumerable<WorkItem> CreateWorkItems()
@@ -73,6 +75,11 @@ namespace ProSuite.AGP.WorkList
 			SetItems(items);
 
 			Extent = GetExtentFromItems(items);
+		}
+
+		public override void Dispose()
+		{
+			// nothing to dispose here
 		}
 
 		#region Nested type: TestItem

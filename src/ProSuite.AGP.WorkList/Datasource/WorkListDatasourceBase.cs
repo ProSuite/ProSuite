@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Reflection;
+using System.Web;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
@@ -27,22 +28,34 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			_msg.DebugFormat("Open {0}", connectionPath);
 
-			// TODO when opening a project (.aprx), our connectionPath will be prepended with "file:///ProjectDirectory/" and twice URL-escaped!
-
 			if (connectionPath == null)
 				throw new ArgumentNullException(nameof(connectionPath));
 
-			if (!connectionPath.IsAbsoluteUri) // make absolute URI
-				connectionPath = new Uri(new Uri("worklist://localhost"), connectionPath);
+			// Empirical: when opening a project (.aprx) with a saved layer
+			// using our Plugin Datasource, the connectionPath will be
+			// prepended with the project file's directory path and
+			// two times URL encoded (e.g., ' ' => %20 => %2520)!
 
+			var name = connectionPath.IsAbsoluteUri
+				           ? connectionPath.LocalPath
+				           : connectionPath.ToString();
+
+			name = HttpUtility.UrlDecode(name);
+			name = HttpUtility.UrlDecode(name);
+
+			int index = name.LastIndexOf('/');
+			if (index >= 0)
+				name = name.Substring(index + 1);
+			index = name.LastIndexOf('\\');
+			if (index >= 0)
+				name = name.Substring(index + 1);
+			
 			// scheme://Host:Port/AbsolutePath?Query#Fragment
 			// worklist://localhost/workListName?unused&for#now
 
-			var name = connectionPath.LocalPath;
-			if (name.Length > 0 && name[0] == '/')
-				name = name.Substring(1);
-
 			_workList = WorkListRegistry.Instance.Get(name);
+			_msg.DebugFormat("Name from connectionPath: {0}, list found = {1}",
+			                 name, _workList != null);
 
 			if (_workList == null)
 				throw new ArgumentException($"No such work list: {connectionPath}");

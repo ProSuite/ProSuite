@@ -1,17 +1,26 @@
 using System;
+using System.Reflection;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
+using JetBrains.Annotations;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain;
+using ProSuite.Commons.Logging;
+using Module = ArcGIS.Desktop.Framework.Contracts.Module;
 
 namespace Clients.AGP.ProSuiteSolution.WorkListTrials
 {
+	[UsedImplicitly]
 	internal class WorkListTrialsModule : Module
 	{
 		private static WorkListTrialsModule _singleton;
+		private WorkListCentral _central;
+
+		private static readonly IMsg _msg =
+			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		/// <summary>
 		/// Retrieve the singleton instance to this module here
@@ -36,13 +45,13 @@ namespace Clients.AGP.ProSuiteSolution.WorkListTrials
 
 		public IWorkList GetTestWorkList()
 		{
-			const string workListName = "Test Items";
+			var name = TestWorkList.Name;
 
-			var workList = WorkListRegistry.Instance.Get(workListName);
+			var workList = Central.GetWorkList(name);
 			if (workList == null)
 			{
-				workList = TestWorkList.Create(workListName);
-				WorkListRegistry.Instance.Add(workList);
+				workList = TestWorkList.Create(name);
+				Central.SetWorkList(workList);
 			}
 
 			return workList;
@@ -55,7 +64,39 @@ namespace Clients.AGP.ProSuiteSolution.WorkListTrials
 			MapView.Active?.Redraw(clearCache);
 		}
 
+		public WorkListCentral Central
+		{
+			get { return _central ?? (_central = new WorkListCentral()); }
+		}
+
 		#region Overrides
+
+		protected override bool Initialize()
+		{
+			_msg.Debug("Initialize()");
+
+			// TODO Testing: always have the TestWorkList:
+			Central.SetWorkList(TestWorkList.Create());
+
+			return true; // initialization successful
+		}
+
+		protected override void Uninitialize()
+		{
+			_msg.Debug("Uninitialize()");
+		}
+
+		protected override Task OnReadSettingsAsync(ModuleSettingsReader settings)
+		{
+			_msg.Debug("OnReadSettingsAsync()");
+			return base.OnReadSettingsAsync(settings);
+		}
+
+		protected override Task OnWriteSettingsAsync(ModuleSettingsWriter settings)
+		{
+			_msg.Debug("OnWriteSettingsAsync()");
+			return base.OnWriteSettingsAsync(settings);
+		}
 
 		/// <summary>
 		/// Called by Framework when ArcGIS Pro is closing

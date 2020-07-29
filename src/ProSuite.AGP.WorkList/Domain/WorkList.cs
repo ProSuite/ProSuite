@@ -80,55 +80,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		private static bool Relates(Geometry a, SpatialRelationship rel, Geometry b)
-		{
-			if (a == null || b == null) return false;
-
-			switch (rel)
-			{
-				case SpatialRelationship.EnvelopeIntersects:
-				case SpatialRelationship.IndexIntersects:
-				case SpatialRelationship.Intersects:
-					return GeometryEngine.Instance.Intersects(a, b);
-				case SpatialRelationship.Touches:
-					return GeometryEngine.Instance.Touches(a, b);
-				case SpatialRelationship.Overlaps:
-					return GeometryEngine.Instance.Overlaps(a, b);
-				case SpatialRelationship.Crosses:
-					return GeometryEngine.Instance.Crosses(a, b);
-				case SpatialRelationship.Within:
-					return GeometryEngine.Instance.Within(a, b);
-				case SpatialRelationship.Contains:
-					return GeometryEngine.Instance.Contains(a, b);
-			}
-
-			return false;
-		}
-
-		private static bool StatusVisible(WorkItemStatus status, WorkItemVisibility visibility)
-		{
-			switch (status)
-			{
-				case WorkItemStatus.Todo:
-					return (visibility & WorkItemVisibility.Todo) != 0;
-
-				case WorkItemStatus.Done:
-					return (visibility & WorkItemVisibility.Done) != 0;
-			}
-
-			return false;
-		}
-
-		private static bool WithinAreaOfInterest(Envelope extent, Polygon areaOfInterest)
-		{
-			if (extent == null) return false;
-			if (areaOfInterest == null) return true;
-			return GeometryEngine.Instance.Intersects(extent, areaOfInterest);
-		}
-
 		/* Navigation */
 
-		public IWorkItem Current => GetItem(CurrentIndex);
+		public virtual IWorkItem Current => GetItem(CurrentIndex);
 
 		protected int CurrentIndex { get; set; }
 
@@ -162,7 +116,10 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual void GoNext()
 		{
-			CurrentIndex += 1;
+			if (CurrentIndex < _items.Count - 1)
+			{
+				CurrentIndex += 1;
+			}
 		}
 
 		public virtual bool CanGoPrevious()
@@ -172,8 +129,13 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual void GoPrevious()
 		{
-			CurrentIndex -= 1;
+			if (CurrentIndex > 0)
+			{
+				CurrentIndex -= 1;
+			}
 		}
+
+		public abstract void Dispose();
 
 		#region Non-public methods
 
@@ -231,6 +193,52 @@ namespace ProSuite.AGP.WorkList.Domain
 			return count > 0
 				       ? EnvelopeBuilder.CreateEnvelope(xmin, ymin, xmax, ymax, sref)
 				       : EnvelopeBuilder.CreateEnvelope(sref); // empty
+		}
+
+		private static bool Relates(Geometry a, SpatialRelationship rel, Geometry b)
+		{
+			if (a == null || b == null) return false;
+
+			switch (rel)
+			{
+				case SpatialRelationship.EnvelopeIntersects:
+				case SpatialRelationship.IndexIntersects:
+				case SpatialRelationship.Intersects:
+					return GeometryEngine.Instance.Intersects(a, b);
+				case SpatialRelationship.Touches:
+					return GeometryEngine.Instance.Touches(a, b);
+				case SpatialRelationship.Overlaps:
+					return GeometryEngine.Instance.Overlaps(a, b);
+				case SpatialRelationship.Crosses:
+					return GeometryEngine.Instance.Crosses(a, b);
+				case SpatialRelationship.Within:
+					return GeometryEngine.Instance.Within(a, b);
+				case SpatialRelationship.Contains:
+					return GeometryEngine.Instance.Contains(a, b);
+			}
+
+			return false;
+		}
+
+		private static bool StatusVisible(WorkItemStatus status, WorkItemVisibility visibility)
+		{
+			switch (status)
+			{
+				case WorkItemStatus.Todo:
+					return (visibility & WorkItemVisibility.Todo) != 0;
+
+				case WorkItemStatus.Done:
+					return (visibility & WorkItemVisibility.Done) != 0;
+			}
+
+			return false;
+		}
+
+		private static bool WithinAreaOfInterest(Envelope extent, Polygon areaOfInterest)
+		{
+			if (extent == null) return false;
+			if (areaOfInterest == null) return true;
+			return GeometryEngine.Instance.Intersects(extent, areaOfInterest);
 		}
 
 		#endregion
