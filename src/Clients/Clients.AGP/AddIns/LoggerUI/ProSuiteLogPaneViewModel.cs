@@ -1,5 +1,6 @@
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
+using log4net.Core;
 using ProSuite.Commons.Logging;
 using System;
 using System.Collections.ObjectModel;
@@ -14,11 +15,12 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
     public class ProSuiteLogPaneViewModel : DockPane, IDisposable
     {
         private const string _dockPaneID = "ProSuiteTools_Logger_ProSuiteLogPane";
+		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        public ObservableCollection<LogMessage> LogMessageList { get; set; }
+		public ObservableCollection<LogMessage> LogMessageList { get; set; }
         public object _lockLogMessages = new object();
 
-		private AppenderDelegate _appenderDelegate = new AppenderDelegate();
+		private LoggingEventsAppender _appenderDelegate = new LoggingEventsAppender();
 
 		#region Clear messages
 
@@ -115,12 +117,23 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
             LogMessageList = new ObservableCollection<LogMessage>();
             BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
 
-			_appenderDelegate.OnNewLogMessage += this.Logger_OnNewLogMessage;
-
-			//ProSuiteLogger.Logger.OnNewLogMessage += this.Logger_OnNewLogMessage;
+			LoggingEventsAppender.OnNewLogMessage += this.Logger_OnNewLogMessage;
+			_msg.Debug("ProSuiteLogPaneViewModel initialized");
 		}
 
-        private void BindingOperations_CollectionRegistering(object sender, CollectionRegisteringEventArgs e)
+		private void OnNewLogEvent(LoggingEvent e)
+		{
+			lock (_lockLogMessages)
+			{
+				// TODO convert LoggingEvent to for text window relevant info (LogMessage?)
+				var logMessage = new LogMessage(LogType.Info, DateTime.Now, "LoggingEvent");//e.logMessage.
+
+				// TODO save messages to buffer(?)
+				LogMessageList.Add(logMessage);
+			}
+		}
+
+		private void BindingOperations_CollectionRegistering(object sender, CollectionRegisteringEventArgs e)
         {
             // to make safe cross thread updates - collection must be registered
             if (e.Collection == LogMessageList)
@@ -131,7 +144,9 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
 
         private void Logger_OnNewLogMessage(object sender, LoggingEventArgs e)
         {
-            if(!(e is null))
+			_msg.Debug("Logger_OnNewLogMessage");
+
+			if (!(e is null))
             {
                 lock (_lockLogMessages)
                 {
@@ -143,8 +158,6 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
                 }
             }
         }
-
-
 
         /// <summary>
         /// Show the DockPane.
@@ -160,7 +173,7 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
 
 		public void Dispose()
 		{
-			_appenderDelegate.OnNewLogMessage -= this.Logger_OnNewLogMessage;
+			LoggingEventsAppender.OnNewLogMessage -= this.Logger_OnNewLogMessage;
 		}
 	}
 

@@ -18,9 +18,12 @@ namespace ProSuite.Commons.Logging
 		}
 	}
 
-	public class AppenderDelegate : AppenderSkeleton
+	public class LoggingEventsAppender : AppenderSkeleton
 	{
-		public event EventHandler<LoggingEventArgs> OnNewLogMessage;
+		// TODO temporary static event handler !!!
+		public static event EventHandler<LoggingEventArgs> OnNewLogMessage;
+
+		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 		protected override void Append(LoggingEvent loggingEvent)
 		{

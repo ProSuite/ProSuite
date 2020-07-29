@@ -89,7 +89,7 @@ namespace Clients.AGP.ProSuiteSolution
 		private static ProSuiteToolsModule _this = null;
 
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-		private const string _loggingConfigFile = "prosuite.logging.gp.xml";
+		private const string _loggingConfigFile = "prosuite.logging.agp.xml";
 
 		/// <summary>
 		/// Retrieve the singleton instance to this module here
@@ -274,12 +274,15 @@ namespace Clients.AGP.ProSuiteSolution
 
 	internal class ShowLogWindow : Button
 	{
+		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
 		protected override void OnClick()
 		{
 			// TODO - is REST an alternative solution? 
 			// https://vsdev2414.esri-de.com/server/rest/services/PROSUITE_QA/verification/GPServer/verifydataset/execute?object_class=%5C%5Cvsdev2414%5Cprosuite_server_trials%5Ctestdata.gdb%5Cpolygons&tile_size=10000&parameters=&verification_extent=&env%3AoutSR=&env%3AprocessSR=&returnZ=false&returnM=false&returnTrueCurves=false&returnFeatureCollection=false&context=&f=json
 
 			//ProSuiteLogger.Logger.Log(LogType.Info, "Open configuration", "Click");
+			_msg.Debug("Click");
 		}
 	}
 

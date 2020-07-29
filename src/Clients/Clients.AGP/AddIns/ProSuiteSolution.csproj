@@ -156,10 +156,13 @@
     <Resource Include="DarkImages\GeodatabaseFeatureDataset32.png" />
   </ItemGroup>
   <ItemGroup>
-  
     <ProjectReference Include="..\..\..\ProSuite.AGP.Picker\ProSuite.AGP.Picker.csproj">
       <Project>{a0664bcb-3a91-4a7e-b303-d9a55b8e6cc8}</Project>
-      <Name>ProSuite.AGP.Picker</Name>      
+      <Name>ProSuite.AGP.Picker</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
+      <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
+      <Name>ProSuite.Commons.Logging</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\..\ProSuite.Commons.QA\QAServiceManager\QAServiceManager.csproj">
       <Project>{7FD1D803-F43F-4530-82F5-44D6F705959F}</Project>
