@@ -51,5 +51,11 @@
     <Compile Include="Types\ProSuiteQAServiceProviderBase.cs" />
     <Compile Include="Types\ProSuiteServerConfiguration.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
+      <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
+      <Name>ProSuite.Commons.Logging</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

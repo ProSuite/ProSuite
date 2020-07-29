@@ -1,3 +1,4 @@
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.QA.ServiceManager.Interfaces;
 using ProSuite.Commons.QA.ServiceManager.Types;
 using System;
@@ -11,8 +12,10 @@ namespace ProSuite.Commons.QA.ServiceManager
 
     public class ProSuiteQAManager
     {
-        // QA service provider - GP, microservices, mock, REST, ...
-        IList<IProSuiteQAServiceProvider> _serviceProviders { get; set; }
+		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+		// QA service provider - GP, microservices, mock, REST, ...
+		IList<IProSuiteQAServiceProvider> _serviceProviders { get; set; }
 
         // QA specifications provider - XML, DDX, ....
         IQASpecificationProvider _specificationsProvider { get; set; }
@@ -30,7 +33,7 @@ namespace ProSuite.Commons.QA.ServiceManager
 
         private void Service_OnStatusChanged(object sender, ProSuiteQAServiceEventArgs e)
         {
-            //ProSuiteLogger.Logger.Log(LogType.Info, $"QAGPServiceProvider: {e.State}");
+            //_msg.Info($"QAGPServiceProvider: {e.State}");
             OnStatusChanged?.Invoke(this, e);
         }
 

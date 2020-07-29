@@ -1,13 +1,10 @@
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
-using log4net.Core;
 using ProSuite.Commons.Logging;
 using System;
 using System.Collections.ObjectModel;
 using System.Windows.Data;
 using System.Windows.Input;
-
-//using Commons.Logger;
 using Button = ArcGIS.Desktop.Framework.Contracts.Button;
 
 namespace Clients.AGP.ProSuiteSolution.LoggerUI
@@ -17,7 +14,7 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
         private const string _dockPaneID = "ProSuiteTools_Logger_ProSuiteLogPane";
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-		public ObservableCollection<LogMessage> LogMessageList { get; set; }
+		public ObservableCollection<LoggingEventItem> LogMessageList { get; set; }
         public object _lockLogMessages = new object();
 
 		private LoggingEventsAppender _appenderDelegate = new LoggingEventsAppender();
@@ -53,12 +50,12 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
 
         public void FilterLogs(object parameter)
         {
-            //var type = (string)parameter;
-            // TODO filter log list or log4net has built in option?
-            //filtereMessagedList = LogMessageList.Where(t => t.Type == LogType.Debug)
+			//var type = (string)parameter;
+			// TODO filter log list or log4net has built in option?
+			//filtereMessagedList = LogMessageList.Where(t => t.Type == LogType.Debug)
 
-            LogMessageList.Add(new LogMessage(LogType.Info, DateTime.Now, IsDebugFilterActive ? "Debug filter enabled" : "Debug filter none"));
-            LogMessageList.Add(new LogMessage(LogType.Info, DateTime.Now, IsVerboseFilterActive ? "Verbose filter enabled" : "Verbose filter none"));
+			_msg.Info(IsDebugFilterActive ? "Debug filter enabled" : "Debug filter none");
+			_msg.Info(IsVerboseFilterActive ? "Verbose filter enabled" : "Verbose filter none");
         }
 
         public bool CanFilterLogs(object parameter) {
@@ -86,11 +83,11 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
 
         private void OpenLogMessage(object msg)
         {
-            var message = (LogMessage) msg;
+            var message = (LoggingEventItem) msg;
 
-            // TODO display UI with current log message info
-            //LogMessageList.Add(new LogMessage(LogType.Info, DateTime.Now,  $"Open message: {message?.Time} {message?.Message}"));
-        }
+			// TODO display UI with current log message info
+			_msg.Info($"Open message: {message?.Time} {message?.Message}");
+		}
 
         #endregion
 
@@ -106,31 +103,19 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
 
         private static void OpenLogLinkMessage(object msg)
         {
-            var message = (LogMessage)msg;
+            var message = (LoggingEventItem)msg;
 
-            // TODO inform UI than "Hyperlink" is clicked
+			// TODO inform UI than "Hyperlink" is clicked
+			_msg.Info($"Hyperlink clicked {message.LinkMessage}");
 
-        }
+		}
 
         protected ProSuiteLogPaneViewModel() {
 
-            LogMessageList = new ObservableCollection<LogMessage>();
+            LogMessageList = new ObservableCollection<LoggingEventItem>();
             BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
 
 			LoggingEventsAppender.OnNewLogMessage += this.Logger_OnNewLogMessage;
-			_msg.Debug("ProSuiteLogPaneViewModel initialized");
-		}
-
-		private void OnNewLogEvent(LoggingEvent e)
-		{
-			lock (_lockLogMessages)
-			{
-				// TODO convert LoggingEvent to for text window relevant info (LogMessage?)
-				var logMessage = new LogMessage(LogType.Info, DateTime.Now, "LoggingEvent");//e.logMessage.
-
-				// TODO save messages to buffer(?)
-				LogMessageList.Add(logMessage);
-			}
 		}
 
 		private void BindingOperations_CollectionRegistering(object sender, CollectionRegisteringEventArgs e)
@@ -144,18 +129,10 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
 
         private void Logger_OnNewLogMessage(object sender, LoggingEventArgs e)
         {
-			_msg.Debug("Logger_OnNewLogMessage");
-
-			if (!(e is null))
+            lock (_lockLogMessages)
             {
-                lock (_lockLogMessages)
-                {
-					// TODO convert LoggingEvent to for text window relevant info (LogMessage?)
-					var logMessage = new LogMessage(LogType.Info, DateTime.Now, "LoggingEvent");//e.logMessage.
-
-					// TODO save messages to buffer(?)
-                    LogMessageList.Add(logMessage);
-                }
+				// TODO save messages to buffer(?)
+                LogMessageList.Add(e?.logItem);
             }
         }
 
