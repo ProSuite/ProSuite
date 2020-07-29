@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.WorkList.PluginDatasource
+namespace ProSuite.AGP.WorkList.Datasource
 {
-	public class WorkItemCursor : PluginCursorTemplate, IDisposable
+	public class WorkItemCursor : PluginCursorTemplate
 	{
 		private readonly IEnumerator<object[]> _enumerator;
 
@@ -25,11 +25,6 @@ namespace ProSuite.AGP.WorkList.PluginDatasource
 		public override bool MoveNext()
 		{
 			return _enumerator.MoveNext();
-		}
-
-		public void Dispose()
-		{
-			_enumerator?.Dispose();
 		}
 	}
 }

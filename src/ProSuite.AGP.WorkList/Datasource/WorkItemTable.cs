@@ -8,17 +8,17 @@ using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.WorkList
+namespace ProSuite.AGP.WorkList.Datasource
 {
 	public class WorkItemTable : PluginTableTemplate
 	{
-		private readonly Contracts.WorkList _workList;
+		private readonly IWorkList _workList;
 		private readonly WorkItemLayer _itemLayer;
 		private readonly string _tableName;
 		private readonly IReadOnlyList<PluginField> _fields;
 
 		// todo daro: how many times invoked?
-		public WorkItemTable(Contracts.WorkList workList, WorkItemLayer itemLayer, string tableName)
+		public WorkItemTable(IWorkList workList, WorkItemLayer itemLayer, string tableName)
 		{
 			_workList = workList ?? throw new ArgumentNullException(nameof(workList));
 			_itemLayer = itemLayer;
@@ -53,7 +53,7 @@ namespace ProSuite.AGP.WorkList
 				case WorkItemLayer.Shape:
 					return _workList.GeometryType;
 				case WorkItemLayer.Extent:
-					return GeometryType.Polygon; // TODO or would Envelope be fine with Pro?
+					return GeometryType.Polygon; // (we convert Envelope to Polygon)
 				default:
 					return GeometryType.Unknown;
 			}
@@ -77,30 +77,9 @@ namespace ProSuite.AGP.WorkList
 
 		public override PluginCursorTemplate Search(QueryFilter queryFilter)
 		{
-			IEnumerable<WorkItem> query = _workList.Items;
-
-			if (_workList.Visibility == WorkItemVisibility.Todo)
-			{
-				query = query.Where(item => item.Status == WorkItemStatus.Todo);
-			}
-
-			if (queryFilter.ObjectIDs != null && queryFilter.ObjectIDs.Count > 0)
-			{
-				var oids = queryFilter.ObjectIDs.OrderBy(oid => oid).ToList();
-				query = query.Where(item => oids.BinarySearch(item.OID) >= 0);
-			}
-
-			if (_workList.AreaOfInterest != null)
-			{
-				query = query.Where(item => GeometryEngine.Instance.Intersects(_workList.AreaOfInterest, item.Extent));
-			}
-
-			// TODO for now we ignore the FilterGeometry and the WhereClause
-			// TODO search should be done by WorkList (which might optimize)
-
-			//return new WorkItemCursor(query.Select(item => GetValues(item, _workList.Current)));
-
-			var list = query.Select(item => GetValues(item, _workList.Current)).ToList();
+			var list = _workList.GetItems(queryFilter)
+			                    .Select(item => GetValues(item, _workList.Current))
+			                    .ToList(); // TODO drop ToList, inline
 			return new WorkItemCursor(list);
 		}
 
@@ -109,7 +88,7 @@ namespace ProSuite.AGP.WorkList
 			return Search((QueryFilter) spatialQueryFilter);
 		}
 
-		private object[] GetValues([NotNull] WorkItem item, WorkItem current = null)
+		private object[] GetValues([NotNull] IWorkItem item, IWorkItem current = null)
 		{
 			var values = new object[6];
 			values[0] = item.OID;

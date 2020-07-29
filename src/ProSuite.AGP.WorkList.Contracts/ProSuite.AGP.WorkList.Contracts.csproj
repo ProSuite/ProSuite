@@ -46,15 +46,15 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="DbStatusSchema.cs" />
-    <Compile Include="WorkItem.cs" />
+    <Compile Include="IWorkItem.cs" />
+    <Compile Include="IWorkList.cs" />
+    <Compile Include="IWorkListRegistry.cs" />
     <Compile Include="IWorkItemRepository.cs" />
     <Compile Include="IWorkItemService.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WorkItemStatus.cs" />
     <Compile Include="WorkItemVisibility.cs" />
     <Compile Include="WorkItemVisited.cs" />
-    <Compile Include="WorkList.cs" />
-    <Compile Include="WorkListRegistry.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">

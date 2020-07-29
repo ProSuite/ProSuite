@@ -1,15 +1,18 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.Commons.AGP.Gdb;
+using ProSuite.AGP.WorkList.Domain;
 
 namespace ProSuite.AGP.WorkList
 {
-	public class TestWorkList : Contracts.WorkList
+	/// <summary>
+	/// A Work List for testing: the 26 Swiss canton capitals in WGS84.
+	/// </summary>
+	public class TestWorkList : Domain.WorkList
 	{
 		#region Factory
 
-		public static Contracts.WorkList Create(string name = null)
+		public static Domain.WorkList Create(string name = null)
 		{
 			var items = CreateWorkItems();
 			return new TestWorkList(name ?? "Test Items", items);
@@ -65,54 +68,12 @@ namespace ProSuite.AGP.WorkList
 
 		#endregion
 
-		private TestWorkList(string name, IEnumerable<WorkItem> items) : base(name)
+		private TestWorkList(string name, IEnumerable<IWorkItem> items) : base(name)
 		{
 			SetItems(items);
 
 			GeometryType = GetGeometryTypeFromItems(items);
 			Extent = GetExtentFromItems(items);
-		}
-
-		// TODO Simplistic implementation of navigation: consider Status, Visibility, AreaOfInterest
-
-		public override bool CanGoFirst()
-		{
-			return Items.Count > 0;
-		}
-
-		public override void GoFirst()
-		{
-			CurrentIndex = 0;
-		}
-
-		public override bool CanGoNearest()
-		{
-			return false;
-		}
-
-		public override void GoNearest()
-		{
-			throw new System.NotImplementedException();
-		}
-
-		public override bool CanGoNext()
-		{
-			return Items.Count > 0 && CurrentIndex < Items.Count - 1;
-		}
-
-		public override void GoNext()
-		{
-			CurrentIndex += 1;
-		}
-
-		public override bool CanGoPrevious()
-		{
-			return Items.Count > 0 && CurrentIndex > 0;
-		}
-
-		public override void GoPrevious()
-		{
-			CurrentIndex -= 1;
 		}
 
 		#region Nested type: TestItem
@@ -122,7 +83,6 @@ namespace ProSuite.AGP.WorkList
 			public TestItem(int oid, double x, double y, string name)
 			{
 				OID = oid;
-				Proxy = new GdbRowReference();
 				Description = name ?? string.Empty;
 				Status = WorkItemStatus.Todo;
 				Visited = WorkItemVisited.NotVisited;
@@ -136,14 +96,13 @@ namespace ProSuite.AGP.WorkList
 			public override WorkItemVisited Visited { get; protected set; }
 			public override Geometry Shape { get; }
 			public override Envelope Extent { get; }
-			public override GdbRowReference Proxy { get; }
 
-			public override void SetStatus(WorkItemStatus status)
+			public override void SetDone(bool done = true)
 			{
-				Status = status;
+				Status = done ? WorkItemStatus.Done : WorkItemStatus.Todo;
 			}
 
-			public override void SetVisited(bool visited)
+			public override void SetVisited(bool visited = true)
 			{
 				Visited = visited ? WorkItemVisited.Visited : WorkItemVisited.NotVisited;
 			}

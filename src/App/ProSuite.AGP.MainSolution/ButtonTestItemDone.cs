@@ -1,6 +1,5 @@
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ProSuite.AGP.WorkList.Contracts;
 
 namespace ProSuite.AGP.MainSolution
 {
@@ -13,15 +12,15 @@ namespace ProSuite.AGP.MainSolution
 
 		private void SetTestItemDone()
 		{
-			var workList = Module1.Current.GetTestWorklist();
+			var workList = WorkListTrialsModule.Current.GetTestWorkList();
 
 			var current = workList.Current;
 			if (current != null)
 			{
-				current.SetStatus(WorkItemStatus.Done);
+				current.SetDone();
 			}
 
-			Module1.Current.RedrawMap();
+			WorkListTrialsModule.Current.RedrawMap();
 		}
 	}
 }

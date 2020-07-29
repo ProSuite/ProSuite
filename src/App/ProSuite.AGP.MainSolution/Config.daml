@@ -11,7 +11,7 @@
          Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
   </AddInInfo>
   <modules>
-    <insertModule id="ProSuite.AGP.MainSolution_Module" className="Module1" autoLoad="false" caption="Module1">
+    <insertModule id="ProSuiteSolution_WorkListTrialsModule" className="WorkListTrialsModule" autoLoad="false" caption="WorkList Trials Module">
       <!-- uncomment to have the control hosted on a separate tab-->
       <tabs>
         <!--<tab id="ProSuite.AGP.MainSolution_Tab1" caption="New Tab">
@@ -21,7 +21,7 @@
       <groups>
         <!-- comment this out if you have no controls on the Addin tab to avoid
               an empty group-->
-        <group id="ProSuite.AGP.MainSolution_Group1" caption="WorkList Trials" appearsOnAddInTab="true">
+        <group id="ProSuiteSolution_WorkListTrials" caption="WorkList Trials" appearsOnAddInTab="true">
           <button refID="ProSuite_AGP_MainSolution_ButtonCreateTestList" size="large" />
           <button refID="ProSuite_AGP_MainSolution_ButtonTestItemDone" size="large" />
           <splitButton refID="ProSuite_AGP_MainSolution_SplitButtonTestListNav" />

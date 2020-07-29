@@ -98,7 +98,7 @@ namespace Clients.AGP.ProSuiteSolution
 		{
 			get
 			{
-				return _this ?? (_this = (ProSuiteToolsModule)FrameworkApplication.FindModule("ProSuiteTools_Module"));
+				return _this ?? (_this = (ProSuiteToolsModule)FrameworkApplication.FindModule("ProSuiteSolution_Module"));
 			}
 		}
 

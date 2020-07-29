@@ -2,8 +2,8 @@ using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly : AssemblyTitle("ProSuite.AGP.WorkList.PluginDatasource")]
-[assembly : AssemblyDescription("")]
+[assembly : AssemblyTitle("ProSuite.Solution.Plugins")]
+[assembly : AssemblyDescription("ProSuite plugins for ArcGIS Pro")]
 [assembly : AssemblyCulture("")]
 
 [assembly : ComVisible(false)]

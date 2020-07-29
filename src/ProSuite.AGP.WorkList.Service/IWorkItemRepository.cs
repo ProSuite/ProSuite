@@ -5,7 +5,7 @@ namespace ProSuite.AGP.WorkList.Service
 {
 	public interface IWorkItemRepository
 	{
-		IEnumerable<WorkItem> GetAll();
+		IEnumerable<IWorkItem> GetAll();
 
 	}
 }
