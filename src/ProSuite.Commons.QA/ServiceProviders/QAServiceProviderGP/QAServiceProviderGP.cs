@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Desktop.Core.Geoprocessing;
@@ -24,6 +25,7 @@ namespace ProSuite.Commons.QA.ServiceProviderArcGIS
 		//private readonly string _toolpath = @"C:\Users\algr\Documents\ArcGIS\Projects\test\admin on vsdev2414.esri-de.com_6443.ags\QAGPServicesTest1\XmlQATool";
 
 		private readonly string _toolpath;
+		private readonly Regex _regex = new Regex("(?<=>)(.*?)(?=<)", RegexOptions.Singleline);
 
 		private ProSuiteQAServiceType _serviceType;
 		public ProSuiteQAServiceType ServiceType
@@ -58,13 +60,9 @@ namespace ProSuite.Commons.QA.ServiceProviderArcGIS
 
 		private void GPEventHandler(string eventName, object o)
 		{
-			//_msg.Info( $"QAGPServiceProvider: {eventName} {o}");
-
 			switch (eventName)
 			{
-				case "OnValidate": // stop execute if any warnings
-								   //				if ((o as IGPMessage[]).Any(it => it.Type == GPMessageType.Warning))
-								   //_cts.Cancel();
+				case "OnValidate":
 					OnStatusChanged?.Invoke(this, new ProSuiteQAServiceEventArgs(ProSuiteQAServiceState.Validated, null));
 					break;
 
@@ -85,8 +83,16 @@ namespace ProSuite.Commons.QA.ServiceProviderArcGIS
 					OnStatusChanged?.Invoke(this, new ProSuiteQAServiceEventArgs(ProSuiteQAServiceState.Started, null));
 					break;
 
+				case "OnMessage":
+					var messageText = o.ToString();
+					var match = _regex.Match(messageText);
+					if (match.Success)
+						messageText = match.Value;
+					OnStatusChanged?.Invoke(this, new ProSuiteQAServiceEventArgs(ProSuiteQAServiceState.Info, messageText));
+					break;
+
 				default:
-					OnStatusChanged?.Invoke(this, new ProSuiteQAServiceEventArgs(ProSuiteQAServiceState.Undefined, eventName));
+					OnStatusChanged?.Invoke(this, new ProSuiteQAServiceEventArgs(ProSuiteQAServiceState.Other, eventName));
 					break;
 
 			}
