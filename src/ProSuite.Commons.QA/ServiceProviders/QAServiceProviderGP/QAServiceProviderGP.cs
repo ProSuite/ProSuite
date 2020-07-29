@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Desktop.Core.Geoprocessing;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.QA.ServiceManager.Interfaces;
 using ProSuite.Commons.QA.ServiceManager.Types;
 //using Commons.Logger;
@@ -20,6 +21,8 @@ namespace ProSuite.Commons.QA.ServiceProviderArcGIS
 
 	public class QAServiceProviderGP : ProSuiteQAServiceProviderBase<ProSuiteQAServerConfiguration>, IProSuiteQAServiceProvider
 	{
+		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
 		//private readonly string _toolpath = @"C:\Users\algr\Documents\ArcGIS\Projects\test\admin on vsdev2414.esri-de.com_6443.ags\QAGPServicesTest1\XmlQATool";
 
 		private readonly string _toolpath;
@@ -57,7 +60,7 @@ namespace ProSuite.Commons.QA.ServiceProviderArcGIS
 
 		private void GPEventHandler(string eventName, object o)
 		{
-			//ProSuiteLogger.Logger.Log(LogType.Info, $"QAGPServiceProvider: {eventName} {o}");
+			//_msg.Info( $"QAGPServiceProvider: {eventName} {o}");
 
 			switch (eventName)
 			{

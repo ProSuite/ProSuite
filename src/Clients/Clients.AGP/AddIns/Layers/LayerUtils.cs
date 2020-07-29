@@ -2,7 +2,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-//using Commons.Logger;
+using ProSuite.Commons.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +13,9 @@ namespace Clients.AGP.ProSuiteSolution.Layers
 {
 	public class LayerUtils
     {
-        public static IList<FeatureLayer> AddFeaturesToMap(string groupLayer, string path, string featureName = null, IList<string> layernames = null, bool select = true)
+		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+		public static IList<FeatureLayer> AddFeaturesToMap(string groupLayer, string path, string featureName = null, IList<string> layernames = null, bool select = true)
         {
 			// is map visible?
 			if (!(MapView.Active != null || String.IsNullOrEmpty(path))) return null;
@@ -50,7 +52,7 @@ namespace Clients.AGP.ProSuiteSolution.Layers
 					MapView.Active.ZoomTo(commonExtent, TimeSpan.FromSeconds(0));
 					MapView.Active.ZoomOutFixed(TimeSpan.FromSeconds(0));
 
-					//ProSuiteLogger.Logger.Log(LogType.Info, $"LayerUtils: QA error layers were added to map");
+					_msg.Info($"LayerUtils: QA error layers were added to map");
 
 					if (select)
 					{
@@ -60,7 +62,7 @@ namespace Clients.AGP.ProSuiteSolution.Layers
 				}
 				catch (Exception ex)
 				{
-					//ProSuiteLogger.Logger.Log(LogType.Error, $"LayerUtils: {ex.Message}");
+					_msg.Error($"LayerUtils: {ex.Message}");
 				}
 			});
 			return layerList;
