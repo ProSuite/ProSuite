@@ -10,7 +10,7 @@ namespace ProSuite.AGP.WorkList.Service
 {
 	// todo daro: separate geometry processing code
 	// todo daro: separate QueuedTask code
-	public class WorkItemService : IWorkItemService<IWorkItem>
+	public class WorkItemProxy : IWorkItemProxy<IWorkItem>
 	{
 		private const int _initialCapacity = 1000;
 
@@ -28,7 +28,7 @@ namespace ProSuite.AGP.WorkList.Service
 		private readonly IWorkItemRepository _repository;
 		private readonly SpatialReference _spatialReference;
 
-		public WorkItemService(IWorkItemRepository repository, SpatialReference spatialReference)
+		public WorkItemProxy(IWorkItemRepository repository, SpatialReference spatialReference)
 		{
 			_repository = repository;
 			_spatialReference = spatialReference;

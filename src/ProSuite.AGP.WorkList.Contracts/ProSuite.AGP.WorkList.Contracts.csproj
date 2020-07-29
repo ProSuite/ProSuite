@@ -46,11 +46,12 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="DbStatusSchema.cs" />
+    <Compile Include="IErrorWorkItem.cs" />
     <Compile Include="IWorkItem.cs" />
     <Compile Include="IWorkList.cs" />
     <Compile Include="IWorkListRegistry.cs" />
     <Compile Include="IWorkItemRepository.cs" />
-    <Compile Include="IWorkItemService.cs" />
+    <Compile Include="IWorkItemProxy.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WorkItemStatus.cs" />
     <Compile Include="WorkItemVisibility.cs" />

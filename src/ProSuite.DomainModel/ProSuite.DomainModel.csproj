@@ -39,12 +39,6 @@
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="EsriDE.Commons">
-      <HintPath>..\..\lib\EsriDE.Commons.dll</HintPath>
-    </Reference>
-    <Reference Include="EsriDE.ProSuite.DomainModel.Core">
-      <HintPath>..\..\lib\EsriDE.ProSuite.DomainModel.Core.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
@@ -52,6 +46,8 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="DataModel\Dataset.cs" />
+    <Compile Include="DataModel\IDataset.cs" />
     <Compile Include="DataModel\IDatasetContext.cs" />
     <Compile Include="DataModel\IWorkspaceContext.cs" />
     <Compile Include="DataModel\WorkspaceContext.cs" />

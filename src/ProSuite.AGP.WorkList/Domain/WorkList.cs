@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
@@ -30,13 +31,13 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public string Name { get; }
 
-		public GeometryType GeometryType { get; protected set; }
-
 		public Envelope Extent { get; protected set; }
 
 		public WorkItemVisibility Visibility { get; set; }
 
 		public Polygon AreaOfInterest { get; set; }
+
+		public bool QueryLanguageSupported { get; } = false;
 
 		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool ignoreListSettings = false)
 		{
@@ -55,10 +56,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				query = query.Where(item => oids.BinarySearch(item.OID) >= 0);
 			}
 
-			if (! string.IsNullOrEmpty(filter?.WhereClause))
-			{
-				int foo = 13; // TODO honour WhereClause
-			}
+			// filter should never have a WhereClause since we say QueryLanguageSupported = false
 
 			if (filter is SpatialQueryFilter sf)
 			{
@@ -77,10 +75,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			lock (_syncLock)
 			{
-				// TODO honour filter (incl spatial)!
-				return _items.Count(item => ignoreListSettings ||
-				                            StatusVisible(item.Status, Visibility) &&
-				                            WithinAreaOfInterest(item.Extent, AreaOfInterest));
+				return GetItems(filter, ignoreListSettings).Count();
 			}
 		}
 
@@ -176,30 +171,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				CurrentIndex = -1;
 
 				Extent = null;
-				GeometryType = GeometryType.Unknown;
 			}
-		}
-
-		protected static GeometryType GetGeometryTypeFromItems(IEnumerable<IWorkItem> items)
-		{
-			GeometryType? type = null;
-
-			if (items != null)
-			{
-				foreach (var item in items)
-				{
-					if (item == null) continue;
-					var shape = item.Shape;
-					if (shape == null) continue;
-
-					if (type == null)
-						type = shape.GeometryType;
-					else if (type != shape.GeometryType)
-						type = GeometryType.Unknown;
-				}
-			}
-
-			return type ?? GeometryType.Unknown;
 		}
 
 		protected static Envelope GetExtentFromItems(IEnumerable<IWorkItem> items)

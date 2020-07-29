@@ -72,7 +72,6 @@ namespace ProSuite.AGP.WorkList
 		{
 			SetItems(items);
 
-			GeometryType = GetGeometryTypeFromItems(items);
 			Extent = GetExtentFromItems(items);
 		}
 
@@ -86,7 +85,6 @@ namespace ProSuite.AGP.WorkList
 				Description = name ?? string.Empty;
 				Status = WorkItemStatus.Todo;
 				Visited = WorkItemVisited.NotVisited;
-				Shape = CreatePoint(x, y);
 				Extent = CreateExtent(x, y);
 			}
 
@@ -94,7 +92,6 @@ namespace ProSuite.AGP.WorkList
 			public override string Description { get; }
 			public override WorkItemStatus Status { get; protected set; }
 			public override WorkItemVisited Visited { get; protected set; }
-			public override Geometry Shape { get; }
 			public override Envelope Extent { get; }
 
 			public override void SetDone(bool done = true)

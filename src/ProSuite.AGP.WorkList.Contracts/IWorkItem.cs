@@ -13,7 +13,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 		string Description { get; }
 		WorkItemStatus Status { get; }
 		WorkItemVisited Visited { get; } // TODO bool
-		Geometry Shape { get; }
 		Envelope Extent { get; }
 
 		void SetDone(bool done = true);

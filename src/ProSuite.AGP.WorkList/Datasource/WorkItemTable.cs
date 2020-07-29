@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
@@ -13,15 +14,13 @@ namespace ProSuite.AGP.WorkList.Datasource
 	public class WorkItemTable : PluginTableTemplate
 	{
 		private readonly IWorkList _workList;
-		private readonly WorkItemLayer _itemLayer;
 		private readonly string _tableName;
 		private readonly IReadOnlyList<PluginField> _fields;
 
 		// todo daro: how many times invoked?
-		public WorkItemTable(IWorkList workList, WorkItemLayer itemLayer, string tableName)
+		public WorkItemTable(IWorkList workList, string tableName)
 		{
 			_workList = workList ?? throw new ArgumentNullException(nameof(workList));
-			_itemLayer = itemLayer;
 			_tableName = tableName ?? throw new ArgumentNullException(nameof(tableName));
 			_fields = new ReadOnlyCollection<PluginField>(GetSchema());
 		}
@@ -48,15 +47,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		public override GeometryType GetShapeType()
 		{
-			switch (_itemLayer)
-			{
-				case WorkItemLayer.Shape:
-					return _workList.GeometryType;
-				case WorkItemLayer.Extent:
-					return GeometryType.Polygon; // (we convert Envelope to Polygon)
-				default:
-					return GeometryType.Unknown;
-			}
+			return GeometryType.Polygon;
 		}
 
 		#region Native RowCount
@@ -77,6 +68,11 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		public override PluginCursorTemplate Search(QueryFilter queryFilter)
 		{
+			Trace.WriteLine("Hello from Search (Trace)");
+			Debug.WriteLine("Hello from Search (Debug)");
+
+
+
 			var list = _workList.GetItems(queryFilter)
 			                    .Select(item => GetValues(item, _workList.Current))
 			                    .ToList(); // TODO drop ToList, inline
@@ -96,9 +92,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 			values[2] = item.Status == WorkItemStatus.Done ? 1 : 0;
 			values[3] = item.Visited == WorkItemVisited.Visited ? 1 : 0;
 			values[4] = item == current ? 1 : 0;
-			values[5] = _itemLayer == WorkItemLayer.Extent
-				            ? CreatePolygon(item.Extent)
-				            : item.Shape;
+			values[5] = CreatePolygon(item.Extent);
 			return values;
 		}
 

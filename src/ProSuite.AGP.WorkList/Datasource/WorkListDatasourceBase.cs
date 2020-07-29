@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Reflection;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
 using WorkListRegistry = ProSuite.AGP.WorkList.Domain.WorkListRegistry;
 
@@ -48,8 +48,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 			_tableNames = new ReadOnlyCollection<string>(
 				new List<string>
 				{
-					FormatTableName(_workList.Name, WorkItemLayer.Extent),
-					FormatTableName(_workList.Name, WorkItemLayer.Shape)
+					FormatTableName(_workList.Name)
 				});
 		}
 
@@ -62,19 +61,14 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			// The given name is one of those returned by GetTableNames()
 
-			_msg.DebugFormat("{0}: OpenTable '{1}'", nameof(WorkListDatasourceBase), name);
+			_msg.WarnFormat("{0}: OpenTable '{1}'", nameof(WorkListDatasourceBase), name);
 
-			var layer = ParseLayer(name);
-
-			if (layer == WorkItemLayer.None)
-			{
-				throw new ArgumentException($"Datasource has no such table: {name}");
-			}
+			ParseLayer(name, out string listName);
 
 			if (_workList == null)
 				throw new InvalidOperationException("Datasource is not open");
 
-			return new WorkItemTable(_workList, layer, name);
+			return new WorkItemTable(_workList, listName);
 		}
 
 		public override IReadOnlyList<string> GetTableNames()
@@ -84,34 +78,19 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		public override bool IsQueryLanguageSupported()
 		{
-			return false; // TODO consider supporting it, but not today
+			return _workList?.QueryLanguageSupported ?? false;
 		}
 
-		private static string FormatTableName(string listName, WorkItemLayer layer)
+		private static string FormatTableName(string listName)
 		{
-			return string.Format(CultureInfo.InvariantCulture, "{0} {1}", listName, layer);
+			// for now just the list name; later we *may* have separate "layers" for different geometry types
+			return Assert.NotNull(listName);
 		}
 
-		private static WorkItemLayer ParseLayer(string tableName)
+		private static void ParseLayer(string tableName, out string listName)
 		{
-			if (tableName == null) return WorkItemLayer.None;
-
-			const char blank = ' ';
-			int index = tableName.LastIndexOf(blank);
-			if (index < 0) return WorkItemLayer.None;
-
-			var suffix = tableName.Substring(index + 1).ToLowerInvariant();
-			switch (suffix)
-			{
-				case "extent":
-				case "envelope":
-					return WorkItemLayer.Extent;
-				case "shape":
-				case "geometry":
-					return WorkItemLayer.Shape;
-			}
-
-			return WorkItemLayer.None;
+			// for now table name *is* the list name
+			listName = tableName;
 		}
 	}
 }
