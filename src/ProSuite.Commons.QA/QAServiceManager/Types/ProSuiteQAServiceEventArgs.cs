@@ -11,8 +11,9 @@ namespace ProSuite.Commons.QA.ServiceManager.Types
 		Finished,
 		ProgressMessage,
 		ProgressPos,
-		Undefined,
-		ResultsReceived
+		Other,
+		ResultsReceived,
+		Info
 	}
 
 	public class ProSuiteQAServiceEventArgs : EventArgs
