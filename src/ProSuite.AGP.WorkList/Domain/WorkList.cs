@@ -4,6 +4,7 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 
 namespace ProSuite.AGP.WorkList.Domain
@@ -15,18 +16,33 @@ namespace ProSuite.AGP.WorkList.Domain
 	/// </summary>
 	public abstract class WorkList : IWorkList
 	{
-		private readonly object _syncLock = new object();
-		private readonly List<IWorkItem> _items;
+		private const int _initialCapacity = 1000;
 
-		protected WorkList(string name)
+		private readonly object _syncLock = new object();
+
+		private readonly List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
+
+		private readonly Dictionary<GdbRowReference, IWorkItem> _itemMap =
+			new Dictionary<GdbRowReference, IWorkItem>(_initialCapacity);
+
+		private readonly IWorkItemRepository _repository;
+
+		protected WorkList(IWorkItemRepository repository, string name)
 		{
+			_repository = repository;
+
 			Name = name ?? string.Empty;
 
 			Visibility = WorkItemVisibility.Todo;
 			AreaOfInterest = null;
-
-			_items = new List<IWorkItem>();
 			CurrentIndex = -1;
+
+			foreach (IWorkItem item in _repository.GetAll())
+			{
+				_itemMap.Add(item.Proxy, item);
+
+				_items.Add(item);
+			}
 		}
 
 		public string Name { get; }
@@ -60,6 +76,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			if (filter is SpatialQueryFilter sf && sf.FilterGeometry != null)
 			{
+				// todo daro: do not use method to build Extent every time
 				query = query.Where(
 					item => Relates(sf.FilterGeometry, sf.SpatialRelationship, item.Extent));
 			}

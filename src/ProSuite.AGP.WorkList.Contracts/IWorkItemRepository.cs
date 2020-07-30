@@ -1,19 +1,21 @@
-//using System;
-//using System.Collections.Generic;
-//using ArcGIS.Core.Data;
-//using ArcGIS.Core.Geometry;
-//using EsriDE.ProSuite.DomainModel.Core.DataModel;
+using System.Collections.Generic;
+using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.PluginDatastore;
+using ArcGIS.Core.Geometry;
+using ProSuite.DomainModel.DataModel;
 
-//namespace ProSuite.AGP.WorkList.Contracts
-//{
-//	[CLSCompliant(false)]
-//	public interface IWorkItemRepository
-//	{
-//		IEnumerable<KeyValuePair<WorkItem, IReadOnlyList<Coordinate3D>>> GetItems(
-//			QueryFilter filter, bool recycle);
+namespace ProSuite.AGP.WorkList.Contracts
+{
+	public interface IWorkItemRepository
+	{
+		int GetCount(QueryFilter filter = null);
 
-//		IEnumerable<WorkItem> GetAll();
+		IEnumerable<PluginField> GetFields(IEnumerable<string> fieldNames = null);
 
-//		void Register(IObjectDataset dataset, DbStatusSchema statusSchema = null);
-//	}
-//}
+		IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(QueryFilter filter, bool recycle);
+
+		IEnumerable<IWorkItem> GetAll();
+
+		void Register(IObjectDataset dataset, DbStatusSchema statusSchema = null);
+	}
+}

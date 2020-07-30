@@ -23,6 +23,15 @@ namespace ProSuite.Commons.AGP.Gdb
 			ObjectId = row.GetObjectID();
 		}
 
+		public GdbRowReference(long objectId, long tableId, [NotNull] string tableName,
+		                       GdbWorkspaceReference workspaceReference = default)
+		{
+			ObjectId = objectId;
+			TableId = tableId;
+			TableName = tableName;
+			WorkspaceReference = workspaceReference;
+		}
+
 		public long ObjectId { get; }
 
 		public long TableId { get; }

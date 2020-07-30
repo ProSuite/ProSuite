@@ -26,23 +26,26 @@ namespace ProSuite.AGP.WorkList.Domain
 		                   double extentExpansionFactor = 1.1,
 		                   double minimumSizeDegrees = 15,
 		                   double minimumSizeProjected = 0.001) :
-			this(new GdbRowReference(row))
+			this(new GdbRowReference(row), extentExpansionFactor, minimumSizeDegrees, minimumSizeProjected)
 		{
 			var feature = row as Feature;
 
 			SetGeometryFromFeature(feature);
-
-			_extentExpansionFactor = extentExpansionFactor;
-			_minimumSizeDegrees = minimumSizeDegrees;
-			_minimumSizeProjected = minimumSizeProjected;
 		}
 
-		protected WorkItem(GdbRowReference reference)
+		protected WorkItem(GdbRowReference reference,
+		                   double extentExpansionFactor = 1.1,
+		                   double minimumSizeDegrees = 15,
+		                   double minimumSizeProjected = 0.001)
 		{
 			Proxy = reference;
 
 			Visited = WorkItemVisited.NotVisited;
 			Status = WorkItemStatus.Todo;
+
+			_extentExpansionFactor = extentExpansionFactor;
+			_minimumSizeDegrees = minimumSizeDegrees;
+			_minimumSizeProjected = minimumSizeProjected;
 		}
 
 		public int OID { get; set;  }
@@ -74,8 +77,12 @@ namespace ProSuite.AGP.WorkList.Domain
 				return EnvelopeBuilder.CreateEnvelope();
 			}
 
+			var sref = SpatialReferenceBuilder.CreateSpatialReference(4326);
+			return EnvelopeBuilder.CreateEnvelope(new Coordinate2D(_xmin, _ymin), new Coordinate2D(_xmax, _ymax), sref);
+
 			// todo daro: what to do with sref?
 			var builder = new EnvelopeBuilder(SpatialReferenceBuilder.CreateSpatialReference(2056, 5729));
+
 			builder.SetXYCoords(new Coordinate2D(_xmin, _ymin), new Coordinate2D(_xmax, _ymax));
 
 			if (_isZAware)
@@ -86,13 +93,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			return builder.ToGeometry();
 		}
 
-		public Envelope Extent
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+		public Envelope Extent => GetExtent();
 
 		public virtual void SetDone(bool done = true)
 		{

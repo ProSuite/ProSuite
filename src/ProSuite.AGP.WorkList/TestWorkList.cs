@@ -1,7 +1,13 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.Commons.AGP.Gdb;
+using ProSuite.DomainModel.DataModel;
 
 namespace ProSuite.AGP.WorkList
 {
@@ -16,11 +22,12 @@ namespace ProSuite.AGP.WorkList
 
 		public static Domain.WorkList Create(string name = null)
 		{
-			var items = CreateWorkItems();
-			return new TestWorkList(name ?? Name, items);
+			IEnumerable<IWorkItem> items = CreateWorkItems();
+			IWorkItemRepository mockRepository = new WorkItemRepositoryMock(items);
+			return new TestWorkList(mockRepository, name ?? Name,mockRepository.GetItems(null, true).Select(pair => pair.Key));
 		}
 
-		private static IEnumerable<WorkItem> CreateWorkItems()
+		private static IEnumerable<IWorkItem> CreateWorkItems()
 		{
 			yield return new TestItem(1, 8.54226, 47.37174, "Zürich");
 			yield return new TestItem(2, 7.44743, 46.94798, "Bern");
@@ -55,7 +62,7 @@ namespace ProSuite.AGP.WorkList
 			var sref = SpatialReferenceBuilder.CreateSpatialReference(4326);
 
 			const double dx = 0.03;
-			const double dy = 0.03;
+			const double dy = 0.03;	
 			var min = new Coordinate2D(x - dx, y - dy);
 			var max = new Coordinate2D(x + dx, y + dy);
 			return EnvelopeBuilder.CreateEnvelope(min, max, sref);
@@ -70,7 +77,8 @@ namespace ProSuite.AGP.WorkList
 
 		#endregion
 
-		private TestWorkList(string name, IEnumerable<IWorkItem> items) : base(name)
+		private TestWorkList(IWorkItemRepository repository, string name,
+		                     IEnumerable<IWorkItem> items) : base(repository, name)
 		{
 			SetItems(items);
 
@@ -86,20 +94,14 @@ namespace ProSuite.AGP.WorkList
 
 		private class TestItem : WorkItem
 		{
-			public TestItem(int oid, double x, double y, string name)
+			public TestItem(int oid, double x, double y, string name) : base(new GdbRowReference(oid, -1 , "foo"))
 			{
 				OID = oid;
 				Description = name ?? string.Empty;
 				Status = WorkItemStatus.Todo;
 				Visited = WorkItemVisited.NotVisited;
-				Extent = CreateExtent(x, y);
+				SetGeometry(CreateExtent(x, y));
 			}
-
-			public override int OID { get; }
-			public override string Description { get; }
-			public override WorkItemStatus Status { get; protected set; }
-			public override WorkItemVisited Visited { get; protected set; }
-			public override Envelope Extent { get; }
 
 			public override void SetDone(bool done = true)
 			{
@@ -109,6 +111,42 @@ namespace ProSuite.AGP.WorkList
 			public override void SetVisited(bool visited = true)
 			{
 				Visited = visited ? WorkItemVisited.Visited : WorkItemVisited.NotVisited;
+			}
+		}
+
+		private class WorkItemRepositoryMock : IWorkItemRepository
+		{
+			private readonly IEnumerable<IWorkItem> _items;
+
+			public WorkItemRepositoryMock(IEnumerable<IWorkItem> items)
+			{
+				_items = items;
+			}
+
+			public int GetCount(QueryFilter filter = null)
+			{
+				throw new NotImplementedException();
+			}
+
+			public IEnumerable<PluginField> GetFields(IEnumerable<string> fieldNames = null)
+			{
+				throw new NotImplementedException();
+			}
+
+			public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
+				QueryFilter filter, bool recycle)
+			{
+				return _items.Select(i => new KeyValuePair<IWorkItem, Geometry>(i, null));
+			}
+
+			public IEnumerable<IWorkItem> GetAll()
+			{
+				return _items;
+			}
+
+			public void Register(IObjectDataset dataset, DbStatusSchema statusSchema = null)
+			{
+				throw new NotImplementedException();
 			}
 		}
 
