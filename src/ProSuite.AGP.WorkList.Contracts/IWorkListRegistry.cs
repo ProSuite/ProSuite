@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace ProSuite.AGP.WorkList.Contracts
 {
 	public interface IWorkListRegistry
@@ -9,5 +11,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		bool Remove(IWorkList workList);
 
 		bool Remove(string name);
+
+		IList<IWorkList> GetAll();
 	}
 }

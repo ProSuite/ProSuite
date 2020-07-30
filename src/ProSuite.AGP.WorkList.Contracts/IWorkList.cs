@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -10,12 +11,10 @@ namespace ProSuite.AGP.WorkList.Contracts
 	/// It maintains a current item and provides
 	/// navigation to change the current item.
 	/// </summary>
-	public interface IWorkList
+	public interface IWorkList : IDisposable
 	{
 		[NotNull]
 		string Name { get; }
-
-		GeometryType GeometryType { get; }
 
 		[CanBeNull]
 		Envelope Extent { get; }
@@ -25,12 +24,16 @@ namespace ProSuite.AGP.WorkList.Contracts
 		[CanBeNull]
 		Polygon AreaOfInterest { get; set; }
 
+		bool QueryLanguageSupported { get; }
+
+		/// <summary>Yield all work items subject to list settings and the given filter.</summary>
+		/// <param name="filter">optional QueryFilter or SpatialQueryFilter</param>
+		/// <param name="ignoreListSettings">if true, ignore Visibility and AreaOfInterest</param>
+		/// <returns></returns>
 		[NotNull]
 		IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool ignoreListSettings = false);
 
-		/// <summary>Equivalent to GetItems(filter).Count()</summary>
-		/// <param name="filter">optional QueryFilter or SpatialQueryFilter</param>
-		/// <param name="ignoreListSettings">if true, ignore Visibility and AreaOfInterest</param>
+		/// <summary>Equivalent to GetItems(filter).Count(), but may be faster</summary>
 		int CountItems(QueryFilter filter = null, bool ignoreListSettings = false);
 
 		/* Navigation */

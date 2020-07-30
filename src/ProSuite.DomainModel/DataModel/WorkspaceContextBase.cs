@@ -1,5 +1,4 @@
 using ArcGIS.Core.Data;
-using EsriDE.ProSuite.DomainModel.Core.DataModel;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.DataModel

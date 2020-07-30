@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ProSuite.AGP.WorkList.Contracts;
 
 namespace ProSuite.AGP.WorkList.Domain
@@ -62,6 +63,14 @@ namespace ProSuite.AGP.WorkList.Domain
 			lock (_registryLock)
 			{
 				return _map.Remove(name);
+			}
+		}
+
+		public IList<IWorkList> GetAll()
+		{
+			lock (_registryLock)
+			{
+				return _map.Values.ToList();
 			}
 		}
 

@@ -45,6 +45,10 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
+      <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
+      <Name>ProSuite.Commons.Logging</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\QAServiceManager\QAServiceManager.csproj">
       <Project>{7FD1D803-F43F-4530-82F5-44D6F705959F}</Project>
       <Name>QAServiceManager</Name>

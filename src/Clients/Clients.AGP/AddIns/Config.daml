@@ -60,22 +60,27 @@
         </dockPane>
       </dockPanes>
     </insertModule>
-    <insertModule id="ProSuiteSolution_WorkListTrialsModule" className="WorkListTrials.WorkListTrialsModule" autoLoad="false" caption="WorkList Trials Module">
+	  <insertModule id="ProSuiteSolution_WorkListTrialsModule" className="WorkListTrials.WorkListTrialsModule" autoLoad="true" caption="WorkList Trials Module">
       <tabs></tabs>
       <groups>
         <group id="ProSuiteSolution_WorkListTrials" caption="WorkList Trials" appearsOnAddInTab="true">
           <button refID="ProSuite_AGP_MainSolution_ButtonCreateTestList" size="large" />
           <button refID="ProSuite_AGP_MainSolution_ButtonTestItemDone" size="large" />
           <splitButton refID="ProSuite_AGP_MainSolution_SplitButtonTestListNav" />
+          <button refID="Clients_AGP_ProSuiteSolution_CreateErrorWorkList" size="large" />
+          <comboBox refID="Clients_AGP_ProSuiteSolution_WorkListVisibilityComboBox" />
         </group>
       </groups>
       <controls>
-        <button id="ProSuite_AGP_MainSolution_ButtonCreateTestList" caption="ButtonCreateTestList" className="WorkListTrials.ButtonCreateTestList" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
+        <button id="ProSuite_AGP_MainSolution_ButtonCreateTestList" caption="Create Test List" className="WorkListTrials.ButtonCreateTestList" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
           <tooltip heading="Create Test List">Create a Work List for testing<disabledText /></tooltip>
         </button>
-        <button id="ProSuite_AGP_MainSolution_ButtonTestItemDone" caption="ButtonTestItemDone" className="WorkListTrials.ButtonTestItemDone" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
+        <button id="ProSuite_AGP_MainSolution_ButtonTestItemDone" caption="Set Done" className="WorkListTrials.ButtonTestItemDone" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
           <tooltip heading="Set Done">Set current item on Test work list to done<disabledText /></tooltip>
         </button>
+	      <comboBox id="Clients_AGP_ProSuiteSolution_WorkListVisibilityComboBox" caption="Visibility" className="WorkListTrials.WorkListVisibilityComboBox" itemWidth="140" extendedCaption="Extended Caption" isEditable="false" isReadOnly="true" resizable="true">
+		      <tooltip heading="Tooltip Heading">Tooltip text<disabledText /></tooltip>
+	      </comboBox>
         <button id="ProSuite_AGP_MainSolution_SplitButtonTestListNav_Items_ButtonNext" caption="Go Next" className="WorkListTrials.SplitButtonTestListNav_GoNext" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlack16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlack32.png">
           <tooltip heading="Next Item">Go to next item on Test work list<disabledText /></tooltip>
         </button>
@@ -84,6 +89,9 @@
         </button>
         <button id="ProSuite_AGP_MainSolution_SplitButtonTestListNav_Items_ButtonFirst" caption="Go First" className="WorkListTrials.SplitButtonTestListNav_GoFirst" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlack16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlack32.png">
           <tooltip heading="First Item">Rewind to first item on Test work list<disabledText /></tooltip>
+        </button>
+        <button id="Clients_AGP_ProSuiteSolution_CreateErrorWorkList" caption="Create Error WorkList" className="CreateErrorWorkList" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
+          <tooltip heading="Tooltip Heading">Tooltip text<disabledText /></tooltip>
         </button>
       </controls>
       <splitButtons>

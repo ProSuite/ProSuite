@@ -12,10 +12,12 @@ namespace ProSuite.AGP.WorkList
 	{
 		#region Factory
 
+		public static readonly string Name = "Test Items";
+
 		public static Domain.WorkList Create(string name = null)
 		{
 			var items = CreateWorkItems();
-			return new TestWorkList(name ?? "Test Items", items);
+			return new TestWorkList(name ?? Name, items);
 		}
 
 		private static IEnumerable<WorkItem> CreateWorkItems()
@@ -52,8 +54,8 @@ namespace ProSuite.AGP.WorkList
 		{
 			var sref = SpatialReferenceBuilder.CreateSpatialReference(4326);
 
-			const double dx = 0.005;
-			const double dy = 0.005;
+			const double dx = 0.03;
+			const double dy = 0.03;
 			var min = new Coordinate2D(x - dx, y - dy);
 			var max = new Coordinate2D(x + dx, y + dy);
 			return EnvelopeBuilder.CreateEnvelope(min, max, sref);
@@ -72,8 +74,12 @@ namespace ProSuite.AGP.WorkList
 		{
 			SetItems(items);
 
-			GeometryType = GetGeometryTypeFromItems(items);
 			Extent = GetExtentFromItems(items);
+		}
+
+		public override void Dispose()
+		{
+			// nothing to dispose here
 		}
 
 		#region Nested type: TestItem
@@ -86,7 +92,6 @@ namespace ProSuite.AGP.WorkList
 				Description = name ?? string.Empty;
 				Status = WorkItemStatus.Todo;
 				Visited = WorkItemVisited.NotVisited;
-				Shape = CreatePoint(x, y);
 				Extent = CreateExtent(x, y);
 			}
 
@@ -94,7 +99,6 @@ namespace ProSuite.AGP.WorkList
 			public override string Description { get; }
 			public override WorkItemStatus Status { get; protected set; }
 			public override WorkItemVisited Visited { get; protected set; }
-			public override Geometry Shape { get; }
 			public override Envelope Extent { get; }
 
 			public override void SetDone(bool done = true)

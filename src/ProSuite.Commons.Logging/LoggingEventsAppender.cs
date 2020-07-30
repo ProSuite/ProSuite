@@ -1,26 +1,22 @@
 using log4net.Appender;
 using log4net.Core;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ProSuite.Commons.Logging
 {
 	public class LoggingEventArgs : EventArgs
 	{
-		public LoggingEvent logMessage;
+		public LoggingEventItem logItem;
 
-		public LoggingEventArgs(LoggingEvent logMessage)
+		public LoggingEventArgs(LoggingEvent logEvent)
 		{
-			this.logMessage = logMessage;
+			logItem = new LoggingEventItem(logEvent);
 		}
 	}
 
 	public class LoggingEventsAppender : AppenderSkeleton
 	{
-		// TODO temporary static event handler !!!
+		// TODO temporary static event handler - unsubscribe!!!
 		public static event EventHandler<LoggingEventArgs> OnNewLogMessage;
 
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);

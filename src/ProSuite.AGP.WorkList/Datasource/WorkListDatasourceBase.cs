@@ -1,12 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.Reflection;
+using System.Web;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
-using WorkListRegistry = ProSuite.AGP.WorkList.Domain.WorkListRegistry;
 
 namespace ProSuite.AGP.WorkList.Datasource
 {
@@ -25,22 +26,36 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		public override void Open(Uri connectionPath) // "open workspace"
 		{
-			_msg.DebugFormat("{0}: Open {1}", nameof(WorkListDatasourceBase), connectionPath);
+			_msg.DebugFormat("Open {0}", connectionPath);
 
 			if (connectionPath == null)
 				throw new ArgumentNullException(nameof(connectionPath));
 
-			if (!connectionPath.IsAbsoluteUri) // make absolute URI
-				connectionPath = new Uri(new Uri("worklist://localhost"), connectionPath);
+			// Empirical: when opening a project (.aprx) with a saved layer
+			// using our Plugin Datasource, the connectionPath will be
+			// prepended with the project file's directory path and
+			// two times URL encoded (e.g., ' ' => %20 => %2520)!
 
+			var name = connectionPath.IsAbsoluteUri
+				           ? connectionPath.LocalPath
+				           : connectionPath.ToString();
+
+			name = HttpUtility.UrlDecode(name);
+			name = HttpUtility.UrlDecode(name);
+
+			int index = name.LastIndexOf('/');
+			if (index >= 0)
+				name = name.Substring(index + 1);
+			index = name.LastIndexOf('\\');
+			if (index >= 0)
+				name = name.Substring(index + 1);
+			
 			// scheme://Host:Port/AbsolutePath?Query#Fragment
 			// worklist://localhost/workListName?unused&for#now
 
-			var name = connectionPath.LocalPath;
-			if (name.Length > 0 && name[0] == '/')
-				name = name.Substring(1);
-
 			_workList = WorkListRegistry.Instance.Get(name);
+			_msg.DebugFormat("Name from connectionPath: {0}, list found = {1}",
+			                 name, _workList != null);
 
 			if (_workList == null)
 				throw new ArgumentException($"No such work list: {connectionPath}");
@@ -48,8 +63,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 			_tableNames = new ReadOnlyCollection<string>(
 				new List<string>
 				{
-					FormatTableName(_workList.Name, WorkItemLayer.Extent),
-					FormatTableName(_workList.Name, WorkItemLayer.Shape)
+					FormatTableName(_workList.Name)
 				});
 		}
 
@@ -62,19 +76,14 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			// The given name is one of those returned by GetTableNames()
 
-			_msg.DebugFormat("{0}: OpenTable '{1}'", nameof(WorkListDatasourceBase), name);
+			_msg.DebugFormat("OpenTable '{0}'", name);
 
-			var layer = ParseLayer(name);
-
-			if (layer == WorkItemLayer.None)
-			{
-				throw new ArgumentException($"Datasource has no such table: {name}");
-			}
+			ParseLayer(name, out string listName);
 
 			if (_workList == null)
 				throw new InvalidOperationException("Datasource is not open");
 
-			return new WorkItemTable(_workList, layer, name);
+			return new WorkItemTable(_workList, listName);
 		}
 
 		public override IReadOnlyList<string> GetTableNames()
@@ -84,34 +93,20 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		public override bool IsQueryLanguageSupported()
 		{
-			return false; // TODO consider supporting it, but not today
+			// TODO Pro calls this before Open(), i.e., when _workList is still null!
+			return _workList?.QueryLanguageSupported ?? false;
 		}
 
-		private static string FormatTableName(string listName, WorkItemLayer layer)
+		private static string FormatTableName(string listName)
 		{
-			return string.Format(CultureInfo.InvariantCulture, "{0} {1}", listName, layer);
+			// for now just the list name; later we *may* have separate "layers" for different geometry types
+			return Assert.NotNull(listName);
 		}
 
-		private static WorkItemLayer ParseLayer(string tableName)
+		private static void ParseLayer(string tableName, out string listName)
 		{
-			if (tableName == null) return WorkItemLayer.None;
-
-			const char blank = ' ';
-			int index = tableName.LastIndexOf(blank);
-			if (index < 0) return WorkItemLayer.None;
-
-			var suffix = tableName.Substring(index + 1).ToLowerInvariant();
-			switch (suffix)
-			{
-				case "extent":
-				case "envelope":
-					return WorkItemLayer.Extent;
-				case "shape":
-				case "geometry":
-					return WorkItemLayer.Shape;
-			}
-
-			return WorkItemLayer.None;
+			// for now table name *is* the list name
+			listName = tableName;
 		}
 	}
 }

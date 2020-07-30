@@ -66,8 +66,8 @@
     <Compile Include="..\..\..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="CreateErrorWorkListButton.cs" />
     <Compile Include="Layers\LayerUtils.cs" />
-    <Compile Include="LoggerUI\LogMessage.cs" />
     <Compile Include="LoggerUI\ProSuiteLogPane.xaml.cs">
       <DependentUpon>ProSuiteLogPane.xaml</DependentUpon>
     </Compile>
@@ -212,6 +212,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="WorkListUI\Images\GoBack.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="DarkImages\GenericButtonBlue32.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
