@@ -31,7 +31,7 @@ namespace ProSuite.AGP.WorkList
 
 		/* The UI may (un)register itself */
 
-		public void RegsiterObserver(IWorkListObserver observer)
+		public void RegisterObserver(IWorkListObserver observer)
 		{
 			_observers.Add(observer);
 		}
