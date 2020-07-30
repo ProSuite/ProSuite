@@ -6,7 +6,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.Commons.AGP.Gdb
 {
 	// todo daro: check correct handle / instantiation of Uri
-	[CLSCompliant(false)]
 	public struct GdbWorkspaceReference : IEquatable<GdbWorkspaceReference>
 	{
 		private readonly string _instance;

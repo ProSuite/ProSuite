@@ -48,7 +48,6 @@
     <Compile Include="ErrorItemRepository.cs" />
     <Compile Include="ErrorWorkItemRepository.cs" />
     <Compile Include="GdbWorkItemRepository.cs" />
-    <Compile Include="IWorkItemRepository.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WorkItemProxy.cs" />
   </ItemGroup>
