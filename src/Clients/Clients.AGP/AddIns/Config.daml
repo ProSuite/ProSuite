@@ -28,6 +28,7 @@
           <button refID="ProSuiteTools_QA_StartGPServer" size="middle" />
           <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
+          <button refID="Clients_AGP_ProSuiteSolution_WorkList" size="large" />
         </group>
       </groups>
       <controls>
@@ -49,6 +50,9 @@
         <button id="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" caption="Logs" className="Clients.AGP.ProSuiteSolution.LoggerUI.ProSuiteLogPane_ShowButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation32.png">
           <tooltip heading="Show Logs Window">Show Logs Window<disabledText /></tooltip>
         </button>
+        <button id="Clients_AGP_ProSuiteSolution_WorkList" caption="WorkList" className="ShowWorkListWindow" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
+          <tooltip heading="Tooltip Heading">Tooltip text<disabledText /></tooltip>
+        </button>
       </controls>
       <dockPanes>
         <dockPane id="ProSuiteTools_Logger_ProSuiteLogPane" caption="ProSuite Logs" className="Clients.AGP.ProSuiteSolution.LoggerUI.ProSuiteLogPaneViewModel" dock="group" dockWith="esri_core_contentsDockPane">
@@ -56,7 +60,6 @@
         </dockPane>
       </dockPanes>
     </insertModule>
-
 	  <insertModule id="ProSuiteSolution_WorkListTrialsModule" className="WorkListTrials.WorkListTrialsModule" autoLoad="true" caption="WorkList Trials Module">
       <tabs></tabs>
       <groups>

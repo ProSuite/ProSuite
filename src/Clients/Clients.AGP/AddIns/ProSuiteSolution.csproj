@@ -82,8 +82,12 @@
     <Compile Include="ProSuiteQAProjectItem.cs" />
     <Compile Include="ProSuiteToolsModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WorkListUI\WorkList.xaml.cs">
+      <DependentUpon>WorkList.xaml</DependentUpon>
+    </Compile>
     <Compile Include="WorkListTrials\WorkListTrialsControls.cs" />
     <Compile Include="WorkListTrials\WorkListTrialsModule.cs" />
+    <Compile Include="WorkListUI\WorkListViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="LoggerUI\ProSuiteLogPane.xaml">
@@ -93,6 +97,10 @@
     <Page Include="PickerUI\PickerWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
+    </Page>
+    <Page Include="WorkListUI\WorkList.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
   <ItemGroup>
@@ -110,8 +118,8 @@
   <ItemGroup>
     <Resource Include="Images\ConfigXDesktop16.png" />
     <Resource Include="Images\ConfigXDesktop32.png" />
-    <Resource Include="Images\ItemInformation16.png" />
-    <Resource Include="Images\ItemInformation32.png" />
+    <Resource Include="WorkListUI\Images\ItemInformation16.png" />
+    <Resource Include="WorkListUI\Images\ItemInformation32.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="DarkImages\ConfigXDesktop16.png" />
@@ -197,13 +205,13 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <AddInContent Include="Images\GenericButtonBlue16.png" />
+    <Resource Include="WorkListUI\Images\GoBack.gif" />
+    <Resource Include="WorkListUI\Images\GoFirst.bmp" />
+    <Resource Include="WorkListUI\Images\GoNearest.bmp" />
+    <Resource Include="WorkListUI\Images\GoNext.gif" />
   </ItemGroup>
   <ItemGroup>
-    <AddInContent Include="Images\GenericButtonBlue32.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <AddInContent Include="DarkImages\GenericButtonBlue16.png" />
+    <Resource Include="WorkListUI\Images\GoBack.png" />
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="DarkImages\GenericButtonBlue32.png" />

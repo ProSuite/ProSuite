@@ -303,6 +303,24 @@ namespace Clients.AGP.ProSuiteSolution
 		}
 	}
 
+	internal class ShowWorkListWindow : Button
+	{
+		private WorkList _worklist = null;
+
+		protected override void OnClick()
+		{
+			//already open?
+			if (_worklist != null)
+				return;
+			_worklist = new WorkList();
+			_worklist.Owner = FrameworkApplication.Current.MainWindow;
+			_worklist.Closed += (o, e) => { _worklist = null; };
+			_worklist.Show();
+			//uncomment for modal
+			//_worklist.ShowDialog();
+		}
+	}
+
 	sealed class QASpecListComboBox : ArcGIS.Desktop.Framework.Contracts.ComboBox
 	{
 		public QASpecListComboBox()
@@ -325,5 +343,6 @@ namespace Clients.AGP.ProSuiteSolution
 		{
 			
 		}
+		
 	}
 }
