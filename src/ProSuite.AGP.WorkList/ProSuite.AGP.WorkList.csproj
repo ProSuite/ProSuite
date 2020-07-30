@@ -75,6 +75,10 @@
       <Project>{a227d52c-0536-498f-acf2-2a5a67c3d9ff}</Project>
       <Name>ProSuite.Commons.Logging</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
+      <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
+      <Name>ProSuite.Commons</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.DomainModel\ProSuite.DomainModel.csproj">
       <Project>{824ddbe3-edaf-460b-b513-386a4260c1ff}</Project>
       <Name>ProSuite.DomainModel</Name>

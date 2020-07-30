@@ -136,6 +136,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			if (CurrentIndex < _items.Count - 1)
 			{
 				CurrentIndex += 1;
+				//TODO should also set current item visited=true
 			}
 		}
 
@@ -149,6 +150,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			if (CurrentIndex > 0)
 			{
 				CurrentIndex -= 1;
+				//TODO should also set current item Visited=true
 			}
 		}
 

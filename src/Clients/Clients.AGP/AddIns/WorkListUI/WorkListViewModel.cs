@@ -52,6 +52,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 
 		public void WorkListAdded(IWorkList workList)
 		{
+			//TODO test this with a test button that adds another worklist with testitems
 			throw new NotImplementedException();
 		}
 
@@ -69,11 +70,13 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 		{
 			CurrentWorkList.GoPrevious();
 			CurrentWorkItem = CurrentWorkList.Current;
+			CurrentWorkItem.SetVisited(); //TODO this should be done by the worklist itself when moving to next/previous
 		}
 		private void GoNextItem()
 		{
 			CurrentWorkList.GoNext();
 			CurrentWorkItem = CurrentWorkList.Current;
+			CurrentWorkItem.SetVisited(); //TODO this should be done by the worklist itself when moving to next/previous
 		}
 	}
 }

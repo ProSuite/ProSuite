@@ -2,13 +2,14 @@ using System;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
-	public abstract class WorkItem : IWorkItem
+	public abstract class WorkItem : NotifyPropertyChangedBase, IWorkItem
 	{
 		private readonly double _extentExpansionFactor;
 		private readonly double _minimumSizeDegrees;
@@ -21,6 +22,9 @@ namespace ProSuite.AGP.WorkList.Domain
 		private double _zmax;
 		private double _zmin;
 		private bool _isZAware;
+		private WorkItemStatus _status;
+		private WorkItemVisited _visited;
+		private string _description;
 
 		protected WorkItem([NotNull] Row row,
 		                   double extentExpansionFactor = 1.1,
@@ -50,10 +54,35 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public int OID { get; set;  }
 
-		public WorkItemVisited Visited { get; set; }
+		public WorkItemVisited Visited
+		{
+			get => _visited;
+			set
+			{
+				_visited = value; 
+				OnPropertyChanged();
+			}
+		}
 
-		public WorkItemStatus Status { get; set; }
-		public string Description { get; set; }
+		public WorkItemStatus Status
+		{
+			get => _status;
+			set
+			{
+				_status = value;
+				OnPropertyChanged();
+			}
+		}
+
+		public string Description
+		{
+			get => _description;
+			set
+			{
+				_description = value;
+				OnPropertyChanged();
+			}
+		}
 
 		public GdbRowReference Proxy { get; }
 

@@ -341,6 +341,13 @@ namespace Clients.AGP.ProSuiteSolution
 					{
 						LayerFactory.Instance.CreateFeatureLayer(
 							(FeatureClass)table, MapView.Active.Map);
+
+						//TODO set renderer using error worklist layer file
+						//var layerDocument = new LayerDocument(@"C:\git\EsriCH.ArcGISPro.Trials\WorkListPrototype\TopgisConfiguration\TestData\Work List edited.lyrx");
+						//CIMLayerDocument cimLayerDocument = layerDocument.GetCIMLayerDocument();
+						//var rendererFromLayerFile = ((CIMFeatureLayer)cimLayerDocument.LayerDefinitions[0]).Renderer as CIMUniqueValueRenderer;
+
+						//featureLayer?.SetRenderer(rendererFromLayerFile);
 					}
 				}
 			}

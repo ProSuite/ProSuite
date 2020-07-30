@@ -51,7 +51,7 @@
           <tooltip heading="Show Logs Window">Show Logs Window<disabledText /></tooltip>
         </button>
         <button id="Clients_AGP_ProSuiteSolution_WorkList" caption="WorkList" className="ShowWorkListWindow" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
-          <tooltip heading="Tooltip Heading">Tooltip text<disabledText /></tooltip>
+          <tooltip heading="Show Error Worklist">Show Error Worklist<disabledText /></tooltip>
         </button>
       </controls>
       <dockPanes>
