@@ -16,6 +16,7 @@ namespace ProSuite.AGP.WorkList.Service
 
 		protected override IWorkItem CreateWorkItemCore(Row row)
 		{
+			
 			return new ErrorItem(row);
 		}
 
