@@ -10,11 +10,14 @@ using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Mapping.Events;
 using System.Collections.Generic;
+using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.Commons.QA.ServiceManager;
 using ProSuite.Commons.QA.ServiceManager.Types;
 using Clients.AGP.ProSuiteSolution.Layers;
 using QAConfigurator;
 using ProSuite.Commons.Logging;
+using Clients.AGP.ProSuiteSolution.WorkListTrials;
 
 namespace Clients.AGP.ProSuiteSolution
 {
@@ -307,8 +310,10 @@ namespace Clients.AGP.ProSuiteSolution
 	{
 		private WorkList _worklist = null;
 
-		protected override void OnClick()
+		protected override async void OnClick()
 		{
+			await QueuedTask.Run(() => {CreateTestList(); });
+			 
 			//already open?
 			if (_worklist != null)
 				return;
@@ -319,7 +324,30 @@ namespace Clients.AGP.ProSuiteSolution
 			//uncomment for modal
 			//_worklist.ShowDialog();
 		}
+
+		private static void CreateTestList()
+		{
+			var workList = WorkListTrialsModule.Current.GetTestWorkList();
+			var workListName = workList.Name;
+
+			var connector = WorkListTrialsModule.Current.GetWorkListConnectionPath(workListName);
+
+			using (var datastore = new PluginDatastore(connector))
+			{
+				var tableNames = datastore.GetTableNames();
+				foreach (var tableName in tableNames)
+				{
+					using (var table = datastore.OpenTable(tableName))
+					{
+						LayerFactory.Instance.CreateFeatureLayer(
+							(FeatureClass)table, MapView.Active.Map);
+					}
+				}
+			}
+		}
 	}
+
+
 
 	sealed class QASpecListComboBox : ArcGIS.Desktop.Framework.Contracts.ComboBox
 	{

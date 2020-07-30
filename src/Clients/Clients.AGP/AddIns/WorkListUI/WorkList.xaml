@@ -6,27 +6,51 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
         mc:Ignorable="d"
-        Title="WorkList" Height="300" Width="300"
-        WindowStartupLocation="CenterOwner"
+        Title="WorkList" 
+        WindowStartupLocation="CenterOwner" SizeToContent="WidthAndHeight"
+        
     >
     <controls:ProWindow.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+
+            <DataTemplate x:Key="WorkListsItemTemplate">
+                <Label Content="{Binding Name}"/>
+            </DataTemplate>
         </ResourceDictionary>
+        
     </controls:ProWindow.Resources>
-    <Grid>
+    <Grid Margin="5">
         <Grid.RowDefinitions>
             <RowDefinition Height="25"/>
-            <RowDefinition Height="25"/>
-            <RowDefinition Height="178*"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <ToolBar Grid.Row="0">
-            <Button>
+            <Button Command="{Binding GoPreviousItemCmd}">
                 <Image Source="Images/GoBack.png" ToolTip="Previous WorkItem"></Image>
             </Button>
+            <Button Command="{Binding GoNextItemCmd}">
+                <Image Source="Images/GoNext.png" ToolTip="Next WorkItem"></Image>
+            </Button>
+            <ComboBox ItemsSource="{Binding WorkLists}" Width="120" ItemTemplate="{StaticResource WorkListsItemTemplate}"/>
         </ToolBar>
+        <StackPanel Grid.Row="2">
+            <DockPanel LastChildFill="True" Margin="0,5,5,0">
+                <Label Content="Description:" Width="80"/>
+                <TextBox Text="{Binding CurrentWorkItem.Description}"/>
+            </DockPanel>
+            <DockPanel LastChildFill="True" Margin="0,5,5,0">
+                <Label Content="Visited:" Width="80"/>
+                <TextBox Text="{Binding CurrentWorkItem.Visited}"/>
+            </DockPanel>
+            <DockPanel LastChildFill="True" Margin="0,5,5,0">
+                <Label Content="Status:" Width="80"/>
+                <TextBox Text="{Binding CurrentWorkItem.Status}"/>
+            </DockPanel>
+        </StackPanel>
     </Grid>
 
 </controls:ProWindow>

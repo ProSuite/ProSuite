@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
@@ -14,24 +15,39 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 	{
 		public WorkListViewModel()
 		{
+			GoPreviousItemCmd = new RelayCommand(GoPreviousItem, () => true, false,
+			                                     true);
+			GoNextItemCmd = new RelayCommand(GoNextItem, () => true, false,
+			                                     true);
 			WorkListCentral = new WorkListCentral();
 			WorkListCentral.RegisterObserver(this);
+			WorkLists = WorkListCentral.GetAllLists();
+			CurrentWorkList = WorkLists.First();
+			CurrentWorkItem = CurrentWorkList.GetItems().First();
 		}
 
-		private WorkList _workList;
-		private WorkItem _workItem;
+		private IWorkList _currentWorkList;
+		private IEnumerable<IWorkList> _workLists;
+		private IWorkItem _currentWorkItem;
 		public WorkListCentral WorkListCentral { get; }
+		public RelayCommand GoPreviousItemCmd { get; }
+		public RelayCommand GoNextItemCmd { get; }
 
-		public WorkList WorkList
+		public IEnumerable<IWorkList> WorkLists
 		{
-			get => _workList;
-			set { SetProperty(ref _workList, value, () => WorkList); }
+			get => _workLists;
+			set { SetProperty(ref _workLists, value, () => WorkLists); }
+		}
+		public IWorkList CurrentWorkList
+		{
+			get => _currentWorkList;
+			set { SetProperty(ref _currentWorkList, value, () => CurrentWorkList); }
 		}
 
-		public WorkItem CurrentWorkItem
+		public IWorkItem CurrentWorkItem
 		{
-			get => _workItem;
-			set { SetProperty(ref _workItem, value, () => CurrentWorkItem); }
+			get => _currentWorkItem;
+			set { SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem); }
 		}
 
 		public void WorkListAdded(IWorkList workList)
@@ -47,6 +63,17 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 		public void WorkListModified(IWorkList workList)
 		{
 			throw new NotImplementedException();
+		}
+
+		private void GoPreviousItem()
+		{
+			CurrentWorkList.GoPrevious();
+			CurrentWorkItem = CurrentWorkList.Current;
+		}
+		private void GoNextItem()
+		{
+			CurrentWorkList.GoNext();
+			CurrentWorkItem = CurrentWorkList.Current;
 		}
 	}
 }

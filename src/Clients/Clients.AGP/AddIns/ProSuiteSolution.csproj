@@ -216,6 +216,9 @@
   <ItemGroup>
     <AddInContent Include="DarkImages\GenericButtonBlue32.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\GoNext.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:
