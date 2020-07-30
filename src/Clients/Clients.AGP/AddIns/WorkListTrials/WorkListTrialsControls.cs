@@ -136,7 +136,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkListTrials
 			workList.GoNext();
 			workList.Current?.SetVisited();
 			QueuedTask.Run(() => WorkListTrialsModule.Current.Refresh());
-		}
+		} 
 	}
 
 	internal class SplitButtonTestListNav_GoPrevious : Button
