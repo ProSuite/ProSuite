@@ -3,30 +3,25 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.DataModel;
 
 namespace ProSuite.AGP.WorkList
 {
-	public class DbStatusSourceClass
+	public class DatabaseSourceClass
 	{
-		public DbStatusSourceClass(IObjectDataset dataset, DbStatusSchema statusSchema) : this(
-			dataset.Name, statusSchema)
-		{
-			Dataset = dataset;
-			StatusSchema = statusSchema;
-		}
-
-		public DbStatusSourceClass(string name, DbStatusSchema statusSchema)
+		public DatabaseSourceClass(string name, DatabaseStatusSchema statusSchema,
+		                           IAttributeReader attributeReader)
 		{
 			Name = name;
 			StatusSchema = statusSchema;
+			AttributeReader = attributeReader;
 		}
 
 		public string Name { get; set; }
-		public IObjectDataset Dataset { get; }
-		public DbStatusSchema StatusSchema { get; }
+		public DatabaseStatusSchema StatusSchema { get; }
+		public IAttributeReader AttributeReader { get; }
 
 		[CanBeNull]
 		public Table OpenTable([NotNull] Geodatabase geodatabase)
@@ -54,6 +49,13 @@ namespace ProSuite.AGP.WorkList
 				                 .Select(field => new PluginField(
 					                         field.Name, field.AliasName, field.FieldType));
 			}
+		}
+
+		public FeatureClassDefinition GetDefinition([NotNull] Geodatabase geodatabase)
+		{
+			Assert.ArgumentNotNull(geodatabase, nameof(geodatabase));
+
+			return geodatabase.GetDefinition<FeatureClassDefinition>(Name);
 		}
 	}
 }

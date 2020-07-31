@@ -14,22 +14,24 @@ namespace ProSuite.AGP.WorkList.Domain
 	/// It maintains a current item and provides
 	/// navigation to change the current item.
 	/// </summary>
+	// todo daro: separate geometry processing code
+	// todo daro: separate QueuedTask code
 	public abstract class WorkList : IWorkList
 	{
 		private const int _initialCapacity = 1000;
 
 		private readonly object _syncLock = new object();
 
+		protected IWorkItemRepository Repository { get; }
+
 		private readonly List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
 
 		private readonly Dictionary<GdbRowReference, IWorkItem> _itemMap =
 			new Dictionary<GdbRowReference, IWorkItem>(_initialCapacity);
 
-		private readonly IWorkItemRepository _repository;
-
 		protected WorkList(IWorkItemRepository repository, string name)
 		{
-			_repository = repository;
+			Repository = repository;
 
 			Name = name ?? string.Empty;
 
@@ -37,7 +39,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			AreaOfInterest = null;
 			CurrentIndex = -1;
 
-			foreach (IWorkItem item in _repository.GetAll())
+			foreach (IWorkItem item in Repository.GetItems())
 			{
 				_itemMap.Add(item.Proxy, item);
 
@@ -55,20 +57,21 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual bool QueryLanguageSupported { get; } = false;
 
-		public virtual IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool ignoreListSettings = false)
+		public virtual IEnumerable<IWorkItem> GetItems(QueryFilter filter = null,
+		                                               bool ignoreListSettings = false)
 		{
 			// Subclass should provide more efficient implementation (e.g. pass filter on to database)
 
-			var query = (IEnumerable<IWorkItem>) _items;
+			IEnumerable<IWorkItem> query = _items;
 
-			if (!ignoreListSettings && Visibility != WorkItemVisibility.None)
+			if (! ignoreListSettings && Visibility != WorkItemVisibility.None)
 			{
 				query = query.Where(item => StatusVisible(item.Status, Visibility));
 			}
 
 			if (filter?.ObjectIDs != null && filter.ObjectIDs.Count > 0)
 			{
-				var oids = filter.ObjectIDs.OrderBy(oid => oid).ToList();
+				List<long> oids = filter.ObjectIDs.OrderBy(oid => oid).ToList();
 				query = query.Where(item => oids.BinarySearch(item.OID) >= 0);
 			}
 
@@ -77,11 +80,10 @@ namespace ProSuite.AGP.WorkList.Domain
 			if (filter is SpatialQueryFilter sf && sf.FilterGeometry != null)
 			{
 				// todo daro: do not use method to build Extent every time
-				query = query.Where(
-					item => Relates(sf.FilterGeometry, sf.SpatialRelationship, item.Extent));
+				query = query.Where(item => Relates(sf.FilterGeometry, sf.SpatialRelationship, item.Extent));
 			}
 
-			if (!ignoreListSettings && AreaOfInterest != null)
+			if (! ignoreListSettings && AreaOfInterest != null)
 			{
 				query = query.Where(item => WithinAreaOfInterest(item.Extent, AreaOfInterest));
 			}
@@ -89,7 +91,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			return query;
 		}
 
-		public virtual int CountItems(QueryFilter filter = null, bool ignoreListSettings = false)
+		public virtual int Count(QueryFilter filter = null, bool ignoreListSettings = false)
 		{
 			lock (_syncLock)
 			{

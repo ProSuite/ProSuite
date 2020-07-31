@@ -30,8 +30,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.WorkList.Contr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.AO.Core", "ProSuite.Commons.AO.Core\ProSuite.Commons.AO.Core.csproj", "{2AD0CBA5-B5F6-4ECF-9071-9A2C15C77488}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.WorkList.Service", "ProSuite.AGP.WorkList.Service\ProSuite.AGP.WorkList.Service.csproj", "{E5B77010-6AF1-4A75-AFE1-1385394914DB}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.WorkList", "ProSuite.AGP.WorkList\ProSuite.AGP.WorkList.csproj", "{2EFE37C6-29A4-4E51-8C9F-D7B895F9CE6D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.WorkList.Test", "ProSuite.AGP.WorkList.Test\ProSuite.AGP.WorkList.Test.csproj", "{AF816619-A110-435B-A575-53A511593422}"
@@ -61,8 +59,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.Picker", "ProSuite.AGP.Picker\ProSuite.AGP.Picker.csproj", "{A0664BCB-3A91-4A7E-B303-D9A55B8E6CC8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.DomainModel", "ProSuite.DomainModel\ProSuite.DomainModel.csproj", "{824DDBE3-EDAF-460B-B513-386A4260C1FF}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.WorkList.Service.Test", "ProSuite.AGP.WorkList.Service.Test\ProSuite.AGP.WorkList.Service.Test.csproj", "{B0DCCB41-3EBC-4B8E-AC25-7C94D8098CB3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -110,10 +106,6 @@ Global
 		{2AD0CBA5-B5F6-4ECF-9071-9A2C15C77488}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2AD0CBA5-B5F6-4ECF-9071-9A2C15C77488}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2AD0CBA5-B5F6-4ECF-9071-9A2C15C77488}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E5B77010-6AF1-4A75-AFE1-1385394914DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E5B77010-6AF1-4A75-AFE1-1385394914DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E5B77010-6AF1-4A75-AFE1-1385394914DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E5B77010-6AF1-4A75-AFE1-1385394914DB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{2EFE37C6-29A4-4E51-8C9F-D7B895F9CE6D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2EFE37C6-29A4-4E51-8C9F-D7B895F9CE6D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2EFE37C6-29A4-4E51-8C9F-D7B895F9CE6D}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -154,10 +146,6 @@ Global
 		{824DDBE3-EDAF-460B-B513-386A4260C1FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{824DDBE3-EDAF-460B-B513-386A4260C1FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{824DDBE3-EDAF-460B-B513-386A4260C1FF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B0DCCB41-3EBC-4B8E-AC25-7C94D8098CB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B0DCCB41-3EBC-4B8E-AC25-7C94D8098CB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B0DCCB41-3EBC-4B8E-AC25-7C94D8098CB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B0DCCB41-3EBC-4B8E-AC25-7C94D8098CB3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

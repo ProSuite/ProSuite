@@ -21,7 +21,7 @@ namespace ProSuite.AGP.WorkList.Test
 		private static MapPoint CreateMapPoint(double x, double y, double z)
 		{
 			return MapPointBuilder.CreateMapPoint(
-				x, y, z, SpatialReferenceBuilder.CreateSpatialReference(2056));
+				x, y, z, SpatialReferenceBuilder.CreateSpatialReference(2056, 5729));
 		}
 
 		public PolygonConstruction LineTo(double x, double y, double z = 0)

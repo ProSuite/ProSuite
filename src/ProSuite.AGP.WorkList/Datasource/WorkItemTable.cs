@@ -28,11 +28,6 @@ namespace ProSuite.AGP.WorkList.Datasource
 			return _tableName;
 		}
 
-		/// <summary>
-		/// Get the collection of fields accessible on the plugin table
-		/// </summary>
-		/// <remarks>The order of returned columns in any rows must match the
-		/// order of the fields specified from GetFields()</remarks>
 		public override IReadOnlyList<PluginField> GetFields()
 		{
 			return _fields;
@@ -66,9 +61,9 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		public override PluginCursorTemplate Search(QueryFilter queryFilter)
 		{
-			var list = _workList.GetItems(queryFilter)
-			                    .Select(item => GetValues(item, _workList.Current))
-			                    .ToList(); // TODO drop ToList, inline
+			List<object[]> list = _workList.GetItems(queryFilter)
+			                               .Select(item => GetValues(item, _workList.Current))
+			                               .ToList(); // TODO drop ToList, inline
 			return new WorkItemCursor(list);
 		}
 
@@ -77,15 +72,14 @@ namespace ProSuite.AGP.WorkList.Datasource
 			return Search((QueryFilter) spatialQueryFilter);
 		}
 
-		private object[] GetValues([NotNull] IWorkItem item, IWorkItem current = null)
+		private static object[] GetValues([NotNull] IWorkItem item, IWorkItem current = null)
 		{
-			var values = new object[6];
+			var values = new object[5];
 			values[0] = item.OID;
-			values[1] = item.Description;
-			values[2] = item.Status == WorkItemStatus.Done ? 1 : 0;
-			values[3] = item.Visited == WorkItemVisited.Visited ? 1 : 0;
-			values[4] = item == current ? 1 : 0;
-			values[5] = CreatePolygon(item.Extent);
+			values[1] = item.Status == WorkItemStatus.Done ? 1 : 0;
+			values[2] = item.Visited == WorkItemVisited.Visited ? 1 : 0;
+			values[3] = item == current ? 1 : 0;
+			values[4] = CreatePolygon(item.Extent);
 			return values;
 		}
 
@@ -93,7 +87,6 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			var fields = new List<PluginField>(8);
 			fields.Add(new PluginField("OBJECTID", "ObjectID", FieldType.OID));
-			fields.Add(new PluginField("TEXT", "Text", FieldType.String));
 			fields.Add(new PluginField("STATUS", "Status", FieldType.Integer));
 			fields.Add(new PluginField("VISITED", "Visited", FieldType.Integer));
 			fields.Add(new PluginField("CURRENT", "Is Current", FieldType.Integer));

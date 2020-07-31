@@ -1,14 +1,27 @@
-using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Gdb
 {
-	[CLSCompliant(false)]
-	public static class GdbRowUtils
+	public static class GdbQueryUtils
 	{
+		[NotNull]
+		public static SpatialQueryFilter CreateSpatialFilter(
+			[NotNull] Geometry filterGeometry,
+			SpatialRelationship spatialRelationship = SpatialRelationship.Intersects,
+			SearchOrder searchOrder = SearchOrder.Spatial)
+		{
+			return new SpatialQueryFilter
+			       {
+				       FilterGeometry = filterGeometry,
+				       SpatialRelationship = spatialRelationship,
+				       SearchOrder = searchOrder
+			       };
+		}
+
 		public static Row GetRow([NotNull] Table table, long oid)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
@@ -31,7 +44,8 @@ namespace ProSuite.Commons.AGP.Gdb
 		}
 
 		public static IEnumerable<T> GetRows<T>([NotNull] Table table,
-		                                        [CanBeNull] QueryFilter filter, bool recycle)
+		                                        [CanBeNull] QueryFilter filter = null,
+		                                        bool recycle = true)
 			where T : Row
 		{
 			Assert.ArgumentNotNull(table, nameof(table));

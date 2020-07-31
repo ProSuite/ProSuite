@@ -8,7 +8,7 @@ using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.DomainModel.DataModel;
 
-namespace ProSuite.AGP.WorkList.Service.Test
+namespace ProSuite.AGP.WorkList.Test
 {
 	[TestFixture]
 	[Apartment(ApartmentState.STA)]
@@ -43,8 +43,8 @@ namespace ProSuite.AGP.WorkList.Service.Test
 		private static IWorkItemRepository CreateWorkItemRepository(
 			Geodatabase geodatabase, string datasetName)
 		{
-			IWorkItemRepository repository = new ErrorItemRepository(new WorkspaceContext(geodatabase));
-			repository.Register(new VectorDatasetMock {Name = datasetName});
+			var repository = new ErrorItemRepository(new WorkspaceContext(geodatabase));
+			repository.Register(datasetName);
 			return repository;
 		}
 

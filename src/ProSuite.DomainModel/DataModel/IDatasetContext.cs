@@ -5,7 +5,7 @@ namespace ProSuite.DomainModel.DataModel
 {
 	public interface IDatasetContext : IDisposable
 	{
-		FeatureClass OpenFeatureClass(IVectorDataset dataset);
-		Table OpenTable(IObjectDataset dataset);
+		FeatureClass OpenFeatureClass(string name);
+		Table OpenTable(string name);
 	}
 }

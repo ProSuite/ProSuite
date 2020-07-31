@@ -14,10 +14,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		WorkItemVisited Visited { get; }
 		GdbRowReference Proxy { get; }
 		WorkItemStatus Status { get; set; }
-
-		// todo daro: Ok on work item class, but should not be serialized
-		string Description { get; set; }
-
+		
 		Envelope Extent { get; }
 
 		void SetDone(bool done = true);

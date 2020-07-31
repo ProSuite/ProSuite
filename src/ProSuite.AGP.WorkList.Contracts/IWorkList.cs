@@ -34,7 +34,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool ignoreListSettings = false);
 
 		/// <summary>Equivalent to GetItems(filter).Count(), but may be faster</summary>
-		int CountItems(QueryFilter filter = null, bool ignoreListSettings = false);
+		int Count(QueryFilter filter = null, bool ignoreListSettings = false);
 
 		/* Navigation */
 

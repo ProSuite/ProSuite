@@ -1,11 +1,11 @@
 using System;
 using ProSuite.AGP.WorkList.Contracts;
 
-namespace ProSuite.AGP.WorkList.Domain
+namespace ProSuite.AGP.WorkList.Test
 {
-	public class ErrorWorkList : WorkList
+	public class MemoryQueryWorkList : Domain.WorkList
 	{
-		public ErrorWorkList(IWorkItemRepository repository, string name) :
+		public MemoryQueryWorkList(IWorkItemRepository repository, string name) :
 			base(repository, name) { }
 
 		public override void Dispose()

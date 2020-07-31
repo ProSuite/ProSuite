@@ -8,10 +8,10 @@ namespace ProSuite.DomainModel.DataModel
 		// on wrong thread" exception?
 		public WorkspaceContext(Geodatabase geodatabase) : base(geodatabase) { }
 
-		public override Table OpenTable(IObjectDataset dataset)
+		public override Table OpenTable(string name)
 		{
 			// todo daro exception handling
-			return Geodatabase?.OpenDataset<Table>(dataset.Name);
+			return Geodatabase?.OpenDataset<Table>(name);
 		}
 	}
 }

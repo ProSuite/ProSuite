@@ -98,31 +98,35 @@ namespace ProSuite.AGP.WorkList.Domain
 			return Proxy.References(table);
 		}
 
-		[NotNull]
-		public Envelope GetExtent()
+		//[NotNull]
+		//public Envelope GetExtent()
+		//{
+		//	if (! HasGeometry)
+		//	{
+		//		return EnvelopeBuilder.CreateEnvelope();
+		//	}
+
+		//	var sref = SpatialReferenceBuilder.CreateSpatialReference(4326);
+		//	return EnvelopeBuilder.CreateEnvelope(new Coordinate2D(_xmin, _ymin), new Coordinate2D(_xmax, _ymax), sref);
+
+		//	// todo daro: what to do with sref?
+		//	var builder = new EnvelopeBuilder(SpatialReferenceBuilder.CreateSpatialReference(2056, 5729));
+
+		//	builder.SetXYCoords(new Coordinate2D(_xmin, _ymin), new Coordinate2D(_xmax, _ymax));
+
+		//	if (_isZAware)
+		//	{
+		//		builder.SetZCoords(_zmin, _zmax);
+		//	}
+
+		//	return builder.ToGeometry();
+		//}
+
+		public Envelope Extent
 		{
-			if (! HasGeometry)
-			{
-				return EnvelopeBuilder.CreateEnvelope();
-			}
-
-			var sref = SpatialReferenceBuilder.CreateSpatialReference(4326);
-			return EnvelopeBuilder.CreateEnvelope(new Coordinate2D(_xmin, _ymin), new Coordinate2D(_xmax, _ymax), sref);
-
-			// todo daro: what to do with sref?
-			var builder = new EnvelopeBuilder(SpatialReferenceBuilder.CreateSpatialReference(2056, 5729));
-
-			builder.SetXYCoords(new Coordinate2D(_xmin, _ymin), new Coordinate2D(_xmax, _ymax));
-
-			if (_isZAware)
-			{
-				builder.SetZCoords(_zmin, _zmax);
-			}
-
-			return builder.ToGeometry();
+			get;
+			private set;
 		}
-
-		public Envelope Extent => GetExtent();
 
 		public virtual void SetDone(bool done = true)
 		{
@@ -161,18 +165,22 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		[CanBeNull]
-		protected virtual Envelope ReadGeometryFromFeature([CanBeNull] Feature feature)
+		protected virtual Geometry GetGeometry([CanBeNull] Feature feature)
 		{
 			return feature?.GetShape().Extent;
 		}
 
 		private void SetGeometryFromFeature([CanBeNull] Feature feature)
 		{
-			//GeometryType = ((FeatureClass)feature?.GetTable())?.ShapeType ??
-			//               esriGeometryType.esriGeometryNull;
+			Geometry geometry = GetGeometry(feature);
 
-			Envelope extent = ReadGeometryFromFeature(feature);
-			SetGeometry(extent);
+			if (geometry == null)
+			{
+				return;
+			}
+
+			Extent = EnvelopeBuilder.CreateEnvelope(geometry.Extent);
+			SetGeometry(Extent);
 		}
 
 		protected void SetGeometry([CanBeNull] Envelope extent)

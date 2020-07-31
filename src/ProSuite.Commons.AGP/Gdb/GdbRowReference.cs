@@ -8,7 +8,6 @@ namespace ProSuite.Commons.AGP.Gdb
 	/// <summary>
 	///     Represents a lightweight reference to a geodatabase object.
 	/// </summary>
-	[CLSCompliant(false)]
 	public struct GdbRowReference : IEquatable<GdbRowReference>
 	{
 		public GdbRowReference([NotNull] Row row)
@@ -49,7 +48,7 @@ namespace ProSuite.Commons.AGP.Gdb
 
 			using (var table = geodatabase.OpenDataset<Table>(TableName))
 			{
-				return GdbRowUtils.GetRow(table, ObjectId);
+				return GdbQueryUtils.GetRow(table, ObjectId);
 			}
 		}
 

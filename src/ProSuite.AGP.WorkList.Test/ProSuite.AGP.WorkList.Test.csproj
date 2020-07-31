@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -38,7 +38,12 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GdbQueryWorkList.cs" />
+    <Compile Include="MemoryQueryWorkList.cs" />
     <Compile Include="PolygonConstruction.cs" />
+    <Compile Include="TestUtils.cs" />
+    <Compile Include="WorkItemRepositoryTest.cs" />
+    <Compile Include="WorkListTest.cs" />
     <Compile Include="WorkItemTest.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -50,6 +55,10 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj">
+      <Project>{47E134C6-B803-451E-8C33-7C71B158B2AC}</Project>
+      <Name>ProSuite.AGP.WorkList.Contracts</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.AGP.WorkList\ProSuite.AGP.WorkList.csproj">
       <Project>{2EFE37C6-29A4-4E51-8C9F-D7B895F9CE6D}</Project>
       <Name>ProSuite.AGP.WorkList</Name>
@@ -57,6 +66,10 @@
     <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">
       <Project>{89f2c583-3022-43f8-9b69-27123836625f}</Project>
       <Name>ProSuite.Commons.AGP</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.DomainModel\ProSuite.DomainModel.csproj">
+      <Project>{824DDBE3-EDAF-460B-B513-386A4260C1FF}</Project>
+      <Name>ProSuite.DomainModel</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

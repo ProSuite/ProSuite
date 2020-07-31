@@ -24,7 +24,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			IEnumerable<IWorkItem> items = CreateWorkItems();
 			IWorkItemRepository mockRepository = new WorkItemRepositoryMock(items);
-			return new TestWorkList(mockRepository, name ?? Name,mockRepository.GetItems(null, true).Select(pair => pair.Key));
+			return new TestWorkList(mockRepository, name ?? Name,mockRepository.GetItems(null, true));
 		}
 
 		private static IEnumerable<IWorkItem> CreateWorkItems()
@@ -103,6 +103,8 @@ namespace ProSuite.AGP.WorkList
 				SetGeometry(CreateExtent(x, y));
 			}
 
+			public string Description { get; set; }
+
 			public override void SetDone(bool done = true)
 			{
 				Status = done ? WorkItemStatus.Done : WorkItemStatus.Todo;
@@ -133,10 +135,9 @@ namespace ProSuite.AGP.WorkList
 				throw new NotImplementedException();
 			}
 
-			public IEnumerable<KeyValuePair<IWorkItem, Geometry>> GetItems(
-				QueryFilter filter, bool recycle)
+			public IEnumerable<IWorkItem> GetItems(QueryFilter filter, bool recycle)
 			{
-				return _items.Select(i => new KeyValuePair<IWorkItem, Geometry>(i, null));
+				return _items;
 			}
 
 			public IEnumerable<IWorkItem> GetAll()
@@ -144,7 +145,7 @@ namespace ProSuite.AGP.WorkList
 				return _items;
 			}
 
-			public void Register(IObjectDataset dataset, DbStatusSchema statusSchema = null)
+			public void Register(string tableName, DatabaseStatusSchema statusSchema = null)
 			{
 				throw new NotImplementedException();
 			}

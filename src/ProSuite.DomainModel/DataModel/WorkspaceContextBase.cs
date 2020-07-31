@@ -1,3 +1,4 @@
+using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -5,7 +6,7 @@ namespace ProSuite.DomainModel.DataModel
 {
 	public abstract class WorkspaceContextBase : IWorkspaceContext
 	{
-		protected WorkspaceContextBase(Geodatabase geodatabase)
+		protected WorkspaceContextBase([NotNull] Geodatabase geodatabase)
 		{
 			Geodatabase = geodatabase;
 		}
@@ -13,12 +14,17 @@ namespace ProSuite.DomainModel.DataModel
 		[CanBeNull]
 		public Geodatabase Geodatabase { get; private set; }
 
-		public FeatureClass OpenFeatureClass(IVectorDataset dataset)
+		[CanBeNull]
+		public FeatureClass OpenFeatureClass([NotNull] string name)
 		{
-			return (FeatureClass) OpenTable(dataset);
+			FeatureClassDefinition featureClassDefinition = Geodatabase.GetDefinitions<FeatureClassDefinition>().Where(d => d.GetName() == "foo").FirstOrDefault();
+			//featureClassDefinition.f
+
+			return (FeatureClass) OpenTable(name);
 		}
 
-		public abstract Table OpenTable(IObjectDataset dataset);
+		[CanBeNull]
+		public abstract Table OpenTable([NotNull] string name);
 
 		public virtual void Dispose()
 		{
