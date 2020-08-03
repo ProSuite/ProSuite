@@ -77,7 +77,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 			var values = new object[5];
 			values[0] = item.OID;
 			values[1] = item.Status == WorkItemStatus.Done ? 1 : 0;
-			values[2] = item.Visited == WorkItemVisited.Visited ? 1 : 0;
+			values[2] = item.Visited ? 1 : 0;
 			values[3] = item == current ? 1 : 0;
 			values[4] = CreatePolygon(item.Extent);
 			return values;

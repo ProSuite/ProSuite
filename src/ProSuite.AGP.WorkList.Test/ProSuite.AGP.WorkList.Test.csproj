@@ -39,9 +39,11 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GdbQueryWorkList.cs" />
+    <Compile Include="ItemRepositoryMock.cs" />
     <Compile Include="MemoryQueryWorkList.cs" />
     <Compile Include="PolygonConstruction.cs" />
     <Compile Include="TestUtils.cs" />
+    <Compile Include="WorkItemMock.cs" />
     <Compile Include="WorkItemRepositoryTest.cs" />
     <Compile Include="WorkListTest.cs" />
     <Compile Include="WorkItemTest.cs" />

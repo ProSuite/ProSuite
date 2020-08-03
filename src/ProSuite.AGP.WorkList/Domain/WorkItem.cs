@@ -23,8 +23,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		private double _zmin;
 		private bool _isZAware;
 		private WorkItemStatus _status;
-		private WorkItemVisited _visited;
 		private string _description;
+		private bool _visited;
 
 		protected WorkItem([NotNull] Row row,
 		                   double extentExpansionFactor = 1.1,
@@ -44,7 +44,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			Proxy = reference;
 
-			Visited = WorkItemVisited.NotVisited;
 			Status = WorkItemStatus.Todo;
 
 			_extentExpansionFactor = extentExpansionFactor;
@@ -54,7 +53,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public int OID { get; set;  }
 
-		public WorkItemVisited Visited
+		public bool Visited
 		{
 			get => _visited;
 			set

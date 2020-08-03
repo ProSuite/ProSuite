@@ -99,7 +99,6 @@ namespace ProSuite.AGP.WorkList
 				OID = oid;
 				Description = name ?? string.Empty;
 				Status = WorkItemStatus.Todo;
-				Visited = WorkItemVisited.NotVisited;
 				SetGeometry(CreateExtent(x, y));
 			}
 
@@ -112,7 +111,7 @@ namespace ProSuite.AGP.WorkList
 
 			public override void SetVisited(bool visited = true)
 			{
-				Visited = visited ? WorkItemVisited.Visited : WorkItemVisited.NotVisited;
+				Visited = visited;
 			}
 		}
 

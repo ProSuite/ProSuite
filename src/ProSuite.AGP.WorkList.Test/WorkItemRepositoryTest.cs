@@ -55,35 +55,35 @@ namespace ProSuite.AGP.WorkList.Test
 			return definition.GetFields();
 		}
 
-		[Test]
-		public void CanGetCertainFields()
-		{
-			var fieldNames = new List<string> {"OBJECTID", "STATUS"};
+		//[Test]
+		//public void CanGetCertainFields()
+		//{
+		//	var fieldNames = new List<string> {"OBJECTID", "STATUS"};
 
-			using (var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(_uri)))
-			{
-				var expected = GetFields(geodatabase, _name).TakeWhile(field => fieldNames.Contains(field.Name))
-				                                            .Select(field => field.Name);
+		//	using (var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(_uri)))
+		//	{
+		//		var expected = GetFields(geodatabase, _name).TakeWhile(field => fieldNames.Contains(field.Name))
+		//		                                            .Select(field => field.Name);
 
-				IWorkItemRepository repository = CreateWorkItemRepository(geodatabase, _name);
-				var actual = repository.GetFields(fieldNames).Select(field => field.Name);
+		//		IWorkItemRepository repository = CreateWorkItemRepository(geodatabase, _name);
+		//		var actual = repository.GetFields(fieldNames).Select(field => field.Name);
 
-				Assert.AreEqual(expected, actual);
-			}
-		}
+		//		Assert.AreEqual(expected, actual);
+		//	}
+		//}
 
-		[Test]
-		public void CanGetFields()
-		{
-			using (var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(_uri)))
-			{
-				var expected = GetFields(geodatabase, _name).Select(field => field.Name);
+		//[Test]
+		//public void CanGetFields()
+		//{
+		//	using (var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(_uri)))
+		//	{
+		//		var expected = GetFields(geodatabase, _name).Select(field => field.Name);
 
-				IWorkItemRepository repository = CreateWorkItemRepository(geodatabase, _name);
-				var actual = repository.GetFields().Select(field => field.Name);
+		//		IWorkItemRepository repository = CreateWorkItemRepository(geodatabase, _name);
+		//		var actual = repository.GetFields().Select(field => field.Name);
 
-				Assert.AreEqual(expected, actual);
-			}
-		}
+		//		Assert.AreEqual(expected, actual);
+		//	}
+		//}
 	}
 }

@@ -55,7 +55,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WorkItemStatus.cs" />
     <Compile Include="WorkItemVisibility.cs" />
-    <Compile Include="WorkItemVisited.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">

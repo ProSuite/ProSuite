@@ -4,8 +4,8 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
@@ -25,10 +25,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		protected IWorkItemRepository Repository { get; }
 
 		private readonly List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
-
-		private readonly Dictionary<GdbRowReference, IWorkItem> _itemMap =
-			new Dictionary<GdbRowReference, IWorkItem>(_initialCapacity);
-
+		
 		protected WorkList(IWorkItemRepository repository, string name)
 		{
 			Repository = repository;
@@ -41,8 +38,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			foreach (IWorkItem item in Repository.GetItems())
 			{
-				_itemMap.Add(item.Proxy, item);
-
 				_items.Add(item);
 			}
 		}
@@ -62,11 +57,12 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			// Subclass should provide more efficient implementation (e.g. pass filter on to database)
 
-			IEnumerable<IWorkItem> query = _items;
+			// todo daro: why?
+			var query = (IEnumerable<IWorkItem>) _items;
 
 			if (! ignoreListSettings && Visibility != WorkItemVisibility.None)
 			{
-				query = query.Where(item => StatusVisible(item.Status, Visibility));
+				query = query.Where(item => IsVisible(item, Visibility));
 			}
 
 			if (filter?.ObjectIDs != null && filter.ObjectIDs.Count > 0)
@@ -103,6 +99,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual IWorkItem Current => GetItem(CurrentIndex);
 
+		// note daro: only change the item index for navigation! the index is the only valid truth!
 		protected int CurrentIndex { get; set; }
 
 		/* This base class provides an overly simplistic implementation */
@@ -115,7 +112,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual void GoFirst()
 		{
-			CurrentIndex = 0;
+			GoNext();
 		}
 
 		public virtual bool CanGoNearest()
@@ -135,10 +132,14 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual void GoNext()
 		{
-			if (CurrentIndex < _items.Count - 1)
+			IWorkItem nextItem = GetNextVisibleItem();
+			//TODO should also set current item visited=true
+
+			if (nextItem != null)
 			{
-				CurrentIndex += 1;
-				//TODO should also set current item visited=true
+				Assert.False(Equals(nextItem, Current), "current item and next item are equal");
+
+				SetCurrentItem(nextItem);
 			}
 		}
 
@@ -158,18 +159,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public abstract void Dispose();
 
-		#region Non-public methods
-
-		private IWorkItem GetItem(int index)
-		{
-			lock (_syncLock)
-			{
-				return 0 <= index && index < _items.Count
-					       ? Assert.NotNull(_items[index])
-					       : null;
-			}
-		}
-
 		protected void SetItems(IEnumerable<IWorkItem> items)
 		{
 			lock (_syncLock)
@@ -178,9 +167,46 @@ namespace ProSuite.AGP.WorkList.Domain
 				_items.AddRange(items.Where(item => item != null));
 
 				CurrentIndex = -1;
-
-				Extent = null;
 			}
+		}
+
+		#region Work list navigation
+
+		/// <summary>
+		///     Sets given work item as the current one. Updates the current item
+		///     index and sets the work item as visited.
+		/// </summary>
+		/// <param name="item">The work item.</param>
+		private void SetCurrentItem([NotNull] IWorkItem item)
+		{
+			item.Visited = true;
+			CurrentIndex = _items.IndexOf(item);
+		}
+
+		[CanBeNull]
+		private IWorkItem GetNextVisibleItem()
+		{
+			if (CurrentIndex >= _items.Count - 1)
+			{
+				// last item reached
+				return null;
+			}
+
+			IWorkItem item = _items[CurrentIndex + 1];
+
+			return IsVisible(item) ? item : null;
+		}
+
+		#endregion
+
+		#region Non-public methods
+
+		[CanBeNull]
+		private IWorkItem GetItem(int index)
+		{
+			return 0 <= index && index < _items.Count
+				       ? Assert.NotNull(_items[index])
+				       : null;
 		}
 
 		protected static Envelope GetExtentFromItems(IEnumerable<IWorkItem> items)
@@ -241,18 +267,28 @@ namespace ProSuite.AGP.WorkList.Domain
 			return false;
 		}
 
-		private static bool StatusVisible(WorkItemStatus status, WorkItemVisibility visibility)
+		private bool IsVisible([NotNull] IWorkItem item)
 		{
-			switch (status)
+			return IsVisible(item, Visibility);
+		}
+
+		private bool IsVisible([NotNull] IWorkItem item, WorkItemVisibility visibility)
+		{
+			WorkItemStatus status = item.Status;
+
+			switch (visibility)
 			{
-				case WorkItemStatus.Todo:
-					return (visibility & WorkItemVisibility.Todo) != 0;
-
-				case WorkItemStatus.Done:
-					return (visibility & WorkItemVisibility.Done) != 0;
+				case WorkItemVisibility.None:
+					return false;
+				case WorkItemVisibility.Todo:
+					return (status & WorkItemStatus.Todo) != 0;
+				case WorkItemVisibility.Done:
+					return (status & WorkItemStatus.Done) != 0;
+				case WorkItemVisibility.All:
+					return true;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(visibility), visibility, null);
 			}
-
-			return false;
 		}
 
 		private static bool WithinAreaOfInterest(Envelope extent, Polygon areaOfInterest)

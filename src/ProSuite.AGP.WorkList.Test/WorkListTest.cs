@@ -35,6 +35,42 @@ namespace ProSuite.AGP.WorkList.Test
 		private string _emptyIssuesGdb = @"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\issues_empty.gdb";
 		private string _featureClassName = "IssuePolygons";
 
+		#region work list navigation tests
+
+		[Test]
+		public void CanGoNext()
+		{
+			IWorkItem item1 = new WorkItemMock(1);
+			IWorkItem item2 = new WorkItemMock(2);
+			IWorkItem item3 = new WorkItemMock(3);
+			IWorkItem item4 = new WorkItemMock(4);
+			var repository = new ItemRepositoryMock(new List<IWorkItem> {item1, item2, item3, item4});
+			
+			IWorkList wl = new MemoryQueryWorkList(repository, "work list");
+
+			wl.GoFirst();
+			Assert.AreEqual(item1, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			wl.GoNext();
+			Assert.AreEqual(item2, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			wl.GoNext();
+			Assert.AreEqual(item3, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			wl.GoNext();
+			Assert.AreEqual(item4, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			// end of work list, current item is the same as before
+			wl.GoNext();
+			Assert.AreEqual(item4, wl.Current);
+			Assert.True(wl.Current?.Visited);
+		}
+
+		#endregion
 
 		[Test]
 		public void Respect_AreaOfInterest_LearningTest()

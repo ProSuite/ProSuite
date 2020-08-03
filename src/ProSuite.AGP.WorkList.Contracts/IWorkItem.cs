@@ -11,12 +11,13 @@ namespace ProSuite.AGP.WorkList.Contracts
 	public interface IWorkItem
 	{
 		int OID { get; }
-		WorkItemVisited Visited { get; }
+		bool Visited { get; set; }
 		GdbRowReference Proxy { get; }
 		WorkItemStatus Status { get; set; }
 		
 		Envelope Extent { get; }
 
+		// todo daro: no write access here. It all happens in repository
 		void SetDone(bool done = true);
 
 		void SetVisited(bool visited = true);
