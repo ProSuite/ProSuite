@@ -25,7 +25,7 @@ namespace ProSuite.AGP.WorkList.Test
 			return _items;
 		}
 
-		public IEnumerable<ISourceClass> RegisterDatasets(ICollection<GdbTableReference> datasets)
+		public IEnumerable<ISourceClass> RegisterDatasets(ICollection<GdbTableIdentity> datasets)
 		{
 			throw new NotImplementedException();
 		}

@@ -5,6 +5,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 {
 	public interface ISelectionItemRepository : IWorkItemRepository
 	{
-		void RegisterDatasets(Dictionary<GdbTableReference, List<long>> selection);
+		void RegisterDatasets(Dictionary<GdbTableIdentity, List<long>> selection);
 	}
 }

@@ -93,7 +93,7 @@ namespace ProSuite.AGP.WorkList
 
 		private class TestItem : WorkItem
 		{
-			public TestItem(int oid, double x, double y, string name) : base(42, new GdbRowReference(oid, -1 , "foo"))
+			public TestItem(int oid, double x, double y, string name) : base(42, new GdbRowIdentity(oid, -1 , "foo"))
 			{
 				OID = oid;
 				Description = name ?? string.Empty;
@@ -138,7 +138,7 @@ namespace ProSuite.AGP.WorkList
 				return _items;
 			}
 
-			public IEnumerable<ISourceClass> RegisterDatasets(ICollection<GdbTableReference> datasets)
+			public IEnumerable<ISourceClass> RegisterDatasets(ICollection<GdbTableIdentity> datasets)
 			{
 				throw new NotImplementedException();
 			}

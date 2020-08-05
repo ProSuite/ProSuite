@@ -3,49 +3,48 @@ using ArcGIS.Core.Data;
 
 namespace ProSuite.Commons.AGP.Gdb
 {
-	public struct GdbTableReference : IEquatable<GdbTableReference>
+	public struct GdbTableIdentity : IEquatable<GdbTableIdentity>
 	{
-		// todo daro: rename to *Description? GdbTableIdentity?
-		public GdbTableReference(Table table)
+		public GdbTableIdentity(Table table)
 		{
 			Name = table.GetName();
 			Id = table.GetID();
 
 			using (Datastore datastore = table.GetDatastore())
 			{
-				WorkspaceReference = new GdbWorkspaceReference(datastore);
+				Workspace = new GdbWorkspaceIdentity(datastore);
 			}
 		}
 
-		public GdbTableReference(string name, long id, GdbWorkspaceReference workspaceReference)
+		public GdbTableIdentity(string name, long id, GdbWorkspaceIdentity workspace)
 		{
 			Name = name;
 			Id = id;
-			WorkspaceReference = workspaceReference;
+			Workspace = workspace;
 		}
 
 		public string Name { get; }
 
 		public long Id { get; }
 
-		public GdbWorkspaceReference WorkspaceReference { get; }
+		public GdbWorkspaceIdentity Workspace { get; }
 
 		public override string ToString()
 		{
 			return $"tableId={Id} tableName={Name}";
 		}
 
-		#region IEquatable<GdbRowReference> implementation
+		#region IEquatable<GdbRowIdentity> implementation
 
-		public bool Equals(GdbTableReference other)
+		public bool Equals(GdbTableIdentity other)
 		{
 			return string.Equals(Name, other.Name) && Id == other.Id &&
-			       WorkspaceReference.Equals(other.WorkspaceReference);
+			       Workspace.Equals(other.Workspace);
 		}
 
 		public override bool Equals(object obj)
 		{
-			return obj is GdbTableReference other && Equals(other);
+			return obj is GdbTableIdentity other && Equals(other);
 		}
 
 		public override int GetHashCode()
@@ -54,7 +53,7 @@ namespace ProSuite.Commons.AGP.Gdb
 			{
 				int hashCode = Name != null ? Name.GetHashCode() : 0;
 				hashCode = (hashCode * 397) ^ Id.GetHashCode();
-				hashCode = (hashCode * 397) ^ WorkspaceReference.GetHashCode();
+				hashCode = (hashCode * 397) ^ Workspace.GetHashCode();
 				return hashCode;
 			}
 		}

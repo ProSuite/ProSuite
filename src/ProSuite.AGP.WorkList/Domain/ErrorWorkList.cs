@@ -3,9 +3,9 @@ using ProSuite.AGP.WorkList.Contracts;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
-	public class SelectionWorkList : WorkList
+	internal class ErrorWorkList : WorkList
 	{
-		public SelectionWorkList(IWorkItemRepository repository, string name) :
+		public ErrorWorkList(IWorkItemRepository repository, string name) :
 			base(repository, name) { }
 
 		public override void Dispose()

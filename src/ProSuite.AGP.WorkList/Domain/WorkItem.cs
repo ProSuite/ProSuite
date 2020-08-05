@@ -30,20 +30,20 @@ namespace ProSuite.AGP.WorkList.Domain
 		                   double extentExpansionFactor = 1.1,
 		                   double minimumSizeDegrees = 15,
 		                   double minimumSizeProjected = 0.001) :
-			this(id, new GdbRowReference(row), extentExpansionFactor, minimumSizeDegrees, minimumSizeProjected)
+			this(id, new GdbRowIdentity(row), extentExpansionFactor, minimumSizeDegrees, minimumSizeProjected)
 		{
 			var feature = row as Feature;
 
 			SetGeometryFromFeature(feature);
 		}
 
-		protected WorkItem(int id, GdbRowReference reference,
+		protected WorkItem(int id, GdbRowIdentity identity,
 		                   double extentExpansionFactor = 1.1,
 		                   double minimumSizeDegrees = 15,
 		                   double minimumSizeProjected = 0.001)
 		{
 			OID = id;
-			Proxy = reference;
+			Proxy = identity;
 
 			Status = WorkItemStatus.Todo;
 
@@ -84,7 +84,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		public GdbRowReference Proxy { get; }
+		public GdbRowIdentity Proxy { get; }
 
 		public bool HasGeometry { get; set; }
 

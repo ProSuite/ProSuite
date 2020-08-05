@@ -12,7 +12,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 	{
 		int OID { get; }
 		bool Visited { get; set; }
-		GdbRowReference Proxy { get; }
+		GdbRowIdentity Proxy { get; }
 		WorkItemStatus Status { get; set; }
 		
 		Envelope Extent { get; }

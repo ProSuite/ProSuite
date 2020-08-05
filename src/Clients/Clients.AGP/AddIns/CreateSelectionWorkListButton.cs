@@ -13,8 +13,8 @@ namespace Clients.AGP.ProSuiteSolution
 
 		private void CreateSelectionWorkList()
 		{
-			var env = new SelectionWorkEnvironment();
-			env.OpenSelectionWorkList();
+			var env = new InMemoryWorkEnvironment();
+			env.OpenWorkList();
 		}
 	}
 }

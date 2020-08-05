@@ -51,12 +51,12 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		IEnumerable<ISourceClass> IWorkItemRepository.RegisterDatasets(ICollection<GdbTableReference> datasets)
+		IEnumerable<ISourceClass> IWorkItemRepository.RegisterDatasets(ICollection<GdbTableIdentity> datasets)
 		{
 			return RegisterDatasetsCore(datasets);
 		}
 
-		protected IEnumerable<ISourceClass> RegisterDatasetsCore(ICollection<GdbTableReference> datasets)
+		protected IEnumerable<ISourceClass> RegisterDatasetsCore(ICollection<GdbTableIdentity> datasets)
 		{
 			foreach (IWorkspaceContext workspace in _workspaces)
 			{
@@ -64,7 +64,7 @@ namespace ProSuite.AGP.WorkList
 				{
 					var definitions = geodatabase.GetDefinitions<FeatureClassDefinition>().ToLookup(d => d.GetName());
 					
-					foreach (GdbTableReference dataset in datasets.Where(d => workspace.Contains(d)))
+					foreach (GdbTableIdentity dataset in datasets.Where(d => workspace.Contains(d)))
 					{
 						// definition names should be unique
 						FeatureClassDefinition definition = definitions[dataset.Name].FirstOrDefault();
@@ -92,7 +92,7 @@ namespace ProSuite.AGP.WorkList
 		protected abstract IWorkItem CreateWorkItemCore([NotNull] Row row, ISourceClass source);
 
 		[NotNull]
-		protected abstract ISourceClass CreateSourceClassCore(GdbTableReference identity,
+		protected abstract ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
 		                                                      [NotNull] IAttributeReader attributeReader,
 		                                                      [CanBeNull] DatabaseStatusSchema statusSchema = null);
 
@@ -105,7 +105,7 @@ namespace ProSuite.AGP.WorkList
 				       : null;
 		}
 
-		private ISourceClass CreateSourceClass(GdbTableReference table, FeatureClassDefinition definition)
+		private ISourceClass CreateSourceClass(GdbTableIdentity table, FeatureClassDefinition definition)
 		{
 			IAttributeReader attributeReader = CreateAttributeReaderCore(definition);
 

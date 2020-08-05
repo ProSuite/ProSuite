@@ -6,12 +6,12 @@ namespace ProSuite.DomainModel.DataModel
 {
 	public abstract class WorkspaceContextBase : IWorkspaceContext
 	{
-		protected WorkspaceContextBase(GdbWorkspaceReference workspace)
+		protected WorkspaceContextBase(GdbWorkspaceIdentity workspace)
 		{
 			Workspace = workspace;
 		}
 
-		public GdbWorkspaceReference Workspace { get; }
+		public GdbWorkspaceIdentity Workspace { get; }
 
 		[CanBeNull]
 		public FeatureClass OpenFeatureClass([NotNull] string name)
@@ -39,9 +39,9 @@ namespace ProSuite.DomainModel.DataModel
 			return Workspace.OpenGeodatabase();
 		}
 
-		public bool Contains(GdbTableReference proxy)
+		public bool Contains(GdbTableIdentity proxy)
 		{
-			return Equals(proxy.WorkspaceReference, Workspace);
+			return Equals(proxy.Workspace, Workspace);
 		}
 	}
 }

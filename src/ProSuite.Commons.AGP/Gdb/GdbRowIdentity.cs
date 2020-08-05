@@ -9,29 +9,29 @@ namespace ProSuite.Commons.AGP.Gdb
 	/// <summary>
 	///     Represents a lightweight reference to a geodatabase object.
 	/// </summary>
-	public struct GdbRowReference : IEquatable<GdbRowReference>
+	public struct GdbRowIdentity : IEquatable<GdbRowIdentity>
 	{
-		public GdbRowReference([NotNull] Row row)
+		public GdbRowIdentity([NotNull] Row row)
 		{
 			// todo daro: GetTable() might be a performance issue?
 			using (Table table = row.GetTable())
 			{
-				Table = new GdbTableReference(table);
+				Table = new GdbTableIdentity(table);
 			}
 
 			ObjectId = row.GetObjectID();
 		}
 
-		public GdbRowReference(long objectId, long tableId, [NotNull] string tableName,
-		                       GdbWorkspaceReference workspaceReference = default)
+		public GdbRowIdentity(long objectId, long tableId, [NotNull] string tableName,
+		                       GdbWorkspaceIdentity workspaceIdentity = default)
 		{
 			ObjectId = objectId;
-			Table = new GdbTableReference(tableName, tableId, workspaceReference);
+			Table = new GdbTableIdentity(tableName, tableId, workspaceIdentity);
 		}
 
 		public long ObjectId { get; }
 
-		public GdbTableReference Table { get; }
+		public GdbTableIdentity Table { get; }
 
 		[Pure]
 		[CanBeNull]
@@ -49,7 +49,7 @@ namespace ProSuite.Commons.AGP.Gdb
 		[CanBeNull]
 		public Row GetRow()
 		{
-			using (Geodatabase geodatabase = Table.WorkspaceReference.OpenGeodatabase())
+			using (Geodatabase geodatabase = Table.Workspace.OpenGeodatabase())
 			{
 				return GetRow(geodatabase);
 			}
@@ -60,7 +60,7 @@ namespace ProSuite.Commons.AGP.Gdb
 		//{
 		//	Assert.ArgumentNotNull(row, nameof(row));
 
-		//	return Equals(new GdbRowReference(row));
+		//	return Equals(new GdbRowIdentity(row));
 		//}
 
 		//[Pure]
@@ -68,8 +68,8 @@ namespace ProSuite.Commons.AGP.Gdb
 		//{
 		//	Assert.ArgumentNotNull(table, nameof(table));
 
-		//	var other = new GdbWorkspaceReference(table.GetDatastore());
-		//	return Equals(WorkspaceReference, other);
+		//	var other = new GdbWorkspaceIdentity(table.GetDatastore());
+		//	return Equals(Workspace, other);
 		//}
 
 		public override string ToString()
@@ -77,16 +77,16 @@ namespace ProSuite.Commons.AGP.Gdb
 			return $"tableId={Table.Id} tableName={Table.Name} oid={ObjectId}";
 		}
 
-		#region IEquatable<GdbRowReference> implementation
+		#region IEquatable<GdbRowIdentity> implementation
 
-		public bool Equals(GdbRowReference other)
+		public bool Equals(GdbRowIdentity other)
 		{
 			return ObjectId == other.ObjectId && Table.Equals(other.Table);
 		}
 
 		public override bool Equals(object obj)
 		{
-			return obj is GdbRowReference other && Equals(other);
+			return obj is GdbRowIdentity other && Equals(other);
 		}
 
 		public override int GetHashCode()

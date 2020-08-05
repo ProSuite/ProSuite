@@ -15,7 +15,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 		public int OID { get; }
 		public bool Visited { get; set; }
-		public GdbRowReference Proxy { get; }
+		public GdbRowIdentity Proxy { get; }
 		public WorkItemStatus Status { get; set; }
 		public Envelope Extent { get; }
 

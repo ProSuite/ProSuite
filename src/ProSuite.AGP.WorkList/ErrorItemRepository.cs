@@ -31,7 +31,7 @@ namespace ProSuite.AGP.WorkList
 			return new ErrorItem(id, row, source.AttributeReader);
 		}
 
-		protected override ISourceClass CreateSourceClassCore(GdbTableReference identity,
+		protected override ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
 		                                                      IAttributeReader attributeReader,
 		                                                      DatabaseStatusSchema statusSchema = null)
 		{

@@ -7,15 +7,15 @@ namespace ProSuite.AGP.WorkList.Contracts
 {
 	public interface IWorkItemProxy<T> where T : IWorkItem
 	{
-		T GetItem(GdbRowReference reference);
+		T GetItem(GdbRowIdentity identity);
 
 		IEnumerable<object[]> GetRowValues(QueryFilter filter, bool recycle);
 
 		Envelope GetExtent();
 
-		void ProcessChanges(IList<GdbRowReference> creates,
-		                    IList<GdbRowReference> modifies,
-		                    IList<GdbRowReference> deletes);
+		void ProcessChanges(IList<GdbRowIdentity> creates,
+		                    IList<GdbRowIdentity> modifies,
+		                    IList<GdbRowIdentity> deletes);
 
 		void Invalidate();
 	}

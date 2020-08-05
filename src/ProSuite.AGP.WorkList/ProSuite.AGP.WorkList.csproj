@@ -46,8 +46,10 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="DatabaseSourceClass.cs" />
+    <Compile Include="ErrorWorkEnvironment.cs" />
     <Compile Include="Domain\AttributeReader.cs" />
     <Compile Include="Domain\ErrorItem.cs" />
+    <Compile Include="Domain\ErrorWorkList.cs" />
     <Compile Include="Domain\SelectionWorkList.cs" />
     <Compile Include="Domain\WorkList.cs" />
     <Compile Include="Domain\WorkListRegistry.cs" />
@@ -57,7 +59,7 @@
     <Compile Include="SelectionItem.cs" />
     <Compile Include="SelectionItemRepository.cs" />
     <Compile Include="SelectionSourceClass.cs" />
-    <Compile Include="SelectionWorkEnvironment.cs" />
+    <Compile Include="InMemoryWorkEnvironment.cs" />
     <Compile Include="TestWorkList.cs" />
     <Compile Include="Domain\WorkItem.cs" />
     <Compile Include="Datasource\WorkItemCursor.cs" />

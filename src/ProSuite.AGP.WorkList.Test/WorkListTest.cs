@@ -97,15 +97,15 @@ namespace ProSuite.AGP.WorkList.Test
 				var uri = new Uri(_emptyIssuesGdb, UriKind.Absolute);
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
-				var workspaceReference = new GdbWorkspaceReference(geodatabase);
+				var workspaceReference = new GdbWorkspaceIdentity(geodatabase);
 				IWorkItemRepository repository = new ErrorItemRepository(new List<IWorkspaceContext>
 				                                         {
 					                                         new WorkspaceContext(workspaceReference)
 				                                         });
 
-				repository.RegisterDatasets(new List<GdbTableReference>
+				repository.RegisterDatasets(new List<GdbTableIdentity>
 				                            {
-					                            new GdbTableReference(
+					                            new GdbTableIdentity(
 						                            _featureClassName, 42, workspaceReference)
 				                            });
 
@@ -147,15 +147,15 @@ namespace ProSuite.AGP.WorkList.Test
 				var uri = new Uri(_emptyIssuesGdb, UriKind.Absolute);
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
-				var workspaceReference = new GdbWorkspaceReference(geodatabase);
+				var workspaceReference = new GdbWorkspaceIdentity(geodatabase);
 				IWorkItemRepository repository = new ErrorItemRepository(new List<IWorkspaceContext>
 				                                         {
 					                                         new WorkspaceContext(workspaceReference)
 				                                         });
 
-				repository.RegisterDatasets(new List<GdbTableReference>
+				repository.RegisterDatasets(new List<GdbTableIdentity>
 				                            {
-					                            new GdbTableReference(
+					                            new GdbTableIdentity(
 						                            _featureClassName, 42, workspaceReference)
 				                            });
 
@@ -205,15 +205,15 @@ namespace ProSuite.AGP.WorkList.Test
 				var uri = new Uri(_emptyIssuesGdb, UriKind.Absolute);
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
-				var workspaceReference = new GdbWorkspaceReference(geodatabase);
+				var workspaceReference = new GdbWorkspaceIdentity(geodatabase);
 				IWorkItemRepository repository = new ErrorItemRepository(new List<IWorkspaceContext>
 				                                         {
 					                                         new WorkspaceContext(workspaceReference)
 				                                         });
 
-				repository.RegisterDatasets(new List<GdbTableReference>
+				repository.RegisterDatasets(new List<GdbTableIdentity>
 				                            {
-					                            new GdbTableReference(
+					                            new GdbTableIdentity(
 						                            _featureClassName, 42, workspaceReference)
 				                            });
 
@@ -256,15 +256,15 @@ namespace ProSuite.AGP.WorkList.Test
 				var uri = new Uri(_emptyIssuesGdb, UriKind.Absolute);
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
-				var workspaceReference = new GdbWorkspaceReference(geodatabase);
+				var workspaceReference = new GdbWorkspaceIdentity(geodatabase);
 				IWorkItemRepository repository = new ErrorItemRepository(new List<IWorkspaceContext>
 				                                         {
 					                                         new WorkspaceContext(workspaceReference)
 				                                         });
 
-				repository.RegisterDatasets(new List<GdbTableReference>
+				repository.RegisterDatasets(new List<GdbTableIdentity>
 				                            {
-					                            new GdbTableReference(
+					                            new GdbTableIdentity(
 						                            _featureClassName, 42, workspaceReference)
 				                            });
 

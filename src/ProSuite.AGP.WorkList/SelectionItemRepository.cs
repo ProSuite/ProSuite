@@ -18,7 +18,7 @@ namespace ProSuite.AGP.WorkList
 		public SelectionItemRepository(
 			IEnumerable<IWorkspaceContext> workspaces) : base(workspaces) { }
 
-		void ISelectionItemRepository.RegisterDatasets(Dictionary<GdbTableReference, List<long>> selection)
+		void ISelectionItemRepository.RegisterDatasets(Dictionary<GdbTableIdentity, List<long>> selection)
 		{
 			foreach (ISourceClass dataset in RegisterDatasetsCore(selection.Keys))
 			{
@@ -39,7 +39,7 @@ namespace ProSuite.AGP.WorkList
 			return new SelectionItem(id, row, source.AttributeReader);
 		}
 
-		protected override ISourceClass CreateSourceClassCore(GdbTableReference identity,
+		protected override ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
 		                                                      IAttributeReader attributeReader,
 		                                                      DatabaseStatusSchema statusSchema = null)
 		{

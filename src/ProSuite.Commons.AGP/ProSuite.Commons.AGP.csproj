@@ -47,9 +47,9 @@
     <Compile Include="CIM\CimFeatureWorkspaceReference.cs" />
     <Compile Include="Gdb\DatasetUtils.cs" />
     <Compile Include="Gdb\GdbQueryUtils.cs" />
-    <Compile Include="Gdb\GdbRowReference.cs" />
-    <Compile Include="Gdb\GdbTableReference.cs" />
-    <Compile Include="Gdb\GdbWorkspaceReference.cs" />
+    <Compile Include="Gdb\GdbRowIdentity.cs" />
+    <Compile Include="Gdb\GdbTableIdentity.cs" />
+    <Compile Include="Gdb\GdbWorkspaceIdentity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Spatial\GeometryUtils.cs" />
   </ItemGroup>

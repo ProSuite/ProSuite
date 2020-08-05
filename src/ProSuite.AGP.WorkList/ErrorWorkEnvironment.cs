@@ -1,0 +1,44 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Gdb;
+using ProSuite.DomainModel.DataModel;
+
+namespace ProSuite.AGP.WorkList
+{
+	public class DatabaseWorkEnvironment : WorkEnvironmentBase
+	{
+		const string _workListName = "Error Work List";
+
+		protected override IEnumerable<BasicFeatureLayer> GetLayers()
+		{
+			return MapView.Active.Map.GetLayersAsFlattenedList().OfType<BasicFeatureLayer>().Select(EnsureFeatureLayerCore);
+		}
+
+		protected override BasicFeatureLayer EnsureFeatureLayerCore(BasicFeatureLayer featureLayer)
+		{
+			throw new NotImplementedException();
+		}
+
+		protected override IWorkItemRepository CreateRepositoryCore(
+			IEnumerable<BasicFeatureLayer> featureLayers)
+		{
+			IEnumerable<GdbTableIdentity> tables = MapUtils.GetDistinctTables(featureLayers, out IEnumerable<GdbWorkspaceIdentity> distinctWorkspaces);
+
+			IEnumerable<IWorkspaceContext> workspaces = GetWorkspaceContexts(distinctWorkspaces);
+
+			IWorkItemRepository repository = new ErrorItemRepository(workspaces);
+			repository.RegisterDatasets(tables.ToList());
+
+			return repository;
+		}
+
+		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository)
+		{
+			return CreateWorkList(repository, _workListName);
+		}
+	}
+}

@@ -11,9 +11,9 @@ namespace ProSuite.AGP.WorkList
 {
 	public class DatabaseSourceClass : ISourceClass
 	{
-		public GdbTableReference Identity { get; }
+		public GdbTableIdentity Identity { get; }
 
-		public DatabaseSourceClass(GdbTableReference identity, DatabaseStatusSchema statusSchema,
+		public DatabaseSourceClass(GdbTableIdentity identity, DatabaseStatusSchema statusSchema,
 		                           IAttributeReader attributeReader)
 		{
 			Identity = identity;

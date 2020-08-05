@@ -9,6 +9,6 @@ namespace ProSuite.DomainModel.DataModel
 		// todo daro: IWorkspaceContext.GetDefinition(table)
 		Geodatabase OpenGeodatabase();
 
-		bool Contains(GdbTableReference proxy);
+		bool Contains(GdbTableIdentity proxy);
 	}
 }

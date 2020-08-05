@@ -6,7 +6,6 @@ using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
-using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.DomainModel.DataModel;
 
@@ -14,54 +13,45 @@ namespace ProSuite.AGP.WorkList
 {
 	public abstract class WorkEnvironmentBase
 	{
-		// todo daro: rename. initialize?
-		public void OpenSelectionWorkList()
+		public void OpenWorkList()
 		{
-			Map map = MapView.Active.Map;
+			List<BasicFeatureLayer> featureLayers = GetLayers().ToList();
 
-			Dictionary<MapMember, List<long>> selection = map.GetSelection();
+			IWorkItemRepository repository = CreateRepositoryCore(featureLayers);
 
-			if (selection.Count < 1)
-			{
-				return;
-			}
+			IWorkList workList = CreateWorkListCore(repository);
 
-			IEnumerable<BasicFeatureLayer> featureLayers = EnsureLayersInWorkList(selection);
+			AddLayer(workList.Name);
+		}
 
-			Dictionary<GdbTableReference, List<long>> selectionByTable =
-				MapUtils.GetDistinctSelectionByTable(featureLayers, out IEnumerable<GdbWorkspaceReference> distinctWorkspaces);
+		protected abstract IEnumerable<BasicFeatureLayer> GetLayers();
 
-			ISelectionItemRepository repository = new SelectionItemRepository(distinctWorkspaces.Select(w => (IWorkspaceContext) new WorkspaceContext(w)));
+		protected abstract IWorkList CreateWorkListCore(IWorkItemRepository repository);
 
-			repository.RegisterDatasets(selectionByTable);
+		protected abstract IWorkItemRepository CreateRepositoryCore(
+			IEnumerable<BasicFeatureLayer> featureLayers);
 
-			const string workListName = "Selection Work List";
-
+		protected IWorkList CreateWorkList(IWorkItemRepository repository, string workListName)
+		{
 			IWorkList list = WorkListRegistry.Instance.Get(workListName);
 			if (list != null)
 			{
 				WorkListRegistry.Instance.Remove(workListName);
 			}
 
-			var workList = new SelectionWorkList(repository, workListName);
+			IWorkList workList = CreateWorkListCore(repository);
 			WorkListRegistry.Instance.Add(workList);
 
-			PluginDatasourceConnectionPath connector = GetWorkListConnectionPath(workListName);
-
-			using (var datastore = new PluginDatastore(connector))
-			{
-				var tableNames = datastore.GetTableNames();
-				foreach (var tableName in tableNames)
-				{
-					using (var table = datastore.OpenTable(tableName))
-					{
-						LayerFactory.Instance.CreateFeatureLayer((FeatureClass) table, MapView.Active.Map);
-					}
-				}
-			}
+			return workList;
 		}
 
-		public PluginDatasourceConnectionPath GetWorkListConnectionPath(string workListName)
+		protected static IEnumerable<IWorkspaceContext> GetWorkspaceContexts(
+			IEnumerable<GdbWorkspaceIdentity> distinctWorkspaces)
+		{
+			return distinctWorkspaces.Select(dws => (IWorkspaceContext) new WorkspaceContext(dws));
+		}
+
+		private PluginDatasourceConnectionPath GetWorkListConnectionPath(string workListName)
 		{
 			const string pluginIdentifier = "ProSuite_WorkListDatasource";
 
@@ -71,33 +61,24 @@ namespace ProSuite.AGP.WorkList
 			return new PluginDatasourceConnectionPath(pluginIdentifier, datasourcePath);
 		}
 
-		private IWorkItemRepository CreateRepository(IEnumerable<IWorkspaceContext> workspaces)
+		private void AddLayer(string workListName)
 		{
-			IWorkItemRepository repository = new SelectionItemRepository(workspaces);
-			return repository;
-		}
+			PluginDatasourceConnectionPath connector = GetWorkListConnectionPath(workListName);
 
-		private IEnumerable<BasicFeatureLayer> EnsureLayersInWorkList(Dictionary<MapMember, List<long>> selection)
-		{
-			return selection.Keys.OfType<BasicFeatureLayer>().Select(EnsureFeatureLayerCore);
+			using (var datastore = new PluginDatastore(connector))
+			{
+				IReadOnlyList<string> tableNames = datastore.GetTableNames();
+				foreach (string tableName in tableNames)
+				{
+					using (Table table = datastore.OpenTable(tableName))
+					{
+						LayerFactory.Instance.CreateFeatureLayer(
+							(FeatureClass) table, MapView.Active.Map);
+					}
+				}
+			}
 		}
 
 		protected abstract BasicFeatureLayer EnsureFeatureLayerCore(BasicFeatureLayer featureLayer);
-
-		//public void OpenErrorWorkList()
-		//{
-		//	Map map = MapView.Active.Map;
-
-		//	IEnumerable<Layer> layers = map.GetLayersAsFlattenedList();
-
-		//	var repository = new ErrorItemRepository();
-
-		//	foreach (BasicFeatureLayer layer in layers.OfType<BasicFeatureLayer>())
-		//	{
-		//		Register(repository, layer);
-		//	}
-		//}
 	}
-
-	public abstract class DatabaseWorkEnvironment : WorkEnvironmentBase { }
 }

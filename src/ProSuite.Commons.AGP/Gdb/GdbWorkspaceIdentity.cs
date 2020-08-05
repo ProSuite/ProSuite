@@ -6,7 +6,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.Commons.AGP.Gdb
 {
 	// todo daro: check correct handle / instantiation of Uri
-	public struct GdbWorkspaceReference : IEquatable<GdbWorkspaceReference>
+	public struct GdbWorkspaceIdentity : IEquatable<GdbWorkspaceIdentity>
 	{
 		private readonly string _instance;
 		private readonly string _version;
@@ -14,10 +14,10 @@ namespace ProSuite.Commons.AGP.Gdb
 		private readonly EnterpriseDatabaseType _dbms;
 		private readonly string _path;
 
-		public GdbWorkspaceReference([NotNull] Datastore datastore) :
+		public GdbWorkspaceIdentity([NotNull] Datastore datastore) :
 			this(datastore.GetConnector()) { }
 
-		public GdbWorkspaceReference([NotNull] Connector connector)
+		public GdbWorkspaceIdentity([NotNull] Connector connector)
 		{
 			Assert.ArgumentNotNull(connector, nameof(connector));
 
@@ -80,9 +80,9 @@ namespace ProSuite.Commons.AGP.Gdb
 			return $"instance={_instance} version={_version} user={_user}, path={_path}";
 		}
 
-		#region IEquatable<GdbRowReference> implementation
+		#region IEquatable<GdbRowIdentity> implementation
 
-		public bool Equals(GdbWorkspaceReference other)
+		public bool Equals(GdbWorkspaceIdentity other)
 		{
 			return string.Equals(_instance, other._instance) &&
 			       string.Equals(_version, other._version) &&
@@ -96,7 +96,7 @@ namespace ProSuite.Commons.AGP.Gdb
 				return false;
 			}
 
-			return obj is GdbWorkspaceReference reference && Equals(reference);
+			return obj is GdbWorkspaceIdentity reference && Equals(reference);
 		}
 
 		public override int GetHashCode()

@@ -6,6 +6,6 @@ namespace ProSuite.DomainModel.DataModel
 	{
 		// todo daro: only pass in the connector as parameter to avoid "called
 		// on wrong thread" exception?
-		public WorkspaceContext(GdbWorkspaceReference workspace) : base(workspace) { }
+		public WorkspaceContext(GdbWorkspaceIdentity workspace) : base(workspace) { }
 	}
 }

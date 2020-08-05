@@ -10,6 +10,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true);
 
-		IEnumerable<ISourceClass> RegisterDatasets(ICollection<GdbTableReference> datasets);
+		IEnumerable<ISourceClass> RegisterDatasets(ICollection<GdbTableIdentity> datasets);
 	}
 }
