@@ -34,23 +34,6 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		protected virtual IEnumerable<IWorkItem> GetItemsCore([NotNull] ISourceClass sourceClass, [CanBeNull] QueryFilter filter, bool recycle)
-		{
-			FeatureClass featureClass = OpenFeatureClass(sourceClass);
-
-			if (featureClass == null)
-			{
-				yield break;
-			}
-			
-			// Todo daro: check recycle
-			foreach (Feature feature in GdbQueryUtils.GetRows<Feature>(
-				featureClass, filter, recycle))
-			{
-				yield return CreateWorkItemCore(feature, sourceClass);
-			}
-		}
-
 		IEnumerable<ISourceClass> IWorkItemRepository.RegisterDatasets(ICollection<GdbTableIdentity> datasets)
 		{
 			return RegisterDatasetsCore(datasets);
@@ -79,6 +62,23 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
+		protected virtual IEnumerable<IWorkItem> GetItemsCore([NotNull] ISourceClass sourceClass, [CanBeNull] QueryFilter filter, bool recycle)
+		{
+			FeatureClass featureClass = OpenFeatureClass(sourceClass);
+
+			if (featureClass == null)
+			{
+				yield break;
+			}
+			
+			// Todo daro: check recycle
+			foreach (Feature feature in GdbQueryUtils.GetRows<Feature>(
+				featureClass, filter, recycle))
+			{
+				yield return CreateWorkItemCore(feature, sourceClass);
+			}
+		}
+
 		[CanBeNull]
 		protected virtual DatabaseStatusSchema CreateStatusSchemaCore()
 		{
@@ -97,7 +97,7 @@ namespace ProSuite.AGP.WorkList
 		                                                      [CanBeNull] DatabaseStatusSchema statusSchema = null);
 
 		[CanBeNull]
-		protected FeatureClass OpenFeatureClass([NotNull] ISourceClass sourceClass)
+		private FeatureClass OpenFeatureClass([NotNull] ISourceClass sourceClass)
 		{
 
 			return _workspacesBySourceClass.TryGetValue(sourceClass, out IWorkspaceContext workspace)

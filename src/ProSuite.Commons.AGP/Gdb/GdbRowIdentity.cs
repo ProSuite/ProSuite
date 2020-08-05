@@ -5,7 +5,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Gdb
 {
-	// todo daro: rename GdbRowIdentity
 	/// <summary>
 	///     Represents a lightweight reference to a geodatabase object.
 	/// </summary>

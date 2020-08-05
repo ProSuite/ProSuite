@@ -12,27 +12,18 @@ namespace ProSuite.AGP.WorkList
 	{
 		const string _workListName = "Selection Work List";
 
-		protected override IEnumerable<BasicFeatureLayer> GetLayers()
+		protected override IEnumerable<BasicFeatureLayer> GetLayers(Map map)
 		{
-			Map map = MapView.Active.Map;
-
 			Dictionary<MapMember, List<long>> selection = map.GetSelection();
 
-			if (selection.Count < 1)
-			{
-				yield break;
-			}
-
-			foreach (BasicFeatureLayer featureLayer in selection
-			                                           .Keys.OfType<BasicFeatureLayer>()
-			                                           .Select(EnsureFeatureLayerCore))
-			{
-				yield return featureLayer;
-			}
+			return selection.Count >= 1
+				       ? selection.Keys.OfType<BasicFeatureLayer>()
+					   : Enumerable.Empty<BasicFeatureLayer>();
 		}
 
-		protected override BasicFeatureLayer EnsureFeatureLayerCore(BasicFeatureLayer featureLayer)
+		protected override BasicFeatureLayer EnsureMapContainsLayerCore(BasicFeatureLayer featureLayer)
 		{
+			// we want every feature layer
 			return featureLayer;
 		}
 

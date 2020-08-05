@@ -13,12 +13,12 @@ namespace ProSuite.AGP.WorkList
 	{
 		const string _workListName = "Error Work List";
 
-		protected override IEnumerable<BasicFeatureLayer> GetLayers()
+		protected override IEnumerable<BasicFeatureLayer> GetLayers(Map map)
 		{
-			return MapView.Active.Map.GetLayersAsFlattenedList().OfType<BasicFeatureLayer>().Select(EnsureFeatureLayerCore);
+			return map.GetLayersAsFlattenedList().OfType<BasicFeatureLayer>();
 		}
 
-		protected override BasicFeatureLayer EnsureFeatureLayerCore(BasicFeatureLayer featureLayer)
+		protected override BasicFeatureLayer EnsureMapContainsLayerCore(BasicFeatureLayer featureLayer)
 		{
 			throw new NotImplementedException();
 		}

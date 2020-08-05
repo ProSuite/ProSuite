@@ -8,7 +8,7 @@ namespace Clients.AGP.ProSuiteSolution
 	{
 		protected override void OnClick()
 		{
-			QueuedTask.Run(() => CreateSelectionWorkList());
+			QueuedTask.Run(CreateSelectionWorkList);
 		}
 
 		private void CreateSelectionWorkList()

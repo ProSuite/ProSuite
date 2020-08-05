@@ -15,7 +15,9 @@ namespace ProSuite.AGP.WorkList
 	{
 		public void OpenWorkList()
 		{
-			List<BasicFeatureLayer> featureLayers = GetLayers().ToList();
+			Map map = MapView.Active.Map;
+
+			IEnumerable<BasicFeatureLayer> featureLayers = GetLayers(map).Select(EnsureMapContainsLayerCore);
 
 			IWorkItemRepository repository = CreateRepositoryCore(featureLayers);
 
@@ -24,12 +26,14 @@ namespace ProSuite.AGP.WorkList
 			AddLayer(workList.Name);
 		}
 
-		protected abstract IEnumerable<BasicFeatureLayer> GetLayers();
+		protected abstract IEnumerable<BasicFeatureLayer> GetLayers(Map map);
 
 		protected abstract IWorkList CreateWorkListCore(IWorkItemRepository repository);
 
 		protected abstract IWorkItemRepository CreateRepositoryCore(
 			IEnumerable<BasicFeatureLayer> featureLayers);
+
+		protected abstract BasicFeatureLayer EnsureMapContainsLayerCore(BasicFeatureLayer featureLayer);
 
 		protected IWorkList CreateWorkList(IWorkItemRepository repository, string workListName)
 		{
@@ -78,7 +82,5 @@ namespace ProSuite.AGP.WorkList
 				}
 			}
 		}
-
-		protected abstract BasicFeatureLayer EnsureFeatureLayerCore(BasicFeatureLayer featureLayer);
 	}
 }
