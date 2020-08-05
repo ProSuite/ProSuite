@@ -3,24 +3,28 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain;
+using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList
 {
-	public class DatabaseSourceClass
+	public class DatabaseSourceClass : ISourceClass
 	{
-		public DatabaseSourceClass(string name, DatabaseStatusSchema statusSchema,
+		public GdbTableReference Identity { get; }
+
+		public DatabaseSourceClass(GdbTableReference identity, DatabaseStatusSchema statusSchema,
 		                           IAttributeReader attributeReader)
 		{
-			Name = name;
+			Identity = identity;
 			StatusSchema = statusSchema;
 			AttributeReader = attributeReader;
 		}
 
-		public string Name { get; set; }
+		public string Name => Identity.Name;
+
 		public DatabaseStatusSchema StatusSchema { get; }
+
 		public IAttributeReader AttributeReader { get; }
 
 		[CanBeNull]

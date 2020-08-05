@@ -97,9 +97,17 @@ namespace ProSuite.AGP.WorkList.Test
 				var uri = new Uri(_emptyIssuesGdb, UriKind.Absolute);
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
-				var repository = new ErrorItemRepository(new WorkspaceContext(geodatabase));
+				var workspaceReference = new GdbWorkspaceReference(geodatabase);
+				IWorkItemRepository repository = new ErrorItemRepository(new List<IWorkspaceContext>
+				                                         {
+					                                         new WorkspaceContext(workspaceReference)
+				                                         });
 
-				repository.Register(_featureClassName);
+				repository.RegisterDatasets(new List<GdbTableReference>
+				                            {
+					                            new GdbTableReference(
+						                            _featureClassName, 42, workspaceReference)
+				                            });
 
 				IWorkList workList = new MemoryQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -139,9 +147,17 @@ namespace ProSuite.AGP.WorkList.Test
 				var uri = new Uri(_emptyIssuesGdb, UriKind.Absolute);
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
-				var repository = new ErrorItemRepository(new WorkspaceContext(geodatabase));
+				var workspaceReference = new GdbWorkspaceReference(geodatabase);
+				IWorkItemRepository repository = new ErrorItemRepository(new List<IWorkspaceContext>
+				                                         {
+					                                         new WorkspaceContext(workspaceReference)
+				                                         });
 
-				repository.Register(_featureClassName);
+				repository.RegisterDatasets(new List<GdbTableReference>
+				                            {
+					                            new GdbTableReference(
+						                            _featureClassName, 42, workspaceReference)
+				                            });
 
 				IWorkList workList = new MemoryQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -189,9 +205,17 @@ namespace ProSuite.AGP.WorkList.Test
 				var uri = new Uri(_emptyIssuesGdb, UriKind.Absolute);
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
-				var repository = new ErrorItemRepository(new WorkspaceContext(geodatabase));
+				var workspaceReference = new GdbWorkspaceReference(geodatabase);
+				IWorkItemRepository repository = new ErrorItemRepository(new List<IWorkspaceContext>
+				                                         {
+					                                         new WorkspaceContext(workspaceReference)
+				                                         });
 
-				repository.Register(_featureClassName);
+				repository.RegisterDatasets(new List<GdbTableReference>
+				                            {
+					                            new GdbTableReference(
+						                            _featureClassName, 42, workspaceReference)
+				                            });
 
 				IWorkList workList = new GdbQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -232,9 +256,17 @@ namespace ProSuite.AGP.WorkList.Test
 				var uri = new Uri(_emptyIssuesGdb, UriKind.Absolute);
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
-				var repository = new ErrorItemRepository(new WorkspaceContext(geodatabase));
+				var workspaceReference = new GdbWorkspaceReference(geodatabase);
+				IWorkItemRepository repository = new ErrorItemRepository(new List<IWorkspaceContext>
+				                                         {
+					                                         new WorkspaceContext(workspaceReference)
+				                                         });
 
-				repository.Register("IssuePolygons");
+				repository.RegisterDatasets(new List<GdbTableReference>
+				                            {
+					                            new GdbTableReference(
+						                            _featureClassName, 42, workspaceReference)
+				                            });
 
 				IWorkList workList = new GdbQueryWorkList(repository, "work list");
 

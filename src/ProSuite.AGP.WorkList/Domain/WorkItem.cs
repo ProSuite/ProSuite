@@ -26,22 +26,23 @@ namespace ProSuite.AGP.WorkList.Domain
 		private string _description;
 		private bool _visited;
 
-		protected WorkItem([NotNull] Row row,
+		protected WorkItem(int id, [NotNull] Row row,
 		                   double extentExpansionFactor = 1.1,
 		                   double minimumSizeDegrees = 15,
 		                   double minimumSizeProjected = 0.001) :
-			this(new GdbRowReference(row), extentExpansionFactor, minimumSizeDegrees, minimumSizeProjected)
+			this(id, new GdbRowReference(row), extentExpansionFactor, minimumSizeDegrees, minimumSizeProjected)
 		{
 			var feature = row as Feature;
 
 			SetGeometryFromFeature(feature);
 		}
 
-		protected WorkItem(GdbRowReference reference,
+		protected WorkItem(int id, GdbRowReference reference,
 		                   double extentExpansionFactor = 1.1,
 		                   double minimumSizeDegrees = 15,
 		                   double minimumSizeProjected = 0.001)
 		{
+			OID = id;
 			Proxy = reference;
 
 			Status = WorkItemStatus.Todo;
@@ -87,15 +88,15 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public bool HasGeometry { get; set; }
 
-		public bool IsBasedOn([NotNull] Row row)
-		{
-			return Proxy.References(row);
-		}
+		//public bool IsBasedOn([NotNull] Row row)
+		//{
+		//	return Proxy.References(row);
+		//}
 
-		public bool IsBasedOn(Table table)
-		{
-			return Proxy.References(table);
-		}
+		//public bool IsBasedOn(Table table)
+		//{
+		//	return Proxy.References(table);
+		//}
 
 		//[NotNull]
 		//public Envelope GetExtent()
@@ -155,6 +156,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		protected virtual string GetDescriptionCore(Row row)
 		{
+			// todo daro: GetTable() might be a performance issue?
 			return $"{DatasetUtils.GetTableDisplayName(row.GetTable())} ID={row.GetObjectID()}";
 		}
 

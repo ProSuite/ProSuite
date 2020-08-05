@@ -9,7 +9,7 @@ namespace ProSuite.Commons.AGP.Spatial
 	public static class GeometryUtils
 	{
 		public static IReadOnlyList<Coordinate3D> GetCoordinates(
-			Geometry geometry, GeometryType type)
+			ArcGIS.Core.Geometry.Geometry geometry, GeometryType type)
 		{
 			switch (type)
 			{

@@ -5,6 +5,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Gdb
 {
+	// todo daro: rename GdbRowIdentity
 	/// <summary>
 	///     Represents a lightweight reference to a geodatabase object.
 	/// </summary>
@@ -12,11 +13,10 @@ namespace ProSuite.Commons.AGP.Gdb
 	{
 		public GdbRowReference([NotNull] Row row)
 		{
+			// todo daro: GetTable() might be a performance issue?
 			using (Table table = row.GetTable())
 			{
-				TableId = table.GetID();
-				TableName = table.GetName();
-				WorkspaceReference = new GdbWorkspaceReference(table.GetDatastore());
+				Table = new GdbTableReference(table);
 			}
 
 			ObjectId = row.GetObjectID();
@@ -26,19 +26,12 @@ namespace ProSuite.Commons.AGP.Gdb
 		                       GdbWorkspaceReference workspaceReference = default)
 		{
 			ObjectId = objectId;
-			TableId = tableId;
-			TableName = tableName;
-			WorkspaceReference = workspaceReference;
+			Table = new GdbTableReference(tableName, tableId, workspaceReference);
 		}
 
 		public long ObjectId { get; }
 
-		public long TableId { get; }
-
-		[NotNull]
-		public string TableName { get; }
-
-		public GdbWorkspaceReference WorkspaceReference { get; }
+		public GdbTableReference Table { get; }
 
 		[Pure]
 		[CanBeNull]
@@ -46,7 +39,7 @@ namespace ProSuite.Commons.AGP.Gdb
 		{
 			Assert.ArgumentNotNull(geodatabase, nameof(geodatabase));
 
-			using (var table = geodatabase.OpenDataset<Table>(TableName))
+			using (var table = geodatabase.OpenDataset<Table>(Table.Name))
 			{
 				return GdbQueryUtils.GetRow(table, ObjectId);
 			}
@@ -56,43 +49,39 @@ namespace ProSuite.Commons.AGP.Gdb
 		[CanBeNull]
 		public Row GetRow()
 		{
-			using (Geodatabase geodatabase = WorkspaceReference.OpenGeodatabase())
+			using (Geodatabase geodatabase = Table.WorkspaceReference.OpenGeodatabase())
 			{
 				return GetRow(geodatabase);
 			}
 		}
 
-		[Pure]
-		public bool References([NotNull] Row row)
-		{
-			Assert.ArgumentNotNull(row, nameof(row));
+		//[Pure]
+		//public bool References([NotNull] Row row)
+		//{
+		//	Assert.ArgumentNotNull(row, nameof(row));
 
-			return Equals(new GdbRowReference(row));
-		}
+		//	return Equals(new GdbRowReference(row));
+		//}
 
-		[Pure]
-		public bool References([NotNull] Table table)
-		{
-			Assert.ArgumentNotNull(table, nameof(table));
+		//[Pure]
+		//public bool References([NotNull] Table table)
+		//{
+		//	Assert.ArgumentNotNull(table, nameof(table));
 
-			var other = new GdbWorkspaceReference(table.GetDatastore());
-			return Equals(WorkspaceReference, other);
-		}
+		//	var other = new GdbWorkspaceReference(table.GetDatastore());
+		//	return Equals(WorkspaceReference, other);
+		//}
 
 		public override string ToString()
 		{
-			return $"tableId={TableId} tableName={TableName} oid={ObjectId}";
+			return $"tableId={Table.Id} tableName={Table.Name} oid={ObjectId}";
 		}
 
 		#region IEquatable<GdbRowReference> implementation
 
-		#endregion
-
 		public bool Equals(GdbRowReference other)
 		{
-			return ObjectId == other.ObjectId && TableId == other.TableId &&
-			       string.Equals(TableName, other.TableName) &&
-			       WorkspaceReference.Equals(other.WorkspaceReference);
+			return ObjectId == other.ObjectId && Table.Equals(other.Table);
 		}
 
 		public override bool Equals(object obj)
@@ -104,12 +93,10 @@ namespace ProSuite.Commons.AGP.Gdb
 		{
 			unchecked
 			{
-				int hashCode = ObjectId.GetHashCode();
-				hashCode = (hashCode * 397) ^ TableId.GetHashCode();
-				hashCode = (hashCode * 397) ^ TableName.GetHashCode();
-				hashCode = (hashCode * 397) ^ WorkspaceReference.GetHashCode();
-				return hashCode;
+				return (ObjectId.GetHashCode() * 397) ^ Table.GetHashCode();
 			}
 		}
+
+		#endregion
 	}
 }

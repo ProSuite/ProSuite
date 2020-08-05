@@ -11,6 +11,7 @@ namespace ProSuite.Commons.AGP.Gdb
 		private readonly string _instance;
 		private readonly string _version;
 		private readonly string _user;
+		private readonly EnterpriseDatabaseType _dbms;
 		private readonly string _path;
 
 		public GdbWorkspaceReference([NotNull] Datastore datastore) :
@@ -24,6 +25,7 @@ namespace ProSuite.Commons.AGP.Gdb
 			_version = null;
 			_user = null;
 			_path = null;
+			_dbms = EnterpriseDatabaseType.Unknown;
 
 			switch (connector)
 			{
@@ -31,6 +33,7 @@ namespace ProSuite.Commons.AGP.Gdb
 					_instance = connectionProperties.Instance;
 					_version = connectionProperties.Version;
 					_user = connectionProperties.User;
+					_dbms = connectionProperties.DBMS;
 					break;
 				case FileGeodatabaseConnectionPath fileGeodatabaseConnectionPath:
 					_path = fileGeodatabaseConnectionPath.Path.AbsolutePath;
@@ -47,7 +50,7 @@ namespace ProSuite.Commons.AGP.Gdb
 			Type type = typeof(T);
 			if (type == typeof(DatabaseConnectionProperties))
 			{
-				return new DatabaseConnectionProperties(EnterpriseDatabaseType.Unknown) as T;
+				return new DatabaseConnectionProperties(_dbms) as T;
 			}
 
 			if (type == typeof(FileGeodatabaseConnectionPath))
@@ -62,7 +65,7 @@ namespace ProSuite.Commons.AGP.Gdb
 			if (string.IsNullOrEmpty(_path))
 			{
 				return new Geodatabase(
-					new DatabaseConnectionProperties(EnterpriseDatabaseType.Unknown)
+					new DatabaseConnectionProperties(_dbms)
 					{
 						Instance = _instance, Version = _version, User = _user
 					});
@@ -70,6 +73,11 @@ namespace ProSuite.Commons.AGP.Gdb
 
 			return new Geodatabase(
 				new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)));
+		}
+
+		public override string ToString()
+		{
+			return $"instance={_instance} version={_version} user={_user}, path={_path}";
 		}
 
 		#region IEquatable<GdbRowReference> implementation

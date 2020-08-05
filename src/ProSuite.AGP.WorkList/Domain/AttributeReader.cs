@@ -1,14 +1,11 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
+using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
 	// todo daro: extract super class?
-	public interface IAttributeReader
-	{
-		T GetValue<T>(Row row, Attributes attribute);
-	}
 
 	public class AttributeReader : IAttributeReader
 	{
@@ -21,8 +18,11 @@ namespace ProSuite.AGP.WorkList.Domain
 		public AttributeReader(TableDefinition definition, params Attributes[] attributes)
 		{
 			// todo daro: add all
+			_fieldNameByIssueAttribute.Add(Attributes.ObjectID, definition.GetObjectIDField());
 			_fieldNameByIssueAttribute.Add(Attributes.IssueCodeDescription, "Description");
 			_fieldNameByIssueAttribute.Add(Attributes.IssueCode, "Code");
+
+			_fieldIndexByAttribute.Add(Attributes.ObjectID, definition.FindField(GetName(Attributes.ObjectID)));
 
 			foreach (Attributes attribute in attributes)
 			{

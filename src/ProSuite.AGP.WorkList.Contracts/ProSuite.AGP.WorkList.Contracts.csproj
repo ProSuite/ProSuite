@@ -45,13 +45,16 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Attributes.cs" />
     <Compile Include="DatabaseStatusSchema.cs" />
+    <Compile Include="IAttributeReader.cs" />
+    <Compile Include="ISelectionItemRepository.cs" />
+    <Compile Include="ISourceClass.cs" />
     <Compile Include="IWorkItem.cs" />
     <Compile Include="IWorkList.cs" />
     <Compile Include="IWorkListRegistry.cs" />
     <Compile Include="IWorkItemRepository.cs" />
     <Compile Include="IWorkItemProxy.cs" />
-    <Compile Include="MemoryWorkItemRepository.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WorkItemStatus.cs" />
     <Compile Include="WorkItemVisibility.cs" />
@@ -64,6 +67,10 @@
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
       <Project>{384763d9-f7a1-4aa2-9abd-ee338cd8d4c1}</Project>
       <Name>ProSuite.Commons.Essentials</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.DomainModel\ProSuite.DomainModel.csproj">
+      <Project>{824DDBE3-EDAF-460B-B513-386A4260C1FF}</Project>
+      <Name>ProSuite.DomainModel</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

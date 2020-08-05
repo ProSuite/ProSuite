@@ -40,13 +40,13 @@ namespace ProSuite.AGP.WorkList.Test
 			// Nothing to do. There's no Host.Shutdown or similar
 		}
 
-		private static IWorkItemRepository CreateWorkItemRepository(
-			Geodatabase geodatabase, string datasetName)
-		{
-			var repository = new ErrorItemRepository(new WorkspaceContext(geodatabase));
-			repository.Register(datasetName);
-			return repository;
-		}
+		//private static IWorkItemRepository CreateWorkItemRepository(
+		//	Geodatabase geodatabase, string datasetName)
+		//{
+		//	var repository = new ErrorItemRepository(new WorkspaceContext(geodatabase));
+		//	repository.RegisterDataset(datasetName);
+		//	return repository;
+		//}
 
 		private static IReadOnlyList<Field> GetFields(
 			Geodatabase geodatabase, string featureClassName)

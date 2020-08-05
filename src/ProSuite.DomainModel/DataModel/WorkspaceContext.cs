@@ -1,4 +1,4 @@
-using ArcGIS.Core.Data;
+using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.DomainModel.DataModel
 {
@@ -6,12 +6,6 @@ namespace ProSuite.DomainModel.DataModel
 	{
 		// todo daro: only pass in the connector as parameter to avoid "called
 		// on wrong thread" exception?
-		public WorkspaceContext(Geodatabase geodatabase) : base(geodatabase) { }
-
-		public override Table OpenTable(string name)
-		{
-			// todo daro exception handling
-			return Geodatabase?.OpenDataset<Table>(name);
-		}
+		public WorkspaceContext(GdbWorkspaceReference workspace) : base(workspace) { }
 	}
 }

@@ -1,7 +1,9 @@
-namespace ProSuite.AGP.WorkList.Domain
+namespace ProSuite.AGP.WorkList.Contracts
 {
 	public enum Attributes
 	{
+		ObjectID,
+
 		IssueDescription,
 
 		IssueCode,

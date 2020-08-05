@@ -1,13 +1,15 @@
+using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.Commons.AGP.Gdb;
 using ProSuite.DomainModel.DataModel;
 
 namespace ProSuite.AGP.WorkList
 {
 	public class ErrorItemRepository : GdbItemRepository
 	{
-		public ErrorItemRepository(IWorkspaceContext workspaceContext) : base(workspaceContext) { }
+		public ErrorItemRepository(IEnumerable<IWorkspaceContext> workspaces) : base(workspaces) { }
 
 		protected override DatabaseStatusSchema CreateStatusSchemaCore()
 		{
@@ -22,16 +24,18 @@ namespace ProSuite.AGP.WorkList
 			                           Attributes.IssueCodeDescription);
 		}
 
-		protected override IWorkItem CreateWorkItemCore(
-			Row row, IAttributeReader reader)
+		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass source)
 		{
-			return new ErrorItem(row, reader);
+			int id = CreateItemIDCore(row, source);
+
+			return new ErrorItem(id, row, source.AttributeReader);
 		}
 
-		protected override DatabaseSourceClass CreateSourceClassCore(
-			string name, DatabaseStatusSchema statusSchema, IAttributeReader attributeReader)
+		protected override ISourceClass CreateSourceClassCore(GdbTableReference identity,
+		                                                      IAttributeReader attributeReader,
+		                                                      DatabaseStatusSchema statusSchema = null)
 		{
-			return new DatabaseSourceClass(name, statusSchema, attributeReader);
+			return new DatabaseSourceClass(identity, statusSchema, attributeReader);
 		}
 	}
 }

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -10,7 +9,7 @@ namespace ProSuite.Commons.AGP.Gdb
 	{
 		[NotNull]
 		public static SpatialQueryFilter CreateSpatialFilter(
-			[NotNull] Geometry filterGeometry,
+			[NotNull] ArcGIS.Core.Geometry.Geometry filterGeometry,
 			SpatialRelationship spatialRelationship = SpatialRelationship.Intersects,
 			SearchOrder searchOrder = SearchOrder.Spatial)
 		{

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -22,6 +23,11 @@ namespace ProSuite.AGP.WorkList.Test
 		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true)
 		{
 			return _items;
+		}
+
+		public IEnumerable<ISourceClass> RegisterDatasets(ICollection<GdbTableReference> datasets)
+		{
+			throw new NotImplementedException();
 		}
 	}
 }

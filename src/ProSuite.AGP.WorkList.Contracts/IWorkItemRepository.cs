@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
+using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
@@ -8,5 +9,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		int GetCount(QueryFilter filter = null);
 
 		IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true);
+
+		IEnumerable<ISourceClass> RegisterDatasets(ICollection<GdbTableReference> datasets);
 	}
 }

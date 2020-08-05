@@ -7,7 +7,6 @@ using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Gdb;
-using ProSuite.DomainModel.DataModel;
 
 namespace ProSuite.AGP.WorkList
 {
@@ -94,7 +93,7 @@ namespace ProSuite.AGP.WorkList
 
 		private class TestItem : WorkItem
 		{
-			public TestItem(int oid, double x, double y, string name) : base(new GdbRowReference(oid, -1 , "foo"))
+			public TestItem(int oid, double x, double y, string name) : base(42, new GdbRowReference(oid, -1 , "foo"))
 			{
 				OID = oid;
 				Description = name ?? string.Empty;
@@ -139,14 +138,14 @@ namespace ProSuite.AGP.WorkList
 				return _items;
 			}
 
+			public IEnumerable<ISourceClass> RegisterDatasets(ICollection<GdbTableReference> datasets)
+			{
+				throw new NotImplementedException();
+			}
+
 			public IEnumerable<IWorkItem> GetAll()
 			{
 				return _items;
-			}
-
-			public void Register(string tableName, DatabaseStatusSchema statusSchema = null)
-			{
-				throw new NotImplementedException();
 			}
 		}
 
