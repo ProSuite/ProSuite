@@ -9,6 +9,8 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
     /// </summary>
     public partial class ProSuiteLogPaneView : UserControl
     {
+		private bool _scrollProcessing = false;
+
         public ProSuiteLogPaneView()
         {
             InitializeComponent();
@@ -16,6 +18,7 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
 
         private void logMessagesGrid_ScrollChanged(object sender, ScrollChangedEventArgs e)
         {
+
             // If the entire contents fit on the screen, ignore this event
             if (e.ExtentHeight < e.ViewportHeight)
                 return;
@@ -28,6 +31,10 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
             if (e.ExtentHeightChange == 0.0 && e.ViewportHeightChange == 0.0)
                 return;
 
+			if (_scrollProcessing)
+				return;
+
+			_scrollProcessing = true;
             // If we were close to the bottom when a new item appeared,
             // scroll the new item into view.  We pick a threshold of 5
             // items since issues were seen when resizing the window with
@@ -37,7 +44,9 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
             var oldViewportHeight = e.ViewportHeight - e.ViewportHeightChange;
             if (oldVerticalOffset + oldViewportHeight + 5 >= oldExtentHeight)
                 logMessagesGrid.ScrollIntoView(logMessagesGrid.Items[logMessagesGrid.Items.Count - 1]);
-        }
+
+			_scrollProcessing = false;
+		}
 
     }
 
