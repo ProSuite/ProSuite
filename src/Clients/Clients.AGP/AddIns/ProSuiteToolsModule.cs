@@ -300,9 +300,9 @@ namespace Clients.AGP.ProSuiteSolution
 			// TODO - is REST an alternative solution? 
 			// https://vsdev2414.esri-de.com/server/rest/services/PROSUITE_QA/verification/GPServer/verifydataset/execute?object_class=%5C%5Cvsdev2414%5Cprosuite_server_trials%5Ctestdata.gdb%5Cpolygons&tile_size=10000&parameters=&verification_extent=&env%3AoutSR=&env%3AprocessSR=&returnZ=false&returnM=false&returnTrueCurves=false&returnFeatureCollection=false&context=&f=json
 
-			//ProSuiteLogger.Logger.Log(LogType.Info, "Open configuration", "Click");
-			// TODO test hyperlink ....
-			_msg.Debug("Click");
+			_msg.Error("Click error <e>link</e> to get something");
+			_msg.Info("Click info");
+			_msg.Debug("<e>Debug</e> to Click debug");
 		}
 	}
 
