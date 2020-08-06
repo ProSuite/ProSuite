@@ -29,6 +29,14 @@ namespace ProSuite.AGP.WorkList
 			_observers = new List<IWorkListObserver>();
 		}
 
+		private void WorkList_WorkListChanged(object sender, WorkListChangedEventArgs e)
+		{
+			foreach (var observer in _observers)
+			{
+				//observer.WorkListModified(workList);
+			}
+		}
+
 		/* The UI may (un)register itself */
 
 		public void RegisterObserver(IWorkListObserver observer)
@@ -41,19 +49,22 @@ namespace ProSuite.AGP.WorkList
 			_observers.Remove(observer);
 		}
 
-		public IWorkList GetWorkList(string name)
+		public IWorkList Get(string name)
 		{
 			return _registry.Get(name);
 		}
 
-		public IEnumerable<IWorkList> GetAllLists()
+		public IEnumerable<IWorkList> GetAll()
 		{
 			return _registry.GetAll();
 		}
 
-		public void SetWorkList(IWorkList workList)
+		// todo daro: return name?
+		public void Set(IWorkList workList)
 		{
 			_registry.Add(workList);
+
+			workList.WorkListChanged += WorkList_WorkListChanged;
 
 			// TODO find and show layer, create if missing
 
@@ -63,17 +74,17 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		public void ShowWorkList(IWorkList workList)
+		public void Show(IWorkList workList)
 		{
 			// TODO find and show layer, create it if missing
 		}
 
-		public void HideWorkList(IWorkList workList)
+		public void Hide(IWorkList workList)
 		{
 			// TODO find and hide layer
 		}
 
-		public void DestroyWorkList(IWorkList workList)
+		public void Dispose(IWorkList workList)
 		{
 			// TODO find and remove layer(s) in all maps
 

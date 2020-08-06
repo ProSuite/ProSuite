@@ -2,16 +2,24 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.DomainModel.DataModel;
 
-namespace ProSuite.AGP.WorkList
+namespace Clients.AGP.ProSuiteSolution.WorkLists
 {
 	public class DatabaseWorkEnvironment : WorkEnvironmentBase
 	{
 		const string _workListName = "Error Work List";
+
+		protected override void ShowWorkListCore(IWorkList workList,
+		                                     LayerDocument template)
+		{
+			WorkListsModule.Current.Show(workList, template);
+		}
 
 		protected override IEnumerable<BasicFeatureLayer> GetLayers(Map map)
 		{
@@ -19,6 +27,12 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		protected override BasicFeatureLayer EnsureMapContainsLayerCore(BasicFeatureLayer featureLayer)
+		{
+			// todo daro: determine layer identity
+			throw new NotImplementedException();
+		}
+
+		protected override LayerDocument GetLayerDocumentCore()
 		{
 			throw new NotImplementedException();
 		}
@@ -38,7 +52,7 @@ namespace ProSuite.AGP.WorkList
 
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository)
 		{
-			return CreateWorkList(repository, _workListName);
+			return new ErrorWorkList(repository, _workListName);
 		}
 	}
 }

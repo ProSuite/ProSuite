@@ -23,7 +23,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		private double _zmin;
 		private bool _isZAware;
 		private WorkItemStatus _status;
-		private string _description;
 		private bool _visited;
 
 		protected WorkItem(int id, [NotNull] Row row,
@@ -70,16 +69,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			set
 			{
 				_status = value;
-				OnPropertyChanged();
-			}
-		}
-
-		public string Description
-		{
-			get => _description;
-			set
-			{
-				_description = value;
 				OnPropertyChanged();
 			}
 		}

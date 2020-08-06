@@ -18,6 +18,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		public AttributeReader(TableDefinition definition, params Attributes[] attributes)
 		{
 			// todo daro: add all
+			// todo daro: does FindField works with qualified field names?
 			_fieldNameByIssueAttribute.Add(Attributes.ObjectID, definition.GetObjectIDField());
 			_fieldNameByIssueAttribute.Add(Attributes.IssueCodeDescription, "Description");
 			_fieldNameByIssueAttribute.Add(Attributes.IssueCode, "Code");

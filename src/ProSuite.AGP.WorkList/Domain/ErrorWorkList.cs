@@ -3,7 +3,7 @@ using ProSuite.AGP.WorkList.Contracts;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
-	internal class ErrorWorkList : WorkList
+	public class ErrorWorkList : WorkList
 	{
 		public ErrorWorkList(IWorkItemRepository repository, string name) :
 			base(repository, name) { }

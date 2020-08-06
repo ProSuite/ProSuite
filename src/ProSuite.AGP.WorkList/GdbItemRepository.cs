@@ -10,6 +10,7 @@ using ProSuite.DomainModel.DataModel;
 
 namespace ProSuite.AGP.WorkList
 {
+	// todo daro: SetStatusDone !!!!
 	// Note maybe all SDK code, like open workspace, etc. should be in here. Not in DatabaseSourceClass for instance.
 	public abstract class GdbItemRepository : IWorkItemRepository
 	{

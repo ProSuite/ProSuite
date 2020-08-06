@@ -47,11 +47,11 @@ namespace Clients.AGP.ProSuiteSolution.WorkListTrials
 		{
 			var name = TestWorkList.Name;
 
-			var workList = Central.GetWorkList(name);
+			var workList = Central.Get(name);
 			if (workList == null)
 			{
 				workList = TestWorkList.Create(name);
-				Central.SetWorkList(workList);
+				Central.Set(workList);
 			}
 
 			return workList;
@@ -76,7 +76,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkListTrials
 			_msg.Debug("Initialize()");
 
 			// TODO Testing: always have the TestWorkList:
-			Central.SetWorkList(TestWorkList.Create());
+			Central.Set(TestWorkList.Create());
 
 			return true; // initialization successful
 		}

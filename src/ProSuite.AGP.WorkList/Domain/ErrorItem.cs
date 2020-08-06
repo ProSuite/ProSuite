@@ -6,6 +6,8 @@ namespace ProSuite.AGP.WorkList.Domain
 	// todo daro: find correct folder and namespace for this class
 	public class ErrorItem : WorkItem
 	{
+		private string _issueCodeDescription;
+
 		public ErrorItem(int id, Row row,
 		                 IAttributeReader reader,
 		                 double extentExpansionFactor = 1.1,
@@ -13,9 +15,20 @@ namespace ProSuite.AGP.WorkList.Domain
 		                 double minimumSizeProjected = 0.001) : base(
 			id, row, extentExpansionFactor, minimumSizeDegrees, minimumSizeProjected)
 		{
-			Description = reader.GetValue<string>(row, Attributes.IssueCodeDescription);
+			ObjectID = reader.GetValue<int>(row, Attributes.ObjectID);
+			IssueCodeDescription = reader.GetValue<string>(row, Attributes.IssueCodeDescription);
 		}
 
-		public string Description { get; }
+		public int ObjectID { get; }
+
+		public string IssueCodeDescription
+		{
+			get => _issueCodeDescription;
+			set
+			{
+				_issueCodeDescription = value;
+				OnPropertyChanged();
+			}
+		}
 	}
 }

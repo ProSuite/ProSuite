@@ -1,16 +1,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.DomainModel.DataModel;
 
-namespace ProSuite.AGP.WorkList
+namespace Clients.AGP.ProSuiteSolution.WorkLists
 {
 	public class InMemoryWorkEnvironment : WorkEnvironmentBase
 	{
-		const string _workListName = "Selection Work List";
+		private readonly string _workListName = "Selection Work List";
+		private readonly string _templateLayer = "Selection Work List.lyrx";
+
+		protected override void ShowWorkListCore(IWorkList workList,
+		                                         LayerDocument template)
+		{
+			WorkListsModule.Current.Show(workList, template);
+		}
 
 		protected override IEnumerable<BasicFeatureLayer> GetLayers(Map map)
 		{
@@ -27,6 +35,15 @@ namespace ProSuite.AGP.WorkList
 			return featureLayer;
 		}
 
+		protected override LayerDocument GetLayerDocumentCore()
+		{
+			string path = ConfigurationUtils.GetConfigFilePath(_templateLayer);
+
+			LayerDocument layerDocument = LayerUtils.CreateLayerDocument(path);
+			// todo daro: inline
+			return layerDocument;
+		}
+
 		protected override IWorkItemRepository CreateRepositoryCore(IEnumerable<BasicFeatureLayer> featureLayers)
 		{
 			Dictionary<GdbTableIdentity, List<long>> selectionByTable =
@@ -34,6 +51,7 @@ namespace ProSuite.AGP.WorkList
 
 			IEnumerable<IWorkspaceContext> workspaces = GetWorkspaceContexts(distinctWorkspaces);
 
+			// todo daro: rafactor SelectionItemRepository(Dictionary<IWorkspaceContext, GdbTableIdentity>, Dictionary<GdbTableIdentity, List<long>>)
 			ISelectionItemRepository repository = new SelectionItemRepository(workspaces);
 			repository.RegisterDatasets(selectionByTable);
 
@@ -42,7 +60,7 @@ namespace ProSuite.AGP.WorkList
 
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository)
 		{
-			return CreateWorkList(repository, _workListName);
+			return new ProSuite.AGP.WorkList.Domain.SelectionWorkList(repository, _workListName);
 		}
 	}
 }

@@ -14,9 +14,6 @@ namespace ProSuite.Commons.AGP.Gdb
 			string name = definition.GetName();
 			string alias = definition.GetAliasName();
 
-			// todo daro: are they equal?
-			//string name = table.GetName();
-
 			if (! name.Equals(alias, StringComparison.CurrentCultureIgnoreCase))
 			{
 				return alias;

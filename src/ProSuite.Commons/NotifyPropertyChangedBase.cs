@@ -4,7 +4,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons
 {
-	public class NotifyPropertyChangedBase:INotifyPropertyChanged
+	public class NotifyPropertyChangedBase : INotifyPropertyChanged
 	{
 		public event PropertyChangedEventHandler PropertyChanged;
 

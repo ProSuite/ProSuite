@@ -4,7 +4,7 @@ using ProSuite.AGP.WorkList.Domain;
 
 namespace ProSuite.AGP.WorkList
 {
-	internal class SelectionItem : WorkItem
+	public class SelectionItem : WorkItem
 	{
 		public SelectionItem(int id, Row row,
 		                     IAttributeReader reader,
@@ -16,6 +16,6 @@ namespace ProSuite.AGP.WorkList
 			ObjectID = reader.GetValue<int>(row, Attributes.ObjectID);
 		}
 
-		public long ObjectID { get; }
+		public int ObjectID { get; }
 	}
 }

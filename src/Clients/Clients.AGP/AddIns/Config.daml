@@ -69,7 +69,6 @@
           <splitButton refID="ProSuite_AGP_MainSolution_SplitButtonTestListNav" />
           <button refID="Clients_AGP_ProSuiteSolution_CreateErrorWorkList" size="large" />
           <comboBox refID="Clients_AGP_ProSuiteSolution_WorkListVisibilityComboBox" />
-					<button refID="Clients_AGP_ProSuiteSolution_CreateSelectionWorkListButton" />
         </group>
       </groups>
       <controls>
@@ -91,9 +90,6 @@
         <button id="ProSuite_AGP_MainSolution_SplitButtonTestListNav_Items_ButtonFirst" caption="Go First" className="WorkListTrials.SplitButtonTestListNav_GoFirst" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlack16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlack32.png">
           <tooltip heading="First Item">Rewind to first item on Test work list<disabledText /></tooltip>
         </button>
-        <button id="Clients_AGP_ProSuiteSolution_CreateSelectionWorkListButton" caption="Create Selection WorkList" className="CreateSelectionWorkListButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
-          <tooltip heading="Tooltip Heading">Tooltip text<disabledText /></tooltip>
-        </button>
       </controls>
       <splitButtons>
         <splitButton id="ProSuite_AGP_MainSolution_SplitButtonTestListNav">
@@ -103,5 +99,33 @@
         </splitButton>
       </splitButtons>
     </insertModule>
+		<insertModule id="ProSuite_WorkList_Module" className="WorkLists.WorkListsModule" autoLoad="true" caption="Selection Work List Module">
+			<tabs>
+				<tab id="ProSuite_WorkList_Tab" caption="Work List">
+					<group refID="ProSuite_WorkList_Group"/>
+				</tab>
+			</tabs>
+			<groups>
+				<group id="ProSuite_WorkList_Group" caption="Selection Work List">
+					<button refID="Clients_AGP_ProSuiteSolution_CreateSelectionWorkListButton"/>
+					<button refID="Clients_AGP_ProSuiteSolution_GoFirstButton"/>
+					<button refID="Clients_AGP_ProSuiteSolution_GoNextButton"/>
+				</group>
+			</groups>
+			<controls>
+				<button id="Clients_AGP_ProSuiteSolution_CreateSelectionWorkListButton" caption="Create Selection WorkList" className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
+					<tooltip heading="tooltip heading">foo<disabledText />
+					</tooltip>
+				</button>
+				<button id="Clients_AGP_ProSuiteSolution_GoFirstButton" caption="Go First" className="WorkLists.GoFirstButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
+					<tooltip heading="tooltip heading">foo<disabledText />
+					</tooltip>
+				</button>
+				<button id="Clients_AGP_ProSuiteSolution_GoNextButton" caption="Go Next" className="WorkLists.GoNextButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
+					<tooltip heading="tooltip heading">foo<disabledText />
+					</tooltip>
+				</button>
+			</controls>
+		</insertModule>
   </modules>
 </ArcGIS>

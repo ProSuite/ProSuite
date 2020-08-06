@@ -272,10 +272,10 @@ namespace ProSuite.AGP.WorkList.Test
 
 				var items = workList.GetItems().Cast<ErrorItem>().ToList();
 
-				Assert.AreEqual("Bart", items[0].Description);
-				Assert.AreEqual("Bart", items[1].Description);
-				Assert.AreEqual("Bart", items[2].Description);
-				Assert.AreEqual("Bart", items[3].Description);
+				Assert.AreEqual("Bart", items[0].IssueCodeDescription);
+				Assert.AreEqual("Bart", items[1].IssueCodeDescription);
+				Assert.AreEqual("Bart", items[2].IssueCodeDescription);
+				Assert.AreEqual("Bart", items[3].IssueCodeDescription);
 			}
 			finally
 			{

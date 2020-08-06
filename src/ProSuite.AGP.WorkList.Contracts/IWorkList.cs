@@ -52,5 +52,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		bool CanGoPrevious();
 		void GoPrevious();
+
+		event EventHandler<WorkListChangedEventArgs> WorkListChanged;
 	}
 }

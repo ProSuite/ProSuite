@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using ArcGIS.Core.Data;
@@ -10,11 +9,12 @@ using ProSuite.DomainModel.DataModel;
 
 namespace ProSuite.AGP.WorkList
 {
-	internal class SelectionItemRepository : GdbItemRepository, ISelectionItemRepository
+	public class SelectionItemRepository : GdbItemRepository, ISelectionItemRepository
 	{
 		private readonly Dictionary<ISourceClass, List<long>> _oidsBySource =
 			new Dictionary<ISourceClass, List<long>>();
 
+		// todo daro: rafactor SelectionItemRepository(Dictionary<IWorkspaceContext, GdbTableIdentity>, Dictionary<GdbTableIdentity, List<long>>)
 		public SelectionItemRepository(
 			IEnumerable<IWorkspaceContext> workspaces) : base(workspaces) { }
 

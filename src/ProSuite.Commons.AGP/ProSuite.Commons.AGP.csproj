@@ -42,6 +42,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Carto\LayerUtils.cs" />
     <Compile Include="Carto\MapUtils.cs" />
     <Compile Include="CIM\CimDatasetReference.cs" />
     <Compile Include="CIM\CimFeatureWorkspaceReference.cs" />

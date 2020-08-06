@@ -1,11 +1,7 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.DomainModel.DataModel;
 
@@ -13,7 +9,7 @@ namespace ProSuite.AGP.WorkList
 {
 	public abstract class WorkEnvironmentBase
 	{
-		public void OpenWorkList()
+		public void CreateWorkList()
 		{
 			Map map = MapView.Active.Map;
 
@@ -21,10 +17,15 @@ namespace ProSuite.AGP.WorkList
 
 			IWorkItemRepository repository = CreateRepositoryCore(featureLayers);
 
+			// todo daro: dispose work list to free memory !!!!
 			IWorkList workList = CreateWorkListCore(repository);
 
-			AddLayer(workList.Name);
+			LayerDocument layerTemplate = GetLayerDocumentCore();
+
+			ShowWorkListCore(workList, layerTemplate);
 		}
+
+		protected abstract void ShowWorkListCore(IWorkList workList, LayerDocument template);
 
 		protected abstract IEnumerable<BasicFeatureLayer> GetLayers(Map map);
 
@@ -35,52 +36,26 @@ namespace ProSuite.AGP.WorkList
 
 		protected abstract BasicFeatureLayer EnsureMapContainsLayerCore(BasicFeatureLayer featureLayer);
 
-		protected IWorkList CreateWorkList(IWorkItemRepository repository, string workListName)
-		{
-			IWorkList list = WorkListRegistry.Instance.Get(workListName);
-			if (list != null)
-			{
-				WorkListRegistry.Instance.Remove(workListName);
-			}
-
-			IWorkList workList = CreateWorkListCore(repository);
-			WorkListRegistry.Instance.Add(workList);
-
-			return workList;
-		}
-
 		protected static IEnumerable<IWorkspaceContext> GetWorkspaceContexts(
 			IEnumerable<GdbWorkspaceIdentity> distinctWorkspaces)
 		{
 			return distinctWorkspaces.Select(dws => (IWorkspaceContext) new WorkspaceContext(dws));
 		}
 
-		private PluginDatasourceConnectionPath GetWorkListConnectionPath(string workListName)
-		{
-			const string pluginIdentifier = "ProSuite_WorkListDatasource";
+		//private void AddLayer(string workListName)
+		//{
+		//	Uri uri = GetUri(workListName);
+		//	//NOTE useless, does not work
+		//	FeatureLayerCreationParams layerCreationParams =
+		//		LayerUtils.CreateLayerParams(uri, layerDocument);
 
-			var baseUri = new Uri("worklist://localhost/");
-			var datasourcePath = new Uri(baseUri, workListName);
+		//	var layer =
+		//		LayerFactory.Instance.CreateLayer<FeatureLayer>(layerCreationParams,
+		//		                                                MapView.Active.Map,
+		//		                                                LayerPosition.AddToTop);
+		//}
 
-			return new PluginDatasourceConnectionPath(pluginIdentifier, datasourcePath);
-		}
-
-		private void AddLayer(string workListName)
-		{
-			PluginDatasourceConnectionPath connector = GetWorkListConnectionPath(workListName);
-
-			using (var datastore = new PluginDatastore(connector))
-			{
-				IReadOnlyList<string> tableNames = datastore.GetTableNames();
-				foreach (string tableName in tableNames)
-				{
-					using (Table table = datastore.OpenTable(tableName))
-					{
-						LayerFactory.Instance.CreateFeatureLayer(
-							(FeatureClass) table, MapView.Active.Map);
-					}
-				}
-			}
-		}
+		// todo daro: move to module?
+		protected abstract LayerDocument GetLayerDocumentCore();
 	}
 }

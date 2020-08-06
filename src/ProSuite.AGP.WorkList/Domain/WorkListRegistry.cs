@@ -33,6 +33,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
+		// todo daro: return name?
 		public void Add(IWorkList workList)
 		{
 			if (workList == null)

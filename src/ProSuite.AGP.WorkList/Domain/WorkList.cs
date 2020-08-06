@@ -25,7 +25,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		protected IWorkItemRepository Repository { get; }
 
 		private readonly List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
-		
+		private EventHandler<WorkListChangedEventArgs> _workListChanged;
+
 		protected WorkList(IWorkItemRepository repository, string name)
 		{
 			Repository = repository;
@@ -40,6 +41,12 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				_items.Add(item);
 			}
+		}
+		
+		public event EventHandler<WorkListChangedEventArgs> WorkListChanged
+		{
+			add { _workListChanged += value; }
+			remove { _workListChanged -= value; }
 		}
 
 		public string Name { get; }
@@ -112,7 +119,17 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual void GoFirst()
 		{
-			GoNext();
+			CurrentIndex = 0;
+
+			IWorkItem nextItem = GetNextVisibleItem();
+			//TODO should also set current item visited=true
+
+			if (nextItem != null)
+			{
+				Assert.False(Equals(nextItem, Current), "current item and next item are equal");
+
+				SetCurrentItem(nextItem, Current);
+			}
 		}
 
 		public virtual bool CanGoNearest()
@@ -139,7 +156,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				Assert.False(Equals(nextItem, Current), "current item and next item are equal");
 
-				SetCurrentItem(nextItem);
+				SetCurrentItem(nextItem, Current);
 			}
 		}
 
@@ -176,11 +193,18 @@ namespace ProSuite.AGP.WorkList.Domain
 		///     Sets given work item as the current one. Updates the current item
 		///     index and sets the work item as visited.
 		/// </summary>
-		/// <param name="item">The work item.</param>
-		private void SetCurrentItem([NotNull] IWorkItem item)
+		/// <param name="nextItem"></param>
+		/// <param name="currentItem">The work item.</param>
+		private void SetCurrentItem([NotNull] IWorkItem nextItem, [CanBeNull] IWorkItem currentItem)
 		{
-			item.Visited = true;
-			CurrentIndex = _items.IndexOf(item);
+			nextItem.Visited = true;
+			CurrentIndex = _items.IndexOf(nextItem);
+
+			var oids = currentItem != null
+				           ? new List<long> {nextItem.OID, currentItem.OID}
+				           : new List<long> {nextItem.OID};
+
+			OnWorkListChanged(null, oids);
 		}
 
 		[CanBeNull]
@@ -299,5 +323,10 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		#endregion
+
+		private void OnWorkListChanged([CanBeNull] Envelope extent = null, [CanBeNull] List<long> oids = null)
+		{
+			_workListChanged?.Invoke(this, new WorkListChangedEventArgs(extent, oids));
+		}
 	}
 }
