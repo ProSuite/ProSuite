@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
+using Clients.AGP.ProSuiteSolution.WorkLists;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
@@ -19,11 +20,11 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 			                                     true);
 			GoNextItemCmd = new RelayCommand(GoNextItem, () => true, false,
 			                                     true);
-			WorkListCentral = new WorkListCentral();
+			WorkListCentral = WorkListsModule.Current.Central;
 			WorkListCentral.RegisterObserver(this);
-			WorkLists = WorkListCentral.GetAllLists();
+			WorkLists = WorkListCentral.GetAll();
 			CurrentWorkList = WorkLists.First();
-			CurrentWorkItem = CurrentWorkList.GetItems().First();
+			CurrentWorkItem = CurrentWorkList.Current;
 		}
 
 		private IWorkList _currentWorkList;
