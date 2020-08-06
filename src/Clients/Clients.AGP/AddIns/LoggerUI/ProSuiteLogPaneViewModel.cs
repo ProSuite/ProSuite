@@ -174,6 +174,18 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
 		{
 			LoggingEventsAppender.OnNewLogMessage -= this.Logger_OnNewLogMessage;
 		}
+
+		// TODO temporary log test while VS2019 have problems
+		internal static void GenerateTestMessages(int number)
+		{
+			var i = 0;
+			while( i++ < number)
+			{
+				_msg.Error($"Click error <e>link</e> to get something nr={i}");
+				_msg.Info("Click info");
+				_msg.Debug("<e>Debug</e> to Click debug");
+			}			
+		}
 	}
 
     /// <summary>
