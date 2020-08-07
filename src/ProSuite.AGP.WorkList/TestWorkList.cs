@@ -143,6 +143,11 @@ namespace ProSuite.AGP.WorkList
 				throw new NotImplementedException();
 			}
 
+			public void Save(IWorkItem item)
+			{
+				throw new NotImplementedException();
+			}
+
 			public IEnumerable<IWorkItem> GetAll()
 			{
 				return _items;

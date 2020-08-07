@@ -7,6 +7,7 @@ using ProSuite.DomainModel.DataModel;
 
 namespace ProSuite.AGP.WorkList
 {
+	// todo daro: refactor!!!
 	public abstract class WorkEnvironmentBase
 	{
 		public void CreateWorkList()
@@ -20,12 +21,13 @@ namespace ProSuite.AGP.WorkList
 			// todo daro: dispose work list to free memory !!!!
 			IWorkList workList = CreateWorkListCore(repository);
 
+			// todo daro: refactor!!!
 			LayerDocument layerTemplate = GetLayerDocumentCore();
 
 			ShowWorkListCore(workList, layerTemplate);
 		}
 
-		protected abstract void ShowWorkListCore(IWorkList workList, LayerDocument template);
+		protected abstract void ShowWorkListCore(IWorkList workList, LayerDocument layerTemplate);
 
 		protected abstract IEnumerable<BasicFeatureLayer> GetLayers(Map map);
 
@@ -42,6 +44,39 @@ namespace ProSuite.AGP.WorkList
 			return distinctWorkspaces.Select(dws => (IWorkspaceContext) new WorkspaceContext(dws));
 		}
 
+		protected abstract LayerDocument GetLayerDocumentCore();
+
+		#region trials
+
+		//[CanBeNull]
+		//private FeatureLayerCreationParams CreateLayer([NotNull] string workListName)
+		//{
+		//	FeatureLayerCreationParams result = null;
+		//	PluginDatastore datastore = null;
+		//	Table table = null;
+
+		//	try
+		//	{
+		//		PluginDatasourceConnectionPath connector = GetWorkListConnectionPath(workListName);
+
+		//		datastore = new PluginDatastore(connector);
+		//		table = datastore.OpenTable(workListName);
+
+		//		result = LayerUtils.CreateLayerParams((FeatureClass) table);
+		//	}
+		//	catch (Exception exception)
+		//	{
+		//		Console.WriteLine(exception);
+		//	}
+		//	finally
+		//	{
+		//		datastore?.Dispose();
+		//		table?.Dispose();
+		//	}
+
+		//	return result;
+		//}
+
 		//private void AddLayer(string workListName)
 		//{
 		//	Uri uri = GetUri(workListName);
@@ -51,11 +86,10 @@ namespace ProSuite.AGP.WorkList
 
 		//	var layer =
 		//		LayerFactory.Instance.CreateLayer<FeatureLayer>(layerCreationParams,
-		//		                                                MapView.Active.Map,
-		//		                                                LayerPosition.AddToTop);
+		//														MapView.Active.Map,
+		//														LayerPosition.AddToTop);
 		//}
 
-		// todo daro: move to module?
-		protected abstract LayerDocument GetLayerDocumentCore();
+		#endregion
 	}
 }

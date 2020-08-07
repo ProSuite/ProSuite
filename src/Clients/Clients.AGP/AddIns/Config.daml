@@ -114,16 +114,13 @@
 			</groups>
 			<controls>
 				<button id="Clients_AGP_ProSuiteSolution_CreateSelectionWorkListButton" caption="Create Selection WorkList" className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
-					<tooltip heading="tooltip heading">foo<disabledText />
-					</tooltip>
+					<tooltip heading="tooltip heading">foo<disabledText /></tooltip>
 				</button>
 				<button id="Clients_AGP_ProSuiteSolution_GoFirstButton" caption="Go First" className="WorkLists.GoFirstButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
-					<tooltip heading="tooltip heading">foo<disabledText />
-					</tooltip>
+					<tooltip heading="tooltip heading">foo<disabledText /></tooltip>
 				</button>
 				<button id="Clients_AGP_ProSuiteSolution_GoNextButton" caption="Go Next" className="WorkLists.GoNextButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
-					<tooltip heading="tooltip heading">foo<disabledText />
-					</tooltip>
+					<tooltip heading="tooltip heading">foo<disabledText /></tooltip>
 				</button>
 			</controls>
 		</insertModule>

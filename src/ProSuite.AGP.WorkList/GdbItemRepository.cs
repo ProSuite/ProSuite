@@ -40,6 +40,11 @@ namespace ProSuite.AGP.WorkList
 			return RegisterDatasetsCore(datasets);
 		}
 
+		public void Save(IWorkItem item)
+		{
+			throw new NotImplementedException();
+		}
+
 		protected IEnumerable<ISourceClass> RegisterDatasetsCore(ICollection<GdbTableIdentity> datasets)
 		{
 			foreach (IWorkspaceContext workspace in _workspaces)

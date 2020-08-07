@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Hosting;
 using NUnit.Framework;
-using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.DomainModel.DataModel;
 
 namespace ProSuite.AGP.WorkList.Test
 {

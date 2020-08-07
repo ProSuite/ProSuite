@@ -29,5 +29,10 @@ namespace ProSuite.AGP.WorkList.Test
 		{
 			throw new NotImplementedException();
 		}
+
+		public void Save(IWorkItem item)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

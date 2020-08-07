@@ -15,10 +15,9 @@ namespace Clients.AGP.ProSuiteSolution.WorkLists
 	{
 		const string _workListName = "Error Work List";
 
-		protected override void ShowWorkListCore(IWorkList workList,
-		                                     LayerDocument template)
+		protected override void ShowWorkListCore(IWorkList workList, LayerDocument layerTemplate)
 		{
-			WorkListsModule.Current.Show(workList, template);
+			WorkListsModule.Current.Show(workList, layerTemplate);
 		}
 
 		protected override IEnumerable<BasicFeatureLayer> GetLayers(Map map)

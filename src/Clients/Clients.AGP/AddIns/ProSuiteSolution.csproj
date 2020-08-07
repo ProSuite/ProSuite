@@ -246,6 +246,9 @@
     <Resource Include="Images\StatusOK_16x.png" />
     <Resource Include="Images\StatusWarning_12x_16x.png" />
   </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Install\Selection Work List.lyrx" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:

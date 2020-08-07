@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
@@ -11,6 +12,8 @@ namespace ProSuite.AGP.WorkList
 		void WorkListRemoved(IWorkList workList);
 
 		void WorkListModified(IWorkList workList);
+
+		void Show(IWorkList workList);
 	}
 
 	/// <summary>
@@ -23,18 +26,11 @@ namespace ProSuite.AGP.WorkList
 		private readonly WorkListRegistry _registry;
 		private readonly IList<IWorkListObserver> _observers;
 
+		[Obsolete("Use WorkListsModul instead")]
 		public WorkListCentral()
 		{
 			_registry = WorkListRegistry.Instance;
 			_observers = new List<IWorkListObserver>();
-		}
-
-		private void WorkList_WorkListChanged(object sender, WorkListChangedEventArgs e)
-		{
-			foreach (var observer in _observers)
-			{
-				//observer.WorkListModified(workList);
-			}
 		}
 
 		/* The UI may (un)register itself */
@@ -63,8 +59,6 @@ namespace ProSuite.AGP.WorkList
 		public void Set(IWorkList workList)
 		{
 			_registry.Add(workList);
-
-			workList.WorkListChanged += WorkList_WorkListChanged;
 
 			// TODO find and show layer, create if missing
 

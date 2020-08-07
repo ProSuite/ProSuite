@@ -14,10 +14,9 @@ namespace Clients.AGP.ProSuiteSolution.WorkLists
 		private readonly string _workListName = "Selection Work List";
 		private readonly string _templateLayer = "Selection Work List.lyrx";
 
-		protected override void ShowWorkListCore(IWorkList workList,
-		                                         LayerDocument template)
+		protected override void ShowWorkListCore(IWorkList workList, LayerDocument layerTemplate)
 		{
-			WorkListsModule.Current.Show(workList, template);
+			WorkListsModule.Current.Show(workList, layerTemplate);
 		}
 
 		protected override IEnumerable<BasicFeatureLayer> GetLayers(Map map)
@@ -46,8 +45,8 @@ namespace Clients.AGP.ProSuiteSolution.WorkLists
 
 		protected override IWorkItemRepository CreateRepositoryCore(IEnumerable<BasicFeatureLayer> featureLayers)
 		{
-			Dictionary<GdbTableIdentity, List<long>> selectionByTable =
-				MapUtils.GetDistinctSelectionByTable(featureLayers, out IEnumerable<GdbWorkspaceIdentity> distinctWorkspaces);
+			// todo daro: refactor!!!
+			Dictionary<GdbTableIdentity, List<long>> selectionByTable = MapUtils.GetDistinctSelectionByTable(featureLayers, out IEnumerable<GdbWorkspaceIdentity> distinctWorkspaces);
 
 			IEnumerable<IWorkspaceContext> workspaces = GetWorkspaceContexts(distinctWorkspaces);
 
