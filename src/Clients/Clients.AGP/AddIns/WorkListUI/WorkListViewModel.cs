@@ -20,7 +20,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 			                                     true);
 			GoNextItemCmd = new RelayCommand(GoNextItem, () => true, false,
 			                                     true);
-			WorkListCentral = WorkListsModule.Current.Central;
+			WorkListCentral = new WorkListCentral();
 			WorkListCentral.RegisterObserver(this);
 			WorkLists = WorkListCentral.GetAll();
 			CurrentWorkList = WorkLists.First();
@@ -63,6 +63,11 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 		}
 
 		public void WorkListModified(IWorkList workList)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void Show(IWorkList workList)
 		{
 			throw new NotImplementedException();
 		}
