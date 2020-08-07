@@ -7,6 +7,7 @@
                  xmlns:esri="http://schemas.esri.com/arcgis/runtime/2013"
                  xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
                  xmlns:local="clr-namespace:Clients.AGP.ProSuiteSolution.LoggerUI"
+                 xmlns:converters="clr-namespace:Clients.AGP.ProSuiteSolution.LoggerUI"
                  mc:Ignorable="d" 
                  d:DesignHeight="300" d:DesignWidth="300"
                  d:DataContext="{Binding Path=ui.ProSuiteLogPaneViewModel}">
@@ -15,6 +16,11 @@
             <ResourceDictionary.MergedDictionaries>
                 <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <BitmapImage x:Key="debug" UriSource="/ProSuiteSolution;component/Images/StatusOK_16x.png" x:Shared="False" />
+            <BitmapImage x:Key="debug1" UriSource="/ProSuiteSolution;component/Images/FlagGreen_16x.png" x:Shared="False" />
+            <BitmapImage x:Key="debug2" UriSource="/ProSuiteSolution;component/Images/Checkmark_green_12x_16x.png" x:Shared="False" />
+            <converters:LogMessageImageConverter x:Key="LogMessageImageConverter"/>
+            <converters:LogMessageLinkConverter x:Key="LogMessageLinkConverter"/>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
@@ -38,17 +44,24 @@
                 ScrollViewer.ScrollChanged="logMessagesGrid_ScrollChanged"
                 ItemsSource="{Binding Path=LogMessageList, Mode=OneWay}" >
             <DataGrid.Columns>
-                <DataGridTextColumn Header="Type" Binding="{Binding Path=Type}" MinWidth="8" Width="Auto" />
+                <DataGridTemplateColumn Width="SizeToCells" IsReadOnly="True" >
+                    <DataGridTemplateColumn.CellTemplate>
+                        <DataTemplate>
+                            <Image Margin="1"  Width="16" Height="16" RenderOptions.BitmapScalingMode="NearestNeighbor"
+       RenderOptions.EdgeMode="Aliased" Source="{Binding Type, Converter={StaticResource LogMessageImageConverter}}"/>
+                        </DataTemplate>
+                    </DataGridTemplateColumn.CellTemplate>
+                </DataGridTemplateColumn>
                 <DataGridTextColumn Header="Time" Binding="{Binding Path=Time}" MinWidth="32" Width="Auto" />
-                <!--<DataGridTextColumn Header="Message" Binding="{Binding Path=Message}" MinWidth="50" Width="*" />-->
                 <DataGridTemplateColumn Header="Message">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <TextBlock>
+                                <TextBlock Text="{Binding Path=Message, Converter={StaticResource LogMessageLinkConverter}, ConverterParameter='first'}"></TextBlock>
                                 <Hyperlink Command="local:ProSuiteLogPaneViewModel.OpenLinkMessage" CommandParameter="{Binding}">
-                                    <TextBlock Text="{Binding Path=LinkMessage}"/>
+                                    <TextBlock Text="{Binding Path=Message, Converter={StaticResource LogMessageLinkConverter}, ConverterParameter='link'}"/>
                                 </Hyperlink>
-                                <TextBlock Text="{Binding Path=Message}"></TextBlock>
+                                <TextBlock Text="{Binding Path=Message, Converter={StaticResource LogMessageLinkConverter}, ConverterParameter='last'}"></TextBlock>
                             </TextBlock>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
@@ -58,8 +71,8 @@
                 <ContextMenu>
                     <MenuItem Header="Clear All Messages" Command="{Binding ClearLogEntries}" />
                     <Separator />
-                    <MenuItem Header="Debug Messages" Command="{Binding FilterLogEntries}" CommandParameter="Debug" IsCheckable="true" IsChecked="{Binding IsDebugFilterActive}"/>
-                    <MenuItem Header="Verbose Messages" Command="{Binding FilterLogEntries}" CommandParameter="Verbose" IsCheckable="true" IsChecked="{Binding IsDebugFilterActive}"/>
+                    <MenuItem Header="Debug Messages" Command="{Binding FilterLogEntries}" CommandParameter="Debug" IsCheckable="true" IsChecked="{Binding DebugLogsAreVisible}"/>
+                    <MenuItem Header="Verbose Messages" Command="{Binding FilterLogEntries}" CommandParameter="Verbose" IsCheckable="true" IsChecked="{Binding VerboseLogsAreVisible}"/>
                 </ContextMenu>
             </DataGrid.ContextMenu>
             <DataGrid.InputBindings>
@@ -67,6 +80,19 @@
                               Command="{Binding OpenMessage}" 
                               CommandParameter="{Binding ElementName=logMessagesGrid, Path=SelectedItem}" />
             </DataGrid.InputBindings>
+            <DataGrid.CellStyle>
+                <Style TargetType="DataGridCell">
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="{x:Type DataGridCell}">
+                                <Grid Background="{TemplateBinding Background}">
+                                    <ContentPresenter VerticalAlignment="Center"/>
+                                </Grid>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </DataGrid.CellStyle>
         </DataGrid>
     </Grid>
 </UserControl>

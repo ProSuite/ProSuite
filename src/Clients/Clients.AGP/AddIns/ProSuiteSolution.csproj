@@ -68,6 +68,8 @@
     <Compile Include="ConfigurationUtils.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
     <Compile Include="Layers\LayerUtils.cs" />
+    <Compile Include="LoggerUI\LogMessageImageConverter.cs" />
+    <Compile Include="LoggerUI\LogMessageLinkConverter.cs" />
     <Compile Include="LoggerUI\ProSuiteLogPane.xaml.cs">
       <DependentUpon>ProSuiteLogPane.xaml</DependentUpon>
     </Compile>
@@ -239,7 +241,10 @@
     <Resource Include="WorkListUI\Images\GoNext.png" />
   </ItemGroup>
   <ItemGroup>
-    <AddInContent Include="Install\Selection Work List.lyrx" />
+    <Resource Include="Images\StatusCriticalError_12x_16x.png" />
+    <Resource Include="Images\StatusInformation_12x_16x.png" />
+    <Resource Include="Images\StatusOK_16x.png" />
+    <Resource Include="Images\StatusWarning_12x_16x.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--

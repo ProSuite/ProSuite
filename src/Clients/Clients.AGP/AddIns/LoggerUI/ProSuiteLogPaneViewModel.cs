@@ -2,6 +2,7 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.Commons.Logging;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Data;
 using System.Windows.Input;
@@ -18,6 +19,7 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
         public object _lockLogMessages = new object();
 
 		private LoggingEventsAppender _appenderDelegate = new LoggingEventsAppender();
+		private List<LogType> _disabledLogTypes = new List<LogType>();
 
 		#region Clear messages
 
@@ -51,21 +53,32 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
         public void FilterLogs(object parameter)
         {
 			//var type = (string)parameter;
+
 			// TODO filter log list or log4net has built in option?
 			//filtereMessagedList = LogMessageList.Where(t => t.Type == LogType.Debug)
 
-			_msg.Info(IsDebugFilterActive ? "Debug filter enabled" : "Debug filter none");
-			_msg.Info(IsVerboseFilterActive ? "Verbose filter enabled" : "Verbose filter none");
+			if (DebugLogsAreVisible )
+				_disabledLogTypes.Remove(LogType.Debug);
+			else
+				_disabledLogTypes.Add(LogType.Debug);
+
+			if (VerboseLogsAreVisible) 
+				_disabledLogTypes.Remove(LogType.Verbose);
+			else
+				_disabledLogTypes.Add(LogType.Verbose);
+
+			_msg.Info(DebugLogsAreVisible ? "Debug logs visible" : "Debug logs hidden");
+			_msg.Info(VerboseLogsAreVisible ? "Verbose logs visible" : "Verbose logs hidden");
         }
 
         public bool CanFilterLogs(object parameter) {
             //var type = (string)parameter;
-            return LogMessageList.Count > 0;
+            return true;
         }
 
-        public bool IsDebugFilterActive { set; get; } = false;
+        public bool DebugLogsAreVisible { set; get; } = true;
 
-        public bool IsVerboseFilterActive { set; get; } = false;
+        public bool VerboseLogsAreVisible { set; get; } = true;
         #endregion
 
         #region Open message
@@ -106,7 +119,7 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
             var message = (LoggingEventItem)msg;
 
 			// TODO inform UI than "Hyperlink" is clicked
-			_msg.Info($"Hyperlink clicked {message.LinkMessage}");
+			//_msg.Info($"Hyperlink clicked {message.LinkMessage}");
 
 		}
 
@@ -129,17 +142,26 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
 
         private void Logger_OnNewLogMessage(object sender, LoggingEventArgs e)
         {
+			if (e == null) return;
+
             lock (_lockLogMessages)
             {
 				// TODO save messages to buffer(?)
-                LogMessageList.Add(e?.logItem);
+
+				if(!IsLogLevelDisabled(e.logItem))
+					LogMessageList.Add(e.logItem);
             }
         }
 
-        /// <summary>
-        /// Show the DockPane.
-        /// </summary>
-        internal static void Show()
+		private bool IsLogLevelDisabled(LoggingEventItem logItem)
+		{
+			return _disabledLogTypes.Contains(logItem.Type);
+		}
+
+		/// <summary>
+		/// Show the DockPane.
+		/// </summary>
+		internal static void Show()
         {
             var pane = (ProSuiteLogPaneViewModel)FrameworkApplication.DockPaneManager.Find(_dockPaneID);
             if (pane == null)
@@ -151,6 +173,18 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
 		public void Dispose()
 		{
 			LoggingEventsAppender.OnNewLogMessage -= this.Logger_OnNewLogMessage;
+		}
+
+		// TODO temporary log test while VS2019 have problems
+		internal static void GenerateTestMessages(int number)
+		{
+			var i = 0;
+			while( i++ < number)
+			{
+				_msg.Error($"Click error <e>link</e> to get something nr={i}");
+				_msg.Info("Click info");
+				_msg.Debug("<e>Debug</e> to Click debug");
+			}			
 		}
 	}
 
