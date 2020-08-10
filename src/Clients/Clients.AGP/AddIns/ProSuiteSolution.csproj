@@ -65,6 +65,9 @@
     <Compile Include="..\..\..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="ConfigUI\ProSuiteConfigDialog.xaml.cs">
+      <DependentUpon>ProSuiteConfigDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ConfigurationUtils.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
     <Compile Include="Layers\LayerUtils.cs" />
@@ -99,6 +102,10 @@
     <Compile Include="WorkLists\InMemoryWorkEnvironment.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="ConfigUI\ProSuiteConfigDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="LoggerUI\ProSuiteLogPane.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -249,9 +256,7 @@
   <ItemGroup>
     <AddInContent Include="Install\Selection Work List.lyrx" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="ConfigUI\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:

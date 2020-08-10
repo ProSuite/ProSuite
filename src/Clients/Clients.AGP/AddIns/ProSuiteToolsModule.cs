@@ -19,6 +19,7 @@ using QAConfigurator;
 using ProSuite.Commons.Logging;
 using Clients.AGP.ProSuiteSolution.WorkListTrials;
 using Clients.AGP.ProSuiteSolution.LoggerUI;
+using Clients.AGP.ProSuiteSolution.ConfigUI;
 
 namespace Clients.AGP.ProSuiteSolution
 {
@@ -300,12 +301,18 @@ namespace Clients.AGP.ProSuiteSolution
 	internal class ShowConfigWindow : Button
 	{
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		private ProSuiteConfigDialog _prosuiteconfigdialog = null;
 
 		protected override void OnClick()
 		{
-			
-
-
+			//already open?
+			if (_prosuiteconfigdialog != null)
+				return;
+			_prosuiteconfigdialog = new ProSuiteConfigDialog();
+			_prosuiteconfigdialog.Owner = FrameworkApplication.Current.MainWindow;
+			_prosuiteconfigdialog.Closed += (o, e) => { _prosuiteconfigdialog = null; };
+			//_prosuiteconfigdialog.Show();
+			_prosuiteconfigdialog.ShowDialog();             // modal?
 		}
 	}
 
