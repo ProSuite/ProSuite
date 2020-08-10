@@ -65,9 +65,18 @@
     <Compile Include="..\..\..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="ConfigUI\ProSuiteConfigCommonsUserControl.xaml.cs">
+      <DependentUpon>ProSuiteConfigCommonsUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ConfigUI\ProSuiteConfigCommonsViewModel.cs" />
     <Compile Include="ConfigUI\ProSuiteConfigDialog.xaml.cs">
       <DependentUpon>ProSuiteConfigDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ConfigUI\ProSuiteConfigQAUserControl.xaml.cs">
+      <DependentUpon>ProSuiteConfigQAUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ConfigUI\ProSuiteConfigQAViewModel.cs" />
+    <Compile Include="ConfigUI\ProSuiteConfigViewModel.cs" />
     <Compile Include="ConfigurationUtils.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
     <Compile Include="Layers\LayerUtils.cs" />
@@ -102,7 +111,15 @@
     <Compile Include="WorkLists\InMemoryWorkEnvironment.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="ConfigUI\ProSuiteConfigCommonsUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ConfigUI\ProSuiteConfigDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ConfigUI\ProSuiteConfigQAUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

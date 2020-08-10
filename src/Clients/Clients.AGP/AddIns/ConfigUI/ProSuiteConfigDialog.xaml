@@ -5,10 +5,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
+        xmlns:local="clr-namespace:Clients.AGP.ProSuiteSolution.ConfigUI"
+        xmlns:ui="clr-namespace:Clients.AGP.ProSuiteSolution.ConfigUI"             
         mc:Ignorable="d"
         Title="ProSuite Configuration" Height="400" Width="500"
         WindowStartupLocation="CenterOwner"
-    >
+        d:DataContext="{Binding Path=ui.ProSuiteConfigPaneViewModel}">
     <controls:ProWindow.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -16,18 +18,26 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </controls:ProWindow.Resources>
-    <Grid>
+    <Grid Margin="8">
+        <Grid.Resources>
+            <DataTemplate DataType="{x:Type local:ProSuiteConfigCommonsViewModel}">
+                <local:ProSuiteConfigCommonsUserControl/>
+            </DataTemplate>
+            <DataTemplate DataType="{x:Type local:ProSuiteConfigQAViewModel}">
+                <local:ProSuiteConfigQAUserControl/>
+            </DataTemplate>
+        </Grid.Resources>
         <TabControl 
             Background="{DynamicResource Esri_DialogClientAreaBackgroundBrush}"
             HorizontalContentAlignment="Left" 
-            VerticalContentAlignment="Top" Margin="8">
-            <TabItem Header="Commons">
-                <Grid />
-            </TabItem>
-            <TabItem Header="QA ">
-                <Grid />
-            </TabItem>
+            VerticalContentAlignment="Top" 
+            ItemsSource="{Binding ConfigTabViewModels}">
+            <TabControl.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock
+                    Text="{Binding TabName}" />
+                </DataTemplate>
+            </TabControl.ItemTemplate>
         </TabControl>
-
     </Grid>
 </controls:ProWindow>

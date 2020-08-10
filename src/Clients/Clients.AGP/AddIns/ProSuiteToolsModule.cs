@@ -308,9 +308,12 @@ namespace Clients.AGP.ProSuiteSolution
 			//already open?
 			if (_prosuiteconfigdialog != null)
 				return;
+
 			_prosuiteconfigdialog = new ProSuiteConfigDialog();
 			_prosuiteconfigdialog.Owner = FrameworkApplication.Current.MainWindow;
+			_prosuiteconfigdialog.DataContext = new ProSuiteConfigViewModel();
 			_prosuiteconfigdialog.Closed += (o, e) => { _prosuiteconfigdialog = null; };
+
 			//_prosuiteconfigdialog.Show();
 			_prosuiteconfigdialog.ShowDialog();             // modal?
 		}
