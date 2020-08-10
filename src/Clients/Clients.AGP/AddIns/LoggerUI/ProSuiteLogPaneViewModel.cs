@@ -176,7 +176,7 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
 		}
 
 		// TODO temporary log test while VS2019 have problems
-		internal static void GenerateTestMessages(int number)
+		internal static void GenerateMockMessages(int number)
 		{
 			var i = 0;
 			while( i++ < number)

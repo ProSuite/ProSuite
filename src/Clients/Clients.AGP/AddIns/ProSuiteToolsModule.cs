@@ -257,7 +257,6 @@ namespace Clients.AGP.ProSuiteSolution
 		{
 			try
 			{
-				//ProSuiteToolsModule.StartQAGPServer(ProSuiteQAServiceType.GPLocal);
 				await ProSuiteToolsModule.StartQAGPServerAsync(ProSuiteQAServiceType.GPLocal);
 			}
 			catch (Exception ex)
@@ -275,11 +274,18 @@ namespace Clients.AGP.ProSuiteSolution
 		{
 			try
 			{
+				// because of VS2019 problems simple test here
+				QueuedTask.Run(() =>
+				{
+					ProSuiteLogPaneViewModel.GenerateMockMessages(10000);
+				});
+
+				// temporary solution for WorkList
 				//QueuedTask.Run(() =>
 				//{
-					var pane = FrameworkApplication.DockPaneManager.Find("esri_dataReviewer_evaluateFeaturesPane");
-					bool visible = pane.IsVisible;
-					pane.Activate();
+				//var pane = FrameworkApplication.DockPaneManager.Find("esri_dataReviewer_evaluateFeaturesPane");
+				//	bool visible = pane.IsVisible;
+				//	pane.Activate();
 				//});
 
 				//MessageBox.Show("QA error handler view is not yet implemented");
@@ -288,23 +294,17 @@ namespace Clients.AGP.ProSuiteSolution
 			{
 				_msg.Error(ex.Message);
 			}
-
 		}
 	}
 
-	internal class ShowLogWindow : Button
+	internal class ShowConfigWindow : Button
 	{
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 		protected override void OnClick()
 		{
-			// TODO - is REST an alternative solution? 
-			// https://vsdev2414.esri-de.com/server/rest/services/PROSUITE_QA/verification/GPServer/verifydataset/execute?object_class=%5C%5Cvsdev2414%5Cprosuite_server_trials%5Ctestdata.gdb%5Cpolygons&tile_size=10000&parameters=&verification_extent=&env%3AoutSR=&env%3AprocessSR=&returnZ=false&returnM=false&returnTrueCurves=false&returnFeatureCollection=false&context=&f=json
+			
 
-			QueuedTask.Run(() =>
-			{
-				ProSuiteLogPaneViewModel.GenerateTestMessages(10000);
-			});
 
 		}
 	}

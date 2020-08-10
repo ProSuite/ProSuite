@@ -249,6 +249,9 @@
   <ItemGroup>
     <AddInContent Include="Install\Selection Work List.lyrx" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ConfigUI\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:
