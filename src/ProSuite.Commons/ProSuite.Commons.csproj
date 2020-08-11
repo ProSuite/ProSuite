@@ -189,6 +189,7 @@
     <Compile Include="NamedValuesExpressions\NamedValuesExpression.cs" />
     <Compile Include="NamedValuesExpressions\NamedValuesParser.cs" />
     <Compile Include="NamedValuesExpressions\SimpleNamedValuesExpression.cs" />
+    <Compile Include="NotifyPropertyChangedBase.cs" />
     <Compile Include="OsUserNameProvider.cs" />
     <Compile Include="Progress\IProgressFeedback.cs" />
     <Compile Include="Progress\LoggingProgressFeedback.cs" />

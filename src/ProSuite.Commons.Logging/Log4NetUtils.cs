@@ -184,5 +184,22 @@ namespace ProSuite.Commons.Logging
 			return ! string.IsNullOrEmpty(value) &&
 			       string.Equals(value, "true", StringComparison.OrdinalIgnoreCase);
 		}
+
+		public static LogType MapLogLevelToLogType(Level level)
+		{
+			if (level == Level.Debug)
+				return LogType.Debug;
+
+			if (level == Level.Info)
+				return LogType.Info;
+
+			if (level == Level.Warn)
+				return LogType.Warn;
+
+			if (level == Level.Error)
+				return LogType.Error;
+
+			return LogType.Other;
+		}
 	}
 }

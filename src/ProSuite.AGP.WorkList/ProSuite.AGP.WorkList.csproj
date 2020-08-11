@@ -1,0 +1,102 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{2EFE37C6-29A4-4E51-8C9F-D7B895F9CE6D}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ProSuite.AGP.WorkList</RootNamespace>
+    <AssemblyName>ProSuite.AGP.WorkList</AssemblyName>
+    <SignAssembly>true</SignAssembly>
+    <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
+    <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.6.1</TargetFrameworkVersion>
+    <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\..\bin</OutputDirectory>
+    <ProSuiteEncryptorFactoryDir Condition=" '$(ProSuiteEncryptorFactoryDir)' == '' ">Cryptography</ProSuiteEncryptorFactoryDir>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$(OutputDirectory)\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <RegisterForComInterop>false</RegisterForComInterop>
+    <NoWarn>1591</NoWarn>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$(OutputDirectory)\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="DatabaseSourceClass.cs" />
+    <Compile Include="Domain\AttributeReader.cs" />
+    <Compile Include="Domain\ErrorItem.cs" />
+    <Compile Include="Domain\ErrorWorkList.cs" />
+    <Compile Include="Domain\SelectionWorkList.cs" />
+    <Compile Include="Domain\WorkList.cs" />
+    <Compile Include="Domain\WorkListRegistry.cs" />
+    <Compile Include="ErrorItemRepository.cs" />
+    <Compile Include="GdbItemRepository.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SelectionItem.cs" />
+    <Compile Include="SelectionItemRepository.cs" />
+    <Compile Include="SelectionSourceClass.cs" />
+    <Compile Include="TestWorkList.cs" />
+    <Compile Include="Domain\WorkItem.cs" />
+    <Compile Include="Datasource\WorkItemCursor.cs" />
+    <Compile Include="Datasource\WorkItemTable.cs" />
+    <Compile Include="Datasource\WorkListDatasourceBase.cs" />
+    <Compile Include="WorkEnvironmentBase.cs" />
+    <Compile Include="WorkListCentral.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj">
+      <Project>{47E134C6-B803-451E-8C33-7C71B158B2AC}</Project>
+      <Name>ProSuite.AGP.WorkList.Contracts</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">
+      <Project>{89f2c583-3022-43f8-9b69-27123836625f}</Project>
+      <Name>ProSuite.Commons.AGP</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
+      <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
+      <Name>ProSuite.Commons.Essentials</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
+      <Project>{a227d52c-0536-498f-acf2-2a5a67c3d9ff}</Project>
+      <Name>ProSuite.Commons.Logging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
+      <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
+      <Name>ProSuite.Commons</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.DomainModel\ProSuite.DomainModel.csproj">
+      <Project>{824ddbe3-edaf-460b-b513-386a4260c1ff}</Project>
+      <Name>ProSuite.DomainModel</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Esri.ArcGISPro.Extensions">
+      <Version>2.5.0.22081</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>

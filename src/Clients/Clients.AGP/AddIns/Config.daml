@@ -1,0 +1,128 @@
+<ArcGIS defaultAssembly="ProSuiteSolution.dll" defaultNamespace="Clients.AGP.ProSuiteSolution" xmlns="http://schemas.esri.com/DADF/Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
+  <AddInInfo id="{aca43c2a-8357-4476-8660-e8bc28bdf848}" version="1.0" desktopVersion="2.5.22081">
+    <Name>ProSuiteTools</Name>
+    <Description>ProSuiteTools description</Description>
+    <Image>Images\AddinDesktop32.png</Image>
+    <Author>The ProSuite Authors</Author>
+    <Company></Company>
+    <Date>2020-04-19</Date>
+    <Subject>Framework</Subject>
+    <!-- Note subject can be one or more of these topics:
+         Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
+  </AddInInfo>
+  <modules>
+    <insertModule id="ProSuiteSolution_Module" className="ProSuiteToolsModule" autoLoad="false" caption="ProSuiteToolsModule">
+      <tabs>
+        <tab id="ProSuiteTools_Tab" caption="ProSuite Tools">
+          <group refID="ProSuiteTools_Commons" />
+          <group refID="ProSuiteTools_QA" />
+        </tab>
+      </tabs>
+      <groups>
+        <group id="ProSuiteTools_Commons" caption="Commons" keytip="G1">
+          <button refID="ProSuiteTools_Commons_ShowLog" size="large" />
+          <button refID="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" size="large" />
+        </group>
+        <group id="ProSuiteTools_QA" caption="QA" keytip="G1">
+          <button refID="ProSuiteTools_QA_StartErrorsDockPane" size="large" />
+          <button refID="ProSuiteTools_QA_StartGPServer" size="middle" />
+          <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
+          <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
+          <button refID="Clients_AGP_ProSuiteSolution_WorkList" size="large" />
+        </group>
+      </groups>
+      <controls>
+        <button id="ProSuiteTools_Commons_ShowLog" caption="Configuration" className="ShowLogWindow" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GeodatabaseFeatureDataset16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GeodatabaseFeatureDataset32.png" keytip="B1">
+          <tooltip heading="Show Config">ProSuite Configuration<disabledText /></tooltip>
+        </button>
+        <button id="ProSuiteTools_QA_StartErrorsDockPane" caption="QA Error Processing" className="StartQAErrorsDockPane" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerSession16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerSession32.png" keytip="B1">
+          <tooltip heading="QA GP Tool">Show QA error worklist<disabledText /></tooltip>
+        </button>
+        <button id="ProSuiteTools_QA_StartGPServer" caption="Start QA GPService" className="StartQAGPTool" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerConnection16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerConnection32.png" keytip="B1">
+          <tooltip heading="QA GP Tool">Execute QA GP Tool on Server with XML<disabledText /></tooltip>
+        </button>
+        <button id="ProSuiteTools_QA_StartExtent" caption="Start QA" className="StartQAGPExtent" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerBatchJobFile16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerBatchJobFile32.png" keytip="B1">
+          <tooltip heading="QA GP Tool">Check QA for local selection<disabledText /></tooltip>
+        </button>
+        <comboBox id="ProSuiteTools_QA_SpecsComboBox" caption=" Specification" className="QASpecListComboBox" itemWidth="90" extendedCaption="Extended Caption" isEditable="false" isReadOnly="true" resizable="true">
+          <tooltip heading="Tooltip Heading">QA specifications<disabledText /></tooltip>
+        </comboBox>
+        <button id="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" caption="Logs" className="Clients.AGP.ProSuiteSolution.LoggerUI.ProSuiteLogPane_ShowButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation32.png">
+          <tooltip heading="Show Logs Window">Show Logs Window<disabledText /></tooltip>
+        </button>
+        <button id="Clients_AGP_ProSuiteSolution_WorkList" caption="WorkList" className="ShowWorkListWindow" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
+          <tooltip heading="Show Error Worklist">Show Error Worklist<disabledText /></tooltip>
+        </button>
+      </controls>
+      <dockPanes>
+        <dockPane id="ProSuiteTools_Logger_ProSuiteLogPane" caption="ProSuite Logs" className="Clients.AGP.ProSuiteSolution.LoggerUI.ProSuiteLogPaneViewModel" dock="group" dockWith="esri_core_contentsDockPane">
+          <content className="Clients.AGP.ProSuiteSolution.LoggerUI.ProSuiteLogPaneView" />
+        </dockPane>
+      </dockPanes>
+    </insertModule>
+	  <insertModule id="ProSuiteSolution_WorkListTrialsModule" className="WorkListTrials.WorkListTrialsModule" autoLoad="true" caption="WorkList Trials Module">
+      <tabs></tabs>
+      <groups>
+        <group id="ProSuiteSolution_WorkListTrials" caption="WorkList Trials" appearsOnAddInTab="true">
+          <button refID="ProSuite_AGP_MainSolution_ButtonCreateTestList" size="large" />
+          <button refID="ProSuite_AGP_MainSolution_ButtonTestItemDone" size="large" />
+          <splitButton refID="ProSuite_AGP_MainSolution_SplitButtonTestListNav" />
+          <button refID="Clients_AGP_ProSuiteSolution_CreateErrorWorkList" size="large" />
+          <comboBox refID="Clients_AGP_ProSuiteSolution_WorkListVisibilityComboBox" />
+        </group>
+      </groups>
+      <controls>
+        <button id="ProSuite_AGP_MainSolution_ButtonCreateTestList" caption="Create Test List" className="WorkListTrials.ButtonCreateTestList" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
+          <tooltip heading="Create Test List">Create a Work List for testing<disabledText /></tooltip>
+        </button>
+        <button id="ProSuite_AGP_MainSolution_ButtonTestItemDone" caption="Set Done" className="WorkListTrials.ButtonTestItemDone" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
+          <tooltip heading="Set Done">Set current item on Test work list to done<disabledText /></tooltip>
+        </button>
+	      <comboBox id="Clients_AGP_ProSuiteSolution_WorkListVisibilityComboBox" caption="Visibility" className="WorkListTrials.WorkListVisibilityComboBox" itemWidth="140" extendedCaption="Extended Caption" isEditable="false" isReadOnly="true" resizable="true">
+		      <tooltip heading="Tooltip Heading">Tooltip text<disabledText /></tooltip>
+	      </comboBox>
+        <button id="ProSuite_AGP_MainSolution_SplitButtonTestListNav_Items_ButtonNext" caption="Go Next" className="WorkListTrials.SplitButtonTestListNav_GoNext" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlack16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlack32.png">
+          <tooltip heading="Next Item">Go to next item on Test work list<disabledText /></tooltip>
+        </button>
+        <button id="ProSuite_AGP_MainSolution_SplitButtonTestListNav_Items_ButtonPrev" caption="Go Previous" className="WorkListTrials.SplitButtonTestListNav_GoPrevious" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlack16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlack32.png">
+          <tooltip heading="Prev Item">Go to previous item on Test work list<disabledText /></tooltip>
+        </button>
+        <button id="ProSuite_AGP_MainSolution_SplitButtonTestListNav_Items_ButtonFirst" caption="Go First" className="WorkListTrials.SplitButtonTestListNav_GoFirst" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlack16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlack32.png">
+          <tooltip heading="First Item">Rewind to first item on Test work list<disabledText /></tooltip>
+        </button>
+      </controls>
+      <splitButtons>
+        <splitButton id="ProSuite_AGP_MainSolution_SplitButtonTestListNav">
+          <button refID="ProSuite_AGP_MainSolution_SplitButtonTestListNav_Items_ButtonNext" />
+          <button refID="ProSuite_AGP_MainSolution_SplitButtonTestListNav_Items_ButtonPrev" />
+          <button refID="ProSuite_AGP_MainSolution_SplitButtonTestListNav_Items_ButtonFirst" />
+        </splitButton>
+      </splitButtons>
+    </insertModule>
+		<insertModule id="ProSuite_WorkList_Module" className="WorkLists.WorkListsModule" autoLoad="true" caption="Selection Work List Module">
+			<tabs>
+				<tab id="ProSuite_WorkList_Tab" caption="Work List">
+					<group refID="ProSuite_WorkList_Group"/>
+				</tab>
+			</tabs>
+			<groups>
+				<group id="ProSuite_WorkList_Group" caption="Selection Work List">
+					<button refID="Clients_AGP_ProSuiteSolution_CreateSelectionWorkListButton"/>
+					<button refID="Clients_AGP_ProSuiteSolution_GoFirstButton"/>
+					<button refID="Clients_AGP_ProSuiteSolution_GoNextButton"/>
+				</group>
+			</groups>
+			<controls>
+				<button id="Clients_AGP_ProSuiteSolution_CreateSelectionWorkListButton" caption="Create Selection WorkList" className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
+					<tooltip heading="tooltip heading">foo<disabledText /></tooltip>
+				</button>
+				<button id="Clients_AGP_ProSuiteSolution_GoFirstButton" caption="Go First" className="WorkLists.GoFirstButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
+					<tooltip heading="tooltip heading">foo<disabledText /></tooltip>
+				</button>
+				<button id="Clients_AGP_ProSuiteSolution_GoNextButton" caption="Go Next" className="WorkLists.GoNextButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
+					<tooltip heading="tooltip heading">foo<disabledText /></tooltip>
+				</button>
+			</controls>
+		</insertModule>
+  </modules>
+</ArcGIS>
