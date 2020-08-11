@@ -18,7 +18,7 @@ namespace ProSuite.DomainModel.Core.QA
 		[UsedImplicitly] private string _operator;
 		[UsedImplicitly] private DateTime _startDate;
 		[UsedImplicitly] private DateTime _endDate;
-		[UsedImplicitly] private int _errorsFound;
+		[UsedImplicitly] private int _issueCount;
 		[UsedImplicitly] private bool _fulfilled;
 		[UsedImplicitly] private double _processorTimeSeconds;
 		[UsedImplicitly] private bool _cancelled;
@@ -159,8 +159,8 @@ namespace ProSuite.DomainModel.Core.QA
 
 		public int IssueCount
 		{
-			get { return _errorsFound; }
-			set { _errorsFound = value; }
+			get { return _issueCount; }
+			set { _issueCount = value; }
 		}
 
 		public int ErrorCount => IssueCount - WarningCount;
