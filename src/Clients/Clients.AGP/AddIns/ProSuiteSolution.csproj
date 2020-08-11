@@ -273,7 +273,12 @@
   <ItemGroup>
     <AddInContent Include="Install\Selection Work List.lyrx" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Resource Include="Images\Search_glyph71GrayNoHalo_16x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Search_16x.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:

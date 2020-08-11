@@ -6,12 +6,11 @@
              xmlns:local="clr-namespace:Clients.AGP.ProSuiteSolution.ConfigUI"
              d:DataContext="{Binding Path=local.ProSuiteConfigQAViewModel}"
              mc:Ignorable="d" 
-             d:DesignHeight="400" d:DesignWidth="700">
+             d:DesignHeight="350" d:DesignWidth="800">
     <Grid>
-        <!--<Label Content="{Binding ServiceProviderConfigs.Count}"  HorizontalAlignment="Left" Margin="30,14,0,0" VerticalAlignment="Top" Width="301" Foreground="#FFFB0808"/>-->
-        <Label Content="QA service provider types" HorizontalAlignment="Left" Margin="16,15,0,0" VerticalAlignment="Top" Width="140" Foreground="#FFF0EBEB"/>
-        <Label Content="QA specification provider types" HorizontalAlignment="Left" Margin="21,266,0,0" VerticalAlignment="Top" Width="204" Foreground="#FFF0EBEB"/>
-        <ListBox ItemsSource="{Binding ServiceProviderConfigs}" SelectedItem="{Binding SelectedConfiguration}" IsSynchronizedWithCurrentItem="True" HorizontalAlignment="Left" Height="86" Margin="20,46,0,0" VerticalAlignment="Top" Width="219">
+        <Label Content="QA service provider types" HorizontalAlignment="Left" Margin="16,7,0,0" VerticalAlignment="Top" Width="140" Foreground="{DynamicResource Esri_TextControlBrush}"/>
+        <Label Content="QA specification provider types" HorizontalAlignment="Left" Margin="20,176,0,0" VerticalAlignment="Top" Width="204" Foreground="{DynamicResource Esri_TextControlBrush}"/>
+        <ListBox ItemsSource="{Binding ServiceProviderConfigs}" SelectedItem="{Binding SelectedConfiguration}" IsSynchronizedWithCurrentItem="True" HorizontalAlignment="Left" Height="86" Margin="20,46,0,0" VerticalAlignment="Top" Width="136">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <WrapPanel>
@@ -20,10 +19,23 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <Label Content="Selectd QA service type settings" HorizontalAlignment="Left" Margin="21,150,0,0" VerticalAlignment="Top" Width="185" Foreground="White"/>
-        <Label Content="Service name" HorizontalAlignment="Left" Margin="38,181,0,0" VerticalAlignment="Top" Width="84" Foreground="White"/>
-        <Label Content="Connection" HorizontalAlignment="Left" Margin="38,212,0,0" VerticalAlignment="Top" Width="84" Foreground="White"/>
-        <TextBox Text="{Binding SelectedConfiguration.ServiceName}" HorizontalAlignment="Left" Height="23" Margin="127,184,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="198" IsEnabled="False"/>
-        <TextBox Text="{Binding SelectedConfiguration.ServiceConnection}" HorizontalAlignment="Left" Height="23" Margin="127,216,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="496"/>
+        <Label Content="Selected QA service type settings" HorizontalAlignment="Left" Margin="168,43,0,0" VerticalAlignment="Top" Width="185" Foreground="{DynamicResource Esri_TextControlBrush}"/>
+        <Label Content="Name" HorizontalAlignment="Left" Margin="168,76,0,0" VerticalAlignment="Top" Width="76" Foreground="{DynamicResource Esri_TextControlBrush}" HorizontalContentAlignment="Right"/>
+        <Label Content="Connection" HorizontalAlignment="Left" Margin="168,107,0,0" VerticalAlignment="Top" Width="76" Foreground="{DynamicResource Esri_TextControlBrush}" HorizontalContentAlignment="Right"/>
+        <TextBox Text="{Binding SelectedConfiguration.ServiceName}" HorizontalAlignment="Left" Height="23" Margin="249,77,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="198" IsEnabled="False"/>
+        <TextBox Text="{Binding SelectedConfiguration.ServiceConnection}" HorizontalAlignment="Left" Height="22" Margin="249,109,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="475"/>
+        <Separator HorizontalAlignment="Left" Height="2" Margin="212,187,0,0" VerticalAlignment="Top" Width="550" Foreground="{DynamicResource Esri_ListBoxPanelIndicator}"/>
+        <Separator HorizontalAlignment="Left" Height="2" Margin="212,18,0,0" VerticalAlignment="Top" Width="550" Foreground="{DynamicResource Esri_ListBoxPanelIndicator}"/>
+        <Button HorizontalAlignment="Right" Margin="0,109,30,0" VerticalAlignment="Top" Width="26" Height="22">
+            <Button.ContentTemplate>
+                <DataTemplate>
+                    <Image Source="../Images/Search_16x.png" Width="16" />
+                </DataTemplate>
+            </Button.ContentTemplate>
+        </Button>
     </Grid>
+    <!--<UserControl.Resources>
+        <Image x:Key="SearchImage" Source="../Images/Search_glyph71GrayNoHalo_16x.png" Height="14" Width="14" RenderOptions.BitmapScalingMode="HighQuality"
+       />
+    </UserControl.Resources>-->
 </UserControl>

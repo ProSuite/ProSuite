@@ -18,7 +18,7 @@ namespace Clients.AGP.ProSuiteSolution.ConfigUI
 				SelectedConfiguration = ServiceProviderConfigs.FirstOrDefault();
 		}
 
-		private ProSuiteQAServerConfiguration selectedConfiguration = null;
+		private ProSuiteQAServerConfiguration selectedConfiguration = new ProSuiteQAServerConfiguration();
 		public ProSuiteQAServerConfiguration SelectedConfiguration
 		{
 			get {
