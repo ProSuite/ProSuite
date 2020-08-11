@@ -58,7 +58,7 @@
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
       <Project>{0B48B56F-3A3D-4367-AA76-A356519AF2AB}</Project>
-      <Name>EsriDE.ProSuite.DomainModel.Core</Name>
+      <Name>ProSuite.DomainModel.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
