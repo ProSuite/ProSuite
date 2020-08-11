@@ -22,7 +22,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		SharedAssemblyInfo.cs = SharedAssemblyInfo.cs
 	EndProjectSection
 EndProject
-
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.DomainModel.Core", "ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj", "{0B48B56F-3A3D-4367-AA76-A356519AF2AB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.DomainModel.Core.Test", "ProSuite.DomainModel.Core.Test\ProSuite.DomainModel.Core.Test.csproj", "{4DE3C160-E2E4-4491-A4CB-1B5DC26D2EFC}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -57,6 +60,14 @@ Global
 		{510D9436-E3AC-465F-9A8B-24F2093C6214}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{510D9436-E3AC-465F-9A8B-24F2093C6214}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{510D9436-E3AC-465F-9A8B-24F2093C6214}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B48B56F-3A3D-4367-AA76-A356519AF2AB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B48B56F-3A3D-4367-AA76-A356519AF2AB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B48B56F-3A3D-4367-AA76-A356519AF2AB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B48B56F-3A3D-4367-AA76-A356519AF2AB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DE3C160-E2E4-4491-A4CB-1B5DC26D2EFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DE3C160-E2E4-4491-A4CB-1B5DC26D2EFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DE3C160-E2E4-4491-A4CB-1B5DC26D2EFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DE3C160-E2E4-4491-A4CB-1B5DC26D2EFC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
