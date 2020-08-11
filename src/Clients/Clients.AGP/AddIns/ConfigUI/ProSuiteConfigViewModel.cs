@@ -1,4 +1,6 @@
 using ArcGIS.Desktop.Framework.Contracts;
+using ProSuite.Commons.QA.ServiceManager.Types;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 
 namespace Clients.AGP.ProSuiteSolution.ConfigUI
@@ -7,13 +9,13 @@ namespace Clients.AGP.ProSuiteSolution.ConfigUI
 	{
 		private ObservableCollection<ViewModelBase> _configTabViewModels;
 
-		public ProSuiteConfigViewModel()
+		public ProSuiteConfigViewModel(IEnumerable<ProSuiteQAServerConfiguration> serviceConfigurations)
 		{
 			_configTabViewModels = new ObservableCollection<ViewModelBase>();
 
 			// TODO algr: number of available Configs should depend from settings
 			ConfigTabViewModels.Add(new ProSuiteConfigCommonsViewModel());
-			ConfigTabViewModels.Add(new ProSuiteConfigQAViewModel());
+			ConfigTabViewModels.Add(new ProSuiteConfigQAViewModel(serviceConfigurations));
 		}
 
 		public ObservableCollection<ViewModelBase> ConfigTabViewModels

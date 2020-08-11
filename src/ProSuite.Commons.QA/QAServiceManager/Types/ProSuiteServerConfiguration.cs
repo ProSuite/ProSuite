@@ -6,7 +6,7 @@ namespace ProSuite.Commons.QA.ServiceManager.Types
     {
         public ProSuiteQAServiceType ServiceType { get; set; }
 
-        public ProSuiteQASpecificationProviderType SpecificationsProviderType { get; set; }
+        //public ProSuiteQASpecificationProviderType SpecificationsProviderType { get; set; }
 
         public string ServiceName { get; set; }
 

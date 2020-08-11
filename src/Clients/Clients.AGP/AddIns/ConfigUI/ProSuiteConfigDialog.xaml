@@ -8,7 +8,7 @@
         xmlns:local="clr-namespace:Clients.AGP.ProSuiteSolution.ConfigUI"
         xmlns:ui="clr-namespace:Clients.AGP.ProSuiteSolution.ConfigUI"             
         mc:Ignorable="d"
-        Title="ProSuite Configuration" Height="400" Width="500"
+        Title="ProSuite Configuration" Height="350" Width="800"
         WindowStartupLocation="CenterOwner"
         d:DataContext="{Binding Path=ui.ProSuiteConfigPaneViewModel}">
     <controls:ProWindow.Resources>
@@ -31,6 +31,7 @@
             Background="{DynamicResource Esri_DialogClientAreaBackgroundBrush}"
             HorizontalContentAlignment="Left" 
             VerticalContentAlignment="Top" 
+            SelectedIndex="1"
             ItemsSource="{Binding ConfigTabViewModels}">
             <TabControl.ItemTemplate>
                 <DataTemplate>

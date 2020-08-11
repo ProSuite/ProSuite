@@ -12,17 +12,18 @@ namespace QAConfigurator
     {
 		//public event EventHandler<ProSuiteConfigurationEventArgs> OnConfigurationChanged;
 
-		private static QAConfiguration _configuration = null;
-		public static QAConfiguration Current
-		{
+		private static List<ProSuiteQAServerConfiguration> _serviceConfigurations = null;
+		public static List<ProSuiteQAServerConfiguration> QAServiceConfigurations {
 			get
 			{
-				if (_configuration == null)
+				if (_serviceConfigurations == null)
 				{
-					_configuration = new QAConfiguration();
+					_serviceConfigurations = new List<ProSuiteQAServerConfiguration>() {
+						GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPService),
+						GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPLocal)
+					};
 				}
-
-				return _configuration;
+				return _serviceConfigurations;
 			}
 		}
 
@@ -30,21 +31,31 @@ namespace QAConfigurator
 		{
 			get
 			{
-				return new ProSuiteQAManager(
-					new List<IProSuiteQAServiceProvider>() {
-						new QAServiceProviderGP(GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPService)),
-						new QAServiceProviderGP(GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPLocal))
-					},
-					new QASpecificationProviderXml()
-					);
+				return new ProSuiteQAManager( GetQAServiceProviders(),	new QASpecificationProviderXml());
 			}
+		}
+
+		private static List<IProSuiteQAServiceProvider> GetQAServiceProviders()
+		{
+			var listOfQAServiceProviders = new List<IProSuiteQAServiceProvider>();
+
+			// check if service provider is allowed?
+
+			var localServerConfiguration = QAServiceConfigurations.Find(c => (c.ServiceType == ProSuiteQAServiceType.GPLocal));
+			if(localServerConfiguration != null)
+				listOfQAServiceProviders.Add(new QAServiceProviderGP(localServerConfiguration));
+
+			var gpServerConfiguration = QAServiceConfigurations.Find(c => (c.ServiceType == ProSuiteQAServiceType.GPService));
+			if (gpServerConfiguration != null)
+				listOfQAServiceProviders.Add(new QAServiceProviderGP(gpServerConfiguration));
+
+			return listOfQAServiceProviders;
 		}
 
 		private static ProSuiteQAServerConfiguration GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType serviceType)
 		{
 			switch (serviceType)
 			{
-
 				case ProSuiteQAServiceType.GPLocal:
 					return new ProSuiteQAServerConfiguration()
 					{
@@ -67,6 +78,7 @@ namespace QAConfigurator
 
 		void UpdateConfiguration()
 		{
+			// TODO algr: update ServiceConfiguration and inform service providers
 
 		}
 	}

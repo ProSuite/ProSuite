@@ -31,6 +31,14 @@ namespace ProSuite.Commons.QA.ServiceManager
             _specificationsProvider = specificationsProvider;
         }
 
+		public IList<IProSuiteQAServiceProvider> ServiceProviders
+		{
+			get
+			{
+				return _serviceProviders;
+			}
+		}
+
         private void Service_OnStatusChanged(object sender, ProSuiteQAServiceEventArgs e)
         {
 			_msg.Info($"{e.State}: {e.Data}");

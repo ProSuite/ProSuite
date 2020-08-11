@@ -311,7 +311,7 @@ namespace Clients.AGP.ProSuiteSolution
 
 			_prosuiteconfigdialog = new ProSuiteConfigDialog();
 			_prosuiteconfigdialog.Owner = FrameworkApplication.Current.MainWindow;
-			_prosuiteconfigdialog.DataContext = new ProSuiteConfigViewModel();
+			_prosuiteconfigdialog.DataContext = new ProSuiteConfigViewModel(QAConfiguration.QAServiceConfigurations);
 			_prosuiteconfigdialog.Closed += (o, e) => { _prosuiteconfigdialog = null; };
 
 			//_prosuiteconfigdialog.Show();
