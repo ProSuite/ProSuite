@@ -6,12 +6,12 @@
              xmlns:local="clr-namespace:Clients.AGP.ProSuiteSolution.ConfigUI"
              d:DataContext="{Binding Path=local.ProSuiteConfigQAViewModel}"
              mc:Ignorable="d" 
-             d:DesignHeight="350" d:DesignWidth="800">
+             d:DesignHeight="400" d:DesignWidth="700">
     <Grid>
         <!--<Label Content="{Binding ServiceProviderConfigs.Count}"  HorizontalAlignment="Left" Margin="30,14,0,0" VerticalAlignment="Top" Width="301" Foreground="#FFFB0808"/>-->
-        <Label Content="QA service providers" HorizontalAlignment="Left" Margin="16,15,0,0" VerticalAlignment="Top" Width="140" Foreground="#FFF0EBEB"/>
-        <Label Content="QA specification providers" HorizontalAlignment="Left" Margin="18,165,0,0" VerticalAlignment="Top" Width="204" Foreground="#FFF0EBEB"/>
-        <ListBox ItemsSource="{Binding ServiceProviderConfigs}" HorizontalAlignment="Left" Height="95" Margin="20,46,0,0" VerticalAlignment="Top" Width="219">
+        <Label Content="QA service provider types" HorizontalAlignment="Left" Margin="16,15,0,0" VerticalAlignment="Top" Width="140" Foreground="#FFF0EBEB"/>
+        <Label Content="QA specification provider types" HorizontalAlignment="Left" Margin="21,266,0,0" VerticalAlignment="Top" Width="204" Foreground="#FFF0EBEB"/>
+        <ListBox ItemsSource="{Binding ServiceProviderConfigs}" SelectedItem="{Binding SelectedConfiguration}" IsSynchronizedWithCurrentItem="True" HorizontalAlignment="Left" Height="86" Margin="20,46,0,0" VerticalAlignment="Top" Width="219">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <WrapPanel>
@@ -20,10 +20,10 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
-        <Label Content="QA service settings" HorizontalAlignment="Left" Margin="261,41,0,0" VerticalAlignment="Top" Width="185" Foreground="White"/>
-        <Label Content="Service name" HorizontalAlignment="Left" Margin="278,72,0,0" VerticalAlignment="Top" Width="84" Foreground="White"/>
-        <Label Content="Connection" HorizontalAlignment="Left" Margin="278,103,0,0" VerticalAlignment="Top" Width="84" Foreground="White"/>
-        <TextBox HorizontalAlignment="Left" Height="23" Margin="367,75,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="198"/>
-        <TextBox HorizontalAlignment="Left" Height="23" Margin="367,107,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="369"/>
+        <Label Content="Selectd QA service type settings" HorizontalAlignment="Left" Margin="21,150,0,0" VerticalAlignment="Top" Width="185" Foreground="White"/>
+        <Label Content="Service name" HorizontalAlignment="Left" Margin="38,181,0,0" VerticalAlignment="Top" Width="84" Foreground="White"/>
+        <Label Content="Connection" HorizontalAlignment="Left" Margin="38,212,0,0" VerticalAlignment="Top" Width="84" Foreground="White"/>
+        <TextBox Text="{Binding SelectedConfiguration.ServiceName}" HorizontalAlignment="Left" Height="23" Margin="127,184,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="198" IsEnabled="False"/>
+        <TextBox Text="{Binding SelectedConfiguration.ServiceConnection}" HorizontalAlignment="Left" Height="23" Margin="127,216,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="496"/>
     </Grid>
 </UserControl>
