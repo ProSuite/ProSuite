@@ -9,7 +9,16 @@
              d:DesignHeight="350" d:DesignWidth="760">
     <Grid>
         <Label Content="QA specification provider" HorizontalAlignment="Left" Margin="10,168,0,0" VerticalAlignment="Top" Width="204" Foreground="{DynamicResource Esri_TextControlBrush}" FontWeight="Bold"/>
-        <ListBox ItemsSource="{Binding ServiceProviderConfigs}" SelectedItem="{Binding SelectedConfiguration}" IsSynchronizedWithCurrentItem="True" HorizontalAlignment="Left" Height="86" Margin="20,46,0,0" VerticalAlignment="Top" Width="136" BorderBrush="{x:Null}"  Background="{DynamicResource Esri_DoskPaneClientAreaBackgroundBrush}">
+        <ListBox ItemsSource="{Binding ServiceProviderConfigs}" 
+                 SelectedItem="{Binding SelectedConfiguration, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                 IsSynchronizedWithCurrentItem="True" 
+                 HorizontalAlignment="Left" 
+                 Height="86" 
+                 Margin="20,46,0,0" 
+                 VerticalAlignment="Top" 
+                 Width="136" 
+                 BorderBrush="{x:Null}"  
+                 Background="{DynamicResource Esri_DockPaneClientAreaBackgroundBrush}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <WrapPanel>
@@ -23,7 +32,7 @@
         <TextBox Text="{Binding SelectedConfiguration.ServiceName}" HorizontalAlignment="Left" Height="23" Margin="188,61,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="198" IsEnabled="False"/>
         <TextBox Text="{Binding SelectedConfiguration.ServiceConnection}" Height="22" Margin="188,110,40,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
         <Separator Height="2" Margin="188,183,22,0" VerticalAlignment="Top" Foreground="{DynamicResource Esri_ListBoxPanelIndicator}"/>
-        <Button Margin="0,110,12,0" Command="{Binding OpenConnectionFileCmd}" VerticalAlignment="Top" Height="22" Width="24 " HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}">
+        <Button Margin="0,110,12,0" Command="{Binding CmdBrowseConnection}" VerticalAlignment="Top" Height="22" Width="24 " HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}">
             <Button.ContentTemplate>
                 <DataTemplate>
                     <Image Source="../Images/FolderOpened_16x.png" Width="16" />

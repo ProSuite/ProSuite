@@ -309,13 +309,19 @@ namespace Clients.AGP.ProSuiteSolution
 			if (_prosuiteconfigdialog != null)
 				return;
 
+			// clone 
+			var tempQAConfiguration = QAConfiguration.Current.QAServiceConfigurations.ConvertAll(x => new ProSuiteQAServerConfiguration(x));
+
 			_prosuiteconfigdialog = new ProSuiteConfigDialog();
 			_prosuiteconfigdialog.Owner = FrameworkApplication.Current.MainWindow;
-			_prosuiteconfigdialog.DataContext = new ProSuiteConfigViewModel(QAConfiguration.QAServiceConfigurations);
+			_prosuiteconfigdialog.DataContext = new ProSuiteConfigViewModel(tempQAConfiguration);
 			_prosuiteconfigdialog.Closed += (o, e) => { _prosuiteconfigdialog = null; };
 
-			//_prosuiteconfigdialog.Show();
-			_prosuiteconfigdialog.ShowDialog();             // modal?
+			if (_prosuiteconfigdialog.ShowDialog() ?? true)
+			{
+				// save changed configuration
+				QAConfiguration.Current.QAServiceConfigurations = tempQAConfiguration;
+			}
 		}
 	}
 

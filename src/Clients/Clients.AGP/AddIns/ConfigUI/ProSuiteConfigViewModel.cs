@@ -1,13 +1,15 @@
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.Commons.QA.ServiceManager.Types;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Windows.Input;
 
 namespace Clients.AGP.ProSuiteSolution.ConfigUI
 {
-	public class ProSuiteConfigViewModel
+	public class ProSuiteConfigViewModel : ViewModelBase
 	{
-		private ObservableCollection<ViewModelBase> _configTabViewModels;
+		private ObservableCollection<ViewModelBase> _configTabViewModels = null;
 
 		public ProSuiteConfigViewModel(IEnumerable<ProSuiteQAServerConfiguration> serviceConfigurations)
 		{
@@ -27,9 +29,37 @@ namespace Clients.AGP.ProSuiteSolution.ConfigUI
 			set
 			{
 				_configTabViewModels = value;
-				// save?
-				//RaisePropertyChanged(() => TabViewModels);
+				//NotifyPropertyChanged("ConfigTabViewModels");
 			}
 		}
+
+		private RelayCommand _cmdSaveSettings;
+		private RelayCommand _cmdCancelSettings;
+
+		public ICommand CmdSaveSettings
+		{
+			get
+			{
+				return _cmdSaveSettings ??
+					   (_cmdSaveSettings = new RelayCommand(parameter => CloseSettingsWindow(parameter, true), () => true));
+			}
+		}
+
+		public ICommand CmdCancelSettings
+		{
+			get
+			{
+				return _cmdCancelSettings ??
+					   (_cmdCancelSettings = new RelayCommand(parameter => CloseSettingsWindow(parameter, false), () => true));
+			}
+		}
+
+		private void CloseSettingsWindow(object parameter, bool saveSettings)
+		{
+			ICloseable window = (ICloseable)parameter;
+			if (window != null)
+				window.CloseWindow(saveSettings);
+		}
+
 	}
 }

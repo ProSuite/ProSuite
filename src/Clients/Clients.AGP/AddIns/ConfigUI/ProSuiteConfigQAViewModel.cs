@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows.Data;
 using System.Windows.Input;
 
 namespace Clients.AGP.ProSuiteSolution.ConfigUI
@@ -35,14 +36,14 @@ namespace Clients.AGP.ProSuiteSolution.ConfigUI
 			}
 		}
 
-		private ICommand _openConnectionFileCmd = null;
-		public ICommand OpenConnectionFileCmd
+		private ICommand _cmdBrowseConnection = null;
+		public ICommand CmdBrowseConnection
 		{
 			get
 			{
-				if (_openConnectionFileCmd == null)
+				if (_cmdBrowseConnection == null)
 				{
-					_openConnectionFileCmd = new RelayCommand(new Action<Object>((sender) =>
+					_cmdBrowseConnection = new RelayCommand(new Action<Object>((sender) =>
 					{
 						var fileFilter = BrowseProjectFilter.GetFilter("esri_browseDialogFilters_browseFiles"); // 
 						fileFilter.FileExtension = "*.*";
@@ -51,28 +52,20 @@ namespace Clients.AGP.ProSuiteSolution.ConfigUI
 						var dlg = new OpenItemDialog()
 						{
 							BrowseFilter = fileFilter,
-							Title = "Browse Content"
+							Title = "Browse Connections"
 						};
 						if (!dlg.ShowDialog().Value)
 							return;
 
 						var item = dlg.Items.First();
 
-						// update 
-						var newServiceConnection = new ProSuiteQAServerConfiguration()
-						{
-							ServiceType = SelectedConfiguration.ServiceType,
-							ServiceName = SelectedConfiguration.ServiceName,
-							ServiceConnection = item.Path
-						};
-						ServiceProviderConfigs[0] = newServiceConnection;
-						//SelectedConfiguration = newServiceConnection;
-
-						//SelectedConfiguration.ServiceConnection = item.Path;
+						// update current configuration (cancel?)
+						SelectedConfiguration.ServiceConnection = item.Path;
+						NotifyPropertyChanged("SelectedConfiguration");
 
 					}), () => { return true; });
 				}
-				return _openConnectionFileCmd;
+				return _cmdBrowseConnection;
 			}
 		}
 

@@ -3,6 +3,7 @@ using ProSuite.Commons.QA.ServiceManager.Interfaces;
 using ProSuite.Commons.QA.ServiceManager.Types;
 using ProSuite.Commons.QA.ServiceProviderArcGIS;
 using ProSuite.Commons.QA.SpecificationProviderFile;
+using System;
 using System.Collections.Generic;
 
 
@@ -10,10 +11,25 @@ namespace QAConfigurator
 {
     public class QAConfiguration
     {
+
+		private static QAConfiguration _configuration = null;
+		public static QAConfiguration Current
+		{
+			get
+			{
+				if (_configuration == null)
+				{
+					_configuration = new QAConfiguration();
+				}
+
+				return _configuration;
+			}
+		}
+
 		//public event EventHandler<ProSuiteConfigurationEventArgs> OnConfigurationChanged;
 
-		private static List<ProSuiteQAServerConfiguration> _serviceConfigurations = null;
-		public static List<ProSuiteQAServerConfiguration> QAServiceConfigurations {
+		private List<ProSuiteQAServerConfiguration> _serviceConfigurations = null;
+		public List<ProSuiteQAServerConfiguration> QAServiceConfigurations {
 			get
 			{
 				if (_serviceConfigurations == null)
@@ -24,6 +40,12 @@ namespace QAConfigurator
 					};
 				}
 				return _serviceConfigurations;
+			}
+			set
+			{
+				_serviceConfigurations = value;
+				// TODO Notify others than config is changed
+				//Invoke(OnConfigurationChanged);
 			}
 		}
 
@@ -41,11 +63,11 @@ namespace QAConfigurator
 
 			// check if service provider is allowed?
 
-			var localServerConfiguration = QAServiceConfigurations.Find(c => (c.ServiceType == ProSuiteQAServiceType.GPLocal));
+			var localServerConfiguration = Current.QAServiceConfigurations.Find(c => (c.ServiceType == ProSuiteQAServiceType.GPLocal));
 			if(localServerConfiguration != null)
 				listOfQAServiceProviders.Add(new QAServiceProviderGP(localServerConfiguration));
 
-			var gpServerConfiguration = QAServiceConfigurations.Find(c => (c.ServiceType == ProSuiteQAServiceType.GPService));
+			var gpServerConfiguration = Current.QAServiceConfigurations.Find(c => (c.ServiceType == ProSuiteQAServiceType.GPService));
 			if (gpServerConfiguration != null)
 				listOfQAServiceProviders.Add(new QAServiceProviderGP(gpServerConfiguration));
 

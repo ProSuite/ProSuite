@@ -3,8 +3,19 @@ namespace ProSuite.Commons.QA.ServiceManager.Types
 {
 
     public class ProSuiteQAServerConfiguration
-    {
-        public ProSuiteQAServiceType ServiceType { get; set; }
+	{
+		public ProSuiteQAServerConfiguration()
+		{
+		}
+
+		public ProSuiteQAServerConfiguration(ProSuiteQAServerConfiguration original)
+		{
+			ServiceType = original.ServiceType;
+			ServiceName = original.ServiceName;
+			ServiceConnection = original.ServiceConnection;
+		}
+
+		public ProSuiteQAServiceType ServiceType { get; set; }
 
         //public ProSuiteQASpecificationProviderType SpecificationsProviderType { get; set; }
 
