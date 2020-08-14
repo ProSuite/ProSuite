@@ -117,6 +117,17 @@ namespace Clients.AGP.ProSuiteSolution
 			}
 		}
 
+		private static void ProSuite_OnConfigurationChanged(object sender, ProSuiteQAConfigEventArgs e)
+		{
+			var serviceConfigs = (IEnumerable<ProSuiteQAServerConfiguration>)e?.Data;
+			if (serviceConfigs == null) return;
+
+			_msg.Info("Configuration is changed");
+			// save changed configuration to project and enable state
+
+			//QAProjectItem
+		}
+
 		#region Overrides
 		/// <summary>
 		/// Initialize logic for the custom module
@@ -130,6 +141,8 @@ namespace Clients.AGP.ProSuiteSolution
 
 			//ProjectItemsChangedEvent.Subscribe(OnProjectItemsChanged);
 			LayersAddedEvent.Subscribe(OnLayerAdded);
+
+			QAConfiguration.Current.OnConfigurationChanged += ProSuite_OnConfigurationChanged;
 
 			return base.Initialize();
 		}
