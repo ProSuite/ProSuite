@@ -319,7 +319,7 @@ namespace Clients.AGP.ProSuiteSolution
 
 			if (_prosuiteconfigdialog.ShowDialog() ?? true)
 			{
-				// save changed configuration
+				// save changed configuration 
 				QAConfiguration.Current.QAServiceConfigurations = tempQAConfiguration;
 			}
 		}

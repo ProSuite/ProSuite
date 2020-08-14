@@ -4,6 +4,7 @@ using ProSuite.Commons.Logging;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
 using Button = ArcGIS.Desktop.Framework.Contracts.Button;
@@ -158,21 +159,42 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
 			return _disabledLogTypes.Contains(logItem.Type);
 		}
 
-		/// <summary>
-		/// Show the DockPane.
-		/// </summary>
-		internal static void Show()
-        {
-            var pane = (ProSuiteLogPaneViewModel)FrameworkApplication.DockPaneManager.Find(_dockPaneID);
-            if (pane == null)
-                return;
+		///// <summary>
+		///// Show the DockPane.
+		///// </summary>
+		//internal static void ShowDockWindow()
+  //      {
+  //          var pane = (ProSuiteLogPaneViewModel)FrameworkApplication.DockPaneManager.Find(_dockPaneID);
+  //          if (pane == null)
+  //              return;
 
-            pane.Activate();
-        }
+  //          pane.Activate();
+  //      }
+
+		internal static void ToggleDockWindowVisibility(bool show)
+		{
+			var pane = (ProSuiteLogPaneViewModel)FrameworkApplication.DockPaneManager.Find(_dockPaneID);
+			if (pane == null)
+				return;
+
+			if (show)
+				pane.Activate();
+			else
+				if (pane.IsVisible)
+					pane.Hide();
+		}
 
 		public void Dispose()
 		{
 			LoggingEventsAppender.OnNewLogMessage -= this.Logger_OnNewLogMessage;
+
+			var pane = (ProSuiteLogPaneViewModel)FrameworkApplication.DockPaneManager.Find(_dockPaneID);
+			if (pane == null)
+				return;
+
+			if (pane.IsVisible)
+				//this.Visible = Visibility.Collapsed;
+				pane.Hide();
 		}
 
 		// TODO temporary log test while VS2019 have problems
@@ -195,7 +217,25 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
     {
         protected override void OnClick()
         {
-            ProSuiteLogPaneViewModel.Show();
-        }
+			IsChecked = !IsChecked;
+			ProSuiteLogPaneViewModel.ToggleDockWindowVisibility(IsChecked);
+
+			if (IsChecked)
+			{
+				Caption = "Hide Log";
+		//		Uri uriSource = new Uri(
+		//"pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericLockNoColor16.png");
+		//		SmallImage = new System.Windows.Media.Imaging.BitmapImage(uriSource);
+			}
+			else
+			{
+				Caption = "Show Log";
+				//SmallImage = new System.Windows.Media.Imaging.BitmapImage(new Uri(
+	   //@"pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericUnLockNoColor16.png"));
+			}
+
+		}
+
+
     }
 }
