@@ -43,24 +43,26 @@ namespace Clients.AGP.ProSuiteSolution.ConfigUI
 				{
 					_cmdBrowseConnection = new RelayCommand(new Action<Object>((sender) =>
 					{
-						var fileFilter = BrowseProjectFilter.GetFilter("esri_browseDialogFilters_browseFiles"); 
-						fileFilter.FileExtension = "*.ags";
-						fileFilter.Name = "ArcGIS Server Connection (*.ags)";
+						var fileFilter = BrowseProjectFilter.GetFilter("esri_browseDialogFilters_browseFiles");
 						fileFilter.BrowsingFilesMode = true;
-
-						var dlg = new OpenItemDialog()
+						if (selectedConfiguration.ServiceType == ProSuiteQAServiceType.GPService)
 						{
-							BrowseFilter = fileFilter,
-							Title = "Browse ArcGIS Server Connections"
-						};
-						if (!dlg.ShowDialog().Value)
-							return;
+							fileFilter.FileExtension = "*.ags";
+							fileFilter.Name = "ArcGIS Server Connection (*.ags)";
+						}
+						else
+						{
+							fileFilter.FileExtension = "*.pyt";
+							fileFilter.Name = "Python Toolbox (*.pyt)";
+						}
 
-						var item = dlg.Items.First();
+						var selectedFile = SelectFileItem(fileFilter);
+						if (!string.IsNullOrEmpty(selectedFile)) { 
 
-						// update current configuration (cancel?)
-						SelectedConfiguration.ServiceConnection = item.Path;
-						NotifyPropertyChanged("SelectedConfiguration");
+							// update current configuration (cancel?)
+							SelectedConfiguration.ServiceConnection = selectedFile;
+							NotifyPropertyChanged("SelectedConfiguration");
+						}
 
 					}), () => { return true; });
 				}
@@ -76,5 +78,18 @@ namespace Clients.AGP.ProSuiteSolution.ConfigUI
 			}
 		}
 
+		// TODO algr: this should be moved to file utils
+		private string SelectFileItem(BrowseProjectFilter projectFilter)
+		{
+			var dlg = new OpenItemDialog()
+			{
+				BrowseFilter = projectFilter,
+				Title = "Browse file ..."
+			};
+			if (!dlg.ShowDialog().Value)
+				return "";
+
+			return dlg.Items.First()?.Path;
+		}
 	}
 }

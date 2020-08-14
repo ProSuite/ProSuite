@@ -10,6 +10,14 @@
     <!-- Note subject can be one or more of these topics:
          Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
   </AddInInfo>
+    <conditions>
+	    <insertCondition id="prosuite_qa_gplocal_enabled" caption="QA GPLocal Enabled">
+		    <state id="prosuite_qa_gplocal_state"/>
+	    </insertCondition>
+		<insertCondition id="prosuite_qa_gpservice_enabled" caption="QA GPService Enabled">
+			<state id="prosuite_qa_gpservice_state"/>
+		</insertCondition>
+    </conditions>
   <modules>
     <insertModule id="ProSuiteSolution_Module" className="ProSuiteToolsModule" autoLoad="false" caption="ProSuiteToolsModule">
       <tabs>
@@ -24,7 +32,7 @@
           <button refID="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" size="large" />
         </group>
         <group id="ProSuiteTools_QA" caption="QA" keytip="G1">
-          <button refID="ProSuiteTools_QA_StartErrorsDockPane" size="large" />
+          <button refID="ProSuiteTools_QA_StartErrorsDockPane" size="large"/>
           <button refID="ProSuiteTools_QA_StartGPServer" size="middle" />
           <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
@@ -38,10 +46,10 @@
         <button id="ProSuiteTools_QA_StartErrorsDockPane" caption="QA Error Processing" className="StartQAErrorsDockPane" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerSession16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerSession32.png" keytip="B1">
           <tooltip heading="QA GP Tool">Show QA error worklist<disabledText /></tooltip>
         </button>
-        <button id="ProSuiteTools_QA_StartGPServer" caption="Start QA GPService" className="StartQAGPTool" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerConnection16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerConnection32.png" keytip="B1">
+        <button id="ProSuiteTools_QA_StartGPServer" caption="Start QA GPService" className="StartQAGPTool" loadOnClick="true" condition="prosuite_qa_gpservice_enabled" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerConnection16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerConnection32.png" keytip="B1">
           <tooltip heading="QA GP Tool">Execute QA GP Tool on Server with XML<disabledText /></tooltip>
         </button>
-        <button id="ProSuiteTools_QA_StartExtent" caption="Start QA" className="StartQAGPExtent" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerBatchJobFile16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerBatchJobFile32.png" keytip="B1">
+        <button id="ProSuiteTools_QA_StartExtent" caption="Start QA" className="StartQAGPExtent" loadOnClick="true" condition="prosuite_qa_gplocal_enabled" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerBatchJobFile16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerBatchJobFile32.png" keytip="B1">
           <tooltip heading="QA GP Tool">Check QA for local selection<disabledText /></tooltip>
         </button>
         <comboBox id="ProSuiteTools_QA_SpecsComboBox" caption=" Specification" className="QASpecListComboBox" itemWidth="90" extendedCaption="Extended Caption" isEditable="false" isReadOnly="true" resizable="true">

@@ -123,9 +123,23 @@ namespace Clients.AGP.ProSuiteSolution
 			if (serviceConfigs == null) return;
 
 			_msg.Info("Configuration is changed");
-			// save changed configuration to project and enable state
 
+			// TODO algr: hide this logic in QAConfig or ViewModel
+			var localService = serviceConfigs.FirstOrDefault(s => (s.ServiceType == ProSuiteQAServiceType.GPLocal && s.IsValid));
+			if (localService != null )
+				FrameworkApplication.State.Activate(ConfigIDs.QA_GPLocal_State);
+			else
+				FrameworkApplication.State.Deactivate(ConfigIDs.QA_GPLocal_State);
+
+			var serverService = serviceConfigs.FirstOrDefault(s => (s.ServiceType == ProSuiteQAServiceType.GPService && s.IsValid));
+			if (serverService != null)
+				FrameworkApplication.State.Activate(ConfigIDs.QA_GPService_State);
+			else
+				FrameworkApplication.State.Deactivate(ConfigIDs.QA_GPService_State);
+
+			// TODO algr: save changed configuration to project
 			//QAProjectItem
+
 		}
 
 		#region Overrides
@@ -284,6 +298,11 @@ namespace Clients.AGP.ProSuiteSolution
 	{
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+		StartQAErrorsDockPane()
+		{
+			//Enabled = false;
+		}
+
 		protected override void OnClick()
 		{
 			try
@@ -309,6 +328,7 @@ namespace Clients.AGP.ProSuiteSolution
 				_msg.Error(ex.Message);
 			}
 		}
+
 	}
 
 	internal class ShowConfigWindow : Button
@@ -393,6 +413,7 @@ namespace Clients.AGP.ProSuiteSolution
 		public QASpecListComboBox()
 		{
 			FillCombo();
+			Enabled = false;
 		}
 
 		private void FillCombo()

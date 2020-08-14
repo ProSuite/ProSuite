@@ -23,5 +23,12 @@ namespace ProSuite.Commons.QA.ServiceManager.Types
 
         public string ServiceConnection { get; set; }
 
+		public bool IsValid
+		{
+			get
+			{
+				return !string.IsNullOrEmpty(ServiceConnection);
+			}
+		}
     }
 }

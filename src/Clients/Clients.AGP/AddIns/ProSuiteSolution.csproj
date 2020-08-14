@@ -65,6 +65,7 @@
     <Compile Include="..\..\..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="ConfigIDs.cs" />
     <Compile Include="ConfigUI\ProSuiteConfigCommonsUserControl.xaml.cs">
       <DependentUpon>ProSuiteConfigCommonsUserControl.xaml</DependentUpon>
     </Compile>
