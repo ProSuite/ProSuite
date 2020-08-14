@@ -21,12 +21,11 @@ namespace QAConfigurator
 				{
 					_configuration = new QAConfiguration();
 				}
-
 				return _configuration;
 			}
 		}
 
-		//public event EventHandler<ProSuiteConfigurationEventArgs> OnConfigurationChanged;
+		public event EventHandler<ProSuiteQAConfigEventArgs> OnConfigurationChanged;
 
 		private List<ProSuiteQAServerConfiguration> _serviceConfigurations = null;
 		public List<ProSuiteQAServerConfiguration> QAServiceConfigurations {
@@ -44,16 +43,21 @@ namespace QAConfigurator
 			set
 			{
 				_serviceConfigurations = value;
-				// TODO Notify others than config is changed
-				//Invoke(OnConfigurationChanged);
+				OnConfigurationChanged?.Invoke(this, new ProSuiteQAConfigEventArgs(QAServiceConfigurations));
 			}
 		}
 
+		private static ProSuiteQAManager _qaManager = null;
 		public static ProSuiteQAManager QAManager
 		{
 			get
 			{
-				return new ProSuiteQAManager( GetQAServiceProviders(),	new QASpecificationProviderXml());
+				if (_qaManager == null)
+				{
+					_qaManager = new ProSuiteQAManager(GetQAServiceProviders(), new QASpecificationProviderXml());
+					Current.OnConfigurationChanged += _qaManager.OnConfigurationChanged;
+				}
+				return _qaManager;
 			}
 		}
 

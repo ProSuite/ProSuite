@@ -55,7 +55,7 @@
                 </Style>
             </TabControl.Resources>
         </TabControl>
-        <Button Content="Close" Style="{DynamicResource Esri_Button}" Command="{Binding CmdSaveSettings, Mode=OneWay}" CommandParameter="{Binding ElementName=settingsWindow}" IsDefault="True" Margin="621,278,80,0" Width="75" Height="24" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
+        <Button Content="Close" Style="{DynamicResource Esri_Button}" Command="{Binding CmdSaveSettings, Mode=OneWay}" CommandParameter="{Binding ElementName=settingsWindow}" IsDefault="True" Margin="250,0,80,0" Height="24" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
         <Button Content="Cancel" Style="{DynamicResource Esri_Button}" Command="{Binding CmdCancelSettings, Mode=OneWay}" CommandParameter="{Binding ElementName=settingsWindow}" IsCancel="True" Margin="350,0,0,0" Width="75" Height="24" VerticalAlignment="Bottom" HorizontalAlignment="Right"/>
     </Grid>
 </controls:ProWindow>

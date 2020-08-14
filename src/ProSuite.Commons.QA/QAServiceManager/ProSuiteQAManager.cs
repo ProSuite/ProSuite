@@ -50,7 +50,15 @@ namespace ProSuite.Commons.QA.ServiceManager
             return _specificationsProvider?.GetQASpecificationNames();
         }
 
-        public async Task<ProSuiteQAResponse> StartQATestingAsync(ProSuiteQARequest request)
+		public void OnConfigurationChanged(object sender, ProSuiteQAConfigEventArgs e)
+		{
+			var serviceConfigs = (IEnumerable<ProSuiteQAServerConfiguration>)e?.Data;
+
+			if (serviceConfigs != null)
+				UpdateServiceConfigs(serviceConfigs);
+		}
+
+		public async Task<ProSuiteQAResponse> StartQATestingAsync(ProSuiteQARequest request)
         {
             var service = GetQAService(request.ServiceType);
             if (service == null)  // throw? 
@@ -74,5 +82,13 @@ namespace ProSuite.Commons.QA.ServiceManager
             return _serviceProviders.Where(sp => sp.ServiceType == type).FirstOrDefault();
         }
 
+		private void UpdateServiceConfigs(IEnumerable<ProSuiteQAServerConfiguration> serviceConfigs)
+		{
+			foreach ( var serviceConfig in serviceConfigs) {
+				var serviceProvider = GetQAService(serviceConfig.ServiceType);
+				if (serviceProvider != null)
+					serviceProvider.UpdateConfig(serviceConfig);
+			}
+		}
     }
 }

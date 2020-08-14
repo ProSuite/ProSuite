@@ -159,18 +159,6 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
 			return _disabledLogTypes.Contains(logItem.Type);
 		}
 
-		///// <summary>
-		///// Show the DockPane.
-		///// </summary>
-		//internal static void ShowDockWindow()
-  //      {
-  //          var pane = (ProSuiteLogPaneViewModel)FrameworkApplication.DockPaneManager.Find(_dockPaneID);
-  //          if (pane == null)
-  //              return;
-
-  //          pane.Activate();
-  //      }
-
 		internal static void ToggleDockWindowVisibility(bool show)
 		{
 			var pane = (ProSuiteLogPaneViewModel)FrameworkApplication.DockPaneManager.Find(_dockPaneID);
@@ -218,22 +206,8 @@ namespace Clients.AGP.ProSuiteSolution.LoggerUI
         protected override void OnClick()
         {
 			IsChecked = !IsChecked;
+			Caption = IsChecked ? "Hide Log" : "Show Log";
 			ProSuiteLogPaneViewModel.ToggleDockWindowVisibility(IsChecked);
-
-			if (IsChecked)
-			{
-				Caption = "Hide Log";
-		//		Uri uriSource = new Uri(
-		//"pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericLockNoColor16.png");
-		//		SmallImage = new System.Windows.Media.Imaging.BitmapImage(uriSource);
-			}
-			else
-			{
-				Caption = "Show Log";
-				//SmallImage = new System.Windows.Media.Imaging.BitmapImage(new Uri(
-	   //@"pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericUnLockNoColor16.png"));
-			}
-
 		}
 
 

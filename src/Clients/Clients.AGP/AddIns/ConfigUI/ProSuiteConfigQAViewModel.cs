@@ -2,13 +2,11 @@ using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
-using ProSuite.Commons.QA.ServiceManager.Interfaces;
 using ProSuite.Commons.QA.ServiceManager.Types;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Windows.Data;
 using System.Windows.Input;
 
 namespace Clients.AGP.ProSuiteSolution.ConfigUI
@@ -45,14 +43,15 @@ namespace Clients.AGP.ProSuiteSolution.ConfigUI
 				{
 					_cmdBrowseConnection = new RelayCommand(new Action<Object>((sender) =>
 					{
-						var fileFilter = BrowseProjectFilter.GetFilter("esri_browseDialogFilters_browseFiles"); // 
-						fileFilter.FileExtension = "*.*";
+						var fileFilter = BrowseProjectFilter.GetFilter("esri_browseDialogFilters_browseFiles"); 
+						fileFilter.FileExtension = "*.ags";
+						fileFilter.Name = "ArcGIS Server Connection (*.ags)";
 						fileFilter.BrowsingFilesMode = true;
 
 						var dlg = new OpenItemDialog()
 						{
 							BrowseFilter = fileFilter,
-							Title = "Browse Connections"
+							Title = "Browse ArcGIS Server Connections"
 						};
 						if (!dlg.ShowDialog().Value)
 							return;

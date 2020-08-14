@@ -46,6 +46,7 @@
     <Compile Include="Interfaces\IQASpecificationProvider.cs" />
     <Compile Include="ProSuiteQAManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Types\ProSuiteQAConfigEventArgs.cs" />
     <Compile Include="Types\ProSuiteQARequest.cs" />
     <Compile Include="Types\ProSuiteQAServiceEventArgs.cs" />
     <Compile Include="Types\ProSuiteQAServiceProviderBase.cs" />
