@@ -98,7 +98,8 @@ namespace ProSuite.AGP.WorkList
 				OID = oid;
 				Description = name ?? string.Empty;
 				Status = WorkItemStatus.Todo;
-				SetGeometry(CreateExtent(x, y));
+				Extent = CreateExtent(x, y);
+				SetGeometry(Extent);
 			}
 
 			public string Description { get; set; }
