@@ -1,13 +1,16 @@
-﻿namespace ProSuite.DomainModel.Core.QA.VerificationProgress
+namespace ProSuite.DomainModel.Core.QA.VerificationProgress
 {
 	public interface IQualityVerificationResult
 	{
+		bool HasQualityVerification();
+
 		QualityVerification GetQualityVerification();
 
 		bool HasIssues { get; }
 
 		bool CanSaveIssues { get; }
 
-		void SaveIssues();
+		int SaveIssues(ErrorDeletionInPerimeter errorDeletion =
+			               ErrorDeletionInPerimeter.VerifiedQualityConditions);
 	}
 }

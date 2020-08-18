@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using ProSuite.Commons.Geometry;
 using ProSuite.Commons.Progress;
 
