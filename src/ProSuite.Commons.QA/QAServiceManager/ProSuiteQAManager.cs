@@ -13,17 +13,19 @@ namespace ProSuite.Commons.QA.ServiceManager
     public class ProSuiteQAManager
     {
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		private IEnumerable<IProSuiteQAServiceProvider> enumerable;
+		private object p;
 
 		// QA service provider - GP, microservices, mock, REST, ...
-		IList<IProSuiteQAServiceProvider> _serviceProviders { get; set; }
+		IEnumerable<IProSuiteQAServiceProvider> _serviceProviders { get; set; }
 
         // QA specifications provider - XML, DDX, ....
         IQASpecificationProvider _specificationsProvider { get; set; }
 
         public event EventHandler<ProSuiteQAServiceEventArgs> OnStatusChanged;
 
-        public ProSuiteQAManager(IList<IProSuiteQAServiceProvider> availableServices, IQASpecificationProvider specificationsProvider)
-        {
+		public ProSuiteQAManager(IEnumerable<IProSuiteQAServiceProvider> availableServices, IQASpecificationProvider specificationsProvider)
+		{
             _serviceProviders = availableServices;
             foreach(var service in _serviceProviders)
                 service.OnStatusChanged += Service_OnStatusChanged;
@@ -31,7 +33,7 @@ namespace ProSuite.Commons.QA.ServiceManager
             _specificationsProvider = specificationsProvider;
         }
 
-		public IList<IProSuiteQAServiceProvider> ServiceProviders
+		public IEnumerable<IProSuiteQAServiceProvider> ServiceProviders
 		{
 			get
 			{
@@ -55,7 +57,10 @@ namespace ProSuite.Commons.QA.ServiceManager
 			var serviceConfigs = (IEnumerable<ProSuiteQAServerConfiguration>)e?.Data;
 
 			if (serviceConfigs != null)
+			{
+				_msg.Info("QA service providers config actualized");
 				UpdateServiceConfigs(serviceConfigs);
+			}
 		}
 
 		public async Task<ProSuiteQAResponse> StartQATestingAsync(ProSuiteQARequest request)
