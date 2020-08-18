@@ -44,6 +44,9 @@
     <ArcGISFolder Condition="'$(ArcGISFolder)' == ''">$(registry:HKEY_CURRENT_USER\SOFTWARE\ESRI\ArcGISPro@InstallDir)</ArcGISFolder>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ArcGIS.Desktop.Resources">
+      <HintPath>..\..\..\..\lib\ArcGIS.Desktop.Resources.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression" />
@@ -79,6 +82,7 @@
     <Compile Include="ConfigUI\ProSuiteConfigQAViewModel.cs" />
     <Compile Include="ConfigUI\ProSuiteConfigViewModel.cs" />
     <Compile Include="ConfigurationUtils.cs" />
+    <Compile Include="Daml.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
     <Compile Include="Layers\LayerUtils.cs" />
     <Compile Include="LoggerUI\LogMessageImageConverter.cs" />
@@ -282,6 +286,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\FolderOpened_white_16x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\GoNearest.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
