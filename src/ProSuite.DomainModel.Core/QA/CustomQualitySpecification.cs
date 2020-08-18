@@ -33,6 +33,13 @@ namespace ProSuite.DomainModel.Core.QA
 		[NotNull]
 		public QualitySpecification CustomizedSpecification { get; }
 
+		public IEnumerable<QualityCondition> GetDisabledConditions()
+		{
+			return Elements.Where(x => ! x.Enabled &&
+			                           StringUtils.IsNotEmpty(x.QualityCondition.Uuid))
+			               .Select(x => x.QualityCondition);
+		}
+
 		public override QualitySpecification BaseSpecification
 			=> CustomizedSpecification.BaseSpecification;
 
@@ -47,9 +54,7 @@ namespace ProSuite.DomainModel.Core.QA
 				        .ToDictionary(x => x.QualityCondition.Uuid);
 
 			var disabledElements = new HashSet<string>(
-				Elements.Where(x => ! x.Enabled &&
-				                    StringUtils.IsNotEmpty(x.QualityCondition.Uuid))
-				        .Select(x => x.QualityCondition.Uuid));
+				GetDisabledConditions().Select(q => q.Uuid));
 
 			Clear();
 
