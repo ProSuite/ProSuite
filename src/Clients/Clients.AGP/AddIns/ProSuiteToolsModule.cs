@@ -10,6 +10,7 @@ using ArcGIS.Desktop.Mapping.Events;
 using Clients.AGP.ProSuiteSolution.ConfigUI;
 using Clients.AGP.ProSuiteSolution.Layers;
 using Clients.AGP.ProSuiteSolution.LoggerUI;
+using Clients.AGP.ProSuiteSolution.ProjectItem;
 using Clients.AGP.ProSuiteSolution.WorkListTrials;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.QA.ServiceManager;
@@ -50,6 +51,8 @@ namespace Clients.AGP.ProSuiteSolution
 		{
 			get
 			{
+				var item = Project.Current.GetItems<ProSuiteQAProjectItem>().FirstOrDefault();
+
 				if (_qaProjectItem == null)
 				{
 					_msg.Info("Project item not available");
@@ -62,8 +65,10 @@ namespace Clients.AGP.ProSuiteSolution
 						{
 							var added = Project.Current.AddItem(_qaProjectItem);
 							_msg.Info($"Project item added {added}");
+
+							var itemAdded = Project.Current.GetItems<ProSuiteQAProjectItem>().FirstOrDefault();
+							Project.Current.SetDirty();//enable save
 							//Project.Current.SaveAsync();
-							//Project.Current.SetDirty();//enable save
 
 							_msg.Info("Project item saved");
 						});

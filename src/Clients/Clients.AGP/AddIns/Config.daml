@@ -10,6 +10,29 @@
     <!-- Note subject can be one or more of these topics:
          Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
   </AddInInfo>
+	
+<!--ProjectItem start ________________________________________________________________________________ -->
+
+	<categories>
+		<updateCategory refID="esri_core_projectContainers">
+			<insertComponent id="ProSuiteItem_FolderContainer" className="Clients.AGP.ProSuiteSolution.ProjectItem.ProSuiteProjectItemContainer" insert="before" placeWith="esri_geodatabase_folderConnectionContainer">
+				<content type="ProSuiteContainer" displayName="ProSuite" contextMenu="ProSuiteItems_AddFoldersMenu" />
+			</insertComponent>
+		</updateCategory>	
+		<updateCategory refID="esri_customItems">
+			<insertComponent id="acme_prosuite_handler" className="ProSuite.Commons.AGP.ProjectItem.ProSuiteQAProjectItem" containerType="ProSuiteContainer">
+				<content displayName="Worklist" fileExtension="wkl" isContainer="true" keywords="worklist"
+						 contextMenuID="ProSuiteItem_ContextMenu">
+					<filterFlags>
+						<type id="File" />
+					</filterFlags>
+				</content>
+			</insertComponent>
+		</updateCategory>
+	</categories>
+	
+	<!--ProjectItem end __________________________________________________________________________________ --> 	
+	
     <conditions>
 	    <insertCondition id="prosuite_qa_gplocal_enabled" caption="QA GPLocal Enabled">
 		    <state id="prosuite_qa_gplocal_state"/>

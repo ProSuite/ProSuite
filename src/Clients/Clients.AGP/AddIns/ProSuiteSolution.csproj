@@ -80,6 +80,7 @@
     <Compile Include="ConfigUI\ProSuiteConfigQAViewModel.cs" />
     <Compile Include="ConfigUI\ProSuiteConfigViewModel.cs" />
     <Compile Include="ConfigurationUtils.cs" />
+    <Compile Include="ProjectItem\ProSuiteProjectItemContainer.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
     <Compile Include="Layers\LayerUtils.cs" />
     <Compile Include="LoggerUI\LogMessageImageConverter.cs" />
@@ -95,7 +96,7 @@
       <DependentUpon>PickerWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="PickerUI\VisibleIfFalseConverter.cs" />
-    <Compile Include="ProSuiteQAProjectItem.cs" />
+    <Compile Include="ProjectItem\ProSuiteQAProjectItem.cs" />
     <Compile Include="ProSuiteToolsModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProSuiteConfigurationDirectorySearcher.cs" />

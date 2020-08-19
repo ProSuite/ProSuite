@@ -35,6 +35,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
@@ -51,6 +52,7 @@
     <Compile Include="Gdb\GdbRowIdentity.cs" />
     <Compile Include="Gdb\GdbTableIdentity.cs" />
     <Compile Include="Gdb\GdbWorkspaceIdentity.cs" />
+    <Compile Include="ImageUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Spatial\GeometryUtils.cs" />
   </ItemGroup>
