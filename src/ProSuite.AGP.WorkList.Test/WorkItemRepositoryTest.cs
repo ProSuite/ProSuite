@@ -40,7 +40,7 @@ namespace ProSuite.AGP.WorkList.Test
 		//private static IWorkItemRepository CreateWorkItemRepository(
 		//	Geodatabase geodatabase, string datasetName)
 		//{
-		//	var repository = new ErrorItemRepository(new WorkspaceContext(geodatabase));
+		//	var repository = new IssueItemRepository(new WorkspaceContext(geodatabase));
 		//	repository.RegisterDataset(datasetName);
 		//	return repository;
 		//}

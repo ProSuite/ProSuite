@@ -4,11 +4,11 @@ using ProSuite.AGP.WorkList.Contracts;
 namespace ProSuite.AGP.WorkList.Domain
 {
 	// todo daro: find correct folder and namespace for this class
-	public class ErrorItem : WorkItem
+	public class IssueItem : WorkItem
 	{
 		private string _issueCodeDescription;
 
-		public ErrorItem(int id, Row row,
+		public IssueItem(int id, Row row,
 		                 IAttributeReader reader,
 		                 double extentExpansionFactor = 1.1,
 		                 double minimumSizeDegrees = 15,

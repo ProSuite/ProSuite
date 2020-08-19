@@ -43,7 +43,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkLists
 
 			IEnumerable<IWorkspaceContext> workspaces = GetWorkspaceContexts(distinctWorkspaces);
 
-			IWorkItemRepository repository = new ErrorItemRepository(workspaces);
+			IWorkItemRepository repository = new IssueItemRepository(workspaces);
 			repository.RegisterDatasets(tables.ToList());
 
 			return repository;
@@ -51,7 +51,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkLists
 
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository)
 		{
-			return new ErrorWorkList(repository, _workListName);
+			return new IssueWorkList(repository, _workListName);
 		}
 	}
 }

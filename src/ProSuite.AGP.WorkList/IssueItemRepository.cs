@@ -7,9 +7,9 @@ using ProSuite.DomainModel.DataModel;
 
 namespace ProSuite.AGP.WorkList
 {
-	public class ErrorItemRepository : GdbItemRepository
+	public class IssueItemRepository : GdbItemRepository
 	{
-		public ErrorItemRepository(IEnumerable<IWorkspaceContext> workspaces) : base(workspaces) { }
+		public IssueItemRepository(IEnumerable<IWorkspaceContext> workspaces) : base(workspaces) { }
 
 		protected override DatabaseStatusSchema CreateStatusSchemaCore()
 		{
@@ -28,7 +28,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			int id = CreateItemIDCore(row, source);
 
-			return new ErrorItem(id, row, source.AttributeReader);
+			return new IssueItem(id, row, source.AttributeReader);
 		}
 
 		protected override ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
