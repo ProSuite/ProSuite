@@ -44,6 +44,9 @@
     <ArcGISFolder Condition="'$(ArcGISFolder)' == ''">$(registry:HKEY_CURRENT_USER\SOFTWARE\ESRI\ArcGISPro@InstallDir)</ArcGISFolder>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ArcGIS.Desktop.Resources">
+      <HintPath>..\..\..\..\lib\ArcGIS.Desktop.Resources.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression" />
@@ -65,9 +68,25 @@
     <Compile Include="..\..\..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="ConfigIDs.cs" />
+    <Compile Include="ConfigUI\ProSuiteConfigCommonsUserControl.xaml.cs">
+      <DependentUpon>ProSuiteConfigCommonsUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ConfigUI\ProSuiteConfigCommonsViewModel.cs" />
+    <Compile Include="ConfigUI\ProSuiteConfigDialog.xaml.cs">
+      <DependentUpon>ProSuiteConfigDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ConfigUI\ProSuiteConfigQAUserControl.xaml.cs">
+      <DependentUpon>ProSuiteConfigQAUserControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ConfigUI\ProSuiteConfigQAViewModel.cs" />
+    <Compile Include="ConfigUI\ProSuiteConfigViewModel.cs" />
     <Compile Include="ConfigurationUtils.cs" />
+    <Compile Include="Daml.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
     <Compile Include="Layers\LayerUtils.cs" />
+    <Compile Include="LoggerUI\LogMessageImageConverter.cs" />
+    <Compile Include="LoggerUI\LogMessageLinkConverter.cs" />
     <Compile Include="LoggerUI\ProSuiteLogPane.xaml.cs">
       <DependentUpon>ProSuiteLogPane.xaml</DependentUpon>
     </Compile>
@@ -97,6 +116,18 @@
     <Compile Include="WorkLists\InMemoryWorkEnvironment.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="ConfigUI\ProSuiteConfigCommonsUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ConfigUI\ProSuiteConfigDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ConfigUI\ProSuiteConfigQAUserControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="LoggerUI\ProSuiteLogPane.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -239,7 +270,25 @@
     <Resource Include="WorkListUI\Images\GoNext.png" />
   </ItemGroup>
   <ItemGroup>
+    <Resource Include="Images\StatusCriticalError_12x_16x.png" />
+    <Resource Include="Images\StatusInformation_12x_16x.png" />
+    <Resource Include="Images\StatusOK_16x.png" />
+    <Resource Include="Images\StatusWarning_12x_16x.png" />
+  </ItemGroup>
+  <ItemGroup>
     <AddInContent Include="Install\Selection Work List.lyrx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\Search_16x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\FolderOpened_16x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\FolderOpened_white_16x.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\GoNearest.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--

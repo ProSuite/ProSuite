@@ -13,5 +13,7 @@ namespace ProSuite.Commons.QA.ServiceManager.Interfaces
         ProSuiteQAResponse StartQASync(ProSuiteQARequest request);
 
         event EventHandler<ProSuiteQAServiceEventArgs> OnStatusChanged;
-    }
+
+		void UpdateConfig(ProSuiteQAServerConfiguration serviceConfig);
+	}
 }

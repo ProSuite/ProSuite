@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using Clients.AGP.ProSuiteSolution.WorkLists;
@@ -20,7 +21,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 			                                     true);
 			GoNextItemCmd = new RelayCommand(GoNextItem, () => true, false,
 			                                     true);
-			WorkListCentral = WorkListsModule.Current.Central;
+			WorkListCentral = new WorkListCentral();
 			WorkListCentral.RegisterObserver(this);
 			WorkLists = WorkListCentral.GetAll();
 			CurrentWorkList = WorkLists.First();
@@ -33,6 +34,22 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 		public WorkListCentral WorkListCentral { get; }
 		public RelayCommand GoPreviousItemCmd { get; }
 		public RelayCommand GoNextItemCmd { get; }
+
+		public ICommand PreviousExtentCmd =>
+			FrameworkApplication.GetPlugInWrapper(
+				DAML.Button.esri_mapping_prevExtentButton) as ICommand;
+
+		public ICommand NextExtentCmd =>
+			FrameworkApplication.GetPlugInWrapper(
+				DAML.Button.esri_mapping_nextExtentButton) as ICommand;
+
+		public ICommand ZoomInCmd =>
+			FrameworkApplication.GetPlugInWrapper(
+				DAML.Button.esri_mapping_fixedZoomInButton) as ICommand;
+
+		public ICommand ZoomOutCmd =>
+			FrameworkApplication.GetPlugInWrapper(
+				DAML.Button.esri_mapping_fixedZoomOutButton) as ICommand;
 
 		public IEnumerable<IWorkList> WorkLists
 		{
@@ -63,6 +80,11 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 		}
 
 		public void WorkListModified(IWorkList workList)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void Show(IWorkList workList)
 		{
 			throw new NotImplementedException();
 		}

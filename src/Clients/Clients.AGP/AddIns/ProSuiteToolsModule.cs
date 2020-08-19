@@ -18,6 +18,8 @@ using Clients.AGP.ProSuiteSolution.Layers;
 using QAConfigurator;
 using ProSuite.Commons.Logging;
 using Clients.AGP.ProSuiteSolution.WorkListTrials;
+using Clients.AGP.ProSuiteSolution.LoggerUI;
+using Clients.AGP.ProSuiteSolution.ConfigUI;
 
 namespace Clients.AGP.ProSuiteSolution
 {
@@ -115,6 +117,31 @@ namespace Clients.AGP.ProSuiteSolution
 			}
 		}
 
+		private static void ProSuite_OnConfigurationChanged(object sender, ProSuiteQAConfigEventArgs e)
+		{
+			var serviceConfigs = (IEnumerable<ProSuiteQAServerConfiguration>)e?.Data;
+			if (serviceConfigs == null) return;
+
+			_msg.Info("Configuration is changed");
+
+			// TODO algr: hide this logic in QAConfig or ViewModel
+			var localService = serviceConfigs.FirstOrDefault(s => (s.ServiceType == ProSuiteQAServiceType.GPLocal && s.IsValid));
+			if (localService != null )
+				FrameworkApplication.State.Activate(ConfigIDs.QA_GPLocal_State);
+			else
+				FrameworkApplication.State.Deactivate(ConfigIDs.QA_GPLocal_State);
+
+			var serverService = serviceConfigs.FirstOrDefault(s => (s.ServiceType == ProSuiteQAServiceType.GPService && s.IsValid));
+			if (serverService != null)
+				FrameworkApplication.State.Activate(ConfigIDs.QA_GPService_State);
+			else
+				FrameworkApplication.State.Deactivate(ConfigIDs.QA_GPService_State);
+
+			// TODO algr: save changed configuration to project
+			//QAProjectItem
+
+		}
+
 		#region Overrides
 		/// <summary>
 		/// Initialize logic for the custom module
@@ -128,6 +155,8 @@ namespace Clients.AGP.ProSuiteSolution
 
 			//ProjectItemsChangedEvent.Subscribe(OnProjectItemsChanged);
 			LayersAddedEvent.Subscribe(OnLayerAdded);
+
+			QAConfiguration.Current.OnConfigurationChanged += ProSuite_OnConfigurationChanged;
 
 			return base.Initialize();
 		}
@@ -256,7 +285,6 @@ namespace Clients.AGP.ProSuiteSolution
 		{
 			try
 			{
-				//ProSuiteToolsModule.StartQAGPServer(ProSuiteQAServiceType.GPLocal);
 				await ProSuiteToolsModule.StartQAGPServerAsync(ProSuiteQAServiceType.GPLocal);
 			}
 			catch (Exception ex)
@@ -270,15 +298,27 @@ namespace Clients.AGP.ProSuiteSolution
 	{
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+		StartQAErrorsDockPane()
+		{
+			//Enabled = false;
+		}
+
 		protected override void OnClick()
 		{
 			try
 			{
+				// because of VS2019 problems simple test here
+				QueuedTask.Run(() =>
+				{
+					ProSuiteLogPaneViewModel.GenerateMockMessages(10000);
+				});
+
+				// temporary solution for WorkList
 				//QueuedTask.Run(() =>
 				//{
-					var pane = FrameworkApplication.DockPaneManager.Find("esri_dataReviewer_evaluateFeaturesPane");
-					bool visible = pane.IsVisible;
-					pane.Activate();
+				//var pane = FrameworkApplication.DockPaneManager.Find("esri_dataReviewer_evaluateFeaturesPane");
+				//	bool visible = pane.IsVisible;
+				//	pane.Activate();
 				//});
 
 				//MessageBox.Show("QA error handler view is not yet implemented");
@@ -287,22 +327,34 @@ namespace Clients.AGP.ProSuiteSolution
 			{
 				_msg.Error(ex.Message);
 			}
-
 		}
+
 	}
 
-	internal class ShowLogWindow : Button
+	internal class ShowConfigWindow : Button
 	{
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		private ProSuiteConfigDialog _prosuiteconfigdialog = null;
 
 		protected override void OnClick()
 		{
-			// TODO - is REST an alternative solution? 
-			// https://vsdev2414.esri-de.com/server/rest/services/PROSUITE_QA/verification/GPServer/verifydataset/execute?object_class=%5C%5Cvsdev2414%5Cprosuite_server_trials%5Ctestdata.gdb%5Cpolygons&tile_size=10000&parameters=&verification_extent=&env%3AoutSR=&env%3AprocessSR=&returnZ=false&returnM=false&returnTrueCurves=false&returnFeatureCollection=false&context=&f=json
+			//already open?
+			if (_prosuiteconfigdialog != null)
+				return;
 
-			//ProSuiteLogger.Logger.Log(LogType.Info, "Open configuration", "Click");
-			// TODO test hyperlink ....
-			_msg.Debug("Click");
+			// clone 
+			var tempQAConfiguration = QAConfiguration.Current.QAServiceConfigurations.ConvertAll(x => new ProSuiteQAServerConfiguration(x));
+
+			_prosuiteconfigdialog = new ProSuiteConfigDialog();
+			_prosuiteconfigdialog.Owner = FrameworkApplication.Current.MainWindow;
+			_prosuiteconfigdialog.DataContext = new ProSuiteConfigViewModel(tempQAConfiguration);
+			_prosuiteconfigdialog.Closed += (o, e) => { _prosuiteconfigdialog = null; };
+
+			if (_prosuiteconfigdialog.ShowDialog() ?? true)
+			{
+				// save changed configuration 
+				QAConfiguration.Current.QAServiceConfigurations = tempQAConfiguration;
+			}
 		}
 	}
 
@@ -361,6 +413,7 @@ namespace Clients.AGP.ProSuiteSolution
 		public QASpecListComboBox()
 		{
 			FillCombo();
+			Enabled = false;
 		}
 
 		private void FillCombo()

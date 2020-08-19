@@ -18,13 +18,14 @@ namespace ProSuite.Commons.QA.ServiceProviderArcGIS
 		Xml
 	}
 
+	// TODO - is REST an alternative (faster) solution for GPService? 
+	// https://vsdev2414.esri-de.com/server/rest/services/PROSUITE_QA/verification/GPServer/verifydataset/execute?object_class=%5C%5Cvsdev2414%5Cprosuite_server_trials%5Ctestdata.gdb%5Cpolygons&tile_size=10000&parameters=&verification_extent=&env%3AoutSR=&env%3AprocessSR=&returnZ=false&returnM=false&returnTrueCurves=false&returnFeatureCollection=false&context=&f=json
+
 	public class QAServiceProviderGP : ProSuiteQAServiceProviderBase<ProSuiteQAServerConfiguration>, IProSuiteQAServiceProvider
 	{
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-		//private readonly string _toolpath = @"C:\Users\algr\Documents\ArcGIS\Projects\test\admin on vsdev2414.esri-de.com_6443.ags\QAGPServicesTest1\XmlQATool";
-
-		private readonly string _toolpath;
+		private string _toolpath;
 		private readonly Regex _regex = new Regex("(?<=>)(.*?)(?=<)", RegexOptions.Singleline);
 
 		private ProSuiteQAServiceType _serviceType;
@@ -39,7 +40,14 @@ namespace ProSuite.Commons.QA.ServiceProviderArcGIS
 		public QAServiceProviderGP(ProSuiteQAServerConfiguration parameters) : base(parameters)
 		{
 			_serviceType = parameters.ServiceType;
-			_toolpath = $"{parameters.ServiceConnection}\\{parameters.ServiceName}";
+			_toolpath = BuildToolPath(parameters);// $"{parameters.ServiceConnection}\\{parameters.ServiceName}";
+		}
+
+		private string BuildToolPath(ProSuiteQAServerConfiguration parameters)
+		{
+			if (string.IsNullOrEmpty(parameters.ServiceConnection) || string.IsNullOrEmpty(parameters.ServiceConnection)) return String.Empty;
+
+			return $"{parameters.ServiceConnection}\\{parameters.ServiceName}";
 		}
 
 		public event EventHandler<ProSuiteQAServiceEventArgs> OnStatusChanged;
@@ -195,6 +203,14 @@ namespace ProSuite.Commons.QA.ServiceProviderArcGIS
 			if (result.IsFailed) return ProSuiteQAError.ServiceFailed;
 			if (result.IsCanceled) return ProSuiteQAError.Canceled;
 			return ProSuiteQAError.ServiceFailed;
+		}
+
+		public void UpdateConfig(ProSuiteQAServerConfiguration serviceConfig)
+		{
+			if(_serviceType == serviceConfig.ServiceType)
+			{
+				_toolpath = BuildToolPath(serviceConfig);
+			}
 		}
 
 		#endregion

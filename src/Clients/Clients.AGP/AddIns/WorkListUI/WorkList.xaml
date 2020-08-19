@@ -37,6 +37,23 @@
             <Button Command="{Binding GoNextItemCmd}">
                 <Image Source="Images/GoNext.png" ToolTip="Next WorkItem" />
             </Button>
+            <Button>
+                <Image Source="Images/GoNearest.png"/>
+            </Button>
+            <Separator/>
+            <Button Command="{Binding PreviousExtentCmd}">
+                <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericBlueLeftArrowLongTail16.png"/>
+            </Button>
+            <Button Command="{Binding NextExtentCmd}">
+                <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericBlueRightArrowLongTail16.png"/>
+            </Button>
+            <Button Command="{Binding ZoomInCmd}">
+                <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/zoomfixedzoomin_b_16.png"/>
+            </Button>
+            <Button Command="{Binding ZoomOutCmd}">
+                <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/zoomfixedzoomout_b_16.png"/>
+            </Button>
+            <Separator/>
             <ComboBox ItemsSource="{Binding WorkLists}" Width="120" DisplayMemberPath="Name"/>
         </ToolBar>
         <StackPanel Grid.Row="2">
@@ -59,5 +76,4 @@
             </DockPanel>
         </StackPanel>
     </Grid>
-
 </controls:ProWindow>

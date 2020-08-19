@@ -98,7 +98,8 @@ namespace ProSuite.AGP.WorkList
 				OID = oid;
 				Description = name ?? string.Empty;
 				Status = WorkItemStatus.Todo;
-				SetGeometry(CreateExtent(x, y));
+				Extent = CreateExtent(x, y);
+				SetGeometry(Extent);
 			}
 
 			public string Description { get; set; }
@@ -139,6 +140,11 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			public IEnumerable<ISourceClass> RegisterDatasets(ICollection<GdbTableIdentity> datasets)
+			{
+				throw new NotImplementedException();
+			}
+
+			public void Save(IWorkItem item)
 			{
 				throw new NotImplementedException();
 			}

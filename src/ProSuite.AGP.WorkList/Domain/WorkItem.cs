@@ -114,7 +114,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		public Envelope Extent
 		{
 			get;
-			private set;
+			// todo daro: make setter private?
+			set;
 		}
 
 		public virtual void SetDone(bool done = true)
@@ -169,6 +170,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				return;
 			}
 
+			// todo daro: make more robust; set Extent in one method
 			Extent = EnvelopeBuilder.CreateEnvelope(geometry.Extent);
 			SetGeometry(Extent);
 		}

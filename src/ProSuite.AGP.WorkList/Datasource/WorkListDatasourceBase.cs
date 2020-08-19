@@ -53,17 +53,10 @@ namespace ProSuite.AGP.WorkList.Datasource
 			// scheme://Host:Port/AbsolutePath?Query#Fragment
 			// worklist://localhost/workListName?unused&for#now
 
-			_workList = WorkListRegistry.Instance.Get(name);
-			_msg.DebugFormat("Name from connectionPath: {0}, list found = {1}",
-			                 name, _workList != null);
-
-			if (_workList == null)
-				throw new ArgumentException($"No such work list: {connectionPath}");
-
 			_tableNames = new ReadOnlyCollection<string>(
 				new List<string>
 				{
-					FormatTableName(_workList.Name)
+					FormatTableName(name)
 				});
 		}
 
@@ -76,7 +69,16 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			// The given name is one of those returned by GetTableNames()
 
+			// todo daro: WorkList is the data source of a table
+
 			_msg.DebugFormat("OpenTable '{0}'", name);
+
+			_workList = WorkListRegistry.Instance.Get(name);
+			_msg.DebugFormat("Name from connectionPath: {0}, list found = {1}",
+			                 name, _workList != null);
+
+			if (_workList == null)
+				throw new ArgumentException($"No such work list: {name}");
 
 			ParseLayer(name, out string listName);
 
