@@ -87,6 +87,7 @@
     <Compile Include="Editing\EraseTool.cs" />
     <Compile Include="Commons\ImageUtils.cs" />
     <Compile Include="ProjectItem\ProSuiteProjectItemContainer.cs" />
+    <Compile Include="Selection\SelectionTool.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
     <Compile Include="Commons\LayerUtils.cs" />
     <Compile Include="LoggerUI\LogMessageImageConverter.cs" />
@@ -303,7 +304,9 @@
     <AddInContent Include="Images\CutHoleTool16.png" />
     <AddInContent Include="Images\CutHoleTool32.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <AddInContent Include="Images\SelectionTool.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:
