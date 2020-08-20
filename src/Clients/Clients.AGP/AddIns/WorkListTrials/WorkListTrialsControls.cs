@@ -63,7 +63,8 @@ namespace Clients.AGP.ProSuiteSolution.WorkListTrials
 			var current = workList.Current;
 			if (current != null)
 			{
-				current.SetDone();
+				// note daro: should be done by IWorkListRepository (called by IWorkList)
+				//current.SetDone();
 
 				WorkListTrialsModule.Current.Refresh();
 			}
@@ -134,7 +135,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkListTrials
 		{
 			var workList = WorkListTrialsModule.Current.GetTestWorkList();
 			workList.GoNext();
-			workList.Current?.SetVisited();
+			//workList.Current?.SetVisited();
 			QueuedTask.Run(() => WorkListTrialsModule.Current.Refresh());
 		} 
 	}
@@ -145,7 +146,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkListTrials
 		{
 			var workList = WorkListTrialsModule.Current.GetTestWorkList();
 			workList.GoPrevious();
-			workList.Current?.SetVisited();
+			//workList.Current?.SetVisited();
 			QueuedTask.Run(() => WorkListTrialsModule.Current.Refresh());
 		}
 	}
@@ -156,7 +157,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkListTrials
 		{
 			var workList = WorkListTrialsModule.Current.GetTestWorkList();
 			workList.GoFirst();
-			workList.Current?.SetVisited();
+			//workList.Current?.SetVisited();
 			QueuedTask.Run(() => WorkListTrialsModule.Current.Refresh());
 		}
 	}

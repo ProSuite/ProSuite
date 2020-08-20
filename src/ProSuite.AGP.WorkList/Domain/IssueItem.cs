@@ -1,5 +1,6 @@
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
@@ -8,12 +9,7 @@ namespace ProSuite.AGP.WorkList.Domain
 	{
 		private string _issueCodeDescription;
 
-		public IssueItem(int id, Row row,
-		                 IAttributeReader reader,
-		                 double extentExpansionFactor = 1.1,
-		                 double minimumSizeDegrees = 15,
-		                 double minimumSizeProjected = 0.001) : base(
-			id, row, extentExpansionFactor, minimumSizeDegrees, minimumSizeProjected)
+		public IssueItem(int id, [NotNull] Row row, IAttributeReader reader) : base(id, row)
 		{
 			ObjectID = reader.GetValue<int>(row, Attributes.ObjectID);
 			IssueCodeDescription = reader.GetValue<string>(row, Attributes.IssueCodeDescription);
