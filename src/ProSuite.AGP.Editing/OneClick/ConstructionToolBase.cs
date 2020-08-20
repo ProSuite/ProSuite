@@ -1,7 +1,13 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 using System.Windows.Input;
+using System.Windows.Resources;
+using ActiproSoftware.Products.Editors;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Templates;
@@ -11,6 +17,8 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.UI.Keyboard;
+using Cursor = System.Windows.Input.Cursor;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -21,12 +29,16 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private bool _shiftIsPressed;
 
+		protected Cursor SketchCursor { get; set; }
+
 		protected ConstructionToolBase()
 		{
 			IsSketchTool = true;
 			SketchOutputMode = SketchOutputMode.Screen;
 
 			GeomIsSimpleAsFeature = false;
+
+			SketchCursor = ToolUtils.GetCursor(Properties.Resources.EditSketchCrosshair);
 		}
 
 		protected bool IsInSketchMode
@@ -59,7 +71,25 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected override void AfterSelection(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
 		{
-			StartSketchPhase();
+			if (CanStartSketchPhase(selectedFeatures))
+			{
+				StartSketchPhase();
+			}
+		}
+
+		private bool CanStartSketchPhase(IList<Feature> selectedFeatures)
+		{
+			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
+			{
+				return false;
+			}
+
+			return CanStartSketchPhaseCore(selectedFeatures);
+		}
+
+		protected virtual bool CanStartSketchPhaseCore(IList<Feature> selectedFeatures)
+		{
+			return true;
 		}
 
 		protected override Task<bool> OnSketchModifiedAsync()
@@ -104,7 +134,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			UseSnapping = true;
 
-			Cursor = Cursors.Cross;
+			SetCursor(SketchCursor);
 
 			StartSketchAsync();
 		}
@@ -184,6 +214,8 @@ namespace ProSuite.AGP.Editing.OneClick
 				// sketch are lost.
 				_editSketchBackup = GetCurrentSketchAsync().Result;
 
+				// TODO: Only clear the sketch and switch to selection phase if REALLY required
+				// (i.e. because a rectangle sketch must be drawn on MouseMove)
 				ClearSketchAsync();
 
 				StartSelectionPhase();
@@ -197,21 +229,33 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				_shiftIsPressed = false;
 
-				StartSketchPhase();
+				// TODO: Maintain selection by using SelectionChanged? Event?
+				IList<Feature> selection =
+					SelectionUtils.GetSelectedFeatures(ActiveMapView).ToList();
 
-				ActiveMapView.SetCurrentSketchAsync(_editSketchBackup);
-
-				// This puts back the edit operations in the undo stack, but when clicking on the top one, the sketch 
-				// is cleared and undoing any previous operation has no effect any more.
-				ActiveMapView.Map.OperationManager.ClearUndoCategory("SketchOperations");
-
-				if (_sketchOperations != null)
+				if (CanUseSelection(selection))
 				{
-					foreach (Operation operation in _sketchOperations)
+					StartSketchPhase();
+
+					if (_editSketchBackup != null)
 					{
-						ActiveMapView.Map.OperationManager.AddUndoOperation(operation);
+						ActiveMapView.SetCurrentSketchAsync(_editSketchBackup);
+
+						// This puts back the edit operations in the undo stack, but when clicking on the top one, the sketch 
+						// is cleared and undoing any previous operation has no effect any more.
+						ActiveMapView.Map.OperationManager.ClearUndoCategory("SketchOperations");
+
+						if (_sketchOperations != null)
+						{
+							foreach (Operation operation in _sketchOperations)
+							{
+								ActiveMapView.Map.OperationManager.AddUndoOperation(operation);
+							}
+						}
 					}
 				}
+
+				_editSketchBackup = null;
 			}
 		}
 

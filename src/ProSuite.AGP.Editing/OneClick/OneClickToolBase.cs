@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -15,6 +16,7 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Keyboard;
+using Cursor = System.Windows.Input.Cursor;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -28,6 +30,9 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected bool RequiresSelection { get; set; } = true;
 
 		protected List<Key> HandledKeys { get; } = new List<Key>();
+
+		protected Cursor SelectionCursor { get; set; }
+		protected Cursor SelectionCursorShift { get; set; }
 
 		protected OneClickToolBase()
 		{
@@ -49,7 +54,31 @@ namespace ProSuite.AGP.Editing.OneClick
 			GeomIsSimpleAsFeature = false;
 			CompleteSketchOnMouseUp = true;
 
+			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
+			{
+				SetCursor(SelectionCursorShift);
+			}
+			else
+			{
+				SetCursor(SelectionCursor);
+			}
+
 			OnSelectionPhaseStarted();
+		}
+
+		protected void SetCursor([CanBeNull] Cursor cursor)
+		{
+			if (cursor != null)
+			{
+				if (cursor != SelectionCursor &&
+				    cursor != SelectionCursorShift)
+				{
+					_msg.Info("Other cursor");
+				}
+				_msg.InfoFormat("Setting cursor {0}",
+				                cursor == SelectionCursor ? "Selection" : Environment.StackTrace);
+				Cursor = cursor;
+			}
 		}
 
 		protected virtual void OnSelectionPhaseStarted() { }
@@ -161,6 +190,13 @@ namespace ProSuite.AGP.Editing.OneClick
 						return HandleEscape();
 					}
 
+					// NOTE: There is no performance penalty when setting the cursor from the QueuedTask
+					if ((k.Key == Key.LeftShift || k.Key == Key.RightShift) &&
+					    SelectionCursorShift != null && IsInSelectionPhase())
+					{
+						SetCursor(SelectionCursorShift);
+					}
+
 					OnKeyDownCore(k);
 
 					return true;
@@ -177,6 +213,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			RunQueuedTask(
 				delegate
 				{
+					if ((k.Key == Key.LeftShift || k.Key == Key.RightShift) &&
+					    SelectionCursor != null && IsInSelectionPhase())
+					{
+						SetCursor(SelectionCursor);
+					}
+
 					OnKeyUpCore(k);
 					return true;
 				});

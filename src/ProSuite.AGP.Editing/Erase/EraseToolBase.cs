@@ -10,6 +10,7 @@ using ArcGIS.Desktop.Editing.Templates;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
+using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Logging;
 
@@ -26,6 +27,9 @@ namespace ProSuite.AGP.Editing.Erase
 		{
 			// This is our property:
 			RequiresSelection = true;
+
+			SelectionCursor = ToolUtils.GetCursor(Resources.EraseToolCursor);
+			SelectionCursorShift = ToolUtils.GetCursor(Resources.EraseToolCursorShift);
 		}
 
 		protected override SketchGeometryType GetSketchGeometryType()
