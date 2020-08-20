@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
@@ -98,21 +97,10 @@ namespace ProSuite.AGP.WorkList
 				OID = oid;
 				Description = name ?? string.Empty;
 				Status = WorkItemStatus.Todo;
-				Extent = CreateExtent(x, y);
-				SetGeometry(Extent);
+				SetGeometry(CreateExtent(x, y));
 			}
 
 			public string Description { get; set; }
-
-			public override void SetDone(bool done = true)
-			{
-				Status = done ? WorkItemStatus.Done : WorkItemStatus.Todo;
-			}
-
-			public override void SetVisited(bool visited = true)
-			{
-				Visited = visited;
-			}
 		}
 
 		private class WorkItemRepositoryMock : IWorkItemRepository

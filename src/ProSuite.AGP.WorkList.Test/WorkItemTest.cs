@@ -64,7 +64,7 @@ namespace ProSuite.AGP.WorkList.Test
 		//		Feature feature = GdbRowUtils.GetRows<Feature>(table, null, true).FirstOrDefault();
 		//		Assert.NotNull(feature);
 
-		//		var errorItem = new ErrorItem(feature);
+		//		var errorItem = new IssueItem(feature);
 		//		Envelope current = errorItem.Extent;
 
 		//		Envelope expected = feature.GetShape().Extent;

@@ -47,12 +47,12 @@
     </Compile>
     <Compile Include="DatabaseSourceClass.cs" />
     <Compile Include="Domain\AttributeReader.cs" />
-    <Compile Include="Domain\ErrorItem.cs" />
-    <Compile Include="Domain\ErrorWorkList.cs" />
+    <Compile Include="Domain\IssueItem.cs" />
+    <Compile Include="Domain\IssueWorkList.cs" />
     <Compile Include="Domain\SelectionWorkList.cs" />
     <Compile Include="Domain\WorkList.cs" />
     <Compile Include="Domain\WorkListRegistry.cs" />
-    <Compile Include="ErrorItemRepository.cs" />
+    <Compile Include="IssueItemRepository.cs" />
     <Compile Include="GdbItemRepository.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SelectionItem.cs" />

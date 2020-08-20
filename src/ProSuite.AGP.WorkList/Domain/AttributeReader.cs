@@ -20,7 +20,11 @@ namespace ProSuite.AGP.WorkList.Domain
 			// todo daro: add all
 			// todo daro: does FindField works with qualified field names?
 			_fieldNameByIssueAttribute.Add(Attributes.ObjectID, definition.GetObjectIDField());
+
+			_fieldNameByIssueAttribute.Add(Attributes.QualityConditionName, "QualityCondition");
 			_fieldNameByIssueAttribute.Add(Attributes.IssueCodeDescription, "Description");
+			_fieldNameByIssueAttribute.Add(Attributes.InvolvedObjects, "InvolvedObjects");
+			_fieldNameByIssueAttribute.Add(Attributes.IssueSeverity, "IssueType");
 			_fieldNameByIssueAttribute.Add(Attributes.IssueCode, "Code");
 
 			_fieldIndexByAttribute.Add(Attributes.ObjectID, definition.FindField(GetName(Attributes.ObjectID)));

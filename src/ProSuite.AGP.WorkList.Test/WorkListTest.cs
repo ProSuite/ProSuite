@@ -98,7 +98,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 				var workspaceReference = new GdbWorkspaceIdentity(geodatabase);
-				IWorkItemRepository repository = new ErrorItemRepository(new List<IWorkspaceContext>
+				IWorkItemRepository repository = new IssueItemRepository(new List<IWorkspaceContext>
 				                                         {
 					                                         new WorkspaceContext(workspaceReference)
 				                                         });
@@ -148,7 +148,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 				var workspaceReference = new GdbWorkspaceIdentity(geodatabase);
-				IWorkItemRepository repository = new ErrorItemRepository(new List<IWorkspaceContext>
+				IWorkItemRepository repository = new IssueItemRepository(new List<IWorkspaceContext>
 				                                         {
 					                                         new WorkspaceContext(workspaceReference)
 				                                         });
@@ -206,7 +206,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 				var workspaceReference = new GdbWorkspaceIdentity(geodatabase);
-				IWorkItemRepository repository = new ErrorItemRepository(new List<IWorkspaceContext>
+				IWorkItemRepository repository = new IssueItemRepository(new List<IWorkspaceContext>
 				                                         {
 					                                         new WorkspaceContext(workspaceReference)
 				                                         });
@@ -257,7 +257,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 				var workspaceReference = new GdbWorkspaceIdentity(geodatabase);
-				IWorkItemRepository repository = new ErrorItemRepository(new List<IWorkspaceContext>
+				IWorkItemRepository repository = new IssueItemRepository(new List<IWorkspaceContext>
 				                                         {
 					                                         new WorkspaceContext(workspaceReference)
 				                                         });
@@ -270,7 +270,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 				IWorkList workList = new GdbQueryWorkList(repository, "work list");
 
-				var items = workList.GetItems().Cast<ErrorItem>().ToList();
+				var items = workList.GetItems().Cast<IssueItem>().ToList();
 
 				Assert.AreEqual("Bart", items[0].IssueCodeDescription);
 				Assert.AreEqual("Bart", items[1].IssueCodeDescription);

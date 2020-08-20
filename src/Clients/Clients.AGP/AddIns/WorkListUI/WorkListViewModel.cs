@@ -93,13 +93,13 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 		{
 			CurrentWorkList.GoPrevious();
 			CurrentWorkItem = CurrentWorkList.Current;
-			CurrentWorkItem.SetVisited(); //TODO this should be done by the worklist itself when moving to next/previous
+			//CurrentWorkItem.SetVisited(); //TODO this should be done by the worklist itself when moving to next/previous
 		}
 		private void GoNextItem()
 		{
 			CurrentWorkList.GoNext();
 			CurrentWorkItem = CurrentWorkList.Current;
-			CurrentWorkItem.SetVisited(); //TODO this should be done by the worklist itself when moving to next/previous
+			//CurrentWorkItem.SetVisited(); //TODO this should be done by the worklist itself when moving to next/previous
 		}
 	}
 }
