@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("QAServiceManager")]
+[assembly: AssemblyTitle("ProSuite.QA.Configurator")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("QAServiceManager")]
+[assembly: AssemblyProduct("ProSuite.QA.Configurator")]
 [assembly: AssemblyCopyright("Copyright ©  2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("7fd1d803-f43f-4530-82f5-44d6f705959f")]
+[assembly: Guid("7c22c12f-3645-45dd-946b-8189816d39d3")]
 
 // Version information for an assembly consists of the following four values:
 //

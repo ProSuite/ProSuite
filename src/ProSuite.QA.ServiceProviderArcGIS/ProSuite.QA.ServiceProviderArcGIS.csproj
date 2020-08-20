@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{28148B16-138E-4056-8EF3-0288AC8A58C7}</ProjectGuid>
+    <ProjectGuid>{B46101C1-5C42-410D-83B9-8EBE2BECBE18}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>QAConfigurator</RootNamespace>
-    <AssemblyName>QAConfigurator</AssemblyName>
+    <RootNamespace>ProSuite.QA.ServiceProviderArcGIS</RootNamespace>
+    <AssemblyName>ProSuite.QA.ServiceProviderArcGIS</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -41,22 +41,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="QAConfiguration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QAServiceProviderGP.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ProSuite.Commons.QA\QAServiceManager\QAServiceManager.csproj">
-      <Project>{7FD1D803-F43F-4530-82F5-44D6F705959F}</Project>
-      <Name>QAServiceManager</Name>
+    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
+      <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
+      <Name>ProSuite.Commons.Logging</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.QA\ServiceProviders\QAServiceProviderGP\QAServiceProviderArcGIS.csproj">
-      <Project>{C2F802E1-FC0F-49CA-A876-126725F8D8C2}</Project>
-      <Name>QAServiceProviderArcGIS</Name>
+    <ProjectReference Include="..\ProSuite.QA.ServiceManager\ProSuite.QA.ServiceManager.csproj">
+      <Project>{A3BCF206-8C54-490A-8F5F-1C3C68EBB208}</Project>
+      <Name>ProSuite.QA.ServiceManager</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.QA\SpeficationsProviders\QASpecificationProviderFile\QASpecificationProviderFile.csproj">
-      <Project>{42CFA8DC-9A4F-4549-B740-400C57D08D09}</Project>
-      <Name>QASpecificationProviderFile</Name>
-    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Esri.ArcGISPro.Extensions">
+      <Version>2.5.0.22081</Version>
+    </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,15 +1,13 @@
 using ProSuite.Commons.QA.ServiceManager.Interfaces;
 using ProSuite.Commons.QA.ServiceManager.Types;
-using ProSuite.Commons.QA.ServiceProviderArcGIS;
-using ProSuite.Commons.QA.SpecificationProviderFile;
+using ProSuite.QA.ServiceProviderArcGIS;
+using ProSuite.QA.SpecificationProviderFile;
 using System.Collections.Generic;
 
-
-namespace QAConfigurator
+namespace ProSuite.QA.Configurator
 {
 	public class QAConfiguration
-    {
-
+	{
 		private static QAConfiguration _configuration = null;
 		public static QAConfiguration Current
 		{

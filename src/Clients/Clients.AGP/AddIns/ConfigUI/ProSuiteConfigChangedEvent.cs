@@ -3,9 +3,6 @@ using ArcGIS.Desktop.Framework;
 using ProSuite.Commons.QA.ServiceManager.Types;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Clients.AGP.ProSuiteSolution.ConfigUI
 {
