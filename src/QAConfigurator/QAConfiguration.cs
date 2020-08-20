@@ -1,15 +1,13 @@
-using ProSuite.Commons.QA.ServiceManager;
 using ProSuite.Commons.QA.ServiceManager.Interfaces;
 using ProSuite.Commons.QA.ServiceManager.Types;
 using ProSuite.Commons.QA.ServiceProviderArcGIS;
 using ProSuite.Commons.QA.SpecificationProviderFile;
-using System;
 using System.Collections.Generic;
 
 
 namespace QAConfigurator
 {
-    public class QAConfiguration
+	public class QAConfiguration
     {
 
 		private static QAConfiguration _configuration = null;
@@ -25,60 +23,47 @@ namespace QAConfigurator
 			}
 		}
 
-		public event EventHandler<ProSuiteQAConfigEventArgs> OnConfigurationChanged;
-
-		private List<ProSuiteQAServerConfiguration> _serviceConfigurations = null;
-		public List<ProSuiteQAServerConfiguration> QAServiceConfigurations {
-			get
-			{
-				if (_serviceConfigurations == null)
-				{
-					_serviceConfigurations = new List<ProSuiteQAServerConfiguration>() {
-						GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPService),
-						GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPLocal)
-					};
-				}
-				return _serviceConfigurations;
-			}
-			set
-			{
-				_serviceConfigurations = value;
-				OnConfigurationChanged?.Invoke(this, new ProSuiteQAConfigEventArgs(QAServiceConfigurations));
-			}
-		}
-
-		private static ProSuiteQAManager _qaManager = null;
-		public static ProSuiteQAManager QAManager
-		{
-			get
-			{
-				if (_qaManager == null)
-				{
-					_qaManager = new ProSuiteQAManager(GetQAServiceProviders(), new QASpecificationProviderXml());
-					Current.OnConfigurationChanged += _qaManager.OnConfigurationChanged;
-				}
-				return _qaManager;
-			}
-		}
-
-		private static List<IProSuiteQAServiceProvider> GetQAServiceProviders()
+		public IEnumerable<IProSuiteQAServiceProvider> GetQAServiceProviders(IEnumerable<ProSuiteQAServerConfiguration> serverConfigs)
 		{
 			var listOfQAServiceProviders = new List<IProSuiteQAServiceProvider>();
-
-			// check if service provider is allowed?
-
-			var localServerConfiguration = Current.QAServiceConfigurations.Find(c => (c.ServiceType == ProSuiteQAServiceType.GPLocal));
-			if(localServerConfiguration != null)
-				listOfQAServiceProviders.Add(new QAServiceProviderGP(localServerConfiguration));
-
-			var gpServerConfiguration = Current.QAServiceConfigurations.Find(c => (c.ServiceType == ProSuiteQAServiceType.GPService));
-			if (gpServerConfiguration != null)
-				listOfQAServiceProviders.Add(new QAServiceProviderGP(gpServerConfiguration));
-
+			foreach (var serverConfig in serverConfigs)
+			{
+				if (serverConfig.ServiceType == ProSuiteQAServiceType.GPLocal ||
+					serverConfig.ServiceType == ProSuiteQAServiceType.GPService)
+				{
+					listOfQAServiceProviders.Add(new QAServiceProviderGP(serverConfig));
+				}
+			}
 			return listOfQAServiceProviders;
 		}
 
-		private static ProSuiteQAServerConfiguration GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType serviceType)
+		public IQASpecificationProvider GetQASpecificationsProvider(ProSuiteQASpecificationsConfiguration specConfig)
+		{
+			return new QASpecificationProviderXml();
+		}
+
+
+		public IEnumerable<ProSuiteQAServerConfiguration> DefaultQAServiceConfig
+		{
+			get
+			{
+				return new List<ProSuiteQAServerConfiguration>() {
+					GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPService),
+					GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPLocal)
+				};
+			}
+		}
+
+
+		public ProSuiteQASpecificationsConfiguration DefaultQASpecConfig
+		{
+			get
+			{
+				return new ProSuiteQASpecificationsConfiguration();
+			}
+		}
+
+		public ProSuiteQAServerConfiguration GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType serviceType)
 		{
 			switch (serviceType)
 			{
@@ -104,10 +89,5 @@ namespace QAConfigurator
 			}
 		}
 
-		void UpdateConfiguration()
-		{
-			// TODO algr: update ServiceConfiguration and inform service providers
-
-		}
 	}
 }

@@ -9,7 +9,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 
-namespace Clients.AGP.ProSuiteSolution.Layers
+namespace Clients.AGP.ProSuiteSolution.Commons
 {
 	public class LayerUtils
     {

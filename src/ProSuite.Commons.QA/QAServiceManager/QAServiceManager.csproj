@@ -50,7 +50,8 @@
     <Compile Include="Types\ProSuiteQARequest.cs" />
     <Compile Include="Types\ProSuiteQAServiceEventArgs.cs" />
     <Compile Include="Types\ProSuiteQAServiceProviderBase.cs" />
-    <Compile Include="Types\ProSuiteServerConfiguration.cs" />
+    <Compile Include="Types\ProSuiteQAServerConfiguration.cs" />
+    <Compile Include="Types\ProSuiteQASpecificationsConfiguration.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">

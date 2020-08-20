@@ -1,39 +1,32 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
+using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.PluginDatastore;
+using ArcGIS.Desktop.Core;
+using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ArcGIS.Desktop.Core;
-using ArcGIS.Desktop.Catalog;
-using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Mapping.Events;
-using System.Collections.Generic;
-using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.PluginDatastore;
+using Clients.AGP.ProSuiteSolution.Commons;
+using Clients.AGP.ProSuiteSolution.ConfigUI;
+using Clients.AGP.ProSuiteSolution.LoggerUI;
+using Clients.AGP.ProSuiteSolution.ProjectItem;
+using Clients.AGP.ProSuiteSolution.WorkListTrials;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.QA.ServiceManager;
 using ProSuite.Commons.QA.ServiceManager.Types;
-using Clients.AGP.ProSuiteSolution.Layers;
 using QAConfigurator;
-using ProSuite.Commons.Logging;
-using Clients.AGP.ProSuiteSolution.WorkListTrials;
-using Clients.AGP.ProSuiteSolution.LoggerUI;
-using Clients.AGP.ProSuiteSolution.ConfigUI;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Clients.AGP.ProSuiteSolution
 {
 	internal class ProSuiteToolsModule : Module
 	{
-		// TODO temporary AGS server connection
-		private readonly static string TEST_SERVER_PATTERN = "2424";
-		private static ServerConnectionProjectItem _agsServerConnection
-		{
-			get
-			{
-				return Project.Current.GetItems<ServerConnectionProjectItem>().Where(conn => conn.Name.Contains(TEST_SERVER_PATTERN)).FirstOrDefault();
-			}
-		}
+		public static event EventHandler<ProSuiteQAConfigEventArgs> OnQAConfigurationChanged;
 
 		private static ProSuiteQAManager _qaManager = null;
 		public static ProSuiteQAManager QAManager
@@ -42,33 +35,59 @@ namespace Clients.AGP.ProSuiteSolution
 			{
 				if (_qaManager == null)
 				{
-					_qaManager = QAConfiguration.QAManager;
+					_qaManager = new ProSuiteQAManager(
+						QAConfiguration.Current.GetQAServiceProviders(QAProjectItem.ServerConfigurations),
+						QAConfiguration.Current.GetQASpecificationsProvider(QAProjectItem.SpecificationConfiguration));
 					_qaManager.OnStatusChanged += QAManager_OnStatusChanged;
+					
+					OnQAConfigurationChanged = _qaManager.OnConfigurationChanged;
 				}
 				return _qaManager;
 			}
 		}
 
-		// for info which could be stored in project
-		private static ProSuiteQAProjectItem _qaProjectItem = null;
-		public static ProSuiteQAProjectItem QAProjectItem
+		private static ProSuiteProjectItem _qaProjectItem = null;
+		public static ProSuiteProjectItem QAProjectItem
 		{
 			get
 			{
+				//QueuedTask.Run(() =>
+				//{
+				//	var container = Project.Current.GetProjectItemContainer("ProSuiteContainer");
+				//	foreach ( var item in container.GetItems())
+				//	{
+				//		var p = item.PhysicalPath;
+				//	}
+				//});
+
 				if (_qaProjectItem == null)
 				{
-					_qaProjectItem = Project.Current.GetItems<ProSuiteQAProjectItem>().FirstOrDefault();
+					_msg.Info("Project item not available");
+
+					_qaProjectItem = Project.Current.GetItems<ProSuiteProjectItem>().FirstOrDefault();
 					if (_qaProjectItem == null)
 					{
-						_qaProjectItem = GetDefaultProjectItem();
-						// add qa info to project
+						// TODO algr: temp solution
+						var issuesPath = Path.Combine(Project.Current.HomeFolderPath, "issues");
+						Directory.CreateDirectory(issuesPath);
+						_qaProjectItem = new ProSuiteProjectItem(issuesPath, QAConfiguration.Current.DefaultQAServiceConfig, QAConfiguration.Current.DefaultQASpecConfig);
 						QueuedTask.Run(() =>
 						{
-							Project.Current.AddItem(_qaProjectItem);
+							var added = Project.Current.AddItem(_qaProjectItem);
+							_msg.Info($"Project item added {added}");
+
+							Project.Current.SetDirty();//enable save
 						});
 					}
 				}
 				return _qaProjectItem;
+			}
+			set
+			{
+				_qaProjectItem = value;
+				UpdateServiceUI(_qaProjectItem);
+
+				//Project.Current.SaveAsync();
 			}
 		}
 
@@ -82,13 +101,6 @@ namespace Clients.AGP.ProSuiteSolution
 				_errorLayers = value;
 				//if (_errorLayers == null) return;
 			}
-		}
-
-		// TODO UI for editing QA parameters?
-		private static ProSuiteQAProjectItem GetDefaultProjectItem()
-		{
-			// TODO XML specifications files?
-			return new ProSuiteQAProjectItem();
 		}
 
 		private static ProSuiteToolsModule _this = null;
@@ -117,28 +129,20 @@ namespace Clients.AGP.ProSuiteSolution
 			}
 		}
 
-		private static void ProSuite_OnConfigurationChanged(object sender, ProSuiteQAConfigEventArgs e)
+		private static void UpdateServiceUI(ProSuiteProjectItem projectItem)
 		{
-			var serviceConfigs = (IEnumerable<ProSuiteQAServerConfiguration>)e?.Data;
-			if (serviceConfigs == null) return;
 
-			_msg.Info("Configuration is changed");
-
-			// TODO algr: hide this logic in QAConfig or ViewModel
-			var localService = serviceConfigs.FirstOrDefault(s => (s.ServiceType == ProSuiteQAServiceType.GPLocal && s.IsValid));
-			if (localService != null )
+			var localService = projectItem.ServerConfigurations.FirstOrDefault(s => (s.ServiceType == ProSuiteQAServiceType.GPLocal && s.IsValid));
+			if (localService != null)
 				FrameworkApplication.State.Activate(ConfigIDs.QA_GPLocal_State);
 			else
 				FrameworkApplication.State.Deactivate(ConfigIDs.QA_GPLocal_State);
 
-			var serverService = serviceConfigs.FirstOrDefault(s => (s.ServiceType == ProSuiteQAServiceType.GPService && s.IsValid));
+			var serverService = projectItem.ServerConfigurations.FirstOrDefault(s => (s.ServiceType == ProSuiteQAServiceType.GPService && s.IsValid));
 			if (serverService != null)
 				FrameworkApplication.State.Activate(ConfigIDs.QA_GPService_State);
 			else
 				FrameworkApplication.State.Deactivate(ConfigIDs.QA_GPService_State);
-
-			// TODO algr: save changed configuration to project
-			//QAProjectItem
 
 		}
 
@@ -151,15 +155,14 @@ namespace Clients.AGP.ProSuiteSolution
 		{
 			InitLoggerConfiguration();
 
-			//ProSuitePro.ProSuiteManager.QAManager.OnStatusChanged += QAManager_OnStatusChanged;
-
 			//ProjectItemsChangedEvent.Subscribe(OnProjectItemsChanged);
-			LayersAddedEvent.Subscribe(OnLayerAdded);
 
-			QAConfiguration.Current.OnConfigurationChanged += ProSuite_OnConfigurationChanged;
+			LayersAddedEvent.Subscribe(OnLayerAdded);
+			ProSuiteConfigChangedEvent.Subscribe(OnConfigurationChanged);
 
 			return base.Initialize();
 		}
+
 		private void InitLoggerConfiguration()
 		{
 			LoggingConfigurator.UsePrivateConfiguration = false;
@@ -180,6 +183,7 @@ namespace Clients.AGP.ProSuiteSolution
 			//ProSuitePro.ProSuiteManager.QAManager.OnStatusChanged -= QAManager_OnStatusChanged;
 			//ProjectItemsChangedEvent.Unsubscribe(OnProjectItemsChanged);
 			LayersAddedEvent.Unsubscribe(OnLayerAdded);
+			ProSuiteConfigChangedEvent.Subscribe(OnConfigurationChanged);
 		}
 
 		/// <summary>
@@ -206,12 +210,6 @@ namespace Clients.AGP.ProSuiteSolution
 		private void OnProjectItemsChanged(ProjectItemsChangedEventArgs obj)
 		{
 			//_msg.Info($"OnProjectItemsChanged Name: {obj.ProjectItem.Name} Action: {obj.Action}");
-
-			var agsItem = obj?.ProjectItem as ServerConnectionProjectItem;
-			if (agsItem != null)
-			{
-				QAProjectItem.ServerConnection = _agsServerConnection?.Path;
-			}
 		}
 
 		private void OnLayerAdded(LayerEventsArgs obj)
@@ -219,6 +217,18 @@ namespace Clients.AGP.ProSuiteSolution
 			_msg.Info($"OnLayerAdded event");
 
 			// TODO update available QA specifications - bind combo box to list?
+		}
+
+		private void OnConfigurationChanged(ProSuiteConfigEventArgs configArgs)
+		{
+			// save changed configuration
+			QAProjectItem.ServerConfigurations = configArgs.ServerConfigurations;
+			QAProjectItem.SpecificationConfiguration = configArgs.SpecificationsConfiguration;
+
+			UpdateServiceUI(QAProjectItem);
+
+			// notify QAManager than config is changed via
+			OnQAConfigurationChanged?.Invoke(this, new ProSuiteQAConfigEventArgs(configArgs.ServerConfigurations));
 		}
 
 
@@ -343,7 +353,7 @@ namespace Clients.AGP.ProSuiteSolution
 				return;
 
 			// clone 
-			var tempQAConfiguration = QAConfiguration.Current.QAServiceConfigurations.ConvertAll(x => new ProSuiteQAServerConfiguration(x));
+			var tempQAConfiguration = ProSuiteToolsModule.QAProjectItem.ServerConfigurations.ToList().ConvertAll(x => new ProSuiteQAServerConfiguration(x));
 
 			_prosuiteconfigdialog = new ProSuiteConfigDialog();
 			_prosuiteconfigdialog.Owner = FrameworkApplication.Current.MainWindow;
@@ -352,8 +362,7 @@ namespace Clients.AGP.ProSuiteSolution
 
 			if (_prosuiteconfigdialog.ShowDialog() ?? true)
 			{
-				// save changed configuration 
-				QAConfiguration.Current.QAServiceConfigurations = tempQAConfiguration;
+				ProSuiteConfigChangedEvent.Publish(new ProSuiteConfigEventArgs(tempQAConfiguration, null));
 			}
 		}
 	}
