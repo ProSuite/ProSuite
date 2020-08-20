@@ -1,22 +1,21 @@
 using ArcGIS.Desktop.Core;
+using Clients.AGP.ProSuiteSolution.Commons;
 using ProSuite.Commons.AGP;
 using System.Threading.Tasks;
 using System.Windows.Media;
 
 namespace Clients.AGP.ProSuiteSolution.ProjectItem
 {
-	internal class ProSuiteProjectItemContainer : CustomProjectItemContainer<ProSuiteQAProjectItem>
+
+	internal class ProSuiteProjectItemContainer : CustomProjectItemContainer<ProSuiteProjectItem>
 	{
-		//This should be an arbitrary unique string. It must match your <content type="..."  in the Config.daml for the container
+		//This should be an arbitrary unique string. It must match your <content type="..." 
+		//in the Config.daml for the container
 		public static readonly string ContainerName = "ProSuiteContainer";
+
 		public ProSuiteProjectItemContainer() : base(ContainerName)
 		{
-		}
 
-		//componentType will be your "ComponentTypeValue" value
-		//see "this.ComponentType" property also
-		public ProSuiteProjectItemContainer(string componentType) : base(componentType)
-		{
 		}
 
 		/// <summary>
@@ -31,42 +30,31 @@ namespace Clients.AGP.ProSuiteSolution.ProjectItem
 		/// <returns>A custom item created from the input parameters</returns>
 		public override Item CreateItem(string name, string path, string containerType, string data)
 		{
-			var item = ItemFactory.Instance.Create(path) as ProSuiteQAProjectItem;
-			if (item != null)
+			var item = ItemFactory.Instance.Create(path);
+			if (item is ProSuiteProjectItemContainer)
 			{
-				// IncludeInPackages true ensures that the stored file is included
-				// in any project templates and project packages.
-				item.IncludeInPackages(true);
-				//this.Add(item);
+				this.Add(item as ProSuiteProjectItem);
 			}
 			return item;
-		}
-
-		/// <summary>
-		/// Adds an item to the container. This will trigger the visibility of the
-		/// container if it was previously empty.
-		/// </summary>
-		/// <param name="projectItem"></param>
-		public void AddItem(ProSuiteQAProjectItem projectItem)
-		{
-			this.Add(projectItem);
 		}
 
 		public override ImageSource LargeImage
 		{
 			get
 			{
-				return ImageUtils.GetImageSource(@"Images/GeodatabaseFeatureDataset32.png");
+				return ImageUtils.GetImageSource(@"FolderWithGISData32.png");
 			}
 		}
 
-		public override Task<System.Windows.Media.ImageSource> SmallImage
+		public override Task<ImageSource> SmallImage
 		{
 			get
 			{
-				return Task.FromResult((ImageSource)ImageUtils.GetImageSource(@"Images/GeodatabaseFeatureDataset16.png"));
+				return Task.FromResult((ImageSource)ImageUtils.GetImageSource(@"FolderWithGISData16.png"));
 			}
 		}
 
 	}
+
+
 }

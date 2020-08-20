@@ -42,5 +42,52 @@ namespace QAConfigurator
 			return new QASpecificationProviderXml();
 		}
 
+
+		public IEnumerable<ProSuiteQAServerConfiguration> DefaultQAServiceConfig
+		{
+			get
+			{
+				return new List<ProSuiteQAServerConfiguration>() {
+					GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPService),
+					GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPLocal)
+				};
+			}
+		}
+
+
+		public ProSuiteQASpecificationsConfiguration DefaultQASpecConfig
+		{
+			get
+			{
+				return new ProSuiteQASpecificationsConfiguration();
+			}
+		}
+
+		public ProSuiteQAServerConfiguration GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType serviceType)
+		{
+			switch (serviceType)
+			{
+				case ProSuiteQAServiceType.GPLocal:
+					return new ProSuiteQAServerConfiguration()
+					{
+						ServiceType = ProSuiteQAServiceType.GPLocal,
+						ServiceName = @"QAGPLocal",
+						//ServiceConnection = @"c:\git\PRD_ProSuite\py_esrich_prosuite_qa_gpservice\ArcGISPro\ProSuiteToolbox.pyt"
+						ServiceConnection = ""
+					};
+
+				case ProSuiteQAServiceType.GPService:
+					return new ProSuiteQAServerConfiguration()
+					{
+						ServiceType = ProSuiteQAServiceType.GPService,
+						ServiceName = @"QAGPServices\ProSuiteQAService",
+						//ServiceConnection = @"C:\Users\algr\Documents\ArcGIS\Projects\test\admin on vsdev2414.esri-de.com_6443 (3).ags"
+						ServiceConnection = ""
+					};
+				default:
+					return new ProSuiteQAServerConfiguration();
+			}
+		}
+
 	}
 }

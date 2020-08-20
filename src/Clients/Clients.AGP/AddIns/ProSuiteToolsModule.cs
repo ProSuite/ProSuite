@@ -7,8 +7,8 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using Clients.AGP.ProSuiteSolution.Commons;
 using Clients.AGP.ProSuiteSolution.ConfigUI;
-using Clients.AGP.ProSuiteSolution.Layers;
 using Clients.AGP.ProSuiteSolution.LoggerUI;
 using Clients.AGP.ProSuiteSolution.ProjectItem;
 using Clients.AGP.ProSuiteSolution.WorkListTrials;
@@ -18,6 +18,7 @@ using ProSuite.Commons.QA.ServiceManager.Types;
 using QAConfigurator;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -45,32 +46,37 @@ namespace Clients.AGP.ProSuiteSolution
 			}
 		}
 
-		// for info which could be stored in project
-		private static ProSuiteQAProjectItem _qaProjectItem = null;
-		public static ProSuiteQAProjectItem QAProjectItem
+		private static ProSuiteProjectItem _qaProjectItem = null;
+		public static ProSuiteProjectItem QAProjectItem
 		{
 			get
 			{
-				var item = Project.Current.GetItems<ProSuiteQAProjectItem>().FirstOrDefault();
+				//QueuedTask.Run(() =>
+				//{
+				//	var container = Project.Current.GetProjectItemContainer("ProSuiteContainer");
+				//	foreach ( var item in container.GetItems())
+				//	{
+				//		var p = item.PhysicalPath;
+				//	}
+				//});
 
 				if (_qaProjectItem == null)
 				{
 					_msg.Info("Project item not available");
 
-					_qaProjectItem = Project.Current.GetItems<ProSuiteQAProjectItem>().FirstOrDefault();
+					_qaProjectItem = Project.Current.GetItems<ProSuiteProjectItem>().FirstOrDefault();
 					if (_qaProjectItem == null)
 					{
-						_qaProjectItem = new ProSuiteQAProjectItem();
+						// TODO algr: temp solution
+						var issuesPath = Path.Combine(Project.Current.HomeFolderPath, "issues");
+						Directory.CreateDirectory(issuesPath);
+						_qaProjectItem = new ProSuiteProjectItem(issuesPath, QAConfiguration.Current.DefaultQAServiceConfig, QAConfiguration.Current.DefaultQASpecConfig);
 						QueuedTask.Run(() =>
 						{
 							var added = Project.Current.AddItem(_qaProjectItem);
 							_msg.Info($"Project item added {added}");
 
-							var itemAdded = Project.Current.GetItems<ProSuiteQAProjectItem>().FirstOrDefault();
 							Project.Current.SetDirty();//enable save
-							//Project.Current.SaveAsync();
-
-							_msg.Info("Project item saved");
 						});
 					}
 				}
@@ -123,7 +129,7 @@ namespace Clients.AGP.ProSuiteSolution
 			}
 		}
 
-		private static void UpdateServiceUI(ProSuiteQAProjectItem projectItem)
+		private static void UpdateServiceUI(ProSuiteProjectItem projectItem)
 		{
 
 			var localService = projectItem.ServerConfigurations.FirstOrDefault(s => (s.ServiceType == ProSuiteQAServiceType.GPLocal && s.IsValid));
