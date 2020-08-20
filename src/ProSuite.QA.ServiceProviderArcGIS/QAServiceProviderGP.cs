@@ -1,16 +1,16 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using ArcGIS.Desktop.Core.Geoprocessing;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.QA.ServiceManager.Interfaces;
 using ProSuite.Commons.QA.ServiceManager.Types;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 
-
-namespace ProSuite.Commons.QA.ServiceProviderArcGIS
+namespace ProSuite.QA.ServiceProviderArcGIS
 {
 	public enum ProSuiteQAToolType
 	{
@@ -190,7 +190,7 @@ namespace ProSuite.Commons.QA.ServiceProviderArcGIS
 		private object ParseGPResultValues(IGPResult result)
 		{
 			if (result?.ReturnValue == null) return null;
-			
+
 			// TODO - should set return data type
 			return result.Values.FirstOrDefault()?.ToString();
 		}
@@ -207,7 +207,7 @@ namespace ProSuite.Commons.QA.ServiceProviderArcGIS
 
 		public void UpdateConfig(ProSuiteQAServerConfiguration serviceConfig)
 		{
-			if(_serviceType == serviceConfig.ServiceType)
+			if (_serviceType == serviceConfig.ServiceType)
 			{
 				_toolpath = BuildToolPath(serviceConfig);
 			}
@@ -215,5 +215,6 @@ namespace ProSuite.Commons.QA.ServiceProviderArcGIS
 
 		#endregion
 	}
+
 
 }

@@ -69,6 +69,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="ConfigIDs.cs" />
+    <Compile Include="ConfigUI\ProSuiteConfigChangedEvent.cs" />
     <Compile Include="ConfigUI\ProSuiteConfigCommonsUserControl.xaml.cs">
       <DependentUpon>ProSuiteConfigCommonsUserControl.xaml</DependentUpon>
     </Compile>
@@ -84,8 +85,10 @@
     <Compile Include="ConfigurationUtils.cs" />
     <Compile Include="Daml.cs" />
     <Compile Include="Editing\EraseTool.cs" />
+    <Compile Include="Commons\ImageUtils.cs" />
+    <Compile Include="ProjectItem\ProSuiteProjectItemContainer.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
-    <Compile Include="Layers\LayerUtils.cs" />
+    <Compile Include="Commons\LayerUtils.cs" />
     <Compile Include="LoggerUI\LogMessageImageConverter.cs" />
     <Compile Include="LoggerUI\LogMessageLinkConverter.cs" />
     <Compile Include="LoggerUI\ProSuiteLogPane.xaml.cs">
@@ -99,7 +102,7 @@
       <DependentUpon>PickerWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="PickerUI\VisibleIfFalseConverter.cs" />
-    <Compile Include="ProSuiteQAProjectItem.cs" />
+    <Compile Include="ProjectItem\ProSuiteProjectItem.cs" />
     <Compile Include="ProSuiteToolsModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProSuiteConfigurationDirectorySearcher.cs" />
@@ -231,10 +234,6 @@
       <Project>{a227d52c-0536-498f-acf2-2a5a67c3d9ff}</Project>
       <Name>ProSuite.Commons.Logging</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite.Commons.QA\QAServiceManager\QAServiceManager.csproj">
-      <Project>{7FD1D803-F43F-4530-82F5-44D6F705959F}</Project>
-      <Name>QAServiceManager</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\ProSuite.Commons\ProSuite.Commons.csproj">
       <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
       <Name>ProSuite.Commons</Name>
@@ -243,9 +242,13 @@
       <Project>{824DDBE3-EDAF-460B-B513-386A4260C1FF}</Project>
       <Name>ProSuite.DomainModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\QAConfigurator\QAConfigurator.csproj">
-      <Project>{28148B16-138E-4056-8EF3-0288AC8A58C7}</Project>
-      <Name>QAConfigurator</Name>
+    <ProjectReference Include="..\..\..\ProSuite.QA.Configurator\ProSuite.QA.Configurator.csproj">
+      <Project>{7C22C12F-3645-45DD-946B-8189816D39D3}</Project>
+      <Name>ProSuite.QA.Configurator</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\ProSuite.QA.ServiceManager\ProSuite.QA.ServiceManager.csproj">
+      <Project>{A3BCF206-8C54-490A-8F5F-1C3C68EBB208}</Project>
+      <Name>ProSuite.QA.ServiceManager</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -294,6 +297,7 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="WorkListUI\Images\GoNearest.png" />
+    <Resource Include="Images\FolderError_16x.png" />
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="Images\CutHoleTool16.png" />

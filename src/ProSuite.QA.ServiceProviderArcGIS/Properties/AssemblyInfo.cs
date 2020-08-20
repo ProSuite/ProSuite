@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("QAConfigurator")]
+[assembly: AssemblyTitle("ProSuite.QA.ServiceProviderArcGIS")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("QAConfigurator")]
+[assembly: AssemblyProduct("ProSuite.QA.ServiceProviderArcGIS")]
 [assembly: AssemblyCopyright("Copyright ©  2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("28148b16-138e-4056-8ef3-0288ac8a58c7")]
+[assembly: Guid("b46101c1-5c42-410d-83b9-8ebe2becbe18")]
 
 // Version information for an assembly consists of the following four values:
 //
