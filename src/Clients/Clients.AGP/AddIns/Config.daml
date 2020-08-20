@@ -24,6 +24,7 @@
         <tab id="ProSuiteTools_Tab" caption="ProSuite Tools">
           <group refID="ProSuiteTools_Commons" />
           <group refID="ProSuiteTools_QA" />
+          <group refID="ProSuiteTools_Editing" />
         </tab>
       </tabs>
       <groups>
@@ -37,6 +38,9 @@
           <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
           <button refID="Clients_AGP_ProSuiteSolution_WorkList" size="large" />
+        </group>
+        <group id="ProSuiteTools_Editing" caption="Edit Tools" keytip="G1">
+          <tool refID="ProSuiteTools_Editing_EraseTool" size="small" />
         </group>
       </groups>
       <controls>
@@ -61,6 +65,11 @@
         <button id="Clients_AGP_ProSuiteSolution_WorkList" caption="WorkList" className="ShowWorkListWindow" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Show Error Worklist">Show Error Worklist<disabledText /></tooltip>
         </button>
+        <tool id="ProSuiteTools_Editing_EraseTool" caption="EraseTool " className="Clients.AGP.ProSuiteSolution.Editing.EraseTool" loadOnClick="true"
+              smallImage="Images\CutHoleTool16.png" largeImage="Images\CutHoleTool32.png"
+              condition="esri_mapping_mapPane">
+          <tooltip heading="Erase Tool">Erase parts of the selected features or cut a hole into a polygon<disabledText /></tooltip>
+        </tool>
       </controls>
       <dockPanes>
         <dockPane id="ProSuiteTools_Logger_ProSuiteLogPane" caption="ProSuite Logs" className="Clients.AGP.ProSuiteSolution.LoggerUI.ProSuiteLogPaneViewModel" dock="group" dockWith="esri_core_contentsDockPane">

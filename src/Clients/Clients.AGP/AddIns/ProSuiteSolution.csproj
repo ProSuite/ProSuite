@@ -83,6 +83,7 @@
     <Compile Include="ConfigUI\ProSuiteConfigViewModel.cs" />
     <Compile Include="ConfigurationUtils.cs" />
     <Compile Include="Daml.cs" />
+    <Compile Include="Editing\EraseTool.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
     <Compile Include="Layers\LayerUtils.cs" />
     <Compile Include="LoggerUI\LogMessageImageConverter.cs" />
@@ -202,6 +203,10 @@
     <Resource Include="DarkImages\GeodatabaseFeatureDataset32.png" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\ProSuite.AGP.Editing\ProSuite.AGP.Editing.csproj">
+      <Project>{EC3D575D-7B9D-467F-BC76-2E093A3126EC}</Project>
+      <Name>ProSuite.AGP.Editing</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\ProSuite.AGP.Picker\ProSuite.AGP.Picker.csproj">
       <Project>{a0664bcb-3a91-4a7e-b303-d9a55b8e6cc8}</Project>
       <Name>ProSuite.AGP.Picker</Name>
@@ -290,6 +295,11 @@
   <ItemGroup>
     <Resource Include="WorkListUI\Images\GoNearest.png" />
   </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\CutHoleTool16.png" />
+    <AddInContent Include="Images\CutHoleTool32.png" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:
