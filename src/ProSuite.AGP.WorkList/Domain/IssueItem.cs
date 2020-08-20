@@ -12,10 +12,23 @@ namespace ProSuite.AGP.WorkList.Domain
 		public IssueItem(int id, [NotNull] Row row, IAttributeReader reader) : base(id, row)
 		{
 			ObjectID = reader.GetValue<int>(row, Attributes.ObjectID);
+
 			IssueCodeDescription = reader.GetValue<string>(row, Attributes.IssueCodeDescription);
+			QualityCondition = reader.GetValue<string>(row, Attributes.QualityConditionName);
+			InvolvedObjects = reader.GetValue<string>(row, Attributes.InvolvedObjects);
+			IssueSeverity = reader.GetValue<string>(row, Attributes.IssueSeverity);
+			IssueCode = reader.GetValue<string>(row, Attributes.IssueCode);
 		}
 
-		public int ObjectID { get; }
+		public string QualityCondition { get; set; }
+
+		public string IssueSeverity { get; set; }
+
+		public string InvolvedObjects { get; set; }
+
+		public string IssueCode { get; set; }
+
+		public int ObjectID { get; set; }
 
 		public string IssueCodeDescription
 		{

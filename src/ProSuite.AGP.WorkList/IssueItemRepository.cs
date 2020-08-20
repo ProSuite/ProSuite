@@ -20,8 +20,11 @@ namespace ProSuite.AGP.WorkList
 			FeatureClassDefinition definition)
 		{
 			return new AttributeReader(definition,
-			                           Attributes.IssueCode,
-			                           Attributes.IssueCodeDescription);
+			                           Attributes.QualityConditionName,
+			                           Attributes.IssueCodeDescription,
+									   Attributes.InvolvedObjects,
+			                           Attributes.IssueSeverity,
+			                           Attributes.IssueCode);
 		}
 
 		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass source)
