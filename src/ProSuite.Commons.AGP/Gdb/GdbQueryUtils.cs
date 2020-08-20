@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -19,6 +20,35 @@ namespace ProSuite.Commons.AGP.Gdb
 				       SpatialRelationship = spatialRelationship,
 				       SearchOrder = searchOrder
 			       };
+		}
+
+		public static IEnumerable<Feature> GetFeatures(
+			[NotNull] Table featureClass,
+			[CanBeNull] QueryFilter filter,
+			bool recycling,
+			[CanBeNull] CancelableProgressor cancelableProgressor = null)
+		{
+			var cursor = featureClass.Search(filter, recycling);
+
+			try
+			{
+				while (cursor.MoveNext())
+				{
+					if (cancelableProgressor != null &&
+					    cancelableProgressor.CancellationToken.IsCancellationRequested)
+					{
+						yield break;
+					}
+
+					var feature = (Feature) cursor.Current;
+
+					yield return feature;
+				}
+			}
+			finally
+			{
+				cursor.Dispose();
+			}
 		}
 
 		public static Row GetRow([NotNull] Table table, long oid)

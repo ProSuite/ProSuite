@@ -1,10 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Carto
 {
@@ -13,7 +16,8 @@ namespace ProSuite.Commons.AGP.Carto
 	{
 		[NotNull]
 		public static Dictionary<GdbTableIdentity, List<long>> GetDistinctSelectionByTable(
-			[NotNull] IEnumerable<BasicFeatureLayer> layers, out IEnumerable<GdbWorkspaceIdentity> distinctWorkspaces)
+			[NotNull] IEnumerable<BasicFeatureLayer> layers,
+			out IEnumerable<GdbWorkspaceIdentity> distinctWorkspaces)
 		{
 			var workspaces = new SimpleSet<GdbWorkspaceIdentity>();
 			var selectionByTable = new Dictionary<GdbTableIdentity, SimpleSet<long>>();
@@ -66,6 +70,112 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				return new GdbTableIdentity(table);
 			}
+		}
+
+		public static IEnumerable<Feature> GetFeatures(Dictionary<MapMember, List<long>> oidsByMapMembers)
+		{
+			foreach (var oidsByMapMember in oidsByMapMembers)
+			{
+				var featureLayer = oidsByMapMember.Key as BasicFeatureLayer;
+
+				if (featureLayer == null) continue;
+
+				foreach (var feature in GetFeatures(featureLayer, oidsByMapMember.Value)) yield return feature;
+			}
+		}
+
+		public static IEnumerable<Feature> GetFeatures(
+			IEnumerable<KeyValuePair<BasicFeatureLayer, List<long>>> oidsByMapMembers)
+		{
+			foreach (var selectionByLayer in oidsByMapMembers)
+			foreach (var feature in GetFeatures(selectionByLayer))
+				yield return feature;
+		}
+		
+		public static IEnumerable<Feature> GetFeatures(KeyValuePair<BasicFeatureLayer, List<long>> layerOids)
+		{
+			var layer = layerOids.Key;
+
+			foreach (var feature in GetFeatures(layer, layerOids.Value)) yield return feature;
+		}
+
+		
+		private static IEnumerable<Feature> GetFeatures(BasicFeatureLayer layer, List<long> oids,
+		                                                bool recycling = false)
+		{
+			if (layer == null) yield break;
+
+			// TODO: Use layer search (there might habe been an issue with recycling?!)
+			var featureClass = layer.GetTable();
+
+			var filter = new QueryFilter
+			             {
+				             WhereClause =
+					             $"{featureClass.GetDefinition().GetObjectIDField()} IN ({StringUtils.Concatenate(oids, ", ")})"
+			             };
+
+			filter.OutputSpatialReference = layer.GetSpatialReference();
+
+			// TODO: Compare performance using inspector, use some feature abstraction?
+			//foreach (long oid in oids)
+			//{
+			//	var inspector = layer.Inspect(oid);
+
+			//	yield return inspector.;
+			//}
+
+			foreach (var feature in GdbQueryUtils.GetFeatures(featureClass, filter, recycling)) yield return feature;
+		}
+
+		public static ArcGIS.Core.Geometry.Geometry ToMapGeometry(MapView mapView,
+		                                                          Polygon screenGeometry)
+		{
+			// TODO: ensure single-part, linear segments
+
+			if (screenGeometry.Extent.Width > 0 || screenGeometry.Extent.Height > 0)
+			{
+				var mapPoints = new List<MapPoint>();
+				foreach (var screenPoint in screenGeometry.Points)
+				{
+					var mapPoint = mapView.ScreenToMap(new Point(screenPoint.X, screenPoint.Y));
+
+					mapPoints.Add(mapPoint);
+				}
+
+				return PolygonBuilder.CreatePolygon(mapPoints, mapView.Camera.SpatialReference);
+			}
+
+			return mapView.ScreenToMap(new Point(screenGeometry.Extent.XMin,
+			                                     screenGeometry.Extent.YMin));
+		}
+
+		public static ArcGIS.Core.Geometry.Geometry ToScreenGeometry(
+			MapView mapView, Polygon mapGeometry)
+		{
+			// TODO: ensure single-part, linear segments
+
+			var screenPoints = new List<Coordinate2D>();
+
+			if (mapGeometry.Extent.Width > 0 || mapGeometry.Extent.Height > 0)
+			{
+				foreach (var mapPoint in mapGeometry.Points)
+				{
+					var screenVertex = mapView.MapToScreen(mapPoint);
+
+					screenPoints.Add(new Coordinate2D(screenVertex.X, screenVertex.Y));
+				}
+
+				return PolygonBuilder.CreatePolygon(screenPoints, mapView.Camera.SpatialReference);
+			}
+
+			// The screen is probably the entire screen
+			var screenPoint = mapView.MapToScreen(mapGeometry.Extent.Center);
+
+			// The client is probably the relevant map canvas, these coords seem to correspond
+			// with the tool's mouse coordinates in SketchOutputMode.Screen!?!
+			var clientPoint = mapView.ScreenToClient(screenPoint);
+
+			return MapPointBuilder.CreateMapPoint(new Coordinate2D(clientPoint.X, clientPoint.Y));
 		}
 
 		#region unused
@@ -137,7 +247,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 			return result;
 		}
-		
+
 		// todo daro: out IEnumerable<IWorkspaceContext> workspaces?
 		[NotNull]
 		public static Dictionary<GdbTableIdentity, IEnumerable<long>> GetDistinctSelectionByTable(
@@ -157,7 +267,7 @@ namespace ProSuite.Commons.AGP.Carto
 					{
 						foreach (long oid in selectedFeatures)
 						{
-							if (!oids.Contains(oid))
+							if (! oids.Contains(oid))
 							{
 								oids.Add(oid);
 							}
@@ -178,12 +288,14 @@ namespace ProSuite.Commons.AGP.Carto
 			return featureLayer.SelectionCount > 0;
 		}
 
-		public static IEnumerable<BasicFeatureLayer> Distinct(this IEnumerable<BasicFeatureLayer> layers)
+		public static IEnumerable<BasicFeatureLayer> Distinct(
+			this IEnumerable<BasicFeatureLayer> layers)
 		{
 			return layers.Distinct(new BasicFeatureLayerComparer());
 		}
 
-		public static IEnumerable<GdbWorkspaceIdentity> GetDistinctWorkspaceProxys(IEnumerable<BasicFeatureLayer> layers)
+		public static IEnumerable<GdbWorkspaceIdentity> GetDistinctWorkspaceProxys(
+			IEnumerable<BasicFeatureLayer> layers)
 		{
 			var result = new SimpleSet<GdbWorkspaceIdentity>();
 
@@ -223,7 +335,6 @@ namespace ProSuite.Commons.AGP.Carto
 			var right = new GdbTableIdentity(y.GetTable());
 
 			return Equals(left, right);
-
 		}
 
 		public int GetHashCode(BasicFeatureLayer obj)
