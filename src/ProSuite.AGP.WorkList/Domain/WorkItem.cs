@@ -111,13 +111,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		//	return builder.ToGeometry();
 		//}
 
-		public Envelope Extent
-		{
-			get;
-			// todo daro: make setter private?
-			set;
-		}
-
 		public virtual void SetDone(bool done = true)
 		{
 			throw new NotImplementedException();
@@ -127,6 +120,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			throw new NotImplementedException();
 		}
+		[CanBeNull]
+		public Envelope Extent { get; private set; }
 
 		[CanBeNull]
 		public Row GetRow()
@@ -170,8 +165,6 @@ namespace ProSuite.AGP.WorkList.Domain
 				return;
 			}
 
-			// todo daro: make more robust; set Extent in one method
-			Extent = EnvelopeBuilder.CreateEnvelope(geometry.Extent);
 			SetGeometry(Extent);
 		}
 
@@ -244,6 +237,8 @@ namespace ProSuite.AGP.WorkList.Domain
 					_zmin = extent.ZMin;
 					_zmax = extent.ZMax;
 				}
+
+				Extent = EnvelopeBuilder.CreateEnvelope(extent, extent.SpatialReference);
 			}
 		}
 
