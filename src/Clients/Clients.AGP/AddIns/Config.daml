@@ -45,6 +45,7 @@
           <group refID="ProSuiteTools_Commons" />
           <group refID="ProSuiteTools_QA" />
           <group refID="ProSuiteTools_Editing" />
+          <group refID="ProSuiteTools_Selection" />
         </tab>
       </tabs>
       <groups>
@@ -61,6 +62,9 @@
         </group>
         <group id="ProSuiteTools_Editing" caption="Edit Tools" keytip="G1">
           <tool refID="ProSuiteTools_Editing_EraseTool" size="small" />
+        </group>
+        <group id="ProSuiteTools_Selection" caption="Selection Tools" keytip="G1">
+          <tool refID="ProSuiteTools_Selection_SelectionTool" size="small" />
         </group>
       </groups>
       <controls>
@@ -89,6 +93,13 @@
               smallImage="Images\CutHoleTool16.png" largeImage="Images\CutHoleTool32.png"
               condition="esri_mapping_mapPane">
           <tooltip heading="Erase Tool">Erase parts of the selected features or cut a hole into a polygon<disabledText /></tooltip>
+        </tool>
+        <tool id="ProSuiteTools_Selection_SelectionTool" caption="Selection" className="Clients.AGP.ProSuiteSolution.Selection.SelectionTool" loadOnClick="true"
+              smallImage="Images\SelectionTool.png" largeImage="Images\SelectionTool.png"
+              condition="esri_mapping_mapPane">
+          <tooltip heading="Selection Tool">
+            Select features for use with the selection worklist<disabledText />
+          </tooltip>
         </tool>
       </controls>
       <dockPanes>
