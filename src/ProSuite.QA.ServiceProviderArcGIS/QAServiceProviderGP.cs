@@ -1,11 +1,10 @@
 using ArcGIS.Desktop.Core.Geoprocessing;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.QA.ServiceManager.Interfaces;
-using ProSuite.Commons.QA.ServiceManager.Types;
+using ProSuite.QA.ServiceManager.Interfaces;
+using ProSuite.QA.ServiceManager.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;

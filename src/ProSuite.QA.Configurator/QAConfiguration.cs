@@ -1,5 +1,5 @@
-using ProSuite.Commons.QA.ServiceManager.Interfaces;
-using ProSuite.Commons.QA.ServiceManager.Types;
+using ProSuite.QA.ServiceManager.Interfaces;
+using ProSuite.QA.ServiceManager.Types;
 using ProSuite.QA.ServiceProviderArcGIS;
 using ProSuite.QA.SpecificationProviderFile;
 using System.Collections.Generic;
@@ -8,17 +8,10 @@ namespace ProSuite.QA.Configurator
 {
 	public class QAConfiguration
 	{
-		private static QAConfiguration _configuration = null;
+		private static QAConfiguration _configuration;
 		public static QAConfiguration Current
 		{
-			get
-			{
-				if (_configuration == null)
-				{
-					_configuration = new QAConfiguration();
-				}
-				return _configuration;
-			}
+			get { return _configuration ?? (_configuration = new QAConfiguration()); }
 		}
 
 		public IEnumerable<IProSuiteQAServiceProvider> GetQAServiceProviders(IEnumerable<ProSuiteQAServerConfiguration> serverConfigs)
@@ -40,18 +33,17 @@ namespace ProSuite.QA.Configurator
 			return new QASpecificationProviderXml();
 		}
 
-
 		public IEnumerable<ProSuiteQAServerConfiguration> DefaultQAServiceConfig
 		{
 			get
 			{
-				return new List<ProSuiteQAServerConfiguration>() {
-					GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPService),
-					GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPLocal)
-				};
+				return new List<ProSuiteQAServerConfiguration>
+				       {
+					       GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPService),
+					       GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPLocal)
+				       };
 			}
 		}
-
 
 		public ProSuiteQASpecificationsConfiguration DefaultQASpecConfig
 		{
@@ -86,6 +78,5 @@ namespace ProSuite.QA.Configurator
 					return new ProSuiteQAServerConfiguration();
 			}
 		}
-
 	}
 }

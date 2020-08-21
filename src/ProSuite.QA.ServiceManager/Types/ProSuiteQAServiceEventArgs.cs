@@ -1,8 +1,7 @@
 using System;
 
-namespace ProSuite.Commons.QA.ServiceManager.Types
+namespace ProSuite.QA.ServiceManager.Types
 {
-
 	public enum ProSuiteQAServiceState
 	{
 		Idle,
@@ -18,14 +17,13 @@ namespace ProSuite.Commons.QA.ServiceManager.Types
 
 	public class ProSuiteQAServiceEventArgs : EventArgs
 	{
-		public ProSuiteQAServiceState State { get; set; }
-		public object Data { get; set; }
+		public ProSuiteQAServiceState State { get; }
+		public object Data { get; }
 
-		public ProSuiteQAServiceEventArgs( ProSuiteQAServiceState state, object data)
+		public ProSuiteQAServiceEventArgs(ProSuiteQAServiceState state, object data)
 		{
-			this.State = state;
-			this.Data = data;
+			State = state;
+			Data = data;
 		}
-
 	}
 }

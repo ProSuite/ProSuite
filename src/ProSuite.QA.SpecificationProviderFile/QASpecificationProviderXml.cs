@@ -1,9 +1,5 @@
-using ProSuite.Commons.QA.ServiceManager.Interfaces;
-using System;
+using ProSuite.QA.ServiceManager.Interfaces;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ProSuite.QA.SpecificationProviderFile
 {
@@ -12,7 +8,7 @@ namespace ProSuite.QA.SpecificationProviderFile
 	{
 		public IList<string> GetQASpecificationNames()
 		{
-			return new List<String>() { "MCTest", "OSM_all", "OSM" };
+			return new List<string> { "MCTest", "OSM_all", "OSM" };
 		}
 	}
 }

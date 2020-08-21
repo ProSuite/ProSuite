@@ -2,7 +2,7 @@ using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
-using ProSuite.Commons.QA.ServiceManager.Types;
+using ProSuite.QA.ServiceManager.Types;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;

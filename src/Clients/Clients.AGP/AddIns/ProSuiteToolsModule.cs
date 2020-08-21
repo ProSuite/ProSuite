@@ -13,7 +13,7 @@ using Clients.AGP.ProSuiteSolution.LoggerUI;
 using Clients.AGP.ProSuiteSolution.ProjectItem;
 using Clients.AGP.ProSuiteSolution.WorkListTrials;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.QA.ServiceManager.Types;
+using ProSuite.QA.ServiceManager.Types;
 using ProSuite.QA.Configurator;
 using ProSuite.QA.ServiceManager;
 using System;

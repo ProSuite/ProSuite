@@ -1,6 +1,4 @@
-
-
-namespace ProSuite.Commons.QA.ServiceManager.Types
+namespace ProSuite.QA.ServiceManager.Types
 {
     public enum ProSuiteQADataFormat
     {
@@ -32,7 +30,6 @@ namespace ProSuite.Commons.QA.ServiceManager.Types
         Canceled
     }
 
-
     public class ProSuiteQARequest
     {
         private ProSuiteQAServiceType type;
@@ -61,5 +58,4 @@ namespace ProSuite.Commons.QA.ServiceManager.Types
 
         public object ResponseData { get; set; }
     }
-
 }

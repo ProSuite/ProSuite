@@ -1,5 +1,4 @@
-
-namespace ProSuite.Commons.QA.ServiceManager.Types
+namespace ProSuite.QA.ServiceManager.Types
 {
     public abstract class ProSuiteQAServiceProviderBase<T>
     {

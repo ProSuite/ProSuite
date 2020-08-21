@@ -1,7 +1,5 @@
-
-namespace ProSuite.Commons.QA.ServiceManager.Types
+namespace ProSuite.QA.ServiceManager.Types
 {
-
     public class ProSuiteQAServerConfiguration
 	{
 		public ProSuiteQAServerConfiguration()

@@ -1,8 +1,8 @@
-using ProSuite.Commons.QA.ServiceManager.Types;
+using ProSuite.QA.ServiceManager.Types;
 using System;
 using System.Threading.Tasks;
 
-namespace ProSuite.Commons.QA.ServiceManager.Interfaces
+namespace ProSuite.QA.ServiceManager.Interfaces
 {
     // QA service provider can be Microservices (local or server), GP (local or server), ...
     public interface IProSuiteQAServiceProvider

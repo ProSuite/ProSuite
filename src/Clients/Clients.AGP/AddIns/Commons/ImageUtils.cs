@@ -1,15 +1,11 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
 namespace Clients.AGP.ProSuiteSolution.Commons
 {
-	public class ImageUtils
+	public static class ImageUtils
 	{
 		public static ImageSource GetImageSource(string imageName)
 		{

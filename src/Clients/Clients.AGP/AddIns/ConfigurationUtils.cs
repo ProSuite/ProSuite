@@ -135,7 +135,7 @@ namespace Clients.AGP.ProSuiteSolution
 		/// Gets the provider of the application's directory for user-specific configuration files.
 		/// </summary>
 		/// <returns></returns>
-		[ProSuite.Commons.Essentials.CodeAnnotations.NotNull]
+		[NotNull]
 		public static IConfigurationDirectoryProvider GetAppDataConfigDirectoryProvider()
 		{
 			return new ConfigurationDirectoryProvider(_companyName, _productName);

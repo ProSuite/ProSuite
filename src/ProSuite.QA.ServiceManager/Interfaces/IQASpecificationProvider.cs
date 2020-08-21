@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace ProSuite.Commons.QA.ServiceManager.Interfaces
+namespace ProSuite.QA.ServiceManager.Interfaces
 {
     // QA specification can provide DDX, XML, ....
     public interface IQASpecificationProvider

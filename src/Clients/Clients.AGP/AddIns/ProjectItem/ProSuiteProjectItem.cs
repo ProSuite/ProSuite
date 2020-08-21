@@ -1,7 +1,7 @@
 using ArcGIS.Desktop.Core;
 using Clients.AGP.ProSuiteSolution.Commons;
 using ESRI.ArcGIS.ItemIndex;
-using ProSuite.Commons.QA.ServiceManager.Types;
+using ProSuite.QA.ServiceManager.Types;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Media;

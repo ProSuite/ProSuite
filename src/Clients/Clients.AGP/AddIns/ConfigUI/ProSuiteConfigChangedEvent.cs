@@ -1,6 +1,6 @@
 using ArcGIS.Core.Events;
 using ArcGIS.Desktop.Framework;
-using ProSuite.Commons.QA.ServiceManager.Types;
+using ProSuite.QA.ServiceManager.Types;
 using System;
 using System.Collections.Generic;
 
