@@ -12,6 +12,8 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing.Erase
@@ -93,36 +95,125 @@ namespace ProSuite.AGP.Editing.Erase
 		/// <param name="cancelableProgressor"></param>
 		/// <returns></returns>
 		/// <exception cref="NotImplementedException"></exception>
-		protected override bool OnEditSketchCompleteCore(Geometry sketchGeometry,
-		                                                 EditingTemplate editTemplate,
-		                                                 MapView activeView,
-		                                                 CancelableProgressor cancelableProgressor =
-			                                                 null)
+		protected override async Task<bool> OnEditSketchCompleteCoreAsync(
+			Geometry sketchGeometry,
+			EditingTemplate editTemplate,
+			MapView activeView,
+			CancelableProgressor cancelableProgressor = null)
 		{
 			var polygon = (Polygon) sketchGeometry;
 
+			var resultFeatures = await QueuedTaskUtils.Run(
+				                     () => CalculateResultFeatures(activeView, polygon),
+				                     cancelableProgressor);
+
+			var taskSave = QueuedTaskUtils.Run(() => SaveAsync(resultFeatures));
+			var taskFlash = QueuedTaskUtils.Run(() => FlashAsync(activeView, resultFeatures));
+
+			await Task.WhenAll(taskFlash, taskSave);
+
+			return taskSave.Result;
+		}
+
+		private static IDictionary<Feature, Geometry> CalculateResultFeatures(
+			MapView activeView, Polygon sketchPolygon)
+		{
 			Dictionary<MapMember, List<long>> selectedFeatures = activeView.Map.GetSelection();
 
+			var resultFeatures = CalculateResultFeatures(selectedFeatures, sketchPolygon);
+
+			return resultFeatures;
+		}
+
+		private static IDictionary<Feature, Geometry> CalculateResultFeatures(
+			Dictionary<MapMember, List<long>> selection,
+			Polygon cutPolygon)
+		{
+			var result = new Dictionary<Feature, Geometry>();
+
+			foreach (var feature in MapUtils.GetFeatures(selection))
+			{
+				Geometry featureGeometry = feature.GetShape();
+				featureGeometry = GeometryEngine.Instance.SimplifyAsFeature(featureGeometry, true);
+				cutPolygon = (Polygon) GeometryEngine.Instance.SimplifyAsFeature(cutPolygon, true);
+				cutPolygon =
+					(Polygon) GeometryEngine.Instance.Project(cutPolygon,
+					                                          featureGeometry.SpatialReference);
+
+				Geometry resultGeometry =
+					GeometryEngine.Instance.Difference(featureGeometry, cutPolygon);
+
+				if (resultGeometry.IsEmpty)
+				{
+					throw new Exception("One or more result geometries have become empty.");
+				}
+
+				result.Add(feature, resultGeometry);
+			}
+
+			return result;
+		}
+
+		private async Task<bool> FlashAsync(MapView activeView,
+		                                    IDictionary<Feature, Geometry> resultFeatures)
+		{
+			if (resultFeatures.Count > 5)
+			{
+				_msg.InfoFormat("{0} have been updated. No flashing will be performed.",
+				                resultFeatures.Count);
+			}
+
+			var polySymbol = SymbolFactory.Instance.DefaultPolygonSymbol;
+
+			foreach (Geometry resultGeometry in resultFeatures.Values)
+			{
+				using (await activeView.AddOverlayAsync(resultGeometry,
+				                                        polySymbol.MakeSymbolReference()))
+				{
+					await Task.Delay(400);
+				}
+			}
+
+			return true;
+		}
+
+		private static async Task<bool> SaveAsync(IDictionary<Feature, Geometry> result)
+		{
 			// create an edit operation
 			var editOperation = new EditOperation();
 
-			editOperation.Name = "Erase polygon from feature(s)";
-			editOperation.ProgressMessage = "Working...";
-			editOperation.CancelMessage = "Operation canceled";
-			editOperation.ErrorMessage = "Error creating points";
+			EditorTransaction transaction = new EditorTransaction(editOperation);
 
-			//editOperation.Cut(selectedFeatures, polygon);
-			SelectionUtils.ClearSelection(activeView.Map);
-			activeView.Map.SetSelection(selectedFeatures);
+			return await transaction.ExecuteAsync(
+				       editContext => Store(editContext, result),
+				       "Erase polygon from feature(s)", GetDatasets(result.Keys));
+		}
 
-			editOperation.Callback(
-				editContext => CutFeatures(editContext, selectedFeatures, polygon),
-				GetDatasets(selectedFeatures.Keys));
+		private static bool Store(
+			EditOperation.IEditContext editContext,
+			IDictionary<Feature, Geometry> result)
+		{
+			foreach (KeyValuePair<Feature, Geometry> keyValuePair in result)
+			{
+				Feature feature = keyValuePair.Key;
+				Geometry geometry = keyValuePair.Value;
 
-			// synchronous execution ok, already on a queued task?!:
-			Task<bool> editOperationResult = editOperation.ExecuteAsync();
+				if (geometry.IsEmpty)
+				{
+					throw new Exception("One or more result geometries have become empty.");
+				}
 
-			return editOperationResult.Result;
+				feature.SetShape(geometry);
+				feature.Store();
+
+				editContext.Invalidate(feature);
+
+				feature.Dispose();
+			}
+
+			_msg.InfoFormat("Successfully stored {0} updated features.", result.Count);
+
+			return true;
 		}
 
 		private static IEnumerable<Dataset> GetDatasets(IEnumerable<MapMember> mapMembers)
@@ -145,34 +236,11 @@ namespace ProSuite.AGP.Editing.Erase
 			}
 		}
 
-		private static void CutFeatures(
-			EditOperation.IEditContext editContext,
-			Dictionary<MapMember, List<long>> selection,
-			Polygon cutPolygon)
+		private static IEnumerable<Dataset> GetDatasets(IEnumerable<Feature> features)
 		{
-			foreach (var feature in MapUtils.GetFeatures(selection))
+			foreach (Feature feature in features)
 			{
-				Geometry featureGeometry = feature.GetShape();
-				featureGeometry = GeometryEngine.Instance.SimplifyAsFeature(featureGeometry, true);
-				cutPolygon = (Polygon) GeometryEngine.Instance.SimplifyAsFeature(cutPolygon, true);
-				cutPolygon =
-					(Polygon) GeometryEngine.Instance.Project(cutPolygon,
-					                                          featureGeometry.SpatialReference);
-
-				Geometry resultGeometry =
-					GeometryEngine.Instance.Difference(featureGeometry, cutPolygon);
-
-				if (resultGeometry.IsEmpty)
-				{
-					throw new Exception("One or more result geometries have become empty.");
-				}
-
-				feature.SetShape(resultGeometry);
-				feature.Store();
-
-				editContext.Invalidate(feature);
-
-				feature.Dispose();
+				yield return feature.GetTable();
 			}
 		}
 	}

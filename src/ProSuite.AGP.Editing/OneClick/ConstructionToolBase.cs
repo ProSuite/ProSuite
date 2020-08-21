@@ -1,13 +1,8 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
-using System.Windows.Resources;
-using ActiproSoftware.Products.Editors;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Templates;
@@ -16,7 +11,9 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.UI.Keyboard;
 using Cursor = System.Windows.Input.Cursor;
 
@@ -29,8 +26,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private bool _shiftIsPressed;
 
-		protected Cursor SketchCursor { get; set; }
-
 		protected ConstructionToolBase()
 		{
 			IsSketchTool = true;
@@ -38,8 +33,10 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			GeomIsSimpleAsFeature = false;
 
-			SketchCursor = ToolUtils.GetCursor(Properties.Resources.EditSketchCrosshair);
+			SketchCursor = ToolUtils.GetCursor(Resources.EditSketchCrosshair);
 		}
+
+		protected Cursor SketchCursor { get; set; }
 
 		protected bool IsInSketchMode
 		{
@@ -49,6 +46,36 @@ namespace ProSuite.AGP.Editing.OneClick
 				return SketchType != SketchGeometryType.Rectangle;
 			}
 		}
+
+		#region MapTool overrides
+
+		protected override Task<bool> OnSketchModifiedAsync()
+		{
+			return QueuedTaskUtils.Run(OnSketchModifiedCore);
+		}
+
+		protected override Task OnSelectionChangedAsync(MapSelectionChangedEventArgs e)
+		{
+			// NOTE: This method is not called when the selection is cleared by another command (e.g. by 'Clear Selection')
+			//       Is there another way to get the global selection changed event? What if we need the selection changed in a button?
+
+			if (_shiftIsPressed
+			) // always false -> toolkeyup is first. This method is apparently scheduled to run after key up
+			{
+				return Task.FromResult(true);
+			}
+
+			if (CanUseSelection(e.Selection))
+			{
+				StartSketchPhase();
+			}
+
+			return Task.FromResult(true);
+		}
+
+		#endregion
+
+		#region OneClickToolBase overrides
 
 		protected override void OnToolActivatingCore()
 		{
@@ -75,110 +102,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				StartSketchPhase();
 			}
-		}
-
-		private bool CanStartSketchPhase(IList<Feature> selectedFeatures)
-		{
-			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
-			{
-				return false;
-			}
-
-			return CanStartSketchPhaseCore(selectedFeatures);
-		}
-
-		protected virtual bool CanStartSketchPhaseCore(IList<Feature> selectedFeatures)
-		{
-			return true;
-		}
-
-		protected override Task<bool> OnSketchModifiedAsync()
-		{
-			return RunQueuedTask(OnSketchModifiedCore);
-		}
-
-		protected override Task OnSelectionChangedAsync(MapSelectionChangedEventArgs e)
-		{
-			// NOTE: This method is not called when the selection is cleared by another command (e.g. by 'Clear Selection')
-			//       Is there another way to get the global selection changed event? What if we need the selection changed in a button?
-
-			if (_shiftIsPressed
-			) // always false -> toolkeyup is first. This method is apparently scheduled to run after key up
-			{
-				return Task.FromResult(true);
-			}
-
-			if (CanUseSelection(e.Selection))
-			{
-				StartSketchPhase();
-			}
-
-			return Task.FromResult(true);
-		}
-
-		protected virtual bool OnSketchModifiedCore()
-		{
-			return true;
-		}
-
-		protected void StartSketchPhase()
-		{
-			if (IsInSketchMode)
-			{
-				return;
-			}
-
-			SketchOutputMode = SketchOutputMode.Map;
-
-			SketchType = GetSketchGeometryType();
-
-			UseSnapping = true;
-
-			SetCursor(SketchCursor);
-
-			StartSketchAsync();
-		}
-
-		protected abstract SketchGeometryType GetSketchGeometryType();
-
-		protected abstract void LogEnteringSketchMode();
-
-		/// <summary>
-		///     Determines whether the provided selection can be used by this tool.
-		/// </summary>
-		/// <param name="selection"></param>
-		/// <returns></returns>
-		protected virtual bool CanUseSelection(Dictionary<MapMember, List<long>> selection)
-		{
-			// TODO
-			return selection.Count > 0;
-		}
-
-		protected virtual CancelableProgressor GetSelectionProgressor()
-		{
-			return null;
-		}
-
-		protected virtual CancelableProgressor GetSketchCompleteProgressor()
-		{
-			return null;
-		}
-
-		/// <summary>
-		///     Determines whether the provided selection can be used by this tool.
-		/// </summary>
-		/// <param name="selection"></param>
-		/// <returns></returns>
-		private bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection)
-		{
-			var mapMemberDictionary = new Dictionary<MapMember, List<long>>(selection.Count);
-
-			foreach (var keyValuePair in selection)
-			{
-				mapMemberDictionary.Add(keyValuePair.Key, keyValuePair.Value);
-			}
-
-			return CanUseSelection(mapMemberDictionary);
 		}
 
 		protected override void OnKeyDownCore(MapViewKeyEventArgs k)
@@ -294,6 +217,132 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
+		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
+		{
+			if (ActiveMapView == null)
+			{
+				return false;
+			}
+
+			// TODO: only if selection was cleared? Generally allow changing the selection through attribute selection?
+			IList<Feature> selection = SelectionUtils.GetSelectedFeatures(ActiveMapView).ToList();
+
+			if (! CanUseSelection(selection))
+			{
+				//LogPromptForSelection();
+				StartSelectionPhase();
+			}
+
+			return true;
+		}
+
+		protected override async Task<bool> OnSketchCompleteCoreAsync(
+			Geometry sketchGeometry,
+			CancelableProgressor progressor)
+		{
+			if (IsInSketchMode)
+			{
+				// take snapshots
+				EditingTemplate currentTemplate = CurrentTemplate;
+				MapView activeView = ActiveMapView;
+
+				return await OnEditSketchCompleteCoreAsync(
+					       sketchGeometry, currentTemplate, activeView, progressor);
+			}
+
+			return false;
+		}
+
+		#endregion
+
+		protected abstract SketchGeometryType GetSketchGeometryType();
+
+		protected virtual bool OnSketchModifiedCore()
+		{
+			return true;
+		}
+
+		protected virtual bool CanStartSketchPhaseCore(IList<Feature> selectedFeatures)
+		{
+			return true;
+		}
+
+		protected abstract void LogEnteringSketchMode();
+
+		/// <summary>
+		/// Determines whether the provided selection can be used by this tool.
+		/// </summary>
+		/// <param name="selection"></param>
+		/// <returns></returns>
+		protected virtual bool CanUseSelection(Dictionary<MapMember, List<long>> selection)
+		{
+			// TODO
+			return selection.Count > 0;
+		}
+
+		protected abstract Task<bool> OnEditSketchCompleteCoreAsync(
+			Geometry sketchGeometry,
+			EditingTemplate editTemplate,
+			MapView activeView,
+			CancelableProgressor cancelableProgressor = null);
+
+		protected virtual CancelableProgressor GetSelectionProgressor()
+		{
+			return null;
+		}
+
+		protected virtual CancelableProgressor GetSketchCompleteProgressor()
+		{
+			return null;
+		}
+
+		protected virtual void OnSketchResetCore() { }
+
+		protected void StartSketchPhase()
+		{
+			if (IsInSketchMode)
+			{
+				return;
+			}
+
+			SketchOutputMode = SketchOutputMode.Map;
+
+			SketchType = GetSketchGeometryType();
+
+			UseSnapping = true;
+
+			SetCursor(SketchCursor);
+
+			StartSketchAsync();
+		}
+
+		/// <summary>
+		/// Determines whether the provided selection can be used by this tool.
+		/// </summary>
+		/// <param name="selection"></param>
+		/// <returns></returns>
+		private bool CanUseSelection(Dictionary<BasicFeatureLayer, List<long>> selection)
+		{
+			var mapMemberDictionary = new Dictionary<MapMember, List<long>>(selection.Count);
+
+			foreach (var keyValuePair in selection)
+			{
+				mapMemberDictionary.Add(keyValuePair.Key, keyValuePair.Value);
+			}
+
+			return CanUseSelection(mapMemberDictionary);
+		}
+
+		private bool CanStartSketchPhase(IList<Feature> selectedFeatures)
+		{
+			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
+			{
+				return false;
+			}
+
+			return CanStartSketchPhaseCore(selectedFeatures);
+		}
+
 		private async Task ResetSketchAsync()
 		{
 			Geometry currentSketch = await GetCurrentSketchAsync();
@@ -318,48 +367,5 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			StartSketchAsync();
 		}
-
-		protected virtual void OnSketchResetCore() { }
-
-		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
-		{
-			if (ActiveMapView == null)
-			{
-				return false;
-			}
-
-			// TODO: only if selection was cleared? Generally allow changing the selection through attribute selection?
-			IList<Feature> selection = SelectionUtils.GetSelectedFeatures(ActiveMapView).ToList();
-
-			if (! CanUseSelection(selection))
-			{
-				//LogPromptForSelection();
-				StartSelectionPhase();
-			}
-
-			return true;
-		}
-
-		protected override bool OnSketchCompleteCore(Geometry sketchGeometry,
-		                                             CancelableProgressor progressor)
-		{
-			if (IsInSketchMode)
-			{
-				// take snapshots
-				EditingTemplate currentTemplate = CurrentTemplate;
-				MapView activeView = ActiveMapView;
-
-				return OnEditSketchCompleteCore(sketchGeometry, currentTemplate, activeView,
-				                                progressor);
-			}
-
-			return false;
-		}
-
-		protected abstract bool OnEditSketchCompleteCore(Geometry sketchGeometry,
-		                                                 EditingTemplate editTemplate,
-		                                                 MapView activeView,
-		                                                 CancelableProgressor cancelableProgressor =
-			                                                 null);
 	}
 }

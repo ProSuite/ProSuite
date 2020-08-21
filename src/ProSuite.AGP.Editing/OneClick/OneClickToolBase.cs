@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
@@ -13,10 +13,13 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Keyboard;
+using Application = System.Windows.Application;
 using Cursor = System.Windows.Input.Cursor;
+using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -44,6 +47,160 @@ namespace ProSuite.AGP.Editing.OneClick
 			HandledKeys.Add(_keyShowOptionsPane);
 		}
 
+		protected override Task OnToolActivateAsync(bool hasMapViewChanged)
+		{
+			_msg.VerboseDebug("OnToolActivateAsync");
+
+			MapView.Active.Map.PropertyChanged += Map_PropertyChanged;
+
+			MapSelectionChangedEvent.Subscribe(OnMapSelectionChanged);
+
+			try
+			{
+				return QueuedTask.Run(
+					() =>
+					{
+						OnToolActivatingCore();
+
+						if (RequiresSelection)
+						{
+							ProcessSelection(SelectionUtils.GetSelectedFeatures(ActiveMapView));
+						}
+
+						return OnToolActivatedCore(hasMapViewChanged);
+					});
+			}
+			catch (Exception e)
+			{
+				HandleError($"Error in tool activation ({Caption}): {e.Message}", e);
+			}
+
+			return Task.CompletedTask;
+		}
+
+		protected override Task OnToolDeactivateAsync(bool hasMapViewChanged)
+		{
+			_msg.VerboseDebug("OnToolDeactivateAsync");
+
+			MapView.Active.Map.PropertyChanged -= Map_PropertyChanged;
+
+			MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChanged);
+
+			try
+			{
+				HideOptionsPane();
+
+				return QueuedTask.Run(() => OnToolDeactivateCore(hasMapViewChanged));
+			}
+			catch (Exception e)
+			{
+				HandleError($"Error in tool deactivation ({Caption}): {e.Message}", e, true);
+			}
+
+			return Task.CompletedTask;
+		}
+
+		protected override void OnToolKeyDown(MapViewKeyEventArgs k)
+		{
+			_msg.VerboseDebug("OnToolKeyDown");
+
+			try
+			{
+				if (IsModifierKey(k.Key) || HandledKeys.Contains(k.Key))
+				{
+					k.Handled = true;
+				}
+
+				if (k.Key == _keyShowOptionsPane)
+				{
+					ShowOptionsPane();
+				}
+
+				QueuedTaskUtils.Run(
+					delegate
+					{
+						if (k.Key == Key.Escape)
+						{
+							return HandleEscape();
+						}
+
+						if ((k.Key == Key.LeftShift || k.Key == Key.RightShift) &&
+						    SelectionCursorShift != null && IsInSelectionPhase())
+						{
+							SetCursor(SelectionCursorShift);
+						}
+
+						OnKeyDownCore(k);
+
+						return true;
+					});
+			}
+			catch (Exception e)
+			{
+				HandleError($"Error in tool key down ({Caption}): {e.Message}", e, true);
+			}
+		}
+
+		protected override void OnToolKeyUp(MapViewKeyEventArgs k)
+		{
+			_msg.VerboseDebug("OnToolKeyUp");
+
+			// TODO: Key pressed management
+			//_shiftIsPressed = false;
+
+			try
+			{
+				QueuedTaskUtils.Run(
+					delegate
+					{
+						if ((k.Key == Key.LeftShift || k.Key == Key.RightShift) &&
+						    SelectionCursor != null && IsInSelectionPhase())
+						{
+							SetCursor(SelectionCursor);
+						}
+
+						OnKeyUpCore(k);
+						return true;
+					});
+			}
+			catch (Exception e)
+			{
+				HandleError($"Error in tool key up ({Caption}): {e.Message}", e, true);
+			}
+		}
+
+		protected override async Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
+		{
+			_msg.VerboseDebug("OnSketchCompleteAsync");
+
+			if (sketchGeometry == null)
+			{
+				// TODO: if in selection phase select at the current mouse location?
+				return false;
+			}
+
+			try
+			{
+				CancelableProgressor progressor = GetCancelableProgressor();
+
+				if (RequiresSelection && IsInSelectionPhase())
+				{
+					return await QueuedTaskUtils.Run(() => OnSelectionSketchComplete(
+						                                 sketchGeometry, progressor));
+				}
+
+				return await OnSketchCompleteCoreAsync(sketchGeometry, progressor);
+			}
+			catch (Exception e)
+			{
+				HandleError($"{Caption}: Error completing sketch ({e.Message})", e);
+				// NOTE: Throwing here results in a process crash (Exception while waiting for a Task to complete)
+				// Consider Task.FromException?
+			}
+
+			return false;
+		}
+
 		protected void StartSelectionPhase()
 		{
 			SketchOutputMode = SketchOutputMode.Map;
@@ -66,187 +223,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			OnSelectionPhaseStarted();
 		}
 
-		protected void SetCursor([CanBeNull] Cursor cursor)
-		{
-			if (cursor != null)
-			{
-				if (cursor != SelectionCursor &&
-				    cursor != SelectionCursorShift)
-				{
-					_msg.Info("Other cursor");
-				}
-				_msg.InfoFormat("Setting cursor {0}",
-				                cursor == SelectionCursor ? "Selection" : Environment.StackTrace);
-				Cursor = cursor;
-			}
-		}
-
 		protected virtual void OnSelectionPhaseStarted() { }
-
-		protected static Task<bool> RunQueuedTask(Func<bool> function,
-		                                          CancelableProgressor progressor = null)
-		{
-			// NOTE: if the progressor is null, there's an argument exception... and a crash
-			// TODO: Use Result class (such as https://gist.github.com/vkhorikov/7852c7606f27c52bc288)
-			// with Either type monad that allows transportation of both return values and failure information
-			// to be used by the caller e.g in a message box.
-
-			// NOTE: Throwing into the queued task results in crash
-
-			bool FunctionToQueue()
-			{
-				try
-				{
-					return function();
-				}
-				catch (Exception e)
-				{
-					_msg.Error(e.Message, e);
-
-					return false;
-				}
-			}
-
-			Task<bool> result = progressor == null
-				                    ? QueuedTask.Run(FunctionToQueue)
-				                    : QueuedTask.Run(FunctionToQueue, progressor);
-
-			return result;
-		}
-
-		protected override Task OnToolActivateAsync(bool hasMapViewChanged)
-		{
-			_msg.VerboseDebug("OnToolActivateAsync");
-
-			MapView.Active.Map.PropertyChanged += Map_PropertyChanged;
-
-			MapSelectionChangedEvent.Subscribe(OnMapSelectionChanged);
-
-			return QueuedTask.Run(
-				() =>
-				{
-					try
-					{
-						OnToolActivatingCore();
-
-						if (RequiresSelection)
-						{
-							ProcessSelection(SelectionUtils.GetSelectedFeatures(ActiveMapView));
-						}
-
-						return OnToolActivatedCore(hasMapViewChanged);
-					}
-					catch (Exception e)
-					{
-						_msg.Error(e.Message, e);
-
-						return false;
-					}
-				});
-		}
-
-		protected override Task OnToolDeactivateAsync(bool hasMapViewChanged)
-		{
-			_msg.VerboseDebug("OnToolDeactivateAsync");
-
-			MapView.Active.Map.PropertyChanged -= Map_PropertyChanged;
-
-			MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChanged);
-
-			HideOptionsPane();
-
-			return QueuedTask.Run(() =>
-			                      {
-				                      try
-				                      {
-					                      OnToolDeactivateCore(hasMapViewChanged);
-				                      }
-				                      catch (Exception e)
-				                      {
-					                      _msg.Error(e.Message, e);
-				                      }
-			                      });
-		}
-
-		protected override void OnToolKeyDown(MapViewKeyEventArgs k)
-		{
-			_msg.VerboseDebug("OnToolKeyDown");
-
-			if (IsModifierKey(k.Key) || HandledKeys.Contains(k.Key))
-			{
-				k.Handled = true;
-			}
-
-			if (k.Key == _keyShowOptionsPane)
-			{
-				ShowOptionsPane();
-			}
-
-			RunQueuedTask(
-				delegate
-				{
-					if (k.Key == Key.Escape)
-					{
-						return HandleEscape();
-					}
-
-					// NOTE: There is no performance penalty when setting the cursor from the QueuedTask
-					if ((k.Key == Key.LeftShift || k.Key == Key.RightShift) &&
-					    SelectionCursorShift != null && IsInSelectionPhase())
-					{
-						SetCursor(SelectionCursorShift);
-					}
-
-					OnKeyDownCore(k);
-
-					return true;
-				});
-		}
-
-		protected override void OnToolKeyUp(MapViewKeyEventArgs k)
-		{
-			_msg.VerboseDebug("OnToolKeyUp");
-
-			// TODO: Key pressed management
-			//_shiftIsPressed = false;
-
-			RunQueuedTask(
-				delegate
-				{
-					if ((k.Key == Key.LeftShift || k.Key == Key.RightShift) &&
-					    SelectionCursor != null && IsInSelectionPhase())
-					{
-						SetCursor(SelectionCursor);
-					}
-
-					OnKeyUpCore(k);
-					return true;
-				});
-		}
-
-		/// <summary>
-		///     Called when the sketch finishes. This is where we will create the sketch operation and then execute it.
-		/// </summary>
-		/// <param name="sketchGeometry">The sketchGeometry created by the sketch.</param>
-		/// <returns>A Task returning a Boolean indicating if the sketch complete event was successfully handled.</returns>
-		protected override Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
-		{
-			_msg.VerboseDebug("OnSketchCompleteAsync");
-
-			if (sketchGeometry == null)
-			{
-				// TODO: if in selection phase select at the current mouse location?
-				return Task.FromResult(false);
-			}
-
-			CancelableProgressor progressor = GetCancelableProgressor();
-
-			return
-				RunQueuedTask(
-					() => RequiresSelection && IsInSelectionPhase()
-						      ? OnSelectionSketchComplete(sketchGeometry, progressor)
-						      : OnSketchCompleteCore(sketchGeometry, progressor), progressor);
-		}
 
 		private static bool IsModifierKey(Key key)
 		{
@@ -258,22 +235,25 @@ namespace ProSuite.AGP.Editing.OneClick
 			       key == Key.RightAlt;
 		}
 
-		/// <summary>
-		/// Called after the feature selection changed
-		/// </summary>
-		/// <param name="args"></param>
 		private void OnMapSelectionChanged(MapSelectionChangedEventArgs args)
 		{
 			_msg.VerboseDebug("OnToolActivateAsync");
 
-			RunQueuedTask(
-				delegate
-				{
-					// Used to clear derived geometries etc.
-					bool result = OnMapSelectionChangedCore(args);
+			try
+			{
+				QueuedTaskUtils.Run(
+					delegate
+					{
+						// Used to clear derived geometries etc.
+						bool result = OnMapSelectionChangedCore(args);
 
-					return result;
-				});
+						return result;
+					});
+			}
+			catch (Exception e)
+			{
+				HandleError($"Error OnSelectionChanged: {e.Message}", e, true);
+			}
 		}
 
 		protected virtual void OnToolActivatingCore() { }
@@ -296,14 +276,16 @@ namespace ProSuite.AGP.Editing.OneClick
 			return null;
 		}
 
-		protected virtual bool OnSketchCompleteCore([NotNull] Geometry sketchGeometry,
-		                                            [CanBeNull] CancelableProgressor progressor)
+		protected virtual Task<bool> OnSketchCompleteCoreAsync(
+			[NotNull] Geometry sketchGeometry,
+			[CanBeNull] CancelableProgressor progressor)
 		{
-			return true;
+			return Task.FromResult(true);
 		}
 
-		private bool OnSelectionSketchComplete(Geometry sketchGeometry,
-		                                       CancelableProgressor progressor)
+		private bool OnSelectionSketchComplete(
+			Geometry sketchGeometry,
+			CancelableProgressor progressor)
 		{
 			if (SketchOutputMode == SketchOutputMode.Map)
 			{
@@ -398,6 +380,29 @@ namespace ProSuite.AGP.Editing.OneClick
 			LogUsingCurrentSelection();
 
 			AfterSelection(selection, progressor);
+		}
+
+		protected void HandleError(string message, Exception e, bool noMessageBox = false)
+		{
+			_msg.Error(message, e);
+
+			if (! noMessageBox)
+			{
+				Application.Current.Dispatcher.Invoke(
+					() =>
+					{
+						MessageBox.Show(message, "Error", MessageBoxButton.OK,
+						                MessageBoxImage.Error);
+					});
+			}
+		}
+
+		protected void SetCursor([CanBeNull] Cursor cursor)
+		{
+			if (cursor != null)
+			{
+				Cursor = cursor;
+			}
 		}
 	}
 }
