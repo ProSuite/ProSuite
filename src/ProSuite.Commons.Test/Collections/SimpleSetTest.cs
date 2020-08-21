@@ -7,18 +7,6 @@ namespace ProSuite.Commons.Test.Collections
 	[TestFixture]
 	public class SimpleSetTest
 	{
-		[SetUp]
-		public void SetUp()
-		{
-			// Invoked before each test
-		}
-
-		[TearDown]
-		public void TearDown()
-		{
-			// invoked after each test
-		}
-
 		[Test]
 		public void AddingIntsTest()
 		{
@@ -36,58 +24,23 @@ namespace ProSuite.Commons.Test.Collections
 		{
 			var set = new SimpleSet<object>();
 
-			try
-			{
-				var member = new TestMember("hello");
-				set.Add(member);
-				set.Add(member); // throw
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine(
-					@"Adding duplicate throwed exception: {0}", ex.Message);
-
-				return; // ok
-			}
-
-			Assert.Fail("No exception when adding duplicate");
+			var member = new TestMember("hello");
+			set.Add(member);
+			Assert.Catch(() => set.Add(member));
+			Assert.True(set.Contains(member));
 		}
 
 		[Test]
-		public void NullNotAllowedInSet()
+		public void CannotAddNull()
 		{
 			var set = new SimpleSet<object>();
 
-			try
-			{
-				set.Add("dont");
-				set.Add("like");
-				set.Add(null);
-			}
-			catch (ArgumentNullException)
-			{
-				Assert.AreEqual(2, set.Count);
-				return; // ok
-			}
+			set.Add("cannot");
+			set.Add("add");
+			Assert.Catch<ArgumentNullException>(() => set.Add(null));
 
-			Assert.Fail("No ArgumentNullException on Add(null)");
-		}
-
-		[Test]
-		public void CannotTestForNull()
-		{
-			var set = new SimpleSet<object>();
-
-			try
-			{
-				set.Contains(null);
-			}
-			catch (ArgumentNullException)
-			{
-				return; // ok
-			}
-
-			Assert.Fail("No ArgumentNullException on Contains(null)");
+			// but can test for null: it's always false
+			Assert.False(set.Contains(null));
 		}
 
 		[Test]
@@ -137,7 +90,7 @@ namespace ProSuite.Commons.Test.Collections
 
 			public bool Equals(TestMember other)
 			{
-				if (other == null)
+				if (other is null)
 				{
 					return false;
 				}
@@ -147,11 +100,6 @@ namespace ProSuite.Commons.Test.Collections
 
 			public override bool Equals(object obj)
 			{
-				if (! (obj is TestMember))
-				{
-					return false;
-				}
-
 				return Equals(obj as TestMember);
 			}
 
