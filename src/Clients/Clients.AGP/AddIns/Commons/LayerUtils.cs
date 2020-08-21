@@ -11,20 +11,22 @@ using System.Linq;
 
 namespace Clients.AGP.ProSuiteSolution.Commons
 {
-	public class LayerUtils
+	public static class LayerUtils
     {
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 		public static IList<FeatureLayer> AddFeaturesToMap(string groupLayer, string path, string featureName = null, IList<string> layernames = null, bool select = true)
         {
 			// is map visible?
-			if (!(MapView.Active != null || String.IsNullOrEmpty(path))) return null;
+			if (MapView.Active == null) return null;
+			if (string.IsNullOrEmpty(path)) return null;
 
 			// are data zipped?
-			var featuresGdb = path.Replace("\n", String.Empty).Replace("\r", String.Empty).Replace(@"\\", @"\");
-			if (Path.GetExtension(featuresGdb) == ".zip")
+			var featuresGdb = path.Replace("\n", string.Empty).Replace("\r", string.Empty).Replace(@"\\", @"\");
+			if (string.Equals(Path.GetExtension(featuresGdb), ".zip", StringComparison.OrdinalIgnoreCase))
 			{
 				var extractDir = Path.GetDirectoryName(path);
+				if (extractDir == null) return null;
 				ZipFile.ExtractToDirectory(path, extractDir);
 				featuresGdb = Path.Combine(extractDir, Path.GetFileNameWithoutExtension(path), featureName);
 				if (!Directory.Exists(featuresGdb)) return null;
@@ -91,12 +93,12 @@ namespace Clients.AGP.ProSuiteSolution.Commons
 			MapView.Active.SelectLayers(featureLayers.ToList());
 		}
 
-		public void ShowNotification(string title, string message, string icon)
+		public static void ShowNotification(string title, string message, string icon)
 		{
 			QueuedTask.Run(() =>
 			{
-				FrameworkApplication.AddNotification(new Notification()
-				{
+				FrameworkApplication.AddNotification(new Notification
+				                                     {
 					Message = "QA results are added to map",
 					Title = "ProSuite Tools",
 					ImageUrl = PackUriForResource("AddInDesktop32.png").AbsoluteUri
@@ -104,9 +106,9 @@ namespace Clients.AGP.ProSuiteSolution.Commons
 			});
 		}
 
-		private Uri PackUriForResource(string resourceName, string folderName = "Images")
+		private static Uri PackUriForResource(string resourceName, string folderName = "Images")
 		{
-			string asm = System.IO.Path.GetFileNameWithoutExtension(
+			string asm = Path.GetFileNameWithoutExtension(
 				System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
 			string uriString = folderName.Length > 0
 				? string.Format("pack://application:,,,/{0};component/{1}/{2}", asm, folderName, resourceName)

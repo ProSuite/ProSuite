@@ -16,13 +16,13 @@ namespace ProSuite.AGP.WorkList
 	{
 		#region Factory
 
-		public static readonly string Name = "Test Items";
+		public static readonly string WorkListName = "Test Items";
 
 		public static Domain.WorkList Create(string name = null)
 		{
 			IEnumerable<IWorkItem> items = CreateWorkItems();
 			IWorkItemRepository mockRepository = new WorkItemRepositoryMock(items);
-			return new TestWorkList(mockRepository, name ?? Name,mockRepository.GetItems(null, true));
+			return new TestWorkList(mockRepository, name ?? WorkListName, mockRepository.GetItems(null, true));
 		}
 
 		private static IEnumerable<IWorkItem> CreateWorkItems()
@@ -64,13 +64,6 @@ namespace ProSuite.AGP.WorkList
 			var min = new Coordinate2D(x - dx, y - dy);
 			var max = new Coordinate2D(x + dx, y + dy);
 			return EnvelopeBuilder.CreateEnvelope(min, max, sref);
-		}
-
-		private static MapPoint CreatePoint(double x, double y)
-		{
-			var sref = SpatialReferenceBuilder.CreateSpatialReference(4326);
-
-			return MapPointBuilder.CreateMapPoint(x, y, sref);
 		}
 
 		#endregion

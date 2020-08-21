@@ -45,7 +45,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkListTrials
 
 		public IWorkList GetTestWorkList()
 		{
-			var name = TestWorkList.Name;
+			var name = TestWorkList.WorkListName;
 
 			var workList = Central.Get(name);
 			if (workList == null)
