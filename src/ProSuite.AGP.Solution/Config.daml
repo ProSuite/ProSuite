@@ -1,7 +1,7 @@
 <ArcGIS defaultAssembly="ProSuiteSolution.dll" defaultNamespace="Clients.AGP.ProSuiteSolution" xmlns="http://schemas.esri.com/DADF/Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
   <AddInInfo id="{aca43c2a-8357-4476-8660-e8bc28bdf848}" version="1.0" desktopVersion="2.5.22081">
-    <Name>ProSuiteTools</Name>
-    <Description>ProSuiteTools description</Description>
+    <Name>ProSuite</Name>
+    <Description>The ProSuite productivity extension for data production, cartographic refinement, and quality assurance</Description>
     <Image>Images\AddinDesktop32.png</Image>
     <Author>The ProSuite Authors</Author>
     <Company></Company>
@@ -10,34 +10,37 @@
     <!-- Note subject can be one or more of these topics:
          Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
   </AddInInfo>
-	<categories>
-		<updateCategory refID="esri_core_projectContainers">
-			<insertComponent id="ProSuiteItem_FolderContainer" className="Clients.AGP.ProSuiteSolution.ProjectItem.ProSuiteProjectItemContainer" insert="before" placeWith="esri_geodatabase_folderConnectionContainer">
-				<content type="ProSuiteContainer" displayName="ProSuite" contextMenu="ProSuiteItems_AddFoldersMenu" />
-			</insertComponent>
-		</updateCategory>	
-		<updateCategory refID="esri_customItems">
-			<insertComponent id="ProSuiteItem_Customitem" className="ProSuite.Commons.AGP.ProjectItem.ProSuiteProjectItem" containerType="ProSuiteContainer">
-				<content displayName="Worklist" fileExtension="wkl" isContainer="true" keywords="worklist"
-						 contextMenuID="ProSuiteItem_ContextMenu">
-					<filterFlags>
-						<type id="File" />
-					</filterFlags>
-				</content>
-			</insertComponent>
-			<!--<insertComponent id="ProSuiteItem_SubItem" className="Clients.AGP.ProSuiteSolution.ProjectItem.ProSuiteSubItem">
-				<content displayName="ProSuiteSubItem" isContainer="false" keywords="ProSuiteSubItem" contextMenuID="ProSuiteSubItem_ContextMenu" />
-			</insertComponent>-->
-		</updateCategory>
-	</categories>
-    <conditions>
-	    <insertCondition id="prosuite_qa_gplocal_enabled" caption="QA GPLocal Enabled">
-		    <state id="prosuite_qa_gplocal_state"/>
-	    </insertCondition>
-		<insertCondition id="prosuite_qa_gpservice_enabled" caption="QA GPService Enabled">
-			<state id="prosuite_qa_gpservice_state"/>
-		</insertCondition>
-    </conditions>
+  <categories>
+    <updateCategory refID="esri_core_projectContainers">
+      <insertComponent id="ProSuiteItem_FolderContainer"
+                       className="Clients.AGP.ProSuiteSolution.ProjectItem.ProSuiteProjectItemContainer"
+                       insert="before" placeWith="esri_geodatabase_folderConnectionContainer">
+        <content type="ProSuiteContainer" displayName="ProSuite" contextMenu="ProSuiteItems_AddFoldersMenu" />
+      </insertComponent>
+    </updateCategory>
+    <updateCategory refID="esri_customItems">
+      <insertComponent id="ProSuiteItem_Customitem" className="ProSuite.Commons.AGP.ProjectItem.ProSuiteProjectItem"
+                       containerType="ProSuiteContainer">
+        <content displayName="Worklist" fileExtension="wkl" isContainer="true" keywords="worklist"
+                 contextMenuID="ProSuiteItem_ContextMenu">
+          <filterFlags>
+            <type id="File" />
+          </filterFlags>
+        </content>
+      </insertComponent>
+      <!--<insertComponent id="ProSuiteItem_SubItem" className="Clients.AGP.ProSuiteSolution.ProjectItem.ProSuiteSubItem">
+        <content displayName="ProSuiteSubItem" isContainer="false" keywords="ProSuiteSubItem" contextMenuID="ProSuiteSubItem_ContextMenu" />
+      </insertComponent>-->
+    </updateCategory>
+  </categories>
+  <conditions>
+    <insertCondition id="prosuite_qa_gplocal_enabled" caption="QA GPLocal Enabled">
+      <state id="prosuite_qa_gplocal_state"/>
+    </insertCondition>
+    <insertCondition id="prosuite_qa_gpservice_enabled" caption="QA GPService Enabled">
+      <state id="prosuite_qa_gpservice_state"/>
+    </insertCondition>
+  </conditions>
   <modules>
     <insertModule id="ProSuiteSolution_Module" className="ProSuiteToolsModule" autoLoad="false" caption="ProSuiteToolsModule">
       <tabs>

@@ -13,7 +13,7 @@
     <Target name="ArcGISPro" version="2.5" />
   </Targets>
   <!-- CLR should be set to the 4.8 set in the .csproj -->
-  <AddIn language="CLR4.8" library="ProSuite.Solution.Plugins.dll" namespace="ProSuite.Solution.Plugins">
+  <AddIn language="CLR4.8" library="ProSuiteSolutionPlugins.dll" namespace="ProSuite.AGP.Solution.Plugins">
     <ArcGISPro>
       <PluginDatasources>
         <PluginDatasource id="ProSuite_WorkListDatasource" class="WorkListDatasource"/>
