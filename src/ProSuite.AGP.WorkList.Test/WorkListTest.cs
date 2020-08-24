@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Core.Hosting;
 using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
@@ -29,7 +28,8 @@ namespace ProSuite.AGP.WorkList.Test
 		public void SetupFixture()
 		{
 			// Host must be initialized on an STA thread:
-			Host.Initialize();
+			//Host.Initialize();
+			ProSuite.Commons.AGP.Hosting.CoreHostProxy.Initialize();
 		}
 
 		private string _emptyIssuesGdb = @"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\issues_empty.gdb";
