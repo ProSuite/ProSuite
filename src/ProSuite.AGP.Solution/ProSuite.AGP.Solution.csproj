@@ -8,7 +8,7 @@
     <ProjectGuid>{ACA43C2A-8357-4476-8660-E8BC28BDF848}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Clients.AGP.ProSuiteSolution</RootNamespace>
+    <RootNamespace>ProSuite.AGP.Solution</RootNamespace>
     <AssemblyName>ProSuiteSolution</AssemblyName>
     <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -20,7 +20,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>..\..\bin\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -31,7 +31,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
+    <OutputPath>..\..\bin\Release\</OutputPath>
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -65,7 +65,7 @@
     <AddInContent Include="DarkImages\AddInDesktop32.png" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\..\SharedAssemblyInfo.cs">
+    <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="ConfigIDs.cs" />
@@ -207,54 +207,54 @@
     <Resource Include="DarkImages\GeodatabaseFeatureDataset32.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\ProSuite.AGP.Editing\ProSuite.AGP.Editing.csproj">
+    <ProjectReference Include="..\ProSuite.AGP.Editing\ProSuite.AGP.Editing.csproj">
       <Project>{EC3D575D-7B9D-467F-BC76-2E093A3126EC}</Project>
       <Name>ProSuite.AGP.Editing</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite.AGP.Picker\ProSuite.AGP.Picker.csproj">
+    <ProjectReference Include="..\ProSuite.AGP.Picker\ProSuite.AGP.Picker.csproj">
       <Project>{a0664bcb-3a91-4a7e-b303-d9a55b8e6cc8}</Project>
       <Name>ProSuite.AGP.Picker</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj">
+    <ProjectReference Include="..\ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj">
       <Project>{47e134c6-b803-451e-8c33-7c71b158b2ac}</Project>
       <Name>ProSuite.AGP.WorkList.Contracts</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite.AGP.WorkList\ProSuite.AGP.WorkList.csproj">
+    <ProjectReference Include="..\ProSuite.AGP.WorkList\ProSuite.AGP.WorkList.csproj">
       <Project>{2efe37c6-29a4-4e51-8c9f-d7b895f9ce6d}</Project>
       <Name>ProSuite.AGP.WorkList</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">
+    <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">
       <Project>{89F2C583-3022-43F8-9B69-27123836625F}</Project>
       <Name>ProSuite.Commons.AGP</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
+    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
       <Project>{384763d9-f7a1-4aa2-9abd-ee338cd8d4c1}</Project>
       <Name>ProSuite.Commons.Essentials</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
+    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
       <Project>{a227d52c-0536-498f-acf2-2a5a67c3d9ff}</Project>
       <Name>ProSuite.Commons.Logging</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite.Commons\ProSuite.Commons.csproj">
+    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
       <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
       <Name>ProSuite.Commons</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite.DomainModel\ProSuite.DomainModel.csproj">
+    <ProjectReference Include="..\ProSuite.DomainModel\ProSuite.DomainModel.csproj">
       <Project>{824DDBE3-EDAF-460B-B513-386A4260C1FF}</Project>
       <Name>ProSuite.DomainModel</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite.QA.Configurator\ProSuite.QA.Configurator.csproj">
+    <ProjectReference Include="..\ProSuite.QA.Configurator\ProSuite.QA.Configurator.csproj">
       <Project>{7C22C12F-3645-45DD-946B-8189816D39D3}</Project>
       <Name>ProSuite.QA.Configurator</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite.QA.ServiceManager\ProSuite.QA.ServiceManager.csproj">
+    <ProjectReference Include="..\ProSuite.QA.ServiceManager\ProSuite.QA.ServiceManager.csproj">
       <Project>{A3BCF206-8C54-490A-8F5F-1C3C68EBB208}</Project>
       <Name>ProSuite.QA.ServiceManager</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Esri.ArcGISPro.Extensions">
-      <Version>2.5.0.22081</Version>
+      <Version>2.6.0.24783</Version>
     </PackageReference>
     <PackageReference Include="JetBrains.Annotations">
       <Version>2020.1.0</Version>

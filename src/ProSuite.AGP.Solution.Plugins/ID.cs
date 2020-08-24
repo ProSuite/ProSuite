@@ -1,4 +1,4 @@
-namespace ProSuite.Solution.Plugins
+namespace ProSuite.AGP.Solution.Plugins
 {
 	public static class ID
 	{
