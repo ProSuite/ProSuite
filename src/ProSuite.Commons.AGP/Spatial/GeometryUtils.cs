@@ -34,5 +34,15 @@ namespace ProSuite.Commons.AGP.Spatial
 		{
 			return featureClass.GetDefinition().GetShapeType();
 		}
+
+		public static SpatialReference CreateSpatialReference(int srid)
+		{
+			return SpatialReferenceBuilder.CreateSpatialReference(srid);
+		}
+
+		public static MapPoint CreatePoint(double x, double y, SpatialReference sref = null)
+		{
+			return MapPointBuilder.CreateMapPoint(x, y, sref);
+		}
 	}
 }
