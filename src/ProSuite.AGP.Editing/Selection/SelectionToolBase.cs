@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.Commons.Logging;
 
@@ -14,6 +15,7 @@ namespace ProSuite.AGP.Editing.Selection
 		public SelectionToolBase()
 		{
 			IsSketchTool = true;
+			SelectionSettings = new SelectionSettings(SketchGeometryType.Polygon);
 		}
 
 		private static readonly IMsg _msg =

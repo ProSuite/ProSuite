@@ -12,6 +12,7 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -25,12 +26,15 @@ namespace ProSuite.AGP.Editing.OneClick
 {
 	public abstract class OneClickToolBase : MapTool
 	{
+		
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		private const Key _keyShowOptionsPane = Key.O;
 
 		protected bool RequiresSelection { get; set; } = true;
+
+		protected SelectionSettings SelectionSettings { get; set; }
 
 		protected List<Key> HandledKeys { get; } = new List<Key>();
 
@@ -40,7 +44,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected OneClickToolBase()
 		{
 			//SketchOutputMode = SketchOutputMode.Screen;
-			SketchType = SketchGeometryType.Rectangle;
+			SelectionSettings = new SelectionSettings(SketchGeometryType.Rectangle);
+			//SketchType = SketchGeometryType.Rectangle;
 			UseSnapping = false;
 
 			HandledKeys.Add(Key.Escape);
@@ -287,10 +292,13 @@ namespace ProSuite.AGP.Editing.OneClick
 			Geometry sketchGeometry,
 			CancelableProgressor progressor)
 		{
-			if (SketchOutputMode == SketchOutputMode.Map)
+			//3D views only support selecting features interactively using geometry in screen coordinates relative to the top-left corner of the view.
+
+			//TODO STS buffer sketch geometry if selectionSettings.PixelTolerance is set
+			if (SelectionSettings.SketchOutputMode == SketchOutputMode.Map)
 			{
 				sketchGeometry =
-					MapUtils.ToScreenGeometry(MapView.Active, (Polygon) sketchGeometry);
+					MapUtils.ToScreenGeometry(MapView.Active, (Polygon)sketchGeometry);
 			}
 
 			Geometry selectionGeometry;
@@ -301,7 +309,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 			else
 			{
-				// the 'map point' is still screen coordinates...
+				// it seems the Polygon is rather a 'map point'. it needs to be buffered with a pixel tolerance
 				selectionGeometry =
 					new Coordinate2D(sketchGeometry.Extent.XMin, sketchGeometry.Extent.YMin)
 						.ToMapPoint();
@@ -318,7 +326,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			//       get the intersecting features with a search cursor, check whether each feature can 
 			//       be selected and if there are still several, bring up a picker dialog (if single selection is required)
 			Dictionary<BasicFeatureLayer, List<long>> selection = ActiveMapView.SelectFeatures(
-				selectionGeometry, selectionMethod, visualIntersect);
+				selectionGeometry, selectionMethod);
 
 			ProcessSelection(SelectionUtils.GetSelectedFeatures(ActiveMapView), progressor);
 
