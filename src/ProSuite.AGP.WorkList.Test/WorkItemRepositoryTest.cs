@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Hosting;
 using NUnit.Framework;
 
 namespace ProSuite.AGP.WorkList.Test
@@ -26,7 +25,8 @@ namespace ProSuite.AGP.WorkList.Test
 		public void SetupFixture()
 		{
 			// Host must be initialized on an STA thread:
-			Host.Initialize();
+			//Host.Initialize();
+			ProSuite.Commons.AGP.Hosting.CoreHostProxy.Initialize();
 			
 			_uri = new Uri(_path, UriKind.Absolute);
 		}
