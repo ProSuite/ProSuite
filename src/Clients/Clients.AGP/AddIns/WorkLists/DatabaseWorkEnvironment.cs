@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
@@ -39,14 +40,9 @@ namespace Clients.AGP.ProSuiteSolution.WorkLists
 		protected override IWorkItemRepository CreateRepositoryCore(
 			IEnumerable<BasicFeatureLayer> featureLayers)
 		{
-			IEnumerable<GdbTableIdentity> tables = MapUtils.GetDistinctTables(featureLayers, out IEnumerable<GdbWorkspaceIdentity> distinctWorkspaces);
+			Dictionary<Geodatabase, List<Table>> tables = MapUtils.GetDistinctTables(featureLayers);
 
-			IEnumerable<IWorkspaceContext> workspaces = GetWorkspaceContexts(distinctWorkspaces);
-
-			IWorkItemRepository repository = new IssueItemRepository(workspaces);
-			repository.RegisterDatasets(tables.ToList());
-
-			return repository;
+			return new IssueItemRepository(tables);
 		}
 
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository)

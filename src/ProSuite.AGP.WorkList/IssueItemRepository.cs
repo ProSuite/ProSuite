@@ -3,13 +3,12 @@ using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Gdb;
-using ProSuite.DomainModel.DataModel;
 
 namespace ProSuite.AGP.WorkList
 {
 	public class IssueItemRepository : GdbItemRepository
 	{
-		public IssueItemRepository(IEnumerable<IWorkspaceContext> workspaces) : base(workspaces) { }
+		public IssueItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase) : base(tablesByGeodatabase) { }
 
 		protected override DatabaseStatusSchema CreateStatusSchemaCore()
 		{

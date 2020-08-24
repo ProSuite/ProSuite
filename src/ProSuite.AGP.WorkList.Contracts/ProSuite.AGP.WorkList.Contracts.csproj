@@ -48,7 +48,6 @@
     <Compile Include="Attributes.cs" />
     <Compile Include="DatabaseStatusSchema.cs" />
     <Compile Include="IAttributeReader.cs" />
-    <Compile Include="ISelectionItemRepository.cs" />
     <Compile Include="ISourceClass.cs" />
     <Compile Include="IWorkItem.cs" />
     <Compile Include="IWorkList.cs" />

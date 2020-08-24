@@ -6,7 +6,6 @@ using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.DataModel;
 
 namespace ProSuite.AGP.WorkList
 {
@@ -14,19 +13,16 @@ namespace ProSuite.AGP.WorkList
 	// Note maybe all SDK code, like open workspace, etc. should be in here. Not in DatabaseSourceClass for instance.
 	public abstract class GdbItemRepository : IWorkItemRepository
 	{
-		private readonly IEnumerable<IWorkspaceContext> _workspaces;
-
-		private readonly Dictionary<ISourceClass, IWorkspaceContext> _workspacesBySourceClass
-			= new Dictionary<ISourceClass, IWorkspaceContext>();
-
-		protected GdbItemRepository(IEnumerable<IWorkspaceContext> workspaces)
+		protected GdbItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase)
 		{
-			_workspaces = workspaces;
+			RegisterDatasets(tablesByGeodatabase);
 		}
+
+		public Dictionary<ISourceClass, Geodatabase> GeodatabaseBySourceClasses { get; } = new Dictionary<ISourceClass, Geodatabase>();
 
 		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true)
 		{
-			foreach (ISourceClass sourceClass in _workspacesBySourceClass.Keys)
+			foreach (ISourceClass sourceClass in GeodatabaseBySourceClasses.Keys)
 			{
 				foreach (IWorkItem workItem in GetItemsCore(sourceClass, filter, recycle))
 				{
@@ -35,51 +31,23 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		IEnumerable<ISourceClass> IWorkItemRepository.RegisterDatasets(ICollection<GdbTableIdentity> datasets)
-		{
-			return RegisterDatasetsCore(datasets);
-		}
-
 		public void Save(IWorkItem item)
 		{
 			throw new NotImplementedException();
 		}
 
-		protected IEnumerable<ISourceClass> RegisterDatasetsCore(ICollection<GdbTableIdentity> datasets)
-		{
-			foreach (IWorkspaceContext workspace in _workspaces)
-			{
-				using (Geodatabase geodatabase = workspace.OpenGeodatabase())
-				{
-					var definitions = geodatabase.GetDefinitions<FeatureClassDefinition>().ToLookup(d => d.GetName());
-					
-					foreach (GdbTableIdentity dataset in datasets.Where(d => workspace.Contains(d)))
-					{
-						// definition names should be unique
-						FeatureClassDefinition definition = definitions[dataset.Name].FirstOrDefault();
-
-						ISourceClass result = CreateSourceClass(dataset, definition);
-
-						_workspacesBySourceClass.Add(result, workspace);
-
-						yield return result;
-					}
-				}
-			}
-		}
-
 		protected virtual IEnumerable<IWorkItem> GetItemsCore([NotNull] ISourceClass sourceClass, [CanBeNull] QueryFilter filter, bool recycle)
 		{
-			FeatureClass featureClass = OpenFeatureClass(sourceClass);
+			Table table = OpenFeatureClass(sourceClass);
 
-			if (featureClass == null)
+			if (table == null)
 			{
 				yield break;
 			}
 			
 			// Todo daro: check recycle
 			foreach (Feature feature in GdbQueryUtils.GetRows<Feature>(
-				featureClass, filter, recycle))
+				table, filter, recycle))
 			{
 				yield return CreateWorkItemCore(feature, sourceClass);
 			}
@@ -102,22 +70,42 @@ namespace ProSuite.AGP.WorkList
 		                                                      [NotNull] IAttributeReader attributeReader,
 		                                                      [CanBeNull] DatabaseStatusSchema statusSchema = null);
 
+		private void RegisterDatasets(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase)
+		{
+			foreach (var pair in tablesByGeodatabase)
+			{
+				Geodatabase geodatabase = pair.Key;
+				var definitions = geodatabase.GetDefinitions<FeatureClassDefinition>().ToLookup(d => d.GetName());
+
+				foreach (Table table in pair.Value)
+				{
+					var identity = new GdbTableIdentity(table);
+
+					FeatureClassDefinition definition = definitions[identity.Name].FirstOrDefault();
+
+					ISourceClass sourceClass = CreateSourceClass(identity, definition);
+
+					GeodatabaseBySourceClasses.Add(sourceClass, geodatabase);
+				}
+			}
+		}
+
 		[CanBeNull]
-		private FeatureClass OpenFeatureClass([NotNull] ISourceClass sourceClass)
+		private Table OpenFeatureClass([NotNull] ISourceClass sourceClass)
 		{
 
-			return _workspacesBySourceClass.TryGetValue(sourceClass, out IWorkspaceContext workspace)
-				       ? workspace.OpenFeatureClass(sourceClass.Name)
+			return GeodatabaseBySourceClasses.TryGetValue(sourceClass, out Geodatabase gdb)
+				       ? gdb.OpenDataset<Table>(sourceClass.Name)
 				       : null;
 		}
 
-		private ISourceClass CreateSourceClass(GdbTableIdentity table, FeatureClassDefinition definition)
+		private ISourceClass CreateSourceClass(GdbTableIdentity identity, FeatureClassDefinition definition)
 		{
 			IAttributeReader attributeReader = CreateAttributeReaderCore(definition);
 
 			DatabaseStatusSchema statusSchema = CreateStatusSchemaCore();
 
-			ISourceClass sourceClass = CreateSourceClassCore(table, attributeReader, statusSchema);
+			ISourceClass sourceClass = CreateSourceClassCore(identity, attributeReader, statusSchema);
 
 			return sourceClass;
 		}
@@ -141,7 +129,7 @@ namespace ProSuite.AGP.WorkList
 			long oid = row.GetObjectID();
 
 			// oid = 666, tableId = 42 => 42666
-			return (int) (Math.Pow(10, Math.Floor(Math.Log10(oid) + 1)) * source.Identity.Id + oid);
+			return (int) (Math.Pow(10, Math.Floor(Math.Log10(oid) + 1)) * source.Id + oid);
 		}
 	}
 }

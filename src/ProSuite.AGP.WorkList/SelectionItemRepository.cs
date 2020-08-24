@@ -1,28 +1,44 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.DomainModel.DataModel;
 
 namespace ProSuite.AGP.WorkList
 {
-	public class SelectionItemRepository : GdbItemRepository, ISelectionItemRepository
+	public class SelectionItemRepository : GdbItemRepository
 	{
 		private readonly Dictionary<ISourceClass, List<long>> _oidsBySource =
 			new Dictionary<ISourceClass, List<long>>();
 
 		// todo daro: rafactor SelectionItemRepository(Dictionary<IWorkspaceContext, GdbTableIdentity>, Dictionary<GdbTableIdentity, List<long>>)
-		public SelectionItemRepository(
-			IEnumerable<IWorkspaceContext> workspaces) : base(workspaces) { }
-
-		void ISelectionItemRepository.RegisterDatasets(Dictionary<GdbTableIdentity, List<long>> selection)
+		public SelectionItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase,
+		                               Dictionary<Table, List<long>> selection) : base(tablesByGeodatabase)
 		{
-			foreach (ISourceClass dataset in RegisterDatasetsCore(selection.Keys))
+			foreach (var pair in selection)
 			{
-				_oidsBySource.Add(dataset, selection[dataset.Identity]);
+				Table table = pair.Key;
+				ISourceClass sourceClass = GeodatabaseBySourceClasses.Keys.FirstOrDefault(s => s.Uses(table));
+
+				if (sourceClass == null)
+				{
+					// todo daro: assert?
+					continue;
+				}
+
+				if (_oidsBySource.TryGetValue(sourceClass, out List<long> ids))
+				{
+					// todo daro: assert?
+					//			  should never be the case because values of SourceClassesByGeodatabase should be distinct
+					ids.AddRange(ids);
+				}
+				else
+				{
+					_oidsBySource.Add(sourceClass, pair.Value);
+				}
 			}
 		}
 
@@ -41,7 +57,8 @@ namespace ProSuite.AGP.WorkList
 
 		protected override ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
 		                                                      IAttributeReader attributeReader,
-		                                                      DatabaseStatusSchema statusSchema = null)
+		                                                      DatabaseStatusSchema statusSchema =
+			                                                      null)
 		{
 			return new SelectionSourceClass(identity, attributeReader);
 		}
