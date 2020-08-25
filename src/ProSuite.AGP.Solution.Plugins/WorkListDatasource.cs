@@ -1,6 +1,6 @@
 using ProSuite.AGP.WorkList.Datasource;
 
-namespace ProSuite.Solution.Plugins
+namespace ProSuite.AGP.Solution.Plugins
 {
 	public class WorkListDatasource : WorkListDatasourceBase
 	{
