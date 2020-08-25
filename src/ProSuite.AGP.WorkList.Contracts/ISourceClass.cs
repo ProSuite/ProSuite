@@ -1,4 +1,5 @@
 using ArcGIS.Core.Data;
+using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
@@ -8,6 +9,8 @@ namespace ProSuite.AGP.WorkList.Contracts
 		IAttributeReader AttributeReader { get; }
 		long Id { get; }
 
-		bool Uses(Table table);
+		bool Uses(GdbTableIdentity table);
+
+		WorkItemStatus GetStatus(Row row);
 	}
 }

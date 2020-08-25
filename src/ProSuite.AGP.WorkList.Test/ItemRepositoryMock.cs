@@ -25,12 +25,33 @@ namespace ProSuite.AGP.WorkList.Test
 			return _items;
 		}
 
-		public IEnumerable<ISourceClass> RegisterDatasets(ICollection<GdbTableIdentity> datasets)
+		public IEnumerable<IWorkItem> GetItems(GdbTableIdentity tableId, QueryFilter filter,
+		                                       bool recycle = true)
 		{
 			throw new NotImplementedException();
 		}
 
 		public void Save(IWorkItem item)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void UpdateItem(IWorkItem item)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void UpdateVolatileState(IEnumerable<IWorkItem> items)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void Commit()
+		{
+			throw new NotImplementedException();
+		}
+
+		public void Discard()
 		{
 			throw new NotImplementedException();
 		}

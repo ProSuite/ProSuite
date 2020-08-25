@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
+using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
@@ -9,6 +10,15 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true);
 
-		void Save(IWorkItem item);
+		// todo daro: extract Interface ISource
+		IEnumerable<IWorkItem> GetItems(GdbTableIdentity tableId, QueryFilter filter, bool recycle = true);
+		
+		void UpdateItem(IWorkItem item);
+
+		void UpdateVolatileState(IEnumerable<IWorkItem> items);
+
+		void Commit();
+
+		void Discard();
 	}
 }

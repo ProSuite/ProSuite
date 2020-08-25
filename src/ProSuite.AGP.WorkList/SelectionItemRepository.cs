@@ -20,8 +20,8 @@ namespace ProSuite.AGP.WorkList
 		{
 			foreach (var pair in selection)
 			{
-				Table table = pair.Key;
-				ISourceClass sourceClass = GeodatabaseBySourceClasses.Keys.FirstOrDefault(s => s.Uses(table));
+				var id = new GdbTableIdentity(pair.Key);
+				ISourceClass sourceClass = GeodatabaseBySourceClasses.Keys.FirstOrDefault(s => s.Uses(id));
 
 				if (sourceClass == null)
 				{
@@ -63,15 +63,14 @@ namespace ProSuite.AGP.WorkList
 			return new SelectionSourceClass(identity, attributeReader);
 		}
 
-		protected override IEnumerable<IWorkItem> GetItemsCore(ISourceClass sourceClass,
-		                                                       QueryFilter filter, bool recycle)
+		protected override IEnumerable<Row> GetRowsCore(ISourceClass sourceClass, QueryFilter filter, bool recycle)
 		{
 			Assert.True(_oidsBySource.TryGetValue(sourceClass, out List<long> oids),
 			            "unexpected source class");
 
 			if (filter == null)
 			{
-				filter = new QueryFilter {ObjectIDs = new ReadOnlyCollection<long>(oids)};
+				filter = new QueryFilter { ObjectIDs = new ReadOnlyCollection<long>(oids) };
 			}
 
 			if (filter is SpatialQueryFilter spatialFilter)
@@ -79,7 +78,7 @@ namespace ProSuite.AGP.WorkList
 				spatialFilter.SearchOrder = SearchOrder.Attribute;
 			}
 
-			return base.GetItemsCore(sourceClass, filter, recycle);
+			return base.GetRowsCore(sourceClass, filter, recycle);
 		}
 	}
 }

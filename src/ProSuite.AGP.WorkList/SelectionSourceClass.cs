@@ -19,9 +19,14 @@ namespace ProSuite.AGP.WorkList
 		public IAttributeReader AttributeReader { get; }
 		public long Id => _identity.Id;
 
-		public bool Uses(Table table)
+		public bool Uses(GdbTableIdentity table)
 		{
-			return _identity.Equals(new GdbTableIdentity(table));
+			return _identity.Equals(table);
+		}
+
+		public WorkItemStatus GetStatus(Row row)
+		{
+			throw new System.NotImplementedException();
 		}
 	}
 }

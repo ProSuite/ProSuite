@@ -8,11 +8,14 @@ namespace ProSuite.AGP.WorkList
 {
 	public class IssueItemRepository : GdbItemRepository
 	{
+		static readonly string _statusFieldName = "Code";
+
 		public IssueItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase) : base(tablesByGeodatabase) { }
 
-		protected override DatabaseStatusSchema CreateStatusSchemaCore()
+		protected override DatabaseStatusSchema CreateStatusSchemaCore(FeatureClassDefinition definition)
 		{
-			return new DatabaseStatusSchema("Code", 100, 200);
+			int fieldIndex = definition.FindField(_statusFieldName);
+			return new DatabaseStatusSchema(_statusFieldName, fieldIndex, 100, 200);
 		}
 
 		protected override IAttributeReader CreateAttributeReaderCore(

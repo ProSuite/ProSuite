@@ -24,9 +24,16 @@ namespace ProSuite.AGP.WorkList
 
 		public long Id => _identity.Id;
 
-		public bool Uses(Table table)
+		public bool Uses(GdbTableIdentity table)
 		{
-			return _identity.Equals(new GdbTableIdentity(table));
+			return _identity.Equals(table);
+		}
+
+		public WorkItemStatus GetStatus([NotNull] Row row)
+		{
+			object value = row[StatusSchema.FieldIndex];
+
+			return StatusSchema.DoneValue.Equals(value) ? WorkItemStatus.Done : WorkItemStatus.Todo;
 		}
 
 		public string Name => _identity.Name;

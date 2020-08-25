@@ -4,7 +4,9 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList
@@ -24,19 +26,49 @@ namespace ProSuite.AGP.WorkList
 		{
 			foreach (ISourceClass sourceClass in GeodatabaseBySourceClasses.Keys)
 			{
-				foreach (IWorkItem workItem in GetItemsCore(sourceClass, filter, recycle))
+				foreach (Row row in GetRowsCore(sourceClass, filter, recycle))
 				{
-					yield return workItem;
+					yield return CreateWorkItemCore(row, sourceClass);
 				}
 			}
+
+			// return GeodatabaseBySourceClasses.Keys.SelectMany(sourceClass => GetItemsCore(sourceClass, filter, recycle));
 		}
 
-		public void Save(IWorkItem item)
+		public IEnumerable<IWorkItem> GetItems(GdbTableIdentity tableId, QueryFilter filter, bool recycle = true)
+		{
+			foreach (ISourceClass sourceClass in GeodatabaseBySourceClasses.Keys.Where(source => source.Uses(tableId)))
+			{
+				foreach (Row row in GetRowsCore(sourceClass, filter, recycle))
+				{
+					yield return CreateWorkItemCore(row, sourceClass);
+				}
+			}
+
+			// return GeodatabaseBySourceClasses.Keys.Where(source => source.Uses(table)).SelectMany(sourceClass => GetItemsCore(sourceClass, filter, recycle));
+		}
+
+		public void UpdateItem(IWorkItem item)
+		{
+			
+		}
+
+		public void UpdateVolatileState(IEnumerable<IWorkItem> items)
 		{
 			throw new NotImplementedException();
 		}
 
-		protected virtual IEnumerable<IWorkItem> GetItemsCore([NotNull] ISourceClass sourceClass, [CanBeNull] QueryFilter filter, bool recycle)
+		public void Commit()
+		{
+			throw new NotImplementedException();
+		}
+
+		public void Discard()
+		{
+			throw new NotImplementedException();
+		}
+
+		protected virtual IEnumerable<Row> GetRowsCore([NotNull] ISourceClass sourceClass, [CanBeNull] QueryFilter filter, bool recycle)
 		{
 			Table table = OpenFeatureClass(sourceClass);
 
@@ -49,12 +81,12 @@ namespace ProSuite.AGP.WorkList
 			foreach (Feature feature in GdbQueryUtils.GetRows<Feature>(
 				table, filter, recycle))
 			{
-				yield return CreateWorkItemCore(feature, sourceClass);
+				yield return feature;
 			}
 		}
 
 		[CanBeNull]
-		protected virtual DatabaseStatusSchema CreateStatusSchemaCore()
+		protected virtual DatabaseStatusSchema CreateStatusSchemaCore(FeatureClassDefinition definition)
 		{
 			return null;
 		}
@@ -103,7 +135,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			IAttributeReader attributeReader = CreateAttributeReaderCore(definition);
 
-			DatabaseStatusSchema statusSchema = CreateStatusSchemaCore();
+			DatabaseStatusSchema statusSchema = CreateStatusSchemaCore(definition);
 
 			ISourceClass sourceClass = CreateSourceClassCore(identity, attributeReader, statusSchema);
 
