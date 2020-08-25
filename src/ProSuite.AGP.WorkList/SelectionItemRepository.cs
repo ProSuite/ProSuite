@@ -1,28 +1,44 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.DomainModel.DataModel;
 
 namespace ProSuite.AGP.WorkList
 {
-	public class SelectionItemRepository : GdbItemRepository, ISelectionItemRepository
+	public class SelectionItemRepository : GdbItemRepository
 	{
 		private readonly Dictionary<ISourceClass, List<long>> _oidsBySource =
 			new Dictionary<ISourceClass, List<long>>();
 
 		// todo daro: rafactor SelectionItemRepository(Dictionary<IWorkspaceContext, GdbTableIdentity>, Dictionary<GdbTableIdentity, List<long>>)
-		public SelectionItemRepository(
-			IEnumerable<IWorkspaceContext> workspaces) : base(workspaces) { }
-
-		void ISelectionItemRepository.RegisterDatasets(Dictionary<GdbTableIdentity, List<long>> selection)
+		public SelectionItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase,
+		                               Dictionary<Table, List<long>> selection) : base(tablesByGeodatabase)
 		{
-			foreach (ISourceClass dataset in RegisterDatasetsCore(selection.Keys))
+			foreach (var pair in selection)
 			{
-				_oidsBySource.Add(dataset, selection[dataset.Identity]);
+				var id = new GdbTableIdentity(pair.Key);
+				ISourceClass sourceClass = GeodatabaseBySourceClasses.Keys.FirstOrDefault(s => s.Uses(id));
+
+				if (sourceClass == null)
+				{
+					// todo daro: assert?
+					continue;
+				}
+
+				if (_oidsBySource.TryGetValue(sourceClass, out List<long> ids))
+				{
+					// todo daro: assert?
+					//			  should never be the case because values of SourceClassesByGeodatabase should be distinct
+					ids.AddRange(ids);
+				}
+				else
+				{
+					_oidsBySource.Add(sourceClass, pair.Value);
+				}
 			}
 		}
 
@@ -41,20 +57,20 @@ namespace ProSuite.AGP.WorkList
 
 		protected override ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
 		                                                      IAttributeReader attributeReader,
-		                                                      DatabaseStatusSchema statusSchema = null)
+		                                                      DatabaseStatusSchema statusSchema =
+			                                                      null)
 		{
 			return new SelectionSourceClass(identity, attributeReader);
 		}
 
-		protected override IEnumerable<IWorkItem> GetItemsCore(ISourceClass sourceClass,
-		                                                       QueryFilter filter, bool recycle)
+		protected override IEnumerable<Row> GetRowsCore(ISourceClass sourceClass, QueryFilter filter, bool recycle)
 		{
 			Assert.True(_oidsBySource.TryGetValue(sourceClass, out List<long> oids),
 			            "unexpected source class");
 
 			if (filter == null)
 			{
-				filter = new QueryFilter {ObjectIDs = new ReadOnlyCollection<long>(oids)};
+				filter = new QueryFilter { ObjectIDs = new ReadOnlyCollection<long>(oids) };
 			}
 
 			if (filter is SpatialQueryFilter spatialFilter)
@@ -62,7 +78,7 @@ namespace ProSuite.AGP.WorkList
 				spatialFilter.SearchOrder = SearchOrder.Attribute;
 			}
 
-			return base.GetItemsCore(sourceClass, filter, recycle);
+			return base.GetRowsCore(sourceClass, filter, recycle);
 		}
 	}
 }

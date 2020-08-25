@@ -3,6 +3,7 @@ using ArcGIS.Core.Data;
 
 namespace ProSuite.Commons.AGP.Gdb
 {
+	// todo daro: rename to TableProxy?
 	public struct GdbTableIdentity : IEquatable<GdbTableIdentity>
 	{
 		public GdbTableIdentity(Table table)
@@ -34,7 +35,7 @@ namespace ProSuite.Commons.AGP.Gdb
 			return $"tableId={Id} tableName={Name}";
 		}
 
-		#region IEquatable<GdbRowIdentity> implementation
+		#region IEquatable<GdbTableIdentity> implementation
 
 		public bool Equals(GdbTableIdentity other)
 		{

@@ -42,9 +42,7 @@
     <Compile Include="PolygonConstruction.cs" />
     <Compile Include="TestUtils.cs" />
     <Compile Include="WorkItemMock.cs" />
-    <Compile Include="WorkItemRepositoryTest.cs" />
     <Compile Include="WorkListTest.cs" />
-    <Compile Include="WorkItemTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Esri.ArcGISPro.Extensions">
@@ -71,9 +69,9 @@
       <Project>{89f2c583-3022-43f8-9b69-27123836625f}</Project>
       <Name>ProSuite.Commons.AGP</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ProSuite.DomainModel\ProSuite.DomainModel.csproj">
-      <Project>{824DDBE3-EDAF-460B-B513-386A4260C1FF}</Project>
-      <Name>ProSuite.DomainModel</Name>
+    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
+      <Project>{66e5d99b-26ab-4fff-834d-d96347df4fa4}</Project>
+      <Name>ProSuite.Commons</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
