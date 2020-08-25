@@ -13,7 +13,7 @@
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.6.1</TargetFrameworkVersion>
-    <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\..\bin</OutputDirectory>
+    <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
     <ProSuiteEncryptorFactoryDir Condition=" '$(ProSuiteEncryptorFactoryDir)' == '' ">Cryptography</ProSuiteEncryptorFactoryDir>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -35,7 +35,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.Commons.xml</DocumentationFile>
+    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.DomainModel.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
