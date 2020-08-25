@@ -111,7 +111,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			return Proxy.GetRow();
 		}
 
-		private void SetGeometryFromFeature([CanBeNull] Feature feature)
+		public void SetGeometryFromFeature([CanBeNull] Feature feature)
 		{
 			Envelope extent = GetExtent(feature);
 

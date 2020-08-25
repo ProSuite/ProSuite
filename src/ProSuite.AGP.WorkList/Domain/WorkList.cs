@@ -4,6 +4,7 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -16,7 +17,7 @@ namespace ProSuite.AGP.WorkList.Domain
 	/// </summary>
 	// todo daro: separate geometry processing code
 	// todo daro: separate QueuedTask code
-	public abstract class WorkList : IWorkList
+	public abstract class WorkList : IWorkList, IRowCache
 	{
 		private const int _initialCapacity = 1000;
 
@@ -25,6 +26,11 @@ namespace ProSuite.AGP.WorkList.Domain
 		protected IWorkItemRepository Repository { get; }
 
 		private readonly List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
+
+		[NotNull]
+		private Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
+			new Dictionary<GdbRowIdentity, IWorkItem>(_initialCapacity);
+
 		private EventHandler<WorkListChangedEventArgs> _workListChanged;
 
 		protected WorkList(IWorkItemRepository repository, string name)
@@ -40,6 +46,15 @@ namespace ProSuite.AGP.WorkList.Domain
 			foreach (IWorkItem item in Repository.GetItems())
 			{
 				_items.Add(item);
+
+				if (! _rowMap.ContainsKey(item.Proxy))
+				{
+					_rowMap.Add(item.Proxy, item);
+				}
+				else
+				{
+					// todo daro: warn
+				}
 			}
 		}
 		
@@ -327,6 +342,56 @@ namespace ProSuite.AGP.WorkList.Domain
 		private void OnWorkListChanged([CanBeNull] Envelope extent = null, [CanBeNull] List<long> oids = null)
 		{
 			_workListChanged?.Invoke(this, new WorkListChangedEventArgs(extent, oids));
+		}
+
+		public void Invalidate()
+		{
+			throw new NotImplementedException();
+		}
+
+		// todo daro: Is SDK type Table the right type?
+		public void ProcessChanges(Dictionary<Table, List<long>> inserts,
+		                           Dictionary<Table, List<long>> deletes,
+		                           Dictionary<Table, List<long>> updates)
+		{
+			foreach (var insert in inserts)
+			{
+				var tableId = new GdbTableIdentity(insert.Key);
+				List<long> oids = insert.Value;
+
+				ProcessInserts(tableId, oids);
+			}
+
+			foreach (var update in updates)
+			{
+				var tableId = new GdbTableIdentity(update.Key);
+				List<long> oids = update.Value;
+
+				ProcessUpdates(tableId, oids);
+
+				// does not work because ObjectIDs = (IReadOnlyList<long>) modify.Value (oids) are the
+				// ObjectIds of source feature not the work item OIDs.
+				//IEnumerable<IWorkItem> workItems = GetItems(filter);
+
+				//IEnumerable<IWorkItem> items = Repository.GetItems(new GdbTableIdentity(modify.Key), filter);
+			}
+		}
+
+		private void ProcessInserts(GdbTableIdentity tableId, List<long> oids)
+		{
+			var filter = new QueryFilter {ObjectIDs = oids};
+			IEnumerable<IWorkItem> items = Repository.GetItems(tableId, filter);
+		}
+
+		private void ProcessUpdates(GdbTableIdentity tableId, IEnumerable<long> oids)
+		{
+			foreach (long oid in oids)
+			{
+				if (_rowMap.TryGetValue(new GdbRowIdentity(oid, tableId), out IWorkItem item))
+				{
+					Repository.UpdateItem(item);
+				}
+			}
 		}
 	}
 }

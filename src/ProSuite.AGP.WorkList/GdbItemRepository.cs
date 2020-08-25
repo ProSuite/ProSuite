@@ -50,7 +50,22 @@ namespace ProSuite.AGP.WorkList
 
 		public void UpdateItem(IWorkItem item)
 		{
-			
+			ISourceClass sourceClass = GeodatabaseBySourceClasses.Keys.FirstOrDefault(sc => sc.Uses(item.Proxy.Table));
+			// todo daro: log message
+			Assert.NotNull(sourceClass);
+
+			var filter = new QueryFilter {ObjectIDs = new List<long> {item.Proxy.ObjectId}};
+
+			Row row = GetRowsCore(sourceClass, filter, recycle: true).FirstOrDefault();
+			// todo daro: log message
+			Assert.NotNull(row);
+
+			item.Status = sourceClass.GetStatus(row);
+
+			if (row is Feature feature)
+			{
+				((WorkItem) item).SetGeometryFromFeature(feature);
+			}
 		}
 
 		public void UpdateVolatileState(IEnumerable<IWorkItem> items)
