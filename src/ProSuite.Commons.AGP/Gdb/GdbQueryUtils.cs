@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -8,6 +9,13 @@ namespace ProSuite.Commons.AGP.Gdb
 {
 	public static class GdbQueryUtils
 	{
+		public static QueryFilter CreateFilter([NotNull] IReadOnlyList<long> oids)
+		{
+			Assert.ArgumentNotNull(oids, nameof(oids));
+
+			return new QueryFilter { ObjectIDs = oids };
+		}
+
 		[NotNull]
 		public static SpatialQueryFilter CreateSpatialFilter(
 			[NotNull] ArcGIS.Core.Geometry.Geometry filterGeometry,
