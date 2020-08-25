@@ -66,10 +66,6 @@
       <Project>{384763d9-f7a1-4aa2-9abd-ee338cd8d4c1}</Project>
       <Name>ProSuite.Commons.Essentials</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ProSuite.DomainModel\ProSuite.DomainModel.csproj">
-      <Project>{824DDBE3-EDAF-460B-B513-386A4260C1FF}</Project>
-      <Name>ProSuite.DomainModel</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Esri.ArcGISPro.Extensions">

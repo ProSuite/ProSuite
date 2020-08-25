@@ -76,7 +76,7 @@ namespace ProSuite.AGP.WorkList
 			{
 				yield break;
 			}
-			
+
 			// Todo daro: check recycle
 			foreach (Feature feature in GdbQueryUtils.GetRows<Feature>(
 				table, filter, recycle))

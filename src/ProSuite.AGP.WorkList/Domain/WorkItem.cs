@@ -85,6 +85,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		[CanBeNull]
 		public string GetDescription()
 		{
+			// todo daro: this is copied from the old world. Why not set description in constructor?
 			Row row = GetRow();
 
 			return row == null

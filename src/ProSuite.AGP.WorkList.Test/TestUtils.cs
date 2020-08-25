@@ -1,7 +1,6 @@
 using System;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using NUnit.Framework;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -48,7 +47,10 @@ namespace ProSuite.AGP.WorkList.Test
 				{
 					// delete all
 					featureClass.DeleteRows(new QueryFilter());
-					Assert.True(featureClass.GetCount() == 0);
+					if (featureClass.GetCount() != 0)
+					{
+						throw new InvalidOperationException();
+					}
 				}
 			}
 		}

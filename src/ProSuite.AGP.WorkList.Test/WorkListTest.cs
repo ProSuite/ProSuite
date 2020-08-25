@@ -9,7 +9,6 @@ using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Gdb;
-using ProSuite.DomainModel.DataModel;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -29,7 +28,7 @@ namespace ProSuite.AGP.WorkList.Test
 		{
 			// Host must be initialized on an STA thread:
 			//Host.Initialize();
-			ProSuite.Commons.AGP.Hosting.CoreHostProxy.Initialize();
+			Commons.AGP.Hosting.CoreHostProxy.Initialize();
 		}
 
 		private string _emptyIssuesGdb = @"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\issues_empty.gdb";

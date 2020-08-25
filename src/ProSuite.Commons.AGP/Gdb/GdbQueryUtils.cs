@@ -14,6 +14,8 @@ namespace ProSuite.Commons.AGP.Gdb
 			SpatialRelationship spatialRelationship = SpatialRelationship.Intersects,
 			SearchOrder searchOrder = SearchOrder.Spatial)
 		{
+			Assert.ArgumentNotNull(filterGeometry, nameof(filterGeometry));
+
 			return new SpatialQueryFilter
 			       {
 				       FilterGeometry = filterGeometry,
@@ -65,10 +67,12 @@ namespace ProSuite.Commons.AGP.Gdb
 					return null;
 				}
 
+				Row result = cursor.Current;
+
 				// todo daro: remove later when GetRow is used intensively throughout the solution
 				Assert.False(cursor.MoveNext(), "more than one row found");
 
-				return cursor.Current;
+				return result;
 			}
 		}
 
