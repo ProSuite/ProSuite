@@ -26,11 +26,21 @@ namespace ProSuite.AGP.Editing.OneClick
 {
 	public abstract class OneClickToolBase : MapTool
 	{
-		
+		private const Key _keyShowOptionsPane = Key.O;
+
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-		private const Key _keyShowOptionsPane = Key.O;
+		protected OneClickToolBase()
+		{
+			SelectionSettings = new SelectionSettings();
+			SketchOutputMode = SelectionSettings.SketchOutputMode;
+			SketchType = SelectionSettings.SketchGeometryType;
+			UseSnapping = false;
+
+			HandledKeys.Add(Key.Escape);
+			HandledKeys.Add(_keyShowOptionsPane);
+		}
 
 		protected bool RequiresSelection { get; set; } = true;
 
@@ -40,17 +50,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected Cursor SelectionCursor { get; set; }
 		protected Cursor SelectionCursorShift { get; set; }
-
-		protected OneClickToolBase()
-		{
-			//SketchOutputMode = SketchOutputMode.Screen;
-			SelectionSettings = new SelectionSettings(SketchGeometryType.Rectangle);
-			//SketchType = SketchGeometryType.Rectangle;
-			UseSnapping = false;
-
-			HandledKeys.Add(Key.Escape);
-			HandledKeys.Add(_keyShowOptionsPane);
-		}
 
 		protected override Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
@@ -293,45 +292,68 @@ namespace ProSuite.AGP.Editing.OneClick
 			CancelableProgressor progressor)
 		{
 			//3D views only support selecting features interactively using geometry in screen coordinates relative to the top-left corner of the view.
-
-			//TODO STS buffer sketch geometry if selectionSettings.PixelTolerance is set
-			if (SelectionSettings.SketchOutputMode == SketchOutputMode.Map)
-			{
-				sketchGeometry =
-					MapUtils.ToScreenGeometry(MapView.Active, (Polygon)sketchGeometry);
-			}
-
-			Geometry selectionGeometry;
+			
+						Geometry selectionGeometry;
 			if (sketchGeometry.Extent.Width > 0 || sketchGeometry.Extent.Height > 0)
 			{
-				// it seems that screen coordinates are fine!
-				selectionGeometry = sketchGeometry;
+				selectionGeometry = BufferGeometryByPixels(sketchGeometry, SelectionSettings.SelectionTolerancePixels);
 			}
 			else
 			{
-				// it seems the Polygon is rather a 'map point'. it needs to be buffered with a pixel tolerance
-				selectionGeometry =
-					new Coordinate2D(sketchGeometry.Extent.XMin, sketchGeometry.Extent.YMin)
-						.ToMapPoint();
+				//TODO STS is it necessary to set a different tolerance for points?
+				// it seems the Polygon is rather a 'map point'. it needs to be buffered with the pointPixelTolerance
+				selectionGeometry = BufferGeometryByPixels(sketchGeometry, SelectionSettings.PointBufferInPixels);
 			}
 
 			// TODO: Add Utils method to KeyboardUtils to do it in the WPF way
-			SelectionCombinationMethod selectionMethod = KeyboardUtils.IsModifierPressed(Keys.Shift)
-				                                             ? SelectionCombinationMethod.XOR
-				                                             : SelectionCombinationMethod.New;
+			SelectionCombinationMethod selectionMethod =
+				KeyboardUtils.IsModifierPressed(Keys.Shift)
+					? SelectionCombinationMethod.XOR
+					: SelectionCombinationMethod.New;
 
-			bool visualIntersect = SketchOutputMode == SketchOutputMode.Screen;
+			//bool visualIntersect = SketchOutputMode == SketchOutputMode.Screen;
 
 			// TODO: cycle through the layers, check whether the ShapeType of the layer can be selected,
 			//       get the intersecting features with a search cursor, check whether each feature can 
 			//       be selected and if there are still several, bring up a picker dialog (if single selection is required)
-			Dictionary<BasicFeatureLayer, List<long>> selection = ActiveMapView.SelectFeatures(
-				selectionGeometry, selectionMethod);
+
+			var featuresPerLayer = new Dictionary<BasicFeatureLayer, List<long>>();
+
+			foreach (BasicFeatureLayer layer in MapView.Active.Map.Layers.OfType<BasicFeatureLayer>())
+			{
+				if (CanSelectFromLayer(layer))
+				{
+					IEnumerable<Feature> features =
+						MapUtils.FilterFeaturesByGeometry(
+							layer, selectionGeometry,
+							SelectionSettings.SpatialRelationship);
+					IEnumerable<long> oids = MapUtils.GetFeaturesOidList(features);
+					if (oids.Any())
+					{
+						featuresPerLayer.Add(layer, oids.ToList());
+					}
+				}
+			}
+
+			if (featuresPerLayer.Count > 1)
+			{
+				
+			}
+
+			//Dictionary<BasicFeatureLayer, List<long>> selection = ActiveMapView.SelectFeatures(selectionGeometry, selectionMethod);
 
 			ProcessSelection(SelectionUtils.GetSelectedFeatures(ActiveMapView), progressor);
 
 			// else: feedback to the user to keep selecting
 			return true;
+		}
+
+		private Geometry BufferGeometryByPixels(Geometry sketchGeometry, int pixelBufferDistance)
+		{
+			double bufferDistance = MapUtils.ConvertScreenPixelToMapLength(pixelBufferDistance);
+			Geometry selectionGeometry =
+				GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
+			return selectionGeometry;
 		}
 
 		protected virtual bool IsInSelectionPhase()
@@ -411,6 +433,28 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				Cursor = cursor;
 			}
+		}
+
+		private bool CanSelectFromLayer(Layer layer)
+		{
+			var featureLayer = layer as FeatureLayer;
+
+			if (featureLayer == null)
+			{
+				return false;
+			}
+
+			if (! featureLayer.IsSelectable)
+			{
+				return false;
+			}
+
+			return featureLayer.GetFeatureClass() != null && CanSelectFromLayerCore(featureLayer);
+		}
+
+		protected virtual bool CanSelectFromLayerCore([NotNull] FeatureLayer featureLayer)
+		{
+			return true;
 		}
 	}
 }

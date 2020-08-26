@@ -4,8 +4,10 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing.Selection
@@ -42,6 +44,12 @@ namespace ProSuite.AGP.Editing.Selection
 			_msg.InfoFormat("Select features by clicking or dragging a box");
 		}
 
-		
+		protected override void OnToolKeyDown(MapViewKeyEventArgs k)
+		{
+			if (k.Key == Key.LeftAlt || k.Key == Key.RightAlt)
+			{
+				
+			}
+		}
 	}
 }
