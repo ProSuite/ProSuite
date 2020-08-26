@@ -50,6 +50,7 @@
     <Compile Include="CIM\CimFeatureWorkspaceReference.cs" />
     <Compile Include="Framework\QueuedTaskUtils.cs" />
     <Compile Include="Gdb\DatasetUtils.cs" />
+    <Compile Include="Gdb\GdbObjectUtils.cs" />
     <Compile Include="Gdb\GdbQueryUtils.cs" />
     <Compile Include="Gdb\GdbRowIdentity.cs" />
     <Compile Include="Gdb\GdbTableIdentity.cs" />

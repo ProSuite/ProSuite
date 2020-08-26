@@ -48,8 +48,11 @@
     </Compile>
     <Compile Include="DatabaseSourceClass.cs" />
     <Compile Include="Domain\AttributeReader.cs" />
+    <Compile Include="Domain\InvolvedTable.cs" />
     <Compile Include="Domain\IssueItem.cs" />
     <Compile Include="Domain\IssueWorkList.cs" />
+    <Compile Include="Domain\OIDRowReference.cs" />
+    <Compile Include="Domain\RowReference.cs" />
     <Compile Include="Domain\SelectionWorkList.cs" />
     <Compile Include="Domain\WorkList.cs" />
     <Compile Include="Domain\WorkListRegistry.cs" />
