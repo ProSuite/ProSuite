@@ -188,6 +188,7 @@ namespace ProSuite.Commons.AGP.Carto
 				         SpatialRelationship = spatialRelationship
 			         };
 			var features = new List<Feature>();
+
 			using (RowCursor rowCursor = layer.Search(qf))
 			{
 				while (rowCursor.MoveNext())
@@ -223,7 +224,7 @@ namespace ProSuite.Commons.AGP.Carto
 			             };
 			Polyline polyline =
 				PolylineBuilder.CreatePolyline(points, MapView.Active.Map.SpatialReference);
-			return polyline.Length;
+			return polyline.Extent.Width;
 		}
 
 		public static bool HasSelection(BasicFeatureLayer featureLayer)

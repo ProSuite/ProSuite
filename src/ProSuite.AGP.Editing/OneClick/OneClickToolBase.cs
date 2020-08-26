@@ -287,13 +287,25 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.FromResult(true);
 		}
 
+		protected override async void OnToolDoubleClick(MapViewMouseButtonEventArgs e)
+		{
+			MapPoint clickPoint = await QueuedTask.Run(() =>
+			{
+
+				return MapView.Active.ClientToMap(e.ClientPoint);
+			});
+				
+			await OnSketchCompleteAsync(clickPoint);
+		}
+
 		private bool OnSelectionSketchComplete(
 			Geometry sketchGeometry,
 			CancelableProgressor progressor)
 		{
 			//3D views only support selecting features interactively using geometry in screen coordinates relative to the top-left corner of the view.
 			
-						Geometry selectionGeometry;
+			Geometry selectionGeometry;
+
 			if (sketchGeometry.Extent.Width > 0 || sketchGeometry.Extent.Height > 0)
 			{
 				selectionGeometry = BufferGeometryByPixels(sketchGeometry, SelectionSettings.SelectionTolerancePixels);
@@ -302,6 +314,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				//TODO STS is it necessary to set a different tolerance for points?
 				// it seems the Polygon is rather a 'map point'. it needs to be buffered with the pointPixelTolerance
+				
 				selectionGeometry = BufferGeometryByPixels(sketchGeometry, SelectionSettings.PointBufferInPixels);
 			}
 
