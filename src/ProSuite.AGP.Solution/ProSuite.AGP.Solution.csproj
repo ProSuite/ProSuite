@@ -15,6 +15,7 @@
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
     <ProNuGetVersion Condition=" '$(ProNuGetVersion)' == '' ">2.6</ProNuGetVersion>
+    <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">..\..\..\EsriDE.Commons\lib\ESRI\ProSDK\2.6</ProAssemblyPath>
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
     <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">..\..\..\EsriDE.Commons\lib\ESRI\ProSDK\2.6</ProAssemblyPath>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
