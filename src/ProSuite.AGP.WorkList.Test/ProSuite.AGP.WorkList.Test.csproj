@@ -10,7 +10,7 @@
     <RootNamespace>ProSuite.AGP.WorkList.Test</RootNamespace>
     <AssemblyName>ProSuite.AGP.WorkList.Test</AssemblyName>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.6.1</TargetFrameworkVersion>
-    <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
+    <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\..\bin</OutputDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -31,6 +31,9 @@
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ArcGIS.CoreHost">
+      <HintPath>C:\Program Files\ArcGIS\Pro\bin\ArcGIS.CoreHost.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
@@ -61,10 +64,6 @@
     <ProjectReference Include="..\ProSuite.AGP.WorkList\ProSuite.AGP.WorkList.csproj">
       <Project>{2EFE37C6-29A4-4E51-8C9F-D7B895F9CE6D}</Project>
       <Name>ProSuite.AGP.WorkList</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.AGP.Hosting\ProSuite.Commons.AGP.Hosting.csproj">
-      <Project>{d6540148-8790-4c77-8a65-518bd10487d7}</Project>
-      <Name>ProSuite.Commons.AGP.Hosting</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">
       <Project>{89f2c583-3022-43f8-9b69-27123836625f}</Project>
