@@ -59,6 +59,7 @@
     <Compile Include="EditEventsRowCacheSynchronizer.cs" />
     <Compile Include="IssueItemRepository.cs" />
     <Compile Include="GdbItemRepository.cs" />
+    <Compile Include="IssueWorkListDefinition.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SelectionItem.cs" />
     <Compile Include="SelectionItemRepository.cs" />

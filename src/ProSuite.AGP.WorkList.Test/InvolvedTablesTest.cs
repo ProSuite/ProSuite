@@ -31,7 +31,18 @@ namespace ProSuite.AGP.WorkList.Test
 		[Test]
 		public void InvolvedTablesParsingTest()
 		{
-			Assert.AreEqual(2, 2);
+			var issueGdbPath = @"c:\log5\PROSUITE_QA_XmlBasedVerificationTool_20200617_155928\issues.gdb";
+			var issueFeatureClass = "IssuePolygons";
+
+			var issueDefinition = new IssueWorkListDefinition()
+			                      {
+									  FgdbPath = issueGdbPath,
+									  Path = "",
+									  VisitedItems = { }
+			};
+
+			var issueRepository = new IssuePolygonsGdbRepository(issueDefinition, issueFeatureClass);
+			var issues = issueRepository.GetAll();
 
 			Assert.AreEqual(1, 1);
 		}

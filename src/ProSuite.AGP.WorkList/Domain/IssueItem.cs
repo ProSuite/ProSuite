@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -39,5 +40,6 @@ namespace ProSuite.AGP.WorkList.Domain
 				OnPropertyChanged();
 			}
 		}
+		public IList<InvolvedTable> InIssueInvolvedTables { get; set; }
 	}
 }

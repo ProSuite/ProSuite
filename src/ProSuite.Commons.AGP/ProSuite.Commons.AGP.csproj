@@ -37,6 +37,7 @@
     <Reference Include="PresentationCore" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
@@ -58,6 +59,9 @@
     <Compile Include="Gdb\GdbWorkspaceIdentity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Spatial\GeometryUtils.cs" />
+    <Compile Include="Storage\GdbRepository.cs" />
+    <Compile Include="Storage\IRepository.cs" />
+    <Compile Include="Storage\XmlRepository.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Esri.ArcGISPro.Extensions">
