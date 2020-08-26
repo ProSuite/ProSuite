@@ -1,83 +1,75 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Core.Internal.CIM;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using Point = System.Windows.Point;
-using Polygon = ArcGIS.Core.Geometry.Polygon;
-using Polyline = ArcGIS.Core.Geometry.Polyline;
-using QueryFilter = ArcGIS.Core.Data.QueryFilter;
 
 namespace ProSuite.Commons.AGP.Carto
 {
-	// todo daro: refactor common lines of code
 	public static class MapUtils
 	{
 		[NotNull]
-		public static Dictionary<GdbTableIdentity, List<long>> GetDistinctSelectionByTable(
-			[NotNull] IEnumerable<BasicFeatureLayer> layers,
-			out IEnumerable<GdbWorkspaceIdentity> distinctWorkspaces)
+		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
+			[NotNull] IEnumerable<BasicFeatureLayer> layers)
 		{
-			var workspaces = new SimpleSet<GdbWorkspaceIdentity>();
-			var selectionByTable = new Dictionary<GdbTableIdentity, SimpleSet<long>>();
+			var result = new Dictionary<Table, SimpleSet<long>>();
+			var distinctTableIds = new Dictionary<GdbTableIdentity, Table>();
 
 			foreach (BasicFeatureLayer layer in layers.Where(HasSelection))
 			{
 				IReadOnlyList<long> selection = layer.GetSelection().GetObjectIDs();
 
-				GdbTableIdentity table = GetTableIdentity(layer);
+				Table table = layer.GetTable();
+				var tableId = new GdbTableIdentity(table);
 
-				if (selectionByTable.TryGetValue(table, out SimpleSet<long> objectIDs))
+				if (! distinctTableIds.ContainsKey(tableId))
 				{
-					foreach (long oid in selection)
-					{
-						objectIDs.TryAdd(oid);
-					}
+					distinctTableIds.Add(tableId, table);
+					result.Add(table, new SimpleSet<long>(selection));
 				}
 				else
 				{
-					selectionByTable.Add(table, new SimpleSet<long>(selection));
+					Table distinctTable = distinctTableIds[tableId];
+
+					SimpleSet<long> ids = result[distinctTable];
+					foreach (long id in selection)
+					{
+						ids.TryAdd(id);
+					}
 				}
-
-				workspaces.TryAdd(table.Workspace);
 			}
 
-			distinctWorkspaces = workspaces.AsEnumerable();
-			return selectionByTable.ToDictionary(p => p.Key, p => p.Value.ToList());
+			return result.ToDictionary(pair => pair.Key, pair => pair.Value.ToList());
 		}
 
-		public static IEnumerable<GdbTableIdentity> GetDistinctTables(
-			[NotNull] IEnumerable<BasicFeatureLayer> layers,
-			out IEnumerable<GdbWorkspaceIdentity> distinctWorkspaces)
+		public static Dictionary<Geodatabase, List<Table>> GetDistinctTables(
+			[NotNull] IEnumerable<BasicFeatureLayer> layers)
 		{
-			var workspaces = new SimpleSet<GdbWorkspaceIdentity>();
-			var tables = new SimpleSet<GdbTableIdentity>();
+			var result = new Dictionary<Geodatabase, SimpleSet<Table>>();
 
-			foreach (GdbTableIdentity table in layers.Select(GetTableIdentity))
+			foreach (Table table in layers.Select(layer => layer.GetTable()).Distinct())
 			{
-				tables.TryAdd(table);
-				workspaces.TryAdd(table.Workspace);
+				var geodatabase = (Geodatabase) table.GetDatastore();
+
+				if (! result.ContainsKey(geodatabase))
+				{
+					result.Add(geodatabase, new SimpleSet<Table> {table});
+				}
+				else
+				{
+					result[geodatabase].TryAdd(table);
+				}
 			}
 
-			distinctWorkspaces = workspaces.AsEnumerable();
-			return tables.ToList();
+			return result.ToDictionary(pair => pair.Key, pair => pair.Value.ToList());
 		}
 
-		public static GdbTableIdentity GetTableIdentity(IDisplayTable layer)
-		{
-			using (Table table = layer.GetTable())
-			{
-				return new GdbTableIdentity(table);
-			}
-		}
-
-		public static IEnumerable<Feature> GetFeatures(
-			Dictionary<MapMember, List<long>> oidsByMapMembers)
+		public static IEnumerable<Feature> GetFeatures(Dictionary<MapMember, List<long>> oidsByMapMembers)
 		{
 			foreach (var oidsByMapMember in oidsByMapMembers)
 			{
@@ -85,8 +77,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 				if (featureLayer == null) continue;
 
-				foreach (var feature in GetFeatures(featureLayer, oidsByMapMember.Value))
-					yield return feature;
+				foreach (var feature in GetFeatures(featureLayer, oidsByMapMember.Value)) yield return feature;
 			}
 		}
 
@@ -97,15 +88,15 @@ namespace ProSuite.Commons.AGP.Carto
 			foreach (var feature in GetFeatures(selectionByLayer))
 				yield return feature;
 		}
-
-		public static IEnumerable<Feature> GetFeatures(
-			KeyValuePair<BasicFeatureLayer, List<long>> layerOids)
+		
+		public static IEnumerable<Feature> GetFeatures(KeyValuePair<BasicFeatureLayer, List<long>> layerOids)
 		{
 			var layer = layerOids.Key;
 
 			foreach (var feature in GetFeatures(layer, layerOids.Value)) yield return feature;
 		}
 
+		
 		private static IEnumerable<Feature> GetFeatures(BasicFeatureLayer layer, List<long> oids,
 		                                                bool recycling = false)
 		{
@@ -130,12 +121,11 @@ namespace ProSuite.Commons.AGP.Carto
 			//	yield return inspector.;
 			//}
 
-			foreach (var feature in GdbQueryUtils.GetFeatures(featureClass, filter, recycling))
-				yield return feature;
+			foreach (var feature in GdbQueryUtils.GetFeatures(featureClass, filter, recycling)) yield return feature;
 		}
 
 		public static ArcGIS.Core.Geometry.Geometry ToMapGeometry(MapView mapView,
-			Polygon screenGeometry)
+		                                                          Polygon screenGeometry)
 		{
 			// TODO: ensure single-part, linear segments
 
@@ -184,175 +174,16 @@ namespace ProSuite.Commons.AGP.Carto
 
 			return MapPointBuilder.CreateMapPoint(new Coordinate2D(clientPoint.X, clientPoint.Y));
 		}
-
-		/// <summary>
-		/// Returns features filtered by spatial relationship. Honors definition queries on the layer. 
-		/// </summary>
-		public static IEnumerable<Feature> FilterFeaturesByGeometry(
-			BasicFeatureLayer layer, ArcGIS.Core.Geometry.Geometry filterGeometry, SpatialRelationship spatialRelationship = SpatialRelationship.Intersects)
-		{
-			SpatialQueryFilter qf = new SpatialQueryFilter()
-			                        {
-				                        FilterGeometry = filterGeometry,
-										SpatialRelationship = spatialRelationship
-			                        };
-			List<Feature> features = new List<Feature>();
-			using (var rowCursor = layer.Search(qf))
-			{
-				while (rowCursor.MoveNext())
-				{
-					features.Add((Feature) rowCursor.Current);
-				}
-			}
-			return features;
-		}
-
-		public static IEnumerable<long> GetFeaturesOidList(IEnumerable<Feature> features)
-		{
-			foreach (var feature in features)
-			{
-				yield return feature.GetObjectID();
-			}
-		}
-
-		//public static List<long> GetFeaturesOidList(IEnumerable<Feature> features)
-		//{
-		//	List<long> oids = new List<long>();
-		//	foreach (var feature in features)
-		//	{
-		//		oids.Add(feature.GetObjectID());
-		//	}
-
-		//	return oids;
-		//}
-
-		public static double ConvertScreenPixelToMapLength(int pixels)
-		{
-			var centerMapPoint = MapView.Active.Extent.Center;
-			var centerScreenPoint = MapView.Active.MapToScreen(centerMapPoint);
-			var distancePoint = new Point()
-			                    {
-									X = centerScreenPoint.X + pixels,
-									Y = centerScreenPoint.Y
-			                    };
-			List<MapPoint> points = new List<MapPoint>()
-			                        {
-										centerMapPoint,
-										MapView.Active.ClientToMap(distancePoint)
-			                        };
-			var polyline =
-				PolylineBuilder.CreatePolyline(points, MapView.Active.Map.SpatialReference);
-			return polyline.Length;
-		}
-
-		#region unused
-
-		public static Dictionary<GdbWorkspaceIdentity, HashSet<GdbTableIdentity>>
-			GeDistinctTablesByWorkspace(IEnumerable<GdbTableIdentity> tables)
-		{
-			var result = new Dictionary<GdbWorkspaceIdentity, HashSet<GdbTableIdentity>>();
-
-			foreach (GdbTableIdentity table in tables)
-			{
-				if (result.TryGetValue(table.Workspace,
-				                       out HashSet<GdbTableIdentity> distinctTables))
-				{
-					if (! distinctTables.Contains(table))
-					{
-						distinctTables.Add(table);
-					}
-				}
-				else
-				{
-					result.Add(table.Workspace, new HashSet<GdbTableIdentity> {table});
-				}
-			}
-
-			return result;
-		}
-
-		public static Dictionary<MapMember, HashSet<long>> GetDistinctSelectionByTable(
-			IEnumerable<KeyValuePair<MapMember, List<long>>> oidsByMapMember)
-		{
-			var distinctProxys = new SimpleSet<GdbTableIdentity>();
-
-			var result = new Dictionary<MapMember, HashSet<long>>();
-
-			foreach (KeyValuePair<MapMember, List<long>> pair in oidsByMapMember)
-			{
-				MapMember mapMember = pair.Key;
-				List<long> selectedFeatures = pair.Value;
-
-				if (! (mapMember is BasicFeatureLayer basicFeatureLayer))
-				{
-					continue;
-				}
-
-				using (Table table = basicFeatureLayer.GetTable())
-				{
-					var proxy = new GdbTableIdentity(table);
-
-					if (distinctProxys.Contains(proxy))
-					{
-						HashSet<long> oids = result[mapMember];
-
-						foreach (long oid in selectedFeatures)
-						{
-							if (! oids.Contains(oid))
-							{
-								oids.Add(oid);
-							}
-						}
-					}
-					else
-					{
-						distinctProxys.Add(proxy);
-						result.Add(mapMember, selectedFeatures.ToHashSet());
-					}
-				}
-			}
-
-			return result;
-		}
-
-		// todo daro: out IEnumerable<IWorkspaceContext> workspaces?
-		[NotNull]
-		public static Dictionary<GdbTableIdentity, IEnumerable<long>> GetDistinctSelectionByTable(
-			[NotNull] IEnumerable<BasicFeatureLayer> layers)
-		{
-			var result = new Dictionary<GdbTableIdentity, HashSet<long>>();
-
-			foreach (BasicFeatureLayer featureLayer in layers.Where(HasSelection))
-			{
-				IReadOnlyList<long> selectedFeatures = featureLayer.GetSelection().GetObjectIDs();
-
-				using (Table table = featureLayer.GetTable())
-				{
-					var proxy = new GdbTableIdentity(table);
-
-					if (result.TryGetValue(proxy, out HashSet<long> oids))
-					{
-						foreach (long oid in selectedFeatures)
-						{
-							if (! oids.Contains(oid))
-							{
-								oids.Add(oid);
-							}
-						}
-					}
-					else
-					{
-						result.Add(proxy, selectedFeatures.ToHashSet());
-					}
-				}
-			}
-
-			return result.ToDictionary(pair => pair.Key, pair => pair.Value.AsEnumerable());
-		}
-
+		
 		public static bool HasSelection(BasicFeatureLayer featureLayer)
 		{
 			return featureLayer.SelectionCount > 0;
+		}
+		
+		public static IEnumerable<Table> Distinct(
+			this IEnumerable<Table> tables)
+		{
+			return tables.Distinct(new TableComparer());
 		}
 
 		public static IEnumerable<BasicFeatureLayer> Distinct(
@@ -360,27 +191,33 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			return layers.Distinct(new BasicFeatureLayerComparer());
 		}
+	}
 
-		public static IEnumerable<GdbWorkspaceIdentity> GetDistinctWorkspaceProxys(
-			IEnumerable<BasicFeatureLayer> layers)
+	public class TableComparer : IEqualityComparer<Table>
+	{
+		public bool Equals(Table x, Table y)
 		{
-			var result = new SimpleSet<GdbWorkspaceIdentity>();
-
-			foreach (BasicFeatureLayer layer in layers)
+			if (ReferenceEquals(x, y))
 			{
-				using (Table table = layer.GetTable())
-				{
-					using (Datastore datastore = table.GetDatastore())
-					{
-						result.TryAdd(new GdbWorkspaceIdentity(datastore));
-					}
-				}
+				// both null or reference equal
+				return true;
 			}
 
-			return result.AsEnumerable();
+			if (x == null || y == null)
+			{
+				return false;
+			}
+
+			var left = new GdbTableIdentity(x);
+			var right = new GdbTableIdentity(y);
+
+			return Equals(left, right);
 		}
 
-		#endregion
+		public int GetHashCode(Table obj)
+		{
+			return new GdbTableIdentity(obj).GetHashCode();
+		}
 	}
 
 	public class BasicFeatureLayerComparer : IEqualityComparer<BasicFeatureLayer>
@@ -406,7 +243,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public int GetHashCode(BasicFeatureLayer obj)
 		{
-			return obj.GetHashCode();
+			return new GdbTableIdentity(obj.GetTable()).GetHashCode();
 		}
 	}
 }

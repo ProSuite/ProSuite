@@ -1,11 +1,10 @@
 using System.Collections.Generic;
 using System.Linq;
+using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Carto;
-using ProSuite.Commons.AGP.Gdb;
-using ProSuite.DomainModel.DataModel;
 
 namespace Clients.AGP.ProSuiteSolution.WorkLists
 {
@@ -45,16 +44,12 @@ namespace Clients.AGP.ProSuiteSolution.WorkLists
 
 		protected override IWorkItemRepository CreateRepositoryCore(IEnumerable<BasicFeatureLayer> featureLayers)
 		{
-			// todo daro: refactor!!!
-			Dictionary<GdbTableIdentity, List<long>> selectionByTable = MapUtils.GetDistinctSelectionByTable(featureLayers, out IEnumerable<GdbWorkspaceIdentity> distinctWorkspaces);
+			List<BasicFeatureLayer> layers = featureLayers.ToList();
 
-			IEnumerable<IWorkspaceContext> workspaces = GetWorkspaceContexts(distinctWorkspaces);
+			Dictionary<Geodatabase, List<Table>> tables = MapUtils.GetDistinctTables(layers);
+			Dictionary<Table, List<long>> selection = MapUtils.GetDistinctSelectionByTable(layers);
 
-			// todo daro: rafactor SelectionItemRepository(Dictionary<IWorkspaceContext, GdbTableIdentity>, Dictionary<GdbTableIdentity, List<long>>)
-			ISelectionItemRepository repository = new SelectionItemRepository(workspaces);
-			repository.RegisterDatasets(selectionByTable);
-
-			return repository;
+			return new SelectionItemRepository(tables, selection);
 		}
 
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository)

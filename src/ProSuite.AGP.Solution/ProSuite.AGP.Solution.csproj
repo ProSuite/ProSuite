@@ -13,7 +13,9 @@
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
+    <ProNuGetVersion Condition=" '$(ProNuGetVersion)' == '' ">2.6</ProNuGetVersion>
+    <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">..\..\..\EsriDE.Commons\lib\ESRI\ProSDK\2.6</ProAssemblyPath>
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
   </PropertyGroup>
@@ -46,7 +48,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ArcGIS.Desktop.Resources">
-      <HintPath>..\..\..\..\lib\ArcGIS.Desktop.Resources.dll</HintPath>
+      <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Desktop.Resources.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -255,7 +257,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Esri.ArcGISPro.Extensions">
-      <Version>2.5.0.22081</Version>
+      <Version>$(ProNuGetVersion)</Version>
     </PackageReference>
     <PackageReference Include="JetBrains.Annotations">
       <Version>2020.1.0</Version>

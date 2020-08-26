@@ -9,7 +9,6 @@ using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Gdb;
-using ProSuite.DomainModel.DataModel;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -29,7 +28,7 @@ namespace ProSuite.AGP.WorkList.Test
 		{
 			// Host must be initialized on an STA thread:
 			//Host.Initialize();
-			ProSuite.Commons.AGP.Hosting.CoreHostProxy.Initialize();
+			Commons.AGP.Hosting.CoreHostProxy.Initialize();
 		}
 
 		private string _emptyIssuesGdb = @"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\issues_empty.gdb";
@@ -97,17 +96,14 @@ namespace ProSuite.AGP.WorkList.Test
 				var uri = new Uri(_emptyIssuesGdb, UriKind.Absolute);
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
-				var workspaceReference = new GdbWorkspaceIdentity(geodatabase);
-				IWorkItemRepository repository = new IssueItemRepository(new List<IWorkspaceContext>
-				                                         {
-					                                         new WorkspaceContext(workspaceReference)
-				                                         });
 
-				repository.RegisterDatasets(new List<GdbTableIdentity>
-				                            {
-					                            new GdbTableIdentity(
-						                            _featureClassName, 42, workspaceReference)
-				                            });
+				var table = geodatabase.OpenDataset<Table>(_featureClassName);
+				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase = new Dictionary<Geodatabase, List<Table>>
+					{
+						{geodatabase, new List<Table> {table}}
+					};
+
+				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase);
 
 				IWorkList workList = new MemoryQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -147,17 +143,13 @@ namespace ProSuite.AGP.WorkList.Test
 				var uri = new Uri(_emptyIssuesGdb, UriKind.Absolute);
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
-				var workspaceReference = new GdbWorkspaceIdentity(geodatabase);
-				IWorkItemRepository repository = new IssueItemRepository(new List<IWorkspaceContext>
-				                                         {
-					                                         new WorkspaceContext(workspaceReference)
-				                                         });
+				var table = geodatabase.OpenDataset<Table>(_featureClassName);
+				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase = new Dictionary<Geodatabase, List<Table>>
+				                                                           {
+					                                                           {geodatabase, new List<Table> {table}}
+				                                                           };
 
-				repository.RegisterDatasets(new List<GdbTableIdentity>
-				                            {
-					                            new GdbTableIdentity(
-						                            _featureClassName, 42, workspaceReference)
-				                            });
+				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase);
 
 				IWorkList workList = new MemoryQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -205,17 +197,14 @@ namespace ProSuite.AGP.WorkList.Test
 				var uri = new Uri(_emptyIssuesGdb, UriKind.Absolute);
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
-				var workspaceReference = new GdbWorkspaceIdentity(geodatabase);
-				IWorkItemRepository repository = new IssueItemRepository(new List<IWorkspaceContext>
-				                                         {
-					                                         new WorkspaceContext(workspaceReference)
-				                                         });
 
-				repository.RegisterDatasets(new List<GdbTableIdentity>
-				                            {
-					                            new GdbTableIdentity(
-						                            _featureClassName, 42, workspaceReference)
-				                            });
+				var table = geodatabase.OpenDataset<Table>(_featureClassName);
+				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase = new Dictionary<Geodatabase, List<Table>>
+				                                                           {
+					                                                           {geodatabase, new List<Table> {table}}
+				                                                           };
+
+				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase);
 
 				IWorkList workList = new GdbQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -256,17 +245,13 @@ namespace ProSuite.AGP.WorkList.Test
 				var uri = new Uri(_emptyIssuesGdb, UriKind.Absolute);
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
-				var workspaceReference = new GdbWorkspaceIdentity(geodatabase);
-				IWorkItemRepository repository = new IssueItemRepository(new List<IWorkspaceContext>
-				                                         {
-					                                         new WorkspaceContext(workspaceReference)
-				                                         });
+				var table = geodatabase.OpenDataset<Table>(_featureClassName);
+				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase = new Dictionary<Geodatabase, List<Table>>
+				                                                           {
+					                                                           {geodatabase, new List<Table> {table}}
+				                                                           };
 
-				repository.RegisterDatasets(new List<GdbTableIdentity>
-				                            {
-					                            new GdbTableIdentity(
-						                            _featureClassName, 42, workspaceReference)
-				                            });
+				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase);
 
 				IWorkList workList = new GdbQueryWorkList(repository, "work list");
 

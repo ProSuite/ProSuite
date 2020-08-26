@@ -3,17 +3,19 @@ using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Gdb;
-using ProSuite.DomainModel.DataModel;
 
 namespace ProSuite.AGP.WorkList
 {
 	public class IssueItemRepository : GdbItemRepository
 	{
-		public IssueItemRepository(IEnumerable<IWorkspaceContext> workspaces) : base(workspaces) { }
+		static readonly string _statusFieldName = "Code";
 
-		protected override DatabaseStatusSchema CreateStatusSchemaCore()
+		public IssueItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase) : base(tablesByGeodatabase) { }
+
+		protected override DatabaseStatusSchema CreateStatusSchemaCore(FeatureClassDefinition definition)
 		{
-			return new DatabaseStatusSchema("Code", 100, 200);
+			int fieldIndex = definition.FindField(_statusFieldName);
+			return new DatabaseStatusSchema(_statusFieldName, fieldIndex, 100, 200);
 		}
 
 		protected override IAttributeReader CreateAttributeReaderCore(

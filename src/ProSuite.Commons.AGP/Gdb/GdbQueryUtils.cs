@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -8,12 +9,21 @@ namespace ProSuite.Commons.AGP.Gdb
 {
 	public static class GdbQueryUtils
 	{
+		public static QueryFilter CreateFilter([NotNull] IReadOnlyList<long> oids)
+		{
+			Assert.ArgumentNotNull(oids, nameof(oids));
+
+			return new QueryFilter { ObjectIDs = oids };
+		}
+
 		[NotNull]
 		public static SpatialQueryFilter CreateSpatialFilter(
 			[NotNull] ArcGIS.Core.Geometry.Geometry filterGeometry,
 			SpatialRelationship spatialRelationship = SpatialRelationship.Intersects,
 			SearchOrder searchOrder = SearchOrder.Spatial)
 		{
+			Assert.ArgumentNotNull(filterGeometry, nameof(filterGeometry));
+
 			return new SpatialQueryFilter
 			       {
 				       FilterGeometry = filterGeometry,
@@ -65,10 +75,12 @@ namespace ProSuite.Commons.AGP.Gdb
 					return null;
 				}
 
+				Row result = cursor.Current;
+
 				// todo daro: remove later when GetRow is used intensively throughout the solution
 				Assert.False(cursor.MoveNext(), "more than one row found");
 
-				return cursor.Current;
+				return result;
 			}
 		}
 

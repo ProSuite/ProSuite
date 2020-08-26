@@ -85,6 +85,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		[CanBeNull]
 		public string GetDescription()
 		{
+			// todo daro: this is copied from the old world. Why not set description in constructor?
 			Row row = GetRow();
 
 			return row == null
@@ -110,7 +111,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			return Proxy.GetRow();
 		}
 
-		private void SetGeometryFromFeature([CanBeNull] Feature feature)
+		public void SetGeometryFromFeature([CanBeNull] Feature feature)
 		{
 			Envelope extent = GetExtent(feature);
 
@@ -187,9 +188,17 @@ namespace ProSuite.AGP.WorkList.Domain
 					_hasZ = true;
 					_zmin = extent.ZMin;
 					_zmax = extent.ZMax;
-				}
 
-				Extent = EnvelopeBuilder.CreateEnvelope(extent, extent.SpatialReference);
+					Extent = EnvelopeBuilder.CreateEnvelope(new Coordinate3D(_xmin, _ymin, _zmin),
+					                                        new Coordinate3D(_xmax, _ymax, _zmax),
+					                                        extent.SpatialReference);
+				}
+				else
+				{
+					Extent = EnvelopeBuilder.CreateEnvelope(new Coordinate2D(_xmin, _ymin),
+					                                        new Coordinate2D(_xmax, _ymax),
+					                                        extent.SpatialReference);
+				}
 			}
 		}
 

@@ -22,6 +22,7 @@ namespace ProSuite.DomainModel.DataModel
 			return (FeatureClass) OpenTable(name);
 		}
 
+		// todo daro: try to open a list of tables and dispose Geodatabase afterwards
 		[CanBeNull]
 		public Table OpenTable(string name)
 		{
