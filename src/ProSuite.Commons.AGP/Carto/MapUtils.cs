@@ -1,13 +1,17 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Internal.CIM;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using Point = System.Windows.Point;
+using Polygon = ArcGIS.Core.Geometry.Polygon;
+using Polyline = ArcGIS.Core.Geometry.Polyline;
+using QueryFilter = ArcGIS.Core.Data.QueryFilter;
 
 namespace ProSuite.Commons.AGP.Carto
 {
@@ -72,7 +76,8 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
-		public static IEnumerable<Feature> GetFeatures(Dictionary<MapMember, List<long>> oidsByMapMembers)
+		public static IEnumerable<Feature> GetFeatures(
+			Dictionary<MapMember, List<long>> oidsByMapMembers)
 		{
 			foreach (var oidsByMapMember in oidsByMapMembers)
 			{
@@ -80,7 +85,8 @@ namespace ProSuite.Commons.AGP.Carto
 
 				if (featureLayer == null) continue;
 
-				foreach (var feature in GetFeatures(featureLayer, oidsByMapMember.Value)) yield return feature;
+				foreach (var feature in GetFeatures(featureLayer, oidsByMapMember.Value))
+					yield return feature;
 			}
 		}
 
@@ -91,15 +97,15 @@ namespace ProSuite.Commons.AGP.Carto
 			foreach (var feature in GetFeatures(selectionByLayer))
 				yield return feature;
 		}
-		
-		public static IEnumerable<Feature> GetFeatures(KeyValuePair<BasicFeatureLayer, List<long>> layerOids)
+
+		public static IEnumerable<Feature> GetFeatures(
+			KeyValuePair<BasicFeatureLayer, List<long>> layerOids)
 		{
 			var layer = layerOids.Key;
 
 			foreach (var feature in GetFeatures(layer, layerOids.Value)) yield return feature;
 		}
 
-		
 		private static IEnumerable<Feature> GetFeatures(BasicFeatureLayer layer, List<long> oids,
 		                                                bool recycling = false)
 		{
@@ -124,11 +130,12 @@ namespace ProSuite.Commons.AGP.Carto
 			//	yield return inspector.;
 			//}
 
-			foreach (var feature in GdbQueryUtils.GetFeatures(featureClass, filter, recycling)) yield return feature;
+			foreach (var feature in GdbQueryUtils.GetFeatures(featureClass, filter, recycling))
+				yield return feature;
 		}
 
 		public static ArcGIS.Core.Geometry.Geometry ToMapGeometry(MapView mapView,
-		                                                          Polygon screenGeometry)
+			Polygon screenGeometry)
 		{
 			// TODO: ensure single-part, linear segments
 
@@ -176,6 +183,66 @@ namespace ProSuite.Commons.AGP.Carto
 			var clientPoint = mapView.ScreenToClient(screenPoint);
 
 			return MapPointBuilder.CreateMapPoint(new Coordinate2D(clientPoint.X, clientPoint.Y));
+		}
+
+		/// <summary>
+		/// Returns features filtered by spatial relationship. Honors definition queries on the layer. 
+		/// </summary>
+		public static IEnumerable<Feature> FilterFeaturesByGeometry(
+			BasicFeatureLayer layer, ArcGIS.Core.Geometry.Geometry filterGeometry, SpatialRelationship spatialRelationship = SpatialRelationship.Intersects)
+		{
+			SpatialQueryFilter qf = new SpatialQueryFilter()
+			                        {
+				                        FilterGeometry = filterGeometry,
+										SpatialRelationship = spatialRelationship
+			                        };
+			List<Feature> features = new List<Feature>();
+			using (var rowCursor = layer.Search(qf))
+			{
+				while (rowCursor.MoveNext())
+				{
+					features.Add((Feature) rowCursor.Current);
+				}
+			}
+			return features;
+		}
+
+		public static IEnumerable<long> GetFeaturesOidList(IEnumerable<Feature> features)
+		{
+			foreach (var feature in features)
+			{
+				yield return feature.GetObjectID();
+			}
+		}
+
+		//public static List<long> GetFeaturesOidList(IEnumerable<Feature> features)
+		//{
+		//	List<long> oids = new List<long>();
+		//	foreach (var feature in features)
+		//	{
+		//		oids.Add(feature.GetObjectID());
+		//	}
+
+		//	return oids;
+		//}
+
+		public static double ConvertScreenPixelToMapLength(int pixels)
+		{
+			var centerMapPoint = MapView.Active.Extent.Center;
+			var centerScreenPoint = MapView.Active.MapToScreen(centerMapPoint);
+			var distancePoint = new Point()
+			                    {
+									X = centerScreenPoint.X + pixels,
+									Y = centerScreenPoint.Y
+			                    };
+			List<MapPoint> points = new List<MapPoint>()
+			                        {
+										centerMapPoint,
+										MapView.Active.ClientToMap(distancePoint)
+			                        };
+			var polyline =
+				PolylineBuilder.CreatePolyline(points, MapView.Active.Map.SpatialReference);
+			return polyline.Length;
 		}
 
 		#region unused
