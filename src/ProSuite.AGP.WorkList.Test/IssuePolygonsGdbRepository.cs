@@ -20,7 +20,7 @@ namespace ProSuite.AGP.WorkList.Test
 			{
 				var tableDef = GdbTableDefinition as TableDefinition;
 				return new AttributeReader(tableDef as TableDefinition,
-				                           Attributes.ObjectID,
+				                           //Attributes.ObjectID,
 				                           Attributes.QualityConditionName,
 				                           Attributes.InvolvedObjects,
 				                           Attributes.IssueSeverity,

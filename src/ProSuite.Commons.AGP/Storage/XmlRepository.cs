@@ -10,7 +10,7 @@ namespace ProSuite.Commons.AGP.Storage
 {
 	public abstract class XmlRepository<T> : IRepository<T> where T : class
 	{
-		private readonly ICollection<T> items;
+		private readonly IList<T> items;
 
 		protected XmlRepository(string filename)
 		{
@@ -19,7 +19,7 @@ namespace ProSuite.Commons.AGP.Storage
 			XmlSerializer serializer = new XmlSerializer(typeof(List<T>), new XmlRootAttribute("Items"));
 			using (StreamReader myWriter = new StreamReader(FileName))
 			{
-				items = (ICollection<T>)serializer.Deserialize(myWriter);
+				items = (IList<T>)serializer.Deserialize(myWriter);
 				myWriter.Close();
 			}
 		}
@@ -36,7 +36,7 @@ namespace ProSuite.Commons.AGP.Storage
 			}
 		}
 
-		public IEnumerable<T> GetAll()
+		public IList<T> GetAll()
 		{
 			return items;
 		}

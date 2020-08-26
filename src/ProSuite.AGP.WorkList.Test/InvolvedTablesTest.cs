@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using ProSuite.AGP.WorkList.Domain;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -12,7 +13,7 @@ namespace ProSuite.AGP.WorkList.Test
 	[Apartment(ApartmentState.STA)]
 	public class InvolvedTablesTest
 	{
-		private string _issuesGdb = @"C:\log5\PROSUITE_QA_XmlBasedVerificationTool_20200617_155928\issues.gdb";
+		private string issueGdbPath = @"c:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\sample_issues\issues.gdb";
 		private string _featureClassName = "IssuePolygons";
 
 		[SetUp]
@@ -31,20 +32,22 @@ namespace ProSuite.AGP.WorkList.Test
 		[Test]
 		public void InvolvedTablesParsingTest()
 		{
-			var issueGdbPath = @"c:\log5\PROSUITE_QA_XmlBasedVerificationTool_20200617_155928\issues.gdb";
 			var issueFeatureClass = "IssuePolygons";
-
-			var issueDefinition = new IssueWorkListDefinition()
-			                      {
-									  FgdbPath = issueGdbPath,
-									  Path = "",
-									  VisitedItems = { }
-			};
+			var issueDefinition =
+				new IssueWorkListDefinition()
+				{
+					FgdbPath = issueGdbPath,
+					Path = "",
+					VisitedItems = { }
+				};
 
 			var issueRepository = new IssuePolygonsGdbRepository(issueDefinition, issueFeatureClass);
 			var issues = issueRepository.GetAll();
 
-			Assert.AreEqual(1, 1);
+			Assert.AreEqual(9, issues.Count);
+
+			var failedIssues = issues.Count(i => (i.InIssueInvolvedTables.Any<InvolvedTable>(t => t.KeyField == null)));
+			Assert.AreEqual(0, failedIssues);
 		}
 	}
 }

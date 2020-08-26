@@ -5,6 +5,7 @@ using System.Linq;
 
 namespace ProSuite.Commons.AGP.Storage
 {
+	// now for only one dataset
 	public abstract class GdbRepository<T, TDataset> : IRepository<T> where T : class
 																	  where TDataset : Dataset	
 	{
@@ -32,7 +33,6 @@ namespace ProSuite.Commons.AGP.Storage
 			}
 		}
 
-		// TODO algr: interface for Search(filter, true) for FeatureClass, Table, ...
 		private TDataset _gdbDataset;
 		private TDataset GdbDataset
 		{
@@ -44,10 +44,10 @@ namespace ProSuite.Commons.AGP.Storage
 
 		public Definition GdbTableDefinition => GdbDataset.GetDefinition();
 
-		private ICollection<T> _query;
-		private ICollection<T> Query
+		private IList<T> _query;
+		private IList<T> Query
 		{
-			get => _query ?? (_query = QueryGdbTable<TDataset>());
+			get => _query ?? (_query = QueryGdbTable<TDataset>(GdbDataset));
 			set => _query = value;
 		}
 
@@ -58,59 +58,11 @@ namespace ProSuite.Commons.AGP.Storage
 			set
 			{
 				_filter = value;
-				Query = QueryGdbTable<TDataset>();
+				Query = QueryGdbTable<TDataset>(GdbDataset);
 			}
 		}
 
-		private ICollection<T> QueryGdbTable<TT>()
-		{
-			_repoIsChanged = false;
-			//if ( typeof(TT) is FeatureClass)
-
-			//return ReadFeatureClassItems(GdbDataset)(Filter, true);
-			//return ReadFeatureClassItems(FeatureClass featureClass);
-			return new List<T>();
-		}
-
-		private IList<T> ReadTableItems(Table table)
-		{
-			var items = new List<T>();
-			if (items == null) return items;
-
-			using (RowCursor cursor = table.Search(Filter, true))
-			{
-				while (cursor.MoveNext())
-				{
-					using (Row currentRow = cursor.Current)
-					{
-						// override T specific behaviour in derived class (issues.gdb->InvolvedTables field ->WorkItem, ...)
-						T item = ParseRow(currentRow);
-						items.Add(item);
-					}
-				}
-			}
-			return items;
-		}
-
-		private IList<T> ReadFeatureClassItems(FeatureClass featureClass)
-		{
-			var items = new List<T>();
-			if (items == null) return items;
-
-			using (RowCursor cursor = featureClass.Search(Filter, true))
-			{
-				while (cursor.MoveNext())
-				{
-					using (Row currentRow = cursor.Current)
-					{
-						// override T specific behaviour in derived class (issues.gdb->InvolvedTables field ->WorkItem, ...)
-						T item = ParseRow(currentRow);
-						items.Add(item);
-					}
-				}
-			}
-			return items;
-		}
+		#region overrides - mapping to/from Row to T
 
 		public virtual T ParseRow(Row currentRow)
 		{
@@ -122,21 +74,11 @@ namespace ProSuite.Commons.AGP.Storage
 			throw new NotImplementedException();
 		}
 
-		// Get (from Query)
-
-		// Update (Query)
-
-		// ...
-
-		// Commit - write in gdb, xml, ...
-
-		//IReadOnlyList<Definition> _featureClasses => GdbGeodabase.GetDefinitions<FeatureClassDefinition>();
-
-		//IReadOnlyList<Definition> _tables => GdbGeodabase.GetDefinitions<TableDefinition>();
+		#endregion
 
 		#region IRepository<T> Members
 
-		public IEnumerable<T> GetAll()
+		public IList<T> GetAll()
 		{
 			return Query;
 		}
@@ -174,10 +116,67 @@ namespace ProSuite.Commons.AGP.Storage
 
 		#endregion
 
+		#region private methods
+
+		private IList<T> QueryGdbTable<TData>(TData value)
+		{
+			_repoIsChanged = false;
+			if (value is FeatureClass features)
+			{
+				return ReadFeatureClassItems(features);
+			}
+			else if (value is Table table)
+			{
+				return ReadTableItems(table);
+			}
+			return new List<T>();
+		}
+
+		private IList<T> ReadTableItems(Table table)
+		{
+			var items = new List<T>();
+			if (items == null) return items;
+
+			using (RowCursor cursor = table.Search(Filter, true))
+			{
+				while (cursor.MoveNext())
+				{
+					using (Row currentRow = cursor.Current)
+					{
+						T item = ParseRow(currentRow);
+						items.Add(item);
+					}
+				}
+			}
+			return items;
+		}
+
+		private IList<T> ReadFeatureClassItems(FeatureClass featureClass)
+		{
+			var items = new List<T>();
+			if (items == null) return items;
+
+			using (RowCursor cursor = featureClass.Search(Filter, true))
+			{
+				while (cursor.MoveNext())
+				{
+					using (Row currentRow = cursor.Current)
+					{
+						T item = ParseRow(currentRow);
+						items.Add(item);
+					}
+				}
+			}
+			return items;
+		}
+
 		private void CommitChanges()
 		{
 			throw new NotImplementedException();
 		}
+
+
+		#endregion
 
 	}
 

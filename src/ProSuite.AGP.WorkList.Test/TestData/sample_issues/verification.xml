@@ -1,0 +1,569 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<QualityVerification xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" qualitySpecification="Messvorbereitung" startTime="2020-06-15T10:44:27.6141334+02:00" endTime="2020-06-15T10:44:29.5538294+02:00" processingSeconds="1.939" warningCount="0" errorCount="22" stopErrorCount="0" version="1.0.0.0">
+  <Properties />
+  <VerifiedConditions>
+    <Category abbreviation="GIS4BG" name="Vermessung" uuid="806B262C-0BFC-4134-9C9F-958792B89563" conditionCount="42" errorCount="22" warningCount="0" conditionCountWithChildren="42" errorCountWithChildren="22" warningCountWithChildren="0">
+      <QualityConditions>
+        <Condition name="BG_AirborneLaserScanFlaeche_GUID_GG" uuid="91B8DCE3-404D-4F5F-B211-4ABA277B1EA5" versionUuid="9003A063-066F-462A-B57F-5C2C36ADB375" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="AirborneLaserScanFlaeche_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Anschlusspunkt_GUID_GG" uuid="652E597B-6295-4A5C-9A8B-A2E05666573C" versionUuid="C0F20678-2BC3-4F79-A8A8-744242DD4A07" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Anschlusspunkt_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Baum_GUID_GG" uuid="37757FE6-65F7-4E2A-A31A-CC4AE1A6E317" versionUuid="708CA573-9B70-457E-9456-03741D1B29E6" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Baum_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Bauwerkslinie_GUID_GG" uuid="EA2BC330-0C01-4F34-8613-4B75414397B2" versionUuid="C414C007-0FFB-4042-AB20-5668FC794F4D" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Bauwerkslinie_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Bauwerkspunkt_GUID_GG" uuid="40E32CD4-85CD-4337-9351-9830CD3692A4" versionUuid="8B18F09E-77C4-42D1-AB53-3ACB86880C7F" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Bauwerkspunkt_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Boeschungssignatur_GUID_GG" uuid="1637E0F0-E2FA-4C19-B1AB-57FBBEBC0FF0" versionUuid="F2A2CACF-B13D-4B85-AFAE-11E13837FB6F" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Boeschungssignatur_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_EcholotFlaeche_GUID_GG" uuid="D216E827-2BAB-4C9A-AC8B-BD577E016B81" versionUuid="368255CB-9B82-42F6-A6D4-3CC58A4849A1" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="EcholotFlaeche_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Einleitung_GUID_GG" uuid="96A19E09-AECF-405D-A0D5-925E5BD77572" versionUuid="CD5D49BC-2502-4223-8C09-84F5F0A2FA66" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Einleitung_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_GasLTGpunkt_GUID_GG" uuid="EACB606E-C25F-4BB7-99C5-73112F0D243A" versionUuid="3A592E9C-183F-47AA-9758-25BDCD460D47" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="GasLTGpunkt_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Gasleitung_GUID_GG" uuid="9DDAE8DE-311C-4B04-AEFD-C8FFDECB89A6" versionUuid="34341641-B87D-4DD2-9943-0C0A62A927E3" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Gasleitung_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Gebaeudelinie_GUID_GG" uuid="20E785B1-A0B3-4918-AC70-2E75FAC38EEF" versionUuid="BE9E1404-C12C-44F6-AF5E-A6788FF65B17" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Gebaeudelinie_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Gebaeudepunkt_GUID_GG" uuid="1E62F571-5498-47F0-AA51-A585B117A68E" versionUuid="81A1CA4B-34F9-497E-8647-754CF29B8B44" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Gebaeudepunkt_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Hilfslinie_GUID_GG" uuid="6266E4F3-F835-4BB3-930D-EA2C3771B9FB" versionUuid="17F6CB1A-E05F-4281-AD79-5A38EDFB39BC" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Hilfslinie_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Hilfspunkt_GUID_GG" uuid="3680FCCD-BEC3-45AA-8DA6-00C8E8AC3101" versionUuid="AAB8BAC0-40E9-4135-AE99-CB2974D53E2A" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Hilfspunkt_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Kanallinie_GUID_GG" uuid="37B0DE7E-9581-4299-8EEB-761B22E930DE" versionUuid="CEF84A45-4342-4DC5-AC23-E77F80D5A31A" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Kanallinie_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Kanalpunkt_GUID_GG" uuid="DE720846-6421-44D3-8913-F8B76E1E1BCA" versionUuid="F0A98109-3716-49CC-9AE3-76FEC84D9E12" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Kanalpunkt_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Katasterlinie_GUID_GG" uuid="B12F39A5-397C-4558-9790-A38CB0546C0B" versionUuid="57B5B351-7CEC-4C9B-86DC-9948DF2B8A39" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Katasterlinie_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Katasterpunkt_GUID_GG" uuid="EDBF8D6D-A509-4524-BDC2-4D6F84AF66D4" versionUuid="ED35E10E-7028-4C27-ACF5-E4D03A9B55B5" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Katasterpunkt_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Leitung_GUID_GG" uuid="042560DC-9BBF-4C74-AC3A-6A387089F13C" versionUuid="3ED8AF51-5EC9-4489-8666-EE1AF8761713" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Leitung_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Leitungspunkt_GUID_GG" uuid="00DD929B-454C-4670-8DBD-96A620061205" versionUuid="98E57F5B-81FA-4433-87F3-E3A0F82F24AA" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Leitungspunkt_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Messstelle_GUID_GG" uuid="472B7FA3-303A-4952-9635-7BE65ED0F920" versionUuid="B4BD6707-7B5F-4DDE-9EF4-1C507987BF0B" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Messstelle_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Monitoringflaeche_GUID_GG" uuid="DD4B4979-878B-476D-8EC0-BA217F578C54" versionUuid="0F167814-9121-40AF-B401-E248A6C6AAB8" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Monitoringflaeche_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_PEP_Flaeche_GUID_GG" uuid="4D167108-288A-412D-8819-4811C38AB0F1" versionUuid="924473CE-5F7E-45DA-93FA-1FB138801A3A" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="PEP_Flaeche_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_ProduktenLTGpunkt_GUID_GG" uuid="17F02CEC-CBE2-4CBD-9EF0-052D5803FD68" versionUuid="4CC01FF1-39FC-41E2-8430-2A39F524C061" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="ProduktenLTGpunkt_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Produktenleitung_GUID_GG" uuid="B97CEC41-59B0-49B5-B9CD-F136C34F844D" versionUuid="A022EFFC-8398-4D8A-B93A-76900EB29EEC" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Produktenleitung_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Schild_GUID_GG" uuid="8592517A-73EF-4CF4-8C13-6F371C1C0AFE" versionUuid="6E4B5B65-E3E8-46BF-A424-350A65D491BB" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Schild_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Schutzrohr_GUID_GG" uuid="3F8B8597-F585-4DDD-9542-65907296366B" versionUuid="B4647215-CD41-4238-A2C9-C975E5A64326" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Schutzrohr_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Schutzrohrpunkt_GUID_GG" uuid="056EAED5-0BA1-4B2E-8394-3A07FB4C0D31" versionUuid="4B71DF15-F6B6-4C17-9C7B-2C7F10494416" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Schutzrohrpunkt_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_StromLTGpunkt_GUID_GG" uuid="F2E090BE-7FEE-4F1C-9E11-1D374B802603" versionUuid="C5FE33F9-A909-47A5-B59C-5B42B5593932" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="StromLTGpunkt_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Stromleitung_GUID_GG" uuid="FBD0384F-F02C-4373-B05E-52D0815FA8AD" versionUuid="D6F60F56-335E-499A-8B1B-FF7EC101BB0D" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Stromleitung_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_TKLTGpunkt_GUID_GG" uuid="7C3EF2F7-79DE-4399-8724-CB8879970F4B" versionUuid="53B186E7-1764-49C6-9517-79C8287152E2" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="TKLTGpunkt_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_TKLeitung_GUID_GG" uuid="61D89BF7-4D72-4230-A957-8A84940D5B4B" versionUuid="04CA7438-865B-4BF4-92F3-136A87BFC50D" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="TKLeitung_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Topographielinie_GUID_GG" uuid="73462B43-0E63-4C31-B47C-A3146758F2CD" versionUuid="CDD383CD-186B-4157-B3AE-580BB86B2624" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Topographielinie_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Topographiepunkt_GUID_GG" uuid="2CE89152-7EC2-456B-BD74-5C9F6CCD7BD2" versionUuid="23CA2AAD-8D39-45C0-AE68-C74DCBD30DF9" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Topographiepunkt_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Vermessungsauftrag_GUID_GG" uuid="3880186A-A8AF-4A18-8917-069ABBF1AC1F" versionUuid="01CF96F0-B8D6-4BBB-9DB3-AD4C6976D0EA" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Vermessungsauftrag_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Vermessungsauftrag_Pflichtfelder_MV" uuid="48B232BF-F371-4C3E-ABEE-7C259B22A7E0" versionUuid="3F103B87-98D0-4F92-8890-73C81746C605" type="Hard" stopCondition="false" issueCount="9">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Vermessungsauftrag_V" />
+            <Parameter name="requiredFieldNames" value="ANLAGE" />
+            <Parameter name="requiredFieldNames" value="ANLAGENART" />
+            <Parameter name="requiredFieldNames" value="AUFTRAGSART" />
+            <Parameter name="requiredFieldNames" value="AUFTRAGSJAHR" />
+            <Parameter name="requiredFieldNames" value="AUFTRAGSNUMMER" />
+            <Parameter name="requiredFieldNames" value="AUFTRAGSTITEL" />
+            <Parameter name="requiredFieldNames" value="BEGINLIFESPANVERSION" />
+            <Parameter name="requiredFieldNames" value="BUERO_VERMESSUNG" />
+            <Parameter name="requiredFieldNames" value="HOEHENBEZUGSSYSTEM" />
+            <Parameter name="requiredFieldNames" value="HORIZONT_HOEHENBEZUG" />
+            <Parameter name="requiredFieldNames" value="LAGEBEZUGSSYSTEM" />
+            <Parameter name="requiredFieldNames" value="PROJEKTNUMMER" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Vermessungsauftrag_VermID_eindeutig" uuid="95DD432D-6305-4B5C-BE38-50839C8EEF4B" versionUuid="2F55E0FA-FB36-4D6D-B07A-E560DC799F10" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="Unique(0)" class="EsriDE.ProSuite.QA.Tests.QaUnique" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Vermessungsauftrag_V" whereClause="VERMESSUNGSAUFTRAGID IS NOT NULL" />
+            <Parameter name="unique" value="VERMESSUNGSAUFTRAGID" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_WaermerohrLTGpunkt_GUID_GG" uuid="FA93192C-1221-431C-AD28-0C6A58C2A5EB" versionUuid="8D894F25-D750-407E-A423-767540C390EE" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="WaermerohrLTGpunkt_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Waermerohrleitung_GUID_GG" uuid="7ACEA69D-2B1E-4619-9F73-F819DD041F90" versionUuid="66636164-A320-4709-9665-CBEA564CC61A" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Waermerohrleitung_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_WasserLTGpunkt_GUID_GG" uuid="5D0BBF44-F505-4E9D-844F-4737B53B6035" versionUuid="F5311689-B775-4346-8164-9B9B58734B94" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="WasserLTGpunkt_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Wasserleitung_GUID_GG" uuid="A47ED9D7-DD12-43D9-831E-90C8EA2B3D55" versionUuid="C277470F-239E-408B-9EB3-93A3262C20EA" type="Hard" stopCondition="false" issueCount="0">
+          <Test name="RequiredFields(0)" class="EsriDE.ProSuite.QA.Tests.QaRequiredFields" constructor="0" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="table" dataset="Wasserleitung_V" />
+            <Parameter name="requiredFieldNames" value="GUID_GG" />
+          </Parameters>
+        </Condition>
+        <Condition name="BG_Wasserleitung_Stützpunktübereinstimmung" uuid="1B6FE4D5-3399-4D85-929C-A74B4A1A4725" versionUuid="EE8C2889-7D4B-44C5-954B-A6B2AC0512D9" type="Hard" stopCondition="false" issueCount="13">
+          <Description>Prüfung, ob die Höhen aus den Punktfeatures mit der entsprechenden Höhe aus dem Linienfeature übereinstimmen bzw. ob sich hier überhaupt ein Punktfeatrure findet.</Description>
+          <Test name="IsCoveredByOther(4)" class="EsriDE.ProSuite.QA.Tests.QaIsCoveredByOther" constructor="4" assembly="EsriDE.ProSuite.QA.Tests" />
+          <Parameters>
+            <Parameter name="covering" dataset="Anschlusspunkt_V" />
+            <Parameter name="covering" dataset="Baum_V" />
+            <Parameter name="covering" dataset="Bauwerkspunkt_V" />
+            <Parameter name="covering" dataset="Einleitung_V" />
+            <Parameter name="covering" dataset="GasLTGpunkt_V" />
+            <Parameter name="covering" dataset="Gebaeudepunkt_V" />
+            <Parameter name="covering" dataset="Kanalpunkt_V" />
+            <Parameter name="covering" dataset="Katasterpunkt_V" />
+            <Parameter name="covering" dataset="Leitungspunkt_V" />
+            <Parameter name="covering" dataset="Messstelle_V" />
+            <Parameter name="covering" dataset="ProduktenLTGpunkt_V" />
+            <Parameter name="covering" dataset="Schild_V" />
+            <Parameter name="covering" dataset="Schutzrohrpunkt_V" />
+            <Parameter name="covering" dataset="StromLTGpunkt_V" />
+            <Parameter name="covering" dataset="TKLTGpunkt_V" />
+            <Parameter name="covering" dataset="Topographiepunkt_V" />
+            <Parameter name="covering" dataset="WaermerohrLTGpunkt_V" />
+            <Parameter name="covering" dataset="WasserLTGpunkt_V" />
+            <Parameter name="covering" dataset="Schutzrohr_V" />
+            <Parameter name="covered" dataset="Wasserleitung_V" />
+            <Parameter name="coveredGeometryComponents" value="Vertices" />
+            <Parameter name="isCoveringCondition" value="" />
+            <Parameter name="ValidUncoveredGeometryConstraint" value="" />
+          </Parameters>
+        </Condition>
+      </QualityConditions>
+    </Category>
+  </VerifiedConditions>
+  <VerifiedDatasets>
+    <VerifiedDataset name="AirborneLaserScanFlaeche_V" workspace="GIS4BG" warningCount="0" errorCount="0" stopErrorCount="0" />
+    <VerifiedDataset name="Anschlusspunkt_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="Baum_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="Bauwerkslinie_V" workspace="GIS4BG" warningCount="0" errorCount="0" stopErrorCount="0" />
+    <VerifiedDataset name="Bauwerkspunkt_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="Boeschungssignatur_V" workspace="GIS4BG" warningCount="0" errorCount="0" stopErrorCount="0" />
+    <VerifiedDataset name="EcholotFlaeche_V" workspace="GIS4BG" warningCount="0" errorCount="0" stopErrorCount="0" />
+    <VerifiedDataset name="Einleitung_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="Gasleitung_V" workspace="GIS4BG" warningCount="0" errorCount="0" stopErrorCount="0" />
+    <VerifiedDataset name="GasLTGpunkt_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="Gebaeudelinie_V" workspace="GIS4BG" warningCount="0" errorCount="0" stopErrorCount="0" />
+    <VerifiedDataset name="Gebaeudepunkt_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="Hilfslinie_V" workspace="GIS4BG" warningCount="0" errorCount="0" stopErrorCount="0" />
+    <VerifiedDataset name="Hilfspunkt_V" workspace="GIS4BG" warningCount="0" errorCount="0" stopErrorCount="0" />
+    <VerifiedDataset name="Kanallinie_V" workspace="GIS4BG" warningCount="0" errorCount="0" stopErrorCount="0" />
+    <VerifiedDataset name="Kanalpunkt_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="Katasterlinie_V" workspace="GIS4BG" warningCount="0" errorCount="0" stopErrorCount="0" />
+    <VerifiedDataset name="Katasterpunkt_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="Leitung_V" workspace="GIS4BG" warningCount="0" errorCount="0" stopErrorCount="0" />
+    <VerifiedDataset name="Leitungspunkt_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="Messstelle_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="Monitoringflaeche_V" workspace="GIS4BG" warningCount="0" errorCount="0" stopErrorCount="0" />
+    <VerifiedDataset name="PEP_Flaeche_V" workspace="GIS4BG" warningCount="0" errorCount="0" stopErrorCount="0" />
+    <VerifiedDataset name="Produktenleitung_V" workspace="GIS4BG" warningCount="0" errorCount="0" stopErrorCount="0" />
+    <VerifiedDataset name="ProduktenLTGpunkt_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="Schild_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="Schutzrohr_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="Schutzrohrpunkt_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="Stromleitung_V" workspace="GIS4BG" warningCount="0" errorCount="0" stopErrorCount="0" />
+    <VerifiedDataset name="StromLTGpunkt_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="TKLeitung_V" workspace="GIS4BG" warningCount="0" errorCount="0" stopErrorCount="0" />
+    <VerifiedDataset name="TKLTGpunkt_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="Topographielinie_V" workspace="GIS4BG" warningCount="0" errorCount="0" stopErrorCount="0" />
+    <VerifiedDataset name="Topographiepunkt_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="Vermessungsauftrag_V" workspace="GIS4BG" warningCount="0" errorCount="9" stopErrorCount="0" />
+    <VerifiedDataset name="Waermerohrleitung_V" workspace="GIS4BG" warningCount="0" errorCount="0" stopErrorCount="0" />
+    <VerifiedDataset name="WaermerohrLTGpunkt_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="Wasserleitung_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+    <VerifiedDataset name="WasserLTGpunkt_V" workspace="GIS4BG" warningCount="0" errorCount="13" stopErrorCount="0" />
+  </VerifiedDatasets>
+  <ReportedIssues>
+    <Category abbreviation="GIS4BG" name="Vermessung" uuid="806B262C-0BFC-4134-9C9F-958792B89563" conditionCount="2" errorCount="22" warningCount="0" conditionCountWithChildren="2" errorCountWithChildren="22" warningCountWithChildren="0">
+      <QualityConditions>
+        <Condition name="BG_Vermessungsauftrag_Pflichtfelder_MV" uuid="48B232BF-F371-4C3E-ABEE-7C259B22A7E0" versionUuid="3F103B87-98D0-4F92-8890-73C81746C605" type="Hard" stopCondition="false" issueCount="9">
+          <Issues>
+            <Issue description="Required field has null value: Anlagenart" code="RequiredFields.NullValue" affectedComponent="ANLAGENART">
+              <Objects>
+                <Table table="Vermessungsauftrag_V">
+                  <Id>2230</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351805.64109999966" ymin="5727573.9142" xmax="352160.56279999966" ymax="5727753.4010000005" />
+            </Issue>
+            <Issue description="Required field has null value: Auftragsart" code="RequiredFields.NullValue" affectedComponent="AUFTRAGSART">
+              <Objects>
+                <Table table="Vermessungsauftrag_V">
+                  <Id>2230</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351805.64109999966" ymin="5727573.9142" xmax="352160.56279999966" ymax="5727753.4010000005" />
+            </Issue>
+            <Issue description="Required field has null value: Auftragstitel" code="RequiredFields.NullValue" affectedComponent="AUFTRAGSTITEL">
+              <Objects>
+                <Table table="Vermessungsauftrag_V">
+                  <Id>2230</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351805.64109999966" ymin="5727573.9142" xmax="352160.56279999966" ymax="5727753.4010000005" />
+            </Issue>
+            <Issue description="Required field has null value: Anlagenart" code="RequiredFields.NullValue" affectedComponent="ANLAGENART">
+              <Objects>
+                <Table table="Vermessungsauftrag_V">
+                  <Id>2602</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351909.15720000025" ymin="5727635.4597999994" xmax="351992.23210000026" ymax="5727733.8579999991" />
+            </Issue>
+            <Issue description="Required field has null value: Auftragsart" code="RequiredFields.NullValue" affectedComponent="AUFTRAGSART">
+              <Objects>
+                <Table table="Vermessungsauftrag_V">
+                  <Id>2602</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351909.15720000025" ymin="5727635.4597999994" xmax="351992.23210000026" ymax="5727733.8579999991" />
+            </Issue>
+            <Issue description="Required field has null value: Auftragstitel" code="RequiredFields.NullValue" affectedComponent="AUFTRAGSTITEL">
+              <Objects>
+                <Table table="Vermessungsauftrag_V">
+                  <Id>2602</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351909.15720000025" ymin="5727635.4597999994" xmax="351992.23210000026" ymax="5727733.8579999991" />
+            </Issue>
+            <Issue description="Required field has null value: Anlagenart" code="RequiredFields.NullValue" affectedComponent="ANLAGENART">
+              <Objects>
+                <Table table="Vermessungsauftrag_V">
+                  <Id>3109</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="334484.36500000022" ymin="5700921.5013" xmax="428402.86400000023" ymax="5744108.4991999995" />
+            </Issue>
+            <Issue description="Required field has null value: Auftragsart" code="RequiredFields.NullValue" affectedComponent="AUFTRAGSART">
+              <Objects>
+                <Table table="Vermessungsauftrag_V">
+                  <Id>3109</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="334484.36500000022" ymin="5700921.5013" xmax="428402.86400000023" ymax="5744108.4991999995" />
+            </Issue>
+            <Issue description="Required field has null value: Auftragstitel" code="RequiredFields.NullValue" affectedComponent="AUFTRAGSTITEL">
+              <Objects>
+                <Table table="Vermessungsauftrag_V">
+                  <Id>3109</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="334484.36500000022" ymin="5700921.5013" xmax="428402.86400000023" ymax="5744108.4991999995" />
+            </Issue>
+          </Issues>
+        </Condition>
+        <Condition name="BG_Wasserleitung_Stützpunktübereinstimmung" uuid="1B6FE4D5-3399-4D85-929C-A74B4A1A4725" versionUuid="EE8C2889-7D4B-44C5-954B-A6B2AC0512D9" type="Hard" stopCondition="false" issueCount="13">
+          <Description>Prüfung, ob die Höhen aus den Punktfeatures mit der entsprechenden Höhe aus dem Linienfeature übereinstimmen bzw. ob sich hier überhaupt ein Punktfeatrure findet.</Description>
+          <Issues>
+            <Issue description="The feature is not covered by any feature" code="CoveredByOther.NotCoveredByAnyFeature" affectedComponent="SHAPE">
+              <Objects>
+                <Table table="Wasserleitung_V">
+                  <Id>11223</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351936.18809999991" ymin="5727701.0483" xmax="351936.34659999982" ymax="5727701.2269" zmin="30.062099999995553" zmax="30.065100000007078" />
+            </Issue>
+            <Issue description="The feature is not covered by any feature" code="CoveredByOther.NotCoveredByAnyFeature" affectedComponent="SHAPE">
+              <Objects>
+                <Table table="Wasserleitung_V">
+                  <Id>11224</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351936.47809999995" ymin="5727700.9693" xmax="351936.56749999989" ymax="5727701.1007" zmin="30.094100000002072" zmax="30.095100000005914" />
+            </Issue>
+            <Issue description="The feature is not covered by any feature" code="CoveredByOther.NotCoveredByAnyFeature" affectedComponent="SHAPE">
+              <Objects>
+                <Table table="Wasserleitung_V">
+                  <Id>11225</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351960.45749999955" ymin="5727655.1686" xmax="351960.57980000041" ymax="5727655.2866999991" zmin="29.701100000005681" zmax="29.702099999994971" />
+            </Issue>
+            <Issue description="The feature is not covered by any feature" code="CoveredByOther.NotCoveredByAnyFeature" affectedComponent="SHAPE">
+              <Objects>
+                <Table table="Wasserleitung_V">
+                  <Id>11226</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351960.84439999983" ymin="5727655.5941" xmax="351960.92819999997" ymax="5727655.6107" zmin="29.589099999997416" zmax="29.595100000005914" />
+            </Issue>
+            <Issue description="The feature is not covered by any feature" code="CoveredByOther.NotCoveredByAnyFeature" affectedComponent="SHAPE">
+              <Objects>
+                <Table table="Wasserleitung_V">
+                  <Id>11227</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351961.49650000036" ymin="5727656.4675999992" xmax="351961.70100000035" ymax="5727656.6301000006" zmin="30.146099999998114" zmax="30.156099999992875" />
+            </Issue>
+            <Issue description="The feature is not covered by any feature" code="CoveredByOther.NotCoveredByAnyFeature" affectedComponent="SHAPE">
+              <Objects>
+                <Table table="Wasserleitung_V">
+                  <Id>11228</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351961.7648" ymin="5727656.7074" xmax="351961.92899999954" ymax="5727656.8522" zmin="30.166100000002189" zmax="30.171100000006845" />
+            </Issue>
+            <Issue description="The feature is not covered by any feature" code="CoveredByOther.NotCoveredByAnyFeature" affectedComponent="SHAPE">
+              <Objects>
+                <Table table="Wasserleitung_V">
+                  <Id>11229</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351962.02680000011" ymin="5727657.0648" xmax="351962.16980000027" ymax="5727657.1647" zmin="30.223100000002887" zmax="30.224100000006729" />
+            </Issue>
+            <Issue description="The feature is not covered by any feature" code="CoveredByOther.NotCoveredByAnyFeature" affectedComponent="SHAPE">
+              <Objects>
+                <Table table="Wasserleitung_V">
+                  <Id>11230</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351962.42410000041" ymin="5727657.5654000007" xmax="351962.55269999988" ymax="5727657.6747999992" zmin="30.29210000000603" zmax="30.296100000006845" />
+            </Issue>
+            <Issue description="The feature is not covered by any feature" code="CoveredByOther.NotCoveredByAnyFeature" affectedComponent="SHAPE">
+              <Objects>
+                <Table table="Wasserleitung_V">
+                  <Id>11231</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351977.88239999954" ymin="5727684.3467999995" xmax="351978.15969999973" ymax="5727684.6417" zmin="30.683099999994738" zmax="30.690100000007078" />
+            </Issue>
+            <Issue description="The feature is not covered by any feature" code="CoveredByOther.NotCoveredByAnyFeature" affectedComponent="SHAPE">
+              <Objects>
+                <Table table="Wasserleitung_V">
+                  <Id>11232</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351990.32980000041" ymin="5727697.2941999994" xmax="351990.33129999973" ymax="5727697.9637" zmin="29.9600999999966" zmax="29.961100000000442" />
+            </Issue>
+            <Issue description="The feature is not covered by any feature" code="CoveredByOther.NotCoveredByAnyFeature" affectedComponent="SHAPE">
+              <Objects>
+                <Table table="Wasserleitung_V">
+                  <Id>11237</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351956.41390000004" ymin="5727720.3753999993" xmax="351956.64790000021" ymax="5727720.3800000008" zmin="30.214099999997416" zmax="30.221099999995204" />
+            </Issue>
+            <Issue description="The feature is not covered by any feature" code="CoveredByOther.NotCoveredByAnyFeature" affectedComponent="SHAPE">
+              <Objects>
+                <Table table="Wasserleitung_V">
+                  <Id>11238</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351956.45839999989" ymin="5727720.1219999995" xmax="351956.65160000045" ymax="5727720.1491" zmin="30.099100000006729" zmax="30.103099999992992" />
+            </Issue>
+            <Issue description="The feature is not covered by any feature" code="CoveredByOther.NotCoveredByAnyFeature" affectedComponent="SHAPE">
+              <Objects>
+                <Table table="Wasserleitung_V">
+                  <Id>11239</Id>
+                </Table>
+              </Objects>
+              <Extent xmin="351984.66100000031" ymin="5727715.5554000009" xmax="351984.75810000021" ymax="5727715.5554000009" zmin="29.956099999995786" zmax="29.957099999999627" />
+            </Issue>
+          </Issues>
+        </Condition>
+      </QualityConditions>
+    </Category>
+  </ReportedIssues>
+</QualityVerification>
