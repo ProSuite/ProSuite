@@ -25,8 +25,8 @@ namespace ProSuite.AGP.Editing.Selection
 		/// </summary>
 		public int SelectionTolerancePixels { get; set; }
 
-		
 
+		//TODO STS is it necessary to set a different tolerance for points?
 		/// <summary>
 		/// Will be applied to point geometries
 		/// </summary>

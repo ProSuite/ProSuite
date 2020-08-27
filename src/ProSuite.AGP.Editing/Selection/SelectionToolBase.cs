@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -17,11 +18,19 @@ namespace ProSuite.AGP.Editing.Selection
 		public SelectionToolBase()
 		{
 			IsSketchTool = true;
-			SelectionSettings = new SelectionSettings(SketchGeometryType.Polygon);
+			SelectionSettings = new SelectionSettings();
+		}
+
+		protected override bool CanUseSelection(IEnumerable<Feature> selectedFeatures)
+		{
+			return false;
 		}
 
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+
+		private SelectionSettings _selectionSettings;
+		private SelectionSettings _selectionSettings1;
 
 		protected override bool IsInSelectionPhase()
 		{
@@ -39,9 +48,16 @@ namespace ProSuite.AGP.Editing.Selection
 			// throw new NotImplementedException();
 		}
 
+		
 		protected override void LogPromptForSelection()
 		{
 			_msg.InfoFormat("Select features by clicking or dragging a box");
+		}
+
+		protected override SelectionSettings SelectionSettings
+		{
+			get => _selectionSettings1;
+			set => _selectionSettings1 = value;
 		}
 
 		protected override void OnToolKeyDown(MapViewKeyEventArgs k)

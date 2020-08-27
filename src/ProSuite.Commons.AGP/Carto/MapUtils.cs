@@ -210,22 +210,36 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public static double ConvertScreenPixelToMapLength(int pixels)
 		{
-			MapPoint centerMapPoint = MapView.Active.Extent.Center;
-			Point centerScreenPoint = MapView.Active.MapToScreen(centerMapPoint);
-			var distancePoint = new Point()
-			                    {
-				                    X = centerScreenPoint.X + pixels,
-				                    Y = centerScreenPoint.Y
-			                    };
-			var points = new List<MapPoint>()
-			             {
-				             centerMapPoint,
-				             MapView.Active.ClientToMap(distancePoint)
-			             };
-			Polyline polyline =
-				PolylineBuilder.CreatePolyline(points, MapView.Active.Map.SpatialReference);
-			return polyline.Extent.Width;
+			//// this approach creates distances far too large
+			//MapPoint centerMapPoint = MapView.Active.Extent.Center;
+			//Point centerScreenPoint = MapView.Active.MapToScreen(centerMapPoint);
+			//var distancePoint = new Point()
+			//                    {
+			//	                    X = centerScreenPoint.X + pixels,
+			//	                    Y = centerScreenPoint.Y
+			//                    };
+			//var points = new List<MapPoint>()
+			//             {
+			//	             centerMapPoint,
+			//	             MapView.Active.ClientToMap(distancePoint)
+			//             };
+			//Polyline polyline =
+			//	PolylineBuilder.CreatePolyline(points, MapView.Active.Map.SpatialReference);
+			//return polyline.Extent.Width;
+
+			//Get the map center
+			var mapExtent = MapView.Active.Map.GetDefaultExtent();
+			var mapPoint = mapExtent.Center;
+			//Map center as screen point
+			var screenPoint = MapView.Active.MapToScreen(mapPoint);
+			//Add selection tolerance pixels to get a "radius".
+			var radiusScreenPoint =
+				new System.Windows.Point((screenPoint.X + pixels), screenPoint.Y);
+			var radiusMapPoint = MapView.Active.ScreenToMap(radiusScreenPoint);
+			//Calculate the selection tolerance distance in map uints.
+			return GeometryEngine.Instance.Distance(mapPoint, radiusMapPoint);
 		}
+
 
 		public static bool HasSelection(BasicFeatureLayer featureLayer)
 		{
