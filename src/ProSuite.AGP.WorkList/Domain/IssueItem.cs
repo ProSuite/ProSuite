@@ -19,6 +19,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			InvolvedObjects = reader.GetValue<string>(row, Attributes.InvolvedObjects);
 			IssueSeverity = reader.GetValue<string>(row, Attributes.IssueSeverity);
 			IssueCode = reader.GetValue<string>(row, Attributes.IssueCode);
+			InIssueInvolvedTables = IssueUtils.ParseInvolvedTables(InvolvedObjects);
 		}
 
 		public string QualityCondition { get; set; }
@@ -40,6 +41,8 @@ namespace ProSuite.AGP.WorkList.Domain
 				OnPropertyChanged();
 			}
 		}
+
 		public IList<InvolvedTable> InIssueInvolvedTables { get; set; }
+
 	}
 }
