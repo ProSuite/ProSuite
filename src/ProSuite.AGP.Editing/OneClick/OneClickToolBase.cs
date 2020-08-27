@@ -22,6 +22,7 @@ using ProSuite.Commons.UI.Keyboard;
 using Application = System.Windows.Application;
 using Cursor = System.Windows.Input.Cursor;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
+using SelectionMode = ProSuite.AGP.Editing.Selection.SelectionMode;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -43,6 +44,10 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			CIMColor magenta = ColorFactory.Instance.CreateRGBColor(255, 0, 255);
 		}
+
+		private SketchingMoveType SketchingMoveType { get; set; }
+
+		protected SelectionMode SelectionMode { get; set; }
 
 		protected bool RequiresSelection { get; set; } = true;
 
@@ -189,6 +194,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				CancelableProgressor progressor = GetCancelableProgressor();
 
+				SketchingMoveType = GetSketchingMoveType(sketchGeometry);
+
 				if (RequiresSelection && IsInSelectionPhase())
 				{
 					return await QueuedTaskUtils.Run(() => OnSelectionSketchComplete(
@@ -289,6 +296,15 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.FromResult(true);
 		}
 
+		private SketchingMoveType GetSketchingMoveType(Geometry geometry)
+		{
+			if (geometry.Extent.Width > 0 || geometry.Extent.Height > 0)
+			{
+				return SketchingMoveType.Drag;
+			}
+
+			return SketchingMoveType.Click;
+		}
 
 		private bool OnSelectionSketchComplete(
 			Geometry sketchGeometry,
@@ -298,89 +314,88 @@ namespace ProSuite.AGP.Editing.OneClick
 			//3D views only support selecting features interactively using geometry
 			//in screen coordinates relative to the top-left corner of the view.
 
-			Geometry selectionGeometry;
+			Geometry selectionGeometry = sketchGeometry;
 
-			var highlightPolygonSymbol = CreatePolygonSymbol();
+			CIMPolygonSymbol highlightPolygonSymbol = CreatePolygonSymbol();
 
-			if (sketchGeometry.Extent.Width > 0 || sketchGeometry.Extent.Height > 0)
+			if (SketchingMoveType == SketchingMoveType.Drag)
 			{
 				selectionGeometry =
 					BufferGeometryByPixels(sketchGeometry,
 					                       SelectionSettings.SelectionTolerancePixels);
-				
 			}
-			else
+
+			if (SketchingMoveType == SketchingMoveType.Click)
 			{
-				// it seems the Polygon is rather a 'map point'. it needs to be buffered
-				// with the pointPixelTolerance
 				var clickCoord =
 					new Coordinate2D(sketchGeometry.Extent.XMin, sketchGeometry.Extent.YMin);
 
 				MapPoint sketchPoint =
 					MapPointBuilder.CreateMapPoint(clickCoord, ActiveMapView.Map.SpatialReference);
-				
+
 				selectionGeometry =
 					BufferGeometryByPixels(sketchPoint,
 					                       SelectionSettings.PointBufferInPixels);
 			}
 
 			AddOverlay(selectionGeometry, highlightPolygonSymbol);
-			
 
-		// TODO: Add Utils method to KeyboardUtils to do it in the WPF way
-		SelectionCombinationMethod selectionMethod =
-			KeyboardUtils.IsModifierPressed(Keys.Shift)
-				? SelectionCombinationMethod.XOR
-				: SelectionCombinationMethod.New;
+			// TODO: Add Utils method to KeyboardUtils to do it in the WPF way
+			SelectionCombinationMethod selectionMethod =
+				KeyboardUtils.IsModifierPressed(Keys.Shift)
+					? SelectionCombinationMethod.XOR
+					: SelectionCombinationMethod.New;
 
-		//bool visualIntersect = SketchOutputMode == SketchOutputMode.Screen;
+			// TODO: cycle through the layers, check whether the ShapeType of the layer can be selected,
+			//       get the intersecting features with a search cursor, check whether each feature can 
+			//       be selected and if there are still several, bring up a picker dialog (if single selection is required)
 
-		// TODO: cycle through the layers, check whether the ShapeType of the layer can be selected,
-		//       get the intersecting features with a search cursor, check whether each feature can 
-		//       be selected and if there are still several, bring up a picker dialog (if single selection is required)
-
-		var featuresPerLayer = new Dictionary<BasicFeatureLayer, List<long>>();
-
-			foreach (BasicFeatureLayer layer in
-		MapView.Active.Map.Layers.OfType<BasicFeatureLayer>())
-		{
-			if (CanSelectFromLayer(layer))
+			switch (SelectionMode)
 			{
-				IEnumerable<Feature> features =
-					MapUtils.FilterFeaturesByGeometry(
-						layer, selectionGeometry,
-						SelectionSettings.SpatialRelationship);
-				IEnumerable<long> oids = MapUtils.GetFeaturesOidList(features);
-				if (oids.Any())
-				{
-					featuresPerLayer.Add(layer, oids.ToList());
-				}
+				case SelectionMode.UserSelect:
+					break;
+				case SelectionMode.Normal:
+					break;
+				case SelectionMode.Original:
+					var featuresPerLayer = new Dictionary<BasicFeatureLayer, List<long>>();
+
+					foreach (BasicFeatureLayer layer in
+						MapView.Active.Map.Layers.OfType<BasicFeatureLayer>())
+					{
+						if (CanSelectFromLayer(layer))
+						{
+							IEnumerable<Feature> features =
+								MapUtils.FilterFeaturesByGeometry(layer, selectionGeometry,
+									SelectionSettings.SpatialRelationship);
+							IEnumerable<long> oids = MapUtils.GetFeaturesOidList(features);
+
+							if (oids.Any())
+							{
+								featuresPerLayer.Add(layer, oids.ToList());
+							}
+						}
+					}
+					if (featuresPerLayer.Count > 1) { }
+
+					break;
 			}
+
+
+			//Dictionary<BasicFeatureLayer, List<long>> selection = ActiveMapView.SelectFeatures(selectionGeometry, selectionMethod);
+
+			ProcessSelection(SelectionUtils.GetSelectedFeatures(ActiveMapView), progressor);
+
+			// else: feedback to the user to keep selecting
+			return true;
 		}
 
-
-		if (featuresPerLayer.Count > 1) { }
-
-		//Dictionary<BasicFeatureLayer, List<long>> selection = ActiveMapView.SelectFeatures(selectionGeometry, selectionMethod);
-
-		ProcessSelection(SelectionUtils.GetSelectedFeatures(ActiveMapView), progressor);
-
-		// else: feedback to the user to keep selecting
-		return true;
-	}
-
-
-
-private Geometry BufferGeometryByPixels(Geometry sketchGeometry, int pixelBufferDistance)
+		private Geometry BufferGeometryByPixels(Geometry sketchGeometry, int pixelBufferDistance)
 		{
-
 			double bufferDistance = MapUtils.ConvertScreenPixelToMapLength(pixelBufferDistance);
 			Geometry selectionGeometry =
 				GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
 			return selectionGeometry;
 		}
-
-		
 
 		protected virtual bool IsInSelectionPhase()
 		{

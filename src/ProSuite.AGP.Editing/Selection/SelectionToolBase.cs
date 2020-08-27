@@ -30,11 +30,30 @@ namespace ProSuite.AGP.Editing.Selection
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		private SelectionSettings _selectionSettings;
-		private SelectionSettings _selectionSettings1;
-
+		
 		protected override bool IsInSelectionPhase()
 		{
 			return true;
+		}
+
+		protected override void OnKeyDownCore(MapViewKeyEventArgs k)
+		{
+			if (k.Key == Key.LeftCtrl || k.Key == Key.RightCtrl)
+			{
+				SelectionMode = SelectionMode.UserSelect;
+			}
+			if (k.Key == Key.LeftAlt || k.Key == Key.RightAlt)
+			{
+				SelectionMode = SelectionMode.Original;
+			}
+		}
+
+		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
+		{
+			if (k.Key == Key.LeftCtrl || k.Key == Key.RightCtrl || k.Key == Key.LeftAlt || k.Key == Key.RightAlt)
+			{
+				SelectionMode = SelectionMode.Normal;
+			}
 		}
 
 		protected override bool HandleEscape()
@@ -56,8 +75,8 @@ namespace ProSuite.AGP.Editing.Selection
 
 		protected override SelectionSettings SelectionSettings
 		{
-			get => _selectionSettings1;
-			set => _selectionSettings1 = value;
+			get => _selectionSettings;
+			set => _selectionSettings = value;
 		}
 
 		protected override void OnToolKeyDown(MapViewKeyEventArgs k)
