@@ -40,6 +40,7 @@
     <Compile Include="InvolvedTablesTest.cs" />
     <Compile Include="IssuePolygonsGdbRepository.cs" />
     <Compile Include="IssueListRepository.cs" />
+    <Compile Include="IssuesStateJsonRepository.cs" />
     <Compile Include="IssuesStateXmlRepository.cs" />
     <Compile Include="ItemRepositoryMock.cs" />
     <Compile Include="MemoryQueryWorkList.cs" />

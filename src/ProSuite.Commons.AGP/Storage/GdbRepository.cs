@@ -171,7 +171,7 @@ namespace ProSuite.Commons.AGP.Storage
 		{
 			if (_repoIsChanged)
 			{
-				// check shema and build RowBuffer
+				// check schema and build RowBuffer
 				foreach (var item in Query)
 				{
 					//var row = CreateRow(item);

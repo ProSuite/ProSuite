@@ -35,6 +35,8 @@ namespace ProSuite.Commons.AGP.Storage
 
 		public void SaveChanges()
 		{
+			if (items.Count == 0) return;
+
 			if (! File.Exists(FileName))
 				File.CreateText(FileName);
 

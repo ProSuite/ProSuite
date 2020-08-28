@@ -61,11 +61,15 @@
     <Compile Include="Spatial\GeometryUtils.cs" />
     <Compile Include="Storage\GdbRepository.cs" />
     <Compile Include="Storage\IRepository.cs" />
+    <Compile Include="Storage\JsonRepository.cs" />
     <Compile Include="Storage\XmlRepository.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Esri.ArcGISPro.Extensions">
       <Version>$(ProNuGetVersion)</Version>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>8.0.3</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

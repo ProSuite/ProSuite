@@ -81,20 +81,20 @@ namespace ProSuite.AGP.WorkList.Test
 		}
 
 		[Test]
-		public void IssueListStatePersistGdbTest()
+		public void IssueListStatePersistJsonTest()
 		{
 			var issueFeatureClass = "IssuePolygons";
 			var definition =
 				new IssueWorkListDefinition()
 				{
 					FgdbPath = issueGdbPath,
-					Path = @"c:\data\states.xml",
+					Path = @"c:\data\states.json",
 					VisitedItems = { }
 				};
 
 			var issuesRepo = new IssueListRepository(
 				new IssuePolygonsGdbRepository(definition.FgdbPath, issueFeatureClass),
-				new IssuesStateXmlRepository(definition.Path)
+				new IssuesStateJsonRepository(definition.Path)
 			);
 
 			var issues = issuesRepo.GetAll().ToList();
