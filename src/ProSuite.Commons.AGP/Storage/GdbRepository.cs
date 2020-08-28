@@ -2,6 +2,7 @@ using ArcGIS.Core.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ArcGIS.Desktop.Internal.Mapping.Locate;
 
 namespace ProSuite.Commons.AGP.Storage
 {
@@ -78,9 +79,9 @@ namespace ProSuite.Commons.AGP.Storage
 
 		#region IRepository<T> Members
 
-		public IList<T> GetAll()
+		public IQueryable<T> GetAll()
 		{
-			return Query;
+			return Query.AsQueryable();
 		}
 
 		public void Add(T item)
@@ -135,8 +136,6 @@ namespace ProSuite.Commons.AGP.Storage
 		private IList<T> ReadTableItems(Table table)
 		{
 			var items = new List<T>();
-			if (items == null) return items;
-
 			using (RowCursor cursor = table.Search(Filter, true))
 			{
 				while (cursor.MoveNext())
@@ -154,8 +153,6 @@ namespace ProSuite.Commons.AGP.Storage
 		private IList<T> ReadFeatureClassItems(FeatureClass featureClass)
 		{
 			var items = new List<T>();
-			if (items == null) return items;
-
 			using (RowCursor cursor = featureClass.Search(Filter, true))
 			{
 				while (cursor.MoveNext())
@@ -172,7 +169,14 @@ namespace ProSuite.Commons.AGP.Storage
 
 		private void CommitChanges()
 		{
-			throw new NotImplementedException();
+			if (_repoIsChanged)
+			{
+				// check shema and build RowBuffer
+				foreach (var item in Query)
+				{
+					//var row = CreateRow(item);
+				}
+			}
 		}
 
 

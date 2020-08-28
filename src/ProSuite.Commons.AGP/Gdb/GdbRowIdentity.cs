@@ -8,7 +8,7 @@ namespace ProSuite.Commons.AGP.Gdb
 	/// <summary>
 	///     Represents a lightweight reference to a geodatabase object.
 	/// </summary>
-	public struct GdbRowIdentity : IEquatable<GdbRowIdentity>
+	public class GdbRowIdentity : IEquatable<GdbRowIdentity>
 	{
 		public GdbRowIdentity([NotNull] Row row)
 		{
@@ -33,6 +33,11 @@ namespace ProSuite.Commons.AGP.Gdb
 		{
 			ObjectId = objectId;
 			Table = tableId;
+		}
+
+		public GdbRowIdentity()
+		{
+
 		}
 
 		public long ObjectId { get; }

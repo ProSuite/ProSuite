@@ -4,7 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using ArcGIS.Core.CIM;
 using NUnit.Framework;
+using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 
 namespace ProSuite.AGP.WorkList.Test
@@ -42,12 +44,69 @@ namespace ProSuite.AGP.WorkList.Test
 				};
 
 			var issueRepository = new IssuePolygonsGdbRepository(issueDefinition, issueFeatureClass);
-			var issues = issueRepository.GetAll();
+			var issues = issueRepository.GetAll().ToList();
 
 			Assert.AreEqual(9, issues.Count);
 
 			//var failedIssues = issues.Count(i => (i.InIssueInvolvedTables.Any<InvolvedTable>(t => t.KeyField == null)));
 			//Assert.AreEqual(0, failedIssues);
 		}
+
+		[Test]
+		public void IssueListStatePersistXmlTest()
+		{
+			var issueFeatureClass = "IssuePolygons";
+			var definition =
+				new IssueWorkListDefinition()
+				{
+					FgdbPath = issueGdbPath,
+					Path = @"c:\data\states.xml",
+					VisitedItems = { }
+				};
+
+			var issuesRepo = new IssueListRepository(
+				new IssuePolygonsGdbRepository(definition.FgdbPath, issueFeatureClass),
+				new IssuesStateXmlRepository(definition.Path)
+			);
+
+			var issues = issuesRepo.GetAll().ToList();
+
+			Assert.AreEqual(9, issues.Count);
+
+			var issue = issues[0];
+			issue.Status = WorkItemStatus.Done;
+			issuesRepo.Update(issue);
+
+			issuesRepo.SaveChanges();
+		}
+
+		[Test]
+		public void IssueListStatePersistGdbTest()
+		{
+			var issueFeatureClass = "IssuePolygons";
+			var definition =
+				new IssueWorkListDefinition()
+				{
+					FgdbPath = issueGdbPath,
+					Path = @"c:\data\states.xml",
+					VisitedItems = { }
+				};
+
+			var issuesRepo = new IssueListRepository(
+				new IssuePolygonsGdbRepository(definition.FgdbPath, issueFeatureClass),
+				new IssuesStateXmlRepository(definition.Path)
+			);
+
+			var issues = issuesRepo.GetAll().ToList();
+
+			Assert.AreEqual(9, issues.Count);
+
+			var issue = issues[0];
+			issue.Status = WorkItemStatus.Done;
+			issuesRepo.Update(issue);
+
+			issuesRepo.SaveChanges();
+		}
+
 	}
 }

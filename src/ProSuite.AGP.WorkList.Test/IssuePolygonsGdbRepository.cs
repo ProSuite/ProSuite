@@ -10,22 +10,16 @@ using ProSuite.Commons.AGP.Storage;
 
 namespace ProSuite.AGP.WorkList.Test
 {
+	// for test only one feature class
 	public class IssuePolygonsGdbRepository : GdbRepository<IssueItem, FeatureClass>
 	{
-		private readonly IList<GdbRowIdentity> _issueStates;
-		private readonly string _issueStatePath;
-
-		private AttributeReader _attributeReader {
-			get
-			{
-				return new AttributeReader(GdbTableDefinition as TableDefinition,
-				                           Attributes.QualityConditionName,
-				                           Attributes.InvolvedObjects,
-				                           Attributes.IssueSeverity,
-				                           Attributes.IssueCode
-				);
-			}
-		}
+		private AttributeReader _attributeReader =>
+			new AttributeReader(GdbTableDefinition as TableDefinition,
+			                    Attributes.QualityConditionName,
+			                    Attributes.InvolvedObjects,
+			                    Attributes.IssueSeverity,
+			                    Attributes.IssueCode
+			);
 
 		public IssuePolygonsGdbRepository(string gdbPath, string className = null) : base(gdbPath, className)
 		{
@@ -33,9 +27,6 @@ namespace ProSuite.AGP.WorkList.Test
 
 		public IssuePolygonsGdbRepository(IssueWorkListDefinition workListDef, string className = null) : base(workListDef.FgdbPath, className)
 		{
-			// open XML repository for IssueWorklistDefinition?
-			_issueStates = workListDef.VisitedItems;
-			_issueStatePath = workListDef.Path;
 		}
 
 		public override IssueItem ParseRow(Row currentRow)

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using ArcGIS.Desktop.Internal.Mapping.Locate;
 
 namespace ProSuite.Commons.AGP.Storage
 {
@@ -16,18 +17,27 @@ namespace ProSuite.Commons.AGP.Storage
 		{
 			FileName = filename;
 
-			XmlSerializer serializer = new XmlSerializer(typeof(List<T>), new XmlRootAttribute("Items"));
-			using (StreamReader myWriter = new StreamReader(FileName))
+			if (File.Exists(FileName))
 			{
-				items = (IList<T>)serializer.Deserialize(myWriter);
-				myWriter.Close();
+				XmlSerializer serializer =
+					new XmlSerializer(typeof(List<T>), new XmlRootAttribute("Items"));
+				using (StreamReader myWriter = new StreamReader(FileName))
+				{
+					items = (IList<T>) serializer.Deserialize(myWriter);
+					myWriter.Close();
+				}
 			}
+			else
+				items = new List<T>();
 		}
 
 		internal string FileName { get; private set; }
 
 		public void SaveChanges()
 		{
+			if (! File.Exists(FileName))
+				File.CreateText(FileName);
+
 			XmlSerializer serializer = new XmlSerializer(items.GetType(), new XmlRootAttribute("Items"));
 			using (StreamWriter myWriter = new StreamWriter(FileName))
 			{
@@ -36,9 +46,9 @@ namespace ProSuite.Commons.AGP.Storage
 			}
 		}
 
-		public IList<T> GetAll()
+		public IQueryable<T> GetAll()
 		{
-			return items;
+			return items.AsQueryable();
 		}
 
 		public void Add(T item)
@@ -48,7 +58,6 @@ namespace ProSuite.Commons.AGP.Storage
 
 		public void Update(T item)
 		{
-			throw new NotImplementedException();
 		}
 
 		public void Delete(T item)
