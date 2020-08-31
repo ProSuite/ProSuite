@@ -1,13 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using ArcGIS.Core.CIM;
 using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain;
+using System.Linq;
+using System.Threading;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -101,8 +95,8 @@ namespace ProSuite.AGP.WorkList.Test
 
 			Assert.AreEqual(9, issues.Count);
 
-			var issue = issues[0];
-			issue.Status = WorkItemStatus.Done;
+			var issue = issues.First();
+			issues.First().Status = WorkItemStatus.Done;
 			issuesRepo.Update(issue);
 
 			issuesRepo.SaveChanges();

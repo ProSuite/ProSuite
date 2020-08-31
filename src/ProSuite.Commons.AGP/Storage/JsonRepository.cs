@@ -1,9 +1,7 @@
-using ArcGIS.Desktop.Internal.Models.Utilities;
+//using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Newtonsoft.Json;
-using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.Commons.AGP.Storage
 {
@@ -11,17 +9,17 @@ namespace ProSuite.Commons.AGP.Storage
 	{
 		private readonly IList<T> items;
 		private readonly string _filename;
-		public readonly JsonConverter _jsonConverter;
+		//public readonly JsonConverter _jsonConverter;
 
-		protected JsonRepository(string filename, JsonConverter jsonConverter = null)
+		protected JsonRepository(string filename /*, JsonConverter jsonConverter = null*/)
 		{
 			_filename = filename;
-			_jsonConverter = jsonConverter;
+			//_jsonConverter = jsonConverter;
 			if (File.Exists(_filename))
 			{
 				string statusJson = File.ReadAllText(_filename);
-				if (!string.IsNullOrEmpty(statusJson))
-					items = JsonConvert.DeserializeObject<List<T>>(statusJson);
+				//if (!string.IsNullOrEmpty(statusJson))
+				//	items = JsonConvert.DeserializeObject<IEnumerable<T>>(statusJson).ToList();
 			}
 			items = items ?? new List<T>();
 		}
@@ -53,8 +51,8 @@ namespace ProSuite.Commons.AGP.Storage
 				File.CreateText(_filename);
 
 			//var jsonText = JsonConvert.SerializeObject(items, _jsonConverter);
-			var jsonText = JsonConvert.SerializeObject(items);
-			File.WriteAllText(_filename,jsonText);
+			//var jsonText = JsonConvert.SerializeObject(items);
+			//File.WriteAllText(_filename,jsonText);
 		}
 	}
 }
