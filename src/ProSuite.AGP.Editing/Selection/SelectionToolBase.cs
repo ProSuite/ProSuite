@@ -83,7 +83,12 @@ namespace ProSuite.AGP.Editing.Selection
 		{
 			if (k.Key == Key.LeftAlt || k.Key == Key.RightAlt)
 			{
-				
+				SelectionMode = SelectionMode.Original;
+			}
+
+			if (k.Key == Key.LeftCtrl || k.Key == Key.RightCtrl)
+			{
+				SelectionMode = SelectionMode.UserSelect;
 			}
 		}
 	}

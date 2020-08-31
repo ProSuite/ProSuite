@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -318,68 +319,80 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			CIMPolygonSymbol highlightPolygonSymbol = CreatePolygonSymbol();
 
-			if (SketchingMoveType == SketchingMoveType.Drag)
-			{
-				selectionGeometry =
-					BufferGeometryByPixels(sketchGeometry,
-					                       SelectionSettings.SelectionTolerancePixels);
-			}
-
-			if (SketchingMoveType == SketchingMoveType.Click)
-			{
-				var clickCoord =
-					new Coordinate2D(sketchGeometry.Extent.XMin, sketchGeometry.Extent.YMin);
-
-				MapPoint sketchPoint =
-					MapPointBuilder.CreateMapPoint(clickCoord, ActiveMapView.Map.SpatialReference);
-
-				selectionGeometry =
-					BufferGeometryByPixels(sketchPoint,
-					                       SelectionSettings.PointBufferInPixels);
-			}
-
-			AddOverlay(selectionGeometry, highlightPolygonSymbol);
-
 			// TODO: Add Utils method to KeyboardUtils to do it in the WPF way
 			SelectionCombinationMethod selectionMethod =
 				KeyboardUtils.IsModifierPressed(Keys.Shift)
 					? SelectionCombinationMethod.XOR
 					: SelectionCombinationMethod.New;
 
-			// TODO: cycle through the layers, check whether the ShapeType of the layer can be selected,
-			//       get the intersecting features with a search cursor, check whether each feature can 
-			//       be selected and if there are still several, bring up a picker dialog (if single selection is required)
-
-			switch (SelectionMode)
+			if (SketchingMoveType == SketchingMoveType.Click)
 			{
-				case SelectionMode.UserSelect:
-					break;
-				case SelectionMode.Normal:
-					break;
-				case SelectionMode.Original:
-					var featuresPerLayer = new Dictionary<BasicFeatureLayer, List<long>>();
+				MapPoint sketchPoint = CreatPointFromSketchPolygon(sketchGeometry);
 
-					foreach (BasicFeatureLayer layer in
-						MapView.Active.Map.Layers.OfType<BasicFeatureLayer>())
-					{
-						if (CanSelectFromLayer(layer))
-						{
-							IEnumerable<Feature> features =
-								MapUtils.FilterFeaturesByGeometry(layer, selectionGeometry,
-									SelectionSettings.SpatialRelationship);
-							IEnumerable<long> oids = MapUtils.GetFeaturesOidList(features);
+				selectionGeometry =
+					BufferGeometryByPixels(sketchPoint,
+					                       SelectionSettings.PointBufferInPixels);
 
-							if (oids.Any())
-							{
-								featuresPerLayer.Add(layer, oids.ToList());
-							}
-						}
-					}
-					if (featuresPerLayer.Count > 1) { }
-
-					break;
+				if (SelectionMode == SelectionMode.Original)
+				{
+					// select all features on clickpoint
+					Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer =
+						FindFeaturesOfAllLayers(selectionGeometry);
+				}
+				else
+				{
+					//select a single feature using feature reduction and/or picker
+				}
 			}
 
+			if (SketchingMoveType == SketchingMoveType.Drag)
+			{
+				selectionGeometry =
+					BufferGeometryByPixels(sketchGeometry,
+					                       SelectionSettings.SelectionTolerancePixels);
+
+				if (SelectionMode == SelectionMode.UserSelect)
+				{
+					// get featureclasses from layers, present selectable featureclasses in Picker
+					IEnumerable<FeatureLayer> featureLayers = ActiveMapView.Map.Layers
+						.OfType<FeatureLayer>();
+
+					var fClassGroups = featureLayers.Where(fLayer =>
+						fLayer.IsSelectable).Select(fLayer => fLayer.GetFeatureClass()).GroupBy(fc => fc.GetName());
+
+					var layerGroupsByFcName = featureLayers.GroupBy(layer => layer.GetFeatureClass().GetName());
+
+					List<FeatureClassInfo> featureClassInfos = new List<FeatureClassInfo>();
+
+					foreach (var group in layerGroupsByFcName)
+					{
+						List<FeatureLayer> belongingLayers = new List<FeatureLayer>();
+						foreach (var layer in group)
+						{
+							belongingLayers.Add(layer);
+						}
+						FeatureClassInfo featureClassInfo = new FeatureClassInfo()
+						                                    {
+																BelongingLayers = belongingLayers,
+																FeatureClass = belongingLayers.First().GetFeatureClass()
+						                                    };
+						featureClassInfos.Add(featureClassInfo);
+					}
+
+					featureClassInfos.OrderBy(info => info.BelongingLayers.First().ShapeType);
+
+
+					//TODO STS: should call Picker here, but what about circular assembly ref?
+				}
+				else
+				{
+					// select all features from all layers
+					Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer =
+						FindFeaturesOfAllLayers(selectionGeometry);
+				}
+			}
+
+			AddOverlay(selectionGeometry, highlightPolygonSymbol);
 
 			//Dictionary<BasicFeatureLayer, List<long>> selection = ActiveMapView.SelectFeatures(selectionGeometry, selectionMethod);
 
@@ -387,6 +400,41 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			// else: feedback to the user to keep selecting
 			return true;
+		}
+
+		private Dictionary<BasicFeatureLayer, List<long>> FindFeaturesOfAllLayers(
+			Geometry selectionGeometry)
+		{
+			var featuresPerLayer = new Dictionary<BasicFeatureLayer, List<long>>();
+
+			foreach (BasicFeatureLayer layer in
+				MapView.Active.Map.Layers.OfType<BasicFeatureLayer>())
+			{
+				if (CanSelectFromLayer(layer))
+				{
+					IEnumerable<Feature> features =
+						MapUtils.FilterFeaturesByGeometry(layer, selectionGeometry,
+						                                  SelectionSettings.SpatialRelationship);
+					IEnumerable<long> oids = MapUtils.GetFeaturesOidList(features);
+
+					if (oids.Any())
+					{
+						featuresPerLayer.Add(layer, oids.ToList());
+					}
+				}
+			}
+
+			return featuresPerLayer;
+		}
+
+		private MapPoint CreatPointFromSketchPolygon(Geometry sketchGeometry)
+		{
+			var clickCoord =
+				new Coordinate2D(sketchGeometry.Extent.XMin, sketchGeometry.Extent.YMin);
+
+			MapPoint sketchPoint =
+				MapPointBuilder.CreateMapPoint(clickCoord, ActiveMapView.Map.SpatialReference);
+			return sketchPoint;
 		}
 
 		private Geometry BufferGeometryByPixels(Geometry sketchGeometry, int pixelBufferDistance)

@@ -55,6 +55,7 @@
     <Compile Include="OneClick\OneClickToolBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Erase\EraseToolBase.cs" />
+    <Compile Include="Selection\FeatureClassInfo.cs" />
     <Compile Include="Selection\LayerPredicate.cs" />
     <Compile Include="Selection\SelectionMode.cs" />
     <Compile Include="Selection\SelectionSettings.cs" />
