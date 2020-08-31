@@ -371,15 +371,22 @@ namespace ProSuite.AGP.Editing.OneClick
 						{
 							belongingLayers.Add(layer);
 						}
+
+						FeatureClass fClass = belongingLayers.First().GetFeatureClass();
+						string featureClassName = fClass.GetName();
+						esriGeometryType gType = belongingLayers.First().ShapeType;
+
 						FeatureClassInfo featureClassInfo = new FeatureClassInfo()
 						                                    {
 																BelongingLayers = belongingLayers,
-																FeatureClass = belongingLayers.First().GetFeatureClass()
+																FeatureClass = fClass,
+																FeatureClassName = featureClassName,
+																ShapeType = gType
 						                                    };
 						featureClassInfos.Add(featureClassInfo);
 					}
 
-					featureClassInfos.OrderBy(info => info.BelongingLayers.First().ShapeType);
+					featureClassInfos.OrderBy(info => info.ShapeType);
 
 
 					//TODO STS: should call Picker here, but what about circular assembly ref?
