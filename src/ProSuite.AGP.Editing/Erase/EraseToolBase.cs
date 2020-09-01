@@ -34,10 +34,10 @@ namespace ProSuite.AGP.Editing.Erase
 			SelectionCursorShift = ToolUtils.GetCursor(Resources.EraseToolCursorShift);
 		}
 
-		protected override SketchGeometryType GetSketchGeometryType()
-		{
-			return SketchGeometryType.Polygon;
-		}
+		//protected override SketchGeometryType GetSketchGeometryType()
+		//{
+		//	return SketchGeometryType.Polygon;
+		//}
 
 		protected override void LogEnteringSketchMode()
 		{
