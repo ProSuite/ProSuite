@@ -14,7 +14,9 @@ using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Selection;
+using ProSuite.AGP.Picker;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -307,7 +309,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			return SketchingMoveType.Click;
 		}
 
-		private bool OnSelectionSketchComplete(
+		private async Task<bool> OnSelectionSketchComplete(
 			Geometry sketchGeometry,
 			CancelableProgressor progressor)
 		{
@@ -365,6 +367,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					foreach (var group in layerGroupsByFcName)
 					{
 						List<FeatureLayer> belongingLayers = new List<FeatureLayer>();
+
 						foreach (var layer in group)
 						{
 							belongingLayers.Add(layer);
@@ -386,7 +389,10 @@ namespace ProSuite.AGP.Editing.OneClick
 
 					featureClassInfos.OrderBy(info => info.ShapeType);
 
-
+					List<IPickableItem> pickableItems = PickableItemAdapter.Get(featureClassInfos);
+					
+					PickerUI.Picker picker = new PickerUI.Picker(pickableItems);
+					FeatureClassInfo item = await picker.PickSingle() as FeatureClassInfo;
 					//TODO STS: should call Picker here, but what about circular assembly ref?
 				}
 				else
@@ -405,6 +411,31 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			// else: feedback to the user to keep selecting
 			return true;
+		}
+
+		
+
+		private Dictionary<BasicFeatureLayer,List<long>> ReduceFeatures(List<FeatureClassInfo> featureClassInfos, Geometry filterGeometry)
+		{
+			Dictionary<BasicFeatureLayer, List<long> > featuresPerLayer = new Dictionary<BasicFeatureLayer, List<long>>();
+			foreach (var info in featureClassInfos)
+			{
+				foreach (var layer in info.BelongingLayers)
+				{
+					var selectionCandidates = MapUtils.FilterFeaturesByGeometry(layer, filterGeometry,
+					                                  SelectionSettings.SpatialRelationship);
+
+					if (selectionCandidates.Any())
+					{
+						var oids = MapUtils.GetFeaturesOidList(selectionCandidates);
+
+						featuresPerLayer.Add(layer, oids.ToList());
+
+						return featuresPerLayer;
+					}
+				}	
+			};
+			return featuresPerLayer;
 		}
 
 		private Dictionary<BasicFeatureLayer, List<long>> FindFeaturesOfAllLayers(

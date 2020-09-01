@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace ProSuite.AGP.Editing.Picker
+namespace ProSuite.AGP.Editing.PickerUI
 {
 	//Since the window's DialogResult Property is not a dependency property,
 	//we cannot bind to it. This attached property is used instead.

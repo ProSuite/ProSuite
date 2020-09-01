@@ -1,4 +1,4 @@
-<Window x:Class="ProSuite.AGP.Editing.Picker.PickerWindow"
+<Window x:Class="ProSuite.AGP.Editing.PickerUI.PickerWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -6,7 +6,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
         xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
-        xmlns:picker="clr-namespace:ProSuite.AGP.Editing.Picker"
+        xmlns:pickerUI="clr-namespace:ProSuite.AGP.Editing.PickerUI"
         mc:Ignorable="d"
         Title="PickerWindow"
         Height="300"
@@ -15,7 +15,7 @@
         WindowStartupLocation="Manual"
         ShowInTaskbar="True"
         WindowStyle="None"
-        picker:DialogCloser.DialogResult ="{Binding Path=DialogResult}"
+        pickerUI:DialogCloser.DialogResult ="{Binding Path=DialogResult}"
         BorderBrush="{DynamicResource Esri_BorderBrush}"
         BorderThickness="1"
         AllowsTransparency="True"
@@ -61,7 +61,7 @@
             </Style>
 
             <BooleanToVisibilityConverter x:Key="VisibleIfTrueConverter" />
-            <picker:VisibleIfFalseConverter x:Key="VisibleIfFalseConverter" />
+            <pickerUI:VisibleIfFalseConverter x:Key="VisibleIfFalseConverter" />
 
             <DataTemplate x:Key="SinglePickTemplate">
                 <DockPanel>

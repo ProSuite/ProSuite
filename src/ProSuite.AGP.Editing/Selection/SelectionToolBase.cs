@@ -46,6 +46,7 @@ namespace ProSuite.AGP.Editing.Selection
 			{
 				SelectionMode = SelectionMode.Original;
 			}
+			_msg.Info($"Key {k.Key} was pressed. SelectionMode: '{SelectionMode}'");
 		}
 
 		//protected override void OnKeyUpCore(MapViewKeyEventArgs k)

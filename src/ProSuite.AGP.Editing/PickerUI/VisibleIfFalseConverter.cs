@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace ProSuite.AGP.Editing.Picker
+namespace ProSuite.AGP.Editing.PickerUI
 {
 	class VisibleIfFalseConverter:IValueConverter
 	{

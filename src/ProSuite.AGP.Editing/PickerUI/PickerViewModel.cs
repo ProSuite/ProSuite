@@ -10,7 +10,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Picker;
 using Polygon = ArcGIS.Core.Geometry.Polygon;
 
-namespace ProSuite.AGP.Editing.Picker
+namespace ProSuite.AGP.Editing.PickerUI
 {
 	public class PickerViewModel : PropertyChangedBase
 	{

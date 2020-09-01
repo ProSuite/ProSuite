@@ -1,10 +1,11 @@
 using ArcGIS.Core.Geometry;
 using System;
+using System.ComponentModel;
 
 namespace ProSuite.AGP.Picker
 
 {
-	public interface IPickableItem
+	public interface IPickableItem: INotifyPropertyChanged
 	{
 		string ItemText { get;}
 

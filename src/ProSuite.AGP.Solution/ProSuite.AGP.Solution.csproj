@@ -204,10 +204,6 @@
       <Project>{EC3D575D-7B9D-467F-BC76-2E093A3126EC}</Project>
       <Name>ProSuite.AGP.Editing</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ProSuite.AGP.Picker\ProSuite.AGP.Picker.csproj">
-      <Project>{a0664bcb-3a91-4a7e-b303-d9a55b8e6cc8}</Project>
-      <Name>ProSuite.AGP.Picker</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj">
       <Project>{47e134c6-b803-451e-8c33-7c71b158b2ac}</Project>
       <Name>ProSuite.AGP.WorkList.Contracts</Name>

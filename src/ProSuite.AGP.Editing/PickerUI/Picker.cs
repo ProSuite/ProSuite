@@ -4,10 +4,11 @@ using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Picker;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.Editing.Picker
+namespace ProSuite.AGP.Editing.PickerUI
 {
 	class Picker : IPicker
 

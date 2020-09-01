@@ -1,6 +1,6 @@
 using System.Windows;
 
-namespace ProSuite.AGP.Editing.Picker
+namespace ProSuite.AGP.Editing.PickerUI
 {
 	/// <summary>
 	/// Interaction logic for PickerWindow.xaml
