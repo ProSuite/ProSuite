@@ -10,7 +10,7 @@ namespace ProSuite.AGP.Editing.Selection
 		public SelectionSettings(SketchGeometryType sketchGeometryType = SketchGeometryType.Rectangle, int selectionTolerancePixels = 3, SpatialRelationship spatialRelationship = SpatialRelationship.Intersects)
 		{
 			SketchGeometryType = sketchGeometryType;
-			SketchOutputMode = MapView.Active.ViewingMode == MapViewingMode.Map ? SketchOutputMode.Map : SketchOutputMode.Screen;
+			SketchOutputMode = SketchOutputMode.Map; 
 			SelectionTolerancePixels = selectionTolerancePixels;
 			SpatialRelationship = spatialRelationship;
 		}
@@ -18,18 +18,15 @@ namespace ProSuite.AGP.Editing.Selection
 		public SpatialRelationship SpatialRelationship { get; set; }
 
 		public SketchGeometryType SketchGeometryType { get; set; }
+
+		/// screen coords are currently not supported and only relevant
+		/// when selecting with the View being in 3D viewing mode
 		public SketchOutputMode SketchOutputMode { get; set; }
 
 		/// <summary>
-		/// Will be applied to all geometries except points
+		/// Will be applied to points only
 		/// </summary>
 		public int SelectionTolerancePixels { get; set; }
-
-
-		//TODO STS is it necessary to set a different tolerance for points?
-		/// <summary>
-		/// Will be applied to point geometries
-		/// </summary>
-		public const int PointBufferInPixels = 3;
+		
 	}
 }

@@ -52,7 +52,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected bool RequiresSelection { get; set; } = true;
 
-		protected abstract SelectionSettings SelectionSettings { get; set; }
+		protected virtual SelectionSettings SelectionSettings { get; set; } 
 
 		protected List<Key> HandledKeys { get; } = new List<Key>();
 
@@ -331,7 +331,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				selectionGeometry =
 					BufferGeometryByPixels(sketchPoint,
-					                       SelectionSettings.PointBufferInPixels);
+					                       SelectionSettings.SelectionTolerancePixels);
 
 				if (SelectionMode == SelectionMode.Original)
 				{
@@ -347,9 +347,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (SketchingMoveType == SketchingMoveType.Drag)
 			{
-				selectionGeometry =
-					BufferGeometryByPixels(sketchGeometry,
-					                       SelectionSettings.SelectionTolerancePixels);
+				selectionGeometry = sketchGeometry;
 
 				if (SelectionMode == SelectionMode.UserSelect)
 				{

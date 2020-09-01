@@ -1,22 +1,6 @@
-using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Erase;
-using ProSuite.AGP.Editing.Selection;
 
-namespace Clients.AGP.ProSuiteSolution.Editing
+namespace ProSuite.AGP.Solution.Editing
 {
-	public class EraseTool : EraseToolBase
-	{
-		private SelectionSettings _selectionSettings;
-
-		public EraseTool()
-		{
-			_selectionSettings = new SelectionSettings(SketchGeometryType.Polygon);
-		}
-
-		protected override SelectionSettings SelectionSettings
-		{
-			get => _selectionSettings;
-			set => _selectionSettings = value;
-		}
-	}
+	public class EraseTool : EraseToolBase { }
 }
