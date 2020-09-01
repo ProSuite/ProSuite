@@ -89,5 +89,65 @@ namespace ProSuite.AGP.Editing.Properties {
                 return ((byte[])(obj));
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] SelectionToolNormal {
+            get {
+                object obj = ResourceManager.GetObject("SelectionToolNormal", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] SelectionToolNormalShift {
+            get {
+                object obj = ResourceManager.GetObject("SelectionToolNormalShift", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] SelectionToolOriginal {
+            get {
+                object obj = ResourceManager.GetObject("SelectionToolOriginal", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] SelectionToolOriginalShift {
+            get {
+                object obj = ResourceManager.GetObject("SelectionToolOriginalShift", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] SelectionToolUser {
+            get {
+                object obj = ResourceManager.GetObject("SelectionToolUser", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] SelectionToolUserShift {
+            get {
+                object obj = ResourceManager.GetObject("SelectionToolUserShift", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }
