@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -7,11 +8,13 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -20,32 +23,41 @@ using ProSuite.Commons.UI.Keyboard;
 using Application = System.Windows.Application;
 using Cursor = System.Windows.Input.Cursor;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
+using SelectionMode = ProSuite.AGP.Editing.Selection.SelectionMode;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
 	public abstract class OneClickToolBase : MapTool
 	{
+		private const Key _keyShowOptionsPane = Key.O;
+
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-		private const Key _keyShowOptionsPane = Key.O;
+		protected readonly List<IDisposable> _overlays = new List<IDisposable>();
+
+		protected OneClickToolBase()
+		{
+			UseSnapping = false;
+
+			HandledKeys.Add(Key.Escape);
+			HandledKeys.Add(_keyShowOptionsPane);
+
+			CIMColor magenta = ColorFactory.Instance.CreateRGBColor(255, 0, 255);
+		}
+
+		private SketchingMoveType SketchingMoveType { get; set; }
+
+		protected SelectionMode SelectionMode { get; set; }
 
 		protected bool RequiresSelection { get; set; } = true;
+
+		protected virtual SelectionSettings SelectionSettings { get; set; } 
 
 		protected List<Key> HandledKeys { get; } = new List<Key>();
 
 		protected Cursor SelectionCursor { get; set; }
 		protected Cursor SelectionCursorShift { get; set; }
-
-		protected OneClickToolBase()
-		{
-			//SketchOutputMode = SketchOutputMode.Screen;
-			SketchType = SketchGeometryType.Rectangle;
-			UseSnapping = false;
-
-			HandledKeys.Add(Key.Escape);
-			HandledKeys.Add(_keyShowOptionsPane);
-		}
 
 		protected override Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
@@ -183,6 +195,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				CancelableProgressor progressor = GetCancelableProgressor();
 
+				SketchingMoveType = GetSketchingMoveType(sketchGeometry);
+
 				if (RequiresSelection && IsInSelectionPhase())
 				{
 					return await QueuedTaskUtils.Run(() => OnSelectionSketchComplete(
@@ -203,8 +217,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected void StartSelectionPhase()
 		{
-			SketchOutputMode = SketchOutputMode.Map;
-			SketchType = SketchGeometryType.Rectangle;
+			SketchOutputMode = SelectionSettings.SketchOutputMode;
+			SketchType = SelectionSettings.SketchGeometryType;
 
 			UseSnapping = false;
 
@@ -283,47 +297,157 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.FromResult(true);
 		}
 
+		private SketchingMoveType GetSketchingMoveType(Geometry geometry)
+		{
+			if (geometry.Extent.Width > 0 || geometry.Extent.Height > 0)
+			{
+				return SketchingMoveType.Drag;
+			}
+
+			return SketchingMoveType.Click;
+		}
+
 		private bool OnSelectionSketchComplete(
 			Geometry sketchGeometry,
 			CancelableProgressor progressor)
 		{
-			if (SketchOutputMode == SketchOutputMode.Map)
-			{
-				sketchGeometry =
-					MapUtils.ToScreenGeometry(MapView.Active, (Polygon) sketchGeometry);
-			}
+			DisposeOverlays();
+			//3D views only support selecting features interactively using geometry
+			//in screen coordinates relative to the top-left corner of the view.
 
-			Geometry selectionGeometry;
-			if (sketchGeometry.Extent.Width > 0 || sketchGeometry.Extent.Height > 0)
-			{
-				// it seems that screen coordinates are fine!
-				selectionGeometry = sketchGeometry;
-			}
-			else
-			{
-				// the 'map point' is still screen coordinates...
-				selectionGeometry =
-					new Coordinate2D(sketchGeometry.Extent.XMin, sketchGeometry.Extent.YMin)
-						.ToMapPoint();
-			}
+			Geometry selectionGeometry = sketchGeometry;
+
+			CIMPolygonSymbol highlightPolygonSymbol = CreatePolygonSymbol();
 
 			// TODO: Add Utils method to KeyboardUtils to do it in the WPF way
-			SelectionCombinationMethod selectionMethod = KeyboardUtils.IsModifierPressed(Keys.Shift)
-				                                             ? SelectionCombinationMethod.XOR
-				                                             : SelectionCombinationMethod.New;
+			SelectionCombinationMethod selectionMethod =
+				KeyboardUtils.IsModifierPressed(Keys.Shift)
+					? SelectionCombinationMethod.XOR
+					: SelectionCombinationMethod.New;
 
-			bool visualIntersect = SketchOutputMode == SketchOutputMode.Screen;
+			if (SketchingMoveType == SketchingMoveType.Click)
+			{
+				MapPoint sketchPoint = CreatPointFromSketchPolygon(sketchGeometry);
 
-			// TODO: cycle through the layers, check whether the ShapeType of the layer can be selected,
-			//       get the intersecting features with a search cursor, check whether each feature can 
-			//       be selected and if there are still several, bring up a picker dialog (if single selection is required)
-			Dictionary<BasicFeatureLayer, List<long>> selection = ActiveMapView.SelectFeatures(
-				selectionGeometry, selectionMethod, visualIntersect);
+				selectionGeometry =
+					BufferGeometryByPixels(sketchPoint,
+					                       SelectionSettings.SelectionTolerancePixels);
+
+				if (SelectionMode == SelectionMode.Original)
+				{
+					// select all features on clickpoint
+					Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer =
+						FindFeaturesOfAllLayers(selectionGeometry);
+				}
+				else
+				{
+					//select a single feature using feature reduction and/or picker
+				}
+			}
+
+			if (SketchingMoveType == SketchingMoveType.Drag)
+			{
+				selectionGeometry = sketchGeometry;
+
+				if (SelectionMode == SelectionMode.UserSelect)
+				{
+					// get featureclasses from layers, present selectable featureclasses in Picker
+					IEnumerable<FeatureLayer> featureLayers = ActiveMapView.Map.Layers
+						.OfType<FeatureLayer>();
+
+					var fClassGroups = featureLayers.Where(fLayer =>
+						fLayer.IsSelectable).Select(fLayer => fLayer.GetFeatureClass()).GroupBy(fc => fc.GetName());
+
+					var layerGroupsByFcName = featureLayers.GroupBy(layer => layer.GetFeatureClass().GetName());
+
+					List<FeatureClassInfo> featureClassInfos = new List<FeatureClassInfo>();
+
+					foreach (var group in layerGroupsByFcName)
+					{
+						List<FeatureLayer> belongingLayers = new List<FeatureLayer>();
+						foreach (var layer in group)
+						{
+							belongingLayers.Add(layer);
+						}
+
+						FeatureClass fClass = belongingLayers.First().GetFeatureClass();
+						string featureClassName = fClass.GetName();
+						esriGeometryType gType = belongingLayers.First().ShapeType;
+
+						FeatureClassInfo featureClassInfo = new FeatureClassInfo()
+						                                    {
+																BelongingLayers = belongingLayers,
+																FeatureClass = fClass,
+																FeatureClassName = featureClassName,
+																ShapeType = gType
+						                                    };
+						featureClassInfos.Add(featureClassInfo);
+					}
+
+					featureClassInfos.OrderBy(info => info.ShapeType);
+
+
+					//TODO STS: should call Picker here, but what about circular assembly ref?
+				}
+				else
+				{
+					// select all features from all layers
+					Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer =
+						FindFeaturesOfAllLayers(selectionGeometry);
+				}
+			}
+
+			AddOverlay(selectionGeometry, highlightPolygonSymbol);
+
+			//Dictionary<BasicFeatureLayer, List<long>> selection = ActiveMapView.SelectFeatures(selectionGeometry, selectionMethod);
 
 			ProcessSelection(SelectionUtils.GetSelectedFeatures(ActiveMapView), progressor);
 
 			// else: feedback to the user to keep selecting
 			return true;
+		}
+
+		private Dictionary<BasicFeatureLayer, List<long>> FindFeaturesOfAllLayers(
+			Geometry selectionGeometry)
+		{
+			var featuresPerLayer = new Dictionary<BasicFeatureLayer, List<long>>();
+
+			foreach (BasicFeatureLayer layer in
+				MapView.Active.Map.Layers.OfType<BasicFeatureLayer>())
+			{
+				if (CanSelectFromLayer(layer))
+				{
+					IEnumerable<Feature> features =
+						MapUtils.FilterFeaturesByGeometry(layer, selectionGeometry,
+						                                  SelectionSettings.SpatialRelationship);
+					IEnumerable<long> oids = MapUtils.GetFeaturesOidList(features);
+
+					if (oids.Any())
+					{
+						featuresPerLayer.Add(layer, oids.ToList());
+					}
+				}
+			}
+
+			return featuresPerLayer;
+		}
+
+		private MapPoint CreatPointFromSketchPolygon(Geometry sketchGeometry)
+		{
+			var clickCoord =
+				new Coordinate2D(sketchGeometry.Extent.XMin, sketchGeometry.Extent.YMin);
+
+			MapPoint sketchPoint =
+				MapPointBuilder.CreateMapPoint(clickCoord, ActiveMapView.Map.SpatialReference);
+			return sketchPoint;
+		}
+
+		private Geometry BufferGeometryByPixels(Geometry sketchGeometry, int pixelBufferDistance)
+		{
+			double bufferDistance = MapUtils.ConvertScreenPixelToMapLength(pixelBufferDistance);
+			Geometry selectionGeometry =
+				GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
+			return selectionGeometry;
 		}
 
 		protected virtual bool IsInSelectionPhase()
@@ -403,6 +527,60 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				Cursor = cursor;
 			}
+		}
+
+		private bool CanSelectFromLayer(Layer layer)
+		{
+			var featureLayer = layer as FeatureLayer;
+
+			if (featureLayer == null)
+			{
+				return false;
+			}
+
+			if (! featureLayer.IsSelectable)
+			{
+				return false;
+			}
+
+			return featureLayer.GetFeatureClass() != null && CanSelectFromLayerCore(featureLayer);
+		}
+
+		protected virtual bool CanSelectFromLayerCore([NotNull] FeatureLayer featureLayer)
+		{
+			return true;
+		}
+
+		private void AddOverlay(Geometry geometry,
+		                        CIMSymbol symbol)
+		{
+			IDisposable addedOverlay =
+				MapView.Active.AddOverlay(geometry, symbol.MakeSymbolReference());
+
+			_overlays.Add(addedOverlay);
+		}
+
+		public void DisposeOverlays()
+		{
+			foreach (IDisposable overlay in _overlays)
+			{
+				overlay.Dispose();
+			}
+
+			_overlays.Clear();
+		}
+
+		private CIMPolygonSymbol CreatePolygonSymbol()
+		{
+			CIMColor magenta = ColorFactory.Instance.CreateRGBColor(255, 0, 255);
+
+			CIMStroke outline = SymbolFactory.Instance.ConstructStroke(
+				magenta, 2, SimpleLineStyle.Solid);
+
+			CIMPolygonSymbol highlightPolygonSymbol =
+				SymbolFactory.Instance.ConstructPolygonSymbol(
+					magenta, SimpleFillStyle.Null, outline);
+			return highlightPolygonSymbol;
 		}
 	}
 }

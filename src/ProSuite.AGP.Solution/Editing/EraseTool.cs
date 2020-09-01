@@ -1,6 +1,6 @@
 using ProSuite.AGP.Editing.Erase;
 
-namespace Clients.AGP.ProSuiteSolution.Editing
+namespace ProSuite.AGP.Solution.Editing
 {
 	public class EraseTool : EraseToolBase { }
 }

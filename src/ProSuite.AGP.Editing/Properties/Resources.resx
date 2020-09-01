@@ -127,4 +127,22 @@
   <data name="EraseToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\EraseToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="SelectionToolNormal" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\SelectionToolNormal.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="SelectionToolNormalShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\SelectionToolNormalShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="SelectionToolOriginal" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\SelectionToolOriginal.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="SelectionToolOriginalShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\SelectionToolOriginalShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="SelectionToolUser" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\SelectionToolUser.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="SelectionToolUserShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\SelectionToolUserShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>

@@ -1,15 +1,13 @@
-using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
-
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using ItemPicker;
-using JetBrains.Annotations;
+using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.Picker;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace Clients.AGP.ProSuiteSolution.PickerUI
+namespace ProSuite.AGP.Editing.Picker
 {
 	class Picker : IPicker
 
@@ -19,14 +17,14 @@ namespace Clients.AGP.ProSuiteSolution.PickerUI
 		private Point _windowLocation;
 		private const double _unknownLoc = -1.0;
 
-		public Picker([ItemNotNull] [NotNull] List<IPickableItem> candidateList)
+		public Picker([NotNull] List<IPickableItem> candidateList)
 		{
 			_candidateList = candidateList;
 			_windowLocation.X = _unknownLoc;
 			_windowLocation.Y = _unknownLoc;
 		}
 
-		public Picker([ItemNotNull] [NotNull] List<IPickableItem> candidateList,
+		public Picker([NotNull] List<IPickableItem> candidateList,
 		              [NotNull] Point pickerWindowLocation)
 		{
 			_candidateList = candidateList;

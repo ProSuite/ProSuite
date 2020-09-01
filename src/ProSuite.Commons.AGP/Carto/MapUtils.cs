@@ -174,7 +174,54 @@ namespace ProSuite.Commons.AGP.Carto
 
 			return MapPointBuilder.CreateMapPoint(new Coordinate2D(clientPoint.X, clientPoint.Y));
 		}
-		
+
+		/// <summary>
+		/// Returns features filtered by spatial relationship. Honors definition queries on the layer. 
+		/// </summary>
+		public static IEnumerable<Feature> FilterFeaturesByGeometry(
+			BasicFeatureLayer layer, ArcGIS.Core.Geometry.Geometry filterGeometry,
+			SpatialRelationship spatialRelationship = SpatialRelationship.Intersects)
+		{
+			var qf = new SpatialQueryFilter()
+			         {
+				         FilterGeometry = filterGeometry,
+				         SpatialRelationship = spatialRelationship
+			         };
+			var features = new List<Feature>();
+
+			using (RowCursor rowCursor = layer.Search(qf))
+			{
+				while (rowCursor.MoveNext())
+				{
+					features.Add((Feature)rowCursor.Current);
+				}
+			}
+
+			return features;
+		}
+
+		public static IEnumerable<long> GetFeaturesOidList(IEnumerable<Feature> features)
+		{
+			foreach (Feature feature in features)
+			{
+				yield return feature.GetObjectID();
+			}
+		}
+
+		public static double ConvertScreenPixelToMapLength(int pixels)
+		{
+			var mapExtent = MapView.Active.Map.GetDefaultExtent();
+			var mapPoint = mapExtent.Center;
+			//Map center as screen point
+			var screenPoint = MapView.Active.MapToScreen(mapPoint);
+			//Add tolerance pixels to get a "radius".
+			var radiusScreenPoint =
+				new System.Windows.Point((screenPoint.X + pixels), screenPoint.Y);
+			var radiusMapPoint = MapView.Active.ScreenToMap(radiusScreenPoint);
+			return GeometryEngine.Instance.Distance(mapPoint, radiusMapPoint);
+		}
+
+
 		public static bool HasSelection(BasicFeatureLayer featureLayer)
 		{
 			return featureLayer.SelectionCount > 0;
