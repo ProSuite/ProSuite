@@ -53,6 +53,13 @@
     </Compile>
     <Compile Include="OneClick\ConstructionToolBase.cs" />
     <Compile Include="OneClick\OneClickToolBase.cs" />
+    <Compile Include="Picker\DialogCloser.cs" />
+    <Compile Include="Picker\Picker.cs" />
+    <Compile Include="Picker\PickerViewModel.cs" />
+    <Compile Include="Picker\PickerWindow.xaml.cs">
+      <DependentUpon>PickerWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Picker\VisibleIfFalseConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Erase\EraseToolBase.cs" />
     <Compile Include="Selection\FeatureClassInfo.cs" />
@@ -78,8 +85,15 @@
     <PackageReference Include="Esri.ArcGISPro.Extensions">
       <Version>$(ProNuGetVersion)</Version>
     </PackageReference>
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
+      <Version>1.1.19</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ProSuite.AGP.Picker\ProSuite.AGP.Picker.csproj">
+      <Project>{A0664BCB-3A91-4A7E-B303-D9A55B8E6CC8}</Project>
+      <Name>ProSuite.AGP.Picker</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">
       <Project>{89f2c583-3022-43f8-9b69-27123836625f}</Project>
       <Name>ProSuite.Commons.AGP</Name>
@@ -103,10 +117,22 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Properties\Images\EditSketchCrosshair.cur" />
+    <Content Include="Properties\Images\SelectionToolNormal.cur" />
+    <Content Include="Properties\Images\SelectionToolNormalShift.cur" />
+    <Content Include="Properties\Images\SelectionToolOriginal.cur" />
+    <Content Include="Properties\Images\SelectionToolOriginalShift.cur" />
+    <Content Include="Properties\Images\SelectionToolUser.cur" />
+    <Content Include="Properties\Images\SelectionToolUserShift.cur" />
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="Properties\Images\EraseToolCursor.cur" />
     <AddInContent Include="Properties\Images\EraseToolCursorShift.cur" />
+  </ItemGroup>
+  <ItemGroup>
+    <Page Include="Picker\PickerWindow.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

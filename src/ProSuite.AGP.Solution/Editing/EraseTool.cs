@@ -1,3 +1,4 @@
+using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Erase;
 using ProSuite.AGP.Editing.Selection;
 
@@ -9,7 +10,7 @@ namespace Clients.AGP.ProSuiteSolution.Editing
 
 		public EraseTool()
 		{
-			_selectionSettings = new SelectionSettings();
+			_selectionSettings = new SelectionSettings(SketchGeometryType.Polygon);
 		}
 
 		protected override SelectionSettings SelectionSettings

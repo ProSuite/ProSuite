@@ -48,13 +48,13 @@ namespace ProSuite.AGP.Editing.Selection
 			}
 		}
 
-		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
-		{
-			if (k.Key == Key.LeftCtrl || k.Key == Key.RightCtrl || k.Key == Key.LeftAlt || k.Key == Key.RightAlt)
-			{
-				SelectionMode = SelectionMode.Normal;
-			}
-		}
+		//protected override void OnKeyUpCore(MapViewKeyEventArgs k)
+		//{
+		//	if (k.Key == Key.LeftCtrl || k.Key == Key.RightCtrl || k.Key == Key.LeftAlt || k.Key == Key.RightAlt)
+		//	{
+		//		SelectionMode = SelectionMode.Normal;
+		//	}
+		//}
 
 		protected override bool HandleEscape()
 		{
@@ -79,17 +79,6 @@ namespace ProSuite.AGP.Editing.Selection
 			set => _selectionSettings = value;
 		}
 
-		protected override void OnToolKeyDown(MapViewKeyEventArgs k)
-		{
-			if (k.Key == Key.LeftAlt || k.Key == Key.RightAlt)
-			{
-				SelectionMode = SelectionMode.Original;
-			}
-
-			if (k.Key == Key.LeftCtrl || k.Key == Key.RightCtrl)
-			{
-				SelectionMode = SelectionMode.UserSelect;
-			}
-		}
+		
 	}
 }
