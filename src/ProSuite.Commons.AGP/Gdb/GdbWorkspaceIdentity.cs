@@ -6,13 +6,13 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.Commons.AGP.Gdb
 {
 	// todo daro: check correct handle / instantiation of Uri
-	public struct GdbWorkspaceIdentity : IEquatable<GdbWorkspaceIdentity>
+	public class GdbWorkspaceIdentity : IEquatable<GdbWorkspaceIdentity>
 	{
-		private readonly string _instance;
-		private readonly string _version;
-		private readonly string _user;
-		private readonly EnterpriseDatabaseType _dbms;
-		private readonly string _path;
+		public readonly string _instance;
+		public readonly string _version;
+		public readonly string _user;
+		public readonly EnterpriseDatabaseType _dbms;
+		public readonly string _path;
 
 		public GdbWorkspaceIdentity([NotNull] Datastore datastore) :
 			this(datastore.GetConnector()) { }
@@ -42,6 +42,15 @@ namespace ProSuite.Commons.AGP.Gdb
 					throw new NotImplementedException(
 						$"connector {connector.GetType()} is not implemented");
 			}
+		}
+
+		public GdbWorkspaceIdentity(string path, string instance, string user, string version)
+		{
+			_instance = instance;
+			_version = version;
+			_user = user;
+			_path = path;
+			_dbms = EnterpriseDatabaseType.Unknown;
 		}
 
 		[CanBeNull]

@@ -68,6 +68,9 @@
     <PackageReference Include="Esri.ArcGISPro.Extensions">
       <Version>$(ProNuGetVersion)</Version>
     </PackageReference>
+    <PackageReference Include="Newtonsoft.Json">
+      <Version>12.0.3</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">

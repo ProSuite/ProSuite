@@ -1,4 +1,4 @@
-//using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,17 +9,21 @@ namespace ProSuite.Commons.AGP.Storage
 	{
 		private readonly IList<T> items;
 		private readonly string _filename;
-		//public readonly JsonConverter _jsonConverter;
+		public readonly JsonConverter _jsonConverter;
 
-		protected JsonRepository(string filename /*, JsonConverter jsonConverter = null*/)
+		protected JsonRepository(string filename , JsonConverter jsonConverter = null)
 		{
 			_filename = filename;
-			//_jsonConverter = jsonConverter;
+			_jsonConverter = jsonConverter;
 			if (File.Exists(_filename))
 			{
-				string statusJson = File.ReadAllText(_filename);
-				//if (!string.IsNullOrEmpty(statusJson))
-				//	items = JsonConvert.DeserializeObject<IEnumerable<T>>(statusJson).ToList();
+				string jsonText = File.ReadAllText(_filename);
+				if (! string.IsNullOrEmpty(jsonText))
+				{
+					items = (_jsonConverter == null) ?
+						        JsonConvert.DeserializeObject<IList<T>>(jsonText) :
+						        JsonConvert.DeserializeObject<IList<T>>(jsonText, _jsonConverter);
+				}
 			}
 			items = items ?? new List<T>();
 		}
@@ -50,8 +54,10 @@ namespace ProSuite.Commons.AGP.Storage
 			if (!File.Exists(_filename))
 				File.CreateText(_filename);
 
-			//var jsonText = JsonConvert.SerializeObject(items, _jsonConverter);
-			//var jsonText = JsonConvert.SerializeObject(items);
+			string jsonText = (_jsonConverter == null) ?
+				                  (JsonConvert.SerializeObject(items)) :
+				                  (JsonConvert.SerializeObject(items, _jsonConverter));
+
 			//File.WriteAllText(_filename,jsonText);
 		}
 	}
