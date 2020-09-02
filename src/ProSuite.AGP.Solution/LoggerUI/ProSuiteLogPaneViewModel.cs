@@ -1,15 +1,14 @@
-using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Contracts;
-using ProSuite.Commons.Logging;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Windows;
 using System.Windows.Data;
 using System.Windows.Input;
+using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Contracts;
+using ProSuite.Commons.Logging;
 using Button = ArcGIS.Desktop.Framework.Contracts.Button;
 
-namespace Clients.AGP.ProSuiteSolution.LoggerUI
+namespace ProSuite.AGP.Solution.LoggerUI
 {
     public class ProSuiteLogPaneViewModel : DockPane, IDisposable
     {

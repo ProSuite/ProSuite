@@ -1,12 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows.Data;
 
-namespace Clients.AGP.ProSuiteSolution.LoggerUI
+namespace ProSuite.AGP.Solution.LoggerUI
 {
 	// TODO should be this moved to common utils, because GPService need this too?
 	class HtmlTextUtils

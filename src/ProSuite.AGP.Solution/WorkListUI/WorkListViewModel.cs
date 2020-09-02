@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
-using Clients.AGP.ProSuiteSolution.WorkLists;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;

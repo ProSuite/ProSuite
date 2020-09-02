@@ -1,10 +1,9 @@
-using ArcGIS.Desktop.Core;
-using Clients.AGP.ProSuiteSolution.Commons;
-using ProSuite.Commons.AGP;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using ArcGIS.Desktop.Core;
+using Clients.AGP.ProSuiteSolution.Commons;
 
-namespace Clients.AGP.ProSuiteSolution.ProjectItem
+namespace ProSuite.AGP.Solution.ProjectItem
 {
 
 	internal class ProSuiteProjectItemContainer : CustomProjectItemContainer<ProSuiteProjectItem>

@@ -7,10 +7,8 @@ using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Carto;
-using ProSuite.Commons.AGP.Gdb;
-using ProSuite.DomainModel.DataModel;
 
-namespace Clients.AGP.ProSuiteSolution.WorkLists
+namespace ProSuite.AGP.Solution.WorkLists
 {
 	public class DatabaseWorkEnvironment : WorkEnvironmentBase
 	{

@@ -2,7 +2,7 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace Clients.AGP.ProSuiteSolution.WorkLists
+namespace ProSuite.AGP.Solution.WorkLists
 {
 	[UsedImplicitly]
 	internal class GoNextButton : Button

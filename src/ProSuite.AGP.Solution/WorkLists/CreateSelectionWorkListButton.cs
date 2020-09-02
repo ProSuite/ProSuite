@@ -2,7 +2,7 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using JetBrains.Annotations;
 
-namespace Clients.AGP.ProSuiteSolution.WorkLists
+namespace ProSuite.AGP.Solution.WorkLists
 {
 	[UsedImplicitly]
 	internal class CreateSelectionWorkListButton : Button

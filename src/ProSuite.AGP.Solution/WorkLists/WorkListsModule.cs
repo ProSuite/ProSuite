@@ -14,7 +14,7 @@ using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace Clients.AGP.ProSuiteSolution.WorkLists
+namespace ProSuite.AGP.Solution.WorkLists
 {
 	[UsedImplicitly]
 	public class WorkListsModule : Module

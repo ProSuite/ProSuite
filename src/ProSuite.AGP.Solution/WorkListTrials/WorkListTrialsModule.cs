@@ -11,7 +11,7 @@ using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Logging;
 using Module = ArcGIS.Desktop.Framework.Contracts.Module;
 
-namespace Clients.AGP.ProSuiteSolution.WorkListTrials
+namespace ProSuite.AGP.Solution.WorkListTrials
 {
 	[UsedImplicitly]
 	internal class WorkListTrialsModule : Module

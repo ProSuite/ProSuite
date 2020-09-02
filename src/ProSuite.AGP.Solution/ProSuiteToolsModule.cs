@@ -1,3 +1,8 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Core;
@@ -7,22 +12,18 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using Clients.AGP.ProSuiteSolution;
 using Clients.AGP.ProSuiteSolution.Commons;
 using Clients.AGP.ProSuiteSolution.ConfigUI;
-using Clients.AGP.ProSuiteSolution.LoggerUI;
-using Clients.AGP.ProSuiteSolution.ProjectItem;
-using Clients.AGP.ProSuiteSolution.WorkListTrials;
+using ProSuite.AGP.Solution.LoggerUI;
+using ProSuite.AGP.Solution.ProjectItem;
+using ProSuite.AGP.Solution.WorkListTrials;
 using ProSuite.Commons.Logging;
-using ProSuite.QA.ServiceManager.Types;
 using ProSuite.QA.Configurator;
 using ProSuite.QA.ServiceManager;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
+using ProSuite.QA.ServiceManager.Types;
 
-namespace Clients.AGP.ProSuiteSolution
+namespace ProSuite.AGP.Solution
 {
 	internal class ProSuiteToolsModule : Module
 	{
@@ -369,7 +370,7 @@ namespace Clients.AGP.ProSuiteSolution
 
 	internal class ShowWorkListWindow : Button
 	{
-		private WorkList _worklist = null;
+		private Clients.AGP.ProSuiteSolution.WorkList _worklist = null;
 
 		protected override async void OnClick()
 		{
@@ -378,7 +379,7 @@ namespace Clients.AGP.ProSuiteSolution
 			//already open?
 			if (_worklist != null)
 				return;
-			_worklist = new WorkList();
+			_worklist = new Clients.AGP.ProSuiteSolution.WorkList();
 			_worklist.Owner = FrameworkApplication.Current.MainWindow;
 			_worklist.Closed += (o, e) => { _worklist = null; };
 			_worklist.Show();

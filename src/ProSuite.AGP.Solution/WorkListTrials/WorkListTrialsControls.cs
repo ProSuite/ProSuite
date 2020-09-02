@@ -9,7 +9,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Logging;
 
-namespace Clients.AGP.ProSuiteSolution.WorkListTrials
+namespace ProSuite.AGP.Solution.WorkListTrials
 {
 	internal class ButtonCreateTestList : Button
 	{

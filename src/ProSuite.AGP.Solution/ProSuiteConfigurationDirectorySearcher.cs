@@ -5,7 +5,7 @@ using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace Clients.AGP.ProSuiteSolution
+namespace ProSuite.AGP.Solution
 {
 	/// <summary>
 	/// Configuration search order:

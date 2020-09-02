@@ -1,9 +1,8 @@
 using System;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Threading;
 
-namespace Clients.AGP.ProSuiteSolution.LoggerUI
+namespace ProSuite.AGP.Solution.LoggerUI
 {
     /// <summary>
     /// Interaction logic for ProSuiteLogPaneView.xaml

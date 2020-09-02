@@ -1,8 +1,8 @@
-using ProSuite.Commons.Logging;
 using System;
 using System.Windows.Data;
+using ProSuite.Commons.Logging;
 
-namespace Clients.AGP.ProSuiteSolution.LoggerUI
+namespace ProSuite.AGP.Solution.LoggerUI
 {
 
 	public class LogMessageImageConverter : IValueConverter

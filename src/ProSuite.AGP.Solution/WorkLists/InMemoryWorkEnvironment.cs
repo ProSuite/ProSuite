@@ -6,7 +6,7 @@ using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Carto;
 
-namespace Clients.AGP.ProSuiteSolution.WorkLists
+namespace ProSuite.AGP.Solution.WorkLists
 {
 	public class InMemoryWorkEnvironment : WorkEnvironmentBase
 	{

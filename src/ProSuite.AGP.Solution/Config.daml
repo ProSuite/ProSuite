@@ -1,4 +1,4 @@
-<ArcGIS defaultAssembly="ProSuiteSolution.dll" defaultNamespace="Clients.AGP.ProSuiteSolution" xmlns="http://schemas.esri.com/DADF/Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
+<ArcGIS defaultAssembly="ProSuiteSolution.dll" defaultNamespace="ProSuite.AGP.Solution" xmlns="http://schemas.esri.com/DADF/Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
   <AddInInfo id="{aca43c2a-8357-4476-8660-e8bc28bdf848}" version="1.0" desktopVersion="2.5.22081">
     <Name>ProSuite</Name>
     <Description>The ProSuite productivity extension for data production, cartographic refinement, and quality assurance</Description>
@@ -13,7 +13,7 @@
   <categories>
     <updateCategory refID="esri_core_projectContainers">
       <insertComponent id="ProSuiteItem_FolderContainer"
-                       className="Clients.AGP.ProSuiteSolution.ProjectItem.ProSuiteProjectItemContainer"
+                       className="ProjectItem.ProSuiteProjectItemContainer"
                        insert="before" placeWith="esri_geodatabase_folderConnectionContainer">
         <content type="ProSuiteContainer" displayName="ProSuite" contextMenu="ProSuiteItems_AddFoldersMenu" />
       </insertComponent>
@@ -86,18 +86,18 @@
         <comboBox id="ProSuiteTools_QA_SpecsComboBox" caption=" Specification" className="QASpecListComboBox" itemWidth="90" extendedCaption="Extended Caption" isEditable="false" isReadOnly="true" resizable="true">
           <tooltip heading="Tooltip Heading">QA specifications<disabledText /></tooltip>
         </comboBox>
-        <button id="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" caption="Logs" className="Clients.AGP.ProSuiteSolution.LoggerUI.ProSuiteLogPane_ShowButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation32.png">
+        <button id="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" caption="Logs" className="LoggerUI.ProSuiteLogPane_ShowButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation32.png">
           <tooltip heading="Show Logs Window">Show Logs Window<disabledText /></tooltip>
         </button>
         <button id="Clients_AGP_ProSuiteSolution_WorkList" caption="WorkList" className="ShowWorkListWindow" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Show Error Worklist">Show Error Worklist<disabledText /></tooltip>
         </button>
-        <tool id="ProSuiteTools_Editing_EraseTool" caption="EraseTool " className="Clients.AGP.ProSuiteSolution.Editing.EraseTool" loadOnClick="true"
+        <tool id="ProSuiteTools_Editing_EraseTool" caption="EraseTool " className="Editing.EraseTool" loadOnClick="true"
               smallImage="Images\CutHoleTool16.png" largeImage="Images\CutHoleTool32.png"
               condition="esri_mapping_mapPane">
           <tooltip heading="Erase Tool">Erase parts of the selected features or cut a hole into a polygon<disabledText /></tooltip>
         </tool>
-        <tool id="ProSuiteTools_Selection_SelectionTool" caption="Selection" className="Clients.AGP.ProSuiteSolution.Selection.SelectionTool" loadOnClick="true"
+        <tool id="ProSuiteTools_Selection_SelectionTool" caption="Selection" className="Selection.SelectionTool" loadOnClick="true"
               smallImage="Images\SelectionTool.png" largeImage="Images\SelectionTool.png"
               condition="esri_mapping_mapPane">
           <tooltip heading="Selection Tool">
@@ -106,8 +106,8 @@
         </tool>
       </controls>
       <dockPanes>
-        <dockPane id="ProSuiteTools_Logger_ProSuiteLogPane" caption="ProSuite Logs" className="Clients.AGP.ProSuiteSolution.LoggerUI.ProSuiteLogPaneViewModel" dock="group" dockWith="esri_core_contentsDockPane">
-          <content className="Clients.AGP.ProSuiteSolution.LoggerUI.ProSuiteLogPaneView" />
+        <dockPane id="ProSuiteTools_Logger_ProSuiteLogPane" caption="ProSuite Logs" className="LoggerUI.ProSuiteLogPaneViewModel" dock="group" dockWith="esri_core_contentsDockPane">
+          <content className="LoggerUI.ProSuiteLogPaneView" />
         </dockPane>
       </dockPanes>
     </insertModule>

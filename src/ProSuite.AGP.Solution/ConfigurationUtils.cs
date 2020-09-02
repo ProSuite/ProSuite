@@ -5,7 +5,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
-namespace Clients.AGP.ProSuiteSolution
+namespace ProSuite.AGP.Solution
 {
 	public static class ConfigurationUtils
 	{
