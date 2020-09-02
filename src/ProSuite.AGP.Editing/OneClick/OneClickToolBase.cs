@@ -390,9 +390,13 @@ namespace ProSuite.AGP.Editing.OneClick
 					featureClassInfos.OrderBy(info => info.ShapeType);
 
 					List<IPickableItem> pickableItems = PickableItemAdapter.Get(featureClassInfos);
-					
-					PickerUI.Picker picker = new PickerUI.Picker(pickableItems);
+
+					Point pickerWindowLocation = await QueuedTask.Run(() => MapView.Active.MapToScreen(selectionGeometry.Extent.Center));
+
+					PickerUI.Picker picker = new PickerUI.Picker(pickableItems,pickerWindowLocation);
+
 					FeatureClassInfo item = await picker.PickSingle() as FeatureClassInfo;
+
 					//TODO STS: should call Picker here, but what about circular assembly ref?
 				}
 				else
