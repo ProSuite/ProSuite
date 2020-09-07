@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,7 +8,7 @@ using ProSuite.Commons.Geometry.SpatialIndex;
 
 namespace ProSuite.Commons.Geometry
 {
-	public class Linestring : ISegmentList, IEquatable<Linestring>
+	public class Linestring : ISegmentList, IPointList, IEquatable<Linestring>
 	{
 		private Box _boundingBox;
 		private readonly List<Line3D> _segments;
@@ -399,7 +399,17 @@ namespace ProSuite.Commons.Geometry
 			}
 		}
 
-		public Pnt3D GetPoint(int pointIndex, bool clone = false)
+		public IPnt GetPoint(int pointIndex, bool clone = false)
+		{
+			return GetPoint3D(pointIndex, clone);
+		}
+
+		public IEnumerable<IPnt> AsEnumerablePoints(bool clone = false)
+		{
+			return GetPoints(0, null, clone);
+		}
+
+		public Pnt3D GetPoint3D(int pointIndex, bool clone = false)
 		{
 			// Line count + 1 - 1:
 			int lastPoint = SegmentCount;
@@ -825,7 +835,7 @@ namespace ProSuite.Commons.Geometry
 		{
 			for (int i = startVertexIndex; i <= endVertexIndex; i++)
 			{
-				Pnt3D point = GetPoint(i);
+				Pnt3D point = GetPoint3D(i);
 
 				UpdatePoint(i, point.X, point.Y, z);
 			}
@@ -1099,7 +1109,7 @@ namespace ProSuite.Commons.Geometry
 			return result;
 		}
 
-		private void UpdateBounds([NotNull] Pnt3D point,
+		private void UpdateBounds([NotNull] IPnt point,
 		                          int pointIndex,
 		                          [NotNull] IList<Line3D> currentSegments,
 		                          [CanBeNull] Pnt3D previouslyAdded)
@@ -1205,7 +1215,7 @@ namespace ProSuite.Commons.Geometry
 			if (beforeIndex == null)
 			{
 				// first index == 0, use z value of afterIndex
-				double z = GetPoint(afterIndex.Value).Z;
+				double z = GetPoint3D(afterIndex.Value).Z;
 
 				SetConstantZ(0, lastPointIndex, z);
 				return true;
@@ -1213,7 +1223,7 @@ namespace ProSuite.Commons.Geometry
 
 			if (afterIndex == null)
 			{
-				double z = GetPoint(beforeIndex.Value).Z;
+				double z = GetPoint3D(beforeIndex.Value).Z;
 				int lastVertexIndex = SegmentCount;
 				SetConstantZ(firstPointIndex, lastVertexIndex, z);
 				return true;
@@ -1231,8 +1241,8 @@ namespace ProSuite.Commons.Geometry
 					"The firstIndex is greater than lastIndex and linestring is not closed. Cannot interpolate across start/end.");
 			}
 
-			double z1 = GetPoint(beforeIndex).Z;
-			double z2 = GetPoint(afterIndex).Z;
+			double z1 = GetPoint3D(beforeIndex).Z;
+			double z2 = GetPoint3D(afterIndex).Z;
 
 			double sequenceLength =
 				GetSegmentsBetween(beforeIndex, afterIndex)

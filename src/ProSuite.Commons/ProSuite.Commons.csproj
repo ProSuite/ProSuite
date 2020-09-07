@@ -84,6 +84,10 @@
     <Compile Include="Geometry\SegmentIntersectionUtils.cs" />
     <Compile Include="Geometry\SingleRingNavigator.cs" />
     <Compile Include="Geometry\SubcurveNavigator.cs" />
+    <Compile Include="Geometry\Wkb\WkbGeometryType.cs" />
+    <Compile Include="Geometry\Wkb\WkbReader.cs" />
+    <Compile Include="Geometry\Wkb\WkbWriter.cs" />
+    <Compile Include="Geometry\Wkb\BigEndianBinaryReader.cs" />
     <Compile Include="ManagedOptions\DatasetSpecificValue.cs" />
     <Compile Include="Misc\Either.cs" />
     <Compile Include="Geometry\Box.cs" />

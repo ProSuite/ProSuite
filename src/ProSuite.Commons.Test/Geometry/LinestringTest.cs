@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -20,10 +20,10 @@ namespace ProSuite.Commons.Test.Geometry
 
 			Linestring linestring = new Linestring(new List<Line3D> {line1});
 
-			Pnt3D start = linestring.GetPoint(0);
+			Pnt3D start = linestring.GetPoint3D(0);
 			Assert.True(ReferenceEquals(startPoint, start));
 
-			Pnt3D end = linestring.GetPoint(1);
+			Pnt3D end = linestring.GetPoint3D(1);
 			Assert.True(ReferenceEquals(endPoint, end));
 
 			var list = linestring.GetPoints(0, 1).ToList();
@@ -57,10 +57,10 @@ namespace ProSuite.Commons.Test.Geometry
 
 			linestring = new Linestring(new[] {startPoint, intermediatePoint, endPoint});
 
-			start = linestring.GetPoint(0);
+			start = linestring.GetPoint3D(0);
 			Assert.True(ReferenceEquals(startPoint, start));
 
-			end = linestring.GetPoint(2);
+			end = linestring.GetPoint3D(2);
 			Assert.True(ReferenceEquals(endPoint, end));
 
 			list = linestring.GetPoints(0, 1).ToList();
@@ -343,7 +343,7 @@ namespace ProSuite.Commons.Test.Geometry
 				int? pt1Idx = linestring.FindPointIdx(testPoint1, true);
 				Assert.NotNull(pt1Idx);
 
-				Pnt3D found = linestring.GetPoint(pt1Idx.Value);
+				Pnt3D found = linestring.GetPoint3D(pt1Idx.Value);
 
 				// incline: 10m per 100m:
 				double testPoint1ExpectedZ = 20 + 10;
@@ -352,7 +352,7 @@ namespace ProSuite.Commons.Test.Geometry
 				int? pt2Idx = linestring.FindPointIdx(testPoint2, true);
 				Assert.NotNull(pt2Idx);
 
-				found = linestring.GetPoint(pt2Idx.Value);
+				found = linestring.GetPoint3D(pt2Idx.Value);
 
 				testPoint1ExpectedZ += 5 * Math.Sqrt(2);
 				Assert.AreEqual(testPoint1ExpectedZ, found.Z);
@@ -398,12 +398,12 @@ namespace ProSuite.Commons.Test.Geometry
 				int? pt1Idx = linestring.FindPointIdx(testPoint1, true);
 				Assert.NotNull(pt1Idx);
 
-				Pnt3D foundPt1 = linestring.GetPoint(pt1Idx.Value);
+				Pnt3D foundPt1 = linestring.GetPoint3D(pt1Idx.Value);
 
 				int? pt2Idx = linestring.FindPointIdx(testPoint2, true);
 				Assert.NotNull(pt2Idx);
 
-				Pnt3D foundPt2 = linestring.GetPoint(pt2Idx.Value);
+				Pnt3D foundPt2 = linestring.GetPoint3D(pt2Idx.Value);
 
 				if (! nanStartOrEnd)
 				{
