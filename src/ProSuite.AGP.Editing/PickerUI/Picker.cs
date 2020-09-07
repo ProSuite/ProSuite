@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -51,13 +52,11 @@ namespace ProSuite.AGP.Editing.PickerUI
 					new PickerViewModel(_candidateList, true);
 			});
 
-			bool dialogresult = ShowPickerControl(_viewModel);
+			ShowPickerControl(_viewModel);
 
 			_viewModel.DisposeOverlays();
 
-			return dialogresult
-				       ? _viewModel.SelectedItem
-				       : _viewModel.PickableItems.First();
+			return _viewModel.SelectedItem ?? _viewModel.PickableItems.First();
 		}
 
 		[CanBeNull]
@@ -90,11 +89,14 @@ namespace ProSuite.AGP.Editing.PickerUI
 			return _viewModel.SelectedItems.ToList<IPickableItem>();
 		}
 
-		private bool ShowPickerControl(PickerViewModel vm)
+		private void ShowPickerControl(PickerViewModel vm)
 		{
-			PickerWindow window = new PickerWindow(vm);
-			ManageWindowLocation(window);
-			return (bool) window.ShowDialog();
+			Application.Current.Dispatcher.Invoke(new Action(() =>
+			{
+				PickerWindow window = new PickerWindow(vm);
+				ManageWindowLocation(window);
+				window.ShowDialog();
+			}));
 		}
 
 		private void ManageWindowLocation(Window window)
