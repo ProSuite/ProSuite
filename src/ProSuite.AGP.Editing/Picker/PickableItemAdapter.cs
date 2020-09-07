@@ -15,7 +15,8 @@ namespace ProSuite.AGP.Editing.Picker
 			List<IPickableItem> pickableItems = new List<IPickableItem>();
 			foreach (var info in featureClassInfos)
 			{
-				pickableItems.Add(new PickableFeatureClassItem(info.FeatureClass, info.ShapeType));
+
+				pickableItems.Add(new PickableFeatureClassItem(info.FeatureClass, info.ShapeType, info.BelongingLayers));
 			}
 
 			return pickableItems;

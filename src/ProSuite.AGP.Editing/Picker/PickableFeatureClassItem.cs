@@ -1,9 +1,13 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows.Controls;
+using System.Windows.Media.Imaging;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Picker
@@ -14,12 +18,14 @@ namespace ProSuite.AGP.Picker
 		private bool _isSelected;
 		private Geometry _geometry;
 		private Uri _itemImageUri;
+		private List<FeatureLayer> _belongingFeatureLayers;
 
-		public PickableFeatureClassItem(FeatureClass featureClass, esriGeometryType geometryType)
+		public PickableFeatureClassItem(FeatureClass featureClass, esriGeometryType geometryType, List<FeatureLayer> belongingFeatureLayers)
 		{
 			_itemText = featureClass.GetName();
 			_geometry = null;
 			ItemImageUri = GetImagePath(geometryType);
+			BelongingFeatureLayers = belongingFeatureLayers;
 		}
 
 		public string ItemText => _itemText;
@@ -42,15 +48,21 @@ namespace ProSuite.AGP.Picker
 			set => _itemImageUri = value;
 		}
 
+		public List<FeatureLayer> BelongingFeatureLayers
+		{
+			get => _belongingFeatureLayers;
+			set => _belongingFeatureLayers = value;
+		}
+
 		
 		private static Uri GetImagePath(esriGeometryType geometryType)
 		{
-			if (geometryType == esriGeometryType.esriGeometryPoint)
+			if (geometryType == esriGeometryType.esriGeometryPoint || geometryType == esriGeometryType.esriGeometryMultipoint)
 			{
 				return new Uri("pack://application:,,,/ProSuite.AGP.Editing;component/Images/PointGeometry.bmp");
 			}
 
-			if (geometryType == esriGeometryType.esriGeometryPolyline)
+			if (geometryType == esriGeometryType.esriGeometryLine || geometryType == esriGeometryType.esriGeometryPolyline)
 			{
 				return new Uri("pack://application:,,,/ProSuite.AGP.Editing;component/Images/LineGeometry.bmp");
 			}

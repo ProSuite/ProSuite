@@ -19,6 +19,7 @@ namespace ProSuite.AGP.Editing.Selection
 		{
 			IsSketchTool = true;
 			SelectionSettings = new SelectionSettings();
+			SelectionMode = SelectionMode.Normal;
 		}
 
 		protected override bool CanUseSelection(IEnumerable<Feature> selectedFeatures)

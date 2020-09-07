@@ -354,40 +354,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				if (SelectionMode == SelectionMode.UserSelect)
 				{
 					// get featureclasses from layers, present selectable featureclasses in Picker
-					IEnumerable<FeatureLayer> featureLayers = ActiveMapView.Map.Layers
-						.OfType<FeatureLayer>();
-
-					var fClassGroups = featureLayers.Where(fLayer =>
-						fLayer.IsSelectable).Select(fLayer => fLayer.GetFeatureClass()).GroupBy(fc => fc.GetName());
-
-					var layerGroupsByFcName = featureLayers.GroupBy(layer => layer.GetFeatureClass().GetName());
-
-					List<FeatureClassInfo> featureClassInfos = new List<FeatureClassInfo>();
-
-					foreach (var group in layerGroupsByFcName)
-					{
-						List<FeatureLayer> belongingLayers = new List<FeatureLayer>();
-
-						foreach (var layer in group)
-						{
-							belongingLayers.Add(layer);
-						}
-
-						FeatureClass fClass = belongingLayers.First().GetFeatureClass();
-						string featureClassName = fClass.GetName();
-						esriGeometryType gType = belongingLayers.First().ShapeType;
-
-						FeatureClassInfo featureClassInfo = new FeatureClassInfo()
-						                                    {
-																BelongingLayers = belongingLayers,
-																FeatureClass = fClass,
-																FeatureClassName = featureClassName,
-																ShapeType = gType
-						                                    };
-						featureClassInfos.Add(featureClassInfo);
-					}
-
-					featureClassInfos.OrderBy(info => info.ShapeType);
+					var featureClassInfos = Selector.GetSelectableFeatureclassInfos();
 
 					List<IPickableItem> pickableItems = PickableItemAdapter.Get(featureClassInfos);
 
@@ -395,21 +362,28 @@ namespace ProSuite.AGP.Editing.OneClick
 
 					PickerUI.Picker picker = new PickerUI.Picker(pickableItems,pickerWindowLocation);
 
-					FeatureClassInfo item = await picker.PickSingle() as FeatureClassInfo;
+					PickableFeatureClassItem item = await picker.PickSingle() as PickableFeatureClassItem;
 
-					//TODO STS: should call Picker here, but what about circular assembly ref?
+
+					item.BelongingFeatureLayers.ForEach(layer =>
+					{
+						layer.Select(null, selectionMethod);
+					});
+
 				}
 				else
 				{
 					// select all features from all layers
 					Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer =
 						FindFeaturesOfAllLayers(selectionGeometry);
+
+					Selector.SelectLayersByOids(featuresPerLayer);
+
+					SelectionMode = SelectionMode.Normal;
 				}
 			}
 
 			AddOverlay(selectionGeometry, highlightPolygonSymbol);
-
-			//Dictionary<BasicFeatureLayer, List<long>> selection = ActiveMapView.SelectFeatures(selectionGeometry, selectionMethod);
 
 			ProcessSelection(SelectionUtils.GetSelectedFeatures(ActiveMapView), progressor);
 
