@@ -254,8 +254,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		protected static Envelope GetExtentFromItems(IEnumerable<IWorkItem> items)
 		{
-			double xmin = double.MaxValue, ymin = double.MaxValue;
-			double xmax = double.MinValue, ymax = double.MinValue;
+			double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
+			double xmax = double.MinValue, ymax = double.MinValue, zmax = double.MinValue;
 			SpatialReference sref = null;
 			long count = 0;
 
@@ -270,9 +270,11 @@ namespace ProSuite.AGP.WorkList.Domain
 
 					if (extent.XMin < xmin) xmin = extent.XMin;
 					if (extent.YMin < ymin) ymin = extent.YMin;
+					if (extent.ZMin < zmin) zmin = extent.ZMin;
 
 					if (extent.XMax > xmax) xmax = extent.XMax;
 					if (extent.YMax > ymax) ymax = extent.YMax;
+					if (extent.ZMax > zmax) zmax = extent.ZMax;
 
 					sref = extent.SpatialReference;
 
@@ -281,8 +283,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 
 			return count > 0
-				       ? EnvelopeBuilder.CreateEnvelope(xmin, ymin, xmax, ymax, sref)
-				       : EnvelopeBuilder.CreateEnvelope(sref); // empty
+				       ? EnvelopeBuilder.CreateEnvelope(new Coordinate3D(xmin, ymin, zmin),
+				                                        new Coordinate3D(xmax, ymax, zmax), sref)
+				       : EnvelopeBuilder.CreateEnvelope(sref);
 		}
 
 		private static bool Relates(Geometry a, SpatialRelationship rel, Geometry b)
