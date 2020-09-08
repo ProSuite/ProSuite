@@ -7,10 +7,13 @@ namespace ProSuite.AGP.Editing.Selection
 {
 	public class SelectionSettings
 	{
-		public SelectionSettings(SketchGeometryType sketchGeometryType = SketchGeometryType.Rectangle, int selectionTolerancePixels = 3, SpatialRelationship spatialRelationship = SpatialRelationship.Intersects)
+		public SelectionSettings(
+			SketchGeometryType sketchGeometryType = SketchGeometryType.Rectangle,
+			int selectionTolerancePixels = 3,
+			SpatialRelationship spatialRelationship = SpatialRelationship.Intersects)
 		{
 			SketchGeometryType = sketchGeometryType;
-			SketchOutputMode = SketchOutputMode.Map; 
+			SketchOutputMode = SketchOutputMode.Map;
 			SelectionTolerancePixels = selectionTolerancePixels;
 			SpatialRelationship = spatialRelationship;
 		}
@@ -27,6 +30,5 @@ namespace ProSuite.AGP.Editing.Selection
 		/// Will be applied to points only
 		/// </summary>
 		public int SelectionTolerancePixels { get; set; }
-		
 	}
 }

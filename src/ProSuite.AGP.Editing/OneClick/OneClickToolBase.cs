@@ -54,7 +54,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected bool RequiresSelection { get; set; } = true;
 
-		protected virtual SelectionSettings SelectionSettings { get; set; } 
+		protected virtual SelectionSettings SelectionSettings { get; set; }
 
 		protected List<Key> HandledKeys { get; } = new List<Key>();
 
@@ -335,15 +335,23 @@ namespace ProSuite.AGP.Editing.OneClick
 					BufferGeometryByPixels(sketchPoint,
 					                       SelectionSettings.SelectionTolerancePixels);
 
+				// select all features spatially related with selectionGeometry
+				Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer =
+					FindFeaturesOfAllLayers(selectionGeometry);
+
 				if (SelectionMode == SelectionMode.Original)
 				{
-					// select all features on clickpoint
-					Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer =
-						FindFeaturesOfAllLayers(selectionGeometry);
+					Selector.SelectLayersFeaturesByOids(featuresPerLayer);
 				}
 				else
 				{
-					//select a single feature using feature reduction and/or picker
+					//select a single feature using feature reduction, 
+					KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer =
+						ReduceFeatures(featuresPerLayer);
+
+					//TODO if still several selection candidates -> present picker here
+
+					Selector.SelectLayersFeaturesByOids(featuresOfLayer);
 				}
 			}
 
@@ -351,39 +359,39 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				selectionGeometry = sketchGeometry;
 
+				//CTRL was pressed
 				if (SelectionMode == SelectionMode.UserSelect)
 				{
-					// get featureclasses from layers, present selectable featureclasses in Picker
-					var featureClassInfos = Selector.GetSelectableFeatureclassInfos();
+					List<FeatureClassInfo> featureClassInfos =
+						Selector.GetSelectableFeatureclassInfos();
 
 					List<IPickableItem> pickableItems = PickableItemAdapter.Get(featureClassInfos);
 
-					Point pickerWindowLocation = await QueuedTask.Run(() => MapView.Active.MapToScreen(selectionGeometry.Extent.Center));
+					Point pickerWindowLocation =
+						await QueuedTask.Run(
+							() => MapView.Active.MapToScreen(selectionGeometry.Extent.Center));
 
-					PickerUI.Picker picker = new PickerUI.Picker(pickableItems,pickerWindowLocation);
+					var picker = new PickerUI.Picker(pickableItems, pickerWindowLocation);
 
-					PickableFeatureClassItem item = await picker.PickSingle() as PickableFeatureClassItem;
-
+					var item = await picker.PickSingle() as PickableFeatureClassItem;
 
 					item.BelongingFeatureLayers.ForEach(layer =>
 					{
 						layer.Select(null, selectionMethod);
 					});
-
 				}
 				else
 				{
-					// select all features from all layers
 					Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer =
 						FindFeaturesOfAllLayers(selectionGeometry);
 
-					Selector.SelectLayersByOids(featuresPerLayer);
-
-					SelectionMode = SelectionMode.Normal;
+					Selector.SelectLayersFeaturesByOids(featuresPerLayer);
 				}
 			}
 
-			AddOverlay(selectionGeometry, highlightPolygonSymbol);
+			// AddOverlay(selectionGeometry, highlightPolygonSymbol);
+
+			SelectionMode = SelectionMode.UserSelect;
 
 			ProcessSelection(SelectionUtils.GetSelectedFeatures(ActiveMapView), progressor);
 
@@ -391,29 +399,23 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		
-
-		private Dictionary<BasicFeatureLayer,List<long>> ReduceFeatures(List<FeatureClassInfo> featureClassInfos, Geometry filterGeometry)
+		private KeyValuePair<BasicFeatureLayer, List<long>> ReduceFeatures(
+			Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer)
 		{
-			Dictionary<BasicFeatureLayer, List<long> > featuresPerLayer = new Dictionary<BasicFeatureLayer, List<long>>();
-			foreach (var info in featureClassInfos)
+			//Dictionary<BasicFeatureLayer, List<long> > featuresPerLayer = new Dictionary<BasicFeatureLayer, List<long>>();
+
+			IOrderedEnumerable<KeyValuePair<BasicFeatureLayer, List<long>>> ordered =
+				featuresPerLayer.OrderBy(el => el.Key.ShapeType, new GeometryTypeComparer());
+
+			foreach (KeyValuePair<BasicFeatureLayer, List<long>> keyValuePair in ordered)
 			{
-				foreach (var layer in info.BelongingLayers)
+				if (keyValuePair.Value.Any())
 				{
-					var selectionCandidates = MapUtils.FilterFeaturesByGeometry(layer, filterGeometry,
-					                                  SelectionSettings.SpatialRelationship);
+					return keyValuePair;
+				}
+			}
 
-					if (selectionCandidates.Any())
-					{
-						var oids = MapUtils.GetFeaturesOidList(selectionCandidates);
-
-						featuresPerLayer.Add(layer, oids.ToList());
-
-						return featuresPerLayer;
-					}
-				}	
-			};
-			return featuresPerLayer;
+			return featuresPerLayer.First();
 		}
 
 		private Dictionary<BasicFeatureLayer, List<long>> FindFeaturesOfAllLayers(

@@ -12,7 +12,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Picker
 {
-	public class PickableFeatureClassItem: IPickableItem
+	public class PickableFeatureClassItem : IPickableItem
 	{
 		private string _itemText;
 		private bool _isSelected;
@@ -20,7 +20,8 @@ namespace ProSuite.AGP.Picker
 		private Uri _itemImageUri;
 		private List<FeatureLayer> _belongingFeatureLayers;
 
-		public PickableFeatureClassItem(FeatureClass featureClass, esriGeometryType geometryType, List<FeatureLayer> belongingFeatureLayers)
+		public PickableFeatureClassItem(FeatureClass featureClass, esriGeometryType geometryType,
+		                                List<FeatureLayer> belongingFeatureLayers)
 		{
 			_itemText = featureClass.GetName();
 			_geometry = null;
@@ -54,22 +55,26 @@ namespace ProSuite.AGP.Picker
 			set => _belongingFeatureLayers = value;
 		}
 
-		
 		private static Uri GetImagePath(esriGeometryType geometryType)
 		{
-			if (geometryType == esriGeometryType.esriGeometryPoint || geometryType == esriGeometryType.esriGeometryMultipoint)
+			if (geometryType == esriGeometryType.esriGeometryPoint ||
+			    geometryType == esriGeometryType.esriGeometryMultipoint)
 			{
-				return new Uri("pack://application:,,,/ProSuite.AGP.Editing;component/Images/PointGeometry.bmp");
+				return new Uri(
+					"pack://application:,,,/ProSuite.AGP.Editing;component/Images/PointGeometry.bmp");
 			}
 
-			if (geometryType == esriGeometryType.esriGeometryLine || geometryType == esriGeometryType.esriGeometryPolyline)
+			if (geometryType == esriGeometryType.esriGeometryLine ||
+			    geometryType == esriGeometryType.esriGeometryPolyline)
 			{
-				return new Uri("pack://application:,,,/ProSuite.AGP.Editing;component/Images/LineGeometry.bmp");
+				return new Uri(
+					"pack://application:,,,/ProSuite.AGP.Editing;component/Images/LineGeometry.bmp");
 			}
 
 			if (geometryType == esriGeometryType.esriGeometryPolygon)
 			{
-				return new Uri("pack://application:,,,/ProSuite.AGP.Editing;component/Images/PolygonGeometry.bmp");
+				return new Uri(
+					"pack://application:,,,/ProSuite.AGP.Editing;component/Images/PolygonGeometry.bmp");
 			}
 
 			return new Uri("");
