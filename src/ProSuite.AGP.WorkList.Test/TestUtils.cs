@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -38,6 +40,19 @@ namespace ProSuite.AGP.WorkList.Test
 			}
 		}
 
+		public static void DeleteRow(string path, string featureClassName, long oid)
+		{
+			var uri = new Uri(path, UriKind.Absolute);
+			using (var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri)))
+			{
+				using (var featureClass = geodatabase.OpenDataset<FeatureClass>(featureClassName))
+				{
+					var filter = new QueryFilter {ObjectIDs = new List<long> {oid}};
+					featureClass.DeleteRows(filter);
+				}
+			}
+		}
+
 		public static void DeleteAllRows(string path, string featureClassName)
 		{
 			var uri = new Uri(path, UriKind.Absolute);
@@ -51,6 +66,19 @@ namespace ProSuite.AGP.WorkList.Test
 					{
 						throw new InvalidOperationException();
 					}
+				}
+			}
+		}
+
+		public static void UpdateFeatureGeometry(string path, string featureClassName, Geometry newGeometry, int oid)
+		{
+			using (var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute))))
+			{
+				using (var featureClass = geodatabase.OpenDataset<FeatureClass>(featureClassName))
+				{
+					var feature = (Feature) GdbQueryUtils.GetRow(featureClass, oid);
+					feature.SetShape(newGeometry);
+					feature.Store();
 				}
 			}
 		}

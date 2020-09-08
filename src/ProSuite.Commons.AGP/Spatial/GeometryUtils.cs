@@ -44,5 +44,10 @@ namespace ProSuite.Commons.AGP.Spatial
 		{
 			return MapPointBuilder.CreateMapPoint(x, y, sref);
 		}
+
+		public static Envelope Union(Envelope first, Envelope second)
+		{
+			return first.Union(second);
+		}
 	}
 }

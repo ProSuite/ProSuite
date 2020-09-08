@@ -56,6 +56,11 @@ namespace ProSuite.AGP.WorkList.Domain
 					// todo daro: warn
 				}
 			}
+
+
+			// todo daro: EnvelopeBuilder as parameter > do not iterate again over items
+			//			  look old work item implementation
+			Extent = GetExtentFromItems(_items);
 		}
 		
 		public event EventHandler<WorkListChangedEventArgs> WorkListChanged
@@ -362,6 +367,14 @@ namespace ProSuite.AGP.WorkList.Domain
 				ProcessInserts(tableId, oids);
 			}
 
+			foreach (var delete in deletes)
+			{
+				var tableId = new GdbTableIdentity(delete.Key);
+				List<long> oids = delete.Value;
+
+				ProcessDeletes(tableId, oids);
+			}
+
 			foreach (var update in updates)
 			{
 				var tableId = new GdbTableIdentity(update.Key);
@@ -372,15 +385,79 @@ namespace ProSuite.AGP.WorkList.Domain
 				// does not work because ObjectIDs = (IReadOnlyList<long>) modify.Value (oids) are the
 				// ObjectIds of source feature not the work item OIDs.
 				//IEnumerable<IWorkItem> workItems = GetItems(filter);
-
-				//IEnumerable<IWorkItem> items = Repository.GetItems(new GdbTableIdentity(modify.Key), filter);
 			}
+		}
+
+		private void ProcessDeletes(GdbTableIdentity tableId, List<long> oids)
+		{
+			foreach (long oid in oids)
+			{
+				// todo daro: refactor, simplify
+				var rowId = new GdbRowIdentity(oid, tableId);
+
+				if (HasCurrentItem && Current != null && Current.Proxy.Equals(rowId))
+				{
+					ClearCurrentItem(Current);
+				}
+
+				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
+				{
+					RemoveWorkItem(item);
+					// todo daro: WorkListChanged > invalidate map
+				}
+			}
+
+			// todo daro: update work list extent?
+			Extent = GetExtentFromItems(_items);
+		}
+
+		private void RemoveWorkItem(IWorkItem item)
+		{
+			_items.Remove(item);
+			_rowMap.Remove(item.Proxy);
+		}
+
+		private void ClearCurrentItem([NotNull] IWorkItem current)
+		{
+			Assert.ArgumentNotNull(current, nameof(current));
+
+			if (CurrentIndex < 0)
+			{
+				return;
+			}
+
+			CurrentIndex = -1;
+
+			OnWorkListChanged(null, new List<long> {current.OID});
 		}
 
 		private void ProcessInserts(GdbTableIdentity tableId, List<long> oids)
 		{
 			var filter = new QueryFilter {ObjectIDs = oids};
-			IEnumerable<IWorkItem> items = Repository.GetItems(tableId, filter);
+
+			foreach (IWorkItem item in Repository.GetItems(tableId, filter).ToList())
+			{
+				if (_rowMap.ContainsKey(item.Proxy))
+				{
+					// todo daro: warn
+				}
+
+				_items.Add(item);
+				_rowMap.Add(item.Proxy, item);
+
+				if (! HasCurrentItem)
+				{
+					SetCurrentItem(item, null);
+					// todo daro: WorkListChanged > invalidate map
+				}
+
+				UpdateExtent(item.Extent);
+			}
+		}
+
+		private void UpdateExtent(Envelope itemExtent)
+		{
+			Extent = Extent.Union(itemExtent);
 		}
 
 		private void ProcessUpdates(GdbTableIdentity tableId, IEnumerable<long> oids)
@@ -390,8 +467,14 @@ namespace ProSuite.AGP.WorkList.Domain
 				if (_rowMap.TryGetValue(new GdbRowIdentity(oid, tableId), out IWorkItem item))
 				{
 					Repository.UpdateItem(item);
+
+					UpdateExtent(item.Extent);
 				}
 			}
 		}
+
+		public bool HasCurrentItem => CurrentIndex >= 0 &&
+		                              _items != null &&
+		                              CurrentIndex < _items.Count;
 	}
 }

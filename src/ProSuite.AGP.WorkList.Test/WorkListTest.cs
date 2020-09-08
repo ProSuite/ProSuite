@@ -9,6 +9,7 @@ using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.AGP.Spatial;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -16,11 +17,32 @@ namespace ProSuite.AGP.WorkList.Test
 	[Apartment(ApartmentState.STA)]
 	public class WorkListTest
 	{
+		private Polygon _poly0;
+		private Polygon _poly1;
+		private Geodatabase _geodatabase;
+		private Table _table0;
+		private Table _table1;
+		private IWorkItemRepository _repository;
+
 		[SetUp]
 		public void SetUp()
 		{
 			// http://stackoverflow.com/questions/8245926/the-current-synchronizationcontext-may-not-be-used-as-a-taskscheduler
 			SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
+
+			
+			_geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(_emptyIssuesGdb, UriKind.Absolute)));
+
+			
+			_table0 = _geodatabase.OpenDataset<Table>(_featureClass0);
+			_table1 = _geodatabase.OpenDataset<Table>(_featureClass1);
+
+			var tablesByGeodatabase = new Dictionary<Geodatabase, List<Table>>
+			                          {
+				                          {_geodatabase, new List<Table> {_table0, _table1}}
+			                          };
+
+			_repository = new IssueItemRepository(tablesByGeodatabase);
 		}
 
 		[OneTimeSetUp]
@@ -29,10 +51,27 @@ namespace ProSuite.AGP.WorkList.Test
 			// Host must be initialized on an STA thread:
 			//Host.Initialize();
 			Commons.AGP.Hosting.CoreHostProxy.Initialize();
+
+
+			_poly0 = PolygonConstruction
+			         .StartPolygon(0, 0, 0)
+			         .LineTo(0, 20, 0)
+			         .LineTo(20, 20, 0)
+			         .LineTo(20, 0, 0)
+			         .ClosePolygon();
+
+			_poly1 = PolygonConstruction
+			         .StartPolygon(0, 0, 0)
+			         .LineTo(0, 40, 0)
+			         .LineTo(40, 40, 0)
+			         .LineTo(40, 0, 0)
+			         .ClosePolygon();
 		}
 
-		private string _emptyIssuesGdb = @"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\issues_empty.gdb";
+		private const string _emptyIssuesGdb = @"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\issues_empty.gdb";
 		private string _featureClassName = "IssuePolygons";
+		private string _featureClass0 = "featureClass0";
+		private string _featureClass1 = "featureClass1";
 
 		#region work list navigation tests
 
@@ -70,6 +109,115 @@ namespace ProSuite.AGP.WorkList.Test
 		}
 
 		#endregion
+
+		[Test]
+		public void Can_handle_WorkList_extent_on_insert()
+		{
+			InsertFeature(_featureClass0, _poly0);
+			InsertFeature(_featureClass1, _poly0);
+
+			try
+			{
+				IWorkList workList = new IssueWorkList(_repository, "work list");
+				AssertEqual(_poly0.Extent, workList.Extent);
+
+				Assert.AreEqual(2, workList.GetItems().ToList().Count);
+
+				InsertFeature(_featureClass0, _poly1);
+
+				var inserts = new Dictionary<Table, List<long>> {{_table0, new List<long> {2}}};
+				var deletes = new Dictionary<Table, List<long>>();
+				var updates = new Dictionary<Table, List<long>>();
+
+				((IRowCache) workList).ProcessChanges(inserts, deletes, updates);
+
+				Assert.AreEqual(3, workList.GetItems().ToList().Count);
+
+				Envelope newExtent = GeometryUtils.Union(_poly0.Extent, _poly1.Extent);
+
+				AssertEqual(newExtent, workList.Extent);
+			}
+			finally
+			{
+				DeleteAllRows(_featureClass0);
+				DeleteAllRows(_featureClass1);
+			}
+		}
+
+		[Test]
+		public void Can_handle_WorkList_extent_on_update()
+		{
+			InsertFeature(_featureClass0, _poly0);
+			InsertFeature(_featureClass1, _poly0);
+
+			try
+			{
+				IWorkList workList = new IssueWorkList(_repository, "work list");
+				AssertEqual(_poly0.Extent, workList.Extent);
+
+				Assert.AreEqual(2, workList.GetItems().ToList().Count);
+
+				UpdateFeatureGeometry(_featureClass0, _poly1);
+				UpdateFeatureGeometry(_featureClass1, _poly1);
+
+				var inserts = new Dictionary<Table, List<long>>();
+				var deletes = new Dictionary<Table, List<long>>();
+				var updates = new Dictionary<Table, List<long>> {{_table0, new List<long> {1}}, {_table1, new List<long> {1}}};
+
+				((IRowCache) workList).ProcessChanges(inserts, deletes, updates);
+
+				var items = workList.GetItems().ToList();
+				Assert.AreEqual(2, items.Count);
+
+				List<long> ids = items.Select(i => i.OID).ToList().ConvertAll(i => (long)i);
+				QueryFilter filter = GdbQueryUtils.CreateFilter(ids);
+
+				foreach (IWorkItem item in workList.GetItems(filter))
+				{
+					AssertEqual(_poly1.Extent, item.Extent);
+				}
+
+				AssertEqual(_poly1.Extent, workList.Extent);
+			}
+			finally
+			{
+				DeleteAllRows(_featureClass0);
+				DeleteAllRows(_featureClass1);
+			}
+		}
+
+		[Test]
+		public void Can_handle_WorkList_extent_on_delete()
+		{
+			InsertFeature(_featureClass0, _poly0);
+			InsertFeature(_featureClass1, _poly1);
+
+			try
+			{
+				IWorkList workList = new IssueWorkList(_repository, "work list");
+				Envelope newExtent = GeometryUtils.Union(_poly0.Extent, _poly1.Extent);
+				AssertEqual(newExtent, workList.Extent);
+
+				Assert.AreEqual(2, workList.GetItems().ToList().Count);
+
+				DeleteRow(_featureClass1);
+
+				var inserts = new Dictionary<Table, List<long>>();
+				var deletes = new Dictionary<Table, List<long>> {{_table1, new List<long> {1}}};
+				var updates = new Dictionary<Table, List<long>>();
+
+				((IRowCache) workList).ProcessChanges(inserts, deletes, updates);
+
+				Assert.AreEqual(1, workList.GetItems().ToList().Count);
+
+				AssertEqual(_poly0.Extent, workList.Extent);
+			}
+			finally
+			{
+				DeleteAllRows(_featureClass0);
+				DeleteAllRows(_featureClass1);
+			}
+		}
 
 		[Test]
 		public void Respect_AreaOfInterest_LearningTest()
@@ -266,6 +414,37 @@ namespace ProSuite.AGP.WorkList.Test
 			{
 				TestUtils.DeleteAllRows(_emptyIssuesGdb, _featureClassName);
 			}
+		}
+
+		private static void InsertFeature(string featureClassName, Polygon polygon)
+		{
+			TestUtils.InsertRows(_emptyIssuesGdb, featureClassName, polygon, 1);
+		}
+
+		private static void UpdateFeatureGeometry(string featureClassName, Polygon polygon)
+		{
+			TestUtils.UpdateFeatureGeometry(_emptyIssuesGdb, featureClassName, polygon, 1);
+		}
+
+		private static void DeleteRow(string featureClassName)
+		{
+			TestUtils.DeleteRow(_emptyIssuesGdb, featureClassName, 1);
+		}
+
+		private static void DeleteAllRows(string featureClassName)
+		{
+			TestUtils.DeleteAllRows(_emptyIssuesGdb, featureClassName);
+		}
+
+		private static void AssertEqual(Envelope expected, Envelope actual)
+		{
+			Assert.True(AreEqual(expected, actual));
+		}
+
+		private static bool AreEqual(Envelope expected, Envelope actual)
+		{
+			// 1.1 is default expansion of work items
+			return expected.Expand(1.1, 1.1, true).IsEqual(actual);
 		}
 	}
 }
