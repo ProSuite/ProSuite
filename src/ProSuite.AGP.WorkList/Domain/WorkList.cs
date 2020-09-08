@@ -71,7 +71,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public string Name { get; }
 
-		public virtual Envelope Extent { get; protected set; }
+		public Envelope Extent { get; protected set; }
 
 		public WorkItemVisibility Visibility { get; set; }
 
@@ -84,7 +84,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			// Subclass should provide more efficient implementation (e.g. pass filter on to database)
 
-			// todo daro: why?
 			var query = (IEnumerable<IWorkItem>) _items;
 
 			if (! ignoreListSettings && Visibility != WorkItemVisibility.None)
