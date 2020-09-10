@@ -12,7 +12,7 @@ using ProSuite.AGP.WorkList.Domain;
 
 namespace Clients.AGP.ProSuiteSolution.WorkListUI
 {
-	public class WorkListViewModel : PropertyChangedBase, IWorkListObserver
+	public class WorkListViewModel : PropertyChangedBase //, IWorkListObserver
 	{
 
 		public WorkListViewModel(IWorkList workList)
