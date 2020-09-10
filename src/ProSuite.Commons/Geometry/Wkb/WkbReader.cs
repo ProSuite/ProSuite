@@ -1,233 +1,210 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geometry.Wkb
 {
 	public class WkbReader
 	{
-		private BinaryReader _reader;
+		//protected BinaryReader Reader { get; set; }
 
-		public IList<RingGroup> ReadMultiPolygon(Stream stream)
-		{
-			using (BinaryReader reader = InitialilzeReader(stream))
-			{
-				uint type = reader.ReadUInt32();
-
-				WkbGeometryType geometryType = (WkbGeometryType) (type % 1000);
-
-				Ordinates ordinates = GetOrdinates(type);
-
-				if (geometryType == WkbGeometryType.Polygon)
-				{
-					RingGroup result = ReadPolygonCore(reader, ordinates);
-
-					return new List<RingGroup> {result};
-				}
-
-				if (geometryType == WkbGeometryType.MultiPolygon)
-				{
-					uint polygonCount = reader.ReadUInt32();
-
-					var result = new List<RingGroup>((int) polygonCount);
-
-					for (int i = 0; i < polygonCount; i++)
-					{
-						result.Add(ReadPolygonCore(reader, ordinates));
-					}
-
-					return result;
-				}
-
-				throw new NotSupportedException($"Cannot read {geometryType} as MultiPolygon.");
-			}
-		}
-
-		public RingGroup ReadPolygon(Stream stream)
-		{
-			using (BinaryReader reader = InitialilzeReader(stream))
-			{
-				uint type = reader.ReadUInt32();
-
-				WkbGeometryType geometryType = (WkbGeometryType) (type % 1000);
-
-				Ordinates ordinates = GetOrdinates(type);
-
-				if (geometryType == WkbGeometryType.Polygon)
-				{
-					RingGroup result = ReadPolygonCore(reader, ordinates);
-
-					return result;
-				}
-
-				throw new NotSupportedException($"Cannot read {geometryType} as Polygon.");
-			}
-		}
-
-		public MultiPolycurve ReadMultiPolycurve(Stream stream)
-		{
-			using (BinaryReader reader = InitialilzeReader(stream))
-			{
-				uint type = reader.ReadUInt32();
-
-				WkbGeometryType geometryType = (WkbGeometryType) (type % 1000);
-
-				Ordinates ordinates = GetOrdinates(type);
-
-				if (geometryType == WkbGeometryType.MultiLineString ||
-				    geometryType == WkbGeometryType.Polygon ||
-				    geometryType == WkbGeometryType.MultiPolygon)
-				{
-					uint linestringCount = reader.ReadUInt32();
-
-					return new MultiPolycurve(
-						ReadLinestringsCore(reader, linestringCount, ordinates));
-				}
-
-				throw new NotSupportedException(
-					$"Cannot read {geometryType} as multi-polycurve.");
-			}
-		}
-
-		public IPnt ReadPoint(Stream stream)
-		{
-			using (BinaryReader reader = InitialilzeReader(stream))
-			{
-				uint type = reader.ReadUInt32();
-
-				WkbGeometryType geometryType = (WkbGeometryType) (type % 1000);
-
-				Ordinates ordinates = GetOrdinates(type);
-
-				if (geometryType != WkbGeometryType.Point)
-				{
-					throw new NotSupportedException(
-						$"Cannot read {geometryType} as point.");
-				}
-
-				return ReadPointCore(reader, ordinates);
-			}
-		}
-
-		public IEnumerable<IPnt> ReadMultiPoint(Stream stream)
-		{
-			using (BinaryReader reader = InitialilzeReader(stream))
-			{
-				uint type = reader.ReadUInt32();
-
-				WkbGeometryType geometryType = (WkbGeometryType) (type % 1000);
-
-				Ordinates ordinates = GetOrdinates(type);
-
-				if (geometryType != WkbGeometryType.MultiPoint)
-				{
-					throw new NotSupportedException(
-						$"Cannot read {geometryType} as point.");
-				}
-
-				uint pointCount = reader.ReadUInt32();
-
-				for (int i = 0; i < pointCount; i++)
-				{
-					yield return ReadPointCore(reader, ordinates);
-				}
-			}
-		}
-
-		private RingGroup ReadPolygonCore(BinaryReader reader, Ordinates ordinates)
-		{
-			uint ringCount = reader.ReadUInt32();
-
-			if (ringCount > 0)
-			{
-				List<Linestring> rings = ReadLinestringsCore(reader, ringCount, ordinates).ToList();
-
-				RingGroup result = new RingGroup(rings.First(), rings.Skip(1));
-
-				return result;
-			}
-
-			// Allow empty?
-			return null;
-		}
-
-		private IEnumerable<Linestring> ReadLinestringsCore(BinaryReader reader, uint count,
-		                                                    Ordinates ordinates)
-		{
-			for (int i = 0; i < count; i++)
-			{
-				yield return new Linestring(ReadPoints3dCore(reader, ordinates));
-			}
-		}
-
-		private IEnumerable<Pnt3D> ReadPoints3dCore(BinaryReader reader, Ordinates ordinates)
-		{
-			uint pointCount = reader.ReadUInt32();
-
-			for (int i = 0; i < pointCount; i++)
-				yield return ReadPoint3dCore(reader, ordinates);
-		}
-
-		private IPnt ReadPointCore(BinaryReader reader, Ordinates ordinates)
-		{
-			switch (ordinates)
-			{
-				case Ordinates.Xy: return new Pnt2D(reader.ReadDouble(), reader.ReadDouble());
-				case Ordinates.Xyz:
-					return new Pnt3D(reader.ReadDouble(), reader.ReadDouble(), reader.ReadDouble());
-				case Ordinates.Xym:
-					throw new NotImplementedException("M-awareness is currently not supported.");
-				case Ordinates.Xyzm:
-					throw new NotImplementedException("M-awareness is currently not supported.");
-				default: throw new NotSupportedException(ordinates.ToString());
-			}
-		}
-
-		private Pnt3D ReadPoint3dCore(BinaryReader reader, Ordinates ordinates)
-		{
-			switch (ordinates)
-			{
-				case Ordinates.Xy:
-					return new Pnt3D(reader.ReadDouble(), reader.ReadDouble(), double.NaN);
-				case Ordinates.Xyz:
-					return new Pnt3D(reader.ReadDouble(), reader.ReadDouble(), reader.ReadDouble());
-				case Ordinates.Xym:
-					throw new NotImplementedException("M-awareness is currently not supported.");
-				case Ordinates.Xyzm:
-					throw new NotImplementedException("M-awareness is currently not supported.");
-				default: throw new NotSupportedException(ordinates.ToString());
-			}
-		}
-
-		private BinaryReader InitialilzeReader(Stream stream)
+		/// <summary>
+		/// Reads the first boolean of the provides stream and initializes the appropriate
+		/// binary reader which will be at position 1 when returned.
+		/// </summary>
+		/// <param name="stream"></param>
+		/// <returns></returns>
+		protected static BinaryReader InitializeReader(Stream stream)
 		{
 			BinaryReader binaryReader = new BinaryReader(stream);
 
 			bool isLittleEndian = binaryReader.ReadBoolean();
 
+			BinaryReader reader;
+
 			if (! isLittleEndian)
 			{
 				binaryReader.Dispose();
 
-				_reader = new BigEndianBinaryReader(stream);
-				_reader.ReadBoolean();
+				reader = new BigEndianBinaryReader(stream);
+				reader.ReadBoolean();
 			}
 			else
 			{
-				_reader = binaryReader;
+				reader = binaryReader;
 			}
 
-			return _reader;
+			return reader;
 		}
 
-		private Ordinates GetOrdinates(uint type)
+		protected static void ReadWkbType([NotNull] BinaryReader reader,
+		                                  bool skipEndianness,
+		                                  out WkbGeometryType geometryType,
+		                                  out Ordinates ordinates)
+		{
+			if (! skipEndianness)
+			{
+				reader.ReadBoolean();
+			}
+
+			int type = checked((int) reader.ReadUInt32());
+
+			geometryType = (WkbGeometryType) (type % 1000);
+
+			ordinates = GetOrdinates(type);
+		}
+
+		protected static P ReadPointCore<P>(BinaryReader reader, Ordinates ordinates,
+		                                    IPointFactory<P> pointBuilder)
+		{
+			switch (ordinates)
+			{
+				case Ordinates.Xy:
+					return pointBuilder.CreatePointXy(reader.ReadDouble(),
+					                                  reader.ReadDouble());
+				case Ordinates.Xyz:
+					return pointBuilder.CreatePointXyz(reader.ReadDouble(),
+					                                   reader.ReadDouble(),
+					                                   reader.ReadDouble());
+				case Ordinates.Xym:
+					return pointBuilder.CreatePointXym(reader.ReadDouble(),
+					                                   reader.ReadDouble(),
+					                                   reader.ReadDouble());
+
+				case Ordinates.Xyzm:
+					return pointBuilder.CreatePointXyzm(reader.ReadDouble(),
+					                                    reader.ReadDouble(),
+					                                    reader.ReadDouble(),
+					                                    reader.ReadDouble());
+
+				default: throw new NotSupportedException(ordinates.ToString());
+			}
+		}
+
+		/// <summary>
+		/// Reads a LineString or multiple LineString geometries using the specified reader.
+		/// </summary>
+		/// <typeparam name="L"></typeparam>
+		/// <typeparam name="P"></typeparam>
+		/// <param name="reader"></param>
+		/// <param name="geometryType"></param>
+		/// <param name="ordinates"></param>
+		/// <param name="geometryBuilder"></param>
+		/// <returns></returns>
+		protected static IEnumerable<L> ReadLinestrings<L, P>(
+			[NotNull] BinaryReader reader,
+			WkbGeometryType geometryType,
+			Ordinates ordinates,
+			[NotNull] GeometryBuilderBase<L, P> geometryBuilder)
+		{
+			IEnumerable<L> linestrings;
+
+			if (geometryType == WkbGeometryType.MultiLineString ||
+			    geometryType == WkbGeometryType.Polygon ||
+			    geometryType == WkbGeometryType.MultiPolygon)
+			{
+				linestrings =
+					ReadLinestrings(reader, ordinates, geometryBuilder);
+			}
+
+			else if (geometryType == WkbGeometryType.LineString)
+			{
+				L linestring = ReadLinestringCore(reader, ordinates, geometryBuilder);
+
+				linestrings = new[] {linestring};
+			}
+			else
+			{
+				throw new NotSupportedException(
+					$"Cannot read {geometryType} as lineString or multiple lineStrings.");
+			}
+
+			return linestrings;
+		}
+
+		protected static IEnumerable<L> ReadLinestringsCore<L, P>(
+			[NotNull] BinaryReader reader,
+			Ordinates ordinates,
+			int linestringCount,
+			[NotNull] GeometryBuilderBase<L, P> geometryBuilder)
+		{
+			for (int i = 0; i < linestringCount; i++)
+			{
+				yield return ReadLinestringCore(reader, ordinates, geometryBuilder);
+			}
+		}
+
+		/// <summary>
+		/// Reads multiple (>1) line strings, including the initial count.
+		/// </summary>
+		/// <typeparam name="L"></typeparam>
+		/// <typeparam name="P"></typeparam>
+		/// <param name="reader"></param>
+		/// <param name="ordinates"></param>
+		/// <param name="geometryBuilder"></param>
+		/// <returns></returns>
+		private static IEnumerable<L> ReadLinestrings<L, P>(
+			[NotNull] BinaryReader reader,
+			Ordinates ordinates,
+			[NotNull] GeometryBuilderBase<L, P> geometryBuilder)
+		{
+			int linestringCount = checked((int) reader.ReadUInt32());
+
+			return ReadLinestrings(reader, ordinates, linestringCount, geometryBuilder);
+		}
+
+		private static IEnumerable<L> ReadLinestrings<L, P>(
+			[NotNull] BinaryReader reader,
+			Ordinates expectedOrdinates,
+			int linestringCount,
+			[NotNull] GeometryBuilderBase<L, P> geometryBuilder)
+		{
+			for (int i = 0; i < linestringCount; i++)
+			{
+				ReadWkbType(reader, false,
+				            out WkbGeometryType geometryType, out Ordinates ordinates);
+
+				Assert.AreEqual(WkbGeometryType.LineString, geometryType,
+				                "Unexpected geometry type");
+
+				Assert.AreEqual(expectedOrdinates, ordinates,
+				                "Linestring with inconsistent ordinates encountered.");
+
+				yield return ReadLinestringCore(reader, ordinates, geometryBuilder);
+			}
+		}
+
+		private static L ReadLinestringCore<L, P>(BinaryReader reader, Ordinates ordinates,
+		                                          GeometryBuilderBase<L, P> geometryBuilder)
+		{
+			int pointCount = checked((int) reader.ReadUInt32());
+
+			IPointFactory<P> builder = geometryBuilder.GetPointFactory(ordinates);
+
+			return geometryBuilder.CreateLinestring(
+				ReadPointsCore(reader, ordinates, builder, pointCount), pointCount);
+		}
+
+		private static IEnumerable<P> ReadPointsCore<P>([NotNull] BinaryReader reader,
+		                                                Ordinates ordinates,
+		                                                [NotNull] IPointFactory<P> builder,
+		                                                int pointCount)
+		{
+			for (int i = 0; i < pointCount; i++)
+			{
+				yield return ReadPointCore(reader, ordinates, builder);
+			}
+		}
+
+		private static Ordinates GetOrdinates(int type)
 		{
 			if (type >= 1000 && type < 2000)
 				return Ordinates.Xyz;
-			else if (type >= 2000 && type < 3000)
+			if (type >= 2000 && type < 3000)
 				return Ordinates.Xym;
-			else if (type >= 3000 && type < 4000)
+			if (type >= 3000 && type < 4000)
 				return Ordinates.Xyzm;
 
 			return Ordinates.Xy;

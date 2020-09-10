@@ -15,11 +15,11 @@ namespace ProSuite.Commons.Test.Geometry.Wkb
 		{
 			Pnt3D point = new Pnt3D(2600001.123, 1200000.987, 432.1);
 
-			WkbWriter writer = new WkbWriter();
+			WkbGeomWriter writer = new WkbGeomWriter();
 
 			byte[] bytes = writer.WritePoint(point);
 
-			WkbReader reader = new WkbReader();
+			WkbGeomReader reader = new WkbGeomReader();
 
 			IPnt deserializedPoint = reader.ReadPoint(new MemoryStream(bytes));
 
@@ -38,11 +38,11 @@ namespace ProSuite.Commons.Test.Geometry.Wkb
 				                         point2
 			                         };
 
-			WkbWriter writer = new WkbWriter();
+			WkbGeomWriter writer = new WkbGeomWriter();
 
 			byte[] bytes = writer.WriteMultipoint(multipoint);
 
-			WkbReader reader = new WkbReader();
+			WkbGeomReader reader = new WkbGeomReader();
 
 			List<IPnt> deserizalized = reader.ReadMultiPoint(new MemoryStream(bytes)).ToList();
 
@@ -76,11 +76,11 @@ namespace ProSuite.Commons.Test.Geometry.Wkb
 			                                       }
 			                        ));
 
-			WkbWriter writer = new WkbWriter();
+			WkbGeomWriter writer = new WkbGeomWriter();
 
 			byte[] bytes = writer.WritePolygon(polygon);
 
-			WkbReader reader = new WkbReader();
+			WkbGeomReader reader = new WkbGeomReader();
 			RingGroup deserialized = reader.ReadPolygon(new MemoryStream(bytes));
 
 			Assert.IsTrue(deserialized.Equals(polygon));
@@ -120,11 +120,11 @@ namespace ProSuite.Commons.Test.Geometry.Wkb
 
 			var multipolygon = new List<RingGroup>(new[] {poly1, poly2});
 
-			WkbWriter writer = new WkbWriter();
+			WkbGeomWriter writer = new WkbGeomWriter();
 
 			byte[] bytes = writer.WriteMultipolygon(multipolygon);
 
-			WkbReader reader = new WkbReader();
+			WkbGeomReader reader = new WkbGeomReader();
 			IList<RingGroup> deserialized = reader.ReadMultiPolygon(new MemoryStream(bytes));
 
 			Assert.IsTrue(deserialized[0].Equals(multipolygon[0]));
@@ -150,11 +150,11 @@ namespace ProSuite.Commons.Test.Geometry.Wkb
 			MultiPolycurve polycurve =
 				new MultiPolycurve(new[] {new Linestring(points1), new Linestring(points2)});
 
-			WkbWriter writer = new WkbWriter();
+			WkbGeomWriter writer = new WkbGeomWriter();
 
 			byte[] bytes = writer.WriteMultiLinestring(polycurve);
 
-			WkbReader reader = new WkbReader();
+			WkbGeomReader reader = new WkbGeomReader();
 			MultiPolycurve deserialized = reader.ReadMultiPolycurve(new MemoryStream(bytes));
 
 			Assert.IsTrue(deserialized.Equals(polycurve));

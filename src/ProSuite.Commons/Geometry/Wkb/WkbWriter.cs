@@ -1,193 +1,164 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geometry.Wkb
 {
-	/// <summary>
-	/// Writes the provided geometries in little-endian WKB format.
-	/// </summary>
 	public class WkbWriter
 	{
 		private static readonly byte[] _doubleNaN =
 			{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf8, 0x7f};
 
-		private BinaryWriter _writer;
+		protected BinaryWriter Writer { get; set; }
 
-		public byte[] WriteMultipolygon(MultiPolycurve multipolygon)
-		{
-			return WriteMultipolygon(
-				GeomTopoOpUtils.GetConnectedComponents(multipolygon, double.Epsilon).ToList());
-		}
-
-		public byte[] WriteMultipolygon([NotNull] ICollection<RingGroup> ringGroups,
-		                                Ordinates ordinates = Ordinates.Xyz)
-		{
-			if (ringGroups.Count == 1)
-			{
-				return WritePolygon(ringGroups.First(), ordinates);
-			}
-
-			// TODO: Initialize with the proper size or allow providing the actual byte[]
-			MemoryStream memoryStream = InitialilzeWriter();
-
-			WriteWkbType(WkbGeometryType.MultiPolygon, ordinates);
-
-			_writer.Write(ringGroups.Count);
-
-			foreach (RingGroup ringGroup in ringGroups)
-			{
-				IList<IPointList> rings = ringGroup.GetLinestrings().Cast<IPointList>().ToList();
-
-				WritePolygonCore(rings, Ordinates.Xyz);
-			}
-
-			return memoryStream.ToArray();
-		}
-
-		public byte[] WritePolygon([NotNull] RingGroup ringGroup,
-		                           Ordinates ordinates = Ordinates.Xyz)
-		{
-			// TODO: Initialize with the proper size or allow providing the actual byte[]
-			MemoryStream memoryStream = InitialilzeWriter();
-
-			WriteWkbType(WkbGeometryType.Polygon, ordinates);
-
-			IList<IPointList> rings = ringGroup.GetLinestrings().Cast<IPointList>().ToList();
-
-			WritePolygonCore(rings, Ordinates.Xyz);
-
-			return memoryStream.ToArray();
-		}
-
-		public byte[] WriteMultiLinestring([NotNull] MultiLinestring multiLinestring,
-		                                   Ordinates ordinates = Ordinates.Xyz)
-		{
-			// TODO: Initialize with the proper size or allow providing the actual byte[]
-			MemoryStream memoryStream = InitialilzeWriter();
-
-			WriteWkbType(WkbGeometryType.MultiPolygon, ordinates);
-
-			_writer.Write(multiLinestring.Count);
-
-			foreach (Linestring linestring in multiLinestring.GetLinestrings())
-			{
-				WriteLinestringCore(linestring, ordinates);
-			}
-
-			return memoryStream.ToArray();
-		}
-
-		public byte[] WritePoint([NotNull] IPnt point, Ordinates ordinates = Ordinates.Xyz)
-		{
-			MemoryStream memoryStream = InitialilzeWriter();
-
-			WriteWkbType(WkbGeometryType.Point, ordinates);
-
-			WritePointCore(point, ordinates);
-
-			return memoryStream.ToArray();
-		}
-
-		public byte[] WriteMultipoint([NotNull] ICollection<IPnt> multipoint,
-		                              Ordinates ordinates = Ordinates.Xyz)
-		{
-			MemoryStream memoryStream = InitialilzeWriter();
-
-			WriteWkbType(WkbGeometryType.MultiPoint, ordinates);
-
-			_writer.Write(multipoint.Count);
-
-			foreach (IPnt point in multipoint)
-			{
-				WritePointCore(point, ordinates);
-			}
-
-			return memoryStream.ToArray();
-		}
-
-		private MemoryStream InitialilzeWriter()
+		protected MemoryStream InitializeWriter()
 		{
 			MemoryStream memoryStream = new MemoryStream();
 
-			_writer = new BinaryWriter(memoryStream);
+			Writer = new BinaryWriter(memoryStream);
 
 			return memoryStream;
 		}
 
-		private void WriteWkbType(WkbGeometryType geometryType, Ordinates ordinates)
+		protected void WriteWkbType(WkbGeometryType geometryType, Ordinates ordinates)
 		{
 			// Byte order: NDR / little endian
-			_writer.Write(true);
+			Writer.Write(true);
 
 			uint type = (uint) ordinates + (uint) geometryType;
 
-			_writer.Write(type);
+			Writer.Write(type);
 		}
 
-		private void WritePolygonCore(IList<IPointList> ringGroup, Ordinates ordinates)
+		protected void WritePolygonCore(IList<IPointList> ringGroup, Ordinates ordinates)
 		{
 			if (ringGroup.Count == 0)
 			{
-				_writer.Write(0);
+				Writer.Write(0);
 				return;
 			}
 
-			_writer.Write(ringGroup.Count);
+			WriteLineStringsCore(ringGroup, ordinates, true);
+		}
 
-			IPointList exteriorRing = ringGroup[0];
+		protected void WriteLineStrings(ICollection<IPointList> linestrings,
+		                                Ordinates ordinates,
+		                                bool reversePointOrder = false)
+		{
+			WriteLineStrings(linestrings, linestrings.Count, ordinates, reversePointOrder);
+		}
 
-			WriteLinestringCore(exteriorRing, ordinates);
+		protected void WriteLineStrings(IEnumerable<IPointList> linestrings,
+		                                int knownLinestringCount,
+		                                Ordinates ordinates,
+		                                bool reversePointOrder = false)
+		{
+			Writer.Write(knownLinestringCount);
 
-			for (int i = 1; i < ringGroup.Count; i++)
+			foreach (IPointList linestring in linestrings)
 			{
-				IPointList interiorRing = ringGroup[i];
-
-				WriteLinestringCore(interiorRing, ordinates);
+				WriteLinestring(linestring, ordinates, reversePointOrder);
 			}
 		}
 
-		private void WriteLinestringCore(IPointList linestring, Ordinates ordinates)
+		/// <summary>
+		/// Writes a linestring including the preceding type information.
+		/// </summary>
+		/// <param name="linestring"></param>
+		/// <param name="ordinates"></param>
+		/// <param name="reversePointOrder"></param>
+		protected void WriteLinestring(IPointList linestring,
+		                               Ordinates ordinates,
+		                               bool reversePointOrder = false)
 		{
-			_writer.Write(linestring.PointCount);
+			WriteWkbType(WkbGeometryType.LineString, ordinates);
 
-			foreach (IPnt point in linestring.AsEnumerablePoints())
+			WriteLinestringCore(linestring, ordinates, reversePointOrder);
+		}
+
+		protected void WriteLineStringsCore(ICollection<IPointList> linestrings,
+		                                    Ordinates ordinates,
+		                                    bool reversePointOrder = false)
+		{
+			Writer.Write(linestrings.Count);
+
+			foreach (IPointList linestring in linestrings)
 			{
-				WritePointCore(point, ordinates);
+				WriteLinestringCore(linestring, ordinates, reversePointOrder);
 			}
 		}
 
-		private void WritePointCore(IPnt point, Ordinates ordinates)
+		/// <summary>
+		/// Writes a linestring without the preceding type information.
+		/// </summary>
+		/// <param name="linestring"></param>
+		/// <param name="ordinates"></param>
+		/// <param name="reversePointOrder"></param>
+		protected void WriteLinestringCore([NotNull] IPointList linestring,
+		                                   Ordinates ordinates,
+		                                   bool reversePointOrder = false)
 		{
-			WriteDouble(point.X);
-			WriteDouble(point.Y);
+			int pointCount = linestring.PointCount;
+
+			Writer.Write(pointCount);
+
+			if (reversePointOrder)
+			{
+				for (int i = pointCount - 1; i >= 0; i--)
+				{
+					WritePointCore(linestring, i, ordinates);
+				}
+			}
+			else
+			{
+				for (int i = 0; i < pointCount; i++)
+				{
+					WritePointCore(linestring, i, ordinates);
+				}
+			}
+		}
+
+		private void WritePointCore(IPointList linestring, int index, Ordinates ordinates)
+		{
+			linestring.GetCoordinates(index, out double x, out double y, out double z);
+
+			// NaN is not allowed
+			WriteXyCoordinates(x, y);
+
+			if (ordinates == Ordinates.Xyz || ordinates == Ordinates.Xyzm)
+			{
+				// Z Value (NaN is allowed)
+				WriteDoubleOrNan(z);
+			}
+		}
+
+		protected void WritePointCore(IPnt point, Ordinates ordinates)
+		{
+			WriteXyCoordinates(point.X, point.Y);
 
 			if (ordinates == Ordinates.Xyz || ordinates == Ordinates.Xyzm)
 			{
 				// Z Value:
-				WriteDouble(point[2]);
+				WriteDoubleOrNan(point[2]);
 			}
 
 			if (ordinates == Ordinates.Xym || ordinates == Ordinates.Xyzm)
 				throw new NotImplementedException("M values are currently not supported.");
 		}
 
-		private void WriteDouble(double? value)
+		protected void WriteXyCoordinates(double x, double y)
 		{
-			if (value.HasValue)
-				_writer.Write(value.Value);
-			else
-				_writer.Write(_doubleNaN);
+			Writer.Write(x);
+			Writer.Write(y);
 		}
-	}
 
-	public enum Ordinates
-	{
-		Xy = 0,
-		Xyz = 1000,
-		Xym = 2000,
-		Xyzm = 3000
+		protected void WriteDoubleOrNan(double value)
+		{
+			if (double.IsNaN(value))
+				Writer.Write(_doubleNaN);
+			else
+				Writer.Write(value);
+		}
 	}
 }

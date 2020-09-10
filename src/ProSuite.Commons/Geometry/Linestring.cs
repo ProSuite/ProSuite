@@ -404,6 +404,15 @@ namespace ProSuite.Commons.Geometry
 			return GetPoint3D(pointIndex, clone);
 		}
 
+		public void GetCoordinates(int pointIndex, out double x, out double y, out double z)
+		{
+			IPnt point = GetPoint(pointIndex);
+
+			x = point.X;
+			y = point.Y;
+			z = point[2];
+		}
+
 		public IEnumerable<IPnt> AsEnumerablePoints(bool clone = false)
 		{
 			return GetPoints(0, null, clone);
