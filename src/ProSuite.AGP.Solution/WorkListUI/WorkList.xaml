@@ -1,0 +1,79 @@
+<controls:ProWindow x:Class="Clients.AGP.ProSuiteSolution.WorkList"
+                    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+                    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+                    xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
+                    xmlns:local="clr-namespace:Clients.AGP.ProSuiteSolution.WorkListUI"
+                    mc:Ignorable="d"
+                    Title="WorkList"
+                    WindowStartupLocation="CenterOwner" SizeToContent="WidthAndHeight">
+    <controls:ProWindow.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <extensions:DesignOnlyResourceDictionary
+                    Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+
+            <!--<DataTemplate x:Key="WorkListsItemTemplate">
+                <Label Content="{Binding Name}" />
+            </DataTemplate>-->
+
+            <local:StatusEnumBooleanConverter x:Key="StatusEnumBooleanConverter" />
+        </ResourceDictionary>
+
+    </controls:ProWindow.Resources>
+    <Grid Margin="5">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="25" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+        <ToolBar Grid.Row="0">
+            <Button Command="{Binding GoPreviousItemCmd}">
+                <Image Source="Images/GoBack.png" ToolTip="Previous WorkItem" />
+            </Button>
+            <Button Command="{Binding GoNextItemCmd}">
+                <Image Source="Images/GoNext.png" ToolTip="Next WorkItem" />
+            </Button>
+            <Button>
+                <Image Source="Images/GoNearest.png"/>
+            </Button>
+            <Separator/>
+            <Button Command="{Binding PreviousExtentCmd}">
+                <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericBlueLeftArrowLongTail16.png"/>
+            </Button>
+            <Button Command="{Binding NextExtentCmd}">
+                <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericBlueRightArrowLongTail16.png"/>
+            </Button>
+            <Button Command="{Binding ZoomInCmd}">
+                <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/zoomfixedzoomin_b_16.png"/>
+            </Button>
+            <Button Command="{Binding ZoomOutCmd}">
+                <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/zoomfixedzoomout_b_16.png"/>
+            </Button>
+            <Separator/>
+            <ComboBox ItemsSource="{Binding WorkLists}" Width="120" DisplayMemberPath="Name"/>
+        </ToolBar>
+        <StackPanel Grid.Row="2">
+            <ToolBar>
+                <Label Content="Status: " />
+                <CheckBox IsChecked="{Binding CurrentWorkItem.Status, 
+                    Converter={StaticResource StatusEnumBooleanConverter}}" />
+            </ToolBar>
+            <DockPanel LastChildFill="True" Margin="0,5,5,0">
+                <Label Content="Description:" Width="80" />
+                <TextBox Text="{Binding CurrentWorkItem.Description}" />
+            </DockPanel>
+            <DockPanel LastChildFill="True" Margin="0,5,5,0">
+                <Label Content="Visited:" Width="80" />
+                <TextBox Text="{Binding CurrentWorkItem.Visited}" />
+            </DockPanel>
+            <DockPanel LastChildFill="True" Margin="0,5,5,0">
+                <Label Content="Status:" Width="80" />
+                <TextBox Text="{Binding CurrentWorkItem.Status}" />
+            </DockPanel>
+        </StackPanel>
+    </Grid>
+</controls:ProWindow>

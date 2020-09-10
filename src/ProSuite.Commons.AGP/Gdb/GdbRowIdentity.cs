@@ -22,10 +22,17 @@ namespace ProSuite.Commons.AGP.Gdb
 		}
 
 		public GdbRowIdentity(long objectId, long tableId, [NotNull] string tableName,
-		                       GdbWorkspaceIdentity workspaceIdentity = default)
+		                      GdbWorkspaceIdentity workspaceIdentity = default) : this(
+			objectId, new GdbTableIdentity(tableName, tableId, workspaceIdentity))
 		{
 			ObjectId = objectId;
 			Table = new GdbTableIdentity(tableName, tableId, workspaceIdentity);
+		}
+
+		public GdbRowIdentity(long objectId, GdbTableIdentity tableId)
+		{
+			ObjectId = objectId;
+			Table = tableId;
 		}
 
 		public long ObjectId { get; }

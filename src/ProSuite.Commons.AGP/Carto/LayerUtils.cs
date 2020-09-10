@@ -1,12 +1,29 @@
+using System.Collections.Generic;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Carto
 {
 	public static class LayerUtils
 	{
+		public static IEnumerable<T> GetRows<T>([NotNull] FeatureLayer featureLayer,
+		                                        [CanBeNull] QueryFilter filter = null)
+			where T : Row
+		{
+			Assert.ArgumentNotNull(featureLayer, nameof(featureLayer));
+
+			using (RowCursor cursor = featureLayer.Search(filter))
+			{
+				while (cursor.MoveNext())
+				{
+					yield return (T) cursor.Current;
+				}
+			}
+		}
+
 		[NotNull]
 		public static FeatureLayerCreationParams CreateLayerParams([NotNull] FeatureClass featureClass)
 		{

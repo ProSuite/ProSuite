@@ -202,9 +202,9 @@ namespace ProSuite.Commons.Test.Text
 		[Test]
 		public void CanConcatenateEmpty()
 		{
-			var list = new List<int>();
+			var empty = new int[0];
 
-			string result = StringUtils.Concatenate(list, ",");
+			string result = StringUtils.Concatenate(empty, ",");
 			Assert.AreEqual(string.Empty, result);
 		}
 
