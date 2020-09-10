@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
@@ -20,7 +21,7 @@ namespace ProSuite.AGP.WorkList
 
 			// todo daro: dispose work list to free memory !!!!
 			IWorkList workList = CreateWorkListCore(repository);
-
+			
 			// todo daro: refactor!!!
 			LayerDocument layerTemplate = GetLayerDocumentCore();
 

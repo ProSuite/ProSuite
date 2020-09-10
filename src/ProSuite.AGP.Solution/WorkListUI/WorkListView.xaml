@@ -1,4 +1,4 @@
-<controls:ProWindow x:Class="Clients.AGP.ProSuiteSolution.WorkList"
+<controls:ProWindow x:Class="ProSuite.AGP.Solution.WorkListUI.WorkListView"
                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
