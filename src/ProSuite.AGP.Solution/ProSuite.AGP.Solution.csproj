@@ -109,8 +109,8 @@
     <Compile Include="WorkLists\GoNextButton.cs" />
     <Compile Include="WorkLists\WorkListsModule.cs" />
     <Compile Include="WorkListUI\StatusEnumBooleanConverter.cs" />
-    <Compile Include="WorkListUI\WorkList.xaml.cs">
-      <DependentUpon>WorkList.xaml</DependentUpon>
+    <Compile Include="WorkListUI\WorkListView.xaml.cs">
+      <DependentUpon>WorkListView.xaml</DependentUpon>
     </Compile>
     <Compile Include="WorkListTrials\WorkListTrialsControls.cs" />
     <Compile Include="WorkListTrials\WorkListTrialsModule.cs" />
@@ -134,7 +134,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="WorkListUI\WorkList.xaml">
+    <Page Include="WorkListUI\WorkListView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

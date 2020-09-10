@@ -18,6 +18,7 @@ using Clients.AGP.ProSuiteSolution.ConfigUI;
 using ProSuite.AGP.Solution.LoggerUI;
 using ProSuite.AGP.Solution.ProjectItem;
 using ProSuite.AGP.Solution.WorkListTrials;
+using ProSuite.AGP.Solution.WorkListUI;
 using ProSuite.Commons.Logging;
 using ProSuite.QA.Configurator;
 using ProSuite.QA.ServiceManager;
@@ -370,7 +371,7 @@ namespace ProSuite.AGP.Solution
 
 	internal class ShowWorkListWindow : Button
 	{
-		private Clients.AGP.ProSuiteSolution.WorkList _worklist = null;
+		private WorkListView _worklist = null;
 
 		protected override async void OnClick()
 		{
@@ -379,7 +380,7 @@ namespace ProSuite.AGP.Solution
 			//already open?
 			if (_worklist != null)
 				return;
-			_worklist = new Clients.AGP.ProSuiteSolution.WorkList();
+			_worklist = new WorkListView();
 			_worklist.Owner = FrameworkApplication.Current.MainWindow;
 			_worklist.Closed += (o, e) => { _worklist = null; };
 			_worklist.Show();

@@ -8,6 +8,8 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using Clients.AGP.ProSuiteSolution.WorkListUI;
+using ProSuite.AGP.Solution.WorkListUI;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
@@ -84,6 +86,27 @@ namespace ProSuite.AGP.Solution.WorkLists
 			foreach (var observer in _observers)
 			{
 				observer.Show(workList);
+				ShowWorkListWindow(workList, observer);
+			}
+		}
+
+		private void ShowWorkListWindow(IWorkList workList, IWorkListObserver observer)
+		{
+			if (observer is WorkListViewModel)
+			{
+				FrameworkApplication.Current.Dispatcher.Invoke(() =>
+					{
+						//WorkListViewModel vm = observer as WorkListViewModel;
+						//WorkListView view = new WorkListView(vm);
+						//view.Owner = FrameworkApplication.Current.MainWindow;
+						//view.Show();
+
+						WorkListView view = new WorkListView();
+						view.Owner = FrameworkApplication.Current.MainWindow;
+						view.Show();
+					}
+				);
+				
 			}
 		}
 
@@ -94,7 +117,10 @@ namespace ProSuite.AGP.Solution.WorkLists
 				// NOTE Register work list before opening plugin datasource
 				// NOTE Register work list in registry and notify all observers about the registration of a new work list.
 
-				_registry.Add(workList);
+				if (_registry.GetAll().Any(wl => wl.Name == workList.Name) == false)
+				{
+					_registry.Add(workList);
+				}
 
 				FeatureLayer workListLayer = AddLayer(workList.Name);
 				LayerUtils.ApplyRenderer(workListLayer, layerTemplate);

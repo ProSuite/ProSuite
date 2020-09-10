@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
+using Clients.AGP.ProSuiteSolution.WorkListUI;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Carto;
@@ -15,6 +16,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		protected override void ShowWorkListCore(IWorkList workList, LayerDocument layerTemplate)
 		{
+			WorkListsModule.Current.RegisterObserver(new WorkListViewModel(workList));
 			WorkListsModule.Current.Show(workList, layerTemplate);
 		}
 

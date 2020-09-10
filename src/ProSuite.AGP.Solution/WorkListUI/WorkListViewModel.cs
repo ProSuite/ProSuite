@@ -14,18 +14,23 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 {
 	public class WorkListViewModel : PropertyChangedBase, IWorkListObserver
 	{
-		public WorkListViewModel()
+
+		public WorkListViewModel(IWorkList workList)
 		{
 			GoPreviousItemCmd = new RelayCommand(GoPreviousItem, () => true, false,
 			                                     true);
 			GoNextItemCmd = new RelayCommand(GoNextItem, () => true, false,
 			                                     true);
-			WorkListCentral = new WorkListCentral();
-			WorkListCentral.RegisterObserver(this);
-			WorkLists = WorkListCentral.GetAll();
-			CurrentWorkList = WorkLists.First();
+			//WorkListCentral = new WorkListCentral();
+			//WorkListCentral.RegisterObserver(this);
+			//WorkLists = WorkListCentral.GetAll();
+			//WorkLists = new List<IWorkList>();
+			//WorkLists.Append(workList);
+			CurrentWorkList = workList;
 			CurrentWorkItem = CurrentWorkList.Current;
 		}
+
+		public WorkListViewModel() { }
 
 		private IWorkList _currentWorkList;
 		private IEnumerable<IWorkList> _workLists;
@@ -50,11 +55,11 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 			FrameworkApplication.GetPlugInWrapper(
 				DAML.Button.esri_mapping_fixedZoomOutButton) as ICommand;
 
-		public IEnumerable<IWorkList> WorkLists
-		{
-			get => _workLists;
-			set { SetProperty(ref _workLists, value, () => WorkLists); }
-		}
+		//public IEnumerable<IWorkList> WorkLists
+		//{
+		//	get => _workLists;
+		//	set { SetProperty(ref _workLists, value, () => WorkLists); }
+		//}
 		public IWorkList CurrentWorkList
 		{
 			get => _currentWorkList;
@@ -85,7 +90,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 
 		public void Show(IWorkList workList)
 		{
-			throw new NotImplementedException();
+			//throw new NotImplementedException();
 		}
 
 		private void GoPreviousItem()
