@@ -39,6 +39,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			_registry = WorkListRegistry.Instance;
 			_observers = new List<IWorkListObserver>();
+			_observers.Add(new WorkListObserver());
 
 			WireEvents();
 
@@ -86,7 +87,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			foreach (var observer in _observers)
 			{
 				observer.Show(workList);
-				ShowWorkListWindow(workList, observer);
+				// ShowWorkListWindow(workList, observer);
 			}
 		}
 
@@ -94,21 +95,23 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			if (observer is WorkListViewModel)
 			{
-				FrameworkApplication.Current.Dispatcher.Invoke(() =>
-					{
-						//WorkListViewModel vm = observer as WorkListViewModel;
-						//WorkListView view = new WorkListView(vm);
-						//view.Owner = FrameworkApplication.Current.MainWindow;
-						//view.Show();
+				//FrameworkApplication.Current.Dispatcher.Invoke(() =>
+				//	{
+				//		////this does not work (viewModel is an observer and is passed to the views datacontext)
+				//		//WorkListViewModel vm = observer as WorkListViewModel;
+				//		//WorkListView view = new WorkListView(vm);
+				//		//view.Owner = FrameworkApplication.Current.MainWindow;
+				//		//view.Show();
 
-						WorkListView view = new WorkListView();
-						view.Owner = FrameworkApplication.Current.MainWindow;
-						view.Show();
-					}
-				);
-				
+				//		////View shows up, but of course without a viewModel as dataContext
+				//		//WorkListView view = new WorkListView();
+				//		//view.Owner = FrameworkApplication.Current.MainWindow;
+				//		//view.Show();
 			}
+			//);
+
 		}
+		
 
 		public void Show(IWorkList workList, LayerDocument layerTemplate)
 		{
@@ -120,6 +123,10 @@ namespace ProSuite.AGP.Solution.WorkLists
 				if (_registry.GetAll().Any(wl => wl.Name == workList.Name) == false)
 				{
 					_registry.Add(workList);
+					foreach (var observer in _observers )
+					{
+						observer.WorkListAdded(workList);
+					}
 				}
 
 				FeatureLayer workListLayer = AddLayer(workList.Name);
