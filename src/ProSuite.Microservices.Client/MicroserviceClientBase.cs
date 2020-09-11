@@ -4,9 +4,11 @@ using System.IO;
 using System.Reflection;
 using Grpc.Core;
 using Grpc.Health.V1;
+using log4net.Core;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
+using Swisstopo.Topgis.Microservices;
 
 namespace ProSuite.Microservices.Client
 {
@@ -107,5 +109,32 @@ namespace ProSuite.Microservices.Client
 		}
 
 		protected abstract string ServiceName { get; }
+
+		protected void LogProgressMessage(ProgressMsg progressMsg)
+		{
+			string messageText = progressMsg?.Message;
+
+			if (!string.IsNullOrEmpty(messageText))
+			{
+				int messageLevel = progressMsg.MessageLevel;
+
+				if (messageLevel == Level.Info.Value)
+				{
+					_msg.Info(messageText);
+				}
+				else if (messageLevel == Level.Warn.Value)
+				{
+					_msg.Warn(messageText);
+				}
+				else if (messageLevel == Level.Error.Value)
+				{
+					_msg.Error(messageText);
+				}
+				else
+				{
+					_msg.Debug(messageText);
+				}
+			}
+		}
 	}
 }
