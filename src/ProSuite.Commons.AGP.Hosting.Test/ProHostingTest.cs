@@ -1,7 +1,7 @@
 using System.Threading;
 using ArcGIS.Core.Geometry;
 using NUnit.Framework;
-using ProSuite.Commons.AGP.Spatial;
+using ProSuite.Commons.AGP.Core.Spatial;
 
 namespace ProSuite.Commons.AGP.Hosting.Test
 {
@@ -35,9 +35,11 @@ namespace ProSuite.Commons.AGP.Hosting.Test
 		{
 			SpatialReference ch1903 = GeometryUtils.CreateSpatialReference(21781);
 			MapPoint point = GeometryUtils.CreatePoint(600000, 200000, ch1903);
+			int count = GeometryUtils.GetPointCount(point);
 
 			Assert.AreEqual(600000.0, point.X);
 			Assert.AreEqual(200000.0, point.Y);
+			Assert.AreEqual(1, count);
 		}
 	}
 }

@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{F334EF2E-5B6C-463B-8EB1-B4C35E5F6697}</ProjectGuid>
+    <ProjectGuid>{14D303FD-58FD-4483-A963-0A681B95ADB9}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>ProSuite.Commons.AGP.Hosting.Test</RootNamespace>
-    <AssemblyName>ProSuite.Commons.AGP.Hosting.Test</AssemblyName>
+    <RootNamespace>ProSuite.Commons.AGP.Test</RootNamespace>
+    <AssemblyName>ProSuite.Commons.AGP.Test</AssemblyName>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
     <ProNuGetVersion Condition=" '$(ProNuGetVersion)' == '' ">2.6</ProNuGetVersion>
@@ -32,10 +32,9 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ProHostingTest.cs" />
+    <Compile Include="ProCoreTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="ArcGIS.Core, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
