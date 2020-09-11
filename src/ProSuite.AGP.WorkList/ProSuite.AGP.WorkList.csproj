@@ -78,6 +78,10 @@
       <Project>{47E134C6-B803-451E-8C33-7C71B158B2AC}</Project>
       <Name>ProSuite.AGP.WorkList.Contracts</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj">
+      <Project>{b80740ec-bb68-410c-a617-e79c467f1969}</Project>
+      <Name>ProSuite.Commons.AGP.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">
       <Project>{89f2c583-3022-43f8-9b69-27123836625f}</Project>
       <Name>ProSuite.Commons.AGP</Name>

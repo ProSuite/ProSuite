@@ -50,15 +50,12 @@
     <Compile Include="CIM\CimDatasetReference.cs" />
     <Compile Include="CIM\CimFeatureWorkspaceReference.cs" />
     <Compile Include="Framework\QueuedTaskUtils.cs" />
-    <Compile Include="Gdb\DatasetUtils.cs" />
-    <Compile Include="Gdb\GdbObjectUtils.cs" />
     <Compile Include="Gdb\GdbQueryUtils.cs" />
     <Compile Include="Gdb\GdbRowIdentity.cs" />
     <Compile Include="Gdb\GdbTableIdentity.cs" />
     <Compile Include="Gdb\EditorTransaction.cs" />
     <Compile Include="Gdb\GdbWorkspaceIdentity.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Spatial\GeometryUtils.cs" />
     <Compile Include="Storage\GdbRepository.cs" />
     <Compile Include="Storage\IRepository.cs" />
     <Compile Include="Storage\XmlRepository.cs" />

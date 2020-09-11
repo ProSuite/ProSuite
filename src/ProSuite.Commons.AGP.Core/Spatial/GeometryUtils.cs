@@ -86,5 +86,12 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 			return geometry.PointCount;
 		}
+
+		public static Envelope Union(Envelope a, Envelope b)
+		{
+			if (a == null) return b;
+			if (b == null) return a;
+			return a.Union(b);
+		}
 	}
 }
