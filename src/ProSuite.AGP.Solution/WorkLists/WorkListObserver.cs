@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ArcGIS.Desktop.Framework;
 using Clients.AGP.ProSuiteSolution.WorkListUI;
@@ -11,6 +12,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 	{
 
 		public List<WorkListViewContext> viewContexts { get; set; } = new List<WorkListViewContext>();
+		private Object _lockObj = new Object();
 
 		public void WorkListAdded(IWorkList workList)
 		{
@@ -51,10 +53,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 			var context = GetContextByWorkListName(workList.Name);
 			var view = context.view;
 
-			FrameworkApplication.Current.Dispatcher.Invoke(() =>
-			{
-				showView(view);
-			});
+			
+			//FrameworkApplication.Current.Dispatcher.Invoke(() =>
+			//{
+				//showView(view);
+				
+				showView(context);
+			//});
 
 			context.ViewIsVisible = true;
 
@@ -71,9 +76,18 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		private void showView(WorkListViewContext viewContext)
 		{
-			viewContext.view.Owner = FrameworkApplication.Current.MainWindow;
-			viewContext.view.Show();
-			viewContext.ViewIsVisible = true;
+			lock (_lockObj)
+			{
+				FrameworkApplication.Current.Dispatcher.Invoke(() =>
+				{
+					viewContext.view.Owner = FrameworkApplication.Current.MainWindow;
+					viewContext.view.Show();
+					viewContext.ViewIsVisible = true;
+
+				});
+			}
+			
+			
 		}
 
 		private void showView(WorkListView view)
