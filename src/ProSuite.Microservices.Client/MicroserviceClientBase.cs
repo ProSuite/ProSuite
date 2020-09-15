@@ -123,6 +123,11 @@ namespace ProSuite.Microservices.Client
 
 			try
 			{
+				if (_healthClient == null)
+				{
+					return false;
+				}
+
 				serviceName = ServiceName;
 
 				HealthCheckResponse healthResponse =
