@@ -36,6 +36,8 @@ namespace ProSuite.Microservices.Client
 			Channel = GrpcUtils.CreateChannel(
 				_host, _port, credentials, enoughForLargeGeometries);
 
+			_msg.DebugFormat("Created grpc channel to {0} on port {1}", _host, _port);
+
 			_healthClient = new Health.HealthClient(Channel);
 		}
 
@@ -49,7 +51,17 @@ namespace ProSuite.Microservices.Client
 		{
 			Channel.ShutdownAsync();
 
-			_startedProcess?.Kill();
+			try
+			{
+				if (_startedProcess != null && ! _startedProcess.HasExited)
+				{
+					_startedProcess?.Kill();
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error killing the started microserver process {_startedProcess}", e);
+			}
 		}
 
 		public void AllowStartingLocalServer(string executable)
@@ -75,11 +87,12 @@ namespace ProSuite.Microservices.Client
 
 				_msg.DebugFormat("Starting microservice {0} in background...", executable);
 
-				_startedProcess = ProcessUtils.StartProcess(executable, arguments, false);
-
-				// Drain the output, otherwise the process hangs once the buffer is full:
-				_startedProcess.BeginOutputReadLine();
-				_startedProcess.BeginErrorReadLine();
+				// TOP-5321: Avoid keeping shared version lock because the child process somehow
+				// keeps the lock alive (despite no edit session in the child process) if it is
+				// started with useShellExecute == false.
+				const bool useShellExecute = true;
+				_startedProcess =
+					ProcessUtils.StartProcess(executable, arguments, useShellExecute, true);
 
 				_msg.DebugFormat("Started microservice in background. Arguments: {0}", arguments);
 			}
