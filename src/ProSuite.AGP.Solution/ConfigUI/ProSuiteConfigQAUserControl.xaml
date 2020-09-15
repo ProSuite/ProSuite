@@ -1,0 +1,45 @@
+<UserControl x:Class="Clients.AGP.ProSuiteSolution.ConfigUI.ProSuiteConfigQAUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:Clients.AGP.ProSuiteSolution.ConfigUI"
+             d:DataContext="{Binding Path=local.ProSuiteConfigQAViewModel}"
+             mc:Ignorable="d" 
+             d:DesignHeight="350" d:DesignWidth="760">
+    <Grid>
+        <Label Content="QA specification provider" HorizontalAlignment="Left" Margin="10,168,0,0" VerticalAlignment="Top" Width="204" Foreground="{DynamicResource Esri_TextControlBrush}" FontWeight="Bold"/>
+        <ListBox ItemsSource="{Binding ServiceProviderConfigs}" 
+                 SelectedItem="{Binding SelectedConfiguration, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" 
+                 IsSynchronizedWithCurrentItem="True" 
+                 HorizontalAlignment="Left" 
+                 Height="86" 
+                 Margin="20,46,0,0" 
+                 VerticalAlignment="Top" 
+                 Width="136" 
+                 BorderBrush="{DynamicResource Esri_DockPaneClientAreaBackgroundBrush}" Background="{x:Null}"  
+                 >
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <WrapPanel>
+                        <TextBlock Text="{Binding ServiceType}"/>
+                    </WrapPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+        <Label Content="Name" HorizontalAlignment="Left" Margin="183,40,0,0" VerticalAlignment="Top" Width="76" Foreground="{DynamicResource Esri_TextControlBrush}"/>
+        <Label Content="Connection" HorizontalAlignment="Left" Margin="183,88,0,0" VerticalAlignment="Top" Width="76" Foreground="{DynamicResource Esri_TextControlBrush}"/>
+        <TextBox Text="{Binding SelectedConfiguration.ServiceName}" HorizontalAlignment="Left" Height="23" Margin="188,61,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="198" IsEnabled="False"/>
+        <TextBox Text="{Binding SelectedConfiguration.ServiceConnection}" Height="22" Margin="188,110,40,0" TextWrapping="Wrap" VerticalAlignment="Top"/>
+        <Separator Height="2" Margin="188,183,22,0" VerticalAlignment="Top" Foreground="{DynamicResource Esri_ListBoxPanelIndicator}"/>
+        <Button Margin="0,110,12,0" Command="{Binding CmdBrowseConnection}" VerticalAlignment="Top" Height="22" Width="24 " HorizontalAlignment="Right" Background="{x:Null}" BorderBrush="{x:Null}">
+            <Button.ContentTemplate>
+                <DataTemplate>
+                    <Image Source="../Images/FolderOpened_16x.png" Width="16" />
+                </DataTemplate>
+            </Button.ContentTemplate>
+        </Button>
+        <Label Content="QA service provider" HorizontalAlignment="Left" Margin="10,19,0,0" VerticalAlignment="Top" Width="140" Foreground="{DynamicResource Esri_TextControlBrush}" FontWeight="Bold"/>
+        <Separator Height="2" Margin="188,34,22,0" VerticalAlignment="Top" Foreground="{DynamicResource Esri_ListBoxPanelIndicator}"/>
+    </Grid>
+</UserControl>

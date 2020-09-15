@@ -12,8 +12,9 @@
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.6.1</TargetFrameworkVersion>
-    <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\..\bin</OutputDirectory>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
+    <ProNuGetVersion Condition=" '$(ProNuGetVersion)' == '' ">2.6</ProNuGetVersion>
+    <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -23,7 +24,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <RegisterForComInterop>false</RegisterForComInterop>
     <NoWarn>1591</NoWarn>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
@@ -34,7 +34,6 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.Commons.Logging.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
@@ -48,7 +47,7 @@
     <Compile Include="Attributes.cs" />
     <Compile Include="DatabaseStatusSchema.cs" />
     <Compile Include="IAttributeReader.cs" />
-    <Compile Include="ISelectionItemRepository.cs" />
+    <Compile Include="IRowCache.cs" />
     <Compile Include="ISourceClass.cs" />
     <Compile Include="IWorkItem.cs" />
     <Compile Include="IWorkList.cs" />
@@ -69,14 +68,10 @@
       <Project>{384763d9-f7a1-4aa2-9abd-ee338cd8d4c1}</Project>
       <Name>ProSuite.Commons.Essentials</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ProSuite.DomainModel\ProSuite.DomainModel.csproj">
-      <Project>{824DDBE3-EDAF-460B-B513-386A4260C1FF}</Project>
-      <Name>ProSuite.DomainModel</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Esri.ArcGISPro.Extensions">
-      <Version>2.5.0.22081</Version>
+      <Version>$(ProNuGetVersion)</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

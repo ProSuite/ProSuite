@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
@@ -17,13 +16,13 @@ namespace ProSuite.AGP.WorkList
 	{
 		#region Factory
 
-		public static readonly string Name = "Test Items";
+		public static readonly string WorkListName = "Test Items";
 
 		public static Domain.WorkList Create(string name = null)
 		{
 			IEnumerable<IWorkItem> items = CreateWorkItems();
 			IWorkItemRepository mockRepository = new WorkItemRepositoryMock(items);
-			return new TestWorkList(mockRepository, name ?? Name,mockRepository.GetItems(null, true));
+			return new TestWorkList(mockRepository, name ?? WorkListName, mockRepository.GetItems(null, true));
 		}
 
 		private static IEnumerable<IWorkItem> CreateWorkItems()
@@ -67,13 +66,6 @@ namespace ProSuite.AGP.WorkList
 			return EnvelopeBuilder.CreateEnvelope(min, max, sref);
 		}
 
-		private static MapPoint CreatePoint(double x, double y)
-		{
-			var sref = SpatialReferenceBuilder.CreateSpatialReference(4326);
-
-			return MapPointBuilder.CreateMapPoint(x, y, sref);
-		}
-
 		#endregion
 
 		private TestWorkList(IWorkItemRepository repository, string name,
@@ -102,16 +94,6 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			public string Description { get; set; }
-
-			public override void SetDone(bool done = true)
-			{
-				Status = done ? WorkItemStatus.Done : WorkItemStatus.Todo;
-			}
-
-			public override void SetVisited(bool visited = true)
-			{
-				Visited = visited;
-			}
 		}
 
 		private class WorkItemRepositoryMock : IWorkItemRepository
@@ -138,12 +120,38 @@ namespace ProSuite.AGP.WorkList
 				return _items;
 			}
 
+			public IEnumerable<IWorkItem> GetItems(GdbTableIdentity tableId, QueryFilter filter,
+			                                       bool recycle = true)
+			{
+				throw new NotImplementedException();
+			}
+
 			public IEnumerable<ISourceClass> RegisterDatasets(ICollection<GdbTableIdentity> datasets)
 			{
 				throw new NotImplementedException();
 			}
 
 			public void Save(IWorkItem item)
+			{
+				throw new NotImplementedException();
+			}
+
+			public void UpdateItem(IWorkItem item)
+			{
+				throw new NotImplementedException();
+			}
+
+			public void UpdateVolatileState(IEnumerable<IWorkItem> items)
+			{
+				throw new NotImplementedException();
+			}
+
+			public void Commit()
+			{
+				throw new NotImplementedException();
+			}
+
+			public void Discard()
 			{
 				throw new NotImplementedException();
 			}

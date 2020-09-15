@@ -1,4 +1,4 @@
-using ProSuite.Commons.Essentials.Assertions;
+using Grpc.Core;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Definitions.QA;
 
@@ -6,15 +6,17 @@ namespace ProSuite.Microservices.Client.QA
 {
 	public class QualityVerificationServiceClient : MicroserviceClientBase
 	{
-		public QualityVerificationGrpc.QualityVerificationGrpcClient QaClient { get; }
+		[CanBeNull]
+		public QualityVerificationGrpc.QualityVerificationGrpcClient QaClient { get; private set; }
 
 		public QualityVerificationServiceClient([NotNull] ClientChannelConfig channelConfig) : base(
-			channelConfig)
-		{
-			QaClient = new QualityVerificationGrpc.QualityVerificationGrpcClient(Channel);
-		}
+			channelConfig) { }
 
-		protected override string ServiceName =>
-			Assert.NotNull(QaClient.GetType()).DeclaringType?.Name;
+		protected override string ServiceName => QaClient?.GetType().DeclaringType?.Name;
+
+		protected override void ChannelOpenedCore(Channel channel)
+		{
+			QaClient = new QualityVerificationGrpc.QualityVerificationGrpcClient(channel);
+		}
 	}
 }

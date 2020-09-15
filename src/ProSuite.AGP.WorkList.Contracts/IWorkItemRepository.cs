@@ -10,9 +10,15 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true);
 
-		// todo daro: get rid of this! Pass in all needed parameters in constructor.
-		IEnumerable<ISourceClass> RegisterDatasets(ICollection<GdbTableIdentity> datasets);
+		// todo daro: extract Interface ISource
+		IEnumerable<IWorkItem> GetItems(GdbTableIdentity tableId, QueryFilter filter, bool recycle = true);
+		
+		void UpdateItem(IWorkItem item);
 
-		void Save(IWorkItem item);
+		void UpdateVolatileState(IEnumerable<IWorkItem> items);
+
+		void Commit();
+
+		void Discard();
 	}
 }
