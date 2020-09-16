@@ -52,14 +52,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			var context = GetContextByWorkListName(workList.Name);
 			var view = context.view;
-
 			
-			//FrameworkApplication.Current.Dispatcher.Invoke(() =>
-			//{
-				//showView(view);
-				
-				showView(context);
-			//});
+			showView(context);
 
 			context.ViewIsVisible = true;
 
@@ -76,25 +70,10 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		private void showView(WorkListViewContext viewContext)
 		{
-			lock (_lockObj)
-			{
-				FrameworkApplication.Current.Dispatcher.Invoke(() =>
-				{
-					viewContext.view.Owner = FrameworkApplication.Current.MainWindow;
-					viewContext.view.Show();
-					viewContext.ViewIsVisible = true;
-
-				});
-			}
-			
-			
+			viewContext.view.Owner = FrameworkApplication.Current.MainWindow;
+			viewContext.view.Show();
+			viewContext.ViewIsVisible = true;
 		}
 
-		private void showView(WorkListView view)
-		{
-			view.Owner = FrameworkApplication.Current.MainWindow;
-			view.Show();
-			
-		}
 	}
 }

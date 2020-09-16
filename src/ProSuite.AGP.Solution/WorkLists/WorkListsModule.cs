@@ -81,7 +81,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return _registry.GetAll();
 		}
 
-		private void ShowView(IWorkList workList)
+		public void ShowView(IWorkList workList)
 		{
 			// NOTE send a show work list request to all observers. Let the observer decide whether to show the work list.
 			foreach (var observer in _observers)
@@ -111,6 +111,14 @@ namespace ProSuite.AGP.Solution.WorkLists
 			//);
 
 		}
+
+		public void WorkListAdded(IWorkList workList)
+		{
+			foreach (var observer in _observers)
+			{
+				observer.WorkListAdded(workList);
+			}
+		}
 		
 
 		public void Show(IWorkList workList, LayerDocument layerTemplate)
@@ -123,10 +131,10 @@ namespace ProSuite.AGP.Solution.WorkLists
 				if (_registry.GetAll().Any(wl => wl.Name == workList.Name) == false)
 				{
 					_registry.Add(workList);
-					foreach (var observer in _observers )
-					{
-						observer.WorkListAdded(workList);
-					}
+					//foreach (var observer in _observers )
+					//{
+					//	observer.WorkListAdded(workList);
+					//}
 				}
 
 				FeatureLayer workListLayer = AddLayer(workList.Name);
@@ -139,7 +147,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				WireEvents(workList);
 
-				ShowView(workList);
+				//ShowView(workList);
 			}
 			catch (Exception exception)
 			{
