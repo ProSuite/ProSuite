@@ -13,9 +13,9 @@ namespace ProSuite.UI.QA.VerificationProgress
 	public static class BackgroundVerificationUtils
 	{
 		public static WpfHostingWinForm CreateVerificationProgressForm(
-			QualityVerificationGrpc.QualityVerificationGrpcClient qaClient,
-			VerificationRequest request,
-			BackgroundVerificationRun verificationRun)
+			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient qaClient,
+			[NotNull] VerificationRequest request,
+			[NotNull] BackgroundVerificationRun verificationRun)
 		{
 			async Task<ServiceCallStatus> VerificationAction()
 			{
@@ -34,10 +34,10 @@ namespace ProSuite.UI.QA.VerificationProgress
 		}
 
 		public static WpfHostingWinForm CreateVerificationProgressForm(
-			IQualityVerificationProgressTracker progressTracker,
-			Func<Task<ServiceCallStatus>> verificationAction,
+			[NotNull] IQualityVerificationProgressTracker progressTracker,
+			[NotNull] Func<Task<ServiceCallStatus>> verificationAction,
 			[CanBeNull] Action<QualityVerification> showReportAction,
-			Action<IQualityVerificationResult> saveAction)
+			[CanBeNull] Action<IQualityVerificationResult> saveAction)
 		{
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel
