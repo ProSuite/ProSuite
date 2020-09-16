@@ -57,7 +57,7 @@ namespace ProSuite.Microservices.Client.QA
 
 		//public IClientIssueMessageCollector IssueMessageCollector { get; private set; }
 
-		public async Task<QualityVerification> VerifyReleaseCycle(ReleaseCycle releaseCycle,
+		public async Task<QualityVerification> VerifyServerRequest(VerificationRequest verificationRequest,
 													  IDomainTransactionManager domainTransactions,
 		                                              IQualityVerificationRepository qualityVerificationRepository,
 		                                              IQualityConditionRepository qualityConditionRepository,
@@ -83,14 +83,8 @@ namespace ProSuite.Microservices.Client.QA
 					//,ShowReportAction = ShowReportAction
 				};
 
-			foreach (var VARIABLE in releaseCycle.WorkUnitRepository.){
-				
-			}
-
 			try
 			{
-				var verificationRequest = CreateVerificationRequestForWorkUnit(workUnit);
-
 				ServiceCallStatus result = await verificationRun.ExecuteAndProcessMessagesAsync(
 					                           QaClient, verificationRequest);
 				_msg.InfoFormat(
@@ -113,47 +107,6 @@ namespace ProSuite.Microservices.Client.QA
 				System.Console.WriteLine(e);
 			}
 			return null;
-		}
-
-		//TODO Utils? ....
-		private VerificationRequest CreateVerificationRequestForWorkUnit(WorkUnit workUnit, IGeometry perimeter = null)
-		{
-			// this is specific for workunit
-			var request = new VerificationRequest();
-			request.WorkContext = new WorkContextMsg
-			                      {
-				                      DdxId = workUnit.Id,
-				                      Type = (int)VerificationContextType.WorkUnit
-			                      };
-
-			// TODO algr: nightly id is only one option?
-			request.Specification = CreateSpecifications(workUnit.NightlyRunQualitySpecificationId);
-			request.Parameters = new VerificationParametersMsg();
-
-			if (perimeter != null && !perimeter.IsEmpty)
-			{
-				ShapeMsg areaOfInterest = ProtobufConversionUtils.ToShapeMsg(perimeter);
-				request.Parameters.Perimeter = areaOfInterest;
-			}
-			request.UserName = EnvironmentUtils.UserDisplayName;
-			return request;
-		}
-
-		private QualitySpecificationMsg CreateSpecifications(int? nightlyRunQualitySpecificationId)
-		{
-			var specification = new QualitySpecificationMsg();
-			if (nightlyRunQualitySpecificationId == null)
-				return specification;
-
-			if (nightlyRunQualitySpecificationId.Value < 0)
-			{
-				specification.WellKnownSpecification = 1;
-			}
-			else
-			{
-				specification.QualitySpecificationId = nightlyRunQualitySpecificationId.Value;
-			}
-			return specification;
 		}
 
 		// TODO - generic request in MicroservicesBase?
