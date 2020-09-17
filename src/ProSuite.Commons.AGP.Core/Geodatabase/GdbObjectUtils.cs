@@ -1,13 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Commons.AGP.Gdb
+namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
 	public static class GdbObjectUtils
 	{

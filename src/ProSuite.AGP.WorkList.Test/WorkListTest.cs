@@ -8,8 +8,8 @@ using ArcGIS.Core.Geometry;
 using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
-using ProSuite.Commons.AGP.Spatial;
 
 namespace ProSuite.AGP.WorkList.Test
 {

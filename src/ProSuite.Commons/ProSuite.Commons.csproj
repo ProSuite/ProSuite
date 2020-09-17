@@ -218,6 +218,7 @@
     <Compile Include="Collections\SimpleSet.cs" />
     <Compile Include="Collections\PropertyComparer.cs" />
     <Compile Include="Collections\SortableBindingList.cs" />
+    <Compile Include="ThreadAffineUseNameProvider.cs" />
     <Compile Include="Validation\DateMustBeAfterAttribute.cs" />
     <Compile Include="Validation\DateMustBeOnOrAfterAttribute.cs" />
     <Compile Include="Validation\GreaterOrEqualToZeroAttribute.cs" />
