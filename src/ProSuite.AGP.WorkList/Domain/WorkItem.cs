@@ -40,6 +40,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			OID = id;
 			Proxy = identity;
 
+			//TODO GetDescription call results in ArcGIS.Core.Data.GeodatabaseNotFoundOrOpenedException
+			//Description = GetDescription(); 
+
 			Status = WorkItemStatus.Todo;
 		}
 
@@ -50,6 +53,11 @@ namespace ProSuite.AGP.WorkList.Domain
 		#region IWorkItem
 
 		public int OID { get; set; }
+
+		public string Description
+		{
+			get;
+		}
 
 		public bool Visited
 		{

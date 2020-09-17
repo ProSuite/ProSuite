@@ -117,7 +117,7 @@
         </dockPane>
       </dockPanes>
     </insertModule>
-    <insertModule id="ProSuiteSolution_WorkListTrialsModule" className="WorkListTrials.WorkListTrialsModule" autoLoad="true" caption="WorkList Trials Module">
+    <insertModule id="ProSuiteSolution_WorkListTrialsModule" className="WorkListTrials.WorkListTrialsModule" autoLoad="false" caption="WorkList Trials Module">
       <tabs></tabs>
       <groups>
         <group id="ProSuiteSolution_WorkListTrials" caption="WorkList Trials" appearsOnAddInTab="true">

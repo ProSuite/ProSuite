@@ -76,6 +76,17 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return _registry.Get(name);
 		}
 
+		public bool TryGet(string name, out IWorkList workList)
+		{
+			workList = Get(name);
+			if (workList == null)
+			{
+				return false;
+			}
+
+			return true;
+		}
+
 		public IEnumerable<IWorkList> GetAll()
 		{
 			return _registry.GetAll();
@@ -91,27 +102,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 		}
 
-		private void ShowWorkListWindow(IWorkList workList, IWorkListObserver observer)
-		{
-			if (observer is WorkListViewModel)
-			{
-				//FrameworkApplication.Current.Dispatcher.Invoke(() =>
-				//	{
-				//		////this does not work (viewModel is an observer and is passed to the views datacontext)
-				//		//WorkListViewModel vm = observer as WorkListViewModel;
-				//		//WorkListView view = new WorkListView(vm);
-				//		//view.Owner = FrameworkApplication.Current.MainWindow;
-				//		//view.Show();
-
-				//		////View shows up, but of course without a viewModel as dataContext
-				//		//WorkListView view = new WorkListView();
-				//		//view.Owner = FrameworkApplication.Current.MainWindow;
-				//		//view.Show();
-			}
-			//);
-
-		}
-
 		public void WorkListAdded(IWorkList workList)
 		{
 			foreach (var observer in _observers)
@@ -119,7 +109,14 @@ namespace ProSuite.AGP.Solution.WorkLists
 				observer.WorkListAdded(workList);
 			}
 		}
-		
+
+		public void WorkListModified(IWorkList workList)
+		{
+			foreach (var observer in _observers)
+			{
+				observer.WorkListModified(workList);
+			}
+		}
 
 		public void Show(IWorkList workList, LayerDocument layerTemplate)
 		{
@@ -131,10 +128,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 				if (_registry.GetAll().Any(wl => wl.Name == workList.Name) == false)
 				{
 					_registry.Add(workList);
-					//foreach (var observer in _observers )
-					//{
-					//	observer.WorkListAdded(workList);
-					//}
+					
 				}
 
 				FeatureLayer workListLayer = AddLayer(workList.Name);
@@ -147,7 +141,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				WireEvents(workList);
 
-				//ShowView(workList);
+				
 			}
 			catch (Exception exception)
 			{

@@ -1,3 +1,4 @@
+using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework;
@@ -21,6 +22,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 				IWorkList wl = env.CreateWorkList();
 				return wl;
 			});
+
+			IWorkList currentWorkList;
+			//if (WorkListsModule.Current.TryGet(workList.Name, out currentWorkList))
+			//{
+			//	WorkListsModule.Current.WorkListModified(workList);
+			//}
+			//else {WorkListsModule.Current.WorkListAdded(workList);}
 			WorkListsModule.Current.WorkListAdded(workList);
 			WorkListsModule.Current.ShowView(workList);
 

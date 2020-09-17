@@ -128,6 +128,14 @@ namespace ProSuite.AGP.WorkList.Domain
 		// note daro: only change the item index for navigation! the index is the only valid truth!
 		protected int CurrentIndex { get; set; }
 
+		public int DisplayIndex
+		{
+			get
+			{
+				return CurrentIndex;
+			}
+		}
+
 		/* This base class provides an overly simplistic implementation */
 		/* TODO should honour Status, Visibility, and AreaOfInterest */
 
