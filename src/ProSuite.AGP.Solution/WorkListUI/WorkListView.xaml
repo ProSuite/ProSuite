@@ -40,6 +40,7 @@
             <Button>
                 <Image Source="Images/GoNearest.png"/>
             </Button>
+            <Button Command="{Binding TestCmd}">Test</Button>
             <Separator/>
             <Button Command="{Binding PreviousExtentCmd}">
                 <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericBlueLeftArrowLongTail16.png"/>
@@ -58,13 +59,18 @@
         </ToolBar>
         <StackPanel Grid.Row="2">
             <ToolBar>
-                <Label Content="Status: " />
-                <CheckBox IsChecked="{Binding CurrentWorkItem.Status, 
-                    Converter={StaticResource StatusEnumBooleanConverter}}" />
+                <StackPanel Orientation="Horizontal">
+                    <!--<Label Content="Status: " />-->
+                    <CheckBox IsChecked="{Binding CurrentWorkItem.Status, 
+                    Converter={StaticResource StatusEnumBooleanConverter}}" Background="Red">Status:</CheckBox >
+                    <CheckBox IsChecked="False">test</CheckBox>
+                </StackPanel>
+               
+
             </ToolBar>
             <DockPanel LastChildFill="True" Margin="0,5,5,0">
                 <Label Content="Description:" Width="80" />
-                <TextBox Text="{Binding Description}" />
+                <TextBox Text="{Binding CurrentWorkItem.Description}" />
             </DockPanel>
             <DockPanel LastChildFill="True" Margin="0,5,5,0">
                 <Label Content="Visited:" Width="80" />

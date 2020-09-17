@@ -110,7 +110,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		private void View_Closed(object sender, EventArgs e)
 		{
-			throw new NotImplementedException();
+			//TODO unload worklist layer here.
+			// throw new NotImplementedException(); 
 		}
 	}
 }

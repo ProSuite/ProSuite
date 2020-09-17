@@ -74,6 +74,7 @@
     <Compile Include="Datasource\WorkItemTable.cs" />
     <Compile Include="Datasource\WorkListDatasourceBase.cs" />
     <Compile Include="WorkEnvironmentBase.cs" />
+    <Compile Include="WorkItemVm.cs" />
     <Compile Include="WorkListCentral.cs" />
     <Compile Include="XmlGdbRowIdentity.cs" />
     <Compile Include="Trial\XmlRepository.cs" />
