@@ -26,6 +26,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		private double _zmax;
 		private double _zmin;
 
+		public string Description { get; }
+
 		#region constructors
 
 		protected WorkItem(int id, [NotNull] Row row) : this(id, new GdbRowIdentity(row))
@@ -33,6 +35,8 @@ namespace ProSuite.AGP.WorkList.Domain
 			var feature = row as Feature;
 
 			SetGeometryFromFeature(feature);
+
+			Description = GetDescription(feature);
 		}
 
 		protected WorkItem(int id, GdbRowIdentity identity)
@@ -53,11 +57,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		#region IWorkItem
 
 		public int OID { get; set; }
-
-		public string Description
-		{
-			get;
-		}
 
 		public bool Visited
 		{
@@ -97,9 +96,16 @@ namespace ProSuite.AGP.WorkList.Domain
 			// todo daro: this is copied from the old world. Why not set description in constructor?
 			Row row = GetRow();
 
+			return GetDescription(row);
+		}
+		
+		[CanBeNull]
+		public string GetDescription(Row row)
+		{
 			return row == null
 				       ? "Row not found for work item"
 				       : GetDescriptionCore(row) ?? string.Empty;
+
 		}
 
 		protected virtual string GetDescriptionCore(Row row)

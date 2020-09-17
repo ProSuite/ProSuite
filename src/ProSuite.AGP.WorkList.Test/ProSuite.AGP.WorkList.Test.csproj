@@ -44,6 +44,7 @@
     <Compile Include="PolygonConstruction.cs" />
     <Compile Include="TestUtils.cs" />
     <Compile Include="WorkItemMock.cs" />
+    <Compile Include="WorkItemTest.cs" />
     <Compile Include="WorkListTest.cs" />
   </ItemGroup>
   <ItemGroup>
