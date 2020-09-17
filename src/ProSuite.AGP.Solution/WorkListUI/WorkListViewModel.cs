@@ -23,15 +23,16 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 			                                     true);
 			
 			CurrentWorkList = workList;
+			CurrentWorkList.GoFirst();
 			CurrentWorkItem = CurrentWorkList.Current;
+
 		}
 
 		public WorkListViewModel() { }
 
 		private SelectionWorkList _currentWorkList;
 		private IWorkItem _currentWorkItem;
-		private int _currentIndex;
-		public WorkListCentral WorkListCentral { get; }
+		
 		public RelayCommand GoPreviousItemCmd { get; }
 		public RelayCommand GoNextItemCmd { get; }
 
@@ -51,11 +52,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 			FrameworkApplication.GetPlugInWrapper(
 				DAML.Button.esri_mapping_fixedZoomOutButton) as ICommand;
 
-		//public IEnumerable<IWorkList> WorkLists
-		//{
-		//	get => _workLists;
-		//	set { SetProperty(ref _workLists, value, () => WorkLists); }
-		//}
+
 		public SelectionWorkList CurrentWorkList
 		{
 			get => _currentWorkList;
@@ -74,13 +71,11 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 		{
 			CurrentWorkList.GoPrevious();
 			CurrentWorkItem = CurrentWorkList.Current;
-			//CurrentWorkItem.SetVisited(); //TODO this should be done by the worklist itself when moving to next/previous
 		}
 		private void GoNextItem()
 		{
 			CurrentWorkList.GoNext();
 			CurrentWorkItem = CurrentWorkList.Current;
-			//CurrentWorkItem.SetVisited(); //TODO this should be done by the worklist itself when moving to next/previous
 		}
 	}
 }
