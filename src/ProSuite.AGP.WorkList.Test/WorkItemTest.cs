@@ -4,7 +4,8 @@ using System.Threading;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using NUnit.Framework;
-using ProSuite.AGP.WorkList.Trial;
+using ProSuite.AGP.WorkList.Domain.Persistence;
+using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -37,8 +38,8 @@ namespace ProSuite.AGP.WorkList.Test
 										  {_geodatabase, new List<Table> {_table0, _table1}}
 									  };
 
-			_repository = new IssueItemRepository(tablesByGeodatabase);
-			_repository.StateRepository = new XmlRepository(@"C:\temp\WorkItemRepositoryTest.xml");
+			IRepository stateRepository = new XmlWorkItemStateRepository(_emptyIssuesGdb, @"C:\temp\states.xml");
+			_repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
 		}
 
 		[TearDown]

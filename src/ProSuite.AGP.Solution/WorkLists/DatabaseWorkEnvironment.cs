@@ -6,6 +6,8 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.AGP.WorkList.Domain.Persistence;
+using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Carto;
 
 namespace ProSuite.AGP.Solution.WorkLists
@@ -40,7 +42,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			Dictionary<Geodatabase, List<Table>> tables = MapUtils.GetDistinctTables(featureLayers);
 
-			return new IssueItemRepository(tables);
+			// todo daro: state repository must not be null
+			IRepository stateRepository = new XmlWorkItemStateRepository(null, @"C:\temp\selection_work_list.xml");
+			return new IssueItemRepository(tables, stateRepository);
 		}
 
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository)

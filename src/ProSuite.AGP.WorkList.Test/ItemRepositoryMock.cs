@@ -31,12 +31,17 @@ namespace ProSuite.AGP.WorkList.Test
 			throw new NotImplementedException();
 		}
 
+		public void Refresh(IWorkItem item)
+		{
+			throw new NotImplementedException();
+		}
+
 		public void Save(IWorkItem item)
 		{
 			throw new NotImplementedException();
 		}
 
-		public void UpdateItem(IWorkItem item)
+		public void Update(IWorkItem item)
 		{
 			throw new NotImplementedException();
 		}

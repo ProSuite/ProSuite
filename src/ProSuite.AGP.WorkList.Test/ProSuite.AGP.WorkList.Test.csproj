@@ -38,12 +38,13 @@
   <ItemGroup>
     <Compile Include="GdbQueryWorkList.cs" />
     <Compile Include="InvolvedTablesTest.cs" />
-    <Compile Include="IssuePolygonsGdbRepository.cs" />
     <Compile Include="ItemRepositoryMock.cs" />
     <Compile Include="MemoryQueryWorkList.cs" />
     <Compile Include="PolygonConstruction.cs" />
+    <Compile Include="WorkItemStateRepositoryTest.cs" />
     <Compile Include="TestUtils.cs" />
     <Compile Include="WorkItemMock.cs" />
+    <Compile Include="WorkItemRepositoryTest.cs" />
     <Compile Include="WorkItemTest.cs" />
     <Compile Include="WorkListTest.cs" />
   </ItemGroup>

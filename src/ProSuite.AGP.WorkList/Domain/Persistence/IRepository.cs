@@ -2,9 +2,9 @@ using System.Collections.Generic;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.WorkList.Trial
+namespace ProSuite.AGP.WorkList.Domain.Persistence
 {
-	public interface IRepository<T> where T : IWorkItemState
+	public interface IRepository
 	{
 		IWorkItem Refresh(IWorkItem item);
 

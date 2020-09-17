@@ -3,15 +3,16 @@ using System.Linq;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.WorkList.Trial
+namespace ProSuite.AGP.WorkList.Domain.Persistence
 {
-	public abstract class Repository<T, T0> : IRepository<T> where T : IWorkItemState
-	                                                         where T0 : IWorkListDefinition<T>
+	public abstract class WorkItemStateRepository<TState, TDefinition> : IRepository
+		where TState : IWorkItemState
+		where TDefinition : IWorkListDefinition<TState>
 	{
-		private List<T> _states;
+		private List<TState> _states;
 		private List<int> _oids;
 
-		private IEnumerable<T> States
+		private IEnumerable<TState> States
 		{
 			get
 			{
@@ -41,7 +42,7 @@ namespace ProSuite.AGP.WorkList.Trial
 
 		public IWorkItem Refresh(IWorkItem item)
 		{
-			T state = Lookup(item);
+			TState state = Lookup(item);
 
 			if (state == null)
 			{
@@ -75,23 +76,23 @@ namespace ProSuite.AGP.WorkList.Trial
 			Invalidate();
 		}
 
-		protected abstract void Store(T0 definition);
+		protected abstract void Store(TDefinition definition);
 
-		protected abstract T0 CreateDefinition(List<T> states);
+		protected abstract TDefinition CreateDefinition(List<TState> states);
 
-		protected abstract T CreateState(IWorkItem item);
+		protected abstract TState CreateState(IWorkItem item);
 
-		protected abstract List<T> ReadStates();
+		protected abstract List<TState> ReadStates();
 
-		protected virtual IWorkItem RefreshCore([NotNull] IWorkItem item, [NotNull] T state)
+		protected virtual IWorkItem RefreshCore([NotNull] IWorkItem item, [NotNull] TState state)
 		{
 			return item;
 		}
 
-		protected virtual void UpdateCore(T state, IWorkItem item) { }
+		protected virtual void UpdateCore(TState state, IWorkItem item) { }
 
 		[CanBeNull]
-		private T Lookup([NotNull] IWorkItem item)
+		private TState Lookup([NotNull] IWorkItem item)
 		{
 			if (Oids == null)
 			{
@@ -105,13 +106,13 @@ namespace ProSuite.AGP.WorkList.Trial
 			}
 
 			// todo daro: inline
-			T result = _states[index];
+			TState result = _states[index];
 			return result;
 		}
 
 		private void Update([NotNull] IWorkItem item)
 		{
-			T state = Lookup(item);
+			TState state = Lookup(item);
 
 			if (state == null)
 			{
