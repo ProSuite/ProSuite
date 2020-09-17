@@ -64,7 +64,7 @@
             </ToolBar>
             <DockPanel LastChildFill="True" Margin="0,5,5,0">
                 <Label Content="Description:" Width="80" />
-                <TextBox Text="{Binding CurrentWorkItem.Description}" />
+                <TextBox Text="{Binding Description}" />
             </DockPanel>
             <DockPanel LastChildFill="True" Margin="0,5,5,0">
                 <Label Content="Visited:" Width="80" />
