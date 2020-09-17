@@ -67,6 +67,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				WorkListView view = new WorkListView(vm);
 
+				view.Title = workList.Name;
+
 				WorkListViewContext newContext = new WorkListViewContext(view);
 
 				viewContexts.Add(newContext);
@@ -99,6 +101,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 				return;
 
 			}
+			
 			viewContext.View.Owner = FrameworkApplication.Current.MainWindow;
 			viewContext.View.Show();
 			viewContext.View.Closed += View_Closed;
