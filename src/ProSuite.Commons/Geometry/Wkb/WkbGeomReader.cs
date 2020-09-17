@@ -7,6 +7,19 @@ namespace ProSuite.Commons.Geometry.Wkb
 {
 	public class WkbGeomReader : WkbReader
 	{
+		/// <summary>
+		/// Initializes a new instance of the <see cref="WkbReader"/> class
+		/// </summary>
+		/// <param name="assumeWkbPolygonsClockwise">Whether it should be
+		/// assumed that the provided byte arrays do not conform to the WKB OGC 1.2 specification
+		/// which states that a polygon's outer ring should be oriented in counter-clockwise
+		/// orientation.
+		/// Wkb produced by ArcObjects (IWkb interface) is counter-clockwise, OGC 1.2 conform.
+		/// Wkb produced by SDE.ST_AsBinary operation is clockwise (!) and
+		/// <see cref="assumeWkbPolygonsClockwise"/> should be set to true.</param>
+		public WkbGeomReader(bool assumeWkbPolygonsClockwise = false)
+			: base(assumeWkbPolygonsClockwise) { }
+
 		public IPnt ReadPoint(Stream stream)
 		{
 			using (BinaryReader reader = InitializeReader(stream))
@@ -34,7 +47,8 @@ namespace ProSuite.Commons.Geometry.Wkb
 				            out WkbGeometryType geometryType, out Ordinates ordinates);
 
 				bool reverseOrder = geometryType == WkbGeometryType.Polygon ||
-				                    geometryType == WkbGeometryType.MultiPolygon;
+				                    geometryType == WkbGeometryType.MultiPolygon &&
+				                    ! AssumeWkbPolygonsClockwise;
 
 				GeomBuilder geometryBuilder = new GeomBuilder(reverseOrder);
 
@@ -128,7 +142,8 @@ namespace ProSuite.Commons.Geometry.Wkb
 
 			if (ringCount > 0)
 			{
-				GeomBuilder geometryBuilder = new GeomBuilder(true);
+				bool reverseOrder = ! AssumeWkbPolygonsClockwise;
+				GeomBuilder geometryBuilder = new GeomBuilder(reverseOrder);
 
 				List<Linestring> rings =
 					ReadLinestringsCore(reader, ordinates, ringCount, geometryBuilder).ToList();

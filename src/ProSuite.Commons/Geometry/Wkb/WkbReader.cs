@@ -6,9 +6,25 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geometry.Wkb
 {
-	public class WkbReader
+	public abstract class WkbReader
 	{
-		//protected BinaryReader Reader { get; set; }
+		/// <summary>
+		/// Initializes a new instance of the <see cref="WkbReader"/> class
+		/// </summary>
+		/// <param name="assumeWkbPolygonsClockwise">Whether it should be
+		/// assumed that the provided byte arrays do not conform to the WKB OGC 1.2 specification
+		/// which states that a polygon's outer ring should be oriented in counter-clockwise
+		/// orientation.
+		/// Wkb produced by ArcObjects (IWkb interface) is counter-clockwise, OGC 1.2 conform.
+		/// Wkb produced by SDE.ST_AsBinary operation is clockwise (!) and
+		/// <see cref="assumeWkbPolygonsClockwise"/> should be set to true.
+		/// Probably most other implementations conform to OGC 1.2</param>
+		protected WkbReader(bool assumeWkbPolygonsClockwise)
+		{
+			AssumeWkbPolygonsClockwise = assumeWkbPolygonsClockwise;
+		}
+
+		protected bool AssumeWkbPolygonsClockwise { get; }
 
 		/// <summary>
 		/// Reads the first boolean of the provides stream and initializes the appropriate

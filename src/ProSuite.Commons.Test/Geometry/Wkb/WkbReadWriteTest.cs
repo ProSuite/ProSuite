@@ -160,6 +160,45 @@ namespace ProSuite.Commons.Test.Geometry.Wkb
 			Assert.IsTrue(deserialized.Equals(polycurve));
 		}
 
+		[Test]
+		public void CanReadClockwiseWindingPolygon()
+		{
+			// Some OGC 1.1 implementations do not have counter-clockwise polygon winding order:
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 8),
+				            new Pnt3D(100, 100, 5),
+				            new Pnt3D(100, 20, 9)
+			            };
+
+			RingGroup polygon = CreatePoly(ring1);
+
+			polygon.AddInteriorRing(new Linestring(new[]
+			                                       {
+				                                       new Pnt3D(25, 50, 0),
+				                                       new Pnt3D(50, 50, 0),
+				                                       new Pnt3D(50, 75, 0),
+				                                       new Pnt3D(25, 75, 0),
+				                                       new Pnt3D(25, 50, 0)
+			                                       }
+			                        ));
+
+			RingGroup inverted = (RingGroup) polygon.Clone();
+			inverted.ReverseOrientation();
+
+			WkbGeomWriter writer = new WkbGeomWriter();
+
+			byte[] bytes = writer.WritePolygon(inverted);
+
+			const bool assumeWkbPolygonsClockwise = true;
+			WkbGeomReader reader = new WkbGeomReader(assumeWkbPolygonsClockwise);
+
+			RingGroup deserialized = reader.ReadPolygon(new MemoryStream(bytes));
+
+			Assert.IsTrue(deserialized.Equals(polygon));
+		}
+
 		private static RingGroup CreatePoly(List<Pnt3D> points)
 		{
 			Linestring ring = CreateRing(points);
