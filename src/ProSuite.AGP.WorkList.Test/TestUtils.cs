@@ -40,6 +40,18 @@ namespace ProSuite.AGP.WorkList.Test
 			}
 		}
 
+		public static Row GetRow(string path, string tableName, long oid)
+		{
+			var uri = new Uri(path, UriKind.Absolute);
+			using (var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri)))
+			{
+				using (var table = geodatabase.OpenDataset<Table>(tableName))
+				{
+					return GdbQueryUtils.GetRow(table, oid);
+				}
+			}
+		}
+
 		public static void DeleteRow(string path, string featureClassName, long oid)
 		{
 			var uri = new Uri(path, UriKind.Absolute);
@@ -66,6 +78,19 @@ namespace ProSuite.AGP.WorkList.Test
 					{
 						throw new InvalidOperationException();
 					}
+				}
+			}
+		}
+
+		public static void UpdateDescription(string path, string featureClassName, int oid)
+		{
+			using (var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(path, UriKind.Absolute))))
+			{
+				using (var table = geodatabase.OpenDataset<Table>(featureClassName))
+				{
+					var row = GdbQueryUtils.GetRow(table, oid);
+					row["Description"] = "Moe";
+					row.Store();
 				}
 			}
 		}
