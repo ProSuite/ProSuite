@@ -65,6 +65,15 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 			set { SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem); }
 		}
 
+		public string Description
+		{
+			get
+			{
+				return CurrentWorkItem.Description;
+			}
+			set { Description = value; }
+		}
+
 		public int CurrentIndex => CurrentWorkList.DisplayIndex;
 		
 		private void GoPreviousItem()
