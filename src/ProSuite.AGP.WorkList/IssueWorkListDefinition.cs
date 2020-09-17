@@ -1,30 +1,31 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ProSuite.Commons.AGP.Gdb;
+using System.Xml.Serialization;
 
 namespace ProSuite.AGP.WorkList
 {
-	public interface IWorkListDefinition
+	// todo daro: abstract class WorkListDefinition?
+	public interface IWorkListDefinition<T> where T : IWorkItemState
 	{
-		/// <summary>
-		/// The XML or whatever file format that is used to persist this definition
-		/// </summary>
 		string Path { get; set; }
+
+		List<T> Items { get; set; }
 	}
 
-	public class IssueWorkListDefinition : IWorkListDefinition
+	[XmlRoot("workListDefinition")]
+	public class XmlBasedWorkListDefinition : IWorkListDefinition<XmlWorkItem>
 	{
+		[XmlElement("xmlFile")]
 		public string Path { get; set; }
 
-		public string FgdbPath { get; set; }
+		[XmlArray("workItems")]
+		[XmlArrayItem(typeof(XmlWorkItem), ElementName = "workItem")]
+		public List<XmlWorkItem> Items { get; set; }
+	}
 
-		/// <summary>
-		/// The visited items' gdb reference, which are persisted in the definition file
-		/// rather than the geodatabase (this is just a suggestion)
-		/// </summary>
-		public List<GdbRowIdentity> VisitedItems { get; } = new List<GdbRowIdentity>();
+	public class IssueWorkListDefinition : XmlBasedWorkListDefinition
+	{
+		[XmlElement("geodatabase")]
+		public string IssueGeodatabasePath { get; set; }
+
 	}
 }
