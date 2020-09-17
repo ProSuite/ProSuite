@@ -15,6 +15,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		public WorkListView(WorkListViewModel viewModel)
 		{
+			InitializeComponent();
 			DataContext = viewModel;
 		}
 	}

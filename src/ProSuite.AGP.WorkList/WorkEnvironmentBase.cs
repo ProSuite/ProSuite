@@ -11,7 +11,7 @@ namespace ProSuite.AGP.WorkList
 	// todo daro: refactor!!!
 	public abstract class WorkEnvironmentBase
 	{
-		public void CreateWorkList()
+		public IWorkList CreateWorkList()
 		{
 			Map map = MapView.Active.Map;
 
@@ -26,6 +26,8 @@ namespace ProSuite.AGP.WorkList
 			LayerDocument layerTemplate = GetLayerDocumentCore();
 
 			ShowWorkListCore(workList, layerTemplate);
+
+			return workList;
 		}
 
 		protected abstract void ShowWorkListCore(IWorkList workList, LayerDocument layerTemplate);

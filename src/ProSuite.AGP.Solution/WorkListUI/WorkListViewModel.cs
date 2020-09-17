@@ -12,29 +12,25 @@ using ProSuite.AGP.WorkList.Domain;
 
 namespace Clients.AGP.ProSuiteSolution.WorkListUI
 {
-	public class WorkListViewModel : PropertyChangedBase, IWorkListObserver
+	public class WorkListViewModel : PropertyChangedBase //, IWorkListObserver
 	{
 
-		public WorkListViewModel(IWorkList workList)
+		public WorkListViewModel(SelectionWorkList workList)
 		{
 			GoPreviousItemCmd = new RelayCommand(GoPreviousItem, () => true, false,
 			                                     true);
 			GoNextItemCmd = new RelayCommand(GoNextItem, () => true, false,
 			                                     true);
-			//WorkListCentral = new WorkListCentral();
-			//WorkListCentral.RegisterObserver(this);
-			//WorkLists = WorkListCentral.GetAll();
-			//WorkLists = new List<IWorkList>();
-			//WorkLists.Append(workList);
+			
 			CurrentWorkList = workList;
 			CurrentWorkItem = CurrentWorkList.Current;
 		}
 
 		public WorkListViewModel() { }
 
-		private IWorkList _currentWorkList;
-		private IEnumerable<IWorkList> _workLists;
+		private SelectionWorkList _currentWorkList;
 		private IWorkItem _currentWorkItem;
+		private int _currentIndex;
 		public WorkListCentral WorkListCentral { get; }
 		public RelayCommand GoPreviousItemCmd { get; }
 		public RelayCommand GoNextItemCmd { get; }
@@ -60,7 +56,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 		//	get => _workLists;
 		//	set { SetProperty(ref _workLists, value, () => WorkLists); }
 		//}
-		public IWorkList CurrentWorkList
+		public SelectionWorkList CurrentWorkList
 		{
 			get => _currentWorkList;
 			set { SetProperty(ref _currentWorkList, value, () => CurrentWorkList); }
@@ -72,27 +68,8 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 			set { SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem); }
 		}
 
-		public void WorkListAdded(IWorkList workList)
-		{
-			//TODO test this with a test button that adds another worklist with testitems
-			throw new NotImplementedException();
-		}
-
-		public void WorkListRemoved(IWorkList workList)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void WorkListModified(IWorkList workList)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void Show(IWorkList workList)
-		{
-			//throw new NotImplementedException();
-		}
-
+		public int CurrentIndex => CurrentWorkList.DisplayIndex;
+		
 		private void GoPreviousItem()
 		{
 			CurrentWorkList.GoPrevious();

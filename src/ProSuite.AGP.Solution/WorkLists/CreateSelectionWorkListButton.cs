@@ -1,23 +1,37 @@
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using JetBrains.Annotations;
 using ProSuite.AGP.Solution.WorkListUI;
+using ProSuite.AGP.WorkList.Contracts;
 
 namespace ProSuite.AGP.Solution.WorkLists
 {
 	[UsedImplicitly]
 	internal class CreateSelectionWorkListButton : Button
 	{ 
-		protected override void OnClick()
+		protected async override void OnClick()
 		{
-			
 
-			QueuedTask.Run(() =>
+			var workList = await QueuedTask.Run(() =>
 			{
 				var env = new InMemoryWorkEnvironment();
-				env.CreateWorkList();
+				IWorkList wl = env.CreateWorkList();
+				return wl;
 			});
+
+			IWorkList currentWorkList;
+			//if (WorkListsModule.Current.TryGet(workList.Name, out currentWorkList))
+			//{
+			//	WorkListsModule.Current.WorkListModified(workList);
+			//}
+			//else {WorkListsModule.Current.WorkListAdded(workList);}
+			WorkListsModule.Current.WorkListAdded(workList);
+			WorkListsModule.Current.ShowView(workList);
+
 		}
 	}
 }

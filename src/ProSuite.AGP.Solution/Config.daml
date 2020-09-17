@@ -68,6 +68,7 @@
         </group>
         <group id="ProSuiteTools_Selection" caption="Selection Tools" keytip="G1">
           <tool refID="ProSuiteTools_Selection_SelectionTool" size="small" />
+          <button refID="WorkLists_CreateSelectionWorkList" size="small" />
         </group>
       </groups>
       <controls>
@@ -92,6 +93,11 @@
         <button id="Clients_AGP_ProSuiteSolution_WorkList" caption="WorkList" className="ShowWorkListWindow" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Show Error Worklist">Show Error Worklist<disabledText /></tooltip>
         </button>
+        <button id="WorkLists_CreateSelectionWorkList" caption="Show Selection WorkList" className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
+          <tooltip heading="tooltip heading">
+            foo<disabledText />
+          </tooltip>
+        </button>
         <tool id="ProSuiteTools_Editing_EraseTool" caption="EraseTool " className="Editing.EraseTool" loadOnClick="true"
               smallImage="Images\CutHoleTool16.png" largeImage="Images\CutHoleTool32.png"
               condition="esri_mapping_mapPane">
@@ -111,7 +117,7 @@
         </dockPane>
       </dockPanes>
     </insertModule>
-    <insertModule id="ProSuiteSolution_WorkListTrialsModule" className="WorkListTrials.WorkListTrialsModule" autoLoad="true" caption="WorkList Trials Module">
+    <insertModule id="ProSuiteSolution_WorkListTrialsModule" className="WorkListTrials.WorkListTrialsModule" autoLoad="false" caption="WorkList Trials Module">
       <tabs></tabs>
       <groups>
         <group id="ProSuiteSolution_WorkListTrials" caption="WorkList Trials" appearsOnAddInTab="true">

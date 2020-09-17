@@ -39,6 +39,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			_registry = WorkListRegistry.Instance;
 			_observers = new List<IWorkListObserver>();
+			_observers.Add(new WorkListObserver());
 
 			WireEvents();
 
@@ -75,38 +76,45 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return _registry.Get(name);
 		}
 
+		public bool TryGet(string name, out IWorkList workList)
+		{
+			workList = Get(name);
+			if (workList == null)
+			{
+				return false;
+			}
+
+			return true;
+		}
+
 		public IEnumerable<IWorkList> GetAll()
 		{
 			return _registry.GetAll();
 		}
 
-		private void ShowView(IWorkList workList)
+		public void ShowView(IWorkList workList)
 		{
 			// NOTE send a show work list request to all observers. Let the observer decide whether to show the work list.
 			foreach (var observer in _observers)
 			{
 				observer.Show(workList);
-				ShowWorkListWindow(workList, observer);
+				// ShowWorkListWindow(workList, observer);
 			}
 		}
 
-		private void ShowWorkListWindow(IWorkList workList, IWorkListObserver observer)
+		public void WorkListAdded(IWorkList workList)
 		{
-			if (observer is WorkListViewModel)
+			foreach (var observer in _observers)
 			{
-				FrameworkApplication.Current.Dispatcher.Invoke(() =>
-					{
-						//WorkListViewModel vm = observer as WorkListViewModel;
-						//WorkListView view = new WorkListView(vm);
-						//view.Owner = FrameworkApplication.Current.MainWindow;
-						//view.Show();
+				observer.WorkListAdded(workList);
+			}
+		}
 
-						WorkListView view = new WorkListView();
-						view.Owner = FrameworkApplication.Current.MainWindow;
-						view.Show();
-					}
-				);
-				
+		public void WorkListModified(IWorkList workList)
+		{
+			foreach (var observer in _observers)
+			{
+				observer.WorkListModified(workList);
 			}
 		}
 
@@ -120,6 +128,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 				if (_registry.GetAll().Any(wl => wl.Name == workList.Name) == false)
 				{
 					_registry.Add(workList);
+					
 				}
 
 				FeatureLayer workListLayer = AddLayer(workList.Name);
@@ -132,7 +141,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				WireEvents(workList);
 
-				ShowView(workList);
+				
 			}
 			catch (Exception exception)
 			{

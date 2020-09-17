@@ -7,7 +7,7 @@
                     xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
                     xmlns:local="clr-namespace:Clients.AGP.ProSuiteSolution.WorkListUI"
                     mc:Ignorable="d"
-                    Title="WorkList"
+                    Title="{Binding Path=CurrentWorkList.Name}"
                     WindowStartupLocation="CenterOwner" SizeToContent="WidthAndHeight">
     <controls:ProWindow.Resources>
         <ResourceDictionary>
@@ -74,6 +74,11 @@
                 <Label Content="Status:" Width="80" />
                 <TextBox Text="{Binding CurrentWorkItem.Status}" />
             </DockPanel>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Label Content="{Binding CurrentWorkList.DisplayIndex}"/>
+                <Label Content="of"/>
+                <Label Content="{Binding CurrentWorkList.Count}"/>
+            </StackPanel>
         </StackPanel>
     </Grid>
 </controls:ProWindow>
