@@ -1,7 +1,7 @@
 using System.Xml.Serialization;
 using ProSuite.Commons.AGP.Gdb;
 
-namespace ProSuite.AGP.WorkList
+namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 {
 	public class XmlGdbRowIdentity
 	{

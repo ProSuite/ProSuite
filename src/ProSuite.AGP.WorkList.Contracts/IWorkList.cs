@@ -54,5 +54,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 		void GoPrevious();
 
 		event EventHandler<WorkListChangedEventArgs> WorkListChanged;
+
+		void Update(IWorkItem item);
+
+		void Commit();
 	}
 }

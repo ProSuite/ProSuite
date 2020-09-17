@@ -5,6 +5,8 @@ using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.AGP.WorkList.Domain.Persistence;
+using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.AGP.WorkList
@@ -126,6 +128,10 @@ namespace ProSuite.AGP.WorkList
 				throw new NotImplementedException();
 			}
 
+			public void Refresh(IWorkItem item)
+			{
+			}
+
 			public IEnumerable<ISourceClass> RegisterDatasets(ICollection<GdbTableIdentity> datasets)
 			{
 				throw new NotImplementedException();
@@ -133,28 +139,25 @@ namespace ProSuite.AGP.WorkList
 
 			public void Save(IWorkItem item)
 			{
-				throw new NotImplementedException();
 			}
 
-			public void UpdateItem(IWorkItem item)
+			public void Update(IWorkItem item)
 			{
-				throw new NotImplementedException();
 			}
 
 			public void UpdateVolatileState(IEnumerable<IWorkItem> items)
 			{
-				throw new NotImplementedException();
 			}
 
 			public void Commit()
 			{
-				throw new NotImplementedException();
 			}
 
 			public void Discard()
 			{
-				throw new NotImplementedException();
 			}
+
+			public IRepository StateRepository { get; set; }
 
 			public IEnumerable<IWorkItem> GetAll()
 			{

@@ -20,6 +20,7 @@ namespace ProSuite.AGP.WorkList.Test
 		public GdbRowIdentity Proxy { get; }
 		public WorkItemStatus Status { get; set; }
 		public Envelope Extent { get; }
+		public string Description { get; }
 
 		public string Description => _description;
 

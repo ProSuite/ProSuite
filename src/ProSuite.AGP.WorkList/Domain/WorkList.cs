@@ -57,6 +57,8 @@ namespace ProSuite.AGP.WorkList.Domain
 				}
 			}
 
+			// todo daro: revise, only for development
+			Repository.UpdateVolatileState(_items);
 
 			// todo daro: EnvelopeBuilder as parameter > do not iterate again over items
 			//			  look old work item implementation
@@ -67,6 +69,16 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			add { _workListChanged += value; }
 			remove { _workListChanged -= value; }
+		}
+
+		public void Update(IWorkItem item)
+		{
+			Repository.Update(item);
+		}
+
+		public void Commit()
+		{
+			Repository.Commit();
 		}
 
 		public string Name { get; }
@@ -227,6 +239,8 @@ namespace ProSuite.AGP.WorkList.Domain
 			nextItem.Visited = true;
 			CurrentIndex = _items.IndexOf(nextItem);
 
+			Repository.Update(nextItem);
+
 			var oids = currentItem != null
 				           ? new List<long> {nextItem.OID, currentItem.OID}
 				           : new List<long> {nextItem.OID};
@@ -260,6 +274,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				       : null;
 		}
 
+		// todo daro: drop or refactor
 		protected static Envelope GetExtentFromItems(IEnumerable<IWorkItem> items)
 		{
 			double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
@@ -361,7 +376,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public void Invalidate()
 		{
-			throw new NotImplementedException();
 		}
 
 		// todo daro: Is SDK type Table the right type?
@@ -369,12 +383,18 @@ namespace ProSuite.AGP.WorkList.Domain
 		                           Dictionary<Table, List<long>> deletes,
 		                           Dictionary<Table, List<long>> updates)
 		{
+			int capacity = inserts.Values.Sum(list => list.Count) +
+			               deletes.Values.Sum(list => list.Count) +
+			               updates.Values.Sum(list => list.Count);
+
+			var invalidFeatures = new List<long>(capacity);
+
 			foreach (var insert in inserts)
 			{
 				var tableId = new GdbTableIdentity(insert.Key);
 				List<long> oids = insert.Value;
 
-				ProcessInserts(tableId, oids);
+				ProcessInserts(tableId, oids, invalidFeatures);
 			}
 
 			foreach (var delete in deletes)
@@ -382,7 +402,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				var tableId = new GdbTableIdentity(delete.Key);
 				List<long> oids = delete.Value;
 
-				ProcessDeletes(tableId, oids);
+				ProcessDeletes(tableId, oids, invalidFeatures);
 			}
 
 			foreach (var update in updates)
@@ -390,15 +410,18 @@ namespace ProSuite.AGP.WorkList.Domain
 				var tableId = new GdbTableIdentity(update.Key);
 				List<long> oids = update.Value;
 
-				ProcessUpdates(tableId, oids);
+				ProcessUpdates(tableId, oids, invalidFeatures);
 
 				// does not work because ObjectIDs = (IReadOnlyList<long>) modify.Value (oids) are the
 				// ObjectIds of source feature not the work item OIDs.
 				//IEnumerable<IWorkItem> workItems = GetItems(filter);
 			}
+
+			OnWorkListChanged(null, invalidFeatures);
 		}
 
-		private void ProcessDeletes(GdbTableIdentity tableId, List<long> oids)
+		private void ProcessDeletes(GdbTableIdentity tableId, List<long> oids,
+		                            List<long> invalidFeatures)
 		{
 			foreach (long oid in oids)
 			{
@@ -413,7 +436,8 @@ namespace ProSuite.AGP.WorkList.Domain
 				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
 				{
 					RemoveWorkItem(item);
-					// todo daro: WorkListChanged > invalidate map
+
+					invalidFeatures.Add(item.OID);
 				}
 			}
 
@@ -441,7 +465,8 @@ namespace ProSuite.AGP.WorkList.Domain
 			OnWorkListChanged(null, new List<long> {current.OID});
 		}
 
-		private void ProcessInserts(GdbTableIdentity tableId, List<long> oids)
+		private void ProcessInserts(GdbTableIdentity tableId, List<long> oids,
+		                            List<long> invalidFeatures)
 		{
 			var filter = new QueryFilter {ObjectIDs = oids};
 
@@ -462,6 +487,8 @@ namespace ProSuite.AGP.WorkList.Domain
 				}
 
 				UpdateExtent(item.Extent);
+
+				invalidFeatures.Add(item.OID);
 			}
 		}
 
@@ -470,15 +497,18 @@ namespace ProSuite.AGP.WorkList.Domain
 			Extent = Extent.Union(itemExtent);
 		}
 
-		private void ProcessUpdates(GdbTableIdentity tableId, IEnumerable<long> oids)
+		private void ProcessUpdates(GdbTableIdentity tableId, IEnumerable<long> oids,
+		                            List<long> invalidFeatures)
 		{
 			foreach (long oid in oids)
 			{
 				if (_rowMap.TryGetValue(new GdbRowIdentity(oid, tableId), out IWorkItem item))
 				{
-					Repository.UpdateItem(item);
+					Repository.Update(item);
 
 					UpdateExtent(item.Extent);
+
+					invalidFeatures.Add(item.OID);
 				}
 			}
 		}

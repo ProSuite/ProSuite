@@ -53,6 +53,9 @@
     <Compile Include="Domain\IssueItem.cs" />
     <Compile Include="Domain\IssueWorkList.cs" />
     <Compile Include="Domain\OIDRowReference.cs" />
+    <Compile Include="Domain\Persistence\Json\JsonBasedWorkListDefinition.cs" />
+    <Compile Include="Domain\Persistence\Json\JsonWorkItemStateRepository.cs" />
+    <Compile Include="Domain\Persistence\Json\JsonWorkItemState.cs" />
     <Compile Include="Domain\RowReference.cs" />
     <Compile Include="Domain\SelectionWorkList.cs" />
     <Compile Include="Domain\WorkList.cs" />
@@ -61,10 +64,12 @@
     <Compile Include="IssueItemRepository.cs" />
     <Compile Include="GdbItemRepository.cs" />
     <Compile Include="IssueUtils.cs" />
-    <Compile Include="IssueWorkListDefinition.cs" />
+    <Compile Include="Domain\Persistence\Xml\XmlWorkListDefinition.cs" />
+    <Compile Include="Domain\IWorkItemState.cs" />
+    <Compile Include="Domain\IWorkListDefinition.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Trial\IRepository.cs" />
-    <Compile Include="Trial\Repository.cs" />
+    <Compile Include="Domain\Persistence\IRepository.cs" />
+    <Compile Include="Domain\Persistence\WorkItemStateRepository.cs" />
     <Compile Include="SelectionItem.cs" />
     <Compile Include="SelectionItemRepository.cs" />
     <Compile Include="SelectionSourceClass.cs" />
@@ -76,9 +81,9 @@
     <Compile Include="WorkEnvironmentBase.cs" />
     <Compile Include="WorkItemVm.cs" />
     <Compile Include="WorkListCentral.cs" />
-    <Compile Include="XmlGdbRowIdentity.cs" />
-    <Compile Include="Trial\XmlRepository.cs" />
-    <Compile Include="XmlWorkItem.cs" />
+    <Compile Include="Domain\Persistence\Xml\XmlGdbRowIdentity.cs" />
+    <Compile Include="Domain\Persistence\Xml\XmlWorkItemStateRepository.cs" />
+    <Compile Include="Domain\Persistence\Xml\XmlWorkItemState.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj">

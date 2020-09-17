@@ -2,9 +2,10 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
-using Clients.AGP.ProSuiteSolution.WorkListUI;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain.Persistence;
+using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Carto;
 
 namespace ProSuite.AGP.Solution.WorkLists
@@ -52,7 +53,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 			Dictionary<Geodatabase, List<Table>> tables = MapUtils.GetDistinctTables(layers);
 			Dictionary<Table, List<long>> selection = MapUtils.GetDistinctSelectionByTable(layers);
 
-			return new SelectionItemRepository(tables, selection);
+			IRepository stateRepository = new XmlWorkItemStateRepository(null, @"C:\temp\selection_work_list.xml");
+			var repository = new SelectionItemRepository(tables, selection, stateRepository);
+			return repository;
 		}
 
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository)

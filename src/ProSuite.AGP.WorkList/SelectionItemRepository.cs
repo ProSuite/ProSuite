@@ -4,6 +4,7 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 
@@ -16,7 +17,8 @@ namespace ProSuite.AGP.WorkList
 
 		// todo daro: rafactor SelectionItemRepository(Dictionary<IWorkspaceContext, GdbTableIdentity>, Dictionary<GdbTableIdentity, List<long>>)
 		public SelectionItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase,
-		                               Dictionary<Table, List<long>> selection) : base(tablesByGeodatabase)
+		                               Dictionary<Table, List<long>> selection,
+		                               IRepository stateRepository) : base(tablesByGeodatabase, stateRepository)
 		{
 			foreach (var pair in selection)
 			{
@@ -52,7 +54,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			int id = CreateItemIDCore(row, source);
 
-			return new SelectionItem(id, row, source.AttributeReader);
+			return RefreshState(new SelectionItem(id, row, source.AttributeReader));
 		}
 
 		protected override ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
