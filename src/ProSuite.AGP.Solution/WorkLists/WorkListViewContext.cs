@@ -5,23 +5,14 @@ namespace ProSuite.AGP.Solution.WorkLists
 {
 	public class WorkListViewContext
 	{
-		public WorkListViewContext(WorkListView view)
+		public WorkListViewContext(WorkListViewModel viewModel)
 		{
-			View = view;
-			View.Closed += View_Closed;
+			ViewModel = viewModel;
 		}
-
-		private void View_Closed(object sender, System.EventArgs e)
-		{
-			ViewIsVisible = false;
-		}
-
-		//public WorkListViewModel  ViewModel { get; set; }
-		public WorkListView View { get; set; }
+		
+		public WorkListViewModel ViewModel { get; }
 
 		public bool ViewIsVisible { get; set; }
-
-
 
 	}
 }

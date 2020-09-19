@@ -6,6 +6,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using Clients.AGP.ProSuiteSolution.WorkListUI;
@@ -128,16 +129,16 @@ namespace ProSuite.AGP.Solution.WorkLists
 				if (_registry.GetAll().Any(wl => wl.Name == workList.Name) == false)
 				{
 					_registry.Add(workList);
-					
-				}
 
-				FeatureLayer workListLayer = AddLayer(workList.Name);
-				LayerUtils.ApplyRenderer(workListLayer, layerTemplate);
+					FeatureLayer workListLayer = AddLayer(workList.Name);
+					LayerUtils.ApplyRenderer(workListLayer, layerTemplate);
 
-				if (! _layerByWorkList.ContainsKey(workList))
-				{
-					_layerByWorkList.Add(workList, workListLayer);
+					if (!_layerByWorkList.ContainsKey(workList))
+					{
+						_layerByWorkList.Add(workList, workListLayer);
+					}
 				}
+				
 
 				WireEvents(workList);
 
@@ -146,6 +147,18 @@ namespace ProSuite.AGP.Solution.WorkLists
 			catch (Exception exception)
 			{
 				Console.WriteLine(exception);
+			}
+		}
+
+		public void RemoveWorkListLayer(IWorkList workList)
+		{
+			if (_layerByWorkList.ContainsKey(workList))
+			{
+				_layerByWorkList.Remove(workList);
+				Layer layer = MapView.Active.Map.GetLayersAsFlattenedList()
+				                     .First(l => l.Name == workList.Name);
+				QueuedTask.Run(()=> MapView.Active.Map.RemoveLayer(layer)); 
+
 			}
 		}
 

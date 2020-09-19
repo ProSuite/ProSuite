@@ -19,13 +19,10 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 
 		public WorkListViewModel(SelectionWorkList workList)
 		{
-			//GoPreviousItemCmd = new RelayCommand(GoPreviousItem, () => true);
-			//GoNextItemCmd = new RelayCommand(GoNextItem, () => true, false,true);
 			
 			CurrentWorkList = workList;
 			CurrentWorkList.GoFirst();
 			CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
-
 		}
 
 		public WorkListViewModel() { }
@@ -51,24 +48,8 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 		public ICommand ZoomOutCmd =>
 			FrameworkApplication.GetPlugInWrapper(
 				DAML.Button.esri_mapping_fixedZoomOutButton) as ICommand;
-
-
-		private ICommand _testCmd;
-		public ICommand TestCmd
-		{
-			get
-			{
-				if (_testCmd == null)
-				{
-					_testCmd = new RelayCommand(() =>
-					{
-						MessageBox.Show("hi");
-					}, () => true);
-				}
-				return _testCmd;
-			}
-		}
-
+		
+		
 		private RelayCommand _goNextItemCmd;
 		public RelayCommand GoNextItemCmd
 		{
@@ -81,6 +62,9 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 
 		private RelayCommand _goPreviousItemCdm;
 		private string _description;
+		
+		private int _count;
+		private int _currentIndex;
 
 		public RelayCommand GoPreviousItemCmd
 		{
@@ -90,7 +74,8 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 				return _goPreviousItemCdm;
 			}
 		}
-
+		
+		
 		public SelectionWorkList CurrentWorkList
 		{
 			get => _currentWorkList;
@@ -102,25 +87,33 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 			get => _currentWorkItem;
 			set
 			{
-				//Description = CurrentWorkItem.Description;
 				SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem);
 			}
 		}
 
-		public string Description
+
+		public IList<WorkItemVisibility> Visibility
 		{
 			get
 			{
-				return CurrentWorkItem.Description;
+				return Enum.GetValues(typeof(WorkItemVisibility)).Cast<WorkItemVisibility>().ToList<WorkItemVisibility>();
 			}
-			set
-			{
-				_description = value;
-				SetProperty(ref _description, value, () => Description);
-			}
+		
 		}
 
-		public int CurrentIndex => CurrentWorkList.DisplayIndex;
+		public int Count
+		{
+			get { return CurrentWorkList.Count();}
+			set { }
+
+		}
+
+		public int CurrentIndex
+		{
+			get { return CurrentWorkList.DisplayIndex; }
+			set { SetProperty(ref _currentIndex, value, () => CurrentIndex); }
+		}
+
 		
 		private void GoPreviousItem()
 		{

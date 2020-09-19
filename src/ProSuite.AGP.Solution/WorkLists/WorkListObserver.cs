@@ -12,7 +12,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 	public class WorkListObserver: IWorkListObserver
 	{
 
-		public List<WorkListViewContext> viewContexts { get; set; } = new List<WorkListViewContext>();
+		public List<WorkListViewContext> ViewContexts { get; set; } = new List<WorkListViewContext>();
+		//public List<WorkListViewModel> viewModels { get; set; } = new List<WorkListViewModel>();
 		private Object _lockObj = new Object();
 
 		public void WorkListAdded(IWorkList workList)
@@ -21,17 +22,14 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			if (TryGetContextByWorkListName(workList.Name, out context))
 			{
-				var viewModel = context.View.DataContext as WorkListViewModel;
+				var viewModel = context.ViewModel;
 				viewModel.CurrentWorkList = workList as SelectionWorkList;
 			}
 			else
 			{
 				WorkListViewModel vm = new WorkListViewModel(workList as SelectionWorkList);
 
-				WorkListView view = new WorkListView(vm);
-				view.Title = workList.Name;
-
-				viewContexts.Add(new WorkListViewContext(view));
+				ViewContexts.Add(new WorkListViewContext(vm));
 			}
 		}
 
@@ -40,7 +38,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			WorkListViewContext viewContext;
 			if (TryGetContextByWorkListName(workList.Name, out viewContext))
 			{
-				viewContexts.Remove(viewContext);
+				ViewContexts.Remove(viewContext);
 			}
 		}
 
@@ -49,8 +47,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			WorkListViewContext context;
 			if (TryGetContextByWorkListName(workList.Name, out context))
 			{
-				var viewModel = context.View.DataContext as WorkListViewModel;
-				viewModel.CurrentWorkList = workList as SelectionWorkList;
+				context.ViewModel.CurrentWorkList = workList as SelectionWorkList;
 			}
 		}
 
@@ -65,13 +62,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 			{
 				WorkListViewModel vm = new WorkListViewModel(workList as SelectionWorkList);
 
-				WorkListView view = new WorkListView(vm);
+				WorkListViewContext newContext = new WorkListViewContext(vm);
 
-				view.Title = workList.Name;
-
-				WorkListViewContext newContext = new WorkListViewContext(view);
-
-				viewContexts.Add(newContext);
+				ViewContexts.Add(newContext);
 
 				showView(context);
 			}
@@ -79,19 +72,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		private bool TryGetContextByWorkListName(string name, out WorkListViewContext viewContext)
 		{
-			viewContext = viewContexts.Find(context =>
-			{
-				var vm = context.View.DataContext as WorkListViewModel;
-				return vm.CurrentWorkList.Name == name;
-			});
-			if (viewContext != null)
-			{
-				return true;
-			}
-			else
-			{
-				return false;
-			}
+			viewContext = ViewContexts.Find(context => context.ViewModel.CurrentWorkList.Name == name);
+			return viewContext != null;
 		}
 
 		private void showView(WorkListViewContext viewContext)
@@ -101,17 +83,26 @@ namespace ProSuite.AGP.Solution.WorkLists
 				return;
 
 			}
-			
-			viewContext.View.Owner = FrameworkApplication.Current.MainWindow;
-			viewContext.View.Show();
-			viewContext.View.Closed += View_Closed;
+			WorkListView view = new WorkListView(viewContext.ViewModel);
+			view.Owner = FrameworkApplication.Current.MainWindow;
+			view.Show();
+			view.Closed += View_Closed;
 			viewContext.ViewIsVisible = true;
 		}
 
 		private void View_Closed(object sender, EventArgs e)
 		{
 			//TODO unload worklist layer here.
-			// throw new NotImplementedException(); 
+			
+			var view = sender as WorkListView;
+			var viewModel = view.DataContext as WorkListViewModel;
+			WorkListViewContext context;
+			if (TryGetContextByWorkListName(viewModel.CurrentWorkList.Name, out context))
+			{
+				context.ViewIsVisible = false;
+			}
+			WorkListsModule.Current.RemoveWorkListLayer(viewModel.CurrentWorkList);
+				 
 		}
 	}
 }

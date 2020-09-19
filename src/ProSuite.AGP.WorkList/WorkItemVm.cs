@@ -28,7 +28,7 @@ namespace ProSuite.AGP.WorkList
 
 		public String Description
 		{
-			get { return _description; }
+			get { return _workItem.Description; }
 			set
 			{
 				_description = value;
@@ -38,22 +38,23 @@ namespace ProSuite.AGP.WorkList
 
 		public WorkItemStatus Status
 		{
-			get { return _status; }
+			get { return _workItem.Status; }
 			set
 			{
 				_status = value;
-				_workItem.Status = value;
 				SetProperty(ref _status, value, () => Status);
+				_workItem.Status = value;
 			}
 		}
 
 		public bool Visited
 		{
-			get { return _visited; }
+			get { return _workItem.Visited; }
 			set
 			{
 				_visited = value;
 				SetProperty(ref _visited, value, () => Visited);
+				_workItem.Visited = value;
 			}
 		}
 

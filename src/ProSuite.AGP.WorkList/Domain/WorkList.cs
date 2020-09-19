@@ -161,8 +161,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			CurrentIndex = 0;
 
 			IWorkItem nextItem = GetNextVisibleItem();
-			//TODO should also set current item visited=true
-
+			
 			if (nextItem != null)
 			{
 				Assert.False(Equals(nextItem, Current), "current item and next item are equal");
@@ -189,7 +188,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		public virtual void GoNext()
 		{
 			IWorkItem nextItem = GetNextVisibleItem();
-			//TODO should also set current item visited=true
 
 			if (nextItem != null)
 			{
@@ -252,6 +250,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		private IWorkItem GetNextVisibleItem()
 		{
 			if (CurrentIndex >= _items.Count - 1)
+
 			{
 				// last item reached
 				return null;

@@ -8,6 +8,7 @@
                     xmlns:local="clr-namespace:Clients.AGP.ProSuiteSolution.WorkListUI"
                     mc:Ignorable="d"
                     Title="{Binding Path=CurrentWorkList.Name}"
+                    d:DesignWidth="300"
                     WindowStartupLocation="CenterOwner" SizeToContent="WidthAndHeight">
     <controls:ProWindow.Resources>
         <ResourceDictionary>
@@ -55,35 +56,31 @@
                 <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/zoomfixedzoomout_b_16.png"/>
             </Button>
             <Separator/>
-            <ComboBox ItemsSource="{Binding WorkLists}" Width="120" DisplayMemberPath="Name"/>
+           
         </ToolBar>
         <StackPanel Grid.Row="2">
             <ToolBar>
-                <StackPanel Orientation="Horizontal">
+                <DockPanel LastChildFill="True">
                     <!--<Label Content="Status: " />-->
-                    <CheckBox IsChecked="{Binding CurrentWorkItem.Status, 
-                    Converter={StaticResource StatusEnumBooleanConverter}}" Background="Red">Status:</CheckBox >
-                    <CheckBox IsChecked="False">test</CheckBox>
-                </StackPanel>
-               
-
+                    <CheckBox VerticalAlignment="Center" DockPanel.Dock="Left" IsChecked="{Binding CurrentWorkItem.Status, 
+                        Converter={StaticResource StatusEnumBooleanConverter}}">Status</CheckBox >
+                    <Separator/>
+                    <ComboBox SelectedItem="{Binding CurrentWorkList.Visibility}" ItemsSource="{Binding Visibility}"/>
+                </DockPanel>
             </ToolBar>
-            <DockPanel LastChildFill="True" Margin="0,5,5,0">
-                <Label Content="Description:" Width="80" />
-                <TextBox Text="{Binding CurrentWorkItem.Description}" />
-            </DockPanel>
-            <DockPanel LastChildFill="True" Margin="0,5,5,0">
-                <Label Content="Visited:" Width="80" />
-                <TextBox Text="{Binding CurrentWorkItem.Visited}" />
-            </DockPanel>
-            <DockPanel LastChildFill="True" Margin="0,5,5,0">
-                <Label Content="Status:" Width="80" />
-                <TextBox Text="{Binding CurrentWorkItem.Status}" />
-            </DockPanel>
+            <Label  Content="{Binding CurrentWorkItem.Description}" />
+            <StackPanel Orientation="Horizontal" >
+                <Label Content="Visited:" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <Label Content="{Binding CurrentWorkItem.Visited}" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal">
+                <Label Content="Status:" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                <Label Content="{Binding CurrentWorkItem.Status}" VerticalAlignment="Center" />
+            </StackPanel>
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Label Content="{Binding CurrentWorkList.DisplayIndex}"/>
+                <Label Content="{Binding CurrentIndex}"/>
                 <Label Content="of"/>
-                <Label Content="{Binding CurrentWorkList.Count}"/>
+                <Label Content="{Binding Count}"/>
             </StackPanel>
         </StackPanel>
     </Grid>

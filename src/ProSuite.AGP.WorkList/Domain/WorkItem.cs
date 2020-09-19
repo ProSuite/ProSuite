@@ -70,7 +70,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			set
 			{
 				_status = value;
-				OnPropertyChanged();
+				OnPropertyChanged(nameof(Status));
 			}
 		}
 
