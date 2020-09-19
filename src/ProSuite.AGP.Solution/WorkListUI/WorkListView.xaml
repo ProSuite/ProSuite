@@ -62,7 +62,7 @@
             <ToolBar>
                 <DockPanel LastChildFill="True">
                     <!--<Label Content="Status: " />-->
-                    <CheckBox VerticalAlignment="Center" DockPanel.Dock="Left" IsChecked="{Binding CurrentWorkItem.Status, 
+                    <CheckBox VerticalAlignment="Center" DockPanel.Dock="Left" IsChecked="{Binding CurrentWorkItem.Status, Mode=TwoWay, 
                         Converter={StaticResource StatusEnumBooleanConverter}}">Status</CheckBox >
                     <Separator/>
                     <ComboBox SelectedItem="{Binding CurrentWorkList.Visibility}" ItemsSource="{Binding Visibility}"/>
