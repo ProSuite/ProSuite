@@ -8,6 +8,7 @@ using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Dialogs;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
@@ -19,10 +20,9 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 
 		public WorkListViewModel(SelectionWorkList workList)
 		{
-			
-			CurrentWorkList = workList;
-			CurrentWorkList.GoFirst();
-			CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
+				CurrentWorkList = workList;
+				CurrentWorkList.GoFirst();
+				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
 		}
 
 		public WorkListViewModel() { }
@@ -84,13 +84,12 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 
 		public WorkItemVm CurrentWorkItem
 		{
-			get => _currentWorkItem;
+			get { return new WorkItemVm(CurrentWorkList.Current); }
 			set
 			{
 				SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem);
 			}
 		}
-
 
 		public IList<WorkItemVisibility> Visibility
 		{
@@ -117,13 +116,21 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 		
 		private void GoPreviousItem()
 		{
-			CurrentWorkList.GoPrevious();
-			CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
+			QueuedTask.Run(() =>
+			{
+				CurrentWorkList.GoPrevious();
+				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
+			});
+
 		}
 		private void GoNextItem()
 		{
-			CurrentWorkList.GoNext();
-			CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
+			QueuedTask.Run(() =>
+			{
+				CurrentWorkList.GoNext();
+				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
+			});
+
 		}
 	}
 }
