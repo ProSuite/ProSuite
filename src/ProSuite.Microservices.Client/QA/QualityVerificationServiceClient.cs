@@ -153,7 +153,9 @@ namespace ProSuite.Microservices.Client.QA
 		}
 
 		// TODO - generic?
-		private async Task<QualityVerification> ExecuteAndProcessMessagesAsync( VerificationRequest request, CancellationTokenSource cancellationTokenSource)
+		private async Task<QualityVerification> ExecuteAndProcessMessagesAsync(
+			VerificationRequest request,
+			CancellationTokenSource cancellationTokenSource)
 		{
 			AsyncServerStreamingCall<VerificationResponse> call = QaClient.VerifyQuality(request);
 
@@ -191,26 +193,26 @@ namespace ProSuite.Microservices.Client.QA
 			return result;
 		}
 
-		//public VerificationRequest CreateVerificationRequest(
-		//	WorkContextMsg workContextMsg,
-		//	QualitySpecificationMsg qualitySpecificationMsg,
-		//	IGeometry perimeter = null)
-		//{
-		//	var request = new VerificationRequest();
+		public VerificationRequest CreateVerificationRequest(
+			WorkContextMsg workContextMsg,
+			QualitySpecificationMsg qualitySpecificationMsg,
+			IGeometry perimeter = null)
+		{
+			var request = new VerificationRequest();
 
-		//	request.WorkContext = workContextMsg;
-		//	request.Specification = qualitySpecificationMsg;
-		//	request.Parameters = new VerificationParametersMsg();
+			request.WorkContext = workContextMsg;
+			request.Specification = qualitySpecificationMsg;
+			request.Parameters = new VerificationParametersMsg();
 
-		//	if (perimeter != null && !perimeter.IsEmpty)
-		//	{
-		//		ShapeMsg areaOfInterest = ProtobufConversionUtils.ToShapeMsg(perimeter);
-		//		request.Parameters.Perimeter = areaOfInterest;
-		//	}
-		//	//request.UserName = EnvironmentUtils.UserDisplayName;
+			if (perimeter != null && !perimeter.IsEmpty)
+			{
+				ShapeMsg areaOfInterest = ProtobufConversionUtils.ToShapeMsg(perimeter);
+				request.Parameters.Perimeter = areaOfInterest;
+			}
+			//request.UserName = EnvironmentUtils.UserDisplayName;
 
-		//	return request;
-		//}
+			return request;
+		}
 
 
 		//private async Task<bool> RunQaRpcAsync(
@@ -278,5 +280,62 @@ namespace ProSuite.Microservices.Client.QA
 
 		//	return true;
 		//}
+	}
+
+	public static class VerificationRequestBuilder
+	{
+		//public static VerificationRequest CreateRequest(
+		//	[NotNull] ReleaseCycle releaseCycle)
+		//{
+		//	foreach (var VARIABLE in releaseCycle.WorkUnitRepository.Get())
+		//	{
+				
+		//	}
+		//	releaseCycle.WorkUnitRepository.Get()
+		//}
+
+		public static VerificationRequest CreateRequest(
+			[NotNull] WorkUnit workUnit,
+			[CanBeNull]IGeometry perimeter = null)
+		{
+			// this is specific for workunit
+			var request = new VerificationRequest();
+			request.WorkContext =
+				new WorkContextMsg
+	              {
+	                  DdxId = workUnit.Id,
+	                  Type = (int)VerificationContextType.WorkUnit
+	              };
+
+			// TODO algr: nightly id is only one option?
+			request.Specification = CreateSpecificationsFromNightlyId(workUnit.NightlyRunQualitySpecificationId);
+			request.Parameters = new VerificationParametersMsg();
+
+			if (perimeter != null && !perimeter.IsEmpty)
+			{
+				ShapeMsg areaOfInterest = ProtobufConversionUtils.ToShapeMsg(perimeter);
+				request.Parameters.Perimeter = areaOfInterest;
+			}
+			request.UserName = EnvironmentUtils.UserDisplayName;
+			return request;
+		}
+
+		private static QualitySpecificationMsg CreateSpecificationsFromNightlyId(int? nightlyRunQualitySpecificationId)
+		{
+			var specification = new QualitySpecificationMsg();
+			if (nightlyRunQualitySpecificationId == null)
+				return specification;
+
+			if (nightlyRunQualitySpecificationId.Value < 0)
+			{
+				specification.WellKnownSpecification = 1;
+			}
+			else
+			{
+				specification.QualitySpecificationId = nightlyRunQualitySpecificationId.Value;
+			}
+			return specification;
+		}
+
 	}
 }

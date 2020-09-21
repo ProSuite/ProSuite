@@ -45,10 +45,6 @@
     <Reference Include="ProSuite.Microservices.Definitions.Shared">
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Shared.dll</HintPath>
     </Reference>
-    <Reference Include="Swisstopo.Topgis.Microservices.Definitions, Version=0.0.3.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Swisstopo.Topgis\lib\swisstopo\Swisstopo.Topgis.Microservices.ServiceDefinitions\Swisstopo.Topgis.Microservices.Definitions.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -87,18 +83,6 @@
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
       <Project>{0b48b56f-3a3d-4367-aa76-a356519af2ab}</Project>
       <Name>ProSuite.DomainModel.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Swisstopo.Topgis\src\Swisstopo.Topgis.Core\Swisstopo.Topgis.Core.csproj">
-      <Project>{1DBD63CD-9F0B-4AA4-AC7F-9E83BCD07900}</Project>
-      <Name>Swisstopo.Topgis.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Swisstopo.Topgis\src\Swisstopo.Topgis.Domain\Swisstopo.Topgis.Domain.csproj">
-      <Project>{189EB36B-AEA5-4487-845D-4F846439DB86}</Project>
-      <Name>Swisstopo.Topgis.Domain</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Swisstopo.Topgis\src\Swisstopo.Topgis.Services\Swisstopo.Topgis.Services.csproj">
-      <Project>{590D3B5D-4BB5-494D-B816-F07E898C46A5}</Project>
-      <Name>Swisstopo.Topgis.Services</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
       <Project>{384763d9-f7a1-4aa2-9abd-ee338cd8d4c1}</Project>
