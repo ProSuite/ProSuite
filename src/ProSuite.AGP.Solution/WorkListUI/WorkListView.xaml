@@ -5,7 +5,7 @@
                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                     xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
-                    xmlns:local="clr-namespace:Clients.AGP.ProSuiteSolution.WorkListUI"
+                    xmlns:workListUi="clr-namespace:ProSuite.AGP.Solution.WorkListUI"
                     mc:Ignorable="d"
                     Title="{Binding Path=CurrentWorkList.Name}"
                     d:DesignWidth="300"
@@ -16,12 +16,9 @@
                 <extensions:DesignOnlyResourceDictionary
                     Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
             </ResourceDictionary.MergedDictionaries>
+          
 
-            <!--<DataTemplate x:Key="WorkListsItemTemplate">
-                <Label Content="{Binding Name}" />
-            </DataTemplate>-->
-
-            <local:StatusEnumBooleanConverter x:Key="StatusEnumBooleanConverter" />
+            <workListUi:StatusEnumBooleanConverter x:Key="StatusEnumBooleanConverter" />
         </ResourceDictionary>
 
     </controls:ProWindow.Resources>
@@ -62,26 +59,29 @@
             <ToolBar>
                 <DockPanel LastChildFill="True">
                     <!--<Label Content="Status: " />-->
-                    <CheckBox VerticalAlignment="Center" DockPanel.Dock="Left" IsChecked="{Binding CurrentWorkItem.Status, Mode=TwoWay, 
+                    <CheckBox VerticalAlignment="Center" DockPanel.Dock="Left" IsChecked="{Binding Status, Mode=TwoWay, 
                         Converter={StaticResource StatusEnumBooleanConverter}}">Status</CheckBox >
                     <Separator/>
                     <ComboBox SelectedItem="{Binding CurrentWorkList.Visibility}" ItemsSource="{Binding Visibility}"/>
                 </DockPanel>
             </ToolBar>
-            <Label  Content="{Binding CurrentWorkItem.Description}" />
-            <StackPanel Orientation="Horizontal" >
-                <Label Content="Visited:" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                <Label Content="{Binding CurrentWorkItem.Visited}" VerticalAlignment="Center" />
+            <StackPanel>
+                <Label  Content="{Binding CurrentWorkItem.Description}" />
+                <StackPanel Orientation="Horizontal" >
+                    <Label Content="Visited:" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                    <Label Content="{Binding Visited}" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Label Content="Status:" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" />
+                    <Label Content="{Binding Status, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                    <Label Content="{Binding CurrentIndex}"/>
+                    <Label Content="of"/>
+                    <Label Content="{Binding Count}"/>
+                </StackPanel>
             </StackPanel>
-            <StackPanel Orientation="Horizontal">
-                <Label Content="Status:" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" />
-                <Label Content="{Binding CurrentWorkItem.Status}" VerticalAlignment="Center" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                <Label Content="{Binding CurrentIndex}"/>
-                <Label Content="of"/>
-                <Label Content="{Binding Count}"/>
-            </StackPanel>
+            
         </StackPanel>
     </Grid>
 </controls:ProWindow>

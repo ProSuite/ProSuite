@@ -29,9 +29,8 @@ namespace ProSuite.AGP.WorkList
 			get { return WorkItem.Status; }
 			set
 			{
-				_status = value;
+				WorkItem.Status = value; 
 				SetProperty(ref _status, value, () => Status);
-				WorkItem.Status = value;
 			}
 		}
 
@@ -40,7 +39,6 @@ namespace ProSuite.AGP.WorkList
 			get { return WorkItem.Visited; }
 			set
 			{
-				_visited = value;
 				SetProperty(ref _visited, value, () => Visited);
 				WorkItem.Visited = value;
 			}

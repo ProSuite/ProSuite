@@ -65,6 +65,8 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 		
 		private int _count;
 		private int _currentIndex;
+		private WorkItemStatus _status;
+		private bool _visited;
 
 		public RelayCommand GoPreviousItemCmd
 		{
@@ -74,11 +76,21 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 				return _goPreviousItemCdm;
 			}
 		}
-		
+
+		public WorkItemStatus Status
+		{
+			get { return CurrentWorkItem.Status;}
+			set
+			{
+				CurrentWorkItem.Status = value;
+				SetProperty(ref _status, value, () => Status);
+			}
+		}
 		
 		public SelectionWorkList CurrentWorkList
 		{
 			get => _currentWorkList;
+
 			set { SetProperty(ref _currentWorkList, value, () => CurrentWorkList); }
 		}
 
@@ -88,6 +100,19 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 			set
 			{
 				SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem);
+				Status = CurrentWorkItem.Status;
+				Visited = CurrentWorkItem.Visited;
+				CurrentIndex = CurrentWorkList.DisplayIndex;
+			}
+		}
+
+		public bool Visited
+		{
+			get { return CurrentWorkItem.Visited; }
+			set
+			{
+				CurrentWorkItem.Visited = value;
+				SetProperty(ref _visited, value, () => Visited);
 			}
 		}
 
