@@ -63,10 +63,10 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 		private RelayCommand _goPreviousItemCdm;
 		private string _description;
 		
-		private int _count;
 		private int _currentIndex;
 		private WorkItemStatus _status;
 		private bool _visited;
+		private string _count;
 
 		public RelayCommand GoPreviousItemCmd
 		{
@@ -83,6 +83,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 			set
 			{
 				CurrentWorkItem.Status = value;
+				CurrentWorkList.Update(CurrentWorkList.Current);
 				SetProperty(ref _status, value, () => Status);
 			}
 		}
@@ -103,6 +104,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 				Status = CurrentWorkItem.Status;
 				Visited = CurrentWorkItem.Visited;
 				CurrentIndex = CurrentWorkList.DisplayIndex;
+				Count = GetCount();
 			}
 		}
 
@@ -122,14 +124,22 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 			{
 				return Enum.GetValues(typeof(WorkItemVisibility)).Cast<WorkItemVisibility>().ToList<WorkItemVisibility>();
 			}
+			set { }
 		
 		}
 
-		public int Count
+		private string GetCount()
 		{
-			get { return CurrentWorkList.Count();}
-			set { }
+			var all = CurrentWorkList.Count(null, true);
+			var toDo = CurrentWorkList
+			           .GetItems(null, true).Count(item => item.Status == WorkItemStatus.Todo);
+			return $"{toDo} of {all} ({toDo} todo, {all} total)";
+		}
 
+		public string Count
+		{
+			get => _count;
+			set { SetProperty(ref _count, value, ()=> Count); }
 		}
 
 		public int CurrentIndex
