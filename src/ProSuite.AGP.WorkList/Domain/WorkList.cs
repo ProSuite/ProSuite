@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
@@ -515,5 +517,13 @@ namespace ProSuite.AGP.WorkList.Domain
 		public bool HasCurrentItem => CurrentIndex >= 0 &&
 		                              _items != null &&
 		                              CurrentIndex < _items.Count;
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		[NotifyPropertyChangedInvocator]
+		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+		{
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+		}
 	}
 }

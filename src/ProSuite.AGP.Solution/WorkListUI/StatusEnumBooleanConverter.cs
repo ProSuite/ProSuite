@@ -3,7 +3,7 @@ using System.Globalization;
 using System.Windows.Data;
 using ProSuite.AGP.WorkList.Contracts;
 
-namespace Clients.AGP.ProSuiteSolution.WorkListUI
+namespace ProSuite.AGP.Solution.WorkListUI
 {
 	public class StatusEnumBooleanConverter: IValueConverter
 	{

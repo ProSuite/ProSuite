@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;

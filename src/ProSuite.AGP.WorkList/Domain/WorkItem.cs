@@ -60,7 +60,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			set
 			{
 				_visited = value;
-				OnPropertyChanged();
 			}
 		}
 
@@ -70,7 +69,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			set
 			{
 				_status = value;
-				OnPropertyChanged(nameof(Status));
 			}
 		}
 
