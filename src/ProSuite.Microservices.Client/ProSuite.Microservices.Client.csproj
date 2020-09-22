@@ -33,12 +33,6 @@
     <DocumentationFile>$(OutputDirectory)\Release\ProSuite.Microservices.Client.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ESRI.ArcGIS.Geometry, Version=10.6.0.0, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
-    <Reference Include="ESRI.ArcGIS.System, Version=10.6.0.0, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <EmbedInteropTypes>True</EmbedInteropTypes>
-    </Reference>
     <Reference Include="ProSuite.Microservices.Definitions.QA">
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.dll</HintPath>
     </Reference>
@@ -68,18 +62,6 @@
     <Compile Include="MicroserviceClientBase.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\EsriDE.Commons\src\EsriDE.Commons.Microservices.AO\EsriDE.Commons.Microservices.AO.csproj">
-      <Project>{108E2FD7-414E-4A26-8FAA-4D39FADA62E7}</Project>
-      <Name>EsriDE.Commons.Microservices.AO</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\EsriDE.ProSuite\src\EsriDE.ProSuite.DomainModel\EsriDE.ProSuite.DomainModel.csproj">
-      <Project>{182E0FCA-4BF1-45BE-BA52-729A8363CA21}</Project>
-      <Name>EsriDE.ProSuite.DomainModel</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\EsriDE.ProSuite\src\EsriDE.ProSuite.Processing\EsriDE.ProSuite.Processing.csproj">
-      <Project>{A29CC43C-0387-41E4-939C-633B7752B6A0}</Project>
-      <Name>EsriDE.ProSuite.Processing</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
       <Project>{0b48b56f-3a3d-4367-aa76-a356519af2ab}</Project>
       <Name>ProSuite.DomainModel.Core</Name>
