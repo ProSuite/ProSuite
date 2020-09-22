@@ -21,7 +21,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 		public WorkListViewModel(SelectionWorkList workList)
 		{
 				CurrentWorkList = workList;
-				CurrentWorkList.GoFirst();
+				CurrentWorkList.GoNext();
 				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
 		}
 
