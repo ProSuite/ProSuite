@@ -164,9 +164,19 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		#region only for development
 
+		public bool CanGoNext()
+		{
+			return _layerByWorkList.Keys.ToList().Any(wl => wl.CanGoNext());
+		}
+
 		public void GoNext()
 		{
 			_layerByWorkList.Keys.ToList().ForEach(wl => wl.GoNext());
+		}
+
+		public bool CanGoFirst()
+		{
+			return _layerByWorkList.Keys.ToList().Any(wl => wl.CanGoFirst());
 		}
 
 		public void GoFirst()
