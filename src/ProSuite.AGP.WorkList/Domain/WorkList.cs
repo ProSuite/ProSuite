@@ -208,15 +208,18 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual bool CanGoPrevious()
 		{
-			return _items.Count > 0 && CurrentIndex > 0;
+			return GetPreviousVisibleItem() != null;
 		}
 
 		public virtual void GoPrevious()
 		{
-			if (CurrentIndex > 0)
+			IWorkItem previousItem = GetPreviousVisibleItem();
+
+			if (previousItem != null)
 			{
-				CurrentIndex -= 1;
-				//TODO should also set current item Visited=true
+				Assert.False(Equals(previousItem, Current), "current item and previous item are equal");
+
+				SetCurrentItem(previousItem, Current);
 			}
 		}
 
@@ -304,6 +307,20 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 
 			IWorkItem item = _items[CurrentIndex + 1];
+
+			return IsVisible(item) ? item : null;
+		}
+
+		[CanBeNull]
+		private IWorkItem GetPreviousVisibleItem()
+		{
+			if (CurrentIndex <= 0)
+			{
+				// no previous item anymore, current is first item
+				return null;
+			}
+			
+			IWorkItem item = _items[CurrentIndex - 1];
 
 			return IsVisible(item) ? item : null;
 		}

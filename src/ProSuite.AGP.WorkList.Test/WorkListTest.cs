@@ -159,6 +159,44 @@ namespace ProSuite.AGP.WorkList.Test
 		}
 
 		[Test]
+		public void Can_go_previous()
+		{
+			IWorkItem item1 = new WorkItemMock(1);
+			IWorkItem item2 = new WorkItemMock(2);
+			IWorkItem item3 = new WorkItemMock(3);
+			IWorkItem item4 = new WorkItemMock(4);
+			var repository = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
+
+			IWorkList wl = new MemoryQueryWorkList(repository, "work list");
+
+			wl.GoNext();
+			Assert.AreEqual(item1, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			wl.GoNext();
+			Assert.AreEqual(item2, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			wl.GoNext();
+			Assert.AreEqual(item3, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			// go previous
+			wl.GoPrevious();
+			Assert.AreEqual(item2, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			// go previous again
+			wl.GoPrevious();
+			Assert.AreEqual(item1, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			wl.GoNext();
+			Assert.AreEqual(item2, wl.Current);
+			Assert.True(wl.Current?.Visited);
+		}
+
+		[Test]
 		public void Cannot_go_first_again_if_first_item_is_set_done()
 		{
 			IWorkItem item1 = new WorkItemMock(1);

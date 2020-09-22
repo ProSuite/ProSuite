@@ -184,6 +184,16 @@ namespace ProSuite.AGP.Solution.WorkLists
 			_layerByWorkList.Keys.ToList().ForEach(wl => wl.GoFirst());
 		}
 
+		public bool CanGoPrevious()
+		{
+			return _layerByWorkList.Keys.ToList().Any(wl => wl.CanGoPrevious());
+		}
+
+		public void GoPrevious()
+		{
+			_layerByWorkList.Keys.ToList().ForEach(wl => wl.GoPrevious());
+		}
+
 		#endregion
 
 		private void WireEvents()
