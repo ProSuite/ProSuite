@@ -116,8 +116,6 @@
     <Compile Include="WorkListUI\WorkListView.xaml.cs">
       <DependentUpon>WorkListView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WorkListTrials\WorkListTrialsControls.cs" />
-    <Compile Include="WorkListTrials\WorkListTrialsModule.cs" />
     <Compile Include="WorkListUI\WorkListViewModel.cs" />
     <Compile Include="WorkLists\InMemoryWorkEnvironment.cs" />
   </ItemGroup>
