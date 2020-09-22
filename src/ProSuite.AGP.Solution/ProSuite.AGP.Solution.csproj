@@ -108,6 +108,7 @@
     <Compile Include="WorkLists\GoFirstButton.cs" />
     <Compile Include="WorkLists\GoNextButton.cs" />
     <Compile Include="WorkLists\GoPreviousButton.cs" />
+    <Compile Include="WorkLists\SetStatusButton.cs" />
     <Compile Include="WorkLists\WorkListObserver.cs" />
     <Compile Include="WorkLists\WorkListsModule.cs" />
     <Compile Include="WorkLists\WorkListViewContext.cs" />

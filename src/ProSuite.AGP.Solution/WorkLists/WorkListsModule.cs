@@ -193,6 +193,25 @@ namespace ProSuite.AGP.Solution.WorkLists
 			_layerByWorkList.Keys.ToList().ForEach(wl => wl.GoPrevious());
 		}
 
+		public void SetStatus()
+		{
+			foreach (IWorkList workList in _layerByWorkList.Keys)
+			{
+				IWorkItem item = workList.Current;
+
+				if (item == null)
+				{
+					return;
+				}
+
+				item.Status = item.Status == WorkItemStatus.Todo
+					              ? WorkItemStatus.Done
+					              : WorkItemStatus.Todo;
+
+				workList.Update(item);
+			}
+		}
+
 		#endregion
 
 		private void WireEvents()

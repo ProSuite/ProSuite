@@ -76,6 +76,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		public void Update(IWorkItem item)
 		{
 			Repository.Update(item);
+			
+			OnWorkListChanged(null, new List<long> { item.OID });
 		}
 
 		public void Commit()

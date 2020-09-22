@@ -168,6 +168,7 @@
           <button refID="Clients_AGP_ProSuiteSolution_GoFirstButton" />
           <button refID="Clients_AGP_ProSuiteSolution_GoPreviousButton" />
           <button refID="Clients_AGP_ProSuiteSolution_GoNextButton" />
+          <button refID="Clients_AGP_ProSuiteSolution_SetStatusButton" />
         </group>
       </groups>
       <controls>
@@ -181,6 +182,9 @@
           <tooltip heading="tooltip heading">foo<disabledText /></tooltip>
         </button>
         <button id="Clients_AGP_ProSuiteSolution_GoNextButton" caption="Go Next" className="WorkLists.GoNextButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
+          <tooltip heading="tooltip heading">foo<disabledText /></tooltip>
+        </button>
+        <button id="Clients_AGP_ProSuiteSolution_SetStatusButton" caption="Set Status" className="WorkLists.SetStatusButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
           <tooltip heading="tooltip heading">foo<disabledText /></tooltip>
         </button>
       </controls>
