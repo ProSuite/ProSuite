@@ -4,13 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
+using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using Clients.AGP.ProSuiteSolution.WorkListUI;
-using ProSuite.AGP.Solution.WorkListUI;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
@@ -199,11 +198,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 		private void WireEvents()
 		{
 			LayersRemovingEvent.Subscribe(OnLayerRemoving);
+			ProjectSavingEvent.Subscribe(OnProjectSaving);
 		}
 
 		private void UnwireEvents()
 		{
 			LayersRemovingEvent.Unsubscribe(OnLayerRemoving);
+			ProjectSavingEvent.Unsubscribe(OnProjectSaving);
 		}
 
 		private void WireEvents(IWorkList workList)
@@ -224,12 +225,25 @@ namespace ProSuite.AGP.Solution.WorkLists
 			{
 				IWorkList workList = _layerByWorkList.FirstOrDefault(pair => pair.Value == layer).Key;
 
+				workList.Commit();
+
 				UnwireEvents(workList);
 
 				_layerByWorkList.Remove(workList);
 				_registry.Remove(workList);
 
 				// todo daro: Dispose work list or whatever is needed.
+			}
+
+			// todo daro: revise
+			return Task.FromResult(0);
+		}
+
+		private Task OnProjectSaving(ProjectEventArgs arg)
+		{
+			foreach (IWorkList workList in _registry.GetAll())
+			{
+				workList.Commit();
 			}
 
 			// todo daro: revise

@@ -43,7 +43,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			Dictionary<Geodatabase, List<Table>> tables = MapUtils.GetDistinctTables(featureLayers);
 
 			// todo daro: state repository must not be null
-			IRepository stateRepository = new XmlWorkItemStateRepository(null, @"C:\temp\selection_work_list.xml");
+			IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\selection_work_list.xml");
 			return new IssueItemRepository(tables, stateRepository);
 		}
 

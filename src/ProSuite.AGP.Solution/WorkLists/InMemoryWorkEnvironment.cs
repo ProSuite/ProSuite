@@ -53,7 +53,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			Dictionary<Geodatabase, List<Table>> tables = MapUtils.GetDistinctTables(layers);
 			Dictionary<Table, List<long>> selection = MapUtils.GetDistinctSelectionByTable(layers);
 
-			IRepository stateRepository = new XmlWorkItemStateRepository(null, @"C:\temp\selection_work_list.xml");
+			IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\a_selection_work_list.xml");
 			var repository = new SelectionItemRepository(tables, selection, stateRepository);
 			return repository;
 		}

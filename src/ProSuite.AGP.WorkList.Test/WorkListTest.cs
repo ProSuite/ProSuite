@@ -44,7 +44,7 @@ namespace ProSuite.AGP.WorkList.Test
 				                          {_geodatabase, new List<Table> {_table0, _table1}}
 			                          };
 
-			IRepository stateRepository = new XmlWorkItemStateRepository(_emptyIssuesGdb, @"C:\temp\states.xml");
+			IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\states.xml");
 			_repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
 		}
 
@@ -373,7 +373,7 @@ namespace ProSuite.AGP.WorkList.Test
 						{geodatabase, new List<Table> {table}}
 					};
 
-				IRepository stateRepository = new XmlWorkItemStateRepository(_emptyIssuesGdb, @"C:\temp\states.xml");
+				IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\states.xml");
 				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
 
 				IWorkList workList = new MemoryQueryWorkList(repository, "work list");
@@ -420,7 +420,7 @@ namespace ProSuite.AGP.WorkList.Test
 					                                                           {geodatabase, new List<Table> {table}}
 				                                                           };
 
-				IRepository stateRepository = new XmlWorkItemStateRepository(_emptyIssuesGdb, @"C:\temp\states.xml");
+				IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\states.xml");
 				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
 
 				IWorkList workList = new MemoryQueryWorkList(repository, "work list");
@@ -476,7 +476,7 @@ namespace ProSuite.AGP.WorkList.Test
 					                                                           {geodatabase, new List<Table> {table}}
 				                                                           };
 
-				IRepository stateRepository = new XmlWorkItemStateRepository(_emptyIssuesGdb, @"C:\temp\states.xml");
+				IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\states.xml");
 				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
 
 				IWorkList workList = new GdbQueryWorkList(repository, "work list");
@@ -524,7 +524,7 @@ namespace ProSuite.AGP.WorkList.Test
 					                                                           {geodatabase, new List<Table> {table}}
 				                                                           };
 
-				IRepository stateRepository = new XmlWorkItemStateRepository(_emptyIssuesGdb, @"C:\temp\states.xml");
+				IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\states.xml");
 				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
 
 				IWorkList workList = new GdbQueryWorkList(repository, "work list");

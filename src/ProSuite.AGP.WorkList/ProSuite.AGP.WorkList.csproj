@@ -56,6 +56,8 @@
     <Compile Include="Domain\Persistence\Json\JsonBasedWorkListDefinition.cs" />
     <Compile Include="Domain\Persistence\Json\JsonWorkItemStateRepository.cs" />
     <Compile Include="Domain\Persistence\Json\JsonWorkItemState.cs" />
+    <Compile Include="Domain\Persistence\Xml\XmlTableReference.cs" />
+    <Compile Include="Domain\Persistence\Xml\XmlWorkListWorkspace.cs" />
     <Compile Include="Domain\RowReference.cs" />
     <Compile Include="Domain\SelectionWorkList.cs" />
     <Compile Include="Domain\WorkList.cs" />

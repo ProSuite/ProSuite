@@ -1,8 +1,9 @@
 using System.Collections.Generic;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain.Persistence.Json;
+using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.Collections;
 
-namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
+namespace ProSuite.AGP.WorkList.Domain.Persistence.Json
 {
 	public class JsonWorkItemStateRepository : WorkItemStateRepository<JsonWorkItemState, JsonBasedWorkListDefinition>
 	{
@@ -11,7 +12,9 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 			throw new System.NotImplementedException();
 		}
 
-		protected override JsonBasedWorkListDefinition CreateDefinition(List<JsonWorkItemState> states)
+		protected override JsonBasedWorkListDefinition CreateDefinition(
+			Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
+			List<JsonWorkItemState> states)
 		{
 			throw new System.NotImplementedException();
 		}
