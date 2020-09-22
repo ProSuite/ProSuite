@@ -61,7 +61,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		public override PluginCursorTemplate Search(QueryFilter queryFilter)
 		{
-			List<object[]> list = _workList.GetItems(queryFilter)
+			List<object[]> list = _workList.GetItems(queryFilter, true)
 			                               .Select(item => GetValues(item, _workList.Current))
 			                               .ToList(); // TODO drop ToList, inline
 			return new WorkItemCursor(list);
