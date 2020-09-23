@@ -38,8 +38,13 @@
             <Button>
                 <Image Source="Images/GoNearest.png"/>
             </Button>
-            <Button Command="{Binding TestCmd}">Test</Button>
             <Separator/>
+            <Button Command="{Binding ZoomToCmd}">
+                <Image Source="Images/ZoomTo.png"/>
+            </Button>
+            <Button Command="{Binding PanToCmd}">
+                <Image Source="Images/PanTo.png"/>
+            </Button>
             <Button Command="{Binding PreviousExtentCmd}">
                 <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericBlueLeftArrowLongTail16.png"/>
             </Button>
