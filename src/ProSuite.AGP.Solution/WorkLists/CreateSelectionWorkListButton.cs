@@ -16,22 +16,15 @@ namespace ProSuite.AGP.Solution.WorkLists
 		protected async override void OnClick()
 		{
 
+			//need to get worklist back from queuedtask to pass it on
 			var workList = await QueuedTask.Run(() =>
 			{
 				var env = new InMemoryWorkEnvironment();
 				IWorkList wl = env.CreateWorkList();
 				return wl;
 			});
-
-			IWorkList currentWorkList;
-			//if (WorkListsModule.Current.TryGet(workList.Name, out currentWorkList))
-			//{
-			//	WorkListsModule.Current.WorkListModified(workList);
-			//}
-			//else {WorkListsModule.Current.WorkListAdded(workList);}
 			WorkListsModule.Current.WorkListAdded(workList);
 			WorkListsModule.Current.ShowView(workList);
-
 		}
 	}
 }
