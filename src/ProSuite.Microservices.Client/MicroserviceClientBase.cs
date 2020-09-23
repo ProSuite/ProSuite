@@ -52,12 +52,18 @@ namespace ProSuite.Microservices.Client
 			_startedProcess?.Kill();
 		}
 
-		public void AllowStartingLocalServer(string executable)
+		public void AllowStartingLocalServer([NotNull] string executable,
+		                                     [CanBeNull] string extraArguments = null)
 		{
 			if (_host.Equals("localhost", StringComparison.InvariantCultureIgnoreCase) &&
 			    ! CanAcceptCalls())
 			{
 				string arguments = $"-h {_host} -p {_port}";
+
+				if (! string.IsNullOrEmpty(extraArguments))
+				{
+					arguments += $" {extraArguments}";
+				}
 
 				string exeName = Path.GetFileNameWithoutExtension(executable);
 				Process[] runningProcesses = Process.GetProcessesByName(exeName);
