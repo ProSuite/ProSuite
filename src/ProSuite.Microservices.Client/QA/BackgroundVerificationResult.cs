@@ -74,13 +74,27 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			if (_qualityVerification == null)
 			{
-				if (VerificationMsg.SavedVerificationId >= 0)
-				{
-					return _qualityVerificationRepository.Get(VerificationMsg.SavedVerificationId);
-				}
-
 				_domainTransactions.UseTransaction(
-					() => { _qualityVerification = GetQualityVerificationTx(VerificationMsg); });
+					() =>
+					{
+						if (VerificationMsg.SavedVerificationId >= 0)
+						{
+							_qualityVerification =
+								_qualityVerificationRepository.Get(
+									VerificationMsg.SavedVerificationId);
+
+							Assert.NotNull(_qualityVerification, "Quality verification not found.");
+
+							_domainTransactions.Initialize(
+								_qualityVerification.ConditionVerifications);
+							_domainTransactions.Initialize(
+								_qualityVerification.VerificationDatasets);
+						}
+						else
+						{
+							_qualityVerification = GetQualityVerificationTx(VerificationMsg);
+						}
+					});
 			}
 
 			return _qualityVerification;
