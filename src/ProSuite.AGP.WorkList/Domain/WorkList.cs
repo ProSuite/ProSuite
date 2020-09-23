@@ -4,6 +4,7 @@ using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -16,7 +17,7 @@ namespace ProSuite.AGP.WorkList.Domain
 	/// </summary>
 	// todo daro: separate geometry processing code
 	// todo daro: separate QueuedTask code
-	public abstract class WorkList : IWorkList
+	public abstract class WorkList : IWorkList, IRowCache
 	{
 		private const int _initialCapacity = 1000;
 
@@ -25,6 +26,11 @@ namespace ProSuite.AGP.WorkList.Domain
 		protected IWorkItemRepository Repository { get; }
 
 		private readonly List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
+
+		[NotNull]
+		private Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
+			new Dictionary<GdbRowIdentity, IWorkItem>(_initialCapacity);
+
 		private EventHandler<WorkListChangedEventArgs> _workListChanged;
 
 		protected WorkList(IWorkItemRepository repository, string name)
@@ -40,7 +46,21 @@ namespace ProSuite.AGP.WorkList.Domain
 			foreach (IWorkItem item in Repository.GetItems())
 			{
 				_items.Add(item);
+
+				if (! _rowMap.ContainsKey(item.Proxy))
+				{
+					_rowMap.Add(item.Proxy, item);
+				}
+				else
+				{
+					// todo daro: warn
+				}
 			}
+
+
+			// todo daro: EnvelopeBuilder as parameter > do not iterate again over items
+			//			  look old work item implementation
+			Extent = GetExtentFromItems(_items);
 		}
 		
 		public event EventHandler<WorkListChangedEventArgs> WorkListChanged
@@ -51,7 +71,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public string Name { get; }
 
-		public virtual Envelope Extent { get; protected set; }
+		public Envelope Extent { get; protected set; }
 
 		public WorkItemVisibility Visibility { get; set; }
 
@@ -64,7 +84,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			// Subclass should provide more efficient implementation (e.g. pass filter on to database)
 
-			// todo daro: why?
 			var query = (IEnumerable<IWorkItem>) _items;
 
 			if (! ignoreListSettings && Visibility != WorkItemVisibility.None)
@@ -235,8 +254,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		protected static Envelope GetExtentFromItems(IEnumerable<IWorkItem> items)
 		{
-			double xmin = double.MaxValue, ymin = double.MaxValue;
-			double xmax = double.MinValue, ymax = double.MinValue;
+			double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
+			double xmax = double.MinValue, ymax = double.MinValue, zmax = double.MinValue;
 			SpatialReference sref = null;
 			long count = 0;
 
@@ -251,9 +270,11 @@ namespace ProSuite.AGP.WorkList.Domain
 
 					if (extent.XMin < xmin) xmin = extent.XMin;
 					if (extent.YMin < ymin) ymin = extent.YMin;
+					if (extent.ZMin < zmin) zmin = extent.ZMin;
 
 					if (extent.XMax > xmax) xmax = extent.XMax;
 					if (extent.YMax > ymax) ymax = extent.YMax;
+					if (extent.ZMax > zmax) zmax = extent.ZMax;
 
 					sref = extent.SpatialReference;
 
@@ -262,8 +283,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 
 			return count > 0
-				       ? EnvelopeBuilder.CreateEnvelope(xmin, ymin, xmax, ymax, sref)
-				       : EnvelopeBuilder.CreateEnvelope(sref); // empty
+				       ? EnvelopeBuilder.CreateEnvelope(new Coordinate3D(xmin, ymin, zmin),
+				                                        new Coordinate3D(xmax, ymax, zmax), sref)
+				       : EnvelopeBuilder.CreateEnvelope(sref);
 		}
 
 		private static bool Relates(Geometry a, SpatialRelationship rel, Geometry b)
@@ -328,5 +350,133 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			_workListChanged?.Invoke(this, new WorkListChangedEventArgs(extent, oids));
 		}
+
+		public void Invalidate()
+		{
+			throw new NotImplementedException();
+		}
+
+		// todo daro: Is SDK type Table the right type?
+		public void ProcessChanges(Dictionary<Table, List<long>> inserts,
+		                           Dictionary<Table, List<long>> deletes,
+		                           Dictionary<Table, List<long>> updates)
+		{
+			foreach (var insert in inserts)
+			{
+				var tableId = new GdbTableIdentity(insert.Key);
+				List<long> oids = insert.Value;
+
+				ProcessInserts(tableId, oids);
+			}
+
+			foreach (var delete in deletes)
+			{
+				var tableId = new GdbTableIdentity(delete.Key);
+				List<long> oids = delete.Value;
+
+				ProcessDeletes(tableId, oids);
+			}
+
+			foreach (var update in updates)
+			{
+				var tableId = new GdbTableIdentity(update.Key);
+				List<long> oids = update.Value;
+
+				ProcessUpdates(tableId, oids);
+
+				// does not work because ObjectIDs = (IReadOnlyList<long>) modify.Value (oids) are the
+				// ObjectIds of source feature not the work item OIDs.
+				//IEnumerable<IWorkItem> workItems = GetItems(filter);
+			}
+		}
+
+		private void ProcessDeletes(GdbTableIdentity tableId, List<long> oids)
+		{
+			foreach (long oid in oids)
+			{
+				// todo daro: refactor, simplify
+				var rowId = new GdbRowIdentity(oid, tableId);
+
+				if (HasCurrentItem && Current != null && Current.Proxy.Equals(rowId))
+				{
+					ClearCurrentItem(Current);
+				}
+
+				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
+				{
+					RemoveWorkItem(item);
+					// todo daro: WorkListChanged > invalidate map
+				}
+			}
+
+			// todo daro: update work list extent?
+			Extent = GetExtentFromItems(_items);
+		}
+
+		private void RemoveWorkItem(IWorkItem item)
+		{
+			_items.Remove(item);
+			_rowMap.Remove(item.Proxy);
+		}
+
+		private void ClearCurrentItem([NotNull] IWorkItem current)
+		{
+			Assert.ArgumentNotNull(current, nameof(current));
+
+			if (CurrentIndex < 0)
+			{
+				return;
+			}
+
+			CurrentIndex = -1;
+
+			OnWorkListChanged(null, new List<long> {current.OID});
+		}
+
+		private void ProcessInserts(GdbTableIdentity tableId, List<long> oids)
+		{
+			var filter = new QueryFilter {ObjectIDs = oids};
+
+			foreach (IWorkItem item in Repository.GetItems(tableId, filter).ToList())
+			{
+				if (_rowMap.ContainsKey(item.Proxy))
+				{
+					// todo daro: warn
+				}
+
+				_items.Add(item);
+				_rowMap.Add(item.Proxy, item);
+
+				if (! HasCurrentItem)
+				{
+					SetCurrentItem(item, null);
+					// todo daro: WorkListChanged > invalidate map
+				}
+
+				UpdateExtent(item.Extent);
+			}
+		}
+
+		private void UpdateExtent(Envelope itemExtent)
+		{
+			Extent = Extent.Union(itemExtent);
+		}
+
+		private void ProcessUpdates(GdbTableIdentity tableId, IEnumerable<long> oids)
+		{
+			foreach (long oid in oids)
+			{
+				if (_rowMap.TryGetValue(new GdbRowIdentity(oid, tableId), out IWorkItem item))
+				{
+					Repository.UpdateItem(item);
+
+					UpdateExtent(item.Extent);
+				}
+			}
+		}
+
+		public bool HasCurrentItem => CurrentIndex >= 0 &&
+		                              _items != null &&
+		                              CurrentIndex < _items.Count;
 	}
 }

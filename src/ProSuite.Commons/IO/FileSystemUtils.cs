@@ -274,15 +274,15 @@ namespace ProSuite.Commons.IO
 		                                    [NotNull] string filePath2)
 		{
 			Assert.ArgumentNotNullOrEmpty(filePath1, nameof(filePath1));
-			Assert.ArgumentCondition(File.Exists(filePath1), "File does not exist: {0}",
-			                         filePath1);
-
 			Assert.ArgumentNotNullOrEmpty(filePath2, nameof(filePath2));
-			Assert.ArgumentCondition(File.Exists(filePath2), "File does not exist: {0}",
-			                         filePath2);
 
-			FileInfo file1Info = new FileInfo(filePath1);
-			FileInfo file2Info = new FileInfo(filePath2);
+			if (! File.Exists(filePath1))
+				throw new InvalidOperationException($"File does not exist: {filePath1}");
+			if (! File.Exists(filePath2))
+				throw new InvalidOperationException($"File does not exist: {filePath2}");
+
+			var file1Info = new FileInfo(filePath1);
+			var file2Info = new FileInfo(filePath2);
 
 			if (file1Info.Length != file2Info.Length)
 			{
@@ -290,22 +290,19 @@ namespace ProSuite.Commons.IO
 			}
 
 			using (var reader1 = new StreamReader(filePath1))
+			using (var reader2 = new StreamReader(filePath2))
 			{
-				using (var reader2 = new StreamReader(filePath2))
+				string line1;
+				do
 				{
-					string line1;
-					string line2;
-					do
-					{
-						line1 = reader1.ReadLine();
-						line2 = reader2.ReadLine();
+					line1 = reader1.ReadLine();
+					string line2 = reader2.ReadLine();
 
-						if (! Equals(line1, line2))
-						{
-							return false;
-						}
-					} while (line1 != null || line2 != null);
-				}
+					if (! Equals(line1, line2))
+					{
+						return false;
+					}
+				} while (line1 != null);
 			}
 
 			return true;
@@ -369,9 +366,7 @@ namespace ProSuite.Commons.IO
 				folderName += '\\';
 			}
 
-			ulong available, total, totalFree;
-
-			if (GetDiskFreeSpaceEx(folderName, out available, out total, out totalFree))
+			if (GetDiskFreeSpaceEx(folderName, out ulong available, out ulong _, out ulong _))
 			{
 				availableFreeBytes = (long) available;
 				return true;

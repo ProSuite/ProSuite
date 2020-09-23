@@ -11,17 +11,32 @@ namespace ProSuite.AGP.WorkList
 {
 	public class DatabaseSourceClass : ISourceClass
 	{
-		public GdbTableIdentity Identity { get; }
+		private readonly GdbTableIdentity _identity;
 
-		public DatabaseSourceClass(GdbTableIdentity identity, DatabaseStatusSchema statusSchema,
+		public DatabaseSourceClass(GdbTableIdentity identity,
+		                           DatabaseStatusSchema statusSchema,
 		                           IAttributeReader attributeReader)
 		{
-			Identity = identity;
+			_identity = identity;
 			StatusSchema = statusSchema;
 			AttributeReader = attributeReader;
 		}
 
-		public string Name => Identity.Name;
+		public long Id => _identity.Id;
+
+		public bool Uses(GdbTableIdentity table)
+		{
+			return _identity.Equals(table);
+		}
+
+		public WorkItemStatus GetStatus([NotNull] Row row)
+		{
+			object value = row[StatusSchema.FieldIndex];
+
+			return StatusSchema.DoneValue.Equals(value) ? WorkItemStatus.Done : WorkItemStatus.Todo;
+		}
+
+		public string Name => _identity.Name;
 
 		public DatabaseStatusSchema StatusSchema { get; }
 

@@ -14,12 +14,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 		bool Visited { get; set; }
 		GdbRowIdentity Proxy { get; }
 		WorkItemStatus Status { get; set; }
-		
 		Envelope Extent { get; }
-
-		// todo daro: no write access here. It all happens in repository
-		void SetDone(bool done = true);
-
-		void SetVisited(bool visited = true);
 	}
 }

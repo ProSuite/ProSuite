@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
@@ -72,17 +73,19 @@ namespace ProSuite.Commons.Collections
 
 		public void Add(T item)
 		{
+			if (item == null)
+				throw new ArgumentNullException();
 			_dict.Add(item, item);
 		}
 
 		public bool Contains(T item)
 		{
-			return _dict.ContainsKey(item);
+			return item != null && _dict.ContainsKey(item);
 		}
 
 		public bool Remove(T item)
 		{
-			return _dict.Remove(item); // true if set modified
+			return item != null && _dict.Remove(item);
 		}
 
 		public void Clear()
@@ -104,15 +107,9 @@ namespace ProSuite.Commons.Collections
 			_dict.Keys.CopyTo(array, startIndex);
 		}
 
-		public int Count
-		{
-			get { return _dict.Count; }
-		}
+		public int Count => _dict.Count;
 
-		public bool IsReadOnly
-		{
-			get { return false; }
-		}
+		public bool IsReadOnly => false;
 
 		#endregion
 
@@ -138,8 +135,7 @@ namespace ProSuite.Commons.Collections
 		/// <returns>True if the set was modified, false otherwise.</returns>
 		public bool TryAdd([NotNull] T item)
 		{
-			T storedItem;
-			return TryAdd(item, out storedItem);
+			return TryAdd(item, out T _);
 		}
 
 		/// <summary>

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Reflection;
 using System.Web;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
@@ -18,8 +17,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 	/// </summary>
 	public abstract class WorkListDatasourceBase : PluginDatasourceTemplate
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private IWorkList _workList;
 		private IReadOnlyList<string> _tableNames;
