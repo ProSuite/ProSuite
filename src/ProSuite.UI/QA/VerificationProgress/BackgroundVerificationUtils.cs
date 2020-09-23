@@ -19,8 +19,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 		{
 			async Task<ServiceCallStatus> VerificationAction()
 			{
-				return await verificationRun.ExecuteAndProcessMessagesAsync(
-					       qaClient, request);
+				return await verificationRun.ExecuteAndProcessMessagesAsync(qaClient);
 			}
 
 			var progressForm = CreateVerificationProgressForm(
