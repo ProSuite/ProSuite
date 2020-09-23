@@ -17,8 +17,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		protected override void ShowWorkListCore(IWorkList workList, LayerDocument layerTemplate)
 		{
-			//WorkListsModule.Current.RegisterObserver(new WorkListViewModel(workList));
-			
 			WorkListsModule.Current.Show(workList, layerTemplate);
 		}
 

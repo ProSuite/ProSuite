@@ -125,23 +125,22 @@ namespace ProSuite.AGP.Solution.WorkLists
 				// NOTE Register work list before opening plugin datasource
 				// NOTE Register work list in registry and notify all observers about the registration of a new work list.
 
-				if (_registry.GetAll().Any(wl => wl.Name == workList.Name) == false)
+				// if worklist already exists in registry, remove it and add the new one 
+				if (_registry.GetAll().Any(wl => wl.Name == workList.Name))
 				{
-					_registry.Add(workList);
-
-					FeatureLayer workListLayer = AddLayer(workList.Name);
-					LayerUtils.ApplyRenderer(workListLayer, layerTemplate);
-
-					if (!_layerByWorkList.ContainsKey(workList))
-					{
-						_layerByWorkList.Add(workList, workListLayer);
-					}
+					_registry.Remove(workList.Name);
 				}
+				_registry.Add(workList);
 				
+				FeatureLayer workListLayer = AddLayer(workList.Name);
+				LayerUtils.ApplyRenderer(workListLayer, layerTemplate);
 
-				WireEvents(workList);
+				if (!_layerByWorkList.ContainsKey(workList))
+				{
+					_layerByWorkList.Add(workList, workListLayer);
+					WireEvents(workList);
+				}
 
-				
 			}
 			catch (Exception exception)
 			{
