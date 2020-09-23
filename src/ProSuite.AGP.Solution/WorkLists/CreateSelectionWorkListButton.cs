@@ -4,9 +4,11 @@ using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using Clients.AGP.ProSuiteSolution.WorkListUI;
 using JetBrains.Annotations;
 using ProSuite.AGP.Solution.WorkListUI;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 
 namespace ProSuite.AGP.Solution.WorkLists
 {
@@ -23,7 +25,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 				IWorkList wl = env.CreateWorkList();
 				return wl;
 			});
-			WorkListsModule.Current.WorkListAdded(workList);
+			WorkListsModule.Current.RegisterObserver(new WorkListViewModel(workList as SelectionWorkList));
+			//WorkListsModule.Current.WorkListAdded(workList);
 			WorkListsModule.Current.ShowView(workList);
 		}
 	}

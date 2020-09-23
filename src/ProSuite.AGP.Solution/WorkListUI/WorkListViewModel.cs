@@ -4,19 +4,22 @@ using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Dialogs;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.Solution.WorkLists;
+using ProSuite.AGP.Solution.WorkListUI;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 
 namespace Clients.AGP.ProSuiteSolution.WorkListUI
 {
-	public class WorkListViewModel : PropertyChangedBase
+	public class WorkListViewModel : PropertyChangedBase, IWorkListObserver
 	{
 		public WorkListViewModel(SelectionWorkList workList)
 		{
@@ -186,6 +189,42 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 				CurrentWorkList.GoNext();
 				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
 			});
+		}
+
+		public void WorkListAdded(IWorkList workList)
+		{
+			//throw new NotImplementedException();
+		}
+
+		public void WorkListRemoved(IWorkList workList)
+		{
+			//throw new NotImplementedException();
+		}
+
+		public void WorkListModified(IWorkList workList)
+		{
+			//throw new NotImplementedException();
+		}
+
+		public void Show(IWorkList workList)
+		{
+			WorkListView view = new WorkListView(this);
+			view.Owner = Application.Current.MainWindow;
+			view.Show();
+			view.Closed += View_Closed;
+		}
+
+		private void View_Closed(object sender, EventArgs e)
+		{
+			var view = sender as WorkListView;
+			var viewModel = view.DataContext as WorkListViewModel;
+			//WorkListViewContext context;
+			//if (TryGetContextByWorkListName(viewModel.CurrentWorkList.Name, out context))
+			//{
+			//	context.ViewIsVisible = false;
+			//}
+
+			WorkListsModule.Current.RemoveWorkListLayer(this.CurrentWorkList);
 		}
 	}
 }
