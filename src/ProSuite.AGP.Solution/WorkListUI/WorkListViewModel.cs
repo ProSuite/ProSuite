@@ -16,22 +16,20 @@ using ProSuite.AGP.WorkList.Domain;
 
 namespace Clients.AGP.ProSuiteSolution.WorkListUI
 {
-	public class WorkListViewModel : PropertyChangedBase 
+	public class WorkListViewModel : PropertyChangedBase
 	{
-
 		public WorkListViewModel(SelectionWorkList workList)
 		{
-				CurrentWorkList = workList;
-				CurrentWorkList.GoNext();
-				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
+			CurrentWorkList = workList;
+			CurrentWorkList.GoNext();
+			CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
 		}
 
 		public WorkListViewModel() { }
 
 		private SelectionWorkList _currentWorkList;
 		private WorkItemVm _currentWorkItem;
-		
-		
+
 		public ICommand PreviousExtentCmd =>
 			FrameworkApplication.GetPlugInWrapper(
 				DAML.Button.esri_mapping_prevExtentButton) as ICommand;
@@ -47,14 +45,14 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 		public ICommand ZoomOutCmd =>
 			FrameworkApplication.GetPlugInWrapper(
 				DAML.Button.esri_mapping_fixedZoomOutButton) as ICommand;
-		
-		
+
 		private RelayCommand _goNextItemCmd;
+
 		public RelayCommand GoNextItemCmd
 		{
 			get
 			{
-				_goNextItemCmd = new RelayCommand(()=> GoNextItem(), ()=> true);
+				_goNextItemCmd = new RelayCommand(() => GoNextItem(), () => true);
 				return _goNextItemCmd;
 			}
 		}
@@ -96,25 +94,17 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 
 		private void ZoomTo()
 		{
-			QueuedTask.Run(() =>
-			{
-				MapView.Active.ZoomTo(CurrentWorkList.Current.Extent);
-			});
-
+			QueuedTask.Run(() => { MapView.Active.ZoomTo(CurrentWorkList.Current.Extent); });
 		}
 
 		private void PanTo()
 		{
-			QueuedTask.Run(() =>
-			{
-				MapView.Active.PanTo(CurrentWorkList.Current.Extent);
-			});
-
+			QueuedTask.Run(() => { MapView.Active.PanTo(CurrentWorkList.Current.Extent); });
 		}
 
 		public WorkItemStatus Status
 		{
-			get { return CurrentWorkItem.Status;}
+			get => CurrentWorkItem.Status;
 			set
 			{
 				CurrentWorkItem.Status = value;
@@ -122,7 +112,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 				SetProperty(ref _status, value, () => Status);
 			}
 		}
-		
+
 		public SelectionWorkList CurrentWorkList
 		{
 			get => _currentWorkList;
@@ -132,7 +122,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 
 		public WorkItemVm CurrentWorkItem
 		{
-			get { return new WorkItemVm(CurrentWorkList.Current); }
+			get => new WorkItemVm(CurrentWorkList.Current);
 			set
 			{
 				SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem);
@@ -145,7 +135,7 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 
 		public bool Visited
 		{
-			get { return CurrentWorkItem.Visited; }
+			get => CurrentWorkItem.Visited;
 			set
 			{
 				CurrentWorkItem.Visited = value;
@@ -155,18 +145,15 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 
 		public IList<WorkItemVisibility> Visibility
 		{
-			get
-			{
-				return Enum.GetValues(typeof(WorkItemVisibility)).Cast<WorkItemVisibility>().ToList<WorkItemVisibility>();
-			}
+			get => Enum.GetValues(typeof(WorkItemVisibility)).Cast<WorkItemVisibility>()
+			           .ToList<WorkItemVisibility>();
 			set { }
-		
 		}
 
 		private string GetCount()
 		{
-			var all = CurrentWorkList.Count(null, true);
-			var toDo = CurrentWorkList
+			int all = CurrentWorkList.Count(null, true);
+			int toDo = CurrentWorkList
 			           .GetItems(null, true).Count(item => item.Status == WorkItemStatus.Todo);
 			return $"{CurrentIndex + 1} of {all} ({toDo} todo, {all} total)";
 		}
@@ -174,19 +161,15 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 		public string Count
 		{
 			get => _count;
-			set { SetProperty(ref _count, value, ()=> Count); }
+			set { SetProperty(ref _count, value, () => Count); }
 		}
 
 		public int CurrentIndex
 		{
-			get { return CurrentWorkList.DisplayIndex; }
-			set
-			{
-				SetProperty(ref _currentIndex, value, () => CurrentIndex);
-			}
+			get => CurrentWorkList.DisplayIndex;
+			set { SetProperty(ref _currentIndex, value, () => CurrentIndex); }
 		}
 
-		
 		private void GoPreviousItem()
 		{
 			QueuedTask.Run(() =>
@@ -194,8 +177,8 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 				CurrentWorkList.GoPrevious();
 				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
 			});
-
 		}
+
 		private void GoNextItem()
 		{
 			QueuedTask.Run(() =>
@@ -203,7 +186,6 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 				CurrentWorkList.GoNext();
 				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
 			});
-
 		}
 	}
 }
