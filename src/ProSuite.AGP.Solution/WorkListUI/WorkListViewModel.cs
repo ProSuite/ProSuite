@@ -1,23 +1,18 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
-using ArcGIS.Desktop.Framework.Dialogs;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Solution.WorkLists;
-using ProSuite.AGP.Solution.WorkListUI;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 
-namespace Clients.AGP.ProSuiteSolution.WorkListUI
+namespace ProSuite.AGP.Solution.WorkListUI
 {
 	public class WorkListViewModel : PropertyChangedBase, IWorkListObserver
 	{
@@ -208,23 +203,17 @@ namespace Clients.AGP.ProSuiteSolution.WorkListUI
 
 		public void Show(IWorkList workList)
 		{
-			WorkListView view = new WorkListView(this);
+			var view = new WorkListView(this);
 			view.Owner = Application.Current.MainWindow;
+			view.Name = workList.Name;
 			view.Show();
 			view.Closed += View_Closed;
 		}
 
 		private void View_Closed(object sender, EventArgs e)
 		{
-			var view = sender as WorkListView;
-			var viewModel = view.DataContext as WorkListViewModel;
-			//WorkListViewContext context;
-			//if (TryGetContextByWorkListName(viewModel.CurrentWorkList.Name, out context))
-			//{
-			//	context.ViewIsVisible = false;
-			//}
-
-			WorkListsModule.Current.RemoveWorkListLayer(this.CurrentWorkList);
+			WorkListsModule.Current.RemoveWorkListLayer(CurrentWorkList);
+			WorkListsModule.Current.UnregisterObserver(this);
 		}
 	}
 }

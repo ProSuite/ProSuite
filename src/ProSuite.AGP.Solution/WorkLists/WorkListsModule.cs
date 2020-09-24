@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mime;
 using System.Threading.Tasks;
+using System.Windows;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Core.Events;
@@ -10,6 +12,7 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.AGP.Solution.WorkListUI;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
@@ -40,8 +43,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			_registry = WorkListRegistry.Instance;
 			_observers = new List<IWorkListObserver>();
-			//_observers.Add(new WorkListObserver());
-
 			WireEvents();
 
 			return base.Initialize();
@@ -99,23 +100,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 			foreach (IWorkListObserver observer in _observers)
 			{
 				observer.Show(workList);
-				// ShowWorkListWindow(workList, observer);
-			}
-		}
-
-		public void WorkListAdded(IWorkList workList)
-		{
-			foreach (IWorkListObserver observer in _observers)
-			{
-				observer.WorkListAdded(workList);
-			}
-		}
-
-		public void WorkListModified(IWorkList workList)
-		{
-			foreach (IWorkListObserver observer in _observers)
-			{
-				observer.WorkListModified(workList);
 			}
 		}
 
@@ -250,6 +234,16 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				_layerByWorkList.Remove(workList);
 				_registry.Remove(workList);
+
+				foreach (Window window in Application.Current.Windows)
+				{
+					if (window.Name == workList.Name)
+					{
+						var vm = window.DataContext as WorkListViewModel;
+						UnregisterObserver(vm);
+						window.Close();
+					}
+				}
 
 				// todo daro: Dispose work list or whatever is needed.
 			}
