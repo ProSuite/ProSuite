@@ -205,5 +205,10 @@ namespace ProSuite.Microservices.Client.QA
 
 			serviceProgress.RemoteCallStatus = (ServiceCallStatus) messageProto.ServiceCallStatus;
 		}
+
+		public override string ToString()
+		{
+			return $"BackgroundVerificationRun for request {VerificationRequest}";
+		}
 	}
 }
