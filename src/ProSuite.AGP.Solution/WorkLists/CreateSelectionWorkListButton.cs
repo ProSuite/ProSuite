@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using Clients.AGP.ProSuiteSolution.WorkListUI;
 using JetBrains.Annotations;
 using ProSuite.AGP.Solution.WorkListUI;
 using ProSuite.AGP.WorkList.Contracts;

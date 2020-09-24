@@ -1,5 +1,3 @@
-using Clients.AGP.ProSuiteSolution.WorkListUI;
-
 namespace ProSuite.AGP.Solution.WorkListUI
 {
 	/// <summary>
