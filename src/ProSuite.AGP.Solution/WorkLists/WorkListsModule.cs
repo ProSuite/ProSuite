@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Mime;
 using System.Threading.Tasks;
 using System.Windows;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Core.Events;
@@ -291,6 +292,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 		}
 
+		private void SetLayerNotSelectable(FeatureLayer fl)
+		{
+			var cimDefinition = fl.GetDefinition() as CIMFeatureLayer;
+			cimDefinition.Selectable = false;
+			fl.SetDefinition(cimDefinition);
+		}
+
 		[CanBeNull]
 		private FeatureLayer AddLayer(string workListName)
 		{
@@ -309,6 +317,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 							LayerFactory.Instance.CreateFeatureLayer((FeatureClass) table,
 								MapView.Active.Map,
 								LayerPosition.AddToTop);
+
+						SetLayerNotSelectable(workListLayer);
 					}
 				}
 			}
