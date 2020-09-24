@@ -296,6 +296,12 @@
   <ItemGroup>
     <AddInContent Include="Images\SelectionTool.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\PanTo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\ZoomTo.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:
