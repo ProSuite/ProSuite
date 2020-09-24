@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Mime;
 using System.Threading.Tasks;
+using System.Windows;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Core.Events;
@@ -10,6 +12,7 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.AGP.Solution.WorkListUI;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
@@ -26,7 +29,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 		private WorkListRegistry _registry;
 		private IList<IWorkListObserver> _observers;
 
-		private Dictionary<IWorkList, FeatureLayer> _layerByWorkList = new Dictionary<IWorkList, FeatureLayer>();
+		private Dictionary<IWorkList, FeatureLayer> _layerByWorkList =
+			new Dictionary<IWorkList, FeatureLayer>();
 
 		public static WorkListsModule Current =>
 			_instance ?? (_instance =
@@ -39,8 +43,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			_registry = WorkListRegistry.Instance;
 			_observers = new List<IWorkListObserver>();
-			_observers.Add(new WorkListObserver());
-
 			WireEvents();
 
 			return base.Initialize();
@@ -95,26 +97,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 		public void ShowView(IWorkList workList)
 		{
 			// NOTE send a show work list request to all observers. Let the observer decide whether to show the work list.
-			foreach (var observer in _observers)
+			foreach (IWorkListObserver observer in _observers)
 			{
 				observer.Show(workList);
-				// ShowWorkListWindow(workList, observer);
-			}
-		}
-
-		public void WorkListAdded(IWorkList workList)
-		{
-			foreach (var observer in _observers)
-			{
-				observer.WorkListAdded(workList);
-			}
-		}
-
-		public void WorkListModified(IWorkList workList)
-		{
-			foreach (var observer in _observers)
-			{
-				observer.WorkListModified(workList);
 			}
 		}
 
@@ -130,17 +115,17 @@ namespace ProSuite.AGP.Solution.WorkLists
 				{
 					_registry.Remove(workList.Name);
 				}
+
 				_registry.Add(workList);
-				
+
 				FeatureLayer workListLayer = AddLayer(workList.Name);
 				LayerUtils.ApplyRenderer(workListLayer, layerTemplate);
 
-				if (!_layerByWorkList.ContainsKey(workList))
+				if (! _layerByWorkList.ContainsKey(workList))
 				{
 					_layerByWorkList.Add(workList, workListLayer);
 					WireEvents(workList);
 				}
-
 			}
 			catch (Exception exception)
 			{
@@ -155,8 +140,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 				_layerByWorkList.Remove(workList);
 				Layer layer = MapView.Active.Map.GetLayersAsFlattenedList()
 				                     .First(l => l.Name == workList.Name);
-				QueuedTask.Run(()=> MapView.Active.Map.RemoveLayer(layer)); 
-
+				QueuedTask.Run(() => MapView.Active.Map.RemoveLayer(layer));
 			}
 		}
 
@@ -237,11 +221,12 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		private Task OnLayerRemoving(LayersRemovingEventArgs e)
 		{
-			foreach (var layer in e.Layers
-			                       .OfType<FeatureLayer>()
-			                       .Where(layer => _layerByWorkList.ContainsValue(layer)))
+			foreach (FeatureLayer layer in e.Layers
+			                                .OfType<FeatureLayer>()
+			                                .Where(layer => _layerByWorkList.ContainsValue(layer)))
 			{
-				IWorkList workList = _layerByWorkList.FirstOrDefault(pair => pair.Value == layer).Key;
+				IWorkList workList =
+					_layerByWorkList.FirstOrDefault(pair => pair.Value == layer).Key;
 
 				workList.Commit();
 
@@ -249,6 +234,16 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				_layerByWorkList.Remove(workList);
 				_registry.Remove(workList);
+
+				foreach (Window window in Application.Current.Windows)
+				{
+					if (window.Name == workList.Name)
+					{
+						var vm = window.DataContext as WorkListViewModel;
+						UnregisterObserver(vm);
+						window.Close();
+					}
+				}
 
 				// todo daro: Dispose work list or whatever is needed.
 			}
@@ -287,7 +282,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				FeatureLayer workListLayer = _layerByWorkList[workList];
 
-				MapView.Active.Invalidate(new Dictionary<Layer, List<long>> { { workListLayer, features } });
+				MapView.Active.Invalidate(new Dictionary<Layer, List<long>>
+				                          {{workListLayer, features}});
 			}
 			catch (Exception exception)
 			{
@@ -310,9 +306,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 					using (Table table = datastore.OpenTable(workListName))
 					{
 						workListLayer =
-							LayerFactory.Instance.CreateFeatureLayer((FeatureClass)table,
-							                                         MapView.Active.Map,
-							                                         LayerPosition.AddToTop);
+							LayerFactory.Instance.CreateFeatureLayer((FeatureClass) table,
+								MapView.Active.Map,
+								LayerPosition.AddToTop);
 					}
 				}
 			}

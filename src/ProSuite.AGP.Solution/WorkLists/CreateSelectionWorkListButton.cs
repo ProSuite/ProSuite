@@ -7,6 +7,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using JetBrains.Annotations;
 using ProSuite.AGP.Solution.WorkListUI;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 
 namespace ProSuite.AGP.Solution.WorkLists
 {
@@ -23,7 +24,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 				IWorkList wl = env.CreateWorkList();
 				return wl;
 			});
-			WorkListsModule.Current.WorkListAdded(workList);
+			WorkListsModule.Current.RegisterObserver(new WorkListViewModel(workList as SelectionWorkList));
 			WorkListsModule.Current.ShowView(workList);
 		}
 	}

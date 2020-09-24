@@ -1,5 +1,3 @@
-using Clients.AGP.ProSuiteSolution.WorkListUI;
-
 namespace ProSuite.AGP.Solution.WorkListUI
 {
 	/// <summary>
@@ -7,11 +5,11 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	/// </summary>
 	public partial class WorkListView : ArcGIS.Desktop.Framework.Controls.ProWindow
 	{
-		public WorkListView()
-		{
-			InitializeComponent();
-			DataContext = new WorkListViewModel();
-		}
+		//public WorkListView()
+		//{
+		//	InitializeComponent();
+		//	DataContext = new WorkListViewModel();
+		//}
 
 		public WorkListView(WorkListViewModel viewModel)
 		{
