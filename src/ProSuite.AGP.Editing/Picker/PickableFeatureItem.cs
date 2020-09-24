@@ -5,9 +5,10 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.Picker;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 
-namespace ProSuite.AGP.Picker
+namespace ProSuite.AGP.Editing.Picker
 {
 	public class PickableFeatureItem : IPickableItem, INotifyPropertyChanged
 	{
@@ -35,19 +36,19 @@ namespace ProSuite.AGP.Picker
 			if (geometry.GeometryType == GeometryType.Point)
 			{
 				return new Uri(
-					"pack://application:,,,/PickerPoc;component/Images/PointGeometry.bmp");
+					"pack://application:,,,/ProSuite.AGP.Editing;component/Images/PointGeometry.bmp");
 			}
 
 			if (geometry.GeometryType == GeometryType.Polyline)
 			{
 				return new Uri(
-					"pack://application:,,,/PickerPoc;component/Images/LineGeometry.bmp");
+					"pack://application:,,,/ProSuite.AGP.Editing;component/Images/LineGeometry.bmp");
 			}
 
 			if (geometry.GeometryType == GeometryType.Polygon)
 			{
 				return new Uri(
-					"pack://application:,,,/PickerPoc;component/Images/PolygonGeometry.bmp");
+					"pack://application:,,,/ProSuite.AGP.Editing;component/Images/PolygonGeometry.bmp");
 			}
 
 			return new Uri("");
