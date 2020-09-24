@@ -58,6 +58,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
     <Reference Include="System.Xaml" />
   </ItemGroup>
@@ -91,6 +92,7 @@
     <Compile Include="Editing\EraseTool.cs" />
     <Compile Include="Commons\ImageUtils.cs" />
     <Compile Include="ProjectItem\ProSuiteProjectItemContainer.cs" />
+    <Compile Include="ProjectItem\ProSuiteProjectItemManager.cs" />
     <Compile Include="Selection\SelectionTool.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
     <Compile Include="Commons\LayerUtils.cs" />

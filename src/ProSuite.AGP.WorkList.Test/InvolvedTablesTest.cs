@@ -32,19 +32,19 @@ namespace ProSuite.AGP.WorkList.Test
 		[Test]
 		public void InvolvedTablesParsingTest()
 		{
-			var issueFeatureClass = "IssuePolygons";
-			var issueDefinition =
-				new IssueWorkListDefinition()
-				{
-					FgdbPath = issueGdbPath,
-					Path = "",
-					VisitedItems = { }
-				};
+			//var issueFeatureClass = "IssuePolygons";
+			//var issueDefinition =
+			//	new IssueWorkListDefinition()
+			//	{
+			//		FgdbPath = issueGdbPath,
+			//		Path = "",
+			//		VisitedItems = { }
+			//	};
 
-			var issueRepository = new IssuePolygonsGdbRepository(issueDefinition, issueFeatureClass);
-			var issues = issueRepository.GetAll();
+			//var issueRepository = new IssuePolygonsGdbRepository(issueDefinition, issueFeatureClass);
+			//var issues = issueRepository.GetAll();
 
-			Assert.AreEqual(9, issues.Count);
+			//Assert.AreEqual(9, issues.Count);
 
 			//var failedIssues = issues.Count(i => (i.InIssueInvolvedTables.Any<InvolvedTable>(t => t.KeyField == null)));
 			//Assert.AreEqual(0, failedIssues);

@@ -1,15 +1,12 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
+using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Internal.Catalog;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using Clients.AGP.ProSuiteSolution;
@@ -23,6 +20,10 @@ using ProSuite.Commons.Logging;
 using ProSuite.QA.Configurator;
 using ProSuite.QA.ServiceManager;
 using ProSuite.QA.ServiceManager.Types;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ProSuite.AGP.Solution
 {
@@ -38,8 +39,8 @@ namespace ProSuite.AGP.Solution
 				if (_qaManager == null)
 				{
 					_qaManager = new ProSuiteQAManager(
-						QAConfiguration.Current.GetQAServiceProviders(QAProjectItem.ServerConfigurations),
-						QAConfiguration.Current.GetQASpecificationsProvider(QAProjectItem.SpecificationConfiguration));
+						QAConfiguration.Current.GetQAServiceProviders(QAProjectItem?.ServerConfigurations),
+						QAConfiguration.Current.GetQASpecificationsProvider(QAProjectItem?.SpecificationConfiguration));
 					_qaManager.OnStatusChanged += QAManager_OnStatusChanged;
 					
 					OnQAConfigurationChanged = _qaManager.OnConfigurationChanged;
@@ -53,15 +54,6 @@ namespace ProSuite.AGP.Solution
 		{
 			get
 			{
-				//QueuedTask.Run(() =>
-				//{
-				//	var container = Project.Current.GetProjectItemContainer("ProSuiteContainer");
-				//	foreach ( var item in container.GetItems())
-				//	{
-				//		var p = item.PhysicalPath;
-				//	}
-				//});
-
 				if (_qaProjectItem == null)
 				{
 					_msg.Info("Project item not available");
@@ -69,17 +61,10 @@ namespace ProSuite.AGP.Solution
 					_qaProjectItem = Project.Current.GetItems<ProSuiteProjectItem>().FirstOrDefault();
 					if (_qaProjectItem == null)
 					{
-						// TODO algr: temp solution
-						var issuesPath = Path.Combine(Project.Current.HomeFolderPath, "issues");
-						Directory.CreateDirectory(issuesPath);
-						_qaProjectItem = new ProSuiteProjectItem(issuesPath, QAConfiguration.Current.DefaultQAServiceConfig, QAConfiguration.Current.DefaultQASpecConfig);
-						QueuedTask.Run(() =>
-						{
-							var added = Project.Current.AddItem(_qaProjectItem);
-							_msg.Info($"Project item added {added}");
+						//_qaProjectItem = new ProSuiteProjectItem(QAConfiguration.Current.DefaultQAServiceConfig,
+						//                                         QAConfiguration.Current.DefaultQASpecConfig);
 
-							Project.Current.SetDirty();//enable save
-						});
+						//ProSuiteProjectItemManager.Current.SaveProjectItem(Project.Current, _qaProjectItem);
 					}
 				}
 				return _qaProjectItem;
@@ -88,8 +73,6 @@ namespace ProSuite.AGP.Solution
 			{
 				_qaProjectItem = value;
 				UpdateServiceUI(_qaProjectItem);
-
-				//Project.Current.SaveAsync();
 			}
 		}
 
@@ -208,7 +191,6 @@ namespace ProSuite.AGP.Solution
 			//_msg.Info($"ProSuiteModule: {e.State}");
 		}
 
-
 		private void OnProjectItemsChanged(ProjectItemsChangedEventArgs obj)
 		{
 			//_msg.Info($"OnProjectItemsChanged Name: {obj.ProjectItem.Name} Action: {obj.Action}");
@@ -232,7 +214,6 @@ namespace ProSuite.AGP.Solution
 			// notify QAManager than config is changed via
 			OnQAConfigurationChanged?.Invoke(this, new ProSuiteQAConfigEventArgs(configArgs.ServerConfigurations));
 		}
-
 
 		internal static void StartQAGPServer(ProSuiteQAServiceType type)
 		{
@@ -268,7 +249,6 @@ namespace ProSuite.AGP.Solution
 				_msg.Error($"StartQAGPServerAsync is failed");
 			}
 		}
-
 	}
 
 	internal class StartQAGPTool : Button
@@ -286,7 +266,6 @@ namespace ProSuite.AGP.Solution
 				_msg.Error(ex.Message);
 			}
 		}
-
 	}
 
 	internal class StartQAGPExtent : Button
@@ -368,6 +347,51 @@ namespace ProSuite.AGP.Solution
 			}
 		}
 	}
+
+	internal class OpenWorkListFile : Button
+	{
+		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+		// TODO algr: temporary tests
+		protected override void OnClick()
+		{
+			var bf = new BrowseProjectFilter();
+
+			//This allows us to view the .wklist custom item (the "container")
+			bf.AddCanBeTypeId("ProSuiteItem_ProjectItem"); //TypeID for the ".wlist" custom project item 
+			//This allows the .wklist item to be browsable to access the lists inside
+			bf.AddDoBrowseIntoTypeId("ProSuiteItem_ProjectItem");
+			//This allows us to view the worklist contained in the .wklist item
+			bf.AddCanBeTypeId("ProSuiteItem_WorkListItem"); //TypeID for the work list contained in the .wklist item
+			bf.Name = "Work List";
+
+			var openItemDialog = new OpenItemDialog
+			                     {
+				                     Title = "Open Work List",
+				                     InitialLocation = @"c:\data",
+				                     BrowseFilter = bf
+			                     };
+			bool? result = openItemDialog.ShowDialog();
+
+			if (result.Value == false || openItemDialog.Items.Count() == 0) return;
+
+			var item = openItemDialog.Items.ToArray()[0];
+			var filePath = item.Path;
+
+
+			// TODO algr: add this worklist to project?
+			ProSuiteProjectItemManager.Current.SaveProjectItem(Project.Current, filePath);
+
+
+			//var repo = new XmlWorkItemStateRepository(null, filePath);
+
+			//var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
+			//XmlWorkListDefinition definition = helper.ReadFromFile(filePath);
+
+			//var json = System.IO.File.ReadAllText(filePath);
+		}
+	}
+
 
 	internal class ShowWorkListWindow : Button
 	{

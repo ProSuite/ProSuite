@@ -13,24 +13,23 @@
   <categories>
     <updateCategory refID="esri_core_projectContainers">
       <insertComponent id="ProSuiteItem_FolderContainer"
-                       className="ProjectItem.ProSuiteProjectItemContainer"
+                       className="ProSuite.AGP.Solution.ProjectItem.ProSuiteProjectItemContainer"
                        insert="before" placeWith="esri_geodatabase_folderConnectionContainer">
-        <content type="ProSuiteContainer" displayName="ProSuite" contextMenu="ProSuiteItems_AddFoldersMenu" />
+        <content type="ProSuiteContainer" displayName="ProSuite items" contextMenu="ProSuiteSolution_ProjectItemContainerMenu" />
       </insertComponent>
     </updateCategory>
     <updateCategory refID="esri_customItems">
-      <insertComponent id="ProSuiteItem_Customitem" className="ProSuite.Commons.AGP.ProjectItem.ProSuiteProjectItem"
+      <insertComponent id="ProSuiteItem_ProjectItem" className="ProSuite.AGP.Solution.ProjectItem.ProSuiteProjectItem"
                        containerType="ProSuiteContainer">
-        <content displayName="Worklist" fileExtension="wkl" isContainer="true" keywords="worklist"
-                 contextMenuID="ProSuiteItem_ContextMenu">
-          <filterFlags>
-            <type id="File" />
-          </filterFlags>
-        </content>
+          <content displayName="Worklist" fileExtension="wklist" isContainer="true" keywords="worklist" contextMenuID="ProSuiteSolution_ProjectItemContextMenu">
+            <filterFlags>
+                <type id="File" />
+            </filterFlags>
+          </content>
       </insertComponent>
-      <!--<insertComponent id="ProSuiteItem_SubItem" className="Clients.AGP.ProSuiteSolution.ProjectItem.ProSuiteSubItem">
-        <content displayName="ProSuiteSubItem" isContainer="false" keywords="ProSuiteSubItem" contextMenuID="ProSuiteSubItem_ContextMenu" />
-      </insertComponent>-->
+      <insertComponent id="ProSuiteItem_WorkListItem" className="Clients.AGP.ProSuiteSolution.ProjectItem.ProSuiteProjectItemWorkList">
+        <content displayName="WorkListItem" isContainer="false" keywords="WorkListItem" contextMenuID="ProSuiteSolution_WorkListContextMenu" />
+      </insertComponent>
     </updateCategory>
   </categories>
   <conditions>
@@ -62,6 +61,7 @@
           <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
           <button refID="Clients_AGP_ProSuiteSolution_WorkList" size="large" />
+          <button refID="Clients_AGP_ProSuiteSolution_OpenWorkList" size="large" />
         </group>
         <group id="ProSuiteTools_Editing" caption="Edit Tools" keytip="G1">
           <tool refID="ProSuiteTools_Editing_EraseTool" size="small" />
@@ -90,6 +90,11 @@
         <button id="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" caption="Logs" className="LoggerUI.ProSuiteLogPane_ShowButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation32.png">
           <tooltip heading="Show Logs Window">Show Logs Window<disabledText /></tooltip>
         </button>
+        <button id="Clients_AGP_ProSuiteSolution_OpenWorkList" caption="OpenWorkList" className="OpenWorkListFile" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
+          <tooltip heading="Open Worklist file">
+            Open Worklist file (wlist)<disabledText />
+          </tooltip>
+        </button>
         <button id="Clients_AGP_ProSuiteSolution_WorkList" caption="WorkList" className="ShowWorkListWindow" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Show Error Worklist">Show Error Worklist<disabledText /></tooltip>
         </button>
@@ -116,6 +121,23 @@
           <content className="LoggerUI.ProSuiteLogPaneView" />
         </dockPane>
       </dockPanes>
+      <menus>
+        <menu id="ProSuiteSolution_ProjectItemContainerMenu" caption="Add Folders" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/TaskItem32.png" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/TaskItem16.png">
+          <tooltip heading="Folder">Add items to project.</tooltip>
+          <button refID="esri_folderConnectionAddButton"/>
+          <button refID="WorkLists_CreateSelectionWorkList" />
+          <!--<button refID="esri_DeleteItem" />-->
+        </menu>
+        <menu id="ProSuiteSolution_ProjectItemContextMenu" caption="ProSuite Project Item">
+          <button refID="Clients_AGP_ProSuiteSolution_OpenWorkList" />
+          <button refID="WorkLists_CreateSelectionWorkList" />
+          <button refID="esri_DeleteItem" />
+        </menu>
+        <menu id="ProSuiteSolution_WorkListContextMenu" caption="Work list">
+          <button refID="WorkLists_CreateSelectionWorkList" />
+          <button refID="esri_DeleteItem" />
+        </menu>
+      </menus>
     </insertModule>
     <insertModule id="ProSuiteSolution_WorkListTrialsModule" className="WorkListTrials.WorkListTrialsModule" autoLoad="false" caption="WorkList Trials Module">
       <tabs></tabs>
