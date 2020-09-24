@@ -238,7 +238,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				foreach (Window window in Application.Current.Windows)
 				{
-					if (window.Name == workList.Name)
+					if (window.Title == workList.Name)
 					{
 						var vm = window.DataContext as WorkListViewModel;
 						UnregisterObserver(vm);
