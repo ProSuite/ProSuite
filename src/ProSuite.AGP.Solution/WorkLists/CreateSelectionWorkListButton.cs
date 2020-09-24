@@ -25,7 +25,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 				return wl;
 			});
 			WorkListsModule.Current.RegisterObserver(new WorkListViewModel(workList as SelectionWorkList));
-			//WorkListsModule.Current.WorkListAdded(workList);
 			WorkListsModule.Current.ShowView(workList);
 		}
 	}

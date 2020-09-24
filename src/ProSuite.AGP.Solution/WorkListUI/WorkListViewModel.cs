@@ -205,7 +205,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			var view = new WorkListView(this);
 			view.Owner = Application.Current.MainWindow;
-			view.Name = workList.Name;
+			view.Title = workList.Name;
 			view.Show();
 			view.Closed += View_Closed;
 		}
