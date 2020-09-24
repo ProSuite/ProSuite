@@ -133,5 +133,46 @@ namespace ProSuite.Commons
 
 			return TimeSpan.FromSeconds(waitSec);
 		}
+
+		public static bool IsLater(DateTime time, int thanHour, int thanMinute)
+		{
+			if (time.Hour > thanHour)
+			{
+				return true;
+			}
+
+			if (time.Hour == thanHour && time.Minute > thanMinute)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		public static bool IsLater(int hour, int minute, DateTime thanTime)
+		{
+			if (hour > thanTime.Hour)
+			{
+				return true;
+			}
+
+			if (hour == thanTime.Hour && minute > thanTime.Minute)
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		public static bool IsWeekEnd(DateTime dateTime)
+		{
+			return dateTime.DayOfWeek == DayOfWeek.Saturday ||
+			       dateTime.DayOfWeek == DayOfWeek.Sunday;
+		}
+
+		public static bool IsWeekDay(DateTime dateTime)
+		{
+			return ! IsWeekEnd(dateTime);
+		}
 	}
 }
