@@ -109,9 +109,7 @@
     <Compile Include="WorkLists\GoNextButton.cs" />
     <Compile Include="WorkLists\GoPreviousButton.cs" />
     <Compile Include="WorkLists\SetStatusButton.cs" />
-    <Compile Include="WorkLists\WorkListObserver.cs" />
     <Compile Include="WorkLists\WorkListsModule.cs" />
-    <Compile Include="WorkLists\WorkListViewContext.cs" />
     <Compile Include="WorkListUI\StatusEnumBooleanConverter.cs" />
     <Compile Include="WorkListUI\WorkListView.xaml.cs">
       <DependentUpon>WorkListView.xaml</DependentUpon>
