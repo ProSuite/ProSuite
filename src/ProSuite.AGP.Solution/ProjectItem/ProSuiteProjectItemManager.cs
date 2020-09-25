@@ -1,91 +1,119 @@
+using System;
+using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ProSuite.Commons.Logging;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
-using ArcGIS.Desktop.Catalog;
-using ArcGIS.Desktop.Internal.Catalog.DatabaseTools.CopyToDatabase.Views;
-using ProSuite.Commons.Logging;
+using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 
 namespace ProSuite.AGP.Solution.ProjectItem
 {
+	public enum ProjectItemType
+	{
+		WorkListDefinition,
+		Configuration
+	}
 	public class ProSuiteProjectItemManager
 	{
-		private static ProSuiteProjectItemManager _manager;
-		private readonly string _workListFolderName = "WorkLists";
+		private readonly string _containerName = "ProSuiteContainer";
 
+		private readonly string _workListFolderName = "WorkLists";
+		private readonly string _configurationFolderName = "";
+
+		private static ProSuiteProjectItemManager _manager;
 		public static ProSuiteProjectItemManager Current => _manager ?? (_manager = new ProSuiteProjectItemManager());
 
 		Msg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-		private string GetProjectSubFolder(Project currentProject, string subFolder)
-		{
-			var issuesPath = Path.Combine(currentProject.HomeFolderPath, subFolder);
-			Directory.CreateDirectory(issuesPath);
-			return issuesPath;
-		}
-
-		public bool SaveProjectItem(Project currentProject, string itemPath)
+		// TODO algr: IRepository<T> interface for Project? Save, Add, ...
+		public bool SaveWorkListDefinitionInProject(Project currentProject, XmlWorkListDefinition definition)
 		{
 			var result = false;
 
-			var subFolder = GetProjectSubFolder(currentProject, _workListFolderName);
+			// serialize to tmp
 
-			// do we have container?
+			// add file to project
+
+			return result;
+		}
+
+		public bool AddFileToProject(string filePath, Project project, ProjectItemType fileType)
+		{
+			var itemFolder = GetProjectItemFolderPath(project, fileType);
+			if (String.IsNullOrEmpty(itemFolder))
+				return false; 
+
+			File.Copy(filePath, Path.Combine(itemFolder, Path.GetFileName(filePath)));
+			return true;
+		}
+
+		#region private functions
+		private string GetProjectItemFolderName(ProjectItemType fileType)
+		{
+			string folderName = null;
+			switch (fileType)
+			{
+				case ProjectItemType.WorkListDefinition:
+					folderName = _workListFolderName;
+					break;
+
+				case ProjectItemType.Configuration:
+					folderName = _configurationFolderName;
+					break;
+
+				default:
+					return null;
+			}
+			return folderName;
+		}
+
+		private string GetProjectItemFolderPath(Project project, ProjectItemType projectType)
+		{
+			var itemFolder = GetProjectItemFolderName(projectType);
+			if (String.IsNullOrEmpty(itemFolder)) return null; // wrong type
+
+			var itemFullPath = Path.Combine(project.HomeFolderPath, itemFolder);
+			bool folderItemPresent = false;
 			QueuedTask.Run(() =>
 			{
-				var container = currentProject.GetProjectItemContainer("ProSuiteContainer");
-				_msg.Info($"ProjectItems are {container.GetItems().Count()}");
+				var container = project.GetProjectItemContainer(_containerName);
 
-				bool folderItemPresent = false;
+				// TODO algr: refactor
 				foreach (var containerItem in container.GetItems())
 				{
 					if (containerItem is FolderConnectionProjectItem)
 					{
-						folderItemPresent = true;
-						break;
+						if (containerItem.Name == itemFolder)
+						{
+							folderItemPresent = true;
+							break;
+						}
 					}
 				}
 
 				if (!folderItemPresent)
 				{
-					var folderItem = new ProSuiteProjectItem(
+					// TODO algr: other project item types
+					var folderItem = new ProSuiteProjectItemFile(
 						"WorkList item",
-						subFolder,
-						"ProSuiteItem_ProjectItem", //item.TypeID,
-						"ProSuiteItem_FolderContainer"); //container.TypeID);
+						itemFolder,
+						"ProSuiteItem_ProjectItemWorkListFile",
+						container.TypeID);
 
-					var added = currentProject.AddItem(folderItem);
-					_msg.Info($"Project item folder added {added}");
+					folderItemPresent = project.AddItem(folderItem);
+					_msg.Info($"Project item folder added {folderItemPresent}");
+					if (folderItemPresent)
+					{
+						Directory.CreateDirectory(itemFullPath);
+						project.SetDirty(); //enable save
+					}
 				}
-
-				File.Copy(itemPath, Path.Combine(subFolder, Path.GetFileName(itemPath)));
-				currentProject.SetDirty(); //enable save
-
 			});
-			return result;
+			return folderItemPresent ? itemFullPath : null;
 		}
 
-		// TODO algr: temp solution
-		//var issuesPath = Path.Combine(Project.Current.HomeFolderPath, "WorkLists");
-		//Directory.CreateDirectory(issuesPath);
-		//_qaProjectItem = new ProSuiteProjectItem(issuesPath, QAConfiguration.Current.DefaultQAServiceConfig, QAConfiguration.Current.DefaultQASpecConfig);
-		//QueuedTask.Run(() =>
-		//{
-		//	var added = Project.Current.AddItem(_qaProjectItem);
-		//	_msg.Info($"Project item added {added}");
-
-		//	Project.Current.SetDirty();//enable save
-		//});
-
-		//QueuedTask.Run(() =>
-		//{
-		//	var container = Project.Current.GetProjectItemContainer("ProSuiteContainer");
-		//	foreach ( var item in container.GetItems())
-		//	{
-		//		var p = item.PhysicalPath;
-		//	}
-		//});
-		//Project.Current.SaveAsync();
+		#endregion
 	}
+
 }

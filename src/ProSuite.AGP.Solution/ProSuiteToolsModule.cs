@@ -49,8 +49,8 @@ namespace ProSuite.AGP.Solution
 			}
 		}
 
-		private static ProSuiteProjectItem _qaProjectItem = null;
-		public static ProSuiteProjectItem QAProjectItem
+		private static ProSuiteProjectItemConfiguration _qaProjectItem = null;
+		public static ProSuiteProjectItemConfiguration QAProjectItem
 		{
 			get
 			{
@@ -58,7 +58,7 @@ namespace ProSuite.AGP.Solution
 				{
 					_msg.Info("Project item not available");
 
-					_qaProjectItem = Project.Current.GetItems<ProSuiteProjectItem>().FirstOrDefault();
+					_qaProjectItem = Project.Current.GetItems<ProSuiteProjectItemConfiguration>().FirstOrDefault();
 					if (_qaProjectItem == null)
 					{
 						//_qaProjectItem = new ProSuiteProjectItem(QAConfiguration.Current.DefaultQAServiceConfig,
@@ -114,7 +114,7 @@ namespace ProSuite.AGP.Solution
 			}
 		}
 
-		private static void UpdateServiceUI(ProSuiteProjectItem projectItem)
+		private static void UpdateServiceUI(ProSuiteProjectItemConfiguration projectItem)
 		{
 
 			var localService = projectItem.ServerConfigurations.FirstOrDefault(s => (s.ServiceType == ProSuiteQAServiceType.GPLocal && s.IsValid));
@@ -348,7 +348,7 @@ namespace ProSuite.AGP.Solution
 		}
 	}
 
-	internal class OpenWorkListFile : Button
+	internal class AddWorkListFile : Button
 	{
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -356,39 +356,27 @@ namespace ProSuite.AGP.Solution
 		protected override void OnClick()
 		{
 			var bf = new BrowseProjectFilter();
+			bf.AddCanBeTypeId("ProSuiteItem_ProjectItemWorkListFile"); //TypeID for the ".wlist" custom project item
 
-			//This allows us to view the .wklist custom item (the "container")
-			bf.AddCanBeTypeId("ProSuiteItem_ProjectItem"); //TypeID for the ".wlist" custom project item 
-			//This allows the .wklist item to be browsable to access the lists inside
-			bf.AddDoBrowseIntoTypeId("ProSuiteItem_ProjectItem");
-			//This allows us to view the worklist contained in the .wklist item
-			bf.AddCanBeTypeId("ProSuiteItem_WorkListItem"); //TypeID for the work list contained in the .wklist item
+			// for subitem allow to browsw inside and add as type
+			//bf.AddDoBrowseIntoTypeId("ProSuiteItem_ProjectItemWorkListFile");
+			//bf.AddCanBeTypeId("ProSuiteItem_WorkListItem"); //subitem 
 			bf.Name = "Work List";
 
 			var openItemDialog = new OpenItemDialog
-			                     {
-				                     Title = "Open Work List",
-				                     InitialLocation = @"c:\data",
-				                     BrowseFilter = bf
-			                     };
+			        {
+	                     Title = "Add Work List",
+	                     InitialLocation = @"c:\data",
+	                     BrowseFilter = bf
+                     };
 			bool? result = openItemDialog.ShowDialog();
-
-			if (result.Value == false || openItemDialog.Items.Count() == 0) return;
+			if (result != null && (result.Value == false || !openItemDialog.Items.Any())) return;
 
 			var item = openItemDialog.Items.ToArray()[0];
 			var filePath = item.Path;
 
-
-			// TODO algr: add this worklist to project?
-			ProSuiteProjectItemManager.Current.SaveProjectItem(Project.Current, filePath);
-
-
-			//var repo = new XmlWorkItemStateRepository(null, filePath);
-
-			//var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
-			//XmlWorkListDefinition definition = helper.ReadFromFile(filePath);
-
-			//var json = System.IO.File.ReadAllText(filePath);
+			// tests 
+			ProSuiteProjectItemManager.Current.AddFileToProject(filePath, Project.Current, ProjectItemType.WorkListDefinition);
 		}
 	}
 
