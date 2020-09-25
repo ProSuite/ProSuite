@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 
 namespace ProSuite.AGP.Editing.Selection
@@ -52,7 +51,7 @@ namespace ProSuite.AGP.Editing.Selection
 		{
 			foreach(var kvp in featuresPerLayer)
 			{
-				QueryFilter qf = new QueryFilter()
+				QueryFilter qf = new QueryFilter
 				                 {
 									 ObjectIDs = kvp.Value
 				                 };
@@ -64,7 +63,7 @@ namespace ProSuite.AGP.Editing.Selection
 			KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer, SelectionCombinationMethod method)
 		{
 			{
-				QueryFilter qf = new QueryFilter()
+				QueryFilter qf = new QueryFilter
 				                 {
 					                 ObjectIDs = featuresOfLayer.Value
 				                 };

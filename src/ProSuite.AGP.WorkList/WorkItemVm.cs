@@ -1,7 +1,6 @@
 using System;
 using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain;
 
 namespace ProSuite.AGP.WorkList
 {
@@ -13,11 +12,10 @@ namespace ProSuite.AGP.WorkList
 
 		public WorkItemVm(IWorkItem workItem)
 		{
-			this.WorkItem = workItem;
+			WorkItem = workItem;
 		}
 
 		private IWorkItem WorkItem { get; set; }
-		
 
 		public String Description
 		{
@@ -32,8 +30,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			get
 			{
-				
-				return WorkItem == null ? WorkItemStatus.Todo: WorkItem.Status;
+				return WorkItem?.Status ?? WorkItemStatus.Todo;
 			}
 			set
 			{
@@ -50,7 +47,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			get
 			{
-				return WorkItem == null ? false: WorkItem.Visited;
+				return WorkItem?.Visited ?? false;
 			}
 			set
 			{
@@ -61,7 +58,5 @@ namespace ProSuite.AGP.WorkList
 				SetProperty(ref _visited, value, () => Visited);
 			}
 		}
-
-
 	}
 }

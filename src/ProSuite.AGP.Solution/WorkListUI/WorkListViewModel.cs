@@ -144,7 +144,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		public IList<WorkItemVisibility> Visibility
 		{
 			get => Enum.GetValues(typeof(WorkItemVisibility)).Cast<WorkItemVisibility>()
-			           .ToList<WorkItemVisibility>();
+			           .ToList();
 			set { }
 		}
 

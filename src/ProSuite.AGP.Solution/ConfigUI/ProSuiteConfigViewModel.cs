@@ -1,15 +1,15 @@
-using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Contracts;
-using ProSuite.QA.ServiceManager.Types;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
+using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Contracts;
+using ProSuite.QA.ServiceManager.Types;
 
-namespace Clients.AGP.ProSuiteSolution.ConfigUI
+namespace ProSuite.AGP.Solution.ConfigUI
 {
 	public class ProSuiteConfigViewModel : ViewModelBase
 	{
-		private ObservableCollection<ViewModelBase> _configTabViewModels = null;
+		private ObservableCollection<ViewModelBase> _configTabViewModels;
 
 		public ProSuiteConfigViewModel(IEnumerable<ProSuiteQAServerConfiguration> serviceConfigurations)
 		{

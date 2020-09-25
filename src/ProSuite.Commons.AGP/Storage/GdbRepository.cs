@@ -11,7 +11,7 @@ namespace ProSuite.Commons.AGP.Storage
 	{
 		private readonly string _gdbPath;
 		private readonly string _name;
-		private bool _repoIsChanged = false;
+		private bool _repoIsChanged;
 
 		protected GdbRepository(string gdbPath, string className = null)
 		{
@@ -47,18 +47,18 @@ namespace ProSuite.Commons.AGP.Storage
 		private IList<T> _query;
 		private IList<T> Query
 		{
-			get => _query ?? (_query = QueryGdbTable<TDataset>(GdbDataset));
+			get => _query ?? (_query = QueryGdbTable(GdbDataset));
 			set => _query = value;
 		}
 
-		private QueryFilter _filter = null;
+		private QueryFilter _filter;
 		public QueryFilter Filter
 		{
 			get => _filter;
 			set
 			{
 				_filter = value;
-				Query = QueryGdbTable<TDataset>(GdbDataset);
+				Query = QueryGdbTable(GdbDataset);
 			}
 		}
 
@@ -135,7 +135,6 @@ namespace ProSuite.Commons.AGP.Storage
 		private IList<T> ReadTableItems(Table table)
 		{
 			var items = new List<T>();
-			if (items == null) return items;
 
 			using (RowCursor cursor = table.Search(Filter, true))
 			{
@@ -154,7 +153,6 @@ namespace ProSuite.Commons.AGP.Storage
 		private IList<T> ReadFeatureClassItems(FeatureClass featureClass)
 		{
 			var items = new List<T>();
-			if (items == null) return items;
 
 			using (RowCursor cursor = featureClass.Search(Filter, true))
 			{
@@ -175,9 +173,6 @@ namespace ProSuite.Commons.AGP.Storage
 			throw new NotImplementedException();
 		}
 
-
 		#endregion
-
 	}
-
 }

@@ -9,22 +9,12 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	{
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{
-			WorkItemStatus status = (WorkItemStatus) value;
-			if (status == WorkItemStatus.Done)
-			{
-				return true;
-			}
-			return false;
+			return value is WorkItemStatus status && status == WorkItemStatus.Done;
 		}
 
 		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
 		{
-			bool val = (bool) value;
-			if (val)
-			{
-				return WorkItemStatus.Done;
-			}
-			return WorkItemStatus.Todo;
+			return value is bool flag && flag ? WorkItemStatus.Done : WorkItemStatus.Todo;
 		}
 	}
 }

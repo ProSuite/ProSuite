@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Mime;
 using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Core.CIM;
@@ -294,7 +293,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		private void SetLayerNotSelectable(FeatureLayer fl)
 		{
-			var cimDefinition = fl.GetDefinition() as CIMFeatureLayer;
+			var cimDefinition = (CIMFeatureLayer) fl.GetDefinition();
 			cimDefinition.Selectable = false;
 			fl.SetDefinition(cimDefinition);
 		}

@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using System.Windows.Media;
 using ArcGIS.Desktop.Core;
-using Clients.AGP.ProSuiteSolution.Commons;
+using ProSuite.AGP.Solution.Commons;
 
 namespace ProSuite.AGP.Solution.ProjectItem
 {
@@ -49,7 +49,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		{
 			get
 			{
-				return Task.FromResult((ImageSource)ImageUtils.GetImageSource(@"FolderWithGISData16.png"));
+				return Task.FromResult(ImageUtils.GetImageSource(@"FolderWithGISData16.png"));
 			}
 		}
 

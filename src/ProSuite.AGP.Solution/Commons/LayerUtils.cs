@@ -1,19 +1,19 @@
-using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Mapping;
-using ProSuite.Commons.Logging;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.Logging;
 
-namespace Clients.AGP.ProSuiteSolution.Commons
+namespace ProSuite.AGP.Solution.Commons
 {
 	public static class LayerUtils
-    {
-		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static IList<FeatureLayer> AddFeaturesToMap(string groupLayer, string path, string featureName = null, IList<string> layernames = null, bool select = true)
         {
@@ -73,6 +73,7 @@ namespace Clients.AGP.ProSuiteSolution.Commons
 		public static void SelectLayersInMap(IEnumerable<FeatureLayer> layers = null)
 		{
 			if (MapView.Active == null) return;
+			if (layers == null) return;
 
 			QueuedTask.Run(() =>
 			{
@@ -81,9 +82,7 @@ namespace Clients.AGP.ProSuiteSolution.Commons
 					layer.Select();
 				}
 			});
-
 		}
-
 
 		public static void SelectLayersInTOC(IEnumerable<FeatureLayer> layers = null)
 		{

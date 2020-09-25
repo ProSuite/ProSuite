@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using ArcGIS.Desktop.Core;
-using Clients.AGP.ProSuiteSolution.Commons;
 using ESRI.ArcGIS.ItemIndex;
+using ProSuite.AGP.Solution.Commons;
 using ProSuite.QA.ServiceManager.Types;
 
 namespace ProSuite.AGP.Solution.ProjectItem
@@ -14,8 +14,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		public ProSuiteQASpecificationsConfiguration SpecificationConfiguration { get; set; }
 		public IEnumerable<ProSuiteQAServerConfiguration> ServerConfigurations { get; set; }
 
-		protected ProSuiteProjectItem() : base()
-		{
+		protected ProSuiteProjectItem() {
 		}
 
 		protected ProSuiteProjectItem(ItemInfoValue iiv) : base(FlipBrowseDialogOnly(iiv))
@@ -63,7 +62,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		{
 			get
 			{
-				return Task.FromResult((ImageSource)ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset16.png"));
+				return Task.FromResult(ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset16.png"));
 			}
 		}
 

@@ -1,4 +1,4 @@
-namespace Clients.AGP.ProSuiteSolution
+namespace ProSuite.AGP.Solution
 {
 	public static class ConfigIDs
 	{

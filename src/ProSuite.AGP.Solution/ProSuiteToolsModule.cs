@@ -10,9 +10,8 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using Clients.AGP.ProSuiteSolution;
-using Clients.AGP.ProSuiteSolution.Commons;
-using Clients.AGP.ProSuiteSolution.ConfigUI;
+using ProSuite.AGP.Solution.Commons;
+using ProSuite.AGP.Solution.ConfigUI;
 using ProSuite.AGP.Solution.LoggerUI;
 using ProSuite.AGP.Solution.ProjectItem;
 using ProSuite.Commons.Logging;
@@ -26,7 +25,7 @@ namespace ProSuite.AGP.Solution
 	{
 		public static event EventHandler<ProSuiteQAConfigEventArgs> OnQAConfigurationChanged;
 
-		private static ProSuiteQAManager _qaManager = null;
+		private static ProSuiteQAManager _qaManager;
 		public static ProSuiteQAManager QAManager
 		{
 			get
@@ -44,7 +43,7 @@ namespace ProSuite.AGP.Solution
 			}
 		}
 
-		private static ProSuiteProjectItem _qaProjectItem = null;
+		private static ProSuiteProjectItem _qaProjectItem;
 		public static ProSuiteProjectItem QAProjectItem
 		{
 			get
@@ -101,9 +100,9 @@ namespace ProSuite.AGP.Solution
 			}
 		}
 
-		private static ProSuiteToolsModule _this = null;
+		private static ProSuiteToolsModule _this;
 
-		private static IMsg msg = null;
+		private static IMsg msg;
 		private static IMsg _msg
 		{
 			get
@@ -269,7 +268,7 @@ namespace ProSuite.AGP.Solution
 
 	internal class StartQAGPTool : Button
 	{
-		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected override async void OnClick()
 		{
@@ -287,7 +286,7 @@ namespace ProSuite.AGP.Solution
 
 	internal class StartQAGPExtent : Button
 	{
-		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected override async void OnClick()
 		{
@@ -341,8 +340,8 @@ namespace ProSuite.AGP.Solution
 
 	internal class ShowConfigWindow : Button
 	{
-		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-		private ProSuiteConfigDialog _prosuiteconfigdialog = null;
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		private ProSuiteConfigDialog _prosuiteconfigdialog;
 
 		protected override void OnClick()
 		{
@@ -365,7 +364,7 @@ namespace ProSuite.AGP.Solution
 		}
 	}
 
-	sealed class QASpecListComboBox : ArcGIS.Desktop.Framework.Contracts.ComboBox
+	sealed class QASpecListComboBox : ComboBox
 	{
 		public QASpecListComboBox()
 		{

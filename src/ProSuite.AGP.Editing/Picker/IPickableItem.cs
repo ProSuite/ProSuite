@@ -1,19 +1,17 @@
-using ArcGIS.Core.Geometry;
 using System;
 using System.ComponentModel;
+using ArcGIS.Core.Geometry;
 
-namespace ProSuite.AGP.Picker
-
+namespace ProSuite.AGP.Editing.Picker
 {
-	public interface IPickableItem: INotifyPropertyChanged
+	public interface IPickableItem : INotifyPropertyChanged
 	{
-		string ItemText { get;}
+		string ItemText { get; }
 
 		bool IsSelected { get; set; }
-		
+
 		Geometry Geometry { get; set; }
 
 		Uri ItemImageUri { get; set; }
-		
 	}
 }

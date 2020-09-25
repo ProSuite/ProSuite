@@ -1,11 +1,9 @@
-using System.Collections;
 using System.Collections.Generic;
 using ArcGIS.Core.CIM;
 
 namespace ProSuite.AGP.Editing.Selection
 {
 	public class GeometryTypeComparer : IComparer<esriGeometryType>
-
 	{
 		public int Compare(esriGeometryType shapeTypeA, esriGeometryType shapeTypeB)
 		{

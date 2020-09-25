@@ -1,15 +1,14 @@
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
+using System.Windows.Input;
 using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.QA.ServiceManager.Types;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Windows.Input;
 
-namespace Clients.AGP.ProSuiteSolution.ConfigUI
+namespace ProSuite.AGP.Solution.ConfigUI
 {
 	public class ProSuiteConfigQAViewModel : ViewModelBase
 	{
@@ -34,14 +33,14 @@ namespace Clients.AGP.ProSuiteSolution.ConfigUI
 			}
 		}
 
-		private ICommand _cmdBrowseConnection = null;
+		private ICommand _cmdBrowseConnection;
 		public ICommand CmdBrowseConnection
 		{
 			get
 			{
 				if (_cmdBrowseConnection == null)
 				{
-					_cmdBrowseConnection = new RelayCommand(new Action<Object>((sender) =>
+					_cmdBrowseConnection = new RelayCommand(sender =>
 					{
 						var fileFilter = BrowseProjectFilter.GetFilter("esri_browseDialogFilters_browseFiles");
 						fileFilter.BrowsingFilesMode = true;
@@ -64,7 +63,7 @@ namespace Clients.AGP.ProSuiteSolution.ConfigUI
 							NotifyPropertyChanged("SelectedConfiguration");
 						}
 
-					}), () => { return true; });
+					}, () => true);
 				}
 				return _cmdBrowseConnection;
 			}
