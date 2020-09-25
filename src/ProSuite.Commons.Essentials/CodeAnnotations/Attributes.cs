@@ -238,7 +238,7 @@ namespace ProSuite.Commons.Essentials.CodeAnnotations
 	/// <summary>
 	/// Indicates that the function argument should be a string literal and match one
 	/// of the parameters of the caller function. For example, ReSharper annotates
-	/// the parameter of <see cref="System.ArgumentNullException"/>.
+	/// the parameter of <see cref="::System.ArgumentNullException"/>.
 	/// </summary>
 	/// <example><code>
 	/// void Foo(string param) {
@@ -461,9 +461,9 @@ namespace ProSuite.Commons.Essentials.CodeAnnotations
 	}
 
 	/// <summary>
-	/// Can be applied to attributes, type parameters, and parameters of a type assignable from <see cref="System.Type"/> .
+	/// Can be applied to attributes, type parameters, and parameters of a type assignable from <see cref="::System.Type"/> .
 	/// When applied to an attribute, the decorated attribute behaves the same as <see cref="UsedImplicitlyAttribute"/>.
-	/// When applied to a type parameter or to a parameter of type <see cref="System.Type"/>,  indicates that the corresponding type
+	/// When applied to a type parameter or to a parameter of type <see cref="::System.Type"/>,  indicates that the corresponding type
 	/// is used implicitly.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Class | AttributeTargets.GenericParameter |
