@@ -1,5 +1,3 @@
-using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Core.Events;
@@ -14,8 +12,6 @@ using Clients.AGP.ProSuiteSolution.Commons;
 using Clients.AGP.ProSuiteSolution.ConfigUI;
 using ProSuite.AGP.Solution.LoggerUI;
 using ProSuite.AGP.Solution.ProjectItem;
-using ProSuite.AGP.Solution.WorkListTrials;
-using ProSuite.AGP.Solution.WorkListUI;
 using ProSuite.Commons.Logging;
 using ProSuite.QA.Configurator;
 using ProSuite.QA.ServiceManager;
@@ -393,54 +389,6 @@ namespace ProSuite.AGP.Solution
 			var window = FrameworkApplication.ActiveWindow as ArcGIS.Desktop.Core.IProjectWindow;
 			var item = window?.SelectedItems.First();
 			_msg.Info($"Worklist could be initialized from definition file {item.Path}");
-		}
-	}
-
-	internal class ShowWorkListWindow : Button
-	{
-		private WorkListView _worklist = null;
-
-		protected override async void OnClick()
-		{
-			await QueuedTask.Run(() => {CreateTestList(); });
-			 
-			//already open?
-			if (_worklist != null)
-				return;
-			_worklist = new WorkListView();
-			_worklist.Owner = FrameworkApplication.Current.MainWindow;
-			_worklist.Closed += (o, e) => { _worklist = null; };
-			_worklist.Show();
-			//uncomment for modal
-			//_worklist.ShowDialog();
-		}
-
-		private static void CreateTestList()
-		{
-			var workList = WorkListTrialsModule.Current.GetTestWorkList();
-			var workListName = workList.Name;
-
-			var connector = WorkListTrialsModule.Current.GetWorkListConnectionPath(workListName);
-
-			using (var datastore = new PluginDatastore(connector))
-			{
-				var tableNames = datastore.GetTableNames();
-				foreach (var tableName in tableNames)
-				{
-					using (var table = datastore.OpenTable(tableName))
-					{
-						LayerFactory.Instance.CreateFeatureLayer(
-							(FeatureClass)table, MapView.Active.Map);
-
-						//TODO set renderer using error worklist layer file
-						//var layerDocument = new LayerDocument(@"C:\git\EsriCH.ArcGISPro.Trials\WorkListPrototype\TopgisConfiguration\TestData\Work List edited.lyrx");
-						//CIMLayerDocument cimLayerDocument = layerDocument.GetCIMLayerDocument();
-						//var rendererFromLayerFile = ((CIMFeatureLayer)cimLayerDocument.LayerDefinitions[0]).Renderer as CIMUniqueValueRenderer;
-
-						//featureLayer?.SetRenderer(rendererFromLayerFile);
-					}
-				}
-			}
 		}
 	}
 

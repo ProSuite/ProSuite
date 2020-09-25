@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence
@@ -11,6 +13,9 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 	{
 		private List<TState> _states;
 		private List<int> _oids;
+
+		private readonly Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> _workspaces =
+			new Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>();
 
 		private IEnumerable<TState> States
 		{
@@ -66,7 +71,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 
 		public void Commit()
 		{
-			Store(CreateDefinition(_states));
+			Store(CreateDefinition(_workspaces, _states));
 
 			Refresh();
 		}
@@ -78,7 +83,9 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 
 		protected abstract void Store(TDefinition definition);
 
-		protected abstract TDefinition CreateDefinition(List<TState> states);
+		protected abstract TDefinition CreateDefinition(
+			Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
+			List<TState> states);
 
 		protected abstract TState CreateState(IWorkItem item);
 
@@ -122,11 +129,17 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 				_states.Add(state);
 			}
 
-			//if (Modified(item))
-			//{
-			//	state.Visited = item.Visited;
-			//	_states.Add(state);
-			//}
+			GdbTableIdentity table = item.Proxy.Table;
+			GdbWorkspaceIdentity workspace = table.Workspace;
+
+			if (_workspaces.TryGetValue(workspace, out SimpleSet<GdbTableIdentity> tables))
+			{
+				tables.TryAdd(table);
+			}
+			else
+			{
+				_workspaces.Add(workspace, new SimpleSet<GdbTableIdentity> { table });
+			}
 
 			state.Visited = item.Visited;
 

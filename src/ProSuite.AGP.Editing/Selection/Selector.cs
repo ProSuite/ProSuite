@@ -48,7 +48,7 @@ namespace ProSuite.AGP.Editing.Selection
 			return featureClassInfos;
 		}
 
-		public static void SelectLayersFeaturesByOids(Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer)
+		public static void SelectLayersFeaturesByOids(Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer, SelectionCombinationMethod method)
 		{
 			foreach(var kvp in featuresPerLayer)
 			{
@@ -56,19 +56,19 @@ namespace ProSuite.AGP.Editing.Selection
 				                 {
 									 ObjectIDs = kvp.Value
 				                 };
-				kvp.Key.Select(qf);
+				kvp.Key.Select(qf, method);
 			}
 		}
 
 		public static void SelectLayersFeaturesByOids(
-			KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer)
+			KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer, SelectionCombinationMethod method)
 		{
 			{
 				QueryFilter qf = new QueryFilter()
 				                 {
 					                 ObjectIDs = featuresOfLayer.Value
 				                 };
-				featuresOfLayer.Key.Select(qf);
+				featuresOfLayer.Key.Select(qf, method);
 			}
 		}
 	}

@@ -38,8 +38,13 @@
             <Button>
                 <Image Source="Images/GoNearest.png"/>
             </Button>
-            <Button Command="{Binding TestCmd}">Test</Button>
             <Separator/>
+            <Button Command="{Binding ZoomToCmd}">
+                <Image Source="Images/ZoomTo.png"/>
+            </Button>
+            <Button Command="{Binding PanToCmd}">
+                <Image Source="Images/PanTo.png"/>
+            </Button>
             <Button Command="{Binding PreviousExtentCmd}">
                 <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericBlueLeftArrowLongTail16.png"/>
             </Button>
@@ -58,9 +63,9 @@
         <StackPanel Grid.Row="2">
             <ToolBar>
                 <DockPanel LastChildFill="True">
-                    <!--<Label Content="Status: " />-->
+                    <Label Content="Status: " />
                     <CheckBox VerticalAlignment="Center" DockPanel.Dock="Left" IsChecked="{Binding Status, Mode=TwoWay, 
-                        Converter={StaticResource StatusEnumBooleanConverter}}">Status</CheckBox >
+                        Converter={StaticResource StatusEnumBooleanConverter}}" Margin="0,0,10,0"/>
                     <Separator/>
                     <ComboBox SelectedItem="{Binding CurrentWorkList.Visibility}" ItemsSource="{Binding Visibility}"/>
                 </DockPanel>
@@ -71,14 +76,9 @@
                     <Label Content="Visited:" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                     <Label Content="{Binding Visited}" VerticalAlignment="Center" />
                 </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Label Content="Status:" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center" />
-                    <Label Content="{Binding Status, UpdateSourceTrigger=PropertyChanged}" VerticalAlignment="Center" />
-                </StackPanel>
+               
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Label Content="{Binding CurrentIndex}"/>
-                    <Label Content="of"/>
-                    <Label Content="{Binding Count}"/>
+                    <Label Content="{Binding Count}"></Label>
                 </StackPanel>
             </StackPanel>
             

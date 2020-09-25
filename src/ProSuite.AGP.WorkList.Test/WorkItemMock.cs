@@ -7,8 +7,6 @@ namespace ProSuite.AGP.WorkList.Test
 {
 	public class WorkItemMock : IWorkItem
 	{
-		private string _description;
-
 		public WorkItemMock(int oid)
 		{
 			OID = oid;
@@ -20,8 +18,7 @@ namespace ProSuite.AGP.WorkList.Test
 		public GdbRowIdentity Proxy { get; }
 		public WorkItemStatus Status { get; set; }
 		public Envelope Extent { get; }
-
-		public string Description => _description;
+		public string Description { get; }
 
 		public void SetDone(bool done = true)
 		{

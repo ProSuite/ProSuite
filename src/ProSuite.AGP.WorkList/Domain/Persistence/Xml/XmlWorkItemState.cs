@@ -27,7 +27,11 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		[XmlAttribute("status")]
 		public WorkItemStatus Status { get; set; }
 
-		[XmlElement("row")]
+		[XmlElement("Row")]
 		public XmlGdbRowIdentity Row { get; set; }
+
+		// todo daro: replace with UUID as workspace id?
+		[XmlAttribute("Path")]
+		public string Path { get; set; }
 	}
 }

@@ -110,15 +110,13 @@
     <Compile Include="WorkLists\DatabaseWorkEnvironment.cs" />
     <Compile Include="WorkLists\GoFirstButton.cs" />
     <Compile Include="WorkLists\GoNextButton.cs" />
-    <Compile Include="WorkLists\WorkListObserver.cs" />
+    <Compile Include="WorkLists\GoPreviousButton.cs" />
+    <Compile Include="WorkLists\SetStatusButton.cs" />
     <Compile Include="WorkLists\WorkListsModule.cs" />
-    <Compile Include="WorkLists\WorkListViewContext.cs" />
     <Compile Include="WorkListUI\StatusEnumBooleanConverter.cs" />
     <Compile Include="WorkListUI\WorkListView.xaml.cs">
       <DependentUpon>WorkListView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WorkListTrials\WorkListTrialsControls.cs" />
-    <Compile Include="WorkListTrials\WorkListTrialsModule.cs" />
     <Compile Include="WorkListUI\WorkListViewModel.cs" />
     <Compile Include="WorkLists\InMemoryWorkEnvironment.cs" />
   </ItemGroup>
@@ -300,6 +298,12 @@
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="Images\SelectionTool.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\PanTo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\ZoomTo.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--

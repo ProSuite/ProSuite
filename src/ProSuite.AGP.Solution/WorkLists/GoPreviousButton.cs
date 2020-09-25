@@ -5,16 +5,16 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.AGP.Solution.WorkLists
 {
 	[UsedImplicitly]
-	internal class GoNextButton : Button
+	internal class GoPreviousButton : Button
 	{
 		protected override void OnClick()
 		{
-			QueuedTask.Run(() => WorkListsModule.Current.GoNext());
+			QueuedTask.Run(() => WorkListsModule.Current.GoPrevious());
 		}
 
 		protected override void OnUpdate()
 		{
-			Enabled = WorkListsModule.Current.CanGoNext();
+			Enabled = WorkListsModule.Current.CanGoPrevious();
 		}
 	}
 }

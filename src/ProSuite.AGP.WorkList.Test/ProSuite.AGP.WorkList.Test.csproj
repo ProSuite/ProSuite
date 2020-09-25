@@ -49,9 +49,6 @@
     <Compile Include="WorkListTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Esri.ArcGISPro.Extensions">
-      <Version>$(ProNuGetVersion)</Version>
-    </PackageReference>
     <PackageReference Include="NUnit">
       <Version>3.12.0</Version>
     </PackageReference>

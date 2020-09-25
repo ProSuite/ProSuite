@@ -76,6 +76,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		public void Update(IWorkItem item)
 		{
 			Repository.Update(item);
+			
+			OnWorkListChanged(null, new List<long> { item.OID });
 		}
 
 		public void Commit()
@@ -92,7 +94,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		public Polygon AreaOfInterest { get; set; }
 
 		public virtual bool QueryLanguageSupported { get; } = false;
-
+		
 		public virtual IEnumerable<IWorkItem> GetItems(QueryFilter filter = null,
 		                                               bool ignoreListSettings = false)
 		{
@@ -155,20 +157,27 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual bool CanGoFirst()
 		{
-			return _items.Count > 0;
+			return GetFirstVisibleVisitedItemBeforeCurrent() != null;
 		}
 
 		public virtual void GoFirst()
 		{
-			CurrentIndex = 0;
-
-			IWorkItem nextItem = GetNextVisibleItem();
+			IWorkItem nextItem = GetFirstVisibleVisitedItemBeforeCurrent();
 			
 			if (nextItem != null)
 			{
 				Assert.False(Equals(nextItem, Current), "current item and next item are equal");
 
 				SetCurrentItem(nextItem, Current);
+			}
+			else
+			{
+				CurrentIndex = 0;
+				IWorkItem item = GetItem(CurrentIndex);
+				if (item != null)
+				{
+					SetCurrentItem(item);
+				}
 			}
 		}
 
@@ -184,7 +193,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual bool CanGoNext()
 		{
-			return _items.Count > 0 && CurrentIndex < _items.Count - 1;
+			return GetNextVisibleItem() != null;
 		}
 
 		public virtual void GoNext()
@@ -201,15 +210,18 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual bool CanGoPrevious()
 		{
-			return _items.Count > 0 && CurrentIndex > 0;
+			return GetPreviousVisibleItem() != null;
 		}
 
 		public virtual void GoPrevious()
 		{
-			if (CurrentIndex > 0)
+			IWorkItem previousItem = GetPreviousVisibleItem();
+
+			if (previousItem != null)
 			{
-				CurrentIndex -= 1;
-				//TODO should also set current item Visited=true
+				Assert.False(Equals(previousItem, Current), "current item and previous item are equal");
+
+				SetCurrentItem(previousItem, Current);
 			}
 		}
 
@@ -234,7 +246,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		/// </summary>
 		/// <param name="nextItem"></param>
 		/// <param name="currentItem">The work item.</param>
-		private void SetCurrentItem([NotNull] IWorkItem nextItem, [CanBeNull] IWorkItem currentItem)
+		private void SetCurrentItem([NotNull] IWorkItem nextItem, [CanBeNull] IWorkItem currentItem = null)
 		{
 			nextItem.Visited = true;
 			CurrentIndex = _items.IndexOf(nextItem);
@@ -249,16 +261,68 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		[CanBeNull]
+		private IWorkItem GetFirstVisibleVisitedItemBeforeCurrent()
+		{
+			IWorkItem currentItem = Current;
+
+			foreach (IWorkItem workItem in _items)
+			{
+				// search for the first visible work item before the 
+				// current one
+				if (workItem == currentItem)
+				{
+					// found the current one, stop search
+					return null;
+				}
+
+				if (! IsVisible(workItem))
+				{
+					continue;
+				}
+
+				if (! workItem.Visited)
+				{
+					if (currentItem != null)
+					{
+						// unexpected
+						//_msg.Warn("Previous work item not visited");
+					}
+
+					return null;
+				}
+
+				// not the current one, visited
+				return workItem;
+			}
+
+			// no visible work items
+			return null;
+		}
+
+		[CanBeNull]
 		private IWorkItem GetNextVisibleItem()
 		{
 			if (CurrentIndex >= _items.Count - 1)
-
 			{
 				// last item reached
 				return null;
 			}
 
 			IWorkItem item = _items[CurrentIndex + 1];
+
+			return IsVisible(item) ? item : null;
+		}
+
+		[CanBeNull]
+		private IWorkItem GetPreviousVisibleItem()
+		{
+			if (CurrentIndex <= 0)
+			{
+				// no previous item anymore, current is first item
+				return null;
+			}
+			
+			IWorkItem item = _items[CurrentIndex - 1];
 
 			return IsVisible(item) ? item : null;
 		}

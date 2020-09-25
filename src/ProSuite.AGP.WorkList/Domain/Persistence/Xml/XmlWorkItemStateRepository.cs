@@ -2,19 +2,27 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Xml;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 {
 	public class XmlWorkItemStateRepository : WorkItemStateRepository<XmlWorkItemState, XmlWorkListDefinition>
 	{
-		private readonly string _geodatabasePath;
 		private readonly string _xmlFilePath;
 
-		public XmlWorkItemStateRepository(string geodatabasePath, string xmlFilePath)
+		public XmlWorkItemStateRepository(string xmlFilePath)
 		{
-			_geodatabasePath = geodatabasePath;
 			_xmlFilePath = xmlFilePath;
+		}
+
+		public static XmlWorkListDefinition Import(string xmlFilePath)
+		{
+			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
+
+			XmlWorkListDefinition definition = helper.ReadFromFile(xmlFilePath);
+			return definition;
 		}
 
 		protected override void Store(XmlWorkListDefinition definition)
@@ -23,9 +31,21 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 			helper.SaveToFile(definition, _xmlFilePath);
 		}
 
-		protected override XmlWorkListDefinition CreateDefinition(List<XmlWorkItemState> states)
+		protected override XmlWorkListDefinition CreateDefinition(
+			Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
+			List<XmlWorkItemState> states)
 		{
-			return new XmlWorkListDefinition { GeodatabasePath = _geodatabasePath, Items = states};
+			var definition = new XmlWorkListDefinition { Items = states};
+
+			definition.Items = states;
+
+			var xmlWorkspaces = new List<XmlWorkListWorkspace>(tablesByWorkspace.Count);
+
+			Populate(tablesByWorkspace, xmlWorkspaces);
+
+			definition.Workspaces = xmlWorkspaces;
+
+			return definition;
 		}
 
 		protected override List<XmlWorkItemState> ReadStates()
@@ -35,9 +55,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 				return new List<XmlWorkItemState>();
 			}
 
-			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
-
-			XmlWorkListDefinition definition = helper.ReadFromFile(_xmlFilePath);
+			XmlWorkListDefinition definition = Import(_xmlFilePath);
 
 			return definition.Items.ToList();
 		}
@@ -46,6 +64,9 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		{
 			var state = new XmlWorkItemState(item.OID, item.Visited, WorkItemStatus.Unknown,
 			                            new XmlGdbRowIdentity(item.Proxy));
+
+			state.Path = item.Proxy.Table.Workspace.Path;
+
 			return state;
 		}
 
@@ -59,6 +80,26 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		protected override void UpdateCore(XmlWorkItemState state, IWorkItem item)
 		{
 			state.Status = item.Status;
+		}
+
+		private static void Populate(
+			Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
+			ICollection<XmlWorkListWorkspace> list)
+		{
+			foreach (KeyValuePair<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> pair in
+				tablesByWorkspace)
+			{
+				GdbWorkspaceIdentity workspace = pair.Key;
+				SimpleSet<GdbTableIdentity> tables = pair.Value;
+
+				var xmlWorkspace = new XmlWorkListWorkspace();
+				xmlWorkspace.Path = workspace.Path;
+				xmlWorkspace.Tables = tables
+				                      .Select(table => new XmlTableReference(table.Id, table.Name))
+				                      .ToList();
+
+				list.Add(xmlWorkspace);
+			}
 		}
 	}
 }

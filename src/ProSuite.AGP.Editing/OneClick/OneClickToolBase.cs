@@ -339,19 +339,38 @@ namespace ProSuite.AGP.Editing.OneClick
 				Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer =
 					FindFeaturesOfAllLayers(selectionGeometry);
 
-				if (SelectionMode == SelectionMode.Original)
+				if (SelectionMode == SelectionMode.Original) //alt was pressed: select all xy
 				{
-					Selector.SelectLayersFeaturesByOids(featuresPerLayer);
+					Selector.SelectLayersFeaturesByOids(featuresPerLayer, selectionMethod);
 				}
-				else
+				else //select a single feature using feature reduction, and picker if necessary
 				{
-					//select a single feature using feature reduction, 
+					
 					KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer =
 						ReduceFeatures(featuresPerLayer);
 
 					//TODO if still several selection candidates -> present picker here
+					if (featuresOfLayer.Value.Count() > 1)
+					{
+						List<IPickableItem> pickables = new List<IPickableItem>();
 
-					Selector.SelectLayersFeaturesByOids(featuresOfLayer);
+						foreach (var feature in MapUtils.GetFeatures(featuresOfLayer))
+						{
+							string text = $"{featuresOfLayer.Key.Name}: {feature.GetObjectID()}";
+							PickableFeatureItem featureItem = new PickableFeatureItem(featuresOfLayer.Key,feature, text);
+							pickables.Add(featureItem);
+						}
+
+						Point pickerWindowLocation =
+							await QueuedTask.Run(
+								() => MapView.Active.MapToScreen(selectionGeometry.Extent.Center));
+
+						var picker = new PickerUI.Picker(pickables, pickerWindowLocation);
+
+						var item = await picker.PickSingle() as PickableFeatureItem;
+					}
+
+					Selector.SelectLayersFeaturesByOids(featuresOfLayer, selectionMethod);
 				}
 			}
 
@@ -359,7 +378,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				selectionGeometry = sketchGeometry;
 
-				//CTRL was pressed
+				//CTRL was pressed: picker shows fclasses to select from
 				if (SelectionMode == SelectionMode.UserSelect)
 				{
 					List<FeatureClassInfo> featureClassInfos =
@@ -380,18 +399,18 @@ namespace ProSuite.AGP.Editing.OneClick
 						layer.Select(null, selectionMethod);
 					});
 				}
-				else
+				else //select all in envelope
 				{
 					Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer =
 						FindFeaturesOfAllLayers(selectionGeometry);
 
-					Selector.SelectLayersFeaturesByOids(featuresPerLayer);
+					Selector.SelectLayersFeaturesByOids(featuresPerLayer, selectionMethod);
 				}
 			}
 
 			// AddOverlay(selectionGeometry, highlightPolygonSymbol);
 
-			SelectionMode = SelectionMode.UserSelect;
+			SelectionMode = SelectionMode.Normal;
 
 			ProcessSelection(SelectionUtils.GetSelectedFeatures(ActiveMapView), progressor);
 

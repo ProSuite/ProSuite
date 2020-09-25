@@ -7,6 +7,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using JetBrains.Annotations;
 using ProSuite.AGP.Solution.WorkListUI;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 
 namespace ProSuite.AGP.Solution.WorkLists
 {
@@ -16,22 +17,15 @@ namespace ProSuite.AGP.Solution.WorkLists
 		protected async override void OnClick()
 		{
 
+			//need to get worklist back from queuedtask to pass it on
 			var workList = await QueuedTask.Run(() =>
 			{
 				var env = new InMemoryWorkEnvironment();
 				IWorkList wl = env.CreateWorkList();
 				return wl;
 			});
-
-			IWorkList currentWorkList;
-			//if (WorkListsModule.Current.TryGet(workList.Name, out currentWorkList))
-			//{
-			//	WorkListsModule.Current.WorkListModified(workList);
-			//}
-			//else {WorkListsModule.Current.WorkListAdded(workList);}
-			WorkListsModule.Current.WorkListAdded(workList);
+			WorkListsModule.Current.RegisterObserver(new WorkListViewModel(workList as SelectionWorkList));
 			WorkListsModule.Current.ShowView(workList);
-
 		}
 	}
 }

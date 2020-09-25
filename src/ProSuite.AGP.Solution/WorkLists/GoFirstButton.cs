@@ -11,5 +11,10 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			QueuedTask.Run(() => WorkListsModule.Current.GoFirst());
 		}
+
+		protected override void OnUpdate()
+		{
+			Enabled = WorkListsModule.Current.CanGoFirst();
+		}
 	}
 }

@@ -201,6 +201,7 @@
     <Compile Include="RegistryUtils.cs" />
     <Compile Include="SimpleUserNameProvider.cs" />
     <Compile Include="SystemUtils.cs" />
+    <Compile Include="Testing\TestDataLocator.cs" />
     <Compile Include="Text\RegexUtils.cs" />
     <Compile Include="Text\RichTextBuilder.cs" />
     <Compile Include="Text\StringUtils.cs" />
