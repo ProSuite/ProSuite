@@ -104,7 +104,6 @@
       <DependentUpon>ProSuiteLogPane.xaml</DependentUpon>
     </Compile>
     <Compile Include="LoggerUI\ProSuiteLogPaneViewModel.cs" />
-    <Compile Include="ProjectItem\ProSuiteProjectItemFile.cs" />
     <Compile Include="ProSuiteToolsModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProSuiteConfigurationDirectorySearcher.cs" />

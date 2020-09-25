@@ -16,9 +16,6 @@ namespace ProSuite.AGP.Solution.ProjectItem
 
 	public class ProSuiteProjectItem : CustomProjectItemBase
 	{
-		public ProSuiteQASpecificationsConfiguration SpecificationConfiguration { get; set; }
-		public IEnumerable<ProSuiteQAServerConfiguration> ServerConfigurations { get; set; }
-
 		protected ProSuiteProjectItem() : base()
 		{
 		}
@@ -26,12 +23,6 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		protected ProSuiteProjectItem(ItemInfoValue iiv) : base(FlipBrowseDialogOnly(iiv))
 		{
 		}
-
-		//public ProSuiteProjectItem(IEnumerable<ProSuiteQAServerConfiguration> serverConfigurations, ProSuiteQASpecificationsConfiguration specifationConfiguration)
-		//{
-		//	SpecificationConfiguration = specifationConfiguration;
-		//	ServerConfigurations = serverConfigurations;
-		//}
 
 		private static ItemInfoValue FlipBrowseDialogOnly(ItemInfoValue iiv)
 		{
@@ -70,24 +61,24 @@ namespace ProSuite.AGP.Solution.ProjectItem
 			return projectItemInfo;
 		}
 
-		public override bool IsContainer => true;
+		public override bool IsContainer => false;//true;
 
 		//TODO: Fetch is required if <b>IsContainer</b> = <b>true</b>
-		public override void Fetch()
-		{
-			this.ClearChildren();
-			string filePath = this.Path; 
+		//public override void Fetch()
+		//{
+		//	this.ClearChildren();
+		//	string filePath = this.Path;
 
-			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
-			XmlWorkListDefinition definition = helper.ReadFromFile(filePath);
+		//	var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
+		//	XmlWorkListDefinition definition = helper.ReadFromFile(filePath);
 
-			ProSuiteProjectItemWorkList workList = new ProSuiteProjectItemWorkList(
-				definition.GeodatabasePath, filePath, "ProSuiteItem_WorkListItem", null);
+		//	ProSuiteProjectItemWorkList workList = new ProSuiteProjectItemWorkList(
+		//		definition.GeodatabasePath, filePath, "ProSuiteItem_WorkListItem", null);
 
-			List<ProSuiteProjectItemWorkList> workLists = new List<ProSuiteProjectItemWorkList>();
-			workLists.Add(workList);
-			this.AddRangeToChildren(workLists);
-		}
+		//	List<ProSuiteProjectItemWorkList> workLists = new List<ProSuiteProjectItemWorkList>();
+		//	workLists.Add(workList);
+		//	this.AddRangeToChildren(workLists);
+		//}
 
 	}
 

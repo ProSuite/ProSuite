@@ -24,6 +24,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace ProSuite.AGP.Solution
 {
@@ -356,7 +357,7 @@ namespace ProSuite.AGP.Solution
 		protected override void OnClick()
 		{
 			var bf = new BrowseProjectFilter();
-			bf.AddCanBeTypeId("ProSuiteItem_ProjectItemWorkListFile"); //TypeID for the ".wlist" custom project item
+			bf.AddCanBeTypeId("ProSuiteItem_ProjectItem"); //TypeID for the ".wlist" custom project item
 
 			// for subitem allow to browsw inside and add as type
 			//bf.AddDoBrowseIntoTypeId("ProSuiteItem_ProjectItemWorkListFile");
@@ -366,7 +367,7 @@ namespace ProSuite.AGP.Solution
 			var openItemDialog = new OpenItemDialog
 			        {
 	                     Title = "Add Work List",
-	                     InitialLocation = @"c:\data",
+	                     InitialLocation = @"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData",
 	                     BrowseFilter = bf
                      };
 			bool? result = openItemDialog.ShowDialog();
@@ -375,11 +376,25 @@ namespace ProSuite.AGP.Solution
 			var item = openItemDialog.Items.ToArray()[0];
 			var filePath = item.Path;
 
+			ProSuiteProjectItemManager.Current.AddProjectItemFileToProject(Project.Current, filePath);
+
 			// tests 
-			ProSuiteProjectItemManager.Current.AddFileToProject(filePath, Project.Current, ProjectItemType.WorkListDefinition);
+			//ProSuiteProjectItemManager.Current.AddFileToProject(filePath, Project.Current, ProjectItemType.WorkListDefinition);
 		}
 	}
 
+	internal class OpenWorkListFile : Button
+	{
+		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
+		// TODO algr: temporary tests
+		protected override void OnClick()
+		{
+			var window = FrameworkApplication.ActiveWindow as ArcGIS.Desktop.Core.IProjectWindow;
+			var item = window?.SelectedItems.First();
+			_msg.Info($"Worklist could be initialized from definition file {item.Path}");
+		}
+	}
 
 	internal class ShowWorkListWindow : Button
 	{
@@ -428,8 +443,6 @@ namespace ProSuite.AGP.Solution
 			}
 		}
 	}
-
-
 
 	sealed class QASpecListComboBox : ArcGIS.Desktop.Framework.Contracts.ComboBox
 	{

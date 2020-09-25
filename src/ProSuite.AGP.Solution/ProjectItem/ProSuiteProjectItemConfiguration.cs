@@ -12,7 +12,7 @@ using ProSuite.QA.ServiceManager.Types;
 
 namespace ProSuite.AGP.Solution.ProjectItem
 {
-	public class ProSuiteProjectItemConfiguration : ProSuiteProjectItemFile
+	public class ProSuiteProjectItemConfiguration : ProSuiteProjectItem
 	{
 		public ProSuiteQASpecificationsConfiguration SpecificationConfiguration { get; set; }
 		public IEnumerable<ProSuiteQAServerConfiguration> ServerConfigurations { get; set; }

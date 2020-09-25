@@ -19,17 +19,17 @@
       </insertComponent>
     </updateCategory>
     <updateCategory refID="esri_customItems">
-      <insertComponent id="ProSuiteItem_ProjectItemWorkListFile" className="ProSuite.AGP.Solution.ProjectItem.ProSuiteProjectItemFile"
+      <insertComponent id="ProSuiteItem_ProjectItem" className="ProSuite.AGP.Solution.ProjectItem.ProSuiteProjectItem"
                        containerType="ProSuiteContainer">
-          <content displayName="Worklist" fileExtension="wklist" isContainer="true" keywords="worklist" contextMenuID="ProSuiteSolution_ProjectItemWorkListContextMenu">
-            <filterFlags>
-                <type id="File" />
-            </filterFlags>
-          </content>
+        <content displayName="Worklist" fileExtension="wklist" isContainer="true" keywords="worklist" contextMenuID="ProSuiteSolution_ProjectItemWorkListContextMenu">
+          <filterFlags>
+            <type id="File" />
+          </filterFlags>
+        </content>
       </insertComponent>
-      <insertComponent id="ProSuiteItem_WorkListItem" className="Clients.AGP.ProSuiteSolution.ProjectItem.ProSuiteProjectItemWorkList">
+      <!--<insertComponent id="ProSuiteItem_WorkListItem" className="Clients.AGP.ProSuiteSolution.ProjectItem.ProSuiteProjectItemWorkList">
         <content displayName="WorkListItem" isContainer="false" keywords="WorkListItem" contextMenuID="ProSuiteSolution_WorkListContextMenu" />
-      </insertComponent>
+      </insertComponent>-->
     </updateCategory>
   </categories>
   <conditions>
@@ -63,6 +63,9 @@
           <button refID="Clients_AGP_ProSuiteSolution_WorkList" size="large" />
           <button refID="Clients_AGP_ProSuiteSolution_AddWorkList" size="large" />
         </group>
+        <group id="ProSuiteTools_QA_Hidden" caption="" appearsOnAddInTab="false">
+          <button refID="Clients_AGP_ProSuiteSolution_OpenWorkList"/>
+        </group>
         <group id="ProSuiteTools_Editing" caption="Edit Tools" keytip="G1">
           <tool refID="ProSuiteTools_Editing_EraseTool" size="small" />
         </group>
@@ -93,6 +96,11 @@
         <button id="Clients_AGP_ProSuiteSolution_AddWorkList" caption="AddWorkList" className="AddWorkListFile" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Add Worklist file">
             Open Worklist file (wklist)<disabledText />
+          </tooltip>
+        </button>
+        <button id="Clients_AGP_ProSuiteSolution_OpenWorkList" caption="OpenWorkList" className="OpenWorkListFile" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
+          <tooltip heading="Open Worklist file">
+            Initialize and Open Worklist file (wklist)<disabledText />
           </tooltip>
         </button>
         <button id="Clients_AGP_ProSuiteSolution_WorkList" caption="WorkList" className="ShowWorkListWindow" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
@@ -129,7 +137,7 @@
           <!--<button refID="esri_DeleteItem" />-->
         </menu>
         <menu id="ProSuiteSolution_ProjectItemWorkListContextMenu" caption="ProSuite Project Item">
-          <button refID="WorkLists_CreateSelectionWorkList" />
+          <button refID="Clients_AGP_ProSuiteSolution_OpenWorkList" />
           <button refID="esri_DeleteItem" />
         </menu>
         <menu id="ProSuiteSolution_WorkListContextMenu" caption="Work list">

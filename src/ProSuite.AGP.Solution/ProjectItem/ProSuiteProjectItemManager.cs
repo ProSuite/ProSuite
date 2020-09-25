@@ -6,6 +6,7 @@ using ProSuite.Commons.Logging;
 using System.IO;
 using System.Linq;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.Xml;
 
 namespace ProSuite.AGP.Solution.ProjectItem
 {
@@ -16,6 +17,8 @@ namespace ProSuite.AGP.Solution.ProjectItem
 	}
 	public class ProSuiteProjectItemManager
 	{
+		// TODO algr: IRepository<T> interface for Project? Save, Add, ...
+
 		private readonly string _containerName = "ProSuiteContainer";
 
 		private readonly string _workListFolderName = "WorkLists";
@@ -26,16 +29,65 @@ namespace ProSuite.AGP.Solution.ProjectItem
 
 		Msg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-		// TODO algr: IRepository<T> interface for Project? Save, Add, ...
-		public bool SaveWorkListDefinitionInProject(Project currentProject, XmlWorkListDefinition definition)
+		// TODO tmp
+
+		private string GetProjectSubFolder(Project currentProject, string subFolder)
+		{
+			var issuesPath = Path.Combine(currentProject.HomeFolderPath, subFolder);
+			Directory.CreateDirectory(issuesPath);
+			return issuesPath;
+		}
+
+		public bool AddProjectItemFileToProject(Project currentProject, string itemPath)
 		{
 			var result = false;
 
+			var subFolder = GetProjectSubFolder(currentProject, _workListFolderName);
+
+			// do we have container?
+			QueuedTask.Run(() =>
+			{
+				var container = currentProject.GetProjectItemContainer("ProSuiteContainer");
+				_msg.Info($"ProjectItems are {container.GetItems().Count()}");
+
+				bool folderItemPresent = false;
+				foreach (var containerItem in container.GetItems())
+				{
+					if (containerItem is FolderConnectionProjectItem)
+					{
+						folderItemPresent = true;
+						break;
+					}
+				}
+
+				if (!folderItemPresent)
+				{
+					var folderItem = new ProSuiteProjectItem(
+						"WorkList item",
+						subFolder,
+						"ProSuiteItem_ProjectItem", //item.TypeID,
+						"ProSuiteItem_FolderContainer"); //container.TypeID);
+
+					var added = currentProject.AddItem(folderItem);
+					_msg.Info($"Project item folder added {added}");
+				}
+
+				File.Copy(itemPath, Path.Combine(subFolder, Path.GetFileName(itemPath)));
+				currentProject.SetDirty(); //enable save
+			});
+			return result;
+		}
+
+		public bool SaveWorkListDefinitionInProject(Project currentProject, XmlWorkListDefinition definition)
+		{
 			// serialize to tmp
+			var tmpPath = Path.GetTempFileName();
+			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
+			helper.SaveToFile(definition, tmpPath);
 
 			// add file to project
-
-			return result;
+			AddProjectItemFileToProject(currentProject, tmpPath);
+			return true;
 		}
 
 		public bool AddFileToProject(string filePath, Project project, ProjectItemType fileType)
@@ -43,6 +95,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 			var itemFolder = GetProjectItemFolderPath(project, fileType);
 			if (String.IsNullOrEmpty(itemFolder))
 				return false; 
+
 
 			File.Copy(filePath, Path.Combine(itemFolder, Path.GetFileName(filePath)));
 			return true;
@@ -74,6 +127,8 @@ namespace ProSuite.AGP.Solution.ProjectItem
 			if (String.IsNullOrEmpty(itemFolder)) return null; // wrong type
 
 			var itemFullPath = Path.Combine(project.HomeFolderPath, itemFolder);
+			Directory.CreateDirectory(itemFullPath);
+
 			bool folderItemPresent = false;
 			QueuedTask.Run(() =>
 			{
@@ -95,19 +150,16 @@ namespace ProSuite.AGP.Solution.ProjectItem
 				if (!folderItemPresent)
 				{
 					// TODO algr: other project item types
-					var folderItem = new ProSuiteProjectItemFile(
+					var folderItem = new ProSuiteProjectItem(
 						"WorkList item",
 						itemFolder,
-						"ProSuiteItem_ProjectItemWorkListFile",
+						"ProSuiteItem_ProjectItem",
 						container.TypeID);
 
 					folderItemPresent = project.AddItem(folderItem);
 					_msg.Info($"Project item folder added {folderItemPresent}");
 					if (folderItemPresent)
-					{
-						Directory.CreateDirectory(itemFullPath);
 						project.SetDirty(); //enable save
-					}
 				}
 			});
 			return folderItemPresent ? itemFullPath : null;

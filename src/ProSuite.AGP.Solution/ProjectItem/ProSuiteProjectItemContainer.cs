@@ -7,7 +7,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 {
 	// this is main container for all specific project items
 
-	internal class ProSuiteProjectItemContainer : CustomProjectItemContainer<ProSuiteProjectItemFile>
+	internal class ProSuiteProjectItemContainer : CustomProjectItemContainer<ProSuiteProjectItem>
 	{
 		//This should be an arbitrary unique string. It must match your <content type="..." 
 		//in the Config.daml for the container
@@ -31,12 +31,12 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		public override Item CreateItem(string name, string path, string containerType, string data)
 		{
 			var item = ItemFactory.Instance.Create(path);
-			//if (item is ProSuiteProjectItemContainer)
-			//{
-				var projectItem = item as ProSuiteProjectItemFile;
+			if (item is ProSuiteProjectItemContainer)
+			{
+				var projectItem = item as ProSuiteProjectItem;
 				if (projectItem != null)
 					this.Add(projectItem);
-			//}
+			}
 
 			return item;
 		}
