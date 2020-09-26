@@ -1,6 +1,8 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -21,7 +23,7 @@ namespace ProSuite.AGP.Editing.Picker
 			QueuedTask.Run(() =>
 			{
 				Geometry = feature.GetShape();
-				ItemImageUri = GetImagePath(Geometry);
+				_itemImageUri = GetImagePath(Geometry);
 			});
 		}
 
@@ -29,26 +31,26 @@ namespace ProSuite.AGP.Editing.Picker
 		private readonly Feature _feature;
 		private bool _isSelected;
 		private Geometry _geometry;
-		private Uri _itemImage;
+		private Uri _itemImageUri;
+		private BitmapImage _img = null;
 
 		private static Uri GetImagePath(Geometry geometry)
 		{
 			if (geometry.GeometryType == GeometryType.Point)
 			{
-				return new Uri(
-					"pack://application:,,,/ProSuite.AGP.Editing;component/Images/PointGeometry.bmp");
+				return new Uri(@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PointGeometry.bmp");
 			}
 
 			if (geometry.GeometryType == GeometryType.Polyline)
 			{
 				return new Uri(
-					"pack://application:,,,/ProSuite.AGP.Editing;component/Images/LineGeometry.bmp");
+					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/LineGeometry.bmp");
 			}
 
 			if (geometry.GeometryType == GeometryType.Polygon)
 			{
 				return new Uri(
-					"pack://application:,,,/ProSuite.AGP.Editing;component/Images/PolygonGeometry.bmp");
+					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PolygonGeometry.bmp");
 			}
 
 			return new Uri("");
@@ -76,11 +78,18 @@ namespace ProSuite.AGP.Editing.Picker
 			set => _geometry = value;
 		}
 
-		public Uri ItemImageUri
+		public ImageSource ItemImageSource
 		{
-			get => _itemImage;
-			set => _itemImage = value;
+			get
+			{
+				if (_img == null)
+				{
+					_img = new BitmapImage(_itemImageUri);
+				}
+				return _img;
+			}
 		}
+
 
 		public FeatureLayer Layer => _featureLayer as FeatureLayer;
 

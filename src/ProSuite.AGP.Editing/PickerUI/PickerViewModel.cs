@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using ArcGIS.Core.CIM;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
@@ -61,6 +63,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 		private List<IPickableItem> _selectedItems;
 
 		protected readonly List<IDisposable> _overlays = new List<IDisposable>();
+
 		
 		public RelayCommand FlashItemCmd { get; internal set; }
 		public RelayCommand CloseCommand { get; set; }
@@ -74,7 +77,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 				DialogResult = true;
 			}
 		}
-
+		
 		public bool IsSingleMode
 		{
 			get => _isSingleMode;
