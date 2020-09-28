@@ -22,5 +22,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 		void Commit();
 
 		void Discard();
+
+		// todo daro: is this the right way?
+		void SetCurrentIndex(int currentIndex);
+		int GetCurrentIndex();
 	}
 }

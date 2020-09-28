@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.DomainModel.DataModel;
 
@@ -93,5 +95,17 @@ namespace ProSuite.AGP.WorkList
 		//}
 
 		#endregion
+
+		protected static Type GetWorkListTypeCore<T>() where T : IWorkList
+		{
+			return typeof(T);
+		}
+
+		protected IRepository CreateStateRepository(string path, string workListName)
+		{
+			return CreateStateRepositoryCore(path, workListName);
+		}
+
+		protected abstract IRepository CreateStateRepositoryCore(string path, string workListName);
 	}
 }

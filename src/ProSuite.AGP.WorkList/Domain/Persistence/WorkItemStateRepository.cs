@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.AGP.WorkList.Contracts;
@@ -11,11 +12,21 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 		where TState : IWorkItemState
 		where TDefinition : IWorkListDefinition<TState>
 	{
+		protected string Name { get; }
+		protected Type Type { get; }
+
 		private List<TState> _states;
 		private List<int> _oids;
 
 		private readonly Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> _workspaces =
 			new Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>();
+
+		protected WorkItemStateRepository(string name, Type type, int? currentItemIndex)
+		{
+			Name = name;
+			Type = type;
+			CurrentIndex = currentItemIndex;
+		}
 
 		private IEnumerable<TState> States
 		{
@@ -45,6 +56,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			}
 		}
 
+		public int? CurrentIndex { get; set; }
+
 		public IWorkItem Refresh(IWorkItem item)
 		{
 			TState state = Lookup(item);
@@ -57,6 +70,35 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			item.Visited = state.Visited;
 
 			return RefreshCore(item, state);
+		}
+
+		public void Update([NotNull] IWorkItem item)
+		{
+			TState state = Lookup(item);
+
+			if (state == null)
+			{
+				// todo daro: revise
+				// create new state if it doesn't exist
+				state = CreateState(item);
+				_states.Add(state);
+			}
+
+			GdbTableIdentity table = item.Proxy.Table;
+			GdbWorkspaceIdentity workspace = table.Workspace;
+
+			if (_workspaces.TryGetValue(workspace, out SimpleSet<GdbTableIdentity> tables))
+			{
+				tables.TryAdd(table);
+			}
+			else
+			{
+				_workspaces.Add(workspace, new SimpleSet<GdbTableIdentity> { table });
+			}
+
+			state.Visited = item.Visited;
+
+			UpdateCore(state, item);
 		}
 
 		public void UpdateVolatileState(IEnumerable<IWorkItem> items)
@@ -115,35 +157,6 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			// todo daro: inline
 			TState result = _states[index];
 			return result;
-		}
-
-		private void Update([NotNull] IWorkItem item)
-		{
-			TState state = Lookup(item);
-
-			if (state == null)
-			{
-				// todo daro: revise
-				// create new state if it doesn't exist
-				state = CreateState(item);
-				_states.Add(state);
-			}
-
-			GdbTableIdentity table = item.Proxy.Table;
-			GdbWorkspaceIdentity workspace = table.Workspace;
-
-			if (_workspaces.TryGetValue(workspace, out SimpleSet<GdbTableIdentity> tables))
-			{
-				tables.TryAdd(table);
-			}
-			else
-			{
-				_workspaces.Add(workspace, new SimpleSet<GdbTableIdentity> { table });
-			}
-
-			state.Visited = item.Visited;
-
-			UpdateCore(state, item);
 		}
 
 		private void Refresh()

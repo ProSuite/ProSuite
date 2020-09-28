@@ -8,10 +8,14 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 	{
 		IWorkItem Refresh(IWorkItem item);
 
+		void Update(IWorkItem item);
+
 		void UpdateVolatileState([NotNull] IEnumerable<IWorkItem> items);
 
 		void Commit();
 
 		void Discard();
+
+		int? CurrentIndex { get; set; }
 	}
 }

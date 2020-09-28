@@ -101,6 +101,7 @@
     <Compile Include="Domain\Persistence\Xml\XmlGdbRowIdentity.cs" />
     <Compile Include="Domain\Persistence\Xml\XmlWorkItemStateRepository.cs" />
     <Compile Include="Domain\Persistence\Xml\XmlWorkItemState.cs" />
+    <Compile Include="WorkListUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj">
@@ -126,6 +127,10 @@
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
       <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
       <Name>ProSuite.Commons</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
+      <Project>{0B48B56F-3A3D-4367-AA76-A356519AF2AB}</Project>
+      <Name>ProSuite.DomainModel.Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.DomainModel\ProSuite.DomainModel.csproj">
       <Project>{824ddbe3-edaf-460b-b513-386a4260c1ff}</Project>

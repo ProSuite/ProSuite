@@ -36,13 +36,14 @@ namespace ProSuite.AGP.WorkList.Test
 			throw new NotImplementedException();
 		}
 
-		public void Save(IWorkItem item)
+		public void Update(IWorkItem item)
 		{
 			throw new NotImplementedException();
 		}
 
-		public void Update(IWorkItem item)
+		public void Save(IWorkItem item)
 		{
+			throw new NotImplementedException();
 		}
 
 		public void UpdateVolatileState(IEnumerable<IWorkItem> items)
@@ -55,6 +56,16 @@ namespace ProSuite.AGP.WorkList.Test
 		}
 
 		public void Discard()
+		{
+			throw new NotImplementedException();
+		}
+
+		public void SetCurrentIndex(int currentIndex)
+		{
+			throw new NotImplementedException();
+		}
+
+		public int GetCurrentIndex()
 		{
 			throw new NotImplementedException();
 		}
