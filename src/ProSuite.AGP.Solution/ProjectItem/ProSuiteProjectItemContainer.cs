@@ -7,7 +7,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 {
 	// this is main container for all specific project items
 
-	internal class ProSuiteProjectItemContainer : CustomProjectItemContainer<ProSuiteProjectItem>
+	internal sealed class ProSuiteProjectItemContainer : CustomProjectItemContainer<ProSuiteProjectItem>
 	{
 		//This should be an arbitrary unique string. It must match your <content type="..." 
 		//in the Config.daml for the container

@@ -76,9 +76,18 @@ namespace ProSuite.AGP.Solution.ProjectItem
 	// TODO ProSuiteDataSubItem for different types of data?
 	internal class ProSuiteProjectItemWorkList : CustomItemBase
 	{
+		private const string DefaultDisplayType = "WorkList";
+		private string _displayType;
+
 		public ProSuiteProjectItemWorkList(string name, string path, string type, string lastModifiedTime) : base(name, path, type, lastModifiedTime)
 		{
-			DisplayType = "WorkList";
+			_displayType = DefaultDisplayType;
+		}
+
+		protected override string DisplayType
+		{
+			get => _displayType ?? DefaultDisplayType;
+			set => _displayType = value;
 		}
 
 		public override ImageSource LargeImage => ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset32.png");
@@ -89,9 +98,18 @@ namespace ProSuite.AGP.Solution.ProjectItem
 	// probably this subitem should not be visible in catalog
 	internal class ProSuiteProjectItemConfig : CustomItemBase
 	{
+		private const string DefaultDisplayType = "Configuration";
+		private string _displayType;
+
 		public ProSuiteProjectItemConfig(string name, string path, string type, string lastModifiedTime) : base(name, path, type, lastModifiedTime)
 		{
-			DisplayType = "Configuration";
+			_displayType = DefaultDisplayType;
+		}
+
+		protected override string DisplayType
+		{
+			get => _displayType ?? DefaultDisplayType;
+			set => _displayType = value;
 		}
 
 		public override ImageSource LargeImage => ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset32.png");
