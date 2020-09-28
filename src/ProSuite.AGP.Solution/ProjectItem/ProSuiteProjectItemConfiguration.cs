@@ -1,12 +1,7 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
-using ArcGIS.Desktop.Core;
-using Clients.AGP.ProSuiteSolution.Commons;
-using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.AGP.Solution.Commons;
 using ProSuite.Commons.Xml;
 using ProSuite.QA.ServiceManager.Types;
 

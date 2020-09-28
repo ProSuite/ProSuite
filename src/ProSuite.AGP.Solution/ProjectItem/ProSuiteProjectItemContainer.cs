@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using System.Windows.Media;
 using ArcGIS.Desktop.Core;
-using Clients.AGP.ProSuiteSolution.Commons;
+using ProSuite.AGP.Solution.Commons;
 
 namespace ProSuite.AGP.Solution.ProjectItem
 {

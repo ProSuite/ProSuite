@@ -2,7 +2,7 @@
 
 set TargetFrameworkVersion=v4.8
 set OutputDirectory=..\..\bin
-set ProAssemblyPath=..\..\..\EsriDE.Commons\lib\ESRI\ProSDK\2.5
+set ProAssemblyPath=C:\Program Files\ArcGIS\Pro
 
 REM In case encryption is used, provide the encryptor factory from a custom location:
 REM set ProSuiteEncryptorFactoryDir=..\..\..\ProSuite-etc\

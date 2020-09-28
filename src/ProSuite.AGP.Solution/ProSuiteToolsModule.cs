@@ -4,12 +4,8 @@ using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Internal.Catalog;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using Clients.AGP.ProSuiteSolution;
-using Clients.AGP.ProSuiteSolution.Commons;
-using Clients.AGP.ProSuiteSolution.ConfigUI;
 using ProSuite.AGP.Solution.LoggerUI;
 using ProSuite.AGP.Solution.ProjectItem;
 using ProSuite.Commons.Logging;
@@ -20,7 +16,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
+using ProSuite.AGP.Solution.Commons;
+using ProSuite.AGP.Solution.ConfigUI;
 
 namespace ProSuite.AGP.Solution
 {
