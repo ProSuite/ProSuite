@@ -34,7 +34,9 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GeometryUtilsTest.cs" />
     <Compile Include="ProCoreTest.cs" />
+    <Compile Include="SymbolUtilsTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="ArcGIS.Core">
