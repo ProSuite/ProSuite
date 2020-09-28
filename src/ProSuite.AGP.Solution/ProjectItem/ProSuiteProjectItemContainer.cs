@@ -1,10 +1,11 @@
 using System.Threading.Tasks;
 using System.Windows.Media;
 using ArcGIS.Desktop.Core;
-using ProSuite.AGP.Solution.Commons;
+using Clients.AGP.ProSuiteSolution.Commons;
 
 namespace ProSuite.AGP.Solution.ProjectItem
 {
+	// this is main container for all specific project items
 
 	internal class ProSuiteProjectItemContainer : CustomProjectItemContainer<ProSuiteProjectItem>
 	{
@@ -14,7 +15,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 
 		public ProSuiteProjectItemContainer() : base(ContainerName)
 		{
-
+			this.ContextMenuID = "ProSuiteSolution_AddFoldersMenu";
 		}
 
 		/// <summary>
@@ -32,26 +33,18 @@ namespace ProSuite.AGP.Solution.ProjectItem
 			var item = ItemFactory.Instance.Create(path);
 			if (item is ProSuiteProjectItemContainer)
 			{
-				this.Add(item as ProSuiteProjectItem);
+				var projectItem = item as ProSuiteProjectItem;
+				if (projectItem != null)
+					this.Add(projectItem);
 			}
+
 			return item;
 		}
 
-		public override ImageSource LargeImage
-		{
-			get
-			{
-				return ImageUtils.GetImageSource(@"FolderWithGISData32.png");
-			}
-		}
+		// TODO algr: better icon (similar to ArcGIS Pro project items)
+		public override ImageSource LargeImage => ImageUtils.GetImageSource(@"FolderWithGISData32.png");
 
-		public override Task<ImageSource> SmallImage
-		{
-			get
-			{
-				return Task.FromResult(ImageUtils.GetImageSource(@"FolderWithGISData16.png"));
-			}
-		}
+		public override Task<ImageSource> SmallImage => Task.FromResult((ImageSource)ImageUtils.GetImageSource(@"FolderWithGISData16.png"));
 
 	}
 

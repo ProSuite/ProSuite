@@ -17,6 +17,8 @@ namespace ProSuite.QA.Configurator
 		public IEnumerable<IProSuiteQAServiceProvider> GetQAServiceProviders(IEnumerable<ProSuiteQAServerConfiguration> serverConfigs)
 		{
 			var listOfQAServiceProviders = new List<IProSuiteQAServiceProvider>();
+			if (serverConfigs == null) return listOfQAServiceProviders;
+
 			foreach (var serverConfig in serverConfigs)
 			{
 				if (serverConfig.ServiceType == ProSuiteQAServiceType.GPLocal ||

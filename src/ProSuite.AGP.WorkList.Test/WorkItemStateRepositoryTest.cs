@@ -18,6 +18,8 @@ namespace ProSuite.AGP.WorkList.Test
 		private Table _table0;
 		private string _issuesGdb = @"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\issues.gdb";
 		private string _featureClass = "IssuePolygons";
+		//private string _statesXml = @"C:\temp\states.xml";
+		private string _statesXml = @"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\a_selection_work_list.xml";
 		private IssueItemRepository _repository;
 
 		[SetUp]
