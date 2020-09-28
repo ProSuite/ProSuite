@@ -74,7 +74,7 @@
                         </i:EventTrigger>
                     </i:Interaction.Triggers>
 
-                    <Image Source="{Binding ItemImageUri, TargetNullValue=null}"
+                    <Image Source="{Binding ItemImageSource, TargetNullValue=null}"
                            Style="{StaticResource Image}" />
                     <TextBlock Text="{Binding ItemText}"
                                Style="{StaticResource TextBlock}" />
@@ -95,7 +95,7 @@
                     <CheckBox IsChecked="{Binding IsSelected}"
                               Style="{StaticResource Checkbox}" />
 
-                    <Image Source="{Binding ItemImageUri, TargetNullValue=null}"
+                    <Image Source="{Binding ItemImageSource, TargetNullValue=null}"
                            Style="{StaticResource Image}" />
 
                     <TextBlock Text="{Binding ItemText}"
@@ -110,7 +110,7 @@
 
     <Grid Background="Transparent">
         <DockPanel Background="Transparent">
-
+            <!--<Image Source="pack://application:,,,/Images/PointGeometry.bmp"></Image>-->
             <Button
                 DockPanel.Dock="Top"
                 HorizontalAlignment="Right"
@@ -118,7 +118,7 @@
                 Command="{Binding CloseCommand}"
                 Style="{DynamicResource Esri_ButtonClose}"
                 Visibility="{Binding IsSingleMode, Converter={StaticResource VisibleIfFalseConverter}}" />
-
+            
             <!-- Listbox visibility is set in viewmodel 
             and depends on Single/Multiselection mode. -->
             <ListBox x:Name="SingleSelection"

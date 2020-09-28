@@ -1,6 +1,6 @@
-using System;
 using System.ComponentModel;
-using ArcGIS.Core.Geometry;
+using System.Windows.Media;
+using Geometry = ArcGIS.Core.Geometry.Geometry;
 
 namespace ProSuite.AGP.Editing.Picker
 {
@@ -12,6 +12,6 @@ namespace ProSuite.AGP.Editing.Picker
 
 		Geometry Geometry { get; set; }
 
-		Uri ItemImageUri { get; set; }
+		ImageSource ItemImageSource { get; }
 	}
 }
