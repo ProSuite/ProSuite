@@ -87,6 +87,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public string Name { get; }
 
+		// An empty work list should return null and not an empty envelope.
+		// Pluggable Datasource cannot handle an empty envelope.
 		public Envelope Extent { get; protected set; }
 
 		public WorkItemVisibility Visibility { get; set; }
@@ -370,10 +372,12 @@ namespace ProSuite.AGP.WorkList.Domain
 				}
 			}
 
+			// Should return null and not an empty envelope. Pluggable Datasource cannot handle
+			// an empty envelope.
 			return count > 0
 				       ? EnvelopeBuilder.CreateEnvelope(new Coordinate3D(xmin, ymin, zmin),
 				                                        new Coordinate3D(xmax, ymax, zmax), sref)
-				       : EnvelopeBuilder.CreateEnvelope(sref);
+				       : null;
 		}
 
 		private static bool Relates(Geometry a, SpatialRelationship rel, Geometry b)

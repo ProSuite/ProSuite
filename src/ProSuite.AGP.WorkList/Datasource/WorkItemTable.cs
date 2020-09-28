@@ -35,6 +35,8 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		public override Envelope GetExtent()
 		{
+			// Do return not an empty envelope.
+			// Pluggable Datasource cannot handle an empty envelope.
 			return _workList.Extent;
 		}
 
