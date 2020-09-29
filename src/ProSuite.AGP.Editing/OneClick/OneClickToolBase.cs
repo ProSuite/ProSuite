@@ -333,6 +333,8 @@ namespace ProSuite.AGP.Editing.OneClick
 					BufferGeometryByPixels(sketchPoint,
 					                       SelectionSettings.SelectionTolerancePixels);
 
+				//AddOverlay(selectionGeometry, highlightPolygonSymbol);
+
 				// select all features spatially related with selectionGeometry
 				Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer =
 					FindFeaturesOfAllLayers(selectionGeometry);
@@ -366,9 +368,9 @@ namespace ProSuite.AGP.Editing.OneClick
 						var picker = new PickerUI.Picker(pickables, pickerWindowLocation);
 
 						var item = await picker.PickSingle() as PickableFeatureItem;
+						KeyValuePair<BasicFeatureLayer, List<long>> kvp = new KeyValuePair<BasicFeatureLayer, List<long>>(item.Layer,new List<long>{item.Oid});
+						Selector.SelectLayersFeaturesByOids(kvp, selectionMethod);
 					}
-
-					Selector.SelectLayersFeaturesByOids(featuresOfLayer, selectionMethod);
 				}
 			}
 
@@ -405,9 +407,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					Selector.SelectLayersFeaturesByOids(featuresPerLayer, selectionMethod);
 				}
 			}
-
-			// AddOverlay(selectionGeometry, highlightPolygonSymbol);
-
+			
 			SelectionMode = SelectionMode.Normal;
 
 			ProcessSelection(SelectionUtils.GetSelectedFeatures(ActiveMapView), progressor);
@@ -445,18 +445,16 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				if (CanSelectFromLayer(layer))
 				{
-					IEnumerable<Feature> features =
-						MapUtils.FilterFeaturesByGeometry(layer, selectionGeometry,
+					IEnumerable<long> oids =
+						MapUtils.FilterLayerOidsByGeometry(layer, selectionGeometry,
 						                                  SelectionSettings.SpatialRelationship);
-					IEnumerable<long> oids = MapUtils.GetFeaturesOidList(features);
-
 					if (oids.Any())
 					{
+						//IEnumerable<long> oids = MapUtils.GetFeaturesOidList(oids);
 						featuresPerLayer.Add(layer, oids.ToList());
 					}
 				}
 			}
-
 			return featuresPerLayer;
 		}
 
