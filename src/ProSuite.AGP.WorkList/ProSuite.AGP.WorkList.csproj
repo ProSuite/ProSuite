@@ -85,6 +85,7 @@
     <Compile Include="Domain\Persistence\Xml\XmlWorkListDefinition.cs" />
     <Compile Include="Domain\IWorkItemState.cs" />
     <Compile Include="Domain\IWorkListDefinition.cs" />
+    <Compile Include="IWorkListObserver.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Domain\Persistence\IRepository.cs" />
     <Compile Include="Domain\Persistence\WorkItemStateRepository.cs" />
@@ -97,7 +98,6 @@
     <Compile Include="Datasource\WorkListDatasourceBase.cs" />
     <Compile Include="WorkEnvironmentBase.cs" />
     <Compile Include="WorkItemVm.cs" />
-    <Compile Include="WorkListCentral.cs" />
     <Compile Include="Domain\Persistence\Xml\XmlGdbRowIdentity.cs" />
     <Compile Include="Domain\Persistence\Xml\XmlWorkItemStateRepository.cs" />
     <Compile Include="Domain\Persistence\Xml\XmlWorkItemState.cs" />
