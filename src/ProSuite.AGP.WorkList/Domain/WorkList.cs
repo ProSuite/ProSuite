@@ -30,7 +30,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		private readonly List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
 
 		[NotNull]
-		private Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
+		private readonly Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
 			new Dictionary<GdbRowIdentity, IWorkItem>(_initialCapacity);
 
 		private EventHandler<WorkListChangedEventArgs> _workListChanged;
@@ -43,7 +43,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			Visibility = WorkItemVisibility.Todo;
 			AreaOfInterest = null;
-			CurrentIndex = -1;
+			CurrentIndex = repository.GetCurrentIndex();
 
 			foreach (IWorkItem item in Repository.GetItems())
 			{
@@ -59,7 +59,8 @@ namespace ProSuite.AGP.WorkList.Domain
 				}
 			}
 
-			// todo daro: revise, only for development
+			// initializes the state repository if no states for
+			// the work items are read yet
 			Repository.UpdateVolatileState(_items);
 
 			// todo daro: EnvelopeBuilder as parameter > do not iterate again over items
@@ -87,6 +88,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public string Name { get; }
 
+		// An empty work list should return null and not an empty envelope.
+		// Pluggable Datasource cannot handle an empty envelope.
 		public Envelope Extent { get; protected set; }
 
 		public WorkItemVisibility Visibility { get; set; }
@@ -134,6 +137,15 @@ namespace ProSuite.AGP.WorkList.Domain
 			lock (_syncLock)
 			{
 				return GetItems(filter, ignoreListSettings).Count();
+			}
+		}
+
+		public int Count(WorkItemVisibility visibility)
+		{
+			lock (_syncLock)
+			{
+				// todo Count(WorkItemVisibility visibility)
+				return -1;
 			}
 		}
 
@@ -227,17 +239,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public abstract void Dispose();
 
-		protected void SetItems(IEnumerable<IWorkItem> items)
-		{
-			lock (_syncLock)
-			{
-				_items.Clear();
-				_items.AddRange(items.Where(item => item != null));
-
-				CurrentIndex = -1;
-			}
-		}
-
 		#region Work list navigation
 
 		/// <summary>
@@ -251,6 +252,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			nextItem.Visited = true;
 			CurrentIndex = _items.IndexOf(nextItem);
 
+			Repository.SetCurrentIndex(CurrentIndex);
 			Repository.Update(nextItem);
 
 			var oids = currentItem != null
@@ -308,9 +310,17 @@ namespace ProSuite.AGP.WorkList.Domain
 				return null;
 			}
 
-			IWorkItem item = _items[CurrentIndex + 1];
+			// true if another visible, visited item comes afterwards
+			for (int i = CurrentIndex + 1; i < _items.Count; i++)
+			{
+				IWorkItem workItem = _items[i];
+				if (IsVisible(workItem))
+				{
+					return workItem;
+				}
+			}
 
-			return IsVisible(item) ? item : null;
+			return null;
 		}
 
 		[CanBeNull]
@@ -370,10 +380,12 @@ namespace ProSuite.AGP.WorkList.Domain
 				}
 			}
 
+			// Should return null and not an empty envelope. Pluggable Datasource cannot handle
+			// an empty envelope.
 			return count > 0
 				       ? EnvelopeBuilder.CreateEnvelope(new Coordinate3D(xmin, ymin, zmin),
 				                                        new Coordinate3D(xmax, ymax, zmax), sref)
-				       : EnvelopeBuilder.CreateEnvelope(sref);
+				       : null;
 		}
 
 		private static bool Relates(Geometry a, SpatialRelationship rel, Geometry b)

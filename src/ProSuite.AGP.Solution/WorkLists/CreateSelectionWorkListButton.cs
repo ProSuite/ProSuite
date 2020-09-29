@@ -1,22 +1,17 @@
-using System;
-using System.Diagnostics;
-using System.Threading.Tasks;
-using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using JetBrains.Annotations;
 using ProSuite.AGP.Solution.WorkListUI;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.WorkLists
 {
 	[UsedImplicitly]
 	internal class CreateSelectionWorkListButton : Button
 	{ 
-		protected async override void OnClick()
+		protected override async void OnClick()
 		{
-
 			//need to get worklist back from queuedtask to pass it on
 			var workList = await QueuedTask.Run(() =>
 			{

@@ -9,7 +9,7 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.Picker;
+using ProSuite.AGP.Editing.Picker;
 using Polygon = ArcGIS.Core.Geometry.Polygon;
 
 namespace ProSuite.AGP.Editing.PickerUI
@@ -100,8 +100,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 		{
 			get
 			{
-				return Enumerable.Where<IPickableItem>(_pickableItems, item =>
-					                                       item.IsSelected).ToList();
+				return _pickableItems.Where(item => item.IsSelected).ToList();
 			}
 		}
 

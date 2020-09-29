@@ -1,6 +1,4 @@
-using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
-using ArcGIS.Desktop.Internal.Mapping;
 using ArcGIS.Desktop.Mapping;
 
 namespace ProSuite.AGP.Editing.Selection

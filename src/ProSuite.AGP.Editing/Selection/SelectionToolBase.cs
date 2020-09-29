@@ -1,14 +1,8 @@
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing.Selection
@@ -27,8 +21,7 @@ namespace ProSuite.AGP.Editing.Selection
 			return false;
 		}
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private SelectionSettings _selectionSettings;
 		
@@ -80,7 +73,5 @@ namespace ProSuite.AGP.Editing.Selection
 			get => _selectionSettings;
 			set => _selectionSettings = value;
 		}
-
-		
 	}
 }

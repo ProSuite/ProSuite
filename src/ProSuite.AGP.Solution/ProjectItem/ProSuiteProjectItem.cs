@@ -1,24 +1,15 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Media;
-using System.Xml.Linq;
 using ArcGIS.Desktop.Core;
-using Clients.AGP.ProSuiteSolution.Commons;
 using ESRI.ArcGIS.ItemIndex;
-using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
-using ProSuite.Commons.Xml;
-using ProSuite.QA.ServiceManager.Types;
+using ProSuite.AGP.Solution.Commons;
 
 namespace ProSuite.AGP.Solution.ProjectItem
 {
 
 	public class ProSuiteProjectItem : CustomProjectItemBase
 	{
-		protected ProSuiteProjectItem() : base()
-		{
-		}
+		protected ProSuiteProjectItem() { }
 
 		protected ProSuiteProjectItem(ItemInfoValue iiv) : base(FlipBrowseDialogOnly(iiv))
 		{
@@ -47,7 +38,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 
 		public override ImageSource LargeImage => ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset32.png");
 
-		public override Task<ImageSource> SmallImage => Task.FromResult((ImageSource)ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset16.png"));
+		public override Task<ImageSource> SmallImage => Task.FromResult(ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset16.png"));
 
 		public override ProjectItemInfo OnGetInfo()
 		{
@@ -85,27 +76,44 @@ namespace ProSuite.AGP.Solution.ProjectItem
 	// TODO ProSuiteDataSubItem for different types of data?
 	internal class ProSuiteProjectItemWorkList : CustomItemBase
 	{
+		private const string DefaultDisplayType = "WorkList";
+		private string _displayType;
+
 		public ProSuiteProjectItemWorkList(string name, string path, string type, string lastModifiedTime) : base(name, path, type, lastModifiedTime)
 		{
-			DisplayType = "WorkList";
+			_displayType = DefaultDisplayType;
+		}
+
+		protected override string DisplayType
+		{
+			get => _displayType ?? DefaultDisplayType;
+			set => _displayType = value;
 		}
 
 		public override ImageSource LargeImage => ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset32.png");
-		public override Task<ImageSource> SmallImage => Task.FromResult((ImageSource)ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset16.png"));
+		public override Task<ImageSource> SmallImage => Task.FromResult(ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset16.png"));
 		public override bool IsContainer => false;
 	}
 
 	// probably this subitem should not be visible in catalog
 	internal class ProSuiteProjectItemConfig : CustomItemBase
 	{
+		private const string DefaultDisplayType = "Configuration";
+		private string _displayType;
+
 		public ProSuiteProjectItemConfig(string name, string path, string type, string lastModifiedTime) : base(name, path, type, lastModifiedTime)
 		{
-			DisplayType = "Configuration";
+			_displayType = DefaultDisplayType;
+		}
+
+		protected override string DisplayType
+		{
+			get => _displayType ?? DefaultDisplayType;
+			set => _displayType = value;
 		}
 
 		public override ImageSource LargeImage => ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset32.png");
-		public override Task<ImageSource> SmallImage => Task.FromResult((ImageSource)ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset16.png"));
+		public override Task<ImageSource> SmallImage => Task.FromResult(ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset16.png"));
 		public override bool IsContainer => false;
 	}
-
 }

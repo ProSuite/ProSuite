@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,9 +13,10 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 	{
 		private readonly string _xmlFilePath;
 
-		public XmlWorkItemStateRepository(string xmlFilePath)
+		public XmlWorkItemStateRepository(string xmlPath, string name, Type type,
+		                                  int? currentItemIndex = null) : base(name, type, currentItemIndex)
 		{
-			_xmlFilePath = xmlFilePath;
+			_xmlFilePath = xmlPath;
 		}
 
 		public static XmlWorkListDefinition Import(string xmlFilePath)
@@ -22,6 +24,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
 
 			XmlWorkListDefinition definition = helper.ReadFromFile(xmlFilePath);
+			definition.Path = xmlFilePath;
 			return definition;
 		}
 
@@ -35,7 +38,18 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 			Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
 			List<XmlWorkItemState> states)
 		{
-			var definition = new XmlWorkListDefinition { Items = states};
+			int index = -1;
+			if (CurrentIndex.HasValue)
+			{
+				index = CurrentIndex.Value;
+			}
+
+			var definition = new XmlWorkListDefinition
+			                 {
+				                 Name = Name, TypeName = Type.FullName,
+				                 AssemblyName = Type.Assembly.GetName().Name, Items = states,
+								 CurrentIndex = index
+			                 };
 
 			definition.Items = states;
 

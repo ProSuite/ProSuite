@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Net.Mime;
 using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Core.CIM;
@@ -17,6 +17,7 @@ using ProSuite.AGP.Solution.WorkListUI;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -30,13 +31,10 @@ namespace ProSuite.AGP.Solution.WorkLists
 		private WorkListRegistry _registry;
 		private IList<IWorkListObserver> _observers;
 
-		private Dictionary<IWorkList, FeatureLayer> _layerByWorkList =
-			new Dictionary<IWorkList, FeatureLayer>();
+		private readonly Dictionary<IWorkList, FeatureLayer> _layerByWorkList = new Dictionary<IWorkList, FeatureLayer>();
 
 		public static WorkListsModule Current =>
-			_instance ?? (_instance =
-				              (WorkListsModule) FrameworkApplication.FindModule(
-					              "ProSuite_WorkList_Module"));
+			_instance ?? (_instance = (WorkListsModule) FrameworkApplication.FindModule("ProSuite_WorkList_Module"));
 
 		#region Module overrides
 
@@ -201,12 +199,20 @@ namespace ProSuite.AGP.Solution.WorkLists
 		private void WireEvents()
 		{
 			LayersRemovingEvent.Subscribe(OnLayerRemoving);
+			DrawCompleteEvent.Subscribe(OnDrawCompleted);
+
+			ProjectOpenedAsyncEvent.Subscribe(OnProjectOpendedAsync);
+			ProjectOpenedEvent.Subscribe(OnProjectOpened);
 			ProjectSavingEvent.Subscribe(OnProjectSaving);
 		}
 
 		private void UnwireEvents()
 		{
 			LayersRemovingEvent.Unsubscribe(OnLayerRemoving);
+			DrawCompleteEvent.Unsubscribe(OnDrawCompleted);
+
+			ProjectOpenedAsyncEvent.Unsubscribe(OnProjectOpendedAsync);
+			ProjectOpenedEvent.Unsubscribe(OnProjectOpened);
 			ProjectSavingEvent.Unsubscribe(OnProjectSaving);
 		}
 
@@ -218,6 +224,23 @@ namespace ProSuite.AGP.Solution.WorkLists
 		private void UnwireEvents(IWorkList workList)
 		{
 			workList.WorkListChanged -= WorkList_WorkListChanged;
+		}
+
+		private void OnDrawCompleted(MapViewEventArgs e)
+		{
+			IReadOnlyList<Layer> layers = MapView.Active.Map.GetLayersAsFlattenedList();
+
+			foreach (IWorkList workList in _registry.GetAll())
+			{
+				Layer workListLayer = layers.FirstOrDefault(l => l.Name == workList.Name);
+				if (workListLayer == null)
+				{
+					continue;
+				}
+
+				_layerByWorkList.Add(workList, (FeatureLayer)workListLayer);
+				return;
+			}
 		}
 
 		private Task OnLayerRemoving(LayersRemovingEventArgs e)
@@ -251,6 +274,39 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			// todo daro: revise
 			return Task.FromResult(0);
+		}
+
+		private void OnProjectOpened(ProjectEventArgs e)
+		{
+			
+		}
+
+		private Task OnProjectOpendedAsync(ProjectEventArgs e)
+		{
+			return QueuedTask.Run(() =>
+			{
+				var path = @"C:\temp\a_selection_work_list.xml";
+
+				if (! File.Exists(path))
+				{
+					return;
+				}
+
+				XmlWorkListDefinition definition = XmlWorkItemStateRepository.Import(path);
+
+				IWorkList workList = WorkListUtils.Create(definition);
+
+				if (_registry.GetAll().Any(wl => wl.Name == workList.Name))
+				{
+					return;
+				}
+
+				_registry.Add(workList);
+
+				WireEvents(workList);
+
+				_synchronizer = new EditEventsRowCacheSynchronizer((WorkList.Domain.WorkList) workList);
+			});
 		}
 
 		private Task OnProjectSaving(ProjectEventArgs arg)
@@ -294,7 +350,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		private void SetLayerNotSelectable(FeatureLayer fl)
 		{
-			var cimDefinition = fl.GetDefinition() as CIMFeatureLayer;
+			var cimDefinition = (CIMFeatureLayer) fl.GetDefinition();
 			cimDefinition.Selectable = false;
 			fl.SetDefinition(cimDefinition);
 		}

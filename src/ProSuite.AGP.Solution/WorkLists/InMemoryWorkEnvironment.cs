@@ -1,9 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Carto;
@@ -44,6 +46,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return layerDocument;
 		}
 
+		protected override IRepository CreateStateRepositoryCore(string path, string workListName)
+		{
+			Type type = GetWorkListTypeCore<SelectionWorkList>();
+
+			return new XmlWorkItemStateRepository(path, workListName, type);
+		}
+
 		protected override IWorkItemRepository CreateRepositoryCore(IEnumerable<BasicFeatureLayer> featureLayers)
 		{
 			List<BasicFeatureLayer> layers = featureLayers.ToList();
@@ -51,7 +60,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 			Dictionary<Geodatabase, List<Table>> tables = MapUtils.GetDistinctTables(layers);
 			Dictionary<Table, List<long>> selection = MapUtils.GetDistinctSelectionByTable(layers);
 
-			IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\a_selection_work_list.xml");
+			var path = @"C:\temp\a_selection_work_list.xml";
+			IRepository stateRepository = CreateStateRepository(path, _workListName);
+
 			var repository = new SelectionItemRepository(tables, selection, stateRepository);
 			return repository;
 		}

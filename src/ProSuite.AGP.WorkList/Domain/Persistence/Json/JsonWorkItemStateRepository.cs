@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
@@ -28,5 +29,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Json
 		{
 			throw new System.NotImplementedException();
 		}
+
+		public JsonWorkItemStateRepository(string name, Type type, int? currentItemIndex = null) : base(name, type, currentItemIndex){}
 	}
 }

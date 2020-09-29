@@ -1,4 +1,4 @@
-<controls:ProWindow x:Class="Clients.AGP.ProSuiteSolution.ConfigUI.ProSuiteConfigDialog"
+<controls:ProWindow x:Class="ProSuite.AGP.Solution.ConfigUI.ProSuiteConfigDialog"
         x:Name="settingsWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
@@ -6,8 +6,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
-        xmlns:local="clr-namespace:Clients.AGP.ProSuiteSolution.ConfigUI"
-        xmlns:ui="clr-namespace:Clients.AGP.ProSuiteSolution.ConfigUI"             
+        xmlns:ui="clr-namespace:ProSuite.AGP.Solution.ConfigUI"
+        xmlns:configUi="clr-namespace:ProSuite.AGP.Solution.ConfigUI"
         mc:Ignorable="d"
         Title="ProSuite Configuration" Height="350" Width="800" MinWidth="450" MinHeight="300"
         WindowStartupLocation="CenterOwner"
@@ -24,11 +24,11 @@
     </controls:ProWindow.InputBindings>
     <Grid Margin="8">
         <Grid.Resources>
-            <DataTemplate DataType="{x:Type local:ProSuiteConfigCommonsViewModel}">
-                <local:ProSuiteConfigCommonsUserControl/>
+            <DataTemplate DataType="{x:Type configUi:ProSuiteConfigCommonsViewModel}">
+                <configUi:ProSuiteConfigCommonsUserControl/>
             </DataTemplate>
-            <DataTemplate DataType="{x:Type local:ProSuiteConfigQAViewModel}">
-                <local:ProSuiteConfigQAUserControl/>
+            <DataTemplate DataType="{x:Type ui:ProSuiteConfigQAViewModel}">
+                <ui:ProSuiteConfigQAUserControl/>
             </DataTemplate>
         </Grid.Resources>
         <TabControl 

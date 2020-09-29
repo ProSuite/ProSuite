@@ -1,6 +1,6 @@
 using ArcGIS.Desktop.Framework.Contracts;
 
-namespace Clients.AGP.ProSuiteSolution.ConfigUI
+namespace ProSuite.AGP.Solution.ConfigUI
 {
 	public class ProSuiteConfigCommonsViewModel : ViewModelBase
 	{

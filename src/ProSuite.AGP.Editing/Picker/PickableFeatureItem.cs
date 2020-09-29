@@ -7,12 +7,11 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.Picker;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 
 namespace ProSuite.AGP.Editing.Picker
 {
-	public class PickableFeatureItem : IPickableItem, INotifyPropertyChanged
+	public class PickableFeatureItem : IPickableItem
 	{
 		public PickableFeatureItem(MapMember mapMember, Feature feature, string text)
 		{
@@ -32,7 +31,7 @@ namespace ProSuite.AGP.Editing.Picker
 		private bool _isSelected;
 		private Geometry _geometry;
 		private Uri _itemImageUri;
-		private BitmapImage _img = null;
+		private BitmapImage _img;
 
 		private static Uri GetImagePath(Geometry geometry)
 		{
@@ -90,8 +89,7 @@ namespace ProSuite.AGP.Editing.Picker
 			}
 		}
 
-
-		public FeatureLayer Layer => _featureLayer as FeatureLayer;
+		public FeatureLayer Layer => _featureLayer;
 
 		public Feature Feature => _feature;
 

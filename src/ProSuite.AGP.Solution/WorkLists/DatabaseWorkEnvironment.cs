@@ -37,13 +37,20 @@ namespace ProSuite.AGP.Solution.WorkLists
 			throw new NotImplementedException();
 		}
 
+		protected override IRepository CreateStateRepositoryCore(string path, string workListName)
+		{
+			Type type = GetWorkListTypeCore<IssueWorkList>();
+
+			return new XmlWorkItemStateRepository(path, workListName, type);
+		}
+
 		protected override IWorkItemRepository CreateRepositoryCore(
 			IEnumerable<BasicFeatureLayer> featureLayers)
 		{
 			Dictionary<Geodatabase, List<Table>> tables = MapUtils.GetDistinctTables(featureLayers);
 
 			// todo daro: state repository must not be null
-			IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\selection_work_list.xml");
+			IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\selection_work_list.xml", null, null);
 			return new IssueItemRepository(tables, stateRepository);
 		}
 

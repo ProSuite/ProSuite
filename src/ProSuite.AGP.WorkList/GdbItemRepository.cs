@@ -81,7 +81,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			// selection work list: stores visited, status in work list definition file
 			// issue work list: stores status in db
-			UpdateVolatileState(new[] {item});
+			WorkItemStateRepository.Update(item);
 
 			GdbTableIdentity tableId = item.Proxy.Table;
 
@@ -105,6 +105,16 @@ namespace ProSuite.AGP.WorkList
 		public void Discard()
 		{
 			WorkItemStateRepository.Discard();
+		}
+
+		public void SetCurrentIndex(int currentIndex)
+		{
+			WorkItemStateRepository.CurrentIndex = currentIndex;
+		}
+
+		public int GetCurrentIndex()
+		{
+			return WorkItemStateRepository.CurrentIndex ?? -1;
 		}
 
 		protected virtual void UpdateCore([NotNull] ISourceClass source, [NotNull] IWorkItem item) { }

@@ -7,7 +7,6 @@ using System.Windows.Media.Imaging;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.Picker;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 

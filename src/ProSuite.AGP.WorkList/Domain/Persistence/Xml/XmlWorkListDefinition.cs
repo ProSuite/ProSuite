@@ -8,12 +8,21 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 	{
 		public string Name { get; set; }
 
+		[XmlElement("Type")]
+		public string TypeName { get; set; }
+
+		[XmlElement("Assembly")]
+		public string AssemblyName { get; set; }
+
 		[XmlElement("XmlFile")]
 		public string Path { get; set; }
 
 		[XmlArray("Workspaces")]
 		[XmlArrayItem(typeof(XmlWorkListWorkspace), ElementName = "Workspace")]
 		public List<XmlWorkListWorkspace> Workspaces { get; set; }
+
+		[XmlElement("CurrentItemIndex")]
+		public int CurrentIndex { get; set; }
 
 		[XmlArray("Items")]
 		[XmlArrayItem(typeof(XmlWorkItemState), ElementName = "Item")]

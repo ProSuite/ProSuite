@@ -220,7 +220,7 @@ namespace ProSuite.Commons.AGP.Carto
 			var screenPoint = MapView.Active.MapToScreen(mapPoint);
 			//Add tolerance pixels to get a "radius".
 			var radiusScreenPoint =
-				new System.Windows.Point((screenPoint.X + pixels), screenPoint.Y);
+				new Point(screenPoint.X + pixels, screenPoint.Y);
 			var radiusMapPoint = MapView.Active.ScreenToMap(radiusScreenPoint);
 			return GeometryEngine.Instance.Distance(mapPoint, radiusMapPoint);
 		}

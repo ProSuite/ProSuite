@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -35,10 +36,10 @@ namespace ProSuite.Commons.Validation
 
 			foreach (PropertyInfo property in type.GetProperties())
 			{
-				Attribute[] attributes = Attribute.GetCustomAttributes(
+				var attributes = Attribute.GetCustomAttributes(
 					property, typeof(ValidationAttribute));
 
-				foreach (ValidationAttribute attribute in attributes)
+				foreach (var attribute in attributes.OfType<ValidationAttribute>())
 				{
 					attribute.Property = property;
 					result.Add(attribute);
@@ -58,9 +59,9 @@ namespace ProSuite.Commons.Validation
 				return notification;
 			}
 
-			if (target is IValidated)
+			if (target is IValidated validated)
 			{
-				((IValidated) target).Validate(notification);
+				validated.Validate(notification);
 			}
 
 			List<ValidationAttribute> atts = ScanType(target.GetType());
@@ -113,9 +114,9 @@ namespace ProSuite.Commons.Validation
 				attribute.Validate(target, notification);
 			}
 
-			if (target is IValidated)
+			if (target is IValidated validated)
 			{
-				((IValidated) target).Validate(notification);
+				validated.Validate(notification);
 			}
 
 			return notification.GetMessages(propertyName);
