@@ -202,10 +202,14 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public static IEnumerable<long> GetFeaturesOidList(IEnumerable<Feature> features)
 		{
+			List<long> oids = new List<long>();
 			foreach (Feature feature in features)
 			{
-				yield return feature.GetObjectID();
+				oids.Add(feature.GetObjectID());
+				//yield return feature.GetObjectID();
 			}
+
+			return oids;
 		}
 
 		public static double ConvertScreenPixelToMapLength(int pixels)
