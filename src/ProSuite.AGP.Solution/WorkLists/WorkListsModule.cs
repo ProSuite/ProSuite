@@ -32,6 +32,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 		private IList<IWorkListObserver> _observers;
 
 		private readonly Dictionary<IWorkList, FeatureLayer> _layerByWorkList = new Dictionary<IWorkList, FeatureLayer>();
+		private EditEventsRowCacheSynchronizer _synchronizer;
 
 		public static WorkListsModule Current =>
 			_instance ?? (_instance = (WorkListsModule) FrameworkApplication.FindModule("ProSuite_WorkList_Module"));
