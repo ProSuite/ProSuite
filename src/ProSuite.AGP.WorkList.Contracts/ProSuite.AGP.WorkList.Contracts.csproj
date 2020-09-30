@@ -55,6 +55,8 @@
     <Compile Include="ISourceClass.cs" />
     <Compile Include="IWorkItem.cs" />
     <Compile Include="IWorkList.cs" />
+    <Compile Include="IWorkListContext.cs" />
+    <Compile Include="IWorkListFactory.cs" />
     <Compile Include="IWorkListRegistry.cs" />
     <Compile Include="IWorkItemRepository.cs" />
     <Compile Include="IWorkItemProxy.cs" />

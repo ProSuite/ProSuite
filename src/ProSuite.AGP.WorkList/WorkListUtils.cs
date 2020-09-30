@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
@@ -92,6 +93,23 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			return result;
+		}
+
+		public static string GetName(string path)
+		{
+			int index = path.LastIndexOf('/');
+			if (index >= 0)
+				path = path.Substring(index + 1);
+			index = path.LastIndexOf('\\');
+			if (index >= 0)
+				path = path.Substring(index + 1);
+
+			// scheme://Host:Port/AbsolutePath?Query#Fragment
+			// worklist://localhost/workListName?unused&for#now
+
+			// work list file => WORKLISTNAME.xml.wl
+			string temp = Path.GetFileNameWithoutExtension(path);
+			return Path.GetFileNameWithoutExtension(temp);
 		}
 	}
 }

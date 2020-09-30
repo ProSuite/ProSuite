@@ -212,7 +212,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		private void View_Closed(object sender, EventArgs e)
 		{
-			WorkListsModule.Current.RemoveWorkListLayer(CurrentWorkList);
+			//WorkListsModule.Current.RemoveWorkListLayer(CurrentWorkList);
 			WorkListsModule.Current.UnregisterObserver(this);
 		}
 	}

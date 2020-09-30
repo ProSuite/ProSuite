@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
@@ -12,29 +11,26 @@ using ProSuite.Commons.AGP.Carto;
 
 namespace ProSuite.AGP.Solution.WorkLists
 {
-	public class DatabaseWorkEnvironment : WorkEnvironmentBase
+	class DatabaseWorkEnvironment : WorkEnvironmentBase
 	{
-		const string _workListName = "Error Work List";
-
-		protected override void ShowWorkListCore(IWorkList workList, LayerDocument layerTemplate)
+		protected override string GetWorkListName(IWorkListContext context)
 		{
-			WorkListsModule.Current.Show(workList, layerTemplate);
+			throw new NotImplementedException();
 		}
 
 		protected override IEnumerable<BasicFeatureLayer> GetLayers(Map map)
 		{
-			return map.GetLayersAsFlattenedList().OfType<BasicFeatureLayer>();
+			throw new NotImplementedException();
 		}
 
 		protected override BasicFeatureLayer EnsureMapContainsLayerCore(BasicFeatureLayer featureLayer)
 		{
-			// todo daro: determine layer identity
 			throw new NotImplementedException();
 		}
 
-		protected override LayerDocument GetLayerDocumentCore()
+		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository, string name)
 		{
-			throw new NotImplementedException();
+			return new IssueWorkList(repository, name);
 		}
 
 		protected override IRepository CreateStateRepositoryCore(string path, string workListName)
@@ -44,19 +40,16 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return new XmlWorkItemStateRepository(path, workListName, type);
 		}
 
-		protected override IWorkItemRepository CreateRepositoryCore(
-			IEnumerable<BasicFeatureLayer> featureLayers)
+		protected override IWorkItemRepository CreateItemRepositoryCore(IEnumerable<BasicFeatureLayer> featureLayers, IRepository stateRepository)
 		{
 			Dictionary<Geodatabase, List<Table>> tables = MapUtils.GetDistinctTables(featureLayers);
 
-			// todo daro: state repository must not be null
-			IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\selection_work_list.xml", null, null);
 			return new IssueItemRepository(tables, stateRepository);
 		}
 
-		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository)
+		protected override LayerDocument GetLayerDocumentCore()
 		{
-			return new IssueWorkList(repository, _workListName);
+			throw new NotImplementedException();
 		}
 	}
 }

@@ -68,6 +68,7 @@
     <Compile Include="Domain\InvolvedTable.cs" />
     <Compile Include="Domain\IssueItem.cs" />
     <Compile Include="Domain\IssueWorkList.cs" />
+    <Compile Include="Domain\WorkListFactoryBase.cs" />
     <Compile Include="Domain\OIDRowReference.cs" />
     <Compile Include="Domain\Persistence\Json\JsonBasedWorkListDefinition.cs" />
     <Compile Include="Domain\Persistence\Json\JsonWorkItemStateRepository.cs" />

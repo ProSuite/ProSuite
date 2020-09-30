@@ -12,7 +12,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 	/// It maintains a current item and provides
 	/// navigation to change the current item.
 	/// </summary>
-	public interface IWorkList : IDisposable, INotifyPropertyChanged
+	public interface IWorkList : IRowCache, IDisposable, INotifyPropertyChanged
 	{
 		[NotNull]
 		string Name { get; }
