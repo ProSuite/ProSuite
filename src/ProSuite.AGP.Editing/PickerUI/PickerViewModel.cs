@@ -2,15 +2,22 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Net.Mime;
+using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ArcGIS.Core.CIM;
+using ArcGIS.Core.Geometry;
+using ArcGIS.Core.Internal.CIM;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Internal.Framework.Win32;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Picker;
+using Geometry = System.Windows.Media.Geometry;
 using Polygon = ArcGIS.Core.Geometry.Polygon;
+using Polyline = ArcGIS.Core.Geometry.Polyline;
 
 namespace ProSuite.AGP.Editing.PickerUI
 {
@@ -74,10 +81,11 @@ namespace ProSuite.AGP.Editing.PickerUI
 			set
 			{
 				SetProperty(ref _selectedItem, value, () => SelectedItem);
+				DisposeOverlays();
 				DialogResult = true;
 			}
 		}
-		
+
 		public bool IsSingleMode
 		{
 			get => _isSingleMode;
@@ -98,14 +106,11 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 		public List<IPickableItem> SelectedItems
 		{
-			get
-			{
-				return _pickableItems.Where(item => item.IsSelected).ToList();
-			}
+			get { return _pickableItems.Where(item => item.IsSelected).ToList(); }
 		}
 
 		private void AddOverlay(ArcGIS.Core.Geometry.Geometry geometry,
-		                        CIMSymbol symbol)
+		                               CIMSymbol symbol)
 		{
 			var addedOverlay =
 				MapView.Active.AddOverlay(geometry, symbol.MakeSymbolReference());
@@ -122,25 +127,26 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 		protected void Close()
 		{
+			_overlays.Clear();
 			DialogResult = true;
 		}
 
 		protected void FlashItem(object param)
-		{
-			DisposeOverlays();
-
-			CIMSymbol symbol = _highlightPointSymbol;
-
-			var candidate = (IPickableItem) param;
-			if (candidate.Geometry is Polygon)
 			{
-				symbol = _highlightPolygonSymbol;
-			}
+				DisposeOverlays();
 
-			if (candidate.Geometry is ArcGIS.Core.Geometry.Polyline)
-			{
-				symbol = _highlightLineSymbol;
-			}
+				CIMSymbol symbol = _highlightPointSymbol;
+				
+				var candidate = (IPickableItem) param;
+				if (candidate.Geometry is Polygon)
+				{
+					symbol = _highlightPolygonSymbol;
+				}
+
+				if (candidate.Geometry is ArcGIS.Core.Geometry.Polyline)
+				{
+					symbol = _highlightLineSymbol;
+				}
 
 			QueuedTask.Run(() => { AddOverlay(candidate.Geometry, symbol); });
 		}

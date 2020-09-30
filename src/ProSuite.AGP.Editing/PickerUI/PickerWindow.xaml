@@ -74,7 +74,7 @@
                         </i:EventTrigger>
                     </i:Interaction.Triggers>
 
-                    <Image Source="{Binding ItemImageSource, TargetNullValue=null}"
+                    <Image Source="{Binding ItemImageSource}"
                            Style="{StaticResource Image}" />
                     <TextBlock Text="{Binding ItemText}"
                                Style="{StaticResource TextBlock}" />
@@ -95,7 +95,7 @@
                     <CheckBox IsChecked="{Binding IsSelected}"
                               Style="{StaticResource Checkbox}" />
 
-                    <Image Source="{Binding ItemImageSource, TargetNullValue=null}"
+                    <Image Source="{Binding ItemImageSource}"
                            Style="{StaticResource Image}" />
 
                     <TextBlock Text="{Binding ItemText}"
