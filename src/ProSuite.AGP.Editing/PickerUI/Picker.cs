@@ -93,6 +93,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 				PickerWindow window = new PickerWindow(vm);
 				ManageWindowLocation(window);
 				window.ShowDialog();
+				vm.DisposeOverlays();
 			});
 		}
 

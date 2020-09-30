@@ -34,22 +34,14 @@ namespace ProSuite.AGP.WorkList.Datasource
 			// prepended with the project file's directory path and
 			// two times URL encoded (e.g., ' ' => %20 => %2520)!
 
-			var name = connectionPath.IsAbsoluteUri
+			var path = connectionPath.IsAbsoluteUri
 				           ? connectionPath.LocalPath
 				           : connectionPath.ToString();
 
-			name = HttpUtility.UrlDecode(name);
-			name = HttpUtility.UrlDecode(name);
+			path = HttpUtility.UrlDecode(path);
+			path = HttpUtility.UrlDecode(path);
 
-			int index = name.LastIndexOf('/');
-			if (index >= 0)
-				name = name.Substring(index + 1);
-			index = name.LastIndexOf('\\');
-			if (index >= 0)
-				name = name.Substring(index + 1);
-			
-			// scheme://Host:Port/AbsolutePath?Query#Fragment
-			// worklist://localhost/workListName?unused&for#now
+			string name = WorkListUtils.GetName(path);
 
 			_tableNames = new ReadOnlyCollection<string>(
 				new List<string>

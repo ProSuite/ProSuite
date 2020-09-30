@@ -98,6 +98,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		private static Polygon CreatePolygon(Envelope envelope)
 		{
+			// todo daro: see WorkListLayer.GetProjectedDraftGeometry
 			return PolygonBuilder.CreatePolygon(envelope, envelope.SpatialReference);
 		}
 	}

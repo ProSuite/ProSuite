@@ -178,7 +178,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <summary>
 		/// Returns features filtered by spatial relationship. Honors definition queries on the layer. 
 		/// </summary>
-		public static IEnumerable<Feature> FilterFeaturesByGeometry(
+		public static IEnumerable<Feature> FilterLayerFeaturesByGeometry(
 			BasicFeatureLayer layer, ArcGIS.Core.Geometry.Geometry filterGeometry,
 			SpatialRelationship spatialRelationship = SpatialRelationship.Intersects)
 		{
@@ -200,12 +200,40 @@ namespace ProSuite.Commons.AGP.Carto
 			return features;
 		}
 
+		/// <summary>
+		/// Returns oids of features filtered by spatial relationship. Honors definition queries on the layer. 
+		/// </summary>
+		public static IEnumerable<long> FilterLayerOidsByGeometry(
+			BasicFeatureLayer layer, ArcGIS.Core.Geometry.Geometry filterGeometry,
+			SpatialRelationship spatialRelationship = SpatialRelationship.Intersects)
+		{
+			var qf = new SpatialQueryFilter()
+			         {
+				         FilterGeometry = filterGeometry,
+				         SpatialRelationship = spatialRelationship
+			         };
+			var oids = new List<long>();
+
+			using (RowCursor rowCursor = layer.Search(qf))
+			{
+				while (rowCursor.MoveNext())
+				{
+					oids.Add(rowCursor.Current.GetObjectID());
+				}
+			}
+			return oids;
+		}
+
 		public static IEnumerable<long> GetFeaturesOidList(IEnumerable<Feature> features)
 		{
+			//List<long> oids = new List<long>();
 			foreach (Feature feature in features)
 			{
+				//oids.Add(feature.GetObjectID());
 				yield return feature.GetObjectID();
 			}
+
+			//return oids;
 		}
 
 		public static double ConvertScreenPixelToMapLength(int pixels)

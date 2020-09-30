@@ -19,7 +19,7 @@ namespace ProSuite.AGP.WorkList.Domain
 	/// </summary>
 	// todo daro: separate geometry processing code
 	// todo daro: separate QueuedTask code
-	public abstract class WorkList : IWorkList, IRowCache
+	public abstract class WorkList : IWorkList
 	{
 		private const int _initialCapacity = 1000;
 

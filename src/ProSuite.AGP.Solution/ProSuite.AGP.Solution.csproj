@@ -139,10 +139,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProSuiteConfigurationDirectorySearcher.cs" />
     <Compile Include="WorkLists\DatabaseWorkEnvironment.cs" />
-    <Compile Include="WorkLists\GoFirstButton.cs" />
-    <Compile Include="WorkLists\GoNextButton.cs" />
-    <Compile Include="WorkLists\GoPreviousButton.cs" />
-    <Compile Include="WorkLists\SetStatusButton.cs" />
     <Compile Include="WorkLists\WorkListsModule.cs" />
     <Compile Include="WorkListUI\StatusEnumBooleanConverter.cs" />
     <Compile Include="WorkListUI\WorkListView.xaml.cs">

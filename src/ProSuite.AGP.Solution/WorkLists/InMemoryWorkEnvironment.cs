@@ -14,12 +14,12 @@ namespace ProSuite.AGP.Solution.WorkLists
 {
 	public class InMemoryWorkEnvironment : WorkEnvironmentBase
 	{
-		private readonly string _workListName = "Selection Work List";
+		private readonly string _workListName = "Selection_Work_List";
 		private readonly string _templateLayer = "Selection Work List.lyrx";
 
-		protected override void ShowWorkListCore(IWorkList workList, LayerDocument layerTemplate)
+		protected override string GetWorkListName(IWorkListContext context)
 		{
-			WorkListsModule.Current.Show(workList, layerTemplate);
+			return context.EnsureUniqueName(_workListName);
 		}
 
 		protected override IEnumerable<BasicFeatureLayer> GetLayers(Map map)
@@ -28,22 +28,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			return selection.Count >= 1
 				       ? selection.Keys.OfType<BasicFeatureLayer>()
-					   : Enumerable.Empty<BasicFeatureLayer>();
+				       : Enumerable.Empty<BasicFeatureLayer>();
 		}
 
 		protected override BasicFeatureLayer EnsureMapContainsLayerCore(BasicFeatureLayer featureLayer)
 		{
 			// we want every feature layer
 			return featureLayer;
-		}
-
-		protected override LayerDocument GetLayerDocumentCore()
-		{
-			string path = ConfigurationUtils.GetConfigFilePath(_templateLayer);
-
-			LayerDocument layerDocument = LayerUtils.CreateLayerDocument(path);
-			// todo daro: inline
-			return layerDocument;
 		}
 
 		protected override IRepository CreateStateRepositoryCore(string path, string workListName)
@@ -53,23 +44,26 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return new XmlWorkItemStateRepository(path, workListName, type);
 		}
 
-		protected override IWorkItemRepository CreateRepositoryCore(IEnumerable<BasicFeatureLayer> featureLayers)
+		protected override IWorkItemRepository CreateItemRepositoryCore(IEnumerable<BasicFeatureLayer> featureLayers, IRepository stateRepository)
 		{
 			List<BasicFeatureLayer> layers = featureLayers.ToList();
 
 			Dictionary<Geodatabase, List<Table>> tables = MapUtils.GetDistinctTables(layers);
 			Dictionary<Table, List<long>> selection = MapUtils.GetDistinctSelectionByTable(layers);
 
-			var path = @"C:\temp\a_selection_work_list.xml";
-			IRepository stateRepository = CreateStateRepository(path, _workListName);
-
-			var repository = new SelectionItemRepository(tables, selection, stateRepository);
-			return repository;
+			return new SelectionItemRepository(tables, selection, stateRepository);
 		}
 
-		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository)
+		protected override LayerDocument GetLayerDocumentCore()
 		{
-			return new ProSuite.AGP.WorkList.Domain.SelectionWorkList(repository, _workListName);
+			string path = ConfigurationUtils.GetConfigFilePath(_templateLayer);
+
+			return LayerUtils.CreateLayerDocument(path);
+		}
+
+		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository, string name)
+		{
+			return new SelectionWorkList(repository, name);
 		}
 	}
 }
