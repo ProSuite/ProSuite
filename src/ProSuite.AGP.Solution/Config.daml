@@ -146,38 +146,6 @@
         </menu>
       </menus>
     </insertModule>
-    <insertModule id="ProSuite_WorkList_Module" className="WorkLists.WorkListsModule" autoLoad="true" caption="Selection Work List Module">
-      <tabs>
-        <tab id="ProSuite_WorkList_Tab" caption="Work List">
-          <group refID="ProSuite_WorkList_Group" />
-        </tab>
-      </tabs>
-      <groups>
-        <group id="ProSuite_WorkList_Group" caption="Selection Work List">
-          <button refID="Clients_AGP_ProSuiteSolution_CreateSelectionWorkListButton" />
-          <button refID="Clients_AGP_ProSuiteSolution_GoFirstButton" />
-          <button refID="Clients_AGP_ProSuiteSolution_GoPreviousButton" />
-          <button refID="Clients_AGP_ProSuiteSolution_GoNextButton" />
-          <button refID="Clients_AGP_ProSuiteSolution_SetStatusButton" />
-        </group>
-      </groups>
-      <controls>
-        <button id="Clients_AGP_ProSuiteSolution_CreateSelectionWorkListButton" caption="Create Selection WorkList" className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
-          <tooltip heading="tooltip heading">foo<disabledText /></tooltip>
-        </button>
-        <button id="Clients_AGP_ProSuiteSolution_GoFirstButton" caption="Go First" className="WorkLists.GoFirstButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
-          <tooltip heading="tooltip heading">foo<disabledText /></tooltip>
-        </button>
-        <button id="Clients_AGP_ProSuiteSolution_GoPreviousButton" caption="Go Previous" className="WorkLists.GoPreviousButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
-          <tooltip heading="tooltip heading">foo<disabledText /></tooltip>
-        </button>
-        <button id="Clients_AGP_ProSuiteSolution_GoNextButton" caption="Go Next" className="WorkLists.GoNextButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
-          <tooltip heading="tooltip heading">foo<disabledText /></tooltip>
-        </button>
-        <button id="Clients_AGP_ProSuiteSolution_SetStatusButton" caption="Set Status" className="WorkLists.SetStatusButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
-          <tooltip heading="tooltip heading">foo<disabledText /></tooltip>
-        </button>
-      </controls>
-    </insertModule>
+    <insertModule id="ProSuite_WorkList_Module" className="WorkLists.WorkListsModule" autoLoad="true" caption="Selection Work List Module"></insertModule>
   </modules>
 </ArcGIS>
