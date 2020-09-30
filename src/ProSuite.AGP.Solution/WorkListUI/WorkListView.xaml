@@ -72,11 +72,6 @@
             </ToolBar>
             <StackPanel>
                 <Label  Content="{Binding CurrentWorkItem.Description}" />
-                <StackPanel Orientation="Horizontal" >
-                    <Label Content="Visited:" Width="80" HorizontalAlignment="Left" VerticalAlignment="Center"/>
-                    <Label Content="{Binding Visited}" VerticalAlignment="Center" />
-                </StackPanel>
-               
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Label Content="{Binding Count}"></Label>
                 </StackPanel>
