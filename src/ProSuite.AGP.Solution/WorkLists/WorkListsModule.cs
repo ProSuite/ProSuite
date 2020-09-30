@@ -144,59 +144,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 		}
 
-		#region only for development
-
-		public bool CanGoNext()
-		{
-			return _layerByWorkList.Keys.ToList().Any(wl => wl.CanGoNext());
-		}
-
-		public void GoNext()
-		{
-			_layerByWorkList.Keys.ToList().ForEach(wl => wl.GoNext());
-		}
-
-		public bool CanGoFirst()
-		{
-			return _layerByWorkList.Keys.ToList().Any(wl => wl.CanGoFirst());
-		}
-
-		public void GoFirst()
-		{
-			_layerByWorkList.Keys.ToList().ForEach(wl => wl.GoFirst());
-		}
-
-		public bool CanGoPrevious()
-		{
-			return _layerByWorkList.Keys.ToList().Any(wl => wl.CanGoPrevious());
-		}
-
-		public void GoPrevious()
-		{
-			_layerByWorkList.Keys.ToList().ForEach(wl => wl.GoPrevious());
-		}
-
-		public void SetStatus()
-		{
-			foreach (IWorkList workList in _layerByWorkList.Keys)
-			{
-				IWorkItem item = workList.Current;
-
-				if (item == null)
-				{
-					return;
-				}
-
-				item.Status = item.Status == WorkItemStatus.Todo
-					              ? WorkItemStatus.Done
-					              : WorkItemStatus.Todo;
-
-				workList.Update(item);
-			}
-		}
-
-		#endregion
-
 		private void WireEvents()
 		{
 			LayersRemovingEvent.Subscribe(OnLayerRemoving);
