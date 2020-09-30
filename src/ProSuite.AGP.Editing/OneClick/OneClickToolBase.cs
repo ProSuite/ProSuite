@@ -349,7 +349,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer =
 						ReduceFeatures(featuresPerLayer);
 
-					//TODO if still several selection candidates -> present picker here
+					// show picker if more than one candidate
 					if (featuresOfLayer.Value.Count() > 1)
 					{
 						List<IPickableItem> pickables = new List<IPickableItem>();
@@ -370,6 +370,10 @@ namespace ProSuite.AGP.Editing.OneClick
 						var item = await picker.PickSingle() as PickableFeatureItem;
 						KeyValuePair<BasicFeatureLayer, List<long>> kvp = new KeyValuePair<BasicFeatureLayer, List<long>>(item.Layer,new List<long>{item.Oid});
 						Selector.SelectLayersFeaturesByOids(kvp, selectionMethod);
+					}
+					else
+					{
+						Selector.SelectLayersFeaturesByOids(featuresPerLayer, selectionMethod);
 					}
 				}
 			}
