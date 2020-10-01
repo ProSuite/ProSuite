@@ -74,14 +74,14 @@ namespace ProSuite.AGP.WorkList.Datasource
 			return Search((QueryFilter) spatialQueryFilter);
 		}
 
-		private static object[] GetValues([NotNull] IWorkItem item, IWorkItem current = null)
+		private object[] GetValues([NotNull] IWorkItem item, IWorkItem current = null)
 		{
 			var values = new object[5];
 			values[0] = item.OID;
 			values[1] = item.Status == WorkItemStatus.Done ? 1 : 0;
 			values[2] = item.Visited ? 1 : 0;
 			values[3] = item == current ? 1 : 0;
-			values[4] = CreatePolygon(item.Extent);
+			values[4] = CreatePolygon(item);
 			return values;
 		}
 
@@ -95,11 +95,37 @@ namespace ProSuite.AGP.WorkList.Datasource
 			fields.Add(new PluginField("SHAPE", "Shape", FieldType.Geometry));
 			return fields.ToArray();
 		}
-
-		private static Polygon CreatePolygon(Envelope envelope)
+		
+		private Polygon CreatePolygon(IWorkItem item)
 		{
-			// todo daro: see WorkListLayer.GetProjectedDraftGeometry
-			return PolygonBuilder.CreatePolygon(envelope, envelope.SpatialReference);
+			Envelope extent = item.Extent;
+
+			if (UseExtent(item))
+			{
+				return PolygonBuilder.CreatePolygon(extent, extent.SpatialReference);
+			}
+			
+			item.QueryPoints(out double xmin, out double ymin,
+			                 out double xmax, out double ymax,
+			                 out double zmax);
+
+			return PolygonBuilder.CreatePolygon(EnvelopeBuilder.CreateEnvelope(
+				                                    new Coordinate3D(xmin, ymin, zmax),
+				                                    new Coordinate3D(xmax, ymax, zmax),
+				                                    extent.SpatialReference));
+		}
+
+		private static bool UseExtent([NotNull] IWorkItem item)
+		{
+			switch (item.GeometryType)
+			{
+				case GeometryType.Polyline:
+				case GeometryType.Polygon:
+					return true;
+
+				default:
+					return false;
+			}
 		}
 	}
 }
