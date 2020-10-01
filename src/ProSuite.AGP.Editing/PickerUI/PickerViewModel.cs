@@ -122,7 +122,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 			_overlays.Add(addedOverlay);
 		}
-
+		
 		public void DisposeOverlays()
 		{
 			foreach (var overlay in _overlays) overlay.Dispose();
@@ -137,27 +137,24 @@ namespace ProSuite.AGP.Editing.PickerUI
 		}
 
 		protected void FlashItem(object param)
+		{
+			DisposeOverlays();
+
+			CIMSymbol symbol = _highlightPointSymbol;
+			
+			var candidate = (IPickableItem) param;
+			if (candidate.Geometry is Polygon)
 			{
-				_msg.Debug("Flash Cmd was called..");
-				DisposeOverlays();
+				symbol = _highlightPolygonSymbol;
+			}
 
-				CIMSymbol symbol = _highlightPointSymbol;
-				
-				var candidate = (IPickableItem) param;
-				if (candidate.Geometry is Polygon)
-				{
-					symbol = _highlightPolygonSymbol;
-				}
-
-				if (candidate.Geometry is ArcGIS.Core.Geometry.Polyline)
-				{
-					symbol = _highlightLineSymbol;
-				}
-
+			if (candidate.Geometry is ArcGIS.Core.Geometry.Polyline)
+			{
+				symbol = _highlightLineSymbol;
+			}
 			QueuedTask.Run(() =>
 			{
 				AddOverlay(candidate.Geometry, symbol);
-				_msg.Debug("added overlay to mapview");
 			});
 		}
 	}
