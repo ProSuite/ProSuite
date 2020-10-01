@@ -69,7 +69,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 		}
 
-		public void CreateWorkList(WorkEnvironmentBase environment)
+		public void CreateWorkList([NotNull] WorkEnvironmentBase environment)
 		{
 			try
 			{
@@ -375,9 +375,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		private void WorkList_WorkListChanged(object sender, WorkListChangedEventArgs e)
 		{
-			List<long> features = e.Items;
+			List<long> oids = e.Items;
 
-			if (features == null)
+			if (oids == null)
 			{
 				return;
 			}
@@ -385,6 +385,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 			try
 			{
 				var workList = (IWorkList) sender;
+
+				// todo daro: remove assertion
+				Assert.True(_layerByWorkList.ContainsKey(workList),
+				            $"sender of {nameof(WorkList_WorkListChanged)} is unknown");
+
 				if (! _layerByWorkList.ContainsKey(workList))
 				{
 					return;
@@ -393,11 +398,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 				FeatureLayer workListLayer = _layerByWorkList[workList];
 
 				MapView.Active.Invalidate(new Dictionary<Layer, List<long>>
-				                          {{workListLayer, features}});
+				                          {{workListLayer, oids}});
 			}
-			catch (Exception exception)
+			catch (Exception exc)
 			{
-				Console.WriteLine(exception);
+				_msg.Error("Error invalidating work list layer", exc);
 			}
 		}
 
