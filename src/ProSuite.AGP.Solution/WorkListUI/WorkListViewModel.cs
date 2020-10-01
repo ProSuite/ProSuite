@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -11,11 +13,14 @@ using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
 	public class WorkListViewModel : PropertyChangedBase, IWorkListObserver
 	{
+		private const double _seconds = 0.3;
+
 		public WorkListViewModel(SelectionWorkList workList)
 		{
 			CurrentWorkList = workList;
@@ -76,7 +81,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			get
 			{
-				_zoomToCmd = new RelayCommand(() => ZoomTo(), () => true);
+				_zoomToCmd = new RelayCommand(ZoomToAsync, () => true);
 				return _zoomToCmd;
 			}
 		}
@@ -85,19 +90,33 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			get
 			{
-				_panToCmd = new RelayCommand(() => PanTo(), () => true);
+				_panToCmd = new RelayCommand(PanToAsync, () => true);
 				return _panToCmd;
 			}
 		}
 
-		private void ZoomTo()
+		private async Task ZoomToAsync()
 		{
-			QueuedTask.Run(() => { MapView.Active.ZoomTo(CurrentWorkList.Current.Extent); });
+			IWorkItem item = CurrentWorkList.Current;
+
+			if (item == null)
+			{
+				return;
+			}
+
+			await MapView.Active.ZoomToAsync(GetEnvelope(item), TimeSpan.FromSeconds(_seconds));
 		}
 
-		private void PanTo()
+		private async Task PanToAsync()
 		{
-			QueuedTask.Run(() => { MapView.Active.PanTo(CurrentWorkList.Current.Extent); });
+			IWorkItem item = CurrentWorkList.Current;
+
+			if (item == null)
+			{
+				return;
+			}
+
+			await MapView.Active.PanToAsync(GetEnvelope(item), TimeSpan.FromSeconds(_seconds));
 		}
 
 		public WorkItemStatus Status
@@ -214,6 +233,18 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			//WorkListsModule.Current.RemoveWorkListLayer(CurrentWorkList);
 			WorkListsModule.Current.UnregisterObserver(this);
+		}
+
+		[NotNull]
+		private static Envelope GetEnvelope([NotNull] IWorkItem item)
+		{
+			item.QueryPoints(out double xmin, out double ymin,
+			                 out double xmax, out double ymax,
+			                 out double zmax);
+
+			return EnvelopeBuilder.CreateEnvelope(new Coordinate3D(xmin, ymin, zmax),
+			                                      new Coordinate3D(xmax, ymax, zmax),
+			                                      item.Extent.SpatialReference);
 		}
 	}
 }
