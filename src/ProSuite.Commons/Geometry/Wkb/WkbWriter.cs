@@ -10,6 +10,8 @@ namespace ProSuite.Commons.Geometry.Wkb
 		private static readonly byte[] _doubleNaN =
 			{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xf8, 0x7f};
 
+		public bool ReversePolygonWindingOrder { get; set; } = true;
+
 		protected BinaryWriter Writer { get; set; }
 
 		protected MemoryStream InitializeWriter()
@@ -39,7 +41,7 @@ namespace ProSuite.Commons.Geometry.Wkb
 				return;
 			}
 
-			WriteLineStringsCore(ringGroup, ordinates, true);
+			WriteLineStringsCore(ringGroup, ordinates, ReversePolygonWindingOrder);
 		}
 
 		protected void WriteLineStrings(ICollection<IPointList> linestrings,
@@ -131,6 +133,9 @@ namespace ProSuite.Commons.Geometry.Wkb
 				// Z Value (NaN is allowed)
 				WriteDoubleOrNan(z);
 			}
+
+			if (ordinates == Ordinates.Xym || ordinates == Ordinates.Xyzm)
+				throw new NotImplementedException("M values are currently not supported.");
 		}
 
 		protected void WritePointCore(IPnt point, Ordinates ordinates)
