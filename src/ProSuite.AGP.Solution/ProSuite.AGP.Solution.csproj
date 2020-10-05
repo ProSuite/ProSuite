@@ -122,10 +122,11 @@
     <Compile Include="Daml.cs" />
     <Compile Include="Editing\EraseTool.cs" />
     <Compile Include="Commons\ImageUtils.cs" />
+    <Compile Include="ProjectItem\ProjectWorkListFileRepository.cs" />
     <Compile Include="ProjectItem\ProSuiteProjectItem.cs" />
     <Compile Include="ProjectItem\ProSuiteProjectItemConfiguration.cs" />
     <Compile Include="ProjectItem\ProSuiteProjectItemContainer.cs" />
-    <Compile Include="ProjectItem\ProSuiteProjectItemManager.cs" />
+    <Compile Include="ProjectItem\ProSuiteProjectFileRepository.cs" />
     <Compile Include="Selection\SelectionTool.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
     <Compile Include="Commons\LayerUtils.cs" />

@@ -1,3 +1,4 @@
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using ArcGIS.Desktop.Core;
@@ -70,6 +71,18 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		//	workLists.Add(workList);
 		//	this.AddRangeToChildren(workLists);
 		//}
+
+
+		/// ////////////////////////////////////////////////////// -----------------------------------------
+		public ProjectItemType Type { get; }
+		// temporary !!!!!!!
+		public string ProjectItemPath { get; set; }
+
+		public ProSuiteProjectItem(ProjectItemType type, string path)
+		{
+			Type = type;
+			ProjectItemPath = path;
+		}
 
 	}
 
