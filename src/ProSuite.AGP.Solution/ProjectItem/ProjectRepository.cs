@@ -9,13 +9,13 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		private static ProjectRepository _repository;
 		public static ProjectRepository Current => _repository ?? (_repository = new ProjectRepository());
 
-		public IEnumerable<string> GetProjectFileItems([NotNull] ProjectItemType itemType)
+		public IEnumerable<string> GetProjectFileItems(ProjectItemType itemType)
 		{
 			ProjectFileRepository fileRepo = InitRepository(itemType);
 			return fileRepo?.GetAll() ?? new List<string>();
 		}
 
-		public bool AddProjectFileItems([NotNull] ProjectItemType itemType, [NotNull] IEnumerable<string> filesPath)
+		public bool AddProjectFileItems(ProjectItemType itemType, [NotNull] IEnumerable<string> filesPath)
 		{
 			ProjectFileRepository fileRepo = InitRepository(itemType);
 			if (fileRepo != null)
@@ -23,6 +23,20 @@ namespace ProSuite.AGP.Solution.ProjectItem
 				foreach (var path in filesPath)
 				{
 					fileRepo.Add(path);
+				}
+				return true;
+			}
+			return false;
+		}
+
+		public bool DeleteProjectFileItems(ProjectItemType itemType, [NotNull] IEnumerable<string> filesPath)
+		{
+			ProjectFileRepository fileRepo = InitRepository(itemType);
+			if (fileRepo != null)
+			{
+				foreach (var path in filesPath)
+				{
+					fileRepo.Delete(path);
 				}
 				return true;
 			}

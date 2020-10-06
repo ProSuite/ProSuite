@@ -367,8 +367,8 @@ namespace ProSuite.AGP.Solution
 			bool? result = openItemDialog.ShowDialog();
 			if (result != null && (result.Value == false || !openItemDialog.Items.Any())) return;
 
-			var item = openItemDialog.Items.ToArray()[0];
-			var filePath = item.Path;
+			var item = openItemDialog.Items.FirstOrDefault();
+			string filePath = item?.Path;
 
 			QueuedTask.Run(() =>
 			{

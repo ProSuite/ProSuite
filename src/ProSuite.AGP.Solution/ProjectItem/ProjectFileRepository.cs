@@ -49,6 +49,13 @@ namespace ProSuite.AGP.Solution.ProjectItem
 			AddProjectItemToProject(path);
 		}
 
+		public virtual void Delete([NotNull] string path)
+		{
+			File.Delete(path);
+		}
+
+		#region private functions
+
 		private void AddProjectItemToProject([NotNull] string path)
 		{
 			QueuedTask.Run(() =>
@@ -62,8 +69,6 @@ namespace ProSuite.AGP.Solution.ProjectItem
 				}
 			});
 		}
-
-		#region private functions
 
 		private string GetProjectItemFolderPath()
 		{
