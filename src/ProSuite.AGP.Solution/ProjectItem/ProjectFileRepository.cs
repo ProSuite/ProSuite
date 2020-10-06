@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ArcGIS.Desktop.Internal.Core;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.ProjectItem
 {
@@ -19,26 +20,27 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		None
 	}
 
-	public abstract class ProSuiteProjectFileRepository 
+	public class ProjectFileRepository 
 	{
 		Msg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 		private readonly string _containerName = "ProSuiteContainer";
 
-		protected abstract string FolderName { get; set; }
+		protected string FolderName { get; set; } = "";
 
-		protected abstract string FileExtension { get; set; }
+		protected string FileExtension { get; set; } = "xml";
 
-		protected abstract string ItemName { get; set; }
+		protected string ItemName { get; set; } = "Project item";
 
-		protected abstract string ProjectName { get; set; }
+		protected string ProjectName = "ProSuiteItem_ProjectItem";
 
-		protected abstract ProjectItemType Type { get; set; }
+		protected ProjectItemType Type { get; set; } = ProjectItemType.None;
 
-		public Project Project { get; set; }
+		protected Project Project { get; }
 
-		protected ProSuiteProjectFileRepository()
+		public ProjectFileRepository([NotNull] Project project)
 		{
+			Project = project;
 		}
 
 		public virtual IEnumerable<string> GetAll()
@@ -51,7 +53,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 			AddProjectItemToProject(path);
 		}
 
-		public virtual bool AddProjectItemToProject(string path)
+		private void AddProjectItemToProject(string path)
 		{
 			QueuedTask.Run(() =>
 			{
@@ -63,7 +65,6 @@ namespace ProSuite.AGP.Solution.ProjectItem
 							  Path.Combine(itemFolder, Path.GetFileName(path)),true);
 				}
 			});
-			return true;
 		}
 
 		#region private functions

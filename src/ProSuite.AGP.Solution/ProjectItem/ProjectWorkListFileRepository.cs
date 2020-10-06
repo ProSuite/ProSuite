@@ -9,23 +9,17 @@ using ArcGIS.Desktop.Core;
 
 namespace ProSuite.AGP.Solution.ProjectItem
 {
-	public class ProjectWorkListFileRepository : ProSuiteProjectFileRepository
+	public class ProjectWorkListFileRepository : ProjectFileRepository
 	{
-		private static ProjectWorkListFileRepository _repository;
-		public static ProjectWorkListFileRepository Current => _repository ?? (_repository = new ProjectWorkListFileRepository());
-
-		public ProjectWorkListFileRepository() : base()
+		public ProjectWorkListFileRepository(Project project) : base(project)
 		{
+			FolderName = "WorkLists";
+			FileExtension = "wklist";
+			ItemName = "WorkList item";
+			Type = ProjectItemType.WorkListDefinition;
 		}
 
-		protected override string FolderName { get; set; } = "WorkLists";
-		protected override string FileExtension { get; set; } = "wklist";
-		protected override string ItemName { get; set; } = "WorkList item";
-		protected override string ProjectName { get; set; } = "ProSuiteItem_ProjectItem";
-		protected override ProjectItemType Type { get; set; } = ProjectItemType.WorkListDefinition;
-
 		// TODO algr: different icons and context menus?
-
 		public override IEnumerable<string> GetAll()
 		{
 			var itemFolder = Project.GetItems<FolderConnectionProjectItem>().FirstOrDefault(p => p.Name == FolderName);

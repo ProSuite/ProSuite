@@ -50,7 +50,7 @@ namespace ProSuite.AGP.Solution
 			{
 				if (_qaProjectItem == null)
 				{
-					_msg.Info("Project item not available");
+					//_msg.Info("Project item not available");
 
 					_qaProjectItem = Project.Current.GetItems<ProSuiteProjectItemConfiguration>().FirstOrDefault();
 					if (_qaProjectItem == null)
@@ -349,6 +349,7 @@ namespace ProSuite.AGP.Solution
 		// TODO algr: temporary tests
 		protected override void OnClick()
 		{
+
 			var bf = new BrowseProjectFilter();
 			bf.AddCanBeTypeId("ProSuiteItem_ProjectItem"); //TypeID for the ".wlist" custom project item
 
@@ -371,9 +372,7 @@ namespace ProSuite.AGP.Solution
 
 			QueuedTask.Run(() =>
 			{
-				ProjectWorkListFileRepository.Current.Project = Project.Current;
-				ProjectWorkListFileRepository.Current.Add(filePath);
-				var projectItems = ProjectWorkListFileRepository.Current.GetAll();
+				ProjectRepository.Current.AddProjectFileItems(ProjectItemType.WorkListDefinition, new List<string>(){filePath});
 			});
 		}
 	}

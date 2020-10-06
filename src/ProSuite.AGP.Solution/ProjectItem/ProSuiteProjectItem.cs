@@ -71,19 +71,6 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		//	workLists.Add(workList);
 		//	this.AddRangeToChildren(workLists);
 		//}
-
-
-		/// ////////////////////////////////////////////////////// -----------------------------------------
-		public ProjectItemType Type { get; }
-		// temporary !!!!!!!
-		public string ProjectItemPath { get; set; }
-
-		public ProSuiteProjectItem(ProjectItemType type, string path)
-		{
-			Type = type;
-			ProjectItemPath = path;
-		}
-
 	}
 
 	// TODO ProSuiteDataSubItem for different types of data?

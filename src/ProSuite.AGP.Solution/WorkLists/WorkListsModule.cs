@@ -346,14 +346,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			// todo daro: later this is replaced with custom project items
 
-			ProjectWorkListFileRepository.Current.Project = Project.Current;
-
+			
 			// todo daro QueuedTask needed?
 			await QueuedTask.Run(() =>
 			{
 				// todo daro: use ConfigurationUtils?
 				//foreach (string path in GetDefinitionFiles())
-				foreach (var path in ProjectWorkListFileRepository.Current.GetAll())
+				foreach (var path in ProjectRepository.Current.GetProjectFileItems(ProjectItemType.WorkListDefinition))
 				{
 					string workListName = WorkListUtils.GetName(path);
 					var factory = new XmlBasedWorkListFactory(path, workListName);
