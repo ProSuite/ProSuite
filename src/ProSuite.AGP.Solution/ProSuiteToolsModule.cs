@@ -50,7 +50,7 @@ namespace ProSuite.AGP.Solution
 			{
 				if (_qaProjectItem == null)
 				{
-					_msg.Info("Project item not available");
+					//_msg.Info("Project item not available");
 
 					_qaProjectItem = Project.Current.GetItems<ProSuiteProjectItemConfiguration>().FirstOrDefault();
 					if (_qaProjectItem == null)
@@ -177,7 +177,6 @@ namespace ProSuite.AGP.Solution
 		}
 		#endregion
 
-
 		#region Event handlers 
 
 		private static void QAManager_OnStatusChanged(object sender, ProSuiteQAServiceEventArgs e)
@@ -245,6 +244,7 @@ namespace ProSuite.AGP.Solution
 		}
 	}
 
+	#region UI commands 
 	internal class StartQAGPTool : Button
 	{
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -349,10 +349,11 @@ namespace ProSuite.AGP.Solution
 		// TODO algr: temporary tests
 		protected override void OnClick()
 		{
+
 			var bf = new BrowseProjectFilter();
 			bf.AddCanBeTypeId("ProSuiteItem_ProjectItem"); //TypeID for the ".wlist" custom project item
 
-			// for subitem allow to browsw inside and add as type
+			// for subitem allow to browse inside and add as type
 			//bf.AddDoBrowseIntoTypeId("ProSuiteItem_ProjectItemWorkListFile");
 			//bf.AddCanBeTypeId("ProSuiteItem_WorkListItem"); //subitem 
 			bf.Name = "Work List";
@@ -369,10 +370,10 @@ namespace ProSuite.AGP.Solution
 			var item = openItemDialog.Items.ToArray()[0];
 			var filePath = item.Path;
 
-			ProSuiteProjectItemManager.Current.AddProjectItemFileToProject(Project.Current, filePath);
-
-			// tests 
-			//ProSuiteProjectItemManager.Current.AddFileToProject(filePath, Project.Current, ProjectItemType.WorkListDefinition);
+			QueuedTask.Run(() =>
+			{
+				ProjectRepository.Current.AddProjectFileItems(ProjectItemType.WorkListDefinition, new List<string>(){filePath});
+			});
 		}
 	}
 
@@ -414,4 +415,6 @@ namespace ProSuite.AGP.Solution
 		}
 		
 	}
+
+	#endregion UI commands 
 }

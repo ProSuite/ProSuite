@@ -13,6 +13,7 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.AGP.Solution.ProjectItem;
 using ProSuite.AGP.Solution.WorkListUI;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
@@ -345,11 +346,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			// todo daro: later this is replaced with custom project items
 
+			
 			// todo daro QueuedTask needed?
 			await QueuedTask.Run(() =>
 			{
 				// todo daro: use ConfigurationUtils?
-				foreach (string path in GetDefinitionFiles())
+				//foreach (string path in GetDefinitionFiles())
+				foreach (var path in ProjectRepository.Current.GetProjectFileItems(ProjectItemType.WorkListDefinition))
 				{
 					string workListName = WorkListUtils.GetName(path);
 					var factory = new XmlBasedWorkListFactory(path, workListName);
