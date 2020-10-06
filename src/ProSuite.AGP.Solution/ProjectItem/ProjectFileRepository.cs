@@ -1,15 +1,11 @@
 using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Xml;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using ArcGIS.Desktop.Internal.Core;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.ProjectItem
 {
@@ -48,12 +44,12 @@ namespace ProSuite.AGP.Solution.ProjectItem
 			return new List<string>();
 		}
 
-		public virtual void Add(string path)
+		public virtual void Add([NotNull] string path)
 		{
 			AddProjectItemToProject(path);
 		}
 
-		private void AddProjectItemToProject(string path)
+		private void AddProjectItemToProject([NotNull] string path)
 		{
 			QueuedTask.Run(() =>
 			{

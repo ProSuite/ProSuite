@@ -1,11 +1,8 @@
-using System;
+using ArcGIS.Desktop.Catalog;
+using ArcGIS.Desktop.Core;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using ArcGIS.Desktop.Catalog;
-using ArcGIS.Desktop.Core;
 
 namespace ProSuite.AGP.Solution.ProjectItem
 {

@@ -1,5 +1,6 @@
 using ArcGIS.Desktop.Core;
 using System.Collections.Generic;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.ProjectItem
 {
@@ -8,13 +9,13 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		private static ProjectRepository _repository;
 		public static ProjectRepository Current => _repository ?? (_repository = new ProjectRepository());
 
-		public IEnumerable<string> GetProjectFileItems(ProjectItemType itemType)
+		public IEnumerable<string> GetProjectFileItems([NotNull] ProjectItemType itemType)
 		{
 			ProjectFileRepository fileRepo = InitRepository(itemType);
 			return fileRepo?.GetAll() ?? new List<string>();
 		}
 
-		public bool AddProjectFileItems(ProjectItemType itemType, IEnumerable<string> filesPath)
+		public bool AddProjectFileItems([NotNull] ProjectItemType itemType, [NotNull] IEnumerable<string> filesPath)
 		{
 			ProjectFileRepository fileRepo = InitRepository(itemType);
 			if (fileRepo != null)
