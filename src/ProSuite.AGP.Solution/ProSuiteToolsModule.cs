@@ -55,8 +55,9 @@ namespace ProSuite.AGP.Solution
 					_qaProjectItem = Project.Current.GetItems<ProSuiteProjectItemConfiguration>().FirstOrDefault();
 					if (_qaProjectItem == null)
 					{
-						//_qaProjectItem = new ProSuiteProjectItem(QAConfiguration.Current.DefaultQAServiceConfig,
-						//                                         QAConfiguration.Current.DefaultQASpecConfig);
+						_qaProjectItem = new ProSuiteProjectItemConfiguration(
+												QAConfiguration.Current.DefaultQAServiceConfig,
+												QAConfiguration.Current.DefaultQASpecConfig);
 
 						//ProSuiteProjectItemManager.Current.SaveProjectItem(Project.Current, _qaProjectItem);
 					}

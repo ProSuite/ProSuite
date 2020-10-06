@@ -17,6 +17,14 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		{
 		}
 
+		public ProSuiteProjectItemConfiguration(
+			IEnumerable<ProSuiteQAServerConfiguration> defaultQAServiceConfig,
+			ProSuiteQASpecificationsConfiguration defaultQASpecConfig)
+		{
+			ServerConfigurations = defaultQAServiceConfig;
+			SpecificationConfiguration = defaultQASpecConfig;
+		}
+
 		public override ImageSource LargeImage => ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset32.png");
 
 		public override Task<ImageSource> SmallImage => Task.FromResult((ImageSource)ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset16.png"));
