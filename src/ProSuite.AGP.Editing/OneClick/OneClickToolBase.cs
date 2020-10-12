@@ -336,7 +336,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			var pickerWindowLocation = new Point(0, 0);
 
 			//var highlightPolygonSymbol = await QueuedTask.Run(() => { return CreatePolygonSymbol(); });
-			 
 
 			Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer =
 				await QueuedTaskUtils.Run(() =>
@@ -347,7 +346,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					selectionGeometry = GetSelectionGeometry(sketchGeometry);
 					pickerWindowLocation =
 						MapView.Active.MapToScreen(selectionGeometry.Extent.Center);
-					 
+
 					// select all features spatially related with selectionGeometry
 					return FindFeaturesOfAllLayers(selectionGeometry);
 				});
@@ -374,7 +373,8 @@ namespace ProSuite.AGP.Editing.OneClick
 					// show picker if more than one candidate
 					if (featuresOfLayer.Value.Count() > 1)
 					{
-						List<IPickableItem> pickables = await QueuedTask.Run(() => GetPickableFeatureItems(featuresOfLayer));
+						List<IPickableItem> pickables =
+							await QueuedTask.Run(() => GetPickableFeatureItems(featuresOfLayer));
 
 						var picker = new PickerUI.Picker(pickables, pickerWindowLocation);
 
@@ -411,7 +411,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 						return PickableItemAdapter.Get(featureClassInfos);
 					});
-					
 
 					var picker = new PickerUI.Picker(pickingCandidates, pickerWindowLocation);
 					var item = await picker.PickSingle() as PickableFeatureClassItem;
@@ -423,7 +422,6 @@ namespace ProSuite.AGP.Editing.OneClick
 							layer.Select(null, selectionMethod);
 						});
 					});
-
 				}
 
 				//no modifier pressed: select all in envelope
@@ -431,19 +429,23 @@ namespace ProSuite.AGP.Editing.OneClick
 				{
 					await QueuedTask.Run(() =>
 					{
-						Selector.SelectLayersFeaturesByOids(featuresPerLayer, selectionMethod);
+						Selector.SelectLayersFeaturesByOids(
+							featuresPerLayer, selectionMethod);
 					});
 				}
 			}
 
 			SelectionMode = SelectionMode.Normal;
-
-			ProcessSelection(SelectionUtils.GetSelectedFeatures(ActiveMapView), progressor);
+			await QueuedTask.Run(() =>
+				                     ProcessSelection(
+					                     SelectionUtils.GetSelectedFeatures(ActiveMapView),
+					                     progressor));
 
 			return true;
 		}
 
-		private List<IPickableItem> GetPickableFeatureItems(KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer)
+		private List<IPickableItem> GetPickableFeatureItems(
+			KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer)
 		{
 			var pickCandidates = new List<IPickableItem>();
 			foreach (Feature feature in MapUtils.GetFeatures(featuresOfLayer))
