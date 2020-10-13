@@ -14,6 +14,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Picker;
+using ProSuite.AGP.Editing.Properties;
 using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
@@ -39,16 +40,14 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected OneClickToolBase()
 		{
 			UseSnapping = false;
-
 			HandledKeys.Add(Key.Escape);
 			HandledKeys.Add(_keyShowOptionsPane);
-
-			CIMColor magenta = ColorFactory.Instance.CreateRGBColor(255, 0, 255);
+			//CIMColor magenta = ColorFactory.Instance.CreateRGBColor(255, 0, 255);
 		}
 
 		private SketchingMoveType SketchingMoveType { get; set; }
 
-		protected SelectionMode SelectionMode { get; set; }
+		//protected SelectionMode SelectionMode { get; set; }
 
 		protected bool RequiresSelection { get; set; } = true;
 
@@ -58,6 +57,13 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected Cursor SelectionCursor { get; set; }
 		protected Cursor SelectionCursorShift { get; set; }
+		protected Cursor SelectionCursorNormal { get; set; }
+		protected Cursor SelectionCursorNormalShift { get; set; }
+		protected Cursor SelectionCursorUser { get; set; }
+		protected Cursor SelectionCursorUserShift { get; set; }
+		protected Cursor SelectionCursorOriginal { get; set; }
+		protected Cursor SelectionCursorOriginalShift { get; set; }
+
 
 		protected override Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
@@ -199,9 +205,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (RequiresSelection && IsInSelectionPhase())
 				{
-					//return await QueuedTaskUtils.Run(() => OnSelectionSketchComplete(
-					//	                                 sketchGeometry, progressor));
-					OnSelectionSketchComplete(sketchGeometry, progressor);
+					await OnSelectionSketchComplete(sketchGeometry, progressor);
 				}
 
 				return await OnSketchCompleteCoreAsync(sketchGeometry, progressor);
@@ -323,6 +327,21 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
+		private SelectionMode GetSelectionSketchMode()
+		{
+			if (KeyboardUtils.IsModifierPressed(Keys.Alt))
+			{
+				return SelectionMode.Original;
+			}
+
+			if (KeyboardUtils.IsModifierPressed(Keys.Control))
+			{
+				return SelectionMode.UserSelect;
+			}
+
+			return SelectionMode.Normal;
+		}
+
 		private async Task<bool> OnSelectionSketchComplete(Geometry sketchGeometry,
 		                                                   CancelableProgressor progressor)
 		{
@@ -337,7 +356,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			//var highlightPolygonSymbol = await QueuedTask.Run(() => { return CreatePolygonSymbol(); });
 
-			Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer =
+			Dictionary<BasicFeatureLayer, List<long>> candidatesOfManyLayers =
 				await QueuedTaskUtils.Run(() =>
 				{
 					DisposeOverlays();
@@ -347,34 +366,40 @@ namespace ProSuite.AGP.Editing.OneClick
 					pickerWindowLocation =
 						MapView.Active.MapToScreen(selectionGeometry.Extent.Center);
 
-					// select all features spatially related with selectionGeometry
+					// find all features spatially related with selectionGeometry
 					return FindFeaturesOfAllLayers(selectionGeometry);
 				});
 
+			if (! candidatesOfManyLayers.Any())
+			{
+				return false;
+
+			}
+
 			if (SketchingMoveType == SketchingMoveType.Click)
 			{
-				//...core 
+				//note if necessary add a virtual core method here for overriding 
 
-				if (SelectionMode == SelectionMode.Original) //alt was pressed: select all xy
+				if (GetSelectionSketchMode() == SelectionMode.Original) //alt was pressed: select all xy
 				{
 					await QueuedTask.Run(() =>
 					{
 						Selector.SelectLayersFeaturesByOids(
-							featuresPerLayer, selectionMethod);
+							candidatesOfManyLayers, selectionMethod);
 					});
 				}
 
 				// select a single feature using feature reduction and picker
 				else
 				{
-					KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer =
-						await QueuedTask.Run(() => ReduceFeatures(featuresPerLayer));
+					KeyValuePair<BasicFeatureLayer, List<long>> candidatesOfLayer =
+						await QueuedTask.Run(() => ReduceFeatures(candidatesOfManyLayers));
 
 					// show picker if more than one candidate
-					if (featuresOfLayer.Value.Count() > 1)
+					if (candidatesOfLayer.Value.Count() > 1)
 					{
 						List<IPickableItem> pickables =
-							await QueuedTask.Run(() => GetPickableFeatureItems(featuresOfLayer));
+							await QueuedTask.Run(() => GetPickableFeatureItems(candidatesOfLayer));
 
 						var picker = new PickerUI.Picker(pickables, pickerWindowLocation);
 
@@ -393,7 +418,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						await QueuedTask.Run(() =>
 						{
 							Selector.SelectLayersFeaturesByOids(
-								featuresPerLayer, selectionMethod);
+								candidatesOfLayer, selectionMethod);
 						});
 					}
 				}
@@ -402,7 +427,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (SketchingMoveType == SketchingMoveType.Drag)
 			{
 				//CTRL was pressed: picker shows FC's to select from
-				if (SelectionMode == SelectionMode.UserSelect)
+				if (GetSelectionSketchMode() == SelectionMode.UserSelect)
 				{
 					List<IPickableItem> pickingCandidates = await QueuedTask.Run(() =>
 					{
@@ -430,12 +455,12 @@ namespace ProSuite.AGP.Editing.OneClick
 					await QueuedTask.Run(() =>
 					{
 						Selector.SelectLayersFeaturesByOids(
-							featuresPerLayer, selectionMethod);
+							candidatesOfManyLayers, selectionMethod);
 					});
 				}
 			}
 
-			SelectionMode = SelectionMode.Normal;
+			//SelectionMode = SelectionMode.Normal;
 			await QueuedTask.Run(() =>
 				                     ProcessSelection(
 					                     SelectionUtils.GetSelectedFeatures(ActiveMapView),
@@ -474,7 +499,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				}
 			}
 
-			return featuresPerLayer.First();
+			return featuresPerLayer.FirstOrDefault();
 		}
 
 		private Dictionary<BasicFeatureLayer, List<long>> FindFeaturesOfAllLayers(

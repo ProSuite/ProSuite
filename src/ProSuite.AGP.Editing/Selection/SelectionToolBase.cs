@@ -1,9 +1,12 @@
 using System.Collections.Generic;
+using System.Windows.Forms;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
+using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.Keyboard;
 
 namespace ProSuite.AGP.Editing.Selection
 {
@@ -13,7 +16,11 @@ namespace ProSuite.AGP.Editing.Selection
 		{
 			IsSketchTool = true;
 			SelectionSettings = new SelectionSettings();
-			SelectionMode = SelectionMode.Normal;
+			SelectionCursor = ToolUtils.GetCursor(Resources.SelectionToolNormal);
+			SelectionCursorShift = ToolUtils.GetCursor(Resources.SelectionToolNormalShift);
+			
+			SetCursor(SelectionCursor);
+			//SelectionMode = SelectionMode.Normal;
 		}
 
 		protected override bool CanUseSelection(IEnumerable<Feature> selectedFeatures)
@@ -32,24 +39,28 @@ namespace ProSuite.AGP.Editing.Selection
 
 		protected override void OnKeyDownCore(MapViewKeyEventArgs k)
 		{
-			if (k.Key == Key.LeftCtrl || k.Key == Key.RightCtrl)
+			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
 			{
-				SelectionMode = SelectionMode.UserSelect;
+				SetCursor(SelectionCursorShift);
 			}
-			if (k.Key == Key.LeftAlt || k.Key == Key.RightAlt)
+			else
 			{
-				SelectionMode = SelectionMode.Original;
+				SetCursor(SelectionCursor);
 			}
-			_msg.Info($"Key {k.Key} was pressed. SelectionMode: '{SelectionMode}'");
+			_msg.Info($"Key {k.Key} was pressed.");
 		}
 
-		//protected override void OnKeyUpCore(MapViewKeyEventArgs k)
-		//{
-		//	if (k.Key == Key.LeftCtrl || k.Key == Key.RightCtrl || k.Key == Key.LeftAlt || k.Key == Key.RightAlt)
-		//	{
-		//		SelectionMode = SelectionMode.Normal;
-		//	}
-		//}
+		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
+		{
+			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
+			{
+				SetCursor(SelectionCursorShift);
+			}
+			else
+			{
+				SetCursor(SelectionCursor);
+			}
+		}
 
 		protected override bool HandleEscape()
 		{

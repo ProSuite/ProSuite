@@ -28,9 +28,9 @@ namespace ProSuite.AGP.Editing.PickerUI
 		private readonly CIMLineSymbol _highlightLineSymbol;
 		private readonly CIMPolygonSymbol _highlightPolygonSymbol;
 		private readonly CIMPointSymbol _highlightPointSymbol;
+
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
-
 
 		public PickerViewModel(List<IPickableItem> pickingCandidates,
 		                       bool isSingleMode)
@@ -47,9 +47,9 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 			_isSingleMode = isSingleMode;
 
-			var magenta = ColorFactory.Instance.CreateRGBColor(255, 0, 255);
+			CIMColor magenta = ColorFactory.Instance.CreateRGBColor(255, 0, 255);
 
-			var outline =
+			CIMStroke outline =
 				SymbolFactory.Instance.ConstructStroke(
 					magenta, 2, SimpleLineStyle.Solid);
 
@@ -76,13 +76,12 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 		protected readonly List<IDisposable> _overlays = new List<IDisposable>();
 
-		
 		public RelayCommand FlashItemCmd { get; internal set; }
 		public RelayCommand CloseCommand { get; set; }
 
 		public IPickableItem SelectedItem
 		{
-			get { return _selectedItem; }
+			get => _selectedItem;
 			set
 			{
 				SetProperty(ref _selectedItem, value, () => SelectedItem);
@@ -115,19 +114,21 @@ namespace ProSuite.AGP.Editing.PickerUI
 		}
 
 		private void AddOverlay(ArcGIS.Core.Geometry.Geometry geometry,
-		                               CIMSymbol symbol)
+		                        CIMSymbol symbol)
 		{
-			var addedOverlay =
+			IDisposable addedOverlay =
 				MapView.Active.AddOverlay(geometry, symbol.MakeSymbolReference());
 
 			_overlays.Add(addedOverlay);
 		}
-		
+
 		public void DisposeOverlays()
 		{
-			foreach (var overlay in _overlays) overlay.Dispose();
-
-			_overlays.Clear();
+			if (_overlays.Any())
+			{
+				_overlays.ForEach((overlay) => overlay.Dispose());
+				_overlays.Clear();
+			}
 		}
 
 		protected void Close()
@@ -138,24 +139,27 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 		protected void FlashItem(object param)
 		{
+			var candidate = (IPickableItem) param;
+			if (candidate.Geometry == null)
+			{
+				return;
+			}
+
 			DisposeOverlays();
 
 			CIMSymbol symbol = _highlightPointSymbol;
-			
-			var candidate = (IPickableItem) param;
+
 			if (candidate.Geometry is Polygon)
 			{
 				symbol = _highlightPolygonSymbol;
 			}
 
-			if (candidate.Geometry is ArcGIS.Core.Geometry.Polyline)
+			if (candidate.Geometry is Polyline)
 			{
 				symbol = _highlightLineSymbol;
 			}
-			QueuedTask.Run(() =>
-			{
-				AddOverlay(candidate.Geometry, symbol);
-			});
+
+			QueuedTask.Run(() => { AddOverlay(candidate.Geometry, symbol); });
 		}
 	}
 }
