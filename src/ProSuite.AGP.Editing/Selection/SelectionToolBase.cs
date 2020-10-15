@@ -23,10 +23,7 @@ namespace ProSuite.AGP.Editing.Selection
 			//SelectionMode = SelectionMode.Normal;
 		}
 
-		protected override bool CanUseSelection(IEnumerable<Feature> selectedFeatures)
-		{
-			return false;
-		}
+		
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 

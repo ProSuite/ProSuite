@@ -50,6 +50,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 				              (WorkListsModule) FrameworkApplication.FindModule(
 					              "ProSuite_WorkList_Module"));
 
+		public event EventHandler<WorkItemPickArgs> WorkItemPicked;
+
 		public void RegisterObserver([NotNull] IWorkListObserver observer)
 		{
 			_observers.Add(observer);
@@ -410,5 +412,16 @@ namespace ProSuite.AGP.Solution.WorkLists
 		}
 
 		#endregion
+
+
+		public virtual void OnWorkItemPicked(WorkItemPickArgs e)
+		{
+			WorkItemPicked?.Invoke(null, e);
+		}
+	}
+
+	public class WorkItemPickArgs : EventArgs
+	{
+		public List<Feature> features { get; set; }
 	}
 }

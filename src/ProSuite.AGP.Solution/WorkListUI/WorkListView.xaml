@@ -8,7 +8,7 @@
                     xmlns:workListUi="clr-namespace:ProSuite.AGP.Solution.WorkListUI"
                     mc:Ignorable="d"
                     Title="{Binding Path=CurrentWorkList.Name}"
-                    d:DesignWidth="300"
+                    d:DesignWidth="400"
                     WindowStartupLocation="CenterOwner" SizeToContent="WidthAndHeight">
     <controls:ProWindow.Resources>
         <ResourceDictionary>
@@ -24,59 +24,71 @@
     </controls:ProWindow.Resources>
     <Grid Margin="5">
         <Grid.RowDefinitions>
-            <RowDefinition Height="25" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <ToolBar Grid.Row="0">
-            <Button Command="{Binding GoPreviousItemCmd}">
-                <Image Source="Images/GoBack.png" ToolTip="Previous WorkItem" />
-            </Button>
-            <Button Command="{Binding GoNextItemCmd}">
-                <Image Source="Images/GoNext.png" ToolTip="Next WorkItem" />
-            </Button>
-            <Button>
-                <Image Source="Images/GoNearest.png"/>
-            </Button>
-            <Separator/>
-            <Button Command="{Binding ZoomToCmd}">
-                <Image Source="Images/ZoomTo.png"/>
-            </Button>
-            <Button Command="{Binding PanToCmd}">
-                <Image Source="Images/PanTo.png"/>
-            </Button>
-            <Button Command="{Binding PreviousExtentCmd}">
-                <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericBlueLeftArrowLongTail16.png"/>
-            </Button>
-            <Button Command="{Binding NextExtentCmd}">
-                <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericBlueRightArrowLongTail16.png"/>
-            </Button>
-            <Button Command="{Binding ZoomInCmd}">
-                <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/zoomfixedzoomin_b_16.png"/>
-            </Button>
-            <Button Command="{Binding ZoomOutCmd}">
-                <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/zoomfixedzoomout_b_16.png"/>
-            </Button>
-            <Separator/>
-           
-        </ToolBar>
-        <StackPanel Grid.Row="2">
-            <ToolBar>
-                <DockPanel LastChildFill="True">
-                    <Label Content="Status: " />
-                    <CheckBox VerticalAlignment="Center" DockPanel.Dock="Left" IsChecked="{Binding Status, Mode=TwoWay, 
-                        Converter={StaticResource StatusEnumBooleanConverter}}" Margin="0,0,10,0"/>
-                    <Separator/>
-                    <ComboBox SelectedItem="{Binding CurrentWorkList.Visibility}" ItemsSource="{Binding Visibility}"/>
-                </DockPanel>
+        <ToolBarTray>
+            <ToolBar Grid.Row="0">
+                <Button Command="{Binding GoFirstItemCmd}">
+                    <Image Source="Images/GoFirst.png" ToolTip="Previous WorkItem" Stretch="UniformToFill" />
+                </Button>
+                <Button Command="{Binding GoPreviousItemCmd}">
+                    <Image Source="Images/GoBack.png" ToolTip="Previous WorkItem" Stretch="UniformToFill" />
+                </Button>
+                <Button Command="{Binding GoNextItemCmd}">
+                    <Image Source="Images/GoNext.png" ToolTip="Next WorkItem" Stretch="UniformToFill" />
+                </Button>
+                <Button>
+                    <Image Source="Images/GoNearest.png" Stretch="UniformToFill"/>
+                </Button>
+                <Button Command="{Binding PickWorkItemCmd}">
+                    <Image Source="Images/PickWorkItemTool.png" Stretch="UniformToFill"/>
+                </Button>
+                <Separator/>
+                <Button Command="{Binding ZoomToCmd}">
+                    <Image Source="Images/ZoomTo.png" Stretch="UniformToFill"/>
+                </Button>
+                <Button Command="{Binding PanToCmd}">
+                    <Image Source="Images/PanTo.png" Stretch="UniformToFill"/>
+                </Button>
+                <Button Command="{Binding ZoomToAllCmd}">
+                    <Image Source="Images/ZoomToAll.png" Stretch="UniformToFill"/>
+                </Button>
+                <Button Command="{Binding PreviousExtentCmd}">
+                    <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericBlueLeftArrowLongTail16.png" Stretch="UniformToFill"/>
+                </Button>
+                <Button Command="{Binding NextExtentCmd}">
+                    <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericBlueRightArrowLongTail16.png" Stretch="UniformToFill"/>
+                </Button>
+                <Button Command="{Binding ZoomInCmd}">
+                    <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/zoomfixedzoomin_b_16.png" Stretch="UniformToFill"/>
+                </Button>
+                <Button Command="{Binding ZoomOutCmd}">
+                    <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/zoomfixedzoomout_b_16.png" Stretch="UniformToFill"/>
+                </Button>
+                <Separator/>
             </ToolBar>
-            <StackPanel>
+        </ToolBarTray>
+        
+        <StackPanel Grid.Row="2">
+            <ToolBarTray>
+                <ToolBar>
+                    <DockPanel LastChildFill="True">
+                        <Label Content="Status: " />
+                        <CheckBox VerticalAlignment="Center" DockPanel.Dock="Left" IsChecked="{Binding Status, Mode=TwoWay, 
+                        Converter={StaticResource StatusEnumBooleanConverter}}" Margin="0,0,10,0"/>
+                        <Separator/>
+                        <ComboBox SelectedItem="{Binding CurrentWorkList.Visibility}" ItemsSource="{Binding Visibility}"/>
+                    </DockPanel>
+                </ToolBar>
+            </ToolBarTray>
+            <StatusBar>
                 <Label  Content="{Binding CurrentWorkItem.Description}" />
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                     <Label Content="{Binding Count}"></Label>
                 </StackPanel>
-            </StackPanel>
-            
+            </StatusBar>
         </StackPanel>
     </Grid>
 </controls:ProWindow>

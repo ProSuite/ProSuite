@@ -3,12 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Input;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.AGP.Solution.Selection;
 using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
@@ -20,6 +24,19 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	public class WorkListViewModel : PropertyChangedBase, IWorkListObserver
 	{
 		private const double _seconds = 0.3;
+		private SelectionWorkList _currentWorkList;
+		private WorkItemVm _currentWorkItem;
+		private int _currentIndex;
+		private WorkItemStatus _status;
+		private bool _visited;
+		private string _count;
+		private RelayCommand _goNextItemCmd;
+		private RelayCommand _goFirstItemCmd;
+		private RelayCommand _goPreviousItemCmd;
+		private RelayCommand _zoomToCmd;
+		private RelayCommand _panToCmd;
+		private RelayCommand _zoomToAllCmd;
+		private RelayCommand _pickWorkItemCmd;
 
 		public WorkListViewModel(SelectionWorkList workList)
 		{
@@ -27,11 +44,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			CurrentWorkList.GoNext();
 			CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
 		}
-
-		public WorkListViewModel() { }
-
-		private SelectionWorkList _currentWorkList;
-		private WorkItemVm _currentWorkItem;
 
 		public ICommand PreviousExtentCmd =>
 			FrameworkApplication.GetPlugInWrapper(
@@ -49,8 +61,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			FrameworkApplication.GetPlugInWrapper(
 				DAML.Button.esri_mapping_fixedZoomOutButton) as ICommand;
 
-		private RelayCommand _goNextItemCmd;
-
 		public RelayCommand GoNextItemCmd
 		{
 			get
@@ -60,13 +70,23 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}
 		}
 
-		private RelayCommand _goPreviousItemCmd;
-		private RelayCommand _zoomToCmd;
-		private int _currentIndex;
-		private WorkItemStatus _status;
-		private bool _visited;
-		private string _count;
-		private RelayCommand _panToCmd;
+		public RelayCommand GoFirstItemCmd
+		{
+			get
+			{
+				_goFirstItemCmd = new RelayCommand(() => GoFirstItem(), () => true);
+				return _goFirstItemCmd;
+			}
+		}
+
+		public RelayCommand ZoomToAllCmd
+		{
+			get
+			{
+				_zoomToAllCmd = new RelayCommand(() => ZoomToAllAsync(), () => true);
+				return _zoomToAllCmd;
+			}
+		}
 
 		public RelayCommand GoPreviousItemCmd
 		{
@@ -95,29 +115,16 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}
 		}
 
-		private async Task ZoomToAsync()
+		public RelayCommand PickWorkItemCmd
 		{
-			IWorkItem item = CurrentWorkList.Current;
-
-			if (item == null)
+			get
 			{
-				return;
+				_pickWorkItemCmd = new RelayCommand(PickWorkItem, () => true);
+				return _pickWorkItemCmd;
 			}
-
-			await MapView.Active.ZoomToAsync(GetEnvelope(item), TimeSpan.FromSeconds(_seconds));
 		}
 
-		private async Task PanToAsync()
-		{
-			IWorkItem item = CurrentWorkList.Current;
-
-			if (item == null)
-			{
-				return;
-			}
-
-			await MapView.Active.PanToAsync(GetEnvelope(item), TimeSpan.FromSeconds(_seconds));
-		}
+		
 
 		public WorkItemStatus Status
 		{
@@ -201,12 +208,83 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			});
 		}
 
+		private async Task ZoomToAsync()
+		{
+			IWorkItem item = CurrentWorkList.Current;
+
+			if (item == null)
+			{
+				return;
+			}
+
+			await MapView.Active.ZoomToAsync(GetEnvelope(item), TimeSpan.FromSeconds(_seconds));
+		}
+
+		private async Task PanToAsync()
+		{
+			IWorkItem item = CurrentWorkList.Current;
+
+			if (item == null)
+			{
+				return;
+			}
+
+			await MapView.Active.PanToAsync(GetEnvelope(item), TimeSpan.FromSeconds(_seconds));
+		}
+
+		private async Task ZoomToAllAsync()
+		{
+			await MapView.Active.ZoomToAsync(CurrentWorkList.Extent);
+		}
+
+		private void GoFirstItem()
+		{
+			QueuedTask.Run(() =>
+			{
+				CurrentWorkList.GoFirst();
+				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
+			});
+		}
+
 		private void GoNextItem()
 		{
 			QueuedTask.Run(() =>
 			{
 				CurrentWorkList.GoNext();
 				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
+			});
+		}
+
+		private void PickWorkItem()
+		{
+			WorkListsModule.Current.WorkItemPicked += Current_WorkItemPicked;
+			FrameworkApplication.SetCurrentToolAsync("ProSuiteTools_PickWorkListItemTool");
+
+			
+			//var wrapper = FrameworkApplication.GetPlugInWrapper("ProSuiteTools_PickWorkListItemTool");
+			//SelectionChangedEventArgs args = new SelectionChangedEventArgs();
+
+			//PickWorkListItemTool pickWorkListItemTool = new PickWorkListItemTool();
+			//pickWorkListItemTool.ItemSelected += (features, args) =>
+			//{
+			//	 QueuedTask.Run(() =>
+			//	{
+			//		var oid = features.First().GetObjectID();
+			//		var selectedItem = CurrentWorkList.GetItems().First(item => item.OID == oid);
+			//		CurrentWorkItem = new WorkItemVm(selectedItem);
+			//	});
+
+
+			//};
+		}
+
+		private void Current_WorkItemPicked(object sender, WorkItemPickArgs e)
+		{
+			QueuedTask.Run(() =>
+			{
+				var oid = e.features.First().GetObjectID();
+				var selectedItem = CurrentWorkList.GetItems().First(item => item.OID == oid);
+				CurrentWorkItem = new WorkItemVm(selectedItem);
 			});
 		}
 

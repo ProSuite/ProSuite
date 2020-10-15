@@ -128,6 +128,7 @@
     <Compile Include="ProjectItem\ProSuiteProjectItemConfiguration.cs" />
     <Compile Include="ProjectItem\ProSuiteProjectItemContainer.cs" />
     <Compile Include="ProjectItem\ProjectFileRepository.cs" />
+    <Compile Include="Selection\PickWorkListItemTool.cs" />
     <Compile Include="Selection\SelectionTool.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
     <Compile Include="Commons\LayerUtils.cs" />
@@ -279,12 +280,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="WorkListUI\Images\GoBack.gif" />
-    <Resource Include="WorkListUI\Images\GoFirst.bmp" />
-    <Resource Include="WorkListUI\Images\GoNearest.bmp" />
-    <Resource Include="WorkListUI\Images\GoNext.gif" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="WorkListUI\Images\GoBack.png" />
   </ItemGroup>
   <ItemGroup>
@@ -327,6 +322,21 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="WorkListUI\Images\ZoomTo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\GoFirst.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\NavigateErrorsCmd.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\NavigateSelectionCmd.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\PickWorkItemTool.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\ZoomToAll.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--

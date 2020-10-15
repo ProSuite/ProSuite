@@ -460,10 +460,11 @@ namespace ProSuite.AGP.Editing.OneClick
 				}
 			}
 
+			MapView activeMapView = MapView.Active;
 			//SelectionMode = SelectionMode.Normal;
 			await QueuedTask.Run(() =>
 				                     ProcessSelection(
-					                     SelectionUtils.GetSelectedFeatures(ActiveMapView),
+					                     SelectionUtils.GetSelectedFeatures(activeMapView),
 					                     progressor));
 
 			return true;
