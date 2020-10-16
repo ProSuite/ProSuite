@@ -1,0 +1,76 @@
+syntax = "proto3";
+package ProSuite.ProtobufClasses;
+
+//import "timestamp.proto";
+
+//option csharp_namespace = "ProSuite.Grpc.ProtobufModels.VerifyQuality";
+
+
+enum VerifyQualityRequestType {
+    Xml = 0;
+    Ddx = 1;
+    Features = 2;
+}
+
+message Elements {
+    string qualityCondition = 1;
+}
+
+message QualitySpecification {
+    string name = 1;
+    optional string uuid = 2;
+    repeated Elements elements = 3;
+}
+
+// ------------------------------------------------------------------------
+message VerifyQualityRequest {
+
+    int32 requestId = 1;
+    VerifyQualityRequestType requestType = 2;
+    QualitySpecification qulitySpecification = 3;
+    message Workspace {   
+        string id = 1;
+        string modelName = 2;
+        string catalogPath = 3;
+    }
+    repeated Workspace dataSources = 4;
+
+    optional int32 tileSize = 5;
+    optional string aoiFeatureLayer = 6;
+    optional string aoiFeatureLayerWhere = 7;
+    optional string resultsFolder = 8;
+} 
+
+// ------------------------------------------------------------------------
+message VerifyQualityResult {
+    
+    int32 requestId = 1;
+    int32 verifyOk = 2;
+    int32 errors = 3;
+    int32 warnings = 4;
+    optional string issuesGdb = 5;
+}
+
+
+message VerifyQualityResponse {
+
+    int32 requestId = 1;
+    enum ProgressStatus {
+        Done = 0;
+        Progress = 1;
+        Failed = 2;
+        Info = 3;
+    }
+    ProgressStatus status = 2;
+
+    optional string message = 3;
+    optional int32 stepsDone = 4;
+    optional int32 stepsTotal = 5;
+
+    optional VerifyQualityResult result = 6;
+}
+
+service VerifyQualityService {
+   rpc PerformQualityVerification(VerifyQualityRequest) returns (stream VerifyQualityResponse) {}
+}
+
