@@ -259,23 +259,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			WorkListsModule.Current.WorkItemPicked += Current_WorkItemPicked;
 			FrameworkApplication.SetCurrentToolAsync("ProSuiteTools_PickWorkListItemTool");
-
 			
-			//var wrapper = FrameworkApplication.GetPlugInWrapper("ProSuiteTools_PickWorkListItemTool");
-			//SelectionChangedEventArgs args = new SelectionChangedEventArgs();
-
-			//PickWorkListItemTool pickWorkListItemTool = new PickWorkListItemTool();
-			//pickWorkListItemTool.ItemSelected += (features, args) =>
-			//{
-			//	 QueuedTask.Run(() =>
-			//	{
-			//		var oid = features.First().GetObjectID();
-			//		var selectedItem = CurrentWorkList.GetItems().First(item => item.OID == oid);
-			//		CurrentWorkItem = new WorkItemVm(selectedItem);
-			//	});
-
-
-			//};
 		}
 
 		private void Current_WorkItemPicked(object sender, WorkItemPickArgs e)
@@ -283,7 +267,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			QueuedTask.Run(() =>
 			{
 				var oid = e.features.First().GetObjectID();
-				var selectedItem = CurrentWorkList.GetItems().First(item => item.OID == oid);
+				IWorkItem selectedItem = CurrentWorkList.GetItems().FirstOrDefault(item => item.OID == oid);
 				CurrentWorkItem = new WorkItemVm(selectedItem);
 			});
 		}

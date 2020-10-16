@@ -42,19 +42,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			UseSnapping = false;
 			HandledKeys.Add(Key.Escape);
 			HandledKeys.Add(_keyShowOptionsPane);
-			//CIMColor magenta = ColorFactory.Instance.CreateRGBColor(255, 0, 255);
 		}
 
 		private SketchingMoveType SketchingMoveType { get; set; }
-
-		//protected SelectionMode SelectionMode { get; set; }
-
 		protected bool RequiresSelection { get; set; } = true;
-
 		protected virtual SelectionSettings SelectionSettings { get; set; }
-
 		protected List<Key> HandledKeys { get; } = new List<Key>();
-
 		protected Cursor SelectionCursor { get; set; }
 		protected Cursor SelectionCursorShift { get; set; }
 		protected Cursor SelectionCursorNormal { get; set; }
@@ -353,14 +346,11 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			Geometry selectionGeometry;
 			var pickerWindowLocation = new Point(0, 0);
-
-			//var highlightPolygonSymbol = await QueuedTask.Run(() => { return CreatePolygonSymbol(); });
-
+			
 			Dictionary<BasicFeatureLayer, List<long>> candidatesOfManyLayers =
 				await QueuedTaskUtils.Run(() =>
 				{
 					DisposeOverlays();
-					//AddOverlay(selectionGeometry, highlightPolygonSymbol);
 
 					selectionGeometry = GetSelectionGeometry(sketchGeometry);
 					pickerWindowLocation =
@@ -373,7 +363,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (! candidatesOfManyLayers.Any())
 			{
 				return false;
-
 			}
 
 			if (SketchingMoveType == SketchingMoveType.Click)
@@ -461,7 +450,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			MapView activeMapView = MapView.Active;
-			//SelectionMode = SelectionMode.Normal;
+
 			await QueuedTask.Run(() =>
 				                     ProcessSelection(
 					                     SelectionUtils.GetSelectedFeatures(activeMapView),

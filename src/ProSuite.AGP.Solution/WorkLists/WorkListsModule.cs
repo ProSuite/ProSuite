@@ -50,6 +50,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 				              (WorkListsModule) FrameworkApplication.FindModule(
 					              "ProSuite_WorkList_Module"));
 
+		public Dictionary<IWorkList, FeatureLayer> LayerByWorkList
+		{
+			get { return _layerByWorkList; }
+		}
+
 		public event EventHandler<WorkItemPickArgs> WorkItemPicked;
 
 		public void RegisterObserver([NotNull] IWorkListObserver observer)
@@ -161,21 +166,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 						                                         MapView.Active.Map,
 						                                         LayerPosition.AddToTop);
 
-					SetLayerNotSelectable(workListLayer);
+					Commons.LayerUtils.SetLayerSelectability(workListLayer, false);
 
 					return workListLayer;
 				}
 			}
 		}
-
-		// todo daro: to utils?
-		private static void SetLayerNotSelectable(Layer layer)
-		{
-			var cimDefinition = (CIMFeatureLayer) layer.GetDefinition();
-			cimDefinition.Selectable = false;
-			layer.SetDefinition(cimDefinition);
-		}
-
+		
 		[NotNull]
 		private PluginDatasourceConnectionPath GetWorkListConnectionPath(
 			[NotNull] string workListName)
