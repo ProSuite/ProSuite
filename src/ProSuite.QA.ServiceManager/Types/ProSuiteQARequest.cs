@@ -32,11 +32,9 @@ namespace ProSuite.QA.ServiceManager.Types
 
     public class ProSuiteQARequest
     {
-        private ProSuiteQAServiceType type;
-
         public ProSuiteQARequest(ProSuiteQAServiceType type)
         {
-            this.type = type;
+            this.ServiceType = type;
         }
 
         public ProSuiteQAServiceType ServiceType { get; }

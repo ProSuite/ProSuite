@@ -52,6 +52,10 @@
       <Project>{B46101C1-5C42-410D-83B9-8EBE2BECBE18}</Project>
       <Name>ProSuite.QA.ServiceProviderArcGIS</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.QA.ServiceProviderMicroservices\ProSuite.QA.ServiceProviderMicroservices.csproj">
+      <Project>{8A13B255-B672-4F81-A9B0-426E81846651}</Project>
+      <Name>ProSuite.QA.ServiceProviderMicroservices</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.QA.SpecificationProviderFile\ProSuite.QA.SpecificationProviderFile.csproj">
       <Project>{61FA8DE4-D5E8-49C3-88CF-1F806DD6B020}</Project>
       <Name>ProSuite.QA.SpecificationProviderFile</Name>

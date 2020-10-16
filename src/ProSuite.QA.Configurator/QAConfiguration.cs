@@ -1,8 +1,11 @@
 using ProSuite.QA.ServiceManager.Interfaces;
 using ProSuite.QA.ServiceManager.Types;
 using ProSuite.QA.ServiceProviderArcGIS;
+using ProSuite.QA.ServiceProviderMicroservices;
 using ProSuite.QA.SpecificationProviderFile;
+using System;
 using System.Collections.Generic;
+using System.Security.Permissions;
 
 namespace ProSuite.QA.Configurator
 {
@@ -21,13 +24,25 @@ namespace ProSuite.QA.Configurator
 
 			foreach (var serverConfig in serverConfigs)
 			{
-				if (serverConfig.ServiceType == ProSuiteQAServiceType.GPLocal ||
-					serverConfig.ServiceType == ProSuiteQAServiceType.GPService)
-				{
-					listOfQAServiceProviders.Add(new QAServiceProviderGP(serverConfig));
-				}
+				IProSuiteQAServiceProvider serviceProvider = CreateServiceProvider(serverConfig);
+				if( serviceProvider != null)
+					listOfQAServiceProviders.Add(serviceProvider);
 			}
 			return listOfQAServiceProviders;
+		}
+
+		private IProSuiteQAServiceProvider CreateServiceProvider(ProSuiteQAServerConfiguration serverConfig)
+		{
+			switch (serverConfig.ServiceType)
+			{
+				case ProSuiteQAServiceType.GPLocal:
+					return new QAServiceProviderGP(serverConfig);
+				case ProSuiteQAServiceType.GPService:
+					return new QAServiceProviderGP(serverConfig);
+				case ProSuiteQAServiceType.gRPC:
+					return new QAServiceProviderMicroservices(serverConfig);
+			}
+			return null;	
 		}
 
 		public IQASpecificationProvider GetQASpecificationsProvider(ProSuiteQASpecificationsConfiguration specConfig)
@@ -42,8 +57,9 @@ namespace ProSuite.QA.Configurator
 				return new List<ProSuiteQAServerConfiguration>
 				       {
 					       GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPService),
-					       GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPLocal)
-				       };
+					       GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPLocal),
+						   GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.gRPC)
+					   };
 			}
 		}
 
@@ -73,9 +89,18 @@ namespace ProSuite.QA.Configurator
 					{
 						ServiceType = ProSuiteQAServiceType.GPService,
 						ServiceName = @"QAGPServices\ProSuiteQAService",
-						//ServiceConnection = @"C:\Users\algr\Documents\ArcGIS\Projects\test\admin on vsdev2414.esri-de.com_6443 (3).ags"
-						ServiceConnection = ""
+						ServiceConnection = @"C:\Users\algr\Documents\ArcGIS\Projects\test\admin on vsdev2414.esri-de.com_6443 (3).ags"
+						//ServiceConnection = ""
 					};
+
+				case ProSuiteQAServiceType.gRPC:
+					return new ProSuiteQAServerConfiguration()
+					{
+						ServiceType = ProSuiteQAServiceType.gRPC,
+						ServiceName = "localhost",
+						ServiceConnection = "30021"
+					};
+
 				default:
 					return new ProSuiteQAServerConfiguration();
 			}

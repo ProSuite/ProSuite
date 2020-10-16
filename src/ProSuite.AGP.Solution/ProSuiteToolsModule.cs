@@ -61,6 +61,7 @@ namespace ProSuite.AGP.Solution
 												QAConfiguration.Current.DefaultQASpecConfig);
 
 						//ProSuiteProjectItemManager.Current.SaveProjectItem(Project.Current, _qaProjectItem);
+						UpdateServiceUI(_qaProjectItem);
 					}
 				}
 				return _qaProjectItem;
@@ -257,7 +258,8 @@ namespace ProSuite.AGP.Solution
 		{
 			try
 			{
-				await ProSuiteToolsModule.StartQAGPServerAsync(ProSuiteQAServiceType.GPService);
+				//await ProSuiteToolsModule.StartQAGPServerAsync(ProSuiteQAServiceType.GPService);
+				await ProSuiteToolsModule.StartQAGPServerAsync(ProSuiteQAServiceType.gRPC);
 			}
 			catch (Exception ex)
 			{

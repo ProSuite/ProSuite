@@ -20,7 +20,7 @@ namespace ProSuite.QA.ServiceProviderMicroservices
 
 		public QAServiceProviderMicroservices(ProSuiteQAServerConfiguration parameters) : base(parameters)
 		{
-			_serviceClient = new ProSuiteGrpcClient(parameters.ServiceConnection, Convert.ToInt32(parameters.ServiceName));
+			_serviceClient = new ProSuiteGrpcClient(parameters.ServiceName, Convert.ToInt32(parameters.ServiceConnection));
 			_serviceClient.OnServiceResponseReceived += ServiceResponseReceived;
 		}
 
