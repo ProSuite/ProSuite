@@ -1,14 +1,21 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace ProSuite.GrpcClient
 {
+	public enum ProSuiteGrpcServerResponseStatus
+	{
+		Started,
+		Progress,
+		Finished,
+		Done,
+		Failed,
+		Info,
+		Other
+	}
+
 	public class ProSuiteGrpcServerResponse
 	{
 		public ProSuiteGrpcServiceType RequestType { get; set; }
+
+		public ProSuiteGrpcServerResponseStatus Status { get; set; }
 
 		public string ResponseMessage { get; set; }		
 

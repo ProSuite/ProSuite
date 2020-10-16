@@ -1,5 +1,6 @@
 using ProSuite.QA.ServiceManager.Types;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ProSuite.QA.ServiceManager.Interfaces
@@ -9,8 +10,8 @@ namespace ProSuite.QA.ServiceManager.Interfaces
     {
         ProSuiteQAServiceType ServiceType { get; }
 
-        Task<ProSuiteQAResponse> StartQAAsync(ProSuiteQARequest request);
-        ProSuiteQAResponse StartQASync(ProSuiteQARequest request);
+        Task<ProSuiteQAResponse> StartQAAsync(ProSuiteQARequest request, CancellationToken token);
+        ProSuiteQAResponse StartQASync(ProSuiteQARequest request, CancellationToken token);
 
         event EventHandler<ProSuiteQAServiceEventArgs> OnStatusChanged;
 

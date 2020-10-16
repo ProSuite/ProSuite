@@ -4,6 +4,7 @@ using ProSuite.QA.ServiceManager.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ProSuite.QA.ServiceManager
@@ -59,7 +60,7 @@ namespace ProSuite.QA.ServiceManager
 			}
 		}
 
-		public async Task<ProSuiteQAResponse> StartQATestingAsync(ProSuiteQARequest request)
+		public async Task<ProSuiteQAResponse> StartQATestingAsync(ProSuiteQARequest request, CancellationToken token)
 		{
 			var service = GetQAService(request.ServiceType);
 			if (service == null)  // throw? 
@@ -69,13 +70,13 @@ namespace ProSuite.QA.ServiceManager
 				};
 
 			// service is responsible for correct format (passtrough)
-			return await service.StartQAAsync(request);
+			return await service.StartQAAsync(request, token);
 		}
 
-		public ProSuiteQAResponse StartQATesting(ProSuiteQARequest request)
+		public ProSuiteQAResponse StartQATesting(ProSuiteQARequest request, CancellationToken token)
 		{
 			var service = GetQAService(request.ServiceType);
-			return service?.StartQASync(request);
+			return service?.StartQASync(request, token);
 		}
 
 		private IProSuiteQAServiceProvider GetQAService(ProSuiteQAServiceType type)

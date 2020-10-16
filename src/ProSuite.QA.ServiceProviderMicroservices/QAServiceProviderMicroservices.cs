@@ -1,7 +1,9 @@
 using ProSuite.Commons.Logging;
+using ProSuite.GrpcClient;
 using ProSuite.QA.ServiceManager.Interfaces;
 using ProSuite.QA.ServiceManager.Types;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ProSuite.QA.ServiceProviderMicroservices
@@ -10,12 +12,7 @@ namespace ProSuite.QA.ServiceProviderMicroservices
 	{
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-		// path to medium - client.exe
-		private string _clientPath = @"test_client.exe";
-
-		//private gRPCClient _serverClient = null;
-		private string _serverAdress;
-		private string _serverPort;
+		private ProSuiteGrpcClient _serviceClient;
 
 		public ProSuiteQAServiceType ServiceType => ProSuiteQAServiceType.gRPC;
 
@@ -23,25 +20,22 @@ namespace ProSuite.QA.ServiceProviderMicroservices
 
 		public QAServiceProviderMicroservices(ProSuiteQAServerConfiguration parameters) : base(parameters)
 		{
-			_serverAdress = parameters.ServiceConnection;
-			_serverPort = parameters.ServiceName;
-
-			// TODO algr: async start
-			InitializeClient(_clientPath);
+			_serviceClient = new ProSuiteGrpcClient(parameters.ServiceConnection, Convert.ToInt32(parameters.ServiceName));
+			_serviceClient.OnServiceResponseReceived += ServiceResponseReceived;
 		}
 
-		private void InitializeClient(string path)
+		private void ServiceResponseReceived(object sender, ProSuiteGrpcEventArgs e)
 		{
-			//_serverClient = new gRPCClient(path);
-			//_serverClient.Start();
+			OnStatusChanged?.Invoke(this, ParseArguments(e));
 		}
 
-		public Task<ProSuiteQAResponse> StartQAAsync(ProSuiteQARequest request)
+		public async Task<ProSuiteQAResponse> StartQAAsync(ProSuiteQARequest request, CancellationToken token)
 		{
-			throw new NotImplementedException();
+			await _serviceClient.CallServer(new ProSuiteGrpcServerRequest { }, token);
+			return new ProSuiteQAResponse { };
 		}
 
-		public ProSuiteQAResponse StartQASync(ProSuiteQARequest request)
+		public ProSuiteQAResponse StartQASync(ProSuiteQARequest request, CancellationToken token)
 		{
 			throw new NotImplementedException();
 		}
@@ -49,6 +43,27 @@ namespace ProSuite.QA.ServiceProviderMicroservices
 		public void UpdateConfig(ProSuiteQAServerConfiguration serviceConfig)
 		{
 			throw new NotImplementedException();
+		}
+
+		private ProSuiteQAServiceEventArgs ParseArguments(ProSuiteGrpcEventArgs serviceArguments)
+		{
+			var serviceResponse = serviceArguments?.Response;
+			return new ProSuiteQAServiceEventArgs(ParseState(serviceResponse?.Status), serviceResponse?.ResponseData);
+		}
+
+		// TODO too many state parsings - common state enum could solve this
+		private ProSuiteQAServiceState ParseState(ProSuiteGrpcServerResponseStatus? status)
+		{
+			if (status == null) return ProSuiteQAServiceState.Other;
+
+			switch (status)
+			{
+				case ProSuiteGrpcServerResponseStatus.Progress:
+					return ProSuiteQAServiceState.ProgressPos;
+				case ProSuiteGrpcServerResponseStatus.Finished:
+					return ProSuiteQAServiceState.Finished;
+			}
+			return ProSuiteQAServiceState.Other;
 		}
 	}
 }

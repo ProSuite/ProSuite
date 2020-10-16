@@ -26,17 +26,17 @@ namespace ProSuite.GrpcClient
 			_serverAddress = serverAddress;
 			_port = port;
 
-			Init();
+			InitServices();
 		}
 
-		private void Init()
+		private void InitServices()
 		{
 			// TODO more than one service?
 			_serviceClient = new VerifyQualityService.VerifyQualityServiceClient(ClientChannel);
 		}
 
 		// TODO return value
-		public async Task CallServer(ProSuiteGrpcServerRequest request, CancellationTokenSource cancellationTokenSource)
+		public async Task CallServer(ProSuiteGrpcServerRequest request, CancellationToken cancellationToken)
 		{
 			// TODO check client connectivity (health?)
 			// TODO background thread?
@@ -54,10 +54,10 @@ namespace ProSuite.GrpcClient
 						RequestType = VerifyQualityRequestType.Xml
 					};
 
-					var serviceCall = _serviceClient.PerformQualityVerification(qualityRequest, null, null, cancellationTokenSource.Token);
+					var serviceCall = _serviceClient.PerformQualityVerification(qualityRequest, null, null, cancellationToken);
 					while (await serviceCall.ResponseStream.MoveNext())
 					{
-						if (cancellationTokenSource.IsCancellationRequested)
+						if (cancellationToken.IsCancellationRequested)
 							break;
 
 						var response = serviceCall.ResponseStream.Current;
@@ -66,6 +66,7 @@ namespace ProSuite.GrpcClient
 								new ProSuiteGrpcServerResponse
 								{
 									RequestType = request.ServiceType,
+									Status = ParseStatus(response.Status),
 									ResponseMessage = $"{response.Status} {response.StepsDone * 100/response.StepsTotal}%",
 									ResponseData = serviceCall.ResponseStream.Current
 								}));
@@ -77,12 +78,23 @@ namespace ProSuite.GrpcClient
 
 		}
 
-		public void Dispose()
+		private ProSuiteGrpcServerResponseStatus ParseStatus(VerifyQualityResponse.Types.ProgressStatus status)
 		{
-			Stop();
+			switch (status)
+			{
+				case VerifyQualityResponse.Types.ProgressStatus.Done:
+					return ProSuiteGrpcServerResponseStatus.Done;
+				case VerifyQualityResponse.Types.ProgressStatus.Failed:
+					return ProSuiteGrpcServerResponseStatus.Failed;
+				case VerifyQualityResponse.Types.ProgressStatus.Info:
+					return ProSuiteGrpcServerResponseStatus.Info;
+				case VerifyQualityResponse.Types.ProgressStatus.Progress:
+					return ProSuiteGrpcServerResponseStatus.Progress;
+			}
+			return ProSuiteGrpcServerResponseStatus.Other;
 		}
 
-		public void Stop()
+		public void Dispose()
 		{
 			ClientChannel.ShutdownAsync().Wait();
 		}

@@ -1,7 +1,6 @@
 using Grpc.Core;
-using System;
 using ProSuite.ProtobufClasses;
-using System.Collections;
+using System;
 using System.Collections.Generic;
 
 namespace ProSuite.GrpcServer
@@ -9,22 +8,23 @@ namespace ProSuite.GrpcServer
 	class Program
     {
 		private static readonly int Port = 30021;
-		private static readonly string Host = "127.0.0.1";
+		private static readonly string Host = "localhost";
 
 		static void Main(string[] args)
         {
+			IEnumerable<ServerServiceDefinition> services = new List<ServerServiceDefinition>();
 			ProSuiteGrpcServer server = new ProSuiteGrpcServer
 			{
-				Services = { VerifyQualityService.BindService(new VerifyQualityGrpcService()) },
 				Ports = { new ServerPort(Host, Port, ServerCredentials.Insecure) }
 			};
+			Console.WriteLine($"ProSuite server listening on {Host}:{Port} ");
+
+			Console.WriteLine($"Available services:");
+			server.Services.Add(VerifyQualityService.BindService(new VerifyQualityGrpcService()));
+			Console.WriteLine($"VerifyQualityService.VerifyQualityGrpcService");
 
 			// TODO subscribe to server events
-
 			server.Start();
-
-			Console.WriteLine($"ProSuite server listening on {Host}:{Port} ");
-			Console.WriteLine($"Available services: VerifyQualityService");
 
 			Console.WriteLine("Press any key to stop the server...");
 			Console.ReadKey();

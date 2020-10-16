@@ -8,7 +8,6 @@ namespace ProSuite.GrpcServer
 	{
 		public override async Task PerformQualityVerification(VerifyQualityRequest request, IServerStreamWriter<VerifyQualityResponse> responseStream, ServerCallContext context)
 		{
-
 			// simulate quality verification and progress
 			for (int i = 1; i < 100; i++)
 			{

@@ -18,6 +18,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ProSuite.AGP.Solution.Commons;
 using ProSuite.AGP.Solution.ConfigUI;
+using System.Threading;
 
 namespace ProSuite.AGP.Solution
 {
@@ -212,7 +213,8 @@ namespace ProSuite.AGP.Solution
 		internal static void StartQAGPServer(ProSuiteQAServiceType type)
 		{
 			_msg.Info($"StartQAGPServer is called");
-			var response = QAManager.StartQATesting(new ProSuiteQARequest(type));
+			var cancellationTokenSource = new CancellationTokenSource();
+			var response = QAManager.StartQATesting(new ProSuiteQARequest(type), cancellationTokenSource.Token);
 			_msg.Info($"StartQAGPServer is ended");
 		}
 
@@ -222,8 +224,9 @@ namespace ProSuite.AGP.Solution
 		{
 			_msg.Info($"StartQAGPServerAsync is called");
 
+			var cancellationTokenSource = new CancellationTokenSource();
 			// TODO get envelope, selected data, selected QA spec
-			var response = await QAManager.StartQATestingAsync(new ProSuiteQARequest(type));
+			var response = await QAManager.StartQATestingAsync(new ProSuiteQARequest(type), cancellationTokenSource.Token);
 			if (response.Error == ProSuiteQAError.None)
 			{
 				_msg.Info($"StartQAGPServerAsync result {response?.ResponseData}");

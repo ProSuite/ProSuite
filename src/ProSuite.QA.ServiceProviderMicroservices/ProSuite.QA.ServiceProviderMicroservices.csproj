@@ -49,6 +49,10 @@
       <Project>{a227d52c-0536-498f-acf2-2a5a67c3d9ff}</Project>
       <Name>ProSuite.Commons.Logging</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.GrpcClient\ProSuite.GrpcClient.csproj">
+      <Project>{DE3070E8-7519-4BB7-8EB9-3E7C4B5B4C2A}</Project>
+      <Name>ProSuite.GrpcClient</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.QA.ServiceManager\ProSuite.QA.ServiceManager.csproj">
       <Project>{a3bcf206-8c54-490a-8f5f-1c3c68ebb208}</Project>
       <Name>ProSuite.QA.ServiceManager</Name>

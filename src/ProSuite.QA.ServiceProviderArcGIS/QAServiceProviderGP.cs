@@ -51,7 +51,7 @@ namespace ProSuite.QA.ServiceProviderArcGIS
 
 		public event EventHandler<ProSuiteQAServiceEventArgs> OnStatusChanged;
 
-		public async Task<ProSuiteQAResponse> StartQAAsync(ProSuiteQARequest parameters)
+		public async Task<ProSuiteQAResponse> StartQAAsync(ProSuiteQARequest parameters, CancellationToken token)
 		{
 			var cts = new CancellationTokenSource();
 
@@ -106,7 +106,7 @@ namespace ProSuite.QA.ServiceProviderArcGIS
 
 		}
 
-		public ProSuiteQAResponse StartQASync(ProSuiteQARequest parameters)
+		public ProSuiteQAResponse StartQASync(ProSuiteQARequest parameters, CancellationToken token)
 		{
 			var args = PrepareGPToolParameters(parameters, ProSuiteQAToolType.Xml);
 			Geoprocessing.OpenToolDialog(_toolpath, args, null, false,
