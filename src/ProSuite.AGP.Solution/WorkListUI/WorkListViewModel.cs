@@ -266,9 +266,23 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			QueuedTask.Run(() =>
 			{
-				var oid = e.features.First().GetObjectID();
-				IWorkItem selectedItem = CurrentWorkList.GetItems().FirstOrDefault(item => item.OID == oid);
-				CurrentWorkItem = new WorkItemVm(selectedItem);
+				//var shapeJson = e.features.First().GetShape().ToJson();
+				var OID = e.features.First().GetObjectID();
+				IWorkItem selectedItem = CurrentWorkList.GetItems().FirstOrDefault(item => item.OID == OID);
+				foreach (var item in CurrentWorkList.GetItems())
+				{
+					Console.WriteLine(item.OID);
+					Console.WriteLine(item.Extent.ToJson());
+				}
+
+				if (selectedItem == null)
+				{
+					return;
+				}
+
+				CurrentWorkList.GoToOid(selectedItem.OID);
+				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
+
 			});
 		}
 

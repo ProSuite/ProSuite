@@ -28,6 +28,7 @@ namespace ProSuite.AGP.Solution.Selection
 		{
 			WorkListsModule.Current.OnWorkItemPicked(new WorkItemPickArgs
 			                                         {features = selectedFeatures.ToList()});
+			SelectionUtils.ClearSelection(ActiveMapView.Map);
 		}
 
 		protected override bool CanSelectFromLayerCore(FeatureLayer featureLayer)
@@ -52,6 +53,8 @@ namespace ProSuite.AGP.Solution.Selection
 					LayerUtils.SetLayerSelectability(featureLayer, true);
 				}
 			}
+
+			SelectionUtils.ClearSelection(ActiveMapView.Map);
 
 			return true;
 		}
@@ -87,7 +90,7 @@ namespace ProSuite.AGP.Solution.Selection
 						var feature = cursor.Current as Feature;
 
 						//if selected feature is a feature of the worklist layer
-						if (feature.GetShape() == selectedFeature.GetShape())
+						if (feature.GetShape().ToJson() == selectedFeature.GetShape().ToJson())
 						{
 							found = true;
 						}
