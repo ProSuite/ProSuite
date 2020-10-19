@@ -45,6 +45,10 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
 		}
 
+		public ICommand ClearSelectionCmd =>
+			FrameworkApplication.GetPlugInWrapper(
+				DAML.Button.esri_mapping_clearSelectionButton) as ICommand;
+
 		public ICommand PreviousExtentCmd =>
 			FrameworkApplication.GetPlugInWrapper(
 				DAML.Button.esri_mapping_prevExtentButton) as ICommand;
@@ -61,6 +65,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			FrameworkApplication.GetPlugInWrapper(
 				DAML.Button.esri_mapping_fixedZoomOutButton) as ICommand;
 
+		
 		public RelayCommand GoNextItemCmd
 		{
 			get

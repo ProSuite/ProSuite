@@ -40,20 +40,24 @@
                     <Image Source="Images/GoNext.png" ToolTip="Next WorkItem" Stretch="UniformToFill" />
                 </Button>
                 <Button>
-                    <Image Source="Images/GoNearest.png" Stretch="UniformToFill"/>
+                    <Image Source="Images/GoNearest.png" Stretch="UniformToFill" ToolTip="Nearest WorkItem"/>
                 </Button>
                 <Button Command="{Binding PickWorkItemCmd}">
-                    <Image Source="Images/PickWorkItemTool.png" Stretch="UniformToFill"/>
+                    <Image Source="Images/PickWorkItemTool.png" Stretch="UniformToFill" ToolTip="Pick Next WorkItem"/>
                 </Button>
                 <Separator/>
                 <Button Command="{Binding ZoomToCmd}">
-                    <Image Source="Images/ZoomTo.png" Stretch="UniformToFill"/>
+                    <Image Source="Images/ZoomTo.png" Stretch="UniformToFill" ToolTip="Zoom to WorkItem"/>
                 </Button>
                 <Button Command="{Binding PanToCmd}">
-                    <Image Source="Images/PanTo.png" Stretch="UniformToFill"/>
+                    <Image Source="Images/PanTo.png" Stretch="UniformToFill" ToolTip="Pan to WorkItem"/>
                 </Button>
                 <Button Command="{Binding ZoomToAllCmd}">
-                    <Image Source="Images/ZoomToAll.png" Stretch="UniformToFill"/>
+                    <Image Source="Images/ZoomToAll.png" Stretch="UniformToFill" ToolTip="Zoom to extent of all WorkItems"/>
+                </Button>
+                <Separator/>
+                <Button Command="{Binding ClearSelectionCmd}">
+                    <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/clearselection16.png" Stretch="UniformToFill"/>
                 </Button>
                 <Button Command="{Binding PreviousExtentCmd}">
                     <Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericBlueLeftArrowLongTail16.png" Stretch="UniformToFill"/>
@@ -79,16 +83,18 @@
                         <CheckBox VerticalAlignment="Center" DockPanel.Dock="Left" IsChecked="{Binding Status, Mode=TwoWay, 
                         Converter={StaticResource StatusEnumBooleanConverter}}" Margin="0,0,10,0"/>
                         <Separator/>
-                        <ComboBox SelectedItem="{Binding CurrentWorkList.Visibility}" ItemsSource="{Binding Visibility}"/>
+                        <DockPanel Dock="Right">
+                            <Label Content="Show"/>
+                            <ComboBox SelectedItem="{Binding CurrentWorkList.Visibility}" ItemsSource="{Binding Visibility}"/>
+                        </DockPanel>
                     </DockPanel>
                 </ToolBar>
             </ToolBarTray>
-            <StatusBar>
+            <DockPanel LastChildFill="True" >
+                <Label Content="{Binding Count}" DockPanel.Dock="Right"></Label>
                 <Label  Content="{Binding CurrentWorkItem.Description}" />
-                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                    <Label Content="{Binding Count}"></Label>
-                </StackPanel>
-            </StatusBar>
+                   
+            </DockPanel>
         </StackPanel>
     </Grid>
 </controls:ProWindow>
