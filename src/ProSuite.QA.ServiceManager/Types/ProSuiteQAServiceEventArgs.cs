@@ -4,15 +4,15 @@ namespace ProSuite.QA.ServiceManager.Types
 {
 	public enum ProSuiteQAServiceState
 	{
-		Idle,
 		Started,
 		Validated,
 		Finished,
-		ProgressMessage,
-		ProgressPos,
+		//ProgressMessage,
+		Progress,
 		Other,
-		ResultsReceived,
-		Info
+		//ResultsReceived,
+		Info,
+		Failed
 	}
 
 	public class ProSuiteQAServiceEventArgs : EventArgs

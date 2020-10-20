@@ -47,14 +47,14 @@ namespace ProSuite.GrpcClient
 				case ProSuiteGrpcServiceType.VerifyQuality:
 
 					// TODO convert from/to protobufs format because of references 
-				
-					var qualityRequest = new VerifyQualityRequest
-					{
-						RequestId = 1,
-						RequestType = VerifyQualityRequestType.Xml
-					};
 
-					var serviceCall = _serviceClient.PerformQualityVerification(qualityRequest, null, null, cancellationToken);
+					var serviceCall = _serviceClient.PerformQualityVerification(
+						new VerifyQualityRequest
+						{
+							RequestId = 1,
+							RequestType = VerifyQualityRequestType.Xml
+						}, null, null, cancellationToken);
+
 					while (await serviceCall.ResponseStream.MoveNext())
 					{
 						if (cancellationToken.IsCancellationRequested)
@@ -67,7 +67,7 @@ namespace ProSuite.GrpcClient
 								{
 									RequestType = request.ServiceType,
 									Status = ParseStatus(response.Status),
-									ResponseMessage = $"{response.Status} {response.StepsDone * 100/response.StepsTotal}%",
+									ResponseMessage = $"{response.Status}", // {response.StepsDone * 100/response.StepsTotal}%
 									ResponseData = serviceCall.ResponseStream.Current
 								}));
 					}

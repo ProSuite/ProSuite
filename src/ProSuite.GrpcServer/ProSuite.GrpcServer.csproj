@@ -66,9 +66,17 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
+      <Project>{a227d52c-0536-498f-acf2-2a5a67c3d9ff}</Project>
+      <Name>ProSuite.Commons.Logging</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Grpc.Protobufs\ProSuite.Grpc.Protobufs.csproj">
       <Project>{54dd2fc9-1cdc-4d80-8e0e-99262610cd01}</Project>
       <Name>ProSuite.Grpc.Protobufs</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.QA.ServiceManager\ProSuite.QA.ServiceManager.csproj">
+      <Project>{a3bcf206-8c54-490a-8f5f-1c3c68ebb208}</Project>
+      <Name>ProSuite.QA.ServiceManager</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

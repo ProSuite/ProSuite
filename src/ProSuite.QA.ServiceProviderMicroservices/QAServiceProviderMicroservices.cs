@@ -59,7 +59,7 @@ namespace ProSuite.QA.ServiceProviderMicroservices
 			switch (status)
 			{
 				case ProSuiteGrpcServerResponseStatus.Progress:
-					return ProSuiteQAServiceState.ProgressPos;
+					return ProSuiteQAServiceState.Progress;
 				case ProSuiteGrpcServerResponseStatus.Finished:
 					return ProSuiteQAServiceState.Finished;
 			}

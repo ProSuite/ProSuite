@@ -74,11 +74,11 @@ namespace ProSuite.QA.ServiceProviderArcGIS
 					break;
 
 				case "OnProgressMessage":
-					OnStatusChanged?.Invoke(this, new ProSuiteQAServiceEventArgs(ProSuiteQAServiceState.ProgressPos, (string)o));
+					OnStatusChanged?.Invoke(this, new ProSuiteQAServiceEventArgs(ProSuiteQAServiceState.Progress, (string)o));
 					break;
 
 				case "OnProgressPos":
-					OnStatusChanged?.Invoke(this, new ProSuiteQAServiceEventArgs(ProSuiteQAServiceState.ProgressPos, (int)o));
+					OnStatusChanged?.Invoke(this, new ProSuiteQAServiceEventArgs(ProSuiteQAServiceState.Progress, (int)o));
 					break;
 
 				case "OnEndExecute":

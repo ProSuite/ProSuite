@@ -1,4 +1,5 @@
 using Grpc.Core;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.GrpcServer
 {
