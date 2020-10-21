@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Collections;
 using ProSuite.Commons.Geometry.SpatialIndex;
 
 namespace ProSuite.Commons.Geometry
@@ -2498,7 +2498,7 @@ namespace ProSuite.Commons.Geometry
 					// Special logic for original point: to avoid changing the basic shape a small
 					// minimum segment length can be specified in order to cut of the spike with an
 					// orthogonal cut
-					Pnt3D origPoint = linestring.GetPoint(currentIdx, true);
+					Pnt3D origPoint = linestring.GetPoint3D(currentIdx, true);
 
 					if (crackPoint.IntersectionPoint.Type ==
 					    IntersectionPointType.LinearIntersectionStart &&
@@ -2519,7 +2519,7 @@ namespace ProSuite.Commons.Geometry
 				}
 				else
 				{
-					newPoints.Add(linestring.GetPoint(currentIdx, true));
+					newPoints.Add(linestring.GetPoint3D(currentIdx, true));
 				}
 			}
 
@@ -2534,14 +2534,14 @@ namespace ProSuite.Commons.Geometry
 		{
 			int? nextIdx = inLinestring.NextVertexIndex(currentVertexIdx);
 
-			if (nextIdx != null && inLinestring.GetPoint(nextIdx.Value).Equals(testPoint))
+			if (nextIdx != null && inLinestring.GetPoint3D(nextIdx.Value).Equals(testPoint))
 			{
 				return true;
 			}
 
 			int? previousIdx = inLinestring.PreviousVertexIndex(currentVertexIdx);
 
-			if (previousIdx != null && inLinestring.GetPoint(previousIdx.Value).Equals(testPoint))
+			if (previousIdx != null && inLinestring.GetPoint3D(previousIdx.Value).Equals(testPoint))
 			{
 				return true;
 			}
@@ -2707,8 +2707,8 @@ namespace ProSuite.Commons.Geometry
 			}
 		}
 
-		private static IEnumerable<RingGroup> GetConnectedComponents(MultiLinestring rings,
-		                                                             double tolerance)
+		public static IEnumerable<RingGroup> GetConnectedComponents(MultiLinestring rings,
+		                                                            double tolerance)
 		{
 			RingGroup singleResult = rings as RingGroup;
 
