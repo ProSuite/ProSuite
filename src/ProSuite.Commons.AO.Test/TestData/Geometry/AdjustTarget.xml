@@ -1,0 +1,124 @@
+<PolylineN xsi:type="typens:PolylineN" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:typens="http://www.esri.com/schemas/ArcGIS/10.0">
+  <HasID>false</HasID>
+  <HasZ>true</HasZ>
+  <HasM>false</HasM>
+  <Extent xsi:type="typens:EnvelopeN">
+    <XMin>2705044.2156626321</XMin>
+    <YMin>1260603.496094048</YMin>
+    <XMax>2705250.0112500042</XMax>
+    <YMax>1260839.7350128219</YMax>
+    <ZMin>642.16749999999593</ZMin>
+    <ZMax>658.53500000000349</ZMax>
+  </Extent>
+  <PathArray xsi:type="typens:ArrayOfPath">
+    <Path xsi:type="typens:Path">
+      <PointArray xsi:type="typens:ArrayOfPoint">
+        <Point xsi:type="typens:PointN">
+          <X>2705245.675319273</X>
+          <Y>1260603.496094048</Y>
+          <Z>654.09500000000116</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705244.7200000025</X>
+          <Y>1260606.6962499991</Y>
+          <Z>654.09500000000116</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705238.6350000054</X>
+          <Y>1260640.0337500051</Y>
+          <Z>658.53500000000349</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705250.0112500042</X>
+          <Y>1260649.2937500104</Y>
+          <Z>656.35374999999476</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705233.8724999987</X>
+          <Y>1260675.4875000045</Y>
+          <Z>654.27000000000407</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705223.288750004</X>
+          <Y>1260714.9112500027</Y>
+          <Z>655.9774999999936</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705212.4400000013</X>
+          <Y>1260750.3650000021</Y>
+          <Z>657.20625000000291</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705184.6587500013</X>
+          <Y>1260738.1950000077</Y>
+          <Z>652.54750000000058</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705167.1962499991</X>
+          <Y>1260733.4325000122</Y>
+          <Z>650.49499999999534</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705143.6487500034</X>
+          <Y>1260728.1400000006</Y>
+          <Z>646.45625000000291</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705124.5987500027</X>
+          <Y>1260735.5487500057</Y>
+          <Z>643.65374999999767</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705118.151250001</X>
+          <Y>1260755.106250003</Y>
+          <Z>643.59875000000466</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705112.0187500045</X>
+          <Y>1260764.4637500122</Y>
+          <Z>642.16749999999593</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705116.1900000013</X>
+          <Y>1260785.1512500048</Y>
+          <Z>643.7412500000064</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705105.512500003</X>
+          <Y>1260800.8350000083</Y>
+          <Z>645.28500000000349</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705090.1625000052</X>
+          <Y>1260803.6712500006</Y>
+          <Z>644.79374999999709</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705064.2737500034</X>
+          <Y>1260818.3637500107</Y>
+          <Z>643.99624999999651</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705044.2156626321</X>
+          <Y>1260839.7350128219</Y>
+          <Z>644.75750000000698</Z>
+        </Point>
+      </PointArray>
+    </Path>
+  </PathArray>
+  <SpatialReference xsi:type="typens:ProjectedCoordinateSystem">
+    <WKT>PROJCS["CH1903+_LV95",GEOGCS["GCS_CH1903+",DATUM["D_CH1903+",SPHEROID["Bessel_1841",6377397.155,299.1528128]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Hotine_Oblique_Mercator_Azimuth_Center"],PARAMETER["False_Easting",2600000.0],PARAMETER["False_Northing",1200000.0],PARAMETER["Scale_Factor",1.0],PARAMETER["Azimuth",90.0],PARAMETER["Longitude_Of_Center",7.439583333333333],PARAMETER["Latitude_Of_Center",46.95240555555556],UNIT["Meter",1.0],AUTHORITY["EPSG",2056]]</WKT>
+    <XOrigin>-29380010.775807656</XOrigin>
+    <YOrigin>-35261816.156355828</YOrigin>
+    <XYScale>128179416.78962041</XYScale>
+    <ZOrigin>-100000</ZOrigin>
+    <ZScale>800</ZScale>
+    <MOrigin>-100000</MOrigin>
+    <MScale>10000</MScale>
+    <XYTolerance>0.012500000000000001</XYTolerance>
+    <ZTolerance>0.012500000000000001</ZTolerance>
+    <MTolerance>0.001</MTolerance>
+    <HighPrecision>true</HighPrecision>
+    <WKID>2056</WKID>
+  </SpatialReference>
+</PolylineN>

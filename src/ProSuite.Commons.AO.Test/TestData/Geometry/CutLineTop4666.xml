@@ -1,0 +1,105 @@
+<PolylineN xsi:type="typens:PolylineN" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:typens="http://www.esri.com/schemas/ArcGIS/10.1">
+  <HasID>false</HasID>
+  <HasZ>true</HasZ>
+  <HasM>false</HasM>
+  <Extent xsi:type="typens:EnvelopeN">
+    <XMin>2736561.2749999985</XMin>
+    <YMin>1194512.6161578719</YMin>
+    <XMax>2736614.2474999987</XMax>
+    <YMax>1194687.1363106715</YMax>
+    <ZMin>2292.1523525481925</ZMin>
+    <ZMax>2323.1423622672428</ZMax>
+  </Extent>
+  <PathArray xsi:type="typens:ArrayOfPath">
+    <Path xsi:type="typens:Path">
+      <PointArray xsi:type="typens:ArrayOfPoint">
+        <Point xsi:type="typens:PointN">
+          <X>2736561.2749999985</X>
+          <Y>1194567.1275000013</Y>
+          <Z>2296.3524999999936</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2736566.3712747763</X>
+          <Y>1194552.0927541784</Y>
+          <Z>2295.0576659593526</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2736573.1477927668</X>
+          <Y>1194541.8217392489</Y>
+          <Z>2294.4766032771208</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2736576.9461118747</X>
+          <Y>1194530.8680445147</Y>
+          <Z>2293.3144779126569</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2736576.1459233714</X>
+          <Y>1194512.6161578719</Y>
+          <Z>2292.1523525481925</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2736591.5804694444</X>
+          <Y>1194513.0632218453</Y>
+          <Z>2292.1523525481925</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2736608.360125029</X>
+          <Y>1194526.7424454221</Y>
+          <Z>2294.0892281556335</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2736595.3281224212</X>
+          <Y>1194578.0850307259</Y>
+          <Z>2297.9629793705153</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2736588.8070240747</X>
+          <Y>1194611.3995046725</Y>
+          <Z>2306.8726071647416</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2736593.6611034786</X>
+          <Y>1194641.5130009337</Y>
+          <Z>2314.42642203376</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2736614.2474999987</X>
+          <Y>1194652.2312499993</Y>
+          <Z>2317.6100000000006</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2736613.950185406</X>
+          <Y>1194671.3890971716</Y>
+          <Z>2321.2054866598023</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2736606.3576552561</X>
+          <Y>1194687.1363106715</Y>
+          <Z>2323.1423622672428</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2736606.3576552561</X>
+          <Y>1194687.1363106715</Y>
+          <Z>2323.1423622672428</Z>
+        </Point>
+      </PointArray>
+    </Path>
+  </PathArray>
+  <SpatialReference xsi:type="typens:ProjectedCoordinateSystem">
+    <WKT>PROJCS["CH1903+_LV95",GEOGCS["GCS_CH1903+",DATUM["D_CH1903+",SPHEROID["Bessel_1841",6377397.155,299.1528128]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Hotine_Oblique_Mercator_Azimuth_Center"],PARAMETER["False_Easting",2600000.0],PARAMETER["False_Northing",1200000.0],PARAMETER["Scale_Factor",1.0],PARAMETER["Azimuth",90.0],PARAMETER["Longitude_Of_Center",7.439583333333333],PARAMETER["Latitude_Of_Center",46.95240555555556],UNIT["Meter",1.0],AUTHORITY["EPSG",2056]]</WKT>
+    <XOrigin>-27386400</XOrigin>
+    <YOrigin>-32067900</YOrigin>
+    <XYScale>140996569.55187955</XYScale>
+    <ZOrigin>-100000</ZOrigin>
+    <ZScale>800</ZScale>
+    <MOrigin>-100000</MOrigin>
+    <MScale>10000</MScale>
+    <XYTolerance>0.012500000000000001</XYTolerance>
+    <ZTolerance>0.012500000000000001</ZTolerance>
+    <MTolerance>0.001</MTolerance>
+    <HighPrecision>true</HighPrecision>
+    <WKID>2056</WKID>
+    <LatestWKID>2056</LatestWKID>
+  </SpatialReference>
+</PolylineN>

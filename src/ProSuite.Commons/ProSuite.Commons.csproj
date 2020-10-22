@@ -274,6 +274,9 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Content Include="..\..\lib\licenses\C5.license.txt">
+      <Link>Licenses\C5.license.txt</Link>
+    </Content>
     <Content Include="..\..\lib\licenses\softSurfer.geomalgorithms.license.txt">
       <Link>Licenses\softSurfer.geomalgorithms.license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

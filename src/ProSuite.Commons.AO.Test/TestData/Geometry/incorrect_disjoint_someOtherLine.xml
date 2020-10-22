@@ -1,0 +1,81 @@
+<PolylineN xsi:type="typens:PolylineN" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:typens="http://www.esri.com/schemas/ArcGIS/10.1">
+  <HasID>false</HasID>
+  <HasZ>false</HasZ>
+  <HasM>false</HasM>
+  <Extent xsi:type="typens:EnvelopeN">
+    <XMin>32654855.233871832</XMin>
+    <YMin>5260544.9383820277</YMin>
+    <XMax>32654950.956884917</XMax>
+    <YMax>5260571.1321844161</YMax>
+  </Extent>
+  <PathArray xsi:type="typens:ArrayOfPath">
+    <Path xsi:type="typens:Path">
+      <PointArray xsi:type="typens:ArrayOfPoint">
+        <Point xsi:type="typens:PointN">
+          <X>32654855.233871832</X>
+          <Y>5260547.9780879989</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>32654863.100216471</X>
+          <Y>5260544.9383820277</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>32654870.878982026</X>
+          <Y>5260545.0971323475</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>32654880.88025203</X>
+          <Y>5260547.6371374242</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>32654895.802781872</X>
+          <Y>5260553.352148857</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>32654906.439053148</X>
+          <Y>5260554.7809017096</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>32654915.329070926</X>
+          <Y>5260558.5909093358</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>32654921.202832673</X>
+          <Y>5260566.5284252111</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>32654931.045352358</X>
+          <Y>5260571.1321844161</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>32654938.030366328</X>
+          <Y>5260570.9734340999</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>32654945.809131887</X>
+          <Y>5260570.1796825118</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>32654950.956884917</X>
+          <Y>5260566.8391247913</Y>
+        </Point>
+      </PointArray>
+    </Path>
+  </PathArray>
+  <SpatialReference xsi:type="typens:ProjectedCoordinateSystem">
+    <WKT>PROJCS["ETRS_1989_UTM_Zone_32N_8stellen",GEOGCS["GCS_ETRS_1989",DATUM["D_ETRS_1989",SPHEROID["GRS_1980",6378137.0,298.257222101]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Transverse_Mercator"],PARAMETER["False_Easting",32500000.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",9.0],PARAMETER["Scale_Factor",0.9996],PARAMETER["Latitude_Of_Origin",0.0],UNIT["Meter",1.0],AUTHORITY["ESRI",102329]]</WKT>
+    <XOrigin>26317160.405504879</XOrigin>
+    <YOrigin>-10997760.337229975</YOrigin>
+    <XYScale>409501524.78998512</XYScale>
+    <ZOrigin>-100000</ZOrigin>
+    <ZScale>10000</ZScale>
+    <MOrigin>-100000</MOrigin>
+    <MScale>10000</MScale>
+    <XYTolerance>0.001</XYTolerance>
+    <ZTolerance>0.001</ZTolerance>
+    <MTolerance>0.001</MTolerance>
+    <HighPrecision>true</HighPrecision>
+    <WKID>102329</WKID>
+    <LatestWKID>102329</LatestWKID>
+  </SpatialReference>
+</PolylineN>
