@@ -13,6 +13,7 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.AGP.Solution.ProjectItem;
 using ProSuite.AGP.Solution.WorkListUI;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
@@ -49,6 +50,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 				              (WorkListsModule) FrameworkApplication.FindModule(
 					              "ProSuite_WorkList_Module"));
 
+		public Dictionary<IWorkList, FeatureLayer> LayerByWorkList
+		{
+			get { return _layerByWorkList; }
+		}
+
+		public event EventHandler<WorkItemPickArgs> WorkItemPicked;
+
 		public void RegisterObserver([NotNull] IWorkListObserver observer)
 		{
 			_observers.Add(observer);
@@ -69,7 +77,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 		}
 
-		public void CreateWorkList(WorkEnvironmentBase environment)
+		public void CreateWorkList([NotNull] WorkEnvironmentBase environment)
 		{
 			try
 			{
@@ -158,21 +166,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 						                                         MapView.Active.Map,
 						                                         LayerPosition.AddToTop);
 
-					SetLayerNotSelectable(workListLayer);
+					Commons.LayerUtils.SetLayerSelectability(workListLayer, false);
 
 					return workListLayer;
 				}
 			}
 		}
-
-		// todo daro: to utils?
-		private static void SetLayerNotSelectable(Layer layer)
-		{
-			var cimDefinition = (CIMFeatureLayer) layer.GetDefinition();
-			cimDefinition.Selectable = false;
-			layer.SetDefinition(cimDefinition);
-		}
-
+		
 		[NotNull]
 		private PluginDatasourceConnectionPath GetWorkListConnectionPath(
 			[NotNull] string workListName)
@@ -345,11 +345,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			// todo daro: later this is replaced with custom project items
 
+			
 			// todo daro QueuedTask needed?
 			await QueuedTask.Run(() =>
 			{
 				// todo daro: use ConfigurationUtils?
-				foreach (string path in GetDefinitionFiles())
+				//foreach (string path in GetDefinitionFiles())
+				foreach (var path in ProjectRepository.Current.GetProjectFileItems(ProjectItemType.WorkListDefinition))
 				{
 					string workListName = WorkListUtils.GetName(path);
 					var factory = new XmlBasedWorkListFactory(path, workListName);
@@ -375,9 +377,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		private void WorkList_WorkListChanged(object sender, WorkListChangedEventArgs e)
 		{
-			List<long> features = e.Items;
+			List<long> oids = e.Items;
 
-			if (features == null)
+			if (oids == null)
 			{
 				return;
 			}
@@ -385,6 +387,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 			try
 			{
 				var workList = (IWorkList) sender;
+
+				// todo daro: remove assertion
+				Assert.True(_layerByWorkList.ContainsKey(workList),
+				            $"sender of {nameof(WorkList_WorkListChanged)} is unknown");
+
 				if (! _layerByWorkList.ContainsKey(workList))
 				{
 					return;
@@ -393,14 +400,25 @@ namespace ProSuite.AGP.Solution.WorkLists
 				FeatureLayer workListLayer = _layerByWorkList[workList];
 
 				MapView.Active.Invalidate(new Dictionary<Layer, List<long>>
-				                          {{workListLayer, features}});
+				                          {{workListLayer, oids}});
 			}
-			catch (Exception exception)
+			catch (Exception exc)
 			{
-				Console.WriteLine(exception);
+				_msg.Error("Error invalidating work list layer", exc);
 			}
 		}
 
 		#endregion
+
+
+		public virtual void OnWorkItemPicked(WorkItemPickArgs e)
+		{
+			WorkItemPicked?.Invoke(null, e);
+		}
+	}
+
+	public class WorkItemPickArgs : EventArgs
+	{
+		public List<Feature> features { get; set; }
 	}
 }

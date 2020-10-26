@@ -237,6 +237,16 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
+		public virtual void GoToOid(int OID)
+		{
+			var targetItem = _items.FirstOrDefault(item => item.OID == OID);
+			if (targetItem != null)
+			{
+				SetCurrentItem(targetItem, Current);
+			}
+			
+		}
+
 		public abstract void Dispose();
 
 		#region Work list navigation

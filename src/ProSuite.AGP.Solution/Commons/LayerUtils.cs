@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Solution.Commons
@@ -82,6 +84,13 @@ namespace ProSuite.AGP.Solution.Commons
 					layer.Select();
 				}
 			});
+		}
+
+		public static void SetLayerSelectability([NotNull] Layer layer, bool selectable)
+		{
+			var cimDefinition = (CIMFeatureLayer)layer.GetDefinition();
+			cimDefinition.Selectable = selectable;
+			layer.SetDefinition(cimDefinition);
 		}
 
 		public static void SelectLayersInTOC(IEnumerable<FeatureLayer> layers = null)

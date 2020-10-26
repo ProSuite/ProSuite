@@ -107,7 +107,7 @@
         <button id="Clients_AGP_ProSuiteSolution_WorkList" caption="WorkList" className="ShowWorkListWindow" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Show Error Worklist">Show Error Worklist<disabledText /></tooltip>
         </button>
-        <button id="WorkLists_CreateSelectionWorkList" caption="Show Selection WorkList" className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonBlue32.png">
+        <button id="WorkLists_CreateSelectionWorkList" caption="Show Selection WorkList" className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true" smallImage="Images/NavigateSelectionCmd.png" largeImage="Images/NavigateSelectionCmd.png">
           <tooltip heading="Show Selection Worklist">Show worklist for iterating on selected items
             <disabledText />
           </tooltip>
@@ -122,6 +122,13 @@
               condition="esri_mapping_mapPane">
           <tooltip heading="Selection Tool">
             Select features for use with the selection worklist<disabledText />
+          </tooltip>
+        </tool>
+        <tool id="ProSuiteTools_PickWorkListItemTool" caption="PickWorkListItem" className="Selection.PickWorkListItemTool" loadOnClick="true"
+              smallImage="Images\SelectionTool.png" largeImage="Images\SelectionTool.png"
+              condition="esri_mapping_mapPane">
+          <tooltip heading="Pick WorkItem Tool">
+            Pick a workitem for setting it as current work item<disabledText />
           </tooltip>
         </tool>
       </controls>

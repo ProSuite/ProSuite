@@ -1,3 +1,10 @@
+using System.Collections;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework.Dialogs;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.Editing.Selection;
 
 namespace ProSuite.AGP.Solution.Selection
@@ -13,7 +20,10 @@ namespace ProSuite.AGP.Solution.Selection
 		- Press CTRL and drag a box to show a list of selectable feature classes. -> SelectionMode.UserSelect -> SelectFeatures(envelope)
 		- Press ALT and click to select all features at the click point. -> SelectionMode.Original 
 		*/
-
 		
+		protected override bool CanUseSelection(IEnumerable<Feature> selectedFeatures)
+		{
+			return false;
+		}
 	}
 }

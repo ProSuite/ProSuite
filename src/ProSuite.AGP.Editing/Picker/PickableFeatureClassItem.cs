@@ -16,7 +16,7 @@ namespace ProSuite.AGP.Editing.Picker
 	{
 		private string _itemText;
 		private bool _isSelected;
-		private Geometry _geometry;
+		[CanBeNull] private Geometry _geometry;
 		private Uri _itemImageUri;
 		private List<FeatureLayer> _belongingFeatureLayers;
 		private BitmapImage _img = null;
@@ -38,6 +38,7 @@ namespace ProSuite.AGP.Editing.Picker
 			set => _isSelected = value;
 		}
 
+		[CanBeNull]
 		public Geometry Geometry
 		{
 			get => _geometry;
