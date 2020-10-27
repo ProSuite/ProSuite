@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,6 +13,30 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 	public class WkbGeometryReader : WkbReader
 	{
 		public static IArrayProvider<WKSPointZ> WksPointArrayProvider { get; set; }
+
+		public IGeometry ReadGeometry([NotNull] Stream stream)
+		{
+			using (BinaryReader reader = InitializeReader(stream))
+			{
+				ReadWkbType(reader, true,
+				            out WkbGeometryType geometryType, out Ordinates ordinates);
+
+				switch (geometryType)
+				{
+					case WkbGeometryType.Point:
+						return ReadPoint(reader, ordinates);
+					case WkbGeometryType.LineString:
+					case WkbGeometryType.MultiLineString:
+						return ReadPolyline(reader, geometryType, ordinates);
+					case WkbGeometryType.Polygon:
+					case WkbGeometryType.MultiPolygon:
+						return ReadPolygon(reader, geometryType, ordinates);
+					default:
+						throw new NotImplementedException(
+							$"Unsupported geometry type: {geometryType}");
+				}
+			}
+		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="WkbReader"/> class
@@ -40,18 +64,7 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 						$"Cannot read {geometryType} as point.");
 				}
 
-				WKSPointZ wksPointZ = ReadPointCore(reader, ordinates, new WksPointZFactory());
-
-				bool zAware = ordinates == Ordinates.Xyz || ordinates == Ordinates.Xyzm;
-
-				IPoint result = GeometryFactory.CreatePoint(wksPointZ);
-
-				if (zAware)
-				{
-					GeometryUtils.MakeZAware(result);
-				}
-
-				return result;
+				return ReadPoint(reader, ordinates);
 			}
 		}
 
@@ -69,15 +82,7 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 						$"Cannot read {geometryType} as polyline.");
 				}
 
-				var geometryBuilder = new WksPointListBuilder();
-
-				IEnumerable<WKSPointZ[]> linestrings =
-					ReadLinestrings(reader, geometryType, ordinates, geometryBuilder);
-
-				IEnumerable<IPath> paths =
-					ToPaths(linestrings, geometryType, ordinates, geometryBuilder);
-
-				return CreatePolycurve<IPolyline>(paths, ordinates);
+				return ReadPolyline(reader, geometryType, ordinates);
 			}
 		}
 
@@ -88,33 +93,69 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 				ReadWkbType(reader, true,
 				            out WkbGeometryType geometryType, out Ordinates ordinates);
 
-				if (geometryType == WkbGeometryType.Polygon)
-				{
-					var rings =
-						ReadSingleExteriorRingPolygon(reader, ordinates).Cast<IGeometry>();
-
-					return CreatePolycurve<IPolygon>(rings, ordinates);
-				}
-
-				if (geometryType == WkbGeometryType.MultiPolygon)
-				{
-					int polygonCount = checked((int) reader.ReadUInt32());
-
-					List<IGeometry> allRings = new List<IGeometry>();
-					for (int i = 0; i < polygonCount; i++)
-					{
-						ReadWkbType(reader, false,
-						            out geometryType, out ordinates);
-
-						allRings.AddRange(ReadSingleExteriorRingPolygon(reader, ordinates));
-					}
-
-					return CreatePolycurve<IPolygon>(allRings, ordinates);
-				}
-
-				throw new NotSupportedException(
-					$"Cannot read {geometryType} as polygon.");
+				return ReadPolygon(reader, geometryType, ordinates);
 			}
+		}
+
+		private IPolygon ReadPolygon(BinaryReader reader, WkbGeometryType geometryType,
+		                             Ordinates ordinates)
+		{
+			if (geometryType == WkbGeometryType.Polygon)
+			{
+				var rings =
+					ReadSingleExteriorRingPolygon(reader, ordinates).Cast<IGeometry>();
+
+				return CreatePolycurve<IPolygon>(rings, ordinates);
+			}
+
+			if (geometryType == WkbGeometryType.MultiPolygon)
+			{
+				int polygonCount = checked((int) reader.ReadUInt32());
+
+				List<IGeometry> allRings = new List<IGeometry>();
+				for (int i = 0; i < polygonCount; i++)
+				{
+					ReadWkbType(reader, false,
+					            out geometryType, out ordinates);
+
+					allRings.AddRange(ReadSingleExteriorRingPolygon(reader, ordinates));
+				}
+
+				return CreatePolycurve<IPolygon>(allRings, ordinates);
+			}
+
+			throw new NotSupportedException(
+				$"Cannot read {geometryType} as polygon.");
+		}
+
+		private static IPoint ReadPoint(BinaryReader reader, Ordinates ordinates)
+		{
+			WKSPointZ wksPointZ = ReadPointCore(reader, ordinates, new WksPointZFactory());
+
+			bool zAware = ordinates == Ordinates.Xyz || ordinates == Ordinates.Xyzm;
+
+			IPoint result = GeometryFactory.CreatePoint(wksPointZ);
+
+			if (zAware)
+			{
+				GeometryUtils.MakeZAware(result);
+			}
+
+			return result;
+		}
+
+		private static IPolyline ReadPolyline(BinaryReader reader, WkbGeometryType geometryType,
+		                                      Ordinates ordinates)
+		{
+			var geometryBuilder = new WksPointListBuilder();
+
+			IEnumerable<WKSPointZ[]> linestrings =
+				ReadLinestrings(reader, geometryType, ordinates, geometryBuilder);
+
+			IEnumerable<IPath> paths =
+				ToPaths(linestrings, geometryType, ordinates, geometryBuilder);
+
+			return CreatePolycurve<IPolyline>(paths, ordinates);
 		}
 
 		private static T CreatePolycurve<T>([NotNull] IEnumerable<IGeometry> parts,

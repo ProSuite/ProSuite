@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -14,6 +14,22 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 	public class WkbGeometryWriter : WkbWriter
 	{
 		public static IArrayProvider<WKSPointZ> WksPointArrayProvider { get; set; }
+
+		public byte[] WriteGeometry([NotNull] IGeometry geometry)
+		{
+			switch (geometry.GeometryType)
+			{
+				case esriGeometryType.esriGeometryPoint:
+					return WritePoint((IPoint) geometry);
+				case esriGeometryType.esriGeometryPolyline:
+					return WritePolyline((IPolyline) geometry);
+				case esriGeometryType.esriGeometryPolygon:
+					return WritePolygon((IPolygon) geometry);
+				default:
+					throw new NotImplementedException(
+						$"Geometry type {geometry.GeometryType} is not implemented.");
+			}
+		}
 
 		public byte[] WritePoint([NotNull] IPoint point)
 		{

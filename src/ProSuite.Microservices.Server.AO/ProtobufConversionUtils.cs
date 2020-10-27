@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -7,6 +9,7 @@ using ESRI.ArcGIS.Geometry;
 using Google.Protobuf;
 using Google.Protobuf.Collections;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Geometry.Serialization;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -23,22 +26,55 @@ namespace ProSuite.Microservices.Server.AO
 		{
 			if (shapeBuffer == null) return null;
 
-			Assert.True(shapeBuffer.FormatCase == ShapeMsg.FormatOneofCase.EsriShape,
-			            "Unsupported format");
+			IGeometry result;
 
-			if (shapeBuffer.EsriShape.IsEmpty) return null;
-
-			var result =
-				GeometryUtils.FromEsriShapeBuffer(shapeBuffer.EsriShape.ToByteArray());
-
-			Assert.AreEqual(ShapeMsg.SpatialReferenceOneofCase.SpatialReferenceEsriXml,
-			                shapeBuffer.SpatialReferenceCase,
-			                "Unsupported spatial reference format");
-
-			if (! string.IsNullOrEmpty(shapeBuffer.SpatialReferenceEsriXml))
+			switch (shapeBuffer.FormatCase)
 			{
-				result.SpatialReference =
-					SpatialReferenceUtils.FromXmlString(shapeBuffer.SpatialReferenceEsriXml);
+				case ShapeMsg.FormatOneofCase.EsriShape:
+
+					if (shapeBuffer.EsriShape.IsEmpty) return null;
+
+					result = GeometryUtils.FromEsriShapeBuffer(shapeBuffer.EsriShape.ToByteArray());
+
+					break;
+				case ShapeMsg.FormatOneofCase.Wkb:
+
+					WkbGeometryReader wkbReader = new WkbGeometryReader();
+					result = wkbReader.ReadGeometry(
+						new MemoryStream(shapeBuffer.Wkb.ToByteArray()));
+
+					break;
+				case ShapeMsg.FormatOneofCase.Envelope:
+
+					result = FromEnvelopeMsg(shapeBuffer.Envelope);
+
+					break;
+				default:
+					throw new NotImplementedException(
+						$"Unsupported format: {shapeBuffer.FormatCase}");
+			}
+
+			switch (shapeBuffer.SpatialReferenceCase)
+			{
+				case ShapeMsg.SpatialReferenceOneofCase.None:
+					break;
+				case ShapeMsg.SpatialReferenceOneofCase.SpatialReferenceEsriXml:
+					if (! string.IsNullOrEmpty(shapeBuffer.SpatialReferenceEsriXml))
+					{
+						result.SpatialReference =
+							SpatialReferenceUtils.FromXmlString(
+								shapeBuffer.SpatialReferenceEsriXml);
+					}
+
+					break;
+				case ShapeMsg.SpatialReferenceOneofCase.SpatialReferenceWkid:
+					result.SpatialReference =
+						SpatialReferenceUtils.CreateSpatialReference(
+							shapeBuffer.SpatialReferenceWkid);
+					break;
+				default:
+					throw new NotImplementedException(
+						$"Unsupported spatial reference format: {shapeBuffer.SpatialReferenceCase}");
 			}
 
 			return result;
@@ -79,7 +115,7 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
-		public static IEnvelope FromEnvelopoeMsg(EnvelopeMsg envProto)
+		public static IEnvelope FromEnvelopeMsg(EnvelopeMsg envProto)
 		{
 			if (envProto == null) return null;
 
