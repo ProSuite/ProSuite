@@ -55,6 +55,7 @@
     <Compile Include="DomainModels\VariantValueTest.cs" />
     <Compile Include="DomainModels\EncryptedStringTest.cs" />
     <Compile Include="Exceptions\ExceptionUtilsTest.cs" />
+    <Compile Include="Geometry\EnvelopeXYTest.cs" />
     <Compile Include="Geometry\GeomRelationUtilsTest.cs" />
     <Compile Include="Geometry\GeomTopoOpUtilsTest.cs" />
     <Compile Include="Geometry\GeomUtilsTest.cs" />
