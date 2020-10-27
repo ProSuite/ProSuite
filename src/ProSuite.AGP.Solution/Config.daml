@@ -39,6 +39,12 @@
     <insertCondition id="prosuite_qa_gpservice_enabled" caption="QA GPService Enabled">
       <state id="prosuite_qa_gpservice_state"/>
     </insertCondition>
+    <insertCondition id="prosuite_protrials_enabled" caption="ProSuite ProTrials">
+      <and>
+        <state id="prosuite_protrials_enabled"/>
+        <state id="esri_mapping_mapViewingMode2DState"/>
+      </and>
+    </insertCondition>
   </conditions>
   <modules>
     <insertModule id="ProSuiteSolution_Module" className="ProSuiteToolsModule" autoLoad="false" caption="ProSuiteToolsModule">
@@ -154,6 +160,56 @@
         </menu>
       </menus>
     </insertModule>
-    <insertModule id="ProSuite_WorkList_Module" className="WorkLists.WorkListsModule" autoLoad="true" caption="Selection Work List Module"></insertModule>
+    <insertModule id="ProSuite_WorkList_Module" className="WorkLists.WorkListsModule" autoLoad="true" caption="Selection Work List Module">
+    </insertModule>
+    <insertModule id="ProSuite_ProTrials_Module" className="ProTrials.ProTrialsModule" autoLoad="false" caption="Pro Trials">
+      <tabs>
+        <tab id="ProSuite_ProTrials_Tab" caption="Pro Trials" keytip="C">
+          <group refID="ProSuite_ProTrials_CartoGroup" />
+        </tab>
+      </tabs>
+      <groups>
+        <group id="ProSuite_ProTrials_CartoGroup" caption="Pro Trials Carto" keytip="C">
+          <tool refID="ProSuite_ProTrials_CreateSunflowerTool" />
+          <button refID="ProSuite_ProTrials_SunflowerColorButton" />
+          <button refID="ProSuite_ProTrials_SunflowerClearButton" />
+        </group>
+      </groups>
+      <controls>
+        <tool id="ProSuite_ProTrials_CreateSunflowerTool" caption="Sunflower" keytip="C1"
+              className="ProSuite.AGP.Solution.ProTrials.CreateSunflowerTool" loadOnClick="true"
+              smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/MarsCat16.png"
+              largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/MarsCat32.png"
+              condition="prosuite_protrials_enabled">
+          <tooltip heading="Sunflower">Draw sunflower pattern over picked features<disabledText /></tooltip>
+        </tool>
+        <button id="ProSuite_ProTrials_SunflowerColorButton" caption="Color Sunflower" keytip="C2"
+                className="ProSuite.AGP.Solution.ProTrials.ColorSunflowerButton" loadOnClick="true"
+                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/BexDog16.png"
+                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/BexDog32.png"
+                condition="prosuite_protrials_enabled">
+          <tooltip heading="Color Sunflower">Colorize the sunflower seeds<disabledText /></tooltip>
+        </button>
+        <button id="ProSuite_ProTrials_SunflowerClearButton" caption="Clear Sunflower" keytip="C3"
+                className="ProSuite.AGP.Solution.ProTrials.ClearSunflowerButton" loadOnClick="true"
+                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/BexDog16.png"
+                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/BexDog32.png"
+                condition="prosuite_protrials_enabled">
+          <tooltip heading="Clear Sunflower">Remove the sunflower seeds from the map<disabledText /></tooltip>
+        </button>
+      </controls>
+      <extensionConfig description="Experimental features in ProSuite"
+                       productName="ProSuite ProTrials"
+                       message="enable/disable experimental features"
+                       hasExtendedInfo="true" />
+    </insertModule>
+    <updateModule refID="ProSuite_ProTrials_Module">
+      <groups>
+        <updateGroup refID="ProSuite_ProTrials_CartoGroup">
+          <insertTool refID="esri_mapping_exploreTool" />
+          <insertTool refID="esri_mapping_clearSelectionButton" />
+        </updateGroup>
+      </groups>
+    </updateModule>
   </modules>
 </ArcGIS>
