@@ -1,0 +1,179 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
+using Google.Protobuf;
+using Google.Protobuf.Collections;
+using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using ProSuite.Microservices.Definitions.Shared;
+
+namespace ProSuite.Microservices.Server.AO
+{
+	public static class ProtobufConversionUtils
+	{
+		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+
+		[CanBeNull]
+		public static IGeometry FromShapeMsg([CanBeNull] ShapeMsg shapeBuffer)
+		{
+			if (shapeBuffer == null) return null;
+
+			Assert.True(shapeBuffer.FormatCase == ShapeMsg.FormatOneofCase.EsriShape,
+			            "Unsupported format");
+
+			if (shapeBuffer.EsriShape.IsEmpty) return null;
+
+			var result =
+				GeometryUtils.FromEsriShapeBuffer(shapeBuffer.EsriShape.ToByteArray());
+
+			Assert.AreEqual(ShapeMsg.SpatialReferenceOneofCase.SpatialReferenceEsriXml,
+			                shapeBuffer.SpatialReferenceCase,
+			                "Unsupported spatial reference format");
+
+			if (! string.IsNullOrEmpty(shapeBuffer.SpatialReferenceEsriXml))
+			{
+				result.SpatialReference =
+					SpatialReferenceUtils.FromXmlString(shapeBuffer.SpatialReferenceEsriXml);
+			}
+
+			return result;
+		}
+
+		[CanBeNull]
+		public static ShapeMsg ToShapeMsg(
+			[CanBeNull] IGeometry geometry,
+			ShapeMsg.FormatOneofCase format = ShapeMsg.FormatOneofCase.EsriShape)
+		{
+			if (geometry == null) return null;
+
+			Assert.ArgumentCondition(format == ShapeMsg.FormatOneofCase.EsriShape,
+			                         "Unsupported format");
+
+			var highLevelGeometry =
+				GeometryUtils.GetHighLevelGeometry(geometry, true);
+
+			var result = new ShapeMsg
+			             {
+				             EsriShape =
+					             ByteString.CopyFrom(
+						             GeometryUtils.ToEsriShapeBuffer(highLevelGeometry))
+			             };
+
+			if (geometry.SpatialReference != null)
+				result.SpatialReferenceEsriXml = SpatialReferenceUtils.ToXmlString(
+					geometry.SpatialReference);
+
+			if (highLevelGeometry != geometry)
+			{
+				_msg.DebugFormat(
+					"Geometry was converted to high-level geometry to encode.");
+
+				Marshal.ReleaseComObject(highLevelGeometry);
+			}
+
+			return result;
+		}
+
+		public static IEnvelope FromEnvelopoeMsg(EnvelopeMsg envProto)
+		{
+			if (envProto == null) return null;
+
+			IEnvelope result = new EnvelopeClass();
+
+			result.XMin = envProto.XMin;
+			result.YMin = envProto.YMin;
+			result.XMax = envProto.XMax;
+			result.YMax = envProto.YMax;
+
+			return result;
+		}
+
+		public static EnvelopeMsg ToEnvelopeMsg([CanBeNull] IEnvelope envelope)
+		{
+			if (envelope == null || envelope.IsEmpty)
+			{
+				return null;
+			}
+
+			var result = new EnvelopeMsg();
+
+			if (envelope.IsEmpty)
+			{
+				result.XMin = double.NaN;
+				result.YMin = double.NaN;
+				result.XMax = double.NaN;
+				result.YMax = double.NaN;
+			}
+			else
+			{
+				result.XMin = envelope.XMin;
+				result.YMin = envelope.YMin;
+				result.XMax = envelope.XMax;
+				result.YMax = envelope.YMax;
+			}
+
+			return result;
+		}
+
+		public static List<IGeometry> CreateGeometryList(
+			RepeatedField<ShapeMsg> shapeBufferList)
+		{
+			var geometryList = new List<IGeometry>(shapeBufferList.Count);
+
+			foreach (var selectableOverlap in shapeBufferList)
+			{
+				var geometry = FromShapeMsg(selectableOverlap);
+				geometryList.Add(geometry);
+			}
+
+			return geometryList;
+		}
+
+		[CanBeNull]
+		public static IList<IPoint> PointsFromShapeProtoBuffer(ShapeMsg shapeBuffer)
+		{
+			var geometry = FromShapeMsg(shapeBuffer);
+
+			if (geometry == null) return null;
+
+			return GeometryUtils.GetPoints(geometry).ToList();
+		}
+
+		public static GdbObjectMsg CreateGdbObjectMsg(IObject featureOrObject,
+		                                              [CanBeNull] IGeometry geometry,
+		                                              int objectClassHandle)
+		{
+			var result = new GdbObjectMsg();
+
+			result.ClassHandle = objectClassHandle;
+
+			result.ObjectId = featureOrObject.OID;
+
+			result.Shape = ToShapeMsg(geometry);
+
+			return result;
+		}
+
+		public static GdbObjectMsg CreateGdbObjectMsg(IFeature gdbFeature)
+		{
+			int classHandle = gdbFeature.Class.ObjectClassID;
+			return CreateGdbObjectMsg(gdbFeature, gdbFeature.Shape, classHandle);
+		}
+
+		/// <summary>
+		/// Return null, if the specified string is empty (i.e. the default value for string
+		/// protocol buffers), or the input string otherwise.
+		/// </summary>
+		/// <param name="value"></param>
+		/// <returns></returns>
+		public static string EmptyToNull(string value)
+		{
+			return string.IsNullOrEmpty(value) ? null : value;
+		}
+	}
+}
