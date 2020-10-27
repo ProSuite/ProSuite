@@ -54,6 +54,7 @@
     <Compile Include="ClientChannelConfigs.cs" />
     <Compile Include="GrpcUtils.cs" />
     <Compile Include="ClientChannelConfig.cs" />
+    <Compile Include="ProtobufConversionUtils.cs" />
     <Compile Include="QA\IClientIssueMessageCollector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QA\BackgroundVerificationResult.cs" />
