@@ -473,10 +473,6 @@
       <SubType>Designer</SubType>
       <DependentUpon>LogEventItemDetailsForm.cs</DependentUpon>
     </EmbeddedResource>
-    <None Include="Properties\Images\Collapse.gif" />
-    <None Include="Properties\Images\Expand.gif" />
-    <None Include="Properties\Images\Remove.gif" />
-    <None Include="Properties\Images\WarnMessage.bmp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
@@ -495,12 +491,15 @@
   <ItemGroup>
     <Content Include="Properties\Images\Browse.png" />
     <Content Include="Properties\Images\ClearFilter.png" />
+    <Content Include="Properties\Images\Collapse.png" />
     <Content Include="Properties\Images\DownArrow.png" />
-    <None Include="Properties\Images\Filter.gif" />
-    <Content Include="Properties\Images\FilterOrange.gif" />
+    <Content Include="Properties\Images\Expand.png" />
+    <Content Include="Properties\Images\Filter.png" />
+    <Content Include="Properties\Images\FilterOrange.png" />
     <Content Include="Properties\Images\Find.png" />
     <Content Include="Properties\Images\MoveDown.png" />
     <Content Include="Properties\Images\MoveUp.png" />
+    <Content Include="Properties\Images\Remove.png" />
     <Content Include="Properties\Images\SelectAll.png" />
     <Content Include="Properties\Images\UpArrow.png" />
   </ItemGroup>

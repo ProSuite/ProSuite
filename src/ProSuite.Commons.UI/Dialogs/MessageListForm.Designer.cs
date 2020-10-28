@@ -84,8 +84,7 @@ namespace ProSuite.Commons.UI.Dialogs
             // 
             // _pictureBoxIcon
             // 
-			this._pictureBoxIcon.Image = global::ProSuite.Commons.UI.Properties.Resources.WarnMessage;
-            this._pictureBoxIcon.Location = new System.Drawing.Point(3, 3);
+			this._pictureBoxIcon.Location = new System.Drawing.Point(3, 3);
             this._pictureBoxIcon.Name = "_pictureBoxIcon";
             this._pictureBoxIcon.Size = new System.Drawing.Size(14, 14);
             this._pictureBoxIcon.SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize;
