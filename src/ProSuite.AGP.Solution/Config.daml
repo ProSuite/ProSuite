@@ -41,8 +41,8 @@
     </insertCondition>
     <insertCondition id="prosuite_protrials_enabled" caption="ProSuite ProTrials">
       <and>
-        <state id="prosuite_protrials_enabled"/>
-        <state id="esri_mapping_mapViewingMode2DState"/>
+        <state id="prosuite_protrials_enabled" />
+        <state id="esri_mapping_mapViewingMode2DState" />
       </and>
     </insertCondition>
   </conditions>
@@ -62,7 +62,7 @@
           <button refID="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" size="large" />
         </group>
         <group id="ProSuiteTools_QA" caption="QA" keytip="G1">
-          <button refID="ProSuiteTools_QA_StartErrorsDockPane" size="large"/>
+          <button refID="ProSuiteTools_QA_StartErrorsDockPane" size="large" />
           <button refID="ProSuiteTools_QA_StartGPServer" size="middle" />
           <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
@@ -70,7 +70,7 @@
           <button refID="Clients_AGP_ProSuiteSolution_AddWorkList" size="large" />
         </group>
         <group id="ProSuiteTools_QA_Hidden" caption="" appearsOnAddInTab="false">
-          <button refID="Clients_AGP_ProSuiteSolution_OpenWorkList"/>
+          <button refID="Clients_AGP_ProSuiteSolution_OpenWorkList" />
         </group>
         <group id="ProSuiteTools_Editing" caption="Edit Tools" keytip="G1">
           <tool refID="ProSuiteTools_Editing_EraseTool" size="small" />
@@ -78,7 +78,7 @@
         <group id="ProSuiteTools_Selection" caption="Selection Tools" keytip="G1">
           <tool refID="ProSuiteTools_Selection_SelectionTool" size="small" />
           <button refID="WorkLists_CreateSelectionWorkList" size="small" />
-          <button refID="esri_mapping_clearSelectionButton" size="small"/>
+          <button refID="esri_mapping_clearSelectionButton" size="small" />
         </group>
       </groups>
       <controls>
@@ -166,6 +166,7 @@
       <tabs>
         <tab id="ProSuite_ProTrials_Tab" caption="Pro Trials" keytip="C">
           <group refID="ProSuite_ProTrials_CartoGroup" />
+          <group refID="ProSuite_ProTrials_CartoProcessGroup" />
         </tab>
       </tabs>
       <groups>
@@ -173,6 +174,9 @@
           <tool refID="ProSuite_ProTrials_CreateSunflowerTool" />
           <button refID="ProSuite_ProTrials_SunflowerColorButton" />
           <button refID="ProSuite_ProTrials_SunflowerClearButton" />
+        </group>
+        <group id="ProSuite_ProTrials_CartoProcessGroup" caption="Carto Process" keytip="C">
+          <button refID="ProSuite_ProTrials_CartoProcessDockpaneButton" size="large" />
         </group>
       </groups>
       <controls>
@@ -197,7 +201,20 @@
                 condition="prosuite_protrials_enabled">
           <tooltip heading="Clear Sunflower">Remove the sunflower seeds from the map<disabledText /></tooltip>
         </button>
+        <button id="ProSuite_ProTrials_CartoProcessDockpaneButton" caption="Show Carto Process Dockpane" keytip="C4"
+                className="ProSuite.AGP.Solution.ProTrials.CartoProcess.CartoProcessDockpane_ShowButton" loadOnClick="true"
+                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png"
+                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
+          <tooltip heading="Show Dockpane">Show Dockpane<disabledText /></tooltip>
+        </button>
       </controls>
+      <dockPanes>
+        <dockPane id="ProSuite_ProTrials_CartoProcessDockpane" caption="Carto Process Runner"
+                  className="ProSuite.AGP.Solution.ProTrials.CartoProcess.CartoProcessDockpaneViewModel"
+                  dock="group" dockWith="esri_core_contentsDockPane">
+          <content className="ProSuite.AGP.Solution.ProTrials.CartoProcess.CartoProcessDockpaneView" />
+        </dockPane>
+      </dockPanes>
       <extensionConfig description="Experimental features in ProSuite"
                        productName="ProSuite ProTrials"
                        message="enable/disable experimental features"

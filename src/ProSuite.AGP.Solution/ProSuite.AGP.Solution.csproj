@@ -104,6 +104,10 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="ProTrials\CartoProcess\CartoProcessDockpane.xaml.cs">
+      <DependentUpon>CartoProcessDockpane.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ProTrials\CartoProcess\CartoProcessDockpaneViewModel.cs" />
     <Compile Include="ConfigIDs.cs" />
     <Compile Include="ConfigUI\ProSuiteConfigChangedEvent.cs" />
     <Compile Include="ConfigUI\ProSuiteConfigCommonsUserControl.xaml.cs">
@@ -128,6 +132,10 @@
     <Compile Include="ProjectItem\ProSuiteProjectItemConfiguration.cs" />
     <Compile Include="ProjectItem\ProSuiteProjectItemContainer.cs" />
     <Compile Include="ProjectItem\ProjectFileRepository.cs" />
+    <Compile Include="ProTrials\CartoProcess\AlignMarkers.cs" />
+    <Compile Include="ProTrials\CartoProcess\CartoProcess.cs" />
+    <Compile Include="ProTrials\CartoProcess\CartoProcessConfig.cs" />
+    <Compile Include="ProTrials\CartoProcess\CreateAnnoMasks.cs" />
     <Compile Include="Selection\PickWorkListItemTool.cs" />
     <Compile Include="ProTrials\ProTrialsModule.cs" />
     <Compile Include="ProTrials\ProTrialsRegistrationWindow.xaml.cs">
@@ -155,6 +163,10 @@
     <Compile Include="WorkLists\InMemoryWorkEnvironment.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="ProTrials\CartoProcess\CartoProcessDockpane.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ConfigUI\ProSuiteConfigCommonsUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -350,6 +362,7 @@
   <ItemGroup>
     <Resource Include="WorkListUI\Images\ZoomToAll.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:
