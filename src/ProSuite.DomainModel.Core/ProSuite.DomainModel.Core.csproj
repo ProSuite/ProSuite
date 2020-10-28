@@ -73,6 +73,13 @@
     <Compile Include="DataModel\ForeignKeyAssociation.cs" />
     <Compile Include="DataModel\ForeignKeyAssociationEnd.cs" />
     <Compile Include="DataModel\GeometryType.cs" />
+    <Compile Include="DataModel\GeometryTypeGeometricNetwork.cs" />
+    <Compile Include="DataModel\GeometryTypeNoGeometry.cs" />
+    <Compile Include="DataModel\GeometryTypeRasterDataset.cs" />
+    <Compile Include="DataModel\GeometryTypeRasterMosaic.cs" />
+    <Compile Include="DataModel\GeometryTypeShape.cs" />
+    <Compile Include="DataModel\GeometryTypeTerrain.cs" />
+    <Compile Include="DataModel\GeometryTypeTopology.cs" />
     <Compile Include="DataModel\IAttributes.cs" />
     <Compile Include="DataModel\IDdxDataset.cs" />
     <Compile Include="DataModel\IErrorDataset.cs" />
@@ -92,6 +99,7 @@
     <Compile Include="DataModel\ObjectSubtypeCriterion.cs" />
     <Compile Include="DataModel\ObjectType.cs" />
     <Compile Include="DataModel\PrimaryKeyAssociationEnd.cs" />
+    <Compile Include="DataModel\ProSuiteGeometryType.cs" />
     <Compile Include="DataModel\SqlCaseSensitivity.cs" />
     <Compile Include="DataModel\TableDataset.cs" />
     <Compile Include="DataModel\UnknownAttributeRole.cs" />
