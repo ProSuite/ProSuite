@@ -230,11 +230,13 @@ namespace ProSuite.AGP.Solution.ProTrials
 					var layer = pair.Key;
 					var uri = layer.URI;
 
+#if PRO27
 					foreach (var oid in pair.Value)
 					{
 						var outline = layer.QueryDrawingOutline(oid, mapView, DrawingOutlineType.Exact);
 						outlines.Add(outline);
 					}
+#endif
 				}
 
 				var perimeter = GeometryEngine.Instance.Union(outlines);
