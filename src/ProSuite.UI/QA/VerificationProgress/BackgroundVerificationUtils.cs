@@ -14,8 +14,8 @@ namespace ProSuite.UI.QA.VerificationProgress
 	{
 		public static WpfHostingWinForm CreateVerificationProgressForm(
 			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient qaClient,
-			[NotNull] VerificationRequest request,
-			[NotNull] BackgroundVerificationRun verificationRun)
+			[NotNull] BackgroundVerificationRun verificationRun,
+			[CanBeNull] string title)
 		{
 			async Task<ServiceCallStatus> VerificationAction()
 			{
@@ -24,7 +24,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 			var progressForm = CreateVerificationProgressForm(
 				verificationRun.Progress, VerificationAction, verificationRun.ShowReportAction,
-				verificationRun.SaveAction);
+				verificationRun.SaveAction, title);
 
 			progressForm.SetMinimumSize(275, 0);
 			progressForm.SetMaximumSize(900, int.MaxValue);
@@ -36,7 +36,8 @@ namespace ProSuite.UI.QA.VerificationProgress
 			[NotNull] IQualityVerificationProgressTracker progressTracker,
 			[NotNull] Func<Task<ServiceCallStatus>> verificationAction,
 			[CanBeNull] Action<QualityVerification> showReportAction,
-			[CanBeNull] Action<IQualityVerificationResult> saveAction)
+			[CanBeNull] Action<IQualityVerificationResult> saveAction,
+			[CanBeNull] string title)
 		{
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel
@@ -53,6 +54,8 @@ namespace ProSuite.UI.QA.VerificationProgress
 			var progressForm = new WpfHostingWinForm(progressControl);
 
 			progressForm.FixedHeight = true;
+
+			progressForm.Text = title;
 
 			return progressForm;
 		}
