@@ -3,11 +3,6 @@ using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
-	/// <summary>
-	///     A WorkItem is an element in a WorkList.
-	///     It has a Status, a Visited flag, a geometric extent, and
-	///     a description. Subclasses may provide additional details.
-	/// </summary>
 	public interface IWorkItem
 	{
 		int OID { get; }
@@ -15,5 +10,15 @@ namespace ProSuite.AGP.WorkList.Contracts
 		GdbRowIdentity Proxy { get; }
 		WorkItemStatus Status { get; set; }
 		Envelope Extent { get; }
+		string Description { get; }
+		GeometryType? GeometryType { get; }
+
+		void QueryPoints(out double xmin, out double ymin,
+		                 out double xmax, out double ymax,
+		                 out double zmax, double minimumSize);
+
+		void QueryPoints(out double xmin, out double ymin,
+		                 out double xmax, out double ymax,
+		                 out double zmax);
 	}
 }

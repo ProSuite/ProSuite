@@ -3,7 +3,7 @@
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
                  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"   
-                 xmlns:ui="clr-namespace:Clients.AGP.ProSuiteSolution"             
+                 xmlns:ui="clr-namespace:ProSuite.AGP.Solution"
                  xmlns:esri="http://schemas.esri.com/arcgis/runtime/2013"
                  xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
                  xmlns:loggerUi="clr-namespace:ProSuite.AGP.Solution.LoggerUI"

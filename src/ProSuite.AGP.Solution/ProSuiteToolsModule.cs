@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
-using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.PluginDatastore;
+using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
@@ -12,16 +6,18 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using Clients.AGP.ProSuiteSolution;
-using Clients.AGP.ProSuiteSolution.Commons;
-using Clients.AGP.ProSuiteSolution.ConfigUI;
 using ProSuite.AGP.Solution.LoggerUI;
 using ProSuite.AGP.Solution.ProjectItem;
-using ProSuite.AGP.Solution.WorkListTrials;
 using ProSuite.Commons.Logging;
 using ProSuite.QA.Configurator;
 using ProSuite.QA.ServiceManager;
 using ProSuite.QA.ServiceManager.Types;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using ProSuite.AGP.Solution.Commons;
+using ProSuite.AGP.Solution.ConfigUI;
 
 namespace ProSuite.AGP.Solution
 {
@@ -37,8 +33,8 @@ namespace ProSuite.AGP.Solution
 				if (_qaManager == null)
 				{
 					_qaManager = new ProSuiteQAManager(
-						QAConfiguration.Current.GetQAServiceProviders(QAProjectItem.ServerConfigurations),
-						QAConfiguration.Current.GetQASpecificationsProvider(QAProjectItem.SpecificationConfiguration));
+						QAConfiguration.Current.GetQAServiceProviders(QAProjectItem?.ServerConfigurations),
+						QAConfiguration.Current.GetQASpecificationsProvider(QAProjectItem?.SpecificationConfiguration));
 					_qaManager.OnStatusChanged += QAManager_OnStatusChanged;
 					
 					OnQAConfigurationChanged = _qaManager.OnConfigurationChanged;
@@ -47,38 +43,22 @@ namespace ProSuite.AGP.Solution
 			}
 		}
 
-		private static ProSuiteProjectItem _qaProjectItem = null;
-		public static ProSuiteProjectItem QAProjectItem
+		private static ProSuiteProjectItemConfiguration _qaProjectItem = null;
+		public static ProSuiteProjectItemConfiguration QAProjectItem
 		{
 			get
 			{
-				//QueuedTask.Run(() =>
-				//{
-				//	var container = Project.Current.GetProjectItemContainer("ProSuiteContainer");
-				//	foreach ( var item in container.GetItems())
-				//	{
-				//		var p = item.PhysicalPath;
-				//	}
-				//});
-
 				if (_qaProjectItem == null)
 				{
-					_msg.Info("Project item not available");
+					//_msg.Info("Project item not available");
 
-					_qaProjectItem = Project.Current.GetItems<ProSuiteProjectItem>().FirstOrDefault();
+					_qaProjectItem = Project.Current.GetItems<ProSuiteProjectItemConfiguration>().FirstOrDefault();
 					if (_qaProjectItem == null)
 					{
-						// TODO algr: temp solution
-						var issuesPath = Path.Combine(Project.Current.HomeFolderPath, "issues");
-						Directory.CreateDirectory(issuesPath);
-						_qaProjectItem = new ProSuiteProjectItem(issuesPath, QAConfiguration.Current.DefaultQAServiceConfig, QAConfiguration.Current.DefaultQASpecConfig);
-						QueuedTask.Run(() =>
-						{
-							var added = Project.Current.AddItem(_qaProjectItem);
-							_msg.Info($"Project item added {added}");
+						//_qaProjectItem = new ProSuiteProjectItem(QAConfiguration.Current.DefaultQAServiceConfig,
+						//                                         QAConfiguration.Current.DefaultQASpecConfig);
 
-							Project.Current.SetDirty();//enable save
-						});
+						//ProSuiteProjectItemManager.Current.SaveProjectItem(Project.Current, _qaProjectItem);
 					}
 				}
 				return _qaProjectItem;
@@ -87,8 +67,6 @@ namespace ProSuite.AGP.Solution
 			{
 				_qaProjectItem = value;
 				UpdateServiceUI(_qaProjectItem);
-
-				//Project.Current.SaveAsync();
 			}
 		}
 
@@ -130,7 +108,7 @@ namespace ProSuite.AGP.Solution
 			}
 		}
 
-		private static void UpdateServiceUI(ProSuiteProjectItem projectItem)
+		private static void UpdateServiceUI(ProSuiteProjectItemConfiguration projectItem)
 		{
 
 			var localService = projectItem.ServerConfigurations.FirstOrDefault(s => (s.ServiceType == ProSuiteQAServiceType.GPLocal && s.IsValid));
@@ -199,14 +177,12 @@ namespace ProSuite.AGP.Solution
 		}
 		#endregion
 
-
 		#region Event handlers 
 
 		private static void QAManager_OnStatusChanged(object sender, ProSuiteQAServiceEventArgs e)
 		{
 			//_msg.Info($"ProSuiteModule: {e.State}");
 		}
-
 
 		private void OnProjectItemsChanged(ProjectItemsChangedEventArgs obj)
 		{
@@ -231,7 +207,6 @@ namespace ProSuite.AGP.Solution
 			// notify QAManager than config is changed via
 			OnQAConfigurationChanged?.Invoke(this, new ProSuiteQAConfigEventArgs(configArgs.ServerConfigurations));
 		}
-
 
 		internal static void StartQAGPServer(ProSuiteQAServiceType type)
 		{
@@ -267,9 +242,9 @@ namespace ProSuite.AGP.Solution
 				_msg.Error($"StartQAGPServerAsync is failed");
 			}
 		}
-
 	}
 
+	#region UI commands 
 	internal class StartQAGPTool : Button
 	{
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
@@ -285,7 +260,6 @@ namespace ProSuite.AGP.Solution
 				_msg.Error(ex.Message);
 			}
 		}
-
 	}
 
 	internal class StartQAGPExtent : Button
@@ -368,55 +342,53 @@ namespace ProSuite.AGP.Solution
 		}
 	}
 
-	internal class ShowWorkListWindow : Button
+	internal class AddWorkListFile : Button
 	{
-		private Clients.AGP.ProSuiteSolution.WorkList _worklist = null;
+		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-		protected override async void OnClick()
+		// TODO algr: temporary tests
+		protected override void OnClick()
 		{
-			await QueuedTask.Run(() => {CreateTestList(); });
-			 
-			//already open?
-			if (_worklist != null)
-				return;
-			_worklist = new Clients.AGP.ProSuiteSolution.WorkList();
-			_worklist.Owner = FrameworkApplication.Current.MainWindow;
-			_worklist.Closed += (o, e) => { _worklist = null; };
-			_worklist.Show();
-			//uncomment for modal
-			//_worklist.ShowDialog();
-		}
 
-		private static void CreateTestList()
-		{
-			var workList = WorkListTrialsModule.Current.GetTestWorkList();
-			var workListName = workList.Name;
+			var bf = new BrowseProjectFilter();
+			bf.AddCanBeTypeId("ProSuiteItem_ProjectItem"); //TypeID for the ".wlist" custom project item
 
-			var connector = WorkListTrialsModule.Current.GetWorkListConnectionPath(workListName);
+			// for subitem allow to browse inside and add as type
+			//bf.AddDoBrowseIntoTypeId("ProSuiteItem_ProjectItemWorkListFile");
+			//bf.AddCanBeTypeId("ProSuiteItem_WorkListItem"); //subitem 
+			bf.Name = "Work List";
 
-			using (var datastore = new PluginDatastore(connector))
+			var openItemDialog = new OpenItemDialog
+			        {
+	                     Title = "Add Work List",
+	                     InitialLocation = @"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData",
+	                     BrowseFilter = bf
+                     };
+			bool? result = openItemDialog.ShowDialog();
+			if (result != null && (result.Value == false || !openItemDialog.Items.Any())) return;
+
+			var item = openItemDialog.Items.FirstOrDefault();
+			string filePath = item?.Path;
+
+			QueuedTask.Run(() =>
 			{
-				var tableNames = datastore.GetTableNames();
-				foreach (var tableName in tableNames)
-				{
-					using (var table = datastore.OpenTable(tableName))
-					{
-						LayerFactory.Instance.CreateFeatureLayer(
-							(FeatureClass)table, MapView.Active.Map);
-
-						//TODO set renderer using error worklist layer file
-						//var layerDocument = new LayerDocument(@"C:\git\EsriCH.ArcGISPro.Trials\WorkListPrototype\TopgisConfiguration\TestData\Work List edited.lyrx");
-						//CIMLayerDocument cimLayerDocument = layerDocument.GetCIMLayerDocument();
-						//var rendererFromLayerFile = ((CIMFeatureLayer)cimLayerDocument.LayerDefinitions[0]).Renderer as CIMUniqueValueRenderer;
-
-						//featureLayer?.SetRenderer(rendererFromLayerFile);
-					}
-				}
-			}
+				ProjectRepository.Current.AddProjectFileItems(ProjectItemType.WorkListDefinition, new List<string>(){filePath});
+			});
 		}
 	}
 
+	internal class OpenWorkListFile : Button
+	{
+		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
+		// TODO algr: temporary tests
+		protected override void OnClick()
+		{
+			var window = FrameworkApplication.ActiveWindow as ArcGIS.Desktop.Core.IProjectWindow;
+			var item = window?.SelectedItems.First();
+			_msg.Info($"Worklist could be initialized from definition file {item.Path}");
+		}
+	}
 
 	sealed class QASpecListComboBox : ArcGIS.Desktop.Framework.Contracts.ComboBox
 	{
@@ -443,4 +415,6 @@ namespace ProSuite.AGP.Solution
 		}
 		
 	}
+
+	#endregion UI commands 
 }

@@ -1,23 +1,19 @@
 using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Windows.Data;
 
 namespace ProSuite.AGP.Solution.LoggerUI
 {
 	// TODO should be this moved to common utils, because GPService need this too?
-	class HtmlTextUtils
+	public static class HtmlTextUtils
 	{
 		private static readonly Regex _regex = new Regex("(?<=>)(.*?)(?=<)", RegexOptions.Singleline);
 
 		public static string GetTagText(string htmlString)
 		{
 			var match = _regex.Match(htmlString);
-			if (match.Success)
-			{
-
-				return match.Value;
-			}
-			return "";
+			return match.Success ? match.Value : string.Empty;
 		}
 	}
 
@@ -28,12 +24,13 @@ namespace ProSuite.AGP.Solution.LoggerUI
 			object value,
 			Type targetType,
 			object parameter,
-			System.Globalization.CultureInfo culture)
+			CultureInfo culture)
 		{
-			string logMsg = value.ToString();
+			string logMsg = System.Convert.ToString(value);
 			string linkMsg = HtmlTextUtils.GetTagText(logMsg);
+			string paramName = System.Convert.ToString(parameter);
 
-			switch (parameter.ToString())
+			switch (paramName)
 			{
 				case "first":
 					if (linkMsg == "")
@@ -49,7 +46,6 @@ namespace ProSuite.AGP.Solution.LoggerUI
 						return logMsg.After(">");
 					else
 						return "";
-
 			}
 			return logMsg;
 		}
@@ -58,7 +54,7 @@ namespace ProSuite.AGP.Solution.LoggerUI
 			object value,
 			Type targetType,
 			object parameter,
-			System.Globalization.CultureInfo culture)
+			CultureInfo culture)
 		{
 			//Put reverse logic here
 			throw new NotImplementedException();
@@ -66,27 +62,23 @@ namespace ProSuite.AGP.Solution.LoggerUI
 	}
 
 	// TODO this could be somewhere in utils
-	static class SubstringExtensions
+	public static class SubstringExtensions
 	{
 		/// <summary>
 		/// Get string value between [first] a and [last] b.
 		/// </summary>
 		public static string Between(this string value, string a, string b)
 		{
-			int posA = value.IndexOf(a);
-			int posB = value.LastIndexOf(b);
-			if (posA == -1)
+			int posA = value.IndexOf(a, StringComparison.Ordinal);
+			int posB = value.LastIndexOf(b, StringComparison.Ordinal);
+			if (posA == -1 || posB == -1)
 			{
-				return "";
-			}
-			if (posB == -1)
-			{
-				return "";
+				return string.Empty;
 			}
 			int adjustedPosA = posA + a.Length;
 			if (adjustedPosA >= posB)
 			{
-				return "";
+				return string.Empty;
 			}
 			return value.Substring(adjustedPosA, posB - adjustedPosA);
 		}
@@ -96,10 +88,10 @@ namespace ProSuite.AGP.Solution.LoggerUI
 		/// </summary>
 		public static string Before(this string value, string a)
 		{
-			int posA = value.IndexOf(a);
+			int posA = value.IndexOf(a, StringComparison.Ordinal);
 			if (posA == -1)
 			{
-				return "";
+				return string.Empty;
 			}
 			return value.Substring(0, posA);
 		}
@@ -109,15 +101,15 @@ namespace ProSuite.AGP.Solution.LoggerUI
 		/// </summary>
 		public static string After(this string value, string a)
 		{
-			int posA = value.LastIndexOf(a);
+			int posA = value.LastIndexOf(a, StringComparison.Ordinal);
 			if (posA == -1)
 			{
-				return "";
+				return string.Empty;
 			}
 			int adjustedPosA = posA + a.Length;
 			if (adjustedPosA >= value.Length)
 			{
-				return "";
+				return string.Empty;
 			}
 			return value.Substring(adjustedPosA);
 		}

@@ -111,7 +111,7 @@ namespace ProSuite.Commons.UI.Finder
 		                                bool allowMultiSelection,
 		                                string filterSettingsContext = null)
 		{
-			Assert.ArgumentNotNull(finderQueries, "list");
+			Assert.ArgumentNotNull(finderQueries, nameof(finderQueries));
 
 			var form = new FinderForm<T>(GetColumnDescriptors(columnDescriptors),
 			                             finderQueries, allowMultiSelection,

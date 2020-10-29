@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -15,8 +14,8 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Picker;
+using ProSuite.AGP.Editing.Properties;
 using ProSuite.AGP.Editing.Selection;
-using ProSuite.AGP.Picker;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -41,25 +40,23 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected OneClickToolBase()
 		{
 			UseSnapping = false;
-
 			HandledKeys.Add(Key.Escape);
 			HandledKeys.Add(_keyShowOptionsPane);
-
-			CIMColor magenta = ColorFactory.Instance.CreateRGBColor(255, 0, 255);
 		}
 
 		private SketchingMoveType SketchingMoveType { get; set; }
-
-		protected SelectionMode SelectionMode { get; set; }
-
 		protected bool RequiresSelection { get; set; } = true;
-
 		protected virtual SelectionSettings SelectionSettings { get; set; }
-
 		protected List<Key> HandledKeys { get; } = new List<Key>();
-
 		protected Cursor SelectionCursor { get; set; }
 		protected Cursor SelectionCursorShift { get; set; }
+		protected Cursor SelectionCursorNormal { get; set; }
+		protected Cursor SelectionCursorNormalShift { get; set; }
+		protected Cursor SelectionCursorUser { get; set; }
+		protected Cursor SelectionCursorUserShift { get; set; }
+		protected Cursor SelectionCursorOriginal { get; set; }
+		protected Cursor SelectionCursorOriginalShift { get; set; }
+
 
 		protected override Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
@@ -201,8 +198,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (RequiresSelection && IsInSelectionPhase())
 				{
-					return await QueuedTaskUtils.Run(() => OnSelectionSketchComplete(
-						                                 sketchGeometry, progressor));
+					await OnSelectionSketchComplete(sketchGeometry, progressor);
 				}
 
 				return await OnSketchCompleteCoreAsync(sketchGeometry, progressor);
@@ -309,101 +305,179 @@ namespace ProSuite.AGP.Editing.OneClick
 			return SketchingMoveType.Click;
 		}
 
-		private async Task<bool> OnSelectionSketchComplete(
-			Geometry sketchGeometry,
-			CancelableProgressor progressor)
+		private Geometry GetSelectionGeometry(Geometry sketchGeometry)
 		{
-			DisposeOverlays();
-			//3D views only support selecting features interactively using geometry
-			//in screen coordinates relative to the top-left corner of the view.
+			if (SketchingMoveType == SketchingMoveType.Click)
+			{
+				MapPoint sketchPoint = CreatPointFromSketchPolygon(sketchGeometry);
 
-			Geometry selectionGeometry = sketchGeometry;
+				return BufferGeometryByPixels(sketchPoint,
+				                              SelectionSettings.SelectionTolerancePixels);
+			}
+			else
+			{
+				return sketchGeometry;
+			}
+		}
 
-			CIMPolygonSymbol highlightPolygonSymbol = CreatePolygonSymbol();
+		private SelectionMode GetSelectionSketchMode()
+		{
+			if (KeyboardUtils.IsModifierPressed(Keys.Alt))
+			{
+				return SelectionMode.Original;
+			}
 
+			if (KeyboardUtils.IsModifierPressed(Keys.Control))
+			{
+				return SelectionMode.UserSelect;
+			}
+
+			return SelectionMode.Normal;
+		}
+
+		private async Task<bool> OnSelectionSketchComplete(Geometry sketchGeometry,
+		                                                   CancelableProgressor progressor)
+		{
 			// TODO: Add Utils method to KeyboardUtils to do it in the WPF way
 			SelectionCombinationMethod selectionMethod =
 				KeyboardUtils.IsModifierPressed(Keys.Shift)
 					? SelectionCombinationMethod.XOR
 					: SelectionCombinationMethod.New;
 
+			Geometry selectionGeometry;
+			var pickerWindowLocation = new Point(0, 0);
+			
+			Dictionary<BasicFeatureLayer, List<long>> candidatesOfManyLayers =
+				await QueuedTaskUtils.Run(() =>
+				{
+					DisposeOverlays();
+
+					selectionGeometry = GetSelectionGeometry(sketchGeometry);
+					pickerWindowLocation =
+						MapView.Active.MapToScreen(selectionGeometry.Extent.Center);
+
+					// find all features spatially related with selectionGeometry
+					return FindFeaturesOfAllLayers(selectionGeometry);
+				});
+
+			if (! candidatesOfManyLayers.Any())
+			{
+				return false;
+			}
+
 			if (SketchingMoveType == SketchingMoveType.Click)
 			{
-				MapPoint sketchPoint = CreatPointFromSketchPolygon(sketchGeometry);
+				//note if necessary add a virtual core method here for overriding 
 
-				selectionGeometry =
-					BufferGeometryByPixels(sketchPoint,
-					                       SelectionSettings.SelectionTolerancePixels);
-
-				// select all features spatially related with selectionGeometry
-				Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer =
-					FindFeaturesOfAllLayers(selectionGeometry);
-
-				if (SelectionMode == SelectionMode.Original)
+				if (GetSelectionSketchMode() == SelectionMode.Original) //alt was pressed: select all xy
 				{
-					Selector.SelectLayersFeaturesByOids(featuresPerLayer);
+					await QueuedTask.Run(() =>
+					{
+						Selector.SelectLayersFeaturesByOids(
+							candidatesOfManyLayers, selectionMethod);
+					});
 				}
+
+				// select a single feature using feature reduction and picker
 				else
 				{
-					//select a single feature using feature reduction, 
-					KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer =
-						ReduceFeatures(featuresPerLayer);
+					KeyValuePair<BasicFeatureLayer, List<long>> candidatesOfLayer =
+						await QueuedTask.Run(() => ReduceFeatures(candidatesOfManyLayers));
 
-					//TODO if still several selection candidates -> present picker here
+					// show picker if more than one candidate
+					if (candidatesOfLayer.Value.Count() > 1)
+					{
+						List<IPickableItem> pickables =
+							await QueuedTask.Run(() => GetPickableFeatureItems(candidatesOfLayer));
 
-					Selector.SelectLayersFeaturesByOids(featuresOfLayer);
+						var picker = new PickerUI.Picker(pickables, pickerWindowLocation);
+
+						var item = await picker.PickSingle() as PickableFeatureItem;
+						var kvp = new KeyValuePair<BasicFeatureLayer, List<long>>(
+							item.Layer, new List<long> {item.Oid});
+
+						await QueuedTask.Run(() =>
+						{
+							Selector.SelectLayersFeaturesByOids(
+								kvp, selectionMethod);
+						});
+					}
+					else
+					{
+						await QueuedTask.Run(() =>
+						{
+							Selector.SelectLayersFeaturesByOids(
+								candidatesOfLayer, selectionMethod);
+						});
+					}
 				}
 			}
 
 			if (SketchingMoveType == SketchingMoveType.Drag)
 			{
-				selectionGeometry = sketchGeometry;
-
-				//CTRL was pressed
-				if (SelectionMode == SelectionMode.UserSelect)
+				//CTRL was pressed: picker shows FC's to select from
+				if (GetSelectionSketchMode() == SelectionMode.UserSelect)
 				{
-					List<FeatureClassInfo> featureClassInfos =
-						Selector.GetSelectableFeatureclassInfos();
+					List<IPickableItem> pickingCandidates = await QueuedTask.Run(() =>
+					{
+						List<FeatureClassInfo> featureClassInfos =
+							Selector.GetSelectableFeatureclassInfos();
 
-					List<IPickableItem> pickableItems = PickableItemAdapter.Get(featureClassInfos);
+						return PickableItemAdapter.Get(featureClassInfos);
+					});
 
-					Point pickerWindowLocation =
-						await QueuedTask.Run(
-							() => MapView.Active.MapToScreen(selectionGeometry.Extent.Center));
-
-					var picker = new PickerUI.Picker(pickableItems, pickerWindowLocation);
-
+					var picker = new PickerUI.Picker(pickingCandidates, pickerWindowLocation);
 					var item = await picker.PickSingle() as PickableFeatureClassItem;
 
-					item.BelongingFeatureLayers.ForEach(layer =>
+					await QueuedTask.Run(() =>
 					{
-						layer.Select(null, selectionMethod);
+						item.BelongingFeatureLayers.ForEach(layer =>
+						{
+							layer.Select(null, selectionMethod);
+						});
 					});
 				}
+
+				//no modifier pressed: select all in envelope
 				else
 				{
-					Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer =
-						FindFeaturesOfAllLayers(selectionGeometry);
-
-					Selector.SelectLayersFeaturesByOids(featuresPerLayer);
+					await QueuedTask.Run(() =>
+					{
+						Selector.SelectLayersFeaturesByOids(
+							candidatesOfManyLayers, selectionMethod);
+					});
 				}
 			}
 
-			// AddOverlay(selectionGeometry, highlightPolygonSymbol);
+			MapView activeMapView = MapView.Active;
 
-			SelectionMode = SelectionMode.UserSelect;
+			await QueuedTask.Run(() =>
+				                     ProcessSelection(
+					                     SelectionUtils.GetSelectedFeatures(activeMapView),
+					                     progressor));
 
-			ProcessSelection(SelectionUtils.GetSelectedFeatures(ActiveMapView), progressor);
-
-			// else: feedback to the user to keep selecting
 			return true;
+		}
+
+		private List<IPickableItem> GetPickableFeatureItems(
+			KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer)
+		{
+			var pickCandidates = new List<IPickableItem>();
+			foreach (Feature feature in MapUtils.GetFeatures(featuresOfLayer))
+			{
+				var text =
+					$"{featuresOfLayer.Key.Name}: {feature.GetObjectID()}";
+				var featureItem =
+					new PickableFeatureItem(featuresOfLayer.Key, feature, text);
+				pickCandidates.Add(featureItem);
+			}
+
+			return pickCandidates;
 		}
 
 		private KeyValuePair<BasicFeatureLayer, List<long>> ReduceFeatures(
 			Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer)
 		{
-			//Dictionary<BasicFeatureLayer, List<long> > featuresPerLayer = new Dictionary<BasicFeatureLayer, List<long>>();
-
 			IOrderedEnumerable<KeyValuePair<BasicFeatureLayer, List<long>>> ordered =
 				featuresPerLayer.OrderBy(el => el.Key.ShapeType, new GeometryTypeComparer());
 
@@ -415,7 +489,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				}
 			}
 
-			return featuresPerLayer.First();
+			return featuresPerLayer.FirstOrDefault();
 		}
 
 		private Dictionary<BasicFeatureLayer, List<long>> FindFeaturesOfAllLayers(
@@ -428,11 +502,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				if (CanSelectFromLayer(layer))
 				{
-					IEnumerable<Feature> features =
-						MapUtils.FilterFeaturesByGeometry(layer, selectionGeometry,
-						                                  SelectionSettings.SpatialRelationship);
-					IEnumerable<long> oids = MapUtils.GetFeaturesOidList(features);
-
+					IEnumerable<long> oids =
+						MapUtils.FilterLayerOidsByGeometry(layer, selectionGeometry,
+						                                   SelectionSettings.SpatialRelationship);
 					if (oids.Any())
 					{
 						featuresPerLayer.Add(layer, oids.ToList());

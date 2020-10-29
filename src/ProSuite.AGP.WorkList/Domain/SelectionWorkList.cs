@@ -10,7 +10,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public override void Dispose()
 		{
-			throw new NotImplementedException();
 		}
 	}
 }

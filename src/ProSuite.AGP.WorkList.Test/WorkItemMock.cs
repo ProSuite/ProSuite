@@ -18,6 +18,21 @@ namespace ProSuite.AGP.WorkList.Test
 		public GdbRowIdentity Proxy { get; }
 		public WorkItemStatus Status { get; set; }
 		public Envelope Extent { get; }
+		public string Description { get; }
+		public GeometryType? GeometryType { get; set; }
+
+		public void QueryPoints(out double xmin, out double ymin, out double xmax, out double ymax,
+		                        out double zmax,
+		                        double minimumSize)
+		{
+			throw new NotImplementedException();
+		}
+
+		public void QueryPoints(out double xmin, out double ymin, out double xmax, out double ymax,
+		                        out double zmax)
+		{
+			throw new NotImplementedException();
+		}
 
 		public void SetDone(bool done = true)
 		{

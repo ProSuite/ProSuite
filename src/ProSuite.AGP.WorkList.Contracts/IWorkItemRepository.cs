@@ -12,13 +12,19 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		// todo daro: extract Interface ISource
 		IEnumerable<IWorkItem> GetItems(GdbTableIdentity tableId, QueryFilter filter, bool recycle = true);
-		
-		void UpdateItem(IWorkItem item);
+
+		void Refresh(IWorkItem item);
+
+		void Update(IWorkItem item);
 
 		void UpdateVolatileState(IEnumerable<IWorkItem> items);
 
 		void Commit();
 
 		void Discard();
+
+		// todo daro: is this the right way?
+		void SetCurrentIndex(int currentIndex);
+		int GetCurrentIndex();
 	}
 }

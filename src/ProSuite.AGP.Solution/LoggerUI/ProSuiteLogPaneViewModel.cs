@@ -16,18 +16,17 @@ namespace ProSuite.AGP.Solution.LoggerUI
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 		public ObservableCollection<LoggingEventItem> LogMessageList { get; set; }
-        public object _lockLogMessages = new object();
+        public readonly object _lockLogMessages = new object();
 
-		private LoggingEventsAppender _appenderDelegate = new LoggingEventsAppender();
-		private List<LogType> _disabledLogTypes = new List<LogType>();
+		//private LoggingEventsAppender _appenderDelegate = new LoggingEventsAppender();
+		private readonly List<LogType> _disabledLogTypes = new List<LogType>();
 
 		#region Clear messages
 
 		private RelayCommand _clearLogEntries;
-        public RelayCommand ClearLogEntries =>
-            _clearLogEntries ?? (_clearLogEntries = new RelayCommand(
-                ClearAllLogEntries,
-                CanClearAllLogEntries));
+		public RelayCommand ClearLogEntries =>
+			_clearLogEntries ?? (_clearLogEntries = new RelayCommand(
+				                     ClearAllLogEntries, CanClearAllLogEntries));
 
         public bool CanClearAllLogEntries => LogMessageList.Count > 0;
 
@@ -39,16 +38,9 @@ namespace ProSuite.AGP.Solution.LoggerUI
 
         // filter log list command
         private RelayCommand _filterLogEntries;
-        public RelayCommand FilterLogEntries
-        {
-            get
-            {
-                return _filterLogEntries ?? (_filterLogEntries = new RelayCommand(
-                    (parameter) => FilterLogs(parameter),
-                    (parameter) => CanFilterLogs(parameter)
-                ));
-            }
-        }
+		public RelayCommand FilterLogEntries =>
+	        _filterLogEntries ?? (_filterLogEntries = new RelayCommand(
+		                              FilterLogs, CanFilterLogs));
 
         public void FilterLogs(object parameter)
         {
@@ -90,7 +82,7 @@ namespace ProSuite.AGP.Solution.LoggerUI
             get
             {
                 return _openMessage ??
-                       (_openMessage = new RelayCommand(parameter => OpenLogMessage(parameter), () => true));
+                       (_openMessage = new RelayCommand(OpenLogMessage, () => true));
             }
         }
 
@@ -148,8 +140,8 @@ namespace ProSuite.AGP.Solution.LoggerUI
             {
 				// TODO save messages to buffer(?)
 
-				if(!IsLogLevelDisabled(e.logItem))
-					LogMessageList.Add(e.logItem);
+				if(!IsLogLevelDisabled(e.LogItem))
+					LogMessageList.Add(e.LogItem);
             }
         }
 

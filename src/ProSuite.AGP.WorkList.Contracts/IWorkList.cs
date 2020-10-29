@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -11,7 +12,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 	/// It maintains a current item and provides
 	/// navigation to change the current item.
 	/// </summary>
-	public interface IWorkList : IDisposable
+	public interface IWorkList : IRowCache, IDisposable, INotifyPropertyChanged
 	{
 		[NotNull]
 		string Name { get; }
@@ -54,5 +55,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 		void GoPrevious();
 
 		event EventHandler<WorkListChangedEventArgs> WorkListChanged;
+
+		void Update(IWorkItem item);
+
+		void Commit();
 	}
 }

@@ -3,28 +3,18 @@ using System.Globalization;
 using System.Windows.Data;
 using ProSuite.AGP.WorkList.Contracts;
 
-namespace Clients.AGP.ProSuiteSolution.WorkListUI
+namespace ProSuite.AGP.Solution.WorkListUI
 {
 	public class StatusEnumBooleanConverter: IValueConverter
 	{
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{
-			WorkItemStatus status = (WorkItemStatus) value;
-			if (status == WorkItemStatus.Done)
-			{
-				return true;
-			}
-			return false;
+			return value is WorkItemStatus status && status == WorkItemStatus.Done;
 		}
 
 		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
 		{
-			bool val = (bool) value;
-			if (val)
-			{
-				return WorkItemStatus.Done;
-			}
-			return WorkItemStatus.Todo;
+			return value is bool flag && flag ? WorkItemStatus.Done : WorkItemStatus.Todo;
 		}
 	}
 }

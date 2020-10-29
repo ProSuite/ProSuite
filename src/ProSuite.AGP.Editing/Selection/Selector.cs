@@ -2,8 +2,9 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing.Selection
 {
@@ -13,19 +14,17 @@ namespace ProSuite.AGP.Editing.Selection
 		{
 			IEnumerable<FeatureLayer> featureLayers = MapView.Active.Map.Layers
 			                                                 .OfType<FeatureLayer>();
+			
+			IEnumerable<IGrouping<string, FeatureLayer>> layerGroupsByFcName =
+				featureLayers.GroupBy(layer => layer.GetFeatureClass().GetName());
 
-			var fClassGroups = featureLayers.Where(fLayer =>
-				                                       fLayer.IsSelectable).Select(fLayer => fLayer.GetFeatureClass()).GroupBy(fc => fc.GetName());
+			var featureClassInfos = new List<FeatureClassInfo>();
 
-			var layerGroupsByFcName = featureLayers.GroupBy(layer => layer.GetFeatureClass().GetName());
-
-			List<FeatureClassInfo> featureClassInfos = new List<FeatureClassInfo>();
-
-			foreach (var group in layerGroupsByFcName)
+			foreach (IGrouping<string, FeatureLayer> group in layerGroupsByFcName)
 			{
-				List<FeatureLayer> belongingLayers = new List<FeatureLayer>();
+				var belongingLayers = new List<FeatureLayer>();
 
-				foreach (var layer in group)
+				foreach (FeatureLayer layer in group)
 				{
 					belongingLayers.Add(layer);
 				}
@@ -34,13 +33,13 @@ namespace ProSuite.AGP.Editing.Selection
 				string featureClassName = fClass.GetName();
 				esriGeometryType gType = belongingLayers.First().ShapeType;
 
-				FeatureClassInfo featureClassInfo = new FeatureClassInfo()
-				                                    {
-					                                    BelongingLayers = belongingLayers,
-					                                    FeatureClass = fClass,
-					                                    FeatureClassName = featureClassName,
-					                                    ShapeType = gType
-				                                    };
+				var featureClassInfo = new FeatureClassInfo()
+				                       {
+					                       BelongingLayers = belongingLayers,
+					                       FeatureClass = fClass,
+					                       FeatureClassName = featureClassName,
+					                       ShapeType = gType
+				                       };
 				featureClassInfos.Add(featureClassInfo);
 			}
 
@@ -48,27 +47,56 @@ namespace ProSuite.AGP.Editing.Selection
 			return featureClassInfos;
 		}
 
-		public static void SelectLayersFeaturesByOids(Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer)
+		public static void SelectLayersFeaturesByOids(
+			[CanBeNull] Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer,
+			SelectionCombinationMethod method)
 		{
-			foreach(var kvp in featuresPerLayer)
+			if (featuresPerLayer == null)
 			{
-				QueryFilter qf = new QueryFilter()
-				                 {
-									 ObjectIDs = kvp.Value
-				                 };
-				kvp.Key.Select(qf);
+				return;
+			}
+
+			if (method == SelectionCombinationMethod.New)
+			{
+				//since SelectionCombinationMethod.New is only applied to
+				//the current layer but selections of other layers remain,
+				//we manually need to clear all selections first. 
+				SelectionUtils.ClearSelection(MapView.Active.Map);
+			}
+
+			foreach (KeyValuePair<BasicFeatureLayer, List<long>> kvp in featuresPerLayer)
+			{
+				var qf = new QueryFilter
+				         {
+					         ObjectIDs = kvp.Value
+				         };
+				kvp.Key.Select(qf, method);
 			}
 		}
 
 		public static void SelectLayersFeaturesByOids(
-			KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer)
+			KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer,
+			SelectionCombinationMethod method)
 		{
+			if (! featuresOfLayer.Value.Any())
 			{
-				QueryFilter qf = new QueryFilter()
-				                 {
-					                 ObjectIDs = featuresOfLayer.Value
-				                 };
-				featuresOfLayer.Key.Select(qf);
+				return;
+			}
+
+			if (method == SelectionCombinationMethod.New)
+			{
+				//since SelectionCombinationMethod.New is only applied to
+				//the current layer but selections of other layers remain,
+				//we manually need to clear all selections first. 
+				SelectionUtils.ClearSelection(MapView.Active.Map);
+			}
+
+			{
+				var qf = new QueryFilter
+				         {
+					         ObjectIDs = featuresOfLayer.Value
+				         };
+				featuresOfLayer.Key.Select(qf, method);
 			}
 		}
 	}

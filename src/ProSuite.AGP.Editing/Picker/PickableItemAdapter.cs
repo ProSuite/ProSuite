@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
-using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Selection;
-using ProSuite.AGP.Picker;
 using ProSuite.Commons.AGP.Carto;
 
 namespace ProSuite.AGP.Editing.Picker

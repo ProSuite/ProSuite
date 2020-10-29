@@ -15,8 +15,7 @@ namespace ProSuite.AGP.Solution
 		private const string _companyName = "esri";
 		private const string _productName = "prosuite";
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[ContractAnnotation("required: true => notnull; required: false => canbenull")]
 		public static string GetConfigFilePath([NotNull] string configFileName,

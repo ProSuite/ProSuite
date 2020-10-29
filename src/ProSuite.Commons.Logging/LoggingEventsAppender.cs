@@ -6,11 +6,11 @@ namespace ProSuite.Commons.Logging
 {
 	public class LoggingEventArgs : EventArgs
 	{
-		public LoggingEventItem logItem;
+		public readonly LoggingEventItem LogItem;
 
 		public LoggingEventArgs(LoggingEvent logEvent)
 		{
-			logItem = new LoggingEventItem(logEvent);
+			LogItem = new LoggingEventItem(logEvent);
 		}
 	}
 
@@ -19,7 +19,7 @@ namespace ProSuite.Commons.Logging
 		// TODO temporary static event handler - unsubscribe!!!
 		public static event EventHandler<LoggingEventArgs> OnNewLogMessage;
 
-		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected override void Append(LoggingEvent loggingEvent)
 		{

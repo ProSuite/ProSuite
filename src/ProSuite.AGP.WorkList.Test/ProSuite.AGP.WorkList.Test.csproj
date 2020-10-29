@@ -10,7 +10,7 @@
     <RootNamespace>ProSuite.AGP.WorkList.Test</RootNamespace>
     <AssemblyName>ProSuite.AGP.WorkList.Test</AssemblyName>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
-    <ProNuGetVersion Condition=" '$(ProNuGetVersion)' == '' ">2.6</ProNuGetVersion>
+    <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">C:\Program Files\ArcGIS\Pro</ProAssemblyPath>
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -32,24 +32,27 @@
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ArcGIS.Core">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GdbQueryWorkList.cs" />
     <Compile Include="InvolvedTablesTest.cs" />
-    <Compile Include="IssuePolygonsGdbRepository.cs" />
     <Compile Include="ItemRepositoryMock.cs" />
     <Compile Include="MemoryQueryWorkList.cs" />
     <Compile Include="PolygonConstruction.cs" />
+    <Compile Include="WorkItemStateRepositoryTest.cs" />
     <Compile Include="TestUtils.cs" />
     <Compile Include="WorkItemMock.cs" />
+    <Compile Include="WorkItemRepositoryTest.cs" />
+    <Compile Include="WorkItemTest.cs" />
     <Compile Include="WorkListTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Esri.ArcGISPro.Extensions">
-      <Version>$(ProNuGetVersion)</Version>
-    </PackageReference>
     <PackageReference Include="NUnit">
       <Version>3.12.0</Version>
     </PackageReference>
@@ -62,6 +65,10 @@
     <ProjectReference Include="..\ProSuite.AGP.WorkList\ProSuite.AGP.WorkList.csproj">
       <Project>{2EFE37C6-29A4-4E51-8C9F-D7B895F9CE6D}</Project>
       <Name>ProSuite.AGP.WorkList</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj">
+      <Project>{b80740ec-bb68-410c-a617-e79c467f1969}</Project>
+      <Name>ProSuite.Commons.AGP.Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.AGP.Hosting\ProSuite.Commons.AGP.Hosting.csproj">
       <Project>{d6540148-8790-4c77-8a65-518bd10487d7}</Project>

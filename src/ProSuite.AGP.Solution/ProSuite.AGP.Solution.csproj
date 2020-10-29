@@ -14,10 +14,8 @@
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
-    <ProNuGetVersion Condition=" '$(ProNuGetVersion)' == '' ">2.6</ProNuGetVersion>
-    <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">..\..\..\EsriDE.Commons\lib\ESRI\ProSDK\2.6</ProAssemblyPath>
+    <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">C:\Program Files\ArcGIS\Pro</ProAssemblyPath>
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
-    <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">..\..\..\EsriDE.Commons\lib\ESRI\ProSDK\2.6</ProAssemblyPath>
     <ProjectTypeGuids>{60dc8134-eba5-43b8-bcc9-bb4bc16c2548};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -48,8 +46,41 @@
     <ArcGISFolder Condition="'$(ArcGISFolder)' == ''">$(registry:HKEY_CURRENT_USER\SOFTWARE\ESRI\ArcGISPro@InstallDir)</ArcGISFolder>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ArcGIS.Core">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Catalog">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ProAssemblyPath)\bin\Extensions\Catalog\ArcGIS.Desktop.Catalog.dll</HintPath>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Core">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ProAssemblyPath)\bin\Extensions\Core\ArcGIS.Desktop.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Editing">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ProAssemblyPath)\bin\Extensions\Editing\ArcGIS.Desktop.Editing.dll</HintPath>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Extensions">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ProAssemblyPath)\bin\Extensions\DesktopExtensions\ArcGIS.Desktop.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Framework">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Desktop.Framework.dll</HintPath>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Mapping">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ProAssemblyPath)\bin\Extensions\Mapping\ArcGIS.Desktop.Mapping.dll</HintPath>
+    </Reference>
     <Reference Include="ArcGIS.Desktop.Resources">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Desktop.Resources.dll</HintPath>
+    </Reference>
+    <Reference Include="ESRI.ArcGIS.ItemIndex">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ProAssemblyPath)\bin\ESRI.ArcGIS.ItemIndex.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -58,6 +89,7 @@
     <Reference Include="System.Xml" />
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
+    <Reference Include="System.Xml.Linq" />
     <Reference Include="WindowsBase" />
     <Reference Include="System.Xaml" />
   </ItemGroup>
@@ -72,6 +104,10 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="ProTrials\CartoProcess\CartoProcessDockpane.xaml.cs">
+      <DependentUpon>CartoProcessDockpane.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="ProTrials\CartoProcess\CartoProcessDockpaneViewModel.cs" />
     <Compile Include="ConfigIDs.cs" />
     <Compile Include="ConfigUI\ProSuiteConfigChangedEvent.cs" />
     <Compile Include="ConfigUI\ProSuiteConfigCommonsUserControl.xaml.cs">
@@ -90,7 +126,21 @@
     <Compile Include="Daml.cs" />
     <Compile Include="Editing\EraseTool.cs" />
     <Compile Include="Commons\ImageUtils.cs" />
+    <Compile Include="ProjectItem\ProjectRepository.cs" />
+    <Compile Include="ProjectItem\ProjectWorkListFileRepository.cs" />
+    <Compile Include="ProjectItem\ProSuiteProjectItem.cs" />
+    <Compile Include="ProjectItem\ProSuiteProjectItemConfiguration.cs" />
     <Compile Include="ProjectItem\ProSuiteProjectItemContainer.cs" />
+    <Compile Include="ProjectItem\ProjectFileRepository.cs" />
+    <Compile Include="ProTrials\CartoProcess\AlignMarkers.cs" />
+    <Compile Include="ProTrials\CartoProcess\CartoProcess.cs" />
+    <Compile Include="ProTrials\CartoProcess\CartoProcessConfig.cs" />
+    <Compile Include="ProTrials\CartoProcess\CreateAnnoMasks.cs" />
+    <Compile Include="Selection\PickWorkListItemTool.cs" />
+    <Compile Include="ProTrials\ProTrialsModule.cs" />
+    <Compile Include="ProTrials\ProTrialsRegistrationWindow.xaml.cs">
+      <DependentUpon>ProTrialsRegistrationWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Selection\SelectionTool.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
     <Compile Include="Commons\LayerUtils.cs" />
@@ -100,24 +150,23 @@
       <DependentUpon>ProSuiteLogPane.xaml</DependentUpon>
     </Compile>
     <Compile Include="LoggerUI\ProSuiteLogPaneViewModel.cs" />
-    <Compile Include="ProjectItem\ProSuiteProjectItem.cs" />
     <Compile Include="ProSuiteToolsModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProSuiteConfigurationDirectorySearcher.cs" />
     <Compile Include="WorkLists\DatabaseWorkEnvironment.cs" />
-    <Compile Include="WorkLists\GoFirstButton.cs" />
-    <Compile Include="WorkLists\GoNextButton.cs" />
     <Compile Include="WorkLists\WorkListsModule.cs" />
     <Compile Include="WorkListUI\StatusEnumBooleanConverter.cs" />
-    <Compile Include="WorkListUI\WorkList.xaml.cs">
-      <DependentUpon>WorkList.xaml</DependentUpon>
+    <Compile Include="WorkListUI\WorkListView.xaml.cs">
+      <DependentUpon>WorkListView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WorkListTrials\WorkListTrialsControls.cs" />
-    <Compile Include="WorkListTrials\WorkListTrialsModule.cs" />
     <Compile Include="WorkListUI\WorkListViewModel.cs" />
     <Compile Include="WorkLists\InMemoryWorkEnvironment.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="ProTrials\CartoProcess\CartoProcessDockpane.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ConfigUI\ProSuiteConfigCommonsUserControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -134,7 +183,11 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="WorkListUI\WorkList.xaml">
+    <Page Include="ProTrials\ProTrialsRegistrationWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="WorkListUI\WorkListView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -212,6 +265,10 @@
       <Project>{2efe37c6-29a4-4e51-8c9f-d7b895f9ce6d}</Project>
       <Name>ProSuite.AGP.WorkList</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj">
+      <Project>{b80740ec-bb68-410c-a617-e79c467f1969}</Project>
+      <Name>ProSuite.Commons.AGP.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">
       <Project>{89F2C583-3022-43F8-9B69-27123836625F}</Project>
       <Name>ProSuite.Commons.AGP</Name>
@@ -242,21 +299,9 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Esri.ArcGISPro.Extensions">
-      <Version>$(ProNuGetVersion)</Version>
-    </PackageReference>
-    <PackageReference Include="JetBrains.Annotations">
-      <Version>2020.1.0</Version>
-    </PackageReference>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
       <Version>1.1.19</Version>
     </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="WorkListUI\Images\GoBack.gif" />
-    <Resource Include="WorkListUI\Images\GoFirst.bmp" />
-    <Resource Include="WorkListUI\Images\GoNearest.bmp" />
-    <Resource Include="WorkListUI\Images\GoNext.gif" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="WorkListUI\Images\GoBack.png" />
@@ -296,6 +341,28 @@
   <ItemGroup>
     <AddInContent Include="Images\SelectionTool.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\PanTo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\ZoomTo.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\GoFirst.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\NavigateErrorsCmd.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\NavigateSelectionCmd.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\PickWorkItemTool.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\ZoomToAll.png" />
+  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
@@ -17,7 +19,7 @@ namespace ProSuite.AGP.WorkList.Domain
 	/// </summary>
 	// todo daro: separate geometry processing code
 	// todo daro: separate QueuedTask code
-	public abstract class WorkList : IWorkList, IRowCache
+	public abstract class WorkList : IWorkList
 	{
 		private const int _initialCapacity = 1000;
 
@@ -28,7 +30,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		private readonly List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
 
 		[NotNull]
-		private Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
+		private readonly Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
 			new Dictionary<GdbRowIdentity, IWorkItem>(_initialCapacity);
 
 		private EventHandler<WorkListChangedEventArgs> _workListChanged;
@@ -41,7 +43,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			Visibility = WorkItemVisibility.Todo;
 			AreaOfInterest = null;
-			CurrentIndex = -1;
+			CurrentIndex = repository.GetCurrentIndex();
 
 			foreach (IWorkItem item in Repository.GetItems())
 			{
@@ -57,6 +59,9 @@ namespace ProSuite.AGP.WorkList.Domain
 				}
 			}
 
+			// initializes the state repository if no states for
+			// the work items are read yet
+			Repository.UpdateVolatileState(_items);
 
 			// todo daro: EnvelopeBuilder as parameter > do not iterate again over items
 			//			  look old work item implementation
@@ -69,8 +74,22 @@ namespace ProSuite.AGP.WorkList.Domain
 			remove { _workListChanged -= value; }
 		}
 
+		public void Update(IWorkItem item)
+		{
+			Repository.Update(item);
+			
+			OnWorkListChanged(null, new List<long> { item.OID });
+		}
+
+		public void Commit()
+		{
+			Repository.Commit();
+		}
+
 		public string Name { get; }
 
+		// An empty work list should return null and not an empty envelope.
+		// Pluggable Datasource cannot handle an empty envelope.
 		public Envelope Extent { get; protected set; }
 
 		public WorkItemVisibility Visibility { get; set; }
@@ -78,7 +97,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		public Polygon AreaOfInterest { get; set; }
 
 		public virtual bool QueryLanguageSupported { get; } = false;
-
+		
 		public virtual IEnumerable<IWorkItem> GetItems(QueryFilter filter = null,
 		                                               bool ignoreListSettings = false)
 		{
@@ -121,6 +140,15 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
+		public int Count(WorkItemVisibility visibility)
+		{
+			lock (_syncLock)
+			{
+				// todo Count(WorkItemVisibility visibility)
+				return -1;
+			}
+		}
+
 		/* Navigation */
 
 		public virtual IWorkItem Current => GetItem(CurrentIndex);
@@ -128,26 +156,40 @@ namespace ProSuite.AGP.WorkList.Domain
 		// note daro: only change the item index for navigation! the index is the only valid truth!
 		protected int CurrentIndex { get; set; }
 
+		public int DisplayIndex
+		{
+			get
+			{
+				return CurrentIndex;
+			}
+		}
+
 		/* This base class provides an overly simplistic implementation */
 		/* TODO should honour Status, Visibility, and AreaOfInterest */
 
 		public virtual bool CanGoFirst()
 		{
-			return _items.Count > 0;
+			return GetFirstVisibleVisitedItemBeforeCurrent() != null;
 		}
 
 		public virtual void GoFirst()
 		{
-			CurrentIndex = 0;
-
-			IWorkItem nextItem = GetNextVisibleItem();
-			//TODO should also set current item visited=true
-
+			IWorkItem nextItem = GetFirstVisibleVisitedItemBeforeCurrent();
+			
 			if (nextItem != null)
 			{
 				Assert.False(Equals(nextItem, Current), "current item and next item are equal");
 
 				SetCurrentItem(nextItem, Current);
+			}
+			else
+			{
+				CurrentIndex = 0;
+				IWorkItem item = GetItem(CurrentIndex);
+				if (item != null)
+				{
+					SetCurrentItem(item);
+				}
 			}
 		}
 
@@ -163,13 +205,12 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual bool CanGoNext()
 		{
-			return _items.Count > 0 && CurrentIndex < _items.Count - 1;
+			return GetNextVisibleItem() != null;
 		}
 
 		public virtual void GoNext()
 		{
 			IWorkItem nextItem = GetNextVisibleItem();
-			//TODO should also set current item visited=true
 
 			if (nextItem != null)
 			{
@@ -181,30 +222,32 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual bool CanGoPrevious()
 		{
-			return _items.Count > 0 && CurrentIndex > 0;
+			return GetPreviousVisibleItem() != null;
 		}
 
 		public virtual void GoPrevious()
 		{
-			if (CurrentIndex > 0)
+			IWorkItem previousItem = GetPreviousVisibleItem();
+
+			if (previousItem != null)
 			{
-				CurrentIndex -= 1;
-				//TODO should also set current item Visited=true
+				Assert.False(Equals(previousItem, Current), "current item and previous item are equal");
+
+				SetCurrentItem(previousItem, Current);
 			}
+		}
+
+		public virtual void GoToOid(int OID)
+		{
+			var targetItem = _items.FirstOrDefault(item => item.OID == OID);
+			if (targetItem != null)
+			{
+				SetCurrentItem(targetItem, Current);
+			}
+			
 		}
 
 		public abstract void Dispose();
-
-		protected void SetItems(IEnumerable<IWorkItem> items)
-		{
-			lock (_syncLock)
-			{
-				_items.Clear();
-				_items.AddRange(items.Where(item => item != null));
-
-				CurrentIndex = -1;
-			}
-		}
 
 		#region Work list navigation
 
@@ -214,16 +257,58 @@ namespace ProSuite.AGP.WorkList.Domain
 		/// </summary>
 		/// <param name="nextItem"></param>
 		/// <param name="currentItem">The work item.</param>
-		private void SetCurrentItem([NotNull] IWorkItem nextItem, [CanBeNull] IWorkItem currentItem)
+		private void SetCurrentItem([NotNull] IWorkItem nextItem, [CanBeNull] IWorkItem currentItem = null)
 		{
 			nextItem.Visited = true;
 			CurrentIndex = _items.IndexOf(nextItem);
+
+			Repository.SetCurrentIndex(CurrentIndex);
+			Repository.Update(nextItem);
 
 			var oids = currentItem != null
 				           ? new List<long> {nextItem.OID, currentItem.OID}
 				           : new List<long> {nextItem.OID};
 
 			OnWorkListChanged(null, oids);
+		}
+
+		[CanBeNull]
+		private IWorkItem GetFirstVisibleVisitedItemBeforeCurrent()
+		{
+			IWorkItem currentItem = Current;
+
+			foreach (IWorkItem workItem in _items)
+			{
+				// search for the first visible work item before the 
+				// current one
+				if (workItem == currentItem)
+				{
+					// found the current one, stop search
+					return null;
+				}
+
+				if (! IsVisible(workItem))
+				{
+					continue;
+				}
+
+				if (! workItem.Visited)
+				{
+					if (currentItem != null)
+					{
+						// unexpected
+						//_msg.Warn("Previous work item not visited");
+					}
+
+					return null;
+				}
+
+				// not the current one, visited
+				return workItem;
+			}
+
+			// no visible work items
+			return null;
 		}
 
 		[CanBeNull]
@@ -235,7 +320,29 @@ namespace ProSuite.AGP.WorkList.Domain
 				return null;
 			}
 
-			IWorkItem item = _items[CurrentIndex + 1];
+			// true if another visible, visited item comes afterwards
+			for (int i = CurrentIndex + 1; i < _items.Count; i++)
+			{
+				IWorkItem workItem = _items[i];
+				if (IsVisible(workItem))
+				{
+					return workItem;
+				}
+			}
+
+			return null;
+		}
+
+		[CanBeNull]
+		private IWorkItem GetPreviousVisibleItem()
+		{
+			if (CurrentIndex <= 0)
+			{
+				// no previous item anymore, current is first item
+				return null;
+			}
+			
+			IWorkItem item = _items[CurrentIndex - 1];
 
 			return IsVisible(item) ? item : null;
 		}
@@ -252,6 +359,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				       : null;
 		}
 
+		// todo daro: drop or refactor
 		protected static Envelope GetExtentFromItems(IEnumerable<IWorkItem> items)
 		{
 			double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
@@ -282,10 +390,12 @@ namespace ProSuite.AGP.WorkList.Domain
 				}
 			}
 
+			// Should return null and not an empty envelope. Pluggable Datasource cannot handle
+			// an empty envelope.
 			return count > 0
 				       ? EnvelopeBuilder.CreateEnvelope(new Coordinate3D(xmin, ymin, zmin),
 				                                        new Coordinate3D(xmax, ymax, zmax), sref)
-				       : EnvelopeBuilder.CreateEnvelope(sref);
+				       : null;
 		}
 
 		private static bool Relates(Geometry a, SpatialRelationship rel, Geometry b)
@@ -353,7 +463,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public void Invalidate()
 		{
-			throw new NotImplementedException();
 		}
 
 		// todo daro: Is SDK type Table the right type?
@@ -361,12 +470,18 @@ namespace ProSuite.AGP.WorkList.Domain
 		                           Dictionary<Table, List<long>> deletes,
 		                           Dictionary<Table, List<long>> updates)
 		{
+			int capacity = inserts.Values.Sum(list => list.Count) +
+			               deletes.Values.Sum(list => list.Count) +
+			               updates.Values.Sum(list => list.Count);
+
+			var invalidFeatures = new List<long>(capacity);
+
 			foreach (var insert in inserts)
 			{
 				var tableId = new GdbTableIdentity(insert.Key);
 				List<long> oids = insert.Value;
 
-				ProcessInserts(tableId, oids);
+				ProcessInserts(tableId, oids, invalidFeatures);
 			}
 
 			foreach (var delete in deletes)
@@ -374,7 +489,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				var tableId = new GdbTableIdentity(delete.Key);
 				List<long> oids = delete.Value;
 
-				ProcessDeletes(tableId, oids);
+				ProcessDeletes(tableId, oids, invalidFeatures);
 			}
 
 			foreach (var update in updates)
@@ -382,15 +497,18 @@ namespace ProSuite.AGP.WorkList.Domain
 				var tableId = new GdbTableIdentity(update.Key);
 				List<long> oids = update.Value;
 
-				ProcessUpdates(tableId, oids);
+				ProcessUpdates(tableId, oids, invalidFeatures);
 
 				// does not work because ObjectIDs = (IReadOnlyList<long>) modify.Value (oids) are the
 				// ObjectIds of source feature not the work item OIDs.
 				//IEnumerable<IWorkItem> workItems = GetItems(filter);
 			}
+
+			OnWorkListChanged(null, invalidFeatures);
 		}
 
-		private void ProcessDeletes(GdbTableIdentity tableId, List<long> oids)
+		private void ProcessDeletes(GdbTableIdentity tableId, List<long> oids,
+		                            List<long> invalidFeatures)
 		{
 			foreach (long oid in oids)
 			{
@@ -405,7 +523,8 @@ namespace ProSuite.AGP.WorkList.Domain
 				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
 				{
 					RemoveWorkItem(item);
-					// todo daro: WorkListChanged > invalidate map
+
+					invalidFeatures.Add(item.OID);
 				}
 			}
 
@@ -433,7 +552,8 @@ namespace ProSuite.AGP.WorkList.Domain
 			OnWorkListChanged(null, new List<long> {current.OID});
 		}
 
-		private void ProcessInserts(GdbTableIdentity tableId, List<long> oids)
+		private void ProcessInserts(GdbTableIdentity tableId, List<long> oids,
+		                            List<long> invalidFeatures)
 		{
 			var filter = new QueryFilter {ObjectIDs = oids};
 
@@ -454,6 +574,8 @@ namespace ProSuite.AGP.WorkList.Domain
 				}
 
 				UpdateExtent(item.Extent);
+
+				invalidFeatures.Add(item.OID);
 			}
 		}
 
@@ -462,15 +584,18 @@ namespace ProSuite.AGP.WorkList.Domain
 			Extent = Extent.Union(itemExtent);
 		}
 
-		private void ProcessUpdates(GdbTableIdentity tableId, IEnumerable<long> oids)
+		private void ProcessUpdates(GdbTableIdentity tableId, IEnumerable<long> oids,
+		                            List<long> invalidFeatures)
 		{
 			foreach (long oid in oids)
 			{
 				if (_rowMap.TryGetValue(new GdbRowIdentity(oid, tableId), out IWorkItem item))
 				{
-					Repository.UpdateItem(item);
+					Repository.Update(item);
 
 					UpdateExtent(item.Extent);
+
+					invalidFeatures.Add(item.OID);
 				}
 			}
 		}
@@ -478,5 +603,13 @@ namespace ProSuite.AGP.WorkList.Domain
 		public bool HasCurrentItem => CurrentIndex >= 0 &&
 		                              _items != null &&
 		                              CurrentIndex < _items.Count;
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		[NotifyPropertyChangedInvocator]
+		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+		{
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+		}
 	}
 }

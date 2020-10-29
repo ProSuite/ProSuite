@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -6,13 +5,11 @@ using System.Windows;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.Editing.Picker;
-using ProSuite.AGP.Picker;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing.PickerUI
 {
 	class Picker : IPicker
-
 	{
 		private PickerViewModel _viewModel;
 		private readonly List<IPickableItem> _candidateList;
@@ -27,7 +24,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 		}
 
 		public Picker([NotNull] List<IPickableItem> candidateList,
-		              [NotNull] Point pickerWindowLocation)
+		              Point pickerWindowLocation)
 		{
 			_candidateList = candidateList;
 			_windowLocation = pickerWindowLocation;
@@ -86,17 +83,18 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 			_viewModel.DisposeOverlays();
 
-			return _viewModel.SelectedItems.ToList<IPickableItem>();
+			return _viewModel.SelectedItems.ToList();
 		}
 
 		private void ShowPickerControl(PickerViewModel vm)
 		{
-			Application.Current.Dispatcher.Invoke(new Action(() =>
+			Application.Current.Dispatcher.Invoke(() =>
 			{
 				PickerWindow window = new PickerWindow(vm);
 				ManageWindowLocation(window);
 				window.ShowDialog();
-			}));
+				vm.DisposeOverlays();
+			});
 		}
 
 		private void ManageWindowLocation(Window window)

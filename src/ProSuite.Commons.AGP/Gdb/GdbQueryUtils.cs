@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -7,6 +6,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Gdb
 {
+	// TODO Should go to ProSuite.Commons.AGP.Core (but then we have to wrap CancelableProgressor)
 	public static class GdbQueryUtils
 	{
 		public static QueryFilter CreateFilter([NotNull] IReadOnlyList<long> oids)
