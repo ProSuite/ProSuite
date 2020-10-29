@@ -124,7 +124,7 @@
     <Compile Include="QA\ScalarTestParameterValue.cs" />
     <Compile Include="QA\TestDefinition.cs" />
     <Compile Include="QA\TestDescriptor.cs" />
-    <Compile Include="QA\TestParameter.cs" />
+    <Compile Include="QA\TestImplementationUtils.cs" />
     <Compile Include="QA\TestParameterType.cs" />
     <Compile Include="QA\TestParameterStringUtils.cs" />
     <Compile Include="QA\TestParameterValue.cs" />
@@ -146,6 +146,10 @@
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons\ProSuite.Commons.csproj">
       <Project>{66e5d99b-26ab-4fff-834d-d96347df4fa4}</Project>
       <Name>ProSuite.Commons</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj">
+      <Project>{01CBBA9E-0D4D-439F-9147-6A5685884A65}</Project>
+      <Name>ProSuite.QA.Core</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

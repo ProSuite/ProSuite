@@ -3,6 +3,7 @@ using System.Globalization;
 using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.Core.QA
 {

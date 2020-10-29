@@ -3,7 +3,7 @@ using System.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.DomainModel.Core.QA
+namespace ProSuite.QA.Core
 {
 	public class TestParameter
 	{

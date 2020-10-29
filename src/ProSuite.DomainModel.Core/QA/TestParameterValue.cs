@@ -4,6 +4,7 @@ using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.Core.QA
 {
