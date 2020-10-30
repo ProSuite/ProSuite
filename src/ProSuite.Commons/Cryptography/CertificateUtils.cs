@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
@@ -30,6 +31,11 @@ namespace ProSuite.Commons.Cryptography
 				X509Certificate2Collection certCollection = store.Certificates;
 
 				certificates = certCollection.Find(findType, searchString, true);
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error finding using {findType} ({searchString})", e);
+				yield break;
 			}
 			finally
 			{
@@ -91,6 +97,32 @@ namespace ProSuite.Commons.Cryptography
 			return GetCertificates(StoreName.Root);
 		}
 
+		[CanBeNull]
+		public static KeyPair FindKeyCertificatePairFromStore(
+			[NotNull] string searchString,
+			[NotNull] IEnumerable<X509FindType> findTypes,
+			StoreName storeName, StoreLocation storeLocation)
+		{
+			foreach (X509FindType findType in findTypes)
+			{
+				_msg.DebugFormat("Searching certificate store ({0}/{1}) trying {2} ({3})",
+				                 storeName, storeLocation, findType, searchString);
+
+				var foundCertificates =
+					FindValidCertificatesWithPrivateKey(
+						storeName, storeLocation, searchString, findType).ToList();
+
+				KeyPair keyPair = GetCertificatePair(foundCertificates);
+
+				if (keyPair != null)
+				{
+					return keyPair;
+				}
+			}
+
+			return null;
+		}
+
 		public static string GetUserRootCertificatesInPemFormat()
 		{
 			return ExportCertificatesToPem(GetUserRootCertificates());
@@ -137,6 +169,63 @@ namespace ProSuite.Commons.Cryptography
 			}
 
 			return stringBuilder.ToString();
+		}
+
+		[CanBeNull]
+		private static KeyPair GetCertificatePair(
+			[NotNull] IReadOnlyList<X509Certificate2> foundCertificates)
+		{
+			if (foundCertificates == null)
+			{
+				throw new ArgumentNullException(nameof(foundCertificates));
+			}
+
+			if (foundCertificates.Count == 0)
+			{
+				_msg.Debug("No certificate found.");
+				return null;
+			}
+
+			// If several were find, use the first that works:
+			foreach (X509Certificate2 certificate in foundCertificates)
+			{
+				if (! certificate.HasPrivateKey)
+				{
+					_msg.DebugFormat(
+						"Certificate {0} has no private key. It cannot be used as server credentials.",
+						certificate);
+
+					continue;
+				}
+
+				if (! certificate.Verify())
+				{
+					_msg.DebugFormat(
+						"Certificate {0} is not valid. It cannot be used as server credentials.",
+						certificate);
+
+					continue;
+				}
+
+				_msg.DebugFormat("Trying to extract private key from certificate {0}...",
+				                 certificate);
+
+				string publicCertificateChain = ExportToPem(certificate);
+
+				string privateKeyValue;
+				string notificationMsg;
+				if (! TryExportPrivateKey(certificate, out privateKeyValue,
+				                          out notificationMsg))
+				{
+					_msg.Debug(notificationMsg);
+
+					continue;
+				}
+
+				return new KeyPair(privateKeyValue, publicCertificateChain);
+			}
+
+			return null;
 		}
 
 		private static void AddAsPem(X509Certificate2 certificate,
@@ -193,7 +282,7 @@ namespace ProSuite.Commons.Cryptography
 				// CryptographicException: "Keyset does not exist" -> This works when running as administrator.
 				RSA rsaPrivateKey = certificate.GetRSAPrivateKey();
 
-				// CryptographicException: "The requested operation is not supported"
+				// CryptographicException: "The requested operation is not supported" (e.g. the key is not exportable)
 				parameters = rsaPrivateKey.ExportParameters(true);
 			}
 			catch (CryptographicException e)
@@ -201,7 +290,7 @@ namespace ProSuite.Commons.Cryptography
 				_msg.Debug("Error getting private key from certificate.", e);
 
 				notifications =
-					$"Cannot get private key from certificate {certificate}, possibly due to access restriction ({e.Message}). Try as administrator?";
+					$"Cannot get private key from certificate {certificate}, possibly due to access restriction ({e.Message}).";
 
 				return false;
 			}
@@ -210,7 +299,7 @@ namespace ProSuite.Commons.Cryptography
 				_msg.Debug("Error getting private key from certificate.", e);
 
 				notifications =
-					$"Cannot get private key from certificate {certificate}, possibly due to access restriction ({e.Message}). Try as administrator?";
+					$"Cannot get private key from certificate {certificate}, possibly due to access restriction ({e.Message}).";
 
 				return false;
 			}
