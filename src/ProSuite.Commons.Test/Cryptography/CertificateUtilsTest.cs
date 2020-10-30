@@ -94,5 +94,36 @@ namespace ProSuite.Commons.Test.Cryptography
 				Console.WriteLine("{0} {1}", msg, certWithPrivateKey);
 			}
 		}
+
+		[Test]
+		[Ignore("In some cases this opens a UI requesting a smart card.")]
+		public void CanGetPrivateKeyFromPersonalCertificate()
+		{
+			foreach (X509Certificate2 certWithPrivateKey in CertificateUtils.GetCertificates(
+				StoreName.My, StoreLocation.CurrentUser, c => c.HasPrivateKey))
+			{
+				// The key might not be exportable...
+
+				bool canExport =
+					CertificateUtils.TryExportPrivateKey(certWithPrivateKey, out string _,
+					                                     out string _);
+
+				string msg = canExport ? "Successfully exported " : "Export failed for ";
+				Console.WriteLine("{0} {1}", msg, certWithPrivateKey);
+			}
+		}
+
+		[Test]
+		public void CanGetCertificatesInChain()
+		{
+			var found = CertificateUtils.GetCertificates(StoreName.My).ToList();
+
+			Assert.IsTrue(found.Count > 0);
+
+			foreach (var cert in CertificateUtils.GetCertificatesInChain(found[0]))
+			{
+				Console.WriteLine(cert);
+			}
+		}
 	}
 }

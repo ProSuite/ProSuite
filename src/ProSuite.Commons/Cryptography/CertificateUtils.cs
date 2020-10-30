@@ -132,9 +132,19 @@ namespace ProSuite.Commons.Cryptography
 		/// Export a certificate (the public key) to a PEM format string.
 		/// </summary>
 		/// <param name="certificate">The certificate to export</param>
+		/// <param name="fullChain"></param>
 		/// <returns>A PEM encoded string</returns>
-		public static string ExportToPem([NotNull] X509Certificate2 certificate)
+		public static string ExportToPem([NotNull] X509Certificate2 certificate,
+		                                 bool fullChain = false)
 		{
+			if (fullChain)
+			{
+				IEnumerable<X509Certificate2> certificatesInChain =
+					GetCertificatesInChain(certificate);
+
+				return ExportCertificatesToPem(certificatesInChain);
+			}
+
 			StringBuilder stringBuilder = new StringBuilder();
 
 			AddAsPem(certificate, stringBuilder);
@@ -169,6 +179,21 @@ namespace ProSuite.Commons.Cryptography
 			}
 
 			return stringBuilder.ToString();
+		}
+
+		public static IEnumerable<X509Certificate2> GetCertificatesInChain(
+			[NotNull] X509Certificate2 certificate)
+		{
+			using (X509Chain chain = new X509Chain())
+			{
+				chain.ChainPolicy.RevocationMode = X509RevocationMode.Online;
+				chain.Build(certificate);
+
+				foreach (X509ChainElement chainElement in chain.ChainElements)
+				{
+					yield return chainElement.Certificate;
+				}
+			}
 		}
 
 		[CanBeNull]
@@ -210,7 +235,7 @@ namespace ProSuite.Commons.Cryptography
 				_msg.DebugFormat("Trying to extract private key from certificate {0}...",
 				                 certificate);
 
-				string publicCertificateChain = ExportToPem(certificate);
+				string publicCertificateChain = ExportToPem(certificate, true);
 
 				string privateKeyValue;
 				string notificationMsg;
