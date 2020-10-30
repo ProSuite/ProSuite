@@ -289,6 +289,10 @@
       <Project>{824DDBE3-EDAF-460B-B513-386A4260C1FF}</Project>
       <Name>ProSuite.DomainModel</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Processing\ProSuite.Processing.csproj">
+      <Project>{0b72e886-b428-48ed-ba96-9cd6fcc5e171}</Project>
+      <Name>ProSuite.Processing</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.QA.Configurator\ProSuite.QA.Configurator.csproj">
       <Project>{7C22C12F-3645-45DD-946B-8189816D39D3}</Project>
       <Name>ProSuite.QA.Configurator</Name>

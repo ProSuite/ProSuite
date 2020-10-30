@@ -8,6 +8,7 @@ using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
@@ -57,7 +58,7 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 			get => GetProcessItems().ToList();
 		}
 
-		private string _configText = "";
+		private string _configText = "Parameter = Value\r\nParameter = Value\r\netc.";
 		public string ConfigText
 		{
 			get => _configText;
@@ -99,6 +100,8 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 				var process = new AlignMarkers(); // TODO get by ProcessName from some repo
 				bool isValid = process.Validate(config);
+
+				var task = QueuedTask.Run(() => {}); // TODO remainder on MCT
 
 				process.Initialize(config);
 

@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
+using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Processing.Evaluation;
+using ProSuite.Processing.Utils;
 
 namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 {
 	public class AlignMarkers : CartoProcess
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
 		public override string Name => nameof(AlignMarkers);
 
 		public ProcessDatasetName InputDataset { get; set; }
@@ -72,7 +73,7 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 			{
 				engine.Execute();
 
-				// TODO engine.ReportProcessComplete("{0} features aligned", engine.FeaturesAligned);
+				engine.ReportProcessComplete("{0} features aligned", engine.FeaturesAligned);
 			}
 		}
 
@@ -83,17 +84,64 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 			private readonly ProcessingDataset _inputDataset;
 			private readonly IList<ProcessingDataset> _referenceDatasets;
 			private readonly double _searchDistance;
-			private readonly object _markerFieldSetter; // TODO
+			private readonly FieldSetter _markerFieldSetter;
 
 			public AlignMarkersEngine(AlignMarkers config, IProcessingContext context, IProcessingFeedback feedback)
-				: base(context, feedback)
+				: base(config.Name, context, feedback)
 			{
-				_inputDataset = null;
+				_inputDataset =
+					OpenRequiredDataset(config.InputDataset, nameof(config.InputDataset));
+
+				_referenceDatasets = OpenDatasetList();
+
+				_searchDistance = ProcessingUtils.Clip(
+					config.SearchDistance, 0, double.MaxValue,
+					nameof(config.SearchDistance));
+
+				_markerFieldSetter = ProcessingUtils.CreateFieldSetter(
+					config.MarkerAttributes, _inputDataset.FeatureClass,
+					nameof(config.MarkerAttributes));
 			}
+
+			public int FeaturesAligned { get; private set; }
 
 			public override void Execute()
 			{
-				_msg.Info($"Hello from {nameof(AlignMarkersEngine)}");
+				TotalFeatures = CountFeatures(_inputDataset);
+				if (TotalFeatures == 0)
+				{
+					return;
+				}
+
+				foreach (var feature in GetFeatures(_inputDataset))
+				{
+					CheckCancel();
+
+					try
+					{
+						ReportStartFeature(feature);
+
+						if (AllowModification(feature, out string reason))
+						{
+							ProcessFeature(feature);
+
+							ReportFeatureProcessed(feature);
+						}
+						else
+						{
+							ReportFeatureSkipped(feature, reason);
+						}
+					}
+					catch (Exception ex)
+					{
+						ReportFeatureFailed(feature, ex);
+					}
+				}
+			}
+
+			private void ProcessFeature([NotNull] Feature feature)
+			{
+
 			}
 		}
 	}
