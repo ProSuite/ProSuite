@@ -68,6 +68,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.AGP.Core.T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.Editing.Test", "ProSuite.AGP.Editing.Test\ProSuite.AGP.Editing.Test.csproj", "{A6DE7214-500C-4AD9-A9BA-28F36930862F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Processing", "ProSuite.Processing\ProSuite.Processing.csproj", "{0B72E886-B428-48ED-BA96-9CD6FCC5E171}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -182,6 +184,10 @@ Global
 		{A6DE7214-500C-4AD9-A9BA-28F36930862F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A6DE7214-500C-4AD9-A9BA-28F36930862F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A6DE7214-500C-4AD9-A9BA-28F36930862F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B72E886-B428-48ED-BA96-9CD6FCC5E171}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B72E886-B428-48ED-BA96-9CD6FCC5E171}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B72E886-B428-48ED-BA96-9CD6FCC5E171}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B72E886-B428-48ED-BA96-9CD6FCC5E171}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
