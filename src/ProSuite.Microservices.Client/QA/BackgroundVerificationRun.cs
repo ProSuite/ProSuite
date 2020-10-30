@@ -129,6 +129,8 @@ namespace ProSuite.Microservices.Client.QA
 			}
 			catch (RpcException rpcException)
 			{
+				_msg.Debug("Error in rpc: ", rpcException);
+
 				if (rpcException.StatusCode == StatusCode.Cancelled)
 				{
 					return Progress.RemoteCallStatus = ServiceCallStatus.Cancelled;
