@@ -3,11 +3,15 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.InteropServices;
+using System.Text;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
+using ProSuite.Commons.Logging;
+using ProSuite.Processing.Utils;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 using Polygon = ArcGIS.Core.Geometry.Polygon;
 using SpatialReference = ArcGIS.Core.Geometry.SpatialReference;
@@ -38,6 +42,57 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 	public interface IProcessingFeedback
 	{
+		/// <summary>
+		/// Assume subsequent reports pertain to this process group
+		/// </summary>
+		string CurrentGroup { get; set; }
+
+		/// <summary>
+		/// Assume subsequent reports pertain to this process
+		/// </summary>
+		CartoProcess CurrentProcess { get; set; }
+
+		/// <summary>
+		/// Assume subsequent reports pertain to this feature
+		/// </summary>
+		Feature CurrentFeature { get; set; }
+
+		void ReportInfo([NotNull] string text);
+
+		[StringFormatMethod("format")]
+		void ReportInfo([NotNull] string format, params object[] args);
+
+		void ReportWarning([NotNull] string text, Exception exception = null);
+
+		void ReportError([NotNull] string text, Exception exception = null);
+
+		/// <summary>
+		/// Report progress to whom it may concern.
+		/// </summary>
+		/// <remarks>
+		/// Implementors shall interpret a percentage below 1 or above 100 as indefinite.
+		/// The <paramref name="text"/> is typically something like "ProcessName: feature M of N".
+		/// </remarks>
+		void ReportProgress(int percentage, [CanBeNull] string text);
+
+		/// <summary>
+		/// Report that processing was stopped by the user.
+		/// </summary>
+		void ReportStopped();
+
+		/// <summary>
+		/// Report that processing has completed (with or without errors).
+		/// </summary>
+		void ReportCompleted();
+
+		/// <summary>
+		/// Return true if the user requests cancelling the process.
+		/// </summary>
+		/// <remarks>
+		/// Processes should frequently check this property.
+		/// When detecting a cancel request, the typical reaction is
+		/// to throw an OperationCanceledException.
+		/// </remarks>
 		bool CancellationPending { get; }
 	}
 
@@ -155,23 +210,108 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 		public void SetSystemFields(RowBuffer row, Table table)
 		{
-			throw new NotImplementedException();
+			// TODO (for now assume no system fields)
 		}
 
 		public IEnumerable<Feature> GetFeatures(FeatureClass featureClass, string whereClause, Geometry extent = null,
 		                                        bool recycling = false)
 		{
-			throw new NotImplementedException();
+			// TODO support for Selected Features
+
+			var filter = CreateFilter(whereClause, extent);
+			using (var cursor = featureClass.Search(filter, recycling))
+			{
+				while (cursor.MoveNext())
+				{
+					using (var row = cursor.Current)
+					{
+						if (row is Feature feature)
+						{
+							yield return feature;
+						}
+					}
+				}
+			}
 		}
 
 		public int CountFeatures(FeatureClass featureClass, string whereClause, Geometry extent = null)
 		{
-			throw new NotImplementedException();
+			// TODO support for Selected Features
+
+			QueryFilter filter = CreateFilter(whereClause, extent);
+
+			return featureClass.GetCount(filter);
+		}
+
+		private static QueryFilter CreateFilter(string whereClause, Geometry extent)
+		{
+			QueryFilter filter;
+
+			if (extent != null)
+			{
+				filter = new SpatialQueryFilter
+				         {
+					         FilterGeometry = extent,
+					         SpatialRelationship = SpatialRelationship.Intersects
+				         };
+			}
+			else
+			{
+				filter = new QueryFilter();
+			}
+
+			if (! string.IsNullOrEmpty(whereClause))
+			{
+				filter.WhereClause = whereClause;
+			}
+
+			return filter;
 		}
 	}
 
 	public class ProProcessingFeedback : IProcessingFeedback
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		public string CurrentGroup { get; set; }
+		public CartoProcess CurrentProcess { get; set; }
+		public Feature CurrentFeature { get; set; }
+
+		public void ReportInfo(string text)
+		{
+			_msg.Info(text);
+		}
+
+		public void ReportInfo(string format, params object[] args)
+		{
+			_msg.InfoFormat(format, args);
+		}
+
+		public void ReportWarning(string text, Exception exception = null)
+		{
+			_msg.Warn(text, exception);
+		}
+
+		public void ReportError(string text, Exception exception = null)
+		{
+			_msg.Error(text, exception);
+		}
+
+		public void ReportProgress(int percentage, string text)
+		{
+			// nothing here, but may kick some progress bar
+		}
+
+		public void ReportStopped()
+		{
+			_msg.Warn("Processing stopped");
+		}
+
+		public void ReportCompleted()
+		{
+			_msg.Info("Processing completed");
+		}
+
 		public bool CancellationPending => false;
 	}
 
@@ -194,14 +334,22 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 	public abstract class CartoProcessEngineBase : IDisposable
 	{
-		protected CartoProcessEngineBase(IProcessingContext context, IProcessingFeedback feedback)
+		protected CartoProcessEngineBase(string name, IProcessingContext context, IProcessingFeedback feedback)
 		{
+			Name = name ?? nameof(CartoProcess);
 			Context = context ?? throw new ArgumentNullException(nameof(context));
 			Feedback = feedback ?? throw new ArgumentNullException(nameof(feedback));
 		}
 
+		protected string Name { get; }
 		protected IProcessingContext Context { get; }
 		protected IProcessingFeedback Feedback { get; }
+
+		public int TotalFeatures { get; set; }
+		private int FeaturesStarted { get; set; }
+		public int FeaturesProcessed { get; set; }
+		public int FeaturesSkipped { get; set; }
+		public int FeaturesFailed { get; set; }
 
 		public abstract void Execute();
 
@@ -276,6 +424,187 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 			result.AddRange(datasets.Select(dataset => OpenDataset(dataset)));
 
 			return result;
+		}
+
+		#endregion
+
+		protected int CountFeatures(ProcessingDataset dataset, Geometry extent = null)
+		{
+			return Context.CountFeatures(dataset.FeatureClass, dataset.WhereClause, extent);
+		}
+
+		protected IEnumerable<Feature> GetFeatures(ProcessingDataset dataset, Geometry extent = null, bool recycling = false)
+		{
+			return Context.GetFeatures(dataset.FeatureClass, dataset.WhereClause, extent, recycling);
+		}
+
+		#region Reporting
+
+		protected void ReportInfo(string message)
+		{
+			Feedback.ReportInfo(message);
+		}
+
+		[StringFormatMethod("format")]
+		protected void ReportInfo(string format, params object[] args)
+		{
+			Feedback.ReportInfo(format, args);
+		}
+
+		protected void ReportWarning(string message)
+		{
+			Feedback.ReportWarning(message);
+		}
+
+		[StringFormatMethod("format")]
+		protected void ReportWarning(string format, params object[] args)
+		{
+			Feedback.ReportWarning(string.Format(format, args));
+		}
+
+		protected void ReportError(Exception exception, string message)
+		{
+			Feedback.ReportError(message, exception);
+		}
+
+		[StringFormatMethod("format")]
+		protected void ReportError(Exception exception, string format, params object[] args)
+		{
+			Feedback.ReportError(string.Format(format, args), exception);
+		}
+
+		protected void ReportProgress(int percentage, string message)
+		{
+			Feedback.ReportProgress(percentage, message);
+		}
+
+		[StringFormatMethod("format")]
+		protected void ReportProgress(int percentage, string format, params object[] args)
+		{
+			ReportProgress(percentage, string.Format(format, args));
+		}
+
+		//protected void ReportProgress(int currentStep, int totalSteps, string message)
+		//{
+		//    float ratio = currentStep / (float) totalSteps;
+		//    int percentage = (int) (100.0 * ratio);
+
+		//    _feedback.ReportProgress(percentage, message);
+		//}
+
+		private void ReportFeatureProgress()
+		{
+			int tally = FeaturesProcessed + FeaturesSkipped + FeaturesFailed;
+
+			tally = Math.Max(tally, FeaturesStarted); // use FeaturesStarted (if maintained)
+
+			if (tally > 0 && TotalFeatures > 0)
+			{
+				float ratio = tally / (float) TotalFeatures;
+				var percentage = (int) Math.Round(100.0 * ratio);
+
+				string text = $"{Name}: feature {tally:N0} of {TotalFeatures:N0}";
+
+				Feedback.ReportProgress(percentage, text);
+			}
+			else
+			{
+				Feedback.ReportProgress(0, Name);
+			}
+		}
+
+		protected void ReportStartFeature(Feature feature)
+		{
+			FeaturesStarted += 1;
+
+			Feedback.CurrentFeature = feature;
+
+			ReportFeatureProgress();
+		}
+
+		protected void ReportFeatureProcessed(Feature feature)
+		{
+			FeaturesProcessed += 1;
+
+			Feedback.CurrentFeature = null;
+
+			ReportFeatureProgress();
+		}
+
+		protected void ReportFeatureSkipped(Feature feature, string reason)
+		{
+			FeaturesSkipped += 1;
+
+			Feedback.ReportWarning(
+				string.Format("Feature ({0}) skipped: {1}",
+				              ProcessingUtils.Format(feature), reason));
+
+			Feedback.CurrentFeature = null;
+
+			ReportFeatureProgress();
+		}
+
+		protected void ReportFeatureFailed(Feature feature, Exception ex)
+		{
+			FeaturesFailed += 1;
+
+			if (ex is COMException comEx)
+			{
+				Feedback.ReportError(
+					string.Format("Feature ({0}) failed (COMException: ErrorCode = {1}): {2}",
+					              ProcessingUtils.Format(feature), comEx.ErrorCode,
+					              comEx.Message), comEx);
+			}
+			else
+			{
+				Feedback.ReportError(
+					string.Format("Feature ({0}) failed: {1}",
+					              ProcessingUtils.Format(feature), ex.Message), ex);
+			}
+
+			Feedback.CurrentFeature = null;
+
+			ReportFeatureProgress();
+		}
+
+		public void ReportProcessComplete(string message = null)
+		{
+			// Leave CurrentGroup as is
+			Feedback.CurrentProcess = null;
+			Feedback.CurrentFeature = null;
+
+			StringBuilder sb = GetProcessCompleteMessage();
+
+			if (! string.IsNullOrEmpty(message))
+			{
+				sb.Append(", ");
+				sb.Append(message);
+			}
+
+			Feedback.ReportInfo(sb.ToString());
+		}
+
+		[StringFormatMethod("format")]
+		public void ReportProcessComplete(string format, params object[] args)
+		{
+			ReportProcessComplete(string.Format(format, args));
+		}
+
+		private StringBuilder GetProcessCompleteMessage()
+		{
+			var sb = new StringBuilder();
+
+			sb.AppendFormat("GdbProcess {0} completed", Name);
+
+			if (TotalFeatures >= 0)
+			{
+				// Processing was feature-by-feature, give some feature stats:
+				sb.Append(", ");
+				sb.AppendFormat("{0:N0}/{1:N0}/{2:N0} features processed/skipped/failed",
+				                FeaturesProcessed, FeaturesSkipped, FeaturesFailed);
+			}
+
+			return sb;
 		}
 
 		#endregion

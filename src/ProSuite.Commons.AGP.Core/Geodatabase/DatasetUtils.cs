@@ -4,7 +4,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
-	[CLSCompliant(false)]
 	public static class DatasetUtils
 	{
 		[NotNull]
