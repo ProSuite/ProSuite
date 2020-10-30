@@ -23,18 +23,18 @@ namespace ProSuite.UI.QA.VerificationProgress
 			if (viewModel.CloseAction == null)
 			{
 				viewModel.CloseAction = () =>
-				                        {
-					                        if (_hostWinForm != null)
-					                        {
-						                        _hostWinForm.Close();
-					                        }
-					                        else
-					                        {
-						                        var wpfWindow = Window.GetWindow(this);
+				{
+					if (_hostWinForm != null)
+					{
+						_hostWinForm.Close();
+					}
+					else
+					{
+						var wpfWindow = Window.GetWindow(this);
 
-						                        Assert.NotNull(wpfWindow).Close();
-					                        }
-				                        };
+						Assert.NotNull(wpfWindow).Close();
+					}
+				};
 			}
 
 			DataContext = viewModel;

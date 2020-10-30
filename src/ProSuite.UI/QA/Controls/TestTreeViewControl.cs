@@ -11,7 +11,6 @@ using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.DataModel;
 using ProSuite.UI.Properties;
-using ProSuite.UI.QA.VerificationResult;
 
 //using ProSuite.UI.QA.VerificationResult;
 
@@ -544,6 +543,7 @@ namespace ProSuite.UI.QA.Controls
 					{
 						continue;
 					}
+
 					uniqueDatasets.Add(dataset.Name, dataset);
 
 					var datasetCategoryItem = new DatasetCategoryItem(dataset.DatasetCategory);
@@ -595,7 +595,8 @@ namespace ProSuite.UI.QA.Controls
 						continue;
 					}
 
-					IDictionary datasetDict = new SortedDictionary<Dataset, object>(datasetComparer);
+					IDictionary datasetDict =
+						new SortedDictionary<Dataset, object>(datasetComparer);
 					result.Add(datasetCategoryItem, datasetDict);
 				}
 			}
@@ -665,7 +666,8 @@ namespace ProSuite.UI.QA.Controls
 						}
 						else
 						{
-							throw new NotImplementedException("Unhandled child type " + sub.GetType());
+							throw new NotImplementedException(
+								"Unhandled child type " + sub.GetType());
 						}
 					}
 				}

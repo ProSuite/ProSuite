@@ -40,8 +40,8 @@ namespace ProSuite.UI.QA.Controls
 				_textBoxTestDescription.ReadOnly = value;
 
 				Color backColor = value
-				                  	? _readOnlyBackColor
-				                  	: _writableBackColor;
+					                  ? _readOnlyBackColor
+					                  : _writableBackColor;
 
 				_textBoxName.BackColor = backColor;
 				_textBoxTestDescription.BackColor = backColor;
@@ -91,12 +91,12 @@ namespace ProSuite.UI.QA.Controls
 				                        : qualityCondition.Category.GetQualifiedName();
 
 			_textBoxTest.Text = qualityCondition.TestDescriptor == null
-			                    	? "<not defined>"
-			                    	: qualityCondition.TestDescriptor.Name;
+				                    ? "<not defined>"
+				                    : qualityCondition.TestDescriptor.Name;
 
 			_textBoxTestDescription.Text = GetDescription(qualityCondition);
-			
-			if (String.IsNullOrEmpty(qualityCondition.Url))
+
+			if (string.IsNullOrEmpty(qualityCondition.Url))
 			{
 				ClearUrl();
 			}

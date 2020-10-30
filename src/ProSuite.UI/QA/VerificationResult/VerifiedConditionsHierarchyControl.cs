@@ -4,7 +4,6 @@ using System.Drawing;
 using System.Linq;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.UI.QA.VerificationResult;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.UI.QA.Controls;
@@ -385,6 +384,7 @@ namespace ProSuite.UI.QA.VerificationResult
 				{
 					return false;
 				}
+
 				return
 					_tag == o._tag &&
 					_location.X == o._location.X &&
@@ -405,11 +405,13 @@ namespace ProSuite.UI.QA.VerificationResult
 			{
 				return false;
 			}
+
 			int n = x.Count;
 			if (n != y.Count)
 			{
 				return false;
 			}
+
 			for (var i = 0; i < n; i++)
 			{
 				if (x[i].Equals(y[i]) == false)
@@ -417,6 +419,7 @@ namespace ProSuite.UI.QA.VerificationResult
 					return false;
 				}
 			}
+
 			return true;
 		}
 

@@ -49,7 +49,8 @@ namespace ProSuite.UI.QA.Controls
 			_textBoxName.Text = testDescriptor.Name;
 			_textBoxImplementation.Text = GetImplementation(testDescriptor);
 
-			var testImplementationInfo = TestImplementationUtils.GetTestImplementationInfo(testDescriptor);
+			var testImplementationInfo =
+				TestImplementationUtils.GetTestImplementationInfo(testDescriptor);
 
 			_textBoxTestDescription.Text = testImplementationInfo == null
 				                               ? string.Empty
@@ -64,7 +65,8 @@ namespace ProSuite.UI.QA.Controls
 			{
 				_textBoxSignature.Text = testImplementationInfo == null
 					                         ? "Unable to create test signature"
-					                         : TestImplementationUtils.GetTestSignature(testImplementationInfo);
+					                         : TestImplementationUtils.GetTestSignature(
+						                         testImplementationInfo);
 			}
 			catch (Exception e)
 			{

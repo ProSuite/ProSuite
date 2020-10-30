@@ -48,6 +48,7 @@ namespace ProSuite.UI.QA.Controls
 						valueList = new List<TestParameterValue>();
 						paramDictionary.Add(paramValue.TestParameterName, valueList);
 					}
+
 					valueList.Add(paramValue);
 				}
 
@@ -81,8 +82,8 @@ namespace ProSuite.UI.QA.Controls
 
 			var testFactory = TestImplementationUtils.GetTestImplementationInfo(_testDescriptor);
 			return testFactory?.Parameters
-			              .FirstOrDefault(x => x.Name == parameterName)
-			              ?.Description;
+			                  .FirstOrDefault(x => x.Name == parameterName)
+			                  ?.Description;
 		}
 
 		private void _dataGridViewTestParameters_CurrentCellChanged(object sender,

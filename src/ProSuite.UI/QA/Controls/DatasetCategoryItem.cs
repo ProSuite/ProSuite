@@ -26,10 +26,12 @@ namespace ProSuite.UI.QA.Controls
 			{
 				return false;
 			}
+
 			if (ReferenceEquals(this, other))
 			{
 				return true;
 			}
+
 			return Equals(other.Name, Name);
 		}
 
@@ -39,14 +41,17 @@ namespace ProSuite.UI.QA.Controls
 			{
 				return false;
 			}
+
 			if (ReferenceEquals(this, obj))
 			{
 				return true;
 			}
+
 			if (obj.GetType() != typeof(DatasetCategoryItem))
 			{
 				return false;
 			}
+
 			return Equals((DatasetCategoryItem) obj);
 		}
 

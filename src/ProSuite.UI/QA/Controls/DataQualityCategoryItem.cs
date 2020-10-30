@@ -44,10 +44,12 @@ namespace ProSuite.UI.QA.Controls
 			{
 				return false;
 			}
+
 			if (ReferenceEquals(this, other))
 			{
 				return true;
 			}
+
 			return Equals(Category, other.Category);
 		}
 
@@ -57,14 +59,17 @@ namespace ProSuite.UI.QA.Controls
 			{
 				return false;
 			}
+
 			if (ReferenceEquals(this, obj))
 			{
 				return true;
 			}
+
 			if (obj.GetType() != GetType())
 			{
 				return false;
 			}
+
 			return Equals((DataQualityCategoryItem) obj);
 		}
 

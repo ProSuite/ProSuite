@@ -53,11 +53,11 @@ namespace ProSuite.UI.QA.VerificationResult
 				_columnFullTime.MaximumTime = maximumTime;
 
 				_latch.RunInsideLatch(() =>
-				                      {
-					                      DataGridViewSortState sortState = GetSortState();
-					                      _gridHandler.BindTo(bindingList);
-					                      RestoreSortState(sortState);
-				                      });
+				{
+					DataGridViewSortState sortState = GetSortState();
+					_gridHandler.BindTo(bindingList);
+					RestoreSortState(sortState);
+				});
 			}
 			finally
 			{
@@ -100,10 +100,12 @@ namespace ProSuite.UI.QA.VerificationResult
 					{
 						continue;
 					}
+
 					datasets.Add(dataset);
 
-					VerifiedDatasetItem item = CreateVerifiedDatasetItem(qualityVerification, dataset,
-					                                                     conditionVerification);
+					VerifiedDatasetItem item = CreateVerifiedDatasetItem(
+						qualityVerification, dataset,
+						conditionVerification);
 
 					if (item.TotalTime > maximumTime)
 					{

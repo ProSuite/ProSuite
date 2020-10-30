@@ -39,8 +39,8 @@ namespace ProSuite.UI.DataModel
 				foreach (Dataset dataset in datasets)
 				{
 					string categoryName = (dataset.DatasetCategory != null)
-					                      	? dataset.DatasetCategory.Name
-					                      	: null;
+						                      ? dataset.DatasetCategory.Name
+						                      : null;
 					string imageKey = DatasetTypeImageLookup.GetImageKey(dataset);
 
 					_groupedListView.AddItem(dataset.DisplayName, categoryName, imageKey);
