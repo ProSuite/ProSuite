@@ -34,8 +34,8 @@
     <DefineConstants>TRACE;$(VSArcGISProduct)</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-	<DocumentationFile>$(OutputDirectory)\Release\ProSuite.Commons.AO.xml</DocumentationFile>
-	<NoWarn>1591</NoWarn>
+    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.Commons.AO.xml</DocumentationFile>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ESRI.ArcGIS.DataSourcesGDB, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
@@ -78,6 +78,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="GrpcServerUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProtobufConversionUtils.cs" />
     <Compile Include="TrackCancellationToken.cs" />
