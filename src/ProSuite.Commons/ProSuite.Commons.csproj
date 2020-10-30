@@ -68,6 +68,7 @@
     <Compile Include="Com\StaTaskScheduler.cs" />
     <Compile Include="ConfigurationDirectoryProvider.cs" />
     <Compile Include="ConfigurationDirectorySearcher.cs" />
+    <Compile Include="Cryptography\CertificateUtils.cs" />
     <Compile Include="Cryptography\PropertyValueEncryptionUtils.cs" />
     <Compile Include="Cryptography\StringEncryptor.cs" />
     <Compile Include="Cryptography\StringEncryptorBase.cs" />

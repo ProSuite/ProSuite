@@ -48,6 +48,7 @@
     <Compile Include="CommandLine\ArgumentsTest.cs" />
     <Compile Include="CommandLine\UsageWriterTest.cs" />
     <Compile Include="ConversionUtilsTest.cs" />
+    <Compile Include="Cryptography\CertificateUtilsTest.cs" />
     <Compile Include="DomainModels\ModelElementNameUtilsTest.cs" />
     <Compile Include="DomainModels\VariantValueTest.cs" />
     <Compile Include="DomainModels\EncryptedStringTest.cs" />
