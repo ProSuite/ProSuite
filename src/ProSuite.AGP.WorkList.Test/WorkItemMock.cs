@@ -1,48 +1,14 @@
-using System;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.Commons.AGP.Gdb;
+using ProSuite.AGP.WorkList.Domain;
 
 namespace ProSuite.AGP.WorkList.Test
 {
-	public class WorkItemMock : IWorkItem
+	public class WorkItemMock : WorkItem
 	{
-		public WorkItemMock(int oid)
+		public WorkItemMock(int id, Geometry geometry = null) : base(id, geometry)
 		{
-			OID = oid;
 			Status = WorkItemStatus.Todo;
-		}
-
-		public int OID { get; }
-		public bool Visited { get; set; }
-		public GdbRowIdentity Proxy { get; }
-		public WorkItemStatus Status { get; set; }
-		public Envelope Extent { get; }
-		public string Description { get; }
-		public GeometryType? GeometryType { get; set; }
-
-		public void QueryPoints(out double xmin, out double ymin, out double xmax, out double ymax,
-		                        out double zmax,
-		                        double minimumSize)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void QueryPoints(out double xmin, out double ymin, out double xmax, out double ymax,
-		                        out double zmax)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void SetDone(bool done = true)
-		{
-			throw new NotImplementedException();
-		}
-
-		[Obsolete("use Visited property")]
-		public void SetVisited(bool visited = true)
-		{
-			throw new NotImplementedException();
 		}
 
 		public override string ToString()

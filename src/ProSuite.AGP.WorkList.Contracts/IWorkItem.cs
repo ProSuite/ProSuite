@@ -12,6 +12,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		Envelope Extent { get; }
 		string Description { get; }
 		GeometryType? GeometryType { get; }
+		bool HasGeometry { get; set; }
 
 		void QueryPoints(out double xmin, out double ymin,
 		                 out double xmax, out double ymax,

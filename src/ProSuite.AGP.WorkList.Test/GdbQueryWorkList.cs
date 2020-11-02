@@ -11,7 +11,8 @@ namespace ProSuite.AGP.WorkList.Test
 			base(repository, name) { }
 
 		public override IEnumerable<IWorkItem> GetItems(QueryFilter filter = null,
-		                                                bool ignoreListSettings = false)
+		                                                bool ignoreListSettings = false,
+		                                                int startIndex = 0)
 		{
 			return Repository.GetItems(filter);
 		}

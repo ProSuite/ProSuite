@@ -51,6 +51,7 @@
     <Compile Include="Geodatabase\DatasetUtils.cs" />
     <Compile Include="Geodatabase\GdbObjectUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Spatial\GeometryFactory.cs" />
     <Compile Include="Spatial\GeometryUtils.cs" />
   </ItemGroup>
   <ItemGroup>

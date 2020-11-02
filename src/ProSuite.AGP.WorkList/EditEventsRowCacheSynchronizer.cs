@@ -87,16 +87,15 @@ namespace ProSuite.AGP.WorkList
 					continue;
 				}
 
-				using (var table = featureLayer.GetTable())
+				Table table = featureLayer.GetTable();
+
+				if (! result.ContainsKey(table))
 				{
-					if (! result.ContainsKey(table))
-					{
-						result.Add(table, pair.Value.ToList());
-					}
-					else
-					{
-						result[table].AddRange(pair.Value);
-					}
+					result.Add(table, pair.Value.ToList());
+				}
+				else
+				{
+					result[table].AddRange(pair.Value);
 				}
 			}
 
