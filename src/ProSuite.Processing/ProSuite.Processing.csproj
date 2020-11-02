@@ -57,6 +57,7 @@
     <Compile Include="Evaluation\EvaluatorEngine.cs" />
     <Compile Include="Evaluation\ExpressionEvaluator.cs" />
     <Compile Include="Evaluation\FieldSetter.cs" />
+    <Compile Include="Evaluation\FieldSetterExtensions.cs" />
     <Compile Include="Evaluation\FindFieldCache.cs" />
     <Compile Include="Evaluation\Function.cs" />
     <Compile Include="Evaluation\IEvaluationEnvironment.cs" />
