@@ -310,6 +310,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			SketchType = GetSketchGeometryType();
 
 			UseSnapping = true;
+			CompleteSketchOnMouseUp = false;
 
 			SetCursor(SketchCursor);
 
