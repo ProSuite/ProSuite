@@ -55,78 +55,79 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 			if (text == null) return;
 
-			int index = 0;
+			var position = new Position();
 
-			SkipWhite(text, ref index);
+			SkipWhite(text, position);
 
-			while (index < text.Length)
+			while (position.Index < text.Length)
 			{
-				string name = ScanName(text, ref index);
+				string name = ScanName(text, position);
 				if (string.IsNullOrEmpty(name))
-					throw SyntaxError("Expect parameter name (position {0})", index);
+					throw SyntaxError(position, "Expect parameter name");
 
-				SkipWhite(text, ref index);
-				if (ScanOperator(text, ref index, ':', '=') == (char) 0)
-					throw SyntaxError("Expect '=' operator (position {0})", index);
-				SkipWhite(text, ref index);
+				SkipWhite(text, position);
+				if (ScanOperator(text, position, ':', '=') == (char) 0)
+					throw SyntaxError(position, "Expect '=' operator");
+				SkipWhite(text, position);
 
-				string value = ScanValue(text, ref index);
+				string value = ScanValue(text, position);
 				if (value == null)
-					throw SyntaxError("Expect value (position {0})", index);
+					throw SyntaxError(position, "Expect a value");
 				_settings.Add(new KeyValuePair<string, object>(name, value));
 
-				SkipWhite(text, ref index);
-				SkipOperator(text, ref index, ';', '\n');
-				SkipWhite(text, ref index);
+				SkipWhite(text, position);
+				SkipOperator(text, position, ';', '\n');
+				SkipWhite(text, position);
 			}
 		}
 
-		private static string ScanValue(string text, ref int index)
+		private static string ScanValue(string text, Position position)
 		{
-			if (index >= text.Length)
+			if (position.Index >= text.Length)
 				return null;
 
-			char c = text[index];
+			char c = text[position.Index];
 			if (c == '\'')
-				return ScanSqlString(text, ref index);
+				return ScanSqlString(text, position);
 
 			if (c == '"')
-				return ScanString(text, ref index);
+				return ScanString(text, position);
 
-			return ScanToDelim(text, ref index, ';', '\n');
+			return ScanToDelim(text, position, ';', '\n');
 		}
 
-		private static string ScanToDelim(string text, ref int index, char d1, char d2)
+		private static string ScanToDelim(string text, Position position, char d1, char d2)
 		{
 			char c;
-			int anchor = index;
-			while (index < text.Length && (c = text[index]) != d1 && c != d2)
+			int anchor = position.Index;
+			while (position.Index < text.Length && (c = text[position.Index]) != d1 && c != d2)
 			{
-				index += 1;
+				position.Advance(text);
 			}
 
-			return text.Substring(anchor, index - anchor).Trim();
+			return text.Substring(anchor, position.Index - anchor).Trim();
 		}
 
-		private static string ScanSqlString(string text, ref int index)
+		private static string ScanSqlString(string text, Position position)
 		{
-			Assert.True(index < text.Length, "Bug");
-			Assert.True(text[index] == '\'', "Bug");
+			Assert.True(position.Index < text.Length, "Bug");
 
 			var sb = new StringBuilder();
-			char quote = text[index];
-			int anchor = index++; // skip opening apostrophe
+			char quote = text[position.Index];
+			int anchor = position.Index;
+			position.Advance(text); // skip opening apostrophe
 
-			while (index < text.Length)
+			while (position.Index < text.Length)
 			{
-				char cc = text[index++];
+				char cc = text[position.Index];
+				position.Advance(text);
 
 				if (cc == quote)
 				{
-					if (index < text.Length && text[index] == quote)
+					if (position.Index < text.Length && text[position.Index] == quote)
 					{
 						sb.Append(quote); // un-escape
-						index += 1; // skip 2nd apostrophe
+						position.Advance(text); // skip 2nd apostrophe
 					}
 					else
 					{
@@ -139,25 +140,26 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 				}
 			}
 
-			throw SyntaxError("Unterminated string starting at position {0}", anchor);
+			throw SyntaxError(position, "Unterminated string starting at position {0}", anchor);
 		}
 
-		private static string ScanString(string text, ref int index)
+		private static string ScanString(string text, Position position)
 		{
-			Assert.True(index < text.Length, "Bug");
-			Assert.True(text[index] == '"', "Bug");
+			Assert.True(position.Index < text.Length, "Bug");
 
 			var sb = new StringBuilder();
-			char quote = text[index];
-			int anchor = index++; // skip opening quote
+			char quote = text[position.Index];
+			int anchor = position.Index;
+			position.Advance(text); // skip opening quote
 
-			while (index < text.Length)
+			while (position.Index < text.Length)
 			{
-				char cc = text[index++];
+				char cc = text[position.Index];
+				position.Advance(text);
 
 				if (cc < ' ')
 				{
-					throw SyntaxError("Control character in string (position {0})", index - 1);
+					throw SyntaxError(position, "Control character in string");
 				}
 
 				if (cc == quote)
@@ -167,12 +169,15 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 				if (cc == '\\')
 				{
-					if (index >= text.Length)
+					if (position.Index >= text.Length)
 					{
 						break;
 					}
 
-					switch (cc = text[index++])
+					cc = text[position.Index];
+					position.Advance(text);
+
+					switch (cc)
 					{
 						case '"':
 						case '\'':
@@ -196,9 +201,9 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 							sb.Append('\t');
 							break;
 						case 'u':
-							throw SyntaxError("\\u#### is not yet implemented (position {0}", index);
+							throw SyntaxError(position, "\\u#### is not yet implemented");
 						default:
-							throw SyntaxError("Invalid escape '\\{0}' in string (position {1})", cc, index);
+							throw SyntaxError(position, "Invalid escape '\\{0}' in string", cc);
 					}
 				}
 				else
@@ -207,55 +212,82 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 				}
 			}
 
-			throw SyntaxError("Unterminated string starting at position {0}", anchor);
+			throw SyntaxError(position, "Unterminated string starting at position {0}", anchor);
 		}
 
-		private static string ScanName(string text, ref int index)
+		private static string ScanName(string text, Position position)
 		{
 			char cc;
-			if (index >= text.Length || ((cc = text[index]) != '_' && !char.IsLetter(cc)))
+			if (position.Index >= text.Length || (cc = text[position.Index]) != '_' && !char.IsLetter(cc))
 			{
 				return null; // not a name at text[index...]
 			}
 
-			int anchor = index;
-			while (index < text.Length && ((cc = text[index]) == '_' || char.IsLetterOrDigit(cc)))
+			int anchor = position.Index;
+			while (position.Index < text.Length && ((cc = text[position.Index]) == '_' || char.IsLetterOrDigit(cc)))
 			{
-				index += 1;
+				position.Advance(text);
 			}
 
-			return text.Substring(anchor, index - anchor);
+			return text.Substring(anchor, position.Index - anchor);
 		}
 
-		private static char ScanOperator(string text, ref int index, char op1, char op2)
+		private static char ScanOperator(string text, Position position, char op1, char op2)
 		{
-			if (index >= text.Length) return (char) 0;
-			char c = text[index];
+			if (position.Index >= text.Length) return (char) 0;
+			char c = text[position.Index];
 			if (c != op1 && c != op2) return (char) 0;
-			index += 1;
+			position.Advance(text);
 			return c;
 		}
 
-		private static void SkipOperator(string text, ref int index, char op1, char op2)
+		private static void SkipOperator(string text, Position position, char op1, char op2)
 		{
-			if (index >= text.Length) return;
-			char c = text[index];
+			if (position.Index >= text.Length) return;
+			char c = text[position.Index];
 			if (c != op1 && c != op2) return;
-			index += 1;
+			position.Advance(text);
 		}
 
-		private static void SkipWhite(string text, ref int index)
+		private static void SkipWhite(string text, Position position)
 		{
-			while (index < text.Length && char.IsWhiteSpace(text, index))
+			while (position.Index < text.Length && char.IsWhiteSpace(text, position.Index))
 			{
-				index += 1;
+				position.Advance(text);
 			}
 		}
 
 		[StringFormatMethod("format")]
-		private static FormatException SyntaxError(string format, params object[] args)
+		private static FormatException SyntaxError(Position position, string format, params object[] args)
 		{
-			return new FormatException(string.Format(format, args));
+			return new FormatException(string.Format(format, args) +
+			                           $" (line {position.LineNumber} position {position.LinePosition}");
+		}
+
+		private class Position
+		{
+			public int Index { get; private set; }
+			public int LineNumber { get; private set; }
+			public int LinePosition { get; private set; }
+
+			public Position()
+			{
+				Index = 0;
+				LineNumber = 1;
+				LinePosition = 1;
+			}
+
+			public void Advance(string text)
+			{
+				if (text[Index] == '\n')
+				{
+					LinePosition = 0;
+					LineNumber += 1;
+				}
+
+				LinePosition += 1;
+				Index += 1;
+			}
 		}
 	}
 }

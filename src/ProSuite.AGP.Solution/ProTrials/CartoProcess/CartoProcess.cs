@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
@@ -24,6 +25,11 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		// ProcessSelectionType
 
 		Geodatabase Geodatabase { get; }
+
+		[CanBeNull]
+		Map Map { get; }
+
+		ProcessingDataset OpenDataset(ProcessDatasetName name);
 
 		[CanBeNull]
 		Polygon GetProcessingPerimeter();
@@ -164,17 +170,19 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 	public class ProcessingDataset
 	{
 		public string DatasetName { get; }
-		public string WhereClause { get; }
+		public string WhereClause { get; } // logically ANDed with any FeatureLayer definition query
 		public FeatureClass FeatureClass { get; }
+		public FeatureLayer FeatureLayer { get; } // optional; if present, use selection!
 		public GeometryType ShapeType { get; }
 		public double XYTolerance { get; }
 		public SpatialReference SpatialReference { get; }
 
-		public ProcessingDataset(ProcessDatasetName datasetName, Geodatabase database)
+		public ProcessingDataset(ProcessDatasetName datasetName, FeatureClass featureClass, FeatureLayer featureLayer = null)
 		{
 			DatasetName = datasetName.DatasetName;
 			WhereClause = datasetName.WhereClause;
-			FeatureClass = database.OpenDataset<FeatureClass>(datasetName.DatasetName); // MCT
+			FeatureClass = featureClass ?? throw new ArgumentNullException(nameof(featureClass));
+			FeatureLayer = featureLayer; // may be nuzll
 
 			var definition = FeatureClass.GetDefinition(); // bombs on joined FC
 			ShapeType = definition.GetShapeType(); // MCT
@@ -185,9 +193,10 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 	public class ProProcessingContext : IProcessingContext
 	{
-		public ProProcessingContext([NotNull] Geodatabase geodatabase)
+		public ProProcessingContext([NotNull] Geodatabase geodatabase, [CanBeNull] Map map)
 		{
 			Geodatabase = geodatabase ?? throw new ArgumentNullException(nameof(geodatabase));
+			Map = map;
 		}
 
 		public Polygon GetProcessingPerimeter()
@@ -196,6 +205,42 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		}
 
 		public Geodatabase Geodatabase { get; }
+
+		public Map Map { get; }
+
+		public ProcessingDataset OpenDataset(ProcessDatasetName name)
+		{
+			if (name == null) return null;
+
+			var featureClass = Geodatabase.OpenDataset<FeatureClass>(name.DatasetName); // MCT
+			var featureLayer = FindLayer(Map, featureClass);
+
+			return new ProcessingDataset(name, featureClass, featureLayer);
+		}
+
+		[CanBeNull]
+		private static FeatureLayer FindLayer(Map map, FeatureClass featureClass)
+		{
+			if (map == null || featureClass == null) return null;
+			var layers = map.GetLayersAsFlattenedList()
+			                .OfType<FeatureLayer>()
+			                .Where(lyr => ProcessingUtils.IsSameTable(GetBaseTable(lyr.GetFeatureClass()), featureClass));
+
+			return layers.SingleOrDefault(); // bombs if duplicate - ok?
+		}
+
+		private static T GetBaseTable<T>(T layerTable) where T : Table
+		{
+			if (layerTable == null)
+				return null;
+			if (! layerTable.IsJoinedTable())
+				return layerTable;
+
+			var join = layerTable.GetJoin();
+			var baseTable = join.GetDestinationTable();
+
+			return (T) baseTable;
+		}
 
 		public bool CanExecute(CartoProcess process)
 		{
@@ -218,7 +263,7 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		{
 			// TODO support for Selected Features
 
-			var filter = CreateFilter(whereClause, extent);
+			var filter = ProcessingUtils.CreateFilter(whereClause, extent);
 			using (var cursor = featureClass.Search(filter, recycling))
 			{
 				while (cursor.MoveNext())
@@ -238,34 +283,9 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		{
 			// TODO support for Selected Features
 
-			QueryFilter filter = CreateFilter(whereClause, extent);
+			QueryFilter filter = ProcessingUtils.CreateFilter(whereClause, extent);
 
 			return featureClass.GetCount(filter);
-		}
-
-		private static QueryFilter CreateFilter(string whereClause, Geometry extent)
-		{
-			QueryFilter filter;
-
-			if (extent != null)
-			{
-				filter = new SpatialQueryFilter
-				         {
-					         FilterGeometry = extent,
-					         SpatialRelationship = SpatialRelationship.Intersects
-				         };
-			}
-			else
-			{
-				filter = new QueryFilter();
-			}
-
-			if (! string.IsNullOrEmpty(whereClause))
-			{
-				filter.WhereClause = whereClause;
-			}
-
-			return filter;
 		}
 	}
 
@@ -319,17 +339,35 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 	{
 		public abstract string Name { get; }
 
-		public abstract bool Validate(CartoProcessConfig config);
+		public virtual bool Validate(CartoProcessConfig config)
+		{
+			return true;
+		}
 
 		public abstract void Initialize(CartoProcessConfig config);
 
-		public abstract IEnumerable<ProcessDatasetName> GetOriginDatasets();
+		public virtual IEnumerable<ProcessDatasetName> GetOriginDatasets()
+		{
+			yield break;
+		}
 
-		public abstract IEnumerable<ProcessDatasetName> GetDerivedDatasets();
+		public virtual IEnumerable<ProcessDatasetName> GetDerivedDatasets()
+		{
+			yield break;
+		}
 
-		public abstract bool CanExecute(IProcessingContext context);
+		public virtual bool CanExecute(IProcessingContext context)
+		{
+			return context.CanExecute(this);
+		}
 
 		public abstract void Execute(IProcessingContext context, IProcessingFeedback feedback);
+
+		[StringFormatMethod("format")]
+		protected static Exception ConfigError(string format, params object[] args)
+		{
+			return new Exception(string.Format(format, args));
+		}
 	}
 
 	public abstract class CartoProcessEngineBase : IDisposable
@@ -403,7 +441,8 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		[ContractAnnotation("dataset:null => null")]
 		protected ProcessingDataset OpenDataset([CanBeNull] ProcessDatasetName dataset)
 		{
-			return dataset == null ? null : new ProcessingDataset(dataset, Context.Geodatabase);
+			if (dataset == null) return null;
+			return Context.OpenDataset(dataset);
 		}
 
 		/// <summary>
@@ -416,12 +455,12 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		/// never <c>null</c>, but it may contain <c>null</c> entries!</returns>
 		/// <remarks>Null entries are allowed to easily cope with optional dataset parameters.</remarks>
 		[NotNull]
-		protected IList<ProcessingDataset> OpenDatasetList(
-			params ProcessDatasetName[] datasets)
+		protected IList<ProcessingDataset> OpenDatasets(
+			ICollection<ProcessDatasetName> datasets)
 		{
-			var result = new List<ProcessingDataset>(datasets.Length);
+			var result = new List<ProcessingDataset>(datasets.Count);
 
-			result.AddRange(datasets.Select(dataset => OpenDataset(dataset)));
+			result.AddRange(datasets.Select(OpenDataset));
 
 			return result;
 		}

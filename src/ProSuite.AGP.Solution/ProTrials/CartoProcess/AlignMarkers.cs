@@ -1,11 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
+using ProSuite.Commons;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Processing.Evaluation;
 using ProSuite.Processing.Utils;
+using MapPoint = ArcGIS.Core.Geometry.MapPoint;
 
 namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 {
@@ -17,11 +22,6 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		public IList<ProcessDatasetName> ReferenceDatasets { get; set; }
 		public double SearchDistance { get; set; }
 		public string MarkerAttributes { get; set; }
-
-		public override bool Validate(CartoProcessConfig config)
-		{
-			return true;
-		}
 
 		public override void Initialize(CartoProcessConfig config)
 		{
@@ -46,25 +46,9 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 			// Note: parameter name for lists: Dataset (sg) or Datasets (pl)?
 		}
 
-		[StringFormatMethod("format")]
-		protected static Exception ConfigError(string format, params object[] args)
-		{
-			return new Exception(string.Format(format, args));
-		}
-
 		public override IEnumerable<ProcessDatasetName> GetOriginDatasets()
 		{
 			yield return InputDataset;
-		}
-
-		public override IEnumerable<ProcessDatasetName> GetDerivedDatasets()
-		{
-			yield break; // no derived datasets
-		}
-
-		public override bool CanExecute(IProcessingContext context)
-		{
-			return context.CanExecute(this);
 		}
 
 		public override void Execute(IProcessingContext context, IProcessingFeedback feedback)
@@ -86,13 +70,16 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 			private readonly double _searchDistance;
 			private readonly FieldSetter _markerFieldSetter;
 
+			private const string InputQualifier = "input";
+			private const string ReferenceQualifier = "reference";
+
 			public AlignMarkersEngine(AlignMarkers config, IProcessingContext context, IProcessingFeedback feedback)
 				: base(config.Name, context, feedback)
 			{
 				_inputDataset =
 					OpenRequiredDataset(config.InputDataset, nameof(config.InputDataset));
 
-				_referenceDatasets = OpenDatasetList();
+				_referenceDatasets = OpenDatasets(config.ReferenceDatasets);
 
 				_searchDistance = ProcessingUtils.Clip(
 					config.SearchDistance, 0, double.MaxValue,
@@ -141,7 +128,109 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 			private void ProcessFeature([NotNull] Feature feature)
 			{
+				var shape = feature.GetShape();
+				var point = Assert.NotNull(shape as MapPoint, "Input shape is not MapPoint");
 
+				IDictionary<Feature, double> distanceByFeature =
+					GetNearFeatures(point, _referenceDatasets, _searchDistance);
+
+				if (distanceByFeature.Count == 0)
+				{
+					_msg.DebugFormat(
+						"Marker feature {0}: No reference feature found within search distance of {1}",
+						ProcessingUtils.Format(feature), _searchDistance);
+					return;
+				}
+
+				var nearest = distanceByFeature.OrderBy(f => f.Value).First();
+
+				var referenceFeature = Assert.NotNull(nearest.Key, "Oops, bug");
+				var distance = nearest.Value; // may be zero
+
+				var referenceShape = referenceFeature.GetShape();
+				var referenceCurve = Assert.NotNull(referenceShape as Multipart,
+				                                    "Reference shape is not Multipart");
+
+				double distanceAlongCurve = GeometryUtils.GetDistanceAlongCurve(referenceCurve, point);
+
+				double normalLength = Math.Max(_inputDataset.XYTolerance, distance);
+				var normalPoly = GeometryEngine.Instance.QueryNormal(
+					referenceCurve, SegmentExtension.NoExtension, distanceAlongCurve,
+					AsRatioOrLength.AsLength, normalLength);
+				var normal = (LineSegment) normalPoly.Parts[0][0]; // TODO safety guards
+
+				double tangentLength = Math.Max(_inputDataset.XYTolerance, distance);
+				var tangentPoly = GeometryEngine.Instance.QueryNormal(
+					referenceCurve, SegmentExtension.NoExtension, distanceAlongCurve,
+					AsRatioOrLength.AsLength, tangentLength);
+				var tangent = (LineSegment) tangentPoly.Parts[0][0]; // TODO safety guards
+
+				// ILine.Angle is the angle between line and positive x axis,
+				// but the Angle property of a representation marker has its
+				// zero point at North: add 90° to ILine.Angle to fix:
+
+				double normalOffset = MathUtils.ToDegrees(normal.Angle) - 90;
+				double normalAngle = ProcessingUtils.ToPositiveDegrees(normalOffset);
+
+				double tangentOffset = MathUtils.ToDegrees(tangent.Angle) - 90;
+				double tangentAngle = ProcessingUtils.ToPositiveDegrees(tangentOffset);
+
+				_markerFieldSetter.ForgetAll()
+				                  .DefineFields(feature, InputQualifier)
+								  .DefineFields(referenceFeature, ReferenceQualifier)
+				                  .DefineValue("normalAngle", normalAngle)
+				                  .DefineValue("tangentAngle", tangentAngle)
+				                  .DefineValue("distance", distance)
+				                  .Execute(feature);
+
+				feature.Store();
+
+				FeaturesAligned += 1;
+
+				_msg.DebugFormat(
+					"Marker feature {0}: aligned to {1} (normalAngle: {2}, tangentAngle: {3}, distance: {4})",
+					ProcessingUtils.Format(feature), ProcessingUtils.Format(referenceFeature),
+					normalAngle, tangentAngle, distance);
+			}
+
+			[NotNull]
+			private IDictionary<Feature, double> GetNearFeatures(
+				[NotNull] Geometry geometry,
+				[NotNull] IEnumerable<ProcessingDataset> datasets,
+				double searchDistance)
+			{
+				Assert.ArgumentNotNull(geometry, nameof(geometry));
+				Assert.ArgumentNotNull(datasets, nameof(datasets));
+
+				var result = new Dictionary<Feature, double>();
+
+				Envelope searchExtent = geometry.Extent;
+
+				var expandedExtent = searchExtent.Expand(searchDistance, searchDistance, false);
+				bool f = ReferenceEquals(expandedExtent, searchExtent); // hypothesis: false (Pro SDK geoms are said to be immutable)
+				searchExtent = expandedExtent;
+
+				foreach (ProcessingDataset dataset in datasets.Where(dataset => dataset != null))
+				{
+					foreach (Feature feature in GetFeatures(dataset, searchExtent))
+					{
+						Geometry otherShape = feature.GetShape();
+
+						if (otherShape is Polygon)
+						{
+							// want the outline of the polygon:
+							otherShape = GeometryEngine.Instance.Boundary(otherShape);
+						}
+
+						double distance = GeometryEngine.Instance.Distance(geometry, otherShape);
+						if (distance <= searchDistance)
+						{
+							result.Add(feature, distance);
+						}
+					}
+				}
+
+				return result;
 			}
 		}
 	}

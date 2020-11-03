@@ -50,6 +50,11 @@ namespace ProSuite.AGP.WorkList.Domain
 			Status = WorkItemStatus.Todo;
 		}
 
+		protected WorkItem(int id, Geometry geometry) : this(id, default(GdbRowIdentity))
+		{
+			SetGeometry(geometry);
+		}
+
 		#endregion
 
 		public bool HasGeometry { get; set; }
@@ -154,6 +159,11 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			Geometry geometry = feature?.GetShape();
 
+			SetGeometry(geometry);
+		}
+
+		private void SetGeometry([CanBeNull] Geometry geometry)
+		{
 			Envelope extent = geometry?.Extent;
 			GeometryType = geometry?.GeometryType;
 

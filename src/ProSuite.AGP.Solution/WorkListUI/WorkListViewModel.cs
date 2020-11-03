@@ -17,6 +17,7 @@ using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.WorkListUI
@@ -162,7 +163,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem);
 				Status = CurrentWorkItem.Status;
 				Visited = CurrentWorkItem.Visited;
-				CurrentIndex = CurrentWorkList.DisplayIndex;
+				CurrentIndex = CurrentWorkList.CurrentIndex;
 				Count = GetCount();
 			}
 		}
@@ -200,7 +201,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		public int CurrentIndex
 		{
-			get => CurrentWorkList.DisplayIndex;
+			get => CurrentWorkList.CurrentIndex;
 			set { SetProperty(ref _currentIndex, value, () => CurrentIndex); }
 		}
 
@@ -273,8 +274,10 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			{
 				//var shapeJson = e.features.First().GetShape().ToJson();
 				var OID = e.features.First().GetObjectID();
-				IWorkItem selectedItem = CurrentWorkList.GetItems().FirstOrDefault(item => item.OID == OID);
-				foreach (var item in CurrentWorkList.GetItems())
+
+				QueryFilter filter = GdbQueryUtils.CreateFilter(new[] {OID});
+				IWorkItem selectedItem = CurrentWorkList.GetItems(filter).FirstOrDefault();
+				foreach (var item in CurrentWorkList.GetItems(null, false))
 				{
 					Console.WriteLine(item.OID);
 					Console.WriteLine(item.Extent.ToJson());

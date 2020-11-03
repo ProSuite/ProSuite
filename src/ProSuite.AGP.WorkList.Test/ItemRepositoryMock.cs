@@ -9,6 +9,7 @@ namespace ProSuite.AGP.WorkList.Test
 	public class ItemRepositoryMock : IWorkItemRepository
 	{
 		private readonly IEnumerable<IWorkItem> _items;
+		private int _currentIndex;
 
 		public ItemRepositoryMock(IEnumerable<IWorkItem> items)
 		{
@@ -36,10 +37,7 @@ namespace ProSuite.AGP.WorkList.Test
 			throw new NotImplementedException();
 		}
 
-		public void Update(IWorkItem item)
-		{
-			throw new NotImplementedException();
-		}
+		public void Update(IWorkItem item) { }
 
 		public void Save(IWorkItem item)
 		{
@@ -62,12 +60,12 @@ namespace ProSuite.AGP.WorkList.Test
 
 		public void SetCurrentIndex(int currentIndex)
 		{
-			throw new NotImplementedException();
+			_currentIndex = currentIndex;
 		}
 
 		public int GetCurrentIndex()
 		{
-			throw new NotImplementedException();
+			return _currentIndex;
 		}
 	}
 }

@@ -197,6 +197,60 @@ namespace ProSuite.AGP.WorkList.Test
 		}
 
 		[Test]
+		public void Can_go_nearest()
+		{
+			MapPoint pt7 = PolygonConstruction.CreateMapPoint(7, 0, 0);
+			MapPoint pt10 = PolygonConstruction.CreateMapPoint(10, 0, 0);
+			MapPoint pt15 = PolygonConstruction.CreateMapPoint(15, 0, 0);
+
+			var item7 = new WorkItemMock(7, pt7);
+			var item10 = new WorkItemMock(10, pt10);
+			var item15 = new WorkItemMock(15, pt15);
+
+			var repository = new ItemRepositoryMock(new[] {item7, item10, item15});
+
+			IWorkList wl = new MemoryQueryWorkList(repository, nameof(Can_go_nearest));
+			
+			Geometry reference = PolygonConstruction.CreateMapPoint(11, 0, 0);
+
+			// go to item10
+			Assert.True(wl.CanGoNearest());
+			wl.GoNearest(reference);
+			Assert.AreEqual(item10, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			// go to item7
+			Assert.True(wl.CanGoNearest());
+			Assert.NotNull(wl.Current);
+			wl.GoNearest(wl.Current.Extent);
+			Assert.AreEqual(item7, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			// go to item15
+			Assert.True(wl.CanGoNearest());
+			Assert.NotNull(wl.Current);
+			wl.GoNearest(wl.Current.Extent);
+			Assert.AreEqual(item15, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			// Now all are visited, what is the next item? None because there is no
+			// more item *after* the last item15.
+			// Now we need to go to item *before* the last one.
+			Assert.False(wl.CanGoNearest());
+
+			Assert.True(wl.CanGoPrevious());
+			wl.GoPrevious();
+			Assert.AreEqual(item10, wl.Current);
+
+			// Now we can go nearest again which is item7 (nearst to item10)
+			Assert.True(wl.CanGoNearest());
+			Assert.NotNull(wl.Current);
+			wl.GoNearest(wl.Current.Extent);
+			Assert.AreEqual(item7, wl.Current);
+			Assert.True(wl.Current?.Visited);
+		}
+
+		[Test]
 		public void Cannot_go_first_again_if_first_item_is_set_done()
 		{
 			IWorkItem item1 = new WorkItemMock(1);
