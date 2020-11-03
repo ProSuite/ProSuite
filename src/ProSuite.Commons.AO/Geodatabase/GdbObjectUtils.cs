@@ -454,7 +454,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (value == null || value == DBNull.Value)
 			{
-				_msg.DebugFormat(
+				_msg.VerboseDebugFormat(
 					"ConvertRowValue: Field value at <index> {0} of row is null.",
 					fieldIndex);
 
