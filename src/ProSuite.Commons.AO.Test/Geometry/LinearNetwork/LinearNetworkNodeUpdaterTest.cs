@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
@@ -19,7 +19,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 		}
 
 		[OneTimeTearDown]

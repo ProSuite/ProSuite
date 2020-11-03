@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.esriSystem;
@@ -18,7 +18,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.ChangeAlong
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 		}
 
 		[OneTimeTearDown]

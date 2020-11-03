@@ -34,7 +34,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			[NotNull] Func<IFeatureClass, int, IFeature> getFeatureMethod)
 		{
 			IFeatureWorkspace featureWorkspace =
-				(IFeatureWorkspace) TestUtils.OpenUserWorkspaceOracle();
+				(IFeatureWorkspace) TestUtils.OpenSDEWorkspaceOracle();
 
 			IFeatureClass featureClass =
 				featureWorkspace.OpenFeatureClass("TOPGIS_TLM.TLM_DTM_MASSENPUNKTE");

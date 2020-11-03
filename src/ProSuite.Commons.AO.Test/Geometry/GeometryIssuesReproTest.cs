@@ -23,7 +23,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 		}
 
 		[OneTimeTearDown]
@@ -760,7 +760,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		public void Repro_LinearCircularArc_PureVirtualFunctionCall()
 		{
 			// NIM090330
-			var locator = new TestDataLocator(@"..\..\ProSuite\src");
+			var locator = new TestDataLocator();
 			string mdbPath = locator.GetPath("linearcirculararcs_crash.mdb");
 
 			IWorkspace workspace = WorkspaceUtils.OpenPgdbWorkspace(mdbPath);

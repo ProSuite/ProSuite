@@ -3,6 +3,7 @@ using System.IO;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Reflection;
 
 namespace ProSuite.Commons.AO.Test.TestSupport
 {
@@ -11,12 +12,22 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		private readonly string _testDataRoot;
 
 		private const string _defaultTestDataDir = "TestData";
-		private const string _defaultRelativePath = @"..\..";
+
+		public static TestDataLocator Create(string repositoryName,
+		                                     string testDataDirRelativeToProject =
+			                                     _defaultTestDataDir)
+		{
+			return new TestDataLocator(
+				Assembly.GetCallingAssembly(),
+				GetRelativePathFromBinToSrc(repositoryName),
+				testDataDirRelativeToProject);
+		}
 
 		#region Constructors
 
 		public TestDataLocator()
-			: this(Assembly.GetCallingAssembly(), _defaultRelativePath,
+			: this(Assembly.GetCallingAssembly(),
+			       GetRelativePathFromBinToSrc("ProSuite"),
 			       _defaultTestDataDir) { }
 
 		public TestDataLocator([NotNull] string relativePath)
@@ -184,6 +195,25 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 			return Path.GetFullPath(Path.Combine(assemblyDirectory.FullName,
 			                                     relativePath));
+		}
+
+		private static string GetRelativePathFromBinToSrc(string repositoryName)
+		{
+			var relativeFromBinToRepo = Path.Combine(@"..\..\..\", repositoryName);
+
+			var binDir = ReflectionUtils.GetAssemblyDirectory(Assembly.GetCallingAssembly());
+
+			var candidate = Path.Combine(binDir, relativeFromBinToRepo);
+
+			if (! Directory.Exists(candidate))
+			{
+				// calling from outside the repo:
+				relativeFromBinToRepo = Path.Combine(@"..\..\", repositoryName);
+			}
+
+			var result = Path.Combine(relativeFromBinToRepo, "src");
+
+			return result;
 		}
 
 		#endregion
