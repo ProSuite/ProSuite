@@ -13,6 +13,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		string Description { get; }
 		GeometryType? GeometryType { get; }
 		bool HasGeometry { get; set; }
+		long ObjectID { get; }
 
 		void QueryPoints(out double xmin, out double ymin,
 		                 out double xmax, out double ymax,

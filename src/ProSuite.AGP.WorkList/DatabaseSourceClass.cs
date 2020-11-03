@@ -1,80 +1,73 @@
-using System.Collections.Generic;
-using System.Linq;
+using System;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList
 {
-	public class DatabaseSourceClass : ISourceClass
+	public class DatabaseSourceClass : SourceClass
 	{
-		private readonly GdbTableIdentity _identity;
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private readonly WorkListStatusSchema _statusSchema;
 
 		public DatabaseSourceClass(GdbTableIdentity identity,
-		                           DatabaseStatusSchema statusSchema,
-		                           IAttributeReader attributeReader)
+		                           [NotNull] WorkListStatusSchema statusSchema,
+		                           [NotNull] IAttributeReader attributeReader) : base(identity)
 		{
-			_identity = identity;
-			StatusSchema = statusSchema;
+			Assert.ArgumentNotNull(statusSchema, nameof(statusSchema));
+			Assert.ArgumentNotNull(attributeReader, nameof(attributeReader));
+
+			_statusSchema = statusSchema;
 			AttributeReader = attributeReader;
 		}
 
-		public long Id => _identity.Id;
+		[NotNull]
+		public string StatusFieldName => _statusSchema.FieldName;
 
-		public bool Uses(GdbTableIdentity table)
-		{
-			return _identity.Equals(table);
-		}
+		[NotNull]
+		public IAttributeReader AttributeReader { get; }
 
 		public WorkItemStatus GetStatus([NotNull] Row row)
 		{
-			object value = row[StatusSchema.FieldIndex];
+			Assert.ArgumentNotNull(row, nameof(row));
 
-			return StatusSchema.DoneValue.Equals(value) ? WorkItemStatus.Done : WorkItemStatus.Todo;
-		}
-
-		public string Name => _identity.Name;
-
-		public DatabaseStatusSchema StatusSchema { get; }
-
-		public IAttributeReader AttributeReader { get; }
-
-		[CanBeNull]
-		public Table OpenTable([NotNull] Geodatabase geodatabase)
-		{
-			Assert.ArgumentNotNull(geodatabase, nameof(geodatabase));
-
-			return geodatabase.OpenDataset<Table>(Name);
-		}
-
-		[CanBeNull]
-		public FeatureClass OpenFeatureClass([NotNull] Geodatabase geodatabase)
-		{
-			Assert.ArgumentNotNull(geodatabase, nameof(geodatabase));
-
-			return geodatabase.OpenDataset<FeatureClass>(Name);
-		}
-
-		public IEnumerable<PluginField> GetFields([NotNull] Geodatabase geodatabase)
-		{
-			Assert.ArgumentNotNull(geodatabase, nameof(geodatabase));
-
-			using (var definition = geodatabase.GetDefinition<FeatureClassDefinition>(Name))
+			try
 			{
-				return definition.GetFields()
-				                 .Select(field => new PluginField(
-					                         field.Name, field.AliasName, field.FieldType));
+				object value = row[_statusSchema.FieldIndex];
+
+				return _statusSchema.DoneValue.Equals(value)
+					       ? WorkItemStatus.Done
+					       : WorkItemStatus.Todo;
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error get value from row {row} with index {_statusSchema.FieldIndex}",
+				           e);
+				throw;
 			}
 		}
 
-		public FeatureClassDefinition GetDefinition([NotNull] Geodatabase geodatabase)
+		public virtual object GetValue(WorkItemStatus status)
 		{
-			Assert.ArgumentNotNull(geodatabase, nameof(geodatabase));
+			switch (status)
+			{
+				case WorkItemStatus.Done:
+					return _statusSchema.DoneValue;
 
-			return geodatabase.GetDefinition<FeatureClassDefinition>(Name);
+				case WorkItemStatus.Todo:
+					return _statusSchema.TodoValue;
+
+				case WorkItemStatus.Unknown:
+					return DBNull.Value;
+
+				default:
+					throw new ArgumentException(
+						$@"Illegal status value: {status}", nameof(status));
+			}
 		}
 	}
 }

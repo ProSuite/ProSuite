@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
@@ -37,7 +38,10 @@ namespace ProSuite.AGP.WorkList.Test
 			throw new NotImplementedException();
 		}
 
-		public void Update(IWorkItem item) { }
+		public Task UpdateAsync(IWorkItem item)
+		{
+			return Task.FromResult(0);
+		}
 
 		public void Save(IWorkItem item)
 		{

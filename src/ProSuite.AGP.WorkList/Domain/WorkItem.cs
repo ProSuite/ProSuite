@@ -63,6 +63,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public int OID { get; set; }
 
+		public long ObjectID => Proxy.ObjectId;
+
 		public bool Visited
 		{
 			get => _visited;

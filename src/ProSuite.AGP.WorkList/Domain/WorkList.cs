@@ -99,7 +99,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public void Update(IWorkItem item)
 		{
-			Repository.Update(item);
+			Repository.UpdateAsync(item);
 			
 			OnWorkListChanged(null, new List<long> { item.OID });
 		}
@@ -713,7 +713,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			CurrentIndex = _items.IndexOf(nextItem);
 
 			Repository.SetCurrentIndex(CurrentIndex);
-			Repository.Update(nextItem);
+			Repository.UpdateAsync(nextItem);
 
 			var oids = currentItem != null
 				           ? new List<long> {nextItem.OID, currentItem.OID}
@@ -1041,7 +1041,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				if (_rowMap.TryGetValue(new GdbRowIdentity(oid, tableId), out IWorkItem item))
 				{
-					Repository.Update(item);
+					Repository.UpdateAsync(item);
 
 					UpdateExtent(item.Extent);
 

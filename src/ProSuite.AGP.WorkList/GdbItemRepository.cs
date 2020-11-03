@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
@@ -57,27 +58,37 @@ namespace ProSuite.AGP.WorkList
 
 		public void Refresh(IWorkItem item)
 		{
-			ISourceClass sourceClass = GeodatabaseBySourceClasses.Keys.FirstOrDefault(sc => sc.Uses(item.Proxy.Table));
-			// todo daro: log message
-			Assert.NotNull(sourceClass);
+			GdbTableIdentity tableId = item.Proxy.Table;
 
-			var filter = new QueryFilter { ObjectIDs = new List<long> { item.Proxy.ObjectId } };
-
-			Row row = GetRowsCore(sourceClass, filter, recycle: true).FirstOrDefault();
 			// todo daro: log message
+			ISourceClass source = GeodatabaseBySourceClasses.Keys.FirstOrDefault(sc => sc.Uses(tableId));
+			Assert.NotNull(source);
+
+			Row row = GetRow(source, item.Proxy.ObjectId);
 			Assert.NotNull(row);
-
-			// todo daro: really needed here? Only geometry is updated but
-			//			  the work itmes's state remains the same.
-			item.Status = sourceClass.GetStatus(row);
 
 			if (row is Feature feature)
 			{
 				((WorkItem) item).SetGeometryFromFeature(feature);
 			}
+
+			RefreshCore(item, source, row);
 		}
 
-		public void Update(IWorkItem item)
+		[CanBeNull]
+		private Row GetRow([NotNull] ISourceClass sourceClass, long oid)
+		{
+			var filter = new QueryFilter {ObjectIDs = new List<long> {oid}};
+
+			// todo daro: log message
+			return GetRowsCore(sourceClass, filter, recycle: true).FirstOrDefault();
+		}
+
+		protected virtual void RefreshCore([NotNull] IWorkItem item,
+		                                   [NotNull] ISourceClass sourceClass,
+		                                   [NotNull] Row row) { }
+
+		public async Task UpdateAsync(IWorkItem item)
 		{
 			// selection work list: stores visited, status in work list definition file
 			// issue work list: stores status in db
@@ -88,7 +99,10 @@ namespace ProSuite.AGP.WorkList
 			ISourceClass source = GeodatabaseBySourceClasses.Keys.FirstOrDefault(s => s.Uses(tableId));
 			Assert.NotNull(source);
 
-			UpdateCore(source, item);
+			Row row = GetRow(source, item.Proxy.ObjectId);
+			Assert.NotNull(row);
+
+			await UpdateCoreAsync(item, source, row);
 		}
 
 		// todo daro: rename?
@@ -117,7 +131,12 @@ namespace ProSuite.AGP.WorkList
 			return WorkItemStateRepository.CurrentIndex ?? -1;
 		}
 
-		protected virtual void UpdateCore([NotNull] ISourceClass source, [NotNull] IWorkItem item) { }
+		protected virtual Task UpdateCoreAsync([NotNull] IWorkItem item,
+		                                       [NotNull] ISourceClass source,
+		                                       Row row)
+		{
+			return Task.FromResult(0);
+		}
 
 		protected virtual IEnumerable<Row> GetRowsCore([NotNull] ISourceClass sourceClass, [CanBeNull] QueryFilter filter, bool recycle)
 		{
@@ -137,21 +156,24 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		[CanBeNull]
-		protected virtual DatabaseStatusSchema CreateStatusSchemaCore(FeatureClassDefinition definition)
+		protected virtual WorkListStatusSchema CreateStatusSchemaCore([NotNull] FeatureClassDefinition definition)
 		{
 			return null;
 		}
 
-		[NotNull]
-		protected abstract IAttributeReader CreateAttributeReaderCore([NotNull] FeatureClassDefinition definition);
+		[CanBeNull]
+		protected virtual IAttributeReader CreateAttributeReaderCore([NotNull] FeatureClassDefinition definition)
+		{
+			return null;
+		}
 
 		[NotNull]
 		protected abstract IWorkItem CreateWorkItemCore([NotNull] Row row, ISourceClass source);
 
 		[NotNull]
 		protected abstract ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
-		                                                      [NotNull] IAttributeReader attributeReader,
-		                                                      [CanBeNull] DatabaseStatusSchema statusSchema = null);
+		                                                      [CanBeNull] IAttributeReader attributeReader,
+		                                                      [CanBeNull] WorkListStatusSchema statusSchema);
 
 		private void RegisterDatasets(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase)
 		{
@@ -176,7 +198,6 @@ namespace ProSuite.AGP.WorkList
 		[CanBeNull]
 		protected Table OpenFeatureClass([NotNull] ISourceClass sourceClass)
 		{
-
 			return GeodatabaseBySourceClasses.TryGetValue(sourceClass, out Geodatabase gdb)
 				       ? gdb.OpenDataset<Table>(sourceClass.Name)
 				       : null;
@@ -194,7 +215,7 @@ namespace ProSuite.AGP.WorkList
 		{
 			IAttributeReader attributeReader = CreateAttributeReaderCore(definition);
 
-			DatabaseStatusSchema statusSchema = CreateStatusSchemaCore(definition);
+			WorkListStatusSchema statusSchema = CreateStatusSchemaCore(definition);
 
 			ISourceClass sourceClass = CreateSourceClassCore(identity, attributeReader, statusSchema);
 
@@ -206,6 +227,21 @@ namespace ProSuite.AGP.WorkList
 		public int GetCount(QueryFilter filter = null)
 		{
 			throw new NotImplementedException();
+		}
+
+		public int Count(WorkItemVisibility visibility)
+		{
+			int count = 0;
+
+			foreach (ISourceClass sourceClass in GeodatabaseBySourceClasses.Keys)
+			{
+				//string whereClause = sourceClass.GetQuery(visibility);
+				//var filter = new QueryFilter {WhereClause = whereClause};
+
+				//count += GetRowsCore(sourceClass, filter, recycle: true).Count();
+			}
+
+			return count;
 		}
 
 		public IEnumerable<PluginField> GetFields(IEnumerable<string> fieldNames = null)

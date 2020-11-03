@@ -49,7 +49,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Attributes.cs" />
-    <Compile Include="DatabaseStatusSchema.cs" />
+    <Compile Include="WorkListStatusSchema.cs" />
     <Compile Include="IAttributeReader.cs" />
     <Compile Include="IRowCache.cs" />
     <Compile Include="ISourceClass.cs" />
