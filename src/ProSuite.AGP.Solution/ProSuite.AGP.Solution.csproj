@@ -104,6 +104,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="ProTrials\CartoProcess\CalculateControlPoints.cs" />
     <Compile Include="ProTrials\CartoProcess\CartoProcessDockpane.xaml.cs">
       <DependentUpon>CartoProcessDockpane.xaml</DependentUpon>
     </Compile>

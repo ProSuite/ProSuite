@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -51,6 +51,7 @@
     <Compile Include="Geodatabase\DatasetUtils.cs" />
     <Compile Include="Geodatabase\GdbObjectUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Spatial\ControlPointUtils.cs" />
     <Compile Include="Spatial\GeometryFactory.cs" />
     <Compile Include="Spatial\GeometryUtils.cs" />
   </ItemGroup>

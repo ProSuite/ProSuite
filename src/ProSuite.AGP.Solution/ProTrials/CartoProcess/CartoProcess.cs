@@ -21,8 +21,8 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 {
 	public interface IProcessingContext
 	{
-		// ProcessExecutionType
-		// ProcessSelectionType
+		// TODO ProcessExecutionType
+		// TODO ProcessSelectionType
 
 		Geodatabase Geodatabase { get; }
 
@@ -40,10 +40,15 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 		void SetSystemFields(RowBuffer row, Table table);
 
-		IEnumerable<Feature> GetFeatures(FeatureClass featureClass, string whereClause,
+		IEnumerable<Feature> GetInputFeatures(ProcessingDataset dataset, Geometry extent = null,
+		                                      bool recycling = false);
+
+		int CountInputFeatures(ProcessingDataset dataset, Geometry extent = null);
+
+		IEnumerable<Feature> GetFeatures(ProcessingDataset dataset,
 		                                 Geometry extent = null, bool recycling = false);
 
-		int CountFeatures(FeatureClass featureClass, string whereClause, Geometry extent = null);
+		int CountFeatures(ProcessingDataset dataset, Geometry extent = null);
 	}
 
 	public interface IProcessingFeedback
@@ -56,12 +61,12 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		/// <summary>
 		/// Assume subsequent reports pertain to this process
 		/// </summary>
-		CartoProcess CurrentProcess { get; set; }
+		CartoProcess CurrentProcess { get; set; } // TODO do not hold process, use a proxy (eg process name)
 
 		/// <summary>
 		/// Assume subsequent reports pertain to this feature
 		/// </summary>
-		Feature CurrentFeature { get; set; }
+		Feature CurrentFeature { get; set; } // TODO do not hold feature, use a proxy
 
 		void ReportInfo([NotNull] string text);
 
@@ -126,6 +131,8 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 			string datasetName = text;
 			string whereClause = null;
 
+			// TODO allow "FC where WC" which reads better than "FC; WC"
+
 			int index = text.IndexOf(';');
 			if (index >= 0)
 			{
@@ -170,9 +177,9 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 	public class ProcessingDataset
 	{
 		public string DatasetName { get; }
-		public string WhereClause { get; } // logically ANDed with any FeatureLayer definition query
-		public FeatureClass FeatureClass { get; }
-		public FeatureLayer FeatureLayer { get; } // optional; if present, use selection!
+		[CanBeNull] public string WhereClause { get; } // logically ANDed with any FeatureLayer definition query
+		[NotNull] public FeatureClass FeatureClass { get; }
+		[CanBeNull] public FeatureLayer FeatureLayer { get; } // optional; if present, use selection!
 		public GeometryType ShapeType { get; }
 		public double XYTolerance { get; }
 		public SpatialReference SpatialReference { get; }
@@ -258,34 +265,90 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 			// TODO (for now assume no system fields)
 		}
 
-		public IEnumerable<Feature> GetFeatures(FeatureClass featureClass, string whereClause, Geometry extent = null,
+		public IEnumerable<Feature> GetInputFeatures(ProcessingDataset dataset, Geometry extent = null,
+		                                             bool recycling = false)
+		{
+			// TODO if (SelectionType == SelectedFeatures) ...
+			if (dataset.FeatureLayer != null && dataset.FeatureLayer.SelectionCount > 0)
+			{
+				return GetLayerFeatures(dataset.FeatureLayer, dataset.WhereClause, extent,
+				                        recycling);
+			}
+
+			return GetFeatures(dataset, extent, recycling);
+		}
+
+		/// <summary>
+		/// Caller's duty to dispose features! See ProConcepts Geodatabase: Search
+		/// </summary>
+		public IEnumerable<Feature> GetFeatures(ProcessingDataset dataset, Geometry extent = null,
 		                                        bool recycling = false)
 		{
-			// TODO support for Selected Features
-
-			var filter = ProcessingUtils.CreateFilter(whereClause, extent);
-			using (var cursor = featureClass.Search(filter, recycling))
+			var filter = ProcessingUtils.CreateFilter(dataset.WhereClause, extent);
+			using (var cursor = dataset.FeatureClass.Search(filter, recycling))
 			{
 				while (cursor.MoveNext())
 				{
-					using (var row = cursor.Current)
+					var row = cursor.Current;
+					if (row is Feature feature)
 					{
-						if (row is Feature feature)
-						{
-							yield return feature;
-						}
+						yield return feature;
 					}
 				}
 			}
 		}
 
-		public int CountFeatures(FeatureClass featureClass, string whereClause, Geometry extent = null)
+		private static IEnumerable<Feature> GetLayerFeatures(FeatureLayer featureLayer, string whereClause,
+		                                                     Geometry extent = null,
+		                                                     bool recycling = false)
 		{
-			// TODO support for Selected Features
+			if (featureLayer == null || featureLayer.SelectionCount < 1)
+			{
+				yield break;
+			}
 
-			QueryFilter filter = ProcessingUtils.CreateFilter(whereClause, extent);
+			var selection = featureLayer.GetSelection();
+			var filter = ProcessingUtils.CreateFilter(whereClause, extent);
+			using (var cursor = selection.Search(filter, recycling))
+			{
+				while (cursor.MoveNext())
+				{
+					var row = cursor.Current;
+					if (row is Feature feature)
+					{
+						yield return feature;
+					}
+				}
+			}
+		}
 
-			return featureClass.GetCount(filter);
+		public int CountInputFeatures(ProcessingDataset dataset, Geometry extent = null)
+		{
+			// TODO if (SelectionType == SelectedFeatures) ...
+			if (dataset.FeatureLayer != null && dataset.FeatureLayer.SelectionCount > 0) 
+			{
+				return CountLayerFeatures(dataset.FeatureLayer, dataset.WhereClause, extent);
+			}
+
+			return CountFeatures(dataset, extent);
+		}
+
+		private static int CountLayerFeatures(FeatureLayer featureLayer, string whereClause,
+		                                      Geometry extent = null)
+		{
+			if (featureLayer.SelectionCount < 1) return 0;
+
+			var selection = featureLayer.GetSelection();
+			var filter = ProcessingUtils.CreateFilter(whereClause, extent);
+			selection = selection.Select(filter);
+			return selection.GetCount();
+		}
+
+		public int CountFeatures(ProcessingDataset dataset, Geometry extent = null)
+		{
+			QueryFilter filter = ProcessingUtils.CreateFilter(dataset.WhereClause, extent);
+
+			return dataset.FeatureClass.GetCount(filter);
 		}
 	}
 
@@ -467,15 +530,33 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 		#endregion
 
-		protected int CountFeatures(ProcessingDataset dataset, Geometry extent = null)
+		#region Getting and counting features
+
+		// Note: {Get,Count}InputFeatures honors SelectionType
+
+		protected IEnumerable<Feature> GetInputFeatures(ProcessingDataset dataset,
+		                                                Geometry extent = null,
+		                                                bool recycling = false)
 		{
-			return Context.CountFeatures(dataset.FeatureClass, dataset.WhereClause, extent);
+			return Context.GetInputFeatures(dataset, extent, recycling);
 		}
 
 		protected IEnumerable<Feature> GetFeatures(ProcessingDataset dataset, Geometry extent = null, bool recycling = false)
 		{
-			return Context.GetFeatures(dataset.FeatureClass, dataset.WhereClause, extent, recycling);
+			return Context.GetFeatures(dataset, extent, recycling);
 		}
+
+		protected int CountInputFeatures(ProcessingDataset dataset, Geometry extent = null)
+		{
+			return Context.CountInputFeatures(dataset, extent);
+		}
+
+		protected int CountFeatures(ProcessingDataset dataset, Geometry extent = null)
+		{
+			return Context.CountFeatures(dataset, extent);
+		}
+
+		#endregion
 
 		#region Reporting
 
