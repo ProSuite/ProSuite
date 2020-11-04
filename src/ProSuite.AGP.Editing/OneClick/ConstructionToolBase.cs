@@ -298,12 +298,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnSketchResetCore() { }
 
-		protected void StartSketchPhase()
+		private void StartSketchPhase()
 		{
-			if (IsInSketchMode)
-			{
-				return;
-			}
 
 			SketchOutputMode = SketchOutputMode.Map;
 
