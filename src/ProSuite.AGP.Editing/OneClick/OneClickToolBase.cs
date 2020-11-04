@@ -46,7 +46,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private SketchingMoveType SketchingMoveType { get; set; }
 		protected bool RequiresSelection { get; set; } = true;
-		protected virtual SelectionSettings SelectionSettings { get; set; }
+		protected virtual SelectionSettings SelectionSettings { get; set; } = new SelectionSettings();
 		protected List<Key> HandledKeys { get; } = new List<Key>();
 		protected Cursor SelectionCursor { get; set; }
 		protected Cursor SelectionCursorShift { get; set; }
