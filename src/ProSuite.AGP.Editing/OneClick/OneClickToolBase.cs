@@ -198,7 +198,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (RequiresSelection && IsInSelectionPhase())
 				{
-					await OnSelectionSketchComplete(sketchGeometry, progressor);
+					return await OnSelectionSketchComplete(sketchGeometry, progressor);
 				}
 
 				return await OnSketchCompleteCoreAsync(sketchGeometry, progressor);
