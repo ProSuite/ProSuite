@@ -27,5 +27,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 		// todo daro: is this the right way?
 		void SetCurrentIndex(int currentIndex);
 		int GetCurrentIndex();
+
+		void SetVisited(IWorkItem item);
+
+		Task SetStatus(IWorkItem item, WorkItemStatus status);
 	}
 }

@@ -19,7 +19,9 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			// todo daro: add all
 			// todo daro: does FindField works with qualified field names?
-			_fieldNameByIssueAttribute.Add(Attributes.ObjectID, definition.GetObjectIDField());
+
+			// todo daro: remove, not needed anymore
+			//_fieldNameByIssueAttribute.Add(Attributes.ObjectID, definition.GetObjectIDField());
 
 			_fieldNameByIssueAttribute.Add(Attributes.IssueCode, "Code");
 			_fieldNameByIssueAttribute.Add(Attributes.IssueCodeDescription, "CodeDescription");
@@ -67,13 +69,14 @@ namespace ProSuite.AGP.WorkList.Domain
 		[CanBeNull]
 		public T GetValue<T>([NotNull] Row row, Attributes attribute)
 		{
-			if (_fieldIndexByAttribute.TryGetValue(attribute, out int fieldIndex))
+			if (! _fieldIndexByAttribute.TryGetValue(attribute, out int fieldIndex))
 			{
-				object value = row[fieldIndex];
-				return (T) value;
+				return default;
 			}
 
-			return default;
+			object value = row[fieldIndex];
+
+			return value == null ? default : (T) value;
 		}
 	}
 }

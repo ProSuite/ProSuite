@@ -80,7 +80,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 			foreach (Feature feature in GdbQueryUtils.GetRows<Feature>(_issuePoints))
 			{
-				var item = new IssueItem(0, feature, reader);
+				var item = new IssueItem(0, feature);
 				break;
 			}
 		}

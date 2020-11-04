@@ -51,20 +51,22 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		bool CanGoNearest();
 
+		void GoNearest([NotNull] Geometry reference,
+		               [CanBeNull] Predicate<IWorkItem> match = null,
+		               params Polygon[] contextPerimeters);
+
 		bool CanGoNext();
 		void GoNext();
 
 		bool CanGoPrevious();
 		void GoPrevious();
+		
+		void SetStatus(IWorkItem item, WorkItemStatus status);
 
-		event EventHandler<WorkListChangedEventArgs> WorkListChanged;
-
-		void Update(IWorkItem item);
+		void SetVisited(IWorkItem item);
 
 		void Commit();
 
-		void GoNearest([NotNull] Geometry reference,
-		               [CanBeNull] Predicate<IWorkItem> match = null,
-		               params Polygon[] contextPerimeters);
+		event EventHandler<WorkListChangedEventArgs> WorkListChanged;
 	}
 }

@@ -1,17 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList.Datasource
 {
 	public class WorkItemTable : PluginTableTemplate
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly IWorkList _workList;
 		private readonly string _tableName;
 		private readonly IReadOnlyList<PluginField> _fields;
@@ -63,9 +67,14 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		public override PluginCursorTemplate Search(QueryFilter queryFilter)
 		{
+			Stopwatch watch = _msg.DebugStartTiming();
+
 			List<object[]> list = _workList.GetItems(queryFilter, true)
 			                               .Select(item => GetValues(item, _workList.Current))
 			                               .ToList(); // TODO drop ToList, inline
+
+			_msg.DebugStopTiming(watch, $"{nameof(WorkItemTable)}.{nameof(Search)}(): {list.Count} items");
+
 			return new WorkItemCursor(list);
 		}
 

@@ -25,7 +25,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	public class WorkListViewModel : PropertyChangedBase, IWorkListObserver
 	{
 		private const double _seconds = 0.3;
-		private SelectionWorkList _currentWorkList;
+		private IWorkList _currentWorkList;
 		private WorkItemVm _currentWorkItem;
 		private int _currentIndex;
 		private WorkItemStatus _status;
@@ -39,7 +39,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private RelayCommand _zoomToAllCmd;
 		private RelayCommand _pickWorkItemCmd;
 
-		public WorkListViewModel(SelectionWorkList workList)
+		public WorkListViewModel(IWorkList workList)
 		{
 			CurrentWorkList = workList;
 			CurrentWorkList.GoNext();
@@ -137,18 +137,21 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			get => CurrentWorkItem.Status;
 			set
 			{
-				CurrentWorkItem.Status = value;
+				if (CurrentWorkItem.Status != value)
+				{
+					CurrentWorkItem.Status = value;
 
-				// NOTE: has to run inside QueuedTask because it triggers an event
-				//		 which does MapView.Active.Invalidate
-				QueuedTask.Run(() => { CurrentWorkList.Update(CurrentWorkList.Current); });
+					// NOTE: has to run inside QueuedTask because it triggers an event
+					//		 which does MapView.Active.Invalidate
+					QueuedTask.Run(() => { CurrentWorkList.SetStatus(CurrentWorkList.Current, value); });
+				}
 
 				SetProperty(ref _status, value, () => Status);
 			}
 		}
 
 		// todo daro: of type IWorkList?
-		public SelectionWorkList CurrentWorkList
+		public IWorkList CurrentWorkList
 		{
 			get => _currentWorkList;
 
@@ -288,9 +291,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 					return;
 				}
 
-				CurrentWorkList.GoToOid(selectedItem.OID);
+				//CurrentWorkList.GoToOid(selectedItem.OID);
 				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
-
 			});
 		}
 
