@@ -89,7 +89,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				CreateLayer(environment, workList.Name);
 
-				RegisterObserver(new WorkListViewModel(workList as SelectionWorkList));
+				RegisterObserver(new WorkListViewModel(workList));
 			}
 			catch (Exception e)
 			{
