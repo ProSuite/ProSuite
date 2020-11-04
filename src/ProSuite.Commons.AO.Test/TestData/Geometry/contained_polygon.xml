@@ -1,0 +1,209 @@
+<PolygonN xsi:type='typens:PolygonN' xmlns:xsi='http://www.w3.org/2001/XMLSchema-instance' xmlns:xs='http://www.w3.org/2001/XMLSchema' xmlns:typens='http://www.esri.com/schemas/ArcGIS/10.1'>
+	<HasID>false</HasID>
+	<HasZ>false</HasZ>
+	<HasM>false</HasM>
+	<Extent xsi:type='typens:EnvelopeN'>
+		<XMin>4552477.25</XMin>
+		<YMin>5605239.2899999991</YMin>
+		<XMax>4552616.1699999999</XMax>
+		<YMax>5605543.9399999995</YMax>
+	</Extent>
+	<RingArray xsi:type='typens:ArrayOfRing'>
+		<Ring xsi:type='typens:Ring'>
+			<PointArray xsi:type='typens:ArrayOfPoint'>
+				<Point xsi:type='typens:PointN'>
+					<X>4552616.1699999999</X>
+					<Y>5605537.1699999999</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552609.8899999997</X>
+					<Y>5605524.7799999993</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552603.1399999997</X>
+					<Y>5605511.4399999995</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552595.6799999997</X>
+					<Y>5605496.6999999993</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552579.5999999996</X>
+					<Y>5605461.4700000007</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552555.9800000004</X>
+					<Y>5605419.25</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552553.6399999997</X>
+					<Y>5605415.1999999993</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552552.2400000002</X>
+					<Y>5605412.7599999998</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552541.2999999998</X>
+					<Y>5605393.7400000002</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552533.5899999999</X>
+					<Y>5605374.7400000002</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552533.5899999999</X>
+					<Y>5605355.0399999991</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552544.8499999996</X>
+					<Y>5605312.25</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552547.0999999996</X>
+					<Y>5605290.2899999991</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552541.8799999999</X>
+					<Y>5605262.1500000004</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552537.3399999999</X>
+					<Y>5605252.2200000007</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552527.9100000001</X>
+					<Y>5605239.2899999991</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552522.6600000001</X>
+					<Y>5605242.9700000007</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552519.6500000004</X>
+					<Y>5605245.7100000009</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552518.1900000004</X>
+					<Y>5605247.0399999991</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552514.2400000002</X>
+					<Y>5605250.6600000001</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552509.6299999999</X>
+					<Y>5605254.8900000006</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552500.1799999997</X>
+					<Y>5605263.6099999994</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552493.0800000001</X>
+					<Y>5605270.2100000009</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552491.3799999999</X>
+					<Y>5605272.4800000004</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552488.5300000003</X>
+					<Y>5605276.3000000007</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552487.0499999998</X>
+					<Y>5605278.1099999994</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552483.6799999997</X>
+					<Y>5605282.25</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552477.25</X>
+					<Y>5605288.2699999996</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552483.4800000004</X>
+					<Y>5605311.6799999997</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552488.54</X>
+					<Y>5605355.0399999991</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552489.0499999998</X>
+					<Y>5605360.3100000005</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552493.0499999998</X>
+					<Y>5605402.3300000001</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552497.7000000002</X>
+					<Y>5605429.6300000008</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552504.3099999996</X>
+					<Y>5605467.0800000001</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552516.1299999999</X>
+					<Y>5605494.6699999999</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552517.9500000002</X>
+					<Y>5605497.3000000007</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552526.9800000004</X>
+					<Y>5605510.3200000003</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552550.9800000004</X>
+					<Y>5605536.5600000005</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552565.4000000004</X>
+					<Y>5605542.25</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552580.5999999996</X>
+					<Y>5605543.9399999995</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552588.9900000002</X>
+					<Y>5605543.2799999993</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552602</X>
+					<Y>5605542.25</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552602.8399999999</X>
+					<Y>5605541.9499999993</Y>
+				</Point>
+				<Point xsi:type='typens:PointN'>
+					<X>4552616.1699999999</X>
+					<Y>5605537.1699999999</Y>
+				</Point>
+			</PointArray>
+		</Ring>
+	</RingArray>
+	<SpatialReference xsi:type='typens:ProjectedCoordinateSystem'>
+		<WKT>PROJCS[&quot;DHDN_3_Degree_Gauss_Zone_4&quot;,GEOGCS[&quot;GCS_Deutsches_Hauptdreiecksnetz&quot;,DATUM[&quot;D_Deutsches_Hauptdreiecksnetz&quot;,SPHEROID[&quot;Bessel_1841&quot;,6377397.155,299.1528128]],PRIMEM[&quot;Greenwich&quot;,0.0],UNIT[&quot;Degree&quot;,0.0174532925199433]],PROJECTION[&quot;Gauss_Kruger&quot;],PARAMETER[&quot;False_Easting&quot;,4500000.0],PARAMETER[&quot;False_Northing&quot;,0.0],PARAMETER[&quot;Central_Meridian&quot;,12.0],PARAMETER[&quot;Scale_Factor&quot;,1.0],PARAMETER[&quot;Latitude_Of_Origin&quot;,0.0],UNIT[&quot;Meter&quot;,1.0],AUTHORITY[&quot;EPSG&quot;,31468]]</WKT>
+		<XOrigin>-1122500</XOrigin>
+		<YOrigin>-10001000</YOrigin>
+		<XYScale>100</XYScale>
+		<ZOrigin>-100000</ZOrigin>
+		<ZScale>10000</ZScale>
+		<MOrigin>-100000</MOrigin>
+		<MScale>10000</MScale>
+		<XYTolerance>0.10000000000000001</XYTolerance>
+		<ZTolerance>0.001</ZTolerance>
+		<MTolerance>0.001</MTolerance>
+		<HighPrecision>true</HighPrecision>
+		<WKID>31464</WKID>
+		<LatestWKID>31468</LatestWKID>
+	</SpatialReference>
+</PolygonN>

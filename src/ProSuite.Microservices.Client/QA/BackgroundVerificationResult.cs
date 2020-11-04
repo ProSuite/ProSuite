@@ -51,18 +51,12 @@ namespace ProSuite.Microservices.Client.QA
 			Stopwatch watch = _msg.DebugStartTiming(
 				"Replacing existing errors with new issues, deleting obsolete allowed errors...");
 
-			var conditionVerifications =
-				Assert.NotNull(GetQualityVerification()).ConditionVerifications;
-
-			IEnumerable<int> verifiedConditions =
-				conditionVerifications.Where(c => c.QualityCondition != null)
-				                      .Select(c => c.QualityCondition.Id);
-
-			int result = _resultIssueCollector.SaveIssues(verifiedConditions);
+			var verifiedConditions = GetVerifiedConditionIds(VerificationMsg).ToList();
+			int issueCount = _resultIssueCollector.SaveIssues(verifiedConditions);
 
 			_msg.DebugStopTiming(watch, "Updated issues in verified context");
 
-			return result;
+			return issueCount;
 		}
 
 		public bool HasQualityVerification()
@@ -74,13 +68,27 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			if (_qualityVerification == null)
 			{
-				if (VerificationMsg.SavedVerificationId >= 0)
-				{
-					return _qualityVerificationRepository.Get(VerificationMsg.SavedVerificationId);
-				}
-
 				_domainTransactions.UseTransaction(
-					() => { _qualityVerification = GetQualityVerificationTx(VerificationMsg); });
+					() =>
+					{
+						if (VerificationMsg.SavedVerificationId >= 0)
+						{
+							_qualityVerification =
+								_qualityVerificationRepository.Get(
+									VerificationMsg.SavedVerificationId);
+
+							Assert.NotNull(_qualityVerification, "Quality verification not found.");
+
+							_domainTransactions.Initialize(
+								_qualityVerification.ConditionVerifications);
+							_domainTransactions.Initialize(
+								_qualityVerification.VerificationDatasets);
+						}
+						else
+						{
+							_qualityVerification = GetQualityVerificationTx(VerificationMsg);
+						}
+					});
 			}
 
 			return _qualityVerification;
@@ -152,6 +160,15 @@ namespace ProSuite.Microservices.Client.QA
 			}
 
 			return conditionVerifications;
+		}
+
+		private static IEnumerable<int> GetVerifiedConditionIds(
+			[NotNull] QualityVerificationMsg msg)
+		{
+			foreach (var conditionVerificationMsg in msg.ConditionVerifications)
+			{
+				yield return conditionVerificationMsg.QualityConditionId;
+			}
 		}
 
 		private QualityCondition GetQualityCondition(int qualityConditionId,

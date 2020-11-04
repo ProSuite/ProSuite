@@ -1,17 +1,23 @@
 using System.Collections.Generic;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
 	public interface IWorkListRegistry
 	{
-		IWorkList Get(string name);
+		[CanBeNull]
+		IWorkList Get([NotNull] string name);
 
-		void Add(IWorkList workList);
+		void Add([NotNull] IWorkList workList);
 
-		bool Remove(IWorkList workList);
+		void Add([NotNull] IWorkListFactory factory);
 
-		bool Remove(string name);
+		bool TryAdd([NotNull] IWorkListFactory factory);
 
-		IList<IWorkList> GetAll();
+		bool Remove([NotNull] IWorkList workList);
+
+		bool Remove([NotNull] string name);
+
+		IEnumerable<string> GetNames();
 	}
 }

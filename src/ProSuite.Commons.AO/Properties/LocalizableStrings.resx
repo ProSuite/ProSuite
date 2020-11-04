@@ -1,0 +1,255 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AdjustGeometry_AdjustImpossible" xml:space="preserve">
+    <value>The adjusting polyline is contained by the target point tolerance buffer. Such situations are not adjustable.</value>
+  </data>
+  <data name="AdjustGeometry_CheckGeometries" xml:space="preserve">
+    <value>Checking geometries...</value>
+  </data>
+  <data name="AdjustGeometry_CreateToleranceError" xml:space="preserve">
+    <value>The creation of the tolerance buffer has failed.</value>
+  </data>
+  <data name="AdjustGeometry_CreatingTolerance" xml:space="preserve">
+    <value>Creating tolerance buffer...</value>
+  </data>
+  <data name="AdjustGeometry_CurveEmpty" xml:space="preserve">
+    <value>Geometry may not be empty at GetCentroid</value>
+  </data>
+  <data name="AdjustGeometry_CurveLenghtZero" xml:space="preserve">
+    <value>Curve may not be zero length at GetCentroid</value>
+  </data>
+  <data name="AdjustGeometry_GeometryTypeNotSupported" xml:space="preserve">
+    <value>Geometry type not supported: {0}, {1}</value>
+  </data>
+  <data name="AdjustGeometry_GetCentroidGeometryNull" xml:space="preserve">
+    <value>Geometry may not be null at GetCentroid</value>
+  </data>
+  <data name="AdjustGeometry_InvalidInput" xml:space="preserve">
+    <value>Input Geometry has to be a Polygon or Polyline.</value>
+  </data>
+  <data name="AdjustGeometry_InvalidOpenIsland" xml:space="preserve">
+    <value>Could not access open island geometry.</value>
+  </data>
+  <data name="AdjustGeometry_InvalidSelection" xml:space="preserve">
+    <value>Geometries of type other than Polygon/Line/Multi-/Point are not adjustable.</value>
+  </data>
+  <data name="AdjustGeometry_MultiPartDifference" xml:space="preserve">
+    <value>The difference of the adjust geometry with the target geometry is more than one single part. Adjusting is not possible.</value>
+  </data>
+  <data name="AdjustGeometry_MultipleTargetsNoCross" xml:space="preserve">
+    <value>Selected feature can not be adjusted to multiple targets.&lt;br&gt;(Not all of the target geometries cross the tolerance buffer)&lt;br&gt;Please change the tolerance.</value>
+  </data>
+  <data name="AdjustGeometry_MultipleTargetsNonperpendicular" xml:space="preserve">
+    <value>Non-perpendicular adjust may not be used with multiple disjoined targets.</value>
+  </data>
+  <data name="AdjustGeometry_MultipleTargetsSourceInside" xml:space="preserve">
+    <value>Tolerance is too big for adjusting to more than one disjoint target.&lt;br&gt;(The selected object is completely inside the tolerance)</value>
+  </data>
+  <data name="AdjustGeometry_MultiPointSelected" xml:space="preserve">
+    <value>The selected target is a multipoint geometry. Adjusting is not possible. Please select a target geometry with a different type than multipoint.</value>
+  </data>
+  <data name="AdjustGeometry_NearestOutsideArea" xml:space="preserve">
+    <value>Nearest point to source of closed line part is not inside adjusting area.</value>
+  </data>
+  <data name="AdjustGeometry_NoCuttingPoints" xml:space="preserve">
+    <value>No cutting points with the centroid line found.</value>
+  </data>
+  <data name="AdjustGeometry_NoMaxPoint" xml:space="preserve">
+    <value>No maximal distance point found.</value>
+  </data>
+  <data name="AdjustGeometry_NoOverlap" xml:space="preserve">
+    <value>Geometries do not overlap. Non Perpendicual adjusting is not possible.</value>
+  </data>
+  <data name="AdjustGeometry_NotNaNFree" xml:space="preserve">
+    <value>Not all point Z-values are NaN free after trim.</value>
+  </data>
+  <data name="AdjustGeometry_OpenIslandMultipart" xml:space="preserve">
+    <value>Open island target consist of {0} parts</value>
+  </data>
+  <data name="AdjustGeometry_OpenIslandMultipartTarget" xml:space="preserve">
+    <value>More than one adjusted target part found in open island geometry, adjusting not possible. Please change the tolerance.</value>
+  </data>
+  <data name="AdjustGeometry_OutsideTolerance" xml:space="preserve">
+    <value>Adjusting geometry is outside tolerance.</value>
+  </data>
+  <data name="AdjustGeometry_ProgressInfo" xml:space="preserve">
+    <value>Adjusting geometry...</value>
+  </data>
+  <data name="AdjustGeometry_SlowProgressInfo" xml:space="preserve">
+    <value>Geometries are being adjusted. This might take a few moments.</value>
+  </data>
+  <data name="AdjustGeometry_TrimmerUnionException" xml:space="preserve">
+    <value>Trimmer geometry union threw an exception.</value>
+  </data>
+  <data name="AdjustGeometry_TrimmingInvalid" xml:space="preserve">
+    <value>Tolerance trimming of adjusted geometry was not valid.</value>
+  </data>
+  <data name="AdjustGeometry_UnsureResult" xml:space="preserve">
+    <value>Unsure adjusting situation. Result could be invalid.</value>
+  </data>
+  <data name="AdjustGeometry_ZNotReadable" xml:space="preserve">
+    <value>Could not access Z value for point. Keeping actual value.</value>
+  </data>
+  <data name="ApplyZ_NoSurface" xml:space="preserve">
+    <value>Surface is not defined</value>
+  </data>
+  <data name="ApplyZ_NoSurfaceUsed" xml:space="preserve">
+    <value>For the given geometry type [{0}] a surface can not be used to assign Z.</value>
+  </data>
+  <data name="ApplyZServices_UnknownZMode" xml:space="preserve">
+    <value>ZMode is unknown.</value>
+  </data>
+  <data name="ApplyZServices_Unsuccessful" xml:space="preserve">
+    <value>ApplyZ was not successful. Modified geometry is invalid.</value>
+  </data>
+  <data name="GeometryUtils_IsGeometrySimple_IdenticalRings" xml:space="preserve">
+    <value>The polygon has identical rings</value>
+  </data>
+  <data name="GeometryUtils_NonSimpleReason_ShortSegments" xml:space="preserve">
+    <value>The geometry has segments that are shorter than allowed by the tolerance</value>
+  </data>
+  <data name="GeometryUtils_NonSimpleReason_SelfIntersections_Allowed" xml:space="preserve">
+    <value>The geometry has self intersections but this is valid for non-planar lines</value>
+  </data>
+  <data name="GeometryUtils_NonSimpleReason_SelfIntersections" xml:space="preserve">
+    <value>The geometry has self intersections</value>
+  </data>
+  <data name="GeometryUtils_NonSimpleReason_UnclosedRing" xml:space="preserve">
+    <value>The geometry has an unclosed ring</value>
+  </data>
+  <data name="GeometryUtils_NonSimpleReason_EmptyPart" xml:space="preserve">
+    <value>The geometry contains an empty part</value>
+  </data>
+  <data name="GeometryUtils_NonSimpleReason_RingOrientation" xml:space="preserve">
+    <value>The geometry has rings that are not oriented correctly (outer rings - clockwise, inner rings - counter-clockwise)</value>
+  </data>
+  <data name="GeometryUtils_NonSimpleReason_SegmentOrientation" xml:space="preserve">
+    <value>The geometry has segments that are not consistently oriented. The 'to' point of a segment should be coincident with the 'from' point of the next segment.</value>
+  </data>
+  <data name="GeometryUtils_NonSimpleReason_DuplicatePoints" xml:space="preserve">
+    <value>Geometry is not simple (duplicate points)</value>
+  </data>
+  <data name="GeometryUtils_NonSimpleReason_Unknown" xml:space="preserve">
+    <value>Geometry is not simple</value>
+  </data>
+  <data name="WorkspaceUtils_Exception_InvalidUserNameOrPassword" xml:space="preserve">
+    <value>The username and/or password is invalid</value>
+  </data>
+</root>

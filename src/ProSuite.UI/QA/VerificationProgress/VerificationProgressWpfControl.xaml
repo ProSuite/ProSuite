@@ -95,7 +95,8 @@
                                  HorizontalContentAlignment="Right" VerticalContentAlignment="Center"
                                  FontWeight="Bold" IsReadOnly="True" />
                     </Border>
-                    <Label Grid.Column="2" Margin="0,0,10,0" Content="{Binding StartTimeText}" HorizontalAlignment="Right"/>
+                    <Label Grid.Column="2" Margin="0,0,10,0" Content="{Binding StartTimeText}"
+                           HorizontalAlignment="Right" />
                 </Grid>
 
                 <!-- Second row: Errors -->
@@ -103,7 +104,7 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="75" />
                         <ColumnDefinition Width="64" />
-                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="Errors" VerticalAlignment="Center" Margin="0,5,0,4" />
                     <Border Grid.Column="1" BorderBrush="DarkGray" BorderThickness="0">
@@ -112,7 +113,8 @@
                                  HorizontalContentAlignment="Right" VerticalContentAlignment="Center"
                                  FontWeight="Bold" IsReadOnly="True" />
                     </Border>
-                    <Label Grid.Column="2" Margin="0,0,10,0" Content="{Binding EndTimeText}" HorizontalAlignment="Right"/>
+                    <Label Grid.Column="2" Margin="0,0,10,0" Content="{Binding EndTimeText}"
+                           HorizontalAlignment="Right" />
                 </Grid>
 
             </Grid>
@@ -144,7 +146,7 @@
         <Border DockPanel.Dock="Bottom" Height="28" BorderBrush="DarkGray" BorderThickness="1">
             <StatusBar Margin="1">
                 <StatusBarItem>
-                    <TextBox Text="{Binding StatusText, Mode=OneWay}" Foreground="{Binding StatusTextColor}" 
+                    <TextBox Text="{Binding StatusText, Mode=OneWay}" Foreground="{Binding StatusTextColor}"
                              Background="Transparent" BorderThickness="0" IsReadOnly="True" />
                 </StatusBarItem>
             </StatusBar>

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -11,7 +12,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 	/// It maintains a current item and provides
 	/// navigation to change the current item.
 	/// </summary>
-	public interface IWorkList : IDisposable
+	public interface IWorkList : IRowCache, IDisposable, INotifyPropertyChanged
 	{
 		[NotNull]
 		string Name { get; }
@@ -29,9 +30,11 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// <summary>Yield all work items subject to list settings and the given filter.</summary>
 		/// <param name="filter">optional QueryFilter or SpatialQueryFilter</param>
 		/// <param name="ignoreListSettings">if true, ignore Visibility and AreaOfInterest</param>
+		/// <param name="startIndex"></param>
 		/// <returns></returns>
 		[NotNull]
-		IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool ignoreListSettings = false);
+		IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool ignoreListSettings = false,
+		                                int startIndex = 0);
 
 		/// <summary>Equivalent to GetItems(filter).Count(), but may be faster</summary>
 		int Count(QueryFilter filter = null, bool ignoreListSettings = false);
@@ -41,11 +44,12 @@ namespace ProSuite.AGP.WorkList.Contracts
 		[CanBeNull]
 		IWorkItem Current { get; }
 
+		int CurrentIndex { get; set; }
+
 		bool CanGoFirst();
 		void GoFirst();
 
 		bool CanGoNearest();
-		void GoNearest();
 
 		bool CanGoNext();
 		void GoNext();
@@ -54,5 +58,13 @@ namespace ProSuite.AGP.WorkList.Contracts
 		void GoPrevious();
 
 		event EventHandler<WorkListChangedEventArgs> WorkListChanged;
+
+		void Update(IWorkItem item);
+
+		void Commit();
+
+		void GoNearest([NotNull] Geometry reference,
+		               [CanBeNull] Predicate<IWorkItem> match = null,
+		               params Polygon[] contextPerimeters);
 	}
 }

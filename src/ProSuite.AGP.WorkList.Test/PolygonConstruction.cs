@@ -20,12 +20,12 @@ namespace ProSuite.AGP.WorkList.Test
 			return new PolygonConstruction(new List<MapPoint> {CreateMapPoint(x, y, z)});
 		}
 
-		private static MapPoint CreateMapPoint(double x, double y)
+		public static MapPoint CreateMapPoint(double x, double y)
 		{
 			return MapPointBuilder.CreateMapPoint(x, y, _sref);
 		}
 
-		private static MapPoint CreateMapPoint(double x, double y, double z)
+		public static MapPoint CreateMapPoint(double x, double y, double z)
 		{
 			return MapPointBuilder.CreateMapPoint(x, y, z, _sref);
 		}

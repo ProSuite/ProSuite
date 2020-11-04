@@ -19,7 +19,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// <param name="inserts"></param>
 		/// <param name="deletes">The deleted rows.</param>
 		/// <param name="updates"></param>
-		/// <param name="creates">The inserted rows.</param>
 		void ProcessChanges(Dictionary<Table, List<long>> inserts,
 		                    Dictionary<Table, List<long>> deletes,
 		                    Dictionary<Table, List<long>> updates);

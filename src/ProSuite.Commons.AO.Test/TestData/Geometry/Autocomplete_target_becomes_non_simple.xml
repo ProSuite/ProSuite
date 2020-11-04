@@ -1,0 +1,126 @@
+<PolygonN xsi:type="typens:PolygonN" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:typens="http://www.esri.com/schemas/ArcGIS/10.4">
+  <HasID>false</HasID>
+  <HasZ>true</HasZ>
+  <HasM>false</HasM>
+  <Extent xsi:type="typens:EnvelopeN">
+    <XMin>2737889.425999999</XMin>
+    <YMin>1124941.5639999993</YMin>
+    <XMax>2741293.0329999989</XMax>
+    <YMax>1127341.8679999993</YMax>
+    <ZMin>0</ZMin>
+    <ZMax>0</ZMax>
+  </Extent>
+  <RingArray xsi:type="typens:ArrayOfRing">
+    <Ring xsi:type="typens:Ring">
+      <PointArray xsi:type="typens:ArrayOfPoint">
+        <Point xsi:type="typens:PointN">
+          <X>2741293.0329999998</X>
+          <Y>1126681.4670000002</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2740581.8319999985</X>
+          <Y>1124941.5639999993</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2740118.2809999995</X>
+          <Y>1124960.6140000001</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2739597.5799999982</X>
+          <Y>1125113.0139999986</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738486.3280000016</X>
+          <Y>1125322.5639999993</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2737895.7760000005</X>
+          <Y>1125690.8649999984</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2737889.425999999</X>
+          <Y>1126617.9670000002</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2739978.5810000002</X>
+          <Y>1127341.8680000007</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2741293.0329999998</X>
+          <Y>1126681.4670000002</Y>
+          <Z>0</Z>
+        </Point>
+      </PointArray>
+    </Ring>
+    <Ring xsi:type="typens:Ring">
+      <PointArray xsi:type="typens:ArrayOfPoint">
+        <Point xsi:type="typens:PointN">
+          <X>2739362.6290000007</X>
+          <Y>1125690.8649999984</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2739769.0300000012</X>
+          <Y>1125684.5150000006</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2739775.379999999</X>
+          <Y>1126351.2659999989</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2739178.4789999984</X>
+          <Y>1126446.5170000009</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738613.3280000016</X>
+          <Y>1126243.3159999996</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738753.0280000009</X>
+          <Y>1125875.0150000006</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2739045.1290000007</X>
+          <Y>1125741.6649999991</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2739362.6290000007</X>
+          <Y>1125690.8649999984</Y>
+          <Z>0</Z>
+        </Point>
+      </PointArray>
+    </Ring>
+  </RingArray>
+  <SpatialReference xsi:type="typens:ProjectedCoordinateSystem">
+    <WKT>PROJCS["CH1903+_LV95",GEOGCS["GCS_CH1903+",DATUM["D_CH1903+",SPHEROID["Bessel_1841",6377397.155,299.1528128]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Hotine_Oblique_Mercator_Azimuth_Center"],PARAMETER["False_Easting",2600000.0],PARAMETER["False_Northing",1200000.0],PARAMETER["Scale_Factor",1.0],PARAMETER["Azimuth",90.0],PARAMETER["Longitude_Of_Center",7.439583333333333],PARAMETER["Latitude_Of_Center",46.95240555555556],UNIT["Meter",1.0],AUTHORITY["EPSG",2056]],VERTCS["LHN95",VDATUM["Landeshohennetz_1995"],PARAMETER["Vertical_Shift",0.0],PARAMETER["Direction",1.0],UNIT["Meter",1.0],AUTHORITY["EPSG",5729]]</WKT>
+    <XOrigin>-27386400</XOrigin>
+    <YOrigin>-32067900</YOrigin>
+    <XYScale>140996569.55187955</XYScale>
+    <ZOrigin>-100000</ZOrigin>
+    <ZScale>1000</ZScale>
+    <MOrigin>-100000</MOrigin>
+    <MScale>10000</MScale>
+    <XYTolerance>0.002</XYTolerance>
+    <ZTolerance>0.01</ZTolerance>
+    <MTolerance>0.01</MTolerance>
+    <HighPrecision>true</HighPrecision>
+    <WKID>2056</WKID>
+    <LatestWKID>2056</LatestWKID>
+    <VCSWKID>5729</VCSWKID>
+    <LatestVCSWKID>5729</LatestVCSWKID>
+  </SpatialReference>
+</PolygonN>

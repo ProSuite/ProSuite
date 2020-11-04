@@ -1,0 +1,126 @@
+<PolygonN xsi:type="typens:PolygonN" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:typens="http://www.esri.com/schemas/ArcGIS/10.0">
+  <HasID>false</HasID>
+  <HasZ>false</HasZ>
+  <HasM>false</HasM>
+  <Extent xsi:type="typens:EnvelopeN">
+    <XMin>4564097.3134000003</XMin>
+    <YMin>5708899.0836999994</YMin>
+    <XMax>4564423.4797</XMax>
+    <YMax>5709241.315299999</YMax>
+  </Extent>
+  <RingArray xsi:type="typens:ArrayOfRing">
+    <Ring xsi:type="typens:Ring">
+      <SegmentArray xsi:type="typens:ArrayOfSegment">
+        <Segment xsi:type="typens:CircularArc">
+          <FromPoint xsi:type="typens:PointN">
+            <X>4564179.6237000003</X>
+            <Y>5709002.784</Y>
+          </FromPoint>
+          <ToPoint xsi:type="typens:PointN">
+            <X>4564179.6237000003</X>
+            <Y>5709002.784</Y>
+          </ToPoint>
+          <CenterPoint xsi:type="typens:PointN">
+            <X>4564179.6237157732</X>
+            <Y>5708950.9338369844</Y>
+          </CenterPoint>
+          <IsCounterClockwise>false</IsCounterClockwise>
+          <IsMinor>false</IsMinor>
+          <IsLine>false</IsLine>
+        </Segment>
+      </SegmentArray>
+    </Ring>
+    <Ring xsi:type="typens:Ring">
+      <SegmentArray xsi:type="typens:ArrayOfSegment">
+        <Segment xsi:type="typens:CircularArc">
+          <FromPoint xsi:type="typens:PointN">
+            <X>4564134.8646999998</X>
+            <Y>5709091.2018999998</Y>
+          </FromPoint>
+          <ToPoint xsi:type="typens:PointN">
+            <X>4564134.8646999998</X>
+            <Y>5709091.2018999998</Y>
+          </ToPoint>
+          <CenterPoint xsi:type="typens:PointN">
+            <X>4564134.8647128865</X>
+            <Y>5709053.6505715493</Y>
+          </CenterPoint>
+          <IsCounterClockwise>false</IsCounterClockwise>
+          <IsMinor>false</IsMinor>
+          <IsLine>false</IsLine>
+        </Segment>
+      </SegmentArray>
+    </Ring>
+    <Ring xsi:type="typens:Ring">
+      <PointArray xsi:type="typens:ArrayOfPoint">
+        <Point xsi:type="typens:PointN">
+          <X>4564423.4797</X>
+          <Y>5709162.4155000001</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>4564378.2281999998</X>
+          <Y>5709127.2232000008</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>4564346.2434999999</X>
+          <Y>5709168.9392000008</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>4564380.3550000004</X>
+          <Y>5709202.6095000003</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>4564423.4797</X>
+          <Y>5709162.4155000001</Y>
+        </Point>
+      </PointArray>
+    </Ring>
+    <Ring xsi:type="typens:Ring">
+      <PointArray xsi:type="typens:ArrayOfPoint">
+        <Point xsi:type="typens:PointN">
+          <X>4564310.4069999997</X>
+          <Y>5709106.8202999998</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>4564232.7555999998</X>
+          <Y>5709069.1629000008</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>4564161.318</X>
+          <Y>5709117.5817000009</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>4564167.5311000003</X>
+          <Y>5709203.6579</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>4564245.1819000002</X>
+          <Y>5709241.3153000008</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>4564316.6195</X>
+          <Y>5709192.8965000007</Y>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>4564310.4069999997</X>
+          <Y>5709106.8202999998</Y>
+        </Point>
+      </PointArray>
+    </Ring>
+  </RingArray>
+  <SpatialReference xsi:type="typens:ProjectedCoordinateSystem">
+    <WKT>PROJCS["DHDN_3_Degree_Gauss_Zone_4",GEOGCS["GCS_Deutsches_Hauptdreiecksnetz",DATUM["D_Deutsches_Hauptdreiecksnetz",SPHEROID["Bessel_1841",6377397.155,299.1528128]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Gauss_Kruger"],PARAMETER["False_Easting",4500000.0],PARAMETER["False_Northing",0.0],PARAMETER["Central_Meridian",12.0],PARAMETER["Scale_Factor",1.0],PARAMETER["Latitude_Of_Origin",0.0],UNIT["Meter",1.0],AUTHORITY["EPSG",31468]]</WKT>
+    <XOrigin>-1122500</XOrigin>
+    <YOrigin>-10001000</YOrigin>
+    <XYScale>10000</XYScale>
+    <ZOrigin>0</ZOrigin>
+    <ZScale>1</ZScale>
+    <MOrigin>0</MOrigin>
+    <MScale>1</MScale>
+    <XYTolerance>0.001</XYTolerance>
+    <ZTolerance>0.001</ZTolerance>
+    <MTolerance>0.001</MTolerance>
+    <HighPrecision>true</HighPrecision>
+    <WKID>31468</WKID>
+  </SpatialReference>
+</PolygonN>

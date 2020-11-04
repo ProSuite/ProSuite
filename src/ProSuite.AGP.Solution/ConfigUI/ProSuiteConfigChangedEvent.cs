@@ -1,10 +1,10 @@
+using System;
+using System.Collections.Generic;
 using ArcGIS.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ProSuite.QA.ServiceManager.Types;
-using System;
-using System.Collections.Generic;
 
-namespace Clients.AGP.ProSuiteSolution.ConfigUI
+namespace ProSuite.AGP.Solution.ConfigUI
 {
 	public class ProSuiteConfigEventArgs : EventBase
 	{

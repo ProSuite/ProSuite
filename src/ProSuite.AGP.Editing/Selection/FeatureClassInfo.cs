@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Windows.Documents;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;

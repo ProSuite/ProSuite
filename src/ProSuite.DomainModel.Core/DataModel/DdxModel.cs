@@ -50,13 +50,13 @@ namespace ProSuite.DomainModel.Core.DataModel
 		#region Constructors
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="Model"/> class.
+		/// Initializes a new instance of the <see cref="DdxModel"/> class.
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
 		protected DdxModel() { }
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="Model"/> class.
+		/// Initializes a new instance of the <see cref="DdxModel"/> class.
 		/// </summary>
 		/// <param name="name">The name of the model.</param>
 		protected DdxModel(string name)

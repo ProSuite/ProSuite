@@ -1,0 +1,156 @@
+<PolygonN xsi:type="typens:PolygonN" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:typens="http://www.esri.com/schemas/ArcGIS/10.4">
+  <HasID>false</HasID>
+  <HasZ>true</HasZ>
+  <HasM>false</HasM>
+  <Extent xsi:type="typens:EnvelopeN">
+    <XMin>2712973.6759044481</XMin>
+    <YMin>1263402.3006466387</YMin>
+    <XMax>2713004.353894555</XMax>
+    <YMax>1263432.9789999984</YMax>
+    <ZMin>455.79399999999441</ZMin>
+    <ZMax>455.79399999999441</ZMax>
+  </Extent>
+  <RingArray xsi:type="typens:ArrayOfRing">
+    <Ring xsi:type="typens:Ring">
+      <SegmentArray xsi:type="typens:ArrayOfSegment">
+        <Segment xsi:type="typens:CircularArc">
+          <FromPoint xsi:type="typens:PointN">
+            <X>2712976.811999999</X>
+            <Y>1263408.3460000008</Y>
+            <Z>455.79399999999441</Z>
+          </FromPoint>
+          <ToPoint xsi:type="typens:PointN">
+            <X>2712989.0150000006</X>
+            <Y>1263432.9789999984</Y>
+            <Z>455.79399999999441</Z>
+          </ToPoint>
+          <CenterPoint xsi:type="typens:PointN">
+            <X>2712989.0150811155</X>
+            <Y>1263417.6398233315</Y>
+          </CenterPoint>
+          <IsCounterClockwise>false</IsCounterClockwise>
+          <IsMinor>false</IsMinor>
+          <IsLine>false</IsLine>
+        </Segment>
+        <Segment xsi:type="typens:CircularArc">
+          <FromPoint xsi:type="typens:PointN">
+            <X>2712989.0150000006</X>
+            <Y>1263432.9789999984</Y>
+            <Z>455.79399999999441</Z>
+          </FromPoint>
+          <ToPoint xsi:type="typens:PointN">
+            <X>2713003.1669999994</X>
+            <Y>1263411.7230000012</Y>
+            <Z>455.79399999999441</Z>
+          </ToPoint>
+          <CenterPoint xsi:type="typens:PointN">
+            <X>2712989.014327473</X>
+            <Y>1263417.6394329313</Y>
+          </CenterPoint>
+          <IsCounterClockwise>false</IsCounterClockwise>
+          <IsMinor>false</IsMinor>
+          <IsLine>false</IsLine>
+        </Segment>
+        <Segment xsi:type="typens:Line">
+          <FromPoint xsi:type="typens:PointN">
+            <X>2713003.1669999994</X>
+            <Y>1263411.7230000012</Y>
+            <Z>455.79399999999441</Z>
+          </FromPoint>
+          <ToPoint xsi:type="typens:PointN">
+            <X>2713003.1429999992</X>
+            <Y>1263411.6660000011</Y>
+            <Z>455.79399999999441</Z>
+          </ToPoint>
+        </Segment>
+        <Segment xsi:type="typens:CircularArc">
+          <FromPoint xsi:type="typens:PointN">
+            <X>2713003.1429999992</X>
+            <Y>1263411.6660000011</Y>
+            <Z>455.79399999999441</Z>
+          </FromPoint>
+          <ToPoint xsi:type="typens:PointN">
+            <X>2713002.9030000009</X>
+            <Y>1263411.1290000007</Y>
+            <Z>455.79399999999441</Z>
+          </ToPoint>
+          <CenterPoint xsi:type="typens:PointN">
+            <X>NaN</X>
+            <Y>NaN</Y>
+          </CenterPoint>
+          <IsCounterClockwise>true</IsCounterClockwise>
+          <IsMinor>true</IsMinor>
+          <IsLine>true</IsLine>
+        </Segment>
+        <Segment xsi:type="typens:Line">
+          <FromPoint xsi:type="typens:PointN">
+            <X>2713002.9030000009</X>
+            <Y>1263411.1290000007</Y>
+            <Z>455.79399999999441</Z>
+          </FromPoint>
+          <ToPoint xsi:type="typens:PointN">
+            <X>2713002.8889999986</X>
+            <Y>1263411.0960000008</Y>
+            <Z>455.79399999999441</Z>
+          </ToPoint>
+        </Segment>
+        <Segment xsi:type="typens:CircularArc">
+          <FromPoint xsi:type="typens:PointN">
+            <X>2713002.8889999986</X>
+            <Y>1263411.0960000008</Y>
+            <Z>455.79399999999441</Z>
+          </FromPoint>
+          <ToPoint xsi:type="typens:PointN">
+            <X>2712977.2410000004</X>
+            <Y>1263407.8090000004</Y>
+            <Z>455.79399999999441</Z>
+          </ToPoint>
+          <CenterPoint xsi:type="typens:PointN">
+            <X>2712989.0157373403</X>
+            <Y>1263417.6397493694</Y>
+          </CenterPoint>
+          <IsCounterClockwise>false</IsCounterClockwise>
+          <IsMinor>false</IsMinor>
+          <IsLine>false</IsLine>
+        </Segment>
+        <Segment xsi:type="typens:CircularArc">
+          <FromPoint xsi:type="typens:PointN">
+            <X>2712977.2410000004</X>
+            <Y>1263407.8090000004</Y>
+            <Z>455.79399999999441</Z>
+          </FromPoint>
+          <ToPoint xsi:type="typens:PointN">
+            <X>2712976.811999999</X>
+            <Y>1263408.3460000008</Y>
+            <Z>455.79399999999441</Z>
+          </ToPoint>
+          <CenterPoint xsi:type="typens:PointN">
+            <X>NaN</X>
+            <Y>NaN</Y>
+          </CenterPoint>
+          <IsCounterClockwise>true</IsCounterClockwise>
+          <IsMinor>true</IsMinor>
+          <IsLine>true</IsLine>
+        </Segment>
+      </SegmentArray>
+    </Ring>
+  </RingArray>
+  <SpatialReference xsi:type="typens:ProjectedCoordinateSystem">
+    <WKT>PROJCS["CH1903+_LV95",GEOGCS["GCS_CH1903+",DATUM["D_CH1903+",SPHEROID["Bessel_1841",6377397.155,299.1528128]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Hotine_Oblique_Mercator_Azimuth_Center"],PARAMETER["False_Easting",2600000.0],PARAMETER["False_Northing",1200000.0],PARAMETER["Scale_Factor",1.0],PARAMETER["Azimuth",90.0],PARAMETER["Longitude_Of_Center",7.439583333333333],PARAMETER["Latitude_Of_Center",46.95240555555556],UNIT["Meter",1.0],AUTHORITY["EPSG",2056]],VERTCS["LHN95",VDATUM["Landeshohennetz_1995"],PARAMETER["Vertical_Shift",0.0],PARAMETER["Direction",1.0],UNIT["Meter",1.0],AUTHORITY["EPSG",5729]]</WKT>
+    <XOrigin>-27386400</XOrigin>
+    <YOrigin>-32067900</YOrigin>
+    <XYScale>140996569.55187955</XYScale>
+    <ZOrigin>-100000</ZOrigin>
+    <ZScale>1000</ZScale>
+    <MOrigin>-100000</MOrigin>
+    <MScale>10000</MScale>
+    <XYTolerance>0.002</XYTolerance>
+    <ZTolerance>0.01</ZTolerance>
+    <MTolerance>0.01</MTolerance>
+    <HighPrecision>true</HighPrecision>
+    <WKID>2056</WKID>
+    <LatestWKID>2056</LatestWKID>
+    <VCSWKID>5729</VCSWKID>
+    <LatestVCSWKID>5729</LatestVCSWKID>
+  </SpatialReference>
+</PolygonN>

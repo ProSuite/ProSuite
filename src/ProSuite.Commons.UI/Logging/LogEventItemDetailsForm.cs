@@ -53,7 +53,7 @@ namespace ProSuite.Commons.UI.Logging
 
 				WriteInnerException(s, logEventItem.Exception.InnerException);
 
-				s.Append(logEventItem.Exception.ToString());
+				s.Append(logEventItem.Exception);
 			}
 
 			return s.ToString();
@@ -66,7 +66,7 @@ namespace ProSuite.Commons.UI.Logging
 				// recurse, write innermost first
 				WriteInnerException(s, inner.InnerException);
 
-				s.Append(inner.ToString());
+				s.Append(inner);
 				s.AppendLine("--- End of inner exception stack trace ---");
 				s.AppendLine();
 			}

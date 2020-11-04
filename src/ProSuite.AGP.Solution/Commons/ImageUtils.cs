@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-namespace Clients.AGP.ProSuiteSolution.Commons
+namespace ProSuite.AGP.Solution.Commons
 {
 	public static class ImageUtils
 	{

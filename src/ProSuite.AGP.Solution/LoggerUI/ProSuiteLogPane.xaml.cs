@@ -9,7 +9,7 @@ namespace ProSuite.AGP.Solution.LoggerUI
     /// </summary>
     public partial class ProSuiteLogPaneView : UserControl
     {
-		private bool _scrollProcessing = false;
+		private bool _scrollProcessing;
 
         public ProSuiteLogPaneView()
         {
@@ -46,7 +46,5 @@ namespace ProSuite.AGP.Solution.LoggerUI
 			}
 			_scrollProcessing = false;
 		}
-
     }
-
 }

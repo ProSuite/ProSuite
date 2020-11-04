@@ -44,6 +44,8 @@ namespace ProSuite.Commons.AGP.Gdb
 			}
 		}
 
+		public string Path => _path;
+
 		[CanBeNull]
 		public T CreateConnector<T>() where T: Connector
 		{

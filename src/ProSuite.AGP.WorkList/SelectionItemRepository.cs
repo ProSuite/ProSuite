@@ -3,7 +3,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain;
+using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 
@@ -16,7 +16,8 @@ namespace ProSuite.AGP.WorkList
 
 		// todo daro: rafactor SelectionItemRepository(Dictionary<IWorkspaceContext, GdbTableIdentity>, Dictionary<GdbTableIdentity, List<long>>)
 		public SelectionItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase,
-		                               Dictionary<Table, List<long>> selection) : base(tablesByGeodatabase)
+		                               Dictionary<Table, List<long>> selection,
+		                               IRepository stateRepository) : base(tablesByGeodatabase, stateRepository)
 		{
 			foreach (var pair in selection)
 			{
@@ -42,25 +43,19 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		protected override IAttributeReader CreateAttributeReaderCore(
-			FeatureClassDefinition definition)
-		{
-			return new AttributeReader(definition);
-		}
-
 		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass source)
 		{
 			int id = CreateItemIDCore(row, source);
 
-			return new SelectionItem(id, row, source.AttributeReader);
+			return RefreshState(new SelectionItem(id, row));
 		}
 
-		protected override ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
-		                                                      IAttributeReader attributeReader,
-		                                                      DatabaseStatusSchema statusSchema =
-			                                                      null)
+		protected override ISourceClass CreateSourceClassCore(
+			GdbTableIdentity identity,
+			IAttributeReader attributeReader,
+			WorkListStatusSchema statusSchema)
 		{
-			return new SelectionSourceClass(identity, attributeReader);
+			return new SelectionSourceClass(identity);
 		}
 
 		protected override IEnumerable<Row> GetRowsCore(ISourceClass sourceClass, QueryFilter filter, bool recycle)

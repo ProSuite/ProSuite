@@ -437,7 +437,7 @@ They are all serialized as an array of double
       <string>height</string>
       <void method="set">
        <object idref="Rectangle2D$Double1"/>
-       <double>140.0</double>
+       <double>200.0</double>
       </void>
      </void>
     </void>
@@ -454,7 +454,11 @@ CIE is CIELab (Lightness, a, b)
 XYZ = based on human eye measurements
 
 Alpha is 0..100
-R, G, B is 0..255</string>
+R, G, B is 0..255
+C, Y, M, K is 0..100
+H is 0..360
+S, L, V is 0..100
+Level is 0..255</string>
      </void>
     </void>
    </object>

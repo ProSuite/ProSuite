@@ -1,15 +1,17 @@
 using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 
-namespace ProSuite.AGP.Picker
+namespace ProSuite.AGP.Editing.Picker
 {
-	public class PickableFeatureItem : IPickableItem, INotifyPropertyChanged
+	public class PickableFeatureItem : IPickableItem
 	{
 		public PickableFeatureItem(MapMember mapMember, Feature feature, string text)
 		{
@@ -20,7 +22,7 @@ namespace ProSuite.AGP.Picker
 			QueuedTask.Run(() =>
 			{
 				Geometry = feature.GetShape();
-				ItemImageUri = GetImagePath(Geometry);
+				_itemImageUri = GetImagePath(Geometry);
 			});
 		}
 
@@ -28,26 +30,26 @@ namespace ProSuite.AGP.Picker
 		private readonly Feature _feature;
 		private bool _isSelected;
 		private Geometry _geometry;
-		private Uri _itemImage;
+		private Uri _itemImageUri;
+		private BitmapImage _img;
 
 		private static Uri GetImagePath(Geometry geometry)
 		{
 			if (geometry.GeometryType == GeometryType.Point)
 			{
-				return new Uri(
-					"pack://application:,,,/PickerPoc;component/Images/PointGeometry.bmp");
+				return new Uri(@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PointGeometry.bmp");
 			}
 
 			if (geometry.GeometryType == GeometryType.Polyline)
 			{
 				return new Uri(
-					"pack://application:,,,/PickerPoc;component/Images/LineGeometry.bmp");
+					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/LineGeometry.bmp");
 			}
 
 			if (geometry.GeometryType == GeometryType.Polygon)
 			{
 				return new Uri(
-					"pack://application:,,,/PickerPoc;component/Images/PolygonGeometry.bmp");
+					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PolygonGeometry.bmp");
 			}
 
 			return new Uri("");
@@ -75,13 +77,19 @@ namespace ProSuite.AGP.Picker
 			set => _geometry = value;
 		}
 
-		public Uri ItemImageUri
+		public ImageSource ItemImageSource
 		{
-			get => _itemImage;
-			set => _itemImage = value;
+			get
+			{
+				if (_img == null)
+				{
+					_img = new BitmapImage(_itemImageUri);
+				}
+				return _img;
+			}
 		}
 
-		public FeatureLayer Layer => _featureLayer as FeatureLayer;
+		public FeatureLayer Layer => _featureLayer;
 
 		public Feature Feature => _feature;
 

@@ -1,51 +1,55 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.AGP.WorkList.Domain.Persistence;
+using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Carto;
 
 namespace ProSuite.AGP.Solution.WorkLists
 {
-	public class DatabaseWorkEnvironment : WorkEnvironmentBase
+	class DatabaseWorkEnvironment : WorkEnvironmentBase
 	{
-		const string _workListName = "Error Work List";
-
-		protected override void ShowWorkListCore(IWorkList workList, LayerDocument layerTemplate)
+		protected override string GetWorkListName(IWorkListContext context)
 		{
-			WorkListsModule.Current.Show(workList, layerTemplate);
+			throw new NotImplementedException();
 		}
 
 		protected override IEnumerable<BasicFeatureLayer> GetLayers(Map map)
 		{
-			return map.GetLayersAsFlattenedList().OfType<BasicFeatureLayer>();
+			throw new NotImplementedException();
 		}
 
 		protected override BasicFeatureLayer EnsureMapContainsLayerCore(BasicFeatureLayer featureLayer)
 		{
-			// todo daro: determine layer identity
 			throw new NotImplementedException();
+		}
+
+		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository, string name)
+		{
+			return new IssueWorkList(repository, name);
+		}
+
+		protected override IRepository CreateStateRepositoryCore(string path, string workListName)
+		{
+			Type type = GetWorkListTypeCore<IssueWorkList>();
+
+			return new XmlWorkItemStateRepository(path, workListName, type);
+		}
+
+		protected override IWorkItemRepository CreateItemRepositoryCore(IEnumerable<BasicFeatureLayer> featureLayers, IRepository stateRepository)
+		{
+			Dictionary<Geodatabase, List<Table>> tables = MapUtils.GetDistinctTables(featureLayers);
+
+			return new IssueItemRepository(tables, stateRepository);
 		}
 
 		protected override LayerDocument GetLayerDocumentCore()
 		{
 			throw new NotImplementedException();
-		}
-
-		protected override IWorkItemRepository CreateRepositoryCore(
-			IEnumerable<BasicFeatureLayer> featureLayers)
-		{
-			Dictionary<Geodatabase, List<Table>> tables = MapUtils.GetDistinctTables(featureLayers);
-
-			return new IssueItemRepository(tables);
-		}
-
-		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository)
-		{
-			return new IssueWorkList(repository, _workListName);
 		}
 	}
 }

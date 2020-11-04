@@ -35,9 +35,6 @@
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
     </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Deployment" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -51,10 +48,12 @@
     <Compile Include="CommandLine\ArgumentsTest.cs" />
     <Compile Include="CommandLine\UsageWriterTest.cs" />
     <Compile Include="ConversionUtilsTest.cs" />
+    <Compile Include="Cryptography\CertificateUtilsTest.cs" />
     <Compile Include="DomainModels\ModelElementNameUtilsTest.cs" />
     <Compile Include="DomainModels\VariantValueTest.cs" />
     <Compile Include="DomainModels\EncryptedStringTest.cs" />
     <Compile Include="Exceptions\ExceptionUtilsTest.cs" />
+    <Compile Include="Geometry\EnvelopeXYTest.cs" />
     <Compile Include="Geometry\GeomRelationUtilsTest.cs" />
     <Compile Include="Geometry\GeomTopoOpUtilsTest.cs" />
     <Compile Include="Geometry\GeomUtilsTest.cs" />
@@ -64,6 +63,7 @@
     <Compile Include="Geometry\Plane3DTest.cs" />
     <Compile Include="Geometry\SegmentIntersectionTest.cs" />
     <Compile Include="Geometry\SpatialIndex\SpatialHashSearcherTest.cs" />
+    <Compile Include="Geometry\Wkb\WkbReadWriteTest.cs" />
     <Compile Include="IO\CsvTest.cs" />
     <Compile Include="IO\FileSystemUtilsTest.cs" />
     <Compile Include="NamedValuesExpressions\NamedValuesParserTest.cs" />
@@ -78,10 +78,6 @@
     <Compile Include="Xml\XmlUtilsTest.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
-      <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
-      <Name>ProSuite.Commons.Logging</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
       <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
       <Name>ProSuite.Commons</Name>
@@ -96,6 +92,7 @@
       <Version>3.12.0</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

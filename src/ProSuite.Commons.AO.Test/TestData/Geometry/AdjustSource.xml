@@ -1,0 +1,94 @@
+<PolylineN xsi:type="typens:PolylineN" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:typens="http://www.esri.com/schemas/ArcGIS/10.0">
+  <HasID>false</HasID>
+  <HasZ>true</HasZ>
+  <HasM>false</HasM>
+  <Extent xsi:type="typens:EnvelopeN">
+    <XMin>2705079.5437499993</XMin>
+    <YMin>1260598.9287500009</YMin>
+    <XMax>2705222.6275000013</XMax>
+    <YMax>1260745.4200000018</YMax>
+    <ZMin>0</ZMin>
+    <ZMax>0</ZMax>
+  </Extent>
+  <PathArray xsi:type="typens:ArrayOfPath">
+    <Path xsi:type="typens:Path">
+      <PointArray xsi:type="typens:ArrayOfPoint">
+        <Point xsi:type="typens:PointN">
+          <X>2705079.5437499993</X>
+          <Y>1260745.4200000018</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705107.9337499999</X>
+          <Y>1260727.25</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705138.5949999988</X>
+          <Y>1260722.7074999996</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705161.3062499985</X>
+          <Y>1260722.7074999996</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705181.7462499999</X>
+          <Y>1260728.3862500004</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705206.7300000004</X>
+          <Y>1260732.9287500009</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705214.6787500009</X>
+          <Y>1260715.8949999996</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705222.6275000013</X>
+          <Y>1260693.182500001</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705221.4924999997</X>
+          <Y>1260667.0637499988</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705179.4750000015</X>
+          <Y>1260643.2175000012</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705144.2725000009</X>
+          <Y>1260631.8612499982</Y>
+          <Z>0</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2705120.4250000007</X>
+          <Y>1260598.9287500009</Y>
+          <Z>0</Z>
+        </Point>
+      </PointArray>
+    </Path>
+  </PathArray>
+  <SpatialReference xsi:type="typens:ProjectedCoordinateSystem">
+    <WKT>PROJCS["CH1903+_LV95",GEOGCS["GCS_CH1903+",DATUM["D_CH1903+",SPHEROID["Bessel_1841",6377397.155,299.1528128]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Hotine_Oblique_Mercator_Azimuth_Center"],PARAMETER["False_Easting",2600000.0],PARAMETER["False_Northing",1200000.0],PARAMETER["Scale_Factor",1.0],PARAMETER["Azimuth",90.0],PARAMETER["Longitude_Of_Center",7.439583333333333],PARAMETER["Latitude_Of_Center",46.95240555555556],UNIT["Meter",1.0],AUTHORITY["EPSG",2056]]</WKT>
+    <XOrigin>-29380010.775807656</XOrigin>
+    <YOrigin>-35261816.156355828</YOrigin>
+    <XYScale>128179416.78962041</XYScale>
+    <ZOrigin>-100000</ZOrigin>
+    <ZScale>800</ZScale>
+    <MOrigin>-100000</MOrigin>
+    <MScale>10000</MScale>
+    <XYTolerance>0.012500000000000001</XYTolerance>
+    <ZTolerance>0.012500000000000001</ZTolerance>
+    <MTolerance>0.001</MTolerance>
+    <HighPrecision>true</HighPrecision>
+    <WKID>2056</WKID>
+  </SpatialReference>
+</PolylineN>

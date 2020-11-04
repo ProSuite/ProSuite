@@ -1,0 +1,57 @@
+<PolylineN xsi:type="typens:PolylineN" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:typens="http://www.esri.com/schemas/ArcGIS/10.4">
+  <HasID>false</HasID>
+  <HasZ>true</HasZ>
+  <HasM>false</HasM>
+  <Extent xsi:type="typens:EnvelopeN">
+    <XMin>683224.18480000272</XMin>
+    <YMin>246735.59960000217</YMin>
+    <XMax>683229.02089999989</XMax>
+    <YMax>246741.8647999987</YMax>
+    <ZMin>0</ZMin>
+    <ZMax>0</ZMax>
+  </Extent>
+  <PathArray xsi:type="typens:ArrayOfPath">
+    <Path xsi:type="typens:Path">
+      <SegmentArray xsi:type="typens:ArrayOfSegment">
+        <Segment xsi:type="typens:EllipticArc">
+          <FromPoint xsi:type="typens:PointN">
+            <X>683224.18480000272</X>
+            <Y>246735.59960000217</Y>
+            <Z>0</Z>
+          </FromPoint>
+          <ToPoint xsi:type="typens:PointN">
+            <X>683229.02089999989</X>
+            <Y>246741.8647999987</Y>
+            <Z>0</Z>
+          </ToPoint>
+          <EllipseStd>false</EllipseStd>
+          <CenterPoint xsi:type="typens:PointN">
+            <X>683187.1469099666</X>
+            <Y>246769.18819585117</Y>
+            <Z>NaN</Z>
+          </CenterPoint>
+          <Rotation>6.2831853070468719</Rotation>
+          <MinorMajorRatio>0.99999999947845941</MinorMajorRatio>
+          <IsCounterClockwise>true</IsCounterClockwise>
+          <IsMinor>true</IsMinor>
+        </Segment>
+      </SegmentArray>
+    </Path>
+  </PathArray>
+  <SpatialReference xsi:type="typens:ProjectedCoordinateSystem">
+    <WKT>PROJCS["CH1903_LV03",GEOGCS["GCS_CH1903",DATUM["D_CH1903",SPHEROID["Bessel_1841",6377397.155,299.1528128]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Hotine_Oblique_Mercator_Azimuth_Center"],PARAMETER["False_Easting",600000.0],PARAMETER["False_Northing",200000.0],PARAMETER["Scale_Factor",1.0],PARAMETER["Azimuth",90.0],PARAMETER["Longitude_Of_Center",7.439583333333333],PARAMETER["Latitude_Of_Center",46.95240555555556],UNIT["Meter",1.0],AUTHORITY["EPSG",21781]]</WKT>
+    <XOrigin>-29386400</XOrigin>
+    <YOrigin>-35212011.42665796</YOrigin>
+    <XYScale>130217442.19096103</XYScale>
+    <ZOrigin>-100000</ZOrigin>
+    <ZScale>10000</ZScale>
+    <MOrigin>-100000</MOrigin>
+    <MScale>10000</MScale>
+    <XYTolerance>0.5</XYTolerance>
+    <ZTolerance>0.001</ZTolerance>
+    <MTolerance>0.001</MTolerance>
+    <HighPrecision>true</HighPrecision>
+    <WKID>21781</WKID>
+    <LatestWKID>21781</LatestWKID>
+  </SpatialReference>
+</PolylineN>

@@ -1,0 +1,567 @@
+<PolygonN xsi:type="typens:PolygonN" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:typens="http://www.esri.com/schemas/ArcGIS/10.4">
+  <HasID>false</HasID>
+  <HasZ>true</HasZ>
+  <HasM>false</HasM>
+  <Extent xsi:type="typens:EnvelopeN">
+    <XMin>2738191.5460000001</XMin>
+    <YMin>1171460</YMin>
+    <XMax>2738811.2000000002</XMax>
+    <YMax>1171823.9539999999</YMax>
+    <ZMin>1460.1059999999998</ZMin>
+    <ZMax>1647.6849999999977</ZMax>
+  </Extent>
+  <RingArray xsi:type="typens:ArrayOfRing">
+    <Ring xsi:type="typens:Ring">
+      <PointArray xsi:type="typens:ArrayOfPoint">
+        <Point xsi:type="typens:PointN">
+          <X>2738277.3390000015</X>
+          <Y>1171709.0700000003</Y>
+          <Z>1483.9049999999988</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738304.9560000002</X>
+          <Y>1171705.8449999988</Y>
+          <Z>1489.2930000000051</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738316.6999999993</X>
+          <Y>1171710</Y>
+          <Z>1492.5010000000038</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738341.2710000016</X>
+          <Y>1171708.0810000002</Y>
+          <Z>1495.3589999999967</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738363.8940000013</X>
+          <Y>1171713.2410000004</Y>
+          <Z>1497.7250000000058</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738387.3090000004</X>
+          <Y>1171721.5749999993</Y>
+          <Z>1502.3739999999962</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738412.7089999989</X>
+          <Y>1171736.6559999995</Y>
+          <Z>1507.9159999999974</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738444.8559999987</X>
+          <Y>1171752.5309999995</Y>
+          <Z>1517.5840000000026</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738461.1999999993</X>
+          <Y>1171752.5</Y>
+          <Z>1515.2309999999998</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738479.7809999995</X>
+          <Y>1171752.1350000016</Y>
+          <Z>1520.2890000000043</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738506.7690000013</X>
+          <Y>1171749.3559999987</Y>
+          <Z>1523.8279999999941</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738525.8189999983</X>
+          <Y>1171738.243999999</Y>
+          <Z>1527.6389999999956</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738552.3599999994</X>
+          <Y>1171733.5789999999</Y>
+          <Z>1534.346000000005</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738581.7789999992</X>
+          <Y>1171737.8480000012</Y>
+          <Z>1541.0160000000033</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738596.8599999994</X>
+          <Y>1171741.0229999982</Y>
+          <Z>1545.7829999999958</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738629</X>
+          <Y>1171750.1999999993</Y>
+          <Z>1556.5639999999985</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738637.5</X>
+          <Y>1171751.1999999993</Y>
+          <Z>1556.7449999999953</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738651.3999999985</X>
+          <Y>1171745.1999999993</Y>
+          <Z>1554.4360000000015</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738663.6999999993</X>
+          <Y>1171748.6999999993</Y>
+          <Z>1559.377999999997</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738688.6999999993</X>
+          <Y>1171747.5</Y>
+          <Z>1560.9389999999985</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738726.1999999993</X>
+          <Y>1171756.1999999993</Y>
+          <Z>1572.5489999999991</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738745</X>
+          <Y>1171765</Y>
+          <Z>1585.3289999999979</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738748.6999999993</X>
+          <Y>1171777.5</Y>
+          <Z>1595.6349999999948</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738763.6999999993</X>
+          <Y>1171792.5</Y>
+          <Z>1608.5500000000029</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738777.5</X>
+          <Y>1171813.6999999993</Y>
+          <Z>1628.8650000000052</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738791.1999999993</X>
+          <Y>1171817.5</Y>
+          <Z>1639.9400000000023</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738800</X>
+          <Y>1171808.6999999993</Y>
+          <Z>1647.6849999999977</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738773.6999999993</X>
+          <Y>1171787.5</Y>
+          <Z>1614.9640000000072</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738767.5</X>
+          <Y>1171772.5</Y>
+          <Z>1596.9260000000068</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738768.6999999993</X>
+          <Y>1171757.5</Y>
+          <Z>1584.1349999999948</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738785</X>
+          <Y>1171755</Y>
+          <Z>1590.2149999999965</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738806.1999999993</X>
+          <Y>1171745</Y>
+          <Z>1599.2430000000022</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738811.1999999993</X>
+          <Y>1171733.6999999993</Y>
+          <Z>1592.2309999999998</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738776.1999999993</X>
+          <Y>1171740</Y>
+          <Z>1581.1790000000037</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738773.1000000015</X>
+          <Y>1171743.8999999985</Y>
+          <Z>1579.9640000000072</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738760.8000000007</X>
+          <Y>1171732.5</Y>
+          <Z>1591.5650000000023</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738757.5</X>
+          <Y>1171736.1999999993</Y>
+          <Z>1584.804999999993</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738743.8999999985</X>
+          <Y>1171732.8999999985</Y>
+          <Z>1580.7810000000027</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738737.5</X>
+          <Y>1171748.6999999993</Y>
+          <Z>1571.5040000000008</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738710</X>
+          <Y>1171746.1999999993</Y>
+          <Z>1565.5910000000003</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738689.6000000015</X>
+          <Y>1171738.1000000015</Y>
+          <Z>1560.0080000000016</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738685.8999999985</X>
+          <Y>1171732.8000000007</Y>
+          <Z>1561.823000000004</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738672.5</X>
+          <Y>1171733.6999999993</Y>
+          <Z>1559.8179999999993</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738665</X>
+          <Y>1171730</Y>
+          <Z>1561.1689999999944</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738636.5480000004</X>
+          <Y>1171719.9880000018</Y>
+          <Z>1556.5829999999987</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738616.8660000004</X>
+          <Y>1171722.3359999992</Y>
+          <Z>1551.8709999999992</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738599.3979999982</X>
+          <Y>1171725.4439999983</Y>
+          <Z>1546.804999999993</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738572.3539999984</X>
+          <Y>1171716.6530000009</Y>
+          <Z>1544.4049999999988</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738546.7230000012</X>
+          <Y>1171715.4800000004</Y>
+          <Z>1538.5390000000043</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738529.2600000016</X>
+          <Y>1171722.3979999982</Y>
+          <Z>1533.2050000000017</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738516.6950000003</X>
+          <Y>1171731.693</Y>
+          <Z>1526.2709999999934</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738501.1009999998</X>
+          <Y>1171740.7529999986</Y>
+          <Z>1523.6049999999959</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738482.4609999992</X>
+          <Y>1171740.2899999991</Y>
+          <Z>1520.6710000000021</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738464.5100000016</X>
+          <Y>1171734.3489999995</Y>
+          <Z>1516.9389999999985</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738440.4979999997</X>
+          <Y>1171726.5089999996</Y>
+          <Z>1513.7390000000014</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738435.4809999987</X>
+          <Y>1171723.693</Y>
+          <Z>1513.1429999999964</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738420</X>
+          <Y>1171715</Y>
+          <Z>1511.3040000000037</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738392.7300000004</X>
+          <Y>1171709.5579999983</Y>
+          <Z>1502.9940000000061</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738374.8429999985</X>
+          <Y>1171702.5579999983</Y>
+          <Z>1497.9199999999983</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738367.0650000013</X>
+          <Y>1171680.7809999995</Y>
+          <Z>1506.4100000000035</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738326.6229999997</X>
+          <Y>1171673.0040000007</Y>
+          <Z>1502.8790000000008</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738297.2600000016</X>
+          <Y>1171672.2360000014</Y>
+          <Z>1494.3059999999969</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738297.5</X>
+          <Y>1171667.5</Y>
+          <Z>1497.6049999999959</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738303.1240000017</X>
+          <Y>1171660.1959999986</Y>
+          <Z>1499.1910000000062</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738312.8999999985</X>
+          <Y>1171647.5</Y>
+          <Z>1501.9489999999932</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738310.3999999985</X>
+          <Y>1171644.5</Y>
+          <Z>1500.2880000000005</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738314.3000000007</X>
+          <Y>1171637.6999999993</Y>
+          <Z>1503.1999999999971</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738326.1999999993</X>
+          <Y>1171635</Y>
+          <Z>1510.7079999999987</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738336.8000000007</X>
+          <Y>1171552.5</Y>
+          <Z>1521.0650000000023</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738343.1000000015</X>
+          <Y>1171546.1999999993</Y>
+          <Z>1521.0310000000027</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738340</X>
+          <Y>1171536.1999999993</Y>
+          <Z>1523.1110000000044</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738348.6999999993</X>
+          <Y>1171490.3000000007</Y>
+          <Z>1531.0099999999948</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738362.5</X>
+          <Y>1171468.6999999993</Y>
+          <Z>1539.7250000000058</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738361.1999999993</X>
+          <Y>1171465</Y>
+          <Z>1537.778999999995</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738353.1000000015</X>
+          <Y>1171470</Y>
+          <Z>1533.4609999999957</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738341.1999999993</X>
+          <Y>1171460</Y>
+          <Z>1518.1239999999962</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738322.5</X>
+          <Y>1171486.1999999993</Y>
+          <Z>1516.6750000000029</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738317.5</X>
+          <Y>1171486.1999999993</Y>
+          <Z>1520.8880000000063</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738313.6999999993</X>
+          <Y>1171497.5</Y>
+          <Z>1518.3080000000045</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738298.6999999993</X>
+          <Y>1171512.5</Y>
+          <Z>1521.0409999999974</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738301.1999999993</X>
+          <Y>1171527.5</Y>
+          <Z>1514.525999999998</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738311.1999999993</X>
+          <Y>1171543.6999999993</Y>
+          <Z>1504.4339999999938</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738303.6999999993</X>
+          <Y>1171557.5</Y>
+          <Z>1502.0099999999948</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738287.5</X>
+          <Y>1171575</Y>
+          <Z>1504.0779999999941</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738268.6999999993</X>
+          <Y>1171630</Y>
+          <Z>1496.054999999993</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738269.6700000018</X>
+          <Y>1171676.6609999985</Y>
+          <Z>1484.7599999999948</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738262.9809999987</X>
+          <Y>1171701.6539999992</Y>
+          <Z>1479.4049999999988</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738248.6640000008</X>
+          <Y>1171732.8599999994</Y>
+          <Z>1476.0280000000057</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738235.3889999986</X>
+          <Y>1171758.0190000013</Y>
+          <Z>1470.3390000000072</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738223.3090000004</X>
+          <Y>1171770.2899999991</Y>
+          <Z>1468.3830000000016</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738210.4829999991</X>
+          <Y>1171776.8350000009</Y>
+          <Z>1467.4940000000061</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738200</X>
+          <Y>1171793.6999999993</Y>
+          <Z>1466.0589999999938</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738191.5460000001</X>
+          <Y>1171823.9539999999</Y>
+          <Z>1460.1059999999998</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738207.5</X>
+          <Y>1171821.1999999993</Y>
+          <Z>1464.8990000000049</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738236.1999999993</X>
+          <Y>1171812.5</Y>
+          <Z>1478.6440000000002</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738230</X>
+          <Y>1171805</Y>
+          <Z>1473.375</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738233.1979999989</X>
+          <Y>1171793.0760000013</Y>
+          <Z>1472.1640000000043</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738233.6999999993</X>
+          <Y>1171791.1999999993</Y>
+          <Z>1471.974000000002</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738245</X>
+          <Y>1171782.5</Y>
+          <Z>1480.8610000000044</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738253.6999999993</X>
+          <Y>1171770</Y>
+          <Z>1490.4489999999932</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738262.5</X>
+          <Y>1171768.6999999993</Y>
+          <Z>1496.4159999999974</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738266.1999999993</X>
+          <Y>1171750</Y>
+          <Z>1488.6340000000055</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738271.1999999993</X>
+          <Y>1171743.1000000015</Y>
+          <Z>1489.0800000000017</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738272.1000000015</X>
+          <Y>1171726.3000000007</Y>
+          <Z>1484.5200000000041</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738271.2939999998</X>
+          <Y>1171713.3159999996</Y>
+          <Z>1486.25</Z>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2738277.3390000015</X>
+          <Y>1171709.0700000003</Y>
+          <Z>1483.9049999999988</Z>
+        </Point>
+      </PointArray>
+    </Ring>
+  </RingArray>
+  <SpatialReference xsi:type="typens:ProjectedCoordinateSystem">
+    <WKT>PROJCS["CH1903+_LV95",GEOGCS["GCS_CH1903+",DATUM["D_CH1903+",SPHEROID["Bessel_1841",6377397.155,299.1528128]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Hotine_Oblique_Mercator_Azimuth_Center"],PARAMETER["False_Easting",2600000.0],PARAMETER["False_Northing",1200000.0],PARAMETER["Scale_Factor",1.0],PARAMETER["Azimuth",90.0],PARAMETER["Longitude_Of_Center",7.439583333333333],PARAMETER["Latitude_Of_Center",46.95240555555556],UNIT["Meter",1.0],AUTHORITY["EPSG",2056]],VERTCS["LHN95",VDATUM["Landeshohennetz_1995"],PARAMETER["Vertical_Shift",0.0],PARAMETER["Direction",1.0],UNIT["Meter",1.0],AUTHORITY["EPSG",5729]]</WKT>
+    <XOrigin>-27386400</XOrigin>
+    <YOrigin>-32067900</YOrigin>
+    <XYScale>1000</XYScale>
+    <ZOrigin>-100000</ZOrigin>
+    <ZScale>1000</ZScale>
+    <MOrigin>0</MOrigin>
+    <MScale>1</MScale>
+    <XYTolerance>0.01</XYTolerance>
+    <ZTolerance>0.01</ZTolerance>
+    <MTolerance>0.01</MTolerance>
+    <HighPrecision>true</HighPrecision>
+    <WKID>2056</WKID>
+    <LatestWKID>2056</LatestWKID>
+    <VCSWKID>5729</VCSWKID>
+    <LatestVCSWKID>5729</LatestVCSWKID>
+  </SpatialReference>
+</PolygonN>

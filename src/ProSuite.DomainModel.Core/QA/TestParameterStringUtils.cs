@@ -4,6 +4,7 @@ using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.Core.QA
 {

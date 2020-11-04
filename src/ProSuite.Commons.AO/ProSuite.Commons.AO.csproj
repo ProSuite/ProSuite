@@ -1,0 +1,307 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="15.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{7E4B0861-83ED-4D12-BE27-93C9053C88CA}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ProSuite.Commons.AO</RootNamespace>
+    <AssemblyName>ProSuite.Commons.AO</AssemblyName>
+    <SignAssembly>true</SignAssembly>
+    <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
+    <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.6.1</TargetFrameworkVersion>
+    <VSArcGISProduct Condition=" '$(VSArcGISProduct)' == ''">ArcGIS</VSArcGISProduct>
+    <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.6\DotNet</ArcGISAssemblyPath>
+    <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">C:\Program Files\ArcGIS\Pro</ProAssemblyPath>
+    <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$(OutputDirectory)\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE;$(VSArcGISProduct)</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$(OutputDirectory)\Release\</OutputPath>
+    <DefineConstants>TRACE;$(VSArcGISProduct)</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.Commons.AO.xml</DocumentationFile>
+    <NoWarn>1591</NoWarn>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(VSArcGISProduct)' == 'Server'">
+    <Reference Include="ArcGIS.CoreHost, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ProAssemblyPath)\bin\ArcGIS.CoreHost.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="ESRI.ArcGIS.DataSourcesGDB, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.$(VSArcGISProduct).DataSourcesGDB.dll</HintPath>
+    </Reference>
+    <Reference Include="ESRI.ArcGIS.DataSourcesRaster, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.$(VSArcGISProduct).DataSourcesRaster.dll</HintPath>
+    </Reference>
+    <Reference Include="ESRI.ArcGIS.Geodatabase, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.$(VSArcGISProduct).Geodatabase.dll</HintPath>
+    </Reference>
+    <Reference Include="ESRI.ArcGIS.GeoDatabaseExtensions, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.$(VSArcGISProduct).GeoDatabaseExtensions.dll</HintPath>
+    </Reference>
+    <Reference Include="ESRI.ArcGIS.Geometry, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.$(VSArcGISProduct).Geometry.dll</HintPath>
+    </Reference>
+    <Reference Include="ESRI.ArcGIS.System, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.$(VSArcGISProduct).System.dll</HintPath>
+    </Reference>
+    <Reference Include="ESRI.ArcGIS.Version, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.ArcGIS.Version.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
+    <Compile Include="Geodatabase\AssociationDescription.cs" />
+    <Compile Include="Geodatabase\AssociationDescriptionUtils.cs" />
+    <Compile Include="Geodatabase\CodedValue.cs" />
+    <Compile Include="Geodatabase\CodedValueSortOrder.cs" />
+    <Compile Include="Geodatabase\DatasetUtils.cs" />
+    <Compile Include="Geodatabase\DeleteChildVersions.cs" />
+    <Compile Include="Geodatabase\DirectConnectDriver.cs" />
+    <Compile Include="Geodatabase\DisplayValueLookup.cs" />
+    <Compile Include="Geodatabase\DomainUtils.cs" />
+    <Compile Include="Geodatabase\EditOperationObserverBase.cs" />
+    <Compile Include="Geodatabase\EditStateInfo.cs" />
+    <Compile Include="Geodatabase\EnumerableCursor.cs" />
+    <Compile Include="Geodatabase\ObjectClassComparer.cs" />
+    <Compile Include="Geodatabase\FeatureStorageUtils.cs" />
+    <Compile Include="Geodatabase\FieldComparison.cs" />
+    <Compile Include="Geodatabase\FieldDisplayUtils.cs" />
+    <Compile Include="Geodatabase\FieldMapping.cs" />
+    <Compile Include="Geodatabase\FieldMappingRowProxy.cs" />
+    <Compile Include="Geodatabase\FieldUtils.cs" />
+    <Compile Include="Geodatabase\FieldValueTransferLogLevel.cs" />
+    <Compile Include="Geodatabase\FilterHelper.cs" />
+    <Compile Include="Geodatabase\ForeignKeyAssociationDescription.cs" />
+    <Compile Include="Geodatabase\GdbElementNamePattern.cs" />
+    <Compile Include="Geodatabase\GdbObjectReference.cs" />
+    <Compile Include="Geodatabase\GdbObjectUtils.cs" />
+    <Compile Include="Geodatabase\GdbQueryUtils.cs" />
+    <Compile Include="Geodatabase\GdbRelationshipRowReference.cs" />
+    <Compile Include="Geodatabase\GdbSqlUtils.cs" />
+    <Compile Include="Geodatabase\GdbTransaction.cs" />
+    <Compile Include="Geodatabase\GdbTransactionBase.cs" />
+    <Compile Include="Geodatabase\GeometricNetworkConnectOption.cs" />
+    <Compile Include="Geodatabase\GuidFieldSortCallback.cs" />
+    <Compile Include="Geodatabase\IApplicableAttributes.cs" />
+    <Compile Include="Geodatabase\IEditOperationObserver.cs" />
+    <Compile Include="Geodatabase\IGdbTransaction.cs" />
+    <Compile Include="Geodatabase\IIssueReporter.cs" />
+    <Compile Include="Geodatabase\IObjectCache.cs" />
+    <Compile Include="Geodatabase\ISegmentAngleComparisonService.cs" />
+    <Compile Include="Geodatabase\JoinDefinition.cs" />
+    <Compile Include="Geodatabase\JoinType.cs" />
+    <Compile Include="Geodatabase\KeyValueConverter.cs" />
+    <Compile Include="Geodatabase\ManyToManyAssociationDescription.cs" />
+    <Compile Include="Geodatabase\NullCodedValue.cs" />
+    <Compile Include="Geodatabase\ObjectClassEquality.cs" />
+    <Compile Include="Geodatabase\ReadRow.cs" />
+    <Compile Include="Geodatabase\RelationshipClassJoinDefinition.cs" />
+    <Compile Include="Geodatabase\RelationshipClassUtils.cs" />
+    <Compile Include="Geodatabase\RowFormat.cs" />
+    <Compile Include="Geodatabase\RowProxy.cs" />
+    <Compile Include="Geodatabase\SegmentAngleComparisonService.cs" />
+    <Compile Include="Geodatabase\Subtype.cs" />
+    <Compile Include="Geodatabase\SyntheticFeature.cs" />
+    <Compile Include="Geodatabase\TableJoinUtils.cs" />
+    <Compile Include="Geodatabase\TableSortUtils.cs" />
+    <Compile Include="Geodatabase\ToolEditOperationObserver.cs" />
+    <Compile Include="Geodatabase\ValueRowProxy.cs" />
+    <Compile Include="Geodatabase\VersionEventsObjectCacheSynchronizer.cs" />
+    <Compile Include="Geodatabase\WorkspaceComparison.cs" />
+    <Compile Include="Geodatabase\WorkspaceUtils.cs" />
+    <Compile Include="Geometry\ArrayProvider.cs" />
+    <Compile Include="Geometry\BoundaryLoopUtils.cs" />
+    <Compile Include="Geometry\BufferFactory.cs" />
+    <Compile Include="Geometry\CannotWeedReason.cs" />
+    <Compile Include="Geometry\ChangeAlong\AdjustedCutSubcurve.cs" />
+    <Compile Include="Geometry\ChangeAlong\AdjustUtils.cs" />
+    <Compile Include="Geometry\ChangeAlong\ChangeGeometryAlongUtils.cs" />
+    <Compile Include="Geometry\ChangeAlong\ConnectLineCalculatorBase.cs" />
+    <Compile Include="Geometry\ChangeAlong\CutSubcurve.cs" />
+    <Compile Include="Geometry\ChangeAlong\GeometryReshaper.cs" />
+    <Compile Include="Geometry\ChangeAlong\GeometryReshaperBase.cs" />
+    <Compile Include="Geometry\ChangeAlong\IConnectLineCalculator.cs" />
+    <Compile Include="Geometry\ChangeAlong\IExtentProvider.cs" />
+    <Compile Include="Geometry\ChangeAlong\IReshapeAlongCurves.cs" />
+    <Compile Include="Geometry\ChangeAlong\IReshapeAlongOptions.cs" />
+    <Compile Include="Geometry\ChangeAlong\ISubcurveCalculator.cs" />
+    <Compile Include="Geometry\ChangeAlong\MultipleGeometriesReshaper.cs" />
+    <Compile Include="Geometry\ChangeAlong\MultiReshapeConnectLineCalculator.cs" />
+    <Compile Include="Geometry\ChangeAlong\PolycurveInUnionReshapeInfo.cs" />
+    <Compile Include="Geometry\ChangeAlong\ReshapableSubcurveCalculator.cs" />
+    <Compile Include="Geometry\ChangeAlong\ReshapeAlongCurveUsability.cs" />
+    <Compile Include="Geometry\ChangeAlong\ReshapeCurveFilterOptions.cs" />
+    <Compile Include="Geometry\ChangeAlong\ReshapeResultFilter.cs" />
+    <Compile Include="Geometry\ChangeAlong\ReshapeUtils.cs" />
+    <Compile Include="Geometry\ChangeAlong\StickyIntersectionConnectLineCalculator.cs" />
+    <Compile Include="Geometry\ChangeAlong\StickyIntersections.cs" />
+    <Compile Include="Geometry\ChangeAlong\StickyIntersectionsMultiplePolygonReshaper.cs" />
+    <Compile Include="Geometry\ChangeAlong\SubcurveFilter.cs" />
+    <Compile Include="Geometry\ChangeAlong\SubcurveNode.cs" />
+    <Compile Include="Geometry\ChangeAlong\TargetBufferOptions.cs" />
+    <Compile Include="Geometry\CloneGeometry.cs" />
+    <Compile Include="Geometry\Cracking\ChopperToolOptions.cs" />
+    <Compile Include="Geometry\Cracking\CrackerToolOptions.cs" />
+    <Compile Include="Geometry\Cracking\CrackPoint.cs" />
+    <Compile Include="Geometry\Cracking\CrackPointCalculator.cs" />
+    <Compile Include="Geometry\Cracking\CrackUtils.cs" />
+    <Compile Include="Geometry\Cracking\FeatureVertexInfo.cs" />
+    <Compile Include="Geometry\Cracking\ICrackingOptions.cs" />
+    <Compile Include="Geometry\Cracking\PartialChopperToolOptions.cs" />
+    <Compile Include="Geometry\Cracking\PartialCrackerToolOptions.cs" />
+    <Compile Include="Geometry\Cracking\ShortSegmentsUtils.cs" />
+    <Compile Include="Geometry\CutPolyline.cs" />
+    <Compile Include="Geometry\Cut\CutGeometryUtils.cs" />
+    <Compile Include="Geometry\Cut\CutResult.cs" />
+    <Compile Include="Geometry\Cut\DegenerateMultipatchFootprintAction.cs" />
+    <Compile Include="Geometry\Cut\DegenerateResultGeometryException.cs" />
+    <Compile Include="Geometry\ExtractParts\GeometryPart.cs" />
+    <Compile Include="Geometry\ExtractParts\PartExtractionUtils.cs" />
+    <Compile Include="Geometry\GeometryComparison.cs" />
+    <Compile Include="Geometry\GeometryConversionUtils.cs" />
+    <Compile Include="Geometry\GeometryEnumerator.cs" />
+    <Compile Include="Geometry\GeometryFactory.cs" />
+    <Compile Include="Geometry\GeometryNonSimpleReason.cs" />
+    <Compile Include="Geometry\GeometryProperties.cs" />
+    <Compile Include="Geometry\GeometryUtils.cs" />
+    <Compile Include="Geometry\IArrayProvider.cs" />
+    <Compile Include="Geometry\IFlexibleSettingProvider.cs" />
+    <Compile Include="Geometry\IntersectionConstraint.cs" />
+    <Compile Include="Geometry\IntersectionMatrix.cs" />
+    <Compile Include="Geometry\IntersectionPointOptions.cs" />
+    <Compile Include="Geometry\IntersectionUtils.cs" />
+    <Compile Include="Geometry\LinearNetwork\Editing\LinearNetworkEditUtils.cs" />
+    <Compile Include="Geometry\LinearNetwork\Editing\NetworkEditValidator.cs" />
+    <Compile Include="Geometry\LinearNetwork\ILinearNetworkFeatureFinder.cs" />
+    <Compile Include="Geometry\LinearNetwork\Editing\IJunctionFeatureFactory.cs" />
+    <Compile Include="Geometry\LinearNetwork\LinearNetworkClassDef.cs" />
+    <Compile Include="Geometry\LinearNetwork\LinearNetworkDef.cs" />
+    <Compile Include="Geometry\LinearNetwork\LinearNetworkFeatureFinderBase.cs" />
+    <Compile Include="Geometry\LinearNetwork\Editing\LinearNetworkNodeUpdater.cs" />
+    <Compile Include="Geometry\LinearNetwork\Editing\LinearNetworkEditAgent.cs" />
+    <Compile Include="Geometry\LinearNetwork\LinearNetworkGdbFeatureFinder.cs" />
+    <Compile Include="Geometry\LinearNetwork\ShortestPath\AdjacentNode.cs" />
+    <Compile Include="Geometry\LinearNetwork\ShortestPath\Dijkstra.cs" />
+    <Compile Include="Geometry\LinearNetwork\ShortestPath\Node.cs" />
+    <Compile Include="Geometry\LinearNetwork\ShortestPath\PolylineGraphConnectivity.cs" />
+    <Compile Include="Geometry\LineEnd.cs" />
+    <Compile Include="Geometry\Location.cs" />
+    <Compile Include="Geometry\Location3D.cs" />
+    <Compile Include="Geometry\Location3DComparer.cs" />
+    <Compile Include="Geometry\LocationComparer.cs" />
+    <Compile Include="Geometry\Plane.cs" />
+    <Compile Include="Geometry\PointSet.cs" />
+    <Compile Include="Geometry\ChangeAlong\ReshapeInfo.cs" />
+    <Compile Include="Geometry\Serialization\WkbGeometryReader.cs" />
+    <Compile Include="Geometry\Serialization\WkbGeometryWriter.cs" />
+    <Compile Include="Geometry\Serialization\WksPointListBuilder.cs" />
+    <Compile Include="Geometry\Serialization\WksPointZFactory.cs" />
+    <Compile Include="Geometry\Serialization\WksPointZPointList.cs" />
+    <Compile Include="Geometry\RemoveOverlaps\Overlaps.cs" />
+    <Compile Include="Geometry\RemoveOverlaps\OverlapsRemover.cs" />
+    <Compile Include="Geometry\RemoveOverlaps\RemoveOverlapsResult.cs" />
+    <Compile Include="Geometry\RemoveOverlaps\RemoveOverlapsUtils.cs" />
+    <Compile Include="Geometry\SegmentReplacementUtils.cs" />
+    <Compile Include="Geometry\TargetFeatureSelection.cs" />
+    <Compile Include="Licensing\ArcGISLicenses.cs" />
+    <Compile Include="Licensing\EsriExtension.cs" />
+    <Compile Include="Licensing\EsriProduct.cs" />
+    <Compile Include="Licensing\EsriProductFallback.cs" />
+    <Compile Include="Licensing\LicenseInitializer.cs" />
+    <Compile Include="Properties\LocalizableStrings.Designer.cs">
+      <DependentUpon>LocalizableStrings.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Geometry\RemoveCutPointsService.cs" />
+    <Compile Include="Geometry\SegmentCounts.cs" />
+    <Compile Include="Geometry\SpatialReferenceUtils.cs" />
+    <Compile Include="Geometry\VertexIndex.cs" />
+    <Compile Include="Geometry\WellKnownHorizontalCS.cs" />
+    <Compile Include="Geometry\WellKnownVerticalCS.cs" />
+    <Compile Include="Geometry\WksGeometryUtils.cs" />
+    <Compile Include="Geometry\WKSPointZComparer.cs" />
+    <Compile Include="Geometry\WKSPointZUtils.cs" />
+    <Compile Include="Geometry\ZAssignment\ChangeAlongZSource.cs" />
+    <Compile Include="Geometry\ZAssignment\ChangeAlongZUtils.cs" />
+    <Compile Include="Geometry\ZAssignment\DtmSubMode.cs" />
+    <Compile Include="Geometry\ZAssignment\IDrapeZ.cs" />
+    <Compile Include="Geometry\ZAssignment\IZSettingsDefaults.cs" />
+    <Compile Include="Geometry\ZAssignment\IZSettingsModel.cs" />
+    <Compile Include="Geometry\ZAssignment\MultiTargetSubMode.cs" />
+    <Compile Include="Geometry\ZAssignment\ZMode.cs" />
+    <Compile Include="Geometry\ZAssignment\ZSettingsModel.cs" />
+    <Compile Include="PropertySetUtils.cs" />
+    <Compile Include="RuntimeUtils.cs" />
+    <Compile Include="SerializationUtils.cs" />
+    <Compile Include="StreamUtils.cs" />
+    <Compile Include="UIDUtils.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\LocalizableStrings.de.resx" />
+    <EmbeddedResource Include="Properties\LocalizableStrings.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>LocalizableStrings.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
+      <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
+      <Name>ProSuite.Commons.Logging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
+      <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
+      <Name>ProSuite.Commons</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
+      <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
+      <Name>ProSuite.Commons.Essentials</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="C5">
+      <Version>2.5.3</Version>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Content Include="..\..\lib\licenses\C5.license.txt">
+      <Link>Licenses\C5.license.txt</Link>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+</Project>

@@ -1,0 +1,273 @@
+<MultiPatchN xsi:type="typens:MultiPatchN" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:typens="http://www.esri.com/schemas/ArcGIS/10.4">
+  <HasID>false</HasID>
+  <HasZ>false</HasZ>
+  <HasM>false</HasM>
+  <Extent xsi:type="typens:EnvelopeN">
+    <XMin>2576660.9539999999</XMin>
+    <YMin>1182069.7010000013</YMin>
+    <XMax>2576686.8390000015</XMax>
+    <YMax>1182087.6790000014</YMax>
+    <ZMin>654.57799999999406</ZMin>
+    <ZMax>658.78100000000268</ZMax>
+  </Extent>
+  <SurfacePatchArray xsi:type="typens:ArrayOfSurfacePatch">
+    <SurfacePatch xsi:type="typens:Ring">
+      <PointArray xsi:type="typens:ArrayOfPoint">
+        <Point xsi:type="typens:PointN">
+          <X>2576678.4340000004</X>
+          <Y>1182086.4600000009</Y>
+          <Z>657.44400000000314</Z>
+          <ID>0</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576679.5890000015</X>
+          <Y>1182086.9690000005</Y>
+          <Z>656.34799999999814</Z>
+          <ID>0</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576681.5289999992</X>
+          <Y>1182082.568</Y>
+          <Z>656.34799999999814</Z>
+          <ID>0</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576680.3740000017</X>
+          <Y>1182082.0590000004</Y>
+          <Z>657.44400000000314</Z>
+          <ID>0</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576678.4340000004</X>
+          <Y>1182086.4600000009</Y>
+          <Z>657.44400000000314</Z>
+          <ID>0</ID>
+        </Point>
+      </PointArray>
+    </SurfacePatch>
+    <SurfacePatch xsi:type="typens:Ring">
+      <PointArray xsi:type="typens:ArrayOfPoint">
+        <Point xsi:type="typens:PointN">
+          <X>2576678.4340000004</X>
+          <Y>1182086.4600000009</Y>
+          <Z>657.44400000000314</Z>
+          <ID>0</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576680.3740000017</X>
+          <Y>1182082.0590000004</Y>
+          <Z>657.44400000000314</Z>
+          <ID>0</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576677.2509999983</X>
+          <Y>1182080.6810000017</Y>
+          <Z>654.57799999999406</Z>
+          <ID>0</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576675.3099999987</X>
+          <Y>1182085.0830000006</Y>
+          <Z>654.57799999999406</Z>
+          <ID>0</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576678.4340000004</X>
+          <Y>1182086.4600000009</Y>
+          <Z>657.44400000000314</Z>
+          <ID>0</ID>
+        </Point>
+      </PointArray>
+    </SurfacePatch>
+    <SurfacePatch xsi:type="typens:Ring">
+      <PointArray xsi:type="typens:ArrayOfPoint">
+        <Point xsi:type="typens:PointN">
+          <X>2576663.2329999991</X>
+          <Y>1182075.0280000009</Y>
+          <Z>658.44899999999325</Z>
+          <ID>1</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576681.6380000003</X>
+          <Y>1182083.1440000013</Y>
+          <Z>658.44899999999325</Z>
+          <ID>1</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576683.2300000004</X>
+          <Y>1182079.5309999995</Y>
+          <Z>656.04899999999907</Z>
+          <ID>1</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576680.8599999994</X>
+          <Y>1182078.4860000014</Y>
+          <Z>656.04899999999907</Z>
+          <ID>1</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576681.6490000002</X>
+          <Y>1182076.7859999985</Y>
+          <Z>654.91000000000349</Z>
+          <ID>1</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576665.5810000002</X>
+          <Y>1182069.7010000013</Y>
+          <Z>654.91000000000349</Z>
+          <ID>1</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576663.2329999991</X>
+          <Y>1182075.0280000009</Y>
+          <Z>658.44899999999325</Z>
+          <ID>1</ID>
+        </Point>
+      </PointArray>
+    </SurfacePatch>
+    <SurfacePatch xsi:type="typens:Ring">
+      <PointArray xsi:type="typens:ArrayOfPoint">
+        <Point xsi:type="typens:PointN">
+          <X>2576681.6380000003</X>
+          <Y>1182083.1440000013</Y>
+          <Z>658.44899999999325</Z>
+          <ID>2</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576663.2329999991</X>
+          <Y>1182075.0280000009</Y>
+          <Z>658.44899999999325</Z>
+          <ID>2</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576660.9539999999</X>
+          <Y>1182080.1950000003</Y>
+          <Z>654.91000000000349</Z>
+          <ID>2</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576675.5379999988</X>
+          <Y>1182086.6259999983</Y>
+          <Z>654.91000000000349</Z>
+          <ID>2</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576676.1050000004</X>
+          <Y>1182085.4329999983</Y>
+          <Z>655.73799999999756</Z>
+          <ID>2</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576677.7030000016</X>
+          <Y>1182086.1380000003</Y>
+          <Z>655.73799999999756</Z>
+          <ID>2</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576678.125</X>
+          <Y>1182085.1110000014</Y>
+          <Z>656.43300000000454</Z>
+          <ID>2</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576680.3399999999</X>
+          <Y>1182086.0879999995</Y>
+          <Z>656.43300000000454</Z>
+          <ID>2</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576681.6380000003</X>
+          <Y>1182083.1440000013</Y>
+          <Z>658.44899999999325</Z>
+          <ID>2</ID>
+        </Point>
+      </PointArray>
+    </SurfacePatch>
+    <SurfacePatch xsi:type="typens:Ring">
+      <PointArray xsi:type="typens:ArrayOfPoint">
+        <Point xsi:type="typens:PointN">
+          <X>2576683.2300000004</X>
+          <Y>1182079.5309999995</Y>
+          <Z>658.78100000000268</Z>
+          <ID>3</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576680.3390000015</X>
+          <Y>1182086.0879999995</Y>
+          <Z>658.78100000000268</Z>
+          <ID>3</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576683.9479999989</X>
+          <Y>1182087.6790000014</Y>
+          <Z>654.57799999999406</Z>
+          <ID>3</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576686.8390000015</X>
+          <Y>1182081.1229999997</Y>
+          <Z>654.57799999999406</Z>
+          <ID>3</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576683.2300000004</X>
+          <Y>1182079.5309999995</Y>
+          <Z>658.78100000000268</Z>
+          <ID>3</ID>
+        </Point>
+      </PointArray>
+    </SurfacePatch>
+    <SurfacePatch xsi:type="typens:Ring">
+      <PointArray xsi:type="typens:ArrayOfPoint">
+        <Point xsi:type="typens:PointN">
+          <X>2576683.2300000004</X>
+          <Y>1182079.5309999995</Y>
+          <Z>658.78100000000268</Z>
+          <ID>3</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576678.6490000002</X>
+          <Y>1182077.5109999999</Y>
+          <Z>654.57799999999406</Z>
+          <ID>3</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576675.7580000013</X>
+          <Y>1182084.068</Y>
+          <Z>654.57799999999406</Z>
+          <ID>3</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576680.3390000015</X>
+          <Y>1182086.0879999995</Y>
+          <Z>658.78100000000268</Z>
+          <ID>3</ID>
+        </Point>
+        <Point xsi:type="typens:PointN">
+          <X>2576683.2300000004</X>
+          <Y>1182079.5309999995</Y>
+          <Z>658.78100000000268</Z>
+          <ID>3</ID>
+        </Point>
+      </PointArray>
+    </SurfacePatch>
+  </SurfacePatchArray>
+  <SpatialReference xsi:type="typens:ProjectedCoordinateSystem">
+    <WKT>PROJCS["CH1903+_LV95",GEOGCS["GCS_CH1903+",DATUM["D_CH1903+",SPHEROID["Bessel_1841",6377397.155,299.1528128]],PRIMEM["Greenwich",0.0],UNIT["Degree",0.0174532925199433]],PROJECTION["Hotine_Oblique_Mercator_Azimuth_Center"],PARAMETER["False_Easting",2600000.0],PARAMETER["False_Northing",1200000.0],PARAMETER["Scale_Factor",1.0],PARAMETER["Azimuth",90.0],PARAMETER["Longitude_Of_Center",7.439583333333333],PARAMETER["Latitude_Of_Center",46.95240555555556],UNIT["Meter",1.0],AUTHORITY["EPSG",2056]],VERTCS["LHN95",VDATUM["Landeshohennetz_1995"],PARAMETER["Vertical_Shift",0.0],PARAMETER["Direction",1.0],UNIT["Meter",1.0],AUTHORITY["EPSG",5729]]</WKT>
+    <XOrigin>-27386400</XOrigin>
+    <YOrigin>-32067900</YOrigin>
+    <XYScale>140996569.55187955</XYScale>
+    <ZOrigin>-100000</ZOrigin>
+    <ZScale>1000</ZScale>
+    <MOrigin>-100000</MOrigin>
+    <MScale>10000</MScale>
+    <XYTolerance>0.01</XYTolerance>
+    <ZTolerance>0.01</ZTolerance>
+    <MTolerance>0.01</MTolerance>
+    <HighPrecision>true</HighPrecision>
+    <WKID>2056</WKID>
+    <LatestWKID>2056</LatestWKID>
+    <VCSWKID>5729</VCSWKID>
+    <LatestVCSWKID>5729</LatestVCSWKID>
+  </SpatialReference>
+</MultiPatchN>

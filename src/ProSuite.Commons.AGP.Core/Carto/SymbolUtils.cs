@@ -71,6 +71,11 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return symbol;
 		}
 
+		public static CIMPointSymbol MakePointSymbol(this CIMMarker marker)
+		{
+			return CreatePointSymbol(marker);
+		}
+
 		public static CIMLineSymbol CreateLineSymbol(params CIMSymbolLayer[] layers)
 		{
 			return new CIMLineSymbol {SymbolLayers = layers, Effects = null};

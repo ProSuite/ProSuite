@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -15,10 +17,14 @@ namespace ProSuite.AGP.WorkList
 	// Note maybe all SDK code, like open workspace, etc. should be in here. Not in DatabaseSourceClass for instance.
 	public abstract class GdbItemRepository : IWorkItemRepository
 	{
-		protected GdbItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase)
+		protected GdbItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase, IRepository workItemStateRepository)
 		{
 			RegisterDatasets(tablesByGeodatabase);
+
+			WorkItemStateRepository = workItemStateRepository;
 		}
+
+		public IRepository WorkItemStateRepository { get; }
 
 		public Dictionary<ISourceClass, Geodatabase> GeodatabaseBySourceClasses { get; } = new Dictionary<ISourceClass, Geodatabase>();
 
@@ -28,7 +34,9 @@ namespace ProSuite.AGP.WorkList
 			{
 				foreach (Row row in GetRowsCore(sourceClass, filter, recycle))
 				{
-					yield return CreateWorkItemCore(row, sourceClass);
+					IWorkItem item = CreateWorkItemCore(row, sourceClass);
+
+					yield return WorkItemStateRepository.Refresh(item);
 				}
 			}
 
@@ -48,39 +56,86 @@ namespace ProSuite.AGP.WorkList
 			// return GeodatabaseBySourceClasses.Keys.Where(source => source.Uses(table)).SelectMany(sourceClass => GetItemsCore(sourceClass, filter, recycle));
 		}
 
-		public void UpdateItem(IWorkItem item)
+		public void Refresh(IWorkItem item)
 		{
-			ISourceClass sourceClass = GeodatabaseBySourceClasses.Keys.FirstOrDefault(sc => sc.Uses(item.Proxy.Table));
-			// todo daro: log message
-			Assert.NotNull(sourceClass);
+			GdbTableIdentity tableId = item.Proxy.Table;
 
-			var filter = new QueryFilter {ObjectIDs = new List<long> {item.Proxy.ObjectId}};
-
-			Row row = GetRowsCore(sourceClass, filter, recycle: true).FirstOrDefault();
 			// todo daro: log message
+			ISourceClass source = GeodatabaseBySourceClasses.Keys.FirstOrDefault(sc => sc.Uses(tableId));
+			Assert.NotNull(source);
+
+			Row row = GetRow(source, item.Proxy.ObjectId);
 			Assert.NotNull(row);
-
-			item.Status = sourceClass.GetStatus(row);
 
 			if (row is Feature feature)
 			{
 				((WorkItem) item).SetGeometryFromFeature(feature);
 			}
+
+			RefreshCore(item, source, row);
 		}
 
+		[CanBeNull]
+		private Row GetRow([NotNull] ISourceClass sourceClass, long oid)
+		{
+			var filter = new QueryFilter {ObjectIDs = new List<long> {oid}};
+
+			// todo daro: log message
+			return GetRowsCore(sourceClass, filter, recycle: true).FirstOrDefault();
+		}
+
+		protected virtual void RefreshCore([NotNull] IWorkItem item,
+		                                   [NotNull] ISourceClass sourceClass,
+		                                   [NotNull] Row row) { }
+
+		public async Task UpdateAsync(IWorkItem item)
+		{
+			// selection work list: stores visited, status in work list definition file
+			// issue work list: stores status in db
+			WorkItemStateRepository.Update(item);
+
+			GdbTableIdentity tableId = item.Proxy.Table;
+
+			ISourceClass source = GeodatabaseBySourceClasses.Keys.FirstOrDefault(s => s.Uses(tableId));
+			Assert.NotNull(source);
+
+			Row row = GetRow(source, item.Proxy.ObjectId);
+			Assert.NotNull(row);
+
+			await UpdateCoreAsync(item, source, row);
+		}
+
+		// todo daro: rename?
 		public void UpdateVolatileState(IEnumerable<IWorkItem> items)
 		{
-			throw new NotImplementedException();
+			WorkItemStateRepository.UpdateVolatileState(items);
 		}
 
 		public void Commit()
 		{
-			throw new NotImplementedException();
+			WorkItemStateRepository.Commit();
 		}
 
 		public void Discard()
 		{
-			throw new NotImplementedException();
+			WorkItemStateRepository.Discard();
+		}
+
+		public void SetCurrentIndex(int currentIndex)
+		{
+			WorkItemStateRepository.CurrentIndex = currentIndex;
+		}
+
+		public int GetCurrentIndex()
+		{
+			return WorkItemStateRepository.CurrentIndex ?? -1;
+		}
+
+		protected virtual Task UpdateCoreAsync([NotNull] IWorkItem item,
+		                                       [NotNull] ISourceClass source,
+		                                       Row row)
+		{
+			return Task.FromResult(0);
 		}
 
 		protected virtual IEnumerable<Row> GetRowsCore([NotNull] ISourceClass sourceClass, [CanBeNull] QueryFilter filter, bool recycle)
@@ -101,21 +156,24 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		[CanBeNull]
-		protected virtual DatabaseStatusSchema CreateStatusSchemaCore(FeatureClassDefinition definition)
+		protected virtual WorkListStatusSchema CreateStatusSchemaCore([NotNull] FeatureClassDefinition definition)
 		{
 			return null;
 		}
 
-		[NotNull]
-		protected abstract IAttributeReader CreateAttributeReaderCore([NotNull] FeatureClassDefinition definition);
+		[CanBeNull]
+		protected virtual IAttributeReader CreateAttributeReaderCore([NotNull] FeatureClassDefinition definition)
+		{
+			return null;
+		}
 
 		[NotNull]
 		protected abstract IWorkItem CreateWorkItemCore([NotNull] Row row, ISourceClass source);
 
 		[NotNull]
 		protected abstract ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
-		                                                      [NotNull] IAttributeReader attributeReader,
-		                                                      [CanBeNull] DatabaseStatusSchema statusSchema = null);
+		                                                      [CanBeNull] IAttributeReader attributeReader,
+		                                                      [CanBeNull] WorkListStatusSchema statusSchema);
 
 		private void RegisterDatasets(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase)
 		{
@@ -138,19 +196,26 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		[CanBeNull]
-		private Table OpenFeatureClass([NotNull] ISourceClass sourceClass)
+		protected Table OpenFeatureClass([NotNull] ISourceClass sourceClass)
 		{
-
 			return GeodatabaseBySourceClasses.TryGetValue(sourceClass, out Geodatabase gdb)
 				       ? gdb.OpenDataset<Table>(sourceClass.Name)
 				       : null;
 		}
 
+		//[CanBeNull]
+		//protected Table OpenFeatureClass2([NotNull] ISourceClass sourceClass)
+		//{
+		//	return GeodatabaseBySourceClasses.TryGetValue(sourceClass, out Geodatabase gdb)
+		//		       ? sourceClass.OpenFeatureClass(gdb)
+		//		       : null;
+		//}
+
 		private ISourceClass CreateSourceClass(GdbTableIdentity identity, FeatureClassDefinition definition)
 		{
 			IAttributeReader attributeReader = CreateAttributeReaderCore(definition);
 
-			DatabaseStatusSchema statusSchema = CreateStatusSchemaCore(definition);
+			WorkListStatusSchema statusSchema = CreateStatusSchemaCore(definition);
 
 			ISourceClass sourceClass = CreateSourceClassCore(identity, attributeReader, statusSchema);
 
@@ -162,6 +227,21 @@ namespace ProSuite.AGP.WorkList
 		public int GetCount(QueryFilter filter = null)
 		{
 			throw new NotImplementedException();
+		}
+
+		public int Count(WorkItemVisibility visibility)
+		{
+			int count = 0;
+
+			foreach (ISourceClass sourceClass in GeodatabaseBySourceClasses.Keys)
+			{
+				//string whereClause = sourceClass.GetQuery(visibility);
+				//var filter = new QueryFilter {WhereClause = whereClause};
+
+				//count += GetRowsCore(sourceClass, filter, recycle: true).Count();
+			}
+
+			return count;
 		}
 
 		public IEnumerable<PluginField> GetFields(IEnumerable<string> fieldNames = null)
@@ -177,6 +257,11 @@ namespace ProSuite.AGP.WorkList
 
 			// oid = 666, tableId = 42 => 42666
 			return (int) (Math.Pow(10, Math.Floor(Math.Log10(oid) + 1)) * source.Id + oid);
+		}
+
+		protected IWorkItem RefreshState(IWorkItem item)
+		{
+			return WorkItemStateRepository.Refresh(item);
 		}
 	}
 }

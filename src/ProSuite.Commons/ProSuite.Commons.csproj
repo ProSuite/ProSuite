@@ -68,6 +68,8 @@
     <Compile Include="Com\StaTaskScheduler.cs" />
     <Compile Include="ConfigurationDirectoryProvider.cs" />
     <Compile Include="ConfigurationDirectorySearcher.cs" />
+    <Compile Include="Cryptography\CertificateUtils.cs" />
+    <Compile Include="Cryptography\KeyPair.cs" />
     <Compile Include="Cryptography\PropertyValueEncryptionUtils.cs" />
     <Compile Include="Cryptography\StringEncryptor.cs" />
     <Compile Include="Cryptography\StringEncryptorBase.cs" />
@@ -79,11 +81,23 @@
     <Compile Include="Geometry\EnvelopeXY.cs" />
     <Compile Include="Geometry\GeomRelationUtils.cs" />
     <Compile Include="Geometry\IBoundedXY.cs" />
+    <Compile Include="Geometry\IPointList.cs" />
     <Compile Include="Geometry\ISegmentList.cs" />
     <Compile Include="Geometry\MultipleRingNavigator.cs" />
     <Compile Include="Geometry\SegmentIntersectionUtils.cs" />
     <Compile Include="Geometry\SingleRingNavigator.cs" />
     <Compile Include="Geometry\SubcurveNavigator.cs" />
+    <Compile Include="Geometry\Wkb\GeomBuilder.cs" />
+    <Compile Include="Geometry\Wkb\IPointFactory.cs" />
+    <Compile Include="Geometry\Wkb\Ordinates.cs" />
+    <Compile Include="Geometry\Wkb\PntFactory.cs" />
+    <Compile Include="Geometry\Wkb\GeometryBuilderBase.cs" />
+    <Compile Include="Geometry\Wkb\WkbGeometryType.cs" />
+    <Compile Include="Geometry\Wkb\WkbGeomReader.cs" />
+    <Compile Include="Geometry\Wkb\WkbReader.cs" />
+    <Compile Include="Geometry\Wkb\WkbGeomWriter.cs" />
+    <Compile Include="Geometry\Wkb\BigEndianBinaryReader.cs" />
+    <Compile Include="Geometry\Wkb\WkbWriter.cs" />
     <Compile Include="ManagedOptions\DatasetSpecificValue.cs" />
     <Compile Include="Misc\Either.cs" />
     <Compile Include="Geometry\Box.cs" />
@@ -201,6 +215,7 @@
     <Compile Include="RegistryUtils.cs" />
     <Compile Include="SimpleUserNameProvider.cs" />
     <Compile Include="SystemUtils.cs" />
+    <Compile Include="Testing\TestDataLocator.cs" />
     <Compile Include="Text\RegexUtils.cs" />
     <Compile Include="Text\RichTextBuilder.cs" />
     <Compile Include="Text\StringUtils.cs" />
@@ -262,6 +277,9 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
+    <Content Include="..\..\lib\licenses\C5.license.txt">
+      <Link>Licenses\C5.license.txt</Link>
+    </Content>
     <Content Include="..\..\lib\licenses\softSurfer.geomalgorithms.license.txt">
       <Link>Licenses\softSurfer.geomalgorithms.license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

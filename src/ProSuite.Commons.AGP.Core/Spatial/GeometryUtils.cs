@@ -93,5 +93,65 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			if (b == null) return a;
 			return a.Union(b);
 		}
+
+		public static Polyline Boundary(Polygon polygon)
+		{
+			if (polygon == null) return null;
+
+			return (Polyline) Engine.Boundary(polygon);
+		}
+
+		public static T Generalize<T>(T geometry, double maxDeviation, bool removeDegenerateParts = false, bool preserveCurves = false) where T : Geometry
+		{
+			if (maxDeviation < double.Epsilon)
+				return geometry;
+
+			return (T) Engine.Generalize(geometry, maxDeviation, removeDegenerateParts,  preserveCurves);
+		}
+
+		public static Polyline Simplify(Polyline polyline, SimplifyType simplifyType,
+		                                bool forceSimplify = false)
+		{
+			if (polyline == null) return null;
+
+			return Engine.SimplifyPolyline(polyline, simplifyType, forceSimplify);
+		}
+
+		public static T Simplify<T>(T geometry, bool forceSimplify = false) where T : Geometry
+		{
+			if (geometry == null) return null;
+
+			return (T) Engine.SimplifyAsFeature(geometry, forceSimplify);
+		}
+
+		public static bool Contains(Geometry a, Geometry b, bool suppressIndexing = false)
+		{
+			if (a == null) return false;
+			if (b == null) return true;
+
+			if (!suppressIndexing)
+			{
+				Engine.AccelerateForRelationalOperations(a);
+				Engine.AccelerateForRelationalOperations(a);
+			}
+
+			return Engine.Contains(a, b);
+		}
+
+		public static double GetDistanceAlongCurve(Multipart curve, MapPoint point)
+		{
+			Engine.QueryPointAndDistance(
+				curve, SegmentExtension.NoExtension, point, AsRatioOrLength.AsLength,
+				out double distanceAlong, out _, out _);
+			return distanceAlong;
+		}
+
+		public static IGeometryEngine Engine
+		{
+			get => _engine ?? GeometryEngine.Instance;
+			set => _engine = value;
+		}
+
+		private static IGeometryEngine _engine;
 	}
 }

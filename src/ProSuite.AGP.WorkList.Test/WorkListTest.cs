@@ -8,6 +8,8 @@ using ArcGIS.Core.Geometry;
 using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.AGP.WorkList.Domain.Persistence;
+using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 
@@ -42,7 +44,17 @@ namespace ProSuite.AGP.WorkList.Test
 				                          {_geodatabase, new List<Table> {_table0, _table1}}
 			                          };
 
-			_repository = new IssueItemRepository(tablesByGeodatabase);
+			IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
+			_repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
+		}
+
+		[TearDown]
+		public void TearDown()
+		{
+			_table0?.Dispose();
+			_table1?.Dispose();
+			_geodatabase?.Dispose();
+			//_repository?.Dispose();
 		}
 
 		[OneTimeSetUp]
@@ -76,7 +88,7 @@ namespace ProSuite.AGP.WorkList.Test
 		#region work list navigation tests
 
 		[Test]
-		public void CanGoNext()
+		public void Can_go_next()
 		{
 			IWorkItem item1 = new WorkItemMock(1);
 			IWorkItem item2 = new WorkItemMock(2);
@@ -86,7 +98,7 @@ namespace ProSuite.AGP.WorkList.Test
 			
 			IWorkList wl = new MemoryQueryWorkList(repository, "work list");
 
-			wl.GoFirst();
+			wl.GoNext();
 			Assert.AreEqual(item1, wl.Current);
 			Assert.True(wl.Current?.Visited);
 
@@ -105,6 +117,170 @@ namespace ProSuite.AGP.WorkList.Test
 			// end of work list, current item is the same as before
 			wl.GoNext();
 			Assert.AreEqual(item4, wl.Current);
+			Assert.True(wl.Current?.Visited);
+		}
+
+		[Test]
+		public void Can_go_first_again()
+		{
+			IWorkItem item1 = new WorkItemMock(1);
+			IWorkItem item2 = new WorkItemMock(2);
+			IWorkItem item3 = new WorkItemMock(3);
+			IWorkItem item4 = new WorkItemMock(4);
+			var repository = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
+
+			IWorkList wl = new MemoryQueryWorkList(repository, "work list");
+
+			wl.GoNext();
+			Assert.AreEqual(item1, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			wl.GoNext();
+			Assert.AreEqual(item2, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			wl.GoNext();
+			Assert.AreEqual(item3, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			// go first again
+			wl.GoFirst();
+			Assert.AreEqual(item1, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			wl.GoNext();
+			Assert.AreEqual(item2, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			// go first again
+			wl.GoFirst();
+			Assert.AreEqual(item1, wl.Current);
+			Assert.True(wl.Current?.Visited);
+		}
+
+		[Test]
+		public void Can_go_previous()
+		{
+			IWorkItem item1 = new WorkItemMock(1);
+			IWorkItem item2 = new WorkItemMock(2);
+			IWorkItem item3 = new WorkItemMock(3);
+			IWorkItem item4 = new WorkItemMock(4);
+			var repository = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
+
+			IWorkList wl = new MemoryQueryWorkList(repository, "work list");
+
+			wl.GoNext();
+			Assert.AreEqual(item1, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			wl.GoNext();
+			Assert.AreEqual(item2, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			wl.GoNext();
+			Assert.AreEqual(item3, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			// go previous
+			wl.GoPrevious();
+			Assert.AreEqual(item2, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			// go previous again
+			wl.GoPrevious();
+			Assert.AreEqual(item1, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			wl.GoNext();
+			Assert.AreEqual(item2, wl.Current);
+			Assert.True(wl.Current?.Visited);
+		}
+
+		[Test]
+		public void Can_go_nearest()
+		{
+			MapPoint pt7 = PolygonConstruction.CreateMapPoint(7, 0, 0);
+			MapPoint pt10 = PolygonConstruction.CreateMapPoint(10, 0, 0);
+			MapPoint pt15 = PolygonConstruction.CreateMapPoint(15, 0, 0);
+
+			var item7 = new WorkItemMock(7, pt7);
+			var item10 = new WorkItemMock(10, pt10);
+			var item15 = new WorkItemMock(15, pt15);
+
+			var repository = new ItemRepositoryMock(new[] {item7, item10, item15});
+
+			IWorkList wl = new MemoryQueryWorkList(repository, nameof(Can_go_nearest));
+			
+			Geometry reference = PolygonConstruction.CreateMapPoint(11, 0, 0);
+
+			// go to item10
+			Assert.True(wl.CanGoNearest());
+			wl.GoNearest(reference);
+			Assert.AreEqual(item10, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			// go to item7
+			Assert.True(wl.CanGoNearest());
+			Assert.NotNull(wl.Current);
+			wl.GoNearest(wl.Current.Extent);
+			Assert.AreEqual(item7, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			// go to item15
+			Assert.True(wl.CanGoNearest());
+			Assert.NotNull(wl.Current);
+			wl.GoNearest(wl.Current.Extent);
+			Assert.AreEqual(item15, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			// Now all are visited, what is the next item? None because there is no
+			// more item *after* the last item15.
+			// Now we need to go to item *before* the last one.
+			Assert.False(wl.CanGoNearest());
+
+			Assert.True(wl.CanGoPrevious());
+			wl.GoPrevious();
+			Assert.AreEqual(item10, wl.Current);
+
+			// Now we can go nearest again which is item7 (nearst to item10)
+			Assert.True(wl.CanGoNearest());
+			Assert.NotNull(wl.Current);
+			wl.GoNearest(wl.Current.Extent);
+			Assert.AreEqual(item7, wl.Current);
+			Assert.True(wl.Current?.Visited);
+		}
+
+		[Test]
+		public void Cannot_go_first_again_if_first_item_is_set_done()
+		{
+			IWorkItem item1 = new WorkItemMock(1);
+			IWorkItem item2 = new WorkItemMock(2);
+			IWorkItem item3 = new WorkItemMock(3);
+			IWorkItem item4 = new WorkItemMock(4);
+			var repository = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
+
+			IWorkList wl = new MemoryQueryWorkList(repository, "work list");
+
+			wl.GoFirst();
+			Assert.AreEqual(item1, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			wl.GoNext();
+			Assert.AreEqual(item2, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			wl.GoFirst();
+			Assert.AreEqual(item1, wl.Current);
+			Assert.True(wl.Current?.Visited);
+
+			// set status done and update work list
+			wl.Current.Status = WorkItemStatus.Done;
+			wl.Update(wl.Current);
+
+			// second item is now the first in work list
+			// because first item is set to done and therefor 'not visible'
+			wl.GoFirst();
+			Assert.AreEqual(item2, wl.Current);
 			Assert.True(wl.Current?.Visited);
 		}
 
@@ -251,7 +427,8 @@ namespace ProSuite.AGP.WorkList.Test
 						{geodatabase, new List<Table> {table}}
 					};
 
-				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase);
+				IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
+				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
 
 				IWorkList workList = new MemoryQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -297,7 +474,8 @@ namespace ProSuite.AGP.WorkList.Test
 					                                                           {geodatabase, new List<Table> {table}}
 				                                                           };
 
-				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase);
+				IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
+				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
 
 				IWorkList workList = new MemoryQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -352,7 +530,8 @@ namespace ProSuite.AGP.WorkList.Test
 					                                                           {geodatabase, new List<Table> {table}}
 				                                                           };
 
-				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase);
+				IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
+				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
 
 				IWorkList workList = new GdbQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -399,7 +578,8 @@ namespace ProSuite.AGP.WorkList.Test
 					                                                           {geodatabase, new List<Table> {table}}
 				                                                           };
 
-				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase);
+				IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
+				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
 
 				IWorkList workList = new GdbQueryWorkList(repository, "work list");
 

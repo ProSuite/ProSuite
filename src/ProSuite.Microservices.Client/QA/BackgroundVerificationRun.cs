@@ -33,11 +33,13 @@ namespace ProSuite.Microservices.Client.QA
 		private readonly CancellationTokenSource _cancellationTokenSource;
 
 		public BackgroundVerificationRun(
+			[NotNull] VerificationRequest verificationRequest,
 			[NotNull] IDomainTransactionManager domainTransactions,
 			[NotNull] IQualityVerificationRepository qualityVerificationRepository,
 			[NotNull] IQualityConditionRepository qualityConditionRepository,
 			CancellationTokenSource cancellationTokenSource)
 		{
+			VerificationRequest = verificationRequest;
 			_domainTransactions = domainTransactions;
 			_qualityVerificationRepository = qualityVerificationRepository;
 			_qualityConditionRepository = qualityConditionRepository;
@@ -48,6 +50,9 @@ namespace ProSuite.Microservices.Client.QA
 				           CancellationTokenSource = cancellationTokenSource
 			           };
 		}
+
+		[NotNull]
+		public VerificationRequest VerificationRequest { get; }
 
 		[CanBeNull]
 		public IClientIssueMessageCollector ResultIssueCollector { get; set; }
@@ -65,14 +70,13 @@ namespace ProSuite.Microservices.Client.QA
 		public Action<QualityVerification> ShowReportAction { get; set; }
 
 		public async Task<ServiceCallStatus> ExecuteAndProcessMessagesAsync(
-			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient rpcClient,
-			[NotNull] VerificationRequest verificationRequest)
+			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient rpcClient)
 		{
 			return await ExecuteAndProcessMessagesAsync(
-				       () => rpcClient.VerifyQuality(verificationRequest));
+				       () => rpcClient.VerifyQuality(VerificationRequest));
 		}
 
-		public async Task<ServiceCallStatus> ExecuteAndProcessMessagesAsync(
+		private async Task<ServiceCallStatus> ExecuteAndProcessMessagesAsync(
 			[NotNull] Func<AsyncServerStreamingCall<VerificationResponse>> verificationFunc)
 		{
 			QualityVerificationResult = new BackgroundVerificationResult(
@@ -125,6 +129,8 @@ namespace ProSuite.Microservices.Client.QA
 			}
 			catch (RpcException rpcException)
 			{
+				_msg.Debug("Error in rpc: ", rpcException);
+
 				if (rpcException.StatusCode == StatusCode.Cancelled)
 				{
 					return Progress.RemoteCallStatus = ServiceCallStatus.Cancelled;
@@ -200,6 +206,11 @@ namespace ProSuite.Microservices.Client.QA
 			serviceProgress.StatusMessage = progressMsg.Message;
 
 			serviceProgress.RemoteCallStatus = (ServiceCallStatus) messageProto.ServiceCallStatus;
+		}
+
+		public override string ToString()
+		{
+			return $"BackgroundVerificationRun for request {VerificationRequest}";
 		}
 	}
 }

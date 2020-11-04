@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.AGP.Gdb;
 

@@ -2,30 +2,31 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Windows.Controls;
+using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using Geometry = ArcGIS.Core.Geometry.Geometry;
 
-namespace ProSuite.AGP.Picker
+namespace ProSuite.AGP.Editing.Picker
 {
 	public class PickableFeatureClassItem : IPickableItem
 	{
 		private string _itemText;
 		private bool _isSelected;
-		private Geometry _geometry;
+		[CanBeNull] private Geometry _geometry;
 		private Uri _itemImageUri;
 		private List<FeatureLayer> _belongingFeatureLayers;
+		private BitmapImage _img = null;
 
 		public PickableFeatureClassItem(FeatureClass featureClass, esriGeometryType geometryType,
 		                                List<FeatureLayer> belongingFeatureLayers)
 		{
 			_itemText = featureClass.GetName();
 			_geometry = null;
-			ItemImageUri = GetImagePath(geometryType);
+			_itemImageUri = GetImagePath(geometryType);
 			BelongingFeatureLayers = belongingFeatureLayers;
 		}
 
@@ -37,16 +38,25 @@ namespace ProSuite.AGP.Picker
 			set => _isSelected = value;
 		}
 
+		[CanBeNull]
 		public Geometry Geometry
 		{
 			get => _geometry;
 			set => _geometry = value;
 		}
 
-		public Uri ItemImageUri
+		
+
+		public ImageSource ItemImageSource
 		{
-			get => _itemImageUri;
-			set => _itemImageUri = value;
+			get
+			{
+				if (_img == null)
+				{
+					_img = new BitmapImage(_itemImageUri);
+				}
+				return _img;
+			}
 		}
 
 		public List<FeatureLayer> BelongingFeatureLayers
@@ -61,20 +71,22 @@ namespace ProSuite.AGP.Picker
 			    geometryType == esriGeometryType.esriGeometryMultipoint)
 			{
 				return new Uri(
-					"pack://application:,,,/ProSuite.AGP.Editing;component/Images/PointGeometry.bmp");
+					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PointGeometry.bmp");
+				//this one here works directly in xaml
+				//pack://application:,,,/Properties/Images/PointGeometry.bmp 
 			}
 
 			if (geometryType == esriGeometryType.esriGeometryLine ||
 			    geometryType == esriGeometryType.esriGeometryPolyline)
 			{
 				return new Uri(
-					"pack://application:,,,/ProSuite.AGP.Editing;component/Images/LineGeometry.bmp");
+					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/LineGeometry.bmp");
 			}
 
 			if (geometryType == esriGeometryType.esriGeometryPolygon)
 			{
 				return new Uri(
-					"pack://application:,,,/ProSuite.AGP.Editing;component/Images/PolygonGeometry.bmp");
+					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PolygonGeometry.bmp",UriKind.Absolute);
 			}
 
 			return new Uri("");
