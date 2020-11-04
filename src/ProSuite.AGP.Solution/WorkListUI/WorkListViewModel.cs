@@ -137,11 +137,14 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			get => CurrentWorkItem.Status;
 			set
 			{
-				CurrentWorkItem.Status = value;
+				if (CurrentWorkItem.Status != value)
+				{
+					CurrentWorkItem.Status = value;
 
-				// NOTE: has to run inside QueuedTask because it triggers an event
-				//		 which does MapView.Active.Invalidate
-				QueuedTask.Run(() => { CurrentWorkList.Update(CurrentWorkList.Current); });
+					// NOTE: has to run inside QueuedTask because it triggers an event
+					//		 which does MapView.Active.Invalidate
+					QueuedTask.Run(() => { CurrentWorkList.SetStatus(CurrentWorkList.Current, value); });
+				}
 
 				SetProperty(ref _status, value, () => Status);
 			}
