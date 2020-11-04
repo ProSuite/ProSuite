@@ -71,5 +71,15 @@ namespace ProSuite.AGP.WorkList.Test
 		{
 			return _currentIndex;
 		}
+
+		public void SetVisited(IWorkItem item)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task SetStatus(IWorkItem item, WorkItemStatus status)
+		{
+			throw new NotImplementedException();
+		}
 	}
 }

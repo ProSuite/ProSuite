@@ -100,7 +100,7 @@ namespace ProSuite.AGP.WorkList.Test
 				item.Visited = true;
 				item.Status = WorkItemStatus.Done;
 
-				workList.Update(item);
+				workList.SetStatus(item, WorkItemStatus.Done);
 
 				item = workList.GetItems(null, true).ToList()[0];
 				

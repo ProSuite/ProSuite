@@ -39,16 +39,31 @@ namespace ProSuite.AGP.WorkList
 			{
 				object value = row[_statusSchema.FieldIndex];
 
-				return _statusSchema.DoneValue.Equals(value)
-					       ? WorkItemStatus.Done
-					       : WorkItemStatus.Todo;
+				return GetStatus(value);
 			}
 			catch (Exception e)
 			{
-				_msg.Error($"Error get value from row {row} with index {_statusSchema.FieldIndex}",
-				           e);
-				throw;
+				_msg.Error($"Error get value from row {row} with index {_statusSchema.FieldIndex}", e);
+
+				return WorkItemStatus.Todo;
 			}
+		}
+
+		public WorkItemStatus GetStatus([CanBeNull] object value)
+		{
+			if (_statusSchema.TodoValue.Equals(value))
+			{
+				return WorkItemStatus.Todo;
+			}
+
+			if (_statusSchema.DoneValue.Equals(value))
+			{
+				return WorkItemStatus.Done;
+			}
+
+			_msg.Debug($"Unknown {nameof(WorkItemStatus)} value {value}, return {nameof(WorkItemStatus.Todo)}");
+
+			return WorkItemStatus.Todo;
 		}
 
 		public virtual object GetValue(WorkItemStatus status)

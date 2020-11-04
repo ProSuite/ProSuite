@@ -28,6 +28,11 @@ namespace ProSuite.AGP.WorkList
 			try
 			{
 				fieldIndex = definition.FindField(_statusFieldName);
+
+				if (fieldIndex < 0)
+				{
+					throw new ArgumentException($"No field {_statusFieldName}");
+				}
 			}
 			catch (Exception e)
 			{
@@ -54,7 +59,43 @@ namespace ProSuite.AGP.WorkList
 		{
 			int id = CreateItemIDCore(row, source);
 
-			return RefreshState(new IssueItem(id, row, ((DatabaseSourceClass) source).AttributeReader));
+			IAttributeReader reader = ((DatabaseSourceClass) source).AttributeReader;
+
+			var item = new IssueItem(id, row)
+			           {
+				           Status = ((DatabaseSourceClass) source).GetStatus(row),
+
+				           IssueCode = reader.GetValue<string>(row, Attributes.IssueCode),
+				           IssueCodeDescription = reader.GetValue<string>(row, Attributes.IssueCodeDescription),
+				           InvolvedObjects = reader.GetValue<string>(row, Attributes.InvolvedObjects),
+				           QualityCondition = reader.GetValue<string>(row, Attributes.QualityConditionName),
+				           TestName = reader.GetValue<string>(row, Attributes.TestName),
+				           TestDescription = reader.GetValue<string>(row, Attributes.TestDescription),
+				           TestType = reader.GetValue<string>(row, Attributes.TestType),
+				           IssueSeverity = reader.GetValue<string>(row, Attributes.IssueSeverity),
+				           StopCondition = reader.GetValue<string>(row, Attributes.IsStopCondition),
+				           Category = reader.GetValue<string>(row, Attributes.Category),
+				           AffectedComponent = reader.GetValue<string>(row, Attributes.AffectedComponent),
+				           Url = reader.GetValue<string>(row, Attributes.Url),
+				           DoubleValue1 = reader.GetValue<double?>(row, Attributes.DoubleValue1),
+				           DoubleValue2 = reader.GetValue<double?>(row, Attributes.DoubleValue2),
+				           TextValue = reader.GetValue<string>(row, Attributes.TextValue),
+				           IssueAssignment = reader.GetValue<string>(row, Attributes.IssueAssignment),
+				           QualityConditionUuid = reader.GetValue<string>(row, Attributes.QualityConditionUuid),
+				           QualityConditionVersionUuid = reader.GetValue<string>(row, Attributes.QualityConditionVersionUuid),
+				           ExceptionStatus = reader.GetValue<string>(row, Attributes.ExceptionStatus),
+				           ExceptionNotes = reader.GetValue<string>(row, Attributes.ExceptionNotes),
+				           ExceptionCategory = reader.GetValue<string>(row, Attributes.ExceptionCategory),
+				           ExceptionOrigin = reader.GetValue<string>(row, Attributes.ExceptionOrigin),
+				           ExceptionDefinedDate = reader.GetValue<string>(row, Attributes.ExceptionDefinedDate),
+				           ExceptionLastRevisionDate = reader.GetValue<string>(row, Attributes.ExceptionLastRevisionDate),
+				           ExceptionRetirementDate = reader.GetValue<string>(row, Attributes.ExceptionRetirementDate),
+				           ExceptionShapeMatchCriterion = reader.GetValue<string>(row, Attributes.ExceptionShapeMatchCriterion)
+			           };
+
+			item.InIssueInvolvedTables = IssueUtils.ParseInvolvedTables(item.InvolvedObjects);
+
+			return RefreshState(item);
 		}
 
 		protected override ISourceClass CreateSourceClassCore(
@@ -72,26 +113,25 @@ namespace ProSuite.AGP.WorkList
 		                                    ISourceClass sourceClass,
 		                                    Row row)
 		{
+			// todo daro: use AttributeReader?
 			// todo daro: really needed here? Only geometry is updated but
 			//			  the work itmes's state remains the same.
-			item.Status = ((DatabaseSourceClass)sourceClass).GetStatus(row);
+			item.Status = ((DatabaseSourceClass) sourceClass).GetStatus(row);
 		}
 
-		protected override async Task UpdateCoreAsync(IWorkItem item, ISourceClass source, Row row)
+		protected override async Task SetStatusCoreAsync(IWorkItem item, ISourceClass source)
 		{
 			Table table = OpenFeatureClass(source);
 
 			try
 			{
-				var databaseSourceClass = (DatabaseSourceClass) source;
-
-				WorkItemStatus priorStatus = ((DatabaseSourceClass)source).GetStatus(row);
+				var databaseSourceClass = (DatabaseSourceClass)source;
 
 				string description = GetOperationDescription(item.Status);
 
 				_msg.Info($"{description}, {item.Proxy}");
 
-				var operation = new EditOperation {Name = description};
+				var operation = new EditOperation { Name = description };
 
 				string fieldName = databaseSourceClass.StatusFieldName;
 				object value = databaseSourceClass.GetValue(item.Status);
