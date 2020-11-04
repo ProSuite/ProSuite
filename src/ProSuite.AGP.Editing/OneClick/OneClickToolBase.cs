@@ -216,12 +216,16 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected void StartSelectionPhase()
 		{
 			SketchOutputMode = SelectionSettings.SketchOutputMode;
+
+			// NOTE: CompleteSketchOnMouseUp must be set before the sketch geometry type,
+			// otherwise it has no effect!
+			CompleteSketchOnMouseUp = true;
+
 			SketchType = SelectionSettings.SketchGeometryType;
 
 			UseSnapping = false;
 
 			GeomIsSimpleAsFeature = false;
-			CompleteSketchOnMouseUp = true;
 
 			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
 			{
