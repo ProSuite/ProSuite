@@ -570,11 +570,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			return selectedFeatures.Any();
 		}
 
-		protected virtual void AfterSelection(IList<Feature> selectedFeatures,
-		                                      CancelableProgressor progressor) { }
+		protected virtual void AfterSelection([NotNull] IList<Feature> selectedFeatures,
+		                                      [CanBeNull] CancelableProgressor progressor) { }
 
-		protected void ProcessSelection(IEnumerable<Feature> selectedFeatures,
-		                                CancelableProgressor progressor = null)
+		private void ProcessSelection([NotNull] IEnumerable<Feature> selectedFeatures,
+		                              [CanBeNull] CancelableProgressor progressor = null)
 		{
 			// TODO: currently the selection is retrieved twice. Testing the selection should 
 			// in the success case return it so that it can be passed to AfterSelection

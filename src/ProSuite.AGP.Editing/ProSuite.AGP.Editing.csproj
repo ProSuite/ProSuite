@@ -79,6 +79,7 @@
     </Compile>
     <Compile Include="OneClick\ConstructionToolBase.cs" />
     <Compile Include="OneClick\OneClickToolBase.cs" />
+    <Compile Include="OneClick\TwoPhaseEditToolBase.cs" />
     <Compile Include="PickerUI\DialogCloser.cs" />
     <Compile Include="PickerUI\Picker.cs" />
     <Compile Include="PickerUI\PickerViewModel.cs" />
@@ -93,6 +94,14 @@
     <Compile Include="Picker\PickableItemAdapter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Erase\EraseToolBase.cs" />
+    <Compile Include="Properties\LocalizableStrings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>LocalizableStrings.resx</DependentUpon>
+    </Compile>
+    <Compile Include="RemoveOverlaps\Overlaps.cs" />
+    <Compile Include="RemoveOverlaps\RemoveOverlapsFeedback.cs" />
+    <Compile Include="RemoveOverlaps\RemoveOverlapsToolBase.cs" />
     <Compile Include="Selection\FeatureClassInfo.cs" />
     <Compile Include="Selection\GeometryTypeComparer.cs" />
     <Compile Include="Selection\Selector.cs" />
@@ -109,6 +118,10 @@
     <Compile Include="ToolUtils.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Properties\LocalizableStrings.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>LocalizableStrings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
@@ -146,6 +159,9 @@
     <Resource Include="PickerUI\Images\PointGeometry.bmp" />
     <Resource Include="PickerUI\Images\PolygonGeometry.bmp" />
     <Content Include="Properties\Images\EditSketchCrosshair.cur" />
+    <Content Include="Properties\Images\RemoveOverlapsToolCursor.cur" />
+    <Content Include="Properties\Images\RemoveOverlapsToolCursorProcess.cur" />
+    <Content Include="Properties\Images\RemoveOverlapsToolCursorShift.cur" />
     <Content Include="Properties\Images\SelectionToolNormal.cur" />
     <Content Include="Properties\Images\SelectionToolNormalShift.cur" />
     <Content Include="Properties\Images\SelectionToolOriginal.cur" />

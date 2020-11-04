@@ -74,6 +74,7 @@
         </group>
         <group id="ProSuiteTools_Editing" caption="Edit Tools" keytip="G1">
           <tool refID="ProSuiteTools_Editing_EraseTool" size="small" />
+          <tool refID="ProSuiteTools_Editing_RemoveOverlapsTool" size="small"/>
         </group>
         <group id="ProSuiteTools_Selection" caption="Selection Tools" keytip="G1">
           <tool refID="ProSuiteTools_Selection_SelectionTool" size="small" />
@@ -122,6 +123,12 @@
               smallImage="Images\CutHoleTool16.png" largeImage="Images\CutHoleTool32.png"
               condition="esri_mapping_mapPane">
           <tooltip heading="Erase Tool">Erase parts of the selected features or cut a hole into a polygon<disabledText /></tooltip>
+        </tool>
+        <tool id="ProSuiteTools_Editing_RemoveOverlapsTool" caption="RemoveOverlapsTool" 
+              className="Editing.RemoveOverlapsTool"
+              loadOnClick="true" smallImage="Images\RemoveOverlapsTool16.png" largeImage="Images\RemoveOverlapsTool32.png"
+              condition="esri_mapping_mapPane">
+          <tooltip heading="Remove Overlaps Tool">Remove a part of a feature that overlaps with other polygon features<disabledText /></tooltip>
         </tool>
         <tool id="ProSuiteTools_Selection_SelectionTool" caption="Selection" className="Selection.SelectionTool" loadOnClick="true"
               smallImage="Images\SelectionTool.png" largeImage="Images\SelectionTool.png"

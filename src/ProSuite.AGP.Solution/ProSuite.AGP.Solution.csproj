@@ -104,6 +104,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Editing\RemoveOverlapsTool.cs" />
     <Compile Include="ProTrials\CartoProcess\CartoProcessDockpane.xaml.cs">
       <DependentUpon>CartoProcessDockpane.xaml</DependentUpon>
     </Compile>
@@ -366,7 +367,12 @@
   <ItemGroup>
     <Resource Include="WorkListUI\Images\ZoomToAll.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <AddInContent Include="Images\RemoveOverlapsTool16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\RemoveOverlapsTool32.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:

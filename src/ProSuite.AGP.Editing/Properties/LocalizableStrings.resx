@@ -117,41 +117,16 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="EditSketchCrosshair" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\EditSketchCrosshair.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="RemoveOverlapsTool_AfterSelection" xml:space="preserve">
+    <value>{0}&lt;br&gt;Press [ESC] to select one or more different features.</value>
   </data>
-  <data name="EraseToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\EraseToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="RemoveOverlapsTool_Caption" xml:space="preserve">
+    <value>Remove Overlaps</value>
   </data>
-  <data name="EraseToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\EraseToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="RemoveOverlapsTool_LogPromptForSelection" xml:space="preserve">
+    <value>Select one or more line or polygon features from which a part should be removed. Press [O] for additional options.&lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click.</value>
   </data>
-  <data name="RemoveOverlapsToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\RemoveOverlapsToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="RemoveOverlapsToolCursorProcess" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\RemoveOverlapsToolCursorProcess.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="RemoveOverlapsToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\RemoveOverlapsToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="SelectionToolNormal" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\SelectionToolNormal.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="SelectionToolNormalShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\SelectionToolNormalShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="SelectionToolOriginal" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\SelectionToolOriginal.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="SelectionToolOriginalShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\SelectionToolOriginalShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="SelectionToolUser" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\SelectionToolUser.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="SelectionToolUserShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Images\SelectionToolUserShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  <data name="RemoveOverlapsTool_Message" xml:space="preserve">
+    <value>Remove a part of a feature that overlaps with other polygon features.</value>
   </data>
 </root>
