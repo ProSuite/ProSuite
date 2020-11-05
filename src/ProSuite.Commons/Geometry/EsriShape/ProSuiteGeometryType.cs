@@ -1,4 +1,4 @@
-namespace ProSuite.DomainModel.Core.DataModel
+namespace ProSuite.Commons.Geometry.EsriShape
 {
 	/// <summary>
 	/// A geometry type enum that corresponds with the esriGeometryType.

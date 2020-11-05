@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ArcGIS.Core.Hosting;
 using ESRI.ArcGIS.esriSystem;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -23,7 +24,7 @@ namespace ProSuite.Commons.AO.Licensing
 
 			if (vsArcGISProductValue == "Server")
 			{
-				InitializeAo11Server();
+				InitializeAo11();
 			}
 			else
 			{
@@ -129,13 +130,13 @@ namespace ProSuite.Commons.AO.Licensing
 			return (esriLicenseExtensionCode) extension;
 		}
 
-		private static void InitializeAo11Server()
+		public static void InitializeAo11()
 		{
 			Assert.True(EnvironmentUtils.Is64BitProcess,
 			            "Cannot use product 'Server' in 32 bit process.");
 
 #if Server
-			ArcGIS.Core.Hosting.Host.Initialize();
+			Host.Initialize();
 			return;
 #endif
 			throw new InvalidOperationException(

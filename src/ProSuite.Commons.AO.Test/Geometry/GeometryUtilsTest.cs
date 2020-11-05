@@ -16,6 +16,7 @@ using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geometry.EsriShape;
 using Array = System.Array;
 
 namespace ProSuite.Commons.AO.Test.Geometry
@@ -2989,6 +2990,44 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			IPolygon restoredPoly = reader.ReadPolygon(new MemoryStream(psBytes));
 
 			Assert.IsTrue(GeometryUtils.AreEqual(polygon, restoredPoly));
+		}
+
+		[Test]
+		public void CanConvertFromToEsriShapeType()
+		{
+			// Guard against changes in future versions:
+
+			Assert.AreEqual(Enum.GetNames(typeof(EsriShapeType)).Length,
+			                Enum.GetNames(typeof(esriShapeType)).Length);
+
+			foreach (object value in Enum.GetValues(typeof(esriShapeType)))
+			{
+				int intValue = (int) value;
+
+				var psShapeType = (EsriShapeType) intValue;
+
+				Assert.AreEqual(psShapeType.ToString().ToUpper(), value.ToString().ToUpper());
+			}
+		}
+
+		[Test]
+		public void CanConvertFromToEsriGeometryType()
+		{
+			// Guard against changes in future versions:
+
+			Assert.AreEqual(Enum.GetNames(typeof(ProSuiteGeometryType)).Length,
+			                Enum.GetNames(typeof(esriGeometryType)).Length);
+
+			foreach (object value in Enum.GetValues(typeof(esriGeometryType)))
+			{
+				int intValue = (int) value;
+
+				var psGeometryType = (ProSuiteGeometryType) intValue;
+
+				string removedPrefix = value.ToString().Substring(12);
+
+				Assert.AreEqual(psGeometryType.ToString(), removedPrefix);
+			}
 		}
 
 		[Test]

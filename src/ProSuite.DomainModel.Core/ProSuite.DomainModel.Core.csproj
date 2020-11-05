@@ -98,7 +98,6 @@
     <Compile Include="DataModel\ObjectSubtypeCriterion.cs" />
     <Compile Include="DataModel\ObjectType.cs" />
     <Compile Include="DataModel\PrimaryKeyAssociationEnd.cs" />
-    <Compile Include="DataModel\ProSuiteGeometryType.cs" />
     <Compile Include="DataModel\SqlCaseSensitivity.cs" />
     <Compile Include="DataModel\TableDataset.cs" />
     <Compile Include="DataModel\UnknownAttributeRole.cs" />

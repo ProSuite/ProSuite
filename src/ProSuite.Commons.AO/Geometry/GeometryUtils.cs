@@ -17,6 +17,7 @@ using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geometry.EsriShape;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 
@@ -845,9 +846,8 @@ namespace ProSuite.Commons.AO.Geometry
 		{
 			// NOTE: Z/M-awareness is assigned by ImportFromESRIShape
 
-			var shapeType = (esriShapeType) esriShapeBuffer[0];
-
-			esriGeometryType geometryType = TranslateEsriShapeType(shapeType);
+			esriGeometryType geometryType =
+				(esriGeometryType) EsriShapeFormatUtils.GetGeometryType(esriShapeBuffer);
 
 			IGeometry result = GeometryFactory.CreateEmptyGeometry(geometryType);
 
@@ -10452,56 +10452,6 @@ namespace ProSuite.Commons.AO.Geometry
 			pointsToUse.Sort((x, y) => y.Value.CompareTo(x.Value));
 
 			return pointsToUse;
-		}
-
-		private static esriGeometryType TranslateEsriShapeType(esriShapeType shapeType)
-		{
-			esriGeometryType geometryType;
-
-			switch (shapeType)
-			{
-				case esriShapeType.esriShapeGeneralPoint:
-				case esriShapeType.esriShapePoint:
-				case esriShapeType.esriShapePointZ:
-				case esriShapeType.esriShapePointM:
-				case esriShapeType.esriShapePointZM:
-					geometryType = esriGeometryType.esriGeometryPoint;
-					break;
-				case esriShapeType.esriShapeGeneralMultipoint:
-				case esriShapeType.esriShapeMultipoint:
-				case esriShapeType.esriShapeMultipointZ:
-				case esriShapeType.esriShapeMultipointM:
-				case esriShapeType.esriShapeMultipointZM:
-					geometryType = esriGeometryType.esriGeometryMultipoint;
-					break;
-				case esriShapeType.esriShapeGeneralPolyline:
-				case esriShapeType.esriShapePolyline:
-				case esriShapeType.esriShapePolylineZ:
-				case esriShapeType.esriShapePolylineM:
-				case esriShapeType.esriShapePolylineZM:
-					geometryType = esriGeometryType.esriGeometryPolyline;
-					break;
-				case esriShapeType.esriShapeGeneralPolygon:
-				case esriShapeType.esriShapePolygon:
-				case esriShapeType.esriShapePolygonZ:
-				case esriShapeType.esriShapePolygonM:
-				case esriShapeType.esriShapePolygonZM:
-					geometryType = esriGeometryType.esriGeometryPolygon;
-					break;
-				case esriShapeType.esriShapeGeneralMultiPatch:
-				case esriShapeType.esriShapeMultiPatch:
-				case esriShapeType.esriShapeMultiPatchM:
-					geometryType = esriGeometryType.esriGeometryMultiPatch;
-					break;
-				case esriShapeType.esriShapeNull:
-					geometryType = esriGeometryType.esriGeometryNull;
-					break;
-				default:
-					throw new ArgumentOutOfRangeException(
-						$"Unsupported geometry type: {shapeType}");
-			}
-
-			return geometryType;
 		}
 
 		/// <summary>

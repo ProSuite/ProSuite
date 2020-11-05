@@ -8,12 +8,14 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using Google.Protobuf;
 using Google.Protobuf.Collections;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Serialization;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Server.AO.Geodatabase;
 
 namespace ProSuite.Microservices.Server.AO
 {
@@ -156,14 +158,14 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
-		public static List<IGeometry> CreateGeometryList(
-			RepeatedField<ShapeMsg> shapeBufferList)
+		public static List<T> FromShapeMsgList<T>(
+			RepeatedField<ShapeMsg> shapeBufferList) where T : IGeometry
 		{
-			var geometryList = new List<IGeometry>(shapeBufferList.Count);
+			var geometryList = new List<T>(shapeBufferList.Count);
 
 			foreach (var selectableOverlap in shapeBufferList)
 			{
-				var geometry = FromShapeMsg(selectableOverlap);
+				T geometry = (T) FromShapeMsg(selectableOverlap);
 				geometryList.Add(geometry);
 			}
 
@@ -180,9 +182,9 @@ namespace ProSuite.Microservices.Server.AO
 			return GeometryUtils.GetPoints(geometry).ToList();
 		}
 
-		public static GdbObjectMsg CreateGdbObjectMsg(IObject featureOrObject,
-		                                              [CanBeNull] IGeometry geometry,
-		                                              int objectClassHandle)
+		public static GdbObjectMsg ToGdbObjectMsg(IObject featureOrObject,
+		                                          [CanBeNull] IGeometry geometry,
+		                                          int objectClassHandle)
 		{
 			var result = new GdbObjectMsg();
 
@@ -195,10 +197,127 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
-		public static GdbObjectMsg CreateGdbObjectMsg(IFeature gdbFeature)
+		public static GdbObjectMsg ToGdbObjectMsg([NotNull] IFeature gdbFeature)
 		{
 			int classHandle = gdbFeature.Class.ObjectClassID;
-			return CreateGdbObjectMsg(gdbFeature, gdbFeature.Shape, classHandle);
+			return ToGdbObjectMsg(gdbFeature, gdbFeature.Shape, classHandle);
+		}
+
+		public static void ToGdbObjectMsgList(
+			IEnumerable<IFeature> features,
+			ICollection<GdbObjectMsg> resultGdbObjects,
+			HashSet<ObjectClassMsg> resultGdbClasses)
+		{
+			foreach (IFeature feature in features)
+			{
+				resultGdbObjects.Add(ToGdbObjectMsg(feature));
+				resultGdbClasses.Add(ToObjectClassMsg(feature.Class));
+			}
+		}
+
+		public static ObjectClassMsg ToObjectClassMsg(
+			[NotNull] IObjectClass objectClass)
+		{
+			esriGeometryType geometryType =
+				objectClass is IFeatureClass fc
+					? fc.ShapeType
+					: esriGeometryType.esriGeometryNull;
+
+			IWorkspace workspace = ((IDataset) objectClass).Workspace;
+
+			ObjectClassMsg result =
+				new ObjectClassMsg()
+				{
+					Name = DatasetUtils.GetName(objectClass),
+					Alias = DatasetUtils.GetAliasName(objectClass),
+					ClassHandle = objectClass.ObjectClassID,
+					GeometryType = (int) geometryType,
+					WorkspaceHandle = workspace?.GetHashCode() ?? -1
+				};
+
+			return result;
+		}
+
+		/// <summary>
+		/// Converts a list of features which are assumed to come from a single
+		/// workspace, i.e. all their object class IDs are unique within their
+		/// workspace.
+		/// </summary>
+		/// <param name="gdbObjectMessages"></param>
+		/// <param name="objectClassMessages"></param>
+		/// <returns></returns>
+		public static IList<IFeature> FromGdbObjectMsgList(
+			[NotNull] ICollection<GdbObjectMsg> gdbObjectMessages,
+			[NotNull] ICollection<ObjectClassMsg> objectClassMessages)
+		{
+			GdbTableContainer container = null;
+			int? workspaceHandle = null;
+			IWorkspace workspace = null;
+
+			foreach (ObjectClassMsg objectClassMsg in objectClassMessages)
+			{
+				if (workspaceHandle == null)
+				{
+					workspaceHandle = objectClassMsg.WorkspaceHandle;
+
+					container = new GdbTableContainer();
+
+					workspace = new GdbWorkspace(container)
+					            {
+						            WorkspaceHandle = objectClassMsg.WorkspaceHandle
+					            };
+				}
+				else
+				{
+					Assert.AreEqual(workspaceHandle, objectClassMsg.WorkspaceHandle,
+					                "Not all features are from the same workspace");
+				}
+
+				if (objectClassMsg.WorkspaceHandle == -1)
+				{
+					workspace = null;
+				}
+
+				var fClass = new GdbFeatureClass(
+					objectClassMsg.ClassHandle, objectClassMsg.Name,
+					(esriGeometryType) objectClassMsg.GeometryType, objectClassMsg.Alias,
+					null, workspace);
+
+				// Add SR to object class? -> remove from BackingDataset
+				//if (objectClassMsg.SpatialReference != null)
+				//{
+				//	fClass.SpatialReference = ...
+				//}
+
+				container?.TryAdd(fClass);
+			}
+
+			var result = new List<IFeature>(gdbObjectMessages.Count);
+
+			foreach (GdbObjectMsg gdbObjectMsg in gdbObjectMessages)
+			{
+				GdbFeature remoteFeature = FromGdbFeatureMsg(gdbObjectMsg, container);
+
+				result.Add(remoteFeature);
+			}
+
+			return result;
+		}
+
+		public static GdbFeature FromGdbFeatureMsg(
+			[NotNull] GdbObjectMsg gdbObjectMsg,
+			[NotNull] GdbTableContainer tableContainer)
+		{
+			var gdbTable = (IFeatureClass) tableContainer.GetByClassId(gdbObjectMsg.ClassHandle);
+
+			IGeometry shape = FromShapeMsg(gdbObjectMsg.Shape);
+
+			var result = new GdbFeature(gdbObjectMsg.ObjectId, gdbTable)
+			             {
+				             Shape = shape
+			             };
+
+			return result;
 		}
 
 		/// <summary>
