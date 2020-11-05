@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -11,7 +13,12 @@ using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Microservices.Client;
+using ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps;
 
 namespace ProSuite.AGP.Editing.RemoveOverlaps
 {
@@ -25,14 +32,19 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		protected RemoveOverlapsToolBase()
 		{
-			IsSketchTool = true;
-			SketchOutputMode = SketchOutputMode.Screen;
 			GeomIsSimpleAsFeature = false;
 
 			SelectionCursor = ToolUtils.GetCursor(Resources.RemoveOverlapsToolCursor);
 			SelectionCursorShift = ToolUtils.GetCursor(Resources.RemoveOverlapsToolCursorShift);
 			SecondPhaseCursor = ToolUtils.GetCursor(Resources.RemoveOverlapsToolCursorProcess);
 		}
+
+		protected RemoveOverlapsClient MicroserviceClient { get; set; }
+			= new RemoveOverlapsClient(new ClientChannelConfig()
+			                           {
+				                           HostName = "localhost",
+				                           Port = 5153
+			                           });
 
 		protected override void OnToolActivatingCore()
 		{
@@ -68,8 +80,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
 		                                                   CancelableProgressor progressor)
 		{
-			// TODO:
-			IList<Feature> overlappingFeatures = selectedFeatures;
+			IList<Feature> overlappingFeatures =
+				GetOverlappingFeatures(selectedFeatures, progressor);
 
 			if (progressor != null && ! progressor.CancellationToken.IsCancellationRequested)
 			{
@@ -100,11 +112,52 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		}
 
 		protected override bool SelectAndProcessDerivedGeometry(
-			Dictionary<MapMember, List<long>> selection, Geometry sketch,
+			Dictionary<MapMember, List<long>> selection,
+			Geometry sketch,
 			CancelableProgressor progressor)
 		{
-			// TODO
-			return false;
+			Assert.NotNull(_overlaps);
+
+			List<Geometry> overlapsToRemove =
+				_overlaps
+					.OverlapGeometries.Where(o => IsOverlapSelected(sketch, o))
+					.ToList();
+
+			if (overlapsToRemove.Count == 0)
+			{
+				return false;
+			}
+
+			IEnumerable<Feature> selectedFeatures = MapUtils.GetFeatures(selection);
+
+			RemoveOverlapsResult result =
+				MicroserviceClient.RemoveOverlaps(
+					selectedFeatures, overlapsToRemove, _overlappingFeatures,
+					progressor?.CancellationToken ?? new CancellationTokenSource().Token);
+
+			var updates = new Dictionary<Feature, Geometry>();
+			var inserts = new Dictionary<Feature, Geometry>();
+
+			foreach (var resultPerFeature in result.ResultsByFeature)
+			{
+				updates.Add(resultPerFeature.OriginalFeature, resultPerFeature.UpdatedGeometry);
+
+				if (resultPerFeature.InsertGeometries.Count > 0)
+				{
+					foreach (Geometry insertGeometry in resultPerFeature.InsertGeometries)
+					{
+						inserts.Add(resultPerFeature.OriginalFeature, insertGeometry);
+					}
+				}
+			}
+
+			var currentSelection = SelectionUtils.GetSelectedFeatures(MapView.Active).ToList();
+
+			bool saved = GdbPersistenceUtils.SaveInOperation("Remove overlaps", updates, inserts);
+
+			CalculateDerivedGeometries(currentSelection, progressor);
+
+			return saved;
 		}
 
 		protected override void ResetDerivedGeometries()
@@ -154,7 +207,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			if (IsInSelectionPhase())
 			{
-				var selectedFeatures = SelectionUtils.GetSelectedFeatures(e.Selection).ToList();
+				var selectedFeatures = MapUtils.GetFeatures(e.Selection).ToList();
 
 				if (CanUseSelection(selectedFeatures))
 				{
@@ -186,22 +239,117 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		{
 			Overlaps overlaps = null;
 
-			// TEST:
-			if (selectedFeatures.Count > 0)
+			CancellationToken cancellationToken;
+
+			if (progressor != null)
 			{
-				return new Overlaps(new[] {selectedFeatures[0].GetShape()});
+				cancellationToken = progressor.CancellationToken;
+			}
+			else
+			{
+				var cancellationTokenSource = new CancellationTokenSource();
+				cancellationToken = cancellationTokenSource.Token;
 			}
 
-			//if (MicroserviceClient != null)
-			//{
-			//	overlaps =
-			//		MicroserviceClient.CalculateOverlaps(selectedFeatures, overlappingFeatures,
-			//			progressor);
-			//}
+			if (MicroserviceClient != null)
+			{
+				overlaps =
+					MicroserviceClient.CalculateOverlaps(selectedFeatures, overlappingFeatures,
+					                                     cancellationToken);
+			}
 
 			return overlaps;
 		}
 
-		//public RemoveOverlapsClient MicroserviceClient { get; set; }
+		private static bool IsOverlapSelected(Geometry sketch, Geometry overlapGeometry)
+		{
+			return GeometryUtils.Contains(sketch, overlapGeometry);
+		}
+
+		#region Search target features
+
+		[NotNull]
+		private IList<Feature> GetOverlappingFeatures(
+			[NotNull] ICollection<Feature> selectedFeatures,
+			[CanBeNull] CancelableProgressor cancellabelProgressor)
+		{
+			Dictionary<MapMember, List<long>> selection = ActiveMapView.Map.GetSelection();
+
+			Envelope inExtent = ActiveMapView.Extent;
+
+			TargetFeatureSelection targetFeatureSelection = TargetFeatureSelection.VisibleFeatures;
+
+			IEnumerable<KeyValuePair<FeatureClass, List<Feature>>> foundOidsByClass =
+				MapUtils.FindFeatures(ActiveMapView, selection, targetFeatureSelection,
+				                      CanOverlapLayer, inExtent, cancellabelProgressor);
+
+			if (cancellabelProgressor != null &&
+			    ! cancellabelProgressor.CancellationToken.IsCancellationRequested)
+			{
+				return new List<Feature>();
+			}
+
+			var foundFeatures = new List<Feature>();
+
+			foreach (var keyValuePair in foundOidsByClass)
+			{
+				foundFeatures.AddRange(keyValuePair.Value);
+			}
+
+			// Remove the selected features from the set of overlapping features.
+			// This is also important to make sure the geometries don't get mixed up / reset 
+			// by inserting target vertices
+			foundFeatures.RemoveAll(selectedFeatures.Contains);
+
+			return foundFeatures;
+		}
+
+		private bool CanOverlapLayer(Layer layer)
+		{
+			var featureLayer = layer as FeatureLayer;
+
+			List<string>
+				ignoredClasses = new List<string>(); // RemoveOverlapsOptions.IgnoreFeatureClasses;
+
+			return CanOverlapGeometryType(featureLayer) &&
+			       (ignoredClasses == null || ! IgnoreLayer(layer, ignoredClasses));
+		}
+
+		private static bool CanOverlapGeometryType([CanBeNull] FeatureLayer featureLayer)
+		{
+			if (featureLayer?.GetFeatureClass() == null)
+			{
+				return false;
+			}
+
+			esriGeometryType shapeType = featureLayer.ShapeType;
+
+			return shapeType == esriGeometryType.esriGeometryPolygon ||
+			       shapeType == esriGeometryType.esriGeometryMultiPatch;
+		}
+
+		private static bool IgnoreLayer(Layer layer, IEnumerable<string> ignoredClasses)
+		{
+			FeatureClass featureClass = (layer as FeatureLayer)?.GetTable() as FeatureClass;
+
+			if (featureClass == null)
+			{
+				return true;
+			}
+
+			string className = featureClass.GetName();
+
+			foreach (string ignoredClass in ignoredClasses)
+			{
+				if (className.EndsWith(ignoredClass, StringComparison.InvariantCultureIgnoreCase))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		#endregion
 	}
 }

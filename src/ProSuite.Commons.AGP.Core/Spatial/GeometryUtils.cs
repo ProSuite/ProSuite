@@ -1,4 +1,5 @@
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using Envelope = ArcGIS.Core.Geometry.Envelope;
 using Geometry = ArcGIS.Core.Geometry.Geometry;
 using Polygon = ArcGIS.Core.Geometry.Polygon;
@@ -124,18 +125,20 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (T) Engine.SimplifyAsFeature(geometry, forceSimplify);
 		}
 
-		public static bool Contains(Geometry a, Geometry b, bool suppressIndexing = false)
+		public static bool Contains(Geometry containing,
+		                            Geometry contained,
+		                            bool suppressIndexing = false)
 		{
-			if (a == null) return false;
-			if (b == null) return true;
+			if (containing == null) return false;
+			if (contained == null) return true;
 
 			if (!suppressIndexing)
 			{
-				Engine.AccelerateForRelationalOperations(a);
-				Engine.AccelerateForRelationalOperations(a);
+				Engine.AccelerateForRelationalOperations(containing);
+				Engine.AccelerateForRelationalOperations(containing);
 			}
 
-			return Engine.Contains(a, b);
+			return Engine.Contains(containing, contained);
 		}
 
 		public static double GetDistanceAlongCurve(Multipart curve, MapPoint point)
@@ -144,6 +147,38 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				curve, SegmentExtension.NoExtension, point, AsRatioOrLength.AsLength,
 				out double distanceAlong, out _, out _);
 			return distanceAlong;
+		}
+
+		public static bool Disjoint([NotNull] Geometry geometry1,
+		                            [NotNull] Geometry geometry2,
+		                            bool suppressIndexing = false)
+		{
+			if (!suppressIndexing)
+			{
+				Engine.AccelerateForRelationalOperations(geometry1);
+				Engine.AccelerateForRelationalOperations(geometry2);
+			}
+
+
+			return GeometryEngine.Instance.Disjoint(geometry1, geometry2);
+		}
+
+		public static Geometry GetClippedPolygon(Polygon polygon, Envelope clipExtent)
+		{
+			return (Polygon) GeometryEngine.Instance.Clip(polygon, clipExtent);
+		}
+
+		public static Polyline GetClippedPolyline(Polyline polyline, Envelope clipExtent)
+		{
+			return (Polyline) GeometryEngine.Instance.Clip(polyline, clipExtent);
+		}
+
+		public static T EnsureSpatialReference<T>(T geometry, SpatialReference spatialReference)
+			where T : Geometry
+		{
+			// TODO: Compare first
+
+			return (T) GeometryEngine.Instance.Project(geometry, spatialReference);
 		}
 
 		public static IGeometryEngine Engine

@@ -123,8 +123,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected abstract bool CanUseDerivedGeometries();
 
 		protected abstract bool SelectAndProcessDerivedGeometry(
-			Dictionary<MapMember, List<long>> selection, Geometry sketch,
-			CancelableProgressor progressor);
+			[NotNull] Dictionary<MapMember, List<long>> selection, [NotNull] Geometry sketch,
+			[CanBeNull] CancelableProgressor progressor);
 
 		protected abstract void ResetDerivedGeometries();
 
@@ -143,10 +143,27 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (CanUseDerivedGeometries())
 			{
-				Cursor = SecondPhaseCursor;
+				StartSecondPhase();
 			}
 
 			LogDerivedGeometriesCalculated(progressor);
+		}
+
+		private void StartSecondPhase()
+		{
+			Cursor = SecondPhaseCursor;
+
+			SketchOutputMode = SketchOutputMode.Map;
+
+			// NOTE: CompleteSketchOnMouseUp must be set before the sketch geometry type,
+			// otherwise it has no effect!
+			CompleteSketchOnMouseUp = true;
+
+			SketchType = SketchGeometryType.Rectangle;
+
+			UseSnapping = false;
+
+			GeomIsSimpleAsFeature = false;
 		}
 	}
 }

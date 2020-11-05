@@ -77,6 +77,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="GdbPersistenceUtils.cs" />
     <Compile Include="OneClick\ConstructionToolBase.cs" />
     <Compile Include="OneClick\OneClickToolBase.cs" />
     <Compile Include="OneClick\TwoPhaseEditToolBase.cs" />
@@ -99,7 +100,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
     </Compile>
-    <Compile Include="RemoveOverlaps\Overlaps.cs" />
     <Compile Include="RemoveOverlaps\RemoveOverlapsFeedback.cs" />
     <Compile Include="RemoveOverlaps\RemoveOverlapsToolBase.cs" />
     <Compile Include="Selection\FeatureClassInfo.cs" />
@@ -133,6 +133,10 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj">
+      <Project>{B80740EC-BB68-410C-A617-E79C467F1969}</Project>
+      <Name>ProSuite.Commons.AGP.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">
       <Project>{89f2c583-3022-43f8-9b69-27123836625f}</Project>
       <Name>ProSuite.Commons.AGP</Name>
@@ -152,6 +156,14 @@
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
       <Project>{66e5d99b-26ab-4fff-834d-d96347df4fa4}</Project>
       <Name>ProSuite.Commons</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Microservices.Client.AGP\ProSuite.Microservices.Client.AGP.csproj">
+      <Project>{5D500C94-FF3A-4BC8-8EDB-3A7177898B81}</Project>
+      <Name>ProSuite.Microservices.Client.AGP</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj">
+      <Project>{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}</Project>
+      <Name>ProSuite.Microservices.Client</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

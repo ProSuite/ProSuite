@@ -13,7 +13,8 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			string name = definition.GetName();
 			string alias = definition.GetAliasName();
 
-			if (! string.Equals(name, alias, StringComparison.CurrentCultureIgnoreCase)) // TODO really CurrentCulture?
+			if (! string.Equals(name, alias, StringComparison.CurrentCultureIgnoreCase)
+			) // TODO really CurrentCulture?
 			{
 				return alias;
 			}
@@ -26,6 +27,11 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 				var parts = sqlSyntax.ParseTableName(alias);
 				return parts.Item3;
 			}
+		}
+
+		public static bool IsSameClass(Table featureClass1, Table featureClass2)
+		{
+			return featureClass1.Handle == featureClass2.Handle;
 		}
 	}
 }

@@ -3,7 +3,7 @@ using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Notifications;
 
-namespace ProSuite.AGP.Editing.RemoveOverlaps
+namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 {
 	/// <summary>
 	/// Holds the result of an overlap calculation.
