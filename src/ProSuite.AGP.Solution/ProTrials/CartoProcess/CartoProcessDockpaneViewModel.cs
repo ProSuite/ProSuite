@@ -99,10 +99,15 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 			{
 				var config = CartoProcessConfig.FromString(ProcessName, ConfigText);
 
-				var process = new AlignMarkers(); // TODO get by ProcessName from some repo
-				bool isValid = process.Validate(config);
+				var process = GetCartoProcess(ProcessName);
+				if (process == null)
+					throw new Exception($"No such carto process: {ProcessName}");
 
-				var gdbItem = GetDatabaseItems(DatabaseName);
+				bool isValid = process.Validate(config);
+				if (!isValid)
+					throw new Exception($"Config is not valid for process {ProcessName}");
+
+				var gdbItem = GetDatabaseItem(DatabaseName);
 				if (gdbItem == null)
 					throw new Exception($"No such database item in project: {DatabaseName}");
 
@@ -131,7 +136,22 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		}
 
 		[CanBeNull]
-		private static GDBProjectItem GetDatabaseItems(string name)
+		private static CartoProcess GetCartoProcess(string name)
+		{
+			// TODO need some type search and Activator logic
+			switch (name)
+			{
+				case nameof(AlignMarkers):
+					return new AlignMarkers();
+				case nameof(CalculateControlPoints):
+					return new CalculateControlPoints();
+				default:
+					return null;
+			}
+		}
+
+		[CanBeNull]
+		private static GDBProjectItem GetDatabaseItem(string name)
 		{
 			GDBProjectItem item;
 			if (string.IsNullOrWhiteSpace(name))
@@ -159,7 +179,7 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		{
 			yield return new CartoProcessItem {Name = nameof(AlignMarkers)};
 			yield return new CartoProcessItem {Name = nameof(CreateAnnoMasks)};
-			//yield return new CartoProcessItem {Name = nameof(CalculateControlPoints)};
+			yield return new CartoProcessItem {Name = nameof(CalculateControlPoints)};
 		}
 	}
 

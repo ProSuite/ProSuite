@@ -26,13 +26,16 @@ namespace ProSuite.AGP.WorkList.Domain
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		// todo daro: revise
 		private const int _initialCapacity = 1000;
 
 		private readonly object _syncLock = new object();
 
+		[NotNull]
 		protected IWorkItemRepository Repository { get; }
 
-		private readonly List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
+		[NotNull] private readonly List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
+		[NotNull] private readonly List<GdbRowIdentity> _invalidRows = new List<GdbRowIdentity>(_initialCapacity);
 
 		[NotNull]
 		private readonly Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
@@ -97,10 +100,17 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual bool QueryLanguageSupported { get; } = false;
 
-		public void Update(IWorkItem item)
+		public void SetStatus(IWorkItem item, WorkItemStatus status)
 		{
-			Repository.UpdateAsync(item);
-			
+			Repository.SetStatus(item, status);
+
+			OnWorkListChanged(null, new List<long> { item.OID });
+		}
+
+		public void SetVisited(IWorkItem item)
+		{
+			Repository.SetVisited(item);
+
 			OnWorkListChanged(null, new List<long> { item.OID });
 		}
 
@@ -115,7 +125,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			// Subclass should provide more efficient implementation (e.g. pass filter on to database)
 
-			IEnumerable<IWorkItem> query = _items.Where(item => _items.IndexOf(item, startIndex) > -1);
+			//IEnumerable<IWorkItem> query = _items.Where(item => _items.IndexOf(item, startIndex) > -1);
+			var query = (IEnumerable<IWorkItem>) _items;
 
 			if (! ignoreListSettings && Visibility != WorkItemVisibility.None)
 			{
@@ -153,7 +164,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		// todo daro
-		public abstract void Dispose();
+		public virtual void Dispose() { }
 
 		/* Navigation */
 
@@ -713,7 +724,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			CurrentIndex = _items.IndexOf(nextItem);
 
 			Repository.SetCurrentIndex(CurrentIndex);
-			Repository.UpdateAsync(nextItem);
+			Repository.SetVisited(nextItem);
 
 			var oids = currentItem != null
 				           ? new List<long> {nextItem.OID, currentItem.OID}
@@ -913,6 +924,24 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public void Invalidate()
 		{
+			try
+			{
+				var invalidItems = new List<long>(_invalidRows.Count);
+
+				foreach (IWorkItem item in _invalidRows.Where(row => _rowMap.ContainsKey(row))
+				                                       .Select(row => _rowMap[row]))
+				{
+					Refresh(item);
+
+					invalidItems.Add(item.OID);
+				}
+
+				OnWorkListChanged(null, invalidItems);
+			}
+			finally
+			{
+				_invalidRows.Clear();
+			}
 		}
 
 		// todo daro: Is SDK type Table the right type?
@@ -924,14 +953,14 @@ namespace ProSuite.AGP.WorkList.Domain
 			               deletes.Values.Sum(list => list.Count) +
 			               updates.Values.Sum(list => list.Count);
 
-			var invalidFeatures = new List<long>(capacity);
+			var invalidItems = new List<long>(capacity);
 
 			foreach (var insert in inserts)
 			{
 				var tableId = new GdbTableIdentity(insert.Key);
 				List<long> oids = insert.Value;
 
-				ProcessInserts(tableId, oids, invalidFeatures);
+				ProcessInserts(tableId, oids, invalidItems);
 			}
 
 			foreach (var delete in deletes)
@@ -939,7 +968,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				var tableId = new GdbTableIdentity(delete.Key);
 				List<long> oids = delete.Value;
 
-				ProcessDeletes(tableId, oids, invalidFeatures);
+				ProcessDeletes(tableId, oids, invalidItems);
 			}
 
 			foreach (var update in updates)
@@ -947,18 +976,18 @@ namespace ProSuite.AGP.WorkList.Domain
 				var tableId = new GdbTableIdentity(update.Key);
 				List<long> oids = update.Value;
 
-				ProcessUpdates(tableId, oids, invalidFeatures);
+				ProcessUpdates(tableId, oids, invalidItems);
 
 				// does not work because ObjectIDs = (IReadOnlyList<long>) modify.Value (oids) are the
 				// ObjectIds of source feature not the work item OIDs.
 				//IEnumerable<IWorkItem> workItems = GetItems(filter);
 			}
 
-			OnWorkListChanged(null, invalidFeatures);
+			OnWorkListChanged(null, invalidItems);
 		}
 
 		private void ProcessDeletes(GdbTableIdentity tableId, List<long> oids,
-		                            List<long> invalidFeatures)
+		                            ICollection<long> invalidItems)
 		{
 			foreach (long oid in oids)
 			{
@@ -974,7 +1003,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				{
 					RemoveWorkItem(item);
 
-					invalidFeatures.Add(item.OID);
+					invalidItems.Add(item.OID);
 				}
 			}
 
@@ -1003,7 +1032,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		private void ProcessInserts(GdbTableIdentity tableId, List<long> oids,
-		                            List<long> invalidFeatures)
+		                            ICollection<long> invalidItems)
 		{
 			var filter = new QueryFilter {ObjectIDs = oids};
 
@@ -1025,7 +1054,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 				UpdateExtent(item.Extent);
 
-				invalidFeatures.Add(item.OID);
+				invalidItems.Add(item.OID);
 			}
 		}
 
@@ -1035,19 +1064,29 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		private void ProcessUpdates(GdbTableIdentity tableId, IEnumerable<long> oids,
-		                            List<long> invalidFeatures)
+		                            ICollection<long> invalidItems)
 		{
 			foreach (long oid in oids)
 			{
-				if (_rowMap.TryGetValue(new GdbRowIdentity(oid, tableId), out IWorkItem item))
+				var rowId = new GdbRowIdentity(oid, tableId);
+
+				if (_rowMap.TryGetValue(rowId, out IWorkItem item))
 				{
-					Repository.UpdateAsync(item);
+					Refresh(item);
 
-					UpdateExtent(item.Extent);
+					_invalidRows.Add(rowId);
 
-					invalidFeatures.Add(item.OID);
+					invalidItems.Add(item.OID);
 				}
 			}
+		}
+
+		// todo daro: refresh or update?
+		private void Refresh(IWorkItem item)
+		{
+			Repository.Refresh(item);
+
+			UpdateExtent(item.Extent);
 		}
 
 		public bool HasCurrentItem => CurrentIndex >= 0 &&

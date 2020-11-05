@@ -94,13 +94,13 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 			public override void Execute()
 			{
-				TotalFeatures = CountFeatures(_inputDataset);
+				TotalFeatures = CountInputFeatures(_inputDataset);
 				if (TotalFeatures == 0)
 				{
 					return;
 				}
 
-				foreach (var feature in GetFeatures(_inputDataset))
+				foreach (var feature in GetInputFeatures(_inputDataset))
 				{
 					CheckCancel();
 
@@ -160,7 +160,7 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 				var normal = (LineSegment) normalPoly.Parts[0][0]; // TODO safety guards
 
 				double tangentLength = Math.Max(_inputDataset.XYTolerance, distance);
-				var tangentPoly = GeometryEngine.Instance.QueryNormal(
+				var tangentPoly = GeometryEngine.Instance.QueryTangent(
 					referenceCurve, SegmentExtension.NoExtension, distanceAlongCurve,
 					AsRatioOrLength.AsLength, tangentLength);
 				var tangent = (LineSegment) tangentPoly.Parts[0][0]; // TODO safety guards
@@ -191,6 +191,12 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 					"Marker feature {0}: aligned to {1} (normalAngle: {2}, tangentAngle: {3}, distance: {4})",
 					ProcessingUtils.Format(feature), ProcessingUtils.Format(referenceFeature),
 					normalAngle, tangentAngle, distance);
+
+				// TODO need some mechanism to ensure disposal (required by Pro SDK documentation); see also OneNote
+				foreach (var pair in distanceByFeature)
+				{
+					pair.Key.Dispose();
+				}
 			}
 
 			[NotNull]
@@ -206,9 +212,7 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 				Envelope searchExtent = geometry.Extent;
 
-				var expandedExtent = searchExtent.Expand(searchDistance, searchDistance, false);
-				bool f = ReferenceEquals(expandedExtent, searchExtent); // hypothesis: false (Pro SDK geoms are said to be immutable)
-				searchExtent = expandedExtent;
+				searchExtent = searchExtent.Expand(searchDistance, searchDistance, false);
 
 				foreach (ProcessingDataset dataset in datasets.Where(dataset => dataset != null))
 				{

@@ -89,7 +89,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				CreateLayer(environment, workList.Name);
 
-				RegisterObserver(new WorkListViewModel(workList as SelectionWorkList));
+				RegisterObserver(new WorkListViewModel(workList));
 			}
 			catch (Exception e)
 			{
@@ -350,8 +350,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 			await QueuedTask.Run(() =>
 			{
 				// todo daro: use ConfigurationUtils?
-				//foreach (string path in GetDefinitionFiles())
-				foreach (var path in ProjectRepository.Current.GetProjectFileItems(ProjectItemType.WorkListDefinition))
+				// todo daro: revise!
+				foreach (string path in GetDefinitionFiles())
+				//foreach (var path in ProjectRepository.Current.GetProjectFileItems(ProjectItemType.WorkListDefinition))
 				{
 					string workListName = WorkListUtils.GetName(path);
 					var factory = new XmlBasedWorkListFactory(path, workListName);

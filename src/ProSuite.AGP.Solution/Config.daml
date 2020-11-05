@@ -79,6 +79,7 @@
         <group id="ProSuiteTools_Selection" caption="Selection Tools" keytip="G1">
           <tool refID="ProSuiteTools_Selection_SelectionTool" size="small" />
           <button refID="WorkLists_CreateSelectionWorkList" size="small" />
+          <button refID="WorkLists_CreateIssueWorkList" size="small" />
           <button refID="esri_mapping_clearSelectionButton" size="small" />
         </group>
       </groups>
@@ -115,8 +116,13 @@
           <tooltip heading="Show Error Worklist">Show Error Worklist<disabledText /></tooltip>
         </button>
         <button id="WorkLists_CreateSelectionWorkList" caption="Show Selection WorkList" className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true" smallImage="Images/NavigateSelectionCmd.png" largeImage="Images/NavigateSelectionCmd.png">
-          <tooltip heading="Show Selection Worklist">Show worklist for iterating on selected items
-            <disabledText />
+          <tooltip heading="Show Selection Work List">Show Selection Work List for iterating on selected items
+						<disabledText />
+          </tooltip>
+        </button>
+        <button id="WorkLists_CreateIssueWorkList" caption="Show Issue Work List" className="WorkLists.CreateIssueWorkListButton" loadOnClick="true" smallImage="Images/NavigateSelectionCmd.png" largeImage="Images/NavigateSelectionCmd.png">
+          <tooltip heading="Show Issue Work List">Show Issue Work List for iterating on issue items
+						<disabledText />
           </tooltip>
         </button>
         <tool id="ProSuiteTools_Editing_EraseTool" caption="EraseTool " className="Editing.EraseTool" loadOnClick="true"
