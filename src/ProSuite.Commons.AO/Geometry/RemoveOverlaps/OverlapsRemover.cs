@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
@@ -39,6 +39,52 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 		[NotNull]
 		[CLSCompliant(false)]
 		public RemoveOverlapsResult Result { get; }
+
+		/// <summary>
+		/// Calculates the result geometries and adds them to the relevant dictionaries.
+		/// </summary>
+		/// <param name="fromFeatures"></param>
+		/// <param name="overlaps"></param>
+		/// <param name="targetFeaturesForVertexInsertion"></param>
+		/// <param name="trackCancel"></param>
+		[CLSCompliant(false)]
+		public void CalculateResults(
+			[NotNull] IEnumerable<IFeature> fromFeatures,
+			[NotNull] Overlaps overlaps,
+			[CanBeNull] ICollection<IFeature> targetFeaturesForVertexInsertion = null,
+			[CanBeNull] ITrackCancel trackCancel = null)
+		{
+			Assert.ArgumentNotNull(fromFeatures, nameof(fromFeatures));
+			Assert.ArgumentNotNull(overlaps, nameof(overlaps));
+
+			foreach (IFeature feature in fromFeatures)
+			{
+				if (trackCancel != null && ! trackCancel.Continue())
+				{
+					return;
+				}
+
+				var gdbObjRef = new GdbObjectReference(feature);
+
+				IList<IGeometry> overlapsForFeature;
+				if (! overlaps.OverlapGeometries.TryGetValue(gdbObjRef, out overlapsForFeature))
+				{
+					_msg.DebugFormat("No overlaps for feature {0}", gdbObjRef);
+					continue;
+				}
+
+				IPolycurve overlapGeometry = (IPolycurve) GeometryUtils.Union(overlapsForFeature);
+
+				ProcessFeature(feature, overlapGeometry);
+
+				if (targetFeaturesForVertexInsertion != null)
+				{
+					// TODO: Filter target features using spatial index!
+					InsertIntersectingVerticesInTargets(targetFeaturesForVertexInsertion,
+					                                    overlapGeometry);
+				}
+			}
+		}
 
 		/// <summary>
 		/// Calculates the result geometries and adds them to the relevant dictionaries.
