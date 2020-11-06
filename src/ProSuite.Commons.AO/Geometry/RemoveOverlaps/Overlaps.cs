@@ -14,14 +14,14 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 	public class Overlaps
 	{
 		[NotNull]
-		public IDictionary<GdbObjectReference, IList<IGeometry>> OverlapGeometries { get; }
+		public IDictionary<GdbObjectReference, IList<IGeometry>> OverlapsBySourceRef { get; }
 
 		[NotNull]
 		public NotificationCollection Notifications { get; }
 
 		public Overlaps()
 		{
-			OverlapGeometries = new Dictionary<GdbObjectReference, IList<IGeometry>>();
+			OverlapsBySourceRef = new Dictionary<GdbObjectReference, IList<IGeometry>>();
 
 			Notifications = new NotificationCollection();
 		}
@@ -29,14 +29,25 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 		public void AddGeometries(GdbObjectReference sourceFeatureRef,
 		                          IList<IGeometry> overlapGeometries)
 		{
-			OverlapGeometries.Add(sourceFeatureRef, overlapGeometries);
+			OverlapsBySourceRef.Add(sourceFeatureRef, overlapGeometries);
 		}
 
-		public int OverlapCount => OverlapGeometries.Count;
+		public int OverlapCount => OverlapsBySourceRef.Count;
 
 		public bool HasOverlaps()
 		{
-			return OverlapGeometries.Count > 0;
+			return OverlapsBySourceRef.Count > 0;
+		}
+
+		public IEnumerable<IGeometry> GetAllOverlapGeometries()
+		{
+			foreach (var geometries in OverlapsBySourceRef.Values)
+			{
+				foreach (IGeometry geometry in geometries)
+				{
+					yield return geometry;
+				}
+			}
 		}
 	}
 }

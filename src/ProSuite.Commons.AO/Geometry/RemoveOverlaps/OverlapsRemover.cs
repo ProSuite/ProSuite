@@ -67,7 +67,7 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 				var gdbObjRef = new GdbObjectReference(feature);
 
 				IList<IGeometry> overlapsForFeature;
-				if (! overlaps.OverlapGeometries.TryGetValue(gdbObjRef, out overlapsForFeature))
+				if (! overlaps.OverlapsBySourceRef.TryGetValue(gdbObjRef, out overlapsForFeature))
 				{
 					_msg.DebugFormat("No overlaps for feature {0}", gdbObjRef);
 					continue;

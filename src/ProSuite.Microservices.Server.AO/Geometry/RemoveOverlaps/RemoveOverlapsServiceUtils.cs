@@ -43,7 +43,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 			var result = new CalculateOverlapsResponse();
 
 			foreach (var overlapByGdbRef
-				in selectableOverlaps.OverlapGeometries)
+				in selectableOverlaps.OverlapsBySourceRef)
 			{
 				var gdbObjRefMsg = ProtobufConversionUtils.ToGdbObjRefMsg(overlapByGdbRef.Key);
 
