@@ -64,7 +64,7 @@ namespace ProSuite.Commons.AGP.Gdb
 
 			if (! result && _exception != null)
 			{
-				throw new Exception("Edit operation failed", _exception);
+				throw _exception;
 			}
 
 			return result;
