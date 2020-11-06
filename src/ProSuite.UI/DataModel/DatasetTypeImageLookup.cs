@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geometry.EsriShape;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.UI.Properties;
 

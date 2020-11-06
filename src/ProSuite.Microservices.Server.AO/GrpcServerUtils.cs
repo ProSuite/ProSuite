@@ -22,7 +22,7 @@ namespace ProSuite.Microservices.Server.AO
 			Func<ITrackCancel, T> func,
 			ServerCallContext serverCallContext,
 			TaskScheduler taskScheduler,
-			bool throwException)
+			bool throwException = false)
 		{
 			CancellationToken cancellationToken = serverCallContext.CancellationToken;
 			string methodName = serverCallContext.Method;
