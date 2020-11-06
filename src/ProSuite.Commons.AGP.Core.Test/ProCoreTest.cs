@@ -11,6 +11,12 @@ namespace ProSuite.Commons.AGP.Test
 	[Apartment(ApartmentState.STA)]
 	public class ProCoreTest
 	{
+		[OneTimeSetUp]
+		public void OneTimeSetUp()
+		{
+			Hosting.CoreHostProxy.Initialize();
+		}
+
 		[Test]
 		public void CanSpatialReferenceProperties()
 		{
@@ -18,6 +24,87 @@ namespace ProSuite.Commons.AGP.Test
 			Assert.IsTrue(wgs84.IsGeographic);
 			Assert.IsFalse(wgs84.IsProjected);
 			Assert.IsFalse(wgs84.IsUnknown);
+		}
+
+		[Test]
+		public void CanMapPointBuilderStatic()
+		{
+			MapPoint pt1 = MapPointBuilder.CreateMapPoint(1.0, 2.0);
+			Assert.False(pt1.HasZ);
+			Assert.False(pt1.HasM);
+			Assert.False(pt1.HasID);
+			Assert.False(pt1.IsEmpty);
+
+			MapPoint pt2 = MapPointBuilder.CreateMapPoint(1.0, 2.0, 3.0);
+			Assert.True(pt2.HasZ);
+			Assert.False(pt2.HasM);
+			Assert.False(pt2.HasID);
+			Assert.False(pt2.IsEmpty);
+
+			MapPoint pt3 = MapPointBuilder.CreateMapPoint(1.0, 2.0, 3.0, 4.0);
+			Assert.True(pt3.HasZ);
+			Assert.True(pt3.HasM);
+			Assert.False(pt3.HasID);
+			Assert.False(pt3.IsEmpty);
+
+			MapPoint pt3Copy = MapPointBuilder.CreateMapPoint(pt3);
+			Assert.True(pt3Copy.IsEqual(pt3));
+			Assert.False(ReferenceEquals(pt3, pt3Copy)); // Note: since geoms are immutable, returning *same* would be ok, but here test for behavior
+		}
+
+		[Test]
+		public void CanMapPointBuilderInstance()
+		{
+			using (var builder = new MapPointBuilder(1.0, 2.0))
+			{
+				Assert.False(builder.HasZ);
+				Assert.False(builder.HasM);
+				Assert.False(builder.HasID);
+				Assert.False(builder.IsEmpty);
+
+				var pt = builder.ToGeometry();
+				Assert.False(pt.HasZ);
+				Assert.False(pt.HasM);
+				Assert.False(pt.HasID);
+				Assert.False(pt.IsEmpty);
+			}
+
+			using (var builder = new MapPointBuilder(1.0, 2.0, 3.0))
+			{
+				Assert.True(builder.HasZ);
+				Assert.False(builder.HasM);
+				Assert.False(builder.HasID);
+				Assert.False(builder.IsEmpty);
+
+				var pt = builder.ToGeometry();
+				Assert.True(pt.HasZ);
+				Assert.False(pt.HasM);
+				Assert.False(pt.HasID);
+				Assert.False(pt.IsEmpty);
+			}
+
+			MapPoint pt3;
+
+			using (var builder = new MapPointBuilder(1.0, 2.0, 3.0, 4.0))
+			{
+				Assert.True(builder.HasZ);
+				Assert.True(builder.HasM);
+				Assert.False(builder.HasID);
+				Assert.False(builder.IsEmpty);
+
+				pt3 = builder.ToGeometry();
+				Assert.True(pt3.HasZ);
+				Assert.True(pt3.HasM);
+				Assert.False(pt3.HasID);
+				Assert.False(pt3.IsEmpty);
+			}
+
+			using (var builder = new MapPointBuilder(pt3))
+			{
+				var pt = builder.ToGeometry();
+				Assert.True(pt3.IsEqual(pt));
+				Assert.False(ReferenceEquals(pt3, pt));
+			}
 		}
 	}
 }

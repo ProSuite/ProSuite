@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
@@ -9,6 +10,8 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geometry.SpatialIndex;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 
@@ -27,11 +30,20 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 			[NotNull] IList<IFeature> overlappingFeatures,
 			[CanBeNull] ITrackCancel trackCancel = null)
 		{
-			var result = new Overlaps(new List<IGeometry>());
+			var result = new Overlaps();
 
 			Stopwatch watch = Stopwatch.StartNew();
 
 			var sourceCount = 0;
+
+			if (overlappingFeatures.Count == 0)
+			{
+				return result;
+			}
+
+			SpatialHashSearcher<IFeature> targetIndex =
+				SpatialHashSearcher<IFeature>.CreateSpatialSearcher(
+					overlappingFeatures, GetEnvelope);
 
 			foreach (IFeature sourceFeature in sourceFeatures)
 			{
@@ -41,9 +53,10 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 					return result;
 				}
 
-				result.AddGeometries(GetSelectableOverlaps(
-					                     sourceFeature, overlappingFeatures,
-					                     result.Notifications, trackCancel));
+				result.AddGeometries(
+					new GdbObjectReference(sourceFeature),
+					GetSelectableOverlaps(sourceFeature, targetIndex, result.Notifications,
+					                      trackCancel).ToList());
 
 				_msg.DebugFormat(
 					"Calculated overlaps for source feature {0}. Current overlaps count: {1}",
@@ -54,37 +67,42 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 
 			_msg.DebugStopTiming(watch,
 			                     "Calculated {0} overlaps between {1} source and {2} target features.",
-			                     result.OverlapCount, sourceCount,
-			                     overlappingFeatures.Count);
+			                     result.OverlapCount, sourceCount, overlappingFeatures.Count);
 
 			return result;
 		}
 
 		public static IEnumerable<IGeometry> GetSelectableOverlaps(
 			[NotNull] IFeature sourceFeature,
-			[NotNull] IEnumerable<IFeature> overlappingFeatures,
+			[NotNull] SpatialHashSearcher<IFeature> overlappingFeatures,
 			[CanBeNull] NotificationCollection notifications = null,
 			[CanBeNull] ITrackCancel trackCancel = null)
 		{
 			IGeometry sourceGeometry = sourceFeature.Shape;
-			var topOpSource = (ITopologicalOperator) sourceGeometry;
 
-			foreach (IFeature feature in overlappingFeatures)
+			if (sourceGeometry == null || sourceGeometry.IsEmpty)
+			{
+				yield break;
+			}
+
+			IEnvelope sourceEnvelope = sourceGeometry.Envelope;
+
+			double tolerance = GeometryUtils.GetXyTolerance(sourceGeometry);
+
+			foreach (IFeature targetFeature in overlappingFeatures.Search(
+				sourceEnvelope.XMin, sourceEnvelope.YMin,
+				sourceEnvelope.XMax, sourceEnvelope.YMax, tolerance))
 			{
 				if (trackCancel != null && ! trackCancel.Continue())
-				{
 					yield break;
-				}
 
 				_msg.VerboseDebugFormat("Calculating overlap from {0}",
-				                        GdbObjectUtils.ToString(feature));
+				                        GdbObjectUtils.ToString(targetFeature));
 
-				IGeometry targetGeometry = feature.Shape;
+				IGeometry targetGeometry = targetFeature.Shape;
 
 				if (GeometryUtils.Disjoint(targetGeometry, sourceGeometry))
-				{
 					continue;
-				}
 
 				if (GeometryUtils.Contains(targetGeometry, sourceGeometry))
 				{
@@ -92,43 +110,58 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 					NotificationUtils.Add(notifications,
 					                      "Source feature {0} is completely within target {1} and would become empty if the overlap was removed. The overlap is supressed.",
 					                      RowFormat.Format(sourceFeature),
-					                      RowFormat.Format(feature));
+					                      RowFormat.Format(targetFeature));
 					continue;
 				}
 
-				_msg.VerboseDebug("Intersecting...");
-
-				if (sourceGeometry.GeometryType ==
-				    esriGeometryType.esriGeometryMultiPatch)
+				if (sourceGeometry.GeometryType == esriGeometryType.esriGeometryMultiPatch)
 				{
 					sourceGeometry = GeometryFactory.CreatePolygon(sourceGeometry);
 				}
 
-				esriGeometryDimension dimension = sourceGeometry is IPolygon
-					                                  ? esriGeometryDimension
-						                                  .esriGeometry2Dimension
-					                                  : esriGeometryDimension
-						                                  .esriGeometry1Dimension;
+				IGeometry intersection = TryGetIntersection(sourceGeometry, targetGeometry);
 
-				if (targetGeometry.GeometryType ==
-				    esriGeometryType.esriGeometryMultiPatch)
-				{
-					targetGeometry = GeometryFactory.CreatePolygon(targetGeometry);
-				}
-
-				IGeometry intersection = topOpSource.Intersect(targetGeometry, dimension);
-
-				Marshal.ReleaseComObject(targetGeometry);
-
-				_msg.VerboseDebug("Simplifying...");
-
-				GeometryUtils.Simplify(intersection);
-
-				if (! intersection.IsEmpty)
-				{
+				if (intersection != null)
 					yield return intersection;
-				}
 			}
+		}
+
+		private static EnvelopeXY GetEnvelope(IFeature feature)
+		{
+			IEnvelope envelope = feature.Extent;
+
+			return new EnvelopeXY(envelope.XMin, envelope.YMin, envelope.XMax, envelope.YMax);
+		}
+
+		[CanBeNull]
+		private static IGeometry TryGetIntersection([NotNull] IGeometry sourceGeometry,
+		                                            [NotNull] IGeometry targetGeometry)
+		{
+			IGeometry targetToIntersect =
+				targetGeometry.GeometryType == esriGeometryType.esriGeometryMultiPatch
+					? GeometryFactory.CreatePolygon(targetGeometry)
+					: targetGeometry;
+
+			esriGeometryDimension dimension =
+				sourceGeometry is IPolygon
+					? esriGeometryDimension.esriGeometry2Dimension
+					: esriGeometryDimension.esriGeometry1Dimension;
+
+			IGeometry intersection = IntersectionUtils.Intersect(
+				sourceGeometry, targetToIntersect, dimension);
+
+			_msg.VerboseDebug("Simplifying...");
+
+			GeometryUtils.Simplify(intersection);
+
+			Marshal.ReleaseComObject(targetToIntersect);
+
+			if (! intersection.IsEmpty)
+			{
+				return intersection;
+			}
+
+			return null;
 		}
 
 		#endregion

@@ -79,6 +79,9 @@
     <Compile Include="Exceptions\ExceptionUtils.cs" />
     <Compile Include="Geometry\CrackPoint.cs" />
     <Compile Include="Geometry\EnvelopeXY.cs" />
+    <Compile Include="Geometry\EsriShape\EsriShapeFormatUtils.cs" />
+    <Compile Include="Geometry\EsriShape\EsriShapeType.cs" />
+    <Compile Include="Geometry\EsriShape\ProSuiteGeometryType.cs" />
     <Compile Include="Geometry\GeomRelationUtils.cs" />
     <Compile Include="Geometry\IBoundedXY.cs" />
     <Compile Include="Geometry\IPointList.cs" />

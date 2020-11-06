@@ -70,6 +70,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Processing", "ProS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.QA.Core", "ProSuite.QA.Core\ProSuite.QA.Core.csproj", "{01CBBA9E-0D4D-439F-9147-6A5685884A65}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Microservices.Client", "ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj", "{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Microservices.Client.AGP", "ProSuite.Microservices.Client.AGP\ProSuite.Microservices.Client.AGP.csproj", "{5D500C94-FF3A-4BC8-8EDB-3A7177898B81}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -188,6 +192,14 @@ Global
 		{01CBBA9E-0D4D-439F-9147-6A5685884A65}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{01CBBA9E-0D4D-439F-9147-6A5685884A65}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{01CBBA9E-0D4D-439F-9147-6A5685884A65}.Release|Any CPU.Build.0 = Release|Any CPU
+		{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5D500C94-FF3A-4BC8-8EDB-3A7177898B81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5D500C94-FF3A-4BC8-8EDB-3A7177898B81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5D500C94-FF3A-4BC8-8EDB-3A7177898B81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5D500C94-FF3A-4BC8-8EDB-3A7177898B81}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

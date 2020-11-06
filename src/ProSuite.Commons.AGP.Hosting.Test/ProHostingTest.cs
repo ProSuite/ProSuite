@@ -33,8 +33,8 @@ namespace ProSuite.Commons.AGP.Hosting.Test
 		[Test]
 		public void CanUseCoreViaProject()
 		{
-			SpatialReference ch1903 = GeometryUtils.CreateSpatialReference(21781);
-			MapPoint point = GeometryUtils.CreatePoint(600000, 200000, ch1903);
+			SpatialReference ch1903 = GeometryFactory.CreateSpatialReference(21781);
+			MapPoint point = GeometryFactory.CreatePoint(600000, 200000, ch1903);
 			int count = GeometryUtils.GetPointCount(point);
 
 			Assert.AreEqual(600000.0, point.X);

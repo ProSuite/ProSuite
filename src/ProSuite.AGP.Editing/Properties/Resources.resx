@@ -127,6 +127,15 @@
   <data name="EraseToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\EraseToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="RemoveOverlapsToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\RemoveOverlapsToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="RemoveOverlapsToolCursorProcess" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\RemoveOverlapsToolCursorProcess.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="RemoveOverlapsToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\RemoveOverlapsToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="SelectionToolNormal" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\SelectionToolNormal.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
