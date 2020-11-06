@@ -32,7 +32,9 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		private Dictionary<IFeature, double> _originalFeatureSize;
 
-		protected GeometryReshaperBase([NotNull] ICollection<IFeature> featuresToReshape)
+		protected IList<ToolEditOperationObserver> EditOperationObservers { get; set; }
+
+		protected GeometryReshaperBase([NotNull] ICollection<IFeature> featuresToReshape, IList<ToolEditOperationObserver> editOperationObservers)
 		{
 			Assert.ArgumentNotNull(featuresToReshape, nameof(featuresToReshape));
 
@@ -926,6 +928,11 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			Assert.False(geometry.IsEmpty, "Reshape result is empty.");
 
+			foreach (var observer in EditOperationObservers)
+			{
+				observer.Updating(feature);
+			}
+
 			StoreReshapedGeometryCore(feature, geometry, notifications);
 
 			_msg.DebugStopTiming(watch, "Stored geometry in {0}",
@@ -938,7 +945,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			[CanBeNull] NotificationCollection notifications)
 		{
 			GdbObjectUtils.SetFeatureShape(feature, newGeometry);
-
+			
 			feature.Store();
 		}
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
@@ -24,12 +24,14 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// Initializes a new instance of the <see cref="GeometryReshaper"/> class.
 		/// </summary>
 		/// <param name="feature">The feature whose geometry shall be reshaped</param>
-		public GeometryReshaper([NotNull] IFeature feature)
-			: base(new List<IFeature> {feature})
+		/// <param name="editOperationObservers">the observers (e.g. AutoAttributeUpdater) which react on an edit initiated by this class</param>
+		public GeometryReshaper([NotNull] IFeature feature, IList<ToolEditOperationObserver> editOperationObservers)
+			: base(new List<IFeature> {feature}, editOperationObservers)
 		{
 			Assert.ArgumentNotNull(feature, nameof(feature));
 
 			_feature = feature;
+			EditOperationObservers = editOperationObservers;
 		}
 
 		public bool AllowOpenJawReshape { private get; set; }
@@ -179,8 +181,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			}
 
 			// The end points might have changed in Z only which is not classified as open-jaw:
-			IPolyline originalPolyline = (IPolyline) feature.Shape;
-			IPolyline newPolyline = (IPolyline) newGeometry;
+			var originalPolyline = (IPolyline) feature.Shape;
+			var newPolyline = (IPolyline) newGeometry;
 
 			return ! GeometryUtils.AreEqual(originalPolyline.FromPoint, newPolyline.FromPoint) ||
 			       ! GeometryUtils.AreEqual(originalPolyline.ToPoint, newPolyline.ToPoint);
@@ -193,8 +195,9 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		{
 			Assert.NotNull(NetworkFeatureFinder);
 
-			var linearNetworkUpdater = NetworkFeatureUpdater ??
-			                           new LinearNetworkNodeUpdater(NetworkFeatureFinder);
+			LinearNetworkNodeUpdater linearNetworkUpdater = NetworkFeatureUpdater ??
+			                                                new LinearNetworkNodeUpdater(
+				                                                NetworkFeatureFinder);
 
 			linearNetworkUpdater.BarrierGeometryOriginal = reshapedFeature.Shape as IPolyline;
 			linearNetworkUpdater.BarrierGeometryChanged = newGeometry as IPolyline;

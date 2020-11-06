@@ -31,8 +31,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		public MultipleGeometriesReshaper(
 			[NotNull] ICollection<IFeature> featuresToReshape,
-			IReshapeAlongOptions reshapeAlongOptions)
-			: this(featuresToReshape)
+			IReshapeAlongOptions reshapeAlongOptions, IList<ToolEditOperationObserver> editOperationObservers)
+			: this(featuresToReshape, editOperationObservers)
 		{
 			MaxProlongationLengthFactor =
 				reshapeAlongOptions.AdjustModeMaxSourceLineProlongationFactor;
@@ -47,8 +47,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// </summary>
 		/// <param name="featuresToReshape">The features whose shape shall be reshaped</param>
 		public MultipleGeometriesReshaper(
-			[NotNull] ICollection<IFeature> featuresToReshape)
-			: base(featuresToReshape)
+			[NotNull] ICollection<IFeature> featuresToReshape, IList<ToolEditOperationObserver> editOperationObservers)
+			: base(featuresToReshape, editOperationObservers)
 		{
 			Assert.True(featuresToReshape.Count > 1,
 			            "Use GeometryReshaper for single feature reshape");
