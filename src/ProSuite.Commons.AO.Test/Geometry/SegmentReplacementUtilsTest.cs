@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
@@ -14,7 +14,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 		}
 
 		[OneTimeTearDown]

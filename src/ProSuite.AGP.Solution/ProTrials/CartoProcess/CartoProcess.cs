@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
@@ -20,10 +21,15 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 {
 	public interface IProcessingContext
 	{
-		// ProcessExecutionType
-		// ProcessSelectionType
+		// TODO ProcessExecutionType
+		// TODO ProcessSelectionType
 
 		Geodatabase Geodatabase { get; }
+
+		[CanBeNull]
+		Map Map { get; }
+
+		ProcessingDataset OpenDataset(ProcessDatasetName name);
 
 		[CanBeNull]
 		Polygon GetProcessingPerimeter();
@@ -34,10 +40,15 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 		void SetSystemFields(RowBuffer row, Table table);
 
-		IEnumerable<Feature> GetFeatures(FeatureClass featureClass, string whereClause,
+		IEnumerable<Feature> GetInputFeatures(ProcessingDataset dataset, Geometry extent = null,
+		                                      bool recycling = false);
+
+		int CountInputFeatures(ProcessingDataset dataset, Geometry extent = null);
+
+		IEnumerable<Feature> GetFeatures(ProcessingDataset dataset,
 		                                 Geometry extent = null, bool recycling = false);
 
-		int CountFeatures(FeatureClass featureClass, string whereClause, Geometry extent = null);
+		int CountFeatures(ProcessingDataset dataset, Geometry extent = null);
 	}
 
 	public interface IProcessingFeedback
@@ -50,12 +61,12 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		/// <summary>
 		/// Assume subsequent reports pertain to this process
 		/// </summary>
-		CartoProcess CurrentProcess { get; set; }
+		CartoProcess CurrentProcess { get; set; } // TODO do not hold process, use a proxy (eg process name)
 
 		/// <summary>
 		/// Assume subsequent reports pertain to this feature
 		/// </summary>
-		Feature CurrentFeature { get; set; }
+		Feature CurrentFeature { get; set; } // TODO do not hold feature, use a proxy
 
 		void ReportInfo([NotNull] string text);
 
@@ -120,6 +131,8 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 			string datasetName = text;
 			string whereClause = null;
 
+			// TODO allow "FC where WC" which reads better than "FC; WC"
+
 			int index = text.IndexOf(';');
 			if (index >= 0)
 			{
@@ -164,17 +177,19 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 	public class ProcessingDataset
 	{
 		public string DatasetName { get; }
-		public string WhereClause { get; }
-		public FeatureClass FeatureClass { get; }
+		[CanBeNull] public string WhereClause { get; } // logically ANDed with any FeatureLayer definition query
+		[NotNull] public FeatureClass FeatureClass { get; }
+		[CanBeNull] public FeatureLayer FeatureLayer { get; } // optional; if present, use selection!
 		public GeometryType ShapeType { get; }
 		public double XYTolerance { get; }
 		public SpatialReference SpatialReference { get; }
 
-		public ProcessingDataset(ProcessDatasetName datasetName, Geodatabase database)
+		public ProcessingDataset(ProcessDatasetName datasetName, FeatureClass featureClass, FeatureLayer featureLayer = null)
 		{
 			DatasetName = datasetName.DatasetName;
 			WhereClause = datasetName.WhereClause;
-			FeatureClass = database.OpenDataset<FeatureClass>(datasetName.DatasetName); // MCT
+			FeatureClass = featureClass ?? throw new ArgumentNullException(nameof(featureClass));
+			FeatureLayer = featureLayer; // may be nuzll
 
 			var definition = FeatureClass.GetDefinition(); // bombs on joined FC
 			ShapeType = definition.GetShapeType(); // MCT
@@ -185,9 +200,10 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 	public class ProProcessingContext : IProcessingContext
 	{
-		public ProProcessingContext([NotNull] Geodatabase geodatabase)
+		public ProProcessingContext([NotNull] Geodatabase geodatabase, [CanBeNull] Map map)
 		{
 			Geodatabase = geodatabase ?? throw new ArgumentNullException(nameof(geodatabase));
+			Map = map;
 		}
 
 		public Polygon GetProcessingPerimeter()
@@ -196,6 +212,42 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		}
 
 		public Geodatabase Geodatabase { get; }
+
+		public Map Map { get; }
+
+		public ProcessingDataset OpenDataset(ProcessDatasetName name)
+		{
+			if (name == null) return null;
+
+			var featureClass = Geodatabase.OpenDataset<FeatureClass>(name.DatasetName); // MCT
+			var featureLayer = FindLayer(Map, featureClass);
+
+			return new ProcessingDataset(name, featureClass, featureLayer);
+		}
+
+		[CanBeNull]
+		private static FeatureLayer FindLayer(Map map, FeatureClass featureClass)
+		{
+			if (map == null || featureClass == null) return null;
+			var layers = map.GetLayersAsFlattenedList()
+			                .OfType<FeatureLayer>()
+			                .Where(lyr => ProcessingUtils.IsSameTable(GetBaseTable(lyr.GetFeatureClass()), featureClass));
+
+			return layers.SingleOrDefault(); // bombs if duplicate - ok?
+		}
+
+		private static T GetBaseTable<T>(T layerTable) where T : Table
+		{
+			if (layerTable == null)
+				return null;
+			if (! layerTable.IsJoinedTable())
+				return layerTable;
+
+			var join = layerTable.GetJoin();
+			var baseTable = join.GetDestinationTable();
+
+			return (T) baseTable;
+		}
 
 		public bool CanExecute(CartoProcess process)
 		{
@@ -213,59 +265,90 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 			// TODO (for now assume no system fields)
 		}
 
-		public IEnumerable<Feature> GetFeatures(FeatureClass featureClass, string whereClause, Geometry extent = null,
+		public IEnumerable<Feature> GetInputFeatures(ProcessingDataset dataset, Geometry extent = null,
+		                                             bool recycling = false)
+		{
+			// TODO if (SelectionType == SelectedFeatures) ...
+			if (dataset.FeatureLayer != null && dataset.FeatureLayer.SelectionCount > 0)
+			{
+				return GetLayerFeatures(dataset.FeatureLayer, dataset.WhereClause, extent,
+				                        recycling);
+			}
+
+			return GetFeatures(dataset, extent, recycling);
+		}
+
+		/// <summary>
+		/// Caller's duty to dispose features! See ProConcepts Geodatabase: Search
+		/// </summary>
+		public IEnumerable<Feature> GetFeatures(ProcessingDataset dataset, Geometry extent = null,
 		                                        bool recycling = false)
 		{
-			// TODO support for Selected Features
-
-			var filter = CreateFilter(whereClause, extent);
-			using (var cursor = featureClass.Search(filter, recycling))
+			var filter = ProcessingUtils.CreateFilter(dataset.WhereClause, extent);
+			using (var cursor = dataset.FeatureClass.Search(filter, recycling))
 			{
 				while (cursor.MoveNext())
 				{
-					using (var row = cursor.Current)
+					var row = cursor.Current;
+					if (row is Feature feature)
 					{
-						if (row is Feature feature)
-						{
-							yield return feature;
-						}
+						yield return feature;
 					}
 				}
 			}
 		}
 
-		public int CountFeatures(FeatureClass featureClass, string whereClause, Geometry extent = null)
+		private static IEnumerable<Feature> GetLayerFeatures(FeatureLayer featureLayer, string whereClause,
+		                                                     Geometry extent = null,
+		                                                     bool recycling = false)
 		{
-			// TODO support for Selected Features
+			if (featureLayer == null || featureLayer.SelectionCount < 1)
+			{
+				yield break;
+			}
 
-			QueryFilter filter = CreateFilter(whereClause, extent);
-
-			return featureClass.GetCount(filter);
+			var selection = featureLayer.GetSelection();
+			var filter = ProcessingUtils.CreateFilter(whereClause, extent);
+			using (var cursor = selection.Search(filter, recycling))
+			{
+				while (cursor.MoveNext())
+				{
+					var row = cursor.Current;
+					if (row is Feature feature)
+					{
+						yield return feature;
+					}
+				}
+			}
 		}
 
-		private static QueryFilter CreateFilter(string whereClause, Geometry extent)
+		public int CountInputFeatures(ProcessingDataset dataset, Geometry extent = null)
 		{
-			QueryFilter filter;
-
-			if (extent != null)
+			// TODO if (SelectionType == SelectedFeatures) ...
+			if (dataset.FeatureLayer != null && dataset.FeatureLayer.SelectionCount > 0) 
 			{
-				filter = new SpatialQueryFilter
-				         {
-					         FilterGeometry = extent,
-					         SpatialRelationship = SpatialRelationship.Intersects
-				         };
-			}
-			else
-			{
-				filter = new QueryFilter();
+				return CountLayerFeatures(dataset.FeatureLayer, dataset.WhereClause, extent);
 			}
 
-			if (! string.IsNullOrEmpty(whereClause))
-			{
-				filter.WhereClause = whereClause;
-			}
+			return CountFeatures(dataset, extent);
+		}
 
-			return filter;
+		private static int CountLayerFeatures(FeatureLayer featureLayer, string whereClause,
+		                                      Geometry extent = null)
+		{
+			if (featureLayer.SelectionCount < 1) return 0;
+
+			var selection = featureLayer.GetSelection();
+			var filter = ProcessingUtils.CreateFilter(whereClause, extent);
+			selection = selection.Select(filter);
+			return selection.GetCount();
+		}
+
+		public int CountFeatures(ProcessingDataset dataset, Geometry extent = null)
+		{
+			QueryFilter filter = ProcessingUtils.CreateFilter(dataset.WhereClause, extent);
+
+			return dataset.FeatureClass.GetCount(filter);
 		}
 	}
 
@@ -319,17 +402,35 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 	{
 		public abstract string Name { get; }
 
-		public abstract bool Validate(CartoProcessConfig config);
+		public virtual bool Validate(CartoProcessConfig config)
+		{
+			return true;
+		}
 
 		public abstract void Initialize(CartoProcessConfig config);
 
-		public abstract IEnumerable<ProcessDatasetName> GetOriginDatasets();
+		public virtual IEnumerable<ProcessDatasetName> GetOriginDatasets()
+		{
+			yield break;
+		}
 
-		public abstract IEnumerable<ProcessDatasetName> GetDerivedDatasets();
+		public virtual IEnumerable<ProcessDatasetName> GetDerivedDatasets()
+		{
+			yield break;
+		}
 
-		public abstract bool CanExecute(IProcessingContext context);
+		public virtual bool CanExecute(IProcessingContext context)
+		{
+			return context.CanExecute(this);
+		}
 
 		public abstract void Execute(IProcessingContext context, IProcessingFeedback feedback);
+
+		[StringFormatMethod("format")]
+		protected static Exception ConfigError(string format, params object[] args)
+		{
+			return new Exception(string.Format(format, args));
+		}
 	}
 
 	public abstract class CartoProcessEngineBase : IDisposable
@@ -403,7 +504,8 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		[ContractAnnotation("dataset:null => null")]
 		protected ProcessingDataset OpenDataset([CanBeNull] ProcessDatasetName dataset)
 		{
-			return dataset == null ? null : new ProcessingDataset(dataset, Context.Geodatabase);
+			if (dataset == null) return null;
+			return Context.OpenDataset(dataset);
 		}
 
 		/// <summary>
@@ -416,27 +518,45 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		/// never <c>null</c>, but it may contain <c>null</c> entries!</returns>
 		/// <remarks>Null entries are allowed to easily cope with optional dataset parameters.</remarks>
 		[NotNull]
-		protected IList<ProcessingDataset> OpenDatasetList(
-			params ProcessDatasetName[] datasets)
+		protected IList<ProcessingDataset> OpenDatasets(
+			ICollection<ProcessDatasetName> datasets)
 		{
-			var result = new List<ProcessingDataset>(datasets.Length);
+			var result = new List<ProcessingDataset>(datasets.Count);
 
-			result.AddRange(datasets.Select(dataset => OpenDataset(dataset)));
+			result.AddRange(datasets.Select(OpenDataset));
 
 			return result;
 		}
 
 		#endregion
 
-		protected int CountFeatures(ProcessingDataset dataset, Geometry extent = null)
+		#region Getting and counting features
+
+		// Note: {Get,Count}InputFeatures honors SelectionType
+
+		protected IEnumerable<Feature> GetInputFeatures(ProcessingDataset dataset,
+		                                                Geometry extent = null,
+		                                                bool recycling = false)
 		{
-			return Context.CountFeatures(dataset.FeatureClass, dataset.WhereClause, extent);
+			return Context.GetInputFeatures(dataset, extent, recycling);
 		}
 
 		protected IEnumerable<Feature> GetFeatures(ProcessingDataset dataset, Geometry extent = null, bool recycling = false)
 		{
-			return Context.GetFeatures(dataset.FeatureClass, dataset.WhereClause, extent, recycling);
+			return Context.GetFeatures(dataset, extent, recycling);
 		}
+
+		protected int CountInputFeatures(ProcessingDataset dataset, Geometry extent = null)
+		{
+			return Context.CountInputFeatures(dataset, extent);
+		}
+
+		protected int CountFeatures(ProcessingDataset dataset, Geometry extent = null)
+		{
+			return Context.CountFeatures(dataset, extent);
+		}
+
+		#endregion
 
 		#region Reporting
 

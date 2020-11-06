@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.AGP.Gdb;
 
@@ -15,7 +16,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		void Refresh(IWorkItem item);
 
-		void Update(IWorkItem item);
+		Task UpdateAsync(IWorkItem item);
 
 		void UpdateVolatileState(IEnumerable<IWorkItem> items);
 
@@ -26,5 +27,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 		// todo daro: is this the right way?
 		void SetCurrentIndex(int currentIndex);
 		int GetCurrentIndex();
+
+		void SetVisited(IWorkItem item);
+
+		Task SetStatus(IWorkItem item, WorkItemStatus status);
 	}
 }

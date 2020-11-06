@@ -63,6 +63,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="CurrentSearchOption.cs" />
     <Compile Include="DatabaseSourceClass.cs" />
     <Compile Include="Domain\AttributeReader.cs" />
     <Compile Include="Domain\InvolvedTable.cs" />
@@ -80,6 +81,7 @@
     <Compile Include="Domain\WorkList.cs" />
     <Compile Include="Domain\WorkListRegistry.cs" />
     <Compile Include="EditEventsRowCacheSynchronizer.cs" />
+    <Compile Include="IssueCorrectionStatus.cs" />
     <Compile Include="IssueItemRepository.cs" />
     <Compile Include="GdbItemRepository.cs" />
     <Compile Include="IssueUtils.cs" />
@@ -97,6 +99,9 @@
     <Compile Include="Datasource\WorkItemCursor.cs" />
     <Compile Include="Datasource\WorkItemTable.cs" />
     <Compile Include="Datasource\WorkListDatasourceBase.cs" />
+    <Compile Include="SourceClass.cs" />
+    <Compile Include="SpatialSearchOption.cs" />
+    <Compile Include="VisitedSearchOption.cs" />
     <Compile Include="WorkEnvironmentBase.cs" />
     <Compile Include="WorkItemVm.cs" />
     <Compile Include="Domain\Persistence\Xml\XmlGdbRowIdentity.cs" />

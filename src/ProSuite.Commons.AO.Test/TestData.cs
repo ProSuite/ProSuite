@@ -40,11 +40,9 @@ namespace ProSuite.Commons.AO.Test
 		private const string _invertedRingPolygonFileName =
 			"PolygonWithIsland_IncorrectRingsOrientation.xml";
 
-		private const string _relativePath = @"..\..\ProSuite\src";
-
 		public static string GetFileGdb93Path()
 		{
-			var locator = new TestDataLocator(_relativePath);
+			var locator = new TestDataLocator();
 			return locator.GetPath(_filegdb93Name);
 		}
 
@@ -55,25 +53,25 @@ namespace ProSuite.Commons.AO.Test
 
 		public static string GetGdb1Path()
 		{
-			var locator = new TestDataLocator(_relativePath);
+			var locator = new TestDataLocator();
 			return locator.GetPath(_gdb1Name);
 		}
 
 		public static string GetGdb2Path()
 		{
-			var locator = new TestDataLocator(_relativePath);
+			var locator = new TestDataLocator();
 			return locator.GetPath(_gdb2Name);
 		}
 
 		public static string GetGdbTableJointUtilsPath()
 		{
-			var locator = new TestDataLocator(_relativePath);
+			var locator = new TestDataLocator();
 			return locator.GetPath(_filegdb_tableJoinUtils);
 		}
 
 		public static string GetCartoMapImplTestMapPath()
 		{
-			var locator = new TestDataLocator(_relativePath);
+			var locator = new TestDataLocator();
 			return locator.GetPath(_cartoMapImplTestMapName);
 		}
 
@@ -131,7 +129,7 @@ namespace ProSuite.Commons.AO.Test
 		[NotNull]
 		public static string GetNonGdbAccessDatabase()
 		{
-			var locator = new TestDataLocator(_relativePath);
+			var locator = new TestDataLocator();
 			return locator.GetPath("access_db.mdb");
 		}
 
@@ -142,7 +140,7 @@ namespace ProSuite.Commons.AO.Test
 
 		public static string GetTiffDtm()
 		{
-			var locator = new TestDataLocator(_relativePath);
+			var locator = new TestDataLocator();
 			return locator.GetPath("test_dtm.tif");
 		}
 	}

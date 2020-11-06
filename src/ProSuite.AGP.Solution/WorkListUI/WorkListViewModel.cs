@@ -17,6 +17,7 @@ using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.WorkListUI
@@ -24,7 +25,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	public class WorkListViewModel : PropertyChangedBase, IWorkListObserver
 	{
 		private const double _seconds = 0.3;
-		private SelectionWorkList _currentWorkList;
+		private IWorkList _currentWorkList;
 		private WorkItemVm _currentWorkItem;
 		private int _currentIndex;
 		private WorkItemStatus _status;
@@ -38,7 +39,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private RelayCommand _zoomToAllCmd;
 		private RelayCommand _pickWorkItemCmd;
 
-		public WorkListViewModel(SelectionWorkList workList)
+		public WorkListViewModel(IWorkList workList)
 		{
 			CurrentWorkList = workList;
 			CurrentWorkList.GoNext();
@@ -136,18 +137,21 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			get => CurrentWorkItem.Status;
 			set
 			{
-				CurrentWorkItem.Status = value;
+				if (CurrentWorkItem.Status != value)
+				{
+					CurrentWorkItem.Status = value;
 
-				// NOTE: has to run inside QueuedTask because it triggers an event
-				//		 which does MapView.Active.Invalidate
-				QueuedTask.Run(() => { CurrentWorkList.Update(CurrentWorkList.Current); });
+					// NOTE: has to run inside QueuedTask because it triggers an event
+					//		 which does MapView.Active.Invalidate
+					QueuedTask.Run(() => { CurrentWorkList.SetStatus(CurrentWorkList.Current, value); });
+				}
 
 				SetProperty(ref _status, value, () => Status);
 			}
 		}
 
 		// todo daro: of type IWorkList?
-		public SelectionWorkList CurrentWorkList
+		public IWorkList CurrentWorkList
 		{
 			get => _currentWorkList;
 
@@ -162,7 +166,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem);
 				Status = CurrentWorkItem.Status;
 				Visited = CurrentWorkItem.Visited;
-				CurrentIndex = CurrentWorkList.DisplayIndex;
+				CurrentIndex = CurrentWorkList.CurrentIndex;
 				Count = GetCount();
 			}
 		}
@@ -200,7 +204,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		public int CurrentIndex
 		{
-			get => CurrentWorkList.DisplayIndex;
+			get => CurrentWorkList.CurrentIndex;
 			set { SetProperty(ref _currentIndex, value, () => CurrentIndex); }
 		}
 
@@ -273,8 +277,10 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			{
 				//var shapeJson = e.features.First().GetShape().ToJson();
 				var OID = e.features.First().GetObjectID();
-				IWorkItem selectedItem = CurrentWorkList.GetItems().FirstOrDefault(item => item.OID == OID);
-				foreach (var item in CurrentWorkList.GetItems())
+
+				QueryFilter filter = GdbQueryUtils.CreateFilter(new[] {OID});
+				IWorkItem selectedItem = CurrentWorkList.GetItems(filter).FirstOrDefault();
+				foreach (var item in CurrentWorkList.GetItems(null, false))
 				{
 					Console.WriteLine(item.OID);
 					Console.WriteLine(item.Extent.ToJson());
@@ -285,9 +291,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 					return;
 				}
 
-				CurrentWorkList.GoToOid(selectedItem.OID);
+				//CurrentWorkList.GoToOid(selectedItem.OID);
 				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
-
 			});
 		}
 

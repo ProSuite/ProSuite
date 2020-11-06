@@ -23,8 +23,6 @@ namespace ProSuite.Commons.AO.Test
 		private const string _poly1 = "poly1.xml";
 		private const string _poly2 = "poly2.xml";
 
-		private const string _relativePath = @"..\..\ProSuite\src";
-
 		private const string _loggingConfigurationFile = "UnitTest_log4net.config";
 
 		private static int _lastClassId;
@@ -120,7 +118,7 @@ namespace ProSuite.Commons.AO.Test
 				new FeatureClassMock(1, "TestPolyClass",
 				                     esriGeometryType.esriGeometryPolygon,
 				                     esriFeatureType.esriFTSimple, poly1.SpatialReference,
-				                     GeometryUtils.IsZAware(poly1), false);
+				                     GeometryUtils.IsZAware(poly1));
 
 			mockPoly1Feature = mockPolyFeatureClass.CreateFeature(poly1);
 
@@ -130,7 +128,7 @@ namespace ProSuite.Commons.AO.Test
 				new FeatureClassMock(2, "TestLineClass",
 				                     esriGeometryType.esriGeometryPolyline,
 				                     esriFeatureType.esriFTSimple, line1.SpatialReference,
-				                     GeometryUtils.IsZAware(line1), false);
+				                     GeometryUtils.IsZAware(line1));
 
 			mockLine1Feature = mockLineFeatureClass.CreateFeature(line1);
 
@@ -156,7 +154,7 @@ namespace ProSuite.Commons.AO.Test
 				new FeatureClassMock(_lastClassId++, "MockFeatureClass", geometry.GeometryType,
 				                     esriFeatureType.esriFTSimple,
 				                     (ISpatialReference) spatialRef,
-				                     GeometryUtils.IsZAware(geometry), false);
+				                     GeometryUtils.IsZAware(geometry));
 
 			IFeature mockFeature = mockFeatureClass.CreateFeature(geometry);
 
@@ -165,8 +163,8 @@ namespace ProSuite.Commons.AO.Test
 
 		public static string GetGeometryTestDataPath(string fileName)
 		{
-			var locator =
-				new TestDataLocator(_relativePath, @"TestData\Geometry");
+			var locator = TestDataLocator.Create("ProSuite", @"TestData\Geometry");
+
 			return locator.GetPath(fileName);
 		}
 

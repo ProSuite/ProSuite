@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -200,6 +201,16 @@ namespace ProSuite.Commons.Reflection
 			return string.IsNullOrEmpty(location)
 				       ? "<n/a>"
 				       : FileVersionInfo.GetVersionInfo(location).FileVersion;
+		}
+
+		[NotNull]
+		public static string GetAssemblyDirectory([NotNull] Assembly assembly)
+		{
+			var assemblyFile = new FileInfo(assembly.Location);
+
+			var binDirectory = Assert.NotNull(assemblyFile.Directory);
+
+			return binDirectory.FullName;
 		}
 
 		/// <summary>

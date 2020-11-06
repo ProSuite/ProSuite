@@ -1,6 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
@@ -32,6 +35,12 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 
 			return string.Format("oid={0} table={1}", oid, tableName);
 		}
-	}
 
+		[NotNull]
+		public static IList<Geometry> GetGeometries(
+			[NotNull] IEnumerable<Feature> features)
+		{
+			return features.Select(feature => feature.GetShape()).ToList();
+		}
+	}
 }

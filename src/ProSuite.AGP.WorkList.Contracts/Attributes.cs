@@ -54,7 +54,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		ExceptionCategory,
 
-		ExceptionDefinitionDate,
+		ExceptionDefinedDate,
 
 		ExceptionLastRevisionDate,
 

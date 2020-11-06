@@ -9,6 +9,7 @@ using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
@@ -92,26 +93,37 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 			}
 		}
 
-		private void RunProcess()
+		private async void RunProcess()
 		{
 			try
 			{
 				var config = CartoProcessConfig.FromString(ProcessName, ConfigText);
 
-				var process = new AlignMarkers(); // TODO get by ProcessName from some repo
+				var process = GetCartoProcess(ProcessName);
+				if (process == null)
+					throw new Exception($"No such carto process: {ProcessName}");
+
 				bool isValid = process.Validate(config);
+				if (!isValid)
+					throw new Exception($"Config is not valid for process {ProcessName}");
 
-				var task = QueuedTask.Run(() => {}); // TODO remainder on MCT
+				var gdbItem = GetDatabaseItem(DatabaseName);
+				if (gdbItem == null)
+					throw new Exception($"No such database item in project: {DatabaseName}");
 
-				process.Initialize(config);
+				await QueuedTask.Run(() =>
+				{
+					process.Initialize(config);
 
-				var geodatabase = GetGeodatabase(DatabaseName);
+					using (var geodatabase = (Geodatabase) gdbItem.GetDatastore())
+					{
+						var context = new ProProcessingContext(geodatabase, MapView.Active?.Map);
+						var feedback = new ProProcessingFeedback();
 
-				var context = new ProProcessingContext(geodatabase);
-				var feedback = new ProProcessingFeedback();
-
-				var canExecute = process.CanExecute(context);
-				process.Execute(context, feedback);
+						var canExecute = process.CanExecute(context);
+						process.Execute(context, feedback);
+					}
+				});
 
 				StatusMessage = "Completed";
 				StatusColor = Brushes.PaleGreen;
@@ -124,7 +136,22 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		}
 
 		[CanBeNull]
-		private static Geodatabase GetGeodatabase(string name)
+		private static CartoProcess GetCartoProcess(string name)
+		{
+			// TODO need some type search and Activator logic
+			switch (name)
+			{
+				case nameof(AlignMarkers):
+					return new AlignMarkers();
+				case nameof(CalculateControlPoints):
+					return new CalculateControlPoints();
+				default:
+					return null;
+			}
+		}
+
+		[CanBeNull]
+		private static GDBProjectItem GetDatabaseItem(string name)
 		{
 			GDBProjectItem item;
 			if (string.IsNullOrWhiteSpace(name))
@@ -138,7 +165,7 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 				              .FirstOrDefault(gdb => gdb.Name == name);
 			}
 
-			return item?.GetDatastore() as Geodatabase; // MCT
+			return item;
 		}
 
 		[NotNull]
@@ -152,6 +179,7 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		{
 			yield return new CartoProcessItem {Name = nameof(AlignMarkers)};
 			yield return new CartoProcessItem {Name = nameof(CreateAnnoMasks)};
+			yield return new CartoProcessItem {Name = nameof(CalculateControlPoints)};
 		}
 	}
 

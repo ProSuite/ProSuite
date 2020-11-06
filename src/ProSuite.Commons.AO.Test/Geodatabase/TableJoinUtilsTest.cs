@@ -1053,7 +1053,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[Test]
 		public void CanLeftJoin_NtoM_Pgdb()
 		{
-			var locator = new TestDataLocator(@"..\..\ProSuite\src");
+			var locator = new TestDataLocator();
 			string dbPath = locator.GetPath("TableJoinUtilsTest.mdb");
 
 			IFeatureWorkspace ws = WorkspaceUtils.OpenPgdbFeatureWorkspace(dbPath);
@@ -1069,7 +1069,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[Test]
 		public void CanRightJoin_NtoM_Pgdb()
 		{
-			var locator = new TestDataLocator(@"..\..\ProSuite\src");
+			var locator = new TestDataLocator();
 			string dbPath = locator.GetPath("TableJoinUtilsTest.mdb");
 
 			IFeatureWorkspace ws = WorkspaceUtils.OpenPgdbFeatureWorkspace(dbPath);
@@ -1095,7 +1095,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[Test]
 		public void CanInnerJoin_NtoM_Pgdb()
 		{
-			var locator = new TestDataLocator(@"..\..\ProSuite\src");
+			var locator = new TestDataLocator();
 			string dbPath = locator.GetPath("TableJoinUtilsTest.mdb");
 
 			IFeatureWorkspace ws = WorkspaceUtils.OpenPgdbFeatureWorkspace(dbPath);
@@ -1115,7 +1115,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 		public void CanRightJoin_1toM_Pgdb()
 		{
-			var locator = new TestDataLocator(@"..\..\ProSuite\src");
+			var locator = new TestDataLocator();
 			string dbPath = locator.GetPath("TableJoinUtilsTest.mdb");
 
 			IFeatureWorkspace ws = WorkspaceUtils.OpenPgdbFeatureWorkspace(dbPath);
@@ -1146,7 +1146,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[Test]
 		public void CanInnerJoin_1toM_Pgdb()
 		{
-			var locator = new TestDataLocator(@"..\..\ProSuite\src");
+			var locator = new TestDataLocator();
 			string dbPath = locator.GetPath("TableJoinUtilsTest.mdb");
 
 			IFeatureWorkspace ws = WorkspaceUtils.OpenPgdbFeatureWorkspace(dbPath);
@@ -1157,7 +1157,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[Test]
 		public void CanLeftOuterJoin_1toM_Pgdb()
 		{
-			var locator = new TestDataLocator(@"..\..\ProSuite\src");
+			var locator = new TestDataLocator();
 			string dbPath = locator.GetPath("TableJoinUtilsTest.mdb");
 
 			IFeatureWorkspace ws = WorkspaceUtils.OpenPgdbFeatureWorkspace(dbPath);
@@ -1193,7 +1193,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[Test]
 		public void CanInnerJoin_1to1_Pgdb()
 		{
-			var locator = new TestDataLocator(@"..\..\ProSuite\src");
+			var locator = new TestDataLocator();
 			string dbPath = locator.GetPath("TableJoinUtilsTest.mdb");
 
 			IFeatureWorkspace ws = WorkspaceUtils.OpenPgdbFeatureWorkspace(dbPath);
@@ -1204,7 +1204,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[Test]
 		public void CanRightOuterJoin_1to1_Pgdb()
 		{
-			var locator = new TestDataLocator(@"..\..\ProSuite\src");
+			var locator = new TestDataLocator();
 			string dbPath = locator.GetPath("TableJoinUtilsTest.mdb");
 
 			IFeatureWorkspace ws = WorkspaceUtils.OpenPgdbFeatureWorkspace(dbPath);

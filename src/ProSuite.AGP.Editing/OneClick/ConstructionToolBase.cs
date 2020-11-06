@@ -255,7 +255,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		#endregion
 
-		//protected abstract SketchGeometryType GetSketchGeometryType();
+		protected abstract SketchGeometryType GetSketchGeometryType();
 
 		protected virtual bool OnSketchModifiedCore()
 		{
@@ -298,14 +298,15 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnSketchResetCore() { }
 
-		protected void StartSketchPhase()
+		private void StartSketchPhase()
 		{
-			if (IsInSketchMode)
-			{
-				return;
-			}
-			
+
+			SketchOutputMode = SketchOutputMode.Map;
+
+			SketchType = GetSketchGeometryType();
+
 			UseSnapping = true;
+			CompleteSketchOnMouseUp = false;
 
 			SetCursor(SketchCursor);
 
