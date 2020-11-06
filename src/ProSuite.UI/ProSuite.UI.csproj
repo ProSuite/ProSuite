@@ -249,20 +249,20 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Properties\Images\DatasetCategory.gif" />
-    <Content Include="Properties\Images\DatasetCategorySelected.gif" />
-    <Content Include="Properties\Images\DatasetTypeDeleted.gif" />
-    <Content Include="Properties\Images\DatasetTypeGeometricNetwork.png" />
-    <Content Include="Properties\Images\DatasetTypeLine.png" />
-    <Content Include="Properties\Images\DatasetTypeMosaicDataset.png" />
-    <Content Include="Properties\Images\DatasetTypeMultipatch.png" />
-    <Content Include="Properties\Images\DatasetTypePoint.png" />
-    <Content Include="Properties\Images\DatasetTypePolygon.png" />
-    <Content Include="Properties\Images\DatasetTypeRasterDataset.png" />
-    <Content Include="Properties\Images\DatasetTypeTable.png" />
-    <Content Include="Properties\Images\DatasetTypeTerrain.png" />
-    <Content Include="Properties\Images\DatasetTypeTopology.png" />
-    <Content Include="Properties\Images\DatasetTypeUnknown.png" />
+    <Content Include="Properties\DatasetTypeImages\DatasetTypeDeleted.png" />
+    <Content Include="Properties\DatasetTypeImages\DatasetTypeGeometricNetwork.png" />
+    <Content Include="Properties\DatasetTypeImages\DatasetTypeLine.png" />
+    <Content Include="Properties\DatasetTypeImages\DatasetTypeMosaicDataset.png" />
+    <Content Include="Properties\DatasetTypeImages\DatasetTypeMultipatch.png" />
+    <Content Include="Properties\DatasetTypeImages\DatasetTypePoint.png" />
+    <Content Include="Properties\DatasetTypeImages\DatasetTypePolygon.png" />
+    <Content Include="Properties\DatasetTypeImages\DatasetTypeRasterDataset.png" />
+    <Content Include="Properties\DatasetTypeImages\DatasetTypeTable.png" />
+    <Content Include="Properties\DatasetTypeImages\DatasetTypeTerrain.png" />
+    <Content Include="Properties\DatasetTypeImages\DatasetTypeTopology.png" />
+    <Content Include="Properties\DatasetTypeImages\DatasetTypeUnknown.png" />
+    <Content Include="Properties\Images\DatasetCategory.png" />
+    <Content Include="Properties\Images\DatasetCategorySelected.png" />
     <Content Include="Properties\Images\Empty.bmp" />
     <Content Include="Properties\Images\Error.png" />
     <Content Include="Properties\Images\Exit.png" />
