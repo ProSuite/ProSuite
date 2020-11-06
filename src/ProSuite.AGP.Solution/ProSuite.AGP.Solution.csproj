@@ -136,7 +136,6 @@
     <Compile Include="ProjectItem\ProjectFileRepository.cs" />
     <Compile Include="ProTrials\CartoProcess\AlignMarkers.cs" />
     <Compile Include="ProTrials\CartoProcess\CartoProcess.cs" />
-    <Compile Include="ProTrials\CartoProcess\CartoProcessConfig.cs" />
     <Compile Include="ProTrials\CartoProcess\CreateAnnoMasks.cs" />
     <Compile Include="Selection\PickWorkListItemTool.cs" />
     <Compile Include="ProTrials\ProTrialsModule.cs" />

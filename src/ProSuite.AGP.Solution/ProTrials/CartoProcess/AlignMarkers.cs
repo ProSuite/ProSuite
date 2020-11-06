@@ -8,6 +8,8 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Processing;
+using ProSuite.Processing.Domain;
 using ProSuite.Processing.Evaluation;
 using ProSuite.Processing.Utils;
 using MapPoint = ArcGIS.Core.Geometry.MapPoint;
@@ -216,7 +218,7 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 				foreach (ProcessingDataset dataset in datasets.Where(dataset => dataset != null))
 				{
-					foreach (Feature feature in GetFeatures(dataset, searchExtent))
+					foreach (Feature feature in GetOtherFeatures(dataset, searchExtent))
 					{
 						Geometry otherShape = feature.GetShape();
 

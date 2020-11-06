@@ -6,7 +6,7 @@ using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
+namespace ProSuite.Processing
 {
 	public class CartoProcessConfig
 	{
