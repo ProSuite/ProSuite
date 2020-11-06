@@ -58,6 +58,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GdbObjectReference.cs" />
     <Compile Include="GeometryProcessing\RemoveOverlaps\OverlapResultGeometries.cs" />
     <Compile Include="GeometryProcessing\RemoveOverlaps\Overlaps.cs" />
     <Compile Include="GeometryProcessing\RemoveOverlaps\RemoveOverlapsClient.cs" />
@@ -66,6 +67,10 @@
     <Compile Include="ProtobufConversionUtils.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">
+      <Project>{89F2C583-3022-43F8-9B69-27123836625F}</Project>
+      <Name>ProSuite.Commons.AGP</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
       <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
       <Name>ProSuite.Commons.Essentials</Name>

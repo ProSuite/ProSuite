@@ -125,12 +125,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		{
 			Assert.NotNull(_overlaps);
 
-			List<Geometry> overlapsToRemove =
-				_overlaps
-					.OverlapGeometries.Where(o => IsOverlapSelected(sketch, o))
-					.ToList();
+			Overlaps overlapsToRemove = SelectOverlaps(_overlaps, sketch);
 
-			if (overlapsToRemove.Count == 0)
+			if (! overlapsToRemove.HasOverlaps())
 			{
 				return false;
 			}
@@ -143,7 +140,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 					progressor?.CancellationToken ?? new CancellationTokenSource().Token);
 
 			var updates = new Dictionary<Feature, Geometry>();
-			var inserts = new Dictionary<Feature, Geometry>();
+			var inserts = new Dictionary<Feature, IList<Geometry>>();
 
 			foreach (var resultPerFeature in result.ResultsByFeature)
 			{
@@ -151,16 +148,14 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 				if (resultPerFeature.InsertGeometries.Count > 0)
 				{
-					foreach (Geometry insertGeometry in resultPerFeature.InsertGeometries)
-					{
-						inserts.Add(resultPerFeature.OriginalFeature, insertGeometry);
-					}
+					inserts.Add(resultPerFeature.OriginalFeature,
+					            resultPerFeature.InsertGeometries);
 				}
 			}
 
-			var currentSelection = SelectionUtils.GetSelectedFeatures(MapView.Active).ToList();
-
 			bool saved = GdbPersistenceUtils.SaveInOperation("Remove overlaps", updates, inserts);
+
+			var currentSelection = SelectionUtils.GetSelectedFeatures(MapView.Active).ToList();
 
 			CalculateDerivedGeometries(currentSelection, progressor);
 
@@ -268,8 +263,51 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			return overlaps;
 		}
 
-		private static bool IsOverlapSelected(Geometry sketch, Geometry overlapGeometry)
+		private static Overlaps SelectOverlaps(Overlaps overlaps, Geometry sketch)
 		{
+			if (overlaps == null)
+			{
+				return new Overlaps();
+			}
+
+			int selectionTolerancePixels = 3;
+
+			bool singlePick = ToolUtils.IsSingleClickSketch(sketch);
+
+			if (singlePick)
+			{
+				sketch = ToolUtils.GetSinglePickSelectionArea(sketch, selectionTolerancePixels);
+			}
+
+			Overlaps result = overlaps.SelectNewOverlaps(
+				o => o.GeometryType == GeometryType.Polyline &&
+				     IsOverlapSelected(sketch, o, singlePick));
+
+			// in case of single pick the line has priority
+			if (! result.HasOverlaps() || ! singlePick)
+			{
+				result.AddGeometries(overlaps,
+				                     g => g.GeometryType == GeometryType.Polygon &&
+				                          IsOverlapSelected(sketch, g, singlePick));
+			}
+
+			return result;
+		}
+
+		private static bool IsOverlapSelected(Geometry sketch, Geometry overlapGeometry,
+		                                      bool singlePick)
+		{
+			if (GeometryUtils.Disjoint(sketch, overlapGeometry))
+			{
+				return false;
+			}
+
+			if (singlePick)
+			{
+				// Any intersection is enough:
+				return true;
+			}
+
 			return GeometryUtils.Contains(sketch, overlapGeometry);
 		}
 

@@ -47,10 +47,19 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 				return null;
 			}
 
-			List<Geometry> overlapGeometries =
-				ProtobufConversionUtils.FromShapeMsgList(response.Overlaps);
+			var result = new Overlaps();
 
-			var result = new Overlaps(overlapGeometries);
+			foreach (OverlapMsg overlapMsg in response.Overlaps)
+			{
+				GdbObjectReference gdbObjRef = new GdbObjectReference(
+					overlapMsg.OriginalFeatureRef.ClassHandle,
+					overlapMsg.OriginalFeatureRef.ObjectId);
+
+				List<Geometry> overlapGeometries =
+					ProtobufConversionUtils.FromShapeMsgList(overlapMsg.Overlaps);
+
+				result.AddGeometries(gdbObjRef, overlapGeometries);
+			}
 
 			result.Notifications.AddRange(
 				response.Notifications.Select(n => new Notification(n)));
@@ -59,7 +68,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 		}
 
 		public RemoveOverlapsResult RemoveOverlaps(IEnumerable<Feature> selectedFeatures,
-		                                           List<Geometry> overlapsToRemove,
+		                                           Overlaps overlapsToRemove,
 		                                           IList<Feature> overlappingFeatures,
 		                                           CancellationToken cancellationToken)
 		{
@@ -175,7 +184,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 
 		private static RemoveOverlapsRequest CreateRemoveOverlapsRequest(
 			IEnumerable<Feature> selectedFeatures,
-			IEnumerable<Geometry> overlapsToRemove,
+			Overlaps overlapsToRemove,
 			IList<Feature> targetFeaturesForVertexInsertion, //RemoveOverlapsOptions options,
 			out List<Feature> updateFeatures)
 		{
@@ -195,9 +204,24 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 
 			updateFeatures.AddRange(selectedFeatureList);
 
-			foreach (Geometry overlapToRemove in overlapsToRemove)
+			foreach (var overlapsBySourceRef in overlapsToRemove.OverlapGeometries)
 			{
-				request.Overlaps.Add(ProtobufConversionUtils.ToShapeMsg(overlapToRemove));
+				int classId = (int) overlapsBySourceRef.Key.ClassId;
+				int objectId = (int) overlapsBySourceRef.Key.ObjectId;
+
+				var overlapMsg = new OverlapMsg();
+				overlapMsg.OriginalFeatureRef = new GdbObjRefMsg()
+				                                {
+					                                ClassHandle = classId,
+					                                ObjectId = objectId
+				                                };
+
+				foreach (Geometry overlap in overlapsBySourceRef.Value)
+				{
+					overlapMsg.Overlaps.Add(ProtobufConversionUtils.ToShapeMsg(overlap, true));
+				}
+
+				request.Overlaps.Add(overlapMsg);
 			}
 
 			if (targetFeaturesForVertexInsertion != null)

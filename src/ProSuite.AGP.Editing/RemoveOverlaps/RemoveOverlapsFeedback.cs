@@ -46,13 +46,23 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				return;
 			}
 
-			foreach (Geometry overlap in newOverlaps.OverlapGeometries)
+			foreach (var overlapsBySourceRef in newOverlaps.OverlapGeometries)
 			{
-				CIMSymbol symbol = overlap is Polygon
+				IList<Geometry> overlapGeometries = overlapsBySourceRef.Value;
+
+				if (overlapGeometries.Count == 0)
+				{
+					continue;
+				}
+
+				Geometry overlaps = GeometryEngine.Instance.Union(overlapsBySourceRef.Value);
+
+				CIMSymbol symbol = overlaps is Polygon
 					                   ? _overlapPolygonSymbol
 					                   : (CIMSymbol) _overlapLineSymbol;
 
-				var addedOverlay = MapView.Active.AddOverlay(overlap, symbol.MakeSymbolReference());
+				var addedOverlay =
+					MapView.Active.AddOverlay(overlaps, symbol.MakeSymbolReference());
 
 				_overlays.Add(addedOverlay);
 			}
