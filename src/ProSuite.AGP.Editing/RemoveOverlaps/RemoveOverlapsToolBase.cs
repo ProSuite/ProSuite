@@ -71,15 +71,22 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			{
 				GeometryType geometryType = fc.GetDefinition().GetShapeType();
 
-				return geometryType == GeometryType.Polygon ||
-				       geometryType == GeometryType.Polyline ||
-				       geometryType == GeometryType.Multipatch;
+				return CanSelectGeometryType(geometryType);
 			});
+		}
+
+		protected override bool CanSelectGeometryType(GeometryType geometryType)
+		{
+			return geometryType == GeometryType.Polyline ||
+			       geometryType == GeometryType.Polygon ||
+			       geometryType == GeometryType.Multipatch;
 		}
 
 		protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
 		                                                   CancelableProgressor progressor)
 		{
+			selectedFeatures = GetApplicableSelectedFeatures(selectedFeatures).ToList();
+
 			IList<Feature> overlappingFeatures =
 				GetOverlappingFeatures(selectedFeatures, progressor);
 

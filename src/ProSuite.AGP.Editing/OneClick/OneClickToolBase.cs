@@ -520,8 +520,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			return featuresPerLayer;
 		}
 
-
-
 		protected virtual bool IsInSelectionPhase()
 		{
 			return false;
@@ -551,8 +549,14 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual bool CanUseSelection([NotNull] IEnumerable<Feature> selectedFeatures)
 		{
-			// TODO
-			return selectedFeatures.Any();
+			return selectedFeatures.Any(CanSelectFeatureGeometryType);
+		}
+
+		protected bool CanSelectFeatureGeometryType([NotNull] Feature feature)
+		{
+			GeometryType shapeType = feature.GetTable().GetDefinition().GetShapeType();
+
+			return CanSelectGeometryType(shapeType);
 		}
 
 		protected virtual void AfterSelection([NotNull] IList<Feature> selectedFeatures,
@@ -615,7 +619,39 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
-			return featureLayer.GetFeatureClass() != null && CanSelectFromLayerCore(featureLayer);
+			if (! CanSelectGeometryType(
+				    GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType)))
+			{
+				return false;
+			}
+
+			if (featureLayer.GetFeatureClass() == null)
+			{
+				return false;
+			}
+
+			return CanSelectFromLayerCore(featureLayer);
+		}
+
+		protected IEnumerable<Feature> GetApplicableSelectedFeatures(
+			[NotNull] IEnumerable<Feature> selectedFeatures)
+		{
+			foreach (Feature feature in selectedFeatures)
+			{
+				GeometryType shapeType = feature.GetTable().GetDefinition().GetShapeType();
+
+				if (! CanSelectGeometryType(shapeType))
+				{
+					continue;
+				}
+
+				yield return feature;
+			}
+		}
+
+		protected virtual bool CanSelectGeometryType(GeometryType geometryType)
+		{
+			return true;
 		}
 
 		protected virtual bool CanSelectFromLayerCore([NotNull] FeatureLayer featureLayer)

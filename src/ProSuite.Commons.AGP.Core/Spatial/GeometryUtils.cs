@@ -1,9 +1,7 @@
+using System;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using Envelope = ArcGIS.Core.Geometry.Envelope;
-using Geometry = ArcGIS.Core.Geometry.Geometry;
-using Polygon = ArcGIS.Core.Geometry.Polygon;
-using SpatialReference = ArcGIS.Core.Geometry.SpatialReference;
 
 namespace ProSuite.Commons.AGP.Core.Spatial
 {
@@ -16,7 +14,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 		public static Envelope CreateEnvelope(
 			double x0, double y0, double x1, double y1,
-		    SpatialReference sref = null)
+			SpatialReference sref = null)
 		{
 			var p0 = new Coordinate2D(x0, y0);
 			var p1 = new Coordinate2D(x1, y1);
@@ -102,12 +100,15 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (Polyline) Engine.Boundary(polygon);
 		}
 
-		public static T Generalize<T>(T geometry, double maxDeviation, bool removeDegenerateParts = false, bool preserveCurves = false) where T : Geometry
+		public static T Generalize<T>(T geometry, double maxDeviation,
+		                              bool removeDegenerateParts = false,
+		                              bool preserveCurves = false) where T : Geometry
 		{
 			if (maxDeviation < double.Epsilon)
 				return geometry;
 
-			return (T) Engine.Generalize(geometry, maxDeviation, removeDegenerateParts,  preserveCurves);
+			return (T) Engine.Generalize(geometry, maxDeviation, removeDegenerateParts,
+			                             preserveCurves);
 		}
 
 		public static Polyline Simplify(Polyline polyline, SimplifyType simplifyType,
@@ -132,7 +133,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			if (containing == null) return false;
 			if (contained == null) return true;
 
-			if (!suppressIndexing)
+			if (! suppressIndexing)
 			{
 				Engine.AccelerateForRelationalOperations(containing);
 				Engine.AccelerateForRelationalOperations(containing);
@@ -153,12 +154,11 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		                            [NotNull] Geometry geometry2,
 		                            bool suppressIndexing = false)
 		{
-			if (!suppressIndexing)
+			if (! suppressIndexing)
 			{
 				Engine.AccelerateForRelationalOperations(geometry1);
 				Engine.AccelerateForRelationalOperations(geometry2);
 			}
-
 
 			return GeometryEngine.Instance.Disjoint(geometry1, geometry2);
 		}
@@ -188,5 +188,30 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		}
 
 		private static IGeometryEngine _engine;
+
+		public static GeometryType TranslateEsriGeometryType(esriGeometryType esriGeometryType)
+		{
+			switch (esriGeometryType)
+			{
+				case esriGeometryType.esriGeometryPoint:
+					return GeometryType.Point;
+				case esriGeometryType.esriGeometryMultipoint:
+					return GeometryType.Multipoint;
+				case esriGeometryType.esriGeometryPolyline:
+					return GeometryType.Polyline;
+				case esriGeometryType.esriGeometryPolygon:
+					return GeometryType.Polygon;
+				case esriGeometryType.esriGeometryMultiPatch:
+					return GeometryType.Multipatch;
+				case esriGeometryType.esriGeometryEnvelope:
+					return GeometryType.Envelope;
+				case esriGeometryType.esriGeometryBag:
+					return GeometryType.GeometryBag;
+				case esriGeometryType.esriGeometryAny:
+					return GeometryType.Unknown;
+				default:
+					throw new ArgumentOutOfRangeException($"Cannot translate {esriGeometryType}");
+			}
+		}
 	}
 }
