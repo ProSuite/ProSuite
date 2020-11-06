@@ -6,6 +6,7 @@ using System.Windows.Media;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
+using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -71,6 +72,21 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 			}
 		}
 
+		private ProcessSelectionType _selectionType = ProcessSelectionType.SelectedFeatures;
+		public ProcessSelectionType SelectionType
+		{
+			get => _selectionType;
+			set
+			{
+				SetProperty(ref _selectionType, value, () => SelectionType);
+			}
+		}
+
+		public IList<ProcessSelectionType> SelectionTypes
+		{
+			get => GetSelectionTypes().ToList();
+		}
+
 		private ICommand _runCommand;
 		public ICommand RunCommand =>
 			_runCommand ?? (_runCommand = new RelayCommand(RunProcess));
@@ -113,6 +129,8 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 				if (gdbItem == null)
 					throw new Exception($"No such database item in project: {DatabaseName}");
 
+				var edop = new EditOperation();
+
 				await QueuedTask.Run(() =>
 				{
 					process.Initialize(config);
@@ -121,6 +139,8 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 					{
 						var context = new ProProcessingContext(geodatabase, MapView.Active?.Map);
 						var feedback = new ProProcessingFeedback();
+
+						context.SelectionType = SelectionType;
 
 						var canExecute = process.CanExecute(context);
 						process.Execute(context, feedback);
@@ -147,6 +167,8 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 					return new AlignMarkers();
 				case nameof(CalculateControlPoints):
 					return new CalculateControlPoints();
+				case nameof(CreateAnnoMasks):
+					return new CreateAnnoMasks();
 				default:
 					return null;
 			}
@@ -173,7 +195,8 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		[NotNull]
 		private static IList<GDBProjectItem> GetDatabaseItems()
 		{
-			return Project.Current.GetItems<GDBProjectItem>().ToList();
+			var list = Project.Current.GetItems<GDBProjectItem>().ToList();
+			return list;
 		}
 
 		[NotNull]
@@ -182,6 +205,15 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 			yield return new CartoProcessItem {Name = nameof(AlignMarkers)};
 			yield return new CartoProcessItem {Name = nameof(CreateAnnoMasks)};
 			yield return new CartoProcessItem {Name = nameof(CalculateControlPoints)};
+		}
+
+		[NotNull]
+		private static IEnumerable<ProcessSelectionType> GetSelectionTypes()
+		{
+			yield return ProcessSelectionType.SelectedFeatures;
+			yield return ProcessSelectionType.VisibleExtent;
+			yield return ProcessSelectionType.AllFeatures;
+			// TODO ... within Perimeter
 		}
 	}
 
