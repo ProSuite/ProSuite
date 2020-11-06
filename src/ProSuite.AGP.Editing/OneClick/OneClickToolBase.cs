@@ -614,6 +614,11 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
+			if (! featureLayer.IsVisible)
+			{
+				return false;
+			}
+
 			if (! featureLayer.IsSelectable)
 			{
 				return false;
