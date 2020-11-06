@@ -187,7 +187,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			marker.RespectFrame = true;
 			marker.MarkerGraphics = new[] {graphic};
 			marker.Frame = style == MarkerStyle.Circle
-				               ? GeometryUtils.CreateEnvelope(-5, -5, 5, 5)
+				               ? GeometryFactory.CreateEnvelope(-5, -5, 5, 5)
 				               : graphic.Geometry.Extent;
 
 			return marker;
@@ -198,11 +198,11 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			switch (style)
 			{
 				case MarkerStyle.Circle:
-					return GeometryUtils.CreateBezierCircle(5);
+					return GeometryFactory.CreateBezierCircle(5);
 
 				case MarkerStyle.Square:
-					var envelope = GeometryUtils.CreateEnvelope(-5, -5, 5, 5);
-					return GeometryUtils.CreatePolygon(envelope);
+					var envelope = GeometryFactory.CreateEnvelope(-5, -5, 5, 5);
+					return GeometryFactory.CreatePolygon(envelope);
 
 				default:
 					throw new NotImplementedException(
