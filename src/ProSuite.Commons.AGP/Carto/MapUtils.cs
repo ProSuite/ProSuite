@@ -292,8 +292,9 @@ namespace ProSuite.Commons.AGP.Carto
 
 			if (intersectingGeometries.Count != 0)
 			{
-				//const bool allowProjectingInput = true;
-				result = GeometryEngine.Instance.Union(intersectingGeometries);
+				var sr = intersectingGeometries[0].SpatialReference;
+				result = GeometryBagBuilder.CreateGeometryBag(intersectingGeometries, sr);
+				//result = GeometryEngine.Instance.Union(intersectingGeometries);
 			}
 
 			return result;
