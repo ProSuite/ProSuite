@@ -7,7 +7,6 @@ using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using Google.Protobuf;
-using Google.Protobuf.Collections;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Serialization;
@@ -218,13 +217,14 @@ namespace ProSuite.Microservices.Server.AO
 		}
 
 		public static List<T> FromShapeMsgList<T>(
-			RepeatedField<ShapeMsg> shapeBufferList) where T : IGeometry
+			[NotNull] ICollection<ShapeMsg> shapeBufferList,
+			[CanBeNull] ISpatialReference classSpatialRef = null) where T : IGeometry
 		{
 			var geometryList = new List<T>(shapeBufferList.Count);
 
 			foreach (var selectableOverlap in shapeBufferList)
 			{
-				T geometry = (T) FromShapeMsg(selectableOverlap);
+				T geometry = (T) FromShapeMsg(selectableOverlap, classSpatialRef);
 				geometryList.Add(geometry);
 			}
 
@@ -315,6 +315,32 @@ namespace ProSuite.Microservices.Server.AO
 			[NotNull] ICollection<GdbObjectMsg> gdbObjectMessages,
 			[NotNull] ICollection<ObjectClassMsg> objectClassMessages)
 		{
+			GdbTableContainer container = CreateGdbTableContainer(objectClassMessages);
+
+			return FromGdbObjectMsgList(gdbObjectMessages, container);
+		}
+
+		public static IList<IFeature> FromGdbObjectMsgList(
+			[NotNull] ICollection<GdbObjectMsg> gdbObjectMessages,
+			[NotNull] GdbTableContainer container)
+		{
+			var result = new List<IFeature>(gdbObjectMessages.Count);
+
+			Assert.NotNull(container, "No object class provided");
+
+			foreach (GdbObjectMsg gdbObjectMsg in gdbObjectMessages)
+			{
+				GdbFeature remoteFeature = FromGdbFeatureMsg(gdbObjectMsg, container);
+
+				result.Add(remoteFeature);
+			}
+
+			return result;
+		}
+
+		public static GdbTableContainer CreateGdbTableContainer(
+			ICollection<ObjectClassMsg> objectClassMessages)
+		{
 			GdbTableContainer container = null;
 			int? workspaceHandle = null;
 			IWorkspace workspace = null;
@@ -348,18 +374,7 @@ namespace ProSuite.Microservices.Server.AO
 				container?.TryAdd(fClass);
 			}
 
-			var result = new List<IFeature>(gdbObjectMessages.Count);
-
-			Assert.NotNull(container, "No object class provided");
-
-			foreach (GdbObjectMsg gdbObjectMsg in gdbObjectMessages)
-			{
-				GdbFeature remoteFeature = FromGdbFeatureMsg(gdbObjectMsg, container);
-
-				result.Add(remoteFeature);
-			}
-
-			return result;
+			return container;
 		}
 
 		private static GdbFeatureClass FromFeatureClassMsg(ObjectClassMsg objectClassMsg,
@@ -393,6 +408,24 @@ namespace ProSuite.Microservices.Server.AO
 			             };
 
 			return result;
+		}
+
+		public static GdbObjRefMsg ToGdbObjRefMsg(IFeature feature)
+		{
+			return new GdbObjRefMsg
+			       {
+				       ClassHandle = feature.Class.ObjectClassID,
+				       ObjectId = feature.OID
+			       };
+		}
+
+		public static GdbObjRefMsg ToGdbObjRefMsg(GdbObjectReference gdbObjectReference)
+		{
+			return new GdbObjRefMsg
+			       {
+				       ClassHandle = gdbObjectReference.ClassId,
+				       ObjectId = gdbObjectReference.ObjectId
+			       };
 		}
 
 		/// <summary>

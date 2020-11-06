@@ -1,15 +1,16 @@
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry.RemoveOverlaps;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared;
+using ProSuite.Microservices.Server.AO.Geodatabase;
 
 namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 {
@@ -34,18 +35,37 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 
 			_msg.DebugStopTiming(watch, "Unpacked feature lists from request params");
 
-			var selectableOverlaps = RemoveOverlapsUtils.GetSelectableOverlaps(
+			Overlaps selectableOverlaps = RemoveOverlapsUtils.GetSelectableOverlaps(
 				sourceFeatures, targetFeatures, trackCancel);
 
 			watch = Stopwatch.StartNew();
 
 			var result = new CalculateOverlapsResponse();
 
-			foreach (var overlap in selectableOverlaps.OverlapGeometries)
-				result.Overlaps.Add(ProtobufConversionUtils.ToShapeMsg(overlap));
+			foreach (var overlapByGdbRef
+				in selectableOverlaps.OverlapGeometries)
+			{
+				var gdbObjRefMsg = ProtobufConversionUtils.ToGdbObjRefMsg(overlapByGdbRef.Key);
+
+				var overlap = overlapByGdbRef.Value;
+
+				var overlapsMsg = new OverlapMsg()
+				                  {
+					                  OriginalFeatureRef = gdbObjRefMsg
+				                  };
+
+				foreach (IGeometry geometry in overlap)
+				{
+					overlapsMsg.Overlaps.Add(ProtobufConversionUtils.ToShapeMsg(geometry));
+				}
+
+				result.Overlaps.Add(overlapsMsg);
+			}
 
 			foreach (var notification in selectableOverlaps.Notifications)
+			{
 				result.Notifications.Add(notification.Message);
+			}
 
 			_msg.DebugStopTiming(watch, "Packed overlaps into response");
 
@@ -60,16 +80,34 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 			bool explodeMultiparts = request.ExplodeMultipartResults;
 			bool storeOverlapsAsNewFeatures = request.StoreOverlapsAsNewFeatures;
 
+			GdbTableContainer container = ProtobufConversionUtils.CreateGdbTableContainer(
+				request.ClassDefinitions);
+
 			IList<IFeature> selectedFeatureList =
 				ProtobufConversionUtils.FromGdbObjectMsgList(
-					request.SourceFeatures, request.ClassDefinitions);
+					request.SourceFeatures, container);
 
 			IList<IFeature> targetFeaturesForVertexInsertion =
 				ProtobufConversionUtils.FromGdbObjectMsgList(
-					request.UpdatableTargetFeatures, request.ClassDefinitions);
+					request.UpdatableTargetFeatures, container);
 
-			List<IGeometry> overlaps =
-				ProtobufConversionUtils.FromShapeMsgList<IGeometry>(request.Overlaps);
+			Overlaps overlaps = new Overlaps();
+
+			foreach (OverlapMsg overlapMsg in request.Overlaps)
+			{
+				GdbObjectReference gdbRef = new GdbObjectReference(
+					overlapMsg.OriginalFeatureRef.ClassHandle,
+					overlapMsg.OriginalFeatureRef.ObjectId);
+
+				IFeatureClass fClass = (IFeatureClass) container.GetByClassId(gdbRef.ClassId);
+
+				List<IGeometry> overlapGeometries =
+					ProtobufConversionUtils.FromShapeMsgList<IGeometry>(
+						overlapMsg.Overlaps,
+						DatasetUtils.GetSpatialReference(fClass));
+
+				overlaps.AddGeometries(gdbRef, overlapGeometries);
+			}
 
 			// Remove overlaps
 			OverlapsRemover overlapsRemover = RemoveOverlaps(
@@ -108,42 +146,17 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 
 		private static OverlapsRemover RemoveOverlaps(
 			[NotNull] IList<IFeature> selectedFeatureList,
-			[NotNull] List<IGeometry> overlaps,
+			[NotNull] Overlaps overlaps,
 			[NotNull] IList<IFeature> targetFeaturesForVertexInsertion,
 			bool explodeMultiparts,
 			bool storeOverlapsAsNewFeatures,
 			[CanBeNull] ITrackCancel trackCancel)
 		{
-			IPolycurve removePolyline;
-			IPolycurve removePolygon;
-			RemoveOverlapsUtils.SelectOverlapsToRemove(overlaps, null, false, trackCancel,
-			                                           out removePolyline, out removePolygon);
-
-			// Remove overlaps
 			var overlapsRemover =
 				new OverlapsRemover(explodeMultiparts, storeOverlapsAsNewFeatures);
 
-			if (removePolyline != null)
-			{
-				overlapsRemover.CalculateResults(
-					selectedFeatureList.Where(
-						feature =>
-							feature.Shape.GeometryType ==
-							esriGeometryType.esriGeometryPolyline),
-					removePolyline, targetFeaturesForVertexInsertion, trackCancel);
-			}
-
-			if (removePolygon != null)
-			{
-				overlapsRemover.CalculateResults(
-					selectedFeatureList.Where(
-						feature =>
-							feature.Shape.GeometryType ==
-							esriGeometryType.esriGeometryPolygon ||
-							feature.Shape.GeometryType ==
-							esriGeometryType.esriGeometryMultiPatch),
-					removePolygon, targetFeaturesForVertexInsertion, trackCancel);
-			}
+			overlapsRemover.CalculateResults(
+				selectedFeatureList, overlaps, targetFeaturesForVertexInsertion, trackCancel);
 
 			return overlapsRemover;
 		}
@@ -162,11 +175,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 
 				// Original feature's geometry does not need to be transported back.
 				resultGeometriesByFeature.OriginalFeatureRef =
-					new GdbObjRefMsg
-					{
-						ClassHandle = feature.Class.ObjectClassID,
-						ObjectId = feature.OID
-					};
+					ProtobufConversionUtils.ToGdbObjRefMsg(feature);
 
 				resultGeometriesByFeature.UpdatedGeometry =
 					ProtobufConversionUtils.ToShapeMsg(resultByFeature.LargestResult);

@@ -7,6 +7,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Microservices.Definitions.Geometry;
+using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.Microservices.Server.AO.Geodatabase;
 using ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps;
 
@@ -89,8 +90,11 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			Assert.AreEqual(1, response.Overlaps.Count);
 
+			List<ShapeMsg> shapeBufferList =
+				response.Overlaps.SelectMany(kvp => kvp.Overlaps).ToList();
+
 			List<IPolygon> resultPolys =
-				ProtobufConversionUtils.FromShapeMsgList<IPolygon>(response.Overlaps);
+				ProtobufConversionUtils.FromShapeMsgList<IPolygon>(shapeBufferList);
 
 			Assert.AreEqual(1, resultPolys.Count);
 
@@ -101,7 +105,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			removeRequest.ClassDefinitions.AddRange(calculationRequest.ClassDefinitions);
 			removeRequest.SourceFeatures.AddRange(calculationRequest.SourceFeatures);
-			removeRequest.Overlaps.AddRange(response.Overlaps);
+			removeRequest.Overlaps.Add(response.Overlaps);
 
 			RemoveOverlapsResponse removeResponse =
 				RemoveOverlapsServiceUtils.RemoveOverlaps(removeRequest);
@@ -180,12 +184,19 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 				                    UpdatableTargetFeatures =
 				                    {
 					                    targetFeatureMsg
-				                    },
-				                    Overlaps =
-				                    {
-					                    ProtobufConversionUtils.ToShapeMsg(overlap)
 				                    }
 			                    };
+
+			var overlapsMsg = new OverlapMsg();
+			overlapsMsg.OriginalFeatureRef = new GdbObjRefMsg()
+			                                 {
+				                                 ClassHandle = sourceFeatureMsg.ClassHandle,
+				                                 ObjectId = sourceFeatureMsg.ObjectId
+			                                 };
+
+			overlapsMsg.Overlaps.Add(ProtobufConversionUtils.ToShapeMsg(overlap));
+
+			removeRequest.Overlaps.Add(overlapsMsg);
 
 			RemoveOverlapsResponse removeResponse =
 				RemoveOverlapsServiceUtils.RemoveOverlaps(removeRequest);
