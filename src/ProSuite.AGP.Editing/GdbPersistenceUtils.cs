@@ -18,7 +18,7 @@ namespace ProSuite.AGP.Editing
 		public static async Task<bool> SaveInOperationAsync(
 			[NotNull] string description,
 			[CanBeNull] IDictionary<Feature, Geometry> updates,
-			[CanBeNull] IDictionary<Feature, Geometry> copies = null)
+			[CanBeNull] IDictionary<Feature, IList<Geometry>> copies = null)
 		{
 			var editOperation = new EditOperation();
 
@@ -29,9 +29,10 @@ namespace ProSuite.AGP.Editing
 				       description, GetDatasets(updates?.Keys, copies?.Keys));
 		}
 
-		public static bool SaveInOperation([NotNull] string description,
-		                                   [CanBeNull] IDictionary<Feature, Geometry> updates,
-		                                   [CanBeNull] IDictionary<Feature, Geometry> copies = null)
+		public static bool SaveInOperation(
+			[NotNull] string description,
+			[CanBeNull] IDictionary<Feature, Geometry> updates,
+			[CanBeNull] IDictionary<Feature, IList<Geometry>> copies = null)
 		{
 			var editOperation = new EditOperation();
 
@@ -45,7 +46,7 @@ namespace ProSuite.AGP.Editing
 		public static bool StoreTx(
 			EditOperation.IEditContext editContext,
 			[CanBeNull] IDictionary<Feature, Geometry> updates,
-			[CanBeNull] IDictionary<Feature, Geometry> copies = null)
+			[CanBeNull] IDictionary<Feature, IList<Geometry>> copies = null)
 		{
 			if (updates != null && updates.Count > 0)
 			{
@@ -59,22 +60,45 @@ namespace ProSuite.AGP.Editing
 
 			if (copies != null && copies.Count > 0)
 			{
-				foreach (KeyValuePair<Feature, Geometry> keyValuePair in copies)
+				foreach (KeyValuePair<Feature, IList<Geometry>> keyValuePair in copies)
 				{
 					Feature originalFeature = keyValuePair.Key;
-					Geometry newGeometry = keyValuePair.Value;
+					IList<Geometry> newGeometries = keyValuePair.Value;
 
-					RowBuffer rowBuffer = DuplicateRow(originalFeature);
+					FeatureClass featureClass = originalFeature.GetTable();
 
-					Feature newFeature = originalFeature.GetTable().CreateRow(rowBuffer);
+					foreach (Geometry newGeometry in newGeometries)
+					{
+						RowBuffer rowBuffer = DuplicateRow(originalFeature);
 
-					StoreShape(newFeature, newGeometry, editContext);
+						SetShape(rowBuffer, newGeometry, featureClass);
+
+						Feature newFeature = featureClass.CreateRow(rowBuffer);
+
+						StoreShape(newFeature, newGeometry, editContext);
+					}
 				}
 
 				_msg.InfoFormat("Successfully created {0} new feature(s).", copies.Count);
 			}
 
 			return true;
+		}
+
+		private static void SetShape([NotNull] RowBuffer rowBuffer,
+		                             [NotNull] Geometry geometry,
+		                             FeatureClass featureClass)
+		{
+			string shapeFieldName = featureClass.GetDefinition().GetShapeField();
+
+			SetShape(rowBuffer, geometry, shapeFieldName);
+		}
+
+		private static void SetShape([NotNull] RowBuffer rowBuffer,
+		                             [NotNull] Geometry geometry,
+		                             string shapeFieldName)
+		{
+			rowBuffer[shapeFieldName] = geometry;
 		}
 
 		private static RowBuffer DuplicateRow(Row row, bool includeShape = false)
@@ -93,7 +117,14 @@ namespace ProSuite.AGP.Editing
 
 			for (int i = 0; i < fields.Count; i++)
 			{
-				if (fields[i].FieldType == FieldType.Geometry && ! includeShape)
+				Field field = fields[i];
+
+				if (! field.IsEditable)
+				{
+					continue;
+				}
+
+				if (field.FieldType == FieldType.Geometry && ! includeShape)
 				{
 					continue;
 				}
@@ -124,8 +155,6 @@ namespace ProSuite.AGP.Editing
 			feature.Store();
 
 			editContext.Invalidate(feature);
-
-			feature.Dispose();
 		}
 
 		private static IEnumerable<Dataset> GetDatasets(params IEnumerable<Feature>[] featureLists)
