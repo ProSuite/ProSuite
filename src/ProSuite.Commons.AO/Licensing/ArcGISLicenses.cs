@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ArcGIS.Core.Hosting;
 using ESRI.ArcGIS.esriSystem;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -136,7 +135,7 @@ namespace ProSuite.Commons.AO.Licensing
 			            "Cannot use product 'Server' in 32 bit process.");
 
 #if Server
-			Host.Initialize();
+			ArcGIS.Core.Hosting.Host.Initialize();
 			return;
 #endif
 			throw new InvalidOperationException(
