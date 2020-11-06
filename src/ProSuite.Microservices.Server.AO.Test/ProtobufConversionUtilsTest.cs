@@ -40,11 +40,16 @@ namespace ProSuite.Microservices.Server.AO.Test
 
 			var polygon = (IPolygon) GeometryUtils.FromXmlFile(xmlFile);
 
-			var shapeMsg = ProtobufConversionUtils.ToShapeMsg(polygon);
+			var shapeMsg = ProtobufConversionUtils.ToShapeMsg(
+				polygon, ShapeMsg.FormatOneofCase.EsriShape,
+				SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml);
 
 			IGeometry rehydrated = ProtobufConversionUtils.FromShapeMsg(shapeMsg);
 
+			Assert.NotNull(rehydrated);
 			Assert.IsTrue(GeometryUtils.AreEqual(polygon, rehydrated));
+			Assert.IsTrue(SpatialReferenceUtils.AreEqual(polygon.SpatialReference,
+			                                             rehydrated.SpatialReference, true, true));
 
 			// ... and WKB
 			var wkbWriter = new WkbGeometryWriter();
@@ -58,6 +63,9 @@ namespace ProSuite.Microservices.Server.AO.Test
 			IGeometry rehydratedFromWkb = ProtobufConversionUtils.FromShapeMsg(wkbShapeMsg);
 
 			Assert.IsTrue(GeometryUtils.AreEqual(polygon, rehydratedFromWkb));
+			Assert.IsTrue(
+				SpatialReferenceUtils.AreEqual(polygon.SpatialReference,
+				                               rehydrated.SpatialReference));
 
 			// ... and envelope
 			IEnvelope envelope = polygon.Envelope;
@@ -71,7 +79,11 @@ namespace ProSuite.Microservices.Server.AO.Test
 					                             XMax = envelope.XMax,
 					                             YMax = envelope.YMax
 				                             },
-				                  SpatialReferenceWkid = (int) WellKnownHorizontalCS.LV95
+				                  SpatialReference = new SpatialReferenceMsg()
+				                                     {
+					                                     SpatialReferenceWkid =
+						                                     (int) WellKnownHorizontalCS.LV95
+				                                     }
 			                  };
 
 			IEnvelope rehydratedEnvelope =
@@ -145,16 +157,17 @@ namespace ProSuite.Microservices.Server.AO.Test
 		[Test]
 		public void CanConvertToFromFeature()
 		{
-			var fClass =
-				new GdbFeatureClass(123, "TestFC", esriGeometryType.esriGeometryPolygon, null);
+			var sr = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95,
+				WellKnownVerticalCS.LN02);
+
+			var fClass = new GdbFeatureClass(123, "TestFC", esriGeometryType.esriGeometryPolygon);
+
+			fClass.SpatialReference = sr;
 
 			GdbFeature featureWithNoShape = new GdbFeature(41, fClass);
 
 			AssertCanConvertToDtoAndBack(featureWithNoShape);
-
-			var sr = SpatialReferenceUtils.CreateSpatialReference(
-				WellKnownHorizontalCS.LV95,
-				WellKnownVerticalCS.LN02);
 
 			IPolygon polygon = GeometryFactory.CreatePolygon(
 				GeometryFactory.CreatePoint(2600000, 1200000, sr),
@@ -173,12 +186,15 @@ namespace ProSuite.Microservices.Server.AO.Test
 		[Test]
 		public void CanConvertToFromFeatureList()
 		{
+			var sr = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95,
+				WellKnownVerticalCS.LN02);
+
 			var fClass1 = new GdbFeatureClass(123, "TestFC", esriGeometryType.esriGeometryPolygon);
 
-			GdbFeature featureWithNoShape = new GdbFeature(41, fClass1);
+			fClass1.SpatialReference = sr;
 
-			var sr = SpatialReferenceUtils.CreateSpatialReference(
-				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LN02);
+			GdbFeature featureWithNoShape = new GdbFeature(41, fClass1);
 
 			IPolygon polygon = GeometryFactory.CreatePolygon(
 				GeometryFactory.CreatePoint(2600000, 1200000, sr),
@@ -193,6 +209,8 @@ namespace ProSuite.Microservices.Server.AO.Test
 
 			var fClass2 =
 				new GdbFeatureClass(124, "TestClass2", esriGeometryType.esriGeometryMultipoint);
+
+			fClass2.SpatialReference = sr;
 
 			GdbFeature multipointFeature = new GdbFeature(41, fClass2);
 

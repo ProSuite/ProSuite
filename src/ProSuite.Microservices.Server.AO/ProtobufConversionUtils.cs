@@ -24,7 +24,8 @@ namespace ProSuite.Microservices.Server.AO
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		[CanBeNull]
-		public static IGeometry FromShapeMsg([CanBeNull] ShapeMsg shapeBuffer)
+		public static IGeometry FromShapeMsg([CanBeNull] ShapeMsg shapeBuffer,
+		                                     [CanBeNull] ISpatialReference classSpatialRef = null)
 		{
 			if (shapeBuffer == null) return null;
 
@@ -56,28 +57,8 @@ namespace ProSuite.Microservices.Server.AO
 						$"Unsupported format: {shapeBuffer.FormatCase}");
 			}
 
-			switch (shapeBuffer.SpatialReferenceCase)
-			{
-				case ShapeMsg.SpatialReferenceOneofCase.None:
-					break;
-				case ShapeMsg.SpatialReferenceOneofCase.SpatialReferenceEsriXml:
-					if (! string.IsNullOrEmpty(shapeBuffer.SpatialReferenceEsriXml))
-					{
-						result.SpatialReference =
-							SpatialReferenceUtils.FromXmlString(
-								shapeBuffer.SpatialReferenceEsriXml);
-					}
-
-					break;
-				case ShapeMsg.SpatialReferenceOneofCase.SpatialReferenceWkid:
-					result.SpatialReference =
-						SpatialReferenceUtils.CreateSpatialReference(
-							shapeBuffer.SpatialReferenceWkid);
-					break;
-				default:
-					throw new NotImplementedException(
-						$"Unsupported spatial reference format: {shapeBuffer.SpatialReferenceCase}");
-			}
+			result.SpatialReference =
+				FromSpatialReferenceMsg(shapeBuffer.SpatialReference, classSpatialRef);
 
 			return result;
 		}
@@ -85,7 +66,9 @@ namespace ProSuite.Microservices.Server.AO
 		[CanBeNull]
 		public static ShapeMsg ToShapeMsg(
 			[CanBeNull] IGeometry geometry,
-			ShapeMsg.FormatOneofCase format = ShapeMsg.FormatOneofCase.EsriShape)
+			ShapeMsg.FormatOneofCase format = ShapeMsg.FormatOneofCase.EsriShape,
+			SpatialReferenceMsg.FormatOneofCase spatialRefFormat =
+				SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid)
 		{
 			if (geometry == null) return null;
 
@@ -103,8 +86,10 @@ namespace ProSuite.Microservices.Server.AO
 			             };
 
 			if (geometry.SpatialReference != null)
-				result.SpatialReferenceEsriXml = SpatialReferenceUtils.ToXmlString(
-					geometry.SpatialReference);
+			{
+				result.SpatialReference =
+					ToSpatialReferenceMsg(geometry.SpatialReference, spatialRefFormat);
+			}
 
 			if (highLevelGeometry != geometry)
 			{
@@ -112,6 +97,80 @@ namespace ProSuite.Microservices.Server.AO
 					"Geometry was converted to high-level geometry to encode.");
 
 				Marshal.ReleaseComObject(highLevelGeometry);
+			}
+
+			return result;
+		}
+
+		public static ISpatialReference FromSpatialReferenceMsg(
+			[CanBeNull] SpatialReferenceMsg spatialRefMsg,
+			[CanBeNull] ISpatialReference classSpatialRef = null)
+		{
+			if (spatialRefMsg == null)
+			{
+				return null;
+			}
+
+			switch (spatialRefMsg.FormatCase)
+			{
+				case SpatialReferenceMsg.FormatOneofCase.None:
+					return null;
+				case SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml:
+
+					string xml = spatialRefMsg.SpatialReferenceEsriXml;
+
+					return string.IsNullOrEmpty(xml)
+						       ? null
+						       : SpatialReferenceUtils.FromXmlString(xml);
+
+				case SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid:
+
+					int wkId = spatialRefMsg.SpatialReferenceWkid;
+
+					return classSpatialRef?.FactoryCode == wkId
+						       ? classSpatialRef
+						       : SpatialReferenceUtils.CreateSpatialReference(wkId);
+
+				case SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkt:
+
+					return SpatialReferenceUtils.ImportFromESRISpatialReference(
+						spatialRefMsg.SpatialReferenceWkt);
+
+				default:
+					throw new NotImplementedException(
+						$"Unsupported spatial reference format: {spatialRefMsg.FormatCase}");
+			}
+		}
+
+		public static SpatialReferenceMsg ToSpatialReferenceMsg(
+			[CanBeNull] ISpatialReference spatialReference,
+			SpatialReferenceMsg.FormatOneofCase format)
+		{
+			if (spatialReference == null)
+			{
+				return null;
+			}
+
+			SpatialReferenceMsg result = new SpatialReferenceMsg();
+
+			switch (format)
+			{
+				case SpatialReferenceMsg.FormatOneofCase.None:
+					break;
+				case SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml:
+					result.SpatialReferenceEsriXml = SpatialReferenceUtils.ToXmlString(
+						spatialReference);
+					break;
+				case SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid:
+					result.SpatialReferenceWkid = spatialReference.FactoryCode;
+					break;
+				case SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkt:
+					result.SpatialReferenceWkt =
+						SpatialReferenceUtils.ExportToESRISpatialReference(spatialReference);
+					break;
+				default:
+					throw new NotImplementedException(
+						$"Unsupported spatial reference format: {format}");
 			}
 
 			return result;
@@ -218,10 +277,14 @@ namespace ProSuite.Microservices.Server.AO
 		public static ObjectClassMsg ToObjectClassMsg(
 			[NotNull] IObjectClass objectClass)
 		{
-			esriGeometryType geometryType =
-				objectClass is IFeatureClass fc
-					? fc.ShapeType
-					: esriGeometryType.esriGeometryNull;
+			esriGeometryType geometryType = esriGeometryType.esriGeometryNull;
+			ISpatialReference spatialRef = null;
+
+			if (objectClass is IFeatureClass fc)
+			{
+				geometryType = fc.ShapeType;
+				spatialRef = DatasetUtils.GetSpatialReference(fc);
+			}
 
 			IWorkspace workspace = ((IDataset) objectClass).Workspace;
 
@@ -231,6 +294,8 @@ namespace ProSuite.Microservices.Server.AO
 					Name = DatasetUtils.GetName(objectClass),
 					Alias = DatasetUtils.GetAliasName(objectClass),
 					ClassHandle = objectClass.ObjectClassID,
+					SpatialReference = ToSpatialReferenceMsg(
+						spatialRef, SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml),
 					GeometryType = (int) geometryType,
 					WorkspaceHandle = workspace?.GetHashCode() ?? -1
 				};
@@ -278,21 +343,14 @@ namespace ProSuite.Microservices.Server.AO
 					workspace = null;
 				}
 
-				var fClass = new GdbFeatureClass(
-					objectClassMsg.ClassHandle, objectClassMsg.Name,
-					(esriGeometryType) objectClassMsg.GeometryType, objectClassMsg.Alias,
-					null, workspace);
-
-				// Add SR to object class? -> remove from BackingDataset
-				//if (objectClassMsg.SpatialReference != null)
-				//{
-				//	fClass.SpatialReference = ...
-				//}
+				GdbFeatureClass fClass = FromFeatureClassMsg(objectClassMsg, workspace);
 
 				container?.TryAdd(fClass);
 			}
 
 			var result = new List<IFeature>(gdbObjectMessages.Count);
+
+			Assert.NotNull(container, "No object class provided");
 
 			foreach (GdbObjectMsg gdbObjectMsg in gdbObjectMessages)
 			{
@@ -304,13 +362,30 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
+		private static GdbFeatureClass FromFeatureClassMsg(ObjectClassMsg objectClassMsg,
+		                                                   IWorkspace workspace)
+		{
+			var result = new GdbFeatureClass(
+				objectClassMsg.ClassHandle,
+				objectClassMsg.Name,
+				(esriGeometryType) objectClassMsg.GeometryType,
+				objectClassMsg.Alias,
+				null, workspace);
+
+			result.SpatialReference = FromSpatialReferenceMsg(objectClassMsg.SpatialReference);
+
+			return result;
+		}
+
 		public static GdbFeature FromGdbFeatureMsg(
 			[NotNull] GdbObjectMsg gdbObjectMsg,
 			[NotNull] GdbTableContainer tableContainer)
 		{
 			var gdbTable = (IFeatureClass) tableContainer.GetByClassId(gdbObjectMsg.ClassHandle);
 
-			IGeometry shape = FromShapeMsg(gdbObjectMsg.Shape);
+			ISpatialReference classSpatialRef = DatasetUtils.GetSpatialReference(gdbTable);
+
+			IGeometry shape = FromShapeMsg(gdbObjectMsg.Shape, classSpatialRef);
 
 			var result = new GdbFeature(gdbObjectMsg.ObjectId, gdbTable)
 			             {

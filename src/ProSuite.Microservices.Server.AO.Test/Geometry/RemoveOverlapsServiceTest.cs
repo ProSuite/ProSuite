@@ -39,6 +39,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 				WellKnownHorizontalCS.LV95,
 				WellKnownVerticalCS.LN02);
 
+			fClass.SpatialReference = sr;
+
 			IPolygon polygon1 = GeometryFactory.CreatePolygon(
 				GeometryFactory.CreatePoint(2600000, 1200000, sr),
 				GeometryFactory.CreatePoint(2601000, 1201000, sr));
