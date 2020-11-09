@@ -143,7 +143,7 @@ namespace ProSuite.AGP.Solution
 			LayersAddedEvent.Subscribe(OnLayerAdded);
 			ProSuiteConfigChangedEvent.Subscribe(OnConfigurationChanged);
 
-			StartToolMicroserviceClient();
+			StartToolMicroserviceClientAsync().GetAwaiter();
 
 			return base.Initialize();
 		}
@@ -251,7 +251,7 @@ namespace ProSuite.AGP.Solution
 			}
 		}
 
-		private async Task<bool> StartToolMicroserviceClient()
+		private async Task<bool> StartToolMicroserviceClientAsync()
 		{
 			string executablePath =
 				ConfigurationUtils.GetProSuiteExecutablePath(
@@ -275,7 +275,7 @@ namespace ProSuite.AGP.Solution
 
 			ToolMicroserviceClient = result;
 
-			return await result.AllowStartingLocalServerAsync(executablePath);
+			return await result.AllowStartingLocalServerAsync(executablePath).ConfigureAwait(false);
 		}
 	}
 

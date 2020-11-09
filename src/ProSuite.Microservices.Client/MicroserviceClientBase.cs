@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Health.V1;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -16,12 +17,14 @@ namespace ProSuite.Microservices.Client
 	{
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
+		private const string _localhost = "localhost";
+
 		private readonly string _host;
 		private int _port;
 		private Health.HealthClient _healthClient;
 		private Process _startedProcess;
 
-		protected MicroserviceClientBase([NotNull] string host = "localhost",
+		protected MicroserviceClientBase([NotNull] string host = _localhost,
 		                                 int port = 5151,
 		                                 string serverCertificatePath = null)
 		{
@@ -66,85 +69,83 @@ namespace ProSuite.Microservices.Client
 			}
 		}
 
+		public async Task<bool> AllowStartingLocalServerAsync([NotNull] string executable,
+		                                                      [CanBeNull] string extraArguments =
+			                                                      null)
+		{
+			if (! _host.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase))
+			{
+				return false;
+			}
+
+			bool canAcceptCalls = await CanAcceptCallsAsync();
+
+			if (canAcceptCalls)
+			{
+				return false;
+			}
+
+			StartLocalServer(executable, extraArguments);
+
+			return true;
+		}
+
 		public void AllowStartingLocalServer([NotNull] string executable,
 		                                     [CanBeNull] string extraArguments = null)
 		{
-			if (_host.Equals("localhost", StringComparison.InvariantCultureIgnoreCase) &&
-			    ! CanAcceptCalls())
+			if (! _host.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase))
 			{
-				if (_port < 0)
-				{
-					// Get next ephemeral port, reopen the channel
-					_port = GetFreeTcpPort();
-					OpenChannel(null);
-				}
-				else
-				{
-					// Kill unhealthy server processes:
-					string exeName = Path.GetFileNameWithoutExtension(executable);
-					Process[] runningProcesses = Process.GetProcessesByName(exeName);
-
-					if (runningProcesses.Length > 0)
-					{
-						_msg.DebugFormat(
-							"Background microservice {0} is already running (but not " +
-							"serving). It will be killed.", exeName);
-
-						foreach (Process process in runningProcesses)
-						{
-							process.Kill();
-						}
-					}
-				}
-
-				string arguments = $"-h {_host} -p {_port}";
-
-				if (! string.IsNullOrEmpty(extraArguments))
-				{
-					arguments += $" {extraArguments}";
-				}
-
-				_msg.DebugFormat("Starting microservice {0} in background...", executable);
-
-				// TOP-5321: Avoid keeping shared version lock because the child process somehow
-				// keeps the lock alive (despite no edit session in the child process) if it is
-				// started with useShellExecute == false.
-				const bool useShellExecute = true;
-				_startedProcess =
-					ProcessUtils.StartProcess(executable, arguments, useShellExecute, true);
-
-				_msg.DebugFormat("Started microservice in background. Arguments: {0}", arguments);
+				return;
 			}
+
+			if (CanAcceptCalls())
+			{
+				return;
+			}
+
+			StartLocalServer(executable, extraArguments);
 		}
 
 		public bool CanAcceptCalls()
 		{
-			string serviceName = null;
-
-			if (_port < 0)
+			if (! TryGetHealthClient(out Health.HealthClient healthClient))
 			{
-				// Avoid waiting for the timeout of the health check, if possible.
 				return false;
 			}
 
 			try
 			{
-				if (_healthClient == null)
-				{
-					return false;
-				}
-
-				serviceName = ServiceName;
-
 				HealthCheckResponse healthResponse =
-					_healthClient.Check(new HealthCheckRequest()
-					                    {Service = serviceName});
+					healthClient.Check(new HealthCheckRequest()
+					                   {Service = ServiceName});
 
 				return healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving;
 			}
 			catch (Exception e)
 			{
-				_msg.Debug($"Error checking health of service {serviceName}", e);
+				_msg.Debug($"Error checking health of service {ServiceName}", e);
+				return false;
+			}
+		}
+
+		public async Task<bool> CanAcceptCallsAsync()
+		{
+			if (! TryGetHealthClient(out Health.HealthClient healthClient))
+			{
+				return false;
+			}
+
+			try
+			{
+				HealthCheckResponse healthResponse =
+					await healthClient.CheckAsync(new HealthCheckRequest()
+					                              {Service = ServiceName});
+
+				return healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving;
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error checking health of service {ServiceName}", e);
 				return false;
 			}
 		}
@@ -169,6 +170,72 @@ namespace ProSuite.Microservices.Client
 		}
 
 		protected abstract void ChannelOpenedCore(Channel channel);
+
+		private void StartLocalServer(string executable, string extraArguments)
+		{
+			if (_port < 0)
+			{
+				// Get next ephemeral port, reopen the channel
+				_port = GetFreeTcpPort();
+				OpenChannel(null);
+			}
+			else
+			{
+				// Kill unhealthy server processes:
+				string exeName = Path.GetFileNameWithoutExtension(executable);
+				Process[] runningProcesses = Process.GetProcessesByName(exeName);
+
+				if (runningProcesses.Length > 0)
+				{
+					_msg.DebugFormat(
+						"Background microservice {0} is already running (but not " +
+						"serving). It will be killed.", exeName);
+
+					foreach (Process process in runningProcesses)
+					{
+						process.Kill();
+					}
+				}
+			}
+
+			string arguments = $"-h {_host} -p {_port}";
+
+			if (! string.IsNullOrEmpty(extraArguments))
+			{
+				arguments += $" {extraArguments}";
+			}
+
+			_msg.DebugFormat("Starting microservice {0} in background...", executable);
+
+			// TOP-5321: Avoid keeping shared version lock because the child process somehow
+			// keeps the lock alive (despite no edit session in the child process) if it is
+			// started with useShellExecute == false.
+			const bool useShellExecute = true;
+			_startedProcess =
+				ProcessUtils.StartProcess(executable, arguments, useShellExecute, true);
+
+			_msg.DebugFormat("Started microservice in background. Arguments: {0}", arguments);
+		}
+
+		private bool TryGetHealthClient(out Health.HealthClient healthClient)
+		{
+			healthClient = null;
+
+			if (_port < 0)
+			{
+				// Avoid waiting for the timeout of the health check, if possible.
+				return false;
+			}
+
+			if (_healthClient == null)
+			{
+				return false;
+			}
+
+			healthClient = _healthClient;
+
+			return true;
+		}
 
 		private static int GetFreeTcpPort()
 		{
