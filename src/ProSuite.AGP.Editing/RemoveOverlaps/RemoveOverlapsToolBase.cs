@@ -16,13 +16,14 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
-using ProSuite.Microservices.Client;
+using ProSuite.Microservices.Client.AGP;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps;
 
 namespace ProSuite.AGP.Editing.RemoveOverlaps
 {
-	public class RemoveOverlapsToolBase : TwoPhaseEditToolBase
+	public abstract class RemoveOverlapsToolBase : TwoPhaseEditToolBase
 	{
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -39,12 +40,16 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			SecondPhaseCursor = ToolUtils.GetCursor(Resources.RemoveOverlapsToolCursorProcess);
 		}
 
-		protected RemoveOverlapsClient MicroserviceClient { get; set; }
-			= new RemoveOverlapsClient(new ClientChannelConfig()
-			                           {
-				                           HostName = "localhost",
-				                           Port = 5153
-			                           });
+		protected abstract GeometryProcessingClient MicroserviceClient { get; }
+
+		protected override void OnUpdate()
+		{
+			Enabled = MicroserviceClient != null;
+
+			Tooltip = Enabled
+				          ? "Remove a part of a feature that overlaps with other polygon features"
+				          : "Microservice not found / not started. Please make sure the latest ProSuite Extension is installed.";
+		}
 
 		protected override void OnToolActivatingCore()
 		{
@@ -258,6 +263,10 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				overlaps =
 					MicroserviceClient.CalculateOverlaps(selectedFeatures, overlappingFeatures,
 					                                     cancellationToken);
+			}
+			else
+			{
+				throw new InvalidConfigurationException("Microservice has not been started.");
 			}
 
 			return overlaps;

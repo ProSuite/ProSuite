@@ -292,6 +292,14 @@
       <Project>{824DDBE3-EDAF-460B-B513-386A4260C1FF}</Project>
       <Name>ProSuite.DomainModel</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Microservices.Client.AGP\ProSuite.Microservices.Client.AGP.csproj">
+      <Project>{5D500C94-FF3A-4BC8-8EDB-3A7177898B81}</Project>
+      <Name>ProSuite.Microservices.Client.AGP</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj">
+      <Project>{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}</Project>
+      <Name>ProSuite.Microservices.Client</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Processing\ProSuite.Processing.csproj">
       <Project>{0b72e886-b428-48ed-ba96-9cd6fcc5e171}</Project>
       <Name>ProSuite.Processing</Name>

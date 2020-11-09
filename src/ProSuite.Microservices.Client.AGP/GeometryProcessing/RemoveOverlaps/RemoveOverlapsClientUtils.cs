@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Threading;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using Grpc.Core;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -16,30 +15,21 @@ using ProSuite.Microservices.Definitions.Shared;
 
 namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 {
-	public class RemoveOverlapsClient : MicroserviceClientBase
+	public static class RemoveOverlapsClientUtils
 	{
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-		public RemoveOverlapsGrpc.RemoveOverlapsGrpcClient RpcClient { get; private set; }
-
-		public RemoveOverlapsClient([NotNull] ClientChannelConfig channelConfig) : base(
-			channelConfig) { }
-
-		protected override string ServiceName => RpcClient?.GetType().DeclaringType?.Name;
-
-		protected override void ChannelOpenedCore(Channel channel)
-		{
-			RpcClient = new RemoveOverlapsGrpc.RemoveOverlapsGrpcClient(channel);
-		}
+		#region Calculate Overlaps
 
 		[CanBeNull]
-		public Overlaps CalculateOverlaps(
+		public static Overlaps CalculateOverlaps(
+			RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] IList<Feature> overlappingFeatures,
 			CancellationToken cancellationToken)
 		{
 			CalculateOverlapsResponse response =
-				CalculateOverlapsRpc(selectedFeatures, overlappingFeatures,
+				CalculateOverlapsRpc(rpcClient, selectedFeatures, overlappingFeatures,
 				                     cancellationToken);
 
 			if (cancellationToken.IsCancellationRequested)
@@ -67,10 +57,59 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 			return result;
 		}
 
-		public RemoveOverlapsResult RemoveOverlaps(IEnumerable<Feature> selectedFeatures,
-		                                           Overlaps overlapsToRemove,
-		                                           IList<Feature> overlappingFeatures,
-		                                           CancellationToken cancellationToken)
+		private static CalculateOverlapsResponse CalculateOverlapsRpc(
+			RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
+			IList<Feature> selectedFeatures,
+			IList<Feature> overlappingFeatures,
+			CancellationToken cancellationToken)
+		{
+			CalculateOverlapsRequest request =
+				CreateCalculateOverlapsRequest(selectedFeatures, overlappingFeatures);
+
+			CalculateOverlapsResponse response;
+
+			try
+			{
+				response = rpcClient.CalculateOverlaps(request, null, null,
+				                                       cancellationToken);
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error calling remote procedure: {e.Message} ", e);
+
+				throw;
+			}
+
+			return response;
+		}
+
+		private static CalculateOverlapsRequest CreateCalculateOverlapsRequest(
+			[NotNull] IList<Feature> selectedFeatures,
+			[NotNull] IList<Feature> overlappingFeatures)
+		{
+			var request = new CalculateOverlapsRequest();
+
+			ProtobufConversionUtils.ToGdbObjectMsgList(selectedFeatures,
+			                                           request.SourceFeatures,
+			                                           request.ClassDefinitions);
+
+			ProtobufConversionUtils.ToGdbObjectMsgList(overlappingFeatures,
+			                                           request.TargetFeatures,
+			                                           request.ClassDefinitions);
+
+			return request;
+		}
+
+		#endregion
+
+		#region Remove Overlaps
+
+		public static RemoveOverlapsResult RemoveOverlaps(
+			RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
+			IEnumerable<Feature> selectedFeatures,
+		                                                  Overlaps overlapsToRemove,
+		                                                  IList<Feature> overlappingFeatures,
+		                                                  CancellationToken cancellationToken)
 		{
 			List<Feature> updateFeatures;
 			RemoveOverlapsRequest request = CreateRemoveOverlapsRequest(
@@ -78,7 +117,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 				out updateFeatures);
 
 			RemoveOverlapsResponse response =
-				RpcClient.RemoveOverlaps(request, null, null, cancellationToken);
+				rpcClient.RemoveOverlaps(request, null, null, cancellationToken);
 
 			return GetRemoveOverlapsResult(response, updateFeatures);
 		}
@@ -165,22 +204,6 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 			                                 f.GetTable().GetID() == classId);
 		}
 
-		private static CalculateOverlapsRequest CreateCalculateOverlapsRequest(
-			[NotNull] IList<Feature> selectedFeatures,
-			[NotNull] IList<Feature> overlappingFeatures)
-		{
-			var request = new CalculateOverlapsRequest();
-
-			ProtobufConversionUtils.ToGdbObjectMsgList(selectedFeatures,
-			                                           request.SourceFeatures,
-			                                           request.ClassDefinitions);
-
-			ProtobufConversionUtils.ToGdbObjectMsgList(overlappingFeatures,
-			                                           request.TargetFeatures,
-			                                           request.ClassDefinitions);
-
-			return request;
-		}
 
 		private static RemoveOverlapsRequest CreateRemoveOverlapsRequest(
 			IEnumerable<Feature> selectedFeatures,
@@ -236,30 +259,6 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 			return request;
 		}
 
-		private CalculateOverlapsResponse CalculateOverlapsRpc(
-			IList<Feature> selectedFeatures,
-			IList<Feature> overlappingFeatures,
-			CancellationToken cancellationToken)
-		{
-			CalculateOverlapsRequest request =
-				CreateCalculateOverlapsRequest(selectedFeatures, overlappingFeatures);
-
-			CalculateOverlapsResponse response;
-
-			try
-			{
-				response =
-					RpcClient.CalculateOverlaps(request, null, null,
-					                            cancellationToken);
-			}
-			catch (Exception e)
-			{
-				_msg.Debug($"Error calling remote procedure: {e.Message} ", e);
-
-				throw;
-			}
-
-			return response;
-		}
+		#endregion
 	}
 }
