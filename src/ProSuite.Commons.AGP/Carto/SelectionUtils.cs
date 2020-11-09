@@ -7,19 +7,6 @@ namespace ProSuite.Commons.AGP.Carto
 {
 	public static class SelectionUtils
 	{
-		public static IEnumerable<Feature> GetSelectedFeatures(MapView activeView)
-		{
-			Dictionary<MapMember, List<long>> selection = activeView.Map.GetSelection();
-
-			foreach (MapMember mapMember in selection.Keys)
-			{
-				foreach (var feature in GetSelectedFeatures(mapMember as BasicFeatureLayer))
-				{
-					yield return feature;
-				}
-			}
-		}
-
 		public static void ClearSelection(Map map)
 		{
 			Dictionary<MapMember, List<long>> selection = map.GetSelection();
@@ -32,6 +19,16 @@ namespace ProSuite.Commons.AGP.Carto
 				{
 					basicLayer.ClearSelection();
 				}
+			}
+		}
+
+		public static IEnumerable<Feature> GetSelectedFeatures([NotNull] MapView activeView)
+		{
+			Dictionary<MapMember, List<long>> selection = activeView.Map.GetSelection();
+
+			foreach (Feature feature1 in MapUtils.GetFeatures(selection))
+			{
+				yield return feature1;
 			}
 		}
 

@@ -4,6 +4,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence
 {
+	// todo daro rename
 	public interface IRepository
 	{
 		IWorkItem Refresh(IWorkItem item);

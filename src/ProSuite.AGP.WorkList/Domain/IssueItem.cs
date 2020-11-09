@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
-using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain
@@ -10,17 +9,51 @@ namespace ProSuite.AGP.WorkList.Domain
 	{
 		private string _issueCodeDescription;
 
-		public IssueItem(int id, [NotNull] Row row, IAttributeReader reader) : base(id, row)
-		{
-			ObjectID = reader.GetValue<int>(row, Attributes.ObjectID);
+		// todo daro: use Factory Method on abstract ISourceClass base to create item
+		//			  instead of passing in reader
+		public IssueItem(int id, [NotNull] Row row) : base(id, row) { }
 
-			IssueCodeDescription = reader.GetValue<string>(row, Attributes.IssueCodeDescription);
-			QualityCondition = reader.GetValue<string>(row, Attributes.QualityConditionName);
-			InvolvedObjects = reader.GetValue<string>(row, Attributes.InvolvedObjects);
-			IssueSeverity = reader.GetValue<string>(row, Attributes.IssueSeverity);
-			IssueCode = reader.GetValue<string>(row, Attributes.IssueCode);
-			//InIssueInvolvedTables = IssueUtils.ParseInvolvedTables(InvolvedObjects);
-		}
+		public string ExceptionRetirementDate { get; set; }
+
+		public string ExceptionLastRevisionDate { get; set; }
+
+		public string ExceptionDefinedDate { get; set; }
+
+		public string ExceptionOrigin { get; set; }
+
+		public string ExceptionCategory { get; set; }
+
+		public string ExceptionNotes { get; set; }
+
+		public string ExceptionStatus { get; set; }
+
+		public string QualityConditionVersionUuid { get; set; }
+
+		public string QualityConditionUuid { get; set; }
+
+		public string IssueAssignment { get; set; }
+
+		public string TextValue { get; set; }
+
+		public string ExceptionShapeMatchCriterion { get; set; }
+
+		public double? DoubleValue2 { get; set; }
+
+		public double? DoubleValue1 { get; set; }
+
+		public string Url { get; set; }
+
+		public string AffectedComponent { get; set; }
+
+		public string Category { get; set; }
+
+		public string StopCondition { get; set; }
+
+		public string TestType { get; set; }
+
+		public string TestDescription { get; set; }
+
+		public string TestName { get; set; }
 
 		public string QualityCondition { get; set; }
 
@@ -29,8 +62,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		public string InvolvedObjects { get; set; }
 
 		public string IssueCode { get; set; }
-
-		public int ObjectID { get; set; }
 
 		public string IssueCodeDescription
 		{
@@ -43,6 +74,5 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		public IList<InvolvedTable> InIssueInvolvedTables { get; set; }
-
 	}
 }

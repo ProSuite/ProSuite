@@ -1,5 +1,7 @@
 using System;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
@@ -52,10 +54,24 @@ namespace ProSuite.Processing.Utils
 			using (var table1 = feature1.GetTable())
 			using (var table2 = feature2.GetTable())
 			{
-				if (ReferenceEquals(table1, table2)) return true;
-				if (Equals(table1.Handle, table2.Handle)) return true;
-				return table1.GetID() != table2.GetID();
+				return IsSameTable(table1, table2);
 			}
+		}
+
+		public static bool IsSameTable(Table fc1, Table fc2)
+		{
+			if (ReferenceEquals(fc1, fc2)) return true;
+			if (Equals(fc1.Handle, fc2.Handle)) return true;
+
+			var id1 = fc1.GetID();
+			var id2 = fc2.GetID();
+			if (id1 != id2) return false;
+			if (id1 >= 0) return true;
+
+			// table id is negative for tables not registered with the Geodatabase
+			// compare table name and workspace -- for now, give up and assume not same
+
+			return false;
 		}
 
 		public static double Clip(double value, double min, double max,
@@ -110,6 +126,74 @@ namespace ProSuite.Processing.Utils
 			return value;
 		}
 
+		/// <summary>
+		/// Normalize the given <paramref name="angle"/> (in degrees)
+		/// so that it is in the range 0 (inclusive) to 360 (exclusive).
+		/// </summary>
+		/// <param name="angle">in degrees</param>
+		/// <returns>angle, in degrees, normalized to 0..360</returns>
+		public static double ToPositiveDegrees(double angle)
+		{
+			angle %= 360;
+
+			if (angle < 0)
+			{
+				angle += 360;
+			}
+
+			return angle;
+		}
+
+		/// <summary>
+		/// Normalize the given <paramref name="angle"/> (in radians)
+		/// so that it is in the range -pi to pi (both inclusive).
+		/// </summary>
+		/// <param name="angle">in radians</param>
+		/// <returns>angle, in radians, normalized to -pi..pi</returns>
+		public static double NormalizeRadians(double angle)
+		{
+			const double twoPi = Math.PI * 2;
+
+			angle %= twoPi; // -2pi .. 2pi
+
+			if (angle > Math.PI)
+			{
+				angle -= twoPi;
+			}
+			else if (angle < -Math.PI)
+			{
+				angle += twoPi;
+			}
+
+			return angle; // -pi .. pi
+		}
+
+		[NotNull]
+		public static QueryFilter CreateFilter(string whereClause, Geometry extent)
+		{
+			QueryFilter filter;
+
+			if (extent != null)
+			{
+				filter = new SpatialQueryFilter
+				         {
+					         FilterGeometry = extent,
+					         SpatialRelationship = SpatialRelationship.Intersects
+				         };
+			}
+			else
+			{
+				filter = new QueryFilter();
+			}
+
+			if (! string.IsNullOrEmpty(whereClause))
+			{
+				filter.WhereClause = whereClause;
+			}
+
+			return filter;
+		}
+
 		[NotNull]
 		public static FieldSetter CreateFieldSetter([CanBeNull] string text,
 		                                            [NotNull] FeatureClass featureClass,
@@ -133,5 +217,21 @@ namespace ProSuite.Processing.Utils
 					$"Unable to create FieldSetter for parameter '{parameterName}': {ex.Message}", ex);
 			}
 		}
+
+		/// <summary>
+		/// Return true iff <paramref name="shape"/> is within
+		/// <paramref name="perimeter"/>; if <paramref name="perimeter"/> is
+		/// <c>null</c> the <paramref name="shape"/> is considered within.
+		/// </summary>
+		public static bool WithinPerimeter(Geometry shape, [CanBeNull] Geometry perimeter)
+		{
+			if (shape == null)
+			{
+				return false;
+			}
+
+			return perimeter == null || GeometryUtils.Contains(perimeter, shape);
+		}
+
 	}
 }

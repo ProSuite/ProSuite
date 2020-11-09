@@ -93,6 +93,36 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] RemoveOverlapsToolCursor {
+            get {
+                object obj = ResourceManager.GetObject("RemoveOverlapsToolCursor", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] RemoveOverlapsToolCursorProcess {
+            get {
+                object obj = ResourceManager.GetObject("RemoveOverlapsToolCursorProcess", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] RemoveOverlapsToolCursorShift {
+            get {
+                object obj = ResourceManager.GetObject("RemoveOverlapsToolCursorShift", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] SelectionToolNormal {
             get {
                 object obj = ResourceManager.GetObject("SelectionToolNormal", resourceCulture);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
@@ -9,6 +10,7 @@ namespace ProSuite.AGP.WorkList.Test
 	public class ItemRepositoryMock : IWorkItemRepository
 	{
 		private readonly IEnumerable<IWorkItem> _items;
+		private int _currentIndex;
 
 		public ItemRepositoryMock(IEnumerable<IWorkItem> items)
 		{
@@ -36,9 +38,9 @@ namespace ProSuite.AGP.WorkList.Test
 			throw new NotImplementedException();
 		}
 
-		public void Update(IWorkItem item)
+		public Task UpdateAsync(IWorkItem item)
 		{
-			throw new NotImplementedException();
+			return Task.FromResult(0);
 		}
 
 		public void Save(IWorkItem item)
@@ -62,10 +64,20 @@ namespace ProSuite.AGP.WorkList.Test
 
 		public void SetCurrentIndex(int currentIndex)
 		{
-			throw new NotImplementedException();
+			_currentIndex = currentIndex;
 		}
 
 		public int GetCurrentIndex()
+		{
+			return _currentIndex;
+		}
+
+		public void SetVisited(IWorkItem item)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task SetStatus(IWorkItem item, WorkItemStatus status)
 		{
 			throw new NotImplementedException();
 		}

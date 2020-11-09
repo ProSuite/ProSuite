@@ -74,10 +74,12 @@
         </group>
         <group id="ProSuiteTools_Editing" caption="Edit Tools" keytip="G1">
           <tool refID="ProSuiteTools_Editing_EraseTool" size="small" />
+          <tool refID="ProSuiteTools_Editing_RemoveOverlapsTool" size="small"/>
         </group>
         <group id="ProSuiteTools_Selection" caption="Selection Tools" keytip="G1">
           <tool refID="ProSuiteTools_Selection_SelectionTool" size="small" />
           <button refID="WorkLists_CreateSelectionWorkList" size="small" />
+          <button refID="WorkLists_CreateIssueWorkList" size="small" />
           <button refID="esri_mapping_clearSelectionButton" size="small" />
         </group>
       </groups>
@@ -114,14 +116,25 @@
           <tooltip heading="Show Error Worklist">Show Error Worklist<disabledText /></tooltip>
         </button>
         <button id="WorkLists_CreateSelectionWorkList" caption="Show Selection WorkList" className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true" smallImage="Images/NavigateSelectionCmd.png" largeImage="Images/NavigateSelectionCmd.png">
-          <tooltip heading="Show Selection Worklist">Show worklist for iterating on selected items
-            <disabledText />
+          <tooltip heading="Show Selection Work List">Show Selection Work List for iterating on selected items
+						<disabledText />
+          </tooltip>
+        </button>
+        <button id="WorkLists_CreateIssueWorkList" caption="Show Issue Work List" className="WorkLists.CreateIssueWorkListButton" loadOnClick="true" smallImage="Images/NavigateSelectionCmd.png" largeImage="Images/NavigateSelectionCmd.png">
+          <tooltip heading="Show Issue Work List">Show Issue Work List for iterating on issue items
+						<disabledText />
           </tooltip>
         </button>
         <tool id="ProSuiteTools_Editing_EraseTool" caption="EraseTool " className="Editing.EraseTool" loadOnClick="true"
               smallImage="Images\CutHoleTool16.png" largeImage="Images\CutHoleTool32.png"
               condition="esri_mapping_mapPane">
           <tooltip heading="Erase Tool">Erase parts of the selected features or cut a hole into a polygon<disabledText /></tooltip>
+        </tool>
+        <tool id="ProSuiteTools_Editing_RemoveOverlapsTool" caption="RemoveOverlapsTool" 
+              className="Editing.RemoveOverlapsTool"
+              loadOnClick="true" smallImage="Images\RemoveOverlapsTool16.png" largeImage="Images\RemoveOverlapsTool32.png"
+              condition="esri_mapping_mapPane">
+          <tooltip heading="Remove Overlaps Tool">Remove a part of a feature that overlaps with other polygon features<disabledText /></tooltip>
         </tool>
         <tool id="ProSuiteTools_Selection_SelectionTool" caption="Selection" className="Selection.SelectionTool" loadOnClick="true"
               smallImage="Images\SelectionTool.png" largeImage="Images\SelectionTool.png"

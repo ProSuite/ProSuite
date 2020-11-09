@@ -38,6 +38,7 @@ namespace ProSuite.AGP.WorkList
 
 		protected abstract IEnumerable<BasicFeatureLayer> GetLayers(Map map);
 
+		// todo daro: revise purpose of this method
 		protected abstract BasicFeatureLayer EnsureMapContainsLayerCore(BasicFeatureLayer featureLayer);
 
 		protected abstract IWorkList CreateWorkListCore(IWorkItemRepository repository, string name);

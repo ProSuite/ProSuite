@@ -104,6 +104,8 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Editing\RemoveOverlapsTool.cs" />
+    <Compile Include="ProTrials\CartoProcess\CalculateControlPoints.cs" />
     <Compile Include="ProTrials\CartoProcess\CartoProcessDockpane.xaml.cs">
       <DependentUpon>CartoProcessDockpane.xaml</DependentUpon>
     </Compile>
@@ -142,6 +144,7 @@
       <DependentUpon>ProTrialsRegistrationWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Selection\SelectionTool.cs" />
+    <Compile Include="WorkLists\CreateIssueWorkListButton.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
     <Compile Include="Commons\LayerUtils.cs" />
     <Compile Include="LoggerUI\LogMessageImageConverter.cs" />
@@ -366,7 +369,12 @@
   <ItemGroup>
     <Resource Include="WorkListUI\Images\ZoomToAll.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <AddInContent Include="Images\RemoveOverlapsTool16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\RemoveOverlapsTool32.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:

@@ -1517,10 +1517,8 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				polyline.SpatialReference = spatialReference;
 			}
-
-			IGeometryBridge2 bridge2 = GeometryBridge2;
-
-			bridge2.AddWKSPointZs((IPointCollection4) polyline, ref pointZs);
+			
+			GeometryUtils.AddWKSPointZs((IPointCollection4) polyline, pointZs);
 
 			GeometryUtils.MakeZAware(polyline);
 

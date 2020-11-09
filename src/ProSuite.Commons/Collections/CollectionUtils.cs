@@ -659,6 +659,29 @@ namespace ProSuite.Commons.Collections
 			}
 		}
 
+		/// <summary>
+		/// A more efficient way to get the distinct elements compared to group by.
+		/// Author: Jon Skeet (https://stackoverflow.com/questions/489258/linqs-distinct-on-a-particular-property)
+		/// </summary>
+		/// <typeparam name="TSource"></typeparam>
+		/// <typeparam name="TKey"></typeparam>
+		/// <param name="source"></param>
+		/// <param name="keySelector"></param>
+		/// <returns></returns>
+		public static IEnumerable<TSource> DistinctBy<TSource, TKey>
+			(this IEnumerable<TSource> source, Func<TSource, TKey> keySelector)
+		{
+			HashSet<TKey> seenKeys = new HashSet<TKey>();
+
+			foreach (TSource element in source)
+			{
+				if (seenKeys.Add(keySelector(element)))
+				{
+					yield return element;
+				}
+			}
+		}
+
 		#region Non-public
 
 		private static int GetFirstIndex<T>(ICollection<ListItem<T>> listItems)

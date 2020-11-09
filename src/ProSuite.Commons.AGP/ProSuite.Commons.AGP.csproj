@@ -63,6 +63,7 @@
     <Compile Include="Carto\LayerUtils.cs" />
     <Compile Include="Carto\MapUtils.cs" />
     <Compile Include="Carto\SelectionUtils.cs" />
+    <Compile Include="Carto\TargetFeatureSelection.cs" />
     <Compile Include="CIM\CimDatasetReference.cs" />
     <Compile Include="CIM\CimFeatureWorkspaceReference.cs" />
     <Compile Include="Framework\QueuedTaskUtils.cs" />
@@ -77,6 +78,10 @@
     <Compile Include="Storage\XmlRepository.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj">
+      <Project>{B80740EC-BB68-410C-A617-E79C467F1969}</Project>
+      <Name>ProSuite.Commons.AGP.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
       <Project>{384763d9-f7a1-4aa2-9abd-ee338cd8d4c1}</Project>
       <Name>ProSuite.Commons.Essentials</Name>

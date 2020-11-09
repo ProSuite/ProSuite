@@ -5,6 +5,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 {
 	public interface IWorkItem
 	{
+		/// <summary>
+		/// work item id
+		/// </summary>
 		int OID { get; }
 		bool Visited { get; set; }
 		GdbRowIdentity Proxy { get; }
@@ -12,6 +15,12 @@ namespace ProSuite.AGP.WorkList.Contracts
 		Envelope Extent { get; }
 		string Description { get; }
 		GeometryType? GeometryType { get; }
+		bool HasGeometry { get; set; }
+
+		/// <summary>
+		/// Object ID of the work item's source row
+		/// </summary>
+		long ObjectID { get; }
 
 		void QueryPoints(out double xmin, out double ymin,
 		                 out double xmax, out double ymax,

@@ -23,7 +23,7 @@ namespace ProSuite.Commons.AO.Licensing
 
 			if (vsArcGISProductValue == "Server")
 			{
-				InitializeAo11Server();
+				InitializeAo11();
 			}
 			else
 			{
@@ -129,7 +129,7 @@ namespace ProSuite.Commons.AO.Licensing
 			return (esriLicenseExtensionCode) extension;
 		}
 
-		private static void InitializeAo11Server()
+		public static void InitializeAo11()
 		{
 			Assert.True(EnvironmentUtils.Is64BitProcess,
 			            "Cannot use product 'Server' in 32 bit process.");

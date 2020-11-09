@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<MicroserverArguments xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                      xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <!-- ********************************************************** -->
+  <!-- Default configuration for geometry processing microservice -->
+  <!-- ********************************************************** -->
+
+  <!-- The geometry processing service is required in order to use the ProSuite edit tools
+       in ArcGIS pro. -->
+  <!-- 	- Path defined in the local environment variable TOPGIS_CENTRAL_TOOL_DEFAULTS -->
+  <!-- 	- Data dictionary definition (currently by the <Attribute Editor Config Directory>\..\ToolDefaults-->
+  <!-- 	- <Program Files>\Config\ -->
+
+  <!-- This configuration file is looked for in the following directories (descending search order): -->
+  <!-- 	- <Install Directory>\Config\ -->
+  <!-- 	- <Install Directory>\bin\Config\ -->
+
+  <!-- The host name.  -->
+  <HostName>localhost</HostName>
+
+  <!-- The port -->
+  <Port>5153</Port>
+
+  <!-- The server certificate subject or thumbprint from the certificate store 
+       (Local Computer). Note that the certificate's private key must be accessible 
+       to the executable. Alternatively, a PEM file containing the certificate 
+       chain (including the root certificate shared with the client). -->
+  <Certificate></Certificate>
+
+  <!-- Only relevant if the certificate is a PEM file: The private key PEM file 
+       (to remain on the server). -->
+  <PrivateKeyFile></PrivateKeyFile>
+
+  <!-- The maximum number of parallel processes. 0 means one less than the CPU count. -->
+  <MaxParallel>0</MaxParallel>
+
+  <!-- Set log level to verbose. -->
+  <VerboseLogging>false</VerboseLogging>
+</MicroserverArguments>

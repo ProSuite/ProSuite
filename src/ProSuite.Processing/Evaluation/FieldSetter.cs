@@ -175,7 +175,7 @@ namespace ProSuite.Processing.Evaluation
 		/// <param name="env">The environment to use (optional, defaults
 		///  to the FieldSetter's internal environment that you can
 		///  manipulate with the various Define methods</param>
-		public void Execute(RowBuffer row, IEvaluationEnvironment env = null)
+		public void Execute(IRowValues row, IEvaluationEnvironment env = null)
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
 

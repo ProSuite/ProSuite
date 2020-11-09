@@ -14,9 +14,9 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Picker;
-using ProSuite.AGP.Editing.Properties;
 using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -46,7 +46,10 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private SketchingMoveType SketchingMoveType { get; set; }
 		protected bool RequiresSelection { get; set; } = true;
-		protected virtual SelectionSettings SelectionSettings { get; set; }
+
+		protected virtual SelectionSettings SelectionSettings { get; set; } =
+			new SelectionSettings();
+
 		protected List<Key> HandledKeys { get; } = new List<Key>();
 		protected Cursor SelectionCursor { get; set; }
 		protected Cursor SelectionCursorShift { get; set; }
@@ -56,7 +59,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected Cursor SelectionCursorUserShift { get; set; }
 		protected Cursor SelectionCursorOriginal { get; set; }
 		protected Cursor SelectionCursorOriginalShift { get; set; }
-
 
 		protected override Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
@@ -198,7 +200,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				if (RequiresSelection && IsInSelectionPhase())
 				{
-					await OnSelectionSketchComplete(sketchGeometry, progressor);
+					return await OnSelectionSketchComplete(sketchGeometry, progressor);
 				}
 
 				return await OnSketchCompleteCoreAsync(sketchGeometry, progressor);
@@ -216,12 +218,16 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected void StartSelectionPhase()
 		{
 			SketchOutputMode = SelectionSettings.SketchOutputMode;
+
+			// NOTE: CompleteSketchOnMouseUp must be set before the sketch geometry type,
+			// otherwise it has no effect!
+			CompleteSketchOnMouseUp = true;
+
 			SketchType = SelectionSettings.SketchGeometryType;
 
 			UseSnapping = false;
 
 			GeomIsSimpleAsFeature = false;
-			CompleteSketchOnMouseUp = true;
 
 			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
 			{
@@ -295,24 +301,22 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.FromResult(true);
 		}
 
-		private SketchingMoveType GetSketchingMoveType(Geometry geometry)
+		private static SketchingMoveType GetSketchingMoveType(Geometry geometry)
 		{
-			if (geometry.Extent.Width > 0 || geometry.Extent.Height > 0)
+			if (ToolUtils.IsSingleClickSketch(geometry))
 			{
-				return SketchingMoveType.Drag;
+				return SketchingMoveType.Click;
 			}
 
-			return SketchingMoveType.Click;
+			return SketchingMoveType.Drag;
 		}
 
 		private Geometry GetSelectionGeometry(Geometry sketchGeometry)
 		{
 			if (SketchingMoveType == SketchingMoveType.Click)
 			{
-				MapPoint sketchPoint = CreatPointFromSketchPolygon(sketchGeometry);
-
-				return BufferGeometryByPixels(sketchPoint,
-				                              SelectionSettings.SelectionTolerancePixels);
+				return ToolUtils.GetSinglePickSelectionArea(
+					sketchGeometry, SelectionSettings.SelectionTolerancePixels);
 			}
 			else
 			{
@@ -346,7 +350,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			Geometry selectionGeometry;
 			var pickerWindowLocation = new Point(0, 0);
-			
+
 			Dictionary<BasicFeatureLayer, List<long>> candidatesOfManyLayers =
 				await QueuedTaskUtils.Run(() =>
 				{
@@ -369,7 +373,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				//note if necessary add a virtual core method here for overriding 
 
-				if (GetSelectionSketchMode() == SelectionMode.Original) //alt was pressed: select all xy
+				if (GetSelectionSketchMode() == SelectionMode.Original
+				) //alt was pressed: select all xy
 				{
 					await QueuedTask.Run(() =>
 					{
@@ -515,24 +520,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			return featuresPerLayer;
 		}
 
-		private MapPoint CreatPointFromSketchPolygon(Geometry sketchGeometry)
-		{
-			var clickCoord =
-				new Coordinate2D(sketchGeometry.Extent.XMin, sketchGeometry.Extent.YMin);
-
-			MapPoint sketchPoint =
-				MapPointBuilder.CreateMapPoint(clickCoord, ActiveMapView.Map.SpatialReference);
-			return sketchPoint;
-		}
-
-		private Geometry BufferGeometryByPixels(Geometry sketchGeometry, int pixelBufferDistance)
-		{
-			double bufferDistance = MapUtils.ConvertScreenPixelToMapLength(pixelBufferDistance);
-			Geometry selectionGeometry =
-				GeometryEngine.Instance.Buffer(sketchGeometry, bufferDistance);
-			return selectionGeometry;
-		}
-
 		protected virtual bool IsInSelectionPhase()
 		{
 			return false;
@@ -562,15 +549,21 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual bool CanUseSelection([NotNull] IEnumerable<Feature> selectedFeatures)
 		{
-			// TODO
-			return selectedFeatures.Any();
+			return selectedFeatures.Any(CanSelectFeatureGeometryType);
 		}
 
-		protected virtual void AfterSelection(IList<Feature> selectedFeatures,
-		                                      CancelableProgressor progressor) { }
+		protected bool CanSelectFeatureGeometryType([NotNull] Feature feature)
+		{
+			GeometryType shapeType = feature.GetTable().GetDefinition().GetShapeType();
 
-		protected void ProcessSelection(IEnumerable<Feature> selectedFeatures,
-		                                CancelableProgressor progressor = null)
+			return CanSelectGeometryType(shapeType);
+		}
+
+		protected virtual void AfterSelection([NotNull] IList<Feature> selectedFeatures,
+		                                      [CanBeNull] CancelableProgressor progressor) { }
+
+		private void ProcessSelection([NotNull] IEnumerable<Feature> selectedFeatures,
+		                              [CanBeNull] CancelableProgressor progressor = null)
 		{
 			// TODO: currently the selection is retrieved twice. Testing the selection should 
 			// in the success case return it so that it can be passed to AfterSelection
@@ -621,12 +614,49 @@ namespace ProSuite.AGP.Editing.OneClick
 				return false;
 			}
 
+			if (! featureLayer.IsVisible)
+			{
+				return false;
+			}
+
 			if (! featureLayer.IsSelectable)
 			{
 				return false;
 			}
 
-			return featureLayer.GetFeatureClass() != null && CanSelectFromLayerCore(featureLayer);
+			if (! CanSelectGeometryType(
+				    GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType)))
+			{
+				return false;
+			}
+
+			if (featureLayer.GetFeatureClass() == null)
+			{
+				return false;
+			}
+
+			return CanSelectFromLayerCore(featureLayer);
+		}
+
+		protected IEnumerable<Feature> GetApplicableSelectedFeatures(
+			[NotNull] IEnumerable<Feature> selectedFeatures)
+		{
+			foreach (Feature feature in selectedFeatures)
+			{
+				GeometryType shapeType = feature.GetTable().GetDefinition().GetShapeType();
+
+				if (! CanSelectGeometryType(shapeType))
+				{
+					continue;
+				}
+
+				yield return feature;
+			}
+		}
+
+		protected virtual bool CanSelectGeometryType(GeometryType geometryType)
+		{
+			return true;
 		}
 
 		protected virtual bool CanSelectFromLayerCore([NotNull] FeatureLayer featureLayer)

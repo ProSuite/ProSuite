@@ -30,21 +30,21 @@ namespace ProSuite.AGP.WorkList
 			_eventToken = EditCompletedEvent.Subscribe(OnEditCompleted);
 		}
 
-		private Task OnEditCompleted(EditCompletedEventArgs args)
+		private async Task OnEditCompleted(EditCompletedEventArgs args)
 		{
 			switch (args.CompletedType)
 			{
 				case EditCompletedType.Save:
 					break;
 				case EditCompletedType.Discard:
-					QueuedTask.Run(() => { _rowCache.Invalidate(); });
+					await QueuedTask.Run(() => { _rowCache.Invalidate(); });
 					break;
 				case EditCompletedType.Operation:
 					ProcessChanges(args);
 					break;
 				case EditCompletedType.Undo:
 				case EditCompletedType.Redo:
-					QueuedTask.Run(() => { ProcessChanges(args); });
+					await QueuedTask.Run(() => { ProcessChanges(args); });
 					break;
 				case EditCompletedType.Reconcile:
 					break;
@@ -55,7 +55,7 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			// todo: revise
-			return Task.FromResult(0);
+			await Task.FromResult(0);
 		}
 
 		private void ProcessChanges(EditCompletedEventArgs args)
@@ -87,16 +87,15 @@ namespace ProSuite.AGP.WorkList
 					continue;
 				}
 
-				using (var table = featureLayer.GetTable())
+				Table table = featureLayer.GetTable();
+
+				if (! result.ContainsKey(table))
 				{
-					if (! result.ContainsKey(table))
-					{
-						result.Add(table, pair.Value.ToList());
-					}
-					else
-					{
-						result[table].AddRange(pair.Value);
-					}
+					result.Add(table, pair.Value.ToList());
+				}
+				else
+				{
+					result[table].AddRange(pair.Value);
 				}
 			}
 

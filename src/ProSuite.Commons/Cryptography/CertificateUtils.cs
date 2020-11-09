@@ -211,46 +211,57 @@ namespace ProSuite.Commons.Cryptography
 				return null;
 			}
 
-			// If several were find, use the first that works:
+			// If several were found, use the first that works:
 			foreach (X509Certificate2 certificate in foundCertificates)
 			{
-				if (! certificate.HasPrivateKey)
+				KeyPair certificateKeyPair = TryExtractKeyPair(certificate);
+
+				if (certificateKeyPair != null)
 				{
-					_msg.DebugFormat(
-						"Certificate {0} has no private key. It cannot be used as server credentials.",
-						certificate);
-
-					continue;
+					return certificateKeyPair;
 				}
-
-				if (! certificate.Verify())
-				{
-					_msg.DebugFormat(
-						"Certificate {0} is not valid. It cannot be used as server credentials.",
-						certificate);
-
-					continue;
-				}
-
-				_msg.DebugFormat("Trying to extract private key from certificate {0}...",
-				                 certificate);
-
-				string publicCertificateChain = ExportToPem(certificate, true);
-
-				string privateKeyValue;
-				string notificationMsg;
-				if (! TryExportPrivateKey(certificate, out privateKeyValue,
-				                          out notificationMsg))
-				{
-					_msg.Debug(notificationMsg);
-
-					continue;
-				}
-
-				return new KeyPair(privateKeyValue, publicCertificateChain);
 			}
 
 			return null;
+		}
+
+		[CanBeNull]
+		private static KeyPair TryExtractKeyPair([NotNull] X509Certificate2 certificate)
+		{
+			if (! certificate.HasPrivateKey)
+			{
+				_msg.DebugFormat(
+					"Certificate {0} has no private key. It cannot be used as server credentials.",
+					certificate);
+
+				return null;
+			}
+
+			if (! certificate.Verify())
+			{
+				_msg.DebugFormat(
+					"Certificate {0} is not valid. It cannot be used as server credentials.",
+					certificate);
+
+				return null;
+			}
+
+			_msg.DebugFormat("Trying to extract private key from certificate {0}...",
+			                 certificate);
+
+			string publicCertificateChain = ExportToPem(certificate, true);
+
+			string privateKeyValue;
+			string notificationMsg;
+			if (! TryExportPrivateKey(certificate, out privateKeyValue,
+			                          out notificationMsg))
+			{
+				_msg.Debug(notificationMsg);
+
+				return null;
+			}
+
+			return new KeyPair(privateKeyValue, publicCertificateChain);
 		}
 
 		private static void AddAsPem(X509Certificate2 certificate,

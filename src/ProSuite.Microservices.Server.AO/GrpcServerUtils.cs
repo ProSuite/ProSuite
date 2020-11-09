@@ -11,7 +11,6 @@ using ProSuite.Commons.Cryptography;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Progress;
 
 namespace ProSuite.Microservices.Server.AO
 {
@@ -19,20 +18,28 @@ namespace ProSuite.Microservices.Server.AO
 	{
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-		public static async Task<ServiceCallStatus> ExecuteServiceCall(
-			Func<ITrackCancel, ServiceCallStatus> func,
+		public static async Task<T> ExecuteServiceCall<T>(
+			Func<ITrackCancel, T> func,
 			ServerCallContext serverCallContext,
-			TaskScheduler taskScheduler)
+			TaskScheduler taskScheduler,
+			bool throwException = false)
 		{
 			CancellationToken cancellationToken = serverCallContext.CancellationToken;
 			string methodName = serverCallContext.Method;
 
 			var trackCancellationToken = new TrackCancellationToken(cancellationToken);
 
-			return await Task.Factory.StartNew(
-				       () => TryExecute(
-					       func, trackCancellationToken, methodName), cancellationToken,
-				       TaskCreationOptions.LongRunning, taskScheduler);
+			T result =
+				await Task.Factory.StartNew(
+					() => TryExecute(func, trackCancellationToken, methodName),
+					cancellationToken, TaskCreationOptions.LongRunning, taskScheduler);
+
+			if (throwException && trackCancellationToken.Exception != null)
+			{
+				ThrowExceptionToClient(trackCancellationToken.Exception);
+			}
+
+			return result;
 		}
 
 		public static void GracefullyStop(Grpc.Core.Server server)
@@ -105,6 +112,23 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
+		public static IList<ChannelOption> CreateChannelOptions(int maxMessageLength)
+		{
+			var maxMsgSendLengthOption = new ChannelOption(
+				"grpc.max_send_message_length", maxMessageLength);
+
+			var maxMsgReceiveLengthOption = new ChannelOption(
+				"grpc.max_receive_message_length", maxMessageLength);
+
+			var channelOptions = new List<ChannelOption>
+			                     {
+				                     maxMsgSendLengthOption,
+				                     maxMsgReceiveLengthOption
+			                     };
+
+			return channelOptions;
+		}
+
 		private static KeyPair TryGetServerCertificateKeyPair(
 			string certificate,
 			[CanBeNull] string privateKeyFilePath)
@@ -175,6 +199,32 @@ namespace ProSuite.Microservices.Server.AO
 			}
 
 			return response;
+		}
+
+		private static void ThrowExceptionToClient(Exception exception)
+		{
+			// This is to avoid a generic exception with little meaning
+
+			// Determine if it is a good idea to use metadata trailers:
+
+			//serverCallContext.ResponseTrailers.Add("ERROR", exception.Message);
+
+			//// This causes a different statuts code / message(probably too long / or illegal characters!)
+			//serverCallContext.ResponseTrailers.Add("EXCEPTION",
+			//                                       exception.ToString());
+
+			// TODO: Add exception type, error code, etc.
+
+			// TODO: Check if this is still the case:
+			// For synchronous calls, there is no result object to extract the trailers from. Simply use the exception
+
+			var rpcException =
+				new RpcException(new Status(StatusCode.Unavailable, exception.ToString()),
+				                 exception.Message);
+
+			_msg.Debug("Re-throwing exception as RPC Exception", exception);
+
+			throw rpcException;
 		}
 	}
 }
