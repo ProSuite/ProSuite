@@ -32,9 +32,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		//TODO STS use editOperationObservers as property instead of constructor, analog FeatureCutter
 		public MultipleGeometriesReshaper(
 			[NotNull] ICollection<IFeature> featuresToReshape,
-			IReshapeAlongOptions reshapeAlongOptions,
-			IList<ToolEditOperationObserver> editOperationObservers)
-			: this(featuresToReshape, editOperationObservers)
+			IReshapeAlongOptions reshapeAlongOptions) : this(featuresToReshape)
 		{
 			MaxProlongationLengthFactor =
 				reshapeAlongOptions.AdjustModeMaxSourceLineProlongationFactor;
@@ -49,49 +47,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// </summary>
 		/// <param name="featuresToReshape">The features whose shape shall be reshaped</param>
 		public MultipleGeometriesReshaper(
-			[NotNull] ICollection<IFeature> featuresToReshape,
-			[CanBeNull] IList<ToolEditOperationObserver> editOperationObservers)
-			: base(featuresToReshape, editOperationObservers)
-		{
-			Assert.True(featuresToReshape.Count > 1,
-			            "Use GeometryReshaper for single feature reshape");
-
-			MaxProlongationLengthFactor = 8.0;
-
-			ReshapeGeometryCloneByFeature =
-				new Dictionary<IFeature, IGeometry>(featuresToReshape.Count);
-
-			foreach (IFeature feature in featuresToReshape)
-			{
-				ReshapeGeometryCloneByFeature.Add(feature, feature.ShapeCopy);
-
-				if (XyTolerance == null)
-				{
-					XyTolerance = GeometryUtils.GetXyTolerance(feature.Shape);
-				}
-				else if (! MathUtils.AreEqual(XyTolerance.Value,
-				                              GeometryUtils.GetXyTolerance(feature.Shape)))
-				{
-					_msg.Debug(
-						"Reshape multiple geometries: Not all features have the same spatial reference (xy tolerance).");
-				}
-			}
-
-			// create the origin union first, before some of the geometries are
-			// reshaped individually which breaks the initial topological situation
-			// this ensures that all geometries are reshaped
-			//_originalUnion = GeometryUtils.UnionGeometries(GeometriesToReshape);
-
-			//GeometryUtils.Simplify(_originalUnion);
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="MultipleGeometriesReshaper"/> class.
-		/// </summary>
-		/// <param name="featuresToReshape">The features whose shape shall be reshaped</param>
-		public MultipleGeometriesReshaper(
 			[NotNull] ICollection<IFeature> featuresToReshape)
-			: base(featuresToReshape, null)
+			: base(featuresToReshape)
 		{
 			Assert.True(featuresToReshape.Count > 1,
 			            "Use GeometryReshaper for single feature reshape");
@@ -414,6 +371,14 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			}
 
 			return reshapedGeometries;
+		}
+
+		protected override void NotifyEditOperationObserversCore(IFeature feature)
+		{
+			foreach (ToolEditOperationObserver observer in EditOperationObservers)
+			{
+				observer.Updating(feature);
+			}
 		}
 
 		protected override void StoreReshapedGeometryCore(

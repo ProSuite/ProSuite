@@ -32,15 +32,9 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		private Dictionary<IFeature, double> _originalFeatureSize;
 
-		protected IList<ToolEditOperationObserver> EditOperationObservers { get; set; }
-
-		protected GeometryReshaperBase([NotNull] ICollection<IFeature> featuresToReshape,
-		                               [CanBeNull]
-		                               IList<ToolEditOperationObserver> editOperationObservers)
+		protected GeometryReshaperBase([NotNull] ICollection<IFeature> featuresToReshape)
 		{
 			Assert.ArgumentNotNull(featuresToReshape, nameof(featuresToReshape));
-
-			EditOperationObservers = editOperationObservers;
 
 			RefreshArea = new EnvelopeClass();
 
@@ -95,6 +89,9 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		[CanBeNull]
 		[CLSCompliant(false)]
 		public IDictionary<IFeature, IGeometry> UpdatedTargets { get; private set; }
+
+		public IList<ToolEditOperationObserver> EditOperationObservers { get; set; } =
+			new List<ToolEditOperationObserver>(0);
 
 		public ReshapeResultFilter ResultFilter { get; set; }
 
@@ -932,7 +929,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			Assert.False(geometry.IsEmpty, "Reshape result is empty.");
 
-			NotifyEditOperationObservers(feature);
+			NotifyEditOperationObserversCore(feature);
 
 			StoreReshapedGeometryCore(feature, geometry, notifications);
 
@@ -940,18 +937,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			                     GdbObjectUtils.ToString(feature));
 		}
 
-		private void NotifyEditOperationObservers(IFeature feature)
-		{
-			if (EditOperationObservers == null)
-			{
-				return;
-			}
-
-			foreach (ToolEditOperationObserver observer in EditOperationObservers)
-			{
-				observer.Updating(feature);
-			}
-		}
+		protected abstract void NotifyEditOperationObserversCore(IFeature feature);
 
 		protected virtual void StoreReshapedGeometryCore(
 			[NotNull] IFeature feature,

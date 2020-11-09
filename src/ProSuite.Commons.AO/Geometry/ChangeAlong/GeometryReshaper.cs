@@ -24,22 +24,12 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// Initializes a new instance of the <see cref="GeometryReshaper"/> class.
 		/// </summary>
 		/// <param name="feature">The feature whose geometry shall be reshaped</param>
-		/// <param name="editOperationObservers">the observers (e.g. AutoAttributeUpdater) which react on an edit initiated by this class</param>
 		public GeometryReshaper([NotNull] IFeature feature)
-			: base(new List<IFeature> {feature}, null)
+			: base(new List<IFeature> {feature})
 		{
 			Assert.ArgumentNotNull(feature, nameof(feature));
 
 			_feature = feature;
-		}
-
-		public GeometryReshaper([NotNull] IFeature feature, IList<ToolEditOperationObserver> editOperationObservers)
-			: base(new List<IFeature> { feature }, editOperationObservers)
-		{
-			Assert.ArgumentNotNull(feature, nameof(feature));
-
-			_feature = feature;
-			EditOperationObservers = editOperationObservers;
 		}
 
 		public bool AllowOpenJawReshape { private get; set; }
@@ -174,6 +164,14 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		{
 			// Single reshapes never overlap
 			return reshapedGeometries;
+		}
+
+		protected override void NotifyEditOperationObserversCore(IFeature feature)
+		{
+			foreach (ToolEditOperationObserver observer in EditOperationObservers)
+			{
+				observer.Updating(feature);
+			}
 		}
 
 		private bool HasEndpointChanged(IFeature feature, IGeometry newGeometry)
