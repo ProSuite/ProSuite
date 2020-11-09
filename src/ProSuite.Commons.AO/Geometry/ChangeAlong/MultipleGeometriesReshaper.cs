@@ -29,6 +29,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		#region Constructors
 
+		//TODO STS use editOperationObservers as property instead of constructor, analog FeatureCutter
 		public MultipleGeometriesReshaper(
 			[NotNull] ICollection<IFeature> featuresToReshape,
 			IReshapeAlongOptions reshapeAlongOptions,
