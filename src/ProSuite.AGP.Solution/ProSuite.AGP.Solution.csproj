@@ -124,7 +124,6 @@
     </Compile>
     <Compile Include="ConfigUI\ProSuiteConfigQAViewModel.cs" />
     <Compile Include="ConfigUI\ProSuiteConfigViewModel.cs" />
-    <Compile Include="ConfigurationUtils.cs" />
     <Compile Include="Daml.cs" />
     <Compile Include="Editing\EraseTool.cs" />
     <Compile Include="Commons\ImageUtils.cs" />
@@ -155,7 +154,6 @@
     <Compile Include="LoggerUI\ProSuiteLogPaneViewModel.cs" />
     <Compile Include="ProSuiteToolsModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ProSuiteConfigurationDirectorySearcher.cs" />
     <Compile Include="WorkLists\DatabaseWorkEnvironment.cs" />
     <Compile Include="WorkLists\WorkListsModule.cs" />
     <Compile Include="WorkListUI\StatusEnumBooleanConverter.cs" />
@@ -267,6 +265,10 @@
     <ProjectReference Include="..\ProSuite.AGP.WorkList\ProSuite.AGP.WorkList.csproj">
       <Project>{2efe37c6-29a4-4e51-8c9f-d7b895f9ce6d}</Project>
       <Name>ProSuite.AGP.WorkList</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Application.Configuration\ProSuite.Application.Configuration.csproj">
+      <Project>{EAB868E4-D8FD-4AB4-9EDA-A9291E7CFEAB}</Project>
+      <Name>ProSuite.Application.Configuration</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj">
       <Project>{b80740ec-bb68-410c-a617-e79c467f1969}</Project>
@@ -383,6 +385,7 @@
   <ItemGroup>
     <AddInContent Include="Images\RemoveOverlapsTool32.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:

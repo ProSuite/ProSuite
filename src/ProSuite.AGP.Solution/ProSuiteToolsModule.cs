@@ -18,6 +18,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ProSuite.AGP.Solution.Commons;
 using ProSuite.AGP.Solution.ConfigUI;
+using ProSuite.Application.Configuration;
 using ProSuite.Microservices.Client;
 using ProSuite.Microservices.Client.AGP;
 
@@ -97,7 +98,7 @@ namespace ProSuite.AGP.Solution
 			}
 			set => msg = value;
 		}
-		private const string _loggingConfigFile = "prosuite.logging.agp.xml";
+		private const string _loggingConfigFile = "prosuite.logging.arcgispro.xml";
 
 		public GeometryProcessingClient ToolMicroserviceClient { get; private set; }
 
@@ -151,7 +152,7 @@ namespace ProSuite.AGP.Solution
 		private void InitLoggerConfiguration()
 		{
 			LoggingConfigurator.UsePrivateConfiguration = false;
-			LoggingConfigurator.Configure(_loggingConfigFile);
+			AppLoggingConfigurator.Configure(_loggingConfigFile);
 
 			// this will instantiate IMsg (should be after log4net configuration) 
 			_msg.Debug("Logging configured");

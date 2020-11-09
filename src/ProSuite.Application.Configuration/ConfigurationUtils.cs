@@ -6,15 +6,15 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
-namespace ProSuite.AGP.Solution
+namespace ProSuite.Application.Configuration
 {
 	public static class ConfigurationUtils
 	{
 		private const string _configDirectoryName = "Config";
 		private const string _ProSuiteDirectoryName = "ProSuite";
 
-		private const string _companyName = "Esri Switzerland";
-		private const string _productName = "ProSuite";
+		public static string CompanyName { get; } = "Esri Switzerland";
+		public static string ProductName { get; } = "ProSuite";
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -24,21 +24,10 @@ namespace ProSuite.AGP.Solution
 		{
 			Assert.ArgumentNotNullOrEmpty(configFileName, nameof(configFileName));
 
-			ProSuiteConfigurationDirectorySearcher searcher =
-				GetConfigurationDirectorySearcher();
+			var searcher = new AppDirectorySearcher(
+				CompanyName, ProductName, GetInstallDirectory().FullName);
 
 			return searcher.GetConfigFilePath(configFileName, required);
-		}
-
-		[NotNull]
-		internal static ProSuiteConfigurationDirectorySearcher
-			GetConfigurationDirectorySearcher()
-		{
-			return new ProSuiteConfigurationDirectorySearcher(
-				_companyName,
-				_productName,
-				GetInstallDirectory().FullName,
-				GetProSuiteDirectory().FullName);
 		}
 
 		/// <summary>
@@ -92,7 +81,7 @@ namespace ProSuite.AGP.Solution
 		[NotNull]
 		public static IConfigurationDirectoryProvider GetAppDataConfigDirectoryProvider()
 		{
-			return new ConfigurationDirectoryProvider(_companyName, _productName);
+			return new ConfigurationDirectoryProvider(CompanyName, ProductName);
 		}
 
 		/// <summary>
@@ -122,18 +111,11 @@ namespace ProSuite.AGP.Solution
 				return fullPath;
 			}
 
-			DirectoryInfo assemblyDirectory = GetBinDirectory();
+			// TODO: Probably a different directory searcher implementation should be used (skip AppData)
+			var searcher = new AppDirectorySearcher(
+				CompanyName, ProductName, GetInstallDirectory().FullName, "bin");
 
-			string exeLocation = Assert.NotNull(assemblyDirectory).FullName;
-
-			fullPath = Path.Combine(exeLocation, exeName);
-
-			if (File.Exists(fullPath))
-			{
-				return fullPath;
-			}
-
-			return null;
+			return searcher.GetConfigFilePath(exeName, false);
 		}
 
 		private static bool TryGetExecutablePathFromRegisteredInstallDir([NotNull] string exeName,
@@ -176,11 +158,11 @@ namespace ProSuite.AGP.Solution
 		}
 
 		[CanBeNull]
-		private static string GetRegisteredInstallDirectory()
+		public static string GetRegisteredInstallDirectory()
 		{
 			string path =
 				RegistryUtils.GetString(RegistryRootKey.LocalMachine,
-				                        $@"SOFTWARE\Wow6432Node\{_companyName}\{_productName}",
+				                        $@"SOFTWARE\Wow6432Node\{CompanyName}\{ProductName}",
 				                        "InstallDirectory");
 
 			if (string.IsNullOrEmpty(path) || ! Directory.Exists(path))
@@ -229,7 +211,7 @@ namespace ProSuite.AGP.Solution
 		/// </summary>
 		/// <returns></returns>
 		[NotNull]
-		private static DirectoryInfo GetProSuiteDirectory()
+		public static DirectoryInfo GetProSuiteDirectory()
 		{
 			DirectoryInfo parent = GetInstallDirectory().Parent;
 			Assert.NotNull(parent, "parent directory is null");
