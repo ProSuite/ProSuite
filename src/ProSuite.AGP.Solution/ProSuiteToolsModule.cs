@@ -18,6 +18,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using ProSuite.AGP.Solution.Commons;
 using ProSuite.AGP.Solution.ConfigUI;
+using ProSuite.Microservices.Client;
+using ProSuite.Microservices.Client.AGP;
 
 namespace ProSuite.AGP.Solution
 {
@@ -97,6 +99,8 @@ namespace ProSuite.AGP.Solution
 		}
 		private const string _loggingConfigFile = "prosuite.logging.agp.xml";
 
+		public GeometryProcessingClient ToolMicroserviceClient { get; private set; }
+
 		/// <summary>
 		/// Retrieve the singleton instance to this module here
 		/// </summary>
@@ -139,6 +143,8 @@ namespace ProSuite.AGP.Solution
 			LayersAddedEvent.Subscribe(OnLayerAdded);
 			ProSuiteConfigChangedEvent.Subscribe(OnConfigurationChanged);
 
+			StartToolMicroserviceClient();
+
 			return base.Initialize();
 		}
 
@@ -163,6 +169,8 @@ namespace ProSuite.AGP.Solution
 			//ProjectItemsChangedEvent.Unsubscribe(OnProjectItemsChanged);
 			LayersAddedEvent.Unsubscribe(OnLayerAdded);
 			ProSuiteConfigChangedEvent.Subscribe(OnConfigurationChanged);
+
+			ToolMicroserviceClient?.Disconnect();
 		}
 
 		/// <summary>
@@ -241,6 +249,33 @@ namespace ProSuite.AGP.Solution
 			{
 				_msg.Error($"StartQAGPServerAsync is failed");
 			}
+		}
+
+		private async Task<bool> StartToolMicroserviceClient()
+		{
+			string executablePath =
+				ConfigurationUtils.GetProSuiteExecutablePath(
+					"prosuite_microserver_geometry_processing.exe");
+
+			if (executablePath == null)
+			{
+				_msg.Warn(
+					"Cannot find microservice deployment folder. Some edit Tools will be disabled.");
+
+				return false;
+			}
+
+			GeometryProcessingClient result = new GeometryProcessingClient(
+				new ClientChannelConfig()
+				{
+					// TODO: Get from configuration
+					HostName = "localhost",
+					Port = 5153
+				});
+
+			ToolMicroserviceClient = result;
+
+			return await result.AllowStartingLocalServerAsync(executablePath);
 		}
 	}
 

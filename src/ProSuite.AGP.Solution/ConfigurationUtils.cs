@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using System.Reflection;
 using ProSuite.Commons;
@@ -12,8 +13,8 @@ namespace ProSuite.AGP.Solution
 		private const string _configDirectoryName = "Config";
 		private const string _ProSuiteDirectoryName = "ProSuite";
 
-		private const string _companyName = "esri";
-		private const string _productName = "prosuite";
+		private const string _companyName = "Esri Switzerland";
+		private const string _productName = "ProSuite";
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -41,7 +42,7 @@ namespace ProSuite.AGP.Solution
 		}
 
 		/// <summary>
-		/// Gets the Topgis install directory.
+		/// Gets the installation directory.
 		/// </summary>
 		/// <returns></returns>
 		[NotNull]
@@ -85,52 +86,6 @@ namespace ProSuite.AGP.Solution
 		}
 
 		/// <summary>
-		/// Gets the full path of the provided executable file name.
-		/// </summary>
-		/// <param name="exeName">The name of the executable.</param>
-		/// <returns></returns>
-		//[NotNull]
-		//public static string GetExecutablePath(string exeName)
-		//{
-		//	string extension = Path.GetExtension(exeName);
-
-		//	if (string.IsNullOrEmpty(extension) ||
-		//	    ! extension.EndsWith("exe", StringComparison.InvariantCultureIgnoreCase))
-		//	{
-		//		exeName = $"{exeName}.exe";
-		//	}
-
-		//	string exeLocation =
-		//		Environment.GetEnvironmentVariable(
-		//			EnvironmentVariables.TopgisExtraBinDirectory);
-
-		//	if (! string.IsNullOrEmpty(exeLocation))
-		//	{
-		//		string result = Path.Combine(exeLocation, exeName);
-
-		//		if (File.Exists(result))
-		//		{
-		//			_msg.DebugFormat(
-		//				"Using TOPGIS executable defined by environment variable ({0}): {1}",
-		//				EnvironmentVariables.TopgisExtraBinDirectory, exeLocation);
-
-		//			return result;
-		//		}
-
-		//		_msg.DebugFormat(
-		//			"The file {0} was not found in the directory defined by environment variable {1}: " +
-		//			"Using standard installation directory",
-		//			exeLocation, EnvironmentVariables.TopgisExtraBinDirectory);
-		//	}
-
-		//	DirectoryInfo assemblyDirectory = GetBinDirectory();
-
-		//	exeLocation = Assert.NotNull(assemblyDirectory).FullName;
-
-		//	return Path.Combine(exeLocation, exeName);
-		//}
-
-		/// <summary>
 		/// Gets the provider of the application's directory for user-specific configuration files.
 		/// </summary>
 		/// <returns></returns>
@@ -138,6 +93,133 @@ namespace ProSuite.AGP.Solution
 		public static IConfigurationDirectoryProvider GetAppDataConfigDirectoryProvider()
 		{
 			return new ConfigurationDirectoryProvider(_companyName, _productName);
+		}
+
+		/// <summary>
+		/// Gets the full path of the provided executable file name.
+		/// </summary>
+		/// <param name="exeName">The name of the executable.</param>
+		/// <returns></returns>
+		[CanBeNull]
+		public static string GetProSuiteExecutablePath(string exeName)
+		{
+			string extension = Path.GetExtension(exeName);
+
+			if (string.IsNullOrEmpty(extension) ||
+			    ! extension.EndsWith("exe", StringComparison.InvariantCultureIgnoreCase))
+			{
+				exeName = $"{exeName}.exe";
+			}
+
+			string fullPath;
+			if (TryGetExecutablePathFromEnvVar(exeName, out fullPath))
+			{
+				return fullPath;
+			}
+
+			if (TryGetExecutablePathFromRegisteredInstallDir(exeName, out fullPath))
+			{
+				return fullPath;
+			}
+
+			DirectoryInfo assemblyDirectory = GetBinDirectory();
+
+			string exeLocation = Assert.NotNull(assemblyDirectory).FullName;
+
+			fullPath = Path.Combine(exeLocation, exeName);
+
+			if (File.Exists(fullPath))
+			{
+				return fullPath;
+			}
+
+			return null;
+		}
+
+		private static bool TryGetExecutablePathFromRegisteredInstallDir([NotNull] string exeName,
+		                                                                 out string fullPath)
+		{
+			fullPath = null;
+
+			string registeredInstallDir = GetRegisteredInstallDirectory();
+
+			if (string.IsNullOrEmpty(registeredInstallDir))
+			{
+				_msg.DebugFormat("ProSuite QA Extension installation is not installed.");
+				return false;
+			}
+
+			string exeLocation = Path.Combine(registeredInstallDir, "bin", exeName);
+
+			if (string.IsNullOrEmpty(exeLocation))
+			{
+				_msg.DebugFormat(
+					"Executable {0} was not found in ProSuite QA Extension installation. Please consider installing the latest version.",
+					exeName);
+
+				return false;
+			}
+
+			string result = Path.Combine(exeLocation, exeName);
+
+			if (File.Exists(result))
+			{
+				_msg.DebugFormat(
+					"Using executable from ProSuite QA Extension install directory: {0}",
+					exeLocation);
+
+				fullPath = result;
+				return true;
+			}
+
+			return false;
+		}
+
+		[CanBeNull]
+		private static string GetRegisteredInstallDirectory()
+		{
+			string path =
+				RegistryUtils.GetString(RegistryRootKey.LocalMachine,
+				                        $@"SOFTWARE\Wow6432Node\{_companyName}\{_productName}",
+				                        "InstallDirectory");
+
+			if (string.IsNullOrEmpty(path) || ! Directory.Exists(path))
+			{
+				return null;
+			}
+
+			return path;
+		}
+
+		private static bool TryGetExecutablePathFromEnvVar(string exeName, out string fullPath)
+		{
+			// TODO: Add EnvironmentVaraiables static class (in core)
+
+			fullPath = null;
+			const string extraBinDir = "PROSUITE_EXTRA_BIN";
+
+			string exeLocation = Environment.GetEnvironmentVariable(extraBinDir);
+
+			if (! string.IsNullOrEmpty(exeLocation))
+			{
+				string result = Path.Combine(exeLocation, exeName);
+
+				if (File.Exists(result))
+				{
+					_msg.DebugFormat(
+						"Using executable defined by environment variable ({0}): {1}",
+						extraBinDir, exeLocation);
+
+					fullPath = result;
+					return true;
+				}
+
+				_msg.DebugFormat(
+					"The file {0} was not found in the directory defined by environment variable {1}.",
+					exeLocation, extraBinDir);
+			}
+
+			return false;
 		}
 
 		#region Non-public methods
