@@ -31,7 +31,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		public MultipleGeometriesReshaper(
 			[NotNull] ICollection<IFeature> featuresToReshape,
-			IReshapeAlongOptions reshapeAlongOptions, IList<ToolEditOperationObserver> editOperationObservers)
+			IReshapeAlongOptions reshapeAlongOptions,
+			IList<ToolEditOperationObserver> editOperationObservers)
 			: this(featuresToReshape, editOperationObservers)
 		{
 			MaxProlongationLengthFactor =
@@ -47,8 +48,49 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// </summary>
 		/// <param name="featuresToReshape">The features whose shape shall be reshaped</param>
 		public MultipleGeometriesReshaper(
-			[NotNull] ICollection<IFeature> featuresToReshape, IList<ToolEditOperationObserver> editOperationObservers)
+			[NotNull] ICollection<IFeature> featuresToReshape,
+			[CanBeNull] IList<ToolEditOperationObserver> editOperationObservers)
 			: base(featuresToReshape, editOperationObservers)
+		{
+			Assert.True(featuresToReshape.Count > 1,
+			            "Use GeometryReshaper for single feature reshape");
+
+			MaxProlongationLengthFactor = 8.0;
+
+			ReshapeGeometryCloneByFeature =
+				new Dictionary<IFeature, IGeometry>(featuresToReshape.Count);
+
+			foreach (IFeature feature in featuresToReshape)
+			{
+				ReshapeGeometryCloneByFeature.Add(feature, feature.ShapeCopy);
+
+				if (XyTolerance == null)
+				{
+					XyTolerance = GeometryUtils.GetXyTolerance(feature.Shape);
+				}
+				else if (! MathUtils.AreEqual(XyTolerance.Value,
+				                              GeometryUtils.GetXyTolerance(feature.Shape)))
+				{
+					_msg.Debug(
+						"Reshape multiple geometries: Not all features have the same spatial reference (xy tolerance).");
+				}
+			}
+
+			// create the origin union first, before some of the geometries are
+			// reshaped individually which breaks the initial topological situation
+			// this ensures that all geometries are reshaped
+			//_originalUnion = GeometryUtils.UnionGeometries(GeometriesToReshape);
+
+			//GeometryUtils.Simplify(_originalUnion);
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="MultipleGeometriesReshaper"/> class.
+		/// </summary>
+		/// <param name="featuresToReshape">The features whose shape shall be reshaped</param>
+		public MultipleGeometriesReshaper(
+			[NotNull] ICollection<IFeature> featuresToReshape)
+			: base(featuresToReshape, null)
 		{
 			Assert.True(featuresToReshape.Count > 1,
 			            "Use GeometryReshaper for single feature reshape");
@@ -172,7 +214,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 					Dictionary<IGeometry, IGeometry> reshapeGeometryCloneByOriginal =
 						ReshapeGeometryCloneByFeature.ToDictionary(pair => pair.Key.Shape,
-						                                           pair => pair.Value);
+							pair => pair.Value);
 
 					var stickyIntersectionReshaper =
 						new StickyIntersectionsMultiplePolygonReshaper(
@@ -385,8 +427,9 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 					"Saving reshape in network feature {0} and moving adjacent edges...",
 					GdbObjectUtils.ToString(feature));
 
-				var linearNetworkUpdater = NetworkFeatureUpdater ??
-				                           new LinearNetworkNodeUpdater(NetworkFeatureFinder);
+				LinearNetworkNodeUpdater linearNetworkUpdater = NetworkFeatureUpdater ??
+				                                                new LinearNetworkNodeUpdater(
+					                                                NetworkFeatureFinder);
 
 				linearNetworkUpdater.BarrierGeometryOriginal =
 					_originalUnion as IPolyline;
@@ -463,8 +506,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 					reshapeAsUnion =
 						MultipleSourcesTreatAsUnion ||
-						(StickyIntersectionPoints != null &&
-						 StickyIntersectionPoints.HasTargetPoints());
+						StickyIntersectionPoints != null &&
+						StickyIntersectionPoints.HasTargetPoints();
 
 					break;
 				case esriGeometryType.esriGeometryPolyline:
@@ -477,8 +520,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 						// it's a line string that can be union-reshaped: only single reshape if no union-reshape
 						reshapeAsUnion =
 							MultipleSourcesTreatAsUnion ||
-							(StickyIntersectionPoints != null &&
-							 StickyIntersectionPoints.HasTargetPoints());
+							StickyIntersectionPoints != null &&
+							StickyIntersectionPoints.HasTargetPoints();
 						reshapeIndividually = ! reshapeAsUnion;
 					}
 					else
@@ -1239,7 +1282,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 					GeometryFactory.CreatePolyline(unionReshapeInfo.GeometryToReshape);
 
 				IPolyline unionReshapeLines = CalculateUnionReshapeLines(unionBoundary,
-				                                                         reshapedUnionBoundary);
+					reshapedUnionBoundary);
 
 				var sourceReplacementLines =
 					(IGeometryCollection)
@@ -1375,8 +1418,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				IsFromPointUnreshaped(pathToReshape, unionReshapeInfo);
 
 			double distanceAlong = GeometryUtils.GetDistanceAlongCurve(pathToReshape,
-			                                                           unionReshapePathEnd,
-			                                                           true);
+				unionReshapePathEnd,
+				true);
 
 			// take the other end as start point for the source replacement
 			double start, end;
@@ -1596,8 +1639,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			if (startSourceConnection != null && endSourceConnection != null)
 			{
 				adjustCurve = AdjustUtils.CreateAdjustedCutSubcurve(reshapePathForUnion,
-				                                                    startSourceConnection,
-				                                                    endSourceConnection);
+					startSourceConnection,
+					endSourceConnection);
 			}
 
 			if (geometryToReshape.GeometryType == esriGeometryType.esriGeometryPolyline)
@@ -1692,12 +1735,12 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		private static bool IsOrientedAlong(ICurve curve1, ICurve alongCurve2)
 		{
 			double fromDistance = GeometryUtils.GetDistanceAlongCurve(alongCurve2,
-			                                                          curve1.FromPoint,
-			                                                          false);
+				curve1.FromPoint,
+				false);
 
 			double toDistance = GeometryUtils.GetDistanceAlongCurve(alongCurve2,
-			                                                        curve1.ToPoint,
-			                                                        false);
+				curve1.ToPoint,
+				false);
 
 			return toDistance > fromDistance;
 		}
@@ -2159,7 +2202,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			// Get the area that is overlapping in the original
 			IGeometry overlap = IntersectionUtils.GetIntersection(originalSmallGeometry,
-			                                                      originalContainingGeometry);
+				originalContainingGeometry);
 
 			// reshape the original overlap using the sketch and the target intersection points!
 			if (! overlap.IsEmpty && StickyIntersectionPoints != null)

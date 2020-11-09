@@ -25,8 +25,16 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// </summary>
 		/// <param name="feature">The feature whose geometry shall be reshaped</param>
 		/// <param name="editOperationObservers">the observers (e.g. AutoAttributeUpdater) which react on an edit initiated by this class</param>
+		public GeometryReshaper([NotNull] IFeature feature)
+			: base(new List<IFeature> {feature}, null)
+		{
+			Assert.ArgumentNotNull(feature, nameof(feature));
+
+			_feature = feature;
+		}
+
 		public GeometryReshaper([NotNull] IFeature feature, IList<ToolEditOperationObserver> editOperationObservers)
-			: base(new List<IFeature> {feature}, editOperationObservers)
+			: base(new List<IFeature> { feature }, editOperationObservers)
 		{
 			Assert.ArgumentNotNull(feature, nameof(feature));
 

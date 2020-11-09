@@ -34,9 +34,13 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		protected IList<ToolEditOperationObserver> EditOperationObservers { get; set; }
 
-		protected GeometryReshaperBase([NotNull] ICollection<IFeature> featuresToReshape, IList<ToolEditOperationObserver> editOperationObservers)
+		protected GeometryReshaperBase([NotNull] ICollection<IFeature> featuresToReshape,
+		                               [CanBeNull]
+		                               IList<ToolEditOperationObserver> editOperationObservers)
 		{
 			Assert.ArgumentNotNull(featuresToReshape, nameof(featuresToReshape));
+
+			EditOperationObservers = editOperationObservers;
 
 			RefreshArea = new EnvelopeClass();
 
@@ -70,7 +74,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		[CanBeNull]
 		public ICollection<IFeature> TargetFeatures
 		{
-			get { return _targetFeatures; }
+			get => _targetFeatures;
 			set
 			{
 				_targetFeatures = value;
@@ -305,7 +309,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			IEnumerable<string> messages = GetReshapedFeaturesMessages(
 				reshapedGeometries, mapUnits, distanceUnits);
 
-			string msg = string.Empty;
+			var msg = string.Empty;
 			if (! string.IsNullOrEmpty(titleMessage))
 			{
 				msg += titleMessage;
@@ -449,7 +453,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		protected void UpdateTargets()
 		{
 			ICollection<IFeature> targetFeatures = Assert.NotNull(TargetFeatures,
-			                                                      "Target features not set.");
+				"Target features not set.");
 			Assert.NotNull(UpdatedTargets, "Updated target features not set.");
 
 			// Remove the non-source points and update the points that are almost at a source point 
@@ -772,7 +776,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			// in case the map is in a different SR
 			GeometryUtils.EnsureSpatialReference(targetGeometry, targetFeature);
 
-			var xyTolerance = Assert.NotNull(XyTolerance).Value;
+			double xyTolerance = Assert.NotNull(XyTolerance).Value;
 
 			if (ReshapeUtils.EnsurePointsExistInTarget(
 				    targetGeometry, _potentialTargetInsertPoints, xyTolerance) &&
@@ -928,15 +932,25 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			Assert.False(geometry.IsEmpty, "Reshape result is empty.");
 
-			foreach (var observer in EditOperationObservers)
-			{
-				observer.Updating(feature);
-			}
+			NotifyEditOperationObservers(feature);
 
 			StoreReshapedGeometryCore(feature, geometry, notifications);
 
 			_msg.DebugStopTiming(watch, "Stored geometry in {0}",
 			                     GdbObjectUtils.ToString(feature));
+		}
+
+		private void NotifyEditOperationObservers(IFeature feature)
+		{
+			if (EditOperationObservers == null)
+			{
+				return;
+			}
+
+			foreach (ToolEditOperationObserver observer in EditOperationObservers)
+			{
+				observer.Updating(feature);
+			}
 		}
 
 		protected virtual void StoreReshapedGeometryCore(
@@ -945,7 +959,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			[CanBeNull] NotificationCollection notifications)
 		{
 			GdbObjectUtils.SetFeatureShape(feature, newGeometry);
-			
+
 			feature.Store();
 		}
 
@@ -1011,11 +1025,11 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				((ITopologicalOperator) fromGeometry).Difference(areaToRemove);
 
 			KeyValuePair<IFeature, IGeometry> featureGeometry =
-				ReshapeGeometryCloneByFeature.First(pair => (pair.Value == fromGeometry));
+				ReshapeGeometryCloneByFeature.First(pair => pair.Value == fromGeometry);
 
 			int originalPartCount = GeometryUtils.GetExteriorRingCount(fromGeometry);
 			int newPartCount =
-				GeometryUtils.GetExteriorRingCount(((IPolygon) reducedGeometry));
+				GeometryUtils.GetExteriorRingCount((IPolygon) reducedGeometry);
 
 			if (originalPartCount < newPartCount)
 			{
