@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 using ArcGIS.Core.Geometry;
 using NUnit.Framework;
@@ -17,24 +16,33 @@ namespace ProSuite.Commons.AGP.Test
 		}
 
 		[Test]
-		public void CanCreateBezierCircle()
+		public void CanPolygonBoundaryNull()
 		{
-			const double radius = 5.0;
-			var center = MapPointBuilder.CreateMapPoint(1, 2);
-			const double delta = 0.000001;
+			Assert.Null(GeometryUtils.Boundary(null));
+		}
 
-			var circle = GeometryUtils.CreateBezierCircle(radius, center);
+		[Test]
+		public void CanPolygonBoundary()
+		{
+			var envelope = GeometryFactory.CreateEnvelope(0, 0, 100, 50);
+			var polygon = GeometryFactory.CreatePolygon(envelope);
+			var boundary = GeometryUtils.Boundary(polygon);
+			Assert.NotNull(boundary);
+			Assert.AreEqual(GeometryType.Polyline, boundary.GeometryType);
+			Assert.AreEqual(polygon.PointCount, boundary.PointCount);
+		}
 
-			Assert.AreEqual(1, circle.PartCount);
-			Assert.AreEqual(5, circle.PointCount);
-			Assert.AreEqual(GeometryType.Polygon, circle.GeometryType);
-			Assert.AreEqual(10.0, circle.Extent.Width, delta);
-			Assert.AreEqual(10.0, circle.Extent.Height, delta);
-			Assert.AreEqual(center.X, circle.Extent.Center.X, delta);
-			Assert.AreEqual(center.Y, circle.Extent.Center.Y, delta);
+		[Test]
+		public void CanPolygonBoundaryPreserveCurves()
+		{
+			var polygon = GeometryFactory.CreateBezierCircle();
+			Assert.True(polygon.HasCurves, "Oops, original polygon has no curves");
+			var boundary = GeometryUtils.Boundary(polygon);
 
-			const double circumference = 2.0 * radius * Math.PI;
-			Assert.AreEqual(circumference, circle.Length, 0.01);
+			Assert.NotNull(boundary);
+			Assert.AreEqual(GeometryType.Polyline, boundary.GeometryType);
+			Assert.True(boundary.HasCurves, "did not preserve curves");
+			Assert.AreEqual(polygon.PointCount, boundary.PointCount);
 		}
 	}
 }

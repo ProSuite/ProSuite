@@ -50,6 +50,17 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="CartoProcessConfig.cs" />
+    <Compile Include="Domain\ICartoProcess.cs" />
+    <Compile Include="Domain\IMapContext.cs" />
+    <Compile Include="Domain\IProcessingContext.cs" />
+    <Compile Include="Domain\IProcessingFeedback.cs" />
+    <Compile Include="Domain\IProcessingSelection.cs" />
+    <Compile Include="Domain\IProcessingSymbology.cs" />
+    <Compile Include="Domain\NoProcessingSelection.cs" />
+    <Compile Include="Domain\ProcessExecutionType.cs" />
+    <Compile Include="Domain\ProcessingDataset.cs" />
+    <Compile Include="Domain\ProcessSelectionType.cs" />
     <Compile Include="Evaluation\CommonValues.cs" />
     <Compile Include="Evaluation\EnvironmentBase.cs" />
     <Compile Include="Evaluation\EnvironmentUtils.cs" />
@@ -69,6 +80,8 @@
     <Compile Include="Evaluation\OpCode.cs" />
     <Compile Include="Evaluation\RowValues.cs" />
     <Compile Include="Evaluation\StandardEnvironment.cs" />
+    <Compile Include="Domain\ProcessDatasetName.cs" />
+    <Compile Include="Domain\ProcessDatasetNameConverter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils\ExtremityType.cs" />
     <Compile Include="Utils\Interval.cs" />

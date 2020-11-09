@@ -65,6 +65,10 @@
 
 		<StackPanel Grid.Row="6" Orientation="Horizontal" FlowDirection="RightToLeft">
 			<Button Content="Run" Command="{Binding RunCommand}" Style="{DynamicResource Esri_SimpleButton}"/>
+			<ComboBox IsEditable="False"
+			          Text="{Binding SelectionType, Mode=TwoWay}"
+			          ItemsSource="{Binding SelectionTypes}">
+			</ComboBox>
 		</StackPanel>
 		<Label Grid.Row="7" Content="_Status" Target="{x:Reference StatusMessage}"/>
 		<TextBlock Grid.Row="8" x:Name="StatusMessage" Text="{Binding StatusMessage, Mode=TwoWay}"
