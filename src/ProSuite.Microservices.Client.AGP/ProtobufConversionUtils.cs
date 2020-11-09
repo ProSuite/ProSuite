@@ -215,25 +215,39 @@ namespace ProSuite.Microservices.Client.AGP
 				watch = Stopwatch.StartNew();
 			}
 
-			var classIds = new HashSet<long>();
+			var classesByClassId = new Dictionary<long, FeatureClass>();
+
+			// Optimization (in Pro, the Map SR seems to be generally equal to the FCs SR, if they match)
+			bool omitDetailedShapeSpatialRef = true;
+
 			foreach (Feature feature in features)
 			{
 				FeatureClass featureClass = feature.GetTable();
 
-				SpatialReference featureClassSpatialRef =
-					featureClass.GetDefinition().GetSpatialReference();
+				Geometry shape = feature.GetShape();
 
-				bool omitDetailedShapeSpatialRef = SpatialReference.AreEqual(
-					featureClassSpatialRef,
-					feature.GetShape().SpatialReference,
-					false, true);
+				// NOTE: The following calls are expensive:
+				// - Geometry.GetShape() (internally, the feature's spatial creation seems costly)
+				// - FeatureClassDefintion.GetSpatialReference()
+				// In case of a large feature count, they should be avoided on a per-feature basis:
 
-				resultGdbObjects.Add(ToGdbObjectMsg(feature, omitDetailedShapeSpatialRef));
-
-				if (classIds.Add(featureClass.GetID()))
+				if (! classesByClassId.ContainsKey(featureClass.GetID()))
 				{
 					resultGdbClasses.Add(ToObjectClassMsg(featureClass));
+
+					classesByClassId.Add(featureClass.GetID(), featureClass);
+
+					SpatialReference featureClassSpatialRef =
+						featureClass.GetDefinition().GetSpatialReference();
+
+					if (! SpatialReference.AreEqual(
+						    featureClassSpatialRef, shape.SpatialReference, false, true))
+					{
+						omitDetailedShapeSpatialRef = false;
+					}
 				}
+
+				resultGdbObjects.Add(ToGdbObjectMsg(feature, shape, omitDetailedShapeSpatialRef));
 			}
 
 			_msg.DebugStopTiming(watch, "Converted {0} features to DTOs", resultGdbObjects.Count);
