@@ -450,7 +450,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		protected void UpdateTargets()
 		{
 			ICollection<IFeature> targetFeatures = Assert.NotNull(TargetFeatures,
-				"Target features not set.");
+			                                                      "Target features not set.");
 			Assert.NotNull(UpdatedTargets, "Updated target features not set.");
 
 			// Remove the non-source points and update the points that are almost at a source point 
@@ -929,7 +929,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			Assert.False(geometry.IsEmpty, "Reshape result is empty.");
 
-			NotifyEditOperationObserversCore(feature);
+			NotifyEditOperationObservers(feature);
 
 			StoreReshapedGeometryCore(feature, geometry, notifications);
 
@@ -937,7 +937,13 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			                     GdbObjectUtils.ToString(feature));
 		}
 
-		protected abstract void NotifyEditOperationObserversCore(IFeature feature);
+		protected void NotifyEditOperationObservers([NotNull] IFeature feature)
+		{
+			foreach (ToolEditOperationObserver observer in EditOperationObservers)
+			{
+				observer.Updating(feature);
+			}
+		}
 
 		protected virtual void StoreReshapedGeometryCore(
 			[NotNull] IFeature feature,

@@ -166,14 +166,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			return reshapedGeometries;
 		}
 
-		protected override void NotifyEditOperationObserversCore(IFeature feature)
-		{
-			foreach (ToolEditOperationObserver observer in EditOperationObservers)
-			{
-				observer.Updating(feature);
-			}
-		}
-
 		private bool HasEndpointChanged(IFeature feature, IGeometry newGeometry)
 		{
 			if (OpenJawReshapeOcurred)

@@ -373,13 +373,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			return reshapedGeometries;
 		}
 
-		protected override void NotifyEditOperationObserversCore(IFeature feature)
-		{
-			foreach (ToolEditOperationObserver observer in EditOperationObservers)
-			{
-				observer.Updating(feature);
-			}
-		}
+
 
 		protected override void StoreReshapedGeometryCore(
 			IFeature feature,
