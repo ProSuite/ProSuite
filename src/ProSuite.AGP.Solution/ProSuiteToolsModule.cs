@@ -18,6 +18,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using ProSuite.AGP.Solution.Commons;
 using ProSuite.AGP.Solution.ConfigUI;
+using ProSuite.Application.Configuration;
+using ProSuite.Microservices.Client;
+using ProSuite.Microservices.Client.AGP;
 
 namespace ProSuite.AGP.Solution
 {
@@ -95,7 +98,9 @@ namespace ProSuite.AGP.Solution
 			}
 			set => msg = value;
 		}
-		private const string _loggingConfigFile = "prosuite.logging.agp.xml";
+		private const string _loggingConfigFile = "prosuite.logging.arcgispro.xml";
+
+		public GeometryProcessingClient ToolMicroserviceClient { get; private set; }
 
 		/// <summary>
 		/// Retrieve the singleton instance to this module here
@@ -139,13 +144,15 @@ namespace ProSuite.AGP.Solution
 			LayersAddedEvent.Subscribe(OnLayerAdded);
 			ProSuiteConfigChangedEvent.Subscribe(OnConfigurationChanged);
 
+			StartToolMicroserviceClientAsync().GetAwaiter();
+
 			return base.Initialize();
 		}
 
 		private void InitLoggerConfiguration()
 		{
 			LoggingConfigurator.UsePrivateConfiguration = false;
-			LoggingConfigurator.Configure(_loggingConfigFile);
+			AppLoggingConfigurator.Configure(_loggingConfigFile);
 
 			// this will instantiate IMsg (should be after log4net configuration) 
 			_msg.Debug("Logging configured");
@@ -163,6 +170,8 @@ namespace ProSuite.AGP.Solution
 			//ProjectItemsChangedEvent.Unsubscribe(OnProjectItemsChanged);
 			LayersAddedEvent.Unsubscribe(OnLayerAdded);
 			ProSuiteConfigChangedEvent.Subscribe(OnConfigurationChanged);
+
+			ToolMicroserviceClient?.Disconnect();
 		}
 
 		/// <summary>
@@ -241,6 +250,33 @@ namespace ProSuite.AGP.Solution
 			{
 				_msg.Error($"StartQAGPServerAsync is failed");
 			}
+		}
+
+		private async Task<bool> StartToolMicroserviceClientAsync()
+		{
+			string executablePath =
+				ConfigurationUtils.GetProSuiteExecutablePath(
+					"prosuite_microserver_geometry_processing.exe");
+
+			if (executablePath == null)
+			{
+				_msg.Warn(
+					"Cannot find microservice deployment folder. Some edit Tools will be disabled.");
+
+				return false;
+			}
+
+			GeometryProcessingClient result = new GeometryProcessingClient(
+				new ClientChannelConfig()
+				{
+					// TODO: Get from configuration
+					HostName = "localhost",
+					Port = 5153
+				});
+
+			ToolMicroserviceClient = result;
+
+			return await result.AllowStartingLocalServerAsync(executablePath).ConfigureAwait(false);
 		}
 	}
 

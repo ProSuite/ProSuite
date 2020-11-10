@@ -6,6 +6,8 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Processing;
+using ProSuite.Processing.Domain;
 using ProSuite.Processing.Utils;
 
 namespace ProSuite.AGP.Solution.ProTrials.CartoProcess

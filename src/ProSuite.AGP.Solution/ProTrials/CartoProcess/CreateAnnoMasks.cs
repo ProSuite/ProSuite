@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Logging;
+using ProSuite.Processing;
+using ProSuite.Processing.Domain;
 
 namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 {

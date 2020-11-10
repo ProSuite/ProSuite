@@ -314,7 +314,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		public void Show(IWorkList workList)
 		{
 			var view = new WorkListView(this);
-			view.Owner = Application.Current.MainWindow;
+			view.Owner = System.Windows.Application.Current.MainWindow;
 			view.Title = workList.Name;
 			view.Show();
 			view.Closed += View_Closed;

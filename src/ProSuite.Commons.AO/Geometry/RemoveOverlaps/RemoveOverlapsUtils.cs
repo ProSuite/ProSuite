@@ -121,8 +121,22 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 
 				IGeometry intersection = TryGetIntersection(sourceGeometry, targetGeometry);
 
-				if (intersection != null)
+				if (intersection == null)
+				{
+					continue;
+				}
+
+				if (GeometryUtils.GetPartCount(intersection) > 1)
+				{
+					foreach (var part in GeometryUtils.Explode(intersection))
+					{
+						yield return part;
+					}
+				}
+				else
+				{
 					yield return intersection;
+				}
 			}
 		}
 

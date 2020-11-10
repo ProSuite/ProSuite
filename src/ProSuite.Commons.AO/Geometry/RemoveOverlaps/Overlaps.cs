@@ -29,6 +29,12 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 		public void AddGeometries(GdbObjectReference sourceFeatureRef,
 		                          IList<IGeometry> overlapGeometries)
 		{
+			if (overlapGeometries.Count == 0)
+
+			{
+				return;
+			}
+
 			OverlapsBySourceRef.Add(sourceFeatureRef, overlapGeometries);
 		}
 

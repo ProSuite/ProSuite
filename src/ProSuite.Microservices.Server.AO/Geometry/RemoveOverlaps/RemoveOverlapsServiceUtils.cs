@@ -5,6 +5,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.RemoveOverlaps;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -56,7 +57,19 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 
 				foreach (IGeometry geometry in overlap)
 				{
-					overlapsMsg.Overlaps.Add(ProtobufConversionUtils.ToShapeMsg(geometry));
+					// TODO: At some point the SR-XY tol/res should be transferred separately (via class-lookup?)
+					var shapeFormat = ShapeMsg.FormatOneofCase.EsriShape;
+					var srFormat = SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml;
+
+					overlapsMsg.Overlaps.Add(
+						ProtobufConversionUtils.ToShapeMsg(
+							geometry, shapeFormat, srFormat));
+
+					if (_msg.IsVerboseDebugEnabled)
+					{
+						_msg.VerboseDebug(
+							$"Calculated overlap: {GeometryUtils.ToString(geometry)}");
+					}
 				}
 
 				result.Overlaps.Add(overlapsMsg);

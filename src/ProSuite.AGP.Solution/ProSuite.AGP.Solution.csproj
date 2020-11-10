@@ -124,7 +124,6 @@
     </Compile>
     <Compile Include="ConfigUI\ProSuiteConfigQAViewModel.cs" />
     <Compile Include="ConfigUI\ProSuiteConfigViewModel.cs" />
-    <Compile Include="ConfigurationUtils.cs" />
     <Compile Include="Daml.cs" />
     <Compile Include="Editing\EraseTool.cs" />
     <Compile Include="Commons\ImageUtils.cs" />
@@ -136,7 +135,6 @@
     <Compile Include="ProjectItem\ProjectFileRepository.cs" />
     <Compile Include="ProTrials\CartoProcess\AlignMarkers.cs" />
     <Compile Include="ProTrials\CartoProcess\CartoProcess.cs" />
-    <Compile Include="ProTrials\CartoProcess\CartoProcessConfig.cs" />
     <Compile Include="ProTrials\CartoProcess\CreateAnnoMasks.cs" />
     <Compile Include="Selection\PickWorkListItemTool.cs" />
     <Compile Include="ProTrials\ProTrialsModule.cs" />
@@ -155,7 +153,6 @@
     <Compile Include="LoggerUI\ProSuiteLogPaneViewModel.cs" />
     <Compile Include="ProSuiteToolsModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ProSuiteConfigurationDirectorySearcher.cs" />
     <Compile Include="WorkLists\DatabaseWorkEnvironment.cs" />
     <Compile Include="WorkLists\WorkListsModule.cs" />
     <Compile Include="WorkListUI\StatusEnumBooleanConverter.cs" />
@@ -268,6 +265,10 @@
       <Project>{2efe37c6-29a4-4e51-8c9f-d7b895f9ce6d}</Project>
       <Name>ProSuite.AGP.WorkList</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Application.Configuration\ProSuite.Application.Configuration.csproj">
+      <Project>{EAB868E4-D8FD-4AB4-9EDA-A9291E7CFEAB}</Project>
+      <Name>ProSuite.Application.Configuration</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj">
       <Project>{b80740ec-bb68-410c-a617-e79c467f1969}</Project>
       <Name>ProSuite.Commons.AGP.Core</Name>
@@ -291,6 +292,14 @@
     <ProjectReference Include="..\ProSuite.DomainModel\ProSuite.DomainModel.csproj">
       <Project>{824DDBE3-EDAF-460B-B513-386A4260C1FF}</Project>
       <Name>ProSuite.DomainModel</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Microservices.Client.AGP\ProSuite.Microservices.Client.AGP.csproj">
+      <Project>{5D500C94-FF3A-4BC8-8EDB-3A7177898B81}</Project>
+      <Name>ProSuite.Microservices.Client.AGP</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj">
+      <Project>{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}</Project>
+      <Name>ProSuite.Microservices.Client</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.Processing\ProSuite.Processing.csproj">
       <Project>{0b72e886-b428-48ed-ba96-9cd6fcc5e171}</Project>
@@ -375,6 +384,7 @@
   <ItemGroup>
     <AddInContent Include="Images\RemoveOverlapsTool32.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:
