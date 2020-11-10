@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -57,6 +57,43 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 			}
 
 			return _filterHelper.Check(feature);
+		}
+
+		protected bool Equals(LinearNetworkClassDef other)
+		{
+			return FeatureClass.Equals(other.FeatureClass) && WhereClause == other.WhereClause &&
+			       GeometryType == other.GeometryType;
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != this.GetType())
+			{
+				return false;
+			}
+
+			return Equals((LinearNetworkClassDef) obj);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				int hashCode = FeatureClass.GetHashCode();
+				hashCode = (hashCode * 397) ^ (WhereClause != null ? WhereClause.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ (int) GeometryType;
+				return hashCode;
+			}
 		}
 
 		public override string ToString()

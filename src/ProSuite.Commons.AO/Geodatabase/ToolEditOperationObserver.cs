@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -10,7 +10,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 	/// specific edit tools.
 	/// </summary>
 	[CLSCompliant(false)]
-	public class ToolEditOperationObserver : EditOperationObserverBase
+	public abstract class ToolEditOperationObserver : EditOperationObserverBase
 	{
 		public virtual void Splitting([CanBeNull] IFeature original,
 		                              [NotNull] IEnumerable<IFeature> inserts) { }

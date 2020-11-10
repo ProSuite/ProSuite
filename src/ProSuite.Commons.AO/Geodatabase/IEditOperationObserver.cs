@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -11,7 +11,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 	/// Hence implementations are not necessarily side-effect free (observer effect;-)
 	/// </summary>
 	[CLSCompliant(false)]
-	public interface IEditOperationObserver
+	public interface IEditOperationObserver : IEquatable<IEditOperationObserver>
 	{
 		/// <summary>
 		/// Whether edits performed on the workspace level (outside an editor edit session)

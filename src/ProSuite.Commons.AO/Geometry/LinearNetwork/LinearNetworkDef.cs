@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -175,6 +175,51 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 			return
 				$"Network Classes: {StringUtils.Concatenate(NetworkClassDefinitions, Environment.NewLine)}" +
 				$"{Environment.NewLine}Default Junctions : {defaultJunctionClass}";
+		}
+
+		protected bool Equals(LinearNetworkDef other)
+		{
+			return Equals(_defaultJunctionClass, other._defaultJunctionClass)
+			       && _defaultSubtype == other._defaultSubtype &&
+			       NetworkClassDefinitions.SequenceEqual(other.NetworkClassDefinitions);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != this.GetType())
+			{
+				return false;
+			}
+
+			return Equals((LinearNetworkDef) obj);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				int hashCode = (_defaultJunctionClass != null
+					                ? _defaultJunctionClass.GetHashCode()
+					                : 0);
+				hashCode = (hashCode * 397) ^ _defaultSubtype.GetHashCode();
+
+				foreach (var classDef in NetworkClassDefinitions)
+				{
+					hashCode = (hashCode * 397) ^ classDef.GetHashCode();
+				}
+
+				return hashCode;
+			}
 		}
 
 		private static bool IsFeatureInNetworkClass(IFeature feature,

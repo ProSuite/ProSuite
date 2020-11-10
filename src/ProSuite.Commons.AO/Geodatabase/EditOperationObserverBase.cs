@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 
@@ -27,5 +27,29 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public virtual void CompletingOperation() { }
 
 		public virtual void CompletedOperation() { }
+
+		public abstract override int GetHashCode();
+
+		public abstract bool Equals(IEditOperationObserver other);
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != this.GetType())
+			{
+				return false;
+			}
+
+			return Equals((EditOperationObserverBase) obj);
+		}
 	}
 }

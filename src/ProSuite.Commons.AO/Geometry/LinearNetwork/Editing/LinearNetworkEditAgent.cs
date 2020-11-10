@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -215,6 +215,41 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 		}
 
 		public override void CompletedOperation() { }
+
+		public override int GetHashCode()
+		{
+			return NetworkDefinition.GetHashCode();
+		}
+
+		public override bool Equals(IEditOperationObserver other)
+		{
+			return Equals((object) other);
+		}
+
+		protected bool Equals(LinearNetworkEditAgent other)
+		{
+			return NetworkDefinition.Equals(other.NetworkDefinition);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != this.GetType())
+			{
+				return false;
+			}
+
+			return Equals((LinearNetworkEditAgent) obj);
+		}
 
 		public override string ToString()
 		{
