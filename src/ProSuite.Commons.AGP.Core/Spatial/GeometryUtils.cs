@@ -119,7 +119,10 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		public static T EnsureSpatialReference<T>(T geometry, SpatialReference spatialReference)
 			where T : Geometry
 		{
-			// TODO: Compare first
+			if (geometry.SpatialReference.IsEqual(spatialReference))
+			{
+				return geometry;
+			}
 
 			return (T) Engine.Project(geometry, spatialReference);
 		}
