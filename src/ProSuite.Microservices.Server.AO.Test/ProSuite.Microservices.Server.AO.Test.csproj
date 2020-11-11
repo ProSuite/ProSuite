@@ -78,6 +78,7 @@
     <Compile Include="Geometry\RemoveOverlapsServiceTest.cs" />
     <Compile Include="ProtobufConversionUtilsTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ServiceHealthTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NUnit">
