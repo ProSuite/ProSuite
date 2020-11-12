@@ -47,7 +47,7 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 		/// orientation.
 		/// Wkb produced by ArcObjects (IWkb interface) is counter-clockwise, OGC 1.2 conform.
 		/// Wkb produced by SDE.ST_AsBinary operation is clockwise (!) and
-		/// <see cref="assumeWkbPolygonsClockwise"/> should be set to true.</param>
+		/// assumeWkbPolygonsClockwise should be set to true.</param>
 		public WkbGeometryReader(bool assumeWkbPolygonsClockwise = false) : base(
 			assumeWkbPolygonsClockwise) { }
 

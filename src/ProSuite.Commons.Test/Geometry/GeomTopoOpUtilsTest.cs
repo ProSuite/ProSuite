@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -1228,8 +1228,6 @@ namespace ProSuite.Commons.Test.Geometry
 
 		private static bool CanCutPlanar(Linestring sourceRing, Linestring cutLine)
 		{
-			RotationAxis? rotationAxis;
-
 			RingGroup source = new RingGroup(sourceRing);
 
 			MultiLinestring target = new MultiPolycurve(new[] {cutLine});
