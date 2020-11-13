@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -44,7 +44,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			Assert.ArgumentCondition(sourceFeatures.Count > 0, "No selected features");
 
 			IEnvelope clipExtent =
-				GetClipExtent(visibleExtent, bufferOptions.BufferDistance);
+				GetClipExtent(visibleExtent,
+				              bufferOptions.BufferTarget ? bufferOptions.BufferDistance : 0);
 
 			ISubcurveCalculator curveCalculator = new ReshapableSubcurveCalculator();
 			curveCalculator.SubcurveFilter =
