@@ -90,8 +90,9 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		[CLSCompliant(false)]
 		public IDictionary<IFeature, IGeometry> UpdatedTargets { get; private set; }
 
-		public IList<ToolEditOperationObserver> EditOperationObservers { get; set; } =
-			new List<ToolEditOperationObserver>(0);
+		[NotNull]
+		protected IList<IEditOperationObserver> EditOperationObservers { get; } =
+			new List<IEditOperationObserver>(0);
 
 		public ReshapeResultFilter ResultFilter { get; set; }
 
@@ -176,6 +177,20 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			[NotNull] IPath reshapePath,
 			bool tryReshapeRingNonDefaultSide,
 			[CanBeNull] NotificationCollection notifications);
+
+		public void AddEditOperationObservers(
+			[CanBeNull] IEnumerable<IEditOperationObserver> observers)
+		{
+			if (observers == null)
+			{
+				return;
+			}
+
+			foreach (var observer in observers)
+			{
+				EditOperationObservers.Add(observer);
+			}
+		}
 
 		/// <summary>
 		/// Reshapes the provided geometries with the provided reshape paths. Multiple
@@ -939,7 +954,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		protected void NotifyEditOperationObservers([NotNull] IFeature feature)
 		{
-			foreach (ToolEditOperationObserver observer in EditOperationObservers)
+			foreach (IEditOperationObserver observer in EditOperationObservers)
 			{
 				observer.Updating(feature);
 			}
