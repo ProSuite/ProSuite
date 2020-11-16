@@ -33,10 +33,10 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// <param name="startIndex"></param>
 		/// <returns></returns>
 		[NotNull]
-		IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool ignoreListSettings = false,
+		IEnumerable<IWorkItem> GetItems([CanBeNull] QueryFilter filter = null, bool ignoreListSettings = false,
 		                                int startIndex = 0);
 
-		int Count(QueryFilter filter = null, bool ignoreListSettings = false);
+		int Count([CanBeNull] QueryFilter filter = null, bool ignoreListSettings = false);
 
 		bool CanGoFirst();
 
@@ -58,12 +58,13 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		bool CanSetStatus();
 
-		void SetStatus(IWorkItem item, WorkItemStatus status);
 
-		void SetVisited(IWorkItem item);
+		void SetVisited([NotNull] IWorkItem item);
 
 		void Commit();
 
 		event EventHandler<WorkListChangedEventArgs> WorkListChanged;
+
+		void SetStatus([NotNull] IWorkItem item, WorkItemStatus status);
 	}
 }

@@ -77,7 +77,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			//			  look old work item implementation
 			Extent = GetExtentFromItems(_items);
 		}
-		
+
 		public event EventHandler<WorkListChangedEventArgs> WorkListChanged
 		{
 			add { _workListChanged += value; }

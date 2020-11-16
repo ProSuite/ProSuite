@@ -97,8 +97,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 		protected override BasicFeatureLayer EnsureMapContainsLayerCore(BasicFeatureLayer featureLayer)
 		{
 			// we want every feature layer
-
-
 			return featureLayer;
 		}
 

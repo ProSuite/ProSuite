@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
@@ -38,7 +37,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		[CanBeNull]
 		public IWorkList Get(string name)
 		{
 			lock (_registryLock)
