@@ -43,6 +43,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		private EventHandler<WorkListChangedEventArgs> _workListChanged;
 
+		protected WorkList() { }
+
 		protected WorkList(IWorkItemRepository repository, string name)
 		{
 			Repository = repository;
@@ -168,8 +170,10 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		// todo daro
-		public virtual void Dispose() { }
+		public virtual void Dispose()
+		{
+			Repository.Dispose();
+		}
 
 		/* Navigation */
 

@@ -154,6 +154,14 @@ namespace ProSuite.AGP.WorkList
 			return WorkItemStateRepository.CurrentIndex ?? -1;
 		}
 
+		public void Dispose()
+		{
+			foreach (Geodatabase gdb in GeodatabaseBySourceClasses.Values)
+			{
+				gdb?.Dispose();
+			}
+		}
+
 		protected virtual Task SetStatusCoreAsync([NotNull] IWorkItem item,
 		                                          [NotNull] ISourceClass source)
 		{

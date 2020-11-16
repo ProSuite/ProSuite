@@ -116,7 +116,10 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			_synchronizer?.Dispose();
 
-			_layerByWorkList.Keys.ToList().ForEach(workList => workList.Dispose());
+			foreach (IWorkList workList in _layerByWorkList.Keys)
+			{
+				workList.Dispose();
+			}
 
 			UnwireEvents();
 
@@ -324,7 +327,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 					//	}
 					//}
 
-					// todo daro: Dispose work list or whatever is needed.
+					// Note daro: don't dispose work list here. Given the following situation.
+					// Remove work list layer would dispose the source geodatabase (in GdbItemRepository).
+					// Add work list layer again with same source geodatabase is going to throw an
+					// exception, e.g. on SetStatus
+					//workList.Dispose();
 				}
 			});
 		}

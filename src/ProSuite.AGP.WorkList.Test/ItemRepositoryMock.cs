@@ -81,5 +81,7 @@ namespace ProSuite.AGP.WorkList.Test
 		{
 			throw new NotImplementedException();
 		}
+
+		public void Dispose() { }
 	}
 }

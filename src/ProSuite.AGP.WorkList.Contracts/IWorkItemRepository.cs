@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
@@ -5,7 +6,7 @@ using ProSuite.Commons.AGP.Gdb;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
-	public interface IWorkItemRepository
+	public interface IWorkItemRepository : IDisposable
 	{
 		int GetCount(QueryFilter filter = null);
 

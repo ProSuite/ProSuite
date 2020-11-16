@@ -23,7 +23,6 @@ namespace ProSuite.AGP.WorkList
 
 			IWorkItemRepository repository = CreateItemRepositoryCore(featureLayers, stateRepository);
 
-			// todo daro: dispose work list to free memory !!!!
 			IWorkList workList = CreateWorkListCore(repository, UniqueName);
 			
 			return workList;
