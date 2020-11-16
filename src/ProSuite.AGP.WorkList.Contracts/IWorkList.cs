@@ -60,7 +60,8 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		bool CanGoPrevious();
 		void GoPrevious();
-		
+
+		bool CanSetStatus();
 		void SetStatus(IWorkItem item, WorkItemStatus status);
 
 		void SetVisited(IWorkItem item);

@@ -100,6 +100,11 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual bool QueryLanguageSupported { get; } = false;
 
+		public bool CanSetStatus()
+		{
+			return HasCurrentItem;
+		}
+
 		public void SetStatus(IWorkItem item, WorkItemStatus status)
 		{
 			Repository.SetStatus(item, status);
