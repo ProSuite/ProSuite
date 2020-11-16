@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Web;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList.Datasource
@@ -22,12 +24,11 @@ namespace ProSuite.AGP.WorkList.Datasource
 		private IWorkList _workList;
 		private IReadOnlyList<string> _tableNames;
 
-		public override void Open(Uri connectionPath) // "open workspace"
+		public override void Open([NotNull] Uri connectionPath) // "open workspace"
 		{
-			_msg.Debug($"Try to open {connectionPath}");
+			Assert.ArgumentNotNull(connectionPath, nameof(connectionPath));
 
-			if (connectionPath == null)
-				throw new ArgumentNullException(nameof(connectionPath));
+			_msg.Debug($"Try to open {connectionPath}");
 
 			// Empirical: when opening a project (.aprx) with a saved layer
 			// using our Plugin Datasource, the connectionPath will be
@@ -55,8 +56,11 @@ namespace ProSuite.AGP.WorkList.Datasource
 			_workList = null;
 		}
 
-		public override PluginTableTemplate OpenTable(string name)
+		public override PluginTableTemplate OpenTable([NotNull] string name)
 		{
+			Assert.ArgumentNotNull(name, nameof(name));
+			Assert.ArgumentCondition(_tableNames.Contains(name), $"Unknown table name {name}");
+
 			// The given name is one of those returned by GetTableNames()
 			_msg.Debug($"Open table '{name}'");
 
@@ -88,13 +92,13 @@ namespace ProSuite.AGP.WorkList.Datasource
 			return _workList?.QueryLanguageSupported ?? false;
 		}
 
-		private static string FormatTableName(string listName)
+		private static string FormatTableName([NotNull] string listName)
 		{
 			// for now just the list name; later we *may* have separate "layers" for different geometry types
 			return Assert.NotNull(listName);
 		}
 
-		private static void ParseLayer(string tableName, out string listName)
+		private static void ParseLayer([NotNull] string tableName, out string listName)
 		{
 			// for now table name *is* the list name
 			listName = tableName;
