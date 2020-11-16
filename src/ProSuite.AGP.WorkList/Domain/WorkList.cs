@@ -1094,9 +1094,8 @@ namespace ProSuite.AGP.WorkList.Domain
 			UpdateExtent(item.Extent);
 		}
 
-		public bool HasCurrentItem => CurrentIndex >= 0 &&
-		                              _items != null &&
-		                              CurrentIndex < _items.Count;
+		private bool HasCurrentItem => CurrentIndex >= 0 &&
+		                               CurrentIndex < _items.Count;
 
 		[NotifyPropertyChangedInvocator]
 		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
