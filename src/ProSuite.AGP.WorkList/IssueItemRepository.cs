@@ -157,11 +157,11 @@ namespace ProSuite.AGP.WorkList
 			switch (status)
 			{
 				case WorkItemStatus.Todo:
-					operationDescription = "Set status of work item to 'Todo'";
+					operationDescription = "Set status of work item to 'Not Corrected'";
 					break;
 
 				case WorkItemStatus.Done:
-					operationDescription = "Set status of work item to 'Done'";
+					operationDescription = "Set status of work item to 'Corrected'";
 					break;
 
 				default:

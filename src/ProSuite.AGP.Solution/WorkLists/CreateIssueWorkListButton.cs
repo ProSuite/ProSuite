@@ -11,7 +11,10 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			var environment = new DatabaseWorkEnvironment();
 
-			await QueuedTask.Run(() => { WorkListsModule.Current.CreateWorkList(environment); });
+			await QueuedTask.Run(async () =>
+			{
+				await WorkListsModule.Current.CreateWorkListAsync(environment);
+			});
 
 			WorkListsModule.Current.ShowView(environment.UniqueName);
 		}

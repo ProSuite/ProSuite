@@ -75,11 +75,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 		}
 
-		public void CreateWorkList([NotNull] WorkEnvironmentBase environment)
+		public async Task CreateWorkListAsync([NotNull] WorkEnvironmentBase environment)
 		{
 			try
 			{
-				IWorkList workList = environment.CreateWorkList(this);
+				IWorkList workList = await environment.CreateWorkListAsync(this);
 
 				// wiring work list events, etc. is done in OnDrawComplete
 				// register work list before creating the layer

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence;
@@ -11,12 +12,14 @@ namespace ProSuite.AGP.WorkList
 	{
 		public string UniqueName { get; private set; }
 
-		public IWorkList CreateWorkList(IWorkListContext context)
+		public async Task<IWorkList> CreateWorkListAsync(IWorkListContext context)
 		{
 			Map map = MapView.Active.Map;
 
-			IEnumerable<BasicFeatureLayer> featureLayers = GetLayers(map).Select(EnsureMapContainsLayerCore);
+			await PrepareSchemaAsync();
 
+			BasicFeatureLayer[] featureLayers = await Task.WhenAll(GetLayers(map).Select(EnsureStatusFieldCoreAsync));
+			
 			UniqueName = GetWorkListName(context);
 
 			IRepository stateRepository = CreateStateRepositoryCore(context.GetPath(UniqueName), UniqueName);
@@ -33,12 +36,17 @@ namespace ProSuite.AGP.WorkList
 			return GetLayerDocumentCore();
 		}
 
+		protected virtual async Task PrepareSchemaAsync()
+		{
+			await Task.FromResult(0);
+		}
+
 		protected abstract string GetWorkListName(IWorkListContext context);
 
 		protected abstract IEnumerable<BasicFeatureLayer> GetLayers(Map map);
 
 		// todo daro: revise purpose of this method
-		protected abstract BasicFeatureLayer EnsureMapContainsLayerCore(BasicFeatureLayer featureLayer);
+		protected abstract Task<BasicFeatureLayer> EnsureStatusFieldCoreAsync(BasicFeatureLayer featureLayer);
 
 		protected abstract IWorkList CreateWorkListCore(IWorkItemRepository repository, string name);
 
