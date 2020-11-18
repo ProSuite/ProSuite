@@ -114,6 +114,7 @@
     <Compile Include="Geometry\WkbSerializerTest.cs" />
     <Compile Include="ProComparisonTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Surface\RectangularTilingUtilsTest.cs" />
     <Compile Include="TestCategory.cs" />
     <Compile Include="TestData.cs" />
     <Compile Include="TestSupport\FeatureClassMock.cs" />
@@ -158,5 +159,6 @@
       <Version>0.5.1</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

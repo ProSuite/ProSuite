@@ -268,7 +268,11 @@
     <Compile Include="RuntimeUtils.cs" />
     <Compile Include="SerializationUtils.cs" />
     <Compile Include="StreamUtils.cs" />
+    <Compile Include="Surface\BorderPointTileAllocationPolicy.cs" />
     <Compile Include="Surface\ISimpleSurface.cs" />
+    <Compile Include="Surface\RectangularTileIndex.cs" />
+    <Compile Include="Surface\RectangularTilingStructure.cs" />
+    <Compile Include="Surface\RectangularTilingUtils.cs" />
     <Compile Include="UIDUtils.cs" />
   </ItemGroup>
   <ItemGroup>
