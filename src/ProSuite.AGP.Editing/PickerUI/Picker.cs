@@ -2,9 +2,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Picker;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing.PickerUI
@@ -84,6 +87,22 @@ namespace ProSuite.AGP.Editing.PickerUI
 			_viewModel.DisposeOverlays();
 
 			return _viewModel.SelectedItems.ToList();
+		}
+
+		public static List<IPickableItem> CreatePickableFeatureItems(
+			KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer)
+		{
+			var pickCandidates = new List<IPickableItem>();
+			foreach (Feature feature in MapUtils.GetFeatures(featuresOfLayer))
+			{
+				var text =
+					$"{featuresOfLayer.Key.Name}: {feature.GetObjectID()}";
+				var featureItem =
+					new PickableFeatureItem(featuresOfLayer.Key, feature, text);
+				pickCandidates.Add(featureItem);
+			}
+
+			return pickCandidates;
 		}
 
 		private void ShowPickerControl(PickerViewModel vm)

@@ -386,7 +386,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				// select a single feature using feature reduction and picker
 				else
 				{
-					IEnumerable<KeyValuePair<BasicFeatureLayer, List<long>>> candidatesOfLayer =
+					IEnumerable<KeyValuePair<BasicFeatureLayer, List<long>>> candidatesOfLayers =
 						await QueuedTask.Run(
 							() => GeometryReducer.GetReducedset(candidatesOfManyLayers));
 
@@ -394,11 +394,12 @@ namespace ProSuite.AGP.Editing.OneClick
 					if (GeometryReducer.ContainsManyFeatures(candidatesOfManyLayers))
 					{
 						List<IPickableItem> pickables = new List<IPickableItem>();
-						foreach (var layerCandidate in candidatesOfLayer)
+						foreach (var layerCandidates in candidatesOfLayers)
 						{
 							pickables.AddRange(
 								await QueuedTask.Run(
-									() => GetPickableFeatureItems(layerCandidate)));
+									() => PickerUI.Picker.CreatePickableFeatureItems(
+										layerCandidates)));
 						}
 
 						var picker = new PickerUI.Picker(pickables, pickerWindowLocation);
@@ -419,7 +420,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						await QueuedTask.Run(() =>
 						{
 							Selector.SelectLayersFeaturesByOids(
-								candidatesOfLayer.First(), selectionMethod);
+								candidatesOfLayers.First(), selectionMethod);
 						});
 					}
 				}
@@ -469,22 +470,6 @@ namespace ProSuite.AGP.Editing.OneClick
 					                     progressor));
 
 			return true;
-		}
-
-		private List<IPickableItem> GetPickableFeatureItems(
-			KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer)
-		{
-			var pickCandidates = new List<IPickableItem>();
-			foreach (Feature feature in MapUtils.GetFeatures(featuresOfLayer))
-			{
-				var text =
-					$"{featuresOfLayer.Key.Name}: {feature.GetObjectID()}";
-				var featureItem =
-					new PickableFeatureItem(featuresOfLayer.Key, feature, text);
-				pickCandidates.Add(featureItem);
-			}
-
-			return pickCandidates;
 		}
 
 		private Dictionary<BasicFeatureLayer, List<long>> FindFeaturesOfAllLayers(
