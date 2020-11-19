@@ -72,6 +72,7 @@
     <Compile Include="Gdb\GdbTableIdentity.cs" />
     <Compile Include="Gdb\EditorTransaction.cs" />
     <Compile Include="Gdb\GdbWorkspaceIdentity.cs" />
+    <Compile Include="GP\GeoprocessingUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Storage\GdbRepository.cs" />
     <Compile Include="Storage\IRepository.cs" />

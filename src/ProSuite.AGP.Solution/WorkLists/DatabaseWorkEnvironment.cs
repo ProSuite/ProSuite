@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Internal.CIM;
 using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework;
@@ -13,6 +15,7 @@ using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Application.Configuration;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.GP;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -24,6 +27,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		private readonly string _workListName = "Issue_Work_List";
 		private readonly string _templateLayer = "Selection Work List.lyrx";
+		private readonly string _domainName = "CORRECTION_STATUS_CD";
 
 		private readonly List<string> _issueFeatureClassNames = new List<string>
 		                                                        {
@@ -40,6 +44,15 @@ namespace ProSuite.AGP.Solution.WorkLists
 			var browseFilter = BrowseProjectFilter.GetFilter(DAML.Filter.esri_browseDialogFilters_geodatabases_file);
 
 			_path = GetSelectedItemPath(title, ItemFilters.geodatabases, browseFilter);
+		}
+
+		protected override async Task PrepareSchemaAsync()
+		{
+			await Task.WhenAll(
+				GeoprocessingUtils.CreateDomainAsync(_path, _domainName, "Correction status for work list"),
+				GeoprocessingUtils.AddCodedValueToDomainAsync(_path, _domainName, 100, "Not Corrected"),
+				GeoprocessingUtils.AddCodedValueToDomainAsync(_path, _domainName, 200, "Corrected"));
+			
 		}
 
 		protected override string GetWorkListName(IWorkListContext context)
@@ -94,10 +107,20 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return dialog.Items.FirstOrDefault()?.Path;
 		}
 
-		protected override BasicFeatureLayer EnsureMapContainsLayerCore(BasicFeatureLayer featureLayer)
+		protected override async Task<BasicFeatureLayer> EnsureStatusFieldCoreAsync(
+			BasicFeatureLayer featureLayer)
 		{
-			// we want every feature layer
+			const string fieldName = "STATUS";
 
+			Task<bool> addField =
+				GeoprocessingUtils.AddFieldAsync(featureLayer.Name, fieldName, "Status",
+				                                 esriFieldType.esriFieldTypeInteger, null, null,
+				                                 null, true, false, _domainName);
+
+			Task<bool> assignDefaultValue =
+				GeoprocessingUtils.AssignDefaultToFieldAsync(featureLayer.Name, fieldName, 100);
+
+			await Task.WhenAll(addField, assignDefaultValue);
 
 			return featureLayer;
 		}

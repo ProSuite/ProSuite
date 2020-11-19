@@ -11,9 +11,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			var environment = new InMemoryWorkEnvironment();
 
-			await QueuedTask.Run(() =>
+			await QueuedTask.Run(async () =>
 			{
-				WorkListsModule.Current.CreateWorkList(environment);
+				await WorkListsModule.Current.CreateWorkListAsync(environment);
 			});
 
 			WorkListsModule.Current.ShowView(environment.UniqueName);

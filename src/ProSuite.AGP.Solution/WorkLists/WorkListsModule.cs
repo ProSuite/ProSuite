@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Core;
@@ -13,7 +12,6 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using ProSuite.AGP.Solution.ProjectItem;
 using ProSuite.AGP.Solution.WorkListUI;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
@@ -77,11 +75,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 		}
 
-		public void CreateWorkList([NotNull] WorkEnvironmentBase environment)
+		public async Task CreateWorkListAsync([NotNull] WorkEnvironmentBase environment)
 		{
 			try
 			{
-				IWorkList workList = environment.CreateWorkList(this);
+				IWorkList workList = await environment.CreateWorkListAsync(this);
 
 				// wiring work list events, etc. is done in OnDrawComplete
 				// register work list before creating the layer
@@ -116,7 +114,10 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			_synchronizer?.Dispose();
 
-			_layerByWorkList.Keys.ToList().ForEach(workList => workList.Dispose());
+			foreach (IWorkList workList in _layerByWorkList.Keys)
+			{
+				workList.Dispose();
+			}
 
 			UnwireEvents();
 
@@ -324,7 +325,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 					//	}
 					//}
 
-					// todo daro: Dispose work list or whatever is needed.
+					// Note daro: don't dispose work list here. Given the following situation.
+					// Remove work list layer would dispose the source geodatabase (in GdbItemRepository).
+					// Add work list layer again with same source geodatabase is going to throw an
+					// exception, e.g. on SetStatus
+					//workList.Dispose();
 				}
 			});
 		}

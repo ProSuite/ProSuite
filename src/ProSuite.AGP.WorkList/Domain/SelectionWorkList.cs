@@ -1,4 +1,3 @@
-using System;
 using ProSuite.AGP.WorkList.Contracts;
 
 namespace ProSuite.AGP.WorkList.Domain
@@ -7,9 +6,5 @@ namespace ProSuite.AGP.WorkList.Domain
 	{
 		public SelectionWorkList(IWorkItemRepository repository, string name) :
 			base(repository, name) { }
-
-		public override void Dispose()
-		{
-		}
 	}
 }

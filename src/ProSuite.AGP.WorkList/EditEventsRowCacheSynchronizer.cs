@@ -66,12 +66,28 @@ namespace ProSuite.AGP.WorkList
 			//	return;
 			//}
 
-			// todo daro: try-finally to dispose tables?
+			// todo daro: Use GdbTableIdentity and dispose tables immediately?
 			Dictionary<Table, List<long>> creates = GetOidsByTable(args.Creates);
 			Dictionary<Table, List<long>> deletes = GetOidsByTable(args.Deletes);
 			Dictionary<Table, List<long>> modifies = GetOidsByTable(args.Modifies);
+			try
+			{
+				_rowCache.ProcessChanges(creates, deletes, modifies);
+			}
+			finally
+			{
+				Dispose(creates.Keys);
+				Dispose(deletes.Keys);
+				Dispose(modifies.Keys);
+			}
+		}
 
-			_rowCache.ProcessChanges(creates, deletes, modifies);
+		private static void Dispose(Dictionary<Table, List<long>>.KeyCollection tables)
+		{
+			foreach (Table table in tables)
+			{
+				table.Dispose();
+			}
 		}
 
 		private static Dictionary<Table, List<long>> GetOidsByTable(

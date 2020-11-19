@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
@@ -15,11 +14,6 @@ namespace ProSuite.AGP.WorkList.Test
 		                                                int startIndex = 0)
 		{
 			return Repository.GetItems(filter);
-		}
-
-		public override void Dispose()
-		{
-			throw new NotImplementedException();
 		}
 	}
 }
