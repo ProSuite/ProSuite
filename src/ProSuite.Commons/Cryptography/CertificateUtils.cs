@@ -48,13 +48,32 @@ namespace ProSuite.Commons.Cryptography
 			}
 		}
 
+		public static IEnumerable<X509Certificate2> FindValidCertificates(
+			StoreName storeName,
+			StoreLocation storeLocation,
+			[NotNull] string searchString,
+			[NotNull] IEnumerable<X509FindType> findTypes)
+		{
+			foreach (X509FindType findType in findTypes)
+			{
+				_msg.DebugFormat("Searching certificate store ({0}/{1}) trying {2} ({3})",
+				                 storeName, storeLocation, findType, searchString);
+
+				foreach (X509Certificate2 certificate in FindValidCertificates(
+					storeName, storeLocation, searchString, findType))
+				{
+					yield return certificate;
+				}
+			}
+		}
+
 		public static IEnumerable<X509Certificate2> FindValidCertificatesWithPrivateKey(
 			StoreName storeName,
 			StoreLocation storeLocation,
 			[NotNull] string searchString,
 			X509FindType findType = X509FindType.FindBySubjectDistinguishedName)
 		{
-			var certificates = FindValidCertificates(
+			IEnumerable<X509Certificate2> certificates = FindValidCertificates(
 				storeName, storeLocation, searchString, findType);
 
 			foreach (X509Certificate2 certificate in certificates)
@@ -108,7 +127,7 @@ namespace ProSuite.Commons.Cryptography
 				_msg.DebugFormat("Searching certificate store ({0}/{1}) trying {2} ({3})",
 				                 storeName, storeLocation, findType, searchString);
 
-				var foundCertificates =
+				List<X509Certificate2> foundCertificates =
 					FindValidCertificatesWithPrivateKey(
 						storeName, storeLocation, searchString, findType).ToList();
 
