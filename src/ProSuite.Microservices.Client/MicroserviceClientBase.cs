@@ -26,14 +26,15 @@ namespace ProSuite.Microservices.Client
 
 		protected MicroserviceClientBase([NotNull] string host = _localhost,
 		                                 int port = 5151,
-		                                 string serverCertificatePath = null)
+		                                 bool useTls = false,
+		                                 string clientCertificate = null)
 		{
 			_host = host;
 			_port = port;
 
 			if (_port >= 0)
 			{
-				OpenChannel(serverCertificatePath);
+				OpenChannel(useTls, clientCertificate);
 			}
 			else
 			{
@@ -43,8 +44,8 @@ namespace ProSuite.Microservices.Client
 		}
 
 		protected MicroserviceClientBase([NotNull] ClientChannelConfig channelConfig)
-			: this(channelConfig.HostName, channelConfig.Port,
-			       channelConfig.ServerCertificateFile) { }
+			: this(channelConfig.HostName, channelConfig.Port, channelConfig.UseTls,
+			       channelConfig.ClientCertificate) { }
 
 		[CanBeNull]
 		protected Channel Channel { get; set; }
@@ -150,14 +151,12 @@ namespace ProSuite.Microservices.Client
 			}
 		}
 
-		protected void OpenChannel(string serverCertificatePath)
+		protected void OpenChannel(bool useTls, string clientCertificate = null)
 		{
 			var enoughForLargeGeometries = (int) Math.Pow(1024, 3);
 
 			ChannelCredentials credentials =
-				string.IsNullOrEmpty(serverCertificatePath)
-					? ChannelCredentials.Insecure
-					: new SslCredentials(File.ReadAllText(serverCertificatePath));
+				GrpcUtils.CreateChannelCredentials(useTls, clientCertificate);
 
 			Channel = GrpcUtils.CreateChannel(
 				_host, _port, credentials, enoughForLargeGeometries);
@@ -177,7 +176,7 @@ namespace ProSuite.Microservices.Client
 			{
 				// Get next ephemeral port, reopen the channel
 				_port = GetFreeTcpPort();
-				OpenChannel(null);
+				OpenChannel(false);
 			}
 			else
 			{
