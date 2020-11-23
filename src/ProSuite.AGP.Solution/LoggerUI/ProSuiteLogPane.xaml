@@ -27,7 +27,7 @@
             <!--<RowDefinition Height="Auto"/>-->
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <DataGrid Grid.Row="0" Margin="5" Name="logMessagesGrid"   
+        <DataGrid Grid.Row="0" Margin="3,0" Name="logMessagesGrid"   
                 ScrollViewer.CanContentScroll="True"      
                 ScrollViewer.VerticalScrollBarVisibility="Auto"        
                 ScrollViewer.HorizontalScrollBarVisibility="Auto"                            

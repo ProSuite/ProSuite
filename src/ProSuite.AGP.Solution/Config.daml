@@ -120,7 +120,7 @@
 						<disabledText />
           </tooltip>
         </button>
-        <button id="WorkLists_CreateIssueWorkList" caption="Show Issue Work List" className="WorkLists.CreateIssueWorkListButton" loadOnClick="true" smallImage="Images/NavigateSelectionCmd.png" largeImage="Images/NavigateSelectionCmd.png">
+        <button id="WorkLists_CreateIssueWorkList" caption="Show Issue Work List" className="WorkLists.CreateIssueWorkListButton" loadOnClick="true" smallImage="Images/NavigateErrorsCmd.png" largeImage="Images/NavigateErrorsCmd.png">
           <tooltip heading="Show Issue Work List">Show Issue Work List for iterating on issue items
 						<disabledText />
           </tooltip>

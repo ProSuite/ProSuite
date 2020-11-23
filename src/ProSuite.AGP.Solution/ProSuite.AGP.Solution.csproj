@@ -330,6 +330,7 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\StatusCriticalError_12x_16x.png" />
+    <Resource Include="Images\StatusDebug_12x_16x.png" />
     <Resource Include="Images\StatusInformation_12x_16x.png" />
     <Resource Include="Images\StatusOK_16x.png" />
     <Resource Include="Images\StatusWarning_12x_16x.png" />
@@ -384,7 +385,6 @@
   <ItemGroup>
     <AddInContent Include="Images\RemoveOverlapsTool32.png" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:
