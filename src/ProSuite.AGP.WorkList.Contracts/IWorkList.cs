@@ -42,6 +42,8 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		void GoFirst();
 
+		void GoToOid(int oid);
+
 		bool CanGoNearest();
 
 		void GoNearest([NotNull] Geometry reference,

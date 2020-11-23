@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -11,12 +9,9 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ArcGIS.Desktop.Mapping.Events;
-using ProSuite.AGP.Solution.Selection;
 using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -38,6 +33,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private RelayCommand _panToCmd;
 		private RelayCommand _zoomToAllCmd;
 		private RelayCommand _pickWorkItemCmd;
+		private WorkListView _view;
 
 		public WorkListViewModel(IWorkList workList)
 		{
@@ -66,7 +62,16 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			FrameworkApplication.GetPlugInWrapper(
 				DAML.Button.esri_mapping_fixedZoomOutButton) as ICommand;
 
-		
+		//Utility method to consolidate UI update logic
+		public void RunOnUIThread(Action action)
+		{
+			if (FrameworkApplication.Current.Dispatcher.CheckAccess())
+				action(); //No invoke needed
+			else
+				//We are not on the UI
+				FrameworkApplication.Current.Dispatcher.BeginInvoke(action);
+		}
+
 		public RelayCommand GoNextItemCmd
 		{
 			get
@@ -130,8 +135,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}
 		}
 
-		
-
 		public WorkItemStatus Status
 		{
 			get => CurrentWorkItem.Status;
@@ -143,7 +146,10 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 					// NOTE: has to run inside QueuedTask because it triggers an event
 					//		 which does MapView.Active.Invalidate
-					QueuedTask.Run(() => { CurrentWorkList.SetStatus(CurrentWorkList.Current, value); });
+					QueuedTask.Run(() =>
+					{
+						CurrentWorkList.SetStatus(CurrentWorkList.Current, value);
+					});
 				}
 
 				SetProperty(ref _status, value, () => Status);
@@ -268,7 +274,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			WorkListsModule.Current.WorkItemPicked += Current_WorkItemPicked;
 			FrameworkApplication.SetCurrentToolAsync("ProSuiteTools_PickWorkListItemTool");
-			
 		}
 
 		private void Current_WorkItemPicked(object sender, WorkItemPickArgs e)
@@ -291,7 +296,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 					return;
 				}
 
-				//CurrentWorkList.GoToOid(selectedItem.OID);
+				CurrentWorkList.GoToOid(selectedItem.OID);
 				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
 			});
 		}
@@ -303,7 +308,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		public void WorkListRemoved(IWorkList workList)
 		{
-			//throw new NotImplementedException();
+			RunOnUIThread(() => _view.Close());
 		}
 
 		public void WorkListModified(IWorkList workList)
@@ -313,17 +318,10 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		public void Show(IWorkList workList)
 		{
-			var view = new WorkListView(this);
-			view.Owner = System.Windows.Application.Current.MainWindow;
-			view.Title = workList.Name;
-			view.Show();
-			view.Closed += View_Closed;
-		}
-
-		private void View_Closed(object sender, EventArgs e)
-		{
-			//WorkListsModule.Current.RemoveWorkListLayer(CurrentWorkList);
-			WorkListsModule.Current.UnregisterObserver(this);
+			_view = new WorkListView(this);
+			_view.Owner = FrameworkApplication.Current.MainWindow;
+			_view.Title = workList.Name;
+			_view.Show();
 		}
 
 		[NotNull]
