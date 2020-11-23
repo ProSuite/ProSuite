@@ -1008,13 +1008,27 @@ namespace ProSuite.Commons.AO.Geodatabase
 				databaseName ?? string.Empty, ownerName ?? string.Empty, tableName);
 		}
 
-		public static ITable CreateQueryLayerClass([NotNull] ISqlWorkspace sqlWorksace,
-		                                           [NotNull] string sql,
-		                                           [NotNull] string name,
-		                                           [CanBeNull] string oidFieldName = null)
+		/// <summary>
+		/// Create a 'Query Layer' type of feature class. Unlike the QueryFeatureClasses created
+		/// by TableJoinUtils, this creates a class with unqualified field names.
+		/// </summary>
+		/// <param name="sqlWorksace">The workspace</param>
+		/// <param name="sql">The query that contains a single shape field column which can
+		/// be found in the sde column registry.</param>
+		/// <param name="name">The name of the table / feature class which will be adapted
+		/// in case it does not start with '%'</param>
+		/// <param name="oidFieldName">The OBJECTID field</param>
+		/// <param name="xyTolerance">The xyTolerance </param>
+		/// <returns></returns>
+		public static ITable CreateQueryLayerClass(
+			[NotNull] ISqlWorkspace sqlWorksace,
+			[NotNull] string sql,
+			[NotNull] string name,
+			[CanBeNull] string oidFieldName = null,
+			double xyTolerance = double.NaN)
 		{
 			IQueryDescription queryDescription =
-				CreateQueryDescription(sqlWorksace, sql, oidFieldName);
+				CreateQueryDescription(sqlWorksace, sql, oidFieldName, xyTolerance);
 
 			return CreateQueryLayerClass(sqlWorksace, queryDescription, name);
 		}
@@ -1022,7 +1036,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public static IQueryDescription CreateQueryDescription(
 			[NotNull] ISqlWorkspace sqlWorksace,
 			[NotNull] string sql,
-			[CanBeNull] string oidFieldName = null)
+			[CanBeNull] string oidFieldName = null,
+			double xyTolerance = double.NaN)
 		{
 			_msg.DebugFormat("Getting query layer description for {0}", sql);
 
@@ -1031,6 +1046,29 @@ namespace ProSuite.Commons.AO.Geodatabase
 			if (! string.IsNullOrEmpty(oidFieldName))
 			{
 				queryDescription.OIDFields = oidFieldName;
+			}
+
+			var srTolerance = (ISpatialReferenceTolerance) queryDescription.SpatialReference;
+
+			if (! double.IsNaN(xyTolerance))
+			{
+				// TOP-5355: In some environments (versions) the SR created by GetQueryDescription()
+				// has 0 tolerances which subsequently results in HRESULT E_FAIL in topo-operators
+				// because it is not simple. Typically the tolerance is just the default of the SR
+				// which, in some situations can be equal or even smaller than the resolution!
+
+				// NOTE: The spatial reference must not be set to anything even slightly different 
+				// from the one derived by the Srid (internally) or no rows are found.
+
+				// However, just chaning the tolerance seems to work:
+
+				srTolerance.XYTolerance = xyTolerance;
+			}
+
+			if (srTolerance.XYToleranceValid != esriSRToleranceEnum.esriSRToleranceOK)
+			{
+				// Safety net: Do not allow a tolerance equal or smaller than the resolution:
+				srTolerance.SetMinimumXYTolerance();
 			}
 
 			return queryDescription;
@@ -1046,7 +1084,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 				name = GetQueryLayerClassName((IFeatureWorkspace) sqlWorksace, name);
 			}
 
-			_msg.DebugFormat("Opening query layer with name {0}", name);
+			_msg.DebugFormat(
+				"Opening query layer with name {0} using the following query description: {1}",
+				name, QueryDescriptionToString(queryDescription));
 
 			ITable queryClass = sqlWorksace.OpenQueryClass(name, queryDescription);
 			return queryClass;
@@ -1069,6 +1109,27 @@ namespace ProSuite.Commons.AO.Geodatabase
 			                        databaseName,
 			                        ownerName,
 			                        tableName);
+		}
+
+		public static string QueryDescriptionToString(
+			[CanBeNull] IQueryDescription queryDescription)
+		{
+			if (queryDescription == null)
+			{
+				return "<null>";
+			}
+
+			StringBuilder sb = new StringBuilder();
+
+			sb.AppendLine(queryDescription.Query);
+			sb.AppendLine($"OID Column: {queryDescription.OIDColumnName}");
+			sb.AppendLine($"SHAPE: {queryDescription.ShapeColumnName}");
+			sb.AppendLine($"Geometry Type: {queryDescription.GeometryType}");
+			sb.AppendLine($"SRID: {queryDescription.Srid}");
+			sb.AppendLine(
+				$"SRID: {SpatialReferenceUtils.ToString(queryDescription.SpatialReference)}");
+
+			return sb.ToString();
 		}
 
 		public static bool IsQueryLayerClassName(string className)
