@@ -355,9 +355,6 @@
     <AddInContent Include="Images\CutHoleTool32.png" />
   </ItemGroup>
   <ItemGroup>
-    <AddInContent Include="Images\SelectionTool.png" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="WorkListUI\Images\PanTo.png" />
   </ItemGroup>
   <ItemGroup>
@@ -365,12 +362,6 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="WorkListUI\Images\GoFirst.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <AddInContent Include="Images\NavigateErrorsCmd.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <AddInContent Include="Images\NavigateSelectionCmd.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="WorkListUI\Images\PickWorkItemTool.png" />
@@ -384,7 +375,16 @@
   <ItemGroup>
     <AddInContent Include="Images\RemoveOverlapsTool32.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <AddInContent Include="Images\NavigateErrorsCmd16.png" />
+    <AddInContent Include="Images\NavigateErrorsCmd32.png" />
+    <AddInContent Include="Images\NavigateSelectionCmd16.png" />
+    <AddInContent Include="Images\NavigateSelectionCmd32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\SelectionTool16.png" />
+    <AddInContent Include="Images\SelectionTool32.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:

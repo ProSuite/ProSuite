@@ -115,12 +115,12 @@
         <button id="Clients_AGP_ProSuiteSolution_WorkList" caption="WorkList" className="ShowWorkListWindow" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Show Error Worklist">Show Error Worklist<disabledText /></tooltip>
         </button>
-        <button id="WorkLists_CreateSelectionWorkList" caption="Show Selection WorkList" className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true" smallImage="Images/NavigateSelectionCmd.png" largeImage="Images/NavigateSelectionCmd.png">
+        <button id="WorkLists_CreateSelectionWorkList" caption="Show Selection WorkList" className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true" smallImage="Images/NavigateSelectionCmd16.png" largeImage="Images/NavigateSelectionCmd32.png">
           <tooltip heading="Show Selection Work List">Show Selection Work List for iterating on selected items
 						<disabledText />
           </tooltip>
         </button>
-        <button id="WorkLists_CreateIssueWorkList" caption="Show Issue Work List" className="WorkLists.CreateIssueWorkListButton" loadOnClick="true" smallImage="Images/NavigateSelectionCmd.png" largeImage="Images/NavigateSelectionCmd.png">
+        <button id="WorkLists_CreateIssueWorkList" caption="Show Issue Work List" className="WorkLists.CreateIssueWorkListButton" loadOnClick="true" smallImage="Images/NavigateErrorsCmd16.png" largeImage="Images/NavigateErrorsCmd32.png">
           <tooltip heading="Show Issue Work List">Show Issue Work List for iterating on issue items
 						<disabledText />
           </tooltip>
@@ -137,7 +137,7 @@
           <tooltip heading="Remove Overlaps Tool">Remove a part of a feature that overlaps with other polygon features<disabledText /></tooltip>
         </tool>
         <tool id="ProSuiteTools_Selection_SelectionTool" caption="Selection" className="Selection.SelectionTool" loadOnClick="true"
-              smallImage="Images\SelectionTool.png" largeImage="Images\SelectionTool.png"
+              smallImage="Images\SelectionTool16.png" largeImage="Images\SelectionTool32.png"
               condition="esri_mapping_mapPane">
           <tooltip heading="Selection Tool">
             Select features for use with the selection worklist<disabledText />
