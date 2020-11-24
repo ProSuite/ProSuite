@@ -320,13 +320,13 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="WorkListUI\Images\GoBack.png" />
+    <Resource Include="WorkListUI\Images\GoBack16.png" />
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="DarkImages\GenericButtonBlue32.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="WorkListUI\Images\GoNext.png" />
+    <Resource Include="WorkListUI\Images\GoNext16.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\StatusCriticalError_12x_16x.png" />
@@ -347,7 +347,7 @@
     <Resource Include="Images\FolderOpened_white_16x.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="WorkListUI\Images\GoNearest.png" />
+    <Resource Include="WorkListUI\Images\GoNearest16.png" />
     <Resource Include="Images\FolderError_16x.png" />
   </ItemGroup>
   <ItemGroup>
@@ -355,19 +355,19 @@
     <AddInContent Include="Images\CutHoleTool32.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="WorkListUI\Images\PanTo.png" />
+    <Resource Include="WorkListUI\Images\PanTo16.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="WorkListUI\Images\ZoomTo.png" />
+    <Resource Include="WorkListUI\Images\ZoomTo16.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="WorkListUI\Images\GoFirst.png" />
+    <Resource Include="WorkListUI\Images\GoFirst16.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="WorkListUI\Images\PickWorkItemTool.png" />
+    <Resource Include="WorkListUI\Images\PickWorkItemTool16.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="WorkListUI\Images\ZoomToAll.png" />
+    <Resource Include="WorkListUI\Images\ZoomToAll16.png" />
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="Images\RemoveOverlapsTool16.png" />

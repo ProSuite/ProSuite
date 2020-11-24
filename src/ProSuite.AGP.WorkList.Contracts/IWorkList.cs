@@ -33,7 +33,8 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// <param name="startIndex"></param>
 		/// <returns></returns>
 		[NotNull]
-		IEnumerable<IWorkItem> GetItems([CanBeNull] QueryFilter filter = null, bool ignoreListSettings = false,
+		IEnumerable<IWorkItem> GetItems([CanBeNull] QueryFilter filter = null,
+		                                bool ignoreListSettings = false,
 		                                int startIndex = 0);
 
 		int Count([CanBeNull] QueryFilter filter = null, bool ignoreListSettings = false);
@@ -59,7 +60,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 		void GoPrevious();
 
 		bool CanSetStatus();
-
 
 		void SetVisited([NotNull] IWorkItem item);
 

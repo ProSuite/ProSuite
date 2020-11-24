@@ -33,7 +33,9 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private RelayCommand _panToCmd;
 		private RelayCommand _zoomToAllCmd;
 		private RelayCommand _pickWorkItemCmd;
+		private RelayCommand _goNearestItemCmd;
 		private WorkListView _view;
+		
 
 		public WorkListViewModel(IWorkList workList)
 		{
@@ -78,6 +80,15 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			{
 				_goNextItemCmd = new RelayCommand(() => GoNextItem(), () => true);
 				return _goNextItemCmd;
+			}
+		}
+
+		public RelayCommand GoNearestItemCmd
+		{
+			get
+			{
+				_goNearestItemCmd = new RelayCommand(() => GoNearestItem(), () => true);
+				return _goNearestItemCmd;
 			}
 		}
 
@@ -219,6 +230,15 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			QueuedTask.Run(() =>
 			{
 				CurrentWorkList.GoPrevious();
+				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
+			});
+		}
+
+		private void GoNearestItem()
+		{
+			QueuedTask.Run(() =>
+			{
+				CurrentWorkList.GoNearest(CurrentWorkList.Current.Extent);
 				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
 			});
 		}

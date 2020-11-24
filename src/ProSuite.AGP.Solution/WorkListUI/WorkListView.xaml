@@ -31,29 +31,29 @@
         <ToolBarTray>
             <ToolBar Grid.Row="0">
                 <Button Command="{Binding GoFirstItemCmd}">
-                    <Image Source="Images/GoFirst.png" ToolTip="Previous WorkItem" Stretch="UniformToFill" />
+                    <Image Source="Images/GoFirst16.png" ToolTip="Previous WorkItem" Stretch="UniformToFill" />
                 </Button>
                 <Button Command="{Binding GoPreviousItemCmd}">
-                    <Image Source="Images/GoBack.png" ToolTip="Previous WorkItem" Stretch="UniformToFill" />
+                    <Image Source="Images/GoBack16.png" ToolTip="Previous WorkItem" Stretch="UniformToFill" />
                 </Button>
                 <Button Command="{Binding GoNextItemCmd}">
-                    <Image Source="Images/GoNext.png" ToolTip="Next WorkItem" Stretch="UniformToFill" />
+                    <Image Source="Images/GoNext16.png" ToolTip="Next WorkItem" Stretch="UniformToFill" />
                 </Button>
-                <Button>
-                    <Image Source="Images/GoNearest.png" Stretch="UniformToFill" ToolTip="Nearest WorkItem"/>
+                <Button Command ="{Binding GoNearestItemCmd}">
+                    <Image Source="Images/GoNearest16.png" Stretch="UniformToFill" ToolTip="Nearest WorkItem"/>
                 </Button>
                 <Button Command="{Binding PickWorkItemCmd}">
-                    <Image Source="Images/PickWorkItemTool.png" Stretch="UniformToFill" ToolTip="Pick Next WorkItem"/>
+                    <Image Source="Images/PickWorkItemTool16.png" Stretch="UniformToFill" ToolTip="Pick Next WorkItem"/>
                 </Button>
                 <Separator/>
                 <Button Command="{Binding ZoomToCmd}">
-                    <Image Source="Images/ZoomTo.png" Stretch="UniformToFill" ToolTip="Zoom to WorkItem"/>
+                    <Image Source="Images/ZoomTo16.png" Stretch="UniformToFill" ToolTip="Zoom to WorkItem"/>
                 </Button>
                 <Button Command="{Binding PanToCmd}">
-                    <Image Source="Images/PanTo.png" Stretch="UniformToFill" ToolTip="Pan to WorkItem"/>
+                    <Image Source="Images/PanTo16.png" Stretch="UniformToFill" ToolTip="Pan to WorkItem"/>
                 </Button>
                 <Button Command="{Binding ZoomToAllCmd}">
-                    <Image Source="Images/ZoomToAll.png" Stretch="UniformToFill" ToolTip="Zoom to extent of all WorkItems"/>
+                    <Image Source="Images/ZoomToAll16.png" Stretch="UniformToFill" ToolTip="Zoom to extent of all WorkItems"/>
                 </Button>
                 <Separator/>
                 <Button Command="{Binding ClearSelectionCmd}">
