@@ -68,7 +68,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 		[CanBeNull]
 		private IWorkListObserver GetObserverByWorklistName(string name)
 		{
-			var vms = _observers.Select(observer => observer as WorkListViewModel);
+			var vms = _observers.Select(observer => observer as SelectionWorkListVm);
 			return vms.FirstOrDefault(vm => vm.CurrentWorkList.Name == name);
 		}
 
@@ -94,7 +94,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				CreateLayer(environment, workList.Name);
 
-				RegisterObserver(new WorkListViewModel(workList));
+				RegisterObserver(new SelectionWorkListVm(workList));
 			}
 			catch (Exception e)
 			{
@@ -341,7 +341,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		private void UnregisterViewModel(IWorkList workList)
 		{
-			WorkListViewModel vm = GetObserverByWorklistName(workList.Name) as WorkListViewModel;
+			SelectionWorkListVm vm = GetObserverByWorklistName(workList.Name) as SelectionWorkListVm;
 
 			if (vm != null)
 			{

@@ -17,7 +17,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
-	public class WorkListViewModel : PropertyChangedBase, IWorkListObserver
+	public abstract class WorkListViewModelBase : PropertyChangedBase, IWorkListObserver
 	{
 		private const double _seconds = 0.3;
 		private IWorkList _currentWorkList;
@@ -34,15 +34,11 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private RelayCommand _zoomToAllCmd;
 		private RelayCommand _pickWorkItemCmd;
 		private RelayCommand _goNearestItemCmd;
-		private WorkListView _view;
-		
 
-		public WorkListViewModel(IWorkList workList)
-		{
-			CurrentWorkList = workList;
-			CurrentWorkList.GoNext();
-			CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
-		}
+		//protected WorkListViewModelBase(IWorkList workList)
+		//{
+
+		//}
 
 		public ICommand ClearSelectionCmd =>
 			FrameworkApplication.GetPlugInWrapper(
@@ -225,6 +221,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			set { SetProperty(ref _currentIndex, value, () => CurrentIndex); }
 		}
 
+		protected abstract WorkListView View { get; set; }
+
 		private void GoPreviousItem()
 		{
 			QueuedTask.Run(() =>
@@ -328,7 +326,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		public void WorkListRemoved(IWorkList workList)
 		{
-			RunOnUIThread(() => _view.Close());
+			RunOnUIThread(() => View.Close());
 		}
 
 		public void WorkListModified(IWorkList workList)
@@ -336,13 +334,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			//throw new NotImplementedException();
 		}
 
-		public void Show(IWorkList workList)
-		{
-			_view = new WorkListView(this);
-			_view.Owner = FrameworkApplication.Current.MainWindow;
-			_view.Title = workList.Name;
-			_view.Show();
-		}
+		public abstract void Show(IWorkList workList);
 
 		[NotNull]
 		private static Envelope GetEnvelope([NotNull] IWorkItem item)

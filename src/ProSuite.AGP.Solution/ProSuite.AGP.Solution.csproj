@@ -159,8 +159,9 @@
     <Compile Include="WorkListUI\WorkListView.xaml.cs">
       <DependentUpon>WorkListView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WorkListUI\WorkListViewModel.cs" />
+    <Compile Include="WorkListUI\WorkListViewModelBase.cs" />
     <Compile Include="WorkLists\InMemoryWorkEnvironment.cs" />
+    <Compile Include="WorkListUI\SelectionWorkListVm.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="ProTrials\CartoProcess\CartoProcessDockpane.xaml">
