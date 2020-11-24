@@ -66,15 +66,17 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			// Unqualified Name must start with %, and it is owned by the current user:
 			Assert.AreEqual("UNITTEST.%TEST_CLASS", queryClassName);
 
+			double xyTolerance = 0.01;
+
 			IFeatureClass fclass = (IFeatureClass)
 				DatasetUtils.CreateQueryLayerClass((ISqlWorkspace) workspace, sql, queryClassName,
-				                                   periPK);
+				                                   periPK, xyTolerance);
 
 			var filter = new SpatialFilterClass
 			             {
 				             Geometry =
 					             GeometryFactory.CreateEnvelope(2600000, 1200000, 2700000, 1300000),
-				             SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects,
+				             SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects
 			             };
 
 			IFeatureCursor cursor = fclass.Search(filter, true);
@@ -94,7 +96,11 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			// solution found elsewhere: only spatial queries work, need to pass spatial filter with geometry
 			IFeatureCursor cursorWithNullFilter = fclass.Search(null, true);
 
-			Assert.NotNull(cursorWithNullFilter.NextFeature());
+			IFeature feature = cursorWithNullFilter.NextFeature();
+
+			Assert.NotNull(feature);
+			Assert.AreEqual(xyTolerance, GeometryUtils.GetXyTolerance(feature.Shape));
+
 			Marshal.ReleaseComObject(cursorWithNullFilter);
 		}
 
