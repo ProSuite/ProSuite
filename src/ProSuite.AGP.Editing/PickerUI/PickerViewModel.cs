@@ -51,10 +51,10 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 			CIMStroke outline =
 				SymbolFactory.Instance.ConstructStroke(
-					magenta, 2, SimpleLineStyle.Solid);
+					magenta, 4, SimpleLineStyle.Solid);
 
 			_highlightLineSymbol =
-				SymbolFactory.Instance.ConstructLineSymbol(magenta, 2);
+				SymbolFactory.Instance.ConstructLineSymbol(magenta, 4);
 
 			_highlightPolygonSymbol =
 				SymbolFactory.Instance.ConstructPolygonSymbol(
