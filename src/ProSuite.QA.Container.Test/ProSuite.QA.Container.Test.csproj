@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F7D731C0-8A36-4B2C-A8C0-AFEB81FA8DD1}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ProSuite.QA.Container.Test</RootNamespace>
+    <AssemblyName>ProSuite.QA.Container.Test</AssemblyName>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.6.1</TargetFrameworkVersion>
+    <VSArcGISProduct Condition=" '$(VSArcGISProduct)' == ''">ArcGIS</VSArcGISProduct>
+    <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.6\DotNet</ArcGISAssemblyPath>
+    <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">C:\Program Files\ArcGIS\Pro</ProAssemblyPath>
+    <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>$(OutputDirectory)\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>$(OutputDirectory)\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="ESRI.ArcGIS.DataSourcesRaster, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.$(VSArcGISProduct).DataSourcesRaster.dll</HintPath>
+    </Reference>
+    <Reference Include="ESRI.ArcGIS.Geodatabase, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.$(VSArcGISProduct).Geodatabase.dll</HintPath>
+    </Reference>
+    <Reference Include="ESRI.ArcGIS.Geometry, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.$(VSArcGISProduct).Geometry.dll</HintPath>
+    </Reference>
+    <Reference Include="ESRI.ArcGIS.System, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.$(VSArcGISProduct).System.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="ExpressionUtilsTest.cs" />
+    <Compile Include="FormatUtilsTest.cs" />
+    <Compile Include="GeometryConstraintTest.cs" />
+    <Compile Include="IssueCodeDescriptions.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>IssueCodeDescriptions.resx</DependentUpon>
+    </Compile>
+    <Compile Include="IssueCodeUtilsTest.cs" />
+    <Compile Include="OverlappingFeaturesTest.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SegmentUtilsTest.cs" />
+    <Compile Include="TestContainerTest.cs" />
+    <Compile Include="TestSupport\GeographicCSGeometryTest.cs" />
+    <Compile Include="TestSupport\MultiTableViewTest.cs" />
+    <Compile Include="TestSupport\TableViewTest.cs" />
+    <Compile Include="TestUtilsTest.cs" />
+    <Compile Include="TestWorkspaceUtils.cs" />
+    <Compile Include="VerifyingContainerTest.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.AO.Test\ProSuite.Commons.AO.Test.csproj">
+      <Project>{0B800210-3407-489B-80C4-D043DDB81ECB}</Project>
+      <Name>ProSuite.Commons.AO.Test</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">
+      <Project>{7E4B0861-83ED-4D12-BE27-93C9053C88CA}</Project>
+      <Name>ProSuite.Commons.AO</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
+      <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
+      <Name>ProSuite.Commons.Essentials</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
+      <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
+      <Name>ProSuite.Commons.Logging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons\ProSuite.Commons.csproj">
+      <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
+      <Name>ProSuite.Commons</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.QA.Container\ProSuite.QA.Container.csproj">
+      <Project>{D51693C1-F9F6-425D-8CD6-8DFBF5A52F6F}</Project>
+      <Name>ProSuite.QA.Container</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="IssueCodeDescriptions.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>IssueCodeDescriptions.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="NUnit">
+      <Version>3.12.0</Version>
+    </PackageReference>
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+</Project>
