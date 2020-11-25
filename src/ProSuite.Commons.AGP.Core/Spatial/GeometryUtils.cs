@@ -45,7 +45,9 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return Engine.Intersection(a, b);
 		}
 
-		public static T Generalize<T>(T geometry, double maxDeviation, bool removeDegenerateParts = false, bool preserveCurves = false) where T : Geometry
+		public static T Generalize<T>(T geometry, double maxDeviation,
+		                              bool removeDegenerateParts = false,
+		                              bool preserveCurves = false) where T : Geometry
 		{
 			if (maxDeviation < double.Epsilon)
 				return geometry;
@@ -154,6 +156,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				case esriGeometryType.esriGeometryBag:
 					return GeometryType.GeometryBag;
 				case esriGeometryType.esriGeometryAny:
+					return GeometryType.Unknown;
+				case esriGeometryType.esriGeometryNull:
 					return GeometryType.Unknown;
 				default:
 					throw new ArgumentOutOfRangeException($"Cannot translate {esriGeometryType}");
