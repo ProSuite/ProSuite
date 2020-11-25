@@ -1,0 +1,279 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="QaEdgeMatchCrossingLines_NoMatch_NoCandidate" xml:space="preserve">
+    <value>Es existiert kein mit der Grenze verbundenes Nachbar-Feature innerhalb der Suchdistanz.</value>
+  </data>
+  <data name="QaEdgeMatchCrossingLines_BordersNotCoincident" xml:space="preserve">
+    <value>Grenzverlauf stimmt nicht überein.</value>
+  </data>
+  <data name="QaEdgeMatchCrossingLines_NoMatch_CandidateExists" xml:space="preserve">
+    <value>Keine exakte Fortsetzung. Nachbarfeature mit Grenzverknüpfung in der Nähe, Distanz zu Endpunkt: {0}.</value>
+  </data>
+  <data name="QaEdgeMatchCrossingLines_NoMatch_CandidateExists_EndPointOutsideTolerance" xml:space="preserve">
+    <value>Keine exakte Fortsetzung. Nachbarfeature mit Grenzverknüpfung, Distanz zu Endpunkt: {0} (zu groß). Distanz zu Linie: {1}.</value>
+  </data>
+  <data name="QaEdgeMatchCrossingLines_NoMatch_NoCandidate_ConnectedOnSameSide" xml:space="preserve">
+    <value>Es existiert kein mit der Grenze verbundenes Nachbar-Feature innerhalb der Suchdistanz. Der Endpunkt ist mit einem anderen Feature auf derselben Seite verknüpft.</value>
+  </data>
+  <data name="EdgeMatchUtils_AttributeConstraints_ConstraintNotFulfilled" xml:space="preserve">
+    <value>Bedingung nicht erfüllt ({0})</value>
+  </data>
+  <data name="EdgeMatchUtils_AttributeConstraints_ValuesNotEqual" xml:space="preserve">
+    <value>Werte nicht gleich ({0})</value>
+  </data>
+  <data name="QaEdgeMatchCrossingAreas_Match_ConstraintsNotFulfilled" xml:space="preserve">
+    <value>Es existiert ein passendes Nachbar-Feature (Länge der gemeinsamen Grenze: {0}). {1}.</value>
+  </data>
+  <data name="QaEdgeMatchBorderingLines_Match_ConstraintsNotFulfilled" xml:space="preserve">
+    <value>Es existiert ein passendes Nachbar-Feature (Länge der gemeinsamen Grenze: {0}). {1}.</value>
+  </data>
+  <data name="QaEdgeMatchBorderingLines_PartlyOutsideVerifiedExtent" xml:space="preserve">
+    <value>Der Grenzverlauf liegt teilweise außerhalb des geprüften Bereichs.</value>
+  </data>
+  <data name="QaEdgeMatchCrossingAreas_PartlyOutsideVerifiedExtent" xml:space="preserve">
+    <value>Der Grenzverlauf liegt teilweise außerhalb des geprüften Bereichs.</value>
+  </data>
+  <data name="QaEdgeMatchCrossingAreas_NoMatch_CandidateExists" xml:space="preserve">
+    <value>Kein passendes Nachbar-Feature. Nachbarfeature mit Grenzverknüpfung in der Nähe. Grenzverlauf stimmt nicht überein.</value>
+  </data>
+  <data name="QaEdgeMatchBorderingLines_NoMatch_CandidateExists" xml:space="preserve">
+    <value>Kein passendes Nachbar-Feature. Nachbarfeature mit Grenzverknüpfung in der Nähe. Grenzverlauf stimmt nicht überein.</value>
+  </data>
+  <data name="QaEdgeMatchCrossingAreas_NoMatch_NoCandidate" xml:space="preserve">
+    <value>Es existiert kein mit der Grenze verbundenes Nachbar-Feature innerhalb der Suchdistanz.</value>
+  </data>
+  <data name="QaEdgeMatchBorderingLines_Match_EndPointNotCoincident" xml:space="preserve">
+    <value>Es existiert ein passendes Nachbar-Feature, aber ein Linienendpunkt stimmt nicht überein.</value>
+  </data>
+  <data name="QaEdgeMatchBorderingLines_NoMatch_NoCandidate" xml:space="preserve">
+    <value>Es existiert kein mit der Grenze verbundenes Nachbar-Feature innerhalb der Suchdistanz.</value>
+  </data>
+  <data name="QaEdgeMatchBorderingPoints_BordersNotCoincident" xml:space="preserve">
+    <value>Grenzverlauf stimmt nicht überein.</value>
+  </data>
+  <data name="QaEdgeMatchBorderingPoints_NoMatch_NoCandidate" xml:space="preserve">
+    <value>Es existiert kein mit der Grenze verbundenes Nachbar-Feature innerhalb der Suchdistanz.</value>
+  </data>
+  <data name="QaEdgeMatchBorderingPoints_NoMatch_CandidateExists" xml:space="preserve">
+    <value>Kein passendes Nachbar-Feature. Nachbarfeature mit Grenzverknüpfung in der Nähe, Distanz: {0}. </value>
+  </data>
+  <data name="VertexCoincidenceChecker_NearbyEdgeNotPassingThroughVertex_DifferentFeature" xml:space="preserve">
+    <value>Benachbarter Linienverlauf verläuft nicht durch den Stützpunkt (Distanz zum benachbarten Linienverlauf: {0} Suchradius)</value>
+  </data>
+  <data name="VertexCoincidenceChecker_NearbyEdgeNotPassingThroughVertex_SameFeature" xml:space="preserve">
+    <value>Benachbarter Linienverlauf auf demselben Feature verläuft nicht durch den Stützpunkt (Distanz zum benachbarten Linienverlauf: {0} Suchradius)</value>
+  </data>
+  <data name="VertexCoincidenceChecker_NearbyVertexNotCoincident_DifferentFeature" xml:space="preserve">
+    <value>Benachbarter Stützpunkt fällt nicht mit diesem Stützpunkt zusammen (Distanz zum Stützpunkt: {0} Suchradius)</value>
+  </data>
+  <data name="VertexCoincidenceChecker_NearbyVertexNotCoincident_SameFeature" xml:space="preserve">
+    <value>Benachbarter Stützpunkt auf demselben Feature fällt nicht mit diesem Stützpunkt zusammen (Distanz zum Stützpunkt: {0} Suchradius)</value>
+  </data>
+  <data name="VertexCoincidenceChecker_NoVertexOnNearbyEdge_DifferentFeature" xml:space="preserve">
+    <value>Kein zusammenfallender Stützpunkt gefunden auf benachbartem Linienverlauf (Distanz zum Linienverlauf: {0} Suchradius)</value>
+  </data>
+  <data name="VertexCoincidenceChecker_NoVertexOnNearbyEdge_SameFeature" xml:space="preserve">
+    <value>Kein zusammenfallender Stützpunkt gefunden auf benachbartem Linienverlauf auf demselben Feature (Distanz zum Linienverlauf: {0} Suchradius)</value>
+  </data>
+  <data name="QaFullCoincidence_PartNotNearReference" xml:space="preserve">
+    <value>Linienverlauf ist zu weit von der Referenzlinie entfernt</value>
+  </data>
+  <data name="QaNearCoincidenceBase_NearlyCoincidentSection_Extended_Base" xml:space="preserve">
+    <value>Länge des Linienverlaufs innerhalb der Annäherungstoleranz {0} ist {1} (&gt; {2})</value>
+  </data>
+  <data name="QaNearCoincidenceBase_NearlyCoincidentSection_Extended_ConnectedPaths" xml:space="preserve">
+    <value>; die Linienverläufe sind verknüpft</value>
+  </data>
+  <data name="QaNearCoincidenceBase_NearlyCoincidentSection_Extended_DisjointPaths" xml:space="preserve">
+    <value>; die kürzeste Distanz zwischen den Linienverläufen ist {0}</value>
+  </data>
+  <data name="QaNearCoincidenceBase_NearlyCoincidentSection_Short" xml:space="preserve">
+    <value>Länge des Linienverlaufs innerhalb der Annäherungstoleranz ist {0} (&gt; {1})</value>
+  </data>
+  <data name="QaSimpleGeometry_Empty" xml:space="preserve">
+    <value>Die Geometrie ist leer</value>
+  </data>
+  <data name="QaSimpleGeometry_Null" xml:space="preserve">
+    <value>Die Geometrie ist NULL</value>
+  </data>
+  <data name="QaGeometryConstraint_ConstraintNotFulfilled_ForShapePart" xml:space="preserve">
+    <value>Die Bedingung ist nicht erfüllt für einen Geometrieteil: {0} ({1})</value>
+  </data>
+  <data name="QaGeometryConstraint_QaGeometryConstraint_ConstraintNotFulfilled_ForShape" xml:space="preserve">
+    <value>Die Bedingung ist nicht erfüllt für die Feature-Geometrie: {0} ({1})</value>
+  </data>
+  <data name="VertexCoincidenceChecker_ZDifference_CoincidentEdge_DifferentFeature" xml:space="preserve">
+    <value>Abweichender Z-Wert entlang zusammenfallendem Linienverlauf (Z-Abstand: {0})</value>
+  </data>
+  <data name="VertexCoincidenceChecker_ZDifference_CoincidentEdge_SameFeature" xml:space="preserve">
+    <value>Abweichender Z-Wert entlang zusammenfallendem Linienverlauf auf demselben Feature (Z-Abstand: {0})</value>
+  </data>
+  <data name="VertexCoincidenceChecker_ZDifference_CoincidentVertex_DifferentFeature" xml:space="preserve">
+    <value>Zusammenfallender Stützpunkt hat einen abweichenden Z-Wert (Z-Abstand: {0})</value>
+  </data>
+  <data name="VertexCoincidenceChecker_ZDifference_CoincidentVertex_SameFeature" xml:space="preserve">
+    <value>Zusammenfallender Stützpunkt auf demselben Feature hat einen abweichenden Z-Wert (Z-Abstand: {0})</value>
+  </data>
+  <data name="QaNoGaps_GapFound" xml:space="preserve">
+    <value>Lücke gefunden (Fläche: </value>
+  </data>
+  <data name="QaNoGaps_SliverParameters" xml:space="preserve">
+    <value>; Perimeter * Perimeter / Fläche: {0}; Perimeter: {1}</value>
+  </data>
+  <data name="QaTopoNotNear_NearlyCoincidentSection_WithinNear" xml:space="preserve">
+    <value>Segmente liegen vollständig innerhalb des Annäherungsbereichs von anderen Segmenten</value>
+  </data>
+  <data name="QaTopoNotNear_NearlyCoincidentSection_Connected_Loop_WithinNear" xml:space="preserve">
+    <value>Verknüpfte Segmente bilden eine geschlossene Schleife und liegen innerhalb des Annäherungsbereichs von anderen Segmenten</value>
+  </data>
+  <data name="QaTopoNotNear_NearlyCoincidentSection_Connected_Loop" xml:space="preserve">
+    <value>Verknüpfte Segmente bilden eine geschlossene Schleife innerhalb des eigenen Annäherungsbereichs</value>
+  </data>
+  <data name="QaTopoNotNear_NearlyCoincidentSection_WithinNear_Connected" xml:space="preserve">
+    <value>Segmente liegen vollständig innerhalb des Annäherungsbereichs von anderen Segmenten, mit denen sie verknüpft sind</value>
+  </data>
+  <data name="QaTopoNotNear_NearlyCoincidentSection_Connected" xml:space="preserve">
+    <value>Länge des Linienverlaufs innerhalb der Annäherungsdistanz ist {0} (&gt;= {1}); die Verläufe sind verknüpft</value>
+  </data>
+  <data name="QaTopoNotNear_NearlyCoincidentSection_Disjoint" xml:space="preserve">
+    <value>Länge des Linienverlaufs innerhalb der Annäherungsdistanz ist {0} (&gt;= {1}); die Verläufe berühren sich nicht</value>
+  </data>
+  <data name="QaTopoNotNear_NearlyCoincidentSection_Crossing" xml:space="preserve">
+    <value>Länge des Linienverlaufs innerhalb der Annäherungsdistanz ist {0} (&gt;= {1}); die Verläufe kreuzen sich, sind aber nicht verknüpft</value>
+  </data>
+  <data name="QaTopoNotNear_CoincidentSectionFound" xml:space="preserve">
+    <value>Linienverläufe sind deckungsgleich</value>
+  </data>
+  <data name="QaTopoNotNear_ShortSubpart" xml:space="preserve">
+    <value>Feature mit nicht verknüpftem Endpunkt ist zu kurz: {0}</value>
+  </data>
+  <data name="QaTopoNotNear_InconsistentLineSymbolEnd" xml:space="preserve">
+    <value>Inkonsistentes Liniensymbol-Ende (letztes Segment ist zu kurz im Vergleich zur Symbolbreite)</value>
+  </data>
+  <data name="VertexCoincidenceChecker_NearbyEdgeNotPassingThroughVertex_ReportCoordinatesSuffix" xml:space="preserve">
+    <value>. Stützpunkt: {0}, {1}</value>
+  </data>
+  <data name="VertexCoincidenceChecker_NoVertexOnNearbyEdge_ReportCoordinatesSuffix" xml:space="preserve">
+    <value>. Stützpunkt: {0}, {1}</value>
+  </data>
+  <data name="VertexCoincidenceChecker_NearbyVertexNotCoincident_ReportCoordinatesSuffix" xml:space="preserve">
+    <value>. Stützpunkt: {0}, {1}; benachbarter Stützpunkt: {2}, {3}</value>
+  </data>
+</root>
