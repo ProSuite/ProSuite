@@ -17,15 +17,15 @@ namespace ProSuite.QA.Container.Test
 		{
 			string dir = Path.GetTempPath();
 
-			string mdb = Path.Combine(dir, mdbName) + ".mdb";
+			string mdb = Path.Combine(dir, mdbName) + ".gdb";
 
-			if (File.Exists(mdb))
+			if (Directory.Exists(mdb))
 			{
-				File.Delete(mdb);
+				Directory.Delete(mdb, true);
 			}
 
-			IFeatureWorkspace testWs = WorkspaceUtils.CreatePgdbWorkspace(dir, mdbName);
-			return testWs;
+			IWorkspaceName wsName = WorkspaceUtils.CreateFileGdbWorkspace(dir, mdbName);
+			return (IFeatureWorkspace) ((IName) wsName).Open();
 		}
 
 		[NotNull]
