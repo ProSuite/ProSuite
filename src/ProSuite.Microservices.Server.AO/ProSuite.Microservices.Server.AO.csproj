@@ -34,7 +34,7 @@
     <DefineConstants>TRACE;$(VSArcGISProduct)</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.Commons.AO.xml</DocumentationFile>
+    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.Microservices.Server.AO.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
@@ -95,7 +95,9 @@
     <Compile Include="Geometry\RemoveOverlaps\RemoveOverlapsGrpcImpl.cs" />
     <Compile Include="Geometry\RemoveOverlaps\RemoveOverlapsServiceUtils.cs" />
     <Compile Include="GrpcServerUtils.cs" />
-    <Compile Include="GrpcWindowsService.cs" />
+    <Compile Include="GrpcWindowsService.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="IServiceHealth.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProtobufConversionUtils.cs" />
