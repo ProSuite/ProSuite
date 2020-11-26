@@ -153,6 +153,12 @@ namespace ProSuite.Microservices.Client
 
 		protected void OpenChannel(bool useTls, string clientCertificate = null)
 		{
+			if (string.IsNullOrEmpty(_host))
+			{
+				_msg.Debug("Host name is null or empty. No channel opened.");
+				return;
+			}
+
 			var enoughForLargeGeometries = (int) Math.Pow(1024, 3);
 
 			ChannelCredentials credentials =

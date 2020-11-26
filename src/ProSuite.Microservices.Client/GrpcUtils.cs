@@ -81,7 +81,7 @@ namespace ProSuite.Microservices.Client
 		}
 
 		public static Channel CreateChannel(
-			string host, int port,
+			[NotNull] string host, int port,
 			ChannelCredentials credentials,
 			int maxMessageLength)
 		{
