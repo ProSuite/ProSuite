@@ -137,7 +137,7 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 					using (var geodatabase = (Geodatabase) gdbItem.GetDatastore())
 					{
-						var context = new ProProcessingContext(geodatabase, MapView.Active?.Map);
+						var context = new ProProcessingContext(geodatabase, MapView.Active);
 						var feedback = new ProProcessingFeedback();
 
 						context.SelectionType = SelectionType;

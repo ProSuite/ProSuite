@@ -17,7 +17,7 @@ namespace ProSuite.Processing
 			Name = name ?? string.Empty;
 			Description = description ?? string.Empty;
 
-			_settings = new List<KeyValuePair<string, object>>();
+			_settings = new List<KeyValuePair<string, object>>(); // todo keep triples (name, value, lineno) for better error reporting
 		}
 
 		public static CartoProcessConfig FromString(string name, string text, string description = null)
@@ -39,14 +39,42 @@ namespace ProSuite.Processing
 			{
 				if (string.Equals(pair.Key, parameterName, StringComparison.Ordinal))
 				{
-					yield return (T) converter.ConvertFrom(pair.Value);
+					yield return ConvertValue<T>(converter, pair.Value, parameterName);
 				}
 			}
 		}
 
-		public T GetValue<T>(string parameterName)
+		public T GetOptionalValue<T>(string parameterName)
 		{
-			return GetValues<T>(parameterName).SingleOrDefault();
+			var values = GetValues<T>(parameterName).ToArray();
+			if (values.Length < 1)
+				return default;
+			if (values.Length > 1)
+				throw ConfigError("Parameter {0} is defined more than once", parameterName);
+			return values[0];
+		}
+
+		public T GetRequiredValue<T>(string parameterName)
+		{
+			var values = GetValues<T>(parameterName).ToArray();
+			if (values.Length < 1)
+				throw ConfigError("Required parameter {0} is missing", parameterName);
+			if (values.Length > 1)
+				throw ConfigError("Parameter {0} is defined more than once", parameterName);
+			return values[0];
+		}
+
+		private static T ConvertValue<T>(TypeConverter converter, object value, string name)
+		{
+			try
+			{
+				return (T) converter.ConvertFrom(value);
+			}
+			catch (Exception ex)
+			{
+				throw ConfigError("Cannot convert {0} to type {1}: {2}",
+				                  name, typeof(T).Name, ex.Message);
+			}
 		}
 
 		public void LoadString(string text)
@@ -65,10 +93,10 @@ namespace ProSuite.Processing
 				if (string.IsNullOrEmpty(name))
 					throw SyntaxError(position, "Expect parameter name");
 
-				SkipWhite(text, position);
+				SkipBlank(text, position);
 				if (ScanOperator(text, position, ':', '=') == (char) 0)
 					throw SyntaxError(position, "Expect '=' operator");
-				SkipWhite(text, position);
+				SkipBlank(text, position);
 
 				string value = ScanValue(text, position);
 				if (value == null)
@@ -257,11 +285,29 @@ namespace ProSuite.Processing
 			}
 		}
 
+		private static void SkipBlank(string text, Position position)
+		{
+			const char blank = ' ';
+			const char tab = '\t';
+
+			char cc;
+			while (position.Index < text.Length && ((cc = text[position.Index]) == blank || cc == tab))
+			{
+				position.Advance(text);
+			}
+		}
+
 		[StringFormatMethod("format")]
 		private static FormatException SyntaxError(Position position, string format, params object[] args)
 		{
 			return new FormatException(string.Format(format, args) +
 			                           $" (line {position.LineNumber} position {position.LinePosition}");
+		}
+
+		[StringFormatMethod("format")]
+		private static Exception ConfigError(string format, params object[] args)
+		{
+			return new Exception(string.Format(format, args));
 		}
 
 		private class Position

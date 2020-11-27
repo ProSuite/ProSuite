@@ -57,7 +57,9 @@
     <Compile Include="Domain\IProcessingFeedback.cs" />
     <Compile Include="Domain\IProcessingSelection.cs" />
     <Compile Include="Domain\IProcessingSymbology.cs" />
+    <Compile Include="Domain\MaskOutlineType.cs" />
     <Compile Include="Domain\NoProcessingSelection.cs" />
+    <Compile Include="Domain\NoProcessingSymbology.cs" />
     <Compile Include="Domain\ProcessExecutionType.cs" />
     <Compile Include="Domain\ProcessingDataset.cs" />
     <Compile Include="Domain\ProcessSelectionType.cs" />

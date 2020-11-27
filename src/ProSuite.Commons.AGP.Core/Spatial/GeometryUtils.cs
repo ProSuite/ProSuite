@@ -129,6 +129,11 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (T) Engine.Project(geometry, spatialReference);
 		}
 
+		public static bool HasCurves(this Geometry geometry)
+		{
+			return geometry is Multipart multipart && multipart.HasCurves;
+		}
+
 		public static IGeometryEngine Engine
 		{
 			get => _engine ?? GeometryEngine.Instance;
