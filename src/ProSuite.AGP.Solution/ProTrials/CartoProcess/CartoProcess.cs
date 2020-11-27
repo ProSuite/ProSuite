@@ -70,6 +70,7 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 		public Geometry QueryDrawingOutline(long oid, OutlineType outlineType)
 		{
+#if PRO27
 			DrawingOutlineType drawingOutlineType;
 			switch (outlineType)
 			{
@@ -84,6 +85,9 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 			}
 
 			return _layer.QueryDrawingOutline(oid, _mapView, drawingOutlineType);
+#else
+			throw new NotImplementedException("Requires ArcGIS Pro 2.7 or newer");
+#endif
 		}
 	}
 
