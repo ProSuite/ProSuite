@@ -1659,10 +1659,20 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return "<workspace not defined>";
 			}
 
-			return workspaceName.Type ==
-			       esriWorkspaceType.esriRemoteDatabaseWorkspace
-				       ? GetConnectionString(workspaceName, true)
-				       : workspaceName.PathName;
+			string result;
+			try
+			{
+				result = workspaceName.Type ==
+				         esriWorkspaceType.esriRemoteDatabaseWorkspace
+					         ? GetConnectionString(workspaceName, true)
+					         : workspaceName.PathName;
+			}
+			catch (Exception e)
+			{
+				return $"<Error converting to string: {e.Message}>";
+			}
+
+			return result;
 		}
 
 		[NotNull]
