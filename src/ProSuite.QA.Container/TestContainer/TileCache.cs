@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -55,7 +55,14 @@ namespace ProSuite.QA.Container.TestContainer
 		public List<IList<BaseRow>>[] IgnoredRowsByTableAndTest { get; }
 
 		public TestRow CurrentTestRow { get; set; }
-		public Box CurrentTileBox { get; set; }
+		public Box CurrentTileBox { get; private set; }
+
+		public Box SetCurrentTileBox(Box tileBox)
+		{
+			_currentRowNeighbors = null;
+			CurrentTileBox = tileBox;
+			return CurrentTileBox;
+		}
 
 		[NotNull]
 		private static double[] GetXYTolerancePerTable(

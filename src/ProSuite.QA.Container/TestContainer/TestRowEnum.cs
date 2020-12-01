@@ -1019,7 +1019,7 @@ namespace ProSuite.QA.Container.TestContainer
 				}
 			}
 
-			_tileCache.CurrentTileBox = tile.Box;
+			_tileCache.SetCurrentTileBox(tile.Box);
 
 			//InitializeTile();
 			//// TestUtils.AddGarbageCollectionRequest();
