@@ -133,7 +133,16 @@ namespace ProSuite.Microservices.Client.QA
 
 				if (rpcException.StatusCode == StatusCode.Cancelled)
 				{
-					return Progress.RemoteCallStatus = ServiceCallStatus.Cancelled;
+					if (Progress.RemoteCallStatus != ServiceCallStatus.Running)
+					{
+						// The client has gone, but the final status has already been set:
+						return Progress.RemoteCallStatus;
+					}
+					else
+					{
+						// Actual cancellation:
+						return Progress.RemoteCallStatus = ServiceCallStatus.Cancelled;
+					}
 				}
 
 				Progress.RemoteCallStatus = ServiceCallStatus.Failed;
