@@ -1534,6 +1534,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				watch = _msg.DebugStartTiming();
 			}
 
+			int rowCount = 0;
+
 			var featureClass = table as IFeatureClass;
 			if (featureClass != null)
 			{
@@ -1544,6 +1546,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 					     feature != null;
 					     feature = cursor.NextFeature())
 					{
+						rowCount++;
 						yield return (T) feature;
 					}
 				}
@@ -1561,11 +1564,22 @@ namespace ProSuite.Commons.AO.Geodatabase
 					     row != null;
 					     row = cursor.NextRow())
 					{
+						rowCount++;
 						yield return (T) row;
 					}
 				}
 				finally
 				{
+					// In case TOP-2231 ever happens again, re-introduce this:
+					// releasing only when there have been rows seems to reduce the 
+					// frequency of https://issuetracker02.eggits.net/browse/TOP-2231
+					// (COM object that has been separated from its underlying RCW cannot be used)
+					// in subsequent edit operations.
+					//if (rowCount > 0 && Marshal.IsComObject(cursor))
+					//{
+					//	ComUtils.ReleaseComObject(cursor);
+					//}
+
 					ComUtils.ReleaseComObject(cursor);
 				}
 			}
@@ -1594,6 +1608,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 						_msg.DebugFormat("SearchOrder: {0}", spatialFilter.SearchOrder);
 					}
 				}
+
+				_msg.DebugFormat("Result row count: {0}", rowCount);
 			}
 		}
 
