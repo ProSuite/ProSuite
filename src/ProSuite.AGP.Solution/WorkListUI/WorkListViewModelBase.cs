@@ -34,12 +34,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private RelayCommand _zoomToAllCmd;
 		private RelayCommand _pickWorkItemCmd;
 		private RelayCommand _goNearestItemCmd;
-
-		//protected WorkListViewModelBase(IWorkList workList)
-		//{
-
-		//}
-
+		
 		public ICommand ClearSelectionCmd =>
 			FrameworkApplication.GetPlugInWrapper(
 				DAML.Button.esri_mapping_clearSelectionButton) as ICommand;
@@ -59,6 +54,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		public ICommand ZoomOutCmd =>
 			FrameworkApplication.GetPlugInWrapper(
 				DAML.Button.esri_mapping_fixedZoomOutButton) as ICommand;
+
+		public abstract bool HasDetailSection { get; }
 
 		//Utility method to consolidate UI update logic
 		public void RunOnUIThread(Action action)
@@ -171,7 +168,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			set { SetProperty(ref _currentWorkList, value, () => CurrentWorkList); }
 		}
 
-		public WorkItemVm CurrentWorkItem
+		public virtual WorkItemVm CurrentWorkItem
 		{
 			get => new WorkItemVm(CurrentWorkList.Current);
 			set

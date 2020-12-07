@@ -1,23 +1,30 @@
-using ArcGIS.Desktop.Framework;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
-	public class SelectionWorkListVm : WorkListViewModelBase
+	class IssueWorkListVm: WorkListViewModelBase
 	{
 		private WorkListView _view;
 		private readonly bool _hasDetailSection;
 
-		public SelectionWorkListVm(IWorkList workList)
+		public IssueWorkListVm(IWorkList workList)
 		{
 			CurrentWorkList = workList;
 			CurrentWorkList.GoNext();
 			CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
-			_hasDetailSection = false;
+			_hasDetailSection = true;
 		}
 
-		public override bool HasDetailSection => _hasDetailSection;
+		public override bool HasDetailSection
+		{
+			get => _hasDetailSection;
+		}
 
 		protected override WorkListView View
 		{
@@ -27,10 +34,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		public override void Show(IWorkList workList)
 		{
-			View = new WorkListView(this);
-			View.Owner = FrameworkApplication.Current.MainWindow;
-			View.Title = workList.Name;
-			View.Show();
+			throw new NotImplementedException();
 		}
 	}
 }
