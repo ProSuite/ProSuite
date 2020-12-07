@@ -64,8 +64,7 @@ namespace ProSuite.QA.Configurator
 					{
 						ServiceType = ProSuiteQAServiceType.GPLocal,
 						ServiceName = @"QAGPLocal",
-						//ServiceConnection = @"c:\git\PRD_ProSuite\py_esrich_prosuite_qa_gpservice\ArcGISPro\ProSuiteToolbox.pyt"
-						ServiceConnection = ""
+						ServiceConnection = @"c:\git\PRD_ProSuite\py_esrich_prosuite_qa_gpservice\ArcGISPro\ProSuiteToolbox.pyt"
 					};
 
 				case ProSuiteQAServiceType.GPService:
@@ -73,7 +72,6 @@ namespace ProSuite.QA.Configurator
 					{
 						ServiceType = ProSuiteQAServiceType.GPService,
 						ServiceName = @"QAGPServices\ProSuiteQAService",
-						//ServiceConnection = @"C:\Users\algr\Documents\ArcGIS\Projects\test\admin on vsdev2414.esri-de.com_6443 (3).ags"
 						ServiceConnection = ""
 					};
 				default:

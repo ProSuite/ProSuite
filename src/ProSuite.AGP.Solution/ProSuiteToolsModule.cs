@@ -18,6 +18,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ProSuite.AGP.Solution.Commons;
 using ProSuite.AGP.Solution.ConfigUI;
+using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.Application.Configuration;
 using ProSuite.Microservices.Client;
 using ProSuite.Microservices.Client.AGP;
@@ -58,8 +59,10 @@ namespace ProSuite.AGP.Solution
 					_qaProjectItem = Project.Current.GetItems<ProSuiteProjectItemConfiguration>().FirstOrDefault();
 					if (_qaProjectItem == null)
 					{
-						//_qaProjectItem = new ProSuiteProjectItem(QAConfiguration.Current.DefaultQAServiceConfig,
-						//                                         QAConfiguration.Current.DefaultQASpecConfig);
+						_qaProjectItem = new ProSuiteProjectItemConfiguration(QAConfiguration.Current.DefaultQAServiceConfig,
+																 QAConfiguration.Current.DefaultQASpecConfig);
+
+						UpdateServiceUI(_qaProjectItem);
 
 						//ProSuiteProjectItemManager.Current.SaveProjectItem(Project.Current, _qaProjectItem);
 					}
@@ -239,17 +242,31 @@ namespace ProSuite.AGP.Solution
 				if (response?.ResponseData != null)
 				{
 					// TODO response data can be not only string
-					ErrorLayers = LayerUtils.AddFeaturesToMap("QA Error issues",
+					ErrorLayers = await LayerUtils.AddFeaturesToMap("QA Error issues",
 						response?.ResponseData.ToString(),
 						"issues.gdb",
 						new List<string>() { "IssuePoints", "IssueLines", "IssueMultiPatches", "IssuePolygons" },
 						true);
+
+					// TODO fire event to open worklist?
+
 				}
 			}
 			else
 			{
 				_msg.Error($"StartQAGPServerAsync is failed");
 			}
+		}
+
+		public async Task<bool> ShowSelectionWorkList()
+		{
+			var environment = new InMemoryWorkEnvironment();
+			await QueuedTask.Run(async () =>
+			{
+				await WorkListsModule.Current.CreateWorkListAsync(environment);
+			});
+			WorkListsModule.Current.ShowView(environment.UniqueName);
+			return true;
 		}
 
 		private async Task<bool> StartToolMicroserviceClientAsync()
@@ -324,25 +341,26 @@ namespace ProSuite.AGP.Solution
 			//Enabled = false;
 		}
 
-		protected override void OnClick()
+		protected override async void OnClick()
 		{
 			try
 			{
-				// because of VS2019 problems simple test here
-				QueuedTask.Run(() =>
-				{
-					ProSuiteLogPaneViewModel.GenerateMockMessages(10000);
-				});
-
-				// temporary solution for WorkList
+				// performance test
 				//QueuedTask.Run(() =>
 				//{
-				//var pane = FrameworkApplication.DockPaneManager.Find("esri_dataReviewer_evaluateFeaturesPane");
+				//	ProSuiteLogPaneViewModel.GenerateMockMessages(10000);
+				//});
+
+				// temporary solution for WorkList
+				//await QueuedTask.Run(() =>
+				//{
+				//	var pane = FrameworkApplication.DockPaneManager.Find("esri_dataReviewer_evaluateFeaturesPane");
 				//	bool visible = pane.IsVisible;
 				//	pane.Activate();
 				//});
 
-				//MessageBox.Show("QA error handler view is not yet implemented");
+				await ProSuiteToolsModule.Current.ShowSelectionWorkList();
+
 			}
 			catch (Exception ex)
 			{
@@ -397,7 +415,7 @@ namespace ProSuite.AGP.Solution
 			var openItemDialog = new OpenItemDialog
 			        {
 	                     Title = "Add Work List",
-	                     InitialLocation = @"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData",
+	                     //InitialLocation = "",
 	                     BrowseFilter = bf
                      };
 			bool? result = openItemDialog.ShowDialog();

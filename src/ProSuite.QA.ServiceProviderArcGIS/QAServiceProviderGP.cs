@@ -139,12 +139,12 @@ namespace ProSuite.QA.ServiceProviderArcGIS
 						////string input_xml = @"\\vsdev2414\prosuite_server_trials\xml\MCQualityTestBayernModel.qa.xml";
 
 						string[] localParams = new string[] {
-							//@"\\vsdev2414\prosuite_server_trials\xml\polygonCovering.qa.xml",	//input_xml
-							@"C:\data\projects\MCTest\polygonCovering.qa.xml",	//input_xml
+							// TODO temporary data source for demo
+							@"C:\data\projects\ProSuitePro\data\polygonCovering.qa.xml",	//input_xml
 							@"50000",															//input_tile 
 							@"",																//input_spec
 							@"",																//input_workspace
-							@"c:\log5",															//input_output_dir
+							@"C:\data\projects\ProSuitePro\logs",															//input_output_dir
 							@"",																//input_options_file
 							@"",																//input_aoi_layer
 							@"",																//input_extent

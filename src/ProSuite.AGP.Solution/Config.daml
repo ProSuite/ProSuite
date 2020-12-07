@@ -21,7 +21,7 @@
     <updateCategory refID="esri_customItems">
       <insertComponent id="ProSuiteItem_ProjectItem" className="ProSuite.AGP.Solution.ProjectItem.ProSuiteProjectItem"
                        containerType="ProSuiteContainer">
-        <content displayName="Worklist" fileExtension="wklist" isContainer="true" keywords="worklist" contextMenuID="ProSuiteSolution_ProjectItemWorkListContextMenu">
+        <content displayName="Worklist" fileExtension="wl" isContainer="true" keywords="worklist" contextMenuID="ProSuiteSolution_ProjectItemWorkListContextMenu">
           <filterFlags>
             <type id="File" />
           </filterFlags>
@@ -102,19 +102,19 @@
         <button id="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" caption="Logs" className="LoggerUI.ProSuiteLogPane_ShowButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation32.png">
           <tooltip heading="Show Logs Window">Show Logs Window<disabledText /></tooltip>
         </button>
-        <button id="Clients_AGP_ProSuiteSolution_AddWorkList" caption="AddWorkList" className="AddWorkListFile" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
+        <!--<button id="Clients_AGP_ProSuiteSolution_AddWorkList" caption="AddWorkList" className="AddWorkListFile" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Add Worklist file">
             Open Worklist file (wklist)<disabledText />
           </tooltip>
-        </button>
+        </button>-->
         <button id="Clients_AGP_ProSuiteSolution_OpenWorkList" caption="OpenWorkList" className="OpenWorkListFile" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Open Worklist file">
             Initialize and Open Worklist file (wklist)<disabledText />
           </tooltip>
         </button>
-        <button id="Clients_AGP_ProSuiteSolution_WorkList" caption="WorkList" className="ShowWorkListWindow" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
+        <!--<button id="Clients_AGP_ProSuiteSolution_WorkList" caption="WorkList" className="ShowWorkListWindow" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Show Error Worklist">Show Error Worklist<disabledText /></tooltip>
-        </button>
+        </button>-->
         <button id="WorkLists_CreateSelectionWorkList" caption="Show Selection WorkList" className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true" smallImage="Images/NavigateSelectionCmd16.png" largeImage="Images/NavigateSelectionCmd32.png">
           <tooltip heading="Show Selection Work List">Show Selection Work List for iterating on selected items
 						<disabledText />
