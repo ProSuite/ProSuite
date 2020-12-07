@@ -6,5 +6,7 @@ namespace ProSuite.QA.ServiceManager.Interfaces
     public interface IQASpecificationProvider
     {
         IList<string> GetQASpecificationNames();
+
+        string GetQASpecificationsConnection(string name);
     }
 }

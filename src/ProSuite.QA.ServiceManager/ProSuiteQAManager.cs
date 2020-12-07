@@ -93,6 +93,11 @@ namespace ProSuite.QA.ServiceManager
 					serviceProvider.UpdateConfig(serviceConfig);
 			}
 		}
+
+		public string GetQASpecificationsConnection(string currentQASpecificationName)
+		{
+			return _specificationsProvider?.GetQASpecificationsConnection(currentQASpecificationName);
+		}
 	}
 
 }

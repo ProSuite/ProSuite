@@ -46,6 +46,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 			_path = GetSelectedItemPath(title, ItemFilters.geodatabases, browseFilter);
 		}
 
+		public DatabaseWorkEnvironment(string path)
+		{
+			_path = path;
+		}
+
 		protected override async Task PrepareSchemaAsync()
 		{
 			await Task.WhenAll(
