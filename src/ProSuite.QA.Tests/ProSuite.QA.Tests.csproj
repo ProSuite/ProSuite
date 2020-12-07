@@ -73,14 +73,35 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Documentation\DocAttribute.cs" />
+    <Compile Include="Documentation\DocStrings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>DocStrings.resx</DependentUpon>
+    </Compile>
+    <Compile Include="IssueCodes\IssueCodeDescriptions.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>IssueCodeDescriptions.resx</DependentUpon>
+    </Compile>
+    <Compile Include="IssueCodes\LocalTestIssueCodes.cs" />
     <Compile Include="Properties\LocalizableStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QaMinSegAngle.cs" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Documentation\DocStrings.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>DocStrings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="IssueCodes\IssueCodeDescriptions.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>IssueCodeDescriptions.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\LocalizableStrings.de.resx" />
     <EmbeddedResource Include="Properties\LocalizableStrings.resx">
       <Generator>ResXFileCodeGenerator</Generator>
