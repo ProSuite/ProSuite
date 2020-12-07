@@ -155,11 +155,23 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WorkLists\DatabaseWorkEnvironment.cs" />
     <Compile Include="WorkLists\WorkListsModule.cs" />
+    <Compile Include="WorkListUI\IssueWorkListView.xaml.cs">
+      <DependentUpon>IssueWorkListView.xaml</DependentUpon>
+    </Compile>
     <Compile Include="WorkListUI\IssueWorkListVm.cs" />
+    <Compile Include="WorkListUI\ShowIssueWorkListView.cs" />
     <Compile Include="WorkListUI\StatusEnumBooleanConverter.cs" />
+    <Compile Include="WorkListUI\WorkListDetails.xaml.cs">
+      <DependentUpon>WorkListDetails.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="WorkListUI\WorkListNavigator.xaml.cs">
+      <DependentUpon>WorkListNavigator.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="WorkListUI\WorkListObserver.cs" />
     <Compile Include="WorkListUI\WorkListView.xaml.cs">
       <DependentUpon>WorkListView.xaml</DependentUpon>
     </Compile>
+    <Compile Include="WorkListUI\WorkListViewBase.cs" />
     <Compile Include="WorkListUI\WorkListViewModelBase.cs" />
     <Compile Include="WorkLists\InMemoryWorkEnvironment.cs" />
     <Compile Include="WorkListUI\SelectionWorkListVm.cs" />
@@ -186,6 +198,18 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ProTrials\ProTrialsRegistrationWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="WorkListUI\IssueWorkListView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="WorkListUI\WorkListDetails.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="WorkListUI\WorkListNavigator.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

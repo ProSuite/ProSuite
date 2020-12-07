@@ -17,7 +17,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
-	public abstract class WorkListViewModelBase : PropertyChangedBase, IWorkListObserver
+	public abstract class WorkListViewModelBase : PropertyChangedBase
 	{
 		private const double _seconds = 0.3;
 		private IWorkList _currentWorkList;
@@ -218,7 +218,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			set { SetProperty(ref _currentIndex, value, () => CurrentIndex); }
 		}
 
-		protected abstract WorkListView View { get; set; }
+		//protected abstract WorkListView View { get; set; }
 
 		private void GoPreviousItem()
 		{
@@ -316,22 +316,22 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			});
 		}
 
-		public void WorkListAdded(IWorkList workList)
-		{
-			//throw new NotImplementedException();
-		}
+		//public void WorkListAdded(IWorkList workList)
+		//{
+		//	//throw new NotImplementedException();
+		//}
 
-		public void WorkListRemoved(IWorkList workList)
-		{
-			RunOnUIThread(() => View.Close());
-		}
+		//public void WorkListRemoved(IWorkList workList)
+		//{
+		//	//RunOnUIThread(() => View.Close());
+		//}
 
-		public void WorkListModified(IWorkList workList)
-		{
-			//throw new NotImplementedException();
-		}
+		//public void WorkListModified(IWorkList workList)
+		//{
+		//	//throw new NotImplementedException();
+		//}
 
-		public abstract void Show(IWorkList workList);
+		//public abstract void Show(IWorkList workList);
 
 		[NotNull]
 		private static Envelope GetEnvelope([NotNull] IWorkItem item)

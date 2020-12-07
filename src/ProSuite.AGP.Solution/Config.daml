@@ -12,15 +12,12 @@
   </AddInInfo>
   <categories>
     <updateCategory refID="esri_core_projectContainers">
-      <insertComponent id="ProSuiteItem_FolderContainer"
-                       className="ProSuite.AGP.Solution.ProjectItem.ProSuiteProjectItemContainer"
-                       insert="before" placeWith="esri_geodatabase_folderConnectionContainer">
+      <insertComponent id="ProSuiteItem_FolderContainer" className="ProSuite.AGP.Solution.ProjectItem.ProSuiteProjectItemContainer" insert="before" placeWith="esri_geodatabase_folderConnectionContainer">
         <content type="ProSuiteContainer" displayName="ProSuite" contextMenu="ProSuiteSolution_ProjectItemContainerMenu" />
       </insertComponent>
     </updateCategory>
     <updateCategory refID="esri_customItems">
-      <insertComponent id="ProSuiteItem_ProjectItem" className="ProSuite.AGP.Solution.ProjectItem.ProSuiteProjectItem"
-                       containerType="ProSuiteContainer">
+      <insertComponent id="ProSuiteItem_ProjectItem" className="ProSuite.AGP.Solution.ProjectItem.ProSuiteProjectItem" containerType="ProSuiteContainer">
         <content displayName="Worklist" fileExtension="wklist" isContainer="true" keywords="worklist" contextMenuID="ProSuiteSolution_ProjectItemWorkListContextMenu">
           <filterFlags>
             <type id="File" />
@@ -34,10 +31,10 @@
   </categories>
   <conditions>
     <insertCondition id="prosuite_qa_gplocal_enabled" caption="QA GPLocal Enabled">
-      <state id="prosuite_qa_gplocal_state"/>
+      <state id="prosuite_qa_gplocal_state" />
     </insertCondition>
     <insertCondition id="prosuite_qa_gpservice_enabled" caption="QA GPService Enabled">
-      <state id="prosuite_qa_gpservice_state"/>
+      <state id="prosuite_qa_gpservice_state" />
     </insertCondition>
     <insertCondition id="prosuite_protrials_enabled" caption="ProSuite ProTrials">
       <and>
@@ -71,10 +68,11 @@
         </group>
         <group id="ProSuiteTools_QA_Hidden" caption="" appearsOnAddInTab="false">
           <button refID="Clients_AGP_ProSuiteSolution_OpenWorkList" />
+          <button refID="ProSuite_AGP_Solution_WorkListUI_IssueWorkListView" size="large" />
         </group>
         <group id="ProSuiteTools_Editing" caption="Edit Tools" keytip="G1">
           <tool refID="ProSuiteTools_Editing_EraseTool" size="small" />
-          <tool refID="ProSuiteTools_Editing_RemoveOverlapsTool" size="small"/>
+          <tool refID="ProSuiteTools_Editing_RemoveOverlapsTool" size="small" />
         </group>
         <group id="ProSuiteTools_Selection" caption="Selection Tools" keytip="G1">
           <tool refID="ProSuiteTools_Selection_SelectionTool" size="small" />
@@ -104,52 +102,40 @@
         </button>
         <button id="Clients_AGP_ProSuiteSolution_AddWorkList" caption="AddWorkList" className="AddWorkListFile" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Add Worklist file">
-            Open Worklist file (wklist)<disabledText />
-          </tooltip>
+            Open Worklist file (wklist)<disabledText /></tooltip>
         </button>
         <button id="Clients_AGP_ProSuiteSolution_OpenWorkList" caption="OpenWorkList" className="OpenWorkListFile" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Open Worklist file">
-            Initialize and Open Worklist file (wklist)<disabledText />
-          </tooltip>
+            Initialize and Open Worklist file (wklist)<disabledText /></tooltip>
         </button>
         <button id="Clients_AGP_ProSuiteSolution_WorkList" caption="WorkList" className="ShowWorkListWindow" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Show Error Worklist">Show Error Worklist<disabledText /></tooltip>
         </button>
         <button id="WorkLists_CreateSelectionWorkList" caption="Show Selection WorkList" className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true" smallImage="Images/NavigateSelectionCmd16.png" largeImage="Images/NavigateSelectionCmd32.png">
           <tooltip heading="Show Selection Work List">Show Selection Work List for iterating on selected items
-						<disabledText />
-          </tooltip>
+						<disabledText /></tooltip>
         </button>
         <button id="WorkLists_CreateIssueWorkList" caption="Show Issue Work List" className="WorkLists.CreateIssueWorkListButton" loadOnClick="true" smallImage="Images/NavigateErrorsCmd16.png" largeImage="Images/NavigateErrorsCmd32.png">
           <tooltip heading="Show Issue Work List">Show Issue Work List for iterating on issue items
-						<disabledText />
-          </tooltip>
+						<disabledText /></tooltip>
         </button>
-        <tool id="ProSuiteTools_Editing_EraseTool" caption="EraseTool " className="Editing.EraseTool" loadOnClick="true"
-              smallImage="Images\CutHoleTool16.png" largeImage="Images\CutHoleTool32.png"
-              condition="esri_mapping_mapPane">
+        <tool id="ProSuiteTools_Editing_EraseTool" caption="EraseTool " className="Editing.EraseTool" loadOnClick="true" smallImage="Images\CutHoleTool16.png" largeImage="Images\CutHoleTool32.png" condition="esri_mapping_mapPane">
           <tooltip heading="Erase Tool">Erase parts of the selected features or cut a hole into a polygon<disabledText /></tooltip>
         </tool>
-        <tool id="ProSuiteTools_Editing_RemoveOverlapsTool" caption="RemoveOverlapsTool" 
-              className="Editing.RemoveOverlapsTool"
-              loadOnClick="true" smallImage="Images\RemoveOverlapsTool16.png" largeImage="Images\RemoveOverlapsTool32.png"
-              condition="esri_mapping_mapPane">
+        <tool id="ProSuiteTools_Editing_RemoveOverlapsTool" caption="RemoveOverlapsTool" className="Editing.RemoveOverlapsTool" loadOnClick="true" smallImage="Images\RemoveOverlapsTool16.png" largeImage="Images\RemoveOverlapsTool32.png" condition="esri_mapping_mapPane">
           <tooltip heading="Remove Overlaps Tool">Remove a part of a feature that overlaps with other polygon features<disabledText /></tooltip>
         </tool>
-        <tool id="ProSuiteTools_Selection_SelectionTool" caption="Selection" className="Selection.SelectionTool" loadOnClick="true"
-              smallImage="Images\SelectionTool16.png" largeImage="Images\SelectionTool32.png"
-              condition="esri_mapping_mapPane">
+        <tool id="ProSuiteTools_Selection_SelectionTool" caption="Selection" className="Selection.SelectionTool" loadOnClick="true" smallImage="Images\SelectionTool16.png" largeImage="Images\SelectionTool32.png" condition="esri_mapping_mapPane">
           <tooltip heading="Selection Tool">
-            Select features for use with the selection worklist<disabledText />
-          </tooltip>
+            Select features for use with the selection worklist<disabledText /></tooltip>
         </tool>
-        <tool id="ProSuiteTools_PickWorkListItemTool" caption="PickWorkListItem" className="Selection.PickWorkListItemTool" loadOnClick="true"
-              smallImage="Images\SelectionTool.png" largeImage="Images\SelectionTool.png"
-              condition="esri_mapping_mapPane">
+        <tool id="ProSuiteTools_PickWorkListItemTool" caption="PickWorkListItem" className="Selection.PickWorkListItemTool" loadOnClick="true" smallImage="Images\SelectionTool.png" largeImage="Images\SelectionTool.png" condition="esri_mapping_mapPane">
           <tooltip heading="Pick WorkItem Tool">
-            Pick a workitem for setting it as current work item<disabledText />
-          </tooltip>
+            Pick a workitem for setting it as current work item<disabledText /></tooltip>
         </tool>
+        <button id="ProSuite_AGP_Solution_WorkListUI_IssueWorkListView" caption="IssueWorkListView" className="ProSuite.AGP.Solution.WorkListUI.ShowIssueWorkListView" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
+          <tooltip heading="Tooltip Heading">Tooltip text<disabledText /></tooltip>
+        </button>
       </controls>
       <dockPanes>
         <dockPane id="ProSuiteTools_Logger_ProSuiteLogPane" caption="ProSuite Logs" className="LoggerUI.ProSuiteLogPaneViewModel" dock="group" dockWith="esri_core_contentsDockPane">
@@ -160,7 +146,7 @@
         <menu id="ProSuiteSolution_ProjectItemContainerMenu" caption="Add Folders" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/TaskItem32.png" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/TaskItem16.png">
           <tooltip heading="Folder">Add items to project.</tooltip>
           <button refID="Clients_AGP_ProSuiteSolution_AddWorkList" />
-          <button refID="esri_folderConnectionAddButton"/>
+          <button refID="esri_folderConnectionAddButton" />
           <!--<button refID="esri_DeleteItem" />-->
         </menu>
         <menu id="ProSuiteSolution_ProjectItemWorkListContextMenu" caption="ProSuite Project Item">
@@ -173,8 +159,7 @@
         </menu>
       </menus>
     </insertModule>
-    <insertModule id="ProSuite_WorkList_Module" className="WorkLists.WorkListsModule" autoLoad="true" caption="Selection Work List Module">
-    </insertModule>
+    <insertModule id="ProSuite_WorkList_Module" className="WorkLists.WorkListsModule" autoLoad="true" caption="Selection Work List Module"></insertModule>
     <insertModule id="ProSuite_ProTrials_Module" className="ProTrials.ProTrialsModule" autoLoad="false" caption="Pro Trials">
       <tabs>
         <tab id="ProSuite_ProTrials_Tab" caption="Pro Trials" keytip="C">
@@ -193,45 +178,25 @@
         </group>
       </groups>
       <controls>
-        <tool id="ProSuite_ProTrials_CreateSunflowerTool" caption="Sunflower" keytip="C1"
-              className="ProSuite.AGP.Solution.ProTrials.CreateSunflowerTool" loadOnClick="true"
-              smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/MarsCat16.png"
-              largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/MarsCat32.png"
-              condition="prosuite_protrials_enabled">
+        <tool id="ProSuite_ProTrials_CreateSunflowerTool" caption="Sunflower" keytip="C1" className="ProSuite.AGP.Solution.ProTrials.CreateSunflowerTool" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/MarsCat16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/MarsCat32.png" condition="prosuite_protrials_enabled">
           <tooltip heading="Sunflower">Draw sunflower pattern over picked features<disabledText /></tooltip>
         </tool>
-        <button id="ProSuite_ProTrials_SunflowerColorButton" caption="Color Sunflower" keytip="C2"
-                className="ProSuite.AGP.Solution.ProTrials.ColorSunflowerButton" loadOnClick="true"
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/BexDog16.png"
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/BexDog32.png"
-                condition="prosuite_protrials_enabled">
+        <button id="ProSuite_ProTrials_SunflowerColorButton" caption="Color Sunflower" keytip="C2" className="ProSuite.AGP.Solution.ProTrials.ColorSunflowerButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/BexDog16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/BexDog32.png" condition="prosuite_protrials_enabled">
           <tooltip heading="Color Sunflower">Colorize the sunflower seeds<disabledText /></tooltip>
         </button>
-        <button id="ProSuite_ProTrials_SunflowerClearButton" caption="Clear Sunflower" keytip="C3"
-                className="ProSuite.AGP.Solution.ProTrials.ClearSunflowerButton" loadOnClick="true"
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/BexDog16.png"
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/BexDog32.png"
-                condition="prosuite_protrials_enabled">
+        <button id="ProSuite_ProTrials_SunflowerClearButton" caption="Clear Sunflower" keytip="C3" className="ProSuite.AGP.Solution.ProTrials.ClearSunflowerButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/BexDog16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/BexDog32.png" condition="prosuite_protrials_enabled">
           <tooltip heading="Clear Sunflower">Remove the sunflower seeds from the map<disabledText /></tooltip>
         </button>
-        <button id="ProSuite_ProTrials_CartoProcessDockpaneButton" caption="Show Carto Process Dockpane" keytip="C4"
-                className="ProSuite.AGP.Solution.ProTrials.CartoProcess.CartoProcessDockpane_ShowButton" loadOnClick="true"
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png"
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
+        <button id="ProSuite_ProTrials_CartoProcessDockpaneButton" caption="Show Carto Process Dockpane" keytip="C4" className="ProSuite.AGP.Solution.ProTrials.CartoProcess.CartoProcessDockpane_ShowButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Show Dockpane">Show Dockpane<disabledText /></tooltip>
         </button>
       </controls>
       <dockPanes>
-        <dockPane id="ProSuite_ProTrials_CartoProcessDockpane" caption="Carto Process Runner"
-                  className="ProSuite.AGP.Solution.ProTrials.CartoProcess.CartoProcessDockpaneViewModel"
-                  dock="group" dockWith="esri_core_contentsDockPane">
+        <dockPane id="ProSuite_ProTrials_CartoProcessDockpane" caption="Carto Process Runner" className="ProSuite.AGP.Solution.ProTrials.CartoProcess.CartoProcessDockpaneViewModel" dock="group" dockWith="esri_core_contentsDockPane">
           <content className="ProSuite.AGP.Solution.ProTrials.CartoProcess.CartoProcessDockpaneView" />
         </dockPane>
       </dockPanes>
-      <extensionConfig description="Experimental features in ProSuite"
-                       productName="ProSuite ProTrials"
-                       message="enable/disable experimental features"
-                       hasExtendedInfo="true" />
+      <extensionConfig description="Experimental features in ProSuite" productName="ProSuite ProTrials" message="enable/disable experimental features" hasExtendedInfo="true" />
     </insertModule>
     <updateModule refID="ProSuite_ProTrials_Module">
       <groups>

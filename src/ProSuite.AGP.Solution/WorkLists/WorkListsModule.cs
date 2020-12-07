@@ -66,11 +66,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 		}
 
 		[CanBeNull]
-		private IWorkListObserver GetObserverByWorklistName(string name)
-		{
-			var vms = _observers.Select(observer => observer as SelectionWorkListVm);
-			return vms.FirstOrDefault(vm => vm.CurrentWorkList.Name == name);
-		}
+		//private IWorkListObserver GetObserverByWorklistName(string name)
+		//{
+		//	var vms = _observers.Select(observer => observer as SelectionWorkListVm);
+		//	return vms.FirstOrDefault(vm => vm.CurrentWorkList.Name == name);
+		//}
 
 		public void ShowView([NotNull] string uniqueName)
 		{
@@ -94,7 +94,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				CreateLayer(environment, workList.Name);
 
-				RegisterObserver(new SelectionWorkListVm(workList));
+				//RegisterObserver(new SelectionWorkListVm(workList));
+				RegisterObserver(new WorkListObserver());
 			}
 			catch (Exception e)
 			{
@@ -325,7 +326,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 					UnwireEvents(workList);
 
-					UnregisterViewModel(workList);
+					//UnregisterViewModel(workList);
 
 					_layerByWorkList.Remove(workList);
 					_registry.Remove(workList);
@@ -339,15 +340,15 @@ namespace ProSuite.AGP.Solution.WorkLists
 			});
 		}
 
-		private void UnregisterViewModel(IWorkList workList)
-		{
-			SelectionWorkListVm vm = GetObserverByWorklistName(workList.Name) as SelectionWorkListVm;
+		//private void UnregisterViewModel(IWorkList workList)
+		//{
+		//	SelectionWorkListVm vm = GetObserverByWorklistName(workList.Name) as SelectionWorkListVm;
 
-			if (vm != null)
-			{
-				UnregisterObserver(vm);
-			}
-		}
+		//	if (vm != null)
+		//	{
+		//		UnregisterObserver(vm);
+		//	}
+		//}
 
 		private async Task OnProjectOpendedAsync(ProjectEventArgs e)
 		{

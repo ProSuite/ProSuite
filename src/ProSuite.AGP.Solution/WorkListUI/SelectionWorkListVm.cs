@@ -19,18 +19,18 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		public override bool HasDetailSection => _hasDetailSection;
 
-		protected override WorkListView View
-		{
-			get => _view;
-			set => _view = value;
-		}
+		//protected override WorkListView View
+		//{
+		//	get => _view;
+		//	set => _view = value;
+		//}
 
-		public override void Show(IWorkList workList)
-		{
-			View = new WorkListView(this);
-			View.Owner = FrameworkApplication.Current.MainWindow;
-			View.Title = workList.Name;
-			View.Show();
-		}
+		//public override void Show(IWorkList workList)
+		//{
+		//	View = new WorkListView(this);
+		//	View.Owner = FrameworkApplication.Current.MainWindow;
+		//	View.Title = workList.Name;
+		//	View.Show();
+		//}
 	}
 }

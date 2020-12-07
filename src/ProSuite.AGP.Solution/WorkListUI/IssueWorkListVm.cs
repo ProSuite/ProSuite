@@ -8,7 +8,7 @@ using ProSuite.AGP.WorkList.Contracts;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
-	class IssueWorkListVm: WorkListViewModelBase
+	public class IssueWorkListVm: WorkListViewModelBase
 	{
 		private WorkListView _view;
 		private readonly bool _hasDetailSection;
@@ -26,15 +26,15 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			get => _hasDetailSection;
 		}
 
-		protected override WorkListView View
-		{
-			get => _view;
-			set => _view = value;
-		}
+		//protected override WorkListView View
+		//{
+		//	get => _view;
+		//	set => _view = value;
+		//}
 
-		public override void Show(IWorkList workList)
-		{
-			throw new NotImplementedException();
-		}
+		//public override void Show(IWorkList workList)
+		//{
+		//	throw new NotImplementedException();
+		//}
 	}
 }
