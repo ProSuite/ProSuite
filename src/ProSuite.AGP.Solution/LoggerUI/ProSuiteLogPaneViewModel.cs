@@ -106,6 +106,15 @@ namespace ProSuite.AGP.Solution.LoggerUI
             }
         }
 
+        public static bool Visible
+        {
+	        get
+	        {
+		        var pane = (ProSuiteLogPaneViewModel)FrameworkApplication.DockPaneManager.Find(_dockPaneID);
+		        return pane != null && pane.IsVisible;
+	        }
+        }
+
         private static void OpenLogLinkMessage(object msg)
         {
             var message = (LoggingEventItem)msg;
@@ -176,7 +185,6 @@ namespace ProSuite.AGP.Solution.LoggerUI
 				pane.Hide();
 		}
 
-		// TODO temporary log test while VS2019 have problems
 		internal static void GenerateMockMessages(int number)
 		{
 			var i = 0;
@@ -194,10 +202,18 @@ namespace ProSuite.AGP.Solution.LoggerUI
     /// </summary>
     internal class ProSuiteLogPane_ShowButton : Button
     {
+	    private readonly string _hideLog = "Hide Log";
+	    private readonly string _showLog = "Show Log";
+
+		public ProSuiteLogPane_ShowButton()
+	    {
+		    Caption = ProSuiteLogPaneViewModel.Visible ? _hideLog : _showLog;
+		    IsChecked = ProSuiteLogPaneViewModel.Visible;
+	    }
         protected override void OnClick()
         {
 			IsChecked = !IsChecked;
-			Caption = IsChecked ? "Hide Log" : "Show Log";
+			Caption = IsChecked ? _hideLog : _showLog;
 			ProSuiteLogPaneViewModel.ToggleDockWindowVisibility(IsChecked);
 		}
 

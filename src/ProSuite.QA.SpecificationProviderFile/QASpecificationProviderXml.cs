@@ -48,10 +48,7 @@ namespace ProSuite.QA.SpecificationProviderFile
 
 		public IList<string> GetQASpecificationNames()
 		{
-			if (AvailableSpecifications.Count == 0)
-				return new List<string>(){ "not available"};
-
-			return AvailableSpecifications.Keys.ToList();
+			return AvailableSpecifications?.Keys.ToList();
 		}
 
 		public string GetQASpecificationsConnection(string name)
