@@ -51,6 +51,7 @@
       <HintPath>$(ProAssemblyPath)\bin\Extensions\Mapping\ArcGIS.Desktop.Mapping.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml" />
@@ -77,6 +78,8 @@
     <Compile Include="Storage\GdbRepository.cs" />
     <Compile Include="Storage\IRepository.cs" />
     <Compile Include="Storage\XmlRepository.cs" />
+    <Compile Include="WPF\ErrorHandler.cs" />
+    <Compile Include="WPF\ViewUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj">

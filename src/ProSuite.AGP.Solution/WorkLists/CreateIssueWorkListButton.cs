@@ -1,29 +1,34 @@
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Solution.WorkLists
 {
 	[UsedImplicitly]
 	internal class CreateIssueWorkListButton : Button
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		protected override async void OnClick()
 		{
-			var environment = new DatabaseWorkEnvironment();
-
-			await QueuedTask.Run(async () =>
+			await ViewUtils.TryAsync(async () =>
 			{
-				await WorkListsModule.Current.CreateWorkListAsync(environment);
-			});
+				var environment = new DatabaseWorkEnvironment();
 
-			string workListName = environment.UniqueName;
+				await QueuedTask.Run(() => WorkListsModule.Current.CreateWorkListAsync(environment));
 
-			if (string.IsNullOrEmpty(workListName))
-			{
-				return;
-			}
+				string workListName = environment.UniqueName;
 
-			WorkListsModule.Current.ShowView(workListName);
+				if (workListName == null)
+				{
+					return;
+				}
+
+				WorkListsModule.Current.ShowView(workListName);
+			}, _msg);
 		}
 	}
 }
