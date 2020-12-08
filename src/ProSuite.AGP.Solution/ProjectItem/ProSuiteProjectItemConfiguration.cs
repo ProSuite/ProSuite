@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using ArcGIS.Desktop.Core;
 using ProSuite.AGP.Solution.Commons;
 using ProSuite.Commons.Xml;
 using ProSuite.QA.ServiceManager.Types;
@@ -15,6 +16,13 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		public ProSuiteProjectItemConfiguration(string name, string catalogPath, string typeID, string containerTypeID) :
 			base(name, catalogPath, typeID, containerTypeID)
 		{
+		}
+
+		public ProSuiteProjectItemConfiguration(IEnumerable<ProSuiteQAServerConfiguration> serverConfigs, ProSuiteQASpecificationsConfiguration specificationConfig) :
+			base()
+		{
+			ServerConfigurations = serverConfigs;
+			SpecificationConfiguration = specificationConfig;
 		}
 
 		public override ImageSource LargeImage => ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset32.png");

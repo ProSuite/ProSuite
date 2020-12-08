@@ -19,6 +19,12 @@ namespace ProSuite.QA.ServiceManager.Types
 
         public string ServiceConnection { get; set; }
 
+        public int DefaultTileSize { get; set; } = 50000;
+
+		public string DefaultOutputFolder { get; set; } = "";
+
+		public string DefaultCompressValue { get; set; } = "false";
+
 		public bool IsValid
 		{
 			get

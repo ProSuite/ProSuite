@@ -27,18 +27,11 @@ namespace ProSuite.QA.ServiceProviderArcGIS
 		private string _toolpath;
 		private readonly Regex _regex = new Regex("(?<=>)(.*?)(?=<)", RegexOptions.Singleline);
 
-		private ProSuiteQAServiceType _serviceType;
-		public ProSuiteQAServiceType ServiceType
-		{
-			get
-			{
-				return _serviceType;
-			}
-		}
+		public ProSuiteQAServiceType ServiceType { get; }
 
 		public QAServiceProviderGP(ProSuiteQAServerConfiguration parameters) : base(parameters)
 		{
-			_serviceType = parameters.ServiceType;
+			ServiceType = parameters.ServiceType;
 			_toolpath = BuildToolPath(parameters);// $"{parameters.ServiceConnection}\\{parameters.ServiceName}";
 		}
 
@@ -56,6 +49,13 @@ namespace ProSuite.QA.ServiceProviderArcGIS
 			var cts = new CancellationTokenSource();
 
 			var args = PrepareGPToolParameters(parameters, ProSuiteQAToolType.Xml);
+			if (args == null)
+			{
+				return new ProSuiteQAResponse()
+				       {
+					       Error = ProSuiteQAError.ServiceFailed
+				       };
+			}
 
 			// background thread
 			GPExecuteToolFlags flags = GPExecuteToolFlags.GPThread;
@@ -109,6 +109,14 @@ namespace ProSuite.QA.ServiceProviderArcGIS
 		public ProSuiteQAResponse StartQASync(ProSuiteQARequest parameters)
 		{
 			var args = PrepareGPToolParameters(parameters, ProSuiteQAToolType.Xml);
+			if (args == null)
+			{
+				return new ProSuiteQAResponse()
+				       {
+					       Error = ProSuiteQAError.ServiceFailed
+				       };
+			}
+
 			Geoprocessing.OpenToolDialog(_toolpath, args, null, false,
 				(event_name, o) =>
 				{
@@ -131,45 +139,20 @@ namespace ProSuite.QA.ServiceProviderArcGIS
 
 		private IReadOnlyList<string> PrepareGPToolParameters(ProSuiteQARequest parameters, ProSuiteQAToolType toolType)
 		{
-			switch (parameters.ServiceType)
+			try
 			{
-				case ProSuiteQAServiceType.GPLocal:
-					{
-						////string input_xml = @"\\vsdev2414\prosuite_server_trials\xml\OSMtestQA_SDE.qa.xml";
-						////string input_xml = @"\\vsdev2414\prosuite_server_trials\xml\MCQualityTestBayernModel.qa.xml";
+				var toolParams = parameters.RequestData?.ToString();
+				if ( toolParams == null)
+					return null;
 
-						string[] localParams = new string[] {
-							//@"\\vsdev2414\prosuite_server_trials\xml\polygonCovering.qa.xml",	//input_xml
-							@"C:\data\projects\MCTest\polygonCovering.qa.xml",	//input_xml
-							@"50000",															//input_tile 
-							@"",																//input_spec
-							@"",																//input_workspace
-							@"c:\log5",															//input_output_dir
-							@"",																//input_options_file
-							@"",																//input_aoi_layer
-							@"",																//input_extent
-							@""																	//output_results
-						};
-						return Geoprocessing.MakeValueArray(localParams);
-					}
-
-				default:
-					{
-						string[] serviceParams = new string[] {
-							//@"C:\Users\algr\Documents\ArcGIS\Projects\test\admin on vsdev2414.esri-de.com_6443.ags", //server_ags
-							@"\\vsdev2414\prosuite_server_trials\xml\polygonCovering.qa.xml",	//input_xml
-							@"50000",															//input_tile 
-							@"",																//input_spec
-							@"",																//input_workspace
-							@"\\vsdev2414\prosuite_server_trials\results",						//input_output_dir
-							@"",																//input_options_file
-							@"",																//input_aoi_layer
-							@"",																//input_extent
-							@""																	//output_results
-						};
-						return Geoprocessing.MakeValueArray(serviceParams);
-					}
+				var localParams = toolParams.Split(',');
+				return Geoprocessing.MakeValueArray(localParams);
 			}
+			catch (Exception ex)
+			{
+				_msg.Error(ex.Message);
+			}
+			return null;
 		}
 
 		private ProSuiteQAResponse FormatProSuiteResponse(IGPResult result)
@@ -206,7 +189,7 @@ namespace ProSuite.QA.ServiceProviderArcGIS
 
 		public void UpdateConfig(ProSuiteQAServerConfiguration serviceConfig)
 		{
-			if (_serviceType == serviceConfig.ServiceType)
+			if (ServiceType == serviceConfig.ServiceType)
 			{
 				_toolpath = BuildToolPath(serviceConfig);
 			}

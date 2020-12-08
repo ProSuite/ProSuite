@@ -63,9 +63,9 @@ namespace ProSuite.AGP.Solution.ProjectItem
 				var itemFolder = GetProjectItemFolderPath();
 				if (!String.IsNullOrEmpty(itemFolder))
 				{
-					_msg.Info($"Copy file {path}");
-					File.Copy(path,
-							  Path.Combine(itemFolder, Path.GetFileName(path)),true);
+					_msg.Info($"Add file {path}");
+					//File.Copy(path,
+					//		  Path.Combine(itemFolder, Path.GetFileName(path)),true);
 				}
 			});
 		}

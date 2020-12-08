@@ -3,6 +3,7 @@ using ProSuite.QA.ServiceManager.Types;
 using ProSuite.QA.ServiceProviderArcGIS;
 using ProSuite.QA.SpecificationProviderFile;
 using System.Collections.Generic;
+using System.IO;
 
 namespace ProSuite.QA.Configurator
 {
@@ -13,6 +14,9 @@ namespace ProSuite.QA.Configurator
 		{
 			get { return _configuration ?? (_configuration = new QAConfiguration()); }
 		}
+
+		// TODO common utils, ...
+		private readonly string _qaInstallationsFolder = @"c:\ProSuite\ArcGisPro\";
 
 		public IEnumerable<IProSuiteQAServiceProvider> GetQAServiceProviders(IEnumerable<ProSuiteQAServerConfiguration> serverConfigs)
 		{
@@ -32,28 +36,19 @@ namespace ProSuite.QA.Configurator
 
 		public IQASpecificationProvider GetQASpecificationsProvider(ProSuiteQASpecificationsConfiguration specConfig)
 		{
-			return new QASpecificationProviderXml();
+			return new QASpecificationProviderXml(specConfig.SpecificationsProviderConnection);
 		}
 
-		public IEnumerable<ProSuiteQAServerConfiguration> DefaultQAServiceConfig
-		{
-			get
+		public IEnumerable<ProSuiteQAServerConfiguration> DefaultQAServiceConfig =>
+			new List<ProSuiteQAServerConfiguration>
 			{
-				return new List<ProSuiteQAServerConfiguration>
-				       {
-					       GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPService),
-					       GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPLocal)
-				       };
-			}
-		}
+				GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPService),
+				GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType.GPLocal)
+			};
 
-		public ProSuiteQASpecificationsConfiguration DefaultQASpecConfig
-		{
-			get
-			{
-				return new ProSuiteQASpecificationsConfiguration();
-			}
-		}
+		public ProSuiteQASpecificationsConfiguration DefaultQASpecConfig =>
+			new ProSuiteQASpecificationsConfiguration(ProSuiteQASpecificationProviderType.Xml,
+			                                          Path.Combine(_qaInstallationsFolder, "Specifications"));
 
 		public ProSuiteQAServerConfiguration GetDefaultQAGPServiceConfiguration(ProSuiteQAServiceType serviceType)
 		{
@@ -64,8 +59,7 @@ namespace ProSuite.QA.Configurator
 					{
 						ServiceType = ProSuiteQAServiceType.GPLocal,
 						ServiceName = @"QAGPLocal",
-						//ServiceConnection = @"c:\git\PRD_ProSuite\py_esrich_prosuite_qa_gpservice\ArcGISPro\ProSuiteToolbox.pyt"
-						ServiceConnection = ""
+						ServiceConnection = Path.Combine(_qaInstallationsFolder, @"Toolbox\ArcGISPro\ProSuiteToolbox.pyt")
 					};
 
 				case ProSuiteQAServiceType.GPService:
@@ -73,9 +67,9 @@ namespace ProSuite.QA.Configurator
 					{
 						ServiceType = ProSuiteQAServiceType.GPService,
 						ServiceName = @"QAGPServices\ProSuiteQAService",
-						//ServiceConnection = @"C:\Users\algr\Documents\ArcGIS\Projects\test\admin on vsdev2414.esri-de.com_6443 (3).ags"
-						ServiceConnection = ""
-					};
+						ServiceConnection = "",
+						DefaultOutputFolder = @"\\vsdev2414\prosuite_server_trials\results"
+			};
 				default:
 					return new ProSuiteQAServerConfiguration();
 			}

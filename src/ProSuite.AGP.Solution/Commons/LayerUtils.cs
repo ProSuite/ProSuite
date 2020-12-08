@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
@@ -17,7 +18,7 @@ namespace ProSuite.AGP.Solution.Commons
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public static IList<FeatureLayer> AddFeaturesToMap(string groupLayer, string path, string featureName = null, IList<string> layernames = null, bool select = true)
+		public static async Task<IList<FeatureLayer>> AddFeaturesToMap(string groupLayer, string path, string featureName = null, IList<string> layernames = null, bool select = true)
         {
 			// is map visible?
 			if (MapView.Active == null) return null;
@@ -35,7 +36,7 @@ namespace ProSuite.AGP.Solution.Commons
 			}
 
 			var layerList = new List<FeatureLayer>();
-			QueuedTask.Run(() =>
+			await QueuedTask.Run(async () =>
 			{
 				try
 				{
@@ -53,8 +54,8 @@ namespace ProSuite.AGP.Solution.Commons
 						commonExtent = featureLayer.QueryExtent();
 					}
 
-					MapView.Active.ZoomTo(commonExtent, TimeSpan.FromSeconds(0));
-					MapView.Active.ZoomOutFixed(TimeSpan.FromSeconds(0));
+					await MapView.Active.ZoomToAsync(commonExtent, TimeSpan.FromSeconds(0));
+					await MapView.Active.ZoomOutFixedAsync(TimeSpan.FromSeconds(0));
 
 					_msg.Info($"LayerUtils: QA error layers were added to map");
 
@@ -77,13 +78,10 @@ namespace ProSuite.AGP.Solution.Commons
 			if (MapView.Active == null) return;
 			if (layers == null) return;
 
-			QueuedTask.Run(() =>
+			foreach (var layer in layers)
 			{
-				foreach (var layer in layers)
-				{
-					layer.Select();
-				}
-			});
+				layer.Select();
+			}
 		}
 
 		public static void SetLayerSelectability([NotNull] Layer layer, bool selectable)

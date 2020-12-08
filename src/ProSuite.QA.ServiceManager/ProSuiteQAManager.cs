@@ -45,7 +45,7 @@ namespace ProSuite.QA.ServiceManager
 
 		public IList<string> GetSpecificationNames()
 		{
-			return _specificationsProvider?.GetQASpecificationNames();
+			return _specificationsProvider?.GetQASpecificationNames() ?? new List<string>() {"not available"};
 		}
 
 		public void OnConfigurationChanged(object sender, ProSuiteQAConfigEventArgs e)
@@ -92,6 +92,11 @@ namespace ProSuite.QA.ServiceManager
 				if (serviceProvider != null)
 					serviceProvider.UpdateConfig(serviceConfig);
 			}
+		}
+
+		public string GetQASpecificationsConnection(string currentQASpecificationName)
+		{
+			return _specificationsProvider?.GetQASpecificationsConnection(currentQASpecificationName);
 		}
 	}
 
