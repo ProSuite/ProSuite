@@ -45,7 +45,7 @@ namespace ProSuite.AGP.WorkList
 
 		protected virtual async Task<bool> TryPrepareSchemaCoreAsync()
 		{
-			return await Task.FromResult(false);
+			return await Task.FromResult(true);
 		}
 
 		protected abstract string GetWorkListName(IWorkListContext context);

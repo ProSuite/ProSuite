@@ -36,23 +36,12 @@ namespace ProSuite.AGP.Solution.WorkLists
 			                                                        "IssuePoints", "IssuePolygons",
 			                                                        "IssueRows"
 		                                                        };
-		[CanBeNull] private string _path;
 
-		public DatabaseWorkEnvironment() : this(BrowseGeodatabase())
-		{
-		}
+		[CanBeNull] private readonly string _path;
 
-		[CanBeNull]
-		private static string BrowseGeodatabase()
-		{
-			const string title = "Select Existing Issue Geodatabase";
-			var browseFilter =
-				BrowseProjectFilter.GetFilter(DAML.Filter.esri_browseDialogFilters_geodatabases_file);
+		public DatabaseWorkEnvironment() : this(BrowseGeodatabase()) { }
 
-			return GetSelectedItemPath(title, ItemFilters.geodatabases, browseFilter);
-		}
-
-		public DatabaseWorkEnvironment(string path)
+		public DatabaseWorkEnvironment([CanBeNull] string path)
 		{
 			_path = path;
 		}
@@ -61,7 +50,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			if (_path == null)
 			{
-				return await base.TryPrepareSchemaCoreAsync();
+				return await Task.FromResult(false);
 			}
 
 			await Task.WhenAll(
@@ -104,25 +93,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 		}
 
 		// todo daro: to utils
-		[CanBeNull]
-		private static string GetSelectedItemPath(string title, string filter,
-		                                          BrowseProjectFilter browseFilter)
-		{
-			var dialog = new OpenItemDialog
-			             {
-				             BrowseFilter = browseFilter,
-				             Filter = filter,
-				             Title = title
-			             };
-
-			if (dialog.ShowDialog().HasValue && dialog.Items.ToList().Count > 0)
-			{
-				return dialog.Items.FirstOrDefault()?.Path;
-			}
-
-			_msg.Info("No Issue Geodatabase selected");
-			return null;
-		}
 
 		protected override async Task<BasicFeatureLayer> EnsureStatusFieldCoreAsync(
 			BasicFeatureLayer featureLayer)
@@ -166,6 +136,36 @@ namespace ProSuite.AGP.Solution.WorkLists
 			string path = ConfigurationUtils.GetConfigFilePath(_templateLayer);
 
 			return LayerUtils.CreateLayerDocument(path);
+		}
+
+		[CanBeNull]
+		private static string BrowseGeodatabase()
+		{
+			const string title = "Select Existing Issue Geodatabase";
+			var browseFilter =
+				BrowseProjectFilter.GetFilter(DAML.Filter.esri_browseDialogFilters_geodatabases_file);
+
+			return GetSelectedItemPath(title, ItemFilters.geodatabases, browseFilter);
+		}
+
+		[CanBeNull]
+		private static string GetSelectedItemPath(string title, string filter,
+		                                          BrowseProjectFilter browseFilter)
+		{
+			var dialog = new OpenItemDialog
+			             {
+				             BrowseFilter = browseFilter,
+				             Filter = filter,
+				             Title = title
+			             };
+
+			if (dialog.ShowDialog().HasValue && dialog.Items.ToList().Count > 0)
+			{
+				return dialog.Items.FirstOrDefault()?.Path;
+			}
+
+			_msg.Info("No Issue Geodatabase selected");
+			return null;
 		}
 	}
 }
