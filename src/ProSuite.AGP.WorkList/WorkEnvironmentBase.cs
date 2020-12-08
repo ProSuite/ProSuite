@@ -5,18 +5,27 @@ using System.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList
 {
 	public abstract class WorkEnvironmentBase
 	{
+		[CanBeNull]
 		public string UniqueName { get; private set; }
 
-		public async Task<IWorkList> CreateWorkListAsync(IWorkListContext context)
+		[NotNull]
+		public async Task<IWorkList> CreateWorkListAsync([NotNull] IWorkListContext context)
 		{
+			Assert.ArgumentNotNull(context, nameof(context));
+
 			Map map = MapView.Active.Map;
 
-			await PrepareSchemaAsync();
+			if (! await TryPrepareSchemaCoreAsync())
+			{
+				return await Task.FromResult(default(IWorkList));
+			}
 
 			BasicFeatureLayer[] featureLayers = await Task.WhenAll(GetLayers(map).Select(EnsureStatusFieldCoreAsync));
 			
@@ -26,9 +35,7 @@ namespace ProSuite.AGP.WorkList
 
 			IWorkItemRepository repository = CreateItemRepositoryCore(featureLayers, stateRepository);
 
-			IWorkList workList = CreateWorkListCore(repository, UniqueName);
-			
-			return workList;
+			return CreateWorkListCore(repository, UniqueName);
 		}
 
 		public LayerDocument GetLayerDocument()
@@ -36,9 +43,9 @@ namespace ProSuite.AGP.WorkList
 			return GetLayerDocumentCore();
 		}
 
-		protected virtual async Task PrepareSchemaAsync()
+		protected virtual async Task<bool> TryPrepareSchemaCoreAsync()
 		{
-			await Task.FromResult(0);
+			return await Task.FromResult(true);
 		}
 
 		protected abstract string GetWorkListName(IWorkListContext context);

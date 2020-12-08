@@ -36,28 +36,39 @@ namespace ProSuite.AGP.Solution.WorkLists
 			                                                        "IssuePoints", "IssuePolygons",
 			                                                        "IssueRows"
 		                                                        };
-		private readonly string _path;
 
-		public DatabaseWorkEnvironment()
-		{
-			const string title = "Select Existing Issue Geodatabase";
-			var browseFilter = BrowseProjectFilter.GetFilter(DAML.Filter.esri_browseDialogFilters_geodatabases_file);
+		[CanBeNull] private readonly string _path;
 
-			_path = GetSelectedItemPath(title, ItemFilters.geodatabases, browseFilter);
-		}
+		public DatabaseWorkEnvironment() : this(BrowseGeodatabase()) { }
 
-		public DatabaseWorkEnvironment(string path)
+		public DatabaseWorkEnvironment([CanBeNull] string path)
 		{
 			_path = path;
 		}
 
-		protected override async Task PrepareSchemaAsync()
+		protected override async Task<bool> TryPrepareSchemaCoreAsync()
 		{
+			if (_path == null)
+			{
+				return false;
+			}
+
+			using (Geodatabase geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute))))
+			{
+				if (geodatabase.GetDomains().Any(domain => string.Equals(_domainName, domain.GetName())))
+				{
+					_msg.Debug($"Domain {_domainName} already exists in {_path}");
+					return true;
+				}
+			}
+
+			// the GP tool is going to fail on creating a domain with the same name
 			await Task.WhenAll(
 				GeoprocessingUtils.CreateDomainAsync(_path, _domainName, "Correction status for work list"),
 				GeoprocessingUtils.AddCodedValueToDomainAsync(_path, _domainName, 100, "Not Corrected"),
 				GeoprocessingUtils.AddCodedValueToDomainAsync(_path, _domainName, 200, "Corrected"));
-			
+
+			return true;
 		}
 
 		protected override string GetWorkListName(IWorkListContext context)
@@ -84,39 +95,26 @@ namespace ProSuite.AGP.Solution.WorkLists
 				{
 					using (var featureClass = geodatabase.OpenDataset<FeatureClass>(featureClassName))
 					{
-						yield return LayerFactory.Instance.CreateFeatureLayer(
+						FeatureLayer featureLayer = LayerFactory.Instance.CreateFeatureLayer(
 							featureClass, MapView.Active.Map, LayerPosition.AddToTop);
+
+						featureLayer.SetExpanded(false);
+						featureLayer.SetVisibility(false);
+
+						yield return featureLayer;
 					}
 				}
 			}
 		}
 
 		// todo daro: to utils
-		[CanBeNull]
-		private static string GetSelectedItemPath(string title, string filter,
-		                                          BrowseProjectFilter browseFilter)
-		{
-			var dialog = new OpenItemDialog()
-			             {
-				             BrowseFilter = browseFilter,
-				             Filter = filter,
-				             Title = title
-			             };
-
-			if (! dialog.ShowDialog().HasValue)
-			{
-				// todo daro: log?
-				return string.Empty;
-			}
-
-			return dialog.Items.FirstOrDefault()?.Path;
-		}
 
 		protected override async Task<BasicFeatureLayer> EnsureStatusFieldCoreAsync(
 			BasicFeatureLayer featureLayer)
 		{
 			const string fieldName = "STATUS";
 
+			// the GP tool is not going to fail on adding a field with the same name
 			Task<bool> addField =
 				GeoprocessingUtils.AddFieldAsync(featureLayer.Name, fieldName, "Status",
 				                                 esriFieldType.esriFieldTypeInteger, null, null,
@@ -154,6 +152,36 @@ namespace ProSuite.AGP.Solution.WorkLists
 			string path = ConfigurationUtils.GetConfigFilePath(_templateLayer);
 
 			return LayerUtils.CreateLayerDocument(path);
+		}
+
+		[CanBeNull]
+		private static string BrowseGeodatabase()
+		{
+			const string title = "Select Existing Issue Geodatabase";
+			var browseFilter =
+				BrowseProjectFilter.GetFilter(DAML.Filter.esri_browseDialogFilters_geodatabases_file);
+
+			return GetSelectedItemPath(title, ItemFilters.geodatabases, browseFilter);
+		}
+
+		[CanBeNull]
+		private static string GetSelectedItemPath(string title, string filter,
+		                                          BrowseProjectFilter browseFilter)
+		{
+			var dialog = new OpenItemDialog
+			             {
+				             BrowseFilter = browseFilter,
+				             Filter = filter,
+				             Title = title
+			             };
+
+			if (dialog.ShowDialog().HasValue && dialog.Items.ToList().Count > 0)
+			{
+				return dialog.Items.FirstOrDefault()?.Path;
+			}
+
+			_msg.Info("No Issue Geodatabase selected");
+			return null;
 		}
 	}
 }

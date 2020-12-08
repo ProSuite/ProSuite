@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Internal.CIM;
 using ArcGIS.Desktop.Core.Geoprocessing;
@@ -144,9 +145,22 @@ namespace ProSuite.Commons.AGP.GP
 				return true;
 			}
 
-			_msg.Error(
-				$"{tool} has failed: {result.Messages}, Parameters: {StringUtils.Concatenate(parameters, ", ")}");
+			_msg.Info(
+				$"{tool} has failed: {StringUtils.Concatenate(Format(result.Messages), ", ")}, Parameters: {StringUtils.Concatenate(parameters, ", ")}");
 			return false;
+		}
+
+		private static IEnumerable<string> Format([NotNull] IEnumerable<IGPMessage> messages)
+		{
+			var msgs = new List<string>(
+				messages.Select(message => $"{message.Type} ({message.ErrorCode}) {message.Text}"));
+
+			if (msgs.Count == 0)
+			{
+				msgs.Add("No GP messages");
+			}
+
+			return msgs;
 		}
 
 		private static string Parse(esriFieldType type)

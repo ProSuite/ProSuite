@@ -90,6 +90,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				RegisterObserver(new WorkListObserver());
 
+					return;
+				}
+
 				// wiring work list events, etc. is done in OnDrawComplete
 				// register work list before creating the layer
 				_registry.Add(workList);
