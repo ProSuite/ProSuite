@@ -50,7 +50,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			if (_path == null)
 			{
-				return await Task.FromResult(false);
+				return false;
 			}
 
 			await Task.WhenAll(
