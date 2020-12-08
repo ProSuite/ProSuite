@@ -144,7 +144,7 @@ namespace ProSuite.Commons.AGP.GP
 				return true;
 			}
 
-			_msg.Error(
+			_msg.Info(
 				$"{tool} has failed: {result.Messages}, Parameters: {StringUtils.Concatenate(parameters, ", ")}");
 			return false;
 		}
