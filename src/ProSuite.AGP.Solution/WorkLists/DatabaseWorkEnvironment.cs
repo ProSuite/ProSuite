@@ -85,8 +85,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 				{
 					using (var featureClass = geodatabase.OpenDataset<FeatureClass>(featureClassName))
 					{
-						yield return LayerFactory.Instance.CreateFeatureLayer(
+						FeatureLayer featureLayer = LayerFactory.Instance.CreateFeatureLayer(
 							featureClass, MapView.Active.Map, LayerPosition.AddToTop);
+
+						featureLayer.SetExpanded(false);
+						featureLayer.SetVisibility(false);
+
+						yield return featureLayer;
 					}
 				}
 			}
