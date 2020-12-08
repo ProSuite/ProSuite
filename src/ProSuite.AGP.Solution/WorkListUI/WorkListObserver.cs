@@ -18,20 +18,22 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		public void WorkListAdded(IWorkList workList)
 		{
-			if (workList is SelectionWorkList)
+			RunOnUIThread(() =>
 			{
-				_viewModel = new SelectionWorkListVm(workList);
-				_view = new WorkListView(_viewModel as SelectionWorkListVm) {Title = workList.Name};
-			}
+				if (workList is SelectionWorkList)
+				{
+					_viewModel = new SelectionWorkListVm(workList);
+					_view = new WorkListView(_viewModel as SelectionWorkListVm)
+					        {Title = workList.Name};
+				}
 
-			if (workList is IssueWorkList)
-			{
-				_viewModel = new IssueWorkListVm(workList);
-				_view = new IssueWorkListView(_viewModel as IssueWorkListVm)
-				        {
-					        Title = workList.Name
-				        };
-			}
+				if (workList is IssueWorkList)
+				{
+					_viewModel = new IssueWorkListVm(workList);
+					_view = new IssueWorkListView(_viewModel as IssueWorkListVm)
+					        {Title = workList.Name};
+				}
+			});
 		}
 
 		public void WorkListRemoved(IWorkList workList)
@@ -43,10 +45,12 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				return;
 			}
 
-			RunOnUIThread(() => { _view?.Close(); });
-
-			_viewModel = null;
-			_view = null;
+			RunOnUIThread(() =>
+			{
+				_view?.Close();
+				_viewModel = null;
+				_view = null;
+			});
 		}
 
 		public void WorkListModified(IWorkList workList)
@@ -73,8 +77,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 			if (ensureWorkListsMatch(workList, _viewModel.CurrentWorkList))
 			{
-				//viewModel.Show(workList);
-				_view?.Show();
+				RunOnUIThread(() => _view?.Show());
 			}
 		}
 

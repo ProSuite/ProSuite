@@ -75,7 +75,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 		public void ShowView([NotNull] string uniqueName)
 		{
 			IWorkList list = _registry.Get(uniqueName);
-			// NOTE send a show work list request to all observers. Let the observer decide whether to show the work list.
+
 			foreach (IWorkListObserver observer in _observers)
 			{
 				observer.Show(list);
@@ -88,14 +88,19 @@ namespace ProSuite.AGP.Solution.WorkLists
 			{
 				IWorkList workList = await environment.CreateWorkListAsync(this);
 
+				RegisterObserver(new WorkListObserver());
+
 				// wiring work list events, etc. is done in OnDrawComplete
 				// register work list before creating the layer
 				_registry.Add(workList);
 
+				foreach (var observer in _observers)
+				{
+					observer.WorkListAdded(workList);
+				}
+
 				CreateLayer(environment, workList.Name);
 
-				//RegisterObserver(new SelectionWorkListVm(workList));
-				RegisterObserver(new WorkListObserver());
 			}
 			catch (Exception e)
 			{
