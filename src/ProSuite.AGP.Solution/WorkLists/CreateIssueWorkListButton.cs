@@ -16,7 +16,14 @@ namespace ProSuite.AGP.Solution.WorkLists
 				await WorkListsModule.Current.CreateWorkListAsync(environment);
 			});
 
-			WorkListsModule.Current.ShowView(environment.UniqueName);
+			string workListName = environment.UniqueName;
+
+			if (string.IsNullOrEmpty(workListName))
+			{
+				return;
+			}
+
+			WorkListsModule.Current.ShowView(workListName);
 		}
 	}
 }
