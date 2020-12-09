@@ -14,6 +14,7 @@ using ProSuite.QA.ServiceManager;
 using ProSuite.QA.ServiceManager.Types;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ProSuite.AGP.Solution.Commons;
@@ -261,10 +262,12 @@ namespace ProSuite.AGP.Solution
 
 				if (response?.ResponseData != null)
 				{
-					// TODO does file exist?
-
-					// TODO fire event to open worklist?
-					await OpenIssuesWorklist(response?.ResponseData.ToString());
+					var issuesGdb = Path.Combine(response.ResponseData.ToString(), "issues.gdb");
+					if (Directory.Exists(issuesGdb))
+					{
+						// TODO fire event to open worklist?
+						await OpenIssuesWorklist(issuesGdb);
+					}
 				}
 			}
 			else
