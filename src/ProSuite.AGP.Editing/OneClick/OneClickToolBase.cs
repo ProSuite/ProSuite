@@ -366,6 +366,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (! candidatesOfManyLayers.Any())
 			{
+				//no candidate (user clicked into empty space): clear selection
+				await QueuedTask.Run(() =>
+				{
+					SelectionUtils.ClearSelection(ActiveMapView.Map);
+				});
+
 				return false;
 			}
 
