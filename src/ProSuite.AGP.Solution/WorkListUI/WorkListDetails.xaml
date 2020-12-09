@@ -22,17 +22,30 @@
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <ToolBarTray>
-            <ToolBar Grid.Row="0">
+
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="120"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        
+        <Label Content="Quality Condition: " Grid.Row="0" Grid.Column="0"/>
+        <Label Content="{Binding QualityCondition }" Grid.Row="0" Grid.Column="1"/>
+        <Label Content="Error Description: " Grid.Row="1" Grid.Column="0"/>
+        <Label Content="" Grid.Row="1" Grid.Column="1"/>
+
+        <ToolBarTray Grid.Row="2">
+            <ToolBar >
               
             </ToolBar>
             
         </ToolBarTray>
-        <DataGrid Grid.Row="1">
-            <DataGridTextColumn Header="Table" Binding="{Binding Name}" />
+        <DataGrid Grid.ColumnSpan="2" Grid.Row="3" ItemsSource="{Binding InvolvedObjects}">
+            <!--<DataGridTextColumn Header="Table" Binding="{Binding Name}" />
             <DataGridTextColumn Header="Subtype" Binding="{Binding Name}" />
-            <DataGridTextColumn Header="Object ID" Binding="{Binding Name}" />
+            <DataGridTextColumn Header="Object ID" Binding="{Binding Name}" />-->
         </DataGrid>
     </Grid>
 </UserControl>

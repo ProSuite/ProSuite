@@ -1,4 +1,5 @@
 using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 
@@ -8,29 +9,23 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	{
 		private WorkListView _view;
 		private readonly bool _hasDetailSection;
+		private WorkItemVmBase _currentWorkItem;
 
 		public SelectionWorkListVm(IWorkList workList)
 		{
 			CurrentWorkList = workList;
 			CurrentWorkList.GoNext();
-			CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
+			CurrentWorkItem = new SelectionWorkItemVm(CurrentWorkList.Current as SelectionItem);
 			_hasDetailSection = false;
 		}
 
 		public override bool HasDetailSection => _hasDetailSection;
 
-		//protected override WorkListView View
-		//{
-		//	get => _view;
-		//	set => _view = value;
-		//}
-
-		//public override void Show(IWorkList workList)
-		//{
-		//	View = new WorkListView(this);
-		//	View.Owner = FrameworkApplication.Current.MainWindow;
-		//	View.Title = workList.Name;
-		//	View.Show();
-		//}
+		public override WorkItemVmBase CurrentWorkItem
+		{
+			get => _currentWorkItem;
+			set => _currentWorkItem = value;
+		}
+		
 	}
 }

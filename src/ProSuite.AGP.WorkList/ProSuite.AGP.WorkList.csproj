@@ -103,7 +103,6 @@
     <Compile Include="SpatialSearchOption.cs" />
     <Compile Include="VisitedSearchOption.cs" />
     <Compile Include="WorkEnvironmentBase.cs" />
-    <Compile Include="WorkItemVm.cs" />
     <Compile Include="Domain\Persistence\Xml\XmlGdbRowIdentity.cs" />
     <Compile Include="Domain\Persistence\Xml\XmlWorkItemStateRepository.cs" />
     <Compile Include="Domain\Persistence\Xml\XmlWorkItemState.cs" />

@@ -155,12 +155,16 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WorkLists\DatabaseWorkEnvironment.cs" />
     <Compile Include="WorkLists\WorkListsModule.cs" />
+    <Compile Include="WorkListUI\InvolvedTableVm.cs" />
+    <Compile Include="WorkListUI\IssueWorkItemVm.cs" />
     <Compile Include="WorkListUI\IssueWorkListView.xaml.cs">
       <DependentUpon>IssueWorkListView.xaml</DependentUpon>
     </Compile>
     <Compile Include="WorkListUI\IssueWorkListVm.cs" />
     <Compile Include="WorkListUI\ShowIssueWorkListView.cs" />
     <Compile Include="WorkListUI\StatusEnumBooleanConverter.cs" />
+    <Compile Include="WorkListUI\SelectionWorkItemVm.cs" />
+    <Compile Include="WorkListUI\WorkItemVmBase.cs" />
     <Compile Include="WorkListUI\WorkListDetails.xaml.cs">
       <DependentUpon>WorkListDetails.xaml</DependentUpon>
     </Compile>

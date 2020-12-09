@@ -21,7 +21,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	{
 		private const double _seconds = 0.3;
 		private IWorkList _currentWorkList;
-		private WorkItemVm _currentWorkItem;
+		
 		private int _currentIndex;
 		private WorkItemStatus _status;
 		private bool _visited;
@@ -168,18 +168,9 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			set { SetProperty(ref _currentWorkList, value, () => CurrentWorkList); }
 		}
 
-		public virtual WorkItemVm CurrentWorkItem
-		{
-			get => new WorkItemVm(CurrentWorkList.Current);
-			set
-			{
-				SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem);
-				Status = CurrentWorkItem.Status;
-				Visited = CurrentWorkItem.Visited;
-				CurrentIndex = CurrentWorkList.CurrentIndex;
-				Count = GetCount();
-			}
-		}
+		public abstract WorkItemVmBase CurrentWorkItem { get; set; }
+
+
 
 		public bool Visited
 		{
@@ -198,7 +189,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			set { }
 		}
 
-		private string GetCount()
+		public string GetCount()
 		{
 			int all = CurrentWorkList.Count(null, true);
 			int toDo = CurrentWorkList
@@ -220,21 +211,25 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		//protected abstract WorkListView View { get; set; }
 
-		private void GoPreviousItem()
+
+		//protected abstract void GoPreviousItem();
+		protected void GoPreviousItem()
 		{
 			QueuedTask.Run(() =>
 			{
 				CurrentWorkList.GoPrevious();
-				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
+				CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
 			});
 		}
 
-		private void GoNearestItem()
+		//protected abstract void GoNearestItem();
+
+		protected virtual void GoNearestItem()
 		{
 			QueuedTask.Run(() =>
 			{
 				CurrentWorkList.GoNearest(CurrentWorkList.Current.Extent);
-				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
+				CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
 			});
 		}
 
@@ -267,21 +262,24 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			await MapView.Active.ZoomToAsync(CurrentWorkList.Extent);
 		}
 
-		private void GoFirstItem()
+
+		//protected abstract void GoFirstItem();
+
+		protected virtual void GoFirstItem()
 		{
 			QueuedTask.Run(() =>
 			{
 				CurrentWorkList.GoFirst();
-				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
+				CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
 			});
 		}
 
-		private void GoNextItem()
+		protected virtual void GoNextItem()
 		{
 			QueuedTask.Run(() =>
 			{
 				CurrentWorkList.GoNext();
-				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
+				CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
 			});
 		}
 
@@ -312,7 +310,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				}
 
 				CurrentWorkList.GoToOid(selectedItem.OID);
-				CurrentWorkItem = new WorkItemVm(CurrentWorkList.Current);
+				CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
 			});
 		}
 
