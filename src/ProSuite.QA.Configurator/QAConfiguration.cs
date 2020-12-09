@@ -59,7 +59,7 @@ namespace ProSuite.QA.Configurator
 					{
 						ServiceType = ProSuiteQAServiceType.GPLocal,
 						ServiceName = @"QAGPLocal",
-						ServiceConnection = Path.Combine(_qaInstallationsFolder, @"Toolbox\ArcGISPro\ProSuiteToolbox.pyt")
+						ServiceConnection = Path.Combine(_qaInstallationsFolder, @"Toolbox\ProSuiteToolbox.pyt")
 					};
 
 				case ProSuiteQAServiceType.GPService:
