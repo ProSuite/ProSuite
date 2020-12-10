@@ -1489,13 +1489,21 @@ namespace ProSuite.Commons.AO.Geodatabase
 				                      SubFields = objectClass.OIDFieldName
 			                      };
 
+			return Count(objectClass, filter);
+		}
+
+		public static int Count([NotNull] IObjectClass objectClass,
+		                        [NotNull] IQueryFilter filter)
+		{
 			var featureClass = objectClass as IFeatureClass;
+
 			if (featureClass != null)
 			{
 				return featureClass.FeatureCount(filter);
 			}
 
 			var table = (ITable) objectClass;
+
 			return table.RowCount(filter);
 		}
 
