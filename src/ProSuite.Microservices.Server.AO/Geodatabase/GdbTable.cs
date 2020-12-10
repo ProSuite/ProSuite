@@ -23,6 +23,8 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 		private int _lastUsedOid;
 		private readonly IWorkspace _workspace;
 
+		private IName _fullName;
+
 		/// <summary>
 		///     Initializes a new instance of the <see cref="GdbTable" /> class.
 		/// </summary>
@@ -232,7 +234,18 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 		[NotNull]
 		public string Name { get; }
 
-		IName IDataset.FullName => null;
+		IName IDataset.FullName
+		{
+			get
+			{
+				if (_fullName == null)
+				{
+					_fullName = new GdbTableName(this);
+				}
+
+				return _fullName;
+			}
+		}
 
 		string IDataset.BrowseName
 		{
@@ -434,6 +447,51 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			{
 				throw new NotImplementedException();
 			}
+		}
+
+		#endregion
+
+		#region Nested class GdbTableName
+
+		private class GdbTableName : IName, IDatasetName, IObjectClassName, ITableName
+		{
+			private readonly GdbTable _table;
+
+			public GdbTableName(GdbTable table)
+			{
+				_table = table;
+				Name = table.Name;
+
+				IWorkspace workspace = ((IDataset) _table).Workspace;
+				WorkspaceName = (IWorkspaceName) ((IDataset) workspace).FullName;
+			}
+
+			#region IName members
+
+			public object Open()
+			{
+				return _table;
+			}
+
+			public string NameString { get; set; }
+
+			#endregion
+
+			#region IDatasetName members
+
+			public string Name { get; set; }
+
+			public esriDatasetType Type => _table.Type;
+
+			public string Category { get; set; }
+
+			public IWorkspaceName WorkspaceName { get; set; }
+
+			public IEnumDatasetName SubsetNames => throw new NotImplementedException();
+
+			#endregion
+
+			public int ObjectClassID => _table.ObjectClassID;
 		}
 
 		#endregion
