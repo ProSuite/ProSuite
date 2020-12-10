@@ -13,7 +13,7 @@
         Width="300"
         SizeToContent="WidthAndHeight"
         WindowStartupLocation="Manual"
-        ShowInTaskbar="True"
+        ShowInTaskbar="False"
         WindowStyle="None"
         pickerUi:DialogCloser.DialogResult="{Binding Path=DialogResult}"
         BorderBrush="{DynamicResource Esri_BorderBrush}"
