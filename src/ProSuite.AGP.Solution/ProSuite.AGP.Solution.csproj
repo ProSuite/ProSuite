@@ -155,6 +155,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WorkLists\DatabaseWorkEnvironment.cs" />
     <Compile Include="WorkLists\WorkListsModule.cs" />
+    <Compile Include="WorkListUI\InvolvedObjectRow.cs" />
     <Compile Include="WorkListUI\InvolvedTableVm.cs" />
     <Compile Include="WorkListUI\IssueWorkItemVm.cs" />
     <Compile Include="WorkListUI\IssueWorkListView.xaml.cs">
@@ -176,6 +177,7 @@
       <DependentUpon>WorkListView.xaml</DependentUpon>
     </Compile>
     <Compile Include="WorkListUI\WorkListViewBase.cs" />
+    <Compile Include="WorkListUI\WorkListViewFactory.cs" />
     <Compile Include="WorkListUI\WorkListViewModelBase.cs" />
     <Compile Include="WorkLists\InMemoryWorkEnvironment.cs" />
     <Compile Include="WorkListUI\SelectionWorkListVm.cs" />

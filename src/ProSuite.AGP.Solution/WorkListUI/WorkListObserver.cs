@@ -3,7 +3,6 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Controls;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
-using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.WorkListUI
@@ -13,75 +12,12 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		[CanBeNull]
 		private ProWindow _view { get; set; }
 
+		public IWorkList WorkList { get; private set; }
+
 		[CanBeNull]
-		private WorkListViewModelBase _viewModel { get; set; }
+		private WorkListViewModelBase ViewModel { get; set; }
 
-		public void WorkListAdded(IWorkList workList)
-		{
-			RunOnUIThread(() =>
-			{
-				if (workList is SelectionWorkList)
-				{
-					_viewModel = new SelectionWorkListVm(workList);
-					_view = new WorkListView(_viewModel as SelectionWorkListVm)
-					        {Title = workList.Name};
-				}
-
-				if (workList is IssueWorkList)
-				{
-					_viewModel = new IssueWorkListVm(workList);
-					_view = new IssueWorkListView(_viewModel as IssueWorkListVm)
-					        {Title = workList.Name};
-				}
-			});
-		}
-
-		public void WorkListRemoved(IWorkList workList)
-		{
-			if (_viewModel == null) return;
-
-			if (! ensureWorkListsMatch(workList, _viewModel.CurrentWorkList))
-			{
-				return;
-			}
-
-			RunOnUIThread(() =>
-			{
-				_view?.Close();
-				_viewModel = null;
-				_view = null;
-			});
-		}
-
-		public void WorkListModified(IWorkList workList)
-		{
-			if (_viewModel == null)
-			{
-				return;
-			}
-
-			if (! ensureWorkListsMatch(workList, _viewModel.CurrentWorkList))
-			{
-				return;
-			}
-
-			_viewModel.CurrentWorkList = workList;
-		}
-
-		public void Show(IWorkList workList)
-		{
-			if (_viewModel == null)
-			{
-				return;
-			}
-
-			if (ensureWorkListsMatch(workList, _viewModel.CurrentWorkList))
-			{
-				RunOnUIThread(() => _view?.Show());
-			}
-		}
-
-		private bool ensureWorkListsMatch(IWorkList workList, IWorkList compareWorkList)
+		private static bool EnsureWorkListsMatch(IWorkList workList, IWorkList compareWorkList)
 		{
 			if (workList != null && compareWorkList != null)
 			{
@@ -99,6 +35,85 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			else
 				//We are not on the UI
 				FrameworkApplication.Current.Dispatcher.BeginInvoke(action);
+		}
+
+		public void WorkListAdded(IWorkList workList)
+		{
+			if (WorkList != null)
+			{
+				return;
+			}
+
+			RunOnUIThread(() =>
+			{
+				var tuple = WorkListViewFactory.CreateView(workList);
+				_view = tuple.Item1;
+				ViewModel = tuple.Item2;
+				WorkList = workList;
+
+				//if (workList is SelectionWorkList)
+				//{
+				//	_viewModel = new SelectionWorkListVm(workList);
+				//	_view = new WorkListView(_viewModel as SelectionWorkListVm)
+				//	        {Title = workList.Name};
+				//	_workList = workList;
+				//}
+
+				//if (workList is IssueWorkList)
+				//{
+				//	_viewModel = new IssueWorkListVm(workList);
+				//	_view = new IssueWorkListView(_viewModel as IssueWorkListVm)
+				//	        {Title = workList.Name};
+				//	_workList = workList;
+				//}
+			});
+		}
+
+		public void WorkListRemoved(IWorkList workList)
+		{
+			if (ViewModel == null) return;
+
+			if (! EnsureWorkListsMatch(workList, ViewModel.CurrentWorkList))
+			{
+				return;
+			}
+
+			RunOnUIThread(() =>
+			{
+				_view?.Close();
+				WorkList = null;
+				ViewModel = null;
+				_view = null;
+			});
+		}
+
+		public void WorkListModified(IWorkList workList)
+		{
+			if (ViewModel == null)
+			{
+				return;
+			}
+
+			if (! EnsureWorkListsMatch(workList, ViewModel.CurrentWorkList))
+			{
+				return;
+			}
+
+			WorkList = workList;
+			ViewModel.CurrentWorkList = workList;
+		}
+
+		public void Show(IWorkList workList)
+		{
+			if (ViewModel == null)
+			{
+				return;
+			}
+
+			if (EnsureWorkListsMatch(workList, ViewModel.CurrentWorkList))
+			{
+				RunOnUIThread(() => _view?.Show());
+			}
 		}
 	}
 }

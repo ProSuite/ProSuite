@@ -20,10 +20,9 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-        <ToolBarTray>
-            <ToolBar Grid.Row="0">
+        <ToolBarTray Grid.Row="0">
+            <ToolBar>
                 <Button Command="{Binding GoFirstItemCmd}">
                     <Image Source="Images/GoFirst16.png" ToolTip="Previous WorkItem" Stretch="UniformToFill" />
                 </Button>
@@ -69,7 +68,7 @@
             </ToolBar>
         </ToolBarTray>
 
-        <StackPanel Grid.Row="2">
+        <StackPanel Grid.Row="1">
             <ToolBarTray>
                 <ToolBar>
                     <DockPanel LastChildFill="True">
@@ -87,7 +86,6 @@
             <DockPanel LastChildFill="True" >
                 <Label Content="{Binding Count}" DockPanel.Dock="Right"></Label>
                 <Label  Content="{Binding CurrentWorkItem.Description}" />
-
             </DockPanel>
         </StackPanel>
     </Grid>

@@ -1,5 +1,3 @@
-using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 
@@ -26,6 +24,5 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			get => _currentWorkItem;
 			set => _currentWorkItem = value;
 		}
-		
 	}
 }

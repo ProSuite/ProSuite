@@ -19,7 +19,13 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		public string QualityCondition
 		{
-			get { return WorkItem == null ? string.Empty :  IssueItem.QualityCondition; }
+			get { return WorkItem == null ? string.Empty : IssueItem.QualityCondition; }
+			set { }
+		}
+
+		public string ErrorDescription
+		{
+			get { return WorkItem == null ? string.Empty : IssueItem.IssueCodeDescription; }
 			set { }
 		}
 	}

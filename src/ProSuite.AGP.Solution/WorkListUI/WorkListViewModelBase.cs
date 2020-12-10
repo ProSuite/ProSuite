@@ -10,7 +10,6 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Solution.WorkLists;
-using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -21,7 +20,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	{
 		private const double _seconds = 0.3;
 		private IWorkList _currentWorkList;
-		
+
 		private int _currentIndex;
 		private WorkItemStatus _status;
 		private bool _visited;
@@ -34,7 +33,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private RelayCommand _zoomToAllCmd;
 		private RelayCommand _pickWorkItemCmd;
 		private RelayCommand _goNearestItemCmd;
-		
+
 		public ICommand ClearSelectionCmd =>
 			FrameworkApplication.GetPlugInWrapper(
 				DAML.Button.esri_mapping_clearSelectionButton) as ICommand;
@@ -170,8 +169,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		public abstract WorkItemVmBase CurrentWorkItem { get; set; }
 
-
-
 		public bool Visited
 		{
 			get => CurrentWorkItem.Visited;
@@ -210,7 +207,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		}
 
 		//protected abstract WorkListView View { get; set; }
-
 
 		//protected abstract void GoPreviousItem();
 		protected void GoPreviousItem()
@@ -262,7 +258,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			await MapView.Active.ZoomToAsync(CurrentWorkList.Extent);
 		}
 
-
 		//protected abstract void GoFirstItem();
 
 		protected virtual void GoFirstItem()
@@ -286,7 +281,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private void PickWorkItem()
 		{
 			WorkListsModule.Current.WorkItemPicked += Current_WorkItemPicked;
-			FrameworkApplication.SetCurrentToolAsync("ProSuiteTools_PickWorkListItemTool");
+			FrameworkApplication.SetCurrentToolAsync(ConfigIDs.Editing_PickWorkListItemTool); 
 		}
 
 		private void Current_WorkItemPicked(object sender, WorkItemPickArgs e)

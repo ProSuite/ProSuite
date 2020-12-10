@@ -65,11 +65,10 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return _observers.Remove(observer);
 		}
 
-		[CanBeNull]
+		//[CanBeNull]
 		//private IWorkListObserver GetObserverByWorklistName(string name)
 		//{
-		//	var vms = _observers.Select(observer => observer as SelectionWorkListVm);
-		//	return vms.FirstOrDefault(vm => vm.CurrentWorkList.Name == name);
+
 		//}
 
 		public void ShowView([NotNull] string uniqueName)
@@ -89,7 +88,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 				IWorkList workList = await environment.CreateWorkListAsync(this);
 
 				RegisterObserver(new WorkListObserver());
-				
+
 				// wiring work list events, etc. is done in OnDrawComplete
 				// register work list before creating the layer
 				_registry.Add(workList);
@@ -100,7 +99,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 				}
 
 				CreateLayer(environment, workList.Name);
-
 			}
 			catch (Exception e)
 			{
@@ -310,11 +308,17 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 		}
 
+		private List<WorkListObserver> GetEmptyObservers()
+		{
+			return _observers.Select(observer => observer as WorkListObserver)
+			                 .Where(wlObserver => wlObserver.WorkList == null).ToList();
+		}
+
 		private async Task OnLayerRemovingAsync(LayersRemovingEventArgs e)
 		{
 			// todo daro: revise usage of Task
-			await Task.Run(() =>
-			{
+			//await Task.Run(() =>
+			//{
 				foreach (IWorkList workList in _layerByWorkList
 				                               .Where(pair => e.Layers.Contains(pair.Value))
 				                               .Select(pair => pair.Key).ToList())
@@ -324,25 +328,36 @@ namespace ProSuite.AGP.Solution.WorkLists
 						observer.WorkListRemoved(workList);
 					}
 
-					// ensure folder exists before commit
-					EnsureFolderExists(GetLocalWorklistsFolder());
+					List<WorkListObserver> emptyObservers = GetEmptyObservers();
 
-					workList.Commit();
+					foreach (var observer in emptyObservers)
+					{
+						UnregisterObserver(observer);
+					}
 
-					UnwireEvents(workList);
+					await QueuedTask.Run(() =>
+					{
+						// ensure folder exists before commit
+						EnsureFolderExists(GetLocalWorklistsFolder());
 
-					//UnregisterViewModel(workList);
+						workList.Commit();
 
-					_layerByWorkList.Remove(workList);
-					_registry.Remove(workList);
+						UnwireEvents(workList);
 
-					// Note daro: don't dispose work list here. Given the following situation.
-					// Remove work list layer would dispose the source geodatabase (in GdbItemRepository).
-					// Add work list layer again with same source geodatabase is going to throw an
-					// exception, e.g. on SetStatus
-					//workList.Dispose();
+						//UnregisterViewModel(workList);
+
+						_layerByWorkList.Remove(workList);
+						_registry.Remove(workList);
+
+						// Note daro: don't dispose work list here. Given the following situation.
+						// Remove work list layer would dispose the source geodatabase (in GdbItemRepository).
+						// Add work list layer again with same source geodatabase is going to throw an
+						// exception, e.g. on SetStatus
+						//workList.Dispose();
+					});
+
 				}
-			});
+			//});
 		}
 
 		//private void UnregisterViewModel(IWorkList workList)

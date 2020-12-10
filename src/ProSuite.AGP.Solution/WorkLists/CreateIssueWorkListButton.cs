@@ -26,7 +26,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 				{
 					return;
 				}
-
 				WorkListsModule.Current.ShowView(workListName);
 			}, _msg);
 		}
