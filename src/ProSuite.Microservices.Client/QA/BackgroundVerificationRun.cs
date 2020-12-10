@@ -4,7 +4,9 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Grpc.Core;
+using ProSuite.Commons.Com;
 using ProSuite.Commons.DomainModels;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geometry;
 using ProSuite.Commons.Logging;
@@ -58,6 +60,9 @@ namespace ProSuite.Microservices.Client.QA
 		public IClientIssueMessageCollector ResultIssueCollector { get; set; }
 
 		[CanBeNull]
+		public IVerificationDataProvider VerificationDataProvider { get; set; }
+
+		[CanBeNull]
 		public BackgroundVerificationResult QualityVerificationResult { get; private set; }
 
 		[NotNull]
@@ -69,15 +74,20 @@ namespace ProSuite.Microservices.Client.QA
 		[CanBeNull]
 		public Action<QualityVerification> ShowReportAction { get; set; }
 
+		private StaTaskScheduler StaTaskScheduler { get; } = new StaTaskScheduler(1);
+
 		public async Task<ServiceCallStatus> ExecuteAndProcessMessagesAsync(
-			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient rpcClient)
+			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient rpcClient,
+			bool provideDataFromClient = false,
+			SchemaMsg schemaMsg = null)
 		{
-			return await ExecuteAndProcessMessagesAsync(
-				       () => rpcClient.VerifyQuality(VerificationRequest));
+			return provideDataFromClient
+				       ? await TryExecuteAsync(c => VerifyDataAsync(rpcClient, c, schemaMsg))
+				       : await TryExecuteAsync(c => VerifyAsync(rpcClient, c));
 		}
 
-		private async Task<ServiceCallStatus> ExecuteAndProcessMessagesAsync(
-			[NotNull] Func<AsyncServerStreamingCall<VerificationResponse>> verificationFunc)
+		private async Task<ServiceCallStatus> TryExecuteAsync(
+			[NotNull] Func<CancellationTokenSource, Task<bool>> func)
 		{
 			QualityVerificationResult = new BackgroundVerificationResult(
 				ResultIssueCollector, _domainTransactions, _qualityVerificationRepository,
@@ -88,44 +98,7 @@ namespace ProSuite.Microservices.Client.QA
 
 			try
 			{
-				using (AsyncServerStreamingCall<VerificationResponse> call = verificationFunc())
-				{
-					while (await call.ResponseStream.MoveNext(_cancellationTokenSource.Token))
-					{
-						VerificationResponse responseMsg = call.ResponseStream.Current;
-
-						Progress.RemoteCallStatus =
-							(ServiceCallStatus) responseMsg.ServiceCallStatus;
-
-						foreach (IssueMsg issueMessage in responseMsg.Issues)
-						{
-							ResultIssueCollector?.AddIssueMessage(issueMessage);
-						}
-
-						foreach (GdbObjRefMsg objRefMsg in responseMsg.ObsoleteExceptions)
-						{
-							ResultIssueCollector?.AddObsoleteException(objRefMsg);
-						}
-
-						UpdateServiceProgress(Progress, responseMsg);
-
-						if (responseMsg.ServiceCallStatus != (int) ServiceCallStatus.Running)
-						{
-							// Final message: Finished, Failed or Cancelled
-
-							if (QualityVerificationResult != null)
-							{
-								QualityVerificationResult.VerificationMsg =
-									responseMsg.QualityVerification;
-
-								ResultIssueCollector?.SetVerifiedPerimeter(
-									responseMsg.VerifiedPerimeter);
-							}
-						}
-
-						LogProgress(responseMsg.Progress);
-					}
-				}
+				await func(_cancellationTokenSource);
 			}
 			catch (RpcException rpcException)
 			{
@@ -151,6 +124,191 @@ namespace ProSuite.Microservices.Client.QA
 			}
 
 			return Progress.RemoteCallStatus;
+		}
+
+		private async Task<bool> VerifyAsync(
+			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient rpcClient,
+			CancellationTokenSource cancellationSource)
+		{
+			using (var call = rpcClient.VerifyQuality(VerificationRequest))
+			{
+				while (await call.ResponseStream.MoveNext(cancellationSource.Token))
+				{
+					VerificationResponse responseMsg = call.ResponseStream.Current;
+
+					HandleProgressMsg(responseMsg);
+				}
+			}
+
+			return true;
+		}
+
+		private async Task<bool> VerifyDataAsync(
+			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient rpcClient,
+			[NotNull] CancellationTokenSource cancellationSource,
+			[CanBeNull] SchemaMsg schemaMsg = null)
+		{
+			using (var call = rpcClient.VerifyDataQuality())
+			{
+				var initialRequest =
+					new DataVerificationRequest
+					{
+						Request = VerificationRequest,
+						Schema = schemaMsg
+					};
+
+				await call.RequestStream.WriteAsync(initialRequest);
+
+				while (await call.ResponseStream.MoveNext(cancellationSource.Token))
+				{
+					var responseMsg = call.ResponseStream.Current;
+
+					if (responseMsg.SchemaRequest != null || responseMsg.DataRequest != null)
+					{
+						await ProvideDataToServer(responseMsg, call.RequestStream,
+						                          cancellationSource);
+					}
+					else
+					{
+						HandleProgressMsg(responseMsg.Response);
+					}
+				}
+			}
+
+			return true;
+		}
+
+		private async Task<bool> ProvideDataToServer(
+			[NotNull] DataVerificationResponse serverResponseMsg,
+			[NotNull] IClientStreamWriter<DataVerificationRequest> dataStream,
+			[NotNull] CancellationTokenSource cancellationSource)
+		{
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				_msg.DebugFormat("Sending verification data for {0}...", serverResponseMsg);
+			}
+
+			Assert.NotNull(VerificationDataProvider, "No verification data provider available.");
+
+			Func<bool> getDataFunc = () => SatisfyDataRequest(
+				serverResponseMsg, VerificationDataProvider, dataStream);
+
+			bool result =
+				await Task.Factory.StartNew(
+					() =>
+						TryExecute(getDataFunc, cancellationSource.Token,
+						           "SatisfyDataRequest"),
+					cancellationSource.Token,
+					TaskCreationOptions.LongRunning, StaTaskScheduler);
+
+			if (result)
+			{
+				_msg.DebugFormat("Successfully provided verification data for to the server.");
+			}
+
+			return result;
+		}
+
+		private static bool SatisfyDataRequest(
+			[NotNull] DataVerificationResponse arg,
+			[NotNull] IVerificationDataProvider verificationDataProvider,
+			[NotNull] IClientStreamWriter<DataVerificationRequest> callRequestStream)
+		{
+			DataVerificationRequest result = new DataVerificationRequest();
+
+			try
+			{
+				if (arg.SchemaRequest != null)
+				{
+					result.Schema = verificationDataProvider.GetGdbSchema(arg.SchemaRequest);
+				}
+				else if (arg.DataRequest != null)
+				{
+					result.Data = verificationDataProvider
+					              .GetData(arg.DataRequest).FirstOrDefault();
+				}
+
+				callRequestStream.WriteAsync(result);
+
+				return true;
+			}
+			catch (Exception e)
+			{
+				_msg.Debug("Error handling data request", e);
+
+				// Send an empty message to make sure the server does not wait forever:
+				callRequestStream.WriteAsync(result);
+				throw;
+			}
+		}
+
+		private static T TryExecute<T>(Func<T> func,
+		                               CancellationToken cancellationToken,
+		                               string methodName)
+		{
+			T response = default;
+
+			try
+			{
+				response = func();
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error in {methodName}", e);
+				//trackCancellationToken.Exception = e;
+			}
+
+			return response;
+		}
+
+		private async Task SatisfyDataQueryAsync(
+			[NotNull] DataRequest dataRequest,
+			[NotNull] IClientStreamWriter<DataVerificationRequest> targetStream)
+		{
+			// Once the result messages are split up, this could be used for higher throughput
+			foreach (GdbData data in Assert.NotNull(VerificationDataProvider).GetData(dataRequest))
+			{
+				DataVerificationRequest r = new DataVerificationRequest
+				                            {
+					                            Data = data
+				                            };
+
+				await targetStream.WriteAsync(r);
+			}
+		}
+
+		private void HandleProgressMsg(VerificationResponse responseMsg)
+		{
+			Progress.RemoteCallStatus =
+				(ServiceCallStatus) responseMsg.ServiceCallStatus;
+
+			foreach (IssueMsg issueMessage in responseMsg.Issues)
+			{
+				ResultIssueCollector?.AddIssueMessage(issueMessage);
+			}
+
+			foreach (GdbObjRefMsg objRefMsg in responseMsg.ObsoleteExceptions)
+			{
+				ResultIssueCollector?.AddObsoleteException(objRefMsg);
+			}
+
+			UpdateServiceProgress(Progress, responseMsg);
+
+			if (responseMsg.ServiceCallStatus != (int) ServiceCallStatus.Running)
+			{
+				// Final message: Finished, Failed or Cancelled
+
+				if (QualityVerificationResult != null)
+				{
+					QualityVerificationResult.VerificationMsg =
+						responseMsg.QualityVerification;
+
+					ResultIssueCollector?.SetVerifiedPerimeter(
+						responseMsg.VerifiedPerimeter);
+				}
+			}
+
+			LogProgress(responseMsg.Progress);
 		}
 
 		private static void LogProgress(VerificationProgressMsg progressMsg)
