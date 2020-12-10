@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 
 namespace ProSuite.Microservices.Server.AO.Geodatabase
@@ -29,7 +30,22 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 
 		public void AddFields(params IField[] fields)
 		{
-			foreach (var field in fields) _fields.Add(field);
+			foreach (var field in fields)
+			{
+				if (string.IsNullOrEmpty(field.Name))
+				{
+					throw new ArgumentException("The field has no name");
+				}
+
+				if (_fields.Any(
+					f => f.Name.Equals(field.Name, StringComparison.InvariantCultureIgnoreCase)))
+				{
+					throw new ArgumentException(
+						$"The field list already contains a field with name {field.Name}");
+				}
+
+				_fields.Add(field);
+			}
 		}
 	}
 }

@@ -34,7 +34,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 		public void CanCalculateOverlaps()
 		{
 			var fClass =
-				new GdbFeatureClass(123, "TestFC", esriGeometryType.esriGeometryPolygon, null);
+				new GdbFeatureClass(123, "TestFC", esriGeometryType.esriGeometryPolygon);
 
 			var sr = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95,
@@ -132,7 +132,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 		public void CanRemoveOverlaps()
 		{
 			var fClass =
-				new GdbFeatureClass(123, "TestFC", esriGeometryType.esriGeometryPolygon, null);
+				new GdbFeatureClass(123, "TestFC", esriGeometryType.esriGeometryPolygon);
 
 			var sr = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95,

@@ -94,7 +94,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 			bool storeOverlapsAsNewFeatures = request.StoreOverlapsAsNewFeatures;
 
 			GdbTableContainer container = ProtobufConversionUtils.CreateGdbTableContainer(
-				request.ClassDefinitions);
+				request.ClassDefinitions, null, out _);
 
 			IList<IFeature> selectedFeatureList =
 				ProtobufConversionUtils.FromGdbObjectMsgList(

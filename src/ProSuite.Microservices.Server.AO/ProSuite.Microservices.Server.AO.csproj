@@ -92,6 +92,8 @@
     <Compile Include="Geodatabase\GdbRow.cs" />
     <Compile Include="Geodatabase\GdbTableContainer.cs" />
     <Compile Include="Geodatabase\GdbWorkspace.cs" />
+    <Compile Include="Geodatabase\InMemoryDataset.cs" />
+    <Compile Include="Geodatabase\RemoteDataset.cs" />
     <Compile Include="Geometry\RemoveOverlaps\RemoveOverlapsGrpcImpl.cs" />
     <Compile Include="Geometry\RemoveOverlaps\RemoveOverlapsServiceUtils.cs" />
     <Compile Include="GrpcServerUtils.cs" />

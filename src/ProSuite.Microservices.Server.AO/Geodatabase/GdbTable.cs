@@ -17,8 +17,8 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 	public class GdbTable : IObjectClass, ITable, IDataset, ISubtypes, IDatasetEdit,
 	                        IEquatable<IObjectClass>
 	{
-		private const string OidFieldName = "OBJECTID";
-		private const bool HasOid = true;
+		//private const string _defaultOidFieldName = "OBJECTID";
+
 		private readonly GdbFields _gdbFields = new GdbFields();
 		private int _lastUsedOid;
 		private readonly IWorkspace _workspace;
@@ -29,22 +29,28 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 		/// <param name="objectClassId">The object class id.</param>
 		/// <param name="name">The name.</param>
 		/// <param name="aliasName">The alias name of the object class.</param>
-		/// <param name="backingDataset"></param>
+		/// <param name="createBackingDataset">The factory method that creates the backing dataset.</param>
 		/// <param name="workspace"></param>
 		public GdbTable(int objectClassId,
 		                [NotNull] string name,
 		                [CanBeNull] string aliasName = null,
-		                [CanBeNull] BackingDataset backingDataset = null,
+		                [CanBeNull] Func<ITable, BackingDataset> createBackingDataset = null,
 		                [CanBeNull] IWorkspace workspace = null)
 		{
 			ObjectClassID = objectClassId;
 			Name = name;
 			AliasName = aliasName;
-			BackingDataset = backingDataset;
-
-			_gdbFields.AddFields(FieldUtils.CreateOIDField());
 
 			_workspace = workspace;
+
+			if (createBackingDataset == null)
+			{
+				BackingDataset = new InMemoryDataset(this, new List<IRow>(0));
+			}
+			else
+			{
+				BackingDataset = createBackingDataset(this);
+			}
 		}
 
 		[CanBeNull]
@@ -66,6 +72,8 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 		{
 			return esriDatasetType.esriDTTable;
 		}
+
+		protected virtual void FieldAddedCore(IField field) { }
 
 		#endregion
 
@@ -131,6 +139,16 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 		public void AddField(IField field)
 		{
 			_gdbFields.AddFields(field);
+
+			if (field.Type == esriFieldType.esriFieldTypeOID)
+			{
+				// Probably the same logic as AO (query) classes:
+				// The last one to be added determines the OID field
+				HasOID = true;
+				OIDFieldName = field.Name;
+			}
+
+			FieldAddedCore(field);
 		}
 
 		public void DeleteField(IField field)
@@ -152,9 +170,9 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 
 		public IIndexes Indexes => throw new NotImplementedException();
 
-		public bool HasOID => HasOid;
+		public bool HasOID { get; private set; }
 
-		public string OIDFieldName => OidFieldName;
+		public string OIDFieldName { get; private set; }
 
 		public UID CLSID => throw new NotImplementedException();
 
@@ -383,7 +401,6 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 				Fields = table.Fields;
 
 				_rowEnumerator = rows.GetEnumerator();
-				_rowEnumerator.Reset();
 			}
 
 			public IFields Fields { get; }

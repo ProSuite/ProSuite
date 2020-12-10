@@ -61,6 +61,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Geometry.dll</HintPath>
     </Reference>
+    <Reference Include="ProSuite.Microservices.Definitions.QA, Version=0.0.7.0, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.dll</HintPath>
+    </Reference>
     <Reference Include="ProSuite.Microservices.Definitions.Shared, Version=0.0.7.0, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Shared.dll</HintPath>
@@ -75,6 +79,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Geodatabase\GdbRowTest.cs" />
+    <Compile Include="Geodatabase\GdbTableTest.cs" />
     <Compile Include="Geometry\RemoveOverlapsServiceTest.cs" />
     <Compile Include="ProtobufConversionUtilsTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -86,6 +92,10 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\EsriDE.ProSuite\src\EsriDE.ProSuite.Microservices.Client\EsriDE.ProSuite.Microservices.Client.csproj">
+      <Project>{D74D9C33-25F6-40A6-8C11-871388A883C4}</Project>
+      <Name>EsriDE.ProSuite.Microservices.Client</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.AO.Test\ProSuite.Commons.AO.Test.csproj">
       <Project>{E9137523-483C-44D6-BE53-ADAACEFBBF5F}</Project>
       <Name>ProSuite.Commons.AO.Test</Name>
