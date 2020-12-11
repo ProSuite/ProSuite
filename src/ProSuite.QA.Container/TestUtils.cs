@@ -805,6 +805,66 @@ namespace ProSuite.QA.Container
 			return containerTest?.InvolvedTerrains?.Any() ?? false;
 		}
 
+		/// <summary>
+		/// Groups tests into container and non container tests
+		/// </summary>
+		/// <param name="tests"></param>
+		/// <param name="allowEditing"></param>
+		/// <param name="containerTests"></param>
+		/// <param name="nonContainerTests"></param>
+		[CLSCompliant(false)]
+		public static void ClassifyTests(
+			[NotNull] IEnumerable<ITest> tests,
+			bool allowEditing,
+			[NotNull] out IList<ContainerTest> containerTests,
+			[NotNull] out IList<ITest> nonContainerTests)
+		{
+			// Handle ITest and extract Test classes
+			containerTests = new List<ContainerTest>();
+			nonContainerTests = new List<ITest>();
+
+			foreach (ITest test in tests)
+			{
+				// set tests up for write access
+				if (test is IEditing editingTest)
+				{
+					editingTest.AllowEditing = allowEditing;
+				}
+
+				var cached = false;
+				var containerTest = test as ContainerTest;
+
+				if (containerTest != null)
+				{
+					foreach (ITable table in containerTest.InvolvedTables)
+					{
+						if (! (table is IFeatureClass))
+						{
+							continue;
+						}
+
+						// found a feature class, enable use as container test
+						containerTests.Add(containerTest);
+						cached = true;
+						break;
+					}
+
+					if (! cached && containerTest.InvolvedTerrains?.Any() == true)
+					{
+						containerTests.Add(containerTest);
+						cached = true;
+					}
+				}
+
+				// important: this may also be ContainerTest subclasses, when
+				// they don't have any involved feature class
+				if (! cached)
+				{
+					nonContainerTests.Add(test);
+				}
+			}
+		}
+
 		[NotNull]
 		public static IDictionary<int, double> GetXyToleranceByTableIndex(
 			[NotNull] ICollection<ITable> tables)
