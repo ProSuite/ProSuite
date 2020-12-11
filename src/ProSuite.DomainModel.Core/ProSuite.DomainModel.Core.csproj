@@ -81,6 +81,7 @@
     <Compile Include="DataModel\GeometryTypeTopology.cs" />
     <Compile Include="DataModel\IAttributes.cs" />
     <Compile Include="DataModel\IDdxDataset.cs" />
+    <Compile Include="DataModel\IDdxRasterDataset.cs" />
     <Compile Include="DataModel\IErrorDataset.cs" />
     <Compile Include="DataModel\IModelElement.cs" />
     <Compile Include="DataModel\IObjectDataset.cs" />

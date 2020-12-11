@@ -48,6 +48,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.QA.Container.Test"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.QA.Tests.Test", "ProSuite.QA.Tests.Test\ProSuite.QA.Tests.Test.csproj", "{5F00BBDF-0E58-4547-90F0-E5E8BC2512EE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.DomainModel.AO", "ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj", "{D360621D-D792-403B-A625-06A707A89D22}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -208,6 +210,14 @@ Global
 		{5F00BBDF-0E58-4547-90F0-E5E8BC2512EE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{5F00BBDF-0E58-4547-90F0-E5E8BC2512EE}.Release|x86.ActiveCfg = Release|Any CPU
 		{5F00BBDF-0E58-4547-90F0-E5E8BC2512EE}.Release|x86.Build.0 = Release|Any CPU
+		{D360621D-D792-403B-A625-06A707A89D22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D360621D-D792-403B-A625-06A707A89D22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D360621D-D792-403B-A625-06A707A89D22}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D360621D-D792-403B-A625-06A707A89D22}.Debug|x86.Build.0 = Debug|Any CPU
+		{D360621D-D792-403B-A625-06A707A89D22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D360621D-D792-403B-A625-06A707A89D22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D360621D-D792-403B-A625-06A707A89D22}.Release|x86.ActiveCfg = Release|Any CPU
+		{D360621D-D792-403B-A625-06A707A89D22}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
