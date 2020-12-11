@@ -6,7 +6,6 @@ namespace ProSuite.Commons.Logging
 
 	public enum LogType
 	{
-		Warning,
 		Info,
 		Debug,
 		Error,
@@ -22,7 +21,7 @@ namespace ProSuite.Commons.Logging
 		{
 			Type = Log4NetUtils.MapLogLevelToLogType(logEvent.Level);
 			Time = logEvent.TimeStamp;
-			Message = $"{logEvent.LoggerName}: {logEvent.RenderedMessage}";
+			Message = logEvent.RenderedMessage;
 		}
 
 		public LogType Type { get; set; }

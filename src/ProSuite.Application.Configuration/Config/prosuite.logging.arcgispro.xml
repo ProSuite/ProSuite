@@ -17,7 +17,7 @@
     <staticLogFileName value="true" />
 
     <layout type="log4net.Layout.PatternLayout">
-      <conversionPattern value="%d{dd.MM HH:mm:ss.fff} [%thread] %-5p %-20c{1} : %m%n" />
+      <conversionPattern value="%d{dd.MM HH:mm:ss.fff} [%thread] %-5p %-20c : %m%n" />
     </layout>
   </appender>
 
@@ -34,7 +34,7 @@
     <staticLogFileName value="true" />
 
     <layout type="log4net.Layout.PatternLayout">
-      <conversionPattern value="%d{dd.MM HH:mm:ss.fff} [%thread] %-5p %-20c{1} : %m%n" />
+      <conversionPattern value="%d{dd.MM HH:mm:ss.fff} [%thread] %-5p %-20c : %m%n" />
     </layout>
   </appender>
 
@@ -51,7 +51,7 @@
     <staticLogFileName value="true" />
 
     <layout type="log4net.Layout.PatternLayout">
-      <conversionPattern value="%d{dd.MM HH:mm:ss.fff} [%thread] %-5p %-20c{1} : %m%n" />
+      <conversionPattern value="%d{dd.MM HH:mm:ss.fff} [%thread] %-5p %-20c : %m%n" />
     </layout>
   </appender>
 

@@ -20,11 +20,8 @@ namespace ProSuite.AGP.Editing.Erase
 {
 	public abstract class EraseToolBase : ConstructionToolBase
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-		/// <summary>
-		/// </summary>
 		protected EraseToolBase()
 		{
 			// This is our property:
@@ -41,7 +38,7 @@ namespace ProSuite.AGP.Editing.Erase
 
 		protected override void LogEnteringSketchMode()
 		{
-			_msg.Info("Define the hole.&lt;br&gt;Hit [ESC] to reselect the polygon(s).");
+			_msg.Info("Define the hole.<br>Hit [ESC] to reselect the polygon(s).");
 		}
 
 		protected override void LogPromptForSelection()
@@ -51,7 +48,7 @@ namespace ProSuite.AGP.Editing.Erase
 			//		  : string.Empty;
 
 			_msg.InfoFormat(
-				"Select one or more polygon features.&lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click.&lt;br&gt;");
+				"Select one or more polygon features.<br>- Press and hold SHIFT to add or remove features from the existing selection.<br>- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click.");
 		}
 
 		protected override bool CanUseSelection(Dictionary<MapMember, List<long>> selection)
@@ -87,14 +84,6 @@ namespace ProSuite.AGP.Editing.Erase
 			return selectionProgressor;
 		}
 
-		/// <summary>
-		/// </summary>
-		/// <param name="sketchGeometry"></param>
-		/// <param name="editTemplate"></param>
-		/// <param name="activeView"></param>
-		/// <param name="cancelableProgressor"></param>
-		/// <returns></returns>
-		/// <exception cref="NotImplementedException"></exception>
 		protected override async Task<bool> OnEditSketchCompleteCoreAsync(
 			Geometry sketchGeometry,
 			EditingTemplate editTemplate,

@@ -1,7 +1,4 @@
-using System.Collections.Generic;
 using System.Windows.Forms;
-using System.Windows.Input;
-using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
@@ -22,9 +19,7 @@ namespace ProSuite.AGP.Editing.Selection
 			SetCursor(SelectionCursor);
 			//SelectionMode = SelectionMode.Normal;
 		}
-
 		
-
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private SelectionSettings _selectionSettings;
@@ -44,7 +39,7 @@ namespace ProSuite.AGP.Editing.Selection
 			{
 				SetCursor(SelectionCursor);
 			}
-			_msg.Info($"Key {k.Key} was pressed.");
+			_msg.Debug($"Key {k.Key} was pressed.");
 		}
 
 		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
