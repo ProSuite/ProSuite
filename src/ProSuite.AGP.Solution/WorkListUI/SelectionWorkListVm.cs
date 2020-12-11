@@ -6,7 +6,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	public class SelectionWorkListVm : WorkListViewModelBase
 	{
 		private WorkListView _view;
-		private readonly bool _hasDetailSection;
 		private WorkItemVmBase _currentWorkItem;
 
 		public SelectionWorkListVm(IWorkList workList)
@@ -14,15 +13,19 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			CurrentWorkList = workList;
 			CurrentWorkList.GoNext();
 			CurrentWorkItem = new SelectionWorkItemVm(CurrentWorkList.Current as SelectionItem);
-			_hasDetailSection = false;
 		}
-
-		public override bool HasDetailSection => _hasDetailSection;
-
+		
 		public override WorkItemVmBase CurrentWorkItem
 		{
-			get => _currentWorkItem;
-			set => _currentWorkItem = value;
+			get => new SelectionWorkItemVm(CurrentWorkList.Current as SelectionItem);
+			set
+			{
+				SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem);
+				//Status = CurrentWorkItem.Status;
+				//Visited = CurrentWorkItem.Visited;
+				CurrentIndex = CurrentWorkList.CurrentIndex;
+				Count = GetCount(); 
+			}
 		}
 	}
 }

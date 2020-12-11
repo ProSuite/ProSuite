@@ -9,7 +9,7 @@
                     mc:Ignorable="d"
                     Title="{Binding Path=CurrentWorkList.Name}"
                     d:DesignWidth="400"
-                    WindowStartupLocation="CenterOwner" SizeToContent="WidthAndHeight">
+                    WindowStartupLocation="CenterOwner" SizeToContent="WidthAndHeight" Topmost="True">
 
     <controls:ProWindow.Resources>
         <ResourceDictionary>
@@ -29,6 +29,7 @@
 
         <workListUi:WorkListNavigator Grid.Row="0" DataContext="{Binding}" />
         <workListUi:WorkListDetails Grid.Row="1" DataContext="{Binding}" />
+        <workListUi:IssueCountControl Grid.Row="2" DataContext="{Binding}" />
     </Grid>
 
 

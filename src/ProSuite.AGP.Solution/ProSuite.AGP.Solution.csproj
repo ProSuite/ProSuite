@@ -157,6 +157,9 @@
     <Compile Include="WorkLists\WorkListsModule.cs" />
     <Compile Include="WorkListUI\InvolvedObjectRow.cs" />
     <Compile Include="WorkListUI\InvolvedTableVm.cs" />
+    <Compile Include="WorkListUI\IssueCountControl.xaml.cs">
+      <DependentUpon>IssueCountControl.xaml</DependentUpon>
+    </Compile>
     <Compile Include="WorkListUI\IssueWorkItemVm.cs" />
     <Compile Include="WorkListUI\IssueWorkListView.xaml.cs">
       <DependentUpon>IssueWorkListView.xaml</DependentUpon>
@@ -204,6 +207,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ProTrials\ProTrialsRegistrationWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="WorkListUI\IssueCountControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

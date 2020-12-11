@@ -54,8 +54,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			FrameworkApplication.GetPlugInWrapper(
 				DAML.Button.esri_mapping_fixedZoomOutButton) as ICommand;
 
-		public abstract bool HasDetailSection { get; }
-
 		//Utility method to consolidate UI update logic
 		public void RunOnUIThread(Action action)
 		{
@@ -153,6 +151,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 					{
 						CurrentWorkList.SetStatus(CurrentWorkList.Current, value);
 					});
+
+					Count = GetCount();
 				}
 
 				SetProperty(ref _status, value, () => Status);
@@ -206,9 +206,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			set { SetProperty(ref _currentIndex, value, () => CurrentIndex); }
 		}
 
-		//protected abstract WorkListView View { get; set; }
-
-		//protected abstract void GoPreviousItem();
 		protected void GoPreviousItem()
 		{
 			QueuedTask.Run(() =>
@@ -217,8 +214,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
 			});
 		}
-
-		//protected abstract void GoNearestItem();
 
 		protected virtual void GoNearestItem()
 		{
@@ -258,8 +253,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			await MapView.Active.ZoomToAsync(CurrentWorkList.Extent);
 		}
 
-		//protected abstract void GoFirstItem();
-
 		protected virtual void GoFirstItem()
 		{
 			QueuedTask.Run(() =>
@@ -281,14 +274,13 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private void PickWorkItem()
 		{
 			WorkListsModule.Current.WorkItemPicked += Current_WorkItemPicked;
-			FrameworkApplication.SetCurrentToolAsync(ConfigIDs.Editing_PickWorkListItemTool); 
+			FrameworkApplication.SetCurrentToolAsync(ConfigIDs.Editing_PickWorkListItemTool);
 		}
 
 		private void Current_WorkItemPicked(object sender, WorkItemPickArgs e)
 		{
 			QueuedTask.Run(() =>
 			{
-				//var shapeJson = e.features.First().GetShape().ToJson();
 				var OID = e.features.First().GetObjectID();
 
 				QueryFilter filter = GdbQueryUtils.CreateFilter(new[] {OID});
@@ -308,23 +300,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
 			});
 		}
-
-		//public void WorkListAdded(IWorkList workList)
-		//{
-		//	//throw new NotImplementedException();
-		//}
-
-		//public void WorkListRemoved(IWorkList workList)
-		//{
-		//	//RunOnUIThread(() => View.Close());
-		//}
-
-		//public void WorkListModified(IWorkList workList)
-		//{
-		//	//throw new NotImplementedException();
-		//}
-
-		//public abstract void Show(IWorkList workList);
 
 		[NotNull]
 		private static Envelope GetEnvelope([NotNull] IWorkItem item)

@@ -32,9 +32,9 @@
         </Grid.ColumnDefinitions>
 
         <Label Content="Quality Condition: " Grid.Row="0" Grid.Column="0" />
-        <TextBox Text="{Binding QualityCondition }" Grid.Row="0" Grid.Column="1" />
+        <TextBox Text="{Binding CurrentWorkItem.QualityCondition }" Grid.Row="0" Grid.Column="1" BorderBrush="Transparent" />
         <Label Content="Error Description: " Grid.Row="1" Grid.Column="0" />
-        <TextBox Text="{Binding ErrorDescription}" Grid.Row="1" Grid.Column="1" />
+        <TextBox Text="{Binding CurrentWorkItem.ErrorDescription}" Grid.Row="1" Grid.Column="1" BorderBrush="Transparent" />
 
         <ToolBarTray Grid.Row="2" Grid.Column="0">
             <ToolBar />

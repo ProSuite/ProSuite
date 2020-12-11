@@ -83,10 +83,6 @@
                     </DockPanel>
                 </ToolBar>
             </ToolBarTray>
-            <DockPanel LastChildFill="True" >
-                <Label Content="{Binding Count}" DockPanel.Dock="Right"></Label>
-                <Label  Content="{Binding CurrentWorkItem.Description}" />
-            </DockPanel>
         </StackPanel>
     </Grid>
 </UserControl>

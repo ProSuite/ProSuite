@@ -9,8 +9,8 @@
                     mc:Ignorable="d"
                     Title="{Binding Path=CurrentWorkList.Name}"
                     d:DesignWidth="400"
-                    WindowStartupLocation="CenterOwner" SizeToContent="WidthAndHeight">
-    
+                    WindowStartupLocation="CenterOwner" SizeToContent="WidthAndHeight" Topmost="True">
+
     <controls:ProWindow.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -24,7 +24,10 @@
     <Grid Margin="5">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
-       <workListUi:WorkListNavigator Grid.Row="0" DataContext="{Binding}"></workListUi:WorkListNavigator>
+
+        <workListUi:WorkListNavigator Grid.Row="0" DataContext="{Binding}" />
+        <workListUi:IssueCountControl Grid.Row="1" DataContext="{Binding}" />
     </Grid>
 </controls:ProWindow>

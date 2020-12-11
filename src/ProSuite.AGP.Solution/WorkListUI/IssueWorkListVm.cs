@@ -7,9 +7,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	public class IssueWorkListVm : WorkListViewModelBase
 	{
 		private WorkListView _view;
-		private readonly bool _hasDetailSection;
 		private WorkItemVmBase _currentWorkItem;
-		private IList<InvolvedTableVm> _involvedObjects;
 		private string _qualityCondition;
 		private List<InvolvedObjectRow> _involvedObjectRows;
 		private string _errorDescription;
@@ -19,28 +17,23 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			CurrentWorkList = workList;
 			CurrentWorkList.GoNext();
 			CurrentWorkItem = new IssueWorkItemVm(CurrentWorkList.Current as IssueItem);
-			_hasDetailSection = true;
 		}
 
-		public override bool HasDetailSection
-		{
-			get => _hasDetailSection;
-		}
-
+		
 		public override WorkItemVmBase CurrentWorkItem
 		{
 			get => new IssueWorkItemVm(CurrentWorkList.Current as IssueItem);
 			set
 			{
 				SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem);
-				Status = CurrentWorkItem.Status;
-				Visited = CurrentWorkItem.Visited;
+				//Status = CurrentWorkItem.Status;
+				//Visited = CurrentWorkItem.Visited;
 				InvolvedObjectRows = CompileInvolvedRows();
-				if (CurrentWorkItem is IssueWorkItemVm issueWorkItemVm)
-				{
-					QualityCondition = issueWorkItemVm.QualityCondition;
-					ErrorDescription = issueWorkItemVm.ErrorDescription;
-				}
+				//if (CurrentWorkItem is IssueWorkItemVm issueWorkItemVm)
+				//{
+				//	//QualityCondition = issueWorkItemVm.QualityCondition;
+				//	ErrorDescription = issueWorkItemVm.ErrorDescription;
+				//}
 
 				CurrentIndex = CurrentWorkList.CurrentIndex;
 				Count = GetCount();
