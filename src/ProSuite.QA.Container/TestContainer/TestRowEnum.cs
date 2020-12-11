@@ -91,18 +91,17 @@ namespace ProSuite.QA.Container.TestContainer
 				_executePolygonRelOp = (IRelationalOperator) executePolygon;
 			}
 
-			_testsPerTable = new Dictionary<ITable, IList<ContainerTest>>();
+			_testsPerTable = TestUtils.GetTestsByTable(_container.ContainerTests);
 
-			_testsPerRaster = new Dictionary<RasterReference, IList<ContainerTest>>();
-			_testsPerTerrain = new Dictionary<TerrainReference, IList<ContainerTest>>();
+			_testsPerRaster = TestUtils.GetTestsByInvolvedType(
+				_container.ContainerTests, (test) => test.InvolvedRasters);
+
+			_testsPerTerrain = TestUtils.GetTestsByInvolvedType(
+				_container.ContainerTests, (test) => test.InvolvedTerrains);
 
 			foreach (ContainerTest containerTest in _container.ContainerTests)
 			{
 				containerTest.DataContainer = this;
-
-				AddTables(containerTest);
-				AddRasters(_testsPerRaster, containerTest);
-				AddTerrains(_testsPerTerrain, containerTest);
 			}
 
 			_rastersRowEnumerable = new RastersRowEnumerable(_testsPerRaster.Keys, _container);
@@ -323,66 +322,6 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 
 			return result;
-		}
-
-		private void AddTables([NotNull] ContainerTest containerTest)
-		{
-			foreach (ITable pTable in containerTest.InvolvedTables)
-			{
-				IList<ContainerTest> testList;
-				if (! _testsPerTable.TryGetValue(pTable, out testList))
-				{
-					testList = new List<ContainerTest>();
-
-					_testsPerTable.Add(pTable, testList);
-				}
-
-				testList.Add(containerTest);
-			}
-		}
-
-		private static void AddRasters(
-			[NotNull] IDictionary<RasterReference, IList<ContainerTest>> testsPerRaster,
-			[NotNull] ContainerTest containerTest)
-		{
-			if (containerTest.InvolvedRasters == null)
-			{
-				return;
-			}
-
-			foreach (RasterReference rasterRef in containerTest.InvolvedRasters)
-			{
-				IList<ContainerTest> testList;
-				if (! testsPerRaster.TryGetValue(rasterRef, out testList))
-				{
-					testList = new List<ContainerTest>();
-					testsPerRaster.Add(rasterRef, testList);
-				}
-
-				testList.Add(containerTest);
-			}
-		}
-
-		private static void AddTerrains(
-			[NotNull] IDictionary<TerrainReference, IList<ContainerTest>> testsPerTerrain,
-			[NotNull] ContainerTest containerTest)
-		{
-			if (containerTest.InvolvedTerrains == null)
-			{
-				return;
-			}
-
-			foreach (TerrainReference terrainRef in containerTest.InvolvedTerrains)
-			{
-				IList<ContainerTest> testList;
-				if (! testsPerTerrain.TryGetValue(terrainRef, out testList))
-				{
-					testList = new List<ContainerTest>();
-					testsPerTerrain.Add(terrainRef, testList);
-				}
-
-				testList.Add(containerTest);
-			}
 		}
 
 		private void InitDelegates()
