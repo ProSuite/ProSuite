@@ -805,6 +805,66 @@ namespace ProSuite.QA.Container
 			return containerTest?.InvolvedTerrains?.Any() ?? false;
 		}
 
+		[NotNull]
+		public static Dictionary<ITable, IList<T>> GetTestsByTable<T>(
+			[NotNull] IEnumerable<T> tests)
+			where T : ITest
+		{
+			Assert.ArgumentNotNull(tests, nameof(tests));
+
+			return GetTestsByInvolvedType(tests, (test) => test.InvolvedTables);
+		}
+
+		[NotNull]
+		public static Dictionary<TI, IList<T>> GetTestsByInvolvedType<TI, T>(
+			[NotNull] IEnumerable<T> tests, [NotNull] Func<T, IEnumerable<TI>> enumInvolved)
+			where T : ITest
+		{
+			Assert.ArgumentNotNull(tests, nameof(tests));
+
+			var result = new Dictionary<TI, IList<T>>();
+
+			foreach (T test in tests)
+			{
+				IEnumerable<TI> involveds = enumInvolved(test);
+				if (involveds == null)
+				{
+					continue;
+				}
+
+				foreach (TI involved in involveds)
+				{
+					if (! result.TryGetValue(involved, out IList<T> list))
+					{
+						list = new List<T>();
+						result.Add(involved, list);
+					}
+
+					list.Add(test);
+				}
+			}
+
+			return result;
+		}
+
+		public static double GetMaximumSearchDistance([NotNull] IEnumerable<ITest> tests)
+		{
+			Assert.ArgumentNotNull(tests, nameof(tests));
+
+			double result = 0;
+			foreach (ITest test in tests)
+			{
+				var containerTest = test as ContainerTest;
+
+				if (containerTest != null)
+				{
+					result = Math.Max(result, containerTest.SearchDistance);
+				}
+			}
+
+			return result;
+		}
+
 		/// <summary>
 		/// Groups tests into container and non container tests
 		/// </summary>
