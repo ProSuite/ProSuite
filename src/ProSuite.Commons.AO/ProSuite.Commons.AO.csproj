@@ -136,6 +136,7 @@
     <Compile Include="Geodatabase\SyntheticFeature.cs" />
     <Compile Include="Geodatabase\TableJoinUtils.cs" />
     <Compile Include="Geodatabase\TableSortUtils.cs" />
+    <Compile Include="Geodatabase\ThreadLocalWorkspace.cs" />
     <Compile Include="Geodatabase\ToolEditOperationObserver.cs" />
     <Compile Include="Geodatabase\ValueRowProxy.cs" />
     <Compile Include="Geodatabase\VersionEventsObjectCacheSynchronizer.cs" />
