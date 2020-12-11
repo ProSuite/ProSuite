@@ -81,7 +81,12 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="DataModel\ISimpleDatasetContext.cs" />
+    <Compile Include="DataModel\ModelElementUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QA\DefaultTestFactory.cs" />
+    <Compile Include="QA\IOpenDataset.cs" />
+    <Compile Include="QA\SimpleDatasetOpener.cs" />
+    <Compile Include="QA\TestFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">
@@ -92,10 +97,31 @@
       <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
       <Name>ProSuite.Commons.Essentials</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
+      <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
+      <Name>ProSuite.Commons.Logging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
+      <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
+      <Name>ProSuite.Commons</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
       <Project>{0B48B56F-3A3D-4367-AA76-A356519AF2AB}</Project>
       <Name>ProSuite.DomainModel.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.QA.Container\ProSuite.QA.Container.csproj">
+      <Project>{D51693C1-F9F6-425D-8CD6-8DFBF5A52F6F}</Project>
+      <Name>ProSuite.QA.Container</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj">
+      <Project>{01CBBA9E-0D4D-439F-9147-6A5685884A65}</Project>
+      <Name>ProSuite.QA.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.QA.Tests\ProSuite.QA.Tests.csproj">
+      <Project>{7A1D3AB3-A9A8-45B0-9452-A0DDEA004E2B}</Project>
+      <Name>ProSuite.QA.Tests</Name>
+    </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
