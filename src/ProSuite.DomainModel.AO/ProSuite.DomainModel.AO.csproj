@@ -82,6 +82,22 @@
     </Compile>
     <Compile Include="DataModel\IDatasetContext.cs" />
     <Compile Include="DataModel\ModelElementUtils.cs" />
+    <Compile Include="Geodatabase\ConnectionFileConnectionProvider.cs" />
+    <Compile Include="Geodatabase\ConnectionProvider.cs" />
+    <Compile Include="Geodatabase\DatabaseType.cs" />
+    <Compile Include="Geodatabase\FileGdbConnectionProvider.cs" />
+    <Compile Include="Geodatabase\FilePathConnectionProviderBase.cs" />
+    <Compile Include="Geodatabase\IAlternateCredentials.cs" />
+    <Compile Include="Geodatabase\IConnectionProviderRepository.cs" />
+    <Compile Include="Geodatabase\IGdbWorkspaceProvider.cs" />
+    <Compile Include="Geodatabase\IOpenSdeWorkspace.cs" />
+    <Compile Include="Geodatabase\IOpenWorkspace.cs" />
+    <Compile Include="Geodatabase\OleDbConnectionFileConnectionProvider.cs" />
+    <Compile Include="Geodatabase\OpenWorkspaceConnectionProvider.cs" />
+    <Compile Include="Geodatabase\SdeConnectionProvider.cs" />
+    <Compile Include="Geodatabase\SdeDirectConnectionProvider.cs" />
+    <Compile Include="Geodatabase\SdeDirectDbUserConnectionProvider.cs" />
+    <Compile Include="Geodatabase\SdeDirectOsaConnectionProvider.cs" />
     <Compile Include="Properties\LocalizableStrings.Designer.cs">
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
       <AutoGen>True</AutoGen>
@@ -129,6 +145,10 @@
     <Compile Include="QA\TestReport\TestReportUtils.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\EsriDE.Commons\src\EsriDE.Commons.AO\EsriDE.Commons.AO.csproj">
+      <Project>{FC86671A-FDF4-449C-8B95-C4CDE4AFE775}</Project>
+      <Name>EsriDE.Commons.AO</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">
       <Project>{7E4B0861-83ED-4D12-BE27-93C9053C88CA}</Project>
       <Name>ProSuite.Commons.AO</Name>
@@ -183,5 +203,6 @@
       <LastGenOutput>SpecificationReportResources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
