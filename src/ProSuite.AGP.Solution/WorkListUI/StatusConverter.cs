@@ -5,7 +5,7 @@ using ProSuite.AGP.WorkList.Contracts;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
-	public class StatusEnumBooleanConverter: IValueConverter
+	public class StatusConverter: IValueConverter
 	{
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{

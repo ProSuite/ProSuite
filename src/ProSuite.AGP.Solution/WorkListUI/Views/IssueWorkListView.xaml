@@ -1,4 +1,4 @@
-<controls:ProWindow x:Class="ProSuite.AGP.Solution.WorkListUI.IssueWorkListView"
+<controls:ProWindow x:Class="ProSuite.AGP.Solution.WorkListUI.Views.IssueWorkListView"
                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -6,6 +6,7 @@
                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                     xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
                     xmlns:workListUi="clr-namespace:ProSuite.AGP.Solution.WorkListUI"
+                    xmlns:views="clr-namespace:ProSuite.AGP.Solution.WorkListUI.Views"
                     mc:Ignorable="d"
                     Title="{Binding Path=CurrentWorkList.Name}"
                     d:DesignWidth="400"
@@ -27,9 +28,9 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <workListUi:WorkListNavigator Grid.Row="0" DataContext="{Binding}" />
-        <workListUi:WorkListDetails Grid.Row="1" DataContext="{Binding}" />
-        <workListUi:IssueCountControl Grid.Row="2" DataContext="{Binding}" />
+        <views:WorkListNavigator Grid.Row="0" DataContext="{Binding}" />
+        <views:WorkListDetails Grid.Row="1" DataContext="{Binding}" />
+        <views:IssueCountControl Grid.Row="2" DataContext="{Binding}" />
     </Grid>
 
 

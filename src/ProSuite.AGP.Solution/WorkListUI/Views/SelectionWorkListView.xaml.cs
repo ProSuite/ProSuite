@@ -1,4 +1,4 @@
-namespace ProSuite.AGP.Solution.WorkListUI
+namespace ProSuite.AGP.Solution.WorkListUI.Views
 {
 	public partial class WorkListView
 	{

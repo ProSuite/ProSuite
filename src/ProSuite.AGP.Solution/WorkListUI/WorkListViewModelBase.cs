@@ -32,6 +32,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private RelayCommand _zoomToAllCmd;
 		private RelayCommand _pickWorkItemCmd;
 		private RelayCommand _goNearestItemCmd;
+		private RelayCommand _flashCurrentItemCmd;
 
 		public ICommand ClearSelectionCmd =>
 			FrameworkApplication.GetPlugInWrapper(
@@ -132,6 +133,15 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			{
 				_pickWorkItemCmd = new RelayCommand(PickWorkItem, () => true);
 				return _pickWorkItemCmd;
+			}
+		}
+
+		public RelayCommand FlashCurrentItemCmd
+		{
+			get
+			{
+				_flashCurrentItemCmd = new RelayCommand(Flash, () => true);
+				return _flashCurrentItemCmd;
 			}
 		}
 
@@ -297,6 +307,23 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 				CurrentWorkList.GoToOid(selectedItem.OID);
 				CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
+			});
+		}
+
+		private void Flash()
+		{
+			QueuedTask.Run(() =>
+			{
+				var layerName = CurrentWorkList.Current.Proxy.Table.Name;
+				var Oid = CurrentWorkList.Current.Proxy.ObjectId;
+				var targetLayer = MapView.Active.Map.GetLayersAsFlattenedList()
+				                         .FirstOrDefault(layer => layer.Name == layerName);
+				if (targetLayer == null)
+				{
+					return;
+				}
+
+				MapView.Active.FlashFeature(targetLayer as BasicFeatureLayer, Oid);
 			});
 		}
 

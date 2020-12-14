@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework.Controls;
+using ProSuite.AGP.Solution.WorkListUI.Views;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 

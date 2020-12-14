@@ -157,27 +157,27 @@
     <Compile Include="WorkLists\WorkListsModule.cs" />
     <Compile Include="WorkListUI\InvolvedObjectRow.cs" />
     <Compile Include="WorkListUI\InvolvedTableVm.cs" />
-    <Compile Include="WorkListUI\IssueCountControl.xaml.cs">
+    <Compile Include="WorkListUI\Views\IssueCountControl.xaml.cs">
       <DependentUpon>IssueCountControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="WorkListUI\IssueWorkItemVm.cs" />
-    <Compile Include="WorkListUI\IssueWorkListView.xaml.cs">
+    <Compile Include="WorkListUI\Views\IssueWorkListView.xaml.cs">
       <DependentUpon>IssueWorkListView.xaml</DependentUpon>
     </Compile>
     <Compile Include="WorkListUI\IssueWorkListVm.cs" />
     <Compile Include="WorkListUI\ShowIssueWorkListView.cs" />
-    <Compile Include="WorkListUI\StatusEnumBooleanConverter.cs" />
+    <Compile Include="WorkListUI\StatusConverter.cs" />
     <Compile Include="WorkListUI\SelectionWorkItemVm.cs" />
     <Compile Include="WorkListUI\WorkItemVmBase.cs" />
-    <Compile Include="WorkListUI\WorkListDetails.xaml.cs">
+    <Compile Include="WorkListUI\Views\WorkListDetails.xaml.cs">
       <DependentUpon>WorkListDetails.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WorkListUI\WorkListNavigator.xaml.cs">
+    <Compile Include="WorkListUI\Views\WorkListNavigator.xaml.cs">
       <DependentUpon>WorkListNavigator.xaml</DependentUpon>
     </Compile>
     <Compile Include="WorkListUI\WorkListObserver.cs" />
-    <Compile Include="WorkListUI\WorkListView.xaml.cs">
-      <DependentUpon>WorkListView.xaml</DependentUpon>
+    <Compile Include="WorkListUI\Views\SelectionWorkListView.xaml.cs">
+      <DependentUpon>SelectionWorkListView.xaml</DependentUpon>
     </Compile>
     <Compile Include="WorkListUI\WorkListViewBase.cs" />
     <Compile Include="WorkListUI\WorkListViewFactory.cs" />
@@ -210,23 +210,23 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="WorkListUI\IssueCountControl.xaml">
+    <Page Include="WorkListUI\Views\IssueCountControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="WorkListUI\IssueWorkListView.xaml">
+    <Page Include="WorkListUI\Views\IssueWorkListView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="WorkListUI\WorkListDetails.xaml">
+    <Page Include="WorkListUI\Views\WorkListDetails.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="WorkListUI\WorkListNavigator.xaml">
+    <Page Include="WorkListUI\Views\WorkListNavigator.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="WorkListUI\WorkListView.xaml">
+    <Page Include="WorkListUI\Views\SelectionWorkListView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -423,6 +423,10 @@
   <ItemGroup>
     <AddInContent Include="Images\SelectionTool16.png" />
     <AddInContent Include="Images\SelectionTool32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\FlashCurrent16.png" />
+    <Resource Include="WorkListUI\Images\FlashCurrent32.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
