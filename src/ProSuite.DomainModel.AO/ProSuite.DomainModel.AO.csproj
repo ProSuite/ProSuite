@@ -80,7 +80,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="DataModel\ISimpleDatasetContext.cs" />
+    <Compile Include="DataModel\IDatasetContext.cs" />
     <Compile Include="DataModel\ModelElementUtils.cs" />
     <Compile Include="Properties\LocalizableStrings.Designer.cs">
       <DependentUpon>LocalizableStrings.resx</DependentUpon>

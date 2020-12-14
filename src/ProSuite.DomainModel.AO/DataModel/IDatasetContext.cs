@@ -6,7 +6,7 @@ using ProSuite.DomainModel.Core.DataModel;
 namespace ProSuite.DomainModel.AO.DataModel
 {
 	[CLSCompliant(false)]
-	public interface ISimpleDatasetContext
+	public interface IDatasetContext
 	{
 		bool CanOpen([NotNull] IDdxDataset dataset);
 

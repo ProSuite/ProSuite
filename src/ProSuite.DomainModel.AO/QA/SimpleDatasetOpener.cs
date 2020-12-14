@@ -14,10 +14,10 @@ namespace ProSuite.DomainModel.AO.QA
 	[CLSCompliant(false)]
 	public class SimpleDatasetOpener : IOpenDataset
 	{
-		private readonly ISimpleDatasetContext _datasetContext;
+		private readonly IDatasetContext _datasetContext;
 
 		[CLSCompliant(false)]
-		public SimpleDatasetOpener(ISimpleDatasetContext datasetContext)
+		public SimpleDatasetOpener(IDatasetContext datasetContext)
 		{
 			_datasetContext = datasetContext;
 		}
