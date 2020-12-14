@@ -82,16 +82,60 @@
     </Compile>
     <Compile Include="DataModel\ISimpleDatasetContext.cs" />
     <Compile Include="DataModel\ModelElementUtils.cs" />
+    <Compile Include="Properties\LocalizableStrings.Designer.cs">
+      <DependentUpon>LocalizableStrings.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QA\DefaultTestFactory.cs" />
     <Compile Include="QA\IOpenDataset.cs" />
     <Compile Include="QA\SimpleDatasetOpener.cs" />
+    <Compile Include="QA\SpecificationReport\HtmlDataModel.cs" />
+    <Compile Include="QA\SpecificationReport\HtmlDataQualityCategory.cs" />
+    <Compile Include="QA\SpecificationReport\HtmlDataQualityCategoryComparer.cs" />
+    <Compile Include="QA\SpecificationReport\HtmlDataQualityCateogryOptionsProvider.cs" />
+    <Compile Include="QA\SpecificationReport\HtmlDataset.cs" />
+    <Compile Include="QA\SpecificationReport\HtmlDatasetReference.cs" />
+    <Compile Include="QA\SpecificationReport\HtmlQualityCondition.cs" />
+    <Compile Include="QA\SpecificationReport\HtmlQualityConditionComparer.cs" />
+    <Compile Include="QA\SpecificationReport\HtmlQualitySpecification.cs" />
+    <Compile Include="QA\SpecificationReport\HtmlQualitySpecificationElement.cs" />
+    <Compile Include="QA\SpecificationReport\HtmlQualitySpecificationElementComparer.cs" />
+    <Compile Include="QA\SpecificationReport\HtmlTestDescriptor.cs" />
+    <Compile Include="QA\SpecificationReport\HtmlTestParameter.cs" />
+    <Compile Include="QA\SpecificationReport\HtmlTestParameterValue.cs" />
+    <Compile Include="QA\SpecificationReport\HtmlTexts.cs" />
+    <Compile Include="QA\SpecificationReport\SpecificationReportResources.Designer.cs">
+      <DependentUpon>SpecificationReportResources.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="QA\SpecificationReport\SpecificationReportUtils.cs" />
+    <Compile Include="QA\TestDescriptorUtils.cs" />
     <Compile Include="QA\TestFactory.cs" />
+    <Compile Include="QA\TestReport\HtmlReportBuilder.cs" />
+    <Compile Include="QA\TestReport\IncludedTest.cs" />
+    <Compile Include="QA\TestReport\IncludedTestBase.cs" />
+    <Compile Include="QA\TestReport\IncludedTestClass.cs" />
+    <Compile Include="QA\TestReport\IncludedTestConstructor.cs" />
+    <Compile Include="QA\TestReport\IncludedTestFactory.cs" />
+    <Compile Include="QA\TestReport\IndexEntry.cs" />
+    <Compile Include="QA\TestReport\IReportBuilder.cs" />
+    <Compile Include="QA\TestReport\SectionTitleIndexEntry.cs" />
+    <Compile Include="QA\TestReport\TestClassIndexEntry.cs" />
+    <Compile Include="QA\TestReport\TestFactoryIndexEntry.cs" />
+    <Compile Include="QA\TestReport\TestIndexEntry.cs" />
+    <Compile Include="QA\TestReport\TestReportUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">
       <Project>{7E4B0861-83ED-4D12-BE27-93C9053C88CA}</Project>
       <Name>ProSuite.Commons.AO</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.DotLiquid\ProSuite.Commons.DotLiquid.csproj">
+      <Project>{F67C25EA-4840-4B16-BAD0-C8E53C16D7BB}</Project>
+      <Name>ProSuite.Commons.DotLiquid</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
       <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
@@ -122,6 +166,22 @@
       <Name>ProSuite.QA.Tests</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="QA\SpecificationReport\QualitySpecificationReport.cd" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Properties\LocalizableStrings.de.resx" />
+    <EmbeddedResource Include="Properties\LocalizableStrings.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>LocalizableStrings.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="QA\SpecificationReport\SpecificationReportResources.de-CH.resx" />
+    <EmbeddedResource Include="QA\SpecificationReport\SpecificationReportResources.de.resx" />
+    <EmbeddedResource Include="QA\SpecificationReport\SpecificationReportResources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>SpecificationReportResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
