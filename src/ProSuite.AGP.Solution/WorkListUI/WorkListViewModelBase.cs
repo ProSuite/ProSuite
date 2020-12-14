@@ -221,6 +221,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			{
 				CurrentWorkList.GoPrevious();
 				CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
+				ZoomTo();
 			});
 		}
 
@@ -230,7 +231,20 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			{
 				CurrentWorkList.GoNearest(CurrentWorkList.Current.Extent);
 				CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
+				ZoomTo();
 			});
+		}
+
+		private void ZoomTo()
+		{
+			IWorkItem item = CurrentWorkList.Current;
+
+			if (item == null)
+			{
+				return;
+			}
+
+			MapView.Active.ZoomTo(GetEnvelope(item), TimeSpan.FromSeconds(_seconds));
 		}
 
 		private async Task ZoomToAsync()
@@ -268,6 +282,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			{
 				CurrentWorkList.GoFirst();
 				CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
+				ZoomTo();
 			});
 		}
 
@@ -277,6 +292,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			{
 				CurrentWorkList.GoNext();
 				CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
+				ZoomTo();
 			});
 		}
 
