@@ -5,7 +5,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 {
 	public class SelectionWorkListVm : WorkListViewModelBase
 	{
-		private WorkListView _view;
 		private WorkItemVmBase _currentWorkItem;
 
 		public SelectionWorkListVm(IWorkList workList)
@@ -21,8 +20,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			set
 			{
 				SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem);
-				//Status = CurrentWorkItem.Status;
-				//Visited = CurrentWorkItem.Visited;
+				Status = CurrentWorkItem.Status;
+				Visited = CurrentWorkItem.Visited;
 				CurrentIndex = CurrentWorkList.CurrentIndex;
 				Count = GetCount(); 
 			}

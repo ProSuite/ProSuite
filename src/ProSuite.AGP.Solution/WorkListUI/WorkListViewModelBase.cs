@@ -20,7 +20,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	{
 		private const double _seconds = 0.3;
 		private IWorkList _currentWorkList;
-
 		private int _currentIndex;
 		private WorkItemStatus _status;
 		private bool _visited;

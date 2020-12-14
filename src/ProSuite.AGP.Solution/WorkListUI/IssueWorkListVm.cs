@@ -6,7 +6,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 {
 	public class IssueWorkListVm : WorkListViewModelBase
 	{
-		private WorkListView _view;
 		private WorkItemVmBase _currentWorkItem;
 		private string _qualityCondition;
 		private List<InvolvedObjectRow> _involvedObjectRows;
@@ -26,14 +25,14 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			set
 			{
 				SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem);
-				//Status = CurrentWorkItem.Status;
-				//Visited = CurrentWorkItem.Visited;
+				Status = CurrentWorkItem.Status;
+				Visited = CurrentWorkItem.Visited;
 				InvolvedObjectRows = CompileInvolvedRows();
-				//if (CurrentWorkItem is IssueWorkItemVm issueWorkItemVm)
-				//{
-				//	//QualityCondition = issueWorkItemVm.QualityCondition;
-				//	ErrorDescription = issueWorkItemVm.ErrorDescription;
-				//}
+				if (CurrentWorkItem is IssueWorkItemVm issueWorkItemVm)
+				{
+					QualityCondition = issueWorkItemVm.QualityCondition;
+					ErrorDescription = issueWorkItemVm.ErrorDescription;
+				}
 
 				CurrentIndex = CurrentWorkList.CurrentIndex;
 				Count = GetCount();
