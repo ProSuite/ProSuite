@@ -18,7 +18,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			CurrentWorkItem = new IssueWorkItemVm(CurrentWorkList.Current as IssueItem);
 		}
 
-		
 		public override WorkItemVmBase CurrentWorkItem
 		{
 			get => new IssueWorkItemVm(CurrentWorkList.Current as IssueItem);
@@ -74,8 +73,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private List<InvolvedObjectRow> CompileInvolvedRows()
 		{
 			var issueWorkItemVm = CurrentWorkItem as IssueWorkItemVm;
-
 			List<InvolvedObjectRow> involvedRows = new List<InvolvedObjectRow>();
+
 			if (issueWorkItemVm == null)
 			{
 				return involvedRows;

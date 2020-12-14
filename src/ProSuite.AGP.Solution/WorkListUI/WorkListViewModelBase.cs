@@ -33,6 +33,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private RelayCommand _pickWorkItemCmd;
 		private RelayCommand _goNearestItemCmd;
 		private RelayCommand _flashCurrentItemCmd;
+		private RelayCommand _flashInvolvedRowCmd;
+		private InvolvedObjectRow _selectedInvolvedObject;
 
 		public ICommand ClearSelectionCmd =>
 			FrameworkApplication.GetPlugInWrapper(
@@ -145,6 +147,33 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}
 		}
 
+
+		public RelayCommand FlashInvolvedRowCmd
+		{
+			get
+			{
+				_flashInvolvedRowCmd = new RelayCommand(FlashInvolvedRow, () => SelectedInvolvedObject != null);
+				return _flashInvolvedRowCmd;
+			}
+		}
+
+		private void FlashInvolvedRow()
+		{
+			if (SelectedInvolvedObject.Name == null || SelectedInvolvedObject.ObjectId < 0)
+			{
+				return;
+			}
+
+			Layer targetLayer = GetLayerByName(SelectedInvolvedObject.Name);
+			if (targetLayer == null)
+			{
+				return;
+			}
+			MapView.Active.FlashFeature(targetLayer as FeatureLayer, SelectedInvolvedObject.ObjectId);
+
+
+		}
+
 		public WorkItemStatus Status
 		{
 			get => CurrentWorkItem.Status;
@@ -195,6 +224,17 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			set { }
 		}
 
+		public InvolvedObjectRow SelectedInvolvedObject {
+			get
+			{
+				return _selectedInvolvedObject;
+			}
+			set
+			{
+				SetProperty(ref _selectedInvolvedObject, value, () => SelectedInvolvedObject);
+			}
+		}
+
 		public string GetCount()
 		{
 			int all = CurrentWorkList.Count(null, true);
@@ -235,7 +275,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			});
 		}
 
-		private void ZoomTo()
+		protected void ZoomTo()
 		{
 			IWorkItem item = CurrentWorkList.Current;
 
@@ -332,8 +372,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			{
 				var layerName = CurrentWorkList.Current.Proxy.Table.Name;
 				var Oid = CurrentWorkList.Current.Proxy.ObjectId;
-				var targetLayer = MapView.Active.Map.GetLayersAsFlattenedList()
-				                         .FirstOrDefault(layer => layer.Name == layerName);
+				Layer targetLayer = GetLayerByName(layerName);
+				
 				if (targetLayer == null)
 				{
 					return;
@@ -341,6 +381,13 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 				MapView.Active.FlashFeature(targetLayer as BasicFeatureLayer, Oid);
 			});
+		}
+
+		[CanBeNull]
+		private Layer GetLayerByName(string name)
+		{
+			return MapView.Active.Map.GetLayersAsFlattenedList()
+			                                .FirstOrDefault(layer => layer.Name == name);
 		}
 
 		[NotNull]

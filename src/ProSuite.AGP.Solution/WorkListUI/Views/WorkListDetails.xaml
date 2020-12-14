@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
-             xmlns:local="clr-namespace:ProSuite.AGP.Solution.WorkListUI"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              mc:Ignorable="d"
              d:DesignWidth="400">
     <UserControl.Resources>
@@ -40,10 +40,20 @@
             <ToolBar />
 
         </ToolBarTray>
-        <DataGrid Grid.ColumnSpan="2" Grid.Column="0" Grid.Row="3" ItemsSource="{Binding InvolvedObjectRows}">
-            <!--<DataGridTextColumn Header="Table" Binding="{Binding Table}" />
-            <DataGridTextColumn Header="Subtype" Binding="{Binding KeyField}" />
-            <DataGridTextColumn Header="Object ID" Binding="{Binding Oid}" />-->
+        <DataGrid Grid.ColumnSpan="2" Grid.Column="0" Grid.Row="3" AutoGenerateColumns="False"
+                  ItemsSource="{Binding InvolvedObjectRows}" SelectedItem="{Binding SelectedInvolvedObject}" SelectionMode="Single">
+            <DataGrid.Columns>
+                <DataGridTextColumn  Header="Table" Binding="{Binding Name}" />
+                <DataGridTextColumn  Header="Subtype" Binding="{Binding KeyField}" />
+                <DataGridTextColumn  Header="Object ID" Binding="{Binding ObjectId}" />
+            </DataGrid.Columns>
+
+            <i:Interaction.Triggers>
+                <i:EventTrigger EventName="SelectionChanged">
+                    <i:InvokeCommandAction Command="{Binding FlashInvolvedRowCmd}" />
+                </i:EventTrigger>
+            </i:Interaction.Triggers>
+
         </DataGrid>
     </Grid>
 </UserControl>
