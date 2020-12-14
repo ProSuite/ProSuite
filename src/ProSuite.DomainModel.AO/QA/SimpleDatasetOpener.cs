@@ -11,6 +11,7 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.QA
 {
+	[CLSCompliant(false)]
 	public class SimpleDatasetOpener : IOpenDataset
 	{
 		private readonly ISimpleDatasetContext _datasetContext;
