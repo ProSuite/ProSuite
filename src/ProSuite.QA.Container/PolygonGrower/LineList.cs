@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
@@ -10,8 +11,8 @@ namespace ProSuite.QA.Container.PolygonGrower
 {
 	public class LineList
 	{
-		[CLSCompliant(false)] protected static readonly IEnvelope QueryEnvelope =
-			new EnvelopeClass();
+		[CLSCompliant(false)] protected static readonly ThreadLocal<IEnvelope> QueryEnvelope =
+			new ThreadLocal<IEnvelope>(() => new EnvelopeClass());
 	}
 
 	[CLSCompliant(false)]
@@ -140,10 +141,10 @@ namespace ProSuite.QA.Container.PolygonGrower
 
 			while (node != null)
 			{
-				node.Value.QueryEnvelope(QueryEnvelope);
-				if (nodeMax == null || QueryEnvelope.XMax > xMax)
+				node.Value.QueryEnvelope(QueryEnvelope.Value);
+				if (nodeMax == null || QueryEnvelope.Value.XMax > xMax)
 				{
-					xMax = QueryEnvelope.XMax;
+					xMax = QueryEnvelope.Value.XMax;
 					nodeMax = node;
 				}
 
@@ -630,15 +631,15 @@ namespace ProSuite.QA.Container.PolygonGrower
 			IEnvelope envelope = null;
 			foreach (TDirectedRow directedRow in _directedRows)
 			{
-				directedRow.QueryEnvelope(QueryEnvelope);
+				directedRow.QueryEnvelope(QueryEnvelope.Value);
 
 				if (envelope == null)
 				{
-					envelope = GeometryFactory.Clone(QueryEnvelope);
+					envelope = GeometryFactory.Clone(QueryEnvelope.Value);
 				}
 				else
 				{
-					envelope.Union(QueryEnvelope);
+					envelope.Union(QueryEnvelope.Value);
 				}
 			}
 
