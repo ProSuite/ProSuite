@@ -1,19 +1,67 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
-using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Core;
 
-namespace EsriDE.ProSuite.DomainModel.QA
+namespace ProSuite.DomainModel.AO.QA
 {
 	[CLSCompliant(false)]
 	public static class TestDescriptorUtils
 	{
+
+		
+		/// <summary>
+		/// Gets the test factory, sets the quality condition for it and initializes parameter values for it.
+		/// </summary>
+		/// <returns>TestFactory or null.</returns>
+		[CanBeNull]
+		public static TestFactory CreateTestFactory([NotNull] QualityCondition qualityCondition)
+		{
+			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
+
+			if (qualityCondition.TestDescriptor == null)
+			{
+				return null;
+			}
+
+			TestFactory factory =
+				TestDescriptorUtils.GetTestFactory(qualityCondition.TestDescriptor);
+
+			if (factory != null)
+			{
+				factory.Condition = qualityCondition;
+				InitializeParameterValues(factory);
+			}
+
+			return factory;
+		}
+
+		private static bool InitializeParameterValues([NotNull] TestFactory factory)
+		{
+			Dictionary<string, TestParameter> parametersByName =
+				factory.Parameters.ToDictionary(
+					testParameter => testParameter.Name);
+
+			foreach (TestParameterValue parameterValue in factory.Condition.ParameterValues)
+			{
+				TestParameter testParameter;
+				if (parametersByName.TryGetValue(parameterValue.TestParameterName,
+				                                 out testParameter))
+				{
+					parameterValue.DataType = testParameter.Type;
+				}
+			}
+
+			return true;
+		}
+
 		/// <summary>
 		/// Gets the test factory. Requires the test class or the test factory descriptor to be defined.
 		/// </summary>

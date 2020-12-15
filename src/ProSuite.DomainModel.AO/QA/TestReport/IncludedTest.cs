@@ -1,9 +1,8 @@
 ﻿using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.AO.QA;
 
-namespace EsriDE.ProSuite.DomainModel.QA.TestReport
+namespace ProSuite.DomainModel.AO.QA.TestReport
 {
 	internal abstract class IncludedTest : IncludedTestBase
 	{

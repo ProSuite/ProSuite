@@ -5,15 +5,14 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Xml;
-using ProSuite.QA.Container;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Xml;
-using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 
-namespace EsriDE.ProSuite.DomainModel.QA.TestReport
+namespace ProSuite.DomainModel.AO.QA.TestReport
 {
 	public class HtmlReportBuilder : IReportBuilder
 	{

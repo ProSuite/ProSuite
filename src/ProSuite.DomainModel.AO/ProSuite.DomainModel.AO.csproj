@@ -80,6 +80,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="DataModel\AttributeUtils.cs" />
     <Compile Include="DataModel\Harvesting\DatasetFeatureDatasetMatchCriterion.cs" />
     <Compile Include="DataModel\Harvesting\DatasetFilter.cs" />
     <Compile Include="DataModel\Harvesting\DatasetFilterFactory.cs" />
@@ -93,17 +94,24 @@
     <Compile Include="DataModel\IAttributeConfiguratorFactory.cs" />
     <Compile Include="DataModel\IAttributeEditorConfigurator.cs" />
     <Compile Include="DataModel\IDatasetContext.cs" />
+    <Compile Include="DataModel\IDatasetEditContext.cs" />
     <Compile Include="DataModel\IDatasetFilter.cs" />
     <Compile Include="DataModel\IDatasetListBuilder.cs" />
     <Compile Include="DataModel\IDatasetListBuilderFactory.cs" />
     <Compile Include="DataModel\IDatasetLookup.cs" />
     <Compile Include="DataModel\IDatasetMatchCriterion.cs" />
     <Compile Include="DataModel\IFeatureDatasetElement.cs" />
+    <Compile Include="DataModel\IFieldIndexCache.cs" />
+    <Compile Include="DataModel\IModelContext.cs" />
     <Compile Include="DataModel\IWorkspaceContext.cs" />
+    <Compile Include="DataModel\IWorkspaceContextLookup.cs" />
     <Compile Include="DataModel\MasterDatabaseWorkspaceContext.cs" />
     <Compile Include="DataModel\Model.cs" />
     <Compile Include="DataModel\ModelElementUtils.cs" />
+    <Compile Include="DataModel\ObjectObject.cs" />
     <Compile Include="DataModel\SpatialReferenceDescriptor.cs" />
+    <Compile Include="DataModel\TableObject.cs" />
+    <Compile Include="DataModel\VectorObject.cs" />
     <Compile Include="DataModel\WorkspaceContextBase.cs" />
     <Compile Include="Geodatabase\ConnectionFileConnectionProvider.cs" />
     <Compile Include="Geodatabase\ConnectionProvider.cs" />
@@ -128,7 +136,21 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QA\DefaultTestFactory.cs" />
+    <Compile Include="QA\ErrorCreation.cs" />
+    <Compile Include="QA\ErrorDeletion.cs" />
+    <Compile Include="QA\ErrorLineObject.cs" />
+    <Compile Include="QA\ErrorMultiPatchObject.cs" />
+    <Compile Include="QA\ErrorMultipointObject.cs" />
+    <Compile Include="QA\ErrorObjectUtils.cs" />
+    <Compile Include="QA\ErrorPolygonObject.cs" />
+    <Compile Include="QA\ErrorTableObject.cs" />
+    <Compile Include="QA\ErrorVectorObject.cs" />
+    <Compile Include="QA\IErrorObject.cs" />
     <Compile Include="QA\IOpenDataset.cs" />
+    <Compile Include="QA\IQualityConditionObjectDatasetResolver.cs" />
+    <Compile Include="QA\IVerificationContext.cs" />
+    <Compile Include="QA\QualityConditionObjectDatasetResolver.cs" />
+    <Compile Include="QA\RowParser.cs" />
     <Compile Include="QA\SimpleDatasetOpener.cs" />
     <Compile Include="QA\SpecificationReport\HtmlDataModel.cs" />
     <Compile Include="QA\SpecificationReport\HtmlDataQualityCategory.cs" />
@@ -166,6 +188,7 @@
     <Compile Include="QA\TestReport\TestFactoryIndexEntry.cs" />
     <Compile Include="QA\TestReport\TestIndexEntry.cs" />
     <Compile Include="QA\TestReport\TestReportUtils.cs" />
+    <Compile Include="QA\VerificationProgressEventArgs.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\EsriDE.Commons\src\EsriDE.Commons.AO\EsriDE.Commons.AO.csproj">

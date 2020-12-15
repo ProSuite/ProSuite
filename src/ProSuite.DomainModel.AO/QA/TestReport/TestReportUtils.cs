@@ -7,7 +7,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
 
-namespace EsriDE.ProSuite.DomainModel.QA.TestReport
+namespace ProSuite.DomainModel.AO.QA.TestReport
 {
 	public static class TestReportUtils
 	{

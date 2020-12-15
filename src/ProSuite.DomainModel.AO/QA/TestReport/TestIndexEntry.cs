@@ -2,7 +2,7 @@
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace EsriDE.ProSuite.DomainModel.QA.TestReport
+namespace ProSuite.DomainModel.AO.QA.TestReport
 {
 	internal class TestIndexEntry : IndexEntry
 	{

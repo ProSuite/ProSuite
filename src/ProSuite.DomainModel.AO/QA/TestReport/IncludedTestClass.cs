@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
-using ProSuite.QA.Container;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
 using ProSuite.QA.Tests.Documentation;
 
-namespace EsriDE.ProSuite.DomainModel.QA.TestReport
+namespace ProSuite.DomainModel.AO.QA.TestReport
 {
 	internal class IncludedTestClass : IncludedTestBase, IComparable<IncludedTestClass>
 	{

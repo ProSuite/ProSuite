@@ -1,6 +1,6 @@
 ﻿using System.Xml;
 
-namespace EsriDE.ProSuite.DomainModel.QA.TestReport
+namespace ProSuite.DomainModel.AO.QA.TestReport
 {
 	internal class SectionTitleIndexEntry : IndexEntry
 	{

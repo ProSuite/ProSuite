@@ -1,7 +1,7 @@
 using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace EsriDE.ProSuite.DomainModel.QA.TestReport
+namespace ProSuite.DomainModel.AO.QA.TestReport
 {
 	public interface IReportBuilder
 	{
