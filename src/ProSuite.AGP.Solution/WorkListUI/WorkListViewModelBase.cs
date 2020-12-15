@@ -13,6 +13,7 @@ using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
@@ -35,6 +36,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private RelayCommand _flashCurrentItemCmd;
 		private RelayCommand _flashInvolvedRowCmd;
 		private InvolvedObjectRow _selectedInvolvedObject;
+
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public ICommand ClearSelectionCmd =>
 			FrameworkApplication.GetPlugInWrapper(
@@ -167,6 +170,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			Layer targetLayer = GetLayerByName(SelectedInvolvedObject.Name);
 			if (targetLayer == null)
 			{
+				_msg.Warn($"Cannot find layer '{targetLayer}' of involved object");
 				return;
 			}
 			MapView.Active.FlashFeature(targetLayer as FeatureLayer, SelectedInvolvedObject.ObjectId);
@@ -376,6 +380,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				
 				if (targetLayer == null)
 				{
+					_msg.Warn($"Cannot find layer '{targetLayer}' of current workitem");
 					return;
 				}
 
