@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -425,7 +424,8 @@ namespace ProSuite.QA.Container.TestContainer
 			_errorAdministrator.Clear();
 
 			IList<ITest> nonContainerTests;
-			ClassifyTests(out _containerTests, out nonContainerTests);
+			TestUtils.ClassifyTests(_tests, _allowEditing, out _containerTests,
+			                        out nonContainerTests);
 
 			// execute non-container tests
 			Execute(nonContainerTests);
@@ -577,56 +577,6 @@ namespace ProSuite.QA.Container.TestContainer
 			return TestUtils.GetUniqueSpatialReference(
 				spatialReferences,
 				requireEqualVerticalCoordinateSystems: false);
-		}
-
-		private void ClassifyTests([NotNull] out IList<ContainerTest> containerTests,
-		                           [NotNull] out IList<ITest> nonContainerTests)
-		{
-			// Handle ITest and extract Test classes
-			containerTests = new List<ContainerTest>();
-			nonContainerTests = new List<ITest>();
-
-			foreach (ITest test in _tests)
-			{
-				// set tests up for write access
-				var editingTest = test as IEditing;
-				if (editingTest != null)
-				{
-					editingTest.AllowEditing = _allowEditing;
-				}
-
-				var cached = false;
-				var containerTest = test as ContainerTest;
-
-				if (containerTest != null)
-				{
-					foreach (ITable table in containerTest.InvolvedTables)
-					{
-						if (! (table is IFeatureClass))
-						{
-							continue;
-						}
-
-						// found a feature class, enable use as container test
-						containerTests.Add(containerTest);
-						cached = true;
-						break;
-					}
-
-					if (! cached && containerTest.InvolvedTerrains?.Any() == true)
-					{
-						containerTests.Add(containerTest);
-						cached = true;
-					}
-				}
-
-				// important: this may also be ContainerTest subclasses, when
-				// they don't have any involved feature class
-				if (! cached)
-				{
-					nonContainerTests.Add(test);
-				}
-			}
 		}
 
 		private void Execute([NotNull] ICollection<ITest> nonContainerTests)
