@@ -70,7 +70,11 @@ namespace ProSuite.AGP.Solution.LoggerUI
 
         public bool DebugLogsAreVisible { set; get; } = true;
 
-        public bool VerboseLogsAreVisible { set; get; } = true;
+        public bool VerboseLogsAreVisible
+        {
+	        set => _msg.IsVerboseDebugEnabled = value;
+	        get => _msg.IsVerboseDebugEnabled;
+        }
         #endregion
 
         #region Open message
