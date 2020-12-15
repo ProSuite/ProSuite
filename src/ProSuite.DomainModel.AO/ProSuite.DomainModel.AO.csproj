@@ -80,8 +80,31 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="DataModel\Harvesting\DatasetFeatureDatasetMatchCriterion.cs" />
+    <Compile Include="DataModel\Harvesting\DatasetFilter.cs" />
+    <Compile Include="DataModel\Harvesting\DatasetFilterFactory.cs" />
+    <Compile Include="DataModel\Harvesting\DatasetMatchCriterionBase.cs" />
+    <Compile Include="DataModel\Harvesting\DatasetMatchCriterionConjunction.cs" />
+    <Compile Include="DataModel\Harvesting\DatasetNameMatchCriterion.cs" />
+    <Compile Include="DataModel\Harvesting\AttributeHarvestingUtils.cs" />
+    <Compile Include="DataModel\Harvesting\HarvestingUtils.cs" />
+    <Compile Include="DataModel\Harvesting\ObjectTypeHarvestingUtils.cs" />
+    <Compile Include="DataModel\IAttributeConfigurator.cs" />
+    <Compile Include="DataModel\IAttributeConfiguratorFactory.cs" />
+    <Compile Include="DataModel\IAttributeEditorConfigurator.cs" />
     <Compile Include="DataModel\IDatasetContext.cs" />
+    <Compile Include="DataModel\IDatasetFilter.cs" />
+    <Compile Include="DataModel\IDatasetListBuilder.cs" />
+    <Compile Include="DataModel\IDatasetListBuilderFactory.cs" />
+    <Compile Include="DataModel\IDatasetLookup.cs" />
+    <Compile Include="DataModel\IDatasetMatchCriterion.cs" />
+    <Compile Include="DataModel\IFeatureDatasetElement.cs" />
+    <Compile Include="DataModel\IWorkspaceContext.cs" />
+    <Compile Include="DataModel\MasterDatabaseWorkspaceContext.cs" />
+    <Compile Include="DataModel\Model.cs" />
     <Compile Include="DataModel\ModelElementUtils.cs" />
+    <Compile Include="DataModel\SpatialReferenceDescriptor.cs" />
+    <Compile Include="DataModel\WorkspaceContextBase.cs" />
     <Compile Include="Geodatabase\ConnectionFileConnectionProvider.cs" />
     <Compile Include="Geodatabase\ConnectionProvider.cs" />
     <Compile Include="Geodatabase\DatabaseType.cs" />
