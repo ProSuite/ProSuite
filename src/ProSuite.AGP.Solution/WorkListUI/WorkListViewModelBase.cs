@@ -12,6 +12,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -34,7 +35,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private RelayCommand _pickWorkItemCmd;
 		private RelayCommand _goNearestItemCmd;
 		private RelayCommand _flashCurrentItemCmd;
-		private RelayCommand _flashInvolvedRowCmd;
+		private RelayCommand _flashInvolvedSelectedCmd;
 		private InvolvedObjectRow _selectedInvolvedObject;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -150,32 +151,31 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}
 		}
 
-
-		public RelayCommand FlashInvolvedRowCmd
+		public RelayCommand FlashInvolvedSelectedCmd
 		{
 			get
 			{
-				_flashInvolvedRowCmd = new RelayCommand(FlashInvolvedRow, () => SelectedInvolvedObject != null);
-				return _flashInvolvedRowCmd;
+				_flashInvolvedSelectedCmd =
+					new RelayCommand(FlashInvolvedRow, () => SelectedInvolvedObject != null);
+				return _flashInvolvedSelectedCmd;
 			}
 		}
 
 		private void FlashInvolvedRow()
 		{
-			if (SelectedInvolvedObject.Name == null || SelectedInvolvedObject.ObjectId < 0)
+			ViewUtils.Try(() =>
 			{
-				return;
-			}
+				Layer targetLayer = GetFeatureLayerByName(SelectedInvolvedObject.Name);
+				if (targetLayer == null)
+				{
+					_msg.Warn(
+						$"Cannot find layer '{SelectedInvolvedObject.Name}' of involved object");
+					return;
+				}
 
-			Layer targetLayer = GetLayerByName(SelectedInvolvedObject.Name);
-			if (targetLayer == null)
-			{
-				_msg.Warn($"Cannot find layer '{targetLayer}' of involved object");
-				return;
-			}
-			MapView.Active.FlashFeature(targetLayer as FeatureLayer, SelectedInvolvedObject.ObjectId);
-
-
+				MapView.Active.FlashFeature(targetLayer as FeatureLayer,
+				                            SelectedInvolvedObject.ObjectId);
+			}, _msg);
 		}
 
 		public WorkItemStatus Status
@@ -228,15 +228,10 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			set { }
 		}
 
-		public InvolvedObjectRow SelectedInvolvedObject {
-			get
-			{
-				return _selectedInvolvedObject;
-			}
-			set
-			{
-				SetProperty(ref _selectedInvolvedObject, value, () => SelectedInvolvedObject);
-			}
+		public InvolvedObjectRow SelectedInvolvedObject
+		{
+			get { return _selectedInvolvedObject; }
+			set { SetProperty(ref _selectedInvolvedObject, value, () => SelectedInvolvedObject); }
 		}
 
 		public string GetCount()
@@ -261,22 +256,28 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		protected void GoPreviousItem()
 		{
-			QueuedTask.Run(() =>
+			ViewUtils.Try(() =>
 			{
-				CurrentWorkList.GoPrevious();
-				CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
-				ZoomTo();
-			});
+				QueuedTask.Run(() =>
+				{
+					CurrentWorkList.GoPrevious();
+					CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
+					ZoomTo();
+				});
+			}, _msg);
 		}
 
-		protected virtual void GoNearestItem()
+		protected void GoNearestItem()
 		{
-			QueuedTask.Run(() =>
+			ViewUtils.Try(() =>
 			{
-				CurrentWorkList.GoNearest(CurrentWorkList.Current.Extent);
-				CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
-				ZoomTo();
-			});
+				QueuedTask.Run(() =>
+				{
+					CurrentWorkList.GoNearest(CurrentWorkList.Current.Extent);
+					CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
+					ZoomTo();
+				});
+			}, _msg);
 		}
 
 		protected void ZoomTo()
@@ -320,79 +321,114 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			await MapView.Active.ZoomToAsync(CurrentWorkList.Extent);
 		}
 
-		protected virtual void GoFirstItem()
+		protected void GoFirstItem()
 		{
-			QueuedTask.Run(() =>
+			ViewUtils.Try(() =>
 			{
-				CurrentWorkList.GoFirst();
-				CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
-				ZoomTo();
-			});
+				QueuedTask.Run(() =>
+				{
+					CurrentWorkList.GoFirst();
+					CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
+					ZoomTo();
+				});
+			}, _msg);
 		}
 
-		protected virtual void GoNextItem()
+		protected void GoNextItem()
 		{
-			QueuedTask.Run(() =>
+			ViewUtils.Try(() =>
 			{
-				CurrentWorkList.GoNext();
-				CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
-				ZoomTo();
-			});
+				QueuedTask.Run(() =>
+				{
+					CurrentWorkList.GoNext();
+					CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
+					ZoomTo();
+				});
+			}, _msg);
 		}
 
-		private void PickWorkItem()
+		private async void PickWorkItem()
 		{
-			WorkListsModule.Current.WorkItemPicked += Current_WorkItemPicked;
-			FrameworkApplication.SetCurrentToolAsync(ConfigIDs.Editing_PickWorkListItemTool);
+			await ViewUtils.TryAsync(() =>
+			{
+				WorkListsModule.Current.WorkItemPicked += Current_WorkItemPicked;
+				return FrameworkApplication.SetCurrentToolAsync(
+					ConfigIDs.Editing_PickWorkListItemTool);
+			}, _msg);
 		}
 
 		private void Current_WorkItemPicked(object sender, WorkItemPickArgs e)
 		{
-			QueuedTask.Run(() =>
+			ViewUtils.Try(() =>
 			{
-				var OID = e.features.First().GetObjectID();
-
-				QueryFilter filter = GdbQueryUtils.CreateFilter(new[] {OID});
-				IWorkItem selectedItem = CurrentWorkList.GetItems(filter).FirstOrDefault();
-				foreach (var item in CurrentWorkList.GetItems(null, false))
+				QueuedTask.Run(() =>
 				{
-					Console.WriteLine(item.OID);
-					Console.WriteLine(item.Extent.ToJson());
-				}
+					var OID = e.features.First().GetObjectID();
 
-				if (selectedItem == null)
-				{
-					return;
-				}
+					QueryFilter filter = GdbQueryUtils.CreateFilter(new[] {OID});
+					IWorkItem selectedItem = CurrentWorkList.GetItems(filter).FirstOrDefault();
+					foreach (var item in CurrentWorkList.GetItems(null, false))
+					{
+						Console.WriteLine(item.OID);
+						Console.WriteLine(item.Extent.ToJson());
+					}
 
-				CurrentWorkList.GoToOid(selectedItem.OID);
-				CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
-			});
+					if (selectedItem == null)
+					{
+						return;
+					}
+
+					CurrentWorkList.GoToOid(selectedItem.OID);
+					CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
+				});
+			}, _msg);
 		}
 
 		private void Flash()
 		{
-			QueuedTask.Run(() =>
+			ViewUtils.Try(() =>
 			{
-				var layerName = CurrentWorkList.Current.Proxy.Table.Name;
-				var Oid = CurrentWorkList.Current.Proxy.ObjectId;
-				Layer targetLayer = GetLayerByName(layerName);
-				
-				if (targetLayer == null)
+				QueuedTask.Run(() =>
 				{
-					_msg.Warn($"Cannot find layer '{targetLayer}' of current workitem");
-					return;
-				}
+					var fcName = CurrentWorkList.Current.Proxy.Table.Name;
+					var oid = CurrentWorkList.Current.Proxy.ObjectId;
 
-				MapView.Active.FlashFeature(targetLayer as BasicFeatureLayer, Oid);
-			});
+					IEnumerable<BasicFeatureLayer> layers = GetLayersOfFeatureClass(fcName);
+
+					Dictionary<BasicFeatureLayer, List<long>> featureSet =
+						new Dictionary<BasicFeatureLayer, List<long>>();
+
+					foreach (var layer in layers)
+					{
+						if (featureSet.Keys.Contains(layer))
+						{
+							featureSet[layer].Add(oid);
+						}
+						else
+						{
+							featureSet.Add(layer, new List<long> {oid});
+						}
+					}
+
+					MapView.Active.FlashFeature(featureSet);
+				});
+			}, _msg);
+		}
+
+		private IEnumerable<FeatureLayer> GetLayersOfFeatureClass(string fcName)
+		{
+			IEnumerable<FeatureLayer> featureLayers = MapView.Active.Map.Layers
+			                                                 .OfType<FeatureLayer>();
+
+			return featureLayers.Where(layer => layer.GetFeatureClass().GetName() == fcName);
 		}
 
 		[CanBeNull]
-		private Layer GetLayerByName(string name)
+		protected FeatureLayer GetFeatureLayerByName(string name)
 		{
 			return MapView.Active.Map.GetLayersAsFlattenedList()
-			                                .FirstOrDefault(layer => layer.Name == name);
+			              .Where(candidate => candidate is BasicFeatureLayer)
+			              .FirstOrDefault(layer => layer.Name == name) as FeatureLayer;
 		}
 
 		[NotNull]

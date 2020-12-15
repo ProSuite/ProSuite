@@ -5,6 +5,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:test="clr-namespace:ProSuite.AGP.Solution.WorkListUI.UiTestData"
              mc:Ignorable="d"
              d:DesignWidth="400">
     <UserControl.Resources>
@@ -13,6 +14,7 @@
                 <extensions:DesignOnlyResourceDictionary
                     Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
             </ResourceDictionary.MergedDictionaries>
+            <!--<StaticResource x:Class="InvolvedObjectRow"></StaticResource>-->
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
@@ -36,21 +38,41 @@
         <TextBox Text="{Binding CurrentWorkItem.ErrorDescription}" Grid.Row="1" Grid.Column="1"
                  BorderBrush="Transparent" />
 
-        <ToolBarTray Grid.Row="2" Grid.Column="0">
-            <ToolBar />
+        <ToolBarTray Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
+            <ToolBar>
+                <Button Command="{Binding ZoomInvolvedAllCmd }">
+                    <Image Source="../Images/ZoomInvolvedAll16.png"  Stretch="UniformToFill" ToolTip="Zoom to all involved features" />
+                </Button>
+                <Button Command="{Binding ZoomInvolvedSelectedCmd }">
+                    <Image Source="../Images/ZoomInvolvedSel16.png"  Stretch="UniformToFill"  ToolTip="Zoom to selected involved features" />
+                </Button>
+                <Separator />
+                <Button Command="{Binding FlashInvolvedAllCmd}">
+                    <Image Source="../Images/FlashInvolvedAll16.png" Stretch="UniformToFill" ToolTip="Flash all involved features" />
+                </Button>
+                <Button Command="{Binding FlashInvolvedSelectedCmd }">
+                    <Image Source="../Images/FlashInvolvedSel16.png"  Stretch="UniformToFill" ToolTip="Flash selected involved features" />
+                </Button>
+            </ToolBar>
 
         </ToolBarTray>
-        <DataGrid Grid.ColumnSpan="2" Grid.Column="0" Grid.Row="3" AutoGenerateColumns="False"
-                  ItemsSource="{Binding InvolvedObjectRows}" SelectedItem="{Binding SelectedInvolvedObject}" SelectionMode="Single">
+        <DataGrid Grid.ColumnSpan="2" Grid.Column="0" Grid.Row="3" HorizontalAlignment="Stretch"
+                  AutoGenerateColumns="False"
+                  ItemsSource="{Binding InvolvedObjectRows}" SelectedItem="{Binding SelectedInvolvedObject}"
+                  SelectionMode="Single" IsReadOnly="True">
+            <!--d:DataContext="{d:DesignInstance {x:Type test:InvolvedObjectMock}, IsDesignTimeCreatable=True }-->
             <DataGrid.Columns>
-                <DataGridTextColumn  Header="Table" Binding="{Binding Name}" />
-                <DataGridTextColumn  Header="Subtype" Binding="{Binding KeyField}" />
-                <DataGridTextColumn  Header="Object ID" Binding="{Binding ObjectId}" />
+                <DataGridTextColumn Width="150" Header="Table" Binding="{Binding Name}" />
+                <DataGridTextColumn Width="150" Header="Subtype" Binding="{Binding KeyField}" />
+                <DataGridTextColumn Width="*" Header="Object ID" Binding="{Binding ObjectId}" />
             </DataGrid.Columns>
 
             <i:Interaction.Triggers>
-                <i:EventTrigger EventName="SelectionChanged">
+                <!--<i:EventTrigger EventName="SelectionChanged">
                     <i:InvokeCommandAction Command="{Binding FlashInvolvedRowCmd}" />
+                </i:EventTrigger>-->
+                <i:EventTrigger EventName="MouseDoubleClick">
+                    <i:InvokeCommandAction Command="{Binding FlashInvolvedSelectedCmd}" />
                 </i:EventTrigger>
             </i:Interaction.Triggers>
 

@@ -157,6 +157,7 @@
     <Compile Include="WorkLists\WorkListsModule.cs" />
     <Compile Include="WorkListUI\InvolvedObjectRow.cs" />
     <Compile Include="WorkListUI\InvolvedTableVm.cs" />
+    <Compile Include="WorkListUI\UiTestData\InvolvedObjectMock.cs" />
     <Compile Include="WorkListUI\Views\IssueCountControl.xaml.cs">
       <DependentUpon>IssueCountControl.xaml</DependentUpon>
     </Compile>
@@ -427,6 +428,18 @@
   <ItemGroup>
     <Resource Include="WorkListUI\Images\FlashCurrent16.png" />
     <Resource Include="WorkListUI\Images\FlashCurrent32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\FlashInvolvedAll16.png" />
+    <Resource Include="WorkListUI\Images\FlashInvolvedAll32.png" />
+    <Resource Include="WorkListUI\Images\FlashInvolvedSel16.png" />
+    <Resource Include="WorkListUI\Images\FlashInvolvedSel32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\ZoomInvolvedAll16.png" />
+    <Resource Include="WorkListUI\Images\ZoomInvolvedAll32.png" />
+    <Resource Include="WorkListUI\Images\ZoomInvolvedSel16.png" />
+    <Resource Include="WorkListUI\Images\ZoomInvolvedSel32.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--

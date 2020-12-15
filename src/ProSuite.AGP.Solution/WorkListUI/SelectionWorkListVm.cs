@@ -13,7 +13,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			CurrentWorkList.GoNext();
 			CurrentWorkItem = new SelectionWorkItemVm(CurrentWorkList.Current as SelectionItem);
 		}
-		
+
 		public override WorkItemVmBase CurrentWorkItem
 		{
 			get => new SelectionWorkItemVm(CurrentWorkList.Current as SelectionItem);
@@ -23,7 +23,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				Status = CurrentWorkItem.Status;
 				Visited = CurrentWorkItem.Visited;
 				CurrentIndex = CurrentWorkList.CurrentIndex;
-				Count = GetCount(); 
+				Count = GetCount();
 			}
 		}
 	}
