@@ -16,6 +16,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Internal.Framework.Win32;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Picker;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using Geometry = System.Windows.Media.Geometry;
 using Polygon = ArcGIS.Core.Geometry.Polygon;
@@ -79,6 +80,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 		public RelayCommand FlashItemCmd { get; internal set; }
 		public RelayCommand CloseCommand { get; set; }
 
+		[CanBeNull]
 		public IPickableItem SelectedItem
 		{
 			get => _selectedItem;
@@ -86,7 +88,12 @@ namespace ProSuite.AGP.Editing.PickerUI
 			{
 				SetProperty(ref _selectedItem, value, () => SelectedItem);
 				DisposeOverlays();
-				DialogResult = true;
+				try
+				{
+					//TODO STS when Picker is canceled, Dialog is already closed here and setting DialogResult in this point is not applicable -> throws exception. Can we set DialogResult in better place?
+					DialogResult = true;
+				}
+				catch { }
 			}
 		}
 

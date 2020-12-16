@@ -412,14 +412,19 @@ namespace ProSuite.AGP.Editing.OneClick
 
 						var item = await picker.PickSingle() as PickableFeatureItem;
 
-						var kvp = new KeyValuePair<BasicFeatureLayer, List<long>>(
-							item.Layer, new List<long> {item.Oid});
-
-						await QueuedTask.Run(() =>
+						if (item != null)
 						{
-							Selector.SelectLayersFeaturesByOids(
-								kvp, selectionMethod);
-						});
+							var kvp = new KeyValuePair<BasicFeatureLayer, List<long>>(
+								item.Layer, new List<long> { item.Oid });
+
+							await QueuedTask.Run(() =>
+							{
+								Selector.SelectLayersFeaturesByOids(
+									kvp, selectionMethod);
+							});
+						}
+
+						
 					}
 					else
 					{
@@ -446,15 +451,19 @@ namespace ProSuite.AGP.Editing.OneClick
 					});
 
 					var picker = new PickerUI.Picker(pickingCandidates, pickerWindowLocation);
+
 					var item = await picker.PickSingle() as PickableFeatureClassItem;
 
-					await QueuedTask.Run(() =>
+					if (item != null)
 					{
-						item.BelongingFeatureLayers.ForEach(layer =>
+						await QueuedTask.Run(() =>
 						{
-							layer.Select(null, selectionMethod);
+							item.BelongingFeatureLayers.ForEach(layer =>
+							{
+								layer.Select(null, selectionMethod);
+							});
 						});
-					});
+					}
 				}
 
 				//no modifier pressed: select all in envelope

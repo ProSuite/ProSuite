@@ -57,7 +57,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 			_viewModel.DisposeOverlays();
 
-			return _viewModel.SelectedItem ?? _viewModel.PickableItems.First();
+			return _viewModel.SelectedItem ?? null ;
 		}
 
 		[CanBeNull]
@@ -87,7 +87,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 			_viewModel.DisposeOverlays();
 
-			return _viewModel.SelectedItems.ToList();
+			return _viewModel.SelectedItems.ToList() ?? null;
 		}
 
 		public static List<IPickableItem> CreatePickableFeatureItems(
@@ -110,7 +110,11 @@ namespace ProSuite.AGP.Editing.PickerUI
 		{
 			PickerWindow window = new PickerWindow(vm);
 			ManageWindowLocation(window);
-			window.ShowDialog();
+			bool? accepted = window.ShowDialog();
+			if (accepted == false)
+			{
+				vm.SelectedItem = null;
+			}
 			vm.DisposeOverlays();
 		}
 
