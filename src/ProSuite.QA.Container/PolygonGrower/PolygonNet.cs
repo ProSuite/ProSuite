@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geometry;
@@ -13,20 +14,20 @@ namespace ProSuite.QA.Container.PolygonGrower
 {
 	public class PolygonNet
 	{
-		[CLSCompliant(false)] protected static readonly Ao.IPoint FromPointTemplate =
-			new Ao.PointClass();
+		[CLSCompliant(false)] protected static readonly ThreadLocal<Ao.IPoint> FromPointTemplate =
+			new ThreadLocal<Ao.IPoint>(() => new Ao.PointClass());
 
-		[CLSCompliant(false)] protected static readonly Ao.IPoint ToPointTemplate =
-			new Ao.PointClass();
+		[CLSCompliant(false)] protected static readonly ThreadLocal<Ao.IPoint> ToPointTemplate =
+			new ThreadLocal<Ao.IPoint>(() => new Ao.PointClass());
 
-		[CLSCompliant(false)] protected static readonly Ao.IEnvelope QueryBox =
-			new Ao.EnvelopeClass();
+		[CLSCompliant(false)] protected static readonly ThreadLocal<Ao.IEnvelope> QueryBox =
+			new ThreadLocal<Ao.IEnvelope>(() => new Ao.EnvelopeClass());
 
-		[CLSCompliant(false)] protected static readonly Ao.IEnvelope QueryX =
-			new Ao.EnvelopeClass();
+		[CLSCompliant(false)] protected static readonly ThreadLocal<Ao.IEnvelope> QueryX =
+			new ThreadLocal<Ao.IEnvelope>(() => new Ao.EnvelopeClass());
 
-		[CLSCompliant(false)] protected static readonly Ao.IEnvelope QueryY =
-			new Ao.EnvelopeClass();
+		[CLSCompliant(false)] protected static readonly ThreadLocal<Ao.IEnvelope> QueryY =
+			new ThreadLocal<Ao.IEnvelope>(() => new Ao.EnvelopeClass());
 	}
 
 	[CLSCompliant(false)]
@@ -110,13 +111,13 @@ namespace ProSuite.QA.Container.PolygonGrower
 				}
 
 				poly.Processed = true;
-				line.Path.QueryEnvelope(QueryBox);
-				if (QueryBox.XMax < outerRingsBox.XMin || QueryBox.YMax < outerRingsBox.YMin)
+				line.Path.QueryEnvelope(QueryBox.Value);
+				if (QueryBox.Value.XMax < outerRingsBox.XMin || QueryBox.Value.YMax < outerRingsBox.YMin)
 				{
 					continue;
 				}
 
-				_qPntAssignInnerRings.X = QueryBox.XMax;
+				_qPntAssignInnerRings.X = QueryBox.Value.XMax;
 				_qPntAssignInnerRings.Y = line.YMax();
 
 				// no unassigned line right of pnt exists, because we sorted the innerLines in this fashion
@@ -274,17 +275,17 @@ namespace ProSuite.QA.Container.PolygonGrower
 				TopologicalLine currentLine = enumerator.Current.Value;
 				if (excludeEqual)
 				{
-					currentLine.Path.QueryEnvelope(QueryBox);
-					if (QueryBox.XMax == searchX)
+					currentLine.Path.QueryEnvelope(QueryBox.Value);
+					if (QueryBox.Value.XMax == searchX)
 					{
 						continue;
 					}
 				}
 
-				QueryBox.PutCoords(searchX, searchY, xMax, searchY);
+				QueryBox.Value.PutCoords(searchX, searchY, xMax, searchY);
 
 				var segList = (Ao.ISegmentCollection) currentLine.Path;
-				Ao.IEnumSegment enumSegments = segList.IndexedEnumSegments[QueryBox];
+				Ao.IEnumSegment enumSegments = segList.IndexedEnumSegments[QueryBox.Value];
 
 				Ao.ISegment segment;
 				int partIndex = 0;
@@ -299,16 +300,16 @@ namespace ProSuite.QA.Container.PolygonGrower
 						return nearestLine;
 					}
 
-					segment.QueryFromPoint(FromPointTemplate);
-					segment.QueryToPoint(ToPointTemplate);
+					segment.QueryFromPoint(FromPointTemplate.Value);
+					segment.QueryToPoint(ToPointTemplate.Value);
 
 					double fromX;
 					double fromY;
-					FromPointTemplate.QueryCoords(out fromX, out fromY);
+					FromPointTemplate.Value.QueryCoords(out fromX, out fromY);
 
 					double toX;
 					double toY;
-					ToPointTemplate.QueryCoords(out toX, out toY);
+					ToPointTemplate.Value.QueryCoords(out toX, out toY);
 
 					if (fromY == searchY)
 					{
@@ -334,7 +335,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 							}
 						}
 						else if (NewLineSide(searchPoint, ref xMax,
-						                     FromPointTemplate, ToPointTemplate, true,
+						                     FromPointTemplate.Value, ToPointTemplate.Value, true,
 						                     ref x1Nearest, ref y1Nearest, ref side))
 						{
 							nearestLine = currentLine;
@@ -344,7 +345,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 					{
 						const bool startOnLine = false;
 						if (NewLineSide(searchPoint, ref xMax,
-						                ToPointTemplate, FromPointTemplate, startOnLine,
+						                ToPointTemplate.Value, FromPointTemplate.Value, startOnLine,
 						                ref x1Nearest, ref y1Nearest, ref side))
 						{
 							nearestLine = currentLine;
@@ -460,10 +461,10 @@ namespace ProSuite.QA.Container.PolygonGrower
 
 			public int Compare(TDirectedRow x, TDirectedRow y)
 			{
-				x.TopologicalLine.Path.QueryEnvelope(QueryX);
-				y.TopologicalLine.Path.QueryEnvelope(QueryY);
+				x.TopologicalLine.Path.QueryEnvelope(QueryX.Value);
+				y.TopologicalLine.Path.QueryEnvelope(QueryY.Value);
 				// sort descending -> y before x
-				return Comparer<double>.Default.Compare(QueryY.XMax, QueryX.XMax);
+				return Comparer<double>.Default.Compare(QueryY.Value.XMax, QueryX.Value.XMax);
 			}
 
 			#endregion

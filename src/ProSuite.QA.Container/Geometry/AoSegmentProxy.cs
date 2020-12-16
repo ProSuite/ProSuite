@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Threading;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
@@ -11,8 +12,8 @@ namespace ProSuite.QA.Container.Geometry
 	[CLSCompliant(false)]
 	public class AoSegmentProxy : SegmentProxy
 	{
-		private static readonly IPoint _qPoint = new PointClass();
-		private static ILine _qTangent;
+		private static ThreadLocal<ILine> _qTangent;
+		private static ThreadLocal<IPoint> _qPoint;
 
 		[NotNull] private readonly Box _extent;
 
@@ -37,7 +38,31 @@ namespace ProSuite.QA.Container.Geometry
 
 		public override double Length => InnerSegment.Length;
 
-		private ILine QTangent => _qTangent ?? (_qTangent = new LineClass());
+		private ILine QTangent
+		{
+			get
+			{
+				if (_qTangent == null)
+				{
+					_qTangent = new ThreadLocal<ILine>(() => new LineClass());
+				}
+
+				return _qTangent.Value;
+			}
+		}
+
+		private static IPoint QPoint
+		{
+			get
+			{
+				if (_qPoint == null)
+				{
+					_qPoint = new ThreadLocal<IPoint>(() => new PointClass());
+				}
+
+				return _qPoint.Value;
+			}
+		}
 
 		public override SegmentProxy GetSubCurve(double fromRatio, double toRatio)
 		{
@@ -111,14 +136,14 @@ namespace ProSuite.QA.Container.Geometry
 
 		public override Pnt GetStart(bool as3D)
 		{
-			InnerSegment.QueryFromPoint(_qPoint);
-			return CreatePoint(_qPoint, as3D);
+			InnerSegment.QueryFromPoint(QPoint);
+			return CreatePoint(QPoint, as3D);
 		}
 
 		public override Pnt GetEnd(bool as3D)
 		{
-			InnerSegment.QueryToPoint(_qPoint);
-			return CreatePoint(_qPoint, as3D);
+			InnerSegment.QueryToPoint(QPoint);
+			return CreatePoint(QPoint, as3D);
 		}
 
 		public override IPnt GetPointAt(double fraction)
@@ -131,22 +156,22 @@ namespace ProSuite.QA.Container.Geometry
 		{
 			const bool asRatio = true;
 			InnerSegment.QueryPoint(esriSegmentExtension.esriNoExtension,
-			                        fraction, asRatio, _qPoint);
+			                        fraction, asRatio, QPoint);
 
-			return CreatePoint(_qPoint, as3D);
+			return CreatePoint(QPoint, as3D);
 		}
 
 		public override double GetDirectionAt(double fraction)
 		{
 			InnerSegment.QueryTangent(esriSegmentExtension.esriExtendTangents, fraction, true, 1,
 			                          QTangent);
-			QTangent.QueryFromPoint(_qPoint);
+			QTangent.QueryFromPoint(QPoint);
 			double x0, y0;
-			_qPoint.QueryCoords(out x0, out y0);
+			QPoint.QueryCoords(out x0, out y0);
 
-			QTangent.QueryToPoint(_qPoint);
+			QTangent.QueryToPoint(QPoint);
 			double x1, y1;
-			_qPoint.QueryCoords(out x1, out y1);
+			QPoint.QueryCoords(out x1, out y1);
 
 			double dir = Math.Atan2(y1 - y0, x1 - x0);
 			return dir;
@@ -157,9 +182,9 @@ namespace ProSuite.QA.Container.Geometry
 			along = 0;
 			offset = 0;
 			bool rightSide = false;
-			_qPoint.PutCoords(point.X, point.Y);
-			InnerSegment.QueryPointAndDistance(esriSegmentExtension.esriExtendTangents, _qPoint,
-			                                   true, _qPoint, ref along, ref offset, ref rightSide);
+			QPoint.PutCoords(point.X, point.Y);
+			InnerSegment.QueryPointAndDistance(esriSegmentExtension.esriExtendTangents, QPoint,
+			                                   true, QPoint, ref along, ref offset, ref rightSide);
 		}
 
 		[NotNull]
