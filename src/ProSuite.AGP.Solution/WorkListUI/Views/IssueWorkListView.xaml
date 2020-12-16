@@ -5,12 +5,11 @@
                     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                     xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
-                    xmlns:workListUi="clr-namespace:ProSuite.AGP.Solution.WorkListUI"
                     xmlns:views="clr-namespace:ProSuite.AGP.Solution.WorkListUI.Views"
                     mc:Ignorable="d"
                     Title="{Binding Path=CurrentWorkList.Name}"
-                    d:DesignWidth="400"
-                    WindowStartupLocation="CenterOwner" SizeToContent="WidthAndHeight" Topmost="True">
+                    Width="450"
+                    WindowStartupLocation="CenterOwner" SizeToContent="Height" Topmost="True">
 
     <controls:ProWindow.Resources>
         <ResourceDictionary>
@@ -21,17 +20,11 @@
         </ResourceDictionary>
     </controls:ProWindow.Resources>
 
-    <Grid Margin="5">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-
+    <StackPanel Margin="5">
         <views:WorkListNavigator Grid.Row="0" DataContext="{Binding}" />
         <views:WorkListDetails Grid.Row="1" DataContext="{Binding}" />
         <views:IssueCountControl Grid.Row="2" DataContext="{Binding}" />
-    </Grid>
+    </StackPanel>
 
 
 </controls:ProWindow>

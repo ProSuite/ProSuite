@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -52,11 +53,11 @@ namespace ProSuite.AGP.Editing.PickerUI
 					new PickerViewModel(_candidateList, true);
 			});
 
-			ShowPickerControl(_viewModel);
+			RunOnUIThread(() => { ShowPickerControl(_viewModel); });
 
 			_viewModel.DisposeOverlays();
 
-			return _viewModel.SelectedItem ?? _viewModel.PickableItems.First();
+			return _viewModel.SelectedItem ?? null ;
 		}
 
 		[CanBeNull]
@@ -82,11 +83,11 @@ namespace ProSuite.AGP.Editing.PickerUI
 				return new List<IPickableItem>();
 			}
 
-			ShowPickerControl(_viewModel);
+			RunOnUIThread(() => { ShowPickerControl(_viewModel); });
 
 			_viewModel.DisposeOverlays();
 
-			return _viewModel.SelectedItems.ToList();
+			return _viewModel.SelectedItems.ToList() ?? null;
 		}
 
 		public static List<IPickableItem> CreatePickableFeatureItems(
@@ -107,13 +108,14 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 		private void ShowPickerControl(PickerViewModel vm)
 		{
-			Application.Current.Dispatcher.Invoke(() =>
+			PickerWindow window = new PickerWindow(vm);
+			ManageWindowLocation(window);
+			bool? accepted = window.ShowDialog();
+			if (accepted == false)
 			{
-				PickerWindow window = new PickerWindow(vm);
-				ManageWindowLocation(window);
-				window.ShowDialog();
-				vm.DisposeOverlays();
-			});
+				vm.SelectedItem = null;
+			}
+			vm.DisposeOverlays();
 		}
 
 		private void ManageWindowLocation(Window window)
@@ -125,8 +127,19 @@ namespace ProSuite.AGP.Editing.PickerUI
 				window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
 				return;
 			}
+
 			window.Left = _windowLocation.X;
 			window.Top = _windowLocation.Y;
+		}
+
+
+		private static void RunOnUIThread(Action action)
+		{
+			if (FrameworkApplication.Current.Dispatcher.CheckAccess())
+				action(); //No invoke needed
+			else
+				//We are not on the UI
+				FrameworkApplication.Current.Dispatcher.BeginInvoke(action);
 		}
 	}
 }

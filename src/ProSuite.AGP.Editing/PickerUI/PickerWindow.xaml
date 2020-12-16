@@ -20,11 +20,18 @@
         BorderThickness="1"
         AllowsTransparency="True"
         FontWeight="Normal"
-        Foreground="Black">
+        Foreground="Black" Deactivated="Window_Deactivated">
 
     <Window.Background>
         <SolidColorBrush Opacity="0.7" Color="White" />
     </Window.Background>
+
+    <!--<Window.CommandBindings>
+        <CommandBinding Command="Close" Executed="OnCloseExecuted" />
+    </Window.CommandBindings>
+    <Window.InputBindings>
+        <KeyBinding Command="Close" Key="Escape" />
+    </Window.InputBindings>-->
 
     <Window.Resources>
         <!--ArcGIS Pro dark and light themes are overriden with several style resources. 
@@ -36,7 +43,7 @@
                 <extensions:DesignOnlyResourceDictionary
                     Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
             </ResourceDictionary.MergedDictionaries>
-           
+
             <Style x:Key="Checkbox" TargetType="CheckBox">
                 <Setter Property="Background" Value="White" />
                 <Setter Property="Margin" Value="0,0,10,0" />
@@ -118,7 +125,7 @@
                 Command="{Binding CloseCommand}"
                 Style="{DynamicResource Esri_ButtonClose}"
                 Visibility="{Binding IsSingleMode, Converter={StaticResource VisibleIfFalseConverter}}" />
-            
+
             <!-- Listbox visibility is set in viewmodel 
             and depends on Single/Multiselection mode. -->
             <ListBox x:Name="SingleSelection"
@@ -156,6 +163,7 @@
                 </ListBox.ItemContainerStyle>
             </ListBox>
 
+            <Button Width="1" Height="1" Background="Transparent" BorderBrush="Transparent" IsCancel="True" />
         </DockPanel>
     </Grid>
 </Window>
