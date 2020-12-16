@@ -93,14 +93,14 @@ namespace ProSuite.AGP.Solution.LoggerUI
         private void OpenLogMessage(object msg)
         {
             var message = (LoggingEventItem) msg;
-
-			// TODO display UI with current log message info
 			_msg.Info($"Open message: {message?.Time} {message?.Message}");
+
+			LogMessageActionEvent.Publish(new LogMessageActionEventArgs(message, LogMessageAction.Details));
 		}
 
-        #endregion
+		#endregion
 
-        private static RelayCommand _openLinkMessage;
+		private static RelayCommand _openLinkMessage;
         public static RelayCommand OpenLinkMessage
         {
             get

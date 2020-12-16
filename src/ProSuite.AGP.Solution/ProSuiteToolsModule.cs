@@ -140,6 +140,7 @@ namespace ProSuite.AGP.Solution
 
 			LayersAddedEvent.Subscribe(OnLayerAdded);
 			ProSuiteConfigChangedEvent.Subscribe(OnConfigurationChanged);
+			LogMessageActionEvent.Subscribe(OnLogMessageActionRequested);
 
 			StartToolMicroserviceClientAsync().GetAwaiter();
 
@@ -163,10 +164,9 @@ namespace ProSuite.AGP.Solution
 		{
 			base.Uninitialize();
 
-			//ProSuitePro.ProSuiteManager.QAManager.OnStatusChanged -= QAManager_OnStatusChanged;
-			//ProjectItemsChangedEvent.Unsubscribe(OnProjectItemsChanged);
 			LayersAddedEvent.Unsubscribe(OnLayerAdded);
-			ProSuiteConfigChangedEvent.Subscribe(OnConfigurationChanged);
+			ProSuiteConfigChangedEvent.Unsubscribe(OnConfigurationChanged);
+			LogMessageActionEvent.Unsubscribe(OnLogMessageActionRequested);
 
 			ToolMicroserviceClient?.Disconnect();
 		}
@@ -212,6 +212,26 @@ namespace ProSuite.AGP.Solution
 
 			// notify QAManager than config is changed via
 			OnQAConfigurationChanged?.Invoke(this, new ProSuiteQAConfigEventArgs(configArgs.ServerConfigurations));
+		}
+
+		private void OnLogMessageActionRequested(LogMessageActionEventArgs logActionArgs)
+		{
+			if (logActionArgs.MessageAction == LogMessageAction.Details)
+			{
+				// TODO algr temporary here
+				var _prosuiteconfigdialog = new LogMessageDetailsDialog();
+				_prosuiteconfigdialog.Owner = FrameworkApplication.Current.MainWindow;
+				_prosuiteconfigdialog.DataContext = new LogMessageDetailsViewModel(logActionArgs.LogMessage);
+
+				if (_prosuiteconfigdialog.ShowDialog() ?? true)
+				{
+
+					_msg.Debug("Log message copied into clipboard");
+
+				}
+			}
+			else
+				_msg.Debug("Unkown LogMessage action");
 		}
 
 		internal static void StartQAGPServer(ProSuiteQAServiceType type)
@@ -466,11 +486,15 @@ namespace ProSuite.AGP.Solution
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 		// TODO algr: temporary tests
-		protected override void OnClick()
+		protected override async void OnClick()
 		{
 			var window = FrameworkApplication.ActiveWindow as ArcGIS.Desktop.Core.IProjectWindow;
 			var item = window?.SelectedItems.First();
-			_msg.Info($"Worklist could be initialized from definition file {item.Path}");
+			if (item != null)
+			{
+				_msg.Info($"Open worklist file {item.Path}");
+				//await ProSuiteToolsModule.OpenIssuesWorklist(item.Path);
+			}
 		}
 	}
 

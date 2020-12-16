@@ -105,6 +105,11 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Editing\RemoveOverlapsTool.cs" />
+    <Compile Include="LoggerUI\LogMessageActionEvent.cs" />
+    <Compile Include="LoggerUI\LogMessageDetailsDialog.xaml.cs">
+      <DependentUpon>LogMessageDetailsDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="LoggerUI\LogMessageDetailsViewModel.cs" />
     <Compile Include="ProTrials\CartoProcess\CalculateControlPoints.cs" />
     <Compile Include="ProTrials\CartoProcess\CartoProcessDockpane.xaml.cs">
       <DependentUpon>CartoProcessDockpane.xaml</DependentUpon>
@@ -186,6 +191,10 @@
     <Compile Include="WorkListUI\SelectionWorkListVm.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="LoggerUI\LogMessageDetailsDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ProTrials\CartoProcess\CartoProcessDockpane.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
