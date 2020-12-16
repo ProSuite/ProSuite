@@ -74,7 +74,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			get
 			{
-				_goNextItemCmd = new RelayCommand(() => GoNextItem(), () => true);
+				_goNextItemCmd = new RelayCommand(execute: () => GoNextItem(),
+				                                  canExecute: () => CurrentWorkList.CanGoNext());
 				return _goNextItemCmd;
 			}
 		}
@@ -83,7 +84,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			get
 			{
-				_goNearestItemCmd = new RelayCommand(() => GoNearestItem(), () => true);
+				_goNearestItemCmd =
+					new RelayCommand(() => GoNearestItem(), () => CurrentWorkList.CanGoNearest());
 				return _goNearestItemCmd;
 			}
 		}
@@ -92,7 +94,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			get
 			{
-				_goFirstItemCmd = new RelayCommand(() => GoFirstItem(), () => true);
+				_goFirstItemCmd =
+					new RelayCommand(() => GoFirstItem(), () => CurrentWorkList.CanGoFirst());
 				return _goFirstItemCmd;
 			}
 		}
@@ -110,7 +113,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			get
 			{
-				_goPreviousItemCmd = new RelayCommand(() => GoPreviousItem(), () => true);
+				_goPreviousItemCmd =
+					new RelayCommand(() => GoPreviousItem(), () => CurrentWorkList.CanGoPrevious());
 				return _goPreviousItemCmd;
 			}
 		}

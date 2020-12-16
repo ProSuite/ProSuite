@@ -26,12 +26,12 @@
         <SolidColorBrush Opacity="0.7" Color="White" />
     </Window.Background>
 
-    <Window.CommandBindings>
+    <!--<Window.CommandBindings>
         <CommandBinding Command="Close" Executed="OnCloseExecuted" />
     </Window.CommandBindings>
     <Window.InputBindings>
         <KeyBinding Command="Close" Key="Escape" />
-    </Window.InputBindings>
+    </Window.InputBindings>-->
 
     <Window.Resources>
         <!--ArcGIS Pro dark and light themes are overriden with several style resources. 
