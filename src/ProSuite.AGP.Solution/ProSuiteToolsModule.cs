@@ -21,7 +21,10 @@ using System.Windows;
 using ProSuite.AGP.Solution.Commons;
 using ProSuite.AGP.Solution.ConfigUI;
 using ProSuite.AGP.Solution.WorkLists;
+using ProSuite.AGP.WorkList;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Application.Configuration;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Microservices.Client;
 using ProSuite.Microservices.Client.AGP;
 
@@ -487,12 +490,22 @@ namespace ProSuite.AGP.Solution
 		// TODO algr: temporary tests
 		protected override async void OnClick()
 		{
-			var window = FrameworkApplication.ActiveWindow as ArcGIS.Desktop.Core.IProjectWindow;
-			var item = window?.SelectedItems.First();
-			if (item != null)
+			try
 			{
-				_msg.Info($"Open worklist file {item.Path}");
-				//await ProSuiteToolsModule.OpenIssuesWorklist(item.Path);
+				var window = FrameworkApplication.ActiveWindow as IProjectWindow;
+				var path = window?.SelectedItems.First().Path;
+				if (path != null)
+				{
+					//string workListName = WorkListUtils.GetName(path);
+					//var factory = new XmlBasedWorkListFactory(path, workListName);
+
+					_msg.Info($"Open worklist file {path}");
+					await ProSuiteToolsModule.OpenIssuesWorklist(path);
+				}
+			}
+			catch (Exception ex)
+			{
+				_msg.Error("Open WorkList error", ex);
 			}
 		}
 	}

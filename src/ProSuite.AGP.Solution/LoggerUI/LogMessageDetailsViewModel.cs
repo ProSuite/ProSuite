@@ -1,3 +1,4 @@
+using System;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.AGP.Solution.ConfigUI;
@@ -25,6 +26,8 @@ namespace ProSuite.AGP.Solution.LoggerUI
 
 		public string CurrentUser => EnvironmentUtils.UserDisplayName;
 
+		public string LogMessage => BuildMessageString();
+
 		public string ClipboardMessage => BuildStringForClipboard();
 
 		private RelayCommand _cmdCopyDetails;
@@ -44,6 +47,24 @@ namespace ProSuite.AGP.Solution.LoggerUI
 			sb.AppendLine($"User:\t\t{CurrentUser}");
 			sb.AppendLine($"Source:\t\t{LogItem.Source}");
 			sb.AppendLine($"Message:\t{LogItem.Message}");
+			if (!String.IsNullOrEmpty(LogItem.ExceptionMessage))
+			{
+				sb.AppendLine($"Exception:");
+				sb.AppendLine($"{LogItem.ExceptionMessage}");
+			}
+			return sb.ToString();
+		}
+
+		private string BuildMessageString()
+		{
+			var sb = new StringBuilder();
+			sb.AppendLine($"{LogItem.Message}");
+			if (! String.IsNullOrEmpty(LogItem.ExceptionMessage))
+			{
+				sb.AppendLine($"Exception:");
+				sb.AppendLine($"{LogItem.ExceptionMessage}");
+			}
+
 			return sb.ToString();
 		}
 

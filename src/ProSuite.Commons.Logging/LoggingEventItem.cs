@@ -23,11 +23,13 @@ namespace ProSuite.Commons.Logging
 			Time = logEvent.TimeStamp;
 			Message = logEvent.RenderedMessage;
 			Source = logEvent.LoggerName;
+			ExceptionMessage = logEvent.ExceptionObject?.StackTrace ?? String.Empty;
 		}
 
 		public LogType Type { get;}
 		public DateTime Time { get;}
 		public string Message { get;}
 		public string Source { get; }
+		public string ExceptionMessage { get; }
 	}
 }
