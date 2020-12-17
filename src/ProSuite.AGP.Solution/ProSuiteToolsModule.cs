@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using ProSuite.AGP.Solution.Commons;
 using ProSuite.AGP.Solution.ConfigUI;
 using ProSuite.AGP.Solution.WorkLists;
@@ -218,16 +219,14 @@ namespace ProSuite.AGP.Solution
 		{
 			if (logActionArgs.MessageAction == LogMessageAction.Details)
 			{
-				// TODO algr temporary here
+				// TODO create dialog only once?
 				var _prosuiteconfigdialog = new LogMessageDetailsDialog();
-				_prosuiteconfigdialog.Owner = FrameworkApplication.Current.MainWindow;
-				_prosuiteconfigdialog.DataContext = new LogMessageDetailsViewModel(logActionArgs.LogMessage);
-
+				var logDetailsViewModel = new LogMessageDetailsViewModel(logActionArgs.LogMessage);
+				_prosuiteconfigdialog.DataContext = logDetailsViewModel;
 				if (_prosuiteconfigdialog.ShowDialog() ?? true)
 				{
-
+					Clipboard.SetText(logDetailsViewModel.ClipboardMessage);
 					_msg.Debug("Log message copied into clipboard");
-
 				}
 			}
 			else

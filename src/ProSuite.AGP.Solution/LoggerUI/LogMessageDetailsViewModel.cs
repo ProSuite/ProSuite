@@ -1,9 +1,10 @@
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.AGP.Solution.ConfigUI;
-using System.Windows.Input;
-using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons;
 using ProSuite.Commons.Logging;
+using System.Text;
+using System.Windows.Input;
 
 namespace ProSuite.AGP.Solution.LoggerUI
 {
@@ -14,13 +15,17 @@ namespace ProSuite.AGP.Solution.LoggerUI
 			LogItem = logItem;
 		}	
 
-		public LoggingEventItem LogItem { get; set; }
+		public LoggingEventItem LogItem { get; }
 
 		public string MessageType => LogItem.Type.ToString().ToUpper();
 
-		public string MessageTime => LogItem.Time.ToShortTimeString();
+		public string MessageTime => LogItem.Time.ToLongTimeString();
 
 		public string MessageDate => LogItem.Time.ToShortDateString();
+
+		public string CurrentUser => EnvironmentUtils.UserDisplayName;
+
+		public string ClipboardMessage => BuildStringForClipboard();
 
 		private RelayCommand _cmdCopyDetails;
 		public ICommand CmdCopyDetails => _cmdCopyDetails ??
@@ -29,6 +34,18 @@ namespace ProSuite.AGP.Solution.LoggerUI
 		private RelayCommand _cmdCancelDetails;
 		public ICommand CmdCancelDetails => _cmdCancelDetails ??
 											(_cmdCancelDetails = new RelayCommand(parameter => CloseSettingsWindow(parameter, false), () => true));
+
+		private string BuildStringForClipboard()
+		{
+			var sb = new StringBuilder();
+			sb.AppendLine($"Level:\t\t{MessageType}");
+			sb.AppendLine($"Date:\t\t{MessageDate}");
+			sb.AppendLine($"Time:\t\t{MessageTime}");
+			sb.AppendLine($"User:\t\t{CurrentUser}");
+			sb.AppendLine($"Source:\t\t{LogItem.Source}");
+			sb.AppendLine($"Message:\t{LogItem.Message}");
+			return sb.ToString();
+		}
 
 		private void CloseSettingsWindow(object parameter, bool saveSettings)
 		{
