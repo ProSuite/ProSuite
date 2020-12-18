@@ -94,6 +94,7 @@
     <Compile Include="Geodatabase\EditOperationObserverBase.cs" />
     <Compile Include="Geodatabase\EditStateInfo.cs" />
     <Compile Include="Geodatabase\EnumerableCursor.cs" />
+    <Compile Include="Geodatabase\IWorkspaceDbConnectionProvider.cs" />
     <Compile Include="Geodatabase\ObjectClassComparer.cs" />
     <Compile Include="Geodatabase\FeatureStorageUtils.cs" />
     <Compile Include="Geodatabase\FieldComparison.cs" />

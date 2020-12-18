@@ -191,10 +191,6 @@
     <Compile Include="QA\VerificationProgressEventArgs.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\EsriDE.Commons\src\EsriDE.Commons.AO\EsriDE.Commons.AO.csproj">
-      <Project>{FC86671A-FDF4-449C-8B95-C4CDE4AFE775}</Project>
-      <Name>EsriDE.Commons.AO</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">
       <Project>{7E4B0861-83ED-4D12-BE27-93C9053C88CA}</Project>
       <Name>ProSuite.Commons.AO</Name>

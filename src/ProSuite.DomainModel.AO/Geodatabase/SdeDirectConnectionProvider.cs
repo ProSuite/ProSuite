@@ -1,6 +1,5 @@
 using System;
 using ESRI.ArcGIS.Geodatabase;
-using EsriDE.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
