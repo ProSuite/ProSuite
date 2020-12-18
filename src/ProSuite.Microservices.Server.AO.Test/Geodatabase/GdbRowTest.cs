@@ -1,11 +1,11 @@
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using EsriDE.ProSuite.Microservices.Client;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test;
+using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.Microservices.Server.AO.Geodatabase;
 
@@ -37,7 +37,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geodatabase
 
 			IFeatureClass realFeatureClass = DatasetUtils.OpenFeatureClass(ws, tlmStrasse);
 
-			var objectClassMsg = ProtobufConversionUtils.ToObjectClassMsg(realFeatureClass, true);
+			var objectClassMsg = ProtobufGdbUtils.ToObjectClassMsg(realFeatureClass, true);
 
 			GdbTableContainer gdbTableContainer =
 				ProtobufConversionUtils.CreateGdbTableContainer(
@@ -69,7 +69,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geodatabase
 			{
 				// TODO: Move all this to separate project referenced by both client and server
 				GdbObjectMsg gdbObjectMsg =
-					ProtobufAoConversionUtils.ToGdbObjectMsg(feature, false, true);
+					ProtobufGdbUtils.ToGdbObjectMsg(feature, false, true);
 
 				GdbRow gdbRow =
 					ProtobufConversionUtils.FromGdbObjectMsg(
@@ -114,7 +114,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geodatabase
 			                          {
 				                          ClassHandle = -1,
 				                          ObjectId = 42,
-				                          Shape = ProtobufConversionUtils.ToShapeMsg(shape)
+				                          Shape = ProtobufGeometryUtils.ToShapeMsg(shape)
 			                          };
 
 			GdbFeatureClass fClass =

@@ -11,6 +11,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Serialization;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test;
+using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.Microservices.Server.AO.Geodatabase;
 
@@ -40,11 +41,11 @@ namespace ProSuite.Microservices.Server.AO.Test
 
 			var polygon = (IPolygon) GeometryUtils.FromXmlFile(xmlFile);
 
-			var shapeMsg = ProtobufConversionUtils.ToShapeMsg(
+			var shapeMsg = ProtobufGeometryUtils.ToShapeMsg(
 				polygon, ShapeMsg.FormatOneofCase.EsriShape,
 				SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml);
 
-			IGeometry rehydrated = ProtobufConversionUtils.FromShapeMsg(shapeMsg);
+			IGeometry rehydrated = ProtobufGeometryUtils.FromShapeMsg(shapeMsg);
 
 			Assert.NotNull(rehydrated);
 			Assert.IsTrue(GeometryUtils.AreEqual(polygon, rehydrated));
@@ -60,7 +61,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 				                  Wkb = ByteString.CopyFrom(wkb)
 			                  };
 
-			IGeometry rehydratedFromWkb = ProtobufConversionUtils.FromShapeMsg(wkbShapeMsg);
+			IGeometry rehydratedFromWkb = ProtobufGeometryUtils.FromShapeMsg(wkbShapeMsg);
 
 			Assert.IsTrue(GeometryUtils.AreEqual(polygon, rehydratedFromWkb));
 			Assert.IsTrue(
@@ -87,7 +88,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 			                  };
 
 			IEnvelope rehydratedEnvelope =
-				(IEnvelope) ProtobufConversionUtils.FromShapeMsg(envShapeMsg);
+				(IEnvelope) ProtobufGeometryUtils.FromShapeMsg(envShapeMsg);
 
 			Assert.IsTrue(GeometryUtils.AreEqual(envelope, rehydratedEnvelope));
 		}
@@ -107,7 +108,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 
 			for (int i = 0; i < runCount; i++)
 			{
-				shapeMsg = ProtobufConversionUtils.ToShapeMsg(polygon);
+				shapeMsg = ProtobufGeometryUtils.ToShapeMsg(polygon);
 			}
 
 			long dehydrationAvg = watch.ElapsedMilliseconds / runCount;
@@ -121,7 +122,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 			IGeometry rehydrated = null;
 			for (int i = 0; i < runCount; i++)
 			{
-				rehydrated = ProtobufConversionUtils.FromShapeMsg(shapeMsg);
+				rehydrated = ProtobufGeometryUtils.FromShapeMsg(shapeMsg);
 
 				// This is almost free:
 				((IPointCollection) rehydrated).QueryPoint(23, point);
@@ -147,9 +148,9 @@ namespace ProSuite.Microservices.Server.AO.Test
 				GeometryFactory.CreateEnvelope(2600000.1234, 1200000.987654, 2601000.12,
 				                               1201000.98);
 
-			EnvelopeMsg envelopeMsg = ProtobufConversionUtils.ToEnvelopeMsg(env);
+			EnvelopeMsg envelopeMsg = ProtobufGeometryUtils.ToEnvelopeMsg(env);
 
-			IEnvelope rehydrated = ProtobufConversionUtils.FromEnvelopeMsg(envelopeMsg);
+			IEnvelope rehydrated = ProtobufGeometryUtils.FromEnvelopeMsg(envelopeMsg);
 
 			Assert.IsTrue(GeometryUtils.AreEqual(env, rehydrated));
 		}
@@ -227,7 +228,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 			ICollection<GdbObjectMsg> dehydrated = new List<GdbObjectMsg>();
 			HashSet<ObjectClassMsg> dehydratedClasses = new HashSet<ObjectClassMsg>();
 
-			ProtobufConversionUtils.ToGdbObjectMsgList(features, dehydrated, dehydratedClasses);
+			ProtobufGdbUtils.ToGdbObjectMsgList(features, dehydrated, dehydratedClasses);
 
 			IList<IFeature> rehydrated =
 				ProtobufConversionUtils.FromGdbObjectMsgList(dehydrated, dehydratedClasses);
@@ -253,7 +254,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 		private static void AssertCanConvertToDtoAndBack(GdbFeature feature)
 		{
 			GdbObjectMsg dehydrated =
-				ProtobufConversionUtils.ToGdbObjectMsg(feature);
+				ProtobufGdbUtils.ToGdbObjectMsg(feature);
 
 			var featureClass = (GdbFeatureClass) feature.Class;
 

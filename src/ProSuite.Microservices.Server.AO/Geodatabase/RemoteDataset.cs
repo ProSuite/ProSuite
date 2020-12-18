@@ -6,6 +6,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
 
@@ -136,7 +137,7 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 		{
 			ShapeMsg searchGeoMsg =
 				filter is ISpatialFilter spatialFilter && spatialFilter.Geometry != null
-					? ProtobufConversionUtils.ToShapeMsg(spatialFilter.Geometry)
+					? ProtobufGeometryUtils.ToShapeMsg(spatialFilter.Geometry)
 					: null;
 
 			var dataRequest = new DataRequest

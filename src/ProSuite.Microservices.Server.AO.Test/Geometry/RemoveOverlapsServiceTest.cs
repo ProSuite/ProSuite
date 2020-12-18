@@ -6,6 +6,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
+using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.Microservices.Server.AO.Geodatabase;
@@ -64,10 +65,10 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 				                           Shape = polygon2
 			                           };
 
-			var sourceFeatureMsg = ProtobufConversionUtils.ToGdbObjectMsg(sourceFeature);
-			var targetFeatureMsg = ProtobufConversionUtils.ToGdbObjectMsg(targetFeature);
+			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(sourceFeature);
+			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(targetFeature);
 
-			var objectClassMsg = ProtobufConversionUtils.ToObjectClassMsg(sourceFeature.Class);
+			var objectClassMsg = ProtobufGdbUtils.ToObjectClassMsg(sourceFeature.Class);
 
 			CalculateOverlapsRequest calculationRequest = new CalculateOverlapsRequest()
 			                                              {
@@ -94,7 +95,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 				response.Overlaps.SelectMany(kvp => kvp.Overlaps).ToList();
 
 			List<IPolygon> resultPolys =
-				ProtobufConversionUtils.FromShapeMsgList<IPolygon>(shapeBufferList);
+				ProtobufGeometryUtils.FromShapeMsgList<IPolygon>(shapeBufferList);
 
 			Assert.AreEqual(1, resultPolys.Count);
 
@@ -120,7 +121,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			Assert.AreEqual(new GdbObjectReference(sourceFeature), originalObjRef);
 
 			var updatedGeometry =
-				ProtobufConversionUtils.FromShapeMsg(resultByFeature.UpdatedGeometry);
+				ProtobufGeometryUtils.FromShapeMsg(resultByFeature.UpdatedGeometry);
 
 			Assert.IsNotNull(updatedGeometry);
 			Assert.AreEqual(1000 * 1000 * 3 / 4, ((IArea) updatedGeometry).Area);
@@ -166,10 +167,10 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			overlap.SpatialReference = sr;
 
-			var sourceFeatureMsg = ProtobufConversionUtils.ToGdbObjectMsg(sourceFeature);
-			var targetFeatureMsg = ProtobufConversionUtils.ToGdbObjectMsg(targetFeature);
+			var sourceFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(sourceFeature);
+			var targetFeatureMsg = ProtobufGdbUtils.ToGdbObjectMsg(targetFeature);
 
-			var objectClassMsg = ProtobufConversionUtils.ToObjectClassMsg(sourceFeature.Class);
+			var objectClassMsg = ProtobufGdbUtils.ToObjectClassMsg(sourceFeature.Class);
 
 			var removeRequest = new RemoveOverlapsRequest()
 			                    {
@@ -194,7 +195,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 				                                 ObjectId = sourceFeatureMsg.ObjectId
 			                                 };
 
-			overlapsMsg.Overlaps.Add(ProtobufConversionUtils.ToShapeMsg(overlap));
+			overlapsMsg.Overlaps.Add(ProtobufGeometryUtils.ToShapeMsg(overlap));
 
 			removeRequest.Overlaps.Add(overlapsMsg);
 
@@ -211,7 +212,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			Assert.AreEqual(new GdbObjectReference(sourceFeature), originalObjRef);
 
 			IGeometry updatedGeometry =
-				ProtobufConversionUtils.FromShapeMsg(resultByFeature.UpdatedGeometry);
+				ProtobufGeometryUtils.FromShapeMsg(resultByFeature.UpdatedGeometry);
 
 			Assert.IsNotNull(updatedGeometry);
 			Assert.AreEqual(1000 * 1000 * 3 / 4, ((IArea) updatedGeometry).Area);

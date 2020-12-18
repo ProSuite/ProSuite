@@ -9,6 +9,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.RemoveOverlaps;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.Microservices.Server.AO.Geodatabase;
@@ -46,7 +47,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 			foreach (var overlapByGdbRef
 				in selectableOverlaps.OverlapsBySourceRef)
 			{
-				var gdbObjRefMsg = ProtobufConversionUtils.ToGdbObjRefMsg(overlapByGdbRef.Key);
+				var gdbObjRefMsg = ProtobufGdbUtils.ToGdbObjRefMsg(overlapByGdbRef.Key);
 
 				var overlap = overlapByGdbRef.Value;
 
@@ -62,7 +63,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 					var srFormat = SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml;
 
 					overlapsMsg.Overlaps.Add(
-						ProtobufConversionUtils.ToShapeMsg(
+						ProtobufGeometryUtils.ToShapeMsg(
 							geometry, shapeFormat, srFormat));
 
 					if (_msg.IsVerboseDebugEnabled)
@@ -115,7 +116,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 				IFeatureClass fClass = (IFeatureClass) container.GetByClassId(gdbRef.ClassId);
 
 				List<IGeometry> overlapGeometries =
-					ProtobufConversionUtils.FromShapeMsgList<IGeometry>(
+					ProtobufGeometryUtils.FromShapeMsgList<IGeometry>(
 						overlapMsg.Overlaps,
 						DatasetUtils.GetSpatialReference(fClass));
 
@@ -145,7 +146,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 					IGeometry newGeometry = keyValuePair.Value;
 
 					GdbObjectMsg targetFeatureMsg =
-						ProtobufConversionUtils.ToGdbObjectMsg(
+						ProtobufGdbUtils.ToGdbObjectMsg(
 							feature, newGeometry, feature.Class.ObjectClassID);
 
 					response.TargetFeaturesToUpdate.Add(targetFeatureMsg);
@@ -188,22 +189,21 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 
 				// Original feature's geometry does not need to be transported back.
 				resultGeometriesByFeature.OriginalFeatureRef =
-					ProtobufConversionUtils.ToGdbObjRefMsg(feature);
+					ProtobufGdbUtils.ToGdbObjRefMsg(feature);
 
 				resultGeometriesByFeature.UpdatedGeometry =
-					ProtobufConversionUtils.ToShapeMsg(resultByFeature.LargestResult);
+					ProtobufGeometryUtils.ToShapeMsg(resultByFeature.LargestResult);
 
 				foreach (var insertGeometry in resultByFeature.NonLargestResults)
 				{
 					resultGeometriesByFeature.NewGeometries.Add(
-						ProtobufConversionUtils
-							.ToShapeMsg(insertGeometry));
+						ProtobufGeometryUtils.ToShapeMsg(insertGeometry));
 				}
 
 				foreach (IGeometry newOverlapFeature in resultByFeature.OverlappingGeometries)
 				{
 					resultGeometriesByFeature.NewGeometries.Add(
-						ProtobufConversionUtils.ToShapeMsg(
+						ProtobufGeometryUtils.ToShapeMsg(
 							newOverlapFeature));
 				}
 

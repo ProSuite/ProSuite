@@ -108,6 +108,10 @@
       <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
       <Name>ProSuite.Commons</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Microservices.AO\ProSuite.Microservices.AO.csproj">
+      <Project>{53E0297E-F959-4D5D-B1CB-33D3A1D96623}</Project>
+      <Name>ProSuite.Microservices.AO</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Microservices.Server.AO\ProSuite.Microservices.Server.AO.csproj">
       <Project>{F997B55F-C442-4224-A573-AE39F72BEB4A}</Project>
       <Name>ProSuite.Microservices.Server.AO</Name>

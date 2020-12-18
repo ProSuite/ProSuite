@@ -4,7 +4,7 @@ using ProSuite.Microservices.Definitions.Shared;
 
 namespace ProSuite.Microservices.Client
 {
-	public static class ProtobufConversionUtils
+	public static class ProtobufGeomUtils
 	{
 		[CanBeNull]
 		public static EnvelopeMsg ToEnvelopeMsg([CanBeNull] EnvelopeXY envelope)
