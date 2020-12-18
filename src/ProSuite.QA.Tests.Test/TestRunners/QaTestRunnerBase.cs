@@ -11,7 +11,6 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 		private readonly List<QaError> _errors = new List<QaError>();
 		private readonly List<IGeometry> _errorGeometries = new List<IGeometry>();
 
-		[CLSCompliant(false)]
 		protected QaTestRunnerBase() { }
 
 		public bool LogErrors { get; set; } = true;
@@ -27,7 +26,6 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 		public IList<QaError> Errors => _errors;
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IList<IGeometry> ErrorGeometries => _errorGeometries;
 
 		protected void ProcessError(object sender, QaErrorEventArgs e)

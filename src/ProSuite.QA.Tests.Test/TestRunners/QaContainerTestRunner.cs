@@ -10,7 +10,6 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 {
 	public class QaContainerTestRunner : QaTestRunnerBase
 	{
-		[CLSCompliant(false)]
 		public QaContainerTestRunner(double tileSize, params ITest[] tests)
 		{
 			TestContainer = new TestContainer {TileSize = tileSize};
@@ -25,21 +24,18 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 		[NotNull]
 		public TestContainer TestContainer { get; }
 
-		[CLSCompliant(false)]
 		public int Execute([NotNull] IEnvelope boundingBox)
 		{
 			TestContainer.KeepErrorGeometry = KeepGeometry;
 			return TestContainer.Execute(boundingBox);
 		}
 
-		[CLSCompliant(false)]
 		public int Execute([NotNull] IPolygon polygon)
 		{
 			TestContainer.KeepErrorGeometry = KeepGeometry;
 			return TestContainer.Execute(polygon);
 		}
 
-		[CLSCompliant(false)]
 		public int Execute([NotNull] IList<ISelectionSet> selectionsList)
 		{
 			TestContainer.KeepErrorGeometry = KeepGeometry;

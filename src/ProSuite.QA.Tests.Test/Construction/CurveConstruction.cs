@@ -5,7 +5,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests.Test.Construction
 {
-	[CLSCompliant(false)]
 	public class CurveConstruction
 	{
 		public CurveConstruction([NotNull] IPolycurve emptyCurve, double x, double y)

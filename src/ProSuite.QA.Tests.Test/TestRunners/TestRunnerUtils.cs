@@ -9,7 +9,6 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.QA.Tests.Test.TestRunners
 {
-	[CLSCompliant(false)]
 	public static class TestRunnerUtils
 	{
 		public static void RunTests([NotNull] ITest test,
