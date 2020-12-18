@@ -192,9 +192,13 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 
 		public bool CanUpgrade => false;
 		public bool CurrentRelease { get; set; }
+
 		public int MajorVersion { get; } = 3;
 		public int MinorVersion { get; } = 0;
 		public int BugfixVersion { get; } = 0;
+
+		// NOTE: This property has been added in AO11 
+		public bool ForceCurrentRelease => false;
 
 		#endregion
 
