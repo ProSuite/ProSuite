@@ -8,7 +8,7 @@
         xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
         xmlns:ui="clr-namespace:ProSuite.AGP.Solution.LoggerUI"
         mc:Ignorable="d"
-        Title="Message details" Height="293.308" Width="503.542" MinWidth="300" MinHeight="300"
+        Title="Message details" Height="300" Width="550" MinWidth="300" MinHeight="300"
         WindowStartupLocation="CenterOwner"
         d:DataContext="{Binding Path=LogMessageDetailsViewModel}">
     <controls:ProWindow.Resources>

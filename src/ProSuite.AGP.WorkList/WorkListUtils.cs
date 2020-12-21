@@ -11,6 +11,7 @@ using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Xml;
 using ProSuite.DomainModel.Core;
 
 namespace ProSuite.AGP.WorkList
@@ -145,6 +146,17 @@ namespace ProSuite.AGP.WorkList
 			// work list file => WORKLISTNAME.xml.wl
 			string temp = Path.GetFileNameWithoutExtension(path);
 			return Path.GetFileNameWithoutExtension(temp);
+		}
+
+		public static string GetWorklistPath(string path)
+		{
+			if (! path.EndsWith("wl"))
+				return path;
+
+			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
+
+			XmlWorkListDefinition definition = helper.ReadFromFile(path);
+			return definition.Workspaces.Select(w => w.Path).FirstOrDefault();
 		}
 	}
 }

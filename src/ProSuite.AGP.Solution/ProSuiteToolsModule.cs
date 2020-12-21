@@ -25,6 +25,7 @@ using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Application.Configuration;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Client;
 using ProSuite.Microservices.Client.AGP;
 
@@ -298,15 +299,16 @@ namespace ProSuite.AGP.Solution
 			}
 		}
 
-		public static async Task<bool> OpenIssuesWorklist(string path)
+		public static async Task<bool> OpenIssuesWorklist([NotNull]string path)
 		{
-			var environment = new DatabaseWorkEnvironment(path);
+			var environment = new DatabaseWorkEnvironment(WorkListUtils.GetWorklistPath(path));
 			await QueuedTask.Run(async () =>
 			{
 				await WorkListsModule.Current.CreateWorkListAsync(environment);
 			});
+			if (environment.UniqueName != null)
+				WorkListsModule.Current.ShowView(environment.UniqueName);
 
-			WorkListsModule.Current.ShowView(environment.UniqueName);
 			return true;
 		}
 
@@ -317,7 +319,9 @@ namespace ProSuite.AGP.Solution
 			{
 				await WorkListsModule.Current.CreateWorkListAsync(environment);
 			});
-			WorkListsModule.Current.ShowView(environment.UniqueName);
+			if (environment.UniqueName != null)
+				WorkListsModule.Current.ShowView(environment.UniqueName);
+
 			return true;
 		}
 
@@ -448,7 +452,7 @@ namespace ProSuite.AGP.Solution
 		}
 	}
 
-	internal class AddWorkListFile : Button
+	internal class ImportWorkListFile : Button
 	{
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -496,9 +500,6 @@ namespace ProSuite.AGP.Solution
 				var path = window?.SelectedItems.First().Path;
 				if (path != null)
 				{
-					//string workListName = WorkListUtils.GetName(path);
-					//var factory = new XmlBasedWorkListFactory(path, workListName);
-
 					_msg.Info($"Open worklist file {path}");
 					await ProSuiteToolsModule.OpenIssuesWorklist(path);
 				}
