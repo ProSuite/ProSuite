@@ -11,6 +11,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -34,11 +35,11 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private RelayCommand _zoomToAllCmd;
 		private RelayCommand _pickWorkItemCmd;
 		private RelayCommand _goNearestItemCmd;
-		private RelayCommand _flashCurrentItemCmd;
-		private RelayCommand _flashInvolvedSelectedCmd;
+		private RelayCommand _flashCurrentFeatureCmd;
 		private InvolvedObjectRow _selectedInvolvedObject;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		private RelayCommand _selectCurrentFeatureCmd;
 
 		public ICommand ClearSelectionCmd =>
 			FrameworkApplication.GetPlugInWrapper(
@@ -123,7 +124,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			get
 			{
-				_zoomToCmd = new RelayCommand(ZoomToAsync, () => true);
+				_zoomToCmd = new RelayCommand(ZoomToAsync, () => CurrentWorkList.Current!=null);
 				return _zoomToCmd;
 			}
 		}
@@ -132,7 +133,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			get
 			{
-				_panToCmd = new RelayCommand(PanToAsync, () => true);
+				_panToCmd = new RelayCommand(PanToAsync, () => CurrentWorkList.Current != null);
 				return _panToCmd;
 			}
 		}
@@ -146,40 +147,24 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}
 		}
 
-		public RelayCommand FlashCurrentItemCmd
+		public RelayCommand SelectCurrentFeatureCmd
 		{
 			get
 			{
-				_flashCurrentItemCmd = new RelayCommand(Flash, () => true);
-				return _flashCurrentItemCmd;
+				_selectCurrentFeatureCmd =
+					new RelayCommand(SelectCurrentFeature, () => CurrentWorkList.Current != null);
+				return _selectCurrentFeatureCmd;
 			}
 		}
 
-		public RelayCommand FlashInvolvedSelectedCmd
+		public RelayCommand FlashCurrentFeatureCmd
 		{
 			get
 			{
-				_flashInvolvedSelectedCmd =
-					new RelayCommand(FlashInvolvedRow, () => SelectedInvolvedObject != null);
-				return _flashInvolvedSelectedCmd;
+				_flashCurrentFeatureCmd =
+					new RelayCommand(FlashCurrentFeature, () => CurrentWorkList.Current != null);
+				return _flashCurrentFeatureCmd;
 			}
-		}
-
-		private void FlashInvolvedRow()
-		{
-			ViewUtils.Try(() =>
-			{
-				Layer targetLayer = GetFeatureLayerByName(SelectedInvolvedObject.Name);
-				if (targetLayer == null)
-				{
-					_msg.Warn(
-						$"Cannot find layer '{SelectedInvolvedObject.Name}' of involved object");
-					return;
-				}
-
-				MapView.Active.FlashFeature(targetLayer as FeatureLayer,
-				                            SelectedInvolvedObject.ObjectId);
-			}, _msg);
 		}
 
 		public WorkItemStatus Status
@@ -298,6 +283,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		private async Task ZoomToAsync()
 		{
+			
 			IWorkItem item = CurrentWorkList.Current;
 
 			if (item == null)
@@ -305,7 +291,9 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				return;
 			}
 
-			await MapView.Active.ZoomToAsync(GetEnvelope(item), TimeSpan.FromSeconds(_seconds));
+			var envelope = await QueuedTask.Run(() => GetEnvelope(item));
+
+			await MapView.Active.ZoomToAsync(envelope, TimeSpan.FromSeconds(_seconds));
 		}
 
 		private async Task PanToAsync()
@@ -317,7 +305,9 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				return;
 			}
 
-			await MapView.Active.PanToAsync(GetEnvelope(item), TimeSpan.FromSeconds(_seconds));
+			var envelope = await QueuedTask.Run(() => GetEnvelope(item));
+
+			await MapView.Active.PanToAsync(envelope, TimeSpan.FromSeconds(_seconds));
 		}
 
 		private async Task ZoomToAllAsync()
@@ -388,7 +378,28 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}, _msg);
 		}
 
-		private void Flash()
+		private void SelectCurrentFeature()
+		{
+			ViewUtils.Try(() =>
+			{
+				QueuedTask.Run(() =>
+				{
+					Dictionary<BasicFeatureLayer, List<long>> featureSet =
+						new Dictionary<BasicFeatureLayer, List<long>>();
+
+					var oid = CurrentWorkList.Current.Proxy.ObjectId;
+					var layers = GetLayersOfFeatureClass(CurrentWorkList.Current.Proxy.Table.Name);
+					SelectionUtils.ClearSelection(MapView.Active.Map);
+					foreach (var layer in layers)
+					{
+						var qf = new QueryFilter() {ObjectIDs = new List<long> {oid}};
+						layer.Select(qf, SelectionCombinationMethod.Add);
+					}
+				});
+			}, _msg);
+		}
+
+		private void FlashCurrentFeature()
 		{
 			ViewUtils.Try(() =>
 			{
@@ -419,12 +430,14 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}, _msg);
 		}
 
-		private IEnumerable<FeatureLayer> GetLayersOfFeatureClass(string fcName)
+		protected IEnumerable<FeatureLayer> GetLayersOfFeatureClass(string fcName)
 		{
 			IEnumerable<FeatureLayer> featureLayers = MapView.Active.Map.Layers
 			                                                 .OfType<FeatureLayer>();
 
-			return featureLayers.Where(layer => layer.GetFeatureClass().GetName() == fcName);
+			return ! featureLayers.Any()
+				       ? featureLayers
+				       : featureLayers.Where(layer => layer.GetFeatureClass().GetName() == fcName);
 		}
 
 		[CanBeNull]
@@ -444,7 +457,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 			return EnvelopeBuilder.CreateEnvelope(new Coordinate3D(xmin, ymin, zmax),
 			                                      new Coordinate3D(xmax, ymax, zmax),
-			                                      item.Extent.SpatialReference);
+			                                      item.Extent.SpatialReference)
+			                      .Expand(1.1, 1.1, true);
 		}
 	}
 }

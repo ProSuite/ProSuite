@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Desktop.Framework;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
@@ -19,7 +20,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private RelayCommand _zoomInvolvedAllCmd;
 		private RelayCommand _zoomInvolvedSelectedCmd;
 		private RelayCommand _flashInvolvedAllCmd;
-
+		private RelayCommand _flashInvolvedSelectedCmd;
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public IssueWorkListVm(IWorkList workList)
@@ -107,6 +108,32 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				_flashInvolvedAllCmd = new RelayCommand(FlashInvolvedAll, () => true);
 				return _flashInvolvedAllCmd;
 			}
+		}
+
+		public RelayCommand FlashInvolvedSelectedCmd
+		{
+			get
+			{
+				_flashInvolvedSelectedCmd =
+					new RelayCommand(FlashInvolvedSelected, () => SelectedInvolvedObject != null);
+				return _flashInvolvedSelectedCmd;
+			}
+		}
+
+		private void FlashInvolvedSelected()
+		{
+			ViewUtils.Try(() =>
+			{
+				QueuedTask.Run(() =>
+				{
+					FeatureLayer involvedLayer = GetFeatureLayerByName(SelectedInvolvedObject.Name);
+					if (involvedLayer == null)
+					{
+						return;
+					}
+					MapView.Active.FlashFeature(involvedLayer, SelectedInvolvedObject.ObjectId);
+				});
+			}, _msg);
 		}
 
 		private void FlashInvolvedAll()

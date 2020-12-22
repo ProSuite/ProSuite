@@ -40,17 +40,17 @@
                 </Button>
                 <Separator/>
                 <Button Command="{Binding ZoomToCmd}">
-                    <Image Source="../Images/ZoomTo16.png" Stretch="UniformToFill" ToolTip="Zoom to WorkItem"/>
+                    <Image Source="../Images/ZoomTo16.png" Stretch="UniformToFill" ToolTip="Zoom To Current Work Item"/>
                 </Button>
                 <Button Command="{Binding PanToCmd}">
-                    <Image Source="../Images/PanTo16.png" Stretch="UniformToFill" ToolTip="Pan to WorkItem"/>
+                    <Image Source="../Images/PanTo16.png" Stretch="UniformToFill" ToolTip="Pan To Current Work Item"/>
                 </Button>
                 <Button Command="{Binding ZoomToAllCmd}">
-                    <Image Source="../Images/ZoomToAll16.png" Stretch="UniformToFill" ToolTip="Zoom to extent of all WorkItems"/>
+                    <Image Source="../Images/ZoomToAll16.png" Stretch="UniformToFill" ToolTip="Zoom To Extent Of All  Work Items"/>
                 </Button>
                 <Separator/>
-                <Button Command="{Binding FlashCurrentItemCmd}">
-                    <Image Source="../Images/FlashCurrent16.png" Stretch="UniformToFill" ToolTip="Flash Current Item"/>
+                <Button Command="{Binding FlashCurrentFeatureCmd}">
+                    <Image Source="../Images/FlashCurrent16.png" Stretch="UniformToFill" ToolTip="Flash Current Work Item"/>
                 </Button>
                 <Separator/>
                 <Button Command="{Binding ClearSelectionCmd}">
@@ -76,15 +76,19 @@
             <ToolBarTray>
                 <ToolBar>
                     <DockPanel LastChildFill="True">
-                        <Label Content="Status: " />
-                        <CheckBox VerticalAlignment="Center" DockPanel.Dock="Left" IsChecked="{Binding Status, Mode=TwoWay, 
-                        Converter={StaticResource StatusEnumBooleanConverter}}" Margin="0,0,10,0"/>
-                        <Separator/>
-                        <DockPanel Dock="Right">
-                            <Label Content="Show"/>
-                            <ComboBox SelectedItem="{Binding CurrentWorkList.Visibility}" ItemsSource="{Binding Visibility}"/>
-                        </DockPanel>
+                        <Label DockPanel.Dock="Left"  Content="Status: " />
+                        <CheckBox VerticalAlignment="Center" IsChecked="{Binding Status, Mode=TwoWay, 
+                        Converter={StaticResource StatusEnumBooleanConverter}}"/>
                     </DockPanel>
+                    <Separator Margin="5,0" />
+                    <StackPanel  Orientation="Horizontal">
+                        <Label Content="Show"/>
+                        <ComboBox SelectedItem="{Binding CurrentWorkList.Visibility}" ItemsSource="{Binding Visibility}"/>
+                    </StackPanel>
+                    <Separator Margin="7,0"/>
+                    <Button Command="{Binding SelectCurrentFeatureCmd}" ToolTip="Select Current Work Item">
+                        <Image Source="../Images/SelectFeatures16.png" Stretch="UniformToFill"/>
+                    </Button>
                 </ToolBar>
             </ToolBarTray>
         </StackPanel>
