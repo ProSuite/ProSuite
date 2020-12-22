@@ -450,6 +450,10 @@
     <Resource Include="WorkListUI\Images\ZoomInvolvedSel16.png" />
     <Resource Include="WorkListUI\Images\ZoomInvolvedSel32.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\SelectFeatures16.png" />
+    <Resource Include="WorkListUI\Images\SelectFeatures32.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:
