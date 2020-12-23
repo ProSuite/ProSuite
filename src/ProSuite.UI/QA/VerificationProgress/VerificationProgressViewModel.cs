@@ -419,6 +419,21 @@ namespace ProSuite.UI.QA.VerificationProgress
 			return result;
 		}
 
+		public void Closing(object sender, CancelEventArgs e)
+		{
+			// Just in case the dialog is closed by the eXit button:
+			if (ProgressTracker == null)
+			{
+				return;
+			}
+
+			if (ProgressTracker.RemoteCallStatus ==
+			    ServiceCallStatus.Running)
+			{
+				ProgressTracker.CancelQualityVerification();
+			}
+		}
+
 		private void CancelOrClose()
 		{
 			Try(nameof(CancelOrClose),
