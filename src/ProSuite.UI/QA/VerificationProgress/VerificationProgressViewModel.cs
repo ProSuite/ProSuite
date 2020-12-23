@@ -55,6 +55,8 @@ namespace ProSuite.UI.QA.VerificationProgress
 		public VerificationProgressViewModel()
 		{
 			CancelButtonText = "Cancel";
+			DetailProgressVisible = Visibility.Hidden;
+			OverallProgressVisible = Visibility.Hidden;
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;

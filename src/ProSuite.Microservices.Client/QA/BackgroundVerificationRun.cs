@@ -351,13 +351,21 @@ namespace ProSuite.Microservices.Client.QA
 			serviceProgress.ProcessingMessage =
 				progressMsg.ProcessingStepMessage;
 
-			serviceProgress.OverallProgressTotalSteps =
-				progressMsg.OverallProgressTotalSteps;
+			if (progressMsg.OverallProgressTotalSteps > 0)
+			{
+				serviceProgress.OverallProgressTotalSteps =
+					progressMsg.OverallProgressTotalSteps;
+			}
+
 			serviceProgress.OverallProgressCurrentStep =
 				progressMsg.OverallProgressCurrentStep;
 
-			serviceProgress.DetailedProgressTotalSteps =
-				progressMsg.DetailedProgressTotalSteps;
+			if (progressMsg.DetailedProgressTotalSteps > 0)
+			{
+				serviceProgress.DetailedProgressTotalSteps =
+					progressMsg.DetailedProgressTotalSteps;
+			}
+
 			serviceProgress.DetailedProgressCurrentStep =
 				progressMsg.DetailedProgressCurrentStep;
 
