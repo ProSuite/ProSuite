@@ -19,8 +19,6 @@ namespace ProSuite.Microservices.Client
 
 		private const string _localhost = "localhost";
 
-		private readonly string _host;
-		private int _port;
 		private Health.HealthClient _healthClient;
 		private Process _startedProcess;
 
@@ -29,23 +27,27 @@ namespace ProSuite.Microservices.Client
 		                                 bool useTls = false,
 		                                 string clientCertificate = null)
 		{
-			_host = host;
-			_port = port;
+			HostName = host;
+			Port = port;
 
-			if (_port >= 0)
+			if (Port >= 0)
 			{
 				OpenChannel(useTls, clientCertificate);
 			}
 			else
 			{
 				_msg.DebugFormat(
-					"Microservice client initialized with port {0}. No channel opened yet.", _port);
+					"Microservice client initialized with port {0}. No channel opened yet.", Port);
 			}
 		}
 
 		protected MicroserviceClientBase([NotNull] ClientChannelConfig channelConfig)
 			: this(channelConfig.HostName, channelConfig.Port, channelConfig.UseTls,
 			       channelConfig.ClientCertificate) { }
+
+		public string HostName { get; }
+
+		public int Port { get; private set; }
 
 		[CanBeNull]
 		protected Channel Channel { get; set; }
@@ -74,7 +76,7 @@ namespace ProSuite.Microservices.Client
 		                                                      [CanBeNull] string extraArguments =
 			                                                      null)
 		{
-			if (! _host.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase))
+			if (! HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase))
 			{
 				return false;
 			}
@@ -94,7 +96,7 @@ namespace ProSuite.Microservices.Client
 		public void AllowStartingLocalServer([NotNull] string executable,
 		                                     [CanBeNull] string extraArguments = null)
 		{
-			if (! _host.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase))
+			if (! HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase))
 			{
 				return;
 			}
@@ -153,7 +155,7 @@ namespace ProSuite.Microservices.Client
 
 		protected void OpenChannel(bool useTls, string clientCertificate = null)
 		{
-			if (string.IsNullOrEmpty(_host))
+			if (string.IsNullOrEmpty(HostName))
 			{
 				_msg.Debug("Host name is null or empty. No channel opened.");
 				return;
@@ -165,9 +167,9 @@ namespace ProSuite.Microservices.Client
 				GrpcUtils.CreateChannelCredentials(useTls, clientCertificate);
 
 			Channel = GrpcUtils.CreateChannel(
-				_host, _port, credentials, enoughForLargeGeometries);
+				HostName, Port, credentials, enoughForLargeGeometries);
 
-			_msg.DebugFormat("Created grpc channel to {0} on port {1}", _host, _port);
+			_msg.DebugFormat("Created grpc channel to {0} on port {1}", HostName, Port);
 
 			_healthClient = new Health.HealthClient(Channel);
 
@@ -178,10 +180,10 @@ namespace ProSuite.Microservices.Client
 
 		private void StartLocalServer(string executable, string extraArguments)
 		{
-			if (_port < 0)
+			if (Port < 0)
 			{
 				// Get next ephemeral port, reopen the channel
-				_port = GetFreeTcpPort();
+				Port = GetFreeTcpPort();
 				OpenChannel(false);
 			}
 			else
@@ -203,7 +205,7 @@ namespace ProSuite.Microservices.Client
 				}
 			}
 
-			string arguments = $"-h {_host} -p {_port}";
+			string arguments = $"-h {HostName} -p {Port}";
 
 			if (! string.IsNullOrEmpty(extraArguments))
 			{
@@ -226,7 +228,7 @@ namespace ProSuite.Microservices.Client
 		{
 			healthClient = null;
 
-			if (_port < 0)
+			if (Port < 0)
 			{
 				// Avoid waiting for the timeout of the health check, if possible.
 				return false;
