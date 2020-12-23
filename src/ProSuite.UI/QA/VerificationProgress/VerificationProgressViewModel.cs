@@ -598,6 +598,12 @@ namespace ProSuite.UI.QA.VerificationProgress
 					TileInfoVisible = Visibility.Visible;
 					DetailProgressText = processingMessage;
 					break;
+				case VerificationProgressType.ProcessParallel:
+					RunningProgressTypeText = "Parallel test execution...";
+					OverallProgressText = currentTile == null ? "Standalone tests" : "Tiles";
+					OverallProgressVisible = Visibility.Visible;
+					DetailProgressText = processingMessage;
+					break;
 				// progress type Error does not change the label
 			}
 		}

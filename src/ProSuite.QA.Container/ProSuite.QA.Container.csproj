@@ -2,11 +2,11 @@
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
   <PropertyGroup>
     <ProjectGuid>{D51693C1-F9F6-425D-8CD6-8DFBF5A52F6F}</ProjectGuid>
-	<OutputType>Library</OutputType>
+    <OutputType>Library</OutputType>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-	<RootNamespace>ProSuite.QA.Container</RootNamespace>
+    <RootNamespace>ProSuite.QA.Container</RootNamespace>
     <AssemblyName>ProSuite.QA.Container</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
