@@ -299,9 +299,9 @@ namespace ProSuite.AGP.Solution
 			}
 		}
 
-		public static async Task<bool> OpenIssuesWorklist([NotNull]string path)
+		public static async Task<bool> OpenIssuesWorklist([NotNull]string wlpath)
 		{
-			var environment = new DatabaseWorkEnvironment(WorkListUtils.GetWorklistPath(path));
+			var environment = new DatabaseWorkEnvironment(WorkListUtils.GetWorklistPath(wlpath), wlpath);
 			await QueuedTask.Run(async () =>
 			{
 				await WorkListsModule.Current.CreateWorkListAsync(environment);

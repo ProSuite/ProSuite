@@ -39,11 +39,14 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		[CanBeNull] private readonly string _path;
 
+		[CanBeNull] private readonly string _wlpath;
+
 		public DatabaseWorkEnvironment() : this(BrowseGeodatabase()) { }
 
-		public DatabaseWorkEnvironment([CanBeNull] string path)
+		public DatabaseWorkEnvironment([CanBeNull] string path, [CanBeNull] string wlpath = null)
 		{
 			_path = path;
+			_wlpath = wlpath;
 		}
 
 		protected override async Task<bool> TryPrepareSchemaCoreAsync()
@@ -182,6 +185,12 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			_msg.Info("No Issue Geodatabase selected");
 			return null;
+		}
+
+		[CanBeNull]
+		public override string GetWorklistId()
+		{
+			return WorkListUtils.GetXmlWorklistName(_wlpath);
 		}
 	}
 }

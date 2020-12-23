@@ -158,5 +158,16 @@ namespace ProSuite.AGP.WorkList
 			XmlWorkListDefinition definition = helper.ReadFromFile(path);
 			return definition.Workspaces.Select(w => w.Path).FirstOrDefault();
 		}
+
+		[CanBeNull]
+		public static string GetXmlWorklistName(string worklistPath)
+		{
+			if (String.IsNullOrEmpty(worklistPath))
+				return null;
+
+			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
+			XmlWorkListDefinition definition = helper.ReadFromFile(worklistPath);
+			return definition.Name;
+		}
 	}
 }
