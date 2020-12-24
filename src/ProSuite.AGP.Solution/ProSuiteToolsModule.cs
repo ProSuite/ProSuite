@@ -14,11 +14,18 @@ using ProSuite.QA.ServiceManager;
 using ProSuite.QA.ServiceManager.Types;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
 using ProSuite.AGP.Solution.Commons;
 using ProSuite.AGP.Solution.ConfigUI;
+using ProSuite.AGP.Solution.WorkLists;
+using ProSuite.AGP.WorkList;
+using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Application.Configuration;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Client;
 using ProSuite.Microservices.Client.AGP;
 
@@ -33,15 +40,17 @@ namespace ProSuite.AGP.Solution
 		{
 			get
 			{
-				if (_qaManager == null)
+				if (_qaManager != null)
 				{
-					_qaManager = new ProSuiteQAManager(
-						QAConfiguration.Current.GetQAServiceProviders(QAProjectItem?.ServerConfigurations),
-						QAConfiguration.Current.GetQASpecificationsProvider(QAProjectItem?.SpecificationConfiguration));
-					_qaManager.OnStatusChanged += QAManager_OnStatusChanged;
-					
-					OnQAConfigurationChanged = _qaManager.OnConfigurationChanged;
+					return _qaManager;
 				}
+
+				_qaManager = new ProSuiteQAManager(
+					QAConfiguration.Current.GetQAServiceProviders(QAProjectItem?.ServerConfigurations),
+					QAConfiguration.Current.GetQASpecificationsProvider(QAProjectItem?.SpecificationConfiguration));
+				_qaManager.OnStatusChanged += QAManager_OnStatusChanged;
+					
+				OnQAConfigurationChanged = _qaManager.OnConfigurationChanged;
 				return _qaManager;
 			}
 		}
@@ -51,18 +60,21 @@ namespace ProSuite.AGP.Solution
 		{
 			get
 			{
+				if (_qaProjectItem != null)
+				{
+					return _qaProjectItem;
+				}
+				//_msg.Info("Project item not available");
+
+				_qaProjectItem = Project.Current.GetItems<ProSuiteProjectItemConfiguration>().FirstOrDefault();
 				if (_qaProjectItem == null)
 				{
-					//_msg.Info("Project item not available");
+					_qaProjectItem = new ProSuiteProjectItemConfiguration(QAConfiguration.Current.DefaultQAServiceConfig,
+						QAConfiguration.Current.DefaultQASpecConfig);
 
-					_qaProjectItem = Project.Current.GetItems<ProSuiteProjectItemConfiguration>().FirstOrDefault();
-					if (_qaProjectItem == null)
-					{
-						//_qaProjectItem = new ProSuiteProjectItem(QAConfiguration.Current.DefaultQAServiceConfig,
-						//                                         QAConfiguration.Current.DefaultQASpecConfig);
+					UpdateServiceUI(_qaProjectItem);
 
-						//ProSuiteProjectItemManager.Current.SaveProjectItem(Project.Current, _qaProjectItem);
-					}
+					//ProSuiteProjectItemManager.Current.SaveProjectItem(Project.Current, _qaProjectItem);
 				}
 				return _qaProjectItem;
 			}
@@ -73,17 +85,7 @@ namespace ProSuite.AGP.Solution
 			}
 		}
 
-		private static IList<FeatureLayer> _errorLayers;
-		public static IList<FeatureLayer> ErrorLayers
-		{
-			get { return _errorLayers; }
-			set
-			{
-				//SetProperty(ref _errorLayers, value, () => ErrorLayers);
-				_errorLayers = value;
-				//if (_errorLayers == null) return;
-			}
-		}
+		public static string CurrentQASpecificationName { get; set; }
 
 		private static ProSuiteToolsModule _this = null;
 
@@ -143,6 +145,7 @@ namespace ProSuite.AGP.Solution
 
 			LayersAddedEvent.Subscribe(OnLayerAdded);
 			ProSuiteConfigChangedEvent.Subscribe(OnConfigurationChanged);
+			LogMessageActionEvent.Subscribe(OnLogMessageActionRequested);
 
 			StartToolMicroserviceClientAsync().GetAwaiter();
 
@@ -166,10 +169,9 @@ namespace ProSuite.AGP.Solution
 		{
 			base.Uninitialize();
 
-			//ProSuitePro.ProSuiteManager.QAManager.OnStatusChanged -= QAManager_OnStatusChanged;
-			//ProjectItemsChangedEvent.Unsubscribe(OnProjectItemsChanged);
 			LayersAddedEvent.Unsubscribe(OnLayerAdded);
-			ProSuiteConfigChangedEvent.Subscribe(OnConfigurationChanged);
+			ProSuiteConfigChangedEvent.Unsubscribe(OnConfigurationChanged);
+			LogMessageActionEvent.Unsubscribe(OnLogMessageActionRequested);
 
 			ToolMicroserviceClient?.Disconnect();
 		}
@@ -217,10 +219,41 @@ namespace ProSuite.AGP.Solution
 			OnQAConfigurationChanged?.Invoke(this, new ProSuiteQAConfigEventArgs(configArgs.ServerConfigurations));
 		}
 
+		private void OnLogMessageActionRequested(LogMessageActionEventArgs logActionArgs)
+		{
+			if (logActionArgs.MessageAction == LogMessageAction.Details)
+			{
+				// TODO create dialog only once?
+				var _prosuiteconfigdialog = new LogMessageDetailsDialog();
+				var logDetailsViewModel = new LogMessageDetailsViewModel(logActionArgs.LogMessage);
+				_prosuiteconfigdialog.DataContext = logDetailsViewModel;
+				if (_prosuiteconfigdialog.ShowDialog() ?? true)
+				{
+					Clipboard.SetText(logDetailsViewModel.ClipboardMessage);
+					_msg.Debug("Log message copied into clipboard");
+				}
+			}
+			else
+				_msg.Debug("Unkown LogMessage action");
+		}
+
 		internal static void StartQAGPServer(ProSuiteQAServiceType type)
 		{
 			_msg.Info($"StartQAGPServer is called");
-			var response = QAManager.StartQATesting(new ProSuiteQARequest(type));
+
+			// TODO temporary 
+			var serviceConfig = _qaProjectItem.ServerConfigurations.FirstOrDefault(
+				c => c.ServiceType == ProSuiteQAServiceType.GPService);
+			if (serviceConfig == null)
+			{
+				_msg.Error($"Server config does not exist");
+				return;
+			}
+
+			var xml = @"\\vsdev2414\prosuite_server_trials\xml\polygonCovering.qa.xml";
+
+			var qaParams = $"{serviceConfig.ServiceConnection},{xml},{serviceConfig.DefaultTileSize},,,{serviceConfig.DefaultOutputFolder},,,,{serviceConfig.DefaultCompressValue}";
+			var response = QAManager.StartQATesting(new ProSuiteQARequest(type, qaParams));
 			_msg.Info($"StartQAGPServer is ended");
 		}
 
@@ -230,26 +263,66 @@ namespace ProSuite.AGP.Solution
 		{
 			_msg.Info($"StartQAGPServerAsync is called");
 
-			// TODO get envelope, selected data, selected QA spec
-			var response = await QAManager.StartQATestingAsync(new ProSuiteQARequest(type));
+			// TODO get envelope, selected data, selected QA spec, config,  ....
+			var serviceConfig = _qaProjectItem.ServerConfigurations.FirstOrDefault(
+				c => c.ServiceType == ProSuiteQAServiceType.GPLocal);
+			if (serviceConfig == null)
+			{
+				_msg.Error($"Server config does not exist");
+				return;
+			}
+
+			// temporary - give path to XML specifications
+			var qaSpecificationsConnection = QAManager.GetQASpecificationsConnection(CurrentQASpecificationName);
+
+			// TODO select only available workspaces 
+			var qaParams = $"{qaSpecificationsConnection},{serviceConfig.DefaultTileSize},,,{serviceConfig.DefaultOutputFolder},,,,{serviceConfig.DefaultCompressValue}";
+
+			var response = await QAManager.StartQATestingAsync(new ProSuiteQARequest(type, qaParams));
 			if (response.Error == ProSuiteQAError.None)
 			{
 				_msg.Info($"StartQAGPServerAsync result {response?.ResponseData}");
 
 				if (response?.ResponseData != null)
 				{
-					// TODO response data can be not only string
-					ErrorLayers = LayerUtils.AddFeaturesToMap("QA Error issues",
-						response?.ResponseData.ToString(),
-						"issues.gdb",
-						new List<string>() { "IssuePoints", "IssueLines", "IssueMultiPatches", "IssuePolygons" },
-						true);
+					var issuesGdb = Path.Combine(response.ResponseData.ToString(), "issues.gdb");
+					if (Directory.Exists(issuesGdb))
+					{
+						// TODO fire event to open worklist?
+						await OpenIssuesWorklist(issuesGdb);
+					}
 				}
 			}
 			else
 			{
-				_msg.Error($"StartQAGPServerAsync is failed");
+				_msg.Error($"StartQAGPServerAsync is failed: ${response.Error}");
 			}
+		}
+
+		public static async Task<bool> OpenIssuesWorklist([NotNull]string wlpath)
+		{
+			var environment = new DatabaseWorkEnvironment(WorkListUtils.GetWorklistPath(wlpath), wlpath);
+			await QueuedTask.Run(async () =>
+			{
+				await WorkListsModule.Current.CreateWorkListAsync(environment);
+			});
+			if (environment.UniqueName != null)
+				WorkListsModule.Current.ShowView(environment.UniqueName);
+
+			return true;
+		}
+
+		public async Task<bool> ShowSelectionWorkList()
+		{
+			var environment = new InMemoryWorkEnvironment();
+			await QueuedTask.Run(async () =>
+			{
+				await WorkListsModule.Current.CreateWorkListAsync(environment);
+			});
+			if (environment.UniqueName != null)
+				WorkListsModule.Current.ShowView(environment.UniqueName);
+
+			return true;
 		}
 
 		private async Task<bool> StartToolMicroserviceClientAsync()
@@ -324,25 +397,26 @@ namespace ProSuite.AGP.Solution
 			//Enabled = false;
 		}
 
-		protected override void OnClick()
+		protected override async void OnClick()
 		{
 			try
 			{
-				// because of VS2019 problems simple test here
-				QueuedTask.Run(() =>
-				{
-					ProSuiteLogPaneViewModel.GenerateMockMessages(10000);
-				});
-
-				// temporary solution for WorkList
+				// performance test
 				//QueuedTask.Run(() =>
 				//{
-				//var pane = FrameworkApplication.DockPaneManager.Find("esri_dataReviewer_evaluateFeaturesPane");
+				//	ProSuiteLogPaneViewModel.GenerateMockMessages(10000);
+				//});
+
+				// temporary solution for WorkList
+				//await QueuedTask.Run(() =>
+				//{
+				//	var pane = FrameworkApplication.DockPaneManager.Find("esri_dataReviewer_evaluateFeaturesPane");
 				//	bool visible = pane.IsVisible;
 				//	pane.Activate();
 				//});
 
-				//MessageBox.Show("QA error handler view is not yet implemented");
+				await ProSuiteToolsModule.Current.ShowSelectionWorkList();
+
 			}
 			catch (Exception ex)
 			{
@@ -378,7 +452,7 @@ namespace ProSuite.AGP.Solution
 		}
 	}
 
-	internal class AddWorkListFile : Button
+	internal class ImportWorkListFile : Button
 	{
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -397,7 +471,7 @@ namespace ProSuite.AGP.Solution
 			var openItemDialog = new OpenItemDialog
 			        {
 	                     Title = "Add Work List",
-	                     InitialLocation = @"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData",
+	                     //InitialLocation = "",
 	                     BrowseFilter = bf
                      };
 			bool? result = openItemDialog.ShowDialog();
@@ -418,11 +492,22 @@ namespace ProSuite.AGP.Solution
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 		// TODO algr: temporary tests
-		protected override void OnClick()
+		protected override async void OnClick()
 		{
-			var window = FrameworkApplication.ActiveWindow as ArcGIS.Desktop.Core.IProjectWindow;
-			var item = window?.SelectedItems.First();
-			_msg.Info($"Worklist could be initialized from definition file {item.Path}");
+			try
+			{
+				var window = FrameworkApplication.ActiveWindow as IProjectWindow;
+				var path = window?.SelectedItems.First().Path;
+				if (path != null)
+				{
+					_msg.Info($"Open worklist file {path}");
+					await ProSuiteToolsModule.OpenIssuesWorklist(path);
+				}
+			}
+			catch (Exception ex)
+			{
+				_msg.Error("Open WorkList error", ex);
+			}
 		}
 	}
 
@@ -431,7 +516,7 @@ namespace ProSuite.AGP.Solution
 		public QASpecListComboBox()
 		{
 			FillCombo();
-			Enabled = false;
+			//Enabled = false;
 		}
 
 		private void FillCombo()
@@ -447,7 +532,7 @@ namespace ProSuite.AGP.Solution
 
 		protected override void OnSelectionChange(ComboBoxItem item)
 		{
-			
+			ProSuiteToolsModule.CurrentQASpecificationName = item.Text;
 		}
 		
 	}

@@ -366,6 +366,12 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (! candidatesOfManyLayers.Any())
 			{
+				//no candidate (user clicked into empty space): clear selection
+				await QueuedTask.Run(() =>
+				{
+					SelectionUtils.ClearSelection(ActiveMapView.Map);
+				});
+
 				return false;
 			}
 
@@ -386,33 +392,46 @@ namespace ProSuite.AGP.Editing.OneClick
 				// select a single feature using feature reduction and picker
 				else
 				{
-					KeyValuePair<BasicFeatureLayer, List<long>> candidatesOfLayer =
-						await QueuedTask.Run(() => ReduceFeatures(candidatesOfManyLayers));
+					IEnumerable<KeyValuePair<BasicFeatureLayer, List<long>>> candidatesOfLayers =
+						await QueuedTask.Run(
+							() => GeometryReducer.GetReducedset(candidatesOfManyLayers));
 
 					// show picker if more than one candidate
-					if (candidatesOfLayer.Value.Count() > 1)
+					if (GeometryReducer.ContainsManyFeatures(candidatesOfManyLayers))
 					{
-						List<IPickableItem> pickables =
-							await QueuedTask.Run(() => GetPickableFeatureItems(candidatesOfLayer));
+						List<IPickableItem> pickables = new List<IPickableItem>();
+						foreach (var layerCandidates in candidatesOfLayers)
+						{
+							pickables.AddRange(
+								await QueuedTask.Run(
+									() => PickerUI.Picker.CreatePickableFeatureItems(
+										layerCandidates)));
+						}
 
 						var picker = new PickerUI.Picker(pickables, pickerWindowLocation);
 
 						var item = await picker.PickSingle() as PickableFeatureItem;
-						var kvp = new KeyValuePair<BasicFeatureLayer, List<long>>(
-							item.Layer, new List<long> {item.Oid});
 
-						await QueuedTask.Run(() =>
+						if (item != null)
 						{
-							Selector.SelectLayersFeaturesByOids(
-								kvp, selectionMethod);
-						});
+							var kvp = new KeyValuePair<BasicFeatureLayer, List<long>>(
+								item.Layer, new List<long> { item.Oid });
+
+							await QueuedTask.Run(() =>
+							{
+								Selector.SelectLayersFeaturesByOids(
+									kvp, selectionMethod);
+							});
+						}
+
+						
 					}
 					else
 					{
 						await QueuedTask.Run(() =>
 						{
 							Selector.SelectLayersFeaturesByOids(
-								candidatesOfLayer, selectionMethod);
+								candidatesOfLayers.First(), selectionMethod);
 						});
 					}
 				}
@@ -432,15 +451,21 @@ namespace ProSuite.AGP.Editing.OneClick
 					});
 
 					var picker = new PickerUI.Picker(pickingCandidates, pickerWindowLocation);
+
 					var item = await picker.PickSingle() as PickableFeatureClassItem;
 
-					await QueuedTask.Run(() =>
+					if (item != null)
 					{
-						item.BelongingFeatureLayers.ForEach(layer =>
+						await QueuedTask.Run(() =>
 						{
-							layer.Select(null, selectionMethod);
+							item.BelongingFeatureLayers.ForEach(layer =>
+							{
+								List<long> oids = candidatesOfManyLayers[layer];
+								QueryFilter qf = new QueryFilter{ObjectIDs = oids};
+								layer.Select(qf, selectionMethod);
+							});
 						});
-					});
+					}
 				}
 
 				//no modifier pressed: select all in envelope
@@ -462,39 +487,6 @@ namespace ProSuite.AGP.Editing.OneClick
 					                     progressor));
 
 			return true;
-		}
-
-		private List<IPickableItem> GetPickableFeatureItems(
-			KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer)
-		{
-			var pickCandidates = new List<IPickableItem>();
-			foreach (Feature feature in MapUtils.GetFeatures(featuresOfLayer))
-			{
-				var text =
-					$"{featuresOfLayer.Key.Name}: {feature.GetObjectID()}";
-				var featureItem =
-					new PickableFeatureItem(featuresOfLayer.Key, feature, text);
-				pickCandidates.Add(featureItem);
-			}
-
-			return pickCandidates;
-		}
-
-		private KeyValuePair<BasicFeatureLayer, List<long>> ReduceFeatures(
-			Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer)
-		{
-			IOrderedEnumerable<KeyValuePair<BasicFeatureLayer, List<long>>> ordered =
-				featuresPerLayer.OrderBy(el => el.Key.ShapeType, new GeometryTypeComparer());
-
-			foreach (KeyValuePair<BasicFeatureLayer, List<long>> keyValuePair in ordered)
-			{
-				if (keyValuePair.Value.Any())
-				{
-					return keyValuePair;
-				}
-			}
-
-			return featuresPerLayer.FirstOrDefault();
 		}
 
 		private Dictionary<BasicFeatureLayer, List<long>> FindFeaturesOfAllLayers(

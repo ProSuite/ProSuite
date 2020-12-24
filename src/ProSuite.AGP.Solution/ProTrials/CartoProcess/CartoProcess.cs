@@ -32,10 +32,12 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 	public class LayerProxyAGP : IProcessingSelection, IProcessingSymbology
 	{
 		private readonly BasicFeatureLayer _layer;
+		private readonly MapView _mapView;
 
-		public LayerProxyAGP(BasicFeatureLayer layer)
+		public LayerProxyAGP(BasicFeatureLayer layer, MapView mapView)
 		{
 			_layer = layer ?? throw new ArgumentNullException();
+			_mapView = mapView ?? throw new ArgumentNullException();
 		}
 
 		public int SelectionCount => _layer.SelectionCount;
@@ -65,17 +67,42 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 				}
 			}
 		}
+
+		public Geometry QueryDrawingOutline(long oid, OutlineType outlineType)
+		{
+#if PRO27
+			DrawingOutlineType drawingOutlineType;
+			switch (outlineType)
+			{
+				case OutlineType.Exact:
+					drawingOutlineType = DrawingOutlineType.Exact;
+					break;
+				case OutlineType.BoundingBox:
+					drawingOutlineType = DrawingOutlineType.BoundingEnvelope;
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(outlineType), outlineType, null);
+			}
+
+			return _layer.QueryDrawingOutline(oid, _mapView, drawingOutlineType);
+#else
+			throw new NotImplementedException("Requires ArcGIS Pro 2.7 or newer");
+#endif
+		}
 	}
 
 	public class ProProcessingContext : IProcessingContext
 	{
 		private readonly Map _map;
+		private readonly MapView _mapView;
+		private readonly Geodatabase _geodatabase;
 
-		public ProProcessingContext([NotNull] Geodatabase geodatabase, [CanBeNull] Map map)
+		public ProProcessingContext([NotNull] Geodatabase geodatabase, [NotNull] MapView mapView)
 		{
-			_map = map;
-			Geodatabase = geodatabase ?? throw new ArgumentNullException(nameof(geodatabase));
-			MapContext = new MapContextAGP(map);
+			_mapView = mapView ?? throw new ArgumentNullException(nameof(mapView));
+			_map = mapView.Map;
+			_geodatabase = geodatabase ?? throw new ArgumentNullException(nameof(geodatabase));
+			MapContext = new MapContextAGP(mapView.Map);
 		}
 
 		public Polygon GetProcessingPerimeter()
@@ -102,8 +129,6 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 			}
 		}
 
-		public Geodatabase Geodatabase { get; }
-
 		public IMapContext MapContext { get; }
 
 		public ProcessSelectionType SelectionType { get; set; }
@@ -118,20 +143,28 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		{
 			if (name == null) return null;
 
-			var featureClass = Geodatabase.OpenDataset<FeatureClass>(name.DatasetName); // MCT
+			var featureClass = _geodatabase.OpenDataset<FeatureClass>(name.DatasetName); // MCT
 			var featureLayer = FindLayer(_map, featureClass);
 
-			return new ProcessingDataset(name, featureClass, new LayerProxyAGP(featureLayer));
+			var layerProxy = featureLayer != null ? new LayerProxyAGP(featureLayer, _mapView) : null;
+
+			return new ProcessingDataset(name, featureClass, layerProxy, layerProxy);
+		}
+
+		public RelationshipClass OpenAssociation(string name)
+		{
+			if (string.IsNullOrWhiteSpace(name)) return null;
+			return _geodatabase.OpenDataset<RelationshipClass>(name); // MCT
 		}
 
 		[CanBeNull]
-		private static FeatureLayer FindLayer(Map map, FeatureClass featureClass)
+		private static BasicFeatureLayer FindLayer(Map map, FeatureClass featureClass)
 		{
 			if (map == null || featureClass == null) return null;
 			var layers = map.GetLayersAsFlattenedList()
-			                .OfType<FeatureLayer>()
+			                .OfType<BasicFeatureLayer>()
 			                .Where(lyr => ProcessingUtils.IsSameTable(
-				                       GetBaseTable(lyr.GetFeatureClass()), featureClass));
+				                       GetBaseTable(lyr.GetTable()), featureClass));
 
 			return layers.SingleOrDefault(); // bombs if duplicate - ok?
 		}
@@ -384,6 +417,13 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		{
 			if (dataset == null) return null;
 			return Context.OpenDataset(dataset);
+		}
+
+		[ContractAnnotation("associationName:null => null")]
+		protected RelationshipClass OpenAssociation([CanBeNull] string associationName)
+		{
+			if (string.IsNullOrWhiteSpace(associationName)) return null;
+			return Context.OpenAssociation(associationName);
 		}
 
 		/// <summary>

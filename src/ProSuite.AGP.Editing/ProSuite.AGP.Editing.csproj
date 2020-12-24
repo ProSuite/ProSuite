@@ -103,6 +103,7 @@
     <Compile Include="RemoveOverlaps\RemoveOverlapsFeedback.cs" />
     <Compile Include="RemoveOverlaps\RemoveOverlapsToolBase.cs" />
     <Compile Include="Selection\FeatureClassInfo.cs" />
+    <Compile Include="Selection\GeometryReducer.cs" />
     <Compile Include="Selection\GeometryTypeComparer.cs" />
     <Compile Include="Selection\Selector.cs" />
     <Compile Include="Selection\LayerPredicate.cs" />

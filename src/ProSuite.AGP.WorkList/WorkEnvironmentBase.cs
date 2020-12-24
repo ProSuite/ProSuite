@@ -1,32 +1,42 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList
 {
 	public abstract class WorkEnvironmentBase
 	{
+		[CanBeNull]
 		public string UniqueName { get; private set; }
 
-		public IWorkList CreateWorkList(IWorkListContext context)
+		[NotNull]
+		public async Task<IWorkList> CreateWorkListAsync([NotNull] IWorkListContext context)
 		{
+			Assert.ArgumentNotNull(context, nameof(context));
+
 			Map map = MapView.Active.Map;
 
-			IEnumerable<BasicFeatureLayer> featureLayers = GetLayers(map).Select(EnsureMapContainsLayerCore);
+			if (! await TryPrepareSchemaCoreAsync())
+			{
+				return await Task.FromResult(default(IWorkList));
+			}
 
-			UniqueName = GetWorkListName(context);
+			BasicFeatureLayer[] featureLayers = await Task.WhenAll(GetLayers(map).Select(EnsureStatusFieldCoreAsync));
+
+			// create new name if worklist do not have one (stored in XML)
+			UniqueName = GetWorklistId() ?? GetWorkListName(context);
 
 			IRepository stateRepository = CreateStateRepositoryCore(context.GetPath(UniqueName), UniqueName);
 
 			IWorkItemRepository repository = CreateItemRepositoryCore(featureLayers, stateRepository);
 
-			// todo daro: dispose work list to free memory !!!!
-			IWorkList workList = CreateWorkListCore(repository, UniqueName);
-			
-			return workList;
+			return CreateWorkListCore(repository, UniqueName);
 		}
 
 		public LayerDocument GetLayerDocument()
@@ -34,12 +44,17 @@ namespace ProSuite.AGP.WorkList
 			return GetLayerDocumentCore();
 		}
 
+		protected virtual async Task<bool> TryPrepareSchemaCoreAsync()
+		{
+			return await Task.FromResult(true);
+		}
+
 		protected abstract string GetWorkListName(IWorkListContext context);
 
 		protected abstract IEnumerable<BasicFeatureLayer> GetLayers(Map map);
 
 		// todo daro: revise purpose of this method
-		protected abstract BasicFeatureLayer EnsureMapContainsLayerCore(BasicFeatureLayer featureLayer);
+		protected abstract Task<BasicFeatureLayer> EnsureStatusFieldCoreAsync(BasicFeatureLayer featureLayer);
 
 		protected abstract IWorkList CreateWorkListCore(IWorkItemRepository repository, string name);
 
@@ -52,6 +67,11 @@ namespace ProSuite.AGP.WorkList
 		protected static Type GetWorkListTypeCore<T>() where T : IWorkList
 		{
 			return typeof(T);
+		}
+
+		public virtual string GetWorklistId()
+		{
+			return null;
 		}
 	}
 }

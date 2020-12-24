@@ -29,8 +29,7 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		{
 			Assert.ArgumentNotNull(config);
 
-			InputDataset = config.GetValue<ProcessDatasetName>(nameof(InputDataset))
-			               ?? throw ConfigError("Required parameter {0} is missing", nameof(InputDataset));
+			InputDataset = config.GetRequiredValue<ProcessDatasetName>(nameof(InputDataset));
 
 			ReferenceDatasets = new List<ProcessDatasetName>();
 			foreach (var dn in config.GetValues<ProcessDatasetName>(nameof(ReferenceDatasets)))
@@ -41,8 +40,8 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 			if (ReferenceDatasets.Count < 1)
 				throw ConfigError("At least one reference dataset is required");
 
-			SearchDistance = config.GetValue<double>(nameof(SearchDistance));
-			MarkerAttributes = config.GetValue<string>(nameof(MarkerAttributes));
+			SearchDistance = config.GetOptionalValue<double>(nameof(SearchDistance));
+			MarkerAttributes = config.GetOptionalValue<string>(nameof(MarkerAttributes));
 
 			// Note: would provide utilities in base class for the operations above
 			// Note: parameter name for lists: Dataset (sg) or Datasets (pl)?

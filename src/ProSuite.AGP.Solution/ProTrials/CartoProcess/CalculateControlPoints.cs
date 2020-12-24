@@ -25,13 +25,10 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 		{
 			Assert.ArgumentNotNull(config);
 
-			InputDataset = config.GetValue<ProcessDatasetName>(nameof(InputDataset))
-			               ?? throw ConfigError("Required parameter {0} is missing",
-			                                    nameof(InputDataset));
-
-			MaximumAngle = config.GetValue<double>(nameof(MaximumAngle));
-			ControlPointIdValue = config.GetValue<int>(nameof(ControlPointIdValue));
-			SimplificationTolerance = config.GetValue<double>(nameof(SimplificationTolerance));
+			InputDataset = config.GetRequiredValue<ProcessDatasetName>(nameof(InputDataset));
+			MaximumAngle = config.GetOptionalValue<double>(nameof(MaximumAngle));
+			ControlPointIdValue = config.GetOptionalValue<int>(nameof(ControlPointIdValue));
+			SimplificationTolerance = config.GetOptionalValue<double>(nameof(SimplificationTolerance));
 		}
 
 		public override IEnumerable<ProcessDatasetName> GetOriginDatasets()

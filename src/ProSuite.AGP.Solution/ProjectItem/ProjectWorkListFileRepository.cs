@@ -11,7 +11,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		public ProjectWorkListFileRepository(Project project) : base(project)
 		{
 			FolderName = "WorkLists";
-			FileExtension = "wklist";
+			FileExtension = "wl";
 			ItemName = "WorkList item";
 			Type = ProjectItemType.WorkListDefinition;
 		}

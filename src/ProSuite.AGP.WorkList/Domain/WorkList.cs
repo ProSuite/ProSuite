@@ -43,6 +43,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		private EventHandler<WorkListChangedEventArgs> _workListChanged;
 
+		protected WorkList() { }
+
 		protected WorkList(IWorkItemRepository repository, string name)
 		{
 			Repository = repository;
@@ -75,7 +77,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			//			  look old work item implementation
 			Extent = GetExtentFromItems(_items);
 		}
-		
+
 		public event EventHandler<WorkListChangedEventArgs> WorkListChanged
 		{
 			add { _workListChanged += value; }
@@ -99,6 +101,11 @@ namespace ProSuite.AGP.WorkList.Domain
 		public Polygon AreaOfInterest { get; set; }
 
 		public virtual bool QueryLanguageSupported { get; } = false;
+
+		public bool CanSetStatus()
+		{
+			return HasCurrentItem;
+		}
 
 		public void SetStatus(IWorkItem item, WorkItemStatus status)
 		{
@@ -163,8 +170,10 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-		// todo daro
-		public virtual void Dispose() { }
+		public virtual void Dispose()
+		{
+			Repository.Dispose();
+		}
 
 		/* Navigation */
 
@@ -1089,9 +1098,8 @@ namespace ProSuite.AGP.WorkList.Domain
 			UpdateExtent(item.Extent);
 		}
 
-		public bool HasCurrentItem => CurrentIndex >= 0 &&
-		                              _items != null &&
-		                              CurrentIndex < _items.Count;
+		private bool HasCurrentItem => CurrentIndex >= 0 &&
+		                               CurrentIndex < _items.Count;
 
 		[NotifyPropertyChangedInvocator]
 		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)

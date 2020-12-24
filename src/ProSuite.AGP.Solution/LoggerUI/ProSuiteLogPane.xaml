@@ -15,9 +15,6 @@
             <ResourceDictionary.MergedDictionaries>
                 <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-            <BitmapImage x:Key="debug" UriSource="/ProSuiteSolution;component/Images/StatusOK_16x.png" x:Shared="False" />
-            <BitmapImage x:Key="debug1" UriSource="/ProSuiteSolution;component/Images/FlagGreen_16x.png" x:Shared="False" />
-            <BitmapImage x:Key="debug2" UriSource="/ProSuiteSolution;component/Images/Checkmark_green_12x_16x.png" x:Shared="False" />
             <loggerUi:LogMessageImageConverter x:Key="LogMessageImageConverter"/>
             <loggerUi:LogMessageLinkConverter x:Key="LogMessageLinkConverter"/>
         </ResourceDictionary>
@@ -27,7 +24,7 @@
             <!--<RowDefinition Height="Auto"/>-->
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <DataGrid Grid.Row="0" Margin="5" Name="logMessagesGrid"   
+        <DataGrid Grid.Row="0" Margin="3,0" Name="logMessagesGrid"   
                 ScrollViewer.CanContentScroll="True"      
                 ScrollViewer.VerticalScrollBarVisibility="Auto"        
                 ScrollViewer.HorizontalScrollBarVisibility="Auto"                            

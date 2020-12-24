@@ -7,8 +7,6 @@ namespace ProSuite.Processing.Domain
 {
 	public interface IProcessingContext
 	{
-		Geodatabase Geodatabase { get; } // TODO really needed? cf OpenDataset()
-
 		[CanBeNull]
 		IMapContext MapContext { get; }
 
@@ -17,6 +15,8 @@ namespace ProSuite.Processing.Domain
 		ProcessExecutionType ExecutionType { get; }
 
 		ProcessingDataset OpenDataset(ProcessDatasetName name);
+
+		RelationshipClass OpenAssociation(string name);
 
 		[CanBeNull]
 		Polygon GetProcessingPerimeter();

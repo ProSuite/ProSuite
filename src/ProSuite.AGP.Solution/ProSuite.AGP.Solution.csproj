@@ -105,6 +105,11 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Editing\RemoveOverlapsTool.cs" />
+    <Compile Include="LoggerUI\LogMessageActionEvent.cs" />
+    <Compile Include="LoggerUI\LogMessageDetailsDialog.xaml.cs">
+      <DependentUpon>LogMessageDetailsDialog.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="LoggerUI\LogMessageDetailsViewModel.cs" />
     <Compile Include="ProTrials\CartoProcess\CalculateControlPoints.cs" />
     <Compile Include="ProTrials\CartoProcess\CartoProcessDockpane.xaml.cs">
       <DependentUpon>CartoProcessDockpane.xaml</DependentUpon>
@@ -155,14 +160,42 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WorkLists\DatabaseWorkEnvironment.cs" />
     <Compile Include="WorkLists\WorkListsModule.cs" />
-    <Compile Include="WorkListUI\StatusEnumBooleanConverter.cs" />
-    <Compile Include="WorkListUI\WorkListView.xaml.cs">
-      <DependentUpon>WorkListView.xaml</DependentUpon>
+    <Compile Include="WorkListUI\InvolvedObjectRow.cs" />
+    <Compile Include="WorkListUI\InvolvedTableVm.cs" />
+    <Compile Include="WorkListUI\UiTestData\InvolvedObjectMock.cs" />
+    <Compile Include="WorkListUI\Views\IssueCountControl.xaml.cs">
+      <DependentUpon>IssueCountControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WorkListUI\WorkListViewModel.cs" />
+    <Compile Include="WorkListUI\IssueWorkItemVm.cs" />
+    <Compile Include="WorkListUI\Views\IssueWorkListView.xaml.cs">
+      <DependentUpon>IssueWorkListView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="WorkListUI\IssueWorkListVm.cs" />
+    <Compile Include="WorkListUI\ShowIssueWorkListView.cs" />
+    <Compile Include="WorkListUI\StatusConverter.cs" />
+    <Compile Include="WorkListUI\SelectionWorkItemVm.cs" />
+    <Compile Include="WorkListUI\WorkItemVmBase.cs" />
+    <Compile Include="WorkListUI\Views\WorkListDetails.xaml.cs">
+      <DependentUpon>WorkListDetails.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="WorkListUI\Views\WorkListNavigator.xaml.cs">
+      <DependentUpon>WorkListNavigator.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="WorkListUI\WorkListObserver.cs" />
+    <Compile Include="WorkListUI\Views\SelectionWorkListView.xaml.cs">
+      <DependentUpon>SelectionWorkListView.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="WorkListUI\WorkListViewBase.cs" />
+    <Compile Include="WorkListUI\WorkListViewFactory.cs" />
+    <Compile Include="WorkListUI\WorkListViewModelBase.cs" />
     <Compile Include="WorkLists\InMemoryWorkEnvironment.cs" />
+    <Compile Include="WorkListUI\SelectionWorkListVm.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="LoggerUI\LogMessageDetailsDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ProTrials\CartoProcess\CartoProcessDockpane.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -187,7 +220,23 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="WorkListUI\WorkListView.xaml">
+    <Page Include="WorkListUI\Views\IssueCountControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="WorkListUI\Views\IssueWorkListView.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="WorkListUI\Views\WorkListDetails.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="WorkListUI\Views\WorkListNavigator.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="WorkListUI\Views\SelectionWorkListView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -320,18 +369,18 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="WorkListUI\Images\GoBack.png" />
+    <Resource Include="WorkListUI\Images\GoBack16.png" />
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="DarkImages\GenericButtonBlue32.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="WorkListUI\Images\GoNext.png" />
+    <Resource Include="WorkListUI\Images\GoNext16.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\StatusCriticalError_12x_16x.png" />
+    <Resource Include="Images\StatusDebug_12x_16x.png" />
     <Resource Include="Images\StatusInformation_12x_16x.png" />
-    <Resource Include="Images\StatusOK_16x.png" />
     <Resource Include="Images\StatusWarning_12x_16x.png" />
   </ItemGroup>
   <ItemGroup>
@@ -347,7 +396,7 @@
     <Resource Include="Images\FolderOpened_white_16x.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="WorkListUI\Images\GoNearest.png" />
+    <Resource Include="WorkListUI\Images\GoNearest16.png" />
     <Resource Include="Images\FolderError_16x.png" />
   </ItemGroup>
   <ItemGroup>
@@ -355,28 +404,19 @@
     <AddInContent Include="Images\CutHoleTool32.png" />
   </ItemGroup>
   <ItemGroup>
-    <AddInContent Include="Images\SelectionTool.png" />
+    <Resource Include="WorkListUI\Images\PanTo16.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="WorkListUI\Images\PanTo.png" />
+    <Resource Include="WorkListUI\Images\ZoomTo16.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="WorkListUI\Images\ZoomTo.png" />
+    <Resource Include="WorkListUI\Images\GoFirst16.png" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="WorkListUI\Images\GoFirst.png" />
+    <Resource Include="WorkListUI\Images\PickWorkItemTool16.png" />
   </ItemGroup>
   <ItemGroup>
-    <AddInContent Include="Images\NavigateErrorsCmd.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <AddInContent Include="Images\NavigateSelectionCmd.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="WorkListUI\Images\PickWorkItemTool.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="WorkListUI\Images\ZoomToAll.png" />
+    <Resource Include="WorkListUI\Images\ZoomToAll16.png" />
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="Images\RemoveOverlapsTool16.png" />
@@ -384,7 +424,36 @@
   <ItemGroup>
     <AddInContent Include="Images\RemoveOverlapsTool32.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <AddInContent Include="Images\NavigateErrorsCmd16.png" />
+    <AddInContent Include="Images\NavigateErrorsCmd32.png" />
+    <AddInContent Include="Images\NavigateSelectionCmd16.png" />
+    <AddInContent Include="Images\NavigateSelectionCmd32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\SelectionTool16.png" />
+    <AddInContent Include="Images\SelectionTool32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\FlashCurrent16.png" />
+    <Resource Include="WorkListUI\Images\FlashCurrent32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\FlashInvolvedAll16.png" />
+    <Resource Include="WorkListUI\Images\FlashInvolvedAll32.png" />
+    <Resource Include="WorkListUI\Images\FlashInvolvedSel16.png" />
+    <Resource Include="WorkListUI\Images\FlashInvolvedSel32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\ZoomInvolvedAll16.png" />
+    <Resource Include="WorkListUI\Images\ZoomInvolvedAll32.png" />
+    <Resource Include="WorkListUI\Images\ZoomInvolvedSel16.png" />
+    <Resource Include="WorkListUI\Images\ZoomInvolvedSel32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="WorkListUI\Images\SelectFeatures16.png" />
+    <Resource Include="WorkListUI\Images\SelectFeatures32.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:

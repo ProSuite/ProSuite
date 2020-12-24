@@ -83,13 +83,13 @@ namespace ProSuite.AGP.Editing.Picker
 					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/LineGeometry.bmp");
 			}
 
-			if (geometryType == esriGeometryType.esriGeometryPolygon)
+			if (geometryType == esriGeometryType.esriGeometryPolygon || geometryType == esriGeometryType.esriGeometryMultiPatch)
 			{
 				return new Uri(
 					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PolygonGeometry.bmp",UriKind.Absolute);
 			}
 
-			return new Uri("");
+			return new Uri(@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PointGeometry.bmp");
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;

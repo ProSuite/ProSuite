@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Desktop.Core;
@@ -13,7 +12,6 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using ProSuite.AGP.Solution.ProjectItem;
 using ProSuite.AGP.Solution.WorkListUI;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
@@ -67,29 +65,47 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return _observers.Remove(observer);
 		}
 
+		//[CanBeNull]
+		//private IWorkListObserver GetObserverByWorklistName(string name)
+		//{
+
+		//}
+
 		public void ShowView([NotNull] string uniqueName)
 		{
 			IWorkList list = _registry.Get(uniqueName);
-			// NOTE send a show work list request to all observers. Let the observer decide whether to show the work list.
+
 			foreach (IWorkListObserver observer in _observers)
 			{
 				observer.Show(list);
 			}
 		}
 
-		public void CreateWorkList([NotNull] WorkEnvironmentBase environment)
+		public async Task CreateWorkListAsync([NotNull] WorkEnvironmentBase environment)
 		{
 			try
 			{
-				IWorkList workList = environment.CreateWorkList(this);
+				// is this worklist already loaded?
+				if (_registry.Exists(environment.GetWorklistId()))
+				{
+					_msg.Debug("Worklist is already loaded");
+					return;
+				}
+
+				IWorkList workList = await environment.CreateWorkListAsync(this);
+
+				RegisterObserver(new WorkListObserver());
 
 				// wiring work list events, etc. is done in OnDrawComplete
 				// register work list before creating the layer
 				_registry.Add(workList);
 
-				CreateLayer(environment, workList.Name);
+				foreach (var observer in _observers)
+				{
+					observer.WorkListAdded(workList);
+				}
 
-				RegisterObserver(new WorkListViewModel(workList));
+				CreateLayer(environment, workList.Name);
 			}
 			catch (Exception e)
 			{
@@ -116,7 +132,10 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			_synchronizer?.Dispose();
 
-			_layerByWorkList.Keys.ToList().ForEach(workList => workList.Dispose());
+			foreach (IWorkList workList in _layerByWorkList.Keys)
+			{
+				workList.Dispose();
+			}
 
 			UnwireEvents();
 
@@ -172,7 +191,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 				}
 			}
 		}
-		
+
 		[NotNull]
 		private PluginDatasourceConnectionPath GetWorkListConnectionPath(
 			[NotNull] string workListName)
@@ -264,13 +283,14 @@ namespace ProSuite.AGP.Solution.WorkLists
 		private void OnDrawCompleted(MapViewEventArgs e)
 		{
 			IReadOnlyList<Layer> layers = e.MapView.Map.GetLayersAsFlattenedList();
-			
+
 			foreach (string name in _registry.GetNames())
 			{
 				// todo daro: need a more robust layer identifier
 				// check first whether work list layer is in TOC
 				FeatureLayer workListLayer = layers.OfType<FeatureLayer>()
-				                                   .FirstOrDefault(layer => string.Equals(layer.Name, name));
+				                                   .FirstOrDefault(
+					                                   layer => string.Equals(layer.Name, name));
 
 				if (workListLayer == null)
 				{
@@ -295,39 +315,67 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 		}
 
+		private List<WorkListObserver> GetEmptyObservers()
+		{
+			return _observers.Select(observer => observer as WorkListObserver)
+			                 .Where(wlObserver => wlObserver.WorkList == null).ToList();
+		}
+
 		private async Task OnLayerRemovingAsync(LayersRemovingEventArgs e)
 		{
 			// todo daro: revise usage of Task
-			await Task.Run(() =>
-			{
+			//await Task.Run(() =>
+			//{
 				foreach (IWorkList workList in _layerByWorkList
 				                               .Where(pair => e.Layers.Contains(pair.Value))
 				                               .Select(pair => pair.Key).ToList())
 				{
-					// ensure folder exists before commit
-					EnsureFolderExists(GetLocalWorklistsFolder());
+					foreach (var observer in _observers)
+					{
+						observer.WorkListRemoved(workList);
+					}
 
-					workList.Commit();
+					List<WorkListObserver> emptyObservers = GetEmptyObservers();
 
-					UnwireEvents(workList);
+					foreach (var observer in emptyObservers)
+					{
+						UnregisterObserver(observer);
+					}
 
-					_layerByWorkList.Remove(workList);
-					_registry.Remove(workList);
+					await QueuedTask.Run(() =>
+					{
+						// ensure folder exists before commit
+						EnsureFolderExists(GetLocalWorklistsFolder());
 
-					//foreach (Window window in Application.Current.Windows)
-					//{
-					//	if (window.Title == workList.Name)
-					//	{
-					//		var vm = window.DataContext as WorkListViewModel;
-					//		UnregisterObserver(vm);
-					//		window.Close();
-					//	}
-					//}
+						workList.Commit();
 
-					// todo daro: Dispose work list or whatever is needed.
+						UnwireEvents(workList);
+
+						//UnregisterViewModel(workList);
+
+						_layerByWorkList.Remove(workList);
+						_registry.Remove(workList);
+
+						// Note daro: don't dispose work list here. Given the following situation.
+						// Remove work list layer would dispose the source geodatabase (in GdbItemRepository).
+						// Add work list layer again with same source geodatabase is going to throw an
+						// exception, e.g. on SetStatus
+						//workList.Dispose();
+					});
+
 				}
-			});
+			//});
 		}
+
+		//private void UnregisterViewModel(IWorkList workList)
+		//{
+		//	SelectionWorkListVm vm = GetObserverByWorklistName(workList.Name) as SelectionWorkListVm;
+
+		//	if (vm != null)
+		//	{
+		//		UnregisterObserver(vm);
+		//	}
+		//}
 
 		private async Task OnProjectOpendedAsync(ProjectEventArgs e)
 		{
@@ -345,19 +393,19 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			// todo daro: later this is replaced with custom project items
 
-			
 			// todo daro QueuedTask needed?
 			await QueuedTask.Run(() =>
 			{
 				// todo daro: use ConfigurationUtils?
 				// todo daro: revise!
 				foreach (string path in GetDefinitionFiles())
-				//foreach (var path in ProjectRepository.Current.GetProjectFileItems(ProjectItemType.WorkListDefinition))
+					//foreach (var path in ProjectRepository.Current.GetProjectFileItems(ProjectItemType.WorkListDefinition))
 				{
 					string workListName = WorkListUtils.GetName(path);
 					var factory = new XmlBasedWorkListFactory(path, workListName);
 
-					Assert.True(_registry.TryAdd(factory), $"work list {factory.Name} already added");
+					Assert.True(_registry.TryAdd(factory),
+					            $"work list {factory.Name} already added");
 				}
 			});
 		}
@@ -410,7 +458,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 		}
 
 		#endregion
-
 
 		public virtual void OnWorkItemPicked(WorkItemPickArgs e)
 		{

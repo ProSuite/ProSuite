@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
@@ -32,10 +33,10 @@ namespace ProSuite.AGP.Solution.WorkLists
 				       : Enumerable.Empty<BasicFeatureLayer>();
 		}
 
-		protected override BasicFeatureLayer EnsureMapContainsLayerCore(BasicFeatureLayer featureLayer)
+		protected override async Task<BasicFeatureLayer> EnsureStatusFieldCoreAsync(
+			BasicFeatureLayer featureLayer)
 		{
-			// we want every feature layer
-			return featureLayer;
+			return await Task.FromResult(featureLayer);
 		}
 
 		protected override IRepository CreateStateRepositoryCore(string path, string workListName)
