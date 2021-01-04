@@ -1624,6 +1624,42 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return index;
 		}
 
+		public static void CreateSpatialIndex(
+			[NotNull] IFeatureClass featureClass,
+			[NotNull] IFeatureClass template)
+		{
+			int shapeIdx = string.IsNullOrEmpty(featureClass.ShapeFieldName)
+				               ? -1 // no SHAPE field
+				               : template.FindField(featureClass.ShapeFieldName);
+
+			IField shapeField = featureClass.Fields.Field[shapeIdx];
+
+			IGeometryDef geometryDef = shapeField.GeometryDef;
+
+			int gridCount = geometryDef.GridCount;
+
+			double gridSize1 = gridCount > 0 ? geometryDef.GridSize[0] : 0;
+			double gridSize2 = gridCount > 1 ? geometryDef.GridSize[1] : 0;
+			double gridSize3 = gridCount > 2 ? geometryDef.GridSize[2] : 0;
+
+			CreateSpatialIndex(featureClass, gridSize1, gridSize2, gridSize3);
+		}
+
+		public static void CreateSpatialIndex([NotNull] IFeatureClass featureClass,
+		                                      double gridSize1 = 0,
+		                                      double gridSize2 = 0,
+		                                      double gridSize3 = 0)
+		{
+			Stopwatch watch = _msg.DebugStartTiming(
+				"Creating spatial index with grid sizes {0}, {1}, {2}...",
+				gridSize1, gridSize2, gridSize3);
+
+			((IFeatureClassSpatialIndex) featureClass).RecreateSpatialIndex(
+				"SpatialIndex", gridSize1, gridSize2, gridSize3);
+
+			_msg.DebugStopTiming(watch, "Created spatial index");
+		}
+
 		[NotNull]
 		public static IEnumerable<IIndex> GetIndexes([NotNull] IObjectClass objectClass)
 		{
