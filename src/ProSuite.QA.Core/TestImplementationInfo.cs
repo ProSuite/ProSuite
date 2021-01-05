@@ -20,6 +20,12 @@ namespace ProSuite.QA.Core
 
 		private IList<TestParameter> _parameters;
 
+		private static readonly Dictionary<string, string> _assemblySubstitutes =
+			new Dictionary<string, string>
+			{
+				{"EsriDE.ProSuite.QA.Tests", "ProSuite.QA.Tests"}
+			};
+
 		public TestImplementationInfo([NotNull] Type type, int constructorId = 0)
 		{
 			Assert.ArgumentNotNull(type, nameof(type));
@@ -35,7 +41,7 @@ namespace ProSuite.QA.Core
 			Assert.ArgumentNotNull(assemblyName, nameof(assemblyName));
 			Assert.ArgumentNotNull(typeName, nameof(typeName));
 
-			_testType = PrivateAssemblyUtils.LoadType(assemblyName, typeName);
+			_testType = PrivateAssemblyUtils.LoadType(assemblyName, typeName, _assemblySubstitutes);
 
 			if (_testType == null)
 			{
