@@ -42,7 +42,14 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 
 				try
 				{
-					return (IGeometry) ValueSet.GetProperty(name);
+					object shapeProperty = ValueSet.GetProperty(name);
+
+					if (shapeProperty == DBNull.Value)
+					{
+						return null;
+					}
+
+					return (IGeometry) shapeProperty;
 				}
 				catch (COMException)
 				{

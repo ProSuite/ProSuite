@@ -138,7 +138,11 @@ namespace ProSuite.Microservices.Server.AO.Test
 			Console.WriteLine("Rehydration: {0}ms", rehydrationAvg);
 
 			Assert.Less(dehydrationAvg, 60);
-			Assert.Less(rehydrationAvg, 6);
+			Assert.Less(rehydrationAvg, 30);
+
+			// Typical output on a reasonable laptop:
+			//Dehydration: 45ms
+			//Rehydration: 20ms
 		}
 
 		[Test]

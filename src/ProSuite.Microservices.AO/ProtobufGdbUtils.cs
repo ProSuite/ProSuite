@@ -190,6 +190,11 @@ namespace ProSuite.Microservices.AO
 					WorkspaceHandle = workspace?.GetHashCode() ?? -1
 				};
 
+			if (aliasName == null)
+			{
+				aliasName = DatasetUtils.GetAliasName((IObjectClass) table);
+			}
+
 			CallbackUtils.DoWithNonNull(aliasName, s => result.Alias = s);
 
 			if (includeFields)
