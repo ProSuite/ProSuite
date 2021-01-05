@@ -10,6 +10,7 @@ using Path = System.IO.Path;
 
 namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 {
+	[CLSCompliant(false)]
 	public static class ExternalIssueRepositoryUtils
 	{
 		[CanBeNull]
