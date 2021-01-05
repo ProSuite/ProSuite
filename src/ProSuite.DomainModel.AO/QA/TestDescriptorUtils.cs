@@ -15,8 +15,6 @@ namespace ProSuite.DomainModel.AO.QA
 	[CLSCompliant(false)]
 	public static class TestDescriptorUtils
 	{
-
-		
 		/// <summary>
 		/// Gets the test factory, sets the quality condition for it and initializes parameter values for it.
 		/// </summary>
@@ -32,7 +30,7 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 
 			TestFactory factory =
-				TestDescriptorUtils.GetTestFactory(qualityCondition.TestDescriptor);
+				GetTestFactory(qualityCondition.TestDescriptor);
 
 			if (factory != null)
 			{

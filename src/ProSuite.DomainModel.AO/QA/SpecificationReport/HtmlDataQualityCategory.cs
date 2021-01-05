@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ProSuite.DomainModel.Core.QA.Html;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.QA.Html;
 
 namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 {
