@@ -94,6 +94,7 @@
     <Compile Include="DataModel\IAttributeConfigurator.cs" />
     <Compile Include="DataModel\IAttributeConfiguratorFactory.cs" />
     <Compile Include="DataModel\IAttributeEditorConfigurator.cs" />
+    <Compile Include="DataModel\ICurrentModelContext.cs" />
     <Compile Include="DataModel\IDatasetContext.cs" />
     <Compile Include="DataModel\IDatasetEditContext.cs" />
     <Compile Include="DataModel\IDatasetFilter.cs" />
@@ -104,6 +105,8 @@
     <Compile Include="DataModel\IFeatureDatasetElement.cs" />
     <Compile Include="DataModel\IFieldIndexCache.cs" />
     <Compile Include="DataModel\IModelContext.cs" />
+    <Compile Include="DataModel\IModelRepository.cs" />
+    <Compile Include="DataModel\IQueryTableContext.cs" />
     <Compile Include="DataModel\IWorkspaceContext.cs" />
     <Compile Include="DataModel\IWorkspaceContextLookup.cs" />
     <Compile Include="DataModel\MasterDatabaseWorkspaceContext.cs" />
@@ -113,7 +116,10 @@
     <Compile Include="DataModel\SpatialReferenceDescriptor.cs" />
     <Compile Include="DataModel\TableObject.cs" />
     <Compile Include="DataModel\VectorObject.cs" />
+    <Compile Include="DataModel\WorkspaceAssociation.cs" />
+    <Compile Include="DataModel\SimpleWorkspaceContext.cs" />
     <Compile Include="DataModel\WorkspaceContextBase.cs" />
+    <Compile Include="DataModel\WorkspaceDataset.cs" />
     <Compile Include="Geodatabase\ConnectionFileConnectionProvider.cs" />
     <Compile Include="Geodatabase\ConnectionProvider.cs" />
     <Compile Include="Geodatabase\DatabaseType.cs" />

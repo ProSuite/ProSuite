@@ -14,6 +14,27 @@ namespace ProSuite.DomainServices.AO.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		public static ICollection<Dataset> GetQualityConditionDatasets(
+			QualitySpecification qualitySpecification)
+		{
+			var datasets = new List<Dataset>();
+			foreach (QualitySpecificationElement element in qualitySpecification.Elements)
+			{
+				if (! element.Enabled)
+				{
+					continue;
+				}
+
+				QualityCondition condition = element.QualityCondition;
+				foreach (Dataset dataset in condition.GetDatasetParameterValues())
+				{
+					datasets.Add(dataset);
+				}
+			}
+
+			return datasets;
+		}
+
 		[NotNull]
 		internal static IEnumerable<QualityCondition> GetOrderedQualityConditions(
 			[NotNull] QualitySpecification qualitySpecification,

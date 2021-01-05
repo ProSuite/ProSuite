@@ -16,7 +16,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 		[CanBeNull]
 		object OpenDataset([NotNull] IDdxDataset dataset,
-		                   [NotNull] Type dataType);
+		                   [CanBeNull] Type knownType = null);
 
 		[CanBeNull]
 		IRelationshipClass OpenRelationshipClass([NotNull] Association association);
