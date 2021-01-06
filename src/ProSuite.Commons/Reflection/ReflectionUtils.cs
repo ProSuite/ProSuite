@@ -138,13 +138,13 @@ namespace ProSuite.Commons.Reflection
 		}
 
 		[CanBeNull]
-		public static string GetDescription([NotNull] ICustomAttributeProvider element)
+		public static string GetDescription([NotNull] ICustomAttributeProvider element,
+		                                    bool inherit = true)
 		{
 			Assert.ArgumentNotNull(element, nameof(element));
 
-			object[] attributes = element.GetCustomAttributes(
-				typeof(DescriptionAttribute),
-				inherit : true);
+			object[] attributes = element.GetCustomAttributes(typeof(DescriptionAttribute),
+			                                                  inherit);
 
 			// DescriptionAttribute has AttributeUsage AllowMultiple=false,
 			// so the first DescriptionAttribute we find will be the only one.
@@ -154,12 +154,13 @@ namespace ProSuite.Commons.Reflection
 		}
 
 		[NotNull]
-		public static string[] GetCategories([NotNull] ICustomAttributeProvider element)
+		public static string[] GetCategories([NotNull] ICustomAttributeProvider element,
+		                                     bool inherit = true)
 		{
 			Assert.ArgumentNotNull(element, nameof(element));
 
 			object[] attributes = element.GetCustomAttributes(typeof(CategoryAttribute),
-			                                                  inherit : true);
+			                                                  inherit);
 
 			return attributes.OfType<CategoryAttribute>()
 			                 .Select(categoryAttribute => categoryAttribute.Category)
