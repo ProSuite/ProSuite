@@ -82,6 +82,7 @@
     </Compile>
     <Compile Include="DataModel\AttributeUtils.cs" />
     <Compile Include="DataModel\FieldIndexCache.cs" />
+    <Compile Include="DataModel\GlobalDatasetLookup.cs" />
     <Compile Include="DataModel\Harvesting\DatasetFeatureDatasetMatchCriterion.cs" />
     <Compile Include="DataModel\Harvesting\DatasetFilter.cs" />
     <Compile Include="DataModel\Harvesting\DatasetFilterFactory.cs" />
@@ -113,6 +114,7 @@
     <Compile Include="DataModel\Model.cs" />
     <Compile Include="DataModel\ModelElementUtils.cs" />
     <Compile Include="DataModel\ObjectObject.cs" />
+    <Compile Include="DataModel\ProductionModel.cs" />
     <Compile Include="DataModel\SpatialReferenceDescriptor.cs" />
     <Compile Include="DataModel\TableObject.cs" />
     <Compile Include="DataModel\VectorObject.cs" />

@@ -96,6 +96,8 @@
     <Compile Include="QA\AreaOfInterest.cs" />
     <Compile Include="QA\AreaOfInterestFactory.cs" />
     <Compile Include="QA\AreaOfInterestWriter.cs" />
+    <Compile Include="QA\AreaSpecification\AreaSpecification.cs" />
+    <Compile Include="QA\AreaSpecification\AreaSpecificationBasedQualitySpecification.cs" />
     <Compile Include="QA\Standalone\ImportExceptions\ExceptionAttributeConflict.cs" />
     <Compile Include="QA\Standalone\ImportExceptions\ExceptionLineage.cs" />
     <Compile Include="QA\Standalone\ImportExceptions\ExceptionUpdateDetector.cs" />
@@ -236,6 +238,7 @@
     <Compile Include="QA\TestExecutionUtils.cs" />
     <Compile Include="QA\TestsWithRelatedGeometry.cs" />
     <Compile Include="QA\TestVerification.cs" />
+    <Compile Include="QA\AreaSpecification\TileRelation.cs" />
     <Compile Include="QA\VerificationReports\InvolvedDatasetsCollector.cs" />
     <Compile Include="QA\VerificationReports\IVerificationReportBuilder.cs" />
     <Compile Include="QA\VerificationReports\LoggingVerificationReportBuilder.cs" />

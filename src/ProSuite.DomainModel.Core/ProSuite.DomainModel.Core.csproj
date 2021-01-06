@@ -99,6 +99,14 @@
     <Compile Include="DataModel\ObjectSubtypeCriterion.cs" />
     <Compile Include="DataModel\ObjectType.cs" />
     <Compile Include="DataModel\PrimaryKeyAssociationEnd.cs" />
+    <Compile Include="DataModel\Repositories\IAssociationEndRepository.cs" />
+    <Compile Include="DataModel\Repositories\IAssociationRepository.cs" />
+    <Compile Include="DataModel\Repositories\IAttributeRepository.cs" />
+    <Compile Include="DataModel\Repositories\IAttributeTypeRepository.cs" />
+    <Compile Include="DataModel\Repositories\IDatasetCategoryRepository.cs" />
+    <Compile Include="DataModel\Repositories\IDatasetRepository.cs" />
+    <Compile Include="DataModel\Repositories\IGeometryTypeRepository.cs" />
+    <Compile Include="DataModel\Repositories\IObjectCategoryRepository.cs" />
     <Compile Include="DataModel\SqlCaseSensitivity.cs" />
     <Compile Include="DataModel\TableDataset.cs" />
     <Compile Include="DataModel\UnknownAttributeRole.cs" />
@@ -134,6 +142,8 @@
     <Compile Include="QA\ErrorDeletionInPerimeter.cs" />
     <Compile Include="QA\Html\HtmlDataQualityCategoryOptions.cs" />
     <Compile Include="QA\Html\IHtmlDataQualityCategoryOptionsProvider.cs" />
+    <Compile Include="QA\Repositories\IDataQualityCategoryRepository.cs" />
+    <Compile Include="QA\Repositories\IQualitySpecificationRepository.cs" />
     <Compile Include="QA\Repositories\IQualityVerificationRepository.cs" />
     <Compile Include="QA\Repositories\IQualityConditionRepository.cs" />
     <Compile Include="QA\QualityCondition.cs" />
@@ -143,6 +153,7 @@
     <Compile Include="QA\QualitySpecificationListComparer.cs" />
     <Compile Include="QA\QualityVerification.cs" />
     <Compile Include="QA\QualityVerificationDataset.cs" />
+    <Compile Include="QA\Repositories\ITestDescriptorRepository.cs" />
     <Compile Include="QA\ScalarTestParameterValue.cs" />
     <Compile Include="QA\TestDefinition.cs" />
     <Compile Include="QA\TestDescriptor.cs" />
@@ -174,5 +185,6 @@
       <Name>ProSuite.QA.Core</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
