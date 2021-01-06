@@ -18,7 +18,6 @@ using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Core;
-using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.DomainModel.AO.QA
 {
@@ -27,8 +26,7 @@ namespace ProSuite.DomainModel.AO.QA
 	{
 		private IList<TestParameter> _parameters;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		#region Constructors
 
@@ -81,8 +79,7 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		[NotNull]
-		public virtual string[] TestCategories =>
-			ReflectionUtils.GetCategories(GetType());
+		public virtual string[] TestCategories => ReflectionUtils.GetCategories(GetType());
 
 		[CanBeNull]
 		public virtual string GetTestDescription()
@@ -177,22 +174,11 @@ namespace ProSuite.DomainModel.AO.QA
 				}
 
 				ParameterInfo constrParam = constrParams[iParam];
-				DocAttribute docAttribute = null;
-				object[] docAttributes = constrParam.GetCustomAttributes(
-					typeof(DocAttribute), true);
 
-				if (docAttributes.Length > 0)
-				{
-					docAttribute = docAttributes[0] as DocAttribute;
-				}
-
-				string description = docAttribute != null
-					                     ? docAttribute.Description
-					                     : string.Empty;
-
-				var testParameter = new TestParameter(constrParam.Name,
-				                                      constrParam.ParameterType, description,
-				                                      isConstructorParameter: true);
+				var testParameter = new TestParameter(
+					constrParam.Name, constrParam.ParameterType,
+					ReflectionUtils.GetDescription(constrParam, inherit: true),
+					isConstructorParameter: true);
 
 				parameters.Add(testParameter);
 			}
@@ -247,22 +233,10 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				DocAttribute docAttribute = null;
-				object[] docAttributes = property.GetCustomAttributes(
-					typeof(DocAttribute), true);
-
-				if (docAttributes.Length > 0)
-				{
-					docAttribute = docAttributes[0] as DocAttribute;
-				}
-
-				string description = docAttribute != null
-					                     ? docAttribute.Description
-					                     : string.Empty;
-
-				var testParameter = new TestParameter(property.Name,
-				                                      property.PropertyType, description,
-				                                      isConstructorParameter: false);
+				var testParameter = new TestParameter(
+					property.Name, property.PropertyType,
+					ReflectionUtils.GetDescription(property, inherit: true),
+					isConstructorParameter: false);
 
 				if (testParameterAttribute != null)
 				{

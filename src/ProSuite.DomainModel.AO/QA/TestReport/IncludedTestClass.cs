@@ -5,7 +5,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container;
-using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
@@ -82,17 +81,11 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 		public override IList<IssueCode> IssueCodes => IssueCodeUtils.GetIssueCodes(_testType);
 
-		#endregion
-
 		[CanBeNull]
-		public override string Description
-		{
-			get
-			{
-				var attribute = ReflectionUtils.GetAttribute<DocAttribute>(_testType);
-				return attribute?.Description;
-			}
-		}
+		public override string Description =>
+			ReflectionUtils.GetDescription(_testType, inherit: false);
+
+		#endregion
 
 		#region Implementation of IComparable<IncludedTestClass>
 
