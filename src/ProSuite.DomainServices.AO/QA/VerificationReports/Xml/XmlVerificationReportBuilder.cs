@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
@@ -9,6 +9,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Reflection;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.Xml;
@@ -25,6 +26,8 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 	// TODO rows with stop conditions
 	public class XmlVerificationReportBuilder : IVerificationReportBuilder
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private bool _verificationOngoing;
 
 		[NotNull] private readonly HashSet<Dataset> _verifiedDatasets =
@@ -640,6 +643,16 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 				if (datasetParameter != null)
 				{
 					Dataset dataset = datasetParameter.DatasetValue;
+
+					if (dataset == null)
+					{
+						_msg.DebugFormat(
+							"Dataset parameter {0} of condition {1} has no dataset value.",
+							datasetParameter.TestParameterName, qualityCondition.Name);
+
+						continue;
+					}
+
 					Assert.NotNull(dataset, "dataset");
 					Assert.False(dataset.Deleted, "dataset is deleted");
 					yield return new XmlTestParameterValue
