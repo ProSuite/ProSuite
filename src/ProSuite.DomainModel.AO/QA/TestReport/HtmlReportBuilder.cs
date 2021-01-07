@@ -552,7 +552,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 				parameterRow.AppendChild(CreateTableCell(testParameter.Name));
 				parameterRow.AppendChild(
-					CreateTableCell(TestImplementationUtils.GetParameterTypeString(testParameter)));
+					CreateTableCell(TestDescriptorUtils.GetParameterTypeString(testParameter)));
 				parameterRow.AppendChild(
 					CreateTableCell(parameterDescription ?? "<no description>"));
 			}
@@ -562,7 +562,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 		private XmlElement GetSignatureRow([NotNull] TestFactory testFactory)
 		{
-			string signature = TestImplementationUtils.GetTestSignature(testFactory);
+			string signature = TestDescriptorUtils.GetTestSignature(testFactory);
 
 			XmlElement signatureRow = CreateTableRow();
 			signatureRow.AppendChild(CreateTableCell("Signature:"));

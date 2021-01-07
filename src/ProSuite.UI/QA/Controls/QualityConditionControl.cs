@@ -124,7 +124,7 @@ namespace ProSuite.UI.QA.Controls
 				ITestImplementationInfo testImplementationInfo =
 					testDescriptor == null
 						? null
-						: TestImplementationUtils.GetTestImplementationInfo(testDescriptor);
+						: TestDescriptorUtils.GetTestImplementationInfo(testDescriptor);
 
 				description = testImplementationInfo == null
 					              ? string.Empty

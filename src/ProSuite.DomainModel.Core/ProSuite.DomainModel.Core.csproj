@@ -156,7 +156,7 @@
     <Compile Include="QA\ScalarTestParameterValue.cs" />
     <Compile Include="QA\TestDefinition.cs" />
     <Compile Include="QA\TestDescriptor.cs" />
-    <Compile Include="QA\TestImplementationUtils.cs" />
+    <Compile Include="QA\TestDescriptorUtils.cs" />
     <Compile Include="QA\TestParameterType.cs" />
     <Compile Include="QA\TestParameterStringUtils.cs" />
     <Compile Include="QA\TestParameterValue.cs" />

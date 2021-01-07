@@ -13,7 +13,7 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 			Description = StringUtils.IsNotEmpty(testParameter.Description)
 				              ? testParameter.Description
 				              : null;
-			Type = TestImplementationUtils.GetParameterTypeString(testParameter);
+			Type = TestDescriptorUtils.GetParameterTypeString(testParameter);
 		}
 
 		[UsedImplicitly]

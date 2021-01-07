@@ -7,7 +7,7 @@ using ProSuite.QA.Core;
 namespace ProSuite.DomainModel.Core.QA
 {
 	[CLSCompliant(false)]
-	public static class TestImplementationUtils
+	public static class TestDescriptorUtils
 	{
 		/// <summary>
 		/// Gets the test factory. Requires the test class or the test factory descriptor to be defined.
