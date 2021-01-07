@@ -39,9 +39,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataModel\AssociationRepositoryTestBase.cs" />
     <Compile Include="DataModel\AttributeTypeRepositoryTestBase.cs" />
+    <Compile Include="DataModel\DatasetRepositoryTestBase.cs" />
     <Compile Include="QA\DataQualityCategoryRepositoryTestBase.cs" />
     <Compile Include="IRepositoryTestController.cs" />
+    <Compile Include="QA\TestDescriptorRepositoryTestBase.cs" />
     <Compile Include="RepositoryTestBase.cs" />
   </ItemGroup>
   <ItemGroup>
