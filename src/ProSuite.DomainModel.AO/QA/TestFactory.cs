@@ -484,10 +484,6 @@ namespace ProSuite.DomainModel.AO.QA
 
 				datasetParameterValue.DataType = parameter.Type;
 
-				// TODO: Test in AO11 context and consider not running this test
-				Assert.True(datasetContext.CanOpen(dataset), "Cannot open dataset {0} of type {1}",
-				            dataset, parameter.Type);
-
 				object result = datasetContext.OpenDataset(dataset, datasetParameterValue.DataType);
 
 				Assert.NotNull(result, "Dataset not found in current context: {0}",

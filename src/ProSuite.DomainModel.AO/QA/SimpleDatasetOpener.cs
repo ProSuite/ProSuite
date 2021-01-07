@@ -25,18 +25,6 @@ namespace ProSuite.DomainModel.AO.QA
 			_datasetContext = datasetContext;
 		}
 
-		public bool CanOpen(IDdxDataset dataset)
-		{
-			if (dataset is IObjectDataset ||
-			    dataset is IDdxRasterDataset)
-
-			{
-				return _datasetContext.CanOpen(dataset);
-			}
-
-			return false;
-		}
-
 		public object OpenDataset(IDdxDataset dataset, Type knownType)
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));

@@ -252,10 +252,8 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			var result = new List<Dataset>();
 
-			foreach (var datasetAndType in GetDatasetParameterValues(condition))
+			foreach (var dataset in condition.GetDatasetParameterValues())
 			{
-				var dataset = datasetAndType.Key;
-
 				if (knownExistingDatasets.Contains(dataset))
 				{
 					continue;
@@ -267,9 +265,7 @@ namespace ProSuite.DomainServices.AO.QA
 					continue;
 				}
 
-				Type datasetType = datasetAndType.Value;
-
-				if (ExistsDataset(dataset, datasetType, datasetOpener))
+				if (ExistsDataset(dataset, datasetOpener))
 				{
 					knownExistingDatasets.Add(dataset);
 				}
@@ -283,72 +279,15 @@ namespace ProSuite.DomainServices.AO.QA
 			return result;
 		}
 
-		[NotNull]
-		private static IEnumerable<KeyValuePair<Dataset, Type>> GetDatasetParameterValues(
-			[NotNull] QualityCondition condition)
-		{
-			foreach (TestParameterValue parameterValue in condition.ParameterValues)
-			{
-				var datasetTestParameterValue = parameterValue as DatasetTestParameterValue;
-
-				Dataset dataset = datasetTestParameterValue?.DatasetValue;
-
-				if (dataset != null)
-				{
-					yield return new KeyValuePair<Dataset, Type>(dataset, parameterValue.DataType);
-				}
-			}
-		}
-
 		private static bool ExistsDataset([NotNull] IDdxDataset dataset,
-		                                  [NotNull] Type datasetType,
 		                                  [NotNull] IOpenDataset datasetOpener)
 		{
-			// TODO REFACTORMODEL: use explicit check on work context
 			// -> allow work context to load dataset from other database ('master')
-			//	TODO: maybe this should be optional? --> here's a use for controlling the fallback
-
 			try
 			{
-				var aoDataset = datasetOpener.OpenDataset(dataset, datasetType);
+				var aoDataset = datasetOpener.OpenDataset(dataset);
 
 				return aoDataset != null;
-
-				//var objectDataset = dataset as ObjectDataset;
-				//if (objectDataset != null)
-				//{
-				//	return datasetContext.OpenObjectClass(objectDataset) != null;
-				//}
-
-				//var topologyDataset = dataset as TopologyDataset;
-				//if (topologyDataset != null)
-				//{
-				//	IDatasetContextEx datasetContextEx =
-				//		AssertIsDatasetContextEx(datasetContext, dataset);
-
-				//	return datasetContextEx.OpenTopology(topologyDataset) != null;
-				//}
-
-				//var geometricNetworkDataset = dataset as GeometricNetworkDataset;
-				//if (geometricNetworkDataset != null)
-				//{
-				//	IDatasetContextEx datasetContextEx =
-				//		AssertIsDatasetContextEx(datasetContext, dataset);
-
-				//	return datasetContextEx.OpenGeometricNetwork(geometricNetworkDataset) != null;
-				//}
-
-				//var terrainDataset = dataset as TerrainDataset;
-				//if (terrainDataset != null)
-				//{
-				//	IDatasetContextEx datasetContextEx =
-				//		AssertIsDatasetContextEx(datasetContext, dataset);
-
-				//	return datasetContextEx.OpenTerrain(terrainDataset) != null;
-				//}
-
-				//// unhandled dataset type, assume existing
-				//return true;
 			}
 			catch (Exception e)
 			{
@@ -356,18 +295,6 @@ namespace ProSuite.DomainServices.AO.QA
 				return false;
 			}
 		}
-
-		//private static IDatasetContextEx AssertIsDatasetContextEx(IDatasetContext datasetContext,
-		//                                                          IDdxDataset dataset)
-		//{
-		//	if (! (datasetContext is IDatasetContextEx datasetContextEx))
-		//	{
-		//		throw new NotImplementedException(
-		//			$"The model context {datasetContext} does not implement IDatasetContextEx. Cannot open {dataset}.");
-		//	}
-
-		//	return datasetContextEx;
-		//}
 
 		private static void ReportConditionWithMissingDatasetsWarning(
 			[NotNull] QualityCondition qualityCondition,

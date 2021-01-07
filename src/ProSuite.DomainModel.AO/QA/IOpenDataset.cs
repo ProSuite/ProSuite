@@ -12,8 +12,6 @@ namespace ProSuite.DomainModel.AO.QA
 	[CLSCompliant(false)]
 	public interface IOpenDataset
 	{
-		bool CanOpen([NotNull] IDdxDataset dataset);
-
 		[CanBeNull]
 		object OpenDataset([NotNull] IDdxDataset dataset,
 		                   [CanBeNull] Type knownType = null);
