@@ -77,10 +77,10 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			foreach (Assembly assembly in assemblies)
 			{
-				foreach (Type testType in TestDescriptorUtils.GetTestClasses(
+				foreach (Type testType in TestFactoryUtils.GetTestClasses(
 					assembly, includeObsolete, includeInternallyUsed))
 				{
-					foreach (int ctorIndex in TestDescriptorUtils.GetTestConstructorIndexes(
+					foreach (int ctorIndex in TestFactoryUtils.GetTestConstructorIndexes(
 						testType,
 						includeObsolete,
 						includeInternallyUsed))
@@ -99,7 +99,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			foreach (Assembly assembly in assemblies)
 			{
 				foreach (Type testFactoryType in
-					TestDescriptorUtils.GetTestFactoryClasses(
+					TestFactoryUtils.GetTestFactoryClasses(
 						assembly, includeObsolete, includeInternallyUsed))
 				{
 					reportBuilder.IncludeTestFactory(testFactoryType);

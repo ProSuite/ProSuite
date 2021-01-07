@@ -35,7 +35,7 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
 
 			TestFactory testFactory =
-				Assert.NotNull(TestDescriptorUtils.GetTestFactory(testDescriptor));
+				Assert.NotNull(TestFactoryUtils.GetTestFactory(testDescriptor));
 
 			Name = testDescriptor.Name;
 			Description = StringUtils.IsNotEmpty(testDescriptor.Description)
@@ -51,7 +51,7 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 				testType = testDescriptor.TestClass.GetInstanceType();
 				ConstructorId = testDescriptor.TestConstructorId;
 				UsesConstructor = true;
-				IsObsolete = TestDescriptorUtils.IsObsolete(testType, ConstructorId,
+				IsObsolete = TestFactoryUtils.IsObsolete(testType, ConstructorId,
 				                                            out _obsoleteMessage);
 			}
 			else if (testDescriptor.TestFactoryDescriptor != null)

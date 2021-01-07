@@ -11,10 +11,10 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 		public IncludedTestConstructor([NotNull] Type testType, int constructorIndex)
 			: base(GetTitle(testType, constructorIndex),
-			       TestDescriptorUtils.GetTestFactory(testType, constructorIndex),
+			       TestFactoryUtils.GetTestFactory(testType, constructorIndex),
 			       testType.Assembly,
-			       TestDescriptorUtils.IsObsolete(testType, constructorIndex),
-			       TestDescriptorUtils.IsInternallyUsed(testType, constructorIndex))
+			       TestFactoryUtils.IsObsolete(testType, constructorIndex),
+			       TestFactoryUtils.IsInternallyUsed(testType, constructorIndex))
 		{
 			_testType = testType;
 			_constructorIndex = constructorIndex;

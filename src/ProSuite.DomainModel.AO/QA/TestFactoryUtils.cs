@@ -13,7 +13,7 @@ using ProSuite.QA.Core;
 namespace ProSuite.DomainModel.AO.QA
 {
 	[CLSCompliant(false)]
-	public static class TestDescriptorUtils
+	public static class TestFactoryUtils
 	{
 		/// <summary>
 		/// Gets the test factory, sets the quality condition for it and initializes parameter values for it.

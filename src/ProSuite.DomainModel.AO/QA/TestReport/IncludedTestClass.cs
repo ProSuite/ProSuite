@@ -19,7 +19,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			: base(GetTitle(testType),
 			       testType.Assembly,
 			       ReflectionUtils.IsObsolete(testType),
-			       TestDescriptorUtils.IsInternallyUsed(testType),
+			       TestFactoryUtils.IsInternallyUsed(testType),
 			       ReflectionUtils.GetCategories(testType))
 		{
 			Assert.ArgumentNotNull(testType, nameof(testType));

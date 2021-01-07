@@ -182,7 +182,7 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="QA\SpecificationReport\SpecificationReportUtils.cs" />
-    <Compile Include="QA\TestDescriptorUtils.cs" />
+    <Compile Include="QA\TestFactoryUtils.cs" />
     <Compile Include="QA\TestFactory.cs" />
     <Compile Include="QA\TestReport\HtmlReportBuilder.cs" />
     <Compile Include="QA\TestReport\IncludedTest.cs" />

@@ -435,7 +435,7 @@ namespace ProSuite.DomainServices.AO.QA
 				ReportPreProcessing("Loading tests...", index++, count);
 
 				TestFactory factory =
-					Assert.NotNull(TestDescriptorUtils.CreateTestFactory(condition),
+					Assert.NotNull(TestFactoryUtils.CreateTestFactory(condition),
 					               $"Cannot create test factory for condition {condition.Name}");
 
 				IList<ITest> tests = factory.CreateTests(datasetOpener);
