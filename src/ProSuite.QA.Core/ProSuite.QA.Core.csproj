@@ -51,6 +51,7 @@
     <Compile Include="ITestImplementationInfo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestImplementationInfo.cs" />
+    <Compile Include="TestImplementationUtils.cs" />
     <Compile Include="TestParameter.cs" />
     <Compile Include="TestParameterAttribute.cs" />
   </ItemGroup>

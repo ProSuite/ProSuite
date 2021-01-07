@@ -4,6 +4,7 @@ using System.Windows.Forms;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Core;
 
 namespace ProSuite.UI.QA.Controls
 {
@@ -65,7 +66,7 @@ namespace ProSuite.UI.QA.Controls
 			{
 				_textBoxSignature.Text = testImplementationInfo == null
 					                         ? "Unable to create test signature"
-					                         : TestDescriptorUtils.GetTestSignature(
+					                         : TestImplementationUtils.GetTestSignature(
 						                         testImplementationInfo);
 			}
 			catch (Exception e)
