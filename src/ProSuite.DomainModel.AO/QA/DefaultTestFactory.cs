@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Reflection;
 using System.Text;
 using ProSuite.Commons.DomainModels;
@@ -80,9 +79,9 @@ namespace ProSuite.DomainModel.AO.QA
 
 		[NotNull]
 		public static IList<TestParameter> CreateParameters([NotNull] Type type,
-		                                                    int constructorIndex)
+		                                                    int constructorId)
 		{
-			ConstructorInfo constr = type.GetConstructors()[constructorIndex];
+			ConstructorInfo constr = type.GetConstructors()[constructorId];
 
 			ParameterInfo[] constructorParameters = constr.GetParameters();
 			PropertyInfo[] properties = type.GetProperties();
@@ -115,7 +114,7 @@ namespace ProSuite.DomainModel.AO.QA
 						isValid = false;
 
 						_msg.Warn(GetMessageConstructorParameterExistsAlsoAsProperty(
-							          type, constructorIndex, constructorParameter));
+							          type, constructorId, constructorParameter));
 					}
 				}
 
@@ -131,9 +130,10 @@ namespace ProSuite.DomainModel.AO.QA
 
 			foreach (ParameterInfo parameter in constructorParameters)
 			{
-				var testParameter = new TestParameter(parameter.Name,
-				                                      parameter.ParameterType,
-				                                      GetDescription(type, constr, parameter));
+				var testParameter = new TestParameter(
+					parameter.Name, parameter.ParameterType,
+					TestImplementationUtils.GetDescription(parameter),
+					isConstructorParameter: true);
 
 				object defaultValue;
 				if (ReflectionUtils.TryGetDefaultValue(parameter, out defaultValue))
@@ -144,20 +144,18 @@ namespace ProSuite.DomainModel.AO.QA
 				testParameters.Add(testParameter);
 			}
 
-			foreach (KeyValuePair<PropertyInfo, TestParameterAttribute> pair
-				in testParameterProperties)
+			foreach (KeyValuePair<PropertyInfo, TestParameterAttribute> pair in
+				testParameterProperties)
 			{
 				PropertyInfo property = pair.Key;
 				TestParameterAttribute attribute = pair.Value;
 
-				const bool isConstructorParameter = false;
-				var testParameter = new TestParameter(property.Name,
-				                                      property.PropertyType,
-				                                      GetDescription(property),
-				                                      isConstructorParameter)
-				                    {
-					                    DefaultValue = attribute.DefaultValue
-				                    };
+				var testParameter = new TestParameter(
+					property.Name, property.PropertyType,
+					TestImplementationUtils.GetDescription(property),
+					isConstructorParameter: false);
+
+				testParameter.DefaultValue = attribute.DefaultValue;
 
 				testParameters.Add(testParameter);
 			}
@@ -169,7 +167,9 @@ namespace ProSuite.DomainModel.AO.QA
 
 		public override string GetTestDescription()
 		{
-			return GetDescription(TestType, _constructorId);
+			ConstructorInfo ctor = TestType.GetConstructors()[_constructorId];
+
+			return TestImplementationUtils.GetDescription(ctor);
 		}
 
 		public override string GetParameterDescription(string parameterName)
@@ -183,7 +183,7 @@ namespace ProSuite.DomainModel.AO.QA
 			{
 				if (string.Equals(parameterInfo.Name, parameterName, stringComparison))
 				{
-					return GetDescription(parameterInfo);
+					return TestImplementationUtils.GetDescription(parameterInfo);
 				}
 			}
 
@@ -191,41 +191,7 @@ namespace ProSuite.DomainModel.AO.QA
 			{
 				if (string.Equals(propertyInfo.Name, parameterName, stringComparison))
 				{
-					return GetDescription(propertyInfo);
-				}
-			}
-
-			return null;
-		}
-
-		public static string GetDescription([NotNull] Type type, int indexCtor)
-		{
-			ConstructorInfo ctor = type.GetConstructors()[indexCtor];
-			return GetDescription(ctor);
-		}
-
-		public static string GetDescription(Type type,
-		                                    ConstructorInfo constructor,
-		                                    [NotNull] ParameterInfo parameter)
-		{
-			return GetDescription(parameter);
-		}
-
-		[CanBeNull]
-		private static string GetDescription(
-			[NotNull] ICustomAttributeProvider attributeProvider)
-		{
-			const bool inherit = false;
-			object[] attributes = attributeProvider.GetCustomAttributes(
-				typeof(DescriptionAttribute), inherit);
-
-			foreach (object attribute in attributes)
-			{
-				var descriptionAttribute = attribute as DescriptionAttribute;
-
-				if (descriptionAttribute != null)
-				{
-					return descriptionAttribute.Description;
+					return TestImplementationUtils.GetDescription(propertyInfo);
 				}
 			}
 
@@ -235,14 +201,14 @@ namespace ProSuite.DomainModel.AO.QA
 		[NotNull]
 		private static string GetMessageConstructorParameterExistsAlsoAsProperty(
 			[NotNull] Type type,
-			int constructorIndex,
+			int constructorId,
 			[NotNull] ParameterInfo constructorParameter)
 		{
 			var sb = new StringBuilder();
 
 			sb.AppendFormat(
 				"{0}({1}) has '{2}' as constructor parameter and as TestParameter property.",
-				type.Name, constructorIndex, constructorParameter.Name);
+				type.Name, constructorId, constructorParameter.Name);
 			sb.AppendLine();
 
 			sb.AppendFormat(

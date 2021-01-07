@@ -177,7 +177,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 				var testParameter = new TestParameter(
 					constrParam.Name, constrParam.ParameterType,
-					ReflectionUtils.GetDescription(constrParam, inherit: true),
+					TestImplementationUtils.GetDescription(constrParam),
 					isConstructorParameter: true);
 
 				parameters.Add(testParameter);
@@ -235,7 +235,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 				var testParameter = new TestParameter(
 					property.Name, property.PropertyType,
-					ReflectionUtils.GetDescription(property, inherit: true),
+					TestImplementationUtils.GetDescription(property),
 					isConstructorParameter: false);
 
 				if (testParameterAttribute != null)

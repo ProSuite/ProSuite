@@ -1,6 +1,8 @@
+using System.Reflection;
 using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Reflection;
 
 namespace ProSuite.QA.Core
 {
@@ -58,6 +60,24 @@ namespace ProSuite.QA.Core
 			}
 
 			return sb.ToString();
+		}
+
+		[CanBeNull]
+		public static string GetDescription([NotNull] ConstructorInfo constructorInfo)
+		{
+			return ReflectionUtils.GetDescription(constructorInfo);
+		}
+
+		[CanBeNull]
+		public static string GetDescription([NotNull] ParameterInfo parameterInfo)
+		{
+			return ReflectionUtils.GetDescription(parameterInfo, inherit: false);
+		}
+
+		[CanBeNull]
+		public static string GetDescription([NotNull] PropertyInfo propertyInfo)
+		{
+			return ReflectionUtils.GetDescription(propertyInfo, inherit: false);
 		}
 	}
 }
