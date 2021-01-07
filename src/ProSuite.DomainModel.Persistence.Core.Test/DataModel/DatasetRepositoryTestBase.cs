@@ -6,7 +6,6 @@ using ProSuite.DomainModel.Core.DataModel.Repositories;
 
 namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 {
-	[CLSCompliant(false)]
 	public abstract class DatasetRepositoryTestBase :
 		RepositoryTestBase<IDatasetRepository>
 	{
