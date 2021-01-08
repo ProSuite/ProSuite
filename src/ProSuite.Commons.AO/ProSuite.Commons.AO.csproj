@@ -94,6 +94,7 @@
     <Compile Include="Geodatabase\EditOperationObserverBase.cs" />
     <Compile Include="Geodatabase\EditStateInfo.cs" />
     <Compile Include="Geodatabase\EnumerableCursor.cs" />
+    <Compile Include="Geodatabase\IWorkspaceDbConnectionProvider.cs" />
     <Compile Include="Geodatabase\ObjectClassComparer.cs" />
     <Compile Include="Geodatabase\FeatureStorageUtils.cs" />
     <Compile Include="Geodatabase\FieldComparison.cs" />
@@ -136,6 +137,7 @@
     <Compile Include="Geodatabase\SyntheticFeature.cs" />
     <Compile Include="Geodatabase\TableJoinUtils.cs" />
     <Compile Include="Geodatabase\TableSortUtils.cs" />
+    <Compile Include="Geodatabase\ThreadLocalWorkspace.cs" />
     <Compile Include="Geodatabase\ToolEditOperationObserver.cs" />
     <Compile Include="Geodatabase\ValueRowProxy.cs" />
     <Compile Include="Geodatabase\VersionEventsObjectCacheSynchronizer.cs" />
@@ -268,6 +270,11 @@
     <Compile Include="RuntimeUtils.cs" />
     <Compile Include="SerializationUtils.cs" />
     <Compile Include="StreamUtils.cs" />
+    <Compile Include="Surface\BorderPointTileAllocationPolicy.cs" />
+    <Compile Include="Surface\ISimpleSurface.cs" />
+    <Compile Include="Surface\RectangularTileIndex.cs" />
+    <Compile Include="Surface\RectangularTilingStructure.cs" />
+    <Compile Include="Surface\RectangularTilingUtils.cs" />
     <Compile Include="UIDUtils.cs" />
   </ItemGroup>
   <ItemGroup>

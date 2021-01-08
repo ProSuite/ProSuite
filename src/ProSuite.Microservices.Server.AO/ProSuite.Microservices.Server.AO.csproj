@@ -34,7 +34,7 @@
     <DefineConstants>TRACE;$(VSArcGISProduct)</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.Commons.AO.xml</DocumentationFile>
+    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.Microservices.Server.AO.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
@@ -62,15 +62,20 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.$(VSArcGISProduct).System.dll</HintPath>
     </Reference>
-    <Reference Include="ProSuite.Microservices.Definitions.Geometry, Version=0.0.3.0, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
+    <Reference Include="ProSuite.Microservices.Definitions.Geometry, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Geometry.dll</HintPath>
     </Reference>
-    <Reference Include="ProSuite.Microservices.Definitions.Shared">
+    <Reference Include="ProSuite.Microservices.Definitions.QA, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.dll</HintPath>
+    </Reference>
+    <Reference Include="ProSuite.Microservices.Definitions.Shared, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Shared.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -91,13 +96,19 @@
     <Compile Include="Geodatabase\GdbRow.cs" />
     <Compile Include="Geodatabase\GdbTableContainer.cs" />
     <Compile Include="Geodatabase\GdbWorkspace.cs" />
+    <Compile Include="Geodatabase\InMemoryDataset.cs" />
+    <Compile Include="Geodatabase\RemoteDataset.cs" />
     <Compile Include="Geometry\RemoveOverlaps\RemoveOverlapsGrpcImpl.cs" />
     <Compile Include="Geometry\RemoveOverlaps\RemoveOverlapsServiceUtils.cs" />
     <Compile Include="GrpcServerUtils.cs" />
+    <Compile Include="GrpcWindowsService.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="IServiceHealth.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProtobufConversionUtils.cs" />
     <Compile Include="ServiceHealth.cs" />
+    <Compile Include="StartedGrpcServer.cs" />
     <Compile Include="TrackCancellationToken.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -127,6 +138,10 @@
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
       <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
       <Name>ProSuite.Commons.Logging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Microservices.AO\ProSuite.Microservices.AO.csproj">
+      <Project>{53E0297E-F959-4D5D-B1CB-33D3A1D96623}</Project>
+      <Name>ProSuite.Microservices.AO</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup />

@@ -5,6 +5,7 @@ namespace ProSuite.DomainModel.Core.QA.VerificationProgress
 		PreProcess,
 		ProcessNonCache,
 		ProcessContainer,
-		Error
+		Error,
+		ProcessParallel
 	}
 }

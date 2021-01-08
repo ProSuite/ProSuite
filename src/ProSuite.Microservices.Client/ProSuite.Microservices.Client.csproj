@@ -22,6 +22,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -30,6 +31,7 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <NoWarn>1591</NoWarn>
     <DocumentationFile>$(OutputDirectory)\Release\ProSuite.Microservices.Client.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
@@ -58,11 +60,12 @@
     <Compile Include="ClientChannelConfigs.cs" />
     <Compile Include="GrpcUtils.cs" />
     <Compile Include="ClientChannelConfig.cs" />
-    <Compile Include="ProtobufConversionUtils.cs" />
+    <Compile Include="ProtobufGeomUtils.cs" />
     <Compile Include="QA\IClientIssueMessageCollector.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QA\BackgroundVerificationResult.cs" />
     <Compile Include="QA\BackgroundVerificationRun.cs" />
+    <Compile Include="QA\IVerificationDataProvider.cs" />
     <Compile Include="QA\QualityVerificationServiceClient.cs" />
     <Compile Include="MicroserviceClientBase.cs" />
   </ItemGroup>

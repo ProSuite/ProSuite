@@ -19,5 +19,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		bool Remove([NotNull] string name);
 
 		IEnumerable<string> GetNames();
+
+		bool Exists([NotNull] string name);
 	}
 }

@@ -12,6 +12,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 {
 	public static class BackgroundVerificationUtils
 	{
+		[CLSCompliant(false)]
 		public static WpfHostingWinForm CreateVerificationProgressForm(
 			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient qaClient,
 			[NotNull] BackgroundVerificationRun verificationRun,

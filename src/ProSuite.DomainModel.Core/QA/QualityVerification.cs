@@ -215,26 +215,29 @@ namespace ProSuite.DomainModel.Core.QA
 				verificationDataset => Equals(verificationDataset.Dataset, dataset));
 		}
 
-		public void CalculateFulfilled()
+		public void CalculateStatistics()
 		{
-			if (_cancelled)
-			{
-				_fulfilled = false;
-				return;
-			}
-
+			bool fulfilled = true;
+			int issueCount = 0;
 			foreach (QualityConditionVerification verification in _conditionVerifications)
 			{
+				issueCount += verification.ErrorCount;
+
 				if (verification.Fulfilled)
 				{
 					continue;
 				}
 
-				_fulfilled = false;
-				return;
+				fulfilled = false;
 			}
 
-			_fulfilled = true;
+			if (_cancelled)
+			{
+				_fulfilled = false;
+			}
+
+			_fulfilled = fulfilled;
+			_issueCount = issueCount;
 		}
 
 		public int WarningCount

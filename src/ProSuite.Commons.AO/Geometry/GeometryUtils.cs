@@ -7730,6 +7730,7 @@ namespace ProSuite.Commons.AO.Geometry
 		/// for a polygon. Make sure the input polygon is simple, otherwise this method fails.
 		/// </summary>
 		/// <param name="polygon">The polygon.</param>
+		/// <param name="allowSimplify"></param>
 		/// <returns></returns>
 		[NotNull]
 		public static IEnumerable<IPolygon> GetConnectedComponents(

@@ -7,9 +7,10 @@ using System.Reflection;
 
 #if DEBUG
 [assembly: AssemblyConfiguration("Debug")]
+[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyFileVersion("1.0.0.0")]
 #else
 [assembly : AssemblyConfiguration("Release")]
-#endif
-
 [assembly: AssemblyVersion("0.1.0.0")]
 [assembly: AssemblyFileVersion("0.1.0.0")]
+#endif

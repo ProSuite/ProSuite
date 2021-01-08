@@ -109,12 +109,10 @@ namespace ProSuite.Microservices.Client.QA
 			result.StartDate = new DateTime(msg.StartTimeTicks);
 			result.EndDate = new DateTime(msg.EndTimeTicks);
 
-			result.IssueCount = conditionVerifications.Sum(v => v.ErrorCount);
-
 			result.ProcessorTimeSeconds = msg.ProcessorTimeSeconds;
 			result.RowsWithStopConditions = msg.RowsWithStopConditions;
 
-			result.CalculateFulfilled();
+			result.CalculateStatistics();
 
 			return result;
 		}

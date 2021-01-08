@@ -116,6 +116,11 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 
 		public void set_Value(int index, object value)
 		{
+			if (value == null)
+			{
+				value = DBNull.Value;
+			}
+
 			ValueSet.SetProperty(Convert.ToString(index), value);
 		}
 

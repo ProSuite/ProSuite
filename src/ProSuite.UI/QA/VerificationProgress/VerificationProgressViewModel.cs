@@ -55,6 +55,8 @@ namespace ProSuite.UI.QA.VerificationProgress
 		public VerificationProgressViewModel()
 		{
 			CancelButtonText = "Cancel";
+			DetailProgressVisible = Visibility.Hidden;
+			OverallProgressVisible = Visibility.Hidden;
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;
@@ -417,6 +419,21 @@ namespace ProSuite.UI.QA.VerificationProgress
 			return result;
 		}
 
+		public void Closing(object sender, CancelEventArgs e)
+		{
+			// Just in case the dialog is closed by the eXit button:
+			if (ProgressTracker == null)
+			{
+				return;
+			}
+
+			if (ProgressTracker.RemoteCallStatus ==
+			    ServiceCallStatus.Running)
+			{
+				ProgressTracker.CancelQualityVerification();
+			}
+		}
+
 		private void CancelOrClose()
 		{
 			Try(nameof(CancelOrClose),
@@ -596,6 +613,12 @@ namespace ProSuite.UI.QA.VerificationProgress
 					OverallProgressText = currentTile == null ? "Standalone tests" : "Tiles";
 					OverallProgressVisible = Visibility.Visible;
 					TileInfoVisible = Visibility.Visible;
+					DetailProgressText = processingMessage;
+					break;
+				case VerificationProgressType.ProcessParallel:
+					RunningProgressTypeText = "Parallel test execution...";
+					OverallProgressText = currentTile == null ? "Standalone tests" : "Tiles";
+					OverallProgressVisible = Visibility.Visible;
 					DetailProgressText = processingMessage;
 					break;
 				// progress type Error does not change the label

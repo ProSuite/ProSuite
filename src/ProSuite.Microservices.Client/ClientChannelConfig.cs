@@ -9,7 +9,9 @@ namespace ProSuite.Microservices.Client
 
 		public int Port { get; set; }
 
+		public bool UseTls { get; set; }
+
 		[CanBeNull]
-		public string ServerCertificateFile { get; set; }
+		public string ClientCertificate { get; set; }
 	}
 }

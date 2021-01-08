@@ -41,6 +41,7 @@
   <ItemGroup>
     <Compile Include="Ado\ConnectionStringUpdaterTest.cs" />
     <Compile Include="Assertions\AssertTest.cs" />
+    <Compile Include="Callbacks\CallbackUtilsTest.cs" />
     <Compile Include="Collections\CollectionUtilsTest.cs" />
     <Compile Include="Collections\DistinctValuesTest.cs" />
     <Compile Include="Collections\NumericStringComparerTest.cs" />

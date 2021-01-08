@@ -28,8 +28,9 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			BasicFeatureLayer[] featureLayers = await Task.WhenAll(GetLayers(map).Select(EnsureStatusFieldCoreAsync));
-			
-			UniqueName = GetWorkListName(context);
+
+			// create new name if worklist do not have one (stored in XML)
+			UniqueName = GetWorklistId() ?? GetWorkListName(context);
 
 			IRepository stateRepository = CreateStateRepositoryCore(context.GetPath(UniqueName), UniqueName);
 
@@ -66,6 +67,11 @@ namespace ProSuite.AGP.WorkList
 		protected static Type GetWorkListTypeCore<T>() where T : IWorkList
 		{
 			return typeof(T);
+		}
+
+		public virtual string GetWorklistId()
+		{
+			return null;
 		}
 	}
 }

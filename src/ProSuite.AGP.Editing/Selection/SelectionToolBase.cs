@@ -7,7 +7,7 @@ using ProSuite.Commons.UI.Keyboard;
 
 namespace ProSuite.AGP.Editing.Selection
 {
-	public class SelectionToolBase: OneClickToolBase
+	public class SelectionToolBase : OneClickToolBase
 	{
 		public SelectionToolBase()
 		{
@@ -15,15 +15,15 @@ namespace ProSuite.AGP.Editing.Selection
 			SelectionSettings = new SelectionSettings();
 			SelectionCursor = ToolUtils.GetCursor(Resources.SelectionToolNormal);
 			SelectionCursorShift = ToolUtils.GetCursor(Resources.SelectionToolNormalShift);
-			
+
 			SetCursor(SelectionCursor);
 			//SelectionMode = SelectionMode.Normal;
 		}
-		
+
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private SelectionSettings _selectionSettings;
-		
+
 		protected override bool IsInSelectionPhase()
 		{
 			return true;
@@ -39,6 +39,7 @@ namespace ProSuite.AGP.Editing.Selection
 			{
 				SetCursor(SelectionCursor);
 			}
+
 			_msg.VerboseDebug($"Key {k.Key} was pressed.");
 		}
 
@@ -65,10 +66,14 @@ namespace ProSuite.AGP.Editing.Selection
 			// throw new NotImplementedException();
 		}
 
-		
 		protected override void LogPromptForSelection()
 		{
-			_msg.InfoFormat("Select features by clicking or dragging a box");
+			_msg.InfoFormat(
+				"Select one or more features by clicking or dragging a box. Options: " +
+				"<br>-Press and hold SHIFT to add or remove features from the existing selection." +
+				"<br>-Press CTRL and drag a box to show a list of selectable feature classes." +
+				"<br>-Press CTRL and click on overlapping features to select a single feature." +
+				"<br>-Press ALT and click to select all features at the click point.");
 		}
 
 		protected override SelectionSettings SelectionSettings

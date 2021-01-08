@@ -778,6 +778,40 @@ namespace ProSuite.Commons.AO.Geodatabase
 			                                      ObjectClassEquality.SameTableSameVersion);
 		}
 
+		/// <summary>
+		/// Creates the joined table by joining the specified tables according to the specified
+		/// join type. The tables must be the origin/destination tables of the specified
+		/// RelationshipClass.
+		/// </summary>
+		/// <param name="relationshipClass">The relationship class that connects the ...</param>
+		/// <param name="tables">to be joined</param>
+		/// <param name="joinType">The join type w.r.t. the list order of the tables.</param>
+		/// <param name="whereClause">Optional where clause</param>
+		/// <returns></returns>
+		[NotNull]
+		public static ITable GetQueryTable(
+			[NotNull] IRelationshipClass relationshipClass,
+			[NotNull] IList<ITable> tables,
+			JoinType joinType,
+			string whereClause = null)
+		{
+			Assert.ArgumentNotNull(relationshipClass, nameof(relationshipClass));
+			Assert.ArgumentNotNull(tables, nameof(tables));
+			Assert.ArgumentCondition(tables.Count > 1, "2 tables required");
+
+			Assert.ArgumentCondition(
+				(IsOriginClass(relationshipClass, tables[0]) &&
+				 IsDestinationClass(relationshipClass, tables[1])) ||
+				(IsDestinationClass(relationshipClass, tables[0]) &&
+				 IsOriginClass(relationshipClass, tables[1])),
+				"tables must be origin/destination of relationship class");
+
+			return TableJoinUtils.CreateQueryTable(
+				relationshipClass,
+				AdaptJoinTypeToRelationshipDirection(relationshipClass, tables, joinType),
+				whereClause: whereClause);
+		}
+
 		#region Private Methods
 
 		/// <summary>
@@ -1473,6 +1507,49 @@ namespace ProSuite.Commons.AO.Geodatabase
 			obj.set_Value(fieldIndex, UIDUtils.CreateUID());
 
 			return true;
+		}
+
+		private static bool IsOriginClass(
+			[NotNull] IRelationshipClass relationshipClass,
+			[NotNull] ITable table)
+		{
+			return DatasetUtils.IsSameObjectClass(relationshipClass.OriginClass,
+			                                      (IObjectClass) table,
+			                                      ObjectClassEquality.SameTableAnyVersion);
+		}
+
+		private static bool IsDestinationClass(
+			[NotNull] IRelationshipClass relationshipClass,
+			[NotNull] ITable table)
+		{
+			return DatasetUtils.IsSameObjectClass(relationshipClass.DestinationClass,
+			                                      (IObjectClass) table,
+			                                      ObjectClassEquality.SameTableAnyVersion);
+		}
+
+		private static JoinType AdaptJoinTypeToRelationshipDirection(
+			[NotNull] IRelationshipClass relationshipClass,
+			[NotNull] IList<ITable> tables,
+			JoinType joinType)
+		{
+			if (joinType == JoinType.InnerJoin || tables[0] == relationshipClass.OriginClass)
+			{
+				// return as is
+				return joinType;
+			}
+
+			// switch the outer join side
+			switch (joinType)
+			{
+				case JoinType.LeftJoin:
+					return JoinType.RightJoin;
+
+				case JoinType.RightJoin:
+					return JoinType.LeftJoin;
+
+				default:
+					throw new AssertionException($"Unhandled join type: {joinType}");
+			}
 		}
 
 		#endregion

@@ -129,5 +129,15 @@ namespace ProSuite.AGP.WorkList.Domain
 				return _map.Keys.ToList();
 			}
 		}
+
+		public bool Exists(string name)
+		{
+			lock (_registryLock)
+			{
+				if (String.IsNullOrEmpty(name))
+					return false;
+				return _map.ContainsKey(name);
+			}
+		}
 	}
 }

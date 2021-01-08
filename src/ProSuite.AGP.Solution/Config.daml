@@ -102,10 +102,10 @@
         <button id="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" caption="Show Log" className="LoggerUI.ProSuiteLogPane_ShowButton" loadOnClick="false" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation32.png">
           <tooltip heading="Show Logs Window">Show Logs Window<disabledText /></tooltip>
         </button>
-        <!--<button id="Clients_AGP_ProSuiteSolution_AddWorkList" caption="AddWorkList" className="AddWorkListFile" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
+        <button id="Clients_AGP_ProSuiteSolution_AddWorkList" caption="Import WorkList" className="ImportWorkListFile" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Import Worklist file">
             Import and add worklist file(wl) to project<disabledText /></tooltip>
-        </button>-->
+        </button>
         <button id="Clients_AGP_ProSuiteSolution_OpenWorkList" caption="OpenWorkList" className="OpenWorkListFile" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Open Worklist file">
             Initialize and Open Worklist file (wl)<disabledText /></tooltip>

@@ -14,5 +14,7 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 		public abstract IEnumerable<IDataset> GetDatasets(esriDatasetType datasetType);
 
 		public abstract ITable OpenTable(string name);
+
+		public abstract ITable OpenQueryTable(string relationshipClassName);
 	}
 }

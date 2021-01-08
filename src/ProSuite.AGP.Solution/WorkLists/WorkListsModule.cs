@@ -85,6 +85,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			try
 			{
+				// is this worklist already loaded?
+				if (_registry.Exists(environment.GetWorklistId()))
+				{
+					_msg.Debug("Worklist is already loaded");
+					return;
+				}
+
 				IWorkList workList = await environment.CreateWorkListAsync(this);
 
 				RegisterObserver(new WorkListObserver());

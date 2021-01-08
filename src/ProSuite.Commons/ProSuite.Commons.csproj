@@ -58,6 +58,7 @@
     <Compile Include="Ado\ConnectionStringBuilder.cs" />
     <Compile Include="Ado\ConnectionStringEncryptionUtils.cs" />
     <Compile Include="AppDataFolder.cs" />
+    <Compile Include="Callbacks\CallbackUtils.cs" />
     <Compile Include="Collections\ConsistentHashLargeDictionary.cs" />
     <Compile Include="Collections\DistinctValue.cs" />
     <Compile Include="Collections\DistinctValues.cs" />

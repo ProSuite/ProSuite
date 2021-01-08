@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
@@ -130,12 +131,14 @@ namespace ProSuite.Microservices.Server.AO
 		}
 
 		private static KeyPair TryGetServerCertificateKeyPair(
-			string certificate,
+			[NotNull] string certificate,
 			[CanBeNull] string privateKeyFilePath)
 		{
 			KeyPair result;
 			if (File.Exists(certificate))
 			{
+				_msg.DebugFormat("Using existing PEM file certificate: {0}.", certificate);
+
 				Assert.NotNullOrEmpty(privateKeyFilePath, "Private key PEM file was not provided.");
 
 				Assert.True(File.Exists(privateKeyFilePath),
@@ -152,15 +155,22 @@ namespace ProSuite.Microservices.Server.AO
 					"No certificate PEM file found using {0}. Getting certificate from store.",
 					certificate);
 
-				// Find server certificate from Store (Local Computer, Personal folder)
-				result =
-					CertificateUtils.FindKeyCertificatePairFromStore(
-						certificate,
-						new[]
-						{
-							X509FindType.FindBySubjectDistinguishedName,
-							X509FindType.FindByThumbprint
-						}, StoreName.My, StoreLocation.LocalMachine);
+				if (! string.IsNullOrEmpty(privateKeyFilePath))
+				{
+					result = GetMixedKeyPair(certificate, privateKeyFilePath);
+				}
+				else
+				{
+					// Find server certificate including private key from Store (Local Computer, Personal folder)
+					result =
+						CertificateUtils.FindKeyCertificatePairFromStore(
+							certificate,
+							new[]
+							{
+								X509FindType.FindBySubjectDistinguishedName,
+								X509FindType.FindByThumbprint
+							}, StoreName.My, StoreLocation.LocalMachine);
+				}
 
 				if (result == null)
 				{
@@ -177,6 +187,48 @@ namespace ProSuite.Microservices.Server.AO
 			if (result != null && _msg.IsVerboseDebugEnabled)
 			{
 				_msg.DebugFormat("Certificate chain: {0}", result.PublicKey);
+			}
+
+			return result;
+		}
+
+		/// <summary>
+		/// Gets the public certificate from the certificate store and the private key from the
+		/// specified file.
+		/// </summary>
+		/// <param name="certificate"></param>
+		/// <param name="privateKeyFilePath"></param>
+		/// <returns></returns>
+		private static KeyPair GetMixedKeyPair(string certificate, string privateKeyFilePath)
+		{
+			Assert.True(File.Exists(privateKeyFilePath),
+			            $"The specified private key PEM file {privateKeyFilePath} was not found. " +
+			            "In order to use the private key from the certificate, the private key file must not be specified.");
+
+			KeyPair result = null;
+
+			// The private key has been provided already, no need to try to extract it from the store:
+			X509Certificate2 x509Certificate2 =
+				CertificateUtils.FindValidCertificates(
+					                StoreName.My, StoreLocation.LocalMachine,
+					                certificate, new[]
+					                             {
+						                             X509FindType
+							                             .FindBySubjectDistinguishedName,
+						                             X509FindType.FindByThumbprint
+					                             })
+				                .FirstOrDefault();
+
+			if (x509Certificate2 != null)
+			{
+				string publicKey = CertificateUtils.ExportToPem(x509Certificate2, true);
+				string privateKey = File.ReadAllText(privateKeyFilePath);
+
+				result = new KeyPair(privateKey, publicKey);
+			}
+			else
+			{
+				_msg.InfoFormat("Certificate not found in certificate store.");
 			}
 
 			return result;

@@ -1,13 +1,16 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using Grpc.Core;
+using ProSuite.Commons.Cryptography;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Microservices.Client
 {
 	public static class GrpcUtils
 	{
-		// TODO: Consider moving to new project ProSuite.Microservices
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		public static IList<ChannelOption> CreateChannelOptions(int maxMessageLength)
@@ -27,12 +30,62 @@ namespace ProSuite.Microservices.Client
 			return channelOptions;
 		}
 
+		public static ChannelCredentials CreateChannelCredentials(
+			bool useTls,
+			[CanBeNull] string clientCertificate = null)
+		{
+			if (! useTls)
+			{
+				_msg.DebugFormat("Using insecure channel credentials");
+
+				return ChannelCredentials.Insecure;
+			}
+
+			string rootCertificatesAsPem =
+				CertificateUtils.GetUserRootCertificatesInPemFormat();
+
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				_msg.DebugFormat("Trusted root credentials provided: {0}",
+				                 rootCertificatesAsPem);
+			}
+
+			KeyCertificatePair sslClientCertificate = null;
+			if (! string.IsNullOrEmpty(clientCertificate))
+			{
+				KeyPair keyPair = CertificateUtils.FindKeyCertificatePairFromStore(
+					clientCertificate, new[]
+					                   {
+						                   X509FindType.FindBySubjectDistinguishedName,
+						                   X509FindType.FindByThumbprint,
+						                   X509FindType.FindBySubjectName
+					                   }, StoreName.My, StoreLocation.CurrentUser);
+
+				if (keyPair != null)
+				{
+					_msg.Debug("Using client-side certificate");
+
+					sslClientCertificate =
+						new KeyCertificatePair(keyPair.PublicKey, keyPair.PrivateKey);
+				}
+				else
+				{
+					throw new ArgumentException(
+						$"Could not usable find client certificate {clientCertificate} in certificate store.");
+				}
+			}
+
+			var result = new SslCredentials(rootCertificatesAsPem, sslClientCertificate);
+
+			return result;
+		}
+
 		public static Channel CreateChannel(
-			string host, int port,
+			[NotNull] string host, int port,
 			ChannelCredentials credentials,
 			int maxMessageLength)
 		{
-			_msg.DebugFormat("Creating channel");
+			_msg.DebugFormat("Creating channel to {0} on port {1}", host, port);
 
 			return new Channel(host, port, credentials,
 			                   CreateChannelOptions(maxMessageLength));

@@ -57,11 +57,15 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.$(VSArcGISProduct).System.dll</HintPath>
     </Reference>
-    <Reference Include="ProSuite.Microservices.Definitions.Geometry, Version=0.0.6.0, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
+    <Reference Include="ProSuite.Microservices.Definitions.Geometry, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Geometry.dll</HintPath>
     </Reference>
-    <Reference Include="ProSuite.Microservices.Definitions.Shared, Version=0.0.7.0, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
+    <Reference Include="ProSuite.Microservices.Definitions.QA, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.dll</HintPath>
+    </Reference>
+    <Reference Include="ProSuite.Microservices.Definitions.Shared, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Shared.dll</HintPath>
     </Reference>
@@ -75,6 +79,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Geodatabase\GdbRowTest.cs" />
+    <Compile Include="Geodatabase\GdbTableTest.cs" />
     <Compile Include="Geometry\RemoveOverlapsServiceTest.cs" />
     <Compile Include="ProtobufConversionUtilsTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -97,6 +103,10 @@
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
       <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
       <Name>ProSuite.Commons</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Microservices.AO\ProSuite.Microservices.AO.csproj">
+      <Project>{53E0297E-F959-4D5D-B1CB-33D3A1D96623}</Project>
+      <Name>ProSuite.Microservices.AO</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.Microservices.Server.AO\ProSuite.Microservices.Server.AO.csproj">
       <Project>{F997B55F-C442-4224-A573-AE39F72BEB4A}</Project>

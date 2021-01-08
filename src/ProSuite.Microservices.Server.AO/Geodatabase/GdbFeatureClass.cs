@@ -13,11 +13,31 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 		                       [NotNull] string name,
 		                       esriGeometryType shapeType,
 		                       [CanBeNull] string aliasName = null,
-		                       [CanBeNull] BackingDataset backingDataset = null,
+		                       [CanBeNull] Func<ITable, BackingDataset> createBackingDataset = null,
 		                       [CanBeNull] IWorkspace workspace = null)
-			: base(objectClassId, name, aliasName, backingDataset, workspace)
+			: base(objectClassId, name, aliasName, createBackingDataset, workspace)
 		{
 			ShapeType = shapeType;
+		}
+
+		protected override void FieldAddedCore(IField field)
+		{
+			base.FieldAddedCore(field);
+
+			if (field.Type == esriFieldType.esriFieldTypeGeometry)
+			{
+				ShapeFieldName = field.Name;
+			}
+		}
+
+		protected override IObject CreateObject(int oid)
+		{
+			return new GdbFeature(oid, this);
+		}
+
+		protected override esriDatasetType GetDatasetType()
+		{
+			return esriDatasetType.esriDTFeatureClass;
 		}
 
 		#region IGeoDataset Members
@@ -44,16 +64,6 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 		public IFeature CreateFeature()
 		{
 			return (IFeature) CreateObject(GetNextOid());
-		}
-
-		protected override IObject CreateObject(int oid)
-		{
-			return new GdbFeature(oid, this);
-		}
-
-		protected override esriDatasetType GetDatasetType()
-		{
-			return esriDatasetType.esriDTFeatureClass;
 		}
 
 		public IFeature GetFeature(int id)

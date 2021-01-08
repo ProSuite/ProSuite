@@ -577,6 +577,50 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
+		public static IGeometry GetFeatureShape(IFeature feature)
+		{
+			IGeometry featureShape;
+			try
+			{
+				featureShape = feature.Shape;
+			}
+			catch (COMException e)
+			{
+				// This sometimes happens with some query name based tables (the shape property is null or throws E_FAIL)
+				_msg.Debug(
+					$"Error getting shape of feature {ToString(feature)}", e);
+
+				var featureClass = (IFeatureClass) feature.Class;
+
+				if (DatasetUtils.IsQueryNameBasedClass(featureClass))
+				{
+					_msg.DebugFormat(
+						"Trying shape field value of query-name based feature class...");
+
+					string shapeFieldName = featureClass.ShapeFieldName;
+					int shapeFieldIdx = featureClass.Fields.FindField(shapeFieldName);
+
+					Assert.True(shapeFieldIdx >= 0, "Shape field {0} not found in {1}",
+					            shapeFieldName, DatasetUtils.GetName(featureClass));
+
+					featureShape = (IGeometry) feature.Value[shapeFieldIdx];
+
+					if (_msg.IsVerboseDebugEnabled)
+					{
+						_msg.DebugFormat(
+							"The shape extracted from the value of the shape field is {0}",
+							GeometryUtils.ToString(featureShape));
+					}
+				}
+				else
+				{
+					throw;
+				}
+			}
+
+			return featureShape;
+		}
+
 		/// <summary>
 		/// Adapts the spatial reference if necessary and sets the feature's shape.
 		/// Store is NOT called in this method.

@@ -1,4 +1,4 @@
-﻿namespace ProSuite.Commons.UI.WinForms
+namespace ProSuite.Commons.UI.WinForms
 {
 	partial class WpfHostingWinForm
 	{
@@ -39,6 +39,7 @@
 			this.MinimizeBox = false;
 			this.Name = "WpfHostingWinForm";
 			this.ShowInTaskbar = false;
+			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.WpfHostingWinForm_FormClosed);
 			this.Load += new System.EventHandler(this.WpfHostingWinForm_Load);
 			this.ResumeLayout(false);
 

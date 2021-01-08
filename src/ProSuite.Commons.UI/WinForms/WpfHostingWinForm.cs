@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Windows.Forms.Integration;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.UI.Persistence.WinForms;
 using ProSuite.Commons.UI.WPF;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -16,11 +17,17 @@ namespace ProSuite.Commons.UI.WinForms
 		private readonly UserControl _wpfControl;
 		private ElementHost _wpfControlHost;
 
+		private readonly FormStateManager<FormState> _formStateManager;
+
 		public WpfHostingWinForm([NotNull] UserControl wpfControl)
 		{
 			_wpfControl = wpfControl;
 
 			InitializeComponent();
+
+			string contextId = _wpfControl.GetType().Name;
+			_formStateManager = new FormStateManager<FormState>(this, contextId);
+			_formStateManager.RestoreState();
 		}
 
 		public bool FixedWidth { get; set; }
@@ -89,6 +96,11 @@ namespace ProSuite.Commons.UI.WinForms
 
 			MinimumSize = new Size(minWidth, minHeight);
 			MaximumSize = new Size(maxWidth, maxHeight);
+		}
+
+		private void WpfHostingWinForm_FormClosed(object sender, FormClosedEventArgs e)
+		{
+			_formStateManager?.SaveState();
 		}
 	}
 }
