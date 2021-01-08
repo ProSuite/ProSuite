@@ -73,25 +73,34 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="AllowedEndpointInteriorIntersections.cs" />
+    <Compile Include="AllowedLineInteriorIntersections.cs" />
     <Compile Include="Documentation\DocAttribute.cs" />
     <Compile Include="Documentation\DocStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>DocStrings.resx</DependentUpon>
     </Compile>
+    <Compile Include="GeometryMathUtils.cs" />
     <Compile Include="IssueCodes\IssueCodeDescriptions.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>IssueCodeDescriptions.resx</DependentUpon>
     </Compile>
     <Compile Include="IssueCodes\LocalTestIssueCodes.cs" />
+    <Compile Include="LineIntersection.cs" />
+    <Compile Include="LineIntersectionUtils.cs" />
     <Compile Include="Properties\LocalizableStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QaLineIntersectAngle.cs" />
+    <Compile Include="QaMinAngle.cs" />
     <Compile Include="QaMinSegAngle.cs" />
+    <Compile Include="SpatialRelations\QaSpatialRelationBase.cs" />
+    <Compile Include="SpatialRelations\QaSpatialRelationSelfBase.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Documentation\DocStrings.resx">

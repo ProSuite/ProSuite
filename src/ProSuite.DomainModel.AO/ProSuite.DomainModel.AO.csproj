@@ -159,6 +159,7 @@
     <Compile Include="QA\IQualityConditionObjectDatasetResolver.cs" />
     <Compile Include="QA\IVerificationContext.cs" />
     <Compile Include="QA\QualityConditionObjectDatasetResolver.cs" />
+    <Compile Include="QA\QualityConditionUtils.cs" />
     <Compile Include="QA\RowParser.cs" />
     <Compile Include="QA\SimpleDatasetOpener.cs" />
     <Compile Include="QA\SpecificationReport\HtmlDataModel.cs" />
@@ -184,6 +185,7 @@
     <Compile Include="QA\SpecificationReport\SpecificationReportUtils.cs" />
     <Compile Include="QA\TestFactoryUtils.cs" />
     <Compile Include="QA\TestFactory.cs" />
+    <Compile Include="QA\TestParameterUtils.cs" />
     <Compile Include="QA\TestReport\HtmlReportBuilder.cs" />
     <Compile Include="QA\TestReport\IncludedTest.cs" />
     <Compile Include="QA\TestReport\IncludedTestBase.cs" />

@@ -89,6 +89,14 @@
       <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
       <Name>ProSuite.Commons</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj">
+      <Project>{D360621D-D792-403B-A625-06A707A89D22}</Project>
+      <Name>ProSuite.DomainModel.AO</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
+      <Project>{0B48B56F-3A3D-4367-AA76-A356519AF2AB}</Project>
+      <Name>ProSuite.DomainModel.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.QA.Container.Test\ProSuite.QA.Container.Test.csproj">
       <Project>{F7D731C0-8A36-4B2C-A8C0-AFEB81FA8DD1}</Project>
       <Name>ProSuite.QA.Container.Test</Name>
@@ -96,6 +104,10 @@
     <ProjectReference Include="..\ProSuite.QA.Container\ProSuite.QA.Container.csproj">
       <Project>{D51693C1-F9F6-425D-8CD6-8DFBF5A52F6F}</Project>
       <Name>ProSuite.QA.Container</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.QA.TestFactories\ProSuite.QA.TestFactories.csproj">
+      <Project>{61704E1C-E13D-45E2-8388-BD3D1F8A1AF5}</Project>
+      <Name>ProSuite.QA.TestFactories</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.QA.Tests\ProSuite.QA.Tests.csproj">
       <Project>{7A1D3AB3-A9A8-45B0-9452-A0DDEA004E2B}</Project>
