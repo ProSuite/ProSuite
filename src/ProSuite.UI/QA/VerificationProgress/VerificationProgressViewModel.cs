@@ -465,7 +465,12 @@ namespace ProSuite.UI.QA.VerificationProgress
 			Try(nameof(CanSaveIssues),
 			    () =>
 			    {
-				    result = ProgressTracker?.RemoteCallStatus == ServiceCallStatus.Finished &&
+				    // TOP-5369: Failed runs should also be saveable
+				    bool saveableStatus =
+					    ProgressTracker?.RemoteCallStatus == ServiceCallStatus.Finished ||
+					    ProgressTracker?.RemoteCallStatus == ServiceCallStatus.Failed;
+
+				    result = saveableStatus &&
 				             SaveAction != null &&
 				             VerificationResult != null &&
 				             VerificationResult.CanSaveIssues;
