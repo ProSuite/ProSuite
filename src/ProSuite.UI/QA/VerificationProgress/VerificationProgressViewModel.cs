@@ -49,6 +49,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 		private string _startTimeText;
 		private string _endTimeText;
+		private SolidColorBrush _runningProgressBackColor;
 
 		#endregion
 
@@ -93,6 +94,16 @@ namespace ProSuite.UI.QA.VerificationProgress
 			set
 			{
 				_runningProgressTypeText = value;
+				OnPropertyChanged();
+			}
+		}
+
+		public SolidColorBrush RunningProgressBackColor
+		{
+			get => _runningProgressBackColor;
+			set
+			{
+				_runningProgressBackColor = value;
 				OnPropertyChanged();
 			}
 		}
@@ -408,6 +419,19 @@ namespace ProSuite.UI.QA.VerificationProgress
 			}
 
 			RunningProgressTypeText = $"{result}";
+
+			switch (result)
+			{
+				case ServiceCallStatus.Failed:
+					RunningProgressBackColor = Brushes.OrangeRed;
+					break;
+				case ServiceCallStatus.Cancelled:
+					RunningProgressBackColor = Brushes.SandyBrown;
+					break;
+				case ServiceCallStatus.Finished:
+					RunningProgressBackColor = Brushes.PaleGreen;
+					break;
+			}
 
 			if (result != ServiceCallStatus.Running)
 			{

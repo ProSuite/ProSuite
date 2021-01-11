@@ -19,9 +19,10 @@
             </Grid.RowDefinitions>
 
             <!-- Main progress type -->
-            <Label Grid.Row="0" Content="{Binding RunningProgressTypeText}" HorizontalAlignment="Left"
-                   HorizontalContentAlignment="Left" Margin="8,5,0,0"
-                   VerticalAlignment="Top" Width="240" />
+            <Label Grid.Row="0" Content="{Binding RunningProgressTypeText}" HorizontalAlignment="Stretch"
+                   HorizontalContentAlignment="Left" Margin="8,5,8,0"
+                   Background="{Binding RunningProgressBackColor}"
+                   VerticalAlignment="Top" />
 
             <!-- Progress messages and progress bars -->
             <Border Grid.Row="1" BorderBrush="DarkGray" BorderThickness="1" Margin="8">
