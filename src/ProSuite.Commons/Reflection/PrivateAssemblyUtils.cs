@@ -44,8 +44,7 @@ namespace ProSuite.Commons.Reflection
 
 		[NotNull]
 		public static Type LoadType([NotNull] string assemblyName,
-		                            [NotNull] string typeName,
-		                            IReadOnlyDictionary<string, string> assemblySubstitutes = null)
+		                            [NotNull] string typeName)
 		{
 			Assert.ArgumentNotNullOrEmpty(assemblyName, nameof(assemblyName));
 			Assert.ArgumentNotNullOrEmpty(typeName, nameof(typeName));
@@ -65,27 +64,25 @@ namespace ProSuite.Commons.Reflection
 
 			Assembly assembly = Assembly.Load(name);
 
-			string substituteAssembly = null;
-
 			bool throwOnError =
-				assemblySubstitutes == null ||
-				! assemblySubstitutes.TryGetValue(assemblyName, out substituteAssembly);
-
+				! _substitutes.TryGetValue(assemblyName, out string subsituteAssembly);
 			Type type = assembly.GetType(typeName, throwOnError);
-
 			if (type == null)
 			{
-				Assert.NotNull(substituteAssembly);
-				string substituteType = typeName.Replace(assemblyName, substituteAssembly);
-
-				_msg.Debug($"Failed loading type {typeName} from {assemblyName}, " +
-				           $"trying {substituteType} from {substituteAssembly}");
-
-				return LoadType(Assert.NotNull(substituteAssembly), substituteType);
+				string substituteType = typeName.Replace(assemblyName, subsituteAssembly);
+				_msg.Debug(
+					$"Failed loading type {typeName} from {assemblyName}, trying {substituteType} from {subsituteAssembly}");
+				return LoadType(Assert.NotNull(subsituteAssembly), substituteType);
 			}
 
 			return type;
 		}
+
+		private static readonly Dictionary<string, string> _substitutes =
+			new Dictionary<string, string>
+			{
+				{"EsriDE.ProSuite.QA.Tests", "ProSuite.QA.Tests"}
+			};
 
 		[NotNull]
 		private static string BinDirectory
