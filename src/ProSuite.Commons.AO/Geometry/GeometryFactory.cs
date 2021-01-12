@@ -20,7 +20,6 @@ namespace ProSuite.Commons.AO.Geometry
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		private static object _emptyRef = Type.Missing;
-		private static IGeometryBridge _geometryBridge;
 
 		[NotNull]
 		public static IMultipoint CreateMultipoint([NotNull] params IPoint[] points)
@@ -126,9 +125,7 @@ namespace ProSuite.Commons.AO.Geometry
 				targetMultipoint = multipoint;
 			}
 
-			IGeometryBridge2 bridge2 = GeometryBridge2;
-
-			bridge2.AddWKSPointZs((IPointCollection4) targetMultipoint, ref pointZs);
+			GeometryUtils.AddWKSPointZs((IPointCollection4) targetMultipoint, pointZs);
 
 			return (IMultipoint) targetMultipoint;
 		}
@@ -153,9 +150,7 @@ namespace ProSuite.Commons.AO.Geometry
 				multipoint.SpatialReference = spatialReference;
 			}
 
-			IGeometryBridge2 bridge2 = GeometryBridge2;
-
-			bridge2.AddWKSPointZs((IPointCollection4) multipoint, ref pointZs);
+			GeometryUtils.AddWKSPointZs((IPointCollection4) multipoint, pointZs);
 
 			GeometryUtils.MakeZAware(multipoint);
 
@@ -1517,7 +1512,7 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				polyline.SpatialReference = spatialReference;
 			}
-			
+
 			GeometryUtils.AddWKSPointZs((IPointCollection4) polyline, pointZs);
 
 			GeometryUtils.MakeZAware(polyline);
@@ -2588,30 +2583,6 @@ namespace ProSuite.Commons.AO.Geometry
 		}
 
 		#region Non-public members
-
-		/// <summary>
-		/// Gets the geometry bridge (singleton)
-		/// </summary>
-		/// <value>The geometry bridge.</value>
-		[NotNull]
-		private static IGeometryBridge GeometryBridge
-		{
-			get
-			{
-				if (_geometryBridge == null)
-				{
-					Type geometryEnvType =
-						Type.GetTypeFromProgID("esriGeometry.GeometryEnvironment");
-					_geometryBridge =
-						(IGeometryBridge) Activator.CreateInstance(geometryEnvType);
-				}
-
-				return _geometryBridge;
-			}
-		}
-
-		[NotNull]
-		private static IGeometryBridge2 GeometryBridge2 => (IGeometryBridge2) GeometryBridge;
 
 		private static void PutPoint([NotNull] WKSPoint[] pointArray, int index,
 		                             double x, double y)
