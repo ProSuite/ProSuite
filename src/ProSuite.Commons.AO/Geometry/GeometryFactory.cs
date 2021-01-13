@@ -8,6 +8,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geometry;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 
@@ -166,6 +167,14 @@ namespace ProSuite.Commons.AO.Geometry
 			                     wksEnvelope.YMin,
 			                     wksEnvelope.XMax,
 			                     wksEnvelope.YMax);
+		}
+
+		[NotNull]
+		public static IPolygon CreatePolygon(
+			[NotNull] EnvelopeXY e,
+			[CanBeNull] ISpatialReference spatialReference = null)
+		{
+			return CreatePolygon(e.XMin, e.YMin, e.XMax, e.YMax, spatialReference);
 		}
 
 		[NotNull]
@@ -363,6 +372,16 @@ namespace ProSuite.Commons.AO.Geometry
 			GeometryUtils.Simplify(Assert.NotNull(result));
 
 			return result;
+		}
+
+		[NotNull]
+		public static IPolyline CreatePolyline(
+			[NotNull] EnvelopeXY e,
+			[CanBeNull] ISpatialReference spatialReference = null)
+		{
+			IEnvelope envelope = CreateEnvelope(e, spatialReference);
+
+			return CreatePolyline(envelope);
 		}
 
 		[NotNull]
@@ -702,6 +721,14 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 
 			return envelope;
+		}
+
+		[NotNull]
+		public static IEnvelope CreateEnvelope(
+			[NotNull] EnvelopeXY e,
+			[CanBeNull] ISpatialReference spatialReference = null)
+		{
+			return CreateEnvelope(e.XMin, e.YMin, e.XMax, e.YMax, spatialReference);
 		}
 
 		/// <summary>

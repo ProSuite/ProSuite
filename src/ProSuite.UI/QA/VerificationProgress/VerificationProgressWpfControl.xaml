@@ -18,14 +18,49 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Main progress type -->
-            <Label Grid.Row="0" Content="{Binding RunningProgressTypeText}" HorizontalAlignment="Stretch"
-                   HorizontalContentAlignment="Left" Margin="8,5,8,0"
-                   Background="{Binding RunningProgressBackColor}"
-                   VerticalAlignment="Top" />
+          <!-- Main progress type -->
+          <Label Grid.Row="0" Content="{Binding RunningProgressTypeText}" HorizontalAlignment="Stretch"
+                 HorizontalContentAlignment="Left" Margin="8,5,8,0"
+                 Background="{Binding RunningProgressBackColor}"
+                 VerticalAlignment="Top" />
+
+          <!-- Top right buttons -->
+          <StackPanel Grid.Row="0" HorizontalAlignment="Right" Orientation="Horizontal"
+                      Margin="8,5,8,0" UseLayoutRounding="True">
+            <!-- Note: UseLayoutRounding="True" avoids blurry bitmaps-->
+            <StackPanel.Resources>
+              
+              <Style TargetType="{x:Type Button}">
+                <!-- Make the buttons square -->
+                <Setter Property="MinWidth" Value="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" />
+                <Setter Property="MinHeight" Value="{Binding ActualWidth, RelativeSource={RelativeSource Self}}" />
+                <!-- Disable buttons if not bound to a command -->
+                <Style.Triggers>
+                  <Trigger Property="Command" Value="{x:Null}">
+                    <Setter Property="IsEnabled" Value="false"/>
+                  </Trigger>
+                </Style.Triggers>
+          </Style>
+            </StackPanel.Resources>
+            <Button Command="{Binding OpenWorkListCommand}"
+                    CommandParameter="{Binding Mode=OneWay}" 
+                    ToolTip="Open work list (update issues first to see the current state)">
+              <Image Source="/ProSuite.UI;component/Properties/Images/NavigateErrorsCmd.png" Stretch="None" />
+            </Button>
+            <Button Command="{Binding ZoomToPerimeterCommand}"
+                    CommandParameter="{Binding Mode=OneWay}"
+                    ToolTip="Zoom to verified perimeter">
+              <Image Source="/ProSuite.UI;component/Properties/Images/ZoomToVerifiedCmd.png" Stretch="None" />
+            </Button>
+            <Button Command="{Binding FlashProgressCommand}"
+                    CommandParameter="{Binding Mode=OneWay}"
+                    ToolTip="Flash the current progress during tile verification" ToolTipService.ShowOnDisabled="True">
+              <Image Source="/ProSuite.UI;component/Properties/Images/FlashProgressCmd.png" Stretch="None" />
+            </Button>
+          </StackPanel>
 
             <!-- Progress messages and progress bars -->
-            <Border Grid.Row="1" BorderBrush="DarkGray" BorderThickness="1" Margin="8">
+            <Border Grid.Row="1" BorderBrush="DarkGray" BorderThickness="1" Margin="8" UseLayoutRounding="True">
                 <DockPanel HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
                            Margin="2">
 

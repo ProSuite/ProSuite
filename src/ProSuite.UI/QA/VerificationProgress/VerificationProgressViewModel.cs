@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -51,6 +52,12 @@ namespace ProSuite.UI.QA.VerificationProgress
 		private string _endTimeText;
 		private SolidColorBrush _runningProgressBackColor;
 
+		private readonly List<EnvelopeXY> _allTiles = new List<EnvelopeXY>();
+
+		private ICommand _openWorkListCommand;
+		private ICommand _zoomToPerimeterCommand;
+		private RelayCommand<VerificationProgressViewModel> _flashProgressCmd;
+
 		#endregion
 
 		public VerificationProgressViewModel()
@@ -83,6 +90,9 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 		[CanBeNull]
 		public Action<IQualityVerificationResult> SaveAction { get; set; }
+
+		[CanBeNull]
+		public Action<IList<EnvelopeXY>> FlashProgressAction { get; set; }
 
 		#endregion
 
@@ -193,6 +203,13 @@ namespace ProSuite.UI.QA.VerificationProgress
 			get => _currentTile;
 			set
 			{
+				if (value != null && value.Equals(_currentTile))
+				{
+					return;
+				}
+
+				_allTiles.Add(value);
+
 				_currentTile = value;
 				OnPropertyChanged();
 
@@ -368,6 +385,34 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 		private IQualityVerificationResult VerificationResult =>
 			ProgressTracker.QualityVerificationResult;
+
+		public ICommand OpenWorkListCommand
+		{
+			get => _openWorkListCommand;
+			set => _openWorkListCommand = value;
+		}
+
+		public ICommand ZoomToPerimeterCommand
+		{
+			get => _zoomToPerimeterCommand;
+			set => _zoomToPerimeterCommand = value;
+		}
+
+		public ICommand FlashProgressCommand
+		{
+			get
+			{
+				if (_flashProgressCmd == null)
+				{
+					_flashProgressCmd = new RelayCommand<VerificationProgressViewModel>(
+						(vm) => FlashProgressAction?.Invoke(_allTiles),
+						(vm) => FlashProgressAction != null && _allTiles.Count > 0 &&
+						        ProgressTracker.RemoteCallStatus == ServiceCallStatus.Running);
+				}
+
+				return _flashProgressCmd;
+			}
+		}
 
 		public async Task<ServiceCallStatus> RunBackgroundVerificationAsync()
 		{
