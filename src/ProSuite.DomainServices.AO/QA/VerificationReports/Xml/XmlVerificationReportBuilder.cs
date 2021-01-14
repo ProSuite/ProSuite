@@ -653,7 +653,6 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 						continue;
 					}
 
-					Assert.NotNull(dataset, "dataset");
 					Assert.False(dataset.Deleted, "dataset is deleted");
 					yield return new XmlTestParameterValue
 					             {
