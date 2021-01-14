@@ -6,35 +6,37 @@ using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Notifications;
 using ProSuite.DomainModel.AO.DataModel;
-using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 
-namespace ProSuite.Microservices.Server.AO.QA
+namespace ProSuite.DomainModel.AO.QA
 {
 	/// <summary>
 	/// Verification context for QA service that does not support updating errors in the
 	/// verified model context.
 	/// </summary>
-	public class BackgroundVerificationContext : IVerificationContext, //IDatasetContextEx,
+	public class BackgroundVerificationContext : IVerificationContext,
 	                                             IQueryTableContext,
 	                                             IDetachedState
 	{
-		private readonly IModelContext _modelContext;
 		[NotNull] private readonly ICollection<Dataset> _verifiedDatasets;
 
+		[CLSCompliant(false)]
 		public BackgroundVerificationContext(
-			[NotNull] IModelContext modelContext,
+			[NotNull] IModelContext innerModelContext,
 			[NotNull] SpatialReferenceDescriptor spatialReferenceDescriptor,
 			[NotNull] ICollection<Dataset> verifiedDatasets)
 		{
-			_modelContext = modelContext;
+			InnerModelContext = innerModelContext;
 			SpatialReferenceDescriptor = spatialReferenceDescriptor;
 			_verifiedDatasets = verifiedDatasets;
 		}
 
+		[CLSCompliant(false)]
+		public IModelContext InnerModelContext { get; }
+
 		public void InitializeSchema(ICollection<Dataset> datasets)
 		{
-			if (_modelContext is VirtualModelContext virtualContext)
+			if (InnerModelContext is IVirtualModelContext virtualContext)
 			{
 				virtualContext.InitializeSchema(datasets);
 			}
@@ -88,22 +90,22 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public bool CanOpen(IDdxDataset dataset)
 		{
-			return _modelContext.CanOpen(dataset);
+			return InnerModelContext.CanOpen(dataset);
 		}
 
 		public IFeatureClass OpenFeatureClass(IVectorDataset dataset)
 		{
-			return _modelContext.OpenFeatureClass(dataset);
+			return InnerModelContext.OpenFeatureClass(dataset);
 		}
 
 		public ITable OpenTable(IObjectDataset dataset)
 		{
-			return _modelContext.OpenTable(dataset);
+			return InnerModelContext.OpenTable(dataset);
 		}
 
 		public IObjectClass OpenObjectClass(IObjectDataset dataset)
 		{
-			return _modelContext.OpenObjectClass(dataset);
+			return InnerModelContext.OpenObjectClass(dataset);
 		}
 
 		//public ITerrain OpenTerrain(ITerrainDataset dataset)
@@ -141,7 +143,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset)
 		{
-			return _modelContext.OpenRasterDataset(dataset);
+			return InnerModelContext.OpenRasterDataset(dataset);
 		}
 
 		//public IMosaicLayer OpenMosaicLayer(IRasterMosaicDataset dataset)
@@ -157,35 +159,36 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public IRelationshipClass OpenRelationshipClass(Association association)
 		{
-			return _modelContext.OpenRelationshipClass(association);
+			return InnerModelContext.OpenRelationshipClass(association);
 		}
 
 		#endregion
 
 		public IWorkspaceContext GetWorkspaceContext(IDdxDataset dataset)
 		{
-			return _modelContext.GetWorkspaceContext(dataset);
+			return InnerModelContext.GetWorkspaceContext(dataset);
 		}
 
 		#region IModelContext members
 
 		public bool IsPrimaryWorkspaceBeingEdited()
 		{
-			return _modelContext.IsPrimaryWorkspaceBeingEdited();
+			return InnerModelContext.IsPrimaryWorkspaceBeingEdited();
 		}
 
-		public IWorkspaceContext PrimaryWorkspaceContext => _modelContext.PrimaryWorkspaceContext;
+		public IWorkspaceContext PrimaryWorkspaceContext =>
+			InnerModelContext.PrimaryWorkspaceContext;
 
 		public IDdxDataset GetDataset(IDatasetName datasetName, bool isValid)
 		{
-			return _modelContext.GetDataset(datasetName, isValid);
+			return InnerModelContext.GetDataset(datasetName, isValid);
 		}
 
 		#endregion
 
 		public void ReattachState(IUnitOfWork unitOfWork)
 		{
-			if (_modelContext is IDetachedState inner)
+			if (InnerModelContext is IDetachedState inner)
 			{
 				inner.ReattachState(unitOfWork);
 			}
@@ -195,7 +198,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public string GetRelationshipClassName(string associationName, Model model)
 		{
-			if (_modelContext is IQueryTableContext queryTableContext)
+			if (InnerModelContext is IQueryTableContext queryTableContext)
 			{
 				return queryTableContext.GetRelationshipClassName(associationName, model);
 			}
@@ -208,14 +211,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 				return null;
 			}
 
-			IRelationshipClass relClass = _modelContext.OpenRelationshipClass(association);
+			IRelationshipClass relClass = InnerModelContext.OpenRelationshipClass(association);
 
 			return relClass == null ? null : DatasetUtils.GetName(relClass);
 		}
 
 		public bool CanOpenQueryTables()
 		{
-			return _modelContext is IQueryTableContext queryTableContext &&
+			return InnerModelContext is IQueryTableContext queryTableContext &&
 			       queryTableContext.CanOpenQueryTables();
 		}
 
@@ -225,7 +228,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		                             JoinType joinType,
 		                             string whereClause)
 		{
-			if (_modelContext is IQueryTableContext queryTableContext &&
+			if (InnerModelContext is IQueryTableContext queryTableContext &&
 			    queryTableContext.CanOpenQueryTables())
 			{
 				return queryTableContext.OpenQueryTable(relationshipClassName, model, tables,

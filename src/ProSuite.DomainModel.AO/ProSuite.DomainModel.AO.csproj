@@ -108,6 +108,7 @@
     <Compile Include="DataModel\IModelContext.cs" />
     <Compile Include="DataModel\IModelRepository.cs" />
     <Compile Include="DataModel\IQueryTableContext.cs" />
+    <Compile Include="DataModel\IVirtualModelContext.cs" />
     <Compile Include="DataModel\IWorkspaceContext.cs" />
     <Compile Include="DataModel\IWorkspaceContextLookup.cs" />
     <Compile Include="DataModel\MasterDatabaseWorkspaceContext.cs" />
@@ -144,6 +145,7 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QA\BackgroundVerificationContext.cs" />
     <Compile Include="QA\DefaultTestFactory.cs" />
     <Compile Include="QA\ErrorCreation.cs" />
     <Compile Include="QA\ErrorDeletion.cs" />

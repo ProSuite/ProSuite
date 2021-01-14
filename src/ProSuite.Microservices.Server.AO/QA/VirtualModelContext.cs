@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -15,7 +15,7 @@ using ProSuite.Microservices.Server.AO.Geodatabase;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
-	public class VirtualModelContext : IModelContext, IQueryTableContext
+	public class VirtualModelContext : IModelContext, IQueryTableContext, IVirtualModelContext
 	{
 		private IList<GdbWorkspace> _virtualWorkspaces;
 
