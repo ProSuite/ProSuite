@@ -42,7 +42,7 @@ namespace ProSuite.Microservices.Client.QA
 
 		public bool HasIssues => _resultIssueCollector?.HasIssues ?? false;
 
-		public bool CanSaveIssues => _resultIssueCollector != null;
+		public bool CanSaveIssues => _resultIssueCollector != null && VerificationMsg != null;
 
 		public int SaveIssues(ErrorDeletionInPerimeter errorDeletion)
 		{
