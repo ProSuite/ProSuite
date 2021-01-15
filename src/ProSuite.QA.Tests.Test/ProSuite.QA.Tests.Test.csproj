@@ -64,15 +64,33 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AssertUtils.cs" />
     <Compile Include="Construction\CurveConstruction.cs" />
     <Compile Include="Construction\MultiPatchConstruction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QaBorderSenseTest.cs" />
+    <Compile Include="QaCentroidsTest.cs" />
+    <Compile Include="QaConnectionsTest.cs" />
     <Compile Include="QaCurveTest.cs" />
+    <Compile Include="QaFlowLogicTest.cs" />
+    <Compile Include="QaFullCoincidenceTest.cs" />
+    <Compile Include="QaIntersectsOtherTest.cs" />
+    <Compile Include="QaLineConnectionFieldValuesTest.cs" />
     <Compile Include="QaMinSegAngleTest.cs" />
+    <Compile Include="QaNotNearTest.cs" />
+    <Compile Include="QaPartCoincidenceOtherTest.cs" />
+    <Compile Include="QaPartCoincidenceSelfTest.cs" />
+    <Compile Include="QaPartCoincidenceVolumeTest.cs" />
+    <Compile Include="QaPointNotNearTest.cs" />
+    <Compile Include="QaPseudoNodesTest.cs" />
     <Compile Include="QaSegmentLengthTest.cs" />
+    <Compile Include="QaTopoNotNearTest.cs" />
+    <Compile Include="TestData\TestDataUtils.cs" />
+    <Compile Include="TestRunners\ModelVectorDataset.cs" />
     <Compile Include="TestRunners\QaContainerTestRunner.cs" />
     <Compile Include="TestRunners\QaTestRunner.cs" />
     <Compile Include="TestRunners\QaTestRunnerBase.cs" />
+    <Compile Include="TestRunners\SimpleModel.cs" />
     <Compile Include="TestRunners\TestRunnerUtils.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -121,6 +139,85 @@
       <Project>{7A1D3AB3-A9A8-45B0-9452-A0DDEA004E2B}</Project>
       <Name>ProSuite.QA.Tests</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="TestData\DKM25_HOEHENKURVE_OID_1216.xml" />
+    <Content Include="TestData\DKM25_HOEHENKURVE_OID_2178.xml" />
+    <Content Include="TestData\QaPartCoincidenceVolumeTest.mdb" />
+    <Content Include="TestData\QaSchemaTests.mdb" />
+    <Content Include="TestData\QaSchemaTestsTableNames.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TestData\QaBorderSense.gdb\a00000001.gdbindexes" />
+    <None Include="TestData\QaBorderSense.gdb\a00000001.gdbtable" />
+    <None Include="TestData\QaBorderSense.gdb\a00000001.gdbtablx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000001.TablesByName.atx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000002.gdbtable" />
+    <None Include="TestData\QaBorderSense.gdb\a00000002.gdbtablx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000003.gdbindexes" />
+    <None Include="TestData\QaBorderSense.gdb\a00000003.gdbtable" />
+    <None Include="TestData\QaBorderSense.gdb\a00000003.gdbtablx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000004.CatItemsByPhysicalName.atx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000004.CatItemsByType.atx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000004.FDO_UUID.atx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000004.gdbindexes" />
+    <None Include="TestData\QaBorderSense.gdb\a00000004.gdbtable" />
+    <None Include="TestData\QaBorderSense.gdb\a00000004.gdbtablx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000004.spx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000005.CatRelsByDestinationID.atx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000005.CatRelsByOriginID.atx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000005.CatRelsByType.atx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000005.FDO_UUID.atx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000005.gdbindexes" />
+    <None Include="TestData\QaBorderSense.gdb\a00000005.gdbtable" />
+    <None Include="TestData\QaBorderSense.gdb\a00000005.gdbtablx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000006.CatRelTypesByBackwardLabel.atx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000006.CatRelTypesByDestItemTypeID.atx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000006.CatRelTypesByForwardLabel.atx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000006.CatRelTypesByName.atx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000006.CatRelTypesByOriginItemTypeID.atx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000006.CatRelTypesByUUID.atx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000006.gdbindexes" />
+    <None Include="TestData\QaBorderSense.gdb\a00000006.gdbtable" />
+    <None Include="TestData\QaBorderSense.gdb\a00000006.gdbtablx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000007.CatItemTypesByName.atx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000007.CatItemTypesByParentTypeID.atx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000007.CatItemTypesByUUID.atx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000007.gdbindexes" />
+    <None Include="TestData\QaBorderSense.gdb\a00000007.gdbtable" />
+    <None Include="TestData\QaBorderSense.gdb\a00000007.gdbtablx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000009.gdbindexes" />
+    <None Include="TestData\QaBorderSense.gdb\a00000009.gdbtable" />
+    <None Include="TestData\QaBorderSense.gdb\a00000009.gdbtablx" />
+    <None Include="TestData\QaBorderSense.gdb\a00000009.spx" />
+    <None Include="TestData\QaBorderSense.gdb\gdb" />
+    <None Include="TestData\QaBorderSense.gdb\timestamps" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000001.gdbindexes" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000001.gdbtable" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000001.gdbtablx" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000002.gdbtable" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000002.gdbtablx" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000003.gdbindexes" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000003.gdbtable" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000003.gdbtablx" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000004.gdbtable" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000004.gdbtablx" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000005.gdbindexes" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000005.gdbtable" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000005.gdbtablx" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000006.gdbindexes" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000006.gdbtable" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000006.gdbtablx" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000007.gdbtable" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000007.gdbtablx" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000008.gdbtable" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000008.gdbtablx" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000026.gdbindexes" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000026.gdbtable" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000026.gdbtablx" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000026.spx" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\gdb" />
+    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\timestamps" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

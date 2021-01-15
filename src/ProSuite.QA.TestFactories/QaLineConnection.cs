@@ -1,0 +1,210 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using ESRI.ArcGIS.Geodatabase;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Tests;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.AO.QA;
+using ProSuite.QA.Core;
+using ProSuite.DomainModel.Core.QA;
+using ProSuite.DomainModel.Core.DataModel;
+
+namespace ProSuite.QA.TestFactories
+{
+	[CLSCompliant(false)]
+	[UsedImplicitly]
+	[LinearNetworkTest]
+	public class QaLineConnection : TestFactory
+	{
+		[NotNull]
+		[UsedImplicitly]
+		public static ITestIssueCodes Codes
+		{
+			get { return QaConnections.Codes; }
+		}
+
+		public override string GetTestTypeDescription()
+		{
+			return typeof(QaConnections).Name;
+		}
+
+		public override string GetTestDescription()
+		{
+			return DocStrings.QaLineConnection;
+		}
+
+		protected override IList<TestParameter> CreateParameters()
+		{
+			var list =
+				new List<TestParameter>
+				{
+					new TestParameter("featureClasses", typeof(IFeatureClass[]),
+					                  DocStrings.QaLineConnection_featureClasses),
+					new TestParameter("rules", typeof(string[]),
+					                  DocStrings.QaLineConnection_rules)
+				};
+
+			return list.AsReadOnly();
+		}
+
+		protected override object[] Args(IOpenDataset datasetContext,
+		                                 IList<TestParameter> testParameters,
+		                                 out List<TableConstraint> tableParameters)
+		{
+			object[] objParams = base.Args(datasetContext, testParameters, out tableParameters);
+			if (objParams.Length != 2)
+			{
+				throw new ArgumentException(string.Format("expected 2 parameter, got {0}",
+				                                          objParams.Length));
+			}
+
+			if (objParams[0] is IFeatureClass[] == false)
+			{
+				throw new ArgumentException(string.Format("expected IFeatureClass[], got {0}",
+				                                          objParams[0].GetType()));
+			}
+
+			if (objParams[1] is string[] == false)
+			{
+				throw new ArgumentException(string.Format("expected string[], got {0}",
+				                                          objParams[1].GetType()));
+			}
+
+			var objects = new object[2];
+			objects[0] = objParams[0];
+
+			var featureClasses = (IFeatureClass[]) objParams[0];
+			var ruleParts = (string[]) objParams[1];
+
+			objects[0] = featureClasses;
+			objects[1] = GetRuleArrays(featureClasses, ruleParts);
+
+			return objects;
+		}
+
+		protected override ITest CreateTestInstance(object[] args)
+		{
+			var featureClasses = (IFeatureClass[]) args[0];
+			var rules = (List<string[]>) args[1];
+
+			return new QaConnections(featureClasses, rules);
+		}
+
+		public override string Export(QualityCondition qualityCondition)
+		{
+			var configurator = new LineConnectionConfigurator();
+			LineConnectionConfigurator.Matrix matrix = configurator.Convert(qualityCondition);
+
+			return matrix.ToCsv();
+		}
+
+		public override QualityCondition CreateQualityCondition(
+			StreamReader file,
+			IList<Dataset> datasets,
+			IEnumerable<TestParameterValue> parameterValues)
+		{
+			Assert.ArgumentNotNull(file, "file");
+			Assert.ArgumentNotNull(datasets, "datasets");
+			Assert.ArgumentNotNull(parameterValues, "parameterValues");
+
+			var datasetFilter = new Dictionary<Dataset, string>();
+
+			foreach (TestParameterValue oldValue in parameterValues)
+			{
+				if (oldValue.TestParameterName !=
+				    LineConnectionConfigurator.FeatureClassesParamName)
+				{
+					continue;
+				}
+
+				var dsValue = (DatasetTestParameterValue) oldValue;
+				if (string.IsNullOrEmpty(dsValue.FilterExpression))
+				{
+					continue;
+				}
+
+				Dataset dataset = dsValue.DatasetValue;
+				Assert.NotNull(dataset, "Dataset parameter {0} does not refer to a dataset",
+				               dsValue.TestParameterName);
+
+				datasetFilter.Add(dataset, dsValue.FilterExpression);
+			}
+
+			LineConnectionConfigurator.Matrix mat =
+				LineConnectionConfigurator.Matrix.Create(file);
+
+			var config = new LineConnectionConfigurator();
+
+			QualityCondition qualityCondition = config.Convert(mat, datasets);
+
+			foreach (TestParameterValue newValue in qualityCondition.ParameterValues)
+			{
+				if (newValue.TestParameterName !=
+				    LineConnectionConfigurator.FeatureClassesParamName)
+				{
+					continue;
+				}
+
+				var datasetTestParameterValue = (DatasetTestParameterValue) newValue;
+				Dataset dataset = datasetTestParameterValue.DatasetValue;
+
+				Assert.NotNull(dataset,
+				               "Dataset parameter '{0}' in quality condition '{1}' does not refer to a dataset",
+				               datasetTestParameterValue.TestParameterName,
+				               qualityCondition.Name);
+
+				string filter;
+				if (datasetFilter.TryGetValue(dataset, out filter))
+				{
+					datasetTestParameterValue.FilterExpression = filter;
+				}
+			}
+
+			return qualityCondition;
+		}
+
+		[NotNull]
+		private static List<string[]> GetRuleArrays(
+			[NotNull] ICollection<IFeatureClass> featureClasses,
+			[NotNull] IList<string> ruleParts)
+		{
+			Assert.ArgumentNotNull(featureClasses, "featureClasses");
+			Assert.ArgumentNotNull(ruleParts, "ruleParts");
+
+			int classCount = featureClasses.Count;
+			int rulePartCount = ruleParts.Count;
+
+			if (rulePartCount % classCount != 0)
+			{
+				throw new ArgumentException(
+					string.Format(
+						"Expected # of rules : n x {0} (=# of feature classes), actual # of rules {1}",
+						classCount, rulePartCount));
+			}
+
+			int rulesPerClassCount = rulePartCount / classCount;
+
+			var result = new List<string[]>();
+
+			int rulePartIndex = 0;
+
+			for (int ruleIndex = 0; ruleIndex < rulesPerClassCount; ruleIndex++)
+			{
+				var ruleArray = new string[classCount];
+
+				for (int classIndex = 0; classIndex < classCount; classIndex++)
+				{
+					ruleArray[classIndex] = ruleParts[rulePartIndex];
+					rulePartIndex++;
+				}
+
+				result.Add(ruleArray);
+			}
+
+			return result;
+		}
+	}
+}

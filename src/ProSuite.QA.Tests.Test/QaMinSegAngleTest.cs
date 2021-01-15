@@ -286,24 +286,5 @@ namespace ProSuite.QA.Tests.Test
 
 			return DatasetUtils.CreateSimpleFeatureClass(ws, name, fields);
 		}
-
-		private class SimpleModel : ProductionModel
-		{
-			public SimpleModel(string name, IWorkspace ws)
-				: base(name)
-			{
-				UserConnectionProvider = new OpenWorkspaceConnectionProvider(ws);
-			}
-
-			protected override IWorkspaceContext CreateMasterDatabaseWorkspaceContext()
-			{
-				return CreateDefaultMasterDatabaseWorkspaceContext();
-			}
-		}
-
-		private class ModelVectorDataset : VectorDataset
-		{
-			public ModelVectorDataset(string name) : base(name) { }
-		}
 	}
 }
