@@ -16,7 +16,7 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace EsriDE.ProSuite.QA.Tests
+namespace ProSuite.QA.Tests
 {
 	[CLSCompliant(false)]
 	[LinearNetworkTest]
