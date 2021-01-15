@@ -35,6 +35,14 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\EsriDE.Commons\lib\ESRI\ArcGIS\$(VSArcGISVersion)ESRI.ArcGIS.Geodatabase.dll</HintPath>
     </Reference>
+    <Reference Include="ESRI.ArcGIS.Geometry, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\EsriDE.Commons\lib\ESRI\ArcGIS\$(VSArcGISVersion)ESRI.ArcGIS.Geometry.dll</HintPath>
+    </Reference>
+    <Reference Include="ESRI.ArcGIS.System, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\EsriDE.Commons\lib\ESRI\ArcGIS\$(VSArcGISVersion)ESRI.ArcGIS.System.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
@@ -46,16 +54,30 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>DocStrings.resx</DependentUpon>
     </Compile>
+    <Compile Include="Obsolete\QaMinPointDistanceFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QaAngleFactory.cs" />
+    <Compile Include="QaExtentFactory.cs" />
+    <Compile Include="QaLinearUnitFactory.cs" />
     <Compile Include="QaLineIntersectAngleFactory.cs" />
+    <Compile Include="QaMaxAreaFactory.cs" />
+    <Compile Include="QaMaxLengthFactory.cs" />
+    <Compile Include="QaMinAreaFactory.cs" />
+    <Compile Include="QaMinIntersectFactory.cs" />
+    <Compile Include="QaMinLengthFactory.cs" />
     <Compile Include="QaMinNodeAngleFactory.cs" />
+    <Compile Include="QaMinNodeDistanceFactory.cs" />
     <Compile Include="QaMinSegAngleFactory.cs" />
+    <Compile Include="QaMinSegmentLengthFactory.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
       <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
       <Name>ProSuite.Commons.Essentials</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
+      <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
+      <Name>ProSuite.Commons</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj">
       <Project>{d360621d-d792-403b-a625-06a707a89d22}</Project>
@@ -81,5 +103,6 @@
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -90,15 +90,28 @@
     <Compile Include="IssueCodes\LocalTestIssueCodes.cs" />
     <Compile Include="LineIntersection.cs" />
     <Compile Include="LineIntersectionUtils.cs" />
+    <Compile Include="NonLinearSegmentType.cs" />
+    <Compile Include="Obsolete\QaMinPointDistance.cs" />
     <Compile Include="Properties\LocalizableStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QaAreaBase.cs" />
+    <Compile Include="QaCurve.cs" />
+    <Compile Include="QaExtent.cs" />
+    <Compile Include="QaLengthBase.cs" />
     <Compile Include="QaLineIntersectAngle.cs" />
+    <Compile Include="QaMaxArea.cs" />
+    <Compile Include="QaMaxLength.cs" />
     <Compile Include="QaMinAngle.cs" />
+    <Compile Include="QaMinArea.cs" />
+    <Compile Include="QaMinIntersect.cs" />
+    <Compile Include="QaMinLength.cs" />
+    <Compile Include="QaMinNodeDistance.cs" />
     <Compile Include="QaMinSegAngle.cs" />
+    <Compile Include="QaSegmentLength.cs" />
     <Compile Include="SpatialRelations\QaSpatialRelationBase.cs" />
     <Compile Include="SpatialRelations\QaSpatialRelationSelfBase.cs" />
   </ItemGroup>

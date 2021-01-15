@@ -65,9 +65,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Construction\CurveConstruction.cs" />
+    <Compile Include="Construction\MultiPatchConstruction.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QaCurveTest.cs" />
     <Compile Include="QaMinSegAngleTest.cs" />
+    <Compile Include="QaSegmentLengthTest.cs" />
     <Compile Include="TestRunners\QaContainerTestRunner.cs" />
+    <Compile Include="TestRunners\QaTestRunner.cs" />
     <Compile Include="TestRunners\QaTestRunnerBase.cs" />
     <Compile Include="TestRunners\TestRunnerUtils.cs" />
   </ItemGroup>
@@ -77,6 +81,10 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ProSuite.Commons.AO.Test\ProSuite.Commons.AO.Test.csproj">
+      <Project>{E9137523-483C-44D6-BE53-ADAACEFBBF5F}</Project>
+      <Name>ProSuite.Commons.AO.Test</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">
       <Project>{7E4B0861-83ED-4D12-BE27-93C9053C88CA}</Project>
       <Name>ProSuite.Commons.AO</Name>
