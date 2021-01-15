@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -49,6 +50,13 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 		private string _startTimeText;
 		private string _endTimeText;
+		private SolidColorBrush _runningProgressBackColor;
+
+		private readonly List<EnvelopeXY> _allTiles = new List<EnvelopeXY>();
+
+		private ICommand _openWorkListCommand;
+		private ICommand _zoomToPerimeterCommand;
+		private RelayCommand<VerificationProgressViewModel> _flashProgressCmd;
 
 		#endregion
 
@@ -83,6 +91,9 @@ namespace ProSuite.UI.QA.VerificationProgress
 		[CanBeNull]
 		public Action<IQualityVerificationResult> SaveAction { get; set; }
 
+		[CanBeNull]
+		public Action<IList<EnvelopeXY>> FlashProgressAction { get; set; }
+
 		#endregion
 
 		#region Bound properties
@@ -93,6 +104,16 @@ namespace ProSuite.UI.QA.VerificationProgress
 			set
 			{
 				_runningProgressTypeText = value;
+				OnPropertyChanged();
+			}
+		}
+
+		public SolidColorBrush RunningProgressBackColor
+		{
+			get => _runningProgressBackColor;
+			set
+			{
+				_runningProgressBackColor = value;
 				OnPropertyChanged();
 			}
 		}
@@ -182,6 +203,13 @@ namespace ProSuite.UI.QA.VerificationProgress
 			get => _currentTile;
 			set
 			{
+				if (value != null && value.Equals(_currentTile))
+				{
+					return;
+				}
+
+				_allTiles.Add(value);
+
 				_currentTile = value;
 				OnPropertyChanged();
 
@@ -358,6 +386,34 @@ namespace ProSuite.UI.QA.VerificationProgress
 		private IQualityVerificationResult VerificationResult =>
 			ProgressTracker.QualityVerificationResult;
 
+		public ICommand OpenWorkListCommand
+		{
+			get => _openWorkListCommand;
+			set => _openWorkListCommand = value;
+		}
+
+		public ICommand ZoomToPerimeterCommand
+		{
+			get => _zoomToPerimeterCommand;
+			set => _zoomToPerimeterCommand = value;
+		}
+
+		public ICommand FlashProgressCommand
+		{
+			get
+			{
+				if (_flashProgressCmd == null)
+				{
+					_flashProgressCmd = new RelayCommand<VerificationProgressViewModel>(
+						(vm) => FlashProgressAction?.Invoke(_allTiles),
+						(vm) => FlashProgressAction != null && _allTiles.Count > 0 &&
+						        ProgressTracker.RemoteCallStatus == ServiceCallStatus.Running);
+				}
+
+				return _flashProgressCmd;
+			}
+		}
+
 		public async Task<ServiceCallStatus> RunBackgroundVerificationAsync()
 		{
 			ServiceCallStatus result;
@@ -408,6 +464,19 @@ namespace ProSuite.UI.QA.VerificationProgress
 			}
 
 			RunningProgressTypeText = $"{result}";
+
+			switch (result)
+			{
+				case ServiceCallStatus.Failed:
+					RunningProgressBackColor = Brushes.OrangeRed;
+					break;
+				case ServiceCallStatus.Cancelled:
+					RunningProgressBackColor = Brushes.SandyBrown;
+					break;
+				case ServiceCallStatus.Finished:
+					RunningProgressBackColor = Brushes.PaleGreen;
+					break;
+			}
 
 			if (result != ServiceCallStatus.Running)
 			{
@@ -465,7 +534,12 @@ namespace ProSuite.UI.QA.VerificationProgress
 			Try(nameof(CanSaveIssues),
 			    () =>
 			    {
-				    result = ProgressTracker?.RemoteCallStatus == ServiceCallStatus.Finished &&
+				    // TOP-5369: Failed runs should also be saveable
+				    bool saveableStatus =
+					    ProgressTracker?.RemoteCallStatus == ServiceCallStatus.Finished ||
+					    ProgressTracker?.RemoteCallStatus == ServiceCallStatus.Failed;
+
+				    result = saveableStatus &&
 				             SaveAction != null &&
 				             VerificationResult != null &&
 				             VerificationResult.CanSaveIssues;

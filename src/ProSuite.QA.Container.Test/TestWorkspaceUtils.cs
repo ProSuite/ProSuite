@@ -47,6 +47,23 @@ namespace ProSuite.QA.Container.Test
 		}
 
 		[NotNull]
+		public static IFeatureWorkspace CreateTestAccessWorkspace(
+			[NotNull] string mdbName)
+		{
+			string dir = Path.GetTempPath();
+
+			string mdb = Path.Combine(dir, mdbName) + ".mdb";
+
+			if (File.Exists(mdb))
+			{
+				File.Delete(mdb);
+			}
+
+			IFeatureWorkspace testWs = WorkspaceUtils.CreatePgdbWorkspace(dir, mdbName);
+			return testWs;
+		}
+
+		[NotNull]
 		public static IFeatureWorkspace CreateInMemoryWorkspace([NotNull] string name)
 		{
 			IWorkspaceName wsName = WorkspaceUtils.CreateInMemoryWorkspace(name);

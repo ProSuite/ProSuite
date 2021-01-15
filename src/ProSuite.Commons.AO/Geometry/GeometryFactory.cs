@@ -8,6 +8,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geometry;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 
@@ -20,7 +21,6 @@ namespace ProSuite.Commons.AO.Geometry
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		private static object _emptyRef = Type.Missing;
-		private static IGeometryBridge _geometryBridge;
 
 		[NotNull]
 		public static IMultipoint CreateMultipoint([NotNull] params IPoint[] points)
@@ -126,9 +126,7 @@ namespace ProSuite.Commons.AO.Geometry
 				targetMultipoint = multipoint;
 			}
 
-			IGeometryBridge2 bridge2 = GeometryBridge2;
-
-			bridge2.AddWKSPointZs((IPointCollection4) targetMultipoint, ref pointZs);
+			GeometryUtils.AddWKSPointZs((IPointCollection4) targetMultipoint, pointZs);
 
 			return (IMultipoint) targetMultipoint;
 		}
@@ -153,9 +151,7 @@ namespace ProSuite.Commons.AO.Geometry
 				multipoint.SpatialReference = spatialReference;
 			}
 
-			IGeometryBridge2 bridge2 = GeometryBridge2;
-
-			bridge2.AddWKSPointZs((IPointCollection4) multipoint, ref pointZs);
+			GeometryUtils.AddWKSPointZs((IPointCollection4) multipoint, pointZs);
 
 			GeometryUtils.MakeZAware(multipoint);
 
@@ -171,6 +167,14 @@ namespace ProSuite.Commons.AO.Geometry
 			                     wksEnvelope.YMin,
 			                     wksEnvelope.XMax,
 			                     wksEnvelope.YMax);
+		}
+
+		[NotNull]
+		public static IPolygon CreatePolygon(
+			[NotNull] EnvelopeXY e,
+			[CanBeNull] ISpatialReference spatialReference = null)
+		{
+			return CreatePolygon(e.XMin, e.YMin, e.XMax, e.YMax, spatialReference);
 		}
 
 		[NotNull]
@@ -368,6 +372,16 @@ namespace ProSuite.Commons.AO.Geometry
 			GeometryUtils.Simplify(Assert.NotNull(result));
 
 			return result;
+		}
+
+		[NotNull]
+		public static IPolyline CreatePolyline(
+			[NotNull] EnvelopeXY e,
+			[CanBeNull] ISpatialReference spatialReference = null)
+		{
+			IEnvelope envelope = CreateEnvelope(e, spatialReference);
+
+			return CreatePolyline(envelope);
 		}
 
 		[NotNull]
@@ -707,6 +721,14 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 
 			return envelope;
+		}
+
+		[NotNull]
+		public static IEnvelope CreateEnvelope(
+			[NotNull] EnvelopeXY e,
+			[CanBeNull] ISpatialReference spatialReference = null)
+		{
+			return CreateEnvelope(e.XMin, e.YMin, e.XMax, e.YMax, spatialReference);
 		}
 
 		/// <summary>
@@ -1517,7 +1539,7 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				polyline.SpatialReference = spatialReference;
 			}
-			
+
 			GeometryUtils.AddWKSPointZs((IPointCollection4) polyline, pointZs);
 
 			GeometryUtils.MakeZAware(polyline);
@@ -2588,30 +2610,6 @@ namespace ProSuite.Commons.AO.Geometry
 		}
 
 		#region Non-public members
-
-		/// <summary>
-		/// Gets the geometry bridge (singleton)
-		/// </summary>
-		/// <value>The geometry bridge.</value>
-		[NotNull]
-		private static IGeometryBridge GeometryBridge
-		{
-			get
-			{
-				if (_geometryBridge == null)
-				{
-					Type geometryEnvType =
-						Type.GetTypeFromProgID("esriGeometry.GeometryEnvironment");
-					_geometryBridge =
-						(IGeometryBridge) Activator.CreateInstance(geometryEnvType);
-				}
-
-				return _geometryBridge;
-			}
-		}
-
-		[NotNull]
-		private static IGeometryBridge2 GeometryBridge2 => (IGeometryBridge2) GeometryBridge;
 
 		private static void PutPoint([NotNull] WKSPoint[] pointArray, int index,
 		                             double x, double y)

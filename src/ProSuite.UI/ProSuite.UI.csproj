@@ -266,10 +266,13 @@
     <Content Include="Properties\Images\Empty.bmp" />
     <Content Include="Properties\Images\Error.png" />
     <Content Include="Properties\Images\Exit.png" />
+    <Resource Include="Properties\Images\FlashProgressCmd.png" />
     <Content Include="Properties\Images\Full.bmp" />
     <Content Include="Properties\Images\Half.bmp" />
+    <Resource Include="Properties\Images\NavigateErrorsCmd.png" />
     <Content Include="Properties\Images\OK.png" />
     <Content Include="Properties\Images\Warning.png" />
+    <Resource Include="Properties\Images\ZoomToVerifiedCmd.png" />
     <Content Include="Properties\TestTypeImages\Prohibition.png" />
     <Content Include="Properties\TestTypeImages\Stop.png" />
     <Content Include="Properties\TestTypeImages\TestTypeUnknown.png" />

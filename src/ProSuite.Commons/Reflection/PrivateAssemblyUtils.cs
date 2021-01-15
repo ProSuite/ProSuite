@@ -65,27 +65,31 @@ namespace ProSuite.Commons.Reflection
 
 			Assembly assembly = Assembly.Load(name);
 
-			string substituteAssembly = null;
+			var substitutes = assemblySubstitutes ?? _substitutes;
 
 			bool throwOnError =
-				assemblySubstitutes == null ||
-				! assemblySubstitutes.TryGetValue(assemblyName, out substituteAssembly);
-
+				! substitutes.TryGetValue(assemblyName, out string subsituteAssembly);
 			Type type = assembly.GetType(typeName, throwOnError);
-
 			if (type == null)
 			{
-				Assert.NotNull(substituteAssembly);
-				string substituteType = typeName.Replace(assemblyName, substituteAssembly);
+				string substituteType = typeName.Replace(assemblyName, subsituteAssembly);
 
-				_msg.Debug($"Failed loading type {typeName} from {assemblyName}, " +
-				           $"trying {substituteType} from {substituteAssembly}");
+				_msg.Debug(
+					$"Failed loading type {typeName} from {assemblyName}, trying {substituteType} from {subsituteAssembly}");
 
-				return LoadType(Assert.NotNull(substituteAssembly), substituteType);
+				return LoadType(Assert.NotNull(subsituteAssembly), substituteType,
+				                new Dictionary<string, string>(0));
 			}
 
 			return type;
 		}
+
+		private static readonly Dictionary<string, string> _substitutes =
+			new Dictionary<string, string>
+			{
+				{"EsriDE.ProSuite.QA.Tests", "ProSuite.QA.Tests"},
+				{"EsriDE.ProSuite.QA.TestFactories", "ProSuite.QA.TestFactories"}
+			};
 
 		[NotNull]
 		private static string BinDirectory
