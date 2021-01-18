@@ -81,16 +81,22 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConfiguratorUtils.cs" />
     <Compile Include="DocStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>DocStrings.resx</DependentUpon>
     </Compile>
+    <Compile Include="LineConnectionConfigurator.cs" />
+    <Compile Include="LinePolyOverlapConfigurator.cs" />
     <Compile Include="Obsolete\QaMinPointDistanceFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QaAngleFactory.cs" />
+    <Compile Include="QaDangleFactory.cs" />
     <Compile Include="QaExtentFactory.cs" />
+    <Compile Include="QaFactoryPseudoNodes.cs" />
     <Compile Include="QaLinearUnitFactory.cs" />
+    <Compile Include="QaLineConnection.cs" />
     <Compile Include="QaLineIntersectAngleFactory.cs" />
     <Compile Include="QaMaxAreaFactory.cs" />
     <Compile Include="QaMaxLengthFactory.cs" />
@@ -101,8 +107,13 @@
     <Compile Include="QaMinNodeDistanceFactory.cs" />
     <Compile Include="QaMinSegAngleFactory.cs" />
     <Compile Include="QaMinSegmentLengthFactory.cs" />
+    <Compile Include="QaTopoNotNearPolyFactory.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">
+      <Project>{7E4B0861-83ED-4D12-BE27-93C9053C88CA}</Project>
+      <Name>ProSuite.Commons.AO</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
       <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
       <Name>ProSuite.Commons.Essentials</Name>
@@ -114,6 +125,10 @@
     <ProjectReference Include="..\ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj">
       <Project>{d360621d-d792-403b-a625-06a707a89d22}</Project>
       <Name>ProSuite.DomainModel.AO</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
+      <Project>{0B48B56F-3A3D-4367-AA76-A356519AF2AB}</Project>
+      <Name>ProSuite.DomainModel.Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.QA.Container\ProSuite.QA.Container.csproj">
       <Project>{D51693C1-F9F6-425D-8CD6-8DFBF5A52F6F}</Project>

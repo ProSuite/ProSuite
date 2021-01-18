@@ -75,23 +75,69 @@
     </Compile>
     <Compile Include="AllowedEndpointInteriorIntersections.cs" />
     <Compile Include="AllowedLineInteriorIntersections.cs" />
+    <Compile Include="Coincidence\ConnectionMode.cs" />
+    <Compile Include="Coincidence\IndexedSegmentUtils.cs" />
+    <Compile Include="Coincidence\LineCapStyle.cs" />
+    <Compile Include="Coincidence\QaFullCoincidenceBase.cs" />
+    <Compile Include="Coincidence\QaNearCoincidenceBase.cs" />
+    <Compile Include="Coincidence\QaNearTopoBase.cs" />
+    <Compile Include="Coincidence\QaPolycurveCoincidenceBase.cs" />
+    <Compile Include="Coincidence\QaTopoNotNear.CoincidentPartsAdapter.cs" />
+    <Compile Include="Coincidence\QaTopoNotNear.cs" />
+    <Compile Include="Coincidence\QaTopoNotNear.ErrorCleanup.cs" />
+    <Compile Include="Coincidence\QaTopoNotNear.Junctions.cs" />
+    <Compile Include="Coincidence\QaTopoNotNear.NestedClasses.cs" />
+    <Compile Include="Coincidence\QaTopoNotNear.UnconnectedEndsAdapter.cs" />
+    <Compile Include="Coincidence\SegmentSearcher.cs" />
     <Compile Include="Documentation\DocAttribute.cs" />
     <Compile Include="Documentation\DocStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>DocStrings.resx</DependentUpon>
     </Compile>
+    <Compile Include="GeometryComponent.cs" />
+    <Compile Include="GeometryComponentUtils.cs" />
     <Compile Include="GeometryMathUtils.cs" />
+    <Compile Include="IssueCodes\CrossesIssueCodes.cs" />
+    <Compile Include="IssueCodes\FieldPropertiesIssueCodes.cs" />
+    <Compile Include="IssueCodes\GdbConstraintIssueCodes.cs" />
+    <Compile Include="IssueCodes\IFieldSpecificationIssueCodes.cs" />
+    <Compile Include="IssueCodes\IFieldSpecificationsIssueCodes.cs" />
+    <Compile Include="IssueCodes\InteriorIntersectsIssueCodes.cs" />
+    <Compile Include="IssueCodes\IntersectionMatrixIssueCodes.cs" />
+    <Compile Include="IssueCodes\IntersectsIssueCodes.cs" />
+    <Compile Include="IssueCodes\IssueCodeDescriptions.de-CH.Designer.cs">
+      <DependentUpon>IssueCodeDescriptions.de-CH.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="IssueCodes\IssueCodeDescriptions.de.Designer.cs">
+      <DependentUpon>IssueCodeDescriptions.de.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
     <Compile Include="IssueCodes\IssueCodeDescriptions.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>IssueCodeDescriptions.resx</DependentUpon>
     </Compile>
     <Compile Include="IssueCodes\LocalTestIssueCodes.cs" />
+    <Compile Include="IssueCodes\MustIntersectIssueCodes.cs" />
+    <Compile Include="IssueCodes\MustTouchIssueCodes.cs" />
+    <Compile Include="IssueCodes\OverlapsIssueCodes.cs" />
+    <Compile Include="IssueCodes\TouchesIssueCodes.cs" />
+    <Compile Include="LineFieldValuesConstraint.cs" />
     <Compile Include="LineIntersection.cs" />
     <Compile Include="LineIntersectionUtils.cs" />
+    <Compile Include="Network\QaConnectionCountRule.cs" />
+    <Compile Include="Network\QaConnectionRule.cs" />
+    <Compile Include="Network\QaConnectionRuleHelper.cs" />
+    <Compile Include="Network\QaNetworkBase.cs" />
     <Compile Include="NonLinearSegmentType.cs" />
+    <Compile Include="Obsolete\QaLineConnection.cs" />
     <Compile Include="Obsolete\QaMinPointDistance.cs" />
+    <Compile Include="OrphanErrorType.cs" />
+    <Compile Include="PointFieldValuesConstraint.cs" />
     <Compile Include="Properties\LocalizableStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -99,9 +145,17 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QaAreaBase.cs" />
+    <Compile Include="QaBorderSense.cs" />
+    <Compile Include="QaCentroids.cs" />
+    <Compile Include="QaConnections.cs" />
     <Compile Include="QaCurve.cs" />
+    <Compile Include="QaDangleCount.cs" />
     <Compile Include="QaExtent.cs" />
+    <Compile Include="QaFlowLogic.cs" />
+    <Compile Include="QaFullCoincidence.cs" />
+    <Compile Include="QaIntersectsOther.cs" />
     <Compile Include="QaLengthBase.cs" />
+    <Compile Include="QaLineConnectionFieldValues.cs" />
     <Compile Include="QaLineIntersectAngle.cs" />
     <Compile Include="QaMaxArea.cs" />
     <Compile Include="QaMaxLength.cs" />
@@ -111,14 +165,31 @@
     <Compile Include="QaMinLength.cs" />
     <Compile Include="QaMinNodeDistance.cs" />
     <Compile Include="QaMinSegAngle.cs" />
+    <Compile Include="QaNotNear.cs" />
+    <Compile Include="QaOrphanNode.cs" />
+    <Compile Include="QaPartCoincidenceOther.cs" />
+    <Compile Include="QaPartCoincidenceSelf.cs" />
+    <Compile Include="QaPointNotNear.cs" />
+    <Compile Include="QaPseudoNodes.cs" />
     <Compile Include="QaSegmentLength.cs" />
     <Compile Include="SpatialRelations\QaSpatialRelationBase.cs" />
+    <Compile Include="SpatialRelations\QaSpatialRelationOtherBase.cs" />
     <Compile Include="SpatialRelations\QaSpatialRelationSelfBase.cs" />
+    <Compile Include="SpatialRelations\QaSpatialRelationUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Documentation\DocStrings.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>DocStrings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="IssueCodes\IssueCodeDescriptions.de-CH.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>IssueCodeDescriptions.de-CH.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="IssueCodes\IssueCodeDescriptions.de.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>IssueCodeDescriptions.de.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="IssueCodes\IssueCodeDescriptions.resx">
       <Generator>ResXFileCodeGenerator</Generator>
