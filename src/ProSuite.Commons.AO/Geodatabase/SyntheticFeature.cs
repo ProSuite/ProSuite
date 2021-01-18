@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
@@ -24,7 +24,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 	/// you get the same value as you would with <see cref="get_Value"/>
 	/// for the appropriate field index.
 	/// </remarks>
-	// TODO With some effort, it may be possible to carve out a common base class with EMA's ConflictingObjectState
 	[CLSCompliant(false)]
 	public class SyntheticFeature : IFeature, IFeatureBuffer, IRowSubtypes
 		// inherited: IObject, IRow, IRowBuffer
@@ -151,7 +150,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 						return string.Empty;
 
 					case esriFieldType.esriFieldTypeDate:
-						return DateTime.MinValue; // TODO Ok?
+						// Use the Win NT epoch (1601-01-01T00:00:00),
+						// MinValue may be out of range for some systems
+						return new DateTime(1601, 1, 1);
 
 					case esriFieldType.esriFieldTypeOID:
 						return -1; // sic
@@ -192,14 +193,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			shape.SpatialReference = geometryDef.SpatialReference;
 
-			var zAware = shape as IZAware;
-			if (zAware != null)
+			if (shape is IZAware zAware)
 			{
 				zAware.ZAware = geometryDef.HasZ;
 			}
 
-			var mAware = shape as IMAware;
-			if (mAware != null)
+			if (shape is IMAware mAware)
 			{
 				mAware.MAware = geometryDef.HasM;
 			}
@@ -231,7 +230,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 					return new MultiPatchClass();
 			}
 
-			throw new NotImplementedException(
+			throw new NotSupportedException(
 				$"Shape type not supported: {shapeType}");
 		}
 
@@ -243,8 +242,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public IGeometry Shape
 		{
-			get { return _fieldValues[_shapeFieldIndex] as IGeometry; }
-			set { _fieldValues[_shapeFieldIndex] = value ?? GetInitialShape(_featureClass); }
+			get => _fieldValues[_shapeFieldIndex] as IGeometry;
+			set => _fieldValues[_shapeFieldIndex] = value ?? GetInitialShape(_featureClass);
 		}
 
 		public IEnvelope Extent => Shape.Envelope;
@@ -291,8 +290,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (! field.Editable)
 			{
-				throw new InvalidOperationException(
-					string.Format("Field {0} is not editable", field.Name));
+				throw new InvalidOperationException($"Field {field.Name} is not editable");
 			}
 
 			if (value == null)
@@ -303,8 +301,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (! field.IsNullable && (value == null || value == DBNull.Value))
 			{
-				throw new InvalidOperationException(
-					string.Format("Field {0} is not nullable", field.Name));
+				throw new InvalidOperationException($"Field {field.Name} is not nullable");
 			}
 
 			// IField.CheckValue() catches some bad values, but it's a rather
@@ -312,8 +309,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			if (! field.CheckValue(value))
 			{
 				throw new ArgumentOutOfRangeException(
-					string.Format("Value [{0}] is not valid for field {1}",
-					              value, field.Name));
+					$"Value <{value}> is not valid for field {field.Name}");
 			}
 
 			try
@@ -360,18 +356,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				case esriFieldType.esriFieldTypeGUID:
 				case esriFieldType.esriFieldTypeGlobalID:
-					// From the Esri Help:
-					// "The Object ID and GUID data types store registry style strings
-					// consisting of 36 characters enclosed in curly brackets."
-					// For example: "{00000000-0000-0000-0000-000000000000}"
-					if (value is Guid)
-						return GuidString((Guid) value);
-					var s = value as string;
-					if (s != null)
-						return new Guid(s).ToString("B");
-					var b = value as byte[];
-					if (b != null) // Guid(b) complains if not 16 bytes
-						return new Guid(b).ToString("B");
+					// Citing from Esri Help: "The Object ID and GUID data types store
+					// registry style strings consisting of 36 characters enclosed in
+					// curly brackets." Example: "{00000000-0000-0000-0000-000000000000}"
+					if (value is Guid guid)
+						return GuidString(guid);
+					if (value is string s)
+						return GuidString(new Guid(s));
+					if (value is byte[] b) // Guid(b) complains if not 16 bytes
+						return GuidString(new Guid(b));
 					throw new ArgumentException("Value is neither Guid nor String nor Byte[16]");
 
 				case esriFieldType.esriFieldTypeGeometry:
@@ -431,51 +424,50 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public void InitDefaultValues()
 		{
-			var subtypes = Class as ISubtypes;
-			if (subtypes != null && subtypes.HasSubtype)
+			if (! (Class is ISubtypes subtypes) || ! subtypes.HasSubtype)
 			{
-				int fieldCount = _fields.FieldCount;
-				for (var i = 0; i < fieldCount; i++)
-				{
-					if (i == subtypes.SubtypeFieldIndex)
-					{
-						continue; // skip, this has already been set
-					}
-
-					IField field = _fields.Field[i];
-
-					if (! field.Editable)
-					{
-						continue;
-					}
-
-					//if (field.Type == esriFieldType.esriFieldTypeOID) continue;
-					//if (field.Type == esriFieldType.esriFieldTypeGeometry) continue;
-
-					object value = subtypes.DefaultValue[SubtypeCode, field.Name];
-
-					if (value == null || value == DBNull.Value)
-					{
-						continue; // No default value seems to be represented by NULL
-					}
-
-					if (! field.CheckValue(value))
-					{
-						continue;
-					}
-
-					IDomain domain = subtypes.Domain[SubtypeCode, field.Name];
-
-					if (domain != null && ! domain.MemberOf(value))
-					{
-						continue;
-					}
-
-					set_Value(i, value);
-				}
+				return; // silently ignore (or should we set class default values?)
 			}
 
-			//else: silently ignore (or should we set class default values?)
+			int fieldCount = _fields.FieldCount;
+			for (var i = 0; i < fieldCount; i++)
+			{
+				if (i == subtypes.SubtypeFieldIndex)
+				{
+					continue; // skip, this has already been set
+				}
+
+				IField field = _fields.Field[i];
+
+				if (! field.Editable)
+				{
+					continue;
+				}
+
+				//if (field.Type == esriFieldType.esriFieldTypeOID) continue;
+				//if (field.Type == esriFieldType.esriFieldTypeGeometry) continue;
+
+				object value = subtypes.DefaultValue[SubtypeCode, field.Name];
+
+				if (value == null || value == DBNull.Value)
+				{
+					continue; // No default value seems to be represented by NULL
+				}
+
+				if (! field.CheckValue(value))
+				{
+					continue;
+				}
+
+				IDomain domain = subtypes.Domain[SubtypeCode, field.Name];
+
+				if (domain != null && ! domain.MemberOf(value))
+				{
+					continue;
+				}
+
+				set_Value(i, value);
+			}
 		}
 
 		public int SubtypeCode

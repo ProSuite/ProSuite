@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -11,31 +11,32 @@ namespace ProSuite.Commons.AO.Geodatabase
 	[CLSCompliant(false)]
 	public static class TableSortUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		/// <summary>
 		/// Creates a table sort object for the provided table and sort field name.
 		/// </summary>
 		/// <param name="table"></param>
 		/// <param name="fieldName"></param>
+		/// <param name="selection"></param>
 		/// <returns></returns>
 		[NotNull]
 		public static ITableSort CreateTableSort([NotNull] ITable table,
-		                                         [NotNull] string fieldName)
+		                                         [NotNull] string fieldName,
+		                                         [CanBeNull] ISelectionSet selection = null)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNullOrEmpty(fieldName, nameof(fieldName));
 
 			int fieldIdx = table.FindField(fieldName);
 
-			Assert.ArgumentCondition(fieldIdx >= 0, "Field {0} not found in table",
-			                         fieldName);
+			Assert.ArgumentCondition(fieldIdx >= 0, "Field {0} not found in table", fieldName);
 
 			return new TableSortClass
 			       {
 				       Table = table,
 				       Fields = fieldName,
+				       SelectionSet = selection
 			       };
 		}
 
@@ -47,10 +48,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// </summary>
 		/// <param name="table"></param>
 		/// <param name="guidFieldName"></param>
+		/// <param name="selection"></param>
 		/// <returns></returns>
 		[NotNull]
 		public static ITableSort CreateGuidFieldTableSort([NotNull] ITable table,
-		                                                  [NotNull] string guidFieldName)
+		                                                  [NotNull] string guidFieldName,
+		                                                  [CanBeNull] ISelectionSet selection =
+			                                                  null)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNullOrEmpty(guidFieldName, nameof(guidFieldName));
@@ -60,9 +64,10 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			Assert.ArgumentCondition(fieldType == esriFieldType.esriFieldTypeGUID ||
 			                         fieldType == esriFieldType.esriFieldTypeGlobalID,
-			                         "Field type of {0} must be Guid or Gobal ID.");
+			                         "Field type of {0} must be Guid or Global ID.",
+			                         fieldType);
 
-			ITableSort result = CreateTableSort(table, guidFieldName);
+			ITableSort result = CreateTableSort(table, guidFieldName, selection);
 
 			result.Compare = new GuidFieldSortCallback();
 
@@ -72,10 +77,19 @@ namespace ProSuite.Commons.AO.Geodatabase
 		[NotNull]
 		public static ICursor GetSortedTableCursor([NotNull] ITable table,
 		                                           [NotNull] string fieldName,
-		                                           [CanBeNull] ITrackCancel trackCancel =
-			                                           null)
+		                                           [CanBeNull] ITrackCancel trackCancel = null)
 		{
 			ITableSort tableSort = CreateTableSort(table, fieldName);
+
+			return GetSortedCursor(tableSort, trackCancel);
+		}
+
+		[NotNull]
+		public static ICursor GetSortedTableCursor([NotNull] ISelectionSet selection,
+		                                           [NotNull] string fieldName,
+		                                           [CanBeNull] ITrackCancel trackCancel = null)
+		{
+			ITableSort tableSort = CreateTableSort(selection.Target, fieldName, selection);
 
 			return GetSortedCursor(tableSort, trackCancel);
 		}
@@ -86,6 +100,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 		                                               [CanBeNull] ITrackCancel trackCancel = null)
 		{
 			ITableSort tableSort = CreateGuidFieldTableSort(table, guidFieldName);
+
+			return GetSortedCursor(tableSort, trackCancel);
+		}
+
+		[NotNull]
+		public static ICursor GetGuidFieldSortedCursor([NotNull] ISelectionSet selection,
+		                                               [NotNull] string guidFieldName,
+		                                               [CanBeNull] ITrackCancel trackCancel = null)
+		{
+			ITableSort tableSort =
+				CreateGuidFieldTableSort(selection.Target, guidFieldName, selection);
 
 			return GetSortedCursor(tableSort, trackCancel);
 		}
