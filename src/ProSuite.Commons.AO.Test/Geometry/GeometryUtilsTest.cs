@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -15,6 +16,7 @@ using ProSuite.Commons.AO.Geometry.Serialization;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Collections;
+using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geometry.EsriShape;
 using Array = System.Array;
@@ -3028,6 +3030,63 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 				Assert.AreEqual(psGeometryType.ToString(), removedPrefix);
 			}
+		}
+
+		[Test]
+		public void CanConvertFromMultipointArray()
+		{
+			// Real-worlds multipoint:
+			var bytes = Encoding.Default.GetBytes(
+				"\n\0\0\0]\u0002J)7ˆDA){Wd1)3AˆëQØ8ˆDAÐMb°4)3A\u0001\0\0\0\u0002\0\0\0\0\0\0\0ˆëQØ8ˆDAÐMb°4)3A]\u0002J)7ˆDA){Wd1)3AÊ¶\"iNð~@\05^ºIô~@\05^ºIô~@Ê¶\"iNð~@");
+
+			CancellationTokenSource cancellationTokenSource = new CancellationTokenSource();
+
+			const int count = 8;
+
+			// First run on MTA thread-pool threads, expect decent error message
+			Task[] tasks = new Task[count];
+			for (int i = 0; i < count; i++)
+			{
+				Task<IGeometry> task =
+					Task.Factory.StartNew(
+						() =>
+						{
+							try
+							{
+								var result = GeometryUtils.FromEsriShapeBuffer(bytes);
+
+								// oddly, it sometimes succeeds even on MTA!
+								// Assert.Fail("Should not succeed on MTA");
+
+								return result;
+							}
+							catch (Exception exception)
+							{
+								Console.WriteLine(exception.Message);
+								throw;
+							}
+						});
+
+				tasks[i] = task;
+			}
+
+			Assert.Throws<AggregateException>(() => Task.WaitAll(tasks));
+
+			// Works on STA:
+			var staScheduler = new StaTaskScheduler(count);
+
+			for (int i = 0; i < count; i++)
+			{
+				Task<IGeometry> task =
+					Task.Factory.StartNew(
+						() => GeometryUtils.FromEsriShapeBuffer(bytes),
+						cancellationTokenSource.Token, TaskCreationOptions.LongRunning,
+						staScheduler);
+
+				tasks[i] = task;
+			}
+
+			Task.WaitAll(tasks);
 		}
 
 		[Test]
