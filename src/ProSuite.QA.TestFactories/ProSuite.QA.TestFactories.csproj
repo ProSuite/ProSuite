@@ -105,6 +105,7 @@
     <Compile Include="QaLineIntersectAngleFactory.cs" />
     <Compile Include="QaMaxAreaFactory.cs" />
     <Compile Include="QaMaxLengthFactory.cs" />
+    <Compile Include="QaMaxSlopeFactory.cs" />
     <Compile Include="QaMinAreaFactory.cs" />
     <Compile Include="QaMinIntersectFactory.cs" />
     <Compile Include="QaMinLengthFactory.cs" />

@@ -1,0 +1,204 @@
+using System;
+using System.Globalization;
+using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.Properties;
+using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+
+namespace ProSuite.QA.Tests
+{
+	[CLSCompliant(false)]
+	[UsedImplicitly]
+	[GeometryTest]
+	public class QaGeometryConstraint : ContainerTest
+	{
+		private readonly bool _perPart;
+		[NotNull] private readonly GeometryConstraint _constraint;
+		[NotNull] private readonly string _shapeFieldName;
+		private readonly esriGeometryType _geometryType;
+
+		#region issue codes
+
+		[CanBeNull] private static TestIssueCodes _codes;
+
+		[NotNull]
+		[UsedImplicitly]
+		public static TestIssueCodes Codes => _codes ?? (_codes = new Code());
+
+		private class Code : LocalTestIssueCodes
+		{
+			public const string ConstraintNotFulfilled_ForShape =
+				"ConstraintNotFulfilled.ForShape";
+
+			public const string ConstraintNotFulfilled_ForShapePart =
+				"ConstraintNotFulfilled.ForShapePart";
+
+			public Code() : base("GeometryConstraint") { }
+		}
+
+		#endregion
+
+		[Doc("QaGeometryConstraint_0")]
+		public QaGeometryConstraint(
+			[Doc("QaGeometryConstraint_featureClass")] [NotNull]
+			IFeatureClass featureClass,
+			[Doc("QaGeometryConstraint_geometryConstraint")] [NotNull]
+			string
+				geometryConstraint,
+			[Doc("QaGeometryConstraint_perPart")] bool perPart)
+			: base((ITable) featureClass)
+		{
+			Assert.ArgumentNotNullOrEmpty(geometryConstraint, nameof(geometryConstraint));
+
+			_shapeFieldName = featureClass.ShapeFieldName;
+			_perPart = perPart;
+			_geometryType = featureClass.ShapeType;
+
+			_constraint = new GeometryConstraint(geometryConstraint);
+		}
+
+		public override bool IsQueriedTable(int tableIndex)
+		{
+			AssertValidInvolvedTableIndex(tableIndex);
+			return false;
+		}
+
+		public override bool RetestRowsPerIntersectedTile(int tableIndex)
+		{
+			return false;
+		}
+
+		protected override int ExecuteCore(IRow row, int tableIndex)
+		{
+			var feature = (IFeature) row;
+
+			return _perPart
+				       ? CheckPerPart(feature)
+				       : CheckShape(feature);
+		}
+
+		private int CheckPerPart([NotNull] IFeature feature)
+		{
+			Assert.ArgumentNotNull(feature, nameof(feature));
+
+			IGeometry shape = feature.Shape;
+
+			if (_geometryType == esriGeometryType.esriGeometryMultipoint && shape != null)
+			{
+				// check individual points
+				return CheckPoints(feature, (IPointCollection) shape);
+			}
+
+			var parts = shape as IGeometryCollection;
+			if (parts != null && parts.GeometryCount > 1)
+			{
+				// there is more than one part
+				return CheckParts(feature, parts);
+			}
+
+			// geometry is single-part or null
+			return CheckShape(feature);
+		}
+
+		private int CheckParts([NotNull] IFeature feature,
+		                       [NotNull] IGeometryCollection parts)
+		{
+			Assert.ArgumentNotNull(feature, nameof(feature));
+			Assert.ArgumentNotNull(parts, nameof(parts));
+
+			var errorCount = 0;
+
+			foreach (IGeometry part in GeometryUtils.GetParts(parts))
+			{
+				if (! _constraint.IsFulfilled(part))
+				{
+					errorCount += ReportError(feature,
+					                          part,
+					                          isPart: true);
+				}
+			}
+
+			return errorCount;
+		}
+
+		private int CheckPoints([NotNull] IFeature feature,
+		                        [NotNull] IPointCollection points)
+		{
+			Assert.ArgumentNotNull(feature, nameof(feature));
+			Assert.ArgumentNotNull(points, nameof(points));
+
+			var errorCount = 0;
+			foreach (IPoint point in GeometryUtils.GetPoints(points, recycle: true))
+			{
+				if (! _constraint.IsFulfilled(point))
+				{
+					errorCount += ReportError(feature, GeometryFactory.Clone(point), isPart: true);
+				}
+			}
+
+			return errorCount;
+		}
+
+		private int CheckShape([NotNull] IFeature feature)
+		{
+			return _constraint.IsFulfilled(feature.Shape)
+				       ? NoError
+				       : ReportError(feature, feature.Shape, isPart: false);
+		}
+
+		private int ReportError([NotNull] IFeature feature,
+		                        [NotNull] IGeometry geometry,
+		                        bool isPart)
+		{
+			string displayValues = _constraint.FormatValues(geometry,
+			                                                CultureInfo.CurrentCulture)
+			                                  .Replace("$", string.Empty);
+
+			string rawValues = _constraint.FormatValues(geometry, CultureInfo.InvariantCulture);
+
+			string description = GetErrorDescription(
+				_constraint.Constraint.Replace("$", string.Empty),
+				displayValues,
+				isPart);
+
+			IGeometry errorGeometry;
+			IssueCode issueCode;
+			if (isPart)
+			{
+				errorGeometry = GeometryUtils.GetHighLevelGeometry(geometry);
+				issueCode = Codes[Code.ConstraintNotFulfilled_ForShapePart];
+			}
+			else
+			{
+				errorGeometry = geometry;
+				issueCode = Codes[Code.ConstraintNotFulfilled_ForShape];
+			}
+
+			return ReportError(description, errorGeometry,
+			                   issueCode, _shapeFieldName,
+			                   new[] {rawValues},
+			                   feature);
+		}
+
+		[NotNull]
+		private static string GetErrorDescription(
+			[NotNull] string geometryConstraint,
+			[NotNull] string constraintValues,
+			bool perPart)
+		{
+			return string.Format(
+				perPart
+					? LocalizableStrings.QaGeometryConstraint_ConstraintNotFulfilled_ForShapePart
+					: LocalizableStrings
+						.QaGeometryConstraint_QaGeometryConstraint_ConstraintNotFulfilled_ForShape,
+				geometryConstraint,
+				constraintValues);
+		}
+	}
+}
