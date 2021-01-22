@@ -122,7 +122,7 @@ namespace ProSuite.QA.Tests.Test
 
 			double limit = FormatUtils.Radians2AngleInUnits(0.1, AngleUnit.Degree);
 
-			var model = new SimpleModel("model", ((IDataset) fc).Workspace);
+			var model = new SimpleModel("model", fc);
 
 			esriGeometryType esriGeometryType = fc.ShapeType;
 

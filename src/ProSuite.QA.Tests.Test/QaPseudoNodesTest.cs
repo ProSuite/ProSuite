@@ -105,7 +105,7 @@ namespace ProSuite.QA.Tests.Test
 
 			var ds1 = (IDataset) fc;
 
-			var model = new SimpleModel("model", (IWorkspace) ws);
+			var model = new SimpleModel("model", fc);
 			Dataset mds1 = model.AddDataset(new ModelVectorDataset(ds1.Name));
 
 			var clsDesc = new ClassDescriptor(typeof(QaFactoryPseudoNodes));

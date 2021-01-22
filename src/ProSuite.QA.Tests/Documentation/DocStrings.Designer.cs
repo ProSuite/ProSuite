@@ -22,7 +22,7 @@ namespace ProSuite.QA.Tests.Documentation {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class DocStrings {
+    public class DocStrings {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("ProSuite.QA.Tests.Documentation.DocStrings", typeof(DocStrings).Assembly);
@@ -51,12 +51,10656 @@ namespace ProSuite.QA.Tests.Documentation {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
             set {
                 resourceCulture = value;
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all points in &apos;featureClass&apos; with a Z range larger than &apos;tolerance&apos;.
+        /// </summary>
+        public static string Qa3dConstantZ_0 {
+            get {
+                return ResourceManager.GetString("Qa3dConstantZ_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or polygon feature class with Z values.
+        /// </summary>
+        public static string Qa3dConstantZ_featureClass {
+            get {
+                return ResourceManager.GetString("Qa3dConstantZ_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum allowed Z range within the feature.
+        /// </summary>
+        public static string Qa3dConstantZ_tolerance {
+            get {
+                return ResourceManager.GetString("Qa3dConstantZ_tolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all line segments in &apos;featureClass&apos; that do not correspond to &apos;type&apos;.
+        /// </summary>
+        public static string Qa3dMonoton_0 {
+            get {
+                return ResourceManager.GetString("Qa3dMonoton_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to if segments with constant height are valid (only applicable if &apos;type&apos; != Constant).
+        /// </summary>
+        public static string Qa3dMonoton_constantAllowed {
+            get {
+                return ResourceManager.GetString("Qa3dMonoton_constantAllowed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or (for &apos;type&apos; = Constant) polygon feature class.
+        /// </summary>
+        public static string Qa3dMonoton_featureClass {
+            get {
+                return ResourceManager.GetString("Qa3dMonoton_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected slope property. If type = MonotonType.Monotonous, the type gets defined for each part by the height difference from its start to its end point.
+        /// </summary>
+        public static string Qa3dMonoton_type {
+            get {
+                return ResourceManager.GetString("Qa3dMonoton_type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all line segments in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;terrain&apos;
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;terrain&apos; must have the same spatial reference..
+        /// </summary>
+        public static string Qa3dPipe_0 {
+            get {
+                return ResourceManager.GetString("Qa3dPipe_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all line segments in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;terrain&apos;
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;terrain&apos; must have the same spatial reference..
+        /// </summary>
+        public static string Qa3dPipe_1 {
+            get {
+                return ResourceManager.GetString("Qa3dPipe_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all line segments in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;raster&apos;
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;raster&apos; must have the same spatial reference..
+        /// </summary>
+        public static string Qa3dPipe_2 {
+            get {
+                return ResourceManager.GetString("Qa3dPipe_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all line segments in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;mosaicLayer&apos;
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;mosaicLayer&apos; must have the same spatial reference..
+        /// </summary>
+        public static string Qa3dPipe_4 {
+            get {
+                return ResourceManager.GetString("Qa3dPipe_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to True: &apos;startEndIgnoreLength&apos; is given as ratio of the shape length
+        ///False: &apos;startEndIgnoreLength&apos; is the absolute length in units of &apos;featureClass&apos;.
+        /// </summary>
+        public static string Qa3dPipe_asRatio {
+            get {
+                return ResourceManager.GetString("Qa3dPipe_asRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or polygon feature class with heights.
+        /// </summary>
+        public static string Qa3dPipe_featureClass {
+            get {
+                return ResourceManager.GetString("Qa3dPipe_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum allowed difference (in z-units).
+        /// </summary>
+        public static string Qa3dPipe_limit {
+            get {
+                return ResourceManager.GetString("Qa3dPipe_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to mosaicLayer, from which the previewlayer raster is used to process.
+        /// </summary>
+        public static string Qa3dPipe_mosaicLayer {
+            get {
+                return ResourceManager.GetString("Qa3dPipe_mosaicLayer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to raster to compare.
+        /// </summary>
+        public static string Qa3dPipe_raster {
+            get {
+                return ResourceManager.GetString("Qa3dPipe_raster", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ignore line parts closer than &apos;startEndIgnoreLength&apos; to the start/end point of the shape.
+        /// </summary>
+        public static string Qa3dPipe_startEndIgnoreLength {
+            get {
+                return ResourceManager.GetString("Qa3dPipe_startEndIgnoreLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to terrain to compare.
+        /// </summary>
+        public static string Qa3dPipe_terrain {
+            get {
+                return ResourceManager.GetString("Qa3dPipe_terrain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to terrain tolerance (in z-Units).
+        /// </summary>
+        public static string Qa3dPipe_terrainTolerance {
+            get {
+                return ResourceManager.GetString("Qa3dPipe_terrainTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AboveLimit : All z-values must be above Terrain + &apos;limit&apos;
+        ///BelowLimit : All z-values must be below Terrain + &apos;limit&apos; (For underground, &apos;limit&apos; must be &lt; 0)
+        ///WithinLimit: All z-values must be below Terrain + &apos;limit&apos; and above Terrain - &apos;limit&apos;
+        ///OutsideLimt: All z-values must be either above Terrani + &apos;limit&apos; or below Terrain - &apos;limit&apos;.
+        /// </summary>
+        public static string Qa3dPipe_zOffsetConstraint {
+            get {
+                return ResourceManager.GetString("Qa3dPipe_zOffsetConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all points or vertices in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;terrain&apos;
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;terrain&apos; must have the same spatial reference..
+        /// </summary>
+        public static string Qa3dSmoothing_0 {
+            get {
+                return ResourceManager.GetString("Qa3dSmoothing_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all points or vertices in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;raster&apos;
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;raster&apos; must have the same spatial reference..
+        /// </summary>
+        public static string Qa3dSmoothing_2 {
+            get {
+                return ResourceManager.GetString("Qa3dSmoothing_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all points or vertices in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;mosaicLayer&apos;
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;mosaicLayer&apos; must have the same spatial reference..
+        /// </summary>
+        public static string Qa3dSmoothing_4 {
+            get {
+                return ResourceManager.GetString("Qa3dSmoothing_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;greater&apos; : the difference must be larger than limit
+        ///&apos;smaller&apos; : the difference must be smaller than limit.
+        /// </summary>
+        public static string Qa3dSmoothing_directionOfError {
+            get {
+                return ResourceManager.GetString("Qa3dSmoothing_directionOfError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class with heights.
+        /// </summary>
+        public static string Qa3dSmoothing_featureClass {
+            get {
+                return ResourceManager.GetString("Qa3dSmoothing_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to limit (in z-units).
+        /// </summary>
+        public static string Qa3dSmoothing_limit {
+            get {
+                return ResourceManager.GetString("Qa3dSmoothing_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to mosaicLayer, from which the previewlayer raster is used to process.
+        /// </summary>
+        public static string Qa3dSmoothing_mosaicLayer {
+            get {
+                return ResourceManager.GetString("Qa3dSmoothing_mosaicLayer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to true : the difference must be larger than limit
+        ///false : the difference must be smaller than limit.
+        /// </summary>
+        public static string Qa3dSmoothing_mustBeLarger {
+            get {
+                return ResourceManager.GetString("Qa3dSmoothing_mustBeLarger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to raster to compare.
+        /// </summary>
+        public static string Qa3dSmoothing_raster {
+            get {
+                return ResourceManager.GetString("Qa3dSmoothing_raster", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to terrain to compare.
+        /// </summary>
+        public static string Qa3dSmoothing_terrain {
+            get {
+                return ResourceManager.GetString("Qa3dSmoothing_terrain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to terrain tolerance (in z-Units).
+        /// </summary>
+        public static string Qa3dSmoothing_terrainTolerance {
+            get {
+                return ResourceManager.GetString("Qa3dSmoothing_terrainTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AboveLimit : All z-values must be above Terrain + &apos;limit&apos;
+        ///BelowLimit : All z-values must be below Terrain + &apos;limit&apos; (For underground, &apos;limit&apos; must be &lt; 0)
+        ///WithinLimit: All z-values must be below Terrain + &apos;limit&apos; and above Terrain - &apos;limit&apos;
+        ///OutsideLimt: All z-values must be either above Terrani + &apos;limit&apos; or below Terrain - &apos;limit&apos;.
+        /// </summary>
+        public static string Qa3dSmoothing_zOffsetConstraint {
+            get {
+                return ResourceManager.GetString("Qa3dSmoothing_zOffsetConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features that are not involved in valid rings:
+        ///Checks if features in &apos;polylineClass&apos; build rings and if the features in a ring are directed in clockwise / counterclockwise direction.
+        /// </summary>
+        public static string QaBorderSense_0 {
+            get {
+                return ResourceManager.GetString("QaBorderSense_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features that are not involved in valid rings:
+        ///Checks if features in &apos;polylineClasses&apos; build rings and if the features in a ring are directed in clockwise / counterclockwise direction
+        ///
+        ///Remark: The feature classes in &apos;polylineClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaBorderSense_1 {
+            get {
+                return ResourceManager.GetString("QaBorderSense_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to indication if rings must be built in clockwise direction (true: features are ordered in clockwise direction).
+        /// </summary>
+        public static string QaBorderSense_clockwise {
+            get {
+                return ResourceManager.GetString("QaBorderSense_clockwise", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline feature class.
+        /// </summary>
+        public static string QaBorderSense_polylineClass {
+            get {
+                return ResourceManager.GetString("QaBorderSense_polylineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline feature classes.
+        /// </summary>
+        public static string QaBorderSense_polylineClasses {
+            get {
+                return ResourceManager.GetString("QaBorderSense_polylineClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds errors in point-line-polygon topology:
+        ///Checks if there is exactly one point from &apos;pointClass&apos; within each polygon built by the features of &apos;polylineClass&apos;
+        ///
+        ///Remark: The feature classes in &apos;polylineClass&apos; and &apos;pointClass&apos; must have the same spatial reference.
+        ///The features of &apos;polylineClass&apos; are not checked for intersections. Use QaLineIntersect to check.
+        /// </summary>
+        public static string QaCentroids_0 {
+            get {
+                return ResourceManager.GetString("QaCentroids_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds errors in point-line-polygon topology:
+        ///Checks if there is exactly one point from &apos;pointClasses&apos; within each polygon built by the features of &apos;polylineClasses&apos;
+        ///
+        ///Remark: All feature classes in &apos;polylineClasses&apos; and &apos;pointClasses&apos; must have the same spatial reference.
+        ///The features of &apos;polylineClasses&apos; are not checked for intersections. Use QaLineIntersect to check.
+        /// </summary>
+        public static string QaCentroids_2 {
+            get {
+                return ResourceManager.GetString("QaCentroids_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to constraint on polygon. Border feature is aliased as &quot;B&quot;, left polygon feature as &quot;L&quot; and right polygon feature as &quot;R&quot;
+        ///Example for constraint: &quot;B.ObjektArt = x AND L.ObjektArt = R.ObjektArt&quot;.
+        /// </summary>
+        public static string QaCentroids_constraint {
+            get {
+                return ResourceManager.GetString("QaCentroids_constraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to point feature class.
+        /// </summary>
+        public static string QaCentroids_pointClass {
+            get {
+                return ResourceManager.GetString("QaCentroids_pointClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to point feature classes.
+        /// </summary>
+        public static string QaCentroids_pointClasses {
+            get {
+                return ResourceManager.GetString("QaCentroids_pointClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline feature class.
+        /// </summary>
+        public static string QaCentroids_polylineClass {
+            get {
+                return ResourceManager.GetString("QaCentroids_polylineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline feature classes.
+        /// </summary>
+        public static string QaCentroids_polylineClasses {
+            get {
+                return ResourceManager.GetString("QaCentroids_polylineClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all connected features in &apos;featureClasses&apos; that do not correspond with the &apos;rules&apos;.
+        ///&apos;featureClasses&apos; can consist of line and point featureclasses. &apos;rules&apos; are checked at all distinct points that exist as start/endpoint (line featureclasses) or points (point featureclasses).
+        ///
+        ///Remark: The feature classes in &apos;featureClasses&apos; must have the same spatial reference. 
+        ///The rules are processed in ordered direction. 
+        ///If the involved features correspond to no rule, they are reported.
+        ///
+        ///One rule consists out [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaConnections_0 {
+            get {
+                return ResourceManager.GetString("QaConnections_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all connected features in &apos;featureClass&apos; that do not correspond with the &apos;rules&apos;.
+        ///&apos;featureClass&apos; can be a polyline or point featureclasses. &apos;rules&apos; are checked at all distinct points that exist as start/endpoint (polyline featureclass) or points (point featureclass).
+        ///The rules are processed in ordered direction. 
+        ///If the involved features correspond to no rule, they are reported.
+        ///
+        ///One rule consists out of one expression for &apos;featureClass&apos;.
+        ///Each expression has a selection expression.
+        ///Additionally [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaConnections_1 {
+            get {
+                return ResourceManager.GetString("QaConnections_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all connected features in &apos;featureClasses&apos; that do not correspond with the &apos;rules&apos;.
+        ///&apos;featureClasses&apos; can consist of polyline and point featureclasses. &apos;rules&apos; are checked at all distinct points that exist as start/endpoint (polyline featureclasses) or points (point featureclasses).
+        ///
+        ///Remark: The feature classes in &apos;featureClasses&apos; must have the same spatial reference. 
+        ///The rules are processed in ordered direction. 
+        ///If the involved features correspond to no rule, they are reported.
+        ///.
+        /// </summary>
+        public static string QaConnections_2 {
+            get {
+                return ResourceManager.GetString("QaConnections_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all connected features in &apos;featureClass&apos; that do not correspond with the &apos;rules&apos;.
+        ///&apos;featureClass&apos; can be a polyline or point featureclasses. &apos;rules&apos; are checked at all distinct points that exist as start/endpoint (polyline featureclass) or points (point featureclass).
+        ///The rules are processed in ordered direction. 
+        ///If the involved features correspond to no rule, they are reported..
+        /// </summary>
+        public static string QaConnections_3 {
+            get {
+                return ResourceManager.GetString("QaConnections_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to involved feature class.
+        /// </summary>
+        public static string QaConnections_featureClass {
+            get {
+                return ResourceManager.GetString("QaConnections_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to involved feature classes.
+        /// </summary>
+        public static string QaConnections_featureClasses {
+            get {
+                return ResourceManager.GetString("QaConnections_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to list of rules. Each string[]-Array builds a rule. In each string[]-Array must be exactly n expressions, where n is the number of feature classes in &apos;featureClasses&apos;.
+        /// </summary>
+        public static string QaConnections_rules_0 {
+            get {
+                return ResourceManager.GetString("QaConnections_rules_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to list of rules.
+        /// </summary>
+        public static string QaConnections_rules_1 {
+            get {
+                return ResourceManager.GetString("QaConnections_rules_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to name of the boolean-Column containing the information about the direction of the line relative to the node.
+        /// </summary>
+        public static string QaConnections_StartsIn {
+            get {
+                return ResourceManager.GetString("QaConnections_StartsIn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all rows in &apos;table&apos; that do not fulfill &apos;constraint&apos;.
+        /// </summary>
+        public static string QaConstraint_0 {
+            get {
+                return ResourceManager.GetString("QaConstraint_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all rows in &apos;table&apos; that do not fulfill the hierarchical &apos;constraints&apos;.
+        /// </summary>
+        public static string QaConstraint_1 {
+            get {
+                return ResourceManager.GetString("QaConstraint_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to checked constraint.
+        /// </summary>
+        public static string QaConstraint_constraint {
+            get {
+                return ResourceManager.GetString("QaConstraint_constraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to hierarchical list of constraints.
+        /// </summary>
+        public static string QaConstraint_constraints {
+            get {
+                return ResourceManager.GetString("QaConstraint_constraints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to table.
+        /// </summary>
+        public static string QaConstraint_table {
+            get {
+                return ResourceManager.GetString("QaConstraint_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds polygons or polylines with an invalid number of contained points.
+        /// </summary>
+        public static string QaContainedPointsCount_0 {
+            get {
+                return ResourceManager.GetString("QaContainedPointsCount_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds polygons or polylines with an invalid number of contained points.
+        /// </summary>
+        public static string QaContainedPointsCount_1 {
+            get {
+                return ResourceManager.GetString("QaContainedPointsCount_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds polygons or polylines with an invalid number of contained points.
+        /// </summary>
+        public static string QaContainedPointsCount_2 {
+            get {
+                return ResourceManager.GetString("QaContainedPointsCount_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds polygons or polylines with an invalid number of contained points.
+        /// </summary>
+        public static string QaContainedPointsCount_3 {
+            get {
+                return ResourceManager.GetString("QaContainedPointsCount_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds polygons or polylines with an invalid number of contained points.
+        /// </summary>
+        public static string QaContainedPointsCount_4 {
+            get {
+                return ResourceManager.GetString("QaContainedPointsCount_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if points exactly on the polygon boundary/polyline end points should be counted for the polygon/polyline..
+        /// </summary>
+        public static string QaContainedPointsCount_countPointOnPolygonBorder {
+            get {
+                return ResourceManager.GetString("QaContainedPointsCount_countPointOnPolygonBorder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The expected number of relevant points per polygon/polyline..
+        /// </summary>
+        public static string QaContainedPointsCount_expectedPointCount {
+            get {
+                return ResourceManager.GetString("QaContainedPointsCount_expectedPointCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum number of relevant points per polygon/polyline..
+        /// </summary>
+        public static string QaContainedPointsCount_maximumPointCount {
+            get {
+                return ResourceManager.GetString("QaContainedPointsCount_maximumPointCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The minimum number of relevant points per polygon/polyline..
+        /// </summary>
+        public static string QaContainedPointsCount_minimumPointCount {
+            get {
+                return ResourceManager.GetString("QaContainedPointsCount_minimumPointCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The point feature class with the points to count per polygon/polyline..
+        /// </summary>
+        public static string QaContainedPointsCount_pointClass {
+            get {
+                return ResourceManager.GetString("QaContainedPointsCount_pointClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The point feature classes with the points to count per polygon/polyline..
+        /// </summary>
+        public static string QaContainedPointsCount_pointClasses {
+            get {
+                return ResourceManager.GetString("QaContainedPointsCount_pointClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The polygon or polyline feature class to check for invalid contained point counts..
+        /// </summary>
+        public static string QaContainedPointsCount_polygonClass {
+            get {
+                return ResourceManager.GetString("QaContainedPointsCount_polygonClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The polygon or polyline feature classes to check for invalid contained point counts..
+        /// </summary>
+        public static string QaContainedPointsCount_polygonClasses {
+            get {
+                return ResourceManager.GetString("QaContainedPointsCount_polygonClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Defines the handling if &apos;polygonClass&apos; is polyline featureclass
+        ///-asIs : use polyline as polyline, check the count for points lying on the polyline 
+        ///-asPolygonIfClosedElseAsPolyline : if the line is closed, check the count of points lying within the polygon with line as boundary, else check the count of points lying on the line
+        ///-asPolygonIfClosedElseReportIssue : if the line is closed, check the count of points lying within the polygon with line as boundary, else report an issue
+        ///-asPolygonIfClosedElseIgn [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaContainedPointsCount_PolylineUsage {
+            get {
+                return ResourceManager.GetString("QaContainedPointsCount_PolylineUsage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Condition expression to determine if a point is relevant for a containing feature. If the condition is defined and not fulfilled for a containing feature/point pair, then the point is not considered relevant for the feature.
+        ///The containing polygon/polyline and the point features are aliased using &quot;POLYGON&quot; and &quot;POINT&quot;, respectively.
+        ///
+        ///Note that for polyline features (for which support was added later) are also aliased using &quot;POLYGON&quot;
+        ///
+        ///Example: POLYGON.FACILITY_ID = POINT.FACILITY_ID.
+        /// </summary>
+        public static string QaContainedPointsCount_relevantPointCondition {
+            get {
+                return ResourceManager.GetString("QaContainedPointsCount_relevantPointCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;isWithin&apos; that are not contained by any feature in &apos;contains&apos;
+        ///Remarks: All feature classes in &apos;contains&apos; and &apos;isWithin&apos; must have the same spatial reference.
+        /// </summary>
+        public static string QaContainsOther_0 {
+            get {
+                return ResourceManager.GetString("QaContainsOther_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;isWithin&apos; that are not contained by any feature in &apos;contains&apos;
+        ///Remarks: All feature classes in &apos;contains&apos; and &apos;isWithin&apos; must have the same spatial reference.
+        /// </summary>
+        public static string QaContainsOther_1 {
+            get {
+                return ResourceManager.GetString("QaContainsOther_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;isWithin&apos; that are not contained by any feature in &apos;contains&apos; for which a given condition is fulfilled.
+        ///Remarks: All feature classes in &apos;contains&apos; and &apos;isWithin&apos; must have the same spatial reference.
+        /// </summary>
+        public static string QaContainsOther_2 {
+            get {
+                return ResourceManager.GetString("QaContainsOther_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;isWithin&apos; that are not contained by any feature in &apos;contains&apos; for which a given condition is fulfilled.
+        ///Remarks: All feature classes in &apos;contains&apos; and &apos;isWithin&apos; must have the same spatial reference.
+        /// </summary>
+        public static string QaContainsOther_3 {
+            get {
+                return ResourceManager.GetString("QaContainsOther_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature classes.
+        /// </summary>
+        public static string QaContainsOther_contains_0 {
+            get {
+                return ResourceManager.GetString("QaContainsOther_contains_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class.
+        /// </summary>
+        public static string QaContainsOther_contains_1 {
+            get {
+                return ResourceManager.GetString("QaContainsOther_contains_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Condition that must be fulfilled for a pair of features from &apos;contains&apos; and &apos;isWithin&apos;. If the condition is not fulfilled, the feature from &apos;contains&apos; is ignored.
+        ///The feature from &apos;contains&apos; can be addressed as &apos;G1&apos; in the condition, the feature from &apos;isWithin&apos; as &apos;G2&apos;..
+        /// </summary>
+        public static string QaContainsOther_isContainingCondition {
+            get {
+                return ResourceManager.GetString("QaContainsOther_isContainingCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature classes with features checked not to be contained by any feature of &apos;contains&apos;.
+        /// </summary>
+        public static string QaContainsOther_isWithin_0 {
+            get {
+                return ResourceManager.GetString("QaContainsOther_isWithin_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class with features checked not to be contained by any feature of &apos;contains&apos;.
+        /// </summary>
+        public static string QaContainsOther_isWithin_1 {
+            get {
+                return ResourceManager.GetString("QaContainsOther_isWithin_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if the non-contained geometry parts should be reported as individual errors (true), or as a single, multi-part error geometry (false).
+        /// </summary>
+        public static string QaContainsOther_reportIndividualParts {
+            get {
+                return ResourceManager.GetString("QaContainsOther_reportIndividualParts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds multipatch or polygon rings where its points are not coplanar.
+        /// </summary>
+        public static string QaCoplanarRings_0 {
+            get {
+                return ResourceManager.GetString("QaCoplanarRings_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum allowed offset from the regression plane through all points of a ring. If this value is 0 or smaller than the resolution of the featureclass, the resolution is used.
+        /// </summary>
+        public static string QaCoplanarRings_coplanarityTolerance {
+            get {
+                return ResourceManager.GetString("QaCoplanarRings_coplanarityTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to multipatch or polygon feature class.
+        /// </summary>
+        public static string QaCoplanarRings_featureClass {
+            get {
+                return ResourceManager.GetString("QaCoplanarRings_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Check outer rings together with their inner rings.
+        /// </summary>
+        public static string QaCoplanarRings_includeAssociatedParts {
+            get {
+                return ResourceManager.GetString("QaCoplanarRings_includeAssociatedParts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;crossingClasses&apos; that are crossing any features of &apos;crossedClasses&apos;
+        ///
+        ///Remark: All feature classes in &apos;crossingClasses&apos; and &apos;crossedClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaCrossesOther_0 {
+            get {
+                return ResourceManager.GetString("QaCrossesOther_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;crossingClass&apos; that are crossing any features of &apos;crossedClass&apos;
+        ///
+        ///Remark: The feature classes in &apos;crossingClass&apos; and &apos;crossedClass&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaCrossesOther_1 {
+            get {
+                return ResourceManager.GetString("QaCrossesOther_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;crossingClasses&apos; that are crossing any features of &apos;crossedClasses&apos;, and for which a given constraint is not fulfilled.
+        ///
+        ///Remark: All feature classes in &apos;crossingClasses&apos; and &apos;crossedClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaCrossesOther_2 {
+            get {
+                return ResourceManager.GetString("QaCrossesOther_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;crossingClass&apos; that are crossing any features of &apos;crossedClass&apos;, and for which a given constraint is not fulfilled.
+        ///
+        ///Remark: The feature classes in &apos;crossingClass&apos; and &apos;crossedClass&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaCrossesOther_3 {
+            get {
+                return ResourceManager.GetString("QaCrossesOther_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature class.
+        /// </summary>
+        public static string QaCrossesOther_crossedClass {
+            get {
+                return ResourceManager.GetString("QaCrossesOther_crossedClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature classes.
+        /// </summary>
+        public static string QaCrossesOther_crossedClasses {
+            get {
+                return ResourceManager.GetString("QaCrossesOther_crossedClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature class.
+        /// </summary>
+        public static string QaCrossesOther_crossingClass {
+            get {
+                return ResourceManager.GetString("QaCrossesOther_crossingClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature classes.
+        /// </summary>
+        public static string QaCrossesOther_crossingClasses {
+            get {
+                return ResourceManager.GetString("QaCrossesOther_crossingClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on a pair of crossing features. If the constraint is defined and fulfilled, no error is reported.
+        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///Example: G1.Level &lt;&gt; G2.Level.
+        /// </summary>
+        public static string QaCrossesOther_validRelationConstraint {
+            get {
+                return ResourceManager.GetString("QaCrossesOther_validRelationConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClasses&apos; that are crossing any features of &apos;featureClasses&apos;.
+        /// </summary>
+        public static string QaCrossesSelf_0 {
+            get {
+                return ResourceManager.GetString("QaCrossesSelf_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; that are crossing any features of &apos;featureClass&apos;.
+        /// </summary>
+        public static string QaCrossesSelf_1 {
+            get {
+                return ResourceManager.GetString("QaCrossesSelf_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClasses&apos; that are crossing any features of &apos;featureClasses&apos;, and for which a given constraint is not fulfilled..
+        /// </summary>
+        public static string QaCrossesSelf_2 {
+            get {
+                return ResourceManager.GetString("QaCrossesSelf_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; that are crossing any features of &apos;featureClass&apos;, and for which a given constraint is not fulfilled..
+        /// </summary>
+        public static string QaCrossesSelf_3 {
+            get {
+                return ResourceManager.GetString("QaCrossesSelf_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature class.
+        /// </summary>
+        public static string QaCrossesSelf_featureClass {
+            get {
+                return ResourceManager.GetString("QaCrossesSelf_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature classes.
+        /// </summary>
+        public static string QaCrossesSelf_featureClasses {
+            get {
+                return ResourceManager.GetString("QaCrossesSelf_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on a pair of crossing features. If the constraint is defined and fulfilled, no error is reported.
+        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///Example: G1.Level &lt;&gt; G2.Level.
+        /// </summary>
+        public static string QaCrossesSelf_validRelationConstraint {
+            get {
+                return ResourceManager.GetString("QaCrossesSelf_validRelationConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds segments in &apos;featureClass&apos; that are not straight lines.
+        /// </summary>
+        public static string QaCurve_0 {
+            get {
+                return ResourceManager.GetString("QaCurve_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of allowed non-linear segment types..
+        /// </summary>
+        public static string QaCurve_AllowedNonLinearSegmentTypes {
+            get {
+                return ResourceManager.GetString("QaCurve_AllowedNonLinearSegmentTypes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or polygon feature class.
+        /// </summary>
+        public static string QaCurve_featureClass {
+            get {
+                return ResourceManager.GetString("QaCurve_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If true, create an issue per consecutive segments of the same unallowed segment type.
+        ///If false, create an issue per consecutive non-linear segments of any unallowed type..
+        /// </summary>
+        public static string QaCurve_GroupIssuesBySegmentType {
+            get {
+                return ResourceManager.GetString("QaCurve_GroupIssuesBySegmentType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds polyline features with a dangle count for which a given dangle count expression is not fulfilled. Dangles are defined as polyline end points that are not (within a specified tolerance) coincident with end points of other polylines..
+        /// </summary>
+        public static string QaDangleCount_0 {
+            get {
+                return ResourceManager.GetString("QaDangleCount_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds polyline features with a dangle count for which a given dangle count expression is not fulfilled. Dangles are defined as polyline end points that are not (within a specified tolerance) coincident with end points of other polylines..
+        /// </summary>
+        public static string QaDangleCount_1 {
+            get {
+                return ResourceManager.GetString("QaDangleCount_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An SQL expression used as condition for valid dangle counts. 
+        ///
+        ///The number of dangles for a given feature can be addressed in the expression as _DangleCount. This value may be compared against constants or expressions involving field values of the verified features.
+        ///
+        ///Examples: 
+        ///- _DangleCount &lt; 2
+        ///- _DangleCount =IsNull(DANGLES, 0).
+        /// </summary>
+        public static string QaDangleCount_dangleCountExpression {
+            get {
+                return ResourceManager.GetString("QaDangleCount_dangleCountExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SQL expressions used as conditions for valid dangle counts, for the respective feature classes. The number of expressions must be either equal to the number of feature classes (in which case the expressions are associated with the feature classes by their list index), or there can be exactly one expression which is used for all specified feature classes.
+        ///
+        ///The number of dangles for a given feature can be addressed in the expression as _DangleCount. This value may be compared against constants or expression [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaDangleCount_dangleCountExpressions {
+            get {
+                return ResourceManager.GetString("QaDangleCount_dangleCountExpressions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline feature class to check for invalid dangle counts. Dangles are identified as end points that are not connected to any other polyline from the same feature class, subject to the defined filter expression..
+        /// </summary>
+        public static string QaDangleCount_polylineClass {
+            get {
+                return ResourceManager.GetString("QaDangleCount_polylineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline feature classes to check for invalid dangle counts. Dangles are identified as end points that are not connected to any other polyline from any of the feature classes, subject to the defined filter expressions..
+        /// </summary>
+        public static string QaDangleCount_polylineClasses {
+            get {
+                return ResourceManager.GetString("QaDangleCount_polylineClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tolerance for finding coincident end points. End points that lie within the tolerance from other end points are considered coincident. A zero tolerance can be specified to require that end points are exactly coincident (requiring equal resolution grids) to be considered connected..
+        /// </summary>
+        public static string QaDangleCount_tolerance {
+            get {
+                return ResourceManager.GetString("QaDangleCount_tolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows with date fields having non-zero time parts. All date fields of the table are checked..
+        /// </summary>
+        public static string QaDateFieldsWithoutTime_0 {
+            get {
+                return ResourceManager.GetString("QaDateFieldsWithoutTime_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows that have non-zero time parts in a specified date field..
+        /// </summary>
+        public static string QaDateFieldsWithoutTime_1 {
+            get {
+                return ResourceManager.GetString("QaDateFieldsWithoutTime_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows that have non-zero time parts in a given list of date fields..
+        /// </summary>
+        public static string QaDateFieldsWithoutTime_2 {
+            get {
+                return ResourceManager.GetString("QaDateFieldsWithoutTime_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The date field to check for a non-zero time part.
+        /// </summary>
+        public static string QaDateFieldsWithoutTime_dateFieldName {
+            get {
+                return ResourceManager.GetString("QaDateFieldsWithoutTime_dateFieldName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The list of date fields to check for non-zero time parts.
+        /// </summary>
+        public static string QaDateFieldsWithoutTime_dateFieldNames {
+            get {
+                return ResourceManager.GetString("QaDateFieldsWithoutTime_dateFieldNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to table.
+        /// </summary>
+        public static string QaDateFieldsWithoutTime_table {
+            get {
+                return ResourceManager.GetString("QaDateFieldsWithoutTime_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features with equal geometries in a feature class. Geometries for which the difference geometry is empty are considered duplicates. Z and M values are therefore ignored, and the XY tolerance of the spatial reference is applied..
+        /// </summary>
+        public static string QaDuplicateGeometrySelf_0 {
+            get {
+                return ResourceManager.GetString("QaDuplicateGeometrySelf_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features with equal geometries in a feature class for which a given constraint is not fulfilled. Geometries for which the difference geometry is empty are considered duplicates. Z and M values are therefore ignored, and the XY tolerance of the spatial reference is applied..
+        /// </summary>
+        public static string QaDuplicateGeometrySelf_1 {
+            get {
+                return ResourceManager.GetString("QaDuplicateGeometrySelf_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features with equal geometries in a feature class for which a given constraint is not fulfilled. Geometries for which the difference geometry is empty are considered duplicates. Z and M values are therefore ignored, and the XY tolerance of the spatial reference is applied. Optionally, duplicates can be reported as a single error for the entire set of features that have an equal geometry..
+        /// </summary>
+        public static string QaDuplicateGeometrySelf_2 {
+            get {
+                return ResourceManager.GetString("QaDuplicateGeometrySelf_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class.
+        /// </summary>
+        public static string QaDuplicateGeometrySelf_featureClass {
+            get {
+                return ResourceManager.GetString("QaDuplicateGeometrySelf_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if a single error should be reported for the complete set of features with equal geometries. If &apos;false&apos;, individual errors are reported for each pair of features with equal geometries. If a validDuplicateConstraint is specified, the pairwise error reporting allows to include the field values for the constraint in the error description. .
+        /// </summary>
+        public static string QaDuplicateGeometrySelf_reportSingleErrorPerDuplicateSet {
+            get {
+                return ResourceManager.GetString("QaDuplicateGeometrySelf_reportSingleErrorPerDuplicateSet", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on features with duplicate geometries. If the constraint is defined and fulfilled, no error is reported.
+        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///Example: G1.Level &lt;&gt; G2.Level.
+        /// </summary>
+        public static string QaDuplicateGeometrySelf_validDuplicateConstraint {
+            get {
+                return ResourceManager.GetString("QaDuplicateGeometrySelf_validDuplicateConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds sections of polylines that follow along the border and have no suitable coincident polyline on the other side of the border that fulfills defined attribute matching rules.
+        ///
+        ///Different border representations may be used for the respective sides, i.e. the borders are not required to be exactly coincident for this test to be applicable.
+        ///
+        ///The border features may be stored either in two separate border feature classes, or in a common border feature class containing the borders for different areas. When  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_0 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds sections of polylines that follow along the border and have no suitable coincident polyline on the other side of the border that fulfills defined attribute matching rules.
+        ///
+        ///Different border representations may be used for the respective sides, i.e. the borders are not required to be exactly coincident for this test to be applicable.
+        ///
+        ///The border features may be stored either in two separate border feature classes, or in a common border feature class containing the borders for different areas. When  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_1 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if polyline features for which a not exactly adjacent candidate feature exists on the other side should only be reported if the attribute constraints are not fulfilled with the candidate feature..
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_AllowDisjointCandidateFeatureIfAttributeConstraintsAreF" +
+                        "ulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if polyline features for which a not exactly adjacent candidate feature exists on the other side should only be reported if the borders are coincident along the section of the polylines where they touch the border..
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_AllowDisjointCandidateFeatureIfBordersAreNotCoincident {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_AllowDisjointCandidateFeatureIfBordersAreNotCoincident", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if polylines with no nearby candidate feature on the other side are allowed. Suitable for cases where coincident polylines on the other side are optional, however any *existing* nearby polylines must match exactly, fulfill attribute constraints etc..
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_AllowNoFeatureWithinSearchDistance {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_AllowNoFeatureWithinSearchDistance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that end points of bordering lines that touch the interior of an adjacent bordering line on the other side are allowed. If &apos;False&apos;, end points on the border of adjacent bordering lines must be exactly coincident..
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_AllowNonCoincidentEndPointsOnBorder {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_AllowNonCoincidentEndPointsOnBorder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline or polygon feature class containing the border geometry on side 1.
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_borderClass1 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_borderClass1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline or polygon feature class containing the border geometry on side 2.
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_borderClass2 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_borderClass2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional attribute constraint for a pair of nearby polylines touching the border from opposite sides. The polyline features are aliased as LINE1 and LINE2.
+        ///
+        ///Example:
+        ///(LINE1.TYPE =LINE2.TYPE) OR (LINE1.TYPE IN (98,99) AND LINE2.TYPE IN (98,99))
+        ///
+        ///See syntax documentation in SQLSyntax_en.pdf.
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_BorderingLineAttributeConstraint {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_BorderingLineAttributeConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional list of comparison options for individual fields specified in &apos;BorderingLineEqualAttributes&apos;. Each list entry must start with the field name, followed by a colon (&apos;:&apos;) and the options for this field. The following options are supported: 
+        ///
+        ///- ignore: allows to ignore characters matching a regular expression in the comparison (removing them from the compared field values). This option is specified in the format ignore=&lt;regular expression&gt;.
+        ///
+        ///- ignoreCondition: allows to ignore specific field values [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_BorderingLineEqualAttributeOptions {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_BorderingLineEqualAttributeOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional field names that are required to have equal values for the touching polyline features on opposite sides of the border.
+        ///Field names may be separated by &apos;,&apos; or &apos;;&apos; (Note that blanks may not be used to separate field names).
+        ///Multi-valued fields based on a separator character (e.g. #) to separate individual values are supported by specifying the separator character for each field (in the format &lt;FIELDNAME&gt;:&lt;separator_character&gt;). In this case, the order of the individual values of a multi-valued fiel [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_BorderingLineEqualAttributes {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_BorderingLineEqualAttributes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The polyline features for opposite sides of the border may be from the same feature class. In this case, a condition can be defined to identify if a polyline feature returned by the spatial search is from the other side. The polyline features to be compared are aliased as LINE1 and LINE2. If no condition is specified, any nearby polyline feature read from the feature class parameter for the other side is treated as a candidate for a corresponding polyline on the other side.
+        ///
+        ///Example: LINE1.STATE_ID &lt;&gt; LIN [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_BorderingLineMatchCondition {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_BorderingLineMatchCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if the BorderingLineAttributeConstraint is symmetric in the sense that the result of the expression will be the same no matter which feature of a bordering line feature pair is specified as LINE1 or LINE2 (in cases where features from side 1 and 2 are treated as equivalent). If set to &apos;False&apos;, the constraint expression is evaluated in both directions, and is considered fulfilled if at least one evaluation is fulfilled. This is equivalent to duplicating the specified constraint with inverted LINE1, [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_IsBorderingLineAttributeConstraintSymmetric {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_IsBorderingLineAttributeConstraintSymmetric", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline feature class containing the polylines on side 1 to check for existence of adjacent neighbor polylines on the other side..
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_lineClass1 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_lineClass1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional condition to associate lines on side 1 to the corresponding border lines on side 1. This condition is necessary if line features and/or border features for both sides are stored in the same respective feature classes (i.e. no separate feature classes for opposite sides of the border). In the condition expression, the line feature is aliased as LINE, and the border feature as BORDER. If no condition is specified, any nearby border feature read from the border feature class parameter for the same sid [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_LineClass1BorderMatchCondition {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_LineClass1BorderMatchCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline feature class containing the polylines on side 2 to check for existence of adjacent neighbor polylines on the other side..
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_lineClass2 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_lineClass2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional condition to associate lines on side 2 to the corresponding border lines on side 2. This condition is necessary if line features and/or border features for both sides are stored in the same respective feature classes (i.e. no separate feature classes for opposite sides of the border). In the condition expression, the line feature is aliased as LINE, and the border feature as BORDER. If no condition is specified, any nearby border feature read from the border feature class parameter for the same sid [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_LineClass2BorderMatchCondition {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_LineClass2BorderMatchCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline feature classes containing the polylines on side 1 to check for existence of adjacent neighbor polylines on the other side..
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_lineClasses1 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_lineClasses1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline feature classes containing the polylines on side 2 to check for existence of adjacent neighbor polylines on the other side..
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_lineClasses2 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_lineClasses2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if attribute constraint violations should be reported as individual issues (true), or combined as one issue per feature pair (false). Default is false..
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_ReportIndividualAttributeConstraintViolations {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_ReportIndividualAttributeConstraintViolations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum distance for searching candidate neighbor polyline features on the other side of the border. Only polyline features that touch their border are taken into account as potential candidates..
+        /// </summary>
+        public static string QaEdgeMatchBorderingLines_searchDistance {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingLines_searchDistance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds points located on the border which have no coincident corresponding point for the opposite side of the border that fulfills defined attribute matching rules.
+        ///
+        ///Different border representations may be used for the respective sides, i.e. the borders are not required to be exactly coincident for this test to be applicable.
+        ///
+        ///The border features may be stored either in two separate border feature classes, or in a common border feature class containing the borders for different areas. When using a common [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_0 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds points located on the border which have no coincident corresponding point for the opposite side of the border that fulfills defined attribute matching rules.
+        ///
+        ///Different border representations may be used for the respective sides, i.e. the borders are not required to be exactly coincident for this test to be applicable.
+        ///
+        ///The border features may be stored either in two separate border feature classes, or in a common border feature class containing the borders for different areas. When using a common [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_1 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if point features for which a not exactly coincident candidate point feature exists on the other side should only be reported if the attribute constraints are not fulfilled with the candidate feature..
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_AllowDisjointCandidateFeatureIfAttributeConstraintsAre" +
+                        "Fulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if point features for which a not exactly coincident candidate point feature exists on the other side should only be reported if the borders are coincident at the point locations..
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_AllowDisjointCandidateFeatureIfBordersAreNotCoincident {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_AllowDisjointCandidateFeatureIfBordersAreNotCoincident" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if points with no nearby candidate feature on the other side are allowed. Suitable for cases where coincident points on the other side are optional, however any *existing* nearby points must match exactly, fulfill attribute constraints etc..
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_AllowNoFeatureWithinSearchDistance {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_AllowNoFeatureWithinSearchDistance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline or polygon feature class containing the border geometry on side 1.
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_borderClass1 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_borderClass1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline or polygon feature class containing the border geometry on side 2.
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_borderClass2 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_borderClass2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional attribute constraint for a pair of bordering points. The point features are aliased as POINT1 and POINT2.
+        ///
+        ///Example:
+        ///(POINT1.TYPE = POINT2.TYPE) OR (POINT1.TYPE IN (98,99) AND POINT2.TYPE IN (98,99))
+        ///
+        ///See syntax documentation in SQLSyntax_en.pdf.
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_BorderingPointAttributeConstraint {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_BorderingPointAttributeConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional list of comparison options for individual fields specified in &apos;BorderingPointEqualAttributes&apos;. Each list entry must start with the field name, followed by a colon (&apos;:&apos;) and the options for this field. The following options are supported: 
+        ///
+        ///- ignore: allows to ignore characters matching a regular expression in the comparison (removing them from the compared field values). This option is specified in the format ignore=&lt;regular expression&gt;.
+        ///
+        ///- ignoreCondition: allows to ignore specific field value [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_BorderingPointEqualAttributeOptions {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_BorderingPointEqualAttributeOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The point features for opposite sides of the border may be from the same feature class. In this case, a condition can be defined to identify if a point feature returned by the spatial search is from the other side. The point features to be compared are aliased as POINT1 and POINT2. If no condition is specified, any nearby point feature read from the feature class parameter for the other side is treated as a candidate for a corresponding point on the other side.
+        ///
+        ///Example: POINT1.STATE_ID &lt;&gt; POINT2.STATE_ID [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_BorderingPointMatchCondition {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_BorderingPointMatchCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional field names that are required to have equal values for the corresponding point features on opposite sides of the border.
+        ///Field names may be separated by &apos;,&apos; or &apos;;&apos; (Note that blanks may not be used to separate field names).
+        ///Multi-valued fields based on a separator character (e.g. #) to separate individual values are supported by specifying the separator character for each field (in the format &lt;FIELDNAME&gt;:&lt;separator_character&gt;). In this case, the order of the individual values of a multi-valued fi [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_BorderPointEqualAttributes {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_BorderPointEqualAttributes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The XY tolerance for bordering points to be considered coincident. If a negative value is specified, then the XY tolerance of the point feature class is used. Otherwise, the specified value is used..
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_CoincidenceTolerance {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_CoincidenceTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if the BorderingPointAttributeConstraint is symmetric in the sense that the result of the expression will be the same no matter which feature of a corresponding point pair is specified as POINT1 or POINT2 (in cases where features from side 1 and 2 are treated as equivalent). If set to &apos;False&apos;, the constraint expression is evaluated in both directions, and is considered fulfilled if at least one evaluation is fulfilled. This is equivalent to duplicating the specified constraint with inverted POINT1 [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_IsBorderingPointAttributeConstraintSymmetric {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_IsBorderingPointAttributeConstraintSymmetric", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point feature class containing the points on side 1 to check for existence of coincident neighbor points on the other side..
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_pointClass1 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_pointClass1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional condition to associate points on side 1 to the corresponding border lines on side 1. This condition is necessary if point features and/or border features for both sides are stored in the same respective feature classes (i.e. no separate feature classes for opposite sides of the border). In the condition expression, the point feature is aliased as POINT, and the border feature as BORDER. If no condition is specified, any nearby border feature read from the border feature class parameter for the same [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_PointClass1BorderMatchCondition {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_PointClass1BorderMatchCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point feature class containing the points on side 2 to check for existence of coincident neighbor points on the other side..
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_pointClass2 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_pointClass2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional condition to associate points on side 2 to the corresponding border lines on side 2. This condition is necessary if point features and/or border features for both sides are stored in the same respective feature classes (i.e. no separate feature classes for opposite sides of the border). In the condition expression, the point feature is aliased as POINT, and the border feature as BORDER. If no condition is specified, any nearby border feature read from the border feature class parameter for the same [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_PointClass2BorderMatchCondition {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_PointClass2BorderMatchCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point feature classes containing the points on side 1 to check for existence of coincident neighbor points on the other side..
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_pointClasses1 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_pointClasses1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point feature classes containing the points on side 2 to check for existence of coincident neighbor points on the other side..
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_pointClasses2 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_pointClasses2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if attribute constraint violations should be reported as individual issues (true), or combined as one issue per feature pair (false). Default is false..
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_ReportIndividualAttributeConstraintViolations {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_ReportIndividualAttributeConstraintViolations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum distance for searching candidate point features on the other side of the border. Only point features that are located on their border are taken into account as potential candidates..
+        /// </summary>
+        public static string QaEdgeMatchBorderingPoints_searchDistance {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchBorderingPoints_searchDistance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds polygons that touch the border and have no suitable connecting polygon on the other side of the border that fulfills defined attribute matching rules.
+        ///
+        ///Different border representations may be used for the respective sides, i.e. the borders are not required to be exactly coincident for this test to be applicable.
+        ///
+        ///The border features may be stored either in two separate border feature classes, or in a common border feature class containing the borders for different areas. When using a common border [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_0 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds polygons that touch the border and have no suitable connecting polygon on the other side of the border that fulfills defined attribute matching rules.
+        ///
+        ///Different border representations may be used for the respective sides, i.e. the borders are not required to be exactly coincident for this test to be applicable.
+        ///
+        ///The border features may be stored either in two separate border feature classes, or in a common border feature class containing the borders for different areas. When using a common border [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_1 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if polygon features for which a not exactly adjacent candidate feature exists on the other side should only be reported if the attribute constraints are not fulfilled with the candidate feature..
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_AllowDisjointCandidateFeatureIfAttributeConstraintsAreFu" +
+                        "lfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if polygon features for which a not exactly adjacent candidate feature exists on the other side should only be reported if the borders are coincident along the section of the polygons where they touch the border..
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_AllowDisjointCandidateFeatureIfBordersAreNotCoincident {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_AllowDisjointCandidateFeatureIfBordersAreNotCoincident", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if polygons touching the border with no nearby candidate feature on the other side are allowed. Suitable for cases where adjacent polygons on the other side are optional, however any *existing* nearby polygon must match exactly, fulfill attribute constraints etc..
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_AllowNoFeatureWithinSearchDistance {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_AllowNoFeatureWithinSearchDistance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polygon feature class containing the polygons on side 1 to check for the existence of suitable adjacent neighbor polygons on the other side..
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_areaClass1 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_areaClass1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional condition to associate polygons on side 1 to the corresponding border lines on side 1. This condition is necessary if polygon features and/or border features for both sides are stored in the same respective feature classes (i.e. no separate feature classes for opposite sides of the border). In the condition expression, the polygon feature is aliased as AREA, and the border feature as BORDER. If no condition is specified, any nearby border feature read from the border feature class parameter for the [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_AreaClass1BorderMatchCondition {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_AreaClass1BorderMatchCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional condition to associate polygons on side 1 to the corresponding &apos;bounding&apos; features on side 1. This condition may be necessary if polygon features and/or bounding features for both sides are stored in the same respective feature classes (i.e. no separate feature classes for opposite sides of the border). In the condition expression, the polygon feature is aliased as AREA, and the border feature as BOUNDINGFEATURE. If no condition is specified, any intersecting bounding feature read from the bounding [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_AreaClass1BoundingFeatureMatchCondition {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_AreaClass1BoundingFeatureMatchCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polygon feature class containing the polygons on side 2 to check for the existence of suitable adjacent neighbor polygons on the other side..
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_areaClass2 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_areaClass2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional condition to associate polygons on side 2 to the corresponding border lines on side 2. This condition is necessary if polygon features and/or border features for both sides are stored in the same respective feature classes (i.e. no separate feature classes for opposite sides of the border). In the condition expression, the polygon feature is aliased as AREA, and the border feature as BORDER. If no condition is specified, any nearby border feature read from the border feature class parameter for the [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_AreaClass2BorderMatchCondition {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_AreaClass2BorderMatchCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional condition to associate polygons on side 2 to the corresponding &apos;bounding&apos; features on side 2. This condition may be necessary if polygon features and/or bounding features for both sides are stored in the same respective feature classes (i.e. no separate feature classes for opposite sides of the border). In the condition expression, the polygon feature is aliased as AREA, and the border feature as BOUNDINGFEATURE. If no condition is specified, any intersecting bounding feature read from the bounding [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_AreaClass2BoundingFeatureMatchCondition {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_AreaClass2BoundingFeatureMatchCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polygon feature classes containing the polygons on side 1 to check for the existence of suitable adjacent neighbor polygons on the other side..
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_areaClasses1 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_areaClasses1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polygon feature classes containing the polygons on side 2 to check for the existence of suitable adjacent neighbor polygons on the other side..
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_areaClasses2 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_areaClasses2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline or polygon feature class containing the border geometry on side 1.
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_borderClass1 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_borderClass1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline or polygon feature class containing the border geometry on side 2.
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_borderClass2 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_borderClass2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of optional feature classes that indicate valid situations where a polygon feature on side 1 does not have a continuation on the other side of the border. If the section of a polygon feature that touches its border has no adjacent polygon feature on the other side, but intersects one of the features from the &apos;bounding&apos; classes, no issue is reported..
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_boundingClasses1 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_boundingClasses1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of optional feature classes that indicate valid situations where a polygon feature on side 2 does not have a continuation on the other side of the border. If the section of a polygon feature that touches its border has no adjacent polygon feature on the other side, but intersects one of the features from the &apos;bounding&apos; classes, no issue is reported..
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_boundingClasses2 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_boundingClasses2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional attribute constraint for a pair of polygons touching the border from opposite sides. The polygon features are aliased as AREA1 and AREA2.
+        ///
+        ///Example:
+        ///(AREA1.TYPE =AREA2.TYPE) OR (AREA1.TYPE IN (98,99) AND AREA2.TYPE IN (98,99))
+        ///
+        ///See syntax documentation in SQLSyntax_en.pdf.
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_CrossingAreaAttributeConstraint {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_CrossingAreaAttributeConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional list of comparison options for individual fields specified in &apos;CrossingAreaEqualAttributes&apos;. Each list entry must start with the field name, followed by a colon (&apos;:&apos;) and the options for this field. The following options are supported: 
+        ///
+        ///- ignore: allows to ignore characters matching a regular expression in the comparison (removing them from the compared field values). This option is specified in the format ignore=&lt;regular expression&gt;.
+        ///
+        ///- ignoreCondition: allows to ignore specific field values  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_CrossingAreaEqualAttributeOptions {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_CrossingAreaEqualAttributeOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional field names that are required to have equal values for the touching polygon features on opposite sides of the border.
+        ///Field names may be separated by &apos;,&apos; or &apos;;&apos; (Note that blanks may not be used to separate field names).
+        ///Multi-valued fields based on a separator character (e.g. #) to separate individual values are supported by specifying the separator character for each field (in the format &lt;FIELDNAME&gt;:&lt;separator_character&gt;). In this case, the order of the individual values of a multi-valued field [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_CrossingAreaEqualAttributes {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_CrossingAreaEqualAttributes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The polygon features for opposite sides of the border may be from the same feature class. In this case, a condition can be defined to identify if a polygon feature returned by the spatial search is from the other side. The polygon features to be compared are aliased as AREA1 and AREA2. If no condition is specified, any nearby polygon feature read from the feature class parameter for the other side is treated as a candidate for a valid area continuoation on the other side.
+        ///
+        ///Example: AREA1.STATE_ID &lt;&gt; AREA2 [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_CrossingAreaMatchCondition {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_CrossingAreaMatchCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if the CrossingAreaAttributeConstraint is symmetric, in the sense that the result of the expression will be the same no matter which feature of a crossing polygon feature pair is specified as AREA1 or AREA2 (in cases where features from side 1 and 2 are treated as equivalent). If set to &apos;False&apos;, the constraint expression is evaluated in both directions, and is considered fulfilled if at least one evaluation is fulfilled. This is equivalent to duplicating the specified constraint with inverted AREA [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_IsCrossingAreaAttributeConstraintSymmetric {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_IsCrossingAreaAttributeConstraintSymmetric", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if attribute constraint violations should be reported as individual issues (true), or combined as one issue per feature pair (false). Default is false..
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_ReportIndividualAttributeConstraintViolations {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_ReportIndividualAttributeConstraintViolations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum distance for searching candidate neighbor polygon features on the other side of the border. Only polygon features that touch their border are taken into account as potential candidates..
+        /// </summary>
+        public static string QaEdgeMatchCrossingAreas_searchDistance {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingAreas_searchDistance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds lines that end on the border which have no suitable connecting neighbor line on the other side of the border.
+        ///
+        ///Different border representations may be used for the respective sides, i.e. the borders are not required to be exactly coincident for this test to be applicable.
+        ///
+        ///The border features may be stored either in two separate border feature classes, or in a common border feature class containing the borders for different areas. When using a common border feature class, the crossing polyline fea [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_0 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds lines that end on the border which have no suitable connecting neighbor line on the other side of the border.
+        ///
+        ///Different border representations may be used for the respective sides, i.e. the borders are not required to be exactly coincident for this test to be applicable.
+        ///
+        ///The border features may be stored either in two separate border feature classes, or in a common border feature class containing the borders for different areas. When using a common border feature class, the crossing polyline fea [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_1 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if line end points for which a not exactly connected candidate feature exists on the other side should only be reported if the attribute constraints are not fulfilled with the candidate feature..
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_AllowDisjointCandidateFeatureIfAttributeConstraintsAreFu" +
+                        "lfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if line end points for which a not exactly connected candidate feature exists on the other side should only be reported if the borders are coincident at the border connections of the two line features..
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_AllowDisjointCandidateFeatureIfBordersAreNotCoincident {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_AllowDisjointCandidateFeatureIfBordersAreNotCoincident", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if line end points on the border that do not connect to a neighbor line end point, but to the interior of a valid neighbor line, are allowed. The connection is only allowed if the attribute constraints are fulfilled with the neighbor line..
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_AllowEndPointsConnectingToInteriorOfValidNeighborLine {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_AllowEndPointsConnectingToInteriorOfValidNeighborLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if lines with no nearby candidate feature on the other side are allowed. Suitable for cases where connections on the other side are optional, however any *existing* connections must match exactly, fulfill attribute constraints etc..
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_AllowNoFeatureWithinSearchDistance {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_AllowNoFeatureWithinSearchDistance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if if lines with no nearby candidate feature on the other side are allowed if the end point on the border is connected to another feature on the same side. If &apos;AllowNoFeatureWithinSearchDistance&apos; is true, then this parameter has no effect, since missing candidate features are generally allowed..
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_AllowNoFeatureWithinSearchDistanceIfConnectedOnSameSide {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_AllowNoFeatureWithinSearchDistanceIfConnectedOnSameSide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline or polygon feature class containing the border geometry on side 1..
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_borderClass1 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_borderClass1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline or polygon feature class containing the border geometry on side 2..
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_borderClass2 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_borderClass2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The XY tolerance for line end points to be considered connected. If a negative value is specified, then the XY tolerance of the line feature class is used. Otherwise, the specified value is used..
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_CoincidenceTolerance {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_CoincidenceTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional attribute constraint for a pair of crossing lines. The line features are aliased as LINE1 and LINE2.
+        ///
+        ///Example:
+        ///(LINE1.WIDTH_CLASS = LINE2.WIDTH_CLASS) OR (LINE1.WIDTH_CLASS = 3 AND LINE2.WIDTH_CLASS IN (3, 6))
+        ///
+        ///See syntax documentation in SQLSyntax_en.pdf.
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_CrossingLineAttributeConstraint {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_CrossingLineAttributeConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional list of comparison options for individual fields specified in &apos;CrossingLineEqualAttributes&apos;. Each list entry must start with the field name, followed by a colon (&apos;:&apos;) and the options for this field. The following options are supported: 
+        ///
+        ///- ignore: allows to ignore characters matching a regular expression in the comparison (removing them from the compared field values). This option is specified in the format ignore=&lt;regular expression&gt;.
+        ///
+        ///- ignoreCondition: allows to ignore specific field values  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_CrossingLineEqualAttributeOptions {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_CrossingLineEqualAttributeOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional field names that are required to have equal values for the crossing line features on opposite sides of the border.
+        ///Field names may be separated by &apos;,&apos; or &apos;;&apos; (Note that blanks may not be used to separate field names).
+        ///Multi-valued fields based on a separator character (e.g. #) to separate individual values are supported by specifying the separator character for each field (in the format &lt;FIELDNAME&gt;:&lt;separator_character&gt;). In this case, the order of the individual values of a multi-valued field is [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_CrossingLineEqualAttributes {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_CrossingLineEqualAttributes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The line features for opposite sides of the border may be from the same feature class. In this case, a condition can be defined to identify if a line feature returned by the spatial search is from the other side. The line features to be compared are aliased as LINE1 and LINE2. If no condition is specified, any nearby line feature read from the feature class parameter for the other side is treated as a candidate for a valid line continuation on the other side.
+        ///
+        ///Example: LINE1.STATE_ID &lt;&gt; LINE2.STATE_ID
+        ///
+        /// [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_CrossingLineMatchCondition {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_CrossingLineMatchCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if attribute constraints should be ignored if more than two crossing lines are connected in one point on the border.
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_IgnoreAttributeConstraintsIfThreeOrMoreConnected {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_IgnoreAttributeConstraintsIfThreeOrMoreConnected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if end points of lines whose last segment follows along the border line should be ignored (in cases where the same lines are also checked with the test for bordering lines, to avoid reporting attribute constraint violations twice)..
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_IgnoreEndPointsOfBorderingLines {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_IgnoreEndPointsOfBorderingLines", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if neighbor lines that pass within the search distance from the end point of the tested line, but whose end point connection to the border is farther away than the search distance, should be ignored (i.e., not treated as &apos;candidates&apos; for a connection)..
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_IgnoreNeighborLinesWithBorderConnectionOutsideSearchDistance {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_IgnoreNeighborLinesWithBorderConnectionOutsideSearchDist" +
+                        "ance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if the CrossingLineAttributeConstraint is symmetric in the sense that the result of the expression will be the same no matter which feature of a crossing line feature pair is specified as LINE1 or LINE2 (in cases where features from side 1 and 2 are treated as equivalent). If set to &apos;False&apos;, the constraint expression is evaluated in both directions, and is considered fulfilled if at least one evaluation is fulfilled. This is equivalent to duplicating the specified constraint with inverted LINE1, L [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_IsCrossingLineAttributeConstraintSymmetric {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_IsCrossingLineAttributeConstraintSymmetric", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline feature class containing the lines on side 1 to check for connections to suitable neighbor lines on the other side..
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_lineClass1 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_lineClass1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional condition to associate lines on side 1 to the corresponding border lines on side 1. This condition is necessary if line features and/or border features for both sides are stored in the same respective feature classes (i.e. no separate feature classes for opposite sides of the border). In the condition expression, the line feature is aliased as LINE, and the border feature as BORDER. If no condition is specified, any nearby border feature read from the border feature class parameter for the same sid [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_LineClass1BorderMatchCondition {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_LineClass1BorderMatchCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline feature class containing the lines on side 2 to check for connections to suitable neighbor lines on the other side..
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_lineClass2 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_lineClass2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional condition to associate lines on side 2 to the corresponding border lines on side 2. This condition is necessary if line features and/or border features for both sides are stored in the same respective feature classes (i.e. no separate feature classes for opposite sides of the border). In the condition expression, the line feature is aliased as LINE, and the border feature as BORDER. If no condition is specified, any nearby border feature read from the border feature class parameter for the same sid [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_LineClass2BorderMatchCondition {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_LineClass2BorderMatchCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline feature classes containing the lines on side 1 to check for connections to suitable neighbor lines on the other side..
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_lineClasses1 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_lineClasses1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline feature class containing the lines on side 2 to check for connections to suitable neighbor lines on the other side..
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_lineClasses2 {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_lineClasses2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum distance for considering line end points connecting to the border as possible matches. If the end points are farther away than this distance (but the neighbor feature is close enough to be a candidate), the reported issue indicates this (in the issue description and the issue code, and by creating an issue geometry based on the nearest location along the neighbor line instead of the two border connection points). A value &lt;= 0 is interpreted as unlimited, i.e. the reported issue is always based on th [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_MaximumEndPointConnectionDistance {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_MaximumEndPointConnectionDistance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Controls the type of issue geometry for connecting border connection end points of nearby lines. If the distance between the points is smaller than this value, the issue geometry is a multipoint geometry containing the two points. Otherwise, a polyline connecting the two points is created. This distance allows to avoid the creation of very short line geometries that would no longer be displayed at relevant map scales..
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_MinimumErrorConnectionLineLength {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_MinimumErrorConnectionLineLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if attribute constraint violations should be reported as individual issues (true), or combined as one issue per feature pair (false). Default is false..
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_ReportIndividualAttributeConstraintViolations {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_ReportIndividualAttributeConstraintViolations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum distance for searching candidate neighbor line features on the other side of the border. Only line features that have at least one end point located on their border are taken into account as potential candidates..
+        /// </summary>
+        public static string QaEdgeMatchCrossingLines_searchDistance {
+            get {
+                return ResourceManager.GetString("QaEdgeMatchCrossingLines_searchDistance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds empty strings in non-nullable text fields.
+        /// </summary>
+        public static string QaEmptyNotNullTextFields_0 {
+            get {
+                return ResourceManager.GetString("QaEmptyNotNullTextFields_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds empty or NULL strings in a list of text fields.
+        /// </summary>
+        public static string QaEmptyNotNullTextFields_1 {
+            get {
+                return ResourceManager.GetString("QaEmptyNotNullTextFields_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to text fields that should not contain NULL or empty string.
+        /// </summary>
+        public static string QaEmptyNotNullTextFields_notNullTextFields {
+            get {
+                return ResourceManager.GetString("QaEmptyNotNullTextFields_notNullTextFields", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to table.
+        /// </summary>
+        public static string QaEmptyNotNullTextFields_table {
+            get {
+                return ResourceManager.GetString("QaEmptyNotNullTextFields_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; where the largest extension of the bounding box is larger than &apos;limit&apos;.
+        /// </summary>
+        public static string QaExtent_0 {
+            get {
+                return ResourceManager.GetString("QaExtent_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features or feature parts in &apos;featureClass&apos; where the largest extension of the bounding box is larger than &apos;limit&apos;..
+        /// </summary>
+        public static string QaExtent_1 {
+            get {
+                return ResourceManager.GetString("QaExtent_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or polygon feature class.
+        /// </summary>
+        public static string QaExtent_featureClass {
+            get {
+                return ResourceManager.GetString("QaExtent_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum extension in (x,y)-units.
+        /// </summary>
+        public static string QaExtent_limit {
+            get {
+                return ResourceManager.GetString("QaExtent_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to check for each part.
+        /// </summary>
+        public static string QaExtent_perPart {
+            get {
+                return ResourceManager.GetString("QaExtent_perPart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all (From/To-) points in &apos;polylineClass&apos;, that are not coincident with exactly one From-point.
+        /// </summary>
+        public static string QaFlowLogic_0 {
+            get {
+                return ResourceManager.GetString("QaFlowLogic_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all (From/To-) points in &apos;polylineClasses&apos;, that are not coincident with exactly one From-point
+        ///
+        ///Remark: The feature classes in &apos;polylineClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaFlowLogic_1 {
+            get {
+                return ResourceManager.GetString("QaFlowLogic_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all (From/To-) points in &apos;polylineClasses&apos;, that are not coincident with exactly one From-point. From/To-Points are determined by &apos;flipExpressions&apos;.
+        ///
+        ///Remark: The feature classes in &apos;polylineClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaFlowLogic_2 {
+            get {
+                return ResourceManager.GetString("QaFlowLogic_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that multiple outgoing lines at a node should not be considered an error..
+        /// </summary>
+        public static string QaFlowLogic_allowMultipleOutgoingLines {
+            get {
+                return ResourceManager.GetString("QaFlowLogic_allowMultipleOutgoingLines", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expressions for determing the directions of the polylines.
+        ///The expressions are evaluated on the features attributes and must return a boolean value. If the expression returns true, the flipped geometry of the features shape is used for testing, otherwise the actual shape.
+        ///
+        ///If &apos;flipExressions&apos; are null: directions are as the features shapes
+        ///
+        ///If there is exactly 1 &apos;flipExpressions&apos;, the expression is applied to all &apos;polylineClasses&apos;. Otherwise, there must be exactly one expression per polylineClass, in c [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaFlowLogic_flipExpressions {
+            get {
+                return ResourceManager.GetString("QaFlowLogic_flipExpressions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline feature class.
+        /// </summary>
+        public static string QaFlowLogic_polylineClass {
+            get {
+                return ResourceManager.GetString("QaFlowLogic_polylineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline feature classes .
+        /// </summary>
+        public static string QaFlowLogic_polylineClasses {
+            get {
+                return ResourceManager.GetString("QaFlowLogic_polylineClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows that have a key value that does not refer to a value in a referenced table..
+        /// </summary>
+        public static string QaForeignKey_0 {
+            get {
+                return ResourceManager.GetString("QaForeignKey_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows that have a key value combination that does not refer to a value combination in a referenced table..
+        /// </summary>
+        public static string QaForeignKey_1 {
+            get {
+                return ResourceManager.GetString("QaForeignKey_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows that have a key value combination that does not refer to a value combination in a referenced table. Optionally, an existing reference can be treated as an error..
+        /// </summary>
+        public static string QaForeignKey_2 {
+            get {
+                return ResourceManager.GetString("QaForeignKey_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the foreign key field in &apos;table&apos;.
+        /// </summary>
+        public static string QaForeignKey_foreignKeyField {
+            get {
+                return ResourceManager.GetString("QaForeignKey_foreignKeyField", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The list of foreign key fields in &apos;table&apos;. This list must contain the same number of elements as &apos;referencedKeyFields&apos;, and the matching fields must be at the same position in the two field lists..
+        /// </summary>
+        public static string QaForeignKey_foreignKeyFields {
+            get {
+                return ResourceManager.GetString("QaForeignKey_foreignKeyFields", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the key field in the referenced table. The values in this field are loaded into memory. For very large referenced tables that are in the same database as &apos;table&apos; the test factory QaRelConstraint may be a better choice since it joins the tables in the database instead of loading the referenced keys into memory. The memory usage of this test is logged at verbose debug level..
+        /// </summary>
+        public static string QaForeignKey_referencedKeyField {
+            get {
+                return ResourceManager.GetString("QaForeignKey_referencedKeyField", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the key fields in the referenced table. The values in these fields are loaded into memory. For very large referenced tables that are in the same database as &apos;table&apos; the test factory QaRelConstraint may be a better choice since it joins the tables in the database instead of loading the referenced keys into memory. The memory usage of this test is logged at verbose debug level..
+        /// </summary>
+        public static string QaForeignKey_referencedKeyFields {
+            get {
+                return ResourceManager.GetString("QaForeignKey_referencedKeyFields", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the table referenced by the foreign keys in &apos;table&apos;.
+        /// </summary>
+        public static string QaForeignKey_referencedTable {
+            get {
+                return ResourceManager.GetString("QaForeignKey_referencedTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if an existing reference is an error. This can be used in conjunction with a filter expression on the referenced table, to check for unallowed references to rows of specific types..
+        /// </summary>
+        public static string QaForeignKey_referenceIsError {
+            get {
+                return ResourceManager.GetString("QaForeignKey_referenceIsError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to table containing foreign key values.
+        /// </summary>
+        public static string QaForeignKey_table {
+            get {
+                return ResourceManager.GetString("QaForeignKey_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all line parts in &apos;featureClass&apos; that are further than &apos;near&apos; from any feature of &apos;reference&apos;
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;reference&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaFullCoincidence_0 {
+            get {
+                return ResourceManager.GetString("QaFullCoincidence_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all line parts in &apos;featureClass&apos; that are further than &apos;near&apos; from any feature of &apos;references&apos;
+        ///
+        ///Remark: All feature classes in &apos;featureClass&apos; and &apos;references&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaFullCoincidence_2 {
+            get {
+                return ResourceManager.GetString("QaFullCoincidence_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or polygon feature class.
+        /// </summary>
+        public static string QaFullCoincidence_featureClass {
+            get {
+                return ResourceManager.GetString("QaFullCoincidence_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional conditions on a pair of nearby features. If the condition for a given feature pair is defined and fulfilled, the proximity check is not applied to this feature pair.
+        ///
+        ///The verified feature is aliased as &quot;G1&quot;, the nearby reference feature as &quot;G2&quot;.
+        ///
+        ///Example: G1.CountryCode &lt;&gt; G2.CountryCode
+        ///
+        ///This list may either be empty (no conditions), contain a single condition that is applied for all reference feature classes, or there may be one condition per reference feature class..
+        /// </summary>
+        public static string QaFullCoincidence_IgnoreNeighborConditions {
+            get {
+                return ResourceManager.GetString("QaFullCoincidence_IgnoreNeighborConditions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to include z-coordinate for checking.
+        /// </summary>
+        public static string QaFullCoincidence_is3D {
+            get {
+                return ResourceManager.GetString("QaFullCoincidence_is3D", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum allowed distance in (x,y)-units from &apos;featureClass&apos; feature to any &apos;reference&apos; feature.
+        /// </summary>
+        public static string QaFullCoincidence_near {
+            get {
+                return ResourceManager.GetString("QaFullCoincidence_near", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to reference polyline or polygon feature class.
+        /// </summary>
+        public static string QaFullCoincidence_reference {
+            get {
+                return ResourceManager.GetString("QaFullCoincidence_reference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to reference polyline or polygon feature classes.
+        /// </summary>
+        public static string QaFullCoincidence_references {
+            get {
+                return ResourceManager.GetString("QaFullCoincidence_references", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Note: this parameter is no longer used.
+        /// </summary>
+        public static string QaFullCoincidence_tileSize {
+            get {
+                return ResourceManager.GetString("QaFullCoincidence_tileSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds network connectivity problems in &apos;network&apos; for a geometric network defined in the geodatabase.
+        ///
+        ///Notes: 
+        ///- The errors correspond to network problem set calculated by CheckAndRepairConnectivity(). If the test is called while editing, edits may be made to repair the connectivity.
+        ///- For detecting inconsistencies in the logical network, consider using QaGdbNetworkElements..
+        /// </summary>
+        public static string QaGdbConnectivity_0 {
+            get {
+                return ResourceManager.GetString("QaGdbConnectivity_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to network to check.
+        /// </summary>
+        public static string QaGdbConnectivity_network {
+            get {
+                return ResourceManager.GetString("QaGdbConnectivity_network", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all rows in &apos;table&apos; that do not fulfill the attribute rules that are defined in the geodatabase
+        ///
+        ///Remark: IAttributeRule.Validate() is used to check the rows..
+        /// </summary>
+        public static string QaGdbConstraint_0 {
+            get {
+                return ResourceManager.GetString("QaGdbConstraint_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to table to check.
+        /// </summary>
+        public static string QaGdbConstraint_table {
+            get {
+                return ResourceManager.GetString("QaGdbConstraint_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds invalid logical network elements in a geometric network.
+        /// </summary>
+        public static string QaGdbNetworkElements_0 {
+            get {
+                return ResourceManager.GetString("QaGdbNetworkElements_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to geometric network.
+        /// </summary>
+        public static string QaGdbNetworkElements_geometricNetwork {
+            get {
+                return ResourceManager.GetString("QaGdbNetworkElements_geometricNetwork", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Verifies that the geodatabase release for a given table corresponds to a specified version..
+        /// </summary>
+        public static string QaGdbRelease_0 {
+            get {
+                return ResourceManager.GetString("QaGdbRelease_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Verifies that the geodatabase release for a given table corresponds to a specified version range. The version range may be open on one side, by specifying only one of minimumVersion and maximumVersion..
+        /// </summary>
+        public static string QaGdbRelease_1 {
+            get {
+                return ResourceManager.GetString("QaGdbRelease_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The unique expected version for the geodatabase release.
+        ///Versions can be specified with up to three components (e.g. 10, 10.2, 10.2.1; the first two are equivalent to 10.*.*, 10.2.*). An unspecified version component matches any value for that component..
+        /// </summary>
+        public static string QaGdbRelease_expectedVersion {
+            get {
+                return ResourceManager.GetString("QaGdbRelease_expectedVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum version of the valid range of versions for the geodatabase release.
+        ///Versions can be specified with up to three components (e.g. 10, 10.2, 10.2.1; the first two are equivalent to 10.*.*, 10.2.*). An unspecified version component matches any value for that component..
+        /// </summary>
+        public static string QaGdbRelease_maximumVersion {
+            get {
+                return ResourceManager.GetString("QaGdbRelease_maximumVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The minimum version of the valid range of versions for the geodatabase release.
+        ///Versions can be specified with up to three components (e.g. 10, 10.2, 10.2.1; the first two are equivalent to 10.*.*, 10.2.*). An unspecified version component matches any value for that component..
+        /// </summary>
+        public static string QaGdbRelease_minimumVersion {
+            get {
+                return ResourceManager.GetString("QaGdbRelease_minimumVersion", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to table to check.
+        /// </summary>
+        public static string QaGdbRelease_table {
+            get {
+                return ResourceManager.GetString("QaGdbRelease_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all errors in &apos;topology&apos; defined in a geodatabase
+        ///
+        ///Remark: ITopology.Validate() is used if the test is run while editing.
+        ///Otherwise, the dirty areas are reporteded as errors.
+        ///The reported errors are copies of the errorFeatures of the topology&apos;s errorFeatureContainer.
+        /// </summary>
+        public static string QaGdbTopology_0 {
+            get {
+                return ResourceManager.GetString("QaGdbTopology_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to topology to check.
+        /// </summary>
+        public static string QaGdbTopology_topology {
+            get {
+                return ResourceManager.GetString("QaGdbTopology_topology", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; whose geometry (or geometry parts) do not fulfill &apos;geometryConstraint&apos;.
+        /// </summary>
+        public static string QaGeometryConstraint_0 {
+            get {
+                return ResourceManager.GetString("QaGeometryConstraint_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class.
+        /// </summary>
+        public static string QaGeometryConstraint_featureClass {
+            get {
+                return ResourceManager.GetString("QaGeometryConstraint_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint for valid geometries or geometry parts. The constraint can be based on the following geometry properties:
+        ///
+        ///- $Area (double): the geometry area for polygons and multipatches (0 for points, multipoints and polylines)
+        ///- $Length (double): the length of the geometry (perimeter length in case of polygons and multipatches; 0 for points and multipoints)
+        ///- $VertexCount (integer): the number of vertices of the geometry
+        ///- $SliverRatio (double): the ratio of (perimeter*perimeter) / area, expressing the  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaGeometryConstraint_geometryConstraint {
+            get {
+                return ResourceManager.GetString("QaGeometryConstraint_geometryConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if the geometry constraint is checked separately for each part in case of multipart geometries (true) or for the entire feature (false).
+        /// </summary>
+        public static string QaGeometryConstraint_perPart {
+            get {
+                return ResourceManager.GetString("QaGeometryConstraint_perPart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all graphic conflicts between &apos;layer&apos; and &apos;conflictLayer&apos;.
+        ///
+        ///Remark: Internally uses GP tool &apos;Detect Graphic Conflict&apos;.
+        ///The reported errors are copies of the conflict polygons returned by the GP tool..
+        /// </summary>
+        public static string QaGraphicConflict_0 {
+            get {
+                return ResourceManager.GetString("QaGraphicConflict_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all graphic conflicts between &apos;featureClass&apos; (&apos;layerRepresentation&apos;) and &apos;conflictClass&apos; (&apos;conflictRepresentation&apos;).
+        ///
+        ///Remark: Internally uses GP tool &apos;Detect Graphic Conflict&apos;.
+        ///The reported errors are copies of the conflict polygons returned by the GP tool..
+        /// </summary>
+        public static string QaGraphicConflict_1 {
+            get {
+                return ResourceManager.GetString("QaGraphicConflict_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class having graphic conflicts.
+        /// </summary>
+        public static string QaGraphicConflict_conflictClass {
+            get {
+                return ResourceManager.GetString("QaGraphicConflict_conflictClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Size and unit (page units or map units) of GP tool parameter &quot;conflict distance&quot;.
+        ///Example: 50 meters.
+        /// </summary>
+        public static string QaGraphicConflict_conflictDistance {
+            get {
+                return ResourceManager.GetString("QaGraphicConflict_conflictDistance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature layer using representation renderer having graphic conflicts.
+        /// </summary>
+        public static string QaGraphicConflict_conflictLayer {
+            get {
+                return ResourceManager.GetString("QaGraphicConflict_conflictLayer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to representation class name of &apos;conflictClass&apos;.
+        /// </summary>
+        public static string QaGraphicConflict_conflictRepresentation {
+            get {
+                return ResourceManager.GetString("QaGraphicConflict_conflictRepresentation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class.
+        /// </summary>
+        public static string QaGraphicConflict_featureClass {
+            get {
+                return ResourceManager.GetString("QaGraphicConflict_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature layer using representation renderer.
+        /// </summary>
+        public static string QaGraphicConflict_layer {
+            get {
+                return ResourceManager.GetString("QaGraphicConflict_layer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to representation class name of &apos;featureClass&apos;.
+        /// </summary>
+        public static string QaGraphicConflict_layerRepresentation {
+            get {
+                return ResourceManager.GetString("QaGraphicConflict_layerRepresentation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Size and unit (page units or map units) of GP tool parameter &quot;line connection allowance&quot;.
+        ///Example: 25 meters.
+        /// </summary>
+        public static string QaGraphicConflict_lineConnectionAllowance {
+            get {
+                return ResourceManager.GetString("QaGraphicConflict_lineConnectionAllowance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to reference scale.
+        /// </summary>
+        public static string QaGraphicConflict_referenceScale {
+            get {
+                return ResourceManager.GetString("QaGraphicConflict_referenceScale", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to scratch workspace where a temporary feature class can be created.
+        /// </summary>
+        public static string QaGraphicConflict_scratchWorkspace {
+            get {
+                return ResourceManager.GetString("QaGraphicConflict_scratchWorkspace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find errors in checking if polylines of &apos;polylineClass&apos; with same attributes are connected. Reports disjoint line groups with ErrorReporting.ReferToFirstPart..
+        /// </summary>
+        public static string QaGroupConnected_0 {
+            get {
+                return ResourceManager.GetString("QaGroupConnected_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find errors in checking if polylines of &apos;polylineClasses&apos; with same attributes are connected.
+        /// </summary>
+        public static string QaGroupConnected_1 {
+            get {
+                return ResourceManager.GetString("QaGroupConnected_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates the allowed overall shape types for line groups:
+        ///
+        ///- None: only linearly connected lines are allowed (no cycles or branches)
+        ///- Cycles: Circular connected lines are allowed
+        ///- Branches: Branching lines are allowed, that means common start/end points of 3 or more lines
+        ///- InsideBranches: A branch toward the inside of a circular area may exist
+        ///- CyclesAndBranches: Cycles and branches are allowed
+        ///- All: Cycles and branches and inside branches are allowed.
+        /// </summary>
+        public static string QaGroupConnected_allowedShape {
+            get {
+                return ResourceManager.GetString("QaGroupConnected_allowedShape", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if line groups that were found in the test perimeter should be checked for their connectivity *outside* of the test area also:
+        ///
+        ///- false (default): Do not check outside of test area. Optimistic assumption: All connected groups leaving the tested area are assumed to be connected. 
+        ///
+        ///- true: Find errors for groups existing within the test area in the entire extent of the data and report those errors intersecting the test area.
+        ///This option includes reading of all features from &apos;polylineClasses&apos;, a [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaGroupConnected_CompleteGroupsOutsideTestArea {
+            get {
+                return ResourceManager.GetString("QaGroupConnected_CompleteGroupsOutsideTestArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The method for reporting errors.
+        ///
+        ///- ReferToFirstPart: the end points of the first encountered group, plus any point of another group with the same identifer are reported. This method is available for backwards compatibility. Use CombineGroups or ShortestGaps.
+        ///If &apos;CompleteGroupsOutsideTestArea&apos; = true, ReferToFirstPart is replaced with ShortestGaps.
+        ///
+        ///- ShortestGaps: each disjoint line group is connected with the nearest line group for the same group identifier, even if the endpoint of the other line gro [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaGroupConnected_errorReporting {
+            get {
+                return ResourceManager.GetString("QaGroupConnected_errorReporting", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A list of all field names that define a key. Features with the same key are tested to be connected.
+        /// </summary>
+        public static string QaGroupConnected_groupBy {
+            get {
+                return ResourceManager.GetString("QaGroupConnected_groupBy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No gaps are reported as errors for endpoints, where the closest other endpoint is further away than &apos;IgnoreGapsLongerThan&apos;.
+        ///
+        ///Note: has no effect for ErrorReporting.ReferToFirstPart.
+        /// </summary>
+        public static string QaGroupConnected_IgnoreGapsLongerThan {
+            get {
+                return ResourceManager.GetString("QaGroupConnected_IgnoreGapsLongerThan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The minimum length for gaps between disjoint line groups for which a connection line will be reported. For shorter gaps, the end points are reported as part of a multipoint error feature..
+        /// </summary>
+        public static string QaGroupConnected_minimumErrorConnectionLineLength {
+            get {
+                return ResourceManager.GetString("QaGroupConnected_minimumErrorConnectionLineLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline feature class.
+        /// </summary>
+        public static string QaGroupConnected_polylineClass {
+            get {
+                return ResourceManager.GetString("QaGroupConnected_polylineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline feature classes, all having the attributes of &apos;groupBy&apos;.
+        /// </summary>
+        public static string QaGroupConnected_polylineClasses {
+            get {
+                return ResourceManager.GetString("QaGroupConnected_polylineClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that any &apos;Multiple Parts&apos; issues are rechecked at the end of the verification, this time involving *all* line features that match the filter expression, to find additional connections between parts. This verification includes features that would normally be excluded due to the violation of stop conditions, or due to custom filter mechanisms (e.g. area-dependent quality specifications).
+        ///
+        ///If true, all line features are re-read and processed at the end of the quality verification if any &apos;Multiple P [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaGroupConnected_RecheckMultiplePartIssues {
+            get {
+                return ResourceManager.GetString("QaGroupConnected_RecheckMultiplePartIssues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If true: Creates the geometric union of all gaps found according to &apos;errorReporting&apos;. 
+        ///If false: Report each found gap separatly.
+        ///
+        ///Default = false.
+        ///Remark: Has no effect for ErrorReporting.ReferToFirstPart.
+        /// </summary>
+        public static string QaGroupConnected_ReportIndividualGaps {
+            get {
+                return ResourceManager.GetString("QaGroupConnected_ReportIndividualGaps", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An optional separator for storing multiple group identifiers in the same field (e.g. E100#E200).
+        /// </summary>
+        public static string QaGroupConnected_valueSeparator {
+            get {
+                return ResourceManager.GetString("QaGroupConnected_valueSeparator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Checks if the number of distinct values of an expression (which may be a single field or a more complex expression involving field concatenation, value translation, substring extraction etc.) within groups defined by a &apos;group by&apos; expression (which also may be a single field or a more complex expression on fields) does not exceed an allowed maximum value..
+        /// </summary>
+        public static string QaGroupConstraints_0 {
+            get {
+                return ResourceManager.GetString("QaGroupConstraints_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Checks if the number of distinct values of an expression (which may be a single field or a more complex expression involving field concatenation, value translation, substring extraction etc.) within groups defined by a &apos;group by&apos; expression (which also may be a single field or a more complex expression on fields) does not exceed an allowed maximum value.
+        ///
+        ///Example:
+        ///Table A with Field &apos;KeyA&apos; with a row KeyA = 5
+        ///Table B with Field &apos;KeyB&apos; with a row KeyB = 5
+        ///
+        ///Test with QaGroupConstraint({A,B}, {KeyA,KeyB} [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaGroupConstraints_1 {
+            get {
+                return ResourceManager.GetString("QaGroupConstraints_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of a field whose number of distinct values within groups defined by &apos;groupByExpression&apos; should be evaluated. Instead of a simple field name, a more complex expression that evaluates to a scalar value may be used. The syntax for these expressions is described here:
+        ///
+        ///http://www.csharp-examples.net/dataview-rowfilter/ 
+        ///http://msdn.microsoft.com/en-us/library/system.data.datacolumn.expression.aspx
+        ///
+        ///Typical elements of such an expression are substring extraction using SUBSTRING(),  string concatena [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaGroupConstraints_distinctExpression {
+            get {
+                return ResourceManager.GetString("QaGroupConstraints_distinctExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of fields whose number of distinct values within groups defined by &apos;groupByExpressions&apos; should be evaluated. Instead of a simple field name, a more complex expression that evaluates to a scalar value may be used.
+        ///The syntax for these expressions is described here:
+        ///
+        ///http://www.csharp-examples.net/dataview-rowfilter/ 
+        ///http://msdn.microsoft.com/en-us/library/system.data.datacolumn.expression.aspx
+        ///
+        ///Typical elements of such an expression are substring extraction using SUBSTRING(),  string concaten [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaGroupConstraints_distinctExpressions {
+            get {
+                return ResourceManager.GetString("QaGroupConstraints_distinctExpressions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of a field whose values define groups for which the number of distinct values of &apos;distinctExpression&apos; are evaluated. As for &apos;distinctExpression&apos; a more complex expression may be used instead of a single field (see. description for &apos;distinctExpression&apos;)..
+        /// </summary>
+        public static string QaGroupConstraints_groupByExpression {
+            get {
+                return ResourceManager.GetString("QaGroupConstraints_groupByExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The names of fields whose values define groups for which the number of distinct values of &apos;distinctExpressions&apos; are evaluated. The groups are evaluated over all &apos;tables&apos;, meaning if a group value exists in table a and in table b, the corresponding rows are grouped together. 
+        ///As for &apos;distinctExpressions&apos; a more complex expression may be used instead of a single field (see. description for &apos;distinctExpressions&apos;)..
+        /// </summary>
+        public static string QaGroupConstraints_groupByExpressions {
+            get {
+                return ResourceManager.GetString("QaGroupConstraints_groupByExpressions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if the number of distinct values within the groups found within the tested rows (e.g. rows in the test perimeter, or individually selected rows) should be calculated from only the tested rows (true), or if the distinct count within those groups should be calculated based on the entire table (false). 
+        ///
+        ///Setting this to false ensures that all errors are found, however those errors may be caused by rows outside the selection of interest (which therefore may not be correctable in a given work context [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaGroupConstraints_limitToTestedRows {
+            get {
+                return ResourceManager.GetString("QaGroupConstraints_limitToTestedRows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum number of distinct values returned from &apos;distinctExpression&apos;, per group value defined by &apos;groupByExpression&apos;.
+        /// </summary>
+        public static string QaGroupConstraints_maxDistinctCount {
+            get {
+                return ResourceManager.GetString("QaGroupConstraints_maxDistinctCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The table to apply group constraints to..
+        /// </summary>
+        public static string QaGroupConstraints_table {
+            get {
+                return ResourceManager.GetString("QaGroupConstraints_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The tables to apply group constraints to. For each table in &apos;tables&apos; there must be a corresponding groupByExpression and distinctExpression.
+        /// </summary>
+        public static string QaGroupConstraints_tables {
+            get {
+                return ResourceManager.GetString("QaGroupConstraints_tables", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds almost horizontal segments: Find segments with a slope angle smaller than &apos;limit&apos;, but larger than &apos;tolerance&apos;..
+        /// </summary>
+        public static string QaHorizontalSegments_0 {
+            get {
+                return ResourceManager.GetString("QaHorizontalSegments_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline, polygon or multipatch feature class.
+        /// </summary>
+        public static string QaHorizontalSegments_featureClass {
+            get {
+                return ResourceManager.GetString("QaHorizontalSegments_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Segments with a slope angle &gt; &apos;limit&apos; [Degree] are not checked. .
+        /// </summary>
+        public static string QaHorizontalSegments_limit {
+            get {
+                return ResourceManager.GetString("QaHorizontalSegments_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Segments with a slope angle &lt;= &apos;tolerance&apos; [Degree] are not reported. .
+        /// </summary>
+        public static string QaHorizontalSegments_tolerance {
+            get {
+                return ResourceManager.GetString("QaHorizontalSegments_tolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features in &apos;relatedClass&apos; that have an interior intersection with a feature in &apos;featureClass&apos;.
+        /// </summary>
+        public static string QaInteriorIntersectsOther_0 {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsOther_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds pairs of features in &apos;featureClass&apos; vs. &apos;relatedClass&apos; that have an interior intersection, and for which a given constraint is not fulfilled..
+        /// </summary>
+        public static string QaInteriorIntersectsOther_1 {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsOther_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds pairs of features in &apos;featureClasses&apos; vs. &apos;relatedClasses&apos; that have an interior intersection..
+        /// </summary>
+        public static string QaInteriorIntersectsOther_2 {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsOther_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds pairs of features in &apos;featureClasses&apos; vs. &apos;relatedClasses&apos; that have an interior intersection, and for which a given constraint is not fulfilled..
+        /// </summary>
+        public static string QaInteriorIntersectsOther_3 {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsOther_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on a pair of features that have intersecting interiors. If the constraint is defined and fulfilled, no error is reported.
+        ///The involved features are aliased using &quot;G1&quot; (featureClass) and G2 (relatedClass)&quot;.
+        ///Example: G1.Level &lt;&gt; G2.Level.
+        /// </summary>
+        public static string QaInteriorIntersectsOther_constraint {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsOther_constraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class.
+        /// </summary>
+        public static string QaInteriorIntersectsOther_featureClass {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsOther_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature classes.
+        /// </summary>
+        public static string QaInteriorIntersectsOther_featureClasses {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsOther_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Area feature class. Errors found that lie within any feature of &apos;IgnoreArea&apos; are not reported.
+        ///A sql-constraint can be provided to this feature class..
+        /// </summary>
+        public static string QaInteriorIntersectsOther_IgnoreArea {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsOther_IgnoreArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature class to search for interior intersections with &apos;featureClass&apos;..
+        /// </summary>
+        public static string QaInteriorIntersectsOther_relatedClass {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsOther_relatedClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature classes to search for interior intersections with features in &apos;featureClasses&apos;..
+        /// </summary>
+        public static string QaInteriorIntersectsOther_relatedClasses {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsOther_relatedClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint for valid intersection geometries. The constraint can be based on the following geometry properties:
+        ///
+        ///- $Area - the geometry area (0 for points and polylines)
+        ///- $Length - the length of the geometry (perimeter length in case of polygons; 0 for point)
+        ///- $VertexCount - the number of vertices of the geometry
+        ///- $SliverRatio - the ratio of (perimeter*perimeter) / area, expressing the elongation of a polygon. NULL for all geometry types except polygons
+        ///- $Dimension - the geometry dimension (points [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaInteriorIntersectsOther_ValidIntersectionGeometryConstraint {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsOther_ValidIntersectionGeometryConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pairs of features in a feature class with intersecting interiors..
+        /// </summary>
+        public static string QaInteriorIntersectsSelf_0 {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsSelf_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pairs of features in a feature class with intersecting interiors, and for which a given constraint is not fulfilled..
+        /// </summary>
+        public static string QaInteriorIntersectsSelf_1 {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsSelf_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pairs of features in a list of feature classes with intersecting interiors..
+        /// </summary>
+        public static string QaInteriorIntersectsSelf_2 {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsSelf_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pairs of features in a list of feature classes with intersecting interiors, and for which a given constraint is not fulfilled..
+        /// </summary>
+        public static string QaInteriorIntersectsSelf_3 {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsSelf_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pairs of features in a list of feature classes with intersecting interiors, and for which a given constraint is not fulfilled. Optionally, all intersections between two features can be reported as one error with multipart error geometry..
+        /// </summary>
+        public static string QaInteriorIntersectsSelf_4 {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsSelf_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on a pair of features that have intersecting interiors. If the constraint is defined and fulfilled, no error is reported.
+        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///Example: G1.Level &lt;&gt; G2.Level.
+        /// </summary>
+        public static string QaInteriorIntersectsSelf_constraint {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsSelf_constraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class.
+        /// </summary>
+        public static string QaInteriorIntersectsSelf_featureClass {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsSelf_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature classes to check for interior intersections.
+        /// </summary>
+        public static string QaInteriorIntersectsSelf_featureClasses {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsSelf_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that multiple intersections between two features should be reported as one error with multipart geometry. Otherwise, individual errors are reported for every intersection area..
+        /// </summary>
+        public static string QaInteriorIntersectsSelf_reportIntersectionsAsMultipart {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsSelf_reportIntersectionsAsMultipart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint for valid intersection geometries. The constraint can be based on the following geometry properties:
+        ///
+        ///- $Area - the geometry area (0 for points and polylines)
+        ///- $Length - the length of the geometry (perimeter length in case of polygons; 0 for points)
+        ///- $VertexCount - the number of vertices of the geometry
+        ///- $SliverRatio - the ratio of (perimeter*perimeter) / area, expressing the elongation of a polygon. NULL for all geometry types except polygons
+        ///- $Dimension - the geometry dimension (point [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaInteriorIntersectsSelf_ValidIntersectionGeometryConstraint {
+            get {
+                return ResourceManager.GetString("QaInteriorIntersectsSelf_ValidIntersectionGeometryConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds interior rings of polygon features that exceed a given maximum ring count. Optionally, only inner rings that are smaller than a specified area are reported..
+        /// </summary>
+        public static string QaInteriorRings_0 {
+            get {
+                return ResourceManager.GetString("QaInteriorRings_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A minimum area for allowed inner rings. If a value &gt; 0 is specified for this parameter, and an inner ring has an area larger than this value, it is ignored (allowed). In this case, it does not count against the &apos;maximumInteriorRingCount&apos;, i.e. that parameter only limits the number of rings that are smaller than the specified area..
+        /// </summary>
+        public static string QaInteriorRings_IgnoreInnerRingsLargerThan {
+            get {
+                return ResourceManager.GetString("QaInteriorRings_IgnoreInnerRingsLargerThan", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum allowed number of interior rings per polygon. With a value of 0, all interior rings are reported.
+        ///    
+        ///If the number of interior rings in a polygon exceeds this value, the smallest rings exceeding the allowed maximum number of rings are reported, unless &apos;ReportOnlySmallestRingsExceedingMaximumCount&apos; is set to false, in which case all rings are reported..
+        /// </summary>
+        public static string QaInteriorRings_maximumInteriorRingCount {
+            get {
+                return ResourceManager.GetString("QaInteriorRings_maximumInteriorRingCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The polygon feature class to check for interior rings..
+        /// </summary>
+        public static string QaInteriorRings_polygonClass {
+            get {
+                return ResourceManager.GetString("QaInteriorRings_polygonClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if rings should be reported as individual errors, or as a multipart error polygon..
+        /// </summary>
+        public static string QaInteriorRings_ReportIndividualRings {
+            get {
+                return ResourceManager.GetString("QaInteriorRings_ReportIndividualRings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If a &apos;maximumInteriorRingCount&apos; value &gt; 0 is specified, then this indicates if only the smallest unallowed rings exceeding the maximum count should be reported as errors (assuming that the smallest rings are the ones that are incorrect), or if all inner rings (smaller than the area specified for &apos;IgnoreInnerRingsLargerThan&apos;, if specified) should be reported..
+        /// </summary>
+        public static string QaInteriorRings_ReportOnlySmallestRingsExceedingMaximumCount {
+            get {
+                return ResourceManager.GetString("QaInteriorRings_ReportOnlySmallestRingsExceedingMaximumCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClasses&apos; that have a given spatial relationship with features in &apos;relatedClasses&apos;. The spatial relationship of the error cases is defined by a 9IM intersection matrix.
+        ///
+        ///Remark: All feature classes in &apos;featureClasses&apos; and &apos;relatedClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaIntersectionMatrixOther_0 {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixOther_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClasses&apos; that have a given spatial relationship with features in &apos;relatedClasses&apos;, and for which a given constraint is not fulfilled. The spatial relationship of the error cases is defined by a 9IM intersection matrix.
+        ///
+        ///Remark: All feature classes in &apos;featureClasses&apos; and &apos;relatedClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaIntersectionMatrixOther_1 {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixOther_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; that have a given spatial relationship with features in &apos;relatedClass&apos;. The spatial relationship of the error cases is defined by a 9IM intersection matrix.
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;relatedClass&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaIntersectionMatrixOther_2 {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixOther_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; that have a given spatial relationship with features in &apos;relatedClass&apos;, and for which a given constraint is not fulfilled. The spatial relationship of the error cases is defined by a 9IM intersection matrix.
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;relatedClass&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaIntersectionMatrixOther_3 {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixOther_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; that have a given spatial relationship with features in &apos;relatedClass&apos;, and for which a given constraint is not fulfilled. The spatial relationship of the error cases is defined by a 9IM intersection matrix. A list of valid intersection dimensions can be specified. Any parts of the intersection geometry (according to the 9IM intersection matrix) with a dimension that is included in this list are not reported as errors.
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaIntersectionMatrixOther_4 {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixOther_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on features that are involved in the specified spatial relationship. If the constraint is defined and fulfilled, no error is reported.
+        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///Example: G1.Level &lt;&gt; G2.Level.
+        /// </summary>
+        public static string QaIntersectionMatrixOther_constraint {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixOther_constraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class which contains features to be checked against features in &apos;relatedClass&apos;.
+        /// </summary>
+        public static string QaIntersectionMatrixOther_featureClass {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixOther_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature classes which contain features to be checked against features in &apos;relatedClasses&apos;.
+        /// </summary>
+        public static string QaIntersectionMatrixOther_featureClasses {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixOther_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 9IM intersection matrix defining the spatial relationship representing an error. The matrix string consists of the 9 cells of the 3x3 intersection matrix, in the following sequence:
+        ///
+        ///1. G1.interior G2.interior
+        ///2. G1.interior G2.boundary
+        ///3. G1.interior G2.exterior
+        ///4. G1.boundary G2.interior
+        ///5. G1.boundary G2.boundary
+        ///6. G1.boundary G2.exterior
+        ///7. G1.exterior G2.interior
+        ///8. G1.exterior G2.boundary
+        ///9. G1.exterior G2.exterior
+        ///
+        ///Example: ****T**** (intersection of geometry boundaries)
+        ///For additional  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaIntersectionMatrixOther_intersectionMatrix {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixOther_intersectionMatrix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class which contains features that may have an invalid spatial relationship with features in &apos;featureClass&apos;.
+        /// </summary>
+        public static string QaIntersectionMatrixOther_relatedClass {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixOther_relatedClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature classes which contain features that may have an invalid spatial relationship with features in &apos;featureClasses&apos;.
+        /// </summary>
+        public static string QaIntersectionMatrixOther_relatedClasses {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixOther_relatedClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An optional list of geometry dimensions that are valid in the 9IM intersection between compared features. The following dimensions are supported:
+        ///- 0: point intersections
+        ///- 1: linear intersections
+        ///- 2: area intersections
+        ///If multiple dimensions are valid, then the dimension values can be separated by comma, semicolon or blank. 
+        ///Note that the dimensions are checked against the intersection geometry according to the specified intersection matrix. I.e. if a matrix of &apos;****T****&apos; is specified (boundary inte [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaIntersectionMatrixOther_validIntersectionDimensions {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixOther_validIntersectionDimensions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClasses&apos; that have a given spatial relationship with other features in &apos;featureClasses&apos; (including the feature class of the feature to be tested). The spatial relationship of the error cases is defined by a 9IM intersection matrix.
+        ///
+        ///Remark: The feature classes in &apos;featureClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaIntersectionMatrixSelf_0 {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixSelf_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClasses&apos; that have a given spatial relationship with other features in &apos;featureClasses&apos; (including the feature class of the feature to be tested), and for which a given constraint is not fulfilled. The spatial relationship of the error cases is defined by a 9IM intersection matrix.
+        ///
+        ///Remark: The feature classes in &apos;featureClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaIntersectionMatrixSelf_1 {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixSelf_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; that have a given spatial relationship with other features in &apos;featureClass&apos;. The spatial relationship of the error cases is defined by a 9IM intersection matrix..
+        /// </summary>
+        public static string QaIntersectionMatrixSelf_2 {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixSelf_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; that have a given spatial relationship with other features in &apos;featureClass&apos;, and for which a given constraint is not fulfilled. The spatial relationship of the error cases is defined by a 9IM intersection matrix..
+        /// </summary>
+        public static string QaIntersectionMatrixSelf_3 {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixSelf_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; that have a given spatial relationship with other features in &apos;featureClass&apos;, and for which a given constraint is not fulfilled. The spatial relationship of the error cases is defined by a 9IM intersection matrix. A list of valid intersection dimensions can be specified. Any parts of the intersection geometry (according to the 9IM intersection matrix) with a dimension that is included in this list are not reported as errors..
+        /// </summary>
+        public static string QaIntersectionMatrixSelf_4 {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixSelf_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on features that are involved in the specified spatial relationship. If the constraint is defined and fulfilled, no error is reported.
+        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///Example: G1.Level &lt;&gt; G2.Level.
+        /// </summary>
+        public static string QaIntersectionMatrixSelf_constraint {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixSelf_constraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class.
+        /// </summary>
+        public static string QaIntersectionMatrixSelf_featureClass {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixSelf_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature classes.
+        /// </summary>
+        public static string QaIntersectionMatrixSelf_featureClasses {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixSelf_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 9IM intersection matrix defining the spatial relationship representing an error. The matrix string consists of the 9 cells of the 3x3 intersection matrix, in the following sequence:
+        ///
+        ///1. G1.interior G2.interior
+        ///2. G1.interior G2.boundary
+        ///3. G1.interior G2.exterior
+        ///4. G1.boundary G2.interior
+        ///5. G1.boundary G2.boundary
+        ///6. G1.boundary G2.exterior
+        ///7. G1.exterior G2.interior
+        ///8. G1.exterior G2.boundary
+        ///9. G1.exterior G2.exterior
+        ///
+        ///Example: ****T**** (intersection of geometry boundaries)
+        ///For additional  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaIntersectionMatrixSelf_intersectionMatrix {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixSelf_intersectionMatrix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An optional list of geometry dimensions that are valid in the 9IM intersection between compared features. The following dimensions are supported:
+        ///- 0: point intersections
+        ///- 1: linear intersections
+        ///- 2: area intersections
+        ///If multiple dimensions are valid, then the dimension values can be separated by comma, semicolon or blank. 
+        ///Note that the dimensions are checked against the intersection geometry according to the specified intersection matrix. I.e. if a matrix of &apos;****T****&apos; is specified (boundary inte [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaIntersectionMatrixSelf_validIntersectionDimensions {
+            get {
+                return ResourceManager.GetString("QaIntersectionMatrixSelf_validIntersectionDimensions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;intersectingClasses&apos; that intersect by any features of &apos;intersectedClasses&apos;
+        ///
+        ///Remark: All feature classes in &apos;intersectedClasses&apos; and &apos;intersectingClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaIntersectsOther_0 {
+            get {
+                return ResourceManager.GetString("QaIntersectsOther_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;intersectingClass&apos; that intersect by any features of &apos;intersectedClass&apos;
+        ///
+        ///Remark: The feature classes in &apos;intersectedClass&apos; and &apos;intersectingClass&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaIntersectsOther_1 {
+            get {
+                return ResourceManager.GetString("QaIntersectsOther_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;intersectingClasses&apos; that intersect by any features of &apos;intersectedClasses&apos;, and for which a given constraint is not fulfilled.
+        ///
+        ///Remark: All feature classes in &apos;intersectedClasses&apos; and &apos;intersectingClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaIntersectsOther_2 {
+            get {
+                return ResourceManager.GetString("QaIntersectsOther_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;intersectingClass&apos; that intersect by any features of &apos;intersectedClass&apos;, and for which a given constraint is not fulfilled.
+        ///
+        ///Remark: The feature classes in &apos;intersectedClass&apos; and &apos;intersectingClass&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaIntersectsOther_3 {
+            get {
+                return ResourceManager.GetString("QaIntersectsOther_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Area feature class. Errors found that lie within any feature of &apos;IgnoreArea&apos; are not reported.
+        ///A sql-constraint can be provided to this feature class..
+        /// </summary>
+        public static string QaIntersectsOther_IgnoreArea {
+            get {
+                return ResourceManager.GetString("QaIntersectsOther_IgnoreArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature class.
+        /// </summary>
+        public static string QaIntersectsOther_intersectedClass {
+            get {
+                return ResourceManager.GetString("QaIntersectsOther_intersectedClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature classes.
+        /// </summary>
+        public static string QaIntersectsOther_intersectedClasses {
+            get {
+                return ResourceManager.GetString("QaIntersectsOther_intersectedClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature class.
+        /// </summary>
+        public static string QaIntersectsOther_intersectingClass {
+            get {
+                return ResourceManager.GetString("QaIntersectsOther_intersectingClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature classes.
+        /// </summary>
+        public static string QaIntersectsOther_intersectingClasses {
+            get {
+                return ResourceManager.GetString("QaIntersectsOther_intersectingClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that multiple intersections between two features should be reported as one error with multipart geometry. Otherwise, individual errors are reported for every intersection area..
+        /// </summary>
+        public static string QaIntersectsOther_ReportIntersectionsAsMultipart {
+            get {
+                return ResourceManager.GetString("QaIntersectsOther_ReportIntersectionsAsMultipart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint for valid intersection geometries. The constraint can be based on the following geometry properties:
+        ///
+        ///- $Area - the geometry area (0 for points and polylines)
+        ///- $Length - the length of the geometry (perimeter length in case of polygons; 0 for point)
+        ///- $VertexCount - the number of vertices of the geometry
+        ///- $SliverRatio - the ratio of (perimeter*perimeter) / area, expressing the elongation of a polygon. NULL for all geometry types except polygons
+        ///- $Dimension - the geometry dimension (points [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaIntersectsOther_ValidIntersectionGeometryConstraint {
+            get {
+                return ResourceManager.GetString("QaIntersectsOther_ValidIntersectionGeometryConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on a pair of intersecting features. If the constraint is defined and fulfilled, no error is reported.
+        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///Example: G1.Level &lt;&gt; G2.Level.
+        /// </summary>
+        public static string QaIntersectsOther_validRelationConstraint {
+            get {
+                return ResourceManager.GetString("QaIntersectsOther_validRelationConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; that intersect any feature in &apos;featureClass&apos;.
+        /// </summary>
+        public static string QaIntersectsSelf_0 {
+            get {
+                return ResourceManager.GetString("QaIntersectsSelf_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClasses&apos; that intersect any feature in &apos;featureClasses&apos;.
+        /// </summary>
+        public static string QaIntersectsSelf_1 {
+            get {
+                return ResourceManager.GetString("QaIntersectsSelf_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClasses&apos; that intersect any feature in &apos;featureClasses&apos;, and for which a given constraint is not fulfilled..
+        /// </summary>
+        public static string QaIntersectsSelf_2 {
+            get {
+                return ResourceManager.GetString("QaIntersectsSelf_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; that intersect any feature in &apos;featureClass&apos;, and for which a given constraint is not fulfilled..
+        /// </summary>
+        public static string QaIntersectsSelf_3 {
+            get {
+                return ResourceManager.GetString("QaIntersectsSelf_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature class.
+        /// </summary>
+        public static string QaIntersectsSelf_featureClass {
+            get {
+                return ResourceManager.GetString("QaIntersectsSelf_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature classes.
+        /// </summary>
+        public static string QaIntersectsSelf_featureClasses {
+            get {
+                return ResourceManager.GetString("QaIntersectsSelf_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The geometry component to consider for the intersection.
+        ///Can either be empty, have one value or have as many values as there are feature classes.
+        ///- If no value is given, the entire geometry is used for all feature classes
+        ///- If there is one value this value is applied to all feature classes
+        ///- If there are as many values as feature classes each value is applied to the corresponding feature class at the same position in the list.
+        /// </summary>
+        public static string QaIntersectsSelf_GeometryComponents {
+            get {
+                return ResourceManager.GetString("QaIntersectsSelf_GeometryComponents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that multiple intersections between two features should be reported as one error with multipart geometry. Otherwise, individual errors are reported for every intersection area..
+        /// </summary>
+        public static string QaIntersectsSelf_ReportIntersectionsAsMultipart {
+            get {
+                return ResourceManager.GetString("QaIntersectsSelf_ReportIntersectionsAsMultipart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint for valid intersection geometries. The constraint can be based on the following geometry properties:
+        ///
+        ///- $Area - the geometry area (0 for points and polylines)
+        ///- $Length - the length of the geometry (perimeter length in case of polygons; 0 for point)
+        ///- $VertexCount - the number of vertices of the geometry
+        ///- $SliverRatio - the ratio of (perimeter*perimeter) / area, expressing the elongation of a polygon. NULL for all geometry types except polygons
+        ///- $Dimension - the geometry dimension (points [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaIntersectsSelf_ValidIntersectionGeometryConstraint {
+            get {
+                return ResourceManager.GetString("QaIntersectsSelf_ValidIntersectionGeometryConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on a pair of intersecting features. If the constraint is defined and fulfilled, no error is reported.
+        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///Example: G1.Level &lt;&gt; G2.Level.
+        /// </summary>
+        public static string QaIntersectsSelf_validRelationConstraint {
+            get {
+                return ResourceManager.GetString("QaIntersectsSelf_validRelationConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;covered&apos; that are not fully covered by the features in &apos;covering&apos;
+        ///
+        ///Remarks: All feature classes in &apos;covered&apos; and &apos;covering&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaIsCoveredByOther_0 {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;covered&apos; that are not fully covered by the features in &apos;covering&apos;
+        ///
+        ///Remarks: The feature classes in &apos;covered&apos; and &apos;covering&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaIsCoveredByOther_1 {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;covered&apos; that are not fully covered by the features in &apos;covering&apos; for which a given condition is fulfilled
+        ///
+        ///Remarks: All feature classes in &apos;covered&apos; and &apos;covering&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaIsCoveredByOther_2 {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;covered&apos; that are not fully covered by the features in &apos;covering&apos; for which a given condition is fulfilled
+        ///
+        ///Remarks: All feature classes in &apos;covered&apos; and &apos;covering&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaIsCoveredByOther_3 {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;covered&apos; for which the specified geometry components are not fully covered by the specified geometry component of features in &apos;covering&apos;.
+        ///
+        ///The following geometry components are supported:
+        ///
+        ///- EntireGeometry: the original feature geometry
+        ///- Boundary: supported for polygons and polylines. For polylines, the boundary consists of the start/end points of all parts. For polygons, it corresponds to the outlines of all polygon rings.
+        ///- Vertices: supported for polygons, polylines, multipa [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaIsCoveredByOther_4 {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;covered&apos; for which the specified geometry components are not sufficiently covered by the specified geometry component of features in &apos;covering&apos;. An allowed uncovered percentage may be specified.
+        ///
+        ///The following geometry components are supported:
+        ///
+        ///- EntireGeometry: the original feature geometry
+        ///- Boundary: supported for polygons and polylines. For polylines, the boundary consists of the start/end points of all parts. For polygons, it corresponds to the outlines of all polygon rings [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaIsCoveredByOther_5 {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_5", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;covered&apos; for which the specified geometry components are not sufficiently covered by the specified geometry component of features in &apos;covering&apos;. An allowed uncovered percentage may be specified.
+        ///
+        ///The following geometry components are supported:
+        ///
+        ///- EntireGeometry: the original feature geometry
+        ///- Boundary: supported for polygons and polylines. For polylines, the boundary consists of the start/end points of all parts. For polygons, it corresponds to the outlines of all polygon rings [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaIsCoveredByOther_6 {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_6", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;covered&apos; for which the specified geometry components are not sufficiently covered by the specified geometry component of features in &apos;covering&apos;, within an (optional) area of interest defined by polygons from &apos;areaOfInterestClasses&apos;. An allowed uncovered percentage may be specified.
+        ///
+        ///The following geometry components are supported:
+        ///
+        ///- EntireGeometry: the original feature geometry
+        ///- Boundary: supported for polygons and polylines. For polylines, the boundary consists of the start/en [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaIsCoveredByOther_7 {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_7", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum uncovered percentage that is still allowed. The specified value must be equal to or larger than 0, and smaller than 100. A value of 0 indicates that the features (or geometry components) must be fully covered. A value of 25 indicates that each feature (or geometry component) must be covered at least by 75 %..
+        /// </summary>
+        public static string QaIsCoveredByOther_allowedUncoveredPercentage {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_allowedUncoveredPercentage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional list of polygon feature classes defining an area of interest. Uncovered geometry parts outside a defined area of interest are ignored..
+        /// </summary>
+        public static string QaIsCoveredByOther_areaOfInterestClasses {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_areaOfInterestClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature classes with features that must be covered by features in &apos;covering&apos;.
+        /// </summary>
+        public static string QaIsCoveredByOther_covered_0 {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_covered_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class with features that must be covered by features in &apos;covering&apos;.
+        /// </summary>
+        public static string QaIsCoveredByOther_covered_1 {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_covered_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The geometry components for the covered feature classes..
+        /// </summary>
+        public static string QaIsCoveredByOther_coveredGeometryComponents_0 {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_coveredGeometryComponents_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature classes.
+        /// </summary>
+        public static string QaIsCoveredByOther_covering_0 {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_covering_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class.
+        /// </summary>
+        public static string QaIsCoveredByOther_covering_1 {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_covering_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The search tolerance for features in the covering classes to be considered covering. The tolerance is applied as a buffer to the covering geometries when testing covered features.
+        ///Can either be empty, have one value or have as many values as there are covering classes.
+        ///- If no value is given no tolerance will be applied
+        ///- If there is one value this value is applied to all covering classes
+        ///- If there are as many values as covering classes each value is applied to the corresponding covering class
+        ///.
+        /// </summary>
+        public static string QaIsCoveredByOther_CoveringClassTolerances {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_CoveringClassTolerances", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The geometry components for the covering feature classes.
+        ///If empty, then &apos;EntireGeometry&apos; will be used. If one component is specified, it is used.
+        /// </summary>
+        public static string QaIsCoveredByOther_coveringGeometryComponents_0 {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_coveringGeometryComponents_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Condition that must be fulfilled for a pair of features from &apos;covering&apos; and &apos;covered&apos;. If the condition is not fulfilled, the feature from &apos;covering&apos; is ignored and does not contribute to the covering area for the &apos;covered&apos; feature.
+        ///The feature from &apos;covering&apos; can be addressed as &apos;G1&apos; in the condition, the feature from &apos;covered&apos; as &apos;G2&apos;..
+        /// </summary>
+        public static string QaIsCoveredByOther_isCoveringCondition {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_isCoveringCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Conditions for combinations of &apos;covered&apos; and &apos;covering&apos; that must be fulfilled for a pair of features from &apos;covering&apos; and &apos;covered&apos;. If the condition is not fulfilled, the feature from &apos;covering&apos; is ignored and does not contribute to the covering area for the &apos;covered&apos; feature.
+        ///The feature from &apos;covering&apos; can be addressed as &apos;G1&apos; in the condition, the feature from &apos;covered&apos; as &apos;G2&apos;.
+        ///
+        ///If a single condition is specified in the list, it is used for all combinations of &apos;covered&apos; and &apos;covering&apos;. If multiple c [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaIsCoveredByOther_isCoveringConditions {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_isCoveringConditions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint for valid uncovered geometries. The constraint can be based on the following geometry properties:
+        ///
+        ///- $Area - the geometry area (0 for points and polylines)
+        ///- $Length - the length of the geometry (perimeter length in case of polygons; 0 for points)
+        ///- $VertexCount - the number of vertices of the geometry
+        ///- $SliverRatio - the ratio of (perimeter*perimeter) / area, expressing the elongation of a polygon. NULL for all geometry types except polygons
+        ///- $Dimension - the geometry dimension (points:  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaIsCoveredByOther_ValidUncoveredGeometryConstraint {
+            get {
+                return ResourceManager.GetString("QaIsCoveredByOther_ValidUncoveredGeometryConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Checks constraints for the distinct values of fields from connected line and point features at a location..
+        /// </summary>
+        public static string QaLineConnectionFieldValues_0 {
+            get {
+                return ResourceManager.GetString("QaLineConnectionFieldValues_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Checks constraints for the distinct values of fields from connected line and point features at a location..
+        /// </summary>
+        public static string QaLineConnectionFieldValues_1 {
+            get {
+                return ResourceManager.GetString("QaLineConnectionFieldValues_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Checks constraints for the distinct values of fields from connected lines at a location..
+        /// </summary>
+        public static string QaLineConnectionFieldValues_2 {
+            get {
+                return ResourceManager.GetString("QaLineConnectionFieldValues_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Checks constraints for the distinct values of fields from connected lines at a location..
+        /// </summary>
+        public static string QaLineConnectionFieldValues_3 {
+            get {
+                return ResourceManager.GetString("QaLineConnectionFieldValues_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Checks constraints for the distinct values of fields from connected lines at a location..
+        /// </summary>
+        public static string QaLineConnectionFieldValues_4 {
+            get {
+                return ResourceManager.GetString("QaLineConnectionFieldValues_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expression to identify points in &apos;pointClass&apos; that are considered valid regardless of their values of the &apos;pointField&apos; field name or expression..
+        /// </summary>
+        public static string QaLineConnectionFieldValues_allowedPointsExpression {
+            get {
+                return ResourceManager.GetString("QaLineConnectionFieldValues_allowedPointsExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expression to identify points in &apos;pointClasses&apos; that are considered valid regardless of their values of the &apos;pointFields&apos; field name or expression. There must be either a single allowPointExpressions value in the list which is valid for all feature classes in &apos;pointClasses&apos;, or there must be one entry in &apos;allowedPointsExpressions&apos; per entry in &apos;pointClasses&apos; and the two lists must be sorted in equal order..
+        /// </summary>
+        public static string QaLineConnectionFieldValues_allowedPointsExpressions {
+            get {
+                return ResourceManager.GetString("QaLineConnectionFieldValues_allowedPointsExpressions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline featureClass.
+        /// </summary>
+        public static string QaLineConnectionFieldValues_lineClass {
+            get {
+                return ResourceManager.GetString("QaLineConnectionFieldValues_lineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline featureClasses. &apos;lineClasses&apos; and &apos;lineFields&apos; must correspond..
+        /// </summary>
+        public static string QaLineConnectionFieldValues_lineClasses {
+            get {
+                return ResourceManager.GetString("QaLineConnectionFieldValues_lineClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Field of &apos;lineClass&apos; checked for equality at connections.
+        /// </summary>
+        public static string QaLineConnectionFieldValues_lineField {
+            get {
+                return ResourceManager.GetString("QaLineConnectionFieldValues_lineField", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fields of &apos;lineClasses&apos; to use for checking the specified constraints. There must be either a single line field value in the list which is valid for all feature classes in &apos;lineClasses&apos;, or there must be one entry in &apos;lineFields&apos; per entry in &apos;lineClasses&apos; and the two lists must be sorted in equal order..
+        /// </summary>
+        public static string QaLineConnectionFieldValues_lineFields {
+            get {
+                return ResourceManager.GetString("QaLineConnectionFieldValues_lineFields", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraints on the field values of connected lines.
+        ///
+        ///- NoConstraint [0]: all line field values are valid
+        ///- AllEqual [1]: field values of all connected lines must be equal
+        ///- AllEqualOrValidPointExists [2]: field values all all connected lines must be equal, or a valid point must exist at the connection location. If a point exists and has it&apos;s constraint fulfilled, distinct line field values are allowed..
+        /// </summary>
+        public static string QaLineConnectionFieldValues_lineFieldValuesConstraint {
+            get {
+                return ResourceManager.GetString("QaLineConnectionFieldValues_lineFieldValuesConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point featureClass.
+        /// </summary>
+        public static string QaLineConnectionFieldValues_pointClass {
+            get {
+                return ResourceManager.GetString("QaLineConnectionFieldValues_pointClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point featureClasses.
+        /// </summary>
+        public static string QaLineConnectionFieldValues_pointClasses {
+            get {
+                return ResourceManager.GetString("QaLineConnectionFieldValues_pointClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Field of &apos;pointClass&apos; to use for checking the specified constraint..
+        /// </summary>
+        public static string QaLineConnectionFieldValues_pointField {
+            get {
+                return ResourceManager.GetString("QaLineConnectionFieldValues_pointField", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fields of &apos;pointClasses&apos; to use for checking the specified constraint. There must be either a single point field value in the list which is valid for all feature classes in &apos;pointClasses&apos;, or there must be one entry in &apos;pointFields&apos; per entry in &apos;pointClasses&apos; and the two lists must be sorted in equal order..
+        /// </summary>
+        public static string QaLineConnectionFieldValues_pointFields {
+            get {
+                return ResourceManager.GetString("QaLineConnectionFieldValues_pointFields", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraints on the field values of connected points (points coincident with other point features and line feature endpoints)
+        ///
+        ///- NoConstraint [0]: all point field values are valid
+        ///- AllEqualAndMatchAnyLineValue [1]: all field values of connected points must be equal, and that one value must be equal to *any* of the line field values of the connected lines.
+        ///- AllEqualAndMatchMostFrequentLineValue [2]: all field values of connected points must be equal, and that one value must be equal to the most frequent [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaLineConnectionFieldValues_pointFieldValuesConstraint {
+            get {
+                return ResourceManager.GetString("QaLineConnectionFieldValues_pointFieldValuesConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find errors in checking if connected polylines of &apos;networkFeatureClasses&apos; with same attributes related to &apos;groupBy&apos; meet the conditions defined by the parameters.
+        /// </summary>
+        public static string QaLineGroupConstraints_0 {
+            get {
+                return ResourceManager.GetString("QaLineGroupConstraints_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to a list of all field names that define a key. Features with the same key are tested to meet the conditions.
+        /// </summary>
+        public static string QaLineGroupConstraints_groupBy {
+            get {
+                return ResourceManager.GetString("QaLineGroupConstraints_groupBy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only groups that fulfill &apos;GroupConditions&apos; are tested..
+        /// </summary>
+        public static string QaLineGroupConstraints_GroupConditions {
+            get {
+                return ResourceManager.GetString("QaLineGroupConstraints_GroupConditions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find all dangles of connected lines where the sum of the lengths are shorter than &apos;minDangleLength&apos;. A dangle is any part of the group from a junction with 3 or more lines to an endpoint of the group.
+        ///
+        ///If &apos;MinDangleLengthContinued&apos; &gt; 0, &apos;MinDangleLengthAtFork&apos; &gt; 0, and/or &apos;MinDangleLengthAtForkContinued&apos; &gt; 0, this value is only checked at dangles, that do not fulfill the constraints for the corresponding settings. I.e. if &apos;MinDangleLengthAtFork&apos; &gt;0, &apos;minDangleLength&apos; is only checked at dangles, that do no [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaLineGroupConstraints_minDangleLength {
+            get {
+                return ResourceManager.GetString("QaLineGroupConstraints_minDangleLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum allowed dangle length, when the dangle end is at a fork.
+        ///
+        ///If &apos;MinDangleLengthAtForkContinued&apos; &gt; 0, this value is only checked, when the dangle end is at a fork, but is not connected to any other group..
+        /// </summary>
+        public static string QaLineGroupConstraints_MinDangleLengthAtFork {
+            get {
+                return ResourceManager.GetString("QaLineGroupConstraints_MinDangleLengthAtFork", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum allowed dangle length, when the dangle end is at a fork and is connected to at least one other group..
+        /// </summary>
+        public static string QaLineGroupConstraints_MinDangleLengthAtForkContinued {
+            get {
+                return ResourceManager.GetString("QaLineGroupConstraints_MinDangleLengthAtForkContinued", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum allowed dangle length, when the dangle end is connected to another group. 
+        ///
+        ///If &apos;MinDangleLengthAtForkContinued&apos; &gt; 0, this value is only checked, when the dangle is connected to at least one other group, but does not end at a fork..
+        /// </summary>
+        public static string QaLineGroupConstraints_MinDangleLengthContinued {
+            get {
+                return ResourceManager.GetString("QaLineGroupConstraints_MinDangleLengthContinued", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find all endpoints closer than &apos;minGap&apos; to other connected lines of the same &apos;groupBy&apos;-key.
+        ///
+        ///If &apos;MinGapToSameGroupCovered&apos; &gt; 0, &apos;MinGapToSameGroupAtFork&apos; &gt; 0, and/or &apos;MinGapToSameGroupAtForkCovered&apos; &gt; 0, this value is only checked at gaps, that do not fulfill the constraints for the corresponding setting. I.e., if &apos;MinGapToSameGroupAtFork&apos; &gt; 0, &apos;minGap&apos; is only checked at gaps, that do not start at a fork..
+        /// </summary>
+        public static string QaLineGroupConstraints_minGap {
+            get {
+                return ResourceManager.GetString("QaLineGroupConstraints_minGap", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find all endpoints closer than &apos;MinGapToOtherGroup&apos; to other connected lines of a different &apos;groupBy&apos;-key.
+        ///
+        ///If &apos;MinGapToOtherGroupAtFork&apos; &gt;0, this value is only checked, if the gap does not start at a fork..
+        /// </summary>
+        public static string QaLineGroupConstraints_MinGapToOtherGroupType {
+            get {
+                return ResourceManager.GetString("QaLineGroupConstraints_MinGapToOtherGroupType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum allowed gap to another group, when the gap starts at a fork..
+        /// </summary>
+        public static string QaLineGroupConstraints_MinGapToOtherGroupTypeAtFork {
+            get {
+                return ResourceManager.GetString("QaLineGroupConstraints_MinGapToOtherGroupTypeAtFork", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum allowed gap to another feature within the same connected group.
+        /// </summary>
+        public static string QaLineGroupConstraints_MinGapToSameGroup {
+            get {
+                return ResourceManager.GetString("QaLineGroupConstraints_MinGapToSameGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum allowed gap to a group of the same group type, when the gap starts at a fork.
+        ///
+        ///If &apos;MinGapToSameGroupAtForkCovered&apos; &gt; 0, this value is only used for gaps, that are not completly covered by other groups..
+        /// </summary>
+        public static string QaLineGroupConstraints_MinGapToSameGroupTypeAtFork {
+            get {
+                return ResourceManager.GetString("QaLineGroupConstraints_MinGapToSameGroupTypeAtFork", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum allowed gap to a group of the same group type, when the gap starts at a fork and is fully covered by other groups.
+        /// </summary>
+        public static string QaLineGroupConstraints_MinGapToSameGroupTypeAtForkCovered {
+            get {
+                return ResourceManager.GetString("QaLineGroupConstraints_MinGapToSameGroupTypeAtForkCovered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum allowed gap to a group of the same group type, when the entire gap is fully covered by other groups.
+        ///
+        ///If &apos;MinGapToSameGroupAtForkCovered&apos; &gt; 0, this value is only used for gaps, that do not start at a fork..
+        /// </summary>
+        public static string QaLineGroupConstraints_MinGapToSameGroupTypeCovered {
+            get {
+                return ResourceManager.GetString("QaLineGroupConstraints_MinGapToSameGroupTypeCovered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find all connected lines where the sum of the lengths are shorter than minGroupLength.
+        /// </summary>
+        public static string QaLineGroupConstraints_minGroupLength {
+            get {
+                return ResourceManager.GetString("QaLineGroupConstraints_minGroupLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to featureclasses to be tested..
+        /// </summary>
+        public static string QaLineGroupConstraints_networkFeatureClasses {
+            get {
+                return ResourceManager.GetString("QaLineGroupConstraints_networkFeatureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An optional separator for storing multiple group identifiers in the same field (e.g. E100#E200).
+        /// </summary>
+        public static string QaLineGroupConstraints_ValueSeparator {
+            get {
+                return ResourceManager.GetString("QaLineGroupConstraints_ValueSeparator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;polylineClasses&apos; that cross any other feature in &apos;polylineClasses&apos;
+        ///
+        ///Remark: The feature classes in &apos;polylineClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaLineIntersect_0 {
+            get {
+                return ResourceManager.GetString("QaLineIntersect_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;polylineClass&apos; that cross any other feature in &apos;polylineClass&apos;.
+        /// </summary>
+        public static string QaLineIntersect_1 {
+            get {
+                return ResourceManager.GetString("QaLineIntersect_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;polylineClasses&apos; that cross any other feature in &apos;polylineClasses&apos;, and for which a given constraint is not fulfilled.
+        ///
+        ///Remark: The feature classes in &apos;polylineClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaLineIntersect_2 {
+            get {
+                return ResourceManager.GetString("QaLineIntersect_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;polylineClass&apos; that cross any other feature in &apos;polylineClass&apos;, and for which a given constraint is not fulfilled..
+        /// </summary>
+        public static string QaLineIntersect_3 {
+            get {
+                return ResourceManager.GetString("QaLineIntersect_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;polylineClasses&apos; that have invalid point intersections with any other feature in &apos;polylineClasses&apos;, and for which a given constraint is not fulfilled. Invalid point intersections are points where lines cross, and where end points of one line have an unallowed intersection with the interior of the other line. Optionally, linear intersections are also reported (based on the Overlaps relation between the line geometries). Without this option, only point intersections are reported..
+        /// </summary>
+        public static string QaLineIntersect_4 {
+            get {
+                return ResourceManager.GetString("QaLineIntersect_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies the allowed intersections of an end point of one line with the interior of another line. 
+        ///- All: all intersections of end points with line interiors are allowed
+        ///- Vertex: intersections of line end points with the interior of another line are allowed, if the intersection point is on a vertex of the other line
+        ///- None: end points may only connect to end points of other lines, never to the interior of other lines.
+        /// </summary>
+        public static string QaLineIntersect_allowedEndpointInteriorIntersections {
+            get {
+                return ResourceManager.GetString("QaLineIntersect_allowedEndpointInteriorIntersections", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies the allowed intersections of the interiors (i.e. excluding the end points) of both lines
+        ///- None: no interior intersections are allowed
+        ///- AtVertexOnBothLines: intersections of the line interiors are allowed if each line has a vertex at the intersection location.
+        /// </summary>
+        public static string QaLineIntersect_AllowedInteriorIntersections {
+            get {
+                return ResourceManager.GetString("QaLineIntersect_AllowedInteriorIntersections", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline feature class.
+        /// </summary>
+        public static string QaLineIntersect_polylineClass {
+            get {
+                return ResourceManager.GetString("QaLineIntersect_polylineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline feature classes.
+        /// </summary>
+        public static string QaLineIntersect_polylineClasses {
+            get {
+                return ResourceManager.GetString("QaLineIntersect_polylineClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that overlaps between intersecting lines should be reported. The end points of the linear overlap intersection will be reported..
+        /// </summary>
+        public static string QaLineIntersect_reportOverlaps {
+            get {
+                return ResourceManager.GetString("QaLineIntersect_reportOverlaps", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on a pair of line features that intersect. If the constraint is defined and fulfilled, no error is reported.
+        ///The involved features are aliased using &quot;G1&quot; (featureClass) and G2 (relatedClass)&quot;.
+        ///Example: G1.Level &lt;&gt; G2.Level.
+        /// </summary>
+        public static string QaLineIntersect_validRelationConstraint {
+            get {
+                return ResourceManager.GetString("QaLineIntersect_validRelationConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all intersection between lines of &apos;polylineClasses&apos; where the intersection angle is smaller than &apos;limit&apos;
+        ///
+        ///Remark: The feature classes in &apos;polylineClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaLineIntersectAngle_0 {
+            get {
+                return ResourceManager.GetString("QaLineIntersectAngle_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to include z-coordinate for checking.
+        /// </summary>
+        public static string QaLineIntersectAngle_is3D {
+            get {
+                return ResourceManager.GetString("QaLineIntersectAngle_is3D", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum permitted angle (in radians).
+        /// </summary>
+        public static string QaLineIntersectAngle_limit {
+            get {
+                return ResourceManager.GetString("QaLineIntersectAngle_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or polygon feature class.
+        /// </summary>
+        public static string QaLineIntersectAngle_polylineClass {
+            get {
+                return ResourceManager.GetString("QaLineIntersectAngle_polylineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or polygon feature classes.
+        /// </summary>
+        public static string QaLineIntersectAngle_polylineClasses {
+            get {
+                return ResourceManager.GetString("QaLineIntersectAngle_polylineClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds intersections of features in &apos;polylineClasses&apos; where the height difference is smaller than &apos;limit&apos;
+        ///
+        ///Remark: The feature classes in &apos;polylineClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaLineIntersectZ_0 {
+            get {
+                return ResourceManager.GetString("QaLineIntersectZ_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds intersections of features in &apos;polylineClass&apos; where the height difference is smaller than &apos;limit&apos;.
+        /// </summary>
+        public static string QaLineIntersectZ_1 {
+            get {
+                return ResourceManager.GetString("QaLineIntersectZ_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds intersections of features in &apos;polylineClass&apos; where the height difference is smaller than &apos;limit&apos; and &apos;constraint&apos; is not fulfilled.
+        /// </summary>
+        public static string QaLineIntersectZ_2 {
+            get {
+                return ResourceManager.GetString("QaLineIntersectZ_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds intersections of features in &apos;polylineClasses&apos; where the height difference is smaller than &apos;limit&apos; and &apos;constraint&apos; is not fulfilled
+        ///
+        ///Remark: The feature classes in &apos;polylineClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaLineIntersectZ_3 {
+            get {
+                return ResourceManager.GetString("QaLineIntersectZ_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds intersections of features in &apos;polylineClasses&apos; where the height difference is smaller than &apos;minimum&apos; or larger than &apos;maximum&apos; or &apos;constraint&apos; is not fulfilled
+        ///
+        ///Remark: The feature classes in &apos;polylineClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaLineIntersectZ_4 {
+            get {
+                return ResourceManager.GetString("QaLineIntersectZ_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to constraint on features at intersection.
+        ///Upper feature is aliased as &quot;U&quot;, lower feature as &quot;L&quot;
+        ///Example: U.EdgeLevel &gt; L.EdgeLevel
+        ///
+        ///Remark: if &apos;limit&apos; &lt;= 0, only &apos;constraint&apos; is checked with &quot;U&quot;, &quot;L&quot; arbitrarily assigned to features).
+        /// </summary>
+        public static string QaLineIntersectZ_constraint {
+            get {
+                return ResourceManager.GetString("QaLineIntersectZ_constraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum height difference in z-Units.
+        /// </summary>
+        public static string QaLineIntersectZ_limit_0 {
+            get {
+                return ResourceManager.GetString("QaLineIntersectZ_limit_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum height difference in z-Units.
+        ///if &apos;limit&apos; &lt;= 0, only constraint is checked (in arbitrary order of the involved features).
+        /// </summary>
+        public static string QaLineIntersectZ_limit_1 {
+            get {
+                return ResourceManager.GetString("QaLineIntersectZ_limit_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum height difference in z-Units.
+        ///if &apos;maximumZDifference&apos; &lt;= 0, maximum height difference is not checked.
+        /// </summary>
+        public static string QaLineIntersectZ_maximumZDifference {
+            get {
+                return ResourceManager.GetString("QaLineIntersectZ_maximumZDifference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum height difference in z-Units.
+        ///if &apos;minimumZDifference&apos; &lt;= 0, minimum height difference is not checked.
+        /// </summary>
+        public static string QaLineIntersectZ_minimumZDifference {
+            get {
+                return ResourceManager.GetString("QaLineIntersectZ_minimumZDifference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline feature class.
+        /// </summary>
+        public static string QaLineIntersectZ_polylineClass {
+            get {
+                return ResourceManager.GetString("QaLineIntersectZ_polylineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline feature classes.
+        /// </summary>
+        public static string QaLineIntersectZ_polylineClasses {
+            get {
+                return ResourceManager.GetString("QaLineIntersectZ_polylineClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all polygons in &apos;polygonClass&apos; with areas larger than &apos;limit&apos;.
+        /// </summary>
+        public static string QaMaxArea_0 {
+            get {
+                return ResourceManager.GetString("QaMaxArea_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all parts in &apos;polygonClass&apos; with areas larger than &apos;limit&apos;. Parts are defined by perPart.
+        /// </summary>
+        public static string QaMaxArea_1 {
+            get {
+                return ResourceManager.GetString("QaMaxArea_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum area in (x,y)-units.
+        /// </summary>
+        public static string QaMaxArea_limit {
+            get {
+                return ResourceManager.GetString("QaMaxArea_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if the area is checked for each ring (true) or for the entire feature (false).
+        /// </summary>
+        public static string QaMaxArea_perPart {
+            get {
+                return ResourceManager.GetString("QaMaxArea_perPart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polygon feature class.
+        /// </summary>
+        public static string QaMaxArea_polygonClass {
+            get {
+                return ResourceManager.GetString("QaMaxArea_polygonClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all lines in &apos;featureClass&apos; with length larger than &apos;limit&apos;.
+        /// </summary>
+        public static string QaMaxLength_0 {
+            get {
+                return ResourceManager.GetString("QaMaxLength_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or polygon feature class.
+        /// </summary>
+        public static string QaMaxLength_featureClass {
+            get {
+                return ResourceManager.GetString("QaMaxLength_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to include z-coordinate for checking.
+        /// </summary>
+        public static string QaMaxLength_is3D {
+            get {
+                return ResourceManager.GetString("QaMaxLength_is3D", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum length in (x,y)-units.
+        /// </summary>
+        public static string QaMaxLength_limit {
+            get {
+                return ResourceManager.GetString("QaMaxLength_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to check for each part .
+        /// </summary>
+        public static string QaMaxLength_perPart {
+            get {
+                return ResourceManager.GetString("QaMaxLength_perPart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all segments in &apos;featureClass&apos; where the slope is larger than &apos;limit&apos;.
+        /// </summary>
+        public static string QaMaxSlope_0 {
+            get {
+                return ResourceManager.GetString("QaMaxSlope_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or polygon feature class.
+        /// </summary>
+        public static string QaMaxSlope_featureClass {
+            get {
+                return ResourceManager.GetString("QaMaxSlope_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum slope (in radians).
+        /// </summary>
+        public static string QaMaxSlope_limit {
+            get {
+                return ResourceManager.GetString("QaMaxSlope_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds polygon/polyline/multipoint features or feature parts with a vertex count larger than &apos;limit&apos;.
+        /// </summary>
+        public static string QaMaxVertexCount_0 {
+            get {
+                return ResourceManager.GetString("QaMaxVertexCount_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polygon, polyline or multipoint feature class.
+        /// </summary>
+        public static string QaMaxVertexCount_featureClass {
+            get {
+                return ResourceManager.GetString("QaMaxVertexCount_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum allowed vertex count.
+        /// </summary>
+        public static string QaMaxVertexCount_limit {
+            get {
+                return ResourceManager.GetString("QaMaxVertexCount_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if the test should be applied per individual parts or on the entire feature geometry.
+        /// </summary>
+        public static string QaMaxVertexCount_perPart {
+            get {
+                return ResourceManager.GetString("QaMaxVertexCount_perPart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds vertices or segments with undefined (NaN) M values..
+        /// </summary>
+        public static string QaMeasures_0 {
+            get {
+                return ResourceManager.GetString("QaMeasures_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds vertices or segments with an invalid M value..
+        /// </summary>
+        public static string QaMeasures_1 {
+            get {
+                return ResourceManager.GetString("QaMeasures_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature class to check the M values for..
+        /// </summary>
+        public static string QaMeasures_featureClass {
+            get {
+                return ResourceManager.GetString("QaMeasures_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The invalid M value to check for..
+        /// </summary>
+        public static string QaMeasures_invalidValue {
+            get {
+                return ResourceManager.GetString("QaMeasures_invalidValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds points on &apos;lineClasses&apos; whose m-Values differ from the neighboring &apos;pointClass&apos;-point
+        ///
+        ///Remark: All feature classes in &apos;pointClass&apos; and &apos;lineClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaMeasuresAtPoints_0 {
+            get {
+                return ResourceManager.GetString("QaMeasuresAtPoints_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expression for getting the expected measure value for a point of &apos;pointClass&apos;:
+        ///- if &apos;expectedMValueExpression&apos; = null, the M-value of the point is used
+        ///- otherwise the field that defines the measure value. Instead of a simple field name, a more complex expression that evaluates to a scalar value may be used. The syntax for these expressions is described here:
+        ///
+        ///http://www.csharp-examples.net/dataview-rowfilter/ 
+        ///http://msdn.microsoft.com/en-us/library/system.data.datacolumn.expression.aspx.
+        /// </summary>
+        public static string QaMeasuresAtPoints_expectedMValueExpression {
+            get {
+                return ResourceManager.GetString("QaMeasuresAtPoints_expectedMValueExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that point features with an undefined expected M value (either the result of the expected M value expression, or the M value of the point if no expression is specified) should be ignored. If &apos;false&apos; an error is reported for undefined expected M values..
+        /// </summary>
+        public static string QaMeasuresAtPoints_ignoreUndefinedExpectedMValue {
+            get {
+                return ResourceManager.GetString("QaMeasuresAtPoints_ignoreUndefinedExpectedMValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Line or polygon featureClasses to be tested.
+        /// </summary>
+        public static string QaMeasuresAtPoints_lineClasses {
+            get {
+                return ResourceManager.GetString("QaMeasuresAtPoints_lineClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to defines the point of a line which measure will be compared:
+        ///-Nearest: the nearest segment point or vertex is taken
+        ///-VertexPreferred: if a vertex lies within &apos;searchDistance&apos; of the point, this vertex, otherwise the nearest segment point
+        ///-VertexRequired: a vertex must lie within the &apos;searchdistance&apos; of a point from &apos;pointClass&apos; closer than &apos;searchdistance&apos; to the line, and this vertex is compared.
+        /// </summary>
+        public static string QaMeasuresAtPoints_lineMSource {
+            get {
+                return ResourceManager.GetString("QaMeasuresAtPoints_lineMSource", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional expression for matching lines to points. If the expression is defined, a line feature is only checked for a given point if the expression is fulfilled. In the expression, the point feature can be adressed as &apos;P&apos; and the line features as &apos;L&apos;.
+        ///
+        ///Example: 
+        ///
+        ///   P.ROUTEID = L.ROUTEID
+        ///
+        ///The syntax for these expressions is described here:
+        ///
+        ///http://www.csharp-examples.net/dataview-rowfilter/ 
+        ///http://msdn.microsoft.com/en-us/library/system.data.datacolumn.expression.aspx.
+        /// </summary>
+        public static string QaMeasuresAtPoints_matchExpression {
+            get {
+                return ResourceManager.GetString("QaMeasuresAtPoints_matchExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum allow difference of the point measure value and the corresponding line measure value .
+        /// </summary>
+        public static string QaMeasuresAtPoints_mTolerance {
+            get {
+                return ResourceManager.GetString("QaMeasuresAtPoints_mTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point featureClass providing measure information dependent on &apos;expectedMValueExpression&apos;.
+        /// </summary>
+        public static string QaMeasuresAtPoints_pointClass {
+            get {
+                return ResourceManager.GetString("QaMeasuresAtPoints_pointClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to if true, at least 1 line must lie closer than &apos;searchDistance&apos; to a point of &apos;pointClass&apos;.
+        /// </summary>
+        public static string QaMeasuresAtPoints_requireLine {
+            get {
+                return ResourceManager.GetString("QaMeasuresAtPoints_requireLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum distance of a point to a line where measure values are compared .
+        /// </summary>
+        public static string QaMeasuresAtPoints_searchDistance {
+            get {
+                return ResourceManager.GetString("QaMeasuresAtPoints_searchDistance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points in &apos;polylineClass&apos; where the angle built by the lines is smaller than &apos;limit&apos;.
+        /// </summary>
+        public static string QaMinAngle_0 {
+            get {
+                return ResourceManager.GetString("QaMinAngle_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points in &apos;polylineClasses&apos; where the angle built by the lines is smaller than &apos;limit&apos;
+        ///
+        ///Remark: The feature classes in &apos;polylineClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaMinAngle_1 {
+            get {
+                return ResourceManager.GetString("QaMinAngle_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to include z-coordinate for checking.
+        /// </summary>
+        public static string QaMinAngle_is3D {
+            get {
+                return ResourceManager.GetString("QaMinAngle_is3D", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum angle (in radians).
+        /// </summary>
+        public static string QaMinAngle_limit {
+            get {
+                return ResourceManager.GetString("QaMinAngle_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline feature class.
+        /// </summary>
+        public static string QaMinAngle_polylineClass {
+            get {
+                return ResourceManager.GetString("QaMinAngle_polylineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline feature classes.
+        /// </summary>
+        public static string QaMinAngle_polylineClasses {
+            get {
+                return ResourceManager.GetString("QaMinAngle_polylineClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all polygons in &apos;polygonClass&apos; with areas smaller than &apos;limit&apos;.
+        /// </summary>
+        public static string QaMinArea_0 {
+            get {
+                return ResourceManager.GetString("QaMinArea_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all parts in &apos;polygonClass&apos; with areas smaller than &apos;limit&apos;. Parts are defined by perPart.
+        /// </summary>
+        public static string QaMinArea_1 {
+            get {
+                return ResourceManager.GetString("QaMinArea_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum area in (x,y)-units.
+        /// </summary>
+        public static string QaMinArea_limit {
+            get {
+                return ResourceManager.GetString("QaMinArea_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if the area is checked for each ring (true) or for the entire feature (false).
+        /// </summary>
+        public static string QaMinArea_perPart {
+            get {
+                return ResourceManager.GetString("QaMinArea_perPart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polygon feature class.
+        /// </summary>
+        public static string QaMinArea_polygonClass {
+            get {
+                return ResourceManager.GetString("QaMinArea_polygonClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all area overlaps between two features in &apos;polygonClasses&apos;, where the overlapping area is smaller than &apos;limit&apos;
+        ///
+        ///Remark: The feature classes in &apos;polygonClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaMinIntersect_0 {
+            get {
+                return ResourceManager.GetString("QaMinIntersect_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all area overlaps between two features in &apos;polygonClass&apos;, where the overlapping area is smaller than &apos;limit&apos;.
+        /// </summary>
+        public static string QaMinIntersect_1 {
+            get {
+                return ResourceManager.GetString("QaMinIntersect_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum overlap area in (x,y)-units.
+        /// </summary>
+        public static string QaMinIntersect_limit {
+            get {
+                return ResourceManager.GetString("QaMinIntersect_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polygon feature class.
+        /// </summary>
+        public static string QaMinIntersect_polygonClass {
+            get {
+                return ResourceManager.GetString("QaMinIntersect_polygonClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polygon feature classes.
+        /// </summary>
+        public static string QaMinIntersect_polygonClasses {
+            get {
+                return ResourceManager.GetString("QaMinIntersect_polygonClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all lines in &apos;featureClass&apos; with length smaller than &apos;limit&apos;.
+        /// </summary>
+        public static string QaMinLength_0 {
+            get {
+                return ResourceManager.GetString("QaMinLength_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or polygon feature class.
+        /// </summary>
+        public static string QaMinLength_featureClass {
+            get {
+                return ResourceManager.GetString("QaMinLength_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to include z-coordinate for checking.
+        /// </summary>
+        public static string QaMinLength_is3D {
+            get {
+                return ResourceManager.GetString("QaMinLength_is3D", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum length in (x,y)-units.
+        /// </summary>
+        public static string QaMinLength_limit {
+            get {
+                return ResourceManager.GetString("QaMinLength_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to check for each part.
+        /// </summary>
+        public static string QaMinLength_perPart {
+            get {
+                return ResourceManager.GetString("QaMinLength_perPart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds polygon/polyline features or feature parts with an average segment length smaller than &apos;limit&apos;.
+        /// </summary>
+        public static string QaMinMeanSegmentLength_0 {
+            get {
+                return ResourceManager.GetString("QaMinMeanSegmentLength_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polygon or polyline feature class.
+        /// </summary>
+        public static string QaMinMeanSegmentLength_featureClass {
+            get {
+                return ResourceManager.GetString("QaMinMeanSegmentLength_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to include z-coordinate for checking (default = false for polyline and polygon, = true for multipatch feature class).
+        /// </summary>
+        public static string QaMinMeanSegmentLength_is3D {
+            get {
+                return ResourceManager.GetString("QaMinMeanSegmentLength_is3D", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The minimum allowed mean segment length.
+        /// </summary>
+        public static string QaMinMeanSegmentLength_limit {
+            get {
+                return ResourceManager.GetString("QaMinMeanSegmentLength_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if the test should be applied per individual parts or on the entire feature geometry.
+        /// </summary>
+        public static string QaMinMeanSegmentLength_perPart {
+            get {
+                return ResourceManager.GetString("QaMinMeanSegmentLength_perPart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClass&apos; closer than &apos;near&apos;.
+        /// </summary>
+        public static string QaMinNodeDistance_0 {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClasses&apos; closer than &apos;near&apos;
+        ///
+        ///Remark: The feature classes in &apos;featureClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaMinNodeDistance_1 {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClasses&apos; closer than &apos;near&apos; and find all coincidend pairs with z-coordinate difference larger than &apos;maxZDifference&apos;. Pairs closer than &apos;tolerance&apos; are considered coincident. No error is reported for point pairs that fulfill a defined constraint..
+        /// </summary>
+        public static string QaMinNodeDistance_10 {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_10", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClass&apos; closer than &apos;near&apos;. Pairs closer than &apos;tolerance&apos; are considered coincident. No error is reported for point pairs that fulfill a defined constraint..
+        /// </summary>
+        public static string QaMinNodeDistance_11 {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_11", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClasses&apos; closer than &apos;near&apos;. Pairs closer than &apos;tolerance&apos; are considered coincident. No error is reported for point pairs that fulfill a defined constraint.
+        ///
+        ///Remark: The feature classes in &apos;featureClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaMinNodeDistance_12 {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_12", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClass&apos; closer than &apos;near&apos;. Pairs closer than &apos;tolerance&apos; are considered coincident.
+        /// </summary>
+        public static string QaMinNodeDistance_2 {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClasses&apos; closer than &apos;near&apos;. Pairs closer than &apos;tolerance&apos; are considered coincident
+        ///
+        ///Remark: The feature classes in &apos;featureClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaMinNodeDistance_3 {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClass&apos; closer than &apos;near&apos; and find all coincidend pairs with z-coordinate difference larger than &apos;maxZDifference&apos;.
+        /// </summary>
+        public static string QaMinNodeDistance_4 {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClasses&apos; closer than &apos;near&apos; and find all coincidend pairs with z-coordinate difference larger than &apos;maxZDifference&apos;
+        ///
+        ///Remark: The feature classes in &apos;featureClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaMinNodeDistance_5 {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_5", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClass&apos; closer than &apos;near&apos; and find all coincidend pairs with z-coordinate difference larger than &apos;maxZDifference&apos;. Pairs closer than &apos;tolerance&apos; are considered coincident.
+        /// </summary>
+        public static string QaMinNodeDistance_6 {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_6", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClasses&apos; closer than &apos;near&apos; and find all coincidend pairs with z-coordinate difference larger than &apos;maxZDifference&apos;. Pairs closer than &apos;tolerance&apos; are considered coincident.
+        /// </summary>
+        public static string QaMinNodeDistance_7 {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_7", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all pair of (From/To-) points of &apos;featureClass&apos; closer than &apos;near&apos; and find all coincidend pairs with z-coordinate difference larger than &apos;maxZDifference&apos;. Pairs closer than &apos;tolerance&apos; are considered coincident. No error is reported for point pairs that fulfill a defined constraint..
+        /// </summary>
+        public static string QaMinNodeDistance_9 {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_9", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to point or polyline feature class.
+        /// </summary>
+        public static string QaMinNodeDistance_featureClass {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to point or polyline feature classes.
+        /// </summary>
+        public static string QaMinNodeDistance_featureClasses {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if the distance between the point should be calculated as a 3D distance..
+        /// </summary>
+        public static string QaMinNodeDistance_is3D {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_is3D", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum allowed z-coordinate difference of coincident points.
+        /// </summary>
+        public static string QaMinNodeDistance_maxZDifference {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_maxZDifference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum point distance in (x,y)-units.
+        /// </summary>
+        public static string QaMinNodeDistance_near {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_near", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to coincidence distance in (x,y)-units. If the distance between the (From/To-) points is less than this tolerance, the points are considered to be coincident.
+        ///    
+        ///A negative tolerance value indicates that coincident points are not considered as valid. This allows to find *all* pairs of points closer than &apos;near&apos;, whether they are coincident or not..
+        /// </summary>
+        public static string QaMinNodeDistance_tolerance {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_tolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on a pair of features that are invalid according to the tolerance values. If the constraint is defined and fulfilled, no error is reported.
+        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///Example: G1.Level &lt;&gt; G2.Level.
+        /// </summary>
+        public static string QaMinNodeDistance_validRelationConstraint {
+            get {
+                return ResourceManager.GetString("QaMinNodeDistance_validRelationConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all consecutive segments in &apos;featureClass&apos; where the angle between two segments is smaller than &apos;limit&apos;.
+        /// </summary>
+        public static string QaMinSegAngle_0 {
+            get {
+                return ResourceManager.GetString("QaMinSegAngle_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unit of &apos;limit&apos;, default = &apos;radian&apos;..
+        /// </summary>
+        public static string QaMinSegAngle_AngularUnit {
+            get {
+                return ResourceManager.GetString("QaMinSegAngle_AngularUnit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or polygon feature class.
+        /// </summary>
+        public static string QaMinSegAngle_featureClass {
+            get {
+                return ResourceManager.GetString("QaMinSegAngle_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to include z-coordinate for checking.
+        /// </summary>
+        public static string QaMinSegAngle_is3D {
+            get {
+                return ResourceManager.GetString("QaMinSegAngle_is3D", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum allowed angle between segments (in &apos;AngularUnit&apos;, default value of &apos;AngularUnit&apos; is radian).
+        /// </summary>
+        public static string QaMinSegAngle_limit {
+            get {
+                return ResourceManager.GetString("QaMinSegAngle_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to if true: Use angles between segment tangents.
+        ///if false: Use vertices to calculate angles.
+        ///default = false..
+        /// </summary>
+        public static string QaMinSegAngle_UseTangents {
+            get {
+                return ResourceManager.GetString("QaMinSegAngle_UseTangents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds non-monotonic sequences in M values.
+        /// </summary>
+        public static string QaMonotonicMeasures_0 {
+            get {
+                return ResourceManager.GetString("QaMonotonicMeasures_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds non-monotonic sequences in M values for a given direction.
+        /// </summary>
+        public static string QaMonotonicMeasures_1 {
+            get {
+                return ResourceManager.GetString("QaMonotonicMeasures_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if constant M values are not to be treated as errors.
+        /// </summary>
+        public static string QaMonotonicMeasures_allowConstantValues {
+            get {
+                return ResourceManager.GetString("QaMonotonicMeasures_allowConstantValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expected direction of monotonicity.
+        /// </summary>
+        public static string QaMonotonicMeasures_expectedMonotonicity {
+            get {
+                return ResourceManager.GetString("QaMonotonicMeasures_expectedMonotonicity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expression to evaluate if feature needs to be flipped for monotonicity evaluation.
+        /// </summary>
+        public static string QaMonotonicMeasures_flipExpression {
+            get {
+                return ResourceManager.GetString("QaMonotonicMeasures_flipExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Line feature class.
+        /// </summary>
+        public static string QaMonotonicMeasures_lineClass {
+            get {
+                return ResourceManager.GetString("QaMonotonicMeasures_lineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds non-monotonic sequences in Z values.
+        /// </summary>
+        public static string QaMonotonicZ_0 {
+            get {
+                return ResourceManager.GetString("QaMonotonicZ_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if constant Z values are not to be treated as errors. Default is True..
+        /// </summary>
+        public static string QaMonotonicZ_AllowConstantValues {
+            get {
+                return ResourceManager.GetString("QaMonotonicZ_AllowConstantValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The expected direction of monotonic change of the sequence of Z values along the line feature. By default, the sequence of Z values runs from the start point to the end point of the feature. By specifying a FlipExpression, this ordering can be inverted based on the value of one or more attributes.
+        ///
+        ///- MonotonicityDirection.Any: the expected direction of monotonic change is defined by the Z values of the start/end points of the line feature: if the Z value of the start point is higher than the Z value of en [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaMonotonicZ_ExpectedMonotonicity {
+            get {
+                return ResourceManager.GetString("QaMonotonicZ_ExpectedMonotonicity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Expression to evaluate if feature needs to be flipped for monotonicity evaluation. If the expression returns True, then the sequence of Z values is reversed..
+        /// </summary>
+        public static string QaMonotonicZ_FlipExpression {
+            get {
+                return ResourceManager.GetString("QaMonotonicZ_FlipExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Line feature class.
+        /// </summary>
+        public static string QaMonotonicZ_lineClass {
+            get {
+                return ResourceManager.GetString("QaMonotonicZ_lineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all geometry parts of &apos;multipatchClass&apos; that not allowed part types.
+        /// </summary>
+        public static string QaMpAllowedPartTypes_0 {
+            get {
+                return ResourceManager.GetString("QaMpAllowedPartTypes_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to if false : report all parts that are rings.
+        /// </summary>
+        public static string QaMpAllowedPartTypes_allowRings {
+            get {
+                return ResourceManager.GetString("QaMpAllowedPartTypes_allowRings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to if false : report all parts that are triangleFans.
+        /// </summary>
+        public static string QaMpAllowedPartTypes_allowTriangleFans {
+            get {
+                return ResourceManager.GetString("QaMpAllowedPartTypes_allowTriangleFans", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to if false : report all parts that are triangles.
+        /// </summary>
+        public static string QaMpAllowedPartTypes_allowTriangles {
+            get {
+                return ResourceManager.GetString("QaMpAllowedPartTypes_allowTriangles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to if false : report all parts that are triangleStrip.
+        /// </summary>
+        public static string QaMpAllowedPartTypes_allowTriangleStrips {
+            get {
+                return ResourceManager.GetString("QaMpAllowedPartTypes_allowTriangleStrips", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to multipatch feature class.
+        /// </summary>
+        public static string QaMpAllowedPartTypes_multiPatchClass {
+            get {
+                return ResourceManager.GetString("QaMpAllowedPartTypes_multiPatchClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find rings where the pointIds of its points are not constant.
+        /// </summary>
+        public static string QaMpConstantPointIdsPerRing_0 {
+            get {
+                return ResourceManager.GetString("QaMpConstantPointIdsPerRing_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to if true: Check that points of inner rings of an outer rings have the same PointIDs as the outer ring&apos;s points.
+        /// </summary>
+        public static string QaMpConstantPointIdsPerRing_includeInnerRings {
+            get {
+                return ResourceManager.GetString("QaMpConstantPointIdsPerRing_includeInnerRings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Multipatch feature class.
+        /// </summary>
+        public static string QaMpConstantPointIdsPerRing_multiPatchClass {
+            get {
+                return ResourceManager.GetString("QaMpConstantPointIdsPerRing_multiPatchClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find mutlitpatch features where footprints have inner rings.
+        /// </summary>
+        public static string QaMpFootprintHoles_0 {
+            get {
+                return ResourceManager.GetString("QaMpFootprintHoles_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Z extent tolerance for horizontal inner rings: inner rings with a Z extent that is less than or equal to this value are considered horizontal. Used for innerRingHandling = IgnoreHorizontalInnerRings..
+        /// </summary>
+        public static string QaMpFootprintHoles_HorizontalZTolerance {
+            get {
+                return ResourceManager.GetString("QaMpFootprintHoles_HorizontalZTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to None: check the footprint of the original multipatch
+        ///IgnoreInnerRings:check the footprint of the multipatch without inner rings
+        ///IgnoreHorizontalInnerRings: check the footpring of the multipatch without the inner rings of horizontal outer rings.
+        /// </summary>
+        public static string QaMpFootprintHoles_innerRingHandling {
+            get {
+                return ResourceManager.GetString("QaMpFootprintHoles_innerRingHandling", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum area for allowed holes. Holes with an area greater or equal the minimum area are ignored. A value of -1 indicates that no minimum area should be applied (all holes are reported)..
+        /// </summary>
+        public static string QaMpFootprintHoles_MinimumArea {
+            get {
+                return ResourceManager.GetString("QaMpFootprintHoles_MinimumArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Multipatch feature class.
+        /// </summary>
+        public static string QaMpFootprintHoles_multiPatchClass {
+            get {
+                return ResourceManager.GetString("QaMpFootprintHoles_multiPatchClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if vertical patches that fall partly outside the multipatch footprint are reported.
+        /// </summary>
+        public static string QaMpFootprintHoles_ReportVerticalPatchesNotCompletelyWithinFootprint {
+            get {
+                return ResourceManager.GetString("QaMpFootprintHoles_ReportVerticalPatchesNotCompletelyWithinFootprint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional factor to reduce the value of the XY resolution, to find inner rings that are too small to be detected with the current XY resolution and tolerance values. The factor must be larger or equal to 1. Default value is 1 (no change of the resolution and tolerance). If a value greater than 1 is specified, the XY tolerance is set to 2 * the reduced resolution value..
+        /// </summary>
+        public static string QaMpFootprintHoles_ResolutionFactor {
+            get {
+                return ResourceManager.GetString("QaMpFootprintHoles_ResolutionFactor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds mutlipatch features that intersect in 2D and their footprints 
+        ///- do not intersect but are closer than &apos;minimumoffset&apos;
+        ///- do intersect but intersection boundary length is &lt; &apos;minimumOverlap&apos;
+        ///-do intersect and the angle at the intersections is &lt; &apos;minimumIntersectionAngleDegrees&apos;.
+        /// </summary>
+        public static string QaMpFootprintRelation_0 {
+            get {
+                return ResourceManager.GetString("QaMpFootprintRelation_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum angle in degrees between the footprint boundaries at their intersections.
+        /// </summary>
+        public static string QaMpFootprintRelation_minimumIntersectAngleDegrees {
+            get {
+                return ResourceManager.GetString("QaMpFootprintRelation_minimumIntersectAngleDegrees", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum offset of the footprints if they do not intersect.
+        /// </summary>
+        public static string QaMpFootprintRelation_minimumOffset {
+            get {
+                return ResourceManager.GetString("QaMpFootprintRelation_minimumOffset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum boundary length of the footprint intersection.
+        /// </summary>
+        public static string QaMpFootprintRelation_minimumOverlap {
+            get {
+                return ResourceManager.GetString("QaMpFootprintRelation_minimumOverlap", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Multipatch feature class.
+        /// </summary>
+        public static string QaMpFootprintRelation_multiPatchClass {
+            get {
+                return ResourceManager.GetString("QaMpFootprintRelation_multiPatchClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to expression for determing the overhang. Examples: 
+        ///&quot;3.0&quot;; &quot;overhangField&quot;; &quot;2.1 * numericField + 5&quot;.
+        /// </summary>
+        public static string QaMpFootprintRelation_overhangExpression {
+            get {
+                return ResourceManager.GetString("QaMpFootprintRelation_overhangExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Coded domain field. The overhang for the feature is determined by the description of the coded value.
+        /// </summary>
+        public static string QaMpFootprintRelationCodedDomainField_overhangCodedDomainField {
+            get {
+                return ResourceManager.GetString("QaMpFootprintRelationCodedDomainField_overhangCodedDomainField", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find all horizontal segments of a multipatch feature where their azimuth&apos;s differ less than &apos;nearAngle&apos; but more than &apos;azimuthTolerance&apos;.
+        /// </summary>
+        public static string QaMpHorizontalAzimuths_0 {
+            get {
+                return ResourceManager.GetString("QaMpHorizontalAzimuths_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Near segments with azimuths not closer than &apos;azimuthTolerance&apos; [degree] are reported.
+        /// </summary>
+        public static string QaMpHorizontalAzimuths_azimuthTolerance {
+            get {
+                return ResourceManager.GetString("QaMpHorizontalAzimuths_azimuthTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Segment with slope angle less than &apos;horizontalTolerance&apos; are considered horizontal.
+        /// </summary>
+        public static string QaMpHorizontalAzimuths_horizontalTolerance {
+            get {
+                return ResourceManager.GetString("QaMpHorizontalAzimuths_horizontalTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Multipatch feature class.
+        /// </summary>
+        public static string QaMpHorizontalAzimuths_multiPatchClass {
+            get {
+                return ResourceManager.GetString("QaMpHorizontalAzimuths_multiPatchClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Segments with azimuths closer than &apos;nearAngle&apos; [degree] are checked.
+        /// </summary>
+        public static string QaMpHorizontalAzimuths_nearAngle {
+            get {
+                return ResourceManager.GetString("QaMpHorizontalAzimuths_nearAngle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to if true: check each ring seperatly; otherwise: check all horizontal segments of the multipatch feature.
+        /// </summary>
+        public static string QaMpHorizontalAzimuths_perRing {
+            get {
+                return ResourceManager.GetString("QaMpHorizontalAzimuths_perRing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find all horizontal segment pairs of a multipatch feature where their heights differ less than &apos;nearHeight&apos; but more than &apos;heightTolerance&apos;.
+        /// </summary>
+        public static string QaMpHorizontalHeights_0 {
+            get {
+                return ResourceManager.GetString("QaMpHorizontalHeights_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Horizontal segments with a height difference less than &apos;heightTolerance&apos; are considered equal height.
+        /// </summary>
+        public static string QaMpHorizontalHeights_heightTolerance {
+            get {
+                return ResourceManager.GetString("QaMpHorizontalHeights_heightTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Multipatch feature class.
+        /// </summary>
+        public static string QaMpHorizontalHeights_multiPatchClass {
+            get {
+                return ResourceManager.GetString("QaMpHorizontalHeights_multiPatchClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Horizontal segments with a height difference less than &apos;nearHeight&apos; are check for equal height.
+        /// </summary>
+        public static string QaMpHorizontalHeights_nearHeight {
+            get {
+                return ResourceManager.GetString("QaMpHorizontalHeights_nearHeight", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find all horizontal segment pairs of a multipatch feature where their azimuth&apos;s differ less than &apos;nearAngle&apos; from 90° but more than &apos;azimuthTolerance&apos;.
+        /// </summary>
+        public static string QaMpHorizontalPerpendicular_0 {
+            get {
+                return ResourceManager.GetString("QaMpHorizontalPerpendicular_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Segment pairs with azimuths not closer than &apos;azimuthTolerance&apos; [degree] to 90° are reported.
+        /// </summary>
+        public static string QaMpHorizontalPerpendicular_azimuthTolerance {
+            get {
+                return ResourceManager.GetString("QaMpHorizontalPerpendicular_azimuthTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to if true: Only segment pairs where two border points are closer than &apos;connectedTolerance&apos; are checked. Border points are start and end point of both segments..
+        /// </summary>
+        public static string QaMpHorizontalPerpendicular_connectedOnly {
+            get {
+                return ResourceManager.GetString("QaMpHorizontalPerpendicular_connectedOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to distance in 3D and xy units of the &apos;multiPatchClass&apos;&apos; spatial reference.
+        /// </summary>
+        public static string QaMpHorizontalPerpendicular_connectedTolerance {
+            get {
+                return ResourceManager.GetString("QaMpHorizontalPerpendicular_connectedTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Segment with slope angle less than &apos;horizontalTolerance&apos; are considered horizontal.
+        /// </summary>
+        public static string QaMpHorizontalPerpendicular_horizontalTolerance {
+            get {
+                return ResourceManager.GetString("QaMpHorizontalPerpendicular_horizontalTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Multipatch feature class.
+        /// </summary>
+        public static string QaMpHorizontalPerpendicular_multiPatchClass {
+            get {
+                return ResourceManager.GetString("QaMpHorizontalPerpendicular_multiPatchClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Segment pairs with azimuths closer than &apos;nearAngle&apos; [degree] to 90° are checked.
+        /// </summary>
+        public static string QaMpHorizontalPerpendicular_nearAngle {
+            get {
+                return ResourceManager.GetString("QaMpHorizontalPerpendicular_nearAngle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds multipatch features having rings whose 2D footprints have an interior intersection. Optionally, intersections of footprint interiors can be allowed for rings having different, unique point ids..
+        /// </summary>
+        public static string QaMpNonIntersectingRingFootprints_0 {
+            get {
+                return ResourceManager.GetString("QaMpNonIntersectingRingFootprints_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if intersections of footprint interiors are allowed for rings that have different, unique point ids. If set to &apos;true&apos;, an error is reported if point ids within a ring are not unique..
+        /// </summary>
+        public static string QaMpNonIntersectingRingFootprints_allowIntersectionsForDifferentPointIds {
+            get {
+                return ResourceManager.GetString("QaMpNonIntersectingRingFootprints_allowIntersectionsForDifferentPointIds", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Multipatch feature class.
+        /// </summary>
+        public static string QaMpNonIntersectingRingFootprints_multiPatchClass {
+            get {
+                return ResourceManager.GetString("QaMpNonIntersectingRingFootprints_multiPatchClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional factor to reduce the value of the XY resolution, to find ring footprint intersections that are too small to be detected with the current XY resolution and tolerance values. The factor must be larger or equal to 1. Default value is 1 (no change of the resolution and tolerance). If a value greater than 1 is specified, the XY tolerance is set to 2 * the reduced resolution value..
+        /// </summary>
+        public static string QaMpNonIntersectingRingFootprints_ResolutionFactor {
+            get {
+                return ResourceManager.GetString("QaMpNonIntersectingRingFootprints_ResolutionFactor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds multipatches where the overhang footprint is less than &apos;limit&apos; or the ring count of the footprint and the overhang footprint differ..
+        /// </summary>
+        public static string QaMpOverhang_0 {
+            get {
+                return ResourceManager.GetString("QaMpOverhang_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to expression for determing the overhang. Examples: 
+        ///&quot;3.0&quot;; &quot;overhangField&quot;; &quot;2.1 * numericField + 5&quot;.
+        /// </summary>
+        public static string QaMpOverhang_expression {
+            get {
+                return ResourceManager.GetString("QaMpOverhang_expression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum allowed area.
+        /// </summary>
+        public static string QaMpOverhang_limit {
+            get {
+                return ResourceManager.GetString("QaMpOverhang_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Multipatch class.
+        /// </summary>
+        public static string QaMpOverhang_multipatchClass {
+            get {
+                return ResourceManager.GetString("QaMpOverhang_multipatchClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Coded domain field. The overhang for the feature is determined by the description of the coded value.
+        /// </summary>
+        public static string QaMpOverhangCodedDomainField_codedDomainField {
+            get {
+                return ResourceManager.GetString("QaMpOverhangCodedDomainField_codedDomainField", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds multipatch features with a 2D footprint that consists of more than one disjoint part..
+        /// </summary>
+        public static string QaMpSinglePartFootprint_0 {
+            get {
+                return ResourceManager.GetString("QaMpSinglePartFootprint_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Multipatch feature class.
+        /// </summary>
+        public static string QaMpSinglePartFootprint_multiPatchClass {
+            get {
+                return ResourceManager.GetString("QaMpSinglePartFootprint_multiPatchClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional factor to reduce the value of the XY resolution, to find disjoint parts that are too small to be detected with the current XY resolution and tolerance values. The factor must be larger or equal to 1. Default value is 1 (no change of the resolution and tolerance). If a value greater than 1 is specified, the XY tolerance is set to 2 * the reduced resolution value..
+        /// </summary>
+        public static string QaMpSinglePartFootprint_ResolutionFactor {
+            get {
+                return ResourceManager.GetString("QaMpSinglePartFootprint_ResolutionFactor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds vertices of &apos;vertexClasses&apos; that are not far enough above or below the faces of &apos;multiPatchClass&apos;.
+        /// </summary>
+        public static string QaMpVertexNotNearFace_0 {
+            get {
+                return ResourceManager.GetString("QaMpVertexNotNearFace_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Coplanarity tolerance of the faces of &apos;multiPatchClass&apos;.
+        /// </summary>
+        public static string QaMpVertexNotNearFace_CoplanarityTolerance {
+            get {
+                return ResourceManager.GetString("QaMpVertexNotNearFace_CoplanarityTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Vertices closer (in 3D) than &apos;EdgeCoincidence&apos; to an edge of a face are excluded from checking for this specific face.
+        /// </summary>
+        public static string QaMpVertexNotNearFace_EdgeCoincidence {
+            get {
+                return ResourceManager.GetString("QaMpVertexNotNearFace_EdgeCoincidence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to if true, non coplanar faces are excluded from checking the vertices of &apos;vertexClasses&apos;.
+        /// </summary>
+        public static string QaMpVertexNotNearFace_IgnoreNonCoplanarFaces {
+            get {
+                return ResourceManager.GetString("QaMpVertexNotNearFace_IgnoreNonCoplanarFaces", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If a vertex lies above a face, the minimum distance it must lie above.
+        /// </summary>
+        public static string QaMpVertexNotNearFace_minimumDistanceAbove {
+            get {
+                return ResourceManager.GetString("QaMpVertexNotNearFace_minimumDistanceAbove", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If a vertex lies below a face, the minimum distance it must lie below the face.
+        /// </summary>
+        public static string QaMpVertexNotNearFace_minimumDistanceBelow {
+            get {
+                return ResourceManager.GetString("QaMpVertexNotNearFace_minimumDistanceBelow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only faces with slopes &gt; &apos;MinimumSlopeDegrees&apos; are tested against vertices.
+        /// </summary>
+        public static string QaMpVertexNotNearFace_MinimumSlopeDegrees {
+            get {
+                return ResourceManager.GetString("QaMpVertexNotNearFace_MinimumSlopeDegrees", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The multipatch feature class which faces are checked against the vertices uf &apos;vertexClasses&apos;. If a feature class shall be checked against itself, it must be used as &apos;multiPatchClass&apos; and as member of &apos;vertexClasses&apos;.
+        /// </summary>
+        public static string QaMpVertexNotNearFace_multiPatchClass {
+            get {
+                return ResourceManager.GetString("QaMpVertexNotNearFace_multiPatchClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Vertices with a z-Difference &lt; &apos;PlaneConicidence&apos; are considered as conincident with the face and are not reported as errors.
+        /// </summary>
+        public static string QaMpVertexNotNearFace_PlaneCoincidence {
+            get {
+                return ResourceManager.GetString("QaMpVertexNotNearFace_PlaneCoincidence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Vertices closer (in 3D) than &apos;PointCoincidence&apos; to a vertex of a face are excluded from checking for this specific face.
+        /// </summary>
+        public static string QaMpVertexNotNearFace_PointCoincidence {
+            get {
+                return ResourceManager.GetString("QaMpVertexNotNearFace_PointCoincidence", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to if true, non coplanar faces are reported as errors.
+        /// </summary>
+        public static string QaMpVertexNotNearFace_ReportNonCoplanarity {
+            get {
+                return ResourceManager.GetString("QaMpVertexNotNearFace_ReportNonCoplanarity", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to if true, vertices of a multipatch feature are check against the faces of the feature itself.
+        /// </summary>
+        public static string QaMpVertexNotNearFace_VerifyWithinFeature {
+            get {
+                return ResourceManager.GetString("QaMpVertexNotNearFace_VerifyWithinFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of featureclasses, from which the vertices are checked against the faces of &apos;multiPatchClass&apos;.
+        /// </summary>
+        public static string QaMpVertexNotNearFace_vertexClasses {
+            get {
+                return ResourceManager.GetString("QaMpVertexNotNearFace_vertexClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds patches in a multipatch that are almost vertical .
+        /// </summary>
+        public static string QaMpVerticalFaces_0 {
+            get {
+                return ResourceManager.GetString("QaMpVerticalFaces_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Multipatch feature class.
+        /// </summary>
+        public static string QaMpVerticalFaces_multiPatchClass {
+            get {
+                return ResourceManager.GetString("QaMpVerticalFaces_multiPatchClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Patches with a slope angle &gt; &apos;nearAngle&apos; [Degree] are checked. nearAngle is i.e. 85 [°].
+        /// </summary>
+        public static string QaMpVerticalFaces_nearAngle {
+            get {
+                return ResourceManager.GetString("QaMpVerticalFaces_nearAngle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Patches where the slope angle is not closer than &apos;toleranceAngle&apos; to 90° are reported. &apos;toleranceAngle&apos; i.e 0.5 [°]. 
+        ///If toleranceAngle = 0 [°] or smaller than the spatial tolerance of the checked multipatch, the spatial tolerance is used..
+        /// </summary>
+        public static string QaMpVerticalFaces_toleranceAngle {
+            get {
+                return ResourceManager.GetString("QaMpVerticalFaces_toleranceAngle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find all multipart features in &apos;featureClass&apos;.
+        /// </summary>
+        public static string QaMultipart_0 {
+            get {
+                return ResourceManager.GetString("QaMultipart_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class.
+        /// </summary>
+        public static string QaMultipart_featureClass {
+            get {
+                return ResourceManager.GetString("QaMultipart_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to only one ring allowed in polygons.
+        /// </summary>
+        public static string QaMultipart_singleRing {
+            get {
+                return ResourceManager.GetString("QaMultipart_singleRing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; that are not closer than &apos;maximumDistance&apos; to any feature of &apos;nearClasses&apos;, or for which nearby features in &apos;nearClasses&apos; do exist, but a given comparison constraint is not fulfilled.
+        ///Note that errors can be reported only for features that are completely within the verified extent. Features that extend beyond the verified extent may have valid neighbors outside of the searched extent, and are therefore ignored..
+        /// </summary>
+        public static string QaMustBeNearOther_0 {
+            get {
+                return ResourceManager.GetString("QaMustBeNearOther_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Format string for numbers in error description, i.e. &quot;{0:N2} m&quot; will display &apos;1.23 m&apos; for a value of 1.2319.
+        /// </summary>
+        public static string QaMustBeNearOther_ErrorDistanceFormat {
+            get {
+                return ResourceManager.GetString("QaMustBeNearOther_ErrorDistanceFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to featureClass to test.
+        /// </summary>
+        public static string QaMustBeNearOther_featureClass {
+            get {
+                return ResourceManager.GetString("QaMustBeNearOther_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum distance within which another feature is required.
+        /// </summary>
+        public static string QaMustBeNearOther_maximumDistance {
+            get {
+                return ResourceManager.GetString("QaMustBeNearOther_maximumDistance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to featureClasses to search for required nearby features.
+        /// </summary>
+        public static string QaMustBeNearOther_nearClasses {
+            get {
+                return ResourceManager.GetString("QaMustBeNearOther_nearClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Condition on a pair of nearby features. The pair only counts as &apos;near enough&apos; if the condition is either undefined or fulfilled.
+        ///The feature to be tested is aliased using &quot;G1&quot;. The nearby (&quot;other&quot;) feature is aliased using &quot;G2&quot;..
+        /// </summary>
+        public static string QaMustBeNearOther_relevantRelationCondition {
+            get {
+                return ResourceManager.GetString("QaMustBeNearOther_relevantRelationCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; that do not have a given spatial relationship with any feature in &apos;otherFeatureClass&apos;, or for which a given constraint is not fulfilled. The required spatial relationship is defined by a 9IM intersection matrix.
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;relatedClass&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaMustIntersectMatrixOther_0 {
+            get {
+                return ResourceManager.GetString("QaMustIntersectMatrixOther_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; that do not have a given spatial relationship with any feature in &apos;otherFeatureClass&apos;, or for which a given constraint is not fulfilled. The required spatial relationship is defined by a 9IM intersection matrix. Optionally, the required and unallowed intersection dimensions may be defined. 
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;relatedClass&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaMustIntersectMatrixOther_1 {
+            get {
+                return ResourceManager.GetString("QaMustIntersectMatrixOther_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClasses&apos; that do not have a given spatial relationship with any feature in &apos;otherFeatureClasses&apos;, or for which a given constraint is not fulfilled. The required spatial relationship is defined by a 9IM intersection matrix.
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;relatedClass&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaMustIntersectMatrixOther_2 {
+            get {
+                return ResourceManager.GetString("QaMustIntersectMatrixOther_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClasses&apos; that do not have a given spatial relationship with any feature in &apos;otherFeatureClasses&apos;, or for which a given constraint is not fulfilled. The required spatial relationship is defined by a 9IM intersection matrix. Optionally, the required and unallowed intersection dimensions may be defined. 
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;relatedClass&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaMustIntersectMatrixOther_3 {
+            get {
+                return ResourceManager.GetString("QaMustIntersectMatrixOther_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature class to check for an expected intersection matrix spatial relation with features in &apos;otherFeatureClass&apos;.
+        /// </summary>
+        public static string QaMustIntersectMatrixOther_featureClass {
+            get {
+                return ResourceManager.GetString("QaMustIntersectMatrixOther_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature classes to check for an expected intersection matrix spatial relation with features in &apos;otherFeatureClasses&apos;.
+        /// </summary>
+        public static string QaMustIntersectMatrixOther_featureClasses {
+            get {
+                return ResourceManager.GetString("QaMustIntersectMatrixOther_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 9IM intersection matrix defining the required spatial relationship. The matrix string consists of the 9 cells of the 3x3 intersection matrix, in the following sequence:
+        ///
+        ///1. G1.interior G2.interior
+        ///2. G1.interior G2.boundary
+        ///3. G1.interior G2.exterior
+        ///4. G1.boundary G2.interior
+        ///5. G1.boundary G2.boundary
+        ///6. G1.boundary G2.exterior
+        ///7. G1.exterior G2.interior
+        ///8. G1.exterior G2.boundary
+        ///9. G1.exterior G2.exterior
+        ///
+        ///Example: ****T**** (intersection of geometry boundaries)
+        ///Refer to the topic &quot;Spatial  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaMustIntersectMatrixOther_intersectionMatrix {
+            get {
+                return ResourceManager.GetString("QaMustIntersectMatrixOther_intersectionMatrix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature class in which to search for features with expected intersection matrix spatial relation.
+        /// </summary>
+        public static string QaMustIntersectMatrixOther_otherFeatureClass {
+            get {
+                return ResourceManager.GetString("QaMustIntersectMatrixOther_otherFeatureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature classes in which to search for features with expected intersection matrix spatial relation.
+        /// </summary>
+        public static string QaMustIntersectMatrixOther_otherFeatureClasses {
+            get {
+                return ResourceManager.GetString("QaMustIntersectMatrixOther_otherFeatureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Condition on a pair of spatially related features. The pair only counts as related if the condition is either undefined or fulfilled.
+        ///The feature to be tested is aliased using &quot;G1&quot;. The touched (&quot;other&quot;) feature is aliased using &quot;G2&quot;..
+        /// </summary>
+        public static string QaMustIntersectMatrixOther_relevantRelationCondition {
+            get {
+                return ResourceManager.GetString("QaMustIntersectMatrixOther_relevantRelationCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A list of geometry dimensions that are expected in the 9IM intersection between compared features. The following dimensions are supported:
+        ///- 0: point intersections
+        ///- 1: linear intersections
+        ///- 2: area intersections
+        ///If multiple dimensions are expected, then the dimension values can be separated by comma, semicolon or blank. If any of the required dimensions do not occur at least once in the 9IM intersection result, then the relationship is not relevant, and an error will be reported (unless there is a rel [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaMustIntersectMatrixOther_requiredIntersectionDimensions {
+            get {
+                return ResourceManager.GetString("QaMustIntersectMatrixOther_requiredIntersectionDimensions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A list of geometry dimensions that are not allowed in the 9IM intersection between compared features. The following dimensions are supported:
+        ///- 0: point intersections
+        ///- 1: linear intersections
+        ///- 2: area intersections
+        ///If multiple dimensions are specified as unallowed, then the dimension values can be separated by comma, semicolon or blank. If any of the unallowed dimensions occurs at least once in the 9IM intersection result, then the relationship is not relevant, and an error will be reported (unless th [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaMustIntersectMatrixOther_unallowedIntersectionDimensions {
+            get {
+                return ResourceManager.GetString("QaMustIntersectMatrixOther_unallowedIntersectionDimensions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features that don&apos;t intersect any other feature in another feature class.
+        /// </summary>
+        public static string QaMustIntersectOther_0 {
+            get {
+                return ResourceManager.GetString("QaMustIntersectOther_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features that don&apos;t intersect any feature in a list of other feature classes.
+        /// </summary>
+        public static string QaMustIntersectOther_1 {
+            get {
+                return ResourceManager.GetString("QaMustIntersectOther_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, line or polygon feature class.
+        /// </summary>
+        public static string QaMustIntersectOther_featureClass {
+            get {
+                return ResourceManager.GetString("QaMustIntersectOther_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, line or polygon feature classes.
+        /// </summary>
+        public static string QaMustIntersectOther_featureClasses {
+            get {
+                return ResourceManager.GetString("QaMustIntersectOther_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, line or polygon feature class to be searched for intersecting features.
+        /// </summary>
+        public static string QaMustIntersectOther_otherFeatureClass {
+            get {
+                return ResourceManager.GetString("QaMustIntersectOther_otherFeatureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, line or polygon feature classes to be searched for intersecting features.
+        /// </summary>
+        public static string QaMustIntersectOther_otherFeatureClasses {
+            get {
+                return ResourceManager.GetString("QaMustIntersectOther_otherFeatureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Condition on a pair of intersecting features. The pair only counts as intersecting if the condition is either undefined or fulfilled.
+        ///The feature to be tested is aliased using &quot;G1&quot;. The intersected (&quot;other&quot;) feature is aliased using &quot;G2&quot;..
+        /// </summary>
+        public static string QaMustIntersectOther_relevantRelationCondition {
+            get {
+                return ResourceManager.GetString("QaMustIntersectOther_relevantRelationCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features in a list of feature classes that don&apos;t intersect any other feature in another list of feature classes.
+        /// </summary>
+        public static string QaMustIntesectOther_1 {
+            get {
+                return ResourceManager.GetString("QaMustIntesectOther_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features that don&apos;t touch any other feature in another feature class.
+        /// </summary>
+        public static string QaMustTouchOther_0 {
+            get {
+                return ResourceManager.GetString("QaMustTouchOther_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features in a list of feature classes that don&apos;t touch any other feature in another list of feature classes.
+        /// </summary>
+        public static string QaMustTouchOther_1 {
+            get {
+                return ResourceManager.GetString("QaMustTouchOther_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, line or polygon feature class.
+        /// </summary>
+        public static string QaMustTouchOther_featureClass {
+            get {
+                return ResourceManager.GetString("QaMustTouchOther_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, line or polygon feature classes.
+        /// </summary>
+        public static string QaMustTouchOther_featureClasses {
+            get {
+                return ResourceManager.GetString("QaMustTouchOther_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, line or polygon feature class to be searched for touching features.
+        /// </summary>
+        public static string QaMustTouchOther_otherFeatureClass {
+            get {
+                return ResourceManager.GetString("QaMustTouchOther_otherFeatureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, line or polygon feature classes to be searched for touching features.
+        /// </summary>
+        public static string QaMustTouchOther_otherFeatureClasses {
+            get {
+                return ResourceManager.GetString("QaMustTouchOther_otherFeatureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Condition on a pair of touching features. The pair only counts as touching if the condition is either undefined or fulfilled.
+        ///The feature to be tested is aliased using &quot;G1&quot;. The touched (&quot;other&quot;) feature is aliased using &quot;G2&quot;..
+        /// </summary>
+        public static string QaMustTouchOther_relevantRelationCondition {
+            get {
+                return ResourceManager.GetString("QaMustTouchOther_relevantRelationCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features that don&apos;t touch any other feature in the same feature class.
+        /// </summary>
+        public static string QaMustTouchSelf_0 {
+            get {
+                return ResourceManager.GetString("QaMustTouchSelf_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features in a list of feature classes that don&apos;t touch any other feature in the same list of feature classes.
+        /// </summary>
+        public static string QaMustTouchSelf_1 {
+            get {
+                return ResourceManager.GetString("QaMustTouchSelf_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, line or polygon feature class.
+        /// </summary>
+        public static string QaMustTouchSelf_featureClass {
+            get {
+                return ResourceManager.GetString("QaMustTouchSelf_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, line or polygon feature classes.
+        /// </summary>
+        public static string QaMustTouchSelf_featureClasses {
+            get {
+                return ResourceManager.GetString("QaMustTouchSelf_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Condition on a pair of touching features. The pair only counts as touching if the condition is either undefined or fulfilled.
+        ///The features are aliased using &quot;G1&quot; and &quot;G2&quot;..
+        /// </summary>
+        public static string QaMustTouchSelf_relevantRelationCondition {
+            get {
+                return ResourceManager.GetString("QaMustTouchSelf_relevantRelationCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all touching features in &apos;polygonClass&apos; that do not fulfill &apos;constraint&apos;.
+        /// </summary>
+        public static string QaNeighbourAreas_0 {
+            get {
+                return ResourceManager.GetString("QaNeighbourAreas_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all touching features in &apos;polygonClass&apos; that do not fulfill &apos;constraint&apos;. Optionally allows to ignore polygon pairs that intersect in points only..
+        /// </summary>
+        public static string QaNeighbourAreas_1 {
+            get {
+                return ResourceManager.GetString("QaNeighbourAreas_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all touching features in &apos;polygonClass&apos; for which all values of editable attributes are equal. Optionally allows to ignore polygon pairs that intersect in points only..
+        /// </summary>
+        public static string QaNeighbourAreas_2 {
+            get {
+                return ResourceManager.GetString("QaNeighbourAreas_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all touching features in &apos;polygonClass&apos; for which the values of a defined list of fields are equal. This field list can be defined by a concatenated string of either relevant or ignored fields. Optionally allows to ignore polygon pairs that intersect in points only..
+        /// </summary>
+        public static string QaNeighbourAreas_3 {
+            get {
+                return ResourceManager.GetString("QaNeighbourAreas_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all touching features in &apos;polygonClass&apos; for which the values of a defined list of fields are equal. This field list can be defined by a list of either relevant or ignored fields. Optionally allows to ignore polygon pairs that intersect in points only..
+        /// </summary>
+        public static string QaNeighbourAreas_4 {
+            get {
+                return ResourceManager.GetString("QaNeighbourAreas_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if polygon pairs that intersect in one or more points only (instead of sharing a common linear boundary) should be ignored..
+        /// </summary>
+        public static string QaNeighbourAreas_allowPointIntersection {
+            get {
+                return ResourceManager.GetString("QaNeighbourAreas_allowPointIntersection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to checked constraint between two touching features. Left polygon feature is aliased as &quot;L&quot; and right polygon feature as &quot;R&quot;
+        ///Example for constraint: &quot;L.ObjektArt &lt;&gt; R.ObjektArt&quot;.
+        /// </summary>
+        public static string QaNeighbourAreas_constraint {
+            get {
+                return ResourceManager.GetString("QaNeighbourAreas_constraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies how the specified list of fields should be interpreted:
+        ///- RelevantFields: the list contains the fields that should be compared.
+        ///- IgnoredFields: the list contains the fields that should not be compared. All editable fields except the ones in the list are compared..
+        /// </summary>
+        public static string QaNeighbourAreas_fieldListType {
+            get {
+                return ResourceManager.GetString("QaNeighbourAreas_fieldListType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The list of field names..
+        /// </summary>
+        public static string QaNeighbourAreas_fields {
+            get {
+                return ResourceManager.GetString("QaNeighbourAreas_fields", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A concatenated string of field names. The names may be separated by blank, comma or semicolon..
+        /// </summary>
+        public static string QaNeighbourAreas_fieldsString {
+            get {
+                return ResourceManager.GetString("QaNeighbourAreas_fieldsString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Area feature class. Errors found that lie within any feature of &apos;IgnoreArea&apos; are not reported.
+        ///A sql-constraint can be provided to this feature class..
+        /// </summary>
+        public static string QaNeighbourAreas_IgnoreArea {
+            get {
+                return ResourceManager.GetString("QaNeighbourAreas_IgnoreArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polygon feature class.
+        /// </summary>
+        public static string QaNeighbourAreas_polygonClass {
+            get {
+                return ResourceManager.GetString("QaNeighbourAreas_polygonClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all boundary loops (closed &apos;bays&apos; in polygon boundaries or multipatch rings) in a polygon or multipatch feature class and reports them as polygon errors..
+        /// </summary>
+        public static string QaNoBoundaryLoops_0 {
+            get {
+                return ResourceManager.GetString("QaNoBoundaryLoops_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all boundary loops (closed &apos;bays&apos; in polygon boundaries or multipatch rings) in a polygon or multipatch feature class and reports them optionally as polygon errors or as point errors identifying the location where the boundary loop starts/ends..
+        /// </summary>
+        public static string QaNoBoundaryLoops_1 {
+            get {
+                return ResourceManager.GetString("QaNoBoundaryLoops_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all boundary loops (closed &apos;bays&apos; in polygon boundaries or multipatch rings) in a polygon or multipatch feature class and reports them optionally as polygon errors or as point errors identifying the location where the boundary loop starts/ends. 
+        ///
+        ///Optionally, loops larger or smaller than a given area limit can be ignored. This can be useful together with &apos;errorGeometry&apos; to report loop start points specifically for large loops (in addition to reporting the loop polygons reported by a separate test), w [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaNoBoundaryLoops_2 {
+            get {
+                return ResourceManager.GetString("QaNoBoundaryLoops_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The area limit in square xy units of the spatial reference.
+        /// </summary>
+        public static string QaNoBoundaryLoops_areaLimit {
+            get {
+                return ResourceManager.GetString("QaNoBoundaryLoops_areaLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if loop polygons smaller than or equal the area limit should be ignored, or if loop polygons larger than the area limit should be ignored..
+        /// </summary>
+        public static string QaNoBoundaryLoops_areaRelation {
+            get {
+                return ResourceManager.GetString("QaNoBoundaryLoops_areaRelation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The type of error geometry to produce (loop polygon or loop start point). Note that even if LoopPolygon is selected, points may be reported, in certain exceptional cases (the reason for which will be included in the error description).
+        /// </summary>
+        public static string QaNoBoundaryLoops_errorGeometry {
+            get {
+                return ResourceManager.GetString("QaNoBoundaryLoops_errorGeometry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polygon or multipatch feature class to check for boundary loops.
+        /// </summary>
+        public static string QaNoBoundaryLoops_polygonClass {
+            get {
+                return ResourceManager.GetString("QaNoBoundaryLoops_polygonClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds closed paths (loops) in polyline features.
+        /// </summary>
+        public static string QaNoClosedPaths_0 {
+            get {
+                return ResourceManager.GetString("QaNoClosedPaths_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The polyline feature class to check for closed paths.
+        /// </summary>
+        public static string QaNoClosedPaths_polylineClass {
+            get {
+                return ResourceManager.GetString("QaNoClosedPaths_polylineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds nodes in &apos;nodeClass&apos; that are not coincident with any feature in &apos;nearClasses&apos;, but are within &apos;near&apos; of at least one feature in &apos;nearClasses&apos;.
+        /// </summary>
+        public static string QaNodeLineCoincidence_0 {
+            get {
+                return ResourceManager.GetString("QaNodeLineCoincidence_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds nodes in &apos;nodeClass&apos; that are not coincident with any feature in &apos;nearClasses&apos;, but are within &apos;near&apos; of at least one feature in &apos;nearClasses&apos;. Optionally, only nodes near an edge but no end point are reported. This permits avoiding multiple errors when applying other tests to check for minimum node distance..
+        /// </summary>
+        public static string QaNodeLineCoincidence_1 {
+            get {
+                return ResourceManager.GetString("QaNodeLineCoincidence_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds nodes in &apos;nodeClass&apos; that are not coincident with any feature in &apos;nearClasses&apos;, but are within &apos;near&apos; of at least one feature in &apos;nearClasses&apos;. Optionally, individual tolerances can be specified for each feature class in &apos;nearClasses&apos;, and for testing within multiple polyline paths in &apos;nodeClass&apos;. Optionally, only nodes near an edge but no end point are reported. This permits avoiding multiple errors when applying other tests to check for minimum node distance..
+        /// </summary>
+        public static string QaNodeLineCoincidence_3 {
+            get {
+                return ResourceManager.GetString("QaNodeLineCoincidence_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The tolerance for nodes to be considered coincident with nearby lines. If a negative value is specified, then the XY tolerance of the node feature class is used. Otherwise, the specified value is used..
+        /// </summary>
+        public static string QaNodeLineCoincidence_CoincidenceTolerance {
+            get {
+                return ResourceManager.GetString("QaNodeLineCoincidence_CoincidenceTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to if set to true, unconnected nodes that are near an endpoint of a line are not reported..
+        /// </summary>
+        public static string QaNodeLineCoincidence_ignoreNearEndpoints {
+            get {
+                return ResourceManager.GetString("QaNodeLineCoincidence_ignoreNearEndpoints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if the 3D distance between nodes and near features should be checked, for features that have Z values. If &apos;false&apos;, the 2D distance is checked..
+        /// </summary>
+        public static string QaNodeLineCoincidence_is3D {
+            get {
+                return ResourceManager.GetString("QaNodeLineCoincidence_is3D", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum distance in (x,y)-units from lines or polygon boundaries for which unconnected nodes are reported. Unconnected nodes further away than this tolerance are not reported..
+        /// </summary>
+        public static string QaNodeLineCoincidence_near {
+            get {
+                return ResourceManager.GetString("QaNodeLineCoincidence_near", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline or polygon classes. For polygon classes, the polygon boundaries will be used..
+        /// </summary>
+        public static string QaNodeLineCoincidence_nearClasses {
+            get {
+                return ResourceManager.GetString("QaNodeLineCoincidence_nearClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of maximum distances in (x,y)-units from lines or polygon boundaries for which unconnected nodes are reported. Unconnected nodes further away than this tolerance are not reported. The number of entries in this list must be either one (in which case the same tolerance is used for all &apos;nearClasses&apos;) or equal to the number of &apos;nearClasses&apos; (to specify individual tolerances for each feature class in &apos;nearClasses&apos;; in this case, the tolerance values must be in the same order as the feature classes for which [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaNodeLineCoincidence_nearTolerances {
+            get {
+                return ResourceManager.GetString("QaNodeLineCoincidence_nearTolerances", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline or point feature class. For polyline feature classes, end points will be processed..
+        /// </summary>
+        public static string QaNodeLineCoincidence_nodeClass {
+            get {
+                return ResourceManager.GetString("QaNodeLineCoincidence_nodeClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum distance in (x,y)-units for searching unconnected nodes within multipart polylines. This value is only used if &apos;nodeClass&apos; is a polyline feature class, and if the value is greater than 0. Note that this value is only applied to search within each polyline geometry. If unconnected end points between different polyline features of the same class should be detected, then the same feature class must be specified as &apos;nodeClass&apos; and as part of &apos;nearClasses&apos;..
+        /// </summary>
+        public static string QaNodeLineCoincidence_withinPolylineTolerance {
+            get {
+                return ResourceManager.GetString("QaNodeLineCoincidence_withinPolylineTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds areas in &apos;polygonClass&apos; with no covering features ( = gaps).
+        /// </summary>
+        public static string QaNoGaps_0 {
+            get {
+                return ResourceManager.GetString("QaNoGaps_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds areas that are not covered by any feature out of &apos;polygonClasses&apos; ( = gaps).
+        /// </summary>
+        public static string QaNoGaps_1 {
+            get {
+                return ResourceManager.GetString("QaNoGaps_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds areas in &apos;polygonClass&apos; with no covering features ( = gaps).
+        /// </summary>
+        public static string QaNoGaps_2 {
+            get {
+                return ResourceManager.GetString("QaNoGaps_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds areas that are not covered by any feature out of &apos;polygonClasses&apos; ( = gaps).
+        /// </summary>
+        public static string QaNoGaps_3 {
+            get {
+                return ResourceManager.GetString("QaNoGaps_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds areas inside polygons in &apos;areaOfInterestClasses&apos; that are not covered by any feature out of &apos;polygonClasses&apos; ( = gaps).
+        /// </summary>
+        public static string QaNoGaps_4 {
+            get {
+                return ResourceManager.GetString("QaNoGaps_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds areas inside polygons in &apos;areaOfInterestClasses&apos; that are not covered by any feature out of &apos;polygonClasses&apos; ( = gaps).
+        /// </summary>
+        public static string QaNoGaps_5 {
+            get {
+                return ResourceManager.GetString("QaNoGaps_5", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of polygon feature classes that delineate the area of interest within which gaps should be detected. 
+        ///    
+        ///Note that gaps between the polygons and the limit of the combined area of interest will potentially also be reported as errors..
+        /// </summary>
+        public static string QaNoGaps_areaOfInterestClasses {
+            get {
+                return ResourceManager.GetString("QaNoGaps_areaOfInterestClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if the test should find gaps that are smaller than the xy tolerance of the spatial reference of the polygon feature classes. This option will not be needed for feature classes that are regularly consolidated using topology validation or the geoprocessing tool &apos;Integrate&apos;, since those operations will automatically eliminate gaps smaller than the tolerance.
+        ///    
+        ///This option increases the memory usage of the test significantly, and should be used carefully for polygons with very large vertex counts [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaNoGaps_findGapsBelowTolerance {
+            get {
+                return ResourceManager.GetString("QaNoGaps_findGapsBelowTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If &apos;maxArea&apos; &gt; 0: Only gaps where the area is smaller than &apos;maxArea&apos; will be reported.
+        ///If &apos;maxArea&apos; &lt;= 0: the &apos;maxArea&apos; is not considered..
+        /// </summary>
+        public static string QaNoGaps_maxArea {
+            get {
+                return ResourceManager.GetString("QaNoGaps_maxArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polygon class to test.
+        /// </summary>
+        public static string QaNoGaps_polygonClass {
+            get {
+                return ResourceManager.GetString("QaNoGaps_polygonClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of polygon classes that should have no gaps.
+        /// </summary>
+        public static string QaNoGaps_polygonClasses {
+            get {
+                return ResourceManager.GetString("QaNoGaps_polygonClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If &apos;sliverlimit&apos; &gt; 0: Only gaps where the ratio between the square of the perimeter and the area is larger than &apos;sliverLimit&apos; will be reported.
+        ///If &apos;sliverlimit&apos; &lt;= 0: the sliverLimit is not considered..
+        /// </summary>
+        public static string QaNoGaps_sliverLimit {
+            get {
+                return ResourceManager.GetString("QaNoGaps_sliverLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The width of sub-tiles in the processed tile, used for partitioning the gap detection in a test container tile. 
+        ///
+        ///Finding gaps can be a memory-intensive process in the case of polygons with very large numbers of vertices (tens to hundreds of thousands). To avoid out-of-memory errors, the test can be instructed to work on smaller pieces of the test tile. In the case of excessive memory consumption during this test, it is recommended to set this subtile width to 1/5 of the configured tile size (e.g. 2&apos;000m  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaNoGaps_subtileWidth {
+            get {
+                return ResourceManager.GetString("QaNoGaps_subtileWidth", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; with null or empty geometries..
+        /// </summary>
+        public static string QaNonEmptyGeometry_0 {
+            get {
+                return ResourceManager.GetString("QaNonEmptyGeometry_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to For polygons and polylines, the features are normally filtered to those with length = 0, in addition to any supplied filter expression for the table. By setting this parameter to &apos;true&apos;, the length-based filtering can be suppressed. In this case only the filter expression for the table is applied, if any. This may result in a large number of features being read and checked for empty geometry..
+        /// </summary>
+        public static string QaNonEmptyGeometry_dontFilterPolycurvesByZeroLength {
+            get {
+                return ResourceManager.GetString("QaNonEmptyGeometry_dontFilterPolycurvesByZeroLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class.
+        /// </summary>
+        public static string QaNonEmptyGeometry_featureClass {
+            get {
+                return ResourceManager.GetString("QaNonEmptyGeometry_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all line sections longer than &apos;minLength&apos; in &apos;featureClass&apos; that are closer than &apos;near&apos; to any other line in &apos;featureClass&apos;..
+        /// </summary>
+        public static string QaNotNear_0 {
+            get {
+                return ResourceManager.GetString("QaNotNear_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all line sections in &apos;featureClass&apos; longer than &apos;minLength&apos; that are closer than &apos;near&apos; to any line in &apos;reference&apos;.
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;reference&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaNotNear_2 {
+            get {
+                return ResourceManager.GetString("QaNotNear_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or polygon feature class.
+        /// </summary>
+        public static string QaNotNear_featureClass {
+            get {
+                return ResourceManager.GetString("QaNotNear_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional condition on a pair of nearby features. If the condition is defined and fulfilled, the proximity check is not applied to this feature pair.
+        ///The involved features are aliased using &quot;G1&quot; and &quot;G2&quot;.
+        ///Example: G1.CountryCode &lt;&gt; G2.CountryCode.
+        /// </summary>
+        public static string QaNotNear_IgnoreNeighborCondition {
+            get {
+                return ResourceManager.GetString("QaNotNear_IgnoreNeighborCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to include z-coordinate for checking.
+        /// </summary>
+        public static string QaNotNear_is3D {
+            get {
+                return ResourceManager.GetString("QaNotNear_is3D", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum reporting length in (x,y)-units.
+        /// </summary>
+        public static string QaNotNear_minLength {
+            get {
+                return ResourceManager.GetString("QaNotNear_minLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to near distance in (x,y)-units.
+        /// </summary>
+        public static string QaNotNear_near {
+            get {
+                return ResourceManager.GetString("QaNotNear_near", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to reference polyline or polygon feature class.
+        /// </summary>
+        public static string QaNotNear_reference {
+            get {
+                return ResourceManager.GetString("QaNotNear_reference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Note: this parameter is no longer used.
+        /// </summary>
+        public static string QaNotNear_tileSize {
+            get {
+                return ResourceManager.GetString("QaNotNear_tileSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds points in polygon or polyline features where parts of the same feature touch.
+        /// </summary>
+        public static string QaNoTouchingParts_0 {
+            get {
+                return ResourceManager.GetString("QaNoTouchingParts_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature class to check for touching parts.
+        /// </summary>
+        public static string QaNoTouchingParts_featureClass {
+            get {
+                return ResourceManager.GetString("QaNoTouchingParts_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all points in &apos;pointClasses&apos; that are neither from nor to point of any feature in &apos;polylineClasses&apos;
+        ///
+        ///Remark: All feature classes in &apos;pointClasses&apos; and &apos;polylineClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaOrphanNode_0 {
+            get {
+                return ResourceManager.GetString("QaOrphanNode_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all points in &apos;pointClass&apos; that are neither from nor to point of any feature in &apos;polylineClass&apos;
+        ///
+        ///Remark: The feature classes in &apos;pointClass&apos; and &apos;polylineClass&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaOrphanNode_1 {
+            get {
+                return ResourceManager.GetString("QaOrphanNode_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all points in &apos;pointClasses&apos; that are neither from nor to point of any feature in &apos;polylineClasses&apos;.
+        ///Performs the tests defined in &apos;errorType&apos;.
+        ///
+        ///Remark: All feature classes in &apos;pointClasses&apos; and &apos;polylineClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaOrphanNode_2 {
+            get {
+                return ResourceManager.GetString("QaOrphanNode_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all points in &apos;pointClass&apos; that are neither from nor to point of any feature in &apos;polylineClass&apos;
+        ///Performs the tests defined in &apos;errorType&apos;.
+        ///
+        ///Remark: The feature classes in &apos;pointClass&apos; and &apos;polylineClass&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaOrphanNode_3 {
+            get {
+                return ResourceManager.GetString("QaOrphanNode_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to report only orpaned points, only line end points without points or both..
+        /// </summary>
+        public static string QaOrphanNode_errorType {
+            get {
+                return ResourceManager.GetString("QaOrphanNode_errorType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to point feature class.
+        /// </summary>
+        public static string QaOrphanNode_pointClass {
+            get {
+                return ResourceManager.GetString("QaOrphanNode_pointClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to point feature classes.
+        /// </summary>
+        public static string QaOrphanNode_pointClasses {
+            get {
+                return ResourceManager.GetString("QaOrphanNode_pointClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline feature class.
+        /// </summary>
+        public static string QaOrphanNode_polylineClass {
+            get {
+                return ResourceManager.GetString("QaOrphanNode_polylineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline feature classes.
+        /// </summary>
+        public static string QaOrphanNode_polylineClasses {
+            get {
+                return ResourceManager.GetString("QaOrphanNode_polylineClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features in &apos;overlappingClasses&apos; overlapping with any feature in &apos;overlappedClasses&apos;
+        ///
+        ///Remark: All feature classes in &apos;overlappedClasses&apos; and &apos;overlappingClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaOverlapsOther_0 {
+            get {
+                return ResourceManager.GetString("QaOverlapsOther_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features in &apos;overlappingClass&apos; overlapping with any feature in &apos;overlappedClass&apos;
+        ///
+        ///Remark: The feature classes &apos;overlappedClass&apos; and &apos;overlappingClass&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaOverlapsOther_1 {
+            get {
+                return ResourceManager.GetString("QaOverlapsOther_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features in &apos;overlappingClasses&apos; overlapping with any feature in &apos;overlappedClasses&apos;, and for which a given constraint is not fulfilled.
+        ///
+        ///Remark: All feature classes in &apos;overlappedClasses&apos; and &apos;overlappingClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaOverlapsOther_2 {
+            get {
+                return ResourceManager.GetString("QaOverlapsOther_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features in &apos;overlappingClass&apos; overlapping with any feature in &apos;overlappedClass&apos;, and for which a given constraint is not fulfilled.
+        ///
+        ///Remark: The feature classes &apos;overlappedClass&apos; and &apos;overlappingClass&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaOverlapsOther_3 {
+            get {
+                return ResourceManager.GetString("QaOverlapsOther_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature class.
+        /// </summary>
+        public static string QaOverlapsOther_overlappedClass {
+            get {
+                return ResourceManager.GetString("QaOverlapsOther_overlappedClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature classes.
+        /// </summary>
+        public static string QaOverlapsOther_overlappedClasses {
+            get {
+                return ResourceManager.GetString("QaOverlapsOther_overlappedClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature class.
+        /// </summary>
+        public static string QaOverlapsOther_overlappingClass {
+            get {
+                return ResourceManager.GetString("QaOverlapsOther_overlappingClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature classes.
+        /// </summary>
+        public static string QaOverlapsOther_overlappingClasses {
+            get {
+                return ResourceManager.GetString("QaOverlapsOther_overlappingClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on a pair of overlapping features. If the constraint is defined and fulfilled, no error is reported.
+        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///Example: G1.Level &lt;&gt; G2.Level.
+        /// </summary>
+        public static string QaOverlapsOther_validRelationConstraint {
+            get {
+                return ResourceManager.GetString("QaOverlapsOther_validRelationConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; that overlap any feature in &apos;featureClass&apos;.
+        /// </summary>
+        public static string QaOverlapsSelf_0 {
+            get {
+                return ResourceManager.GetString("QaOverlapsSelf_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClasses&apos; that overlap any feature in &apos;featureClasses&apos;.
+        /// </summary>
+        public static string QaOverlapsSelf_1 {
+            get {
+                return ResourceManager.GetString("QaOverlapsSelf_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClasses&apos; that overlap any feature in &apos;featureClasses&apos;, and for which a given constraint is not fulfilled..
+        /// </summary>
+        public static string QaOverlapsSelf_2 {
+            get {
+                return ResourceManager.GetString("QaOverlapsSelf_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; that overlap any feature in &apos;featureClass&apos;, and for which a given constraint is not fulfilled..
+        /// </summary>
+        public static string QaOverlapsSelf_3 {
+            get {
+                return ResourceManager.GetString("QaOverlapsSelf_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature class.
+        /// </summary>
+        public static string QaOverlapsSelf_featureClass {
+            get {
+                return ResourceManager.GetString("QaOverlapsSelf_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature classes.
+        /// </summary>
+        public static string QaOverlapsSelf_featureClasses {
+            get {
+                return ResourceManager.GetString("QaOverlapsSelf_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on a pair of overlapping features. If the constraint is defined and fulfilled, no error is reported.
+        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///Example: G1.Level &lt;&gt; G2.Level.
+        /// </summary>
+        public static string QaOverlapsSelf_validRelationConstraint {
+            get {
+                return ResourceManager.GetString("QaOverlapsSelf_validRelationConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tolerance for line sections to be considered as coincident (default: 0 --&gt; sections must be exactly coincident).
+        /// </summary>
+        public static string QaPartCoincidence_coincidenceTolerance {
+            get {
+                return ResourceManager.GetString("QaPartCoincidence_coincidenceTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum length to report line sections, that are near but not coincident, and touch or cross the neighboring line sections.
+        /// </summary>
+        public static string QaPartCoincidence_connectedMinLength {
+            get {
+                return ResourceManager.GetString("QaPartCoincidence_connectedMinLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum length to report line sections, that are near but not coincident, and never touch or cross the neighboring line sections.
+        /// </summary>
+        public static string QaPartCoincidence_disjointMinLength {
+            get {
+                return ResourceManager.GetString("QaPartCoincidence_disjointMinLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or polygon feature class.
+        /// </summary>
+        public static string QaPartCoincidence_featureClass {
+            get {
+                return ResourceManager.GetString("QaPartCoincidence_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or polygon feature classes.
+        /// </summary>
+        public static string QaPartCoincidence_featureClasses {
+            get {
+                return ResourceManager.GetString("QaPartCoincidence_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to include z-coordinate for checking.
+        /// </summary>
+        public static string QaPartCoincidence_is3D {
+            get {
+                return ResourceManager.GetString("QaPartCoincidence_is3D", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum length to report near, but not coincident line sections.
+        /// </summary>
+        public static string QaPartCoincidence_minLength {
+            get {
+                return ResourceManager.GetString("QaPartCoincidence_minLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum distance in (x,y)-units where 2 lines are checked for coincidence.
+        /// </summary>
+        public static string QaPartCoincidence_near {
+            get {
+                return ResourceManager.GetString("QaPartCoincidence_near", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to reference polyline or polygon feature class.
+        /// </summary>
+        public static string QaPartCoincidence_reference {
+            get {
+                return ResourceManager.GetString("QaPartCoincidence_reference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Note: this parameter is no longer used.
+        /// </summary>
+        public static string QaPartCoincidence_tileSize {
+            get {
+                return ResourceManager.GetString("QaPartCoincidence_tileSize", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find line sections longer than &apos;minLength&apos; in &apos;featureClass&apos;, that lie nearer than &apos;near&apos; to lines in &apos;reference&apos; but are not coincident.
+        ///
+        ///Remark: All feature classes in &apos;featureClass&apos; and &apos;reference&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaPartCoincidenceOther_0 {
+            get {
+                return ResourceManager.GetString("QaPartCoincidenceOther_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find line sections longer than a specified minimum length in &apos;featureClass&apos;, that lie nearer than &apos;near&apos; to lines in &apos;reference&apos; but are not coincident. The minimum length can be defined separately for line pairs that are connected (&apos;connectedMinLength&apos;) or disjoint (&apos;disjointMinLength&apos;). A coincidence tolerance can be specified to indicate a maximum allowed offset between the lines at which they are still considered to be coincident.
+        ///
+        ///Remark: All feature classes in &apos;featureClass&apos; and &apos;reference&apos; must hav [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaPartCoincidenceOther_4 {
+            get {
+                return ResourceManager.GetString("QaPartCoincidenceOther_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional condition on a pair of nearby features. If the condition is defined and fulfilled, the proximity check is not applied to this feature pair.
+        ///The involved features are aliased using &quot;G1&quot; and &quot;G2&quot;.
+        ///Example: G1.CountryCode &lt;&gt; G2.CountryCode.
+        /// </summary>
+        public static string QaPartCoincidenceOther_IgnoreNeighborCondition {
+            get {
+                return ResourceManager.GetString("QaPartCoincidenceOther_IgnoreNeighborCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find line sections longer than &apos;minLength&apos; in &apos;featureClass&apos;, where 2 non-coincident lines lie nearer than &apos;near&apos; but are not coincident..
+        /// </summary>
+        public static string QaPartCoincidenceSelf_0 {
+            get {
+                return ResourceManager.GetString("QaPartCoincidenceSelf_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find line sections longer than &apos;minLength&apos; in &apos;featureClasses&apos;, where 2 non-coincident lines lie nearer than &apos;near&apos;, but are not coincident.
+        ///
+        ///Remark: All feature classes in &apos;featureClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaPartCoincidenceSelf_2 {
+            get {
+                return ResourceManager.GetString("QaPartCoincidenceSelf_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find line sections longer than a specified minimum length in &apos;featureClasses&apos;, where 2 non-coincident lines lie nearer than &apos;near&apos;, but are not coincident. The minimum length can be defined separately for line pairs that are connected (&apos;connectedMinLength&apos;) or disjoint (&apos;disjointMinLength&apos;). A coincidence tolerance can be specified to indicate a maximum allowed offset between the lines at which they are still considered to be coincident.
+        ///
+        ///Remark: All feature classes in &apos;featureClasses&apos; must have the same  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaPartCoincidenceSelf_6 {
+            get {
+                return ResourceManager.GetString("QaPartCoincidenceSelf_6", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional conditions on a pair of nearby features. If the condition for a given feature pair is defined and fulfilled, the proximity check is not applied to this feature pair.
+        ///
+        ///The involved features are aliased using &quot;G1&quot; and &quot;G2&quot;.
+        ///
+        ///Example: G1.CountryCode &lt;&gt; G2.CountryCode
+        ///
+        ///If all features are from the same feature class, then this list may contain only one condition (or be empty). For multiple feature classes, either a single condition may be specified that is used for all combinations of features fr [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaPartCoincidenceSelf_IgnoreNeighborConditions {
+            get {
+                return ResourceManager.GetString("QaPartCoincidenceSelf_IgnoreNeighborConditions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds points in &apos;pointClass&apos; that are closer than &apos;limit&apos; to feature geometries (or geometry components) in &apos;referenceClass&apos;. .
+        /// </summary>
+        public static string QaPointNotNear_0 {
+            get {
+                return ResourceManager.GetString("QaPointNotNear_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds points in &apos;pointClass&apos; that are closer than &apos;limit&apos; to feature geometries (or geometry components) in &apos;referenceClasses&apos;..
+        /// </summary>
+        public static string QaPointNotNear_1 {
+            get {
+                return ResourceManager.GetString("QaPointNotNear_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds points in &apos;pointClass&apos; that are closer to feature geometries (or geometry components) in &apos;referenceClasses&apos; than the sum of distances derived from attribute expressions for the point feature and a reference feature..
+        /// </summary>
+        public static string QaPointNotNear_2 {
+            get {
+                return ResourceManager.GetString("QaPointNotNear_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds points in &apos;pointClass&apos; that are closer to feature geometries (or geometry components) in &apos;referenceClasses&apos; than the sum of distances derived from attribute expressions for the point feature and a reference feature. The reference feature distances can be defined for both sides of line features or polygon boundaries, with the option to swap left / right sides (as defined by the line direction) based on an attribute expression or constant..
+        /// </summary>
+        public static string QaPointNotNear_3 {
+            get {
+                return ResourceManager.GetString("QaPointNotNear_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that points coincident with a reference feature (or a geometry component thereof) are allowed. The maximum XY tolerance of the point feature class and the reference feature class is used to determine coincidence..
+        /// </summary>
+        public static string QaPointNotNear_AllowCoincidentPoints {
+            get {
+                return ResourceManager.GetString("QaPointNotNear_AllowCoincidentPoints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If set, defines which component (entire, border, vertices, end points, start point, end point, centroid, label point, interior vertices) of the reference geometry is checked. If not set, the entire geometry is tested.
+        ///If &apos;GeometryComponents&apos; contains one entry, this component is applied to all reference feature classes. If &apos;GeometryComponents&apos; containes more than one entry, it must contain exactly the number of feature classes in &apos;referenceClasses&apos;..
+        /// </summary>
+        public static string QaPointNotNear_GeometryComponents {
+            get {
+                return ResourceManager.GetString("QaPointNotNear_GeometryComponents", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum allowed distance.
+        /// </summary>
+        public static string QaPointNotNear_limit {
+            get {
+                return ResourceManager.GetString("QaPointNotNear_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The minimum length for errors to be reported as connection line between the point and the nearest location on the neighbor feature. For larger values of &apos;limit&apos;, these lines can be used to indicate the corresponding locations that are too close. However, very short lines can be hard to spot, therefore this parameter specifies a lower limit for the length of connection lines, below which the locations are reported as points. 
+        ///A negative value indicates, that errors should always be reported as points instea [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaPointNotNear_MinimumErrorLineLength {
+            get {
+                return ResourceManager.GetString("QaPointNotNear_MinimumErrorLineLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point or line feature class to check. In case of line feature classes, the end points of the lines are tested..
+        /// </summary>
+        public static string QaPointNotNear_pointClass {
+            get {
+                return ResourceManager.GetString("QaPointNotNear_pointClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SQL expression for calculating the contribution of the point feature to the total allowed minimum distance between point and reference feature..
+        /// </summary>
+        public static string QaPointNotNear_pointDistanceExpression {
+            get {
+                return ResourceManager.GetString("QaPointNotNear_pointDistanceExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Line or Polygon feature class to check against.
+        /// </summary>
+        public static string QaPointNotNear_referenceClass {
+            get {
+                return ResourceManager.GetString("QaPointNotNear_referenceClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Line or Polygon feature classes to check against.
+        /// </summary>
+        public static string QaPointNotNear_referenceClasses {
+            get {
+                return ResourceManager.GetString("QaPointNotNear_referenceClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SQL expressions for calculating the contribution of a reference feature to the total allowed minimum distance between point and reference feature. The number of expressions must be either equal to the number of reference feature classes (in which case the expressions are associated with the reference feature classes by their list index), or there can be exactly one expression which is used for all specified reference feature classes..
+        /// </summary>
+        public static string QaPointNotNear_referenceDistanceExpressions {
+            get {
+                return ResourceManager.GetString("QaPointNotNear_referenceDistanceExpressions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SQL expressions to flip the right side of the reference feature. This parameter is only used if &apos;ReferenceRightSideDistances&apos; is defined.
+        ///The number of expressions must be either equal to the number of reference feature classes (in which case the expressions are associated with the reference feature classes by their list index), or there can be exactly one expression which is used for all specified reference feature classes..
+        /// </summary>
+        public static string QaPointNotNear_referenceFlipExpressions {
+            get {
+                return ResourceManager.GetString("QaPointNotNear_referenceFlipExpressions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to SQL expressions for calculating the contribution of a reference feature to the total allowed minimum distance between point and reference feature, if the point lies on the right side of the reference feature. If the point lies on the left side of the feature, &apos;referenceDistanceExpressions&apos; is used if defined, otherwise &apos;searchDistance&apos;.
+        ///This parameter is only used for: 
+        ///-polygon features and &apos;GeometryComponents&apos; equal to EntireFeature or Border
+        ///-polyline features and &apos;GeometryComponents&apos; equal to EntireF [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaPointNotNear_referenceRightSideDistances {
+            get {
+                return ResourceManager.GetString("QaPointNotNear_referenceRightSideDistances", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum search distance for relevant reference features. Should be large enough to contain all actual distances calculated by adding the values of the attribute expressions for point and reference feature pairs..
+        /// </summary>
+        public static string QaPointNotNear_searchDistance {
+            get {
+                return ResourceManager.GetString("QaPointNotNear_searchDistance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If set, defines constraints between a feature of &apos;pointClass&apos; and a feature of a reference feature class. If this constraint is fulfilled, the distance between the features is not checked against &apos;limit&apos; and no error is reported.
+        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///Example: G1.Level &lt;&gt; G2.Level.
+        ///If &apos;ValidRelationConstraints&apos; contains one entry, this constraint is applied to all reference feature classes. If &apos;ValidRelationConstraints&apos; containes more than one entry, it must contain exactl [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaPointNotNear_ValidRelationConstraints {
+            get {
+                return ResourceManager.GetString("QaPointNotNear_ValidRelationConstraints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all points in &apos;pointClass&apos; not nearer than &apos;near&apos; to any feature of &apos;nearClasses&apos;
+        ///
+        ///Remark: All feature classes in &apos;pointClass&apos; and &apos;nearClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaPointOnLine_0 {
+            get {
+                return ResourceManager.GetString("QaPointOnLine_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum point distance in (x,y)-units.
+        /// </summary>
+        public static string QaPointOnLine_near {
+            get {
+                return ResourceManager.GetString("QaPointOnLine_near", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or polygon feature classes.
+        /// </summary>
+        public static string QaPointOnLine_nearClasses {
+            get {
+                return ResourceManager.GetString("QaPointOnLine_nearClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to point feature class.
+        /// </summary>
+        public static string QaPointOnLine_pointClass {
+            get {
+                return ResourceManager.GetString("QaPointOnLine_pointClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds pseudo nodes: Finds all endpoints in &apos;polylineClasses&apos;, that correspond to exactly 2 From-/To-points of &apos;polylineClasses&apos;, the two involved features belong to the same feature class, the attributes values of the involved features do not differ and they are not separated by a point out of &apos;validPseudoNodes&apos; 
+        ///
+        ///Remark: All feature classes in &apos;polylineClasses&apos; and &apos;validPseudoNodes&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaPseudoNodes_0 {
+            get {
+                return ResourceManager.GetString("QaPseudoNodes_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds pseudo nodes: Finds all endpoints in &apos;polylineClass&apos;, that correspond to exactly 2 From-/To-points of &apos;polylineClass&apos;, the attributes values of the involved features do not differ and they are not separated by a point out of &apos;validPseudoNode&apos;
+        ///
+        ///Remark: The feature classes in &apos;validPseudoNode&apos; and &apos;polylineClass&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaPseudoNodes_1 {
+            get {
+                return ResourceManager.GetString("QaPseudoNodes_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds pseudo nodes: Finds all endpoints in &apos;polylineClasses&apos;, that correspond to exactly 2 From-/To-points of &apos;polylineClasses&apos;, the two involved features belong to the same feature class and the attributes values of the involved features do not differ
+        ///
+        ///Remark: The feature classes in &apos;polylineClasses&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaPseudoNodes_2 {
+            get {
+                return ResourceManager.GetString("QaPseudoNodes_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds pseudo nodes: Finds all endpoints in &apos;polylineClass&apos;, that correspond to exactly 2 From-/To-points and the attributes values of the involved features do not differ.
+        /// </summary>
+        public static string QaPseudoNodes_3 {
+            get {
+                return ResourceManager.GetString("QaPseudoNodes_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to fields that are not checked for equality (not editable fields are ignored by default).
+        ///For each feature class in &apos;polylineClasses&apos;, the ignore fields must be defined.
+        ///The sort order must correspond with &apos;polylineClasses&apos;..
+        /// </summary>
+        public static string QaPseudoNodes_ignoreFields_0 {
+            get {
+                return ResourceManager.GetString("QaPseudoNodes_ignoreFields_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to fields that are not checked for equality (not editable fields are ignored by default)..
+        /// </summary>
+        public static string QaPseudoNodes_ignoreFields_1 {
+            get {
+                return ResourceManager.GetString("QaPseudoNodes_ignoreFields_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if end points of closed lines which are not connected to another line should be ignored..
+        /// </summary>
+        public static string QaPseudoNodes_IgnoreLoopEndpoints {
+            get {
+                return ResourceManager.GetString("QaPseudoNodes_IgnoreLoopEndpoints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline feature class.
+        /// </summary>
+        public static string QaPseudoNodes_polylineClass {
+            get {
+                return ResourceManager.GetString("QaPseudoNodes_polylineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline feature classes.
+        /// </summary>
+        public static string QaPseudoNodes_polylineClasses {
+            get {
+                return ResourceManager.GetString("QaPseudoNodes_polylineClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class containing point, line or polygon features to indicate valid pseudo nodes. Pseudo nodes are valid, if they lie on a point, a polyline or a polygon border of &apos;validPseudoNode&apos;..
+        /// </summary>
+        public static string QaPseudoNodes_validPseudoNode {
+            get {
+                return ResourceManager.GetString("QaPseudoNodes_validPseudoNode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature classes containing point, line or polygon features to indicate valid pseudo nodes. Pseudo nodes are valid, if they lie on a point, a polyline or a polygon border of &apos;validPseudoNodes&apos;..
+        /// </summary>
+        public static string QaPseudoNodes_validPseudoNodes {
+            get {
+                return ResourceManager.GetString("QaPseudoNodes_validPseudoNodes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows with values that do not match a defined regular expression.
+        /// </summary>
+        public static string QaRegularExpression_0 {
+            get {
+                return ResourceManager.GetString("QaRegularExpression_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows with values that do not match a defined regular expression.
+        /// </summary>
+        public static string QaRegularExpression_1 {
+            get {
+                return ResourceManager.GetString("QaRegularExpression_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows with values that do not match a defined regular expression. Optionally, a match can be considered an error..
+        /// </summary>
+        public static string QaRegularExpression_2 {
+            get {
+                return ResourceManager.GetString("QaRegularExpression_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows with values that do not match a defined regular expression. Optionally, a match can be considered an error..
+        /// </summary>
+        public static string QaRegularExpression_3 {
+            get {
+                return ResourceManager.GetString("QaRegularExpression_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows with values that do not match a defined regular expression. Optionally, a match can be considered an error..
+        /// </summary>
+        public static string QaRegularExpression_4 {
+            get {
+                return ResourceManager.GetString("QaRegularExpression_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows with values that do not match a defined regular expression. Optionally, a match can be considered an error..
+        /// </summary>
+        public static string QaRegularExpression_5 {
+            get {
+                return ResourceManager.GetString("QaRegularExpression_5", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies how the specified field(s) should be interpreted:
+        ///- RelevantFields: the specified fields are the ones to be verified.
+        ///- IgnoredFields: all editable text fields *except* the specified fields will be verified..
+        /// </summary>
+        public static string QaRegularExpression_FieldListType {
+            get {
+                return ResourceManager.GetString("QaRegularExpression_FieldListType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Name of one or more fields to verify against the regular expression. If multiple fields are specified, they have to be separated by blank, comma or semicolon..
+        /// </summary>
+        public static string QaRegularExpression_fieldName {
+            get {
+                return ResourceManager.GetString("QaRegularExpression_fieldName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Fields to verify against the regular expression.
+        /// </summary>
+        public static string QaRegularExpression_fieldNames {
+            get {
+                return ResourceManager.GetString("QaRegularExpression_fieldNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if a pattern match is considered an error:
+        ///- &apos;true&apos;: a match is an error
+        ///- &apos;false&apos; -&gt; a match is correct (default).
+        /// </summary>
+        public static string QaRegularExpression_matchIsError {
+            get {
+                return ResourceManager.GetString("QaRegularExpression_matchIsError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to String defining the regular expression. The test uses the .Net regular expression syntax. The basic syntax typically used for this test should be identical to other regular expression implementations.
+        ///
+        ///Regular expression (regex) tutorials and basic syntax reference:
+        ///
+        ///- http://www.ternent.com/tech/regexp.html
+        ///- http://regexlib.com/CheatSheet.aspx
+        ///- http://www.regular-expressions.info/tutorial.html
+        ///- http://www.regular-expressions.info/reference.html
+        ///
+        ///.Net regular expression documentation: 
+        ///
+        ///- http [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaRegularExpression_pattern {
+            get {
+                return ResourceManager.GetString("QaRegularExpression_pattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A description for the pattern, to be displayed in the error text..
+        /// </summary>
+        public static string QaRegularExpression_patternDescription {
+            get {
+                return ResourceManager.GetString("QaRegularExpression_patternDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to table.
+        /// </summary>
+        public static string QaRegularExpression_table {
+            get {
+                return ResourceManager.GetString("QaRegularExpression_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of field to verify against the regular expression.
+        /// </summary>
+        public static string QaRegularExpression_textFieldNames {
+            get {
+                return ResourceManager.GetString("QaRegularExpression_textFieldNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all rows in &apos;table&apos; that do not fulfill &apos;constraint&apos;.
+        /// </summary>
+        public static string QaRelationConstraint_0 {
+            get {
+                return ResourceManager.GetString("QaRelationConstraint_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all rows in &apos;table&apos; that do not fulfill the hierarchical &apos;constraints&apos;.
+        /// </summary>
+        public static string QaRelationConstraint_1 {
+            get {
+                return ResourceManager.GetString("QaRelationConstraint_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to checked constraint.
+        /// </summary>
+        public static string QaRelationConstraint_constraint {
+            get {
+                return ResourceManager.GetString("QaRelationConstraint_constraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to hierarchical list of constraints.
+        /// </summary>
+        public static string QaRelationConstraint_constraints {
+            get {
+                return ResourceManager.GetString("QaRelationConstraint_constraints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to related tables to find involved rows.
+        /// </summary>
+        public static string QaRelationConstraint_relatedTables {
+            get {
+                return ResourceManager.GetString("QaRelationConstraint_relatedTables", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to table built with relations out of &apos;relatedTables&apos;.
+        /// </summary>
+        public static string QaRelationConstraint_table {
+            get {
+                return ResourceManager.GetString("QaRelationConstraint_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; whose &apos;representation&apos; does not conform to specified constraints.
+        /// </summary>
+        public static string QaRepresentationConstraints_0 {
+            get {
+                return ResourceManager.GetString("QaRepresentationConstraints_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If &apos;AllowPropertyOverrides&apos; is false, with true, allows explicit field overrides (any property mapped to a field except visibility).
+        /// </summary>
+        public static string QaRepresentationConstraints_AllowExplicitFieldOverrides {
+            get {
+                return ResourceManager.GetString("QaRepresentationConstraints_AllowExplicitFieldOverrides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies if free representations are allowed.
+        /// </summary>
+        public static string QaRepresentationConstraints_AllowFreeRepresentation {
+            get {
+                return ResourceManager.GetString("QaRepresentationConstraints_AllowFreeRepresentation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies if invalid representation rules (Rule IDs) are allowed.
+        /// </summary>
+        public static string QaRepresentationConstraints_AllowInvalidRuleID {
+            get {
+                return ResourceManager.GetString("QaRepresentationConstraints_AllowInvalidRuleID", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies if invisible representations are allowed.
+        /// </summary>
+        public static string QaRepresentationConstraints_AllowInvisibleRepresentation {
+            get {
+                return ResourceManager.GetString("QaRepresentationConstraints_AllowInvisibleRepresentation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies if representation property overrides are allowed.
+        /// </summary>
+        public static string QaRepresentationConstraints_AllowPropertyOverrides {
+            get {
+                return ResourceManager.GetString("QaRepresentationConstraints_AllowPropertyOverrides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies if representation shape overrides are allowed.
+        /// </summary>
+        public static string QaRepresentationConstraints_AllowShapeOverride {
+            get {
+                return ResourceManager.GetString("QaRepresentationConstraints_AllowShapeOverride", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class.
+        /// </summary>
+        public static string QaRepresentationConstraints_featureClass {
+            get {
+                return ResourceManager.GetString("QaRepresentationConstraints_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class representation.
+        /// </summary>
+        public static string QaRepresentationConstraints_representation {
+            get {
+                return ResourceManager.GetString("QaRepresentationConstraints_representation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of valid property overrides.
+        ///A symbol property can be defined with the syntax: RuleID{value}#{Path}#{GraphicAttribute} where {Path} can be specified using:
+        ///
+        ///Effects[#]             global geometric effect, indexing is zero-based
+        ///Layers[#]              hint: only BasicMarkerSymbols have layer-level graphic attrs
+        ///Layers[#].FillPattern  assume layer is a fill symbol and get its FillPattern
+        ///Layers[#].LineStroke   assume layer is a line symbol and get its Stroke
+        ///Layers[#].MarkerPlacement assume layer  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaRepresentationConstraints_ValidPropertyOverrides {
+            get {
+                return ResourceManager.GetString("QaRepresentationConstraints_ValidPropertyOverrides", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows with null values for a given list of required fields.
+        /// </summary>
+        public static string QaRequiredFields_0 {
+            get {
+                return ResourceManager.GetString("QaRequiredFields_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if empty string values are allowed. If false, then empty string values in required fields are reported as errors.
+        /// </summary>
+        public static string QaRequiredFields_allowEmptyStrings {
+            get {
+                return ResourceManager.GetString("QaRequiredFields_allowEmptyStrings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if fields specified in &apos;requiredFieldNames&apos;, but not existing in table, should be ignored. If &apos;false&apos; (default) then an exception is thrown if a specified field does not exist.
+        /// </summary>
+        public static string QaRequiredFields_allowMissingFields {
+            get {
+                return ResourceManager.GetString("QaRequiredFields_allowMissingFields", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of field names to check for null values.
+        /// </summary>
+        public static string QaRequiredFields_requiredFieldNames {
+            get {
+                return ResourceManager.GetString("QaRequiredFields_requiredFieldNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of field names to check for null values, as a concatenated string. This form can simplify some configuration methods. Supported separators; &apos; &apos; (blank), &apos;,&apos;, &apos;;&apos;.
+        /// </summary>
+        public static string QaRequiredFields_requiredFieldNamesString {
+            get {
+                return ResourceManager.GetString("QaRequiredFields_requiredFieldNamesString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to table.
+        /// </summary>
+        public static string QaRequiredFields_table {
+            get {
+                return ResourceManager.GetString("QaRequiredFields_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds discontinuities in the M values at connections between line features of the same route.
+        ///    
+        ///The connecting end points of lines within the same route must have the same M values, otherwise an error is reported. M values with a difference smaller than the M tolerance of the spatial reference are considered equal..
+        /// </summary>
+        public static string QaRouteMeasuresContinuous_0 {
+            get {
+                return ResourceManager.GetString("QaRouteMeasuresContinuous_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds discontinuities in the M values at connections between line features of the same route.
+        ///    
+        ///The connecting end points of lines within the same route must have the same M values, otherwise an error is reported. M values with a difference smaller than the M tolerance of the spatial reference are considered equal..
+        /// </summary>
+        public static string QaRouteMeasuresContinuous_1 {
+            get {
+                return ResourceManager.GetString("QaRouteMeasuresContinuous_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The line feature class that contains the routes to check for M discontinuities..
+        /// </summary>
+        public static string QaRouteMeasuresContinuous_polylineClass {
+            get {
+                return ResourceManager.GetString("QaRouteMeasuresContinuous_polylineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The line feature classes that contain the routes to check for M discontinuities..
+        /// </summary>
+        public static string QaRouteMeasuresContinuous_polylineClasses {
+            get {
+                return ResourceManager.GetString("QaRouteMeasuresContinuous_polylineClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of the field that contains the route IDs. Features having the same route id belong to the same route..
+        /// </summary>
+        public static string QaRouteMeasuresContinuous_routeIdField {
+            get {
+                return ResourceManager.GetString("QaRouteMeasuresContinuous_routeIdField", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The names of the fields that contains the route IDs. Features having the same route id belong to the same route.
+        ///    
+        ///If one field name is specified, that field name must exist in all the specified feature classes. If individual field names per feature class should be used, then one field name per feature class must be present in the list. Field names are matched to feature classes by their position in the list..
+        /// </summary>
+        public static string QaRouteMeasuresContinuous_routeIdFields {
+            get {
+                return ResourceManager.GetString("QaRouteMeasuresContinuous_routeIdFields", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds segment sequences within line features belonging to the same route that have the same measure values. Both non-unique measure ranges from different features, and non-unique measures within a single feature (due to non-monotonic measures) are reported..
+        /// </summary>
+        public static string QaRouteMeasuresUnique_0 {
+            get {
+                return ResourceManager.GetString("QaRouteMeasuresUnique_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds segment sequences within line features belonging to the same route that have the same measure values. Both non-unique measure ranges from different features, and non-unique measures within a single feature (due to non-monotonic measures) are reported..
+        /// </summary>
+        public static string QaRouteMeasuresUnique_1 {
+            get {
+                return ResourceManager.GetString("QaRouteMeasuresUnique_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline class with M values.
+        /// </summary>
+        public static string QaRouteMeasuresUnique_polylineClass {
+            get {
+                return ResourceManager.GetString("QaRouteMeasuresUnique_polylineClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline classes with M values.
+        /// </summary>
+        public static string QaRouteMeasuresUnique_polylineClasses {
+            get {
+                return ResourceManager.GetString("QaRouteMeasuresUnique_polylineClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of the field that contains the route ID. All features having the same route ID are checked for unique M values..
+        /// </summary>
+        public static string QaRouteMeasuresUnique_routeIdField {
+            get {
+                return ResourceManager.GetString("QaRouteMeasuresUnique_routeIdField", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The names of the fields that contains the route ID, per line feature class. All features having the same route ID are checked for unique M values.
+        ///If multiple feature classes are specified, there must be either a single route ID field name (to be used for all feature classes), or an equal number of route ID field names and feature classes. Field names are associated to feature classes by their position in the list..
+        /// </summary>
+        public static string QaRouteMeasuresUnique_routeIdFields {
+            get {
+                return ResourceManager.GetString("QaRouteMeasuresUnique_routeIdFields", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Determines if the number of rows in a table is within an expected range.
+        /// </summary>
+        public static string QaRowCount_0 {
+            get {
+                return ResourceManager.GetString("QaRowCount_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Determines if the number of rows in a table is within an expected range, defined based on offsets from the row count in one or more reference tables. This can be used to check if a copy / append operation from one or more source tables to a target table was successful..
+        /// </summary>
+        public static string QaRowCount_1 {
+            get {
+                return ResourceManager.GetString("QaRowCount_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The expected maximum row count. A negative value indicates that there is no upper limit for the number of rows in the table..
+        /// </summary>
+        public static string QaRowCount_maximumRowCount {
+            get {
+                return ResourceManager.GetString("QaRowCount_maximumRowCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The offset to apply to the reference row count to determine the expected maximum row count. This can be a negative value by specifying a leading &apos;-&apos;. The offset can be specified as a percentage of the reference row count, by adding a trailing &apos;%&apos;.
+        ///
+        ///Examples:
+        ///&quot;100&quot; (maximum value =reference row count +100)
+        ///&quot;-100&quot; (maximum value =reference row count - 100)
+        ///&quot;10%&quot; (maximum value = reference row count + 10% of reference row count)
+        ///&quot;-10%&quot; (maximum value =reference row count - 10% of refrence row count)
+        ///&quot;0&quot; [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaRowCount_maximumValueOffset {
+            get {
+                return ResourceManager.GetString("QaRowCount_maximumValueOffset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The expected minimum row count..
+        /// </summary>
+        public static string QaRowCount_minimumRowCount {
+            get {
+                return ResourceManager.GetString("QaRowCount_minimumRowCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The offset to apply to the reference row count to determine the expected minimum row count. This can be a negative value by specifying a leading &apos;-&apos;. The offset can be specified as a percentage of the reference row count, by adding a trailing &apos;%&apos;.
+        ///
+        ///Examples:
+        ///&quot;100&quot; (minimum value =reference row count +100)
+        ///&quot;-100&quot; (minimum value =reference row count - 100)
+        ///&quot;10%&quot; (minimum value = reference row count + 10% of reference row count)
+        ///&quot;-10%&quot; (minimum value =reference row count - 10% of refrence row count)
+        ///&quot;0&quot; [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaRowCount_minimumValueOffset {
+            get {
+                return ResourceManager.GetString("QaRowCount_minimumValueOffset", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The tables to get the reference row count from, to which the offset specifications will be applied to determine the expected row count range. More than one table can be specified to support scenarios where rows are appended from multiple source tables into a target table..
+        /// </summary>
+        public static string QaRowCount_referenceTables {
+            get {
+                return ResourceManager.GetString("QaRowCount_referenceTables", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to table.
+        /// </summary>
+        public static string QaRowCount_table {
+            get {
+                return ResourceManager.GetString("QaRowCount_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds fields with invalid alias names..
+        /// </summary>
+        public static string QaSchemaFieldAliases_0 {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldAliases_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if non-default alias names for system fields are allowed. If &apos;false&apos;, alias names for system fields need to be equal to the field name, and the maximum length and charachter case is not tested..
+        /// </summary>
+        public static string QaSchemaFieldAliases_allowCustomSystemFieldAlias {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldAliases_allowCustomSystemFieldAlias", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The expected character case for field alias names..
+        /// </summary>
+        public static string QaSchemaFieldAliases_expectedCase {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldAliases_expectedCase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The expected difference between the alias name and the field name (for non-system fields)
+        ///
+        ///- Any: no comparison made
+        ///- CaseSensitiveDifference: the alias name must be different from the field name. A case-only difference is valid (e.g. alias name &apos;Name&apos; for field &apos;NAME&apos; is allowed)
+        ///- CaseInsensitiveDifference: the alias name must be different from the field name. A case-only difference is not allowed.
+        /// </summary>
+        public static string QaSchemaFieldAliases_expectedDifference {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldAliases_expectedDifference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum string length for field alias names. If 0 or negative, no length check is applied..
+        /// </summary>
+        public static string QaSchemaFieldAliases_maximumLength {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldAliases_maximumLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if alias names need to be unique for all fields within the table..
+        /// </summary>
+        public static string QaSchemaFieldAliases_requireUniqueAliasNames {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldAliases_requireUniqueAliasNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The table to check for fields with invalid alias names..
+        /// </summary>
+        public static string QaSchemaFieldAliases_table {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldAliases_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds coded value domains referenced from a table that have invalid coded values lists..
+        /// </summary>
+        public static string QaSchemaFieldDomainCodedValues_0 {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainCodedValues_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if empty coded value names are allowed..
+        /// </summary>
+        public static string QaSchemaFieldDomainCodedValues_allowEmptyName {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainCodedValues_allowEmptyName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum length for a coded value name. If 0 or negative, no length check is applied..
+        /// </summary>
+        public static string QaSchemaFieldDomainCodedValues_maximumNameLength {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainCodedValues_maximumNameLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The minimum number of coded value names that must be different from the value. E.g. if set to 1, an error is reported if all names are equal to the value..
+        /// </summary>
+        public static string QaSchemaFieldDomainCodedValues_minimumNonEqualNameValueCount {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainCodedValues_minimumNonEqualNameValueCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The minimum number of values in the coded value domain..
+        /// </summary>
+        public static string QaSchemaFieldDomainCodedValues_minimumValueCount {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainCodedValues_minimumValueCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The table to check for invalid coded value domains..
+        /// </summary>
+        public static string QaSchemaFieldDomainCodedValues_table {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainCodedValues_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The constraint for uniqueness of the coded value names:
+        ///- None: no uniqueness check is applied.
+        ///- UniqueExactCase: names must be unique with their exact case (i.e. names differing only in case are allowed)
+        ///- UniqueAnyCase: names must be unique with any case (i.e. names differeing only in case are not allowed).
+        /// </summary>
+        public static string QaSchemaFieldDomainCodedValues_uniqueNamesConstraint {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainCodedValues_uniqueNamesConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds domains with invalid domain descriptions..
+        /// </summary>
+        public static string QaSchemaFieldDomainDescriptions_0 {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainDescriptions_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum string length for domains. If 0 or negative, no length check is applied..
+        /// </summary>
+        public static string QaSchemaFieldDomainDescriptions_maximumLength {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainDescriptions_maximumLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if descriptions of domains must be unique. Domain descriptions are compared in case-insensitive manner, i.e. domain descriptions that differ only in character case are considered duplicates..
+        /// </summary>
+        public static string QaSchemaFieldDomainDescriptions_requireUniqueDescriptions {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainDescriptions_requireUniqueDescriptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The table to check for domains with invalid descriptions..
+        /// </summary>
+        public static string QaSchemaFieldDomainDescriptions_table {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainDescriptions_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A table in another workspace to check for duplicates. Optional, if undefined the workspace of the table to be tested is checked. The table merely points at the workspace to compare against^..
+        /// </summary>
+        public static string QaSchemaFieldDomainDescriptions_targetWorkspaceTable {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainDescriptions_targetWorkspaceTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds domains referenced from a table whose names do not match a defined regular expression..
+        /// </summary>
+        public static string QaSchemaFieldDomainNameRegex_0 {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainNameRegex_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if a pattern match is considered an error:
+        ///- &apos;true&apos;: a match is an error
+        ///- &apos;false&apos; -&gt; a match is correct (default).
+        /// </summary>
+        public static string QaSchemaFieldDomainNameRegex_matchIsError {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainNameRegex_matchIsError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to String defining the regular expression. The test uses the .Net regular expression syntax. The basic syntax typically used for this test should be identical to other regular expression implementations.
+        ///
+        ///Regular expression (regex) tutorials and basic syntax reference:
+        ///
+        ///- http://www.ternent.com/tech/regexp.html
+        ///- http://regexlib.com/CheatSheet.aspx
+        ///- http://www.regular-expressions.info/tutorial.html
+        ///- http://www.regular-expressions.info/reference.html
+        ///
+        ///.Net regular expression documentation: 
+        ///
+        ///- http [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaSchemaFieldDomainNameRegex_pattern {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainNameRegex_pattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A description for the pattern, to be displayed in the error text..
+        /// </summary>
+        public static string QaSchemaFieldDomainNameRegex_patternDescription {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainNameRegex_patternDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The table to check for referenced domains with invalid names..
+        /// </summary>
+        public static string QaSchemaFieldDomainNameRegex_table {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainNameRegex_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds domains referenced from a table that have invalid names..
+        /// </summary>
+        public static string QaSchemaFieldDomainNames_0 {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainNames_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The expected character case for the domain name..
+        /// </summary>
+        public static string QaSchemaFieldDomainNames_expectedCase {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainNames_expectedCase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An expected prefix for the domain name. Optional..
+        /// </summary>
+        public static string QaSchemaFieldDomainNames_expectedPrefix {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainNames_expectedPrefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum string length for domain names. If 0 or negative, no length check is applied..
+        /// </summary>
+        public static string QaSchemaFieldDomainNames_maximumLength {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainNames_maximumLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if the domain name must contain the name of the field that references it..
+        /// </summary>
+        public static string QaSchemaFieldDomainNames_mustContainFieldName {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainNames_mustContainFieldName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The table to check for referenced domains with invalid name..
+        /// </summary>
+        public static string QaSchemaFieldDomainNames_table {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomainNames_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds domains referenced from a table that are not valid for the referencing field (due to a data type mismatch)..
+        /// </summary>
+        public static string QaSchemaFieldDomains_0 {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomains_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The table to check for domains that are not valid for the referencing field..
+        /// </summary>
+        public static string QaSchemaFieldDomains_table {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldDomains_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds field names that do not match a defined regular expression..
+        /// </summary>
+        public static string QaSchemaFieldNameRegex_0 {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldNameRegex_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if a pattern match is considered an error:
+        ///- &apos;true&apos;: a match is an error
+        ///- &apos;false&apos; -&gt; a match is correct (default).
+        /// </summary>
+        public static string QaSchemaFieldNameRegex_matchIsError {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldNameRegex_matchIsError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to String defining the regular expression. The test uses the .Net regular expression syntax. The basic syntax typically used for this test should be identical to other regular expression implementations.
+        ///
+        ///Regular expression (regex) tutorials and basic syntax reference:
+        ///
+        ///- http://www.ternent.com/tech/regexp.html
+        ///- http://regexlib.com/CheatSheet.aspx
+        ///- http://www.regular-expressions.info/tutorial.html
+        ///- http://www.regular-expressions.info/reference.html
+        ///
+        ///.Net regular expression documentation: 
+        ///
+        ///- http [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaSchemaFieldNameRegex_pattern {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldNameRegex_pattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A description for the pattern, to be displayed in the error text..
+        /// </summary>
+        public static string QaSchemaFieldNameRegex_patternDescription {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldNameRegex_patternDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The table to check for fields based on the regular expression..
+        /// </summary>
+        public static string QaSchemaFieldNameRegex_table {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldNameRegex_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds fields with invalid names..
+        /// </summary>
+        public static string QaSchemaFieldNames_0 {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldNames_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The expected character case for field names..
+        /// </summary>
+        public static string QaSchemaFieldNames_expectedCase {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldNames_expectedCase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum string length for field names. If 0 or negative, no length check is applied..
+        /// </summary>
+        public static string QaSchemaFieldNames_maximumLength {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldNames_maximumLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The table to check for invalid field names..
+        /// </summary>
+        public static string QaSchemaFieldNames_table {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldNames_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The number of characters at the start of the field name that needs to be unique for all field names in the table. Used to ensure that field names that are truncated during an export (e.g. to shapefiles) are still unique..
+        /// </summary>
+        public static string QaSchemaFieldNames_uniqueSubstringLength {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldNames_uniqueSubstringLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Verifies if a field has expected properties.
+        /// </summary>
+        public static string QaSchemaFieldProperties_0 {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldProperties_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The expected alias name for the field (optional)..
+        /// </summary>
+        public static string QaSchemaFieldProperties_expectedAliasName {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldProperties_expectedAliasName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The expected domain name for the field (optional)..
+        /// </summary>
+        public static string QaSchemaFieldProperties_expectedDomainName {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldProperties_expectedDomainName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The expected field length. If 0 or negative, no length check is applied..
+        /// </summary>
+        public static string QaSchemaFieldProperties_expectedFieldLength {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldProperties_expectedFieldLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The expected field type..
+        /// </summary>
+        public static string QaSchemaFieldProperties_expectedFieldType {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldProperties_expectedFieldType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if the field is not required to exist in the table (may be useful when testing for standardized fields that are not present in all tables)..
+        /// </summary>
+        public static string QaSchemaFieldProperties_fieldIsOptional {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldProperties_fieldIsOptional", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of the field to check the field properties for..
+        /// </summary>
+        public static string QaSchemaFieldProperties_fieldName {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldProperties_fieldName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The table to check the field properties in..
+        /// </summary>
+        public static string QaSchemaFieldProperties_table {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldProperties_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds fields that have a reserved field name, based on a list of reserved names..
+        /// </summary>
+        public static string QaSchemaReservedFieldNames_0 {
+            get {
+                return ResourceManager.GetString("QaSchemaReservedFieldNames_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds fields that have a reserved field name, based on a concatenated string of reserved names..
+        /// </summary>
+        public static string QaSchemaReservedFieldNames_1 {
+            get {
+                return ResourceManager.GetString("QaSchemaReservedFieldNames_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds fields that have a reserved field name, based on a table containing reserved names, and optionally a reason why a name is reserved and a valid name that should be used instead..
+        /// </summary>
+        public static string QaSchemaReservedFieldNames_2 {
+            get {
+                return ResourceManager.GetString("QaSchemaReservedFieldNames_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of the field containing the reserved field names in &apos;reservedNamesTable&apos;. This field is required..
+        /// </summary>
+        public static string QaSchemaReservedFieldNames_reservedNameFieldName {
+            get {
+                return ResourceManager.GetString("QaSchemaReservedFieldNames_reservedNameFieldName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The list of reserved names..
+        /// </summary>
+        public static string QaSchemaReservedFieldNames_reservedNames {
+            get {
+                return ResourceManager.GetString("QaSchemaReservedFieldNames_reservedNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A string with concatenated reserved names. Individual names can be separated by &apos;,&apos;, &apos;;&apos; and &apos; &apos;..
+        /// </summary>
+        public static string QaSchemaReservedFieldNames_reservedNamesString {
+            get {
+                return ResourceManager.GetString("QaSchemaReservedFieldNames_reservedNamesString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A table containing reserved names. This may be in a different workspace than the tested table..
+        /// </summary>
+        public static string QaSchemaReservedFieldNames_reservedNamesTable {
+            get {
+                return ResourceManager.GetString("QaSchemaReservedFieldNames_reservedNamesTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of a field containing the reason why a field name is reserved (e.g., reserved word in some database system). Optional..
+        /// </summary>
+        public static string QaSchemaReservedFieldNames_reservedReasonFieldName {
+            get {
+                return ResourceManager.GetString("QaSchemaReservedFieldNames_reservedReasonFieldName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The table to check for fields with reserved names..
+        /// </summary>
+        public static string QaSchemaReservedFieldNames_table {
+            get {
+                return ResourceManager.GetString("QaSchemaReservedFieldNames_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of a field containing a valid name that should be used instead of the reserved name. Optional..
+        /// </summary>
+        public static string QaSchemaReservedFieldNames_validNameFieldName {
+            get {
+                return ResourceManager.GetString("QaSchemaReservedFieldNames_validNameFieldName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Checks if the spatial reference of a feature class is exactly (including domain, tolerance and resolution) equal to the spatial reference of a reference feature class..
+        /// </summary>
+        public static string QaSchemaSpatialReference_0 {
+            get {
+                return ResourceManager.GetString("QaSchemaSpatialReference_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Checks if the spatial reference of a feature class is exactly (including domain, tolerance and resolution) equal to the spatial reference defined in an spatial reference xml string..
+        /// </summary>
+        public static string QaSchemaSpatialReference_1 {
+            get {
+                return ResourceManager.GetString("QaSchemaSpatialReference_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature class to check the spatial reference for..
+        /// </summary>
+        public static string QaSchemaSpatialReference_featureClass {
+            get {
+                return ResourceManager.GetString("QaSchemaSpatialReference_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The reference feature class to compare the spatial reference with..
+        /// </summary>
+        public static string QaSchemaSpatialReference_referenceFeatureClass {
+            get {
+                return ResourceManager.GetString("QaSchemaSpatialReference_referenceFeatureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The spatial reference xml string (as used in geodatabase workspace xml files)..
+        /// </summary>
+        public static string QaSchemaSpatialReference_spatialReferenceXml {
+            get {
+                return ResourceManager.GetString("QaSchemaSpatialReference_spatialReferenceXml", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find all segments in &apos;featureClass&apos; smaller than &apos;limit&apos;.
+        /// </summary>
+        public static string QaSegmentLength_0 {
+            get {
+                return ResourceManager.GetString("QaSegmentLength_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline, polygon or multipatch feature class.
+        /// </summary>
+        public static string QaSegmentLength_featureClass {
+            get {
+                return ResourceManager.GetString("QaSegmentLength_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to include z-coordinate for checking (default = false for polyline and polygon, = true for multipatch feature class).
+        /// </summary>
+        public static string QaSegmentLength_is3D {
+            get {
+                return ResourceManager.GetString("QaSegmentLength_is3D", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum segment length.
+        /// </summary>
+        public static string QaSegmentLength_limit {
+            get {
+                return ResourceManager.GetString("QaSegmentLength_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; with non-simple geometries.
+        /// </summary>
+        public static string QaSimpleGeometry_0 {
+            get {
+                return ResourceManager.GetString("QaSimpleGeometry_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; with non-simple geometries. Optionally ignores non-planar (self-intersecting) lines.
+        /// </summary>
+        public static string QaSimpleGeometry_1 {
+            get {
+                return ResourceManager.GetString("QaSimpleGeometry_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; with non-simple geometries. Optionally ignores non-planar (self-intersecting) lines, and allows specifying a custom factor for reducing the spatial reference xy tolerance used in the detection of non-simple geometries..
+        /// </summary>
+        public static string QaSimpleGeometry_2 {
+            get {
+                return ResourceManager.GetString("QaSimpleGeometry_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if non-planar (self-intersecting) lines should be ignored or reported..
+        /// </summary>
+        public static string QaSimpleGeometry_allowNonPlanarLines {
+            get {
+                return ResourceManager.GetString("QaSimpleGeometry_allowNonPlanarLines", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to multipoint, polyline, polygon or multipatch feature class.
+        /// </summary>
+        public static string QaSimpleGeometry_featureClass {
+            get {
+                return ResourceManager.GetString("QaSimpleGeometry_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A factor (between 0.1 and 1.0) to apply to the spatial reference xy tolerance used for the detection of non-simple geometries (advanced; default factor for other constructors is 0.4)..
+        /// </summary>
+        public static string QaSimpleGeometry_toleranceFactor {
+            get {
+                return ResourceManager.GetString("QaSimpleGeometry_toleranceFactor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all sliver polygons in &apos;polygonClass&apos;.
+        /// </summary>
+        public static string QaSliverPolygon_0 {
+            get {
+                return ResourceManager.GetString("QaSliverPolygon_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximal allowed ratio between the square of the perimeter and the area.
+        /// </summary>
+        public static string QaSliverPolygon_limit {
+            get {
+                return ResourceManager.GetString("QaSliverPolygon_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum area of checked features.
+        /// </summary>
+        public static string QaSliverPolygon_maxArea {
+            get {
+                return ResourceManager.GetString("QaSliverPolygon_maxArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polygon feature class.
+        /// </summary>
+        public static string QaSliverPolygon_polygonClass {
+            get {
+                return ResourceManager.GetString("QaSliverPolygon_polygonClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all segments in &apos;featureClass&apos; where the discretized second derivative of the slope angle exceeds &apos;limit&apos;. This means that there are to abrupt changes in the slope angle..
+        /// </summary>
+        public static string QaSmooth_0 {
+            get {
+                return ResourceManager.GetString("QaSmooth_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or polygon feature class with z-coorindates.
+        /// </summary>
+        public static string QaSmooth_featureClass {
+            get {
+                return ResourceManager.GetString("QaSmooth_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the maximum permitted second derivative of the angle in radians.
+        /// </summary>
+        public static string QaSmooth_limit {
+            get {
+                return ResourceManager.GetString("QaSmooth_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds spikes in terrain by testing all triangles of &apos;terrain&apos;. A spike is defined a node, where all neighboring triangles have a height difference &gt; &apos;maxDeltaZ&apos; and a slope &gt; &apos;maxSlopeDegrees&apos;.
+        /// </summary>
+        public static string QaTerrainSpikes_0 {
+            get {
+                return ResourceManager.GetString("QaTerrainSpikes_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum allowed height difference of a triangle in &apos;terrain&apos; so that the nodes of the triangle are no spikes. Otherwise the nodes may be spikes (see test description for an exact definition of spikes)..
+        /// </summary>
+        public static string QaTerrainSpikes_maxDeltaZ {
+            get {
+                return ResourceManager.GetString("QaTerrainSpikes_maxDeltaZ", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maximum allowed slope of a triangle in &apos;terrain&apos; so that the nodes of the triangle are no spikes. Otherwise the nodes may be spikes (see test description for an exact definition of spikes)..
+        /// </summary>
+        public static string QaTerrainSpikes_maxSlopeDegrees {
+            get {
+                return ResourceManager.GetString("QaTerrainSpikes_maxSlopeDegrees", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Terrain to check.
+        /// </summary>
+        public static string QaTerrainSpikes_terrain {
+            get {
+                return ResourceManager.GetString("QaTerrainSpikes_terrain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tolerance of &apos;terrain&apos;.
+        /// </summary>
+        public static string QaTerrainSpikes_terrainTolerance {
+            get {
+                return ResourceManager.GetString("QaTerrainSpikes_terrainTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;touchedClasses&apos; that are touched by features in &apos;touchingClasses&apos;.
+        /// </summary>
+        public static string QaTouchesOther_0 {
+            get {
+                return ResourceManager.GetString("QaTouchesOther_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;touchedClass&apos; that are touched by features in &apos;touchingClass&apos;.
+        /// </summary>
+        public static string QaTouchesOther_1 {
+            get {
+                return ResourceManager.GetString("QaTouchesOther_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;touchedClasses&apos; that are touched by features in &apos;touchingClasses&apos;, and for which a given constraint is not fulfilled..
+        /// </summary>
+        public static string QaTouchesOther_2 {
+            get {
+                return ResourceManager.GetString("QaTouchesOther_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;touchedClass&apos; that are touched by features in &apos;touchingClass&apos;, and for which a given constraint is not fulfilled..
+        /// </summary>
+        public static string QaTouchesOther_3 {
+            get {
+                return ResourceManager.GetString("QaTouchesOther_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature class.
+        /// </summary>
+        public static string QaTouchesOther_touchedClass {
+            get {
+                return ResourceManager.GetString("QaTouchesOther_touchedClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature classes.
+        /// </summary>
+        public static string QaTouchesOther_touchedClasses {
+            get {
+                return ResourceManager.GetString("QaTouchesOther_touchedClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature class.
+        /// </summary>
+        public static string QaTouchesOther_touchingClass {
+            get {
+                return ResourceManager.GetString("QaTouchesOther_touchingClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature classes.
+        /// </summary>
+        public static string QaTouchesOther_touchingClasses {
+            get {
+                return ResourceManager.GetString("QaTouchesOther_touchingClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on a pair of touching features. If the constraint is defined and fulfilled, no error is reported.
+        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///Example: G1.Level &lt;&gt; G2.Level.
+        /// </summary>
+        public static string QaTouchesOther_validRelationConstraint {
+            get {
+                return ResourceManager.GetString("QaTouchesOther_validRelationConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint for valid &quot;touch&quot; geometries (i.e. the geometry along which two features touch). The constraint can be based on the following geometry properties:
+        ///
+        ///- $Length - the length of the geometry (perimeter length in case of polygons; 0 for points)
+        ///- $VertexCount - the number of vertices of the geometry
+        ///for all geometry types except polygons
+        ///- $Dimension - the geometry dimension (points: 0; lines: 1; polygons: 2)
+        ///- $EllipticArcCount - the number of elliptic arcs
+        ///- $CircularArcCount - the number of  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaTouchesOther_ValidTouchGeometryConstraint {
+            get {
+                return ResourceManager.GetString("QaTouchesOther_ValidTouchGeometryConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClasses&apos; that are touched by other features in &apos;featureClasses&apos;.
+        /// </summary>
+        public static string QaTouchesSelf_0 {
+            get {
+                return ResourceManager.GetString("QaTouchesSelf_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; that are touched by other features in &apos;featureClass&apos;.
+        /// </summary>
+        public static string QaTouchesSelf_1 {
+            get {
+                return ResourceManager.GetString("QaTouchesSelf_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClasses&apos; that are touched by other features in &apos;featureClasses&apos;, and for which a given constraint is not fulfilled..
+        /// </summary>
+        public static string QaTouchesSelf_2 {
+            get {
+                return ResourceManager.GetString("QaTouchesSelf_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all features in &apos;featureClass&apos; that are touched by other features in &apos;featureClass&apos;, and for which a given constraint is not fulfilled..
+        /// </summary>
+        public static string QaTouchesSelf_3 {
+            get {
+                return ResourceManager.GetString("QaTouchesSelf_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature class.
+        /// </summary>
+        public static string QaTouchesSelf_featureClass {
+            get {
+                return ResourceManager.GetString("QaTouchesSelf_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point, multipoint, line or polygon feature classes.
+        /// </summary>
+        public static string QaTouchesSelf_featureClasses {
+            get {
+                return ResourceManager.GetString("QaTouchesSelf_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on a pair of touching features. If the constraint is defined and fulfilled, no error is reported.
+        ///The involved features are aliased using &quot;G1&quot; and G2&quot;.
+        ///Example: G1.Level &lt;&gt; G2.Level.
+        /// </summary>
+        public static string QaTouchesSelf_validRelationConstraint {
+            get {
+                return ResourceManager.GetString("QaTouchesSelf_validRelationConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint for valid &quot;touch&quot; geometries (i.e. the geometry along which two features touch). The constraint can be based on the following geometry properties:
+        ///
+        ///- $Length - the length of the geometry (perimeter length in case of polygons; 0 for points)
+        ///- $VertexCount - the number of vertices of the geometry
+        ///for all geometry types except polygons
+        ///- $Dimension - the geometry dimension (points: 0; lines: 1; polygons: 2)
+        ///- $EllipticArcCount - the number of elliptic arcs
+        ///- $CircularArcCount - the number of  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaTouchesSelf_ValidTouchGeometryConstraint {
+            get {
+                return ResourceManager.GetString("QaTouchesSelf_ValidTouchGeometryConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows with text fields having leading or trailing whitespace characters. All text fields of the table are checked. Fields with only whitespace characters are also reported..
+        /// </summary>
+        public static string QaTrimmedTextFields_0 {
+            get {
+                return ResourceManager.GetString("QaTrimmedTextFields_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows with text fields having leading or trailing whitespace characters. All text fields of the table are checked. For fields that contain only whitespace, a maximum number of allowed whitespace characters can specified..
+        /// </summary>
+        public static string QaTrimmedTextFields_1 {
+            get {
+                return ResourceManager.GetString("QaTrimmedTextFields_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows that have leading or trailing whitespace characters in a specified text field. An error is reported also if the field contains only whitespace characters..
+        /// </summary>
+        public static string QaTrimmedTextFields_2 {
+            get {
+                return ResourceManager.GetString("QaTrimmedTextFields_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows that have leading or trailing whitespace characters in a specified text field. If the field contains only whitespace, a maximum number of allowed whitespace characters can specified..
+        /// </summary>
+        public static string QaTrimmedTextFields_3 {
+            get {
+                return ResourceManager.GetString("QaTrimmedTextFields_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows that have leading or trailing whitespace characters in a given list of text fields. If the field contains only whitespace, a maximum number of allowed whitespace characters can specified..
+        /// </summary>
+        public static string QaTrimmedTextFields_4 {
+            get {
+                return ResourceManager.GetString("QaTrimmedTextFields_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows that have leading or trailing whitespace characters in a given list of text fields. The field list can be defined by a concatenated string of either relevant or ignored fields. If the field contains only whitespace, a maximum number of allowed whitespace characters can specified..
+        /// </summary>
+        public static string QaTrimmedTextFields_5 {
+            get {
+                return ResourceManager.GetString("QaTrimmedTextFields_5", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows that have leading or trailing whitespace characters in a given list of text fields. The field list can be defined by a list of either relevant or ignored fields. If the field contains only whitespace, a maximum number of allowed whitespace characters can specified..
+        /// </summary>
+        public static string QaTrimmedTextFields_6 {
+            get {
+                return ResourceManager.GetString("QaTrimmedTextFields_6", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The number of allowed whitespace characters, if a text field contains only whitespace characters..
+        /// </summary>
+        public static string QaTrimmedTextFields_allowedWhiteSpaceOnlyCount {
+            get {
+                return ResourceManager.GetString("QaTrimmedTextFields_allowedWhiteSpaceOnlyCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specifies how the specified list of fields should be interpreted:
+        ///- RelevantFields: the list contains the fields that should be checked for trailing/leading whitespace
+        ///- IgnoredFields: the list contains the fields that should not be checked. All editable fields except the ones in the list will be checked..
+        /// </summary>
+        public static string QaTrimmedTextFields_fieldListType {
+            get {
+                return ResourceManager.GetString("QaTrimmedTextFields_fieldListType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to table.
+        /// </summary>
+        public static string QaTrimmedTextFields_table {
+            get {
+                return ResourceManager.GetString("QaTrimmedTextFields_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The text field to check for leading or trailing blanks.
+        /// </summary>
+        public static string QaTrimmedTextFields_textFieldName {
+            get {
+                return ResourceManager.GetString("QaTrimmedTextFields_textFieldName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The list of text fields to check for leading or trailing blanks.
+        /// </summary>
+        public static string QaTrimmedTextFields_textFieldNames {
+            get {
+                return ResourceManager.GetString("QaTrimmedTextFields_textFieldNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A concatenated string of field names. The names may be separated by blank, comma or semicolon..
+        /// </summary>
+        public static string QaTrimmedTextFields_textFieldNamesString {
+            get {
+                return ResourceManager.GetString("QaTrimmedTextFields_textFieldNamesString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows in &apos;table&apos; for which the values in the field(s) defined by &apos;unique&apos; are not unique.
+        /// </summary>
+        public static string QaUnique_0 {
+            get {
+                return ResourceManager.GetString("QaUnique_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows in &apos;tables&apos; for which the values in the field(s) defined by &apos;uniques&apos; are not unique across all tables.
+        /// </summary>
+        public static string QaUnique_1 {
+            get {
+                return ResourceManager.GetString("QaUnique_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum number of rows in memory.
+        /// </summary>
+        public static string QaUnique_maxRows {
+            get {
+                return ResourceManager.GetString("QaUnique_maxRows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to table to check for uniqueness of field values.
+        /// </summary>
+        public static string QaUnique_table {
+            get {
+                return ResourceManager.GetString("QaUnique_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to tables to check for overall uniqueness of field values.
+        /// </summary>
+        public static string QaUnique_tables {
+            get {
+                return ResourceManager.GetString("QaUnique_tables", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to unique constraint for the table  (one or more field names. If the combination of values from more than one field name should be unique, then the field names must be separated by &quot;,&quot;). Note that an index on the first unique attribute should exist if the total row count is large (otherwise the test may be slow if applied to a subset of the data, e.g. a spatial query to a feature class).
+        /// </summary>
+        public static string QaUnique_unique {
+            get {
+                return ResourceManager.GetString("QaUnique_unique", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of unique constraints for the tables. There may be either a single definition applicable to all tables, or one entry per table if field names are different for different tables. Each constraint definition consists of one or more field names. If the combination of values from more than one field name must be unique, then the field names must be separated by &quot;,&quot;. Note that an index on the first unique attribute should exist if the total row count is large (otherwise the test may be slow if applied to a s [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaUnique_uniques {
+            get {
+                return ResourceManager.GetString("QaUnique_uniques", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows in a table that are not referenced by any row in a collection of referencing tables.
+        /// </summary>
+        public static string QaUnreferencedRows_0 {
+            get {
+                return ResourceManager.GetString("QaUnreferencedRows_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The table to search for unreferenced rows.
+        /// </summary>
+        public static string QaUnreferencedRows_referencedTable {
+            get {
+                return ResourceManager.GetString("QaUnreferencedRows_referencedTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The tables with relationships to the referenced table. These tables are not required to reside in the same database as the reference table..
+        /// </summary>
+        public static string QaUnreferencedRows_referencingTables {
+            get {
+                return ResourceManager.GetString("QaUnreferencedRows_referencingTables", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The definition of relationships between referencing tables and referenced table. For each referencing table, there must be a corresponding &apos;relation&apos; definition. A &apos;relation&apos; definition lists the relevant field names, and for n:m relationships, the relationship table. Note that all relations must refer to the same key field in the referenced table.
+        ///
+        ///The following format is used for &apos;relation&apos; entries:
+        ///
+        ///- n:1 and 1:1 relationships:
+        ///
+        ///&lt;keyfield_in_referenced_table&gt;,&lt;foreignkeyfield_in_referencing_table&gt;        /// [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaUnreferencedRows_relations {
+            get {
+                return ResourceManager.GetString("QaUnreferencedRows_relations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features with attributes for XY and/or Z coordinate values whose values differ significantly from the coordinates of the feature. .
+        /// </summary>
+        public static string QaValidCoordinateFields_0 {
+            get {
+                return ResourceManager.GetString("QaValidCoordinateFields_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that undefined XY coordinate field values are allowed even if the feature shape is defined. If false, an error with issue code &apos;ShapeIsDefinedButCoordinateFieldHasNoValue&apos; is reported in this case..
+        /// </summary>
+        public static string QaValidCoordinateFields_AllowMissingXYFieldValueForDefinedShape {
+            get {
+                return ResourceManager.GetString("QaValidCoordinateFields_AllowMissingXYFieldValueForDefinedShape", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that undefined Z coordinate field values are allowed even if the feature shape is defined. If false, an error with issue code &apos;ShapeIsDefinedButCoordinateFieldHasNoValue&apos; is reported in this case..
+        /// </summary>
+        public static string QaValidCoordinateFields_AllowMissingZFieldValueForDefinedShape {
+            get {
+                return ResourceManager.GetString("QaValidCoordinateFields_AllowMissingZFieldValueForDefinedShape", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that the XY coordinate fields are allowed to contain values even if the feature shape is undefined (empty or null). If false, an error with issue code &apos;ShapeIsUndefinedButCoordinateFieldHasValue&apos; is reported in this case..
+        /// </summary>
+        public static string QaValidCoordinateFields_AllowXYFieldValuesForUndefinedShape {
+            get {
+                return ResourceManager.GetString("QaValidCoordinateFields_AllowXYFieldValuesForUndefinedShape", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that the Z coordinate field is allowed to contain values even if the feature shape is undefined (empty or null). If false, an error with issue code &apos;ShapeIsUndefinedButCoordinateFieldHasValue&apos; is reported in this case..
+        /// </summary>
+        public static string QaValidCoordinateFields_AllowZFieldValueForUndefinedShape {
+            get {
+                return ResourceManager.GetString("QaValidCoordinateFields_AllowZFieldValueForUndefinedShape", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to If coordinate values are stored in text fields, this parameter specified the name of the culture to be used for interpreting the numeric values from the text string (defining the decimal symbol, thousands separator etc.). 
+        ///
+        ///The name is a combination of an ISO 639 two-letter lowercase culture code associated with a language (see http://en.wikipedia.org/wiki/ISO_639) and an ISO 3166 two-letter uppercase subculture code associated with a country or region (see http://en.wikipedia.org/wiki/ISO_3166-2). 
+        ///
+        ///Ex [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaValidCoordinateFields_culture {
+            get {
+                return ResourceManager.GetString("QaValidCoordinateFields_culture", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The point feature class to check for invalid coordinate field values.
+        /// </summary>
+        public static string QaValidCoordinateFields_featureClass {
+            get {
+                return ResourceManager.GetString("QaValidCoordinateFields_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of the field containing the X coordinate value (optional).
+        /// </summary>
+        public static string QaValidCoordinateFields_xCoordinateFieldName {
+            get {
+                return ResourceManager.GetString("QaValidCoordinateFields_xCoordinateFieldName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum allowed distance between the XY coordinates field values and the coordinates of the feature. If only one of the XY coordinate fields is specified, or if both are specified and only one has a value (and AllowMissingXYFieldValueForDefinedShape is &apos;true&apos;), the distance is measured only along the axis of the available coordinate value..
+        /// </summary>
+        public static string QaValidCoordinateFields_xyTolerance {
+            get {
+                return ResourceManager.GetString("QaValidCoordinateFields_xyTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of the field containing the Y coordinate value (optional).
+        /// </summary>
+        public static string QaValidCoordinateFields_yCoordinateFieldName {
+            get {
+                return ResourceManager.GetString("QaValidCoordinateFields_yCoordinateFieldName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of the field containing the Z coordinate value (optional).
+        /// </summary>
+        public static string QaValidCoordinateFields_zCoordinateFieldName {
+            get {
+                return ResourceManager.GetString("QaValidCoordinateFields_zCoordinateFieldName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The maximum allowed distance between the Z coordinates field values and the coordinates of the feature..
+        /// </summary>
+        public static string QaValidCoordinateFields_zTolerance {
+            get {
+                return ResourceManager.GetString("QaValidCoordinateFields_zTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows with date field values that are invalid or outside a defined date range.
+        /// </summary>
+        public static string QaValidDateValues_0 {
+            get {
+                return ResourceManager.GetString("QaValidDateValues_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows with date values from a given list of date fields that are invalid or outside a defined date range.
+        /// </summary>
+        public static string QaValidDateValues_1 {
+            get {
+                return ResourceManager.GetString("QaValidDateValues_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows with date values from a given list of date fields that are invalid or outside a defined date range. The list of date fields can be defined by a concatenated string of field names.
+        /// </summary>
+        public static string QaValidDateValues_2 {
+            get {
+                return ResourceManager.GetString("QaValidDateValues_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows with date field values that are invalid or outside a defined date range. The maximum date value can be specified relative to the current date/time.
+        /// </summary>
+        public static string QaValidDateValues_3 {
+            get {
+                return ResourceManager.GetString("QaValidDateValues_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows with date values from a given list of date fields that are invalid or outside a defined date range. The list of date fields can be defined by a concatenated string of field names. The maximum date value can be specified relative to the current date/time.
+        /// </summary>
+        public static string QaValidDateValues_4 {
+            get {
+                return ResourceManager.GetString("QaValidDateValues_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows with date values from a given list of date fields that are invalid or outside a defined date range. The list of date fields can be defined by a concatenated string of field names. The minimum date value can be specified relative to the current date/time.
+        /// </summary>
+        public static string QaValidDateValues_5 {
+            get {
+                return ResourceManager.GetString("QaValidDateValues_5", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds rows with date values from a given list of date fields that are invalid or outside a defined date range. The list of date fields can be defined by a concatenated string of field names. The minimum and maximum date values can be specified relative to the current date/time.
+        /// </summary>
+        public static string QaValidDateValues_6 {
+            get {
+                return ResourceManager.GetString("QaValidDateValues_6", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to List of date field names to verify against the defined date range.
+        /// </summary>
+        public static string QaValidDateValues_dateFieldNames {
+            get {
+                return ResourceManager.GetString("QaValidDateValues_dateFieldNames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A concatenated string of date field names. The names may be separated by blank, comma or semicolon..
+        /// </summary>
+        public static string QaValidDateValues_dateFieldNamesString {
+            get {
+                return ResourceManager.GetString("QaValidDateValues_dateFieldNamesString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The upper bound of the range of valid date values, relative to the current date/time. If the value is left empty, the current date/time is used as the maximum date. Optionally, an offset can be defined from the current date/time, using the following syntax:
+        ///
+        ///[-]{ d | d.hh:mm[:ss] | hh:mm[:ss] }
+        ///
+        ///Elements in square brackets ([ and ]) are optional. One selection from the list of alternatives enclosed in braces ({ and }) and separated by vertical bars (|) is required. The following list describes each elem [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaValidDateValues_maximumDateTimeRelativeToNow {
+            get {
+                return ResourceManager.GetString("QaValidDateValues_maximumDateTimeRelativeToNow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the upper bound of the range of valid date values.
+        /// </summary>
+        public static string QaValidDateValues_maximumDateValue {
+            get {
+                return ResourceManager.GetString("QaValidDateValues_maximumDateValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The lower bound of the range of valid date values, relative to the current date/time. If the value is left empty, the current date/time is used as the minimum date. Optionally, an offset can be defined from the current date/time, using the following syntax:
+        ///
+        ///[-]{ d | d.hh:mm[:ss] | hh:mm[:ss] }
+        ///
+        ///Elements in square brackets ([ and ]) are optional. One selection from the list of alternatives enclosed in braces ({ and }) and separated by vertical bars (|) is required. The following list describes each elem [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaValidDateValues_minimumDateTimeRelativeToNow {
+            get {
+                return ResourceManager.GetString("QaValidDateValues_minimumDateTimeRelativeToNow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to the lower bound of the range of valid date values.
+        /// </summary>
+        public static string QaValidDateValues_minimumDateValue {
+            get {
+                return ResourceManager.GetString("QaValidDateValues_minimumDateValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to table.
+        /// </summary>
+        public static string QaValidDateValues_table {
+            get {
+                return ResourceManager.GetString("QaValidDateValues_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features with invalid non-linear segments. Currently, circular arcs that degenerated to a line and therefore have no center point are found..
+        /// </summary>
+        public static string QaValidNonLinearSegments_0 {
+            get {
+                return ResourceManager.GetString("QaValidNonLinearSegments_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features with invalid non-linear segments. Currently, circular arcs that degenerated to a line and therefore have no center point are found. Additionally, circular arcs with a chord height smaller than a specified value may be identified..
+        /// </summary>
+        public static string QaValidNonLinearSegments_1 {
+            get {
+                return ResourceManager.GetString("QaValidNonLinearSegments_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline or polygon feature class.
+        /// </summary>
+        public static string QaValidNonLinearSegments_featureClass {
+            get {
+                return ResourceManager.GetString("QaValidNonLinearSegments_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A minimum chord height for the circular arc to be considered valid. Circular arcs with cord heights smaller than the xy tolerance are converted to degenerated, linear circular arcs (radius = infinity, center point =null, cord height =0). If the features are to be transformed into another spatial reference with larger tolerance, this property can be used to detect segments that will degenerate during that transformation..
+        /// </summary>
+        public static string QaValidNonLinearSegments_minimumChordHeight {
+            get {
+                return ResourceManager.GetString("QaValidNonLinearSegments_minimumChordHeight", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Checks field values in &apos;table&apos; for valid URLs. The URLs can be stored in a single field or it can be the result of a SQL expression referencing one or more fields. Supported are HTTP or file system URLs (UNC paths or paths to mapped drives). FTP URLs are not supported yet.
+        /// </summary>
+        public static string QaValidUrls_0 {
+            get {
+                return ResourceManager.GetString("QaValidUrls_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates the maximum number of parallel tasks for validating urls. Default is 1 (no parallel tasks). The actual number of parallel tasks is limited by the number of virtual cores available on the machine. A higher value than the number of virtual cores may be specified, however the number actual parallel tasks will never exceed that limit..
+        /// </summary>
+        public static string QaValidUrls_MaximumParallelTasks {
+            get {
+                return ResourceManager.GetString("QaValidUrls_MaximumParallelTasks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The table to check for valid URLs.
+        /// </summary>
+        public static string QaValidUrls_table {
+            get {
+                return ResourceManager.GetString("QaValidUrls_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The name of a field containing URLs to be checked. Instead of a simple field name, a more complex expression that evaluates to a string value may be used. The syntax for these expressions is described here:
+        ///
+        ///http://www.csharp-examples.net/dataview-rowfilter/ 
+        ///http://msdn.microsoft.com/en-us/library/system.data.datacolumn.expression.aspx
+        ///
+        ///Typical elements of such an expression are substring extraction using SUBSTRING(),  string concatenation using &apos;+&apos; (e.g. FIELD1 + &apos;#&apos; +FIELD2), or string length evalua [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaValidUrls_urlExpression {
+            get {
+                return ResourceManager.GetString("QaValidUrls_urlExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all rows in &apos;table&apos; with invalid data types. This can be the case for GUID-values. The test itself checks all datatypes.
+        /// </summary>
+        public static string QaValue_0 {
+            get {
+                return ResourceManager.GetString("QaValue_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to fields to check.
+        /// </summary>
+        public static string QaValue_fields {
+            get {
+                return ResourceManager.GetString("QaValue_fields", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to table.
+        /// </summary>
+        public static string QaValue_table {
+            get {
+                return ResourceManager.GetString("QaValue_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds vertices for which there is no coincident vertex and/or edge within the geometry of features of a given feature class..
+        /// </summary>
+        public static string QaVertexCoincidence_0 {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidence_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The tolerance for considering a nearby vertex or edge as coincident. To verify for exact topological correctness, a value of 0 should be used (default). However if multiple feature classes are verified, which have differing XY resolutions and/or domains, a larger value (less than the largest of the involved XY resolutions) may have to be used, since coordinates may not be exactly coincident due to offsets in the resolution grids used for storing coordinate values..
+        /// </summary>
+        public static string QaVertexCoincidence_CoincidenceTolerance {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidence_CoincidenceTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The search tolerance for nearby edges that are required to be coincident. If an edge is within this search distance from a vertex of the verified feature, but not close enough to it (according to the CoincidenceTolerance), an error is reported. If RequireVertexOn is True, then an error is reported even if the edge is within the CoincidenceTolerance from the verified vertex.
+        ///- a negative value indicates that the XY tolerance of the verified feature should be used (default)
+        ///- a value of 0 indicates that no  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaVertexCoincidence_EdgeTolerance {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidence_EdgeTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature class to check for vertices that lack a coincident vertex and/or edge within the same feature. All shape types are supported..
+        /// </summary>
+        public static string QaVertexCoincidence_featureClass {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidence_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that the distance between verified vertices and nearby vertices/edges should be calculated as 3D distance. Applicable for feature classes with Z values..
+        /// </summary>
+        public static string QaVertexCoincidence_Is3D {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidence_Is3D", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The search tolerance for nearby vertices that are required to be coincident. If a vertex is within this search distance from a vertex of the verified feature, but not coincident with it (according to the CoincidenceTolerance), an error is reported.
+        ///- a negative value indicates that the XY tolerance of the verified feature should be used (default)
+        ///- a value of 0 indicates that no search for nearby vertices should be performed.
+        ///- a positive value is used as search tolerance.
+        /// </summary>
+        public static string QaVertexCoincidence_PointTolerance {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidence_PointTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if vertex coordinate values should be included in the issue description.
+        /// </summary>
+        public static string QaVertexCoincidence_ReportCoordinates {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidence_ReportCoordinates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if any edge within the EdgeTolerance is required to have a coincident vertex. If True, an error is reported if there is any edge within the EdgeTolerance from the verified vertex, even if the distance from the vertex to the edge is less than or equal the CoincidenceTolerance, as long as there is no coincident vertex on that edge..
+        /// </summary>
+        public static string QaVertexCoincidence_RequireVertexOnNearbyEdge {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidence_RequireVertexOnNearbyEdge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Tolerance below which Z values of two coincident vertices are considered as equal/coincident.
+        /// 
+        ///Note: &apos;ZCoincidenceTolerance&apos; is only used if &apos;ZTolerance&apos; is not set to 0.
+        ///
+        ///&apos;ZCoincidenceTolerance&apos; &lt; 0: Use the maximum Z tolerance of the involved feature classes
+        ///&apos;ZCoincidenceTolerance&apos; == 0 (default value): Z values must be exactly equal to be considered coincident
+        ///&apos;ZCoincidenceTolerance&apos; &gt; 0: Use the specified value to determine equality/coincidence of Z values.
+        /// </summary>
+        public static string QaVertexCoincidence_ZCoincidenceTolerance {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidence_ZCoincidenceTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Z search distance within which coincident vertices/edges should have corresponding Z values.
+        ///
+        ///if &apos;ZTolerance&apos; = 0 (default) : Z values of vertices/edges are not compared
+        ///
+        ///if &apos;ZTolerance&apos; &gt; 0 :
+        ///- any Z difference between two vertices that is larger than this tolerance is ignored (-&gt; it is considered a deliberate Z offset, no error)
+        ///- any Z difference between two vertices that is smaller than this tolerance, but not coincident (as defined by &apos;ZCoincidenceTolerance&apos;) is reported
+        ///
+        ///if &apos;ZTolerance&apos; &lt;  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaVertexCoincidence_ZTolerance {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidence_ZTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds vertices for which there is no coincident vertex and/or edge in nearby features of another feature class..
+        /// </summary>
+        public static string QaVertexCoincidenceOther_0 {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceOther_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds vertices for which there is no coincident vertex and/or edge in nearby features of a given list of other feature classes..
+        /// </summary>
+        public static string QaVertexCoincidenceOther_1 {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceOther_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds vertices for which there is no coincident vertex and/or edge in nearby features of a given list of other feature classes. If an optional constraint is fulfilled for a pair of features, non-coincidence of vertices is allowed for these features..
+        /// </summary>
+        public static string QaVertexCoincidenceOther_2 {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceOther_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional condition on a pair of nearby features. If the condition is defined and fulfilled, non-coincidence of vertices between these features is allowed.
+        ///The involved features are aliased using &quot;G1&quot; (feature class) and &quot;G2&quot; (related class).
+        ///Example: G1.CountryCode &lt;&gt; G2.CountryCode.
+        /// </summary>
+        public static string QaVertexCoincidenceOther_allowedNonCoincidenceCondition {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceOther_allowedNonCoincidenceCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if both vertices in &apos;featureClass(es)&apos; must have a coincident vertex in &apos;relatedClass(es)&apos; and vice versa (Bidirectional = true), or if only the vertices in &apos;featureClass(es)&apos; are required to have a coincident vertex in &apos;relatedClass(es)&apos;, but not the other way around (Bidirectional =false).
+        /// </summary>
+        public static string QaVertexCoincidenceOther_Bidirectional {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceOther_Bidirectional", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The tolerance for considering a nearby vertex or edge as coincident. To verify for exact topological correctness, a value of 0 should be used (default). However if multiple feature classes are verified, which have differing XY resolutions and/or domains, a larger value (less than the largest of the involved XY resolutions) may have to be used, since coordinates may not be exactly coincident due to offsets in the resolution grids used for storing coordinate values..
+        /// </summary>
+        public static string QaVertexCoincidenceOther_CoincidenceTolerance {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceOther_CoincidenceTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The search tolerance for nearby edges that are required to be coincident. If an edge is within this search distance from a vertex of the verified feature, but not close enough to it (according to the CoincidenceTolerance), an error is reported. If RequireVertexOn is True, then an error is reported even if the edge is within the CoincidenceTolerance from the verified vertex.
+        ///- a negative value indicates that the XY tolerance of the verified feature should be used (default)
+        ///- a value of 0 indicates that no  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaVertexCoincidenceOther_EdgeTolerance {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceOther_EdgeTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature class to check for vertices that lack a coincident vertex and/or edge in nearby features in  &apos;related class&apos;. All shape types are supported..
+        /// </summary>
+        public static string QaVertexCoincidenceOther_featureClass {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceOther_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature classes to check for vertices that lack a coincident vertex and/or edge in nearby features in &apos;related classes&apos;. All shape types are supported..
+        /// </summary>
+        public static string QaVertexCoincidenceOther_featureClasses {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceOther_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that the distance between verified vertices and nearby vertices/edges should be calculated as 3D distance. Applicable for feature classes with Z values..
+        /// </summary>
+        public static string QaVertexCoincidenceOther_Is3D {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceOther_Is3D", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The search tolerance for nearby vertices that are required to be coincident. If a vertex is within this search distance from a vertex of the verified feature, but not coincident with it (according to the CoincidenceTolerance), an error is reported.
+        ///- a negative value indicates that the XY tolerance of the verified feature should be used (default)
+        ///- a value of 0 indicates that no search for nearby vertices should be performed.
+        ///- a positive value is used as search tolerance.
+        /// </summary>
+        public static string QaVertexCoincidenceOther_PointTolerance {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceOther_PointTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature class to check for vertices that lack a coincident vertex and/or edge in nearby features in  &apos;related class&apos;. All shape types are supported..
+        /// </summary>
+        public static string QaVertexCoincidenceOther_relatedClass {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceOther_relatedClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature classes to search for lacking vertices based on vertices &apos;featureClasses&apos;..
+        /// </summary>
+        public static string QaVertexCoincidenceOther_relatedClasses {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceOther_relatedClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if any edge within the EdgeTolerance is required to have a coincident vertex. If True, an error is reported if there is any edge within the EdgeTolerance from the verified vertex, even if the distance from the vertex to the edge is less than or equal the CoincidenceTolerance, as long as there is no coincident vertex on that edge..
+        /// </summary>
+        public static string QaVertexCoincidenceOther_RequireVertexOnNearbyEdge {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceOther_RequireVertexOnNearbyEdge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds vertices for which there is no coincident vertex and/or edge in nearby features of a given feature class..
+        /// </summary>
+        public static string QaVertexCoincidenceSelf_0 {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceSelf_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds vertices for which there is no coincident vertex and/or edge in nearby features of a given list of feature classes..
+        /// </summary>
+        public static string QaVertexCoincidenceSelf_1 {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceSelf_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds vertices for which there is no coincident vertex and/or edge in nearby features of a given list of feature classes. If an optional constraint is fulfilled for a pair of features, non-coincidence of vertices is allowed for these features..
+        /// </summary>
+        public static string QaVertexCoincidenceSelf_2 {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceSelf_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional condition on a pair of nearby features. If the condition is defined and fulfilled, non-coincidence of vertices between these features is allowed.
+        ///The involved features are aliased using &quot;G1&quot; and &quot;G2&quot;.
+        ///Example: G1.CountryCode &lt;&gt; G2.CountryCode.
+        /// </summary>
+        public static string QaVertexCoincidenceSelf_allowedNonCoincidenceCondition {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceSelf_allowedNonCoincidenceCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The tolerance for considering a nearby vertex or edge as coincident. To verify for exact topological correctness, a value of 0 should be used (default). However if multiple feature classes are verified, which have differing XY resolutions and/or domains, a larger value (less than the largest of the involved XY resolutions) may have to be used, since coordinates may not be exactly coincident due to offsets in the resolution grids used for storing coordinate values..
+        /// </summary>
+        public static string QaVertexCoincidenceSelf_CoincidenceTolerance {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceSelf_CoincidenceTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The search tolerance for nearby edges that are required to be coincident. If an edge is within this search distance from a vertex of the verified feature, but not close enough to it (according to the CoincidenceTolerance), an error is reported. If RequireVertexOn is True, then an error is reported even if the edge is within the CoincidenceTolerance from the verified vertex.
+        ///- a negative value indicates that the XY tolerance of the verified feature should be used (default)
+        ///- a value of 0 indicates that no  [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaVertexCoincidenceSelf_EdgeTolerance {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceSelf_EdgeTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature class to check for vertices that lack a coincident vertex and/or edge in nearby features in the same feature class. All shape types are supported..
+        /// </summary>
+        public static string QaVertexCoincidenceSelf_featureClass {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceSelf_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature classes to check for vertices that lack a coincident vertex and/or edge in nearby features in any of the specified feature classes. All shape types are supported..
+        /// </summary>
+        public static string QaVertexCoincidenceSelf_featureClasses {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceSelf_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that the distance between verified vertices and nearby vertices/edges should be calculated as 3D distance. Applicable for feature classes with Z values..
+        /// </summary>
+        public static string QaVertexCoincidenceSelf_Is3D {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceSelf_Is3D", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The search tolerance for nearby vertices that are required to be coincident. If a vertex is within this search distance from a vertex of the verified feature, but not coincident with it (according to the CoincidenceTolerance), an error is reported.
+        ///- a negative value indicates that the XY tolerance of the verified feature should be used (default)
+        ///- a value of 0 indicates that no search for nearby vertices should be performed.
+        ///- a positive value is used as search tolerance.
+        /// </summary>
+        public static string QaVertexCoincidenceSelf_PointTolerance {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceSelf_PointTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if any edge within the EdgeTolerance is required to have a coincident vertex. If True, an error is reported if there is any edge within the EdgeTolerance from the verified vertex, even if the distance from the vertex to the edge is less than or equal the CoincidenceTolerance, as long as there is no coincident vertex on that edge..
+        /// </summary>
+        public static string QaVertexCoincidenceSelf_RequireVertexOnNearbyEdge {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceSelf_RequireVertexOnNearbyEdge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that vertex coincidence should be verified also within the geometry of each verified feature. If False, vertex coincidence is verified only between different features..
+        /// </summary>
+        public static string QaVertexCoincidenceSelf_VerifyWithinFeature {
+            get {
+                return ResourceManager.GetString("QaVertexCoincidenceSelf_VerifyWithinFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features that are not fully within a specified box.
+        /// </summary>
+        public static string QaWithinBox_0 {
+            get {
+                return ResourceManager.GetString("QaWithinBox_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature class.
+        /// </summary>
+        public static string QaWithinBox_featureClass {
+            get {
+                return ResourceManager.GetString("QaWithinBox_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if only the geometry parts outside the box are reported. Otherwise the entire feature geometry is reported.
+        /// </summary>
+        public static string QaWithinBox_reportOnlyOutsideParts {
+            get {
+                return ResourceManager.GetString("QaWithinBox_reportOnlyOutsideParts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to X maximum coordinate of the box.
+        /// </summary>
+        public static string QaWithinBox_xMax {
+            get {
+                return ResourceManager.GetString("QaWithinBox_xMax", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to X minimum coordinate of the box.
+        /// </summary>
+        public static string QaWithinBox_xMin {
+            get {
+                return ResourceManager.GetString("QaWithinBox_xMin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Y maximum coordinate of the box.
+        /// </summary>
+        public static string QaWithinBox_yMax {
+            get {
+                return ResourceManager.GetString("QaWithinBox_yMax", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Y minimum coordinate of the box.
+        /// </summary>
+        public static string QaWithinBox_yMin {
+            get {
+                return ResourceManager.GetString("QaWithinBox_yMin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features with Z values outside of a defined range.
+        ///
+        ///- Supported for points, lines, polygons, multipoints and multipatches.
+        ///- For lines and polygons, individual errors are reported for consecutive segments (or parts of segments) exceeding the same boundary of the Z range.
+        ///- For multipoints and multipatches, one error is reported for all points exceeding the same boundary of the Z range..
+        /// </summary>
+        public static string QaWithinZRange_0 {
+            get {
+                return ResourceManager.GetString("QaWithinZRange_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features with Z values outside of a defined range, and allowing for special values outside the defined range (e.g. -9999).
+        ///
+        ///- Supported for points, lines, polygons, multipoints and multipatches.
+        ///- For lines and polygons, individual errors are reported for consecutive segments (or parts of segments) exceeding the same boundary of the Z range.
+        ///- For multipoints and multipatches, one error is reported for all points exceeding the same boundary of the Z range..
+        /// </summary>
+        public static string QaWithinZRange_1 {
+            get {
+                return ResourceManager.GetString("QaWithinZRange_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional list of special allowed values outside of the defined valid Z range (e.g. -9999).
+        /// </summary>
+        public static string QaWithinZRange_allowedZValues {
+            get {
+                return ResourceManager.GetString("QaWithinZRange_allowedZValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature class to check for Z values outside of the defined range.
+        /// </summary>
+        public static string QaWithinZRange_featureClass {
+            get {
+                return ResourceManager.GetString("QaWithinZRange_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The upper boundary of the range of valid Z values.
+        ///
+        ///Z values larger than this value are considered invalid..
+        /// </summary>
+        public static string QaWithinZRange_maximumZValue {
+            get {
+                return ResourceManager.GetString("QaWithinZRange_maximumZValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The lower boundary of the range of valid Z values. 
+        ///
+        ///Z values smaller than this value are considered invalid..
+        /// </summary>
+        public static string QaWithinZRange_minimumZValue {
+            get {
+                return ResourceManager.GetString("QaWithinZRange_minimumZValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features where the Z difference to features from another feature class is less than &apos;limit&apos;.
+        /// </summary>
+        public static string QaZDifferenceOther_0 {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features where the Z difference to features from a list of other feature classes is less than &apos;limit&apos;.
+        /// </summary>
+        public static string QaZDifferenceOther_1 {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 3D feature class to check.
+        /// </summary>
+        public static string QaZDifferenceOther_featureClass {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 3D feature classes to check.
+        /// </summary>
+        public static string QaZDifferenceOther_featureClasses {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to For zComparisonMethod &apos;IntersectionPoints&apos; and UseDistanceFromReferenceRingPlane =True: indicates if non-coplanar rings should be ignored, i.e. not reported. If &apos;False&apos; (default), such rings are reported as errors..
+        /// </summary>
+        public static string QaZDifferenceOther_IgnoreNonCoplanarReferenceRings {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_IgnoreNonCoplanarReferenceRings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Minimum allowed Z difference.
+        /// </summary>
+        public static string QaZDifferenceOther_limit {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional expression to calculate the maximum Z difference based on attributes of the lower/upper features. The lower feature can be addressed as &apos;L&apos;, the upper feature as &apos;U&apos;..
+        /// </summary>
+        public static string QaZDifferenceOther_MaximumZDifferenceExpression {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_MaximumZDifferenceExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional expression to calculate the minimum Z difference based on attributes of the lower/upper features. The lower feature can be addressed as &apos;L&apos;, the upper feature as &apos;U&apos;. If defined, this overrides the value of &apos;limit&apos;.
+        /// </summary>
+        public static string QaZDifferenceOther_MinimumZDifferenceExpression {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_MinimumZDifferenceExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to For zComparisonMethod &apos;IntersectionPoints&apos; and UseDistanceFromReferenceRingPlane =True: indicates the coplanarity tolerance, i.e. the maximum allowed distance of individual ring vertices from the regression plane through all ring vertices for the ring to be considered planar. The Z difference to non-planar rings is not checked..
+        /// </summary>
+        public static string QaZDifferenceOther_ReferenceRingPlaneCoplanarityTolerance {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_ReferenceRingPlaneCoplanarityTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 3D feature class to compare with.
+        /// </summary>
+        public static string QaZDifferenceOther_relatedClass {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_relatedClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 3D feature classes to compare with.
+        /// </summary>
+        public static string QaZDifferenceOther_relatedClasses {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_relatedClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Optional condition that, if defined, must be fulfilled for a pair of features to check the Z differences between them..
+        /// </summary>
+        public static string QaZDifferenceOther_RelevantRelationCondition {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_RelevantRelationCondition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates that the Z distance between vertices of the input feature class(es) and the planes of intersecting rings of features from the related class(es) is verified. Only relevant for zComparisonMethod &quot;.
+        /// </summary>
+        public static string QaZDifferenceOther_UseDistanceFromReferenceRingPlane {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_UseDistanceFromReferenceRingPlane", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to BoundingBox: check the Z difference between the bounding boxes of features that intersect in 2D
+        ///IntersectionPoints: check the Z difference at intersection points, or the Z difference of vertices of the feature class(es) to the plane defined by rings of 2D-intersecting features in the related class(es)..
+        /// </summary>
+        public static string QaZDifferenceOther_zComparisonMethod {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_zComparisonMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on Z relation of features with 2D intersection.
+        ///Upper feature is aliased as &quot;U&quot;, lower feature as &quot;L&quot;
+        ///Example: U.EdgeLevel &gt; L.EdgeLevel.
+        /// </summary>
+        public static string QaZDifferenceOther_zRelationConstraint {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_zRelationConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features where the Z difference to another feature is less than &apos;limit&apos;.
+        /// </summary>
+        public static string QaZDifferenceSelf_0 {
+            get {
+                return ResourceManager.GetString("QaZDifferenceSelf_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features where the Z difference to another feature within a list of feature classes is less than &apos;limit&apos;.
+        /// </summary>
+        public static string QaZDifferenceSelf_1 {
+            get {
+                return ResourceManager.GetString("QaZDifferenceSelf_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 3D feature class to check.
+        /// </summary>
+        public static string QaZDifferenceSelf_featureClass {
+            get {
+                return ResourceManager.GetString("QaZDifferenceSelf_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 3D feature classes to check against each other and itself.
+        /// </summary>
+        public static string QaZDifferenceSelf_featureClasses {
+            get {
+                return ResourceManager.GetString("QaZDifferenceSelf_featureClasses", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum allowed Z difference.
+        /// </summary>
+        public static string QaZDifferenceSelf_limit {
+            get {
+                return ResourceManager.GetString("QaZDifferenceSelf_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to BoundingBox: compare the Z difference between the bounding boxes of features that intersect in 2D.
+        /// </summary>
+        public static string QaZDifferenceSelf_zComparisonMethod {
+            get {
+                return ResourceManager.GetString("QaZDifferenceSelf_zComparisonMethod", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint on Z relation of features with 2D intersection.
+        ///Upper feature is aliased as &quot;U&quot;, lower feature as &quot;L&quot;
+        ///Example: U.EdgeLevel &gt; L.EdgeLevel.
+        /// </summary>
+        public static string QaZDifferenceSelf_zRelationConstraint {
+            get {
+                return ResourceManager.GetString("QaZDifferenceSelf_zRelationConstraint", resourceCulture);
             }
         }
     }

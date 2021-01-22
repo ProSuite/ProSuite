@@ -65,27 +65,42 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssertUtils.cs" />
+    <Compile Include="Constraints\GdbConstraintUtilsTest.cs" />
+    <Compile Include="Construction\Coords.cs" />
     <Compile Include="Construction\CurveConstruction.cs" />
     <Compile Include="Construction\MultiPatchConstruction.cs" />
+    <Compile Include="MeasureUtilsTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QaBorderSenseTest.cs" />
     <Compile Include="QaCentroidsTest.cs" />
     <Compile Include="QaConnectionsTest.cs" />
+    <Compile Include="QaConstraintTest.cs" />
     <Compile Include="QaCurveTest.cs" />
     <Compile Include="QaFlowLogicTest.cs" />
     <Compile Include="QaFullCoincidenceTest.cs" />
+    <Compile Include="QaGdbConstraintFactoryTest.cs" />
+    <Compile Include="QaGroupConnectedTest.cs" />
+    <Compile Include="QaGroupConstraintsTest.cs" />
     <Compile Include="QaIntersectsOtherTest.cs" />
     <Compile Include="QaLineConnectionFieldValuesTest.cs" />
+    <Compile Include="QaLineGroupConstraintsTest.cs" />
     <Compile Include="QaMinSegAngleTest.cs" />
+    <Compile Include="QaMonotonicZTest.cs" />
+    <Compile Include="QaMustBeNearOtherTest.cs" />
     <Compile Include="QaNotNearTest.cs" />
     <Compile Include="QaPartCoincidenceOtherTest.cs" />
     <Compile Include="QaPartCoincidenceSelfTest.cs" />
     <Compile Include="QaPartCoincidenceVolumeTest.cs" />
     <Compile Include="QaPointNotNearTest.cs" />
     <Compile Include="QaPseudoNodesTest.cs" />
+    <Compile Include="QaRegularExpressionTest.cs" />
+    <Compile Include="QaRelConstraintTest.cs" />
     <Compile Include="QaSegmentLengthTest.cs" />
     <Compile Include="QaTopoNotNearTest.cs" />
+    <Compile Include="QaUniqueTest.cs" />
+    <Compile Include="RouteMeasuresTest.cs" />
     <Compile Include="TestData\TestDataUtils.cs" />
+    <Compile Include="TestRunners\ModelTableDataset.cs" />
     <Compile Include="TestRunners\ModelVectorDataset.cs" />
     <Compile Include="TestRunners\QaContainerTestRunner.cs" />
     <Compile Include="TestRunners\QaTestRunner.cs" />
@@ -130,6 +145,10 @@
     <ProjectReference Include="..\ProSuite.QA.Container\ProSuite.QA.Container.csproj">
       <Project>{D51693C1-F9F6-425D-8CD6-8DFBF5A52F6F}</Project>
       <Name>ProSuite.QA.Container</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj">
+      <Project>{01cbba9e-0d4d-439f-9147-6a5685884a65}</Project>
+      <Name>ProSuite.QA.Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.QA.TestFactories\ProSuite.QA.TestFactories.csproj">
       <Project>{61704E1C-E13D-45E2-8388-BD3D1F8A1AF5}</Project>
@@ -219,6 +238,7 @@
     <None Include="TestData\QaPartCoincidendeCurveTest.gdb\gdb" />
     <None Include="TestData\QaPartCoincidendeCurveTest.gdb\timestamps" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
