@@ -98,6 +98,8 @@ namespace ProSuite.Commons.AO.Geometry
 			return CreateVerticalCoordinateSystem((int) vcs);
 		}
 
+		private static readonly object _srLock = new object();
+
 		/// <summary>
 		/// Creates a spatial reference based on a factory code.
 		/// </summary>
@@ -110,7 +112,18 @@ namespace ProSuite.Commons.AO.Geometry
 		                                                       bool setDefaultXyDomain =
 			                                                       false)
 		{
-			ISpatialReference sref = Factory.CreateSpatialReference(srId);
+			ISpatialReference sref;
+
+			// Experimental: Try preventing the following error by serialized access
+			//System.ArgumentException: the input is not a geographic or projected coordinate system
+			//	at ESRI.ArcGIS.Geometry.ISpatialReferenceFactory3.CreateSpatialReference(Int32 srID)
+			// Unfortunately the error is not reproducible in a simple unit test
+			// Repro: Run nightly work unit verification for several eligible work units
+			//        and it happens in ca. 1 out of 2 cases.
+			lock (_srLock)
+			{
+				sref = Factory.CreateSpatialReference(srId);
+			}
 
 			if (setDefaultXyDomain)
 			{

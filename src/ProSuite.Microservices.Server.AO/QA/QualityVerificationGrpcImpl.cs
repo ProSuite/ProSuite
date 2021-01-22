@@ -375,7 +375,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private static void SetupUserNameProvider(VerificationRequest request)
 		{
-			_msg.InfoFormat("New verification request from {0}", request.UserName);
+			_msg.DebugFormat("New verification request from {0}", request.UserName);
 
 			string userName = request.UserName;
 
@@ -620,7 +620,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			catch (InvalidOperationException ex)
 			{
 				// For example: System.InvalidOperationException: Only one write can be pending at a time
-				_msg.Debug("Error sending progress to the client", ex);
+				_msg.VerboseDebug("Error sending progress to the client", ex);
 
 				// The issues would be lost, so put them back into the collection
 				foreach (IssueMsg issue in response.Issues)

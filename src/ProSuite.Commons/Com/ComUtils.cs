@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -158,6 +160,29 @@ namespace ProSuite.Commons.Com
 			}
 
 			return result;
+		}
+
+		public static Task<T> StartStaTask<T>(Func<T> func)
+		{
+			var tcs = new TaskCompletionSource<T>();
+
+			Thread thread = new Thread(() =>
+			{
+				try
+				{
+					tcs.SetResult(func());
+				}
+				catch (Exception e)
+				{
+					tcs.SetException(e);
+				}
+			});
+
+			thread.IsBackground = true;
+			thread.SetApartmentState(ApartmentState.STA);
+			thread.Start();
+
+			return tcs.Task;
 		}
 
 		private static bool HasPublicParameterlessConstructor([NotNull] Type type)

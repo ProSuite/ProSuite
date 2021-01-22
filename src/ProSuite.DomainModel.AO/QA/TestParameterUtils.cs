@@ -1,3 +1,8 @@
+#if Server
+using ESRI.ArcGIS.DatasourcesRaster;
+#else
+using ESRI.ArcGIS.DataSourcesRaster;
+#endif
 using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -40,20 +45,16 @@ namespace ProSuite.DomainModel.AO.QA
 			if (typeof(IObjectClass).IsAssignableFrom(dataType))
 				return TestParameterType.ObjectDataset;
 
-			if (typeof(ITopology).IsAssignableFrom(dataType))
-				return TestParameterType.TopologyDataset;
-			if (typeof(IGeometricNetwork).IsAssignableFrom(dataType))
-				return TestParameterType.GeometricNetworkDataset;
-			// TODO: Handle Topology / Terrain / ...
-			//if (typeof(ITerrain).IsAssignableFrom(dataType))
-			//	return TestParameterType.TerrainDataset;
-
-			//if (typeof(IMosaicLayer).IsAssignableFrom(dataType))
-			//	return TestParameterType.RasterMosaicDataset;
-			//if (typeof(IMosaicDataset).IsAssignableFrom(dataType))
-			//	return TestParameterType.RasterMosaicDataset;
+			if (typeof(IMosaicDataset).IsAssignableFrom(dataType))
+				return TestParameterType.RasterMosaicDataset;
 			if (typeof(IRasterDataset).IsAssignableFrom(dataType))
 				return TestParameterType.RasterDataset;
+
+			if (typeof(IDataset).IsAssignableFrom(dataType))
+			{
+				// Topology, Terrain, Geometric Network, Mosaic
+				return TestParameterType.Unknown;
+			}
 
 			if (dataType == typeof(double))
 				return TestParameterType.Double;
@@ -81,11 +82,13 @@ namespace ProSuite.DomainModel.AO.QA
 				return false;
 			}
 
+			return typeof(IDataset).IsAssignableFrom(type);
+
 			return typeof(IFeatureClass).IsAssignableFrom(type) ||
 			       typeof(ITable).IsAssignableFrom(type) ||
 			       typeof(IObjectClass).IsAssignableFrom(type) ||
-			       typeof(ITopology).IsAssignableFrom(type) ||
-			       typeof(IGeometricNetwork).IsAssignableFrom(type) ||
+			       //typeof(ITopology).IsAssignableFrom(type) ||
+			       //typeof(IGeometricNetwork).IsAssignableFrom(type) ||
 			       //			       typeof(ITerrain).IsAssignableFrom(type) ||
 			       typeof(IRasterDataset).IsAssignableFrom(type) ||
 			       typeof(IRasterDataset2).IsAssignableFrom(type)
