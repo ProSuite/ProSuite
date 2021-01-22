@@ -89,12 +89,17 @@
     <Compile Include="Coincidence\QaTopoNotNear.NestedClasses.cs" />
     <Compile Include="Coincidence\QaTopoNotNear.UnconnectedEndsAdapter.cs" />
     <Compile Include="Coincidence\SegmentSearcher.cs" />
+    <Compile Include="Constraints\ConstraintNode.cs" />
+    <Compile Include="Constraints\GdbConstraintUtils.cs" />
+    <Compile Include="CrossTileFeatureState.cs" />
+    <Compile Include="CurveMeasureRange.cs" />
     <Compile Include="Documentation\DocAttribute.cs" />
     <Compile Include="Documentation\DocStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>DocStrings.resx</DependentUpon>
     </Compile>
+    <Compile Include="FieldListType.cs" />
     <Compile Include="GeometryComponent.cs" />
     <Compile Include="GeometryComponentUtils.cs" />
     <Compile Include="GeometryMathUtils.cs" />
@@ -129,14 +134,21 @@
     <Compile Include="LineFieldValuesConstraint.cs" />
     <Compile Include="LineIntersection.cs" />
     <Compile Include="LineIntersectionUtils.cs" />
+    <Compile Include="MeasureUtils.cs" />
+    <Compile Include="MMonotonicitySequence.cs" />
+    <Compile Include="MonotonicityDirection.cs" />
+    <Compile Include="MonotonicitySequence.cs" />
     <Compile Include="Network\QaConnectionCountRule.cs" />
     <Compile Include="Network\QaConnectionRule.cs" />
     <Compile Include="Network\QaConnectionRuleHelper.cs" />
+    <Compile Include="Network\QaGroupNetworkBase.cs" />
     <Compile Include="Network\QaNetworkBase.cs" />
     <Compile Include="NonLinearSegmentType.cs" />
     <Compile Include="Obsolete\QaLineConnection.cs" />
     <Compile Include="Obsolete\QaMinPointDistance.cs" />
     <Compile Include="OrphanErrorType.cs" />
+    <Compile Include="OverlappingMeasures.cs" />
+    <Compile Include="PendingFeature.cs" />
     <Compile Include="PointFieldValuesConstraint.cs" />
     <Compile Include="Properties\LocalizableStrings.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -148,39 +160,64 @@
     <Compile Include="QaBorderSense.cs" />
     <Compile Include="QaCentroids.cs" />
     <Compile Include="QaConnections.cs" />
+    <Compile Include="QaConstraint.cs" />
     <Compile Include="QaCurve.cs" />
     <Compile Include="QaDangleCount.cs" />
     <Compile Include="QaExtent.cs" />
     <Compile Include="QaFlowLogic.cs" />
     <Compile Include="QaFullCoincidence.cs" />
+    <Compile Include="QaGroupConnected.cs" />
+    <Compile Include="QaGroupConstraints.cs" />
     <Compile Include="QaIntersectsOther.cs" />
     <Compile Include="QaLengthBase.cs" />
     <Compile Include="QaLineConnectionFieldValues.cs" />
+    <Compile Include="QaLineGroupConstraints.cs" />
     <Compile Include="QaLineIntersectAngle.cs" />
     <Compile Include="QaMaxArea.cs" />
     <Compile Include="QaMaxLength.cs" />
+    <Compile Include="QaMeasures.cs" />
     <Compile Include="QaMinAngle.cs" />
     <Compile Include="QaMinArea.cs" />
     <Compile Include="QaMinIntersect.cs" />
     <Compile Include="QaMinLength.cs" />
     <Compile Include="QaMinNodeDistance.cs" />
     <Compile Include="QaMinSegAngle.cs" />
+    <Compile Include="QaMonotonicMeasures.cs" />
+    <Compile Include="QaMonotonicZ.cs" />
+    <Compile Include="QaMustBeNearOther.cs" />
+    <Compile Include="QaMustIntersectMatrixOther.cs" />
+    <Compile Include="QaMustIntersectOther.cs" />
+    <Compile Include="QaMustTouchOther.cs" />
+    <Compile Include="QaMustTouchSelf.cs" />
+    <Compile Include="QaNeighbourAreas.cs" />
     <Compile Include="QaNotNear.cs" />
     <Compile Include="QaOrphanNode.cs" />
     <Compile Include="QaPartCoincidenceOther.cs" />
     <Compile Include="QaPartCoincidenceSelf.cs" />
     <Compile Include="QaPointNotNear.cs" />
     <Compile Include="QaPseudoNodes.cs" />
+    <Compile Include="QaRegularExpression.cs" />
+    <Compile Include="QaRelationConstraint.cs" />
+    <Compile Include="QaRequiredSpatialRelationOther.cs" />
+    <Compile Include="QaRouteMeasuresUnique.cs" />
     <Compile Include="QaSegmentLength.cs" />
+    <Compile Include="QaTrimmedTextFields.cs" />
+    <Compile Include="QaUnique.cs" />
+    <Compile Include="QaValue.cs" />
+    <Compile Include="RouteMeasures.cs" />
+    <Compile Include="SimpleCrossTileFeatureState.cs" />
     <Compile Include="SpatialRelations\QaSpatialRelationBase.cs" />
     <Compile Include="SpatialRelations\QaSpatialRelationOtherBase.cs" />
     <Compile Include="SpatialRelations\QaSpatialRelationSelfBase.cs" />
     <Compile Include="SpatialRelations\QaSpatialRelationUtils.cs" />
+    <Compile Include="TestRowReference.cs" />
+    <Compile Include="ZMonotonicitySequence.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Documentation\DocStrings.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
+      <Generator>PublicResXFileCodeGenerator</Generator>
       <LastGenOutput>DocStrings.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="IssueCodes\IssueCodeDescriptions.de-CH.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -228,6 +265,21 @@
       <Name>ProSuite.QA.Container</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <None Include="Documentation\de\EsriCH.QA.Tests.QuickReference_de.pdf" />
+    <None Include="Documentation\en\EsriCH.QA.Tests.QuickReference_en.pdf" />
+    <None Include="Documentation\en\SQLSyntax_en.docx" />
+    <None Include="Documentation\en\SQLSyntax_en.pdf" />
+    <None Include="Documentation\Extended\de\QaFactoryPseudoNodes.docx" />
+    <None Include="Documentation\Extended\de\QaFactoryPseudoNodes.pdf" />
+    <None Include="Documentation\Extended\de\QaFlowLogic.docx" />
+    <None Include="Documentation\Extended\de\QaFlowLogic.pdf" />
+    <None Include="Documentation\Extended\de\QaLineConnection.docx" />
+    <None Include="Documentation\Extended\de\QaLineConnection.pdf" />
+    <None Include="Documentation\Extended\de\QaMinNodeDistance.docx" />
+    <None Include="Documentation\Extended\de\QaMinNodeDistance.pdf" />
+    <None Include="Documentation\Extended\de\QaNodeLineCoincidence.docx" />
+    <None Include="Documentation\Extended\de\QaNodeLineCoincidence.pdf" />
+  </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
