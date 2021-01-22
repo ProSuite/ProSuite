@@ -11,14 +11,8 @@ namespace ProSuite.QA.Tests.Documentation
 	[CLSCompliant(false)]
 	public class DocAttribute : LocalizedDescriptionAttribute
 	{
-		private readonly string _resourceName;
-
 		public DocAttribute([NotNull] string resourceName)
 			: base(DocStrings.ResourceManager, resourceName)
-		{
-			_resourceName = resourceName;
-		}
-
-		public string ResourceName => _resourceName;
+		{ }
 	}
 }

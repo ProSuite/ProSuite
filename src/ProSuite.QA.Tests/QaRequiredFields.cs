@@ -1,0 +1,205 @@
+using System;
+using System.Collections.Generic;
+using ESRI.ArcGIS.Geodatabase;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+
+namespace ProSuite.QA.Tests
+{
+	[CLSCompliant(false)]
+	[UsedImplicitly]
+	[AttributeTest]
+	public class QaRequiredFields : ContainerTest
+	{
+		private readonly bool _allowEmptyStrings;
+		private readonly List<int> _requiredFieldIndices = new List<int>();
+
+		#region issue codes
+
+		[CanBeNull] private static TestIssueCodes _codes;
+
+		[NotNull]
+		[UsedImplicitly]
+		public static TestIssueCodes Codes => _codes ?? (_codes = new Code());
+
+		private class Code : LocalTestIssueCodes
+		{
+			public const string NullValue = "NullValue";
+			public const string EmptyString = "EmptyString";
+
+			public Code() : base("RequiredFields") { }
+		}
+
+		#endregion
+
+		[Doc("QaRequiredFields_0")]
+		public QaRequiredFields(
+				[Doc("QaRequiredFields_table")] [NotNull]
+				ITable table,
+				[Doc("QaRequiredFields_requiredFieldNames")] [NotNull]
+				IEnumerable<string>
+					requiredFieldNames)
+			// ReSharper disable once IntroduceOptionalParameters.Global
+			: this(table, requiredFieldNames, false) { }
+
+		[Doc("QaRequiredFields_0")]
+		public QaRequiredFields(
+				[Doc("QaRequiredFields_table")] [NotNull]
+				ITable table,
+				[Doc("QaRequiredFields_requiredFieldNames")] [NotNull]
+				IEnumerable<string>
+					requiredFieldNames,
+				[Doc("QaRequiredFields_allowEmptyStrings")]
+				bool allowEmptyStrings)
+			// ReSharper disable once IntroduceOptionalParameters.Global
+			: this(table, requiredFieldNames, allowEmptyStrings, false) { }
+
+		[Doc("QaRequiredFields_0")]
+		public QaRequiredFields(
+			[Doc("QaRequiredFields_table")] [NotNull]
+			ITable table,
+			[Doc("QaRequiredFields_requiredFieldNames")] [NotNull]
+			IEnumerable<string>
+				requiredFieldNames,
+			[Doc("QaRequiredFields_allowEmptyStrings")]
+			bool allowEmptyStrings,
+			[Doc("QaRequiredFields_allowMissingFields")]
+			bool allowMissingFields)
+			: base(table)
+		{
+			Assert.ArgumentNotNull(requiredFieldNames, nameof(requiredFieldNames));
+
+			_allowEmptyStrings = allowEmptyStrings;
+
+			foreach (string fieldName in requiredFieldNames)
+			{
+				int index = table.FindField(fieldName);
+				if (index < 0)
+				{
+					if (allowMissingFields)
+					{
+						// ignore non-existing field
+						continue;
+					}
+
+					throw new ArgumentException(
+						string.Format("Field not found in table {0}: {1}",
+						              DatasetUtils.GetName(table),
+						              fieldName), nameof(requiredFieldNames));
+				}
+
+				_requiredFieldIndices.Add(index);
+			}
+		}
+
+		[Doc("QaRequiredFields_0")]
+		public QaRequiredFields(
+			[Doc("QaRequiredFields_table")] [NotNull]
+			ITable table,
+			[Doc("QaRequiredFields_requiredFieldNamesString")] [NotNull]
+			string
+				requiredFieldNamesString,
+			[Doc("QaRequiredFields_allowEmptyStrings")]
+			bool allowEmptyStrings,
+			[Doc("QaRequiredFields_allowMissingFields")]
+			bool allowMissingFields)
+			: this(table, TestUtils.GetTokens(requiredFieldNamesString),
+			       allowEmptyStrings, allowMissingFields) { }
+
+		[Doc("QaRequiredFields_0")]
+		public QaRequiredFields(
+			[Doc("QaRequiredFields_table")] [NotNull]
+			ITable table,
+			[Doc("QaRequiredFields_allowEmptyStrings")]
+			bool allowEmptyStrings)
+			: this(table, GetAllEditableFieldNames(table),
+			       allowEmptyStrings, false) { }
+
+		public override bool IsQueriedTable(int tableIndex)
+		{
+			return false;
+		}
+
+		public override bool IsGeometryUsedTable(int tableIndex)
+		{
+			return (AreaOfInterest != null);
+		}
+
+		public override bool RetestRowsPerIntersectedTile(int tableIndex)
+		{
+			return false;
+		}
+
+		protected override int ExecuteCore(IRow row, int tableIndex)
+		{
+			int errorCount = 0;
+
+			foreach (int fieldIndex in _requiredFieldIndices)
+			{
+				object value = row.get_Value(fieldIndex);
+
+				string fieldName;
+				if (value == null || (value is DBNull))
+				{
+					string description =
+						string.Format("Required field has null value: {0}",
+						              TestUtils.GetFieldDisplayName(
+							              row, fieldIndex, out fieldName));
+
+					errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
+					                          Codes[Code.NullValue], fieldName,
+					                          row);
+				}
+				else
+				{
+					var stringValue = value as string;
+					if (stringValue != null)
+					{
+						if (! _allowEmptyStrings && stringValue.Length == 0)
+						{
+							string description = string.Format(
+								"Required field has empty string value: {0}",
+								TestUtils.GetFieldDisplayName(row, fieldIndex, out fieldName));
+
+							errorCount += ReportError(description, TestUtils.GetShapeCopy(row),
+							                          Codes[Code.EmptyString], fieldName,
+							                          row);
+						}
+					}
+				}
+			}
+
+			return errorCount;
+		}
+
+		[NotNull]
+		private static IEnumerable<string> GetAllEditableFieldNames([NotNull] ITable table)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+
+			var featureClass = table as IFeatureClass;
+			string shapeFieldName = featureClass?.ShapeFieldName;
+
+			foreach (IField field in DatasetUtils.GetFields(table))
+			{
+				if (! field.Editable || ! field.IsNullable)
+				{
+					continue;
+				}
+
+				if (shapeFieldName != null &&
+				    string.Equals(field.Name, shapeFieldName, StringComparison.OrdinalIgnoreCase))
+				{
+					continue;
+				}
+
+				yield return field.Name;
+			}
+		}
+	}
+}

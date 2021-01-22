@@ -59,5 +59,3607 @@ namespace ProSuite.QA.Tests.IssueCodes {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A matching neighbor feature exists, but attribute constraints are not fulfilled..
+        /// </summary>
+        internal static string BorderingLines_Match_ConstraintsNotFulfilled {
+            get {
+                return ResourceManager.GetString("BorderingLines_Match_ConstraintsNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A matching neighbor feature exists, but a line end point is not coincident..
+        /// </summary>
+        internal static string BorderingLines_Match_EndPointNotCoincident {
+            get {
+                return ResourceManager.GetString("BorderingLines_Match_EndPointNotCoincident", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. There is a nearby neighbor feature connected to the border. The border lines are not coincident where the features touch the border..
+        /// </summary>
+        internal static string BorderingLines_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsFulfilled {
+            get {
+                return ResourceManager.GetString("BorderingLines_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. There is a nearby neighbor feature connected to the border. Attribute constraints are not fulfilled with that feature. The borders are not coincident where the features touch the border..
+        /// </summary>
+        internal static string BorderingLines_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsNotFulfilled {
+            get {
+                return ResourceManager.GetString("BorderingLines_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsNotFulfill" +
+                        "ed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. No neighbor feature connected to the border found within the search distance..
+        /// </summary>
+        internal static string BorderingLines_NoMatch_NoCandidate {
+            get {
+                return ResourceManager.GetString("BorderingLines_NoMatch_NoCandidate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. No neighbor feature connected to the border found within the search distance. The border line is partly outside the verified extent..
+        /// </summary>
+        internal static string BorderingLines_NoMatch_NoCandidate_PartlyOutsideVerifiedExtent {
+            get {
+                return ResourceManager.GetString("BorderingLines_NoMatch_NoCandidate_PartlyOutsideVerifiedExtent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A matching neighbor feature exists, but attribute constraints are not fulfilled..
+        /// </summary>
+        internal static string BorderingPoints_Match_ConstraintsNotFulfilled {
+            get {
+                return ResourceManager.GetString("BorderingPoints_Match_ConstraintsNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. There is a nearby neighbor feature connected to the border. The borders are not coincident at the point locations..
+        /// </summary>
+        internal static string BorderingPoints_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsFulfilled {
+            get {
+                return ResourceManager.GetString("BorderingPoints_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsFulfilled" +
+                        "", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. There is a nearby neighbor feature connected to the border. Attribute constraints are not fulfilled with that feature. The borders are not coincident at the point locations..
+        /// </summary>
+        internal static string BorderingPoints_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsNotFulfilled {
+            get {
+                return ResourceManager.GetString("BorderingPoints_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsNotFulfil" +
+                        "led", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. There is a nearby neighbor feature connected to the border..
+        /// </summary>
+        internal static string BorderingPoints_NoMatch_CandidateExists_ConstraintsFulfilled {
+            get {
+                return ResourceManager.GetString("BorderingPoints_NoMatch_CandidateExists_ConstraintsFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. There is a nearby neighbor feature connected to the border. Attribute constraints are not fulfilled with that feature..
+        /// </summary>
+        internal static string BorderingPoints_NoMatch_CandidateExists_ConstraintsNotFulfilled {
+            get {
+                return ResourceManager.GetString("BorderingPoints_NoMatch_CandidateExists_ConstraintsNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. No neighbor feature connected to the border found within the search distance..
+        /// </summary>
+        internal static string BorderingPoints_NoMatch_NoCandidate {
+            get {
+                return ResourceManager.GetString("BorderingPoints_NoMatch_NoCandidate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dangling line.
+        /// </summary>
+        internal static string BorderSense_DanglingLine {
+            get {
+                return ResourceManager.GetString("BorderSense_DanglingLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Empty polygon created.
+        /// </summary>
+        internal static string BorderSense_EmptyPolygonCreated {
+            get {
+                return ResourceManager.GetString("BorderSense_EmptyPolygonCreated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Incomplete line.
+        /// </summary>
+        internal static string BorderSense_IncompleteLine {
+            get {
+                return ResourceManager.GetString("BorderSense_IncompleteLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inconsistent orientation.
+        /// </summary>
+        internal static string BorderSense_InconsistentOrientation {
+            get {
+                return ResourceManager.GetString("BorderSense_InconsistentOrientation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inverted orientation.
+        /// </summary>
+        internal static string BorderSense_InvertedOrientation {
+            get {
+                return ResourceManager.GetString("BorderSense_InvertedOrientation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Boundary loop found.
+        /// </summary>
+        internal static string BoundaryLoops_BoundaryLoop {
+            get {
+                return ResourceManager.GetString("BoundaryLoops_BoundaryLoop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Boundary loop larger than maximum allowed area found.
+        /// </summary>
+        internal static string BoundaryLoops_BoundaryLoop_AreaLargerThanLimit {
+            get {
+                return ResourceManager.GetString("BoundaryLoops_BoundaryLoop_AreaLargerThanLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Boundary loop smaller than minimum allowed area found.
+        /// </summary>
+        internal static string BoundaryLoops_BoundaryLoop_AreaSmallerThanLimit {
+            get {
+                return ResourceManager.GetString("BoundaryLoops_BoundaryLoop_AreaSmallerThanLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Boundary loop found, but the loop polygon can not be constructed.
+        /// </summary>
+        internal static string BoundaryLoops_BoundaryLoop_UnableToConstructLoopPolygon {
+            get {
+                return ResourceManager.GetString("BoundaryLoops_BoundaryLoop_UnableToConstructLoopPolygon", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Centroid lies on a border.
+        /// </summary>
+        internal static string Centroids_CentroidLiesOnBorder {
+            get {
+                return ResourceManager.GetString("Centroids_CentroidLiesOnBorder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dangling line.
+        /// </summary>
+        internal static string Centroids_DanglingLine {
+            get {
+                return ResourceManager.GetString("Centroids_DanglingLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Centroid does not match constraint.
+        /// </summary>
+        internal static string Centroids_DoesNotMatchConstraint {
+            get {
+                return ResourceManager.GetString("Centroids_DoesNotMatchConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Multiple centroids inside constructed polygon.
+        /// </summary>
+        internal static string Centroids_MultipleCentroids {
+            get {
+                return ResourceManager.GetString("Centroids_MultipleCentroids", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constructed polygon contains no centroid.
+        /// </summary>
+        internal static string Centroids_NoCentroid {
+            get {
+                return ResourceManager.GetString("Centroids_NoCentroid", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Coded value names are not unique within the domain.
+        /// </summary>
+        internal static string CodedValues_NamesNotUnique {
+            get {
+                return ResourceManager.GetString("CodedValues_NamesNotUnique", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Coded value has no name.
+        /// </summary>
+        internal static string CodedValues_NoName {
+            get {
+                return ResourceManager.GetString("CodedValues_NoName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The number of coded values with a name different from the value is not sufficient.
+        /// </summary>
+        internal static string CodedValues_NotEnoughNamesDifferentFromValue {
+            get {
+                return ResourceManager.GetString("CodedValues_NotEnoughNamesDifferentFromValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Length of coded value name exceeds maximum value.
+        /// </summary>
+        internal static string CodedValues_TextLength_TooLong {
+            get {
+                return ResourceManager.GetString("CodedValues_TextLength_TooLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Length of coded value name is less than minimum value.
+        /// </summary>
+        internal static string CodedValues_TextLength_TooShort {
+            get {
+                return ResourceManager.GetString("CodedValues_TextLength_TooShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of coded values is less than minimum value.
+        /// </summary>
+        internal static string CodedValues_TooFewCodedValues {
+            get {
+                return ResourceManager.GetString("CodedValues_TooFewCodedValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The line group contains a branch.
+        /// </summary>
+        internal static string ConnectedLineGroups_InvalidLineGroup_Branch {
+            get {
+                return ResourceManager.GetString("ConnectedLineGroups_InvalidLineGroup_Branch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The line group contains a cycle.
+        /// </summary>
+        internal static string ConnectedLineGroups_InvalidLineGroup_Cycle {
+            get {
+                return ResourceManager.GetString("ConnectedLineGroups_InvalidLineGroup_Cycle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The line group contains a branch to the interior of a cycle.
+        /// </summary>
+        internal static string ConnectedLineGroups_InvalidLineGroup_InsideBranch {
+            get {
+                return ResourceManager.GetString("ConnectedLineGroups_InvalidLineGroup_InsideBranch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The line group consists of more than one connected part.
+        /// </summary>
+        internal static string ConnectedLineGroups_InvalidLineGroup_MultipleParts {
+            get {
+                return ResourceManager.GetString("ConnectedLineGroups_InvalidLineGroup_MultipleParts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The constraint is not fulfilled.
+        /// </summary>
+        internal static string Constraints_ConstraintNotFulfilled {
+            get {
+                return ResourceManager.GetString("Constraints_ConstraintNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error evaluating constraint expression.
+        /// </summary>
+        internal static string Constraints_ErrorEvaluatingExpression {
+            get {
+                return ResourceManager.GetString("Constraints_ErrorEvaluatingExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unclosed line.
+        /// </summary>
+        internal static string ContainedPoints_NotClosedLine {
+            get {
+                return ResourceManager.GetString("ContainedPoints_NotClosedLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of contained points larger than expected number.
+        /// </summary>
+        internal static string ContainedPoints_PointCount_LargerThanExpected {
+            get {
+                return ResourceManager.GetString("ContainedPoints_PointCount_LargerThanExpected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of contained points larger than the specified maximum.
+        /// </summary>
+        internal static string ContainedPoints_PointCount_LargerThanMaximum {
+            get {
+                return ResourceManager.GetString("ContainedPoints_PointCount_LargerThanMaximum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of contained points smaller than expected number.
+        /// </summary>
+        internal static string ContainedPoints_PointCount_SmallerThanExpected {
+            get {
+                return ResourceManager.GetString("ContainedPoints_PointCount_SmallerThanExpected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of contained points less than the specified minimum.
+        /// </summary>
+        internal static string ContainedPoints_PointCount_SmallerThanMinimum {
+            get {
+                return ResourceManager.GetString("ContainedPoints_PointCount_SmallerThanMinimum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature is not contained.
+        /// </summary>
+        internal static string ContainsOther_NoContainingFeature {
+            get {
+                return ResourceManager.GetString("ContainsOther_NoContainingFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature is contained, but the constraint is not fulfilled for any of the containing features.
+        /// </summary>
+        internal static string ContainsOther_NoContainingFeature_WithFulfilledConstraint {
+            get {
+                return ResourceManager.GetString("ContainsOther_NoContainingFeature_WithFulfilledConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Face does not define a valid plane (segments are collinear).
+        /// </summary>
+        internal static string CoplanarRings_FaceDoesNotDefineValidPlane {
+            get {
+                return ResourceManager.GetString("CoplanarRings_FaceDoesNotDefineValidPlane", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Face is not coplanar.
+        /// </summary>
+        internal static string CoplanarRings_FaceNotCoplanar {
+            get {
+                return ResourceManager.GetString("CoplanarRings_FaceNotCoplanar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature is not covered by any feature.
+        /// </summary>
+        internal static string CoveredByOther_NotCoveredByAnyFeature {
+            get {
+                return ResourceManager.GetString("CoveredByOther_NotCoveredByAnyFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature is not covered by any feature within the verified extent (the tested feature extends beyond the verified extent).
+        /// </summary>
+        internal static string CoveredByOther_NotCoveredByAnyFeature_PartlyOutsideVerifiedExtent {
+            get {
+                return ResourceManager.GetString("CoveredByOther_NotCoveredByAnyFeature_PartlyOutsideVerifiedExtent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature is not covered by any feature within the verified extent for which the defined constraint is fulfilled (the tested feature extends beyond the verified extent).
+        /// </summary>
+        internal static string CoveredByOther_NotCoveredByAnyFeature_PartlyOutsideVerifiedExtent_WithFulfilledConstraint {
+            get {
+                return ResourceManager.GetString("CoveredByOther_NotCoveredByAnyFeature_PartlyOutsideVerifiedExtent_WithFulfilledCo" +
+                        "nstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature is not covered by any feature for which the defined constraint is fulfilled.
+        /// </summary>
+        internal static string CoveredByOther_NotCoveredByAnyFeature_WithFulfilledConstraint {
+            get {
+                return ResourceManager.GetString("CoveredByOther_NotCoveredByAnyFeature_WithFulfilledConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature is not fully covered by other features.
+        /// </summary>
+        internal static string CoveredByOther_NotFullyCovered {
+            get {
+                return ResourceManager.GetString("CoveredByOther_NotFullyCovered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature is not fully covered by other features for which the defined constraint is fulfilled.
+        /// </summary>
+        internal static string CoveredByOther_NotFullyCovered_WithFulfilledConstraint {
+            get {
+                return ResourceManager.GetString("CoveredByOther_NotFullyCovered_WithFulfilledConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature is not sufficiently covered by other features (the covered percentage is smaller than the minimum value).
+        /// </summary>
+        internal static string CoveredByOther_NotSufficientlyCovered {
+            get {
+                return ResourceManager.GetString("CoveredByOther_NotSufficientlyCovered", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature is not sufficiently covered by other features for which the defined constraint is fulfilled (the covered percentage is smaller than the minimum value).
+        /// </summary>
+        internal static string CoveredByOther_NotSufficientlyCovered_WithFulfilledConstraint {
+            get {
+                return ResourceManager.GetString("CoveredByOther_NotSufficientlyCovered_WithFulfilledConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature geometries cross each other.
+        /// </summary>
+        internal static string Crosses_GeometriesCross {
+            get {
+                return ResourceManager.GetString("Crosses_GeometriesCross", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature geometries cross each other and the attribute constraint is not fulfilled.
+        /// </summary>
+        internal static string Crosses_GeometriesCross_ConstraintNotFulfilled {
+            get {
+                return ResourceManager.GetString("Crosses_GeometriesCross_ConstraintNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A matching neighbor feature exists, but attribute constraints are not fulfilled..
+        /// </summary>
+        internal static string CrossingAreas_Match_ConstraintsNotFulfilled {
+            get {
+                return ResourceManager.GetString("CrossingAreas_Match_ConstraintsNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. There is a nearby neighbor feature connected to the border. The border lines are not coincident where the features touch the border..
+        /// </summary>
+        internal static string CrossingAreas_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsFulfilled {
+            get {
+                return ResourceManager.GetString("CrossingAreas_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. There is a nearby neighbor feature connected to the border. Attribute constraints are not fulfilled with that feature. The border lines are not coincident where the features touch the border..
+        /// </summary>
+        internal static string CrossingAreas_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsNotFulfilled {
+            get {
+                return ResourceManager.GetString("CrossingAreas_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsNotFulfille" +
+                        "d", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. No neighbor feature connected to the border found within the search distance..
+        /// </summary>
+        internal static string CrossingAreas_NoMatch_NoCandidate {
+            get {
+                return ResourceManager.GetString("CrossingAreas_NoMatch_NoCandidate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. No neighbor feature connected to the border found within the search distance. The border line is partly outside the verified extent..
+        /// </summary>
+        internal static string CrossingAreas_NoMatch_NoCandidate_PartlyOutsideVerifiedExtent {
+            get {
+                return ResourceManager.GetString("CrossingAreas_NoMatch_NoCandidate_PartlyOutsideVerifiedExtent", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A matching neighbor feature exists, but attribute constraints are not fulfilled..
+        /// </summary>
+        internal static string CrossingLines_Match_ConstraintsNotFulfilled {
+            get {
+                return ResourceManager.GetString("CrossingLines_Match_ConstraintsNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. There is a nearby neighbor feature connected to the border. The borders are not coincident at the line end points..
+        /// </summary>
+        internal static string CrossingLines_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsFulfilled {
+            get {
+                return ResourceManager.GetString("CrossingLines_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. There is a nearby neighbor feature connected to the border. Attribute constraints are not fulfilled with that feature. The borders are not coincident at the line end points..
+        /// </summary>
+        internal static string CrossingLines_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsNotFulfilled {
+            get {
+                return ResourceManager.GetString("CrossingLines_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsNotFulfille" +
+                        "d", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. There is a nearby neighbor feature connected to the border..
+        /// </summary>
+        internal static string CrossingLines_NoMatch_CandidateExists_ConstraintsFulfilled {
+            get {
+                return ResourceManager.GetString("CrossingLines_NoMatch_CandidateExists_ConstraintsFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. There is a nearby neighbor feature connected to the border. Attribute constraints are not fulfilled with that feature..
+        /// </summary>
+        internal static string CrossingLines_NoMatch_CandidateExists_ConstraintsNotFulfilled {
+            get {
+                return ResourceManager.GetString("CrossingLines_NoMatch_CandidateExists_ConstraintsNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. There is a nearby neighbor feature connected to the border. The distance to its border connection exceeds the maximum value. The borders are not coincident at the line end points..
+        /// </summary>
+        internal static string CrossingLines_NoMatch_CandidateExists_EndPointOutsideTolerance_BordersNotCoincident_ConstraintsFulfilled {
+            get {
+                return ResourceManager.GetString("CrossingLines_NoMatch_CandidateExists_EndPointOutsideTolerance_BordersNotCoincide" +
+                        "nt_ConstraintsFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. There is a nearby neighbor feature connected to the border. The distance to its border connection exceeds the maximum value. Attribute constraints are not fulfilled. The borders are not coincident at the line end points..
+        /// </summary>
+        internal static string CrossingLines_NoMatch_CandidateExists_EndPointOutsideTolerance_BordersNotCoincident_ConstraintsNotFulfilled {
+            get {
+                return ResourceManager.GetString("CrossingLines_NoMatch_CandidateExists_EndPointOutsideTolerance_BordersNotCoincide" +
+                        "nt_ConstraintsNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. There is a nearby neighbor feature connected to the border. The distance to its border connection exceeds the maximum value..
+        /// </summary>
+        internal static string CrossingLines_NoMatch_CandidateExists_EndPointOutsideTolerance_ConstraintsFulfilled {
+            get {
+                return ResourceManager.GetString("CrossingLines_NoMatch_CandidateExists_EndPointOutsideTolerance_ConstraintsFulfill" +
+                        "ed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. There is a nearby neighbor feature connected to the border. The distance to its border connection exceeds the maximum value. Attribute constraints are not fulfilled..
+        /// </summary>
+        internal static string CrossingLines_NoMatch_CandidateExists_EndPointOutsideTolerance_ConstraintsNotFulfilled {
+            get {
+                return ResourceManager.GetString("CrossingLines_NoMatch_CandidateExists_EndPointOutsideTolerance_ConstraintsNotFulf" +
+                        "illed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. No neighbor feature connected to the border found within the search distance..
+        /// </summary>
+        internal static string CrossingLines_NoMatch_NoCandidate {
+            get {
+                return ResourceManager.GetString("CrossingLines_NoMatch_NoCandidate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No matching neighbor feature. No neighbor feature connected to the border found within search distance. The end point connects to another feature on the same side..
+        /// </summary>
+        internal static string CrossingLines_NoMatch_NoCandidate_ConnectedOnSameSide {
+            get {
+                return ResourceManager.GetString("CrossingLines_NoMatch_NoCandidate_ConnectedOnSameSide", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polyline feature has invalid number of dangles.
+        /// </summary>
+        internal static string DangleCount_InvalidNumberOfDangles {
+            get {
+                return ResourceManager.GetString("DangleCount_InvalidNumberOfDangles", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The date value has a time part.
+        /// </summary>
+        internal static string DateFieldsWithoutTime_HasTimePart {
+            get {
+                return ResourceManager.GetString("DateFieldsWithoutTime_HasTimePart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid date value.
+        /// </summary>
+        internal static string DateFieldsWithoutTime_InvalidDateValue {
+            get {
+                return ResourceManager.GetString("DateFieldsWithoutTime_InvalidDateValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error reading date value from field.
+        /// </summary>
+        internal static string DateValues_UnrecognizedDateValue {
+            get {
+                return ResourceManager.GetString("DateValues_UnrecognizedDateValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Date value is after latest valid date.
+        /// </summary>
+        internal static string DateValues_ValueAfterLatestValidDate {
+            get {
+                return ResourceManager.GetString("DateValues_ValueAfterLatestValidDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Date value is before earliest valid date.
+        /// </summary>
+        internal static string DateValues_ValueBeforeEarliestValidDate {
+            get {
+                return ResourceManager.GetString("DateValues_ValueBeforeEarliestValidDate", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Domain descriptions are not unique.
+        /// </summary>
+        internal static string DomainDescriptions_NotUnique {
+            get {
+                return ResourceManager.GetString("DomainDescriptions_NotUnique", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Length of domain description exceeds maximum value.
+        /// </summary>
+        internal static string DomainDescriptions_TextLength_TooLong {
+            get {
+                return ResourceManager.GetString("DomainDescriptions_TextLength_TooLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The domain name matches the error pattern.
+        /// </summary>
+        internal static string DomainNameRegex_MatchingErrorPattern {
+            get {
+                return ResourceManager.GetString("DomainNameRegex_MatchingErrorPattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The domain name does not match the expected pattern.
+        /// </summary>
+        internal static string DomainNameRegex_NotMatchingExpectedPattern {
+            get {
+                return ResourceManager.GetString("DomainNameRegex_NotMatchingExpectedPattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Domain name contains only lower-case characters.
+        /// </summary>
+        internal static string DomainNames_Case_AllLower {
+            get {
+                return ResourceManager.GetString("DomainNames_Case_AllLower", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Domain name contains only upper-case characters.
+        /// </summary>
+        internal static string DomainNames_Case_AllUpper {
+            get {
+                return ResourceManager.GetString("DomainNames_Case_AllUpper", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Domain name contains upper-case characters.
+        /// </summary>
+        internal static string DomainNames_Case_NotAllLower {
+            get {
+                return ResourceManager.GetString("DomainNames_Case_NotAllLower", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Domain name contains lower-case characters.
+        /// </summary>
+        internal static string DomainNames_Case_NotAllUpper {
+            get {
+                return ResourceManager.GetString("DomainNames_Case_NotAllUpper", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Domain name is not in mixed-case.
+        /// </summary>
+        internal static string DomainNames_Case_NotMixed {
+            get {
+                return ResourceManager.GetString("DomainNames_Case_NotMixed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The domain name does not contain the name of the field for which it is used.
+        /// </summary>
+        internal static string DomainNames_DoesNotContainFieldName {
+            get {
+                return ResourceManager.GetString("DomainNames_DoesNotContainFieldName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The domain name does not start with the expected prefix.
+        /// </summary>
+        internal static string DomainNames_DoesNotStartWithPrefix {
+            get {
+                return ResourceManager.GetString("DomainNames_DoesNotStartWithPrefix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Length of domain name exceeds maximum value.
+        /// </summary>
+        internal static string DomainNames_TextLength_TooLong {
+            get {
+                return ResourceManager.GetString("DomainNames_TextLength_TooLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Length of domain name is less than minimum value.
+        /// </summary>
+        internal static string DomainNames_TextLength_TooShort {
+            get {
+                return ResourceManager.GetString("DomainNames_TextLength_TooShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature geometries are equal in XY.
+        /// </summary>
+        internal static string Duplicates_GeometriesEqualInXY {
+            get {
+                return ResourceManager.GetString("Duplicates_GeometriesEqualInXY", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature geometries are equal in XY and the attribute constraint is not fulfilled.
+        /// </summary>
+        internal static string Duplicates_GeometriesEqualInXY_ConstraintNotFulfilled {
+            get {
+                return ResourceManager.GetString("Duplicates_GeometriesEqualInXY_ConstraintNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The geometry is empty.
+        /// </summary>
+        internal static string EmptyGeometry_GeometryEmpty {
+            get {
+                return ResourceManager.GetString("EmptyGeometry_GeometryEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The geometry is null.
+        /// </summary>
+        internal static string EmptyGeometry_GeometryNull {
+            get {
+                return ResourceManager.GetString("EmptyGeometry_GeometryNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Empty text in field.
+        /// </summary>
+        internal static string EmptyNotNullTextFields_EmptyText {
+            get {
+                return ResourceManager.GetString("EmptyNotNullTextFields_EmptyText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Text field has unexpected value.
+        /// </summary>
+        internal static string EmptyNotNullTextFields_UnexpectedValue {
+            get {
+                return ResourceManager.GetString("EmptyNotNullTextFields_UnexpectedValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Text field value is null.
+        /// </summary>
+        internal static string EmptyNotNullTextFields_ValueIsNull {
+            get {
+                return ResourceManager.GetString("EmptyNotNullTextFields_ValueIsNull", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature extent is larger than the limit.
+        /// </summary>
+        internal static string Extent_ExtentLargerThanLimit {
+            get {
+                return ResourceManager.GetString("Extent_ExtentLargerThanLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Alias name contains only lower-case characters.
+        /// </summary>
+        internal static string FieldAliases_Case_AllLower {
+            get {
+                return ResourceManager.GetString("FieldAliases_Case_AllLower", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Alias name contains only upper-case characters.
+        /// </summary>
+        internal static string FieldAliases_Case_AllUpper {
+            get {
+                return ResourceManager.GetString("FieldAliases_Case_AllUpper", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Alias name contains upper-case characters.
+        /// </summary>
+        internal static string FieldAliases_Case_NotAllLower {
+            get {
+                return ResourceManager.GetString("FieldAliases_Case_NotAllLower", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Alias name contains lower-case characters.
+        /// </summary>
+        internal static string FieldAliases_Case_NotAllUpper {
+            get {
+                return ResourceManager.GetString("FieldAliases_Case_NotAllUpper", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Alias name is not in mixed-case.
+        /// </summary>
+        internal static string FieldAliases_Case_NotMixed {
+            get {
+                return ResourceManager.GetString("FieldAliases_Case_NotMixed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Alias name is same as field name.
+        /// </summary>
+        internal static string FieldAliases_EqualsFieldName {
+            get {
+                return ResourceManager.GetString("FieldAliases_EqualsFieldName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Alias name differs from field name only in character case.
+        /// </summary>
+        internal static string FieldAliases_EqualsFieldName_ExceptCase {
+            get {
+                return ResourceManager.GetString("FieldAliases_EqualsFieldName_ExceptCase", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Alias name is not defined.
+        /// </summary>
+        internal static string FieldAliases_NoAliasName {
+            get {
+                return ResourceManager.GetString("FieldAliases_NoAliasName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Alias name is not unique within table.
+        /// </summary>
+        internal static string FieldAliases_NotUnique {
+            get {
+                return ResourceManager.GetString("FieldAliases_NotUnique", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Alias name of system field is not equal to the field name.
+        /// </summary>
+        internal static string FieldAliases_SystemFieldAliasDiffersFromName {
+            get {
+                return ResourceManager.GetString("FieldAliases_SystemFieldAliasDiffersFromName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Length of alias name exceeds maximum value.
+        /// </summary>
+        internal static string FieldAliases_TextLength_TooLong {
+            get {
+                return ResourceManager.GetString("FieldAliases_TextLength_TooLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Length of alias name is less than minimum value.
+        /// </summary>
+        internal static string FieldAliases_TextLength_TooShort {
+            get {
+                return ResourceManager.GetString("FieldAliases_TextLength_TooShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The domain is used for a field with a different data type.
+        /// </summary>
+        internal static string FieldDomains_FieldTypeMismatch {
+            get {
+                return ResourceManager.GetString("FieldDomains_FieldTypeMismatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The field name matches the error pattern.
+        /// </summary>
+        internal static string FieldNameRegex_MatchingErrorPattern {
+            get {
+                return ResourceManager.GetString("FieldNameRegex_MatchingErrorPattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The field name does not match the expected pattern.
+        /// </summary>
+        internal static string FieldNameRegex_NotMatchingExpectedPattern {
+            get {
+                return ResourceManager.GetString("FieldNameRegex_NotMatchingExpectedPattern", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Field name contains only lower-case characters.
+        /// </summary>
+        internal static string FieldNames_Case_AllLower {
+            get {
+                return ResourceManager.GetString("FieldNames_Case_AllLower", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Field name contains only upper-case characters.
+        /// </summary>
+        internal static string FieldNames_Case_AllUpper {
+            get {
+                return ResourceManager.GetString("FieldNames_Case_AllUpper", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Field name contains upper-case characters.
+        /// </summary>
+        internal static string FieldNames_Case_NotAllLower {
+            get {
+                return ResourceManager.GetString("FieldNames_Case_NotAllLower", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Field name contains lower-case characters.
+        /// </summary>
+        internal static string FieldNames_Case_NotAllUpper {
+            get {
+                return ResourceManager.GetString("FieldNames_Case_NotAllUpper", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Field name is not in mixed-case.
+        /// </summary>
+        internal static string FieldNames_Case_NotMixed {
+            get {
+                return ResourceManager.GetString("FieldNames_Case_NotMixed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to First characters of field name are not unique within table.
+        /// </summary>
+        internal static string FieldNames_SubstringNotUnique {
+            get {
+                return ResourceManager.GetString("FieldNames_SubstringNotUnique", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Length of field name exceeds maximum value.
+        /// </summary>
+        internal static string FieldNames_TextLength_TooLong {
+            get {
+                return ResourceManager.GetString("FieldNames_TextLength_TooLong", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Length of field name is less than minimum value.
+        /// </summary>
+        internal static string FieldNames_TextLength_TooShort {
+            get {
+                return ResourceManager.GetString("FieldNames_TextLength_TooShort", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Required field does not exist.
+        /// </summary>
+        internal static string FieldProperties_MissingField {
+            get {
+                return ResourceManager.GetString("FieldProperties_MissingField", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The field does not have a domain assigned, but there is a domain specified for it.
+        /// </summary>
+        internal static string FieldProperties_NoDomain {
+            get {
+                return ResourceManager.GetString("FieldProperties_NoDomain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The field does not have the specified alias name.
+        /// </summary>
+        internal static string FieldProperties_UnexpectedAlias {
+            get {
+                return ResourceManager.GetString("FieldProperties_UnexpectedAlias", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The field has an unexpected domain assigned.
+        /// </summary>
+        internal static string FieldProperties_UnexpectedDomain {
+            get {
+                return ResourceManager.GetString("FieldProperties_UnexpectedDomain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The field does not have the specified field length.
+        /// </summary>
+        internal static string FieldProperties_UnexpectedFieldLength {
+            get {
+                return ResourceManager.GetString("FieldProperties_UnexpectedFieldLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Alias name matches a field specification, but field name is different.
+        /// </summary>
+        internal static string FieldProperties_UnexpectedFieldNameForAlias {
+            get {
+                return ResourceManager.GetString("FieldProperties_UnexpectedFieldNameForAlias", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The field does not have the specified field type.
+        /// </summary>
+        internal static string FieldProperties_UnexpectedFieldType {
+            get {
+                return ResourceManager.GetString("FieldProperties_UnexpectedFieldType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The field value is not valid for the field type.
+        /// </summary>
+        internal static string FieldValues_ValueNotValidForFieldType {
+            get {
+                return ResourceManager.GetString("FieldValues_ValueNotValidForFieldType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Node has multiple outgoing lines.
+        /// </summary>
+        internal static string FlowLogic_OutgoingLines_Multiple {
+            get {
+                return ResourceManager.GetString("FlowLogic_OutgoingLines_Multiple", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Node has no outgoing lines.
+        /// </summary>
+        internal static string FlowLogic_OutgoingLines_None {
+            get {
+                return ResourceManager.GetString("FlowLogic_OutgoingLines_None", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Field values don&apos;t reference a row in the target table.
+        /// </summary>
+        internal static string ForeignKeys_NoReferencedRow {
+            get {
+                return ResourceManager.GetString("ForeignKeys_NoReferencedRow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to convert a field value to the target field type.
+        /// </summary>
+        internal static string ForeignKeys_UnableToConvertFieldValue {
+            get {
+                return ResourceManager.GetString("ForeignKeys_UnableToConvertFieldValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Field values incorrectly reference a row in the target table.
+        /// </summary>
+        internal static string ForeignKeys_UnexpectedReferencedRow {
+            get {
+                return ResourceManager.GetString("ForeignKeys_UnexpectedReferencedRow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Part not near reference.
+        /// </summary>
+        internal static string FullCoincidence_PartNotNearReference {
+            get {
+                return ResourceManager.GetString("FullCoincidence_PartNotNearReference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gap found.
+        /// </summary>
+        internal static string Gaps_Gap {
+            get {
+                return ResourceManager.GetString("Gaps_Gap", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gap found with area smaller than minimum value.
+        /// </summary>
+        internal static string Gaps_Gap_AreaTooSmall {
+            get {
+                return ResourceManager.GetString("Gaps_Gap_AreaTooSmall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gap found with area smaller than minimum value and ratio of perimeter (squared) to area larger than maximum value.
+        /// </summary>
+        internal static string Gaps_Gap_AreaTooSmallAndSliverRatioTooLarge {
+            get {
+                return ResourceManager.GetString("Gaps_Gap_AreaTooSmallAndSliverRatioTooLarge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Gap found with ratio of perimeter (squared) to area larger than maximum value.
+        /// </summary>
+        internal static string Gaps_Gap_SliverRatioTooLarge {
+            get {
+                return ResourceManager.GetString("Gaps_Gap_SliverRatioTooLarge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid object ID value.
+        /// </summary>
+        internal static string GdbAttributeRules_InvalidObjectID {
+            get {
+                return ResourceManager.GetString("GdbAttributeRules_InvalidObjectID", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid subtype field value.
+        /// </summary>
+        internal static string GdbAttributeRules_InvalidSubtype {
+            get {
+                return ResourceManager.GetString("GdbAttributeRules_InvalidSubtype", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Field value is not valid for domain.
+        /// </summary>
+        internal static string GdbAttributeRules_ValueNotValidForDomain {
+            get {
+                return ResourceManager.GetString("GdbAttributeRules_ValueNotValidForDomain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connectivity problem in network.
+        /// </summary>
+        internal static string GdbConnectivity_NetworkConnectivityError {
+            get {
+                return ResourceManager.GetString("GdbConnectivity_NetworkConnectivityError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connectivity problem in network. The network was edited and the problem was repaired.
+        /// </summary>
+        internal static string GdbConnectivity_NetworkConnectivityError_RepairedDuringTestrun {
+            get {
+                return ResourceManager.GetString("GdbConnectivity_NetworkConnectivityError_RepairedDuringTestrun", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Geodatabase attribute rule not fulfilled.
+        /// </summary>
+        internal static string GdbConstraint_GdbConstraintNotFulfilled {
+            get {
+                return ResourceManager.GetString("GdbConstraint_GdbConstraintNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A geodatabase attribute rule is incorrectly defined.
+        /// </summary>
+        internal static string GdbConstraint_InvalidRuleDefinition {
+            get {
+                return ResourceManager.GetString("GdbConstraint_InvalidRuleDefinition", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error getting geometry for complex edge element.
+        /// </summary>
+        internal static string GdbNetworkElements_ComplexEdge_ErrorAccessingGeometry {
+            get {
+                return ResourceManager.GetString("GdbNetworkElements_ComplexEdge_ErrorAccessingGeometry", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid complex edge element.
+        /// </summary>
+        internal static string GdbNetworkElements_ComplexEdge_InvalidComplexEdge {
+            get {
+                return ResourceManager.GetString("GdbNetworkElements_ComplexEdge_InvalidComplexEdge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Complex edge geometry is zero-length.
+        /// </summary>
+        internal static string GdbNetworkElements_ComplexEdge_ZeroLength {
+            get {
+                return ResourceManager.GetString("GdbNetworkElements_ComplexEdge_ZeroLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error ocurred, network feature could not be processed.
+        /// </summary>
+        internal static string GdbNetworkElements_ErrorProcessingNetworkFeature {
+            get {
+                return ResourceManager.GetString("GdbNetworkElements_ErrorProcessingNetworkFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Complex junction has an invalid element id.
+        /// </summary>
+        internal static string GdbNetworkElements_InvalidElementID_ComplexJunction {
+            get {
+                return ResourceManager.GetString("GdbNetworkElements_InvalidElementID_ComplexJunction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to From junction has an invalid element id.
+        /// </summary>
+        internal static string GdbNetworkElements_InvalidElementID_Edge_FromJunction {
+            get {
+                return ResourceManager.GetString("GdbNetworkElements_InvalidElementID_Edge_FromJunction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to To junction has an invalid element id.
+        /// </summary>
+        internal static string GdbNetworkElements_InvalidElementID_Edge_ToJunction {
+            get {
+                return ResourceManager.GetString("GdbNetworkElements_InvalidElementID_Edge_ToJunction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Simple edge has an invalid element id.
+        /// </summary>
+        internal static string GdbNetworkElements_InvalidElementID_SimpleEdge {
+            get {
+                return ResourceManager.GetString("GdbNetworkElements_InvalidElementID_SimpleEdge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Simple junction has an invalid element id.
+        /// </summary>
+        internal static string GdbNetworkElements_InvalidElementID_SimpleJunction {
+            get {
+                return ResourceManager.GetString("GdbNetworkElements_InvalidElementID_SimpleJunction", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dirty area found (topology not validated).
+        /// </summary>
+        internal static string GdbTopology_DirtyArea {
+            get {
+                return ResourceManager.GetString("GdbTopology_DirtyArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A topology rule is not fulfilled.
+        /// </summary>
+        internal static string GdbTopology_RuleNotFulfilled {
+            get {
+                return ResourceManager.GetString("GdbTopology_RuleNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The topology validation failed.
+        /// </summary>
+        internal static string GdbTopology_ValidationFailed {
+            get {
+                return ResourceManager.GetString("GdbTopology_ValidationFailed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The geodatabase release version is too high.
+        /// </summary>
+        internal static string GeodatabaseRelease_IncorrectVersion_TooHigh {
+            get {
+                return ResourceManager.GetString("GeodatabaseRelease_IncorrectVersion_TooHigh", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The geodatabase release version is too low.
+        /// </summary>
+        internal static string GeodatabaseRelease_IncorrectVersion_TooLow {
+            get {
+                return ResourceManager.GetString("GeodatabaseRelease_IncorrectVersion_TooLow", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to determine the geodatabase release version.
+        /// </summary>
+        internal static string GeodatabaseRelease_UnableToDetermineRelease {
+            get {
+                return ResourceManager.GetString("GeodatabaseRelease_UnableToDetermineRelease", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Geometry constraint is not fulfilled for shape.
+        /// </summary>
+        internal static string GeometryConstraint_ConstraintNotFulfilled_ForShape {
+            get {
+                return ResourceManager.GetString("GeometryConstraint_ConstraintNotFulfilled_ForShape", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Geometry constraint is not fulfilled for geometry part.
+        /// </summary>
+        internal static string GeometryConstraint_ConstraintNotFulfilled_ForShapePart {
+            get {
+                return ResourceManager.GetString("GeometryConstraint_ConstraintNotFulfilled_ForShapePart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature partially or completely outside terrain extent.
+        /// </summary>
+        internal static string GeometryToTerrainZOffset_NoTerrainData {
+            get {
+                return ResourceManager.GetString("GeometryToTerrainZOffset_NoTerrainData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Geometry not enough above terrain.
+        /// </summary>
+        internal static string GeometryToTerrainZOffset_ZOffset_NotEnoughAboveTerrain {
+            get {
+                return ResourceManager.GetString("GeometryToTerrainZOffset_ZOffset_NotEnoughAboveTerrain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Geometry not enough below terrain.
+        /// </summary>
+        internal static string GeometryToTerrainZOffset_ZOffset_NotEnoughBelowTerrain {
+            get {
+                return ResourceManager.GetString("GeometryToTerrainZOffset_ZOffset_NotEnoughBelowTerrain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Geometry not outside limits, too close to terrain.
+        /// </summary>
+        internal static string GeometryToTerrainZOffset_ZOffset_TooCloseToTerrain {
+            get {
+                return ResourceManager.GetString("GeometryToTerrainZOffset_ZOffset_TooCloseToTerrain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Geometry not within limits, too far from terrain.
+        /// </summary>
+        internal static string GeometryToTerrainZOffset_ZOffset_TooFarFromTerrain {
+            get {
+                return ResourceManager.GetString("GeometryToTerrainZOffset_ZOffset_TooFarFromTerrain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Symbols intersect.
+        /// </summary>
+        internal static string GraphicConflict_SymbolsIntersect {
+            get {
+                return ResourceManager.GetString("GraphicConflict_SymbolsIntersect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of distinct values in group not as expected.
+        /// </summary>
+        internal static string GroupConstraints_DistinctValues_NotExpectedNumber {
+            get {
+                return ResourceManager.GetString("GroupConstraints_DistinctValues_NotExpectedNumber", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of distinct values in group not in the expected range.
+        /// </summary>
+        internal static string GroupConstraints_DistinctValues_NotInExpectedRange {
+            get {
+                return ResourceManager.GetString("GroupConstraints_DistinctValues_NotInExpectedRange", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Too few distinct values in group.
+        /// </summary>
+        internal static string GroupConstraints_DistinctValues_TooFew {
+            get {
+                return ResourceManager.GetString("GroupConstraints_DistinctValues_TooFew", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Too many distinct values in group.
+        /// </summary>
+        internal static string GroupConstraints_DistinctValues_TooMany {
+            get {
+                return ResourceManager.GetString("GroupConstraints_DistinctValues_TooMany", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Consecutive segments are almost, but not sufficently horizontal.
+        /// </summary>
+        internal static string HorizontalSegments_NotSufficientlyHorizontal_ConsecutiveSegments {
+            get {
+                return ResourceManager.GetString("HorizontalSegments_NotSufficientlyHorizontal_ConsecutiveSegments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The segment is almost, but not sufficently horizontal.
+        /// </summary>
+        internal static string HorizontalSegments_NotSufficientlyHorizontal_Segment {
+            get {
+                return ResourceManager.GetString("HorizontalSegments_NotSufficientlyHorizontal_Segment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The interiors of feature geometries intersect each other.
+        /// </summary>
+        internal static string InteriorIntersects_InteriorsIntersect {
+            get {
+                return ResourceManager.GetString("InteriorIntersects_InteriorsIntersect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The interiors of feature geometries intersect each other and the attribute constraint is not fulfilled.
+        /// </summary>
+        internal static string InteriorIntersects_InteriorsIntersect_ConstraintNotFulfilled {
+            get {
+                return ResourceManager.GetString("InteriorIntersects_InteriorsIntersect_ConstraintNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The polygon has an unallowed number of interior rings.
+        /// </summary>
+        internal static string InteriorRings_UnallowedInteriorRings {
+            get {
+                return ResourceManager.GetString("InteriorRings_UnallowedInteriorRings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature geometries intersect according to a 9IM intersection matrix.
+        /// </summary>
+        internal static string IntersectionMatrix_GeometriesIntersectWithMatrix {
+            get {
+                return ResourceManager.GetString("IntersectionMatrix_GeometriesIntersectWithMatrix", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature geometries intersect according to a 9IM intersection matrix and the attribute constraint is not fulfilled.
+        /// </summary>
+        internal static string IntersectionMatrix_GeometriesIntersectWithMatrix_ConstraintNotFulfilled {
+            get {
+                return ResourceManager.GetString("IntersectionMatrix_GeometriesIntersectWithMatrix_ConstraintNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No intersection.
+        /// </summary>
+        internal static string IntersectionMatrix_NoIntersection {
+            get {
+                return ResourceManager.GetString("IntersectionMatrix_NoIntersection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attribute constraint is not fulfilled.
+        /// </summary>
+        internal static string IntersectionZDifference_ConstraintNotFulfilled {
+            get {
+                return ResourceManager.GetString("IntersectionZDifference_ConstraintNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Face is not coplanar.
+        /// </summary>
+        internal static string IntersectionZDifference_FaceNotCoplanar {
+            get {
+                return ResourceManager.GetString("IntersectionZDifference_FaceNotCoplanar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Z value is not defined.
+        /// </summary>
+        internal static string IntersectionZDifference_UndefinedZ {
+            get {
+                return ResourceManager.GetString("IntersectionZDifference_UndefinedZ", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Z distance between the corresponding Z values is too large.
+        /// </summary>
+        internal static string IntersectionZDifference_ZDifferenceTooLarge {
+            get {
+                return ResourceManager.GetString("IntersectionZDifference_ZDifferenceTooLarge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Z distance between the corresponding Z values is too small.
+        /// </summary>
+        internal static string IntersectionZDifference_ZDifferenceTooSmall {
+            get {
+                return ResourceManager.GetString("IntersectionZDifference_ZDifferenceTooSmall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature geometries intersect each other.
+        /// </summary>
+        internal static string Intersects_GeometriesIntersect {
+            get {
+                return ResourceManager.GetString("Intersects_GeometriesIntersect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature geometries intersect each other and the attribute constraint is not fulfilled.
+        /// </summary>
+        internal static string Intersects_GeometriesIntersect_ConstraintNotFulfilled {
+            get {
+                return ResourceManager.GetString("Intersects_GeometriesIntersect_ConstraintNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Field values do not match line constraint.
+        /// </summary>
+        internal static string LineConnectionFieldValues_ConstraintNotFulfilled_Line {
+            get {
+                return ResourceManager.GetString("LineConnectionFieldValues_ConstraintNotFulfilled_Line", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Field values do not match point constraint and line constraint.
+        /// </summary>
+        internal static string LineConnectionFieldValues_ConstraintNotFulfilled_LineAndPoint {
+            get {
+                return ResourceManager.GetString("LineConnectionFieldValues_ConstraintNotFulfilled_LineAndPoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Field values do not match point constraint.
+        /// </summary>
+        internal static string LineConnectionFieldValues_ConstraintNotFulfilled_Point {
+            get {
+                return ResourceManager.GetString("LineConnectionFieldValues_ConstraintNotFulfilled_Point", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Features do not fulfill any of the rules for valid connections.
+        /// </summary>
+        internal static string LineConnections_RulesNotFulfilled {
+            get {
+                return ResourceManager.GetString("LineConnections_RulesNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dangle length is too small (dangle ends at fork, and connects to other groups).
+        /// </summary>
+        internal static string LineGroupConstraints_Dangle_AtFork_Continued {
+            get {
+                return ResourceManager.GetString("LineGroupConstraints_Dangle_AtFork_Continued", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dangle length is too small (dangle ends at fork, no connection to other groups).
+        /// </summary>
+        internal static string LineGroupConstraints_Dangle_AtFork_Discontinued {
+            get {
+                return ResourceManager.GetString("LineGroupConstraints_Dangle_AtFork_Discontinued", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dangle length is too small (dangle does not end at fork, and connects to other groups).
+        /// </summary>
+        internal static string LineGroupConstraints_Dangle_NotAtFork_Continued {
+            get {
+                return ResourceManager.GetString("LineGroupConstraints_Dangle_NotAtFork_Continued", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Dangle length is too small (dangle does not end at fork, no connection to other groups).
+        /// </summary>
+        internal static string LineGroupConstraints_Dangle_NotAtFork_Discontinued {
+            get {
+                return ResourceManager.GetString("LineGroupConstraints_Dangle_NotAtFork_Discontinued", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Small gap to other group of different type (gap starts at fork).
+        /// </summary>
+        internal static string LineGroupConstraints_Gap_ToOtherGroupType_AtFork {
+            get {
+                return ResourceManager.GetString("LineGroupConstraints_Gap_ToOtherGroupType_AtFork", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Small gap to other group of different type (gap does not start at fork).
+        /// </summary>
+        internal static string LineGroupConstraints_Gap_ToOtherGroupType_NotAtFork {
+            get {
+                return ResourceManager.GetString("LineGroupConstraints_Gap_ToOtherGroupType_NotAtFork", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Small gap to other group of same type (gap starts at fork and is covered by other group).
+        /// </summary>
+        internal static string LineGroupConstraints_Gap_ToSameGroupType_AtFork_CoveredByOtherGroup {
+            get {
+                return ResourceManager.GetString("LineGroupConstraints_Gap_ToSameGroupType_AtFork_CoveredByOtherGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Small gap to other group of same type (gap starts at fork, not covered by other group).
+        /// </summary>
+        internal static string LineGroupConstraints_Gap_ToSameGroupType_AtFork_NotCoveredByOtherGroup {
+            get {
+                return ResourceManager.GetString("LineGroupConstraints_Gap_ToSameGroupType_AtFork_NotCoveredByOtherGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Small gap to other group of same type (gap does not start at fork but is covered by other group).
+        /// </summary>
+        internal static string LineGroupConstraints_Gap_ToSameGroupType_NotAtFork_CoveredByOtherGroup {
+            get {
+                return ResourceManager.GetString("LineGroupConstraints_Gap_ToSameGroupType_NotAtFork_CoveredByOtherGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Small gap to other group of same type (gap does not start at fork and is not covered by other group).
+        /// </summary>
+        internal static string LineGroupConstraints_Gap_ToSameGroupType_NotAtFork_NotCoveredByOtherGroup {
+            get {
+                return ResourceManager.GetString("LineGroupConstraints_Gap_ToSameGroupType_NotAtFork_NotCoveredByOtherGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Group length is too small.
+        /// </summary>
+        internal static string LineGroupConstraints_GroupTooSmall {
+            get {
+                return ResourceManager.GetString("LineGroupConstraints_GroupTooSmall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The field value contains the same group value more than once.
+        /// </summary>
+        internal static string LineGroups_InvalidFieldValue_DuplicateGroupValueInField {
+            get {
+                return ResourceManager.GetString("LineGroups_InvalidFieldValue_DuplicateGroupValueInField", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The field value is invalid.
+        /// </summary>
+        internal static string LineGroups_InvalidFieldValue_InvalidValueForSeparator {
+            get {
+                return ResourceManager.GetString("LineGroups_InvalidFieldValue_InvalidValueForSeparator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Line intersection angle smaller than the specified minimum.
+        /// </summary>
+        internal static string LineIntersectAngle_IntersectionAngleSmallerThanLimit {
+            get {
+                return ResourceManager.GetString("LineIntersectAngle_IntersectionAngleSmallerThanLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid line intersection.
+        /// </summary>
+        internal static string LineIntersections_InvalidLineIntersection {
+            get {
+                return ResourceManager.GetString("LineIntersections_InvalidLineIntersection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid line intersection (attribute constraint is not fulfilled).
+        /// </summary>
+        internal static string LineIntersections_InvalidLineIntersection_ConstraintNotFulfilled {
+            get {
+                return ResourceManager.GetString("LineIntersections_InvalidLineIntersection_ConstraintNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Constraint not fulfilled.
+        /// </summary>
+        internal static string LineIntersectZ_ConstraintNotFulfilled {
+            get {
+                return ResourceManager.GetString("LineIntersectZ_ConstraintNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Difference between Z values at line intersection is larger than the allowed maximum.
+        /// </summary>
+        internal static string LineIntersectZ_ZDifferenceAtLineIntersection_LargerThanLimit {
+            get {
+                return ResourceManager.GetString("LineIntersectZ_ZDifferenceAtLineIntersection_LargerThanLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Difference between Z values at line intersection is smaller than the allowed minimum.
+        /// </summary>
+        internal static string LineIntersectZ_ZDifferenceAtLineIntersection_SmallerThanLimit {
+            get {
+                return ResourceManager.GetString("LineIntersectZ_ZDifferenceAtLineIntersection_SmallerThanLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Area is larger than maximum value.
+        /// </summary>
+        internal static string MaxArea_AreaTooLarge {
+            get {
+                return ResourceManager.GetString("MaxArea_AreaTooLarge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The length of the geometry is larger than the maximum value.
+        /// </summary>
+        internal static string MaximumLength_LengthTooLarge {
+            get {
+                return ResourceManager.GetString("MaximumLength_LengthTooLarge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Slope is too steep.
+        /// </summary>
+        internal static string MaxSlope_SlopeTooSteep {
+            get {
+                return ResourceManager.GetString("MaxSlope_SlopeTooSteep", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The geometry contains too many vertices.
+        /// </summary>
+        internal static string MaxVertexCount_TooManyVertices {
+            get {
+                return ResourceManager.GetString("MaxVertexCount_TooManyVertices", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid value from expected measure expression.
+        /// </summary>
+        internal static string MeasuresAtPoints_ExpressionResultNotNumeric {
+            get {
+                return ResourceManager.GetString("MeasuresAtPoints_ExpressionResultNotNumeric", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Actual measure value not not within tolerance of expected measure value.
+        /// </summary>
+        internal static string MeasuresAtPoints_MValueNotAsExpected {
+            get {
+                return ResourceManager.GetString("MeasuresAtPoints_MValueNotAsExpected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point does not lie closer than search distance to any line vertex.
+        /// </summary>
+        internal static string MeasuresAtPoints_NoVertexNearPoint {
+            get {
+                return ResourceManager.GetString("MeasuresAtPoints_NoVertexNearPoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point does not lie closer than search distance to any line.
+        /// </summary>
+        internal static string MeasuresAtPoints_PointNotNearLine {
+            get {
+                return ResourceManager.GetString("MeasuresAtPoints_PointNotNearLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Undefined expected measure value from expression.
+        /// </summary>
+        internal static string MeasuresAtPoints_UndefinedMValue_FromExpression {
+            get {
+                return ResourceManager.GetString("MeasuresAtPoints_UndefinedMValue_FromExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Undefined measure value on point feature.
+        /// </summary>
+        internal static string MeasuresAtPoints_UndefinedMValue_FromPointFeature {
+            get {
+                return ResourceManager.GetString("MeasuresAtPoints_UndefinedMValue_FromPointFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Measure values are not valid.
+        /// </summary>
+        internal static string MeasureValues_InvalidMValues {
+            get {
+                return ResourceManager.GetString("MeasureValues_InvalidMValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Measure values are not defined.
+        /// </summary>
+        internal static string MeasureValues_UndefinedMValues {
+            get {
+                return ResourceManager.GetString("MeasureValues_UndefinedMValues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Angle between lines is smaller then the specified minimum.
+        /// </summary>
+        internal static string MinAngle_AngleTooSmall {
+            get {
+                return ResourceManager.GetString("MinAngle_AngleTooSmall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Endpoints do not fit.
+        /// </summary>
+        internal static string MinAngle_EndPointsDoNotFit {
+            get {
+                return ResourceManager.GetString("MinAngle_EndPointsDoNotFit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Area is smaller than minimum value.
+        /// </summary>
+        internal static string MinArea_AreaTooSmall {
+            get {
+                return ResourceManager.GetString("MinArea_AreaTooSmall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The length of the geometry is smaller than the minimum value.
+        /// </summary>
+        internal static string MinimumLength_LengthTooSmall {
+            get {
+                return ResourceManager.GetString("MinimumLength_LengthTooSmall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The angle between two segments is smaller than the minimum value.
+        /// </summary>
+        internal static string MinimumSegmentAngle_SegmentAngleTooSmall {
+            get {
+                return ResourceManager.GetString("MinimumSegmentAngle_SegmentAngleTooSmall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Intersection area is smaller than the specified limit .
+        /// </summary>
+        internal static string MinIntersect_SmallIntersectionArea {
+            get {
+                return ResourceManager.GetString("MinIntersect_SmallIntersectionArea", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The average length of segments in the geometry is below the limit.
+        /// </summary>
+        internal static string MinMeanSegmentLength_AverageSegmentLengthBelowLimit {
+            get {
+                return ResourceManager.GetString("MinMeanSegmentLength_AverageSegmentLengthBelowLimit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The geometry has an invalid segment count.
+        /// </summary>
+        internal static string MinMeanSegmentLength_InvalidSegmentCount {
+            get {
+                return ResourceManager.GetString("MinMeanSegmentLength_InvalidSegmentCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Distance between nodes smaller than allowed minimum.
+        /// </summary>
+        internal static string MinNodeDistance_NodeDistanceTooSmall {
+            get {
+                return ResourceManager.GetString("MinNodeDistance_NodeDistanceTooSmall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Distance between nodes smaller than allowed minimum (attribute constraint is not fulfilled).
+        /// </summary>
+        internal static string MinNodeDistance_NodeDistanceTooSmall_ConstraintNotFulfilled {
+            get {
+                return ResourceManager.GetString("MinNodeDistance_NodeDistanceTooSmall_ConstraintNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Difference in Z value larger than allowed maximum.
+        /// </summary>
+        internal static string MinNodeDistance_ZDifferenceTooLarge {
+            get {
+                return ResourceManager.GetString("MinNodeDistance_ZDifferenceTooLarge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Difference in Z value larger than allowed maximum (attribute constraint is not fulfilled).
+        /// </summary>
+        internal static string MinNodeDistance_ZDifferenceTooLarge_ConstraintNotFulfilled {
+            get {
+                return ResourceManager.GetString("MinNodeDistance_ZDifferenceTooLarge_ConstraintNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Measure values are not monotonic.
+        /// </summary>
+        internal static string MonotonicMeasures_MeasuresNotMonotonic {
+            get {
+                return ResourceManager.GetString("MonotonicMeasures_MeasuresNotMonotonic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Z values are not monotonic.
+        /// </summary>
+        internal static string MonotonicZ_ZNotMonotonic {
+            get {
+                return ResourceManager.GetString("MonotonicZ_ZNotMonotonic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Invalid geometry type in multipatch.
+        /// </summary>
+        internal static string MpAllowedPartTypes_InvalidGeometryType {
+            get {
+                return ResourceManager.GetString("MpAllowedPartTypes_InvalidGeometryType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point IDs in Multipatch ring are not constant.
+        /// </summary>
+        internal static string MpConstantPointIdsPerRing_DifferentIdInRing {
+            get {
+                return ResourceManager.GetString("MpConstantPointIdsPerRing_DifferentIdInRing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point IDs in outer ring are constant but IDs in inner ring are different.
+        /// </summary>
+        internal static string MpConstantPointIdsPerRing_InnerRingIdDifferentFromOuterRingId {
+            get {
+                return ResourceManager.GetString("MpConstantPointIdsPerRing_InnerRingIdDifferentFromOuterRingId", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Footprint has inner ring.
+        /// </summary>
+        internal static string MpFootprintHoles_FootprintHasInnerRing {
+            get {
+                return ResourceManager.GetString("MpFootprintHoles_FootprintHasInnerRing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Multipatch has only vertical patches forming a ring.
+        /// </summary>
+        internal static string MpFootprintHoles_MultiPatchHasOnlyVerticalPatchesFormingARing {
+            get {
+                return ResourceManager.GetString("MpFootprintHoles_MultiPatchHasOnlyVerticalPatchesFormingARing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Vertical patch is not completely within footprint.
+        /// </summary>
+        internal static string MpFootprintHoles_VerticalPatchNotCompletelyWithinFootprint {
+            get {
+                return ResourceManager.GetString("MpFootprintHoles_VerticalPatchNotCompletelyWithinFootprint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A group of horizontal segments have similar, but not equal azimuths.
+        /// </summary>
+        internal static string MpHorizontalAzimuths_AzimuthsSimilarButNotEqual_SegmentGroup {
+            get {
+                return ResourceManager.GetString("MpHorizontalAzimuths_AzimuthsSimilarButNotEqual_SegmentGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The two horizontal segments have similar, but not equal azimuths.
+        /// </summary>
+        internal static string MpHorizontalAzimuths_AzimuthsSimilarButNotEqual_SegmentPair {
+            get {
+                return ResourceManager.GetString("MpHorizontalAzimuths_AzimuthsSimilarButNotEqual_SegmentPair", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to A group of segments in multipatch have similar but not equal heights.
+        /// </summary>
+        internal static string MpHorizontalHeights_HeightsSimilarButNotEqual_SegmentGroup {
+            get {
+                return ResourceManager.GetString("MpHorizontalHeights_HeightsSimilarButNotEqual_SegmentGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Two segments in multipatch have similar but not equal heights.
+        /// </summary>
+        internal static string MpHorizontalHeights_HeightsSimilarButNotEqual_TwoSegments {
+            get {
+                return ResourceManager.GetString("MpHorizontalHeights_HeightsSimilarButNotEqual_TwoSegments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The segments of this group are almost, but not sufficently perpendicular.
+        /// </summary>
+        internal static string MpHorizontalPerpendicular_NotSufficientlyPerpendicular_GroupOfSegments {
+            get {
+                return ResourceManager.GetString("MpHorizontalPerpendicular_NotSufficientlyPerpendicular_GroupOfSegments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The two segments are almost, but not sufficently perpendicular.
+        /// </summary>
+        internal static string MpHorizontalPerpendicular_NotSufficientlyPerpendicular_TwoSegments {
+            get {
+                return ResourceManager.GetString("MpHorizontalPerpendicular_NotSufficientlyPerpendicular_TwoSegments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point ids are not unique within face.
+        /// </summary>
+        internal static string MpNonIntersectingRingFootprints_PointIdNotUniqueWithinFace {
+            get {
+                return ResourceManager.GetString("MpNonIntersectingRingFootprints_PointIdNotUniqueWithinFace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Footprints of rings intersect.
+        /// </summary>
+        internal static string MpNonIntersectingRingFootprints_RingFootprintsIntersect {
+            get {
+                return ResourceManager.GetString("MpNonIntersectingRingFootprints_RingFootprintsIntersect", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Footprint of MultiPatch feature contains more than one part.
+        /// </summary>
+        internal static string MpSinglePartFootprint_FootprintHasMultipleParts {
+            get {
+                return ResourceManager.GetString("MpSinglePartFootprint_FootprintHasMultipleParts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Face does not define a valid plane.
+        /// </summary>
+        internal static string MpVertexNotNearFace_FaceDoesNotDefineValidPlane {
+            get {
+                return ResourceManager.GetString("MpVertexNotNearFace_FaceDoesNotDefineValidPlane", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Face is not coplanar.
+        /// </summary>
+        internal static string MpVertexNotNearFace_FaceNotCoplanar {
+            get {
+                return ResourceManager.GetString("MpVertexNotNearFace_FaceNotCoplanar", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point is within non-coplanarity of face.
+        /// </summary>
+        internal static string MpVertexNotNearFace_PointInNonCoplanarityOfFace {
+            get {
+                return ResourceManager.GetString("MpVertexNotNearFace_PointInNonCoplanarityOfFace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point is too close above face.
+        /// </summary>
+        internal static string MpVertexNotNearFace_PointTooCloseAboveFace {
+            get {
+                return ResourceManager.GetString("MpVertexNotNearFace_PointTooCloseAboveFace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point is too close below face.
+        /// </summary>
+        internal static string MpVertexNotNearFace_PointTooCloseBelowFace {
+            get {
+                return ResourceManager.GetString("MpVertexNotNearFace_PointTooCloseBelowFace", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The face is almost, but not sufficiently vertical.
+        /// </summary>
+        internal static string MpVerticalFaces_NotSufficientlyVertical {
+            get {
+                return ResourceManager.GetString("MpVerticalFaces_NotSufficientlyVertical", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The polygon consists of more than one exterior ring.
+        /// </summary>
+        internal static string Multipart_MultipleExteriorRings {
+            get {
+                return ResourceManager.GetString("Multipart_MultipleExteriorRings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The geometry consists of more than one part.
+        /// </summary>
+        internal static string Multipart_MultipleParts {
+            get {
+                return ResourceManager.GetString("Multipart_MultipleParts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No feature found within the maximum distance.
+        /// </summary>
+        internal static string MustBeNear_NoFeatureWithinDistance {
+            get {
+                return ResourceManager.GetString("MustBeNear_NoFeatureWithinDistance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No feature with fulfilled constraint found within the maximum distance.
+        /// </summary>
+        internal static string MustBeNear_NoFeatureWithinDistance_WithFulfilledConstraint {
+            get {
+                return ResourceManager.GetString("MustBeNear_NoFeatureWithinDistance_WithFulfilledConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature does not have the required 9IM intersection relation with any other feature.
+        /// </summary>
+        internal static string MustIntersect9IM_NoFeatureWithRequiredRelation {
+            get {
+                return ResourceManager.GetString("MustIntersect9IM_NoFeatureWithRequiredRelation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature does not have the required 9IM intersection relation with any other feature that fulfills the constraint.
+        /// </summary>
+        internal static string MustIntersect9IM_NoFeatureWithRequiredRelation_WithFulfilledConstraint {
+            get {
+                return ResourceManager.GetString("MustIntersect9IM_NoFeatureWithRequiredRelation_WithFulfilledConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature is not touched by another feature.
+        /// </summary>
+        internal static string MustTouch_NoTouchingFeature {
+            get {
+                return ResourceManager.GetString("MustTouch_NoTouchingFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature is not touched by another feature that fulfills the constraint.
+        /// </summary>
+        internal static string MustTouch_NoTouchingFeature_WithFulfilledConstraint {
+            get {
+                return ResourceManager.GetString("MustTouch_NoTouchingFeature_WithFulfilledConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Coincident section found.
+        /// </summary>
+        internal static string NearCoincidence_CoincidentSection {
+            get {
+                return ResourceManager.GetString("NearCoincidence_CoincidentSection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Inconsistent line symbol end (end segment is too short compared to the symbol width).
+        /// </summary>
+        internal static string NearCoincidence_InconsistentLineSymbolEnd {
+            get {
+                return ResourceManager.GetString("NearCoincidence_InconsistentLineSymbolEnd", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nearly coincident section found (between different features).
+        /// </summary>
+        internal static string NearCoincidence_NearlyCoincidentSection_BetweenFeatures {
+            get {
+                return ResourceManager.GetString("NearCoincidence_NearlyCoincidentSection_BetweenFeatures", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nearly coincident section found (paths are connected).
+        /// </summary>
+        internal static string NearCoincidence_NearlyCoincidentSection_Connected {
+            get {
+                return ResourceManager.GetString("NearCoincidence_NearlyCoincidentSection_Connected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connected segments within near distance form a loop.
+        /// </summary>
+        internal static string NearCoincidence_NearlyCoincidentSection_Connected_Loop {
+            get {
+                return ResourceManager.GetString("NearCoincidence_NearlyCoincidentSection_Connected_Loop", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Connected segments form a loop and are within near distance to other connected segments.
+        /// </summary>
+        internal static string NearCoincidence_NearlyCoincidentSection_Connected_Loop_WithinNear {
+            get {
+                return ResourceManager.GetString("NearCoincidence_NearlyCoincidentSection_Connected_Loop_WithinNear", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nearly coincident section found (paths are connected) - the geometry exceeds the verified extent.
+        /// </summary>
+        internal static string NearCoincidence_NearlyCoincidentSection_Connected_NotFullyProcessed {
+            get {
+                return ResourceManager.GetString("NearCoincidence_NearlyCoincidentSection_Connected_NotFullyProcessed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nearly coincident section found (paths are crossing but not connected).
+        /// </summary>
+        internal static string NearCoincidence_NearlyCoincidentSection_Crossing {
+            get {
+                return ResourceManager.GetString("NearCoincidence_NearlyCoincidentSection_Crossing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nearly coincident section found (paths are crossing but not connected) - the geometry exceeds the verified extent.
+        /// </summary>
+        internal static string NearCoincidence_NearlyCoincidentSection_Crossing_NotFullyProcessed {
+            get {
+                return ResourceManager.GetString("NearCoincidence_NearlyCoincidentSection_Crossing_NotFullyProcessed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nearly coincident section found (paths are disjoint).
+        /// </summary>
+        internal static string NearCoincidence_NearlyCoincidentSection_Disjoint {
+            get {
+                return ResourceManager.GetString("NearCoincidence_NearlyCoincidentSection_Disjoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nearly coincident section found (paths are disjoint) - the geometry exceeds the verified extent.
+        /// </summary>
+        internal static string NearCoincidence_NearlyCoincidentSection_Disjoint_NotFullyProcessed {
+            get {
+                return ResourceManager.GetString("NearCoincidence_NearlyCoincidentSection_Disjoint_NotFullyProcessed", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nearly coincident section found (within the same feature).
+        /// </summary>
+        internal static string NearCoincidence_NearlyCoincidentSection_WithinFeature {
+            get {
+                return ResourceManager.GetString("NearCoincidence_NearlyCoincidentSection_WithinFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Segments are fully within near distance of other segments.
+        /// </summary>
+        internal static string NearCoincidence_NearlyCoincidentSection_WithinNear {
+            get {
+                return ResourceManager.GetString("NearCoincidence_NearlyCoincidentSection_WithinNear", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Segments are fully within near distance of other segments to which they are connected.
+        /// </summary>
+        internal static string NearCoincidence_NearlyCoincidentSection_WithinNear_Connected {
+            get {
+                return ResourceManager.GetString("NearCoincidence_NearlyCoincidentSection_WithinNear_Connected", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature with unconnected ends is too short.
+        /// </summary>
+        internal static string NearCoincidence_ShortSubpart {
+            get {
+                return ResourceManager.GetString("NearCoincidence_ShortSubpart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polygons touch and have equal values for all compared fields.
+        /// </summary>
+        internal static string NeighbourAreas_PolygonsTouch_AllFieldsEqual {
+            get {
+                return ResourceManager.GetString("NeighbourAreas_PolygonsTouch_AllFieldsEqual", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polygons touch and constraint is not fulfilled.
+        /// </summary>
+        internal static string NeighbourAreas_PolygonsTouch_ConstraintNotFulfilled {
+            get {
+                return ResourceManager.GetString("NeighbourAreas_PolygonsTouch_ConstraintNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Polygons touch (no fields to compare).
+        /// </summary>
+        internal static string NeighbourAreas_PolygonsTouch_NoFieldsToCompare {
+            get {
+                return ResourceManager.GetString("NeighbourAreas_PolygonsTouch_NoFieldsToCompare", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Closed path.
+        /// </summary>
+        internal static string NoClosedPaths_ClosedPath {
+            get {
+                return ResourceManager.GetString("NoClosedPaths_ClosedPath", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unconnected node is too close to a line (between different features).
+        /// </summary>
+        internal static string NodeLineCoincidence_NodeTooCloseToLine_BetweenFeatures {
+            get {
+                return ResourceManager.GetString("NodeLineCoincidence_NodeTooCloseToLine_BetweenFeatures", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unconnected node is too close to a line (within the same feature).
+        /// </summary>
+        internal static string NodeLineCoincidence_NodeTooCloseToLine_WithinFeature {
+            get {
+                return ResourceManager.GetString("NodeLineCoincidence_NodeTooCloseToLine_WithinFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Missing node.
+        /// </summary>
+        internal static string OrphanNode_MissingNode {
+            get {
+                return ResourceManager.GetString("OrphanNode_MissingNode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Orphan node.
+        /// </summary>
+        internal static string OrphanNode_OrphanNode {
+            get {
+                return ResourceManager.GetString("OrphanNode_OrphanNode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature geometries overlap each other.
+        /// </summary>
+        internal static string Overlaps_GeometriesOverlap {
+            get {
+                return ResourceManager.GetString("Overlaps_GeometriesOverlap", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature geometries overlap each other and the attribute constraint is not fulfilled.
+        /// </summary>
+        internal static string Overlaps_GeometriesOverlap_ConstraintNotFulfilled {
+            get {
+                return ResourceManager.GetString("Overlaps_GeometriesOverlap_ConstraintNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point is too close to reference feature.
+        /// </summary>
+        internal static string PointNotNear_PointTooClose {
+            get {
+                return ResourceManager.GetString("PointNotNear_PointTooClose", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point is too close to reference feature and the attribute constraint is not fulfilled.
+        /// </summary>
+        internal static string PointNotNear_PointTooClose_ConstraintNotFulfilled {
+            get {
+                return ResourceManager.GetString("PointNotNear_PointTooClose_ConstraintNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point is within polygon.
+        /// </summary>
+        internal static string PointNotNear_PointWithin {
+            get {
+                return ResourceManager.GetString("PointNotNear_PointWithin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point is within polygon and the attribute constraint is not fulfilled.
+        /// </summary>
+        internal static string PointNotNear_PointWithin_ConstraintNotFulfilled {
+            get {
+                return ResourceManager.GetString("PointNotNear_PointWithin_ConstraintNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point does not lie near line.
+        /// </summary>
+        internal static string PointOnLine_PointNotNearLine {
+            get {
+                return ResourceManager.GetString("PointOnLine_PointNotNearLine", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Pseudo node.
+        /// </summary>
+        internal static string PseudoNodes_PseudoNode {
+            get {
+                return ResourceManager.GetString("PseudoNodes_PseudoNode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The field value does not match the regular expression.
+        /// </summary>
+        internal static string RegularExpression_FieldValueDoesNotMatchRegularExpression {
+            get {
+                return ResourceManager.GetString("RegularExpression_FieldValueDoesNotMatchRegularExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The field value matches the regular expression.
+        /// </summary>
+        internal static string RegularExpression_FieldValueMatchesRegularExpression {
+            get {
+                return ResourceManager.GetString("RegularExpression_FieldValueMatchesRegularExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error formatting the field&apos;s value.
+        /// </summary>
+        internal static string RegularExpression_StringFormattingError {
+            get {
+                return ResourceManager.GetString("RegularExpression_StringFormattingError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Representation is a free representation.
+        /// </summary>
+        internal static string RepresentationConstraints_FreeRepresentation {
+            get {
+                return ResourceManager.GetString("RepresentationConstraints_FreeRepresentation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Representation has an invalid representation rule.
+        /// </summary>
+        internal static string RepresentationConstraints_InvalidRuleID {
+            get {
+                return ResourceManager.GetString("RepresentationConstraints_InvalidRuleID", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Representation is invisible.
+        /// </summary>
+        internal static string RepresentationConstraints_InvisibleRepresentation {
+            get {
+                return ResourceManager.GetString("RepresentationConstraints_InvisibleRepresentation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Not a representation.
+        /// </summary>
+        internal static string RepresentationConstraints_NoRepresentation {
+            get {
+                return ResourceManager.GetString("RepresentationConstraints_NoRepresentation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Representation properties are overriden.
+        /// </summary>
+        internal static string RepresentationConstraints_PropertyOverride {
+            get {
+                return ResourceManager.GetString("RepresentationConstraints_PropertyOverride", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Representation shape is overriden.
+        /// </summary>
+        internal static string RepresentationConstraints_ShapeOverride {
+            get {
+                return ResourceManager.GetString("RepresentationConstraints_ShapeOverride", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Required field contains an empty string.
+        /// </summary>
+        internal static string RequiredFields_EmptyString {
+            get {
+                return ResourceManager.GetString("RequiredFields_EmptyString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Required field contains NULL value.
+        /// </summary>
+        internal static string RequiredFields_NullValue {
+            get {
+                return ResourceManager.GetString("RequiredFields_NullValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The field uses a reserved name.
+        /// </summary>
+        internal static string ReservedFieldNames_FieldNameIsReserved {
+            get {
+                return ResourceManager.GetString("ReservedFieldNames_FieldNameIsReserved", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to M values are different at line connection within route.
+        /// </summary>
+        internal static string RouteMeasuresContinuous_DifferentMeasuresAtLineConnection_MDifferenceExceedsTolerance {
+            get {
+                return ResourceManager.GetString("RouteMeasuresContinuous_DifferentMeasuresAtLineConnection_MDifferenceExceedsToler" +
+                        "ance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to One M value is NaN at line connection within route.
+        /// </summary>
+        internal static string RouteMeasuresContinuous_DifferentMeasuresAtLineConnection_OneValueIsNaN {
+            get {
+                return ResourceManager.GetString("RouteMeasuresContinuous_DifferentMeasuresAtLineConnection_OneValueIsNaN", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Measures are not unique due to non-monotonicity within feature.
+        /// </summary>
+        internal static string RouteMeasuresUnique_MeasuresNotUnique_WithinFeature {
+            get {
+                return ResourceManager.GetString("RouteMeasuresUnique_MeasuresNotUnique_WithinFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Measures are not unique for different features on same route.
+        /// </summary>
+        internal static string RouteMeasuresUnique_MeasuresNotUnique_WithinRoute {
+            get {
+                return ResourceManager.GetString("RouteMeasuresUnique_MeasuresNotUnique_WithinRoute", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of rows is less than minimum value.
+        /// </summary>
+        internal static string RowCount_TooFewRows {
+            get {
+                return ResourceManager.GetString("RowCount_TooFewRows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Number of rows exceeds maximum value.
+        /// </summary>
+        internal static string RowCount_TooManyRows {
+            get {
+                return ResourceManager.GetString("RowCount_TooManyRows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Consecutive segment lengths smaller than limit.
+        /// </summary>
+        internal static string SegmentLength_SmallerThanLimit_ConsecutiveSegments {
+            get {
+                return ResourceManager.GetString("SegmentLength_SmallerThanLimit_ConsecutiveSegments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Segment length smaller than limit.
+        /// </summary>
+        internal static string SegmentLength_SmallerThanLimit_OneSegment {
+            get {
+                return ResourceManager.GetString("SegmentLength_SmallerThanLimit_OneSegment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Non-linear segment(s) found.
+        /// </summary>
+        internal static string SegmentTypes_NonLinearSegments {
+            get {
+                return ResourceManager.GetString("SegmentTypes_NonLinearSegments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Bezier segment(s) found.
+        /// </summary>
+        internal static string SegmentTypes_NonLinearSegments_Bezier {
+            get {
+                return ResourceManager.GetString("SegmentTypes_NonLinearSegments_Bezier", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Circular arc segment(s) found.
+        /// </summary>
+        internal static string SegmentTypes_NonLinearSegments_CircularArc {
+            get {
+                return ResourceManager.GetString("SegmentTypes_NonLinearSegments_CircularArc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Elliptic arc segment(s) found.
+        /// </summary>
+        internal static string SegmentTypes_NonLinearSegments_EllipticArc {
+            get {
+                return ResourceManager.GetString("SegmentTypes_NonLinearSegments_EllipticArc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Duplicate points.
+        /// </summary>
+        internal static string SimpleGeometry_DuplicatePoints {
+            get {
+                return ResourceManager.GetString("SimpleGeometry_DuplicatePoints", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Empty geometry part.
+        /// </summary>
+        internal static string SimpleGeometry_EmptyPart {
+            get {
+                return ResourceManager.GetString("SimpleGeometry_EmptyPart", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Geometry is empty.
+        /// </summary>
+        internal static string SimpleGeometry_EmptyShape {
+            get {
+                return ResourceManager.GetString("SimpleGeometry_EmptyShape", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Identical rings.
+        /// </summary>
+        internal static string SimpleGeometry_IdenticalRings {
+            get {
+                return ResourceManager.GetString("SimpleGeometry_IdenticalRings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Geometry is null.
+        /// </summary>
+        internal static string SimpleGeometry_NullShape {
+            get {
+                return ResourceManager.GetString("SimpleGeometry_NullShape", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Incorrect ring orientation.
+        /// </summary>
+        internal static string SimpleGeometry_RingOrientation {
+            get {
+                return ResourceManager.GetString("SimpleGeometry_RingOrientation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Incorrect segment orientation.
+        /// </summary>
+        internal static string SimpleGeometry_SegmentOrientation {
+            get {
+                return ResourceManager.GetString("SimpleGeometry_SegmentOrientation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Self intersection.
+        /// </summary>
+        internal static string SimpleGeometry_SelfIntersection {
+            get {
+                return ResourceManager.GetString("SimpleGeometry_SelfIntersection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Short segment.
+        /// </summary>
+        internal static string SimpleGeometry_ShortSegment {
+            get {
+                return ResourceManager.GetString("SimpleGeometry_ShortSegment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unclosed ring.
+        /// </summary>
+        internal static string SimpleGeometry_UnclosedRing {
+            get {
+                return ResourceManager.GetString("SimpleGeometry_UnclosedRing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Undefined non-simple reason.
+        /// </summary>
+        internal static string SimpleGeometry_Undefined {
+            get {
+                return ResourceManager.GetString("SimpleGeometry_Undefined", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown non-simple reason.
+        /// </summary>
+        internal static string SimpleGeometry_Unknown {
+            get {
+                return ResourceManager.GetString("SimpleGeometry_Unknown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Area is smaller than minimum value.
+        /// </summary>
+        internal static string SliverPolygons_AreaTooSmall {
+            get {
+                return ResourceManager.GetString("SliverPolygons_AreaTooSmall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Area is smaller than minimum value, and the ratio of perimeter (squared) to area is larger than maximum value.
+        /// </summary>
+        internal static string SliverPolygons_AreaTooSmallAndSliverRatioTooLarge {
+            get {
+                return ResourceManager.GetString("SliverPolygons_AreaTooSmallAndSliverRatioTooLarge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The ratio of perimeter (squared) to area is too large.
+        /// </summary>
+        internal static string SliverPolygons_SliverRatioTooLarge {
+            get {
+                return ResourceManager.GetString("SliverPolygons_SliverRatioTooLarge", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Abrupt change in slope angle.
+        /// </summary>
+        internal static string SmoothZProfile_AbruptChangeInSlopeAngle {
+            get {
+                return ResourceManager.GetString("SmoothZProfile_AbruptChangeInSlopeAngle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The XY coordinate system is different.
+        /// </summary>
+        internal static string SpatialReference_CoordinateSystemDifferent_XY {
+            get {
+                return ResourceManager.GetString("SpatialReference_CoordinateSystemDifferent_XY", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Z coordinate system is different.
+        /// </summary>
+        internal static string SpatialReference_CoordinateSystemDifferent_Z {
+            get {
+                return ResourceManager.GetString("SpatialReference_CoordinateSystemDifferent_Z", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The M domain/precision is different.
+        /// </summary>
+        internal static string SpatialReference_PrecisionDifferent_M {
+            get {
+                return ResourceManager.GetString("SpatialReference_PrecisionDifferent_M", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The XY domain/precision is different.
+        /// </summary>
+        internal static string SpatialReference_PrecisionDifferent_XY {
+            get {
+                return ResourceManager.GetString("SpatialReference_PrecisionDifferent_XY", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Z domain/precision is different.
+        /// </summary>
+        internal static string SpatialReference_PrecisionDifferent_Z {
+            get {
+                return ResourceManager.GetString("SpatialReference_PrecisionDifferent_Z", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The M tolerance is different.
+        /// </summary>
+        internal static string SpatialReference_ToleranceDifferent_M {
+            get {
+                return ResourceManager.GetString("SpatialReference_ToleranceDifferent_M", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The XY tolerance is different.
+        /// </summary>
+        internal static string SpatialReference_ToleranceDifferent_XY {
+            get {
+                return ResourceManager.GetString("SpatialReference_ToleranceDifferent_XY", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Z tolerance is different.
+        /// </summary>
+        internal static string SpatialReference_ToleranceDifferent_Z {
+            get {
+                return ResourceManager.GetString("SpatialReference_ToleranceDifferent_Z", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to No intersection.
+        /// </summary>
+        internal static string SpatialRelationBase_NoIntersection {
+            get {
+                return ResourceManager.GetString("SpatialRelationBase_NoIntersection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Point classified as spike (maximum Z difference and slope exceeded).
+        /// </summary>
+        internal static string TerrainSpikes_MaximumSlopeAndDeltaZExceeded {
+            get {
+                return ResourceManager.GetString("TerrainSpikes_MaximumSlopeAndDeltaZExceeded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Difference between Z values for feature larger than tolerance, all values are unique.
+        /// </summary>
+        internal static string ThreeDConstantZ_ZDifferenceOutsideTolerance_AllValuesUnique {
+            get {
+                return ResourceManager.GetString("ThreeDConstantZ_ZDifferenceOutsideTolerance_AllValuesUnique", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Difference between Z values for feature larger than tolerance, not all values are unique.
+        /// </summary>
+        internal static string ThreeDConstantZ_ZDifferenceOutsideTolerance_NotAllValuesUnique {
+            get {
+                return ResourceManager.GetString("ThreeDConstantZ_ZDifferenceOutsideTolerance_NotAllValuesUnique", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature geometries touch each other.
+        /// </summary>
+        internal static string Touches_GeometriesTouch {
+            get {
+                return ResourceManager.GetString("Touches_GeometriesTouch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature geometries touch each other and the attribute constraint is not fulfilled.
+        /// </summary>
+        internal static string Touches_GeometriesTouch_ConstraintNotFulfilled {
+            get {
+                return ResourceManager.GetString("Touches_GeometriesTouch_ConstraintNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Geometry parts touch.
+        /// </summary>
+        internal static string TouchingParts_PartsTouch {
+            get {
+                return ResourceManager.GetString("TouchingParts_PartsTouch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error reading text from field.
+        /// </summary>
+        internal static string TrimmedTextFields_ErrorReadingString {
+            get {
+                return ResourceManager.GetString("TrimmedTextFields_ErrorReadingString", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The text has blanks both at the beginning and the end.
+        /// </summary>
+        internal static string TrimmedTextFields_LeadingAndTrailingBlanks {
+            get {
+                return ResourceManager.GetString("TrimmedTextFields_LeadingAndTrailingBlanks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The text has one or more blanks at the beginning.
+        /// </summary>
+        internal static string TrimmedTextFields_LeadingBlanks {
+            get {
+                return ResourceManager.GetString("TrimmedTextFields_LeadingBlanks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The text consists only of one or more blanks.
+        /// </summary>
+        internal static string TrimmedTextFields_OnlyBlanks {
+            get {
+                return ResourceManager.GetString("TrimmedTextFields_OnlyBlanks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The text has one or more blanks at the end.
+        /// </summary>
+        internal static string TrimmedTextFields_TrailingBlanks {
+            get {
+                return ResourceManager.GetString("TrimmedTextFields_TrailingBlanks", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Field values are not unique.
+        /// </summary>
+        internal static string UniqueFields_NotUnique {
+            get {
+                return ResourceManager.GetString("UniqueFields_NotUnique", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to An error ocurred while trying to convert a foreign key value to the field type of the primary key.
+        /// </summary>
+        internal static string UnreferencedRows_ConversionError {
+            get {
+                return ResourceManager.GetString("UnreferencedRows_ConversionError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Value is not referenced by any table.
+        /// </summary>
+        internal static string UnreferencedRows_ValueNotReferenced {
+            get {
+                return ResourceManager.GetString("UnreferencedRows_ValueNotReferenced", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error reading coordinate value from field.
+        /// </summary>
+        internal static string ValidCoordinateFields_ErrorReadingFieldValue {
+            get {
+                return ResourceManager.GetString("ValidCoordinateFields_ErrorReadingFieldValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The shape is defined, but the coordinate field does not contain a value.
+        /// </summary>
+        internal static string ValidCoordinateFields_ShapeIsDefinedButCoordinateFieldHasNoValue {
+            get {
+                return ResourceManager.GetString("ValidCoordinateFields_ShapeIsDefinedButCoordinateFieldHasNoValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The shape is not defined, but the coordinate field has a value.
+        /// </summary>
+        internal static string ValidCoordinateFields_ShapeIsUndefinedButCoordinateFieldHasValue {
+            get {
+                return ResourceManager.GetString("ValidCoordinateFields_ShapeIsUndefinedButCoordinateFieldHasValue", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unable to read coordinate value from text field.
+        /// </summary>
+        internal static string ValidCoordinateFields_TextFieldValueIsNotNumeric {
+            get {
+                return ResourceManager.GetString("ValidCoordinateFields_TextFieldValueIsNotNumeric", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The distance between the XY field coordinates and the shape is larger than the tolerance.
+        /// </summary>
+        internal static string ValidCoordinateFields_XYFieldCoordinatesTooFarFromShape {
+            get {
+                return ResourceManager.GetString("ValidCoordinateFields_XYFieldCoordinatesTooFarFromShape", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The distance between the one available XY coordinate field value and the shape is larger than the tolerance.
+        /// </summary>
+        internal static string ValidCoordinateFields_XYFieldCoordinateValueTooFarFromShape {
+            get {
+                return ResourceManager.GetString("ValidCoordinateFields_XYFieldCoordinateValueTooFarFromShape", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The distance between the Z field coordinate value and the shape Z value is larger than the tolerance.
+        /// </summary>
+        internal static string ValidCoordinateFields_ZFieldCoordinateTooFarFromShape {
+            get {
+                return ResourceManager.GetString("ValidCoordinateFields_ZFieldCoordinateTooFarFromShape", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Circular arc has no center point.
+        /// </summary>
+        internal static string ValidNonLinearSegments_CicularArc_NoCenterPoint {
+            get {
+                return ResourceManager.GetString("ValidNonLinearSegments_CicularArc_NoCenterPoint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Chord height of circular arc is too small.
+        /// </summary>
+        internal static string ValidNonLinearSegments_CircularArc_ChordHeightTooSmall {
+            get {
+                return ResourceManager.GetString("ValidNonLinearSegments_CircularArc_ChordHeightTooSmall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The specified file exists but cannot be read.
+        /// </summary>
+        internal static string ValidUrls_CannotAccessResource_FileSystem_NoReadAccess {
+            get {
+                return ResourceManager.GetString("ValidUrls_CannotAccessResource_FileSystem_NoReadAccess", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The specified file system path does not exist.
+        /// </summary>
+        internal static string ValidUrls_CannotAccessResource_FileSystem_PathDoesNotExist {
+            get {
+                return ResourceManager.GetString("ValidUrls_CannotAccessResource_FileSystem_PathDoesNotExist", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Error getting a response from the server.
+        /// </summary>
+        internal static string ValidUrls_CannotAccessResource_Web_ErrorGettingResponse {
+            get {
+                return ResourceManager.GetString("ValidUrls_CannotAccessResource_Web_ErrorGettingResponse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The server returned an error code for the request.
+        /// </summary>
+        internal static string ValidUrls_CannotAccessResource_Web_InvalidResponse {
+            get {
+                return ResourceManager.GetString("ValidUrls_CannotAccessResource_Web_InvalidResponse", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unsupported URL format.
+        /// </summary>
+        internal static string ValidUrls_UnsupportedUrlFormat {
+            get {
+                return ResourceManager.GetString("ValidUrls_UnsupportedUrlFormat", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The URL type is not supported.
+        /// </summary>
+        internal static string ValidUrls_UnsupportedUrlType {
+            get {
+                return ResourceManager.GetString("ValidUrls_UnsupportedUrlType", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nearby edge on different feature does not pass through vertex.
+        /// </summary>
+        internal static string VertexCoincidence_NearbyEdgeNotPassingThroughVertex_DifferentFeature {
+            get {
+                return ResourceManager.GetString("VertexCoincidence_NearbyEdgeNotPassingThroughVertex_DifferentFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nearby edge on same feature does not pass through vertex.
+        /// </summary>
+        internal static string VertexCoincidence_NearbyEdgeNotPassingThroughVertex_SameFeature {
+            get {
+                return ResourceManager.GetString("VertexCoincidence_NearbyEdgeNotPassingThroughVertex_SameFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nearby vertex on different feature is not coincident.
+        /// </summary>
+        internal static string VertexCoincidence_NearbyVertexNotCoincident_DifferentFeature {
+            get {
+                return ResourceManager.GetString("VertexCoincidence_NearbyVertexNotCoincident_DifferentFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nearby vertex on same feature is not coincident.
+        /// </summary>
+        internal static string VertexCoincidence_NearbyVertexNotCoincident_SameFeature {
+            get {
+                return ResourceManager.GetString("VertexCoincidence_NearbyVertexNotCoincident_SameFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nearby edge on different feature does not have a coincident vertex.
+        /// </summary>
+        internal static string VertexCoincidence_NoVertexOnNearbyEdge_DifferentFeature {
+            get {
+                return ResourceManager.GetString("VertexCoincidence_NoVertexOnNearbyEdge_DifferentFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Nearby edge on same feature does not have a coincident vertex.
+        /// </summary>
+        internal static string VertexCoincidence_NoVertexOnNearbyEdge_SameFeature {
+            get {
+                return ResourceManager.GetString("VertexCoincidence_NoVertexOnNearbyEdge_SameFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Z value along a coincident edge on different feature differs.
+        /// </summary>
+        internal static string VertexCoincidence_ZDifference_CoincidentEdge_DifferentFeature {
+            get {
+                return ResourceManager.GetString("VertexCoincidence_ZDifference_CoincidentEdge_DifferentFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Z value along a coincident edge on same feature differs.
+        /// </summary>
+        internal static string VertexCoincidence_ZDifference_CoincidentEdge_SameFeature {
+            get {
+                return ResourceManager.GetString("VertexCoincidence_ZDifference_CoincidentEdge_SameFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Z value of coincident vertex on different feature differs.
+        /// </summary>
+        internal static string VertexCoincidence_ZDifference_CoincidentVertex_DifferentFeature {
+            get {
+                return ResourceManager.GetString("VertexCoincidence_ZDifference_CoincidentVertex_DifferentFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Z value of coincident vertex on same feature differs.
+        /// </summary>
+        internal static string VertexCoincidence_ZDifference_CoincidentVertex_SameFeature {
+            get {
+                return ResourceManager.GetString("VertexCoincidence_ZDifference_CoincidentVertex_SameFeature", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Feature partially or completely outside terrain extent.
+        /// </summary>
+        internal static string VertexToTerrainZOffset_NoTerrainData {
+            get {
+                return ResourceManager.GetString("VertexToTerrainZOffset_NoTerrainData", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to At least one vertex not enough above terrain.
+        /// </summary>
+        internal static string VertexToTerrainZOffset_ZOffset_NotEnoughAboveTerrain {
+            get {
+                return ResourceManager.GetString("VertexToTerrainZOffset_ZOffset_NotEnoughAboveTerrain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to At least one vertex not enough below terrain.
+        /// </summary>
+        internal static string VertexToTerrainZOffset_ZOffset_NotEnoughBelowTerrain {
+            get {
+                return ResourceManager.GetString("VertexToTerrainZOffset_ZOffset_NotEnoughBelowTerrain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to At least one vertex not outside limits, too close to terrain.
+        /// </summary>
+        internal static string VertexToTerrainZOffset_ZOffset_TooCloseToTerrain {
+            get {
+                return ResourceManager.GetString("VertexToTerrainZOffset_ZOffset_TooCloseToTerrain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to At least one vertex not within limits, too far from terrain.
+        /// </summary>
+        internal static string VertexToTerrainZOffset_ZOffset_TooFarFromTerrain {
+            get {
+                return ResourceManager.GetString("VertexToTerrainZOffset_ZOffset_TooFarFromTerrain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The geometry is not fully within the expected extent.
+        /// </summary>
+        internal static string WithinBox_GeometryNotWithinBox {
+            get {
+                return ResourceManager.GetString("WithinBox_GeometryNotWithinBox", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Z value(s) above the valid range.
+        /// </summary>
+        internal static string WithinZRange_ZOutsideRange_AboveMaximum {
+            get {
+                return ResourceManager.GetString("WithinZRange_ZOutsideRange_AboveMaximum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Z value(s) below the valid range.
+        /// </summary>
+        internal static string WithinZRange_ZOutsideRange_BelowMinimum {
+            get {
+                return ResourceManager.GetString("WithinZRange_ZOutsideRange_BelowMinimum", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Z relation constraint is not fulfilled.
+        /// </summary>
+        internal static string ZRangeDifference_ConstraintNotFulfilled {
+            get {
+                return ResourceManager.GetString("ZRangeDifference_ConstraintNotFulfilled", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Z value is not defined.
+        /// </summary>
+        internal static string ZRangeDifference_UndefinedZ {
+            get {
+                return ResourceManager.GetString("ZRangeDifference_UndefinedZ", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The Z distance between the feature Z ranges is too small.
+        /// </summary>
+        internal static string ZRangeDifference_ZDifferenceTooSmall {
+            get {
+                return ResourceManager.GetString("ZRangeDifference_ZDifferenceTooSmall", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The feature Z ranges overlap.
+        /// </summary>
+        internal static string ZRangeDifference_ZRangesOverlap {
+            get {
+                return ResourceManager.GetString("ZRangeDifference_ZRangesOverlap", resourceCulture);
+            }
+        }
     }
 }

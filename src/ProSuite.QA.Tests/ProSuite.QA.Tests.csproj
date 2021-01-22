@@ -102,6 +102,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>DocStrings.resx</DependentUpon>
     </Compile>
+    <Compile Include="Documentation\RenamedAttribute.cs" />
     <Compile Include="EdgeMatch\AttributeConstraintViolation.cs" />
     <Compile Include="EdgeMatch\ConstraintError.cs" />
     <Compile Include="EdgeMatch\ConstraintErrorCache.cs" />
@@ -123,6 +124,7 @@
     <Compile Include="GeometryComponentUtils.cs" />
     <Compile Include="GeometryMathUtils.cs" />
     <Compile Include="InnerRingHandling.cs" />
+    <Compile Include="IPoints.cs" />
     <Compile Include="ISegmentPair.cs" />
     <Compile Include="IssueCodes\CrossesIssueCodes.cs" />
     <Compile Include="IssueCodes\FieldPropertiesIssueCodes.cs" />
@@ -153,6 +155,14 @@
     <Compile Include="IssueCodes\OverlapsIssueCodes.cs" />
     <Compile Include="IssueCodes\TouchesIssueCodes.cs" />
     <Compile Include="IValueTransformation.cs" />
+    <Compile Include="KeySets\GuidKeySet.cs" />
+    <Compile Include="KeySets\IKeySet.cs" />
+    <Compile Include="KeySets\ITupleKeySet.cs" />
+    <Compile Include="KeySets\KeySet.cs" />
+    <Compile Include="KeySets\KeySetUtils.cs" />
+    <Compile Include="KeySets\Tuple.cs" />
+    <Compile Include="KeySets\TupleKeySet.cs" />
+    <Compile Include="KnownGaps.cs" />
     <Compile Include="LineFieldValuesConstraint.cs" />
     <Compile Include="LineIntersection.cs" />
     <Compile Include="LineIntersectionUtils.cs" />
@@ -168,9 +178,15 @@
     <Compile Include="Network\QaGroupNetworkBase.cs" />
     <Compile Include="Network\QaNetworkBase.cs" />
     <Compile Include="NonLinearSegmentType.cs" />
+    <Compile Include="Obsolete\QaIntersect.cs" />
+    <Compile Include="Obsolete\QaInvalidGeometry.cs" />
     <Compile Include="Obsolete\QaLineConnection.cs" />
+    <Compile Include="Obsolete\QaLineNeighborAreas.cs" />
     <Compile Include="Obsolete\QaMinPointDistance.cs" />
     <Compile Include="Obsolete\QaMpFootprintHasInnerRing.cs" />
+    <Compile Include="Obsolete\QaOrphanNodesObsolete.cs" />
+    <Compile Include="Obsolete\QaRouteMeasures.cs" />
+    <Compile Include="OffsetSpecification.cs" />
     <Compile Include="OrphanErrorType.cs" />
     <Compile Include="OverlappingMeasures.cs" />
     <Compile Include="PendingFeature.cs" />
@@ -183,6 +199,7 @@
     <Compile Include="PointEnumerators\SegmentsPlane.cs" />
     <Compile Include="PointEnumerators\SegmentsPlaneProvider.cs" />
     <Compile Include="PointFieldValuesConstraint.cs" />
+    <Compile Include="PolylineUsage.cs" />
     <Compile Include="Properties\LocalizableStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -194,6 +211,7 @@
     <Compile Include="QaCentroids.cs" />
     <Compile Include="QaConnections.cs" />
     <Compile Include="QaConstraint.cs" />
+    <Compile Include="QaContainedPointsCount.cs" />
     <Compile Include="QaCoplanarRings.cs" />
     <Compile Include="QaCrossesOther.cs" />
     <Compile Include="QaCrossesSelf.cs" />
@@ -206,7 +224,9 @@
     <Compile Include="QaEdgeMatchCrossingLines.cs" />
     <Compile Include="QaExtent.cs" />
     <Compile Include="QaFlowLogic.cs" />
+    <Compile Include="QaForeignKey.cs" />
     <Compile Include="QaFullCoincidence.cs" />
+    <Compile Include="QaGdbRelease.cs" />
     <Compile Include="QaGeometryConstraint.cs" />
     <Compile Include="QaGroupConnected.cs" />
     <Compile Include="QaGroupConstraints.cs" />
@@ -257,23 +277,48 @@
     <Compile Include="QaMustTouchOther.cs" />
     <Compile Include="QaMustTouchSelf.cs" />
     <Compile Include="QaNeighbourAreas.cs" />
+    <Compile Include="QaNoBoundaryLoops.cs" />
+    <Compile Include="QaNoClosedPaths.cs" />
+    <Compile Include="QaNodeLineCoincidence.cs" />
+    <Compile Include="QaNoGaps.cs" />
+    <Compile Include="QaNonEmptyGeometry.cs" />
     <Compile Include="QaNotNear.cs" />
+    <Compile Include="QaNoTouchingParts.cs" />
     <Compile Include="QaOrphanNode.cs" />
     <Compile Include="QaOverlapsOther.cs" />
     <Compile Include="QaOverlapsSelf.cs" />
     <Compile Include="QaPartCoincidenceOther.cs" />
     <Compile Include="QaPartCoincidenceSelf.cs" />
     <Compile Include="QaPointNotNear.cs" />
+    <Compile Include="QaPointOnLine.cs" />
     <Compile Include="QaPseudoNodes.cs" />
     <Compile Include="QaRegularExpression.cs" />
     <Compile Include="QaRelationConstraint.cs" />
+    <Compile Include="QaRequiredFields.cs" />
     <Compile Include="QaRequiredSpatialRelationOther.cs" />
+    <Compile Include="QaRouteMeasuresContinuous.cs" />
     <Compile Include="QaRouteMeasuresUnique.cs" />
+    <Compile Include="QaRowCount.cs" />
+    <Compile Include="QaSchemaFieldAliases.cs" />
+    <Compile Include="QaSchemaFieldDomainCodedValues.cs" />
+    <Compile Include="QaSchemaFieldDomainDescriptions.cs" />
+    <Compile Include="QaSchemaFieldDomainNameRegex.cs" />
+    <Compile Include="QaSchemaFieldDomainNames.cs" />
+    <Compile Include="QaSchemaFieldDomains.cs" />
+    <Compile Include="QaSchemaFieldNameRegex.cs" />
+    <Compile Include="QaSchemaFieldNames.cs" />
+    <Compile Include="QaSchemaFieldProperties.cs" />
+    <Compile Include="QaSchemaReservedFieldNames.cs" />
+    <Compile Include="QaSchemaSpatialReference.cs" />
     <Compile Include="QaSegmentLength.cs" />
+    <Compile Include="QaSimpleGeometry.cs" />
+    <Compile Include="QaSliverPolygon.cs" />
+    <Compile Include="QaSmooth.cs" />
     <Compile Include="QaTouchesOther.cs" />
     <Compile Include="QaTouchesSelf.cs" />
     <Compile Include="QaTrimmedTextFields.cs" />
     <Compile Include="QaUnique.cs" />
+    <Compile Include="QaUnreferencedRows.cs" />
     <Compile Include="QaValue.cs" />
     <Compile Include="QaVertexCoincidence.cs" />
     <Compile Include="QaVertexCoincidenceOther.cs" />
@@ -281,6 +326,13 @@
     <Compile Include="QaZDifferenceOther.cs" />
     <Compile Include="QaZDifferenceSelf.cs" />
     <Compile Include="RouteMeasures.cs" />
+    <Compile Include="Schema\DomainUsage.cs" />
+    <Compile Include="Schema\FieldSpecification.cs" />
+    <Compile Include="Schema\FieldSpecifications.cs" />
+    <Compile Include="Schema\QaSchemaFieldPropertiesBase.cs" />
+    <Compile Include="Schema\QaSchemaReservedFieldNamesBase.cs" />
+    <Compile Include="Schema\QaSchemaTestBase.cs" />
+    <Compile Include="Schema\SchemaTestUtils.cs" />
     <Compile Include="SegmentPairUtils.cs" />
     <Compile Include="SimpleCrossTileFeatureState.cs" />
     <Compile Include="SpatialRelations\QaSpatialRelationBase.cs" />
@@ -289,7 +341,10 @@
     <Compile Include="SpatialRelations\QaSpatialRelationUtils.cs" />
     <Compile Include="TestRowReference.cs" />
     <Compile Include="UnequalField.cs" />
+    <Compile Include="UniqueStringsConstraint.cs" />
+    <Compile Include="VersionSpecification.cs" />
     <Compile Include="VertexCoincidenceChecker.cs" />
+    <Compile Include="WksPointVas.cs" />
     <Compile Include="ZComparisonMethod.cs" />
     <Compile Include="ZDifferenceStrategy.cs" />
     <Compile Include="ZDifferenceStrategyBoundingBox.cs" />
@@ -315,6 +370,7 @@
     <EmbeddedResource Include="IssueCodes\IssueCodeDescriptions.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>IssueCodeDescriptions.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\LocalizableStrings.de.resx" />
     <EmbeddedResource Include="Properties\LocalizableStrings.resx">
