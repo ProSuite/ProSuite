@@ -3151,6 +3151,13 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			GeometryUtils.MakeZAware(polygon);
 			GeometryUtils.ConstantZ(polygon, 17.4);
 			AssertExactEsriShapeBufferConversion(polygon);
+
+			// Multipatches return with empty geometry (10.6.1)!
+			IMultiPatch multipatch = GeometryFactory.CreateMultiPatch(polygon);
+			
+			byte[] bytes = GeometryUtils.ToEsriShapeBuffer(multipatch);
+			IGeometry restoredGeometry = GeometryUtils.FromEsriShapeBuffer(bytes);
+			Assert.IsTrue(restoredGeometry.IsEmpty);
 		}
 
 		[Test]
