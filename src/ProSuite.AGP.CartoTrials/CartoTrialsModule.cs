@@ -9,28 +9,25 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
-namespace ProSuite.AGP.Solution.ProTrials
+namespace ProSuite.AGP.CartoTrials
 {
-	public class ProTrialsModule : Module, IExtensionConfig
+	[UsedImplicitly]
+	public class CartoTrialsModule : Module, IExtensionConfig
 	{
-		private static ProTrialsModule _instance;
+		private static CartoTrialsModule _instance;
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private static ExtensionState _extensionState = ExtensionState.Disabled;
 
 		private readonly IList<Graphic> _graphics = new List<Graphic>();
 		private MapView _graphicsMapView;
 
-		public static ProTrialsModule Instance
-		{
-			get
-			{
-				return _instance ?? (_instance =
-					                     (ProTrialsModule) FrameworkApplication.FindModule(
-						                     "ProSuite_ProTrials_Module"));
-			}
-		}
+		public static CartoTrialsModule Instance =>
+			_instance ?? (_instance =
+				              (CartoTrialsModule) FrameworkApplication.FindModule(
+					              "ProSuite_CartoTrials_Module"));
 
 		#region Extension Config (Licensing/Enabling)
 
@@ -42,12 +39,12 @@ namespace ProSuite.AGP.Solution.ProTrials
 
 			if (valid)
 			{
-				FrameworkApplication.State.Activate("prosuite_protrials_enabled");
+				FrameworkApplication.State.Activate("prosuite_cartotrials_enabled");
 				_extensionState = ExtensionState.Enabled;
 			}
 			else
 			{
-				FrameworkApplication.State.Deactivate("prosuite_protrials_enabled");
+				FrameworkApplication.State.Deactivate("prosuite_cartotrials_enabled");
 				_extensionState = ExtensionState.Disabled;
 			}
 
@@ -81,7 +78,7 @@ namespace ProSuite.AGP.Solution.ProTrials
 				{
 					if (! CheckLicensing(AuthorizationID))
 					{
-						new ProTrialsRegistrationWindow().ShowDialog();
+						new CartoTrialsRegistrationWindow().ShowDialog();
 					}
 				}
 			}
@@ -163,9 +160,15 @@ namespace ProSuite.AGP.Solution.ProTrials
 
 	public class ClearSunflowerButton : Button
 	{
+		protected override void OnUpdate()
+		{
+			var caption = Caption;
+			base.OnUpdate();
+		}
+
 		protected override void OnClick()
 		{
-			QueuedTask.Run(() => ProTrialsModule.Instance.ClearGraphics());
+			QueuedTask.Run(() => CartoTrialsModule.Instance.ClearGraphics());
 		}
 	}
 
@@ -173,7 +176,7 @@ namespace ProSuite.AGP.Solution.ProTrials
 	{
 		protected override void OnClick()
 		{
-			QueuedTask.Run(() => ProTrialsModule.Instance.ColorGraphics());
+			QueuedTask.Run(() => CartoTrialsModule.Instance.ColorGraphics());
 		}
 	}
 
@@ -230,13 +233,11 @@ namespace ProSuite.AGP.Solution.ProTrials
 					var layer = pair.Key;
 					var uri = layer.URI;
 
-#if PRO27
 					foreach (var oid in pair.Value)
 					{
 						var outline = layer.QueryDrawingOutline(oid, mapView, DrawingOutlineType.Exact);
 						outlines.Add(outline);
 					}
-#endif
 				}
 
 				var perimeter = GeometryEngine.Instance.Union(outlines);
@@ -273,7 +274,7 @@ namespace ProSuite.AGP.Solution.ProTrials
 					}
 				}
 
-				ProTrialsModule.Instance.SetGraphics(points, seedSymbol, refScale);
+				CartoTrialsModule.Instance.SetGraphics(points, seedSymbol, refScale);
 
 				return true;
 			});
@@ -300,7 +301,7 @@ namespace ProSuite.AGP.Solution.ProTrials
 		public static IEnumerable<Coordinate2D> SunflowerPoints(double x0, double y0, double k)
 		{
 			const double phi = 1.61803398874989;
-			double phisq = phi * phi;
+			const double phisq = phi * phi;
 			const int n = int.MaxValue;
 
 			for (int i = 0; i < n; i++)
