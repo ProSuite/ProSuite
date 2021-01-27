@@ -71,18 +71,32 @@ namespace ProSuite.Microservices.Server.AO
 		{
 			if (geometry == null) return null;
 
-			Assert.ArgumentCondition(format == ShapeMsg.FormatOneofCase.EsriShape,
+			Assert.ArgumentCondition(format == ShapeMsg.FormatOneofCase.EsriShape ||
+			                         format == ShapeMsg.FormatOneofCase.Wkb,
 			                         "Unsupported format");
+
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				_msg.DebugFormat("Converting geometry {0} to shape msg",
+				                 GeometryUtils.ToString(geometry));
+			}
 
 			var highLevelGeometry =
 				GeometryUtils.GetHighLevelGeometry(geometry, true);
 
-			var result = new ShapeMsg
-			             {
-				             EsriShape =
-					             ByteString.CopyFrom(
-						             GeometryUtils.ToEsriShapeBuffer(highLevelGeometry))
-			             };
+			var result = new ShapeMsg();
+
+			if (format == ShapeMsg.FormatOneofCase.EsriShape)
+			{
+				result.EsriShape = ByteString.CopyFrom(
+					GeometryUtils.ToEsriShapeBuffer(highLevelGeometry));
+			}
+			else
+			{
+				var wkbWriter = new WkbGeometryWriter();
+				byte[] wkb = wkbWriter.WriteGeometry(highLevelGeometry);
+				result.Wkb = ByteString.CopyFrom(wkb);
+			}
 
 			if (geometry.SpatialReference != null)
 			{
