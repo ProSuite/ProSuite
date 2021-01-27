@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using ESRI.ArcGIS.esriSystem;
+using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Serialization;
 using ProSuite.Commons.AO.Licensing;
@@ -592,6 +594,224 @@ namespace ProSuite.Commons.AO.Test.Geometry
 				readMultiPolygon.SelectMany(g => g.GetLinestrings()));
 
 			Assert.IsTrue(multiPly.Equals(readMultiPolycurve));
+
+			// As multipatch
+			IMultiPatch multipatch = GeometryFactory.CreateMultiPatch(multiPolygon);
+
+			wkb = writer.WriteMultipatch(multipatch);
+
+			IMultiPatch readMultipatch = (IMultiPatch) reader.ReadGeometry(new MemoryStream(wkb));
+
+			// TODO: Implement AreEqual for multipatch that is more permissive regarding First/Outer ring type
+			AssertEqual(multipatch, readMultipatch);
+		}
+
+		[Test]
+		public void CanConvertMultipatchWithOuterInnerRingSequence()
+		{
+			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
+
+			IRing outerRing0 = GeometryUtils.GetRings(
+				                                GeometryFactory.CreatePolygon(
+					                                2601000, 1200000, 2602000, 1201000, 432))
+			                                .Single();
+			outerRing0.SpatialReference = sr;
+
+			IRing outerRing1 = GeometryUtils.GetRings(
+				                                GeometryFactory.CreatePolygon(
+					                                2600000, 1200000, 2601000, 1201000, 432))
+			                                .Single();
+			outerRing1.SpatialReference = sr;
+
+			IRing innerRing = GeometryFactory.CreateRing(new[]
+			                                             {
+				                                             new WKSPointZ()
+				                                             {X = 2600100, Y = 1200100, Z = 432},
+				                                             new WKSPointZ()
+				                                             {X = 2600200, Y = 1200100, Z = 432},
+				                                             new WKSPointZ()
+				                                             {X = 2600200, Y = 1200200, Z = 432},
+				                                             new WKSPointZ()
+				                                             {X = 2600100, Y = 1200200, Z = 432},
+				                                             new WKSPointZ()
+				                                             {X = 2600100, Y = 1200100, Z = 432},
+			                                             });
+			innerRing.SpatialReference = sr;
+
+			IMultiPatch multipatch = GeometryFactory.CreateEmptyMultiPatch(outerRing0);
+
+			object emptyRef = Type.Missing;
+
+			((IGeometryCollection) multipatch).AddGeometry(outerRing0, ref emptyRef, ref emptyRef);
+			multipatch.PutRingType(outerRing0, esriMultiPatchRingType.esriMultiPatchFirstRing);
+
+			((IGeometryCollection) multipatch).AddGeometry(outerRing1, ref emptyRef, ref emptyRef);
+			multipatch.PutRingType(outerRing1, esriMultiPatchRingType.esriMultiPatchOuterRing);
+
+			((IGeometryCollection) multipatch).AddGeometry(innerRing, ref emptyRef, ref emptyRef);
+			multipatch.PutRingType(innerRing, esriMultiPatchRingType.esriMultiPatchInnerRing);
+
+			WkbGeometryWriter writer = new WkbGeometryWriter();
+			byte[] wkb = writer.WriteMultipatch(multipatch);
+
+			WkbGeometryReader reader = new WkbGeometryReader();
+			IGeometry rehydrated = reader.ReadGeometry(new MemoryStream(wkb));
+
+			Assert.IsTrue(GeometryUtils.AreEqual(multipatch, rehydrated));
+		}
+
+		[Test]
+		public void CanConvertMultipatchesSpecialCasesWithInnerRings()
+		{
+			IWorkspace workspace = TestUtils.OpenSDEWorkspaceOracle();
+
+			IFeatureClass featureClass = DatasetUtils.OpenFeatureClass(
+				workspace, "TOPGIS_TLM.TLM_GEBAEUDE");
+
+			const int rolexLearningCenter = 321430;
+			const int mediamarktMuriBB = 565844;
+			const int hintermBahnhofGraenichen = 2269631;
+			IQueryFilter qf = new QueryFilterClass()
+			                  {
+				                  WhereClause = "OBJECTID IN (" +
+				                                $"{hintermBahnhofGraenichen}, " +
+				                                $"{mediamarktMuriBB}, " +
+				                                $"{rolexLearningCenter})"
+			                  };
+			int count = 0;
+
+			foreach (IFeature feature in GdbQueryUtils.GetFeatures(featureClass, qf, true))
+			{
+				count++;
+
+				AssertWkbSerialization(feature, false);
+				AssertWkbSerialization(feature, true);
+			}
+
+			Assert.AreEqual(3, count);
+		}
+
+		[Ignore(
+			"Takes a long time and fails because IMultipatch.GetRingType() can return the wrong type if there are identical rings")]
+		[Test]
+		public void CanConvertMultipatchesAllBuildings()
+		{
+			IWorkspace workspace = TestUtils.OpenSDEWorkspaceOracle();
+
+			IFeatureClass featureClass = DatasetUtils.OpenFeatureClass(
+				workspace, "TOPGIS_TLM.TLM_GEBAEUDE");
+
+			int count = 0;
+			foreach (IFeature feature in GdbQueryUtils.GetFeatures(featureClass, true))
+			{
+				count++;
+
+				AssertWkbSerialization(feature, false);
+			}
+		}
+
+		[Ignore("Takes a long time and fails because some buildings have gaps in their point IDs")]
+		[Test]
+		public void CanConvertMultipatchesAllBuildingsGroupedByPointId()
+		{
+			IWorkspace workspace = TestUtils.OpenSDEWorkspaceOracle();
+
+			IFeatureClass featureClass = DatasetUtils.OpenFeatureClass(
+				workspace, "TOPGIS_TLM.TLM_GEBAEUDE");
+
+			int count = 0;
+			foreach (IFeature feature in GdbQueryUtils.GetFeatures(featureClass, true))
+			{
+				count++;
+
+				AssertWkbSerialization(feature, true);
+			}
+		}
+
+		private static void AssertWkbSerialization(IFeature feature,
+		                                           bool groupPartsByPointId)
+		{
+			IMultiPatch multipatch = (IMultiPatch) feature.Shape;
+			IMultiPatch rehydrated = null;
+			groupPartsByPointId = groupPartsByPointId && GeometryUtils.IsPointIDAware(multipatch);
+
+			if (! groupPartsByPointId)
+			{
+				var pointIDAware = (IPointIDAware) multipatch;
+				pointIDAware.PointIDAware = false;
+			}
+
+			try
+			{
+				WkbGeometryWriter writer = new WkbGeometryWriter();
+				byte[] wkb = writer.WriteMultipatch(multipatch, groupPartsByPointId);
+
+				WkbGeometryReader reader = new WkbGeometryReader();
+				rehydrated = reader.ReadMultipatch(new MemoryStream(wkb), groupPartsByPointId);
+
+				rehydrated.SpatialReference = multipatch.SpatialReference;
+
+				AssertEqual(multipatch, rehydrated);
+
+				// This does not compare ring types
+				Assert.AreEqual(GeometryUtils.ToXmlString(multipatch),
+				                GeometryUtils.ToXmlString(rehydrated),
+				                $"GEBAEUDE {feature.OID} failed xml test");
+
+				// Most of the features fail this test, even though they are identical
+				//Assert.IsTrue(GeometryUtils.AreEqual(multipatch, rehydrated),
+				//              $"GEBAEUDE {feature.OID} failed equality test");
+			}
+			catch
+			{
+				Console.WriteLine("Error serializing/deserializing feature {0}", feature.OID);
+
+				GeometryUtils.ToXmlFile(multipatch, @"C:\temp\orig.xml");
+
+				if (rehydrated != null)
+				{
+					GeometryUtils.ToXmlFile(rehydrated, @"C:\temp\rehydrated.xml");
+				}
+
+				throw;
+			}
+		}
+
+		private static void AssertEqual(IMultiPatch multipatch1, IMultiPatch multipatch2)
+		{
+			var originalCollection = ((IGeometryCollection) multipatch1);
+			Assert.AreEqual(originalCollection.GeometryCount,
+			                ((IGeometryCollection) multipatch2).GeometryCount);
+
+			for (int i = 0; i < originalCollection.GeometryCount; i++)
+			{
+				IRing originalRing = (IRing) originalCollection.Geometry[i];
+				IRing rehydratedRing = (IRing) ((IGeometryCollection) multipatch2).Geometry[i];
+
+				// This does not compare point IDs
+				GeometryUtils.AreEqual(originalRing, rehydratedRing);
+
+				bool isBeginning = false;
+				esriMultiPatchRingType origType =
+					multipatch1.GetRingType(originalRing, ref isBeginning);
+				esriMultiPatchRingType rehydratedType =
+					multipatch2.GetRingType(rehydratedRing, ref isBeginning);
+
+				if (origType == esriMultiPatchRingType.esriMultiPatchInnerRing)
+					Assert.AreEqual(origType, rehydratedType);
+				else if (origType == esriMultiPatchRingType.esriMultiPatchOuterRing ||
+				         origType == esriMultiPatchRingType.esriMultiPatchFirstRing)
+				{
+					Assert.IsTrue(
+						rehydratedType == esriMultiPatchRingType.esriMultiPatchOuterRing ||
+						rehydratedType == esriMultiPatchRingType.esriMultiPatchFirstRing);
+				}
+				else
+				{
+					Assert.AreEqual(origType, rehydratedType);
+				}
+			}
 		}
 
 		private static byte[] ToChristianSchwarzWkb(IPoint point)
