@@ -26,7 +26,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			_lic.Checkout(EsriProduct.ArcEditor);
 
-			_testWs = TestWorkspaceUtils.CreateTestWorkspace("QaGroupConstraintsTest");
+			_testWs = TestWorkspaceUtils.CreateTestAccessWorkspace("QaGroupConstraintsTest");
 			_fgdbWs =
 				TestWorkspaceUtils.CreateTestFgdbWorkspace("QaGroupConstraintsTest");
 		}

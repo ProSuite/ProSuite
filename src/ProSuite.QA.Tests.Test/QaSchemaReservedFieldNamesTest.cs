@@ -87,7 +87,7 @@ namespace ProSuite.QA.Tests.Test
 		[NotNull]
 		private static IList<QaError> GetErrors([NotNull] string tableName)
 		{
-			var locator = new TestDataLocator(@"..\..\EsriDE.ProSuite\src");
+			var locator = new TestDataLocator(@"..\..\ProSuite\src");
 			string path = locator.GetPath("QaSchemaTests.mdb");
 
 			IFeatureWorkspace workspace = WorkspaceUtils.OpenPgdbFeatureWorkspace(path);

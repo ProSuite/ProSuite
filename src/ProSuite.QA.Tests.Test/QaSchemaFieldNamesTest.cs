@@ -289,7 +289,7 @@ namespace ProSuite.QA.Tests.Test
 		                                        ExpectedCase expectedCase,
 		                                        int uniqueSubstringLength)
 		{
-			var locator = new TestDataLocator(@"..\..\EsriDE.ProSuite\src");
+			var locator = new TestDataLocator(@"..\..\ProSuite\src");
 			string path = locator.GetPath("QaSchemaTests.mdb");
 
 			IFeatureWorkspace workspace = WorkspaceUtils.OpenPgdbFeatureWorkspace(path);

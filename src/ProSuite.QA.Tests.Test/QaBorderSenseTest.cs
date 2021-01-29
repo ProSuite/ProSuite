@@ -37,7 +37,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			const string featureClassName = "TLM_STEHENDES_GEWAESSER";
 
-			var locator = new TestDataLocator(@"..\..\EsriDE.ProSuite\src");
+			var locator = new TestDataLocator(@"..\..\ProSuite\src");
 			string path = locator.GetPath("QaBorderSense.gdb");
 
 			IFeatureWorkspace workspace = WorkspaceUtils.OpenFileGdbFeatureWorkspace(path);

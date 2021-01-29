@@ -29,7 +29,7 @@ namespace ProSuite.QA.Tests.Test
 
 			const string databaseName = "TestUnique";
 
-			_pgdbWorkspace = TestWorkspaceUtils.CreateTestWorkspace(databaseName);
+			_pgdbWorkspace = TestWorkspaceUtils.CreateTestAccessWorkspace(databaseName);
 			_fgdbWorkspace = TestWorkspaceUtils.CreateTestFgdbWorkspace(databaseName);
 		}
 

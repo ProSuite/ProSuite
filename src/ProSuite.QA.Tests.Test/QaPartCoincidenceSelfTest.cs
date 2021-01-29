@@ -915,7 +915,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestValidFileGdb()
 		{
-			var locator = new TestDataLocator(@"..\..\EsriDE.ProSuite\src");
+			var locator = new TestDataLocator(@"..\..\ProSuite\src");
 			string path = locator.GetPath("QaPartCoincidendeCurveTest.gdb");
 
 			var ws = (IFeatureWorkspace) WorkspaceUtils.OpenFileGdbWorkspace(path);
@@ -963,7 +963,7 @@ namespace ProSuite.QA.Tests.Test
 
 		private static void TestVolume(IEnvelope testArea)
 		{
-			var locator = new TestDataLocator(@"..\..\EsriDE.ProSuite\src");
+			var locator = new TestDataLocator(@"..\..\ProSuite\src");
 			string path = locator.GetPath("QaPartCoincidenceVolumeTest.mdb");
 
 			IFeatureWorkspace ws = WorkspaceUtils.OpenPgdbFeatureWorkspace(path);

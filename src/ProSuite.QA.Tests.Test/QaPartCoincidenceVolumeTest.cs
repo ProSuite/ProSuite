@@ -91,7 +91,7 @@ namespace ProSuite.QA.Tests.Test
 		[NotNull]
 		private static IList<QaError> Execute(double tileSize)
 		{
-			var locator = new TestDataLocator(@"..\..\EsriDE.ProSuite\src");
+			var locator = new TestDataLocator(@"..\..\ProSuite\src");
 			string path = locator.GetPath("QaPartCoincidenceVolumeTest.mdb");
 
 			IFeatureWorkspace ws = WorkspaceUtils.OpenPgdbFeatureWorkspace(path);

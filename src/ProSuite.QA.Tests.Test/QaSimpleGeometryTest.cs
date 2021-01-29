@@ -68,7 +68,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void Gen2847_NonZawarePolylineWithInteriorLoops()
 		{
-			var locator = new TestDataLocator(@"..\..\EsriDE.ProSuite\src");
+			var locator = new TestDataLocator(@"..\..\ProSuite\src");
 			string path = locator.GetPath("DKM25_HOEHENKURVE_OID_2178.xml");
 
 			var nonZAwarePolyline = (IPolyline) GeometryUtils.FromXmlFile(path);
