@@ -212,16 +212,19 @@
     <Compile Include="QaConnections.cs" />
     <Compile Include="QaConstraint.cs" />
     <Compile Include="QaContainedPointsCount.cs" />
+    <Compile Include="QaContainsOther.cs" />
     <Compile Include="QaCoplanarRings.cs" />
     <Compile Include="QaCrossesOther.cs" />
     <Compile Include="QaCrossesSelf.cs" />
     <Compile Include="QaCurve.cs" />
     <Compile Include="QaDangleCount.cs" />
+    <Compile Include="QaDateFieldsWithoutTime.cs" />
     <Compile Include="QaDuplicateGeometrySelf.cs" />
     <Compile Include="QaEdgeMatchBorderingLines.cs" />
     <Compile Include="QaEdgeMatchBorderingPoints.cs" />
     <Compile Include="QaEdgeMatchCrossingAreas.cs" />
     <Compile Include="QaEdgeMatchCrossingLines.cs" />
+    <Compile Include="QaEmptyNotNullTextFields.cs" />
     <Compile Include="QaExtent.cs" />
     <Compile Include="QaFlowLogic.cs" />
     <Compile Include="QaForeignKey.cs" />
@@ -319,10 +322,16 @@
     <Compile Include="QaTrimmedTextFields.cs" />
     <Compile Include="QaUnique.cs" />
     <Compile Include="QaUnreferencedRows.cs" />
+    <Compile Include="QaValidCoordinateFields.cs" />
+    <Compile Include="QaValidDateValues.cs" />
+    <Compile Include="QaValidNonLinearSegments.cs" />
+    <Compile Include="QaValidUrls.cs" />
     <Compile Include="QaValue.cs" />
     <Compile Include="QaVertexCoincidence.cs" />
     <Compile Include="QaVertexCoincidenceOther.cs" />
     <Compile Include="QaVertexCoincidenceSelf.cs" />
+    <Compile Include="QaWithinBox.cs" />
+    <Compile Include="QaWithinZRange.cs" />
     <Compile Include="QaZDifferenceOther.cs" />
     <Compile Include="QaZDifferenceSelf.cs" />
     <Compile Include="RouteMeasures.cs" />
@@ -351,6 +360,10 @@
     <Compile Include="ZDifferenceStrategyFactory.cs" />
     <Compile Include="ZDifferenceStrategyIntersectionPoints.cs" />
     <Compile Include="ZMonotonicitySequence.cs" />
+    <Compile Include="ZOffsetConstraint.cs" />
+    <Compile Include="ZRangeErrorSegments.cs" />
+    <Compile Include="ZRangeRelation.cs" />
+    <Compile Include="ZRangeUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Documentation\DocStrings.resx">

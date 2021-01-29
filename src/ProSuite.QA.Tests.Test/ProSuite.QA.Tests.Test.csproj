@@ -85,6 +85,7 @@
     <Compile Include="QaConnectionsTest.cs" />
     <Compile Include="QaConstraintTest.cs" />
     <Compile Include="QaContainedPointsCountTest.cs" />
+    <Compile Include="QaContainsOtherTest.cs" />
     <Compile Include="QaCoplanarRingsTest.cs" />
     <Compile Include="QaCurveTest.cs" />
     <Compile Include="QaDuplicateGeometrySelfTest.cs" />
@@ -97,6 +98,7 @@
     <Compile Include="QaFullCoincidenceTest.cs" />
     <Compile Include="QaGdbConstraintFactoryTest.cs" />
     <Compile Include="QaGeometryConstraintTest.cs" />
+    <Compile Include="QaGeometryUtilsTest.cs" />
     <Compile Include="QaGroupConnectedTest.cs" />
     <Compile Include="QaGroupConstraintsTest.cs" />
     <Compile Include="QaHorizontalSegmentsTest.cs" />
@@ -150,7 +152,10 @@
     <Compile Include="QaTopoNotNearTest.cs" />
     <Compile Include="QaUniqueTest.cs" />
     <Compile Include="QaUnreferencedRowsTest.cs" />
+    <Compile Include="QaValidCoordinateFieldsTest.cs" />
+    <Compile Include="QaValidUrlsTest.cs" />
     <Compile Include="QaVertexCoincidenceSelfTest.cs" />
+    <Compile Include="QaWithinZRangeTest.cs" />
     <Compile Include="QaZDifferenceSelfTest.cs" />
     <Compile Include="RouteMeasuresTest.cs" />
     <Compile Include="SpatialRelations\QaSpatialRelationUtilsTest.cs" />
@@ -164,8 +169,11 @@
     <Compile Include="TestRunners\SimpleErrorWorkspace.cs" />
     <Compile Include="TestRunners\SimpleModel.cs" />
     <Compile Include="TestRunners\TestRunnerUtils.cs" />
+    <Compile Include="TopologicalLineTest.cs" />
     <Compile Include="VersionSpecificationTest.cs" />
+    <Compile Include="WebServer.cs" />
     <Compile Include="ZDifferenceStrategyIntersectionPointsTest.cs" />
+    <Compile Include="ZRangeUtilsTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NUnit">
