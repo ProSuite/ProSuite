@@ -101,6 +101,7 @@
     <Compile Include="Geometry\Wkb\WkbGeomWriter.cs" />
     <Compile Include="Geometry\Wkb\BigEndianBinaryReader.cs" />
     <Compile Include="Geometry\Wkb\WkbWriter.cs" />
+    <Compile Include="IO\ZipStorer.cs" />
     <Compile Include="ManagedOptions\DatasetSpecificValue.cs" />
     <Compile Include="Misc\Either.cs" />
     <Compile Include="Geometry\Box.cs" />
