@@ -44,14 +44,14 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaGeometryConstraint_0")]
+		[Doc(nameof(DocStrings.QaGeometryConstraint_0))]
 		public QaGeometryConstraint(
-			[Doc("QaGeometryConstraint_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaGeometryConstraint_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaGeometryConstraint_geometryConstraint")] [NotNull]
+			[Doc(nameof(DocStrings.QaGeometryConstraint_geometryConstraint))] [NotNull]
 			string
 				geometryConstraint,
-			[Doc("QaGeometryConstraint_perPart")] bool perPart)
+			[Doc(nameof(DocStrings.QaGeometryConstraint_perPart))] bool perPart)
 			: base((ITable) featureClass)
 		{
 			Assert.ArgumentNotNullOrEmpty(geometryConstraint, nameof(geometryConstraint));

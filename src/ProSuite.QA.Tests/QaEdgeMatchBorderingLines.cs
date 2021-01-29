@@ -120,39 +120,39 @@ namespace ProSuite.QA.Tests
 			public Code() : base("BorderingLines") { }
 		}
 
-		[Doc("QaEdgeMatchBorderingLines_0")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_0))]
 		public QaEdgeMatchBorderingLines(
-			[Doc("QaEdgeMatchBorderingLines_lineClass1")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_lineClass1))] [NotNull]
 			IFeatureClass lineClass1,
-			[Doc("QaEdgeMatchBorderingLines_borderClass1")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_borderClass1))] [NotNull]
 			IFeatureClass
 				borderClass1,
-			[Doc("QaEdgeMatchBorderingLines_lineClass2")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_lineClass2))] [NotNull]
 			IFeatureClass lineClass2,
-			[Doc("QaEdgeMatchBorderingLines_borderClass2")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_borderClass2))] [NotNull]
 			IFeatureClass
 				borderClass2,
-			[Doc("QaEdgeMatchBorderingLines_searchDistance")]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_searchDistance))]
 			double
 				searchDistance)
 			: this(new[] {lineClass1}, borderClass1,
 			       new[] {lineClass2}, borderClass2, searchDistance) { }
 
-		[Doc("QaEdgeMatchBorderingLines_1")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_1))]
 		public QaEdgeMatchBorderingLines(
-			[Doc("QaEdgeMatchBorderingLines_lineClasses1")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_lineClasses1))] [NotNull]
 			IList<IFeatureClass>
 				lineClasses1,
-			[Doc("QaEdgeMatchBorderingLines_borderClass1")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_borderClass1))] [NotNull]
 			IFeatureClass
 				borderClass1,
-			[Doc("QaEdgeMatchBorderingLines_lineClasses2")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_lineClasses2))] [NotNull]
 			IList<IFeatureClass>
 				lineClasses2,
-			[Doc("QaEdgeMatchBorderingLines_borderClass2")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_borderClass2))] [NotNull]
 			IFeatureClass
 				borderClass2,
-			[Doc("QaEdgeMatchBorderingLines_searchDistance")]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_searchDistance))]
 			double
 				searchDistance)
 			: base(CastToTables(lineClasses1, new[] {borderClass1},
@@ -218,7 +218,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaEdgeMatchBorderingLines_LineClass1BorderMatchCondition")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_LineClass1BorderMatchCondition))]
 		public string LineClass1BorderMatchCondition
 		{
 			get { return _lineClass1BorderMatchConditionSql; }
@@ -230,7 +230,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaEdgeMatchBorderingLines_LineClass2BorderMatchCondition")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_LineClass2BorderMatchCondition))]
 		public string LineClass2BorderMatchCondition
 		{
 			get { return _lineClass2BorderMatchConditionSql; }
@@ -242,7 +242,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaEdgeMatchBorderingLines_BorderingLineMatchCondition")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_BorderingLineMatchCondition))]
 		public string BorderingLineMatchCondition
 		{
 			get { return _borderingLineMatchConditionSql; }
@@ -254,7 +254,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaEdgeMatchBorderingLines_BorderingLineAttributeConstraint")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_BorderingLineAttributeConstraint))]
 		public string BorderingLineAttributeConstraint
 		{
 			get { return _borderingLineAttributeConstraintSql; }
@@ -266,7 +266,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaEdgeMatchBorderingLines_BorderingLineEqualAttributes")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_BorderingLineEqualAttributes))]
 		public string BorderingLineEqualAttributes
 		{
 			get { return _borderingLineEqualAttributes; }
@@ -278,7 +278,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaEdgeMatchBorderingLines_BorderingLineEqualAttributeOptions")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_BorderingLineEqualAttributeOptions))]
 		public IList<string> BorderingLineEqualAttributeOptions
 		{
 			get { return _borderingLineEqualAttributeOptions; }
@@ -290,11 +290,11 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(false)]
-		[Doc("QaEdgeMatchBorderingLines_ReportIndividualAttributeConstraintViolations")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_ReportIndividualAttributeConstraintViolations))]
 		public bool ReportIndividualAttributeConstraintViolations { get; set; }
 
 		[TestParameter(_defaultIsBorderingLineAttributeConstraintSymmetric)]
-		[Doc("QaEdgeMatchBorderingLines_IsBorderingLineAttributeConstraintSymmetric")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_IsBorderingLineAttributeConstraintSymmetric))]
 		public bool IsBorderingLineAttributeConstraintSymmetric
 		{
 			get { return _isBorderingLineAttributeConstraintSymmetric; }
@@ -306,24 +306,24 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(_defaultAllowDisjointCandidateFeatureIfBordersAreNotCoincident)]
-		[Doc(
-			"QaEdgeMatchBorderingLines_AllowDisjointCandidateFeatureIfBordersAreNotCoincident"
-		)]
+		[Doc(nameof(DocStrings.
+			QaEdgeMatchBorderingLines_AllowDisjointCandidateFeatureIfBordersAreNotCoincident
+		))]
 		public bool AllowDisjointCandidateFeatureIfBordersAreNotCoincident { get; set; }
 
 		[TestParameter(_defaultAllowNoFeatureWithinSearchDistance)]
-		[Doc("QaEdgeMatchBorderingLines_AllowNoFeatureWithinSearchDistance")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_AllowNoFeatureWithinSearchDistance))]
 		public bool AllowNoFeatureWithinSearchDistance { get; set; }
 
 		[TestParameter(_defaultAllowNonCoincidentEndPointsOnBorder)]
-		[Doc("QaEdgeMatchBorderingLines_AllowNonCoincidentEndPointsOnBorder")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingLines_AllowNonCoincidentEndPointsOnBorder))]
 		public bool AllowNonCoincidentEndPointsOnBorder { get; set; }
 
 		[TestParameter(
 			_defaultAllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled)]
-		[Doc(
-			"QaEdgeMatchBorderingLines_AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled"
-		)]
+		[Doc(nameof(DocStrings.
+			QaEdgeMatchBorderingLines_AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled
+		))]
 		public bool AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled { get; set; }
 
 		protected override int CompleteTileCore(TileInfo tileInfo)

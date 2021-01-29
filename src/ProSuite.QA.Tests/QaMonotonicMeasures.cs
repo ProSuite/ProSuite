@@ -48,25 +48,25 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMonotonicMeasures_0")]
+		[Doc(nameof(DocStrings.QaMonotonicMeasures_0))]
 		public QaMonotonicMeasures(
-				[Doc("QaMonotonicMeasures_lineClass")] [NotNull]
+				[Doc(nameof(DocStrings.QaMonotonicMeasures_lineClass))] [NotNull]
 				IFeatureClass lineClass,
-				[Doc("QaMonotonicMeasures_allowConstantValues")]
+				[Doc(nameof(DocStrings.QaMonotonicMeasures_allowConstantValues))]
 				bool allowConstantValues)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(lineClass, allowConstantValues, MonotonicityDirection.Any, null) { }
 
-		[Doc("QaMonotonicMeasures_1")]
+		[Doc(nameof(DocStrings.QaMonotonicMeasures_1))]
 		public QaMonotonicMeasures(
-			[Doc("QaMonotonicMeasures_lineClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMonotonicMeasures_lineClass))] [NotNull]
 			IFeatureClass lineClass,
-			[Doc("QaMonotonicMeasures_allowConstantValues")]
+			[Doc(nameof(DocStrings.QaMonotonicMeasures_allowConstantValues))]
 			bool allowConstantValues,
-			[Doc("QaMonotonicMeasures_expectedMonotonicity")]
+			[Doc(nameof(DocStrings.QaMonotonicMeasures_expectedMonotonicity))]
 			MonotonicityDirection
 				expectedMonotonicity,
-			[Doc("QaMonotonicMeasures_flipExpression")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMonotonicMeasures_flipExpression))] [CanBeNull]
 			string flipExpression)
 			: base((ITable) lineClass)
 		{

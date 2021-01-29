@@ -51,8 +51,8 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaCurve_0")]
-		public QaCurve([Doc("QaCurve_featureClass")] [NotNull]
+		[Doc(nameof(DocStrings.QaCurve_0))]
+		public QaCurve([Doc(nameof(DocStrings.QaCurve_featureClass))] [NotNull]
 		               IFeatureClass featureClass)
 			: base((ITable) featureClass)
 		{
@@ -60,11 +60,11 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaCurve_AllowedNonLinearSegmentTypes")]
+		[Doc(nameof(DocStrings.QaCurve_AllowedNonLinearSegmentTypes))]
 		public IList<NonLinearSegmentType> AllowedNonLinearSegmentTypes { get; set; }
 
 		[TestParameter(false)]
-		[Doc("QaCurve_GroupIssuesBySegmentType")]
+		[Doc(nameof(DocStrings.QaCurve_GroupIssuesBySegmentType))]
 		public bool GroupIssuesBySegmentType { get; set; }
 
 		public override bool IsQueriedTable(int tableIndex)

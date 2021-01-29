@@ -126,62 +126,62 @@ namespace ProSuite.QA.Tests
 
 		#region Constructors
 
-		[Doc("QaIsCoveredByOther_0")]
+		[Doc(nameof(DocStrings.QaIsCoveredByOther_0))]
 		public QaIsCoveredByOther(
-				[Doc("QaIsCoveredByOther_covering_0")] [NotNull]
+				[Doc(nameof(DocStrings.QaIsCoveredByOther_covering_0))] [NotNull]
 				IList<IFeatureClass>
 					covering,
-				[Doc("QaIsCoveredByOther_covered_0")] [NotNull]
+				[Doc(nameof(DocStrings.QaIsCoveredByOther_covered_0))] [NotNull]
 				IList<IFeatureClass>
 					covered)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(covering, covered, null) { }
 
-		[Doc("QaIsCoveredByOther_1")]
+		[Doc(nameof(DocStrings.QaIsCoveredByOther_1))]
 		public QaIsCoveredByOther(
-			[Doc("QaIsCoveredByOther_covering_1")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_covering_1))] [NotNull]
 			IFeatureClass covering,
-			[Doc("QaIsCoveredByOther_covered_1")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_covered_1))] [NotNull]
 			IFeatureClass covered)
 			: this(new[] {covering}, new[] {covered}, null) { }
 
-		[Doc("QaIsCoveredByOther_2")]
+		[Doc(nameof(DocStrings.QaIsCoveredByOther_2))]
 		public QaIsCoveredByOther(
-			[Doc("QaIsCoveredByOther_covering_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_covering_0))] [NotNull]
 			IList<IFeatureClass>
 				covering,
-			[Doc("QaIsCoveredByOther_covered_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_covered_0))] [NotNull]
 			IList<IFeatureClass>
 				covered,
-			[Doc("QaIsCoveredByOther_isCoveringCondition")]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_isCoveringCondition))]
 			string isCoveringCondition)
 			: this(covering, new[] {GeometryComponent.EntireGeometry},
 			       covered, new[] {GeometryComponent.EntireGeometry},
 			       isCoveringCondition) { }
 
-		[Doc("QaIsCoveredByOther_3")]
+		[Doc(nameof(DocStrings.QaIsCoveredByOther_3))]
 		public QaIsCoveredByOther(
-			[Doc("QaIsCoveredByOther_covering_1")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_covering_1))] [NotNull]
 			IFeatureClass covering,
-			[Doc("QaIsCoveredByOther_covered_1")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_covered_1))] [NotNull]
 			IFeatureClass covered,
-			[Doc("QaIsCoveredByOther_isCoveringCondition")]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_isCoveringCondition))]
 			string isCoveringCondition)
 			: this(new[] {covering}, new[] {covered}, isCoveringCondition) { }
 
-		[Doc("QaIsCoveredByOther_4")]
+		[Doc(nameof(DocStrings.QaIsCoveredByOther_4))]
 		public QaIsCoveredByOther(
-			[Doc("QaIsCoveredByOther_covering_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_covering_0))] [NotNull]
 			IList<IFeatureClass>
 				covering,
-			[Doc("QaIsCoveredByOther_coveringGeometryComponents_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_coveringGeometryComponents_0))] [NotNull]
 			IList<GeometryComponent> coveringGeometryComponents,
-			[Doc("QaIsCoveredByOther_covered_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_covered_0))] [NotNull]
 			IList<IFeatureClass>
 				covered,
-			[Doc("QaIsCoveredByOther_coveredGeometryComponents_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_coveredGeometryComponents_0))] [NotNull]
 			IList<GeometryComponent> coveredGeometryComponents,
-			[Doc("QaIsCoveredByOther_isCoveringCondition")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_isCoveringCondition))] [CanBeNull]
 			string
 				isCoveringCondition)
 			: this(covering, coveringGeometryComponents,
@@ -189,22 +189,22 @@ namespace ProSuite.QA.Tests
 			       // ReSharper disable once IntroduceOptionalParameters.Global
 			       isCoveringCondition, 0d) { }
 
-		[Doc("QaIsCoveredByOther_5")]
+		[Doc(nameof(DocStrings.QaIsCoveredByOther_5))]
 		public QaIsCoveredByOther(
-			[Doc("QaIsCoveredByOther_covering_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_covering_0))] [NotNull]
 			IList<IFeatureClass>
 				covering,
-			[Doc("QaIsCoveredByOther_coveringGeometryComponents_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_coveringGeometryComponents_0))] [NotNull]
 			IList<GeometryComponent> coveringGeometryComponents,
-			[Doc("QaIsCoveredByOther_covered_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_covered_0))] [NotNull]
 			IList<IFeatureClass>
 				covered,
-			[Doc("QaIsCoveredByOther_coveredGeometryComponents_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_coveredGeometryComponents_0))] [NotNull]
 			IList<GeometryComponent> coveredGeometryComponents,
-			[Doc("QaIsCoveredByOther_isCoveringCondition")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_isCoveringCondition))] [CanBeNull]
 			string
 				isCoveringCondition,
-			[Doc("QaIsCoveredByOther_allowedUncoveredPercentage")]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_allowedUncoveredPercentage))]
 			double
 				allowedUncoveredPercentage)
 			: this(covering, coveringGeometryComponents,
@@ -214,22 +214,22 @@ namespace ProSuite.QA.Tests
 				       : new[] {isCoveringCondition},
 			       allowedUncoveredPercentage) { }
 
-		[Doc("QaIsCoveredByOther_6")]
+		[Doc(nameof(DocStrings.QaIsCoveredByOther_6))]
 		public QaIsCoveredByOther(
-			[Doc("QaIsCoveredByOther_covering_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_covering_0))] [NotNull]
 			IList<IFeatureClass>
 				covering,
-			[Doc("QaIsCoveredByOther_coveringGeometryComponents_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_coveringGeometryComponents_0))] [NotNull]
 			IList<GeometryComponent> coveringGeometryComponents,
-			[Doc("QaIsCoveredByOther_covered_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_covered_0))] [NotNull]
 			IList<IFeatureClass>
 				covered,
-			[Doc("QaIsCoveredByOther_coveredGeometryComponents_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_coveredGeometryComponents_0))] [NotNull]
 			IList<GeometryComponent> coveredGeometryComponents,
-			[Doc("QaIsCoveredByOther_isCoveringConditions")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_isCoveringConditions))] [CanBeNull]
 			IList<string>
 				isCoveringConditions,
-			[Doc("QaIsCoveredByOther_allowedUncoveredPercentage")]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_allowedUncoveredPercentage))]
 			double
 				allowedUncoveredPercentage)
 			: this(covering, coveringGeometryComponents,
@@ -238,25 +238,25 @@ namespace ProSuite.QA.Tests
 			       allowedUncoveredPercentage,
 			       new List<IFeatureClass>()) { }
 
-		[Doc("QaIsCoveredByOther_7")]
+		[Doc(nameof(DocStrings.QaIsCoveredByOther_7))]
 		public QaIsCoveredByOther(
-			[Doc("QaIsCoveredByOther_covering_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_covering_0))] [NotNull]
 			IList<IFeatureClass>
 				covering,
-			[Doc("QaIsCoveredByOther_coveringGeometryComponents_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_coveringGeometryComponents_0))] [NotNull]
 			IList<GeometryComponent> coveringGeometryComponents,
-			[Doc("QaIsCoveredByOther_covered_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_covered_0))] [NotNull]
 			IList<IFeatureClass>
 				covered,
-			[Doc("QaIsCoveredByOther_coveredGeometryComponents_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_coveredGeometryComponents_0))] [NotNull]
 			IList<GeometryComponent> coveredGeometryComponents,
-			[Doc("QaIsCoveredByOther_isCoveringConditions")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_isCoveringConditions))] [CanBeNull]
 			IList<string>
 				isCoveringConditions,
-			[Doc("QaIsCoveredByOther_allowedUncoveredPercentage")]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_allowedUncoveredPercentage))]
 			double
 				allowedUncoveredPercentage,
-			[Doc("QaIsCoveredByOther_areaOfInterestClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaIsCoveredByOther_areaOfInterestClasses))] [NotNull]
 			IList<IFeatureClass>
 				areaOfInterestClasses)
 			: base(CastToTables(covering, covered, areaOfInterestClasses))
@@ -319,7 +319,7 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaIsCoveredByOther_CoveringClassTolerances")]
+		[Doc(nameof(DocStrings.QaIsCoveredByOther_CoveringClassTolerances))]
 		[TestParameter]
 		public IList<double> CoveringClassTolerances
 		{
@@ -344,7 +344,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaIsCoveredByOther_ValidUncoveredGeometryConstraint")]
+		[Doc(nameof(DocStrings.QaIsCoveredByOther_ValidUncoveredGeometryConstraint))]
 		public string ValidUncoveredGeometryConstraint
 		{
 			get { return _validUncoveredGeometryConstraint?.Constraint; }

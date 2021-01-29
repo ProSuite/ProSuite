@@ -50,12 +50,12 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMpNonIntersectingRingFootprints_0")]
+		[Doc(nameof(DocStrings.QaMpNonIntersectingRingFootprints_0))]
 		public QaMpNonIntersectingRingFootprints(
-			[Doc("QaMpNonIntersectingRingFootprints_multiPatchClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMpNonIntersectingRingFootprints_multiPatchClass))] [NotNull]
 			IFeatureClass
 				multiPatchClass,
-			[Doc("QaMpNonIntersectingRingFootprints_allowIntersectionsForDifferentPointIds")]
+			[Doc(nameof(DocStrings.QaMpNonIntersectingRingFootprints_allowIntersectionsForDifferentPointIds))]
 			bool allowIntersectionsForDifferentPointIds)
 			: base((ITable) multiPatchClass)
 		{
@@ -68,7 +68,7 @@ namespace ProSuite.QA.Tests
 
 		[UsedImplicitly]
 		[TestParameter(_defaultResolutionFactor)]
-		[Doc("QaMpNonIntersectingRingFootprints_ResolutionFactor")]
+		[Doc(nameof(DocStrings.QaMpNonIntersectingRingFootprints_ResolutionFactor))]
 		public double ResolutionFactor
 		{
 			get { return _resolutionFactor; }

@@ -35,17 +35,17 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMpAllowedPartTypes_0")]
+		[Doc(nameof(DocStrings.QaMpAllowedPartTypes_0))]
 		public QaMpAllowedPartTypes(
-			[Doc("QaMpAllowedPartTypes_multiPatchClass")]
+			[Doc(nameof(DocStrings.QaMpAllowedPartTypes_multiPatchClass))]
 			IFeatureClass multiPatchClass,
-			[Doc("QaMpAllowedPartTypes_allowRings")]
+			[Doc(nameof(DocStrings.QaMpAllowedPartTypes_allowRings))]
 			bool allowRings,
-			[Doc("QaMpAllowedPartTypes_allowTriangleFans")]
+			[Doc(nameof(DocStrings.QaMpAllowedPartTypes_allowTriangleFans))]
 			bool allowTriangleFans,
-			[Doc("QaMpAllowedPartTypes_allowTriangleStrips")]
+			[Doc(nameof(DocStrings.QaMpAllowedPartTypes_allowTriangleStrips))]
 			bool allowTriangleStrips,
-			[Doc("QaMpAllowedPartTypes_allowTriangles")]
+			[Doc(nameof(DocStrings.QaMpAllowedPartTypes_allowTriangles))]
 			bool allowTriangles) :
 			base((ITable) multiPatchClass)
 		{

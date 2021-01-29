@@ -42,16 +42,16 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMustBeNearOther_0")]
+		[Doc(nameof(DocStrings.QaMustBeNearOther_0))]
 		public QaMustBeNearOther(
-			[NotNull] [Doc("QaMustBeNearOther_featureClass")]
+			[NotNull] [Doc(nameof(DocStrings.QaMustBeNearOther_featureClass))]
 			IFeatureClass featureClass,
-			[NotNull] [Doc("QaMustBeNearOther_nearClasses")]
+			[NotNull] [Doc(nameof(DocStrings.QaMustBeNearOther_nearClasses))]
 			ICollection<IFeatureClass>
 				nearClasses,
-			[Doc("QaMustBeNearOther_maximumDistance")]
+			[Doc(nameof(DocStrings.QaMustBeNearOther_maximumDistance))]
 			double maximumDistance,
-			[Doc("QaMustBeNearOther_relevantRelationCondition")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMustBeNearOther_relevantRelationCondition))] [CanBeNull]
 			string relevantRelationCondition)
 			: base(new[] {featureClass}, nearClasses, relevantRelationCondition)
 		{
@@ -64,7 +64,7 @@ namespace ProSuite.QA.Tests
 
 		[CanBeNull]
 		[TestParameter]
-		[Doc("QaMustBeNearOther_ErrorDistanceFormat")]
+		[Doc(nameof(DocStrings.QaMustBeNearOther_ErrorDistanceFormat))]
 		public string ErrorDistanceFormat { get; set; }
 
 		protected override CrossTileFeatureState<PendingFeature>

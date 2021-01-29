@@ -43,12 +43,12 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMpConstantPointIdsPerRing_0")]
+		[Doc(nameof(DocStrings.QaMpConstantPointIdsPerRing_0))]
 		public QaMpConstantPointIdsPerRing(
-			[Doc("QaMpConstantPointIdsPerRing_multiPatchClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMpConstantPointIdsPerRing_multiPatchClass))] [NotNull]
 			IFeatureClass
 				multiPatchClass,
-			[Doc("QaMpConstantPointIdsPerRing_includeInnerRings")]
+			[Doc(nameof(DocStrings.QaMpConstantPointIdsPerRing_includeInnerRings))]
 			bool includeInnerRings)
 			: base((ITable) multiPatchClass)
 		{

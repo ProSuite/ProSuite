@@ -101,39 +101,39 @@ namespace ProSuite.QA.Tests
 			public Code() : base("BorderingPoints") { }
 		}
 
-		[Doc("QaEdgeMatchBorderingPoints_0")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_0))]
 		public QaEdgeMatchBorderingPoints(
-			[Doc("QaEdgeMatchBorderingPoints_pointClass1")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_pointClass1))] [NotNull]
 			IFeatureClass pointClass1,
-			[Doc("QaEdgeMatchBorderingPoints_borderClass1")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_borderClass1))] [NotNull]
 			IFeatureClass
 				borderClass1,
-			[Doc("QaEdgeMatchBorderingPoints_pointClass2")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_pointClass2))] [NotNull]
 			IFeatureClass pointClass2,
-			[Doc("QaEdgeMatchBorderingPoints_borderClass2")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_borderClass2))] [NotNull]
 			IFeatureClass
 				borderClass2,
-			[Doc("QaEdgeMatchBorderingPoints_searchDistance")]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_searchDistance))]
 			double searchDistance)
 			: this(new[] {pointClass1}, borderClass1,
 			       new[] {pointClass2}, borderClass2,
 			       searchDistance) { }
 
-		[Doc("QaEdgeMatchBorderingPoints_1")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_1))]
 		public QaEdgeMatchBorderingPoints(
-			[Doc("QaEdgeMatchBorderingPoints_pointClasses1")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_pointClasses1))] [NotNull]
 			IList<IFeatureClass>
 				pointClasses1,
-			[Doc("QaEdgeMatchBorderingPoints_borderClass1")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_borderClass1))] [NotNull]
 			IFeatureClass
 				borderClass1,
-			[Doc("QaEdgeMatchBorderingPoints_pointClasses2")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_pointClasses2))] [NotNull]
 			IList<IFeatureClass>
 				pointClasses2,
-			[Doc("QaEdgeMatchBorderingPoints_borderClass2")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_borderClass2))] [NotNull]
 			IFeatureClass
 				borderClass2,
-			[Doc("QaEdgeMatchBorderingPoints_searchDistance")]
+			[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_searchDistance))]
 			double searchDistance)
 			: base(CastToTables(pointClasses1, new[] {borderClass1},
 			                    pointClasses2, new[] {borderClass2}))
@@ -193,7 +193,7 @@ namespace ProSuite.QA.Tests
 				_defaultAllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled;
 		}
 
-		[Doc("QaEdgeMatchBorderingPoints_PointClass1BorderMatchCondition")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_PointClass1BorderMatchCondition))]
 		[TestParameter]
 		public string PointClass1BorderMatchCondition
 		{
@@ -205,7 +205,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaEdgeMatchBorderingPoints_PointClass2BorderMatchCondition")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_PointClass2BorderMatchCondition))]
 		[TestParameter]
 		public string PointClass2BorderMatchCondition
 		{
@@ -217,7 +217,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaEdgeMatchBorderingPoints_BorderingPointMatchCondition")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_BorderingPointMatchCondition))]
 		[TestParameter]
 		public string BorderingPointMatchCondition
 		{
@@ -229,7 +229,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaEdgeMatchBorderingPoints_BorderingPointAttributeConstraint")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_BorderingPointAttributeConstraint))]
 		[TestParameter]
 		public string BorderingPointAttributeConstraint
 		{
@@ -241,7 +241,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaEdgeMatchBorderingPoints_IsBorderingPointAttributeConstraintSymmetric")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_IsBorderingPointAttributeConstraintSymmetric))]
 		[TestParameter(_defaultIsBorderingPointAttributeConstraintSymmetric)]
 		public bool IsBorderingPointAttributeConstraintSymmetric
 		{
@@ -254,7 +254,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		// NOTE blank is not supported as field separator (as it may be used as multi-value separator)
-		[Doc("QaEdgeMatchBorderingPoints_BorderPointEqualAttributes")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_BorderPointEqualAttributes))]
 		[TestParameter]
 		public string BorderingPointEqualAttributes
 		{
@@ -266,7 +266,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaEdgeMatchBorderingPoints_BorderingPointEqualAttributeOptions")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_BorderingPointEqualAttributeOptions))]
 		[TestParameter]
 		public IList<string> BorderingPointEqualAttributeOptions
 		{
@@ -279,27 +279,26 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(false)]
-		[Doc("QaEdgeMatchBorderingPoints_ReportIndividualAttributeConstraintViolations")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_ReportIndividualAttributeConstraintViolations))]
 		public bool ReportIndividualAttributeConstraintViolations { get; set; }
 
-		[Doc("QaEdgeMatchBorderingPoints_CoincidenceTolerance")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_CoincidenceTolerance))]
 		[TestParameter(_defaultCoincidenceTolerance)]
 		public double CoincidenceTolerance { get; set; }
 
-		[Doc(
-				"QaEdgeMatchBorderingPoints_AllowDisjointCandidateFeatureIfBordersAreNotCoincident"
-			)
-		]
+		[Doc(nameof(DocStrings.
+				QaEdgeMatchBorderingPoints_AllowDisjointCandidateFeatureIfBordersAreNotCoincident
+			))]
 		[TestParameter(_defaultAllowDisjointCandidateFeatureIfBordersAreNotCoincident)]
 		public bool AllowDisjointCandidateFeatureIfBordersAreNotCoincident { get; set; }
 
-		[Doc("QaEdgeMatchBorderingPoints_AllowNoFeatureWithinSearchDistance")]
+		[Doc(nameof(DocStrings.QaEdgeMatchBorderingPoints_AllowNoFeatureWithinSearchDistance))]
 		[TestParameter(_defaultAllowNoFeatureWithinSearchDistance)]
 		public bool AllowNoFeatureWithinSearchDistance { get; set; }
 
-		[Doc(
-			"QaEdgeMatchBorderingPoints_AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled"
-		)]
+		[Doc(nameof(DocStrings.
+			QaEdgeMatchBorderingPoints_AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled
+		))]
 		[TestParameter(
 			_defaultAllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled)]
 		public bool AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled { get; set; }

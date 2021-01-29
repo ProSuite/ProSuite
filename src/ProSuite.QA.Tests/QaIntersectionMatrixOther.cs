@@ -36,77 +36,77 @@ namespace ProSuite.QA.Tests
 
 		#region Constructors
 
-		[Doc("QaIntersectionMatrixOther_0")]
+		[Doc(nameof(DocStrings.QaIntersectionMatrixOther_0))]
 		public QaIntersectionMatrixOther(
-			[Doc("QaIntersectionMatrixOther_featureClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_featureClasses))] [NotNull]
 			IList<IFeatureClass>
 				featureClasses,
-			[Doc("QaIntersectionMatrixOther_relatedClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_relatedClasses))] [NotNull]
 			IList<IFeatureClass>
 				relatedClasses,
-			[Doc("QaIntersectionMatrixOther_intersectionMatrix")] [NotNull]
+			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_intersectionMatrix))] [NotNull]
 			string
 				intersectionMatrix)
 			: this(featureClasses, relatedClasses, intersectionMatrix, string.Empty, null) { }
 
-		[Doc("QaIntersectionMatrixOther_1")]
+		[Doc(nameof(DocStrings.QaIntersectionMatrixOther_1))]
 		public QaIntersectionMatrixOther(
-				[Doc("QaIntersectionMatrixOther_featureClasses")] [NotNull]
+				[Doc(nameof(DocStrings.QaIntersectionMatrixOther_featureClasses))] [NotNull]
 				IList<IFeatureClass>
 					featureClasses,
-				[Doc("QaIntersectionMatrixOther_relatedClasses")] [NotNull]
+				[Doc(nameof(DocStrings.QaIntersectionMatrixOther_relatedClasses))] [NotNull]
 				IList<IFeatureClass>
 					relatedClasses,
-				[Doc("QaIntersectionMatrixOther_intersectionMatrix")] [NotNull]
+				[Doc(nameof(DocStrings.QaIntersectionMatrixOther_intersectionMatrix))] [NotNull]
 				string
 					intersectionMatrix,
-				[Doc("QaIntersectionMatrixOther_constraint")] [CanBeNull]
+				[Doc(nameof(DocStrings.QaIntersectionMatrixOther_constraint))] [CanBeNull]
 				string constraint)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClasses, relatedClasses, intersectionMatrix, constraint, null) { }
 
-		[Doc("QaIntersectionMatrixOther_2")]
+		[Doc(nameof(DocStrings.QaIntersectionMatrixOther_2))]
 		public QaIntersectionMatrixOther(
-			[Doc("QaIntersectionMatrixOther_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_featureClass))] [NotNull]
 			IFeatureClass
 				featureClass,
-			[Doc("QaIntersectionMatrixOther_relatedClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_relatedClass))] [NotNull]
 			IFeatureClass
 				relatedClass,
-			[Doc("QaIntersectionMatrixOther_intersectionMatrix")] [NotNull]
+			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_intersectionMatrix))] [NotNull]
 			string
 				intersectionMatrix)
 			: this(featureClass, relatedClass, intersectionMatrix, string.Empty) { }
 
-		[Doc("QaIntersectionMatrixOther_3")]
+		[Doc(nameof(DocStrings.QaIntersectionMatrixOther_3))]
 		public QaIntersectionMatrixOther(
-			[Doc("QaIntersectionMatrixOther_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_featureClass))] [NotNull]
 			IFeatureClass
 				featureClass,
-			[Doc("QaIntersectionMatrixOther_relatedClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_relatedClass))] [NotNull]
 			IFeatureClass
 				relatedClass,
-			[Doc("QaIntersectionMatrixOther_intersectionMatrix")] [NotNull]
+			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_intersectionMatrix))] [NotNull]
 			string
 				intersectionMatrix,
-			[Doc("QaIntersectionMatrixOther_constraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_constraint))] [CanBeNull]
 			string constraint)
 			: this(new[] {featureClass}, new[] {relatedClass}, intersectionMatrix, constraint) { }
 
-		[Doc("QaIntersectionMatrixOther_4")]
+		[Doc(nameof(DocStrings.QaIntersectionMatrixOther_4))]
 		public QaIntersectionMatrixOther(
-			[Doc("QaIntersectionMatrixOther_featureClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_featureClasses))] [NotNull]
 			IList<IFeatureClass>
 				featureClasses,
-			[Doc("QaIntersectionMatrixOther_relatedClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_relatedClasses))] [NotNull]
 			IList<IFeatureClass>
 				relatedClasses,
-			[Doc("QaIntersectionMatrixOther_intersectionMatrix")] [NotNull]
+			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_intersectionMatrix))] [NotNull]
 			string
 				intersectionMatrix,
-			[Doc("QaIntersectionMatrixOther_constraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_constraint))] [CanBeNull]
 			string constraint,
-			[Doc("QaIntersectionMatrixOther_validIntersectionDimensions")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaIntersectionMatrixOther_validIntersectionDimensions))] [CanBeNull]
 			string
 				validIntersectionDimensions)
 			: base(featureClasses, relatedClasses, intersectionMatrix)

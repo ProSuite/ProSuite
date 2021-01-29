@@ -51,18 +51,18 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMpHorizontalAzimuths_0")]
+		[Doc(nameof(DocStrings.QaMpHorizontalAzimuths_0))]
 		public QaMpHorizontalAzimuths(
-			[Doc("QaMpHorizontalAzimuths_multiPatchClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMpHorizontalAzimuths_multiPatchClass))] [NotNull]
 			IFeatureClass
 				multiPatchClass,
-			[Doc("QaMpHorizontalAzimuths_nearAngle")]
+			[Doc(nameof(DocStrings.QaMpHorizontalAzimuths_nearAngle))]
 			double nearAngle,
-			[Doc("QaMpHorizontalAzimuths_azimuthTolerance")]
+			[Doc(nameof(DocStrings.QaMpHorizontalAzimuths_azimuthTolerance))]
 			double azimuthTolerance,
-			[Doc("QaMpHorizontalAzimuths_horizontalTolerance")]
+			[Doc(nameof(DocStrings.QaMpHorizontalAzimuths_horizontalTolerance))]
 			double horizontalTolerance,
-			[Doc("QaMpHorizontalAzimuths_perRing")]
+			[Doc(nameof(DocStrings.QaMpHorizontalAzimuths_perRing))]
 			bool perRing)
 			: base((ITable) multiPatchClass)
 		{

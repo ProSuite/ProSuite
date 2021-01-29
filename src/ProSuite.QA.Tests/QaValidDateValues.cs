@@ -42,25 +42,25 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaValidDateValues_0")]
+		[Doc(nameof(DocStrings.QaValidDateValues_0))]
 		public QaValidDateValues(
-			[Doc("QaValidDateValues_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
 			ITable table,
-			[Doc("QaValidDateValues_minimumDateValue")]
+			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateValue))]
 			DateTime minimumDateValue,
-			[Doc("QaValidDateValues_maximumDateValue")]
+			[Doc(nameof(DocStrings.QaValidDateValues_maximumDateValue))]
 			DateTime maximumDateValue)
 			: this(table, minimumDateValue, maximumDateValue, GetAllDateFieldNames(table)) { }
 
-		[Doc("QaValidDateValues_1")]
+		[Doc(nameof(DocStrings.QaValidDateValues_1))]
 		public QaValidDateValues(
-			[Doc("QaValidDateValues_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
 			ITable table,
-			[Doc("QaValidDateValues_minimumDateValue")]
+			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateValue))]
 			DateTime minimumDateValue,
-			[Doc("QaValidDateValues_maximumDateValue")]
+			[Doc(nameof(DocStrings.QaValidDateValues_maximumDateValue))]
 			DateTime maximumDateValue,
-			[Doc("QaValidDateValues_dateFieldNames")] [NotNull]
+			[Doc(nameof(DocStrings.QaValidDateValues_dateFieldNames))] [NotNull]
 			IEnumerable<string>
 				dateFieldNames)
 			: base(table)
@@ -85,43 +85,43 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaValidDateValues_2")]
+		[Doc(nameof(DocStrings.QaValidDateValues_2))]
 		public QaValidDateValues(
-			[Doc("QaValidDateValues_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
 			ITable table,
-			[Doc("QaValidDateValues_minimumDateValue")]
+			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateValue))]
 			DateTime minimumDateValue,
-			[Doc("QaValidDateValues_maximumDateValue")]
+			[Doc(nameof(DocStrings.QaValidDateValues_maximumDateValue))]
 			DateTime maximumDateValue,
-			[Doc("QaValidDateValues_dateFieldNamesString")] [NotNull]
+			[Doc(nameof(DocStrings.QaValidDateValues_dateFieldNamesString))] [NotNull]
 			string
 				dateFieldNamesString)
 			: this(table, minimumDateValue, maximumDateValue,
 			       TestUtils.GetTokens(dateFieldNamesString)) { }
 
-		[Doc("QaValidDateValues_3")]
+		[Doc(nameof(DocStrings.QaValidDateValues_3))]
 		public QaValidDateValues(
-			[Doc("QaValidDateValues_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
 			ITable table,
-			[Doc("QaValidDateValues_minimumDateValue")]
+			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateValue))]
 			DateTime minimumDateValue,
-			[Doc("QaValidDateValues_maximumDateTimeRelativeToNow")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaValidDateValues_maximumDateTimeRelativeToNow))] [CanBeNull]
 			string
 				maximumDateTimeRelativeToNow)
 			: this(table, minimumDateValue,
 			       GetDateTimeRelativeToNow(maximumDateTimeRelativeToNow),
 			       GetAllDateFieldNames(table)) { }
 
-		[Doc("QaValidDateValues_4")]
+		[Doc(nameof(DocStrings.QaValidDateValues_4))]
 		public QaValidDateValues(
-			[Doc("QaValidDateValues_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
 			ITable table,
-			[Doc("QaValidDateValues_minimumDateValue")]
+			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateValue))]
 			DateTime minimumDateValue,
-			[Doc("QaValidDateValues_maximumDateTimeRelativeToNow")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaValidDateValues_maximumDateTimeRelativeToNow))] [CanBeNull]
 			string
 				maximumDateTimeRelativeToNow,
-			[Doc("QaValidDateValues_dateFieldNamesString")] [NotNull]
+			[Doc(nameof(DocStrings.QaValidDateValues_dateFieldNamesString))] [NotNull]
 			string
 				dateFieldNamesString)
 			: this(table,
@@ -129,16 +129,16 @@ namespace ProSuite.QA.Tests
 			       GetDateTimeRelativeToNow(maximumDateTimeRelativeToNow),
 			       TestUtils.GetTokens(dateFieldNamesString)) { }
 
-		[Doc("QaValidDateValues_5")]
+		[Doc(nameof(DocStrings.QaValidDateValues_5))]
 		public QaValidDateValues(
-			[Doc("QaValidDateValues_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
 			ITable table,
-			[Doc("QaValidDateValues_minimumDateTimeRelativeToNow")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateTimeRelativeToNow))] [CanBeNull]
 			string
 				minimumDateTimeRelativeToNow,
-			[Doc("QaValidDateValues_maximumDateValue")]
+			[Doc(nameof(DocStrings.QaValidDateValues_maximumDateValue))]
 			DateTime maximumDateValue,
-			[Doc("QaValidDateValues_dateFieldNamesString")] [NotNull]
+			[Doc(nameof(DocStrings.QaValidDateValues_dateFieldNamesString))] [NotNull]
 			string
 				dateFieldNamesString)
 			: this(table,
@@ -146,17 +146,17 @@ namespace ProSuite.QA.Tests
 			       maximumDateValue,
 			       TestUtils.GetTokens(dateFieldNamesString)) { }
 
-		[Doc("QaValidDateValues_6")]
+		[Doc(nameof(DocStrings.QaValidDateValues_6))]
 		public QaValidDateValues(
-			[Doc("QaValidDateValues_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
 			ITable table,
-			[Doc("QaValidDateValues_minimumDateTimeRelativeToNow")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateTimeRelativeToNow))] [CanBeNull]
 			string
 				minimumDateTimeRelativeToNow,
-			[Doc("QaValidDateValues_maximumDateTimeRelativeToNow")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaValidDateValues_maximumDateTimeRelativeToNow))] [CanBeNull]
 			string
 				maximumDateTimeRelativeToNow,
-			[Doc("QaValidDateValues_dateFieldNamesString")] [NotNull]
+			[Doc(nameof(DocStrings.QaValidDateValues_dateFieldNamesString))] [NotNull]
 			string
 				dateFieldNamesString)
 			: this(table,

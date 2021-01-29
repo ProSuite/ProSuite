@@ -50,33 +50,33 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaContainsOther_0")]
+		[Doc(nameof(DocStrings.QaContainsOther_0))]
 		public QaContainsOther(
-				[Doc("QaContainsOther_contains_0")] [NotNull]
+				[Doc(nameof(DocStrings.QaContainsOther_contains_0))] [NotNull]
 				IList<IFeatureClass> contains,
-				[Doc("QaContainsOther_isWithin_0")] [NotNull]
+				[Doc(nameof(DocStrings.QaContainsOther_isWithin_0))] [NotNull]
 				IList<IFeatureClass> isWithin)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(contains, isWithin, null, false) { }
 
-		[Doc("QaContainsOther_1")]
+		[Doc(nameof(DocStrings.QaContainsOther_1))]
 		public QaContainsOther(
-			[Doc("QaContainsOther_contains_1")] [NotNull]
+			[Doc(nameof(DocStrings.QaContainsOther_contains_1))] [NotNull]
 			IFeatureClass contains,
-			[Doc("QaContainsOther_isWithin_1")] [NotNull]
+			[Doc(nameof(DocStrings.QaContainsOther_isWithin_1))] [NotNull]
 			IFeatureClass isWithin)
 			: this(new[] {contains}, new[] {isWithin}, null, false) { }
 
-		[Doc("QaContainsOther_2")]
+		[Doc(nameof(DocStrings.QaContainsOther_2))]
 		public QaContainsOther(
-			[Doc("QaContainsOther_contains_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaContainsOther_contains_0))] [NotNull]
 			IList<IFeatureClass> contains,
-			[Doc("QaContainsOther_isWithin_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaContainsOther_isWithin_0))] [NotNull]
 			IList<IFeatureClass> isWithin,
-			[Doc("QaContainsOther_isContainingCondition")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaContainsOther_isContainingCondition))] [CanBeNull]
 			string
 				isContainingCondition,
-			[Doc("QaContainsOther_reportIndividualParts")]
+			[Doc(nameof(DocStrings.QaContainsOther_reportIndividualParts))]
 			bool reportIndividualParts)
 			: base(CastToTables(contains, isWithin))
 		{
@@ -93,16 +93,16 @@ namespace ProSuite.QA.Tests
 				GetShapeTypesByTableIndex(contains, isWithin));
 		}
 
-		[Doc("QaContainsOther_3")]
+		[Doc(nameof(DocStrings.QaContainsOther_3))]
 		public QaContainsOther(
-			[Doc("QaContainsOther_contains_1")] [NotNull]
+			[Doc(nameof(DocStrings.QaContainsOther_contains_1))] [NotNull]
 			IFeatureClass contains,
-			[Doc("QaContainsOther_isWithin_1")] [NotNull]
+			[Doc(nameof(DocStrings.QaContainsOther_isWithin_1))] [NotNull]
 			IFeatureClass isWithin,
-			[Doc("QaContainsOther_isContainingCondition")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaContainsOther_isContainingCondition))] [CanBeNull]
 			string
 				isContainingCondition,
-			[Doc("QaContainsOther_reportIndividualParts")]
+			[Doc(nameof(DocStrings.QaContainsOther_reportIndividualParts))]
 			bool reportIndividualParts)
 			: this(new[] {contains},
 			       new[] {isWithin},

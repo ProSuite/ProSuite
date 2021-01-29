@@ -41,18 +41,18 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaExtent_0")]
+		[Doc(nameof(DocStrings.QaExtent_0))]
 		public QaExtent(
-				[Doc("QaExtent_featureClass")] IFeatureClass featureClass,
-				[Doc("QaExtent_limit")] double limit)
+				[Doc(nameof(DocStrings.QaExtent_featureClass))] IFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaExtent_limit))] double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, limit, false) { }
 
-		[Doc("QaExtent_1")]
+		[Doc(nameof(DocStrings.QaExtent_1))]
 		public QaExtent(
-			[Doc("QaExtent_featureClass")] IFeatureClass featureClass,
-			[Doc("QaExtent_limit")] double limit,
-			[Doc("QaExtent_perPart")] bool perPart)
+			[Doc(nameof(DocStrings.QaExtent_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaExtent_limit))] double limit,
+			[Doc(nameof(DocStrings.QaExtent_perPart))] bool perPart)
 			: base((ITable) featureClass)
 		{
 			_limit = limit;

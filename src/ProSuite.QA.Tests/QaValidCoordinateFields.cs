@@ -64,24 +64,24 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaValidCoordinateFields_0")]
+		[Doc(nameof(DocStrings.QaValidCoordinateFields_0))]
 		public QaValidCoordinateFields(
-			[Doc("QaValidCoordinateFields_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaValidCoordinateFields_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaValidCoordinateFields_xCoordinateFieldName")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaValidCoordinateFields_xCoordinateFieldName))] [CanBeNull]
 			string
 				xCoordinateFieldName,
-			[Doc("QaValidCoordinateFields_yCoordinateFieldName")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaValidCoordinateFields_yCoordinateFieldName))] [CanBeNull]
 			string
 				yCoordinateFieldName,
-			[Doc("QaValidCoordinateFields_zCoordinateFieldName")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaValidCoordinateFields_zCoordinateFieldName))] [CanBeNull]
 			string
 				zCoordinateFieldName,
-			[Doc("QaValidCoordinateFields_xyTolerance")]
+			[Doc(nameof(DocStrings.QaValidCoordinateFields_xyTolerance))]
 			double xyTolerance,
-			[Doc("QaValidCoordinateFields_zTolerance")]
+			[Doc(nameof(DocStrings.QaValidCoordinateFields_zTolerance))]
 			double zTolerance,
-			[Doc("QaValidCoordinateFields_culture")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaValidCoordinateFields_culture))] [CanBeNull]
 			string culture)
 			: base((ITable) featureClass)
 		{
@@ -156,19 +156,19 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(false)]
-		[Doc("QaValidCoordinateFields_AllowXYFieldValuesForUndefinedShape")]
+		[Doc(nameof(DocStrings.QaValidCoordinateFields_AllowXYFieldValuesForUndefinedShape))]
 		public bool AllowXYFieldValuesForUndefinedShape { get; set; }
 
 		[TestParameter(false)]
-		[Doc("QaValidCoordinateFields_AllowZFieldValueForUndefinedShape")]
+		[Doc(nameof(DocStrings.QaValidCoordinateFields_AllowZFieldValueForUndefinedShape))]
 		public bool AllowZFieldValueForUndefinedShape { get; set; }
 
 		[TestParameter(false)]
-		[Doc("QaValidCoordinateFields_AllowMissingZFieldValueForDefinedShape")]
+		[Doc(nameof(DocStrings.QaValidCoordinateFields_AllowMissingZFieldValueForDefinedShape))]
 		public bool AllowMissingZFieldValueForDefinedShape { get; set; }
 
 		[TestParameter(false)]
-		[Doc("QaValidCoordinateFields_AllowMissingXYFieldValueForDefinedShape")]
+		[Doc(nameof(DocStrings.QaValidCoordinateFields_AllowMissingXYFieldValueForDefinedShape))]
 		public bool AllowMissingXYFieldValueForDefinedShape { get; set; }
 
 		protected override int ExecuteCore(IRow row, int tableIndex)

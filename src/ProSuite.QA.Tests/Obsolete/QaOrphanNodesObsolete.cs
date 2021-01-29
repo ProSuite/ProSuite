@@ -26,10 +26,10 @@ namespace ProSuite.QA.Tests
 		/// <param name="pointClasses">point layer</param>
 		/// <param name="polylineClasses">polyLine layers</param>
 		/// <remarks>All layers must have the same spatial reference</remarks>
-		[Doc("QaOrphanNode_0")]
+		[Doc(nameof(DocStrings.QaOrphanNode_0))]
 		public QaOrphanNodesObsolete(
-			[Doc("QaOrphanNode_pointClasses")] IList<IFeatureClass> pointClasses,
-			[Doc("QaOrphanNode_polylineClasses")] IList<IFeatureClass> polylineClasses)
+			[Doc(nameof(DocStrings.QaOrphanNode_pointClasses))] IList<IFeatureClass> pointClasses,
+			[Doc(nameof(DocStrings.QaOrphanNode_polylineClasses))] IList<IFeatureClass> polylineClasses)
 			: base(CastToTables(pointClasses, polylineClasses))
 		{
 			_nPointLayers = pointClasses.Count;
@@ -42,10 +42,10 @@ namespace ProSuite.QA.Tests
 		/// <param name="pointClass">point layer</param>
 		/// <param name="polylineClass">polyLine layer</param>
 		/// <remarks>All layers must have the same spatial reference</remarks>
-		[Doc("QaOrphanNodes_1")]
+		[Doc(nameof(DocStrings.QaOrphanNode_1))]
 		public QaOrphanNodesObsolete(
-			[Doc("QaOrphanNode_pointClass")] IFeatureClass pointClass,
-			[Doc("QaOrphanNode_polylineClass")] IFeatureClass polylineClass)
+			[Doc(nameof(DocStrings.QaOrphanNode_pointClass))] IFeatureClass pointClass,
+			[Doc(nameof(DocStrings.QaOrphanNode_polylineClass))] IFeatureClass polylineClass)
 			: base(new[] {(ITable) pointClass, (ITable) polylineClass})
 		{
 			_nPointLayers = 1;

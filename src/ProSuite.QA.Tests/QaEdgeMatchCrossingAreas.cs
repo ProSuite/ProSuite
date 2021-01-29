@@ -123,52 +123,52 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaEdgeMatchCrossingAreas_0")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_0))]
 		public QaEdgeMatchCrossingAreas(
-			[Doc("QaEdgeMatchCrossingAreas_areaClass1")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_areaClass1))] [NotNull]
 			IFeatureClass areaClass1,
-			[Doc("QaEdgeMatchCrossingAreas_borderClass1")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_borderClass1))] [NotNull]
 			IFeatureClass
 				borderClass1,
-			[Doc("QaEdgeMatchCrossingAreas_areaClass2")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_areaClass2))] [NotNull]
 			IFeatureClass areaClass2,
-			[Doc("QaEdgeMatchCrossingAreas_borderClass2")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_borderClass2))] [NotNull]
 			IFeatureClass
 				borderClass2,
-			[Doc("QaEdgeMatchCrossingAreas_searchDistance")]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_searchDistance))]
 			double
 				searchDistance,
-			[Doc("QaEdgeMatchCrossingAreas_boundingClasses1")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_boundingClasses1))] [CanBeNull]
 			IList<IFeatureClass>
 				boundingClasses1,
-			[Doc("QaEdgeMatchCrossingAreas_boundingClasses2")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_boundingClasses2))] [CanBeNull]
 			IList<IFeatureClass>
 				boundingClasses2)
 			: this(new[] {areaClass1}, borderClass1,
 			       new[] {areaClass2}, borderClass2,
 			       searchDistance, boundingClasses1, boundingClasses2) { }
 
-		[Doc("QaEdgeMatchCrossingAreas_1")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_1))]
 		public QaEdgeMatchCrossingAreas(
-			[Doc("QaEdgeMatchCrossingAreas_areaClasses1")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_areaClasses1))] [NotNull]
 			IList<IFeatureClass>
 				areaClasses1,
-			[Doc("QaEdgeMatchCrossingAreas_borderClass1")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_borderClass1))] [NotNull]
 			IFeatureClass
 				borderClass1,
-			[Doc("QaEdgeMatchCrossingAreas_areaClasses2")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_areaClasses2))] [NotNull]
 			IList<IFeatureClass>
 				areaClasses2,
-			[Doc("QaEdgeMatchCrossingAreas_borderClass2")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_borderClass2))] [NotNull]
 			IFeatureClass
 				borderClass2,
-			[Doc("QaEdgeMatchCrossingAreas_searchDistance")]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_searchDistance))]
 			double
 				searchDistance,
-			[Doc("QaEdgeMatchCrossingAreas_boundingClasses1")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_boundingClasses1))] [CanBeNull]
 			IList<IFeatureClass>
 				boundingClasses1,
-			[Doc("QaEdgeMatchCrossingAreas_boundingClasses2")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_boundingClasses2))] [CanBeNull]
 			IList<IFeatureClass>
 				boundingClasses2)
 			: base(CastToTables(areaClasses1, new[] {borderClass1},
@@ -255,7 +255,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaEdgeMatchCrossingAreas_AreaClass1BorderMatchCondition")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_AreaClass1BorderMatchCondition))]
 		public string AreaClass1BorderMatchCondition
 		{
 			get { return _areaClass1BorderMatchConditionSql; }
@@ -267,7 +267,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaEdgeMatchCrossingAreas_AreaClass1BoundingFeatureMatchCondition")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_AreaClass1BoundingFeatureMatchCondition))]
 		public string AreaClass1BoundingFeatureMatchCondition
 		{
 			get { return _areaClass1BoundingFeatureMatchConditionSql; }
@@ -279,7 +279,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaEdgeMatchCrossingAreas_AreaClass2BoundingFeatureMatchCondition")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_AreaClass2BoundingFeatureMatchCondition))]
 		public string AreaClass2BoundingFeatureMatchCondition
 		{
 			get { return _areaClass2BoundingFeatureMatchConditionSql; }
@@ -291,7 +291,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaEdgeMatchCrossingAreas_AreaClass2BorderMatchCondition")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_AreaClass2BorderMatchCondition))]
 		public string AreaClass2BorderMatchCondition
 		{
 			get { return _areaClass2BorderMatchConditionSql; }
@@ -303,7 +303,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaEdgeMatchCrossingAreas_CrossingAreaMatchCondition")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_CrossingAreaMatchCondition))]
 		public string CrossingAreaMatchCondition
 		{
 			get { return _crossingAreaMatchConditionSql; }
@@ -315,7 +315,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaEdgeMatchCrossingAreas_CrossingAreaAttributeConstraint")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_CrossingAreaAttributeConstraint))]
 		public string CrossingAreaAttributeConstraint
 		{
 			get { return _crossingAreaAttributeConstraintSql; }
@@ -327,7 +327,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(_defaultIsCrossingAreaAttributeConstraintSymmetric)]
-		[Doc("QaEdgeMatchCrossingAreas_IsCrossingAreaAttributeConstraintSymmetric")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_IsCrossingAreaAttributeConstraintSymmetric))]
 		public bool IsCrossingAreaAttributeConstraintSymmetric
 		{
 			get { return _isCrossingAreaAttributeConstraintSymmetric; }
@@ -339,7 +339,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaEdgeMatchCrossingAreas_CrossingAreaEqualAttributes")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_CrossingAreaEqualAttributes))]
 		public string CrossingAreaEqualAttributes
 		{
 			get { return _crossingAreaEqualAttributes; }
@@ -351,7 +351,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(false)]
-		[Doc("QaEdgeMatchCrossingAreas_CrossingAreaEqualAttributeOptions")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_CrossingAreaEqualAttributeOptions))]
 		public IList<string> CrossingAreaEqualAttributeOptions
 		{
 			get { return _crossingAreaEqualAttributeOptions; }
@@ -363,22 +363,22 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaEdgeMatchCrossingAreas_ReportIndividualAttributeConstraintViolations")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_ReportIndividualAttributeConstraintViolations))]
 		public bool ReportIndividualAttributeConstraintViolations { get; set; }
 
 		[TestParameter(_defaultAllowNoFeatureWithinSearchDistance)]
-		[Doc("QaEdgeMatchCrossingAreas_AllowNoFeatureWithinSearchDistance")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingAreas_AllowNoFeatureWithinSearchDistance))]
 		public bool AllowNoFeatureWithinSearchDistance { get; set; }
 
 		[TestParameter(_defaultAllowDisjointCandidateFeatureIfBordersAreNotCoincident)]
-		[Doc(
-			"QaEdgeMatchCrossingAreas_AllowDisjointCandidateFeatureIfBordersAreNotCoincident"
-		)]
+		[Doc(nameof(DocStrings.
+			QaEdgeMatchCrossingAreas_AllowDisjointCandidateFeatureIfBordersAreNotCoincident
+		))]
 		public bool AllowDisjointCandidateFeatureIfBordersAreNotCoincident { get; set; }
 
-		[Doc(
-			"QaEdgeMatchCrossingAreas_AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled"
-		)]
+		[Doc(nameof(DocStrings.
+			QaEdgeMatchCrossingAreas_AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled
+		))]
 		[TestParameter(
 			_defaultAllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled)]
 		public bool AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled { get; set; }

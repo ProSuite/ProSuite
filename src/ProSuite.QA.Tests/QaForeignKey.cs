@@ -58,43 +58,43 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaForeignKey_0")]
+		[Doc(nameof(DocStrings.QaForeignKey_0))]
 		public QaForeignKey(
-			[Doc("QaForeignKey_table")] [NotNull] ITable table,
-			[Doc("QaForeignKey_foreignKeyField")] [NotNull]
+			[Doc(nameof(DocStrings.QaForeignKey_table))] [NotNull] ITable table,
+			[Doc(nameof(DocStrings.QaForeignKey_foreignKeyField))] [NotNull]
 			string foreignKeyField,
-			[Doc("QaForeignKey_referencedTable")] [NotNull]
+			[Doc(nameof(DocStrings.QaForeignKey_referencedTable))] [NotNull]
 			ITable referencedTable,
-			[Doc("QaForeignKey_referencedKeyField")] [NotNull]
+			[Doc(nameof(DocStrings.QaForeignKey_referencedKeyField))] [NotNull]
 			string referencedKeyField)
 			: this(table, new[] {foreignKeyField}, referencedTable, new[] {referencedKeyField}) { }
 
-		[Doc("QaForeignKey_1")]
+		[Doc(nameof(DocStrings.QaForeignKey_1))]
 		public QaForeignKey(
-				[Doc("QaForeignKey_table")] [NotNull] ITable table,
-				[Doc("QaForeignKey_foreignKeyFields")] [NotNull]
+				[Doc(nameof(DocStrings.QaForeignKey_table))] [NotNull] ITable table,
+				[Doc(nameof(DocStrings.QaForeignKey_foreignKeyFields))] [NotNull]
 				IEnumerable<string>
 					foreignKeyFields,
-				[Doc("QaForeignKey_referencedTable")] [NotNull]
+				[Doc(nameof(DocStrings.QaForeignKey_referencedTable))] [NotNull]
 				ITable referencedTable,
-				[Doc("QaForeignKey_referencedKeyFields")] [NotNull]
+				[Doc(nameof(DocStrings.QaForeignKey_referencedKeyFields))] [NotNull]
 				IEnumerable<string>
 					referencedKeyFields)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(table, foreignKeyFields, referencedTable, referencedKeyFields, false) { }
 
-		[Doc("QaForeignKey_2")]
+		[Doc(nameof(DocStrings.QaForeignKey_2))]
 		public QaForeignKey(
-			[Doc("QaForeignKey_table")] [NotNull] ITable table,
-			[Doc("QaForeignKey_foreignKeyFields")] [NotNull]
+			[Doc(nameof(DocStrings.QaForeignKey_table))] [NotNull] ITable table,
+			[Doc(nameof(DocStrings.QaForeignKey_foreignKeyFields))] [NotNull]
 			IEnumerable<string>
 				foreignKeyFields,
-			[Doc("QaForeignKey_referencedTable")] [NotNull]
+			[Doc(nameof(DocStrings.QaForeignKey_referencedTable))] [NotNull]
 			ITable referencedTable,
-			[Doc("QaForeignKey_referencedKeyFields")] [NotNull]
+			[Doc(nameof(DocStrings.QaForeignKey_referencedKeyFields))] [NotNull]
 			IEnumerable<string>
 				referencedKeyFields,
-			[Doc("QaForeignKey_referenceIsError")] bool referenceIsError)
+			[Doc(nameof(DocStrings.QaForeignKey_referenceIsError))] bool referenceIsError)
 			: base(new[] {table, referencedTable})
 		{
 			Assert.ArgumentNotNull(table, nameof(table));

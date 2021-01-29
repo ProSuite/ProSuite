@@ -53,20 +53,20 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMpHorizontalPerpendicular_0")]
+		[Doc(nameof(DocStrings.QaMpHorizontalPerpendicular_0))]
 		public QaMpHorizontalPerpendicular(
-			[Doc("QaMpHorizontalPerpendicular_multiPatchClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMpHorizontalPerpendicular_multiPatchClass))] [NotNull]
 			IFeatureClass
 				multiPatchClass,
-			[Doc("QaMpHorizontalPerpendicular_nearAngle")]
+			[Doc(nameof(DocStrings.QaMpHorizontalPerpendicular_nearAngle))]
 			double nearAngle,
-			[Doc("QaMpHorizontalPerpendicular_azimuthTolerance")]
+			[Doc(nameof(DocStrings.QaMpHorizontalPerpendicular_azimuthTolerance))]
 			double azimuthTolerance,
-			[Doc("QaMpHorizontalPerpendicular_horizontalTolerance")]
+			[Doc(nameof(DocStrings.QaMpHorizontalPerpendicular_horizontalTolerance))]
 			double horizontalTolerance,
-			[Doc("QaMpHorizontalPerpendicular_connectedOnly")]
+			[Doc(nameof(DocStrings.QaMpHorizontalPerpendicular_connectedOnly))]
 			bool connectedOnly,
-			[Doc("QaMpHorizontalPerpendicular_connectedTolerance")]
+			[Doc(nameof(DocStrings.QaMpHorizontalPerpendicular_connectedTolerance))]
 			double connectedTolerance)
 			: base((ITable) multiPatchClass)
 		{

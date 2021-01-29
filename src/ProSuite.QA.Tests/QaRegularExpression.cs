@@ -53,81 +53,81 @@ namespace ProSuite.QA.Tests
 
 		#region constructors
 
-		[Doc("QaRegularExpression_0")]
+		[Doc(nameof(DocStrings.QaRegularExpression_0))]
 		public QaRegularExpression(
-				[Doc("QaRegularExpression_table")] [NotNull]
+				[Doc(nameof(DocStrings.QaRegularExpression_table))] [NotNull]
 				ITable table,
-				[Doc("QaRegularExpression_pattern")] [NotNull]
+				[Doc(nameof(DocStrings.QaRegularExpression_pattern))] [NotNull]
 				string pattern,
-				[Doc("QaRegularExpression_fieldName")] [NotNull]
+				[Doc(nameof(DocStrings.QaRegularExpression_fieldName))] [NotNull]
 				string fieldName)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(table, pattern, TestUtils.GetTokens(fieldName), false, null) { }
 
-		[Doc("QaRegularExpression_1")]
+		[Doc(nameof(DocStrings.QaRegularExpression_1))]
 		public QaRegularExpression(
-				[Doc("QaRegularExpression_table")] [NotNull]
+				[Doc(nameof(DocStrings.QaRegularExpression_table))] [NotNull]
 				ITable table,
-				[Doc("QaRegularExpression_pattern")] [NotNull]
+				[Doc(nameof(DocStrings.QaRegularExpression_pattern))] [NotNull]
 				string pattern,
-				[Doc("QaRegularExpression_fieldNames")] [NotNull]
+				[Doc(nameof(DocStrings.QaRegularExpression_fieldNames))] [NotNull]
 				IEnumerable<string> fieldNames)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(table, pattern, fieldNames, false, null) { }
 
-		[Doc("QaRegularExpression_2")]
+		[Doc(nameof(DocStrings.QaRegularExpression_2))]
 		public QaRegularExpression(
-				[Doc("QaRegularExpression_table")] [NotNull]
+				[Doc(nameof(DocStrings.QaRegularExpression_table))] [NotNull]
 				ITable table,
-				[Doc("QaRegularExpression_pattern")] [NotNull]
+				[Doc(nameof(DocStrings.QaRegularExpression_pattern))] [NotNull]
 				string pattern,
-				[Doc("QaRegularExpression_fieldName")] [NotNull]
+				[Doc(nameof(DocStrings.QaRegularExpression_fieldName))] [NotNull]
 				string fieldName,
-				[Doc("QaRegularExpression_matchIsError")]
+				[Doc(nameof(DocStrings.QaRegularExpression_matchIsError))]
 				bool matchIsError)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(table, pattern, TestUtils.GetTokens(fieldName), matchIsError, null) { }
 
-		[Doc("QaRegularExpression_3")]
+		[Doc(nameof(DocStrings.QaRegularExpression_3))]
 		public QaRegularExpression(
-				[Doc("QaRegularExpression_table")] [NotNull]
+				[Doc(nameof(DocStrings.QaRegularExpression_table))] [NotNull]
 				ITable table,
-				[Doc("QaRegularExpression_pattern")] [NotNull]
+				[Doc(nameof(DocStrings.QaRegularExpression_pattern))] [NotNull]
 				string pattern,
-				[Doc("QaRegularExpression_fieldNames")] [NotNull]
+				[Doc(nameof(DocStrings.QaRegularExpression_fieldNames))] [NotNull]
 				IEnumerable<string> fieldNames,
-				[Doc("QaRegularExpression_matchIsError")]
+				[Doc(nameof(DocStrings.QaRegularExpression_matchIsError))]
 				bool matchIsError)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(table, pattern, fieldNames, matchIsError, null) { }
 
-		[Doc("QaRegularExpression_4")]
+		[Doc(nameof(DocStrings.QaRegularExpression_4))]
 		public QaRegularExpression(
-			[Doc("QaRegularExpression_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaRegularExpression_table))] [NotNull]
 			ITable table,
-			[Doc("QaRegularExpression_pattern")] [NotNull]
+			[Doc(nameof(DocStrings.QaRegularExpression_pattern))] [NotNull]
 			string pattern,
-			[Doc("QaRegularExpression_fieldName")] [NotNull]
+			[Doc(nameof(DocStrings.QaRegularExpression_fieldName))] [NotNull]
 			string fieldName,
-			[Doc("QaRegularExpression_matchIsError")]
+			[Doc(nameof(DocStrings.QaRegularExpression_matchIsError))]
 			bool matchIsError,
-			[Doc("QaRegularExpression_patternDescription")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaRegularExpression_patternDescription))] [CanBeNull]
 			string
 				patternDescription)
 			: this(table, pattern, TestUtils.GetTokens(fieldName), matchIsError,
 			       patternDescription) { }
 
-		[Doc("QaRegularExpression_5")]
+		[Doc(nameof(DocStrings.QaRegularExpression_5))]
 		public QaRegularExpression(
-			[Doc("QaRegularExpression_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaRegularExpression_table))] [NotNull]
 			ITable table,
-			[Doc("QaRegularExpression_pattern")] [NotNull]
+			[Doc(nameof(DocStrings.QaRegularExpression_pattern))] [NotNull]
 			string pattern,
-			[Doc("QaRegularExpression_fieldNames")] [NotNull]
+			[Doc(nameof(DocStrings.QaRegularExpression_fieldNames))] [NotNull]
 			IEnumerable<string> fieldNames,
-			[Doc("QaRegularExpression_matchIsError")]
+			[Doc(nameof(DocStrings.QaRegularExpression_matchIsError))]
 			bool matchIsError,
-			[Doc("QaRegularExpression_patternDescription")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaRegularExpression_patternDescription))] [CanBeNull]
 			string
 				patternDescription)
 			: base(table)
@@ -148,7 +148,7 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaRegularExpression_FieldListType")]
+		[Doc(nameof(DocStrings.QaRegularExpression_FieldListType))]
 		[TestParameter(FieldListType.RelevantFields)]
 		public FieldListType FieldListType { get; set; } = FieldListType.RelevantFields;
 

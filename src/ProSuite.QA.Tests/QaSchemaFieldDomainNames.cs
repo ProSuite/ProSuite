@@ -49,17 +49,17 @@ namespace ProSuite.QA.Tests
 
 		#region Constructors
 
-		[Doc("QaSchemaFieldDomainNames_0")]
+		[Doc(nameof(DocStrings.QaSchemaFieldDomainNames_0))]
 		public QaSchemaFieldDomainNames(
-			[Doc("QaSchemaFieldDomainNames_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaFieldDomainNames_table))] [NotNull]
 			ITable table,
-			[Doc("QaSchemaFieldDomainNames_expectedPrefix")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaSchemaFieldDomainNames_expectedPrefix))] [CanBeNull]
 			string expectedPrefix,
-			[Doc("QaSchemaFieldDomainNames_maximumLength")]
+			[Doc(nameof(DocStrings.QaSchemaFieldDomainNames_maximumLength))]
 			int maximumLength,
-			[Doc("QaSchemaFieldDomainNames_mustContainFieldName")]
+			[Doc(nameof(DocStrings.QaSchemaFieldDomainNames_mustContainFieldName))]
 			bool mustContainFieldName,
-			[Doc("QaSchemaFieldDomainNames_expectedCase")]
+			[Doc(nameof(DocStrings.QaSchemaFieldDomainNames_expectedCase))]
 			ExpectedCase expectedCase)
 			: base(table)
 		{

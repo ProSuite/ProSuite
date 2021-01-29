@@ -37,24 +37,24 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaIntersectsSelf_0")]
+		[Doc(nameof(DocStrings.QaIntersectsSelf_0))]
 		public QaIntersectsSelf(
-				[Doc("QaIntersectsSelf_featureClass")] IFeatureClass featureClass)
+				[Doc(nameof(DocStrings.QaIntersectsSelf_featureClass))] IFeatureClass featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, null) { }
 
-		[Doc("QaIntersectsSelf_1")]
+		[Doc(nameof(DocStrings.QaIntersectsSelf_1))]
 		public QaIntersectsSelf(
-				[Doc("QaIntersectsSelf_featureClasses")]
+				[Doc(nameof(DocStrings.QaIntersectsSelf_featureClasses))]
 				IList<IFeatureClass> featureClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClasses, null) { }
 
-		[Doc("QaIntersectsSelf_2")]
+		[Doc(nameof(DocStrings.QaIntersectsSelf_2))]
 		public QaIntersectsSelf(
-			[Doc("QaIntersectsSelf_featureClasses")]
+			[Doc(nameof(DocStrings.QaIntersectsSelf_featureClasses))]
 			IList<IFeatureClass> featureClasses,
-			[Doc("QaIntersectsSelf_validRelationConstraint")]
+			[Doc(nameof(DocStrings.QaIntersectsSelf_validRelationConstraint))]
 			string validRelationConstraint)
 			: base(featureClasses, esriSpatialRelEnum.esriSpatialRelIntersects)
 		{
@@ -68,10 +68,10 @@ namespace ProSuite.QA.Tests
 				              .ToList());
 		}
 
-		[Doc("QaIntersectsSelf_3")]
+		[Doc(nameof(DocStrings.QaIntersectsSelf_3))]
 		public QaIntersectsSelf(
-			[Doc("QaIntersectsSelf_featureClass")] IFeatureClass featureClass,
-			[Doc("QaIntersectsSelf_validRelationConstraint")]
+			[Doc(nameof(DocStrings.QaIntersectsSelf_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaIntersectsSelf_validRelationConstraint))]
 			string validRelationConstraint)
 			: this(new[] {featureClass}, validRelationConstraint) { }
 
@@ -103,12 +103,12 @@ namespace ProSuite.QA.Tests
 		#endregion
 
 		[TestParameter(_defaultReportIntersectionsAsMultipart)]
-		[Doc("QaIntersectsSelf_ReportIntersectionsAsMultipart")]
+		[Doc(nameof(DocStrings.QaIntersectsSelf_ReportIntersectionsAsMultipart))]
 		public bool ReportIntersectionsAsMultipart { get; set; } =
 			_defaultReportIntersectionsAsMultipart;
 
 		[TestParameter]
-		[Doc("QaIntersectsSelf_ValidIntersectionGeometryConstraint")]
+		[Doc(nameof(DocStrings.QaIntersectsSelf_ValidIntersectionGeometryConstraint))]
 		public string ValidIntersectionGeometryConstraint
 		{
 			get { return _validIntersectionGeometryConstraint?.Constraint; }
@@ -121,7 +121,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaIntersectsSelf_GeometryComponents")]
+		[Doc(nameof(DocStrings.QaIntersectsSelf_GeometryComponents))]
 		[TestParameter]
 		public IList<GeometryComponent> GeometryComponents
 		{

@@ -32,22 +32,22 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaTouchesSelf_0")]
+		[Doc(nameof(DocStrings.QaTouchesSelf_0))]
 		public QaTouchesSelf(
-				[Doc("QaTouchesSelf_featureClasses")] IList<IFeatureClass> featureClasses)
+				[Doc(nameof(DocStrings.QaTouchesSelf_featureClasses))] IList<IFeatureClass> featureClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClasses, null) { }
 
-		[Doc("QaTouchesSelf_1")]
+		[Doc(nameof(DocStrings.QaTouchesSelf_1))]
 		public QaTouchesSelf(
-				[Doc("QaTouchesSelf_featureClass")] IFeatureClass featureClass)
+				[Doc(nameof(DocStrings.QaTouchesSelf_featureClass))] IFeatureClass featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, null) { }
 
-		[Doc("QaTouchesSelf_2")]
+		[Doc(nameof(DocStrings.QaTouchesSelf_2))]
 		public QaTouchesSelf(
-			[Doc("QaTouchesSelf_featureClasses")] IList<IFeatureClass> featureClasses,
-			[Doc("QaTouchesSelf_validRelationConstraint")]
+			[Doc(nameof(DocStrings.QaTouchesSelf_featureClasses))] IList<IFeatureClass> featureClasses,
+			[Doc(nameof(DocStrings.QaTouchesSelf_validRelationConstraint))]
 			string validRelationConstraint)
 			: base(featureClasses, esriSpatialRelEnum.esriSpatialRelTouches)
 		{
@@ -56,15 +56,15 @@ namespace ProSuite.QA.Tests
 				                              : null;
 		}
 
-		[Doc("QaTouchesSelf_3")]
+		[Doc(nameof(DocStrings.QaTouchesSelf_3))]
 		public QaTouchesSelf(
-			[Doc("QaTouchesSelf_featureClass")] IFeatureClass featureClass,
-			[Doc("QaTouchesSelf_validRelationConstraint")]
+			[Doc(nameof(DocStrings.QaTouchesSelf_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaTouchesSelf_validRelationConstraint))]
 			string validRelationConstraint)
 			: this(new[] {featureClass}, validRelationConstraint) { }
 
 		[TestParameter]
-		[Doc("QaTouchesSelf_ValidTouchGeometryConstraint")]
+		[Doc(nameof(DocStrings.QaTouchesSelf_ValidTouchGeometryConstraint))]
 		public string ValidTouchGeometryConstraint
 		{
 			get { return _validTouchGeometryConstraint?.Constraint; }

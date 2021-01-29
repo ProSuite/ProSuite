@@ -53,14 +53,14 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaUnreferencedRows_0")]
+		[Doc(nameof(DocStrings.QaUnreferencedRows_0))]
 		public QaUnreferencedRows(
-			[Doc("QaUnreferencedRows_referencedTable")] [NotNull]
+			[Doc(nameof(DocStrings.QaUnreferencedRows_referencedTable))] [NotNull]
 			ITable referencedTable,
-			[Doc("QaUnreferencedRows_referencingTables")] [NotNull]
+			[Doc(nameof(DocStrings.QaUnreferencedRows_referencingTables))] [NotNull]
 			IList<ITable>
 				referencingTables,
-			[Doc("QaUnreferencedRows_relations")] [NotNull]
+			[Doc(nameof(DocStrings.QaUnreferencedRows_relations))] [NotNull]
 			IList<string> relations)
 			: base(Union(new[] {referencedTable}, referencingTables))
 		{

@@ -47,11 +47,11 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMinSegAngle_0")]
+		[Doc(nameof(DocStrings.QaMinSegAngle_0))]
 		public QaMinSegAngle(
-			[Doc("QaMinSegAngle_featureClass")] IFeatureClass featureClass,
-			[Doc("QaMinSegAngle_limit")] double limit,
-			[Doc("QaMinSegAngle_is3D")] bool is3D)
+			[Doc(nameof(DocStrings.QaMinSegAngle_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaMinSegAngle_limit))] double limit,
+			[Doc(nameof(DocStrings.QaMinSegAngle_is3D))] bool is3D)
 			: base((ITable) featureClass)
 		{
 			_settings = new Settings(limit, _defaultAngularUnit, is3D);
@@ -62,19 +62,19 @@ namespace ProSuite.QA.Tests
 			AngularUnit = _defaultAngularUnit;
 		}
 
-		[Doc("QaMinSegAngle_0")]
+		[Doc(nameof(DocStrings.QaMinSegAngle_0))]
 		public QaMinSegAngle(
-				[Doc("QaMinSegAngle_featureClass")] IFeatureClass featureClass,
-				[Doc("QaMinSegAngle_limit")] double limit)
+				[Doc(nameof(DocStrings.QaMinSegAngle_featureClass))] IFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaMinSegAngle_limit))] double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, limit, false) { }
 
 		[TestParameter(_defaultUseTangents)]
-		[Doc("QaMinSegAngle_UseTangents")]
+		[Doc(nameof(DocStrings.QaMinSegAngle_UseTangents))]
 		public bool UseTangents { get; set; }
 
 		[TestParameter(_defaultAngularUnit)]
-		[Doc("QaMinSegAngle_AngularUnit")]
+		[Doc(nameof(DocStrings.QaMinSegAngle_AngularUnit))]
 		public AngleUnit AngularUnit
 		{
 			get { return AngleUnit; }

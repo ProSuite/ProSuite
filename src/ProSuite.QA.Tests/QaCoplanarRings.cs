@@ -48,13 +48,13 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaCoplanarRings_0")]
+		[Doc(nameof(DocStrings.QaCoplanarRings_0))]
 		public QaCoplanarRings(
-			[Doc("QaCoplanarRings_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaCoplanarRings_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaCoplanarRings_coplanarityTolerance")]
+			[Doc(nameof(DocStrings.QaCoplanarRings_coplanarityTolerance))]
 			double coplanarityTolerance,
-			[Doc("QaCoplanarRings_includeAssociatedParts")]
+			[Doc(nameof(DocStrings.QaCoplanarRings_includeAssociatedParts))]
 			bool includeAssociatedParts)
 			: base((ITable) featureClass)
 		{

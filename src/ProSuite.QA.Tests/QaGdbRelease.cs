@@ -41,20 +41,20 @@ namespace ProSuite.QA.Tests
 		#endregion
 
 		[UsedImplicitly]
-		[Doc("QaGdbRelease_0")]
-		public QaGdbRelease([Doc("QaGdbRelease_table")] [NotNull] ITable table,
-		                    [Doc("QaGdbRelease_expectedVersion")] [CanBeNull]
+		[Doc(nameof(DocStrings.QaGdbRelease_0))]
+		public QaGdbRelease([Doc(nameof(DocStrings.QaGdbRelease_table))] [NotNull] ITable table,
+		                    [Doc(nameof(DocStrings.QaGdbRelease_expectedVersion))] [CanBeNull]
 		                    string
 			                    expectedVersion)
 			: this(table, expectedVersion, expectedVersion) { }
 
 		[UsedImplicitly]
-		[Doc("QaGdbRelease_1")]
-		public QaGdbRelease([Doc("QaGdbRelease_table")] [NotNull] ITable table,
-		                    [Doc("QaGdbRelease_minimumVersion")] [CanBeNull]
+		[Doc(nameof(DocStrings.QaGdbRelease_1))]
+		public QaGdbRelease([Doc(nameof(DocStrings.QaGdbRelease_table))] [NotNull] ITable table,
+		                    [Doc(nameof(DocStrings.QaGdbRelease_minimumVersion))] [CanBeNull]
 		                    string
 			                    minimumVersion,
-		                    [Doc("QaGdbRelease_maximumVersion")] [CanBeNull]
+		                    [Doc(nameof(DocStrings.QaGdbRelease_maximumVersion))] [CanBeNull]
 		                    string
 			                    maximumVersion)
 			: base(table)

@@ -44,16 +44,16 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaSchemaFieldDomainDescriptions_0")]
+		[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_0))]
 		public QaSchemaFieldDomainDescriptions(
-			[Doc("QaSchemaFieldDomainDescriptions_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_table))] [NotNull]
 			ITable table,
-			[Doc("QaSchemaFieldDomainDescriptions_maximumLength")]
+			[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_maximumLength))]
 			int maximumLength,
-			[Doc("QaSchemaFieldDomainDescriptions_requireUniqueDescriptions")]
+			[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_requireUniqueDescriptions))]
 			bool
 				requireUniqueDescriptions,
-			[Doc("QaSchemaFieldDomainDescriptions_targetWorkspaceTable")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_targetWorkspaceTable))] [CanBeNull]
 			ITable
 				targetWorkspaceTable)
 			: base(table)
@@ -66,13 +66,13 @@ namespace ProSuite.QA.Tests
 			_targetWorkspaceTable = targetWorkspaceTable;
 		}
 
-		[Doc("QaSchemaFieldDomainDescriptions_0")]
+		[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_0))]
 		public QaSchemaFieldDomainDescriptions(
-				[Doc("QaSchemaFieldDomainDescriptions_table")] [NotNull]
+				[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_table))] [NotNull]
 				ITable table,
-				[Doc("QaSchemaFieldDomainDescriptions_maximumLength")]
+				[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_maximumLength))]
 				int maximumLength,
-				[Doc("QaSchemaFieldDomainDescriptions_requireUniqueDescriptions")]
+				[Doc(nameof(DocStrings.QaSchemaFieldDomainDescriptions_requireUniqueDescriptions))]
 				bool
 					requireUniqueDescriptions)
 			// ReSharper disable once IntroduceOptionalParameters.Global

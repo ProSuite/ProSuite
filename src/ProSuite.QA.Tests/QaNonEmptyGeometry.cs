@@ -42,18 +42,18 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaNonEmptyGeometry_0")]
+		[Doc(nameof(DocStrings.QaNonEmptyGeometry_0))]
 		public QaNonEmptyGeometry(
-				[NotNull] [Doc("QaNonEmptyGeometry_featureClass")]
+				[NotNull] [Doc(nameof(DocStrings.QaNonEmptyGeometry_featureClass))]
 				IFeatureClass featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, false) { }
 
-		[Doc("QaNonEmptyGeometry_0")]
+		[Doc(nameof(DocStrings.QaNonEmptyGeometry_0))]
 		public QaNonEmptyGeometry(
-			[NotNull] [Doc("QaNonEmptyGeometry_featureClass")]
+			[NotNull] [Doc(nameof(DocStrings.QaNonEmptyGeometry_featureClass))]
 			IFeatureClass featureClass,
-			[Doc("QaNonEmptyGeometry_dontFilterPolycurvesByZeroLength")]
+			[Doc(nameof(DocStrings.QaNonEmptyGeometry_dontFilterPolycurvesByZeroLength))]
 			bool
 				dontFilterPolycurvesByZeroLength)
 			: base(new[] {(ITable) featureClass})

@@ -67,140 +67,140 @@ namespace ProSuite.QA.Tests
 
 		#region Constructors
 
-		[Doc("QaMinNodeDistance_0")]
+		[Doc(nameof(DocStrings.QaMinNodeDistance_0))]
 		public QaMinNodeDistance(
-			[Doc("QaMinNodeDistance_featureClass")]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClass))]
 			IFeatureClass featureClass,
-			[Doc("QaMinNodeDistance_near")] double near,
-			[Doc("QaMinNodeDistance_is3D")] bool is3D)
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))] bool is3D)
 			: this(featureClass, near, GeometryUtils.GetXyTolerance(featureClass),
 			       is3D, _noMaxZDifference, null) { }
 
-		[Doc("QaMinNodeDistance_1")]
+		[Doc(nameof(DocStrings.QaMinNodeDistance_1))]
 		public QaMinNodeDistance(
-			[Doc("QaMinNodeDistance_featureClasses")]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
 			IList<IFeatureClass> featureClasses,
-			[Doc("QaMinNodeDistance_near")] double near,
-			[Doc("QaMinNodeDistance_is3D")] bool is3D)
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))] bool is3D)
 			: this(featureClasses, near, GeometryUtils.GetXyTolerance(featureClasses[0]), is3D) { }
 
-		[Doc("QaMinNodeDistance_2")]
+		[Doc(nameof(DocStrings.QaMinNodeDistance_2))]
 		public QaMinNodeDistance(
-			[Doc("QaMinNodeDistance_featureClass")]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClass))]
 			IFeatureClass featureClass,
-			[Doc("QaMinNodeDistance_near")] double near,
-			[Doc("QaMinNodeDistance_tolerance")] double tolerance,
-			[Doc("QaMinNodeDistance_is3D")] bool is3D)
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))] bool is3D)
 			: this(featureClass, near, tolerance, is3D, _noMaxZDifference, null) { }
 
-		[Doc("QaMinNodeDistance_3")]
+		[Doc(nameof(DocStrings.QaMinNodeDistance_3))]
 		public QaMinNodeDistance(
-			[Doc("QaMinNodeDistance_featureClasses")]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
 			IList<IFeatureClass> featureClasses,
-			[Doc("QaMinNodeDistance_near")] double near,
-			[Doc("QaMinNodeDistance_tolerance")] double tolerance,
-			[Doc("QaMinNodeDistance_is3D")] bool is3D)
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))] bool is3D)
 			: this(featureClasses, near, tolerance, is3D, _noMaxZDifference, null) { }
 
-		[Doc("QaMinNodeDistance_4")]
+		[Doc(nameof(DocStrings.QaMinNodeDistance_4))]
 		public QaMinNodeDistance(
-			[Doc("QaMinNodeDistance_featureClass")]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClass))]
 			IFeatureClass featureClass,
-			[Doc("QaMinNodeDistance_near")] double near,
-			[Doc("QaMinNodeDistance_maxZDifference")]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_maxZDifference))]
 			double maxZDifference)
 			: this(featureClass, near, GeometryUtils.GetXyTolerance(featureClass), false,
 			       maxZDifference, null) { }
 
-		[Doc("QaMinNodeDistance_5")]
+		[Doc(nameof(DocStrings.QaMinNodeDistance_5))]
 		public QaMinNodeDistance(
-			[Doc("QaMinNodeDistance_featureClasses")]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
 			IList<IFeatureClass> featureClasses,
-			[Doc("QaMinNodeDistance_near")] double near,
-			[Doc("QaMinNodeDistance_maxZDifference")]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_maxZDifference))]
 			double maxZDifference)
 			: this(featureClasses, near, GeometryUtils.GetXyTolerance(featureClasses[0]),
 			       maxZDifference) { }
 
-		[Doc("QaMinNodeDistance_6")]
+		[Doc(nameof(DocStrings.QaMinNodeDistance_6))]
 		public QaMinNodeDistance(
-				[Doc("QaMinNodeDistance_featureClass")]
+				[Doc(nameof(DocStrings.QaMinNodeDistance_featureClass))]
 				IFeatureClass featureClass,
-				[Doc("QaMinNodeDistance_near")] double near,
-				[Doc("QaMinNodeDistance_tolerance")] double tolerance,
-				[Doc("QaMinNodeDistance_maxZDifference")]
+				[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
+				[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
+				[Doc(nameof(DocStrings.QaMinNodeDistance_maxZDifference))]
 				double maxZDifference)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, near, tolerance, maxZDifference, null) { }
 
-		[Doc("QaMinNodeDistance_7")]
+		[Doc(nameof(DocStrings.QaMinNodeDistance_7))]
 		public QaMinNodeDistance(
-				[Doc("QaMinNodeDistance_featureClasses")]
+				[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
 				IList<IFeatureClass> featureClasses,
-				[Doc("QaMinNodeDistance_near")] double near,
-				[Doc("QaMinNodeDistance_tolerance")] double tolerance,
-				[Doc("QaMinNodeDistance_maxZDifference")]
+				[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
+				[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
+				[Doc(nameof(DocStrings.QaMinNodeDistance_maxZDifference))]
 				double maxZDifference)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClasses, near, tolerance, maxZDifference, null) { }
 
-		[Doc("QaMinNodeDistance_1")]
+		[Doc(nameof(DocStrings.QaMinNodeDistance_1))]
 		public QaMinNodeDistance(
-			[Doc("QaMinNodeDistance_featureClasses")]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
 			IList<IFeatureClass> featureClasses,
-			[Doc("QaMinNodeDistance_near")] double near)
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near)
 			: this(featureClasses, near,
 			       GeometryUtils.GetXyTolerance(featureClasses[0]), false) { }
 
-		[Doc("QaMinNodeDistance_9")]
+		[Doc(nameof(DocStrings.QaMinNodeDistance_9))]
 		public QaMinNodeDistance(
-			[Doc("QaMinNodeDistance_featureClass")]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClass))]
 			IFeatureClass featureClass,
-			[Doc("QaMinNodeDistance_near")] double near,
-			[Doc("QaMinNodeDistance_tolerance")] double tolerance,
-			[Doc("QaMinNodeDistance_maxZDifference")]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_maxZDifference))]
 			double maxZDifference,
-			[Doc("QaMinNodeDistance_validRelationConstraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_validRelationConstraint))] [CanBeNull]
 			string
 				validRelationConstraint)
 			: this(featureClass, near, tolerance, false,
 			       maxZDifference, validRelationConstraint) { }
 
-		[Doc("QaMinNodeDistance_10")]
+		[Doc(nameof(DocStrings.QaMinNodeDistance_10))]
 		public QaMinNodeDistance(
-			[Doc("QaMinNodeDistance_featureClasses")]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
 			IList<IFeatureClass> featureClasses,
-			[Doc("QaMinNodeDistance_near")] double near,
-			[Doc("QaMinNodeDistance_tolerance")] double tolerance,
-			[Doc("QaMinNodeDistance_maxZDifference")]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_maxZDifference))]
 			double maxZDifference,
-			[Doc("QaMinNodeDistance_validRelationConstraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_validRelationConstraint))] [CanBeNull]
 			string
 				validRelationConstraint)
 			: this(featureClasses, near, tolerance, false,
 			       maxZDifference, validRelationConstraint) { }
 
-		[Doc("QaMinNodeDistance_11")]
+		[Doc(nameof(DocStrings.QaMinNodeDistance_11))]
 		public QaMinNodeDistance(
-			[Doc("QaMinNodeDistance_featureClass")]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClass))]
 			IFeatureClass featureClass,
-			[Doc("QaMinNodeDistance_near")] double near,
-			[Doc("QaMinNodeDistance_tolerance")] double tolerance,
-			[Doc("QaMinNodeDistance_is3D")] bool is3D,
-			[Doc("QaMinNodeDistance_validRelationConstraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))] bool is3D,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_validRelationConstraint))] [CanBeNull]
 			string
 				validRelationConstraint)
 			: this(
 				featureClass, near, tolerance, is3D, _noMaxZDifference, validRelationConstraint) { }
 
-		[Doc("QaMinNodeDistance_12")]
+		[Doc(nameof(DocStrings.QaMinNodeDistance_12))]
 		public QaMinNodeDistance(
-			[Doc("QaMinNodeDistance_featureClasses")]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
 			IList<IFeatureClass> featureClasses,
-			[Doc("QaMinNodeDistance_near")] double near,
-			[Doc("QaMinNodeDistance_tolerance")] double tolerance,
-			[Doc("QaMinNodeDistance_is3D")] bool is3D,
-			[Doc("QaMinNodeDistance_validRelationConstraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))] bool is3D,
+			[Doc(nameof(DocStrings.QaMinNodeDistance_validRelationConstraint))] [CanBeNull]
 			string
 				validRelationConstraint)
 			: this(

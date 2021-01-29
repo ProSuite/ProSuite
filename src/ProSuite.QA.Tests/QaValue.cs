@@ -42,10 +42,10 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaValue_0")]
+		[Doc(nameof(DocStrings.QaValue_0))]
 		public QaValue(
-			[Doc("QaValue_table")] [NotNull] ITable table,
-			[Doc("QaValue_fields")] [CanBeNull] IList<string> fields)
+			[Doc(nameof(DocStrings.QaValue_table))] [NotNull] ITable table,
+			[Doc(nameof(DocStrings.QaValue_fields))] [CanBeNull] IList<string> fields)
 			: base(table)
 		{
 			_fieldInfos = GetFieldInfos(table, GetFieldNames(table, fields));

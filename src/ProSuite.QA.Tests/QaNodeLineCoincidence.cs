@@ -68,59 +68,59 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaNodeLineCoincidence_0")]
+		[Doc(nameof(DocStrings.QaNodeLineCoincidence_0))]
 		public QaNodeLineCoincidence(
-				[Doc("QaNodeLineCoincidence_nodeClass")] [NotNull]
+				[Doc(nameof(DocStrings.QaNodeLineCoincidence_nodeClass))] [NotNull]
 				IFeatureClass nodeClass,
-				[Doc("QaNodeLineCoincidence_nearClasses")] [NotNull]
+				[Doc(nameof(DocStrings.QaNodeLineCoincidence_nearClasses))] [NotNull]
 				IList<IFeatureClass>
 					nearClasses,
-				[Doc("QaNodeLineCoincidence_near")] double near)
+				[Doc(nameof(DocStrings.QaNodeLineCoincidence_near))] double near)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(nodeClass, nearClasses, near, false) { }
 
-		[Doc("QaNodeLineCoincidence_1")]
+		[Doc(nameof(DocStrings.QaNodeLineCoincidence_1))]
 		public QaNodeLineCoincidence(
-				[Doc("QaNodeLineCoincidence_nodeClass")] [NotNull]
+				[Doc(nameof(DocStrings.QaNodeLineCoincidence_nodeClass))] [NotNull]
 				IFeatureClass nodeClass,
-				[Doc("QaNodeLineCoincidence_nearClasses")] [NotNull]
+				[Doc(nameof(DocStrings.QaNodeLineCoincidence_nearClasses))] [NotNull]
 				IList<IFeatureClass>
 					nearClasses,
-				[Doc("QaNodeLineCoincidence_near")] double near,
-				[Doc("QaNodeLineCoincidence_ignoreNearEndpoints")]
+				[Doc(nameof(DocStrings.QaNodeLineCoincidence_near))] double near,
+				[Doc(nameof(DocStrings.QaNodeLineCoincidence_ignoreNearEndpoints))]
 				bool ignoreNearEndpoints)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(nodeClass, nearClasses, near, ignoreNearEndpoints, false) { }
 
-		[Doc("QaNodeLineCoincidence_1")]
+		[Doc(nameof(DocStrings.QaNodeLineCoincidence_1))]
 		public QaNodeLineCoincidence(
-			[Doc("QaNodeLineCoincidence_nodeClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaNodeLineCoincidence_nodeClass))] [NotNull]
 			IFeatureClass nodeClass,
-			[Doc("QaNodeLineCoincidence_nearClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaNodeLineCoincidence_nearClasses))] [NotNull]
 			IList<IFeatureClass>
 				nearClasses,
-			[Doc("QaNodeLineCoincidence_near")] double near,
-			[Doc("QaNodeLineCoincidence_ignoreNearEndpoints")]
+			[Doc(nameof(DocStrings.QaNodeLineCoincidence_near))] double near,
+			[Doc(nameof(DocStrings.QaNodeLineCoincidence_ignoreNearEndpoints))]
 			bool ignoreNearEndpoints,
-			[Doc("QaNodeLineCoincidence_is3D")] bool is3D)
+			[Doc(nameof(DocStrings.QaNodeLineCoincidence_is3D))] bool is3D)
 			: this(nodeClass, nearClasses, new[] {near}, near, ignoreNearEndpoints, is3D) { }
 
-		[Doc("QaNodeLineCoincidence_3")]
+		[Doc(nameof(DocStrings.QaNodeLineCoincidence_3))]
 		public QaNodeLineCoincidence(
-			[Doc("QaNodeLineCoincidence_nodeClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaNodeLineCoincidence_nodeClass))] [NotNull]
 			IFeatureClass nodeClass,
-			[Doc("QaNodeLineCoincidence_nearClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaNodeLineCoincidence_nearClasses))] [NotNull]
 			IList<IFeatureClass>
 				nearClasses,
-			[Doc("QaNodeLineCoincidence_nearTolerances")] [NotNull]
+			[Doc(nameof(DocStrings.QaNodeLineCoincidence_nearTolerances))] [NotNull]
 			IList<double>
 				nearTolerances,
-			[Doc("QaNodeLineCoincidence_withinPolylineTolerance")]
+			[Doc(nameof(DocStrings.QaNodeLineCoincidence_withinPolylineTolerance))]
 			double
 				withinPolylineTolerance,
-			[Doc("QaNodeLineCoincidence_ignoreNearEndpoints")]
+			[Doc(nameof(DocStrings.QaNodeLineCoincidence_ignoreNearEndpoints))]
 			bool ignoreNearEndpoints,
-			[Doc("QaNodeLineCoincidence_is3D")] bool is3D) :
+			[Doc(nameof(DocStrings.QaNodeLineCoincidence_is3D))] bool is3D) :
 			base(CastToTables(new[] {nodeClass}, nearClasses))
 		{
 			Assert.ArgumentNotNull(nodeClass, nameof(nodeClass));
@@ -164,7 +164,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(_defaultCoincidenceTolerance)]
-		[Doc("QaNodeLineCoincidence_CoincidenceTolerance")]
+		[Doc(nameof(DocStrings.QaNodeLineCoincidence_CoincidenceTolerance))]
 		public double CoincidenceTolerance { get; set; }
 
 		protected override void BeginTileCore(BeginTileParameters parameters)

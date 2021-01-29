@@ -72,15 +72,15 @@ namespace ProSuite.QA.Tests
 
 		// TODO update doc strings (polygons AND polylines)
 
-		[Doc("QaContainedPointsCount_0")]
+		[Doc(nameof(DocStrings.QaContainedPointsCount_0))]
 		public QaContainedPointsCount(
-			[Doc("QaContainedPointsCount_polygonClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_polygonClass))] [NotNull]
 			IFeatureClass polygonClass,
-			[Doc("QaContainedPointsCount_pointClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_pointClass))] [NotNull]
 			IFeatureClass pointClass,
-			[Doc("QaContainedPointsCount_expectedPointCount")]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_expectedPointCount))]
 			int expectedPointCount,
-			[Doc("QaContainedPointsCount_relevantPointCondition")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_relevantPointCondition))] [CanBeNull]
 			string
 				relevantPointCondition)
 			: this(new[] {polygonClass},
@@ -90,17 +90,17 @@ namespace ProSuite.QA.Tests
 			       relevantPointCondition,
 			       false) { }
 
-		[Doc("QaContainedPointsCount_1")]
+		[Doc(nameof(DocStrings.QaContainedPointsCount_1))]
 		public QaContainedPointsCount(
-			[Doc("QaContainedPointsCount_polygonClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_polygonClass))] [NotNull]
 			IFeatureClass polygonClass,
-			[Doc("QaContainedPointsCount_pointClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_pointClass))] [NotNull]
 			IFeatureClass pointClass,
-			[Doc("QaContainedPointsCount_minimumPointCount")]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_minimumPointCount))]
 			int minimumPointCount,
-			[Doc("QaContainedPointsCount_maximumPointCount")]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_maximumPointCount))]
 			int maximumPointCount,
-			[Doc("QaContainedPointsCount_relevantPointCondition")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_relevantPointCondition))] [CanBeNull]
 			string
 				relevantPointCondition)
 			: this(new[] {polygonClass},
@@ -110,20 +110,20 @@ namespace ProSuite.QA.Tests
 			       relevantPointCondition,
 			       false) { }
 
-		[Doc("QaContainedPointsCount_2")]
+		[Doc(nameof(DocStrings.QaContainedPointsCount_2))]
 		public QaContainedPointsCount(
-			[Doc("QaContainedPointsCount_polygonClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_polygonClass))] [NotNull]
 			IFeatureClass polygonClass,
-			[Doc("QaContainedPointsCount_pointClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_pointClass))] [NotNull]
 			IFeatureClass pointClass,
-			[Doc("QaContainedPointsCount_minimumPointCount")]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_minimumPointCount))]
 			int minimumPointCount,
-			[Doc("QaContainedPointsCount_maximumPointCount")]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_maximumPointCount))]
 			int maximumPointCount,
-			[Doc("QaContainedPointsCount_relevantPointCondition")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_relevantPointCondition))] [CanBeNull]
 			string
 				relevantPointCondition,
-			[Doc("QaContainedPointsCount_countPointOnPolygonBorder")]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_countPointOnPolygonBorder))]
 			bool
 				countPointOnPolygonBorder)
 			: this(new[] {polygonClass},
@@ -133,39 +133,39 @@ namespace ProSuite.QA.Tests
 			       relevantPointCondition,
 			       countPointOnPolygonBorder) { }
 
-		[Doc("QaContainedPointsCount_3")]
+		[Doc(nameof(DocStrings.QaContainedPointsCount_3))]
 		public QaContainedPointsCount(
-			[Doc("QaContainedPointsCount_polygonClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_polygonClasses))] [NotNull]
 			IList<IFeatureClass>
 				polygonClasses,
-			[Doc("QaContainedPointsCount_pointClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_pointClasses))] [NotNull]
 			IList<IFeatureClass>
 				pointClasses,
-			[Doc("QaContainedPointsCount_expectedPointCount")]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_expectedPointCount))]
 			int expectedPointCount,
-			[Doc("QaContainedPointsCount_relevantPointCondition")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_relevantPointCondition))] [CanBeNull]
 			string
 				relevantPointCondition)
 			: this(polygonClasses, pointClasses,
 			       expectedPointCount, expectedPointCount,
 			       relevantPointCondition, false) { }
 
-		[Doc("QaContainedPointsCount_4")]
+		[Doc(nameof(DocStrings.QaContainedPointsCount_4))]
 		public QaContainedPointsCount(
-			[Doc("QaContainedPointsCount_polygonClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_polygonClasses))] [NotNull]
 			IList<IFeatureClass>
 				polygonClasses,
-			[Doc("QaContainedPointsCount_pointClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_pointClasses))] [NotNull]
 			IList<IFeatureClass>
 				pointClasses,
-			[Doc("QaContainedPointsCount_minimumPointCount")]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_minimumPointCount))]
 			int minimumPointCount,
-			[Doc("QaContainedPointsCount_maximumPointCount")]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_maximumPointCount))]
 			int maximumPointCount,
-			[Doc("QaContainedPointsCount_relevantPointCondition")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_relevantPointCondition))] [CanBeNull]
 			string
 				relevantPointCondition,
-			[Doc("QaContainedPointsCount_countPointOnPolygonBorder")]
+			[Doc(nameof(DocStrings.QaContainedPointsCount_countPointOnPolygonBorder))]
 			bool
 				countPointOnPolygonBorder) :
 			base(CastToTables(
@@ -191,9 +191,7 @@ namespace ProSuite.QA.Tests
 		#endregion
 
 		[TestParameter(_defaultPolylineUsage)]
-		[Doc(
-			"QaContainedPointsCount_PolylineUsage"
-		)]
+		[Doc(nameof(DocStrings.QaContainedPointsCount_PolylineUsage))]
 		public PolylineUsage PolylineUsage
 		{
 			get { return _polylineUsage; }

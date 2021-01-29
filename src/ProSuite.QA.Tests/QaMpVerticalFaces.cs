@@ -44,12 +44,12 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMpVerticalFaces_0")]
+		[Doc(nameof(DocStrings.QaMpVerticalFaces_0))]
 		public QaMpVerticalFaces(
-			[Doc("QaMpVerticalFaces_multiPatchClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMpVerticalFaces_multiPatchClass))] [NotNull]
 			IFeatureClass multiPatchClass,
-			[Doc("QaMpVerticalFaces_nearAngle")] double nearAngle,
-			[Doc("QaMpVerticalFaces_toleranceAngle")]
+			[Doc(nameof(DocStrings.QaMpVerticalFaces_nearAngle))] double nearAngle,
+			[Doc(nameof(DocStrings.QaMpVerticalFaces_toleranceAngle))]
 			double toleranceAngle)
 			: base((ITable) multiPatchClass)
 		{

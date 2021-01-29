@@ -48,11 +48,11 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaSegmentLength_0")]
+		[Doc(nameof(DocStrings.QaSegmentLength_0))]
 		public QaSegmentLength(
-			[Doc("QaSegmentLength_featureClass")] IFeatureClass featureClass,
-			[Doc("QaSegmentLength_limit")] double limit,
-			[Doc("QaSegmentLength_is3D")] bool is3D)
+			[Doc(nameof(DocStrings.QaSegmentLength_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSegmentLength_limit))] double limit,
+			[Doc(nameof(DocStrings.QaSegmentLength_is3D))] bool is3D)
 			: base((ITable) featureClass)
 		{
 			_limit = limit;
@@ -61,10 +61,10 @@ namespace ProSuite.QA.Tests
 			NumberFormat = "N0";
 		}
 
-		[Doc("QaSegmentLength_0")]
+		[Doc(nameof(DocStrings.QaSegmentLength_0))]
 		public QaSegmentLength(
-			[Doc("QaSegmentLength_featureClass")] IFeatureClass featureClass,
-			[Doc("QaSegmentLength_limit")] double limit)
+			[Doc(nameof(DocStrings.QaSegmentLength_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSegmentLength_limit))] double limit)
 			: this(
 				featureClass, limit,
 				featureClass.ShapeType == esriGeometryType.esriGeometryMultiPatch) { }

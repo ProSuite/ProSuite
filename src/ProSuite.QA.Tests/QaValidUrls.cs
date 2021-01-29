@@ -93,10 +93,10 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaValidUrls_0")]
+		[Doc(nameof(DocStrings.QaValidUrls_0))]
 		public QaValidUrls(
-			[Doc("QaValidUrls_table")] [NotNull] ITable table,
-			[Doc("QaValidUrls_urlExpression")] [NotNull]
+			[Doc(nameof(DocStrings.QaValidUrls_table))] [NotNull] ITable table,
+			[Doc(nameof(DocStrings.QaValidUrls_urlExpression))] [NotNull]
 			string urlExpression)
 			: base(table)
 		{
@@ -154,7 +154,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(_defaultMaximumParallelTasks)]
-		[Doc("QaValidUrls_MaximumParallelTasks")]
+		[Doc(nameof(DocStrings.QaValidUrls_MaximumParallelTasks))]
 		public int MaximumParallelTasks
 		{
 			get { return _maximumParallelTasks; }

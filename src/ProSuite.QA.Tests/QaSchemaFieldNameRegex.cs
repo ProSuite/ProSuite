@@ -42,15 +42,15 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaSchemaFieldNameRegex_0")]
+		[Doc(nameof(DocStrings.QaSchemaFieldNameRegex_0))]
 		public QaSchemaFieldNameRegex(
-			[Doc("QaSchemaFieldNameRegex_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaFieldNameRegex_table))] [NotNull]
 			ITable table,
-			[Doc("QaSchemaFieldNameRegex_pattern")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaFieldNameRegex_pattern))] [NotNull]
 			string pattern,
-			[Doc("QaSchemaFieldNameRegex_matchIsError")]
+			[Doc(nameof(DocStrings.QaSchemaFieldNameRegex_matchIsError))]
 			bool matchIsError,
-			[Doc("QaSchemaFieldNameRegex_patternDescription")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaSchemaFieldNameRegex_patternDescription))] [CanBeNull]
 			string
 				patternDescription)
 			: base(table)

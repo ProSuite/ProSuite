@@ -24,27 +24,27 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMustTouchOther_0")]
+		[Doc(nameof(DocStrings.QaMustTouchOther_0))]
 		public QaMustTouchOther(
-			[Doc("QaMustTouchOther_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMustTouchOther_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaMustTouchOther_otherFeatureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMustTouchOther_otherFeatureClass))] [NotNull]
 			IFeatureClass
 				otherFeatureClass,
-			[Doc("QaMustTouchOther_relevantRelationCondition")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMustTouchOther_relevantRelationCondition))] [CanBeNull]
 			string
 				relevantRelationCondition)
 			: base(featureClass, otherFeatureClass, relevantRelationCondition) { }
 
-		[Doc("QaMustTouchOther_1")]
+		[Doc(nameof(DocStrings.QaMustTouchOther_1))]
 		public QaMustTouchOther(
-			[Doc("QaMustTouchOther_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMustTouchOther_featureClass))] [NotNull]
 			ICollection<IFeatureClass>
 				featureClasses,
-			[Doc("QaMustTouchOther_otherFeatureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMustTouchOther_otherFeatureClass))] [NotNull]
 			ICollection<IFeatureClass>
 				otherFeatureClasses,
-			[Doc("QaMustTouchOther_relevantRelationCondition")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMustTouchOther_relevantRelationCondition))] [CanBeNull]
 			string
 				relevantRelationCondition)
 			: base(featureClasses, otherFeatureClasses, relevantRelationCondition) { }

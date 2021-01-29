@@ -67,11 +67,11 @@ namespace ProSuite.QA.Tests
 		/// <param name="compareMPrecision">if set to <c>true</c>, m precision must be equal.</param>
 		/// <param name="compareTolerances">if set to <c>true</c>, tolerances must be equal.</param>
 		/// <param name="compareVerticalCoordinateSystems">if set to <c>true</c>, vertical coordinate system must be equal.</param>
-		[Doc("QaSchemaSpatialReference_0")]
+		[Doc(nameof(DocStrings.QaSchemaSpatialReference_0))]
 		public QaSchemaSpatialReference(
-			[Doc("QaSchemaSpatialReference_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaSchemaSpatialReference_referenceFeatureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_referenceFeatureClass))] [NotNull]
 			IFeatureClass
 				referenceFeatureClass,
 			bool compareXYPrecision,
@@ -95,11 +95,11 @@ namespace ProSuite.QA.Tests
 		/// <param name="compareMPrecision">if set to <c>true</c>, m precision must be equal.</param>
 		/// <param name="compareTolerances">if set to <c>true</c>, tolerances must be equal.</param>
 		/// <param name="compareVerticalCoordinateSystems">if set to <c>true</c>, vertical coordinate system must be equal.</param>
-		[Doc("QaSchemaSpatialReference_1")]
+		[Doc(nameof(DocStrings.QaSchemaSpatialReference_1))]
 		public QaSchemaSpatialReference(
-			[Doc("QaSchemaSpatialReference_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaSchemaSpatialReference_spatialReferenceXml")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_spatialReferenceXml))] [NotNull]
 			string
 				spatialReferenceXml,
 			bool compareXYPrecision,
@@ -122,11 +122,11 @@ namespace ProSuite.QA.Tests
 		/// <param name="compareUsedPrecisions">if set to <c>true</c> the precisions for the relevant dimensions must be equal.</param>
 		/// <param name="compareTolerances">if set to <c>true</c>, tolerances of the relevant dimensions must be equal.</param>
 		/// <param name="compareVerticalCoordinateSystems">if set to <c>true</c>, vertical coordinate system must be equal.</param>
-		[Doc("QaSchemaSpatialReference_2")]
+		[Doc(nameof(DocStrings.QaSchemaSpatialReference_2))]
 		public QaSchemaSpatialReference(
-			[Doc("QaSchemaSpatialReference_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaSchemaSpatialReference_referenceFeatureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_referenceFeatureClass))] [NotNull]
 			IFeatureClass
 				referenceFeatureClass,
 			bool compareUsedPrecisions,
@@ -150,11 +150,11 @@ namespace ProSuite.QA.Tests
 		/// <param name="compareUsedPrecisions">if set to <c>true</c> the precisions for the relevant dimensions must be equal.</param>
 		/// <param name="compareTolerances">if set to <c>true</c>, tolerances of the relevant dimensions must be equal.</param>
 		/// <param name="compareVerticalCoordinateSystems">if set to <c>true</c>, vertical coordinate system must be equal.</param>
-		[Doc("QaSchemaSpatialReference_3")]
+		[Doc(nameof(DocStrings.QaSchemaSpatialReference_3))]
 		public QaSchemaSpatialReference(
-			[Doc("QaSchemaSpatialReference_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaSchemaSpatialReference_spatialReferenceXml")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaSpatialReference_spatialReferenceXml))] [NotNull]
 			string
 				spatialReferenceXml,
 			bool compareUsedPrecisions,

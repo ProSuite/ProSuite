@@ -45,11 +45,11 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaInteriorRings_0")]
+		[Doc(nameof(DocStrings.QaInteriorRings_0))]
 		public QaInteriorRings(
-			[Doc("QaInteriorRings_polygonClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaInteriorRings_polygonClass))] [NotNull]
 			IFeatureClass polygonClass,
-			[Doc("QaInteriorRings_maximumInteriorRingCount")]
+			[Doc(nameof(DocStrings.QaInteriorRings_maximumInteriorRingCount))]
 			int maximumInteriorRingCount)
 			: base((ITable) polygonClass)
 		{
@@ -69,16 +69,16 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(_defaultIgnoreInnerRingsLargerThan)]
-		[Doc("QaInteriorRings_IgnoreInnerRingsLargerThan")]
+		[Doc(nameof(DocStrings.QaInteriorRings_IgnoreInnerRingsLargerThan))]
 		[UsedImplicitly]
 		public double IgnoreInnerRingsLargerThan { get; set; }
 
 		[TestParameter(_defaultReportIndividualRings)]
-		[Doc("QaInteriorRings_ReportIndividualRings")]
+		[Doc(nameof(DocStrings.QaInteriorRings_ReportIndividualRings))]
 		public bool ReportIndividualRings { get; set; }
 
 		[TestParameter(_defaultReportOnlySmallestRingsExceedingMaximumCount)]
-		[Doc("QaInteriorRings_ReportOnlySmallestRingsExceedingMaximumCount")]
+		[Doc(nameof(DocStrings.QaInteriorRings_ReportOnlySmallestRingsExceedingMaximumCount))]
 		public bool ReportOnlySmallestRingsExceedingMaximumCount { get; set; }
 
 		public override bool IsQueriedTable(int tableIndex)

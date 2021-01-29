@@ -35,9 +35,9 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaSchemaFieldDomains_0")]
+		[Doc(nameof(DocStrings.QaSchemaFieldDomains_0))]
 		public QaSchemaFieldDomains(
-			[Doc("QaSchemaFieldDomains_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaFieldDomains_table))] [NotNull]
 			ITable table)
 			: base(table)
 		{

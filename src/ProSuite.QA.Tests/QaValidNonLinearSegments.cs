@@ -45,18 +45,18 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaValidNonLinearSegments_0")]
+		[Doc(nameof(DocStrings.QaValidNonLinearSegments_0))]
 		public QaValidNonLinearSegments(
-				[Doc("QaValidNonLinearSegments_featureClass")] [NotNull]
+				[Doc(nameof(DocStrings.QaValidNonLinearSegments_featureClass))] [NotNull]
 				IFeatureClass featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, 0d) { }
 
-		[Doc("QaValidNonLinearSegments_1")]
+		[Doc(nameof(DocStrings.QaValidNonLinearSegments_1))]
 		public QaValidNonLinearSegments(
-			[Doc("QaValidNonLinearSegments_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaValidNonLinearSegments_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaValidNonLinearSegments_minimumChordHeight")]
+			[Doc(nameof(DocStrings.QaValidNonLinearSegments_minimumChordHeight))]
 			double minimumChordHeight)
 			: base(new[] {(ITable) featureClass})
 		{

@@ -54,32 +54,32 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaNoBoundaryLoops_0")]
+		[Doc(nameof(DocStrings.QaNoBoundaryLoops_0))]
 		public QaNoBoundaryLoops(
-				[Doc("QaNoBoundaryLoops_polygonClass")] [NotNull]
+				[Doc(nameof(DocStrings.QaNoBoundaryLoops_polygonClass))] [NotNull]
 				IFeatureClass polygonClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polygonClass, BoundaryLoopErrorGeometry.LoopPolygon) { }
 
-		[Doc("QaNoBoundaryLoops_1")]
+		[Doc(nameof(DocStrings.QaNoBoundaryLoops_1))]
 		public QaNoBoundaryLoops(
-			[Doc("QaNoBoundaryLoops_polygonClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaNoBoundaryLoops_polygonClass))] [NotNull]
 			IFeatureClass polygonClass,
-			[Doc("QaNoBoundaryLoops_errorGeometry")]
+			[Doc(nameof(DocStrings.QaNoBoundaryLoops_errorGeometry))]
 			BoundaryLoopErrorGeometry errorGeometry)
 			: this(
 				// ReSharper disable once IntroduceOptionalParameters.Global
 				polygonClass, errorGeometry, BoundaryLoopAreaRelation.IgnoreSmallerOrEqual, 0) { }
 
-		[Doc("QaNoBoundaryLoops_2")]
+		[Doc(nameof(DocStrings.QaNoBoundaryLoops_2))]
 		public QaNoBoundaryLoops(
-			[Doc("QaNoBoundaryLoops_polygonClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaNoBoundaryLoops_polygonClass))] [NotNull]
 			IFeatureClass polygonClass,
-			[Doc("QaNoBoundaryLoops_errorGeometry")]
+			[Doc(nameof(DocStrings.QaNoBoundaryLoops_errorGeometry))]
 			BoundaryLoopErrorGeometry errorGeometry,
-			[Doc("QaNoBoundaryLoops_areaRelation")]
+			[Doc(nameof(DocStrings.QaNoBoundaryLoops_areaRelation))]
 			BoundaryLoopAreaRelation areaRelation,
-			[Doc("QaNoBoundaryLoops_areaLimit")] double areaLimit)
+			[Doc(nameof(DocStrings.QaNoBoundaryLoops_areaLimit))] double areaLimit)
 			: base((ITable) polygonClass)
 		{
 			Assert.ArgumentNotNull(polygonClass, nameof(polygonClass));

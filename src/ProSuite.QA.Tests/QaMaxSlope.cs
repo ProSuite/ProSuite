@@ -40,10 +40,10 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMaxSlope_0")]
+		[Doc(nameof(DocStrings.QaMaxSlope_0))]
 		public QaMaxSlope(
-			[Doc("QaMaxSlope_featureClass")] IFeatureClass featureClass,
-			[Doc("QaMaxSlope_limit")] double limit)
+			[Doc(nameof(DocStrings.QaMaxSlope_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaMaxSlope_limit))] double limit)
 			: base((ITable) featureClass)
 		{
 			_limit = limit;

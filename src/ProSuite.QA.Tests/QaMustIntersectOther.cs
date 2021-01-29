@@ -25,23 +25,23 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMustIntersectOther_0")]
+		[Doc(nameof(DocStrings.QaMustIntersectOther_0))]
 		public QaMustIntersectOther(
-			[Doc("QaMustIntersectOther_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMustIntersectOther_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaMustIntersectOther_otherFeatureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMustIntersectOther_otherFeatureClass))] [NotNull]
 			IFeatureClass otherFeatureClass,
-			[Doc("QaMustIntersectOther_relevantRelationCondition")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMustIntersectOther_relevantRelationCondition))] [CanBeNull]
 			string relevantRelationCondition)
 			: base(featureClass, otherFeatureClass, relevantRelationCondition) { }
 
-		[Doc("QaMustIntersectOther_1")]
+		[Doc(nameof(DocStrings.QaMustIntersectOther_1))]
 		public QaMustIntersectOther(
-			[Doc("QaMustIntersectOther_featureClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaMustIntersectOther_featureClasses))] [NotNull]
 			ICollection<IFeatureClass> featureClasses,
-			[Doc("QaMustIntersectOther_otherFeatureClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaMustIntersectOther_otherFeatureClasses))] [NotNull]
 			ICollection<IFeatureClass> otherFeatureClasses,
-			[Doc("QaMustIntersectOther_relevantRelationCondition")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMustIntersectOther_relevantRelationCondition))] [CanBeNull]
 			string relevantRelationCondition)
 			: base(featureClasses, otherFeatureClasses, relevantRelationCondition) { }
 

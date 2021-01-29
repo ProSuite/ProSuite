@@ -37,38 +37,38 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaRequiredFields_0")]
+		[Doc(nameof(DocStrings.QaRequiredFields_0))]
 		public QaRequiredFields(
-				[Doc("QaRequiredFields_table")] [NotNull]
+				[Doc(nameof(DocStrings.QaRequiredFields_table))] [NotNull]
 				ITable table,
-				[Doc("QaRequiredFields_requiredFieldNames")] [NotNull]
+				[Doc(nameof(DocStrings.QaRequiredFields_requiredFieldNames))] [NotNull]
 				IEnumerable<string>
 					requiredFieldNames)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(table, requiredFieldNames, false) { }
 
-		[Doc("QaRequiredFields_0")]
+		[Doc(nameof(DocStrings.QaRequiredFields_0))]
 		public QaRequiredFields(
-				[Doc("QaRequiredFields_table")] [NotNull]
+				[Doc(nameof(DocStrings.QaRequiredFields_table))] [NotNull]
 				ITable table,
-				[Doc("QaRequiredFields_requiredFieldNames")] [NotNull]
+				[Doc(nameof(DocStrings.QaRequiredFields_requiredFieldNames))] [NotNull]
 				IEnumerable<string>
 					requiredFieldNames,
-				[Doc("QaRequiredFields_allowEmptyStrings")]
+				[Doc(nameof(DocStrings.QaRequiredFields_allowEmptyStrings))]
 				bool allowEmptyStrings)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(table, requiredFieldNames, allowEmptyStrings, false) { }
 
-		[Doc("QaRequiredFields_0")]
+		[Doc(nameof(DocStrings.QaRequiredFields_0))]
 		public QaRequiredFields(
-			[Doc("QaRequiredFields_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaRequiredFields_table))] [NotNull]
 			ITable table,
-			[Doc("QaRequiredFields_requiredFieldNames")] [NotNull]
+			[Doc(nameof(DocStrings.QaRequiredFields_requiredFieldNames))] [NotNull]
 			IEnumerable<string>
 				requiredFieldNames,
-			[Doc("QaRequiredFields_allowEmptyStrings")]
+			[Doc(nameof(DocStrings.QaRequiredFields_allowEmptyStrings))]
 			bool allowEmptyStrings,
-			[Doc("QaRequiredFields_allowMissingFields")]
+			[Doc(nameof(DocStrings.QaRequiredFields_allowMissingFields))]
 			bool allowMissingFields)
 			: base(table)
 		{
@@ -97,25 +97,25 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaRequiredFields_0")]
+		[Doc(nameof(DocStrings.QaRequiredFields_0))]
 		public QaRequiredFields(
-			[Doc("QaRequiredFields_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaRequiredFields_table))] [NotNull]
 			ITable table,
-			[Doc("QaRequiredFields_requiredFieldNamesString")] [NotNull]
+			[Doc(nameof(DocStrings.QaRequiredFields_requiredFieldNamesString))] [NotNull]
 			string
 				requiredFieldNamesString,
-			[Doc("QaRequiredFields_allowEmptyStrings")]
+			[Doc(nameof(DocStrings.QaRequiredFields_allowEmptyStrings))]
 			bool allowEmptyStrings,
-			[Doc("QaRequiredFields_allowMissingFields")]
+			[Doc(nameof(DocStrings.QaRequiredFields_allowMissingFields))]
 			bool allowMissingFields)
 			: this(table, TestUtils.GetTokens(requiredFieldNamesString),
 			       allowEmptyStrings, allowMissingFields) { }
 
-		[Doc("QaRequiredFields_0")]
+		[Doc(nameof(DocStrings.QaRequiredFields_0))]
 		public QaRequiredFields(
-			[Doc("QaRequiredFields_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaRequiredFields_table))] [NotNull]
 			ITable table,
-			[Doc("QaRequiredFields_allowEmptyStrings")]
+			[Doc(nameof(DocStrings.QaRequiredFields_allowEmptyStrings))]
 			bool allowEmptyStrings)
 			: this(table, GetAllEditableFieldNames(table),
 			       allowEmptyStrings, false) { }

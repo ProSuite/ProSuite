@@ -44,14 +44,14 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMpHorizontalHeights_0")]
+		[Doc(nameof(DocStrings.QaMpHorizontalHeights_0))]
 		public QaMpHorizontalHeights(
-			[Doc("QaMpHorizontalHeights_multiPatchClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMpHorizontalHeights_multiPatchClass))] [NotNull]
 			IFeatureClass
 				multiPatchClass,
-			[Doc("QaMpHorizontalHeights_nearHeight")]
+			[Doc(nameof(DocStrings.QaMpHorizontalHeights_nearHeight))]
 			double nearHeight,
-			[Doc("QaMpHorizontalHeights_heightTolerance")]
+			[Doc(nameof(DocStrings.QaMpHorizontalHeights_heightTolerance))]
 			double heightTolerance)
 			: base((ITable) multiPatchClass)
 		{

@@ -63,45 +63,45 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaLineIntersectZ_0")]
+		[Doc(nameof(DocStrings.QaLineIntersectZ_0))]
 		public QaLineIntersectZ(
-			[Doc("QaLineIntersectZ_polylineClasses")]
+			[Doc(nameof(DocStrings.QaLineIntersectZ_polylineClasses))]
 			IList<IFeatureClass> polylineClasses,
-			[Doc("QaLineIntersectZ_limit_0")] double limit)
+			[Doc(nameof(DocStrings.QaLineIntersectZ_limit_0))] double limit)
 			: this(polylineClasses, limit, string.Empty) { }
 
-		[Doc("QaLineIntersectZ_1")]
+		[Doc(nameof(DocStrings.QaLineIntersectZ_1))]
 		public QaLineIntersectZ(
-			[Doc("QaLineIntersectZ_polylineClass")]
+			[Doc(nameof(DocStrings.QaLineIntersectZ_polylineClass))]
 			IFeatureClass polylineClass,
-			[Doc("QaLineIntersectZ_limit_0")] double limit)
+			[Doc(nameof(DocStrings.QaLineIntersectZ_limit_0))] double limit)
 			: this(polylineClass, limit, string.Empty) { }
 
-		[Doc("QaLineIntersectZ_2")]
+		[Doc(nameof(DocStrings.QaLineIntersectZ_2))]
 		public QaLineIntersectZ(
-			[Doc("QaLineIntersectZ_polylineClass")]
+			[Doc(nameof(DocStrings.QaLineIntersectZ_polylineClass))]
 			IFeatureClass polylineClass,
-			[Doc("QaLineIntersectZ_limit_1")] double limit,
-			[Doc("QaLineIntersectZ_constraint")] string constraint)
+			[Doc(nameof(DocStrings.QaLineIntersectZ_limit_1))] double limit,
+			[Doc(nameof(DocStrings.QaLineIntersectZ_constraint))] string constraint)
 			: this(new[] {polylineClass}, limit, constraint) { }
 
-		[Doc("QaLineIntersectZ_3")]
+		[Doc(nameof(DocStrings.QaLineIntersectZ_3))]
 		public QaLineIntersectZ(
-			[Doc("QaLineIntersectZ_polylineClasses")]
+			[Doc(nameof(DocStrings.QaLineIntersectZ_polylineClasses))]
 			IList<IFeatureClass> polylineClasses,
-			[Doc("QaLineIntersectZ_limit_1")] double limit,
-			[Doc("QaLineIntersectZ_constraint")] string constraint)
+			[Doc(nameof(DocStrings.QaLineIntersectZ_limit_1))] double limit,
+			[Doc(nameof(DocStrings.QaLineIntersectZ_constraint))] string constraint)
 			: this(polylineClasses, limit, 0, constraint) { }
 
-		[Doc("QaLineIntersectZ_4")]
+		[Doc(nameof(DocStrings.QaLineIntersectZ_4))]
 		public QaLineIntersectZ(
-			[Doc("QaLineIntersectZ_polylineClasses")]
+			[Doc(nameof(DocStrings.QaLineIntersectZ_polylineClasses))]
 			IList<IFeatureClass> polylineClasses,
-			[Doc("QaLineIntersectZ_minimumZDifference")]
+			[Doc(nameof(DocStrings.QaLineIntersectZ_minimumZDifference))]
 			double minimumZDifference,
-			[Doc("QaLineIntersectZ_maximumZDifference")]
+			[Doc(nameof(DocStrings.QaLineIntersectZ_maximumZDifference))]
 			double maximumZDifference,
-			[Doc("QaLineIntersectZ_constraint")] string constraint)
+			[Doc(nameof(DocStrings.QaLineIntersectZ_constraint))] string constraint)
 			: base(polylineClasses, esriSpatialRelEnum.esriSpatialRelCrosses)
 		{
 			_minimumZDifference = minimumZDifference;
@@ -117,7 +117,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaLineIntersectZ_MinimumZDifferenceExpression")]
+		[Doc(nameof(DocStrings.QaLineIntersectZ_MinimumZDifferenceExpression))]
 		public string MinimumZDifferenceExpression
 		{
 			get { return _minimumZDifferenceExpressionSql; }
@@ -133,7 +133,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaLineIntersectZ_MaximumZDifferenceExpression")]
+		[Doc(nameof(DocStrings.QaLineIntersectZ_MaximumZDifferenceExpression))]
 		public string MaximumZDifferenceExpression
 		{
 			get { return _maximumZDifferenceExpressionSql; }

@@ -58,12 +58,12 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMpFootprintHoles_0")]
+		[Doc(nameof(DocStrings.QaMpFootprintHoles_0))]
 		public QaMpFootprintHoles(
-			[Doc("QaMpFootprintHoles_multiPatchClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMpFootprintHoles_multiPatchClass))] [NotNull]
 			IFeatureClass
 				multiPatchClass,
-			[Doc("QaMpFootprintHoles_innerRingHandling")]
+			[Doc(nameof(DocStrings.QaMpFootprintHoles_innerRingHandling))]
 			InnerRingHandling
 				innerRingHandling)
 			: base((ITable) multiPatchClass)
@@ -80,7 +80,7 @@ namespace ProSuite.QA.Tests
 
 		[UsedImplicitly]
 		[TestParameter(0)]
-		[Doc("QaMpFootprintHoles_HorizontalZTolerance")]
+		[Doc(nameof(DocStrings.QaMpFootprintHoles_HorizontalZTolerance))]
 		public double HorizontalZTolerance
 		{
 			get { return _horizontalZTolerance; }
@@ -94,7 +94,7 @@ namespace ProSuite.QA.Tests
 
 		[UsedImplicitly]
 		[TestParameter(_defaultResolutionFactor)]
-		[Doc("QaMpFootprintHoles_ResolutionFactor")]
+		[Doc(nameof(DocStrings.QaMpFootprintHoles_ResolutionFactor))]
 		public double ResolutionFactor
 		{
 			get { return _resolutionFactor; }
@@ -108,7 +108,7 @@ namespace ProSuite.QA.Tests
 
 		[UsedImplicitly]
 		[TestParameter(_defaultMinimumArea)]
-		[Doc("QaMpFootprintHoles_MinimumArea")]
+		[Doc(nameof(DocStrings.QaMpFootprintHoles_MinimumArea))]
 		public double MinimumArea
 		{
 			get { return _minimumArea; }
@@ -124,7 +124,7 @@ namespace ProSuite.QA.Tests
 
 		[UsedImplicitly]
 		[TestParameter(true)]
-		[Doc("QaMpFootprintHoles_ReportVerticalPatchesNotCompletelyWithinFootprint")]
+		[Doc(nameof(DocStrings.QaMpFootprintHoles_ReportVerticalPatchesNotCompletelyWithinFootprint))]
 		public bool ReportVerticalPatchesNotCompletelyWithinFootprint { get; set; } =
 			true;
 

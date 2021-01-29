@@ -11,16 +11,16 @@ namespace ProSuite.QA.Tests
 	public class QaInvalidGeometry : QaSimpleGeometry
 	{
 		[Obsolete("Replaced by QaSimpleGeometry")]
-		[Doc("QaSimpleGeometry_0")]
+		[Doc(nameof(DocStrings.QaSimpleGeometry_0))]
 		public QaInvalidGeometry(
-			[Doc("QaSimpleGeometry_featureClass")] IFeatureClass featureClass)
+			[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))] IFeatureClass featureClass)
 			: base(featureClass) { }
 
 		[Obsolete("Replaced by QaSimpleGeometry")]
-		[Doc("QaSimpleGeometry_1")]
+		[Doc(nameof(DocStrings.QaSimpleGeometry_1))]
 		public QaInvalidGeometry(
-			[Doc("QaSimpleGeometry_featureClass")] IFeatureClass featureClass,
-			[Doc("QaSimpleGeometry_allowNonPlanarLines")]
+			[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSimpleGeometry_allowNonPlanarLines))]
 			bool allowNonPlanarLines)
 			: base(featureClass, allowNonPlanarLines) { }
 	}

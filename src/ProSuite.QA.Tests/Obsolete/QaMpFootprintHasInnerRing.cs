@@ -15,12 +15,12 @@ namespace ProSuite.QA.Tests
 	[Obsolete("Use QaMpFootprintHoles")]
 	public class QaMpFootprintHasInnerRing : QaMpFootprintHoles
 	{
-		[Doc("QaMpFootprintHoles_0")]
+		[Doc(nameof(DocStrings.QaMpFootprintHoles_0))]
 		public QaMpFootprintHasInnerRing(
-			[Doc("QaMpFootprintHoles_multiPatchClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMpFootprintHoles_multiPatchClass))] [NotNull]
 			IFeatureClass
 				multiPatchClass,
-			[Doc("QaMpFootprintHoles_innerRingHandling")]
+			[Doc(nameof(DocStrings.QaMpFootprintHoles_innerRingHandling))]
 			InnerRingHandling
 				innerRingHandling)
 			: base(multiPatchClass, innerRingHandling) { }

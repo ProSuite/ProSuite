@@ -53,9 +53,9 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMonotonicZ_0")]
+		[Doc(nameof(DocStrings.QaMonotonicZ_0))]
 		public QaMonotonicZ(
-			[Doc("QaMonotonicZ_lineClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMonotonicZ_lineClass))] [NotNull]
 			IFeatureClass lineClass)
 			: base((ITable) lineClass)
 		{
@@ -70,15 +70,15 @@ namespace ProSuite.QA.Tests
 			FlipExpression = _defaultFlipExpression;
 		}
 
-		[Doc("QaMonotonicZ_AllowConstantValues")]
+		[Doc(nameof(DocStrings.QaMonotonicZ_AllowConstantValues))]
 		[TestParameter(_defaultAllowConstantValues)]
 		public bool AllowConstantValues { get; set; }
 
-		[Doc("QaMonotonicZ_ExpectedMonotonicity")]
+		[Doc(nameof(DocStrings.QaMonotonicZ_ExpectedMonotonicity))]
 		[TestParameter(_defaultExpectedMonotonicity)]
 		public MonotonicityDirection ExpectedMonotonicity { get; set; }
 
-		[Doc("QaMonotonicZ_FlipExpression")]
+		[Doc(nameof(DocStrings.QaMonotonicZ_FlipExpression))]
 		[TestParameter(_defaultFlipExpression)]
 		public string FlipExpression { get; set; }
 

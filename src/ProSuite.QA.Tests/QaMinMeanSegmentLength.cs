@@ -47,25 +47,25 @@ namespace ProSuite.QA.Tests
 
 		#region constructors
 
-		[Doc("QaMinMeanSegmentLength_0")]
+		[Doc(nameof(DocStrings.QaMinMeanSegmentLength_0))]
 		public QaMinMeanSegmentLength(
-			[Doc("QaMinMeanSegmentLength_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaMinMeanSegmentLength_limit")] double limit,
-			[Doc("QaMinMeanSegmentLength_perPart")]
+			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_limit))] double limit,
+			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_perPart))]
 			bool perPart)
 			: this(
 				featureClass, limit, perPart,
 				featureClass.ShapeType == esriGeometryType.esriGeometryMultiPatch) { }
 
-		[Doc("QaMinMeanSegmentLength_0")]
+		[Doc(nameof(DocStrings.QaMinMeanSegmentLength_0))]
 		public QaMinMeanSegmentLength(
-			[Doc("QaMinMeanSegmentLength_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaMinMeanSegmentLength_limit")] double limit,
-			[Doc("QaMinMeanSegmentLength_perPart")]
+			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_limit))] double limit,
+			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_perPart))]
 			bool perPart,
-			[Doc("QaMinMeanSegmentLength_is3D")] bool is3D)
+			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_is3D))] bool is3D)
 			: base((ITable) featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));

@@ -49,15 +49,15 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaSchemaFieldNames_0")]
+		[Doc(nameof(DocStrings.QaSchemaFieldNames_0))]
 		public QaSchemaFieldNames(
-			[Doc("QaSchemaFieldNames_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaFieldNames_table))] [NotNull]
 			ITable table,
-			[Doc("QaSchemaFieldNames_maximumLength")]
+			[Doc(nameof(DocStrings.QaSchemaFieldNames_maximumLength))]
 			int maximumLength,
-			[Doc("QaSchemaFieldNames_expectedCase")]
+			[Doc(nameof(DocStrings.QaSchemaFieldNames_expectedCase))]
 			ExpectedCase expectedCase,
-			[Doc("QaSchemaFieldNames_uniqueSubstringLength")]
+			[Doc(nameof(DocStrings.QaSchemaFieldNames_uniqueSubstringLength))]
 			int uniqueSubstringLength)
 			: base(table)
 		{

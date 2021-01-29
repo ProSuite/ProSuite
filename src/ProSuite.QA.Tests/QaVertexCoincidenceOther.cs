@@ -46,34 +46,34 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaVertexCoincidenceOther_0")]
+		[Doc(nameof(DocStrings.QaVertexCoincidenceOther_0))]
 		public QaVertexCoincidenceOther(
-			[Doc("QaVertexCoincidenceOther_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaVertexCoincidenceOther_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaVertexCoincidenceOther_relatedClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaVertexCoincidenceOther_relatedClass))] [NotNull]
 			IFeatureClass relatedClass)
 			: this(new[] {featureClass}, new[] {relatedClass}) { }
 
-		[Doc("QaVertexCoincidenceOther_1")]
+		[Doc(nameof(DocStrings.QaVertexCoincidenceOther_1))]
 		public QaVertexCoincidenceOther(
-				[Doc("QaVertexCoincidenceOther_featureClasses")] [NotNull]
+				[Doc(nameof(DocStrings.QaVertexCoincidenceOther_featureClasses))] [NotNull]
 				IList<IFeatureClass>
 					featureClasses,
-				[Doc("QaVertexCoincidenceOther_relatedClasses")] [NotNull]
+				[Doc(nameof(DocStrings.QaVertexCoincidenceOther_relatedClasses))] [NotNull]
 				IList<IFeatureClass>
 					relatedClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClasses, relatedClasses, null) { }
 
-		[Doc("QaVertexCoincidenceOther_2")]
+		[Doc(nameof(DocStrings.QaVertexCoincidenceOther_2))]
 		public QaVertexCoincidenceOther(
-			[Doc("QaVertexCoincidenceOther_featureClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaVertexCoincidenceOther_featureClasses))] [NotNull]
 			IList<IFeatureClass>
 				featureClasses,
-			[Doc("QaVertexCoincidenceOther_relatedClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaVertexCoincidenceOther_relatedClasses))] [NotNull]
 			IList<IFeatureClass>
 				relatedClasses,
-			[Doc("QaVertexCoincidenceOther_allowedNonCoincidenceCondition")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaVertexCoincidenceOther_allowedNonCoincidenceCondition))] [CanBeNull]
 			string
 				allowedNonCoincidenceCondition)
 			: base(featureClasses, relatedClasses, esriSpatialRelEnum.esriSpatialRelIntersects)
@@ -99,7 +99,7 @@ namespace ProSuite.QA.Tests
 			UpdateSearchDistance();
 		}
 
-		[Doc("QaVertexCoincidenceOther_PointTolerance")]
+		[Doc(nameof(DocStrings.QaVertexCoincidenceOther_PointTolerance))]
 		[TestParameter(_defaultUseXyTolerance)]
 		public double PointTolerance
 		{
@@ -111,7 +111,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaVertexCoincidenceOther_EdgeTolerance")]
+		[Doc(nameof(DocStrings.QaVertexCoincidenceOther_EdgeTolerance))]
 		[TestParameter(_defaultUseXyTolerance)]
 		public double EdgeTolerance
 		{
@@ -123,7 +123,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaVertexCoincidenceOther_RequireVertexOnNearbyEdge")]
+		[Doc(nameof(DocStrings.QaVertexCoincidenceOther_RequireVertexOnNearbyEdge))]
 		[TestParameter(_defaultRequireVertexOnNearbyEdge)]
 		public bool RequireVertexOnNearbyEdge
 		{
@@ -131,7 +131,7 @@ namespace ProSuite.QA.Tests
 			set { _vertexCoincidenceChecker.RequireVertexOnNearbyEdge = value; }
 		}
 
-		[Doc("QaVertexCoincidenceOther_CoincidenceTolerance")]
+		[Doc(nameof(DocStrings.QaVertexCoincidenceOther_CoincidenceTolerance))]
 		[TestParameter(0)]
 		public double CoincidenceTolerance
 		{
@@ -139,7 +139,7 @@ namespace ProSuite.QA.Tests
 			set { _vertexCoincidenceChecker.CoincidenceTolerance = value; }
 		}
 
-		[Doc("QaVertexCoincidence_ZTolerance")]
+		[Doc(nameof(DocStrings.QaVertexCoincidence_ZTolerance))]
 		[TestParameter(0)]
 		public double ZTolerance
 		{
@@ -147,7 +147,7 @@ namespace ProSuite.QA.Tests
 			set { _vertexCoincidenceChecker.ZTolerance = value; }
 		}
 
-		[Doc("QaVertexCoincidence_ZCoincidenceTolerance")]
+		[Doc(nameof(DocStrings.QaVertexCoincidence_ZCoincidenceTolerance))]
 		[TestParameter(0)]
 		public double ZCoincidenceTolerance
 		{
@@ -155,7 +155,7 @@ namespace ProSuite.QA.Tests
 			set { _vertexCoincidenceChecker.ZCoincidenceTolerance = value; }
 		}
 
-		[Doc("QaVertexCoincidenceOther_Is3D")]
+		[Doc(nameof(DocStrings.QaVertexCoincidenceOther_Is3D))]
 		[TestParameter(_defaultIs3D)]
 		public bool Is3D
 		{
@@ -163,11 +163,11 @@ namespace ProSuite.QA.Tests
 			set { _vertexCoincidenceChecker.Is3D = value; }
 		}
 
-		[Doc("QaVertexCoincidenceOther_Bidirectional")]
+		[Doc(nameof(DocStrings.QaVertexCoincidenceOther_Bidirectional))]
 		[TestParameter(_defaultBidirectional)]
 		public bool Bidirectional { get; set; }
 
-		[Doc("QaVertexCoincidence_ReportCoordinates")]
+		[Doc(nameof(DocStrings.QaVertexCoincidence_ReportCoordinates))]
 		[TestParameter]
 		public bool ReportCoordinates
 		{

@@ -56,30 +56,30 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaDuplicateGeometrySelf_0")]
+		[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_0))]
 		public QaDuplicateGeometrySelf(
-			[Doc("QaDuplicateGeometrySelf_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_featureClass))] [NotNull]
 			IFeatureClass featureClass)
 			: this(featureClass, string.Empty) { }
 
-		[Doc("QaDuplicateGeometrySelf_1")]
+		[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_1))]
 		public QaDuplicateGeometrySelf(
-				[Doc("QaDuplicateGeometrySelf_featureClass")] [NotNull]
+				[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_featureClass))] [NotNull]
 				IFeatureClass featureClass,
-				[Doc("QaDuplicateGeometrySelf_validDuplicateConstraint")] [CanBeNull]
+				[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_validDuplicateConstraint))] [CanBeNull]
 				string
 					validDuplicateConstraint)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, validDuplicateConstraint, false) { }
 
-		[Doc("QaDuplicateGeometrySelf_2")]
+		[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_2))]
 		public QaDuplicateGeometrySelf(
-			[Doc("QaDuplicateGeometrySelf_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaDuplicateGeometrySelf_validDuplicateConstraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_validDuplicateConstraint))] [CanBeNull]
 			string
 				validDuplicateConstraint,
-			[Doc("QaDuplicateGeometrySelf_reportSingleErrorPerDuplicateSet")]
+			[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_reportSingleErrorPerDuplicateSet))]
 			bool
 				reportSingleErrorPerDuplicateSet)
 			: base(featureClass, esriSpatialRelEnum.esriSpatialRelIntersects)

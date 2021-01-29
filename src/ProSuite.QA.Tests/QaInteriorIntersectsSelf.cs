@@ -36,45 +36,45 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaInteriorIntersectsSelf_0")]
+		[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_0))]
 		public QaInteriorIntersectsSelf(
-			[Doc("QaInteriorIntersectsSelf_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_featureClass))] [NotNull]
 			IFeatureClass featureClass)
 			: this(featureClass, string.Empty) { }
 
-		[Doc("QaInteriorIntersectsSelf_1")]
+		[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_1))]
 		public QaInteriorIntersectsSelf(
-			[Doc("QaInteriorIntersectsSelf_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaInteriorIntersectsSelf_constraint")]
+			[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_constraint))]
 			string constraint)
 			: this(new[] {featureClass}, constraint) { }
 
-		[Doc("QaInteriorIntersectsSelf_2")]
+		[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_2))]
 		public QaInteriorIntersectsSelf(
-			[Doc("QaInteriorIntersectsSelf_featureClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_featureClasses))] [NotNull]
 			IList<IFeatureClass>
 				featureClasses)
 			: this(featureClasses, string.Empty) { }
 
-		[Doc("QaInteriorIntersectsSelf_3")]
+		[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_3))]
 		public QaInteriorIntersectsSelf(
-				[Doc("QaInteriorIntersectsSelf_featureClasses")] [NotNull]
+				[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_featureClasses))] [NotNull]
 				IList<IFeatureClass>
 					featureClasses,
-				[Doc("QaInteriorIntersectsSelf_constraint")]
+				[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_constraint))]
 				string constraint)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClasses, constraint, false) { }
 
-		[Doc("QaInteriorIntersectsSelf_4")]
+		[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_4))]
 		public QaInteriorIntersectsSelf(
-			[Doc("QaInteriorIntersectsSelf_featureClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_featureClasses))] [NotNull]
 			IList<IFeatureClass>
 				featureClasses,
-			[Doc("QaInteriorIntersectsSelf_constraint")]
+			[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_constraint))]
 			string constraint,
-			[Doc("QaInteriorIntersectsSelf_reportIntersectionsAsMultipart")]
+			[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_reportIntersectionsAsMultipart))]
 			bool
 				reportIntersectionsAsMultipart)
 			: base(featureClasses, _intersectionMatrix)
@@ -86,7 +86,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaInteriorIntersectsSelf_ValidIntersectionGeometryConstraint")]
+		[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_ValidIntersectionGeometryConstraint))]
 		public string ValidIntersectionGeometryConstraint
 		{
 			get { return _validIntersectionGeometryConstraint?.Constraint; }

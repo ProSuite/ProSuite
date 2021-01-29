@@ -62,22 +62,22 @@ namespace ProSuite.QA.Tests
 
 		#region constructors
 
-		[Doc("QaNeighbourAreas_0")]
+		[Doc(nameof(DocStrings.QaNeighbourAreas_0))]
 		public QaNeighbourAreas(
-				[Doc("QaNeighbourAreas_polygonClass")] [NotNull]
+				[Doc(nameof(DocStrings.QaNeighbourAreas_polygonClass))] [NotNull]
 				IFeatureClass polygonClass,
-				[Doc("QaNeighbourAreas_constraint")] [CanBeNull]
+				[Doc(nameof(DocStrings.QaNeighbourAreas_constraint))] [CanBeNull]
 				string constraint)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polygonClass, constraint, false) { }
 
-		[Doc("QaNeighbourAreas_1")]
+		[Doc(nameof(DocStrings.QaNeighbourAreas_1))]
 		public QaNeighbourAreas(
-			[Doc("QaNeighbourAreas_polygonClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaNeighbourAreas_polygonClass))] [NotNull]
 			IFeatureClass polygonClass,
-			[Doc("QaNeighbourAreas_constraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaNeighbourAreas_constraint))] [CanBeNull]
 			string constraint,
-			[Doc("QaNeighbourAreas_allowPointIntersection")]
+			[Doc(nameof(DocStrings.QaNeighbourAreas_allowPointIntersection))]
 			bool allowPointIntersection)
 			: base((ITable) polygonClass)
 		{
@@ -87,38 +87,38 @@ namespace ProSuite.QA.Tests
 			_allowPointIntersection = allowPointIntersection;
 		}
 
-		[Doc("QaNeighbourAreas_2")]
+		[Doc(nameof(DocStrings.QaNeighbourAreas_2))]
 		public QaNeighbourAreas(
-			[Doc("QaNeighbourAreas_polygonClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaNeighbourAreas_polygonClass))] [NotNull]
 			IFeatureClass polygonClass,
-			[Doc("QaNeighbourAreas_allowPointIntersection")]
+			[Doc(nameof(DocStrings.QaNeighbourAreas_allowPointIntersection))]
 			bool allowPointIntersection)
 			: this(polygonClass, allowPointIntersection, new List<string>(),
 			       FieldListType.IgnoredFields) { }
 
-		[Doc("QaNeighbourAreas_3")]
+		[Doc(nameof(DocStrings.QaNeighbourAreas_3))]
 		public QaNeighbourAreas(
-			[Doc("QaNeighbourAreas_polygonClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaNeighbourAreas_polygonClass))] [NotNull]
 			IFeatureClass polygonClass,
-			[Doc("QaNeighbourAreas_allowPointIntersection")]
+			[Doc(nameof(DocStrings.QaNeighbourAreas_allowPointIntersection))]
 			bool allowPointIntersection,
-			[Doc("QaNeighbourAreas_fieldsString")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaNeighbourAreas_fieldsString))] [CanBeNull]
 			string fieldsString,
-			[Doc("QaNeighbourAreas_fieldListType")]
+			[Doc(nameof(DocStrings.QaNeighbourAreas_fieldListType))]
 			FieldListType fieldListType)
 			: this(polygonClass, allowPointIntersection,
 			       TestUtils.GetTokens(fieldsString),
 			       fieldListType) { }
 
-		[Doc("QaNeighbourAreas_4")]
+		[Doc(nameof(DocStrings.QaNeighbourAreas_4))]
 		public QaNeighbourAreas(
-			[Doc("QaNeighbourAreas_polygonClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaNeighbourAreas_polygonClass))] [NotNull]
 			IFeatureClass polygonClass,
-			[Doc("QaNeighbourAreas_allowPointIntersection")]
+			[Doc(nameof(DocStrings.QaNeighbourAreas_allowPointIntersection))]
 			bool allowPointIntersection,
-			[Doc("QaNeighbourAreas_fields")] [NotNull]
+			[Doc(nameof(DocStrings.QaNeighbourAreas_fields))] [NotNull]
 			IEnumerable<string> fields,
-			[Doc("QaNeighbourAreas_fieldListType")]
+			[Doc(nameof(DocStrings.QaNeighbourAreas_fieldListType))]
 			FieldListType fieldListType)
 			: base((ITable) polygonClass)
 		{
@@ -135,7 +135,7 @@ namespace ProSuite.QA.Tests
 		#endregion
 
 		[TestParameter]
-		[Doc("QaNeighbourAreas_IgnoreArea")]
+		[Doc(nameof(DocStrings.QaNeighbourAreas_IgnoreArea))]
 		public IFeatureClass IgnoreArea
 		{
 			get { return _ignoreAreaProcessor?.FeatureClass; }

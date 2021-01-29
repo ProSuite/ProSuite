@@ -38,12 +38,12 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMaxVertexCount_0")]
+		[Doc(nameof(DocStrings.QaMaxVertexCount_0))]
 		public QaMaxVertexCount(
-			[Doc("QaMaxVertexCount_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMaxVertexCount_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaMaxVertexCount_limit")] double limit,
-			[Doc("QaMaxVertexCount_perPart")] bool perPart)
+			[Doc(nameof(DocStrings.QaMaxVertexCount_limit))] double limit,
+			[Doc(nameof(DocStrings.QaMaxVertexCount_perPart))] bool perPart)
 			: base((ITable) featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));

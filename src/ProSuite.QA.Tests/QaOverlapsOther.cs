@@ -30,31 +30,31 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaOverlapsOther_0")]
+		[Doc(nameof(DocStrings.QaOverlapsOther_0))]
 		public QaOverlapsOther(
-				[Doc("QaOverlapsOther_overlappedClasses")]
+				[Doc(nameof(DocStrings.QaOverlapsOther_overlappedClasses))]
 				IList<IFeatureClass> overlapped,
-				[Doc("QaOverlapsOther_overlappingClasses")]
+				[Doc(nameof(DocStrings.QaOverlapsOther_overlappingClasses))]
 				IList<IFeatureClass> overlapping)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(overlapped, overlapping, null) { }
 
-		[Doc("QaOverlapsOther_1")]
+		[Doc(nameof(DocStrings.QaOverlapsOther_1))]
 		public QaOverlapsOther(
-				[Doc("QaOverlapsOther_overlappedClass")]
+				[Doc(nameof(DocStrings.QaOverlapsOther_overlappedClass))]
 				IFeatureClass overlapped,
-				[Doc("QaOverlapsOther_overlappingClass")]
+				[Doc(nameof(DocStrings.QaOverlapsOther_overlappingClass))]
 				IFeatureClass overlapping)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(overlapped, overlapping, null) { }
 
-		[Doc("QaOverlapsOther_2")]
+		[Doc(nameof(DocStrings.QaOverlapsOther_2))]
 		public QaOverlapsOther(
-			[Doc("QaOverlapsOther_overlappedClasses")]
+			[Doc(nameof(DocStrings.QaOverlapsOther_overlappedClasses))]
 			IList<IFeatureClass> overlappedClasses,
-			[Doc("QaOverlapsOther_overlappingClasses")]
+			[Doc(nameof(DocStrings.QaOverlapsOther_overlappingClasses))]
 			IList<IFeatureClass> overlappingClasses,
-			[Doc("QaOverlapsOther_validRelationConstraint")]
+			[Doc(nameof(DocStrings.QaOverlapsOther_validRelationConstraint))]
 			string validRelationConstraint)
 			: base(
 				overlappedClasses, overlappingClasses, esriSpatialRelEnum.esriSpatialRelOverlaps)
@@ -64,13 +64,13 @@ namespace ProSuite.QA.Tests
 				                              : null;
 		}
 
-		[Doc("QaOverlapsOther_3")]
+		[Doc(nameof(DocStrings.QaOverlapsOther_3))]
 		public QaOverlapsOther(
-			[Doc("QaOverlapsOther_overlappedClass")]
+			[Doc(nameof(DocStrings.QaOverlapsOther_overlappedClass))]
 			IFeatureClass overlappedClass,
-			[Doc("QaOverlapsOther_overlappingClass")]
+			[Doc(nameof(DocStrings.QaOverlapsOther_overlappingClass))]
 			IFeatureClass overlappingClass,
-			[Doc("QaOverlapsOther_validRelationConstraint")]
+			[Doc(nameof(DocStrings.QaOverlapsOther_validRelationConstraint))]
 			string validRelationConstraint)
 			: this(new[] {overlappedClass}, new[] {overlappingClass}, validRelationConstraint) { }
 

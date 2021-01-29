@@ -154,16 +154,16 @@ namespace ProSuite.QA.Tests
 		[NotNull] private readonly Dictionary<Group, NetGrower<NodesDirectedRow>>
 			_groupGrowerDict;
 
-		[Doc("QaLineGroupConstraints_0")]
+		[Doc(nameof(DocStrings.QaLineGroupConstraints_0))]
 		public QaLineGroupConstraints(
-			[Doc("QaLineGroupConstraints_networkFeatureClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineGroupConstraints_networkFeatureClasses))] [NotNull]
 			IList<IFeatureClass> networkFeatureClasses,
-			[Doc("QaLineGroupConstraints_minGap")] double minGap,
-			[Doc("QaLineGroupConstraints_minGroupLength")]
+			[Doc(nameof(DocStrings.QaLineGroupConstraints_minGap))] double minGap,
+			[Doc(nameof(DocStrings.QaLineGroupConstraints_minGroupLength))]
 			double minGroupLength,
-			[Doc("QaLineGroupConstraints_minDangleLength")]
+			[Doc(nameof(DocStrings.QaLineGroupConstraints_minDangleLength))]
 			double minDangleLength,
-			[Doc("QaLineGroupConstraints_groupBy")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineGroupConstraints_groupBy))] [NotNull]
 			IList<string> groupBy)
 			: base(CastToTables((IEnumerable<IFeatureClass>) networkFeatureClasses), groupBy)
 		{
@@ -191,7 +191,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaLineGroupConstraints_ValueSeparator")]
+		[Doc(nameof(DocStrings.QaLineGroupConstraints_ValueSeparator))]
 		public string ValueSeparator
 		{
 			get { return ValueSeparatorBase; }
@@ -199,7 +199,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaLineGroupConstraints_GroupConditions")]
+		[Doc(nameof(DocStrings.QaLineGroupConstraints_GroupConditions))]
 		public IList<string> GroupConditions
 		{
 			get { return GroupConditionsBase; }
@@ -207,7 +207,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(0)]
-		[Doc("QaLineGroupConstraints_MinGapToOtherGroupType")]
+		[Doc(nameof(DocStrings.QaLineGroupConstraints_MinGapToOtherGroupType))]
 		public double MinGapToOtherGroupType
 		{
 			get { return _minGapToOtherGroupType; }
@@ -219,19 +219,19 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(0)]
-		[Doc("QaLineGroupConstraints_MinDangleLengthContinued")]
+		[Doc(nameof(DocStrings.QaLineGroupConstraints_MinDangleLengthContinued))]
 		public double MinDangleLengthContinued { get; set; }
 
 		[TestParameter(0)]
-		[Doc("QaLineGroupConstraints_MinDangleLengthAtForkContinued")]
+		[Doc(nameof(DocStrings.QaLineGroupConstraints_MinDangleLengthAtForkContinued))]
 		public double MinDangleLengthAtForkContinued { get; set; }
 
 		[TestParameter(0)]
-		[Doc("QaLineGroupConstraints_MinDangleLengthAtFork")]
+		[Doc(nameof(DocStrings.QaLineGroupConstraints_MinDangleLengthAtFork))]
 		public double MinDangleLengthAtFork { get; set; }
 
 		[TestParameter(0)]
-		[Doc("QaLineGroupConstraints_MinGapToSameGroupTypeCovered")]
+		[Doc(nameof(DocStrings.QaLineGroupConstraints_MinGapToSameGroupTypeCovered))]
 		public double MinGapToSameGroupTypeCovered
 		{
 			get { return _minGapToSameGroupTypeCovered; }
@@ -243,7 +243,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(0)]
-		[Doc("QaLineGroupConstraints_MinGapToSameGroupTypeAtFork")]
+		[Doc(nameof(DocStrings.QaLineGroupConstraints_MinGapToSameGroupTypeAtFork))]
 		public double MinGapToSameGroupTypeAtFork
 		{
 			get { return _minGapToSameGroupTypeAtFork; }
@@ -255,7 +255,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(0)]
-		[Doc("QaLineGroupConstraints_MinGapToSameGroupTypeAtForkCovered")]
+		[Doc(nameof(DocStrings.QaLineGroupConstraints_MinGapToSameGroupTypeAtForkCovered))]
 		public double MinGapToSameGroupTypeAtForkCovered
 		{
 			get { return _minGapToSameGroupTypeAtForkCovered; }
@@ -267,7 +267,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(0)]
-		[Doc("QaLineGroupConstraints_MinGapToOtherGroupTypeAtFork")]
+		[Doc(nameof(DocStrings.QaLineGroupConstraints_MinGapToOtherGroupTypeAtFork))]
 		public double MinGapToOtherGroupTypeAtFork
 		{
 			get { return _minGapToOtherGroupTypeAtFork; }
@@ -279,7 +279,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(0)]
-		[Doc("QaLineGroupConstraints_MinGapToSameGroup")]
+		[Doc(nameof(DocStrings.QaLineGroupConstraints_MinGapToSameGroup))]
 		public double MinGapToSameGroup
 		{
 			get { return _minGapToSameGroup; }

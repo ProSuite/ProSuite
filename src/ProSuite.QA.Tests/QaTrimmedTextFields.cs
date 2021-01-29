@@ -43,83 +43,83 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaTrimmedTextFields_0")]
+		[Doc(nameof(DocStrings.QaTrimmedTextFields_0))]
 		public QaTrimmedTextFields(
-			[Doc("QaTrimmedTextFields_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_table))] [NotNull]
 			ITable table)
 			: this(table, 0, GetAllTextFieldNames(table), FieldListType.RelevantFields) { }
 
-		[Doc("QaTrimmedTextFields_1")]
+		[Doc(nameof(DocStrings.QaTrimmedTextFields_1))]
 		public QaTrimmedTextFields(
-			[Doc("QaTrimmedTextFields_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_table))] [NotNull]
 			ITable table,
-			[Doc("QaTrimmedTextFields_allowedWhiteSpaceOnlyCount")]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_allowedWhiteSpaceOnlyCount))]
 			int
 				allowedWhiteSpaceOnlyCount)
 			: this(table, allowedWhiteSpaceOnlyCount,
 			       GetAllTextFieldNames(table), FieldListType.RelevantFields) { }
 
-		[Doc("QaTrimmedTextFields_2")]
+		[Doc(nameof(DocStrings.QaTrimmedTextFields_2))]
 		public QaTrimmedTextFields(
-			[Doc("QaTrimmedTextFields_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_table))] [NotNull]
 			ITable table,
-			[Doc("QaTrimmedTextFields_textFieldName")] [NotNull]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_textFieldName))] [NotNull]
 			string textFieldName)
 			: this(table, 0, textFieldName) { }
 
-		[Doc("QaTrimmedTextFields_3")]
+		[Doc(nameof(DocStrings.QaTrimmedTextFields_3))]
 		public QaTrimmedTextFields(
-			[Doc("QaTrimmedTextFields_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_table))] [NotNull]
 			ITable table,
-			[Doc("QaTrimmedTextFields_allowedWhiteSpaceOnlyCount")]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_allowedWhiteSpaceOnlyCount))]
 			int
 				allowedWhiteSpaceOnlyCount,
-			[Doc("QaTrimmedTextFields_textFieldName")] [NotNull]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_textFieldName))] [NotNull]
 			string textFieldName)
 			: this(table, allowedWhiteSpaceOnlyCount,
 			       new[] {textFieldName}, FieldListType.RelevantFields) { }
 
-		[Doc("QaTrimmedTextFields_4")]
+		[Doc(nameof(DocStrings.QaTrimmedTextFields_4))]
 		public QaTrimmedTextFields(
-			[Doc("QaTrimmedTextFields_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_table))] [NotNull]
 			ITable table,
-			[Doc("QaTrimmedTextFields_allowedWhiteSpaceOnlyCount")]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_allowedWhiteSpaceOnlyCount))]
 			int
 				allowedWhiteSpaceOnlyCount,
-			[Doc("QaTrimmedTextFields_textFieldNames")] [NotNull]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_textFieldNames))] [NotNull]
 			IEnumerable<string>
 				textFieldNames)
 			: this(table, allowedWhiteSpaceOnlyCount,
 			       // ReSharper disable once IntroduceOptionalParameters.Global
 			       textFieldNames, FieldListType.RelevantFields) { }
 
-		[Doc("QaTrimmedTextFields_5")]
+		[Doc(nameof(DocStrings.QaTrimmedTextFields_5))]
 		public QaTrimmedTextFields(
-			[Doc("QaTrimmedTextFields_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_table))] [NotNull]
 			ITable table,
-			[Doc("QaTrimmedTextFields_allowedWhiteSpaceOnlyCount")]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_allowedWhiteSpaceOnlyCount))]
 			int
 				allowedWhiteSpaceOnlyCount,
-			[Doc("QaTrimmedTextFields_textFieldNamesString")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_textFieldNamesString))] [CanBeNull]
 			string
 				textFieldNamesString,
-			[Doc("QaTrimmedTextFields_fieldListType")]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_fieldListType))]
 			FieldListType fieldListType)
 			: this(table, allowedWhiteSpaceOnlyCount,
 			       TestUtils.GetTokens(textFieldNamesString),
 			       fieldListType) { }
 
-		[Doc("QaTrimmedTextFields_6")]
+		[Doc(nameof(DocStrings.QaTrimmedTextFields_6))]
 		public QaTrimmedTextFields(
-			[Doc("QaTrimmedTextFields_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_table))] [NotNull]
 			ITable table,
-			[Doc("QaTrimmedTextFields_allowedWhiteSpaceOnlyCount")]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_allowedWhiteSpaceOnlyCount))]
 			int
 				allowedWhiteSpaceOnlyCount,
-			[Doc("QaTrimmedTextFields_textFieldNames")] [NotNull]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_textFieldNames))] [NotNull]
 			IEnumerable<string>
 				textFieldNames,
-			[Doc("QaTrimmedTextFields_fieldListType")]
+			[Doc(nameof(DocStrings.QaTrimmedTextFields_fieldListType))]
 			FieldListType fieldListType)
 			: base(table)
 		{

@@ -32,27 +32,27 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaTouchesOther_0")]
+		[Doc(nameof(DocStrings.QaTouchesOther_0))]
 		public QaTouchesOther(
-				[Doc("QaTouchesOther_touchingClasses")]
+				[Doc(nameof(DocStrings.QaTouchesOther_touchingClasses))]
 				IList<IFeatureClass> touching,
-				[Doc("QaTouchesOther_touchedClasses")] IList<IFeatureClass> touched)
+				[Doc(nameof(DocStrings.QaTouchesOther_touchedClasses))] IList<IFeatureClass> touched)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(touching, touched, null) { }
 
-		[Doc("QaTouchesOther_1")]
+		[Doc(nameof(DocStrings.QaTouchesOther_1))]
 		public QaTouchesOther(
-				[Doc("QaTouchesOther_touchingClass")] IFeatureClass touching,
-				[Doc("QaTouchesOther_touchedClass")] IFeatureClass touched)
+				[Doc(nameof(DocStrings.QaTouchesOther_touchingClass))] IFeatureClass touching,
+				[Doc(nameof(DocStrings.QaTouchesOther_touchedClass))] IFeatureClass touched)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(touching, touched, null) { }
 
-		[Doc("QaTouchesOther_2")]
+		[Doc(nameof(DocStrings.QaTouchesOther_2))]
 		public QaTouchesOther(
-			[Doc("QaTouchesOther_touchingClasses")]
+			[Doc(nameof(DocStrings.QaTouchesOther_touchingClasses))]
 			IList<IFeatureClass> touching,
-			[Doc("QaTouchesOther_touchedClasses")] IList<IFeatureClass> touched,
-			[Doc("QaTouchesOther_validRelationConstraint")]
+			[Doc(nameof(DocStrings.QaTouchesOther_touchedClasses))] IList<IFeatureClass> touched,
+			[Doc(nameof(DocStrings.QaTouchesOther_validRelationConstraint))]
 			string validRelationConstraint)
 			: base(touching, touched, esriSpatialRelEnum.esriSpatialRelTouches)
 		{
@@ -61,16 +61,16 @@ namespace ProSuite.QA.Tests
 				                              : null;
 		}
 
-		[Doc("QaTouchesOther_3")]
+		[Doc(nameof(DocStrings.QaTouchesOther_3))]
 		public QaTouchesOther(
-			[Doc("QaTouchesOther_touchingClass")] IFeatureClass touching,
-			[Doc("QaTouchesOther_touchedClass")] IFeatureClass touched,
-			[Doc("QaTouchesOther_validRelationConstraint")]
+			[Doc(nameof(DocStrings.QaTouchesOther_touchingClass))] IFeatureClass touching,
+			[Doc(nameof(DocStrings.QaTouchesOther_touchedClass))] IFeatureClass touched,
+			[Doc(nameof(DocStrings.QaTouchesOther_validRelationConstraint))]
 			string validRelationConstraint)
 			: this(new[] {touching}, new[] {touched}, validRelationConstraint) { }
 
 		[TestParameter]
-		[Doc("QaTouchesOther_ValidTouchGeometryConstraint")]
+		[Doc(nameof(DocStrings.QaTouchesOther_ValidTouchGeometryConstraint))]
 		public string ValidTouchGeometryConstraint
 		{
 			get { return _validTouchGeometryConstraint?.Constraint; }

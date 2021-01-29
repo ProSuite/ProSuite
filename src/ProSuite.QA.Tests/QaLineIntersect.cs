@@ -65,27 +65,27 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaLineIntersect_0")]
+		[Doc(nameof(DocStrings.QaLineIntersect_0))]
 		public QaLineIntersect(
-				[Doc("QaLineIntersect_polylineClasses")] [NotNull]
+				[Doc(nameof(DocStrings.QaLineIntersect_polylineClasses))] [NotNull]
 				IList<IFeatureClass>
 					polylineClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, null, AllowedEndpointInteriorIntersections.All, false) { }
 
-		[Doc("QaLineIntersect_1")]
+		[Doc(nameof(DocStrings.QaLineIntersect_1))]
 		public QaLineIntersect(
-				[Doc("QaLineIntersect_polylineClass")] [NotNull]
+				[Doc(nameof(DocStrings.QaLineIntersect_polylineClass))] [NotNull]
 				IFeatureClass polylineClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClass, null) { }
 
-		[Doc("QaLineIntersect_2")]
+		[Doc(nameof(DocStrings.QaLineIntersect_2))]
 		public QaLineIntersect(
-			[Doc("QaLineIntersect_polylineClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineIntersect_polylineClasses))] [NotNull]
 			IList<IFeatureClass>
 				polylineClasses,
-			[Doc("QaLineIntersect_validRelationConstraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaLineIntersect_validRelationConstraint))] [CanBeNull]
 			string
 				validRelationConstraint)
 			: this(
@@ -93,26 +93,26 @@ namespace ProSuite.QA.Tests
 				// ReSharper disable once IntroduceOptionalParameters.Global
 				AllowedEndpointInteriorIntersections.All, false) { }
 
-		[Doc("QaLineIntersect_3")]
+		[Doc(nameof(DocStrings.QaLineIntersect_3))]
 		public QaLineIntersect(
-			[Doc("QaLineIntersect_polylineClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineIntersect_polylineClass))] [NotNull]
 			IFeatureClass polylineClass,
-			[Doc("QaLineIntersect_validRelationConstraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaLineIntersect_validRelationConstraint))] [CanBeNull]
 			string
 				validRelationConstraint)
 			: this(new[] {polylineClass}, validRelationConstraint) { }
 
-		[Doc("QaLineIntersect_4")]
+		[Doc(nameof(DocStrings.QaLineIntersect_4))]
 		public QaLineIntersect(
-			[Doc("QaLineIntersect_polylineClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineIntersect_polylineClasses))] [NotNull]
 			IList<IFeatureClass>
 				polylineClasses,
-			[Doc("QaLineIntersect_validRelationConstraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaLineIntersect_validRelationConstraint))] [CanBeNull]
 			string
 				validRelationConstraint,
-			[Doc("QaLineIntersect_allowedEndpointInteriorIntersections")]
+			[Doc(nameof(DocStrings.QaLineIntersect_allowedEndpointInteriorIntersections))]
 			AllowedEndpointInteriorIntersections allowedEndpointInteriorIntersections,
-			[Doc("QaLineIntersect_reportOverlaps")]
+			[Doc(nameof(DocStrings.QaLineIntersect_reportOverlaps))]
 			bool reportOverlaps)
 			: base(polylineClasses,
 			       GetSpatialRel(allowedEndpointInteriorIntersections, reportOverlaps))
@@ -138,7 +138,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(_defaultAllowedInteriorIntersections)]
-		[Doc("QaLineIntersect_AllowedInteriorIntersections")]
+		[Doc(nameof(DocStrings.QaLineIntersect_AllowedInteriorIntersections))]
 		public AllowedLineInteriorIntersections AllowedInteriorIntersections { get; set; }
 
 		protected override int FindErrors(IRow row1, int tableIndex1,

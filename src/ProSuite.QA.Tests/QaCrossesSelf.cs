@@ -31,22 +31,22 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaCrossesSelf_0")]
+		[Doc(nameof(DocStrings.QaCrossesSelf_0))]
 		public QaCrossesSelf(
-				[Doc("QaCrossesSelf_featureClasses")] IList<IFeatureClass> featureClasses)
+				[Doc(nameof(DocStrings.QaCrossesSelf_featureClasses))] IList<IFeatureClass> featureClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClasses, null) { }
 
-		[Doc("QaCrossesSelf_1")]
+		[Doc(nameof(DocStrings.QaCrossesSelf_1))]
 		public QaCrossesSelf(
-				[Doc("QaCrossesSelf_featureClass")] IFeatureClass featureClass)
+				[Doc(nameof(DocStrings.QaCrossesSelf_featureClass))] IFeatureClass featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, null) { }
 
-		[Doc("QaCrossesSelf_2")]
+		[Doc(nameof(DocStrings.QaCrossesSelf_2))]
 		public QaCrossesSelf(
-			[Doc("QaCrossesSelf_featureClasses")] IList<IFeatureClass> featureClasses,
-			[Doc("QaCrossesSelf_validRelationConstraint")]
+			[Doc(nameof(DocStrings.QaCrossesSelf_featureClasses))] IList<IFeatureClass> featureClasses,
+			[Doc(nameof(DocStrings.QaCrossesSelf_validRelationConstraint))]
 			string validRelationConstraint)
 			: base(featureClasses, esriSpatialRelEnum.esriSpatialRelCrosses)
 		{
@@ -55,10 +55,10 @@ namespace ProSuite.QA.Tests
 				                              : null;
 		}
 
-		[Doc("QaCrossesSelf_3")]
+		[Doc(nameof(DocStrings.QaCrossesSelf_3))]
 		public QaCrossesSelf(
-			[Doc("QaCrossesSelf_featureClass")] IFeatureClass featureClass,
-			[Doc("QaCrossesSelf_validRelationConstraint")]
+			[Doc(nameof(DocStrings.QaCrossesSelf_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaCrossesSelf_validRelationConstraint))]
 			string validRelationConstraint)
 			: this(new[] {featureClass}, validRelationConstraint) { }
 

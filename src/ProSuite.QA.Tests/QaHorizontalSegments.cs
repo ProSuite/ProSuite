@@ -49,12 +49,12 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaHorizontalSegments_0")]
+		[Doc(nameof(DocStrings.QaHorizontalSegments_0))]
 		public QaHorizontalSegments(
-			[Doc("QaHorizontalSegments_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaHorizontalSegments_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaHorizontalSegments_limit")] double limit,
-			[Doc("QaHorizontalSegments_tolerance")]
+			[Doc(nameof(DocStrings.QaHorizontalSegments_limit))] double limit,
+			[Doc(nameof(DocStrings.QaHorizontalSegments_tolerance))]
 			double tolerance)
 			: base((ITable) featureClass)
 		{

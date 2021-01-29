@@ -43,65 +43,65 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaZDifferenceOther_0")]
+		[Doc(nameof(DocStrings.QaZDifferenceOther_0))]
 		public QaZDifferenceOther(
-			[Doc("QaZDifferenceOther_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaZDifferenceOther_relatedClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_relatedClass))] [NotNull]
 			IFeatureClass relatedClass,
-			[Doc("QaZDifferenceOther_limit")] double limit,
-			[Doc("QaZDifferenceOther_zComparisonMethod")]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_limit))] double limit,
+			[Doc(nameof(DocStrings.QaZDifferenceOther_zComparisonMethod))]
 			ZComparisonMethod zComparisonMethod,
-			[Doc("QaZDifferenceOther_zRelationConstraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_zRelationConstraint))] [CanBeNull]
 			string zRelationConstraint)
 			: this(new[] {featureClass}, new[] {relatedClass},
 			       limit, zComparisonMethod, zRelationConstraint) { }
 
-		[Doc("QaZDifferenceOther_1")]
+		[Doc(nameof(DocStrings.QaZDifferenceOther_1))]
 		public QaZDifferenceOther(
-			[Doc("QaZDifferenceOther_featureClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_featureClasses))] [NotNull]
 			IList<IFeatureClass> featureClasses,
-			[Doc("QaZDifferenceOther_relatedClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_relatedClasses))] [NotNull]
 			IList<IFeatureClass> relatedClasses,
-			[Doc("QaZDifferenceOther_limit")] double limit,
-			[Doc("QaZDifferenceOther_zComparisonMethod")]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_limit))] double limit,
+			[Doc(nameof(DocStrings.QaZDifferenceOther_zComparisonMethod))]
 			ZComparisonMethod zComparisonMethod,
-			[Doc("QaZDifferenceOther_zRelationConstraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_zRelationConstraint))] [CanBeNull]
 			string zRelationConstraint)
 			: this(featureClasses, relatedClasses, limit, 0, zComparisonMethod,
 			       zRelationConstraint) { }
 
-		[Doc("QaZDifferenceOther_2")]
+		[Doc(nameof(DocStrings.QaZDifferenceOther_2))]
 		public QaZDifferenceOther(
-			[Doc("QaZDifferenceOther_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaZDifferenceOther_relatedClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_relatedClass))] [NotNull]
 			IFeatureClass relatedClass,
-			[Doc("QaZDifferenceOther_minimumZDifference")]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_minimumZDifference))]
 			double minimumZDifference,
-			[Doc("QaZDifferenceOther_maximumZDifference")]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_maximumZDifference))]
 			double maximumZDifference,
-			[Doc("QaZDifferenceOther_zComparisonMethod")]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_zComparisonMethod))]
 			ZComparisonMethod zComparisonMethod,
-			[Doc("QaZDifferenceOther_zRelationConstraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_zRelationConstraint))] [CanBeNull]
 			string zRelationConstraint)
 			: this(new[] {featureClass}, new[] {relatedClass},
 			       minimumZDifference, maximumZDifference,
 			       zComparisonMethod, zRelationConstraint) { }
 
-		[Doc("QaZDifferenceOther_3")]
+		[Doc(nameof(DocStrings.QaZDifferenceOther_3))]
 		public QaZDifferenceOther(
-			[Doc("QaZDifferenceOther_featureClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_featureClasses))] [NotNull]
 			IList<IFeatureClass> featureClasses,
-			[Doc("QaZDifferenceOther_relatedClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_relatedClasses))] [NotNull]
 			IList<IFeatureClass> relatedClasses,
-			[Doc("QaZDifferenceOther_minimumZDifference")]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_minimumZDifference))]
 			double minimumZDifference,
-			[Doc("QaZDifferenceOther_maximumZDifference")]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_maximumZDifference))]
 			double maximumZDifference,
-			[Doc("QaZDifferenceOther_zComparisonMethod")]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_zComparisonMethod))]
 			ZComparisonMethod zComparisonMethod,
-			[Doc("QaZDifferenceOther_zRelationConstraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaZDifferenceOther_zRelationConstraint))] [CanBeNull]
 			string zRelationConstraint)
 			: base(featureClasses, relatedClasses,
 			       esriSpatialRelEnum.esriSpatialRelIntersects)
@@ -116,7 +116,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaZDifferenceOther_RelevantRelationCondition")]
+		[Doc(nameof(DocStrings.QaZDifferenceOther_RelevantRelationCondition))]
 		public string RelevantRelationCondition
 		{
 			get { return _relevantRelationConditionSql; }
@@ -128,7 +128,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaZDifferenceOther_MinimumZDifferenceExpression")]
+		[Doc(nameof(DocStrings.QaZDifferenceOther_MinimumZDifferenceExpression))]
 		public string MinimumZDifferenceExpression
 		{
 			get { return _minimumZDifferenceExpressionSql; }
@@ -136,7 +136,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaZDifferenceOther_MaximumZDifferenceExpression")]
+		[Doc(nameof(DocStrings.QaZDifferenceOther_MaximumZDifferenceExpression))]
 		public string MaximumZDifferenceExpression
 		{
 			get { return _maximumZDifferenceExpressionSql; }
@@ -144,15 +144,15 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaZDifferenceOther_UseDistanceFromReferenceRingPlane")]
+		[Doc(nameof(DocStrings.QaZDifferenceOther_UseDistanceFromReferenceRingPlane))]
 		public bool UseDistanceFromReferenceRingPlane { get; set; }
 
 		[TestParameter]
-		[Doc("QaZDifferenceOther_ReferenceRingPlaneCoplanarityTolerance")]
+		[Doc(nameof(DocStrings.QaZDifferenceOther_ReferenceRingPlaneCoplanarityTolerance))]
 		public double ReferenceRingPlaneCoplanarityTolerance { get; set; }
 
 		[TestParameter]
-		[Doc("QaZDifferenceOther_IgnoreNonCoplanarReferenceRings")]
+		[Doc(nameof(DocStrings.QaZDifferenceOther_IgnoreNonCoplanarReferenceRings))]
 		public bool IgnoreNonCoplanarReferenceRings { get; set; }
 
 		protected override int FindErrors(IRow row1, int tableIndex1,

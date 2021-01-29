@@ -78,26 +78,26 @@ namespace ProSuite.QA.Tests
 		// Note: ContainerTests cannot test for missing or empty geometries
 		// because the container's search filter will miss such features!
 
-		[Doc("QaSimpleGeometry_0")]
+		[Doc(nameof(DocStrings.QaSimpleGeometry_0))]
 		public QaSimpleGeometry(
-				[Doc("QaSimpleGeometry_featureClass")] IFeatureClass featureClass)
+				[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))] IFeatureClass featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, false, _defaultToleranceFactor) { }
 
-		[Doc("QaSimpleGeometry_1")]
+		[Doc(nameof(DocStrings.QaSimpleGeometry_1))]
 		public QaSimpleGeometry(
-				[Doc("QaSimpleGeometry_featureClass")] IFeatureClass featureClass,
-				[Doc("QaSimpleGeometry_allowNonPlanarLines")]
+				[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))] IFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaSimpleGeometry_allowNonPlanarLines))]
 				bool allowNonPlanarLines)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, allowNonPlanarLines, _defaultToleranceFactor) { }
 
-		[Doc("QaSimpleGeometry_2")]
+		[Doc(nameof(DocStrings.QaSimpleGeometry_2))]
 		public QaSimpleGeometry(
-			[Doc("QaSimpleGeometry_featureClass")] IFeatureClass featureClass,
-			[Doc("QaSimpleGeometry_allowNonPlanarLines")]
+			[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSimpleGeometry_allowNonPlanarLines))]
 			bool allowNonPlanarLines,
-			[Doc("QaSimpleGeometry_toleranceFactor")]
+			[Doc(nameof(DocStrings.QaSimpleGeometry_toleranceFactor))]
 			double toleranceFactor)
 			: base((ITable) featureClass)
 		{

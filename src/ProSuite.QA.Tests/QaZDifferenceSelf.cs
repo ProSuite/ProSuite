@@ -37,55 +37,55 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaZDifferenceSelf_0")]
+		[Doc(nameof(DocStrings.QaZDifferenceSelf_0))]
 		public QaZDifferenceSelf(
-			[Doc("QaZDifferenceSelf_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaZDifferenceSelf_limit")] double limit,
-			[Doc("QaZDifferenceSelf_zComparisonMethod")]
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_limit))] double limit,
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_zComparisonMethod))]
 			ZComparisonMethod zComparisonMethod,
-			[Doc("QaZDifferenceSelf_zRelationConstraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_zRelationConstraint))] [CanBeNull]
 			string zRelationConstraint)
 			: this(new[] {featureClass}, limit, zComparisonMethod,
 			       zRelationConstraint) { }
 
-		[Doc("QaZDifferenceSelf_1")]
+		[Doc(nameof(DocStrings.QaZDifferenceSelf_1))]
 		public QaZDifferenceSelf(
-			[Doc("QaZDifferenceSelf_featureClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_featureClasses))] [NotNull]
 			IList<IFeatureClass> featureClasses,
-			[Doc("QaZDifferenceSelf_limit")] double limit,
-			[Doc("QaZDifferenceSelf_zComparisonMethod")]
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_limit))] double limit,
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_zComparisonMethod))]
 			ZComparisonMethod zComparisonMethod,
-			[Doc("QaZDifferenceSelf_zRelationConstraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_zRelationConstraint))] [CanBeNull]
 			string zRelationConstraint)
 			: this(featureClasses, limit, 0, zComparisonMethod, zRelationConstraint) { }
 
-		[Doc("QaZDifferenceSelf_2")]
+		[Doc(nameof(DocStrings.QaZDifferenceSelf_2))]
 		public QaZDifferenceSelf(
-			[Doc("QaZDifferenceSelf_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaZDifferenceSelf_minimumZDifference")]
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_minimumZDifference))]
 			double minimumZDifference,
-			[Doc("QaZDifferenceSelf_maximumZDifference")]
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_maximumZDifference))]
 			double maximumZDifference,
-			[Doc("QaZDifferenceSelf_zComparisonMethod")]
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_zComparisonMethod))]
 			ZComparisonMethod zComparisonMethod,
-			[Doc("QaZDifferenceSelf_zRelationConstraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_zRelationConstraint))] [CanBeNull]
 			string zRelationConstraint)
 			: this(new[] {featureClass}, minimumZDifference, maximumZDifference,
 			       zComparisonMethod, zRelationConstraint) { }
 
-		[Doc("QaZDifferenceSelf_3")]
+		[Doc(nameof(DocStrings.QaZDifferenceSelf_3))]
 		public QaZDifferenceSelf(
-			[Doc("QaZDifferenceSelf_featureClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_featureClasses))] [NotNull]
 			IList<IFeatureClass> featureClasses,
-			[Doc("QaZDifferenceSelf_minimumZDifference")]
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_minimumZDifference))]
 			double minimumZDifference,
-			[Doc("QaZDifferenceSelf_maximumZDifference")]
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_maximumZDifference))]
 			double maximumZDifference,
-			[Doc("QaZDifferenceSelf_zComparisonMethod")]
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_zComparisonMethod))]
 			ZComparisonMethod zComparisonMethod,
-			[Doc("QaZDifferenceSelf_zRelationConstraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaZDifferenceSelf_zRelationConstraint))] [CanBeNull]
 			string zRelationConstraint)
 			: base(featureClasses, esriSpatialRelEnum.esriSpatialRelIntersects)
 		{
@@ -96,7 +96,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaZDifferenceOther_MinimumZDifferenceExpression")]
+		[Doc(nameof(DocStrings.QaZDifferenceOther_MinimumZDifferenceExpression))]
 		public string MinimumZDifferenceExpression
 		{
 			get { return _minimumZDifferenceExpressionSql; }
@@ -104,7 +104,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaZDifferenceOther_MaximumZDifferenceExpression")]
+		[Doc(nameof(DocStrings.QaZDifferenceOther_MaximumZDifferenceExpression))]
 		public string MaximumZDifferenceExpression
 		{
 			get { return _maximumZDifferenceExpressionSql; }

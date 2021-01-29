@@ -69,47 +69,47 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMeasuresAtPoints_0")]
+		[Doc(nameof(DocStrings.QaMeasuresAtPoints_0))]
 		public QaMeasuresAtPoints(
-			[Doc("QaMeasuresAtPoints_pointClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMeasuresAtPoints_pointClass))] [NotNull]
 			IFeatureClass pointClass,
-			[Doc("QaMeasuresAtPoints_expectedMValueExpression")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMeasuresAtPoints_expectedMValueExpression))] [CanBeNull]
 			string
 				expectedMValueExpression,
-			[Doc("QaMeasuresAtPoints_lineClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaMeasuresAtPoints_lineClasses))] [NotNull]
 			IList<IFeatureClass> lineClasses,
-			[Doc("QaMeasuresAtPoints_searchDistance")]
+			[Doc(nameof(DocStrings.QaMeasuresAtPoints_searchDistance))]
 			double searchDistance,
-			[Doc("QaMeasuresAtPoints_mTolerance")] double mTolerance,
-			[Doc("QaMeasuresAtPoints_lineMSource")]
+			[Doc(nameof(DocStrings.QaMeasuresAtPoints_mTolerance))] double mTolerance,
+			[Doc(nameof(DocStrings.QaMeasuresAtPoints_lineMSource))]
 			LineMSource lineMSource,
-			[Doc("QaMeasuresAtPoints_requireLine")]
+			[Doc(nameof(DocStrings.QaMeasuresAtPoints_requireLine))]
 			bool requireLine)
 			: this(
 				pointClass, expectedMValueExpression, lineClasses, searchDistance, mTolerance,
 				// ReSharper disable once IntroduceOptionalParameters.Global
 				lineMSource, requireLine, false, null) { }
 
-		[Doc("QaMeasuresAtPoints_0")]
+		[Doc(nameof(DocStrings.QaMeasuresAtPoints_0))]
 		public QaMeasuresAtPoints(
-			[Doc("QaMeasuresAtPoints_pointClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMeasuresAtPoints_pointClass))] [NotNull]
 			IFeatureClass pointClass,
-			[Doc("QaMeasuresAtPoints_expectedMValueExpression")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMeasuresAtPoints_expectedMValueExpression))] [CanBeNull]
 			string
 				expectedMValueExpression,
-			[Doc("QaMeasuresAtPoints_lineClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaMeasuresAtPoints_lineClasses))] [NotNull]
 			IList<IFeatureClass> lineClasses,
-			[Doc("QaMeasuresAtPoints_searchDistance")]
+			[Doc(nameof(DocStrings.QaMeasuresAtPoints_searchDistance))]
 			double searchDistance,
-			[Doc("QaMeasuresAtPoints_mTolerance")] double mTolerance,
-			[Doc("QaMeasuresAtPoints_lineMSource")]
+			[Doc(nameof(DocStrings.QaMeasuresAtPoints_mTolerance))] double mTolerance,
+			[Doc(nameof(DocStrings.QaMeasuresAtPoints_lineMSource))]
 			LineMSource lineMSource,
-			[Doc("QaMeasuresAtPoints_requireLine")]
+			[Doc(nameof(DocStrings.QaMeasuresAtPoints_requireLine))]
 			bool requireLine,
-			[Doc("QaMeasuresAtPoints_ignoreUndefinedExpectedMValue")]
+			[Doc(nameof(DocStrings.QaMeasuresAtPoints_ignoreUndefinedExpectedMValue))]
 			bool
 				ignoreUndefinedExpectedMValue,
-			[Doc("QaMeasuresAtPoints_matchExpression")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMeasuresAtPoints_matchExpression))] [CanBeNull]
 			string matchExpression)
 			: base(
 				CastToTables((IEnumerable<IFeatureClass>) Union(new[] {pointClass}, lineClasses)))

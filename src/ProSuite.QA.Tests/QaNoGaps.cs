@@ -69,69 +69,69 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaNoGaps_0")]
-		public QaNoGaps([Doc("QaNoGaps_polygonClass")] [NotNull]
+		[Doc(nameof(DocStrings.QaNoGaps_0))]
+		public QaNoGaps([Doc(nameof(DocStrings.QaNoGaps_polygonClass))] [NotNull]
 		                IFeatureClass polygonClass,
-		                [Doc("QaNoGaps_sliverLimit")] double sliverLimit,
-		                [Doc("QaNoGaps_maxArea")] double maxArea)
+		                [Doc(nameof(DocStrings.QaNoGaps_sliverLimit))] double sliverLimit,
+		                [Doc(nameof(DocStrings.QaNoGaps_maxArea))] double maxArea)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polygonClass, sliverLimit, maxArea, 0d, false) { }
 
-		[Doc("QaNoGaps_1")]
+		[Doc(nameof(DocStrings.QaNoGaps_1))]
 		public QaNoGaps(
-				[Doc("QaNoGaps_polygonClasses")] [NotNull]
+				[Doc(nameof(DocStrings.QaNoGaps_polygonClasses))] [NotNull]
 				IList<IFeatureClass> polygonClasses,
-				[Doc("QaNoGaps_sliverLimit")] double sliverLimit,
-				[Doc("QaNoGaps_maxArea")] double maxArea)
+				[Doc(nameof(DocStrings.QaNoGaps_sliverLimit))] double sliverLimit,
+				[Doc(nameof(DocStrings.QaNoGaps_maxArea))] double maxArea)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polygonClasses, sliverLimit, maxArea, 0d, false) { }
 
-		[Doc("QaNoGaps_2")]
-		public QaNoGaps([Doc("QaNoGaps_polygonClass")] [NotNull]
+		[Doc(nameof(DocStrings.QaNoGaps_2))]
+		public QaNoGaps([Doc(nameof(DocStrings.QaNoGaps_polygonClass))] [NotNull]
 		                IFeatureClass polygonClass,
-		                [Doc("QaNoGaps_sliverLimit")] double sliverLimit,
-		                [Doc("QaNoGaps_maxArea")] double maxArea,
-		                [Doc("QaNoGaps_subtileWidth")] double subtileWidth,
-		                [Doc("QaNoGaps_findGapsBelowTolerance")]
+		                [Doc(nameof(DocStrings.QaNoGaps_sliverLimit))] double sliverLimit,
+		                [Doc(nameof(DocStrings.QaNoGaps_maxArea))] double maxArea,
+		                [Doc(nameof(DocStrings.QaNoGaps_subtileWidth))] double subtileWidth,
+		                [Doc(nameof(DocStrings.QaNoGaps_findGapsBelowTolerance))]
 		                bool findGapsBelowTolerance)
 			: this(new List<IFeatureClass> {polygonClass}, sliverLimit, maxArea,
 			       subtileWidth, 0,
 			       findGapsBelowTolerance, _emptyFeatureClasses) { }
 
-		[Doc("QaNoGaps_3")]
+		[Doc(nameof(DocStrings.QaNoGaps_3))]
 		public QaNoGaps(
-			[Doc("QaNoGaps_polygonClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaNoGaps_polygonClasses))] [NotNull]
 			IList<IFeatureClass> polygonClasses,
-			[Doc("QaNoGaps_sliverLimit")] double sliverLimit,
-			[Doc("QaNoGaps_maxArea")] double maxArea,
-			[Doc("QaNoGaps_subtileWidth")] double subtileWidth,
-			[Doc("QaNoGaps_findGapsBelowTolerance")]
+			[Doc(nameof(DocStrings.QaNoGaps_sliverLimit))] double sliverLimit,
+			[Doc(nameof(DocStrings.QaNoGaps_maxArea))] double maxArea,
+			[Doc(nameof(DocStrings.QaNoGaps_subtileWidth))] double subtileWidth,
+			[Doc(nameof(DocStrings.QaNoGaps_findGapsBelowTolerance))]
 			bool findGapsBelowTolerance)
 			: this(polygonClasses, sliverLimit, maxArea,
 			       subtileWidth, 0,
 			       findGapsBelowTolerance, _emptyFeatureClasses) { }
 
-		[Doc("QaNoGaps_4")]
+		[Doc(nameof(DocStrings.QaNoGaps_4))]
 		public QaNoGaps(
-			[Doc("QaNoGaps_polygonClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaNoGaps_polygonClasses))] [NotNull]
 			IList<IFeatureClass> polygonClasses,
-			[Doc("QaNoGaps_sliverLimit")] double sliverLimit,
-			[Doc("QaNoGaps_maxArea")] double maxArea,
-			[Doc("QaNoGaps_areaOfInterestClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaNoGaps_sliverLimit))] double sliverLimit,
+			[Doc(nameof(DocStrings.QaNoGaps_maxArea))] double maxArea,
+			[Doc(nameof(DocStrings.QaNoGaps_areaOfInterestClasses))] [NotNull]
 			IList<IFeatureClass>
 				areaOfInterestClasses)
 			: this(polygonClasses, sliverLimit, maxArea, 0d, false, areaOfInterestClasses) { }
 
-		[Doc("QaNoGaps_5")]
+		[Doc(nameof(DocStrings.QaNoGaps_5))]
 		public QaNoGaps(
-			[Doc("QaNoGaps_polygonClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaNoGaps_polygonClasses))] [NotNull]
 			IList<IFeatureClass> polygonClasses,
-			[Doc("QaNoGaps_sliverLimit")] double sliverLimit,
-			[Doc("QaNoGaps_maxArea")] double maxArea,
-			[Doc("QaNoGaps_subtileWidth")] double subtileWidth,
-			[Doc("QaNoGaps_findGapsBelowTolerance")]
+			[Doc(nameof(DocStrings.QaNoGaps_sliverLimit))] double sliverLimit,
+			[Doc(nameof(DocStrings.QaNoGaps_maxArea))] double maxArea,
+			[Doc(nameof(DocStrings.QaNoGaps_subtileWidth))] double subtileWidth,
+			[Doc(nameof(DocStrings.QaNoGaps_findGapsBelowTolerance))]
 			bool findGapsBelowTolerance,
-			[Doc("QaNoGaps_areaOfInterestClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaNoGaps_areaOfInterestClasses))] [NotNull]
 			IList<IFeatureClass>
 				areaOfInterestClasses)
 			: this(polygonClasses, sliverLimit, maxArea,

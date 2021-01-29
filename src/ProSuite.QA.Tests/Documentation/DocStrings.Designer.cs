@@ -3092,6 +3092,15 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The minimum number of distinct values returned from &apos;distinctExpression&apos;, per group value defined by &apos;groupByExpression&apos;.
+        /// </summary>
+        public static string QaGroupConstraints_minDistinctCount {
+            get {
+                return ResourceManager.GetString("QaGroupConstraints_minDistinctCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The table to apply group constraints to..
         /// </summary>
         public static string QaGroupConstraints_table {
@@ -4690,12 +4699,34 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The maximally allowed z-Difference as (feature-dependent)expression
+        ///Upper feature is aliased as &quot;U&quot;, lower feature as &quot;L&quot;
+        ///Example: U.ZDiff + L.ZDiff.
+        /// </summary>
+        public static string QaLineIntersectZ_MaximumZDifferenceExpression {
+            get {
+                return ResourceManager.GetString("QaLineIntersectZ_MaximumZDifferenceExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to minimum height difference in z-Units.
         ///if &apos;minimumZDifference&apos; &lt;= 0, minimum height difference is not checked.
         /// </summary>
         public static string QaLineIntersectZ_minimumZDifference {
             get {
                 return ResourceManager.GetString("QaLineIntersectZ_minimumZDifference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The minimally allowed z-Difference as (feature-dependent)expression
+        ///Upper feature is aliased as &quot;U&quot;, lower feature as &quot;L&quot;
+        ///Example: U.ZDiff + L.ZDiff.
+        /// </summary>
+        public static string QaLineIntersectZ_MinimumZDifferenceExpression {
+            get {
+                return ResourceManager.GetString("QaLineIntersectZ_MinimumZDifferenceExpression", resourceCulture);
             }
         }
         
@@ -7122,6 +7153,15 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to If set, the tolerance that 2 junction points are considered equal. If not set: tolerance of featureclass..
+        /// </summary>
+        public static string QaNotNear_JunctionCoincidenceTolerance {
+            get {
+                return ResourceManager.GetString("QaNotNear_JunctionCoincidenceTolerance", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to minimum reporting length in (x,y)-units.
         /// </summary>
         public static string QaNotNear_minLength {
@@ -7573,6 +7613,17 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string QaPartCoincidenceSelf_6 {
             get {
                 return ResourceManager.GetString("QaPartCoincidenceSelf_6", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Find line sections longer than a specified minimum length in &apos;featureClasses&apos;, where 2 non-coincident lines lie nearer than &apos;near&apos;, but are not coincident. The minimum length can be defined separately for line pairs that are connected (&apos;connectedMinLengthExpressions&apos;) or disjoint (&apos;disjointMinLengthExpressions&apos;). A coincidence tolerance can be specified to indicate a maximum allowed offset between the lines at which they are still considered to be coincident.
+        ///
+        ///Remark: All feature classes in &apos;featureClasse [rest of string was truncated]&quot;;.
+        /// </summary>
+        public static string QaPartCoincidenceSelf_7 {
+            get {
+                return ResourceManager.GetString("QaPartCoincidenceSelf_7", resourceCulture);
             }
         }
         
@@ -9033,6 +9084,24 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string QaSchemaSpatialReference_1 {
             get {
                 return ResourceManager.GetString("QaSchemaSpatialReference_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Checks if the spatial reference of &apos;featureClass&apos; is exactly (including domain, tolerance and resolution) equal to the spatial reference of &apos;referenceFeatureClass&apos;..
+        /// </summary>
+        public static string QaSchemaSpatialReference_2 {
+            get {
+                return ResourceManager.GetString("QaSchemaSpatialReference_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Checks if the spatial reference of &apos;featureClass&apos; is exactly (including domain, tolerance and resolution) equal to the spatial reference defined in &apos;spatialReferenceXml&apos; string..
+        /// </summary>
+        public static string QaSchemaSpatialReference_3 {
+            get {
+                return ResourceManager.GetString("QaSchemaSpatialReference_3", resourceCulture);
             }
         }
         
@@ -10520,6 +10589,24 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Finds features where the Z difference to another feature is not between &apos;minimumZDifference&apos; and &apos;maximumZDifference&apos;.
+        /// </summary>
+        public static string QaZDifferenceOther_2 {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features where the Z difference to features from a list of other feature classes is not between &apos;minimumZDifference&apos; and &apos;maximumZDifference&apos;.
+        /// </summary>
+        public static string QaZDifferenceOther_3 {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to 3D feature class to check.
         /// </summary>
         public static string QaZDifferenceOther_featureClass {
@@ -10556,11 +10643,29 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to maximum allowed Z-Difference. Remark: If &apos;MaximumZDifferenceExpression&apos; is set, this value is not used..
+        /// </summary>
+        public static string QaZDifferenceOther_maximumZDifference {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_maximumZDifference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Optional expression to calculate the maximum Z difference based on attributes of the lower/upper features. The lower feature can be addressed as &apos;L&apos;, the upper feature as &apos;U&apos;..
         /// </summary>
         public static string QaZDifferenceOther_MaximumZDifferenceExpression {
             get {
                 return ResourceManager.GetString("QaZDifferenceOther_MaximumZDifferenceExpression", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum allowed Z-Difference. Remark: If &apos;MinimumZDifferenceExpression&apos; is set, this value is not used..
+        /// </summary>
+        public static string QaZDifferenceOther_minimumZDifference {
+            get {
+                return ResourceManager.GetString("QaZDifferenceOther_minimumZDifference", resourceCulture);
             }
         }
         
@@ -10658,6 +10763,24 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Finds features where the Z difference to another feature is not between &apos;minimumZDifference&apos; and &apos;maximumZDifference&apos;.
+        /// </summary>
+        public static string QaZDifferenceSelf_2 {
+            get {
+                return ResourceManager.GetString("QaZDifferenceSelf_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds features where the Z difference to another feature within a list of feature classesis not between &apos;minimumZDifference&apos; and &apos;maximumZDifference&apos;.
+        /// </summary>
+        public static string QaZDifferenceSelf_3 {
+            get {
+                return ResourceManager.GetString("QaZDifferenceSelf_3", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to 3D feature class to check.
         /// </summary>
         public static string QaZDifferenceSelf_featureClass {
@@ -10681,6 +10804,24 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string QaZDifferenceSelf_limit {
             get {
                 return ResourceManager.GetString("QaZDifferenceSelf_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum allowed Z-Difference. Remark: If &apos;MaximumZDifferenceExpression&apos; is set, this value is not used..
+        /// </summary>
+        public static string QaZDifferenceSelf_maximumZDifference {
+            get {
+                return ResourceManager.GetString("QaZDifferenceSelf_maximumZDifference", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to minimum allowed Z-Difference. Remark: If &apos;MinimumZDifferenceExpression&apos; is set, this value is not used..
+        /// </summary>
+        public static string QaZDifferenceSelf_minimumZDifference {
+            get {
+                return ResourceManager.GetString("QaZDifferenceSelf_minimumZDifference", resourceCulture);
             }
         }
         

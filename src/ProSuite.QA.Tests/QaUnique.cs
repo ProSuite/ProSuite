@@ -84,28 +84,28 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaUnique_0")]
+		[Doc(nameof(DocStrings.QaUnique_0))]
 		public QaUnique(
-				[Doc("QaUnique_table")] ITable table,
-				[Doc("QaUnique_unique")] string unique)
+				[Doc(nameof(DocStrings.QaUnique_table))] ITable table,
+				[Doc(nameof(DocStrings.QaUnique_unique))] string unique)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(table, unique, _defaultMaxRows) { }
 
-		[Doc("QaUnique_0")]
+		[Doc(nameof(DocStrings.QaUnique_0))]
 		public QaUnique(
-			[Doc("QaUnique_table")] ITable table,
-			[Doc("QaUnique_unique")] string unique,
-			[Doc("QaUnique_maxRows")] [DefaultValue(_defaultMaxRows)]
+			[Doc(nameof(DocStrings.QaUnique_table))] ITable table,
+			[Doc(nameof(DocStrings.QaUnique_unique))] string unique,
+			[Doc(nameof(DocStrings.QaUnique_maxRows))] [DefaultValue(_defaultMaxRows)]
 			int maxRows)
 			: this(new[] {table}, new[] {unique})
 		{
 			_maxRows = maxRows;
 		}
 
-		[Doc("QaUnique_1")]
+		[Doc(nameof(DocStrings.QaUnique_1))]
 		public QaUnique(
-			[Doc("QaUnique_tables")] IList<ITable> tables,
-			[Doc("QaUnique_uniques")] IList<string> uniques)
+			[Doc(nameof(DocStrings.QaUnique_tables))] IList<ITable> tables,
+			[Doc(nameof(DocStrings.QaUnique_uniques))] IList<string> uniques)
 			: base(tables)
 		{
 			Assert.ArgumentNotNull(tables, nameof(tables));

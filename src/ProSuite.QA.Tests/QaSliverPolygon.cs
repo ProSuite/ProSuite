@@ -54,18 +54,18 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaSliverPolygon_0")]
+		[Doc(nameof(DocStrings.QaSliverPolygon_0))]
 		public QaSliverPolygon(
-				[Doc("QaSliverPolygon_polygonClass")] IFeatureClass polygonClass,
-				[Doc("QaSliverPolygon_limit")] double limit)
+				[Doc(nameof(DocStrings.QaSliverPolygon_polygonClass))] IFeatureClass polygonClass,
+				[Doc(nameof(DocStrings.QaSliverPolygon_limit))] double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polygonClass, limit, -1) { }
 
-		[Doc("QaSliverPolygon_0")]
+		[Doc(nameof(DocStrings.QaSliverPolygon_0))]
 		public QaSliverPolygon(
-			[Doc("QaSliverPolygon_polygonClass")] IFeatureClass polygonClass,
-			[Doc("QaSliverPolygon_limit")] double limit,
-			[Doc("QaSliverPolygon_maxArea")] double maxArea)
+			[Doc(nameof(DocStrings.QaSliverPolygon_polygonClass))] IFeatureClass polygonClass,
+			[Doc(nameof(DocStrings.QaSliverPolygon_limit))] double limit,
+			[Doc(nameof(DocStrings.QaSliverPolygon_maxArea))] double maxArea)
 			: base((ITable) polygonClass)
 		{
 			Assert.ArgumentNotNull(polygonClass, nameof(polygonClass));

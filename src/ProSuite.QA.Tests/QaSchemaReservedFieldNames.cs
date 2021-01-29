@@ -13,33 +13,33 @@ namespace ProSuite.QA.Tests
 	[SchemaTest]
 	public class QaSchemaReservedFieldNames : QaSchemaReservedFieldNamesBase
 	{
-		[Doc("QaSchemaReservedFieldNames_0")]
+		[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_0))]
 		public QaSchemaReservedFieldNames(
-			[Doc("QaSchemaReservedFieldNames_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_table))] [NotNull]
 			ITable table,
-			[Doc("QaSchemaReservedFieldNames_reservedNames")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedNames))] [NotNull]
 			IEnumerable<string> reservedNames)
 			: base(table, reservedNames) { }
 
-		[Doc("QaSchemaReservedFieldNames_1")]
+		[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_1))]
 		public QaSchemaReservedFieldNames(
-			[Doc("QaSchemaReservedFieldNames_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_table))] [NotNull]
 			ITable table,
-			[Doc("QaSchemaReservedFieldNames_reservedNamesString")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedNamesString))] [NotNull]
 			string reservedNamesString)
 			: base(table, reservedNamesString) { }
 
-		[Doc("QaSchemaReservedFieldNames_2")]
+		[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_2))]
 		public QaSchemaReservedFieldNames(
-			[Doc("QaSchemaReservedFieldNames_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_table))] [NotNull]
 			ITable table,
-			[Doc("QaSchemaReservedFieldNames_reservedNamesTable")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedNamesTable))] [NotNull]
 			ITable reservedNamesTable,
-			[Doc("QaSchemaReservedFieldNames_reservedNameFieldName")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedNameFieldName))] [NotNull]
 			string reservedNameFieldName,
-			[Doc("QaSchemaReservedFieldNames_reservedReasonFieldName")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedReasonFieldName))] [CanBeNull]
 			string reservedReasonFieldName,
-			[Doc("QaSchemaReservedFieldNames_validNameFieldName")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_validNameFieldName))] [CanBeNull]
 			string validNameFieldName)
 			: base(table, reservedNamesTable, reservedNameFieldName, reservedReasonFieldName,
 			       validNameFieldName) { }

@@ -36,16 +36,16 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMultipart_0")]
+		[Doc(nameof(DocStrings.QaMultipart_0))]
 		public QaMultipart(
-				[Doc("QaMultipart_featureClass")] IFeatureClass featureClass)
+				[Doc(nameof(DocStrings.QaMultipart_featureClass))] IFeatureClass featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, singleRing: false) { }
 
-		[Doc("QaMultipart_0")]
+		[Doc(nameof(DocStrings.QaMultipart_0))]
 		public QaMultipart(
-			[Doc("QaMultipart_featureClass")] IFeatureClass featureClass,
-			[Doc("QaMultipart_singleRing")] bool singleRing)
+			[Doc(nameof(DocStrings.QaMultipart_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaMultipart_singleRing))] bool singleRing)
 			: base((ITable) featureClass)
 		{
 			_singleRing = singleRing;

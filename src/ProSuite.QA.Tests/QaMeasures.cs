@@ -48,18 +48,18 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMeasures_0")]
+		[Doc(nameof(DocStrings.QaMeasures_0))]
 		public QaMeasures(
-				[Doc("QaMeasures_featureClass")] [NotNull]
+				[Doc(nameof(DocStrings.QaMeasures_featureClass))] [NotNull]
 				IFeatureClass featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, double.NaN) { }
 
-		[Doc("QaMeasures_1")]
+		[Doc(nameof(DocStrings.QaMeasures_1))]
 		public QaMeasures(
-			[Doc("QaMeasures_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMeasures_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaMeasures_invalidValue")] double invalidValue)
+			[Doc(nameof(DocStrings.QaMeasures_invalidValue))] double invalidValue)
 			: base((ITable) featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));

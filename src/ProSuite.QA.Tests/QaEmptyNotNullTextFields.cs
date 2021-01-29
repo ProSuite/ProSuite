@@ -39,17 +39,17 @@ namespace ProSuite.QA.Tests
 
 		#region Constructors
 
-		[Doc("QaEmptyNotNullTextFields_0")]
+		[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_0))]
 		public QaEmptyNotNullTextFields(
-			[Doc("QaEmptyNotNullTextFields_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_table))] [NotNull]
 			ITable table)
 			: this(table, GetNotNullTextFields(table)) { }
 
-		[Doc("QaEmptyNotNullTextFields_1")]
+		[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_1))]
 		public QaEmptyNotNullTextFields(
-			[Doc("QaEmptyNotNullTextFields_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_table))] [NotNull]
 			ITable table,
-			[Doc("QaEmptyNotNullTextFields_notNullTextFields")] [NotNull]
+			[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_notNullTextFields))] [NotNull]
 			string[]
 				notNullTextFields)
 			: base(table)

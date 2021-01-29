@@ -47,22 +47,22 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaWithinZRange_0")]
+		[Doc(nameof(DocStrings.QaWithinZRange_0))]
 		public QaWithinZRange(
-				[Doc("QaWithinZRange_featureClass")] [NotNull]
+				[Doc(nameof(DocStrings.QaWithinZRange_featureClass))] [NotNull]
 				IFeatureClass featureClass,
-				[Doc("QaWithinZRange_minimumZValue")] double minimumZValue,
-				[Doc("QaWithinZRange_maximumZValue")] double maximumZValue)
+				[Doc(nameof(DocStrings.QaWithinZRange_minimumZValue))] double minimumZValue,
+				[Doc(nameof(DocStrings.QaWithinZRange_maximumZValue))] double maximumZValue)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, minimumZValue, maximumZValue, null) { }
 
-		[Doc("QaWithinZRange_1")]
+		[Doc(nameof(DocStrings.QaWithinZRange_1))]
 		public QaWithinZRange(
-			[Doc("QaWithinZRange_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaWithinZRange_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaWithinZRange_minimumZValue")] double minimumZValue,
-			[Doc("QaWithinZRange_maximumZValue")] double maximumZValue,
-			[Doc("QaWithinZRange_allowedZValues")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaWithinZRange_minimumZValue))] double minimumZValue,
+			[Doc(nameof(DocStrings.QaWithinZRange_maximumZValue))] double maximumZValue,
+			[Doc(nameof(DocStrings.QaWithinZRange_allowedZValues))] [CanBeNull]
 			IEnumerable<double>
 				allowedZValues)
 			: base((ITable) featureClass)

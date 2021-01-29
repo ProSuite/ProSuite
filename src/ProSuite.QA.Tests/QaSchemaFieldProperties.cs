@@ -15,23 +15,23 @@ namespace ProSuite.QA.Tests
 	{
 		private readonly FieldSpecification _fieldSpecification;
 
-		[Doc("QaSchemaFieldProperties_0")]
+		[Doc(nameof(DocStrings.QaSchemaFieldProperties_0))]
 		public QaSchemaFieldProperties(
-			[Doc("QaSchemaFieldProperties_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaFieldProperties_table))] [NotNull]
 			ITable table,
-			[Doc("QaSchemaFieldProperties_fieldName")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaFieldProperties_fieldName))] [NotNull]
 			string fieldName,
-			[Doc("QaSchemaFieldProperties_expectedFieldType")]
+			[Doc(nameof(DocStrings.QaSchemaFieldProperties_expectedFieldType))]
 			esriFieldType expectedFieldType,
-			[Doc("QaSchemaFieldProperties_expectedFieldLength")]
+			[Doc(nameof(DocStrings.QaSchemaFieldProperties_expectedFieldLength))]
 			int expectedFieldLength,
-			[Doc("QaSchemaFieldProperties_expectedAliasName")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaSchemaFieldProperties_expectedAliasName))] [CanBeNull]
 			string
 				expectedAliasName,
-			[Doc("QaSchemaFieldProperties_expectedDomainName")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaSchemaFieldProperties_expectedDomainName))] [CanBeNull]
 			string
 				expectedDomainName,
-			[Doc("QaSchemaFieldProperties_fieldIsOptional")]
+			[Doc(nameof(DocStrings.QaSchemaFieldProperties_fieldIsOptional))]
 			bool fieldIsOptional)
 			: base(table, false)
 		{

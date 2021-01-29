@@ -42,11 +42,11 @@ namespace ProSuite.QA.Tests
 
 		#region constructors
 
-		[Doc("QaMustTouchSelf_0")]
+		[Doc(nameof(DocStrings.QaMustTouchSelf_0))]
 		public QaMustTouchSelf(
-			[Doc("QaMustTouchSelf_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMustTouchSelf_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaMustTouchSelf_relevantRelationCondition")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMustTouchSelf_relevantRelationCondition))] [CanBeNull]
 			string
 				relevantRelationCondition)
 			: this(new[] {featureClass}, relevantRelationCondition)
@@ -54,12 +54,12 @@ namespace ProSuite.QA.Tests
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 		}
 
-		[Doc("QaMustTouchSelf_1")]
+		[Doc(nameof(DocStrings.QaMustTouchSelf_1))]
 		public QaMustTouchSelf(
-			[Doc("QaMustTouchSelf_featureClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaMustTouchSelf_featureClasses))] [NotNull]
 			ICollection<IFeatureClass>
 				featureClasses,
-			[Doc("QaMustTouchSelf_relevantRelationCondition")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaMustTouchSelf_relevantRelationCondition))] [CanBeNull]
 			string
 				relevantRelationCondition)
 			: base(featureClasses.Cast<ITable>())

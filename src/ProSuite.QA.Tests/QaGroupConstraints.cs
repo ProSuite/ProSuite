@@ -70,50 +70,50 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaGroupConstraints_0")]
+		[Doc(nameof(DocStrings.QaGroupConstraints_0))]
 		public QaGroupConstraints(
-			[Doc("QaGroupConstraints_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaGroupConstraints_table))] [NotNull]
 			ITable table,
-			[Doc("QaGroupConstraints_groupByExpression")] [NotNull]
+			[Doc(nameof(DocStrings.QaGroupConstraints_groupByExpression))] [NotNull]
 			string groupByExpression,
-			[Doc("QaGroupConstraints_distinctExpression")] [NotNull]
+			[Doc(nameof(DocStrings.QaGroupConstraints_distinctExpression))] [NotNull]
 			string distinctExpression,
-			[Doc("QaGroupConstraints_maxDistinctCount")]
+			[Doc(nameof(DocStrings.QaGroupConstraints_maxDistinctCount))]
 			int maxDistinctCount,
-			[Doc("QaGroupConstraints_limitToTestedRows")]
+			[Doc(nameof(DocStrings.QaGroupConstraints_limitToTestedRows))]
 			bool limitToTestedRows)
 			: this(new[] {table}, new[] {groupByExpression}, new[] {distinctExpression},
 			       0, maxDistinctCount, limitToTestedRows) { }
 
-		[Doc("QaGroupConstraints_1")]
+		[Doc(nameof(DocStrings.QaGroupConstraints_1))]
 		public QaGroupConstraints(
-			[Doc("QaGroupConstraints_tables")] [NotNull]
+			[Doc(nameof(DocStrings.QaGroupConstraints_tables))] [NotNull]
 			IList<ITable> tables,
-			[Doc("QaGroupConstraints_groupByExpressions")] [NotNull]
+			[Doc(nameof(DocStrings.QaGroupConstraints_groupByExpressions))] [NotNull]
 			IList<string> groupByExpressions,
-			[Doc("QaGroupConstraints_distinctExpressions")] [NotNull]
+			[Doc(nameof(DocStrings.QaGroupConstraints_distinctExpressions))] [NotNull]
 			IList<string> distinctExpressions,
-			[Doc("QaGroupConstraints_maxDistinctCount")]
+			[Doc(nameof(DocStrings.QaGroupConstraints_maxDistinctCount))]
 			int maxDistinctCount,
-			[Doc("QaGroupConstraints_limitToTestedRows")]
+			[Doc(nameof(DocStrings.QaGroupConstraints_limitToTestedRows))]
 			bool limitToTestedRows)
 			: this(tables, groupByExpressions, distinctExpressions,
 			       0, maxDistinctCount, limitToTestedRows) { }
 
 		// TODO document
-		[Doc("QaGroupConstraints_2")]
+		[Doc(nameof(DocStrings.QaGroupConstraints_1))]
 		public QaGroupConstraints(
-			[Doc("QaGroupConstraints_tables")] [NotNull]
+			[Doc(nameof(DocStrings.QaGroupConstraints_tables))] [NotNull]
 			IList<ITable> tables,
-			[Doc("QaGroupConstraints_groupByExpressions")] [NotNull]
+			[Doc(nameof(DocStrings.QaGroupConstraints_groupByExpressions))] [NotNull]
 			IList<string> groupByExpressions,
-			[Doc("QaGroupConstraints_distinctExpressions")] [NotNull]
+			[Doc(nameof(DocStrings.QaGroupConstraints_distinctExpressions))] [NotNull]
 			IList<string> distinctExpressions,
-			[Doc("QaGroupConstraints_minDistinctCount")]
+			[Doc(nameof(DocStrings.QaGroupConstraints_minDistinctCount))]
 			int minDistinctCount,
-			[Doc("QaGroupConstraints_maxDistinctCount")]
+			[Doc(nameof(DocStrings.QaGroupConstraints_maxDistinctCount))]
 			int maxDistinctCount,
-			[Doc("QaGroupConstraints_limitToTestedRows")]
+			[Doc(nameof(DocStrings.QaGroupConstraints_limitToTestedRows))]
 			bool limitToTestedRows)
 			: base(tables)
 		{

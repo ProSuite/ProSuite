@@ -40,13 +40,13 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaPointOnLine_0")]
+		[Doc(nameof(DocStrings.QaPointOnLine_0))]
 		public QaPointOnLine(
-			[NotNull] [Doc("QaPointOnLine_pointClass")]
+			[NotNull] [Doc(nameof(DocStrings.QaPointOnLine_pointClass))]
 			IFeatureClass pointClass,
-			[NotNull] [Doc("QaPointOnLine_nearClasses")]
+			[NotNull] [Doc(nameof(DocStrings.QaPointOnLine_nearClasses))]
 			IList<IFeatureClass> nearClasses,
-			[Doc("QaPointOnLine_near")] double near)
+			[Doc(nameof(DocStrings.QaPointOnLine_near))] double near)
 			: base(CastToTables(new[] {pointClass}, nearClasses))
 		{
 			_spatialReference = ((IGeoDataset) pointClass).SpatialReference;

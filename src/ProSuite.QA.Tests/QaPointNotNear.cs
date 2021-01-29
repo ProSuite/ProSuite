@@ -89,23 +89,23 @@ namespace ProSuite.QA.Tests
 		[NotNull] private readonly IDictionary<int, double> _xyToleranceByTableIndex;
 		private readonly double _pointClassXyTolerance;
 
-		[Doc("QaPointNotNear_0")]
+		[Doc(nameof(DocStrings.QaPointNotNear_0))]
 		public QaPointNotNear(
-			[NotNull] [Doc("QaPointNotNear_pointClass")]
+			[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_pointClass))]
 			IFeatureClass pointClass,
-			[NotNull] [Doc("QaPointNotNear_referenceClass")]
+			[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_referenceClass))]
 			IFeatureClass referenceClass,
-			[Doc("QaPointNotNear_limit")] double limit)
+			[Doc(nameof(DocStrings.QaPointNotNear_limit))] double limit)
 			: this(pointClass, new[] {referenceClass}, limit) { }
 
-		[Doc("QaPointNotNear_1")]
+		[Doc(nameof(DocStrings.QaPointNotNear_1))]
 		public QaPointNotNear(
-			[NotNull] [Doc("QaPointNotNear_pointClass")]
+			[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_pointClass))]
 			IFeatureClass pointClass,
-			[NotNull] [Doc("QaPointNotNear_referenceClasses")]
+			[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_referenceClasses))]
 			IList<IFeatureClass>
 				referenceClasses,
-			[Doc("QaPointNotNear_limit")] double limit)
+			[Doc(nameof(DocStrings.QaPointNotNear_limit))] double limit)
 			: base(CastToTables(new[] {pointClass}, referenceClasses))
 		{
 			Assert.ArgumentNotNull(pointClass, nameof(pointClass));
@@ -124,18 +124,18 @@ namespace ProSuite.QA.Tests
 			_pointClassXyTolerance = _xyToleranceByTableIndex[0];
 		}
 
-		[Doc("QaPointNotNear_2")]
+		[Doc(nameof(DocStrings.QaPointNotNear_2))]
 		public QaPointNotNear(
-				[NotNull] [Doc("QaPointNotNear_pointClass")]
+				[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_pointClass))]
 				IFeatureClass pointClass,
-				[NotNull] [Doc("QaPointNotNear_referenceClasses")]
+				[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_referenceClasses))]
 				IList<IFeatureClass>
 					referenceClasses,
-				[Doc("QaPointNotNear_searchDistance")] double searchDistance,
-				[CanBeNull] [Doc("QaPointNotNear_pointDistanceExpression")]
+				[Doc(nameof(DocStrings.QaPointNotNear_searchDistance))] double searchDistance,
+				[CanBeNull] [Doc(nameof(DocStrings.QaPointNotNear_pointDistanceExpression))]
 				string
 					pointDistanceExpression,
-				[CanBeNull] [Doc("QaPointNotNear_referenceDistanceExpressions")]
+				[CanBeNull] [Doc(nameof(DocStrings.QaPointNotNear_referenceDistanceExpressions))]
 				IList<string>
 					referenceDistanceExpressions)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -144,24 +144,24 @@ namespace ProSuite.QA.Tests
 			       referenceRightSideDistances: null,
 			       referenceFlipExpressions: null) { }
 
-		[Doc("QaPointNotNear_3")]
+		[Doc(nameof(DocStrings.QaPointNotNear_3))]
 		public QaPointNotNear(
-			[NotNull] [Doc("QaPointNotNear_pointClass")]
+			[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_pointClass))]
 			IFeatureClass pointClass,
-			[NotNull] [Doc("QaPointNotNear_referenceClasses")]
+			[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_referenceClasses))]
 			IList<IFeatureClass>
 				referenceClasses,
-			[Doc("QaPointNotNear_searchDistance")] double searchDistance,
-			[CanBeNull] [Doc("QaPointNotNear_pointDistanceExpression")]
+			[Doc(nameof(DocStrings.QaPointNotNear_searchDistance))] double searchDistance,
+			[CanBeNull] [Doc(nameof(DocStrings.QaPointNotNear_pointDistanceExpression))]
 			string
 				pointDistanceExpression,
-			[CanBeNull] [Doc("QaPointNotNear_referenceDistanceExpressions")]
+			[CanBeNull] [Doc(nameof(DocStrings.QaPointNotNear_referenceDistanceExpressions))]
 			IList<string>
 				referenceDistanceExpressions,
-			[CanBeNull] [Doc("QaPointNotNear_referenceRightSideDistances")]
+			[CanBeNull] [Doc(nameof(DocStrings.QaPointNotNear_referenceRightSideDistances))]
 			IList<string>
 				referenceRightSideDistances,
-			[CanBeNull] [Doc("QaPointNotNear_referenceFlipExpressions")]
+			[CanBeNull] [Doc(nameof(DocStrings.QaPointNotNear_referenceFlipExpressions))]
 			IList<string>
 				referenceFlipExpressions)
 			: base(CastToTables(new[] {pointClass}, referenceClasses))
@@ -212,11 +212,11 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaPointNotNear_AllowCoincidentPoints")]
+		[Doc(nameof(DocStrings.QaPointNotNear_AllowCoincidentPoints))]
 		public bool AllowCoincidentPoints { get; set; }
 
 		[TestParameter]
-		[Doc("QaPointNotNear_GeometryComponents")]
+		[Doc(nameof(DocStrings.QaPointNotNear_GeometryComponents))]
 		public IList<GeometryComponent> GeometryComponents
 		{
 			get { return _geometryComponents; }
@@ -235,7 +235,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaPointNotNear_ValidRelationConstraints")]
+		[Doc(nameof(DocStrings.QaPointNotNear_ValidRelationConstraints))]
 		public IList<string> ValidRelationConstraints
 		{
 			get { return _validRelationConstraints; }
@@ -261,7 +261,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(_defaultMinimumErrorLineLength)]
-		[Doc("QaPointNotNear_MinimumErrorLineLength")]
+		[Doc(nameof(DocStrings.QaPointNotNear_MinimumErrorLineLength))]
 		public double MinimumErrorLineLength { get; set; } =
 			_defaultMinimumErrorLineLength;
 

@@ -44,10 +44,10 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaSmooth_0")]
+		[Doc(nameof(DocStrings.QaSmooth_0))]
 		public QaSmooth(
-			[Doc("QaSmooth_featureClass")] IFeatureClass featureClass,
-			[Doc("QaSmooth_limit")] double limit)
+			[Doc(nameof(DocStrings.QaSmooth_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSmooth_limit))] double limit)
 			: base((ITable) featureClass)
 		{
 			_limit = limit;

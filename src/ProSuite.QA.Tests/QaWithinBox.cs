@@ -44,26 +44,26 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaWithinBox_0")]
+		[Doc(nameof(DocStrings.QaWithinBox_0))]
 		public QaWithinBox(
-				[Doc("QaWithinBox_featureClass")] [NotNull]
+				[Doc(nameof(DocStrings.QaWithinBox_featureClass))] [NotNull]
 				IFeatureClass featureClass,
-				[Doc("QaWithinBox_xMin")] double xMin,
-				[Doc("QaWithinBox_yMin")] double yMin,
-				[Doc("QaWithinBox_xMax")] double xMax,
-				[Doc("QaWithinBox_yMax")] double yMax)
+				[Doc(nameof(DocStrings.QaWithinBox_xMin))] double xMin,
+				[Doc(nameof(DocStrings.QaWithinBox_yMin))] double yMin,
+				[Doc(nameof(DocStrings.QaWithinBox_xMax))] double xMax,
+				[Doc(nameof(DocStrings.QaWithinBox_yMax))] double yMax)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, xMin, yMin, xMax, yMax, false) { }
 
-		[Doc("QaWithinBox_0")]
+		[Doc(nameof(DocStrings.QaWithinBox_0))]
 		public QaWithinBox(
-			[Doc("QaWithinBox_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaWithinBox_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaWithinBox_xMin")] double xMin,
-			[Doc("QaWithinBox_yMin")] double yMin,
-			[Doc("QaWithinBox_xMax")] double xMax,
-			[Doc("QaWithinBox_yMax")] double yMax,
-			[Doc("QaWithinBox_reportOnlyOutsideParts")]
+			[Doc(nameof(DocStrings.QaWithinBox_xMin))] double xMin,
+			[Doc(nameof(DocStrings.QaWithinBox_yMin))] double yMin,
+			[Doc(nameof(DocStrings.QaWithinBox_xMax))] double xMax,
+			[Doc(nameof(DocStrings.QaWithinBox_yMax))] double yMax,
+			[Doc(nameof(DocStrings.QaWithinBox_reportOnlyOutsideParts))]
 			bool reportOnlyOutsideParts)
 			: base((ITable) featureClass)
 		{

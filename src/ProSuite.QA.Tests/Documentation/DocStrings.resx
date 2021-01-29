@@ -4738,4 +4738,55 @@ A sql-constraint can be provided to this feature class.</value>
     <value>Area feature class. Errors found that lie within any feature of 'IgnoreArea' are not reported.
 A sql-constraint can be provided to this feature class.</value>
   </data>
+  <data name="QaGroupConstraints_minDistinctCount" xml:space="preserve">
+    <value>The minimum number of distinct values returned from 'distinctExpression', per group value defined by 'groupByExpression'</value>
+  </data>
+  <data name="QaLineIntersectZ_MaximumZDifferenceExpression" xml:space="preserve">
+    <value>The maximally allowed z-Difference as (feature-dependent)expression
+Upper feature is aliased as "U", lower feature as "L"
+Example: U.ZDiff + L.ZDiff</value>
+  </data>
+  <data name="QaLineIntersectZ_MinimumZDifferenceExpression" xml:space="preserve">
+    <value>The minimally allowed z-Difference as (feature-dependent)expression
+Upper feature is aliased as "U", lower feature as "L"
+Example: U.ZDiff + L.ZDiff</value>
+  </data>
+  <data name="QaNotNear_JunctionCoincidenceTolerance" xml:space="preserve">
+    <value>If set, the tolerance that 2 junction points are considered equal. If not set: tolerance of featureclass.</value>
+  </data>
+  <data name="QaPartCoincidenceSelf_7" xml:space="preserve">
+    <value>Find line sections longer than a specified minimum length in 'featureClasses', where 2 non-coincident lines lie nearer than 'near', but are not coincident. The minimum length can be defined separately for line pairs that are connected ('connectedMinLengthExpressions') or disjoint ('disjointMinLengthExpressions'). A coincidence tolerance can be specified to indicate a maximum allowed offset between the lines at which they are still considered to be coincident.
+
+Remark: All feature classes in 'featureClasses' must have the same spatial reference.</value>
+  </data>
+  <data name="QaSchemaSpatialReference_2" xml:space="preserve">
+    <value>Checks if the spatial reference of 'featureClass' is exactly (including domain, tolerance and resolution) equal to the spatial reference of 'referenceFeatureClass'.</value>
+  </data>
+  <data name="QaSchemaSpatialReference_3" xml:space="preserve">
+    <value>Checks if the spatial reference of 'featureClass' is exactly (including domain, tolerance and resolution) equal to the spatial reference defined in 'spatialReferenceXml' string.</value>
+  </data>
+  <data name="QaZDifferenceOther_2" xml:space="preserve">
+    <value>Finds features where the Z difference to another feature is not between 'minimumZDifference' and 'maximumZDifference'</value>
+  </data>
+  <data name="QaZDifferenceOther_3" xml:space="preserve">
+    <value>Finds features where the Z difference to features from a list of other feature classes is not between 'minimumZDifference' and 'maximumZDifference'</value>
+  </data>
+  <data name="QaZDifferenceOther_maximumZDifference" xml:space="preserve">
+    <value>maximum allowed Z-Difference. Remark: If 'MaximumZDifferenceExpression' is set, this value is not used.</value>
+  </data>
+  <data name="QaZDifferenceOther_minimumZDifference" xml:space="preserve">
+    <value>minimum allowed Z-Difference. Remark: If 'MinimumZDifferenceExpression' is set, this value is not used.</value>
+  </data>
+  <data name="QaZDifferenceSelf_2" xml:space="preserve">
+    <value>Finds features where the Z difference to another feature is not between 'minimumZDifference' and 'maximumZDifference'</value>
+  </data>
+  <data name="QaZDifferenceSelf_3" xml:space="preserve">
+    <value>Finds features where the Z difference to another feature within a list of feature classesis not between 'minimumZDifference' and 'maximumZDifference'</value>
+  </data>
+  <data name="QaZDifferenceSelf_maximumZDifference" xml:space="preserve">
+    <value>maximum allowed Z-Difference. Remark: If 'MaximumZDifferenceExpression' is set, this value is not used.</value>
+  </data>
+  <data name="QaZDifferenceSelf_minimumZDifference" xml:space="preserve">
+    <value>minimum allowed Z-Difference. Remark: If 'MinimumZDifferenceExpression' is set, this value is not used.</value>
+  </data>
 </root>

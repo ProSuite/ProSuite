@@ -34,9 +34,9 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaVertexCoincidence_0")]
+		[Doc(nameof(DocStrings.QaVertexCoincidence_0))]
 		public QaVertexCoincidence(
-			[Doc("QaVertexCoincidence_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaVertexCoincidence_featureClass))] [NotNull]
 			IFeatureClass featureClass)
 			: base((ITable) featureClass)
 		{
@@ -55,7 +55,7 @@ namespace ProSuite.QA.Tests
 			UpdateSearchDistance();
 		}
 
-		[Doc("QaVertexCoincidence_PointTolerance")]
+		[Doc(nameof(DocStrings.QaVertexCoincidence_PointTolerance))]
 		[TestParameter(_defaultUseXyTolerance)]
 		public double PointTolerance
 		{
@@ -67,7 +67,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaVertexCoincidence_EdgeTolerance")]
+		[Doc(nameof(DocStrings.QaVertexCoincidence_EdgeTolerance))]
 		[TestParameter(_defaultUseXyTolerance)]
 		public double EdgeTolerance
 		{
@@ -79,7 +79,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaVertexCoincidence_RequireVertexOnNearbyEdge")]
+		[Doc(nameof(DocStrings.QaVertexCoincidence_RequireVertexOnNearbyEdge))]
 		[TestParameter(_defaultRequireVertexOnNearbyEdge)]
 		public bool RequireVertexOnNearbyEdge
 		{
@@ -87,7 +87,7 @@ namespace ProSuite.QA.Tests
 			set { _vertexCoincidenceChecker.RequireVertexOnNearbyEdge = value; }
 		}
 
-		[Doc("QaVertexCoincidence_CoincidenceTolerance")]
+		[Doc(nameof(DocStrings.QaVertexCoincidence_CoincidenceTolerance))]
 		[TestParameter(0)]
 		public double CoincidenceTolerance
 		{
@@ -95,7 +95,7 @@ namespace ProSuite.QA.Tests
 			set { _vertexCoincidenceChecker.CoincidenceTolerance = value; }
 		}
 
-		[Doc("QaVertexCoincidence_Is3D")]
+		[Doc(nameof(DocStrings.QaVertexCoincidence_Is3D))]
 		[TestParameter(_defaultIs3D)]
 		public bool Is3D
 		{
@@ -103,7 +103,7 @@ namespace ProSuite.QA.Tests
 			set { _vertexCoincidenceChecker.Is3D = value; }
 		}
 
-		[Doc("QaVertexCoincidence_ZTolerance")]
+		[Doc(nameof(DocStrings.QaVertexCoincidence_ZTolerance))]
 		[TestParameter(0)]
 		public double ZTolerance
 		{
@@ -111,7 +111,7 @@ namespace ProSuite.QA.Tests
 			set { _vertexCoincidenceChecker.ZTolerance = value; }
 		}
 
-		[Doc("QaVertexCoincidence_ZCoincidenceTolerance")]
+		[Doc(nameof(DocStrings.QaVertexCoincidence_ZCoincidenceTolerance))]
 		[TestParameter(0)]
 		public double ZCoincidenceTolerance
 		{
@@ -119,7 +119,7 @@ namespace ProSuite.QA.Tests
 			set { _vertexCoincidenceChecker.ZCoincidenceTolerance = value; }
 		}
 
-		[Doc("QaVertexCoincidence_ReportCoordinates")]
+		[Doc(nameof(DocStrings.QaVertexCoincidence_ReportCoordinates))]
 		[TestParameter]
 		public bool ReportCoordinates
 		{

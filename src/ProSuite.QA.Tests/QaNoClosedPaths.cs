@@ -36,9 +36,9 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaNoClosedPaths_0")]
+		[Doc(nameof(DocStrings.QaNoClosedPaths_0))]
 		public QaNoClosedPaths(
-			[Doc("QaNoClosedPaths_polylineClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaNoClosedPaths_polylineClass))] [NotNull]
 			IFeatureClass polyLineClass)
 			: base((ITable) polyLineClass)
 		{

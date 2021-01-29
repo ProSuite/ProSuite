@@ -51,9 +51,9 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMpSinglePartFootprint_0")]
+		[Doc(nameof(DocStrings.QaMpSinglePartFootprint_0))]
 		public QaMpSinglePartFootprint(
-			[Doc("QaMpSinglePartFootprint_multiPatchClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMpSinglePartFootprint_multiPatchClass))] [NotNull]
 			IFeatureClass
 				multiPatchClass)
 			: base((ITable) multiPatchClass)
@@ -76,7 +76,7 @@ namespace ProSuite.QA.Tests
 
 		[UsedImplicitly]
 		[TestParameter(_defaultResolutionFactor)]
-		[Doc("QaMpSinglePartFootprint_ResolutionFactor")]
+		[Doc(nameof(DocStrings.QaMpSinglePartFootprint_ResolutionFactor))]
 		public double ResolutionFactor
 		{
 			get { return _resolutionFactor; }

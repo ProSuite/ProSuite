@@ -57,17 +57,17 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaSchemaFieldAliases_0")]
+		[Doc(nameof(DocStrings.QaSchemaFieldAliases_0))]
 		public QaSchemaFieldAliases(
-			[Doc("QaSchemaFieldAliases_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaFieldAliases_table))] [NotNull]
 			ITable table,
-			[Doc("QaSchemaFieldAliases_maximumLength")]
+			[Doc(nameof(DocStrings.QaSchemaFieldAliases_maximumLength))]
 			int maximumLength,
-			[Doc("QaSchemaFieldAliases_expectedCase")]
+			[Doc(nameof(DocStrings.QaSchemaFieldAliases_expectedCase))]
 			ExpectedCase expectedCase,
-			[Doc("QaSchemaFieldAliases_requireUniqueAliasNames")]
+			[Doc(nameof(DocStrings.QaSchemaFieldAliases_requireUniqueAliasNames))]
 			bool requireUniqueAliasNames,
-			[Doc("QaSchemaFieldAliases_allowCustomSystemFieldAlias")]
+			[Doc(nameof(DocStrings.QaSchemaFieldAliases_allowCustomSystemFieldAlias))]
 			bool
 				allowCustomSystemFieldAlias)
 			: this(table, maximumLength, expectedCase, requireUniqueAliasNames,
@@ -75,20 +75,20 @@ namespace ProSuite.QA.Tests
 			       // ReSharper disable once IntroduceOptionalParameters.Global
 			       ExpectedStringDifference.Any) { }
 
-		[Doc("QaSchemaFieldAliases_0")]
+		[Doc(nameof(DocStrings.QaSchemaFieldAliases_0))]
 		public QaSchemaFieldAliases(
-			[Doc("QaSchemaFieldAliases_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaFieldAliases_table))] [NotNull]
 			ITable table,
-			[Doc("QaSchemaFieldAliases_maximumLength")]
+			[Doc(nameof(DocStrings.QaSchemaFieldAliases_maximumLength))]
 			int maximumLength,
-			[Doc("QaSchemaFieldAliases_expectedCase")]
+			[Doc(nameof(DocStrings.QaSchemaFieldAliases_expectedCase))]
 			ExpectedCase expectedCase,
-			[Doc("QaSchemaFieldAliases_requireUniqueAliasNames")]
+			[Doc(nameof(DocStrings.QaSchemaFieldAliases_requireUniqueAliasNames))]
 			bool requireUniqueAliasNames,
-			[Doc("QaSchemaFieldAliases_allowCustomSystemFieldAlias")]
+			[Doc(nameof(DocStrings.QaSchemaFieldAliases_allowCustomSystemFieldAlias))]
 			bool
 				allowCustomSystemFieldAlias,
-			[Doc("QaSchemaFieldAliases_expectedDifference")]
+			[Doc(nameof(DocStrings.QaSchemaFieldAliases_expectedDifference))]
 			ExpectedStringDifference
 				expectedDifference)
 			: base(table)

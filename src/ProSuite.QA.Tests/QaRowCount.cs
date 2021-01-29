@@ -42,11 +42,11 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaRowCount_0")]
+		[Doc(nameof(DocStrings.QaRowCount_0))]
 		public QaRowCount(
-			[Doc("QaRowCount_table")] [NotNull] ITable table,
-			[Doc("QaRowCount_minimumRowCount")] int minimumRowCount,
-			[Doc("QaRowCount_maximumRowCount")] int maximumRowCount)
+			[Doc(nameof(DocStrings.QaRowCount_table))] [NotNull] ITable table,
+			[Doc(nameof(DocStrings.QaRowCount_minimumRowCount))] int minimumRowCount,
+			[Doc(nameof(DocStrings.QaRowCount_maximumRowCount))] int maximumRowCount)
 			: base(new[] {table})
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
@@ -56,14 +56,14 @@ namespace ProSuite.QA.Tests
 			_maximumRowCount = maximumRowCount;
 		}
 
-		[Doc("QaRowCount_1")]
+		[Doc(nameof(DocStrings.QaRowCount_1))]
 		public QaRowCount(
-			[Doc("QaRowCount_table")] [NotNull] ITable table,
-			[Doc("QaRowCount_referenceTables")] [NotNull]
+			[Doc(nameof(DocStrings.QaRowCount_table))] [NotNull] ITable table,
+			[Doc(nameof(DocStrings.QaRowCount_referenceTables))] [NotNull]
 			IList<ITable> referenceTables,
-			[Doc("QaRowCount_minimumValueOffset")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaRowCount_minimumValueOffset))] [CanBeNull]
 			string minimumValueOffset,
-			[Doc("QaRowCount_maximumValueOffset")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaRowCount_maximumValueOffset))] [CanBeNull]
 			string maximumValueOffset)
 			: base(Union(new[] {table}, referenceTables))
 		{

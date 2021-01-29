@@ -48,22 +48,22 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaRouteMeasuresUnique_0")]
+		[Doc(nameof(DocStrings.QaRouteMeasuresUnique_0))]
 		public QaRouteMeasuresUnique(
-			[Doc("QaRouteMeasuresUnique_polylineClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaRouteMeasuresUnique_polylineClass))] [NotNull]
 			IFeatureClass
 				polylineClass,
-			[Doc("QaRouteMeasuresUnique_routeIdField")] [NotNull]
+			[Doc(nameof(DocStrings.QaRouteMeasuresUnique_routeIdField))] [NotNull]
 			string
 				routeIdField)
 			: this(new[] {polylineClass}, new[] {routeIdField}) { }
 
-		[Doc("QaRouteMeasuresUnique_1")]
+		[Doc(nameof(DocStrings.QaRouteMeasuresUnique_1))]
 		public QaRouteMeasuresUnique(
-			[Doc("QaRouteMeasuresUnique_polylineClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaRouteMeasuresUnique_polylineClasses))] [NotNull]
 			ICollection<IFeatureClass>
 				polylineClasses,
-			[Doc("QaRouteMeasuresUnique_routeIdFields")] [NotNull]
+			[Doc(nameof(DocStrings.QaRouteMeasuresUnique_routeIdFields))] [NotNull]
 			IEnumerable<string>
 				routeIdFields)
 			: base(CastToTables(polylineClasses))

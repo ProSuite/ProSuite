@@ -307,30 +307,30 @@ namespace ProSuite.QA.Tests
 		private readonly Dictionary<Group, MultipartGroupEnds> _multiplePartsCandidates =
 			new Dictionary<Group, MultipartGroupEnds>();
 
-		[Doc("QaGroupConnected_0")]
+		[Doc(nameof(DocStrings.QaGroupConnected_0))]
 		public QaGroupConnected(
-			[Doc("QaGroupConnected_polylineClass")]
+			[Doc(nameof(DocStrings.QaGroupConnected_polylineClass))]
 			IFeatureClass polylineClass,
-			[Doc("QaGroupConnected_groupBy")] [NotNull]
+			[Doc(nameof(DocStrings.QaGroupConnected_groupBy))] [NotNull]
 			IList<string> groupBy,
-			[Doc("QaGroupConnected_allowedShape")] ShapeAllowed allowedShape)
+			[Doc(nameof(DocStrings.QaGroupConnected_allowedShape))] ShapeAllowed allowedShape)
 			: this(new[] {polylineClass}, groupBy, null, allowedShape,
 			       _defaultErrorReporting, -1) { }
 
-		[Doc("QaGroupConnected_1")]
+		[Doc(nameof(DocStrings.QaGroupConnected_1))]
 		public QaGroupConnected(
-			[Doc("QaGroupConnected_polylineClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaGroupConnected_polylineClasses))] [NotNull]
 			IList<IFeatureClass>
 				polylineClasses,
-			[Doc("QaGroupConnected_groupBy")] [NotNull]
+			[Doc(nameof(DocStrings.QaGroupConnected_groupBy))] [NotNull]
 			IList<string> groupBy,
-			[Doc("QaGroupConnected_valueSeparator")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaGroupConnected_valueSeparator))] [CanBeNull]
 			string valueSeparator,
-			[Doc("QaGroupConnected_allowedShape")] ShapeAllowed allowedShape,
-			[Doc("QaGroupConnected_errorReporting")]
+			[Doc(nameof(DocStrings.QaGroupConnected_allowedShape))] ShapeAllowed allowedShape,
+			[Doc(nameof(DocStrings.QaGroupConnected_errorReporting))]
 			[DefaultValue(GroupErrorReporting.ShortestGaps)]
 			GroupErrorReporting errorReporting,
-			[Doc("QaGroupConnected_minimumErrorConnectionLineLength")]
+			[Doc(nameof(DocStrings.QaGroupConnected_minimumErrorConnectionLineLength))]
 			double
 				minimumErrorConnectionLineLength)
 			: base(CastToTables((IEnumerable<IFeatureClass>) polylineClasses), groupBy)
@@ -351,27 +351,27 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(_defaultReportIndividualGaps)]
-		[Doc("QaGroupConnected_ReportIndividualGaps")]
+		[Doc(nameof(DocStrings.QaGroupConnected_ReportIndividualGaps))]
 		public bool ReportIndividualGaps { get; set; } = _defaultReportIndividualGaps;
 
 		[TestParameter(_defaultIgnoreGapsLongerThan)]
-		[Doc("QaGroupConnected_IgnoreGapsLongerThan")]
+		[Doc(nameof(DocStrings.QaGroupConnected_IgnoreGapsLongerThan))]
 		public double IgnoreGapsLongerThan { get; set; } = _defaultIgnoreGapsLongerThan;
 
 		// NOTE: currently not exposed as test parameter
 		//[TestParameter]
-		[Doc("QaGroupConnected_RecheckMultiplePartIssues")]
+		[Doc(nameof(DocStrings.QaGroupConnected_RecheckMultiplePartIssues))]
 		public bool RecheckMultiplePartIssues { get; set; }
 
 		[TestParameter(_defaultCompleteGroupsOutsideTestArea)]
-		[Doc("QaGroupConnected_CompleteGroupsOutsideTestArea")]
+		[Doc(nameof(DocStrings.QaGroupConnected_CompleteGroupsOutsideTestArea))]
 		public bool CompleteGroupsOutsideTestArea { get; set; } =
 			_defaultCompleteGroupsOutsideTestArea;
 
 		// Goal: a test factory that newly includes this test parameter should continue to use the same value that the was previously used (when no parameter value was stored for the factory), 
 		// until an explicit value is selected for the new parameter.
 		// --> the same value passed in constructor 0, which is used by factory (--> ReferToFirstPart).
-		[Doc("QaGroupConnected_errorReporting")]
+		[Doc(nameof(DocStrings.QaGroupConnected_errorReporting))]
 		[DefaultValue(_defaultErrorReporting)]
 		[PublicAPI]
 		public GroupErrorReporting ErrorReporting { get; set; }

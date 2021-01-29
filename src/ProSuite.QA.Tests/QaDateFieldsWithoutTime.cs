@@ -39,25 +39,25 @@ namespace ProSuite.QA.Tests
 
 		#region constructors
 
-		[Doc("QaDateFieldsWithoutTime_0")]
+		[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_0))]
 		public QaDateFieldsWithoutTime(
-			[Doc("QaDateFieldsWithoutTime_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_table))] [NotNull]
 			ITable table)
 			: this(table, GetAllDateFieldNames(table)) { }
 
-		[Doc("QaDateFieldsWithoutTime_1")]
+		[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_1))]
 		public QaDateFieldsWithoutTime(
-			[Doc("QaDateFieldsWithoutTime_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_table))] [NotNull]
 			ITable table,
-			[Doc("QaDateFieldsWithoutTime_dateFieldName")] [NotNull]
+			[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_dateFieldName))] [NotNull]
 			string dateFieldName)
 			: this(table, new[] {dateFieldName}) { }
 
-		[Doc("QaDateFieldsWithoutTime_2")]
+		[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_2))]
 		public QaDateFieldsWithoutTime(
-			[Doc("QaDateFieldsWithoutTime_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_table))] [NotNull]
 			ITable table,
-			[Doc("QaDateFieldsWithoutTime_dateFieldNames")] [NotNull]
+			[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_dateFieldNames))] [NotNull]
 			IEnumerable<string>
 				dateFieldNames)
 			: base(table)

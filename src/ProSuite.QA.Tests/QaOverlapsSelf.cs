@@ -34,22 +34,22 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaOverlapsSelf_0")]
+		[Doc(nameof(DocStrings.QaOverlapsSelf_0))]
 		public QaOverlapsSelf(
-				[Doc("QaOverlapsSelf_featureClass")] IFeatureClass featureClass)
+				[Doc(nameof(DocStrings.QaOverlapsSelf_featureClass))] IFeatureClass featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, null) { }
 
-		[Doc("QaOverlapsSelf_1")]
+		[Doc(nameof(DocStrings.QaOverlapsSelf_1))]
 		public QaOverlapsSelf(
-				[Doc("QaOverlapsSelf_featureClasses")] IList<IFeatureClass> featureClasses)
+				[Doc(nameof(DocStrings.QaOverlapsSelf_featureClasses))] IList<IFeatureClass> featureClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClasses, null) { }
 
-		[Doc("QaOverlapsSelf_2")]
+		[Doc(nameof(DocStrings.QaOverlapsSelf_2))]
 		public QaOverlapsSelf(
-			[Doc("QaOverlapsSelf_featureClasses")] IList<IFeatureClass> featureClasses,
-			[Doc("QaOverlapsSelf_validRelationConstraint")]
+			[Doc(nameof(DocStrings.QaOverlapsSelf_featureClasses))] IList<IFeatureClass> featureClasses,
+			[Doc(nameof(DocStrings.QaOverlapsSelf_validRelationConstraint))]
 			string validRelationConstraint)
 			: base(featureClasses, esriSpatialRelEnum.esriSpatialRelOverlaps)
 		{
@@ -58,10 +58,10 @@ namespace ProSuite.QA.Tests
 				                              : null;
 		}
 
-		[Doc("QaOverlapsSelf_3")]
+		[Doc(nameof(DocStrings.QaOverlapsSelf_3))]
 		public QaOverlapsSelf(
-			[Doc("QaOverlapsSelf_featureClass")] IFeatureClass featureClass,
-			[Doc("QaOverlapsSelf_validRelationConstraint")]
+			[Doc(nameof(DocStrings.QaOverlapsSelf_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaOverlapsSelf_validRelationConstraint))]
 			string validRelationConstraint)
 			: this(new[] {featureClass}, validRelationConstraint) { }
 

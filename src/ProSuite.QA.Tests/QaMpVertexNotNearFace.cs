@@ -79,17 +79,17 @@ namespace ProSuite.QA.Tests
 		private IList<QueryFilterHelper> _filterHelpers;
 		private readonly IEnvelope _envelopeTemplate = new EnvelopeClass();
 
-		[Doc("QaMpVertexNotNearFace_0")]
+		[Doc(nameof(DocStrings.QaMpVertexNotNearFace_0))]
 		public QaMpVertexNotNearFace(
-			[Doc("QaMpVertexNotNearFace_multiPatchClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaMpVertexNotNearFace_multiPatchClass))] [NotNull]
 			IFeatureClass
 				multiPatchClass,
-			[Doc("QaMpVertexNotNearFace_vertexClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaMpVertexNotNearFace_vertexClasses))] [NotNull]
 			IList<IFeatureClass>
 				vertexClasses,
-			[Doc("QaMpVertexNotNearFace_minimumDistanceAbove")]
+			[Doc(nameof(DocStrings.QaMpVertexNotNearFace_minimumDistanceAbove))]
 			double minimumDistanceAbove,
-			[Doc("QaMpVertexNotNearFace_minimumDistanceBelow")]
+			[Doc(nameof(DocStrings.QaMpVertexNotNearFace_minimumDistanceBelow))]
 			double minimumDistanceBelow)
 			: base(
 				CastToTables(Union(new[] {multiPatchClass}, vertexClasses)
@@ -111,35 +111,35 @@ namespace ProSuite.QA.Tests
 			_zSrTolerance = srt.ZTolerance;
 		}
 
-		[Doc("QaMpVertexNotNearFace_CoplanarityTolerance")]
+		[Doc(nameof(DocStrings.QaMpVertexNotNearFace_CoplanarityTolerance))]
 		[TestParameter]
 		public double CoplanarityTolerance { get; set; }
 
-		[Doc("QaMpVertexNotNearFace_ReportNonCoplanarity")]
+		[Doc(nameof(DocStrings.QaMpVertexNotNearFace_ReportNonCoplanarity))]
 		[TestParameter(_defaultReportNonCoplanarity)]
 		public bool ReportNonCoplanarity { get; set; }
 
-		[Doc("QaMpVertexNotNearFace_IgnoreNonCoplanarFaces")]
+		[Doc(nameof(DocStrings.QaMpVertexNotNearFace_IgnoreNonCoplanarFaces))]
 		[TestParameter(_defaultIgnoreNonCoplanarFaces)]
 		public bool IgnoreNonCoplanarFaces { get; set; }
 
-		[Doc("QaMpVertexNotNearFace_VerifyWithinFeature")]
+		[Doc(nameof(DocStrings.QaMpVertexNotNearFace_VerifyWithinFeature))]
 		[TestParameter(_defaultVerifyWithinFeature)]
 		public bool VerifyWithinFeature { get; set; }
 
-		[Doc("QaMpVertexNotNearFace_PointCoincidence")]
+		[Doc(nameof(DocStrings.QaMpVertexNotNearFace_PointCoincidence))]
 		[TestParameter]
 		public double PointCoincidence { get; set; }
 
-		[Doc("QaMpVertexNotNearFace_EdgeCoincidence")]
+		[Doc(nameof(DocStrings.QaMpVertexNotNearFace_EdgeCoincidence))]
 		[TestParameter]
 		public double EdgeCoincidence { get; set; }
 
-		[Doc("QaMpVertexNotNearFace_PlaneCoincidence")]
+		[Doc(nameof(DocStrings.QaMpVertexNotNearFace_PlaneCoincidence))]
 		[TestParameter(_defaultPlaneCoincidence)]
 		public double PlaneCoincidence { get; set; }
 
-		[Doc("QaMpVertexNotNearFace_MinimumSlopeDegrees")]
+		[Doc(nameof(DocStrings.QaMpVertexNotNearFace_MinimumSlopeDegrees))]
 		[TestParameter]
 		public double MinimumSlopeDegrees
 		{

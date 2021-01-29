@@ -158,42 +158,42 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaEdgeMatchCrossingLines_0")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_0))]
 		public QaEdgeMatchCrossingLines(
-			[Doc("QaEdgeMatchCrossingLines_lineClass1")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_lineClass1))] [NotNull]
 			IFeatureClass
 				lineClass1,
-			[Doc("QaEdgeMatchCrossingLines_borderClass1")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_borderClass1))] [NotNull]
 			IFeatureClass
 				borderClass1,
-			[Doc("QaEdgeMatchCrossingLines_lineClass2")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_lineClass2))] [NotNull]
 			IFeatureClass
 				lineClass2,
-			[Doc("QaEdgeMatchCrossingLines_borderClass2")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_borderClass2))] [NotNull]
 			IFeatureClass
 				borderClass2,
-			[Doc("QaEdgeMatchCrossingLines_searchDistance")]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_searchDistance))]
 			double
 				searchDistance)
 			: this(new[] {lineClass1}, borderClass1,
 			       new[] {lineClass2}, borderClass2,
 			       searchDistance) { }
 
-		[Doc("QaEdgeMatchCrossingLines_1")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_1))]
 		public QaEdgeMatchCrossingLines(
-			[Doc("QaEdgeMatchCrossingLines_lineClasses1")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_lineClasses1))] [NotNull]
 			IList<IFeatureClass>
 				lineClasses1,
-			[Doc("QaEdgeMatchCrossingLines_borderClass1")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_borderClass1))] [NotNull]
 			IFeatureClass
 				borderClass1,
-			[Doc("QaEdgeMatchCrossingLines_lineClasses2")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_lineClasses2))] [NotNull]
 			IList<IFeatureClass>
 				lineClasses2,
-			[Doc("QaEdgeMatchCrossingLines_borderClass2")] [NotNull]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_borderClass2))] [NotNull]
 			IFeatureClass
 				borderClass2,
-			[Doc("QaEdgeMatchCrossingLines_searchDistance")]
+			[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_searchDistance))]
 			double
 				searchDistance)
 			: base(CastToTables(lineClasses1, new[] {borderClass1},
@@ -269,7 +269,7 @@ namespace ProSuite.QA.Tests
 				_defaultAllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled;
 		}
 
-		[Doc("QaEdgeMatchCrossingLines_MinimumErrorConnectionLineLength")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_MinimumErrorConnectionLineLength))]
 		[TestParameter(0)]
 		public double MinimumErrorConnectionLineLength
 		{
@@ -282,7 +282,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaEdgeMatchCrossingLines_MaximumEndPointConnectionDistance")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_MaximumEndPointConnectionDistance))]
 		[TestParameter(0)]
 		public double MaximumEndPointConnectionDistance
 		{
@@ -295,7 +295,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaEdgeMatchCrossingLines_LineClass1BorderMatchCondition")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_LineClass1BorderMatchCondition))]
 		[TestParameter]
 		public string LineClass1BorderMatchCondition
 		{
@@ -307,7 +307,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaEdgeMatchCrossingLines_LineClass2BorderMatchCondition")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_LineClass2BorderMatchCondition))]
 		[TestParameter]
 		public string LineClass2BorderMatchCondition
 		{
@@ -319,7 +319,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaEdgeMatchCrossingLines_CrossingLineMatchCondition")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_CrossingLineMatchCondition))]
 		[TestParameter]
 		public string CrossingLineMatchCondition
 		{
@@ -331,7 +331,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaEdgeMatchCrossingLines_CrossingLineAttributeConstraint")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_CrossingLineAttributeConstraint))]
 		[TestParameter]
 		public string CrossingLineAttributeConstraint
 		{
@@ -343,7 +343,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaEdgeMatchCrossingLines_IsCrossingLineAttributeConstraintSymmetric")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_IsCrossingLineAttributeConstraintSymmetric))]
 		[TestParameter(_defaultIsCrossingLineAttributeConstraintSymmetric)]
 		public bool IsCrossingLineAttributeConstraintSymmetric
 		{
@@ -356,7 +356,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		// NOTE blank is not supported as field separator (as it may be used as multi-value separator)
-		[Doc("QaEdgeMatchCrossingLines_CrossingLineEqualAttributes")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_CrossingLineEqualAttributes))]
 		[TestParameter]
 		public string CrossingLineEqualAttributes
 		{
@@ -368,7 +368,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[Doc("QaEdgeMatchCrossingLines_CrossingLineEqualAttributeOptions")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_CrossingLineEqualAttributeOptions))]
 		[TestParameter]
 		public IList<string> CrossingLineEqualAttributeOptions
 		{
@@ -381,59 +381,58 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter(false)]
-		[Doc("QaEdgeMatchCrossingLines_ReportIndividualAttributeConstraintViolations")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_ReportIndividualAttributeConstraintViolations))]
 		public bool ReportIndividualAttributeConstraintViolations { get; set; }
 
-		[Doc("QaEdgeMatchCrossingLines_CoincidenceTolerance")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_CoincidenceTolerance))]
 		[TestParameter(_defaultCoincidenceTolerance)]
 		public double CoincidenceTolerance { get; set; }
 
-		[Doc("QaEdgeMatchCrossingLines_AllowNoFeatureWithinSearchDistance")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_AllowNoFeatureWithinSearchDistance))]
 		[TestParameter(_defaultAllowNoFeatureWithinSearchDistance)]
 		public bool AllowNoFeatureWithinSearchDistance { get; set; }
 
-		[Doc(
-				"QaEdgeMatchCrossingLines_IgnoreAttributeConstraintsIfThreeOrMoreConnected"
-			)
-		]
+		[Doc(nameof(DocStrings.
+				QaEdgeMatchCrossingLines_IgnoreAttributeConstraintsIfThreeOrMoreConnected
+		))]
 		[TestParameter(_defaultIgnoreAttributesConstraintsIfThreeOrMoreConnected)]
 		public bool IgnoreAttributeConstraintsIfThreeOrMoreConnected { get; set; }
 
-		[Doc(
-			"QaEdgeMatchCrossingLines_AllowNoFeatureWithinSearchDistanceIfConnectedOnSameSide"
-		)]
+		[Doc(nameof(DocStrings.
+			QaEdgeMatchCrossingLines_AllowNoFeatureWithinSearchDistanceIfConnectedOnSameSide
+		))]
 		[TestParameter(_defaultAllowNoFeatureWithinSearchDistanceIfConnectedOnSameSide
 		)]
 		public bool AllowNoFeatureWithinSearchDistanceIfConnectedOnSameSide { get; set; }
 
-		[Doc(
-			"QaEdgeMatchCrossingLines_AllowDisjointCandidateFeatureIfBordersAreNotCoincident"
-		)]
+		[Doc(nameof(DocStrings.
+			QaEdgeMatchCrossingLines_AllowDisjointCandidateFeatureIfBordersAreNotCoincident
+		))]
 		[TestParameter(_defaultAllowDisjointCandidateFeatureIfBordersAreNotCoincident)
 		]
 		public bool AllowDisjointCandidateFeatureIfBordersAreNotCoincident { get; set; }
 
-		[Doc(
-			"QaEdgeMatchCrossingLines_IgnoreNeighborLinesWithBorderConnectionOutsideSearchDistance"
-		)]
+		[Doc(nameof(DocStrings.
+			QaEdgeMatchCrossingLines_IgnoreNeighborLinesWithBorderConnectionOutsideSearchDistance
+		))]
 		[TestParameter(
 			_defaultIgnoreNeighborLinesWithBorderConnectionOutsideSearchDistance)
 		]
 		public bool IgnoreNeighborLinesWithBorderConnectionOutsideSearchDistance { get; set; }
 
-		[Doc(
-			"QaEdgeMatchCrossingLines_AllowEndPointsConnectingToInteriorOfValidNeighborLine"
-		)]
+		[Doc(nameof(DocStrings.
+			QaEdgeMatchCrossingLines_AllowEndPointsConnectingToInteriorOfValidNeighborLine
+		))]
 		[TestParameter(_defaultAllowEndPointsConnectingToInteriorOfValidNeighborLine)]
 		public bool AllowEndPointsConnectingToInteriorOfValidNeighborLine { get; set; }
 
-		[Doc("QaEdgeMatchCrossingLines_IgnoreEndPointsOfBorderingLines")]
+		[Doc(nameof(DocStrings.QaEdgeMatchCrossingLines_IgnoreEndPointsOfBorderingLines))]
 		[TestParameter(_defaultIgnoreEndPointsOfBorderingLines)]
 		public bool IgnoreEndPointsOfBorderingLines { get; set; }
 
-		[Doc(
-			"QaEdgeMatchCrossingLines_AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled"
-		)]
+		[Doc(nameof(DocStrings.
+			QaEdgeMatchCrossingLines_AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled
+		))]
 		[TestParameter(
 			_defaultAllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled)]
 		public bool AllowDisjointCandidateFeatureIfAttributeConstraintsAreFulfilled { get; set; }

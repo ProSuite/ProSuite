@@ -52,21 +52,21 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaSchemaFieldDomainCodedValues_0")]
+		[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_0))]
 		public QaSchemaFieldDomainCodedValues(
-			[Doc("QaSchemaFieldDomainCodedValues_table")] [NotNull]
+			[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_table))] [NotNull]
 			ITable table,
-			[Doc("QaSchemaFieldDomainCodedValues_maximumNameLength")]
+			[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_maximumNameLength))]
 			int maximumNameLength,
-			[Doc("QaSchemaFieldDomainCodedValues_uniqueNamesConstraint")]
+			[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_uniqueNamesConstraint))]
 			UniqueStringsConstraint
 				uniqueNamesConstraint,
-			[Doc("QaSchemaFieldDomainCodedValues_minimumValueCount")]
+			[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_minimumValueCount))]
 			int minimumValueCount,
-			[Doc("QaSchemaFieldDomainCodedValues_minimumNonEqualNameValueCount")]
+			[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_minimumNonEqualNameValueCount))]
 			int
 				minimumNonEqualNameValueCount,
-			[Doc("QaSchemaFieldDomainCodedValues_allowEmptyName")]
+			[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_allowEmptyName))]
 			bool allowEmptyName)
 			: base(table)
 		{

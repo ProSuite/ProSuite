@@ -37,19 +37,19 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMinIntersect_0")]
+		[Doc(nameof(DocStrings.QaMinIntersect_0))]
 		public QaMinIntersect(
-			[Doc("QaMinIntersect_polygonClasses")] IList<IFeatureClass> polygonClasses,
-			[Doc("QaMinIntersect_limit")] double limit)
+			[Doc(nameof(DocStrings.QaMinIntersect_polygonClasses))] IList<IFeatureClass> polygonClasses,
+			[Doc(nameof(DocStrings.QaMinIntersect_limit))] double limit)
 			: base(polygonClasses, esriSpatialRelEnum.esriSpatialRelIntersects)
 		{
 			_limit = limit;
 		}
 
-		[Doc("QaMinIntersect_1")]
+		[Doc(nameof(DocStrings.QaMinIntersect_1))]
 		public QaMinIntersect(
-			[Doc("QaMinIntersect_polygonClass")] IFeatureClass polygonClass,
-			[Doc("QaMinIntersect_limit")] double limit)
+			[Doc(nameof(DocStrings.QaMinIntersect_polygonClass))] IFeatureClass polygonClass,
+			[Doc(nameof(DocStrings.QaMinIntersect_limit))] double limit)
 			: this(new[] {polygonClass}, limit) { }
 
 		protected override int FindErrors(IRow row1, int tableIndex1,

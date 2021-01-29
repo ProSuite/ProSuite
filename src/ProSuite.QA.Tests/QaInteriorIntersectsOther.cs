@@ -38,39 +38,39 @@ namespace ProSuite.QA.Tests
 
 		#region Constructors
 
-		[Doc("QaInteriorIntersectsOther_0")]
+		[Doc(nameof(DocStrings.QaInteriorIntersectsOther_0))]
 		public QaInteriorIntersectsOther(
-			[Doc("QaInteriorIntersectsOther_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaInteriorIntersectsOther_relatedClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_relatedClass))] [NotNull]
 			IFeatureClass relatedClass)
 			: this(featureClass, relatedClass, string.Empty) { }
 
-		[Doc("QaInteriorIntersectsOther_1")]
+		[Doc(nameof(DocStrings.QaInteriorIntersectsOther_1))]
 		public QaInteriorIntersectsOther(
-			[Doc("QaInteriorIntersectsOther_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc("QaInteriorIntersectsOther_relatedClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_relatedClass))] [NotNull]
 			IFeatureClass relatedClass,
-			[Doc("QaInteriorIntersectsOther_constraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_constraint))] [CanBeNull]
 			string constraint)
 			: this(new[] {featureClass}, new[] {relatedClass}, constraint) { }
 
-		[Doc("QaInteriorIntersectsOther_2")]
+		[Doc(nameof(DocStrings.QaInteriorIntersectsOther_2))]
 		public QaInteriorIntersectsOther(
-			[Doc("QaInteriorIntersectsOther_featureClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_featureClasses))] [NotNull]
 			IList<IFeatureClass> featureClasses,
-			[Doc("QaInteriorIntersectsOther_relatedClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_relatedClasses))] [NotNull]
 			IList<IFeatureClass> relatedClasses)
 			: this(featureClasses, relatedClasses, string.Empty) { }
 
-		[Doc("QaInteriorIntersectsOther_3")]
+		[Doc(nameof(DocStrings.QaInteriorIntersectsOther_3))]
 		public QaInteriorIntersectsOther(
-			[Doc("QaInteriorIntersectsOther_featureClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_featureClasses))] [NotNull]
 			IList<IFeatureClass> featureClasses,
-			[Doc("QaInteriorIntersectsOther_relatedClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_relatedClasses))] [NotNull]
 			IList<IFeatureClass> relatedClasses,
-			[Doc("QaInteriorIntersectsOther_constraint")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaInteriorIntersectsOther_constraint))] [CanBeNull]
 			string constraint)
 			: base(featureClasses, relatedClasses, _intersectionMatrix)
 		{
@@ -82,7 +82,7 @@ namespace ProSuite.QA.Tests
 		#endregion
 
 		[TestParameter]
-		[Doc("QaInteriorIntersectsOther_ValidIntersectionGeometryConstraint")]
+		[Doc(nameof(DocStrings.QaInteriorIntersectsOther_ValidIntersectionGeometryConstraint))]
 		public string ValidIntersectionGeometryConstraint
 		{
 			get { return _validIntersectionGeometryConstraint?.Constraint; }
@@ -95,7 +95,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaInteriorIntersectsOther_IgnoreArea")]
+		[Doc(nameof(DocStrings.QaInteriorIntersectsOther_IgnoreArea))]
 		public IFeatureClass IgnoreArea
 		{
 			get { return _ignoreAreaProcessor?.FeatureClass; }

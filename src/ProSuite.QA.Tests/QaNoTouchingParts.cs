@@ -40,9 +40,9 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaNoTouchingParts_0")]
+		[Doc(nameof(DocStrings.QaNoTouchingParts_0))]
 		public QaNoTouchingParts(
-			[Doc("QaNoTouchingParts_featureClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaNoTouchingParts_featureClass))] [NotNull]
 			IFeatureClass featureClass)
 			: base((ITable) featureClass)
 		{

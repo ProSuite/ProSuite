@@ -13,24 +13,24 @@ namespace ProSuite.QA.Tests
 	[InternallyUsedTest]
 	public class QaRelationConstraint : QaConstraint
 	{
-		[Doc("QaRelationConstraint_0")]
+		[Doc(nameof(DocStrings.QaRelationConstraint_0))]
 		public QaRelationConstraint(
-			[Doc("QaRelationConstraint_table")] ITable table,
-			[Doc("QaRelationConstraint_constraint")]
+			[Doc(nameof(DocStrings.QaRelationConstraint_table))] ITable table,
+			[Doc(nameof(DocStrings.QaRelationConstraint_constraint))]
 			string constraint,
-			[Doc("QaRelationConstraint_relatedTables")]
+			[Doc(nameof(DocStrings.QaRelationConstraint_relatedTables))]
 			IList<ITable> relatedTables)
 			: base(table, constraint)
 		{
 			AddRelatedTables(table, relatedTables);
 		}
 
-		[Doc("QaRelationConstraint_1")]
+		[Doc(nameof(DocStrings.QaRelationConstraint_1))]
 		public QaRelationConstraint(
-			[Doc("QaRelationConstraint_table")] ITable table,
-			[Doc("QaRelationConstraint_constraints")]
+			[Doc(nameof(DocStrings.QaRelationConstraint_table))] ITable table,
+			[Doc(nameof(DocStrings.QaRelationConstraint_constraints))]
 			IList<ConstraintNode> constraints,
-			[Doc("QaRelationConstraint_relatedTables")]
+			[Doc(nameof(DocStrings.QaRelationConstraint_relatedTables))]
 			IList<ITable> relatedTables)
 			: base(table, constraints)
 		{

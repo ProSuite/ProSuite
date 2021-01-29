@@ -57,27 +57,27 @@ namespace ProSuite.QA.Tests
 
 		#region Constructors
 
-		[Doc("QaConstraint_0")]
+		[Doc(nameof(DocStrings.QaConstraint_0))]
 		public QaConstraint(
-				[Doc("QaConstraint_table")] [NotNull] ITable table,
-				[Doc("QaConstraint_constraint")] string constraint)
+				[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull] ITable table,
+				[Doc(nameof(DocStrings.QaConstraint_constraint))] string constraint)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(table, constraint, 0) { }
 
-		[Doc("QaConstraint_1")]
+		[Doc(nameof(DocStrings.QaConstraint_1))]
 		[InternallyUsedTest]
 		public QaConstraint(
-				[Doc("QaConstraint_table")] [NotNull] ITable table,
-				[Doc("QaConstraint_constraints")] [NotNull]
+				[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull] ITable table,
+				[Doc(nameof(DocStrings.QaConstraint_constraints))] [NotNull]
 				IList<ConstraintNode> constraints)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(table, constraints, 0) { }
 
-		[Doc("QaConstraint_0")]
+		[Doc(nameof(DocStrings.QaConstraint_0))]
 		[InternallyUsedTest]
 		public QaConstraint(
-			[Doc("QaConstraint_table")] [NotNull] ITable table,
-			[Doc("QaConstraint_constraint")] string constraint,
+			[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull] ITable table,
+			[Doc(nameof(DocStrings.QaConstraint_constraint))] string constraint,
 			int errorDescriptionVersion)
 			: base(table)
 		{
@@ -87,11 +87,11 @@ namespace ProSuite.QA.Tests
 			_errorDescriptionVersion = errorDescriptionVersion;
 		}
 
-		[Doc("QaConstraint_1")]
+		[Doc(nameof(DocStrings.QaConstraint_1))]
 		[InternallyUsedTest]
 		public QaConstraint(
-			[Doc("QaConstraint_table")] [NotNull] ITable table,
-			[Doc("QaConstraint_constraints")] [NotNull]
+			[Doc(nameof(DocStrings.QaConstraint_table))] [NotNull] ITable table,
+			[Doc(nameof(DocStrings.QaConstraint_constraints))] [NotNull]
 			IList<ConstraintNode> constraints,
 			int errorDescriptionVersion)
 			: base(table)
