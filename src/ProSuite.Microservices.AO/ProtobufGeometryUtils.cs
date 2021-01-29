@@ -68,6 +68,8 @@ namespace ProSuite.Microservices.AO
 		{
 			if (shapeBuffer == null) return null;
 
+			if (shapeBuffer.FormatCase == ShapeMsg.FormatOneofCase.None) return null;
+
 			IGeometry result;
 
 			switch (shapeBuffer.FormatCase)

@@ -131,16 +131,14 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			return reshapedGeometries;
 		}
 
-		protected override void StoreReshapedGeometryCore(
+		protected override IEnumerable<IFeature> StoreReshapedGeometryCore(
 			IFeature feature,
 			IGeometry newGeometry,
 			NotificationCollection notifications)
 		{
 			if (! HasEndpointChanged(feature, newGeometry))
 			{
-				base.StoreReshapedGeometryCore(feature, newGeometry, notifications);
-
-				return;
+				return base.StoreReshapedGeometryCore(feature, newGeometry, notifications);
 			}
 
 			_msg.DebugFormat("Saving open jaw reshape on network feature {0}...",
@@ -149,12 +147,10 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			if (MoveLineEndJunction && NetworkFeatureFinder != null &&
 			    newGeometry.GeometryType == esriGeometryType.esriGeometryPolyline)
 			{
-				StoreOpenJawReshapeWithEndPointMove(feature, newGeometry, notifications);
+				return StoreOpenJawReshapeWithEndPointMove(feature, newGeometry, notifications);
 			}
-			else
-			{
-				StoreOpenJawReshape(feature, newGeometry);
-			}
+
+			return StoreOpenJawReshape(feature, newGeometry);
 		}
 
 		public override IDictionary<IGeometry, NotificationCollection>
@@ -186,7 +182,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			       ! GeometryUtils.AreEqual(originalPolyline.ToPoint, newPolyline.ToPoint);
 		}
 
-		public void StoreOpenJawReshapeWithEndPointMove(
+		public IEnumerable<IFeature> StoreOpenJawReshapeWithEndPointMove(
 			[NotNull] IFeature reshapedFeature,
 			[NotNull] IGeometry newGeometry,
 			[CanBeNull] NotificationCollection notifications)
@@ -204,6 +200,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			                                           notifications);
 
 			AddToRefreshArea(linearNetworkUpdater.RefreshEnvelope);
+
+			return linearNetworkUpdater.UpdatedFeatures;
 		}
 
 		/// <summary>
@@ -324,26 +322,27 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		#region Private methods for storing Y-Reshape
 
-		private void StoreOpenJawReshape([NotNull] IFeature feature,
-		                                 [NotNull] IGeometry newGeometry)
+		private IEnumerable<IFeature> StoreOpenJawReshape([NotNull] IFeature feature,
+		                                                  [NotNull] IGeometry newGeometry)
 		{
-			//const bool allowSnappingEdgeEndPoints = true;
+			AddToRefreshArea(newGeometry);
 
 			if (NetworkFeatureUpdater != null)
 			{
 				NetworkFeatureUpdater.StoreSingleFeatureShape(feature, newGeometry);
+
+				foreach (var updatedFeature in NetworkFeatureUpdater.UpdatedFeatures)
+				{
+					yield return updatedFeature;
+				}
 			}
 			else
 			{
 				GdbObjectUtils.SetFeatureShape(feature, newGeometry);
 				feature.Store();
+
+				yield return feature;
 			}
-
-			AddToRefreshArea(newGeometry);
-
-			//NetworkUtils.SetFeatureShape(
-			//	feature, newGeometry,
-			//	GeometricNetworkConnectOption.DisconnectAndReconnect, allowSnappingEdgeEndPoints);
 		}
 
 		#endregion

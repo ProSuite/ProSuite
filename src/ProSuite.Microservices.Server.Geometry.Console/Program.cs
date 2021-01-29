@@ -16,6 +16,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Server.AO;
+using ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape;
 using ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps;
 
 namespace ProSuite.Microservices.Server.Geometry.Console
@@ -151,6 +152,8 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 				                                //Health = health
 			                                };
 
+			var advancedReshapeServiceImpl = new AdvancedReshapeGrpcImpl(taskScheduler);
+
 			//health.SetStatus(removeOverlapsServiceImpl.GetType(), true);
 
 			ServerCredentials serverCredentials =
@@ -167,6 +170,7 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 					Services =
 					{
 						RemoveOverlapsGrpc.BindService(removeOverlapsServiceImpl),
+						ReshapeGrpc.BindService(advancedReshapeServiceImpl)
 						//Health.BindService(healthService)
 					},
 					Ports =
