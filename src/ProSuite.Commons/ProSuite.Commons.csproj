@@ -212,6 +212,7 @@
     <Compile Include="Progress\IProgressFeedback.cs" />
     <Compile Include="Progress\LoggingProgressFeedback.cs" />
     <Compile Include="Progress\NopProgressFeedback.cs" />
+    <Compile Include="Progress\ProgressFeedbackBase.cs" />
     <Compile Include="Progress\ServiceCallStatus.cs" />
     <Compile Include="Reflection\PrivateAssemblyUtils.cs" />
     <Compile Include="Reflection\ReflectionUtils.cs" />
