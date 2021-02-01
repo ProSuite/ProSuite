@@ -95,13 +95,16 @@ namespace ProSuite.Microservices.Client.AGP
 		}
 
 		[CanBeNull]
-		public static Geometry FromShapeMsg([CanBeNull] ShapeMsg shapeMsg)
+		public static Geometry FromShapeMsg(
+			[CanBeNull] ShapeMsg shapeMsg,
+			[CanBeNull] SpatialReference knownSpatialReference = null)
 		{
 			if (shapeMsg == null) return null;
 
 			if (shapeMsg.FormatCase == ShapeMsg.FormatOneofCase.None) return null;
 
-			SpatialReference sr = FromSpatialReferenceMsg(shapeMsg.SpatialReference);
+			SpatialReference sr = knownSpatialReference ??
+			                      FromSpatialReferenceMsg(shapeMsg.SpatialReference);
 
 			Geometry result;
 
