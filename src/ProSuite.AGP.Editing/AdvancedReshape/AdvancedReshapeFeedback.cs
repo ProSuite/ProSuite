@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
@@ -25,8 +26,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			_openJawReplaceEndSymbol = CreateHollowCircle(0, 0, 200);
 
-			_addAreaSymbol = CreateHatchedAreaSymbol(0, 255, 0, 90);
-			_removeAreaSymbol = CreateHatchedAreaSymbol(255, 0, 0);
+			_addAreaSymbol = SymbolUtils.CreateHatchFillSymbol(0, 255, 0, 90);
+			_removeAreaSymbol = SymbolUtils.CreateHatchFillSymbol(255, 0, 0);
 		}
 
 		public void UpdateOpenJawReplacedEndPoint(MapPoint point)
@@ -103,29 +104,6 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				geometry, cimSymbol.MakeSymbolReference());
 
 			return result;
-		}
-
-		private static CIMPolygonSymbol CreateHatchedAreaSymbol(double r, double g, double b,
-		                                                        double rotation = 0)
-		{
-			CIMColor color = ColorFactory.Instance.CreateRGBColor(r, g, b);
-
-			var hatchLineSymbol = SymbolFactory.Instance.ConstructLineSymbol(color, 2);
-
-			var hatchFill = new CIMHatchFill
-			                {
-				                Enable = true,
-				                Rotation = rotation,
-				                Separation = 5,
-				                LineSymbol = hatchLineSymbol
-			                };
-
-			var symbolLayers = new List<CIMSymbolLayer>();
-
-			symbolLayers.AddRange(hatchLineSymbol.SymbolLayers);
-			symbolLayers.Add(hatchFill);
-
-			return new CIMPolygonSymbol {SymbolLayers = symbolLayers.ToArray()};
 		}
 
 		private static CIMPointSymbol CreateHollowCircle(int red, int green, int blue)
