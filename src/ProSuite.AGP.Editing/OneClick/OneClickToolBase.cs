@@ -478,8 +478,8 @@ namespace ProSuite.AGP.Editing.OneClick
 							item.BelongingFeatureLayers.ForEach(layer =>
 							{
 								List<long> oids = candidatesOfManyLayers[layer];
-								QueryFilter qf = new QueryFilter{ObjectIDs = oids};
-								layer.Select(qf, selectionMethod);
+
+								SelectionUtils.SelectFeatures(layer, selectionMethod, oids);
 							});
 						});
 					}
