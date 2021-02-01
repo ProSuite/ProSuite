@@ -61,6 +61,7 @@
     <Compile Include="Collections\ConsistentHashLargeDictionary.cs" />
     <Compile Include="Collections\DistinctValue.cs" />
     <Compile Include="Collections\DistinctValues.cs" />
+    <Compile Include="Collections\FilterableSortableBindingList.cs" />
     <Compile Include="Collections\HashHelpers.cs" />
     <Compile Include="Collections\LargeDictionaryFactory.cs" />
     <Compile Include="Collections\NumericStringComparer.cs" />
