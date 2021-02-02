@@ -580,6 +580,16 @@ namespace ProSuite.DomainServices.AO.QA
 				_msg.DebugFormat("Issue found: {0}", qaError);
 			}
 
+			// TODO: Consider checking basic relevance (inside test perimeter?) here
+
+			var eventArgs = new QaErrorEventArgs(qaError);
+			QaError?.Invoke(this, eventArgs);
+
+			if (eventArgs.Cancel)
+			{
+				return false;
+			}
+
 			ITest test = qaError.Test;
 			QualityConditionVerification conditionVerification =
 				GetQualityConditionVerification(test);
@@ -611,12 +621,7 @@ namespace ProSuite.DomainServices.AO.QA
 				}
 			}
 
-			var eventArgs = new QaErrorEventArgs(qaError);
-			QaError?.Invoke(this, eventArgs);
-
-			// TODO: Consider checking basic relevance (inside test perimeter?) here
-
-			return ! eventArgs.Cancel;
+			return true;
 		}
 
 		#endregion
