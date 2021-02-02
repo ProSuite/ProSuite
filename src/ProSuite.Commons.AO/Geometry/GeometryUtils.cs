@@ -7915,7 +7915,10 @@ namespace ProSuite.Commons.AO.Geometry
 				count = wksPointZs.Length;
 			}
 
-			toResult.AddWKSPointZs(count, ref wksPointZs[0]);
+			if (count > 0)
+			{
+				toResult.AddWKSPointZs(count, ref wksPointZs[0]);
+			}
 		}
 
 		public static void QueryWKSPoints([NotNull] IPointCollection4 pointCollection,
