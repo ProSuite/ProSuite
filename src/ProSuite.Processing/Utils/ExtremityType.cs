@@ -38,7 +38,6 @@ namespace ProSuite.Processing.Utils
 				default:
 					throw new ArgumentOutOfRangeException(nameof(value), value,
 					                                      InvalidExtremityTypeMessage);
-				// TODO return value instead?
 			}
 		}
 
@@ -62,7 +61,6 @@ namespace ProSuite.Processing.Utils
 				default:
 					throw new ArgumentOutOfRangeException(nameof(value), value,
 					                                      InvalidExtremityTypeMessage);
-				// TODO return value instead?
 			}
 		}
 
@@ -86,7 +84,6 @@ namespace ProSuite.Processing.Utils
 				default:
 					throw new ArgumentOutOfRangeException(nameof(value), value,
 					                                      InvalidExtremityTypeMessage);
-				// TODO return value instead?
 			}
 		}
 
@@ -102,7 +99,7 @@ namespace ProSuite.Processing.Utils
 		{
 			if (processFrom || processTo)
 			{
-				ExtremityType extremity = value ?? default(ExtremityType);
+				ExtremityType extremity = value ?? default;
 				return Recompute(extremity, processFrom, processTo, matchFrom, matchTo);
 			}
 
