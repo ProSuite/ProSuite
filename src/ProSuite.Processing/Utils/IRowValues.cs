@@ -1,11 +1,12 @@
 using System.Collections.Generic;
+using ProSuite.Processing.Evaluation;
 
 namespace ProSuite.Processing.Utils
 {
 	/// <summary>
 	/// An abstraction of Rows and RowBuffers
 	/// </summary>
-	public interface IRowValues
+	public interface IRowValues : INamedValues
 	{
 		IReadOnlyList<string> FieldNames { get; }
 

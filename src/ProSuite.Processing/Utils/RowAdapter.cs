@@ -2,11 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
-using ProSuite.Processing.Evaluation;
 
 namespace ProSuite.Processing.Utils
 {
-	public class RowValues : IRowValues, INamedValues
+	public class RowValues : IRowValues
 	{
 		// TODO the old Evaluation.RowValues has support for a pseudo fields "_DATASET" and "_DATASET_" that return the dataset's name
 		public RowValues(Row row)
@@ -44,7 +43,7 @@ namespace ProSuite.Processing.Utils
 		}
 	}
 
-	public class RowBufferValues : IRowValues, INamedValues
+	public class RowBufferValues : IRowValues
 	{
 		public RowBufferValues(RowBuffer row)
 		{

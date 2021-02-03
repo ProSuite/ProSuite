@@ -35,8 +35,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ClusterUtilsTest.cs" />
+    <Compile Include="ExpressionEvaluatorTest.cs" />
     <Compile Include="ExtremityTypeTest.cs" />
+    <Compile Include="FieldSetterTest.cs" />
     <Compile Include="GapListTest.cs" />
+    <Compile Include="ImplicitValueTest.cs" />
+    <Compile Include="Mocks\RowValuesMock.cs" />
     <Compile Include="NumberUtilsTest.cs" />
   </ItemGroup>
   <ItemGroup>
