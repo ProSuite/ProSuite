@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<xs:schema xmlns:tns="urn:ProSuite.QA.XmlBasedVerificationOptions-1.0" elementFormDefault="qualified"
+           targetNamespace="urn:ProSuite.QA.XmlBasedVerificationOptions-1.0"
+           xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="VerificationOptions" nillable="true" type="tns:XmlVerificationOptions" />
+  <xs:complexType name="XmlVerificationOptions">
+    <xs:all>
+      <xs:element minOccurs="0" maxOccurs="1" name="KeyFields" type="tns:XmlKeyFields" />
+      <xs:element minOccurs="0" maxOccurs="1" name="IssueGdbName" type="xs:string" />
+      <xs:element minOccurs="0" maxOccurs="1" name="ExceptionGdbName" type="xs:string" />
+      <xs:element minOccurs="0" maxOccurs="1" name="MxdDocumentName" type="xs:string" />
+      <xs:element minOccurs="0" maxOccurs="1" name="XmlReportName" type="xs:string" />
+      <xs:element minOccurs="0" maxOccurs="1" name="DefaultTemplateDirectoryPath" type="xs:string" />
+      <xs:element minOccurs="0" maxOccurs="1" name="HtmlReports" type="tns:ArrayOfXmlHtmlReportOptions" />
+      <xs:element minOccurs="0" maxOccurs="1" name="IssueMaps" type="tns:ArrayOfXmlIssueMapOptions" />
+      <xs:element minOccurs="0" maxOccurs="1" name="QualitySpecificationReports"
+                  type="tns:ArrayOfXmlSpecificationReportOptions" />
+      <xs:element minOccurs="0" maxOccurs="1" name="Exceptions" type="tns:XmlExceptionConfiguration" />
+    </xs:all>
+  </xs:complexType>
+  <xs:complexType name="XmlKeyFields">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="DataSource" type="tns:XmlDataSourceKeyFields" />
+    </xs:sequence>
+    <xs:attribute name="defaultKeyField" type="xs:string" />
+  </xs:complexType>
+  <xs:complexType name="XmlDataSourceKeyFields">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="Dataset" type="tns:XmlDatasetKeyField" />
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" />
+    <xs:attribute name="defaultKeyField" type="xs:string" />
+  </xs:complexType>
+  <xs:complexType name="XmlDatasetKeyField">
+    <xs:attribute name="name" type="xs:string" />
+    <xs:attribute name="keyField" type="xs:string" />
+  </xs:complexType>
+  <xs:complexType name="ArrayOfXmlHtmlReportOptions">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="Report" nillable="true" type="tns:XmlHtmlReportOptions" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="XmlHtmlReportOptions">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="DataQualityCategories"
+                  type="tns:ArrayOfXmlHtmlReportDataQualityCategoryOptions" />
+    </xs:sequence>
+    <xs:attribute name="template" type="xs:string" />
+    <xs:attribute name="reportFile" type="xs:string" use="required" />
+  </xs:complexType>
+  <xs:complexType name="ArrayOfXmlHtmlReportDataQualityCategoryOptions">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="CategoryOptions" nillable="true"
+                  type="tns:XmlHtmlReportDataQualityCategoryOptions" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="XmlHtmlReportDataQualityCategoryOptions">
+    <xs:attribute name="categoryUuid" type="xs:string" use="required" />
+    <xs:attribute default="false" name="ignoreCategoryLevel" type="xs:boolean" />
+    <xs:attribute name="aliasName" type="xs:string" />
+  </xs:complexType>
+  <xs:complexType name="ArrayOfXmlIssueMapOptions">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="IssueMap" nillable="true" type="tns:XmlIssueMapOptions" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="XmlIssueMapOptions">
+    <xs:all>
+      <xs:element minOccurs="0" maxOccurs="1" name="IssueLabels" type="tns:XmlLabelOptions" />
+      <xs:element minOccurs="0" maxOccurs="1" name="IssueDisplayExpression" type="tns:XmlDisplayExpressionOptions" />
+      <xs:element minOccurs="0" maxOccurs="1" name="ExceptionLabels" type="tns:XmlLabelOptions" />
+      <xs:element minOccurs="0" maxOccurs="1" name="ExceptionDisplayExpression" type="tns:XmlDisplayExpressionOptions" />
+      <xs:element minOccurs="0" maxOccurs="1" name="IssueFieldOptions" type="tns:ArrayOfXmlFieldOptions" />
+      <xs:element minOccurs="0" maxOccurs="1" name="ExceptionFieldOptions" type="tns:ArrayOfXmlFieldOptions" />
+    </xs:all>
+    <xs:attribute name="template" type="xs:string" />
+    <xs:attribute name="mxdFile" type="xs:string" use="required" />
+    <xs:attribute default="true" name="listLayersByAffectedComponent" type="xs:boolean" />
+    <xs:attribute default="IssueType" name="issueLayersGroupBy" type="tns:IssueLayersGroupBy" />
+    <xs:attribute name="version" type="xs:string" />
+    <xs:attribute default="true" name="displayLabels" type="xs:boolean" />
+    <xs:attribute default="true" name="showMapTips" type="xs:boolean" />
+    <xs:attribute default="0" name="verifiedFeaturesMinimumScale" type="xs:double" />
+  </xs:complexType>
+  <xs:complexType name="XmlLabelOptions">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute default="default" name="visible" type="tns:TrueFalseDefault" />
+        <xs:attribute default="0" name="minimumScale" type="xs:double" />
+        <xs:attribute default="true" name="isExpressionSimple" type="xs:boolean" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:simpleType name="TrueFalseDefault">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="default" />
+      <xs:enumeration value="true" />
+      <xs:enumeration value="false" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="XmlDisplayExpressionOptions">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute default="default" name="showMapTips" type="tns:TrueFalseDefault" />
+        <xs:attribute default="true" name="isExpressionSimple" type="xs:boolean" />
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:complexType name="ArrayOfXmlFieldOptions">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="Field" nillable="true" type="tns:XmlFieldOptions" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="XmlFieldOptions">
+    <xs:attribute name="field" type="xs:string" use="required" />
+    <xs:attribute name="aliasName" type="xs:string" />
+    <xs:attribute default="default" name="visible" type="tns:TrueFalseDefault" />
+    <xs:attribute default="default" name="highlight" type="tns:TrueFalseDefault" />
+    <xs:attribute default="default" name="readOnly" type="tns:TrueFalseDefault" />
+  </xs:complexType>
+  <xs:simpleType name="IssueLayersGroupBy">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="None" />
+      <xs:enumeration value="IssueType" />
+      <xs:enumeration value="CategoryAndIssueType" />
+      <xs:enumeration value="CategoryOrIssueType" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="ArrayOfXmlSpecificationReportOptions">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="Report" nillable="true"
+                  type="tns:XmlSpecificationReportOptions" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="XmlSpecificationReportOptions">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="DataQualityCategories"
+                  type="tns:ArrayOfXmlHtmlReportDataQualityCategoryOptions" />
+    </xs:sequence>
+    <xs:attribute name="template" type="xs:string" />
+    <xs:attribute name="reportFile" type="xs:string" use="required" />
+  </xs:complexType>
+  <xs:complexType name="XmlExceptionConfiguration">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="DataSource" type="xs:string" />
+      <xs:element minOccurs="0" maxOccurs="1" name="InvolvedObjectsMatchCriteria"
+                  type="tns:XmlInvolvedObjectsMatchCriteria" />
+    </xs:sequence>
+    <xs:attribute default="EqualEnvelope" name="defaultShapeMatchCriterion" type="tns:ShapeMatchCriterion" />
+    <xs:attribute default="Active" name="defaultExceptionObjectStatus" type="tns:ExceptionObjectStatus" />
+    <xs:attribute default="true" name="exportExceptions" type="xs:boolean" />
+  </xs:complexType>
+  <xs:complexType name="XmlInvolvedObjectsMatchCriteria">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="IgnoredDatasets"
+                  type="tns:ArrayOfXmlInvolvedObjectsMatchCriterionIgnoredDatasets" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="ArrayOfXmlInvolvedObjectsMatchCriterionIgnoredDatasets">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="DataSource" nillable="true"
+                  type="tns:XmlInvolvedObjectsMatchCriterionIgnoredDatasets" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="XmlInvolvedObjectsMatchCriterionIgnoredDatasets">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="DatasetName" type="xs:string" />
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" />
+  </xs:complexType>
+  <xs:simpleType name="ShapeMatchCriterion">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="EqualEnvelope" />
+      <xs:enumeration value="WithinEnvelope" />
+      <xs:enumeration value="IgnoreShape" />
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="ExceptionObjectStatus">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Active" />
+      <xs:enumeration value="Inactive" />
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>

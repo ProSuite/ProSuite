@@ -14,8 +14,10 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA
 {
+	// TODO: Create ITestParameterValidator interface that can be injected to where this is needed
 	public static class TestParameter_Utils
 	{
+		[Obsolete]
 		public static void AssertValidDataset([NotNull] TestParameter testParameter,
 		                                      [CanBeNull] Dataset dataset)
 		{

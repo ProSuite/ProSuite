@@ -81,6 +81,7 @@
     <Compile Include="QA\Exceptions\InvolvedObjectsMatchCriteriaTest.cs" />
     <Compile Include="QA\HtmlReports\HtmlReportUtilsTest.cs" />
     <Compile Include="QA\Issues\IssueUtilsTest.cs" />
+    <Compile Include="QA\Standalone\XmlBased\DataSourceTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.AO.Test\ProSuite.Commons.AO.Test.csproj">
@@ -125,5 +126,6 @@
       <Version>3.12.0</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

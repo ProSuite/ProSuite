@@ -233,6 +233,29 @@
     <Compile Include="QA\RowsWithStopConditions.cs" />
     <Compile Include="QA\RowWithStopCondition.cs" />
     <Compile Include="QA\SingleThreadedTestRunner.cs" />
+    <Compile Include="QA\Standalone\XmlBased\DataSource.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\DisplayExpression.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\FieldConfigurator.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\IssueLayersGroupBy.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\IssueMapDefinition.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\LabelOptions.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\SpecificationReportDefinition.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\TrueFalseDefault.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\VerificationOptionUtils.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\XmlDatasetKeyField.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\XmlDataSourceKeyFields.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\XmlDisplayExpressionOptions.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\XmlExceptionConfiguration.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\XmlFieldOptions.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\XmlHtmlReportDataQualityCategoryOptions.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\XmlHtmlReportOptions.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\XmlInvolvedObjectsMatchCriteria.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\XmlIssueMapOptions.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\XmlKeyFields.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\XmlLabelOptions.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\XmlSpecificationReportOptions.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\XmlVerificationOptions.cs" />
+    <Compile Include="QA\Standalone\XmlBased\XmlBasedQualitySpecificationFactory.cs" />
     <Compile Include="QA\StopInfo.cs" />
     <Compile Include="QA\TestAssembler.cs" />
     <Compile Include="QA\TestExecutionUtils.cs" />
@@ -266,6 +289,13 @@
     <Compile Include="QA\VerificationReports\Xml\XmlVerifiedQualityCondition.cs" />
     <Compile Include="QA\VerificationTimeStats.cs" />
     <Compile Include="QA\VerificationUtils.cs" />
+    <Compile Include="QA\VerifiedDataModel\IVerifiedModelFactory.cs" />
+    <Compile Include="QA\VerifiedDataModel\VerifiedModel.cs" />
+    <Compile Include="Schemas\Schema.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Schema.resx</DependentUpon>
+    </Compile>
     <Compile Include="Xml\Xml2DEnvelope.cs" />
     <Compile Include="Xml\XmlEnvelope.cs" />
     <Compile Include="Xml\XmlNamed2DEnvelope.cs" />
@@ -328,6 +358,17 @@
       <LastGenOutput>IssueTableFieldAliases.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Schemas\Schema.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Schema.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Schemas\ProSuite.QA.XmlBasedVerificationOptions-1.0.xsd">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="Schemas\update_XmlBasedVerificationOptions.bat" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

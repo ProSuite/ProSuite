@@ -83,6 +83,15 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		[CanBeNull]
+		public static IRasterDataset TryOpenFromMasterDatabase(IDdxRasterDataset dataset,
+		                                                       bool allowAlways = false)
+		{
+			IDatasetContext context = GetMasterDatabaseWorkspaceContext(dataset,
+			                                                            allowAlways);
+			return context?.OpenRasterDataset(dataset);
+		}
+
+		[CanBeNull]
 		public static IWorkspaceContext GetMasterDatabaseWorkspaceContext(
 			[NotNull] IModelElement modelElement, bool allowAlways = false)
 		{
