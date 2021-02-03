@@ -50,6 +50,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="CartoProcessConfig.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="Domain\ICartoProcess.cs" />
     <Compile Include="Domain\IMapContext.cs" />
     <Compile Include="Domain\IProcessingContext.cs" />

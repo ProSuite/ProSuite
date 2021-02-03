@@ -11,6 +11,16 @@ namespace ProSuite.Processing.Utils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		public static double PointsToMillimeters(double points)
+		{
+			return points / Constants.PointsPerMillimeter;
+		}
+
+		public static double MillimetersToPoints(double millimeters)
+		{
+			return millimeters * Constants.PointsPerMillimeter;
+		}
+
 		public static double Clip(double value, double min, double max,
 		                          [CanBeNull] string parameter = null)
 		{
