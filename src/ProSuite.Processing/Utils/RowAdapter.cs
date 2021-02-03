@@ -1,35 +1,23 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ProSuite.Processing.Evaluation;
 
 namespace ProSuite.Processing.Utils
 {
-	/// <summary>
-	/// An abstraction of Row and RowBuffer; other than
-	/// in ArcObjects, with Pro SDK Row is not derived
-	/// from RowBuffer.
-	/// </summary>
-	public interface IRowValues
-	{
-		IReadOnlyList<Field> Fields { get; }
-
-		object this[int index] { get; set; }
-
-		int FindField(string fieldName);
-	}
-
 	public class RowValues : IRowValues, INamedValues
 	{
 		// TODO the old Evaluation.RowValues has support for a pseudo fields "_DATASET" and "_DATASET_" that return the dataset's name
 		public RowValues(Row row)
 		{
 			Row = row ?? throw new ArgumentNullException();
+			FieldNames = row.GetFields().Select(f => f.Name).ToArray();
 		}
 
 		public Row Row { get; }
 
-		public IReadOnlyList<Field> Fields => Row.GetFields();
+		public IReadOnlyList<string> FieldNames { get; }
 
 		public object this[int index]
 		{
@@ -61,11 +49,12 @@ namespace ProSuite.Processing.Utils
 		public RowBufferValues(RowBuffer row)
 		{
 			Row = row ?? throw new ArgumentNullException();
+			FieldNames = row.GetFields().Select(f => f.Name).ToArray();
 		}
 
 		public RowBuffer Row { get; }
 
-		public IReadOnlyList<Field> Fields => Row.GetFields();
+		public IReadOnlyList<string> FieldNames { get; }
 
 		public object this[int index]
 		{

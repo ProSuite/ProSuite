@@ -167,8 +167,8 @@ namespace ProSuite.Processing.Evaluation
 		{
 			if (value == null)
 				return false; // null is not false (nor true)
-			if (value is bool)
-				return ((bool) value) == false;
+			if (value is bool b)
+				return b == false;
 			return false; // all values are "truthy" (except null and false)
 		}
 
@@ -176,8 +176,8 @@ namespace ProSuite.Processing.Evaluation
 		{
 			if (value == null)
 				return false; // null is not true (nor false)
-			if (value is bool)
-				return (bool) value;
+			if (value is bool b)
+				return b;
 			return true; // all values are "truthy" (except null and false)
 		}
 

@@ -1,12 +1,11 @@
 using System;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
-using ProSuite.Processing.Evaluation;
 
 namespace ProSuite.Processing.Utils
 {
@@ -197,17 +196,18 @@ namespace ProSuite.Processing.Utils
 		[NotNull]
 		public static FieldSetter CreateFieldSetter([CanBeNull] string text,
 		                                            [NotNull] FeatureClass featureClass,
-		                                            [NotNull] string parameterName, 
-		                                            [CanBeNull] FindFieldCache findFieldCache = null)
+		                                            [NotNull] string parameterName)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 			Assert.ArgumentNotNull(parameterName, nameof(parameterName));
 
 			try
 			{
-				var fieldSetter = FieldSetter.Create(text, findFieldCache);
+				var fieldSetter = FieldSetter.Create(text);
 
-				fieldSetter.ValidateTargetFields(featureClass.GetDefinition().GetFields());
+				var fieldNames = featureClass.GetDefinition().GetFields().Select(f => f.Name);
+
+				fieldSetter.ValidateTargetFields(fieldNames);
 
 				return fieldSetter;
 			}
@@ -223,6 +223,7 @@ namespace ProSuite.Processing.Utils
 		/// <paramref name="perimeter"/>; if <paramref name="perimeter"/> is
 		/// <c>null</c> the <paramref name="shape"/> is considered within.
 		/// </summary>
+		// TODO Shouldn't this be on processing context?
 		public static bool WithinPerimeter(Geometry shape, [CanBeNull] Geometry perimeter)
 		{
 			if (shape == null)
@@ -230,8 +231,12 @@ namespace ProSuite.Processing.Utils
 				return false;
 			}
 
-			return perimeter == null || GeometryUtils.Contains(perimeter, shape);
-		}
+			if (perimeter == null)
+			{
+				return true;
+			}
 
+			return GeometryEngine.Instance.Contains(perimeter, shape);
+		}
 	}
 }

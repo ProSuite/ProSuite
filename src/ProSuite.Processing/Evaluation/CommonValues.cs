@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Processing.Utils;
@@ -72,13 +71,13 @@ namespace ProSuite.Processing.Evaluation
 			Assert.ArgumentNotNull(row, nameof(row));
 			Assert.ArgumentNotNull(combine, nameof(combine));
 
-			var fields = row.Fields;
-			int fieldCount = fields.Count;
+			var fieldNames = row.FieldNames;
+			int fieldCount = fieldNames.Count;
 
 			for (int i = 0; i < fieldCount; i++)
 			{
-				Field field = fields[i];
-				if (string.IsNullOrEmpty(field.Name))
+				var fieldName = fieldNames[i];
+				if (string.IsNullOrEmpty(fieldName))
 				{
 					continue;
 				}
@@ -89,9 +88,9 @@ namespace ProSuite.Processing.Evaluation
 					value = null;
 				}
 
-				object commonValue = GetValue(field.Name);
+				object commonValue = GetValue(fieldName);
 
-				_commonValues[field.Name] = combine(value, commonValue);
+				_commonValues[fieldName] = combine(value, commonValue);
 			}
 		}
 

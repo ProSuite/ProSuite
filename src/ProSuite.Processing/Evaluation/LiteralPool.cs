@@ -14,10 +14,7 @@ namespace ProSuite.Processing.Evaluation
 			_dict = new Dictionary<object, int>();
 		}
 
-		public int Count
-		{
-			get { return _pool?.Length ?? _dict.Count; }
-		}
+		public int Count => _pool?.Length ?? _dict.Count;
 
 		//public bool IsCommitted
 		//{

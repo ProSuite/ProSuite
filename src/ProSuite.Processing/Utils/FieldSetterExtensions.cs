@@ -1,8 +1,8 @@
 using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Processing.Utils;
+using ProSuite.Processing.Evaluation;
 
-namespace ProSuite.Processing.Evaluation
+namespace ProSuite.Processing.Utils
 {
 	/// <summary>
 	/// Provide additional overloads to <see cref="FieldSetter"/>
