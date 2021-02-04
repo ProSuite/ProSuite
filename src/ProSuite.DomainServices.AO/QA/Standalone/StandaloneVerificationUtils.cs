@@ -2,9 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.DotLiquid;
@@ -98,7 +95,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			return result;
 		}
 
-		
 		[CanBeNull]
 		public static Model GetPrimaryModel(
 			[NotNull] QualitySpecification qualitySpecification)
@@ -137,7 +133,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 			return maxReferenceModel;
 		}
-
 
 		[NotNull]
 		public static List<string> WriteQualitySpecificationReport(
@@ -229,7 +224,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 			return keyFieldLookup.GetKeyField;
 		}
-		
+
 		[NotNull]
 		public static List<string> WriteHtmlReports(
 			[NotNull] QualitySpecification qualitySpecification,
@@ -320,7 +315,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			                 reportDefinition.TemplatePath);
 
 			LiquidUtils.RegisterSafeType<HtmlReportModel>();
-			LiquidUtils.RegisterSafeType<HtmlReports.HtmlTexts>();
+			LiquidUtils.RegisterSafeType<HtmlTexts>();
 
 			string output = LiquidUtils.Render(
 				reportDefinition.TemplatePath,
@@ -332,7 +327,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 			_msg.InfoFormat("Html report written to {0}", reportFilePath);
 		}
-
 
 		[NotNull]
 		private static string GetUniqueDefaultName(
