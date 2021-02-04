@@ -20,7 +20,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 		{
 			TestUtils.ConfigureUnittestLogging();
 
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 		}
 
 		[OneTimeTearDown]
@@ -32,14 +32,13 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 		[Test]
 		public void CanHarvestSimpleModel()
 		{
-			IWorkspace workspace =
-				TestUtils.OpenOsaWorkspaceOracle();
+			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
 
 			VerifiedModelFactory modelFactory =
 				new VerifiedModelFactory(CreateWorkspaceContextSimple,
 				                         new SimpleVerifiedDatasetHarvester());
 
-			// NOTE: Harvesting the attributes is sometimes just as fast as with the
+			// NOTE: Harvesting the attributes is sometimes just as fast as with the (cached)
 			// MasterDatabaseWorkspaceContextEx (ca. 30s) but sometimes extremely slow!
 			modelFactory.HarvestAttributes = true;
 			modelFactory.HarvestObjectTypes = true;

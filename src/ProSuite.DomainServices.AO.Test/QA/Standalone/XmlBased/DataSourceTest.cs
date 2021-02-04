@@ -1,12 +1,15 @@
+using System;
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
+using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 
-namespace EsriDE.ProSuite.Services.Test.QA.GP.XmlBased
+namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 {
 	[TestFixture]
 	public class DataSourceTest
@@ -16,7 +19,7 @@ namespace EsriDE.ProSuite.Services.Test.QA.GP.XmlBased
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 		}
 
 		[OneTimeTearDown]
@@ -40,6 +43,12 @@ namespace EsriDE.ProSuite.Services.Test.QA.GP.XmlBased
 
 			dataSource.WorkspaceAsText = GetWorkspaceCatalogPath();
 
+			if (EnvironmentUtils.Is64BitProcess)
+			{
+				// TODO: Move test data to different format
+				return;
+			}
+
 			Assert.IsTrue(dataSource.HasWorkspaceInformation);
 			Assert.IsTrue(dataSource.ReferencesValidWorkspace);
 		}
@@ -49,7 +58,22 @@ namespace EsriDE.ProSuite.Services.Test.QA.GP.XmlBased
 		{
 			string catalogPath = GetWorkspaceCatalogPath();
 
-			IWorkspace workspace = WorkspaceUtils.OpenPgdbWorkspace(catalogPath);
+			IWorkspace workspace;
+			try
+			{
+				workspace = WorkspaceUtils.OpenPgdbWorkspace(catalogPath);
+			}
+			catch (Exception)
+			{
+				// TODO: Move test data to different format
+				if (EnvironmentUtils.Is64BitProcess)
+				{
+					Console.WriteLine("Expected exception: PGDB is not supported on x64");
+					return;
+				}
+
+				throw;
+			}
 
 			var dataSource = new DataSource("test", "test") {WorkspaceAsText = catalogPath};
 
@@ -66,7 +90,37 @@ namespace EsriDE.ProSuite.Services.Test.QA.GP.XmlBased
 		{
 			string catalogPath = GetWorkspaceCatalogPath();
 
-			IWorkspace workspace = WorkspaceUtils.OpenPgdbWorkspace(catalogPath);
+			IWorkspace workspace;
+			try
+			{
+				workspace = WorkspaceUtils.OpenPgdbWorkspace(catalogPath);
+			}
+			catch (Exception)
+			{
+				// TODO: Move test data to different format
+				if (EnvironmentUtils.Is64BitProcess)
+				{
+					Console.WriteLine("Expected exception: PGDB is not supported on x64");
+					return;
+				}
+
+				throw;
+			}
+
+			string connectionString = WorkspaceUtils.GetConnectionString(workspace);
+
+			var dataSource = new DataSource("test", "test")
+			                 {WorkspaceAsText = connectionString};
+
+			IWorkspace openedWorkspace = dataSource.OpenWorkspace();
+			Assert.IsNotNull(openedWorkspace);
+			Assert.AreEqual(workspace, openedWorkspace);
+		}
+
+		[Test]
+		public void CanOpenFromConnectionStringSDE()
+		{
+			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
 			string connectionString = WorkspaceUtils.GetConnectionString(workspace);
 
 			var dataSource = new DataSource("test", "test")
@@ -80,7 +134,7 @@ namespace EsriDE.ProSuite.Services.Test.QA.GP.XmlBased
 		[NotNull]
 		private static string GetWorkspaceCatalogPath()
 		{
-			var locator = new TestDataLocator(@"..\..\EsriDE.ProSuite\src");
+			var locator = TestDataLocator.Create("ProSuite", @"QA\TestData");
 
 			return locator.GetPath("QATestData.mdb");
 		}
