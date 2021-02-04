@@ -82,6 +82,7 @@
     <Compile Include="QA\HtmlReports\HtmlReportUtilsTest.cs" />
     <Compile Include="QA\Issues\IssueUtilsTest.cs" />
     <Compile Include="QA\Standalone\XmlBased\DataSourceTest.cs" />
+    <Compile Include="QA\VerifiedDataModel\VerifiedModelFactoryTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.AO.Test\ProSuite.Commons.AO.Test.csproj">

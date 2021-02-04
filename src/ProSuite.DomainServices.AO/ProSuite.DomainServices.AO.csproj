@@ -290,7 +290,12 @@
     <Compile Include="QA\VerificationTimeStats.cs" />
     <Compile Include="QA\VerificationUtils.cs" />
     <Compile Include="QA\VerifiedDataModel\IVerifiedModelFactory.cs" />
+    <Compile Include="QA\VerifiedDataModel\SimpleVerifiedDatasetHarvester.cs" />
+    <Compile Include="QA\VerifiedDataModel\VerifiedDatasetHarvesterBase.cs" />
     <Compile Include="QA\VerifiedDataModel\VerifiedModel.cs" />
+    <Compile Include="QA\VerifiedDataModel\VerifiedModelFactory.cs" />
+    <Compile Include="QA\VerifiedDataModel\VerifiedTableDataset.cs" />
+    <Compile Include="QA\VerifiedDataModel\VerifiedVectorDataset.cs" />
     <Compile Include="Schemas\Schema.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
