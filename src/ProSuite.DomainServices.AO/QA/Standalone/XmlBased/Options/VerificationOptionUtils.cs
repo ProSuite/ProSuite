@@ -14,7 +14,6 @@ using ProSuite.Commons.Text;
 using ProSuite.Commons.Xml;
 using ProSuite.DomainModel.Core.QA.Html;
 using ProSuite.DomainServices.AO.QA.Exceptions;
-using ProSuite.DomainServices.AO.QA.HtmlReports;
 using ProSuite.DomainServices.AO.Schemas;
 
 namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options

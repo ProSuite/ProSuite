@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -7,11 +7,12 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.Html;
+using ProSuite.DomainServices.AO.QA.HtmlReports;
 using ProSuite.DomainServices.AO.QA.Issues;
 using ProSuite.DomainServices.AO.QA.VerificationReports.Xml;
 using ProSuite.DomainServices.AO.Xml;
 
-namespace ProSuite.DomainServices.AO.QA.HtmlReports
+namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 {
 	public class HtmlReportModel
 	{

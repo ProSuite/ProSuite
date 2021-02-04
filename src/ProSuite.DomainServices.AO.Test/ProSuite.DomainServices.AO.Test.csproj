@@ -82,6 +82,7 @@
     <Compile Include="QA\HtmlReports\HtmlReportUtilsTest.cs" />
     <Compile Include="QA\Issues\IssueUtilsTest.cs" />
     <Compile Include="QA\Standalone\XmlBased\DataSourceTest.cs" />
+    <Compile Include="QA\Standalone\XmlBased\KeyFieldLookupTest.cs" />
     <Compile Include="QA\Standalone\XmlBased\VerificationOptionUtilsTest.cs" />
     <Compile Include="QA\Standalone\XmlBased\XmlBasedQualitySpecificationFactoryTest.cs" />
     <Compile Include="QA\VerifiedDataModel\VerifiedModelFactoryTest.cs" />

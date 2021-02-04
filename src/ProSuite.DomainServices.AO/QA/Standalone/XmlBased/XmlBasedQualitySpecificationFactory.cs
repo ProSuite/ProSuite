@@ -59,6 +59,21 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		[NotNull]
 		public QualitySpecification CreateQualitySpecification(
 			[NotNull] XmlDataQualityDocument document,
+			[NotNull] IEnumerable<DataSource> dataSources,
+			bool ignoreConditionsForUnknownDatasets)
+		{
+			KeyValuePair<XmlQualitySpecification, XmlDataQualityCategory> keyValuePair =
+				document.GetAllQualitySpecifications().Single();
+
+			string singleSpecificationName = Assert.NotNullOrEmpty(keyValuePair.Key.Name);
+
+			return CreateQualitySpecification(document, singleSpecificationName, dataSources,
+			                                  ignoreConditionsForUnknownDatasets);
+		}
+
+		[NotNull]
+		public QualitySpecification CreateQualitySpecification(
+			[NotNull] XmlDataQualityDocument document,
 			[NotNull] string qualitySpecificationName,
 			[NotNull] IEnumerable<DataSource> dataSources,
 			bool ignoreConditionsForUnknownDatasets)

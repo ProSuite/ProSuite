@@ -4,7 +4,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.QA.Html;
 
-namespace ProSuite.DomainServices.AO.QA.HtmlReports
+namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options
 {
 	public class HtmlReportDefinition : IHtmlDataQualityCategoryOptionsProvider
 	{

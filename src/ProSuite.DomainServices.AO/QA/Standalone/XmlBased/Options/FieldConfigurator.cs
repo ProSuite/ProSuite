@@ -76,8 +76,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options
 		}
 
 		public void Configure([NotNull] ITable table,
-		                        [NotNull] ITableFields tableFields,
-		                        [NotNull] IIssueTableFields fields)
+		                      [NotNull] ITableFields tableFields,
+		                      [NotNull] IIssueTableFields fields)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(tableFields, nameof(tableFields));

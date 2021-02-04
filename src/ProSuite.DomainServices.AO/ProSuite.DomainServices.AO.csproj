@@ -107,8 +107,9 @@
     <Compile Include="QA\Standalone\ImportExceptions\ImportExceptionsUtils.cs" />
     <Compile Include="QA\Standalone\ImportExceptions\ManagedExceptionVersion.cs" />
     <Compile Include="QA\Standalone\ImportExceptions\ManagedExceptionVersionFactory.cs" />
-    <Compile Include="QA\HtmlReports\HtmlReportDefinition.cs" />
-    <Compile Include="QA\HtmlReports\HtmlReportModel.cs" />
+    <Compile Include="QA\Standalone\StandaloneVerificationUtils.cs" />
+    <Compile Include="QA\Standalone\XmlBased\Options\HtmlReportDefinition.cs" />
+    <Compile Include="QA\Standalone\XmlBased\HtmlReportModel.cs" />
     <Compile Include="QA\IssuePersistence\ErrorRepositoryUtils.cs" />
     <Compile Include="QA\Exceptions\ExceptionCategory.cs" />
     <Compile Include="QA\Exceptions\ExceptionDataset.cs" />
@@ -239,6 +240,7 @@
     <Compile Include="QA\Standalone\ProgressProcessor.cs" />
     <Compile Include="QA\Standalone\StandaloneQualityVerificationService.cs" />
     <Compile Include="QA\Standalone\XmlBased\DataSource.cs" />
+    <Compile Include="QA\Standalone\XmlBased\KeyFieldLookup.cs" />
     <Compile Include="QA\Standalone\XmlBased\Options\DisplayExpression.cs" />
     <Compile Include="QA\Standalone\XmlBased\Options\FieldConfigurator.cs" />
     <Compile Include="QA\Standalone\XmlBased\Options\IssueLayersGroupBy.cs" />
@@ -261,6 +263,7 @@
     <Compile Include="QA\Standalone\XmlBased\Options\XmlSpecificationReportOptions.cs" />
     <Compile Include="QA\Standalone\XmlBased\Options\XmlVerificationOptions.cs" />
     <Compile Include="QA\Standalone\XmlBased\XmlBasedQualitySpecificationFactory.cs" />
+    <Compile Include="QA\Standalone\XmlBased\XmlBasedVerificationService.cs" />
     <Compile Include="QA\StopInfo.cs" />
     <Compile Include="QA\TestAssembler.cs" />
     <Compile Include="QA\TestExecutionUtils.cs" />
@@ -374,6 +377,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Include="QA\Standalone\XmlBased\XmlBasedVerificationReportModel.cd" />
     <None Include="Schemas\ProSuite.QA.XmlBasedVerificationOptions-1.0.xsd">
       <SubType>Designer</SubType>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

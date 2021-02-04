@@ -49,6 +49,24 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 		}
 
+		[NotNull]
+		public static XmlDataQualityDocument DeserializeXml([NotNull] string xml)
+		{
+			Assert.ArgumentNotNullOrEmpty(xml, nameof(xml));
+
+			string schema = Schema.ProSuite_QA_QualitySpecifications_2_0;
+
+			try
+			{
+				return XmlUtils.DeserializeString<XmlDataQualityDocument>(xml, schema);
+			}
+			catch (Exception e)
+			{
+				throw new XmlDeserializationException(
+					string.Format("Error deserializing xml: {0}", e.Message), e);
+			}
+		}
+
 		public static void AssertUniqueWorkspaceIds(
 			[NotNull] XmlDataQualityDocument document)
 		{
