@@ -98,6 +98,8 @@
     <Compile Include="QA\AreaOfInterestWriter.cs" />
     <Compile Include="QA\AreaSpecification\AreaSpecification.cs" />
     <Compile Include="QA\AreaSpecification\AreaSpecificationBasedQualitySpecification.cs" />
+    <Compile Include="QA\Standalone\BufferedIssueWriter.cs" />
+    <Compile Include="QA\Standalone\IIssueWriter.cs" />
     <Compile Include="QA\Standalone\ImportExceptions\ExceptionAttributeConflict.cs" />
     <Compile Include="QA\Standalone\ImportExceptions\ExceptionLineage.cs" />
     <Compile Include="QA\Standalone\ImportExceptions\ExceptionUpdateDetector.cs" />
@@ -233,6 +235,9 @@
     <Compile Include="QA\RowsWithStopConditions.cs" />
     <Compile Include="QA\RowWithStopCondition.cs" />
     <Compile Include="QA\SingleThreadedTestRunner.cs" />
+    <Compile Include="QA\Standalone\IssueProcessor.cs" />
+    <Compile Include="QA\Standalone\ProgressProcessor.cs" />
+    <Compile Include="QA\Standalone\StandaloneQualityVerificationService.cs" />
     <Compile Include="QA\Standalone\XmlBased\DataSource.cs" />
     <Compile Include="QA\Standalone\XmlBased\Options\DisplayExpression.cs" />
     <Compile Include="QA\Standalone\XmlBased\Options\FieldConfigurator.cs" />
