@@ -1,6 +1,5 @@
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA.SpecificationReport

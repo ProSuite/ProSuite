@@ -8,8 +8,6 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geometry.EsriShape;
-using ProSuite.DomainModel.AO.DataModel;
-using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
