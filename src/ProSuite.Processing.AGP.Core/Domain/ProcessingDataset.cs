@@ -2,8 +2,9 @@ using System;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Processing.Domain;
 
-namespace ProSuite.Processing.Domain
+namespace ProSuite.Processing.AGP.Core.Domain
 {
 	public class ProcessingDataset
 	{

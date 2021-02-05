@@ -1,6 +1,6 @@
 using ArcGIS.Core.Geometry;
 
-namespace ProSuite.Processing.Domain
+namespace ProSuite.Processing.AGP.Core.Domain
 {
 	public interface IProcessingSymbology
 	{

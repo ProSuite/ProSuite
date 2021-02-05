@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
 
-namespace ProSuite.Processing.Domain
+namespace ProSuite.Processing.AGP.Core.Domain
 {
 	public class NoProcessingSelection : IProcessingSelection
 	{
