@@ -206,6 +206,7 @@
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Qa3dConstantZ.cs" />
     <Compile Include="QaAreaBase.cs" />
     <Compile Include="QaBorderSense.cs" />
     <Compile Include="QaCentroids.cs" />
