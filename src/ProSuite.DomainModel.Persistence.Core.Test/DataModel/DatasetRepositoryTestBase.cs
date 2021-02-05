@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using ProSuite.DomainModel.Core.DataModel;
