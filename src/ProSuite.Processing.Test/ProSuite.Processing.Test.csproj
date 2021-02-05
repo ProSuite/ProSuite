@@ -42,6 +42,7 @@
     <Compile Include="ImplicitValueTest.cs" />
     <Compile Include="Mocks\RowValuesMock.cs" />
     <Compile Include="NumberUtilsTest.cs" />
+    <Compile Include="WhereClauseMatcherTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NUnit">

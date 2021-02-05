@@ -72,6 +72,7 @@
     <Compile Include="Utils\Interval.cs" />
     <Compile Include="Utils\IRowValues.cs" />
     <Compile Include="Utils\NumberUtils.cs" />
+    <Compile Include="Utils\WhereClauseMatcher.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
