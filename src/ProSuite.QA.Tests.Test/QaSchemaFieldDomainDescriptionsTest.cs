@@ -10,6 +10,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Tests.Test.TestData;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -23,7 +24,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 		}
 
 		[OneTimeTearDown]
@@ -374,7 +375,7 @@ namespace ProSuite.QA.Tests.Test
 		                                        int maximumLength,
 		                                        bool noDuplicateDescriptions)
 		{
-			var locator = new TestDataLocator(@"..\..\ProSuite\src");
+			var locator = TestDataUtils.GetTestDataLocator();
 			string path = locator.GetPath("QaSchemaTests.mdb");
 
 			IFeatureWorkspace workspace = WorkspaceUtils.OpenPgdbFeatureWorkspace(path);

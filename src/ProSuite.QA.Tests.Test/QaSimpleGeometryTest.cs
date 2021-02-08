@@ -8,6 +8,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Tests.Test.TestData;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -19,7 +20,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 		}
 
 		[OneTimeTearDown]
@@ -68,7 +69,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void Gen2847_NonZawarePolylineWithInteriorLoops()
 		{
-			var locator = new TestDataLocator(@"..\..\ProSuite\src");
+			var locator = TestDataUtils.GetTestDataLocator();
 			string path = locator.GetPath("DKM25_HOEHENKURVE_OID_2178.xml");
 
 			var nonZAwarePolyline = (IPolyline) GeometryUtils.FromXmlFile(path);

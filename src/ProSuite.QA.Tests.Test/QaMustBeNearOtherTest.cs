@@ -29,7 +29,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 
 			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace("QaMustBeNearOtherTest");
 		}

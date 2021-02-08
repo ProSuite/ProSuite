@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests.Test.TestData
@@ -47,6 +48,14 @@ namespace ProSuite.QA.Tests.Test.TestData
 		{
 			string fullPath = Path.Combine(LocalDataPath, testDataPath);
 			return fullPath;
+		}
+
+		[NotNull]
+		public static TestDataLocator GetTestDataLocator()
+		{
+			var locator = TestDataLocator.Create("ProSuite");
+
+			return locator;
 		}
 	}
 }

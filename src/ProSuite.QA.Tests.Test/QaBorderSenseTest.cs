@@ -10,6 +10,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Tests.Test.TestData;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -23,7 +24,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 		}
 
 		[OneTimeTearDown]
@@ -37,7 +38,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			const string featureClassName = "TLM_STEHENDES_GEWAESSER";
 
-			var locator = new TestDataLocator(@"..\..\ProSuite\src");
+			var locator = TestDataUtils.GetTestDataLocator();
 			string path = locator.GetPath("QaBorderSense.gdb");
 
 			IFeatureWorkspace workspace = WorkspaceUtils.OpenFileGdbFeatureWorkspace(path);
