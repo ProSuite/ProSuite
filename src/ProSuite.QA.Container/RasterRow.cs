@@ -1,8 +1,4 @@
-#if Server
-using ESRI.ArcGIS.DatasourcesRaster;
-#else
 using ESRI.ArcGIS.DataSourcesRaster;
-#endif
 using System;
 using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
