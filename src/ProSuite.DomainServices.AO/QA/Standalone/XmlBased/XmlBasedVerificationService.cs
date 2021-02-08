@@ -36,23 +36,21 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[CanBeNull] private readonly string _htmlReportTemplatePath;
-		[CanBeNull] private readonly string _outputParentDirectoryEnvironmentVariableName;
 		[CanBeNull] private readonly string _qualitySpecificationTemplatePath;
 
-		protected XmlBasedVerificationService(
+		public XmlBasedVerificationService(
 			[CanBeNull] string htmlReportTemplatePath = null,
-			[CanBeNull] string outputParentDirectoryEnvironmentVariableName = null,
 			[CanBeNull] string qualitySpecificationTemplatePath = null)
 		{
 			_htmlReportTemplatePath = htmlReportTemplatePath;
-			_outputParentDirectoryEnvironmentVariableName =
-				outputParentDirectoryEnvironmentVariableName;
 			_qualitySpecificationTemplatePath = qualitySpecificationTemplatePath;
 		}
 
 		[CLSCompliant(false)]
 		public void ExecuteVerification(
 			[NotNull] string dataQualityXml,
+			[CanBeNull] string specificationName,
+			[NotNull] IList<string> dataSourceReplacements,
 			[CanBeNull] AreaOfInterest areaOfInterest,
 			[CanBeNull] string optionsXml,
 			double tileSize,
@@ -66,17 +64,18 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			                                                  out qualitySpecifications);
 
 			XmlQualitySpecification xmlQualitySpecification =
-				qualitySpecifications.FirstOrDefault();
+				qualitySpecifications.FirstOrDefault(
+					s =>
+						specificationName == null ||
+						specificationName.Equals(
+							s.Name, StringComparison.CurrentCultureIgnoreCase));
 
 			Assert.NotNull(xmlQualitySpecification, "qualitySpecification");
 
 			IList<DataSource> dataSources =
 				StandaloneVerificationUtils.GetDataSources(document, xmlQualitySpecification);
 
-			// Datasource changes should have already been applied to the xml
-			// ApplyDataSourceChanges(dataSourcesParameter, dataSources);
-
-			// TODO validate data sources
+			ApplyDataSourceChanges(dataSourceReplacements, dataSources);
 
 			XmlVerificationOptions verificationOptions =
 				StringUtils.IsNotEmpty(optionsXml)
@@ -142,6 +141,33 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			                                .ToList();
 
 			return document;
+		}
+
+		private static void ApplyDataSourceChanges(
+			[NotNull] IList<string> dataSourceReplacements,
+			[NotNull] IList<DataSource> dataSources)
+		{
+			Assert.ArgumentNotNull(dataSourceReplacements, nameof(dataSourceReplacements));
+			Assert.ArgumentNotNull(dataSources, nameof(dataSources));
+
+			if (dataSourceReplacements.Count == 0)
+			{
+				return;
+			}
+
+			Assert.AreEqual(dataSources.Count, dataSourceReplacements.Count,
+			                "The number of data source replacement workspaces does not match number of data sources in XML specification.");
+
+			for (var i = 0; i < dataSources.Count; i++)
+			{
+				DataSource dataSource = dataSources[i];
+				string replacement = dataSourceReplacements[i];
+
+				_msg.DebugFormat("Replacing data source {0} with {1}...", dataSource.DisplayName,
+				                 replacement);
+
+				dataSource.WorkspaceAsText = replacement;
+			}
 		}
 
 		[MethodImpl(MethodImplOptions.NoInlining)]

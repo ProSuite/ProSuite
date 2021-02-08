@@ -22,6 +22,7 @@ using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
 using ProSuite.DomainServices.AO.QA.Issues;
+using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
@@ -145,6 +146,35 @@ namespace ProSuite.Microservices.Server.AO.QA
 					trackCancel =>
 						VerifyDataQualityCore(initialrequest, moreDataRequest, responseStream,
 						                      trackCancel);
+
+				ServiceCallStatus result =
+					await GrpcServerUtils.ExecuteServiceCall(
+						func, context, _singleStaThreadScheduler);
+
+				_msg.InfoFormat("Verification {0}", result);
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error verifying quality for request {request}", e);
+
+				SendFatalException(e, responseStream);
+				SetUnhealthy();
+			}
+		}
+
+		public override async Task VerifyStandaloneXml(
+			StandaloneVerificationRequest request,
+			IServerStreamWriter<VerificationResponse> responseStream,
+			ServerCallContext context)
+		{
+			try
+			{
+				_msg.InfoFormat("Starting standa alone verification request from {0}",
+				                context.Peer);
+				_msg.DebugFormat("Request details: {0}", request);
+
+				Func<ITrackCancel, ServiceCallStatus> func =
+					trackCancel => VerifyStandaloneXmlCore(request, responseStream, trackCancel);
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
@@ -325,6 +355,69 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return result;
 		}
 
+		private ServiceCallStatus VerifyStandaloneXmlCore(
+			StandaloneVerificationRequest request,
+			IServerStreamWriter<VerificationResponse> responseStream,
+			ITrackCancel trackCancel)
+		{
+			// Machine login
+			SetupUserNameProvider(Environment.UserName);
+
+			// TODO: Re-direct log messages
+			void SendResponse(VerificationResponse r) => responseStream.WriteAsync(r);
+
+			try
+			{
+				VerificationParametersMsg parameters = request.Parameters;
+
+				IGeometry perimeter =
+					ProtobufGeometryUtils.FromShapeMsg(parameters.Perimeter);
+
+				XmlBasedVerificationService qaService =
+					CreateXmlBasedStandaloneService(request, SendResponse, trackCancel);
+
+				XmlQualitySpecificationMsg xmlSpecification = request.Specification;
+
+				var aoi = perimeter == null ? null : new AreaOfInterest(perimeter);
+				qaService.ExecuteVerification(
+					xmlSpecification.Xml,
+					xmlSpecification.SelectedSpecificationName,
+					xmlSpecification.DataSourceReplacements, aoi, null, parameters.TileSize,
+					parameters.IssueFileGdbPath, IssueRepositoryType.FileGdb,
+					true, trackCancel);
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error checking quality for request {request}", e);
+
+				if (! EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+					    "PROSUITE_QA_SERVER_KEEP_SERVING_ON_ERROR"))
+				{
+					SetUnhealthy();
+				}
+
+				return ServiceCallStatus.Failed;
+			}
+
+			return trackCancel.Continue()
+				       ? ServiceCallStatus.Finished
+				       : ServiceCallStatus.Cancelled;
+		}
+
+		private XmlBasedVerificationService CreateXmlBasedStandaloneService(
+			[NotNull] StandaloneVerificationRequest request,
+			[NotNull] Action<VerificationResponse> writeAction,
+			ITrackCancel trackCancel)
+		{
+			// From local xml options?
+			string specificationTemplatePath = null;
+			XmlBasedVerificationService xmlService = new XmlBasedVerificationService(
+				request.Parameters.HtmlTemplatePath,
+				specificationTemplatePath);
+
+			return xmlService;
+		}
+
 		private static IEnumerable<GdbObjRefMsg> GetDeletableAllowedErrorRefs(
 			VerificationParametersMsg requestParameters,
 			BackgroundVerificationService qaService)
@@ -375,9 +468,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private static void SetupUserNameProvider(VerificationRequest request)
 		{
-			_msg.DebugFormat("New verification request from {0}", request.UserName);
-
 			string userName = request.UserName;
+
+			SetupUserNameProvider(userName);
+		}
+
+		private static void SetupUserNameProvider(string userName)
+		{
+			_msg.DebugFormat("New verification request from {0}", userName);
 
 			if (! string.IsNullOrEmpty(userName))
 			{
