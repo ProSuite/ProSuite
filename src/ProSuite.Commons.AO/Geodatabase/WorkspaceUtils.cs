@@ -1,4 +1,8 @@
-using ESRI.ArcGIS.DataSourcesRaster;
+#if Server
+using ESRI.ArcGIS.DatasourcesGDB;
+#else
+using ESRI.ArcGIS.DataSourcesGDB;
+#endif
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -9,7 +13,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Authentication;
 using System.Threading;
-using ESRI.ArcGIS.DataSourcesGDB;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Properties;
