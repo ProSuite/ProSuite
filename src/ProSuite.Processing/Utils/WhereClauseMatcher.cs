@@ -1215,7 +1215,7 @@ namespace ProSuite.Processing.Utils
 			public NameValidator(IEnumerable<string> fields)
 			{
 				if (fields == null) throw new ArgumentNullException();
-				_fields = fields.ToHashSet(StringComparer.OrdinalIgnoreCase);
+				_fields = new HashSet<string>(fields, StringComparer.OrdinalIgnoreCase);
 				_badNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 			}
 
