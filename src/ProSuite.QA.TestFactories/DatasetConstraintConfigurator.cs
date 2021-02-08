@@ -6,7 +6,6 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Tests.Constraints;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -15,6 +14,7 @@ using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Tests.Constraints;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -162,8 +162,8 @@ namespace ProSuite.QA.TestFactories
 			var testDesc = new TestDescriptor("QaDatasetConstraintFactory", clsDesc);
 			var qc = new QualityCondition("qc_dataset_" + Dataset.Name, testDesc);
 
-			QualityCondition_Utils.AddParameterValue(qc, QaDatasetConstraintFactory.TableAttribute,
-			                                        Dataset);
+			QualityConditionParameterUtils.AddParameterValue(
+				qc, QaDatasetConstraintFactory.TableAttribute, Dataset);
 			AddParameters(qc, Constraints, "");
 
 			return qc;
@@ -446,10 +446,9 @@ namespace ProSuite.QA.TestFactories
 			string subPrefix = prefix + "+";
 			foreach (ConstraintNode node in nodes)
 			{
-				QualityCondition_Utils.AddParameterValue(qualityCondition,
-				                                        QaDatasetConstraintFactory
-					                                        .ConstraintAttribute,
-				                                        prefix + node.Condition);
+				QualityConditionParameterUtils.AddParameterValue(
+					qualityCondition, QaDatasetConstraintFactory.ConstraintAttribute,
+					prefix + node.Condition);
 
 				AddParameters(qualityCondition, node.Nodes, subPrefix);
 			}

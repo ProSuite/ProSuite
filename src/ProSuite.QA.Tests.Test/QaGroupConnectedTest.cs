@@ -2,6 +2,15 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core;
+using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Test;
 using ProSuite.QA.Container.TestContainer;
@@ -9,15 +18,6 @@ using ProSuite.QA.TestFactories;
 using ProSuite.QA.Tests.Test.Construction;
 using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
-using NUnit.Framework;
-using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geometry;
-using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.Core;
-using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.DomainModel.Core.QA;
-using ProSuite.DomainModel.AO.QA;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -1168,7 +1168,8 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		private static QaRelGroupConnected CreateRelGroupConnectedFactory(
-			IFeatureWorkspace testWs, string fcName, out SimpleModel model, string relTableName = null)
+			IFeatureWorkspace testWs, string fcName, out SimpleModel model,
+			string relTableName = null)
 		{
 			IFieldsEdit fcFields = new FieldsClass();
 			fcFields.AddField(FieldUtils.CreateOIDField());
@@ -1210,15 +1211,14 @@ namespace ProSuite.QA.Tests.Test
 			var clsDesc = new ClassDescriptor(typeof(QaRelGroupConnected));
 			var tstDesc = new TestDescriptor("GroupConnected", clsDesc);
 			var condition = new QualityCondition("cndGroupConnected", tstDesc);
-			QualityCondition_Utils.AddParameterValue(condition, "relationTables", mds1);
-			QualityCondition_Utils.AddParameterValue(condition, "relationTables", mdsRel);
-			QualityCondition_Utils.AddParameterValue(condition, "relation", relName);
-			QualityCondition_Utils.AddParameterValue(condition, "join", JoinType.InnerJoin);
-			QualityCondition_Utils.AddParameterValue(condition, "groupBy",
-			                                        string.Format("{0}.{1}", dsRel.Name,
-			                                                      _groupField));
-			QualityCondition_Utils.AddParameterValue(condition, "allowedShape",
-			                                        QaGroupConnected.ShapeAllowed.All);
+			QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mds1);
+			QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mdsRel);
+			QualityConditionParameterUtils.AddParameterValue(condition, "relation", relName);
+			QualityConditionParameterUtils.AddParameterValue(condition, "join", JoinType.InnerJoin);
+			QualityConditionParameterUtils.AddParameterValue(
+				condition, "groupBy", string.Format("{0}.{1}", dsRel.Name, _groupField));
+			QualityConditionParameterUtils.AddParameterValue(condition, "allowedShape",
+			                                                 QaGroupConnected.ShapeAllowed.All);
 
 			var fact = new QaRelGroupConnected();
 			fact.Condition = condition;
@@ -1230,10 +1230,11 @@ namespace ProSuite.QA.Tests.Test
 		{
 			if (args.CurrentStep == Step.TileProcessing)
 			{
-				Console.WriteLine(@"Tile {0} of {1}: {2}", args.Current, args.Total, GeometryUtils.Format(args.CurrentEnvelope));
+				Console.WriteLine(@"Tile {0} of {1}: {2}", args.Current, args.Total,
+				                  GeometryUtils.Format(args.CurrentEnvelope));
 
-//        args.CurrentEnvelope.Expand(0.02, 0.02, false);
-      }
+				//        args.CurrentEnvelope.Expand(0.02, 0.02, false);
+			}
 		}
 
 		[NotNull]
@@ -2059,11 +2060,13 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureWorkspace testWs = _pgdbWorkspace;
 
 			QaRelGroupConnected fact =
-				CreateRelGroupConnectedFactory(testWs, "TestRelatedFactoryFc", out SimpleModel model);
+				CreateRelGroupConnectedFactory(testWs, "TestRelatedFactoryFc",
+				                               out SimpleModel model);
 
 			QualityCondition condition = fact.Condition;
 
-			IList<ITest> tests = fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+			IList<ITest> tests =
+				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 			Assert.AreEqual(1, tests.Count);
 
 			Assert.AreNotEqual(((QaGroupConnected) tests[0]).ErrorReporting,
@@ -2072,14 +2075,11 @@ namespace ProSuite.QA.Tests.Test
 			                   true);
 
 			// test optional parameters
-			QualityCondition_Utils.AddParameterValue(condition,
-			                                        nameof(QaGroupConnected.ErrorReporting),
-			                                        QaGroupConnected
-				                                        .GroupErrorReporting.ShortestGaps);
-			QualityCondition_Utils.AddParameterValue(condition,
-			                                        nameof(QaGroupConnected
-				                                               .CompleteGroupsOutsideTestArea),
-			                                        true);
+			QualityConditionParameterUtils.AddParameterValue(
+				condition, nameof(QaGroupConnected.ErrorReporting),
+				QaGroupConnected.GroupErrorReporting.ShortestGaps);
+			QualityConditionParameterUtils.AddParameterValue(
+				condition, nameof(QaGroupConnected.CompleteGroupsOutsideTestArea), true);
 
 			tests = fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 			Assert.AreEqual(((QaGroupConnected) tests[0]).ErrorReporting,
@@ -2397,8 +2397,8 @@ namespace ProSuite.QA.Tests.Test
 			runner.Execute(GeometryFactory.CreateEnvelope(2600000, 1199000, 2602000, 1200000));
 		}
 
-		[Test] 
-    [Ignore("requires connection to TOPGIST")]
+		[Test]
+		[Ignore("requires connection to TOPGIST")]
 		public void Topgis5203()
 		{
 			var ws = (IFeatureWorkspace) TestDataUtils.OpenTopgisTlm();
@@ -2425,7 +2425,8 @@ namespace ProSuite.QA.Tests.Test
 			var runner = new QaContainerTestRunner(tileSize, test);
 			runner.TestContainer.ProgressChanged += testContainer_ProgressChanged;
 
-      runner.Execute(GeometryFactory.CreateEnvelope(2707400.00, 1217900.00, 2725100.00, 1230100.00));
+			runner.Execute(
+				GeometryFactory.CreateEnvelope(2707400.00, 1217900.00, 2725100.00, 1230100.00));
 			//runner.Execute(GeometryFactory.CreateEnvelope(2730900, 1164500, 2731000, 1164600));
 
 			//runner.ClearErrors();
@@ -2433,40 +2434,40 @@ namespace ProSuite.QA.Tests.Test
 			//                                              1165000));
 		}
 
-    [Test]
-    [Ignore("uses temporary local data")]
-    public void Topgis5342()
-    {
-      var ws = (IFeatureWorkspace)TestDataUtils.OpenFileGdb(@"C:\temp\TOP-5342_2.gdb");
+		[Test]
+		[Ignore("uses temporary local data")]
+		public void Topgis5342()
+		{
+			var ws = (IFeatureWorkspace) TestDataUtils.OpenFileGdb(@"C:\temp\TOP-5342_2.gdb");
 
-      var tables =
-        new List<ITable>
-        {
-          ws.OpenTable("TLM_FLIESSGEWAESSER"),
-          ws.OpenTable("TLM_GEWAESSER_LAUF")
-        };
-      IRelationshipClass relationshipClass =
-        ws.OpenRelationshipClass("TLM_FLIESSGEWAESSER_LAUF");
+			var tables =
+				new List<ITable>
+				{
+					ws.OpenTable("TLM_FLIESSGEWAESSER"),
+					ws.OpenTable("TLM_GEWAESSER_LAUF")
+				};
+			IRelationshipClass relationshipClass =
+				ws.OpenRelationshipClass("TLM_FLIESSGEWAESSER_LAUF");
 
-      ITable joinedTable = TableJoinUtils.CreateQueryTable(relationshipClass,
-                                                           JoinType.InnerJoin);
+			ITable joinedTable = TableJoinUtils.CreateQueryTable(relationshipClass,
+			                                                     JoinType.InnerJoin);
 
-      var test = new QaGroupConnected(
-        (IFeatureClass)joinedTable, new[] { "TLM_GEWAESSER_LAUF.GWL_NR" },
-        QaGroupConnected.ShapeAllowed.None);
-      test.AddRelatedTables(joinedTable, tables);
-      test.CompleteGroupsOutsideTestArea = true;
+			var test = new QaGroupConnected(
+				(IFeatureClass) joinedTable, new[] {"TLM_GEWAESSER_LAUF.GWL_NR"},
+				QaGroupConnected.ShapeAllowed.None);
+			test.AddRelatedTables(joinedTable, tables);
+			test.CompleteGroupsOutsideTestArea = true;
 
 			double tileSize = 10000;
-      var runner = new QaContainerTestRunner(tileSize, test);
-      runner.TestContainer.ProgressChanged += testContainer_ProgressChanged;
+			var runner = new QaContainerTestRunner(tileSize, test);
+			runner.TestContainer.ProgressChanged += testContainer_ProgressChanged;
 
-      runner.Execute(GeometryFactory.CreateEnvelope(2707400.00, 1217900.00, 2725100.00, 1230100.00));
+			runner.Execute(
+				GeometryFactory.CreateEnvelope(2707400.00, 1217900.00, 2725100.00, 1230100.00));
 
-      //runner.ClearErrors();
-      //runner.Execute(GeometryFactory.CreateEnvelope(2731000 - tileSize, 1164500, 2731100,
-      //                                              1165000));
-
+			//runner.ClearErrors();
+			//runner.Execute(GeometryFactory.CreateEnvelope(2731000 - tileSize, 1164500, 2731100,
+			//                                              1165000));
 		}
 	}
 }

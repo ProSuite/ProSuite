@@ -8,8 +8,6 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geometry.EsriShape;
-using ProSuite.DomainModel.AO.DataModel;
-using ProSuite.DomainModel.AO.Geodatabase;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
@@ -136,9 +134,9 @@ namespace ProSuite.QA.Tests.Test
 				});
 
 			var condition = new QualityCondition("testtest", testDescriptor);
-			QualityCondition_Utils.AddParameterValue(condition, "featureClass", ds);
-			QualityCondition_Utils.AddParameterValue(condition, "limit", limit);
-			QualityCondition_Utils.AddParameterValue(condition, "is3D", true);
+			QualityConditionParameterUtils.AddParameterValue(condition, "featureClass", ds);
+			QualityConditionParameterUtils.AddParameterValue(condition, "limit", limit);
+			QualityConditionParameterUtils.AddParameterValue(condition, "is3D", true);
 
 			TestFactory factory = TestFactoryUtils.CreateTestFactory(condition);
 			Assert.IsNotNull(factory);

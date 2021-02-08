@@ -1679,7 +1679,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				return null;
 			}
 
-			TestParameter_Utils.AssertValidDataset(testParameter, dataset);
+			TestParameterTypeUtils.AssertValidDataset(testParameter, dataset);
 			return new DatasetTestParameterValue(testParameter, dataset,
 			                                     xmlDatasetTestParameterValue.WhereClause,
 			                                     xmlDatasetTestParameterValue.UsedAsReferenceData);
