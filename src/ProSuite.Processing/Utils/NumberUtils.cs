@@ -1,5 +1,5 @@
 using System;
-using ProSuite.Commons.Essentials.CodeAnnotations;
+using System.Diagnostics;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Processing.Utils
@@ -21,14 +21,13 @@ namespace ProSuite.Processing.Utils
 			return millimeters * Constants.PointsPerMillimeter;
 		}
 
-		public static double Clip(double value, double min, double max,
-		                          [CanBeNull] string parameter = null)
+		public static double Clamp(this double value, double min, double max, string name = null)
 		{
 			if (value < min)
 			{
-				if (! string.IsNullOrEmpty(parameter))
+				if (! string.IsNullOrEmpty(name))
 				{
-					_msg.WarnFormat("{0} was {1}, clipped to {2}", parameter, value, min);
+					_msg.WarnFormat("{0} was {1}, clamped to {2}", name, value, min);
 				}
 
 				return min;
@@ -36,9 +35,9 @@ namespace ProSuite.Processing.Utils
 
 			if (value > max)
 			{
-				if (! string.IsNullOrEmpty(parameter))
+				if (! string.IsNullOrEmpty(name))
 				{
-					_msg.WarnFormat("{0} was {1}, clipped to {2}", parameter, value, max);
+					_msg.WarnFormat("{0} was {1}, clamped to {2}", name, value, max);
 				}
 
 				return max;
@@ -47,14 +46,15 @@ namespace ProSuite.Processing.Utils
 			return value;
 		}
 
-		public static int Clip(int value, int min, int max,
-		                       [CanBeNull] string parameter = null)
+		public static int Clamp(this int value, int min, int max, string name = null)
 		{
+			Debug.Assert(min < max);
+
 			if (value < min)
 			{
-				if (! string.IsNullOrEmpty(parameter))
+				if (! string.IsNullOrEmpty(name))
 				{
-					_msg.WarnFormat("{0} was {1}, clipped to {2}", parameter, value, min);
+					_msg.WarnFormat("{0} was {1}, clamped to {2}", name, value, min);
 				}
 
 				return min;
@@ -62,9 +62,9 @@ namespace ProSuite.Processing.Utils
 
 			if (value > max)
 			{
-				if (! string.IsNullOrEmpty(parameter))
+				if (! string.IsNullOrEmpty(name))
 				{
-					_msg.WarnFormat("{0} was {1}, clipped to {2}", parameter, value, max);
+					_msg.WarnFormat("{0} was {1}, clamped to {2}", name, value, max);
 				}
 
 				return max;
@@ -113,6 +113,12 @@ namespace ProSuite.Processing.Utils
 			}
 
 			return angle; // -pi .. pi
+		}
+
+		/// <remarks>A number is finite if it is not NaN and not infinity</remarks>
+		public static bool IsFinite(this double number)
+		{
+			return ! double.IsNaN(number) && ! double.IsInfinity(number);
 		}
 	}
 }
