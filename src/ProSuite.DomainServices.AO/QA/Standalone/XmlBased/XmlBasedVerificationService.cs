@@ -49,8 +49,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		[CLSCompliant(false)]
 		public void ExecuteVerification(
 			[NotNull] string dataQualityXml,
-			[CanBeNull] string specificationName,
-			[NotNull] IList<string> dataSourceReplacements,
+			[NotNull] string specificationName,
+			[NotNull] List<DataSource> dataSourceReplacements,
 			[CanBeNull] AreaOfInterest areaOfInterest,
 			[CanBeNull] string optionsXml,
 			double tileSize,
@@ -63,19 +63,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			XmlDataQualityDocument document = ReadXmlDocument(dataQualityXml,
 			                                                  out qualitySpecifications);
 
-			XmlQualitySpecification xmlQualitySpecification =
-				qualitySpecifications.FirstOrDefault(
-					s =>
-						specificationName == null ||
-						specificationName.Equals(
-							s.Name, StringComparison.CurrentCultureIgnoreCase));
-
-			Assert.NotNull(xmlQualitySpecification, "qualitySpecification");
-
-			IList<DataSource> dataSources =
-				StandaloneVerificationUtils.GetDataSources(document, xmlQualitySpecification);
-
-			ApplyDataSourceChanges(dataSourceReplacements, dataSources);
+			_msg.DebugFormat("Available specifications: {0}",
+			                 StringUtils.Concatenate(qualitySpecifications.Select(s => s.Name),
+			                                         ", "));
 
 			XmlVerificationOptions verificationOptions =
 				StringUtils.IsNotEmpty(optionsXml)
@@ -94,7 +84,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				int exceptionCount;
 				int unusedExceptionObjectCount;
 				int rowCountWithStopConditions;
-				bool fulfilled = Verify(document, dataSources,
+				bool fulfilled = Verify(document, specificationName, dataSourceReplacements,
 				                        tileSize, outputDirectoryPath,
 				                        issueRepositoryType, properties,
 				                        verificationOptions,
@@ -109,15 +99,10 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			}
 			catch (Exception)
 			{
-				GC.Collect();
-				GC.WaitForPendingFinalizers();
-
 				StandaloneVerificationUtils.TryDeleteOutputDirectory(outputDirectoryPath);
 				throw;
 			}
 
-			GC.Collect();
-			GC.WaitForPendingFinalizers();
 		}
 
 		[NotNull]
@@ -129,8 +114,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			XmlDataQualityDocument document = XmlDataQualityUtils.DeserializeXml(xml);
 
-			Assert.True(document.GetAllQualitySpecifications().Any(),
-			            "The document does not contain any quality specifications");
+			Assert.ArgumentCondition(document.GetAllQualitySpecifications().Any(),
+			                         "The document does not contain any quality specifications");
+
 			XmlDataQualityUtils.AssertUniqueQualitySpecificationNames(document);
 			XmlDataQualityUtils.AssertUniqueQualityConditionNames(document);
 			XmlDataQualityUtils.AssertUniqueTestDescriptorNames(document);
@@ -142,37 +128,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			return document;
 		}
-
-		private static void ApplyDataSourceChanges(
-			[NotNull] IList<string> dataSourceReplacements,
-			[NotNull] IList<DataSource> dataSources)
-		{
-			Assert.ArgumentNotNull(dataSourceReplacements, nameof(dataSourceReplacements));
-			Assert.ArgumentNotNull(dataSources, nameof(dataSources));
-
-			if (dataSourceReplacements.Count == 0)
-			{
-				return;
-			}
-
-			Assert.AreEqual(dataSources.Count, dataSourceReplacements.Count,
-			                "The number of data source replacement workspaces does not match number of data sources in XML specification.");
-
-			for (var i = 0; i < dataSources.Count; i++)
-			{
-				DataSource dataSource = dataSources[i];
-				string replacement = dataSourceReplacements[i];
-
-				_msg.DebugFormat("Replacing data source {0} with {1}...", dataSource.DisplayName,
-				                 replacement);
-
-				dataSource.WorkspaceAsText = replacement;
-			}
-		}
-
+		
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		private bool Verify([NotNull] XmlDataQualityDocument document,
-		                    [NotNull] IEnumerable<DataSource> dataSources,
+		                    [NotNull] string specificationName,
+							[NotNull] IEnumerable<DataSource> dataSources,
 		                    double tileSize,
 		                    [NotNull] string directoryPath,
 		                    IssueRepositoryType issureRepositoryType,
@@ -192,7 +152,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				QualitySpecification qualitySpecification;
 				using (_msg.IncrementIndentation("Setting up quality specification"))
 				{
-					// TODO report errors 
 					var modelFactory = new VerifiedModelFactory(
 						CreateSimpleWorkspaceContext, new SimpleVerifiedDatasetHarvester());
 
@@ -201,9 +160,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 					var factory =
 						new XmlBasedQualitySpecificationFactory(modelFactory, datasetOpener);
 
-					// Assumption: the document contains *exactly* 1 specification.
 					qualitySpecification = factory.CreateQualitySpecification(
-						document, dataSources, ignoreConditionsForUnknownDatasets);
+						document, specificationName, dataSources, ignoreConditionsForUnknownDatasets);
 				}
 
 				return Verify(qualitySpecification, tileSize, directoryPath,
@@ -218,7 +176,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			finally
 			{
 				GC.Collect();
-				GC.WaitForPendingFinalizers();
 			}
 		}
 

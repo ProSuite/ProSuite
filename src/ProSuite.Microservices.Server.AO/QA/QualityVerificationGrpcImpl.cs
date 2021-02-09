@@ -16,6 +16,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
+using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
@@ -378,17 +379,43 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				XmlQualitySpecificationMsg xmlSpecification = request.Specification;
 
+				var dataSources = new List<DataSource>();
+				foreach (string replacement in xmlSpecification.DataSourceReplacements)
+				{
+					List<string> replacementStrings = StringUtils.SplitAndTrim(replacement, '>');
+					Assert.AreEqual(2, replacementStrings.Count,
+					                "Data source workspace is not of the format workspace_id > catalog_path");
+
+					var dataSource = new DataSource(replacementStrings[0], replacementStrings[0])
+					                 {
+						                 WorkspaceAsText = replacementStrings[1]
+					                 };
+
+					dataSources.Add(dataSource);
+				}
+
 				var aoi = perimeter == null ? null : new AreaOfInterest(perimeter);
-				qaService.ExecuteVerification(
-					xmlSpecification.Xml,
-					xmlSpecification.SelectedSpecificationName,
-					xmlSpecification.DataSourceReplacements, aoi, null, parameters.TileSize,
-					parameters.IssueFileGdbPath, IssueRepositoryType.FileGdb,
-					true, trackCancel);
+
+				try
+				{
+					qaService.ExecuteVerification(
+						xmlSpecification.Xml,
+						xmlSpecification.SelectedSpecificationName,
+						dataSources, aoi, null, parameters.TileSize,
+						parameters.IssueFileGdbPath, IssueRepositoryType.FileGdb,
+						true, trackCancel);
+				}
+				catch (ArgumentException argumentException)
+				{
+					_msg.Warn("Argument exception", argumentException);
+
+					return ServiceCallStatus.Failed;
+				}
 			}
 			catch (Exception e)
 			{
-				_msg.Error($"Error checking quality for request {request}", e);
+				_msg.DebugFormat("Error during processing of request {0}", request);
+				_msg.Error("Error verifying quality: ", e);
 
 				if (! EnvironmentUtils.GetBooleanEnvironmentVariableValue(
 					    "PROSUITE_QA_SERVER_KEEP_SERVING_ON_ERROR"))
@@ -404,7 +431,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				       : ServiceCallStatus.Cancelled;
 		}
 
-		private XmlBasedVerificationService CreateXmlBasedStandaloneService(
+		private static XmlBasedVerificationService CreateXmlBasedStandaloneService(
 			[NotNull] StandaloneVerificationRequest request,
 			[NotNull] Action<VerificationResponse> writeAction,
 			ITrackCancel trackCancel)
