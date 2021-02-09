@@ -8,6 +8,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using Grpc.Core;
+using log4net.Core;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Callbacks;
@@ -165,23 +166,30 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public override async Task VerifyStandaloneXml(
 			StandaloneVerificationRequest request,
-			IServerStreamWriter<VerificationResponse> responseStream,
+			IServerStreamWriter<StandaloneVerificationResponse> responseStream,
 			ServerCallContext context)
 		{
 			try
 			{
-				_msg.InfoFormat("Starting standa alone verification request from {0}",
+				_msg.InfoFormat("Starting stand-alone verification request from {0}",
 				                context.Peer);
 				_msg.DebugFormat("Request details: {0}", request);
 
-				Func<ITrackCancel, ServiceCallStatus> func =
-					trackCancel => VerifyStandaloneXmlCore(request, responseStream, trackCancel);
+				Action<LoggingEvent> action =
+					SendInfoLogAction(responseStream, ServiceCallStatus.Running);
 
-				ServiceCallStatus result =
-					await GrpcServerUtils.ExecuteServiceCall(
-						func, context, _singleStaThreadScheduler);
+				using (MessagingUtils.TemporaryRootAppender(new ActionAppender(action)))
+				{
+					Func<ITrackCancel, ServiceCallStatus> func =
+						trackCancel => VerifyStandaloneXmlCore(request, responseStream,
+						                                       trackCancel);
 
-				_msg.InfoFormat("Verification {0}", result);
+					ServiceCallStatus result =
+						await GrpcServerUtils.ExecuteServiceCall(
+							func, context, _singleStaThreadScheduler);
+
+					_msg.InfoFormat("Verification {0}", result);
+				}
 			}
 			catch (Exception e)
 			{
@@ -190,6 +198,34 @@ namespace ProSuite.Microservices.Server.AO.QA
 				SendFatalException(e, responseStream);
 				SetUnhealthy();
 			}
+		}
+
+		private static Action<LoggingEvent> SendInfoLogAction(
+			[NotNull] IServerStreamWriter<StandaloneVerificationResponse> responseStream,
+			ServiceCallStatus callStatus)
+		{
+			Action<LoggingEvent> action =
+				e =>
+				{
+					if (e.Level.Value < Level.Info.Value)
+					{
+						return;
+					}
+
+					var response = new StandaloneVerificationResponse
+					               {
+						               Message = new LogMsg
+						                         {
+							                         Message = e.RenderedMessage,
+							                         MessageLevel = e.Level.Value
+						                         },
+						               ServiceCallStatus = (int) callStatus
+					               };
+
+					MessagingUtils.TrySendResponse(responseStream, response);
+				};
+
+			return action;
 		}
 
 		private static async Task<DataVerificationRequest> RequestMoreDataAsync(
@@ -358,14 +394,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private ServiceCallStatus VerifyStandaloneXmlCore(
 			StandaloneVerificationRequest request,
-			IServerStreamWriter<VerificationResponse> responseStream,
+			IServerStreamWriter<StandaloneVerificationResponse> responseStream,
 			ITrackCancel trackCancel)
 		{
 			// Machine login
 			SetupUserNameProvider(Environment.UserName);
-
-			// TODO: Re-direct log messages
-			void SendResponse(VerificationResponse r) => responseStream.WriteAsync(r);
 
 			try
 			{
@@ -375,7 +408,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					ProtobufGeometryUtils.FromShapeMsg(parameters.Perimeter);
 
 				XmlBasedVerificationService qaService =
-					CreateXmlBasedStandaloneService(request, SendResponse, trackCancel);
+					CreateXmlBasedStandaloneService(request);
 
 				XmlQualitySpecificationMsg xmlSpecification = request.Specification;
 
@@ -432,9 +465,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 
 		private static XmlBasedVerificationService CreateXmlBasedStandaloneService(
-			[NotNull] StandaloneVerificationRequest request,
-			[NotNull] Action<VerificationResponse> writeAction,
-			ITrackCancel trackCancel)
+			[NotNull] StandaloneVerificationRequest request)
 		{
 			// From local xml options?
 			string specificationTemplatePath = null;
@@ -734,8 +765,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 				response.Issues.Add(issue);
 			}
 
-			//response.Issues.AddRange(issues);
-
 			_msg.DebugFormat("Sending {0} errors back to client...", issues.Count);
 
 			try
@@ -860,6 +889,22 @@ namespace ProSuite.Microservices.Server.AO.QA
 				// For example: System.InvalidOperationException: Only one write can be pending at a time
 				_msg.Warn("Error sending progress to the client", ex);
 			}
+		}
+
+		private static void SendFatalException(
+			[NotNull] Exception exception,
+			IServerStreamWriter<StandaloneVerificationResponse> responseStream)
+		{
+			MessagingUtils.SendResponse(responseStream,
+			                            new StandaloneVerificationResponse()
+			                            {
+				                            Message = new LogMsg()
+				                                      {
+					                                      Message = exception.Message,
+					                                      MessageLevel = Level.Error.Value
+				                                      },
+				                            ServiceCallStatus = (int) ServiceCallStatus.Failed
+			                            });
 		}
 
 		private void SetUnhealthy()
