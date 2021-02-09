@@ -5,7 +5,7 @@ using System.Text;
 using NUnit.Framework;
 using ProSuite.Processing.Evaluation;
 
-namespace ProSuite.Processing.Test
+namespace ProSuite.Processing.Test.Evaluation
 {
 	[TestFixture]
 	public class ExpressionEvaluatorTest
