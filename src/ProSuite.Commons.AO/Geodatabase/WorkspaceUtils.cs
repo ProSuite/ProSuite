@@ -623,6 +623,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			catch (COMException exception)
 			{
+				_msg.Debug($"Error opening workspace using catalog path {connectionFilePath}",
+				           exception);
+
 				if (exception.ErrorCode == (decimal) fdoError.FDO_E_CONNECTION_CANCELLED)
 				{
 					// clear the parameters for this instance (to allow re-authentication on next try)
