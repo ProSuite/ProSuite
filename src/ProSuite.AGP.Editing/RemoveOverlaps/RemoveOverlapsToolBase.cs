@@ -13,6 +13,7 @@ using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -353,7 +354,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			// Remove the selected features from the set of overlapping features.
 			// This is also important to make sure the geometries don't get mixed up / reset 
 			// by inserting target vertices
-			foundFeatures.RemoveAll(selectedFeatures.Contains);
+			foundFeatures.RemoveAll(
+				f => selectedFeatures.Any(s => GdbObjectUtils.IsSameFeature(f, s)));
 
 			return foundFeatures;
 		}

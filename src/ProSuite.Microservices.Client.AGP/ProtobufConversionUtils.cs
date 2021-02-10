@@ -209,9 +209,9 @@ namespace ProSuite.Microservices.Client.AGP
 		}
 
 		public static void ToGdbObjectMsgList(
-			IEnumerable<Feature> features,
-			ICollection<GdbObjectMsg> resultGdbObjects,
-			ICollection<ObjectClassMsg> resultGdbClasses)
+			[NotNull] IEnumerable<Feature> features,
+			[NotNull] ICollection<GdbObjectMsg> resultGdbObjects,
+			[NotNull] ICollection<ObjectClassMsg> resultGdbClasses)
 		{
 			Stopwatch watch = null;
 
@@ -266,8 +266,9 @@ namespace ProSuite.Microservices.Client.AGP
 			_msg.DebugStopTiming(watch, "Converted {0} features to DTOs", resultGdbObjects.Count);
 		}
 
-		public static ObjectClassMsg ToObjectClassMsg([NotNull] Table objectClass,
-		                                              SpatialReference spatialRef = null)
+		public static ObjectClassMsg ToObjectClassMsg(
+			[NotNull] Table objectClass,
+			[CanBeNull] SpatialReference spatialRef = null)
 		{
 			esriGeometryType geometryType = TranslateAGPShapeType(objectClass);
 
@@ -327,7 +328,7 @@ namespace ProSuite.Microservices.Client.AGP
 		}
 
 		public static List<Geometry> FromShapeMsgList(
-			ICollection<ShapeMsg> shapeBufferList)
+			[NotNull] ICollection<ShapeMsg> shapeBufferList)
 		{
 			var geometryList = new List<Geometry>(shapeBufferList.Count);
 

@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Templates;
@@ -12,6 +13,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -259,8 +261,12 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			{
 				selection = GetApplicableSelectedFeatures(activeView).ToList();
 
+				var potentiallyAffectedFeatures =
+					GetAdjacentFeatures(selection, cancelableProgressor);
+
 				var result = MicroserviceClient.Reshape(
-					selection, polyline, true, true, _nonDefaultSideMode);
+					selection, polyline, potentiallyAffectedFeatures, true, true,
+					_nonDefaultSideMode);
 
 				Dictionary<Feature, Geometry> resultFeatures;
 
@@ -338,6 +344,49 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					});
 
 			return result;
+		}
+
+		[CanBeNull]
+		private IList<Feature> GetAdjacentFeatures(
+			[NotNull] ICollection<Feature> selectedFeatures,
+			[CanBeNull] CancelableProgressor cancellabelProgressor)
+		{
+			Dictionary<MapMember, List<long>> selection = ActiveMapView.Map.GetSelection();
+
+			if (! selection.Keys.Any(mm => mm is FeatureLayer fl &&
+			                               fl.ShapeType == esriGeometryType.esriGeometryPolyline))
+			{
+				return null;
+			}
+
+			Envelope inExtent = ActiveMapView.Extent;
+
+			// TODO: Use linear network classes as defined in reshape options
+			TargetFeatureSelection targetFeatureSelection = TargetFeatureSelection.SameClass;
+
+			IEnumerable<KeyValuePair<FeatureClass, List<Feature>>> foundOidsByClass =
+				MapUtils.FindFeatures(
+					ActiveMapView, selection, targetFeatureSelection,
+					layer => layer.ShapeType == esriGeometryType.esriGeometryPolyline,
+					inExtent, cancellabelProgressor);
+
+			if (cancellabelProgressor != null &&
+			    ! cancellabelProgressor.CancellationToken.IsCancellationRequested)
+			{
+				return new List<Feature>();
+			}
+
+			var foundFeatures = new List<Feature>();
+
+			foreach (var keyValuePair in foundOidsByClass)
+			{
+				foundFeatures.AddRange(keyValuePair.Value);
+			}
+
+			foundFeatures.RemoveAll(
+				f => selectedFeatures.Any(s => GdbObjectUtils.IsSameFeature(f, s)));
+
+			return foundFeatures;
 		}
 
 		private void LogReshapeResults(ReshapeResult reshapeResult,
@@ -430,7 +479,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			}
 
 			ReshapeResult reshapeResult = await MicroserviceClient.ReshapeAsync(
-				                              polygonSelection, sketchPolyline, false, true,
+				                              polygonSelection, sketchPolyline, null, false, true,
 				                              nonDefaultSide);
 
 			// TODO: discard result if the user has since clicked again or some other event (finish / esc) happened

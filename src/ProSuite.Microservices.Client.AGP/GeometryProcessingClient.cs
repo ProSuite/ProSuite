@@ -51,24 +51,26 @@ namespace ProSuite.Microservices.Client.AGP
 		public async Task<ReshapeResult> ReshapeAsync(
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] Polyline reshapeLine,
+			[CanBeNull] IList<Feature> adjacentFeatures,
 			bool allowOpenJawReshape,
 			bool multiReshapeAsUnion,
 			bool tryReshapeNonDefault)
 		{
 			return await AdvancedReshapeClientUtils.ReshapeAsync(
-				       ReshapeClient, selectedFeatures, reshapeLine, allowOpenJawReshape,
-				       multiReshapeAsUnion, tryReshapeNonDefault);
+				       ReshapeClient, selectedFeatures, reshapeLine, adjacentFeatures,
+				       allowOpenJawReshape, multiReshapeAsUnion, tryReshapeNonDefault);
 		}
 
 		public ReshapeResult Reshape(
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] Polyline reshapeLine,
+			[CanBeNull] IList<Feature> adjacentFeatures,
 			bool allowOpenJawReshape,
 			bool multiReshapeAsUnion,
 			bool tryReshapeNonDefault)
 		{
 			return AdvancedReshapeClientUtils.Reshape(
-				ReshapeClient, selectedFeatures, reshapeLine, allowOpenJawReshape,
+				ReshapeClient, selectedFeatures, reshapeLine, adjacentFeatures, allowOpenJawReshape,
 				multiReshapeAsUnion, tryReshapeNonDefault);
 		}
 

@@ -49,5 +49,38 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return features.Where(
 				f => DatasetUtils.GetShapeType(f.GetTable()) == byGeometryType);
 		}
+
+		public static bool IsSameFeature(Feature feature1, Feature feature2)
+		{
+			return IsSameRow(feature1, feature2);
+		}
+
+		public static bool IsSameRow(Row row1, Row row2)
+		{
+			if (row1 == null && row2 == null)
+			{
+				return true;
+			}
+
+			if (row1 == null || row2 == null)
+			{
+				return false;
+			}
+
+			if (row1.Handle == row2.Handle)
+			{
+				return true;
+			}
+
+			if (row1.GetObjectID() != row2.GetObjectID())
+			{
+				return false;
+			}
+
+			Table table1 = row1.GetTable();
+			Table table2 = row2.GetTable();
+
+			return DatasetUtils.IsSameClass(table1, table2);
+		}
 	}
 }

@@ -47,6 +47,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 			[NotNull] ReshapeGrpc.ReshapeGrpcClient rpcClient,
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] Polyline reshapeLine,
+			[CanBeNull] IList<Feature> adjacentFeatures,
 			bool allowOpenJawReshape,
 			bool multiReshapeAsUnion,
 			bool tryReshapeNonDefault)
@@ -60,8 +61,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 						AddInputFeatures(selectedFeatures, allInputFeatures);
 
 						return CreateReshapeRequest(
-							selectedFeatures, reshapeLine, allowOpenJawReshape, multiReshapeAsUnion,
-							tryReshapeNonDefault);
+							selectedFeatures, reshapeLine, adjacentFeatures, allowOpenJawReshape,
+							multiReshapeAsUnion, tryReshapeNonDefault);
 					});
 
 			request.AllowOpenJawReshape = true;
@@ -102,6 +103,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 			[NotNull] ReshapeGrpc.ReshapeGrpcClient rpcClient,
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] Polyline reshapeLine,
+			[CanBeNull] IList<Feature> adjacentFeatures,
 			bool allowOpenJawReshape,
 			bool multiReshapeAsUnion,
 			bool tryReshapeNonDefault)
@@ -110,9 +112,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 
 			AddInputFeatures(selectedFeatures, allInputFeatures);
 
+			if (adjacentFeatures != null)
+				AddInputFeatures(adjacentFeatures, allInputFeatures);
+
 			AdvancedReshapeRequest request = CreateReshapeRequest(
-				selectedFeatures, reshapeLine, allowOpenJawReshape, multiReshapeAsUnion,
-				tryReshapeNonDefault);
+				selectedFeatures, reshapeLine, adjacentFeatures, allowOpenJawReshape,
+				multiReshapeAsUnion, tryReshapeNonDefault);
 
 			return Reshape(rpcClient, request, allInputFeatures);
 		}
@@ -171,6 +176,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 		private static AdvancedReshapeRequest CreateReshapeRequest(
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] Polyline reshapePath,
+			[CanBeNull] IList<Feature> adjacentFeatures,
 			bool allowOpenJaw, bool multiReshapeAsUnion, bool useNonDefaultSide)
 		{
 			var request = new AdvancedReshapeRequest();
@@ -186,8 +192,15 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 			request.UseNonDefaultReshapeSide = useNonDefaultSide;
 			request.MultipleSourcesTryUnion = multiReshapeAsUnion;
 
-			// TODO:
-			//request.PotentiallyConnectedFeatures
+			// TODO: from options
+			request.MoveOpenJawEndJunction = true;
+
+			if (adjacentFeatures != null)
+			{
+				ProtobufConversionUtils.ToGdbObjectMsgList(
+					adjacentFeatures, request.PotentiallyConnectedFeatures,
+					request.ClassDefinitions);
+			}
 
 			return request;
 		}
