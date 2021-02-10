@@ -49,9 +49,9 @@ namespace ProSuite.Microservices.Server.AO
 				return;
 			}
 
-			_msg.Warn("Error sending progress to the client. Retrying the last response in 1s...");
+			// Re-try (typically for the final message containing some extra information):
+			_msg.Debug("Error sending progress to the client. Retrying in 1s...");
 
-			// Re-try (only for final message)
 			Task.Delay(1000);
 			responseStream.WriteAsync(response);
 		}
