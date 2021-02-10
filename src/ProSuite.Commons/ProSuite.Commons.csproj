@@ -43,6 +43,7 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -103,6 +104,7 @@
     <Compile Include="Geometry\Wkb\BigEndianBinaryReader.cs" />
     <Compile Include="Geometry\Wkb\WkbWriter.cs" />
     <Compile Include="IO\ZipStorer.cs" />
+    <Compile Include="IO\ZipUtils.cs" />
     <Compile Include="ManagedOptions\DatasetSpecificValue.cs" />
     <Compile Include="Misc\Either.cs" />
     <Compile Include="Geometry\Box.cs" />

@@ -12,6 +12,7 @@ namespace ProSuite.Commons.IO
 	/// Supports Deflate (default) and Store compression methods.
 	/// </summary>
 	[CLSCompliant(false)]
+	[Obsolete("Use ZipArchive in System.IO.Compression. Keep this class for reference")]
 	public class ZipStorer : IDisposable
 	{
 		#region Nested type: CompressionMethod
