@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geometry.Wkb;
 
@@ -31,6 +32,8 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 					case WkbGeometryType.Polygon:
 					case WkbGeometryType.MultiPolygon:
 						return ReadPolygon(reader, geometryType, ordinates);
+					case WkbGeometryType.MultiSurface:
+						return ReadMultipatch(reader, ordinates);
 					default:
 						throw new NotImplementedException(
 							$"Unsupported geometry type: {geometryType}");
@@ -97,6 +100,21 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 			}
 		}
 
+		public IMultiPatch ReadMultipatch([NotNull] Stream stream,
+		                                  bool groupPartsByPointIDs = false)
+		{
+			using (BinaryReader reader = InitializeReader(stream))
+			{
+				ReadWkbType(reader, true,
+				            out WkbGeometryType geometryType, out Ordinates ordinates);
+
+				Assert.AreEqual(WkbGeometryType.MultiSurface, geometryType,
+				                "Unexpected geometry type: {0}", geometryType);
+
+				return ReadMultipatch(reader, ordinates, groupPartsByPointIDs);
+			}
+		}
+
 		private IPolygon ReadPolygon(BinaryReader reader, WkbGeometryType geometryType,
 		                             Ordinates ordinates)
 		{
@@ -126,6 +144,95 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 
 			throw new NotSupportedException(
 				$"Cannot read {geometryType} as polygon.");
+		}
+
+		private IMultiPatch ReadMultipatch(BinaryReader reader,
+		                                   Ordinates expectedOrdinates,
+		                                   bool groupPartsByPointIDs = false)
+		{
+			IMultiPatch result = new MultiPatchClass();
+
+			if (groupPartsByPointIDs)
+			{
+				GeometryUtils.MakePointIDAware(result);
+			}
+
+			int polyhedraCount = checked((int) reader.ReadUInt32());
+
+			for (int i = 0; i < polyhedraCount; i++)
+			{
+				WkbGeometryType geometryType;
+				Ordinates ordinates;
+				ReadWkbType(reader, false,
+				            out geometryType, out ordinates);
+
+				Assert.AreEqual(WkbGeometryType.PolyhedralSurface, geometryType,
+				                "Unexpected geometry type");
+
+				Assert.AreEqual(expectedOrdinates, ordinates,
+				                "Unexpected ordinates dimension");
+
+				int polygonCount = checked((int) reader.ReadUInt32());
+
+				for (int p = 0; p < polygonCount; p++)
+				{
+					ReadWkbType(reader, false,
+					            out geometryType, out expectedOrdinates);
+
+					Assert.AreEqual(WkbGeometryType.Polygon, geometryType,
+					                "Unexpected geometry type");
+
+					var rings = ReadSingleExteriorRingPolygon(reader, ordinates, false).ToList();
+
+					if (rings.Count == 0) continue;
+
+					if (groupPartsByPointIDs)
+					{
+						AssignPointIds(rings, i);
+					}
+
+					var outerRingType = rings.Count > 1
+						                    ? esriMultiPatchRingType.esriMultiPatchOuterRing
+						                    : p == 0 || groupPartsByPointIDs
+							                    ? esriMultiPatchRingType.esriMultiPatchFirstRing
+							                    : esriMultiPatchRingType.esriMultiPatchRing;
+
+					IRing outerRing = rings[0];
+					GeometryFactory.AddRingToMultiPatch(outerRing, result, outerRingType);
+
+					if (rings.Count > 1)
+					{
+						for (int r = 1; r < rings.Count; r++)
+						{
+							IRing innerRing = rings[r];
+							GeometryFactory.AddRingToMultiPatch(
+								innerRing, result, esriMultiPatchRingType.esriMultiPatchInnerRing);
+						}
+					}
+				}
+			}
+
+			return result;
+		}
+
+		private static void AssignPointIds([NotNull] IEnumerable<IRing> rings, int id)
+		{
+			foreach (IRing ring in rings)
+			{
+				AssignPointIds(ring, id);
+
+				// NOTE: Inner rings do not have PointIDs in Safa multipatches
+				id = 0;
+			}
+		}
+
+		private static void AssignPointIds([NotNull] IRing ring, int id)
+		{
+			GeometryUtils.MakePointIDAware(ring);
+
+			IPointCollection points = (IPointCollection) ring;
+
+			GeometryUtils.AssignConstantPointID(points, id);
 		}
 
 		private static IPoint ReadPoint(BinaryReader reader, Ordinates ordinates)
@@ -197,9 +304,15 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 				       : (T) GeometryFactory.CreateEmptyPolyline(null, zAware, mAware);
 		}
 
+		[NotNull]
 		private IEnumerable<IRing> ReadSingleExteriorRingPolygon(
-			[NotNull] BinaryReader reader, Ordinates ordinates)
+			[NotNull] BinaryReader reader, Ordinates ordinates, bool? reverseOrder = null)
 		{
+			if (reader == null)
+			{
+				throw new ArgumentNullException(nameof(reader));
+			}
+
 			int ringCount = checked((int) reader.ReadUInt32());
 
 			bool zAware = ordinates == Ordinates.Xyz || ordinates == Ordinates.Xyzm;
@@ -210,8 +323,8 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 
 			if (ringCount > 0)
 			{
-				bool reverseOrder = ! AssumeWkbPolygonsClockwise;
-				var geometryBuilder = new WksPointListBuilder(reverseOrder);
+				bool reverse = reverseOrder ?? ! AssumeWkbPolygonsClockwise;
+				var geometryBuilder = new WksPointListBuilder(reverse);
 
 				foreach (WKSPointZ[] wksPoints in ReadLinestringsCore(
 					reader, ordinates, ringCount, geometryBuilder))

@@ -693,6 +693,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 			issueProto.IssueGeometry =
 				ProtobufGeometryUtils.ToShapeMsg(geometry);
 
+			// NOTE: Multipatches are not restored from byte arrays in EsriShape (10.6.1)
+			ShapeMsg.FormatOneofCase format =
+				geometry?.GeometryType == esriGeometryType.esriGeometryMultiPatch
+					? ShapeMsg.FormatOneofCase.Wkb
+					: ShapeMsg.FormatOneofCase.EsriShape;
+
+			issueProto.IssueGeometry =
+				ProtobufGeometryUtils.ToShapeMsg(geometry, format);
+
 			issueProto.CreationDateTimeTicks = DateTime.Now.Ticks;
 
 			//issueProto.IsInvalidException = args.us;

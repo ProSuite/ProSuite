@@ -4,41 +4,52 @@ using System.IO;
 using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geometry.ExtractParts;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geometry;
 using ProSuite.Commons.Geometry.Wkb;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Geometry.Serialization
 {
 	[CLSCompliant(false)]
 	public class WkbGeometryWriter : WkbWriter
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		public static IArrayProvider<WKSPointZ> WksPointArrayProvider { get; set; }
 
 		public byte[] WriteGeometry([NotNull] IGeometry geometry)
 		{
-			switch (geometry.GeometryType)
+			try
 			{
-				case esriGeometryType.esriGeometryPoint:
-					return WritePoint((IPoint) geometry);
-				case esriGeometryType.esriGeometryPolyline:
-					return WritePolyline((IPolyline) geometry);
-				case esriGeometryType.esriGeometryPolygon:
-					return WritePolygon((IPolygon) geometry);
-				default:
-					throw new NotImplementedException(
-						$"Geometry type {geometry.GeometryType} is not implemented.");
+				switch (geometry.GeometryType)
+				{
+					case esriGeometryType.esriGeometryPoint:
+						return WritePoint((IPoint) geometry);
+					case esriGeometryType.esriGeometryPolyline:
+						return WritePolyline((IPolyline) geometry);
+					case esriGeometryType.esriGeometryPolygon:
+						return WritePolygon((IPolygon) geometry);
+					case esriGeometryType.esriGeometryMultiPatch:
+						return WriteMultipatch((IMultiPatch) geometry);
+					default:
+						throw new NotImplementedException(
+							$"Geometry type {geometry.GeometryType} is not implemented.");
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error writing geometry to WKB: {GeometryUtils.ToString(geometry)}",
+				           e);
+				throw;
 			}
 		}
 
 		public byte[] WritePoint([NotNull] IPoint point)
 		{
-			Ordinates ordinates = GeometryUtils.IsZAware(point) ? Ordinates.Xyz : Ordinates.Xy;
-
-			if (GeometryUtils.IsMAware(point))
-			{
-				ordinates = ordinates == Ordinates.Xy ? Ordinates.Xym : Ordinates.Xyzm;
-			}
+			Ordinates ordinates = GetOrdinatesDimension(point);
 
 			// TODO: Initialize with the proper size or allow providing the actual byte[]
 			MemoryStream memoryStream = InitializeWriter();
@@ -56,12 +67,7 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 			// TODO: Initialize with the proper size or allow providing the actual byte[]
 			MemoryStream memoryStream = InitializeWriter();
 
-			Ordinates ordinates = GeometryUtils.IsZAware(polygon) ? Ordinates.Xyz : Ordinates.Xy;
-
-			if (GeometryUtils.IsMAware(polygon))
-			{
-				ordinates = ordinates == Ordinates.Xy ? Ordinates.Xym : Ordinates.Xyzm;
-			}
+			Ordinates ordinates = GetOrdinatesDimension(polygon);
 
 			int exteriorRingCount = polygon.ExteriorRingCount;
 
@@ -97,12 +103,7 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 			// TODO: Initialize with the proper size or allow providing the actual byte[]
 			MemoryStream memoryStream = InitializeWriter();
 
-			Ordinates ordinates = GeometryUtils.IsZAware(polyline) ? Ordinates.Xyz : Ordinates.Xy;
-
-			if (GeometryUtils.IsMAware(polyline))
-			{
-				ordinates = ordinates == Ordinates.Xy ? Ordinates.Xym : Ordinates.Xyzm;
-			}
+			Ordinates ordinates = GetOrdinatesDimension(polyline);
 
 			int count = ((IGeometryCollection) polyline).GeometryCount;
 
@@ -123,6 +124,78 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 			}
 
 			return memoryStream.ToArray();
+		}
+
+		public byte[] WriteMultipatch([NotNull] IMultiPatch multipatch,
+		                              bool groupPartsByPointIDs = false)
+		{
+			Assert.True(GeometryUtils.IsRingBasedMultipatch(multipatch),
+			            "Unsupported (non-ring-based) multipatch.");
+
+			// TODO: Initialize with the proper size or allow providing the actual byte[]
+			MemoryStream memoryStream = InitializeWriter();
+
+			Ordinates ordinates = GetOrdinatesDimension(multipatch);
+
+			WriteWkbType(WkbGeometryType.MultiSurface, ordinates);
+
+			var geometryParts =
+				GeometryPart.FromGeometry(multipatch, groupPartsByPointIDs).ToList();
+
+			Writer.Write(geometryParts.Count);
+
+			foreach (GeometryPart part in geometryParts)
+			{
+				WriteWkbType(WkbGeometryType.PolyhedralSurface, ordinates);
+
+				List<List<IRing>> polygonGroup = GetPolygons(multipatch, part).ToList();
+
+				Writer.Write(polygonGroup.Count);
+
+				foreach (List<IRing> rings in polygonGroup)
+				{
+					WriteWkbType(WkbGeometryType.Polygon, ordinates);
+
+					WriteLineStringsCore(GetAsPointList(rings).ToList(), ordinates);
+				}
+			}
+
+			return memoryStream.ToArray();
+		}
+
+		private static IEnumerable<List<IRing>> GetPolygons([NotNull] IMultiPatch multipatch,
+		                                                    [NotNull] GeometryPart part)
+		{
+			var result = new Dictionary<IRing, List<IRing>>();
+
+			foreach (IRing ring in part.LowLevelGeometries.Cast<IRing>())
+			{
+				bool beginning = false;
+				esriMultiPatchRingType type = multipatch.GetRingType(ring, ref beginning);
+
+				if (type != esriMultiPatchRingType.esriMultiPatchInnerRing)
+				{
+					result.Add(ring, new List<IRing>());
+				}
+				else
+				{
+					IRing outerRing = multipatch.FindBeginningRing(ring);
+
+					Assert.True(result.ContainsKey(outerRing),
+					            "No outer ring found for inner ring.");
+
+					result[outerRing].Add(ring);
+				}
+			}
+
+			foreach (KeyValuePair<IRing, List<IRing>> keyValuePair in result)
+			{
+				List<IRing> polygonRings = keyValuePair.Value;
+
+				polygonRings.Insert(0, keyValuePair.Key);
+
+				yield return polygonRings;
+			}
 		}
 
 		private void WritePointCore(IPoint point, Ordinates ordinates)
@@ -170,6 +243,21 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 			}
 		}
 
+		private static IEnumerable<IPointList> GetAsPointList(
+			[NotNull] ICollection<IRing> rings)
+		{
+			foreach (IRing ring in rings)
+			{
+				IPointCollection4 pointCollection = (IPointCollection4) ring;
+
+				WKSPointZ[] pointArray = new WKSPointZ[pointCollection.PointCount];
+
+				GeometryUtils.QueryWKSPointZs(pointCollection, pointArray);
+
+				yield return new WksPointZPointList(pointArray, 0, pointCollection.PointCount);
+			}
+		}
+
 		private byte[] WriteEmptyPolycuve([NotNull] MemoryStream memoryStream,
 		                                  WkbGeometryType geometryType,
 		                                  Ordinates ordinates)
@@ -190,6 +278,18 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 			}
 
 			return WksPointArrayProvider.GetArray(pointCount);
+		}
+
+		private static Ordinates GetOrdinatesDimension(IGeometry point)
+		{
+			Ordinates ordinates = GeometryUtils.IsZAware(point) ? Ordinates.Xyz : Ordinates.Xy;
+
+			if (GeometryUtils.IsMAware(point))
+			{
+				ordinates = ordinates == Ordinates.Xy ? Ordinates.Xym : Ordinates.Xyzm;
+			}
+
+			return ordinates;
 		}
 	}
 }
