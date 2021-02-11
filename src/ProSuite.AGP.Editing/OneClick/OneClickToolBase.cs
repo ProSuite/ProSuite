@@ -16,6 +16,7 @@ using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -50,7 +51,17 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual SelectionSettings SelectionSettings { get; set; } =
 			new SelectionSettings();
 
+		/// <summary>
+		/// The list of handled keys, i.e. the keys for which <see cref="MapTool.HandleKeyDownAsync"/>
+		/// will be called (and potentially in the future also MapTool.HandleKeyUpAsync)
+		/// </summary>
 		protected List<Key> HandledKeys { get; } = new List<Key>();
+
+		/// <summary>
+		/// The currently pressed keys.
+		/// </summary>
+		protected HashSet<Key> PressedKeys { get; } = new HashSet<Key>();
+
 		protected Cursor SelectionCursor { get; set; }
 		protected Cursor SelectionCursorShift { get; set; }
 		protected Cursor SelectionCursorNormal { get; set; }
@@ -67,6 +78,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			MapView.Active.Map.PropertyChanged += Map_PropertyChanged;
 
 			MapSelectionChangedEvent.Subscribe(OnMapSelectionChanged);
+
+			PressedKeys.Clear();
 
 			try
 			{
@@ -119,6 +132,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			try
 			{
+				PressedKeys.Add(k.Key);
+
 				if (IsModifierKey(k.Key) || HandledKeys.Contains(k.Key))
 				{
 					k.Handled = true;
@@ -137,7 +152,7 @@ namespace ProSuite.AGP.Editing.OneClick
 							return HandleEscape();
 						}
 
-						if ((k.Key == Key.LeftShift || k.Key == Key.RightShift) &&
+						if (IsShiftKey(k.Key) &&
 						    SelectionCursorShift != null && IsInSelectionPhase())
 						{
 							SetCursor(SelectionCursorShift);
@@ -158,15 +173,12 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug("OnToolKeyUp");
 
-			// TODO: Key pressed management
-			//_shiftIsPressed = false;
-
 			try
 			{
 				QueuedTaskUtils.Run(
 					delegate
 					{
-						if ((k.Key == Key.LeftShift || k.Key == Key.RightShift) &&
+						if (IsShiftKey(k.Key) &&
 						    SelectionCursor != null && IsInSelectionPhase())
 						{
 							SetCursor(SelectionCursor);
@@ -179,6 +191,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			catch (Exception e)
 			{
 				HandleError($"Error in tool key up ({Caption}): {e.Message}", e, true);
+			}
+			finally
+			{
+				PressedKeys.Remove(k.Key);
 			}
 		}
 
@@ -251,6 +267,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			       key == Key.RightCtrl ||
 			       key == Key.LeftAlt ||
 			       key == Key.RightAlt;
+		}
+
+		protected static bool IsShiftKey(Key key)
+		{
+			return key == Key.LeftShift ||
+			       key == Key.RightShift;
 		}
 
 		private void OnMapSelectionChanged(MapSelectionChangedEventArgs args)
@@ -366,13 +388,18 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (! candidatesOfManyLayers.Any())
 			{
-				//no candidate (user clicked into empty space): clear selection
-				await QueuedTask.Run(() =>
+				if (selectionMethod != SelectionCombinationMethod.XOR)
 				{
-					SelectionUtils.ClearSelection(ActiveMapView.Map);
-				});
+					//no candidate (user clicked into empty space): clear selection
+					await QueuedTask.Run(
+						() => { SelectionUtils.ClearSelection(ActiveMapView.Map); });
 
-				return false;
+					return false;
+				}
+				else
+				{
+					return false;
+				}
 			}
 
 			if (SketchingMoveType == SketchingMoveType.Click)
@@ -415,7 +442,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						if (item != null)
 						{
 							var kvp = new KeyValuePair<BasicFeatureLayer, List<long>>(
-								item.Layer, new List<long> { item.Oid });
+								item.Layer, new List<long> {item.Oid});
 
 							await QueuedTask.Run(() =>
 							{
@@ -423,8 +450,6 @@ namespace ProSuite.AGP.Editing.OneClick
 									kvp, selectionMethod);
 							});
 						}
-
-						
 					}
 					else
 					{
@@ -461,8 +486,8 @@ namespace ProSuite.AGP.Editing.OneClick
 							item.BelongingFeatureLayers.ForEach(layer =>
 							{
 								List<long> oids = candidatesOfManyLayers[layer];
-								QueryFilter qf = new QueryFilter{ObjectIDs = oids};
-								layer.Select(qf, selectionMethod);
+
+								SelectionUtils.SelectFeatures(layer, selectionMethod, oids);
 							});
 						});
 					}
@@ -546,7 +571,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected bool CanSelectFeatureGeometryType([NotNull] Feature feature)
 		{
-			GeometryType shapeType = feature.GetTable().GetDefinition().GetShapeType();
+			GeometryType shapeType = DatasetUtils.GetShapeType(feature.GetTable());
 
 			return CanSelectGeometryType(shapeType);
 		}
@@ -635,7 +660,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			foreach (Feature feature in selectedFeatures)
 			{
-				GeometryType shapeType = feature.GetTable().GetDefinition().GetShapeType();
+				GeometryType shapeType = DatasetUtils.GetShapeType(feature.GetTable());
 
 				if (! CanSelectGeometryType(shapeType))
 				{
@@ -644,6 +669,13 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				yield return feature;
 			}
+		}
+
+		protected IEnumerable<Feature> GetApplicableSelectedFeatures(MapView activeView)
+		{
+			var selectedFeatures = SelectionUtils.GetSelectedFeatures(activeView);
+
+			return GetApplicableSelectedFeatures(selectedFeatures);
 		}
 
 		protected virtual bool CanSelectGeometryType(GeometryType geometryType)

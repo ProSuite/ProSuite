@@ -43,6 +43,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
     </Reference>
+    <Reference Include="ArcGIS.Desktop.Framework, PublicKeyToken=8fc3cc631e44ad86" >
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Desktop.Framework.dll</HintPath>
+    </Reference>
     <Reference Include="ProSuite.Microservices.Definitions.Geometry, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Geometry.dll</HintPath>
@@ -59,6 +63,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="GdbObjectReference.cs" />
+    <Compile Include="GeometryProcessing\AdvancedReshape\AdvancedReshapeClientUtils.cs" />
+    <Compile Include="GeometryProcessing\AdvancedReshape\ReshapeResult.cs" />
+    <Compile Include="GeometryProcessing\AdvancedReshape\ReshapeResultFeature.cs" />
     <Compile Include="GeometryProcessing\RemoveOverlaps\OverlapResultGeometries.cs" />
     <Compile Include="GeometryProcessing\RemoveOverlaps\Overlaps.cs" />
     <Compile Include="GeometryProcessingClient.cs" />
@@ -97,5 +104,6 @@
       <Version>2.31.0</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

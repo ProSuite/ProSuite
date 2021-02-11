@@ -14,7 +14,7 @@ using ProSuite.Processing.Evaluation;
 using ProSuite.Processing.Utils;
 using MapPoint = ArcGIS.Core.Geometry.MapPoint;
 
-namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
+namespace ProSuite.AGP.CartoTrials.CartoProcess
 {
 	public class AlignMarkers : CartoProcess
 	{

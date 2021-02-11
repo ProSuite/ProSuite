@@ -125,7 +125,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		public int OpenJawIntersectionPointCount { get; protected set; }
 
-		protected bool NotificationIsWarning { get; set; }
+		public bool NotificationIsWarning { get; set; }
+
 		public abstract bool AddRefreshAreaPadding { get; }
 
 		#region Implementation of IDisposable
@@ -257,7 +258,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				CacheOriginalFeatureSize();
 			}
 
-			var result = new List<IFeature>();
+			IList<IFeature> result = new List<IFeature>();
 
 			transaction.Execute(
 				editWorkspace,
@@ -272,10 +273,10 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// </summary>
 		/// <param name="reshapedGeometries"></param>
 		/// <returns></returns>
-		public List<IFeature> Save(
+		public IList<IFeature> Save(
 			[NotNull] IDictionary<IGeometry, NotificationCollection> reshapedGeometries)
 		{
-			var result = new List<IFeature>();
+			var result = new HashSet<IFeature>();
 
 			foreach (
 				KeyValuePair<IFeature, IGeometry> keyValuePair in
@@ -284,11 +285,9 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				IFeature feature = keyValuePair.Key;
 				IGeometry geometryClone = keyValuePair.Value;
 
-				StoreReshapedGeometry(geometryClone, feature,
-				                      reshapedGeometries[geometryClone],
-				                      NotificationIsWarning);
-
-				result.Add(feature);
+				result.UnionWith(StoreReshapedGeometry(geometryClone, feature,
+				                                       reshapedGeometries[geometryClone],
+				                                       NotificationIsWarning));
 			}
 
 			// Only insert the target vertices after the source is simplified to ensure source-target vertex consistency
@@ -300,10 +299,10 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			if (UpdatedTargets != null)
 			{
 				GdbObjectUtils.StoreGeometries(UpdatedTargets);
-				result.AddRange(UpdatedTargets.Keys);
+				result.UnionWith(UpdatedTargets.Keys);
 			}
 
-			return result;
+			return result.ToList();
 		}
 
 		public void LogSuccessfulReshape(
@@ -885,12 +884,13 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			}
 		}
 
-		private void StoreReshapedGeometry([NotNull] IGeometry newGeometry,
-		                                   [NotNull] IFeature feature,
-		                                   [CanBeNull] NotificationCollection notifications,
-		                                   bool warn)
+		private IEnumerable<IFeature> StoreReshapedGeometry(
+			[NotNull] IGeometry newGeometry,
+			[NotNull] IFeature feature,
+			[CanBeNull] NotificationCollection notifications,
+			bool warn)
 		{
-			StoreReshapedGeometry(newGeometry, feature, notifications);
+			var result = StoreReshapedGeometry(newGeometry, feature, notifications);
 
 			string message = notifications?.Concatenate(". ");
 
@@ -910,11 +910,14 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 					_msg.Info(message);
 				}
 			}
+
+			return result;
 		}
 
-		private void StoreReshapedGeometry([NotNull] IGeometry geometry,
-		                                   [NotNull] IFeature feature,
-		                                   [CanBeNull] NotificationCollection notifications)
+		private IEnumerable<IFeature> StoreReshapedGeometry([NotNull] IGeometry geometry,
+		                                                    [NotNull] IFeature feature,
+		                                                    [CanBeNull]
+		                                                    NotificationCollection notifications)
 		{
 			Assert.ArgumentNotNull(geometry, nameof(geometry));
 			Assert.ArgumentNotNull(feature, nameof(feature));
@@ -946,10 +949,12 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			NotifyEditOperationObservers(feature);
 
-			StoreReshapedGeometryCore(feature, geometry, notifications);
+			var result = StoreReshapedGeometryCore(feature, geometry, notifications);
 
 			_msg.DebugStopTiming(watch, "Stored geometry in {0}",
 			                     GdbObjectUtils.ToString(feature));
+
+			return result;
 		}
 
 		protected void NotifyEditOperationObservers([NotNull] IFeature feature)
@@ -960,7 +965,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			}
 		}
 
-		protected virtual void StoreReshapedGeometryCore(
+		protected virtual IEnumerable<IFeature> StoreReshapedGeometryCore(
 			[NotNull] IFeature feature,
 			[NotNull] IGeometry newGeometry,
 			[CanBeNull] NotificationCollection notifications)
@@ -968,6 +973,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			GdbObjectUtils.SetFeatureShape(feature, newGeometry);
 
 			feature.Store();
+
+			yield return feature;
 		}
 
 		private static bool AnyPolygonWithinOther(IEnumerable<IGeometry> geometries,

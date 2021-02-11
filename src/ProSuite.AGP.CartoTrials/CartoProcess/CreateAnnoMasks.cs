@@ -11,7 +11,7 @@ using ProSuite.Processing.Domain;
 using ProSuite.Processing.Evaluation;
 using ProSuite.Processing.Utils;
 
-namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
+namespace ProSuite.AGP.CartoTrials.CartoProcess
 {
 	public class CreateAnnoMasks : CartoProcess
 	{

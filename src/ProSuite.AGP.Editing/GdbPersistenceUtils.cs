@@ -48,6 +48,9 @@ namespace ProSuite.AGP.Editing
 			[CanBeNull] IDictionary<Feature, Geometry> updates,
 			[CanBeNull] IDictionary<Feature, IList<Geometry>> copies = null)
 		{
+			_msg.DebugFormat("Saving {0} updates and {1} inserts...", updates?.Count ?? 0,
+			                 copies?.Count ?? 0);
+
 			if (updates != null && updates.Count > 0)
 			{
 				foreach (KeyValuePair<Feature, Geometry> keyValuePair in updates)

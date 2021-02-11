@@ -3,7 +3,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -104,8 +103,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
 		{
-			if (k.Key == Key.LeftShift ||
-			    k.Key == Key.RightShift)
+			if (IsShiftKey(k.Key))
 			{
 				Cursor = IsInSelectionPhase() ? SelectionCursor : SecondPhaseCursor;
 			}

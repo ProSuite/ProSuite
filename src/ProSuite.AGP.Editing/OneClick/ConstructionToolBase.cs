@@ -14,6 +14,7 @@ using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Keyboard;
 using Cursor = System.Windows.Input.Cursor;
 
@@ -21,10 +22,12 @@ namespace ProSuite.AGP.Editing.OneClick
 {
 	public abstract class ConstructionToolBase : OneClickToolBase
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private Geometry _editSketchBackup;
 		private List<Operation> _sketchOperations;
 
-		private bool _shiftIsPressed;
+		private bool _intermittentSelectionPhase;
 
 		protected ConstructionToolBase()
 		{
@@ -59,7 +62,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			// NOTE: This method is not called when the selection is cleared by another command (e.g. by 'Clear Selection')
 			//       Is there another way to get the global selection changed event? What if we need the selection changed in a button?
 
-			if (_shiftIsPressed
+			if (_intermittentSelectionPhase
 			) // always false -> toolkeyup is first. This method is apparently scheduled to run after key up
 			{
 				return Task.FromResult(true);
@@ -79,6 +82,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnToolActivatingCore()
 		{
+			_msg.VerboseDebug("OnToolActivatingCore");
+
 			if (! RequiresSelection)
 			{
 				StartSketchPhase();
@@ -106,10 +111,11 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnKeyDownCore(MapViewKeyEventArgs k)
 		{
-			if (k.Key == Key.LeftShift ||
-			    k.Key == Key.RightShift)
+			_msg.VerboseDebug("OnKeyDownCore");
+
+			if (IsShiftKey(k.Key))
 			{
-				if (_shiftIsPressed)
+				if (_intermittentSelectionPhase)
 				{
 					// This is called repeatedly while keeping the shift key pressed
 					return;
@@ -120,7 +126,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					return;
 				}
 
-				_shiftIsPressed = true;
+				_intermittentSelectionPhase = true;
 
 				// TODO: How can we not destroy the undo stack?
 
@@ -145,12 +151,15 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
+
+
 		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
 		{
-			if (k.Key == Key.LeftShift ||
-			    k.Key == Key.RightShift)
+			_msg.VerboseDebug("OnKeyUpCore");
+
+			if (IsShiftKey(k.Key))
 			{
-				_shiftIsPressed = false;
+				_intermittentSelectionPhase = false;
 
 				// TODO: Maintain selection by using SelectionChanged? Event?
 				IList<Feature> selection =
@@ -219,6 +228,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
 		{
+			_msg.VerboseDebug("OnMapSelectionChangedCore");
+
 			if (ActiveMapView == null)
 			{
 				return false;
@@ -240,6 +251,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			Geometry sketchGeometry,
 			CancelableProgressor progressor)
 		{
+			_msg.VerboseDebug("OnSketchCompleteCoreAsync");
+
 			if (IsInSketchMode)
 			{
 				// take snapshots
@@ -300,7 +313,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void StartSketchPhase()
 		{
-
 			SketchOutputMode = SketchOutputMode.Map;
 
 			SketchType = GetSketchGeometryType();
@@ -311,6 +323,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			SetCursor(SketchCursor);
 
 			StartSketchAsync();
+
+			LogEnteringSketchMode();
 		}
 
 		/// <summary>

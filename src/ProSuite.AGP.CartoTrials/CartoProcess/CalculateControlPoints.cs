@@ -10,7 +10,7 @@ using ProSuite.Processing;
 using ProSuite.Processing.Domain;
 using ProSuite.Processing.Utils;
 
-namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
+namespace ProSuite.AGP.CartoTrials.CartoProcess
 {
 	public class CalculateControlPoints : CartoProcess
 	{

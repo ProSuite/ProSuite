@@ -61,6 +61,36 @@ namespace ProSuite.AGP.Editing.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Sketch the reshape line to change the selection.
+        ///- Press R to restore the sketch from the previous reshape operation.
+        ///- Press S to toggle the non-default reshape side of the geometry.
+        ///- Press ESC to select different features..
+        /// </summary>
+        internal static string AdvancedReshapeTool_LogEnteringSketchMode {
+            get {
+                return ResourceManager.GetString("AdvancedReshapeTool_LogEnteringSketchMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select one or more line or polygon features to reshape. &lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click.&lt;br&gt;- Press [O] for additional options.&lt;br&gt;{0}.
+        /// </summary>
+        internal static string AdvancedReshapeTool_LogPromptForSelection {
+            get {
+                return ResourceManager.GetString("AdvancedReshapeTool_LogPromptForSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to - Press Enter to re-use the existing selection..
+        /// </summary>
+        internal static string AdvancedReshapeTool_LogPromptForSelection_Enter {
+            get {
+                return ResourceManager.GetString("AdvancedReshapeTool_LogPromptForSelection_Enter", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}&lt;br&gt;Press [ESC] to select one or more different features..
         /// </summary>
         internal static string RemoveOverlapsTool_AfterSelection {

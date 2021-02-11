@@ -38,12 +38,6 @@
     <insertCondition id="prosuite_qa_gpservice_enabled" caption="QA GPService Enabled">
       <state id="prosuite_qa_gpservice_state" />
     </insertCondition>
-    <insertCondition id="prosuite_protrials_enabled" caption="ProSuite ProTrials">
-      <and>
-        <state id="prosuite_protrials_enabled" />
-        <state id="esri_mapping_mapViewingMode2DState" />
-      </and>
-    </insertCondition>
   </conditions>
   <modules>
     <insertModule id="ProSuiteSolution_Module" className="ProSuiteToolsModule" autoLoad="false" caption="ProSuiteToolsModule">
@@ -75,6 +69,7 @@
         <group id="ProSuiteTools_Editing" caption="Edit Tools" keytip="G1">
           <tool refID="ProSuiteTools_Editing_EraseTool" size="small" />
           <tool refID="ProSuiteTools_Editing_RemoveOverlapsTool" size="small" />
+          <tool refID="ProSuiteTools_Editing_AdvancedReshapeTool" size="small"/>
         </group>
         <group id="ProSuiteTools_Selection" caption="Selection Tools" keytip="G1">
           <tool refID="ProSuiteTools_Selection_SelectionTool" size="small" />
@@ -127,6 +122,25 @@
         <tool id="ProSuiteTools_Editing_RemoveOverlapsTool" caption="RemoveOverlapsTool" className="Editing.RemoveOverlapsTool" loadOnClick="true" smallImage="Images\RemoveOverlapsTool16.png" largeImage="Images\RemoveOverlapsTool32.png" condition="esri_mapping_mapPane">
           <tooltip heading="Remove Overlaps Tool">Remove a part of a feature that overlaps with other polygon features<disabledText /></tooltip>
         </tool>
+        <tool id="ProSuiteTools_Editing_AdvancedReshapeTool" caption="AdvancedReshapeTool" className="Editing.AdvancedReshapeTool" loadOnClick="true" 
+              smallImage="Images\AdvancedReshapeTool16.png" largeImage="Images\AdvancedReshapeTool32.png" 
+              condition="esri_mapping_mapPane">
+          <tooltip heading="Advanced Reshape" image="Images\AdvancedReshapeToolTip.png">
+Reshape line or polygon feature(s) with advanced options.
+
+1. Select feature(s) to reshape
+2. Create the sketch to replaces the segments between intersection points
+
+Shortcuts:
+ESC: Return to selection phase
+R: Reload previous sketch
+S: Use non-default reshape side
+M: Toggle end-junction move in Y-reshape
+N: Target intersection in multi-reshape
+O: Additional options
+            <disabledText />
+          </tooltip>
+        </tool>
         <tool id="ProSuiteTools_Selection_SelectionTool" caption="Selection" className="Selection.SelectionTool" loadOnClick="true" smallImage="Images\SelectionTool16.png" largeImage="Images\SelectionTool32.png" condition="esri_mapping_mapPane">
           <tooltip heading="Selection Tool">
             Select features for use with the selection worklist<disabledText /></tooltip>
@@ -162,51 +176,5 @@
       </menus>
     </insertModule>
     <insertModule id="ProSuite_WorkList_Module" className="WorkLists.WorkListsModule" autoLoad="true" caption="Selection Work List Module"></insertModule>
-    <insertModule id="ProSuite_ProTrials_Module" className="ProTrials.ProTrialsModule" autoLoad="false" caption="Pro Trials">
-      <tabs>
-        <tab id="ProSuite_ProTrials_Tab" caption="Pro Trials" keytip="C">
-          <group refID="ProSuite_ProTrials_CartoGroup" />
-          <group refID="ProSuite_ProTrials_CartoProcessGroup" />
-        </tab>
-      </tabs>
-      <groups>
-        <group id="ProSuite_ProTrials_CartoGroup" caption="Pro Trials Carto" keytip="C">
-          <tool refID="ProSuite_ProTrials_CreateSunflowerTool" />
-          <button refID="ProSuite_ProTrials_SunflowerColorButton" />
-          <button refID="ProSuite_ProTrials_SunflowerClearButton" />
-        </group>
-        <group id="ProSuite_ProTrials_CartoProcessGroup" caption="Carto Process" keytip="C">
-          <button refID="ProSuite_ProTrials_CartoProcessDockpaneButton" size="large" />
-        </group>
-      </groups>
-      <controls>
-        <tool id="ProSuite_ProTrials_CreateSunflowerTool" caption="Sunflower" keytip="C1" className="ProSuite.AGP.Solution.ProTrials.CreateSunflowerTool" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/MarsCat16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/MarsCat32.png" condition="prosuite_protrials_enabled">
-          <tooltip heading="Sunflower">Draw sunflower pattern over picked features<disabledText /></tooltip>
-        </tool>
-        <button id="ProSuite_ProTrials_SunflowerColorButton" caption="Color Sunflower" keytip="C2" className="ProSuite.AGP.Solution.ProTrials.ColorSunflowerButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/BexDog16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/BexDog32.png" condition="prosuite_protrials_enabled">
-          <tooltip heading="Color Sunflower">Colorize the sunflower seeds<disabledText /></tooltip>
-        </button>
-        <button id="ProSuite_ProTrials_SunflowerClearButton" caption="Clear Sunflower" keytip="C3" className="ProSuite.AGP.Solution.ProTrials.ClearSunflowerButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/BexDog16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/BexDog32.png" condition="prosuite_protrials_enabled">
-          <tooltip heading="Clear Sunflower">Remove the sunflower seeds from the map<disabledText /></tooltip>
-        </button>
-        <button id="ProSuite_ProTrials_CartoProcessDockpaneButton" caption="Show Carto Process Dockpane" keytip="C4" className="ProSuite.AGP.Solution.ProTrials.CartoProcess.CartoProcessDockpane_ShowButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
-          <tooltip heading="Show Dockpane">Show Dockpane<disabledText /></tooltip>
-        </button>
-      </controls>
-      <dockPanes>
-        <dockPane id="ProSuite_ProTrials_CartoProcessDockpane" caption="Carto Process Runner" className="ProSuite.AGP.Solution.ProTrials.CartoProcess.CartoProcessDockpaneViewModel" dock="group" dockWith="esri_core_contentsDockPane">
-          <content className="ProSuite.AGP.Solution.ProTrials.CartoProcess.CartoProcessDockpaneView" />
-        </dockPane>
-      </dockPanes>
-      <extensionConfig description="Experimental features in ProSuite" productName="ProSuite ProTrials" message="enable/disable experimental features" hasExtendedInfo="true" />
-    </insertModule>
-    <updateModule refID="ProSuite_ProTrials_Module">
-      <groups>
-        <updateGroup refID="ProSuite_ProTrials_CartoGroup">
-          <insertTool refID="esri_mapping_exploreTool" />
-          <insertTool refID="esri_mapping_clearSelectionButton" />
-        </updateGroup>
-      </groups>
-    </updateModule>
   </modules>
 </ArcGIS>

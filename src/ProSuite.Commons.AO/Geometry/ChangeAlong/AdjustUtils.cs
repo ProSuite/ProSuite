@@ -1,8 +1,9 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -16,7 +17,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-		private static readonly IPoint _point = new PointClass();
+		private static readonly ThreadLocal<IPoint> _point =
+			new ThreadLocal<IPoint>(() => new PointClass());
 
 		[CLSCompliant(false)]
 		[CanBeNull]
@@ -437,7 +439,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			//			-> Unfortunately only reproducible in memory, not with persisted XML geometries!
 			// WORK-AROUND:
 
-			if (GeometryUtils.GetDistanceFromCurve(point, polyline, _point) <
+			if (GeometryUtils.GetDistanceFromCurve(point, polyline, _point.Value) <
 			    GeometryUtils.GetXyTolerance(polyline))
 			{
 				_msg.DebugFormat(

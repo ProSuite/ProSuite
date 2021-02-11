@@ -63,6 +63,26 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] AdvancedReshapeToolCursor {
+            get {
+                object obj = ResourceManager.GetObject("AdvancedReshapeToolCursor", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] AdvancedReshapeToolCursorShift {
+            get {
+                object obj = ResourceManager.GetObject("AdvancedReshapeToolCursorShift", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] EditSketchCrosshair {
             get {
                 object obj = ResourceManager.GetObject("EditSketchCrosshair", resourceCulture);
