@@ -20,9 +20,10 @@ namespace ProSuite.Microservices.Server.AO
 
 		[Option('c', "certificate", Required = false,
 		        HelpText =
-			        "The server certificate subject or thumbprint from the certificate store " +
-			        "(Local Computer). Note that the certificate's private key must be accessible " +
-			        "to this executable, unless the --key parameter is also specified. " +
+			        "The server certificate to be used for transport security (SSL/TLS). " +
+			        "Specify the server certificate subject or thumbprint from the certificate " +
+			        "store (Local Computer). Note that the certificate's private key must be " +
+			        "accessible to this executable, unless the --key parameter is also specified. " +
 			        "Alternatively this can be a PEM file containing the certificate " +
 			        "chain (including the root certificate shared with the client).")]
 		public string Certificate { get; set; }
