@@ -343,6 +343,7 @@ namespace ProSuite.AGP.Solution
 				new ClientChannelConfig()
 				{
 					// TODO: Get from configuration
+					//HostName = "coronet.esri-de.com",
 					HostName = "localhost",
 					Port = 5153
 				});
