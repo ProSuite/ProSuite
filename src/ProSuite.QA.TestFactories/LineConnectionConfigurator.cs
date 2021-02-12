@@ -48,14 +48,14 @@ namespace ProSuite.QA.TestFactories
 
 			foreach (KeyValuePair<string, VectorDataset> pair in lineClasses)
 			{
-				QualityCondition_Utils.AddParameterValue(qualityCondition, FeatureClassesParamName,
-				                                         pair.Value);
+				QualityConditionParameterUtils.AddParameterValue(
+					qualityCondition, FeatureClassesParamName, pair.Value);
 			}
 
 			foreach (KeyValuePair<string, VectorDataset> pair in nodeClasses)
 			{
-				QualityCondition_Utils.AddParameterValue(qualityCondition, FeatureClassesParamName,
-				                                         pair.Value);
+				QualityConditionParameterUtils.AddParameterValue(
+					qualityCondition, FeatureClassesParamName, pair.Value);
 			}
 
 			foreach (KeyValuePair<string, VectorDataset> pair in lineClasses)
@@ -98,7 +98,7 @@ namespace ProSuite.QA.TestFactories
 			{
 				foreach (string rule in rules.Rules)
 				{
-					QualityCondition_Utils.AddParameterValue(
+					QualityConditionParameterUtils.AddParameterValue(
 						qualityCondition, RulesParamName, rule);
 				}
 			}

@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
 using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Core;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Network;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Core;
 
 namespace ProSuite.QA.Tests
 {
@@ -47,15 +47,15 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaPseudoNodes_0")]
+		[Doc(nameof(DocStrings.QaPseudoNodes_0))]
 		public QaPseudoNodes(
-			[Doc("QaPseudoNodes_polylineClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaPseudoNodes_polylineClasses))] [NotNull]
 			IList<IFeatureClass>
 				polylineClasses,
-			[Doc("QaPseudoNodes_ignoreFields_0")] [NotNull]
+			[Doc(nameof(DocStrings.QaPseudoNodes_ignoreFields_0))] [NotNull]
 			IList<IList<string>>
 				ignoreFields,
-			[Doc("QaPseudoNodes_validPseudoNodes")] [NotNull]
+			[Doc(nameof(DocStrings.QaPseudoNodes_validPseudoNodes))] [NotNull]
 			IList<IFeatureClass>
 				validPseudoNodes)
 			: base(CastToTables(polylineClasses, validPseudoNodes), false,
@@ -67,13 +67,13 @@ namespace ProSuite.QA.Tests
 			_polylineClasses = polylineClasses;
 		}
 
-		[Doc("QaPseudoNodes_1")]
+		[Doc(nameof(DocStrings.QaPseudoNodes_1))]
 		public QaPseudoNodes(
-			[Doc("QaPseudoNodes_polylineClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaPseudoNodes_polylineClass))] [NotNull]
 			IFeatureClass polylineClass,
-			[Doc("QaPseudoNodes_ignoreFields_1")] [NotNull]
+			[Doc(nameof(DocStrings.QaPseudoNodes_ignoreFields_1))] [NotNull]
 			string[] ignoreFields,
-			[Doc("QaPseudoNodes_validPseudoNode")] [NotNull]
+			[Doc(nameof(DocStrings.QaPseudoNodes_validPseudoNode))] [NotNull]
 			IFeatureClass validPseudoNode)
 			: base(
 				CastToTables(polylineClass, validPseudoNode), false,
@@ -84,12 +84,12 @@ namespace ProSuite.QA.Tests
 			_polylineClasses = null;
 		}
 
-		[Doc("QaPseudoNodes_2")]
+		[Doc(nameof(DocStrings.QaPseudoNodes_2))]
 		public QaPseudoNodes(
-				[Doc("QaPseudoNodes_polylineClasses")] [NotNull]
+				[Doc(nameof(DocStrings.QaPseudoNodes_polylineClasses))] [NotNull]
 				IList<IFeatureClass>
 					polylineClasses,
-				[Doc("QaPseudoNodes_ignoreFields_0")] [NotNull]
+				[Doc(nameof(DocStrings.QaPseudoNodes_ignoreFields_0))] [NotNull]
 				IList<IList<string>>
 					ignoreFields)
 			// ReSharper disable once PossiblyMistakenUseOfParamsMethod
@@ -101,11 +101,11 @@ namespace ProSuite.QA.Tests
 			_polylineClasses = polylineClasses;
 		}
 
-		[Doc("QaPseudoNodes_3")]
+		[Doc(nameof(DocStrings.QaPseudoNodes_3))]
 		public QaPseudoNodes(
-			[Doc("QaPseudoNodes_polylineClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaPseudoNodes_polylineClass))] [NotNull]
 			IFeatureClass polylineClass,
-			[Doc("QaPseudoNodes_ignoreFields_1")] [NotNull]
+			[Doc(nameof(DocStrings.QaPseudoNodes_ignoreFields_1))] [NotNull]
 			string[] ignoreFields)
 			: base(polylineClass, false)
 		{
@@ -113,7 +113,7 @@ namespace ProSuite.QA.Tests
 			_polylineClasses = null;
 		}
 
-		[Doc("QaPseudoNodes_IgnoreLoopEndpoints")]
+		[Doc(nameof(DocStrings.QaPseudoNodes_IgnoreLoopEndpoints))]
 		[TestParameter(false)]
 		public bool IgnoreLoopEndpoints { get; set; }
 

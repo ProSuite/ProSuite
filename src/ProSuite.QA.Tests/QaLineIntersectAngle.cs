@@ -45,13 +45,13 @@ namespace ProSuite.QA.Tests
 
 		#region Constructors
 
-		[Doc("QaLineIntersectAngle_0")]
+		[Doc(nameof(DocStrings.QaLineIntersectAngle_0))]
 		public QaLineIntersectAngle(
-			[Doc("QaLineIntersectAngle_polylineClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineIntersectAngle_polylineClasses))] [NotNull]
 			IList<IFeatureClass>
 				polylineClasses,
-			[Doc("QaLineIntersectAngle_limit")] double limit,
-			[Doc("QaLineIntersectAngle_is3D")] bool is3d)
+			[Doc(nameof(DocStrings.QaLineIntersectAngle_limit))] double limit,
+			[Doc(nameof(DocStrings.QaLineIntersectAngle_is3D))] bool is3d)
 			: base(polylineClasses, esriSpatialRelEnum.esriSpatialRelCrosses)
 		{
 			_limit = limit;
@@ -64,20 +64,20 @@ namespace ProSuite.QA.Tests
 		public QaLineIntersectAngle([NotNull] IFeatureClass table, double limit, bool is3d)
 			: this(new[] {table}, limit, is3d) { }
 
-		[Doc("QaLineIntersectAngle_0")]
+		[Doc(nameof(DocStrings.QaLineIntersectAngle_0))]
 		public QaLineIntersectAngle(
-				[Doc("QaLineIntersectAngle_polylineClasses")] [NotNull]
+				[Doc(nameof(DocStrings.QaLineIntersectAngle_polylineClasses))] [NotNull]
 				IList<IFeatureClass>
 					polylineClasses,
-				[Doc("QaLineIntersectAngle_limit")] double limit)
+				[Doc(nameof(DocStrings.QaLineIntersectAngle_limit))] double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, limit, false) { }
 
-		[Doc("QaLineIntersectAngle_0")]
+		[Doc(nameof(DocStrings.QaLineIntersectAngle_0))]
 		public QaLineIntersectAngle(
-			[Doc("QaLineIntersectAngle_polylineClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineIntersectAngle_polylineClass))] [NotNull]
 			IFeatureClass polylineClass,
-			[Doc("QaLineIntersectAngle_limit")] double limit)
+			[Doc(nameof(DocStrings.QaLineIntersectAngle_limit))] double limit)
 			: this(new[] {polylineClass}, limit) { }
 
 		#endregion

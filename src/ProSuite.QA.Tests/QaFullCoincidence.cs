@@ -51,24 +51,24 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaFullCoincidence_0")]
+		[Doc(nameof(DocStrings.QaFullCoincidence_0))]
 		public QaFullCoincidence(
-				[Doc("QaFullCoincidence_featureClass")]
+				[Doc(nameof(DocStrings.QaFullCoincidence_featureClass))]
 				IFeatureClass featureClass,
-				[Doc("QaFullCoincidence_reference")] IFeatureClass reference,
-				[Doc("QaFullCoincidence_near")] double near,
-				[Doc("QaFullCoincidence_is3D")] bool is3D)
+				[Doc(nameof(DocStrings.QaFullCoincidence_reference))] IFeatureClass reference,
+				[Doc(nameof(DocStrings.QaFullCoincidence_near))] double near,
+				[Doc(nameof(DocStrings.QaFullCoincidence_is3D))] bool is3D)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, reference, near, is3D, _defaultTileSize) { }
 
-		[Doc("QaFullCoincidence_0")]
+		[Doc(nameof(DocStrings.QaFullCoincidence_0))]
 		public QaFullCoincidence(
-			[Doc("QaFullCoincidence_featureClass")]
+			[Doc(nameof(DocStrings.QaFullCoincidence_featureClass))]
 			IFeatureClass featureClass,
-			[Doc("QaFullCoincidence_reference")] IFeatureClass reference,
-			[Doc("QaFullCoincidence_near")] double near,
-			[Doc("QaFullCoincidence_is3D")] bool is3D,
-			[Doc("QaFullCoincidence_tileSize")] double tileSize)
+			[Doc(nameof(DocStrings.QaFullCoincidence_reference))] IFeatureClass reference,
+			[Doc(nameof(DocStrings.QaFullCoincidence_near))] double near,
+			[Doc(nameof(DocStrings.QaFullCoincidence_is3D))] bool is3D,
+			[Doc(nameof(DocStrings.QaFullCoincidence_tileSize))] double tileSize)
 			: base(
 				new[] {featureClass, reference}, near,
 				new ConstantFeatureDistanceProvider(near / 2), is3D)
@@ -78,24 +78,24 @@ namespace ProSuite.QA.Tests
 			_referenceList = new[] {reference};
 		}
 
-		[Doc("QaFullCoincidence_2")]
+		[Doc(nameof(DocStrings.QaFullCoincidence_2))]
 		public QaFullCoincidence(
-				[Doc("QaFullCoincidence_featureClass")]
+				[Doc(nameof(DocStrings.QaFullCoincidence_featureClass))]
 				IFeatureClass featureClass,
-				[Doc("QaFullCoincidence_references")] IList<IFeatureClass> references,
-				[Doc("QaFullCoincidence_near")] double near,
-				[Doc("QaFullCoincidence_is3D")] bool is3D)
+				[Doc(nameof(DocStrings.QaFullCoincidence_references))] IList<IFeatureClass> references,
+				[Doc(nameof(DocStrings.QaFullCoincidence_near))] double near,
+				[Doc(nameof(DocStrings.QaFullCoincidence_is3D))] bool is3D)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, references, near, is3D, _defaultTileSize) { }
 
-		[Doc("QaFullCoincidence_2")]
+		[Doc(nameof(DocStrings.QaFullCoincidence_2))]
 		public QaFullCoincidence(
-			[Doc("QaFullCoincidence_featureClass")]
+			[Doc(nameof(DocStrings.QaFullCoincidence_featureClass))]
 			IFeatureClass featureClass,
-			[Doc("QaFullCoincidence_references")] IList<IFeatureClass> references,
-			[Doc("QaFullCoincidence_near")] double near,
-			[Doc("QaFullCoincidence_is3D")] bool is3D,
-			[Doc("QaFullCoincidence_tileSize")] double tileSize)
+			[Doc(nameof(DocStrings.QaFullCoincidence_references))] IList<IFeatureClass> references,
+			[Doc(nameof(DocStrings.QaFullCoincidence_near))] double near,
+			[Doc(nameof(DocStrings.QaFullCoincidence_is3D))] bool is3D,
+			[Doc(nameof(DocStrings.QaFullCoincidence_tileSize))] double tileSize)
 			: base(
 				Union(new[] {featureClass}, references), near,
 				new ConstantFeatureDistanceProvider(near / 2), is3D)
@@ -105,28 +105,28 @@ namespace ProSuite.QA.Tests
 			_referenceList = references;
 		}
 
-		[Doc("QaFullCoincidence_2")]
+		[Doc(nameof(DocStrings.QaFullCoincidence_2))]
 		public QaFullCoincidence(
-				[Doc("QaFullCoincidence_featureClass")]
+				[Doc(nameof(DocStrings.QaFullCoincidence_featureClass))]
 				IFeatureClass featureClass,
-				[Doc("QaFullCoincidence_references")] IList<IFeatureClass> references,
-				[Doc("QaFullCoincidence_near")] double near)
+				[Doc(nameof(DocStrings.QaFullCoincidence_references))] IList<IFeatureClass> references,
+				[Doc(nameof(DocStrings.QaFullCoincidence_near))] double near)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, references, near, false, _defaultTileSize) { }
 
-		[Doc("QaFullCoincidence_2")]
+		[Doc(nameof(DocStrings.QaFullCoincidence_2))]
 		public QaFullCoincidence(
-			[Doc("QaFullCoincidence_featureClass")]
+			[Doc(nameof(DocStrings.QaFullCoincidence_featureClass))]
 			IFeatureClass featureClass,
-			[Doc("QaFullCoincidence_references")] IList<IFeatureClass> references,
-			[Doc("QaFullCoincidence_near")] double near,
-			[Doc("QaFullCoincidence_tileSize")] double tileSize)
+			[Doc(nameof(DocStrings.QaFullCoincidence_references))] IList<IFeatureClass> references,
+			[Doc(nameof(DocStrings.QaFullCoincidence_near))] double near,
+			[Doc(nameof(DocStrings.QaFullCoincidence_tileSize))] double tileSize)
 			: this(featureClass, references, near, false, tileSize) { }
 
 		protected override bool IsDirected => true;
 
 		[TestParameter]
-		[Doc("QaFullCoincidence_IgnoreNeighborConditions")]
+		[Doc(nameof(DocStrings.QaFullCoincidence_IgnoreNeighborConditions))]
 		public IList<string> IgnoreNeighborConditions
 		{
 			get { return _ignoreNeighborConditionsSql; }

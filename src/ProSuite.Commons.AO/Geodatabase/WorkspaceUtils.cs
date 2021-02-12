@@ -623,6 +623,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			catch (COMException exception)
 			{
+				_msg.Debug($"Error opening workspace using catalog path {connectionFilePath}",
+				           exception);
+
 				if (exception.ErrorCode == (decimal) fdoError.FDO_E_CONNECTION_CANCELLED)
 				{
 					// clear the parameters for this instance (to allow re-authentication on next try)
@@ -779,7 +782,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		public static IFeatureWorkspace OpenFeatureWorkspace([NotNull] string catalogPath)
+		public static IWorkspace OpenWorkspace([NotNull] string catalogPath)
 		{
 			Assert.ArgumentNotNullOrEmpty(catalogPath, nameof(catalogPath));
 
@@ -789,28 +792,33 @@ namespace ProSuite.Commons.AO.Geodatabase
 			if (catalogPath.EndsWith(".sde",
 			                         StringComparison.InvariantCultureIgnoreCase))
 			{
-				return (IFeatureWorkspace) OpenSDEWorkspace(catalogPath);
+				return OpenSDEWorkspace(catalogPath);
 			}
 
 			if (catalogPath.EndsWith(".gdb",
 			                         StringComparison.InvariantCultureIgnoreCase))
 			{
-				return (IFeatureWorkspace) OpenFileGdbWorkspace(catalogPath);
+				return OpenFileGdbWorkspace(catalogPath);
 			}
 
 			if (catalogPath.EndsWith(".mdb",
 			                         StringComparison.InvariantCultureIgnoreCase))
 			{
-				return (IFeatureWorkspace) OpenPgdbWorkspace(catalogPath);
+				return OpenPgdbWorkspace(catalogPath);
 			}
 
 			if (Directory.Exists(catalogPath))
 			{
-				return OpenShapefileWorkspace(catalogPath);
+				return (IWorkspace) OpenShapefileWorkspace(catalogPath);
 			}
 
 			throw new ArgumentOutOfRangeException(nameof(catalogPath),
-			                                      "Could not detect workspace type.");
+			                                      $"Could not detect workspace type of {catalogPath}.");
+		}
+
+		public static IFeatureWorkspace OpenFeatureWorkspace([NotNull] string catalogPath)
+		{
+			return (IFeatureWorkspace) OpenWorkspace(catalogPath);
 		}
 
 		/// <summary>

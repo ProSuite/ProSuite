@@ -1,0 +1,242 @@
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
+using ProSuite.QA.Container;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+
+namespace ProSuite.QA.Tests
+{
+	[CLSCompliant(false)]
+	[UsedImplicitly]
+	public class QaRowCount : NonContainerTest
+	{
+		private readonly ITable _table;
+		private readonly int _minimumRowCount;
+		private readonly int _maximumRowCount;
+
+		private readonly IList<ITable> _referenceTables;
+		private readonly OffsetSpecification _minimumValueOffset;
+		private readonly OffsetSpecification _maximumValueOffset;
+
+		#region issue codes
+
+		[CanBeNull] private static TestIssueCodes _codes;
+
+		[NotNull]
+		[UsedImplicitly]
+		public static TestIssueCodes Codes => _codes ?? (_codes = new Code());
+
+		private class Code : LocalTestIssueCodes
+		{
+			public const string TooFewRows = "TooFewRows";
+			public const string TooManyRows = "TooManyRows";
+
+			public Code() : base("RowCount") { }
+		}
+
+		#endregion
+
+		[Doc(nameof(DocStrings.QaRowCount_0))]
+		public QaRowCount(
+			[Doc(nameof(DocStrings.QaRowCount_table))] [NotNull] ITable table,
+			[Doc(nameof(DocStrings.QaRowCount_minimumRowCount))] int minimumRowCount,
+			[Doc(nameof(DocStrings.QaRowCount_maximumRowCount))] int maximumRowCount)
+			: base(new[] {table})
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+
+			_table = table;
+			_minimumRowCount = minimumRowCount;
+			_maximumRowCount = maximumRowCount;
+		}
+
+		[Doc(nameof(DocStrings.QaRowCount_1))]
+		public QaRowCount(
+			[Doc(nameof(DocStrings.QaRowCount_table))] [NotNull] ITable table,
+			[Doc(nameof(DocStrings.QaRowCount_referenceTables))] [NotNull]
+			IList<ITable> referenceTables,
+			[Doc(nameof(DocStrings.QaRowCount_minimumValueOffset))] [CanBeNull]
+			string minimumValueOffset,
+			[Doc(nameof(DocStrings.QaRowCount_maximumValueOffset))] [CanBeNull]
+			string maximumValueOffset)
+			: base(Union(new[] {table}, referenceTables))
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNull(referenceTables, nameof(referenceTables));
+
+			_table = table;
+			_referenceTables = new List<ITable>(referenceTables);
+
+			CultureInfo formatProvider = CultureInfo.InvariantCulture;
+			_minimumValueOffset = OffsetSpecification.Parse(minimumValueOffset, formatProvider);
+			_maximumValueOffset = OffsetSpecification.Parse(maximumValueOffset, formatProvider);
+
+			Assert.ArgumentCondition(
+				_minimumValueOffset != null || _maximumValueOffset != null,
+				"At least one offset must be specified");
+		}
+
+		public override int Execute()
+		{
+			return ExecuteGeometry(null);
+		}
+
+		public override int Execute(IEnvelope boundingBox)
+		{
+			return ExecuteGeometry(boundingBox);
+		}
+
+		public override int Execute(IPolygon area)
+		{
+			return ExecuteGeometry(area);
+		}
+
+		public override int Execute(IEnumerable<IRow> selectedRows)
+		{
+			// TODO what to do with selection?
+			return NoError;
+		}
+
+		public override int Execute(IRow row)
+		{
+			// TODO what to do with individual row?
+			return NoError;
+		}
+
+		protected override ISpatialReference GetSpatialReference()
+		{
+			var featureClass = _table as IFeatureClass;
+
+			return featureClass == null
+				       ? null
+				       : DatasetUtils.GetSpatialReference(featureClass);
+		}
+
+		private int ExecuteGeometry([CanBeNull] IGeometry geometry)
+		{
+			const int verifiedTableIndex = 0;
+
+			int rowCount = GetRowCount(_table, verifiedTableIndex, geometry);
+
+			if (_referenceTables == null)
+			{
+				return ReportErrors(rowCount, _minimumRowCount, _maximumRowCount);
+			}
+
+			int referenceRowCount = GetReferenceRowCount(geometry);
+
+			return ReportErrors(rowCount, referenceRowCount,
+			                    _minimumValueOffset,
+			                    _maximumValueOffset);
+		}
+
+		private int GetReferenceRowCount([CanBeNull] IGeometry geometry)
+		{
+			Assert.NotNull(_referenceTables, "_referenceTables");
+
+			var result = 0;
+
+			var referenceTableIndex = 1;
+			foreach (ITable referenceTable in _referenceTables)
+			{
+				result += GetRowCount(referenceTable, referenceTableIndex, geometry);
+
+				referenceTableIndex++;
+			}
+
+			return result;
+		}
+
+		private int GetRowCount([NotNull] ITable table,
+		                        int tableIndex,
+		                        [CanBeNull] IGeometry geometry)
+		{
+			var featureClass = table as IFeatureClass;
+
+			IGeometry searchGeometry = featureClass == null
+				                           ? null
+				                           : geometry;
+
+			IQueryFilter filter = CreateQueryFilter(table, tableIndex, searchGeometry);
+
+			return table.RowCount(filter);
+		}
+
+		private int ReportErrors(int rowCount, int minimumRowCount, int maximumRowCount)
+		{
+			if (rowCount < minimumRowCount)
+			{
+				string description = string.Format(
+					"Row count is less than minimum value: {0:N0} < {1:N0}",
+					rowCount, minimumRowCount);
+
+				return ReportError(description, _table, Codes[Code.TooFewRows], null);
+			}
+
+			if (maximumRowCount >= 0 && rowCount > maximumRowCount)
+			{
+				string description = string.Format(
+					"Row count is greater than maximum value: {0:N0} > {1:N0}",
+					rowCount, maximumRowCount);
+
+				return ReportError(description, _table, Codes[Code.TooManyRows], null);
+			}
+
+			return NoError;
+		}
+
+		private int ReportErrors(int rowCount,
+		                         int referenceRowCount,
+		                         [CanBeNull] OffsetSpecification minimumValueOffset,
+		                         [CanBeNull] OffsetSpecification maximumValueOffset)
+		{
+			if (minimumValueOffset != null)
+			{
+				var minimumRowCount =
+					(int) Math.Ceiling(minimumValueOffset.ApplyTo(referenceRowCount));
+
+				if (rowCount < minimumRowCount)
+				{
+					string description = string.Format(
+						"Row count is less than minimum value: {0:N0} < {1:N0} (reference row count: {2:N0})",
+						rowCount, minimumRowCount, referenceRowCount);
+
+					return ReportError(description, _table, Codes[Code.TooFewRows], null);
+				}
+			}
+
+			if (maximumValueOffset != null)
+			{
+				var maximumRowCount =
+					(int) Math.Floor(maximumValueOffset.ApplyTo(referenceRowCount));
+
+				if (rowCount > maximumRowCount)
+				{
+					string description = string.Format(
+						"Row count is greater than maximum value: {0:N0} > {1:N0} (reference row count: {2:N0})",
+						rowCount, maximumRowCount, referenceRowCount);
+
+					return ReportError(description, _table, Codes[Code.TooManyRows], null);
+				}
+			}
+
+			return NoError;
+		}
+
+		[NotNull]
+		private IQueryFilter CreateQueryFilter([NotNull] ITable table,
+		                                       int tableIndex,
+		                                       [CanBeNull] IGeometry geometry)
+		{
+			return TestUtils.CreateFilter(geometry, AreaOfInterest,
+			                              GetConstraint(tableIndex),
+			                              table, null);
+		}
+	}
+}

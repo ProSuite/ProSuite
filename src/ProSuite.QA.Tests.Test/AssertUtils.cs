@@ -10,7 +10,7 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.QA.Tests.Test
 {
-	internal static class AssertUtils
+	public static class AssertUtils
 	{
 		public static void OneError([NotNull] QaTestRunnerBase runner,
 		                            [NotNull] string issueCodeId)

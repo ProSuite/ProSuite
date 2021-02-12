@@ -20,7 +20,7 @@ namespace ProSuite.QA.Tests
 	[InternallyUsedTest]
 	public class QaConnections : QaNetworkBase
 	{
-		[Doc("QaConnections_StartsIn")] public static readonly string StartsIn = "_StartsIn";
+		[Doc(nameof(DocStrings.QaConnections_StartsIn))] public static readonly string StartsIn = "_StartsIn";
 
 		private TableView[] _tableFilterHelpers;
 		private IList<QaConnectionRuleHelper> _ruleHelpers;
@@ -44,19 +44,19 @@ namespace ProSuite.QA.Tests
 
 		#region Constructors
 
-		[Doc("QaConnections_0")]
+		[Doc(nameof(DocStrings.QaConnections_0))]
 		public QaConnections(
-			[Doc("QaConnections_featureClasses")] IList<IFeatureClass> featureClasses,
-			[Doc("QaConnections_rules_0")] IList<string[]> rules)
+			[Doc(nameof(DocStrings.QaConnections_featureClasses))] IList<IFeatureClass> featureClasses,
+			[Doc(nameof(DocStrings.QaConnections_rules_0))] IList<string[]> rules)
 			: base(CastToTables((IEnumerable<IFeatureClass>) featureClasses), false)
 		{
 			Init(rules);
 		}
 
-		[Doc("QaConnections_1")]
+		[Doc(nameof(DocStrings.QaConnections_1))]
 		public QaConnections(
-			[Doc("QaConnections_featureClass")] IFeatureClass featureClass,
-			[Doc("QaConnections_rules_1")] IEnumerable<string> rules)
+			[Doc(nameof(DocStrings.QaConnections_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaConnections_rules_1))] IEnumerable<string> rules)
 			: base(featureClass, false)
 		{
 			List<string[]> ruleArrays = rules.Select(rule => new[] {rule}).ToList();
@@ -64,17 +64,17 @@ namespace ProSuite.QA.Tests
 			Init(ruleArrays);
 		}
 
-		[Doc("QaConnections_2")]
+		[Doc(nameof(DocStrings.QaConnections_2))]
 		public QaConnections(
-				[Doc("QaConnections_featureClasses")] IList<IFeatureClass> featureClasses,
-				[Doc("QaConnections_rules_1")] IList<QaConnectionRule> rules)
+				[Doc(nameof(DocStrings.QaConnections_featureClasses))] IList<IFeatureClass> featureClasses,
+				[Doc(nameof(DocStrings.QaConnections_rules_1))] IList<QaConnectionRule> rules)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClasses, rules, 0) { }
 
-		[Doc("QaConnections_3")]
+		[Doc(nameof(DocStrings.QaConnections_3))]
 		public QaConnections(
-			[Doc("QaConnections_featureClass")] IFeatureClass featureClass,
-			[Doc("QaConnections_rules_1")] IList<QaConnectionRule> rules)
+			[Doc(nameof(DocStrings.QaConnections_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaConnections_rules_1))] IList<QaConnectionRule> rules)
 			: this(new[] {featureClass}, rules) { }
 
 		// TODO document/private?

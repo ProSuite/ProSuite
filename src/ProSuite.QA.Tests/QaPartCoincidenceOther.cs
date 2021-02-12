@@ -25,64 +25,64 @@ namespace ProSuite.QA.Tests
 		private IgnoreRowNeighborCondition _ignoreNeighborCondition;
 		private bool _isIgnoreNeighborConditionInitialized;
 
-		[Doc("QaPartCoincidenceOther_0")]
+		[Doc(nameof(DocStrings.QaPartCoincidenceOther_0))]
 		public QaPartCoincidenceOther(
-				[Doc("QaPartCoincidence_featureClass")]
+				[Doc(nameof(DocStrings.QaPartCoincidence_featureClass))]
 				IFeatureClass featureClass,
-				[Doc("QaPartCoincidence_reference")] IFeatureClass reference,
-				[Doc("QaPartCoincidence_near")] double near,
-				[Doc("QaPartCoincidence_minLength")] double minLength,
-				[Doc("QaPartCoincidence_is3D")] bool is3D)
+				[Doc(nameof(DocStrings.QaPartCoincidence_reference))] IFeatureClass reference,
+				[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
+				[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength,
+				[Doc(nameof(DocStrings.QaPartCoincidence_is3D))] bool is3D)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, reference, near, minLength, is3D, 1000.0) { }
 
-		[Doc("QaPartCoincidenceOther_0")]
+		[Doc(nameof(DocStrings.QaPartCoincidenceOther_0))]
 		public QaPartCoincidenceOther(
-			[Doc("QaPartCoincidence_featureClass")]
+			[Doc(nameof(DocStrings.QaPartCoincidence_featureClass))]
 			IFeatureClass featureClass,
-			[Doc("QaPartCoincidence_reference")] IFeatureClass reference,
-			[Doc("QaPartCoincidence_near")] double near,
-			[Doc("QaPartCoincidence_minLength")] double minLength,
-			[Doc("QaPartCoincidence_is3D")] bool is3D,
-			[Doc("QaPartCoincidence_tileSize")] double tileSize)
+			[Doc(nameof(DocStrings.QaPartCoincidence_reference))] IFeatureClass reference,
+			[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
+			[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength,
+			[Doc(nameof(DocStrings.QaPartCoincidence_is3D))] bool is3D,
+			[Doc(nameof(DocStrings.QaPartCoincidence_tileSize))] double tileSize)
 			: this(featureClass, reference, near, minLength, minLength, is3D, tileSize, 0)
 		{
 			_reference = reference;
 		}
 
-		[Doc("QaPartCoincidenceOther_0")]
+		[Doc(nameof(DocStrings.QaPartCoincidenceOther_0))]
 		public QaPartCoincidenceOther(
-				[Doc("QaPartCoincidence_featureClass")]
+				[Doc(nameof(DocStrings.QaPartCoincidence_featureClass))]
 				IFeatureClass featureClass,
-				[Doc("QaPartCoincidence_reference")] IFeatureClass reference,
-				[Doc("QaPartCoincidence_near")] double near,
-				[Doc("QaPartCoincidence_minLength")] double minLength)
+				[Doc(nameof(DocStrings.QaPartCoincidence_reference))] IFeatureClass reference,
+				[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
+				[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, reference, near, minLength, false, 1000.0) { }
 
-		[Doc("QaPartCoincidenceOther_0")]
+		[Doc(nameof(DocStrings.QaPartCoincidenceOther_0))]
 		public QaPartCoincidenceOther(
-			[Doc("QaPartCoincidence_featureClass")]
+			[Doc(nameof(DocStrings.QaPartCoincidence_featureClass))]
 			IFeatureClass featureClass,
-			[Doc("QaPartCoincidence_reference")] IFeatureClass reference,
-			[Doc("QaPartCoincidence_near")] double near,
-			[Doc("QaPartCoincidence_minLength")] double minLength,
-			[Doc("QaPartCoincidence_tileSize")] double tileSize)
+			[Doc(nameof(DocStrings.QaPartCoincidence_reference))] IFeatureClass reference,
+			[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
+			[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength,
+			[Doc(nameof(DocStrings.QaPartCoincidence_tileSize))] double tileSize)
 			: this(featureClass, reference, near, minLength, false, tileSize) { }
 
-		[Doc("QaPartCoincidenceOther_4")]
+		[Doc(nameof(DocStrings.QaPartCoincidenceOther_4))]
 		public QaPartCoincidenceOther(
-			[Doc("QaPartCoincidence_featureClass")]
+			[Doc(nameof(DocStrings.QaPartCoincidence_featureClass))]
 			IFeatureClass featureClass,
-			[Doc("QaPartCoincidence_reference")] IFeatureClass reference,
-			[Doc("QaPartCoincidence_near")] double near,
-			[Doc("QaPartCoincidence_connectedMinLength")]
+			[Doc(nameof(DocStrings.QaPartCoincidence_reference))] IFeatureClass reference,
+			[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
+			[Doc(nameof(DocStrings.QaPartCoincidence_connectedMinLength))]
 			double connectedMinLength,
-			[Doc("QaPartCoincidence_disjointMinLength")]
+			[Doc(nameof(DocStrings.QaPartCoincidence_disjointMinLength))]
 			double disjointMinLength,
-			[Doc("QaPartCoincidence_is3D")] bool is3D,
-			[Doc("QaPartCoincidence_tileSize")] double tileSize,
-			[Doc("QaPartCoincidence_coincidenceTolerance")]
+			[Doc(nameof(DocStrings.QaPartCoincidence_is3D))] bool is3D,
+			[Doc(nameof(DocStrings.QaPartCoincidence_tileSize))] double tileSize,
+			[Doc(nameof(DocStrings.QaPartCoincidence_coincidenceTolerance))]
 			double coincidenceTolerance)
 			: base(
 				new[] {featureClass, reference}, near,
@@ -97,7 +97,7 @@ namespace ProSuite.QA.Tests
 		protected override bool IsDirected => true;
 
 		[TestParameter]
-		[Doc("QaPartCoincidenceOther_IgnoreNeighborCondition")]
+		[Doc(nameof(DocStrings.QaPartCoincidenceOther_IgnoreNeighborCondition))]
 		public string IgnoreNeighborCondition { get; set; }
 
 		protected override int ExecuteCore(IRow row, int tableIndex)

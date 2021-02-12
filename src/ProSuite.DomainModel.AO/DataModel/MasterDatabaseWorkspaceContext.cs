@@ -3,6 +3,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel
@@ -10,6 +11,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 	[CLSCompliant(false)]
 	public class MasterDatabaseWorkspaceContext : WorkspaceContextBase
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		[NotNull] private readonly Model _model;
 
 		/// <summary>
@@ -26,8 +29,12 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			_model = model;
 
-			Assert.False(model.KeepDatasetLocks,
-			             "Keeping dataset locks is not supported currently. For cached workspace elements, use MasterDatabaseWorkspaceContextEx or provide your own.");
+			if (model.KeepDatasetLocks)
+			{
+				_msg.Debug(
+					"Keeping dataset locks is not supported by the simple MasterDatabaseWorkspaceContext." +
+					"No workspace proxy will be used.");
+			}
 		}
 
 		public override bool CanOpen(IDdxDataset dataset)

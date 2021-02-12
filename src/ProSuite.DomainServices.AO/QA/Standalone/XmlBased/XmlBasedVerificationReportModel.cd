@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="NameAndType">
+  <Comment CommentText="HtmlReportModel can be accessed in template as &quot;report&quot;&#xD;&#xA;&#xD;&#xA;Example: &lt;title&gt;{{report.Source}}&lt;/title&gt;">
+    <Position X="1.021" Y="1.385" Height="0.771" Width="2.721" />
+  </Comment>
+  <Comment CommentText="HtmlTexts can be accessed in template as &quot;text&quot;.&#xD;&#xA;&#xD;&#xA;Example:&#xD;&#xA;&lt;td class=&quot;name&quot;&gt;{{text.DateOfVerification}}&lt;/td&gt;">
+    <Position X="7.263" Y="8.531" Height="0.76" Width="3.252" />
+  </Comment>
+  <Class Name="ProSuite.DomainServices.AO.QA.Standalone.XmlBased.HtmlReportModel">
+    <Position X="1" Y="2.25" Width="2.75" />
+    <Members>
+      <Field Name="_issueGroups" Hidden="true" />
+      <Field Name="_verificationReport" Hidden="true" />
+      <Method Name="GetProperties" Hidden="true" />
+      <Method Name="GetTestIdentifier" Hidden="true" />
+      <Method Name="HtmlReportModel" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <AssociationLine Name="IssueGroups" Type="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlReportIssueGroup" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="3.312" Y="7.392" />
+        <Point X="3.312" Y="8.188" />
+        <Point X="12.75" Y="8.188" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.216" Y="0.1" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>IEAACYMAjBgEgBAAAAgABBAASAAHAABIFCAgQAQCAAA=</HashCode>
+      <FileName>QA\GP\XmlBased\HtmlReportModel.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="Properties" />
+      <Property Name="AreaOfInterest" />
+    </ShowAsAssociation>
+    <ShowAsCollectionAssociation>
+      <Property Name="HtmlReportFiles" />
+      <Property Name="IssueMapFiles" />
+      <Property Name="QualitySpecificationReportFiles" />
+      <Property Name="IssueGroups" />
+      <Property Name="CategoryIssueGroups" />
+      <Property Name="CategoriesWithIssues" />
+      <Property Name="RootCategories" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlReportIssueGroup">
+    <Position X="12.75" Y="7.75" Width="2.75" />
+    <Members>
+      <Field Name="_issueGroup" Hidden="true" />
+      <Field Name="_issueTypeError" Hidden="true" />
+      <Field Name="_issueTypeWarning" Hidden="true" />
+      <Method Name="HtmlReportIssueGroup" Hidden="true" />
+      <Property Name="IssueCountFormatted" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Fields" Collapsed="true" />
+    </Compartments>
+    <AssociationLine Name="ExceptionCategories" Type="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlExceptionCategoryCount" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="15.5" Y="7.938" />
+        <Point X="18.25" Y="7.938" />
+        <Point X="18.25" Y="6.488" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true" ManuallySized="true">
+        <Position X="0.049" Y="1.034" Height="0.182" Width="3.636" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AIIDIECAEAAkKBSAEAABAQAAAAAVEAAAAABAgAAogAA=</HashCode>
+      <FileName>QA\HtmlReports\HtmlReportIssueGroup.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="ExceptionCategories" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="EsriDE.ProSuite.Services.QA.HtmlReports.HtmlReportQualityCondition">
+    <Position X="16" Y="1.25" Width="2.75" />
+    <Members>
+      <Field Name="_exceptionCategories" Hidden="true" />
+      <Field Name="_htmlExceptionCategoryCounts" Hidden="true" />
+      <Field Name="_issueGroupExceptionCategoryCounts" Hidden="true" />
+      <Field Name="_issueTypeError" Hidden="true" />
+      <Field Name="_issueTypeWarning" Hidden="true" />
+      <Field Name="_qualityCondition" Hidden="true" />
+      <Method Name="HtmlReportQualityCondition" Hidden="true" />
+      <Method Name="IncludeExceptions" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <AssociationLine Name="ExceptionCategories" Type="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlExceptionCategoryCount">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.104" Y="0.628" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>BICCAECAAAAEABAAEIAAAAAAAAARAAEAAABAAAAoEAA=</HashCode>
+      <FileName>QA\HtmlReports\HtmlReportQualityCondition.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="ExceptionCategories" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="ProSuite.Commons.DotLiquid.NameValuePairs">
+    <Position X="4.25" Y="0.5" Width="2.5" />
+    <Members>
+      <Method Name="NameValuePairs" Hidden="true" />
+    </Members>
+    <TypeIdentifier />
+    <ShowAsCollectionAssociation>
+      <Property Name="Entries" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="Commons.DotLiquid.NameValuePair">
+    <Position X="9.25" Y="0.5" Width="1.5" />
+    <Members>
+      <Method Name="NameValuePair" Hidden="true" />
+    </Members>
+    <TypeIdentifier />
+  </Class>
+  <Class Name="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlReportDataQualityCategory">
+    <Position X="9" Y="2.75" Width="2.75" />
+    <Members>
+      <Field Name="_category" Hidden="true" />
+      <Field Name="_categoryComparer" Hidden="true" />
+      <Field Name="_exceptionCategories" Hidden="true" />
+      <Field Name="_htmlExceptionCategoryCounts" Hidden="true" />
+      <Field Name="_issueGroupComparer" Hidden="true" />
+      <Field Name="_issueGroups" Hidden="true" />
+      <Field Name="_issueGroupsRequireSorting" Hidden="true" />
+      <Field Name="_qualityConditionComparer" Hidden="true" />
+      <Field Name="_qualityConditions" Hidden="true" />
+      <Field Name="_subCategories" Hidden="true" />
+      <Field Name="_uniqueName" Hidden="true" />
+      <Method Name="AddIssueGroup" Hidden="true" />
+      <Method Name="AggregateExceptionCategories" Hidden="true" />
+      <Method Name="Equals" Hidden="true" />
+      <Method Name="GetDisplayName" Hidden="true" />
+      <Method Name="GetHashCode" Hidden="true" />
+      <Method Name="HtmlReportDataQualityCategory" Hidden="true" />
+      <Method Name="Include" Hidden="true" />
+      <Method Name="IncludeSubCategory" Hidden="true" />
+      <Property Name="IssueCountFormatted" Hidden="true" />
+      <Method Name="ToString" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <AssociationLine Name="ParentCategory" Type="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlReportDataQualityCategory">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-1.297" Y="0.154" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="SubCategories" Type="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlReportDataQualityCategory">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-1.296" Y="0.383" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="ExceptionCategories" Type="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlExceptionCategoryCount">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.797" Y="0.112" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="IssueGroups" Type="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlReportIssueGroup" ManuallyRouted="true" FixedFromPoint="true" FixedToPoint="true">
+      <Path>
+        <Point X="11.75" Y="6.563" />
+        <Point X="13.875" Y="6.563" />
+        <Point X="13.875" Y="7.75" />
+      </Path>
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-0.799" Y="1.271" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="QualityConditions" Type="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlReportQualityCondition">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="0.318" Y="0.081" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAECIADAAAEkDBQFgMCATCUIAAAFAIgJARCAAgA4EEA=</HashCode>
+      <FileName>QA\HtmlReports\HtmlReportDataQualityCategory.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="ParentCategory" />
+    </ShowAsAssociation>
+    <ShowAsCollectionAssociation>
+      <Property Name="SubCategories" />
+      <Property Name="ExceptionCategories" />
+      <Property Name="IssueGroups" />
+      <Property Name="QualityConditions" />
+    </ShowAsCollectionAssociation>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlReportAreaOfInterest">
+    <Position X="1" Y="8.75" Width="2.5" />
+    <Members>
+      <Method Name="HtmlReportAreaOfInterest" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>AAAgAAAAAAQgAAAAABBAAAAAAAAAAAAAAQAAAQAAAEg=</HashCode>
+      <FileName>QA\HtmlReports\HtmlReportAreaOfInterest.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlTexts">
+    <Position X="7.25" Y="9.5" Width="3.25" />
+    <TypeIdentifier>
+      <HashCode>AwRAQEIogAMQgwiwAAAAAAQAICoAQBTEAIABAEIAIgA=</HashCode>
+      <FileName>QA\HtmlReports\HtmlTexts.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ProSuite.DomainServices.AO.QA.HtmlReports.OutputFile">
+    <Position X="7" Y="2.25" Width="1.5" />
+    <Members>
+      <Method Name="OutputFile" Hidden="true" />
+      <Method Name="ToString" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAACABAAABAAAA=</HashCode>
+      <FileName>QA\HtmlReports\OutputFile.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlExceptionCategoryCount">
+    <Position X="16.25" Y="5" Width="2.25" />
+    <Members>
+      <Method Name="Equals" Hidden="true" />
+      <Method Name="GetHashCode" Hidden="true" />
+      <Method Name="HtmlExceptionCategoryCount" Hidden="true" />
+    </Members>
+    <Compartments>
+      <Compartment Name="Methods" Collapsed="true" />
+    </Compartments>
+    <TypeIdentifier>
+      <HashCode>AAAAAAAAAAAEAAAAgAAAAAQAAAAAAIAAAAAAAAAACAA=</HashCode>
+      <FileName>QA\HtmlReports\HtmlExceptionCategoryCount.cs</FileName>
+    </TypeIdentifier>
+    <Lollipop Position="0.2" />
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

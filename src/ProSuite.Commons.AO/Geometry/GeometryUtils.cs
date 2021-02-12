@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Xml;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -854,7 +855,23 @@ namespace ProSuite.Commons.AO.Geometry
 			var shp = (IESRIShape2) result;
 
 			var count = 0;
-			shp.ImportFromESRIShape(ref count, ref esriShapeBuffer[0]);
+
+			try
+			{
+				shp.ImportFromESRIShape(ref count, ref esriShapeBuffer[0]);
+			}
+			catch (Exception e)
+			{
+				_msg.Debug(
+					$"Error creating {geometryType} geometry from " +
+					$"{Encoding.Default.GetString(esriShapeBuffer)} using new empty geometry {ToString(result)}",
+					e);
+
+				// Improve the error message in case this is called on an MTA thread:
+				Assert.AreEqual(ApartmentState.STA, Thread.CurrentThread.GetApartmentState(),
+				                "Thread is not STA");
+				throw;
+			}
 
 			return result;
 		}
@@ -7898,7 +7915,10 @@ namespace ProSuite.Commons.AO.Geometry
 				count = wksPointZs.Length;
 			}
 
-			toResult.AddWKSPointZs(count, ref wksPointZs[0]);
+			if (count > 0)
+			{
+				toResult.AddWKSPointZs(count, ref wksPointZs[0]);
+			}
 		}
 
 		public static void QueryWKSPoints([NotNull] IPointCollection4 pointCollection,

@@ -34,31 +34,31 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaIntersectsOther_0")]
+		[Doc(nameof(DocStrings.QaIntersectsOther_0))]
 		public QaIntersectsOther(
-				[Doc("QaIntersectsOther_intersectedClasses")] [NotNull]
+				[Doc(nameof(DocStrings.QaIntersectsOther_intersectedClasses))] [NotNull]
 				IList<IFeatureClass> intersected,
-				[Doc("QaIntersectsOther_intersectingClasses")] [NotNull]
+				[Doc(nameof(DocStrings.QaIntersectsOther_intersectingClasses))] [NotNull]
 				IList<IFeatureClass> intersecting)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(intersected, intersecting, null) { }
 
-		[Doc("QaIntersectsOther_1")]
+		[Doc(nameof(DocStrings.QaIntersectsOther_1))]
 		public QaIntersectsOther(
-				[Doc("QaIntersectsOther_intersectedClass")] [NotNull]
+				[Doc(nameof(DocStrings.QaIntersectsOther_intersectedClass))] [NotNull]
 				IFeatureClass intersected,
-				[Doc("QaIntersectsOther_intersectingClass")] [NotNull]
+				[Doc(nameof(DocStrings.QaIntersectsOther_intersectingClass))] [NotNull]
 				IFeatureClass intersecting)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(intersected, intersecting, null) { }
 
-		[Doc("QaIntersectsOther_2")]
+		[Doc(nameof(DocStrings.QaIntersectsOther_2))]
 		public QaIntersectsOther(
-			[Doc("QaIntersectsOther_intersectedClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaIntersectsOther_intersectedClasses))] [NotNull]
 			IList<IFeatureClass> intersectedClasses,
-			[Doc("QaIntersectsOther_intersectingClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaIntersectsOther_intersectingClasses))] [NotNull]
 			IList<IFeatureClass> intersectingClasses,
-			[Doc("QaIntersectsOther_validRelationConstraint")]
+			[Doc(nameof(DocStrings.QaIntersectsOther_validRelationConstraint))]
 			string validRelationConstraint)
 			: base(
 				intersectedClasses, intersectingClasses,
@@ -69,13 +69,13 @@ namespace ProSuite.QA.Tests
 				                              : null;
 		}
 
-		[Doc("QaIntersectsOther_3")]
+		[Doc(nameof(DocStrings.QaIntersectsOther_3))]
 		public QaIntersectsOther(
-			[Doc("QaIntersectsOther_intersectedClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaIntersectsOther_intersectedClass))] [NotNull]
 			IFeatureClass intersectedClass,
-			[Doc("QaIntersectsOther_intersectingClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaIntersectsOther_intersectingClass))] [NotNull]
 			IFeatureClass intersectingClass,
-			[Doc("QaIntersectsOther_validRelationConstraint")]
+			[Doc(nameof(DocStrings.QaIntersectsOther_validRelationConstraint))]
 			string validRelationConstraint)
 			: this(new[] {intersectedClass}, new[] {intersectingClass}, validRelationConstraint
 			) { }
@@ -105,12 +105,12 @@ namespace ProSuite.QA.Tests
 		#endregion
 
 		[TestParameter(_defaultReportIntersectionsAsMultipart)]
-		[Doc("QaIntersectsOther_ReportIntersectionsAsMultipart")]
+		[Doc(nameof(DocStrings.QaIntersectsOther_ReportIntersectionsAsMultipart))]
 		public bool ReportIntersectionsAsMultipart { get; set; } =
 			_defaultReportIntersectionsAsMultipart;
 
 		[TestParameter]
-		[Doc("QaIntersectsOther_ValidIntersectionGeometryConstraint")]
+		[Doc(nameof(DocStrings.QaIntersectsOther_ValidIntersectionGeometryConstraint))]
 		public string ValidIntersectionGeometryConstraint
 		{
 			get { return _validIntersectionGeometryConstraint?.Constraint; }
@@ -124,7 +124,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[TestParameter]
-		[Doc("QaIntersectsOther_IgnoreArea")]
+		[Doc(nameof(DocStrings.QaIntersectsOther_IgnoreArea))]
 		public IFeatureClass IgnoreArea
 		{
 			get { return _ignoreAreaProcessor?.FeatureClass; }

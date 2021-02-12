@@ -3,22 +3,20 @@ using System.Collections.Generic;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
-using ProSuite.QA.TestFactories;
-using ProSuite.QA.Tests.Test.Construction;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.AO.DataModel;
-using ProSuite.DomainModel.AO.Geodatabase;
+using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.DomainModel.AO.QA;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Test;
+using ProSuite.QA.TestFactories;
+using ProSuite.QA.Tests.Test.Construction;
+using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -32,7 +30,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 		}
 
 		[OneTimeTearDown]
@@ -105,28 +103,26 @@ namespace ProSuite.QA.Tests.Test
 
 			var ds1 = (IDataset) fc;
 
-			var model = new SimpleModel("model", (IWorkspace) ws);
+			var model = new SimpleModel("model", fc);
 			Dataset mds1 = model.AddDataset(new ModelVectorDataset(ds1.Name));
 
 			var clsDesc = new ClassDescriptor(typeof(QaFactoryPseudoNodes));
 			var tstDesc = new TestDescriptor("GroupEnds", clsDesc);
 			var condition = new QualityCondition("cndPseudoNodes", tstDesc);
-			QualityCondition_Utils.AddParameterValue(condition,
-			                                        QaFactoryPseudoNodes.PolylineClassesParam,
-			                                        mds1);
-			QualityCondition_Utils.AddParameterValue(condition,
-			                                        QaFactoryPseudoNodes.IgnoreFieldsParam,
-			                                        _nrFieldName);
-			QualityCondition_Utils.AddParameterValue(condition,
-			                                        QaFactoryPseudoNodes.IgnoreFieldsParam,
-			                                        QaFactoryPseudoNodes.EndLayerFields);
+			QualityConditionParameterUtils.AddParameterValue(
+				condition, QaFactoryPseudoNodes.PolylineClassesParam, mds1);
+			QualityConditionParameterUtils.AddParameterValue(
+				condition, QaFactoryPseudoNodes.IgnoreFieldsParam, _nrFieldName);
+			QualityConditionParameterUtils.AddParameterValue(
+				condition, QaFactoryPseudoNodes.IgnoreFieldsParam,
+				QaFactoryPseudoNodes.EndLayerFields);
 			// implicit: ignoreLoopEndPoints = false
 
 			var fact = new QaFactoryPseudoNodes();
 			fact.Condition = condition;
 
-			
-			IList<ITest> tests = fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+			IList<ITest> tests =
+				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 			Assert.AreEqual(1, tests.Count);
 
 			ITest test = tests[0];
@@ -135,9 +131,8 @@ namespace ProSuite.QA.Tests.Test
 			Assert.AreEqual(1, runner.Errors.Count);
 
 			// set ignoreLoopEndPoints = true and rerun
-			QualityCondition_Utils.AddParameterValue(condition,
-			                                        QaFactoryPseudoNodes.IgnoreLoopEndPointsParam,
-			                                        true);
+			QualityConditionParameterUtils.AddParameterValue(
+				condition, QaFactoryPseudoNodes.IgnoreLoopEndPointsParam, true);
 			fact.Condition = condition;
 
 			tests = fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));

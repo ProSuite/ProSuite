@@ -34,18 +34,18 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMaxArea_0")]
+		[Doc(nameof(DocStrings.QaMaxArea_0))]
 		public QaMaxArea(
-				[Doc("QaMaxArea_polygonClass")] IFeatureClass polygonClass,
-				[Doc("QaMaxArea_limit")] double limit)
+				[Doc(nameof(DocStrings.QaMaxArea_polygonClass))] IFeatureClass polygonClass,
+				[Doc(nameof(DocStrings.QaMaxArea_limit))] double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polygonClass, limit, false) { }
 
-		[Doc("QaMaxArea_1")]
+		[Doc(nameof(DocStrings.QaMaxArea_1))]
 		public QaMaxArea(
-			[Doc("QaMaxArea_polygonClass")] IFeatureClass polygonClass,
-			[Doc("QaMaxArea_limit")] double limit,
-			[Doc("QaMaxArea_perPart")] bool perPart)
+			[Doc(nameof(DocStrings.QaMaxArea_polygonClass))] IFeatureClass polygonClass,
+			[Doc(nameof(DocStrings.QaMaxArea_limit))] double limit,
+			[Doc(nameof(DocStrings.QaMaxArea_perPart))] bool perPart)
 			: base(polygonClass, limit, perPart) { }
 
 		protected override int CheckArea(double area, IGeometry shape, IRow row)

@@ -47,29 +47,29 @@ namespace ProSuite.QA.Tests
 
 		#region constructors
 
-		[Doc("QaFlowLogic_0")]
+		[Doc(nameof(DocStrings.QaFlowLogic_0))]
 		public QaFlowLogic(
-			[Doc("QaFlowLogic_polylineClass")] IFeatureClass polylineClass)
+			[Doc(nameof(DocStrings.QaFlowLogic_polylineClass))] IFeatureClass polylineClass)
 			: this(new[] {polylineClass}) { }
 
-		[Doc("QaFlowLogic_1")]
+		[Doc(nameof(DocStrings.QaFlowLogic_1))]
 		public QaFlowLogic(
-				[Doc("QaFlowLogic_polylineClasses")] IList<IFeatureClass> polylineClasses)
+				[Doc(nameof(DocStrings.QaFlowLogic_polylineClasses))] IList<IFeatureClass> polylineClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, null, false) { }
 
-		[Doc("QaFlowLogic_2")]
+		[Doc(nameof(DocStrings.QaFlowLogic_2))]
 		public QaFlowLogic(
-				[Doc("QaFlowLogic_polylineClasses")] IList<IFeatureClass> polylineClasses,
-				[Doc("QaFlowLogic_flipExpressions")] IList<string> flipExpressions)
+				[Doc(nameof(DocStrings.QaFlowLogic_polylineClasses))] IList<IFeatureClass> polylineClasses,
+				[Doc(nameof(DocStrings.QaFlowLogic_flipExpressions))] IList<string> flipExpressions)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, flipExpressions, false) { }
 
-		[Doc("QaFlowLogic_2")]
+		[Doc(nameof(DocStrings.QaFlowLogic_2))]
 		public QaFlowLogic(
-			[Doc("QaFlowLogic_polylineClasses")] IList<IFeatureClass> polylineClasses,
-			[Doc("QaFlowLogic_flipExpressions")] IList<string> flipExpressions,
-			[Doc("QaFlowLogic_allowMultipleOutgoingLines")]
+			[Doc(nameof(DocStrings.QaFlowLogic_polylineClasses))] IList<IFeatureClass> polylineClasses,
+			[Doc(nameof(DocStrings.QaFlowLogic_flipExpressions))] IList<string> flipExpressions,
+			[Doc(nameof(DocStrings.QaFlowLogic_allowMultipleOutgoingLines))]
 			bool allowMultipleOutgoingLines)
 			: base(CastToTables((IEnumerable<IFeatureClass>) polylineClasses), false)
 		{

@@ -34,25 +34,25 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMinLength_0")]
+		[Doc(nameof(DocStrings.QaMinLength_0))]
 		public QaMinLength(
-			[Doc("QaMinLength_featureClass")] IFeatureClass featureClass,
-			[Doc("QaMinLength_limit")] double limit,
-			[Doc("QaMinLength_is3D")] bool is3D)
+			[Doc(nameof(DocStrings.QaMinLength_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaMinLength_limit))] double limit,
+			[Doc(nameof(DocStrings.QaMinLength_is3D))] bool is3D)
 			: base(featureClass, limit, is3D) { }
 
-		[Doc("QaMinLength_0")]
+		[Doc(nameof(DocStrings.QaMinLength_0))]
 		public QaMinLength(
-			[Doc("QaMinLength_featureClass")] IFeatureClass featureClass,
-			[Doc("QaMinLength_limit")] double limit)
+			[Doc(nameof(DocStrings.QaMinLength_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaMinLength_limit))] double limit)
 			: base(featureClass, limit) { }
 
-		[Doc("QaMinLength_0")]
+		[Doc(nameof(DocStrings.QaMinLength_0))]
 		public QaMinLength(
-			[Doc("QaMinLength_featureClass")] IFeatureClass featureClass,
-			[Doc("QaMinLength_limit")] double limit,
-			[Doc("QaMinLength_is3D")] bool is3D,
-			[Doc("QaMinLength_perPart")] bool perPart)
+			[Doc(nameof(DocStrings.QaMinLength_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaMinLength_limit))] double limit,
+			[Doc(nameof(DocStrings.QaMinLength_is3D))] bool is3D,
+			[Doc(nameof(DocStrings.QaMinLength_perPart))] bool perPart)
 			: base(featureClass, limit, is3D, perPart) { }
 
 		protected override int CheckLength(double length, ICurve curve, IRow row)
