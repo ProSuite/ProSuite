@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Templates;
@@ -151,8 +150,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-
-
 		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
 		{
 			_msg.VerboseDebug("OnKeyUpCore");
@@ -193,36 +190,41 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override bool HandleEscape()
 		{
-			if (IsInSketchMode)
-			{
-				// if sketch is empty, also remove selection and return to selection phase
-
-				if (! RequiresSelection)
+			QueuedTaskUtils.Run(
+				delegate
 				{
-					// remain in sketch mode, just reset the sketch
-					ResetSketch();
-				}
-				else
-				{
-					Geometry sketch = GetCurrentSketchAsync().Result;
-
-					if (sketch != null && ! sketch.IsEmpty)
+					if (IsInSketchMode)
 					{
-						ResetSketch();
+						// if sketch is empty, also remove selection and return to selection phase
+
+						if (! RequiresSelection)
+						{
+							// remain in sketch mode, just reset the sketch
+							ResetSketch();
+						}
+						else
+						{
+							Geometry sketch = GetCurrentSketchAsync().Result;
+
+							if (sketch != null && ! sketch.IsEmpty)
+							{
+								ResetSketch();
+							}
+							else
+							{
+								SelectionUtils.ClearSelection(ActiveMapView.Map);
+
+								StartSelectionPhase();
+							}
+						}
 					}
 					else
 					{
 						SelectionUtils.ClearSelection(ActiveMapView.Map);
-
-						StartSelectionPhase();
 					}
-				}
-			}
-			else
-			{
-				SelectionUtils.ClearSelection(ActiveMapView.Map);
-			}
 
+					return true;
+				});
 			return true;
 		}
 

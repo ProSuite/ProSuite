@@ -43,7 +43,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
     </Reference>
-    <Reference Include="ArcGIS.Desktop.Framework, PublicKeyToken=8fc3cc631e44ad86" >
+    <Reference Include="ArcGIS.Desktop.Framework, PublicKeyToken=8fc3cc631e44ad86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Desktop.Framework.dll</HintPath>
     </Reference>
@@ -71,6 +71,7 @@
     <Compile Include="GeometryProcessingClient.cs" />
     <Compile Include="GeometryProcessing\RemoveOverlaps\RemoveOverlapsClientUtils.cs" />
     <Compile Include="GeometryProcessing\RemoveOverlaps\RemoveOverlapsResult.cs" />
+    <Compile Include="GeometryProcessing\RpcCallUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProtobufConversionUtils.cs" />
   </ItemGroup>

@@ -43,6 +43,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return features.Select(feature => feature.GetShape()).ToList();
 		}
 
+		[NotNull]
 		public static IEnumerable<Feature> Filter([NotNull] IEnumerable<Feature> features,
 		                                          GeometryType byGeometryType)
 		{

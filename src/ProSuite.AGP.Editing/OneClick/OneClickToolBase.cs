@@ -144,14 +144,16 @@ namespace ProSuite.AGP.Editing.OneClick
 					ShowOptionsPane();
 				}
 
+				// Cancel outside a queued task otherwise the current task that blocks the queue
+				// cannot be cancelled.
+				if (k.Key == Key.Escape)
+				{
+					HandleEscape();
+				}
+
 				QueuedTaskUtils.Run(
 					delegate
 					{
-						if (k.Key == Key.Escape)
-						{
-							return HandleEscape();
-						}
-
 						if (IsShiftKey(k.Key) &&
 						    SelectionCursorShift != null && IsInSelectionPhase())
 						{

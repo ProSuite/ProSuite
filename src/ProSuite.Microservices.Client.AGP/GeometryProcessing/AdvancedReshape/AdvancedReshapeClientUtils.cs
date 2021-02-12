@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -36,40 +37,45 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 						return geometryToReshape.SpatialReference;
 					});
 
-			// Not in a queued task!
+			// Not in a queued task (but it is still called multiple times because...)
 			ShapeMsg pointMsg = rpcClient.GetOpenJawReshapeLineReplaceEndPoint(request);
 
 			return await QueuedTaskUtils.Run(
 				       () => (MapPoint) ProtobufConversionUtils.FromShapeMsg(pointMsg, sr));
 		}
 
-		public static async Task<ReshapeResult> ReshapeAsync(
+		public static ReshapeResult TryReshape(
 			[NotNull] ReshapeGrpc.ReshapeGrpcClient rpcClient,
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] Polyline reshapeLine,
 			[CanBeNull] IList<Feature> adjacentFeatures,
 			bool allowOpenJawReshape,
 			bool multiReshapeAsUnion,
-			bool tryReshapeNonDefault)
+			bool tryReshapeNonDefault,
+			CancellationToken cancellationToken)
 		{
 			var allInputFeatures = new Dictionary<GdbObjectReference, Feature>();
 
-			AdvancedReshapeRequest request =
-				await QueuedTaskUtils.Run(
-					() =>
-					{
-						AddInputFeatures(selectedFeatures, allInputFeatures);
+			AddInputFeatures(selectedFeatures, allInputFeatures);
 
-						return CreateReshapeRequest(
-							selectedFeatures, reshapeLine, adjacentFeatures, allowOpenJawReshape,
-							multiReshapeAsUnion, tryReshapeNonDefault);
-					});
+			var request = CreateReshapeRequest(
+				selectedFeatures, reshapeLine, adjacentFeatures, allowOpenJawReshape,
+				multiReshapeAsUnion, tryReshapeNonDefault);
 
 			request.AllowOpenJawReshape = true;
 
-			// TODO:
-			// Inside a QueuedTask this will be executed up to 4 times! -> Use background task (> 2.6)
-			AdvancedReshapeResponse reshapeResultMsg = rpcClient.AdvancedReshape(request);
+			// TODO: If the server is overwhelmed by requests, the calls block (and cannot even be cancelled)
+			//       Add a task scheduler mode that throws if no free thread is available immediately
+			const int deadline = 2000;
+
+			AdvancedReshapeResponse reshapeResultMsg = RpcCallUtils.Try(
+				o => rpcClient.AdvancedReshape(request, o),
+				cancellationToken, deadline, true);
+
+			if (reshapeResultMsg == null)
+			{
+				return null;
+			}
 
 			var result = new ReshapeResult
 			             {
@@ -106,7 +112,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 			[CanBeNull] IList<Feature> adjacentFeatures,
 			bool allowOpenJawReshape,
 			bool multiReshapeAsUnion,
-			bool tryReshapeNonDefault)
+			bool tryReshapeNonDefault,
+			CancellationToken cancellationToken)
 		{
 			var allInputFeatures = new Dictionary<GdbObjectReference, Feature>();
 
@@ -119,20 +126,27 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 				selectedFeatures, reshapeLine, adjacentFeatures, allowOpenJawReshape,
 				multiReshapeAsUnion, tryReshapeNonDefault);
 
-			return Reshape(rpcClient, request, allInputFeatures);
+			return Reshape(rpcClient, request, allInputFeatures, cancellationToken);
 		}
 
 		private static ReshapeResult Reshape(
 			[NotNull] ReshapeGrpc.ReshapeGrpcClient rpcClient,
 			[NotNull] AdvancedReshapeRequest request,
-			[NotNull] IReadOnlyDictionary<GdbObjectReference, Feature> allInputFeatures)
+			[NotNull] IReadOnlyDictionary<GdbObjectReference, Feature> allInputFeatures,
+			CancellationToken cancellationToken)
 		{
 			request.AllowOpenJawReshape = true;
 
-			// TODO:
-			// Inside a QueuedTask this will be executed up to 4 times! -> Use background task (> 2.6)
-			// Or alternatively, use a single TaskCompletionSource and take it from there. 
-			AdvancedReshapeResponse reshapeResultMsg = rpcClient.AdvancedReshape(request);
+			const int deadlinePerFeature = 5000;
+
+			AdvancedReshapeResponse reshapeResultMsg = RpcCallUtils.Try(
+				o => rpcClient.AdvancedReshape(request, o),
+				cancellationToken, deadlinePerFeature * request.Features.Count);
+
+			if (reshapeResultMsg == null)
+			{
+				return null;
+			}
 
 			var result = new ReshapeResult
 			             {

@@ -92,11 +92,17 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override bool HandleEscape()
 		{
-			SelectionUtils.ClearSelection(ActiveMapView.Map);
+			QueuedTaskUtils.Run(
+				() =>
+				{
+					SelectionUtils.ClearSelection(ActiveMapView.Map);
 
-			ResetDerivedGeometries();
+					ResetDerivedGeometries();
 
-			StartSelectionPhase();
+					StartSelectionPhase();
+
+					return true;
+				});
 
 			return true;
 		}
