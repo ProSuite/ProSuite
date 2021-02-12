@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Templates;
@@ -24,6 +25,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private Geometry _editSketchBackup;
+		private Geometry _previousSketch;
+
 		private List<Operation> _sketchOperations;
 
 		private bool _intermittentSelectionPhase;
@@ -87,6 +90,13 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				StartSketchPhase();
 			}
+		}
+
+		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+		{
+			RememberSketch();
+
+			base.OnToolDeactivateCore(hasMapViewChanged);
 		}
 
 		protected override bool IsInSelectionPhase()
@@ -186,6 +196,11 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				_editSketchBackup = null;
 			}
+
+			if (k.Key == Key.R)
+			{
+				RestorePreviousSketch();
+			}
 		}
 
 		protected override bool HandleEscape()
@@ -260,6 +275,8 @@ namespace ProSuite.AGP.Editing.OneClick
 				// take snapshots
 				EditingTemplate currentTemplate = CurrentTemplate;
 				MapView activeView = ActiveMapView;
+
+				RememberSketch(sketchGeometry);
 
 				return await OnEditSketchCompleteCoreAsync(
 					       sketchGeometry, currentTemplate, activeView, progressor);
@@ -373,12 +390,32 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void ResetSketch()
 		{
+			RememberSketch();
+
 			ClearSketchAsync();
 			OnSketchModifiedCore();
 
 			OnSketchResetCore();
 
 			StartSketchAsync();
+		}
+
+		protected void RememberSketch(Geometry knownSketch = null)
+		{
+			var sketch = knownSketch ?? GetCurrentSketchAsync().Result;
+
+			if (sketch != null && ! sketch.IsEmpty)
+			{
+				_previousSketch = sketch;
+			}
+		}
+
+		protected void RestorePreviousSketch()
+		{
+			if (_previousSketch != null && ! _previousSketch.IsEmpty)
+			{
+				SetCurrentSketchAsync(_previousSketch);
+			}
 		}
 	}
 }

@@ -129,6 +129,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		{
 			_feedback?.Clear();
 			_feedback = null;
+
+			base.OnToolDeactivateCore(hasMapViewChanged);
 		}
 
 		protected override SketchGeometryType GetSketchGeometryType()
@@ -256,8 +258,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			CancelableProgressor cancelableProgressor = null)
 		{
 			_feedback.Clear();
-			_nonDefaultSideMode = false;
-
+			
 			// TODO: cancel all running background tasks...
 
 			var polyline = (Polyline) sketchGeometry;
@@ -300,6 +301,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 				return success;
 			});
+
+			_nonDefaultSideMode = false;
 
 			//if (!_advancedReshapeOptions.RemainInSketchMode)
 			{
