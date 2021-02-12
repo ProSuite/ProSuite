@@ -13,7 +13,6 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Geometry.Serialization
 {
-	[CLSCompliant(false)]
 	public class WkbGeometryWriter : WkbWriter
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();

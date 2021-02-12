@@ -13,7 +13,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Base class for tests that check the area of polygons.
 	/// </summary>
-	[CLSCompliant(false)]
 	public abstract class QaAreaBase : ContainerTest
 	{
 		private readonly bool _perPart;

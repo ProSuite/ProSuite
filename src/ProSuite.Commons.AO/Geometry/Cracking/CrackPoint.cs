@@ -1,9 +1,7 @@
-﻿using System;
 using ESRI.ArcGIS.Geometry;
 
 namespace ProSuite.Commons.AO.Geometry.Cracking
 {
-	[CLSCompliant(false)]
 	public class CrackPoint
 	{
 		public IPoint Point { get; set; }

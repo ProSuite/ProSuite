@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -10,7 +10,6 @@ using ProSuite.Commons.Geometry;
 
 namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 {
-	[CLSCompliant(false)]
 	public static class LinearNetworkEditUtils
 	{
 		public static IList<IFeature> SplitAtJunctions(

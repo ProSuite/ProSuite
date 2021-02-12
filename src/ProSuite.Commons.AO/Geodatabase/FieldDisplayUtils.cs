@@ -10,7 +10,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 {
 	public static class FieldDisplayUtils
 	{
-		[CLSCompliant(false)]
 		public static string GetDefaultRowFormat([NotNull] IObjectClass objectClass,
 		                                         bool includeClassAlias = false)
 		{
@@ -52,7 +51,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="objectClass">The object class.</param>
 		/// <param name="fieldName">The field name of the name field, if found.</param>
 		/// <returns><c>true</c> if a name field was found, <c>false</c> otherwise.</returns>
-		[CLSCompliant(false)]
 		public static bool TryGetNameField([NotNull] IObjectClass objectClass,
 		                                   out string fieldName)
 		{

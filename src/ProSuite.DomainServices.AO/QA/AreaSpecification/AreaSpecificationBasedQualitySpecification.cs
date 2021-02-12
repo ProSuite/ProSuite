@@ -53,7 +53,6 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 			_currentFeatureAreaSpecifications = null;
 		}
 
-		[CLSCompliant(false)]
 		public void SetCurrentTile(IEnvelope currentTile)
 		{
 			_currentTile = currentTile;
@@ -64,7 +63,6 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 			}
 		}
 
-		[CLSCompliant(false)]
 		public bool IsFeatureToBeTested(IFeature feature,
 		                                bool recycled, Guid recycleUnique,
 		                                QualityCondition qualityCondition,
@@ -93,7 +91,6 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 		///   <c>true</c> if the error is relevant for the location; otherwise, <c>false</c>.
 		/// </returns>
 		/// <remarks>Must be called within a domain transaction.</remarks>
-		[CLSCompliant(false)]
 		public bool IsErrorRelevant(IGeometry errorGeometry,
 		                            QualityCondition qualityCondition,
 		                            ICollection<InvolvedRow> involvedRows)

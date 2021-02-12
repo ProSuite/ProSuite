@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -9,7 +8,6 @@ namespace ProSuite.QA.Container
 	/// <summary>
 	/// Interface for reporting QA errors
 	/// </summary>
-	[CLSCompliant(false)]
 	public interface IErrorReporting
 	{
 		int Report([NotNull] string description,

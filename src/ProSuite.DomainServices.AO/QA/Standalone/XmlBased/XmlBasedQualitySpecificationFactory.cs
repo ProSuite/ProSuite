@@ -32,7 +32,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		/// </summary>
 		/// <param name="modelFactory">The model builder.</param>
 		/// <param name="datasetOpener"></param>
-		[CLSCompliant(false)]
 		public XmlBasedQualitySpecificationFactory(
 			[NotNull] IVerifiedModelFactory modelFactory,
 			[NotNull] IOpenDataset datasetOpener)

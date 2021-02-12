@@ -6,7 +6,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests.PointEnumerators
 {
-	[CLSCompliant(false)]
 	public static class PointsEnumeratorFactory
 	{
 		[NotNull]

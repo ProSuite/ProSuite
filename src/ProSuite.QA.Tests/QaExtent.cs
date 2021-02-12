@@ -15,7 +15,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Check whether the x or y extent of features - or feature parts - exceeds a given limit.
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[GeometryTest]
 	public class QaExtent : ContainerTest

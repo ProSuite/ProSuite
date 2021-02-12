@@ -10,7 +10,6 @@ namespace ProSuite.QA.Tests
 	/// Look for an Intersection between two lines that
 	/// are on the same layer
 	/// </summary>
-	[CLSCompliant(false)]
 	[Obsolete("use QaLineIntersect")]
 	public class QaIntersect : ContainerTest
 	{

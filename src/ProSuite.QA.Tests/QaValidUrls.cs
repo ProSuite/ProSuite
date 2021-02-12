@@ -21,7 +21,6 @@ namespace ProSuite.QA.Tests
 {
 	[AttributeTest]
 	[UsedImplicitly]
-	[CLSCompliant(false)]
 	public class QaValidUrls : ContainerTest
 	{
 		[NotNull] private readonly ITable _table;

@@ -7,7 +7,6 @@ using ProSuite.QA.Tests;
 
 namespace ProSuite.QA.TestFactories
 {
-	[CLSCompliant(false)]
 	[Obsolete("use QaMinNodeDistanceFactory")]
 	public class QaMinPointDistanceFactory : QaLinearUnitFactory
 	{

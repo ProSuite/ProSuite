@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -9,7 +8,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainServices.AO.QA.Issues
 {
-	[CLSCompliant(false)]
 	public class IssueFeatureWriter : IssueWriter
 	{
 		private readonly bool _hasM;

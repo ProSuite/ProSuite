@@ -20,7 +20,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
-	[CLSCompliant(false)]
 	public abstract class GeometryReshaperBase : IDisposable
 	{
 		private static readonly IMsg _msg =
@@ -87,7 +86,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// This dictionary is populated if the TargetFeatures are set before reshaping.
 		/// </summary>
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public IDictionary<IFeature, IGeometry> UpdatedTargets { get; private set; }
 
 		[NotNull]

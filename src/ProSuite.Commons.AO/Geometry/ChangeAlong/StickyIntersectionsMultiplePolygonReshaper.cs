@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -25,7 +24,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		private List<KeyValuePair<IPoint, ISegment>> _stitchPoints;
 
-		[CLSCompliant(false)]
 		public StickyIntersectionsMultiplePolygonReshaper(
 			[NotNull] Dictionary<IGeometry, IGeometry> reshapeGeometryCloneByOriginal,
 			[NotNull] Dictionary<IGeometry, IList<ReshapeInfo>> individualReshapes,
@@ -38,12 +36,10 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			UsedTargetIntersections = new List<IPoint>();
 		}
 
-		[CLSCompliant(false)]
 		public IEnvelope RefreshArea { get; set; }
 
 		public bool AddAutomaticSourceTargetPairs { get; set; }
 
-		[CLSCompliant(false)]
 		public IList<IPoint> UsedTargetIntersections { get; private set; }
 
 		/// <summary>
@@ -55,7 +51,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// <param name="notifications"></param>
 		/// <returns></returns>
 		[NotNull]
-		[CLSCompliant(false)]
 		public IDictionary<IGeometry, NotificationCollection>
 			ReshapeGeometries(
 				[NotNull] IPath reshapePath,

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -19,7 +19,6 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[CLSCompliant(false)]
 		public VerifiedModelFactory(
 			[NotNull] Func<Model, IFeatureWorkspace, IWorkspaceContext> workspaceContextFactory,
 			[NotNull] VerifiedDatasetHarvesterBase datasetHarvester)
@@ -44,7 +43,6 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			set => _datasetHarvester.HarvestObjectTypes = value;
 		}
 
-		[CLSCompliant(false)]
 		public Model CreateModel(IWorkspace workspace,
 		                         string name,
 		                         ISpatialReference spatialReference,

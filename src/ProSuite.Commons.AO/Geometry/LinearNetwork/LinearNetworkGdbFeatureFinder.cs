@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -9,7 +8,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 {
-	[CLSCompliant(false)]
 	public class LinearNetworkGdbFeatureFinder : LinearNetworkFeatureFinderBase
 	{
 		private IWorkspace _searchWorkspace;

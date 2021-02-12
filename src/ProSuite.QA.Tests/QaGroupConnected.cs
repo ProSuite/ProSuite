@@ -34,7 +34,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Check if polylines with same attributes are connected
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[LinearNetworkTest]
 	public class QaGroupConnected : QaGroupNetworkBase<DirectedRow>

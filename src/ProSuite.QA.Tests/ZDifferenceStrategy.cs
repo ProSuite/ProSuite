@@ -9,7 +9,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	public abstract class ZDifferenceStrategy
 	{
 		private readonly Func<double, string, double, string, string>

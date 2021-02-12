@@ -1,4 +1,3 @@
-﻿using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -9,7 +8,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		private readonly string _referencingKeyName;
 		private readonly string _referencedKeyName;
 
-		[CLSCompliant(false)]
 		public ForeignKeyAssociationDescription([NotNull] ITable referencingTable,
 		                                        [NotNull] string referencingKeyName,
 		                                        [NotNull] ITable referencedTable,

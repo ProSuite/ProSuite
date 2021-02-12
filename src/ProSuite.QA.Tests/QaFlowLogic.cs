@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -18,7 +17,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Check if there is always exactly one outgoing vertex
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[LinearNetworkTest]
 	public class QaFlowLogic : QaNetworkBase

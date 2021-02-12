@@ -35,7 +35,6 @@ namespace ProSuite.DomainServices.AO.QA
 
 		private bool _isUsed;
 
-		[CLSCompliant(false)]
 		public AllowedError([NotNull] QualityCondition qualityCondition,
 		                    int? conditionVersion,
 		                    [CanBeNull] IGeometry geometry,
@@ -94,7 +93,6 @@ namespace ProSuite.DomainServices.AO.QA
 			_usesGdbDatasetNames = usesGdbDatasetNames;
 		}
 
-		[CLSCompliant(false)]
 		public ITable Table => _table;
 
 		public int ObjectId => _oid;

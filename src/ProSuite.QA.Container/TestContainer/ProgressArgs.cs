@@ -49,7 +49,6 @@ namespace ProSuite.QA.Container.TestContainer
 		public long BruttoTicks { get; set; }
 		public long NettoTicks { get; set; }
 
-		[CLSCompliant(false)]
 		public ProgressArgs(Step step, int current, int total, IEnvelope currentEnvelope,
 		                    [CanBeNull] IEnvelope allBox)
 		{
@@ -77,10 +76,8 @@ namespace ProSuite.QA.Container.TestContainer
 
 		public int Total { get; }
 
-		[CLSCompliant(false)]
 		public IEnvelope CurrentEnvelope { get; }
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public IEnvelope ProcessedEnvelope
 		{
@@ -98,7 +95,6 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 		}
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public IEnvelope AllBox { get; }
 

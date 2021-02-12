@@ -7,7 +7,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	public abstract class CrossTileFeatureState<T> where T : PendingFeature
 	{
 		private readonly IDictionary<int, HashSet<int>> _featuresKnownOK =

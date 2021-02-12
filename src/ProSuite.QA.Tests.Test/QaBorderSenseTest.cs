@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container.Test;
@@ -15,7 +14,6 @@ using ProSuite.QA.Tests.Test.TestData;
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
-	[CLSCompliant(false)]
 	public class QaBorderSenseTest
 	{
 		private readonly ArcGISLicenses _lic = new ArcGISLicenses();

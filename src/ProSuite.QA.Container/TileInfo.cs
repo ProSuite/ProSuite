@@ -1,4 +1,3 @@
-﻿using System;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -9,7 +8,6 @@ namespace ProSuite.QA.Container
 	{
 		private IEnvelope _processedEnvelope;
 
-		[CLSCompliant(false)]
 		public TileInfo(TileState state,
 		                [CanBeNull] IEnvelope currentEnvelope,
 		                [CanBeNull] IEnvelope allBox)
@@ -20,16 +18,13 @@ namespace ProSuite.QA.Container
 		}
 
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public IEnvelope CurrentEnvelope { get; }
 
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public IEnvelope AllBox { get; }
 
 		public TileState State { get; }
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public IEnvelope ProcessedEnvelope
 		{

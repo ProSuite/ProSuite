@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -8,7 +7,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 	{
 		#region nested classes
 
-		[CLSCompliant(false)]
 		public class NodesDirectedRowComparer : IComparer<NodesDirectedRow>,
 		                                        IEqualityComparer<NodesDirectedRow>
 		{
@@ -19,19 +17,16 @@ namespace ProSuite.QA.Container.PolygonGrower
 				_rowComparer = rowComparer;
 			}
 
-			[CLSCompliant(false)]
 			public bool Equals(NodesDirectedRow x, NodesDirectedRow y)
 			{
 				return Compare(x, y) == 0;
 			}
 
-			[CLSCompliant(false)]
 			public int GetHashCode(NodesDirectedRow row)
 			{
 				return _rowComparer.GetHashCode(row);
 			}
 
-			[CLSCompliant(false)]
 			public int Compare(NodesDirectedRow x, NodesDirectedRow y)
 			{
 				return _rowComparer.Compare(x, y);
@@ -40,7 +35,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 
 		#endregion
 
-		[CLSCompliant(false)]
 		public NodesDirectedRow([NotNull] ITopologicalLine line,
 		                        [NotNull] ITableIndexRow row,
 		                        bool isBackward)

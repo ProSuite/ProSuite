@@ -12,7 +12,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Finds large polygons or polygon parts
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[GeometryTest]
 	public class QaMaxArea : QaAreaBase

@@ -7,7 +7,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.QA.Container.TestSupport
 {
-	[CLSCompliant(false)]
 	public class ObjectIdAliasColumnInfo : ColumnInfo
 	{
 		private readonly List<string> _baseFieldNames = new List<string>();

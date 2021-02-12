@@ -17,7 +17,6 @@ using Pnt = ProSuite.Commons.Geometry.Pnt;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[GeometryTest]
 	public class QaMpFootprintHoles : ContainerTest

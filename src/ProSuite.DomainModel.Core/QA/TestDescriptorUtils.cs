@@ -1,11 +1,9 @@
-using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.Core.QA
 {
-	[CLSCompliant(false)]
 	public static class TestDescriptorUtils
 	{
 		/// <summary>

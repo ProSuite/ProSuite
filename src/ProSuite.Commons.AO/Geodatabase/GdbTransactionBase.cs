@@ -10,7 +10,6 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public abstract class GdbTransactionBase : IGdbTransaction
 	{
 		private static readonly IMsg _msg =

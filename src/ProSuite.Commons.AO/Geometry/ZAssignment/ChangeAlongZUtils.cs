@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using ESRI.ArcGIS.Geometry;
@@ -10,7 +10,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AO.Geometry.ZAssignment
 {
-	[CLSCompliant(false)]
 	public static class ChangeAlongZUtils
 	{
 		private static readonly IMsg _msg =

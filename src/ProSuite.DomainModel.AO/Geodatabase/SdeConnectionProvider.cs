@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -6,7 +5,6 @@ using ProSuite.Commons.Validation;
 
 namespace ProSuite.DomainModel.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public abstract class SdeConnectionProvider : ConnectionProvider,
 	                                              IOpenSdeWorkspace,
 	                                              IAlternateCredentials

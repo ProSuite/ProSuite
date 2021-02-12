@@ -7,7 +7,6 @@ namespace ProSuite.QA.Tests
 	// ReSharper restore CheckNamespace
 {
 	[Obsolete("Replaced by QaSimpleGeometry")]
-	[CLSCompliant(false)]
 	public class QaInvalidGeometry : QaSimpleGeometry
 	{
 		[Obsolete("Replaced by QaSimpleGeometry")]

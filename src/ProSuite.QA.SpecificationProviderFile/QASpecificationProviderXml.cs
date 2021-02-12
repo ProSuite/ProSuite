@@ -40,7 +40,7 @@ namespace ProSuite.QA.SpecificationProviderFile
 				}
 				return tempData;
 			}
-			catch (Exception ex)
+			catch (Exception)
 			{
 				return null;
 			}

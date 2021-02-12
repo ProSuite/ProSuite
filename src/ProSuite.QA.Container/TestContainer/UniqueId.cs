@@ -1,4 +1,3 @@
-﻿using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -8,7 +7,6 @@ namespace ProSuite.QA.Container.TestContainer
 	{
 		[NotNull] private readonly UniqueIdProvider _uniqueIdProvider;
 
-		[CLSCompliant(false)]
 		public UniqueId([NotNull] IFeature feature,
 		                [NotNull] UniqueIdProvider uniqueIdProvider)
 		{

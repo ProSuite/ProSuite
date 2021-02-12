@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -11,7 +10,6 @@ namespace ProSuite.QA.Tests.Schema
 	/// <summary>
 	/// Base class for table (and feature class) schema tests
 	/// </summary>
-	[CLSCompliant(false)]
 	public abstract class QaSchemaTestBase : NonContainerTest
 	{
 		private readonly ITable _table;

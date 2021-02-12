@@ -17,7 +17,6 @@ namespace ProSuite.Commons.AO.Geometry
 	/// <summary>
 	/// Utility methods for working with spatial references.
 	/// </summary>
-	[CLSCompliant(false)]
 	public static class SpatialReferenceUtils
 	{
 		private static readonly IMsg _msg =

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -8,7 +7,6 @@ using Pnt = ProSuite.Commons.Geometry.Pnt;
 
 namespace ProSuite.QA.Tests.PointEnumerators
 {
-	[CLSCompliant(false)]
 	public interface IPointsEnumerator
 	{
 		[NotNull]

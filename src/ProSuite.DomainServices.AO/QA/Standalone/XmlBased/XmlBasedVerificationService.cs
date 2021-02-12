@@ -46,7 +46,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			_qualitySpecificationTemplatePath = qualitySpecificationTemplatePath;
 		}
 
-		[CLSCompliant(false)]
 		public void ExecuteVerification(
 			[NotNull] string dataQualityXml,
 			[NotNull] string specificationName,

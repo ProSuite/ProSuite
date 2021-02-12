@@ -8,7 +8,6 @@ using ProSuite.Commons.AO.Geometry;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[Obsolete("Use QaMinNodeDistance")]
 	public class QaMinPointDistance : ContainerTest
 	{

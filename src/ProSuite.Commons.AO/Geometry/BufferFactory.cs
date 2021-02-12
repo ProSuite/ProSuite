@@ -54,7 +54,6 @@ namespace ProSuite.Commons.AO.Geometry
 		/// Specifies on which side of a polyline its buffer is constructed; defaults to 'esriBufferFull' (both sides).
 		/// </summary>
 		/// <value>The side option.</value>
-		[CLSCompliant(false)]
 		public esriBufferConstructionSideEnum SideOption
 		{
 			get { return _properties.SideOption; }
@@ -77,7 +76,6 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <value>The end option.</value>
 		/// <remarks>When setting to Flat, it seems that this must be done BEFORE setting other properties, otherwise
 		/// some unwanted tolerance is applied to the result and the line end points don't touch the buffer.</remarks>
-		[CLSCompliant(false)]
 		public esriBufferConstructionEndEnum EndOption
 		{
 			get { return _properties.EndOption; }
@@ -127,7 +125,6 @@ namespace ProSuite.Commons.AO.Geometry
 			set { _properties.ExplodeBuffers = value; }
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IEnumerable<KeyValuePair<T, IPolygon>> Buffer<T>(
 			[NotNull] IEnumerable<KeyValuePair<T, IGeometry>> mappedInput,
@@ -147,7 +144,6 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IList<IPolygon> Buffer([NotNull] IGeometry input, double distance)
 		{
@@ -158,7 +154,6 @@ namespace ProSuite.Commons.AO.Geometry
 				       : Buffer(new BufferInputGeometry(input), distance);
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IList<IPolygon> Buffer([NotNull] IEnumerable<IGeometry> input,
 		                              double distance)
@@ -178,7 +173,6 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IList<IPolygon> Buffer([NotNull] IEnumGeometry enumInput,
 		                              double distance)
@@ -190,7 +184,6 @@ namespace ProSuite.Commons.AO.Geometry
 				       : BufferCore(enumInput, distance);
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IList<IPolygon> Buffer([NotNull] IGeometryBag inputBag,
 		                              [NotNull] IEnumerable<double> distances)

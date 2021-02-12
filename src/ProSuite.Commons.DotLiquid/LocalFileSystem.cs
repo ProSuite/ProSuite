@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using DotLiquid;
@@ -35,7 +34,6 @@ namespace ProSuite.Commons.DotLiquid
 			                                    RegexOptions.IgnoreCase);
 		}
 
-		[CLSCompliant(false)]
 		public string ReadTemplateFile(Context context, string templateName)
 		{
 			Assert.ArgumentNotNull(context, nameof(context));

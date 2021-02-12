@@ -10,7 +10,6 @@ using ProSuite.Commons.Geometry.Wkb;
 
 namespace ProSuite.Commons.AO.Geometry.Serialization
 {
-	[CLSCompliant(false)]
 	public class WkbGeometryReader : WkbReader
 	{
 		public static IArrayProvider<WKSPointZ> WksPointArrayProvider { get; set; }

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -19,7 +18,6 @@ namespace ProSuite.QA.Container.TestSupport
 			_relTables = relTables;
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public static RelatedTables Create([NotNull] IList<ITable> relatedTables,
 		                                   [NotNull] ITable joinedTable)
@@ -52,7 +50,6 @@ namespace ProSuite.QA.Container.TestSupport
 		[NotNull]
 		public IList<RelatedTable> Related => _relTables.AsReadOnly();
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IList<InvolvedRow> GetInvolvedRows([NotNull] IRow row)
 		{
@@ -71,7 +68,6 @@ namespace ProSuite.QA.Container.TestSupport
 			return involved;
 		}
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public IGeometry GetGeometry([NotNull] IRow row)
 		{

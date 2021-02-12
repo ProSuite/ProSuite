@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -13,7 +12,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Base class for tests that check the length of polylines / polygon perimeters
 	/// </summary>
-	[CLSCompliant(false)]
 	public abstract class QaLengthBase : ContainerTest
 	{
 		private readonly bool _is3D;

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -21,7 +20,6 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 		[NotNull] private readonly IList<IssueFeatureWriter> _featureWriters =
 			new List<IssueFeatureWriter>();
 
-		[CLSCompliant(false)]
 		public IssueGeodatabaseCreator([NotNull] IFeatureWorkspace featureWorkspace,
 		                               [NotNull] IIssueTableFieldManagement fields,
 		                               [CanBeNull] ISpatialReference spatialReference,
@@ -121,7 +119,6 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IIssueRepository GetIssueRepository()
 		{
 			return new IssueRepository(_rowWriter,

@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
@@ -25,7 +24,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		[NotNull] private readonly TestContainer _testContainer;
 		[CanBeNull] private readonly ITrackCancel _trackCancel;
 
-		[CLSCompliant(false)]
 		public ProgressProcessor(
 			[NotNull] TestContainer testContainer,
 			[NotNull] IDictionary<ITest, QualitySpecificationElement> elementsByTest,

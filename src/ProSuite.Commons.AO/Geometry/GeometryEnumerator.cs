@@ -9,7 +9,6 @@ namespace ProSuite.Commons.AO.Geometry
 	/// <summary>
 	/// Implementation of <see cref="IEnumGeometry"/> used e.g. to pass to <see cref="IBufferConstruction.ConstructBuffers"/>.
 	/// </summary>
-	[CLSCompliant(false)]
 	public class GeometryEnumerator<T> : IEnumGeometry, IDisposable where T : IGeometry
 	{
 		[NotNull] private readonly IEnumerable<T> _geometries;
@@ -23,7 +22,6 @@ namespace ProSuite.Commons.AO.Geometry
 		/// Initializes a new instance of the <see cref="GeometryEnumerator&lt;T&gt;"/> class.
 		/// </summary>
 		/// <param name="geometries">The geometries.</param>
-		[CLSCompliant(false)]
 		public GeometryEnumerator([NotNull] IEnumerable<T> geometries)
 		{
 			Assert.ArgumentNotNull(geometries, nameof(geometries));
@@ -34,7 +32,6 @@ namespace ProSuite.Commons.AO.Geometry
 
 		#endregion
 
-		[CLSCompliant(false)]
 		public IGeometry Next()
 		{
 			if (_enumerator.MoveNext())

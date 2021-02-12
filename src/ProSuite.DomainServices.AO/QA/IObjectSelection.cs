@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
@@ -7,7 +6,6 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.DomainServices.AO.QA
 {
-	[CLSCompliant(false)]
 	public interface IObjectSelection
 	{
 		bool Contains([NotNull] InvolvedRow involvedRow,

@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -10,7 +9,6 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.DomainServices.AO.QA.Issues
 {
-	[CLSCompliant(false)]
 	public static class IssueRepositoryUtils
 	{
 		private static readonly IMsg _msg =

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -11,7 +10,6 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 		private readonly List<IDatasetMatchCriterion> _inclusionCriteria;
 		private readonly List<IDatasetMatchCriterion> _exclusionCriteria;
 
-		[CLSCompliant(false)]
 		public DatasetFilter(
 			[NotNull] IEnumerable<IDatasetMatchCriterion> inclusionCriteria,
 			[NotNull] IEnumerable<IDatasetMatchCriterion> exclusionCriteria)
@@ -23,7 +21,6 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 			_exclusionCriteria = new List<IDatasetMatchCriterion>(exclusionCriteria);
 		}
 
-		[CLSCompliant(false)]
 		public bool Exclude(IDatasetName datasetName, out string reason)
 		{
 			Assert.ArgumentNotNull(datasetName, nameof(datasetName));

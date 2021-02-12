@@ -19,7 +19,6 @@ using ProSuite.Commons.Misc;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	public class ZDifferenceStrategyIntersectionPoints : ZDifferenceStrategy
 	{
 		private readonly Func<int, bool> _useDistanceFromPlane;

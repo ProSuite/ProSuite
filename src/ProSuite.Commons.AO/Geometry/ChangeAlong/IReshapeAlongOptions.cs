@@ -1,9 +1,7 @@
-using System;
 using ProSuite.Commons.AO.Geometry.ZAssignment;
 
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
-	[CLSCompliant(false)]
 	public interface IReshapeAlongOptions
 	{
 		bool AdjustMode { get; set; }

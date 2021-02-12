@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -10,7 +9,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 	/// It is mainly intended for read only operations on rows
 	/// When setting values, the underlying row is captured
 	/// </summary>
-	[CLSCompliant(false)]
 	public class RowProxy : IRow
 	{
 		[CanBeNull] private IRow _row;

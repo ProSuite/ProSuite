@@ -1,4 +1,3 @@
-﻿using System;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -11,7 +10,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		private readonly IPath _pathOnTarget;
 
-		[CLSCompliant(false)]
 		public AdjustedCutSubcurve([NotNull] IPath pathOnTarget,
 		                           [CanBeNull] IPath connectionLineAtFrom,
 		                           [CanBeNull] IPath connectionLineAtTo)
@@ -26,20 +24,15 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			Path = GetFullReshapePath(pathOnTarget);
 		}
 
-		[CLSCompliant(false)]
 		public IPath ConnectLineAtFromPoint => _connectLineAtFromPoint;
 
-		[CLSCompliant(false)]
 		public IPath ConnectLineAtToPoint => _connectLineAtToPoint;
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IPath PathOnTarget => _pathOnTarget;
 
-		[CLSCompliant(false)]
 		protected override IPoint FromPointOnTarget => PathOnTarget.FromPoint;
 
-		[CLSCompliant(false)]
 		protected override IPoint ToPointOnTarget => PathOnTarget.ToPoint;
 
 		protected override bool CanReshapeCore()

@@ -16,7 +16,6 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 	/// <summary>
 	/// Encapsulates the access to the error datasets and their schema information.
 	/// </summary>
-	[CLSCompliant(false)]
 	public class QualityErrorRepositoryDatasets
 	{
 		private readonly IVerificationContext _verificationContext;

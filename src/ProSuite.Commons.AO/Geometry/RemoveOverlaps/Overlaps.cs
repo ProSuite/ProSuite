@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -10,7 +9,6 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 	/// <summary>
 	/// Holds the result of an overlaps calculation.
 	/// </summary>
-	[CLSCompliant(false)]
 	public class Overlaps
 	{
 		[NotNull]

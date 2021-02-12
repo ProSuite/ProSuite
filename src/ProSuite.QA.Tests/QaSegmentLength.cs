@@ -17,7 +17,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Check whether the segments of a polyline/a polygon are bigger than a limit.
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[GeometryTest]
 	public class QaSegmentLength : ContainerTest

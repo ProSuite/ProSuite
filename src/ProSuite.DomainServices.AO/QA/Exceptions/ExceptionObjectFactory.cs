@@ -51,7 +51,6 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 
 		[NotNull] private readonly List<string> _fieldNames;
 
-		[CLSCompliant(false)]
 		public ExceptionObjectFactory(
 			[NotNull] ITable table,
 			[NotNull] IIssueTableFields fields,
@@ -130,7 +129,6 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 		public IEnumerable<string> FieldNames => _fieldNames;
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public ExceptionObject CreateExceptionObject([NotNull] IRow row)
 		{
 			Guid qualityConditionUuid = Assert.NotNull(GetGuid(row, _uuidIndex),

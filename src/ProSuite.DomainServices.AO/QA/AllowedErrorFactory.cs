@@ -28,7 +28,6 @@ namespace ProSuite.DomainServices.AO.QA
 		/// </summary>
 		/// <param name="qualityConditionsById">The quality conditions by id.</param>
 		/// <param name="datasetResolver">The quality condition-based dataset resolver.</param>
-		[CLSCompliant(false)]
 		public AllowedErrorFactory(
 			[NotNull] IDictionary<int, QualityCondition> qualityConditionsById,
 			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver)
@@ -40,7 +39,6 @@ namespace ProSuite.DomainServices.AO.QA
 			_datasetResolver = datasetResolver;
 		}
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public AllowedError CreateAllowedError(
 			[NotNull] IssueDatasetWriter issueWriter,

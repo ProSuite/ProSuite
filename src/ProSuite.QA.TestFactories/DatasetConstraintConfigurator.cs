@@ -981,7 +981,6 @@ namespace ProSuite.QA.TestFactories
 			return GetCodeValuesCore(field, objectClass);
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		protected virtual SortedDictionary<string, object> GetCodeValuesCore(
 			[NotNull] IField field, [NotNull] IObjectClass table)
@@ -1247,7 +1246,6 @@ namespace ProSuite.QA.TestFactories
 			private IList<object> _codeValues;
 			private readonly string _nullVal;
 
-			[CLSCompliant(false)]
 			public FieldValues([NotNull] IField field,
 			                   int fieldIndex,
 			                   [NotNull] string nullValue)
@@ -1260,7 +1258,6 @@ namespace ProSuite.QA.TestFactories
 				_nullVal = nullValue;
 			}
 
-			[CLSCompliant(false)]
 			public FieldValues([NotNull] IField field, int fieldIndex,
 			                   [NotNull] string nullValue,
 			                   IList<string> codeNames, IList<object> codeValues)

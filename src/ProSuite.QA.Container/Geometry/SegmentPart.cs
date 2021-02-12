@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using ProSuite.Commons.Essentials.Assertions;
@@ -39,7 +39,6 @@ namespace ProSuite.QA.Container.Geometry
 
 		private SegmentProxy _nearSelf;
 
-		[CLSCompliant(false)]
 		public SegmentPart([NotNull] ISegmentProxy segmentProxy,
 		                   double minFraction,
 		                   double maxFraction,
@@ -66,7 +65,6 @@ namespace ProSuite.QA.Container.Geometry
 			Complete = complete;
 		}
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public ISegmentProxy SegmentProxy
 		{
@@ -133,7 +131,6 @@ namespace ProSuite.QA.Container.Geometry
 			}
 		}
 
-		[CLSCompliant(false)]
 		public SegmentProxy NearSelf
 		{
 			get { return _nearSelf; }

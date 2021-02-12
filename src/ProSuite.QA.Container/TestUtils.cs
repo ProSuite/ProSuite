@@ -16,7 +16,6 @@ using ProSuite.QA.Container.TestSupport;
 
 namespace ProSuite.QA.Container
 {
-	[CLSCompliant(false)]
 	public static class TestUtils
 	{
 		private static readonly IMsg _msg =
@@ -95,7 +94,6 @@ namespace ProSuite.QA.Container
 			return 0;
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public static IQueryFilter CreateFilter([CanBeNull] IGeometry queryArea,
 		                                        [CanBeNull] IPolygon constraintArea,
@@ -140,7 +138,6 @@ namespace ProSuite.QA.Container
 			return filter;
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public static IEnumerable<IGeometry> GetParts([NotNull] IPolygon shape,
 		                                              PolygonPartType perPart)
@@ -167,7 +164,6 @@ namespace ProSuite.QA.Container
 			}
 		}
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public static IEnvelope GetFullExtent(
 			[NotNull] IEnumerable<IGeoDataset> geoDatasets)
@@ -237,7 +233,6 @@ namespace ProSuite.QA.Container
 			return extentUnion;
 		}
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public static IGeometry GetShapeCopy([NotNull] IRow row)
 		{
@@ -271,7 +266,6 @@ namespace ProSuite.QA.Container
 			return null;
 		}
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public static IGeometry GetShapeCopy([NotNull] IRow row,
 		                                     [CanBeNull] RelatedTables relatedTables)
@@ -412,7 +406,6 @@ namespace ProSuite.QA.Container
 		/// <param name="shape0"></param>
 		/// <param name="shape1"></param>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		public static IGeometry GetOverlap([NotNull] IGeometry shape0,
 		                                   [NotNull] IGeometry shape1)
 		{
@@ -792,7 +785,6 @@ namespace ProSuite.QA.Container
 			return StringUtils.ConcatenateSorted(names, ",");
 		}
 
-		[CLSCompliant(false)]
 		public static bool UsesSpatialDataset([NotNull] ITest test)
 		{
 			if (test.InvolvedTables.OfType<IFeatureClass>().Any())
@@ -872,7 +864,6 @@ namespace ProSuite.QA.Container
 		/// <param name="allowEditing"></param>
 		/// <param name="containerTests"></param>
 		/// <param name="nonContainerTests"></param>
-		[CLSCompliant(false)]
 		public static void ClassifyTests(
 			[NotNull] IEnumerable<ITest> tests,
 			bool allowEditing,

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -18,7 +18,6 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.ShortestPath
 	/// Represents a planar graph between edge features (and optional node features).
 	/// The features are represented by GdbObjectReferences in order to limit memory usage.
 	/// </summary>
-	[CLSCompliant(false)]
 	public class PolylineGraphConnectivity
 	{
 		// TODO:

@@ -60,7 +60,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		}
 
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public string GetKeyField([NotNull] IObjectDataset objectDataset)
 		{
 			if (_dataSources == null || _dataSources.Count == 0)

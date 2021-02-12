@@ -13,7 +13,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	public static class MeasureUtils
 	{
 		private static readonly ThreadLocal<IPoint> _pointTemplate =

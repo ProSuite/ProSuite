@@ -86,7 +86,6 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 		private readonly IFeatureWorkspace _ws;
 		private readonly Dictionary<esriGeometryType, ErrorTable> _errorTables;
 
-		[CLSCompliant(false)]
 		public SimpleErrorWorkspace([NotNull] IFeatureWorkspace ws)
 		{
 			_ws = ws;

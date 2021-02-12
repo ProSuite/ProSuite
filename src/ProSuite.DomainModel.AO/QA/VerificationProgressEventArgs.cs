@@ -18,7 +18,6 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		// for errors
-		[CLSCompliant(false)]
 		public VerificationProgressEventArgs(VerificationProgressType type,
 		                                     int current, IGeometry errorGeometry,
 		                                     bool isAllowable)
@@ -53,7 +52,6 @@ namespace ProSuite.DomainModel.AO.QA
 			Total = total;
 		}
 
-		[CLSCompliant(false)]
 		public VerificationProgressEventArgs(Step step, int currentTile, int totalTile,
 		                                     IEnvelope currentBox,
 		                                     [CanBeNull] IEnvelope totalBox)
@@ -71,23 +69,19 @@ namespace ProSuite.DomainModel.AO.QA
 
 		public int Total { get; }
 
-		[CLSCompliant(false)]
 		public IEnvelope CurrentBox { get; private set; }
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public IEnvelope TotalBox { get; }
 
 		public object Tag { get; set; }
 
-		[CLSCompliant(false)]
 		public IGeometry ErrorGeometry { get; }
 
 		public VerificationProgressType ProgressType { get; }
 
 		public Step ProgressStep { get; }
 
-		[CLSCompliant(false)]
 		public void SetSpatialReference(ISpatialReference spatialReference)
 		{
 			if (CurrentBox == null)

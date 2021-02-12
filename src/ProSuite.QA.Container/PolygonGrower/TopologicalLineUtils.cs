@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
@@ -8,7 +8,6 @@ using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Container.PolygonGrower
 {
-	[CLSCompliant(false)]
 	public static class TopologicalLineUtils
 	{
 		[CanBeNull] [ThreadStatic] private static IEnvelope _queryEnvelope;
@@ -24,7 +23,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			                            out yMax);
 		}
 
-		[CLSCompliant(false)]
 		public static int CalculateOrientation([NotNull] ISegmentCollection lineSegments,
 		                                       double resolution,
 		                                       out double yMax)
