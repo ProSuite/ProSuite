@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -23,7 +22,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 
 		[NotNull] private readonly List<IssueAttribute> _editableAttributes;
 
-		[CLSCompliant(false)]
 		public ManagedExceptionVersionFactory(
 			[NotNull] ITable table,
 			[NotNull] IIssueTableFields fields,
@@ -52,7 +50,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public ManagedExceptionVersion CreateExceptionVersion([NotNull] IRow row)
 		{
 			var result = new ManagedExceptionVersion(

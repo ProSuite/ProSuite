@@ -11,7 +11,6 @@ using ProSuite.Commons.Geometry;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	public static class MultiPatchUtils
 	{
 		[NotNull]

@@ -9,7 +9,6 @@ using ProSuite.Commons.Geometry;
 
 namespace ProSuite.QA.Container.Geometry
 {
-	[CLSCompliant(false)]
 	public class AoSegmentProxy : SegmentProxy
 	{
 		private static ThreadLocal<ILine> _qTangent;
@@ -99,11 +98,9 @@ namespace ProSuite.QA.Container.Geometry
 			return box;
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public ISegment InnerSegment { get; }
 
-		[CLSCompliant(false)]
 		public override IPolyline GetPolyline(bool forceCreation)
 		{
 			if (_segmentLine == null || forceCreation)

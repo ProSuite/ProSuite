@@ -100,7 +100,6 @@ namespace ProSuite.QA.Container.TestSupport
 			       };
 		}
 
-		[CLSCompliant(false)]
 		public ColumnInfoFactory([NotNull] ITable table)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
@@ -110,7 +109,6 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public ColumnInfo GetColumnInfo([NotNull] string expressionToken)
 		{
 			int fieldIndex = _table.FindField(expressionToken);

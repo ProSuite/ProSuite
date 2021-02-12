@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -29,7 +28,6 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 	///   type, just insert the desired point feature and a split will happen due to the
 	///   above mechanism.
 	/// </summary>
-	[CLSCompliant(false)]
 	public class LinearNetworkEditAgent : EditOperationObserverBase
 	{
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
@@ -39,7 +37,6 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 		private readonly List<IFeature> _deletedInOperation;
 		private readonly double _searchTolerance;
 
-		[CLSCompliant(false)]
 		public LinearNetworkEditAgent(
 			[NotNull] LinearNetworkDef networkDefinition,
 			[NotNull] ILinearNetworkFeatureFinder networkFeatureFinder)

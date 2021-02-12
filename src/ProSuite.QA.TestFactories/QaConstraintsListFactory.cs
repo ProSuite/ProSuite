@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 using ESRI.ArcGIS.Geodatabase;
@@ -15,7 +14,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.QA.TestFactories
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[AttributeTest]
 	public class QaConstraintsListFactory : TestFactory

@@ -38,7 +38,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 
 		#region Constructor
 
-		[CLSCompliant(false)]
 		public BufferedIssueWriter(
 			[NotNull] IVerificationReportBuilder verificationReportBuilder,
 			[NotNull] IDatasetContext datasetContext,

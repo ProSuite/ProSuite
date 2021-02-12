@@ -8,7 +8,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.TestSupport
 {
-	[CLSCompliant(false)]
 	public class ShapeAreaAliasColumnInfo : ColumnInfo
 	{
 		private readonly int _fieldIndex;

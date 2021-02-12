@@ -37,7 +37,6 @@ using Path = System.IO.Path;
 
 namespace ProSuite.DomainServices.AO.QA
 {
-	[CLSCompliant(false)]
 	public abstract class QualityVerificationServiceBase
 	{
 		#region Field declarations
@@ -73,7 +72,6 @@ namespace ProSuite.DomainServices.AO.QA
 
 		#region Constructors
 
-		[CLSCompliant(false)]
 		protected QualityVerificationServiceBase([NotNull] IGdbTransaction gdbTransaction,
 		                                         [NotNull] IDatasetLookup datasetLookup)
 		{
@@ -255,7 +253,6 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 		}
 
-		[CLSCompliant(false)]
 		protected IGeometry TestPerimeter
 		{
 			get { return _testPerimeter; }

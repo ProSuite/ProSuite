@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 
@@ -17,7 +16,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		#region Implementation of IEqualityComparer<IFeatureClass>
 
-		[CLSCompliant(false)]
 		public bool Equals(IObjectClass x, IObjectClass y)
 		{
 			if (ReferenceEquals(x, y))
@@ -34,7 +32,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return DatasetUtils.IsSameObjectClass(x, y, _classEquality);
 		}
 
-		[CLSCompliant(false)]
 		public int GetHashCode(IObjectClass featureClass)
 		{
 			return featureClass.GetHashCode();

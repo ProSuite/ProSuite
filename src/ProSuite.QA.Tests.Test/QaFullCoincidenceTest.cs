@@ -20,7 +20,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
-	[CLSCompliant(false)]
 	public class QaFullCoincidenceTest
 	{
 		private readonly ArcGISLicenses _lic = new ArcGISLicenses();

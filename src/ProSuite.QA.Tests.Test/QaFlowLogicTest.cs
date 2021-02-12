@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
@@ -15,7 +14,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
-	[CLSCompliant(false)]
 	public class QaFlowLogicTest
 	{
 		private readonly ArcGISLicenses _lic = new ArcGISLicenses();

@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Collections;
@@ -15,12 +14,10 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 	{
 		[NotNull] private readonly List<IVerificationReportBuilder> _reportBuilders;
 
-		[CLSCompliant(false)]
 		public MultiReportBuilder(
 			[NotNull] params IVerificationReportBuilder[] reportBuilders)
 			: this((IEnumerable<IVerificationReportBuilder>) reportBuilders) { }
 
-		[CLSCompliant(false)]
 		public MultiReportBuilder(
 			[NotNull] IEnumerable<IVerificationReportBuilder> reportBuilders)
 		{
@@ -29,7 +26,6 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 			_reportBuilders = new List<IVerificationReportBuilder>(reportBuilders);
 		}
 
-		[CLSCompliant(false)]
 		public void BeginVerification(AreaOfInterest areaOfInterest)
 		{
 			foreach (IVerificationReportBuilder builder in _reportBuilders)
@@ -46,7 +42,6 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 			}
 		}
 
-		[CLSCompliant(false)]
 		public void AddIssue(Issue issue, IGeometry errorGeometry)
 		{
 			foreach (IVerificationReportBuilder builder in _reportBuilders)
@@ -67,7 +62,6 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 			}
 		}
 
-		[CLSCompliant(false)]
 		public void AddExceptionStatistics(IExceptionStatistics statistics)
 		{
 			foreach (IVerificationReportBuilder builder in _reportBuilders)

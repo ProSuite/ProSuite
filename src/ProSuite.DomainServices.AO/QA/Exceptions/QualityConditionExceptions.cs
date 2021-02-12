@@ -36,7 +36,6 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 		[CanBeNull] private readonly InvolvedObjectsIgnoredDatasetPredicate
 			_ignoredDatasetsPredicate;
 
-		[CLSCompliant(false)]
 		public QualityConditionExceptions(
 			[NotNull] QualityCondition qualityCondition,
 			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver,
@@ -56,7 +55,6 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 				_ignoredDatasetsPredicate.IgnoreDataset);
 		}
 
-		[CLSCompliant(false)]
 		public QualityConditionExceptions(Guid qualityConditionVersionUuid,
 		                                  [CanBeNull] IBox areaOfInterestBox)
 		{

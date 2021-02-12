@@ -12,7 +12,6 @@ namespace ProSuite.QA.Tests
 	/// </summary>
 	[Obsolete("Use QaNetOrphanNodes (QaNetOrphanNodes will be renamed to QaOrphanNodes)")
 	]
-	[CLSCompliant(false)]
 	public class QaOrphanNodesObsolete : ContainerTest
 	{
 		private readonly int _nLayers;

@@ -12,7 +12,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA
 {
-	[CLSCompliant(false)]
 	public class DefaultTestFactory : TestFactory
 	{
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);

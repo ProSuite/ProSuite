@@ -13,7 +13,6 @@ namespace ProSuite.QA.Container.TestSupport
 	{
 		private const char _tableSeparator = '.';
 
-		[CLSCompliant(false)]
 		public static MultiTableView Create(
 			[NotNull] IList<ITable> tables,
 			[NotNull] IList<string> tableAliases,
@@ -141,7 +140,6 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public static TableView Create([NotNull] ITable table,
 		                               [CanBeNull] string constraint)
 		{
@@ -152,7 +150,6 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public static TableView Create([NotNull] ITable table,
 		                               [CanBeNull] string expression,
 		                               bool useAsConstraint,

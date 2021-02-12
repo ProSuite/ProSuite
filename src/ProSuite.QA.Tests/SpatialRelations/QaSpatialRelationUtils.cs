@@ -12,7 +12,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.QA.Tests.SpatialRelations
 {
-	[CLSCompliant(false)]
 	public static class QaSpatialRelationUtils
 	{
 		// matrix layout:

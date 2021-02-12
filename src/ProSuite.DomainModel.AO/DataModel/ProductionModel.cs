@@ -1,9 +1,7 @@
-using System;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
-	[CLSCompliant(false)]
 	public abstract class ProductionModel : Model
 	{
 		private ErrorMultipointDataset _errorMultipointDataset;
@@ -24,7 +22,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 		/// <param name="name">The name of the model.</param>
 		protected ProductionModel(string name) : base(name) { }
 
-		[CLSCompliant(false)]
 		public ErrorMultipointDataset ErrorMultipointDataset
 		{
 			get
@@ -34,7 +31,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 			}
 		}
 
-		[CLSCompliant(false)]
 		public ErrorMultiPatchDataset ErrorMultiPatchDataset
 		{
 			get
@@ -44,7 +40,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 			}
 		}
 
-		[CLSCompliant(false)]
 		public ErrorLineDataset ErrorLineDataset
 		{
 			get
@@ -54,7 +49,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 			}
 		}
 
-		[CLSCompliant(false)]
 		public ErrorPolygonDataset ErrorPolygonDataset
 		{
 			get

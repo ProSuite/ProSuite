@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -16,7 +15,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[TopologyTest]
 	public class QaIntersectsSelf : QaSpatialRelationSelfBase

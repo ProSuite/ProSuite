@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -22,7 +21,6 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 	/// Once the subclass for geometric networks is deleted, all virtual / protected keywords
 	/// can be deleted / made private.
 	/// </summary>
-	[CLSCompliant(false)]
 	public class LinearNetworkNodeUpdater
 	{
 		private static readonly IMsg _msg =

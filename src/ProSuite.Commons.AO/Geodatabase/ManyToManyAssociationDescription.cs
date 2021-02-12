@@ -1,4 +1,3 @@
-﻿using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -12,7 +11,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		private readonly string _associationTableKey1;
 		private readonly string _associationTableKey2;
 
-		[CLSCompliant(false)]
 		public ManyToManyAssociationDescription(
 			[NotNull] ITable table1,
 			[NotNull] string table1KeyName,
@@ -37,7 +35,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public string Table2KeyName => _table2KeyName;
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public ITable AssociationTable => _associationTable;
 
 		[NotNull]

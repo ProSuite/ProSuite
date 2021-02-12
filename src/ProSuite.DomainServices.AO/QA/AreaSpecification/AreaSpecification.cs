@@ -33,7 +33,6 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 		/// Initializes a new instance of the <see cref="QualitySpecification"/> class.
 		/// </summary>
 		/// <param name="qualitySpecification">The quality specification.</param>
-		[CLSCompliant(false)]
 		public AreaSpecification([NotNull] QualitySpecification qualitySpecification)
 		{
 			Assert.ArgumentNotNull(qualitySpecification, nameof(qualitySpecification));
@@ -48,7 +47,6 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 		/// <param name="qualitySpecification">The quality specification.</param>
 		/// <param name="polygon">The area in the spatial reference of the data model.</param>
 		/// <param name="editableDatasets">The editable datasets.</param>
-		[CLSCompliant(false)]
 		public AreaSpecification([NotNull] QualitySpecification qualitySpecification,
 		                         [NotNull] IPolygon polygon,
 		                         [NotNull] IEnumerable<Dataset> editableDatasets)
@@ -114,14 +112,12 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 			return VerifiedDatasetNames.Contains(datasetName);
 		}
 
-		[CLSCompliant(false)]
 		public void SetCurrentTile([CanBeNull] IEnvelope currentTile)
 		{
 			_currentTile = currentTile;
 			_currentTileRelation = TileRelation.Unknown;
 		}
 
-		[CLSCompliant(false)]
 		public bool Intersects([NotNull] IGeometry geometry)
 		{
 			IPolygon polygon = GetPolygon();
@@ -136,7 +132,6 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 			return ! ((IRelationalOperator) polygon).Disjoint(geometry);
 		}
 
-		[CLSCompliant(false)]
 		public bool Contains([NotNull] IGeometry geometry)
 		{
 			IPolygon polygon = GetPolygon();
@@ -173,7 +168,6 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 		/// </summary>
 		/// <remarks>The spatial references must match.</remarks>
 		/// <param name="polygon">The polygon.</param>
-		[CLSCompliant(false)]
 		public void Union([NotNull] IPolygon polygon)
 		{
 			Assert.ArgumentNotNull(polygon, nameof(polygon));

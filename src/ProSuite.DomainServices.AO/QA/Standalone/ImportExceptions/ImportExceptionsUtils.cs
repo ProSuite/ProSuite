@@ -19,7 +19,6 @@ using ProSuite.DomainServices.AO.QA.Issues;
 
 namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 {
-	[CLSCompliant(false)]
 	public static class ImportExceptionsUtils
 	{
 		private static readonly IMsg _msg =

@@ -19,7 +19,6 @@ namespace ProSuite.QA.Tests
 	/// exceed a certain maximum. This means that there are no to abrupt changes in
 	/// the slope angle.
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[GeometryTest]
 	[ZValuesTest]

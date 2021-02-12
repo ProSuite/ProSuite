@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -24,7 +23,6 @@ namespace ProSuite.QA.Tests
 
 		public int OID => _oid;
 
-		[CLSCompliant(false)]
 		public bool IsFullyChecked([NotNull] IEnvelope tileEnvelope,
 		                           [CanBeNull] IEnvelope testRunEnvelope)
 		{

@@ -12,7 +12,6 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 		[NotNull] private readonly ITable _table;
 		[NotNull] private readonly IIssueTableFields _fields;
 
-		[CLSCompliant(false)]
 		protected ExceptionObjectFactoryBase([NotNull] ITable table,
 		                                     [NotNull] IIssueTableFields fields)
 		{
@@ -28,7 +27,6 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			return _fields.GetIndex(attribute, _table, optional);
 		}
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		protected static object GetValue([NotNull] IRow row, int fieldIndex)
 		{
@@ -47,7 +45,6 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			return value;
 		}
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		protected static string GetString([NotNull] IRow row, int fieldIndex)
 		{
@@ -66,7 +63,6 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			return (string) value;
 		}
 
-		[CLSCompliant(false)]
 		protected static DateTime? GetDateTime([NotNull] IRow row, int fieldIndex)
 		{
 			if (fieldIndex < 0)
@@ -85,7 +81,6 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			return dateTimeValue;
 		}
 
-		[CLSCompliant(false)]
 		protected static Guid? GetGuid([NotNull] IRow row, int fieldIndex)
 		{
 			if (fieldIndex < 0)

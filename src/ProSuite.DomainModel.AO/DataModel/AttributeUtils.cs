@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
@@ -12,7 +12,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 	/// <summary>
 	/// Provides ArcObjects-specific functionality for domain attributes.
 	/// </summary>
-	[CLSCompliant(false)]
 	public static class AttributeUtils
 	{
 		private static readonly IMsg _msg =
@@ -134,7 +133,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return row.Value[GetRequiredFieldIndex(row, attribute, fieldIndexCache)];
 		}
 
-		[CLSCompliant(false)]
 		public static T? GetValueFor<T>([NotNull] IRow row,
 		                                [NotNull] Attribute attribute,
 		                                [CanBeNull] IFieldIndexCache fieldIndexCache)

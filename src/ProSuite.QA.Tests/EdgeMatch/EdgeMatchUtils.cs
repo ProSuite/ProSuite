@@ -16,7 +16,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.QA.Tests.EdgeMatch
 {
-	[CLSCompliant(false)]
 	public static class EdgeMatchUtils
 	{
 		public static bool IsDisjoint([NotNull] IGeometry geometry1,

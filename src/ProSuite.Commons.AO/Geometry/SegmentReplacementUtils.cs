@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -12,7 +12,6 @@ using ProSuite.Commons.Notifications;
 
 namespace ProSuite.Commons.AO.Geometry
 {
-	[CLSCompliant(false)]
 	public static class SegmentReplacementUtils
 	{
 		private static readonly IMsg _msg =

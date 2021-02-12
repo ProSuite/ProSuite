@@ -16,7 +16,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.QA.TestFactories
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	public class QaTopoNotNearPolyFactory : TestFactory
 	{

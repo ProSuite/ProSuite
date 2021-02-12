@@ -15,7 +15,6 @@ namespace ProSuite.QA.Container
 		/// Initializes a new instance of the <see cref="RowComparer"/> class.
 		/// </summary>
 		/// <param name="relatedTablesProvider">The related tables provider.</param>
-		[CLSCompliant(false)]
 		public RowComparer([NotNull] IRelatedTablesProvider relatedTablesProvider)
 		{
 			Assert.ArgumentNotNull(relatedTablesProvider, nameof(relatedTablesProvider));
@@ -25,7 +24,6 @@ namespace ProSuite.QA.Container
 
 		#region IComparer<IRow> Members
 
-		[CLSCompliant(false)]
 		public int Compare(IRow row0, IRow row1)
 		{
 			if (row0 == row1)

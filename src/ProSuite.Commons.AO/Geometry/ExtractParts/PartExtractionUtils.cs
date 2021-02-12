@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geometry;
@@ -6,7 +5,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geometry.ExtractParts
 {
-	[CLSCompliant(false)]
 	public static class PartExtractionUtils
 	{
 		public static IEnumerable<GeometryPart> GetGeometryParts(

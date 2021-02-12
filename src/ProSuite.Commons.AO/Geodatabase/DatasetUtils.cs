@@ -25,7 +25,6 @@ using Path = System.IO.Path;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public static class DatasetUtils
 	{
 		private static readonly IMsg _msg =

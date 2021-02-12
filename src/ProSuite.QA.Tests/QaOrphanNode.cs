@@ -16,7 +16,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Check if there are orphan nodes by consulting several line layers
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[LinearNetworkTest]
 	public class QaOrphanNode : QaNetworkBase

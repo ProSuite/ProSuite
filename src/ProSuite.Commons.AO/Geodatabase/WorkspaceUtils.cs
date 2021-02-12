@@ -26,7 +26,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public static class WorkspaceUtils
 	{
 		private const string _defaultRepositoryName = "SDE";

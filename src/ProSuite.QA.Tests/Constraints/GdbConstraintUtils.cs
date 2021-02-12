@@ -11,7 +11,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests.Constraints
 {
-	[CLSCompliant(false)]
 	public static class GdbConstraintUtils
 	{
 		private static readonly CultureInfo _culture = new CultureInfo("", false);

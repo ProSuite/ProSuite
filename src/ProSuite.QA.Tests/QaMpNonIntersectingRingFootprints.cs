@@ -16,7 +16,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[GeometryTest]
 	public class QaMpNonIntersectingRingFootprints : ContainerTest

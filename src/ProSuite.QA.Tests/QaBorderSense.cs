@@ -18,7 +18,6 @@ namespace ProSuite.QA.Tests
 	/// Check if the lakes and islands are pointing in the right direction
 	/// This test should be run after an intersecting lines test
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[TopologyTest]
 	[PolygonNetworkTest]

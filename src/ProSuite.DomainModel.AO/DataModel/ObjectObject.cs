@@ -12,7 +12,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 		private readonly ObjectDataset _dataset;
 		private readonly IFieldIndexCache _fieldIndexCache;
 
-		[CLSCompliant(false)]
 		protected ObjectObject([NotNull] IObject obj,
 		                       [NotNull] ObjectDataset dataset,
 		                       [CanBeNull] IFieldIndexCache fieldIndexCache)

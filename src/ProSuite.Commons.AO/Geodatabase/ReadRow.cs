@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 
 namespace ProSuite.Commons.AO.Geodatabase
@@ -11,6 +10,5 @@ namespace ProSuite.Commons.AO.Geodatabase
 	/// <param name="result">The result of the read operation</param>
 	/// <returns><c>true</c> if the read process should continue, <c>false</c> if the read
 	/// process should stop after receiving the result of this invocation.</returns>
-	[CLSCompliant(false)]
 	public delegate bool ReadRow<T>(IRow row, out T result);
 }

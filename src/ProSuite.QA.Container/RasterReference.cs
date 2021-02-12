@@ -1,11 +1,9 @@
-﻿using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
 {
-	[CLSCompliant(false)]
 	public abstract class RasterReference
 	{
 		public abstract bool EqualsCore([NotNull] RasterReference rasterReference);

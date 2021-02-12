@@ -9,7 +9,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.TestSupport
 {
-	[CLSCompliant(false)]
 	public class ShapeLengthAliasColumnInfo : ColumnInfo
 	{
 		private readonly int _fieldIndex;

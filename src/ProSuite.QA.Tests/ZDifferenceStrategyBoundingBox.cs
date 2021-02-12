@@ -10,7 +10,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	public class ZDifferenceStrategyBoundingBox : ZDifferenceStrategy
 	{
 		#region issue codes

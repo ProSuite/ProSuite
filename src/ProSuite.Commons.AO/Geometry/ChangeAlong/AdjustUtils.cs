@@ -20,7 +20,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		private static readonly ThreadLocal<IPoint> _point =
 			new ThreadLocal<IPoint>(() => new PointClass());
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public static AdjustedCutSubcurve CalculateAdjustedPath(
 			[NotNull] IPath adjustLine,
@@ -69,7 +68,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			return adjustedSubcurve;
 		}
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public static AdjustedCutSubcurve CreateAdjustedCutSubcurve(
 			[NotNull] IPath fullAdjustLine,
@@ -122,7 +120,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			                               endSourceConnection);
 		}
 
-		[CLSCompliant(false)]
 		public static bool TryBuffer(
 			[NotNull] IGeometry geometry,
 			double tolerance,
@@ -162,7 +159,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// <param name="oneOrTwoDimensionalGeometry"></param>
 		/// <param name="tolerance"></param>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		[NotNull]
 		public static IPolygon GetOutlineBuffer(
 			[NotNull] IGeometry oneOrTwoDimensionalGeometry,
@@ -203,7 +199,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			return result;
 		}
 
-		[CLSCompliant(false)]
 		public static bool ValidateBufferDistance(
 			[NotNull] IGeometry lineOrPolygon,
 			double tolerance,

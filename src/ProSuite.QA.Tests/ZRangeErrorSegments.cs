@@ -10,7 +10,6 @@ namespace ProSuite.QA.Tests
 	{
 		[NotNull] private readonly List<ISegment> _segments = new List<ISegment>();
 
-		[CLSCompliant(false)]
 		public ZRangeErrorSegments(ZRangeRelation zRangeRelation,
 		                           [CanBeNull] ISpatialReference spatialReference,
 		                           bool startsOnFirstSegment = false)
@@ -31,7 +30,6 @@ namespace ProSuite.QA.Tests
 			MaxZ = Math.Max(MaxZ, errorSegments.MaxZ);
 		}
 
-		[CLSCompliant(false)]
 		public void AddSegment([NotNull] ISegment segment, double fromZ, double toZ)
 		{
 			_segments.Add(segment);
@@ -41,7 +39,6 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IEnumerable<ISegment> Segments => _segments;
 
 		public ZRangeRelation ZRangeRelation { get; }
@@ -57,11 +54,9 @@ namespace ProSuite.QA.Tests
 		public double MaxZ { get; private set; }
 
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public ISpatialReference SpatialReference { get; }
 
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public IPoint CreateStartPoint()
 		{
 			return _segments.Count == 0
@@ -70,7 +65,6 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IPolyline CreatePolyline()
 		{
 			IPolyline result = new PolylineClass

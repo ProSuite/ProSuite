@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -12,7 +11,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	public abstract class QaRequiredSpatialRelationOther<T> : ContainerTest
 		where T : PendingFeature
 	{

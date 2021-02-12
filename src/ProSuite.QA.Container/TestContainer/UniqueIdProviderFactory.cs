@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
@@ -8,7 +8,6 @@ namespace ProSuite.QA.Container.TestContainer
 {
 	public static class UniqueIdProviderFactory
 	{
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public static UniqueIdProvider Create([NotNull] ITable table)
 		{

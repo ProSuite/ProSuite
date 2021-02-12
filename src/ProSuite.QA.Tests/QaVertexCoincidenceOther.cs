@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -17,7 +16,6 @@ using ProSuite.QA.Core;
 namespace ProSuite.QA.Tests
 {
 	[TopologyTest]
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	public class QaVertexCoincidenceOther : QaSpatialRelationOtherBase
 	{

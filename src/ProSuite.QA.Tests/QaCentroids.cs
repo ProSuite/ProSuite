@@ -21,7 +21,6 @@ namespace ProSuite.QA.Tests
 	/// within each polygon. 
 	/// Polygons are derived out of polylines.
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[TopologyTest]
 	[PolygonNetworkTest]

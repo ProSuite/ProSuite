@@ -78,7 +78,6 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[CLSCompliant(false)]
 		public VertexCoincidenceChecker(
 			[NotNull] IErrorReporting errorReporting,
 			[NotNull] Func<double, string, double, string, string> formatComparisonFunction,
@@ -162,7 +161,6 @@ namespace ProSuite.QA.Tests
 
 		public bool VerifyWithinFeature { get; set; }
 
-		[CLSCompliant(false)]
 		public int CheckCoincidence([NotNull] IPointsEnumerator pointsEnumerator,
 		                            [NotNull] IFeature nearFeature)
 		{

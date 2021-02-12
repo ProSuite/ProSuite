@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -45,7 +45,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		#region Constructors
 
-		[CLSCompliant(false)]
 		public CutSubcurve([NotNull] IPath path,
 		                   bool touchAtFromPoint,
 		                   bool touchAtToPoint,
@@ -63,7 +62,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			_touchingDifferentParts = touchingDifferentParts;
 		}
 
-		[CLSCompliant(false)]
 		public CutSubcurve([NotNull] IPath path,
 		                   bool canReshape,
 		                   bool isCandidate,
@@ -154,17 +152,14 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			}
 		}
 
-		[CLSCompliant(false)]
 		public IPath Path
 		{
 			get { return _path; }
 			protected set { _path = value; }
 		}
 
-		[CLSCompliant(false)]
 		protected virtual IPoint FromPointOnTarget => Path.FromPoint;
 
-		[CLSCompliant(false)]
 		protected virtual IPoint ToPointOnTarget => Path.ToPoint;
 
 		private bool TouchAtToPoint => _touchAtToPoint;
@@ -201,7 +196,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		public SubcurveNode ToNode => _toNode;
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public List<IPoint> ExtraTargetInsertPoints { get; set; }
 
@@ -295,7 +289,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			return string.Format("CutSubcurve with {0}", pathInfo);
 		}
 
-		[CLSCompliant(false)]
 		public IEnumerable<IPoint> GetPotentialTargetInsertPoints()
 		{
 			yield return FromPointOnTarget;
@@ -359,7 +352,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// This can be used to easily and exactly reconstruct the course of the target in the reshape line. 
 		/// </summary>
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public ISegment TargetSegmentAtFromPoint { get; set; }
 
 		/// <summary>
@@ -367,7 +359,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// This can be used to easily and exactly reconstruct the course of the target in the reshape line. 
 		/// </summary>
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public ISegment TargetSegmentAtToPoint { get; set; }
 
 		/// <summary>
@@ -375,7 +366,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// sources are treated individually to identify for which feature a specific reshape curve is appliccable.
 		/// </summary>
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public GdbObjectReference? Source { get; set; }
 
 		#region Private and protected members

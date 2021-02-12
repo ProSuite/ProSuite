@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
@@ -25,7 +24,6 @@ namespace ProSuite.QA.Tests.Schema
 		/// <param name="expectedAliasName">Expected alias name of the field (optional).</param>
 		/// <param name="expectedDomainName">Expected name of the domain (optional).</param>
 		/// <param name="fieldIsOptional">if set to <c>true</c> the field is not required to exist.</param>
-		[CLSCompliant(false)]
 		public FieldSpecification([NotNull] string fieldName,
 		                          esriFieldType expectedFieldType,
 		                          int expectedFieldLength,
@@ -52,7 +50,6 @@ namespace ProSuite.QA.Tests.Schema
 		public string ExpectedAliasName { get; }
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IEnumerable<KeyValuePair<string, IssueCode>> GetIssues(
 			[NotNull] IField field,
 			[CanBeNull] IFieldSpecificationIssueCodes issueCodes)

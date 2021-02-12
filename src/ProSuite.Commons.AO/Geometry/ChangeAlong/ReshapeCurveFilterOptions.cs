@@ -1,5 +1,3 @@
-﻿using System;
-
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
 	public class ReshapeCurveFilterOptions
@@ -17,7 +15,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			ExcludeResultingInOverlaps = excludeResultingInOverlaps;
 		}
 
-		[CLSCompliant(false)]
 		public ReshapeCurveFilterOptions(IReshapeAlongOptions reshapeAlongOptions)
 			: this(
 				reshapeAlongOptions.ClipLinesOnVisibleExtent,

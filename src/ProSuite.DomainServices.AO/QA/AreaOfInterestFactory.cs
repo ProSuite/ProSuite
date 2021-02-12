@@ -14,7 +14,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.DomainServices.AO.QA
 {
-	[CLSCompliant(false)]
 	public static class AreaOfInterestFactory
 	{
 		private static readonly IMsg _msg =

@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.esriSystem;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -7,7 +6,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options
 {
 	public class IssueMapDefinition
 	{
-		[CLSCompliant(false)]
 		public IssueMapDefinition(
 			[CanBeNull] string templatePath,
 			[NotNull] string fileName,
@@ -61,7 +59,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options
 
 		public double VerifiedFeaturesMinimumScale { get; }
 
-		[CLSCompliant(false)]
 		public esriArcGISVersion DocumentVersion { get; }
 
 		[NotNull]

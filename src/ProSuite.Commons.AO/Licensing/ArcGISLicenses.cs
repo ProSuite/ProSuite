@@ -61,13 +61,11 @@ namespace ProSuite.Commons.AO.Licensing
 			}
 		}
 
-		[CLSCompliant(false)]
 		public esriLicenseStatus CheckoutExtension(esriLicenseExtensionCode extensionCode)
 		{
 			return _initializer.CheckoutExtension(extensionCode);
 		}
 
-		[CLSCompliant(false)]
 		public esriLicenseStatus CheckinExtension(esriLicenseExtensionCode extensionCode)
 		{
 			return _initializer.CheckinExtension(extensionCode);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
@@ -26,7 +26,6 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public StopInfo GetStopInfo([NotNull] IRow row)
 		{
 			if (! row.HasOID)

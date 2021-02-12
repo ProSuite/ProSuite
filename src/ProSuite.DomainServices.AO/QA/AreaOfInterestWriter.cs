@@ -29,7 +29,6 @@ namespace ProSuite.DomainServices.AO.QA
 			GeneralizationTolerance
 		}
 
-		[CLSCompliant(false)]
 		public AreaOfInterestWriter([NotNull] IFeatureWorkspace featureWorkspace)
 		{
 			Assert.ArgumentNotNull(featureWorkspace, nameof(featureWorkspace));
@@ -39,7 +38,6 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IFeatureClass WriteAreaOfInterest(
 			[NotNull] AreaOfInterest aoi,
 			[NotNull] ISpatialReference spatialReference)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -14,13 +14,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-		[CLSCompliant(false)]
 		public FieldMapping([NotNull] IField sourceField, int sourceFieldIndex,
 		                    [NotNull] IField targetField, int targetFieldIndex)
 			: this(sourceField.Name, sourceField.Type, sourceFieldIndex,
 			       targetField.Name, targetField.Type, targetFieldIndex) { }
 
-		[CLSCompliant(false)]
 		public FieldMapping([NotNull] string sourceFieldName,
 		                    esriFieldType sourceFieldType,
 		                    int sourceFieldIndex,
@@ -49,10 +47,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		[NotNull]
 		public string TargetFieldName { get; }
 
-		[CLSCompliant(false)]
 		public esriFieldType SourceFieldType { get; }
 
-		[CLSCompliant(false)]
 		public esriFieldType TargetFieldType { get; }
 
 		public int TargetFieldIndex { get; }
@@ -67,7 +63,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			                     SourceFieldType, TargetFieldType);
 		}
 
-		[CLSCompliant(false)]
 		public void TransferValue(
 			[NotNull] IFeature sourceFeature,
 			[NotNull] IFeature targetFeature,

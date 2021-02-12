@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
@@ -10,7 +10,6 @@ using ProSuite.Commons.Geometry.SpatialIndex;
 
 namespace ProSuite.Commons.AO.Geometry
 {
-	[CLSCompliant(false)]
 	public static class BoundaryLoopUtils
 	{
 		[NotNull]

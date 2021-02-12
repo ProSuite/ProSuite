@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -9,7 +8,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 		public abstract int RowsCount { get; }
 	}
 
-	[CLSCompliant(false)]
 	public class NetNode<TDirectedRow> : NetNode
 		where TDirectedRow : class, INodesDirectedRow
 	{

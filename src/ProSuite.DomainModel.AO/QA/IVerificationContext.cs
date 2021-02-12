@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Notifications;
@@ -7,7 +6,6 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.QA
 {
-	[CLSCompliant(false)]
 	public interface IVerificationContext : IModelContext
 	{
 		[NotNull]

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -12,7 +12,6 @@ namespace ProSuite.QA.Container.Geometry
 		[NotNull] private readonly SegmentHull _neighbor;
 		private readonly bool _is3D;
 
-		[CLSCompliant(false)]
 		public static SegmentPair Create([NotNull] SegmentHull hull,
 		                                 [NotNull] SegmentHull neighbor,
 		                                 bool is3D)
@@ -23,7 +22,6 @@ namespace ProSuite.QA.Container.Geometry
 			return created;
 		}
 
-		[CLSCompliant(false)]
 		protected SegmentPair([NotNull] SegmentHull hull,
 		                      [NotNull] SegmentHull neighbor,
 		                      bool is3D)
@@ -33,14 +31,12 @@ namespace ProSuite.QA.Container.Geometry
 			_is3D = is3D;
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public SegmentHull Hull
 		{
 			get { return _hull; }
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public SegmentHull Neighbor
 		{

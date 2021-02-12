@@ -12,7 +12,6 @@ namespace ProSuite.QA.Container
 	/// <summary>
 	/// Base class for tests running in the container
 	/// </summary>
-	[CLSCompliant(false)]
 	public abstract partial class ContainerTest : TestBase, IRelatedTablesProvider
 	{
 		private readonly List<QueryFilterHelper> _filterHelpers;
@@ -49,7 +48,6 @@ namespace ProSuite.QA.Container
 		/// Initializes a new instance of the <see cref="ContainerTest"/> class.
 		/// </summary>
 		/// <param name="table">The table.</param>
-		[CLSCompliant(false)]
 		protected ContainerTest(ITable table) : this(new[] {table}) { }
 
 		#endregion
@@ -166,7 +164,6 @@ namespace ProSuite.QA.Container
 
 		// TODO currently this seems to be called on container tests only when they
 		//      don't have any involved feature class (only tables without geometry)
-		[CLSCompliant(false)]
 		public override int Execute(IEnvelope boundingBox)
 		{
 			Assert.ArgumentNotNull(boundingBox, nameof(boundingBox));
@@ -208,7 +205,6 @@ namespace ProSuite.QA.Container
 		// TODO currently this seems to be called on container tests only when they 
 		//      don't have any involved feature class (only tables without geometry)
 		//      (or apparently from unit tests)
-		[CLSCompliant(false)]
 		public override int Execute(IPolygon area)
 		{
 			Assert.ArgumentNotNull(area, nameof(area));
@@ -238,7 +234,6 @@ namespace ProSuite.QA.Container
 			return errorCount;
 		}
 
-		[CLSCompliant(false)]
 		public override int Execute(IEnumerable<IRow> selectedRows)
 		{
 			Assert.ArgumentNotNull(selectedRows, nameof(selectedRows));
@@ -290,7 +285,6 @@ namespace ProSuite.QA.Container
 			return errorCount;
 		}
 
-		[CLSCompliant(false)]
 		public override int Execute(IRow row)
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
@@ -609,7 +603,6 @@ namespace ProSuite.QA.Container
 		/// <summary>
 		/// Adapts IQueryFilter so that it conforms to the needs of the test
 		/// </summary>
-		[CLSCompliant(false)]
 		protected virtual void ConfigureQueryFilter(int tableIndex,
 		                                            [NotNull] IQueryFilter queryFilter)
 		{
@@ -667,7 +660,6 @@ namespace ProSuite.QA.Container
 		/// <param name="filterHelper">helper corresponding to filter</param>
 		/// <param name="cacheGeometry">geometry of feature, from which queryFilter.Geometry was derived</param>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		[NotNull]
 		protected IEnumerable<IRow> Search([NotNull] ITable table,
 		                                   [NotNull] IQueryFilter queryFilter,
@@ -722,7 +714,6 @@ namespace ProSuite.QA.Container
 		/// <param name="spatialRelation"></param>
 		/// <param name="where">additional where clause ('involvedTableConstraint' AND 'where')</param>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		[NotNull]
 		protected IEnumerable<IRow> Search(
 			int involvedTableIndex,

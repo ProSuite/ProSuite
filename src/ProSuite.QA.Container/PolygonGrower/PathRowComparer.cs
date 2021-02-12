@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -19,19 +18,16 @@ namespace ProSuite.QA.Container.PolygonGrower
 			get { return _rowComparer; }
 		}
 
-		[CLSCompliant(false)]
 		public bool Equals(IDirectedRow x, IDirectedRow y)
 		{
 			return Compare(x, y) == 0;
 		}
 
-		[CLSCompliant(false)]
 		public int GetHashCode(IDirectedRow row)
 		{
 			return 37 * row.Row.RowOID + row.TopoLine.PartIndex;
 		}
 
-		[CLSCompliant(false)]
 		public int Compare(IDirectedRow x, IDirectedRow y)
 		{
 			int d = _rowComparer.Compare(x.Row, y.Row);

@@ -7,7 +7,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.PolygonGrower
 {
-	[CLSCompliant(false)]
 	public class RingGrower<TDirectedRow> where TDirectedRow : class, ILineDirectedRow
 	{
 		private readonly Func<TDirectedRow, TDirectedRow> _revertFunc;
@@ -20,7 +19,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 		private readonly SortedDictionary<IDirectedRow, LineList<TDirectedRow>> _endRows;
 		private readonly SortedDictionary<IDirectedRow, LineList<TDirectedRow>> _startRows;
 
-		[CLSCompliant(false)]
 		public RingGrower([NotNull] Func<TDirectedRow, TDirectedRow> revertFunc)
 		{
 			_revertFunc = revertFunc;
@@ -129,7 +127,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			}
 		}
 
-		[CLSCompliant(false)]
 		public void ResolvePoint(IPoint point,
 		                         [NotNull] List<TDirectedRow> intersectList,
 		                         TDirectedRow row)
@@ -184,7 +181,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			}
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public List<LineList<TDirectedRow>> GetAndRemoveCollectionsInside(
 			[CanBeNull] IEnvelope envelope)

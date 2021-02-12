@@ -47,7 +47,6 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 
 		#region Constructor
 
-		[CLSCompliant(false)]
 		public ExceptionObjectRepository(
 			[NotNull] IWorkspace workspace,
 			[NotNull] IIssueTableFields issueTableFields,
@@ -88,7 +87,6 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 
 		public bool IsShapefileWorkspace { get; }
 
-		[CLSCompliant(false)]
 		public void ReadExceptions(
 			[NotNull] ICollection<QualityCondition> qualityConditions,
 			ShapeMatchCriterion defaultShapeMatchCriterion,
@@ -177,12 +175,10 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			return buffer;
 		}
 
-		[CLSCompliant(false)]
 		public IExceptionStatistics ExceptionStatistics => _exceptionStatistics;
 
 		public IExceptionObjectEvaluator ExceptionObjectEvaluator => _evaluator;
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IList<IExceptionDataset> ExportExceptions(
 			[NotNull] IFeatureWorkspace targetWorkspace,

@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
@@ -6,7 +5,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 {
-	[CLSCompliant(false)]
 	public class DatasetNameMatchCriterion : DatasetMatchCriterionBase
 	{
 		/// <summary>
@@ -16,7 +14,6 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 		public DatasetNameMatchCriterion([NotNull] IEnumerable<string> namePatterns)
 			: base(namePatterns) { }
 
-		[CLSCompliant(false)]
 		public override bool IsSatisfied(IDatasetName datasetName, out string reason)
 		{
 			string databaseName;

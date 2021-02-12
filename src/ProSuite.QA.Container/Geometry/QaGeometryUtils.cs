@@ -12,7 +12,6 @@ using ProSuite.Commons.Geometry;
 
 namespace ProSuite.QA.Container.Geometry
 {
-	[CLSCompliant(false)]
 	public static class QaGeometryUtils
 	{
 		// always access by property
@@ -66,7 +65,6 @@ namespace ProSuite.QA.Container.Geometry
 			return new Pnt3D(x, y, point.Z);
 		}
 
-		[CLSCompliant(false)]
 		public static WKSPointZ GetWksPoint(IPnt p)
 		{
 			var wks = new WKSPointZ

@@ -18,7 +18,6 @@ namespace ProSuite.QA.Tests
 	/// Check if there are any crossing lines that are too close
 	/// to each other within several line layers
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[TopologyTest]
 	[ZValuesTest]

@@ -1,4 +1,3 @@
-using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
@@ -7,7 +6,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA
 {
-	[CLSCompliant(false)]
 	public static class QualityConditionParameterUtils
 	{
 		public static void AddParameterValue(QualityCondition qualityCondition,

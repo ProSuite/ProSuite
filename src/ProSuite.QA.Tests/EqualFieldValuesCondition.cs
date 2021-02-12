@@ -25,7 +25,6 @@ namespace ProSuite.QA.Tests
 		private readonly bool _caseSensitive;
 		[NotNull] private readonly List<FieldInfo> _fieldInfos;
 
-		[CLSCompliant(false)]
 		public EqualFieldValuesCondition([CanBeNull] string fields,
 		                                 [CanBeNull] IEnumerable<string> fieldOptions,
 		                                 [NotNull] IEnumerable<ITable> comparedTables,
@@ -47,7 +46,6 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		[CLSCompliant(false)]
 		public IEnumerable<UnequalField> GetNonEqualFields(
 			[NotNull] IRow row1, int tableIndex1,
 			[NotNull] IRow row2, int tableIndex2)
@@ -439,7 +437,6 @@ namespace ProSuite.QA.Tests
 				_valueField2 = $"{Row2Alias}._VALUE";
 			}
 
-			[CLSCompliant(false)]
 			protected override void AddUnboundColumns(Action<string, Type> addColumn,
 			                                          IList<ITable> tables)
 			{
@@ -451,7 +448,6 @@ namespace ProSuite.QA.Tests
 				addColumn(_valueField2, GetFieldType(tables[1], _fieldName));
 			}
 
-			[CLSCompliant(false)]
 			public bool IsFulfilled([NotNull] IRow row1, int tableIndex1, object value1,
 			                        [NotNull] IRow row2, int tableIndex2, object value2)
 			{
@@ -518,7 +514,6 @@ namespace ProSuite.QA.Tests
 			[NotNull] private static readonly HashSet<string> _nullStringSet =
 				new HashSet<string>(new[] {(string) null});
 
-			[CLSCompliant(false)]
 			public FieldInfo(
 				[NotNull] string fieldName,
 				[CanBeNull] string multiValueSeparator = null,
@@ -537,7 +532,6 @@ namespace ProSuite.QA.Tests
 						                      : multiValueSeparator;
 			}
 
-			[CLSCompliant(false)]
 			public void AddComparedTable([NotNull] ITable table)
 			{
 				if (_tableFieldInfos.ContainsKey(table))
@@ -557,7 +551,6 @@ namespace ProSuite.QA.Tests
 			}
 
 			[ContractAnnotation("=>true, message:canbenull; =>false, message:notnull")]
-			[CLSCompliant(false)]
 			public bool AreValuesEqual([NotNull] IRow row1, int tableIndex1,
 			                           [NotNull] IRow row2, int tableIndex2,
 			                           bool caseSensitive,
@@ -612,7 +605,6 @@ namespace ProSuite.QA.Tests
 				return false;
 			}
 
-			[CLSCompliant(false)]
 			public bool AreValuesEqual([NotNull] IRow row1, int tableIndex1, object value1,
 			                           [NotNull] IRow row2, int tableIndex2, object value2,
 			                           bool caseSensitive)

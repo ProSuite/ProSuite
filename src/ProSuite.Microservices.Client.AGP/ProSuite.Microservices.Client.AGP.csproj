@@ -43,7 +43,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
     </Reference>
-    <Reference Include="ArcGIS.Desktop.Framework, PublicKeyToken=8fc3cc631e44ad86" >
+    <Reference Include="ArcGIS.Desktop.Framework, PublicKeyToken=8fc3cc631e44ad86">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Desktop.Framework.dll</HintPath>
     </Reference>
@@ -62,6 +62,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs">
+      <Link>Properties\SharedAssemblyInfo.cs</Link>
+    </Compile>
     <Compile Include="GdbObjectReference.cs" />
     <Compile Include="GeometryProcessing\AdvancedReshape\AdvancedReshapeClientUtils.cs" />
     <Compile Include="GeometryProcessing\AdvancedReshape\ReshapeResult.cs" />

@@ -10,7 +10,6 @@ namespace ProSuite.QA.Tests
 	/// Check if neighboring areas with line in between lack certain differences
 	/// </summary>
 	/// History: 26.10: GKAT initial coding
-	[CLSCompliant(false)]
 	[Obsolete("Unfinished. Consolidate with qaNeighborAreas, or delete")]
 	public class QaLineNeighborAreas : ContainerTest
 	{

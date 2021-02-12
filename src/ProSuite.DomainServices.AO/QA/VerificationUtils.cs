@@ -14,7 +14,6 @@ using Path = System.IO.Path;
 
 namespace ProSuite.DomainServices.AO.QA
 {
-	[CLSCompliant(false)]
 	public static class VerificationUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();

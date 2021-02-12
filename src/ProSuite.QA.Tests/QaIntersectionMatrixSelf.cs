@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -14,7 +13,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[TopologyTest]
 	public class QaIntersectionMatrixSelf : QaSpatialRelationSelfBase
