@@ -235,7 +235,7 @@ namespace ProSuite.QA.TestFactories
 		[NotNull]
 		private static IEnumerable<RuleCount> Rules(
 			[NotNull] IList<ConnectionType> lineTypes,
-			[NotNull] KeyValuePair<IList<ConnectionType>, int[,]> node,
+			KeyValuePair<IList<ConnectionType>, int[,]> node,
 			[NotNull] IList<string> lineClasses,
 			[NotNull] Dictionary<string, VectorDataset> nodeClasses)
 		{
@@ -1027,8 +1027,7 @@ namespace ProSuite.QA.TestFactories
 					int count;
 					if (maxVars.TryGetValue(var, out count) == false)
 					{
-						Assert.Fail(string.Format(
-							            "Count for {0} not defined", var));
+						Assert.Fail("Count for {0} not defined", var);
 					}
 
 					subtypesMax.Add(subtype, count);
@@ -1502,7 +1501,7 @@ namespace ProSuite.QA.TestFactories
 			}
 
 			private void AppendCsv([NotNull] StringBuilder sb,
-			                       [NotNull] KeyValuePair<IList<ConnectionType>, int[,]> node)
+			                       KeyValuePair<IList<ConnectionType>, int[,]> node)
 			{
 				int n = _lineTypes.Count;
 				foreach (ConnectionType nodeType in node.Key)
