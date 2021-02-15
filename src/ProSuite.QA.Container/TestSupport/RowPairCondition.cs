@@ -78,7 +78,6 @@ namespace ProSuite.QA.Container.TestSupport
 		[NotNull]
 		public string Row2Alias { get; }
 
-		[CLSCompliant(false)]
 		public bool IsFulfilled(
 			[NotNull] IRow row1, int tableIndex1,
 			[NotNull] IRow row2, int tableIndex2)
@@ -86,7 +85,6 @@ namespace ProSuite.QA.Container.TestSupport
 			return IsFulfilled(row1, tableIndex1, row2, tableIndex2, null);
 		}
 
-		[CLSCompliant(false)]
 		public bool IsFulfilled(
 			[NotNull] IRow row1, int tableIndex1,
 			[NotNull] IRow row2, int tableIndex2,
@@ -107,7 +105,6 @@ namespace ProSuite.QA.Container.TestSupport
 			                   overridingFieldValues);
 		}
 
-		[CLSCompliant(false)]
 		public bool IsFulfilled([NotNull] IRow row1, int tableIndex1,
 		                        [NotNull] IRow row2, int tableIndex2,
 		                        [NotNull] out string conditionMessage)
@@ -115,7 +112,6 @@ namespace ProSuite.QA.Container.TestSupport
 			return IsFulfilled(row1, tableIndex1, row2, tableIndex2, out conditionMessage, null);
 		}
 
-		[CLSCompliant(false)]
 		public bool IsFulfilled([NotNull] IRow row1, int tableIndex1,
 		                        [NotNull] IRow row2, int tableIndex2,
 		                        [NotNull] out string conditionMessage,
@@ -127,7 +123,6 @@ namespace ProSuite.QA.Container.TestSupport
 			                   overridingFieldValues);
 		}
 
-		[CLSCompliant(false)]
 		[ContractAnnotation(
 			"=>true, conditionMessage:canbenull,errorColumnNames:canbenull; " +
 			"=>false, conditionMessage:notnull,errorColumnNames:notnull")]
@@ -154,7 +149,6 @@ namespace ProSuite.QA.Container.TestSupport
 			                   overridingFieldValues);
 		}
 
-		[CLSCompliant(false)]
 		protected virtual void AddUnboundColumns([NotNull] Action<string, Type> addColumn,
 		                                         [NotNull] IList<ITable> tables) { }
 

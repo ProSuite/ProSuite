@@ -21,7 +21,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[ProximityTest]
 	public partial class QaTopoNotNear : QaNearTopoBase

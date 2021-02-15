@@ -12,7 +12,6 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 	{
 		private readonly ITest _test;
 
-		[CLSCompliant(false)]
 		public QaTestRunner([NotNull] ITest test)
 		{
 			Assert.ArgumentNotNull(test, nameof(test));
@@ -32,25 +31,21 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 			return _test.Execute();
 		}
 
-		[CLSCompliant(false)]
 		public int Execute([NotNull] IEnvelope boundingBox)
 		{
 			return _test.Execute(boundingBox);
 		}
 
-		[CLSCompliant(false)]
 		public int Execute([NotNull] IPolygon area)
 		{
 			return _test.Execute(area);
 		}
 
-		[CLSCompliant(false)]
 		public int Execute([NotNull] IEnumerable<IRow> selection)
 		{
 			return _test.Execute(selection);
 		}
 
-		[CLSCompliant(false)]
 		public int Execute([NotNull] IRow row)
 		{
 			return _test.Execute(row);

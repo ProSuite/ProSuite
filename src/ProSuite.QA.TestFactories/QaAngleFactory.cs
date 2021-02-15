@@ -9,7 +9,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.QA.TestFactories
 {
-	[CLSCompliant(false)]
 	public abstract class QaAngleFactory : TestFactory
 	{
 		private IList<TestParameter> _parameters;

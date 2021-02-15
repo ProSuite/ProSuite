@@ -39,7 +39,6 @@ namespace ProSuite.QA.Tests
 
 		public double Tolerance => _tolerance;
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IEnumerable<IPolygon> GetCompletedGaps(
 			[NotNull] IEnumerable<IPolygon> currentTileGaps,

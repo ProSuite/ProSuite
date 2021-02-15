@@ -39,7 +39,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		/// <param name="verificationReportBuilder">The verification report builder.</param>
 		/// <param name="openDatasetFactory">Factory method that creates the appropriate
 		/// IOpenDataset implementation.</param>
-		[CLSCompliant(false)]
 		public StandaloneQualityVerificationService(
 			[NotNull] IVerificationReportBuilder verificationReportBuilder,
 			Func<IDatasetContext, IOpenDataset> openDatasetFactory)
@@ -66,7 +65,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		/// <param name="areaOfInterest">The area of interest for the verification (optional).</param>
 		/// <param name="trackCancel">The cancel tracker.</param>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		public bool Verify(
 			[NotNull] QualitySpecification qualitySpecification,
 			[NotNull] IDatasetContext datasetContext,
@@ -105,7 +103,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		/// <param name="warningCount">The number of warnings.</param>
 		/// <param name="rowCountWithStopConditions">The number of rows for which a stop condition was violated - those rows may not be completely tested.</param>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		public bool Verify([NotNull] QualitySpecification qualitySpecification,
 		                   [NotNull] IDatasetContext datasetContext,
 		                   [NotNull] IQualityConditionObjectDatasetResolver datasetResolver,

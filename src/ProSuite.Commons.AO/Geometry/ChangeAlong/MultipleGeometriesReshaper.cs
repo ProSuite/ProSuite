@@ -16,7 +16,6 @@ using ProSuite.Commons.Notifications;
 
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
-	[CLSCompliant(false)]
 	public class MultipleGeometriesReshaper : GeometryReshaperBase
 	{
 		private static readonly IMsg _msg =

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Data;
 using ESRI.ArcGIS.Geodatabase;
@@ -29,7 +28,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="table">Table, which rows should be checked</param>
 		/// <param name="constraint">constraint to fulfill</param>
 		/// <returns>FilterHelper instance, use 'instance.Check(row)' to check if a row fulfills the constraint</returns>
-		[CLSCompliant(false)]
 		public static FilterHelper Create([NotNull] ITable table,
 		                                  [CanBeNull] string constraint)
 		{
@@ -96,7 +94,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return helper;
 		}
 
-		[CLSCompliant(false)]
 		public bool Check(IRow row)
 		{
 			if (_constraintView == null)

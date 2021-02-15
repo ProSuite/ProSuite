@@ -1,4 +1,3 @@
-using System;
 using System.Text.RegularExpressions;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
@@ -12,7 +11,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[SchemaTest]
 	public class QaSchemaFieldDomainNameRegex : QaSchemaTestBase

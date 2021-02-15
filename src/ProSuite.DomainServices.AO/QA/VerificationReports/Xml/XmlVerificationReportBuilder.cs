@@ -80,7 +80,6 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 
 		#region Implementation of IVerificationReportBuilder
 
-		[CLSCompliant(false)]
 		public void BeginVerification(AreaOfInterest areaOfInterest)
 		{
 			Assert.False(_verificationOngoing, "verification already begun");
@@ -126,7 +125,6 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 			}
 		}
 
-		[CLSCompliant(false)]
 		public void AddIssue(Issue issue, IGeometry errorGeometry)
 		{
 			AssertVerifying();
@@ -155,7 +153,6 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 			AssertVerifying();
 		}
 
-		[CLSCompliant(false)]
 		public void AddExceptionStatistics(IExceptionStatistics statistics)
 		{
 			_exceptionStatistics = statistics;

@@ -10,6 +10,7 @@ using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
@@ -46,6 +47,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		private SketchingMoveType SketchingMoveType { get; set; }
+
 		protected bool RequiresSelection { get; set; } = true;
 
 		protected virtual SelectionSettings SelectionSettings { get; set; } =
@@ -78,6 +80,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			MapView.Active.Map.PropertyChanged += Map_PropertyChanged;
 
 			MapSelectionChangedEvent.Subscribe(OnMapSelectionChanged);
+			EditCompletedEvent.Subscribe(OnEditCompleted);
 
 			PressedKeys.Clear();
 
@@ -111,6 +114,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			MapView.Active.Map.PropertyChanged -= Map_PropertyChanged;
 
 			MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChanged);
+			EditCompletedEvent.Unsubscribe(OnEditCompleted);
 
 			try
 			{
@@ -144,14 +148,16 @@ namespace ProSuite.AGP.Editing.OneClick
 					ShowOptionsPane();
 				}
 
+				// Cancel outside a queued task otherwise the current task that blocks the queue
+				// cannot be cancelled.
+				if (k.Key == Key.Escape)
+				{
+					HandleEscape();
+				}
+
 				QueuedTaskUtils.Run(
 					delegate
 					{
-						if (k.Key == Key.Escape)
-						{
-							return HandleEscape();
-						}
-
 						if (IsShiftKey(k.Key) &&
 						    SelectionCursorShift != null && IsInSelectionPhase())
 						{
@@ -277,7 +283,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void OnMapSelectionChanged(MapSelectionChangedEventArgs args)
 		{
-			_msg.VerboseDebug("OnToolActivateAsync");
+			_msg.VerboseDebug("OnMapSelectionChanged");
 
 			try
 			{
@@ -294,6 +300,27 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				HandleError($"Error OnSelectionChanged: {e.Message}", e, true);
 			}
+		}
+
+		private Task OnEditCompleted(EditCompletedEventArgs args)
+		{
+			_msg.VerboseDebug("OnEditCompleted");
+
+			try
+			{
+				return OnEditCompletedCore(args);
+			}
+			catch (Exception e)
+			{
+				HandleError($"Error OnEditCompleted: {e.Message}", e, true);
+
+				return Task.FromResult(false);
+			}
+		}
+
+		protected virtual Task OnEditCompletedCore(EditCompletedEventArgs args)
+		{
+			return Task.FromResult(true);
 		}
 
 		protected virtual void OnToolActivatingCore() { }

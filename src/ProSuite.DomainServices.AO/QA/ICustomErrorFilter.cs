@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
@@ -10,7 +9,6 @@ namespace ProSuite.DomainServices.AO.QA
 	/// <summary>
 	/// Extra error filtering used for very specific topgis requirements.
 	/// </summary>
-	[CLSCompliant(false)]
 	public interface ICustomErrorFilter
 	{
 		bool IsRelevantDueToErrorGeometry([CanBeNull] IGeometry qaErrorGeometry,

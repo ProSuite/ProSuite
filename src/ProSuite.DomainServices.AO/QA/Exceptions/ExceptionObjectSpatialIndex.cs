@@ -47,7 +47,6 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			_exceptionObjects.Add(exceptionObject);
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IEnumerable<ExceptionObject> Search([NotNull] IGeometry geometry)
 		{
@@ -106,7 +105,6 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			}
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IEnumerable<ExceptionObject> Search(
 			[NotNull] ExceptionObject exceptionObject)

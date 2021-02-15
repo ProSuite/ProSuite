@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
@@ -8,7 +7,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests.Schema
 {
-	[CLSCompliant(false)]
 	public abstract class QaSchemaFieldPropertiesBase : QaSchemaTestBase
 	{
 		private readonly ITable _table;

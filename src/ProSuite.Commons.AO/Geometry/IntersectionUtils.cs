@@ -13,7 +13,6 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Geometry
 {
-	[CLSCompliant(false)]
 	public static class IntersectionUtils
 	{
 		private static readonly esriGeometryDimension[] _intersectDimensions0 =

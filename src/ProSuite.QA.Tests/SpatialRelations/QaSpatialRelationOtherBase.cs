@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -13,7 +12,6 @@ namespace ProSuite.QA.Tests.SpatialRelations
 	/// have a certain relation with each other.
 	/// This test often is used with constraints
 	/// </summary>
-	[CLSCompliant(false)]
 	public abstract class QaSpatialRelationOtherBase : QaSpatialRelationBase
 	{
 		private readonly int _fromClassCount;

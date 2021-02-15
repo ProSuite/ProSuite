@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
@@ -11,7 +11,6 @@ using ProSuite.Commons.Notifications;
 
 namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 {
-	[CLSCompliant(false)]
 	public class NetworkEditValidator
 	{
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);

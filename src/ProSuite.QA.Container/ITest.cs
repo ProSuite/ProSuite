@@ -6,7 +6,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
 {
-	[CLSCompliant(false)]
 	public interface ITest
 	{
 		[NotNull]

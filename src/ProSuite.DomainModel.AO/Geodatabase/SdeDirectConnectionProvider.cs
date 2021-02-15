@@ -7,7 +7,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.DomainModel.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public abstract class SdeDirectConnectionProvider : SdeConnectionProvider,
 	                                                    IWorkspaceDbConnectionProvider
 	{

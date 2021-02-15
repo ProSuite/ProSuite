@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
@@ -7,7 +6,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests.Test.TestData
 {
-	[CLSCompliant(false)]
 	public static class TestDataUtils
 	{
 		private const string _topgisTlmPath = "topgis\\topgis_tlm@topgist.sde";

@@ -15,7 +15,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Reports horizontal with almost near azimuth
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[GeometryTest]
 	public class QaMpHorizontalHeights : ContainerTest

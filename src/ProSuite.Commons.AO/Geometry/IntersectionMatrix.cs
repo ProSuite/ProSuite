@@ -79,7 +79,6 @@ namespace ProSuite.Commons.AO.Geometry
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IList<IGeometry> GetIntersections([NotNull] IGeometry g1,
 		                                         [NotNull] IGeometry g2)
 		{

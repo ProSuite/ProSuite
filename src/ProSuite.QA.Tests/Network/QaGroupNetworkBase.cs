@@ -14,7 +14,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.QA.Tests.Network
 {
-	[CLSCompliant(false)]
 	public abstract class QaGroupNetworkBase : QaNetworkBase
 	{
 		internal class FieldValueCode : LocalTestIssueCodes
@@ -38,7 +37,6 @@ namespace ProSuite.QA.Tests.Network
 			: base(featureClasses, false) { }
 	}
 
-	[CLSCompliant(false)]
 	public abstract class QaGroupNetworkBase<TDirectedRow> : QaGroupNetworkBase
 		where TDirectedRow : class, IDirectedRow
 	{
@@ -709,7 +707,6 @@ namespace ProSuite.QA.Tests.Network
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public List<T> GetDangle<T>([NotNull] T endRow, out bool isComplete)
 			where T : class, INodesDirectedRow
 		{

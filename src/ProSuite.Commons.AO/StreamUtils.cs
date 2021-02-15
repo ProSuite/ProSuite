@@ -11,7 +11,6 @@ namespace ProSuite.Commons.AO
 	/// <summary>
 	/// Utilities for reading from and writing to variant streams.
 	/// </summary>
-	[CLSCompliant(false)]
 	public static class StreamUtils
 	{
 		private static readonly IMsg _msg =

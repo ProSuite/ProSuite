@@ -1,9 +1,7 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public class ValueRowProxy : RowProxy
 	{
 		private readonly object[] _values;

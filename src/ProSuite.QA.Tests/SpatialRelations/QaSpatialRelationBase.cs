@@ -13,7 +13,6 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.QA.Tests.SpatialRelations
 {
-	[CLSCompliant(false)]
 	public abstract class QaSpatialRelationBase : ContainerTest
 	{
 		private QueryFilterHelper[] _filterHelpers;

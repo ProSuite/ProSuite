@@ -19,7 +19,6 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
-	[CLSCompliant(false)]
 	public abstract class Model : DdxModel
 	{
 		protected const string EnvironmentVariableNoModelSchemaCache =
@@ -202,7 +201,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public IWorkspaceContext MasterDatabaseWorkspaceContext
 		{
 			get
@@ -234,28 +232,24 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		[Required]
-		[CLSCompliant(false)]
 		public ConnectionProvider UserConnectionProvider
 		{
 			get { return _userConnectionProvider; }
 			set { _userConnectionProvider = value; }
 		}
 
-		[CLSCompliant(false)]
 		public SdeDirectConnectionProvider RepositoryOwnerConnectionProvider
 		{
 			get { return _repositoryOwnerConnectionProvider; }
 			set { _repositoryOwnerConnectionProvider = value; }
 		}
 
-		[CLSCompliant(false)]
 		public ConnectionProvider SchemaOwnerConnectionProvider
 		{
 			get { return _schemaOwnerConnectionProvider; }
 			set { _schemaOwnerConnectionProvider = value; }
 		}
 
-		[CLSCompliant(false)]
 		[Required]
 		public SpatialReferenceDescriptor SpatialReferenceDescriptor
 		{
@@ -318,7 +312,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		#region Harvesting
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IEnumerable<ObjectAttributeType> Harvest(
 			[NotNull] IList<GeometryType> geometryTypes,
@@ -336,7 +329,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 			               GetAttributeConfigurator(existingAttributeTypes));
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IEnumerable<ObjectAttributeType> Harvest(
 			[NotNull] IDatasetListBuilderFactory datasetListBuilderFactory,
@@ -362,7 +354,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return Harvest(datasetListBuilder, attributeConfigurator);
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IEnumerable<ObjectAttributeType> Harvest(
 			[NotNull] IDatasetListBuilder datasetListBuilder,
@@ -394,7 +385,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 		// - handling central / local case (parent / child replicas)
 		protected virtual void OnHarvesting() { }
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IEnumerable<ObjectAttributeType> Harvest(
 			[NotNull] IDatasetListBuilder datasetListBuilder,
@@ -520,7 +510,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 		/// is set to <c>true</c>.
 		/// </summary>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public IWorkspace GetMasterDatabaseWorkspace()
 		{
@@ -620,7 +609,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		protected virtual bool AutoEnableSchemaCache => false;
 
-		[CLSCompliant(false)]
 		// ReSharper disable once VirtualMemberNeverOverridden.Global
 		protected virtual IEnumerable<ConnectionProvider> GetConnectionProvidersCore()
 		{

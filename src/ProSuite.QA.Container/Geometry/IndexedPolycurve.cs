@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
@@ -22,7 +21,6 @@ namespace ProSuite.QA.Container.Geometry
 
 		#region Constructors
 
-		[CLSCompliant(false)]
 		public IndexedPolycurve([NotNull] IPointCollection4 baseGeometry)
 		{
 			Assert.ArgumentNotNull(baseGeometry, nameof(baseGeometry));
@@ -80,7 +78,6 @@ namespace ProSuite.QA.Container.Geometry
 
 		public void Dispose() { }
 
-		[CLSCompliant(false)]
 		public IEnvelope Envelope => GeometryFactory.Clone(_envelope);
 
 		public bool AllowIndexing
@@ -89,7 +86,6 @@ namespace ProSuite.QA.Container.Geometry
 			set { }
 		}
 
-		[CLSCompliant(false)]
 		public SegmentProxy GetSegment(int partIndex, int segmentIndex)
 		{
 			PartProxy partProxy = _partProxies[partIndex];
@@ -97,7 +93,6 @@ namespace ProSuite.QA.Container.Geometry
 			return segmentProxy;
 		}
 
-		[CLSCompliant(false)]
 		public IEnumerable<SegmentProxy> GetSegments()
 		{
 			foreach (PartProxy partProxy in _partProxies)
@@ -109,7 +104,6 @@ namespace ProSuite.QA.Container.Geometry
 			}
 		}
 
-		[CLSCompliant(false)]
 		public bool TryGetSegmentNeighborhoods(
 			IIndexedSegments neighborSegments, IBox commonBox, double searchDistance,
 			out IEnumerable<SegmentProxyNeighborhood> neighborhoods)
@@ -153,7 +147,6 @@ namespace ProSuite.QA.Container.Geometry
 			}
 		}
 
-		[CLSCompliant(false)]
 		public IEnumerable<SegmentProxy> GetSegments(IBox box)
 		{
 			foreach (BoxTree<SegmentProxy>.TileEntry tileEntry in _boxTree.Search(box))
@@ -179,7 +172,6 @@ namespace ProSuite.QA.Container.Geometry
 			return segCount;
 		}
 
-		[CLSCompliant(false)]
 		public IPolyline GetSubpart(int partIndex, int startSegmentIndex,
 		                            double startFraction,
 		                            int endSegmentIndex, double endFraction)

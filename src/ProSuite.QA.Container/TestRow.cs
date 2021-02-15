@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -31,17 +30,14 @@ namespace ProSuite.QA.Container
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IList<ContainerTest> ApplicableTests { get; }
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IDataReference DataReference { get; }
 
 		[CanBeNull]
 		internal IBox Extent { get; }
 
-		[CLSCompliant(false)]
 		public void SetSuccess(ContainerTest containerTest, bool success)
 		{
 			_success[ApplicableTests.IndexOf(containerTest)] = success;

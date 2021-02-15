@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -32,7 +31,6 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 			HarvestObjectTypes(objectDataset, objectClass);
 		}
 
-		[CLSCompliant(false)]
 		public static void HarvestObjectTypes([NotNull] ObjectDataset objectDataset,
 		                                      [NotNull] IObjectClass objectClass)
 		{

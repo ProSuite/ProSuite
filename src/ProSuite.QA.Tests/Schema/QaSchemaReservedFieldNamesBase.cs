@@ -12,7 +12,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.QA.Tests.Schema
 {
-	[CLSCompliant(false)]
 	public abstract class QaSchemaReservedFieldNamesBase : QaSchemaTestBase
 	{
 		private readonly ITable _table;

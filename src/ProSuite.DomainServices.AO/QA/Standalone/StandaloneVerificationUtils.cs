@@ -24,7 +24,6 @@ using HtmlTexts = ProSuite.DomainServices.AO.QA.HtmlReports.HtmlTexts;
 
 namespace ProSuite.DomainServices.AO.QA.Standalone
 {
-	[CLSCompliant(false)]
 	public static class StandaloneVerificationUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();

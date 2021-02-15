@@ -44,7 +44,6 @@ namespace ProSuite.QA.Container.TestContainer
 
 		#endregion
 
-		[CLSCompliant(false)]
 		public void RegisterTestedFeature([NotNull] BaseRow row,
 		                                  [CanBeNull] IList<ContainerTest> reducedTests)
 		{
@@ -59,7 +58,6 @@ namespace ProSuite.QA.Container.TestContainer
 			                                      ? -1
 			                                      : _currentCachedPointCount;
 
-		[CLSCompliant(false)]
 		public bool WasAlreadyTested([NotNull] IFeature feature,
 		                             [NotNull] ContainerTest containerTest)
 		{
@@ -68,7 +66,6 @@ namespace ProSuite.QA.Container.TestContainer
 			return testedRow != null && testedRow.WasTestedFor(containerTest);
 		}
 
-		[CLSCompliant(false)]
 		public void AdaptSearchTolerance([NotNull] ITable table, double searchDistance)
 		{
 			double existingDistance;
@@ -82,7 +79,6 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 		}
 
-		[CLSCompliant(false)]
 		public double GetSearchTolerance([CanBeNull] ITable table)
 		{
 			const double defaultTolerance = 0;

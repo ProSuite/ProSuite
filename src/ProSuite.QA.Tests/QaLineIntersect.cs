@@ -20,7 +20,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Check if there are two crossing lines within several different line layers
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[TopologyTest]
 	[LinearNetworkTest]

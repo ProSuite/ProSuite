@@ -14,7 +14,6 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.QA.TestFactories
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[LinearNetworkTest]
 	public class QaLineConnection : TestFactory

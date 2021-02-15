@@ -18,7 +18,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[LinearNetworkTest]
 	[TopologyTest]
 	[UsedImplicitly]

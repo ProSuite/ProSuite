@@ -33,7 +33,6 @@ namespace ProSuite.DomainModel.AO.QA
 			return sb.ToString();
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public static string Format([NotNull] ITest test,
 		                            int testIndex,
@@ -54,7 +53,6 @@ namespace ProSuite.DomainModel.AO.QA
 			return sb.ToString();
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public static InvolvedRows Parse([NotNull] string involvedObjectsString)
 		{

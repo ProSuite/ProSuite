@@ -6,7 +6,6 @@ namespace ProSuite.QA.Container.TestSupport
 {
 	public class StringFieldExpression : FieldExpressionBase
 	{
-		[CLSCompliant(false)]
 		public StringFieldExpression([NotNull] ITable table,
 		                             [NotNull] string expression,
 		                             bool evaluateImmediately = false,
@@ -14,7 +13,6 @@ namespace ProSuite.QA.Container.TestSupport
 			: base(table, expression, evaluateImmediately, caseSensitive) { }
 
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public string GetString([NotNull] IRow row)
 		{
 			object value = GetValue(row);

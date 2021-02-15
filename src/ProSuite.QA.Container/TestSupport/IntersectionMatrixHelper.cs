@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using ESRI.ArcGIS.Geodatabase;
@@ -28,7 +27,6 @@ namespace ProSuite.QA.Container.TestSupport
 		/// <param name="validIntersectionDimensions">The valid intersection dimensions.</param>
 		/// <param name="constraintIsCaseSensitive">Indicates if the constraint is case sensitive</param>
 		/// <param name="intersectionGeometryConstraint">The intersection geometry constraint.</param>
-		[CLSCompliant(false)]
 		public IntersectionMatrixHelper(
 			[NotNull] IntersectionMatrix intersectionMatrix,
 			[CanBeNull] string validRelationConstraint = null,
@@ -48,7 +46,6 @@ namespace ProSuite.QA.Container.TestSupport
 
 		#endregion
 
-		[CLSCompliant(false)]
 		public int ReportErrors([NotNull] IFeature feature1, int tableIndex1,
 		                        [NotNull] IFeature feature2, int tableIndex2,
 		                        [NotNull] IErrorReporting reportError,

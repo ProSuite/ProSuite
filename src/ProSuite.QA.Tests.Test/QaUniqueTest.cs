@@ -15,7 +15,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
-	[CLSCompliant(false)]
 	public class QaUniqueTest
 	{
 		private readonly ArcGISLicenses _lic = new ArcGISLicenses();

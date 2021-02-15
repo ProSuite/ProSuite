@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -20,7 +19,6 @@ namespace ProSuite.QA.Container.Geometry
 		private int _currentPartIndex;
 		private int _currentSegmentIndex;
 
-		[CLSCompliant(false)]
 		public SegmentsEnumerator([NotNull] IEnumSegment enumSegment)
 		{
 			Assert.ArgumentNotNull(enumSegment, nameof(enumSegment));
@@ -49,7 +47,6 @@ namespace ProSuite.QA.Container.Geometry
 			get { return Current; }
 		}
 
-		[CLSCompliant(false)]
 		public ISegment Current
 		{
 			get { return _current; }

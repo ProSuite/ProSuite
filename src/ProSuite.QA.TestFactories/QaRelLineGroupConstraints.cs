@@ -11,7 +11,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.QA.TestFactories
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[LinearNetworkTest]
 	public class QaRelLineGroupConstraints : QaRelationTestFactory

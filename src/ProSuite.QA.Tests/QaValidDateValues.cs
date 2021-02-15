@@ -14,7 +14,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[AttributeTest]
 	public class QaValidDateValues : ContainerTest

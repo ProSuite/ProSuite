@@ -30,7 +30,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			_removeAreaSymbol = SymbolUtils.CreateHatchFillSymbol(255, 0, 0);
 		}
 
-		public void UpdateOpenJawReplacedEndPoint(MapPoint point)
+		public void UpdateOpenJawReplacedEndPoint([CanBeNull] MapPoint point)
 		{
 			_openJawReplacedEndPointOverlay?.Dispose();
 
@@ -42,12 +42,12 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			}
 		}
 
-		public Task<bool> UpdatePreview([NotNull] IList<ReshapeResultFeature> resultFeatures)
+		public Task<bool> UpdatePreview([CanBeNull] IList<ReshapeResultFeature> resultFeatures)
 		{
 			_polygonPreviewOverlayAdd?.Dispose();
 			_polygonPreviewOverlayRemove?.Dispose();
 
-			if (resultFeatures.Count == 0)
+			if (resultFeatures == null || resultFeatures.Count == 0)
 			{
 				return Task.FromResult(false);
 			}
@@ -79,7 +79,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return Task.FromResult(true);
 		}
 
-		public void DisposeOverlays()
+		public void Clear()
 		{
 			_openJawReplacedEndPointOverlay?.Dispose();
 			_openJawReplacedEndPointOverlay = null;

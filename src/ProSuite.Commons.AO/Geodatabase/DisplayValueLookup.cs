@@ -29,7 +29,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// Initializes a new instance of the <see cref="DisplayValueLookup"/> class.
 		/// </summary>
 		/// <param name="objectClass">The object class.</param>
-		[CLSCompliant(false)]
 		public DisplayValueLookup([NotNull] IObjectClass objectClass)
 		{
 			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
@@ -56,7 +55,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="row">The row.</param>
 		/// <param name="fieldIndex">Index of the field.</param>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		public object GetDisplayValue([NotNull] IRow row, int fieldIndex)
 		{
 			FieldLookup fieldLookup = _fieldLookupByIndex[fieldIndex];

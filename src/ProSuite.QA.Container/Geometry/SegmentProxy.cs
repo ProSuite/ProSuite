@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
@@ -8,7 +8,6 @@ using ProSuite.Commons.Geometry;
 
 namespace ProSuite.QA.Container.Geometry
 {
-	[CLSCompliant(false)]
 	public abstract class SegmentProxy : ISegmentProxy
 	{
 		private Box _extent;
@@ -65,7 +64,6 @@ namespace ProSuite.QA.Container.Geometry
 		public abstract WKSEnvelope GetSubCurveBox(double fromRatio, double toRatio);
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IPolygon CreateBuffer(double distance)
 		{
 			const bool forceCreation = false;

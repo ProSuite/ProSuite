@@ -1,4 +1,3 @@
-﻿using System;
 using ProSuite.Commons.AO.Geometry.ZAssignment;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -6,7 +5,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
 	public class TargetBufferOptions
 	{
-		[CLSCompliant(false)]
 		public TargetBufferOptions(double bufferDistance,
 		                           double bufferMinimumSegmentLength,
 		                           [CanBeNull] IZSettingsModel zSettingsModel = null)
@@ -16,7 +14,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			ZSettingsModel = zSettingsModel;
 		}
 
-		[CLSCompliant(false)]
 		public TargetBufferOptions([NotNull] IReshapeAlongOptions reshapeAlongOptions,
 		                           [CanBeNull] IZSettingsModel zSettingsModel = null)
 			: this(
@@ -36,7 +33,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		public double BufferMinimumSegmentLength { get; }
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public IZSettingsModel ZSettingsModel { get; }
 

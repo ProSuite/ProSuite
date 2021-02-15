@@ -1,4 +1,3 @@
-﻿using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using ESRI.ArcGIS.Geometry;
@@ -13,7 +12,6 @@ namespace ProSuite.DomainServices.AO.Xml
 		[UsedImplicitly]
 		public Xml2DEnvelope() { }
 
-		[CLSCompliant(false)]
 		public Xml2DEnvelope([NotNull] IEnvelope envelope)
 		{
 			Assert.ArgumentNotNull(envelope, nameof(envelope));
@@ -57,7 +55,6 @@ namespace ProSuite.DomainServices.AO.Xml
 		[XmlAttribute("coordinateSystemId")]
 		public int CoordinateSystemId { get; set; }
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IEnvelope CreateEnvelope()
 		{

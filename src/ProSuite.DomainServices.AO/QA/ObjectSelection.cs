@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
@@ -20,7 +19,6 @@ namespace ProSuite.DomainServices.AO.QA
 
 		[NotNull] private readonly IQualityConditionObjectDatasetResolver _datasetResolver;
 
-		[CLSCompliant(false)]
 		public ObjectSelection(
 			[NotNull] IEnumerable<IObject> selectedObjects,
 			[NotNull] IDatasetLookup datasetLookup,
@@ -63,7 +61,6 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 		}
 
-		[CLSCompliant(false)]
 		public IEnumerable<int> GetSelectedOIDs(IObjectDataset dataset)
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));

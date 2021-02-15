@@ -18,7 +18,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Check if there are pseudonodes across several line layers
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[InternallyUsedTest]
 	public class QaPseudoNodes : QaNetworkBase

@@ -8,7 +8,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
-	[CLSCompliant(false)]
 	public static class IndexedSegmentUtils
 	{
 		[NotNull]

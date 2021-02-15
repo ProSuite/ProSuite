@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
@@ -11,7 +10,6 @@ using ProSuite.QA.Core;
 namespace ProSuite.QA.Tests
 {
 	[GeometryTest]
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	public class QaVertexCoincidence : ContainerTest
 	{

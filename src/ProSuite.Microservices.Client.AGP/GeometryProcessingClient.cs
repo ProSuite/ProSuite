@@ -48,28 +48,32 @@ namespace ProSuite.Microservices.Client.AGP
 				cancellationToken);
 		}
 
-		public async Task<ReshapeResult> ReshapeAsync(
+		public ReshapeResult TryReshape(
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] Polyline reshapeLine,
+			[CanBeNull] IList<Feature> adjacentFeatures,
 			bool allowOpenJawReshape,
 			bool multiReshapeAsUnion,
-			bool tryReshapeNonDefault)
+			bool tryReshapeNonDefault,
+			CancellationToken cancellationToken)
 		{
-			return await AdvancedReshapeClientUtils.ReshapeAsync(
-				       ReshapeClient, selectedFeatures, reshapeLine, allowOpenJawReshape,
-				       multiReshapeAsUnion, tryReshapeNonDefault);
+			return AdvancedReshapeClientUtils.TryReshape(
+				ReshapeClient, selectedFeatures, reshapeLine, adjacentFeatures, allowOpenJawReshape,
+				multiReshapeAsUnion, tryReshapeNonDefault, cancellationToken);
 		}
 
 		public ReshapeResult Reshape(
 			[NotNull] IList<Feature> selectedFeatures,
 			[NotNull] Polyline reshapeLine,
+			[CanBeNull] IList<Feature> adjacentFeatures,
 			bool allowOpenJawReshape,
 			bool multiReshapeAsUnion,
-			bool tryReshapeNonDefault)
+			bool tryReshapeNonDefault,
+			CancellationToken cancellationToken)
 		{
 			return AdvancedReshapeClientUtils.Reshape(
-				ReshapeClient, selectedFeatures, reshapeLine, allowOpenJawReshape,
-				multiReshapeAsUnion, tryReshapeNonDefault);
+				ReshapeClient, selectedFeatures, reshapeLine, adjacentFeatures, allowOpenJawReshape,
+				multiReshapeAsUnion, tryReshapeNonDefault, cancellationToken);
 		}
 
 		public async Task<MapPoint> GetOpenJawReplacementPointAsync(

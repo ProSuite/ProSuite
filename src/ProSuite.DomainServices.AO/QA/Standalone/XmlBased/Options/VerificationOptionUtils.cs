@@ -18,7 +18,6 @@ using ProSuite.DomainServices.AO.Schemas;
 
 namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased.Options
 {
-	[CLSCompliant(false)]
 	public static class VerificationOptionUtils
 	{
 		[NotNull]

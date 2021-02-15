@@ -25,6 +25,8 @@ namespace ProSuite.AGP.Editing.OneClick
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private Geometry _editSketchBackup;
+		private Geometry _previousSketch;
+
 		private List<Operation> _sketchOperations;
 
 		private bool _intermittentSelectionPhase;
@@ -90,6 +92,13 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
+		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+		{
+			RememberSketch();
+
+			base.OnToolDeactivateCore(hasMapViewChanged);
+		}
+
 		protected override bool IsInSelectionPhase()
 		{
 			return ! IsInSketchMode;
@@ -151,8 +160,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-
-
 		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
 		{
 			_msg.VerboseDebug("OnKeyUpCore");
@@ -189,40 +196,50 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				_editSketchBackup = null;
 			}
+
+			if (k.Key == Key.R)
+			{
+				RestorePreviousSketch();
+			}
 		}
 
 		protected override bool HandleEscape()
 		{
-			if (IsInSketchMode)
-			{
-				// if sketch is empty, also remove selection and return to selection phase
-
-				if (! RequiresSelection)
+			QueuedTaskUtils.Run(
+				delegate
 				{
-					// remain in sketch mode, just reset the sketch
-					ResetSketch();
-				}
-				else
-				{
-					Geometry sketch = GetCurrentSketchAsync().Result;
-
-					if (sketch != null && ! sketch.IsEmpty)
+					if (IsInSketchMode)
 					{
-						ResetSketch();
+						// if sketch is empty, also remove selection and return to selection phase
+
+						if (! RequiresSelection)
+						{
+							// remain in sketch mode, just reset the sketch
+							ResetSketch();
+						}
+						else
+						{
+							Geometry sketch = GetCurrentSketchAsync().Result;
+
+							if (sketch != null && ! sketch.IsEmpty)
+							{
+								ResetSketch();
+							}
+							else
+							{
+								SelectionUtils.ClearSelection(ActiveMapView.Map);
+
+								StartSelectionPhase();
+							}
+						}
 					}
 					else
 					{
 						SelectionUtils.ClearSelection(ActiveMapView.Map);
-
-						StartSelectionPhase();
 					}
-				}
-			}
-			else
-			{
-				SelectionUtils.ClearSelection(ActiveMapView.Map);
-			}
 
+					return true;
+				});
 			return true;
 		}
 
@@ -258,6 +275,8 @@ namespace ProSuite.AGP.Editing.OneClick
 				// take snapshots
 				EditingTemplate currentTemplate = CurrentTemplate;
 				MapView activeView = ActiveMapView;
+
+				RememberSketch(sketchGeometry);
 
 				return await OnEditSketchCompleteCoreAsync(
 					       sketchGeometry, currentTemplate, activeView, progressor);
@@ -371,12 +390,32 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void ResetSketch()
 		{
+			RememberSketch();
+
 			ClearSketchAsync();
 			OnSketchModifiedCore();
 
 			OnSketchResetCore();
 
 			StartSketchAsync();
+		}
+
+		protected void RememberSketch(Geometry knownSketch = null)
+		{
+			var sketch = knownSketch ?? GetCurrentSketchAsync().Result;
+
+			if (sketch != null && ! sketch.IsEmpty)
+			{
+				_previousSketch = sketch;
+			}
+		}
+
+		protected void RestorePreviousSketch()
+		{
+			if (_previousSketch != null && ! _previousSketch.IsEmpty)
+			{
+				SetCurrentSketchAsync(_previousSketch);
+			}
 		}
 	}
 }

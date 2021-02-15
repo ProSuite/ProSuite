@@ -12,7 +12,6 @@ namespace ProSuite.QA.Tests
 
 		[CanBeNull] private readonly ISpatialReference _spatialReference;
 
-		[CLSCompliant(false)]
 		public MonotonicitySequence(esriMonotinicityEnum monotonicityType,
 		                            [CanBeNull] ISpatialReference spatialReference)
 		{
@@ -27,10 +26,8 @@ namespace ProSuite.QA.Tests
 
 		public bool? FeatureIsFlipped { get; set; }
 
-		[CLSCompliant(false)]
 		public esriMonotinicityEnum? FeatureMonotonicityTrend { get; set; }
 
-		[CLSCompliant(false)]
 		public void Add([NotNull] ISegment segment)
 		{
 			_segments.Add(segment);
@@ -38,7 +35,6 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IPolyline CreatePolyline()
 		{
 			IPolyline result = new PolylineClass
@@ -59,14 +55,11 @@ namespace ProSuite.QA.Tests
 			return result;
 		}
 
-		[CLSCompliant(false)]
 		public esriMonotinicityEnum MonotonicityType { get; }
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IList<ISegment> Segments => _segments;
 
-		[CLSCompliant(false)]
 		protected virtual void AdaptMZAware([NotNull] IGeometry geometry) { }
 	}
 }

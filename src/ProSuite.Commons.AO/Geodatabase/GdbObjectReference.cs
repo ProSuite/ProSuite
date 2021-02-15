@@ -16,7 +16,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// Initializes a new instance of the <see cref="GdbObjectReference"/> struct.
 		/// </summary>
 		/// <param name="obj">The gdb object to create the reference for.</param>
-		[CLSCompliant(false)]
 		public GdbObjectReference([NotNull] IObject obj)
 			: this(obj.Class.ObjectClassID, obj.OID) { }
 
@@ -53,7 +52,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// </summary>
 		/// <param name="workspace">The workspace.</param>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		[CanBeNull]
 		[Pure]
 		public IObject GetObject([NotNull] IFeatureWorkspace workspace)
@@ -73,7 +71,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <c>false</c> otherwise.</returns>
 		/// <remarks>Only considers object class id and object id. 
 		/// Disregards difference in version.</remarks>
-		[CLSCompliant(false)]
 		[Pure]
 		public bool References([NotNull] IObject obj)
 		{
@@ -89,7 +86,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <returns><c>true</c> if the reference points to an object in the given class, 
 		/// <c>false</c> otherwise.</returns>
 		/// <remarks>Only considers object class id. Disregards difference in version.</remarks>
-		[CLSCompliant(false)]
 		[Pure]
 		public bool References([NotNull] IObjectClass objectClass)
 		{
@@ -105,7 +101,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <returns><c>true</c> if the reference points to an object in the given table, 
 		/// <c>false</c> otherwise.</returns>
 		/// <remarks>Only considers table object class id. Disregards difference in version.</remarks>
-		[CLSCompliant(false)]
 		[Pure]
 		public bool References([NotNull] ITable table)
 		{

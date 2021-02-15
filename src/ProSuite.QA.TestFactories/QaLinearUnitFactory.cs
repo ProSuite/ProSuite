@@ -12,7 +12,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.QA.TestFactories
 {
-	[CLSCompliant(false)]
 	public abstract class QaLinearUnitFactory : DefaultTestFactory
 	{
 		#region AreaUnits enum

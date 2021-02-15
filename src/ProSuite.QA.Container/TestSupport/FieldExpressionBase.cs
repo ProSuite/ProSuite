@@ -15,7 +15,6 @@ namespace ProSuite.QA.Container.TestSupport
 
 		private TableView _tableView;
 
-		[CLSCompliant(false)]
 		protected FieldExpressionBase([NotNull] ITable table,
 		                              [NotNull] string expression,
 		                              bool evaluateImmediately = false,
@@ -43,7 +42,6 @@ namespace ProSuite.QA.Container.TestSupport
 			}
 		}
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		protected object GetValue([NotNull] IRow row)
 		{

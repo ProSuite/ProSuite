@@ -10,7 +10,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 	/// <summary>
 	/// Helper methods for geodatabase domains
 	/// </summary>
-	[CLSCompliant(false)]
 	public static class DomainUtils
 	{
 		[CanBeNull]

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Data;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -15,7 +15,6 @@ namespace ProSuite.QA.Container.TestSupport
 
 		private readonly TableView _expressionView;
 
-		[CLSCompliant(false)]
 		public ExpressionValueProvider([NotNull] ITable table,
 		                               [NotNull] string expression,
 		                               bool caseSensitive = false)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ProSuite.Commons.Essentials.Assertions;
@@ -6,7 +6,6 @@ using ProSuite.Commons.Geometry.Wkb;
 
 namespace ProSuite.Commons.AO.Geometry.Serialization
 {
-	[CLSCompliant(false)]
 	public class WksPointListBuilder : GeometryBuilderBase<WKSPointZ[], WKSPointZ>
 	{
 		private readonly bool _reverseOrder;

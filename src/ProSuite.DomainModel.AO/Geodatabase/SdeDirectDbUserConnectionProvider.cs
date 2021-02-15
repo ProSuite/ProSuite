@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
@@ -7,7 +6,6 @@ using ProSuite.Commons.Validation;
 
 namespace ProSuite.DomainModel.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public class SdeDirectDbUserConnectionProvider : SdeDirectConnectionProvider
 	{
 		[CanBeNull] [UsedImplicitly] private EncryptedString _encryptedPassword;

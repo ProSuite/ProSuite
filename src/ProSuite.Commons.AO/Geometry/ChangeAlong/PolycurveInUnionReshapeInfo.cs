@@ -1,9 +1,7 @@
-using System;
 using ESRI.ArcGIS.Geometry;
 
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
-	[CLSCompliant(false)]
 	public class PolycurveInUnionReshapeInfo
 	{
 		public PolycurveInUnionReshapeInfo(IPolycurve geometryToReshape,

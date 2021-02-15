@@ -21,7 +21,6 @@ using Pnt = ProSuite.Commons.Geometry.Pnt;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[ProximityTest]
 	public class QaMpVertexNotNearFace : ContainerTest
 	{

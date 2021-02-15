@@ -31,7 +31,6 @@ namespace ProSuite.QA.Tests.Schema
 		/// <param name="fieldSpecifications">The field specifications.</param>
 		/// <param name="matchAliasName">if set to <c>true</c> [match alias name].</param>
 		/// <param name="issueCodes">The issue codes.</param>
-		[CLSCompliant(false)]
 		public FieldSpecifications(
 			[NotNull] ITable table,
 			[NotNull] IEnumerable<FieldSpecification> fieldSpecifications,

@@ -1,4 +1,3 @@
-using System;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -15,7 +14,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Determine that no slope exceeds a certain limit
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[GeometryTest]
 	[ZValuesTest]

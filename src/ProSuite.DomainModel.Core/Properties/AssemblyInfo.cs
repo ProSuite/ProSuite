@@ -1,4 +1,3 @@
-using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
@@ -7,7 +6,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyCulture("")]
 
 [assembly: ComVisible(false)]
-[assembly: CLSCompliant(true)]
 
 // This GUID is for the ID of the typelib if this project is exposed to COM:
 [assembly: Guid("0b48b56f-3a3d-4367-aa76-a356519af2ab")]

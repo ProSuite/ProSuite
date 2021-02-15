@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
@@ -34,14 +33,12 @@ namespace ProSuite.QA.Container.PolygonGrower
 		/// </summary>
 		/// <param name="row"></param>
 		/// <param name="partIndex">part index of row.Shape, -1: full line</param>
-		[CLSCompliant(false)]
 		public TopologicalLine([NotNull] TableIndexRow row, int partIndex)
 			: this(row, (IPolyline) ((IFeature) row.Row).Shape, partIndex)
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
 		}
 
-		[CLSCompliant(false)]
 		public TopologicalLine([NotNull] TableIndexRow row,
 		                       [NotNull] IPolyline line,
 		                       int partIndex)
@@ -61,11 +58,9 @@ namespace ProSuite.QA.Container.PolygonGrower
 
 		public int PartIndex { get; }
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IPolyline FullLine { get; }
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public ICurve Path
 		{
@@ -87,10 +82,8 @@ namespace ProSuite.QA.Container.PolygonGrower
 			}
 		}
 
-		[CLSCompliant(false)]
 		public IPoint FromPoint => _fromPoint ?? (_fromPoint = Path.FromPoint);
 
-		[CLSCompliant(false)]
 		public IPoint ToPoint => _toPoint ?? (_toPoint = Path.ToPoint);
 
 		public double FromAngle
@@ -179,7 +172,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			internal set { _leftPoly = value; }
 		}
 
-		[CLSCompliant(false)]
 		public IRow LeftCentroid
 		{
 			get { return _leftCentroid; }
@@ -192,20 +184,17 @@ namespace ProSuite.QA.Container.PolygonGrower
 			internal set { _rightPoly = value; }
 		}
 
-		[CLSCompliant(false)]
 		public IRow RightCentroid
 		{
 			get { return _rightCentroid; }
 			internal set { _rightCentroid = value; }
 		}
 
-		[CLSCompliant(false)]
 		public void QueryFromPoint([NotNull] IPoint queryPoint)
 		{
 			Path.QueryFromPoint(queryPoint);
 		}
 
-		[CLSCompliant(false)]
 		public void QueryToPoint([NotNull] IPoint queryPoint)
 		{
 			Path.QueryToPoint(queryPoint);

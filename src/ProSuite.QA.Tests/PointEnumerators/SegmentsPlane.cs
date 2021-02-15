@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geometry;
@@ -14,7 +13,6 @@ namespace ProSuite.QA.Tests.PointEnumerators
 		[CanBeNull] private Plane3D _plane;
 		[CanBeNull] private IGeometry _geometry;
 
-		[CLSCompliant(false)]
 		public SegmentsPlane([NotNull] IEnumerable<SegmentProxy> segments,
 		                     esriGeometryType shapeType)
 		{
@@ -28,11 +26,9 @@ namespace ProSuite.QA.Tests.PointEnumerators
 			ShapeType = shapeType;
 		}
 
-		[CLSCompliant(false)]
 		public esriGeometryType ShapeType { get; }
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IEnumerable<SegmentProxy> Segments { get; }
 
 		public IEnumerable<Pnt3D> GetPoints()
@@ -45,11 +41,9 @@ namespace ProSuite.QA.Tests.PointEnumerators
 			_plane ?? (_plane = QaGeometryUtils.CreatePlane3D(Segments));
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IGeometry Geometry =>
 			_geometry ?? (_geometry = GetGeometry(Segments, ShapeType));
 
-		[CLSCompliant(false)]
 		public double GetXyDistance([NotNull] IGeometry other)
 		{
 			return ((IProximityOperator) Geometry).ReturnDistance(other);

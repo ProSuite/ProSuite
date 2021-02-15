@@ -13,7 +13,6 @@ using ProSuite.Commons.AO.Licensing;
 
 namespace ProSuite.QA.Tests.Test
 {
-	[CLSCompliant(false)]
 	[TestFixture]
 	public class QaGroupConstraintsTest
 	{

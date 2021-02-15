@@ -1,11 +1,9 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	public class OleDbConnectionFileConnectionProvider : FilePathConnectionProviderBase,
 	                                                     IOpenSdeWorkspace

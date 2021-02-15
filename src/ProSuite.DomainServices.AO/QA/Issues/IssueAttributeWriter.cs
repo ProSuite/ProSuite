@@ -1,4 +1,3 @@
-﻿using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -32,7 +31,6 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 
 		#region Constructors
 
-		[CLSCompliant(false)]
 		public IssueAttributeWriter([NotNull] ITable table,
 		                            [NotNull] IIssueTableFields fields) : base(table)
 		{
@@ -80,7 +78,6 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 
 		#endregion
 
-		[CLSCompliant(false)]
 		public void WriteAttributes(Issue issue, IRowBuffer rowBuffer)
 		{
 			Assert.ArgumentNotNull(issue, nameof(issue));

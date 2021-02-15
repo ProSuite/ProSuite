@@ -2,8 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Templates;
@@ -12,6 +14,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -36,12 +39,14 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		// - Reshape size change logging - use abbreviations for display units
 		// - R(estore) sketch
 		// - Connected lines reshape
+		// - Update feedback on toggle layer visibility
 
 		private AdvancedReshapeFeedback _feedback;
 
 		private Task<bool> _updateFeedbackTask;
 
 		private bool _nonDefaultSideMode;
+		private CancellationTokenSource _cancellationTokenSource;
 		private const Key _keyToggleNonDefaultSide = Key.S;
 
 		protected AdvancedReshapeToolBase()
@@ -64,6 +69,13 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			if (MicroserviceClient == null)
 				DisabledTooltip =
 					"Microservice not found or not started. Please make sure the latest ProSuite Extension is installed.";
+		}
+
+		protected override bool HandleEscape()
+		{
+			_cancellationTokenSource?.Cancel();
+
+			return base.HandleEscape();
 		}
 
 		protected override void LogPromptForSelection()
@@ -115,8 +127,10 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
-			_feedback?.DisposeOverlays();
+			_feedback?.Clear();
 			_feedback = null;
+
+			base.OnToolDeactivateCore(hasMapViewChanged);
 		}
 
 		protected override SketchGeometryType GetSketchGeometryType()
@@ -138,7 +152,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			bool nonDefaultSide =
 				_nonDefaultSideMode || PressedKeys.Contains(_keyToggleNonDefaultSide);
 
-			bool success = false;
+			bool updated = false;
 			try
 			{
 				if (! PressedKeys.Contains(Key.Space))
@@ -147,7 +161,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					//       E.g. wait for SystemInformation.DoubleClickTime for the second click
 					//       and only start if it has not ocvurred
 					_updateFeedbackTask = UpdateFeedbackAsync(nonDefaultSide);
-					success = await _updateFeedbackTask;
+					updated = await _updateFeedbackTask;
 				}
 			}
 			catch (Exception e)
@@ -160,7 +174,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				_updateFeedbackTask = null;
 			}
 
-			return success;
+			// Does it make any difference what the return value is?
+			return updated;
 		}
 
 		protected override async Task HandleKeyDownAsync(MapViewKeyEventArgs k)
@@ -239,13 +254,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 		//}
 
 		protected override async Task<bool> OnEditSketchCompleteCoreAsync(
-			Geometry sketchGeometry, EditingTemplate editTemplate,
-			MapView activeView,
+			Geometry sketchGeometry, EditingTemplate editTemplate, MapView activeView,
 			CancelableProgressor cancelableProgressor = null)
 		{
-			_feedback.DisposeOverlays();
-			_nonDefaultSideMode = false;
-
+			_feedback.Clear();
+			
 			// TODO: cancel all running background tasks...
 
 			var polyline = (Polyline) sketchGeometry;
@@ -259,15 +272,25 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			{
 				selection = GetApplicableSelectedFeatures(activeView).ToList();
 
-				var result = MicroserviceClient.Reshape(
-					selection, polyline, true, true, _nonDefaultSideMode);
+				var potentiallyAffectedFeatures =
+					GetAdjacentFeatures(selection, cancelableProgressor);
 
-				Dictionary<Feature, Geometry> resultFeatures;
+				// This timout should be enough even in extreme circumstances:
+				int timeout = selection.Count * 10000;
+				_cancellationTokenSource = new CancellationTokenSource(timeout);
 
-				resultFeatures =
-					result.ResultFeatures.ToDictionary(
-						r => r.Feature,
-						r => r.UpdatedGeometry);
+				ReshapeResult result = MicroserviceClient.Reshape(
+					selection, polyline, potentiallyAffectedFeatures, true, true,
+					_nonDefaultSideMode, _cancellationTokenSource.Token);
+
+				if (result == null)
+				{
+					return false;
+				}
+
+				Dictionary<Feature, Geometry> resultFeatures =
+					result.ResultFeatures.ToDictionary(r => r.Feature,
+					                                   r => r.UpdatedGeometry);
 
 				LogReshapeResults(result, selection.Count);
 
@@ -279,6 +302,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				return success;
 			});
 
+			_nonDefaultSideMode = false;
+
 			//if (!_advancedReshapeOptions.RemainInSketchMode)
 			{
 				StartSelectionPhase();
@@ -289,7 +314,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override void OnSketchResetCore()
 		{
-			_feedback.DisposeOverlays();
+			_feedback.Clear();
 			_nonDefaultSideMode = false;
 		}
 
@@ -299,7 +324,8 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			if (sketchPolyline == null || sketchPolyline.IsEmpty || sketchPolyline.PointCount < 2)
 			{
-				return false;
+				_feedback?.Clear();
+				return true;
 			}
 
 			// Snapshot:
@@ -325,19 +351,57 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 							await UpdateOpenJawReplacedEndpointAsync(nonDefaultSide, sketchPolyline,
 							                                         polylineSelection);
 
-						if (updated)
-						{
-							return true;
-						}
-
-						updated = await UpdatePolygonResultPreviewAsync(
-							          nonDefaultSide, sketchPolyline,
-							          polygonSelection);
+						updated |= await UpdatePolygonResultPreviewAsync(
+							           nonDefaultSide, sketchPolyline,
+							           polygonSelection);
 
 						return updated;
 					});
 
 			return result;
+		}
+
+		[CanBeNull]
+		private IList<Feature> GetAdjacentFeatures(
+			[NotNull] ICollection<Feature> selectedFeatures,
+			[CanBeNull] CancelableProgressor cancellabelProgressor)
+		{
+			Dictionary<MapMember, List<long>> selection = ActiveMapView.Map.GetSelection();
+
+			if (! selection.Keys.Any(mm => mm is FeatureLayer fl &&
+			                               fl.ShapeType == esriGeometryType.esriGeometryPolyline))
+			{
+				return null;
+			}
+
+			Envelope inExtent = ActiveMapView.Extent;
+
+			// TODO: Use linear network classes as defined in reshape options
+			TargetFeatureSelection targetFeatureSelection = TargetFeatureSelection.SameClass;
+
+			IEnumerable<KeyValuePair<FeatureClass, List<Feature>>> foundOidsByClass =
+				MapUtils.FindFeatures(
+					ActiveMapView, selection, targetFeatureSelection,
+					layer => layer.ShapeType == esriGeometryType.esriGeometryPolyline,
+					inExtent, cancellabelProgressor);
+
+			if (cancellabelProgressor != null &&
+			    ! cancellabelProgressor.CancellationToken.IsCancellationRequested)
+			{
+				return new List<Feature>();
+			}
+
+			var foundFeatures = new List<Feature>();
+
+			foreach (var keyValuePair in foundOidsByClass)
+			{
+				foundFeatures.AddRange(keyValuePair.Value);
+			}
+
+			foundFeatures.RemoveAll(
+				f => selectedFeatures.Any(s => GdbObjectUtils.IsSameFeature(f, s)));
+
+			return foundFeatures;
 		}
 
 		private void LogReshapeResults(ReshapeResult reshapeResult,
@@ -400,38 +464,44 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				       "Advanced reshape", resultFeatures);
 		}
 
-		private async Task<bool> UpdateOpenJawReplacedEndpointAsync(bool useNonDefaultReshapeSide,
-		                                                            [NotNull] Polyline sketchLine,
-		                                                            IList<Feature>
-			                                                            polylineSelection)
+		private async Task<bool> UpdateOpenJawReplacedEndpointAsync(
+			bool useNonDefaultReshapeSide,
+			[NotNull] Polyline sketchLine,
+			[NotNull] IList<Feature> polylineSelection)
 		{
-			// TODO: check criteria, see AdvancedReshapeFeedback for ArcMap
-			if (polylineSelection.Count != 1)
-			{
-				return false;
-			}
+			// TODO: check options (allow/disallow)
 
-			MapPoint endPoint = await MicroserviceClient.GetOpenJawReplacementPointAsync(
-				                    polylineSelection[0], sketchLine, useNonDefaultReshapeSide);
+			MapPoint endPoint = null;
+
+			if (polylineSelection.Count == 1)
+			{
+				endPoint = await MicroserviceClient.GetOpenJawReplacementPointAsync(
+					           polylineSelection[0], sketchLine, useNonDefaultReshapeSide);
+			}
 
 			_feedback?.UpdateOpenJawReplacedEndPoint(endPoint);
 
 			return true;
 		}
 
-		private async Task<bool> UpdatePolygonResultPreviewAsync(bool nonDefaultSide,
-		                                                         [NotNull] Polyline sketchPolyline,
-		                                                         [NotNull]
-		                                                         List<Feature> polygonSelection)
+		private async Task<bool> UpdatePolygonResultPreviewAsync(
+			bool nonDefaultSide,
+			[NotNull] Polyline sketchPolyline,
+			[NotNull] List<Feature> polygonSelection)
 		{
-			if (polygonSelection.Count == 0)
-			{
-				return false;
-			}
+			ReshapeResult reshapeResult = null;
 
-			ReshapeResult reshapeResult = await MicroserviceClient.ReshapeAsync(
-				                              polygonSelection, sketchPolyline, false, true,
-				                              nonDefaultSide);
+			if (polygonSelection.Count != 0)
+			{
+				// Idea: ReshapeOperation class that contains the options to build the rpc, cancellation token, time out settings and logging.
+
+				// TODO: Keep this source and cancel in case finish sketch happens
+				var cancellationTokenSource = new CancellationTokenSource(3000);
+
+				reshapeResult = MicroserviceClient.TryReshape(
+					polygonSelection, sketchPolyline, null, false, true,
+					nonDefaultSide, cancellationTokenSource.Token);
+			}
 
 			// TODO: discard result if the user has since clicked again or some other event (finish / esc) happened
 
@@ -440,10 +510,10 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			//	() => _feedback?.UpdatePreview(reshapeResult.ResultFeatures));
 
 			return await QueuedTaskUtils.Run(
-				       () => _feedback?.UpdatePreview(reshapeResult.ResultFeatures));
+				       () => _feedback?.UpdatePreview(reshapeResult?.ResultFeatures));
 		}
 
-		public void LogSuccessfulReshape(
+		private void LogSuccessfulReshape(
 			[CanBeNull] string titleMessage,
 			[NotNull] Dictionary<Feature, Geometry> reshapedGeometries)
 		{
@@ -501,7 +571,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			return result;
 		}
 
-		public static double GetAreaOrLength(Geometry geometry)
+		private static double GetAreaOrLength(Geometry geometry)
 		{
 			Polygon polygon = geometry as Polygon;
 

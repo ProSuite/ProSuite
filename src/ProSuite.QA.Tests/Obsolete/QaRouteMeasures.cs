@@ -9,7 +9,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.QA.Tests
 	// ReSharper restore CheckNamespace
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[Obsolete("Use QaRouteMeasuresContinuous")]
 	[LinearNetworkTest]

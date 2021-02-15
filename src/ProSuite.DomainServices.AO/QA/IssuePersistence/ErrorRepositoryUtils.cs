@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
@@ -10,7 +10,6 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 {
-	[CLSCompliant(false)]
 	public static class ErrorRepositoryUtils
 	{
 		private static readonly IMsg _msg =

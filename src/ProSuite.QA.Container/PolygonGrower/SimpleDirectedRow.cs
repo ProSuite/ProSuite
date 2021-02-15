@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -11,7 +10,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 		private readonly ITopologicalLine _topologicalLine;
 		private readonly ITableIndexRow _row;
 
-		[CLSCompliant(false)]
 		public SimpleDirectedRow([NotNull] ITopologicalLine line,
 		                         [NotNull] ITableIndexRow row,
 		                         bool isBackward)
@@ -33,7 +31,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			get { return _isBackward; }
 		}
 
-		[CLSCompliant(false)]
 		public IPoint FromPoint
 		{
 			get
@@ -44,13 +41,11 @@ namespace ProSuite.QA.Container.PolygonGrower
 			}
 		}
 
-		[CLSCompliant(false)]
 		public ITableIndexRow Row
 		{
 			get { return _row; }
 		}
 
-		[CLSCompliant(false)]
 		public IPoint ToPoint
 		{
 			get
@@ -81,7 +76,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			}
 		}
 
-		[CLSCompliant(false)]
 		public ITopologicalLine TopoLine
 		{
 			get { return _topologicalLine; }
@@ -97,7 +91,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			return new SimpleDirectedRow(_topologicalLine, _row, ! _isBackward);
 		}
 
-		[CLSCompliant(false)]
 		public ISegmentCollection GetSegmentCollection()
 		{
 			var line = (ICurve) ((IClone) _topologicalLine.GetLine()).Clone();

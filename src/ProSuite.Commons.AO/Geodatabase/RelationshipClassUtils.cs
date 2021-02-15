@@ -16,7 +16,6 @@ using ProSuite.Commons.Notifications;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public static class RelationshipClassUtils
 	{
 		private static readonly IMsg _msg =

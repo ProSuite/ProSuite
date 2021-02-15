@@ -23,7 +23,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA.Xml
 {
-	[CLSCompliant(false)]
 	public static class XmlDataQualityUtils
 	{
 		private static readonly IMsg _msg =

@@ -20,7 +20,6 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.DomainServices.AO.QA
 {
-	[CLSCompliant(false)]
 	public static class AllowedErrorUtils
 	{
 		private static readonly IMsg _msg =

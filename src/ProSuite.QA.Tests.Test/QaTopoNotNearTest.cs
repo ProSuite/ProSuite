@@ -668,7 +668,6 @@ namespace ProSuite.QA.Tests.Test
 			double x0 = 0;
 			double x1 = 100;
 			double y0 = 0;
-			double y1 = 0;
 
 			var nSplits = 10;
 
@@ -1151,8 +1150,7 @@ namespace ProSuite.QA.Tests.Test
 			var pairP1 = new SegmentPair2D(hullP1, hull2);
 
 			IList<double[]> limitsP1;
-			bool cut = pairP1.CutCurveHull(0, out limitsP1, out startNear, out endNear,
-			                               out coincident);
+			pairP1.CutCurveHull(0, out limitsP1, out startNear, out endNear, out coincident);
 		}
 
 		[Test]

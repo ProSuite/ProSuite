@@ -4,7 +4,6 @@ using ProSuite.Commons.AO.Geometry;
 
 namespace ProSuite.QA.Tests.Test.Construction
 {
-	[CLSCompliant(false)]
 	public class MultiPatchConstruction
 	{
 		private readonly IMultiPatch _multiPatch;

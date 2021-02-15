@@ -17,7 +17,6 @@ namespace ProSuite.QA.Tests
 	/// Check if there are any crossing lines that have a too small angle 
 	/// between each other
 	/// </summary>
-	[CLSCompliant(false)]
 	[IntersectionParameterTest]
 	[UsedImplicitly]
 	public class QaLineIntersectAngle : QaSpatialRelationSelfBase

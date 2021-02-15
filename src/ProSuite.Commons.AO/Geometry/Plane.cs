@@ -239,7 +239,6 @@ namespace ProSuite.Commons.AO.Geometry
 		                         Math.Abs(_ny) > double.Epsilon ||
 		                         Math.Abs(_nz) > double.Epsilon;
 
-		[CLSCompliant(false)]
 		public WKSPointZ GetNormalVector()
 		{
 			WKSPointZ normal;
@@ -258,7 +257,6 @@ namespace ProSuite.Commons.AO.Geometry
 			return Math.Abs(f);
 		}
 
-		[CLSCompliant(false)]
 		public WKSPointZ GetPlaneVector()
 		{
 			WKSPointZ normal = GetNormalVector();
@@ -277,7 +275,6 @@ namespace ProSuite.Commons.AO.Geometry
 			return normedPlaneVector;
 		}
 
-		[CLSCompliant(false)]
 		public void GetPlaneVectors(out WKSPointZ planeVector1, out WKSPointZ planeVector2)
 		{
 			WKSPointZ normal = GetNormalVector();

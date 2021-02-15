@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -34,7 +34,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		#endregion
 
-		[CLSCompliant(false)]
 		public ReshapeInfo([NotNull] IGeometry geometryToReshape,
 		                   [NotNull] IPath reshapePath,
 		                   [CanBeNull] NotificationCollection notifications)
@@ -72,10 +71,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IGeometry GeometryToReshape { get; }
 
-		[CLSCompliant(false)]
 		public IPath ReshapePath { get; private set; }
 
 		[CanBeNull]
@@ -144,7 +141,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		public RingReshapeType RingReshapeType { get; private set; }
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public ReshapeResultFilter ReshapeResultFilter { get; set; }
 
@@ -174,12 +170,10 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// <summary>
 		/// The segments that were replaced by the reshape.
 		/// </summary>
-		[CLSCompliant(false)]
 		public IPath ReplacedSegments { get; set; }
 
 		internal bool NotificationIsWarning { get; set; }
 
-		[CLSCompliant(false)]
 		public ReshapeInfo CreateCopy(IGeometry geometryToReshape,
 		                              NotificationCollection notifications)
 		{
@@ -228,7 +222,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// </summary>
 		/// <returns></returns>
 		[NotNull]
-		[CLSCompliant(false)]
 		public IGeometry GetGeometryPartToReshape()
 		{
 			Assert.NotNull(PartIndexToReshape);
@@ -291,7 +284,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			return result;
 		}
 
-		[CLSCompliant(false)]
 		public bool CanReshapePart(int partIdx,
 		                           IGeometry highLevelReshapePath)
 		{
@@ -378,7 +370,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			return canReshape;
 		}
 
-		[CLSCompliant(false)]
 		public bool IsVerticalRingReshape(int partIdx, out IList<IPath> trimmedVerticalPaths)
 		{
 			var part = (ICurve) ((IGeometryCollection) GeometryToReshape).get_Geometry(partIdx);
@@ -441,7 +432,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			return result;
 		}
 
-		[CLSCompliant(false)]
 		public void GetBothSideReshapePolygons(
 			out IPolygon leftPolygon, out IPolygon rightPolygon)
 		{
@@ -461,7 +451,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// should be done or not.</param>
 		/// <param name="leftPolygon"></param>
 		/// <param name="rightPolygon"></param>
-		[CLSCompliant(false)]
 		public void GetBothSideReshapePolygons(bool simplifyResult,
 		                                       out IPolygon leftPolygon,
 		                                       out IPolygon rightPolygon)
@@ -500,7 +489,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// </summary>
 		/// <param name="unclearResultRing"></param>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		public RingReshapeSideOfLine DetermineReshapeSide(out IRing unclearResultRing)
 		{
 			unclearResultRing = null;
@@ -548,7 +536,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// Determines which side should be used by the reshape operation, if possible.
 		/// </summary>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		public RingReshapeSideOfLine DetermineReshapeSide()
 		{
 			IRing unclearRing;
@@ -835,7 +822,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			return RingReshapeSideOfLine.Undefined;
 		}
 
-		[CLSCompliant(false)]
 		public RingReshapeType GetRingReshapeType([NotNull] IPolygon leftPoly,
 		                                          [NotNull] IPolygon rightPoly,
 		                                          IRing originalRing)

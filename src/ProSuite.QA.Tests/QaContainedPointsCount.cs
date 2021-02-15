@@ -17,7 +17,6 @@ using ProSuite.QA.Core;
 namespace ProSuite.QA.Tests
 {
 	[UsedImplicitly]
-	[CLSCompliant(false)]
 	[TopologyTest]
 	public class QaContainedPointsCount : ContainerTest
 	{

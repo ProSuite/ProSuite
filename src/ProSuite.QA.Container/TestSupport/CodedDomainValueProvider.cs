@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
@@ -22,7 +22,6 @@ namespace ProSuite.QA.Container.TestSupport
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-		[CLSCompliant(false)]
 		public CodedDomainValueProvider([NotNull] ITable table,
 		                                [NotNull] string codedDomainField,
 		                                [CanBeNull] IFormatProvider formatProvider)

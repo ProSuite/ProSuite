@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
@@ -33,11 +32,9 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 			Result = new RemoveOverlapsResult();
 		}
 
-		[CLSCompliant(false)]
 		public IFlexibleSettingProvider<ChangeAlongZSource> ZSourceProvider { get; set; }
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public RemoveOverlapsResult Result { get; }
 
 		/// <summary>
@@ -47,7 +44,6 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 		/// <param name="overlaps"></param>
 		/// <param name="targetFeaturesForVertexInsertion"></param>
 		/// <param name="trackCancel"></param>
-		[CLSCompliant(false)]
 		public void CalculateResults(
 			[NotNull] IEnumerable<IFeature> fromFeatures,
 			[NotNull] Overlaps overlaps,
@@ -93,7 +89,6 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 		/// <param name="overlap"></param>
 		/// <param name="targetFeaturesForVertexInsertion"></param>
 		/// <param name="trackCancel"></param>
-		[CLSCompliant(false)]
 		public void CalculateResults(
 			[NotNull] IEnumerable<IFeature> fromFeatures,
 			[NotNull] IPolycurve overlap,
@@ -122,7 +117,6 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 			}
 		}
 
-		[CLSCompliant(false)]
 		public void InsertIntersectingVerticesInTargets(
 			[NotNull] IEnumerable<IFeature> targetFeatures,
 			[NotNull] IPolycurve removeGeometry)

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
@@ -16,7 +15,6 @@ namespace ProSuite.QA.Tests
 	/// Check if there are any elements in a group of layers that 
 	/// are overlapped by an element within a group of line layers.
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[TopologyTest]
 	public class QaOverlapsSelf : QaSpatialRelationSelfBase
