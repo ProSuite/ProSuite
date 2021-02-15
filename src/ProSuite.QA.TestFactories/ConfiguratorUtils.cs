@@ -15,7 +15,7 @@ namespace ProSuite.QA.TestFactories
 		public static IObjectClass OpenFromDefaultDatabase(
 			[NotNull] IObjectDataset objectDataset)
 		{
-			Assert.ArgumentNotNull(objectDataset, "objectDataset");
+			Assert.ArgumentNotNull(objectDataset, nameof(objectDataset));
 
 			IWorkspaceContext masterDbContext =
 				ModelElementUtils.GetMasterDatabaseWorkspaceContext(objectDataset);
@@ -43,7 +43,7 @@ namespace ProSuite.QA.TestFactories
 		                              [NotNull] IEnumerable<Dataset> datasets) where T : Dataset
 		{
 			Assert.ArgumentNotNullOrEmpty(datasetName, "name");
-			Assert.ArgumentNotNull(datasets, "datasets");
+			Assert.ArgumentNotNull(datasets, nameof(datasets));
 
 			foreach (Dataset dataset in datasets)
 			{

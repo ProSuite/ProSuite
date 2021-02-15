@@ -106,9 +106,9 @@ namespace ProSuite.QA.TestFactories
 			IList<Dataset> datasets,
 			IEnumerable<TestParameterValue> parameterValues)
 		{
-			Assert.ArgumentNotNull(file, "file");
-			Assert.ArgumentNotNull(datasets, "datasets");
-			Assert.ArgumentNotNull(parameterValues, "parameterValues");
+			Assert.ArgumentNotNull(file, nameof(file));
+			Assert.ArgumentNotNull(datasets, nameof(datasets));
+			Assert.ArgumentNotNull(parameterValues, nameof(parameterValues));
 
 			var datasetFilter = new Dictionary<Dataset, string>();
 
@@ -171,8 +171,8 @@ namespace ProSuite.QA.TestFactories
 			[NotNull] ICollection<IFeatureClass> featureClasses,
 			[NotNull] IList<string> ruleParts)
 		{
-			Assert.ArgumentNotNull(featureClasses, "featureClasses");
-			Assert.ArgumentNotNull(ruleParts, "ruleParts");
+			Assert.ArgumentNotNull(featureClasses, nameof(featureClasses));
+			Assert.ArgumentNotNull(ruleParts, nameof(ruleParts));
 
 			int classCount = featureClasses.Count;
 			int rulePartCount = ruleParts.Count;

@@ -32,8 +32,8 @@ namespace ProSuite.QA.TestFactories
 		public QualityCondition Convert([NotNull] Matrix matrix,
 		                                [NotNull] IList<Dataset> datasets)
 		{
-			Assert.ArgumentNotNull(matrix, "matrix");
-			Assert.ArgumentNotNull(datasets, "datasets");
+			Assert.ArgumentNotNull(matrix, nameof(matrix));
+			Assert.ArgumentNotNull(datasets, nameof(datasets));
 
 			var classDescriptor = new ClassDescriptor(typeof(QaLineConnection));
 
@@ -109,7 +109,7 @@ namespace ProSuite.QA.TestFactories
 		[NotNull]
 		public Matrix Convert([NotNull] QualityCondition qualityCondition)
 		{
-			Assert.ArgumentNotNull(qualityCondition, "qualityCondition");
+			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 
 			IList<TestParameterValue> featureClassParameters =
 				qualityCondition.GetParameterValues(FeatureClassesParamName);

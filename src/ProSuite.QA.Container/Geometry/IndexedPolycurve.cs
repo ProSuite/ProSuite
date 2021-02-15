@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
@@ -25,7 +25,7 @@ namespace ProSuite.QA.Container.Geometry
 		[CLSCompliant(false)]
 		public IndexedPolycurve([NotNull] IPointCollection4 baseGeometry)
 		{
-			Assert.ArgumentNotNull(baseGeometry, "baseGeometry");
+			Assert.ArgumentNotNull(baseGeometry, nameof(baseGeometry));
 
 			const bool @dynamic = true;
 			const int dimension = 2;

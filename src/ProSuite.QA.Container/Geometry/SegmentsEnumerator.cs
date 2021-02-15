@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -23,7 +23,7 @@ namespace ProSuite.QA.Container.Geometry
 		[CLSCompliant(false)]
 		public SegmentsEnumerator([NotNull] IEnumSegment enumSegment)
 		{
-			Assert.ArgumentNotNull(enumSegment, "enumSegment");
+			Assert.ArgumentNotNull(enumSegment, nameof(enumSegment));
 
 			_enumSegment = enumSegment;
 

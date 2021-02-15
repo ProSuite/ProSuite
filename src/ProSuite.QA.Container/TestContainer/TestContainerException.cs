@@ -69,8 +69,8 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private static string GetMessage([NotNull] ITest test, [NotNull] IRow row)
 		{
-			Assert.ArgumentNotNull(test, "test");
-			Assert.ArgumentNotNull(row, "row");
+			Assert.ArgumentNotNull(test, nameof(test));
+			Assert.ArgumentNotNull(row, nameof(row));
 
 			ITable table = row.Table;
 

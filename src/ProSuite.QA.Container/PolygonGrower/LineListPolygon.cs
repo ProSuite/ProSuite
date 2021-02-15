@@ -49,7 +49,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 		public LineListPolygon([NotNull] LineList<TDirectedRow> outerRing)
 			: base(false)
 		{
-			Assert.ArgumentNotNull(outerRing, "outerRing");
+			Assert.ArgumentNotNull(outerRing, nameof(outerRing));
 
 			_mainRing = outerRing;
 			_canProcess = true;
@@ -64,7 +64,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 		public LineListPolygon([NotNull] LineList<TDirectedRow> ring, bool isInnerRing)
 			: base(isInnerRing)
 		{
-			Assert.ArgumentNotNull(ring, "ring");
+			Assert.ArgumentNotNull(ring, nameof(ring));
 
 			if (isInnerRing == false)
 			{
