@@ -1,5 +1,7 @@
 using System;
 using System.Diagnostics;
+using System.Globalization;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Processing.Utils
@@ -120,5 +122,78 @@ namespace ProSuite.Processing.Utils
 		{
 			return ! double.IsNaN(number) && ! double.IsInfinity(number);
 		}
+
+		[NotNull]
+		public static int[] ParseIntegerList([CanBeNull] string text, char separator)
+		{
+			if (text == null)
+			{
+				return _emptyIntArray;
+			}
+
+			text = text.Trim();
+			if (text.Length < 1)
+			{
+				return _emptyIntArray;
+			}
+
+			string[] parts = text.Split(separator);
+
+			if (parts.Length < 1)
+			{
+				return _emptyIntArray;
+			}
+
+			var result = new int[parts.Length];
+
+			const NumberStyles numberStyle = NumberStyles.Integer;
+			CultureInfo invariant = CultureInfo.InvariantCulture;
+
+			for (var index = 0; index < parts.Length; index++)
+			{
+				string part = parts[index];
+				result[index] = int.Parse(part, numberStyle, invariant);
+			}
+
+			return result;
+		}
+
+		[NotNull]
+		public static double[] ParseDoubleList([CanBeNull] string text, char separator)
+		{
+			if (text == null)
+			{
+				return _emptyDoubleArray;
+			}
+
+			text = text.Trim();
+			if (text.Length < 1)
+			{
+				return _emptyDoubleArray;
+			}
+
+			string[] parts = text.Split(separator);
+
+			if (parts.Length < 1)
+			{
+				return _emptyDoubleArray;
+			}
+
+			var result = new double[parts.Length];
+
+			const NumberStyles numberStyle = NumberStyles.Float;
+			CultureInfo invariant = CultureInfo.InvariantCulture;
+
+			for (var index = 0; index < parts.Length; index++)
+			{
+				string part = parts[index];
+				result[index] = double.Parse(part, numberStyle, invariant);
+			}
+
+			return result;
+		}
+
+		private static readonly int[] _emptyIntArray = new int[0];
+		private static readonly double[] _emptyDoubleArray = new double[0];
 	}
 }

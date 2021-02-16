@@ -1,11 +1,8 @@
 using System;
-using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Exceptions;
-using ProSuite.Processing.Utils;
 
 namespace ProSuite.Processing.AGP.Core.Utils
 {
@@ -92,31 +89,6 @@ namespace ProSuite.Processing.AGP.Core.Utils
 			}
 
 			return filter;
-		}
-
-		[NotNull]
-		public static FieldSetter CreateFieldSetter([CanBeNull] string text,
-		                                            [NotNull] FeatureClass featureClass,
-		                                            [NotNull] string parameterName)
-		{
-			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
-			Assert.ArgumentNotNull(parameterName, nameof(parameterName));
-
-			try
-			{
-				var fieldSetter = FieldSetter.Create(text);
-
-				var fieldNames = featureClass.GetDefinition().GetFields().Select(f => f.Name);
-
-				fieldSetter.ValidateTargetFields(fieldNames);
-
-				return fieldSetter;
-			}
-			catch (Exception ex)
-			{
-				throw new InvalidConfigurationException(
-					$"Unable to create FieldSetter for parameter '{parameterName}': {ex.Message}", ex);
-			}
 		}
 
 		/// <summary>

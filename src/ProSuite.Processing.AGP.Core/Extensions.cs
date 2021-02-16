@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
+using ProSuite.Commons.Exceptions;
 using ProSuite.Processing.Evaluation;
 using ProSuite.Processing.Utils;
 
@@ -17,6 +18,28 @@ namespace ProSuite.Processing.AGP.Core
 		public static IRowValues RowValues(this RowBuffer row)
 		{
 			return row == null ? null : new RowBufferAdapter(row);
+		}
+
+		#region FieldSetter
+
+		public static FieldSetter ValidateTargetFields(
+			this FieldSetter instance, FeatureClass featureClass, string parameterName)
+		{
+			if (instance == null) return null;
+			if (featureClass == null) return instance;
+
+			try
+			{
+				var fieldNames = featureClass.GetDefinition().GetFields().Select(f => f.Name);
+				instance.ValidateTargetFields(fieldNames);
+			}
+			catch (Exception ex)
+			{
+				throw new InvalidConfigurationException(
+					$"Parameter {parameterName} is invalid: {ex.Message}");
+			}
+
+			return instance;
 		}
 
 		public static FieldSetter DefineFields(
@@ -48,6 +71,8 @@ namespace ProSuite.Processing.AGP.Core
 				throw new ArgumentNullException(nameof(instance));
 			instance.Execute(row.RowValues(), env);
 		}
+
+		#endregion
 
 		#region Nested type: RowAdapter
 
