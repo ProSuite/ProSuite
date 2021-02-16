@@ -28,7 +28,7 @@ namespace ProSuite.UI.DataModel
 
 		public void SetDatasets([NotNull] IEnumerable<Dataset> datasets)
 		{
-			Assert.ArgumentNotNull(datasets, "datasets");
+			Assert.ArgumentNotNull(datasets, nameof(datasets));
 
 			_groupedListView.BeginUpdate();
 
@@ -38,9 +38,7 @@ namespace ProSuite.UI.DataModel
 
 				foreach (Dataset dataset in datasets)
 				{
-					string categoryName = (dataset.DatasetCategory != null)
-						                      ? dataset.DatasetCategory.Name
-						                      : null;
+					string categoryName = dataset.DatasetCategory?.Name;
 					string imageKey = DatasetTypeImageLookup.GetImageKey(dataset);
 
 					_groupedListView.AddItem(dataset.DisplayName, categoryName, imageKey);

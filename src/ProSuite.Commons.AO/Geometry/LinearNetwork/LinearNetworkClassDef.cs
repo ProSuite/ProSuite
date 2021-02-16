@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -11,17 +10,14 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 	{
 		private FilterHelper _filterHelper;
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IFeatureClass FeatureClass { get; }
 
 		[CanBeNull]
 		public string WhereClause { get; }
 
-		[CLSCompliant(false)]
 		public esriGeometryType GeometryType { get; }
 
-		[CLSCompliant(false)]
 		public LinearNetworkClassDef([NotNull] IFeatureClass featureClass,
 		                             [CanBeNull] string whereClause = null)
 		{
@@ -43,7 +39,6 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 		/// feature class, is part of the network w.r.t. the where clause.
 		/// <remarks>Internally uses a <see cref="FilterHelper"/> instantiated upon first use.</remarks> 
 		/// </summary>
-		[CLSCompliant(false)]
 		public bool IsInLinearNetworkClass([NotNull] IFeature feature)
 		{
 			if (string.IsNullOrEmpty(WhereClause))

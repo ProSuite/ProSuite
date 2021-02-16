@@ -1,11 +1,9 @@
-﻿using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DomainServices.AO.QA
 {
-	[CLSCompliant(false)]
 	public interface IVerificationParameters
 	{
 		double TileSize { get; }

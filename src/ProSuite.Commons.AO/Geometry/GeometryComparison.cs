@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Reflection;
@@ -47,7 +47,6 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <param name="baseGeometry">The base geometry. Tt should be snappd to its spatial reference and not changed as long as this instance is in use.</param>
 		/// <param name="compareGeometry">The geometry to compare with, in the same spatial reference as the base
 		/// geometry. Tt should be snappd to its spatial reference and not changed as long as this instance is in use.</param>
-		[CLSCompliant(false)]
 		public GeometryComparison([NotNull] IGeometry baseGeometry,
 		                          [NotNull] IGeometry compareGeometry)
 			: this(baseGeometry,
@@ -56,7 +55,6 @@ namespace ProSuite.Commons.AO.Geometry
 			       GeometryUtils.GetZResolution(baseGeometry)) { }
 
 		[Obsolete]
-		[CLSCompliant(false)]
 		public GeometryComparison([NotNull] WKSPointZ[] baseCoords,
 		                          [NotNull] WKSPointZ[] compareCoords,
 		                          ISpatialReference spatialReference,
@@ -74,7 +72,6 @@ namespace ProSuite.Commons.AO.Geometry
 		/// geometry. NOTE: it should be snapped to its spatial reference.</param>
 		/// <param name="xyTolerance"></param>
 		/// <param name="zTolerance"></param>
-		[CLSCompliant(false)]
 		public GeometryComparison([NotNull] IGeometry baseGeometry,
 		                          [NotNull] IGeometry compareGeometry,
 		                          double xyTolerance, double zTolerance)
@@ -132,7 +129,6 @@ namespace ProSuite.Commons.AO.Geometry
 		/// in different order!
 		/// </summary>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		public IDictionary<WKSPointZ, VertexIndex> GetDifference(bool compare3D)
 		{
 			// TODO: to avoid tolerance-issues consider using GetChangedVertices implementation
@@ -143,7 +139,6 @@ namespace ProSuite.Commons.AO.Geometry
 			return GetPointDifference(baseCoordinates, compareCoordinates);
 		}
 
-		[CLSCompliant(false)]
 		public bool CompareGeometryContainsPoint3D(WKSPointZ point)
 		{
 			Assert.ArgumentNotNull(point, nameof(point));
@@ -232,7 +227,6 @@ namespace ProSuite.Commons.AO.Geometry
 		/// exist in the compare geometry are returned.</param>
 		/// <returns>The difference vertices</returns>
 		[NotNull]
-		[CLSCompliant(false)]
 		public IList<WKSPointZ> GetDifferentVertices(bool symmetric)
 		{
 			bool reportDuplicateVertices;
@@ -292,7 +286,6 @@ namespace ProSuite.Commons.AO.Geometry
 		/// geometry should be reported as difference</param>
 		/// <returns>The difference vertices</returns>
 		[NotNull]
-		[CLSCompliant(false)]
 		public IList<WKSPointZ> GetDifferentVertices(bool symmetric,
 		                                             bool reportDuplicateVertices)
 		{
@@ -350,7 +343,6 @@ namespace ProSuite.Commons.AO.Geometry
 		/// </summary>
 		/// <param name="zDifferentPoints"></param>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		public IPolyline GetBaseSegmentZDifferences(
 			out IDictionary<WKSPointZ, VertexIndex> zDifferentPoints)
 		{

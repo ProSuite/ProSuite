@@ -4,7 +4,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	public static class GeometryMathUtils
 	{
 		public static double CalculateSmoothness([NotNull] ISegment segment0,

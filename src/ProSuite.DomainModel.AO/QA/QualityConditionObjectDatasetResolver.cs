@@ -22,7 +22,6 @@ namespace ProSuite.DomainModel.AO.QA
 			_modelDatasetMap = new Dictionary<QualityCondition,
 				Dictionary<string, Dataset>>();
 
-		[CLSCompliant(false)]
 		public QualityConditionObjectDatasetResolver(
 			[NotNull] IWorkspaceContextLookup workspaceContextLookup)
 		{
@@ -31,7 +30,6 @@ namespace ProSuite.DomainModel.AO.QA
 			_workspaceContextLookup = workspaceContextLookup;
 		}
 
-		[CLSCompliant(false)]
 		public IObjectDataset GetDatasetByGdbTableName(
 			string gdbTableName, QualityCondition qualityCondition)
 		{
@@ -60,7 +58,6 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		// TODO pass parameter to control if match is REQUIRED (when errors are reported) or optional (stored involved rows)
-		[CLSCompliant(false)]
 		public IObjectDataset GetDatasetByInvolvedRowTableName(
 			string involvedRowTableName, QualityCondition qualityCondition)
 		{

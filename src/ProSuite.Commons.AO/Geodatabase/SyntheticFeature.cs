@@ -24,7 +24,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 	/// you get the same value as you would with <see cref="get_Value"/>
 	/// for the appropriate field index.
 	/// </remarks>
-	[CLSCompliant(false)]
 	public class SyntheticFeature : IFeature, IFeatureBuffer, IRowSubtypes
 		// inherited: IObject, IRow, IRowBuffer
 	{

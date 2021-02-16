@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -13,7 +12,6 @@ namespace ProSuite.QA.Tests.Network
 		private string _constraint;
 		private Dictionary<string, QaConnectionCountRule> _countRulesByVariableName;
 
-		[CLSCompliant(false)]
 		public QaConnectionRule([NotNull] IList<ITable> tables,
 		                        [NotNull] IList<string> tableRuleStrings)
 		{

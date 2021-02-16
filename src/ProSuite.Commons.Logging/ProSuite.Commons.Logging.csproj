@@ -54,6 +54,7 @@
     <Compile Include="Msg.cs" />
     <Compile Include="MsgBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ActionAppender.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\..\lib\licenses\log4net.license.txt">
@@ -63,7 +64,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="log4net">
-      <Version>2.0.10</Version>
+      <Version>2.0.12</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

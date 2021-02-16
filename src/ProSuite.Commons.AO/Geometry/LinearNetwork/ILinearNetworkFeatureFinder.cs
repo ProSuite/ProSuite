@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -6,7 +6,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 {
-	[CLSCompliant(false)]
 	public interface ILinearNetworkFeatureFinder
 	{
 		[NotNull]

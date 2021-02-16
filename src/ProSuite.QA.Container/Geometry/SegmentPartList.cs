@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
@@ -15,7 +15,6 @@ namespace ProSuite.QA.Container.Geometry
 		private int _currentPart = -1;
 		private WKSPointZ[] _currentWks;
 
-		[CLSCompliant(false)]
 		public SegmentPartList([NotNull] IPolycurve line)
 		{
 			_line = line;
@@ -43,7 +42,6 @@ namespace ProSuite.QA.Container.Geometry
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IList<IPolyline> GetParts()
 		{
 			_list.Sort(new SegmentPartComparer());

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -104,7 +104,6 @@ namespace ProSuite.Commons.AO
 		}
 
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public static string GetInstalledVersion(ProductCode productCode)
 		{
 			RuntimeInfo info = GetInstalledRuntime(productCode);
@@ -112,7 +111,6 @@ namespace ProSuite.Commons.AO
 		}
 
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public static RuntimeInfo GetInstalledRuntime(ProductCode productCode)
 		{
 			return RuntimeManager.InstalledRuntimes.FirstOrDefault(

@@ -4,7 +4,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.PolygonGrower
 {
-	[CLSCompliant(false)]
 	public class NetGrower<TDirectedRow> where TDirectedRow : class, INodesDirectedRow
 	{
 		public class GeometryCompleteEventArgs : EventArgs

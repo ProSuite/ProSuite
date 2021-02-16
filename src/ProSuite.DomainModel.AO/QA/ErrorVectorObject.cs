@@ -8,7 +8,6 @@ namespace ProSuite.DomainModel.AO.QA
 {
 	public class ErrorVectorObject : VectorObject, IErrorObject
 	{
-		[CLSCompliant(false)]
 		protected ErrorVectorObject([NotNull] IFeature feature,
 		                            [NotNull] ErrorVectorDataset dataset,
 		                            [CanBeNull] IFieldIndexCache fieldIndexCache)

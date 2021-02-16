@@ -199,19 +199,22 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 		private static string GetRelativePathFromBinToSrc(string repositoryName)
 		{
-			var relativeFromBinToRepo = Path.Combine(@"..\..\..\", repositoryName);
+			string binDir = ReflectionUtils.GetAssemblyDirectory(Assembly.GetCallingAssembly());
 
-			var binDir = ReflectionUtils.GetAssemblyDirectory(Assembly.GetCallingAssembly());
+			string repoRoot = Path.Combine(binDir, @"..\..\");
 
-			var candidate = Path.Combine(binDir, relativeFromBinToRepo);
+			var directory = new DirectoryInfo(repoRoot);
 
-			if (! Directory.Exists(candidate))
+			if (! directory.Name.Equals(repositoryName,
+			                            StringComparison.InvariantCultureIgnoreCase))
 			{
-				// calling from outside the repo:
-				relativeFromBinToRepo = Path.Combine(@"..\..\", repositoryName);
+				// It is a sub-repository in a different repo
+				repoRoot = Path.Combine(repoRoot, repositoryName);
 			}
 
-			var result = Path.Combine(relativeFromBinToRepo, "src");
+			var result = Path.Combine(repoRoot, "src");
+
+			Assert.True(Directory.Exists(result), "Directory does not exist: {0}", result);
 
 			return result;
 		}

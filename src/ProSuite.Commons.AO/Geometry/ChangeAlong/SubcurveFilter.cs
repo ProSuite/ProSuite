@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -10,7 +9,6 @@ using ProSuite.Commons.Notifications;
 
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
-	[CLSCompliant(false)]
 	public class SubcurveFilter
 	{
 		private static readonly IMsg _msg =

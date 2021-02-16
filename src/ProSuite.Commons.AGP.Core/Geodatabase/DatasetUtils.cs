@@ -1,5 +1,7 @@
 using System;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
@@ -32,6 +34,13 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		public static bool IsSameClass(Table featureClass1, Table featureClass2)
 		{
 			return featureClass1.Handle == featureClass2.Handle;
+		}
+
+		public static GeometryType GetShapeType([NotNull] FeatureClass featureClass)
+		{
+			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+
+			return featureClass.GetDefinition().GetShapeType();
 		}
 	}
 }

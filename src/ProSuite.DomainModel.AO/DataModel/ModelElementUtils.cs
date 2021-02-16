@@ -12,7 +12,6 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
-	[CLSCompliant(false)]
 	public static class ModelElementUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -83,6 +82,15 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		[CanBeNull]
+		public static IRasterDataset TryOpenFromMasterDatabase(IDdxRasterDataset dataset,
+		                                                       bool allowAlways = false)
+		{
+			IDatasetContext context = GetMasterDatabaseWorkspaceContext(dataset,
+			                                                            allowAlways);
+			return context?.OpenRasterDataset(dataset);
+		}
+
+		[CanBeNull]
 		public static IWorkspaceContext GetMasterDatabaseWorkspaceContext(
 			[NotNull] IModelElement modelElement, bool allowAlways = false)
 		{
@@ -103,7 +111,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return model.MasterDatabaseWorkspaceContext;
 		}
 
-		[CLSCompliant(false)]
 		public static bool UseCaseSensitiveSql([NotNull] ITable table,
 		                                       SqlCaseSensitivity caseSensitivity)
 		{

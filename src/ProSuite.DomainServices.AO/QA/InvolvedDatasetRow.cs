@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
@@ -7,7 +7,6 @@ namespace ProSuite.DomainServices.AO.QA
 {
 	public class InvolvedDatasetRow : IComparable, IComparable<InvolvedDatasetRow>
 	{
-		[CLSCompliant(false)]
 		public InvolvedDatasetRow([NotNull] IObjectDataset dataset, int objectId)
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
@@ -16,7 +15,6 @@ namespace ProSuite.DomainServices.AO.QA
 			ObjectId = objectId;
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IObjectDataset Dataset { get; }
 

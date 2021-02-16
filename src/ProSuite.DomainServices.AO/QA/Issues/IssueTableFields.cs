@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -52,7 +52,6 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 				       : null;
 		}
 
-		[CLSCompliant(false)]
 		public int GetIndex(IssueAttribute attribute, ITable table, bool optional = false)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
@@ -76,7 +75,6 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 				nameof(attribute));
 		}
 
-		[CLSCompliant(false)]
 		public bool HasField(IssueAttribute attribute, ITable table)
 		{
 			return GetIndex(attribute, table, optional: true) >= 0;
@@ -100,13 +98,11 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 			return fieldIndex;
 		}
 
-		[CLSCompliant(false)]
 		public IEnumerable<IField> CreateFields()
 		{
 			return _fields.Select(field => field.Definition.CreateField());
 		}
 
-		[CLSCompliant(false)]
 		public IField CreateField(IssueAttribute attribute, bool optional = false)
 		{
 			FieldDefinition definition = GetFieldDefinition(attribute);

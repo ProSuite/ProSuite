@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.Assertions;
 
@@ -6,7 +5,6 @@ namespace ProSuite.QA.Container.TestContainer
 {
 	public class BaseRowComparer : IEqualityComparer<BaseRow>
 	{
-		[CLSCompliant(false)]
 		public bool Equals(BaseRow x, BaseRow y)
 		{
 			// Assumption :
@@ -62,7 +60,6 @@ namespace ProSuite.QA.Container.TestContainer
 			return true;
 		}
 
-		[CLSCompliant(false)]
 		public int GetHashCode(BaseRow obj)
 		{
 			if (obj.UniqueId?.Id != null)

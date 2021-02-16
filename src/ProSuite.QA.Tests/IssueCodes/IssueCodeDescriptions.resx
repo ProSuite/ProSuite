@@ -1,101 +1,1317 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
-	<!-- 
-		Microsoft ResX Schema
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
 
-		Version 1.3
-
-		The primary goals of this format is to allow a simple XML format 
-		that is mostly human readable. The generation and parsing of the 
-		various data types are done through the TypeConverter classes 
-		associated with the data types.
-
-		Example:
-
-		... ado.net/XML headers & schema ...
-		<resheader name="resmimetype">text/microsoft-resx</resheader>
-		<resheader name="version">1.3</resheader>
-		<resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
-		<resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
-		<data name="Name1">this is my long string</data>
-		<data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
-		<data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
-			[base64 mime encoded serialized .NET Framework object]
-		</data>
-		<data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
-			[base64 mime encoded string representing a byte array form of the .NET Framework object]
-		</data>
-
-		There are any number of "resheader" rows that contain simple 
-		name/value pairs.
-
-		Each data row contains a name, and value. The row also contains a 
-		type or mimetype. Type corresponds to a .NET class that support 
-		text/value conversion through the TypeConverter architecture. 
-		Classes that don't support this are serialized and stored with the 
-		mimetype set.
-
-		The mimetype is used for serialized objects, and tells the 
-		ResXResourceReader how to depersist the object. This is currently not 
-		extensible. For a given mimetype the value must be set accordingly:
-
-		Note - application/x-microsoft.net.object.binary.base64 is the format 
-		that the ResXResourceWriter will generate, however the reader can 
-		read any of the formats listed below.
-
-		mimetype: application/x-microsoft.net.object.binary.base64
-		value   : The object must be serialized with 
-			: System.Serialization.Formatters.Binary.BinaryFormatter
-			: and then encoded with base64 encoding.
-
-		mimetype: application/x-microsoft.net.object.soap.base64
-		value   : The object must be serialized with 
-			: System.Runtime.Serialization.Formatters.Soap.SoapFormatter
-			: and then encoded with base64 encoding.
-
-		mimetype: application/x-microsoft.net.object.bytearray.base64
-		value   : The object must be serialized into a byte array 
-			: using a System.ComponentModel.TypeConverter
-			: and then encoded with base64 encoding.
-	-->
-	
-	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-		<xsd:element name="root" msdata:IsDataSet="true">
-			<xsd:complexType>
-				<xsd:choice maxOccurs="unbounded">
-					<xsd:element name="data">
-						<xsd:complexType>
-							<xsd:sequence>
-								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
-							</xsd:sequence>
-							<xsd:attribute name="name" type="xsd:string" msdata:Ordinal="1" />
-							<xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
-							<xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
-						</xsd:complexType>
-					</xsd:element>
-					<xsd:element name="resheader">
-						<xsd:complexType>
-							<xsd:sequence>
-								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-							</xsd:sequence>
-							<xsd:attribute name="name" type="xsd:string" use="required" />
-						</xsd:complexType>
-					</xsd:element>
-				</xsd:choice>
-			</xsd:complexType>
-		</xsd:element>
-	</xsd:schema>
-	<resheader name="resmimetype">
-		<value>text/microsoft-resx</value>
-	</resheader>
-	<resheader name="version">
-		<value>1.3</value>
-	</resheader>
-	<resheader name="reader">
-		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
-	<resheader name="writer">
-		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.3500.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="BoundaryLoops_BoundaryLoop" xml:space="preserve">
+    <value>Boundary loop found</value>
+  </data>
+  <data name="BoundaryLoops_BoundaryLoop_AreaLargerThanLimit" xml:space="preserve">
+    <value>Boundary loop larger than maximum allowed area found</value>
+  </data>
+  <data name="BoundaryLoops_BoundaryLoop_AreaSmallerThanLimit" xml:space="preserve">
+    <value>Boundary loop smaller than minimum allowed area found</value>
+  </data>
+  <data name="BoundaryLoops_BoundaryLoop_UnableToConstructLoopPolygon" xml:space="preserve">
+    <value>Boundary loop found, but the loop polygon can not be constructed</value>
+  </data>
+  <data name="CodedValues_NamesNotUnique" xml:space="preserve">
+    <value>Coded value names are not unique within the domain</value>
+  </data>
+  <data name="CodedValues_NoName" xml:space="preserve">
+    <value>Coded value has no name</value>
+  </data>
+  <data name="CodedValues_NotEnoughNamesDifferentFromValue" xml:space="preserve">
+    <value>The number of coded values with a name different from the value is not sufficient</value>
+  </data>
+  <data name="CodedValues_TextLength_TooLong" xml:space="preserve">
+    <value>Length of coded value name exceeds maximum value</value>
+  </data>
+  <data name="CodedValues_TextLength_TooShort" xml:space="preserve">
+    <value>Length of coded value name is less than minimum value</value>
+  </data>
+  <data name="CodedValues_TooFewCodedValues" xml:space="preserve">
+    <value>Number of coded values is less than minimum value</value>
+  </data>
+  <data name="Constraints_ConstraintNotFulfilled" xml:space="preserve">
+    <value>The constraint is not fulfilled</value>
+  </data>
+  <data name="Constraints_ErrorEvaluatingExpression" xml:space="preserve">
+    <value>Error evaluating constraint expression</value>
+  </data>
+  <data name="ContainsOther_NoContainingFeature" xml:space="preserve">
+    <value>The feature is not contained</value>
+  </data>
+  <data name="ContainsOther_NoContainingFeature_WithFulfilledConstraint" xml:space="preserve">
+    <value>The feature is contained, but the constraint is not fulfilled for any of the containing features</value>
+  </data>
+  <data name="CoveredByOther_NotCoveredByAnyFeature" xml:space="preserve">
+    <value>The feature is not covered by any feature</value>
+  </data>
+  <data name="CoveredByOther_NotCoveredByAnyFeature_PartlyOutsideVerifiedExtent" xml:space="preserve">
+    <value>The feature is not covered by any feature within the verified extent (the tested feature extends beyond the verified extent)</value>
+  </data>
+  <data name="CoveredByOther_NotFullyCovered" xml:space="preserve">
+    <value>The feature is not fully covered by other features</value>
+  </data>
+  <data name="CoveredByOther_NotSufficientlyCovered" xml:space="preserve">
+    <value>The feature is not sufficiently covered by other features (the covered percentage is smaller than the minimum value)</value>
+  </data>
+  <data name="Crosses_GeometriesCross" xml:space="preserve">
+    <value>The feature geometries cross each other</value>
+  </data>
+  <data name="Crosses_GeometriesCross_ConstraintNotFulfilled" xml:space="preserve">
+    <value>The feature geometries cross each other and the attribute constraint is not fulfilled</value>
+  </data>
+  <data name="DateValues_UnrecognizedDateValue" xml:space="preserve">
+    <value>Error reading date value from field</value>
+  </data>
+  <data name="DateValues_ValueAfterLatestValidDate" xml:space="preserve">
+    <value>Date value is after latest valid date</value>
+  </data>
+  <data name="DateValues_ValueBeforeEarliestValidDate" xml:space="preserve">
+    <value>Date value is before earliest valid date</value>
+  </data>
+  <data name="DomainDescriptions_NotUnique" xml:space="preserve">
+    <value>Domain descriptions are not unique</value>
+  </data>
+  <data name="DomainDescriptions_TextLength_TooLong" xml:space="preserve">
+    <value>Length of domain description exceeds maximum value</value>
+  </data>
+  <data name="DomainNameRegex_MatchingErrorPattern" xml:space="preserve">
+    <value>The domain name matches the error pattern</value>
+  </data>
+  <data name="DomainNameRegex_NotMatchingExpectedPattern" xml:space="preserve">
+    <value>The domain name does not match the expected pattern</value>
+  </data>
+  <data name="DomainNames_Case_AllLower" xml:space="preserve">
+    <value>Domain name contains only lower-case characters</value>
+  </data>
+  <data name="DomainNames_Case_AllUpper" xml:space="preserve">
+    <value>Domain name contains only upper-case characters</value>
+  </data>
+  <data name="DomainNames_Case_NotAllLower" xml:space="preserve">
+    <value>Domain name contains upper-case characters</value>
+  </data>
+  <data name="DomainNames_Case_NotAllUpper" xml:space="preserve">
+    <value>Domain name contains lower-case characters</value>
+  </data>
+  <data name="DomainNames_Case_NotMixed" xml:space="preserve">
+    <value>Domain name is not in mixed-case</value>
+  </data>
+  <data name="DomainNames_DoesNotContainFieldName" xml:space="preserve">
+    <value>The domain name does not contain the name of the field for which it is used</value>
+  </data>
+  <data name="DomainNames_DoesNotStartWithPrefix" xml:space="preserve">
+    <value>The domain name does not start with the expected prefix</value>
+  </data>
+  <data name="DomainNames_TextLength_TooLong" xml:space="preserve">
+    <value>Length of domain name exceeds maximum value</value>
+  </data>
+  <data name="DomainNames_TextLength_TooShort" xml:space="preserve">
+    <value>Length of domain name is less than minimum value</value>
+  </data>
+  <data name="Duplicates_GeometriesEqualInXY" xml:space="preserve">
+    <value>The feature geometries are equal in XY</value>
+  </data>
+  <data name="Duplicates_GeometriesEqualInXY_ConstraintNotFulfilled" xml:space="preserve">
+    <value>The feature geometries are equal in XY and the attribute constraint is not fulfilled</value>
+  </data>
+  <data name="EmptyGeometry_GeometryEmpty" xml:space="preserve">
+    <value>The geometry is empty</value>
+  </data>
+  <data name="EmptyGeometry_GeometryNull" xml:space="preserve">
+    <value>The geometry is null</value>
+  </data>
+  <data name="FieldAliases_Case_AllLower" xml:space="preserve">
+    <value>Alias name contains only lower-case characters</value>
+  </data>
+  <data name="FieldAliases_Case_AllUpper" xml:space="preserve">
+    <value>Alias name contains only upper-case characters</value>
+  </data>
+  <data name="FieldAliases_Case_NotAllLower" xml:space="preserve">
+    <value>Alias name contains upper-case characters</value>
+  </data>
+  <data name="FieldAliases_Case_NotAllUpper" xml:space="preserve">
+    <value>Alias name contains lower-case characters</value>
+  </data>
+  <data name="FieldAliases_Case_NotMixed" xml:space="preserve">
+    <value>Alias name is not in mixed-case</value>
+  </data>
+  <data name="FieldAliases_EqualsFieldName" xml:space="preserve">
+    <value>Alias name is same as field name</value>
+  </data>
+  <data name="FieldAliases_EqualsFieldName_ExceptCase" xml:space="preserve">
+    <value>Alias name differs from field name only in character case</value>
+  </data>
+  <data name="FieldAliases_NoAliasName" xml:space="preserve">
+    <value>Alias name is not defined</value>
+  </data>
+  <data name="FieldAliases_NotUnique" xml:space="preserve">
+    <value>Alias name is not unique within table</value>
+  </data>
+  <data name="FieldAliases_SystemFieldAliasDiffersFromName" xml:space="preserve">
+    <value>Alias name of system field is not equal to the field name</value>
+  </data>
+  <data name="FieldAliases_TextLength_TooLong" xml:space="preserve">
+    <value>Length of alias name exceeds maximum value</value>
+  </data>
+  <data name="FieldAliases_TextLength_TooShort" xml:space="preserve">
+    <value>Length of alias name is less than minimum value</value>
+  </data>
+  <data name="FieldDomains_FieldTypeMismatch" xml:space="preserve">
+    <value>The domain is used for a field with a different data type</value>
+  </data>
+  <data name="FieldNameRegex_MatchingErrorPattern" xml:space="preserve">
+    <value>The field name matches the error pattern</value>
+  </data>
+  <data name="FieldNameRegex_NotMatchingExpectedPattern" xml:space="preserve">
+    <value>The field name does not match the expected pattern</value>
+  </data>
+  <data name="FieldNames_Case_AllLower" xml:space="preserve">
+    <value>Field name contains only lower-case characters</value>
+  </data>
+  <data name="FieldNames_Case_AllUpper" xml:space="preserve">
+    <value>Field name contains only upper-case characters</value>
+  </data>
+  <data name="FieldNames_Case_NotAllLower" xml:space="preserve">
+    <value>Field name contains upper-case characters</value>
+  </data>
+  <data name="FieldNames_Case_NotAllUpper" xml:space="preserve">
+    <value>Field name contains lower-case characters</value>
+  </data>
+  <data name="FieldNames_Case_NotMixed" xml:space="preserve">
+    <value>Field name is not in mixed-case</value>
+  </data>
+  <data name="FieldNames_SubstringNotUnique" xml:space="preserve">
+    <value>First characters of field name are not unique within table</value>
+  </data>
+  <data name="FieldNames_TextLength_TooLong" xml:space="preserve">
+    <value>Length of field name exceeds maximum value</value>
+  </data>
+  <data name="FieldNames_TextLength_TooShort" xml:space="preserve">
+    <value>Length of field name is less than minimum value</value>
+  </data>
+  <data name="FieldProperties_MissingField" xml:space="preserve">
+    <value>Required field does not exist</value>
+  </data>
+  <data name="FieldProperties_NoDomain" xml:space="preserve">
+    <value>The field does not have a domain assigned, but there is a domain specified for it</value>
+  </data>
+  <data name="FieldProperties_UnexpectedAlias" xml:space="preserve">
+    <value>The field does not have the specified alias name</value>
+  </data>
+  <data name="FieldProperties_UnexpectedDomain" xml:space="preserve">
+    <value>The field has an unexpected domain assigned</value>
+  </data>
+  <data name="FieldProperties_UnexpectedFieldLength" xml:space="preserve">
+    <value>The field does not have the specified field length</value>
+  </data>
+  <data name="FieldProperties_UnexpectedFieldNameForAlias" xml:space="preserve">
+    <value>Alias name matches a field specification, but field name is different</value>
+  </data>
+  <data name="FieldProperties_UnexpectedFieldType" xml:space="preserve">
+    <value>The field does not have the specified field type</value>
+  </data>
+  <data name="FieldValues_ValueNotValidForFieldType" xml:space="preserve">
+    <value>The field value is not valid for the field type</value>
+  </data>
+  <data name="ForeignKeys_NoReferencedRow" xml:space="preserve">
+    <value>Field values don't reference a row in the target table</value>
+  </data>
+  <data name="ForeignKeys_UnableToConvertFieldValue" xml:space="preserve">
+    <value>Unable to convert a field value to the target field type</value>
+  </data>
+  <data name="ForeignKeys_UnexpectedReferencedRow" xml:space="preserve">
+    <value>Field values incorrectly reference a row in the target table</value>
+  </data>
+  <data name="Gaps_Gap" xml:space="preserve">
+    <value>Gap found</value>
+  </data>
+  <data name="Gaps_Gap_AreaTooSmall" xml:space="preserve">
+    <value>Gap found with area smaller than minimum value</value>
+  </data>
+  <data name="Gaps_Gap_AreaTooSmallAndSliverRatioTooLarge" xml:space="preserve">
+    <value>Gap found with area smaller than minimum value and ratio of perimeter (squared) to area larger than maximum value</value>
+  </data>
+  <data name="Gaps_Gap_SliverRatioTooLarge" xml:space="preserve">
+    <value>Gap found with ratio of perimeter (squared) to area larger than maximum value</value>
+  </data>
+  <data name="InteriorIntersects_InteriorsIntersect" xml:space="preserve">
+    <value>The interiors of feature geometries intersect each other</value>
+  </data>
+  <data name="InteriorIntersects_InteriorsIntersect_ConstraintNotFulfilled" xml:space="preserve">
+    <value>The interiors of feature geometries intersect each other and the attribute constraint is not fulfilled</value>
+  </data>
+  <data name="InteriorRings_UnallowedInteriorRings" xml:space="preserve">
+    <value>The polygon has an unallowed number of interior rings</value>
+  </data>
+  <data name="IntersectionMatrix_GeometriesIntersectWithMatrix" xml:space="preserve">
+    <value>The feature geometries intersect according to a 9IM intersection matrix</value>
+  </data>
+  <data name="IntersectionMatrix_GeometriesIntersectWithMatrix_ConstraintNotFulfilled" xml:space="preserve">
+    <value>The feature geometries intersect according to a 9IM intersection matrix and the attribute constraint is not fulfilled</value>
+  </data>
+  <data name="Intersects_GeometriesIntersect" xml:space="preserve">
+    <value>The feature geometries intersect each other</value>
+  </data>
+  <data name="Intersects_GeometriesIntersect_ConstraintNotFulfilled" xml:space="preserve">
+    <value>The feature geometries intersect each other and the attribute constraint is not fulfilled</value>
+  </data>
+  <data name="MaxArea_AreaTooLarge" xml:space="preserve">
+    <value>Area is larger than maximum value</value>
+  </data>
+  <data name="MaximumLength_LengthTooLarge" xml:space="preserve">
+    <value>The length of the geometry is larger than the maximum value</value>
+  </data>
+  <data name="MaxVertexCount_TooManyVertices" xml:space="preserve">
+    <value>The geometry contains too many vertices</value>
+  </data>
+  <data name="MeasureValues_InvalidMValues" xml:space="preserve">
+    <value>Measure values are not valid</value>
+  </data>
+  <data name="MeasureValues_UndefinedMValues" xml:space="preserve">
+    <value>Measure values are not defined</value>
+  </data>
+  <data name="MinArea_AreaTooSmall" xml:space="preserve">
+    <value>Area is smaller than minimum value</value>
+  </data>
+  <data name="MinimumLength_LengthTooSmall" xml:space="preserve">
+    <value>The length of the geometry is smaller than the minimum value</value>
+  </data>
+  <data name="MinimumSegmentAngle_SegmentAngleTooSmall" xml:space="preserve">
+    <value>The angle between two segments is smaller than the minimum value</value>
+  </data>
+  <data name="Multipart_MultipleExteriorRings" xml:space="preserve">
+    <value>The polygon consists of more than one exterior ring</value>
+  </data>
+  <data name="Multipart_MultipleParts" xml:space="preserve">
+    <value>The geometry consists of more than one part</value>
+  </data>
+  <data name="NodeLineCoincidence_NodeTooCloseToLine_BetweenFeatures" xml:space="preserve">
+    <value>Unconnected node is too close to a line (between different features)</value>
+  </data>
+  <data name="NodeLineCoincidence_NodeTooCloseToLine_WithinFeature" xml:space="preserve">
+    <value>Unconnected node is too close to a line (within the same feature)</value>
+  </data>
+  <data name="SegmentTypes_NonLinearSegments" xml:space="preserve">
+    <value>Non-linear segment(s) found</value>
+  </data>
+  <data name="Overlaps_GeometriesOverlap" xml:space="preserve">
+    <value>The feature geometries overlap each other</value>
+  </data>
+  <data name="Overlaps_GeometriesOverlap_ConstraintNotFulfilled" xml:space="preserve">
+    <value>The feature geometries overlap each other and the attribute constraint is not fulfilled</value>
+  </data>
+  <data name="NearCoincidence_NearlyCoincidentSection_BetweenFeatures" xml:space="preserve">
+    <value>Nearly coincident section found (between different features)</value>
+  </data>
+  <data name="NearCoincidence_NearlyCoincidentSection_WithinFeature" xml:space="preserve">
+    <value>Nearly coincident section found (within the same feature)</value>
+  </data>
+  <data name="RequiredFields_EmptyString" xml:space="preserve">
+    <value>Required field contains an empty string</value>
+  </data>
+  <data name="RequiredFields_NullValue" xml:space="preserve">
+    <value>Required field contains NULL value</value>
+  </data>
+  <data name="ReservedFieldNames_FieldNameIsReserved" xml:space="preserve">
+    <value>The field uses a reserved name</value>
+  </data>
+  <data name="RowCount_TooFewRows" xml:space="preserve">
+    <value>Number of rows is less than minimum value</value>
+  </data>
+  <data name="RowCount_TooManyRows" xml:space="preserve">
+    <value>Number of rows exceeds maximum value</value>
+  </data>
+  <data name="SimpleGeometry_DuplicatePoints" xml:space="preserve">
+    <value>Duplicate points</value>
+  </data>
+  <data name="SimpleGeometry_EmptyPart" xml:space="preserve">
+    <value>Empty geometry part</value>
+  </data>
+  <data name="SimpleGeometry_EmptyShape" xml:space="preserve">
+    <value>Geometry is empty</value>
+  </data>
+  <data name="SimpleGeometry_IdenticalRings" xml:space="preserve">
+    <value>Identical rings</value>
+  </data>
+  <data name="SimpleGeometry_NullShape" xml:space="preserve">
+    <value>Geometry is null</value>
+  </data>
+  <data name="SimpleGeometry_RingOrientation" xml:space="preserve">
+    <value>Incorrect ring orientation</value>
+  </data>
+  <data name="SimpleGeometry_SegmentOrientation" xml:space="preserve">
+    <value>Incorrect segment orientation</value>
+  </data>
+  <data name="SimpleGeometry_SelfIntersection" xml:space="preserve">
+    <value>Self intersection</value>
+  </data>
+  <data name="SimpleGeometry_ShortSegment" xml:space="preserve">
+    <value>Short segment</value>
+  </data>
+  <data name="SimpleGeometry_UnclosedRing" xml:space="preserve">
+    <value>Unclosed ring</value>
+  </data>
+  <data name="SimpleGeometry_Undefined" xml:space="preserve">
+    <value>Undefined non-simple reason</value>
+  </data>
+  <data name="SimpleGeometry_Unknown" xml:space="preserve">
+    <value>Unknown non-simple reason</value>
+  </data>
+  <data name="SliverPolygons_AreaTooSmall" xml:space="preserve">
+    <value>Area is smaller than minimum value</value>
+  </data>
+  <data name="SliverPolygons_AreaTooSmallAndSliverRatioTooLarge" xml:space="preserve">
+    <value>Area is smaller than minimum value, and the ratio of perimeter (squared) to area is larger than maximum value</value>
+  </data>
+  <data name="SliverPolygons_SliverRatioTooLarge" xml:space="preserve">
+    <value>The ratio of perimeter (squared) to area is too large</value>
+  </data>
+  <data name="SpatialReference_CoordinateSystemDifferent_XY" xml:space="preserve">
+    <value>The XY coordinate system is different</value>
+  </data>
+  <data name="SpatialReference_CoordinateSystemDifferent_Z" xml:space="preserve">
+    <value>The Z coordinate system is different</value>
+  </data>
+  <data name="SpatialReference_PrecisionDifferent_M" xml:space="preserve">
+    <value>The M domain/precision is different</value>
+  </data>
+  <data name="SpatialReference_PrecisionDifferent_XY" xml:space="preserve">
+    <value>The XY domain/precision is different</value>
+  </data>
+  <data name="SpatialReference_PrecisionDifferent_Z" xml:space="preserve">
+    <value>The Z domain/precision is different</value>
+  </data>
+  <data name="SpatialReference_ToleranceDifferent_M" xml:space="preserve">
+    <value>The M tolerance is different</value>
+  </data>
+  <data name="SpatialReference_ToleranceDifferent_XY" xml:space="preserve">
+    <value>The XY tolerance is different</value>
+  </data>
+  <data name="SpatialReference_ToleranceDifferent_Z" xml:space="preserve">
+    <value>The Z tolerance is different</value>
+  </data>
+  <data name="Touches_GeometriesTouch" xml:space="preserve">
+    <value>The feature geometries touch each other</value>
+  </data>
+  <data name="Touches_GeometriesTouch_ConstraintNotFulfilled" xml:space="preserve">
+    <value>The feature geometries touch each other and the attribute constraint is not fulfilled</value>
+  </data>
+  <data name="TouchingParts_PartsTouch" xml:space="preserve">
+    <value>Geometry parts touch</value>
+  </data>
+  <data name="TrimmedTextFields_ErrorReadingString" xml:space="preserve">
+    <value>Error reading text from field</value>
+  </data>
+  <data name="TrimmedTextFields_LeadingAndTrailingBlanks" xml:space="preserve">
+    <value>The text has blanks both at the beginning and the end</value>
+  </data>
+  <data name="TrimmedTextFields_LeadingBlanks" xml:space="preserve">
+    <value>The text has one or more blanks at the beginning</value>
+  </data>
+  <data name="TrimmedTextFields_OnlyBlanks" xml:space="preserve">
+    <value>The text consists only of one or more blanks</value>
+  </data>
+  <data name="TrimmedTextFields_TrailingBlanks" xml:space="preserve">
+    <value>The text has one or more blanks at the end</value>
+  </data>
+  <data name="UniqueFields_NotUnique" xml:space="preserve">
+    <value>Field values are not unique</value>
+  </data>
+  <data name="WithinBox_GeometryNotWithinBox" xml:space="preserve">
+    <value>The geometry is not fully within the expected extent</value>
+  </data>
+  <data name="GdbAttributeRules_InvalidObjectID" xml:space="preserve">
+    <value>Invalid object ID value</value>
+  </data>
+  <data name="GdbAttributeRules_InvalidSubtype" xml:space="preserve">
+    <value>Invalid subtype field value</value>
+  </data>
+  <data name="GdbAttributeRules_ValueNotValidForDomain" xml:space="preserve">
+    <value>Field value is not valid for domain</value>
+  </data>
+  <data name="GeodatabaseRelease_IncorrectVersion_TooHigh" xml:space="preserve">
+    <value>The geodatabase release version is too high</value>
+  </data>
+  <data name="GeodatabaseRelease_IncorrectVersion_TooLow" xml:space="preserve">
+    <value>The geodatabase release version is too low</value>
+  </data>
+  <data name="GeodatabaseRelease_UnableToDetermineRelease" xml:space="preserve">
+    <value>Unable to determine the geodatabase release version</value>
+  </data>
+  <data name="MustBeNear_NoFeatureWithinDistance" xml:space="preserve">
+    <value>No feature found within the maximum distance</value>
+  </data>
+  <data name="MustBeNear_NoFeatureWithinDistance_WithFulfilledConstraint" xml:space="preserve">
+    <value>No feature with fulfilled constraint found within the maximum distance</value>
+  </data>
+  <data name="MustIntersect9IM_NoFeatureWithRequiredRelation" xml:space="preserve">
+    <value>Feature does not have the required 9IM intersection relation with any other feature</value>
+  </data>
+  <data name="MustIntersect9IM_NoFeatureWithRequiredRelation_WithFulfilledConstraint" xml:space="preserve">
+    <value>Feature does not have the required 9IM intersection relation with any other feature that fulfills the constraint</value>
+  </data>
+  <data name="MustTouch_NoTouchingFeature" xml:space="preserve">
+    <value>Feature is not touched by another feature</value>
+  </data>
+  <data name="MustTouch_NoTouchingFeature_WithFulfilledConstraint" xml:space="preserve">
+    <value>Feature is not touched by another feature that fulfills the constraint</value>
+  </data>
+  <data name="ZRangeDifference_ZRangesOverlap" xml:space="preserve">
+    <value>The feature Z ranges overlap</value>
+  </data>
+  <data name="ZRangeDifference_ZDifferenceTooSmall" xml:space="preserve">
+    <value>The Z distance between the feature Z ranges is too small</value>
+  </data>
+  <data name="ValidUrls_CannotAccessResource_Web_ErrorGettingResponse" xml:space="preserve">
+    <value>Error getting a response from the server</value>
+  </data>
+  <data name="ValidUrls_CannotAccessResource_Web_InvalidResponse" xml:space="preserve">
+    <value>The server returned an error code for the request</value>
+  </data>
+  <data name="ValidUrls_UnsupportedUrlType" xml:space="preserve">
+    <value>The URL type is not supported</value>
+  </data>
+  <data name="ValidUrls_CannotAccessResource_FileSystem_NoReadAccess" xml:space="preserve">
+    <value>The specified file exists but cannot be read</value>
+  </data>
+  <data name="ValidUrls_CannotAccessResource_FileSystem_PathDoesNotExist" xml:space="preserve">
+    <value>The specified file system path does not exist</value>
+  </data>
+  <data name="VertexCoincidence_NearbyEdgeNotPassingThroughVertex_DifferentFeature" xml:space="preserve">
+    <value>Nearby edge on different feature does not pass through vertex</value>
+  </data>
+  <data name="VertexCoincidence_NearbyEdgeNotPassingThroughVertex_SameFeature" xml:space="preserve">
+    <value>Nearby edge on same feature does not pass through vertex</value>
+  </data>
+  <data name="VertexCoincidence_NearbyVertexNotCoincident_DifferentFeature" xml:space="preserve">
+    <value>Nearby vertex on different feature is not coincident</value>
+  </data>
+  <data name="VertexCoincidence_NearbyVertexNotCoincident_SameFeature" xml:space="preserve">
+    <value>Nearby vertex on same feature is not coincident</value>
+  </data>
+  <data name="VertexCoincidence_NoVertexOnNearbyEdge_DifferentFeature" xml:space="preserve">
+    <value>Nearby edge on different feature does not have a coincident vertex</value>
+  </data>
+  <data name="VertexCoincidence_NoVertexOnNearbyEdge_SameFeature" xml:space="preserve">
+    <value>Nearby edge on same feature does not have a coincident vertex</value>
+  </data>
+  <data name="MpFootprintHoles_FootprintHasInnerRing" xml:space="preserve">
+    <value>Footprint has inner ring</value>
+  </data>
+  <data name="MpFootprintHoles_MultiPatchHasOnlyVerticalPatchesFormingARing" xml:space="preserve">
+    <value>Multipatch has only vertical patches forming a ring</value>
+  </data>
+  <data name="MpFootprintHoles_VerticalPatchNotCompletelyWithinFootprint" xml:space="preserve">
+    <value>Vertical patch is not completely within footprint</value>
+  </data>
+  <data name="WithinZRange_ZOutsideRange_AboveMaximum" xml:space="preserve">
+    <value>Z value(s) above the valid range</value>
+  </data>
+  <data name="WithinZRange_ZOutsideRange_BelowMinimum" xml:space="preserve">
+    <value>Z value(s) below the valid range</value>
+  </data>
+  <data name="FullCoincidence_PartNotNearReference" xml:space="preserve">
+    <value>Part not near reference</value>
+  </data>
+  <data name="CrossingLines_NoMatch_CandidateExists_ConstraintsFulfilled" xml:space="preserve">
+    <value>No matching neighbor feature. There is a nearby neighbor feature connected to the border.</value>
+  </data>
+  <data name="CrossingLines_NoMatch_CandidateExists_EndPointOutsideTolerance_ConstraintsFulfilled" xml:space="preserve">
+    <value>No matching neighbor feature. There is a nearby neighbor feature connected to the border. The distance to its border connection exceeds the maximum value.</value>
+  </data>
+  <data name="CrossingLines_NoMatch_NoCandidate" xml:space="preserve">
+    <value>No matching neighbor feature. No neighbor feature connected to the border found within the search distance.</value>
+  </data>
+  <data name="LineGroups_InvalidFieldValue_DuplicateGroupValueInField" xml:space="preserve">
+    <value>The field value contains the same group value more than once</value>
+  </data>
+  <data name="LineGroups_InvalidFieldValue_InvalidValueForSeparator" xml:space="preserve">
+    <value>The field value is invalid</value>
+  </data>
+  <data name="ConnectedLineGroups_InvalidLineGroup_Branch" xml:space="preserve">
+    <value>The line group contains a branch</value>
+  </data>
+  <data name="ConnectedLineGroups_InvalidLineGroup_Cycle" xml:space="preserve">
+    <value>The line group contains a cycle</value>
+  </data>
+  <data name="ConnectedLineGroups_InvalidLineGroup_InsideBranch" xml:space="preserve">
+    <value>The line group contains a branch to the interior of a cycle</value>
+  </data>
+  <data name="ConnectedLineGroups_InvalidLineGroup_MultipleParts" xml:space="preserve">
+    <value>The line group consists of more than one connected part</value>
+  </data>
+  <data name="TerrainSpikes_MaximumSlopeAndDeltaZExceeded" xml:space="preserve">
+    <value>Point classified as spike (maximum Z difference and slope exceeded)</value>
+  </data>
+  <data name="CoplanarRings_FaceDoesNotDefineValidPlane" xml:space="preserve">
+    <value>Face does not define a valid plane (segments are collinear)</value>
+  </data>
+  <data name="CoplanarRings_FaceNotCoplanar" xml:space="preserve">
+    <value>Face is not coplanar</value>
+  </data>
+  <data name="MpVertexNotNearFace_FaceDoesNotDefineValidPlane" xml:space="preserve">
+    <value>Face does not define a valid plane</value>
+  </data>
+  <data name="MpVertexNotNearFace_FaceNotCoplanar" xml:space="preserve">
+    <value>Face is not coplanar</value>
+  </data>
+  <data name="MpVertexNotNearFace_PointInNonCoplanarityOfFace" xml:space="preserve">
+    <value>Point is within non-coplanarity of face</value>
+  </data>
+  <data name="MpVertexNotNearFace_PointTooCloseAboveFace" xml:space="preserve">
+    <value>Point is too close above face</value>
+  </data>
+  <data name="MpVertexNotNearFace_PointTooCloseBelowFace" xml:space="preserve">
+    <value>Point is too close below face</value>
+  </data>
+  <data name="ValidCoordinateFields_ErrorReadingFieldValue" xml:space="preserve">
+    <value>Error reading coordinate value from field</value>
+  </data>
+  <data name="ValidCoordinateFields_ShapeIsDefinedButCoordinateFieldHasNoValue" xml:space="preserve">
+    <value>The shape is defined, but the coordinate field does not contain a value</value>
+  </data>
+  <data name="ValidCoordinateFields_ShapeIsUndefinedButCoordinateFieldHasValue" xml:space="preserve">
+    <value>The shape is not defined, but the coordinate field has a value</value>
+  </data>
+  <data name="ValidCoordinateFields_TextFieldValueIsNotNumeric" xml:space="preserve">
+    <value>Unable to read coordinate value from text field</value>
+  </data>
+  <data name="ValidCoordinateFields_XYFieldCoordinatesTooFarFromShape" xml:space="preserve">
+    <value>The distance between the XY field coordinates and the shape is larger than the tolerance</value>
+  </data>
+  <data name="ValidCoordinateFields_XYFieldCoordinateValueTooFarFromShape" xml:space="preserve">
+    <value>The distance between the one available XY coordinate field value and the shape is larger than the tolerance</value>
+  </data>
+  <data name="ValidCoordinateFields_ZFieldCoordinateTooFarFromShape" xml:space="preserve">
+    <value>The distance between the Z field coordinate value and the shape Z value is larger than the tolerance</value>
+  </data>
+  <data name="LineIntersections_InvalidLineIntersection" xml:space="preserve">
+    <value>Invalid line intersection</value>
+  </data>
+  <data name="LineIntersections_InvalidLineIntersection_ConstraintNotFulfilled" xml:space="preserve">
+    <value>Invalid line intersection (attribute constraint is not fulfilled)</value>
+  </data>
+  <data name="CoveredByOther_NotCoveredByAnyFeature_WithFulfilledConstraint" xml:space="preserve">
+    <value>The feature is not covered by any feature for which the defined constraint is fulfilled</value>
+  </data>
+  <data name="CoveredByOther_NotCoveredByAnyFeature_PartlyOutsideVerifiedExtent_WithFulfilledConstraint" xml:space="preserve">
+    <value>The feature is not covered by any feature within the verified extent for which the defined constraint is fulfilled (the tested feature extends beyond the verified extent)</value>
+  </data>
+  <data name="CoveredByOther_NotFullyCovered_WithFulfilledConstraint" xml:space="preserve">
+    <value>The feature is not fully covered by other features for which the defined constraint is fulfilled</value>
+  </data>
+  <data name="CoveredByOther_NotSufficientlyCovered_WithFulfilledConstraint" xml:space="preserve">
+    <value>The feature is not sufficiently covered by other features for which the defined constraint is fulfilled (the covered percentage is smaller than the minimum value)</value>
+  </data>
+  <data name="MpNonIntersectingRingFootprints_PointIdNotUniqueWithinFace" xml:space="preserve">
+    <value>Point ids are not unique within face</value>
+  </data>
+  <data name="MpNonIntersectingRingFootprints_RingFootprintsIntersect" xml:space="preserve">
+    <value>Footprints of rings intersect</value>
+  </data>
+  <data name="MpSinglePartFootprint_FootprintHasMultipleParts" xml:space="preserve">
+    <value>Footprint of MultiPatch feature contains more than one part</value>
+  </data>
+  <data name="NoClosedPaths_ClosedPath" xml:space="preserve">
+    <value>Closed path</value>
+  </data>
+  <data name="RouteMeasuresUnique_MeasuresNotUnique_WithinFeature" xml:space="preserve">
+    <value>Measures are not unique due to non-monotonicity within feature</value>
+  </data>
+  <data name="RouteMeasuresUnique_MeasuresNotUnique_WithinRoute" xml:space="preserve">
+    <value>Measures are not unique for different features on same route</value>
+  </data>
+  <data name="EmptyNotNullTextFields_EmptyText" xml:space="preserve">
+    <value>Empty text in field</value>
+  </data>
+  <data name="EmptyNotNullTextFields_UnexpectedValue" xml:space="preserve">
+    <value>Text field has unexpected value</value>
+  </data>
+  <data name="EmptyNotNullTextFields_ValueIsNull" xml:space="preserve">
+    <value>Text field value is null</value>
+  </data>
+  <data name="MaxSlope_SlopeTooSteep" xml:space="preserve">
+    <value>Slope is too steep</value>
+  </data>
+  <data name="MinIntersect_SmallIntersectionArea" xml:space="preserve">
+    <value>Intersection area is smaller than the specified limit </value>
+  </data>
+  <data name="MonotonicMeasures_MeasuresNotMonotonic" xml:space="preserve">
+    <value>Measure values are not monotonic</value>
+  </data>
+  <data name="PointOnLine_PointNotNearLine" xml:space="preserve">
+    <value>Point does not lie near line</value>
+  </data>
+  <data name="MeasuresAtPoints_ExpressionResultNotNumeric" xml:space="preserve">
+    <value>Invalid value from expected measure expression</value>
+  </data>
+  <data name="MeasuresAtPoints_MValueNotAsExpected" xml:space="preserve">
+    <value>Actual measure value not not within tolerance of expected measure value</value>
+  </data>
+  <data name="MeasuresAtPoints_NoVertexNearPoint" xml:space="preserve">
+    <value>Point does not lie closer than search distance to any line vertex</value>
+  </data>
+  <data name="MeasuresAtPoints_PointNotNearLine" xml:space="preserve">
+    <value>Point does not lie closer than search distance to any line</value>
+  </data>
+  <data name="MeasuresAtPoints_UndefinedMValue_FromExpression" xml:space="preserve">
+    <value>Undefined expected measure value from expression</value>
+  </data>
+  <data name="MeasuresAtPoints_UndefinedMValue_FromPointFeature" xml:space="preserve">
+    <value>Undefined measure value on point feature</value>
+  </data>
+  <data name="GeometryToTerrainZOffset_ZOffset_NotEnoughAboveTerrain" xml:space="preserve">
+    <value>Geometry not enough above terrain</value>
+  </data>
+  <data name="GeometryToTerrainZOffset_ZOffset_NotEnoughBelowTerrain" xml:space="preserve">
+    <value>Geometry not enough below terrain</value>
+  </data>
+  <data name="GeometryToTerrainZOffset_ZOffset_TooCloseToTerrain" xml:space="preserve">
+    <value>Geometry not outside limits, too close to terrain</value>
+  </data>
+  <data name="GeometryToTerrainZOffset_ZOffset_TooFarFromTerrain" xml:space="preserve">
+    <value>Geometry not within limits, too far from terrain</value>
+  </data>
+  <data name="GeometryToTerrainZOffset_NoTerrainData" xml:space="preserve">
+    <value>Feature partially or completely outside terrain extent</value>
+  </data>
+  <data name="LineConnections_RulesNotFulfilled" xml:space="preserve">
+    <value>Features do not fulfill any of the rules for valid connections</value>
+  </data>
+  <data name="FlowLogic_OutgoingLines_Multiple" xml:space="preserve">
+    <value>Node has multiple outgoing lines</value>
+  </data>
+  <data name="FlowLogic_OutgoingLines_None" xml:space="preserve">
+    <value>Node has no outgoing lines</value>
+  </data>
+  <data name="LineIntersectAngle_IntersectionAngleSmallerThanLimit" xml:space="preserve">
+    <value>Line intersection angle smaller than the specified minimum</value>
+  </data>
+  <data name="MpAllowedPartTypes_InvalidGeometryType" xml:space="preserve">
+    <value>Invalid geometry type in multipatch</value>
+  </data>
+  <data name="ContainedPoints_PointCount_LargerThanExpected" xml:space="preserve">
+    <value>Number of contained points larger than expected number</value>
+  </data>
+  <data name="ContainedPoints_PointCount_LargerThanMaximum" xml:space="preserve">
+    <value>Number of contained points larger than the specified maximum</value>
+  </data>
+  <data name="ContainedPoints_PointCount_SmallerThanExpected" xml:space="preserve">
+    <value>Number of contained points smaller than expected number</value>
+  </data>
+  <data name="ContainedPoints_PointCount_SmallerThanMinimum" xml:space="preserve">
+    <value>Number of contained points less than the specified minimum</value>
+  </data>
+  <data name="VertexToTerrainZOffset_ZOffset_NotEnoughAboveTerrain" xml:space="preserve">
+    <value>At least one vertex not enough above terrain</value>
+  </data>
+  <data name="VertexToTerrainZOffset_ZOffset_NotEnoughBelowTerrain" xml:space="preserve">
+    <value>At least one vertex not enough below terrain</value>
+  </data>
+  <data name="VertexToTerrainZOffset_ZOffset_TooCloseToTerrain" xml:space="preserve">
+    <value>At least one vertex not outside limits, too close to terrain</value>
+  </data>
+  <data name="VertexToTerrainZOffset_ZOffset_TooFarFromTerrain" xml:space="preserve">
+    <value>At least one vertex not within limits, too far from terrain</value>
+  </data>
+  <data name="VertexToTerrainZOffset_NoTerrainData" xml:space="preserve">
+    <value>Feature partially or completely outside terrain extent</value>
+  </data>
+  <data name="Centroids_CentroidLiesOnBorder" xml:space="preserve">
+    <value>Centroid lies on a border</value>
+  </data>
+  <data name="Centroids_DanglingLine" xml:space="preserve">
+    <value>Dangling line</value>
+  </data>
+  <data name="Centroids_DoesNotMatchConstraint" xml:space="preserve">
+    <value>Centroid does not match constraint</value>
+  </data>
+  <data name="Centroids_MultipleCentroids" xml:space="preserve">
+    <value>Multiple centroids inside constructed polygon</value>
+  </data>
+  <data name="Centroids_NoCentroid" xml:space="preserve">
+    <value>Constructed polygon contains no centroid</value>
+  </data>
+  <data name="GdbNetworkElements_ComplexEdge_ErrorAccessingGeometry" xml:space="preserve">
+    <value>Error getting geometry for complex edge element</value>
+  </data>
+  <data name="GdbNetworkElements_ComplexEdge_InvalidComplexEdge" xml:space="preserve">
+    <value>Invalid complex edge element</value>
+  </data>
+  <data name="GdbNetworkElements_ComplexEdge_ZeroLength" xml:space="preserve">
+    <value>Complex edge geometry is zero-length</value>
+  </data>
+  <data name="GdbNetworkElements_ErrorProcessingNetworkFeature" xml:space="preserve">
+    <value>An error ocurred, network feature could not be processed</value>
+  </data>
+  <data name="GdbNetworkElements_InvalidElementID_ComplexJunction" xml:space="preserve">
+    <value>Complex junction has an invalid element id</value>
+  </data>
+  <data name="GdbNetworkElements_InvalidElementID_Edge_FromJunction" xml:space="preserve">
+    <value>From junction has an invalid element id</value>
+  </data>
+  <data name="GdbNetworkElements_InvalidElementID_Edge_ToJunction" xml:space="preserve">
+    <value>To junction has an invalid element id</value>
+  </data>
+  <data name="GdbNetworkElements_InvalidElementID_SimpleEdge" xml:space="preserve">
+    <value>Simple edge has an invalid element id</value>
+  </data>
+  <data name="GdbNetworkElements_InvalidElementID_SimpleJunction" xml:space="preserve">
+    <value>Simple junction has an invalid element id</value>
+  </data>
+  <data name="MpVerticalFaces_NotSufficientlyVertical" xml:space="preserve">
+    <value>The face is almost, but not sufficiently vertical</value>
+  </data>
+  <data name="OrphanNode_MissingNode" xml:space="preserve">
+    <value>Missing node</value>
+  </data>
+  <data name="OrphanNode_OrphanNode" xml:space="preserve">
+    <value>Orphan node</value>
+  </data>
+  <data name="ThreeDConstantZ_ZDifferenceOutsideTolerance_AllValuesUnique" xml:space="preserve">
+    <value>Difference between Z values for feature larger than tolerance, all values are unique</value>
+  </data>
+  <data name="ThreeDConstantZ_ZDifferenceOutsideTolerance_NotAllValuesUnique" xml:space="preserve">
+    <value>Difference between Z values for feature larger than tolerance, not all values are unique</value>
+  </data>
+  <data name="DateFieldsWithoutTime_HasTimePart" xml:space="preserve">
+    <value>The date value has a time part</value>
+  </data>
+  <data name="DateFieldsWithoutTime_InvalidDateValue" xml:space="preserve">
+    <value>Invalid date value</value>
+  </data>
+  <data name="Extent_ExtentLargerThanLimit" xml:space="preserve">
+    <value>Feature extent is larger than the limit</value>
+  </data>
+  <data name="GdbConstraint_GdbConstraintNotFulfilled" xml:space="preserve">
+    <value>Geodatabase attribute rule not fulfilled</value>
+  </data>
+  <data name="GdbConstraint_InvalidRuleDefinition" xml:space="preserve">
+    <value>A geodatabase attribute rule is incorrectly defined</value>
+  </data>
+  <data name="MinMeanSegmentLength_AverageSegmentLengthBelowLimit" xml:space="preserve">
+    <value>The average length of segments in the geometry is below the limit</value>
+  </data>
+  <data name="MinMeanSegmentLength_InvalidSegmentCount" xml:space="preserve">
+    <value>The geometry has an invalid segment count</value>
+  </data>
+  <data name="MpConstantPointIdsPerRing_InnerRingIdDifferentFromOuterRingId" xml:space="preserve">
+    <value>Point IDs in outer ring are constant but IDs in inner ring are different</value>
+  </data>
+  <data name="MpConstantPointIdsPerRing_DifferentIdInRing" xml:space="preserve">
+    <value>Point IDs in Multipatch ring are not constant</value>
+  </data>
+  <data name="RegularExpression_FieldValueDoesNotMatchRegularExpression" xml:space="preserve">
+    <value>The field value does not match the regular expression</value>
+  </data>
+  <data name="RegularExpression_FieldValueMatchesRegularExpression" xml:space="preserve">
+    <value>The field value matches the regular expression</value>
+  </data>
+  <data name="RegularExpression_StringFormattingError" xml:space="preserve">
+    <value>Error formatting the field's value</value>
+  </data>
+  <data name="SmoothZProfile_AbruptChangeInSlopeAngle" xml:space="preserve">
+    <value>Abrupt change in slope angle</value>
+  </data>
+  <data name="NeighbourAreas_PolygonsTouch_ConstraintNotFulfilled" xml:space="preserve">
+    <value>Polygons touch and constraint is not fulfilled</value>
+  </data>
+  <data name="NeighbourAreas_PolygonsTouch_AllFieldsEqual" xml:space="preserve">
+    <value>Polygons touch and have equal values for all compared fields</value>
+  </data>
+  <data name="NeighbourAreas_PolygonsTouch_NoFieldsToCompare" xml:space="preserve">
+    <value>Polygons touch (no fields to compare)</value>
+  </data>
+  <data name="HorizontalSegments_NotSufficientlyHorizontal_ConsecutiveSegments" xml:space="preserve">
+    <value>Consecutive segments are almost, but not sufficently horizontal</value>
+  </data>
+  <data name="HorizontalSegments_NotSufficientlyHorizontal_Segment" xml:space="preserve">
+    <value>The segment is almost, but not sufficently horizontal</value>
+  </data>
+  <data name="MpHorizontalAzimuths_AzimuthsSimilarButNotEqual_SegmentGroup" xml:space="preserve">
+    <value>A group of horizontal segments have similar, but not equal azimuths</value>
+  </data>
+  <data name="MpHorizontalAzimuths_AzimuthsSimilarButNotEqual_SegmentPair" xml:space="preserve">
+    <value>The two horizontal segments have similar, but not equal azimuths</value>
+  </data>
+  <data name="MpHorizontalHeights_HeightsSimilarButNotEqual_SegmentGroup" xml:space="preserve">
+    <value>A group of segments in multipatch have similar but not equal heights</value>
+  </data>
+  <data name="MpHorizontalHeights_HeightsSimilarButNotEqual_TwoSegments" xml:space="preserve">
+    <value>Two segments in multipatch have similar but not equal heights</value>
+  </data>
+  <data name="SegmentLength_SmallerThanLimit_ConsecutiveSegments" xml:space="preserve">
+    <value>Consecutive segment lengths smaller than limit</value>
+  </data>
+  <data name="SegmentLength_SmallerThanLimit_OneSegment" xml:space="preserve">
+    <value>Segment length smaller than limit</value>
+  </data>
+  <data name="DangleCount_InvalidNumberOfDangles" xml:space="preserve">
+    <value>Polyline feature has invalid number of dangles</value>
+  </data>
+  <data name="GdbConnectivity_NetworkConnectivityError" xml:space="preserve">
+    <value>Connectivity problem in network</value>
+  </data>
+  <data name="GdbConnectivity_NetworkConnectivityError_RepairedDuringTestrun" xml:space="preserve">
+    <value>Connectivity problem in network. The network was edited and the problem was repaired</value>
+  </data>
+  <data name="PseudoNodes_PseudoNode" xml:space="preserve">
+    <value>Pseudo node</value>
+  </data>
+  <data name="UnreferencedRows_ConversionError" xml:space="preserve">
+    <value>An error ocurred while trying to convert a foreign key value to the field type of the primary key</value>
+  </data>
+  <data name="UnreferencedRows_ValueNotReferenced" xml:space="preserve">
+    <value>Value is not referenced by any table</value>
+  </data>
+  <data name="GdbTopology_DirtyArea" xml:space="preserve">
+    <value>Dirty area found (topology not validated)</value>
+  </data>
+  <data name="GdbTopology_RuleNotFulfilled" xml:space="preserve">
+    <value>A topology rule is not fulfilled</value>
+  </data>
+  <data name="GroupConstraints_DistinctValues_NotExpectedNumber" xml:space="preserve">
+    <value>Number of distinct values in group not as expected</value>
+  </data>
+  <data name="GroupConstraints_DistinctValues_NotInExpectedRange" xml:space="preserve">
+    <value>Number of distinct values in group not in the expected range</value>
+  </data>
+  <data name="GroupConstraints_DistinctValues_TooFew" xml:space="preserve">
+    <value>Too few distinct values in group</value>
+  </data>
+  <data name="GroupConstraints_DistinctValues_TooMany" xml:space="preserve">
+    <value>Too many distinct values in group</value>
+  </data>
+  <data name="MinNodeDistance_NodeDistanceTooSmall" xml:space="preserve">
+    <value>Distance between nodes smaller than allowed minimum</value>
+  </data>
+  <data name="MinNodeDistance_ZDifferenceTooLarge" xml:space="preserve">
+    <value>Difference in Z value larger than allowed maximum</value>
+  </data>
+  <data name="GraphicConflict_SymbolsIntersect" xml:space="preserve">
+    <value>Symbols intersect</value>
+  </data>
+  <data name="LineConnectionFieldValues_ConstraintNotFulfilled_Line" xml:space="preserve">
+    <value>Field values do not match line constraint</value>
+  </data>
+  <data name="LineConnectionFieldValues_ConstraintNotFulfilled_LineAndPoint" xml:space="preserve">
+    <value>Field values do not match point constraint and line constraint</value>
+  </data>
+  <data name="LineConnectionFieldValues_ConstraintNotFulfilled_Point" xml:space="preserve">
+    <value>Field values do not match point constraint</value>
+  </data>
+  <data name="LineIntersectZ_ConstraintNotFulfilled" xml:space="preserve">
+    <value>Constraint not fulfilled</value>
+  </data>
+  <data name="LineIntersectZ_ZDifferenceAtLineIntersection_SmallerThanLimit" xml:space="preserve">
+    <value>Difference between Z values at line intersection is smaller than the allowed minimum</value>
+  </data>
+  <data name="LineIntersectZ_ZDifferenceAtLineIntersection_LargerThanLimit" xml:space="preserve">
+    <value>Difference between Z values at line intersection is larger than the allowed maximum</value>
+  </data>
+  <data name="MinAngle_AngleTooSmall" xml:space="preserve">
+    <value>Angle between lines is smaller then the specified minimum</value>
+  </data>
+  <data name="MinAngle_EndPointsDoNotFit" xml:space="preserve">
+    <value>Endpoints do not fit</value>
+  </data>
+  <data name="MpHorizontalPerpendicular_NotSufficientlyPerpendicular_GroupOfSegments" xml:space="preserve">
+    <value>The segments of this group are almost, but not sufficently perpendicular</value>
+  </data>
+  <data name="MpHorizontalPerpendicular_NotSufficientlyPerpendicular_TwoSegments" xml:space="preserve">
+    <value>The two segments are almost, but not sufficently perpendicular</value>
+  </data>
+  <data name="RouteMeasuresContinuous_DifferentMeasuresAtLineConnection_MDifferenceExceedsTolerance" xml:space="preserve">
+    <value>M values are different at line connection within route</value>
+  </data>
+  <data name="RouteMeasuresContinuous_DifferentMeasuresAtLineConnection_OneValueIsNaN" xml:space="preserve">
+    <value>One M value is NaN at line connection within route</value>
+  </data>
+  <data name="SpatialRelationBase_NoIntersection" xml:space="preserve">
+    <value>No intersection</value>
+  </data>
+  <data name="ValidNonLinearSegments_CicularArc_NoCenterPoint" xml:space="preserve">
+    <value>Circular arc has no center point</value>
+  </data>
+  <data name="ValidNonLinearSegments_CircularArc_ChordHeightTooSmall" xml:space="preserve">
+    <value>Chord height of circular arc is too small</value>
+  </data>
+  <data name="BorderSense_DanglingLine" xml:space="preserve">
+    <value>Dangling line</value>
+  </data>
+  <data name="BorderSense_EmptyPolygonCreated" xml:space="preserve">
+    <value>Empty polygon created</value>
+  </data>
+  <data name="BorderSense_IncompleteLine" xml:space="preserve">
+    <value>Incomplete line</value>
+  </data>
+  <data name="BorderSense_InconsistentOrientation" xml:space="preserve">
+    <value>Inconsistent orientation</value>
+  </data>
+  <data name="BorderSense_InvertedOrientation" xml:space="preserve">
+    <value>Inverted orientation</value>
+  </data>
+  <data name="GdbTopology_ValidationFailed" xml:space="preserve">
+    <value>The topology validation failed</value>
+  </data>
+  <data name="IntersectionMatrix_NoIntersection" xml:space="preserve">
+    <value>No intersection</value>
+  </data>
+  <data name="SegmentTypes_NonLinearSegments_Bezier" xml:space="preserve">
+    <value>Bezier segment(s) found</value>
+  </data>
+  <data name="SegmentTypes_NonLinearSegments_CircularArc" xml:space="preserve">
+    <value>Circular arc segment(s) found</value>
+  </data>
+  <data name="SegmentTypes_NonLinearSegments_EllipticArc" xml:space="preserve">
+    <value>Elliptic arc segment(s) found</value>
+  </data>
+  <data name="MinNodeDistance_NodeDistanceTooSmall_ConstraintNotFulfilled" xml:space="preserve">
+    <value>Distance between nodes smaller than allowed minimum (attribute constraint is not fulfilled)</value>
+  </data>
+  <data name="MinNodeDistance_ZDifferenceTooLarge_ConstraintNotFulfilled" xml:space="preserve">
+    <value>Difference in Z value larger than allowed maximum (attribute constraint is not fulfilled)</value>
+  </data>
+  <data name="PointNotNear_PointTooClose" xml:space="preserve">
+    <value>Point is too close to reference feature</value>
+  </data>
+  <data name="PointNotNear_PointTooClose_ConstraintNotFulfilled" xml:space="preserve">
+    <value>Point is too close to reference feature and the attribute constraint is not fulfilled</value>
+  </data>
+  <data name="PointNotNear_PointWithin" xml:space="preserve">
+    <value>Point is within polygon</value>
+  </data>
+  <data name="PointNotNear_PointWithin_ConstraintNotFulfilled" xml:space="preserve">
+    <value>Point is within polygon and the attribute constraint is not fulfilled</value>
+  </data>
+  <data name="MonotonicZ_ZNotMonotonic" xml:space="preserve">
+    <value>Z values are not monotonic</value>
+  </data>
+  <data name="CrossingAreas_Match_ConstraintsNotFulfilled" xml:space="preserve">
+    <value>A matching neighbor feature exists, but attribute constraints are not fulfilled.</value>
+  </data>
+  <data name="CrossingAreas_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsFulfilled" xml:space="preserve">
+    <value>No matching neighbor feature. There is a nearby neighbor feature connected to the border. The border lines are not coincident where the features touch the border.</value>
+  </data>
+  <data name="CrossingAreas_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsNotFulfilled" xml:space="preserve">
+    <value>No matching neighbor feature. There is a nearby neighbor feature connected to the border. Attribute constraints are not fulfilled with that feature. The border lines are not coincident where the features touch the border.</value>
+  </data>
+  <data name="CrossingAreas_NoMatch_NoCandidate" xml:space="preserve">
+    <value>No matching neighbor feature. No neighbor feature connected to the border found within the search distance.</value>
+  </data>
+  <data name="CrossingAreas_NoMatch_NoCandidate_PartlyOutsideVerifiedExtent" xml:space="preserve">
+    <value>No matching neighbor feature. No neighbor feature connected to the border found within the search distance. The border line is partly outside the verified extent.</value>
+  </data>
+  <data name="BorderingLines_Match_ConstraintsNotFulfilled" xml:space="preserve">
+    <value>A matching neighbor feature exists, but attribute constraints are not fulfilled.</value>
+  </data>
+  <data name="BorderingLines_Match_EndPointNotCoincident" xml:space="preserve">
+    <value>A matching neighbor feature exists, but a line end point is not coincident.</value>
+  </data>
+  <data name="BorderingLines_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsFulfilled" xml:space="preserve">
+    <value>No matching neighbor feature. There is a nearby neighbor feature connected to the border. The border lines are not coincident where the features touch the border.</value>
+  </data>
+  <data name="BorderingLines_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsNotFulfilled" xml:space="preserve">
+    <value>No matching neighbor feature. There is a nearby neighbor feature connected to the border. Attribute constraints are not fulfilled with that feature. The borders are not coincident where the features touch the border.</value>
+  </data>
+  <data name="BorderingLines_NoMatch_NoCandidate" xml:space="preserve">
+    <value>No matching neighbor feature. No neighbor feature connected to the border found within the search distance.</value>
+  </data>
+  <data name="BorderingLines_NoMatch_NoCandidate_PartlyOutsideVerifiedExtent" xml:space="preserve">
+    <value>No matching neighbor feature. No neighbor feature connected to the border found within the search distance. The border line is partly outside the verified extent.</value>
+  </data>
+  <data name="BorderingPoints_Match_ConstraintsNotFulfilled" xml:space="preserve">
+    <value>A matching neighbor feature exists, but attribute constraints are not fulfilled.</value>
+  </data>
+  <data name="BorderingPoints_NoMatch_CandidateExists_ConstraintsFulfilled" xml:space="preserve">
+    <value>No matching neighbor feature. There is a nearby neighbor feature connected to the border.</value>
+  </data>
+  <data name="BorderingPoints_NoMatch_CandidateExists_ConstraintsNotFulfilled" xml:space="preserve">
+    <value>No matching neighbor feature. There is a nearby neighbor feature connected to the border. Attribute constraints are not fulfilled with that feature.</value>
+  </data>
+  <data name="BorderingPoints_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsFulfilled" xml:space="preserve">
+    <value>No matching neighbor feature. There is a nearby neighbor feature connected to the border. The borders are not coincident at the point locations.</value>
+  </data>
+  <data name="BorderingPoints_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsNotFulfilled" xml:space="preserve">
+    <value>No matching neighbor feature. There is a nearby neighbor feature connected to the border. Attribute constraints are not fulfilled with that feature. The borders are not coincident at the point locations.</value>
+  </data>
+  <data name="BorderingPoints_NoMatch_NoCandidate" xml:space="preserve">
+    <value>No matching neighbor feature. No neighbor feature connected to the border found within the search distance.</value>
+  </data>
+  <data name="CrossingLines_Match_ConstraintsNotFulfilled" xml:space="preserve">
+    <value>A matching neighbor feature exists, but attribute constraints are not fulfilled.</value>
+  </data>
+  <data name="CrossingLines_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsNotFulfilled" xml:space="preserve">
+    <value>No matching neighbor feature. There is a nearby neighbor feature connected to the border. Attribute constraints are not fulfilled with that feature. The borders are not coincident at the line end points.</value>
+  </data>
+  <data name="CrossingLines_NoMatch_CandidateExists_BordersNotCoincident_ConstraintsFulfilled" xml:space="preserve">
+    <value>No matching neighbor feature. There is a nearby neighbor feature connected to the border. The borders are not coincident at the line end points.</value>
+  </data>
+  <data name="CrossingLines_NoMatch_CandidateExists_ConstraintsNotFulfilled" xml:space="preserve">
+    <value>No matching neighbor feature. There is a nearby neighbor feature connected to the border. Attribute constraints are not fulfilled with that feature.</value>
+  </data>
+  <data name="CrossingLines_NoMatch_CandidateExists_EndPointOutsideTolerance_BordersNotCoincident_ConstraintsFulfilled" xml:space="preserve">
+    <value>No matching neighbor feature. There is a nearby neighbor feature connected to the border. The distance to its border connection exceeds the maximum value. The borders are not coincident at the line end points.</value>
+  </data>
+  <data name="CrossingLines_NoMatch_NoCandidate_ConnectedOnSameSide" xml:space="preserve">
+    <value>No matching neighbor feature. No neighbor feature connected to the border found within search distance. The end point connects to another feature on the same side.</value>
+  </data>
+  <data name="CrossingLines_NoMatch_CandidateExists_EndPointOutsideTolerance_BordersNotCoincident_ConstraintsNotFulfilled" xml:space="preserve">
+    <value>No matching neighbor feature. There is a nearby neighbor feature connected to the border. The distance to its border connection exceeds the maximum value. Attribute constraints are not fulfilled. The borders are not coincident at the line end points.</value>
+  </data>
+  <data name="CrossingLines_NoMatch_CandidateExists_EndPointOutsideTolerance_ConstraintsNotFulfilled" xml:space="preserve">
+    <value>No matching neighbor feature. There is a nearby neighbor feature connected to the border. The distance to its border connection exceeds the maximum value. Attribute constraints are not fulfilled.</value>
+  </data>
+  <data name="LineGroupConstraints_Dangle_AtFork_Continued" xml:space="preserve">
+    <value>Dangle length is too small (dangle ends at fork, and connects to other groups)</value>
+  </data>
+  <data name="LineGroupConstraints_Dangle_AtFork_Discontinued" xml:space="preserve">
+    <value>Dangle length is too small (dangle ends at fork, no connection to other groups)</value>
+  </data>
+  <data name="LineGroupConstraints_Dangle_NotAtFork_Continued" xml:space="preserve">
+    <value>Dangle length is too small (dangle does not end at fork, and connects to other groups)</value>
+  </data>
+  <data name="LineGroupConstraints_Dangle_NotAtFork_Discontinued" xml:space="preserve">
+    <value>Dangle length is too small (dangle does not end at fork, no connection to other groups)</value>
+  </data>
+  <data name="LineGroupConstraints_Gap_ToOtherGroupType_AtFork" xml:space="preserve">
+    <value>Small gap to other group of different type (gap starts at fork)</value>
+  </data>
+  <data name="LineGroupConstraints_Gap_ToOtherGroupType_NotAtFork" xml:space="preserve">
+    <value>Small gap to other group of different type (gap does not start at fork)</value>
+  </data>
+  <data name="LineGroupConstraints_Gap_ToSameGroupType_AtFork_CoveredByOtherGroup" xml:space="preserve">
+    <value>Small gap to other group of same type (gap starts at fork and is covered by other group)</value>
+  </data>
+  <data name="LineGroupConstraints_Gap_ToSameGroupType_AtFork_NotCoveredByOtherGroup" xml:space="preserve">
+    <value>Small gap to other group of same type (gap starts at fork, not covered by other group)</value>
+  </data>
+  <data name="LineGroupConstraints_Gap_ToSameGroupType_NotAtFork_CoveredByOtherGroup" xml:space="preserve">
+    <value>Small gap to other group of same type (gap does not start at fork but is covered by other group)</value>
+  </data>
+  <data name="LineGroupConstraints_Gap_ToSameGroupType_NotAtFork_NotCoveredByOtherGroup" xml:space="preserve">
+    <value>Small gap to other group of same type (gap does not start at fork and is not covered by other group)</value>
+  </data>
+  <data name="LineGroupConstraints_GroupTooSmall" xml:space="preserve">
+    <value>Group length is too small</value>
+  </data>
+  <data name="RepresentationConstraints_FreeRepresentation" xml:space="preserve">
+    <value>Representation is a free representation</value>
+  </data>
+  <data name="RepresentationConstraints_InvalidRuleID" xml:space="preserve">
+    <value>Representation has an invalid representation rule</value>
+  </data>
+  <data name="RepresentationConstraints_InvisibleRepresentation" xml:space="preserve">
+    <value>Representation is invisible</value>
+  </data>
+  <data name="RepresentationConstraints_NoRepresentation" xml:space="preserve">
+    <value>Not a representation</value>
+  </data>
+  <data name="RepresentationConstraints_PropertyOverride" xml:space="preserve">
+    <value>Representation properties are overriden</value>
+  </data>
+  <data name="RepresentationConstraints_ShapeOverride" xml:space="preserve">
+    <value>Representation shape is overriden</value>
+  </data>
+  <data name="GeometryConstraint_ConstraintNotFulfilled_ForShape" xml:space="preserve">
+    <value>Geometry constraint is not fulfilled for shape</value>
+  </data>
+  <data name="GeometryConstraint_ConstraintNotFulfilled_ForShapePart" xml:space="preserve">
+    <value>Geometry constraint is not fulfilled for geometry part</value>
+  </data>
+  <data name="VertexCoincidence_ZDifference_CoincidentVertex_SameFeature" xml:space="preserve">
+    <value>Z value of coincident vertex on same feature differs</value>
+  </data>
+  <data name="VertexCoincidence_ZDifference_CoincidentVertex_DifferentFeature" xml:space="preserve">
+    <value>Z value of coincident vertex on different feature differs</value>
+  </data>
+  <data name="VertexCoincidence_ZDifference_CoincidentEdge_SameFeature" xml:space="preserve">
+    <value>Z value along a coincident edge on same feature differs</value>
+  </data>
+  <data name="VertexCoincidence_ZDifference_CoincidentEdge_DifferentFeature" xml:space="preserve">
+    <value>Z value along a coincident edge on different feature differs</value>
+  </data>
+  <data name="NearCoincidence_NearlyCoincidentSection_Connected" xml:space="preserve">
+    <value>Nearly coincident section found (paths are connected)</value>
+  </data>
+  <data name="NearCoincidence_NearlyCoincidentSection_Connected_NotFullyProcessed" xml:space="preserve">
+    <value>Nearly coincident section found (paths are connected) - the geometry exceeds the verified extent</value>
+  </data>
+  <data name="NearCoincidence_NearlyCoincidentSection_Disjoint" xml:space="preserve">
+    <value>Nearly coincident section found (paths are disjoint)</value>
+  </data>
+  <data name="NearCoincidence_NearlyCoincidentSection_Disjoint_NotFullyProcessed" xml:space="preserve">
+    <value>Nearly coincident section found (paths are disjoint) - the geometry exceeds the verified extent</value>
+  </data>
+  <data name="NearCoincidence_NearlyCoincidentSection_WithinNear" xml:space="preserve">
+    <value>Segments are fully within near distance of other segments</value>
+  </data>
+  <data name="NearCoincidence_NearlyCoincidentSection_Crossing" xml:space="preserve">
+    <value>Nearly coincident section found (paths are crossing but not connected)</value>
+  </data>
+  <data name="NearCoincidence_NearlyCoincidentSection_Crossing_NotFullyProcessed" xml:space="preserve">
+    <value>Nearly coincident section found (paths are crossing but not connected) - the geometry exceeds the verified extent</value>
+  </data>
+  <data name="NearCoincidence_NearlyCoincidentSection_Connected_Loop" xml:space="preserve">
+    <value>Connected segments within near distance form a loop</value>
+  </data>
+  <data name="NearCoincidence_NearlyCoincidentSection_Connected_Loop_WithinNear" xml:space="preserve">
+    <value>Connected segments form a loop and are within near distance to other connected segments</value>
+  </data>
+  <data name="NearCoincidence_NearlyCoincidentSection_WithinNear_Connected" xml:space="preserve">
+    <value>Segments are fully within near distance of other segments to which they are connected</value>
+  </data>
+  <data name="NearCoincidence_CoincidentSection" xml:space="preserve">
+    <value>Coincident section found</value>
+  </data>
+  <data name="NearCoincidence_ShortSubpart" xml:space="preserve">
+    <value>Feature with unconnected ends is too short</value>
+  </data>
+  <data name="NearCoincidence_InconsistentLineSymbolEnd" xml:space="preserve">
+    <value>Inconsistent line symbol end (end segment is too short compared to the symbol width)</value>
+  </data>
+  <data name="ValidUrls_UnsupportedUrlFormat" xml:space="preserve">
+    <value>Unsupported URL format</value>
+  </data>
+  <data name="ZRangeDifference_ConstraintNotFulfilled" xml:space="preserve">
+    <value>The Z relation constraint is not fulfilled</value>
+  </data>
+  <data name="ZRangeDifference_UndefinedZ" xml:space="preserve">
+    <value>Z value is not defined</value>
+  </data>
+  <data name="IntersectionZDifference_ConstraintNotFulfilled" xml:space="preserve">
+    <value>Attribute constraint is not fulfilled</value>
+  </data>
+  <data name="IntersectionZDifference_FaceNotCoplanar" xml:space="preserve">
+    <value>Face is not coplanar</value>
+  </data>
+  <data name="IntersectionZDifference_UndefinedZ" xml:space="preserve">
+    <value>Z value is not defined</value>
+  </data>
+  <data name="IntersectionZDifference_ZDifferenceTooLarge" xml:space="preserve">
+    <value>The Z distance between the corresponding Z values is too large</value>
+  </data>
+  <data name="IntersectionZDifference_ZDifferenceTooSmall" xml:space="preserve">
+    <value>The Z distance between the corresponding Z values is too small</value>
+  </data>
+  <data name="ContainedPoints_NotClosedLine" xml:space="preserve">
+    <value>Unclosed line</value>
+  </data>
 </root>

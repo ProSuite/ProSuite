@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
@@ -32,7 +32,6 @@ namespace ProSuite.Commons.AO.Geometry
 		/// </summary>
 		/// <param name="spatialReference"></param>
 		/// <param name="compare3D"></param>
-		[CLSCompliant(false)]
 		public WKSPointZComparer([NotNull] ISpatialReference spatialReference, bool compare3D)
 			: this(SpatialReferenceUtils.GetXyResolution(spatialReference),
 			       compare3D
@@ -48,7 +47,6 @@ namespace ProSuite.Commons.AO.Geometry
 		/// the resolution but closer than the tolerance can still be considered different.</param>
 		/// <param name="zTolerance">The Z-tolerance. Use NaN to ignore Z values</param>
 		/// <param name="spatialReference"></param>
-		[CLSCompliant(false)]
 		public WKSPointZComparer(double xyTolerance, double zTolerance,
 		                         [NotNull] ISpatialReference spatialReference)
 		{
@@ -86,7 +84,6 @@ namespace ProSuite.Commons.AO.Geometry
 
 		#region IComparer<WKSPointZ> Members
 
-		[CLSCompliant(false)]
 		public int Compare(WKSPointZ a, WKSPointZ b)
 		{
 			// dont't use the tolerance to make sure the sorting is correct also for small distances
@@ -156,13 +153,11 @@ namespace ProSuite.Commons.AO.Geometry
 
 		#region Implementation of IEqualityComparer<WKSPointZ>
 
-		[CLSCompliant(false)]
 		public bool Equals(WKSPointZ x, WKSPointZ y)
 		{
 			return GeometryUtils.IsSamePoint(x, y, _xyTolerance, _zTolerance);
 		}
 
-		[CLSCompliant(false)]
 		public int GetHashCode(WKSPointZ point)
 		{
 			// - NOTE: double.GetHashCode is not just its integer representation, so it's no problem to use it also for lat/long

@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Collections;
@@ -74,7 +73,6 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private int _uniqueIdCount;
 
-		[CLSCompliant(false)]
 		public UniqueIdProvider([NotNull] IDictionary<int, ITable> baseTablePerOidFieldIndex)
 		{
 			Assert.ArgumentNotNull(baseTablePerOidFieldIndex, nameof(baseTablePerOidFieldIndex));
@@ -93,7 +91,6 @@ namespace ProSuite.QA.Container.TestContainer
 			return new List<int>(_baseTablePerOidFieldIndex.Keys);
 		}
 
-		[CLSCompliant(false)]
 		public IList<int?> GetKeys(IFeature feature)
 		{
 			var keys = new List<int?>(5); // _keysToId.Count);
@@ -108,7 +105,6 @@ namespace ProSuite.QA.Container.TestContainer
 			return keys;
 		}
 
-		[CLSCompliant(false)]
 		public int GetUniqueId([NotNull] IFeature feature)
 		{
 			IList<int?> keys = GetKeys(feature);

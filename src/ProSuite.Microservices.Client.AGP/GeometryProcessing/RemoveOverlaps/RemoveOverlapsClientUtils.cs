@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -32,7 +31,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 				CalculateOverlapsRpc(rpcClient, selectedFeatures, overlappingFeatures,
 				                     cancellationToken);
 
-			if (cancellationToken.IsCancellationRequested)
+			if (response == null || cancellationToken.IsCancellationRequested)
 			{
 				return null;
 			}
@@ -57,6 +56,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 			return result;
 		}
 
+		[CanBeNull]
 		private static CalculateOverlapsResponse CalculateOverlapsRpc(
 			RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
 			IList<Feature> selectedFeatures,
@@ -66,19 +66,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 			CalculateOverlapsRequest request =
 				CreateCalculateOverlapsRequest(selectedFeatures, overlappingFeatures);
 
-			CalculateOverlapsResponse response;
+			int maxTimePerFeature = 4000;
 
-			try
-			{
-				response = rpcClient.CalculateOverlaps(request, null, null,
-				                                       cancellationToken);
-			}
-			catch (Exception e)
-			{
-				_msg.Debug($"Error calling remote procedure: {e.Message} ", e);
-
-				throw;
-			}
+			CalculateOverlapsResponse response =
+				RpcCallUtils.Try(
+					o => rpcClient.CalculateOverlaps(request, o),
+					cancellationToken, maxTimePerFeature * selectedFeatures.Count);
 
 			return response;
 		}
@@ -107,9 +100,9 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 		public static RemoveOverlapsResult RemoveOverlaps(
 			RemoveOverlapsGrpc.RemoveOverlapsGrpcClient rpcClient,
 			IEnumerable<Feature> selectedFeatures,
-		                                                  Overlaps overlapsToRemove,
-		                                                  IList<Feature> overlappingFeatures,
-		                                                  CancellationToken cancellationToken)
+			Overlaps overlapsToRemove,
+			IList<Feature> overlappingFeatures,
+			CancellationToken cancellationToken)
 		{
 			List<Feature> updateFeatures;
 			RemoveOverlapsRequest request = CreateRemoveOverlapsRequest(
@@ -203,7 +196,6 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 			return updateFeatures.First(f => f.GetObjectID() == objectId &&
 			                                 f.GetTable().GetID() == classId);
 		}
-
 
 		private static RemoveOverlapsRequest CreateRemoveOverlapsRequest(
 			IEnumerable<Feature> selectedFeatures,

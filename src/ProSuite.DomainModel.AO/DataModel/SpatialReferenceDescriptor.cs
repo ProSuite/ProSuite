@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.DomainModels;
@@ -44,7 +43,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 		/// Initializes a new instance of the <see cref="SpatialReferenceDescriptor"/> class.
 		/// </summary>
 		/// <param name="spatialReference">The spatial reference.</param>
-		[CLSCompliant(false)]
 		public SpatialReferenceDescriptor([NotNull] ISpatialReference spatialReference)
 			: this(spatialReference.Name, SpatialReferenceUtils.ToXmlString(spatialReference)) { }
 
@@ -79,7 +77,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public ISpatialReference SpatialReference
 			=> _spatialReference ?? (_spatialReference = CreateSpatialReference());
 

@@ -16,7 +16,6 @@ using ProSuite.Commons.Progress;
 
 namespace ProSuite.Commons.AO.Geometry.Cracking
 {
-	[CLSCompliant(false)]
 	public static class ShortSegmentsUtils
 	{
 		private static readonly IMsg _msg =

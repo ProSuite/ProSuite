@@ -14,23 +14,22 @@ namespace ProSuite.QA.Container.PolygonGrower
 {
 	public class PolygonNet
 	{
-		[CLSCompliant(false)] protected static readonly ThreadLocal<Ao.IPoint> FromPointTemplate =
+		protected static readonly ThreadLocal<Ao.IPoint> FromPointTemplate =
 			new ThreadLocal<Ao.IPoint>(() => new Ao.PointClass());
 
-		[CLSCompliant(false)] protected static readonly ThreadLocal<Ao.IPoint> ToPointTemplate =
+		protected static readonly ThreadLocal<Ao.IPoint> ToPointTemplate =
 			new ThreadLocal<Ao.IPoint>(() => new Ao.PointClass());
 
-		[CLSCompliant(false)] protected static readonly ThreadLocal<Ao.IEnvelope> QueryBox =
+		protected static readonly ThreadLocal<Ao.IEnvelope> QueryBox =
 			new ThreadLocal<Ao.IEnvelope>(() => new Ao.EnvelopeClass());
 
-		[CLSCompliant(false)] protected static readonly ThreadLocal<Ao.IEnvelope> QueryX =
+		protected static readonly ThreadLocal<Ao.IEnvelope> QueryX =
 			new ThreadLocal<Ao.IEnvelope>(() => new Ao.EnvelopeClass());
 
-		[CLSCompliant(false)] protected static readonly ThreadLocal<Ao.IEnvelope> QueryY =
+		protected static readonly ThreadLocal<Ao.IEnvelope> QueryY =
 			new ThreadLocal<Ao.IEnvelope>(() => new Ao.EnvelopeClass());
 	}
 
-	[CLSCompliant(false)]
 	public class PolygonNet<TDirectedRow> : PolygonNet,
 	                                        IEnumerable<LineListPolygon<TDirectedRow>>
 		where TDirectedRow : class, IPolygonDirectedRow
@@ -53,7 +52,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 
 		#endregion
 
-		[CLSCompliant(false)]
 		public static PolygonNet<T> Create<T>(List<LineList<T>> outerRingList,
 		                                      Ao.IEnvelope outerRingsBox,
 		                                      List<LineList<T>> innerRingList,
@@ -204,7 +202,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			return tree;
 		}
 
-		[CLSCompliant(false)]
 		public LineListPolygon AssignCentroid(IRow pointRow, out TopologicalLine line,
 		                                      out int side)
 		{

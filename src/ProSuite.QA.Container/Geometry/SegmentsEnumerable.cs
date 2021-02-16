@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
@@ -19,7 +18,6 @@ namespace ProSuite.QA.Container.Geometry
 			return GetEnumerator();
 		}
 
-		[CLSCompliant(false)]
 		public IEnumerator<ISegment> GetEnumerator()
 		{
 			return _enumerator;

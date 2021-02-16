@@ -5,7 +5,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Surface
 {
-	[CLSCompliant(false)]
 	public interface ISimpleSurface : IDisposable
 	{
 		[CanBeNull]

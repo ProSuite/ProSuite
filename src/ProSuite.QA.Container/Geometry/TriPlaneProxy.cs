@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 
@@ -48,7 +48,7 @@ namespace ProSuite.QA.Container.Geometry
 				return new WksFromToSegmentProxy(Points, PartIndex, 2, _index2, _index0);
 			}
 
-			throw new ArgumentOutOfRangeException("segmentIndex");
+			throw new ArgumentOutOfRangeException(nameof(segmentIndex));
 		}
 
 		protected override WKSPointZ GetPlanePoint(int pointIndex)
@@ -73,7 +73,7 @@ namespace ProSuite.QA.Container.Geometry
 				return Points.Points[_index0];
 			}
 
-			throw new ArgumentOutOfRangeException("pointIndex");
+			throw new ArgumentOutOfRangeException(nameof(pointIndex));
 		}
 	}
 }

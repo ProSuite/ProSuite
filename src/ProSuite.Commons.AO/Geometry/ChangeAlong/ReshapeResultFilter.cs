@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
@@ -10,7 +9,6 @@ using ProSuite.Commons.Notifications;
 
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
-	[CLSCompliant(false)]
 	public class ReshapeResultFilter
 	{
 		private readonly List<IEnvelope> _allowedExtents;

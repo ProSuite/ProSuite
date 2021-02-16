@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -13,7 +13,6 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Geometry.Cracking
 {
-	[CLSCompliant(false)]
 	public class CrackPointCalculator
 	{
 		private static readonly IMsg _msg =

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
@@ -11,7 +10,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 	/// relationship classes and query tables using the join as defined by the relationship
 	/// class.
 	/// </summary>
-	[CLSCompliant(false)]
 	public interface IQueryTableContext
 	{
 		/// <summary>

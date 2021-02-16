@@ -13,7 +13,6 @@ namespace ProSuite.QA.Tests
 	/// Check that only lines that follow certain rules are connected
 	/// </summary>
 	/// History: 15.12 GKAT Initial Coding
-	[CLSCompliant(false)]
 	[Obsolete("Use QaConnections")]
 	public class QaLineConnection : QaSpatialRelationSelfBase
 	{

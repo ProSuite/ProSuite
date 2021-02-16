@@ -314,6 +314,39 @@ namespace ProSuite.Commons.Geometry
 			return true;
 		}
 
+		/// <summary>
+		/// Determines whether this linestring has linear self-intersections, e.g. because it is
+		/// partially vertical.
+		/// </summary>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		public bool HasLinearSelfIntersections(double tolerance)
+		{
+			// Some segment must be covered by other segments.
+			for (var i = 0; i < _segments.Count; i++)
+			{
+				Line3D segment = _segments[i];
+
+				if (segment.StartPoint.EqualsXY(segment.EndPoint, tolerance))
+				{
+					// vertical
+					continue;
+				}
+
+				var segmentIntersectingLines =
+					GeomTopoOpUtils.GetLinearSelfIntersectionsXY(this, i, tolerance);
+
+				if (segmentIntersectingLines.Count == 0)
+				{
+					continue;
+				}
+
+				return true;
+			}
+
+			return true;
+		}
+
 		public bool IsFirstPointInPart(int vertexIndex)
 		{
 			return vertexIndex == 0;
@@ -957,7 +990,7 @@ namespace ProSuite.Commons.Geometry
 
 			Pnt3D startPoint = fromSegmentRatio > 0
 				                   ? startSegment.GetPointAlong(
-					                   fromSegmentRatio, asRatio : true)
+					                   fromSegmentRatio, asRatio: true)
 				                   : clonePoints
 					                   ? startSegment.StartPointCopy
 					                   : startSegment.StartPoint;
@@ -965,7 +998,7 @@ namespace ProSuite.Commons.Geometry
 			Line3D endSegment = _segments[toSegment];
 			Pnt3D endPoint = toSegmentRatio > 0
 				                 ? endSegment.GetPointAlong(
-					                 toSegmentRatio, asRatio : true)
+					                 toSegmentRatio, asRatio: true)
 				                 : clonePoints
 					                 ? endSegment.StartPointCopy
 					                 : endSegment.StartPoint;

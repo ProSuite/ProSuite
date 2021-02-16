@@ -678,7 +678,6 @@ namespace ProSuite.QA.Tests.Coincidence
 						}
 					}
 
-					var fulfilledRuleFound = false;
 					foreach (QaConnectionRuleHelper ruleHelper in helpers)
 					{
 						// check if all rows comply to the current rule 
@@ -701,8 +700,6 @@ namespace ProSuite.QA.Tests.Coincidence
 							// all rows comply to the current rule,
 							// so one rule if fulfilled and no further checking needed
 							return true;
-							fulfilledRuleFound = true;
-							break;
 						}
 					}
 				}

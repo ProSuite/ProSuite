@@ -1,11 +1,9 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Text;
 
 namespace ProSuite.DomainModel.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public class SdeDirectOsaConnectionProvider : SdeDirectConnectionProvider
 	{
 		#region Constructors

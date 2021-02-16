@@ -22,13 +22,11 @@ namespace ProSuite.QA.Container.TestSupport
 			_tableAliasIndexes = tableAliasIndexes;
 		}
 
-		[CLSCompliant(false)]
 		public bool MatchesConstraint(params IRow[] rows)
 		{
 			return MatchesConstraint(null, rows);
 		}
 
-		[CLSCompliant(false)]
 		public bool MatchesConstraint(
 			[CanBeNull] IDictionary<string, object> overridingFieldValues,
 			params IRow[] rows)
@@ -177,13 +175,11 @@ namespace ProSuite.QA.Container.TestSupport
 			return result;
 		}
 
-		[CLSCompliant(false)]
 		public string ToString(params IRow[] rows)
 		{
 			return ToString(false, rows);
 		}
 
-		[CLSCompliant(false)]
 		public string ToString(bool concise, params IRow[] rows)
 		{
 			// TODO assertions? rows order matching table order?
@@ -222,7 +218,6 @@ namespace ProSuite.QA.Container.TestSupport
 		/// </summary>
 		/// <param name="rows">The collection of rows. The order must match that of the tables/aliases collections.</param>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public DataRow Add(params IRow[] rows)
 		{

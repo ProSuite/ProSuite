@@ -6,7 +6,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO
 {
-	[CLSCompliant(false)]
 	public static class UIDUtils
 	{
 		[NotNull]

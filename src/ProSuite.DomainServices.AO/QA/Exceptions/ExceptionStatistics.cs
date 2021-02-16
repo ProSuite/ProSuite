@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -30,7 +29,6 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			=
 			new Dictionary<IssueGroupKey, List<ExceptionObject>>();
 
-		[CLSCompliant(false)]
 		public ExceptionStatistics([NotNull] IWorkspace workspace)
 		{
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
@@ -132,7 +130,6 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			InactiveExceptionObjectCount++;
 		}
 
-		[CLSCompliant(false)]
 		public void ReportNonUniqueKey([NotNull] ITable table, [NotNull] object key)
 		{
 			HashSet<object> keys;

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -9,7 +8,6 @@ using ProSuite.QA.Tests;
 
 namespace ProSuite.QA.TestFactories
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[IntersectionParameterTest]
 	public class QaLineIntersectAngleFactory : QaAngleFactory

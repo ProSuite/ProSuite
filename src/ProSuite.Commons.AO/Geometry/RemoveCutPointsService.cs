@@ -8,7 +8,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geometry
 {
-	[CLSCompliant(false)]
 	public static class RemoveCutPointsService
 	{
 		#region Public methods
@@ -21,7 +20,6 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <param name="newSourceGeometry">The new source geometry.</param>
 		/// <param name="originalTargetGeometries">The original target geometries.</param>
 		/// <param name="newTargetGeometries">The new target geometries.</param>
-		[CLSCompliant(false)]
 		public static void RemoveMiddlePoints(
 			[NotNull] IGeometry originalSourceGeometry,
 			[NotNull] IGeometry newSourceGeometry,
@@ -58,7 +56,6 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <param name="originalGeometry">The original geometry.</param>
 		/// <param name="newGeometry">The new geometry.</param>
 		/// <param name="border">The border.</param>
-		[CLSCompliant(false)]
 		public static void RemoveBorderPoints([NotNull] IGeometry originalGeometry,
 		                                      [NotNull] IGeometry newGeometry,
 		                                      [NotNull] IGeometry border)
@@ -85,7 +82,6 @@ namespace ProSuite.Commons.AO.Geometry
 		/// </summary>
 		/// <param name="geometry">High- or low-level geometry from which the points should be removed.</param>
 		/// <param name="removedPoints">The points to remove.</param>
-		[CLSCompliant(false)]
 		public static void RemovePoints([NotNull] IGeometry geometry,
 		                                [CanBeNull] IEnumerable<IPoint> removedPoints)
 		{
@@ -124,7 +120,6 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 		}
 
-		[CLSCompliant(false)]
 		public static void RemovePoints([NotNull] IMultiPatch multipatch,
 		                                [NotNull] IEnumerable<IPoint> pointsToRemove)
 		{

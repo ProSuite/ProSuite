@@ -15,7 +15,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 	/// <summary>
 	/// Utility methods for formatting row values.
 	/// </summary>
-	[CLSCompliant(false)]
 	public static class RowFormat
 	{
 		#region Fields

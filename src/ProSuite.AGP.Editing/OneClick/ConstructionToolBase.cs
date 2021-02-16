@@ -14,6 +14,7 @@ using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Keyboard;
 using Cursor = System.Windows.Input.Cursor;
 
@@ -21,10 +22,14 @@ namespace ProSuite.AGP.Editing.OneClick
 {
 	public abstract class ConstructionToolBase : OneClickToolBase
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private Geometry _editSketchBackup;
+		private Geometry _previousSketch;
+
 		private List<Operation> _sketchOperations;
 
-		private bool _shiftIsPressed;
+		private bool _intermittentSelectionPhase;
 
 		protected ConstructionToolBase()
 		{
@@ -59,7 +64,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			// NOTE: This method is not called when the selection is cleared by another command (e.g. by 'Clear Selection')
 			//       Is there another way to get the global selection changed event? What if we need the selection changed in a button?
 
-			if (_shiftIsPressed
+			if (_intermittentSelectionPhase
 			) // always false -> toolkeyup is first. This method is apparently scheduled to run after key up
 			{
 				return Task.FromResult(true);
@@ -79,10 +84,19 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnToolActivatingCore()
 		{
+			_msg.VerboseDebug("OnToolActivatingCore");
+
 			if (! RequiresSelection)
 			{
 				StartSketchPhase();
 			}
+		}
+
+		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
+		{
+			RememberSketch();
+
+			base.OnToolDeactivateCore(hasMapViewChanged);
 		}
 
 		protected override bool IsInSelectionPhase()
@@ -106,10 +120,11 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnKeyDownCore(MapViewKeyEventArgs k)
 		{
-			if (k.Key == Key.LeftShift ||
-			    k.Key == Key.RightShift)
+			_msg.VerboseDebug("OnKeyDownCore");
+
+			if (IsShiftKey(k.Key))
 			{
-				if (_shiftIsPressed)
+				if (_intermittentSelectionPhase)
 				{
 					// This is called repeatedly while keeping the shift key pressed
 					return;
@@ -120,7 +135,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					return;
 				}
 
-				_shiftIsPressed = true;
+				_intermittentSelectionPhase = true;
 
 				// TODO: How can we not destroy the undo stack?
 
@@ -147,10 +162,11 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
 		{
-			if (k.Key == Key.LeftShift ||
-			    k.Key == Key.RightShift)
+			_msg.VerboseDebug("OnKeyUpCore");
+
+			if (IsShiftKey(k.Key))
 			{
-				_shiftIsPressed = false;
+				_intermittentSelectionPhase = false;
 
 				// TODO: Maintain selection by using SelectionChanged? Event?
 				IList<Feature> selection =
@@ -180,45 +196,57 @@ namespace ProSuite.AGP.Editing.OneClick
 
 				_editSketchBackup = null;
 			}
+
+			if (k.Key == Key.R)
+			{
+				RestorePreviousSketch();
+			}
 		}
 
 		protected override bool HandleEscape()
 		{
-			if (IsInSketchMode)
-			{
-				// if sketch is empty, also remove selection and return to selection phase
-
-				if (! RequiresSelection)
+			QueuedTaskUtils.Run(
+				delegate
 				{
-					// remain in sketch mode, just reset the sketch
-					ResetSketch();
-				}
-				else
-				{
-					Geometry sketch = GetCurrentSketchAsync().Result;
-
-					if (sketch != null && ! sketch.IsEmpty)
+					if (IsInSketchMode)
 					{
-						ResetSketch();
+						// if sketch is empty, also remove selection and return to selection phase
+
+						if (! RequiresSelection)
+						{
+							// remain in sketch mode, just reset the sketch
+							ResetSketch();
+						}
+						else
+						{
+							Geometry sketch = GetCurrentSketchAsync().Result;
+
+							if (sketch != null && ! sketch.IsEmpty)
+							{
+								ResetSketch();
+							}
+							else
+							{
+								SelectionUtils.ClearSelection(ActiveMapView.Map);
+
+								StartSelectionPhase();
+							}
+						}
 					}
 					else
 					{
 						SelectionUtils.ClearSelection(ActiveMapView.Map);
-
-						StartSelectionPhase();
 					}
-				}
-			}
-			else
-			{
-				SelectionUtils.ClearSelection(ActiveMapView.Map);
-			}
 
+					return true;
+				});
 			return true;
 		}
 
 		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
 		{
+			_msg.VerboseDebug("OnMapSelectionChangedCore");
+
 			if (ActiveMapView == null)
 			{
 				return false;
@@ -240,11 +268,15 @@ namespace ProSuite.AGP.Editing.OneClick
 			Geometry sketchGeometry,
 			CancelableProgressor progressor)
 		{
+			_msg.VerboseDebug("OnSketchCompleteCoreAsync");
+
 			if (IsInSketchMode)
 			{
 				// take snapshots
 				EditingTemplate currentTemplate = CurrentTemplate;
 				MapView activeView = ActiveMapView;
+
+				RememberSketch(sketchGeometry);
 
 				return await OnEditSketchCompleteCoreAsync(
 					       sketchGeometry, currentTemplate, activeView, progressor);
@@ -300,7 +332,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void StartSketchPhase()
 		{
-
 			SketchOutputMode = SketchOutputMode.Map;
 
 			SketchType = GetSketchGeometryType();
@@ -311,6 +342,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			SetCursor(SketchCursor);
 
 			StartSketchAsync();
+
+			LogEnteringSketchMode();
 		}
 
 		/// <summary>
@@ -357,12 +390,32 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void ResetSketch()
 		{
+			RememberSketch();
+
 			ClearSketchAsync();
 			OnSketchModifiedCore();
 
 			OnSketchResetCore();
 
 			StartSketchAsync();
+		}
+
+		protected void RememberSketch(Geometry knownSketch = null)
+		{
+			var sketch = knownSketch ?? GetCurrentSketchAsync().Result;
+
+			if (sketch != null && ! sketch.IsEmpty)
+			{
+				_previousSketch = sketch;
+			}
+		}
+
+		protected void RestorePreviousSketch()
+		{
+			if (_previousSketch != null && ! _previousSketch.IsEmpty)
+			{
+				SetCurrentSketchAsync(_previousSketch);
+			}
 		}
 	}
 }

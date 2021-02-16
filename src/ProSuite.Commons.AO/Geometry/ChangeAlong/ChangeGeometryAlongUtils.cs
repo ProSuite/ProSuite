@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -13,7 +12,6 @@ using ProSuite.Commons.Notifications;
 
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
-	[CLSCompliant(false)]
 	public static class ChangeGeometryAlongUtils
 	{
 		private static readonly IMsg _msg =
@@ -508,7 +506,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		}
 	}
 
-	[CLSCompliant(false)]
 	public class StaticExtentProvider : IExtentProvider
 	{
 		private readonly List<IEnvelope> _extents;

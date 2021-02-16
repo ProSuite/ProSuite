@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -99,7 +98,6 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 		}
 
-		[CLSCompliant(false)]
 		public bool TryGetTestTime([NotNull] ITest test,
 		                           out double milliseconds)
 		{
@@ -119,7 +117,6 @@ namespace ProSuite.DomainServices.AO.QA
 			return ticks / _ticksPerMilliseconds;
 		}
 
-		[CLSCompliant(false)]
 		public bool TryGetContainerTestTimes([NotNull] ContainerTest test,
 		                                     out double rowMilliseconds,
 		                                     out double tileCompletionMilliseconds)
@@ -141,7 +138,6 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IEnumerable<KeyValuePair<IDataset, double>> DatasetLoadTimes
 		{
 			get

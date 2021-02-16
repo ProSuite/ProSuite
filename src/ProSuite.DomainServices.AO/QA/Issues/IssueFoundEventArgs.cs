@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -36,7 +36,6 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 		public bool IsAllowable { get; }
 
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public IGeometry ErrorGeometry { get; }
 
 		[NotNull]

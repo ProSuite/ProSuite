@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Threading;
 using ESRI.ArcGIS.esriSystem;
@@ -9,7 +8,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 	/// <summary>
 	/// Provides a workspace to be used in various threads.
 	/// </summary>
-	[CLSCompliant(false)]
 	public class ThreadLocalWorkspace
 	{
 		private readonly string[] _connectionProps;

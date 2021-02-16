@@ -9,7 +9,6 @@ namespace ProSuite.Commons.AO
 {
 	public static class PropertySetUtils
 	{
-		[CLSCompliant(false)]
 		[NotNull]
 		public static IPropertySet Clone([NotNull] IPropertySet propertySet)
 		{
@@ -18,7 +17,6 @@ namespace ProSuite.Commons.AO
 			return (IPropertySet) ((IClone) propertySet).Clone();
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public static IDictionary<string, object> GetDictionary(
 			[NotNull] IPropertySet propertySet)
@@ -45,7 +43,6 @@ namespace ProSuite.Commons.AO
 			return result;
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public static IPropertySet GetPropertySet(
 			[NotNull] IDictionary<string, object> propertyMap)
@@ -62,7 +59,6 @@ namespace ProSuite.Commons.AO
 			return propertySet;
 		}
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public static object GetValue([NotNull] IPropertySet propertySet,
 		                              [NotNull] string propertyName)
@@ -125,7 +121,6 @@ namespace ProSuite.Commons.AO
 		/// <param name="propertyName">Name of the property.</param>
 		/// <returns>The property value converted to a string. 
 		/// An empty string is returned if the property does not exist or has a value of null (never return null).</returns>
-		[CLSCompliant(false)]
 		[NotNull]
 		public static string GetStringValue([NotNull] IPropertySet propertySet,
 		                                    [NotNull] string propertyName)
@@ -140,7 +135,6 @@ namespace ProSuite.Commons.AO
 				       : value.ToString();
 		}
 
-		[CLSCompliant(false)]
 		public static bool HasProperty([NotNull] IPropertySet propertySet,
 		                               [NotNull] string propertyName)
 		{

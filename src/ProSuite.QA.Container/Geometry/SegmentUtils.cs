@@ -8,7 +8,6 @@ using ProSuite.Commons.Geometry;
 
 namespace ProSuite.QA.Container.Geometry
 {
-	[CLSCompliant(false)]
 	public static class SegmentUtils
 	{
 		[ThreadStatic] private static IPoint _helpPoint;
@@ -186,13 +185,13 @@ namespace ProSuite.QA.Container.Geometry
 		}
 
 		/// <summary>
-		/// Lösung der Quadratischen Gleichung: a * x^2 + b * x + c = 0
+		/// LÃ¶sung der Quadratischen Gleichung: a * x^2 + b * x + c = 0
 		/// r1, r2 = (-b -+ ((b^2 - 4ac)^0.5))/2a<br/>
 		/// </summary>
 		public static bool SolveSqr(double a, double b, double c,
 		                            out double x0, out double x1)
 		{
-			// Lösung der quadratischen Gleichung:
+			// LÃ¶sung der quadratischen Gleichung:
 			//r1, r2 = (-b -+ ((b^2 - 4ac)^0.5))/2a
 
 			double dDet = (b * b) - 4.0 * a * c;

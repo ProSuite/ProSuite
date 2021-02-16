@@ -17,7 +17,6 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 	/// Provides functionality to add/update/delete attributes for domain classes that derive
 	/// from IAttributes while separating the ArcObjects dependencies from the domain classes.
 	/// </summary>
-	[CLSCompliant(false)]
 	public static class AttributeHarvestingUtils
 	{
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
@@ -127,7 +126,6 @@ namespace ProSuite.DomainModel.AO.DataModel.Harvesting
 			HarvestAttributes(objectDataset, configurator, objectClass);
 		}
 
-		[CLSCompliant(false)]
 		public static void HarvestAttributes([NotNull] ObjectDataset objectDataset,
 		                                     [CanBeNull] IAttributeConfigurator configurator,
 		                                     [NotNull] IObjectClass objectClass)

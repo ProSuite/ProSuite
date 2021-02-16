@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geometry;
@@ -7,7 +7,6 @@ namespace ProSuite.QA.Container.Geometry
 {
 	public class SegmentPair3D : SegmentPair
 	{
-		[CLSCompliant(false)]
 		public SegmentPair3D([NotNull] SegmentHull segmentProxy,
 		                     [NotNull] SegmentHull hullSegmentProxy) :
 			base(segmentProxy, hullSegmentProxy, is3D: true) { }

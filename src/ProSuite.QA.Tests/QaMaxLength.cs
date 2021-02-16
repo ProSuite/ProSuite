@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
@@ -12,7 +11,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Reports lines or polygon boundaries that are longer than a limit.
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[GeometryTest]
 	public class QaMaxLength : QaLengthBase
@@ -34,25 +32,25 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMaxLength_0")]
+		[Doc(nameof(DocStrings.QaMaxLength_0))]
 		public QaMaxLength(
-			[Doc("QaMaxLength_featureClass")] IFeatureClass featureClass,
-			[Doc("QaMaxLength_limit")] double limit,
-			[Doc("QaMaxLength_is3D")] bool is3D)
+			[Doc(nameof(DocStrings.QaMaxLength_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaMaxLength_limit))] double limit,
+			[Doc(nameof(DocStrings.QaMaxLength_is3D))] bool is3D)
 			: base(featureClass, limit, is3D) { }
 
-		[Doc("QaMaxLength_0")]
+		[Doc(nameof(DocStrings.QaMaxLength_0))]
 		public QaMaxLength(
-			[Doc("QaMaxLength_featureClass")] IFeatureClass featureClass,
-			[Doc("QaMaxLength_limit")] double limit)
+			[Doc(nameof(DocStrings.QaMaxLength_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaMaxLength_limit))] double limit)
 			: base(featureClass, limit) { }
 
-		[Doc("QaMaxLength_0")]
+		[Doc(nameof(DocStrings.QaMaxLength_0))]
 		public QaMaxLength(
-			[Doc("QaMaxLength_featureClass")] IFeatureClass featureClass,
-			[Doc("QaMaxLength_limit")] double limit,
-			[Doc("QaMaxLength_is3D")] bool is3D,
-			[Doc("QaMaxLength_perPart")] bool perPart)
+			[Doc(nameof(DocStrings.QaMaxLength_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaMaxLength_limit))] double limit,
+			[Doc(nameof(DocStrings.QaMaxLength_is3D))] bool is3D,
+			[Doc(nameof(DocStrings.QaMaxLength_perPart))] bool perPart)
 			: base(featureClass, limit, is3D, perPart) { }
 
 		protected override int CheckLength(double length, ICurve curve, IRow row)

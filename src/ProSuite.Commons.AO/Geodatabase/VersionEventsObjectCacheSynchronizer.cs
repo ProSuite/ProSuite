@@ -23,7 +23,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// </summary>
 		/// <param name="objectCache">The object cache.</param>
 		/// <param name="featureWorkspace">The feature workspace.</param>
-		[CLSCompliant(false)]
 		public VersionEventsObjectCacheSynchronizer(IObjectCache objectCache,
 		                                            IFeatureWorkspace featureWorkspace)
 		{

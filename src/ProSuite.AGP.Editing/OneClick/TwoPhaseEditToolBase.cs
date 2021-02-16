@@ -3,13 +3,14 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Keyboard;
@@ -37,6 +38,30 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			return true;
+		}
+
+		protected override Task OnEditCompletedCore(EditCompletedEventArgs args)
+		{
+			bool requiresRecalculate = args.CompletedType == EditCompletedType.Discard ||
+			                           args.CompletedType == EditCompletedType.Reconcile ||
+			                           args.CompletedType == EditCompletedType.Redo ||
+			                           args.CompletedType == EditCompletedType.Undo;
+
+			if (requiresRecalculate)
+			{
+				QueuedTask.Run(
+					() =>
+					{
+						var selectedFeatures =
+							SelectionUtils.GetSelectedFeatures(ActiveMapView).ToList();
+
+						CalculateDerivedGeometries(selectedFeatures, GetCancelableProgressor());
+
+						return true;
+					});
+			}
+
+			return base.OnEditCompletedCore(args);
 		}
 
 		protected override void AfterSelection(IList<Feature> selectedFeatures,
@@ -93,19 +118,24 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override bool HandleEscape()
 		{
-			SelectionUtils.ClearSelection(ActiveMapView.Map);
+			QueuedTaskUtils.Run(
+				() =>
+				{
+					SelectionUtils.ClearSelection(ActiveMapView.Map);
 
-			ResetDerivedGeometries();
+					ResetDerivedGeometries();
 
-			StartSelectionPhase();
+					StartSelectionPhase();
+
+					return true;
+				});
 
 			return true;
 		}
 
 		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
 		{
-			if (k.Key == Key.LeftShift ||
-			    k.Key == Key.RightShift)
+			if (IsShiftKey(k.Key))
 			{
 				Cursor = IsInSelectionPhase() ? SelectionCursor : SecondPhaseCursor;
 			}

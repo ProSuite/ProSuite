@@ -12,7 +12,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.QA.TestFactories
 {
-	[CLSCompliant(false)]
 	public abstract class QaLinearUnitFactory : DefaultTestFactory
 	{
 		#region AreaUnits enum
@@ -160,7 +159,7 @@ namespace ProSuite.QA.TestFactories
 					return esriUnits.esriMillimeters;
 
 				default:
-					throw new ArgumentOutOfRangeException("unit", unit,
+					throw new ArgumentOutOfRangeException(nameof(unit), unit,
 					                                      string.Format("Unknown length units: {0}",
 					                                                    unit));
 			}
@@ -186,7 +185,7 @@ namespace ProSuite.QA.TestFactories
 					return esriUnits.esriMillimeters;
 
 				default:
-					throw new ArgumentOutOfRangeException("unit", unit,
+					throw new ArgumentOutOfRangeException(nameof(unit), unit,
 					                                      string.Format("Unknown area units: {0}",
 					                                                    unit));
 			}

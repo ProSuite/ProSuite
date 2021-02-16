@@ -26,7 +26,8 @@ namespace ProSuite.Microservices.AO
 		{
 			if (geometry == null) return null;
 
-			Assert.ArgumentCondition(format == ShapeMsg.FormatOneofCase.EsriShape,
+			Assert.ArgumentCondition(format == ShapeMsg.FormatOneofCase.EsriShape ||
+			                         format == ShapeMsg.FormatOneofCase.Wkb,
 			                         "Unsupported format");
 
 			if (_msg.IsVerboseDebugEnabled)
@@ -38,12 +39,19 @@ namespace ProSuite.Microservices.AO
 			var highLevelGeometry =
 				GeometryUtils.GetHighLevelGeometry(geometry, true);
 
-			var result = new ShapeMsg
-			             {
-				             EsriShape =
-					             ByteString.CopyFrom(
-						             GeometryUtils.ToEsriShapeBuffer(highLevelGeometry))
-			             };
+			var result = new ShapeMsg();
+
+			if (format == ShapeMsg.FormatOneofCase.EsriShape)
+			{
+				result.EsriShape = ByteString.CopyFrom(
+					GeometryUtils.ToEsriShapeBuffer(highLevelGeometry));
+			}
+			else
+			{
+				var wkbWriter = new WkbGeometryWriter();
+				byte[] wkb = wkbWriter.WriteGeometry(highLevelGeometry);
+				result.Wkb = ByteString.CopyFrom(wkb);
+			}
 
 			if (geometry.SpatialReference != null)
 			{
@@ -67,6 +75,8 @@ namespace ProSuite.Microservices.AO
 		                                     [CanBeNull] ISpatialReference classSpatialRef = null)
 		{
 			if (shapeBuffer == null) return null;
+
+			if (shapeBuffer.FormatCase == ShapeMsg.FormatOneofCase.None) return null;
 
 			IGeometry result;
 

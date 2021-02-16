@@ -28,7 +28,6 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 		[NotNull] private readonly IDictionary<Guid, QualityConditionExceptions>
 			_qualityConditionExceptions = new Dictionary<Guid, QualityConditionExceptions>();
 
-		[CLSCompliant(false)]
 		public ExceptionObjectEvaluator(
 			[NotNull] IEnumerable<ExceptionObject> exceptionObjects,
 			[NotNull] IDictionary<Guid, QualityCondition> conditionsByUuid,

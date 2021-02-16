@@ -1,4 +1,3 @@
-﻿using System;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -6,7 +5,6 @@ namespace ProSuite.QA.Container
 {
 	public class BeginTileParameters
 	{
-		[CLSCompliant(false)]
 		public BeginTileParameters([CanBeNull] IEnvelope tileEnvelope,
 		                           [CanBeNull] IEnvelope testRunEnvelope)
 		{
@@ -14,11 +12,9 @@ namespace ProSuite.QA.Container
 			TestRunEnvelope = testRunEnvelope;
 		}
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public IEnvelope TileEnvelope { get; }
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public IEnvelope TestRunEnvelope { get; }
 	}

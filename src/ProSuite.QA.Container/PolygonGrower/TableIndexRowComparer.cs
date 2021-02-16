@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 
 namespace ProSuite.QA.Container.PolygonGrower
@@ -8,7 +7,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 	{
 		#region IComparer<TableIndexRow> Members
 
-		[CLSCompliant(false)]
 		public int Compare(ITableIndexRow row0, ITableIndexRow row1)
 		{
 			if (row0 == null && row1 == null)
@@ -51,13 +49,11 @@ namespace ProSuite.QA.Container.PolygonGrower
 
 		#endregion
 
-		[CLSCompliant(false)]
 		public bool Equals(ITableIndexRow x, ITableIndexRow y)
 		{
 			return Compare(x, y) == 0;
 		}
 
-		[CLSCompliant(false)]
 		public int GetHashCode(ITableIndexRow obj)
 		{
 			return obj.RowOID ^ 29 * obj.TableIndex;

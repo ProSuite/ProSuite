@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -8,7 +8,6 @@ namespace ProSuite.QA.Container.Geometry
 {
 	public class SegmentPair2D : SegmentPair
 	{
-		[CLSCompliant(false)]
 		public SegmentPair2D([NotNull] SegmentHull segmentProxy,
 		                     [NotNull] SegmentHull hullSegmentProxy) :
 			base(segmentProxy, hullSegmentProxy, is3D: false) { }

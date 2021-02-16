@@ -9,7 +9,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.QA.Container
 {
-	[CLSCompliant(false)]
 	public static class ExpressionUtils
 	{
 		private const string _caseSensitiveHint = "##CASESENSITIVE";

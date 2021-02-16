@@ -31,7 +31,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 
 			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace("QaMinSegAngleTest");
 		}
@@ -120,7 +120,7 @@ namespace ProSuite.QA.Tests.Test
 
 			double limit = FormatUtils.Radians2AngleInUnits(0.1, AngleUnit.Degree);
 
-			var model = new SimpleModel("model", ((IDataset) fc).Workspace);
+			var model = new SimpleModel("model", fc);
 
 			esriGeometryType esriGeometryType = fc.ShapeType;
 
@@ -134,9 +134,9 @@ namespace ProSuite.QA.Tests.Test
 				});
 
 			var condition = new QualityCondition("testtest", testDescriptor);
-			QualityCondition_Utils.AddParameterValue(condition, "featureClass", ds);
-			QualityCondition_Utils.AddParameterValue(condition, "limit", limit);
-			QualityCondition_Utils.AddParameterValue(condition, "is3D", true);
+			QualityConditionParameterUtils.AddParameterValue(condition, "featureClass", ds);
+			QualityConditionParameterUtils.AddParameterValue(condition, "limit", limit);
+			QualityConditionParameterUtils.AddParameterValue(condition, "is3D", true);
 
 			TestFactory factory = TestFactoryUtils.CreateTestFactory(condition);
 			Assert.IsNotNull(factory);

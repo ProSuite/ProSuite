@@ -45,7 +45,6 @@ namespace ProSuite.QA.Tests
 	 * TODO add explicit tolerance? Or (optionally) get maximum tolerance from feature classes?
 	 */
 
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[LinearNetworkTest]
 	public class QaLineConnectionFieldValues : QaNetworkBase
@@ -86,72 +85,72 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaLineConnectionFieldValues_0")]
+		[Doc(nameof(DocStrings.QaLineConnectionFieldValues_0))]
 		public QaLineConnectionFieldValues(
-			[Doc("QaLineConnectionFieldValues_lineClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineClass))] [NotNull]
 			IFeatureClass lineClass,
-			[Doc("QaLineConnectionFieldValues_lineField")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineField))] [NotNull]
 			string lineField,
-			[Doc("QaLineConnectionFieldValues_lineFieldValuesConstraint")]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineFieldValuesConstraint))]
 			LineFieldValuesConstraint lineFieldValuesConstraint,
-			[Doc("QaLineConnectionFieldValues_pointClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointClass))] [NotNull]
 			IFeatureClass pointClass,
-			[Doc("QaLineConnectionFieldValues_pointField")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointField))] [CanBeNull]
 			string pointField,
-			[Doc("QaLineConnectionFieldValues_pointFieldValuesConstraint")]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointFieldValuesConstraint))]
 			PointFieldValuesConstraint pointFieldValuesConstraint)
 			: this(new[] {lineClass}, new[] {lineField}, lineFieldValuesConstraint,
 			       pointClass, pointField, pointFieldValuesConstraint) { }
 
-		[Doc("QaLineConnectionFieldValues_1")]
+		[Doc(nameof(DocStrings.QaLineConnectionFieldValues_1))]
 		public QaLineConnectionFieldValues(
-			[Doc("QaLineConnectionFieldValues_lineClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineClasses))] [NotNull]
 			IList<IFeatureClass>
 				lineClasses,
-			[Doc("QaLineConnectionFieldValues_lineFields")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineFields))] [NotNull]
 			IList<string> lineFields,
-			[Doc("QaLineConnectionFieldValues_lineFieldValuesConstraint")]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineFieldValuesConstraint))]
 			LineFieldValuesConstraint lineFieldValuesConstraint,
-			[Doc("QaLineConnectionFieldValues_pointClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointClass))] [NotNull]
 			IFeatureClass pointClass,
-			[Doc("QaLineConnectionFieldValues_pointField")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointField))] [CanBeNull]
 			string pointField,
-			[Doc("QaLineConnectionFieldValues_pointFieldValuesConstraint")]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointFieldValuesConstraint))]
 			PointFieldValuesConstraint pointFieldValuesConstraint)
 			: this(
 				lineClasses, lineFields, lineFieldValuesConstraint, pointClass, pointField,
 				// ReSharper disable once IntroduceOptionalParameters.Global
 				pointFieldValuesConstraint, null) { }
 
-		[Doc("QaLineConnectionFieldValues_2")]
+		[Doc(nameof(DocStrings.QaLineConnectionFieldValues_2))]
 		public QaLineConnectionFieldValues(
-			[Doc("QaLineConnectionFieldValues_lineClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineClass))] [NotNull]
 			IFeatureClass lineClass,
-			[Doc("QaLineConnectionFieldValues_lineField")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineField))] [NotNull]
 			string lineField,
-			[Doc("QaLineConnectionFieldValues_lineFieldValuesConstraint")]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineFieldValuesConstraint))]
 			LineFieldValuesConstraint lineFieldValuesConstraint,
-			[Doc("QaLineConnectionFieldValues_pointClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointClass))] [NotNull]
 			IFeatureClass pointClass)
 			: this(new[] {lineClass}, new[] {lineField}, lineFieldValuesConstraint,
 			       pointClass, null, PointFieldValuesConstraint.NoConstraint) { }
 
-		[Doc("QaLineConnectionFieldValues_3")]
+		[Doc(nameof(DocStrings.QaLineConnectionFieldValues_3))]
 		public QaLineConnectionFieldValues(
-			[Doc("QaLineConnectionFieldValues_lineClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineClasses))] [NotNull]
 			IList<IFeatureClass>
 				lineClasses,
-			[Doc("QaLineConnectionFieldValues_lineFields")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineFields))] [NotNull]
 			IList<string> lineFields,
-			[Doc("QaLineConnectionFieldValues_lineFieldValuesConstraint")]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineFieldValuesConstraint))]
 			LineFieldValuesConstraint lineFieldValuesConstraint,
-			[Doc("QaLineConnectionFieldValues_pointClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointClass))] [NotNull]
 			IFeatureClass pointClass,
-			[Doc("QaLineConnectionFieldValues_pointField")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointField))] [CanBeNull]
 			string pointField,
-			[Doc("QaLineConnectionFieldValues_pointFieldValuesConstraint")]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointFieldValuesConstraint))]
 			PointFieldValuesConstraint pointFieldValuesConstraint,
-			[Doc("QaLineConnectionFieldValues_allowedPointsExpression")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_allowedPointsExpression))] [CanBeNull]
 			string
 				allowedPointsExpression)
 			: this(lineClasses, lineFields, lineFieldValuesConstraint, new[] {pointClass},
@@ -161,24 +160,24 @@ namespace ProSuite.QA.Tests
 				       ? null
 				       : new[] {allowedPointsExpression}) { }
 
-		[Doc("QaLineConnectionFieldValues_4")]
+		[Doc(nameof(DocStrings.QaLineConnectionFieldValues_4))]
 		public QaLineConnectionFieldValues(
-			[Doc("QaLineConnectionFieldValues_lineClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineClasses))] [NotNull]
 			IList<IFeatureClass>
 				lineClasses,
-			[Doc("QaLineConnectionFieldValues_lineFields")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineFields))] [NotNull]
 			IList<string> lineFields,
-			[Doc("QaLineConnectionFieldValues_lineFieldValuesConstraint")]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_lineFieldValuesConstraint))]
 			LineFieldValuesConstraint lineFieldValuesConstraint,
-			[Doc("QaLineConnectionFieldValues_pointClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointClasses))] [NotNull]
 			IList<IFeatureClass>
 				pointClasses,
-			[Doc("QaLineConnectionFieldValues_pointFields")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointFields))] [CanBeNull]
 			IList<string>
 				pointFields,
-			[Doc("QaLineConnectionFieldValues_pointFieldValuesConstraint")]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_pointFieldValuesConstraint))]
 			PointFieldValuesConstraint pointFieldValuesConstraint,
-			[Doc("QaLineConnectionFieldValues_allowedPointsExpressions")] [CanBeNull]
+			[Doc(nameof(DocStrings.QaLineConnectionFieldValues_allowedPointsExpressions))] [CanBeNull]
 			IList<string>
 				allowedPointsExpressions)
 			: base(CastToTables(lineClasses, pointClasses),

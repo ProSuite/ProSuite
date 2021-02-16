@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -7,11 +6,9 @@ using ProSuite.DomainServices.AO.QA.Issues;
 
 namespace ProSuite.DomainServices.AO.QA.Exceptions
 {
-	[CLSCompliant(false)]
 	public interface IExceptionStatistics
 	{
 		[NotNull]
-		[CLSCompliant(false)]
 		IWorkspace Workspace { get; }
 
 		int ExceptionCount { get; }

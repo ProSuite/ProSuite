@@ -3,7 +3,6 @@ using ESRI.ArcGIS.Geodatabase;
 
 namespace ProSuite.QA.Container
 {
-	[CLSCompliant(false)]
 	public class TestRowException : Exception
 	{
 		public TestRowException(ITest test, IRow row, string msg)
