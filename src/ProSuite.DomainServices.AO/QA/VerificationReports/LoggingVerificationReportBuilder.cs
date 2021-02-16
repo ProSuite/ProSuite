@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using ESRI.ArcGIS.Geometry;
@@ -51,7 +50,6 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 			}
 		}
 
-		[CLSCompliant(false)]
 		public void AddExceptionStatistics(IExceptionStatistics statistics) { }
 
 		void IVerificationReportBuilder.EndVerification(bool cancelled)

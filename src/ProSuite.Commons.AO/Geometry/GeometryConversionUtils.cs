@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.esriSystem;
@@ -11,7 +11,6 @@ using ProSuite.Commons.Geometry.SpatialIndex;
 
 namespace ProSuite.Commons.AO.Geometry
 {
-	[CLSCompliant(false)]
 	public static class GeometryConversionUtils
 	{
 		public static IArrayProvider<WKSPointZ> WksPointArrayProvider { get; set; }

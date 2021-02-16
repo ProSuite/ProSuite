@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -10,7 +10,6 @@ namespace ProSuite.QA.Container
 	/// <summary>
 	/// Helper methods to deal with involved rows
 	/// </summary>
-	[CLSCompliant(false)]
 	public static class InvolvedRowUtils
 	{
 		public static void AddUniqueInvolvedRows(

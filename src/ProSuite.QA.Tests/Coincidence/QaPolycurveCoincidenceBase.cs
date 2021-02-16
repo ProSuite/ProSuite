@@ -19,7 +19,6 @@ using Pnt = ProSuite.Commons.Geometry.Pnt;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
-	[CLSCompliant(false)]
 	public abstract class QaPolycurveCoincidenceBase : ContainerTest
 	{
 		[NotNull] private readonly IEnvelope _removeBox = new EnvelopeClass();
@@ -1670,13 +1669,11 @@ namespace ProSuite.QA.Tests.Coincidence
 				     caseSensitivity) { }
 		}
 
-		[CLSCompliant(false)]
 		protected interface IFeatureDistanceProvider
 		{
 			IFeatureRowsDistance GetRowsDistance([NotNull] IRow row1, int tableIndex);
 		}
 
-		[CLSCompliant(false)]
 		protected interface IPairDistanceProvider
 		{
 			IPairRowsDistance GetRowsDistance([NotNull] IRow row1, int tableIndex);
@@ -1687,13 +1684,11 @@ namespace ProSuite.QA.Tests.Coincidence
 			bool TryGetConstantDistance(out double distance);
 		}
 
-		[CLSCompliant(false)]
 		protected interface IPairRowsDistance
 		{
 			double GetAddedDistance([NotNull] IRow neighborRow, int neighborTableIndex);
 		}
 
-		[CLSCompliant(false)]
 		protected interface IFeatureRowsDistance : IPairRowsDistance
 		{
 			double GetRowDistance();
@@ -1701,7 +1696,6 @@ namespace ProSuite.QA.Tests.Coincidence
 			double GetNearDistance([NotNull] IRow neighborRow, int neighborTableIndex);
 		}
 
-		[CLSCompliant(false)]
 		protected interface IAssymetricFeatureRowsDistance : IFeatureRowsDistance
 		{
 			double GetLeftSideDistance();
@@ -1713,7 +1707,6 @@ namespace ProSuite.QA.Tests.Coincidence
 			double GetRightSideDistance([NotNull] IRow neighborRow, int neighborTableIndex);
 		}
 
-		[CLSCompliant(false)]
 		protected static SegmentHull CreateSegmentHull(
 			[NotNull] SegmentProxy segment, IFeatureRowsDistance rowsDistance,
 			[NotNull] SegmentCap startCap, [NotNull] SegmentCap endCap)
@@ -1727,7 +1720,6 @@ namespace ProSuite.QA.Tests.Coincidence
 			return hull;
 		}
 
-		[CLSCompliant(false)]
 		protected static SegmentHull CreateNeighborSegmentHull(
 			[NotNull] SegmentProxy segment, IFeatureRowsDistance rowsDistance,
 			[NotNull] IFeature neighborFeature, int neighborTableIndex,
@@ -1746,7 +1738,6 @@ namespace ProSuite.QA.Tests.Coincidence
 			return hull;
 		}
 
-		[CLSCompliant(false)]
 		protected class ConstantFeatureDistanceProvider : ConstantDistanceProvider,
 		                                                  IFeatureDistanceProvider,
 		                                                  IFeatureRowsDistance
@@ -1754,7 +1745,6 @@ namespace ProSuite.QA.Tests.Coincidence
 			public ConstantFeatureDistanceProvider(double featureDistance)
 				: base(featureDistance, featureDistance) { }
 
-			[CLSCompliant(false)]
 			public IFeatureRowsDistance GetRowsDistance(IRow row1, int tableIndex)
 			{
 				return this;
@@ -1773,7 +1763,6 @@ namespace ProSuite.QA.Tests.Coincidence
 			}
 		}
 
-		[CLSCompliant(false)]
 		protected class ConstantPairDistanceProvider : ConstantDistanceProvider,
 		                                               IPairDistanceProvider,
 		                                               IPairRowsDistance
@@ -1781,7 +1770,6 @@ namespace ProSuite.QA.Tests.Coincidence
 			public ConstantPairDistanceProvider(double pairDistance)
 				: base(pairDistance, 0) { }
 
-			[CLSCompliant(false)]
 			public IPairRowsDistance GetRowsDistance(IRow row1, int tableIndex)
 			{
 				return this;
@@ -1793,7 +1781,6 @@ namespace ProSuite.QA.Tests.Coincidence
 			}
 		}
 
-		[CLSCompliant(false)]
 		protected abstract class ConstantDistanceProvider : IConstantDistanceProvider
 		{
 			public double SelfDistance { get; }
@@ -1972,7 +1959,6 @@ namespace ProSuite.QA.Tests.Coincidence
 			[NotNull] private Func<int, bool> _getSqlCaseSensitivityForTableIndex;
 			[CanBeNull] private List<DoubleFieldExpression> _expressions;
 
-			[CLSCompliant(false)]
 			public ExpressionBasedDistanceProvider(
 				[NotNull] IEnumerable<string> expressions,
 				[NotNull] ICollection<IFeatureClass> featureClasses)
@@ -2018,7 +2004,6 @@ namespace ProSuite.QA.Tests.Coincidence
 				return GetRowsDistance(row1, tableIndex);
 			}
 
-			[CLSCompliant(false)]
 			public ExpressionBasedRowsDistance GetRowsDistance(IRow row1, int tableIndex)
 			{
 				double distance1 = Expressions[tableIndex].GetDouble(row1) ?? 0;

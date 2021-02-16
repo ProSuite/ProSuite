@@ -10,7 +10,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 	/// The -ing methods can be used to modify the involved features to be stored.
 	/// Hence implementations are not necessarily side-effect free (observer effect;-)
 	/// </summary>
-	[CLSCompliant(false)]
 	public interface IEditOperationObserver : IEquatable<IEditOperationObserver>
 	{
 		/// <summary>

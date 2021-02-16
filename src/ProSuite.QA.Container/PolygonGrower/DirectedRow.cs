@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
@@ -12,7 +11,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 	{
 		#region nested classes
 
-		[CLSCompliant(false)]
 		public class RowByLineAngleComparer : IComparer<DirectedRow>
 		{
 			#region IComparer<DirectedRow> Members
@@ -35,7 +33,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 		private readonly bool _isBackward;
 		private readonly TopologicalLine _topologicalLine;
 
-		[CLSCompliant(false)]
 		public DirectedRow([NotNull] TableIndexRow row, int partIndex, bool isBackward)
 			: base(row)
 		{
@@ -77,7 +74,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			get { return _topologicalLine.PartIndex; }
 		}
 
-		[CLSCompliant(false)]
 		public IPoint FromPoint
 		{
 			get
@@ -108,7 +104,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			get { return new NetPoint_(FromPoint); }
 		}
 
-		[CLSCompliant(false)]
 		public IPoint ToPoint
 		{
 			get
@@ -160,7 +155,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			}
 		}
 
-		[CLSCompliant(false)]
 		public IRow RightCentroid
 		{
 			get
@@ -203,7 +197,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			}
 		}
 
-		[CLSCompliant(false)]
 		public IRow LeftCentroid
 		{
 			get
@@ -235,7 +228,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			get { return _topologicalLine; }
 		}
 
-		[CLSCompliant(false)]
 		public void QueryFromPoint(IPoint queryPoint)
 		{
 			if (_isBackward)
@@ -254,7 +246,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			return queryPoint;
 		}
 
-		[CLSCompliant(false)]
 		public void QueryToPoint(IPoint queryPoint)
 		{
 			if (_isBackward)
@@ -272,7 +263,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			return new DirectedRow(_topologicalLine, ! _isBackward);
 		}
 
-		[CLSCompliant(false)]
 		public ISegmentCollection GetDirectedSegmentCollection()
 		{
 			var line = (ICurve) ((IClone) _topologicalLine.Path).Clone();
@@ -285,7 +275,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			return (ISegmentCollection) line;
 		}
 
-		[CLSCompliant(false)]
 		public ICurve GetBaseLine()
 		{
 			return _topologicalLine.Path;

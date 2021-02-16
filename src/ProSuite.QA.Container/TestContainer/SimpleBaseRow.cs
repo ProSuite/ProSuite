@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -7,7 +7,6 @@ using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Container.TestContainer
 {
-	[CLSCompliant(false)]
 	public class SimpleBaseRow : BaseRow
 	{
 		public SimpleBaseRow([NotNull] IFeature feature)

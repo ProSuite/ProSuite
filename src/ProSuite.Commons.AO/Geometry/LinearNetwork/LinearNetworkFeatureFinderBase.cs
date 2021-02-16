@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -16,7 +16,6 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 	/// <summary>
 	/// Base class providing feature access for 2D-linear network feature finders.
 	/// </summary>
-	[CLSCompliant(false)]
 	public abstract class LinearNetworkFeatureFinderBase : ILinearNetworkFeatureFinder
 	{
 		private static readonly IMsg _msg =

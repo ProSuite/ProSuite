@@ -16,7 +16,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Check if there are orphan nodes by consulting several line layers
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[LinearNetworkTest]
 	public class QaOrphanNode : QaNetworkBase
@@ -41,35 +40,35 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaOrphanNode_0")]
+		[Doc(nameof(DocStrings.QaOrphanNode_0))]
 		public QaOrphanNode(
-				[Doc("QaOrphanNode_pointClasses")] IList<IFeatureClass> pointClasses,
-				[Doc("QaOrphanNode_polylineClasses")] IList<IFeatureClass> polylineClasses)
+				[Doc(nameof(DocStrings.QaOrphanNode_pointClasses))] IList<IFeatureClass> pointClasses,
+				[Doc(nameof(DocStrings.QaOrphanNode_polylineClasses))] IList<IFeatureClass> polylineClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(pointClasses, polylineClasses, OrphanErrorType.Both) { }
 
-		[Doc("QaOrphanNode_1")]
+		[Doc(nameof(DocStrings.QaOrphanNode_1))]
 		public QaOrphanNode(
-				[Doc("QaOrphanNode_pointClass")] IFeatureClass pointClass,
-				[Doc("QaOrphanNode_polylineClass")] IFeatureClass polylineClass)
+				[Doc(nameof(DocStrings.QaOrphanNode_pointClass))] IFeatureClass pointClass,
+				[Doc(nameof(DocStrings.QaOrphanNode_polylineClass))] IFeatureClass polylineClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(pointClass, polylineClass, OrphanErrorType.Both) { }
 
-		[Doc("QaOrphanNode_2")]
+		[Doc(nameof(DocStrings.QaOrphanNode_2))]
 		public QaOrphanNode(
-			[Doc("QaOrphanNode_pointClasses")] IList<IFeatureClass> pointClasses,
-			[Doc("QaOrphanNode_polylineClasses")] IList<IFeatureClass> polylineClasses,
-			[Doc("QaOrphanNode_errorType")] OrphanErrorType errorType)
+			[Doc(nameof(DocStrings.QaOrphanNode_pointClasses))] IList<IFeatureClass> pointClasses,
+			[Doc(nameof(DocStrings.QaOrphanNode_polylineClasses))] IList<IFeatureClass> polylineClasses,
+			[Doc(nameof(DocStrings.QaOrphanNode_errorType))] OrphanErrorType errorType)
 			: base(CastToTables(pointClasses, polylineClasses), false)
 		{
 			_errorType = errorType;
 		}
 
-		[Doc("QaOrphanNode_3")]
+		[Doc(nameof(DocStrings.QaOrphanNode_3))]
 		public QaOrphanNode(
-			[Doc("QaOrphanNode_pointClass")] IFeatureClass pointClass,
-			[Doc("QaOrphanNode_polylineClass")] IFeatureClass polylineClass,
-			[Doc("QaOrphanNode_errorType")] OrphanErrorType errorType)
+			[Doc(nameof(DocStrings.QaOrphanNode_pointClass))] IFeatureClass pointClass,
+			[Doc(nameof(DocStrings.QaOrphanNode_polylineClass))] IFeatureClass polylineClass,
+			[Doc(nameof(DocStrings.QaOrphanNode_errorType))] OrphanErrorType errorType)
 			: base(new[] {(ITable) pointClass, (ITable) polylineClass}, false)
 		{
 			_errorType = errorType;

@@ -18,7 +18,6 @@ namespace ProSuite.QA.Tests
 	/// Check if the lakes and islands are pointing in the right direction
 	/// This test should be run after an intersecting lines test
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[TopologyTest]
 	[PolygonNetworkTest]
@@ -51,16 +50,16 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaBorderSense_0")]
+		[Doc(nameof(DocStrings.QaBorderSense_0))]
 		public QaBorderSense(
-			[Doc("QaBorderSense_polylineClass")] IFeatureClass polylineClass,
-			[Doc("QaBorderSense_clockwise")] bool clockwise)
+			[Doc(nameof(DocStrings.QaBorderSense_polylineClass))] IFeatureClass polylineClass,
+			[Doc(nameof(DocStrings.QaBorderSense_clockwise))] bool clockwise)
 			: this(new[] {polylineClass}, clockwise) { }
 
-		[Doc("QaBorderSense_1")]
+		[Doc(nameof(DocStrings.QaBorderSense_1))]
 		public QaBorderSense(
-			[Doc("QaBorderSense_polylineClasses")] IList<IFeatureClass> polylineClasses,
-			[Doc("QaBorderSense_clockwise")] bool clockwise)
+			[Doc(nameof(DocStrings.QaBorderSense_polylineClasses))] IList<IFeatureClass> polylineClasses,
+			[Doc(nameof(DocStrings.QaBorderSense_clockwise))] bool clockwise)
 			: base(CastToTables((IEnumerable<IFeatureClass>) polylineClasses), true)
 		{
 			_orientation = clockwise;

@@ -21,7 +21,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA
 {
-	[CLSCompliant(false)]
 	public abstract class TestFactory : ITestImplementationInfo
 	{
 		private IList<TestParameter> _parameters;
@@ -312,7 +311,6 @@ namespace ProSuite.DomainModel.AO.QA
 			return constructorArgs.ToArray();
 		}
 
-		[CLSCompliant(false)]
 		protected bool TryGetArgumentValue(
 			[NotNull] TestParameter parameter,
 			[NotNull] IOpenDataset datasetContext,
@@ -321,7 +319,6 @@ namespace ProSuite.DomainModel.AO.QA
 			return TryGetArgumentValue(parameter, datasetContext, null, out value);
 		}
 
-		[CLSCompliant(false)]
 		protected bool TryGetArgumentValue(
 			[NotNull] TestParameter parameter,
 			[NotNull] IOpenDataset datasetContext,
@@ -703,7 +700,6 @@ namespace ProSuite.DomainModel.AO.QA
 				QaSqlIsCaseSensitive = qaSqlIsCaseSensitive;
 			}
 
-			[CLSCompliant(false)]
 			[NotNull]
 			public ITable Table { get; }
 

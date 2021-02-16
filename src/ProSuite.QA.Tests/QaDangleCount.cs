@@ -18,7 +18,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[LinearNetworkTest]
 	[TopologyTest]
 	[UsedImplicitly]
@@ -52,24 +51,24 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaDangleCount_0")]
+		[Doc(nameof(DocStrings.QaDangleCount_0))]
 		public QaDangleCount(
-			[Doc("QaDangleCount_polylineClass")] [NotNull]
+			[Doc(nameof(DocStrings.QaDangleCount_polylineClass))] [NotNull]
 			IFeatureClass polylineClass,
-			[Doc("QaDangleCount_dangleCountExpression")] [NotNull]
+			[Doc(nameof(DocStrings.QaDangleCount_dangleCountExpression))] [NotNull]
 			string dangleCountExpression,
-			[Doc("QaDangleCount_tolerance")] double tolerance)
+			[Doc(nameof(DocStrings.QaDangleCount_tolerance))] double tolerance)
 			: this(new[] {polylineClass}, new[] {dangleCountExpression}, tolerance) { }
 
-		[Doc("QaDangleCount_1")]
+		[Doc(nameof(DocStrings.QaDangleCount_1))]
 		public QaDangleCount(
-			[Doc("QaDangleCount_polylineClasses")] [NotNull]
+			[Doc(nameof(DocStrings.QaDangleCount_polylineClasses))] [NotNull]
 			IList<IFeatureClass>
 				polylineClasses,
-			[Doc("QaDangleCount_dangleCountExpressions")] [NotNull]
+			[Doc(nameof(DocStrings.QaDangleCount_dangleCountExpressions))] [NotNull]
 			IList<string>
 				dangleCountExpressions,
-			[Doc("QaDangleCount_tolerance")] double tolerance)
+			[Doc(nameof(DocStrings.QaDangleCount_tolerance))] double tolerance)
 			: base(
 				CastToTables((IEnumerable<IFeatureClass>) polylineClasses), tolerance,
 				false, null

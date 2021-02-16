@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using ArcGIS.Core.CIM;
+using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using Geometry = ArcGIS.Core.Geometry.Geometry;
 
 namespace ProSuite.Commons.AGP.Core.Carto
 {
@@ -76,6 +76,21 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return CreatePointSymbol(marker);
 		}
 
+		public static CIMLineSymbol CreateLineSymbol(float red, float green, float blue,
+		                                             double lineWidth)
+		{
+			CIMColor color = ColorUtils.CreateRGB(red, green, blue);
+
+			var solidStroke = new CIMSolidStroke
+			                  {
+				                  Color = color,
+				                  Width = lineWidth
+			                  };
+
+			CIMLineSymbol lineSymbol = CreateLineSymbol(solidStroke);
+			return lineSymbol;
+		}
+
 		public static CIMLineSymbol CreateLineSymbol(params CIMSymbolLayer[] layers)
 		{
 			return new CIMLineSymbol {SymbolLayers = layers, Effects = null};
@@ -135,6 +150,29 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return CreatePolygonSymbol(symbolLayers.ToArray());
 		}
 
+		public static CIMPolygonSymbol CreateHatchFillSymbol(float red, float green, float blue,
+		                                                     double rotation = 0,
+		                                                     double lineWidth = 2,
+		                                                     double lineSeparation = 5)
+		{
+			CIMLineSymbol lineSymbol = CreateLineSymbol(red, green, blue, lineWidth);
+
+			var hatchFill = new CIMHatchFill
+			                {
+				                Enable = true,
+				                Rotation = rotation,
+				                Separation = lineSeparation,
+				                LineSymbol = lineSymbol
+			                };
+
+			var symbolLayers = new List<CIMSymbolLayer>();
+
+			symbolLayers.AddRange(lineSymbol.SymbolLayers);
+			symbolLayers.Add(hatchFill);
+
+			return new CIMPolygonSymbol {SymbolLayers = symbolLayers.ToArray()};
+		}
+
 		#region Symbol Layers
 
 		public static CIMStroke CreateSolidStroke(CIMColor color, double width = -1)
@@ -159,7 +197,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return solidFill;
 		}
 
-		public static CIMFill CreateHatchFill(double angleDegrees, double separation, CIMColor color = null)
+		public static CIMFill CreateHatchFill(double angleDegrees, double separation,
+		                                      CIMColor color = null)
 		{
 			var hatchFill = new CIMHatchFill();
 			hatchFill.Enable = true;
@@ -214,7 +253,9 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 		#region Marker Placements
 
-		public static T SetMarkerPlacement<T>(this T marker, [CanBeNull] CIMMarkerPlacement placement) where T : CIMMarker
+		public static T SetMarkerPlacement<T>(this T marker,
+		                                      [CanBeNull] CIMMarkerPlacement placement)
+			where T : CIMMarker
 		{
 			if (marker == null)
 				throw new ArgumentNullException(nameof(marker));
@@ -224,7 +265,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return marker;
 		}
 
-		public static T SetMarkerPlacementAlongLine<T>(this T marker, params double[] template) where T : CIMMarker
+		public static T SetMarkerPlacementAlongLine<T>(this T marker, params double[] template)
+			where T : CIMMarker
 		{
 			var placement = new CIMMarkerPlacementAlongLineSameSize();
 			placement.PlacementTemplate = template ?? new[] {10 * DefaultStrokeWidth};
@@ -232,7 +274,10 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return marker.SetMarkerPlacement(placement);
 		}
 
-		public static T SetMarkerPlacementAtExtremities<T>(this T marker, ExtremityPlacement extremities, double offsetAlongLine = 0.0) where T : CIMMarker
+		public static T SetMarkerPlacementAtExtremities<T>(this T marker,
+		                                                   ExtremityPlacement extremities,
+		                                                   double offsetAlongLine = 0.0)
+			where T : CIMMarker
 		{
 			var placement = new CIMMarkerPlacementAtExtremities();
 			placement.ExtremityPlacement = extremities;
@@ -241,7 +286,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return marker.SetMarkerPlacement(placement);
 		}
 
-		public static T SetMarkerEndings<T>(this T marker, PlacementEndings endings, double customOffset = 0.0) where T : CIMMarker
+		public static T SetMarkerEndings<T>(this T marker, PlacementEndings endings,
+		                                    double customOffset = 0.0) where T : CIMMarker
 		{
 			if (marker.MarkerPlacement is CIMMarkerPlacementAlongLine placement)
 			{
@@ -256,7 +302,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return marker;
 		}
 
-		public static T SetMarkerControlPointEndings<T>(this T marker, PlacementEndings endings) where T : CIMMarker
+		public static T SetMarkerControlPointEndings<T>(this T marker, PlacementEndings endings)
+			where T : CIMMarker
 		{
 			if (marker.MarkerPlacement is CIMMarkerPlacementAlongLine placement)
 			{
@@ -270,7 +317,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return marker;
 		}
 
-		public static T SetMarkerOffsetAlongLine<T>(this T marker, double offsetAlongLine) where T : CIMMarker
+		public static T SetMarkerOffsetAlongLine<T>(this T marker, double offsetAlongLine)
+			where T : CIMMarker
 		{
 			switch (marker.MarkerPlacement)
 			{
@@ -301,7 +349,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return marker;
 		}
 
-		public static T SetMarkerPerpendicularOffset<T>(this T marker, double offset) where T : CIMMarker
+		public static T SetMarkerPerpendicularOffset<T>(this T marker, double offset)
+			where T : CIMMarker
 		{
 			if (marker.MarkerPlacement is CIMMarkerStrokePlacement placement)
 			{
@@ -324,7 +373,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 		#region Geometric Effects
 
-		public static T SetEffects<T>(this T layer, params CIMGeometricEffect[] effects) where T : CIMSymbolLayer
+		public static T SetEffects<T>(this T layer, params CIMGeometricEffect[] effects)
+			where T : CIMSymbolLayer
 		{
 			if (layer == null)
 				throw new ArgumentNullException(nameof(layer));
@@ -334,7 +384,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return layer;
 		}
 
-		public static T AddGlobalEffect<T>(this T symbol, CIMGeometricEffect effect) where T : CIMMultiLayerSymbol
+		public static T AddGlobalEffect<T>(this T symbol, CIMGeometricEffect effect)
+			where T : CIMMultiLayerSymbol
 		{
 			if (symbol == null)
 				throw new ArgumentNullException(nameof(symbol));
@@ -344,7 +395,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return symbol;
 		}
 
-		public static T AddEffect<T>(this T layer, CIMGeometricEffect effect) where T : CIMSymbolLayer
+		public static T AddEffect<T>(this T layer, CIMGeometricEffect effect)
+			where T : CIMSymbolLayer
 		{
 			if (layer == null)
 				throw new ArgumentNullException(nameof(layer));
@@ -446,7 +498,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 				throw new InvalidOperationException($"Found no primitive with name {label}");
 			}
 
-			if (primitive.GetType().GetProperty(property, BindingFlags.Public | BindingFlags.Instance) == null)
+			if (primitive.GetType().GetProperty(
+				    property, BindingFlags.Public | BindingFlags.Instance) == null)
 			{
 				throw new InvalidOperationException($"Primitive has no property '{property}'");
 			}
@@ -480,7 +533,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return primitive;
 		}
 
-		public static T LabelEffect<T>(this T primitive, out Guid label) where T : CIMGeometricEffect
+		public static T LabelEffect<T>(this T primitive, out Guid label)
+			where T : CIMGeometricEffect
 		{
 			if (primitive == null)
 				throw new ArgumentNullException(nameof(primitive));
@@ -491,7 +545,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return primitive;
 		}
 
-		public static T LabelPlacement<T>(this T primitive, out Guid label) where T : CIMMarkerPlacement
+		public static T LabelPlacement<T>(this T primitive, out Guid label)
+			where T : CIMMarkerPlacement
 		{
 			if (primitive == null)
 				throw new ArgumentNullException(nameof(primitive));
@@ -543,7 +598,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 					if (layer is CIMMarker marker)
 					{
 						var placement = marker.MarkerPlacement;
-						if (placement != null && string.Equals(placement.PrimitiveName, primitiveName))
+						if (placement != null &&
+						    string.Equals(placement.PrimitiveName, primitiveName))
 						{
 							if (placement is T found) return found;
 						}
@@ -674,7 +730,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			                 "or \"layer N\" or " +
 			                 "or \"layer N placement\" " +
 			                 "or \"layer N effect M\" " +
-							 "or \"layer N graphic M\" " +
+			                 "or \"layer N graphic M\" " +
 			                 "where N and M are non-negative integers";
 			return new ArgumentException(message);
 		}
@@ -699,7 +755,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		private static bool TryParseIndex(string text, out int index)
 		{
 			// Integer in decimal notation, allow leading and trailing blanks
-			return int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out index);
+			return int.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture,
+			                    out index);
 		}
 
 		/// <remarks>

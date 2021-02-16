@@ -17,7 +17,6 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.DomainModel.AO.QA
 {
-	[CLSCompliant(false)]
 	public static class ErrorObjectUtils
 	{
 		private static readonly IMsg _msg =

@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -14,11 +13,9 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 		private readonly bool _reverseOrder;
 		private readonly int _actualStartIndex;
 
-		[CLSCompliant(false)]
 		public WksPointZPointList([NotNull] WKSPointZ[] wksPoints) : this(
 			wksPoints, 0, wksPoints.Length) { }
 
-		[CLSCompliant(false)]
 		public WksPointZPointList([NotNull] WKSPointZ[] wksPoints, int startIndex, int count,
 		                          bool reverseOrder = false)
 		{

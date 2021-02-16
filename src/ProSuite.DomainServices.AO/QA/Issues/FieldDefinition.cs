@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -8,7 +7,6 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 {
 	public abstract class FieldDefinition
 	{
-		[CLSCompliant(false)]
 		protected FieldDefinition([NotNull] string name,
 		                          [CanBeNull] string aliasName,
 		                          esriFieldType type,
@@ -37,7 +35,6 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 		private int Length { get; }
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IField CreateField()
 		{
 			return Type == esriFieldType.esriFieldTypeString

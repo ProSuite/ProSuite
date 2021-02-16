@@ -1,10 +1,8 @@
-﻿using System;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Geometry;
 
 namespace ProSuite.Commons.AO.Geometry
 {
-	[CLSCompliant(false)]
 	public class CutPolyline
 	{
 		public IPolyline Polyline { get; set; }

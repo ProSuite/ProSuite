@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,7 +16,6 @@ namespace ProSuite.QA.Container
 
 		#region Constructors
 
-		[CLSCompliant(false)]
 		public QaError([NotNull] ITest test,
 		               [NotNull] string description,
 		               [NotNull] IEnumerable<InvolvedRow> involvedRows,
@@ -47,14 +45,12 @@ namespace ProSuite.QA.Container
 
 		#endregion
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public ITest Test { get; }
 
 		[NotNull]
 		public IList<InvolvedRow> InvolvedRows { get; }
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public IGeometry Geometry => _errorGeometry.Geometry;
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Collections;
@@ -20,12 +20,10 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 		[NotNull]
 		public ICollection<Dataset> InvolvedDatasets => _involvedDatasets;
 
-		[CLSCompliant(false)]
 		public void BeginVerification(AreaOfInterest areaOfInterest) { }
 
 		public void AddVerifiedDataset(Dataset dataset) { }
 
-		[CLSCompliant(false)]
 		public void AddIssue(Issue issue, IGeometry errorGeometry)
 		{
 			QualityCondition qualityCondition = issue.QualityCondition;
@@ -46,7 +44,6 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports
 		public void AddRowsWithStopConditions(
 			IEnumerable<RowWithStopCondition> rowsWithStopCondition) { }
 
-		[CLSCompliant(false)]
 		public void AddExceptionStatistics(IExceptionStatistics statistics) { }
 
 		public void EndVerification(bool cancelled) { }

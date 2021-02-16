@@ -118,7 +118,7 @@ namespace ProSuite.UI.DataModel
 		[NotNull]
 		public static Image GetImage([NotNull] IDdxDataset dataset)
 		{
-			Assert.ArgumentNotNull(dataset, "dataset");
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
 
 			return dataset.Deleted
 				       ? GetImage(_keyDeleted)

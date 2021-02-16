@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -24,7 +24,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		#region Crack point calculation
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public static IList<FeatureVertexInfo> CreateFeatureVertexInfos(
 			[NotNull] IEnumerable<IFeature> selectedFeatures,
 			[CanBeNull] IEnvelope inExtent,
@@ -45,7 +44,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			return result;
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public static IList<FeatureVertexInfo> CreateFeatureVertexInfos(
 			[NotNull] IEnumerable<IFeature> selectedFeatures,
@@ -70,7 +68,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			return result;
 		}
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public static FeatureVertexInfo CreateFeatureVertexInfo(
 			[NotNull] IFeature selectedFeature,
@@ -112,7 +109,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		/// <param name="targetFeatureSelection"></param>
 		/// <param name="crackPointCalculator"></param>
 		/// <param name="trackCancel"></param>
-		[CLSCompliant(false)]
 		public static void AddTargetIntersectionCrackPoints(
 			[NotNull] IEnumerable<FeatureVertexInfo> toVertexInfos,
 			[NotNull] IEnumerable<IFeature> targetFeatures,
@@ -140,7 +136,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		/// <param name="targetFeatureSelection"></param>
 		/// <param name="crackPointCalculator"></param>
 		/// <param name="trackCancel"></param>
-		[CLSCompliant(false)]
 		public static void AddTargetIntersectionCrackPoints(
 			[NotNull] FeatureVertexInfo toVertexInfo,
 			[NotNull] IEnumerable<IFeature> targetFeatures,
@@ -183,7 +178,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			}
 		}
 
-		[CLSCompliant(false)]
 		public static void AddFeatureIntersectionCrackPoints(
 			[NotNull] IEnumerable<FeatureVertexInfo> vertexInfos,
 			[NotNull] CrackPointCalculator crackPointCalculator,
@@ -214,7 +208,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		/// <param name="crackPointCalculator"></param>
 		/// <param name="processingSpatialReference"></param>
 		/// <param name="trackCancel"></param>
-		[CLSCompliant(false)]
 		public static void AddGeometryPartIntersectionCrackPoints(
 			[NotNull] FeatureVertexInfo toVertexInfo,
 			[NotNull] CrackPointCalculator crackPointCalculator,
@@ -297,7 +290,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			toVertexInfo.AddCrackPoints(crackPoints);
 		}
 
-		[CLSCompliant(false)]
 		public static IPolyline CreatePolylineSalad(IGeometry geometry)
 		{
 			IPolyline result = GeometryFactory.CreatePolyline(geometry.SpatialReference,
@@ -323,7 +315,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 		#region Add or remove crack / weed points from feature vertex info
 
-		[CLSCompliant(false)]
 		public static void RemovePoints(
 			[NotNull] ICollection<FeatureVertexInfo> vertexInfos,
 			[NotNull] IDictionary<IFeature, IGeometry> resultGeometries,
@@ -335,7 +326,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			                withinArea);
 		}
 
-		[CLSCompliant(false)]
 		public static void AddRemovePoints(
 			[NotNull] ICollection<FeatureVertexInfo> vertexInfos,
 			[NotNull] IDictionary<IFeature, IGeometry> resultGeometries,
@@ -347,7 +337,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			                withinArea);
 		}
 
-		[CLSCompliant(false)]
 		public static void CrackMultipatch([NotNull] IMultiPatch multiPatch,
 		                                   [NotNull] IPointCollection pointsToAdd,
 		                                   [CanBeNull] double? maxSnapTolerance)
@@ -377,7 +366,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			multiPatch.InvalXYFootprint();
 		}
 
-		[CLSCompliant(false)]
 		public static void CrackMultipatchRing([NotNull] IRing ring,
 		                                       [NotNull] IPoint crackPoint,
 		                                       double tolerance,
@@ -442,7 +430,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			}
 		}
 
-		[CLSCompliant(false)]
 		public static IPoint GetPointOnSegment(IRing ring, int segmentIndex, IPoint atLocation)
 		{
 			ISegment segment = ((ISegmentCollection) ring).Segment[segmentIndex];
@@ -469,7 +456,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		/// <param name="cancel"></param>
 		/// <param name="withinArea"></param>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		public static IDictionary<IFeature, IGeometry> GetSplitPoints(
 			[NotNull] IEnumerable<FeatureVertexInfo> featureVertexInfos,
 			[CanBeNull] ITrackCancel cancel,
@@ -510,7 +496,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		/// <param name="cancel"></param>
 		/// <param name="withinArea"></param>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		public static IDictionary<FeatureVertexInfo, IEnumerable<IPolyline>> GetSplitLineGeometries(
 			[NotNull] IEnumerable<FeatureVertexInfo> featureVertexInfos,
 			[CanBeNull] ITrackCancel cancel,
@@ -550,7 +535,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		/// </summary>
 		/// <returns></returns>
 		[NotNull]
-		[CLSCompliant(false)]
 		public static IList<IPoint> GetOrderedChopPoints(
 			[NotNull] IPointCollection chopPoints,
 			[NotNull] IPolyline polylineToSplit)
@@ -612,7 +596,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		/// <param name="only2D"></param>
 		/// <param name="inPerimeter"></param>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		public static IPointCollection GetWeedPoints(
 			[NotNull] IPolycurve polycurve, double weedTolerance, bool only2D,
 			[CanBeNull] IGeometry inPerimeter)
@@ -671,7 +654,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			return weededPoints;
 		}
 
-		[CLSCompliant(false)]
 		public static IPointCollection RemovePoints(
 			[NotNull] IPointCollection fromPointCollection,
 			[NotNull] IPointCollection pointsToRemove)
@@ -702,7 +684,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			return (IPointCollection) GeometryFactory.CreateMultipoint(removedPoints);
 		}
 
-		[CLSCompliant(false)]
 		public static void AddUnnecessaryVerticesToDelete(
 			[NotNull] IEnumerable<FeatureVertexInfo> featureVertexInfos,
 			[CanBeNull] IPolygon perimeter)
@@ -716,7 +697,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			}
 		}
 
-		[CLSCompliant(false)]
 		public static void AddUnnecessaryVerticesToDelete(FeatureVertexInfo featureVertexInfo,
 		                                                  double tolerance,
 		                                                  IPolygon perimeter)
@@ -776,7 +756,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		/// or not. If not, the two geometries might form a kink at the split point. This could be desireable if the split
 		/// point is for example an existing junction which should not be moved.</param>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		public static IList<IFeature> SplitPolylineFeature(IFeature polylineFeature,
 		                                                   IPoint splitPoint,
 		                                                   bool projectSplitPointOntoLine)

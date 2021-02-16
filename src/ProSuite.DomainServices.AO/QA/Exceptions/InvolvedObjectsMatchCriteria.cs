@@ -53,7 +53,6 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			}
 		}
 
-		[CLSCompliant(false)]
 		public bool IgnoreDataset([NotNull] IObjectDataset objectDataset)
 		{
 			if (_ignoredDataSources.Count == 0 && _ignoredDatasetsByDataSource.Count == 0)

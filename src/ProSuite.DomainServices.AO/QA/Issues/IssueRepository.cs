@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -28,7 +28,6 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-		[CLSCompliant(false)]
 		public IssueRepository([NotNull] IssueRowWriter rowWriter,
 		                       [NotNull] IEnumerable<IssueFeatureWriter> featureWriters,
 		                       [NotNull] IIssueTableFields fields,
@@ -60,16 +59,12 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 
 		#region Implementation of IIssueRepository
 
-		[CLSCompliant(false)]
 		public IIssueGeometryTransformation IssueGeometryTransformation { get; set; }
 
-		[CLSCompliant(false)]
 		public IEnumerable<IIssueDataset> IssueDatasets => _issueDatasets;
 
-		[CLSCompliant(false)]
 		public IFeatureWorkspace FeatureWorkspace { get; }
 
-		[CLSCompliant(false)]
 		public void AddIssue(Issue issue, IGeometry issueGeometry)
 		{
 			Assert.ArgumentNotNull(issue, nameof(issue));
@@ -97,7 +92,6 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 			}
 		}
 
-		[CLSCompliant(false)]
 		public void CreateIndexes(ITrackCancel trackCancel, bool ignoreErrors = false)
 		{
 			foreach (IssueFeatureWriter writer in

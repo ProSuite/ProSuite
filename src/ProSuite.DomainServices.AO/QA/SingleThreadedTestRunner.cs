@@ -37,7 +37,6 @@ namespace ProSuite.DomainServices.AO.QA
 
 		private IRow _currentRow;
 
-		[CLSCompliant(false)]
 		public SingleThreadedTestRunner(
 			Dictionary<ITest, TestVerification> testVerifications,
 			Dictionary<QualityCondition, IList<ITest>> testsByCondition,
@@ -52,7 +51,6 @@ namespace ProSuite.DomainServices.AO.QA
 		/// Dataset lookup used to update QualityVerification. Can be null
 		/// if <see cref="QualityVerification"/> is not set either.
 		/// </summary>
-		[CLSCompliant(false)]
 		public IDatasetLookup DatasetLookup { get; set; }
 
 		public event EventHandler<QaErrorEventArgs> QaError;
@@ -63,7 +61,6 @@ namespace ProSuite.DomainServices.AO.QA
 
 		public QualityVerification QualityVerification { get; set; }
 
-		[CLSCompliant(false)]
 		public void Execute(IEnumerable<ITest> tests,
 		                    AreaOfInterest areaOfInterest,
 		                    CancellationTokenSource cancellationTokenSource)
@@ -111,7 +108,6 @@ namespace ProSuite.DomainServices.AO.QA
 
 		public bool Cancelled => CancellationTokenSource.IsCancellationRequested;
 
-		[CLSCompliant(false)]
 		public IObjectSelection ObjectSelection { get; set; }
 
 		public bool ForceFullScanForNonContainerTests { get; set; }
@@ -123,7 +119,6 @@ namespace ProSuite.DomainServices.AO.QA
 		// TODO: extract more specific interface (ICustomTestRowFilter?), separate from stateless
 		// method relevant for ICustomErrorFilter:
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public ILocationBasedQualitySpecification LocationBasedQualitySpecification { get; set; }
 
 		private CancellationTokenSource CancellationTokenSource { get; set; }
@@ -580,6 +575,16 @@ namespace ProSuite.DomainServices.AO.QA
 				_msg.DebugFormat("Issue found: {0}", qaError);
 			}
 
+			// TODO: Consider checking basic relevance (inside test perimeter?) here
+
+			var eventArgs = new QaErrorEventArgs(qaError);
+			QaError?.Invoke(this, eventArgs);
+
+			if (eventArgs.Cancel)
+			{
+				return false;
+			}
+
 			ITest test = qaError.Test;
 			QualityConditionVerification conditionVerification =
 				GetQualityConditionVerification(test);
@@ -611,12 +616,7 @@ namespace ProSuite.DomainServices.AO.QA
 				}
 			}
 
-			var eventArgs = new QaErrorEventArgs(qaError);
-			QaError?.Invoke(this, eventArgs);
-
-			// TODO: Consider checking basic relevance (inside test perimeter?) here
-
-			return ! eventArgs.Cancel;
+			return true;
 		}
 
 		#endregion

@@ -65,7 +65,6 @@ namespace ProSuite.Commons.AO.Surface
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public static IEnvelope GetTileEnvelope(
 			double originX, double originY,
 			double tileWidth, double tileHeight,
@@ -99,7 +98,6 @@ namespace ProSuite.Commons.AO.Surface
 			return GeometryFactory.CreateEnvelope(xMin, yMin, xMax, yMax, spatialReference);
 		}
 
-		[CLSCompliant(false)]
 		public static void QueryTileEnvelope(double originX, double originY,
 		                                     double tileWidth, double tileHeight,
 		                                     RectangularTileIndex tileIndex,

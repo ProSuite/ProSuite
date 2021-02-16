@@ -13,7 +13,6 @@ using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[IntersectionParameterTest]
 	public class QaMinAngle : ContainerTest
@@ -49,31 +48,31 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaMinAngle_0")]
+		[Doc(nameof(DocStrings.QaMinAngle_0))]
 		public QaMinAngle(
-			[Doc("QaMinAngle_polylineClass")] IFeatureClass polylineClass,
-			[Doc("QaMinAngle_limit")] double limit,
-			[Doc("QaMinAngle_is3D")] bool is3D)
+			[Doc(nameof(DocStrings.QaMinAngle_polylineClass))] IFeatureClass polylineClass,
+			[Doc(nameof(DocStrings.QaMinAngle_limit))] double limit,
+			[Doc(nameof(DocStrings.QaMinAngle_is3D))] bool is3D)
 			: base((ITable) polylineClass)
 		{
 			Init(limit, is3D);
 		}
 
-		[Doc("QaMinAngle_1")]
+		[Doc(nameof(DocStrings.QaMinAngle_1))]
 		public QaMinAngle(
-				[Doc("QaMinAngle_polylineClasses")] IList<IFeatureClass> polylineClasses,
-				[Doc("QaMinAngle_limit")] double limit,
-				[Doc("QaMinAngle_is3D")] bool is3D)
+				[Doc(nameof(DocStrings.QaMinAngle_polylineClasses))] IList<IFeatureClass> polylineClasses,
+				[Doc(nameof(DocStrings.QaMinAngle_limit))] double limit,
+				[Doc(nameof(DocStrings.QaMinAngle_is3D))] bool is3D)
 			// ReSharper disable once PossiblyMistakenUseOfParamsMethod
 			: base(CastToTables(polylineClasses))
 		{
 			Init(limit, is3D);
 		}
 
-		[Doc("QaMinAngle_1")]
+		[Doc(nameof(DocStrings.QaMinAngle_1))]
 		public QaMinAngle(
-				[Doc("QaMinAngle_polylineClasses")] IList<IFeatureClass> polylineClasses,
-				[Doc("QaMinAngle_limit")] double limit)
+				[Doc(nameof(DocStrings.QaMinAngle_polylineClasses))] IList<IFeatureClass> polylineClasses,
+				[Doc(nameof(DocStrings.QaMinAngle_limit))] double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, limit, false) { }
 

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
@@ -9,7 +8,6 @@ namespace ProSuite.Commons.AO.Surface
 {
 	public class RectangularTilingStructure
 	{
-		[CLSCompliant(false)]
 		public RectangularTilingStructure(
 			double originX, double originY,
 			double tileWidth, double tileHeight,
@@ -35,11 +33,9 @@ namespace ProSuite.Commons.AO.Surface
 
 		public BorderPointTileAllocationPolicy BorderPointTileAllocation { get; }
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public ISpatialReference SpatialReference { get; }
 
-		[CLSCompliant(false)]
 		public RectangularTileIndex GetTileIndexAt([NotNull] IPoint point)
 		{
 			Assert.ArgumentNotNull(point, nameof(point));
@@ -66,7 +62,6 @@ namespace ProSuite.Commons.AO.Surface
 			                                           borderPointTileAllocation);
 		}
 
-		[CLSCompliant(false)]
 		public IEnvelope GetTileEnvelope([CanBeNull] ISpatialReference spatialReference,
 		                                 params RectangularTileIndex[] tileIndexes)
 		{
@@ -79,7 +74,6 @@ namespace ProSuite.Commons.AO.Surface
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IEnvelope GetIntersectedTilesExtent([NotNull] IEnvelope extent,
 		                                           [NotNull] IEnvelope constraintExtent)
 		{
@@ -132,7 +126,6 @@ namespace ProSuite.Commons.AO.Surface
 			return result;
 		}
 
-		[CLSCompliant(false)]
 		public IEnumerable<RectangularTileIndex> GetIntersectingTiles([NotNull] IGeometry geometry)
 		{
 			IEnvelope extent = geometry.Envelope;
@@ -151,7 +144,6 @@ namespace ProSuite.Commons.AO.Surface
 			}
 		}
 
-		[CLSCompliant(false)]
 		public IEnumerable<RectangularTileIndex> GetIntersectingTiles([NotNull] IEnvelope extent)
 		{
 			double xMin, yMin, xMax, yMax;
@@ -170,7 +162,6 @@ namespace ProSuite.Commons.AO.Surface
 			return GetAllTilesBetween(minIndex, maxIndex);
 		}
 
-		[CLSCompliant(false)]
 		public void QueryEnvelope(RectangularTileIndex forTile,
 		                          [NotNull] IEnvelope envelope)
 		{

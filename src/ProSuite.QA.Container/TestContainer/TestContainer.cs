@@ -53,7 +53,6 @@ namespace ProSuite.QA.Container.TestContainer
 
 		#endregion
 
-		[CLSCompliant(false)]
 		public IEnumerable<ITest> Tests => _tests;
 
 		public int TestCount => _tests.Count;
@@ -227,7 +226,6 @@ namespace ProSuite.QA.Container.TestContainer
 
 		#endregion
 
-		[CLSCompliant(false)]
 		public void AddTest([NotNull] ITest test)
 		{
 			Assert.ArgumentNotNull(test, nameof(test));
@@ -241,7 +239,6 @@ namespace ProSuite.QA.Container.TestContainer
 
 		public event ProgressHandler ProgressChanged;
 
-		[CLSCompliant(false)]
 		public int Execute([NotNull] IEnvelope boundingBox)
 		{
 			Assert.ArgumentNotNull(boundingBox, nameof(boundingBox));
@@ -255,7 +252,6 @@ namespace ProSuite.QA.Container.TestContainer
 			return ExecuteCore();
 		}
 
-		[CLSCompliant(false)]
 		public int Execute([NotNull] IPolygon polygon)
 		{
 			Assert.ArgumentNotNull(polygon, nameof(polygon));
@@ -291,7 +287,6 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		// TODO not called. Remove? 
-		[CLSCompliant(false)]
 		public int Execute([NotNull] IList<ISelectionSet> selectionsList)
 		{
 			Assert.ArgumentNotNull(selectionsList, nameof(selectionsList));
@@ -564,7 +559,6 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public ISpatialReference GetSpatialReference()
 		{
 			var spatialReferences = new List<ISpatialReference>();

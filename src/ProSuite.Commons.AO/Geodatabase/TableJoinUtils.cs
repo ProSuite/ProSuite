@@ -13,7 +13,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public static class TableJoinUtils
 	{
 		private static readonly IMsg _msg =

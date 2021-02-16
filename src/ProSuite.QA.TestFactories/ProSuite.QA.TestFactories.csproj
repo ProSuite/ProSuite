@@ -74,24 +74,30 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ConfiguratorUtils.cs" />
+    <Compile Include="DatasetConstraintConfigurator.cs" />
     <Compile Include="DocStrings.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>DocStrings.resx</DependentUpon>
     </Compile>
+    <Compile Include="HierarchicalConstraintUtils.cs" />
     <Compile Include="LineConnectionConfigurator.cs" />
     <Compile Include="LinePolyOverlapConfigurator.cs" />
     <Compile Include="Obsolete\QaMinPointDistanceFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QaAngleFactory.cs" />
+    <Compile Include="QaConstraintsListFactory.cs" />
     <Compile Include="QaDangleFactory.cs" />
+    <Compile Include="QaDatasetConstraintFactory.cs" />
     <Compile Include="QaExtentFactory.cs" />
     <Compile Include="QaFactoryPseudoNodes.cs" />
+    <Compile Include="QaGdbConstraintFactory.cs" />
     <Compile Include="QaLinearUnitFactory.cs" />
     <Compile Include="QaLineConnection.cs" />
     <Compile Include="QaLineIntersectAngleFactory.cs" />
     <Compile Include="QaMaxAreaFactory.cs" />
     <Compile Include="QaMaxLengthFactory.cs" />
+    <Compile Include="QaMaxSlopeFactory.cs" />
     <Compile Include="QaMinAreaFactory.cs" />
     <Compile Include="QaMinIntersectFactory.cs" />
     <Compile Include="QaMinLengthFactory.cs" />
@@ -99,6 +105,14 @@
     <Compile Include="QaMinNodeDistanceFactory.cs" />
     <Compile Include="QaMinSegAngleFactory.cs" />
     <Compile Include="QaMinSegmentLengthFactory.cs" />
+    <Compile Include="QaRelationTestFactory.cs" />
+    <Compile Include="QaRelConstraint.cs" />
+    <Compile Include="QaRelGroupConnected.cs" />
+    <Compile Include="QaRelGroupConstraints.cs" />
+    <Compile Include="QaRelLineGroupConstraints.cs" />
+    <Compile Include="QaRelMustBeNearOther.cs" />
+    <Compile Include="QaRelRegularExpression.cs" />
+    <Compile Include="QaRelUnique.cs" />
     <Compile Include="QaTopoNotNearPolyFactory.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -109,6 +123,10 @@
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
       <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
       <Name>ProSuite.Commons.Essentials</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
+      <Project>{a227d52c-0536-498f-acf2-2a5a67c3d9ff}</Project>
+      <Name>ProSuite.Commons.Logging</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
       <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.esriSystem;
@@ -17,7 +17,6 @@ namespace ProSuite.QA.Container
 	/// <summary>
 	/// Base class for tests
 	/// </summary>
-	[CLSCompliant(false)]
 	public abstract class TestBase : ITest, IErrorReporting
 	{
 		private class TableProps

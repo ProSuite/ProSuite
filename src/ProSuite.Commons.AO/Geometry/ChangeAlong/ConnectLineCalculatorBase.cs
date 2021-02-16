@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -8,7 +7,6 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
-	[CLSCompliant(false)]
 	public abstract class ConnectLineCalculatorBase : IConnectLineCalculator
 	{
 		private static readonly IMsg _msg =
@@ -36,7 +34,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// <param name="searchForward">Direction to search</param>
 		/// <param name="fallBackConnection"></param>
 		/// <returns>Index of the first adjustable point</returns>
-		[CLSCompliant(false)]
 		public abstract IPath FindConnection(ICurve curveToConnectTo,
 		                                     ICurve curveToSearch,
 		                                     bool searchForward,

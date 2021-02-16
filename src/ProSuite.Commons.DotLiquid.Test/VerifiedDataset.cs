@@ -20,7 +20,7 @@ namespace ProSuite.Commons.DotLiquid.Test
 		/// <param name="workspaceName">Name of the workspace.</param>
 		public VerifiedDataset([NotNull] string name, [CanBeNull] string workspaceName)
 		{
-			Assert.ArgumentNotNullOrEmpty(name, "name");
+			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
 
 			Name = name;
 			WorkspaceName = workspaceName;

@@ -9,6 +9,7 @@ using CommandLine;
 using Grpc.Core;
 using Grpc.HealthCheck;
 using ProSuite.Commons;
+using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
@@ -16,6 +17,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Server.AO;
+using ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape;
 using ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps;
 
 namespace ProSuite.Microservices.Server.Geometry.Console
@@ -97,6 +99,18 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 
 				ConfigureLogging(arguments.VerboseLogging, _logConfigFileName);
 
+				var arcGisProductEnvVar = "VSArcGISProduct";
+
+				string vsArcGISProductValue =
+					Environment.GetEnvironmentVariable(arcGisProductEnvVar);
+
+				// Read the RuntimeUtils.Version to initialize it and use fall-back implementation
+				// to avoid subsequent hang once the license has been initialized (this is probably
+				// only relevant for 10.x).
+				_msg.DebugFormat(
+					"Installed ArcGIS Version: {0}. Product Environment Variable {1}: {2}",
+					RuntimeUtils.Version, arcGisProductEnvVar, vsArcGISProductValue);
+
 				if (configFilePath != null)
 				{
 					_msg.InfoFormat("Using service configuration defined in {0}", configFilePath);
@@ -113,7 +127,8 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 
 				_msg.InfoFormat("Checking out ArcGIS license...");
 
-				ArcGISLicenses.InitializeAo11();
+				ArcGISLicenses lic = new ArcGISLicenses();
+				lic.Checkout();
 
 				EnvironmentUtils.SetConfigurationDirectoryProvider(
 					ConfigurationUtils.GetAppDataConfigDirectoryProvider());
@@ -151,6 +166,8 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 				                                //Health = health
 			                                };
 
+			var advancedReshapeServiceImpl = new AdvancedReshapeGrpcImpl(taskScheduler);
+
 			//health.SetStatus(removeOverlapsServiceImpl.GetType(), true);
 
 			ServerCredentials serverCredentials =
@@ -167,6 +184,7 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 					Services =
 					{
 						RemoveOverlapsGrpc.BindService(removeOverlapsServiceImpl),
+						ReshapeGrpc.BindService(advancedReshapeServiceImpl)
 						//Health.BindService(healthService)
 					},
 					Ports =

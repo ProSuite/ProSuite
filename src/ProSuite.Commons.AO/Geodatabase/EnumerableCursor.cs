@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
@@ -12,7 +11,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		#region Constructors
 
-		[CLSCompliant(false)]
 		public EnumerableCursor(ICursor cursor)
 		{
 			_cursor = cursor;
@@ -22,7 +20,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		#region IEnumerable implementation
 
-		[CLSCompliant(false)]
 		public IEnumerator<IRow> GetEnumerator()
 		{
 			return new CursorEnumerator(_cursor);

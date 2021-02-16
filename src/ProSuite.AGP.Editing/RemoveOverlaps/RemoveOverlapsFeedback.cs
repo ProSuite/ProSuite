@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps;
 
@@ -17,24 +18,10 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		public RemoveOverlapsFeedback()
 		{
-			CIMColor color = ColorFactory.Instance.CreateRGBColor(255, 0, 0);
+			_overlapLineSymbol =
+				SymbolUtils.CreateLineSymbol(255, 0, 0, 2);
 
-			_overlapLineSymbol = SymbolFactory.Instance.ConstructLineSymbol(color, 2);
-
-			var hatchFill = new CIMHatchFill
-			                {
-				                Enable = true,
-				                Rotation = 0.0,
-				                Separation = 2.5,
-				                LineSymbol = _overlapLineSymbol
-			                };
-
-			var symbolLayers = new List<CIMSymbolLayer>();
-
-			symbolLayers.AddRange(_overlapLineSymbol.SymbolLayers);
-			symbolLayers.Add(hatchFill);
-
-			_overlapPolygonSymbol = new CIMPolygonSymbol {SymbolLayers = symbolLayers.ToArray()};
+			_overlapPolygonSymbol = SymbolUtils.CreateHatchFillSymbol(255, 0, 0);
 		}
 
 		public void Update([CanBeNull] Overlaps newOverlaps)

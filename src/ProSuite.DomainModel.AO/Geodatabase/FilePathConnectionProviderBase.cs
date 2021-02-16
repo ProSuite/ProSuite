@@ -7,7 +7,6 @@ using ProSuite.Commons.Validation;
 
 namespace ProSuite.DomainModel.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public abstract class FilePathConnectionProviderBase : ConnectionProvider
 	{
 		[UsedImplicitly] private string _path;

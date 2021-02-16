@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text.RegularExpressions;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -49,7 +49,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		[NotNull]
 		public string Pattern => _pattern;
 
-		[CLSCompliant(false)]
 		public bool Matches([NotNull] IDatasetName datasetName)
 		{
 			string databaseName;

@@ -13,7 +13,6 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 		[NotNull] private readonly IList<InvolvedTable> _involvedTables;
 		[CanBeNull] private readonly ManagedProperties _managedProperties;
 
-		[CLSCompliant(false)]
 		public ExceptionObject(int id,
 		                       Guid qualityConditionUuid,
 		                       Guid qualityConditionVersionUuid,
@@ -78,15 +77,12 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 
 		public Guid QualityConditionVersionUuid { get; }
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public IBox ShapeEnvelope { get; }
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public IBox AreaOfInterestShapeEnvelope { get; }
 
-		[CLSCompliant(false)]
 		public esriGeometryType? ShapeType { get; }
 
 		public double? XYTolerance { get; }

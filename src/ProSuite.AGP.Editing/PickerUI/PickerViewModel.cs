@@ -2,23 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Net.Mime;
-using System.Reflection;
-using System.Threading.Tasks;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using ArcGIS.Core.CIM;
-using ArcGIS.Core.Geometry;
-using ArcGIS.Core.Internal.CIM;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Internal.Framework.Win32;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using Geometry = System.Windows.Media.Geometry;
 using Polygon = ArcGIS.Core.Geometry.Polygon;
 using Polyline = ArcGIS.Core.Geometry.Polyline;
 
@@ -30,18 +21,14 @@ namespace ProSuite.AGP.Editing.PickerUI
 		private readonly CIMPolygonSymbol _highlightPolygonSymbol;
 		private readonly CIMPointSymbol _highlightPointSymbol;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public PickerViewModel(List<IPickableItem> pickingCandidates,
 		                       bool isSingleMode)
 		{
-			FlashItemCmd = new RelayCommand(param =>
-				                                FlashItem(param), () => true, false,
-			                                true);
+			FlashItemCmd = new RelayCommand(FlashItem, () => true, false);
 
-			CloseCommand = new RelayCommand(() =>
-				                                Close(), () => true, false, true);
+			CloseCommand = new RelayCommand(Close, () => true, false);
 
 			PickableItems =
 				new ObservableCollection<IPickableItem>(pickingCandidates);
@@ -72,8 +59,6 @@ namespace ProSuite.AGP.Editing.PickerUI
 		protected IPickableItem _selectedItem;
 
 		protected bool _isSingleMode;
-
-		private List<IPickableItem> _selectedItems;
 
 		protected readonly List<IDisposable> _overlays = new List<IDisposable>();
 

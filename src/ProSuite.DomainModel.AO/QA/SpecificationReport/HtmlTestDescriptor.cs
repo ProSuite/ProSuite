@@ -52,7 +52,7 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 				ConstructorId = testDescriptor.TestConstructorId;
 				UsesConstructor = true;
 				IsObsolete = TestFactoryUtils.IsObsolete(testType, ConstructorId,
-				                                            out _obsoleteMessage);
+				                                         out _obsoleteMessage);
 			}
 			else if (testDescriptor.TestFactoryDescriptor != null)
 			{

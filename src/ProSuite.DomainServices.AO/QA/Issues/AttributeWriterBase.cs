@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
@@ -21,7 +21,6 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-		[CLSCompliant(false)]
 		protected AttributeWriterBase([NotNull] ITable table)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
@@ -41,7 +40,6 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 			                   out _fieldNullabilityByIndex);
 		}
 
-		[CLSCompliant(false)]
 		protected int Find([NotNull] ITable table,
 		                   [NotNull] string fieldName)
 		{
@@ -69,7 +67,6 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 			                            nameof(fieldName));
 		}
 
-		[CLSCompliant(false)]
 		protected void WriteDouble([NotNull] IRowBuffer rowBuffer,
 		                           int fieldIndex,
 		                           [CanBeNull] double? value)
@@ -86,7 +83,6 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 			}
 		}
 
-		[CLSCompliant(false)]
 		protected void WriteText([NotNull] IRowBuffer rowBuffer,
 		                         int fieldIndex,
 		                         [CanBeNull] string value,

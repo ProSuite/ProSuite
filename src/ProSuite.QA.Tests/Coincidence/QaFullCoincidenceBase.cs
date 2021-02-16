@@ -6,7 +6,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
-	[CLSCompliant(false)]
 	public abstract class QaFullCoincidenceBase : QaPolycurveCoincidenceBase
 	{
 		protected QaFullCoincidenceBase(

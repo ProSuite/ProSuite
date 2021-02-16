@@ -66,11 +66,7 @@ namespace ProSuite.AGP.Editing.Selection
 
 			foreach (KeyValuePair<BasicFeatureLayer, List<long>> kvp in featuresPerLayer)
 			{
-				var qf = new QueryFilter
-				         {
-					         ObjectIDs = kvp.Value
-				         };
-				kvp.Key.Select(qf, method);
+				SelectionUtils.SelectFeatures(kvp.Key, method, kvp.Value);
 			}
 		}
 
@@ -91,13 +87,7 @@ namespace ProSuite.AGP.Editing.Selection
 				SelectionUtils.ClearSelection(MapView.Active.Map);
 			}
 
-			{
-				var qf = new QueryFilter
-				         {
-					         ObjectIDs = featuresOfLayer.Value
-				         };
-				featuresOfLayer.Key.Select(qf, method);
-			}
+			SelectionUtils.SelectFeatures(featuresOfLayer.Key, method, featuresOfLayer.Value);
 		}
 	}
 }

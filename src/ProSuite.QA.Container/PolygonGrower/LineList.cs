@@ -11,11 +11,10 @@ namespace ProSuite.QA.Container.PolygonGrower
 {
 	public class LineList
 	{
-		[CLSCompliant(false)] protected static readonly ThreadLocal<IEnvelope> QueryEnvelope =
+		protected static readonly ThreadLocal<IEnvelope> QueryEnvelope =
 			new ThreadLocal<IEnvelope>(() => new EnvelopeClass());
 	}
 
-	[CLSCompliant(false)]
 	public class LineList<TDirectedRow> : LineList where TDirectedRow : ILineDirectedRow
 	{
 		private readonly PathRowComparer _pathRowComparer;
@@ -57,13 +56,11 @@ namespace ProSuite.QA.Container.PolygonGrower
 
 		#endregion
 
-		[CLSCompliant(false)]
 		public IPoint FromPoint
 		{
 			get { return _directedRows.First.Value.FromPoint; }
 		}
 
-		[CLSCompliant(false)]
 		public IPoint ToPoint
 		{
 			get { return _directedRows.Last.Value.ToPoint; }
@@ -80,7 +77,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			get { return ((IRelationalOperator) FromPoint).Equals(ToPoint); }
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IList<IRow> GetUniqueRows(IList<ITable> tableIndexTables)
 		{
@@ -483,7 +479,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 		/// </summary>
 		/// <returns></returns>
 		[NotNull]
-		[CLSCompliant(false)]
 		public IPolyline GetBorder()
 		{
 			IPolyline border;
@@ -512,7 +507,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IPolygon GetPolygon()
 		{
 			IPolygon poly = CombineRings();
@@ -549,7 +543,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IPolyline GetPolyline()
 		{
 			IPolyline polyline =
@@ -625,7 +618,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 		}
 
 		[CanBeNull]
-		[CLSCompliant(false)]
 		public IEnvelope Envelope()
 		{
 			IEnvelope envelope = null;

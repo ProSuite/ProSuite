@@ -15,7 +15,6 @@ namespace ProSuite.DomainServices.AO.QA
 		private readonly IFeatureWorkspace _featureWorkspace;
 		private readonly IIssueStatisticsTableFieldNames _fieldNames;
 
-		[CLSCompliant(false)]
 		public IssueStatisticsWriter([NotNull] IFeatureWorkspace featureWorkspace)
 		{
 			Assert.ArgumentNotNull(featureWorkspace, nameof(featureWorkspace));
@@ -25,7 +24,6 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IIssueStatisticsTable WriteStatistics(
 			[NotNull] IssueStatistics issueStatistics)
 		{

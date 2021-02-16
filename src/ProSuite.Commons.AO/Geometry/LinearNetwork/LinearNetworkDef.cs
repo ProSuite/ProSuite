@@ -17,7 +17,6 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 	/// should be created e.g. by the <see cref="LinearNetworkEditAgent"/> when deemed
 	/// necessary.
 	/// </summary>
-	[CLSCompliant(false)]
 	public class LinearNetworkDef
 	{
 		[CanBeNull] private readonly IFeatureClass _defaultJunctionClass;

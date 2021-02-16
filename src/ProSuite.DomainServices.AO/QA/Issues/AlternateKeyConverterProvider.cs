@@ -21,7 +21,6 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 		[NotNull] private readonly IQualityConditionObjectDatasetResolver _datasetResolver;
 		[NotNull] private readonly IDatasetContext _datasetContext;
 
-		[CLSCompliant(false)]
 		public AlternateKeyConverterProvider(
 			[NotNull] IDictionary<Guid, QualityCondition> conditionsByGuid,
 			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver,

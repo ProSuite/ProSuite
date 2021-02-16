@@ -14,7 +14,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 	{
 		#region Constructors
 
-		[CLSCompliant(false)]
 		public GdbRelationshipRowReference([NotNull] IObject obj)
 		{
 			IObjectClass objClass = obj.Class;
@@ -60,7 +59,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// </summary>
 		/// <param name="workspace">The workspace.</param>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		[Pure]
 		public IObject GetObject([NotNull] IFeatureWorkspace workspace)
 		{
@@ -82,7 +80,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <c>false</c> otherwise.</returns>
 		/// <remarks>Only considers object class id and object id. 
 		/// Disregards difference in version.</remarks>
-		[CLSCompliant(false)]
 		[Pure]
 		public bool References([NotNull] IObject obj)
 		{
@@ -98,7 +95,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <returns><c>true</c> if the reference points to an object in the given class, 
 		/// <c>false</c> otherwise.</returns>
 		/// <remarks>Only considers object class id. Disregards difference in version.</remarks>
-		[CLSCompliant(false)]
 		[Pure]
 		public bool References([NotNull] IObjectClass objectClass)
 		{
@@ -127,7 +123,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <returns><c>true</c> if the reference points to an object in the given table, 
 		/// <c>false</c> otherwise.</returns>
 		/// <remarks>Only considers table object class id. Disregards difference in version.</remarks>
-		[CLSCompliant(false)]
 		[Pure]
 		public bool References(ITable table)
 		{

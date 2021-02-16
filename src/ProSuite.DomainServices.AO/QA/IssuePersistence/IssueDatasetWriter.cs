@@ -51,7 +51,6 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		/// <param name="issueFeatureClass">The error feature class.</param>
 		/// <param name="issueObjectDataset">The error object dataset.</param>
 		/// <param name="fieldIndexCache">The field index cache.</param>
-		[CLSCompliant(false)]
 		public IssueDatasetWriter([NotNull] IFeatureClass issueFeatureClass,
 		                          [NotNull] IErrorDataset issueObjectDataset,
 		                          [NotNull] IFieldIndexCache fieldIndexCache)
@@ -63,7 +62,6 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		/// <param name="issueTable">The error table.</param>
 		/// <param name="issueObjectDataset">The error object dataset.</param>
 		/// <param name="fieldIndexCache">The field index cache.</param>
-		[CLSCompliant(false)]
 		public IssueDatasetWriter([NotNull] ITable issueTable,
 		                          [NotNull] IErrorDataset issueObjectDataset,
 		                          [NotNull] IFieldIndexCache fieldIndexCache)
@@ -94,11 +92,9 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		[PublicAPI]
 		public int MaxBufferedPointCount { get; set; } = 10000;
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public ITable Table { get; }
 
-		[CLSCompliant(false)]
 		public ISpatialReference SpatialReference
 		{
 			get
@@ -144,7 +140,6 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			}
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IRowBuffer GetRowBuffer()
 		{
@@ -160,7 +155,6 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			return Assert.NotNull(_rowBuffer);
 		}
 
-		[CLSCompliant(false)]
 		public void InsertRow()
 		{
 			Assert.NotNull(_rowBuffer, "no row buffer");
@@ -213,20 +207,17 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IList<InvolvedRow> GetInvolvedRows([NotNull] IRow errorRow)
 		{
 			return RowParser.Parse(GetString(errorRow, AttributeRole.ErrorObjects));
 		}
 
-		[CLSCompliant(false)]
 		public T? Get<T>([NotNull] IRow errorRow,
 		                 [NotNull] AttributeRole role) where T : struct
 		{
 			return GdbObjectUtils.ReadRowValue<T>(errorRow, GetFieldIndex(role));
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public string GetString([NotNull] IRow errorRow,
 		                        [NotNull] AttributeRole role)
@@ -235,7 +226,6 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			return Assert.NotNull(GetString(errorRow, role, roleIsOptional));
 		}
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public string GetString([NotNull] IRow errorRow,
 		                        [NotNull] AttributeRole role,
@@ -254,7 +244,6 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 				       : Convert.ToString(obj);
 		}
 
-		[CLSCompliant(false)]
 		public void WriteValue([NotNull] IRowBuffer rowBuffer,
 		                       [NotNull] AttributeRole role,
 		                       [CanBeNull] object value)
@@ -264,7 +253,6 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			rowBuffer.set_Value(fieldIndex, value ?? DBNull.Value);
 		}
 
-		[CLSCompliant(false)]
 		public void WriteValue([NotNull] IRowBuffer rowBuffer,
 		                       [NotNull] AttributeRole role,
 		                       [CanBeNull] string text)
@@ -276,7 +264,6 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 
 		// additional WriteValue(string fieldName) could be considered with cached field index dictionary.
 
-		[CLSCompliant(false)]
 		public void WriteValue([NotNull] IRowBuffer rowBuffer,
 		                       [NotNull] string fieldName,
 		                       [CanBeNull] string text)
@@ -338,7 +325,6 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			return length;
 		}
 
-		[CLSCompliant(false)]
 		public void DeleteErrorObjects([NotNull] IQueryFilter filter)
 		{
 			Assert.ArgumentNotNull(filter, nameof(filter));
@@ -351,7 +337,6 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			_msg.DebugStopTiming(watch, "Errors deleted in {0}", DatasetName);
 		}
 
-		[CLSCompliant(false)]
 		public void DeleteErrorObjects(
 			[NotNull] IQueryFilter filter,
 			[NotNull] IDeletableErrorRowFilter deletableErrorRowFilter,
@@ -411,7 +396,6 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			                     count, DatasetName);
 		}
 
-		[CLSCompliant(false)]
 		public int DeleteOrphanedErrorObjects([NotNull] IQueryFilter filter,
 		                                      [NotNull] ICollection<int> qualityConditionIds)
 		{

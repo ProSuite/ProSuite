@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -7,7 +6,6 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 	public static class IssueTableFieldsFactory
 	{
 		[NotNull]
-		[CLSCompliant(false)]
 		public static IIssueTableFieldManagement GetIssueTableFields(
 			bool addExceptionFields,
 			bool useDbfFieldNames = false,

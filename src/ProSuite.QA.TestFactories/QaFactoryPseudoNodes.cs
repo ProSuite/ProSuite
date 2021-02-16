@@ -11,7 +11,6 @@ using ProSuite.QA.Tests;
 
 namespace ProSuite.QA.TestFactories
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[LinearNetworkTest]
 	public class QaFactoryPseudoNodes : TestFactory

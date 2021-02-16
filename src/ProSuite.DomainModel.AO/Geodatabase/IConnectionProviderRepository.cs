@@ -1,11 +1,9 @@
-using System;
 using System.Collections.Generic;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public interface IConnectionProviderRepository : IRepository<ConnectionProvider>
 	{
 		[NotNull]

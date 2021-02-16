@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -10,7 +10,6 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
-	[CLSCompliant(false)]
 	public class StickyIntersectionConnectLineCalculator : IDisposable
 		// : ConnectLineCalculatorBase
 	{

@@ -1,4 +1,3 @@
-﻿using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -12,7 +11,6 @@ namespace ProSuite.QA.Container.TestSupport
 		private readonly bool _undefinedConstraintIsFulfilled;
 		[CanBeNull] private readonly TableView _tableView;
 
-		[CLSCompliant(false)]
 		public RowCondition([NotNull] ITable table,
 		                    [CanBeNull] string condition,
 		                    bool undefinedConstraintIsFulfilled = false,
@@ -31,7 +29,6 @@ namespace ProSuite.QA.Container.TestSupport
 			}
 		}
 
-		[CLSCompliant(false)]
 		public bool IsFulfilled([NotNull] IRow row)
 		{
 			Assert.ArgumentNotNull(row, nameof(row));

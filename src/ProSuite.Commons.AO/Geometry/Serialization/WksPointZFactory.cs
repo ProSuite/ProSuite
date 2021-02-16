@@ -1,10 +1,9 @@
-﻿using System;
+using System;
 using ESRI.ArcGIS.esriSystem;
 using ProSuite.Commons.Geometry.Wkb;
 
 namespace ProSuite.Commons.AO.Geometry.Serialization
 {
-	[CLSCompliant(false)]
 	public class WksPointZFactory : IPointFactory<WKSPointZ>
 	{
 		public WKSPointZ CreatePointXy(double x, double y)

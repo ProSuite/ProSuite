@@ -23,7 +23,6 @@ namespace ProSuite.QA.Tests
 
 		private double _angle;
 
-		[CLSCompliant(false)]
 		public LineIntersection([NotNull] IPolyline a, [NotNull] IPolyline b,
 		                        [NotNull] IPoint at, bool is3D)
 		{
@@ -39,7 +38,6 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IPoint At { get; }
 
 		public double Angle

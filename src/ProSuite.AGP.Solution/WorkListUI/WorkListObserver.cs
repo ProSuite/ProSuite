@@ -50,22 +50,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				_view = tuple.Item1;
 				ViewModel = tuple.Item2;
 				WorkList = workList;
-
-				//if (workList is SelectionWorkList)
-				//{
-				//	_viewModel = new SelectionWorkListVm(workList);
-				//	_view = new WorkListView(_viewModel as SelectionWorkListVm)
-				//	        {Title = workList.Name};
-				//	_workList = workList;
-				//}
-
-				//if (workList is IssueWorkList)
-				//{
-				//	_viewModel = new IssueWorkListVm(workList);
-				//	_view = new IssueWorkListView(_viewModel as IssueWorkListVm)
-				//	        {Title = workList.Name};
-				//	_workList = workList;
-				//}
 			});
 		}
 

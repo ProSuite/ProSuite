@@ -30,7 +30,6 @@ namespace ProSuite.QA.Container
 			                    out _isSpatialFilter);
 		}
 
-		[CLSCompliant(false)]
 		public EnumCursor([NotNull] ISelectionSet selectionSet,
 		                  [CanBeNull] IQueryFilter queryFilter,
 		                  bool recycle) : this(selectionSet.Target, queryFilter)
@@ -48,7 +47,6 @@ namespace ProSuite.QA.Container
 			}
 		}
 
-		[CLSCompliant(false)]
 		public EnumCursor([NotNull] ITable table,
 		                  [CanBeNull] IQueryFilter queryFilter,
 		                  bool recycle) : this(table, queryFilter)
@@ -70,7 +68,6 @@ namespace ProSuite.QA.Container
 
 		#region IEnumerable<IRow> Members
 
-		[CLSCompliant(false)]
 		public IEnumerator<IRow> GetEnumerator()
 		{
 			return new RowEnumerator(this);
@@ -88,7 +85,6 @@ namespace ProSuite.QA.Container
 			Dispose();
 		}
 
-		[CLSCompliant(false)]
 		public static string CreateMessage([NotNull] ITable table,
 		                                   [CanBeNull] IQueryFilter filter)
 		{

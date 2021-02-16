@@ -1,9 +1,7 @@
-using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainServices.AO.QA.Exceptions
 {
-	[CLSCompliant(false)]
 	public interface IExceptionObjectRepository
 	{
 		[NotNull]

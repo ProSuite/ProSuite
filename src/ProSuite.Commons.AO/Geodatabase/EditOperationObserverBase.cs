@@ -1,10 +1,8 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public abstract class EditOperationObserverBase : IEditOperationObserver
 	{
 		public virtual bool ObserveWorkspaceOperations => false;

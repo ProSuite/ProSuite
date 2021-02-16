@@ -21,7 +21,6 @@ namespace ProSuite.QA.Tests
 	/// within each polygon. 
 	/// Polygons are derived out of polylines.
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[TopologyTest]
 	[PolygonNetworkTest]
@@ -56,35 +55,35 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		[Doc("QaCentroids_0")]
+		[Doc(nameof(DocStrings.QaCentroids_0))]
 		public QaCentroids(
-				[Doc("QaCentroids_polylineClass")] IFeatureClass polylineClass,
-				[Doc("QaCentroids_pointClass")] IFeatureClass pointClass)
+				[Doc(nameof(DocStrings.QaCentroids_polylineClass))] IFeatureClass polylineClass,
+				[Doc(nameof(DocStrings.QaCentroids_pointClass))] IFeatureClass pointClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClass, pointClass, null) { }
 
-		[Doc("QaCentroids_0")]
+		[Doc(nameof(DocStrings.QaCentroids_0))]
 		public QaCentroids(
-			[Doc("QaCentroids_polylineClass")] IFeatureClass polylineClass,
-			[Doc("QaCentroids_pointClass")] IFeatureClass pointClass,
-			[Doc("QaCentroids_constraint")] string constraint)
+			[Doc(nameof(DocStrings.QaCentroids_polylineClass))] IFeatureClass polylineClass,
+			[Doc(nameof(DocStrings.QaCentroids_pointClass))] IFeatureClass pointClass,
+			[Doc(nameof(DocStrings.QaCentroids_constraint))] string constraint)
 			: base(CastToTables(polylineClass, pointClass), false)
 		{
 			Init(constraint);
 		}
 
-		[Doc("QaCentroids_2")]
+		[Doc(nameof(DocStrings.QaCentroids_2))]
 		public QaCentroids(
-				[Doc("QaCentroids_polylineClasses")] IList<IFeatureClass> polylineClasses,
-				[Doc("QaCentroids_pointClasses")] IList<IFeatureClass> pointClasses)
+				[Doc(nameof(DocStrings.QaCentroids_polylineClasses))] IList<IFeatureClass> polylineClasses,
+				[Doc(nameof(DocStrings.QaCentroids_pointClasses))] IList<IFeatureClass> pointClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, pointClasses, null) { }
 
-		[Doc("QaCentroids_2")]
+		[Doc(nameof(DocStrings.QaCentroids_2))]
 		public QaCentroids(
-			[Doc("QaCentroids_polylineClasses")] IList<IFeatureClass> polylineClasses,
-			[Doc("QaCentroids_pointClasses")] IList<IFeatureClass> pointClasses,
-			[Doc("QaCentroids_constraint")] string constraint)
+			[Doc(nameof(DocStrings.QaCentroids_polylineClasses))] IList<IFeatureClass> polylineClasses,
+			[Doc(nameof(DocStrings.QaCentroids_pointClasses))] IList<IFeatureClass> pointClasses,
+			[Doc(nameof(DocStrings.QaCentroids_constraint))] string constraint)
 			: base(CastToTables(polylineClasses, pointClasses), false)
 		{
 			Init(constraint);

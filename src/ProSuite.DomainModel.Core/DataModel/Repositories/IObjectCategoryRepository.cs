@@ -1,11 +1,9 @@
-using System;
 using System.Collections.Generic;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.DataModel.Repositories
 {
-	[CLSCompliant(false)]
 	public interface IObjectCategoryRepository : IRepository<ObjectCategory>
 	{
 		[NotNull]

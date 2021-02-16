@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -8,14 +7,12 @@ namespace ProSuite.QA.Container.PolygonGrower
 {
 	public sealed class TableIndexRow : ITableIndexRow
 	{
-		[CLSCompliant(false)]
 		public TableIndexRow([NotNull] IRow row, int tableIndex)
 		{
 			Row = row;
 			TableIndex = tableIndex;
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IRow Row { get; }
 

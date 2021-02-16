@@ -9,7 +9,6 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
-	[CLSCompliant(false)]
 	public class SimpleWorkspaceContext : WorkspaceContextBase
 	{
 		[NotNull] private readonly DdxModel _model;
@@ -24,7 +23,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		#region Constructors
 
-		[CLSCompliant(false)]
 		public SimpleWorkspaceContext(
 			[NotNull] DdxModel model,
 			[NotNull] IFeatureWorkspace featureWorkspace,
@@ -103,7 +101,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 				       : DatasetUtils.OpenRasterDataset(Workspace, workspaceDataset.Name);
 		}
 
-		[CLSCompliant(false)]
 		public override IRelationshipClass OpenRelationshipClass(Association association)
 		{
 			Assert.ArgumentNotNull(association, nameof(association));

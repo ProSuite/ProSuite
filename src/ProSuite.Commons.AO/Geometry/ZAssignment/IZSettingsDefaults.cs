@@ -1,11 +1,9 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geometry.ZAssignment
 {
-	[CLSCompliant(false)]
 	public interface IZSettingsDefaults
 	{
 		double DefaultConstantZ { get; }

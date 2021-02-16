@@ -16,7 +16,6 @@ namespace ProSuite.QA.Container
 		/// Initializes a new instance of the <see cref="InvolvedRow"/> class.
 		/// </summary>
 		/// <param name="row">The row.</param>
-		[CLSCompliant(false)]
 		public InvolvedRow([NotNull] IRow row)
 			: this(((IDataset) row.Table).Name,
 			       row.Table.HasOID
@@ -37,7 +36,6 @@ namespace ProSuite.QA.Container
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public static IList<InvolvedRow> CreateList([NotNull] IList<IRow> rows)
 		{
 			int count = rows.Count;

@@ -18,7 +18,6 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public static class GdbQueryUtils
 	{
 		private static readonly IMsg _msg =

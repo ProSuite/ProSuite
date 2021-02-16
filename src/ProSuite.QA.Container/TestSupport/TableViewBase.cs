@@ -17,7 +17,6 @@ namespace ProSuite.QA.Container.TestSupport
 		/// </summary>
 		/// <param name="columnInfos"></param>
 		/// <param name="constraintView">The constraint view.</param>
-		[CLSCompliant(false)]
 		protected TableViewBase([NotNull] IEnumerable<ColumnInfo> columnInfos,
 		                        [CanBeNull] DataView constraintView)
 		{
@@ -133,11 +132,9 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		protected ICollection<ColumnInfo> ColumnInfos => _columnInfos;
 
 		[NotNull]
-		[CLSCompliant(false)]
 		protected ColumnInfo GetColumnInfo(int columnIndex)
 		{
 			return _columnInfos[columnIndex];

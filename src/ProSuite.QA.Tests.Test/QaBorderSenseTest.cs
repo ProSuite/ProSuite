@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container.Test;
@@ -8,13 +7,12 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Tests.Test.TestData;
 
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
-	[CLSCompliant(false)]
 	public class QaBorderSenseTest
 	{
 		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
@@ -23,7 +21,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 		}
 
 		[OneTimeTearDown]
@@ -37,7 +35,7 @@ namespace ProSuite.QA.Tests.Test
 		{
 			const string featureClassName = "TLM_STEHENDES_GEWAESSER";
 
-			var locator = new TestDataLocator(@"..\..\EsriDE.ProSuite\src");
+			var locator = TestDataUtils.GetTestDataLocator();
 			string path = locator.GetPath("QaBorderSense.gdb");
 
 			IFeatureWorkspace workspace = WorkspaceUtils.OpenFileGdbFeatureWorkspace(path);

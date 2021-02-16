@@ -8,7 +8,6 @@ namespace ProSuite.DomainServices.AO.QA
 {
 	public class AreaOfInterest
 	{
-		[CLSCompliant(false)]
 		public AreaOfInterest([NotNull] IGeometry geometry,
 		                      [CanBeNull] string description = null,
 		                      [CanBeNull] string featureSource = null,
@@ -40,11 +39,9 @@ namespace ProSuite.DomainServices.AO.QA
 
 		public bool IsEmpty { get; }
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IGeometry Geometry { get; }
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IPolygon CreatePolygon()
 		{
@@ -64,14 +61,12 @@ namespace ProSuite.DomainServices.AO.QA
 				"AOI geometry must be either polygon or envelope");
 		}
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public IEnvelope ClipExtent { get; }
 
 		[CanBeNull]
 		public string Description { get; }
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public IEnvelope Extent { get; }
 

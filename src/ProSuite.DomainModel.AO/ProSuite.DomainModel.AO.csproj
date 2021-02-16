@@ -82,6 +82,7 @@
     </Compile>
     <Compile Include="DataModel\AttributeUtils.cs" />
     <Compile Include="DataModel\FieldIndexCache.cs" />
+    <Compile Include="DataModel\GeometryTypeFactory.cs" />
     <Compile Include="DataModel\GlobalDatasetLookup.cs" />
     <Compile Include="DataModel\Harvesting\DatasetFeatureDatasetMatchCriterion.cs" />
     <Compile Include="DataModel\Harvesting\DatasetFilter.cs" />
@@ -111,11 +112,14 @@
     <Compile Include="DataModel\IVirtualModelContext.cs" />
     <Compile Include="DataModel\IWorkspaceContext.cs" />
     <Compile Include="DataModel\IWorkspaceContextLookup.cs" />
+    <Compile Include="DataModel\MasterDatabaseDatasetContext.cs" />
     <Compile Include="DataModel\MasterDatabaseWorkspaceContext.cs" />
+    <Compile Include="DataModel\MasterDatabaseWorkspaceContextLookup.cs" />
     <Compile Include="DataModel\Model.cs" />
     <Compile Include="DataModel\ModelElementUtils.cs" />
     <Compile Include="DataModel\ObjectObject.cs" />
     <Compile Include="DataModel\ProductionModel.cs" />
+    <Compile Include="DataModel\ProSuiteGeometryTypeExtensions.cs" />
     <Compile Include="DataModel\SpatialReferenceDescriptor.cs" />
     <Compile Include="DataModel\TableObject.cs" />
     <Compile Include="DataModel\VectorObject.cs" />
@@ -158,10 +162,13 @@
     <Compile Include="QA\ErrorVectorObject.cs" />
     <Compile Include="QA\IErrorObject.cs" />
     <Compile Include="QA\IOpenDataset.cs" />
+    <Compile Include="QA\IQualityConditionContextAware.cs" />
     <Compile Include="QA\IQualityConditionObjectDatasetResolver.cs" />
+    <Compile Include="QA\ITestConfigurator.cs" />
+    <Compile Include="QA\ITestParameterDatasetProvider.cs" />
     <Compile Include="QA\IVerificationContext.cs" />
     <Compile Include="QA\QualityConditionObjectDatasetResolver.cs" />
-    <Compile Include="QA\QualityConditionUtils.cs" />
+    <Compile Include="QA\QualityConditionParameterUtils.cs" />
     <Compile Include="QA\RowParser.cs" />
     <Compile Include="QA\SimpleDatasetOpener.cs" />
     <Compile Include="QA\SpecificationReport\HtmlDataModel.cs" />
@@ -187,7 +194,7 @@
     <Compile Include="QA\SpecificationReport\SpecificationReportUtils.cs" />
     <Compile Include="QA\TestFactoryUtils.cs" />
     <Compile Include="QA\TestFactory.cs" />
-    <Compile Include="QA\TestParameterUtils.cs" />
+    <Compile Include="QA\TestParameterTypeUtils.cs" />
     <Compile Include="QA\TestReport\HtmlReportBuilder.cs" />
     <Compile Include="QA\TestReport\IncludedTest.cs" />
     <Compile Include="QA\TestReport\IncludedTestBase.cs" />
@@ -203,6 +210,26 @@
     <Compile Include="QA\TestReport\TestReportUtils.cs" />
     <Compile Include="QA\VerificationContextUtils.cs" />
     <Compile Include="QA\VerificationProgressEventArgs.cs" />
+    <Compile Include="QA\Xml\IXmlEntityMetadata.cs" />
+    <Compile Include="QA\Xml\Override.cs" />
+    <Compile Include="QA\Xml\XmlClassDescriptor.cs" />
+    <Compile Include="QA\Xml\XmlDataQualityCategory.cs" />
+    <Compile Include="QA\Xml\XmlDataQualityDocument.cs" />
+    <Compile Include="QA\Xml\XmlDataQualityUtils.cs" />
+    <Compile Include="QA\Xml\XmlDatasetTestParameterValue.cs" />
+    <Compile Include="QA\Xml\XmlDeserializationException.cs" />
+    <Compile Include="QA\Xml\XmlQualityCondition.cs" />
+    <Compile Include="QA\Xml\XmlQualitySpecification.cs" />
+    <Compile Include="QA\Xml\XmlQualitySpecificationElement.cs" />
+    <Compile Include="QA\Xml\XmlScalarTestParameterValue.cs" />
+    <Compile Include="QA\Xml\XmlTestDescriptor.cs" />
+    <Compile Include="QA\Xml\XmlTestParameterValue.cs" />
+    <Compile Include="QA\Xml\XmlWorkspace.cs" />
+    <Compile Include="Schemas\Schema.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Schema.resx</DependentUpon>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">
@@ -244,6 +271,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="QA\SpecificationReport\QualitySpecificationReport.cd" />
+    <None Include="Schemas\ProSuite.QA.QualitySpecifications-2.0.xsd">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\LocalizableStrings.de.resx" />
@@ -257,6 +288,11 @@
     <EmbeddedResource Include="QA\SpecificationReport\SpecificationReportResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>SpecificationReportResources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Schemas\Schema.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Schema.Designer.cs</LastGenOutput>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup />

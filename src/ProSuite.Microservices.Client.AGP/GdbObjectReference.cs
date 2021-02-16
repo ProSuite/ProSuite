@@ -17,7 +17,6 @@ namespace ProSuite.Microservices.Client.AGP
 		/// Initializes a new instance of the <see cref="GdbObjectReference"/> struct.
 		/// </summary>
 		/// <param name="row">The gdb object to create the reference for.</param>
-		[CLSCompliant(false)]
 		public GdbObjectReference([NotNull] Row row)
 			: this(row.GetTable().GetID(), row.GetObjectID()) { }
 
@@ -57,7 +56,6 @@ namespace ProSuite.Microservices.Client.AGP
 		/// <c>false</c> otherwise.</returns>
 		/// <remarks>Only considers object class id and object id. 
 		/// Disregards difference in version.</remarks>
-		[CLSCompliant(false)]
 		[Pure]
 		public bool References([NotNull] Row row)
 		{
@@ -73,7 +71,6 @@ namespace ProSuite.Microservices.Client.AGP
 		/// <returns><c>true</c> if the reference points to an object in the given class, 
 		/// <c>false</c> otherwise.</returns>
 		/// <remarks>Only considers object class id. Disregards difference in version.</remarks>
-		[CLSCompliant(false)]
 		[Pure]
 		public bool References([NotNull] Table table)
 		{

@@ -20,7 +20,6 @@ using Path = System.IO.Path;
 
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
-	[CLSCompliant(false)]
 	public static class ReshapeUtils
 	{
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
@@ -501,7 +500,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// <param name="resultingTargets">The result dictionary containing the resulting 
 		/// target geometry/feature pairs. It can be re-used for serveral calls with verious 
 		/// source geometries.</param>
-		[CLSCompliant(false)]
 		public static void InsertIntersectingVerticesInTargets(
 			[NotNull] IEnumerable<IFeature> targetFeatures,
 			[NotNull] IGeometry sourceGeometry,
@@ -890,7 +888,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// <param name="spatialReference">The result's spatial reference.</param>
 		/// <param name="useMinimumTolerance"></param>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		public static IGeometryCollection GetSimplifiedReshapeCurves(
 			[NotNull] IEnumerable<CutSubcurve> reshapeCurves,
 			[CanBeNull] ISpatialReference spatialReference = null,
