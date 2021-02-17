@@ -32,11 +32,11 @@ namespace ProSuite.Commons.Validation
 
 		public int CompareTo(object obj)
 		{
-			var message = (NotificationMessage) obj;
+			var other = (NotificationMessage) obj;
 
-			return Equals(FieldName, message.FieldName)
-				       ? Message.CompareTo(message.Message)
-				       : string.Compare(FieldName, message.FieldName);
+			int order = string.CompareOrdinal(FieldName, other.FieldName);
+			if (order != 0) return order;
+			return string.CompareOrdinal(Message, other.Message);
 		}
 
 		#endregion

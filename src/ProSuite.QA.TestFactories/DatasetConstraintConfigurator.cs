@@ -1358,7 +1358,7 @@ namespace ProSuite.QA.TestFactories
 
 			public static int SortField(Code x, Code y)
 			{
-				return x.Field.ToUpper().CompareTo(y.Field.ToUpper());
+				return string.Compare(x.Field, y.Field, StringComparison.OrdinalIgnoreCase);
 			}
 
 			public Code([NotNull] string fieldName,

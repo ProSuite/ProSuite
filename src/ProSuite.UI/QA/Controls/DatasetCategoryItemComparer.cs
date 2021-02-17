@@ -38,7 +38,7 @@ namespace ProSuite.UI.QA.Controls
 				return -1;
 			}
 
-			return x.Name.CompareTo(y.Name);
+			return string.CompareOrdinal(x.Name, y.Name);
 		}
 
 		#endregion
