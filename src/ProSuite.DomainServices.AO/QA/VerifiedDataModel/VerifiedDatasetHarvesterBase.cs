@@ -15,7 +15,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly IList<Dataset> _datasets = new List<Dataset>();
+		private IList<Dataset> _datasets = new List<Dataset>();
 
 		protected VerifiedDatasetHarvesterBase()
 		{
@@ -47,6 +47,11 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 
 				model.AddDataset(dataset);
 			}
+		}
+
+		public void ResetDatasets()
+		{
+			_datasets = new List<Dataset>();
 		}
 
 		[CanBeNull]
