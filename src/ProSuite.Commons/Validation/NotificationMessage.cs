@@ -48,13 +48,8 @@ namespace ProSuite.Commons.Validation
 				return true;
 			}
 
-			var notificationMessage = obj as NotificationMessage;
-			if (notificationMessage == null)
-			{
-				return false;
-			}
-
-			return Equals(FieldName, notificationMessage.FieldName) &&
+			return obj is NotificationMessage notificationMessage &&
+			       Equals(FieldName, notificationMessage.FieldName) &&
 			       Equals(Message, notificationMessage.Message) &&
 			       Equals(Severity, notificationMessage.Severity);
 		}

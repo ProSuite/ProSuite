@@ -2075,9 +2075,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		private static void GetFirstPointWorkaround(IGeometry geometry)
 			// ReSharper restore UnusedMember.Local
 		{
-			var points = geometry as IPointCollection;
-
-			if (points != null && points.PointCount > 0)
+			if (geometry is IPointCollection points && points.PointCount > 0)
 			{
 				points.get_Point(0);
 			}
@@ -2094,8 +2092,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 				yield break;
 			}
 
-			var bag = intersections as IGeometryBag;
-			if (bag != null)
+			if (intersections is IGeometryBag bag)
 			{
 				var collection = (IGeometryCollection) bag;
 				for (var i = 0; i < collection.GeometryCount; i++)
@@ -2118,14 +2115,12 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 		private static void Simplify(IGeometry geometry)
 		{
-			var topoOp2 = geometry as ITopologicalOperator2;
-			if (topoOp2 != null)
+			if (geometry is ITopologicalOperator2 topoOp2)
 			{
 				topoOp2.IsKnownSimple_2 = false;
 			}
 
-			var topoOp = geometry as ITopologicalOperator;
-			if (topoOp != null)
+			if (geometry is ITopologicalOperator topoOp)
 			{
 				topoOp.Simplify();
 			}
