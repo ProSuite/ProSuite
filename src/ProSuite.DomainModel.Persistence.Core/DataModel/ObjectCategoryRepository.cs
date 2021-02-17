@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using NHibernate;
 using ProSuite.Commons.Essentials.Assertions;
@@ -9,7 +8,6 @@ using ProSuite.DomainModel.Core.DataModel.Repositories;
 
 namespace ProSuite.DomainModel.Persistence.Core.DataModel
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	public class ObjectCategoryRepository : NHibernateRepository<ObjectCategory>,
 	                                        IObjectCategoryRepository
