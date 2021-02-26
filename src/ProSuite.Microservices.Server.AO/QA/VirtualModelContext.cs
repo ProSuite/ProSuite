@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -12,6 +13,7 @@ using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.Microservices.Server.AO.Geodatabase;
+using ProSuite.QA.Container;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
@@ -141,6 +143,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 		public IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset)
 		{
 			throw new NotImplementedException();
+		}
+
+		public TerrainReference OpenTerrainReference(ISimpleTerrainDataset dataset)
+		{
+			IFeatureWorkspace workspace = GetWorkspace(dataset.Model);
+			return TinTerrainReference.Create(
+				workspace.OpenFeatureDataset(dataset.FeatureDatasetName));
 		}
 
 		public IRelationshipClass OpenRelationshipClass(Association association)

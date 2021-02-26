@@ -1,5 +1,6 @@
 using System;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 
@@ -21,6 +22,9 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[CanBeNull]
 		IRasterDataset OpenRasterDataset([NotNull] IDdxRasterDataset dataset);
+
+		[CanBeNull]
+		TerrainReference OpenTerrainReference([NotNull] ISimpleTerrainDataset dataset);
 
 		[CanBeNull]
 		IRelationshipClass OpenRelationshipClass([NotNull] Association association);

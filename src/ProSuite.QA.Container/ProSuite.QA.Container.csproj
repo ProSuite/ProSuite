@@ -159,7 +159,6 @@
     <Compile Include="RasterReference.cs" />
     <Compile Include="RasterRow.cs" />
     <Compile Include="RowReference.cs" />
-    <Compile Include="TerrainReference.cs" />
     <Compile Include="TestBase.cs" />
     <Compile Include="TestCategories\AttributeTestAttribute.cs" />
     <Compile Include="TestCategories\EdgeMatchTestAttribute.cs" />
@@ -302,6 +301,7 @@
     <Compile Include="TileInfo.cs" />
     <Compile Include="TileState.cs" />
     <Compile Include="TinSurface.cs" />
+    <Compile Include="TinTerrainReference.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">

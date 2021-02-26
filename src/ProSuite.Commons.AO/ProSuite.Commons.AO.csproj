@@ -275,6 +275,7 @@
     <Compile Include="Surface\RectangularTileIndex.cs" />
     <Compile Include="Surface\RectangularTilingStructure.cs" />
     <Compile Include="Surface\RectangularTilingUtils.cs" />
+    <Compile Include="Surface\TerrainReference.cs" />
     <Compile Include="UIDUtils.cs" />
   </ItemGroup>
   <ItemGroup>

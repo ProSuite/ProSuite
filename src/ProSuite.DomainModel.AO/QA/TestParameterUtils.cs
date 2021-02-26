@@ -5,6 +5,7 @@ using ESRI.ArcGIS.DataSourcesRaster;
 #endif
 using System;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.DataModel;
@@ -56,6 +57,11 @@ namespace ProSuite.DomainModel.AO.QA
 			{
 				// Topology, Terrain, Geometric Network, Mosaic
 				return TestParameterType.Unknown;
+			}
+
+			if (typeof(TerrainReference).IsAssignableFrom(dataType))
+			{
+				return TestParameterType.TerrainDataset;
 			}
 
 			if (dataType == typeof(double))
@@ -118,11 +124,11 @@ namespace ProSuite.DomainModel.AO.QA
 					return dataset is TableDataset;
 
 				// TODO: Handle Topology / Terrain / ...
+				case TestParameterType.TerrainDataset:
+					return dataset is SimpleTerrainDataset;
+
 				//case TestParameterType.TopologyDataset:
 				//	return dataset is TopologyDataset;
-
-				//case TestParameterType.TerrainDataset:
-				//	return dataset is TerrainDataset;
 
 				//case TestParameterType.GeometricNetworkDataset:
 				//	return dataset is GeometricNetworkDataset;

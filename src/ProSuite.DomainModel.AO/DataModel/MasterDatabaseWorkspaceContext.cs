@@ -1,10 +1,12 @@
 using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.QA.Container;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
@@ -70,6 +72,14 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return DatasetUtils.OpenRasterDataset(Workspace, GetGdbElementName(dataset));
 
 			//return _workspaceProxy.OpenRasterDataset(GetGdbElementName(dataset));
+		}
+
+		public override TerrainReference OpenTerrainReference(ISimpleTerrainDataset dataset)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			return TinTerrainReference.Create(
+				FeatureWorkspace.OpenFeatureDataset(dataset.FeatureDatasetName));
 		}
 
 		public override IRelationshipClass OpenRelationshipClass(Association association)

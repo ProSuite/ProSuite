@@ -1,10 +1,9 @@
-﻿using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using System;
 
-namespace ProSuite.QA.Container
+namespace ProSuite.Commons.AO.Surface
 {
 	[CLSCompliant(false)]
 	public abstract class TerrainReference

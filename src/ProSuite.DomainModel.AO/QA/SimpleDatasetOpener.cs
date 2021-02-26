@@ -5,6 +5,7 @@ using ESRI.ArcGIS.DataSourcesRaster;
 #endif
 using System;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
@@ -72,6 +73,9 @@ namespace ProSuite.DomainModel.AO.QA
 			if (typeof(IRasterDataset2) == knownType)
 				return (IRasterDataset2) _datasetContext.OpenRasterDataset(
 					(IDdxRasterDataset) dataset);
+
+			if (typeof(TerrainReference) == knownType)
+				return _datasetContext.OpenTerrainReference((ISimpleTerrainDataset) dataset);
 
 			throw new ArgumentException($"Unsupported data type {knownType}");
 		}

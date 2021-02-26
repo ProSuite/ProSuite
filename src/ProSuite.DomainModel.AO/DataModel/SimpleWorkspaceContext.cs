@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.QA.Container;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
@@ -101,6 +103,19 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return workspaceDataset == null
 				       ? null
 				       : DatasetUtils.OpenRasterDataset(Workspace, workspaceDataset.Name);
+		}
+
+		public override TerrainReference OpenTerrainReference(ISimpleTerrainDataset dataset)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			WorkspaceDataset workspaceDataset = GetWorkspaceDataset(dataset);
+
+			return workspaceDataset == null
+				       ? null
+				       : TinTerrainReference.Create(
+					       FeatureWorkspace.OpenFeatureDataset(
+						       workspaceDataset.FeatureDatasetName));
 		}
 
 		[CLSCompliant(false)]

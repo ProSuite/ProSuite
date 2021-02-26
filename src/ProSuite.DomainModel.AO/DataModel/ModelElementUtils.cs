@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -89,6 +90,15 @@ namespace ProSuite.DomainModel.AO.DataModel
 			IDatasetContext context = GetMasterDatabaseWorkspaceContext(dataset,
 			                                                            allowAlways);
 			return context?.OpenRasterDataset(dataset);
+		}
+
+		[CanBeNull]
+		public static TerrainReference TryOpenFromMasterDatabase(
+			ISimpleTerrainDataset dataset, bool allowAlways = false)
+		{
+			IDatasetContext context = GetMasterDatabaseWorkspaceContext(dataset,
+			                                                            allowAlways);
+			return context?.OpenTerrainReference(dataset);
 		}
 
 		[CanBeNull]

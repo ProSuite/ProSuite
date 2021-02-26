@@ -1,5 +1,6 @@
 using System;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel
@@ -28,9 +29,15 @@ namespace ProSuite.DomainModel.AO.DataModel
 		{
 			return ModelElementUtils.TryOpenFromMasterDatabase(dataset);
 		}
-		
+
 		[CLSCompliant(false)]
 		public IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset)
+		{
+			return ModelElementUtils.TryOpenFromMasterDatabase(dataset);
+		}
+
+		[CLSCompliant(false)]
+		public TerrainReference OpenTerrainReference(ISimpleTerrainDataset dataset)
 		{
 			return ModelElementUtils.TryOpenFromMasterDatabase(dataset);
 		}

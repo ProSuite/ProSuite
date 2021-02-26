@@ -149,6 +149,7 @@
     <Compile Include="QaSegmentLengthTest.cs" />
     <Compile Include="QaSimpleGeometryTest.cs" />
     <Compile Include="QaSliverPolgonTest.cs" />
+    <Compile Include="QaSurfaceSpikesTest.cs" />
     <Compile Include="QaTopoNotNearTest.cs" />
     <Compile Include="QaUniqueTest.cs" />
     <Compile Include="QaUnreferencedRowsTest.cs" />
@@ -161,6 +162,7 @@
     <Compile Include="SpatialRelations\QaSpatialRelationUtilsTest.cs" />
     <Compile Include="SpatialRelations\TestErrorReporter.cs" />
     <Compile Include="TestData\TestDataUtils.cs" />
+    <Compile Include="TestRunners\ModelSimpleTerrainDataset.cs" />
     <Compile Include="TestRunners\ModelTableDataset.cs" />
     <Compile Include="TestRunners\ModelVectorDataset.cs" />
     <Compile Include="TestRunners\QaContainerTestRunner.cs" />

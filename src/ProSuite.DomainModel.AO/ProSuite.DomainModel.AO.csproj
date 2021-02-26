@@ -109,6 +109,7 @@
     <Compile Include="DataModel\IModelContext.cs" />
     <Compile Include="DataModel\IModelRepository.cs" />
     <Compile Include="DataModel\IQueryTableContext.cs" />
+    <Compile Include="DataModel\ISimpleTerrainDataset.cs" />
     <Compile Include="DataModel\IVirtualModelContext.cs" />
     <Compile Include="DataModel\IWorkspaceContext.cs" />
     <Compile Include="DataModel\IWorkspaceContextLookup.cs" />
@@ -120,6 +121,7 @@
     <Compile Include="DataModel\ObjectObject.cs" />
     <Compile Include="DataModel\ProductionModel.cs" />
     <Compile Include="DataModel\ProSuiteGeometryTypeExtensions.cs" />
+    <Compile Include="DataModel\SimpleTerrainDataset.cs" />
     <Compile Include="DataModel\SpatialReferenceDescriptor.cs" />
     <Compile Include="DataModel\TableObject.cs" />
     <Compile Include="DataModel\VectorObject.cs" />
