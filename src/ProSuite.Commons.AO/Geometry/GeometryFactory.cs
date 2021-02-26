@@ -14,7 +14,6 @@ using ProSuite.Commons.Notifications;
 
 namespace ProSuite.Commons.AO.Geometry
 {
-	[CLSCompliant(false)]
 	public static class GeometryFactory
 	{
 		private static readonly IMsg _msg =

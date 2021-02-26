@@ -1,16 +1,16 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
-using ProSuite.QA.TestFactories;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.DomainModel.AO.QA;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Test;
+using ProSuite.QA.TestFactories;
+using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -23,7 +23,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 
 			_testWs = TestWorkspaceUtils.CreateTestFgdbWorkspace(
 				"QaGdbConstraintFactoryTest");
@@ -66,13 +66,14 @@ namespace ProSuite.QA.Tests.Test
 				new TestDescriptor("testdescriptor",
 				                   new ClassDescriptor(typeof(QaGdbConstraintFactory))));
 
-			QualityCondition_Utils.AddParameterValue(condition, "table", tableDataset);
-			QualityCondition_Utils.AddParameterValue(condition,
-			                                        "AllowNullValuesForCodedValueDomains", false);
+			QualityConditionParameterUtils.AddParameterValue(condition, "table", tableDataset);
+			QualityConditionParameterUtils.AddParameterValue(
+				condition, "AllowNullValuesForCodedValueDomains", false);
 
 			var factory = new QaGdbConstraintFactory {Condition = condition};
 
-			IList<ITest> tests = factory.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+			IList<ITest> tests =
+				factory.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 
 			Assert.AreEqual(1, tests.Count);
 
@@ -123,13 +124,14 @@ namespace ProSuite.QA.Tests.Test
 				new TestDescriptor("testdescriptor",
 				                   new ClassDescriptor(typeof(QaGdbConstraintFactory))));
 
-			QualityCondition_Utils.AddParameterValue(condition, "table", tableDataset);
-			QualityCondition_Utils.AddParameterValue(condition, "AllowNullValuesForRangeDomains",
-			                                        false);
+			QualityConditionParameterUtils.AddParameterValue(condition, "table", tableDataset);
+			QualityConditionParameterUtils.AddParameterValue(
+				condition, "AllowNullValuesForRangeDomains", false);
 
 			var factory = new QaGdbConstraintFactory {Condition = condition};
 
-			IList<ITest> tests = factory.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+			IList<ITest> tests =
+				factory.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 
 			Assert.AreEqual(1, tests.Count);
 
@@ -180,11 +182,12 @@ namespace ProSuite.QA.Tests.Test
 				new TestDescriptor("testdescriptor",
 				                   new ClassDescriptor(typeof(QaGdbConstraintFactory))));
 
-			QualityCondition_Utils.AddParameterValue(condition, "table", tableDataset);
+			QualityConditionParameterUtils.AddParameterValue(condition, "table", tableDataset);
 
 			var factory = new QaGdbConstraintFactory {Condition = condition};
 
-			IList<ITest> tests = factory.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+			IList<ITest> tests =
+				factory.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 
 			Assert.AreEqual(1, tests.Count);
 

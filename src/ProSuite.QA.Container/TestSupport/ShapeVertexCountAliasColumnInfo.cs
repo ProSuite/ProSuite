@@ -8,7 +8,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.TestSupport
 {
-	[CLSCompliant(false)]
 	public class ShapeVertexCountAliasColumnInfo : ColumnInfo
 	{
 		private readonly esriGeometryType _shapeType;

@@ -23,7 +23,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA.Xml
 {
-	[CLSCompliant(false)]
 	public static class XmlDataQualityUtils
 	{
 		private static readonly IMsg _msg =
@@ -350,10 +349,13 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			string trimmedName = qualitySpecificationName.Trim();
 
+			var availableNames = new List<string>();
+
 			foreach (
 				KeyValuePair<XmlQualitySpecification, XmlDataQualityCategory> pair in
 				qualitySpecifications)
 			{
+				availableNames.Add(pair.Key.Name);
 				if (string.Equals(pair.Key.Name, trimmedName,
 				                  StringComparison.OrdinalIgnoreCase))
 				{
@@ -361,6 +363,10 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					return pair.Key;
 				}
 			}
+
+			_msg.InfoFormat(
+				"No match found for desired specification {0}. Available specifications are: {1}",
+				qualitySpecificationName, StringUtils.Concatenate(availableNames, ", "));
 
 			category = null;
 			return null;
@@ -1244,7 +1250,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			foreach (TestDescriptor testDescriptor in GetSorted(testDescriptors))
 			{
 				document.AddTestDescriptor(CreateXmlTestDescriptor(testDescriptor,
-				                                                   exportMetadata));
+					                           exportMetadata));
 			}
 
 			IEnumerable<QualityCondition> qualityConditions =
@@ -1336,12 +1342,12 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			)
 			{
 				document.AddCategory(CreateXmlDataQualityCategory(category,
-				                                                  getQualityConditions,
-				                                                  getQualitySpecifications,
-				                                                  workspaceIdsByModel,
-				                                                  exportMetadata,
-				                                                  exportAllCategories,
-				                                                  exportNotes));
+					                     getQualityConditions,
+					                     getQualitySpecifications,
+					                     workspaceIdsByModel,
+					                     exportMetadata,
+					                     exportAllCategories,
+					                     exportNotes));
 			}
 		}
 
@@ -1380,12 +1386,12 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			foreach (DataQualityCategory subCategory in GetSorted(category.SubCategories))
 			{
 				XmlDataQualityCategory xmlSubCategory = CreateXmlDataQualityCategory(subCategory,
-				                                                                     getQualityConditions,
-				                                                                     getQualitySpecifications,
-				                                                                     workspaceIdsByModel,
-				                                                                     exportMetadata,
-				                                                                     exportAllCategories,
-				                                                                     exportNotes);
+					getQualityConditions,
+					getQualitySpecifications,
+					workspaceIdsByModel,
+					exportMetadata,
+					exportAllCategories,
+					exportNotes);
 
 				if (! exportAllCategories &&
 				    ! xmlSubCategory.ContainsQualityConditions &&
@@ -1400,9 +1406,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			foreach (QualityCondition condition in GetSorted(getQualityConditions(category)))
 			{
 				result.AddQualityCondition(CreateXmlQualityCondition(condition,
-				                                                     workspaceIdsByModel,
-				                                                     exportMetadata,
-				                                                     exportNotes));
+					                           workspaceIdsByModel,
+					                           exportMetadata,
+					                           exportNotes));
 			}
 
 			foreach (
@@ -1410,8 +1416,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				GetSorted(getQualitySpecifications(category)))
 			{
 				result.AddQualitySpecification(CreateXmlQualitySpecification(specification,
-				                                                             exportMetadata,
-				                                                             exportNotes));
+					                               exportMetadata,
+					                               exportNotes));
 			}
 
 			return result;
@@ -1679,7 +1685,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				return null;
 			}
 
-			TestParameter_Utils.AssertValidDataset(testParameter, dataset);
+			TestParameterTypeUtils.AssertValidDataset(testParameter, dataset);
 			return new DatasetTestParameterValue(testParameter, dataset,
 			                                     xmlDatasetTestParameterValue.WhereClause,
 			                                     xmlDatasetTestParameterValue.UsedAsReferenceData);
@@ -1719,8 +1725,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				            "No matching model found for workspace id '{0}'", workspaceId);
 
 				return ModelElementUtils.GetDatasetFromStoredName(datasetName,
-				                                                  model,
-				                                                  ignoreUnknownDataset);
+					model,
+					ignoreUnknownDataset);
 			}
 
 			if (StringUtils.IsNullOrEmptyOrBlank(workspaceId))
@@ -1732,8 +1738,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				{
 					// there is a default model
 					return ModelElementUtils.GetDatasetFromStoredName(datasetName,
-					                                                  defaultModel,
-					                                                  ignoreUnknownDataset);
+						defaultModel,
+						ignoreUnknownDataset);
 				}
 			}
 

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -9,7 +8,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 	/// Provides the possibility to observe higher-level edits that can be reported by
 	/// specific edit tools.
 	/// </summary>
-	[CLSCompliant(false)]
 	public abstract class ToolEditOperationObserver : EditOperationObserverBase
 	{
 		public virtual void Splitting([CanBeNull] IFeature original,

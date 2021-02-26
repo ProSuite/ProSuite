@@ -28,7 +28,6 @@ namespace ProSuite.QA.Container
 			_constraintView = new DataView(dataTable) {RowFilter = constraint};
 		}
 
-		[CLSCompliant(false)]
 		public bool IsFulfilled([CanBeNull] IGeometry geometry)
 		{
 			DataTable dataTable = _constraintView.Table;
@@ -50,7 +49,6 @@ namespace ProSuite.QA.Container
 			return _constraintView.Count == 1;
 		}
 
-		[CLSCompliant(false)]
 		[NotNull]
 		public string FormatValues([CanBeNull] IGeometry geometry,
 		                           [NotNull] IFormatProvider formatProvider)

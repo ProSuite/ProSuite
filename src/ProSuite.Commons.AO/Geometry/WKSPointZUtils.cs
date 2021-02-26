@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.esriSystem;
@@ -9,7 +9,6 @@ using Array = System.Array;
 
 namespace ProSuite.Commons.AO.Geometry
 {
-	[CLSCompliant(false)]
 	public static class WKSPointZUtils
 	{
 		public static WKSPointZ CreatePoint(double x, double y, double z)

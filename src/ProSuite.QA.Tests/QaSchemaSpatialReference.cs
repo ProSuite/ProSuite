@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
@@ -14,7 +13,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[SchemaTest]
 	public class QaSchemaSpatialReference : QaSchemaTestBase

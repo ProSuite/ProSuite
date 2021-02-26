@@ -1,11 +1,10 @@
-﻿using System;
+using System;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
 {
-	[CLSCompliant(false)]
 	public class QaErrorGeometry
 	{
 		[CanBeNull] [ThreadStatic] private static IEnvelope _envelopeTemplate;

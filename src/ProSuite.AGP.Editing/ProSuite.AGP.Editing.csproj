@@ -77,6 +77,8 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="AdvancedReshape\AdvancedReshapeFeedback.cs" />
+    <Compile Include="AdvancedReshape\AdvancedReshapeToolBase.cs" />
     <Compile Include="GdbPersistenceUtils.cs" />
     <Compile Include="OneClick\ConstructionToolBase.cs" />
     <Compile Include="OneClick\OneClickToolBase.cs" />
@@ -122,6 +124,7 @@
     <EmbeddedResource Include="Properties\LocalizableStrings.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>LocalizableStrings.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -171,6 +174,8 @@
     <Resource Include="PickerUI\Images\LineGeometry.bmp" />
     <Resource Include="PickerUI\Images\PointGeometry.bmp" />
     <Resource Include="PickerUI\Images\PolygonGeometry.bmp" />
+    <None Include="Properties\Images\AdvancedReshapeToolCursor.cur" />
+    <None Include="Properties\Images\AdvancedReshapeToolCursorShift.cur" />
     <Content Include="Properties\Images\EditSketchCrosshair.cur" />
     <Content Include="Properties\Images\RemoveOverlapsToolCursor.cur" />
     <Content Include="Properties\Images\RemoveOverlapsToolCursorProcess.cur" />

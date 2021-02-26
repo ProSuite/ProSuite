@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -19,7 +19,6 @@ namespace ProSuite.DomainServices.AO.QA
 		[NotNull] private readonly Func<ITest, QualityCondition> _getQualityCondition;
 		[CanBeNull] private readonly Predicate<VectorDataset> _isRelevantVectorDataset;
 
-		[CLSCompliant(false)]
 		public TestAssembler(
 			[NotNull] IVerificationContext verificationContext,
 			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver,
@@ -90,7 +89,6 @@ namespace ProSuite.DomainServices.AO.QA
 			return containerTests;
 		}
 
-		[CLSCompliant(false)]
 		public List<IList<ITest>> BuildTestGroups(
 			[NotNull] IList<ITest> tests, int maxProcesses)
 		{
@@ -126,7 +124,6 @@ namespace ProSuite.DomainServices.AO.QA
 			return testGroups;
 		}
 
-		[CLSCompliant(false)]
 		public List<IList<QualityCondition>> BuildQualityConditionGroups(
 			[NotNull] IList<ITest> tests,
 			[CanBeNull] AreaOfInterest areaOfInterest,

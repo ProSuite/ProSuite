@@ -1,11 +1,9 @@
-﻿using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.PolygonGrower
 {
-	[CLSCompliant(false)]
 	public interface ITableIndexRow
 	{
 		int RowOID { get; }

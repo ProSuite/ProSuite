@@ -1,10 +1,8 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public interface IApplicableAttributes
 	{
 		bool HasNonApplicableAttributes([NotNull] IObjectClass objectClass);

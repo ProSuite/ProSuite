@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -13,14 +12,12 @@ namespace ProSuite.QA.Tests.PointEnumerators
 	{
 		private readonly IIndexedSegments _indexedSegments;
 
-		[CLSCompliant(false)]
 		public static SegmentsPlaneProvider Create([NotNull] IFeature feature,
 		                                           bool includeAssociatedParts)
 		{
 			return Create(feature, feature.Shape.GeometryType, includeAssociatedParts);
 		}
 
-		[CLSCompliant(false)]
 		public static SegmentsPlaneProvider Create(
 			[NotNull] IFeature feature,
 			esriGeometryType shapeType,
@@ -72,7 +69,6 @@ namespace ProSuite.QA.Tests.PointEnumerators
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IIndexedSegments IndexedSegments => _indexedSegments;
 
 		[CanBeNull]

@@ -7,7 +7,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.TestSupport
 {
-	[CLSCompliant(false)]
 	public abstract class ShapeEnvelopePropertyAliasColumnInfoBase : ColumnInfo
 	{
 		private readonly List<string> _baseFieldNames = new List<string>();

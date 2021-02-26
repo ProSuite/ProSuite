@@ -5,7 +5,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public interface IGdbTransaction
 	{
 		event EventHandler Aborted;

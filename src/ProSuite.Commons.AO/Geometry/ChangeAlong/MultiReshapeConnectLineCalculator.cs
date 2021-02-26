@@ -1,4 +1,3 @@
-﻿using System;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
@@ -8,7 +7,6 @@ using ProSuite.Commons.Notifications;
 
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
-	[CLSCompliant(false)]
 	public class MultiReshapeConnectLineCalculator : ConnectLineCalculatorBase
 	{
 		private static readonly IMsg _msg =
@@ -20,7 +18,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		private readonly double _maxProlongationLengthFactor;
 		private readonly double _tolerance;
 
-		[CLSCompliant(false)]
 		public MultiReshapeConnectLineCalculator(IGeometry originalUnion,
 		                                         IGeometry geometryPartToReshape,
 		                                         ReshapeInfo unionReshapeInfo,
@@ -45,7 +42,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		public NotificationCollection FallbackNotifications { get; private set; }
 
-		[CLSCompliant(false)]
 		public override IPath FindConnection(ICurve sourceReplacementPath,
 		                                     ICurve reshapePath, bool searchForward,
 		                                     out IPath fallBackConnection)

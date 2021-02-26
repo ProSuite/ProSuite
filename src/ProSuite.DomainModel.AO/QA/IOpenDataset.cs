@@ -9,7 +9,6 @@ namespace ProSuite.DomainModel.AO.QA
 	/// Narrow-focus, simple to implement interface for opening any DDX datasets (and associations)
 	/// that are supported on a specific platform for a specific context.
 	/// </summary>
-	[CLSCompliant(false)]
 	public interface IOpenDataset
 	{
 		[CanBeNull]

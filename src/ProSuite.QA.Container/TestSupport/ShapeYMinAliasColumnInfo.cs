@@ -1,11 +1,9 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.TestSupport
 {
-	[CLSCompliant(false)]
 	public class ShapeYMinAliasColumnInfo : ShapeEnvelopePropertyAliasColumnInfoBase
 	{
 		public ShapeYMinAliasColumnInfo([NotNull] ITable table,

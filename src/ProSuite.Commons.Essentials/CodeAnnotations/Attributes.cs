@@ -203,6 +203,7 @@ namespace ProSuite.Commons.Essentials.CodeAnnotations
 			To = to;
 		}
 
+		[CLSCompliant(false)]
 		public ValueRangeAttribute(ulong from, ulong to)
 		{
 			From = from;
@@ -214,6 +215,7 @@ namespace ProSuite.Commons.Essentials.CodeAnnotations
 			From = To = value;
 		}
 
+		[CLSCompliant(false)]
 		public ValueRangeAttribute(ulong value)
 		{
 			From = To = value;

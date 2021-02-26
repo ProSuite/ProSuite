@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Globalization;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -6,7 +6,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public static class GdbSqlUtils
 	{
 		/// <summary>

@@ -95,11 +95,16 @@ namespace ProSuite.Microservices.Client.AGP
 		}
 
 		[CanBeNull]
-		public static Geometry FromShapeMsg([CanBeNull] ShapeMsg shapeMsg)
+		public static Geometry FromShapeMsg(
+			[CanBeNull] ShapeMsg shapeMsg,
+			[CanBeNull] SpatialReference knownSpatialReference = null)
 		{
 			if (shapeMsg == null) return null;
 
-			SpatialReference sr = FromSpatialReferenceMsg(shapeMsg.SpatialReference);
+			if (shapeMsg.FormatCase == ShapeMsg.FormatOneofCase.None) return null;
+
+			SpatialReference sr = knownSpatialReference ??
+			                      FromSpatialReferenceMsg(shapeMsg.SpatialReference);
 
 			Geometry result;
 
@@ -204,9 +209,9 @@ namespace ProSuite.Microservices.Client.AGP
 		}
 
 		public static void ToGdbObjectMsgList(
-			IEnumerable<Feature> features,
-			ICollection<GdbObjectMsg> resultGdbObjects,
-			ICollection<ObjectClassMsg> resultGdbClasses)
+			[NotNull] IEnumerable<Feature> features,
+			[NotNull] ICollection<GdbObjectMsg> resultGdbObjects,
+			[NotNull] ICollection<ObjectClassMsg> resultGdbClasses)
 		{
 			Stopwatch watch = null;
 
@@ -246,6 +251,14 @@ namespace ProSuite.Microservices.Client.AGP
 						omitDetailedShapeSpatialRef = false;
 					}
 				}
+				else
+				{
+					// TODO: Better solution: hash class ID with workspace handle in ToObjectClassMsg()
+					// Make sure they are from the same workspace to avoid conflicting class ids
+					Assert.AreEqual(classesByClassId[featureClass.GetID()].GetDatastore().Handle,
+					                featureClass.GetDatastore().Handle,
+					                "Conflicting class id from different workspaces. Please report.");
+				}
 
 				resultGdbObjects.Add(ToGdbObjectMsg(feature, shape, omitDetailedShapeSpatialRef));
 			}
@@ -253,8 +266,9 @@ namespace ProSuite.Microservices.Client.AGP
 			_msg.DebugStopTiming(watch, "Converted {0} features to DTOs", resultGdbObjects.Count);
 		}
 
-		public static ObjectClassMsg ToObjectClassMsg([NotNull] Table objectClass,
-		                                              SpatialReference spatialRef = null)
+		public static ObjectClassMsg ToObjectClassMsg(
+			[NotNull] Table objectClass,
+			[CanBeNull] SpatialReference spatialRef = null)
 		{
 			esriGeometryType geometryType = TranslateAGPShapeType(objectClass);
 
@@ -314,7 +328,7 @@ namespace ProSuite.Microservices.Client.AGP
 		}
 
 		public static List<Geometry> FromShapeMsgList(
-			ICollection<ShapeMsg> shapeBufferList)
+			[NotNull] ICollection<ShapeMsg> shapeBufferList)
 		{
 			var geometryList = new List<Geometry>(shapeBufferList.Count);
 

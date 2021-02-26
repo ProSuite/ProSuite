@@ -11,7 +11,6 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
-	[CLSCompliant(false)]
 	public class SimpleWorkspaceContext : WorkspaceContextBase
 	{
 		[NotNull] private readonly DdxModel _model;
@@ -26,7 +25,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		#region Constructors
 
-		[CLSCompliant(false)]
 		public SimpleWorkspaceContext(
 			[NotNull] DdxModel model,
 			[NotNull] IFeatureWorkspace featureWorkspace,

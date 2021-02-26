@@ -1,10 +1,8 @@
-using System;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
-	[CLSCompliant(false)]
 	public interface IConnectLineCalculator
 	{
 		/// <summary>

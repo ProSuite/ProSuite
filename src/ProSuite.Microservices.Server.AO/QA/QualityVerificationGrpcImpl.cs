@@ -8,6 +8,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using Grpc.Core;
+using log4net.Core;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Callbacks;
@@ -16,12 +17,14 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
+using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
 using ProSuite.DomainServices.AO.QA.Issues;
+using ProSuite.DomainServices.AO.QA.Standalone.XmlBased;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
@@ -159,6 +162,70 @@ namespace ProSuite.Microservices.Server.AO.QA
 				SendFatalException(e, responseStream);
 				SetUnhealthy();
 			}
+		}
+
+		public override async Task VerifyStandaloneXml(
+			StandaloneVerificationRequest request,
+			IServerStreamWriter<StandaloneVerificationResponse> responseStream,
+			ServerCallContext context)
+		{
+			try
+			{
+				_msg.InfoFormat("Starting stand-alone verification request from {0}",
+				                context.Peer);
+				_msg.DebugFormat("Request details: {0}", request);
+
+				Action<LoggingEvent> action =
+					SendInfoLogAction(responseStream, ServiceCallStatus.Running);
+
+				using (MessagingUtils.TemporaryRootAppender(new ActionAppender(action)))
+				{
+					Func<ITrackCancel, ServiceCallStatus> func =
+						trackCancel => VerifyStandaloneXmlCore(request, responseStream,
+						                                       trackCancel);
+
+					ServiceCallStatus result =
+						await GrpcServerUtils.ExecuteServiceCall(
+							func, context, _singleStaThreadScheduler);
+
+					_msg.InfoFormat("Verification {0}", result);
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Error($"Error verifying quality for request {request}", e);
+
+				SendFatalException(e, responseStream);
+				SetUnhealthy();
+			}
+		}
+
+		private static Action<LoggingEvent> SendInfoLogAction(
+			[NotNull] IServerStreamWriter<StandaloneVerificationResponse> responseStream,
+			ServiceCallStatus callStatus)
+		{
+			Action<LoggingEvent> action =
+				e =>
+				{
+					if (e.Level.Value < Level.Info.Value)
+					{
+						return;
+					}
+
+					var response = new StandaloneVerificationResponse
+					               {
+						               Message = new LogMsg
+						                         {
+							                         Message = e.RenderedMessage,
+							                         MessageLevel = e.Level.Value
+						                         },
+						               ServiceCallStatus = (int) callStatus
+					               };
+
+					MessagingUtils.TrySendResponse(responseStream, response);
+				};
+
+			return action;
 		}
 
 		private static async Task<DataVerificationRequest> RequestMoreDataAsync(
@@ -325,6 +392,90 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return result;
 		}
 
+		private ServiceCallStatus VerifyStandaloneXmlCore(
+			StandaloneVerificationRequest request,
+			IServerStreamWriter<StandaloneVerificationResponse> responseStream,
+			ITrackCancel trackCancel)
+		{
+			// Machine login
+			SetupUserNameProvider(Environment.UserName);
+
+			try
+			{
+				VerificationParametersMsg parameters = request.Parameters;
+
+				IGeometry perimeter =
+					ProtobufGeometryUtils.FromShapeMsg(parameters.Perimeter);
+
+				XmlBasedVerificationService qaService =
+					CreateXmlBasedStandaloneService(request);
+
+				XmlQualitySpecificationMsg xmlSpecification = request.Specification;
+
+				var dataSources = new List<DataSource>();
+				foreach (string replacement in xmlSpecification.DataSourceReplacements)
+				{
+					List<string> replacementStrings = StringUtils.SplitAndTrim(replacement, '>');
+					Assert.AreEqual(2, replacementStrings.Count,
+					                "Data source workspace is not of the format workspace_id > catalog_path");
+
+					var dataSource = new DataSource(replacementStrings[0], replacementStrings[0])
+					                 {
+						                 WorkspaceAsText = replacementStrings[1]
+					                 };
+
+					dataSources.Add(dataSource);
+				}
+
+				var aoi = perimeter == null ? null : new AreaOfInterest(perimeter);
+
+				try
+				{
+					qaService.ExecuteVerification(
+						xmlSpecification.Xml,
+						xmlSpecification.SelectedSpecificationName,
+						dataSources, aoi, null, parameters.TileSize,
+						parameters.IssueFileGdbPath, IssueRepositoryType.FileGdb,
+						true, trackCancel);
+				}
+				catch (ArgumentException argumentException)
+				{
+					_msg.Warn("Argument exception", argumentException);
+
+					return ServiceCallStatus.Failed;
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.DebugFormat("Error during processing of request {0}", request);
+				_msg.Error("Error verifying quality: ", e);
+
+				if (! EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+					    "PROSUITE_QA_SERVER_KEEP_SERVING_ON_ERROR"))
+				{
+					SetUnhealthy();
+				}
+
+				return ServiceCallStatus.Failed;
+			}
+
+			return trackCancel.Continue()
+				       ? ServiceCallStatus.Finished
+				       : ServiceCallStatus.Cancelled;
+		}
+
+		private static XmlBasedVerificationService CreateXmlBasedStandaloneService(
+			[NotNull] StandaloneVerificationRequest request)
+		{
+			// From local xml options?
+			string specificationTemplatePath = null;
+			XmlBasedVerificationService xmlService = new XmlBasedVerificationService(
+				request.Parameters.HtmlTemplatePath,
+				specificationTemplatePath);
+
+			return xmlService;
+		}
+
 		private static IEnumerable<GdbObjRefMsg> GetDeletableAllowedErrorRefs(
 			VerificationParametersMsg requestParameters,
 			BackgroundVerificationService qaService)
@@ -375,9 +526,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private static void SetupUserNameProvider(VerificationRequest request)
 		{
-			_msg.DebugFormat("New verification request from {0}", request.UserName);
-
 			string userName = request.UserName;
+
+			SetupUserNameProvider(userName);
+		}
+
+		private static void SetupUserNameProvider(string userName)
+		{
+			_msg.DebugFormat("New verification request from {0}", userName);
 
 			if (! string.IsNullOrEmpty(userName))
 			{
@@ -537,6 +693,15 @@ namespace ProSuite.Microservices.Server.AO.QA
 			issueProto.IssueGeometry =
 				ProtobufGeometryUtils.ToShapeMsg(geometry);
 
+			// NOTE: Multipatches are not restored from byte arrays in EsriShape (10.6.1)
+			ShapeMsg.FormatOneofCase format =
+				geometry?.GeometryType == esriGeometryType.esriGeometryMultiPatch
+					? ShapeMsg.FormatOneofCase.Wkb
+					: ShapeMsg.FormatOneofCase.EsriShape;
+
+			issueProto.IssueGeometry =
+				ProtobufGeometryUtils.ToShapeMsg(geometry, format);
+
 			issueProto.CreationDateTimeTicks = DateTime.Now.Ticks;
 
 			//issueProto.IsInvalidException = args.us;
@@ -608,8 +773,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				response.Issues.Add(issue);
 			}
-
-			//response.Issues.AddRange(issues);
 
 			_msg.DebugFormat("Sending {0} errors back to client...", issues.Count);
 
@@ -735,6 +898,22 @@ namespace ProSuite.Microservices.Server.AO.QA
 				// For example: System.InvalidOperationException: Only one write can be pending at a time
 				_msg.Warn("Error sending progress to the client", ex);
 			}
+		}
+
+		private static void SendFatalException(
+			[NotNull] Exception exception,
+			IServerStreamWriter<StandaloneVerificationResponse> responseStream)
+		{
+			MessagingUtils.SendResponse(responseStream,
+			                            new StandaloneVerificationResponse()
+			                            {
+				                            Message = new LogMsg()
+				                                      {
+					                                      Message = exception.Message,
+					                                      MessageLevel = Level.Error.Value
+				                                      },
+				                            ServiceCallStatus = (int) ServiceCallStatus.Failed
+			                            });
 		}
 
 		private void SetUnhealthy()

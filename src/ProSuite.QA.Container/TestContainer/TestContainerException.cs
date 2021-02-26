@@ -14,7 +14,6 @@ namespace ProSuite.QA.Container.TestContainer
 
 		#region Constructors
 
-		[CLSCompliant(false)]
 		public TestContainerException([NotNull] ITest test,
 		                              [CanBeNull] Exception innerException)
 			: base(GetMessage(test), innerException)
@@ -22,7 +21,6 @@ namespace ProSuite.QA.Container.TestContainer
 			_test = test;
 		}
 
-		[CLSCompliant(false)]
 		public TestContainerException([NotNull] ITest test,
 		                              [NotNull] IRow row,
 		                              [CanBeNull] Exception innerException)
@@ -32,7 +30,6 @@ namespace ProSuite.QA.Container.TestContainer
 			_row = row;
 		}
 
-		[CLSCompliant(false)]
 		public TestContainerException([NotNull] ITest test,
 		                              [CanBeNull] IEnvelope box,
 		                              [CanBeNull] Exception innerException)
@@ -44,19 +41,16 @@ namespace ProSuite.QA.Container.TestContainer
 
 		#endregion
 
-		[CLSCompliant(false)]
 		public ITest Test
 		{
 			get { return _test; }
 		}
 
-		[CLSCompliant(false)]
 		public IRow Row
 		{
 			get { return _row; }
 		}
 
-		[CLSCompliant(false)]
 		public IEnvelope Box
 		{
 			get { return _box; }
@@ -69,8 +63,8 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private static string GetMessage([NotNull] ITest test, [NotNull] IRow row)
 		{
-			Assert.ArgumentNotNull(test, "test");
-			Assert.ArgumentNotNull(row, "row");
+			Assert.ArgumentNotNull(test, nameof(test));
+			Assert.ArgumentNotNull(row, nameof(row));
 
 			ITable table = row.Table;
 

@@ -24,7 +24,6 @@ using ProSuite.Commons.Notifications;
 
 namespace ProSuite.Commons.AO.Geometry
 {
-	[CLSCompliant(false)]
 	public static class GeometryUtils
 	{
 		// private const double _searchRadiusMultiplyer = 5.0;
@@ -9092,7 +9091,6 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <param name="shorterGeometry">The resulting shorter line.</param>
 		/// <param name="longerGeometry">The resulting longer line.</param>
 		/// <returns>Whether the split could be done or not.</returns>
-		[CLSCompliant(false)]
 		public static bool TrySplitPolyline(IPolyline polyline,
 		                                    IPoint splitPoint,
 		                                    bool projectSplitPointOntoLine,

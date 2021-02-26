@@ -12,7 +12,6 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.QA
 {
-	[CLSCompliant(false)]
 	public static class VerificationContextUtils
 	{
 		[Obsolete("Use GetIssueDatasets()")]

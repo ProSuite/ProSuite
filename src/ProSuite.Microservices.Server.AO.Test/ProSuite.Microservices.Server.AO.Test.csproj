@@ -80,6 +80,7 @@
   <ItemGroup>
     <Compile Include="Geodatabase\GdbRowTest.cs" />
     <Compile Include="Geodatabase\GdbTableTest.cs" />
+    <Compile Include="Geometry\AdvancedReshapeServiceTest.cs" />
     <Compile Include="Geometry\RemoveOverlapsServiceTest.cs" />
     <Compile Include="ProtobufConversionUtilsTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

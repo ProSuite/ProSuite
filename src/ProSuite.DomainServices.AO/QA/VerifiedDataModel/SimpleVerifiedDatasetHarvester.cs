@@ -1,10 +1,8 @@
-﻿using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 {
-	[CLSCompliant(false)]
 	public class SimpleVerifiedDatasetHarvester : VerifiedDatasetHarvesterBase
 	{
 		public override bool IgnoreDataset(IDatasetName datasetName, out string reason)

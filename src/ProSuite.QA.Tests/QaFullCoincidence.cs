@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -16,7 +15,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[ProximityTest]
 	public class QaFullCoincidence : QaFullCoincidenceBase

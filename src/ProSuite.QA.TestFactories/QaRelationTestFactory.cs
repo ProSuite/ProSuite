@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
@@ -13,7 +12,6 @@ using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.QA.TestFactories
 {
-	[CLSCompliant(false)]
 	public abstract class QaRelationTestFactory : TestFactory
 	{
 		[NotNull]

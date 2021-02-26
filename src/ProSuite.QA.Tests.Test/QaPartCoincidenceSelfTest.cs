@@ -10,7 +10,6 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.AO.Test.TestSupport;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -23,7 +22,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor, EsriProductFallback.TryHigherProduct);
+			_lic.Checkout();
 
 			_testWs = TestWorkspaceUtils.CreateTestFgdbWorkspace("TestPartCoincidenceSelf");
 		}
@@ -915,7 +914,7 @@ namespace ProSuite.QA.Tests.Test
 		[Test]
 		public void TestValidFileGdb()
 		{
-			var locator = new TestDataLocator(@"..\..\ProSuite\src");
+			var locator = TestDataUtils.GetTestDataLocator();
 			string path = locator.GetPath("QaPartCoincidendeCurveTest.gdb");
 
 			var ws = (IFeatureWorkspace) WorkspaceUtils.OpenFileGdbWorkspace(path);
@@ -963,7 +962,7 @@ namespace ProSuite.QA.Tests.Test
 
 		private static void TestVolume(IEnvelope testArea)
 		{
-			var locator = new TestDataLocator(@"..\..\ProSuite\src");
+			var locator = TestDataUtils.GetTestDataLocator();
 			string path = locator.GetPath("QaPartCoincidenceVolumeTest.mdb");
 
 			IFeatureWorkspace ws = WorkspaceUtils.OpenPgdbFeatureWorkspace(path);

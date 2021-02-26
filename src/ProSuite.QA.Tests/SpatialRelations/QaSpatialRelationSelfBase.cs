@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -12,7 +11,6 @@ namespace ProSuite.QA.Tests.SpatialRelations
 	/// Check if there are any elements inside a group of layers that 
 	/// have a certain relation with each other.
 	/// </summary>
-	[CLSCompliant(false)]
 	public abstract class QaSpatialRelationSelfBase : QaSpatialRelationBase
 	{
 		#region Constructors

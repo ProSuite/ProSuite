@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -8,7 +8,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainServices.AO.QA.Issues
 {
-	[CLSCompliant(false)]
 	public abstract class IssueWriter : IDisposable
 	{
 		[NotNull] private readonly IIssueAttributeWriter _issueAttributeWriter;

@@ -50,25 +50,43 @@ namespace ProSuite.Commons.Reflection
 			Assert.ArgumentNotNullOrEmpty(assemblyName, nameof(assemblyName));
 			Assert.ArgumentNotNullOrEmpty(typeName, nameof(typeName));
 
-			AssemblyName name = GetAssemblyName(BinDirectory, assemblyName);
-
-			if (string.IsNullOrEmpty(name.CodeBase))
-			{
-				_msg.VerboseDebugFormat("Loading type {0} from {1}",
-				                        typeName, name);
-			}
-			else
-			{
-				_msg.VerboseDebugFormat("Loading type {0} from {1} (codebase: {2})",
-				                        typeName, name, name.CodeBase);
-			}
-
-			Assembly assembly = Assembly.Load(name);
-
 			var substitutes = assemblySubstitutes ?? _substitutes;
 
 			bool throwOnError =
-				! substitutes.TryGetValue(assemblyName, out string subsituteAssembly);
+				!substitutes.TryGetValue(assemblyName, out string subsituteAssembly);
+
+			Assembly assembly = null;
+			try
+			{
+				AssemblyName name = GetAssemblyName(BinDirectory, assemblyName);
+
+				if (string.IsNullOrEmpty(name.CodeBase))
+				{
+					_msg.VerboseDebugFormat("Loading type {0} from {1}",
+					                        typeName, name);
+				}
+				else
+				{
+					_msg.VerboseDebugFormat("Loading type {0} from {1} (codebase: {2})",
+					                        typeName, name, name.CodeBase);
+				}
+
+				assembly = Assembly.Load(name);
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Loading {typeName} failed because assembly {assemblyName} from {BinDirectory} could not be loaded.", e);
+
+				if (throwOnError)
+				{
+					throw;
+				}
+
+				_msg.DebugFormat("Trying assembly substitute {0}...", subsituteAssembly);
+
+				assembly = Assembly.Load(subsituteAssembly);
+			}
+			
 			Type type = assembly.GetType(typeName, throwOnError);
 			if (type == null)
 			{

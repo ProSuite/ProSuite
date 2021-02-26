@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container.Geometry
@@ -11,7 +11,6 @@ namespace ProSuite.QA.Container.Geometry
 		[NotNull] private readonly SegmentCap _startCap;
 		[NotNull] private readonly SegmentCap _endCap;
 
-		[CLSCompliant(false)]
 		public SegmentHull([NotNull] SegmentProxy segment, double offset,
 		                   [NotNull] SegmentCap startCap, [NotNull] SegmentCap endCap)
 		{
@@ -22,7 +21,6 @@ namespace ProSuite.QA.Container.Geometry
 			_endCap = endCap;
 		}
 
-		[CLSCompliant(false)]
 		public SegmentHull([NotNull] SegmentProxy segment, double leftOffset, double rightOffset,
 		                   [NotNull] SegmentCap startCap, [NotNull] SegmentCap endCap)
 		{
@@ -33,7 +31,6 @@ namespace ProSuite.QA.Container.Geometry
 			_endCap = endCap;
 		}
 
-		[CLSCompliant(false)]
 		public SegmentProxy Segment
 		{
 			get { return _segment; }

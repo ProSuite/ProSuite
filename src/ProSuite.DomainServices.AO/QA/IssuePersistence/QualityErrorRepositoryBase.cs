@@ -23,7 +23,6 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 {
-	[CLSCompliant(false)]
 	public abstract class QualityErrorRepositoryBase
 	{
 		#region Fields
@@ -56,7 +55,6 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		/// <see cref="VerifiedQualityConditions"/> property is set.</param>
 		/// <param name="datasetResolver">The dataset resolver.</param>
 		/// <param name="qualityConditionRepository">The quality condition repository.</param>
-		[CLSCompliant(false)]
 		protected QualityErrorRepositoryBase(
 			[NotNull] IVerificationContext verificationContext,
 			[NotNull] Dictionary<QualityCondition, IList<ITest>> testsByQualityCondition,
@@ -100,7 +98,6 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		/// The test perimeter. It is important to set this property if applicable
 		/// to make sure only the errors in the test perimeter are deleted.
 		/// </summary>
-		[CLSCompliant(false)]
 		public IGeometry Perimeter
 		{
 			get { return _perimeter; }
@@ -111,7 +108,6 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			}
 		}
 
-		[CLSCompliant(false)]
 		public QualityErrorRepositoryDatasets IssueDatasets { get; }
 
 		[NotNull]
@@ -151,7 +147,6 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		/// <param name="transaction"></param>
 		/// <param name="issueObject"></param>
 		/// <param name="issueType"></param>
-		[CLSCompliant(false)]
 		[Obsolete("use ChangeIssueType()")]
 		public void SetErrorType([NotNull] IGdbTransaction transaction,
 		                         [NotNull] IObject issueObject,
@@ -171,7 +166,6 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		/// <param name="issueObjects">The issue objects.</param>
 		/// <param name="newIssueType">Type of the issue.</param>
 		[NotNull]
-		[CLSCompliant(false)]
 		public ICollection<IObject> ChangeIssueType(
 			[NotNull] IGdbTransaction transaction,
 			[NotNull] IEnumerable<IObject> issueObjects,

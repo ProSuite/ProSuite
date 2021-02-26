@@ -26,7 +26,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 		}
 
 		[OneTimeTearDown]
@@ -99,11 +99,11 @@ namespace ProSuite.QA.Tests.Test
 			var clsDesc = new ClassDescriptor(typeof(QaRelConstraint));
 			var tstDesc = new TestDescriptor("RelConstraint", clsDesc);
 			QualityCondition condition = new QualityCondition("fc_table_constraints", tstDesc);
-			QualityCondition_Utils.AddParameterValue(condition, "relationTables", vectorDataset);
-			QualityCondition_Utils.AddParameterValue(condition, "relationTables", tableDataset);
-			QualityCondition_Utils.AddParameterValue(condition, "relation", "rc");
-			QualityCondition_Utils.AddParameterValue(condition, "join", JoinType.InnerJoin);
-			QualityCondition_Utils.AddParameterValue(condition, "constraint",
+			QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", vectorDataset);
+			QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", tableDataset);
+			QualityConditionParameterUtils.AddParameterValue(condition, "relation", "rc");
+			QualityConditionParameterUtils.AddParameterValue(condition, "join", JoinType.InnerJoin);
+			QualityConditionParameterUtils.AddParameterValue(condition, "constraint",
 			                                        "(fc.OBJECTID = 1 AND table.OBJECTID = 1) AND (table.TEXT = 'table')");
 
 			var factory = new QaRelConstraint {Condition = condition};

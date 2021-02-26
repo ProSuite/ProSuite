@@ -1,4 +1,3 @@
-﻿using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -6,7 +5,6 @@ using ProSuite.Commons.Geometry;
 
 namespace ProSuite.QA.Container.TestContainer
 {
-	[CLSCompliant(false)]
 	public abstract class BaseRow
 	{
 		[CanBeNull] private IList<int> _oidList;

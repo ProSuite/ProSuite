@@ -20,7 +20,6 @@ using ProSuite.Commons.Geometry;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[TopologyTest]
 	public class QaNoGaps : ContainerTest

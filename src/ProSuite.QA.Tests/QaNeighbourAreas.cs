@@ -21,7 +21,6 @@ namespace ProSuite.QA.Tests
 	/// Check if there are any two touching areas inside a layer
 	/// that have certain properties
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[TopologyTest]
 	public class QaNeighbourAreas : ContainerTest

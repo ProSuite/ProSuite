@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container.TestSupport;
@@ -9,7 +8,6 @@ namespace ProSuite.QA.Container
 	{
 		private readonly TableView _tableView;
 
-		[CLSCompliant(false)]
 		public QueryFilterHelper([NotNull] ITable table,
 		                         [CanBeNull] string constraint,
 		                         bool caseSensitive)
@@ -21,7 +19,6 @@ namespace ProSuite.QA.Container
 			SubFields = _tableView.SubFields;
 		}
 
-		[CLSCompliant(false)]
 		public ContainerTest ContainerTest { get; set; }
 
 		public bool ForNetwork { get; set; }
@@ -32,7 +29,6 @@ namespace ProSuite.QA.Container
 
 		public bool AttributeFirst { get; set; } = true;
 
-		[CLSCompliant(false)]
 		public bool MatchesConstraint([NotNull] IRow row)
 		{
 			bool match = _tableView.MatchesConstraint(row);

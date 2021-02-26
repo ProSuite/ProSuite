@@ -1,4 +1,3 @@
-using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geometry.EsriShape;
 
@@ -20,14 +19,12 @@ namespace ProSuite.DomainModel.Core.DataModel
 		/// </summary>
 		/// <param name="name">The name for the geometry type.</param>
 		/// <param name="geometryType">The corresponding esri geometry type.</param>
-		[CLSCompliant(false)]
 		public GeometryTypeShape([NotNull] string name, ProSuiteGeometryType geometryType)
 			: base(name)
 		{
 			_shapeType = geometryType;
 		}
 
-		[CLSCompliant(false)]
 		public ProSuiteGeometryType ShapeType => _shapeType;
 
 		protected override GeometryType CreateClone()

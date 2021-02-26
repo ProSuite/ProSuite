@@ -42,7 +42,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 			lineage.Include(exceptionVersion);
 		}
 
-		[CLSCompliant(false)]
 		public bool HasChange(
 			[NotNull] ManagedExceptionVersion updateExceptionVersion,
 			[NotNull] out ManagedExceptionVersion mergedExceptionVersion,

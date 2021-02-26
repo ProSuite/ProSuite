@@ -21,7 +21,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Check that polygons are not too thin and long
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[GeometryTest]
 	public class QaSliverPolygon : ContainerTest

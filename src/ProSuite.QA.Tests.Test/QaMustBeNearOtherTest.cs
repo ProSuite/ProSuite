@@ -2,20 +2,20 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
-using ProSuite.QA.TestFactories;
-using ProSuite.QA.Tests.Test.Construction;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.DomainModel.AO.QA;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Test;
+using ProSuite.QA.TestFactories;
+using ProSuite.QA.Tests.Test.Construction;
+using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -29,7 +29,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 
 			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace("QaMustBeNearOtherTest");
 		}
@@ -253,20 +253,21 @@ namespace ProSuite.QA.Tests.Test
 			var clsDesc = new ClassDescriptor(typeof(QaRelMustBeNearOther));
 			var tstDesc = new TestDescriptor("testNear", clsDesc);
 			var condition = new QualityCondition("cndNear", tstDesc);
-			QualityCondition_Utils.AddParameterValue(condition, "relationTables", mds1);
-			QualityCondition_Utils.AddParameterValue(condition, "relationTables", mdsRel,
-			                                        $"{relTableName}.{IdField} = 12"); // --> only f11 get's checked
-			QualityCondition_Utils.AddParameterValue(condition, "relation", relName);
-			QualityCondition_Utils.AddParameterValue(condition, "join", JoinType.InnerJoin);
-			QualityCondition_Utils.AddParameterValue(condition, "nearClasses", mds2);
-			QualityCondition_Utils.AddParameterValue(condition, "maximumDistance", 5);
-			QualityCondition_Utils.AddParameterValue(condition, "relevantRelationCondition",
-			                                        string.Empty);
+			QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mds1);
+			QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mdsRel,
+			                                                 $"{relTableName}.{IdField} = 12"); // --> only f11 get's checked
+			QualityConditionParameterUtils.AddParameterValue(condition, "relation", relName);
+			QualityConditionParameterUtils.AddParameterValue(condition, "join", JoinType.InnerJoin);
+			QualityConditionParameterUtils.AddParameterValue(condition, "nearClasses", mds2);
+			QualityConditionParameterUtils.AddParameterValue(condition, "maximumDistance", 5);
+			QualityConditionParameterUtils.AddParameterValue(condition, "relevantRelationCondition",
+			                                                 string.Empty);
 
 			var fact = new QaRelMustBeNearOther();
 			fact.Condition = condition;
 
-			IList<ITest> tests = fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+			IList<ITest> tests =
+				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 			Assert.AreEqual(1, tests.Count);
 
 			var runner = new QaContainerTestRunner(1000, tests[0]);

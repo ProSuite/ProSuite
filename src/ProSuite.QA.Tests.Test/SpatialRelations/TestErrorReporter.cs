@@ -10,7 +10,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests.Test.SpatialRelations
 {
-	[CLSCompliant(false)]
 	public class TestErrorReporter : IErrorReporting
 	{
 		[NotNull]

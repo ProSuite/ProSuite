@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
@@ -31,7 +31,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-		[CLSCompliant(false)]
 		public IssueProcessor(
 			[NotNull] IIssueWriter issueWriter,
 			[NotNull] IDictionary<ITest, QualitySpecificationElement> elementsByTest,
@@ -189,7 +188,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global
 		public bool Fulfilled { get; private set; }
 
-		[CLSCompliant(false)]
 		public bool HasStopCondition([NotNull] IRow row)
 		{
 			return _rowsWithStopConditions.GetStopInfo(row) != null;

@@ -7,7 +7,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	public static class LineIntersectionUtils
 	{
 		[ThreadStatic] private static IPoint _templatePoint1;

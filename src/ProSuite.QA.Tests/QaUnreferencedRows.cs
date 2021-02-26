@@ -17,7 +17,6 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[AttributeTest]
 	public class QaUnreferencedRows : NonContainerTest

@@ -8,7 +8,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	public static class ZRangeUtils
 	{
 		public static double GetSplitRatio(double fromZ, double toZ,

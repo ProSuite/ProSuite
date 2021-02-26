@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 
@@ -6,11 +6,9 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.ShortestPath
 {
 	public class Node
 	{
-		[CLSCompliant(false)]
 		public Node(IPoint point, ISpatialReference spatialReference = null)
 			: this(point.X, point.Y, spatialReference ?? point.SpatialReference) { }
 
-		[CLSCompliant(false)]
 		public Node(double x, double y, ISpatialReference spatialReference)
 		{
 			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));

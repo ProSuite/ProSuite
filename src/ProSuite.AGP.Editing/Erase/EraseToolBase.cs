@@ -38,7 +38,7 @@ namespace ProSuite.AGP.Editing.Erase
 
 		protected override void LogEnteringSketchMode()
 		{
-			_msg.Info("Define the hole.<br>Hit [ESC] to reselect the polygon(s).");
+			_msg.Info("Sketch a hole or any polygon to be erased from the selection.<br>Press [ESC] to reselect the polygon(s).");
 		}
 
 		protected override void LogPromptForSelection()
@@ -97,7 +97,9 @@ namespace ProSuite.AGP.Editing.Erase
 				                     cancelableProgressor);
 
 			var taskSave = QueuedTaskUtils.Run(() => SaveAsync(resultFeatures));
-			var taskFlash = QueuedTaskUtils.Run(() => FlashAsync(activeView, resultFeatures));
+			var taskFlash =
+				QueuedTaskUtils.Run(
+					() => ToolUtils.FlashResultPolygonsAsync(activeView, resultFeatures));
 
 			await Task.WhenAll(taskFlash, taskSave);
 
@@ -142,30 +144,7 @@ namespace ProSuite.AGP.Editing.Erase
 
 			return result;
 		}
-
-		private async Task<bool> FlashAsync(MapView activeView,
-		                                    IDictionary<Feature, Geometry> resultFeatures)
-		{
-			if (resultFeatures.Count > 5)
-			{
-				_msg.InfoFormat("{0} have been updated. No flashing will be performed.",
-				                resultFeatures.Count);
-			}
-
-			var polySymbol = SymbolFactory.Instance.DefaultPolygonSymbol;
-
-			foreach (Geometry resultGeometry in resultFeatures.Values)
-			{
-				using (await activeView.AddOverlayAsync(resultGeometry,
-				                                        polySymbol.MakeSymbolReference()))
-				{
-					await Task.Delay(400);
-				}
-			}
-
-			return true;
-		}
-
+		
 		private static async Task<bool> SaveAsync(IDictionary<Feature, Geometry> result)
 		{
 			// create an edit operation

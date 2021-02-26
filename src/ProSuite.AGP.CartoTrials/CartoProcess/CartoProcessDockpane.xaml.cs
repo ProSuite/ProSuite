@@ -1,6 +1,6 @@
 using System.Windows.Controls;
 
-namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
+namespace ProSuite.AGP.CartoTrials.CartoProcess
 {
 	/// <summary>
 	/// Interaction logic for CartoProcessDockpaneView.xaml

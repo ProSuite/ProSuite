@@ -10,13 +10,11 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 {
-	[CLSCompliant(false)]
 	public class VerifiedModel : Model
 	{
 		[NotNull]
 		private readonly Func<Model, IFeatureWorkspace, IWorkspaceContext> _workspaceContextFactory;
 
-		[CLSCompliant(false)]
 		public VerifiedModel(
 			[NotNull] string name,
 			[NotNull] IWorkspace workspace,

@@ -14,7 +14,6 @@ namespace ProSuite.QA.Tests.Network
 	/// <summary>
 	/// Check if there is always exactly one outgoing vertex
 	/// </summary>
-	[CLSCompliant(false)]
 	public abstract class QaNetworkBase : ContainerTest
 	{
 		private readonly bool _includeBorderNodes;

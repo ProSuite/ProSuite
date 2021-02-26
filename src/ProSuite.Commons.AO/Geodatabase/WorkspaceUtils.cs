@@ -26,7 +26,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public static class WorkspaceUtils
 	{
 		private const string _defaultRepositoryName = "SDE";
@@ -623,6 +622,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			catch (COMException exception)
 			{
+				_msg.Debug($"Error opening workspace using catalog path {connectionFilePath}",
+				           exception);
+
 				if (exception.ErrorCode == (decimal) fdoError.FDO_E_CONNECTION_CANCELLED)
 				{
 					// clear the parameters for this instance (to allow re-authentication on next try)

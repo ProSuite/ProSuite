@@ -12,7 +12,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA
 {
-	[CLSCompliant(false)]
 	public static class TestFactoryUtils
 	{
 		/// <summary>

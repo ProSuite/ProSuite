@@ -17,7 +17,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[GeometryTest]
 	public class QaMpVerticalFaces : ContainerTest

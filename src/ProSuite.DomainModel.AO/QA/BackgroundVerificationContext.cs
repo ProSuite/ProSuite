@@ -21,7 +21,6 @@ namespace ProSuite.DomainModel.AO.QA
 	{
 		[NotNull] private readonly ICollection<Dataset> _verifiedDatasets;
 
-		[CLSCompliant(false)]
 		public BackgroundVerificationContext(
 			[NotNull] IModelContext innerModelContext,
 			[NotNull] SpatialReferenceDescriptor spatialReferenceDescriptor,
@@ -32,7 +31,6 @@ namespace ProSuite.DomainModel.AO.QA
 			_verifiedDatasets = verifiedDatasets;
 		}
 
-		[CLSCompliant(false)]
 		public IModelContext InnerModelContext { get; }
 
 		public void InitializeSchema(ICollection<Dataset> datasets)

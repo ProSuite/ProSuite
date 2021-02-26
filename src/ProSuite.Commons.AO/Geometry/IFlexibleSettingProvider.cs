@@ -1,4 +1,3 @@
-﻿using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -9,7 +8,6 @@ namespace ProSuite.Commons.AO.Geometry
 	/// override the static setting.
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
-	[CLSCompliant(false)]
 	public interface IFlexibleSettingProvider<T> where T : struct
 	{
 		// TODO: Instead of IObject something more flexible like IProcessingContext could be used

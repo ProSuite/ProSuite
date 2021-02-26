@@ -13,14 +13,12 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.QA
 {
-	[CLSCompliant(false)]
 	public class SimpleDatasetOpener : IOpenDataset
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly IDatasetContext _datasetContext;
 
-		[CLSCompliant(false)]
 		public SimpleDatasetOpener(IDatasetContext datasetContext)
 		{
 			_datasetContext = datasetContext;

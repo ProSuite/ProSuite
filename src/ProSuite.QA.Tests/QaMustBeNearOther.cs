@@ -12,7 +12,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[ProximityTest]
 	public class QaMustBeNearOther : QaRequiredSpatialRelationOther<PendingFeature>
 	{

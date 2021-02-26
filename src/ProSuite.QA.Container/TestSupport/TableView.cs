@@ -30,7 +30,6 @@ namespace ProSuite.QA.Container.TestSupport
 			return new TableView(ColumnInfos, dataView);
 		}
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public DataRow Add([NotNull] IRow row,
 		                   [CanBeNull] ICollection<ColumnInfo> columnInfos = null)
@@ -51,7 +50,6 @@ namespace ProSuite.QA.Container.TestSupport
 			return dataRow;
 		}
 
-		[CLSCompliant(false)]
 		public bool MatchesConstraint([NotNull] IRow row)
 		{
 			DataView dataView = ConstraintView;
@@ -68,7 +66,6 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public string ToString([NotNull] IRow row, bool constraintOnly = false)
 		{
 			HashSet<string> fieldNames = constraintOnly
@@ -80,7 +77,6 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public string ToString([NotNull] IRow row,
 		                       bool constraintOnly,
 		                       [CanBeNull] ICollection<string> addedConstraintFieldNames)

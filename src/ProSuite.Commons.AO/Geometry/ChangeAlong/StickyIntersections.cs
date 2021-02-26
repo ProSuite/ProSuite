@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -14,7 +14,6 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
-	[CLSCompliant(false)]
 	public class StickyIntersections
 	{
 		private static readonly IMsg _msg =

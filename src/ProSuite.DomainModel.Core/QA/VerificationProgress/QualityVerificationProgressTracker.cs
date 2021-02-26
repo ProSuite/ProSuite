@@ -1,4 +1,3 @@
-using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -8,7 +7,6 @@ using ProSuite.Commons.Progress;
 
 namespace ProSuite.DomainModel.Core.QA.VerificationProgress
 {
-	[CLSCompliant(false)]
 	public class QualityVerificationProgressTracker : IQualityVerificationProgressTracker
 	{
 		private ServiceCallStatus _serviceCallStatus;

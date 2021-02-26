@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,7 +12,6 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.DomainServices.AO.QA.Exceptions
 {
-	[CLSCompliant(false)]
 	public static class ExceptionObjectUtils
 	{
 		private const string _tableDelimiter = ";";

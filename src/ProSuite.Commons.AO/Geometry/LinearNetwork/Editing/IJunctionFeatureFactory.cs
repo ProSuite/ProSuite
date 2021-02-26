@@ -1,4 +1,3 @@
-﻿using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -9,7 +8,6 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 	/// a junction to be created in the specified network if any but the default junction
 	/// type defined in the linear network shall be created.
 	/// </summary>
-	[CLSCompliant(false)]
 	public interface IJunctionFeatureFactory
 	{
 		/// <summary>

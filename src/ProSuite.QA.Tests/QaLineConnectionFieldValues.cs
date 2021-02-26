@@ -45,7 +45,6 @@ namespace ProSuite.QA.Tests
 	 * TODO add explicit tolerance? Or (optionally) get maximum tolerance from feature classes?
 	 */
 
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[LinearNetworkTest]
 	public class QaLineConnectionFieldValues : QaNetworkBase

@@ -1,11 +1,9 @@
-﻿using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DomainModel.AO.QA
 {
-	[CLSCompliant(false)]
 	public interface IQualityConditionObjectDatasetResolver
 	{
 		[CanBeNull]

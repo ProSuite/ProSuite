@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
@@ -12,7 +11,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Finds all lines that are too short
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[GeometryTest]
 	public class QaMinLength : QaLengthBase

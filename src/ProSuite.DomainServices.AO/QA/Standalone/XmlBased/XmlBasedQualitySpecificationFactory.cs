@@ -32,7 +32,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		/// </summary>
 		/// <param name="modelFactory">The model builder.</param>
 		/// <param name="datasetOpener"></param>
-		[CLSCompliant(false)]
 		public XmlBasedQualitySpecificationFactory(
 			[NotNull] IVerifiedModelFactory modelFactory,
 			[NotNull] IOpenDataset datasetOpener)
@@ -116,9 +115,10 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				XmlDataQualityUtils.FindXmlQualitySpecification(document,
 				                                                qualitySpecificationName,
 				                                                out xmlSpecificationCategory);
-			Assert.NotNull(xmlQualitySpecification,
-			               "Specification '{0} not found in document",
-			               qualitySpecificationName);
+
+			Assert.ArgumentCondition(xmlQualitySpecification != null,
+			                         "Specification '{0} not found in document",
+			                         qualitySpecificationName);
 
 			XmlDataQualityUtils.AssertUniqueElementNames(xmlQualitySpecification);
 
@@ -357,8 +357,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			                                         databaseName, schemaOwner);
 
 			ISpatialReference spatialReference = GetMainSpatialReference(result,
-			                                                             workspaceId,
-			                                                             referencedConditions);
+				workspaceId,
+				referencedConditions);
 
 			if (spatialReference != null)
 			{

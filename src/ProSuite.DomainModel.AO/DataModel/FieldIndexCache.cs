@@ -13,7 +13,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 		[NotNull] private readonly Dictionary<ITable, FieldIndexes> _fieldIndexesByTable =
 			new Dictionary<ITable, FieldIndexes>();
 
-		[CLSCompliant(false)]
 		public int GetFieldIndex(IObjectClass objectClass,
 		                         string fieldName,
 		                         AttributeRole role)
@@ -21,7 +20,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return GetFieldIndex((ITable) objectClass, fieldName, role);
 		}
 
-		[CLSCompliant(false)]
 		public int GetFieldIndex(ITable table, string fieldName, AttributeRole role)
 		{
 			FieldIndexes fieldIndexes;
@@ -34,13 +32,11 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return fieldIndexes.GetFieldIndex(fieldName, role);
 		}
 
-		[CLSCompliant(false)]
 		public int GetSubtypeFieldIndex(IObjectClass objectClass)
 		{
 			return GetSubtypeFieldIndex((ITable) objectClass);
 		}
 
-		[CLSCompliant(false)]
 		public int GetSubtypeFieldIndex(ITable table)
 		{
 			FieldIndexes fieldIndexes;
@@ -53,7 +49,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return fieldIndexes.GetSubtypeFieldIndex();
 		}
 
-		[CLSCompliant(false)]
 		public void Clear([NotNull] ITable table)
 		{
 			_fieldIndexesByTable.Remove(table);

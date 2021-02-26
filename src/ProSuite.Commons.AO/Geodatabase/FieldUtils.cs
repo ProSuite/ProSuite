@@ -9,7 +9,6 @@ using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public static class FieldUtils
 	{
 		[NotNull]

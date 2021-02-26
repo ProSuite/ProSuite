@@ -17,7 +17,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Checks Constraints on a table
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[AttributeTest]
 	public class QaValue : ContainerTest

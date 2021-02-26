@@ -55,7 +55,6 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 
 		public ZSettingsModel() : this(null) { }
 
-		[CLSCompliant(false)]
 		public ZSettingsModel([CanBeNull] IZSettingsDefaults zSettingsDefaults)
 		{
 			_modeSelectableStates.Clear();
@@ -105,7 +104,6 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 
 		public double DefaultOffset => _defaultOffset;
 
-		[CLSCompliant(false)]
 		public ISurface DefaultSurface => null;
 
 		public double DefaultDtmOffset => _defaultDtmOffset;
@@ -118,7 +116,6 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 
 		public MultiTargetSubMode DefaultMultiTargetSubMode => _defaultMultiTargetMode;
 
-		[CLSCompliant(false)]
 		public ISurface PrepareVirtualSurface(IEnvelope envelope, ISurface surface,
 		                                      double minimalResolution)
 		{
@@ -334,7 +331,6 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 		public event EventHandler SourceGeometryChanged;
 		public event EventHandler SelectableModesChanged;
 
-		[CLSCompliant(false)]
 		public IZSettingsDefaults ZSettingsDefaults
 		{
 			get { return _zSettingsDefaults; }
@@ -391,7 +387,6 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 			}
 		}
 
-		[CLSCompliant(false)]
 		public ISurface DtmSurface
 		{
 			get { return _dtmSurface; }
@@ -465,7 +460,6 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 			}
 		}
 
-		[CLSCompliant(false)]
 		public IList<IGeometry> TargetGeometries
 		{
 			get { return _targetGeometries; }
@@ -477,7 +471,6 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 			}
 		}
 
-		[CLSCompliant(false)]
 		public IGeometry SourceGeometry
 		{
 			get { return _sourceGeometry; }
@@ -577,7 +570,6 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 			}
 		}
 
-		[CLSCompliant(false)]
 		public void PrepareSurface(IList<IFeature> features, double minimalResolution)
 		{
 			Assert.NotNull(_zSettingsDefaults, "_zSettingsDefaults");
@@ -587,7 +579,6 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 			PrepareSurface(envelope, minimalResolution);
 		}
 
-		[CLSCompliant(false)]
 		public void PrepareSurface(IList<IGeometry> geometries, double minimalResolution)
 		{
 			Assert.NotNull(_zSettingsDefaults, "_zSettingsDefaults");
@@ -597,7 +588,6 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 			PrepareSurface(envelope, minimalResolution);
 		}
 
-		[CLSCompliant(false)]
 		public void PrepareSurface(IEnvelope envelope, double minimalResolution)
 		{
 			Assert.NotNull(_zSettingsDefaults, "_zSettingsDefaults");

@@ -20,7 +20,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 
 			_spatialReference = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95);
@@ -203,7 +203,6 @@ namespace ProSuite.QA.Tests.Test
 		public void CantGetDistanceToNonPlanarPolygon()
 		{
 			const double z1 = 10;
-			const double z2 = 20;
 			var g1 = GeometryFactory.CreatePoint(100, 0, z1);
 			var polygon =
 				CurveConstruction.StartPoly(0, 0, 10)

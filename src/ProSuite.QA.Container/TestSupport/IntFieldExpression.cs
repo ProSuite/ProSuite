@@ -6,14 +6,12 @@ namespace ProSuite.QA.Container.TestSupport
 {
 	public class IntFieldExpression : FieldExpressionBase
 	{
-		[CLSCompliant(false)]
 		public IntFieldExpression([NotNull] ITable table,
 		                          [NotNull] string expression,
 		                          bool evaluateImmediately = false,
 		                          bool caseSensitive = false)
 			: base(table, expression, evaluateImmediately, caseSensitive) { }
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		public int? GetInt([NotNull] IRow row)
 		{

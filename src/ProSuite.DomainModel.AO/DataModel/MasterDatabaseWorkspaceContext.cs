@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
@@ -10,7 +9,6 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
-	[CLSCompliant(false)]
 	public class MasterDatabaseWorkspaceContext : WorkspaceContextBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();

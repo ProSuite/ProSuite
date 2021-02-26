@@ -29,7 +29,6 @@ namespace ProSuite.QA.Tests
 	// TODO: consider using ITableSort also if selection set is verified
 	// TODO: consider option to use ITableSort instead of ORDER BY (if collation is known to be different between two Oracle instances)
 	// TODO: add parameter to enforce case-sensitive comparison
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[AttributeTest]
 	public class QaUnique : NonContainerTest

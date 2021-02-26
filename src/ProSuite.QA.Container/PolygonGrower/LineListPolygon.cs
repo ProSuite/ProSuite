@@ -23,7 +23,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			get { return _isInnerRing; }
 		}
 
-		[CLSCompliant(false)]
 		public List<IRow> Centroids
 		{
 			get { return _centroids; }
@@ -36,7 +35,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 		protected abstract void AddCore(LineListPolygon poly);
 	}
 
-	[CLSCompliant(false)]
 	public class LineListPolygon<TDirectedRow> : LineListPolygon
 		where TDirectedRow : class, IPolygonDirectedRow
 	{
@@ -49,7 +47,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 		public LineListPolygon([NotNull] LineList<TDirectedRow> outerRing)
 			: base(false)
 		{
-			Assert.ArgumentNotNull(outerRing, "outerRing");
+			Assert.ArgumentNotNull(outerRing, nameof(outerRing));
 
 			_mainRing = outerRing;
 			_canProcess = true;
@@ -64,7 +62,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 		public LineListPolygon([NotNull] LineList<TDirectedRow> ring, bool isInnerRing)
 			: base(isInnerRing)
 		{
-			Assert.ArgumentNotNull(ring, "ring");
+			Assert.ArgumentNotNull(ring, nameof(ring));
 
 			if (isInnerRing == false)
 			{
@@ -113,7 +111,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			set { _canProcess = value; }
 		}
 
-		[CLSCompliant(false)]
 		public Ao.IPolygon GetPolygon()
 		{
 			Ao.IPolygon polygon = new Ao.PolygonClass();

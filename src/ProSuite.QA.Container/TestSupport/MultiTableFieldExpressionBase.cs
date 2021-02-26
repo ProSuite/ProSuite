@@ -16,7 +16,6 @@ namespace ProSuite.QA.Container.TestSupport
 		[NotNull] private readonly IDictionary<TableIndexPair, MultiTableView> _constraintViews =
 			new Dictionary<TableIndexPair, MultiTableView>();
 
-		[CLSCompliant(false)]
 		protected MultiTableFieldExpressionBase(
 			[NotNull] string expression,
 			[NotNull] string row1Alias,
@@ -48,7 +47,6 @@ namespace ProSuite.QA.Container.TestSupport
 		[NotNull]
 		public string Row2Alias { get; }
 
-		[CLSCompliant(false)]
 		[CanBeNull]
 		protected object GetValue([NotNull] IRow row1, int tableIndex1,
 		                          [NotNull] IRow row2, int tableIndex2)

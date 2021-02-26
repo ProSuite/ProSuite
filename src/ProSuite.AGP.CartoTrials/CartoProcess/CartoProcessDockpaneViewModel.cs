@@ -15,21 +15,19 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Processing;
 using ProSuite.Processing.Domain;
 
-namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
+namespace ProSuite.AGP.CartoTrials.CartoProcess
 {
 	internal class CartoProcessDockpaneViewModel : DockPane
 	{
-		private const string _dockPaneID = "ProSuite_ProTrials_CartoProcessDockpane";
+		private const string _dockPaneID = "ProSuite_CartoTrials_CartoProcessDockpane";
 
 		protected CartoProcessDockpaneViewModel() { }
 
 		internal static void Show()
 		{
 			DockPane pane = FrameworkApplication.DockPaneManager.Find(_dockPaneID);
-			if (pane == null)
-				return;
 
-			pane.Activate();
+			pane?.Activate();
 		}
 
 		private string _databaseName = "";

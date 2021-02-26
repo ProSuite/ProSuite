@@ -32,8 +32,8 @@ namespace ProSuite.QA.TestFactories
 		public QualityCondition Convert([NotNull] Matrix matrix,
 		                                [NotNull] IList<Dataset> datasets)
 		{
-			Assert.ArgumentNotNull(matrix, "matrix");
-			Assert.ArgumentNotNull(datasets, "datasets");
+			Assert.ArgumentNotNull(matrix, nameof(matrix));
+			Assert.ArgumentNotNull(datasets, nameof(datasets));
 
 			var classDescriptor = new ClassDescriptor(typeof(QaLineConnection));
 
@@ -48,14 +48,14 @@ namespace ProSuite.QA.TestFactories
 
 			foreach (KeyValuePair<string, VectorDataset> pair in lineClasses)
 			{
-				QualityCondition_Utils.AddParameterValue(qualityCondition, FeatureClassesParamName,
-				                                         pair.Value);
+				QualityConditionParameterUtils.AddParameterValue(
+					qualityCondition, FeatureClassesParamName, pair.Value);
 			}
 
 			foreach (KeyValuePair<string, VectorDataset> pair in nodeClasses)
 			{
-				QualityCondition_Utils.AddParameterValue(qualityCondition, FeatureClassesParamName,
-				                                         pair.Value);
+				QualityConditionParameterUtils.AddParameterValue(
+					qualityCondition, FeatureClassesParamName, pair.Value);
 			}
 
 			foreach (KeyValuePair<string, VectorDataset> pair in lineClasses)
@@ -98,7 +98,7 @@ namespace ProSuite.QA.TestFactories
 			{
 				foreach (string rule in rules.Rules)
 				{
-					QualityCondition_Utils.AddParameterValue(
+					QualityConditionParameterUtils.AddParameterValue(
 						qualityCondition, RulesParamName, rule);
 				}
 			}
@@ -109,7 +109,7 @@ namespace ProSuite.QA.TestFactories
 		[NotNull]
 		public Matrix Convert([NotNull] QualityCondition qualityCondition)
 		{
-			Assert.ArgumentNotNull(qualityCondition, "qualityCondition");
+			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
 
 			IList<TestParameterValue> featureClassParameters =
 				qualityCondition.GetParameterValues(FeatureClassesParamName);
@@ -235,7 +235,7 @@ namespace ProSuite.QA.TestFactories
 		[NotNull]
 		private static IEnumerable<RuleCount> Rules(
 			[NotNull] IList<ConnectionType> lineTypes,
-			[NotNull] KeyValuePair<IList<ConnectionType>, int[,]> node,
+			KeyValuePair<IList<ConnectionType>, int[,]> node,
 			[NotNull] IList<string> lineClasses,
 			[NotNull] Dictionary<string, VectorDataset> nodeClasses)
 		{
@@ -1027,8 +1027,7 @@ namespace ProSuite.QA.TestFactories
 					int count;
 					if (maxVars.TryGetValue(var, out count) == false)
 					{
-						Assert.Fail(string.Format(
-							            "Count for {0} not defined", var));
+						Assert.Fail("Count for {0} not defined", var);
 					}
 
 					subtypesMax.Add(subtype, count);
@@ -1502,7 +1501,7 @@ namespace ProSuite.QA.TestFactories
 			}
 
 			private void AppendCsv([NotNull] StringBuilder sb,
-			                       [NotNull] KeyValuePair<IList<ConnectionType>, int[,]> node)
+			                       KeyValuePair<IList<ConnectionType>, int[,]> node)
 			{
 				int n = _lineTypes.Count;
 				foreach (ConnectionType nodeType in node.Key)

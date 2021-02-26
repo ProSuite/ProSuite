@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -23,7 +22,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 			get { return _row; }
 		}
 
-		[CLSCompliant(false)]
 		public IPoint NetPoint
 		{
 			get { return NetPoint__.Point; }
@@ -33,7 +31,6 @@ namespace ProSuite.QA.Container.PolygonGrower
 
 		// NOTE: queryPoint is not necessarily updated (depends on subclass). Must use the returned point
 		// NOTE: the method name is misleading, and the overall design should be cleaned up to make it less obscure (e.g., no NetPoint, NetPoint_ and NetPoint__ classes/methods)
-		[CLSCompliant(false)]
 		[NotNull]
 		public IPoint QueryNetPoint([NotNull] IPoint queryPoint)
 		{
@@ -49,13 +46,11 @@ namespace ProSuite.QA.Container.PolygonGrower
 		{
 			private readonly IPoint _point;
 
-			[CLSCompliant(false)]
 			public NetPoint_([NotNull] IPoint point)
 			{
 				_point = point;
 			}
 
-			[CLSCompliant(false)]
 			[NotNull]
 			public IPoint Point
 			{

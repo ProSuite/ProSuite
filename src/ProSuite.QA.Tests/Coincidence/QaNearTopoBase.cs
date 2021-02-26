@@ -15,7 +15,6 @@ using Pnt = ProSuite.Commons.Geometry.Pnt;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
-	[CLSCompliant(false)]
 	public abstract class QaNearTopoBase : QaPolycurveCoincidenceBase
 	{
 		private readonly double _coincidenceTolerance;

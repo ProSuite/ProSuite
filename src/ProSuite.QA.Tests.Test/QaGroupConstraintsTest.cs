@@ -13,7 +13,6 @@ using ProSuite.Commons.AO.Licensing;
 
 namespace ProSuite.QA.Tests.Test
 {
-	[CLSCompliant(false)]
 	[TestFixture]
 	public class QaGroupConstraintsTest
 	{
@@ -24,7 +23,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 
 			_testWs = TestWorkspaceUtils.CreateTestAccessWorkspace("QaGroupConstraintsTest");
 			_fgdbWs =

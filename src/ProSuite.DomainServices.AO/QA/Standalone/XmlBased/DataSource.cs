@@ -89,7 +89,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		#endregion
 
 		[NotNull]
-		[CLSCompliant(false)]
 		public IWorkspace OpenWorkspace()
 		{
 			if (! string.IsNullOrEmpty(_catalogPath))

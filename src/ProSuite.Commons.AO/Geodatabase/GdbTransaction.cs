@@ -1,9 +1,7 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 
 namespace ProSuite.Commons.AO.Geodatabase
 {
-	[CLSCompliant(false)]
 	public class GdbTransaction : GdbTransactionBase
 	{
 		#region Constructors

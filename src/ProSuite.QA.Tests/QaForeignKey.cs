@@ -16,7 +16,6 @@ using Tuple = ProSuite.QA.Tests.KeySets.Tuple;
 namespace ProSuite.QA.Tests
 {
 	[UsedImplicitly]
-	[CLSCompliant(false)]
 	[AttributeTest]
 	public class QaForeignKey : NonContainerTest
 	{

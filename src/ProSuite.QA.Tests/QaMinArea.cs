@@ -12,7 +12,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Finds small polygons or polygon parts
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[GeometryTest]
 	public class QaMinArea : QaAreaBase

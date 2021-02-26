@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -18,7 +18,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 	/// intersection points with other features, crack points used for topological correctness, i.e.
 	/// intersection points with other geometries that do not (yet) exist, and points to be deleted.
 	/// </summary>
-	[CLSCompliant(false)]
 	public class FeatureVertexInfo
 	{
 		private static readonly IMsg _msg =

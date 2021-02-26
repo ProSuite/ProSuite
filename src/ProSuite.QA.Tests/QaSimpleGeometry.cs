@@ -22,7 +22,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Finds all invalid geometries (null, empty, not simple)
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[GeometryTest]
 	public class QaSimpleGeometry : ContainerTest

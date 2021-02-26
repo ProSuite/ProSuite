@@ -15,7 +15,7 @@ using ProSuite.Processing;
 using ProSuite.Processing.Domain;
 using ProSuite.Processing.Utils;
 
-namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
+namespace ProSuite.AGP.CartoTrials.CartoProcess
 {
 	public class MapContextAGP : IMapContext
 	{
@@ -36,8 +36,9 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 		public LayerProxyAGP(BasicFeatureLayer layer, MapView mapView)
 		{
-			_layer = layer ?? throw new ArgumentNullException();
-			_mapView = mapView ?? throw new ArgumentNullException();
+			_layer = layer ?? throw new ArgumentNullException(nameof(layer));
+
+			_mapView = mapView ?? throw new ArgumentNullException(nameof(mapView));
 		}
 
 		public int SelectionCount => _layer.SelectionCount;
@@ -70,7 +71,6 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 
 		public Geometry QueryDrawingOutline(long oid, OutlineType outlineType)
 		{
-#if PRO27
 			DrawingOutlineType drawingOutlineType;
 			switch (outlineType)
 			{
@@ -85,9 +85,6 @@ namespace ProSuite.AGP.Solution.ProTrials.CartoProcess
 			}
 
 			return _layer.QueryDrawingOutline(oid, _mapView, drawingOutlineType);
-#else
-			throw new NotImplementedException("Requires ArcGIS Pro 2.7 or newer");
-#endif
 		}
 	}
 

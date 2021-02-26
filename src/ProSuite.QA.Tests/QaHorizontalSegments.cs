@@ -19,7 +19,6 @@ namespace ProSuite.QA.Tests
 	/// <summary>
 	/// Reports non-linear polycurve segments as errors
 	/// </summary>
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[GeometryTest]
 	[ZValuesTest]

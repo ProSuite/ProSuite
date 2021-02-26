@@ -18,7 +18,6 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[EdgeMatchTest]
 	public class QaEdgeMatchCrossingLines : ContainerTest

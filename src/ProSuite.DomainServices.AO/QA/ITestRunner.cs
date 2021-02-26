@@ -11,7 +11,6 @@ namespace ProSuite.DomainServices.AO.QA
 	/// <summary>
 	/// Encapsulates the execution of tests in a specific area of interest.
 	/// </summary>
-	[CLSCompliant(false)]
 	public interface ITestRunner
 	{
 		event EventHandler<QaErrorEventArgs> QaError;

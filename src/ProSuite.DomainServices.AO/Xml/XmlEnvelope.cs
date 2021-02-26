@@ -1,4 +1,3 @@
-﻿using System;
 using System.ComponentModel;
 using System.Xml.Serialization;
 using ESRI.ArcGIS.Geometry;
@@ -14,7 +13,6 @@ namespace ProSuite.DomainServices.AO.Xml
 		[UsedImplicitly]
 		public XmlEnvelope() { }
 
-		[CLSCompliant(false)]
 		public XmlEnvelope([NotNull] IEnvelope envelope)
 		{
 			Assert.ArgumentNotNull(envelope, nameof(envelope));

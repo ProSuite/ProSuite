@@ -5,16 +5,16 @@ using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Controls;
 
-namespace ProSuite.AGP.Solution.ProTrials
+namespace ProSuite.AGP.CartoTrials
 {
 	/// <summary>
-	/// Interaction logic for ProTrialsRegistrationWindow.xaml
+	/// Interaction logic for CartoTrialsRegistrationWindow.xaml
 	/// </summary>
-	public partial class ProTrialsRegistrationWindow : ProWindow, INotifyPropertyChanged
+	public partial class CartoTrialsRegistrationWindow : ProWindow, INotifyPropertyChanged
 	{
 		private ICommand _authorizeCommand;
 
-		public ProTrialsRegistrationWindow()
+		public CartoTrialsRegistrationWindow()
 		{
 			InitializeComponent();
 
@@ -23,10 +23,10 @@ namespace ProSuite.AGP.Solution.ProTrials
 
 		public string AuthorizationID
 		{
-			get => ProTrialsModule.AuthorizationID;
+			get => CartoTrialsModule.AuthorizationID;
 			set
 			{
-				ProTrialsModule.AuthorizationID = value;
+				CartoTrialsModule.AuthorizationID = value;
 				OnPropertyChanged();
 			}
 		}
@@ -44,8 +44,8 @@ namespace ProSuite.AGP.Solution.ProTrials
 
 		private void Authorize()
 		{
-			if (ProTrialsModule.CheckLicensing(
-				ProTrialsModule.AuthorizationID))
+			if (CartoTrialsModule.CheckLicensing(
+				CartoTrialsModule.AuthorizationID))
 			{
 				MessageBox.Show(
 					"Add-in authorized. Thank you",

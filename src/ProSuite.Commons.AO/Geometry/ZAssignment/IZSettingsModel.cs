@@ -5,7 +5,6 @@ using ESRI.ArcGIS.Geometry;
 
 namespace ProSuite.Commons.AO.Geometry.ZAssignment
 {
-	[CLSCompliant(false)]
 	public interface IZSettingsModel
 	{
 		// Main Z mode

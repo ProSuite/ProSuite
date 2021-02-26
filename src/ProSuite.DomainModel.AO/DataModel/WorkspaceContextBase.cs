@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
@@ -7,7 +6,6 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
-	[CLSCompliant(false)]
 	public abstract class WorkspaceContextBase : IWorkspaceContext
 	{
 		protected WorkspaceContextBase([NotNull] IFeatureWorkspace featureWorkspace)

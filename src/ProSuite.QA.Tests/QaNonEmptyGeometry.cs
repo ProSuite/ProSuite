@@ -1,24 +1,27 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[UsedImplicitly]
 	[GeometryTest]
 	public class QaNonEmptyGeometry : NonContainerTest
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly IFeatureClass _featureClass;
 		private readonly bool _dontFilterPolycurvesByZeroLength;
 		private readonly string _shapeFieldName;
@@ -134,10 +137,64 @@ namespace ProSuite.QA.Tests
 			const bool recycling = true;
 			IQueryFilter filter = CreateFilter(featureClass, GetConstraint(0));
 
+			int previousOid = -1;
+			bool tryFallbackImplementation = false;
+
+			// New with 12.5 (probably 10.8.1 x64 too?) for multipatch features:
+			// COMException (errorCode -2147220959) with various messages, such as
+			// - Insufficient permissions [ORA-00942: table or view does not exist]
+			// - The operation was attempted on an empty geometry (when in SDE schema/user)
+			// when an empty geometry is encountered!
+
+			try
+			{
+				foreach (IFeature feature in
+					GdbQueryUtils.GetFeatures(featureClass, filter, recycling))
+				{
+					errorCount += TestFeature(feature);
+					previousOid = feature.OID;
+				}
+			}
+			catch (COMException e)
+			{
+				_msg.Debug($"Error getting feature from {DatasetUtils.GetName(featureClass)}. " +
+				           $"Previous successful object id: {previousOid}", e);
+
+				if (e.ErrorCode == -2147220959)
+				{
+					_msg.Debug(
+						"Error getting feature with presumably empty geometry. Using fall-back implementation (slow) to identify object id.");
+					tryFallbackImplementation = true;
+				}
+				else
+				{
+					throw;
+				}
+			}
+
+			if (! tryFallbackImplementation)
+			{
+				return errorCount;
+			}
+
+			// Read all features without geometry, get geometry separately for each feature:
+			filter.SubFields = featureClass.OIDFieldName;
+
 			foreach (IFeature feature in
 				GdbQueryUtils.GetFeatures(featureClass, filter, recycling))
 			{
-				errorCount += TestFeature(feature);
+				try
+				{
+					IFeature featureWithGeometry = featureClass.GetFeature(feature.OID);
+					Marshal.ReleaseComObject(featureWithGeometry);
+				}
+				catch (Exception e)
+				{
+					errorCount += ReportError($"Feature geometry cannot be loaded ({e.Message})",
+					                          null,
+					                          Codes[Code.GeometryEmpty], _shapeFieldName,
+					                          feature);
+				}
 			}
 
 			return errorCount;

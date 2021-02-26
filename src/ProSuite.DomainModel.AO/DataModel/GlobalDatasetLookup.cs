@@ -17,7 +17,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 	/// An implementation of IDatasetLookup that looks up domain model datasets
 	/// registered in the data dictionary, and uses an internal cache for speed.
 	/// </summary>
-	[CLSCompliant(false)]
 	public class GlobalDatasetLookup : IDatasetLookup, IDetachedState
 	{
 		[NotNull] private readonly Dictionary<WorkspaceElement, Dataset> _datasetIndex =

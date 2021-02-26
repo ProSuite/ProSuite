@@ -5,7 +5,6 @@ using System;
 
 namespace ProSuite.Commons.AO.Surface
 {
-	[CLSCompliant(false)]
 	public abstract class TerrainReference
 	{
 		[NotNull]

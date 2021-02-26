@@ -1,10 +1,11 @@
 using System.Collections.Generic;
-using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using Grpc.Core;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
+using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Microservices.Definitions.Geometry;
 
@@ -12,9 +13,8 @@ namespace ProSuite.Microservices.Client.AGP
 {
 	public class GeometryProcessingClient : MicroserviceClientBase
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
 		private RemoveOverlapsGrpc.RemoveOverlapsGrpcClient RemoveOverlapsClient { get; set; }
+		private ReshapeGrpc.ReshapeGrpcClient ReshapeClient { get; set; }
 
 		public GeometryProcessingClient([NotNull] ClientChannelConfig channelConfig) : base(
 			channelConfig) { }
@@ -25,6 +25,7 @@ namespace ProSuite.Microservices.Client.AGP
 		protected override void ChannelOpenedCore(Channel channel)
 		{
 			RemoveOverlapsClient = new RemoveOverlapsGrpc.RemoveOverlapsGrpcClient(channel);
+			ReshapeClient = new ReshapeGrpc.ReshapeGrpcClient(channel);
 		}
 
 		[CanBeNull]
@@ -45,6 +46,43 @@ namespace ProSuite.Microservices.Client.AGP
 			return RemoveOverlapsClientUtils.RemoveOverlaps(
 				RemoveOverlapsClient, selectedFeatures, overlapsToRemove, overlappingFeatures,
 				cancellationToken);
+		}
+
+		public ReshapeResult TryReshape(
+			[NotNull] IList<Feature> selectedFeatures,
+			[NotNull] Polyline reshapeLine,
+			[CanBeNull] IList<Feature> adjacentFeatures,
+			bool allowOpenJawReshape,
+			bool multiReshapeAsUnion,
+			bool tryReshapeNonDefault,
+			CancellationToken cancellationToken)
+		{
+			return AdvancedReshapeClientUtils.TryReshape(
+				ReshapeClient, selectedFeatures, reshapeLine, adjacentFeatures, allowOpenJawReshape,
+				multiReshapeAsUnion, tryReshapeNonDefault, cancellationToken);
+		}
+
+		public ReshapeResult Reshape(
+			[NotNull] IList<Feature> selectedFeatures,
+			[NotNull] Polyline reshapeLine,
+			[CanBeNull] IList<Feature> adjacentFeatures,
+			bool allowOpenJawReshape,
+			bool multiReshapeAsUnion,
+			bool tryReshapeNonDefault,
+			CancellationToken cancellationToken)
+		{
+			return AdvancedReshapeClientUtils.Reshape(
+				ReshapeClient, selectedFeatures, reshapeLine, adjacentFeatures, allowOpenJawReshape,
+				multiReshapeAsUnion, tryReshapeNonDefault, cancellationToken);
+		}
+
+		public async Task<MapPoint> GetOpenJawReplacementPointAsync(
+			[NotNull] Feature polylineFeature,
+			[NotNull] Polyline reshapeLine,
+			bool useNonDefaultReshapeSide)
+		{
+			return await AdvancedReshapeClientUtils.GetOpenJawReplacementPointAsync(
+				       ReshapeClient, polylineFeature, reshapeLine, useNonDefaultReshapeSide);
 		}
 	}
 }

@@ -44,7 +44,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout(EsriProduct.ArcEditor);
+			_lic.Checkout();
 
 			_spatialReference = CreateLV95();
 			_testWs = TestWorkspaceUtils.CreateInMemoryWorkspace(
@@ -200,14 +200,14 @@ namespace ProSuite.QA.Tests.Test
 				var clsDesc = new ClassDescriptor(typeof(QaRelRegularExpression));
 				var tstDesc = new TestDescriptor("GroupEnds", clsDesc);
 				var condition = new QualityCondition("cndGroupEnds", tstDesc);
-				QualityCondition_Utils.AddParameterValue(condition, "relationTables", mds1);
-				QualityCondition_Utils.AddParameterValue(condition, "relationTables", mdsRel);
-				QualityCondition_Utils.AddParameterValue(condition, "relation", relClassName);
-				QualityCondition_Utils.AddParameterValue(condition, "join", JoinType.InnerJoin);
-				QualityCondition_Utils.AddParameterValue(condition, "pattern", "A");
-				QualityCondition_Utils.AddParameterValue(condition, "fieldNames",
+				QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mds1);
+				QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mdsRel);
+				QualityConditionParameterUtils.AddParameterValue(condition, "relation", relClassName);
+				QualityConditionParameterUtils.AddParameterValue(condition, "join", JoinType.InnerJoin);
+				QualityConditionParameterUtils.AddParameterValue(condition, "pattern", "A");
+				QualityConditionParameterUtils.AddParameterValue(condition, "fieldNames",
 				                                        $"{tableName}.{_textFieldName}");
-				QualityCondition_Utils.AddParameterValue(condition, "MatchIsError", false);
+				QualityConditionParameterUtils.AddParameterValue(condition, "MatchIsError", false);
 				//condition.AddParameterValue("PatternDescription", "Hallo");
 
 				var factory = new QaRelRegularExpression {Condition = condition};

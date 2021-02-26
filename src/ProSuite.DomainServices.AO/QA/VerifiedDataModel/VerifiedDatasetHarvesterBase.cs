@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -12,7 +11,6 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 {
-	[CLSCompliant(false)]
 	public abstract class VerifiedDatasetHarvesterBase : IDatasetListBuilder
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
