@@ -45,10 +45,7 @@
     <Compile Include="CartoProcessConfig.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="Domain\IMapContext.cs" />
-    <Compile Include="Domain\IProcessingFeedback.cs" />
     <Compile Include="Domain\MaskOutlineType.cs" />
-    <Compile Include="Domain\ProcessExecutionType.cs" />
-    <Compile Include="Domain\ProcessSelectionType.cs" />
     <Compile Include="Evaluation\CommonValues.cs" />
     <Compile Include="Evaluation\EnvironmentBase.cs" />
     <Compile Include="Evaluation\EvaluationException.cs" />

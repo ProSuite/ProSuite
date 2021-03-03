@@ -111,6 +111,14 @@
     <Compile Include="DataModel\UnknownAttributeRole.cs" />
     <Compile Include="DataModel\VariantValueFactory.cs" />
     <Compile Include="DataModel\VectorDataset.cs" />
+    <Compile Include="Processing\FeatureProxy.cs" />
+    <Compile Include="Processing\IProcessingDebug.cs" />
+    <Compile Include="Processing\IProcessingFeedback.cs" />
+    <Compile Include="Processing\ParameterAttribute.cs" />
+    <Compile Include="Processing\ParameterDisplayTypes.cs" />
+    <Compile Include="Processing\ProcessDatasetName.cs" />
+    <Compile Include="Processing\ProcessExecutionType.cs" />
+    <Compile Include="Processing\ProcessSelectionType.cs" />
     <Compile Include="QA\CustomQualitySpecification.cs" />
     <Compile Include="QA\DataQualityCategory.cs" />
     <Compile Include="QA\DataQualityCategoryComparer.cs" />

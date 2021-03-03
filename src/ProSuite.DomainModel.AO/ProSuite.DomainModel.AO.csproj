@@ -143,6 +143,8 @@
     <Compile Include="Geodatabase\SdeDirectConnectionProvider.cs" />
     <Compile Include="Geodatabase\SdeDirectDbUserConnectionProvider.cs" />
     <Compile Include="Geodatabase\SdeDirectOsaConnectionProvider.cs" />
+    <Compile Include="Processing\IXmlCartoProcessesExporter.cs" />
+    <Compile Include="Processing\IXmlCartoProcessesImporter.cs" />
     <Compile Include="Properties\LocalizableStrings.Designer.cs">
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
       <AutoGen>True</AutoGen>
