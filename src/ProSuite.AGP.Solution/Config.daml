@@ -75,6 +75,7 @@
           <tool refID="ProSuiteTools_Selection_SelectionTool" size="small" />
           <button refID="WorkLists_CreateSelectionWorkList" size="small" />
           <button refID="WorkLists_CreateIssueWorkList" size="small" />
+          <button refID="WorkLists_ShowWorkListsButton" size="small" />
           <button refID="esri_mapping_clearSelectionButton" size="small" />
         </group>
       </groups>
@@ -151,6 +152,9 @@ O: Additional options
         </tool>
         <button id="ProSuite_AGP_Solution_WorkListUI_IssueWorkListView" caption="IssueWorkListView" className="ProSuite.AGP.Solution.WorkListUI.ShowIssueWorkListView" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Tooltip Heading">Tooltip text<disabledText /></tooltip>
+        </button>
+        <button id="WorkLists_ShowWorkListsButton" caption="Open Work List" className="WorkLists.ShowWorkListsButton" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
+          <tooltip heading="Show Work Lists for Work List Layers"><disabledText /></tooltip>
         </button>
       </controls>
       <dockPanes>

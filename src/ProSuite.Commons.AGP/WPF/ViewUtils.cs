@@ -90,5 +90,21 @@ namespace ProSuite.Commons.AGP.WPF
 
 			msg.VerboseDebug($"{method}");
 		}
+
+		public static void RunOnUIThread([NotNull] Action action)
+		{
+			Assert.ArgumentNotNull(action, nameof(action));
+
+			if (System.Windows.Application.Current.Dispatcher.CheckAccess())
+			{
+				//No invoke needed
+				action();
+			}
+			else
+			{
+				//We are not on the UI
+				System.Windows.Application.Current.Dispatcher.BeginInvoke(action);
+			}
+		}
 	}
 }

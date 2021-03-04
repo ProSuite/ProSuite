@@ -1,7 +1,8 @@
 using System;
-using ArcGIS.Desktop.Framework.Controls;
+using System.Windows;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -9,65 +10,62 @@ namespace ProSuite.AGP.Solution.WorkListUI
 {
 	internal class WorkListObserver : IWorkListObserver, IDisposable
 	{
-		[CanBeNull] private ProWindow _view;
+		[NotNull] private readonly IWorkList _worklist;
+		[CanBeNull] private Window _view;
 
 		public WorkListObserver([NotNull] IWorkList worklist)
 		{
 			Assert.ArgumentNotNull(worklist, nameof(worklist));
 
-			Worklist = worklist;
+			_worklist = worklist;
 		}
 
-		[NotNull]
-		public IWorkList Worklist { get; private set; }
-
-		public void Set(IWorkList worklist)
+		public void Dispose()
 		{
-			Worklist = worklist;
+			_worklist.Dispose();
+
+			(_view as IDisposable)?.Dispose();
 		}
 
-		public bool CloseView()
+		public void Close()
 		{
 			if (_view == null)
 			{
-				return true;
+				return;
 			}
 
-			RunOnUIThread(() => { _view.Close(); });
-
-			return true;
+			ViewUtils.RunOnUIThread(() => { _view.Close(); });
 		}
 
 		public void Show()
 		{
-			RunOnUIThread(() =>
+			if (_view != null)
 			{
-				_view = WorkListViewFactory.CreateView(Worklist);
+				// show work list button clicked > we're already on UI thread
+				_view.Activate();
+				return;
+			}
+
+			ViewUtils.RunOnUIThread(() =>
+			{
+				_view = WorkListViewFactory.CreateView(_worklist);
+
+				_view.Closed += _view_Closed;
 
 				_view.Show();
 			});
 		}
 
-		//Utility method to consolidate UI update logic
-		private static void RunOnUIThread([NotNull] Action action)
+		private void _view_Closed(object sender, EventArgs e)
 		{
-			if (System.Windows.Application.Current.Dispatcher.CheckAccess())
+			if (_view == null)
 			{
-				//No invoke needed
-				action();
+				return;
 			}
-			else
-			{
-				//We are not on the UI
-				System.Windows.Application.Current.Dispatcher.BeginInvoke(action);
-			}
-		}
 
-		public void Dispose()
-		{
-			Worklist.Dispose();
-
-			(_view as IDisposable)?.Dispose();
+			// in WPF a closed window cannot be re-openend again
+			_view.Closed -= _view_Closed;
+			_view = null;
 		}
 	}
 }
