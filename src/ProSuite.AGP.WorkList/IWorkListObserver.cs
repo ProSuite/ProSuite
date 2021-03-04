@@ -1,15 +1,14 @@
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList
 {
 	public interface IWorkListObserver
 	{
-		void WorkListAdded(IWorkList workList);
+		void Show();
 
-		void WorkListRemoved(IWorkList workList);
+		void Set([NotNull] IWorkList worklist);
 
-		void WorkListModified(IWorkList workList);
-
-		void Show(IWorkList workList);
+		bool CloseView();
 	}
 }

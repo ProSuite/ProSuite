@@ -110,8 +110,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 		}
 
-		// todo daro: to utils
-
 		protected override async Task<BasicFeatureLayer> EnsureStatusFieldCoreAsync(
 			BasicFeatureLayer featureLayer)
 		{
