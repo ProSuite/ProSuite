@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -22,6 +23,11 @@ namespace ProSuite.DomainModel.AO.DataModel
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
 		protected SimpleTerrainDataset() { }
+
+		protected SimpleTerrainDataset(IList<ITerrainSoure> sources)
+		{
+			Sources = sources;
+		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="SimpleTerrainDataset"/> class.
@@ -68,6 +74,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		#endregion
 
 		public override string TypeDescription => "Terrain";
+		public int TerrainDefId { get; protected set; } = -1;
 
 		public string FeatureDatasetName
 		{
@@ -78,6 +85,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 				_featureDatasetName = value;
 			}
 		}
+
+		public IList<ITerrainSoure> Sources { get; }
 
 		#region ISpatialDataset Members
 

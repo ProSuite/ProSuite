@@ -145,6 +145,7 @@
     <Compile Include="Geodatabase\SdeDirectConnectionProvider.cs" />
     <Compile Include="Geodatabase\SdeDirectDbUserConnectionProvider.cs" />
     <Compile Include="Geodatabase\SdeDirectOsaConnectionProvider.cs" />
+    <Compile Include="DataModel\ITerrainSource.cs" />
     <Compile Include="Properties\LocalizableStrings.Designer.cs">
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
       <AutoGen>True</AutoGen>
