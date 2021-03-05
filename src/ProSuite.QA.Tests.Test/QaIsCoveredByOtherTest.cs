@@ -1435,6 +1435,32 @@ namespace ProSuite.QA.Tests.Test
 			Assert.IsTrue(runner.Errors.Count < 2);
 		}
 
+		[Test]
+		[Ignore("uses local data")]
+		public void TestDkm25()
+		{
+			IFeatureWorkspace ws1 = WorkspaceUtils.OpenFileGdbFeatureWorkspace(
+				@"C:\temp\QaIsCoveredByOther\106_00mm_dkm25_anno_annomasks.gdb");
+			IFeatureWorkspace ws2 = WorkspaceUtils.OpenFileGdbFeatureWorkspace(
+				@"C:\temp\QaIsCoveredByOther\108_00mm_dkm25_anno_annomasks.gdb");
+
+			QaIsCoveredByOther test =
+				new QaIsCoveredByOther(
+					new List<IFeatureClass>
+					{
+						ws1.OpenFeatureClass("DKM25_ANNOBLAU_MASK"),
+					},
+					new List<IFeatureClass>
+					{
+						ws2.OpenFeatureClass("DKM25_ANNOBLAU_MASK")
+					});
+			test.ValidUncoveredGeometryConstraint = "$SliverRatio < 50 OR $Area > 10";
+
+			var runner = new QaContainerTestRunner(10000, test);
+
+			runner.Execute();
+
+		}
 		private void CreatePolygonFeatureClasses([NotNull] string testName,
 		                                         [NotNull] out IFeatureClass coveringClass,
 		                                         [NotNull] out IFeatureClass coveredClass,
