@@ -199,7 +199,7 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 		internal void AddQualitySpecificationElement(
 			[NotNull] HtmlQualitySpecificationElement element)
 		{
-			Assert.ArgumentNotNull(element, "issueGroup");
+			Assert.ArgumentNotNull(element, nameof(element));
 
 			_elements.Add(element);
 		}

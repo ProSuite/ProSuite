@@ -15,7 +15,7 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 		internal HtmlDataset([NotNull] Dataset dataset)
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
-			Assert.ArgumentNotNullOrEmpty(dataset.Name, "dataset name is not defined");
+			Assert.NotNullOrEmpty(dataset.Name, "dataset name is not defined");
 
 			_dataset = dataset;
 			GeometryType = GetGeometryTypeName(dataset);

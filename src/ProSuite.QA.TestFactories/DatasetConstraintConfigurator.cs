@@ -522,8 +522,7 @@ namespace ProSuite.QA.TestFactories
 
 			if (terms[0].Equals(_subtypeField, StringComparison.InvariantCultureIgnoreCase))
 			{
-				int idx;
-				if (int.TryParse(terms[2], out idx))
+				if (int.TryParse(terms[2], out int idx))
 				{
 					if (Subtypes.TryGetValue(idx, out code))
 					{
@@ -547,8 +546,7 @@ namespace ProSuite.QA.TestFactories
 			if (idx == null)
 			{
 				// generell condition
-				bool bCond;
-				if (bool.TryParse(condition, out bCond) && bCond)
+				if (bool.TryParse(condition, out bool bCond) && bCond)
 				{
 					condition = "";
 				}
@@ -933,8 +931,7 @@ namespace ProSuite.QA.TestFactories
 					foreach (string code in codeValues.Keys)
 					{
 						// TODO InvariantCulture?
-						double codeValue;
-						if (double.TryParse(code, out codeValue) &&
+						if (double.TryParse(code, out double codeValue) &&
 						    Math.Abs(codeValue - constraintValue) < double.Epsilon)
 						{
 							constraint = code;
@@ -992,10 +989,10 @@ namespace ProSuite.QA.TestFactories
 
 			if (codedValueDomain == null)
 			{
-				var subtypesTbl = table as ISubtypes;
 				int fieldIndex = table.FindField(field.Name);
 
-				if (subtypesTbl != null && subtypesTbl.SubtypeFieldIndex == fieldIndex)
+				if (table is ISubtypes subtypesTbl &&
+				    subtypesTbl.SubtypeFieldIndex == fieldIndex)
 				{
 					IList<Subtype> subtypes = DatasetUtils.GetSubtypes(table);
 					codeValues = new SortedDictionary<string, object>();
@@ -1041,11 +1038,9 @@ namespace ProSuite.QA.TestFactories
 			object testObject = null;
 			while (nullObject == null)
 			{
-				string code;
-
 				testObject = GetTestObject(field.Type, testObject);
 
-				if (testObject != null && ! valueCodes.TryGetValue(testObject, out code))
+				if (testObject != null && ! valueCodes.TryGetValue(testObject, out _))
 				{
 					nullObject = testObject;
 				}
@@ -1358,7 +1353,7 @@ namespace ProSuite.QA.TestFactories
 
 			public static int SortField(Code x, Code y)
 			{
-				return x.Field.ToUpper().CompareTo(y.Field.ToUpper());
+				return string.Compare(x.Field, y.Field, StringComparison.OrdinalIgnoreCase);
 			}
 
 			public Code([NotNull] string fieldName,
@@ -1398,8 +1393,7 @@ namespace ProSuite.QA.TestFactories
 					val = string.Format(_culture, "{0}", _codeId);
 
 					// TODO use _culture as FormatProvider?
-					double d;
-					if (! double.TryParse(val, out d))
+					if (! double.TryParse(val, out _))
 					{
 						val = string.Format("'{0}'", _codeId);
 					}

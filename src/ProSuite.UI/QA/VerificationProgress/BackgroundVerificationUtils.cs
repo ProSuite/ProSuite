@@ -27,7 +27,6 @@ namespace ProSuite.UI.QA.VerificationProgress
 		/// envelopes represents the processed tiles. The last entry is the currently processing tile.</param>
 		/// <param name="title"></param>
 		/// <returns></returns>
-		[CLSCompliant(false)]
 		public static WpfHostingWinForm CreateVerificationProgressForm(
 			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient qaClient,
 			[NotNull] BackgroundVerificationRun verificationRun,

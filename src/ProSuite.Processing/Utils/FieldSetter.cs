@@ -2,17 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Processing.Utils;
+using ProSuite.Processing.Evaluation;
 
-namespace ProSuite.Processing.Evaluation
+namespace ProSuite.Processing.Utils
 {
 	/// <summary>
-	/// Assign values to one or more fields in a <see cref="RowBuffer"/>
-	/// (that is, a table row or feature). The assignments are specified
-	/// as a text string of the form
+	/// Assign values to one or more fields in a table row or feature.
+	/// The assignments are specified as a text string of the form
 	/// <code>Field = Expr; Field = Expr; etc.</code>
 	/// where Field is the name of a field in the row or feature,
 	/// and Expr is an expression over the fields in the row/feature
@@ -25,18 +23,15 @@ namespace ProSuite.Processing.Evaluation
 	public class FieldSetter
 	{
 		private readonly Assignment[] _assignments;
-		private readonly FindFieldCache _findFieldCache;
 		private readonly Stack<object> _stack;
 		private readonly StandardEnvironment _environment;
 		private readonly object[] _values;
 		private string _text;
 
-		private FieldSetter([NotNull] IEnumerable<Assignment> assignments,
-		                    FindFieldCache findFieldCache = null)
+		private FieldSetter([NotNull] IEnumerable<Assignment> assignments)
 		{
 			_assignments = assignments.ToArray();
 			_values = new object[_assignments.Length];
-			_findFieldCache = findFieldCache ?? new FindFieldCache();
 			_stack = new Stack<object>();
 			_environment = new StandardEnvironment();
 			_text = null;
@@ -46,12 +41,10 @@ namespace ProSuite.Processing.Evaluation
 		/// Create a <see cref="FieldSetter"/> instance.
 		/// </summary>
 		/// <param name="text">The field assignments; syntax: name = expr { ; name = expr }</param>
-		/// <param name="findFieldCache">A cache for field index lookups (optional)</param>
 		/// <returns>A <see cref="FieldSetter"/> instance</returns>
-		public static FieldSetter Create([CanBeNull] string text,
-		                                 FindFieldCache findFieldCache = null)
+		public static FieldSetter Create([CanBeNull] string text)
 		{
-			return new FieldSetter(Parse(text ?? string.Empty), findFieldCache);
+			return new FieldSetter(Parse(text ?? string.Empty));
 		}
 
 		/// <summary>
@@ -59,11 +52,11 @@ namespace ProSuite.Processing.Evaluation
 		/// of the target fields in the FieldSetter's assignments
 		/// is not within the given <paramref name="fields"/>.
 		/// </summary>
-		public void ValidateTargetFields([NotNull] IReadOnlyList<Field> fields)
+		public void ValidateTargetFields([NotNull] IEnumerable<string> fields)
 		{
 			Assert.ArgumentNotNull(fields, nameof(fields));
 
-			var lookup = fields.ToLookup(f => f.Name);
+			var lookup = fields.ToLookup(f => f, StringComparer.OrdinalIgnoreCase);
 			var noSuchFields = _assignments.Where(a => ! lookup.Contains(a.FieldName))
 			                               .Select(a => a.FieldName).ToArray();
 
@@ -165,7 +158,7 @@ namespace ProSuite.Processing.Evaluation
 		/// <summary>
 		/// Execute this field setter on the given <paramref name="row"/>,
 		/// that is, perform the field value assignments. It is the caller's
-		/// duty to <see cref="Row.Store">Store</see> these changes.
+		/// duty to store these changes.
 		/// <para/>
 		/// The values of the given <paramref name="row"/> are not available
 		/// in the evaluation environment unless this row has been passed
@@ -193,12 +186,18 @@ namespace ProSuite.Processing.Evaluation
 			for (int i = 0; i < count; i++)
 			{
 				string fieldName = _assignments[i].FieldName;
-				int fieldIndex = _findFieldCache.GetFieldIndex(row, fieldName);
+				int fieldIndex = GetFieldIndex(row, fieldName);
 
 				object value = _values[i];
 
 				row[fieldIndex] = value ?? DBNull.Value;
 			}
+		}
+
+		private static int GetFieldIndex(IRowValues row, string fieldName)
+		{
+			// Here we *may* want to cache field index (measure)
+			return row.FindField(fieldName);
 		}
 
 		public IEnumerable<KeyValuePair<string, ExpressionEvaluator>> GetAssignments()
@@ -256,8 +255,7 @@ namespace ProSuite.Processing.Evaluation
 					throw SyntaxError("Expect '=' operator (position {0})", index);
 				}
 
-				int length;
-				var evaluator = ExpressionEvaluator.Create(text, index, out length);
+				var evaluator = ExpressionEvaluator.Create(text, index, out int length);
 				index += length;
 
 				yield return new Assignment(name, evaluator);
@@ -282,7 +280,7 @@ namespace ProSuite.Processing.Evaluation
 		private static string ScanName(string text, ref int index)
 		{
 			char cc;
-			if (index >= text.Length || ((cc = text[index]) != '_' && ! char.IsLetter(cc)))
+			if (index >= text.Length || (cc = text[index]) != '_' && ! char.IsLetter(cc))
 			{
 				return null; // not a name at text[index...]
 			}

@@ -67,6 +67,8 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 
 			var featureWorkspace = (IFeatureWorkspace) workspace;
 
+			_datasetHarvester.ResetDatasets();
+
 			using (_msg.IncrementIndentation("Reading datasets for '{0}'", name))
 			{
 				var harvestedNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);

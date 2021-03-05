@@ -32,11 +32,11 @@ namespace ProSuite.Commons.Validation
 
 		public int CompareTo(object obj)
 		{
-			var message = (NotificationMessage) obj;
+			var other = (NotificationMessage) obj;
 
-			return Equals(FieldName, message.FieldName)
-				       ? Message.CompareTo(message.Message)
-				       : string.Compare(FieldName, message.FieldName);
+			int order = string.CompareOrdinal(FieldName, other.FieldName);
+			if (order != 0) return order;
+			return string.CompareOrdinal(Message, other.Message);
 		}
 
 		#endregion
@@ -48,13 +48,8 @@ namespace ProSuite.Commons.Validation
 				return true;
 			}
 
-			var notificationMessage = obj as NotificationMessage;
-			if (notificationMessage == null)
-			{
-				return false;
-			}
-
-			return Equals(FieldName, notificationMessage.FieldName) &&
+			return obj is NotificationMessage notificationMessage &&
+			       Equals(FieldName, notificationMessage.FieldName) &&
 			       Equals(Message, notificationMessage.Message) &&
 			       Equals(Severity, notificationMessage.Severity);
 		}

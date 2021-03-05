@@ -43,6 +43,7 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
@@ -61,6 +62,7 @@
     <Compile Include="Collections\ConsistentHashLargeDictionary.cs" />
     <Compile Include="Collections\DistinctValue.cs" />
     <Compile Include="Collections\DistinctValues.cs" />
+    <Compile Include="Collections\FilterableSortableBindingList.cs" />
     <Compile Include="Collections\HashHelpers.cs" />
     <Compile Include="Collections\LargeDictionaryFactory.cs" />
     <Compile Include="Collections\NumericStringComparer.cs" />
@@ -101,6 +103,8 @@
     <Compile Include="Geometry\Wkb\WkbGeomWriter.cs" />
     <Compile Include="Geometry\Wkb\BigEndianBinaryReader.cs" />
     <Compile Include="Geometry\Wkb\WkbWriter.cs" />
+    <Compile Include="IO\ZipStorer.cs" />
+    <Compile Include="IO\ZipUtils.cs" />
     <Compile Include="ManagedOptions\DatasetSpecificValue.cs" />
     <Compile Include="Misc\Either.cs" />
     <Compile Include="Geometry\Box.cs" />
@@ -211,6 +215,7 @@
     <Compile Include="Progress\IProgressFeedback.cs" />
     <Compile Include="Progress\LoggingProgressFeedback.cs" />
     <Compile Include="Progress\NopProgressFeedback.cs" />
+    <Compile Include="Progress\ProgressFeedbackBase.cs" />
     <Compile Include="Progress\ServiceCallStatus.cs" />
     <Compile Include="Reflection\PrivateAssemblyUtils.cs" />
     <Compile Include="Reflection\ReflectionUtils.cs" />

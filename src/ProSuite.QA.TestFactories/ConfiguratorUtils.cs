@@ -42,7 +42,7 @@ namespace ProSuite.QA.TestFactories
 		public static T GetDataset<T>([NotNull] string datasetName,
 		                              [NotNull] IEnumerable<Dataset> datasets) where T : Dataset
 		{
-			Assert.ArgumentNotNullOrEmpty(datasetName, "name");
+			Assert.ArgumentNotNullOrEmpty(datasetName, nameof(datasetName));
 			Assert.ArgumentNotNull(datasets, nameof(datasets));
 
 			foreach (Dataset dataset in datasets)

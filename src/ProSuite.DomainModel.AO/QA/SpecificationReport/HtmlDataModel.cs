@@ -18,7 +18,7 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 		public HtmlDataModel([NotNull] DdxModel model)
 		{
 			Assert.ArgumentNotNull(model, nameof(model));
-			Assert.ArgumentNotNullOrEmpty(model.Name, "model name is not defined");
+			Assert.NotNullOrEmpty(model.Name, "model name is not defined");
 
 			_model = model;
 		}

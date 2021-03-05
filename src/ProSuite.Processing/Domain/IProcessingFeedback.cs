@@ -1,5 +1,4 @@
 using System;
-using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Processing.Domain
@@ -19,7 +18,7 @@ namespace ProSuite.Processing.Domain
 		/// <summary>
 		/// Assume subsequent reports pertain to this feature
 		/// </summary>
-		Feature CurrentFeature { get; set; } // TODO do not hold feature, use a proxy
+		object CurrentFeature { get; set; } // TODO do not hold feature, use a proxy
 
 		void ReportInfo([NotNull] string text);
 

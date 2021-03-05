@@ -54,7 +54,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 				if (lastValue != null)
 				{
-					Assert.False(currentValue.CompareTo(lastValue) < 0, "Not sorted");
+					int order = string.CompareOrdinal(currentValue, lastValue);
+					Assert.False(order < 0, "Not sorted");
 				}
 
 				lastValue = currentValue;

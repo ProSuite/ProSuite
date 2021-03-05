@@ -18,12 +18,10 @@ namespace ProSuite.Processing.Evaluation
 		private StandardEnvironment _environment;
 
 		private ImplicitValue(
-			[NotNull] ExpressionEvaluator evaluator, bool isMissing,
-			string name = null, FindFieldCache findFieldCache = null)
+			[NotNull] ExpressionEvaluator evaluator, bool isMissing, string name = null)
 		{
 			Name = name;
 			IsMissing = isMissing;
-			FindFieldCache = findFieldCache;
 
 			_evaluator = evaluator;
 			_stack = new Stack<object>();
@@ -40,8 +38,7 @@ namespace ProSuite.Processing.Evaluation
 		/// in exception messages.
 		/// </summary>
 		public static ImplicitValue Create(
-			[CanBeNull] string expression, string name = null,
-			FindFieldCache findFieldCache = null)
+			[CanBeNull] string expression, string name = null)
 		{
 			expression = StringUtils.Trim(expression);
 
@@ -50,12 +47,12 @@ namespace ProSuite.Processing.Evaluation
 				if (string.IsNullOrEmpty(expression))
 				{
 					var evaluator = ExpressionEvaluator.CreateConstant(null);
-					return new ImplicitValue(evaluator, true, name, findFieldCache);
+					return new ImplicitValue(evaluator, true, name);
 				}
 				else
 				{
 					var evaluator = ExpressionEvaluator.Create(expression);
-					return new ImplicitValue(evaluator, false, name, findFieldCache);
+					return new ImplicitValue(evaluator, false, name);
 				}
 			}
 			catch (Exception ex)
@@ -103,9 +100,6 @@ namespace ProSuite.Processing.Evaluation
 			[NotNull] get { return _environment; }
 			set { _environment = value ?? new StandardEnvironment(); }
 		}
-
-		[CanBeNull]
-		public FindFieldCache FindFieldCache { get; set; }
 
 		/// <summary>
 		/// Evaluate the expression in the current environment.

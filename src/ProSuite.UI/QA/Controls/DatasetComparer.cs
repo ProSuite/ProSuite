@@ -29,7 +29,7 @@ namespace ProSuite.UI.QA.Controls
 				return 0;
 			}
 
-			int i = x.AliasName.CompareTo(y.AliasName);
+			int i = string.CompareOrdinal(x.AliasName, y.AliasName);
 
 			if (i == 0)
 			{

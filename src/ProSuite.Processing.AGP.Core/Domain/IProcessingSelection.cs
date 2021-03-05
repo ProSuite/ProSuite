@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 
-namespace ProSuite.Processing.Domain
+namespace ProSuite.Processing.AGP.Core.Domain
 {
 	public interface IProcessingSelection
 	{
