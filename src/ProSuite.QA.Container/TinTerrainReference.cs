@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
@@ -14,7 +15,8 @@ namespace ProSuite.QA.Container
 		[NotNull]
 		public static TinTerrainReference Create([NotNull] IFeatureDataset fds)
 		{
-			List<IFeatureClass> masspoints = new List<IFeatureClass>();
+			List<IFeatureClass> sources = new List<IFeatureClass>();
+			List<esriTinSurfaceType> types = new List<esriTinSurfaceType>();
 			IEnumDataset subsets = fds.Subsets;
 			subsets.Reset();
 			for (IDataset subset = subsets.Next();
@@ -29,25 +31,47 @@ namespace ProSuite.QA.Container
 
 				if (fc.ShapeType == esriGeometryType.esriGeometryMultipoint)
 				{
-					masspoints.Add(fc);
+					sources.Add(fc);
+					types.Add(esriTinSurfaceType.esriTinMassPoint);
+				}
+
+				if (fc.ShapeType == esriGeometryType.esriGeometryPolyline)
+				{
+					sources.Add(fc);
+					types.Add(esriTinSurfaceType.esriTinHardLine);
 				}
 			}
 
-			return new TinTerrainReference(fds.Name, masspoints);
+			return new TinTerrainReference(fds.Name, sources, types);
+		}
+
+		[NotNull]
+		public static TinTerrainReference Create(
+			[NotNull] IList<IFeatureClass> sources,
+			[NotNull] List<esriTinSurfaceType> types)
+		{
+			Assert.AreEqual(sources.Count, types.Count,
+			                $"Expected equal number of sources and types, got {sources.Count} sources and {types.Count} types");
+			return new TinTerrainReference("dummyname", sources, types);
 		}
 
 		private readonly string _name;
-		private readonly IList<IFeatureClass> _massPointFcs;
+		private readonly IList<IFeatureClass> _sources;
+		private readonly IList<esriTinSurfaceType> _types;
 		private RectangularTilingStructure _tiling;
 
 		private TinTerrainReference([NotNull] string name,
-		                            [NotNull] IList<IFeatureClass> massPointFcs)
+		                            [NotNull] IList<IFeatureClass> sources,
+		                            [NotNull] IList<esriTinSurfaceType> types)
 		{
+			Assert.AreEqual(sources.Count, types.Count,
+			                $"Expected equal number of sources and types, got {sources.Count} sources and {types.Count} types");
 			_name = name;
-			_massPointFcs = new List<IFeatureClass>(massPointFcs);
+			_sources = sources;
+			_types = types;
 		}
 
-		public override IGeoDataset Dataset => (IGeoDataset) _massPointFcs[0];
+		public override IGeoDataset Dataset => (IGeoDataset) _sources[0];
 
 		//TODO: init correct values
 		public override RectangularTilingStructure Tiling =>
@@ -65,12 +89,13 @@ namespace ProSuite.QA.Container
 			ISpatialFilter filter = new SpatialFilterClass();
 			filter.Geometry = extent;
 			filter.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
-			foreach (var featureClass in _massPointFcs)
+			for (int iSource = 0; iSource < _sources.Count; iSource++)
 			{
-				IFeatureCursor crs = featureClass.Search(filter, Recycling: false);
+				IFeatureClass source = _sources[iSource];
+				IFeatureCursor crs = source.Search(filter, Recycling: false);
 				try
 				{
-					tin.AddFromFeatureCursor(crs, null, null, esriTinSurfaceType.esriTinMassPoint);
+					tin.AddFromFeatureCursor(crs, null, null, _types[iSource]);
 				}
 				finally
 				{
@@ -93,14 +118,19 @@ namespace ProSuite.QA.Container
 				return false;
 			}
 
-			if (_massPointFcs.Count != other._massPointFcs.Count)
+			if (_sources.Count != other._sources.Count)
 			{
 				return false;
 			}
 
-			for (int i = 0; i < _massPointFcs.Count; i++)
+			for (int i = 0; i < _sources.Count; i++)
 			{
-				if (_massPointFcs[i] != other._massPointFcs[i])
+				if (_sources[i] != other._sources[i])
+				{
+					return false;
+				}
+
+				if (_types[i] != other._types[i])
 				{
 					return false;
 				}
@@ -111,7 +141,7 @@ namespace ProSuite.QA.Container
 
 		public override int GetHashCodeCore()
 		{
-			return _massPointFcs[0].GetHashCode();
+			return _sources[0].GetHashCode();
 		}
 	}
 }

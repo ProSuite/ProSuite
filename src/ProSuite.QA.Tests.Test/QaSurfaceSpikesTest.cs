@@ -1,4 +1,7 @@
 using System.Collections.Generic;
+using System.IO;
+using System.Text;
+using System.Xml.Serialization;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
@@ -94,15 +97,43 @@ namespace ProSuite.QA.Tests.Test
 		//}
 
 		[Test]
-		public void TestRelatedFactoryMinParameters()
+		public void CanRunFromCondition()
 		{
+			XmlSimpleTerrainDataset tds =
+				new XmlSimpleTerrainDataset
+				{
+					Sources =
+						new List<XmlTerrainSource>
+						{
+							new XmlTerrainSource
+							{
+								Dataset = "TOPGIS_TLM.TLM_DTM_MASSENPUNKTE",
+								Type = esriTinSurfaceType.esriTinMassPoint
+							},
+							new XmlTerrainSource
+							{
+								Dataset = "TOPGIS_TLM.TLM_DTM_BRUCHKANTE",
+								Type = esriTinSurfaceType.esriTinHardLine
+							}
+						}
+				};
+
+			XmlSerializer serializer = new XmlSerializer(typeof(XmlSimpleTerrainDataset));
+			StringBuilder sb = new StringBuilder();
+			using (StringWriter xmlWriter = new StringWriter(sb))
+			{
+				serializer.Serialize(xmlWriter, tds);
+			}
+
 			IWorkspace dtmWs = TestDataUtils.OpenTopgisTlm();
 
 			var model = new SimpleModel("model", dtmWs);
 			Dataset mds1 =
 				model.AddDataset(
-					new ModelSimpleTerrainDataset("TOPGIS_TLM.TLM_DTM_TERRAIN",
-					                              "TOPGIS_TLM.TLM_DTM"));
+					//new ModelSimpleTerrainDataset("TOPGIS_TLM.TLM_DTM_TERRAIN",
+					//                              "TOPGIS_TLM.TLM_DTM")
+					new ModelSimpleTerrainDataset(sb.ToString())
+				);
 
 			var clsDesc = new ClassDescriptor(typeof(QaSurfaceSpikes));
 			var tstDesc = new TestDescriptor("QaSurfaceSpikes", clsDesc, testConstructorId: 0);

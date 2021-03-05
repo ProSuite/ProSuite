@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
@@ -76,8 +77,23 @@ namespace ProSuite.DomainModel.AO.DataModel
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
 
-			return TinTerrainReference.Create(
-				FeatureWorkspace.OpenFeatureDataset(dataset.FeatureDatasetName));
+			if (dataset.Sources != null)
+			{
+				List<IFeatureClass> sourceFcs = new List<IFeatureClass>();
+				List<esriTinSurfaceType> types = new List<esriTinSurfaceType>();
+				foreach (var source in dataset.Sources)
+				{
+					sourceFcs.Add(FeatureWorkspace.OpenFeatureClass(source.Dataset.Name));
+					types.Add(source.Type);
+				}
+
+				return TinTerrainReference.Create(sourceFcs, types);
+			}
+			else
+			{
+				return TinTerrainReference.Create(
+					FeatureWorkspace.OpenFeatureDataset(dataset.FeatureDatasetName));
+			}
 		}
 
 		public override IRelationshipClass OpenRelationshipClass(Association association)
