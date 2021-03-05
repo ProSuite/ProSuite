@@ -1,4 +1,4 @@
-﻿using NHibernate;
+using NHibernate;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Orm.NHibernate
@@ -34,5 +34,10 @@ namespace ProSuite.Commons.Orm.NHibernate
 		/// </summary>
 		[CanBeNull]
 		ISession CurrentSession { get; }
+
+		/// <summary>
+		/// Whether this instance is configured with a valid session factory.
+		/// </summary>
+		bool Configured { get; }
 	}
 }
