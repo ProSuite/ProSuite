@@ -5,6 +5,7 @@ using ESRI.ArcGIS.DataSourcesRaster;
 #endif
 using System;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
@@ -47,6 +48,8 @@ namespace ProSuite.DomainModel.AO.QA
 				return TestParameterType.RasterMosaicDataset;
 			if (typeof(IRasterDataset).IsAssignableFrom(dataType))
 				return TestParameterType.RasterDataset;
+			if (typeof(TerrainReference).IsAssignableFrom(dataType))
+				return TestParameterType.TerrainDataset;
 
 			// The following types cannot be loaded in the Enterprise SDK:
 			if (dataType.Name == "IMosaicLayer")
