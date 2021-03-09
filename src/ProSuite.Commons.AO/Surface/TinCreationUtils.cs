@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
-using ESRI.ArcGIS.GeoDatabaseExtensions;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
@@ -73,27 +72,16 @@ namespace ProSuite.Commons.AO.Surface
 		/// Returns envelopes that subdivide the provided area of interest into areas that contain
 		/// no more points than maxPointCount.
 		/// </summary>
-		/// <param name="terrain"></param>
+		/// <param name="estimatePointsFunc"></param>
 		/// <param name="areaOfInterest"></param>
 		/// <param name="maxPointCount"></param>
-		/// <param name="resolution"></param>
 		/// <returns></returns>
 		public static IList<IEnvelope> GetAreaOfInterestSubdivisions(
-			[NotNull] ITerrain terrain,
+			[NotNull] Func<IEnvelope, double> estimatePointsFunc,
 			[NotNull] IEnvelope areaOfInterest,
-			int maxPointCount, double resolution)
+			int maxPointCount)
 		{
-			Assert.True(
-				SpatialReferenceUtils.AreEqual(
-					terrain.SpatialReference, areaOfInterest.SpatialReference,
-					comparePrecisionAndTolerance: false,
-					compareVerticalCoordinateSystems: false),
-				"AOI is expected in target spatial reference");
-
 			var result = new List<IEnvelope>();
-
-			Func<IEnvelope, double> estimatePointsFunc =
-				aoi => terrain.GetPointCount(aoi, resolution);
 
 			double tolerance = GeometryUtils.GetXyTolerance(areaOfInterest);
 			double minArea = tolerance * tolerance * 100 * 100;
