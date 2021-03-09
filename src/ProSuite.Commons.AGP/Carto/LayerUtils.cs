@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
@@ -64,10 +65,30 @@ namespace ProSuite.Commons.AGP.Carto
 			return ((CIMFeatureLayer) definition)?.Renderer as T;
 		}
 
-		[CanBeNull]
+
+		[NotNull]
 		public static LayerDocument CreateLayerDocument([NotNull] string path)
 		{
+			if (! File.Exists(path))
+			{
+				throw new ArgumentException($"{path} does not exist");
+			}
+
+			// todo daro no valid .lyrx file
+
 			return new LayerDocument(path);
+		}
+
+		[CanBeNull]
+		public static LayerDocument CreateLayerDocument([NotNull] string path,
+		                                                string layerName)
+		{
+			var layerDocument = CreateLayerDocument(path);
+
+			CIMLayerDocument cimLayerDocument = layerDocument.GetCIMLayerDocument();
+			cimLayerDocument.LayerDefinitions[0].Name = layerName;
+
+			return new LayerDocument(cimLayerDocument);
 		}
 
 		public static void ApplyRenderer(FeatureLayer layer, LayerDocument template)

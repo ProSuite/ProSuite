@@ -17,6 +17,7 @@ using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -43,9 +44,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		[NotNull] private readonly Dictionary<string, string> _uriByWorklistName =
 			new Dictionary<string, string>();
-
-		// todo daro rename
-
+		
 		private IWorkListRegistry _registry;
 		[CanBeNull] private EditEventsRowCacheSynchronizer _synchronizer;
 
@@ -60,21 +59,23 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		public void ShowView()
 		{
-			foreach (string name in GetWorklists().Select(wl => wl.Name))
+			foreach (IWorkList worklist in GetWorklists())
 			{
-				if (! _viewsByWorklistName.ContainsKey(name))
+				if (! _viewsByWorklistName.ContainsKey(worklist.Name))
 				{
-					IWorkList workList = GetWorklist(name);
-
-					if (workList != null)
-					{
-						_viewsByWorklistName.Add(name, new WorkListObserver(workList));
-					}
+					_viewsByWorklistName.Add(worklist.Name, new WorkListObserver(worklist));
 				}
 
-				IWorkListObserver view = _viewsByWorklistName[name];
+				IWorkListObserver view = _viewsByWorklistName[worklist.Name];
 
-				view.Show();
+				if (_layersByWorklistName.TryGetValue(worklist.Name, out FeatureLayer layer))
+				{
+					view.Show(layer.Name);
+				}
+				else
+				{
+					view.Show();
+				}
 			}
 		}
 
@@ -105,7 +106,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				_viewsByWorklistName.Add(workList.Name, new WorkListObserver(workList));
 
-				CreateLayer(environment, workList.Name);
+				CreateLayer(environment, workList);
 			}
 			catch (Exception e)
 			{
@@ -208,21 +209,21 @@ namespace ProSuite.AGP.Solution.WorkLists
 		public string EnsureUniqueName([NotNull] string workListName)
 		{
 			//todo daro: use GUID as identifier?
-			return $"{workListName}_{Guid.NewGuid()}";
+			return $"{workListName}_{Guid.NewGuid()}".Replace('-', '_').ToLower();
 		}
 
 		#endregion
 
 		private void CreateLayer([NotNull] WorkEnvironmentBase environment,
-		                         [NotNull] string name)
+		                         [NotNull] IWorkList workList)
 		{
 			// todo daro: inline
 			LayerDocument layerTemplate = environment.GetLayerDocument();
-			LayerUtils.ApplyRenderer(AddLayer(name), layerTemplate);
+			LayerUtils.ApplyRenderer(AddLayer(workList.Name, workList.DisplayName), layerTemplate);
 		}
 
 		[CanBeNull]
-		private FeatureLayer AddLayer([NotNull] string worklistName)
+		private FeatureLayer AddLayer([NotNull] string worklistName, [NotNull] string layerName)
 		{
 			PluginDatasourceConnectionPath connector = GetWorkListConnectionPath(worklistName);
 
@@ -234,7 +235,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 					FeatureLayer worklistLayer =
 						LayerFactory.Instance.CreateFeatureLayer((FeatureClass) table,
 						                                         MapView.Active.Map,
-						                                         LayerPosition.AddToTop);
+						                                         LayerPosition.AddToTop, layerName);
+
 
 					Commons.LayerUtils.SetLayerSelectability(worklistLayer, false);
 
@@ -318,6 +320,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			ProjectOpenedAsyncEvent.Subscribe(OnProjectOpendedAsync);
 			ProjectSavingEvent.Subscribe(OnProjectSavingAsync);
+
+			MapMemberPropertiesChangedEvent.Subscribe(OnMapMemberPropertiesChanged);
 		}
 
 		private void UnwireEvents()
@@ -328,6 +332,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			ProjectOpenedAsyncEvent.Unsubscribe(OnProjectOpendedAsync);
 			ProjectSavingEvent.Unsubscribe(OnProjectSavingAsync);
+
+			MapMemberPropertiesChangedEvent.Unsubscribe(OnMapMemberPropertiesChanged);
 		}
 
 		private void WireEvents(IWorkList workList)
@@ -397,8 +403,44 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			foreach (var pair in _uriByWorklistName)
 			{
+				// ReSharper disable once UnusedVariable
 				string worklistName = pair.Key;
+				// ReSharper disable once UnusedVariable
 				string uri = pair.Value;
+			}
+		}
+
+		private void OnMapMemberPropertiesChanged(MapMemberPropertiesChangedEventArgs e)
+		{
+			List<MapMember> mapMembers = e.MapMembers.ToList();
+			List<MapMemberEventHint> eventHints = e.EventHints.ToList();
+
+			if (mapMembers.Count == 0)
+			{
+				return;
+			}
+
+			Assert.AreEqual(mapMembers.Count, eventHints.Count,
+			                $"Unequal count of {nameof(MapMember)} and {nameof(MapMemberEventHint)}");
+
+			for (var index = 0; index < mapMembers.Count; index++)
+			{
+				if (eventHints[index] != MapMemberEventHint.Name)
+				{
+					continue;
+				}
+
+				MapMember mapMember = mapMembers[index];
+
+				string uri = LayerUtils.GetUri(mapMember);
+				string name = WorkListUtils.ParseName(uri);
+
+				if (! _viewsByWorklistName.TryGetValue(name, out IWorkListObserver view))
+				{
+					continue;
+				}
+
+				ViewUtils.RunOnUIThread(() => { view.View.Title = mapMember.Name; });
 			}
 		}
 
@@ -477,11 +519,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 				foreach (string path in GetDefinitionFiles())
 					//foreach (var path in ProjectRepository.Current.GetProjectFileItems(ProjectItemType.WorkListDefinition))
 				{
-					string workListName = WorkListUtils.GetName(path);
+					string workListName = WorkListUtils.GetName(path).ToLower();
 					var factory = new XmlBasedWorkListFactory(path, workListName);
 
-					Assert.True(_registry.TryAdd(factory),
-					            $"work list {factory.Name} already added");
+					if (_registry.TryAdd(factory))
+					{
+						_msg.Debug($"Add work list {workListName} from file {path}");
+					}
 				}
 			});
 		}

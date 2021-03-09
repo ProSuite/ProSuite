@@ -148,6 +148,19 @@ namespace ProSuite.AGP.WorkList
 			return Path.GetFileNameWithoutExtension(temp);
 		}
 
+		// todo daro rename GetNameFromUri?
+		public static string ParseName(string layerUri)
+		{
+			int index = layerUri.LastIndexOf('/');
+			if (index < 0)
+			{
+				throw new ArgumentException($"{layerUri} is not a valid layer URI");
+			}
+
+			string name = layerUri.Substring(index + 1);
+			return Path.GetFileNameWithoutExtension(name);
+		}
+
 		public static string GetWorklistPath(string path)
 		{
 			if (! path.EndsWith("wl"))

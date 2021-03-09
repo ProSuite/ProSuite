@@ -8,7 +8,7 @@
                     xmlns:workListUi="clr-namespace:ProSuite.AGP.Solution.WorkListUI"
                     xmlns:views="clr-namespace:ProSuite.AGP.Solution.WorkListUI.Views"
                     mc:Ignorable="d"
-                    Title="{Binding Path=CurrentWorkList.Name}"
+                    Title="{Binding Path=CurrentWorkList.DisplayName}"
                     d:DesignWidth="400"
                     WindowStartupLocation="CenterOwner" SizeToContent="WidthAndHeight" Topmost="True">
 

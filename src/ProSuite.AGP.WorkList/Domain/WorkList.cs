@@ -88,6 +88,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public string Name { get; }
 
+		public abstract string DisplayName { get; }
+
 		// NOTE: An empty work list should return null and not an empty envelope.
 		//		 Pluggable Datasource cannot handle an empty envelope.
 		public Envelope Extent { get; protected set; }

@@ -1,5 +1,6 @@
 using System;
 using System.Windows;
+using ArcGIS.Desktop.Framework.Controls;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.WPF;
@@ -11,7 +12,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	internal class WorkListObserver : IWorkListObserver, IDisposable
 	{
 		[NotNull] private readonly IWorkList _worklist;
-		[CanBeNull] private Window _view;
+		[CanBeNull] private ProWindow _view;
 
 		public WorkListObserver([NotNull] IWorkList worklist)
 		{
@@ -27,6 +28,9 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			(_view as IDisposable)?.Dispose();
 		}
 
+		[CanBeNull]
+		public ProWindow View => _view;
+
 		public void Close()
 		{
 			if (_view == null)
@@ -37,10 +41,15 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			ViewUtils.RunOnUIThread(() => { _view.Close(); });
 		}
 
-		public void Show()
+		public void Show(string title)
 		{
 			if (_view != null)
 			{
+				if (! string.IsNullOrEmpty(title))
+				{
+					_view.Title = title;
+				}
+
 				// show work list button clicked > we're already on UI thread
 				_view.Activate();
 				return;
@@ -49,6 +58,11 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			ViewUtils.RunOnUIThread(() =>
 			{
 				_view = WorkListViewFactory.CreateView(_worklist);
+
+				if (! string.IsNullOrEmpty(title))
+				{
+					_view.Title = title;
+				}
 
 				_view.Closed += _view_Closed;
 

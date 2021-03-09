@@ -12,6 +12,7 @@ namespace ProSuite.AGP.WorkList
 {
 	public abstract class WorkEnvironmentBase
 	{
+		// TODO DARO environment should be stateless. get state from module
 		[CanBeNull]
 		public string UniqueName { get; private set; }
 

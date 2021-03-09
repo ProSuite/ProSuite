@@ -13,6 +13,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 		string Name { get; }
 
 		[NotNull]
+		string DisplayName { get; }
+
+		[NotNull]
 		Envelope Extent { get; }
 
 		WorkItemVisibility Visibility { get; set; }
