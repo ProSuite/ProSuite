@@ -114,6 +114,7 @@
     <Compile Include="Processing\FeatureProxy.cs" />
     <Compile Include="Processing\IProcessingDebug.cs" />
     <Compile Include="Processing\IProcessingFeedback.cs" />
+    <Compile Include="Processing\IProcessReportBuilder.cs" />
     <Compile Include="Processing\ParameterAttribute.cs" />
     <Compile Include="Processing\ParameterDisplayTypes.cs" />
     <Compile Include="Processing\ProcessDatasetName.cs" />
