@@ -7,6 +7,7 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
@@ -102,18 +103,20 @@ namespace ProSuite.QA.Tests.Test
 			XmlSimpleTerrainDataset tds =
 				new XmlSimpleTerrainDataset
 				{
+					Name = "TestSimpleTerrainDs",
+					PointDensity = 7.8125,
 					Sources =
 						new List<XmlTerrainSource>
 						{
 							new XmlTerrainSource
 							{
 								Dataset = "TOPGIS_TLM.TLM_DTM_MASSENPUNKTE",
-								Type = esriTinSurfaceType.esriTinMassPoint
+								Type = TinSurfaceType.MassPoint
 							},
 							new XmlTerrainSource
 							{
 								Dataset = "TOPGIS_TLM.TLM_DTM_BRUCHKANTE",
-								Type = esriTinSurfaceType.esriTinHardLine
+								Type = TinSurfaceType.HardLine
 							}
 						}
 				};

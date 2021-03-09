@@ -301,7 +301,6 @@
     <Compile Include="TileInfo.cs" />
     <Compile Include="TileState.cs" />
     <Compile Include="TinSurface.cs" />
-    <Compile Include="TinTerrainReference.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">

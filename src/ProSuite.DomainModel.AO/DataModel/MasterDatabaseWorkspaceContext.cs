@@ -6,7 +6,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.QA.Container;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
@@ -77,23 +76,10 @@ namespace ProSuite.DomainModel.AO.DataModel
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
 
-			if (dataset.Sources != null)
-			{
-				List<IFeatureClass> sourceFcs = new List<IFeatureClass>();
-				List<esriTinSurfaceType> types = new List<esriTinSurfaceType>();
-				foreach (var source in dataset.Sources)
-				{
-					sourceFcs.Add(FeatureWorkspace.OpenFeatureClass(source.Dataset.Name));
-					types.Add(source.Type);
-				}
+			IList<SimpleTerrainDataSource> terrainSources =
+				ModelElementUtils.GetTerrainDataSources(dataset, OpenObjectClass);
 
-				return TinTerrainReference.Create(sourceFcs, types);
-			}
-			else
-			{
-				return TinTerrainReference.Create(
-					FeatureWorkspace.OpenFeatureDataset(dataset.FeatureDatasetName));
-			}
+			return new SimpleTerrain(dataset.Name, terrainSources, dataset.PointDensity, null);
 		}
 
 		public override IRelationshipClass OpenRelationshipClass(Association association)

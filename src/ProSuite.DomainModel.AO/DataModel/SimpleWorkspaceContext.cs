@@ -7,7 +7,6 @@ using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
-using ProSuite.QA.Container;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
@@ -107,16 +106,12 @@ namespace ProSuite.DomainModel.AO.DataModel
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
 
-			WorkspaceDataset workspaceDataset = GetWorkspaceDataset(dataset);
+			IList<SimpleTerrainDataSource> terrainSources =
+				ModelElementUtils.GetTerrainDataSources(dataset, OpenObjectClass);
 
-			return workspaceDataset == null
-				       ? null
-				       : TinTerrainReference.Create(
-					       FeatureWorkspace.OpenFeatureDataset(
-						       workspaceDataset.FeatureDatasetName));
+			return new SimpleTerrain(dataset.Name, terrainSources, dataset.PointDensity, null);
 		}
 
-		[CLSCompliant(false)]
 		public override IRelationshipClass OpenRelationshipClass(Association association)
 		{
 			Assert.ArgumentNotNull(association, nameof(association));
@@ -167,7 +162,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			WorkspaceAssociation workspaceAssociation;
 			return _workspaceAssociationByRelClassName.TryGetValue(relationshipClassName,
-			                                                       out workspaceAssociation)
+				       out workspaceAssociation)
 				       ? workspaceAssociation.Association
 				       : null;
 		}

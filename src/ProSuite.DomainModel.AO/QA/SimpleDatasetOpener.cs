@@ -40,6 +40,11 @@ namespace ProSuite.DomainModel.AO.QA
 					return _datasetContext.OpenObjectClass(objectDataset) != null;
 				}
 
+				if (dataset is ISimpleTerrainDataset simpleTerrainDataset)
+				{
+					return _datasetContext.OpenTerrainReference(simpleTerrainDataset);
+				}
+
 				// TODO: Raster, Mosaic
 
 				return null;

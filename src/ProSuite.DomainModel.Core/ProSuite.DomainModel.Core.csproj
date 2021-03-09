@@ -79,12 +79,14 @@
     <Compile Include="DataModel\GeometryTypeTerrain.cs" />
     <Compile Include="DataModel\GeometryTypeTopology.cs" />
     <Compile Include="DataModel\IAttributes.cs" />
+    <Compile Include="DataModel\IDatasetCollection.cs" />
     <Compile Include="DataModel\IDdxDataset.cs" />
     <Compile Include="DataModel\IDdxRasterDataset.cs" />
     <Compile Include="DataModel\IErrorDataset.cs" />
     <Compile Include="DataModel\IModelElement.cs" />
     <Compile Include="DataModel\IObjectDataset.cs" />
     <Compile Include="DataModel\IRegisteredGdbObject.cs" />
+    <Compile Include="DataModel\ISimpleTerrainDataset.cs" />
     <Compile Include="DataModel\ISpatialDataset.cs" />
     <Compile Include="DataModel\ITableDataset.cs" />
     <Compile Include="DataModel\IVectorDataset.cs" />
@@ -106,8 +108,10 @@
     <Compile Include="DataModel\Repositories\IDatasetRepository.cs" />
     <Compile Include="DataModel\Repositories\IGeometryTypeRepository.cs" />
     <Compile Include="DataModel\Repositories\IObjectCategoryRepository.cs" />
+    <Compile Include="DataModel\SimpleTerrainDataset.cs" />
     <Compile Include="DataModel\SqlCaseSensitivity.cs" />
     <Compile Include="DataModel\TableDataset.cs" />
+    <Compile Include="DataModel\TinSurfaceType.cs" />
     <Compile Include="DataModel\UnknownAttributeRole.cs" />
     <Compile Include="DataModel\VariantValueFactory.cs" />
     <Compile Include="DataModel\VectorDataset.cs" />
@@ -165,6 +169,7 @@
     <Compile Include="QA\VerificationProgress\QualityVerificationProgressTracker.cs" />
     <Compile Include="QA\VerificationProgress\VerificationProgressStep.cs" />
     <Compile Include="QA\VerificationProgress\VerificationProgressType.cs" />
+    <Compile Include="DataModel\TerrainSourceDataset.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">

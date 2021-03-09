@@ -1,12 +1,11 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.DomainModel.Core;
-using ProSuite.DomainModel.Core.DataModel;
 
-namespace ProSuite.DomainModel.AO.DataModel
+namespace ProSuite.DomainModel.Core.DataModel
 {
 	public abstract class SimpleTerrainDataset : Dataset, ISimpleTerrainDataset
 	{
@@ -15,6 +14,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[UsedImplicitly] private LayerFile _defaultSymbology;
 		[UsedImplicitly] private string _featureDatasetName;
+		[UsedImplicitly] private double _pointDensity;
 
 		#region Constructors
 
@@ -24,7 +24,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		/// <remarks>Required for NHibernate</remarks>
 		protected SimpleTerrainDataset() { }
 
-		protected SimpleTerrainDataset(IList<ITerrainSoure> sources)
+		protected SimpleTerrainDataset(IList<TerrainSourceDataset> sources)
 		{
 			Sources = sources;
 		}
@@ -73,12 +73,21 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		#endregion
 
-		public override string TypeDescription => "Terrain";
-		public int TerrainDefId { get; protected set; } = -1;
+		public override string TypeDescription => "SimpleTerrain";
 
-		public string FeatureDatasetName
+		#region ISimpleTerrainDataset Members
+
+		public int TerrainId => Id;
+
+		public double PointDensity
 		{
-			get { return _featureDatasetName; }
+			get => _pointDensity;
+			set => _pointDensity = value;
+		}
+
+		private string FeatureDatasetName
+		{
+			get => _featureDatasetName;
 			set
 			{
 				Assert.ArgumentNotNullOrEmpty(value, nameof(value));
@@ -86,14 +95,18 @@ namespace ProSuite.DomainModel.AO.DataModel
 			}
 		}
 
-		public IList<ITerrainSoure> Sources { get; }
+		public IList<TerrainSourceDataset> Sources { get; }
+
+		#endregion
+
+		public IEnumerable<IDdxDataset> ContainedDatasets => Sources.Select(s => s.Dataset);
 
 		#region ISpatialDataset Members
 
 		public LayerFile DefaultLayerFile
 		{
-			get { return _defaultSymbology; }
-			set { _defaultSymbology = value; }
+			get => _defaultSymbology;
+			set => _defaultSymbology = value;
 		}
 
 		[UsedImplicitly]

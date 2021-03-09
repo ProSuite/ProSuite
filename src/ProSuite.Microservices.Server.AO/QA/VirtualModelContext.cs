@@ -13,7 +13,6 @@ using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.Microservices.Server.AO.Geodatabase;
-using ProSuite.QA.Container;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
@@ -147,9 +146,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public TerrainReference OpenTerrainReference(ISimpleTerrainDataset dataset)
 		{
-			IFeatureWorkspace workspace = GetWorkspace(dataset.Model);
-			return TinTerrainReference.Create(
-				workspace.OpenFeatureDataset(dataset.FeatureDatasetName));
+			IList<SimpleTerrainDataSource> terrainSources =
+				ModelElementUtils.GetTerrainDataSources(dataset, OpenObjectClass);
+
+			return new SimpleTerrain(dataset.Name, terrainSources, dataset.PointDensity, null);
 		}
 
 		public IRelationshipClass OpenRelationshipClass(Association association)

@@ -193,6 +193,7 @@
     <Compile Include="Geometry\GeometryProperties.cs" />
     <Compile Include="Geometry\GeometryUtils.cs" />
     <Compile Include="Geometry\IArrayProvider.cs" />
+    <Compile Include="Geometry\ICoordinateTransformer.cs" />
     <Compile Include="Geometry\IFlexibleSettingProvider.cs" />
     <Compile Include="Geometry\IntersectionConstraint.cs" />
     <Compile Include="Geometry\IntersectionMatrix.cs" />
@@ -265,11 +266,16 @@
     <Compile Include="SerializationUtils.cs" />
     <Compile Include="StreamUtils.cs" />
     <Compile Include="Surface\BorderPointTileAllocationPolicy.cs" />
+    <Compile Include="Surface\FeatureTinGenerator.cs" />
     <Compile Include="Surface\ISimpleSurface.cs" />
+    <Compile Include="Surface\ITinGenerator.cs" />
     <Compile Include="Surface\RectangularTileIndex.cs" />
     <Compile Include="Surface\RectangularTilingStructure.cs" />
     <Compile Include="Surface\RectangularTilingUtils.cs" />
+    <Compile Include="Surface\SimpleTerrain.cs" />
+    <Compile Include="Surface\SimpleTerrainDataSource.cs" />
     <Compile Include="Surface\TerrainReference.cs" />
+    <Compile Include="Surface\TinCreationUtils.cs" />
     <Compile Include="UIDUtils.cs" />
   </ItemGroup>
   <ItemGroup>
