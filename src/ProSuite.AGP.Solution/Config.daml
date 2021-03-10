@@ -181,18 +181,18 @@
               smallImage="Images\AdvancedReshapeTool16.png" largeImage="Images\AdvancedReshapeTool32.png"
               condition="esri_mapping_mapPane">
           <tooltip heading="Advanced Reshape" image="Images\AdvancedReshapeToolTip.png">
-            Reshape line or polygon feature(s) with advanced options.
+Reshape line or polygon feature(s) with advanced options.
 
-            1. Select feature(s) to reshape
-            2. Create the sketch to replaces the segments between intersection points
+1. Select feature(s) to reshape
+2. Create the sketch to replaces the segments between intersection points
 
-            Shortcuts:
-            ESC: Return to selection phase
-            R: Reload previous sketch
-            S: Use non-default reshape side
-            M: Toggle end-junction move in Y-reshape
-            N: Target intersection in multi-reshape
-            O: Additional options
+Shortcuts:
+ESC: Return to selection phase
+R: Reload previous sketch
+S: Use non-default reshape side
+M: Toggle end-junction move in Y-reshape
+N: Target intersection in multi-reshape
+O: Additional options
             <disabledText />
           </tooltip>
         </tool>
