@@ -9,13 +9,6 @@ using System.IO;
 
 namespace ProSuite.AGP.Solution.ProjectItem
 {
-	public enum ProjectItemType
-	{
-		WorkListDefinition,
-		Configuration,
-		None
-	}
-
 	public class ProjectFileRepository 
 	{
 		Msg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);

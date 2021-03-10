@@ -131,5 +131,12 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			return map.FindLayer(uri, recursive);
 		}
+
+		public static void SetLayerSelectability([NotNull] FeatureLayer layer, bool selectable = true)
+		{
+			var cimDefinition = (CIMFeatureLayer) layer.GetDefinition();
+			cimDefinition.Selectable = selectable;
+			layer.SetDefinition(cimDefinition);
+		}
 	}
 }
