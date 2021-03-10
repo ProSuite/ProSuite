@@ -219,36 +219,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 			LayerUtils.ApplyRenderer(AddLayer(uri, workList.Name, workList.DisplayName), environment.GetLayerDocument());
 		}
 
-		//[CanBeNull]
-		//private FeatureLayer AddLayer([NotNull] string worklistName, [NotNull] string layerName)
-		//{
-		//	PluginDatasourceConnectionPath connector = GetWorkListConnectionPath(worklistName);
-
-		//	// todo daro: disposing our own datastore and table?!?
-		//	using (var datastore = new PluginDatastore(connector))
-		//	{
-		//		using (Table table = datastore.OpenTable(worklistName))
-		//		{
-		//			FeatureLayer worklistLayer =
-		//				LayerFactory.Instance.CreateFeatureLayer((FeatureClass)table,
-		//				                                         MapView.Active.Map,
-		//				                                         LayerPosition.AddToTop, layerName);
-
-
-		//			Commons.LayerUtils.SetLayerSelectability(worklistLayer, false);
-
-		//			_uriByWorklistName.Add(worklistName, LayerUtils.GetUri(worklistLayer));
-		//			return worklistLayer;
-		//		}
-		//	}
-		//}
-
 		[CanBeNull]
 		private FeatureLayer AddLayer([NotNull] Uri dataSource, string worklistName, [NotNull] string layerName)
 		{
 			PluginDatasourceConnectionPath connector = new PluginDatasourceConnectionPath(PluginIdentifier, dataSource);
 
-			// todo daro: disposing our own datastore and table?!?
 			using (var datastore = new PluginDatastore(connector))
 			{
 				using (Table table = datastore.OpenTable(worklistName))
@@ -284,20 +259,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			return WorkListUtils.GetLocalWorklistsFolder(GetProject().HomeFolderPath);
 		}
-
-		//[NotNull]
-		//private PluginDatasourceConnectionPath GetWorkListConnectionPath(
-		//	[NotNull] string workListName)
-		//{
-		//	return new PluginDatasourceConnectionPath(PluginIdentifier, GetUri(workListName));
-		//}
-
-
-		//[NotNull]
-		//private PluginDatasourceConnectionPath GetWorkListConnectionPath([NotNull] Uri uri)
-		//{
-		//	return new PluginDatasourceConnectionPath(PluginIdentifier, uri);
-		//}
 
 		[NotNull]
 		private static IEnumerable<string> GetDefinitionFiles()
@@ -498,16 +459,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 				}
 			//});
 		}
-
-		//private void UnregisterViewModel(IWorkList workList)
-		//{
-		//	SelectionWorkListVm vm = GetObserverByWorklistName(workList.Name) as SelectionWorkListVm;
-
-		//	if (vm != null)
-		//	{
-		//		UnregisterObserver(vm);
-		//	}
-		//}
 
 		private async Task OnProjectOpendedAsync(ProjectEventArgs e)
 		{
