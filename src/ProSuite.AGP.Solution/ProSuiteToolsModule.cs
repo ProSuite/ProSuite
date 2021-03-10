@@ -347,16 +347,19 @@ namespace ProSuite.AGP.Solution
 		{
 			const string exeName = "prosuite_microserver_geometry_processing.exe";
 
-			_msg.IncrementIndentation("Searching for microservice deployment ({0})...", exeName);
-
-			string executablePath = ConfigurationUtils.GetProSuiteExecutablePath(exeName);
-
-			if (executablePath == null)
+			string executablePath;
+			using (_msg.IncrementIndentation("Searching for microservice deployment ({0})...",
+			                                 exeName))
 			{
-				_msg.Warn(
-					"Cannot find microservice deployment folder. Some edit Tools will be disabled.");
+				executablePath = ConfigurationUtils.GetProSuiteExecutablePath(exeName);
 
-				return false;
+				if (executablePath == null)
+				{
+					_msg.Warn(
+						"Cannot find microservice deployment folder. Some edit Tools will be disabled.");
+
+					return false;
+				}
 			}
 
 			GeometryProcessingClient result = new GeometryProcessingClient(
