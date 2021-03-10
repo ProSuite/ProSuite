@@ -46,6 +46,13 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Inspector\BufferAppender.cs" />
+    <Compile Include="Inspector\ILoggingContext.cs" />
+    <Compile Include="Inspector\ILoggingContextInfo.cs" />
+    <Compile Include="Inspector\LogInspector.cs" />
+    <Compile Include="Inspector\LogInspectorEvent.cs" />
+    <Compile Include="Inspector\LogInspectorLevel.cs" />
+    <Compile Include="Inspector\LogSnapshot.cs" />
     <Compile Include="LoggingEventItem.cs" />
     <Compile Include="LoggingEventsAppender.cs" />
     <Compile Include="Log4NetUtils.cs" />
