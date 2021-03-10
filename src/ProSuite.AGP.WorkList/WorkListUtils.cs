@@ -10,6 +10,7 @@ using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Xml;
 using ProSuite.DomainModel.Core;
@@ -19,6 +20,30 @@ namespace ProSuite.AGP.WorkList
 	public static class WorkListUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private const string WorklistsFolder = "Worklists";
+
+		[NotNull]
+		public static string GetLocalWorklistsFolder(string homeFolderPath)
+		{
+			return Path.Combine(homeFolderPath, WorklistsFolder);
+		}
+		
+		[CanBeNull]
+		public static Uri GetUri([NotNull] string homeFolderPath,
+		                         [NotNull] string workListName,
+		                         [NotNull] string fileSuffix)
+		{
+			//var baseUri = new Uri("worklist://localhost/");
+			string folder = GetLocalWorklistsFolder(homeFolderPath);
+
+			if (FileSystemUtils.EnsureFolderExists(folder))
+			{
+				return new Uri(Path.Combine(folder, $"{workListName}{fileSuffix}"));
+			}
+
+			return null;
+		}
 
 		[NotNull]
 		public static IWorkList Create([NotNull] XmlWorkListDefinition definition)
@@ -161,25 +186,44 @@ namespace ProSuite.AGP.WorkList
 			return Path.GetFileNameWithoutExtension(name);
 		}
 
-		public static string GetWorklistPath(string path)
+		[CanBeNull]
+		public static string GetIssueGeodatabasePath([NotNull] string worklistDefinitionFile)
 		{
-			if (! path.EndsWith("wl"))
-				return path;
+			Assert.ArgumentNotNullOrEmpty(worklistDefinitionFile, nameof(worklistDefinitionFile));
+
+			if (! File.Exists(worklistDefinitionFile))
+			{
+				_msg.Debug($"{worklistDefinitionFile} does not exist");
+				return null;
+			}
+
+			string extension = Path.GetExtension(worklistDefinitionFile);
+
+			if (! string.Equals(extension, ".iwl"))
+			{
+				_msg.Debug($"{worklistDefinitionFile} is no issue work list");
+				return null;
+			}
 
 			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
 
-			XmlWorkListDefinition definition = helper.ReadFromFile(path);
+			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
 			return definition.Workspaces.Select(w => w.Path).FirstOrDefault();
 		}
 
 		[CanBeNull]
-		public static string GetXmlWorklistName(string worklistPath)
+		public static string GetWorklistName([NotNull] string worklistDefinitionFile)
 		{
-			if (String.IsNullOrEmpty(worklistPath))
+			Assert.ArgumentNotNullOrEmpty(worklistDefinitionFile, nameof(worklistDefinitionFile));
+
+			if (! File.Exists(worklistDefinitionFile))
+			{
+				_msg.Debug($"{worklistDefinitionFile} does not exist");
 				return null;
+			}
 
 			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
-			XmlWorkListDefinition definition = helper.ReadFromFile(worklistPath);
+			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
 			return definition.Name;
 		}
 	}

@@ -99,6 +99,20 @@ namespace ProSuite.AGP.WorkList.Domain
 			return true;
 		}
 
+		public bool TryAdd(IWorkList worklist)
+		{
+			lock (_registryLock)
+			{
+				if (_map.ContainsKey(worklist.Name))
+				{
+					return false;
+				}
+			}
+
+			Add(worklist);
+			return true;
+		}
+
 		public bool Remove(IWorkList workList)
 		{
 			if (workList == null)

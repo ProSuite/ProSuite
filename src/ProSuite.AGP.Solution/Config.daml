@@ -24,7 +24,7 @@
     <updateCategory refID="esri_customItems">
       <insertComponent id="ProSuiteItem_ProjectItem" className="ProSuite.AGP.Solution.ProjectItem.ProSuiteProjectItem"
                        containerType="ProSuiteContainer">
-        <content displayName="Worklist" fileExtension="wl" isContainer="true" keywords="worklist"
+        <content displayName="Worklist" fileExtension="swl" isContainer="true" keywords="worklist"
                  contextMenuID="ProSuiteSolution_ProjectItemWorkListContextMenu">
           <filterFlags>
             <type id="File" />
@@ -69,7 +69,7 @@
           <button refID="Clients_AGP_ProSuiteSolution_AddWorkList" size="large" />
         </group>
         <group id="ProSuiteTools_QA_Hidden" caption="" appearsOnAddInTab="false">
-          <button refID="Clients_AGP_ProSuiteSolution_OpenWorkList" />
+          <button refID="Clients_AGP_ProSuiteSolution_WorkLists_OpenWorklistButton" />
           <button refID="ProSuite_AGP_Solution_WorkListUI_IssueWorkListView" size="large" />
         </group>
         <group id="ProSuiteTools_Editing" caption="Edit Tools" keytip="G1">
@@ -133,7 +133,7 @@
             Import and add worklist file(wl) to project<disabledText />
           </tooltip>
         </button>
-        <button id="Clients_AGP_ProSuiteSolution_OpenWorkList" caption="OpenWorkList" className="OpenWorkListFile"
+        <button id="Clients_AGP_ProSuiteSolution_WorkLists_OpenWorklistButton" caption="OpenWorkList" className="WorkLists.OpenWorklistButton"
                 loadOnClick="true"
                 smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png"
                 largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
@@ -241,7 +241,7 @@ O: Additional options
           <!--<button refID="esri_DeleteItem" />-->
         </menu>
         <menu id="ProSuiteSolution_ProjectItemWorkListContextMenu" caption="ProSuite Project Item">
-          <button refID="Clients_AGP_ProSuiteSolution_OpenWorkList" />
+          <button refID="Clients_AGP_ProSuiteSolution_WorkLists_OpenWorklistButton" />
           <button refID="esri_DeleteItem" />
         </menu>
         <menu id="ProSuiteSolution_WorkListContextMenu" caption="Work list">

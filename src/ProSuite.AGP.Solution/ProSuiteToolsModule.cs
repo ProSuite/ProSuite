@@ -18,6 +18,7 @@ using ProSuite.AGP.Solution.ProjectItem;
 using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.AGP.WorkList;
 using ProSuite.Application.Configuration;
+using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Client;
@@ -316,31 +317,31 @@ namespace ProSuite.AGP.Solution
 			}
 		}
 
-		public static async Task<bool> OpenIssuesWorklist([NotNull] string wlpath)
+		public static async Task OpenIssuesWorklist([NotNull] string wlpath)
 		{
-			var environment =
-				new DatabaseWorkEnvironment(WorkListUtils.GetWorklistPath(wlpath), wlpath);
-			await QueuedTask.Run(async () =>
+			await ViewUtils.TryAsync(async () =>
 			{
-				await WorkListsModule.Current.CreateWorkListAsync(environment);
-			});
-			if (environment.UniqueName != null)
-				WorkListsModule.Current.ShowView(environment.UniqueName);
+				throw new NotImplementedException();
+				string workListName = WorkListsModule.Current.EnsureUniqueName();
+				var environment = new DatabaseWorkEnvironment();
 
-			return true;
+				await QueuedTask.Run(() => WorkListsModule.Current.CreateWorkListAsync(environment, workListName));
+
+				WorkListsModule.Current.ShowView(workListName);
+			}, _msg);
 		}
 
-		public async Task<bool> ShowSelectionWorkList()
+		public async Task ShowSelectionWorkList()
 		{
-			var environment = new InMemoryWorkEnvironment();
-			await QueuedTask.Run(async () =>
+			await ViewUtils.TryAsync(async () =>
 			{
-				await WorkListsModule.Current.CreateWorkListAsync(environment);
-			});
-			if (environment.UniqueName != null)
-				WorkListsModule.Current.ShowView(environment.UniqueName);
+				string workListName = WorkListsModule.Current.EnsureUniqueName();
+				var environment = new InMemoryWorkEnvironment();
 
-			return true;
+				await QueuedTask.Run(() => WorkListsModule.Current.CreateWorkListAsync(environment, workListName));
+
+				WorkListsModule.Current.ShowView(workListName);
+			}, _msg);
 		}
 
 		private async Task<bool> StartToolMicroserviceClientAsync()
@@ -510,30 +511,6 @@ namespace ProSuite.AGP.Solution
 					ProjectItemType.WorkListDefinition,
 					new List<string>() {filePath});
 			});
-		}
-	}
-
-	internal class OpenWorkListFile : Button
-	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
-
-		// TODO algr: temporary tests
-		protected override async void OnClick()
-		{
-			try
-			{
-				var window = FrameworkApplication.ActiveWindow as IProjectWindow;
-				var path = window?.SelectedItems.First().Path;
-				if (path != null)
-				{
-					_msg.Info($"Open worklist file {path}");
-					await ProSuiteToolsModule.OpenIssuesWorklist(path);
-				}
-			}
-			catch (Exception ex)
-			{
-				_msg.Error("Open WorkList error", ex);
-			}
 		}
 	}
 

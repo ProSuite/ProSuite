@@ -20,17 +20,16 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 
 namespace ProSuite.AGP.Solution.WorkLists
 {
 	[UsedImplicitly]
-	public class WorkListsModule : Module, IWorkListContext
+	public class WorkListsModule : Module
 	{
 		private const string PluginIdentifier = "ProSuite_WorkListDatasource";
-		private const string WorklistsFolder = "Worklists";
-		private const string FileSuffix = ".xml.wl";
 
 		private static WorkListsModule _instance;
 
@@ -87,34 +86,40 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 		}
 
-		public async Task CreateWorkListAsync([NotNull] WorkEnvironmentBase environment)
+		public async Task CreateWorkListAsync([NotNull] WorkEnvironmentBase environment, [NotNull] string name)
 		{
-			try
-			{
-				// is this worklist already loaded?
-				if (_registry.Exists(environment.GetWorklistId()))
-				{
-					_msg.Debug("Worklist is already loaded");
-					return;
-				}
+			Assert.ArgumentNotNull(environment, nameof(environment));
+			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
 
-				IWorkList workList = await environment.CreateWorkListAsync(this);
+			IWorkList workList;
+
+			if (_registry.Exists(name))
+			{
+				workList = _registry.Get(name);
+			}
+			else
+			{
+				// todo daro rename all workList to worklist
+				workList = await environment.CreateWorkListAsync(GetProject().HomeFolderPath, name);
 				// after creation go to first item
 				workList.GoFirst();
 
 				// wiring work list events, etc. is done in OnDrawComplete
 				// register work list before creating the layer
-				_registry.Add(workList);
-
-				_viewsByWorklistName.Add(workList.Name, new WorkListObserver(workList));
-
-				CreateLayer(environment, workList);
+				_registry.TryAdd(workList);
 			}
-			catch (Exception e)
+
+			Assert.NotNull(workList, $"work list {name} is null");
+
+			if (! _viewsByWorklistName.ContainsKey(workList.Name))
 			{
-				_msg.Error("Create work list failed", e);
+				_viewsByWorklistName.Add(workList.Name, new WorkListObserver(workList));
 			}
+
+			CreateLayer(environment, workList);
 		}
+
+		// todo daro to utils
 
 		#region Module overrides
 
@@ -198,36 +203,50 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		#endregion
 
-		#region IWorkListContext overrides
-
 		[NotNull]
-		public string GetPath([NotNull] string workListName)
-		{
-			// todo daro: use ConfigurationUtils?
-			return GetUri(workListName).LocalPath;
-		}
-
-		[NotNull]
-		public string EnsureUniqueName([NotNull] string workListName)
+		public string EnsureUniqueName()
 		{
 			//todo daro: use GUID as identifier?
-			return $"{workListName}_{Guid.NewGuid()}".Replace('-', '_').ToLower();
+			return $"{Guid.NewGuid()}".Replace('-', '_').ToLower();
 		}
-
-		#endregion
 
 		private void CreateLayer([NotNull] WorkEnvironmentBase environment,
 		                         [NotNull] IWorkList workList)
 		{
-			// todo daro: inline
-			LayerDocument layerTemplate = environment.GetLayerDocument();
-			LayerUtils.ApplyRenderer(AddLayer(workList.Name, workList.DisplayName), layerTemplate);
+			// todo refactor
+			Uri uri = WorkListUtils.GetUri(GetProject().HomeFolderPath, workList.Name, environment.FileSuffix);
+
+			LayerUtils.ApplyRenderer(AddLayer(uri, workList.Name, workList.DisplayName), environment.GetLayerDocument());
 		}
 
+		//[CanBeNull]
+		//private FeatureLayer AddLayer([NotNull] string worklistName, [NotNull] string layerName)
+		//{
+		//	PluginDatasourceConnectionPath connector = GetWorkListConnectionPath(worklistName);
+
+		//	// todo daro: disposing our own datastore and table?!?
+		//	using (var datastore = new PluginDatastore(connector))
+		//	{
+		//		using (Table table = datastore.OpenTable(worklistName))
+		//		{
+		//			FeatureLayer worklistLayer =
+		//				LayerFactory.Instance.CreateFeatureLayer((FeatureClass)table,
+		//				                                         MapView.Active.Map,
+		//				                                         LayerPosition.AddToTop, layerName);
+
+
+		//			Commons.LayerUtils.SetLayerSelectability(worklistLayer, false);
+
+		//			_uriByWorklistName.Add(worklistName, LayerUtils.GetUri(worklistLayer));
+		//			return worklistLayer;
+		//		}
+		//	}
+		//}
+
 		[CanBeNull]
-		private FeatureLayer AddLayer([NotNull] string worklistName, [NotNull] string layerName)
+		private FeatureLayer AddLayer([NotNull] Uri dataSource, string worklistName, [NotNull] string layerName)
 		{
-			PluginDatasourceConnectionPath connector = GetWorkListConnectionPath(worklistName);
+			PluginDatasourceConnectionPath connector = new PluginDatasourceConnectionPath(PluginIdentifier, dataSource);
 
 			// todo daro: disposing our own datastore and table?!?
 			using (var datastore = new PluginDatastore(connector))
@@ -240,59 +259,53 @@ namespace ProSuite.AGP.Solution.WorkLists
 						                                         LayerPosition.AddToTop, layerName);
 
 
-					Commons.LayerUtils.SetLayerSelectability(worklistLayer, false);
+					LayerUtils.SetLayerSelectability(worklistLayer, false);
 
-					_uriByWorklistName.Add(worklistName, LayerUtils.GetUri(worklistLayer));
+					if (! _uriByWorklistName.ContainsKey(worklistName))
+					{
+						_uriByWorklistName.Add(worklistName, LayerUtils.GetUri(worklistLayer));
+					}
+
 					return worklistLayer;
 				}
 			}
 		}
 
 		[NotNull]
-		private PluginDatasourceConnectionPath GetWorkListConnectionPath(
-			[NotNull] string workListName)
+		private static Project GetProject()
 		{
-			return new PluginDatasourceConnectionPath(PluginIdentifier, GetUri(workListName));
+			Project current = Project.Current;
+			// todo daro: remove assertion
+			Assert.NotNull(current, "no project");
+			return current;
 		}
 
-		[NotNull]
-		private Uri GetUri([NotNull] string workListName)
+		private static string GetLocalWorklistsFolder()
 		{
-			//var baseUri = new Uri("worklist://localhost/");
-			string folder = GetLocalWorklistsFolder();
-			EnsureFolderExists(folder);
-
-			return new Uri(Path.Combine(folder, $"{workListName}{FileSuffix}"));
+			return WorkListUtils.GetLocalWorklistsFolder(GetProject().HomeFolderPath);
 		}
+
+		//[NotNull]
+		//private PluginDatasourceConnectionPath GetWorkListConnectionPath(
+		//	[NotNull] string workListName)
+		//{
+		//	return new PluginDatasourceConnectionPath(PluginIdentifier, GetUri(workListName));
+		//}
+
+
+		//[NotNull]
+		//private PluginDatasourceConnectionPath GetWorkListConnectionPath([NotNull] Uri uri)
+		//{
+		//	return new PluginDatasourceConnectionPath(PluginIdentifier, uri);
+		//}
 
 		[NotNull]
 		private static IEnumerable<string> GetDefinitionFiles()
 		{
 			string folder = GetLocalWorklistsFolder();
-			EnsureFolderExists(folder);
+			FileSystemUtils.EnsureFolderExists(folder);
 
-			return Directory.GetFiles(folder, $"*{FileSuffix}", SearchOption.TopDirectoryOnly);
-		}
-
-		[NotNull]
-		private static string GetLocalWorklistsFolder()
-		{
-			Project current = Project.Current;
-			// todo daro: remove assertion
-			Assert.NotNull(current, "no project");
-
-			return Path.Combine(current.HomeFolderPath, WorklistsFolder);
-		}
-
-		private static void EnsureFolderExists([NotNull] string path)
-		{
-			if (Directory.Exists(path))
-			{
-				return;
-			}
-
-			DirectoryInfo info = Directory.CreateDirectory(path);
-			_msg.Debug($"Create folder {info.FullName}");
+			return Directory.GetFiles(folder, $"*xml.*wl", SearchOption.TopDirectoryOnly);
 		}
 
 		//public void RemoveWorkListLayer(IWorkList workList)
@@ -462,10 +475,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 						_viewsByWorklistName.Remove(workList.Name);
 					}
 
+					// todo daro: QueuedTask.Run not needed here!
 					await QueuedTask.Run(() =>
 					{
 						// ensure folder exists before commit
-						EnsureFolderExists(GetLocalWorklistsFolder());
+						FileSystemUtils.EnsureFolderExists(GetLocalWorklistsFolder());
 
 						workList.Commit();
 
@@ -474,7 +488,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 						//UnregisterViewModel(workList);
 
 						_layersByWorklistName.Remove(workList.Name);
-						_registry.Remove(workList);
+						// don't remove work list from registry
+						//_registry.Remove(workList);
 
 						// Note daro: don't dispose work list here. Given the following situation.
 						// Remove work list layer would dispose the source geodatabase (in GdbItemRepository).
@@ -482,7 +497,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 						// exception, e.g. on SetStatus
 						//workList.Dispose();
 					});
-
 				}
 			//});
 		}
@@ -537,7 +551,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			// todo daro: revise usage of Task
 			await Task.Run(() =>
 			{
-				EnsureFolderExists(GetLocalWorklistsFolder());
+				FileSystemUtils.EnsureFolderExists(GetLocalWorklistsFolder());
 
 				foreach (IWorkList workList in GetWorklists())
 				{
