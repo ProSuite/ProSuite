@@ -18,7 +18,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			switch (workList)
 			{
 				case SelectionWorkList _:
-					return new WorkListView(new SelectionWorkListVm(workList));
+					return new SelectionWorkListView(new SelectionWorkListVm(workList));
 				case IssueWorkList _:
 					return new IssueWorkListView(new IssueWorkListVm(workList));
 				default:

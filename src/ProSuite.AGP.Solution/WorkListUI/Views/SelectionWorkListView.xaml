@@ -1,4 +1,4 @@
-<controls:ProWindow x:Class="ProSuite.AGP.Solution.WorkListUI.Views.WorkListView"
+<controls:ProWindow x:Class="ProSuite.AGP.Solution.WorkListUI.Views.SelectionWorkListView"
                     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:controls="clr-namespace:ArcGIS.Desktop.Framework.Controls;assembly=ArcGIS.Desktop.Framework"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
@@ -10,7 +10,7 @@
                     mc:Ignorable="d"
                     Title="{Binding Path=CurrentWorkList.DisplayName}"
                     d:DesignWidth="400"
-                    WindowStartupLocation="CenterOwner" SizeToContent="WidthAndHeight" Topmost="True">
+                    WindowStartupLocation="CenterOwner" SizeToContent="WidthAndHeight" ShowInTaskbar="False">
 
     <controls:ProWindow.Resources>
         <ResourceDictionary>

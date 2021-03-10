@@ -1,5 +1,5 @@
 using System;
-using System.Windows;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Controls;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
@@ -59,13 +59,15 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			{
 				_view = WorkListViewFactory.CreateView(_worklist);
 
+				_view.Owner = FrameworkApplication.Current.MainWindow;
+
 				if (! string.IsNullOrEmpty(title))
 				{
 					_view.Title = title;
 				}
 
 				_view.Closed += _view_Closed;
-
+				
 				_view.Show();
 			});
 		}
