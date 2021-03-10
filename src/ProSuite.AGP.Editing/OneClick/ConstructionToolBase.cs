@@ -235,6 +235,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					}
 					else
 					{
+						ClearSketchAsync();
 						SelectionUtils.ClearSelection(ActiveMapView.Map);
 					}
 
