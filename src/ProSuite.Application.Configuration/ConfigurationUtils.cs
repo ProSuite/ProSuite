@@ -178,9 +178,9 @@ namespace ProSuite.Application.Configuration
 			// TODO: Add EnvironmentVaraiables static class (in core)
 
 			fullPath = null;
-			const string extraBinDir = "PROSUITE_EXTRA_BIN";
+			const string extraBinDirEnvVar = "PROSUITE_EXTRA_BIN";
 
-			string exeLocation = Environment.GetEnvironmentVariable(extraBinDir);
+			string exeLocation = Environment.GetEnvironmentVariable(extraBinDirEnvVar);
 
 			if (! string.IsNullOrEmpty(exeLocation))
 			{
@@ -190,7 +190,7 @@ namespace ProSuite.Application.Configuration
 				{
 					_msg.DebugFormat(
 						"Using executable defined by environment variable ({0}): {1}",
-						extraBinDir, exeLocation);
+						extraBinDirEnvVar, exeLocation);
 
 					fullPath = result;
 					return true;
@@ -198,7 +198,11 @@ namespace ProSuite.Application.Configuration
 
 				_msg.DebugFormat(
 					"The file {0} was not found in the directory defined by environment variable {1}.",
-					exeLocation, extraBinDir);
+					exeLocation, extraBinDirEnvVar);
+			}
+			else
+			{
+				_msg.DebugFormat("The environment variable {0} is not defined.", extraBinDirEnvVar);
 			}
 
 			return false;

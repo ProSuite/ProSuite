@@ -327,9 +327,11 @@ namespace ProSuite.AGP.Solution
 
 		private async Task<bool> StartToolMicroserviceClientAsync()
 		{
-			string executablePath =
-				ConfigurationUtils.GetProSuiteExecutablePath(
-					"prosuite_microserver_geometry_processing.exe");
+			const string exeName = "prosuite_microserver_geometry_processing.exe";
+
+			_msg.IncrementIndentation("Searching for microservice deployment ({0})...", exeName);
+
+			string executablePath = ConfigurationUtils.GetProSuiteExecutablePath(exeName);
 
 			if (executablePath == null)
 			{
