@@ -488,8 +488,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 						//UnregisterViewModel(workList);
 
 						_layersByWorklistName.Remove(workList.Name);
-						// don't remove work list from registry
-						//_registry.Remove(workList);
 
 						// Note daro: don't dispose work list here. Given the following situation.
 						// Remove work list layer would dispose the source geodatabase (in GdbItemRepository).
