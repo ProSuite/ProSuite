@@ -3,8 +3,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.Callbacks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
