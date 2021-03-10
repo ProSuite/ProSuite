@@ -37,6 +37,12 @@
     <DocumentationFile>$(OutputDirectory)\Release\ProSuite.Commons.AO.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
+  <ItemGroup Condition="'$(VSArcGISProduct)' == 'Server'">
+    <Reference Include="ArcGIS.CoreHost, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ProAssemblyPath)\bin\ArcGIS.CoreHost.dll</HintPath>
+    </Reference>
+  </ItemGroup>
   <ItemGroup>
     <Reference Include="ESRI.ArcGIS.DataSourcesGDB, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
