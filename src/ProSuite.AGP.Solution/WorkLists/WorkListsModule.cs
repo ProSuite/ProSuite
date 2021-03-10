@@ -422,13 +422,12 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		private async Task OnLayerRemovingAsync(LayersRemovingEventArgs e)
 		{
-			// todo daro: revise usage of Task
-			//await Task.Run(() =>
-			//{
-			foreach (IWorkList workList in _layersByWorklistName
-			                               .Where(pair => e.Layers.Contains(pair.Value))
-			                               .Select(pair => GetWorklist(pair.Key))
-			                               .Where(worklist => worklist != null).ToList())
+			await Task.Run(() =>
+			{
+				foreach (IWorkList workList in _layersByWorklistName
+				                               .Where(pair => e.Layers.Contains(pair.Value))
+				                               .Select(pair => GetWorklist(pair.Key))
+				                               .Where(worklist => worklist != null).ToList())
 				{
 					if (_viewsByWorklistName.ContainsKey(workList.Name))
 					{
@@ -436,28 +435,22 @@ namespace ProSuite.AGP.Solution.WorkLists
 						_viewsByWorklistName.Remove(workList.Name);
 					}
 
-					// todo daro: QueuedTask.Run not needed here!
-					await QueuedTask.Run(() =>
-					{
-						// ensure folder exists before commit
-						FileSystemUtils.EnsureFolderExists(GetLocalWorklistsFolder());
+					// ensure folder exists before commit
+					FileSystemUtils.EnsureFolderExists(GetLocalWorklistsFolder());
 
-						workList.Commit();
+					workList.Commit();
 
-						UnwireEvents(workList);
+					UnwireEvents(workList);
 
-						//UnregisterViewModel(workList);
+					_layersByWorklistName.Remove(workList.Name);
 
-						_layersByWorklistName.Remove(workList.Name);
-
-						// Note daro: don't dispose work list here. Given the following situation.
-						// Remove work list layer would dispose the source geodatabase (in GdbItemRepository).
-						// Add work list layer again with same source geodatabase is going to throw an
-						// exception, e.g. on SetStatus
-						//workList.Dispose();
-					});
+					// Note daro: don't dispose work list here. Given the following situation.
+					// Remove work list layer would dispose the source geodatabase (in GdbItemRepository).
+					// Add work list layer again with same source geodatabase is going to throw an
+					// exception, e.g. on SetStatus
+					//workList.Dispose();
 				}
-			//});
+			});
 		}
 
 		private async Task OnProjectOpendedAsync(ProjectEventArgs e)
