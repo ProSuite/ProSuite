@@ -14,6 +14,7 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Solution.Commons
 {
+	// todo daro move to ProSuite.Commons.AGP.Carto
 	public static class LayerUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -82,13 +83,6 @@ namespace ProSuite.AGP.Solution.Commons
 			{
 				layer.Select();
 			}
-		}
-
-		public static void SetLayerSelectability([NotNull] Layer layer, bool selectable)
-		{
-			var cimDefinition = (CIMFeatureLayer)layer.GetDefinition();
-			cimDefinition.Selectable = selectable;
-			layer.SetDefinition(cimDefinition);
 		}
 
 		public static void SelectLayersInTOC(IEnumerable<FeatureLayer> layers = null)

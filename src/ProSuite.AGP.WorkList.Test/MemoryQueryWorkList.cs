@@ -6,5 +6,7 @@ namespace ProSuite.AGP.WorkList.Test
 	{
 		public MemoryQueryWorkList(IWorkItemRepository repository, string name) :
 			base(repository, name) { }
+
+		public override string DisplayName => $"{nameof(MemoryQueryWorkList)}";
 	}
 }

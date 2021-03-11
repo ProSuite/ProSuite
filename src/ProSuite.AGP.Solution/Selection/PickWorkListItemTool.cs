@@ -34,10 +34,10 @@ namespace ProSuite.AGP.Solution.Selection
 		protected override bool CanSelectFromLayerCore(FeatureLayer featureLayer)
 		{
 			//can select from layer if the layer is a worklist layer
-			if (WorkListsModule.Current.LayerByWorkList.ContainsValue(featureLayer))
+			if (WorkListsModule.Current.LayersByWorklistName.ContainsValue(featureLayer))
 			{
 				WorkListLayer = featureLayer;
-				Commons.LayerUtils.SetLayerSelectability(WorkListLayer, true);
+				ProSuite.Commons.AGP.Carto.LayerUtils.SetLayerSelectability(WorkListLayer, true);
 				return true;
 			}
 			return false;
@@ -48,9 +48,9 @@ namespace ProSuite.AGP.Solution.Selection
 			var featureLayers = ActiveMapView.Map.Layers.OfType<FeatureLayer>();
 			foreach (FeatureLayer featureLayer in featureLayers)
 			{
-				if (WorkListsModule.Current.LayerByWorkList.ContainsValue(featureLayer))
+				if (WorkListsModule.Current.LayersByWorklistName.ContainsValue(featureLayer))
 				{
-					LayerUtils.SetLayerSelectability(featureLayer, true);
+					ProSuite.Commons.AGP.Carto.LayerUtils.SetLayerSelectability(featureLayer, true);
 				}
 			}
 
@@ -63,7 +63,7 @@ namespace ProSuite.AGP.Solution.Selection
 		{
 			if (WorkListLayer != null)
 			{
-				Commons.LayerUtils.SetLayerSelectability(WorkListLayer, false);
+				ProSuite.Commons.AGP.Carto.LayerUtils.SetLayerSelectability(WorkListLayer, false);
 			}
 			
 		}

@@ -1,15 +1,14 @@
-using ProSuite.AGP.WorkList.Contracts;
+using ArcGIS.Desktop.Framework.Controls;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList
 {
 	public interface IWorkListObserver
 	{
-		void WorkListAdded(IWorkList workList);
+		void Show([CanBeNull] string title = null);
 
-		void WorkListRemoved(IWorkList workList);
+		void Close();
 
-		void WorkListModified(IWorkList workList);
-
-		void Show(IWorkList workList);
+		ProWindow View { get; }
 	}
 }

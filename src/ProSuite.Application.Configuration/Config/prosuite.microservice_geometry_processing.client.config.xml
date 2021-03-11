@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ClientChannelConfigs xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                      xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+  <!-- ***************************************************************** -->
+  <!-- Geometry Processing for Edit Tools Service Channel Configurations -->
+  <!-- ***************************************************************** -->
+
+  <!-- This configuration file is looked for in the following directories (descending search order): -->
+  <!-- 	- The path specified by the environment variable PROSUITE_CONFIG_DIR -->
+  <!-- 	- <%LOCALAPPDATA%>\Esri Switzerland\ProSuite\Config\ -->
+  <!-- 	- <%APPDATA%>\Esri Switzerland\ProSuite\Config\ -->
+  <!-- 	- <Common Application Data>\Esri Switzerland\ProSuite\Config\ -->
+  <!-- 	- <Install Directory>\Config\ -->
+  <!-- 	- <"Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Esri Switzerland\ProSuite\InstallDirectory>\Config\ -->
+  <!-- 	- <Install Directory>\bin\..\ -->
+  <!-- 	- <Install Directory>\bin\..\..\ -->
+  <!-- 	- <Install Directory>\bin\..\..\..\ -->
+  <!-- 	- <Current Working Directory\ -->
+  <!-- 	- <Install Directory>\bin\Config\ -->
+
+  <!-- The list of channels to use for connection attempts (currently only the first is used!). -->
+  <Channels>
+
+    <ClientChannelConfig>
+
+      <!-- The host name. In case localhost is used, the client process is allowed to start a new 
+           server process. To disable background processing, specify an empty host name. -->
+      <HostName>localhost</HostName>
+
+      <!-- The port. In case the host is localhost and the specified port is below 0 the next free 
+           ephemeral port will be used to communicate with a newly started server process. 
+           In case a positive port number is specified, an already running process using the same 
+           port will be 
+           - used directly (no new process is started) if it is healthy
+           - killed and restarted, in case it is not healthy.
+           If no current process is using the specified port, a new server process is started. -->
+      <Port>5153</Port>
+
+      <!-- Whether the channel uses transport layer security (SSL/TLS). If true, the trusted root 
+           certificates from the user's certificate store are used for the channel credentials. -->
+      <UseTls>false</UseTls>
+
+      <!-- Optionally, use mutual TLS by providing the client certificate (including an exportable 
+           private key. Specify the certificate subject or thumbprint of the certificate in the 
+           current user's certificate store. -->
+      <ClientCertificate></ClientCertificate>
+
+    </ClientChannelConfig>
+  </Channels>
+</ClientChannelConfigs>

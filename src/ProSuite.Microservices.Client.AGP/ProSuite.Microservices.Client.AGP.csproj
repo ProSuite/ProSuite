@@ -75,6 +75,7 @@
     <Compile Include="GeometryProcessing\RemoveOverlaps\RemoveOverlapsClientUtils.cs" />
     <Compile Include="GeometryProcessing\RemoveOverlaps\RemoveOverlapsResult.cs" />
     <Compile Include="GeometryProcessing\RpcCallUtils.cs" />
+    <Compile Include="GrpcClientConfigUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProtobufConversionUtils.cs" />
   </ItemGroup>

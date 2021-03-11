@@ -1,8 +1,8 @@
 namespace ProSuite.AGP.Solution.WorkListUI.Views
 {
-	public partial class WorkListView
+	public partial class SelectionWorkListView
 	{
-		public WorkListView(SelectionWorkListVm vm)
+		public SelectionWorkListView(WorkListViewModelBase vm)
 		{
 			InitializeComponent();
 			DataContext = vm;

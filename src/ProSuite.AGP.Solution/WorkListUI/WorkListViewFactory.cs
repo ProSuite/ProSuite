@@ -1,33 +1,30 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ArcGIS.Desktop.Framework.Controls;
 using ProSuite.AGP.Solution.WorkListUI.Views;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
 	public static class WorkListViewFactory
 	{
-		public static Tuple<ProWindow, WorkListViewModelBase> CreateView(IWorkList workList)
+		[NotNull]
+		public static ProWindow CreateView([NotNull] IWorkList workList)
 		{
-			if (workList is SelectionWorkList)
-			{
-				var vm = new SelectionWorkListVm(workList);
-				var view = new WorkListView(vm as SelectionWorkListVm);
-				return new Tuple<ProWindow, WorkListViewModelBase>(view,vm);
-			}
+			Assert.ArgumentNotNull(workList, nameof(workList));
 
-			if (workList is IssueWorkList)
+			switch (workList)
 			{
-				var vm = new IssueWorkListVm(workList);
-				var view = new IssueWorkListView(vm as IssueWorkListVm);
-				return new Tuple<ProWindow, WorkListViewModelBase>(view, vm);
+				case SelectionWorkList _:
+					return new SelectionWorkListView(new SelectionWorkListVm(workList));
+				case IssueWorkList _:
+					return new IssueWorkListView(new IssueWorkListVm(workList));
+				default:
+					throw new ArgumentOutOfRangeException(
+						$"Unkown work list type {workList.GetType()}");
 			}
-			else return new Tuple<ProWindow, WorkListViewModelBase>(null,null);
 		}
 	}
 }
