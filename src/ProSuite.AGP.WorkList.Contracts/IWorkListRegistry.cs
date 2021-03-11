@@ -20,6 +20,9 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		IEnumerable<string> GetNames();
 
+		// todo rename Contains
 		bool Exists([NotNull] string name);
+
+		bool TryAdd(IWorkList worklist);
 	}
 }
