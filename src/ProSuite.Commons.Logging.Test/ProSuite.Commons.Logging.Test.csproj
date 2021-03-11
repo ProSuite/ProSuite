@@ -42,7 +42,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="LoggingTest.cs" />
     <Compile Include="MsgBaseTest.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -69,7 +69,6 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Drawing" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -144,14 +143,6 @@
     <Compile Include="Geodatabase\SdeDirectConnectionProvider.cs" />
     <Compile Include="Geodatabase\SdeDirectDbUserConnectionProvider.cs" />
     <Compile Include="Geodatabase\SdeDirectOsaConnectionProvider.cs" />
-    <Compile Include="Processing\GdbProcessUtils.cs" />
-    <Compile Include="Processing\IGdbProcess.cs" />
-    <Compile Include="Processing\IGdbProcessManager.cs" />
-    <Compile Include="Processing\IGroupGdbProcess.cs" />
-    <Compile Include="Processing\IProcessingContext.cs" />
-    <Compile Include="Processing\IXmlCartoProcessesExporter.cs" />
-    <Compile Include="Processing\IXmlCartoProcessesImporter.cs" />
-    <Compile Include="Processing\Reporting\HtmlProcessReportBuilder.cs" />
     <Compile Include="Properties\LocalizableStrings.Designer.cs">
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
       <AutoGen>True</AutoGen>
