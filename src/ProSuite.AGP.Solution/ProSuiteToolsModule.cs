@@ -18,9 +18,9 @@ using ProSuite.AGP.Solution.ProjectItem;
 using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.AGP.WorkList;
 using ProSuite.Application.Configuration;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Microservices.Client;
 using ProSuite.Microservices.Client.AGP;
 using ProSuite.QA.Configurator;
 using ProSuite.QA.ServiceManager;
@@ -32,6 +32,13 @@ namespace ProSuite.AGP.Solution
 	[UsedImplicitly]
 	internal class ProSuiteToolsModule : Module
 	{
+		private const string _loggingConfigFile = "prosuite.logging.arcgispro.xml";
+
+		private const string _microserverExeName = "prosuite_microserver_geometry_processing.exe";
+
+		const string _microserviceClientConfigXml =
+			"prosuite.microservice.geometry_processing.client.config.xml";
+
 		public static event EventHandler<ProSuiteQAConfigEventArgs> OnQAConfigurationChanged;
 
 		private static ProSuiteQAManager _qaManager;
@@ -107,8 +114,6 @@ namespace ProSuite.AGP.Solution
 			}
 			set => msg = value;
 		}
-
-		private const string _loggingConfigFile = "prosuite.logging.arcgispro.xml";
 
 		public GeometryProcessingClient ToolMicroserviceClient { get; private set; }
 
@@ -345,13 +350,11 @@ namespace ProSuite.AGP.Solution
 
 		private async Task<bool> StartToolMicroserviceClientAsync()
 		{
-			const string exeName = "prosuite_microserver_geometry_processing.exe";
-
 			string executablePath;
 			using (_msg.IncrementIndentation("Searching for microservice deployment ({0})...",
-			                                 exeName))
+			                                 _microserverExeName))
 			{
-				executablePath = ConfigurationUtils.GetProSuiteExecutablePath(exeName);
+				executablePath = ConfigurationUtils.GetProSuiteExecutablePath(_microserverExeName);
 
 				if (executablePath == null)
 				{
@@ -362,18 +365,16 @@ namespace ProSuite.AGP.Solution
 				}
 			}
 
-			GeometryProcessingClient result = new GeometryProcessingClient(
-				new ClientChannelConfig()
-				{
-					// TODO: Get from configuration
-					//HostName = "coronet.esri-de.com",
-					HostName = "localhost",
-					Port = 5153
-				});
+			string configFilePath =
+				ConfigurationUtils.GetConfigFilePath(_microserviceClientConfigXml, false);
 
-			ToolMicroserviceClient = result;
+			GeometryProcessingClient result =
+				await GrpcClientConfigUtils.StartGeometryProcessingClient(
+					executablePath, configFilePath);
 
-			return await result.AllowStartingLocalServerAsync(executablePath).ConfigureAwait(false);
+			ToolMicroserviceClient = Assert.NotNull(result);
+
+			return true;
 		}
 	}
 
