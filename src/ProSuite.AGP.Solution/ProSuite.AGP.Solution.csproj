@@ -147,7 +147,7 @@
     <Compile Include="ProSuiteToolsModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WorkLists\DatabaseWorkEnvironment.cs" />
-    <Compile Include="WorkLists\OpenWorklistButton.cs" />
+    <Compile Include="WorkLists\AddWorklistButton.cs" />
     <Compile Include="WorkLists\ShowWorkListsButton.cs" />
     <Compile Include="WorkLists\WorkListsModule.cs" />
     <Compile Include="WorkListUI\InvolvedObjectRow.cs" />

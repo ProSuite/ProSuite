@@ -1,20 +1,19 @@
-using System;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.WorkList;
 using ProSuite.Commons.AGP.WPF;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Solution.WorkLists
 {
 	[UsedImplicitly]
-	internal class OpenWorklistButton : Button
+	internal class AddWorklistButton : Button
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -64,7 +63,10 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			if (string.Equals(extension, ".iwl"))
 			{
-				throw new NotImplementedException("issue work list is not supported yet");
+				string gdbPath = WorkListUtils.GetIssueGeodatabasePath(path);
+				Assert.NotNull(gdbPath, "issue geodatabase does not exist");
+
+				return new DatabaseWorkEnvironment(gdbPath);
 			}
 
 			return null;

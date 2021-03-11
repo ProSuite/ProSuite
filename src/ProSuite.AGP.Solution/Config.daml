@@ -69,7 +69,7 @@
           <button refID="Clients_AGP_ProSuiteSolution_AddWorkList" size="large" />
         </group>
         <group id="ProSuiteTools_QA_Hidden" caption="" appearsOnAddInTab="false">
-          <button refID="Clients_AGP_ProSuiteSolution_WorkLists_OpenWorklistButton" />
+          <button refID="Clients_AGP_ProSuiteSolution_WorkLists_AddWorklistButton" />
           <button refID="ProSuite_AGP_Solution_WorkListUI_IssueWorkListView" size="large" />
         </group>
         <group id="ProSuiteTools_Editing" caption="Edit Tools" keytip="G1">
@@ -133,12 +133,11 @@
             Import and add worklist file(wl) to project<disabledText />
           </tooltip>
         </button>
-        <button id="Clients_AGP_ProSuiteSolution_WorkLists_OpenWorklistButton" caption="OpenWorkList" className="WorkLists.OpenWorklistButton"
+        <button id="Clients_AGP_ProSuiteSolution_WorkLists_AddWorklistButton" caption="Add Work List To Current Map" className="WorkLists.AddWorklistButton"
                 loadOnClick="true"
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png"
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
-          <tooltip heading="Open Worklist file">
-            Initialize and Open Worklist file (wl)<disabledText />
+                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/AddContent16.png"
+                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/AddContent32.png">
+          <tooltip heading="Add Work List To Current Map">Add work list to the active map and open navigator.<disabledText />
           </tooltip>
         </button>
         <!--<button id="Clients_AGP_ProSuiteSolution_WorkList" caption="WorkList" className="ShowWorkListWindow" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
@@ -241,8 +240,7 @@ O: Additional options
           <!--<button refID="esri_DeleteItem" />-->
         </menu>
         <menu id="ProSuiteSolution_ProjectItemWorkListContextMenu" caption="ProSuite Project Item">
-          <button refID="Clients_AGP_ProSuiteSolution_WorkLists_OpenWorklistButton" />
-          <button refID="esri_DeleteItem" />
+          <button refID="Clients_AGP_ProSuiteSolution_WorkLists_AddWorklistButton" />
         </menu>
         <menu id="ProSuiteSolution_WorkListContextMenu" caption="Work list">
           <button refID="esri_DeleteItem" />

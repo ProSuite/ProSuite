@@ -209,7 +209,21 @@ namespace ProSuite.AGP.WorkList
 			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
 
 			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
-			return definition.Workspaces.Select(w => w.Path).FirstOrDefault();
+			List<XmlWorkListWorkspace> workspaces = definition.Workspaces;
+
+			string result = workspaces[0].Path;
+
+			if (workspaces.Count > 0)
+			{
+				_msg.Info(
+					$"There are many issue geodatabases in {worklistDefinitionFile} but only one is expected. Taking the first one {result}");
+			}
+			else
+			{
+				_msg.Debug($"Found issue geodatabase {result} in {worklistDefinitionFile}");
+			}
+
+			return result;
 		}
 
 		[CanBeNull]

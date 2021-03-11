@@ -38,15 +38,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		[CanBeNull] private readonly string _path;
 
-		// todo daro drop!
-		[CanBeNull] private readonly string _wlpath;
-
 		public DatabaseWorkEnvironment() : this(BrowseGeodatabase()) { }
 
-		public DatabaseWorkEnvironment([CanBeNull] string path, [CanBeNull] string wlpath = null)
+		public DatabaseWorkEnvironment([CanBeNull] string path)
 		{
 			_path = path;
-			_wlpath = wlpath;
 		}
 
 		public override string FileSuffix => ".xml.iwl";
@@ -55,6 +51,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			if (_path == null)
 			{
+				_msg.Debug($"{nameof(_path)} is null");
 				return false;
 			}
 
