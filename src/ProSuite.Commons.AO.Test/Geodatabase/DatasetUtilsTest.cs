@@ -1,18 +1,24 @@
-#if Server
-using ESRI.ArcGIS.DatasourcesRaster;
-#else
-using ESRI.ArcGIS.DataSourcesRaster;
-#endif
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
+using OSGeo.GDAL;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Logging;
+#if Server
+using ESRI.ArcGIS.DatasourcesRaster;
+
+#else
+using ESRI.ArcGIS.DataSourcesRaster;
+#endif
 
 namespace ProSuite.Commons.AO.Test.Geodatabase
 {
@@ -111,9 +117,205 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
 
 			IMosaicDataset dataset = DatasetUtils.OpenMosaicDataset(workspace,
-			                                                        "TOPGIS_TLM.TLM_DTM_MOSAIC");
+				"TOPGIS_TLM.TLM_DTM_MOSAIC");
 
 			Assert.NotNull(dataset);
+		}
+
+		[Test]
+		[Category(TestCategory.Sde)]
+		public void CanGetRasterFromMosaicDataset()
+		{
+			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
+
+			IMosaicDataset dataset = DatasetUtils.OpenMosaicDataset(workspace,
+				"TOPGIS_TLM.TLM_DTM_MOSAIC");
+
+			IRaster raster = ((IMosaicDataset3) dataset).GetRaster(string.Empty);
+
+			Assert.NotNull(dataset);
+
+			IRasterCursor rasterCursor = raster.CreateCursor();
+
+			IPixelBlock rasterCursorPixelBlock = rasterCursor.PixelBlock;
+
+			Assert.NotNull(rasterCursorPixelBlock);
+		}
+
+		[Test]
+		[Category(TestCategory.Sde)]
+		public void CanGetRasterFileFromMosaicDatasetUsingSpatialQuery()
+		{
+			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
+
+			IMosaicDataset mosaicDataset = DatasetUtils.OpenMosaicDataset(workspace,
+				"TOPGIS_TLM.TLM_DTM_MOSAIC");
+
+			IFeatureClass rasterCatalog = mosaicDataset.Catalog;
+
+			IEnvelope winterthur = GeometryFactory.CreateEnvelope(
+				2690000, 1254000, 2707500, 1266000,
+				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95));
+
+			winterthur.Expand(-0.1, -0.1, false);
+
+			IQueryFilter spatialFilter =
+				GdbQueryUtils.CreateSpatialFilter(rasterCatalog, winterthur);
+
+			IStringArray stringArray;
+			Stopwatch watch = Stopwatch.StartNew();
+
+			int count = 0;
+			foreach (IFeature catalogFeature in GdbQueryUtils.GetFeatures(
+				rasterCatalog, spatialFilter, false))
+			{
+				// Method 1 (slow):
+				var rasterCatalogItem = (IRasterCatalogItem) catalogFeature;
+
+				IRasterDataset rasterDataset = rasterCatalogItem.RasterDataset;
+				var itemPaths = (IItemPaths) rasterDataset;
+				stringArray = itemPaths.GetPaths();
+				Marshal.ReleaseComObject(rasterDataset);
+
+				Assert.AreEqual(1, stringArray.Count);
+
+				string resultPathViaRasterDataset = stringArray.Element[0];
+
+				// Method 2 (fast):
+				var itemPathsQuery = (IItemPathsQuery) mosaicDataset;
+
+				if (itemPathsQuery.QueryPathsParameters == null)
+				{
+					itemPathsQuery.QueryPathsParameters = new QueryPathsParametersClass();
+				}
+
+				stringArray = itemPathsQuery.GetItemPaths(catalogFeature);
+				Assert.AreEqual(1, stringArray.Count);
+
+				string resultPathViaItemPathsQuery = stringArray.Element[0];
+				Assert.AreEqual(resultPathViaRasterDataset, resultPathViaItemPathsQuery);
+				count++;
+			}
+
+			Console.WriteLine("Successfully extracted {0} raster paths in {1}s", count,
+			                  watch.Elapsed.TotalSeconds);
+		}
+
+		[Test]
+		[Category(TestCategory.Sde)]
+		public void CanOpenRasterFileFromMosaicDatasetUsingSpatialQueryGdal_Learning()
+		{
+			// TODO: Corrext GDAL native reference. Work-around: copy the x64 directory to the output dir
+			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
+
+			IMosaicDataset mosaicDataset = DatasetUtils.OpenMosaicDataset(workspace,
+				"TOPGIS_TLM.TLM_DTM_MOSAIC");
+
+			IFeatureClass rasterCatalog = mosaicDataset.Catalog;
+
+			IPoint winterthurLL = GeometryFactory.CreatePoint(
+				2690021, 1254011,
+				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95));
+
+			IQueryFilter spatialFilter =
+				GdbQueryUtils.CreateSpatialFilter(rasterCatalog, winterthurLL);
+
+			Gdal.AllRegister();
+
+			IStringArray stringArray;
+			Stopwatch watch = Stopwatch.StartNew();
+
+			List<IFeature> features = GdbQueryUtils.GetFeatures(
+				rasterCatalog, spatialFilter, false).ToList();
+
+			Assert.True(features.Count > 0);
+
+			var itemPathsQuery = (IItemPathsQuery) mosaicDataset;
+			itemPathsQuery.QueryPathsParameters = new QueryPathsParametersClass();
+
+			stringArray = itemPathsQuery.GetItemPaths(features[0]);
+
+			string rasterPath = stringArray.Element[0];
+
+			Dataset ds = Gdal.Open(rasterPath, Access.GA_ReadOnly);
+
+			if (ds == null)
+			{
+				Console.WriteLine("Can't open " + rasterPath);
+				return;
+			}
+
+			Console.WriteLine("Raster dataset parameters:");
+			Console.WriteLine("  Projection: " + ds.GetProjectionRef());
+			Console.WriteLine("  RasterCount: " + ds.RasterCount);
+			Console.WriteLine("  RasterSize (" + ds.RasterXSize + "," + ds.RasterYSize + ")");
+
+			double[] adfGeoTransform = new double[6];
+			ds.GetGeoTransform(adfGeoTransform);
+
+			double originX = adfGeoTransform[0];
+			double originY = adfGeoTransform[3];
+
+			Console.WriteLine($"Origin: {originX} | {originY}");
+
+			double pixelSizeX = adfGeoTransform[1];
+			double pixelSizeY = adfGeoTransform[5];
+
+			Console.WriteLine($"Pixel Size: {pixelSizeX} | {pixelSizeY}");
+
+			/* -------------------------------------------------------------------- */
+			/*      Get driver                                                      */
+			/* -------------------------------------------------------------------- */
+			Driver drv = ds.GetDriver();
+
+			if (drv == null)
+			{
+				Console.WriteLine("Can't get driver.");
+				Environment.Exit(-1);
+			}
+
+			Console.WriteLine("Using driver " + drv.LongName);
+
+			/* -------------------------------------------------------------------- */
+			/*      Get raster band                                                 */
+			/* -------------------------------------------------------------------- */
+			for (int iBand = 1; iBand <= ds.RasterCount; iBand++)
+			{
+				Band band = ds.GetRasterBand(iBand);
+				Console.WriteLine("Band " + iBand + " :");
+				Console.WriteLine("   DataType: " + band.DataType);
+				Console.WriteLine("   Size (" + band.XSize + "," + band.YSize + ")");
+				Console.WriteLine("   PaletteInterp: " +
+				                  band.GetRasterColorInterpretation().ToString());
+
+				band.GetBlockSize(out int blockSizeX, out int blockSizeY);
+
+				Console.WriteLine("   Block Size (" + blockSizeX + "," + blockSizeY + ")");
+
+				for (int iOver = 0; iOver < band.GetOverviewCount(); iOver++)
+				{
+					Band over = band.GetOverview(iOver);
+					Console.WriteLine("      OverView " + iOver + " :");
+					Console.WriteLine("         DataType: " + over.DataType);
+					Console.WriteLine("         Size (" + over.XSize + "," + over.YSize + ")");
+					Console.WriteLine("         PaletteInterp: " +
+					                  over.GetRasterColorInterpretation());
+				}
+
+				// Get the value at winterthurLL:
+				int pxlOffsetX = (int) Math.Floor((winterthurLL.X - originX) / pixelSizeX);
+				int pxlOffsetY = (int) Math.Floor((winterthurLL.Y - originY) / pixelSizeY);
+
+				double[] buffer = new double[1];
+				band.ReadRaster(pxlOffsetX, pxlOffsetY, 1, 1, buffer, 1, 1, 0, 0);
+
+				double z = buffer[0];
+
+				// TODO: Theoretically there is an underlying block cache which would make subsequent
+				//       reads in a similar area very fast (TEST!) - probably the same as IRaster behaviour.
+				// TODO: Bilinear interpolation if it's not the middle of a pixel!
+				Console.WriteLine("Z value at {0}, {1}: {2}", winterthurLL.X, winterthurLL.Y, z);
+			}
 		}
 
 		[Test]
@@ -126,7 +328,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IFeatureWorkspace workspace =
 				WorkspaceUtils.OpenPgdbFeatureWorkspace(_simpleGdbPath);
 			IFeatureClass featureClass = DatasetUtils.OpenFeatureClass(workspace,
-			                                                           featureClassName);
+				featureClassName);
 
 			IList<IFeature> rows = GdbQueryUtils.FindList(featureClass, "OBJECTID = 1");
 			Assert.IsTrue(rows.Count == 1,

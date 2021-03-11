@@ -152,6 +152,12 @@
     <Content Include="TestData\README.txt" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="GDAL">
+      <Version>2.4.4</Version>
+    </PackageReference>
+    <PackageReference Include="GDAL.Native">
+      <Version>2.4.4</Version>
+    </PackageReference>
     <PackageReference Include="NUnit">
       <Version>3.12.0</Version>
     </PackageReference>
