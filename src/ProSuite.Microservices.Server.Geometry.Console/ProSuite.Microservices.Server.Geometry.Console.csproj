@@ -101,12 +101,15 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ConfigurationUtils.cs" />
     <Compile Include="MicroserverArguments.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ProSuite.Application.Configuration\ProSuite.Application.Configuration.csproj">
+      <Project>{eab868e4-d8fd-4ab4-9eda-a9291e7cfeab}</Project>
+      <Name>ProSuite.Application.Configuration</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">
       <Project>{7E4B0861-83ED-4D12-BE27-93C9053C88CA}</Project>
       <Name>ProSuite.Commons.AO</Name>
@@ -144,7 +147,7 @@
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>
-    <Content Include="Config\prosuite.logging.microservice.geometry_processing.xml">
+    <Content Include="Config\prosuite.logging.microserver.geometry_processing.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Config\prosuite.microserver.geometry_processing.xml">
