@@ -7,18 +7,25 @@ using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList
 {
 	public abstract class WorkEnvironmentBase
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		// TODO DARO environment should be stateless. get state from module
 		[CanBeNull]
 		public string UniqueName { get; private set; }
 
+		public abstract string FileSuffix { get; }
+
 		[NotNull]
-		public async Task<IWorkList> CreateWorkListAsync([NotNull] IWorkListContext context)
+		public async Task<IWorkList> CreateWorkListAsync([NotNull] string homeFolderPath, [NotNull] string uniqueName)
 		{
-			Assert.ArgumentNotNull(context, nameof(context));
+			Assert.ArgumentNotNullOrEmpty(homeFolderPath, nameof(homeFolderPath));
+			Assert.ArgumentNotNullOrEmpty(uniqueName, nameof(uniqueName));
 
 			Map map = MapView.Active.Map;
 
@@ -30,9 +37,13 @@ namespace ProSuite.AGP.WorkList
 			BasicFeatureLayer[] featureLayers = await Task.WhenAll(GetLayers(map).Select(EnsureStatusFieldCoreAsync));
 
 			// create new name if worklist do not have one (stored in XML)
-			UniqueName = GetWorklistId() ?? GetWorkListName(context);
+			//UniqueName = GetWorklistId() ?? GetWorkListName(context);
+			UniqueName = uniqueName;
 
-			IRepository stateRepository = CreateStateRepositoryCore(context.GetPath(UniqueName), UniqueName);
+			string path = WorkListUtils.GetUri(homeFolderPath, uniqueName, FileSuffix).LocalPath;
+			_msg.Debug($"Create work list state repository in {path}");
+
+			IRepository stateRepository = CreateStateRepositoryCore(path, UniqueName);
 
 			IWorkItemRepository repository = CreateItemRepositoryCore(featureLayers, stateRepository);
 
@@ -48,8 +59,6 @@ namespace ProSuite.AGP.WorkList
 		{
 			return await Task.FromResult(true);
 		}
-
-		protected abstract string GetWorkListName(IWorkListContext context);
 
 		protected abstract IEnumerable<BasicFeatureLayer> GetLayers(Map map);
 
@@ -67,11 +76,6 @@ namespace ProSuite.AGP.WorkList
 		protected static Type GetWorkListTypeCore<T>() where T : IWorkList
 		{
 			return typeof(T);
-		}
-
-		public virtual string GetWorklistId()
-		{
-			return null;
 		}
 	}
 }

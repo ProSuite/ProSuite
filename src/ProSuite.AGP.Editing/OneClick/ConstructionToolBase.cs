@@ -24,6 +24,8 @@ namespace ProSuite.AGP.Editing.OneClick
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		private const Key _keyRestorePrevious = Key.R;
+
 		private Geometry _editSketchBackup;
 		private Geometry _previousSketch;
 
@@ -51,6 +53,8 @@ namespace ProSuite.AGP.Editing.OneClick
 				return SketchType != SketchGeometryType.Rectangle;
 			}
 		}
+
+		protected virtual bool SupportRestoreLastSketch => true;
 
 		#region MapTool overrides
 
@@ -197,7 +201,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				_editSketchBackup = null;
 			}
 
-			if (k.Key == Key.R)
+			if (k.Key == _keyRestorePrevious)
 			{
 				RestorePreviousSketch();
 			}
@@ -235,6 +239,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					}
 					else
 					{
+						ClearSketchAsync();
 						SelectionUtils.ClearSelection(ActiveMapView.Map);
 					}
 
@@ -400,8 +405,13 @@ namespace ProSuite.AGP.Editing.OneClick
 			StartSketchAsync();
 		}
 
-		protected void RememberSketch(Geometry knownSketch = null)
+		private void RememberSketch(Geometry knownSketch = null)
 		{
+			if (! SupportRestoreLastSketch)
+			{
+				return;
+			}
+
 			var sketch = knownSketch ?? GetCurrentSketchAsync().Result;
 
 			if (sketch != null && ! sketch.IsEmpty)
@@ -410,11 +420,43 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		protected void RestorePreviousSketch()
+		private void RestorePreviousSketch()
 		{
-			if (_previousSketch != null && ! _previousSketch.IsEmpty)
+			if (! SupportRestoreLastSketch)
+			{
+				return;
+			}
+
+			if (_previousSketch == null || _previousSketch.IsEmpty)
+			{
+				_msg.Warn("There is no previous sketch to restore.");
+
+				return;
+			}
+
+			if (! IsInSketchMode)
+			{
+				// If a non-rectangular sketch is set while SketchType is rectangle (or probably generally the wrong type)
+				// sketching is not possible any more and the application appears hanging
+
+				// Try start sketch mode:
+				IList<Feature> selection =
+					SelectionUtils.GetSelectedFeatures(ActiveMapView).ToList();
+
+				if (CanUseSelection(selection))
+				{
+					AfterSelection(selection, null);
+				}
+			}
+
+			if (IsInSketchMode)
 			{
 				SetCurrentSketchAsync(_previousSketch);
+			}
+			else
+			{
+				_msg.Warn("Sketch cannot be restored in selection phase. " +
+				          "Please try again in the sketch phase.");
 			}
 		}
 	}

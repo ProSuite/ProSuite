@@ -119,7 +119,7 @@ namespace ProSuite.Application.Configuration
 		}
 
 		private static bool TryGetExecutablePathFromRegisteredInstallDir([NotNull] string exeName,
-		                                                                 out string fullPath)
+			out string fullPath)
 		{
 			fullPath = null;
 
@@ -178,9 +178,9 @@ namespace ProSuite.Application.Configuration
 			// TODO: Add EnvironmentVaraiables static class (in core)
 
 			fullPath = null;
-			const string extraBinDir = "PROSUITE_EXTRA_BIN";
+			const string extraBinDirEnvVar = "PROSUITE_EXTRA_BIN";
 
-			string exeLocation = Environment.GetEnvironmentVariable(extraBinDir);
+			string exeLocation = Environment.GetEnvironmentVariable(extraBinDirEnvVar);
 
 			if (! string.IsNullOrEmpty(exeLocation))
 			{
@@ -189,16 +189,20 @@ namespace ProSuite.Application.Configuration
 				if (File.Exists(result))
 				{
 					_msg.DebugFormat(
-						"Using executable defined by environment variable ({0}): {1}",
-						extraBinDir, exeLocation);
+						"Using executable from directory defined by environment variable ({0}): {1}",
+						extraBinDirEnvVar, exeLocation);
 
 					fullPath = result;
 					return true;
 				}
 
 				_msg.DebugFormat(
-					"The file {0} was not found in the directory defined by environment variable {1}.",
-					exeLocation, extraBinDir);
+					"The file {0} was not found in the directory {1} defined by environment variable {2}.",
+					exeName, exeLocation, extraBinDirEnvVar);
+			}
+			else
+			{
+				_msg.DebugFormat("The environment variable {0} is not defined.", extraBinDirEnvVar);
 			}
 
 			return false;

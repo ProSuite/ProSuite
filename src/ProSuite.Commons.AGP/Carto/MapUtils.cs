@@ -19,7 +19,8 @@ namespace ProSuite.Commons.AGP.Carto
 	public static class MapUtils
 	{
 		[NotNull]
-		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
+		public static Dictionary<Table, List<long>>
+			GetDistinctSelectionByTable(
 			[NotNull] IEnumerable<BasicFeatureLayer> layers)
 		{
 			var result = new Dictionary<Table, SimpleSet<long>>();
@@ -505,9 +506,9 @@ namespace ProSuite.Commons.AGP.Carto
 			return GeometryEngine.Instance.Distance(mapPoint, radiusMapPoint);
 		}
 
-		public static bool HasSelection(BasicFeatureLayer featureLayer)
+		public static bool HasSelection([CanBeNull] BasicFeatureLayer featureLayer)
 		{
-			return featureLayer.SelectionCount > 0;
+			return featureLayer?.SelectionCount > 0;
 		}
 
 		public static IEnumerable<Table> Distinct(
@@ -520,6 +521,22 @@ namespace ProSuite.Commons.AGP.Carto
 			this IEnumerable<BasicFeatureLayer> layers)
 		{
 			return layers.Distinct(new BasicFeatureLayerComparer());
+		}
+
+
+		public static IEnumerable<T> GetRows<T>([NotNull] BasicFeatureLayer layer,
+		                                        [CanBeNull] QueryFilter filter = null)
+			where T : Row
+		{
+			Assert.ArgumentNotNull(layer, nameof(layer));
+
+			using (RowCursor cursor = layer.Search(filter))
+			{
+				while (cursor.MoveNext())
+				{
+					yield return (T)cursor.Current;
+				}
+			}
 		}
 	}
 

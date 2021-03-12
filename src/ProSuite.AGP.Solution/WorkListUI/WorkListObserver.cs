@@ -3,101 +3,85 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Controls;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.WPF;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
-	class WorkListObserver : IWorkListObserver
+	internal class WorkListObserver : IWorkListObserver, IDisposable
 	{
-		[CanBeNull]
-		private ProWindow _view { get; set; }
+		[NotNull] private readonly IWorkList _worklist;
+		[CanBeNull] private ProWindow _view;
 
-		public IWorkList WorkList { get; private set; }
-
-		[CanBeNull]
-		private WorkListViewModelBase ViewModel { get; set; }
-
-		private static bool EnsureWorkListsMatch(IWorkList workList, IWorkList compareWorkList)
+		public WorkListObserver([NotNull] IWorkList worklist)
 		{
-			if (workList != null && compareWorkList != null)
-			{
-				return workList.Name == compareWorkList.Name;
-			}
+			Assert.ArgumentNotNull(worklist, nameof(worklist));
 
-			return false;
+			_worklist = worklist;
 		}
 
-		//Utility method to consolidate UI update logic
-		private static void RunOnUIThread(Action action)
+		public void Dispose()
 		{
-			if (FrameworkApplication.Current.Dispatcher.CheckAccess())
-				action(); //No invoke needed
-			else
-				//We are not on the UI
-				FrameworkApplication.Current.Dispatcher.BeginInvoke(action);
+			_worklist.Dispose();
+
+			(_view as IDisposable)?.Dispose();
 		}
 
-		public void WorkListAdded(IWorkList workList)
+		[CanBeNull]
+		public ProWindow View => _view;
+
+		public void Close()
 		{
-			if (WorkList != null)
+			if (_view == null)
 			{
 				return;
 			}
 
-			RunOnUIThread(() =>
+			ViewUtils.RunOnUIThread(() => { _view.Close(); });
+		}
+
+		public void Show(string title)
+		{
+			if (_view != null)
 			{
-				var tuple = WorkListViewFactory.CreateView(workList);
-				_view = tuple.Item1;
-				ViewModel = tuple.Item2;
-				WorkList = workList;
+				if (! string.IsNullOrEmpty(title))
+				{
+					_view.Title = title;
+				}
+
+				// show work list button clicked > we're already on UI thread
+				_view.Activate();
+				return;
+			}
+
+			ViewUtils.RunOnUIThread(() =>
+			{
+				_view = WorkListViewFactory.CreateView(_worklist);
+
+				_view.Owner = FrameworkApplication.Current.MainWindow;
+
+				if (! string.IsNullOrEmpty(title))
+				{
+					_view.Title = title;
+				}
+
+				_view.Closed += _view_Closed;
+				
+				_view.Show();
 			});
 		}
 
-		public void WorkListRemoved(IWorkList workList)
+		private void _view_Closed(object sender, EventArgs e)
 		{
-			if (ViewModel == null) return;
-
-			if (! EnsureWorkListsMatch(workList, ViewModel.CurrentWorkList))
+			if (_view == null)
 			{
 				return;
 			}
 
-			RunOnUIThread(() =>
-			{
-				_view?.Close();
-				WorkList = null;
-				ViewModel = null;
-				_view = null;
-			});
-		}
-
-		public void WorkListModified(IWorkList workList)
-		{
-			if (ViewModel == null)
-			{
-				return;
-			}
-
-			if (! EnsureWorkListsMatch(workList, ViewModel.CurrentWorkList))
-			{
-				return;
-			}
-
-			WorkList = workList;
-			ViewModel.CurrentWorkList = workList;
-		}
-
-		public void Show(IWorkList workList)
-		{
-			if (ViewModel == null)
-			{
-				return;
-			}
-
-			if (EnsureWorkListsMatch(workList, ViewModel.CurrentWorkList))
-			{
-				RunOnUIThread(() => _view?.Show());
-			}
+			// in WPF a closed window cannot be re-openend again
+			_view.Closed -= _view_Closed;
+			_view = null;
 		}
 	}
 }

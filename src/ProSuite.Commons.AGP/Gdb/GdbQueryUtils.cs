@@ -65,17 +65,24 @@ namespace ProSuite.Commons.AGP.Gdb
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
-			string oidField = table.GetDefinition().GetObjectIDField();
+			return GetRow<Row>(table, oid);
+		}
 
-			using (RowCursor cursor =
-				table.Search(new QueryFilter {WhereClause = $"{oidField} = {oid}"}, false))
+		public static T GetRow<T>([NotNull] Table table, long oid)
+			where T : Row
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+
+			QueryFilter filter = CreateFilter(new[] {oid});
+
+			using (RowCursor cursor = table.Search(filter, false))
 			{
 				if (! cursor.MoveNext())
 				{
 					return null;
 				}
 
-				Row result = cursor.Current;
+				var result = (T) cursor.Current;
 
 				// todo daro: remove later when GetRow is used intensively throughout the solution
 				Assert.False(cursor.MoveNext(), "more than one row found");

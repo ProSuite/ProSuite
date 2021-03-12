@@ -344,7 +344,7 @@ namespace ProSuite.Commons.Geometry
 				return true;
 			}
 
-			return true;
+			return false;
 		}
 
 		public bool IsFirstPointInPart(int vertexIndex)

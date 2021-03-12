@@ -10,7 +10,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		public SelectionWorkListVm(IWorkList workList)
 		{
 			CurrentWorkList = workList;
-			CurrentWorkList.GoNext();
 			CurrentWorkItem = new SelectionWorkItemVm(CurrentWorkList.Current as SelectionItem);
 		}
 

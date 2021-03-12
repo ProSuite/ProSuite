@@ -10,6 +10,7 @@ using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Xml;
 using ProSuite.DomainModel.Core;
@@ -19,6 +20,31 @@ namespace ProSuite.AGP.WorkList
 	public static class WorkListUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private const string WorklistsFolder = "Worklists";
+
+		[NotNull]
+		public static string GetLocalWorklistsFolder(string homeFolderPath)
+		{
+			return Path.Combine(homeFolderPath, WorklistsFolder);
+		}
+		
+		[NotNull]
+		public static Uri GetUri([NotNull] string homeFolderPath,
+		                         [NotNull] string workListName,
+		                         [NotNull] string fileSuffix)
+		{
+			//var baseUri = new Uri("worklist://localhost/");
+			string folder = GetLocalWorklistsFolder(homeFolderPath);
+
+			if (! FileSystemUtils.EnsureFolderExists(folder))
+			{
+				Assert.True(Directory.Exists(homeFolderPath), $"{homeFolderPath} does not exist");
+				return new Uri(homeFolderPath);
+			}
+
+			return new Uri(Path.Combine(folder, $"{workListName}{fileSuffix}"));
+		}
 
 		[NotNull]
 		public static IWorkList Create([NotNull] XmlWorkListDefinition definition)
@@ -148,25 +174,71 @@ namespace ProSuite.AGP.WorkList
 			return Path.GetFileNameWithoutExtension(temp);
 		}
 
-		public static string GetWorklistPath(string path)
+		// todo daro rename GetNameFromUri?
+		public static string ParseName(string layerUri)
 		{
-			if (! path.EndsWith("wl"))
-				return path;
+			int index = layerUri.LastIndexOf('/');
+			if (index < 0)
+			{
+				throw new ArgumentException($"{layerUri} is not a valid layer URI");
+			}
 
-			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
-
-			XmlWorkListDefinition definition = helper.ReadFromFile(path);
-			return definition.Workspaces.Select(w => w.Path).FirstOrDefault();
+			string name = layerUri.Substring(index + 1);
+			return Path.GetFileNameWithoutExtension(name);
 		}
 
 		[CanBeNull]
-		public static string GetXmlWorklistName(string worklistPath)
+		public static string GetIssueGeodatabasePath([NotNull] string worklistDefinitionFile)
 		{
-			if (String.IsNullOrEmpty(worklistPath))
+			Assert.ArgumentNotNullOrEmpty(worklistDefinitionFile, nameof(worklistDefinitionFile));
+
+			if (! File.Exists(worklistDefinitionFile))
+			{
+				_msg.Debug($"{worklistDefinitionFile} does not exist");
 				return null;
+			}
+
+			string extension = Path.GetExtension(worklistDefinitionFile);
+
+			if (! string.Equals(extension, ".iwl"))
+			{
+				_msg.Debug($"{worklistDefinitionFile} is no issue work list");
+				return null;
+			}
 
 			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
-			XmlWorkListDefinition definition = helper.ReadFromFile(worklistPath);
+
+			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
+			List<XmlWorkListWorkspace> workspaces = definition.Workspaces;
+
+			string result = workspaces[0].Path;
+
+			if (workspaces.Count > 0)
+			{
+				_msg.Info(
+					$"There are many issue geodatabases in {worklistDefinitionFile} but only one is expected. Taking the first one {result}");
+			}
+			else
+			{
+				_msg.Debug($"Found issue geodatabase {result} in {worklistDefinitionFile}");
+			}
+
+			return result;
+		}
+
+		[CanBeNull]
+		public static string GetWorklistName([NotNull] string worklistDefinitionFile)
+		{
+			Assert.ArgumentNotNullOrEmpty(worklistDefinitionFile, nameof(worklistDefinitionFile));
+
+			if (! File.Exists(worklistDefinitionFile))
+			{
+				_msg.Debug($"{worklistDefinitionFile} does not exist");
+				return null;
+			}
+
+			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
+			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
 			return definition.Name;
 		}
 	}

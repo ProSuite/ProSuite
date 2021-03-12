@@ -172,7 +172,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			get => CurrentWorkItem.Status;
 			set
 			{
-				if (CurrentWorkItem.Status != value)
+				if (CurrentWorkItem.Status != value && CurrentWorkList.Current != null)
 				{
 					CurrentWorkItem.Status = value;
 

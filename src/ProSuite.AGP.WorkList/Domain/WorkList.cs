@@ -22,7 +22,7 @@ namespace ProSuite.AGP.WorkList.Domain
 	/// </summary>
 	// todo daro: separate geometry processing code
 	// todo daro: separate QueuedTask code
-	public abstract class WorkList : IWorkList
+	public abstract class WorkList : IWorkList, IEquatable<WorkList>
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -87,6 +87,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		public event PropertyChangedEventHandler PropertyChanged;
 
 		public string Name { get; }
+
+		public abstract string DisplayName { get; }
 
 		// NOTE: An empty work list should return null and not an empty envelope.
 		//		 Pluggable Datasource cannot handle an empty envelope.
@@ -1106,5 +1108,39 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
 		}
+
+		#region IEquatable implementation
+
+		public bool Equals(WorkList other)
+		{
+			return string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != GetType())
+			{
+				return false;
+			}
+
+			return Equals((WorkList) obj);
+		}
+
+		public override int GetHashCode()
+		{
+			return StringComparer.OrdinalIgnoreCase.GetHashCode(Name);
+		}
+
+		#endregion
 	}
 }
