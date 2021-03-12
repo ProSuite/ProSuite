@@ -76,6 +76,7 @@
     <Compile Include="Text\RegexUtilsTest.cs" />
     <Compile Include="Text\RichTextBuilderTest.cs" />
     <Compile Include="Text\StringUtilsTest.cs" />
+    <Compile Include="Text\TaggingUtilsTest.cs" />
     <Compile Include="Xml\XmlUtilsTest.cs" />
   </ItemGroup>
   <ItemGroup>
