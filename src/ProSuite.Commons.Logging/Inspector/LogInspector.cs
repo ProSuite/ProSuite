@@ -6,6 +6,12 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Logging.Inspector
 {
+	/// <summary>
+	/// Capture log events into a fixed-size priority queue.
+	/// Useful to collect log events during long-running processes
+	/// for later user presentation. Usage: Attach(), run process,
+	/// Detach(), present LastSnapshot in UI.
+	/// </summary>
 	public class LogInspector : IDisposable
 	{
 		private const int DefaultCapacity = 4096;
@@ -25,7 +31,6 @@ namespace ProSuite.Commons.Logging.Inspector
 		public int Capacity { get; set; }
 		public LogInspectorLevel Threshold { get; set; }
 		public string LoggerPrefix { get; set; }
-		public ILoggingContextInfo ContextInfo { get; set; }
 
 		public bool IsAttached => _appender != null;
 
@@ -50,7 +55,6 @@ namespace ProSuite.Commons.Logging.Inspector
 			var appender = new BufferAppender(Math.Max(1, Capacity));
 			var guid = Guid.NewGuid().ToString("N"); // hex digits only
 			appender.Name = $"Inspector_{guid}";
-			appender.Fix = FixFlags.Partial; // Message+ThreadName+Domain+Exception+Properties
 			appender.Threshold = ConvertLevel(Threshold);
 
 			if (! string.IsNullOrEmpty(LoggerPrefix))
@@ -79,14 +83,14 @@ namespace ProSuite.Commons.Logging.Inspector
 		/// Take a snapshot of the captured logging events
 		/// while attached to an event source.
 		/// </summary>
-		public void TakeSnapshot(ILoggingContextInfo contextInfo = null)
+		public void TakeSnapshot()
 		{
 			if (_appender == null)
 			{
 				throw new InvalidOperationException("Not attached");
 			}
 
-			LastSnapshot = _appender.Snapshot(contextInfo ?? ContextInfo);
+			LastSnapshot = _appender.Snapshot();
 		}
 
 		/// <summary>

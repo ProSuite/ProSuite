@@ -10,7 +10,6 @@ namespace ProSuite.Commons.Logging.Inspector
 	public class BufferAppender : AppenderSkeleton
 	{
 		private readonly CaptureBuffer _buffer;
-		private FixFlags _fixFlags;
 		private int _errorCount;
 		private int _droppedErrors;
 		private int _warnCount;
@@ -24,7 +23,6 @@ namespace ProSuite.Commons.Logging.Inspector
 		public BufferAppender(int capacity)
 		{
 			_buffer = new CaptureBuffer(capacity);
-			_fixFlags = FixFlags.All;
 			_sync = new object();
 		}
 
@@ -33,19 +31,13 @@ namespace ProSuite.Commons.Logging.Inspector
 			get { lock(_sync) return _buffer.Capacity; }
 		}
 
-		public FixFlags Fix
-		{
-			get => _fixFlags;
-			set => _fixFlags = value;
-		}
-
 		[NotNull]
-		public LogSnapshot Snapshot(ILoggingContextInfo contextInfo)
+		public LogSnapshot Snapshot()
 		{
 			lock (_sync)
 			{
 				var capturedEvents = _buffer.GetSnapshot()
-				                            .Select(e => ConvertEvent(e, contextInfo))
+				                            .Select(LogInspectorUtils.ConvertEvent)
 				                            .ToArray();
 
 				return new LogSnapshot(Capacity, capturedEvents)
@@ -62,28 +54,6 @@ namespace ProSuite.Commons.Logging.Inspector
 			}
 		}
 
-		private static LogInspectorEvent ConvertEvent([NotNull] LoggingEvent loggingEvent,
-		                                              ILoggingContextInfo contextInfo = null)
-		{
-			var level = ConvertLevel(loggingEvent.Level);
-			var message = loggingEvent.RenderedMessage ?? Convert.ToString(loggingEvent.MessageObject);
-			ILoggingContext context = contextInfo?.GetLoggingContext(loggingEvent);
-			return new LogInspectorEvent(level, loggingEvent.TimeStamp,
-			                             loggingEvent.LoggerName, message,
-			                             loggingEvent.ExceptionObject, context);
-		}
-
-		private static LogInspectorLevel ConvertLevel(Level level)
-		{
-			if (level == null) return LogInspectorLevel.All;
-			if (level < Level.Debug) return LogInspectorLevel.All;
-			if (level < Level.Info) return LogInspectorLevel.Debug;
-			if (level < Level.Warn) return LogInspectorLevel.Info;
-			if (level < Level.Error) return LogInspectorLevel.Warn;
-			if (level < Level.Fatal) return LogInspectorLevel.Error;
-			return LogInspectorLevel.Off;
-		}
-
 		#region AppenderSkeleton
 
 		protected override void Append(LoggingEvent loggingEvent)
@@ -94,8 +64,8 @@ namespace ProSuite.Commons.Logging.Inspector
 			}
 
 			// Fix volatile data in the event prior to storing.
-			// There's a fix more/less versus memory tradeoff.
-			loggingEvent.Fix = Fix;
+			// There is a fix more/less versus memory tradeoff.
+			loggingEvent.Fix = FixFlags.Partial; // Message+ThreadName+Domain+Exception+Properties;
 
 			lock (_sync)
 			{
@@ -106,6 +76,10 @@ namespace ProSuite.Commons.Logging.Inspector
 				UpdateDrops(droppedLevel);
 			}
 		}
+
+		#endregion
+
+		#region Private methods
 
 		private void UpdateCounts(Level level)
 		{

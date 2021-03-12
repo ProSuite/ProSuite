@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 
 namespace ProSuite.Commons.Logging.Inspector
 {
-	public class LogInspectorEvent
+	public class LogInspectorEntry
 	{
-		public LogInspectorEvent(LogInspectorLevel level, DateTime timeStamp, string loggerName,
+		public LogInspectorEntry(LogInspectorLevel level, DateTime timeStamp, string loggerName,
 		                         string message, Exception exception = null,
 		                         ILoggingContext context = null)
 		{
