@@ -8,6 +8,7 @@ using System.Threading;
 using CommandLine;
 using Grpc.Core;
 using Grpc.HealthCheck;
+using ProSuite.Application.Configuration;
 using ProSuite.Commons;
 using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Licensing;
@@ -15,6 +16,7 @@ using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Xml;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Server.AO;
 using ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape;
@@ -30,7 +32,7 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 		private const string _configFileName = "prosuite.microserver.geometry_processing.xml";
 
 		private const string _logConfigFileName =
-			"prosuite.logging.microservice.geometry_processing.xml";
+			"prosuite.logging.microserver.geometry_processing.xml";
 
 		private const string _verboseLoggingEnvVar = "PROSUITE_MICROSERVICE_VERBOSE_LOGGING";
 
@@ -89,8 +91,8 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 			{
 				MicroserverArguments arguments;
 				string configFilePath;
-				if (! ConfigurationUtils.TryGetArgumentsFromConfigFile(
-					    args, _configFileName, out arguments, out configFilePath))
+				if (! TryGetArgumentsFromConfigFile(args, _configFileName, out arguments,
+				                                    out configFilePath))
 				{
 					var parsedArgs = Parser.Default.ParseArguments<MicroserverArguments>(args);
 
@@ -201,16 +203,14 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 			return server;
 		}
 
-		public static void ConfigureLogging(bool verboseRequired,
-		                                    [NotNull] string logConfigFileName)
+		private static void ConfigureLogging(bool verboseRequired,
+		                                     [NotNull] string logConfigFileName)
 		{
 			int processId = Process.GetCurrentProcess().Id;
 
-			LoggingConfigurator.SetGlobalProperty("LogFileSuffix", $"PID_{processId}");
+			//LoggingConfigurator.SetGlobalProperty("LogFileSuffix", $"PID_{processId}");
 
-			LoggingConfigurator.Configure(logConfigFileName,
-			                              GetLogConfigPaths(),
-			                              useDefaultConfiguration: true);
+			AppLoggingConfigurator.Configure(logConfigFileName);
 
 			_msg.ReportMemoryConsumptionOnError = true;
 
@@ -260,6 +260,32 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 
 			yield return binDir;
 			yield return Path.Combine(binDir, configDir);
+		}
+
+		private static bool TryGetArgumentsFromConfigFile(string[] args, string configFileName,
+		                                                  out MicroserverArguments arguments,
+		                                                  out string configFilePath)
+		{
+			arguments = null;
+			configFilePath = null;
+
+			if (args.Length == 0)
+			{
+				_msg.InfoFormat("Getting server host/port parameters from configuration file.");
+
+				configFilePath = ConfigurationUtils.GetConfigFilePath(configFileName, false);
+
+				if (configFilePath != null)
+				{
+					XmlSerializationHelper<MicroserverArguments> helper =
+						new XmlSerializationHelper<MicroserverArguments>();
+
+					arguments = helper.ReadFromFile(configFilePath);
+					return true;
+				}
+			}
+
+			return false;
 		}
 	}
 

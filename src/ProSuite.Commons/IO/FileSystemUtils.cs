@@ -375,6 +375,27 @@ namespace ProSuite.Commons.IO
 			return false;
 		}
 
+		public static bool EnsureFolderExists([NotNull] string path)
+		{
+			if (Directory.Exists(path))
+			{
+				return true;
+			}
+
+			try
+			{
+				_msg.Debug($"Try to create folder {path}");
+				Directory.CreateDirectory(path);
+
+				return true;
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Cannot create folder {path}", e);
+				return false;
+			}
+		}
+
 		/// <summary>
 		/// Gets the available space (in gigabytes) of a drive or UNC network location.
 		/// </summary>

@@ -16,13 +16,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 {
 	public class InMemoryWorkEnvironment : WorkEnvironmentBase
 	{
-		private readonly string _workListName = "Selection_Work_List";
 		private readonly string _templateLayer = "Selection Work List.lyrx";
 
-		protected override string GetWorkListName(IWorkListContext context)
-		{
-			return context.EnsureUniqueName(_workListName);
-		}
+		public override string FileSuffix => ".xml.swl";
 
 		protected override IEnumerable<BasicFeatureLayer> GetLayers(Map map)
 		{

@@ -8,13 +8,19 @@
   <!-- ********************************************************** -->
 
   <!-- The geometry processing service is required in order to use the ProSuite edit tools
-       in ArcGIS pro. -->
-  <!-- 	- Path defined in the local environment variable TOPGIS_CENTRAL_TOOL_DEFAULTS -->
-  <!-- 	- Data dictionary definition (currently by the <Attribute Editor Config Directory>\..\ToolDefaults-->
-  <!-- 	- <Program Files>\Config\ -->
+       in ArcGIS Pro. -->
 
   <!-- This configuration file is looked for in the following directories (descending search order): -->
+  <!-- 	- The path specified by the environment variable PROSUITE_CONFIG_DIR -->
+  <!-- 	- <%LOCALAPPDATA%>\Esri Switzerland\ProSuite\Config\ -->
+  <!-- 	- <%APPDATA%>\Esri Switzerland\ProSuite\Config\ -->
+  <!-- 	- <Common Application Data>\Esri Switzerland\ProSuite\Config\ -->
   <!-- 	- <Install Directory>\Config\ -->
+  <!-- 	- <"Computer\HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Esri Switzerland\ProSuite\InstallDirectory>\Config\ -->
+  <!-- 	- <Install Directory>\bin\..\ -->
+  <!-- 	- <Install Directory>\bin\..\..\ -->
+  <!-- 	- <Install Directory>\bin\..\..\..\ -->
+  <!-- 	- <Current Working Directory\ -->
   <!-- 	- <Install Directory>\bin\Config\ -->
 
   <!-- The host name.  -->

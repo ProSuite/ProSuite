@@ -26,7 +26,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		public IssueWorkListVm(IWorkList workList)
 		{
 			CurrentWorkList = workList;
-			CurrentWorkList.GoNext();
 			CurrentWorkItem = new IssueWorkItemVm(CurrentWorkList.Current as IssueItem);
 		}
 

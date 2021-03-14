@@ -6,5 +6,7 @@ namespace ProSuite.AGP.WorkList.Domain
 	{
 		public IssueWorkList(IWorkItemRepository repository, string name) :
 			base(repository, name) { }
+
+		public override string DisplayName => "Issue Work List";
 	}
 }
