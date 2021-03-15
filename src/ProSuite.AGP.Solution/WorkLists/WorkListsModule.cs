@@ -101,25 +101,30 @@ namespace ProSuite.AGP.Solution.WorkLists
 			{
 				// todo daro rename all workList to worklist
 				workList = await environment.CreateWorkListAsync(GetProject().HomeFolderPath, name);
-				// after creation go to first item
-				workList.GoFirst();
 
-				// wiring work list events, etc. is done in OnDrawComplete
-				// register work list before creating the layer
-				_registry.TryAdd(workList);
+				if (workList != null)
+				{
+					// after creation go to first item
+					workList.GoFirst();
+
+					// wiring work list events, etc. is done in OnDrawComplete
+					// register work list before creating the layer
+					_registry.TryAdd(workList);
+				}
 			}
 
-			Assert.NotNull(workList, $"work list {name} is null");
-
-			if (! _viewsByWorklistName.ContainsKey(workList.Name))
+			if (workList != null)
 			{
-				_viewsByWorklistName.Add(workList.Name, new WorkListObserver(workList));
+				Assert.NotNull(workList, $"work list {name} is null");
+
+				if (! _viewsByWorklistName.ContainsKey(workList.Name))
+				{
+					_viewsByWorklistName.Add(workList.Name, new WorkListObserver(workList));
+				}
+
+				CreateLayer(environment, workList);
 			}
-
-			CreateLayer(environment, workList);
 		}
-
-		// todo daro to utils
 
 		#region Module overrides
 
