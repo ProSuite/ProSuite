@@ -14,11 +14,12 @@
   </AddInInfo>
   <categories>
     <updateCategory refID="esri_core_projectContainers">
-      <insertComponent id="ProSuiteItem_FolderContainer"
+      <!--<insertComponent id="ProSuiteItem_FolderContainer"
                        className="ProSuite.AGP.Solution.ProjectItem.ProSuiteProjectItemContainer"
                        insert="before" placeWith="esri_geodatabase_folderConnectionContainer">
         <content type="ProSuiteContainer" displayName="ProSuite"
                  contextMenu="ProSuiteSolution_ProjectItemContainerMenu" />
+      </insertComponent>-->
       </insertComponent>
     </updateCategory>
     <updateCategory refID="esri_customItems">
@@ -31,6 +32,15 @@
           </filterFlags>
         </content>
       </insertComponent>
+      <!--<insertComponent id="ProSuiteItem_ProjectItem" className="ProSuite.AGP.Solution.ProjectItem.ProSuiteProjectItem"
+                       containerType="ProSuiteContainer">
+        <content displayName="Worklist" fileExtension="iwl" isContainer="true" keywords="worklist"
+                 contextMenuID="ProSuiteSolution_ProjectItemWorkListContextMenu">
+          <filterFlags>
+            <type id="File" />
+          </filterFlags>
+        </content>
+      </insertComponent>-->
       <!--<insertComponent id="ProSuiteItem_WorkListItem" className="Clients.AGP.ProSuiteSolution.ProjectItem.ProSuiteProjectItemWorkList">
         <content displayName="WorkListItem" isContainer="false" keywords="WorkListItem" contextMenuID="ProSuiteSolution_WorkListContextMenu" />
       </insertComponent>-->
