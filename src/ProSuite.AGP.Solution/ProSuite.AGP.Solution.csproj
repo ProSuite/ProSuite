@@ -434,6 +434,10 @@
   <ItemGroup>
     <AddInContent Include="Images\AdvancedReshapeToolTip.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\NavigateWorklistCmd16.png" />
+    <Resource Include="Images\NavigateWorklistCmd32.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:

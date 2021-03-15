@@ -89,6 +89,7 @@
           <button refID="ProSuiteTools_QA_StartGPServer" size="middle" />
           <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
+          <button refID="WorkLists_CreateIssueWorkList" size="large" />
           <!--<button refID="Clients_AGP_ProSuiteSolution_AddWorkList" size="large" />-->
         </group>
         <group id="ProSuiteTools_QA_Hidden" caption="" appearsOnAddInTab="false">
@@ -102,10 +103,9 @@
         </group>
         <group id="ProSuiteTools_Selection" caption="Selection Tools" keytip="G1">
           <tool refID="ProSuiteTools_Selection_SelectionTool" size="small" />
-          <button refID="WorkLists_CreateSelectionWorkList" size="small" />
-          <button refID="WorkLists_CreateIssueWorkList" size="small" />
-          <button refID="WorkLists_ShowWorkListsButton" size="small" />
           <button refID="esri_mapping_clearSelectionButton" size="small" />
+          <button refID="WorkLists_ShowWorkListsButton" size="small" />
+          <button refID="WorkLists_CreateSelectionWorkList" size="large" />
         </group>
       </groups>
       <controls>
@@ -163,7 +163,7 @@
           <tooltip heading="Add Work List To Current Map">Add work list to the active map and open navigator.<disabledText />
           </tooltip>
         </button>
-        <button id="WorkLists_CreateSelectionWorkList" caption="Show Selection WorkList"
+        <button id="WorkLists_CreateSelectionWorkList" caption="Show Selection Work List"
                 className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true"
                 smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateSelectionCmd16.png" 
                 largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateSelectionCmd32.png">
@@ -239,9 +239,9 @@ O: Additional options
         </button>
         <button id="WorkLists_ShowWorkListsButton" caption="Open Work List" className="WorkLists.ShowWorkListsButton"
                 loadOnClick="true"
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png"
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
-          <tooltip heading="Show Work Lists for Work List Layers">
+                smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd16.png"
+                largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd32.png">
+          <tooltip heading="Show Work Lists for present Work List Layers in TOC">
             <disabledText />
           </tooltip>
         </button>
