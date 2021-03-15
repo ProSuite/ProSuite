@@ -133,6 +133,9 @@
     <Compile Include="ProjectItem\ProSuiteProjectItemContainer.cs" />
     <Compile Include="ProjectItem\ProjectFileRepository.cs" />
     <Compile Include="ProjectItem\ProSuiteProjectItemWorkList.cs" />
+    <Compile Include="ProjectItem\IssueWorklistItem.cs" />
+    <Compile Include="ProjectItem\SelectionWorklistItem.cs" />
+    <Compile Include="ProjectItem\WorklistsContainer.cs" />
     <Compile Include="Selection\PickWorkListItemTool.cs" />
     <Compile Include="Selection\SelectionTool.cs" />
     <Compile Include="WorkLists\CreateIssueWorkListButton.cs" />
@@ -395,10 +398,10 @@
     <AddInContent Include="Images\RemoveOverlapsTool32.png" />
   </ItemGroup>
   <ItemGroup>
-    <AddInContent Include="Images\NavigateErrorsCmd16.png" />
-    <AddInContent Include="Images\NavigateErrorsCmd32.png" />
-    <AddInContent Include="Images\NavigateSelectionCmd16.png" />
-    <AddInContent Include="Images\NavigateSelectionCmd32.png" />
+    <Resource Include="Images\NavigateErrorsCmd16.png" />
+    <Resource Include="Images\NavigateErrorsCmd32.png" />
+    <Resource Include="Images\NavigateSelectionCmd16.png" />
+    <Resource Include="Images\NavigateSelectionCmd32.png" />
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="Images\SelectionTool16.png" />

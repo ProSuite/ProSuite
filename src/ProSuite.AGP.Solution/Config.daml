@@ -20,12 +20,26 @@
         <content type="ProSuiteContainer" displayName="ProSuite"
                  contextMenu="ProSuiteSolution_ProjectItemContainerMenu" />
       </insertComponent>-->
+      <insertComponent id="Worklist_WorklistsContainer"
+                       className="ProSuite.AGP.Solution.ProjectItem.WorklistsContainer" insert="before"
+                       placeWith="esri_geodatabase_folderConnectionContainer">
+        <content type="ProSuite.AGP.Solution.ProjectItem.WorkListsContainer" displayName="Work Lists" />
       </insertComponent>
     </updateCategory>
     <updateCategory refID="esri_customItems">
-      <insertComponent id="ProSuiteItem_ProjectItem" className="ProSuite.AGP.Solution.ProjectItem.ProSuiteProjectItem"
-                       containerType="ProSuiteContainer">
-        <content displayName="Worklist" fileExtension="swl" isContainer="true" keywords="worklist"
+      <insertComponent id="Worklist_IssueWorklistItem" className="ProSuite.AGP.Solution.ProjectItem.IssueWorklistItem"
+                       containerType="ProSuite.AGP.Solution.ProjectItem.WorkListsContainer">
+        <!--TODO: Modify the fileExtension attribute to your unique custom item's file extension.-->
+        <content displayName="we have an issue" fileExtension="iwl" isContainer="false" keywords="work list"
+                 contextMenuID="ProSuiteSolution_ProjectItemWorkListContextMenu">
+          <filterFlags>
+            <type id="File" />
+          </filterFlags>
+        </content>
+      </insertComponent>
+      <insertComponent id="Worklist_SelectionWorklistItem" className="ProSuite.AGP.Solution.ProjectItem.SelectionWorklistItem"
+                       containerType="ProSuite.AGP.Solution.ProjectItem.WorkListsContainer">
+        <content displayName="selected stuff" fileExtension="swl" isContainer="false" keywords="work list"
                  contextMenuID="ProSuiteSolution_ProjectItemWorkListContextMenu">
           <filterFlags>
             <type id="File" />
@@ -155,7 +169,8 @@
         </button>-->
         <button id="WorkLists_CreateSelectionWorkList" caption="Show Selection WorkList"
                 className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true"
-                smallImage="Images/NavigateSelectionCmd16.png" largeImage="Images/NavigateSelectionCmd32.png">
+                smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateSelectionCmd16.png" 
+                largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateSelectionCmd32.png">
           <tooltip heading="Show Selection Work List">
             Show Selection Work List for iterating on selected items
             <disabledText />
@@ -163,7 +178,8 @@
         </button>
         <button id="WorkLists_CreateIssueWorkList" caption="Show Issue Work List"
                 className="WorkLists.CreateIssueWorkListButton" loadOnClick="true"
-                smallImage="Images/NavigateErrorsCmd16.png" largeImage="Images/NavigateErrorsCmd32.png">
+                smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateErrorsCmd16.png"
+                largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateErrorsCmd32.png">
           <tooltip heading="Show Issue Work List">
             Show Issue Work List for iterating on issue items
             <disabledText />
