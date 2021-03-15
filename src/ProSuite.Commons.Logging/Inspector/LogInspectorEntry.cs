@@ -22,5 +22,6 @@ namespace ProSuite.Commons.Logging.Inspector
 		public string Message { get; }
 		public Exception Exception { get; }
 		public ILoggingContext Context { get; }
+		public long SequenceNumber { get; set; }
 	}
 }

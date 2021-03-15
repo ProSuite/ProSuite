@@ -17,7 +17,7 @@ namespace ProSuite.Commons.Logging.Inspector
 	/// </summary>
 	public static class LoggingContext
 	{
-		public static readonly string ContextPropertyName = "ProSuite.Commons.Logging:Context";
+		private const string ContextPropertyName = "ProSuite.Commons.Logging:Context";
 
 		[CanBeNull]
 		public static ILoggingContext GetLoggingContext(LoggingEvent loggingEvent)

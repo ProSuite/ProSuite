@@ -24,8 +24,7 @@ namespace ProSuite.Commons.Logging.Inspector
 			Threshold = LogInspectorLevel.Debug;
 			LoggerPrefix = null;
 
-			AttachTime = DateTime.MinValue;
-			LastSnapshot = new LogSnapshot(DefaultCapacity);
+			LastSnapshot = new LogSnapshot(DefaultCapacity, DateTime.Now);
 		}
 
 		public int Capacity { get; set; }
@@ -33,8 +32,6 @@ namespace ProSuite.Commons.Logging.Inspector
 		public string LoggerPrefix { get; set; }
 
 		public bool IsAttached => _appender != null;
-
-		public DateTime AttachTime { get; private set; }
 
 		[NotNull]
 		public LogSnapshot LastSnapshot { get; private set; }
@@ -52,7 +49,7 @@ namespace ProSuite.Commons.Logging.Inspector
 			// it's a no-op if the appender is already attached:
 			Log4NetUtils.AddRootAppender(Interceptor);
 
-			var appender = new BufferAppender(Math.Max(1, Capacity));
+			var appender = new BufferAppender(Math.Max(1, Capacity), DateTime.Now);
 			var guid = Guid.NewGuid().ToString("N"); // hex digits only
 			appender.Name = $"Inspector_{guid}";
 			appender.Threshold = ConvertLevel(Threshold);
@@ -69,7 +66,6 @@ namespace ProSuite.Commons.Logging.Inspector
 			// 3. PreAppendCheck() and exit if false
 			// 4. call Append(e)
 
-			AttachTime = DateTime.Now;
 			Interceptor.AddAppender(appender);
 
 			// Just for the record:

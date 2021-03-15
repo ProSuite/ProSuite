@@ -5,15 +5,17 @@ namespace ProSuite.Commons.Logging.Inspector
 {
 	public class LogSnapshot
 	{
-		public LogSnapshot(int captureCapacity,
+		public LogSnapshot(int captureCapacity, DateTime startTime,
 		                   LogInspectorEntry[] capturedEvents = null,
 		                   DateTime? snapshotTime = null)
 		{
 			CaptureCapacity = captureCapacity;
+			StartTime = startTime;
 			CapturedEvents = capturedEvents ?? new LogInspectorEntry[0];
 			SnapshotTime = snapshotTime ?? DateTime.Now;
 		}
 
+		public DateTime StartTime { get; }
 		public DateTime SnapshotTime { get; }
 
 		public int CaptureCapacity { get; }
