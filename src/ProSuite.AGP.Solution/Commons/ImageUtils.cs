@@ -9,8 +9,7 @@ namespace ProSuite.AGP.Solution.Commons
 	{
 		public static ImageSource GetImageSource(string imageName)
 		{
-			var image = new BitmapImage(ResourceAccessor.Get($"Images/{imageName}"));
-			return image;
+			return new BitmapImage(ResourceAccessor.Get($"Images/{imageName}"));
 		}
 	}
 
@@ -18,10 +17,10 @@ namespace ProSuite.AGP.Solution.Commons
 	{
 		public static Uri Get(string resourcePath)
 		{
-			var uri = string.Format(
-				"pack://application:,,,/{0};component/{1}"
-				, Assembly.GetExecutingAssembly().GetName().Name
-				, resourcePath
+			string uri = string.Format(
+				"pack://application:,,,/{0};component/{1}",
+				Assembly.GetExecutingAssembly().GetName().Name,
+				resourcePath
 			);
 
 			return new Uri(uri, UriKind.Absolute);
