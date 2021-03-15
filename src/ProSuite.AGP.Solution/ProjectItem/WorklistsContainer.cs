@@ -21,16 +21,16 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		public override Task<ImageSource> SmallImage =>
 			Task.FromResult(ImageUtils.GetImageSource(@"GenericButtonPurple16.png"));
 
-		public override Item CreateItem(string name, string path, string containerType, string data)
-		{
-			var item = (IssueWorklistItem) ItemFactory.Instance.Create(path);
+		//public override Item CreateItem(string name, string path, string containerType, string data)
+		//{
+		//	var item = (IssueWorklistItem) ItemFactory.Instance.Create(path);
 
-			// IncludeInPackages true ensures that the quake file is included
-			// in any project templates and project packages.
-			item.IncludeInPackages(true);
-			Add(item);
+		//	// IncludeInPackages true ensures that the quake file is included
+		//	// in any project templates and project packages.
+		//	item.IncludeInPackages(true);
+		//	Add(item);
 
-			return item;
-		}
+		//	return item;
+		//}
 	}
 }
