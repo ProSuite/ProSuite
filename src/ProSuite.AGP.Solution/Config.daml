@@ -89,7 +89,6 @@
           <button refID="ProSuiteTools_QA_StartGPServer" size="middle" />
           <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
-          <button refID="Clients_AGP_ProSuiteSolution_WorkList" size="large" />
           <button refID="Clients_AGP_ProSuiteSolution_AddWorkList" size="large" />
         </group>
         <group id="ProSuiteTools_QA_Hidden" caption="" appearsOnAddInTab="false">
@@ -164,9 +163,6 @@
           <tooltip heading="Add Work List To Current Map">Add work list to the active map and open navigator.<disabledText />
           </tooltip>
         </button>
-        <!--<button id="Clients_AGP_ProSuiteSolution_WorkList" caption="WorkList" className="ShowWorkListWindow" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
-          <tooltip heading="Show Error Worklist">Show Error Worklist<disabledText /></tooltip>
-        </button>-->
         <button id="WorkLists_CreateSelectionWorkList" caption="Show Selection WorkList"
                 className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true"
                 smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateSelectionCmd16.png" 
