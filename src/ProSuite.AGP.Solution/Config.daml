@@ -89,7 +89,7 @@
           <button refID="ProSuiteTools_QA_StartGPServer" size="middle" />
           <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
-          <button refID="Clients_AGP_ProSuiteSolution_AddWorkList" size="large" />
+          <!--<button refID="Clients_AGP_ProSuiteSolution_AddWorkList" size="large" />-->
         </group>
         <group id="ProSuiteTools_QA_Hidden" caption="" appearsOnAddInTab="false">
           <button refID="Clients_AGP_ProSuiteSolution_WorkLists_AddWorklistButton" />
@@ -148,14 +148,14 @@
                 largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation32.png">
           <tooltip heading="Show Logs Window">Show Logs Window<disabledText /></tooltip>
         </button>
-        <button id="Clients_AGP_ProSuiteSolution_AddWorkList" caption="Import WorkList" className="ImportWorkListFile"
+        <!--<button id="Clients_AGP_ProSuiteSolution_AddWorkList" caption="Import WorkList" className="ImportWorkListFile"
                 loadOnClick="true"
                 smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png"
                 largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Import Worklist file">
             Import and add worklist file(wl) to project<disabledText />
           </tooltip>
-        </button>
+        </button>-->
         <button id="Clients_AGP_ProSuiteSolution_WorkLists_AddWorklistButton" caption="Add Work List To Current Map" className="WorkLists.AddWorklistButton"
                 loadOnClick="true"
                 smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/AddContent16.png"
