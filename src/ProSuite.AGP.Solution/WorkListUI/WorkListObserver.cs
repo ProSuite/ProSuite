@@ -28,7 +28,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			(_view as IDisposable)?.Dispose();
 		}
 
-		[CanBeNull]
 		public ProWindow View => _view;
 
 		public void Close()

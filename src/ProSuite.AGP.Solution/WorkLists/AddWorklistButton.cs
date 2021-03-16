@@ -31,8 +31,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				_msg.Debug($"Open work list from file {path}");
 
-				string workListName = WorkListUtils.GetName(path);
-
 				WorkEnvironmentBase environment = CreateEnvironment(path);
 
 				if (environment == null)
@@ -40,9 +38,10 @@ namespace ProSuite.AGP.Solution.WorkLists
 					return;
 				}
 
-				await QueuedTask.Run(() => WorkListsModule.Current.CreateWorkListAsync(environment, workListName));
+				string worklistName = await QueuedTask.Run(() => WorkListsModule.Current.ShowWorklistAsync(environment, path));
+				Assert.NotNullOrEmpty(worklistName);
 
-				WorkListsModule.Current.ShowView(workListName);
+				WorkListsModule.Current.ShowView(worklistName);
 			}, _msg);
 		}
 
