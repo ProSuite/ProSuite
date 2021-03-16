@@ -1,13 +1,13 @@
 <ArcGIS defaultAssembly="ProSuiteSolution.dll" defaultNamespace="ProSuite.AGP.Solution"
         xmlns="http://schemas.esri.com/DADF/Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
-  <AddInInfo id="{aca43c2a-8357-4476-8660-e8bc28bdf848}" version="0.1" desktopVersion="2.5.22081">
+  <AddInInfo id="{aca43c2a-8357-4476-8660-e8bc28bdf848}" version="0.2" desktopVersion="2.5.22081">
     <Name>ProSuite</Name>
     <Description>The ProSuite productivity extension for data production, cartographic refinement, and quality assurance</Description>
     <Image>Images\AddinDesktop32.png</Image>
     <Author>The ProSuite Authors</Author>
     <Company></Company>
-    <Date>2020-12-16</Date>
+    <Date>2021-03-16</Date>
     <Subject>Framework</Subject>
     <!-- Note subject can be one or more of these topics:
          Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
