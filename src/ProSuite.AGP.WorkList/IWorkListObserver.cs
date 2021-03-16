@@ -9,6 +9,7 @@ namespace ProSuite.AGP.WorkList
 
 		void Close();
 
+		[CanBeNull]
 		ProWindow View { get; }
 	}
 }

@@ -447,6 +447,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 						continue;
 					}
 
+					if (view.View == null)
+					{
+						continue;
+					}
+
 					ViewUtils.RunOnUIThread(() => { view.View.Title = mapMember.Name; });
 				}
 
