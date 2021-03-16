@@ -52,6 +52,7 @@
     <Compile Include="WorkItemRepositoryTest.cs" />
     <Compile Include="WorkItemTest.cs" />
     <Compile Include="WorkListTest.cs" />
+    <Compile Include="WorklistUtilsTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NUnit">
@@ -87,6 +88,9 @@
   <ItemGroup>
     <Content Include="TestData\IssuePolygons.xml" />
     <Content Include="TestData\ReadMe_test_data_creation.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="TestData\work_list_definition_pointing_to_sde.xml.swl" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
