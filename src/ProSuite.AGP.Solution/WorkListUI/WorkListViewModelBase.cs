@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -182,6 +183,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 					{
 						CurrentWorkList.SetStatus(CurrentWorkList.Current, value);
 					});
+
+					Project.Current.SetDirty();
 
 					Count = GetCount();
 				}
