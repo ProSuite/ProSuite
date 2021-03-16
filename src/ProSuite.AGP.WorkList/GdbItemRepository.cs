@@ -28,7 +28,7 @@ namespace ProSuite.AGP.WorkList
 			WorkItemStateRepository = workItemStateRepository;
 		}
 
-		public IRepository WorkItemStateRepository { get; }
+		protected IRepository WorkItemStateRepository { get; }
 
 		public Dictionary<ISourceClass, Geodatabase> GeodatabaseBySourceClasses { get; } = new Dictionary<ISourceClass, Geodatabase>();
 
