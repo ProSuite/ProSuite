@@ -46,5 +46,13 @@ namespace ProSuite.AGP.Solution.LoggerUI
 			}
 			_scrollProcessing = false;
 		}
-    }
+
+
+		private void logMessagesGrid_MouseRightButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+		{
+			DataGridRow row = sender as DataGridRow;
+			logMessagesGrid.SelectedItem = row.Item;
+		}
+
+	}
 }
