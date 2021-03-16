@@ -15,11 +15,15 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			await ViewUtils.TryAsync(async () =>
 			{
-				await QueuedTask.Run(
-					() => WorkListsModule.Current.CreateWorkListAsync(
-						new DatabaseWorkEnvironment(), WorkListsModule.Current.EnsureUniqueName()));
+				// has to be outside QueuedTask because of OpenItemDialog
+				var environment = new DatabaseWorkEnvironment();
 
-				WorkListsModule.Current.ShowView(WorkListsModule.Current.EnsureUniqueName());
+				string name = WorkListsModule.Current.EnsureUniqueName();
+
+				await QueuedTask.Run(
+					() => WorkListsModule.Current.CreateWorkListAsync(environment, name));
+
+				WorkListsModule.Current.ShowView(name);
 			}, _msg);
 		}
 	}

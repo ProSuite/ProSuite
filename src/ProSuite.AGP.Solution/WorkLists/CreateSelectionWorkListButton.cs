@@ -15,11 +15,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			await ViewUtils.TryAsync(async () =>
 			{
+				string name = WorkListsModule.Current.EnsureUniqueName();
+
 				await QueuedTask.Run(
 					() => WorkListsModule.Current.CreateWorkListAsync(
-						new InMemoryWorkEnvironment(), WorkListsModule.Current.EnsureUniqueName()));
+						new InMemoryWorkEnvironment(), name));
 
-				WorkListsModule.Current.ShowView(WorkListsModule.Current.EnsureUniqueName());
+				WorkListsModule.Current.ShowView(name);
 			}, _msg);
 		}
 	}
