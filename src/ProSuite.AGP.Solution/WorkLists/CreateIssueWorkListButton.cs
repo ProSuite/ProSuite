@@ -15,12 +15,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			await ViewUtils.TryAsync(async () =>
 			{
-				string workListName = WorkListsModule.Current.EnsureUniqueName();
-				var environment = new DatabaseWorkEnvironment();
+				await QueuedTask.Run(
+					() => WorkListsModule.Current.CreateWorkListAsync(
+						new DatabaseWorkEnvironment(), WorkListsModule.Current.EnsureUniqueName()));
 
-				await QueuedTask.Run(() => WorkListsModule.Current.CreateWorkListAsync(environment, workListName));
-
-				WorkListsModule.Current.ShowView(workListName);
+				WorkListsModule.Current.ShowView(WorkListsModule.Current.EnsureUniqueName());
 			}, _msg);
 		}
 	}

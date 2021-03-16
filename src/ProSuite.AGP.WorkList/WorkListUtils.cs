@@ -32,7 +32,7 @@ namespace ProSuite.AGP.WorkList
 		}
 		
 		[NotNull]
-		public static Uri GetUri([NotNull] string homeFolderPath,
+		public static Uri GetDatasource([NotNull] string homeFolderPath,
 		                         [NotNull] string workListName,
 		                         [NotNull] string fileSuffix)
 		{

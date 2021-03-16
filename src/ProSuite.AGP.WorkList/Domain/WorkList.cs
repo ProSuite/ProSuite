@@ -86,7 +86,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
-		public string Name { get; }
+		public string Name { get; set; }
 
 		public abstract string DisplayName { get; }
 
