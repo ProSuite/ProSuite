@@ -175,6 +175,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				StartSecondPhase();
 			}
+			else
+			{
+				// In case it has not yet been started (e.g. on tool activation with selection)
+				StartSelectionPhase();
+			}
 
 			LogDerivedGeometriesCalculated(progressor);
 		}
