@@ -79,7 +79,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 			var state = new XmlWorkItemState(item.OID, item.Visited, WorkItemStatus.Unknown,
 			                            new XmlGdbRowIdentity(item.Proxy));
 
-			state.Path = item.Proxy.Table.Workspace.Path;
+			state.ConnectionString = item.Proxy.Table.Workspace.ConnectionString;
 
 			return state;
 		}
@@ -107,7 +107,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 				SimpleSet<GdbTableIdentity> tables = pair.Value;
 
 				var xmlWorkspace = new XmlWorkListWorkspace();
-				xmlWorkspace.Path = workspace.Path;
+				xmlWorkspace.ConnectionString = workspace.ConnectionString;
+				xmlWorkspace.WorkspaceFactory = workspace.WorkspaceFactory.ToString();
 				xmlWorkspace.Tables = tables
 				                      .Select(table => new XmlTableReference(table.Id, table.Name))
 				                      .ToList();

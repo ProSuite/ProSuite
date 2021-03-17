@@ -148,9 +148,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			lock (_registryLock)
 			{
-				if (String.IsNullOrEmpty(name))
-					return false;
-				return _map.ContainsKey(name);
+				return ! string.IsNullOrEmpty(name) && _map.ContainsKey(name);
 			}
 		}
 	}
