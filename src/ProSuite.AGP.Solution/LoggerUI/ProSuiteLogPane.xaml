@@ -9,7 +9,7 @@
                  xmlns:loggerUi="clr-namespace:ProSuite.AGP.Solution.LoggerUI"
                  mc:Ignorable="d" 
                  d:DesignHeight="300" d:DesignWidth="300"
-                 d:DataContext="{Binding Path=ui.ProSuiteLogPaneViewModel}">
+                 d:DataContext="{Binding Path=ui.ProSuiteLogPaneViewModel}" IsVisibleChanged="UserControl_IsVisibleChanged">
      <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -37,9 +37,8 @@
                 SelectionMode="Single"
                 ColumnWidth="*"
                 VerticalScrollBarVisibility="Visible"
-                ScrollViewer.ScrollChanged="logMessagesGrid_ScrollChanged"
                 SelectedItem="{Binding SelectedRow}"
-                ItemsSource="{Binding Path=LogMessageList, Mode=OneWay}" >
+                ItemsSource="{Binding Path=LogMessageList, Mode=OneWay}" Loaded="logMessagesGrid_Loaded" >
             <DataGrid.Columns>
                 <DataGridTemplateColumn Width="SizeToCells" IsReadOnly="True" >
                     <DataGridTemplateColumn.CellTemplate>

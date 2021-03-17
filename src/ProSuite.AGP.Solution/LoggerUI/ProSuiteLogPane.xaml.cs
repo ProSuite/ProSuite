@@ -1,52 +1,22 @@
+using ProSuite.Commons.Logging;
 using System;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Threading;
 
 namespace ProSuite.AGP.Solution.LoggerUI
 {
-    /// <summary>
-    /// Interaction logic for ProSuiteLogPaneView.xaml
-    /// </summary>
-    public partial class ProSuiteLogPaneView : UserControl
+	/// <summary>
+	/// Interaction logic for ProSuiteLogPaneView.xaml
+	/// </summary>
+	public partial class ProSuiteLogPaneView : UserControl
     {
-		private bool _scrollProcessing;
-
         public ProSuiteLogPaneView()
         {
             InitializeComponent();
-        }
-
-        private void logMessagesGrid_ScrollChanged(object sender, ScrollChangedEventArgs e)
-        {
-
-            if (e.ExtentHeight < e.ViewportHeight)
-                return;
-
-            if (logMessagesGrid.Items.Count <= 0)
-                return;
-
-            if (e.ExtentHeightChange == 0.0 && e.ViewportHeightChange == 0.0)
-                return;
-
-			if (_scrollProcessing)
-				return;
-
-			_scrollProcessing = true;
-
-            var oldExtentHeight = e.ExtentHeight - e.ExtentHeightChange;
-            var oldVerticalOffset = e.VerticalOffset - e.VerticalChange;
-            var oldViewportHeight = e.ViewportHeight - e.ViewportHeightChange;
-			if (oldVerticalOffset + oldViewportHeight + 5 >= oldExtentHeight)
-			{
-				logMessagesGrid.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() =>
-				{
-					logMessagesGrid.UpdateLayout();
-					logMessagesGrid.ScrollIntoView(logMessagesGrid.Items[logMessagesGrid.Items.Count - 1], null);
-				}));
-			}
-			_scrollProcessing = false;
 		}
-
 
 		private void logMessagesGrid_MouseRightButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
 		{
@@ -54,5 +24,37 @@ namespace ProSuite.AGP.Solution.LoggerUI
 			logMessagesGrid.SelectedItem = row.Item;
 		}
 
+		private void logMessagesGrid_Loaded(object sender, System.Windows.RoutedEventArgs e)
+		{
+			var items = (logMessagesGrid.ItemsSource as ObservableCollection<LoggingEventItem>);
+
+			if (items == null)
+				return;
+
+			items.CollectionChanged += CollectionChanged;
+		}
+
+		private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+		{
+			var msSecDelay = 500; // delay to scroll to end to last message - cancealable?
+			Task.Delay(msSecDelay).ContinueWith((_) => ScrollMessagesToEnd());
+		}
+
+		private void ScrollMessagesToEnd()
+		{
+			logMessagesGrid.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() =>
+			{
+				if (logMessagesGrid.Items != null && logMessagesGrid.Items.Count > 0)
+				{
+					logMessagesGrid.ScrollIntoView(logMessagesGrid.Items[logMessagesGrid.Items.Count - 1]);
+				}
+			}));
+		}
+
+		private void UserControl_IsVisibleChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)
+		{
+			if (IsVisible)
+				ScrollMessagesToEnd();
+		}
 	}
 }
