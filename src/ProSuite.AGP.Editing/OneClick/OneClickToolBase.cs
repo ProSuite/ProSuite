@@ -19,12 +19,11 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Keyboard;
-using Application = System.Windows.Application;
 using Cursor = System.Windows.Input.Cursor;
-using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 using SelectionMode = ProSuite.AGP.Editing.Selection.SelectionMode;
 
 namespace ProSuite.AGP.Editing.OneClick
@@ -621,15 +620,12 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.Error(message, e);
 
-			if (! noMessageBox)
+			if (noMessageBox)
 			{
-				Application.Current.Dispatcher.Invoke(
-					() =>
-					{
-						MessageBox.Show(message, "Error", MessageBoxButton.OK,
-						                MessageBoxImage.Error);
-					});
+				return;
 			}
+
+			ErrorHandler.HandleError(message, null, _msg, "Error");
 		}
 
 		protected void SetCursor([CanBeNull] Cursor cursor)
