@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -77,8 +76,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug("OnToolActivateAsync");
 
-			MapView.Active.Map.PropertyChanged += Map_PropertyChanged;
-
+			MapPropertyChangedEvent.Subscribe(OnPropertyChanged);
 			MapSelectionChangedEvent.Subscribe(OnMapSelectionChanged);
 			EditCompletedEvent.Subscribe(OnEditCompleted);
 
@@ -111,8 +109,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			_msg.VerboseDebug("OnToolDeactivateAsync");
 
-			MapView.Active.Map.PropertyChanged -= Map_PropertyChanged;
-
+			MapPropertyChangedEvent.Unsubscribe(OnPropertyChanged);
 			MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChanged);
 			EditCompletedEvent.Unsubscribe(OnEditCompleted);
 
@@ -573,13 +570,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected virtual void OnKeyUpCore(MapViewKeyEventArgs mapViewKeyEventArgs) { }
 
-		private void Map_PropertyChanged(object sender, PropertyChangedEventArgs e)
-		{
-			OnMapPropertyChangedCore(sender, e);
-		}
-
-		protected virtual void
-			OnMapPropertyChangedCore(object sender, PropertyChangedEventArgs e) { }
+		protected virtual void OnPropertyChanged(MapPropertyChangedEventArgs e) { }
 
 		protected virtual void ShowOptionsPane() { }
 
