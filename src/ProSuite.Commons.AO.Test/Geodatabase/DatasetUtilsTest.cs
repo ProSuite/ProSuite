@@ -220,6 +220,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IQueryFilter spatialFilter =
 				GdbQueryUtils.CreateSpatialFilter(rasterCatalog, winterthurLL);
 
+			// In case of DllNotFoundException, copy the appropriate dlls from the gdal subdirectory to the bin
 			Gdal.AllRegister();
 
 			IStringArray stringArray;
@@ -236,6 +237,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			stringArray = itemPathsQuery.GetItemPaths(features[0]);
 
 			string rasterPath = stringArray.Element[0];
+
+			Console.WriteLine("Opening raster dataset {0}...", rasterPath);
 
 			Dataset ds = Gdal.Open(rasterPath, Access.GA_ReadOnly);
 
@@ -288,6 +291,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				Console.WriteLine("   PaletteInterp: " +
 				                  band.GetRasterColorInterpretation().ToString());
 
+				double noDataValue;
+				int hasNoDataValue;
+				band.GetNoDataValue(out noDataValue, out hasNoDataValue);
+
+				Console.WriteLine("   Has NoData value: " + hasNoDataValue);
+				Console.WriteLine("   NoData value: " + noDataValue);
+
 				band.GetBlockSize(out int blockSizeX, out int blockSizeY);
 
 				Console.WriteLine("   Block Size (" + blockSizeX + "," + blockSizeY + ")");
@@ -306,7 +316,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				int pxlOffsetX = (int) Math.Floor((winterthurLL.X - originX) / pixelSizeX);
 				int pxlOffsetY = (int) Math.Floor((winterthurLL.Y - originY) / pixelSizeY);
 
-				double[] buffer = new double[1];
+				// NOTE: ReadBlock is not available (and generally discouraged anyway)
+				float[] buffer = new float[1];
 				band.ReadRaster(pxlOffsetX, pxlOffsetY, 1, 1, buffer, 1, 1, 0, 0);
 
 				double z = buffer[0];
