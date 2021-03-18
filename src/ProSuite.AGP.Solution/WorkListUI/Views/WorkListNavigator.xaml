@@ -86,7 +86,7 @@
                         <ComboBox SelectedItem="{Binding CurrentWorkList.Visibility}" ItemsSource="{Binding Visibility}"/>
                     </StackPanel>
                     <Separator Margin="7,0"/>
-                    <Button Command="{Binding SelectCurrentFeatureCmd}" ToolTip="Select Current Work Item">
+                    <Button Command="{Binding SelectInvolvedObjectsCmd}" ToolTip="Select Involved Objects">
                         <Image Source="../Images/SelectFeatures16.png" Stretch="UniformToFill"/>
                     </Button>
                 </ToolBar>

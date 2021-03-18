@@ -451,6 +451,16 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			              .FirstOrDefault(layer => layer.Name == name) as FeatureLayer;
 		}
 
+		[CanBeNull]
+		protected async Task<FeatureLayer> GetFeatureLayerByFeatureClassName(string name)
+		{
+			return await QueuedTask.Run(() =>
+			{
+				var layers = MapView.Active.Map.GetLayersAsFlattenedList().OfType<FeatureLayer>();
+				return layers.FirstOrDefault(layer => layer.GetFeatureClass().GetName() == name);
+			});
+		}
+
 		[NotNull]
 		private static Envelope GetEnvelope([NotNull] IWorkItem item)
 		{

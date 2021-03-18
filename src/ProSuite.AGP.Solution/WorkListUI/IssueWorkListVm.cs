@@ -1,13 +1,16 @@
-using System.Collections.Generic;
-using System.Linq;
+using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
@@ -21,6 +24,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private RelayCommand _zoomInvolvedSelectedCmd;
 		private RelayCommand _flashInvolvedAllCmd;
 		private RelayCommand _flashInvolvedSelectedCmd;
+		private RelayCommand _selectInvolvedObjectsCmd;
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public IssueWorkListVm(IWorkList workList)
@@ -81,6 +85,16 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			set { SetProperty(ref _involvedObjectRows, value, () => InvolvedObjectRows); }
 		}
 
+		public RelayCommand SelectInvolvedObjectsCmd
+		{
+			get
+			{
+				_selectInvolvedObjectsCmd =
+					new RelayCommand(SelectInvolvedObjects, () => true); // loaded?
+				return _selectInvolvedObjectsCmd;
+			}
+		}
+
 		public RelayCommand ZoomInvolvedAllCmd
 		{
 			get
@@ -119,45 +133,60 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}
 		}
 
-		private void FlashInvolvedSelected()
+		private async void FlashInvolvedSelected()
 		{
-			ViewUtils.Try(() =>
+			ViewUtils.Try(async() =>
 			{
-				QueuedTask.Run(() =>
+				FeatureLayer involvedLayer = await GetFeatureLayerByFeatureClassName(SelectedInvolvedObject.Name);
+				if (involvedLayer == null)
 				{
-					FeatureLayer involvedLayer = GetFeatureLayerByName(SelectedInvolvedObject.Name);
-					if (involvedLayer == null)
-					{
-						return;
-					}
-					MapView.Active.FlashFeature(involvedLayer, SelectedInvolvedObject.ObjectId);
-				});
+					return;
+				}
+				MapView.Active.FlashFeature(involvedLayer, SelectedInvolvedObject.ObjectId);
 			}, _msg);
 		}
 
-		private void FlashInvolvedAll()
+		private async void FlashInvolvedAll()
 		{
-			var featureSet = GetInvolvedFeatureSet();
+			var featureSet = await GetInvolvedFeatureSet();
 			MapView.Active.FlashFeature(featureSet);
 		}
 
 		private void ZoomInvolvedAll()
 		{
-			ViewUtils.Try(() =>
+			ViewUtils.Try(async () =>
 			{
-				Dictionary<BasicFeatureLayer, List<long>> featureSet = GetInvolvedFeatureSet();
-				MapView.Active.ZoomToAsync(featureSet);
+				Dictionary<BasicFeatureLayer, List<long>> featureSet = await GetInvolvedFeatureSet();
+				await MapView.Active.ZoomToAsync(featureSet);
+			}, _msg);
+		}
+
+		private void SelectInvolvedObjects()
+		{
+			ViewUtils.Try(async () =>
+			{
+				Dictionary<BasicFeatureLayer, List<long>> involvedFeatureClasses = await GetInvolvedFeatureSet();
+
+				await QueuedTask.Run(() =>
+				{
+					SelectionUtils.ClearSelection(MapView.Active.Map);
+					foreach (var involvedFeatureClass in involvedFeatureClasses)
+					{
+						var qf = new QueryFilter() { ObjectIDs = involvedFeatureClass.Value };
+						involvedFeatureClass.Key.Select(qf, SelectionCombinationMethod.Add);
+					}
+				});
 			}, _msg);
 		}
 
 		[CanBeNull]
-		private Dictionary<BasicFeatureLayer, List<long>> GetInvolvedFeatureSet()
+		private async Task<Dictionary<BasicFeatureLayer, List<long>>> GetInvolvedFeatureSet()
 		{
 			Dictionary<BasicFeatureLayer, List<long>> featureSet =
 				new Dictionary<BasicFeatureLayer, List<long>>();
 			foreach (InvolvedObjectRow row in InvolvedObjectRows)
 			{
-				FeatureLayer involvedLayer = GetFeatureLayerByName(row.Name);
+				FeatureLayer involvedLayer = await GetFeatureLayerByFeatureClassName(row.Name);
 				if (involvedLayer == null)
 				{
 					continue;
@@ -178,16 +207,16 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		private void ZoomInvolvedSelected()
 		{
-			ViewUtils.Try(() =>
+			ViewUtils.Try(async() =>
 			{
-				Layer involvedLayer = GetFeatureLayerByName(SelectedInvolvedObject.Name);
+				Layer involvedLayer = await GetFeatureLayerByFeatureClassName(SelectedInvolvedObject.Name);
 				if (involvedLayer == null)
 				{
 					return;
 				}
 
-				MapView.Active.ZoomToAsync(involvedLayer as FeatureLayer,
-				                           SelectedInvolvedObject.ObjectId);
+				await MapView.Active.ZoomToAsync(involvedLayer as FeatureLayer,
+										   SelectedInvolvedObject.ObjectId);
 			}, _msg);
 		}
 
