@@ -86,7 +86,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 		}
 
-		public async Task<string> CreateWorkListAsync([NotNull] WorkEnvironmentBase environment, [NotNull] string name)
+		public async Task CreateWorkListAsync([NotNull] WorkEnvironmentBase environment, [NotNull] string name)
 		{
 			Assert.ArgumentNotNull(environment, nameof(environment));
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
@@ -96,7 +96,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 			Uri uri = WorkListUtils.GetDatasource(GetProject().HomeFolderPath, name, environment.FileSuffix);
 
 			IWorkList worklist = await environment.CreateWorkListAsync(uri.LocalPath, name);
-			Assert.NotNull(worklist);
+
+			if (worklist == null)
+			{
+				return;
+			}
 
 			// after creation go to first item
 			worklist.GoFirst();
@@ -113,8 +117,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 			FeatureLayer layer = AddLayer(uri, name, worklist.DisplayName);
 
 			LayerUtils.ApplyRenderer(layer, environment.GetLayerDocument());
-
-			return worklist.Name;
 		}
 
 		[NotNull]
