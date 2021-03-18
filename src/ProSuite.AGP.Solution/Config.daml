@@ -175,11 +175,12 @@
         </button>
         <button id="WorkLists_CreateIssueWorkList" caption="Show Issue Work List"
                 className="WorkLists.CreateIssueWorkListButton" loadOnClick="true"
+                condition="esri_mapping_mapPane"
                 smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateErrorsCmd16.png"
                 largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateErrorsCmd32.png">
           <tooltip heading="Show Issue Work List">
             Show Issue Work List for iterating on issue items
-            <disabledText />
+            <disabledText>No active map.</disabledText>
           </tooltip>
         </button>
         <tool id="ProSuiteTools_Editing_EraseTool" caption="EraseTool " className="Editing.EraseTool"
@@ -239,11 +240,11 @@ O: Additional options
           <tooltip heading="Tooltip Heading">Tooltip text<disabledText /></tooltip>
         </button>
         <button id="WorkLists_ShowWorkListsButton" caption="Open Work List" className="WorkLists.ShowWorkListsButton"
-                loadOnClick="true"
+                loadOnClick="true" condition="esri_mapping_mapPane"
                 smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd16.png"
                 largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd32.png">
           <tooltip heading="Show Work Lists for present Work List Layers in TOC">
-            <disabledText />
+						<disabledText>No active map.</disabledText>
           </tooltip>
         </button>
       </controls>
