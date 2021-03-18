@@ -164,12 +164,13 @@
           </tooltip>
         </button>
         <button id="WorkLists_CreateSelectionWorkList" caption="Show Selection Work List"
-                className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true"
+                className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true" 
+                condition="esri_mapping_activeMapView_hasFeatureSelectionCondition"
                 smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateSelectionCmd16.png" 
                 largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateSelectionCmd32.png">
           <tooltip heading="Show Selection Work List">
             Show Selection Work List for iterating on selected items
-            <disabledText />
+            <disabledText>No features selected.</disabledText>
           </tooltip>
         </button>
         <button id="WorkLists_CreateIssueWorkList" caption="Show Issue Work List"
