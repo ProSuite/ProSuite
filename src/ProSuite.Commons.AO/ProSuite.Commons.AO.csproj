@@ -275,6 +275,13 @@
     <Compile Include="Surface\FeatureTinGenerator.cs" />
     <Compile Include="Surface\ISimpleSurface.cs" />
     <Compile Include="Surface\ITinGenerator.cs" />
+    <Compile Include="Surface\Raster\AoPixelBlock.cs" />
+    <Compile Include="Surface\Raster\IRasterDatasetProvider.cs" />
+    <Compile Include="Surface\Raster\ISimplePixelBlock.cs" />
+    <Compile Include="Surface\Raster\ISimpleRaster.cs" />
+    <Compile Include="Surface\Raster\SimpleAoRaster.cs" />
+    <Compile Include="Surface\Raster\SimpleRasterMosaic.cs" />
+    <Compile Include="Surface\Raster\SimpleRasterSurface.cs" />
     <Compile Include="Surface\RectangularTileIndex.cs" />
     <Compile Include="Surface\RectangularTilingStructure.cs" />
     <Compile Include="Surface\RectangularTilingUtils.cs" />
