@@ -41,19 +41,21 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			// The math looks better when using -1 because the origin is the top left corner
 			// This is consistent with GDAL
 			PixelSizeY = -1 * rasterProperties.MeanCellSize().Y;
-			
+
 			Width = rasterProperties.Width;
 			Height = rasterProperties.Height;
 
 			NoDataValue = rasterProperties.NoDataValue;
 		}
 
+		public IRaster BaseRaster => _raster;
+
 		public object NoDataValue { get; set; }
 
 		public int Width { get; set; }
 
 		public int Height { get; set; }
-		
+
 		/// <summary>
 		/// The X coordinate of the origin (i.e. top left of the raster extent) in georeferenced space.
 		/// </summary>

@@ -1,70 +1,64 @@
+using System;
 using System.Linq;
 using System.Text;
+using ESRI.ArcGIS.DataSourcesRaster;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.Commons.AO;
+using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
 
 namespace ProSuite.QA.Tests.Surface
 {
-	public class MosaicLayerReference : RasterReference
+	public class MosaicRasterReference : RasterReference
 	{
-		[NotNull] private readonly MosaicLayerDefinition _mosaicLayer;
+		[NotNull] private readonly SimpleRasterMosaic _simpleRasterMosaic;
 		[NotNull] private readonly byte[] _mosaicDefinitionBytes;
-		[NotNull] private readonly IDataset _rasterDataset;
 
-		public MosaicLayerReference([NotNull] MosaicLayerDefinition mosaicLayer)
+		public MosaicRasterReference([NotNull] SimpleRasterMosaic simpleRasterMosaic)
 		{
-			Assert.ArgumentNotNull(mosaicLayer, nameof(mosaicLayer));
+			Assert.ArgumentNotNull(simpleRasterMosaic, nameof(simpleRasterMosaic));
 
-			_mosaicLayer = mosaicLayer;
+			_simpleRasterMosaic = simpleRasterMosaic;
 
-			_mosaicDefinitionBytes = GetMosaicDefinitionBytes(mosaicLayer);
-
-			// ReSharper disable once SuspiciousTypeConversion.Global
-			_rasterDataset = (IDataset) _mosaicLayer.MosaicDataset;
+			_mosaicDefinitionBytes = GetMosaicDefinitionBytes(simpleRasterMosaic);
 		}
 
-		public override ISimpleSurface CreateSurface(IRaster raster)
+		public override IDataset Dataset => throw new NotImplementedException();
+		public override IGeoDataset GeoDataset => throw new NotImplementedException();
+
+		public override IRasterProps RasterProps => throw new NotImplementedException();
+
+		public override ISimpleSurface CreateSurface(IEnvelope extent,
+		                                             out IDataset memoryRasterDataset)
 		{
-			var rasterSurface = new RasterSurface();
-
-			rasterSurface.PutRaster(raster, 0);
-
-			return rasterSurface;
-		}
-
-		public override IDataset RasterDataset => _rasterDataset;
-
-		public override IRaster CreateFullRaster()
-		{
-			return _mosaicLayer.MosaicDataset.CreateDefaultRaster();
+			throw new NotImplementedException();
 		}
 
 		public override bool EqualsCore(RasterReference rasterReference)
 		{
-			var other = rasterReference as MosaicLayerReference;
+			var other = rasterReference as MosaicRasterReference;
 
 			if (other == null)
 			{
 				return false;
 			}
 
-			return _rasterDataset == other._rasterDataset &&
+			return _simpleRasterMosaic == other._simpleRasterMosaic && // TODO
 			       _mosaicDefinitionBytes.SequenceEqual(other._mosaicDefinitionBytes);
 		}
 
 		public override int GetHashCodeCore()
 		{
-			return _rasterDataset.GetHashCode();
+			return _simpleRasterMosaic.GetHashCode(); // TODO
 		}
 
 		[NotNull]
-		private static byte[] GetMosaicDefinitionBytes([NotNull] MosaicLayerDefinition mosaicLayer)
+		private static byte[] GetMosaicDefinitionBytes([NotNull] SimpleRasterMosaic raster)
 		{
-			return Encoding.UTF8.GetBytes(mosaicLayer.DefinitionString);
+			return Encoding.UTF8.GetBytes("TODO"); // TODO
 			//IImageServerLayer previewLayer = mosaicLayer.PreviewLayer;
 
 			//IImageServiceInfo serviceInfo = previewLayer?.ServiceInfo;

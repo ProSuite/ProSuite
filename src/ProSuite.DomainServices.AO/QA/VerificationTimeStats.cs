@@ -49,7 +49,7 @@ namespace ProSuite.DomainServices.AO.QA
 					break;
 				case Step.RasterLoaded:
 				{
-					IDataset ds = ((RasterReference) args.Tag).RasterDataset;
+					IDataset ds = ((RasterReference) args.Tag).Dataset;
 					Add(_datasetLoadTimes, ds, dt);
 				}
 					break;

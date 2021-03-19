@@ -6,6 +6,7 @@ using ESRI.ArcGIS.DataSourcesRaster;
 using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
@@ -48,6 +49,8 @@ namespace ProSuite.DomainModel.AO.QA
 				return TestParameterType.RasterMosaicDataset;
 			if (typeof(IRasterDataset).IsAssignableFrom(dataType))
 				return TestParameterType.RasterDataset;
+			if (typeof(SimpleRasterMosaic).IsAssignableFrom(dataType))
+				return TestParameterType.RasterMosaicDataset;
 			if (typeof(TerrainReference).IsAssignableFrom(dataType))
 				return TestParameterType.TerrainDataset;
 

@@ -289,7 +289,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			foreach (RasterReference rasterReference in _testsPerRaster.Keys)
 			{
-				yield return (IGeoDataset) rasterReference.RasterDataset;
+				yield return rasterReference.GeoDataset;
 			}
 		}
 

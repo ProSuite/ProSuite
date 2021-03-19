@@ -84,11 +84,8 @@ namespace ProSuite.QA.Container
 			{
 				foreach (RasterReference raster in InvolvedRasters)
 				{
-					geoDataset = raster.RasterDataset as IGeoDataset;
-					if (geoDataset != null)
-					{
-						yield return geoDataset;
-					}
+					geoDataset = raster.GeoDataset;
+					yield return geoDataset;
 				}
 			}
 		}
@@ -592,9 +589,9 @@ namespace ProSuite.QA.Container
 				ITable table = InvolvedTables[tableIndex];
 
 				filterHelpers[tableIndex] = new QueryFilterHelper(table,
-				                                                  GetConstraint(tableIndex),
-				                                                  GetSqlCaseSensitivity(
-					                                                  tableIndex));
+					GetConstraint(tableIndex),
+					GetSqlCaseSensitivity(
+						tableIndex));
 				spatialFilters[tableIndex] = new SpatialFilterClass();
 
 				ConfigureQueryFilter(tableIndex, spatialFilters[tableIndex]);

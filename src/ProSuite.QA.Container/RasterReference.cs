@@ -1,4 +1,6 @@
+using ESRI.ArcGIS.DataSourcesRaster;
 using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -11,12 +13,17 @@ namespace ProSuite.QA.Container
 		public abstract int GetHashCodeCore();
 
 		[NotNull]
-		public abstract IRaster CreateFullRaster();
-
-		public abstract ISimpleSurface CreateSurface(IRaster raster);
+		public abstract ISimpleSurface CreateSurface([NotNull] IEnvelope extent,
+		                                             [CanBeNull] out IDataset memoryRasterDataset);
 
 		[NotNull]
-		public abstract IDataset RasterDataset { get; }
+		public abstract IDataset Dataset { get; }
+
+		[NotNull]
+		public abstract IGeoDataset GeoDataset { get; }
+
+		[NotNull]
+		public abstract IRasterProps RasterProps { get; }
 
 		public override bool Equals(object obj)
 		{

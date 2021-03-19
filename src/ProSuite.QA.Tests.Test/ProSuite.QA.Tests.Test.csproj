@@ -163,6 +163,8 @@
     <Compile Include="SpatialRelations\QaSpatialRelationUtilsTest.cs" />
     <Compile Include="SpatialRelations\TestErrorReporter.cs" />
     <Compile Include="TestData\TestDataUtils.cs" />
+    <Compile Include="TestRunners\ModelMosaicDefinitionDataset.cs" />
+    <Compile Include="TestRunners\ModelMosaicRasterDataset.cs" />
     <Compile Include="TestRunners\ModelSimpleTerrainDataset.cs" />
     <Compile Include="TestRunners\ModelTableDataset.cs" />
     <Compile Include="TestRunners\ModelVectorDataset.cs" />

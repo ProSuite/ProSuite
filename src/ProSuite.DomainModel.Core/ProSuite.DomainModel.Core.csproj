@@ -86,6 +86,7 @@
     <Compile Include="DataModel\IModelElement.cs" />
     <Compile Include="DataModel\IObjectDataset.cs" />
     <Compile Include="DataModel\IRegisteredGdbObject.cs" />
+    <Compile Include="DataModel\ISimpleRasterDataset.cs" />
     <Compile Include="DataModel\ISimpleTerrainDataset.cs" />
     <Compile Include="DataModel\ISpatialDataset.cs" />
     <Compile Include="DataModel\ITableDataset.cs" />
@@ -108,6 +109,7 @@
     <Compile Include="DataModel\Repositories\IDatasetRepository.cs" />
     <Compile Include="DataModel\Repositories\IGeometryTypeRepository.cs" />
     <Compile Include="DataModel\Repositories\IObjectCategoryRepository.cs" />
+    <Compile Include="DataModel\SimpleRasterDataset.cs" />
     <Compile Include="DataModel\SimpleTerrainDataset.cs" />
     <Compile Include="DataModel\SqlCaseSensitivity.cs" />
     <Compile Include="DataModel\TableDataset.cs" />

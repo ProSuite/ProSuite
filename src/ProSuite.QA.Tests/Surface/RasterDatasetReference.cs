@@ -1,14 +1,18 @@
+using ESRI.ArcGIS.DataSourcesRaster;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
+using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
 
 namespace ProSuite.QA.Tests.Surface
 {
 	public class RasterDatasetReference : RasterReference
 	{
 		[NotNull] private readonly IRasterDataset2 _rasterDataset;
+		[CanBeNull] private IRaster _fullRaster;
 
 		public RasterDatasetReference([NotNull] IRasterDataset2 rasterDataset)
 		{
@@ -17,20 +21,24 @@ namespace ProSuite.QA.Tests.Surface
 			_rasterDataset = rasterDataset;
 		}
 
-		public override ISimpleSurface CreateSurface(IRaster raster)
-		{
-			var rasterSurface = new RasterSurface();
+		public override IDataset Dataset => (IDataset) _rasterDataset;
+		public override IGeoDataset GeoDataset => (IGeoDataset) _rasterDataset;
+		public override IRasterProps RasterProps => (IRasterProps) FullRaster;
 
-			rasterSurface.PutRaster(raster, 0);
+		private IRaster FullRaster =>
+			_fullRaster
+			?? (_fullRaster = _rasterDataset.CreateFullRaster());
+
+		public override ISimpleSurface CreateSurface(IEnvelope extent,
+		                                             out IDataset memoryRasterDataset)
+		{
+			IRaster clipped =
+				RasterUtils.GetClippedRaster(FullRaster, extent, out memoryRasterDataset);
+
+			var rasterSurface = new RasterSurface();
+			rasterSurface.PutRaster(clipped, 0);
 
 			return rasterSurface;
-		}
-
-		public override IDataset RasterDataset => (IDataset) _rasterDataset;
-
-		public override IRaster CreateFullRaster()
-		{
-			return _rasterDataset.CreateFullRaster();
 		}
 
 		public override bool EqualsCore(RasterReference rasterReference)

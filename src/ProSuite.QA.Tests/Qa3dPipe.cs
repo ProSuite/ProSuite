@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+using ESRI.ArcGIS.DataSourcesRaster;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -154,10 +156,10 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
 			IFeatureClass featureClass,
 			[Doc(nameof(DocStrings.Qa3dPipe_mosaicLayer))] [NotNull]
-			MosaicLayerDefinition mosaicLayer,
+			SimpleRasterMosaic simpleRasterMosaic,
 			[Doc(nameof(DocStrings.Qa3dPipe_limit))]
 			double limit)
-			: this(featureClass, mosaicLayer, limit,
+			: this(featureClass, simpleRasterMosaic, limit,
 			       // ReSharper disable once IntroduceOptionalParameters.Global
 			       ZOffsetConstraint.WithinLimit, 0, false) { }
 
@@ -166,7 +168,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
 			IFeatureClass featureClass,
 			[Doc(nameof(DocStrings.Qa3dPipe_mosaicLayer))] [NotNull]
-			MosaicLayerDefinition mosaicLayer,
+			SimpleRasterMosaic simpleRasterMosaic,
 			[Doc(nameof(DocStrings.Qa3dPipe_limit))]
 			double limit,
 			[Doc(nameof(DocStrings.Qa3dPipe_zOffsetConstraint))]
@@ -176,7 +178,44 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.Qa3dPipe_asRatio))]
 			bool asRatio)
 			: base(
-				featureClass, new MosaicLayerReference(mosaicLayer), limit, zOffsetConstraint)
+				featureClass, new MosaicRasterReference(simpleRasterMosaic), limit,
+				zOffsetConstraint)
+		{
+			ValidateAsRatio(startEndIgnoreLength, asRatio);
+
+			_shapeType = featureClass.ShapeType;
+			_startEndIgnoreLength = startEndIgnoreLength;
+			_asRatio = asRatio;
+
+			_interpolateTolerance = 2 * GeometryUtils.GetXyResolution(featureClass);
+		}
+
+		public Qa3dPipeX(
+			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
+			IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.Qa3dPipe_mosaicLayer))] [NotNull]
+			IMosaicDataset mosaicLayer,
+			[Doc(nameof(DocStrings.Qa3dPipe_limit))]
+			double limit)
+			: this(featureClass, mosaicLayer, limit,
+			       // ReSharper disable once IntroduceOptionalParameters.Global
+			       ZOffsetConstraint.WithinLimit, 0, false) { }
+
+		public Qa3dPipeX(
+			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
+			IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.Qa3dPipe_mosaicLayer))] [NotNull]
+			IMosaicDataset mosaicLayer,
+			[Doc(nameof(DocStrings.Qa3dPipe_limit))]
+			double limit,
+			[Doc(nameof(DocStrings.Qa3dPipe_zOffsetConstraint))]
+			ZOffsetConstraint zOffsetConstraint,
+			[Doc(nameof(DocStrings.Qa3dPipe_startEndIgnoreLength))]
+			double startEndIgnoreLength,
+			[Doc(nameof(DocStrings.Qa3dPipe_asRatio))]
+			bool asRatio)
+			: base(
+				featureClass, new MosaicDsRasterReference(mosaicLayer), limit, zOffsetConstraint)
 		{
 			ValidateAsRatio(startEndIgnoreLength, asRatio);
 
@@ -612,10 +651,10 @@ namespace ProSuite.QA.Tests
 					{
 						IPolyline segLine = QaGeometryUtils.CreatePolyline(segment);
 						((ISegmentCollection) segLine).AddSegment(recycling
-							                                          ? GeometryFactory.Clone(
-								                                          segment)
-							                                          : segment,
-						                                          ref missing, ref missing);
+								? GeometryFactory.Clone(
+									segment)
+								: segment,
+							ref missing, ref missing);
 
 						interpol = InterpolateShape(surface, segLine);
 

@@ -1,12 +1,6 @@
-#if Server
-using ESRI.ArcGIS.DatasourcesRaster;
-#else
-using ESRI.ArcGIS.DataSourcesRaster;
-#endif
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
@@ -19,7 +13,7 @@ namespace ProSuite.QA.Container.TestContainer
 	internal class RastersRowEnumerable
 	{
 		private const int _defaultMaxRasterPointCount = 4096 * 4096;
-		[NotNull] private readonly IDictionary<RasterReference, IRaster> _rastersDict;
+		[NotNull] private readonly HashSet<RasterReference> _rastersDict;
 		[NotNull] private readonly ITestProgress _progress;
 
 		private readonly Box _extent;
@@ -28,12 +22,10 @@ namespace ProSuite.QA.Container.TestContainer
 		public RastersRowEnumerable(
 			[NotNull] IEnumerable<RasterReference> rasterReferences,
 			[NotNull] ITestProgress progress)
-			: this(rasterReferences.ToDictionary(
-				       r => r,
-				       r => r.CreateFullRaster()), progress) { }
+			: this(rasterReferences.ToHashSet(), progress) { }
 
 		public RastersRowEnumerable(
-			[NotNull] IDictionary<RasterReference, IRaster> rasters,
+			[NotNull] HashSet<RasterReference> rasters,
 			[NotNull] ITestProgress progress)
 		{
 			Assert.ArgumentNotNull(rasters, nameof(rasters));
@@ -44,9 +36,9 @@ namespace ProSuite.QA.Container.TestContainer
 
 			IEnvelope extent = null;
 			var minDx = double.MaxValue;
-			foreach (var raster in rasters.Values)
+			foreach (var raster in rasters)
 			{
-				var props = (IRasterProps) raster;
+				var props = raster.RasterProps;
 				minDx = Math.Min(props.MeanCellSize().X, minDx);
 				if (extent == null)
 				{
@@ -76,9 +68,9 @@ namespace ProSuite.QA.Container.TestContainer
 				_maxRasterPointCount = value;
 
 				double sum = 0;
-				foreach (IRaster raster in _rastersDict.Values)
+				foreach (var raster in _rastersDict)
 				{
-					double dx = ((IRasterProps) raster).MeanCellSize().X;
+					double dx = raster.RasterProps.MeanCellSize().X;
 					sum += 1 / (dx * dx);
 				}
 
@@ -153,10 +145,9 @@ namespace ProSuite.QA.Container.TestContainer
 					IEnvelope rasterBox = GeometryFactory.CreateEnvelope(
 						rasterXMin, rasterYMin, rasterXMax, rasterYMax);
 
-					var rows = _rastersDict.Select(p => new RasterRow(
-						                               rasterBox, p.Key, p.Value, 0,
-						                               _progress))
-					                       .ToList();
+					var rows = _rastersDict
+					           .Select(p => new RasterRow(rasterBox, p, _progress))
+					           .ToList();
 
 					foreach (RasterRow rasterRow in rows)
 					{

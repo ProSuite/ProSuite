@@ -352,6 +352,7 @@
     <Compile Include="SpatialRelations\QaSpatialRelationOtherBase.cs" />
     <Compile Include="SpatialRelations\QaSpatialRelationSelfBase.cs" />
     <Compile Include="SpatialRelations\QaSpatialRelationUtils.cs" />
+    <Compile Include="Surface\MosaicDsRasterReference.cs" />
     <Compile Include="Surface\MosaicLayerReference.cs" />
     <Compile Include="Surface\RasterDatasetReference.cs" />
     <Compile Include="Surface\RasterSurface.cs" />
