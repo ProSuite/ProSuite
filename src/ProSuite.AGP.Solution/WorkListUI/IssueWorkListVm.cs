@@ -24,7 +24,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private RelayCommand _zoomInvolvedSelectedCmd;
 		private RelayCommand _flashInvolvedAllCmd;
 		private RelayCommand _flashInvolvedSelectedCmd;
-		private RelayCommand _selectInvolvedObjectsCmd;
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public IssueWorkListVm(IWorkList workList)
@@ -79,20 +78,15 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			set { SetProperty(ref _errorDescription, value, () => QualityCondition); }
 		}
 
+		public override string ToolTip
+		{
+			get => "Select Involved Objects";
+		}
+
 		public List<InvolvedObjectRow> InvolvedObjectRows
 		{
 			get => CompileInvolvedRows();
 			set { SetProperty(ref _involvedObjectRows, value, () => InvolvedObjectRows); }
-		}
-
-		public RelayCommand SelectInvolvedObjectsCmd
-		{
-			get
-			{
-				_selectInvolvedObjectsCmd =
-					new RelayCommand(SelectInvolvedObjects, () => true); // loaded?
-				return _selectInvolvedObjectsCmd;
-			}
 		}
 
 		public RelayCommand ZoomInvolvedAllCmd
@@ -161,7 +155,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}, _msg);
 		}
 
-		private void SelectInvolvedObjects()
+		public override void SelectCurrentFeature()
 		{
 			ViewUtils.Try(async () =>
 			{

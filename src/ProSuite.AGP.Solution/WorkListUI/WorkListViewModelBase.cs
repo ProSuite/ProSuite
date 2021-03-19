@@ -246,6 +246,11 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			set { SetProperty(ref _currentIndex, value, () => CurrentIndex); }
 		}
 
+		public virtual string ToolTip
+		{
+			get => "Select Current Workm Item";
+		}
+
 		protected void GoPreviousItem()
 		{
 			ViewUtils.Try(() =>
@@ -381,7 +386,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}, _msg);
 		}
 
-		private void SelectCurrentFeature()
+		public virtual void SelectCurrentFeature()
 		{
 			ViewUtils.Try(() =>
 			{
