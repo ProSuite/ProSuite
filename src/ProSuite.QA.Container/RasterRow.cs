@@ -151,11 +151,18 @@ namespace ProSuite.QA.Container
 			Assert.ArgumentNotNull(sourceRaster, nameof(sourceRaster));
 			Assert.ArgumentNotNull(box, nameof(box));
 
+
+			IEnvelope clipBox = GetClipBox(box, sourceRaster);
+
+			if (sourceRaster is ISimpleSurfaceProvider provider)
+			{
+				memoryRasterDataset = null;
+				return provider.GetSurface(clipBox);
+			}
+
 			IRasterFunction rasterFunction = new ClipFunctionClass();
 			IClipFunctionArguments functionArguments = new ClipFunctionArgumentsClass();
 			functionArguments.Raster = sourceRaster;
-
-			IEnvelope clipBox = GetClipBox(box, sourceRaster);
 
 			functionArguments.Extent = clipBox;
 			functionArguments.ClippingGeometry = clipBox;

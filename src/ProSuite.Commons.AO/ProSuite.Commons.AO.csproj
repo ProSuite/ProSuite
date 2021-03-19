@@ -275,6 +275,7 @@
     <Compile Include="Surface\FeatureTinGenerator.cs" />
     <Compile Include="Surface\ISimpleSurface.cs" />
     <Compile Include="Surface\ITinGenerator.cs" />
+    <Compile Include="Surface\MosaicLayerDefinition.cs" />
     <Compile Include="Surface\RectangularTileIndex.cs" />
     <Compile Include="Surface\RectangularTilingStructure.cs" />
     <Compile Include="Surface\RectangularTilingUtils.cs" />
