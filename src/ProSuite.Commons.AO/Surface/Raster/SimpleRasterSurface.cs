@@ -20,6 +20,7 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 		#region ISimpleSurface members
 
+		IRaster ISimpleSurface.AsRaster() => throw new NotImplementedException();
 		public void Dispose()
 		{
 			// TODO:
