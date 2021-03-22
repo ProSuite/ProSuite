@@ -62,7 +62,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// </summary>
 		protected HashSet<Key> PressedKeys { get; } = new HashSet<Key>();
 
-		protected Cursor SelectionCursor { get; set; }
+		protected virtual Cursor SelectionCursor { get; set; }
 		protected Cursor SelectionCursorShift { get; set; }
 		protected Cursor SelectionCursorNormal { get; set; }
 		protected Cursor SelectionCursorNormalShift { get; set; }

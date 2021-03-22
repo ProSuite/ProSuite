@@ -41,6 +41,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private RelayCommand _selectCurrentFeatureCmd;
+		private string _lastActiveTool = null;
 
 		public ICommand ClearSelectionCmd =>
 			FrameworkApplication.GetPlugInWrapper(
@@ -248,7 +249,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		public virtual string ToolTip
 		{
-			get => "Select Current Workm Item";
+			get => "Select Current Work Item";
 		}
 
 		protected void GoPreviousItem()
@@ -353,6 +354,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			await ViewUtils.TryAsync(() =>
 			{
+				_lastActiveTool = FrameworkApplication.CurrentTool;
+
 				WorkListsModule.Current.WorkItemPicked += Current_WorkItemPicked;
 				return FrameworkApplication.SetCurrentToolAsync(
 					ConfigIDs.Editing_PickWorkListItemTool);
@@ -405,6 +408,13 @@ namespace ProSuite.AGP.Solution.WorkListUI
 					}
 				});
 			}, _msg);
+		}
+
+		public virtual void NavigatorUnloaded()
+		{
+			if (!String.IsNullOrEmpty(_lastActiveTool))
+				FrameworkApplication.SetCurrentToolAsync(_lastActiveTool);
+			_lastActiveTool = null;
 		}
 
 		private void FlashCurrentFeature()

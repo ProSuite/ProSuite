@@ -1,20 +1,16 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Dialogs;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.AGP.Editing;
 using ProSuite.AGP.Editing.Selection;
-using ProSuite.AGP.Solution.Commons;
 using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using LayerUtils = ProSuite.AGP.Solution.Commons.LayerUtils;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Windows.Input;
 
 namespace ProSuite.AGP.Solution.Selection
 {
@@ -22,6 +18,8 @@ namespace ProSuite.AGP.Solution.Selection
 	{
 		[CanBeNull]
 		public FeatureLayer WorkListLayer { get; set; }
+
+		protected override Cursor SelectionCursor { get => ToolUtils.GetCursor(Resource.PickerToolCursor); }
 
 		protected override void AfterSelection(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
@@ -65,7 +63,6 @@ namespace ProSuite.AGP.Solution.Selection
 			{
 				ProSuite.Commons.AGP.Carto.LayerUtils.SetLayerSelectability(WorkListLayer, false);
 			}
-			
 		}
 
 		protected override bool CanUseSelection(IEnumerable<Feature> selectedFeatures)

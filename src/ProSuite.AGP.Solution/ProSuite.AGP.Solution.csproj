@@ -136,6 +136,11 @@
     <Compile Include="ProjectItem\IssueWorklistItem.cs" />
     <Compile Include="ProjectItem\SelectionWorklistItem.cs" />
     <Compile Include="ProjectItem\WorklistsContainer.cs" />
+    <Compile Include="Resource.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource.resx</DependentUpon>
+    </Compile>
     <Compile Include="Selection\PickWorkListItemTool.cs" />
     <Compile Include="Selection\SelectionTool.cs" />
     <Compile Include="WorkLists\CreateIssueWorkListButton.cs" />
@@ -437,6 +442,15 @@
   <ItemGroup>
     <Resource Include="Images\NavigateWorklistCmd16.png" />
     <Resource Include="Images\NavigateWorklistCmd32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\PickerToolCursor.cur" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resource.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--

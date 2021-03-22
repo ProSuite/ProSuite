@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
              xmlns:workListUi="clr-namespace:ProSuite.AGP.Solution.WorkListUI"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="400">
     <UserControl.Resources>
@@ -92,5 +92,11 @@
                 </ToolBar>
             </ToolBarTray>
         </StackPanel>
+
+        <i:Interaction.Triggers>
+            <i:EventTrigger EventName="Unloaded">
+                <i:CallMethodAction MethodName="NavigatorUnloaded" TargetObject="{Binding}"/>
+            </i:EventTrigger>
+        </i:Interaction.Triggers>
     </Grid>
 </UserControl>
