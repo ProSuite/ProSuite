@@ -35,9 +35,9 @@
                 <Button Command ="{Binding GoNearestItemCmd}">
                     <Image Source="../Images/GoNearest16.png" ToolTip="Nearest Work Item" Stretch="UniformToFill"/>
                 </Button>
-                <Button Command="{Binding PickWorkItemCmd}">
+                <ToggleButton Command="{Binding PickWorkItemCmd}">
                     <Image Source="../Images/PickWorkItemTool16.png" ToolTip="Pick Work Item On Map" Stretch="UniformToFill"/>
-                </Button>
+                </ToggleButton>
                 <Separator/>
                 <Button Command="{Binding ZoomToCmd}">
                     <Image Source="../Images/ZoomTo16.png" ToolTip="Zoom To Current Work Item" Stretch="UniformToFill"/>

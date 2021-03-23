@@ -21,6 +21,12 @@ namespace ProSuite.AGP.Solution.Selection
 
 		protected override Cursor SelectionCursor { get => ToolUtils.GetCursor(Resource.PickerToolCursor); }
 
+		protected override void OnToolKeyDown(MapViewKeyEventArgs k)
+		{
+			// ignore modifier keys
+			return;
+		}
+
 		protected override void AfterSelection(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
 		{
@@ -53,7 +59,6 @@ namespace ProSuite.AGP.Solution.Selection
 			}
 
 			SelectionUtils.ClearSelection(ActiveMapView.Map);
-
 			return true;
 		}
 

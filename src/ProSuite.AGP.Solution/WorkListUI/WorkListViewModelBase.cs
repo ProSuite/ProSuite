@@ -41,7 +41,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private RelayCommand _selectCurrentFeatureCmd;
-		private string _lastActiveTool = null;
+		private string _lastActiveTool = "esri_mapping_exploreTool";
 
 		public ICommand ClearSelectionCmd =>
 			FrameworkApplication.GetPlugInWrapper(
@@ -354,11 +354,16 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			await ViewUtils.TryAsync(() =>
 			{
-				_lastActiveTool = FrameworkApplication.CurrentTool;
-
-				WorkListsModule.Current.WorkItemPicked += Current_WorkItemPicked;
-				return FrameworkApplication.SetCurrentToolAsync(
-					ConfigIDs.Editing_PickWorkListItemTool);
+				if (FrameworkApplication.CurrentTool != ConfigIDs.Editing_PickWorkListItemTool)
+				{
+					_lastActiveTool = FrameworkApplication.CurrentTool;
+					return FrameworkApplication.SetCurrentToolAsync(ConfigIDs.Editing_PickWorkListItemTool);
+				}
+				else
+				{
+					// if picker tool is active then restore previous one
+					return FrameworkApplication.SetCurrentToolAsync(_lastActiveTool);
+				}
 			}, _msg);
 		}
 
@@ -412,9 +417,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		public virtual void NavigatorUnloaded()
 		{
-			if (!String.IsNullOrEmpty(_lastActiveTool))
-				FrameworkApplication.SetCurrentToolAsync(_lastActiveTool);
-			_lastActiveTool = null;
+			FrameworkApplication.SetCurrentToolAsync(_lastActiveTool);
 		}
 
 		private void FlashCurrentFeature()
