@@ -41,11 +41,11 @@
                     <Image Source="../Images/PickWorkItemTool16.png" ToolTip="Pick Work Item On Map" Stretch="UniformToFill"/>
                 </ToggleButton>
                 <Separator/>
-                <Button Command="{Binding ZoomToCmd}">
-                    <Image Source="../Images/ZoomTo16.png" ToolTip="Zoom To Current Work Item" Stretch="UniformToFill"/>
-                </Button>
-                <Button Command="{Binding PanToCmd}">
-                    <Image Source="../Images/PanTo16.png" ToolTip="Pan To Current Work Item" Stretch="UniformToFill"/>
+				<ToggleButton Command="{Binding ZoomToCmd}" IsChecked="{Binding AutoZoomMode}">
+	                <Image Source="../Images/ZoomTo16.png" ToolTip="Zoom To Current (SHIFT to Toggle Auto-Zoom Mode)" Stretch="UniformToFill"/>
+                </ToggleButton>
+				<Button Command="{Binding PanToCmd}">
+                    <Image Source="../Images/PanTo16.png" ToolTip="Pan To Current" Stretch="UniformToFill"/>
                 </Button>
                 <Button Command="{Binding ZoomToAllCmd}">
                     <Image Source="../Images/ZoomToAll16.png" ToolTip="Zoom To All Work Items"  Stretch="UniformToFill"/>
