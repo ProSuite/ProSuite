@@ -26,16 +26,16 @@
         <ToolBarTray Grid.Row="0">
             <ToolBar>
                 <Button Command="{Binding GoFirstItemCmd}">
-                    <Image Source="../Images/GoFirst16.png" ToolTip="First Work Item" Stretch="UniformToFill"/>
+                    <Image Source="../Images/GoFirst16.png" ToolTip="First" Stretch="UniformToFill"/>
                 </Button>
                 <Button Command="{Binding GoPreviousItemCmd}">
-                    <Image Source="../Images/GoBack16.png" ToolTip="Previous Work Item" Stretch="UniformToFill"/>
+                    <Image Source="../Images/GoBack16.png" ToolTip="Previous" Stretch="UniformToFill"/>
                 </Button>
                 <Button Command="{Binding GoNextItemCmd}">
-                    <Image Source="../Images/GoNext16.png" ToolTip="Next Work Item" Stretch="UniformToFill"/>
+                    <Image Source="../Images/GoNext16.png" ToolTip="Next" Stretch="UniformToFill"/>
                 </Button>
                 <Button Command ="{Binding GoNearestItemCmd}">
-                    <Image Source="../Images/GoNearest16.png" ToolTip="Nearest Work Item" Stretch="UniformToFill"/>
+                    <Image Source="../Images/GoNearest16.png" ToolTip="Go to Nearest" Stretch="UniformToFill"/>
                 </Button>
                 <ToggleButton Command="{Binding PickWorkItemCmd}">
                     <Image Source="../Images/PickWorkItemTool16.png" ToolTip="Pick Work Item On Map" Stretch="UniformToFill"/>
@@ -48,11 +48,11 @@
                     <Image Source="../Images/PanTo16.png" ToolTip="Pan To Current" Stretch="UniformToFill"/>
                 </Button>
                 <Button Command="{Binding ZoomToAllCmd}">
-                    <Image Source="../Images/ZoomToAll16.png" ToolTip="Zoom To All Work Items"  Stretch="UniformToFill"/>
+                    <Image Source="../Images/ZoomToAll16.png" ToolTip="Zoom To All"  Stretch="UniformToFill"/>
                 </Button>
                 <Separator/>
                 <Button Command="{Binding FlashCurrentFeatureCmd}">
-                    <Image Source="../Images/FlashCurrent16.png" ToolTip="Flash Current Work Item" Stretch="UniformToFill"/>
+                    <Image Source="../Images/FlashCurrent16.png" ToolTip="Flash" Stretch="UniformToFill"/>
                 </Button>
                 <Separator/>
                 <Button Command="{Binding ClearSelectionCmd}">
