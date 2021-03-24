@@ -299,6 +299,58 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}, _msg);
 		}
 
+		[NotNull]
+		private Geometry GetReferenceGeometry([NotNull] Envelope visibleExtent,
+		                                      Geometry candidate = null)
+		{
+			Assert.ArgumentNotNull(visibleExtent, nameof(visibleExtent));
+			Assert.ArgumentCondition(! visibleExtent.IsEmpty, "visible extent is empty");
+
+			Geometry reference;
+			if (TryGetReferenceGeometry(visibleExtent, candidate, out reference))
+			{
+				return Assert.NotNull(reference, "reference is null");
+			}
+
+			Assert.NotNull(CurrentWorkList.Current);
+
+			if (TryGetReferenceGeometry(visibleExtent, CurrentWorkList.Current.Extent,
+			                            out reference))
+			{
+				return Assert.NotNull(reference, "reference is null");
+			}
+
+			MapPoint centroid = GeometryEngine.Instance.Centroid(visibleExtent);
+			return Assert.NotNull(centroid, "centroid is null");
+		}
+
+		private static bool TryGetReferenceGeometry(
+			[NotNull] Envelope visibleExtent,
+			[CanBeNull] Geometry candidateReferenceGeometry,
+			[CanBeNull] out Geometry referenceGeometry)
+		{
+			if (candidateReferenceGeometry == null || candidateReferenceGeometry.IsEmpty)
+			{
+				referenceGeometry = null;
+				return false;
+			}
+
+			Map map = MapView.Active.Map;
+
+			Geometry projected =
+				GeometryUtils.EnsureSpatialReference(candidateReferenceGeometry,
+				                                     map.SpatialReference);
+
+			if (GeometryUtils.Contains(visibleExtent, projected))
+			{
+				referenceGeometry = projected;
+				return true;
+			}
+
+			referenceGeometry = null;
+			return false;
+		}
+
 		protected void ZoomTo()
 		{
 			IWorkItem item = CurrentWorkList.Current;

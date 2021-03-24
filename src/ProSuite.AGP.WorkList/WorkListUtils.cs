@@ -10,6 +10,7 @@ using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.Ado;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
@@ -308,6 +309,18 @@ namespace ProSuite.AGP.WorkList
 			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
 			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
 			return definition.Name;
+		}
+
+		public static void MoveTo([NotNull] List<IWorkItem> items,
+		                          [NotNull] IWorkItem movingItem,
+		                          int insertIndex)
+		{
+			Assert.ArgumentNotNull(items, nameof(items));
+			Assert.ArgumentNotNull(movingItem, nameof(movingItem));
+			Assert.ArgumentCondition(insertIndex >= 0 && insertIndex < items.Count,
+			                         "insert index out of range: {0}", insertIndex);
+
+			CollectionUtils.MoveTo(items, movingItem, insertIndex);
 		}
 	}
 }
