@@ -193,22 +193,11 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual void GoFirst()
 		{
-			IWorkItem nextItem = GetFirstVisibleVisitedItemBeforeCurrent();
-			
-			if (nextItem != null)
+			CurrentIndex = 0;
+			IWorkItem item = GetItem(CurrentIndex);
+			if (item != null)
 			{
-				Assert.False(Equals(nextItem, Current), "current item and next item are equal");
-
-				SetCurrentItem(nextItem, Current);
-			}
-			else
-			{
-				CurrentIndex = 0;
-				IWorkItem item = GetItem(CurrentIndex);
-				if (item != null)
-				{
-					SetCurrentItem(item);
-				}
+				SetCurrentItem(item);
 			}
 		}
 
@@ -220,7 +209,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				if (IsVisible(workItem) && workItem.Status == WorkItemStatus.Todo)
 				{
-					if (!workItem.Visited)
+					if (! workItem.Visited)
 					{
 						return true;
 					}
@@ -731,6 +720,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		/// <param name="currentItem">The work item.</param>
 		private void SetCurrentItem([NotNull] IWorkItem nextItem, [CanBeNull] IWorkItem currentItem = null)
 		{
+			ReorderCurrentItem(nextItem);
+
 			nextItem.Visited = true;
 			CurrentIndex = _items.IndexOf(nextItem);
 
@@ -742,6 +733,42 @@ namespace ProSuite.AGP.WorkList.Domain
 				           : new List<long> {nextItem.OID};
 
 			OnWorkListChanged(null, oids);
+		}
+
+		private void ReorderCurrentItem([NotNull] IWorkItem nextItem)
+		{
+			// move new item to just after previous current
+			int insertIndex = GetReorderInsertIndex(nextItem);
+
+			// todo daro drop
+			_msg.Debug($"Reorder visited items: {nextItem}, insert index: {insertIndex}");
+
+			WorkListUtils.MoveTo(_items, nextItem, insertIndex);
+		}
+
+		private int GetReorderInsertIndex([NotNull] IWorkItem nextItem)
+		{
+			int firstUnvisitedIndex = _items.FindIndex(item => ! item.Visited);
+
+			int currentItemIndex = _items.IndexOf(nextItem);
+
+			// no unvisited item anymore, don't reorder, just go through the list
+			if (firstUnvisitedIndex < 0)
+			{
+				return currentItemIndex;
+			}
+
+			// move the current item to the first unvisited item index in the list
+			if (firstUnvisitedIndex <= currentItemIndex)
+			{
+				return firstUnvisitedIndex;
+			}
+
+			throw new ArgumentOutOfRangeException($"{nameof(firstUnvisitedIndex)} {firstUnvisitedIndex}, {nameof(currentItemIndex)} {currentItemIndex}");
+			// todo daro revise this section
+			return firstUnvisitedIndex == 0
+				       ? 0
+				       : firstUnvisitedIndex - 1;
 		}
 
 		[CanBeNull]

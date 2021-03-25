@@ -13,8 +13,10 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.AGP.WPF;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -122,11 +124,11 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}
 		}
 
-		public RelayCommand ZoomToCmd
+		public ICommand ZoomToCmd
 		{
 			get
 			{
-				_zoomToCmd = new RelayCommand(ZoomToAsync, () => CurrentWorkList.Current!=null);
+				_zoomToCmd = new RelayCommand(ZoomToAsync, () => CurrentWorkList.Current != null);
 				return _zoomToCmd;
 			}
 		}
@@ -260,9 +262,24 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				{
 					CurrentWorkList.GoPrevious();
 					CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
-					ZoomTo();
 				});
 			}, _msg);
+		}
+
+		private bool? _autoZoomMode = true;
+
+		public bool? AutoZoomMode
+		{
+			get => _autoZoomMode;
+			set
+			{
+				if (! ShiftPressed())
+				{
+					return;
+				}
+
+				SetProperty(ref _autoZoomMode, value, () => AutoZoomMode);
+			}
 		}
 
 		protected void GoNearestItem()
@@ -271,11 +288,67 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			{
 				QueuedTask.Run(() =>
 				{
-					CurrentWorkList.GoNearest(CurrentWorkList.Current.Extent);
+					CurrentWorkList.GoNearest(GetReferenceGeometry(MapView.Active.Extent));
 					CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
-					ZoomTo();
+
+					if (_autoZoomMode != null && _autoZoomMode.Value)
+					{
+						ZoomTo();
+					}
 				});
 			}, _msg);
+		}
+
+		[NotNull]
+		private Geometry GetReferenceGeometry([NotNull] Envelope visibleExtent,
+		                                      Geometry candidate = null)
+		{
+			Assert.ArgumentNotNull(visibleExtent, nameof(visibleExtent));
+			Assert.ArgumentCondition(! visibleExtent.IsEmpty, "visible extent is empty");
+
+			Geometry reference;
+			if (TryGetReferenceGeometry(visibleExtent, candidate, out reference))
+			{
+				return Assert.NotNull(reference, "reference is null");
+			}
+
+			Assert.NotNull(CurrentWorkList.Current);
+
+			if (TryGetReferenceGeometry(visibleExtent, CurrentWorkList.Current.Extent,
+			                            out reference))
+			{
+				return Assert.NotNull(reference, "reference is null");
+			}
+
+			MapPoint centroid = GeometryEngine.Instance.Centroid(visibleExtent);
+			return Assert.NotNull(centroid, "centroid is null");
+		}
+
+		private static bool TryGetReferenceGeometry(
+			[NotNull] Envelope visibleExtent,
+			[CanBeNull] Geometry candidateReferenceGeometry,
+			[CanBeNull] out Geometry referenceGeometry)
+		{
+			if (candidateReferenceGeometry == null || candidateReferenceGeometry.IsEmpty)
+			{
+				referenceGeometry = null;
+				return false;
+			}
+
+			Map map = MapView.Active.Map;
+
+			Geometry projected =
+				GeometryUtils.EnsureSpatialReference(candidateReferenceGeometry,
+				                                     map.SpatialReference);
+
+			if (GeometryUtils.Contains(visibleExtent, projected))
+			{
+				referenceGeometry = projected;
+				return true;
+			}
+
+			referenceGeometry = null;
+			return false;
 		}
 
 		protected void ZoomTo()
@@ -292,7 +365,11 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		private async Task ZoomToAsync()
 		{
-			
+			if (ShiftPressed())
+			{
+				return;
+			}
+
 			IWorkItem item = CurrentWorkList.Current;
 
 			if (item == null)
@@ -300,9 +377,14 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				return;
 			}
 
-			var envelope = await QueuedTask.Run(() => GetEnvelope(item));
+			Envelope envelope = await QueuedTask.Run(() => GetEnvelope(item));
 
 			await MapView.Active.ZoomToAsync(envelope, TimeSpan.FromSeconds(_seconds));
+		}
+
+		private static bool ShiftPressed()
+		{
+			return (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift;
 		}
 
 		private async Task PanToAsync()
@@ -332,7 +414,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				{
 					CurrentWorkList.GoFirst();
 					CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
-					ZoomTo();
 				});
 			}, _msg);
 		}
@@ -345,7 +426,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				{
 					CurrentWorkList.GoNext();
 					CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
-					ZoomTo();
 				});
 			}, _msg);
 		}

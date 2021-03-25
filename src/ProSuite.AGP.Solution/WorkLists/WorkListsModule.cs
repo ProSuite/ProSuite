@@ -104,8 +104,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 				return;
 			}
 
-			// after creation go to first item
-			worklist.GoFirst();
+			// after creation go to nearest item
+			worklist.GoNearest(MapView.Active.Extent);
 
 			// wiring work list events, etc. is done in OnDrawComplete
 			// register work list before creating the layer
