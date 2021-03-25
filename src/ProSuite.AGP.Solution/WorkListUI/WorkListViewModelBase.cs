@@ -355,16 +355,11 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			await ViewUtils.TryAsync(() =>
 			{
 				if (FrameworkApplication.CurrentTool != ConfigIDs.Editing_PickWorkListItemTool)
-				{
 					_lastActiveTool = FrameworkApplication.CurrentTool;
-					WorkListsModule.Current.WorkItemPicked += Current_WorkItemPicked;
-					return FrameworkApplication.SetCurrentToolAsync(ConfigIDs.Editing_PickWorkListItemTool);
-				}
-				else
-				{
-					// if picker tool is active then restore previous one
-					return FrameworkApplication.SetCurrentToolAsync(_lastActiveTool);
-				}
+
+				WorkListsModule.Current.WorkItemPicked += Current_WorkItemPicked;
+				WorkListsModule.Current.ActiveWorkListlayer = CurrentWorkList; // only current worklist will select invoked picker
+				return FrameworkApplication.SetCurrentToolAsync(ConfigIDs.Editing_PickWorkListItemTool);
 			}, _msg);
 		}
 
@@ -420,6 +415,9 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			if(!string.IsNullOrEmpty(_lastActiveTool))
 				FrameworkApplication.SetCurrentToolAsync(_lastActiveTool);
+			// TODO this for test only
+			if (WorkListsModule.Current.ActiveWorkListlayer.Name == CurrentWorkList.Name )
+				WorkListsModule.Current.ActiveWorkListlayer = null;
 		}
 
 		private void FlashCurrentFeature()

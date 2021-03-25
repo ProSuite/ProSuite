@@ -1,4 +1,5 @@
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
@@ -10,11 +11,12 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace ProSuite.AGP.Solution.Selection
 {
-	internal class PickWorkListItemTool : SelectionToolBase
+	class PickWorkListItemTool : SelectionToolBase
 	{
 		[CanBeNull]
 		public FeatureLayer WorkListLayer { get; set; }
@@ -40,9 +42,13 @@ namespace ProSuite.AGP.Solution.Selection
 			//can select from layer if the layer is a worklist layer
 			if (WorkListsModule.Current.LayersByWorklistName.ContainsValue(featureLayer))
 			{
-				WorkListLayer = featureLayer;
-				ProSuite.Commons.AGP.Carto.LayerUtils.SetLayerSelectability(WorkListLayer, true);
-				return true;
+				FeatureLayer layer = null; // TODO - should be better comparison
+				if ( WorkListsModule.Current.LayersByWorklistName.TryGetValue(WorkListsModule.Current.ActiveWorkListlayer?.Name, out layer)
+					&& layer?.Name == featureLayer.Name) {
+					WorkListLayer = featureLayer;
+					ProSuite.Commons.AGP.Carto.LayerUtils.SetLayerSelectability(WorkListLayer, true);
+					return true;
+				}
 			}
 			return false;
 		}
@@ -102,5 +108,6 @@ namespace ProSuite.AGP.Solution.Selection
 
 			return found;
 		}
+
 	}
 }

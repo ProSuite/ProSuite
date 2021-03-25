@@ -106,6 +106,8 @@
           <button refID="esri_mapping_clearSelectionButton" size="small" />
           <button refID="WorkLists_ShowWorkListsButton" size="small" />
           <button refID="WorkLists_CreateSelectionWorkList" size="large" />
+          <!--TODO PickerTool test-->
+          <!--<tool refID="ProSuiteTools_PickWorkListItemTool" size="large" />-->
         </group>
       </groups>
       <controls>
@@ -226,9 +228,11 @@ O: Additional options
             Select features for use with the selection worklist<disabledText />
           </tooltip>
         </tool>
-        <tool id="ProSuiteTools_PickWorkListItemTool" caption="PickWorkListItem"
-              className="Selection.PickWorkListItemTool" loadOnClick="true" smallImage="Images\SelectionTool.png"
-              largeImage="Images\SelectionTool.png" condition="esri_mapping_mapPane">
+        <tool id="ProSuiteTools_PickWorkListItemTool" caption="Picker Tool"
+              className="Selection.PickWorkListItemTool" loadOnClick="true"
+              smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png"
+              largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png"
+              condition="esri_mapping_mapPane">
           <tooltip heading="Pick WorkItem Tool">
             Pick a workitem for setting it as current work item<disabledText />
           </tooltip>

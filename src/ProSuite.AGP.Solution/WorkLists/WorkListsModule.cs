@@ -54,6 +54,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		public Dictionary<string, FeatureLayer> LayersByWorklistName => _layersByWorklistName;
 
+		public IWorkList ActiveWorkListlayer { get; internal set; }
+
 		public event EventHandler<WorkItemPickArgs> WorkItemPicked;
 
 		public void ShowView()
