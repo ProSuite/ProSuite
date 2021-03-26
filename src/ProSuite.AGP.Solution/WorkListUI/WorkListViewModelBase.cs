@@ -496,7 +496,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			if(!string.IsNullOrEmpty(_lastActiveTool))
 				FrameworkApplication.SetCurrentToolAsync(_lastActiveTool);
 			// TODO this for test only
-			if (WorkListsModule.Current.ActiveWorkListlayer.Name == CurrentWorkList.Name )
+			if (WorkListsModule.Current.ActiveWorkListlayer?.Name == CurrentWorkList.Name )
 				WorkListsModule.Current.ActiveWorkListlayer = null;
 		}
 

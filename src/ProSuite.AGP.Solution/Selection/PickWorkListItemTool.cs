@@ -44,7 +44,7 @@ namespace ProSuite.AGP.Solution.Selection
 			{
 				FeatureLayer layer = null; // TODO - should be better comparison
 				if ( WorkListsModule.Current.LayersByWorklistName.TryGetValue(WorkListsModule.Current.ActiveWorkListlayer?.Name, out layer)
-					&& layer?.Name == featureLayer.Name) {
+					&& layer?.URI == featureLayer.URI) {
 					WorkListLayer = featureLayer;
 					ProSuite.Commons.AGP.Carto.LayerUtils.SetLayerSelectability(WorkListLayer, true);
 					return true;
