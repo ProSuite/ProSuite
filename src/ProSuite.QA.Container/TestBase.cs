@@ -14,10 +14,296 @@ using ProSuite.QA.Container.TestSupport;
 
 namespace ProSuite.QA.Container
 {
+	public abstract class TestBase : ProcessBase, ITest, IErrorReporting
+	{
+		protected static int NoError => 0;
+
+		public virtual event EventHandler<RowEventArgs> TestingRow;
+
+		protected event EventHandler<QaErrorEventArgs> PostProcessError;
+		public virtual event EventHandler<QaErrorEventArgs> QaError;
+
+		protected TestBase([NotNull] IEnumerable<ITable> tables)
+			: base(tables) { }
+
+		public abstract int Execute();
+
+		public abstract int Execute(IEnvelope boundingBox);
+
+		public abstract int Execute(IPolygon area);
+
+		public abstract int Execute(IEnumerable<IRow> selectedRows);
+
+		public abstract int Execute(IRow row);
+
+		private void OnQaError([NotNull] QaErrorEventArgs args)
+		{
+			QaError?.Invoke(this, args);
+		}
+
+		int IErrorReporting.Report(string description,
+															 params IRow[] rows)
+		{
+			return ReportError(description, null, null, null, rows);
+		}
+		protected bool CancelTestingRow([NotNull] IRow row, Guid? recycleUnique = null,
+																		bool ignoreTestArea = false)
+		{
+			EventHandler<RowEventArgs> handler = TestingRow;
+
+			if (handler == null)
+			{
+				return false;
+			}
+
+			RowEventArgs rowEventArgs = !recycleUnique.HasValue
+																		? new RowEventArgs(row)
+																		: new RowEventArgs(row, recycleUnique.Value);
+
+			rowEventArgs.IgnoreTestArea = ignoreTestArea;
+			handler(this, rowEventArgs);
+
+			return rowEventArgs.Cancel;
+		}
+
+		int IErrorReporting.Report(string description,
+															 IssueCode issueCode,
+															 string affectedComponent,
+															 params IRow[] rows)
+		{
+			const IGeometry errorGeometry = null;
+			const bool reportIndividualParts = false;
+
+			return ReportError(description, errorGeometry,
+												 issueCode, affectedComponent,
+												 reportIndividualParts,
+												 rows);
+		}
+
+		int IErrorReporting.Report(string description,
+															 IGeometry errorGeometry,
+															 params IRow[] rows)
+		{
+			return ReportError(description, errorGeometry, null, null, rows);
+		}
+
+		int IErrorReporting.Report(string description,
+															 IGeometry errorGeometry,
+															 IssueCode issueCode,
+															 string affectedComponent,
+															 params IRow[] rows)
+		{
+			const bool reportIndividualParts = false;
+
+			return ReportError(description, errorGeometry,
+												 issueCode, affectedComponent,
+												 reportIndividualParts, rows);
+		}
+
+		int IErrorReporting.Report(string description,
+															 IGeometry errorGeometry,
+															 IssueCode issueCode,
+															 bool reportIndividualParts,
+															 params IRow[] rows)
+		{
+			return ReportError(description, errorGeometry,
+												 issueCode, null,
+												 reportIndividualParts, rows);
+		}
+		public int Report(string description, IGeometry errorGeometry, IssueCode issueCode,
+											string affectedComponent, IEnumerable<object> values,
+											params IRow[] rows)
+		{
+			return ReportError(description, errorGeometry,
+												 issueCode, affectedComponent, values,
+												 rows);
+		}
+
+		int IErrorReporting.Report(string description,
+															 IGeometry errorGeometry,
+															 IssueCode issueCode,
+															 string affectedComponent,
+															 bool reportIndividualParts,
+															 params IRow[] rows)
+		{
+			return ReportError(description, errorGeometry,
+												 issueCode, affectedComponent,
+												 reportIndividualParts, rows);
+		}
+
+		protected int ReportError([NotNull] string description,
+															[CanBeNull] IGeometry errorGeometry,
+															[CanBeNull] IssueCode issueCode,
+															[CanBeNull] string affectedComponent,
+															bool reportIndividualParts,
+															params IRow[] rows)
+		{
+			return ReportError(description, errorGeometry,
+												 issueCode, affectedComponent, null,
+												 reportIndividualParts, rows);
+		}
+
+		protected int ReportError([NotNull] string description,
+															[CanBeNull] IGeometry errorGeometry,
+															[CanBeNull] IssueCode issueCode,
+															[CanBeNull] string affectedComponent,
+															[CanBeNull] IEnumerable<object> values,
+															bool reportIndividualParts,
+															params IRow[] rows)
+		{
+			ICollection<object> valueCollection =
+				values == null
+					? null
+					: CollectionUtils.GetCollection(values);
+
+			if (!reportIndividualParts || errorGeometry == null || errorGeometry.IsEmpty)
+			{
+				return ReportError(description, errorGeometry,
+													 issueCode, affectedComponent, valueCollection,
+													 rows);
+			}
+
+			var errorCount = 0;
+
+			foreach (IGeometry part in GeometryUtils.Explode(errorGeometry))
+			{
+				if (!part.IsEmpty)
+				{
+					errorCount += ReportError(description, part,
+																		issueCode, affectedComponent, valueCollection,
+																		rows);
+				}
+			}
+
+			return errorCount;
+		}
+
+		protected int ReportError([NotNull] string description,
+															[CanBeNull] IssueCode issueCode,
+															[CanBeNull] string affectedComponent,
+															[NotNull] IRow row)
+		{
+			return ReportError(description, TestUtils.GetShapeCopy(row),
+												 issueCode, affectedComponent, row);
+		}
+
+		[Obsolete("call overload with issueCode and affectedComponent")]
+		protected int ReportError([NotNull] string description,
+															[CanBeNull] IGeometry errorGeometry,
+															params IRow[] rows)
+		{
+			return ReportError(description, errorGeometry, null, null, rows);
+		}
+
+		protected int ReportError([NotNull] string description,
+															[CanBeNull] IGeometry errorGeometry,
+															[CanBeNull] IssueCode issueCode,
+															[CanBeNull] string affectedComponent,
+															params IRow[] rows)
+		{
+			return ReportError(description, errorGeometry,
+												 issueCode, affectedComponent,
+												 InvolvedRowUtils.GetInvolvedRows(rows));
+		}
+
+		protected int ReportError([NotNull] string description,
+															[CanBeNull] IGeometry errorGeometry,
+															[CanBeNull] IssueCode issueCode,
+															[CanBeNull] string affectedComponent,
+															[CanBeNull] IEnumerable<object> values,
+															params IRow[] rows)
+		{
+			return ReportError(description, errorGeometry,
+												 issueCode, affectedComponent,
+												 InvolvedRowUtils.GetInvolvedRows(rows),
+												 values);
+		}
+
+		[Obsolete("call overload with issueCode and affectedComponent")]
+		protected int ReportError([NotNull] string description,
+															[CanBeNull] IGeometry errorGeometry,
+															[NotNull] IEnumerable<InvolvedRow> involvedRows)
+		{
+			return ReportError(description, errorGeometry, null, null, involvedRows);
+		}
+
+		protected int ReportError([NotNull] string description,
+															[CanBeNull] IGeometry errorGeometry,
+															[CanBeNull] IssueCode issueCode,
+															[CanBeNull] string affectedComponent,
+															[NotNull] IEnumerable<InvolvedRow> involvedRows,
+															[CanBeNull] IEnumerable<object> values = null)
+		{
+			var args = new QaErrorEventArgs(new QaError(this, description, involvedRows,
+																									errorGeometry,
+																									issueCode, affectedComponent,
+																									values: values));
+			PostProcessError?.Invoke(this, args);
+			if (args.Cancel)
+			{
+				return 0;
+			}
+
+			OnQaError(args);
+			return 1;
+		}
+
+		protected int ReportError([NotNull] string description,
+															[NotNull] ITable table,
+															[CanBeNull] IssueCode issueCode,
+															[CanBeNull] string affectedComponent,
+															[CanBeNull] IEnumerable<object> values = null)
+		{
+			var involvedRows = new List<InvolvedRow> { CreateInvolvedRowForTable(table) };
+
+			const IGeometry geometry = null;
+			var qaError = new QaError(this, description, involvedRows, geometry,
+																issueCode, affectedComponent,
+																values: values);
+
+			var args = new QaErrorEventArgs(qaError);
+			PostProcessError?.Invoke(this, args);
+			if (args.Cancel)
+			{
+				return 0;
+			}
+
+			OnQaError(args);
+
+			return 1;
+		}
+
+		[NotNull]
+		private static InvolvedRow CreateInvolvedRowForTable([NotNull] ITable table)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+
+			return new InvolvedRow(DatasetUtils.GetName(table));
+		}
+	}
+
+	public abstract class PreProcessor : ProcessBase
+	{
+		protected PreProcessor([NotNull] IEnumerable<ITable> tables, int involvedTableIndex)
+			: base(tables)
+		{
+			InvolvedTableIndex = involvedTableIndex;
+		}
+		public int InvolvedTableIndex { get; }
+		public abstract bool CancelExecute(IRow row);
+	}
+	public abstract class PostProcessor : ProcessBase
+	{
+		protected PostProcessor([NotNull] IEnumerable<ITable> tables)
+			: base(tables)
+		{ }
+		public abstract bool Cancel(QaError error);
+	}
+
 	/// <summary>
 	/// Base class for tests
 	/// </summary>
-	public abstract class TestBase : ITest, IErrorReporting
+	public abstract class ProcessBase
 	{
 		private class TableProps
 		{
@@ -39,7 +325,7 @@ namespace ProSuite.QA.Container
 		/// Initializes a new instance of the <see cref="TestBase"/> class.
 		/// </summary>
 		/// <param name="tables">The tables.</param>
-		protected TestBase([NotNull] IEnumerable<ITable> tables)
+		protected ProcessBase([NotNull] IEnumerable<ITable> tables)
 		{
 			Assert.ArgumentNotNull(tables, nameof(tables));
 
@@ -50,8 +336,6 @@ namespace ProSuite.QA.Container
 		}
 
 		#endregion
-
-		protected static int NoError => 0;
 
 		public AngleUnit AngleUnit { get; set; } = DefaultAngleUnit;
 
@@ -72,26 +356,23 @@ namespace ProSuite.QA.Container
 		/// </summary>
 		public IList<ITable> InvolvedTables { get; }
 
-		public virtual event EventHandler<RowEventArgs> TestingRow;
-
-		protected event EventHandler<QaErrorEventArgs> PostProcessError;
-		public virtual event EventHandler<QaErrorEventArgs> QaError;
-
 		protected int AddInvolvedTable(ITable table, string constraint, bool sqlCaseSensitivity,
-		                               bool queriedOnly = false)
+																	 bool queriedOnly = false)
 		{
 			InvolvedTables.Add(table);
 			_tableProps.Add(new TableProps
-			                {
-				                Constraint = constraint, UseCaseSensitiveSQL = sqlCaseSensitivity,
-				                QueriedOnly = queriedOnly
-			                });
+			{
+				Constraint = constraint,
+				UseCaseSensitiveSQL = sqlCaseSensitivity,
+				QueriedOnly = queriedOnly
+			});
 			AddInvolvedTableCore(table, constraint, sqlCaseSensitivity);
 			return InvolvedTables.Count - 1;
 		}
 
 		protected virtual void AddInvolvedTableCore(
-			ITable table, string constraint, bool sqlCaseSensitivity) { }
+			ITable table, string constraint, bool sqlCaseSensitivity)
+		{ }
 
 		public void SetConstraint(int tableIndex, string constraint)
 		{
@@ -106,7 +387,8 @@ namespace ProSuite.QA.Container
 		}
 
 		protected virtual void SetConstraintCore(ITable table, int tableIndex,
-		                                         string constraint) { }
+																						 string constraint)
+		{ }
 
 		public void SetAreaOfInterest(IPolygon areaOfInterest)
 		{
@@ -117,91 +399,9 @@ namespace ProSuite.QA.Container
 			}
 
 			GeometryUtils.EnsureSpatialReference(areaOfInterest, GetSpatialReference(),
-			                                     out _areaOfInterest);
+																					 out _areaOfInterest);
 
-			((ISpatialIndex) _areaOfInterest).AllowIndexing = true;
-		}
-
-		public abstract int Execute();
-
-		public abstract int Execute(IEnvelope boundingBox);
-
-		public abstract int Execute(IPolygon area);
-
-		public abstract int Execute(IEnumerable<IRow> selectedRows);
-
-		public abstract int Execute(IRow row);
-
-		int IErrorReporting.Report(string description,
-		                           params IRow[] rows)
-		{
-			return ReportError(description, null, null, null, rows);
-		}
-
-		int IErrorReporting.Report(string description,
-		                           IssueCode issueCode,
-		                           string affectedComponent,
-		                           params IRow[] rows)
-		{
-			const IGeometry errorGeometry = null;
-			const bool reportIndividualParts = false;
-
-			return ReportError(description, errorGeometry,
-			                   issueCode, affectedComponent,
-			                   reportIndividualParts,
-			                   rows);
-		}
-
-		int IErrorReporting.Report(string description,
-		                           IGeometry errorGeometry,
-		                           params IRow[] rows)
-		{
-			return ReportError(description, errorGeometry, null, null, rows);
-		}
-
-		int IErrorReporting.Report(string description,
-		                           IGeometry errorGeometry,
-		                           IssueCode issueCode,
-		                           string affectedComponent,
-		                           params IRow[] rows)
-		{
-			const bool reportIndividualParts = false;
-
-			return ReportError(description, errorGeometry,
-			                   issueCode, affectedComponent,
-			                   reportIndividualParts, rows);
-		}
-
-		public int Report(string description, IGeometry errorGeometry, IssueCode issueCode,
-		                  string affectedComponent, IEnumerable<object> values,
-		                  params IRow[] rows)
-		{
-			return ReportError(description, errorGeometry,
-			                   issueCode, affectedComponent, values,
-			                   rows);
-		}
-
-		int IErrorReporting.Report(string description,
-		                           IGeometry errorGeometry,
-		                           IssueCode issueCode,
-		                           bool reportIndividualParts,
-		                           params IRow[] rows)
-		{
-			return ReportError(description, errorGeometry,
-			                   issueCode, null,
-			                   reportIndividualParts, rows);
-		}
-
-		int IErrorReporting.Report(string description,
-		                           IGeometry errorGeometry,
-		                           IssueCode issueCode,
-		                           string affectedComponent,
-		                           bool reportIndividualParts,
-		                           params IRow[] rows)
-		{
-			return ReportError(description, errorGeometry,
-			                   issueCode, affectedComponent,
-			                   reportIndividualParts, rows);
+			((ISpatialIndex)_areaOfInterest).AllowIndexing = true;
 		}
 
 		/// <summary>
@@ -218,7 +418,7 @@ namespace ProSuite.QA.Container
 
 		[NotNull]
 		protected static IList<ITable> Union([NotNull] IList<ITable> tables0,
-		                                     [NotNull] IList<ITable> tables1)
+																				 [NotNull] IList<ITable> tables1)
 		{
 			var union = new List<ITable>(tables0.Count + tables1.Count);
 
@@ -247,7 +447,7 @@ namespace ProSuite.QA.Container
 		[NotNull]
 		protected static IList<ITable> CastToTables(params IFeatureClass[] featureClasses)
 		{
-			return CastToTables((IEnumerable<IFeatureClass>) featureClasses);
+			return CastToTables((IEnumerable<IFeatureClass>)featureClasses);
 		}
 
 		[NotNull]
@@ -273,7 +473,7 @@ namespace ProSuite.QA.Container
 				{
 					Assert.NotNull(featureClass, "list entry is null");
 
-					union.Add((ITable) featureClass);
+					union.Add((ITable)featureClass);
 				}
 			}
 
@@ -282,181 +482,6 @@ namespace ProSuite.QA.Container
 
 		[CanBeNull]
 		protected abstract ISpatialReference GetSpatialReference();
-
-		protected int ReportError([NotNull] string description,
-		                          [CanBeNull] IGeometry errorGeometry,
-		                          [CanBeNull] IssueCode issueCode,
-		                          [CanBeNull] string affectedComponent,
-		                          bool reportIndividualParts,
-		                          params IRow[] rows)
-		{
-			return ReportError(description, errorGeometry,
-			                   issueCode, affectedComponent, null,
-			                   reportIndividualParts, rows);
-		}
-
-		protected int ReportError([NotNull] string description,
-		                          [CanBeNull] IGeometry errorGeometry,
-		                          [CanBeNull] IssueCode issueCode,
-		                          [CanBeNull] string affectedComponent,
-		                          [CanBeNull] IEnumerable<object> values,
-		                          bool reportIndividualParts,
-		                          params IRow[] rows)
-		{
-			ICollection<object> valueCollection =
-				values == null
-					? null
-					: CollectionUtils.GetCollection(values);
-
-			if (! reportIndividualParts || errorGeometry == null || errorGeometry.IsEmpty)
-			{
-				return ReportError(description, errorGeometry,
-				                   issueCode, affectedComponent, valueCollection,
-				                   rows);
-			}
-
-			var errorCount = 0;
-
-			foreach (IGeometry part in GeometryUtils.Explode(errorGeometry))
-			{
-				if (! part.IsEmpty)
-				{
-					errorCount += ReportError(description, part,
-					                          issueCode, affectedComponent, valueCollection,
-					                          rows);
-				}
-			}
-
-			return errorCount;
-		}
-
-		protected int ReportError([NotNull] string description,
-		                          [CanBeNull] IssueCode issueCode,
-		                          [CanBeNull] string affectedComponent,
-		                          [NotNull] IRow row)
-		{
-			return ReportError(description, TestUtils.GetShapeCopy(row),
-			                   issueCode, affectedComponent, row);
-		}
-
-		[Obsolete("call overload with issueCode and affectedComponent")]
-		protected int ReportError([NotNull] string description,
-		                          [CanBeNull] IGeometry errorGeometry,
-		                          params IRow[] rows)
-		{
-			return ReportError(description, errorGeometry, null, null, rows);
-		}
-
-		protected int ReportError([NotNull] string description,
-		                          [CanBeNull] IGeometry errorGeometry,
-		                          [CanBeNull] IssueCode issueCode,
-		                          [CanBeNull] string affectedComponent,
-		                          params IRow[] rows)
-		{
-			return ReportError(description, errorGeometry,
-			                   issueCode, affectedComponent,
-			                   InvolvedRowUtils.GetInvolvedRows(rows));
-		}
-
-		protected int ReportError([NotNull] string description,
-		                          [CanBeNull] IGeometry errorGeometry,
-		                          [CanBeNull] IssueCode issueCode,
-		                          [CanBeNull] string affectedComponent,
-		                          [CanBeNull] IEnumerable<object> values,
-		                          params IRow[] rows)
-		{
-			return ReportError(description, errorGeometry,
-			                   issueCode, affectedComponent,
-			                   InvolvedRowUtils.GetInvolvedRows(rows),
-			                   values);
-		}
-
-		[Obsolete("call overload with issueCode and affectedComponent")]
-		protected int ReportError([NotNull] string description,
-		                          [CanBeNull] IGeometry errorGeometry,
-		                          [NotNull] IEnumerable<InvolvedRow> involvedRows)
-		{
-			return ReportError(description, errorGeometry, null, null, involvedRows);
-		}
-
-		protected int ReportError([NotNull] string description,
-		                          [CanBeNull] IGeometry errorGeometry,
-		                          [CanBeNull] IssueCode issueCode,
-		                          [CanBeNull] string affectedComponent,
-		                          [NotNull] IEnumerable<InvolvedRow> involvedRows,
-		                          [CanBeNull] IEnumerable<object> values = null)
-		{
-			var args = new QaErrorEventArgs(new QaError(this, description, involvedRows,
-			                                            errorGeometry,
-			                                            issueCode, affectedComponent,
-			                                            values: values));
-			PostProcessError?.Invoke(this, args);
-			if (args.Cancel)
-			{
-				return 0;
-			}
-
-			OnQaError(args);
-			return 1;
-		}
-
-		protected int ReportError([NotNull] string description,
-		                          [NotNull] ITable table,
-		                          [CanBeNull] IssueCode issueCode,
-		                          [CanBeNull] string affectedComponent,
-		                          [CanBeNull] IEnumerable<object> values = null)
-		{
-			var involvedRows = new List<InvolvedRow> {CreateInvolvedRowForTable(table)};
-
-			const IGeometry geometry = null;
-			var qaError = new QaError(this, description, involvedRows, geometry,
-			                          issueCode, affectedComponent,
-			                          values: values);
-
-			var args = new QaErrorEventArgs(qaError);
-			PostProcessError?.Invoke(this, args);
-			if (args.Cancel)
-			{
-				return 0;
-			}
-
-			OnQaError(args);
-
-			return 1;
-		}
-
-		[NotNull]
-		private static InvolvedRow CreateInvolvedRowForTable([NotNull] ITable table)
-		{
-			Assert.ArgumentNotNull(table, nameof(table));
-
-			return new InvolvedRow(DatasetUtils.GetName(table));
-		}
-
-		private void OnQaError([NotNull] QaErrorEventArgs args)
-		{
-			QaError?.Invoke(this, args);
-		}
-
-		protected bool CancelTestingRow([NotNull] IRow row, Guid? recycleUnique = null,
-		                                bool ignoreTestArea = false)
-		{
-			EventHandler<RowEventArgs> handler = TestingRow;
-
-			if (handler == null)
-			{
-				return false;
-			}
-
-			RowEventArgs rowEventArgs = ! recycleUnique.HasValue
-				                            ? new RowEventArgs(row)
-				                            : new RowEventArgs(row, recycleUnique.Value);
-
-			rowEventArgs.IgnoreTestArea = ignoreTestArea;
-			handler(this, rowEventArgs);
-
-			return rowEventArgs.Cancel;
-		}
 
 		[NotNull]
 		protected string FormatAngle(double radians, string format)
@@ -481,19 +506,19 @@ namespace ProSuite.QA.Container
 
 		[NotNull]
 		protected string FormatLengthComparison(double value0, string compare,
-		                                        double value1,
-		                                        ISpatialReference sr)
+																						double value1,
+																						ISpatialReference sr)
 		{
 			string result = FormatLengthComparison(value0, compare, value1, sr,
-			                                       "{0} {1} {2}");
+																						 "{0} {1} {2}");
 			return result;
 		}
 
 		[NotNull]
 		protected string FormatLengthComparison(double value0, string compare,
-		                                        double value1,
-		                                        ISpatialReference sr,
-		                                        string expressionFormat)
+																						double value1,
+																						ISpatialReference sr,
+																						string expressionFormat)
 		{
 			esriUnits lengthUnit = _lengthUnit;
 			double referenceScale = ReferenceScale;
@@ -505,16 +530,16 @@ namespace ProSuite.QA.Container
 
 			string compareFormat = FormatUtils.CompareFormat(v0, compare, v1, numberFormat);
 			string result = string.Format(expressionFormat,
-			                              FormatLength(v0, compareFormat),
-			                              compare,
-			                              FormatLength(v1, compareFormat));
+																		FormatLength(v0, compareFormat),
+																		compare,
+																		FormatLength(v1, compareFormat));
 
 			return result;
 		}
 
 		[NotNull]
 		protected string FormatAreaComparison(double value0, string compare, double value1,
-		                                      ISpatialReference sr)
+																					ISpatialReference sr)
 		{
 			double f = FormatUtils.GetLengthUnitFactor(sr, _lengthUnit, ReferenceScale);
 			double v0 = f * f * value0;
@@ -523,8 +548,8 @@ namespace ProSuite.QA.Container
 			string format = FormatUtils.CompareFormat(v0, compare, v1, NumberFormat);
 
 			return string.Format("{0} {1} {2}",
-			                     FormatArea(v0, format), compare,
-			                     FormatArea(v1, format));
+													 FormatArea(v0, format), compare,
+													 FormatArea(v1, format));
 		}
 
 		/// <summary>
@@ -538,7 +563,7 @@ namespace ProSuite.QA.Container
 		/// <returns>"string.Format({0} {1} {2}, v0, compare, v1)" </returns>
 		[NotNull]
 		protected string FormatComparison(double v0, string compare, double v1,
-		                                  string initFormat)
+																			string initFormat)
 		{
 			return FormatComparison(v0, compare, v1, initFormat, "{0} {1} {2}");
 		}
@@ -556,8 +581,8 @@ namespace ProSuite.QA.Container
 		/// <returns>string.Format('expressionString', v0, compare, v1)</returns>
 		[NotNull]
 		protected string FormatComparison(double v0, string compare, double v1,
-		                                  string initFormat,
-		                                  string expressionString)
+																			string initFormat,
+																			string expressionString)
 		{
 			if (initFormat == null)
 			{
@@ -565,7 +590,7 @@ namespace ProSuite.QA.Container
 			}
 
 			return FormatUtils.FormatComparison(initFormat, v0, v1, compare,
-			                                    expressionString);
+																					expressionString);
 		}
 
 		[NotNull]
@@ -573,16 +598,16 @@ namespace ProSuite.QA.Container
 		{
 			string v = FormatUtils.GetValueString(area, format);
 
-			return ! string.IsNullOrEmpty(_unitString)
-				       ? string.Format("{0} {1}2", v, _unitString)
-				       : v;
+			return !string.IsNullOrEmpty(_unitString)
+							 ? string.Format("{0} {1}2", v, _unitString)
+							 : v;
 		}
 
 		[NotNull]
 		private string FormatLength(double value, string format)
 		{
 			string s = string.Format("{0} {1}", FormatUtils.GetValueString(value, format),
-			                         _unitString);
+															 _unitString);
 			return s;
 		}
 
@@ -640,12 +665,12 @@ namespace ProSuite.QA.Container
 
 		public bool GetSqlCaseSensitivity([NotNull] params int[] tableIndexes)
 		{
-			return GetSqlCaseSensitivity((IEnumerable<int>) tableIndexes);
+			return GetSqlCaseSensitivity((IEnumerable<int>)tableIndexes);
 		}
 
 		public bool GetSqlCaseSensitivity([NotNull] params ITable[] tables)
 		{
-			return GetSqlCaseSensitivity((IEnumerable<ITable>) tables);
+			return GetSqlCaseSensitivity((IEnumerable<ITable>)tables);
 		}
 
 		public bool GetSqlCaseSensitivity([NotNull] IEnumerable<ITable> tables)
