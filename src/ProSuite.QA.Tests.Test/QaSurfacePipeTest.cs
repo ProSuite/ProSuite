@@ -1,5 +1,9 @@
 using System.Collections.Generic;
+#if Server
+using ESRI.ArcGIS.DatasourcesRaster;
+#else
 using ESRI.ArcGIS.DataSourcesRaster;
+#endif
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
@@ -21,7 +25,7 @@ using TestUtils = ProSuite.Commons.AO.Test.TestUtils;
 namespace ProSuite.QA.Tests.Test
 {
 	[TestFixture]
-	public class Qa3dPipeTest
+	public class QaSurfacePipeTest
 	{
 		private readonly ArcGISLicenses _lic = new ArcGISLicenses();
 		private IFeatureWorkspace _testFgdbWs;
@@ -106,7 +110,7 @@ namespace ProSuite.QA.Tests.Test
 			IMosaicDataset mosaicDataset = DatasetUtils.OpenMosaicDataset(workspace,
 				"TOPGIS_TLM.TLM_DTM_MOSAIC");
 
-			var test = new Qa3dPipeX(fc, new SimpleRasterMosaic(mosaicDataset), 4);
+			var test = new QaSurfacePipe(fc, new SimpleRasterMosaic(mosaicDataset), 4);
 
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute();
@@ -151,14 +155,14 @@ namespace ProSuite.QA.Tests.Test
 			Dataset mds1 =
 				model.AddDataset(new ModelMosaicRasterDataset("TOPGIS_TLM.TLM_DTM_MOSAIC"));
 
-			var clsDesc = new ClassDescriptor(typeof(Qa3dPipeX));
-			var tstDesc = new TestDescriptor("Qa3dPipe", clsDesc, testConstructorId: 4);
-			var condition = new QualityCondition("Qa3dPipe", tstDesc);
+			var clsDesc = new ClassDescriptor(typeof(QaSurfacePipe));
+			var tstDesc = new TestDescriptor("QaSurfacePipe", clsDesc, testConstructorId: 4);
+			var condition = new QualityCondition("QaSurfacePipe", tstDesc);
 			QualityConditionParameterUtils.AddParameterValue(condition, "featureClass", mds0);
 			QualityConditionParameterUtils.AddParameterValue(condition, "simpleRasterMosaic", mds1);
 			QualityConditionParameterUtils.AddParameterValue(condition, "limit", 2);
 
-			var fact = new DefaultTestFactory(typeof(Qa3dPipeX), constructorId: 4);
+			var fact = new DefaultTestFactory(typeof(QaSurfacePipe), constructorId: 4);
 			fact.Condition = condition;
 
 			IList<ITest> tests =
@@ -183,14 +187,14 @@ namespace ProSuite.QA.Tests.Test
 			Dataset mds1 =
 				model.AddDataset(new ModelMosaicRasterDataset("TOPGIS_TLM.TLM_DTM_MOSAIC"));
 
-			var clsDesc = new ClassDescriptor(typeof(Qa3dPipeX));
-			var tstDesc = new TestDescriptor("Qa3dPipe", clsDesc, testConstructorId: 6);
-			var condition = new QualityCondition("Qa3dPipe", tstDesc);
+			var clsDesc = new ClassDescriptor(typeof(QaSurfacePipe));
+			var tstDesc = new TestDescriptor("QaSurfacePipe", clsDesc, testConstructorId: 6);
+			var condition = new QualityCondition("QaSurfacePipe", tstDesc);
 			QualityConditionParameterUtils.AddParameterValue(condition, "featureClass", mds0);
 			QualityConditionParameterUtils.AddParameterValue(condition, "mosaicLayer", mds1);
 			QualityConditionParameterUtils.AddParameterValue(condition, "limit", 2);
 
-			var fact = new DefaultTestFactory(typeof(Qa3dPipeX), 6);
+			var fact = new DefaultTestFactory(typeof(QaSurfacePipe), 6);
 			fact.Condition = condition;
 
 			IList<ITest> tests =

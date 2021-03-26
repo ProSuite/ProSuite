@@ -8,13 +8,13 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.QA.Tests
 {
-	public abstract class Qa3dOffset : ContainerTest
+	public abstract class QaSurfaceOffset : ContainerTest
 	{
-		protected Qa3dOffset([NotNull] IFeatureClass featureClass,
-		                     [NotNull] TerrainReference terrain,
-		                     double terrainTolerance,
-		                     double limit,
-		                     ZOffsetConstraint zOffsetConstraint)
+		protected QaSurfaceOffset([NotNull] IFeatureClass featureClass,
+		                          [NotNull] TerrainReference terrain,
+		                          double terrainTolerance,
+		                          double limit,
+		                          ZOffsetConstraint zOffsetConstraint)
 			: this(featureClass, limit, zOffsetConstraint)
 		{
 			Assert.ArgumentNotNull(terrain, nameof(terrain));
@@ -23,10 +23,10 @@ namespace ProSuite.QA.Tests
 			TerrainTolerance = terrainTolerance;
 		}
 
-		protected Qa3dOffset([NotNull] IFeatureClass featureClass,
-		                     [NotNull] RasterReference rasterReference,
-		                     double limit,
-		                     ZOffsetConstraint zOffsetConstraint)
+		protected QaSurfaceOffset([NotNull] IFeatureClass featureClass,
+		                          [NotNull] RasterReference rasterReference,
+		                          double limit,
+		                          ZOffsetConstraint zOffsetConstraint)
 			: this(featureClass, limit, zOffsetConstraint)
 		{
 			Assert.ArgumentNotNull(rasterReference, nameof(rasterReference));
@@ -34,9 +34,9 @@ namespace ProSuite.QA.Tests
 			InvolvedRasters = new List<RasterReference> {rasterReference};
 		}
 
-		private Qa3dOffset([NotNull] IFeatureClass featureClass,
-		                   double limit,
-		                   ZOffsetConstraint zOffsetConstraint)
+		private QaSurfaceOffset([NotNull] IFeatureClass featureClass,
+		                        double limit,
+		                        ZOffsetConstraint zOffsetConstraint)
 			: base((ITable) featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));

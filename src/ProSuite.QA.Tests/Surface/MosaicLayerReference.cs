@@ -1,7 +1,11 @@
 using System;
 using System.Linq;
 using System.Text;
+#if Server
+using ESRI.ArcGIS.DatasourcesRaster;
+#else
 using ESRI.ArcGIS.DataSourcesRaster;
+#endif
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Surface;

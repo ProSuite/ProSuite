@@ -1,6 +1,10 @@
 using System;
 using System.Reflection;
+#if Server
+using ESRI.ArcGIS.DatasourcesRaster;
+#else
 using ESRI.ArcGIS.DataSourcesRaster;
+#endif
 using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;

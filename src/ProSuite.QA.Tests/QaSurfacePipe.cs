@@ -2,7 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
+#if Server
+using ESRI.ArcGIS.DatasourcesRaster;
+#else
 using ESRI.ArcGIS.DataSourcesRaster;
+#endif
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -28,7 +32,7 @@ namespace ProSuite.QA.Tests
 	//Remark: Implement for "ISurfaceProvider"
 	[UsedImplicitly]
 	[ZValuesTest]
-	public class Qa3dPipeX : Qa3dOffset
+	public class QaSurfacePipe : QaSurfaceOffset
 	{
 		private readonly double _startEndIgnoreLength;
 		private readonly bool _asRatio;
@@ -73,7 +77,7 @@ namespace ProSuite.QA.Tests
 		#region constructors
 
 		[Doc(nameof(DocStrings.Qa3dPipe_0))]
-		public Qa3dPipeX(
+		public QaSurfacePipe(
 			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
 			IFeatureClass featureClass,
 			[Doc(nameof(DocStrings.Qa3dPipe_terrain))] [NotNull]
@@ -87,7 +91,7 @@ namespace ProSuite.QA.Tests
 			       ZOffsetConstraint.WithinLimit, 0, false) { }
 
 		[Doc(nameof(DocStrings.Qa3dPipe_1))]
-		public Qa3dPipeX(
+		public QaSurfacePipe(
 			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
 			IFeatureClass featureClass,
 			[Doc(nameof(DocStrings.Qa3dPipe_terrain))] [NotNull]
@@ -114,7 +118,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[Doc(nameof(DocStrings.Qa3dPipe_2))]
-		public Qa3dPipeX(
+		public QaSurfacePipe(
 			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
 			IFeatureClass featureClass,
 			[Doc(nameof(DocStrings.Qa3dPipe_raster))] [NotNull]
@@ -126,7 +130,7 @@ namespace ProSuite.QA.Tests
 			       ZOffsetConstraint.WithinLimit, 0, false) { }
 
 		[Doc(nameof(DocStrings.Qa3dPipe_2))]
-		public Qa3dPipeX(
+		public QaSurfacePipe(
 			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
 			IFeatureClass featureClass,
 			[Doc(nameof(DocStrings.Qa3dPipe_raster))] [NotNull]
@@ -152,7 +156,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[Doc(nameof(DocStrings.Qa3dPipe_4))]
-		public Qa3dPipeX(
+		public QaSurfacePipe(
 			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
 			IFeatureClass featureClass,
 			[Doc(nameof(DocStrings.Qa3dPipe_mosaicLayer))] [NotNull]
@@ -164,7 +168,7 @@ namespace ProSuite.QA.Tests
 			       ZOffsetConstraint.WithinLimit, 0, false) { }
 
 		[Doc(nameof(DocStrings.Qa3dPipe_4))]
-		public Qa3dPipeX(
+		public QaSurfacePipe(
 			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
 			IFeatureClass featureClass,
 			[Doc(nameof(DocStrings.Qa3dPipe_mosaicLayer))] [NotNull]
@@ -190,7 +194,7 @@ namespace ProSuite.QA.Tests
 			_interpolateTolerance = 2 * GeometryUtils.GetXyResolution(featureClass);
 		}
 
-		public Qa3dPipeX(
+		public QaSurfacePipe(
 			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
 			IFeatureClass featureClass,
 			[Doc(nameof(DocStrings.Qa3dPipe_mosaicLayer))] [NotNull]
@@ -201,7 +205,7 @@ namespace ProSuite.QA.Tests
 			       // ReSharper disable once IntroduceOptionalParameters.Global
 			       ZOffsetConstraint.WithinLimit, 0, false) { }
 
-		public Qa3dPipeX(
+		public QaSurfacePipe(
 			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
 			IFeatureClass featureClass,
 			[Doc(nameof(DocStrings.Qa3dPipe_mosaicLayer))] [NotNull]

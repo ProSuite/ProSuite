@@ -1,8 +1,3 @@
-#if Server
-using ESRI.ArcGIS.DatasourcesRaster;
-#else
-using ProSuite.QA.Container.TestContainer;
-#endif
 using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -11,6 +6,7 @@ using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.QA.Container.TestContainer;
 
 namespace ProSuite.QA.Container
 {

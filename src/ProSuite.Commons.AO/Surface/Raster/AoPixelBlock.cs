@@ -1,7 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+#if Server
+using ESRI.ArcGIS.DatasourcesRaster;
+#else
 using ESRI.ArcGIS.DataSourcesRaster;
+#endif
 using ESRI.ArcGIS.Geodatabase;
 
 namespace ProSuite.Commons.AO.Surface.Raster
