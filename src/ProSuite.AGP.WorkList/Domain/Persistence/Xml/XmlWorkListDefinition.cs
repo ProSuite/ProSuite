@@ -3,7 +3,7 @@ using System.Xml.Serialization;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 {
-	[XmlRoot("workListDefinition")]
+	[XmlRoot("WorkListDefinition")]
 	public class XmlWorkListDefinition : IWorkListDefinition<XmlWorkItemState>
 	{
 		public string Name { get; set; }

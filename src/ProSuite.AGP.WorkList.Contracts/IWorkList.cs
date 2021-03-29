@@ -10,7 +10,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 	public interface IWorkList : IRowCache, IDisposable, INotifyPropertyChanged
 	{
 		[NotNull]
-		string Name { get; }
+		string Name { get; set; }
 
 		[NotNull]
 		string DisplayName { get; }

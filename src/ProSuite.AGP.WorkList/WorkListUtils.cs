@@ -2,12 +2,15 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.Ado;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
@@ -30,7 +33,7 @@ namespace ProSuite.AGP.WorkList
 		}
 		
 		[NotNull]
-		public static Uri GetUri([NotNull] string homeFolderPath,
+		public static Uri GetDatasource([NotNull] string homeFolderPath,
 		                         [NotNull] string workListName,
 		                         [NotNull] string fileSuffix)
 		{
@@ -100,9 +103,8 @@ namespace ProSuite.AGP.WorkList
 
 			foreach (XmlWorkListWorkspace workspace in workspaces)
 			{
-				var geodatabase =
-					new Geodatabase(
-						new FileGeodatabaseConnectionPath(new Uri(workspace.Path, UriKind.Absolute)));
+				var geodatabase = GetGeodatabase(workspace);
+				Assert.NotNull(geodatabase);
 
 				if (result.ContainsKey(geodatabase))
 				{
@@ -114,6 +116,73 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			return result;
+		}
+
+		[CanBeNull]
+		private static Geodatabase GetGeodatabase([NotNull] XmlWorkListWorkspace workspace)
+		{
+			Assert.ArgumentNotNull(workspace, nameof(workspace));
+
+			// DBCLIENT = oracle
+			// AUTHENTICATION_MODE = DBMS
+			// PROJECT_INSTANCE = sde
+			// ENCRYPTED_PASSWORD = 00022e684d4b4235766e4b6e324833335277647064696e734e586f584269575652504534653763387763674876504d3d2a00
+			// SERVER = topgist
+			// INSTANCE = sde:oracle11g: topgist
+			// VERSION = SDE.DEFAULT
+			// DB_CONNECTION_PROPERTIES = topgist
+			// USER = topgis_tlm
+
+			try
+			{
+				Assert.True(
+					Enum.TryParse(workspace.WorkspaceFactory, ignoreCase: true, out WorkspaceFactory factory),
+					$"Cannot parse {nameof(WorkspaceFactory)} from string {workspace.WorkspaceFactory}");
+
+				switch (factory)
+				{
+					case WorkspaceFactory.FileGDB:
+						return new Geodatabase(
+							new FileGeodatabaseConnectionPath(
+								new Uri(workspace.ConnectionString, UriKind.Absolute)));
+
+					case WorkspaceFactory.SDE:
+						var builder = new ConnectionStringBuilder(workspace.ConnectionString);
+
+						Assert.True(
+							Enum.TryParse(builder["dbclient"], ignoreCase: true,
+							              out EnterpriseDatabaseType databaseType),
+							$"Cannot parse {nameof(EnterpriseDatabaseType)} from connection string {workspace.ConnectionString}");
+
+						Assert.True(
+							Enum.TryParse(builder["authentication_mode"], ignoreCase: true,
+							              out AuthenticationMode authMode),
+							$"Cannot parse {nameof(AuthenticationMode)} from connection string {workspace.ConnectionString}");
+
+						var connectionProperties =
+							new DatabaseConnectionProperties(databaseType)
+							{
+								AuthenticationMode = authMode,
+								ProjectInstance = builder["project_instance"],
+								Database = builder["server"], // is always null in CIMFeatureDatasetDataConnection
+								Instance = builder["instance"],
+								Version = builder["version"],
+								Branch = builder["branch"] // ?
+								//Password = builder["encrypted_password"],
+								//User = builder["user"]
+							};
+
+
+				return new Geodatabase(connectionProperties);
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Cannot open geodatabase from connection string {workspace.ConnectionString}", e);
+				return null;
+			}
 		}
 
 		private static List<Table> GetDistinctTables(XmlWorkListWorkspace workspace, Geodatabase geodatabase)
@@ -211,7 +280,7 @@ namespace ProSuite.AGP.WorkList
 			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
 			List<XmlWorkListWorkspace> workspaces = definition.Workspaces;
 
-			string result = workspaces[0].Path;
+			string result = workspaces[0].ConnectionString;
 
 			if (workspaces.Count > 0)
 			{
@@ -240,6 +309,18 @@ namespace ProSuite.AGP.WorkList
 			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
 			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
 			return definition.Name;
+		}
+
+		public static void MoveTo([NotNull] List<IWorkItem> items,
+		                          [NotNull] IWorkItem movingItem,
+		                          int insertIndex)
+		{
+			Assert.ArgumentNotNull(items, nameof(items));
+			Assert.ArgumentNotNull(movingItem, nameof(movingItem));
+			Assert.ArgumentCondition(insertIndex >= 0 && insertIndex < items.Count,
+			                         "insert index out of range: {0}", insertIndex);
+
+			CollectionUtils.MoveTo(items, movingItem, insertIndex);
 		}
 	}
 }

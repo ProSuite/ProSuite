@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence;
@@ -74,6 +75,11 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			return base.GetRowsCore(sourceClass, filter, recycle);
+		}
+
+		protected override async Task SetStatusCoreAsync(IWorkItem item, ISourceClass source)
+		{
+			await Task.Run(() => WorkItemStateRepository.Update(item));
 		}
 	}
 }

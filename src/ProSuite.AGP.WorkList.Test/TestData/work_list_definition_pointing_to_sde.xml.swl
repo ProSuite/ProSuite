@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<WorkListDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>f3feb1b6_e746_46cf_8c28_48cc60a0114c</Name>
+  <Type>ProSuite.AGP.WorkList.Domain.SelectionWorkList</Type>
+  <Assembly>ProSuite.AGP.WorkList</Assembly>
+  <Workspaces>
+    <Workspace connectionString="ENCRYPTED_PASSWORD=00022e687a666275386f31555667704d515168504e32312b46777442705734515a4d395878536773425278636b2b303d2a00;SERVER=topgist;INSTANCE=sde:oracle11g:topgist;DBCLIENT=oracle;DB_CONNECTION_PROPERTIES=topgist;PROJECT_INSTANCE=sde;USER=topgis_tlm;VERSION=SDE.DEFAULT;AUTHENTICATION_MODE=DBMS" workspaceFactory="SDE">
+      <Tables>
+        <Table tableId="12115" name="TOPGIS_TLM.TLM_SPORTBAUTE_PLY" />
+      </Tables>
+    </Workspace>
+  </Workspaces>
+  <CurrentItemIndex>0</CurrentItemIndex>
+  <Items>
+    <Item id="1211598812" visited="false" status="Todo" path="ENCRYPTED_PASSWORD=00022e687a666275386f31555667704d515168504e32312b46777442705734515a4d395878536773425278636b2b303d2a00;SERVER=topgist;INSTANCE=sde:oracle11g:topgist;DBCLIENT=oracle;DB_CONNECTION_PROPERTIES=topgist;PROJECT_INSTANCE=sde;USER=topgis_tlm;VERSION=SDE.DEFAULT;AUTHENTICATION_MODE=DBMS">
+      <Row oid="98812" tableId="12115" tableName="TOPGIS_TLM.TLM_SPORTBAUTE_PLY" />
+    </Item>
+    <Item id="1211599124" visited="false" status="Todo" path="ENCRYPTED_PASSWORD=00022e687a666275386f31555667704d515168504e32312b46777442705734515a4d395878536773425278636b2b303d2a00;SERVER=topgist;INSTANCE=sde:oracle11g:topgist;DBCLIENT=oracle;DB_CONNECTION_PROPERTIES=topgist;PROJECT_INSTANCE=sde;USER=topgis_tlm;VERSION=SDE.DEFAULT;AUTHENTICATION_MODE=DBMS">
+      <Row oid="99124" tableId="12115" tableName="TOPGIS_TLM.TLM_SPORTBAUTE_PLY" />
+    </Item>
+  </Items>
+</WorkListDefinition>
