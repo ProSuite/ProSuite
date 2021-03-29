@@ -601,19 +601,27 @@ namespace ProSuite.AGP.WorkList.Domain
 						// todo daro: old implentation
 						//workItem.QueryExtent(otherExtent);
 						Envelope otherExtent = workItem.Extent;
+						// IWorkItem.Extent from SDE (and reported from ALGR from occasionally from issues.gdb) seems to
+						// to have an unequal SR compared to the referenceGeometry which is the MapView.Current.Extent
+						// when the work list ist opened for the first time.
+						// EMA: while editing the SR resolution might be set to a very small value. This probably does
+						// not happen from FGDB data.
+						// todo daro: find a better solution than reprojecting in foreach loop
+						Geometry projected =
+							GeometryUtils.EnsureSpatialReference(
+								referenceGeometry, otherExtent.SpatialReference);
 
 						double distance;
 						try
 						{
-							if (GeometryEngine.Instance.Disjoint(searchReference, otherExtent))
+							if (GeometryUtils.Disjoint(projected, otherExtent))
 							{
-								distance = GeometryEngine.Instance.Distance(referenceGeometry, otherExtent);
+								distance = GeometryEngine.Instance.Distance(projected, otherExtent);
 							}
 							else
 							{
 								//MapPoint otherCentroid = GeometryEngine.Instance.Centroid(otherExtent);
-								// todo daro inline
-								distance = GeometryEngine.Instance.Distance(referenceGeometry, otherExtent.Center);
+								distance = GeometryEngine.Instance.Distance(projected, otherExtent.Center);
 							}
 
 							// todo daro: old implentation
