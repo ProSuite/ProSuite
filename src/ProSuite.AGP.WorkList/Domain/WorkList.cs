@@ -43,8 +43,6 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		private EventHandler<WorkListChangedEventArgs> _workListChanged;
 
-		protected WorkList() { }
-
 		protected WorkList(IWorkItemRepository repository, string name)
 		{
 			Repository = repository;
@@ -581,26 +579,22 @@ namespace ProSuite.AGP.WorkList.Domain
 			double minDistance = double.MaxValue;
 			IWorkItem nearest = null;
 			IWorkItem firstWithoutGeometry = null;
+			IWorkItem current = Current;
 
-			// todo daro: old implentation
-			//IEnvelope otherExtent = new EnvelopeClass();
-			//IPoint otherCentroid = new PointClass();
-
-			IWorkItem currentItem = Current;
-
-			foreach (IWorkItem workItem in candidates)
+			foreach (IWorkItem item in candidates)
 			{
-				if (workItem == currentItem)
+				if (item == current)
 				{
 					// current item, ignore
 				}
 				else
 				{
-					if (workItem.HasGeometry)
+					if (item.HasGeometry)
 					{
 						// todo daro: old implentation
 						//workItem.QueryExtent(otherExtent);
-						Envelope otherExtent = workItem.Extent;
+						Envelope otherExtent = item.Extent;
+
 						// IWorkItem.Extent from SDE (and reported from ALGR from occasionally from issues.gdb) seems to
 						// to have an unequal SR compared to the referenceGeometry which is the MapView.Current.Extent
 						// when the work list ist opened for the first time.
@@ -648,7 +642,7 @@ namespace ProSuite.AGP.WorkList.Domain
 						if (distance < minDistance)
 						{
 							minDistance = distance;
-							nearest = workItem;
+							nearest = item;
 						}
 					}
 					else
@@ -656,7 +650,7 @@ namespace ProSuite.AGP.WorkList.Domain
 						// item without geometry
 						if (firstWithoutGeometry == null)
 						{
-							firstWithoutGeometry = workItem;
+							firstWithoutGeometry = item;
 						}
 					}
 				}
