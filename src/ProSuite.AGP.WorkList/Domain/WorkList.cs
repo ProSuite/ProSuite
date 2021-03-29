@@ -193,11 +193,14 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual void GoFirst()
 		{
+			IWorkItem current = GetItem(CurrentIndex);
+
 			CurrentIndex = 0;
-			IWorkItem item = GetItem(CurrentIndex);
-			if (item != null)
+			IWorkItem next = GetItem(CurrentIndex);
+
+			if (next != null)
 			{
-				SetCurrentItem(item);
+				SetCurrentItem(next, current);
 			}
 		}
 
