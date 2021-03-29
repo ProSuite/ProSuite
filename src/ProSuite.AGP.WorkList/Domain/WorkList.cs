@@ -298,14 +298,19 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#endregion
 
-		public virtual void GoToOid(int OID)
+		public virtual void GoToOid(int oid)
 		{
-			var targetItem = _items.FirstOrDefault(item => item.OID == OID);
-			if (targetItem != null)
+			if (Current?.OID == oid)
 			{
-				SetCurrentItem(targetItem, Current);
+				return;
 			}
-			
+
+			IWorkItem target = _items.FirstOrDefault(item => item.OID == oid);
+
+			if (target != null)
+			{
+				SetCurrentItem(target, Current);
+			}
 		}
 
 		#region Navigation non-public
@@ -1084,7 +1089,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 				if (! HasCurrentItem)
 				{
-					SetCurrentItem(item, null);
+					SetCurrentItem(item);
 					// todo daro: WorkListChanged > invalidate map
 				}
 
