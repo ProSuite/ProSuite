@@ -764,8 +764,6 @@ namespace ProSuite.AGP.WorkList.Domain
 				return firstUnvisitedIndex;
 			}
 
-			throw new ArgumentOutOfRangeException($"{nameof(firstUnvisitedIndex)} {firstUnvisitedIndex}, {nameof(currentItemIndex)} {currentItemIndex}");
-			// todo daro revise this section
 			return firstUnvisitedIndex == 0
 				       ? 0
 				       : firstUnvisitedIndex - 1;
