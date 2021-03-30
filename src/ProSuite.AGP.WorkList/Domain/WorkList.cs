@@ -311,7 +311,8 @@ namespace ProSuite.AGP.WorkList.Domain
 				return;
 			}
 
-			IWorkItem target = _items.FirstOrDefault(item => item.OID == oid);
+			var filter = new QueryFilter {ObjectIDs = new[] {(long) oid}};
+			IWorkItem target = GetItems(filter, false).FirstOrDefault();
 
 			if (target != null)
 			{
