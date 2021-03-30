@@ -128,11 +128,10 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual IEnumerable<IWorkItem> GetItems(QueryFilter filter = null,
 		                                               bool ignoreListSettings = false,
-		                                               int startIndex = 0)
+		                                               int startIndex = -1)
 		{
 			// Subclass should provide more efficient implementation (e.g. pass filter on to database)
 
-			//IEnumerable<IWorkItem> query = _items.Where(item => _items.IndexOf(item, startIndex) > -1);
 			var query = (IEnumerable<IWorkItem>) _items;
 
 			if (! ignoreListSettings && Visibility != WorkItemVisibility.None)
@@ -157,6 +156,11 @@ namespace ProSuite.AGP.WorkList.Domain
 			if (! ignoreListSettings && AreaOfInterest != null)
 			{
 				query = query.Where(item => WithinAreaOfInterest(item.Extent, AreaOfInterest));
+			}
+
+			if (startIndex > -1 && startIndex < _items.Count)
+			{
+				query = query.Where(item => _items.IndexOf(item, startIndex) > -1);
 			}
 
 			return query;
@@ -193,13 +197,15 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			IWorkItem current = GetItem(CurrentIndex);
 
-			CurrentIndex = 0;
-			IWorkItem next = GetItem(CurrentIndex);
+			// todo daro to ?? statement
+			IWorkItem first = GetFirstVisibleVisitedItemBeforeCurrent();
 
-			if (next != null)
-			{
-				SetCurrentItem(next, current);
-			}
+			// todo daro: remove assertion when sure algorithm works
+			//			  CanGoFirst should prevent the assertion
+			Assert.NotNull(first);
+			Assert.False(Equals(first, Current), "current item and first item are equal");
+
+			SetCurrentItemCore(first, current);
 		}
 
 		public virtual bool CanGoNearest()
@@ -237,9 +243,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			Stopwatch watch = _msg.DebugStartTiming();
 
-			// todo daro: don't use start index for now
-			//int startIndex = CurrentIndex + 1;
-			int startIndex = 0;
+			// start after the current item
+			int startIndex = CurrentIndex + 1;
 
 			// first, try to go to an unvisted item
 			bool found = TryGoNearest(contextPerimeters, reference,
@@ -260,41 +265,41 @@ namespace ProSuite.AGP.WorkList.Domain
 				ClearCurrentItem(Current);
 			}
 
-			_msg.DebugStopTiming(watch, "WorkList.GoNearest()");
+			_msg.DebugStopTiming(watch, nameof(GetNearest));
 		}
 
 		public virtual bool CanGoNext()
 		{
-			return GetNextVisibleItem() != null;
+			return GetNextVisitedVisibleItem() != null;
 		}
 
 		public virtual void GoNext()
 		{
-			IWorkItem nextItem = GetNextVisibleItem();
+			IWorkItem next = GetNextVisitedVisibleItem();
 
-			if (nextItem != null)
-			{
-				Assert.False(Equals(nextItem, Current), "current item and next item are equal");
+			// todo daro: remove assertion when sure algorithm works
+			//			  CanGoNext should prevent the assertion
+			Assert.NotNull(next);
+			Assert.False(Equals(next, Current), "current item and next item are equal");
 
-				SetCurrentItem(nextItem, Current);
-			}
+			SetCurrentItemCore(next, Current);
 		}
 
 		public virtual bool CanGoPrevious()
 		{
-			return GetPreviousVisibleItem() != null;
+			return GetPreviousVisitedVisibleItem() != null;
 		}
 
 		public virtual void GoPrevious()
 		{
-			IWorkItem previousItem = GetPreviousVisibleItem();
+			IWorkItem previous = GetPreviousVisitedVisibleItem();
 
-			if (previousItem != null)
-			{
-				Assert.False(Equals(previousItem, Current), "current item and previous item are equal");
+			// todo daro: remove assertion when sure algorithm works
+			//			  CanGoPrevious should prevent the assertion
+			Assert.NotNull(previous);
+			Assert.False(Equals(previous, Current), "current item and previous item are equal");
 
-				SetCurrentItem(previousItem, Current);
-			}
+			SetCurrentItemCore(previous, Current);
 		}
 
 		#endregion
@@ -416,7 +421,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			return GetItems(null, startIndex, currentSearch, visitedSearch).ToList();
 		}
 
-		private IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, int startIndex = 0,
+		private IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, int startIndex = -1,
 		                                        CurrentSearchOption currentSearch = CurrentSearchOption.ExcludeCurrent,
 		                                        VisitedSearchOption visitedSearch = VisitedSearchOption.ExcludeVisited)
 		{
@@ -728,10 +733,15 @@ namespace ProSuite.AGP.WorkList.Domain
 		/// </summary>
 		/// <param name="nextItem"></param>
 		/// <param name="currentItem">The work item.</param>
-		private void SetCurrentItem([NotNull] IWorkItem nextItem, [CanBeNull] IWorkItem currentItem = null)
+		private void SetCurrentItem([NotNull] IWorkItem nextItem, IWorkItem currentItem = null)
 		{
 			ReorderCurrentItem(nextItem);
 
+			SetCurrentItemCore(nextItem, currentItem);
+		}
+
+		private void SetCurrentItemCore([NotNull] IWorkItem nextItem, IWorkItem currentItem = null)
+		{
 			nextItem.Visited = true;
 			CurrentIndex = _items.IndexOf(nextItem);
 
@@ -819,7 +829,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		[CanBeNull]
-		private IWorkItem GetNextVisibleItem()
+		private IWorkItem GetNextVisitedVisibleItem()
 		{
 			if (CurrentIndex >= _items.Count - 1)
 			{
@@ -830,10 +840,10 @@ namespace ProSuite.AGP.WorkList.Domain
 			// true if another visible, visited item comes afterwards
 			for (int i = CurrentIndex + 1; i < _items.Count; i++)
 			{
-				IWorkItem workItem = _items[i];
-				if (IsVisible(workItem))
+				IWorkItem item = _items[i];
+				if (item.Visited && IsVisible(item))
 				{
-					return workItem;
+					return item;
 				}
 			}
 
@@ -841,17 +851,27 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		[CanBeNull]
-		private IWorkItem GetPreviousVisibleItem()
+		private IWorkItem GetPreviousVisitedVisibleItem()
 		{
 			if (CurrentIndex <= 0)
 			{
 				// no previous item anymore, current is first item
 				return null;
 			}
-			
-			IWorkItem item = _items[CurrentIndex - 1];
 
-			return IsVisible(item) ? item : null;
+			if (CurrentIndex > 0)
+			{
+				for (int i = CurrentIndex - 1; i >= 0; i--)
+				{
+					IWorkItem item = _items[i];
+					if (item.Visited && IsVisible(item))
+					{
+						return item;
+					}
+				}
+			}
+
+			return null;
 		}
 
 		#endregion
