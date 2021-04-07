@@ -79,6 +79,10 @@
     <Compile Include="Xml\XmlUtilsTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\..\Swisstopo.GeniusDB\src\Swisstopo.GeniusDB.AddIn.IMIT\Swisstopo.GeniusDB.AddIn.IMIT.csproj">
+      <Project>{D1719438-6B28-4318-92E1-BB3E9EADDB61}</Project>
+      <Name>Swisstopo.GeniusDB.AddIn.IMIT</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
       <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
       <Name>ProSuite.Commons</Name>

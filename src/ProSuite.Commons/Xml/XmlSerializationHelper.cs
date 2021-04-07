@@ -67,7 +67,7 @@ namespace ProSuite.Commons.Xml
 		/// <returns></returns>
 		[NotNull]
 		public T ReadFromFile([NotNull] string xmlFile,
-		                      [CanBeNull] Action<string> receiveNotification)
+		                      [CanBeNull] string receiveNotification)
 		{
 			Assert.ArgumentNotNullOrEmpty(xmlFile, nameof(xmlFile));
 			Assert.ArgumentCondition(File.Exists(xmlFile), "file does not exist: {0}", xmlFile);
