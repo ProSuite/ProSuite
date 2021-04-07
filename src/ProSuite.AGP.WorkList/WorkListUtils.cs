@@ -2,14 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.Ado;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Xml;
 using ProSuite.DomainModel.Core;
@@ -19,6 +23,31 @@ namespace ProSuite.AGP.WorkList
 	public static class WorkListUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private const string WorklistsFolder = "Worklists";
+
+		[NotNull]
+		public static string GetLocalWorklistsFolder(string homeFolderPath)
+		{
+			return Path.Combine(homeFolderPath, WorklistsFolder);
+		}
+		
+		[NotNull]
+		public static Uri GetDatasource([NotNull] string homeFolderPath,
+		                         [NotNull] string workListName,
+		                         [NotNull] string fileSuffix)
+		{
+			//var baseUri = new Uri("worklist://localhost/");
+			string folder = GetLocalWorklistsFolder(homeFolderPath);
+
+			if (! FileSystemUtils.EnsureFolderExists(folder))
+			{
+				Assert.True(Directory.Exists(homeFolderPath), $"{homeFolderPath} does not exist");
+				return new Uri(homeFolderPath);
+			}
+
+			return new Uri(Path.Combine(folder, $"{workListName}{fileSuffix}"));
+		}
 
 		[NotNull]
 		public static IWorkList Create([NotNull] XmlWorkListDefinition definition)
@@ -74,9 +103,8 @@ namespace ProSuite.AGP.WorkList
 
 			foreach (XmlWorkListWorkspace workspace in workspaces)
 			{
-				var geodatabase =
-					new Geodatabase(
-						new FileGeodatabaseConnectionPath(new Uri(workspace.Path, UriKind.Absolute)));
+				var geodatabase = GetGeodatabase(workspace);
+				Assert.NotNull(geodatabase);
 
 				if (result.ContainsKey(geodatabase))
 				{
@@ -88,6 +116,73 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			return result;
+		}
+
+		[CanBeNull]
+		private static Geodatabase GetGeodatabase([NotNull] XmlWorkListWorkspace workspace)
+		{
+			Assert.ArgumentNotNull(workspace, nameof(workspace));
+
+			// DBCLIENT = oracle
+			// AUTHENTICATION_MODE = DBMS
+			// PROJECT_INSTANCE = sde
+			// ENCRYPTED_PASSWORD = 00022e684d4b4235766e4b6e324833335277647064696e734e586f584269575652504534653763387763674876504d3d2a00
+			// SERVER = topgist
+			// INSTANCE = sde:oracle11g: topgist
+			// VERSION = SDE.DEFAULT
+			// DB_CONNECTION_PROPERTIES = topgist
+			// USER = topgis_tlm
+
+			try
+			{
+				Assert.True(
+					Enum.TryParse(workspace.WorkspaceFactory, ignoreCase: true, out WorkspaceFactory factory),
+					$"Cannot parse {nameof(WorkspaceFactory)} from string {workspace.WorkspaceFactory}");
+
+				switch (factory)
+				{
+					case WorkspaceFactory.FileGDB:
+						return new Geodatabase(
+							new FileGeodatabaseConnectionPath(
+								new Uri(workspace.ConnectionString, UriKind.Absolute)));
+
+					case WorkspaceFactory.SDE:
+						var builder = new ConnectionStringBuilder(workspace.ConnectionString);
+
+						Assert.True(
+							Enum.TryParse(builder["dbclient"], ignoreCase: true,
+							              out EnterpriseDatabaseType databaseType),
+							$"Cannot parse {nameof(EnterpriseDatabaseType)} from connection string {workspace.ConnectionString}");
+
+						Assert.True(
+							Enum.TryParse(builder["authentication_mode"], ignoreCase: true,
+							              out AuthenticationMode authMode),
+							$"Cannot parse {nameof(AuthenticationMode)} from connection string {workspace.ConnectionString}");
+
+						var connectionProperties =
+							new DatabaseConnectionProperties(databaseType)
+							{
+								AuthenticationMode = authMode,
+								ProjectInstance = builder["project_instance"],
+								Database = builder["server"], // is always null in CIMFeatureDatasetDataConnection
+								Instance = builder["instance"],
+								Version = builder["version"],
+								Branch = builder["branch"] // ?
+								//Password = builder["encrypted_password"],
+								//User = builder["user"]
+							};
+
+
+				return new Geodatabase(connectionProperties);
+					default:
+						throw new ArgumentOutOfRangeException();
+				}
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Cannot open geodatabase from connection string {workspace.ConnectionString}", e);
+				return null;
+			}
 		}
 
 		private static List<Table> GetDistinctTables(XmlWorkListWorkspace workspace, Geodatabase geodatabase)
@@ -148,26 +243,84 @@ namespace ProSuite.AGP.WorkList
 			return Path.GetFileNameWithoutExtension(temp);
 		}
 
-		public static string GetWorklistPath(string path)
+		// todo daro rename GetNameFromUri?
+		public static string ParseName(string layerUri)
 		{
-			if (! path.EndsWith("wl"))
-				return path;
+			int index = layerUri.LastIndexOf('/');
+			if (index < 0)
+			{
+				throw new ArgumentException($"{layerUri} is not a valid layer URI");
+			}
 
-			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
-
-			XmlWorkListDefinition definition = helper.ReadFromFile(path);
-			return definition.Workspaces.Select(w => w.Path).FirstOrDefault();
+			string name = layerUri.Substring(index + 1);
+			return Path.GetFileNameWithoutExtension(name);
 		}
 
 		[CanBeNull]
-		public static string GetXmlWorklistName(string worklistPath)
+		public static string GetIssueGeodatabasePath([NotNull] string worklistDefinitionFile)
 		{
-			if (String.IsNullOrEmpty(worklistPath))
+			Assert.ArgumentNotNullOrEmpty(worklistDefinitionFile, nameof(worklistDefinitionFile));
+
+			if (! File.Exists(worklistDefinitionFile))
+			{
+				_msg.Debug($"{worklistDefinitionFile} does not exist");
 				return null;
+			}
+
+			string extension = Path.GetExtension(worklistDefinitionFile);
+
+			if (! string.Equals(extension, ".iwl"))
+			{
+				_msg.Debug($"{worklistDefinitionFile} is no issue work list");
+				return null;
+			}
 
 			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
-			XmlWorkListDefinition definition = helper.ReadFromFile(worklistPath);
+
+			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
+			List<XmlWorkListWorkspace> workspaces = definition.Workspaces;
+
+			string result = workspaces[0].ConnectionString;
+
+			if (workspaces.Count > 0)
+			{
+				_msg.Info(
+					$"There are many issue geodatabases in {worklistDefinitionFile} but only one is expected. Taking the first one {result}");
+			}
+			else
+			{
+				_msg.Debug($"Found issue geodatabase {result} in {worklistDefinitionFile}");
+			}
+
+			return result;
+		}
+
+		[CanBeNull]
+		public static string GetWorklistName([NotNull] string worklistDefinitionFile)
+		{
+			Assert.ArgumentNotNullOrEmpty(worklistDefinitionFile, nameof(worklistDefinitionFile));
+
+			if (! File.Exists(worklistDefinitionFile))
+			{
+				_msg.Debug($"{worklistDefinitionFile} does not exist");
+				return null;
+			}
+
+			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
+			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
 			return definition.Name;
+		}
+
+		public static void MoveTo([NotNull] List<IWorkItem> items,
+		                          [NotNull] IWorkItem movingItem,
+		                          int insertIndex)
+		{
+			Assert.ArgumentNotNull(items, nameof(items));
+			Assert.ArgumentNotNull(movingItem, nameof(movingItem));
+			Assert.ArgumentCondition(insertIndex >= 0 && insertIndex < items.Count,
+			                         "insert index out of range: {0}", insertIndex);
+
+			CollectionUtils.MoveTo(items, movingItem, insertIndex);
 		}
 	}
 }

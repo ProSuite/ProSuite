@@ -1,6 +1,5 @@
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -16,17 +15,15 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			await ViewUtils.TryAsync(async () =>
 			{
+				// has to be outside QueuedTask because of OpenItemDialog
 				var environment = new DatabaseWorkEnvironment();
 
-				await QueuedTask.Run(() => WorkListsModule.Current.CreateWorkListAsync(environment));
+				string name = WorkListsModule.Current.EnsureUniqueName();
 
-				string workListName = environment.UniqueName;
+				await QueuedTask.Run(
+					() => WorkListsModule.Current.CreateWorkListAsync(environment, name));
 
-				if (workListName == null)
-				{
-					return;
-				}
-				WorkListsModule.Current.ShowView(workListName);
+				WorkListsModule.Current.ShowView(name);
 			}, _msg);
 		}
 	}

@@ -1,4 +1,5 @@
 using System;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -12,20 +13,19 @@ namespace ProSuite.Commons.AGP.Gdb
 		private readonly string _version;
 		private readonly string _user;
 		private readonly EnterpriseDatabaseType _dbms;
-		private readonly string _path;
 
 		public GdbWorkspaceIdentity([NotNull] Datastore datastore) :
-			this(datastore.GetConnector()) { }
+			this(datastore.GetConnector(), datastore.GetConnectionString()) { }
 
-		public GdbWorkspaceIdentity([NotNull] Connector connector)
+		public GdbWorkspaceIdentity([NotNull] Connector connector, string connectionString)
 		{
 			Assert.ArgumentNotNull(connector, nameof(connector));
 
 			_instance = null;
 			_version = null;
 			_user = null;
-			_path = null;
 			_dbms = EnterpriseDatabaseType.Unknown;
+			ConnectionString = string.Empty;
 
 			switch (connector)
 			{
@@ -34,9 +34,13 @@ namespace ProSuite.Commons.AGP.Gdb
 					_version = connectionProperties.Version;
 					_user = connectionProperties.User;
 					_dbms = connectionProperties.DBMS;
+					ConnectionString = connectionString;
+					WorkspaceFactory = WorkspaceFactory.SDE;
 					break;
 				case FileGeodatabaseConnectionPath fileGeodatabaseConnectionPath:
-					_path = fileGeodatabaseConnectionPath.Path.AbsolutePath;
+					// connectionString is "DATABASE=C:\\git\\KtLU.Dabank\\data\\Testdaten\\dabank_test_data\\Default.gdb"
+					ConnectionString = fileGeodatabaseConnectionPath.Path.AbsolutePath;
+					WorkspaceFactory = WorkspaceFactory.FileGDB;
 					break;
 				default:
 					throw new NotImplementedException(
@@ -44,7 +48,10 @@ namespace ProSuite.Commons.AGP.Gdb
 			}
 		}
 
-		public string Path => _path;
+		[NotNull]
+		public string ConnectionString { get; }
+
+		public WorkspaceFactory WorkspaceFactory { get; }
 
 		[CanBeNull]
 		public T CreateConnector<T>() where T: Connector
@@ -57,14 +64,14 @@ namespace ProSuite.Commons.AGP.Gdb
 
 			if (type == typeof(FileGeodatabaseConnectionPath))
 			{
-				return new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)) as T;
+				return new FileGeodatabaseConnectionPath(new Uri(ConnectionString, UriKind.Absolute)) as T;
 			}
 			return null;
 		}
 
 		public Geodatabase OpenGeodatabase()
 		{
-			if (string.IsNullOrEmpty(_path))
+			if (string.IsNullOrEmpty(ConnectionString))
 			{
 				return new Geodatabase(
 					new DatabaseConnectionProperties(_dbms)
@@ -74,12 +81,12 @@ namespace ProSuite.Commons.AGP.Gdb
 			}
 
 			return new Geodatabase(
-				new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)));
+				new FileGeodatabaseConnectionPath(new Uri(ConnectionString, UriKind.Absolute)));
 		}
 
 		public override string ToString()
 		{
-			return $"instance={_instance} version={_version} user={_user}, path={_path}";
+			return $"instance={_instance} version={_version} user={_user}, path={ConnectionString}";
 		}
 
 		#region IEquatable<GdbRowIdentity> implementation
@@ -88,7 +95,7 @@ namespace ProSuite.Commons.AGP.Gdb
 		{
 			return string.Equals(_instance, other._instance) &&
 			       string.Equals(_version, other._version) &&
-			       string.Equals(_user, other._user) && Equals(_path, other._path);
+			       string.Equals(_user, other._user) && Equals(ConnectionString, other.ConnectionString);
 		}
 
 		public override bool Equals(object obj)
@@ -108,7 +115,7 @@ namespace ProSuite.Commons.AGP.Gdb
 				int hashCode = _instance != null ? _instance.GetHashCode() : 0;
 				hashCode = (hashCode * 397) ^ (_version != null ? _version.GetHashCode() : 0);
 				hashCode = (hashCode * 397) ^ (_user != null ? _user.GetHashCode() : 0);
-				hashCode = (hashCode * 397) ^ (_path != null ? _path.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ ConnectionString.GetHashCode();
 				return hashCode;
 			}
 		}

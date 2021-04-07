@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using log4net.Appender;
 using log4net.Core;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -10,7 +9,6 @@ namespace ProSuite.Commons.Logging.Inspector
 	public class BufferAppender : AppenderSkeleton
 	{
 		private readonly CaptureBuffer _buffer;
-		private FixFlags _fixFlags;
 		private int _errorCount;
 		private int _droppedErrors;
 		private int _warnCount;
@@ -21,11 +19,11 @@ namespace ProSuite.Commons.Logging.Inspector
 		private int _droppedDebugs;
 		private readonly object _sync;
 
-		public BufferAppender(int capacity)
+		public BufferAppender(int capacity, DateTime? startTime = null)
 		{
 			_buffer = new CaptureBuffer(capacity);
-			_fixFlags = FixFlags.All;
 			_sync = new object();
+			StartTime = startTime ?? DateTime.Now;
 		}
 
 		public int Capacity
@@ -33,22 +31,16 @@ namespace ProSuite.Commons.Logging.Inspector
 			get { lock(_sync) return _buffer.Capacity; }
 		}
 
-		public FixFlags Fix
-		{
-			get => _fixFlags;
-			set => _fixFlags = value;
-		}
+		public DateTime StartTime { get; }
 
 		[NotNull]
-		public LogSnapshot Snapshot(ILoggingContextInfo contextInfo)
+		public LogSnapshot Snapshot()
 		{
 			lock (_sync)
 			{
-				var capturedEvents = _buffer.GetSnapshot()
-				                            .Select(e => ConvertEvent(e, contextInfo))
-				                            .ToArray();
+				var capturedEvents = _buffer.GetSnapshot();
 
-				return new LogSnapshot(Capacity, capturedEvents)
+				return new LogSnapshot(Capacity, StartTime, capturedEvents)
 				       {
 					       ErrorCount = _errorCount,
 					       DroppedErrors = _droppedErrors,
@@ -62,28 +54,6 @@ namespace ProSuite.Commons.Logging.Inspector
 			}
 		}
 
-		private static LogInspectorEvent ConvertEvent([NotNull] LoggingEvent loggingEvent,
-		                                              ILoggingContextInfo contextInfo = null)
-		{
-			var level = ConvertLevel(loggingEvent.Level);
-			var message = loggingEvent.RenderedMessage ?? Convert.ToString(loggingEvent.MessageObject);
-			ILoggingContext context = contextInfo?.GetLoggingContext(loggingEvent);
-			return new LogInspectorEvent(level, loggingEvent.TimeStamp,
-			                             loggingEvent.LoggerName, message,
-			                             loggingEvent.ExceptionObject, context);
-		}
-
-		private static LogInspectorLevel ConvertLevel(Level level)
-		{
-			if (level == null) return LogInspectorLevel.All;
-			if (level < Level.Debug) return LogInspectorLevel.All;
-			if (level < Level.Info) return LogInspectorLevel.Debug;
-			if (level < Level.Warn) return LogInspectorLevel.Info;
-			if (level < Level.Error) return LogInspectorLevel.Warn;
-			if (level < Level.Fatal) return LogInspectorLevel.Error;
-			return LogInspectorLevel.Off;
-		}
-
 		#region AppenderSkeleton
 
 		protected override void Append(LoggingEvent loggingEvent)
@@ -93,65 +63,63 @@ namespace ProSuite.Commons.Logging.Inspector
 				return; // silently ignore the unexpected
 			}
 
-			// Fix volatile data in the event prior to storing.
-			// There's a fix more/less versus memory tradeoff.
-			loggingEvent.Fix = Fix;
-
 			lock (_sync)
 			{
-				UpdateCounts(loggingEvent.Level);
+				// Convert to our own type so we do not have to fix
+				// and hold any (large) LoggingEvent instances.
 
-				_buffer.Append(loggingEvent, out Level droppedLevel);
+				var entry = LogInspectorUtils.ConvertEvent(loggingEvent);
 
-				UpdateDrops(droppedLevel);
+				UpdateCounts(entry.Level);
+
+				var overflow = _buffer.Append(entry);
+
+				if (overflow != null)
+				{
+					UpdateDrops(overflow.Level);
+				}
 			}
 		}
 
-		private void UpdateCounts(Level level)
-		{
-			if (level == null)
-			{
-				return;
-			}
+		#endregion
 
-			if (level < Level.Info)
+		#region Private methods
+
+		private void UpdateCounts(LogInspectorLevel level)
+		{
+			if (level < LogInspectorLevel.Info)
 			{
 				_debugCount += 1;
 			}
-			else if (level < Level.Warn)
+			else if (level < LogInspectorLevel.Warn)
 			{
 				_infoCount += 1;
 			}
-			else if (level < Level.Error)
+			else if (level < LogInspectorLevel.Error)
 			{
 				_warnCount += 1;
 			}
-			else // level >= Error
+			else
 			{
 				_errorCount += 1;
 			}
 		}
 
-		private void UpdateDrops(Level level)
+		private void UpdateDrops(LogInspectorLevel level)
 		{
-			if (level == null)
-			{
-				return;
-			}
-
-			if (level < Level.Info)
+			if (level < LogInspectorLevel.Info)
 			{
 				_droppedDebugs += 1;
 			}
-			else if (level < Level.Warn)
+			else if (level < LogInspectorLevel.Warn)
 			{
 				_droppedInfos += 1;
 			}
-			else if (level < Level.Error)
+			else if (level < LogInspectorLevel.Error)
 			{
 				_droppedWarns += 1;
 			}
-			else // level >= Error
+			else
 			{
 				_droppedErrors += 1;
 			}
@@ -161,7 +129,7 @@ namespace ProSuite.Commons.Logging.Inspector
 
 		#region Nested type: CaptureBuffer
 
-		private class CaptureBuffer : PriorityQueue<BufferItem>
+		private class CaptureBuffer : PriorityQueue<LogInspectorEntry>
 		{
 			private long _sequenceNumber;
 
@@ -170,56 +138,42 @@ namespace ProSuite.Commons.Logging.Inspector
 				_sequenceNumber = 0;
 			}
 
-			protected override bool Priority(BufferItem a, BufferItem b)
+			protected override bool Priority(LogInspectorEntry a, LogInspectorEntry b)
 			{
-				var aa = a.LoggingEvent;
-				var bb = b.LoggingEvent;
-
-				if (aa == null || bb == null)
+				if (a == null || b == null)
 					throw new ArgumentNullException();
 
-				if (aa.Level == null && bb.Level != null)
+				if (a.Level < b.Level)
 					return true;
-				if (aa.Level == null || bb.Level == null)
-					return false;
-
-				if (aa.Level < bb.Level)
-					return true;
-				return aa.Level == bb.Level && a.SequenceNumber < b.SequenceNumber;
+				return a.Level == b.Level && a.SequenceNumber < b.SequenceNumber;
 			}
 
-			public void Append(LoggingEvent loggingEvent, out Level droppedLevel)
+			public LogInspectorEntry Append(LogInspectorEntry entry)
 			{
-				var overflow = AddWithOverflow(new BufferItem(_sequenceNumber++, loggingEvent));
-
-				droppedLevel = overflow.LoggingEvent?.Level;
+				entry.SequenceNumber = _sequenceNumber++;
+				return AddWithOverflow(entry);
 			}
 
-			public IEnumerable<LoggingEvent> GetSnapshot()
+			public LogInspectorEntry[] GetSnapshot()
 			{
-				var array = new BufferItem[Count];
+				var array = new LogInspectorEntry[Count];
+
 				CopyAll(array, 0);
-				return array.OrderBy(item => item.SequenceNumber)
-				            .Select(item => item.LoggingEvent);
+
+				Array.Sort(array, new SequenceComparer());
+
+				return array;
 			}
-		}
 
-		/// <summary>
-		/// This is simply a <see cref="LoggingEvent"/> together with
-		/// a sequence number. We need the sequence number for sorting
-		/// events into the order of occurrence, because the resolution
-		/// of the <see cref="log4net.Core.LoggingEvent.TimeStamp"/> is
-		/// too coarse and our buffering/sorting is not stable.
-		/// </summary>
-		private readonly struct BufferItem
-		{
-			public readonly long SequenceNumber;
-			public readonly LoggingEvent LoggingEvent;
-
-			public BufferItem(long sequenceNumber, LoggingEvent loggingEvent)
+			private class SequenceComparer : IComparer<LogInspectorEntry>
 			{
-				SequenceNumber = sequenceNumber;
-				LoggingEvent = loggingEvent;
+				public int Compare(LogInspectorEntry x, LogInspectorEntry y)
+				{
+					if (x == null || y == null) throw new ArgumentNullException();
+					if (x.SequenceNumber > y.SequenceNumber) return 1;
+					if (x.SequenceNumber < y.SequenceNumber) return -1;
+					return 0;
+				}
 			}
 		}
 
@@ -244,8 +198,7 @@ namespace ProSuite.Commons.Logging.Inspector
 			/// Use a negative <paramref name="capacity"/> for an unbounded queue.
 			/// An unbounded queue will grow as needed.
 			/// </summary>
-			/// <param name="capacity">If negative, this indicates an unbounded
-			/// queue; otherwise, this is the queue's fixed capacity.</param>
+			/// <param name="capacity">queue capacity, at least 1</param>
 			protected PriorityQueue(int capacity)
 			{
 				if (capacity < 1)
@@ -294,7 +247,7 @@ namespace ProSuite.Commons.Logging.Inspector
 				var top = _heap[1];
 
 				_heap[1] = item;
-				DownHeap(1); // fix heap
+				DownHeap(1);
 
 				return top;
 			}

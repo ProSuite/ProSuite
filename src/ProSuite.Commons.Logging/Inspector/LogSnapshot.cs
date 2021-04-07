@@ -1,25 +1,27 @@
-﻿using System;
+using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Logging.Inspector
 {
 	public class LogSnapshot
 	{
-		public LogSnapshot(int captureCapacity,
-		                   LogInspectorEvent[] capturedEvents = null,
+		public LogSnapshot(int captureCapacity, DateTime startTime,
+		                   LogInspectorEntry[] capturedEvents = null,
 		                   DateTime? snapshotTime = null)
 		{
 			CaptureCapacity = captureCapacity;
-			CapturedEvents = capturedEvents ?? new LogInspectorEvent[0];
+			StartTime = startTime;
+			CapturedEvents = capturedEvents ?? new LogInspectorEntry[0];
 			SnapshotTime = snapshotTime ?? DateTime.Now;
 		}
 
+		public DateTime StartTime { get; }
 		public DateTime SnapshotTime { get; }
 
 		public int CaptureCapacity { get; }
 
 		[NotNull]
-		public LogInspectorEvent[] CapturedEvents { get; }
+		public LogInspectorEntry[] CapturedEvents { get; }
 
 		public int ErrorCount { get; set; }
 		public int DroppedErrors { get; set; }

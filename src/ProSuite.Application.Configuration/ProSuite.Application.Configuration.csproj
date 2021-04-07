@@ -72,6 +72,7 @@
     <Content Include="Config\prosuite.logging.arcgispro.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="Config\prosuite.microservice_geometry_processing.client.config.xml" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

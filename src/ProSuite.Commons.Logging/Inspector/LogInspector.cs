@@ -6,6 +6,12 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Logging.Inspector
 {
+	/// <summary>
+	/// Capture log events into a fixed-size priority queue.
+	/// Useful to collect log events during long-running processes
+	/// for later user presentation. Usage: Attach(), run process,
+	/// Detach(), present LastSnapshot in UI.
+	/// </summary>
 	public class LogInspector : IDisposable
 	{
 		private const int DefaultCapacity = 4096;
@@ -18,18 +24,14 @@ namespace ProSuite.Commons.Logging.Inspector
 			Threshold = LogInspectorLevel.Debug;
 			LoggerPrefix = null;
 
-			AttachTime = DateTime.MinValue;
-			LastSnapshot = new LogSnapshot(DefaultCapacity);
+			LastSnapshot = new LogSnapshot(DefaultCapacity, DateTime.Now);
 		}
 
 		public int Capacity { get; set; }
 		public LogInspectorLevel Threshold { get; set; }
 		public string LoggerPrefix { get; set; }
-		public ILoggingContextInfo ContextInfo { get; set; }
 
 		public bool IsAttached => _appender != null;
-
-		public DateTime AttachTime { get; private set; }
 
 		[NotNull]
 		public LogSnapshot LastSnapshot { get; private set; }
@@ -47,10 +49,9 @@ namespace ProSuite.Commons.Logging.Inspector
 			// it's a no-op if the appender is already attached:
 			Log4NetUtils.AddRootAppender(Interceptor);
 
-			var appender = new BufferAppender(Math.Max(1, Capacity));
+			var appender = new BufferAppender(Math.Max(1, Capacity), DateTime.Now);
 			var guid = Guid.NewGuid().ToString("N"); // hex digits only
 			appender.Name = $"Inspector_{guid}";
-			appender.Fix = FixFlags.Partial; // Message+ThreadName+Domain+Exception+Properties
 			appender.Threshold = ConvertLevel(Threshold);
 
 			if (! string.IsNullOrEmpty(LoggerPrefix))
@@ -65,7 +66,6 @@ namespace ProSuite.Commons.Logging.Inspector
 			// 3. PreAppendCheck() and exit if false
 			// 4. call Append(e)
 
-			AttachTime = DateTime.Now;
 			Interceptor.AddAppender(appender);
 
 			// Just for the record:
@@ -79,14 +79,14 @@ namespace ProSuite.Commons.Logging.Inspector
 		/// Take a snapshot of the captured logging events
 		/// while attached to an event source.
 		/// </summary>
-		public void TakeSnapshot(ILoggingContextInfo contextInfo = null)
+		public void TakeSnapshot()
 		{
 			if (_appender == null)
 			{
 				throw new InvalidOperationException("Not attached");
 			}
 
-			LastSnapshot = _appender.Snapshot(contextInfo ?? ContextInfo);
+			LastSnapshot = _appender.Snapshot();
 		}
 
 		/// <summary>

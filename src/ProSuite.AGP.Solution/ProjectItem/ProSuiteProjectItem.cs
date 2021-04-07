@@ -1,4 +1,3 @@
-using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using ArcGIS.Desktop.Core;
@@ -7,13 +6,35 @@ using ProSuite.AGP.Solution.Commons;
 
 namespace ProSuite.AGP.Solution.ProjectItem
 {
-
 	public class ProSuiteProjectItem : CustomProjectItemBase
 	{
 		protected ProSuiteProjectItem() { }
 
-		protected ProSuiteProjectItem(ItemInfoValue iiv) : base(FlipBrowseDialogOnly(iiv))
+		protected ProSuiteProjectItem(ItemInfoValue iiv) : base(FlipBrowseDialogOnly(iiv)) { }
+
+		//TODO: Overload for use in your container create item
+		public ProSuiteProjectItem(string name, string catalogPath, string typeID,
+		                           string containerTypeID) :
+			base(name, catalogPath, typeID, containerTypeID) { }
+
+		public override ImageSource LargeImage =>
+			ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset32.png");
+
+		public override Task<ImageSource> SmallImage =>
+			Task.FromResult(ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset16.png"));
+
+		public override bool IsContainer => false; //true;
+
+		public override ProjectItemInfo OnGetInfo()
 		{
+			var projectItemInfo = new ProjectItemInfo
+			                      {
+				                      Name = Name,
+				                      Path = Path,
+				                      Type = ProSuiteProjectItemContainer.ContainerName
+			                      };
+
+			return projectItemInfo;
 		}
 
 		private static ItemInfoValue FlipBrowseDialogOnly(ItemInfoValue iiv)
@@ -21,39 +42,6 @@ namespace ProSuite.AGP.Solution.ProjectItem
 			iiv.browseDialogOnly = "FALSE";
 			return iiv;
 		}
-
-		//TODO: Overload for use in your container create item
-		public ProSuiteProjectItem(string name, string catalogPath, string typeID, string containerTypeID) :
-		  base(name, catalogPath, typeID, containerTypeID)
-		{
-		}
-
-		public ProSuiteProjectItem Clone() => new ProSuiteProjectItem(this.Name, this.Path, this.TypeID, this.ContainerType);
-
-		/// <summary>
-		/// DTor
-		/// </summary>
-		~ProSuiteProjectItem()
-		{
-		}
-
-		public override ImageSource LargeImage => ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset32.png");
-
-		public override Task<ImageSource> SmallImage => Task.FromResult(ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset16.png"));
-
-		public override ProjectItemInfo OnGetInfo()
-		{
-			var projectItemInfo = new ProjectItemInfo
-			{
-				Name = this.Name,
-				Path = this.Path,
-				Type = ProSuiteProjectItemContainer.ContainerName
-			};
-
-			return projectItemInfo;
-		}
-
-		public override bool IsContainer => false;//true;
 
 		//TODO: Fetch is required if <b>IsContainer</b> = <b>true</b>
 		//public override void Fetch()
@@ -71,49 +59,5 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		//	workLists.Add(workList);
 		//	this.AddRangeToChildren(workLists);
 		//}
-	}
-
-	// TODO ProSuiteDataSubItem for different types of data?
-	internal class ProSuiteProjectItemWorkList : CustomItemBase
-	{
-		private const string DefaultDisplayType = "WorkList";
-		private string _displayType;
-
-		public ProSuiteProjectItemWorkList(string name, string path, string type, string lastModifiedTime) : base(name, path, type, lastModifiedTime)
-		{
-			_displayType = DefaultDisplayType;
-		}
-
-		protected override string DisplayType
-		{
-			get => _displayType ?? DefaultDisplayType;
-			set => _displayType = value;
-		}
-
-		public override ImageSource LargeImage => ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset32.png");
-		public override Task<ImageSource> SmallImage => Task.FromResult(ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset16.png"));
-		public override bool IsContainer => false;
-	}
-
-	// probably this subitem should not be visible in catalog
-	internal class ProSuiteProjectItemConfig : CustomItemBase
-	{
-		private const string DefaultDisplayType = "Configuration";
-		private string _displayType;
-
-		public ProSuiteProjectItemConfig(string name, string path, string type, string lastModifiedTime) : base(name, path, type, lastModifiedTime)
-		{
-			_displayType = DefaultDisplayType;
-		}
-
-		protected override string DisplayType
-		{
-			get => _displayType ?? DefaultDisplayType;
-			set => _displayType = value;
-		}
-
-		public override ImageSource LargeImage => ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset32.png");
-		public override Task<ImageSource> SmallImage => Task.FromResult(ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset16.png"));
-		public override bool IsContainer => false;
 	}
 }

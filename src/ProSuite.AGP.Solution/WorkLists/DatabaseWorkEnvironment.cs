@@ -25,7 +25,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly string _workListName = "Issue_Work_List";
 		private readonly string _templateLayer = "Selection Work List.lyrx";
 		private readonly string _domainName = "CORRECTION_STATUS_CD";
 
@@ -39,20 +38,20 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		[CanBeNull] private readonly string _path;
 
-		[CanBeNull] private readonly string _wlpath;
-
 		public DatabaseWorkEnvironment() : this(BrowseGeodatabase()) { }
 
-		public DatabaseWorkEnvironment([CanBeNull] string path, [CanBeNull] string wlpath = null)
+		public DatabaseWorkEnvironment([CanBeNull] string path)
 		{
 			_path = path;
-			_wlpath = wlpath;
 		}
+
+		public override string FileSuffix => ".xml.iwl";
 
 		protected override async Task<bool> TryPrepareSchemaCoreAsync()
 		{
 			if (_path == null)
 			{
+				_msg.Debug($"{nameof(_path)} is null");
 				return false;
 			}
 
@@ -72,11 +71,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 				GeoprocessingUtils.AddCodedValueToDomainAsync(_path, _domainName, 200, "Corrected"));
 
 			return true;
-		}
-
-		protected override string GetWorkListName(IWorkListContext context)
-		{
-			return context.EnsureUniqueName(_workListName);
 		}
 
 		protected override IEnumerable<BasicFeatureLayer> GetLayers(Map map)
@@ -109,8 +103,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 				}
 			}
 		}
-
-		// todo daro: to utils
 
 		protected override async Task<BasicFeatureLayer> EnsureStatusFieldCoreAsync(
 			BasicFeatureLayer featureLayer)
@@ -185,12 +177,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			_msg.Info("No Issue Geodatabase selected");
 			return null;
-		}
-
-		[CanBeNull]
-		public override string GetWorklistId()
-		{
-			return WorkListUtils.GetXmlWorklistName(_wlpath);
 		}
 	}
 }

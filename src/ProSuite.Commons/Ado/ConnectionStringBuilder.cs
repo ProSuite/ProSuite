@@ -1,39 +1,46 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.Ado
 {
 	public class ConnectionStringBuilder
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly DbConnectionStringBuilder _builder;
 
-		#region Constructors
-
 		/// <summary>
-		/// Initializes a new instance of the <see cref="ConnectionStringBuilder"/> class.
 		/// </summary>
-		public ConnectionStringBuilder() : this(null) { }
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="ConnectionStringBuilder"/> class.
-		/// </summary>
-		/// <param name="connectionString">The connection string.</param>
-		public ConnectionStringBuilder([CanBeNull] string connectionString)
+		/// <param name="keyword">Must be lower case</param>
+		/// <returns></returns>
+		public string this[string keyword]
 		{
-			_builder = new DbConnectionStringBuilder {ConnectionString = connectionString};
+			get
+			{
+				if (_builder.TryGetValue(keyword, out object value))
+				{
+					return ConvertToString(value);
+				}
+
+				_msg.Debug($"no keyword {keyword} in {_builder.ConnectionString}");
+				return string.Empty;
+			}
 		}
 
-		#endregion
+		[NotNull]
+		public string ConnectionString => _builder.ConnectionString;
 
 		[NotNull]
-		public IList<KeyValuePair<string, string>> GetEntries()
+		public Dictionary<string, string> GetEntries()
 		{
-			var result = new List<KeyValuePair<string, string>>();
+			var result = new Dictionary<string, string>();
 
 			ICollection keywords = _builder.Keys;
+			Assert.NotNull(keywords);
 
 			foreach (string keyword in keywords)
 			{
@@ -44,17 +51,22 @@ namespace ProSuite.Commons.Ado
 					continue;
 				}
 
-				var stringValue = value as string;
-
-				if (stringValue == null)
-				{
-					Assert.Fail("connection string value is not a string: {0}", value);
-				}
-
-				result.Add(new KeyValuePair<string, string>(keyword, stringValue));
+				result.Add(keyword, ConvertToString(value));
 			}
 
 			return result;
+		}
+
+		private static string ConvertToString(object value)
+		{
+			var stringValue = value as string;
+
+			if (stringValue == null)
+			{
+				Assert.Fail("connection string value is not a string: {0}", value);
+			}
+
+			return stringValue;
 		}
 
 		public void Add([NotNull] string keyword, [NotNull] string newValue)
@@ -80,7 +92,22 @@ namespace ProSuite.Commons.Ado
 			return _builder.Remove(keyword);
 		}
 
-		[NotNull]
-		public string ConnectionString => _builder.ConnectionString ?? string.Empty;
+		#region Constructors
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="ConnectionStringBuilder" /> class.
+		/// </summary>
+		public ConnectionStringBuilder() : this(string.Empty) { }
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="ConnectionStringBuilder" /> class.
+		/// </summary>
+		/// <param name="connectionString">The connection string.</param>
+		public ConnectionStringBuilder([NotNull] string connectionString)
+		{
+			_builder = new DbConnectionStringBuilder {ConnectionString = connectionString};
+		}
+
+		#endregion
 	}
 }
