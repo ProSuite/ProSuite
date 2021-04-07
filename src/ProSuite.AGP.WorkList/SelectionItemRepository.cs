@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
@@ -66,7 +65,7 @@ namespace ProSuite.AGP.WorkList
 
 			if (filter == null)
 			{
-				filter = new QueryFilter { ObjectIDs = new ReadOnlyCollection<long>(oids) };
+				filter = new QueryFilter { ObjectIDs = oids };
 			}
 
 			if (filter is SpatialQueryFilter spatialFilter)
