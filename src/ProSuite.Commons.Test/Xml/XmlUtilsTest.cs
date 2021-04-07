@@ -1,9 +1,7 @@
 using System;
-using System.Runtime.Remoting.Messaging;
 using System.Xml;
 using NUnit.Framework;
 using ProSuite.Commons.Xml;
-using Swisstopo.GeniusDB.AddIn.IMIT.Einzelbaum;
 
 namespace ProSuite.Commons.Test.Xml
 {
@@ -50,12 +48,6 @@ namespace ProSuite.Commons.Test.Xml
 			Assert.AreEqual("#aaaa[0x0B]bbb[0x0C]#", escaped);
 		}
 
-		[Test]
-		public void CanDeserializeXml()
-		{
-			var helper = new XmlSerializationHelper<PartialEinzelbaumOptions>();
-
-			var options = helper.ReadFromFile(@"C:/temp/EinzelbaumToolOptions");
-		}
+		
 	}
 }
