@@ -235,10 +235,12 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			throw new InvalidOperationException("No row count result specified for mock");
 		}
 
-		ICursor ITable.Search(IQueryFilter QueryFilter, bool Recycling)
-		{
-			throw new NotImplementedException();
-		}
+		ICursor ITable.Search(IQueryFilter QueryFilter, bool Recycling) =>
+			Search(QueryFilter, Recycling);
+
+		protected virtual ICursor Search(IQueryFilter QueryFilter, bool Recycling)
+			=> throw new NotImplementedException();
+
 
 		ICursor ITable.Update(IQueryFilter QueryFilter, bool Recycling)
 		{

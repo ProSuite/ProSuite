@@ -103,9 +103,12 @@ namespace ProSuite.QA.Container.TestContainer
 				_searchToleranceFromTo[queriedTableIndex] = searchToleranceByTable;
 
 				ITable table = GetCachedTable(queriedTableIndex);
-				IList<ContainerTest> pTestList = _testsPerTable[table];
+				if (! _testsPerTable.TryGetValue(table, out IList<ContainerTest> tableTests))
+				{
+					continue;
+				}
 
-				foreach (ContainerTest containerTest in pTestList)
+				foreach (ContainerTest containerTest in tableTests)
 				{
 					if (Math.Abs(containerTest.SearchDistance) < double.Epsilon)
 					{
@@ -214,7 +217,7 @@ namespace ProSuite.QA.Container.TestContainer
 				double ymax;
 				_envelopeTemplate.QueryCoords(out xmin, out ymin, out xmax, out ymax);
 
-				cacheGeometryOverlapsLeftTile = xmin < CurrentTileBox.Min.X &&
+				cacheGeometryOverlapsLeftTile = xmin < CurrentTileBox?.Min.X &&
 				                                xmin > _testRunBox.Min.X;
 
 				// https://issuetracker02.eggits.net/browse/COM-85
@@ -224,7 +227,7 @@ namespace ProSuite.QA.Container.TestContainer
 				// - tile ymin            = 220557.78534
 				// --> filter geometry is completely outside of tile boundaries!!!
 				// --> causes incorrect error in QaContainsOther
-				cacheGeometryOverlapsBottomTile = ymin < CurrentTileBox.Min.Y &&
+				cacheGeometryOverlapsBottomTile = ymin < CurrentTileBox?.Min.Y &&
 				                                  ymin > _testRunBox.Min.Y;
 			}
 
@@ -232,10 +235,12 @@ namespace ProSuite.QA.Container.TestContainer
 
 			engine.SetSourceGeometry(filterGeometry);
 
-			IList<ContainerTest> tests = _testsPerTable[table];
-			int indexTest = tests.IndexOf(filterHelper.ContainerTest);
-
-			IList<BaseRow> ignoredRows = IgnoredRowsByTableAndTest[tableIndex][indexTest];
+			IList<BaseRow> ignoredRows = null;
+			if (_testsPerTable.TryGetValue(table, out IList<ContainerTest> tests))
+			{
+				int indexTest = tests.IndexOf(filterHelper.ContainerTest);
+				ignoredRows = IgnoredRowsByTableAndTest[tableIndex][indexTest];
+			}
 
 			foreach (BoxTree<CachedRow>.TileEntry entry in searchList)
 			{

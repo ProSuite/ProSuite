@@ -70,4 +70,44 @@ namespace ProSuite.QA.Container
 
 		void SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql);
 	}
+
+	public interface IProcessorTest
+	{
+		IReadOnlyList<IPostProcessor> PostProcessors { get; }
+		IReadOnlyList<IPreProcessor> PreProcessors { get; }
+	}
+
+	public interface IPreProcessor
+	{
+		[NotNull]
+		IList<ITable> InvolvedTables { get; }
+
+		int TableIndex { get; }
+
+		bool VerifyExecute(IRow row);
+	}
+
+	public interface ITableTransformer
+	{
+		[NotNull]
+		IList<ITable> InvolvedTables { get; }
+
+		ITable GetTransformed();
+	}
+
+	public interface IDerivedTable
+	{
+		[NotNull]
+		IList<ITable> InvolvedTables { get; }
+
+		ISearchable DataContainer { get; set; }
+	}
+
+	public interface IPostProcessor
+	{
+		[NotNull]
+		IList<ITable> InvolvedTables { get; }
+
+		void PostProcessError(QaErrorEventArgs args);
+	}
 }

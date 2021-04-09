@@ -102,6 +102,13 @@ namespace ProSuite.QA.Container.TestContainer
 			foreach (ContainerTest containerTest in _container.ContainerTests)
 			{
 				containerTest.DataContainer = this;
+				foreach (ITable table in containerTest.InvolvedTables)
+				{
+					if (table is IDerivedTable derived)
+					{
+						derived.DataContainer = this;
+					}
+				}
 			}
 
 			_rastersRowEnumerable = new RastersRowEnumerable(_testsPerRaster.Keys, _container);
@@ -440,20 +447,24 @@ namespace ProSuite.QA.Container.TestContainer
 			{
 				double? cachedRowSearchTolerance = null;
 
+				ITable cachedTable = _cachedTables[cachedTableIndex];
+				_testsPerTable.TryGetValue(cachedTable, out IList<ContainerTest> testsPerTable);
+
 				foreach (BoxTree<CachedRow>.TileEntry entry in _tileCache.EnumEntries(
 					cachedTableIndex, tile.Box))
 				{
 					tileRowIndex++;
+
+					if (testsPerTable == null)
+					{
+						continue;
+					}
 
 					CachedRow cachedRow = entry.Value;
 					if (cachedRow.DisjointFromExecuteArea)
 					{
 						continue;
 					}
-
-					ITable cachedTable = _cachedTables[cachedTableIndex];
-
-					IList<ContainerTest> testsPerTable = _testsPerTable[cachedTable];
 
 					// TODO: use new class Class_with_ContainerTest_and_InvolvedTableIndex instead of containerTest for applicable tests
 					IList<ContainerTest> applicableTests = GetApplicableTests(
@@ -813,6 +824,19 @@ namespace ProSuite.QA.Container.TestContainer
 			foreach (KeyValuePair<ITable, IList<ContainerTest>> pair in testsPerTable)
 			{
 				ITable table = pair.Key;
+
+				if (table is IDerivedTable derived)
+				{
+					foreach (var baseTable in derived.InvolvedTables)
+					{
+						// TODO: Use dictionary
+						if (! cachedTables.Contains(baseTable))
+						{
+							cachedTables.Add(baseTable);
+						}
+					}
+				}
+
 				IList<ContainerTest> tests = pair.Value;
 				var queried = false;
 				var geometryUsed = false;
@@ -1451,30 +1475,33 @@ namespace ProSuite.QA.Container.TestContainer
 		{
 			var result = new List<IList<BaseRow>>();
 
-			foreach (ContainerTest test in _testsPerTable[table])
+			if (_testsPerTable.TryGetValue(table, out IList<ContainerTest> tableTests))
 			{
-				List<BaseRow> ignoreList = null;
-
-				if (test.AreaOfInterest != null &&
-				    ! ((IRelationalOperator) test.AreaOfInterest).Contains(tileGeometry))
+				foreach (ContainerTest test in tableTests)
 				{
-					foreach (CachedRow cachedRow in cachedRows)
+					List<BaseRow> ignoreList = null;
+
+					if (test.AreaOfInterest != null &&
+					    ! ((IRelationalOperator) test.AreaOfInterest).Contains(tileGeometry))
 					{
-						if (! test.IsOutsideAreaOfInterest(cachedRow.Feature))
+						foreach (CachedRow cachedRow in cachedRows)
 						{
-							continue;
-						}
+							if (! test.IsOutsideAreaOfInterest(cachedRow.Feature))
+							{
+								continue;
+							}
 
-						if (ignoreList == null)
-						{
-							ignoreList = new List<BaseRow>();
-						}
+							if (ignoreList == null)
+							{
+								ignoreList = new List<BaseRow>();
+							}
 
-						ignoreList.Add(cachedRow);
+							ignoreList.Add(cachedRow);
+						}
 					}
-				}
 
-				result.Add(ignoreList);
+					result.Add(ignoreList);
+				}
 			}
 
 			return result;

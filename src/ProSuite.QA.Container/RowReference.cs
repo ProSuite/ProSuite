@@ -71,6 +71,15 @@ namespace ProSuite.QA.Container
 				return 0;
 			}
 
+			foreach (var preProcessor in containerTest.GetPreProcessors(involvedTableIndex))
+			{
+				if (! preProcessor.VerifyExecute(row))
+				{
+					applicable = false;
+					return 0;
+				}
+			}
+
 			// the test is applicable for the row, run it
 			applicable = true;
 			return containerTest.Execute(row, involvedTableIndex, RecycleUnique);

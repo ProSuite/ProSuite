@@ -6,7 +6,7 @@ using ProSuite.QA.Container.TestContainer;
 
 namespace ProSuite.QA.Container
 {
-	internal interface ISearchable
+	public interface ISearchable
 	{
 		///// <summary>
 		///// returns the extent of the area for which data are currently loaded in the cache of the ISearchable instance

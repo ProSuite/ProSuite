@@ -12,7 +12,7 @@ namespace ProSuite.QA.Container
 	/// <summary>
 	/// Base class for tests running in the container
 	/// </summary>
-	public abstract partial class ContainerTest : TestBase, IRelatedTablesProvider
+	public abstract partial class ContainerTest : TestBase, IRelatedTablesProvider, IProcessorTest
 	{
 		private readonly List<QueryFilterHelper> _filterHelpers;
 
@@ -57,6 +57,40 @@ namespace ProSuite.QA.Container
 		public IList<RasterReference> InvolvedRasters { get; protected set; }
 
 		public IList<TerrainReference> InvolvedTerrains { get; protected set; }
+
+		private List<IPreProcessor> _preProcessors { get; set; }
+		public IReadOnlyList<IPreProcessor> PreProcessors => _preProcessors;
+		private Dictionary<int, List<IPreProcessor>> _preProssesorDict;
+
+		private Dictionary<int, List<IPreProcessor>> PreProssesorDict => _preProssesorDict ??
+			(_preProssesorDict = GetPreProcessorDict(_preProcessors));
+
+		[NotNull]
+		private Dictionary<int, List<IPreProcessor>> GetPreProcessorDict(
+			[CanBeNull] IList<IPreProcessor> preProcessors)
+		{
+			Dictionary<int, List<IPreProcessor>> dict = new Dictionary<int, List<IPreProcessor>>();
+			if (preProcessors == null)
+			{
+				return dict;
+			}
+
+			foreach (IPreProcessor proc in preProcessors)
+			{
+				if (! dict.TryGetValue(proc.TableIndex, out List<IPreProcessor> procs))
+				{
+					procs = new List<IPreProcessor>();
+					dict.Add(proc.TableIndex, procs);
+				}
+
+				procs.Add(proc);
+			}
+
+			return dict;
+		}
+
+		private List<IPostProcessor> PostProcessors { get; set; }
+		IReadOnlyList<IPostProcessor> IProcessorTest.PostProcessors => PostProcessors;
 
 		public IEnumerable<IGeoDataset> GetInvolvedGeoDatasets()
 		{
@@ -118,6 +152,23 @@ namespace ProSuite.QA.Container
 		[PublicAPI]
 		protected bool KeepRows { get; set; }
 
+		protected override void OnQaError(QaErrorEventArgs args)
+		{
+			if (PostProcessors != null)
+			{
+				foreach (IPostProcessor postProcessor in PostProcessors)
+				{
+					postProcessor.PostProcessError(args);
+					if (args.Cancel)
+					{
+						return;
+					}
+				}
+			}
+
+			base.OnQaError(args);
+		}
+
 		#region ITest Members
 
 		// TODO currently this seems to be called on container tests only when they
@@ -145,7 +196,7 @@ namespace ProSuite.QA.Container
 					IQueryFilter queryFilter = new QueryFilterClass();
 					ConfigureQueryFilter(tableIndex, queryFilter);
 
-					errorCount += Execute(table, queryFilter);
+					errorCount += Execute(table, tableIndex, queryFilter);
 				}
 
 				tableIndex++;
@@ -189,7 +240,7 @@ namespace ProSuite.QA.Container
 				IQueryFilter filter = TestUtils.CreateFilter(boundingBox, AreaOfInterest,
 				                                             GetConstraint(tableIndex),
 				                                             table, null);
-				errorCount += Execute(table, filter);
+				errorCount += Execute(table, tableIndex, filter);
 
 				tableIndex++;
 			}
@@ -221,7 +272,7 @@ namespace ProSuite.QA.Container
 				IQueryFilter filter = TestUtils.CreateFilter(area, AreaOfInterest,
 				                                             GetConstraint(tableIndex),
 				                                             table, null);
-				errorCount += Execute(table, filter);
+				errorCount += Execute(table, tableIndex, filter);
 
 				tableIndex++;
 			}
@@ -591,9 +642,9 @@ namespace ProSuite.QA.Container
 				ITable table = InvolvedTables[tableIndex];
 
 				filterHelpers[tableIndex] = new QueryFilterHelper(table,
-				                                                  GetConstraint(tableIndex),
-				                                                  GetSqlCaseSensitivity(
-					                                                  tableIndex));
+					GetConstraint(tableIndex),
+					GetSqlCaseSensitivity(
+						tableIndex));
 				spatialFilters[tableIndex] = new SpatialFilterClass();
 
 				ConfigureQueryFilter(tableIndex, spatialFilters[tableIndex]);
@@ -801,21 +852,35 @@ namespace ProSuite.QA.Container
 			                                                   GetSqlCaseSensitivity(tableIndex));
 		}
 
-		private int Execute([NotNull] ITable table, [CanBeNull] IQueryFilter queryFilter)
+		[NotNull]
+		public IReadOnlyList<IPreProcessor> GetPreProcessors(int involvedTableIndex)
+		{
+			if (! PreProssesorDict.TryGetValue(involvedTableIndex,
+			                                   out List<IPreProcessor> preProcessors))
+			{
+				preProcessors = new List<IPreProcessor>();
+			}
+
+			return preProcessors;
+		}
+
+		private int Execute([NotNull] ITable table, int tableIndex,
+		                    [CanBeNull] IQueryFilter queryFilter)
 		{
 			var cursor = new EnumCursor(table, queryFilter, ! KeepRows);
 			var errorCount = 0;
+			IReadOnlyList<IPreProcessor> preProcessors = GetPreProcessors(tableIndex);
 
 			foreach (IRow row in cursor)
 			{
-				if (row is IFeature)
+				if (row is IFeature feature)
 				{
 					// TODO revise
 
 					// workaround that all spatial searches work properly:
 					// explicitly calculate IsSimple --> 
 					// state of shape seems to be consistent afterward
-					var shapeTopoOp = ((IFeature) row).Shape as ITopologicalOperator2;
+					var shapeTopoOp = feature.Shape as ITopologicalOperator2;
 					// always, when a shape comes from DB, though it needs not to be true:
 					//Debug.Assert(shp.IsKnownSimple && shp.IsSimple);
 
@@ -826,7 +891,20 @@ namespace ProSuite.QA.Container
 					}
 				}
 
-				errorCount += Execute(row);
+				bool cancel = false;
+				foreach (var preprocessor in preProcessors)
+				{
+					if (! preprocessor.VerifyExecute(row))
+					{
+						cancel = true;
+						break;
+					}
+				}
+
+				if (! cancel)
+				{
+					errorCount += ExecuteCore(row, tableIndex);
+				}
 			}
 
 			return errorCount;
