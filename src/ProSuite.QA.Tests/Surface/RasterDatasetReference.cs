@@ -3,10 +3,13 @@ using ESRI.ArcGIS.DatasourcesRaster;
 #else
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif
+using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
+using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
@@ -27,22 +30,28 @@ namespace ProSuite.QA.Tests.Surface
 
 		public override IDataset Dataset => (IDataset) _rasterDataset;
 		public override IGeoDataset GeoDataset => (IGeoDataset) _rasterDataset;
-		public override IRasterProps RasterProps => (IRasterProps) FullRaster;
+		public override double CellSize => ((IRasterProps) FullRaster).MeanCellSize().X;
 
 		private IRaster FullRaster =>
 			_fullRaster
 			?? (_fullRaster = _rasterDataset.CreateFullRaster());
 
-		public override ISimpleSurface CreateSurface(IEnvelope extent,
-		                                             out IDataset memoryRasterDataset)
+		public override ISimpleSurface CreateSurface(IEnvelope extent)
 		{
+			IDataset memoryRasterDataset;
+
 			IRaster clipped =
 				RasterUtils.GetClippedRaster(FullRaster, extent, out memoryRasterDataset);
 
-			var rasterSurface = new RasterSurface();
-			rasterSurface.PutRaster(clipped, 0);
+			IDataset disposableDataset = memoryRasterDataset;
 
-			return rasterSurface;
+			IDisposable disposableCallback =
+				new DisposableCallback(() => RasterUtils.ReleaseMemoryRasterDataset(disposableDataset));
+
+			var simpleRasterDataset = new SimpleRasterDataset(
+				clipped, GeometryFactory.CreatePolygon(extent), disposableCallback);
+
+			return new SimpleRasterSurface(simpleRasterDataset);
 		}
 
 		public override bool EqualsCore(RasterReference rasterReference)

@@ -3,11 +3,14 @@ using ESRI.ArcGIS.DatasourcesRaster;
 #else
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif
+using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geometry;
+using IPnt = ESRI.ArcGIS.Geodatabase.IPnt;
 
 namespace ProSuite.Commons.AO.Surface.Raster
 {
@@ -106,6 +109,22 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			topLeftColumn.SetCoords(pixelOffsetX, pixelOffsetY);
 
 			_raster.Read(topLeftColumn, pixelBlock);
+		}
+
+		public void Dispose()
+		{
+			if (_raster != null)
+			{
+				Marshal.ReleaseComObject(_raster);
+			}
+		}
+
+		public EnvelopeXY GetEnvelope()
+		{
+			var rasterProperties = (IRasterProps) _raster;
+			IEnvelope envelope = rasterProperties.Extent;
+
+			return new EnvelopeXY(envelope.XMin, envelope.YMin, envelope.XMax, envelope.YMax);
 		}
 
 		private static IRaster OpenRaster(string filePath)

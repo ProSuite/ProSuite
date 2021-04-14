@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -8,7 +9,7 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.Geometry.SpatialIndex
 {
-	public class SpatialHashIndex<T>
+	public class SpatialHashIndex<T> : IEnumerable<T>
 	{
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
@@ -142,6 +143,29 @@ namespace ProSuite.Commons.Geometry.SpatialIndex
 			return $"SpatialHashIndex with {_tiles.Count} tiles, estimated items per tile: " +
 			       $"{_estimatedItemsPerTile}, {_tiles.Count(kvp => kvp.Value.Count > _estimatedItemsPerTile)} " +
 			       $"tiles exceed the estimated item count. Tiling: {_tilingDefinition}";
+		}
+
+		public IEnumerator<T> GetEnumerator()
+		{
+			// The resulting identifiers must be made distinct
+			// TODO: ConcurrentHashset 
+			_foundIdentifiers = _foundIdentifiers ?? new HashSet<T>();
+			_foundIdentifiers.Clear();
+
+			foreach (var identifiers in _tiles.Values)
+			{
+				foreach (T identifier in identifiers)
+				{
+					_foundIdentifiers.Add(identifier);
+				}
+			}
+
+			return _foundIdentifiers.GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
 		}
 
 		private IEnumerable<T> FindItemsWithinTile(TileIndex tileIndex,

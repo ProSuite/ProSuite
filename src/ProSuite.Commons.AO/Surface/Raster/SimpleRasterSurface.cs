@@ -1,40 +1,54 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geometry.SpatialIndex;
 
 namespace ProSuite.Commons.AO.Surface.Raster
 {
 	/// <summary>
-	/// Simple surface implementation for a set of raster file. The appropriate raster
+	/// Simple surface implementation for a set of raster files. The appropriate raster
 	/// to be used at a specific location is provided by the raster dataset provider. The
 	/// raster datasets are cached.
 	/// </summary>
 	public class SimpleRasterSurface : ISimpleSurface
 	{
-		private readonly IRasterDatasetProvider _rasterDatasetProvider;
+		private readonly IRasterProvider _rasterProvider;
 
-		public SimpleRasterSurface(IRasterDatasetProvider rasterDatasetProvider)
+		private readonly RasterCache _rasterCache;
+
+		public SimpleRasterSurface(IRasterProvider rasterProvider)
 		{
-			_rasterDatasetProvider = rasterDatasetProvider;
+			_rasterProvider = rasterProvider;
+
+			IEnvelope boundaryEnv = _rasterProvider.GetInterpolationDomain().Envelope;
+
+			EnvelopeXY envelope = new EnvelopeXY(
+				boundaryEnv.XMin, boundaryEnv.YMin, boundaryEnv.XMax, boundaryEnv.YMax);
+
+			_rasterCache = new RasterCache(envelope, GeometryUtils.GetXyTolerance(boundaryEnv));
 		}
 
 		#region ISimpleSurface members
 
 		IRaster ISimpleSurface.AsRaster() => throw new NotImplementedException();
+
 		public void Dispose()
 		{
-			// TODO:
-			// foreach rasterDataset in openRasters -> close
+			_rasterCache?.Dispose();
 		}
 
 		public IPolygon GetDomain()
 		{
-			return _rasterDatasetProvider.GetInterpolationDomain();
+			return _rasterProvider.GetInterpolationDomain();
 		}
 
 		public double GetZ(double x, double y)
 		{
-			ISimpleRaster simpleRaster = _rasterDatasetProvider.GetSimpleRaster(x, y);
+			ISimpleRaster simpleRaster = GetRaster(x, y);
 
 			if (simpleRaster == null)
 			{
@@ -94,6 +108,20 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			return value;
 		}
 
+		private ISimpleRaster GetRaster(double x, double y)
+		{
+			// TODO: Get all rasters in an extent, Z-order stuff
+			ISimpleRaster simpleRaster = _rasterCache.GetRasters(x, y).FirstOrDefault();
+
+			if (simpleRaster == null)
+			{
+				simpleRaster = _rasterProvider.GetSimpleRaster(x, y);
+				_rasterCache.AddRaster(simpleRaster);
+			}
+
+			return simpleRaster;
+		}
+
 		private static bool HasNoDataValues(ISimplePixelBlock<float> pixelBlock,
 		                                    float noDataValue)
 		{
@@ -124,5 +152,61 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		}
 
 		#endregion
+	}
+
+	internal class RasterCache : IDisposable
+	{
+		private readonly EnvelopeXY _maximumExtent;
+		private readonly double _searchTolerance;
+
+		private SpatialHashSearcher<ISimpleRaster> _rasterIndex;
+
+		public RasterCache(EnvelopeXY maximumExtent,
+		                   double searchTolerance)
+		{
+			_maximumExtent = maximumExtent;
+			_searchTolerance = searchTolerance;
+		}
+
+		public IEnumerable<ISimpleRaster> GetRasters(double x, double y)
+		{
+			foreach (ISimpleRaster simpleRaster in _rasterIndex.Search(new Pnt2D(x, y),
+			                                                           _searchTolerance))
+			{
+				yield return simpleRaster;
+			}
+		}
+
+		public void AddRaster(ISimpleRaster simpleRaster)
+		{
+			EnvelopeXY envelope = simpleRaster.GetEnvelope();
+
+			if (_rasterIndex == null)
+			{
+				_rasterIndex = CreateRasterIndex(envelope);
+			}
+
+			_rasterIndex.Add(simpleRaster, envelope);
+		}
+
+		private SpatialHashSearcher<ISimpleRaster> CreateRasterIndex(EnvelopeXY typicalRasterSize)
+		{
+			TilingDefinition tiling = new TilingDefinition(_maximumExtent.XMin, _maximumExtent.YMin,
+			                                               typicalRasterSize.Width,
+			                                               typicalRasterSize.Height);
+
+			SpatialHashSearcher<ISimpleRaster> rasterIndex =
+				new SpatialHashSearcher<ISimpleRaster>(tiling, 32, 4);
+
+			return rasterIndex;
+		}
+
+		public void Dispose()
+		{
+			foreach (ISimpleRaster simpleRaster in _rasterIndex)
+			{
+				simpleRaster.Dispose();
+			}
+		}
 	}
 }

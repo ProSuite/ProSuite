@@ -1,8 +1,6 @@
 using System.Reflection;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Surface;
-using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -15,7 +13,6 @@ namespace ProSuite.QA.Container
 		[NotNull] private readonly ITestProgress _testProgress;
 
 		[CanBeNull] private ISimpleSurface _rasterSurface;
-		[CanBeNull] private IDataset _memoryRasterDataset;
 
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
@@ -84,21 +81,6 @@ namespace ProSuite.QA.Container
 
 			_rasterSurface.Dispose();
 			_rasterSurface = null;
-
-			IWorkspace memoryWs = null;
-			if (_memoryRasterDataset != null)
-			{
-				memoryWs = _memoryRasterDataset.Workspace;
-				_memoryRasterDataset.Delete();
-				ComUtils.ReleaseComObject(_memoryRasterDataset);
-				_memoryRasterDataset = null;
-			}
-
-			if (memoryWs != null)
-			{
-				((IDataset) memoryWs).Delete();
-				ComUtils.ReleaseComObject(memoryWs);
-			}
 		}
 
 		[NotNull]
@@ -113,8 +95,7 @@ namespace ProSuite.QA.Container
 					                                      Step.RasterLoaded,
 					                                      0, 1, RasterReference))
 					{
-						_rasterSurface = RasterReference.CreateSurface(Extent,
-							out _memoryRasterDataset);
+						_rasterSurface = RasterReference.CreateSurface(Extent);
 					}
 				}
 

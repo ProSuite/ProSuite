@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
@@ -6,7 +7,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geometry.SpatialIndex
 {
-	public class SpatialHashSearcher<T> : ISpatialSearcher<T>
+	public class SpatialHashSearcher<T> : ISpatialSearcher<T>, IEnumerable<T>
 	{
 		private const int _segmentCountThreshold = 200;
 
@@ -15,12 +16,18 @@ namespace ProSuite.Commons.Geometry.SpatialIndex
 		public SpatialHashSearcher(double xMin, double yMin, double gridSize,
 		                           int estimatedMaxTileCount,
 		                           double estimatedItemsPerTile)
+			: this(new TilingDefinition(xMin, yMin, gridSize, gridSize),
+			       estimatedMaxTileCount, estimatedItemsPerTile) { }
+
+		public SpatialHashSearcher(TilingDefinition tilingDefinition,
+		                           int estimatedMaxTileCount,
+		                           double estimatedItemsPerTile)
 		{
-			Assert.ArgumentCondition(gridSize > 0, "GridSize must be > 0");
+			Assert.ArgumentCondition(tilingDefinition.TileWidth > 0, "Tile width must be > 0");
+			Assert.ArgumentCondition(tilingDefinition.TileHeight > 0, "Tile height must be > 0");
 
 			_spatialHashIndex = new SpatialHashIndex<T>(
-				new TilingDefinition(xMin, yMin, gridSize, gridSize),
-				estimatedMaxTileCount, estimatedItemsPerTile);
+				tilingDefinition, estimatedMaxTileCount, estimatedItemsPerTile);
 		}
 
 		[CanBeNull]
@@ -322,6 +329,16 @@ namespace ProSuite.Commons.Geometry.SpatialIndex
 			{
 				averageDensity = double.NaN;
 			}
+		}
+
+		public IEnumerator<T> GetEnumerator()
+		{
+			return _spatialHashIndex.GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
 		}
 	}
 }

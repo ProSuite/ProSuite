@@ -1,8 +1,10 @@
+using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geometry;
 
 namespace ProSuite.Commons.AO.Surface.Raster
 {
-	public interface ISimpleRaster
+	public interface ISimpleRaster : IDisposable
 	{
 		/// <summary>
 		/// The X coordinate of the origin (i.e. top left of the raster extent) in georeferenced space.
@@ -37,5 +39,7 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		void ReadPixelBlock<T>(int pixelOffsetX, int pixelOffsetY,
 		                       [NotNull] ISimplePixelBlock<T> simplePixelBlock,
 		                       int nPixelSpace = 0, int nLineSpace = 0);
+
+		EnvelopeXY GetEnvelope();
 	}
 }

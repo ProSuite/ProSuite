@@ -36,17 +36,16 @@ namespace ProSuite.QA.Container.TestContainer
 
 			IEnvelope extent = null;
 			var minDx = double.MaxValue;
-			foreach (var raster in rasters)
+			foreach (RasterReference raster in rasters)
 			{
-				var props = raster.RasterProps;
-				minDx = Math.Min(props.MeanCellSize().X, minDx);
+				
 				if (extent == null)
 				{
-					extent = props.Extent.Envelope;
+					extent = raster.GeoDataset.Extent.Envelope;
 				}
 				else
 				{
-					extent.Union(props.Extent.Envelope);
+					extent.Union(raster.GeoDataset.Extent.Envelope);
 				}
 			}
 
@@ -70,7 +69,7 @@ namespace ProSuite.QA.Container.TestContainer
 				double sum = 0;
 				foreach (var raster in _rastersDict)
 				{
-					double dx = raster.RasterProps.MeanCellSize().X;
+					double dx = raster.CellSize;
 					sum += 1 / (dx * dx);
 				}
 

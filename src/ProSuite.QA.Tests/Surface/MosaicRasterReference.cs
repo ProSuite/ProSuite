@@ -1,11 +1,5 @@
-using System;
 using System.Linq;
 using System.Text;
-#if Server
-using ESRI.ArcGIS.DatasourcesRaster;
-#else
-using ESRI.ArcGIS.DataSourcesRaster;
-#endif
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Surface;
@@ -30,15 +24,15 @@ namespace ProSuite.QA.Tests.Surface
 			_mosaicDefinitionBytes = GetMosaicDefinitionBytes(simpleRasterMosaic);
 		}
 
-		public override IDataset Dataset => throw new NotImplementedException();
-		public override IGeoDataset GeoDataset => throw new NotImplementedException();
+		public override IDataset Dataset => _simpleRasterMosaic;
 
-		public override IRasterProps RasterProps => throw new NotImplementedException();
+		public override IGeoDataset GeoDataset => _simpleRasterMosaic;
 
-		public override ISimpleSurface CreateSurface(IEnvelope extent,
-		                                             out IDataset memoryRasterDataset)
+		public override double CellSize => _simpleRasterMosaic.GetMaxCellSize();
+
+		public override ISimpleSurface CreateSurface(IEnvelope extent)
 		{
-			throw new NotImplementedException();
+			return new SimpleRasterSurface(_simpleRasterMosaic);
 		}
 
 		public override bool EqualsCore(RasterReference rasterReference)

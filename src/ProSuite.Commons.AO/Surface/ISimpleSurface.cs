@@ -24,9 +24,4 @@ namespace ProSuite.Commons.AO.Surface
 		[CanBeNull]
 		IRaster AsRaster();
 	}
-	[Obsolete("move")]
-	public interface ISimpleSurfaceProvider
-	{
-		ISimpleSurface GetSurface([CanBeNull] IEnvelope extent = null);
-	}
 }

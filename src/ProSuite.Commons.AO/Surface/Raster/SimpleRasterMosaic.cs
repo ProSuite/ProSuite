@@ -1,10 +1,10 @@
-using System;
-using System.Linq;
 #if Server
 using ESRI.ArcGIS.DatasourcesRaster;
 #else
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif
+using System;
+using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -16,7 +16,7 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Surface.Raster
 {
-	public class SimpleRasterMosaic : IRasterDatasetProvider
+	public class SimpleRasterMosaic : IRasterProvider, IDataset, IGeoDataset
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -24,6 +24,9 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 		private readonly string _mosaicRuleZOrderField;
 		private readonly bool _mosaicRuleDescending;
+
+		// TODO: Consider supporting VRT file format directly or
+		//       a polygon feature class with a raster path field and a boundary polygon
 
 		public SimpleRasterMosaic(IMosaicDataset mosaicDataset,
 		                          string mosaicRuleZOrderField = null,
@@ -33,6 +36,12 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 			_mosaicRuleZOrderField = mosaicRuleZOrderField;
 			_mosaicRuleDescending = mosaicRuleDescending;
+		}
+
+		public double GetMaxCellSize()
+		{
+			// Should be tested and possibly done in a different way altogether
+			return _mosaicDataset.MosaicFunction.MaximumVisibleCellsize.X;
 		}
 
 		public IPolygon GetInterpolationDomain()
@@ -137,5 +146,70 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 			return stringArray.Element[0];
 		}
+
+		public void Dispose() { }
+
+		#region IGeoDataset members
+
+		public ISpatialReference SpatialReference =>
+			((IGeoDataset) _mosaicDataset).SpatialReference;
+
+		public IEnvelope Extent => ((IGeoDataset) _mosaicDataset).Extent;
+
+		#endregion
+
+		#region IDataset members
+
+		public bool CanCopy()
+		{
+			return false;
+		}
+
+		public IDataset Copy(string copyName, IWorkspace copyWorkspace)
+		{
+			throw new NotImplementedException();
+		}
+
+		public bool CanDelete()
+		{
+			return false;
+		}
+
+		public void Delete()
+		{
+			throw new NotImplementedException();
+		}
+
+		public bool CanRename()
+		{
+			return false;
+		}
+
+		public void Rename(string name)
+		{
+			throw new NotImplementedException();
+		}
+
+		public string Name => ((IDataset) _mosaicDataset).Name;
+
+		public IName FullName => ((IDataset) _mosaicDataset).FullName;
+
+		public string BrowseName
+		{
+			get => throw new NotImplementedException();
+			set => throw new NotImplementedException();
+		}
+
+		public esriDatasetType Type => ((IDataset) _mosaicDataset).Type;
+
+		public string Category => throw new NotImplementedException();
+
+		public IEnumDataset Subsets => throw new NotImplementedException();
+
+		public IWorkspace Workspace => ((IDataset) _mosaicDataset).Workspace;
+
+		public IPropertySet PropertySet => ((IDataset) _mosaicDataset).PropertySet;
+
+		#endregion
 	}
 }

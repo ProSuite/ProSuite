@@ -219,7 +219,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.Qa3dPipe_asRatio))]
 			bool asRatio)
 			: base(
-				featureClass, new MosaicDsRasterReference(mosaicLayer), limit, zOffsetConstraint)
+				featureClass, new MosaicRasterReference(new SimpleRasterMosaic(mosaicLayer)), limit, zOffsetConstraint)
 		{
 			ValidateAsRatio(startEndIgnoreLength, asRatio);
 

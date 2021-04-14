@@ -1,11 +1,10 @@
 #if Server
 using ESRI.ArcGIS.DatasourcesRaster;
 #else
-using ESRI.ArcGIS.DataSourcesRaster;
+using ProSuite.Commons.AO.Surface;
 #endif
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
@@ -17,8 +16,7 @@ namespace ProSuite.QA.Container
 		public abstract int GetHashCodeCore();
 
 		[NotNull]
-		public abstract ISimpleSurface CreateSurface([NotNull] IEnvelope extent,
-		                                             [CanBeNull] out IDataset memoryRasterDataset);
+		public abstract ISimpleSurface CreateSurface([NotNull] IEnvelope extent);
 
 		[NotNull]
 		public abstract IDataset Dataset { get; }
@@ -26,8 +24,7 @@ namespace ProSuite.QA.Container
 		[NotNull]
 		public abstract IGeoDataset GeoDataset { get; }
 
-		[NotNull]
-		public abstract IRasterProps RasterProps { get; }
+		public abstract double CellSize { get; }
 
 		public override bool Equals(object obj)
 		{

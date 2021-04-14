@@ -1,14 +1,15 @@
-using System;
 #if Server
 using ESRI.ArcGIS.DatasourcesRaster;
 #else
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif
+using System;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -110,6 +111,24 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			result.PutWKSCoords(wks);
 
 			return result;
+		}
+
+		public static void ReleaseMemoryRasterDataset(
+			[CanBeNull] IDataset disposableMemoryRasterDataset)
+		{
+			IWorkspace memoryWs = null;
+			if (disposableMemoryRasterDataset != null)
+			{
+				memoryWs = disposableMemoryRasterDataset.Workspace;
+				disposableMemoryRasterDataset.Delete();
+				ComUtils.ReleaseComObject(disposableMemoryRasterDataset);
+			}
+
+			if (memoryWs != null)
+			{
+				((IDataset) memoryWs).Delete();
+				ComUtils.ReleaseComObject(memoryWs);
+			}
 		}
 	}
 }
