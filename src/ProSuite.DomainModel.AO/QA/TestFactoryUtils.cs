@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
@@ -293,6 +294,28 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 
 			return result;
+		}
+
+		[NotNull]
+		public static ITable GetTransformedTable([NotNull] QualityCondition transformer,
+		                                         [NotNull] IOpenDataset datasetContext,
+		                                         [NotNull] DatasetTestParameterValue baseTable)
+		{
+			DefaultTestFactory factory = (DefaultTestFactory) CreateTestFactory(transformer);
+			Assert.NotNull(factory);
+			DatasetTestParameterValue baseValue = new DatasetTestParameterValue(
+				factory.Parameters[0], baseTable.DatasetValue, baseTable.FilterExpression);
+			try
+			{
+				transformer.AddParameterValue(baseValue);
+
+				ITableTransformer t = factory.CreateInstance<ITableTransformer>(datasetContext);
+				return t.GetTransformed();
+			}
+			finally
+			{
+				transformer.RemoveParameterValue(baseValue);
+			}
 		}
 	}
 }

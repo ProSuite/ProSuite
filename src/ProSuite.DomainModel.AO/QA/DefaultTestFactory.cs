@@ -64,11 +64,24 @@ namespace ProSuite.DomainModel.AO.QA
 		[NotNull]
 		protected Type TestType => _testType;
 
+		public T CreateInstance<T>(IOpenDataset context)
+			where T : IInvolvesTables
+		{
+			IList<T> created = Create(context, Parameters,
+			                          (args) => new[] {CreateInstance<T>(args)});
+			return created[0];
+		}
+
 		protected override ITest CreateTestInstance(object[] args)
+		{
+			return CreateInstance<ITest>(args);
+		}
+
+		private T CreateInstance<T>(object[] args)
 		{
 			ConstructorInfo constructor = TestType.GetConstructors()[_constructorId];
 
-			return (ITest) constructor.Invoke(args);
+			return (T) constructor.Invoke(args);
 		}
 
 		protected override IList<TestParameter> CreateParameters()

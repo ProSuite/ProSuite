@@ -6,11 +6,21 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
 {
-	public interface ITest
+	public interface IInvolvesTables
 	{
 		[NotNull]
 		IList<ITable> InvolvedTables { get; }
+		/// <summary>
+		/// limits the data to execute corresponding to condition
+		/// </summary>
+		/// <param name="tableIndex"></param>
+		/// <param name="condition"></param>
+		void SetConstraint(int tableIndex, [CanBeNull] string condition);
 
+		void SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql);
+	}
+	public interface ITest : IInvolvesTables
+	{
 		/// <summary>
 		/// thrown before a test on a row is performed
 		/// </summary>
@@ -60,15 +70,6 @@ namespace ProSuite.QA.Container
 		/// </summary>
 		/// <param name="area"></param>
 		void SetAreaOfInterest([CanBeNull] IPolygon area);
-
-		/// <summary>
-		/// limits the data to execute corresponding to condition
-		/// </summary>
-		/// <param name="tableIndex"></param>
-		/// <param name="condition"></param>
-		void SetConstraint(int tableIndex, [CanBeNull] string condition);
-
-		void SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql);
 	}
 
 	public interface IProcessorTest
@@ -87,11 +88,8 @@ namespace ProSuite.QA.Container
 		bool VerifyExecute(IRow row);
 	}
 
-	public interface ITableTransformer
+	public interface ITableTransformer : IInvolvesTables
 	{
-		[NotNull]
-		IList<ITable> InvolvedTables { get; }
-
 		ITable GetTransformed();
 	}
 

@@ -105,7 +105,7 @@ namespace ProSuite.DomainModel.AO.QA
 		[NotNull]
 		public IList<ITest> CreateTests([NotNull] IOpenDataset datasetContext)
 		{
-			return CreateTests(datasetContext, Parameters);
+			return Create(datasetContext, Parameters, CreateTestInstances);
 		}
 
 		public virtual string Export([NotNull] QualityCondition qualityCondition)
@@ -369,36 +369,48 @@ namespace ProSuite.DomainModel.AO.QA
 				return false;
 			}
 
-			value = GetArgumentValue(parameter, valuesForParameter);
-
 			// if correct type, add to dataSetList
 			if (tableConstraints != null &&
 			    valuesForParameter.Count > 0 &&
 			    valuesForParameter[0] is ITable)
 			{
-				foreach (DatasetTestParameterValue datasetParameterValue in parameterValueList)
+				for (int iValue = 0; iValue < valuesForParameter.Count; iValue++)
 				{
+					DatasetTestParameterValue datasetParameterValue = parameterValueList[iValue];
+
 					Dataset dataset =
 						Assert.NotNull(datasetParameterValue.DatasetValue, "dataset is null");
 
-					var table = (ITable) datasetContext.OpenDataset(
-						dataset, Assert.NotNull(datasetParameterValue.DataType));
+					ITable transformed = HandleTableTransformers(
+						datasetContext, datasetParameterValue, tableConstraints.Count);
 
-					Assert.NotNull(table, "Dataset not found in current context: {0}",
-					               dataset.Name);
+					if (transformed == null)
+					{
+						var table = (ITable) datasetContext.OpenDataset(
+							dataset, Assert.NotNull(datasetParameterValue.DataType));
 
-					DdxModel dataModel = dataset.Model;
+						Assert.NotNull(table, "Dataset not found in current context: {0}",
+						               dataset.Name);
 
-					bool useCaseSensitiveSql = dataModel != null &&
-					                           ModelElementUtils.UseCaseSensitiveSql(
-						                           table, dataModel.SqlCaseSensitivity);
+						DdxModel dataModel = dataset.Model;
 
-					tableConstraints.Add(new TableConstraint(
-						                     table, datasetParameterValue.FilterExpression,
-						                     useCaseSensitiveSql));
+						bool useCaseSensitiveSql = dataModel != null &&
+						                           ModelElementUtils.UseCaseSensitiveSql(
+							                           table, dataModel.SqlCaseSensitivity);
+
+						tableConstraints.Add(new TableConstraint(
+							                     table, datasetParameterValue.FilterExpression,
+							                     useCaseSensitiveSql));
+					}
+					else
+					{
+						valuesForParameter[iValue] = transformed;
+						tableConstraints.Add(new TableConstraint(transformed, null, false));
+					}
 				}
 			}
 
+			value = GetArgumentValue(parameter, valuesForParameter);
 			return true;
 		}
 
@@ -493,8 +505,10 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		[NotNull]
-		private IList<ITest> CreateTests([NotNull] IOpenDataset datasetContext,
-		                                 [NotNull] IList<TestParameter> testParameters)
+		protected IList<T> Create<T>([NotNull] IOpenDataset datasetContext,
+		                             [NotNull] IList<TestParameter> testParameters,
+		                             Func<object[], IList<T>> createFromArgs)
+			where T : IInvolvesTables
 		{
 			Assert.ArgumentNotNull(datasetContext, nameof(datasetContext));
 			Assert.ArgumentNotNull(testParameters, nameof(testParameters));
@@ -506,11 +520,11 @@ namespace ProSuite.DomainModel.AO.QA
 				                                     testParameters,
 				                                     out sortedTableParameters);
 
-				IList<ITest> tests = CreateTestInstances(constructorArguments);
+				IList<T> createds = createFromArgs(constructorArguments);
 
-				foreach (ITest test in tests)
+				foreach (var created in createds)
 				{
-					ApplyTableParameters(test, sortedTableParameters);
+					ApplyTableParameters(created, sortedTableParameters);
 				}
 
 				// apply non-constructor arguments
@@ -525,7 +539,7 @@ namespace ProSuite.DomainModel.AO.QA
 						continue;
 					}
 
-					foreach (ITest test in tests)
+					foreach (var test in createds)
 					{
 						int preInvolvedTablesCount = test.InvolvedTables.Count;
 						SetPropertyValue(test, parameter, value);
@@ -534,7 +548,7 @@ namespace ProSuite.DomainModel.AO.QA
 					}
 				}
 
-				return tests;
+				return createds;
 			}
 			catch (Exception e)
 			{
@@ -583,7 +597,31 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 		}
 
-		protected virtual void SetPropertyValue([NotNull] ITest test,
+		[CanBeNull]
+		private ITable HandleTableTransformers([NotNull] IOpenDataset datasetContext,
+		                                       [NotNull] DatasetTestParameterValue baseTable,
+		                                       int involvedTableIndex)
+		{
+			if (Condition == null)
+			{
+				return null;
+			}
+
+			foreach (QualityCondition.TableTransformer transformer in Condition.GetTransformers())
+			{
+				if (transformer.InvolvedTableIndex == involvedTableIndex)
+				{
+					ITable transformed =
+						TestFactoryUtils.GetTransformedTable(
+							transformer.Transformer, datasetContext, baseTable);
+					return transformed;
+				}
+			}
+
+			return null;
+		}
+
+		protected virtual void SetPropertyValue([NotNull] object test,
 		                                        [NotNull] TestParameter testParameter,
 		                                        [CanBeNull] object value)
 		{
@@ -596,7 +634,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 			PropertyInfo propertyInfo = testType.GetProperty(propertyName);
 			Assert.NotNull(propertyInfo,
-			               "Property not found for test type {0}: {1}",
+			               "Property not found for type {0}: {1}",
 			               testType.Name, propertyName);
 
 			MethodInfo setMethod = propertyInfo.GetSetMethod();
@@ -608,7 +646,7 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		private void SetNonConstructorConstraints(
-			[NotNull] ITest test, int preInvolvedTablesCount,
+			[NotNull] IInvolvesTables test, int preInvolvedTablesCount,
 			[CanBeNull] IList<TableConstraint> tableConstraints)
 		{
 			Assert.ArgumentNotNull(test, nameof(test));
@@ -631,7 +669,7 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		private static void ApplyTableParameters(
-			[NotNull] ITest test,
+			[NotNull] IInvolvesTables test,
 			[NotNull] IList<TableConstraint> sortedTableParameters)
 		{
 			int tableCount = sortedTableParameters.Count;

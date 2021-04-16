@@ -5,7 +5,7 @@ using ProSuite.DomainModel.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test.TestRunners
 {
-	internal class SimpleModel : ProductionModel
+	public class SimpleModel : ProductionModel
 	{
 		public SimpleModel(string name, IFeatureClass anyWorkspaceFeatureClass)
 			: this(name, (ITable) anyWorkspaceFeatureClass) { }

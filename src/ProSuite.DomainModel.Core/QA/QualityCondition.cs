@@ -314,6 +314,26 @@ namespace ProSuite.DomainModel.Core.QA
 			return TestParameterStringUtils.FormatParameterValues(ParameterValues, maxLength);
 		}
 
+		public class TableTransformer
+		{
+			public int InvolvedTableIndex { get; set; }
+			public QualityCondition Transformer { get; set; }
+		}
+
+		private List<TableTransformer> _transformers = new List<TableTransformer>();
+		public void AddTableTransformer([NotNull] QualityCondition transformer,
+		                                int involvedTableIndex)
+		{
+			_transformers.Add(new TableTransformer
+			                  {InvolvedTableIndex = involvedTableIndex, Transformer = transformer});
+		}
+
+		[NotNull]
+		public IReadOnlyList<TableTransformer> GetTransformers()
+		{
+			return _transformers;
+		}
+
 		public override bool Equals(object obj)
 		{
 			if (this == obj)
