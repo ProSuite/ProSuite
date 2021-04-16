@@ -105,7 +105,9 @@ namespace ProSuite.DomainModel.AO.QA
 		[NotNull]
 		public IList<ITest> CreateTests([NotNull] IOpenDataset datasetContext)
 		{
-			return Create(datasetContext, Parameters, CreateTestInstances);
+			IList<ITest> tests = Create(datasetContext, Parameters, CreateTestInstances);
+			AddPrePostProcessors(tests, datasetContext);
+			return tests;
 		}
 
 		public virtual string Export([NotNull] QualityCondition qualityCondition)
@@ -269,6 +271,28 @@ namespace ProSuite.DomainModel.AO.QA
 
 		[NotNull]
 		protected abstract IList<TestParameter> CreateParameters();
+
+		private void AddPrePostProcessors([NotNull] IList<ITest> tests, IOpenDataset datasetContext)
+		{
+			QualityCondition c = Condition;
+			if (c == null)
+			{
+				return;
+			}
+
+			foreach (ITest test in tests)
+			{
+				if (! (test is IEditProcessorTest procTest)) continue;
+
+				foreach (QualityCondition postProcessor in c.GetPostProcessors())
+				{
+					DefaultTestFactory factory = (DefaultTestFactory) TestFactoryUtils.CreateTestFactory(postProcessor);
+					Assert.NotNull(factory);
+					IPostProcessor proc = factory.CreateInstance<IPostProcessor>(datasetContext);
+					procTest.AddPostProcessor(proc);
+				}
+			}
+		}
 
 		[NotNull]
 		protected virtual object[] Args(

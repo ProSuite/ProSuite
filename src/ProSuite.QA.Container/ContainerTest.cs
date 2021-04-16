@@ -12,7 +12,7 @@ namespace ProSuite.QA.Container
 	/// <summary>
 	/// Base class for tests running in the container
 	/// </summary>
-	public abstract partial class ContainerTest : TestBase, IRelatedTablesProvider, IProcessorTest
+	public abstract partial class ContainerTest : TestBase, IRelatedTablesProvider, IEditProcessorTest
 	{
 		private readonly List<QueryFilterHelper> _filterHelpers;
 
@@ -58,9 +58,16 @@ namespace ProSuite.QA.Container
 
 		public IList<TerrainReference> InvolvedTerrains { get; protected set; }
 
-		private List<IPreProcessor> _preProcessors { get; set; }
-		public IReadOnlyList<IPreProcessor> PreProcessors => _preProcessors;
+		private List<IPreProcessor> _preProcessors;
 		private Dictionary<int, List<IPreProcessor>> _preProssesorDict;
+		public IReadOnlyList<IPreProcessor> PreProcessors => _preProcessors;
+		void IEditProcessorTest.AddPreProcessor(IPreProcessor proc)
+		{
+			_preProcessors = _preProcessors ?? new List<IPreProcessor>();
+			_preProssesorDict = null;
+			_preProcessors.Add(proc);
+		}
+
 
 		private Dictionary<int, List<IPreProcessor>> PreProssesorDict => _preProssesorDict ??
 			(_preProssesorDict = GetPreProcessorDict(_preProcessors));
@@ -89,8 +96,14 @@ namespace ProSuite.QA.Container
 			return dict;
 		}
 
-		private List<IPostProcessor> PostProcessors { get; set; }
-		IReadOnlyList<IPostProcessor> IProcessorTest.PostProcessors => PostProcessors;
+		private List<IPostProcessor> _postProcessors;
+		public IReadOnlyList<IPostProcessor> PostProcessors => _postProcessors;
+
+		void IEditProcessorTest.AddPostProcessor(IPostProcessor proc)
+		{
+			_postProcessors = _postProcessors ?? new List<IPostProcessor>();
+			_postProcessors.Add(proc);
+		}
 
 		public IEnumerable<IGeoDataset> GetInvolvedGeoDatasets()
 		{
@@ -154,9 +167,9 @@ namespace ProSuite.QA.Container
 
 		protected override void OnQaError(QaErrorEventArgs args)
 		{
-			if (PostProcessors != null)
+			if (_postProcessors != null)
 			{
-				foreach (IPostProcessor postProcessor in PostProcessors)
+				foreach (IPostProcessor postProcessor in _postProcessors)
 				{
 					postProcessor.PostProcessError(args);
 					if (args.Cancel)
@@ -627,78 +640,6 @@ namespace ProSuite.QA.Container
 			return TestUtils.GetUniqueSpatialReference(
 				this,
 				requireEqualVerticalCoordinateSystems: false);
-		}
-
-		protected void CopyFilters([NotNull] out IList<ISpatialFilter> spatialFilters,
-		                           [NotNull] out IList<QueryFilterHelper> filterHelpers)
-		{
-			int tableCount = InvolvedTables.Count;
-
-			spatialFilters = new ISpatialFilter[tableCount];
-			filterHelpers = new QueryFilterHelper[tableCount];
-
-			for (var tableIndex = 0; tableIndex < tableCount; tableIndex++)
-			{
-				ITable table = InvolvedTables[tableIndex];
-
-				filterHelpers[tableIndex] = new QueryFilterHelper(table,
-					GetConstraint(tableIndex),
-					GetSqlCaseSensitivity(
-						tableIndex));
-				spatialFilters[tableIndex] = new SpatialFilterClass();
-
-				ConfigureQueryFilter(tableIndex, spatialFilters[tableIndex]);
-			}
-		}
-
-		/// <summary>
-		/// Adapts IQueryFilter so that it conforms to the needs of the test
-		/// </summary>
-		protected virtual void ConfigureQueryFilter(int tableIndex,
-		                                            [NotNull] IQueryFilter queryFilter)
-		{
-			Assert.ArgumentNotNull(queryFilter, nameof(queryFilter));
-
-			ITable table = InvolvedTables[tableIndex];
-			string constraint = GetConstraint(tableIndex);
-
-			queryFilter.AddField(table.OIDFieldName);
-
-			var featureClass = table as IFeatureClass;
-
-			// add shape field
-			if (featureClass != null)
-			{
-				queryFilter.AddField(featureClass.ShapeFieldName);
-			}
-
-			// add subtype field
-			var subtypes = table as ISubtypes;
-			if (subtypes != null)
-			{
-				if (subtypes.HasSubtype)
-				{
-					queryFilter.AddField(subtypes.SubtypeFieldName);
-				}
-			}
-
-			// add where clause fields
-			if (constraint != null)
-			{
-				foreach (
-					string fieldName in
-					ExpressionUtils.GetExpressionFieldNames(table, constraint))
-				{
-					queryFilter.AddField(fieldName);
-					// .AddField checks for multiple entries !					
-				}
-
-				queryFilter.WhereClause = constraint;
-			}
-			else
-			{
-				queryFilter.WhereClause = constraint;
-			}
 		}
 
 		/// <summary>

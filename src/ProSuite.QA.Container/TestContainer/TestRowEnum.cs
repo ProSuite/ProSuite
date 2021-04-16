@@ -113,7 +113,10 @@ namespace ProSuite.QA.Container.TestContainer
 
 			_rastersRowEnumerable = new RastersRowEnumerable(_testsPerRaster.Keys, _container);
 
-			ClassifyTables(_testsPerTable, out _cachedTables, out _nonCachedTables);
+			HashSet<ITable> cachedSet;
+			ClassifyTables(_testsPerTable, out cachedSet, out _nonCachedTables);
+			AddProcessorTables(_container.ContainerTests, cachedSet);
+			_cachedTables = new List<ITable>(cachedSet);
 
 			_cachedTableCount = _cachedTables.Count;
 
@@ -813,12 +816,12 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private static void ClassifyTables(
 			[NotNull] IDictionary<ITable, IList<ContainerTest>> testsPerTable,
-			[NotNull] out IList<ITable> cachedTables,
+			[NotNull] out HashSet<ITable> cachedTables,
 			[NotNull] out IList<TableFields> nonCachedTables)
 		{
 			Assert.ArgumentNotNull(testsPerTable, nameof(testsPerTable));
 
-			cachedTables = new List<ITable>();
+			cachedTables = new HashSet<ITable>();
 			nonCachedTables = new List<TableFields>();
 
 			foreach (KeyValuePair<ITable, IList<ContainerTest>> pair in testsPerTable)
@@ -829,48 +832,12 @@ namespace ProSuite.QA.Container.TestContainer
 				{
 					foreach (var baseTable in derived.InvolvedTables)
 					{
-						// TODO: Use dictionary
-						if (! cachedTables.Contains(baseTable))
-						{
-							cachedTables.Add(baseTable);
-						}
+						cachedTables.Add(baseTable);
 					}
 				}
 
 				IList<ContainerTest> tests = pair.Value;
-				var queried = false;
-				var geometryUsed = false;
-
-				foreach (ContainerTest test in tests)
-				{
-					IList<ITable> tableList = test.InvolvedTables;
-					int involvedTableCount = tableList.Count;
-
-					for (var tableIndex = 0;
-					     tableIndex < involvedTableCount;
-					     tableIndex++)
-					{
-						if (tableList[tableIndex] != table)
-						{
-							continue;
-						}
-
-						if (test.IsQueriedTable(tableIndex))
-						{
-							queried = true;
-							geometryUsed = true;
-						}
-						else if (test.IsGeometryUsedTable(tableIndex))
-						{
-							geometryUsed = true;
-						}
-					}
-
-					if (queried)
-					{
-						break;
-					}
-				}
+				GetNeeds(table, tests, out bool queried, out bool geometryUsed);
 
 				if (queried)
 				{
@@ -893,6 +860,78 @@ namespace ProSuite.QA.Container.TestContainer
 
 					nonCachedTables.Add(new TableFields(table, subFields,
 					                                    excludeShapeField));
+				}
+			}
+		}
+
+		private void AddProcessorTables(IEnumerable<ContainerTest> tests, HashSet<ITable> cachedSet)
+		{
+			foreach (var test in tests)
+			{
+				if (test.PreProcessors != null)
+				{
+					foreach (IPreProcessor proc in test.PreProcessors)
+					{
+						foreach (ITable table in proc.InvolvedTables)
+						{
+							cachedSet.Add(table);
+						}
+					}
+				}
+
+				if (test.PostProcessors != null)
+				{
+					foreach (IPostProcessor proc in test.PostProcessors)
+					{
+						foreach (ITable table in proc.InvolvedTables)
+						{
+							cachedSet.Add(table);
+						}
+
+						if (proc is PostProcessor p)
+						{
+							p.DataContainer = this;
+						}
+					}
+				}
+			}
+		}
+
+		private static void GetNeeds(
+			ITable table, IEnumerable<ContainerTest> tests,
+			out bool queried, out bool geometryUsed)
+		{
+			queried = false;
+			geometryUsed = false;
+
+			foreach (ContainerTest test in tests)
+			{
+				IList<ITable> tableList = test.InvolvedTables;
+				int involvedTableCount = tableList.Count;
+
+				for (var tableIndex = 0;
+				     tableIndex < involvedTableCount;
+				     tableIndex++)
+				{
+					if (tableList[tableIndex] != table)
+					{
+						continue;
+					}
+
+					if (test.IsQueriedTable(tableIndex))
+					{
+						queried = true;
+						geometryUsed = true;
+					}
+					else if (test.IsGeometryUsedTable(tableIndex))
+					{
+						geometryUsed = true;
+					}
+				}
+
+				if (queried)
+				{
+					break;
 				}
 			}
 		}

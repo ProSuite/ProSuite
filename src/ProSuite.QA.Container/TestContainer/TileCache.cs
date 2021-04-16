@@ -43,7 +43,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			_cachedTableCount = cachedTables.Count;
 			_rowBoxTrees = new RowBoxTree[_cachedTables.Count];
-			_xyToleranceByTableIndex = GetXYTolerancePerTable(_testsPerTable.Keys);
+			_xyToleranceByTableIndex = GetXYTolerancePerTable(_cachedTables);
 			IgnoredRowsByTableAndTest = new List<IList<BaseRow>>[_cachedTableCount];
 			OverlappingFeatures = new OverlappingFeatures(_container.MaxCachedPointCount);
 

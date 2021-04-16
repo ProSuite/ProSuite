@@ -297,12 +297,60 @@ namespace ProSuite.QA.Container
 		public abstract bool CancelExecute(IRow row);
 	}
 
-	public abstract class PostProcessor : ProcessBase
+	public abstract class PostProcessor : ProcessBase, IPostProcessor
 	{
 		protected PostProcessor([NotNull] IEnumerable<ITable> tables)
 			: base(tables) { }
 
 		public abstract bool Cancel(QaError error);
+
+		public void PostProcessError(QaErrorEventArgs args)
+		{
+			if (args.Cancel == false && Cancel(args.QaError))
+			{
+				args.Cancel = true;
+			}
+		}
+
+		internal ISearchable DataContainer { get; set; }
+
+		protected override ISpatialReference GetSpatialReference()
+		{
+			return TestUtils.GetUniqueSpatialReference(
+				this,
+				requireEqualVerticalCoordinateSystems: false);
+		}
+		[NotNull]
+		protected IEnumerable<IRow> Search([NotNull] ITable table,
+		                                   [NotNull] IQueryFilter queryFilter,
+		                                   [NotNull] QueryFilterHelper filterHelper,
+		                                   [CanBeNull] IGeometry cacheGeometry = null)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNull(queryFilter, nameof(queryFilter));
+			Assert.ArgumentNotNull(filterHelper, nameof(filterHelper));
+
+			if (DataContainer != null)
+			{
+				IEnumerable<IRow> rows = DataContainer.Search(table, queryFilter,
+				                                              filterHelper, cacheGeometry);
+
+				if (rows != null)
+				{
+					return rows;
+				}
+			}
+
+			// this could be controlled by a flag on the filterHelper or a parameter
+			// on the Search() method: AllowRecycling
+			const bool recycle = false;
+			var cursor = new EnumCursor(table, queryFilter, recycle);
+
+			// TestUtils.AddGarbageCollectionRequest();
+
+			return cursor;
+		}
+
 	}
 
 	/// <summary>
@@ -316,6 +364,28 @@ namespace ProSuite.QA.Container
 			public bool UseCaseSensitiveSQL { get; set; }
 			public bool QueriedOnly { get; set; }
 		}
+
+		[NotNull]
+		protected static IList<ITable> CastToTables(
+			params IList<IFeatureClass>[] featureClasses)
+		{
+			int totalCount = featureClasses.Sum(list => list.Count);
+
+			var union = new List<ITable>(totalCount);
+
+			foreach (IList<IFeatureClass> list in featureClasses)
+			{
+				foreach (IFeatureClass featureClass in list)
+				{
+					Assert.NotNull(featureClass, "list entry is null");
+
+					union.Add((ITable)featureClass);
+				}
+			}
+
+			return union;
+		}
+
 
 		protected const AngleUnit DefaultAngleUnit = AngleUnit.Radiant;
 		private IPolygon _areaOfInterest;
@@ -390,6 +460,78 @@ namespace ProSuite.QA.Container
 			_tableProps[tableIndex].UseCaseSensitiveSQL = useCaseSensitiveQaSql;
 		}
 
+		protected void CopyFilters([NotNull] out IList<ISpatialFilter> spatialFilters,
+		                           [NotNull] out IList<QueryFilterHelper> filterHelpers)
+		{
+			int tableCount = InvolvedTables.Count;
+
+			spatialFilters = new ISpatialFilter[tableCount];
+			filterHelpers = new QueryFilterHelper[tableCount];
+
+			for (var tableIndex = 0; tableIndex < tableCount; tableIndex++)
+			{
+				ITable table = InvolvedTables[tableIndex];
+
+				filterHelpers[tableIndex] = new QueryFilterHelper(table,
+					GetConstraint(tableIndex),
+					GetSqlCaseSensitivity(
+						tableIndex));
+				spatialFilters[tableIndex] = new SpatialFilterClass();
+
+				ConfigureQueryFilter(tableIndex, spatialFilters[tableIndex]);
+			}
+		}
+
+		/// <summary>
+		/// Adapts IQueryFilter so that it conforms to the needs of the test
+		/// </summary>
+		protected virtual void ConfigureQueryFilter(int tableIndex,
+		                                            [NotNull] IQueryFilter queryFilter)
+		{
+			Assert.ArgumentNotNull(queryFilter, nameof(queryFilter));
+
+			ITable table = InvolvedTables[tableIndex];
+			string constraint = GetConstraint(tableIndex);
+
+			queryFilter.AddField(table.OIDFieldName);
+
+			var featureClass = table as IFeatureClass;
+
+			// add shape field
+			if (featureClass != null)
+			{
+				queryFilter.AddField(featureClass.ShapeFieldName);
+			}
+
+			// add subtype field
+			var subtypes = table as ISubtypes;
+			if (subtypes != null)
+			{
+				if (subtypes.HasSubtype)
+				{
+					queryFilter.AddField(subtypes.SubtypeFieldName);
+				}
+			}
+
+			// add where clause fields
+			if (constraint != null)
+			{
+				foreach (
+					string fieldName in
+					ExpressionUtils.GetExpressionFieldNames(table, constraint))
+				{
+					queryFilter.AddField(fieldName);
+					// .AddField checks for multiple entries !					
+				}
+
+				queryFilter.WhereClause = constraint;
+			}
+			else
+			{
+				queryFilter.WhereClause = constraint;
+			}
+		}
+
 		protected virtual void SetConstraintCore(ITable table, int tableIndex,
 		                                         string constraint) { }
 
@@ -460,27 +602,6 @@ namespace ProSuite.QA.Container
 			Assert.ArgumentNotNull(featureClasses, nameof(featureClasses));
 
 			return featureClasses.Cast<ITable>().ToList();
-		}
-
-		[NotNull]
-		protected static IList<ITable> CastToTables(
-			params IList<IFeatureClass>[] featureClasses)
-		{
-			int totalCount = featureClasses.Sum(list => list.Count);
-
-			var union = new List<ITable>(totalCount);
-
-			foreach (IList<IFeatureClass> list in featureClasses)
-			{
-				foreach (IFeatureClass featureClass in list)
-				{
-					Assert.NotNull(featureClass, "list entry is null");
-
-					union.Add((ITable) featureClass);
-				}
-			}
-
-			return union;
 		}
 
 		[CanBeNull]

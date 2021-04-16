@@ -277,7 +277,7 @@ namespace ProSuite.QA.Container
 
 		[CanBeNull]
 		public static ISpatialReference GetUniqueSpatialReference(
-			[NotNull] ITest test,
+			[NotNull] IInvolvesTables test,
 			bool requireEqualVerticalCoordinateSystems)
 		{
 			return GetUniqueSpatialReference(GetSpatialReferences(test),
@@ -286,7 +286,7 @@ namespace ProSuite.QA.Container
 
 		[NotNull]
 		public static IEnumerable<ISpatialReference> GetSpatialReferences(
-			[NotNull] ITest test)
+			[NotNull] IInvolvesTables test)
 		{
 			Assert.ArgumentNotNull(test, nameof(test));
 
@@ -301,7 +301,7 @@ namespace ProSuite.QA.Container
 
 		[NotNull]
 		public static IEnumerable<IGeoDataset> GetGeodatasets(
-			[NotNull] ITest test)
+			[NotNull] IInvolvesTables test)
 		{
 			Assert.ArgumentNotNull(test, nameof(test));
 

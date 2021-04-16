@@ -334,6 +334,18 @@ namespace ProSuite.DomainModel.Core.QA
 			return _transformers;
 		}
 
+		private List<QualityCondition> _postProcessors = new List<QualityCondition>();
+		public void AddPostProcessor([NotNull] QualityCondition postProcessor)
+		{
+			_postProcessors.Add(postProcessor);
+		}
+
+		[NotNull]
+		public IReadOnlyList<QualityCondition> GetPostProcessors()
+		{
+			return _postProcessors;
+		}
+
 		public override bool Equals(object obj)
 		{
 			if (this == obj)

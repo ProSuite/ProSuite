@@ -74,15 +74,22 @@ namespace ProSuite.QA.Container
 
 	public interface IProcessorTest
 	{
+		[CanBeNull]
 		IReadOnlyList<IPostProcessor> PostProcessors { get; }
+
+		[CanBeNull]
 		IReadOnlyList<IPreProcessor> PreProcessors { get; }
 	}
 
-	public interface IPreProcessor
+	public interface IEditProcessorTest : IProcessorTest
 	{
-		[NotNull]
-		IList<ITable> InvolvedTables { get; }
+		void AddPreProcessor(IPreProcessor proc);
+		void AddPostProcessor(IPostProcessor proc);
+	}
 
+
+	public interface IPreProcessor : IInvolvesTables
+	{
 		int TableIndex { get; }
 
 		bool VerifyExecute(IRow row);
@@ -101,11 +108,8 @@ namespace ProSuite.QA.Container
 		ISearchable DataContainer { get; set; }
 	}
 
-	public interface IPostProcessor
+	public interface IPostProcessor : IInvolvesTables
 	{
-		[NotNull]
-		IList<ITable> InvolvedTables { get; }
-
 		void PostProcessError(QaErrorEventArgs args);
 	}
 }
