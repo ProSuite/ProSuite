@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 using Grpc.Core;
 using Grpc.Health.V1;
 using ProSuite.Commons.Cryptography;
@@ -130,6 +131,45 @@ namespace ProSuite.Microservices.Client
 			}
 
 			return false;
+		}
+
+		/// <summary>
+		/// Determines whether the specified endpoint is connected to the specified service
+		/// that responds with health status 'Serving' .
+		/// </summary>
+		/// <param name="healthClient"></param>
+		/// <param name="serviceName"></param>
+		/// <returns>StatusCode.OK if the service is healthy.</returns>
+		public static async Task<StatusCode> IsServingAsync(
+			[NotNull] Health.HealthClient healthClient,
+			[NotNull] string serviceName)
+		{
+			StatusCode statusCode = StatusCode.Unknown;
+
+			try
+			{
+				HealthCheckResponse healthResponse =
+					await healthClient.CheckAsync(new HealthCheckRequest()
+					                              {Service = serviceName});
+
+				statusCode =
+					healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving
+						? StatusCode.OK
+						: StatusCode.ResourceExhausted;
+			}
+			catch (RpcException rpcException)
+			{
+				_msg.Debug($"Error checking health of service {serviceName}", rpcException);
+
+				statusCode = rpcException.StatusCode;
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error checking health of service {serviceName}", e);
+				return statusCode;
+			}
+
+			return statusCode;
 		}
 	}
 }

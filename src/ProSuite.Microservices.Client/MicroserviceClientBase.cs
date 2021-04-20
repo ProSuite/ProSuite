@@ -54,13 +54,20 @@ namespace ProSuite.Microservices.Client
 		public int Port { get; private set; }
 
 		protected bool UseTls { get; }
+
 		protected string ClientCertificate { get; }
 
 		[CanBeNull]
 		protected Channel Channel { get; set; }
 
+		protected bool ChannelIsLoadBalancer { get; set; }
+
 		[NotNull]
 		protected abstract string ServiceName { get; }
+
+		[NotNull]
+		private string ChannelServiceName =>
+			ChannelIsLoadBalancer ? nameof(ServiceDiscoveryGrpc) : ServiceName;
 
 		public void Disconnect()
 		{
@@ -125,10 +132,12 @@ namespace ProSuite.Microservices.Client
 				return false;
 			}
 
-			bool result = GrpcUtils.IsServing(healthClient, ServiceName, out StatusCode statusCode);
+			string serviceName = ChannelServiceName;
 
-			_msg.DebugFormat("Service {0} is serving: {1}. Status: {2}", ServiceName, result,
-			                 statusCode);
+			bool result = GrpcUtils.IsServing(healthClient, serviceName, out StatusCode statusCode);
+
+			_msg.DebugFormat("Service {0} is serving at {1}: {2}. Status: {3}", serviceName,
+			                 Channel?.ResolvedTarget, result, statusCode);
 
 			return result;
 		}
@@ -140,19 +149,14 @@ namespace ProSuite.Microservices.Client
 				return false;
 			}
 
-			try
-			{
-				HealthCheckResponse healthResponse =
-					await healthClient.CheckAsync(new HealthCheckRequest()
-					                              {Service = ServiceName});
+			string serviceName = ChannelServiceName;
 
-				return healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving;
-			}
-			catch (Exception e)
-			{
-				_msg.Debug($"Error checking health of service {ServiceName}", e);
-				return false;
-			}
+			StatusCode statusCode = await GrpcUtils.IsServingAsync(healthClient, serviceName);
+
+			_msg.DebugFormat("Health status for service {0} at {1}: {2}.", serviceName,
+			                 Channel?.ResolvedTarget, statusCode);
+
+			return statusCode == StatusCode.OK;
 		}
 
 		protected void OpenChannel(bool useTls,
@@ -188,8 +192,6 @@ namespace ProSuite.Microservices.Client
 
 			ChannelOpenedCore(Channel);
 		}
-
-		public bool ChannelIsLoadBalancer { get; set; }
 
 		protected abstract void ChannelOpenedCore(Channel channel);
 
@@ -299,6 +301,8 @@ namespace ProSuite.Microservices.Client
 
 			if (isLoadBalancer)
 			{
+				_msg.DebugFormat("{0} is a load balancer address.", channel.ResolvedTarget);
+
 				Channel suggestedLocation =
 					TryGetChannelFromLoadBalancer(channel, credentials, serviceName,
 					                              enoughForLargeGeometries);
