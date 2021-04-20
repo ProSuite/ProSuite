@@ -100,20 +100,22 @@ namespace ProSuite.Microservices.Client
 			return true;
 		}
 
-		public void AllowStartingLocalServer([NotNull] string executable,
+		public bool AllowStartingLocalServer([NotNull] string executable,
 		                                     [CanBeNull] string extraArguments = null)
 		{
 			if (! HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase))
 			{
-				return;
+				return false;
 			}
 
 			if (CanAcceptCalls())
 			{
-				return;
+				return false;
 			}
 
 			StartLocalServer(executable, extraArguments);
+
+			return true;
 		}
 
 		public bool CanAcceptCalls()
