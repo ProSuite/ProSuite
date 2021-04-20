@@ -40,5 +40,23 @@ namespace ProSuite.Microservices.Server.AO.Test
 
 			Assert.IsTrue(health.IsAnyServiceUnhealthy());
 		}
+
+		[Test]
+		public void CanSetEmptyServiceNameHealth()
+		{
+			HealthServiceImpl healthImpl = new HealthServiceImpl();
+
+			IServiceHealth health = new ServiceHealth(healthImpl);
+
+			health.SetStatus(string.Empty, true);
+
+			Task<HealthCheckResponse> response = healthImpl.Check(
+				new HealthCheckRequest(), null);
+
+			Assert.AreEqual(HealthCheckResponse.Types.ServingStatus.Serving,
+			                response.Result.Status);
+
+			Assert.IsFalse(health.IsAnyServiceUnhealthy());
+		}
 	}
 }
