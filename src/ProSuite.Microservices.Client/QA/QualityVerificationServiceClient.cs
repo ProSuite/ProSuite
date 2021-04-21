@@ -9,6 +9,17 @@ namespace ProSuite.Microservices.Client.QA
 	{
 		private QualityVerificationGrpc.QualityVerificationGrpcClient _staticQaClient;
 
+		public QualityVerificationServiceClient([NotNull] ClientChannelConfig channelConfig)
+			: base(channelConfig) { }
+
+		public QualityVerificationServiceClient([NotNull] string host,
+		                                        int port = 5151,
+		                                        bool useTls = false,
+		                                        string clientCertificate = null)
+			: base(host, port, useTls, clientCertificate) { }
+
+		protected override string ServiceName => nameof(QualityVerificationGrpc);
+
 		[CanBeNull]
 		public QualityVerificationGrpc.QualityVerificationGrpcClient QaClient
 		{
@@ -44,11 +55,6 @@ namespace ProSuite.Microservices.Client.QA
 					"Neither a static channel nor a load balancer channel has been opened.");
 			}
 		}
-
-		public QualityVerificationServiceClient([NotNull] ClientChannelConfig channelConfig) : base(
-			channelConfig) { }
-
-		protected override string ServiceName => nameof(QualityVerificationGrpc);
 
 		protected override void ChannelOpenedCore(Channel channel)
 		{
