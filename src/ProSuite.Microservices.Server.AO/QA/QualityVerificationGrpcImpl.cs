@@ -440,9 +440,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 				var dataSources = new List<DataSource>();
 				foreach (string replacement in xmlSpecification.DataSourceReplacements)
 				{
-					List<string> replacementStrings = StringUtils.SplitAndTrim(replacement, '>');
+					List<string> replacementStrings = StringUtils.SplitAndTrim(replacement, '|');
 					Assert.AreEqual(2, replacementStrings.Count,
-					                "Data source workspace is not of the format workspace_id > catalog_path");
+					                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
 
 					var dataSource = new DataSource(replacementStrings[0], replacementStrings[0])
 					                 {
