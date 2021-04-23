@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
@@ -5,13 +6,10 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.QA.Xml
 {
-	public class XmlQualityCondition : IXmlEntityMetadata
+	public class XmlInstanceConfiguration
 	{
-		[CanBeNull] private string _description;
-		[CanBeNull] private string _notes;
-		[CanBeNull] private string _url;
-
-		[NotNull] private readonly List<XmlTestParameterValue> _parameterValues =
+		[NotNull]
+		private readonly List<XmlTestParameterValue> _parameterValues =
 			new List<XmlTestParameterValue>();
 
 		[CanBeNull]
@@ -21,6 +19,24 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[CanBeNull]
 		[XmlAttribute("testDescriptor")]
 		public string TestDescriptorName { get; set; }
+
+		[NotNull]
+		[XmlArray("Parameters")]
+		[XmlArrayItem(typeof(XmlDatasetTestParameterValue), ElementName = "Dataset")]
+		[XmlArrayItem(typeof(XmlScalarTestParameterValue), ElementName = "Scalar")]
+		public List<XmlTestParameterValue> ParameterValues
+		{
+			get { return _parameterValues; }
+		}
+
+	}
+
+	public class XmlQualityCondition : XmlInstanceConfiguration, IXmlEntityMetadata
+	{
+		[CanBeNull] private string _description;
+		[CanBeNull] private string _notes;
+		[CanBeNull] private string _url;
+
 
 		[CanBeNull]
 		[XmlAttribute("url")]
@@ -87,14 +103,22 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[DefaultValue(false)]
 		public bool NeverStoreRelatedGeometryForTableRowIssues { get; set; }
 
-		[NotNull]
-		[XmlArray("Parameters")]
-		[XmlArrayItem(typeof(XmlDatasetTestParameterValue), ElementName = "Dataset")]
-		[XmlArrayItem(typeof(XmlScalarTestParameterValue), ElementName = "Scalar")]
-		public List<XmlTestParameterValue> ParameterValues
-		{
-			get { return _parameterValues; }
-		}
+		[CanBeNull]
+		[XmlArray("PostProcessors")]
+		[XmlArrayItem(typeof(XmlInstanceConfiguration), ElementName = "PostProcessor")]
+		public List<XmlInstanceConfiguration> PostProcessors { get; set; }
+
+		[Obsolete("move to XmlDataSetParameterValue")]
+		[CanBeNull]
+		[XmlArray("PreProcessors")]
+		[XmlArrayItem(typeof(XmlInstanceConfiguration), ElementName = "PreProcessor")]
+		public List<XmlInstanceConfiguration> PreProcessors { get; set; }
+
+		[Obsolete("move to XmlDataSetParameterValue")]
+		[CanBeNull]
+		[XmlArray("TableTransformers")]
+		[XmlArrayItem(typeof(XmlInstanceConfiguration), ElementName = "TableTransformers")]
+		public List<XmlInstanceConfiguration> TableTransformers { get; set; }
 
 		[XmlAttribute("createdDate")]
 		public string CreatedDate { get; set; }

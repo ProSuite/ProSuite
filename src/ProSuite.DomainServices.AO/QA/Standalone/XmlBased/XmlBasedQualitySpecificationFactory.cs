@@ -163,12 +163,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 				ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters;
 				QualityCondition qualityCondition = XmlDataQualityUtils.CreateQualityCondition(
-					xmlCondition,
-					testDescriptorsByName[xmlCondition.TestDescriptorName],
-					modelsByWorkspaceId,
-					getDatasetsByName,
-					conditionCategory,
-					ignoreConditionsForUnknownDatasets,
+					xmlCondition, testDescriptorsByName,
+					modelsByWorkspaceId, getDatasetsByName,
+					conditionCategory, ignoreConditionsForUnknownDatasets,
 					out unknownDatasetParameters);
 
 				if (qualityCondition == null)
@@ -262,10 +259,20 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			var result = new Dictionary<string, TestDescriptor>(
 				StringComparer.OrdinalIgnoreCase);
 
-			foreach (XmlQualityCondition condition in referencedConditions)
+			AddTestDescriptors(result, referencedConditions, xmlTestDescriptorsByName);
+
+			return result;
+		}
+
+		private static void AddTestDescriptors(
+			[NotNull] Dictionary<string, TestDescriptor> descriptors,
+			[NotNull] IEnumerable<XmlInstanceConfiguration> configurations,
+			[NotNull] IDictionary<string, XmlTestDescriptor> xmlTestDescriptorsByName)
+		{
+			foreach (XmlInstanceConfiguration configuration in configurations)
 			{
-				string testDescriptorName = condition.TestDescriptorName;
-				if (testDescriptorName == null || result.ContainsKey(testDescriptorName))
+				string testDescriptorName = configuration.TestDescriptorName;
+				if (testDescriptorName == null || descriptors.ContainsKey(testDescriptorName))
 				{
 					continue;
 				}
@@ -277,14 +284,33 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 					throw new InvalidConfigurationException(
 						string.Format(
 							"Test descriptor {0}, referenced in quality condition {1}, not found",
-							testDescriptorName, condition.Name));
+							testDescriptorName, configuration.Name));
 				}
 
-				result.Add(testDescriptorName,
-				           XmlDataQualityUtils.CreateTestDescriptor(xmlTestDescriptor));
-			}
+				descriptors.Add(testDescriptorName,
+				                XmlDataQualityUtils.CreateTestDescriptor(xmlTestDescriptor));
 
-			return result;
+				if (configuration is XmlQualityCondition condition)
+				{
+					if (condition.PostProcessors != null)
+					{
+						AddTestDescriptors(descriptors, condition.PostProcessors,
+						                   xmlTestDescriptorsByName);
+					}
+
+					if (condition.PreProcessors != null)
+					{
+						AddTestDescriptors(descriptors, condition.PreProcessors,
+						                   xmlTestDescriptorsByName);
+					}
+
+					if (condition.TableTransformers != null)
+					{
+						AddTestDescriptors(descriptors, condition.TableTransformers,
+						                   xmlTestDescriptorsByName);
+					}
+				}
+			}
 		}
 
 		[NotNull]
