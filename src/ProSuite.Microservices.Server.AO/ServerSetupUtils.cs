@@ -16,6 +16,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Xml;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Server.AO.QA;
+using Quaestor.LoadReporting;
 
 namespace ProSuite.Microservices.Server.AO
 {
@@ -48,11 +49,18 @@ namespace ProSuite.Microservices.Server.AO
 
 			IServiceHealth health = new ServiceHealth(healthService);
 
+			LoadReportingGrpcImpl loadReporting = new LoadReportingGrpcImpl();
+
+			ServiceLoad serviceLoad = new ServiceLoad(2);
+
+			loadReporting.AllowMonitoring(nameof(QualityVerificationGrpc), serviceLoad);
+
 			var wuVerificationServiceImpl =
 				new QualityVerificationGrpcImpl(inputsFactoryMethod,
 				                                arguments.MaxParallel)
 				{
-					Checkout3DAnalyst = checkout3dAnalyst
+					Checkout3DAnalyst = checkout3dAnalyst,
+					CurrentLoad = serviceLoad
 				};
 
 			if (markUnhealthyOnExceptions)
@@ -77,7 +85,8 @@ namespace ProSuite.Microservices.Server.AO
 					Services =
 					{
 						QualityVerificationGrpc.BindService(wuVerificationServiceImpl),
-						Health.BindService(healthService)
+						Health.BindService(healthService),
+						LoadReportingGrpc.BindService(loadReporting)
 					},
 					Ports =
 					{

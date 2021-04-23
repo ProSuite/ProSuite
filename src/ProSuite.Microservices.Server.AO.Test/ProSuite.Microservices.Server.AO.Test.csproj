@@ -87,6 +87,9 @@
     <Compile Include="ServiceHealthTest.cs" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Grpc.HealthCheck">
+      <Version>2.36.4</Version>
+    </PackageReference>
     <PackageReference Include="NUnit">
       <Version>3.12.0</Version>
     </PackageReference>
