@@ -20,6 +20,7 @@ using ProSuite.DomainModel.Core;
 
 namespace ProSuite.AGP.WorkList
 {
+	// todo daro: rename to WorklistUtils
 	public static class WorkListUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -226,8 +227,14 @@ namespace ProSuite.AGP.WorkList
 			return result;
 		}
 
-		public static string GetName(string path)
+		[NotNull]
+		public static string GetName([CanBeNull] string path)
 		{
+			if (string.IsNullOrEmpty(path))
+			{
+				return string.Empty;
+			}
+
 			int index = path.LastIndexOf('/');
 			if (index >= 0)
 				path = path.Substring(index + 1);
