@@ -95,46 +95,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 		}
 
-		// todo daro move down
-		public async Task CreateWorkListAsync([NotNull] WorkEnvironmentBase environment, [NotNull] string name)
-		{
-			Assert.ArgumentNotNull(environment, nameof(environment));
-			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
-
-			Assert.False(_registry.Exists(name), $"work list {name} already exists");
-
-			Uri uri = WorkListUtils.GetDatasource(GetProject().HomeFolderPath, name, environment.FileSuffix);
-
-			IWorkList worklist = await environment.CreateWorkListAsync(uri.LocalPath, name);
-
-			if (worklist == null)
-			{
-				return;
-			}
-
-			// after creation go to nearest item
-			worklist.GoNearest(MapView.Active.Extent);
-			// Commit writes work list definition to disk. Necessary for adding
-			// project item.
-			worklist.Commit();
-
-			// wiring work list events, etc. is done in OnDrawComplete
-			// register work list before creating the layer
-			_registry.TryAdd(worklist);
-
-			// todo daro drop assertion
-			Assert.True(ProjectItemUtils.TryAdd(uri.LocalPath, out WorklistItem item), $"cannot add item {worklist.Name}");
-
-			if (! _viewsByWorklistName.ContainsKey(worklist.Name))
-			{
-				_viewsByWorklistName.Add(worklist.Name, new WorkListObserver(worklist, item));
-			}
-
-			FeatureLayer layer = AddLayer(uri, name, worklist.DisplayName);
-
-			LayerUtils.ApplyRenderer(layer, environment.GetLayerDocument());
-		}
-
 		[NotNull]
 		public string ShowWorklist([NotNull] WorkEnvironmentBase environment, [NotNull] string path)
 		{
@@ -184,6 +144,45 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return Assert.NotNullOrEmpty(worklist.Name);
 		}
 
+		public async Task CreateWorkListAsync([NotNull] WorkEnvironmentBase environment, [NotNull] string name)
+		{
+			Assert.ArgumentNotNull(environment, nameof(environment));
+			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
+
+			Assert.False(_registry.Exists(name), $"work list {name} already exists");
+
+			Uri uri = WorkListUtils.GetDatasource(GetProject().HomeFolderPath, name, environment.FileSuffix);
+
+			IWorkList worklist = await environment.CreateWorkListAsync(uri.LocalPath, name);
+
+			if (worklist == null)
+			{
+				return;
+			}
+
+			// after creation go to nearest item
+			worklist.GoNearest(MapView.Active.Extent);
+
+			// Commit writes work list definition to disk.
+			// Necessary for adding project item.
+			worklist.Commit();
+
+			// wiring work list events, etc. is done in OnDrawComplete
+			// register work list before creating the layer
+			_registry.TryAdd(worklist);
+			
+			Assert.True(ProjectItemUtils.TryAdd(uri.LocalPath, out WorklistItem item), $"cannot add item {worklist.Name}");
+
+			if (! _viewsByWorklistName.ContainsKey(worklist.Name))
+			{
+				_viewsByWorklistName.Add(worklist.Name, new WorkListObserver(worklist, item));
+			}
+
+			FeatureLayer layer = AddLayer(uri, name, worklist.DisplayName);
+
+			LayerUtils.ApplyRenderer(layer, environment.GetLayerDocument());
+		}
+
 		#region Module overrides
 
 		protected override bool Initialize()
@@ -215,7 +214,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		protected override Task OnReadSettingsAsync(ModuleSettingsReader settings)
 		{
-			// todo daro ever null? NO
+			// should never be null
 			if (settings == null)
 			{
 				return base.OnReadSettingsAsync(settings);
@@ -304,7 +303,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 		private static Project GetProject()
 		{
 			Project current = Project.Current;
-			// todo daro: remove assertion
 			Assert.NotNull(current, "no project");
 			return current;
 		}
@@ -506,7 +504,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		private async Task OnProjectOpendedAsync(ProjectEventArgs e)
 		{
-			// todo daro:
 			// 1) Check all existing project items.
 			// 2) Add a work list factory to registry for every work list project item found in custom project items
 			//	  (Use work list factory because we do not want to create a work list for EVERY work list project item.
@@ -631,8 +628,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			try
 			{
 				var workList = (IWorkList) sender;
-
-				// todo daro: remove assertion
+				
 				Assert.True(_layersByWorklistName.ContainsKey(workList.Name),
 				            $"sender of {nameof(WorkList_WorkListChanged)} is unknown");
 
@@ -691,8 +687,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			return _layersByWorklistName.Select(pair => GetWorklist(pair.Key)).Where(workList => workList != null);
 		}
-
-		// todo daro move to worklistutils
+		
 		[CanBeNull]
 		private IWorkList GetWorklist(string name)
 		{
