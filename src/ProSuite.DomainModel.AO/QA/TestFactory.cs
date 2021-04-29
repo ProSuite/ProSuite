@@ -402,35 +402,19 @@ namespace ProSuite.DomainModel.AO.QA
 				{
 					DatasetTestParameterValue datasetParameterValue = parameterValueList[iValue];
 
-					Dataset dataset =
-						Assert.NotNull(datasetParameterValue.DatasetValue, "dataset is null");
+					Dataset dataset = datasetParameterValue.DatasetValue;
 
-					ITable transformed = HandleTableTransformers(
-						datasetContext, datasetParameterValue, tableConstraints.Count);
+					var table = (ITable) valuesForParameter[iValue];
 
-					if (transformed == null)
-					{
-						var table = (ITable) datasetContext.OpenDataset(
-							dataset, Assert.NotNull(datasetParameterValue.DataType));
+					DdxModel dataModel = dataset?.Model;
 
-						Assert.NotNull(table, "Dataset not found in current context: {0}",
-						               dataset.Name);
+					bool useCaseSensitiveSql = dataModel != null &&
+					                           ModelElementUtils.UseCaseSensitiveSql(
+						                           table, dataModel.SqlCaseSensitivity);
 
-						DdxModel dataModel = dataset.Model;
-
-						bool useCaseSensitiveSql = dataModel != null &&
-						                           ModelElementUtils.UseCaseSensitiveSql(
-							                           table, dataModel.SqlCaseSensitivity);
-
-						tableConstraints.Add(new TableConstraint(
-							                     table, datasetParameterValue.FilterExpression,
-							                     useCaseSensitiveSql));
-					}
-					else
-					{
-						valuesForParameter[iValue] = transformed;
-						tableConstraints.Add(new TableConstraint(transformed, null, false));
-					}
+					tableConstraints.Add(new TableConstraint(
+						                     table, datasetParameterValue.FilterExpression,
+						                     useCaseSensitiveSql));
 				}
 			}
 
@@ -489,8 +473,23 @@ namespace ProSuite.DomainModel.AO.QA
 			Assert.ArgumentNotNull(parameter, nameof(parameter));
 			Assert.ArgumentNotNull(datasetContext, nameof(datasetContext));
 
-			var scalarParameterValue = paramVal as ScalarTestParameterValue;
-			if (scalarParameterValue != null)
+			if (paramVal.Source != null)
+			{
+				if (! (TestFactoryUtils.CreateTestFactory(paramVal.Source) is DefaultTestFactory fct
+				      ))
+				{
+					throw new ArgumentException(
+						$"Unable to create DefaultTestFactory for {paramVal.Source}");
+				}
+
+				// TODO: implement for other types
+				ITableTransformer sourceInstance =
+					fct.CreateInstance<ITableTransformer>(datasetContext);
+				// TODO: Harvest sourceInstance in paramVal. 
+				return sourceInstance.GetTransformed();
+			}
+
+			if (paramVal is ScalarTestParameterValue scalarParameterValue)
 			{
 				if (scalarParameterValue.DataType == null)
 				{
@@ -503,8 +502,7 @@ namespace ProSuite.DomainModel.AO.QA
 				return scalarParameterValue.GetValue();
 			}
 
-			var datasetParameterValue = paramVal as DatasetTestParameterValue;
-			if (datasetParameterValue != null)
+			if (paramVal is DatasetTestParameterValue datasetParameterValue)
 			{
 				if (datasetParameterValue.DatasetValue == null &&
 				    ! parameter.IsConstructorParameter)
@@ -619,30 +617,6 @@ namespace ProSuite.DomainModel.AO.QA
 
 				throw new InvalidOperationException(sb.ToString(), e);
 			}
-		}
-
-		[CanBeNull]
-		private ITable HandleTableTransformers([NotNull] IOpenDataset datasetContext,
-		                                       [NotNull] DatasetTestParameterValue baseTable,
-		                                       int involvedTableIndex)
-		{
-			if (Condition == null)
-			{
-				return null;
-			}
-
-			foreach (QualityCondition.TableTransformer transformer in Condition.GetTransformers())
-			{
-				if (transformer.InvolvedTableIndex == involvedTableIndex)
-				{
-					ITable transformed =
-						TestFactoryUtils.GetTransformedTable(
-							transformer.Transformer, datasetContext, baseTable);
-					return transformed;
-				}
-			}
-
-			return null;
 		}
 
 		protected virtual void SetPropertyValue([NotNull] object test,

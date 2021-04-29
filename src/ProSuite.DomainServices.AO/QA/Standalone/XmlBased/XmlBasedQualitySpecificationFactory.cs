@@ -125,13 +125,13 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			IDictionary<XmlDataQualityCategory, DataQualityCategory> categoryMap =
 				GetCategoryMap(document);
 
-			IList<KeyValuePair<XmlQualityCondition, XmlDataQualityCategory>>
+			IList<KeyValuePair<XmlInstanceConfiguration, XmlDataQualityCategory>>
 				referencedXmlConditionPairs =
 					XmlDataQualityUtils.GetReferencedXmlQualityConditions(
 						                   document, new[] {xmlQualitySpecification})
 					                   .ToList();
 
-			IList<XmlQualityCondition> referencedXmlConditions =
+			IList<XmlInstanceConfiguration> referencedXmlConditions =
 				referencedXmlConditionPairs.Select(p => p.Key)
 				                           .ToList();
 
@@ -150,23 +150,42 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			Func<string, IList<Dataset>> getDatasetsByName = name => new List<Dataset>();
 
+			var instanceConfigurationByName = new Dictionary<string, QualityCondition>();
+			var createds = new Dictionary<XmlInstanceConfiguration, QualityCondition>();
+			var xmlConfigByCondition = new Dictionary<QualityCondition, XmlInstanceConfiguration>();
 			foreach (
-				KeyValuePair<XmlQualityCondition, XmlDataQualityCategory> pair in
+				KeyValuePair<XmlInstanceConfiguration, XmlDataQualityCategory> pair in
 				referencedXmlConditionPairs)
 			{
-				XmlQualityCondition xmlCondition = pair.Key;
-				XmlDataQualityCategory xmlConditionCategory = pair.Value;
+				XmlInstanceConfiguration xmlCondition = pair.Key;
+				QualityCondition created = XmlDataQualityUtils.PrepareQualityCondition(
+					xmlCondition, testDescriptorsByName);
 
+				createds.Add(xmlCondition, created);
+				xmlConfigByCondition.Add(created, xmlCondition);
+				if (xmlCondition.Name != null)
+				{
+					instanceConfigurationByName.Add(xmlCondition.Name, created);
+				}
+			}
+
+			foreach (
+				KeyValuePair<XmlInstanceConfiguration, XmlDataQualityCategory> pair in
+				referencedXmlConditionPairs)
+			{
+				XmlInstanceConfiguration xmlCondition = pair.Key;
+				QualityCondition created = createds[xmlCondition];
+				XmlDataQualityCategory xmlConditionCategory = pair.Value;
 				DataQualityCategory conditionCategory = xmlConditionCategory != null
 					                                        ? categoryMap[xmlConditionCategory]
 					                                        : null;
 
 				ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters;
-				QualityCondition qualityCondition = XmlDataQualityUtils.CreateQualityCondition(
-					xmlCondition, testDescriptorsByName,
-					modelsByWorkspaceId, getDatasetsByName,
-					conditionCategory, ignoreConditionsForUnknownDatasets,
-					out unknownDatasetParameters);
+				QualityCondition qualityCondition = XmlDataQualityUtils.CompleteQualityCondition(
+					created, xmlCondition, modelsByWorkspaceId,
+					instanceConfigurationByName, xmlConfigByCondition,
+					getDatasetsByName, conditionCategory,
+					ignoreConditionsForUnknownDatasets, out unknownDatasetParameters);
 
 				if (qualityCondition == null)
 				{
@@ -250,7 +269,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		[NotNull]
 		private static IDictionary<string, TestDescriptor>
 			GetReferencedTestDescriptorsByName(
-				[NotNull] IEnumerable<XmlQualityCondition> referencedConditions,
+				[NotNull] IEnumerable<XmlInstanceConfiguration> referencedConditions,
 				[NotNull] XmlDataQualityDocument document)
 		{
 			IDictionary<string, XmlTestDescriptor> xmlTestDescriptorsByName =
@@ -290,23 +309,21 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				descriptors.Add(testDescriptorName,
 				                XmlDataQualityUtils.CreateTestDescriptor(xmlTestDescriptor));
 
-				if (configuration is XmlQualityCondition condition)
+				foreach (XmlTestParameterValue parVal in configuration.ParameterValues)
 				{
-					if (condition.PostProcessors != null)
+					if (parVal.InstanceConfigurationName != null)
 					{
-						AddTestDescriptors(descriptors, condition.PostProcessors,
+						AddTestDescriptors(descriptors, new XmlInstanceConfiguration[]{},
 						                   xmlTestDescriptorsByName);
 					}
 
+				}
+
+				if (configuration is XmlQualityCondition condition)
+				{
 					if (condition.PreProcessors != null)
 					{
 						AddTestDescriptors(descriptors, condition.PreProcessors,
-						                   xmlTestDescriptorsByName);
-					}
-
-					if (condition.TableTransformers != null)
-					{
-						AddTestDescriptors(descriptors, condition.TableTransformers,
 						                   xmlTestDescriptorsByName);
 					}
 				}
@@ -327,7 +344,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		private IDictionary<string, Model> GetModelsByWorkspaceId(
 			[NotNull] IEnumerable<XmlWorkspace> xmlWorkspaces,
 			[NotNull] IEnumerable<DataSource> dataSources,
-			[NotNull] IList<XmlQualityCondition> referencedConditions)
+			[NotNull] IList<XmlInstanceConfiguration> referencedConditions)
 		{
 			Dictionary<string, DataSource> dataSourcesByWorkspaceId =
 				dataSources.ToDictionary(dataSource => dataSource.ID,
@@ -377,7 +394,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			[NotNull] string workspaceId,
 			[CanBeNull] string databaseName,
 			[CanBeNull] string schemaOwner,
-			[NotNull] IEnumerable<XmlQualityCondition> referencedConditions)
+			[NotNull] IEnumerable<XmlInstanceConfiguration> referencedConditions)
 		{
 			Model result = _modelFactory.CreateModel(workspace, modelName, null,
 			                                         databaseName, schemaOwner);
@@ -399,7 +416,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		private ISpatialReference GetMainSpatialReference(
 			[NotNull] Model model,
 			[NotNull] string workspaceId,
-			[NotNull] IEnumerable<XmlQualityCondition> referencedConditions)
+			[NotNull] IEnumerable<XmlInstanceConfiguration> referencedConditions)
 		{
 			var spatialDatasetReferenceCount =
 				new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);

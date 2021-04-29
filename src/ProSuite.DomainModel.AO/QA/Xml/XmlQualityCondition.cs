@@ -106,19 +106,13 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[CanBeNull]
 		[XmlArray("PostProcessors")]
 		[XmlArrayItem(typeof(XmlInstanceConfiguration), ElementName = "PostProcessor")]
-		public List<XmlInstanceConfiguration> PostProcessors { get; set; }
+		public List<string> PostProcessorNames { get; set; }
 
 		[Obsolete("move to XmlDataSetParameterValue")]
 		[CanBeNull]
 		[XmlArray("PreProcessors")]
 		[XmlArrayItem(typeof(XmlInstanceConfiguration), ElementName = "PreProcessor")]
 		public List<XmlInstanceConfiguration> PreProcessors { get; set; }
-
-		[Obsolete("move to XmlDataSetParameterValue")]
-		[CanBeNull]
-		[XmlArray("TableTransformers")]
-		[XmlArrayItem(typeof(XmlInstanceConfiguration), ElementName = "TableTransformers")]
-		public List<XmlInstanceConfiguration> TableTransformers { get; set; }
 
 		[XmlAttribute("createdDate")]
 		public string CreatedDate { get; set; }

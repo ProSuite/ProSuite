@@ -266,11 +266,12 @@ namespace ProSuite.DomainModel.Core.QA
 		public IList<TestParameterValue> ParameterValues =>
 			new ReadOnlyList<TestParameterValue>(_parameterValues);
 
-		public void AddParameterValue([NotNull] TestParameterValue parameterValue)
+		public TestParameterValue AddParameterValue([NotNull] TestParameterValue parameterValue)
 		{
 			Assert.ArgumentNotNull(parameterValue, nameof(parameterValue));
 
 			_parameterValues.Add(parameterValue);
+			return parameterValue;
 		}
 
 		public void RemoveParameterValue([NotNull] TestParameterValue parameterValue)
@@ -318,20 +319,6 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			public int InvolvedTableIndex { get; set; }
 			public QualityCondition Transformer { get; set; }
-		}
-
-		private List<TableTransformer> _transformers = new List<TableTransformer>();
-		public void AddTableTransformer([NotNull] QualityCondition transformer,
-		                                int involvedTableIndex)
-		{
-			_transformers.Add(new TableTransformer
-			                  {InvolvedTableIndex = involvedTableIndex, Transformer = transformer});
-		}
-
-		[NotNull]
-		public IReadOnlyList<TableTransformer> GetTransformers()
-		{
-			return _transformers;
 		}
 
 		private List<QualityCondition> _postProcessors = new List<QualityCondition>();

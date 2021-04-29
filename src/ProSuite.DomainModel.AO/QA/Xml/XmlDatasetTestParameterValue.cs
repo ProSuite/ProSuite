@@ -18,15 +18,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[DefaultValue(null)]
 		public string WorkspaceId { get; set; }
 
-		[XmlArray("PreProcessors")]
-		[XmlArrayItem(typeof(XmlInstanceConfiguration), ElementName = "PreProcessor")]
+		// TODO: rename
+		[XmlArrayItem(ElementName = "PreProcessorName")] 
 		[DefaultValue(null)]
-		public List<XmlInstanceConfiguration> PreProcessors { get; set; }
-
-		[XmlArray("TableTransformers")]
-		[XmlArrayItem(typeof(XmlInstanceConfiguration), ElementName = "TableTransformer")]
-		[DefaultValue(null)]
-		public List<XmlInstanceConfiguration> TableTransformers { get; set; }
-
+		public List<string> PreProcessorNames { get; set; }
 	}
 }

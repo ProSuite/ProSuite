@@ -80,6 +80,9 @@ namespace ProSuite.DomainModel.Core.QA
 
 		public abstract string StringValue { get; set; }
 
+		[CanBeNull]
+		public QualityCondition Source { get; set; }
+
 		[NotNull]
 		public abstract TestParameterValue Clone();
 
