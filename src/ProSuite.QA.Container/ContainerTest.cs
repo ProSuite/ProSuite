@@ -52,49 +52,19 @@ namespace ProSuite.QA.Container
 
 		#endregion
 
+
 		protected internal double TerrainTolerance { get; set; }
 
 		public IList<RasterReference> InvolvedRasters { get; protected set; }
 
 		public IList<TerrainReference> InvolvedTerrains { get; protected set; }
 
-		private List<IPreProcessor> _preProcessors;
-		private Dictionary<int, List<IPreProcessor>> _preProssesorDict;
-		public IReadOnlyList<IPreProcessor> PreProcessors => _preProcessors;
-		void IEditProcessorTest.AddPreProcessor(IPreProcessor proc)
-		{
-			_preProcessors = _preProcessors ?? new List<IPreProcessor>();
-			_preProssesorDict = null;
-			_preProcessors.Add(proc);
-		}
+		private Dictionary<int, IReadOnlyList<IPreProcessor>> _preProssesorDict;
 
 
-		private Dictionary<int, List<IPreProcessor>> PreProssesorDict => _preProssesorDict ??
-			(_preProssesorDict = GetPreProcessorDict(_preProcessors));
+		private Dictionary<int, IReadOnlyList<IPreProcessor>> PreProssesorDict =>
+			_preProssesorDict ?? (_preProssesorDict = new Dictionary<int, IReadOnlyList<IPreProcessor>>());
 
-		[NotNull]
-		private Dictionary<int, List<IPreProcessor>> GetPreProcessorDict(
-			[CanBeNull] IList<IPreProcessor> preProcessors)
-		{
-			Dictionary<int, List<IPreProcessor>> dict = new Dictionary<int, List<IPreProcessor>>();
-			if (preProcessors == null)
-			{
-				return dict;
-			}
-
-			foreach (IPreProcessor proc in preProcessors)
-			{
-				if (! dict.TryGetValue(proc.TableIndex, out List<IPreProcessor> procs))
-				{
-					procs = new List<IPreProcessor>();
-					dict.Add(proc.TableIndex, procs);
-				}
-
-				procs.Add(proc);
-			}
-
-			return dict;
-		}
 
 		private List<IPostProcessor> _postProcessors;
 		public IReadOnlyList<IPostProcessor> PostProcessors => _postProcessors;
@@ -793,11 +763,17 @@ namespace ProSuite.QA.Container
 			                                                   GetSqlCaseSensitivity(tableIndex));
 		}
 
+		protected override void SetPreProcessorsCore(
+			int tableIndex, [CanBeNull] IReadOnlyList<IPreProcessor> preProcessors)
+		{
+			PreProssesorDict[tableIndex] = preProcessors;
+		}
+
 		[NotNull]
 		public IReadOnlyList<IPreProcessor> GetPreProcessors(int involvedTableIndex)
 		{
 			if (! PreProssesorDict.TryGetValue(involvedTableIndex,
-			                                   out List<IPreProcessor> preProcessors))
+			                                   out IReadOnlyList<IPreProcessor> preProcessors))
 			{
 				preProcessors = new List<IPreProcessor>();
 			}

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.QA.Core;
@@ -129,6 +130,9 @@ namespace ProSuite.DomainModel.Core.QA
 			get { return _filterExpression; }
 			set { _filterExpression = value; }
 		}
+
+		[CanBeNull]
+		public List<QualityCondition> PreProcessors { get; set; }
 
 		public bool UsedAsReferenceData
 		{

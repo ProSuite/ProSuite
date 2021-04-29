@@ -868,17 +868,6 @@ namespace ProSuite.QA.Container.TestContainer
 		{
 			foreach (var test in tests)
 			{
-				if (test.PreProcessors != null)
-				{
-					foreach (IPreProcessor proc in test.PreProcessors)
-					{
-						foreach (ITable table in proc.InvolvedTables)
-						{
-							cachedSet.Add(table);
-						}
-					}
-				}
-
 				if (test.PostProcessors != null)
 				{
 					foreach (IPostProcessor proc in test.PostProcessors)
@@ -891,6 +880,17 @@ namespace ProSuite.QA.Container.TestContainer
 						if (proc is PostProcessor p)
 						{
 							p.DataContainer = this;
+						}
+					}
+				}
+
+				for (int iInvolved = 0; iInvolved < test.InvolvedTables.Count; iInvolved++)
+				{
+					foreach (IPreProcessor proc in test.GetPreProcessors(iInvolved))
+					{
+						foreach (ITable table in proc.InvolvedTables)
+						{
+							cachedSet.Add(table);
 						}
 					}
 				}

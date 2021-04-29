@@ -284,20 +284,15 @@ namespace ProSuite.QA.Container
 		}
 	}
 
-	public abstract class PreProcessor : ProcessBase
+	public abstract class PreProcessor : InvolvesTablesBase, IPreProcessor
 	{
-		protected PreProcessor([NotNull] IEnumerable<ITable> tables, int involvedTableIndex)
-			: base(tables)
-		{
-			InvolvedTableIndex = involvedTableIndex;
-		}
+		protected PreProcessor([NotNull] IEnumerable<ITable> tables)
+			: base(tables) { }
 
-		public int InvolvedTableIndex { get; }
-
-		public abstract bool CancelExecute(IRow row);
+		public abstract bool VerifyExecute(IRow row);
 	}
 
-	public abstract class PostProcessor : ProcessBase, IPostProcessor
+	public abstract class PostProcessor : InvolvesTablesBase, IPostProcessor
 	{
 		protected PostProcessor([NotNull] IEnumerable<ITable> tables)
 			: base(tables) { }
@@ -311,10 +306,17 @@ namespace ProSuite.QA.Container
 				args.Cancel = true;
 			}
 		}
+	}
+
+	public abstract class InvolvesTablesBase : ProcessBase, IInvolvesTables
+	{
+		protected InvolvesTablesBase([NotNull] IEnumerable<ITable> tables)
+			: base(tables)
+		{ }
 
 		internal ISearchable DataContainer { get; set; }
 
-		protected override ISpatialReference GetSpatialReference()
+		protected sealed override ISpatialReference GetSpatialReference()
 		{
 			return TestUtils.GetUniqueSpatialReference(
 				this,
@@ -352,7 +354,6 @@ namespace ProSuite.QA.Container
 		}
 
 	}
-
 	/// <summary>
 	/// Base class for tests
 	/// </summary>
@@ -363,6 +364,7 @@ namespace ProSuite.QA.Container
 			public string Constraint { get; set; }
 			public bool UseCaseSensitiveSQL { get; set; }
 			public bool QueriedOnly { get; set; }
+			public IReadOnlyList<IPreProcessor> PreProcessors { get; set; }
 		}
 
 		[NotNull]
@@ -451,13 +453,18 @@ namespace ProSuite.QA.Container
 		public void SetConstraint(int tableIndex, string constraint)
 		{
 			_tableProps[tableIndex].Constraint = constraint;
-
 			SetConstraintCore(InvolvedTables[tableIndex], tableIndex, constraint);
 		}
 
 		public void SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql)
 		{
 			_tableProps[tableIndex].UseCaseSensitiveSQL = useCaseSensitiveQaSql;
+		}
+		public void SetPreProcessors(int tableIndex,
+		                             [CanBeNull] IReadOnlyList<IPreProcessor> preProcessors)
+		{
+			_tableProps[tableIndex].PreProcessors = preProcessors;
+			SetPreProcessorsCore(tableIndex, preProcessors);
 		}
 
 		protected void CopyFilters([NotNull] out IList<ISpatialFilter> spatialFilters,
@@ -534,6 +541,10 @@ namespace ProSuite.QA.Container
 
 		protected virtual void SetConstraintCore(ITable table, int tableIndex,
 		                                         string constraint) { }
+
+		protected virtual void SetPreProcessorsCore(
+			int tableIndex, IReadOnlyList<IPreProcessor> preProcessors)
+		{ }
 
 		public void SetAreaOfInterest(IPolygon areaOfInterest)
 		{

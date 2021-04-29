@@ -741,7 +741,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					StringComparer.OrdinalIgnoreCase);
 
 
-			AddProcessors(created, xmlInstanceConfiguration, instanceConfigurationsByName);
+			AddPostProcessors(created, xmlInstanceConfiguration, instanceConfigurationsByName);
 
 			foreach (XmlTestParameterValue xmlParamValue in
 				xmlInstanceConfiguration.ParameterValues)
@@ -776,8 +776,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 					if (xmlParamValue is XmlDatasetTestParameterValue datasetValue)
 					{
-						parameterValue =
-							CreateDatasetTestParameterValue(testParameter, datasetValue, null);
+						parameterValue = CreateDatasetTestParameterValue(
+							testParameter, datasetValue, instanceConfigurationsByName, null);
 					}
 					else if (xmlParamValue is XmlScalarTestParameterValue scalarValue)
 					{
@@ -796,7 +796,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					parameterValue = CreateDatasetTestParameterValue(
 						testParameter, datasetValue,
 						Assert.NotNullOrEmpty(xmlInstanceConfiguration.Name),
-						modelsByWorkspaceId, getDatasetsByName, ignoreForUnknownDatasets);
+						modelsByWorkspaceId, instanceConfigurationsByName,
+						getDatasetsByName, ignoreForUnknownDatasets);
 
 					if (parameterValue == null)
 					{
@@ -829,12 +830,11 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			return created;
 		}
 
-		private static void AddProcessors(
+		private static void AddPostProcessors(
 			[NotNull] QualityCondition qualityCondition,
 			[NotNull] XmlInstanceConfiguration xmlInstanceConfiration,
 			[NotNull] IDictionary<string, QualityCondition> instanceConfigsByName)
 		{
-			//TODO: Handle preProcessors, TableTransformers
 			if (xmlInstanceConfiration is XmlQualityCondition xmlCondition)
 			{
 				IList<string> postProcNames = xmlCondition.PostProcessorNames;
@@ -1889,6 +1889,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			[NotNull] XmlDatasetTestParameterValue xmlDatasetTestParameterValue,
 			[NotNull] string qualityConditionName,
 			[NotNull] IDictionary<string, Model> modelsByWorkspaceId,
+			[NotNull] IDictionary<string, QualityCondition> instanceConfigurationsByName,
 			[NotNull] Func<string, IList<Dataset>> getDatasetsByName,
 			bool ignoreForUnknownDatasets)
 		{
@@ -1917,18 +1918,38 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			TestParameterTypeUtils.AssertValidDataset(testParameter, dataset);
 			return CreateDatasetTestParameterValue(testParameter, xmlDatasetTestParameterValue,
-			                                       dataset);
+			                                       instanceConfigurationsByName, dataset);
 		}
 
 		[NotNull]
 		private static TestParameterValue CreateDatasetTestParameterValue(
 			[NotNull] TestParameter testParameter,
-			[NotNull] XmlDatasetTestParameterValue xmlDatasetTestParameterValue,
+			[NotNull] XmlDatasetTestParameterValue xmlValue,
+			[NotNull] IDictionary<string, QualityCondition> instanceConfigurationsByName,
 			[CanBeNull] Dataset dataset)
 		{
-			return new DatasetTestParameterValue(testParameter, dataset,
-			                                     xmlDatasetTestParameterValue.WhereClause,
-			                                     xmlDatasetTestParameterValue.UsedAsReferenceData);
+			var paramValue = new DatasetTestParameterValue(
+				testParameter, dataset,
+				xmlValue.WhereClause,
+				xmlValue.UsedAsReferenceData);
+
+			if (xmlValue.PreProcessorNames != null)
+			{
+				List<QualityCondition> procs = new List<QualityCondition>();
+				foreach (string procName in xmlValue.PreProcessorNames)
+				{
+					if (! instanceConfigurationsByName.TryGetValue(
+						    procName, out QualityCondition proc))
+					{
+						Assert.NotNull(proc, $"Instance configuration {procName} not found");
+					}
+
+					procs.Add(proc);
+				}
+
+				paramValue.PreProcessors = procs;
+			}
+			return paramValue;
 		}
 
 		[CanBeNull]

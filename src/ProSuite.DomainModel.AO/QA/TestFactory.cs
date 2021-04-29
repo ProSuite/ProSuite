@@ -412,14 +412,38 @@ namespace ProSuite.DomainModel.AO.QA
 					                           ModelElementUtils.UseCaseSensitiveSql(
 						                           table, dataModel.SqlCaseSensitivity);
 
+					List<IPreProcessor> preProcessors = GetPreProcessors(
+						datasetParameterValue.PreProcessors, datasetContext);
+
 					tableConstraints.Add(new TableConstraint(
 						                     table, datasetParameterValue.FilterExpression,
-						                     useCaseSensitiveSql));
+						                     useCaseSensitiveSql, preProcessors));
 				}
 			}
 
 			value = GetArgumentValue(parameter, valuesForParameter);
 			return true;
+		}
+
+		[CanBeNull]
+		private static List<IPreProcessor> GetPreProcessors(
+			[CanBeNull]IList<QualityCondition> preProcConfigurations,
+			[NotNull] IOpenDataset context)
+		{
+			if (preProcConfigurations == null)
+			{
+				return null;
+			}
+
+			List<IPreProcessor> procs = new List<IPreProcessor>();
+			foreach (QualityCondition conf in preProcConfigurations)
+			{
+				DefaultTestFactory fct = (DefaultTestFactory)TestFactoryUtils.CreateTestFactory(conf);
+				Assert.NotNull(fct, $"Cannot create TestFactor for  {conf}");
+				procs.Add(fct.CreateInstance<IPreProcessor>(context));
+			}
+
+			return procs;
 		}
 
 		[NotNull]
@@ -475,8 +499,8 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (paramVal.Source != null)
 			{
-				if (! (TestFactoryUtils.CreateTestFactory(paramVal.Source) is DefaultTestFactory fct
-				      ))
+				if (! (TestFactoryUtils.CreateTestFactory(paramVal.Source)
+					       is DefaultTestFactory fct))
 				{
 					throw new ArgumentException(
 						$"Unable to create DefaultTestFactory for {paramVal.Source}");
@@ -668,9 +692,9 @@ namespace ProSuite.DomainModel.AO.QA
 
 		private static void ApplyTableParameters(
 			[NotNull] IInvolvesTables test,
-			[NotNull] IList<TableConstraint> sortedTableParameters)
+			[NotNull] IList<TableConstraint> sortedTableConstraints)
 		{
-			int tableCount = sortedTableParameters.Count;
+			int tableCount = sortedTableConstraints.Count;
 
 			if (tableCount == 0)
 			{
@@ -690,8 +714,8 @@ namespace ProSuite.DomainModel.AO.QA
 
 				for (var tableIndex = 0; tableIndex < tableCount; tableIndex++)
 				{
-					TableConstraint value = sortedTableParameters[tableIndex];
-					ITable table = value.Table;
+					TableConstraint tableConstraint = sortedTableConstraints[tableIndex];
+					ITable table = tableConstraint.Table;
 
 					if (table != test.InvolvedTables[tableIndex])
 					{
@@ -703,12 +727,17 @@ namespace ProSuite.DomainModel.AO.QA
 								((IDataset) table).Name));
 					}
 
-					if (StringUtils.IsNotEmpty(value.FilterExpression))
+					if (StringUtils.IsNotEmpty(tableConstraint.FilterExpression))
 					{
-						test.SetConstraint(tableIndex, value.FilterExpression);
+						test.SetConstraint(tableIndex, tableConstraint.FilterExpression);
 					}
 
-					test.SetSqlCaseSensitivity(tableIndex, value.QaSqlIsCaseSensitive);
+					test.SetSqlCaseSensitivity(tableIndex, tableConstraint.QaSqlIsCaseSensitive);
+
+					if (test is IEditProcessorTest editProcTest)
+					{
+						editProcTest.SetPreProcessors(tableIndex, tableConstraint.PreProcessors);
+					}
 				}
 			}
 		}
@@ -725,15 +754,18 @@ namespace ProSuite.DomainModel.AO.QA
 			/// <param name="table">The table.</param>
 			/// <param name="filterExpression">The filter expression.</param>
 			/// <param name="qaSqlIsCaseSensitive">Indicates if SQL statements referring to this table should be treated as case-sensitive (only if evaluated by the QA sql engine)</param>
+			/// <param name="preProcessors">non text base filters</param>
 			public TableConstraint([NotNull] ITable table,
 			                       [CanBeNull] string filterExpression,
-			                       bool qaSqlIsCaseSensitive)
+			                       bool qaSqlIsCaseSensitive,
+			                       [CanBeNull] IReadOnlyList<IPreProcessor> preProcessors = null)
 			{
 				Assert.ArgumentNotNull(table, nameof(table));
 
 				Table = table;
 				FilterExpression = filterExpression;
 				QaSqlIsCaseSensitive = qaSqlIsCaseSensitive;
+				PreProcessors = preProcessors;
 			}
 
 			[NotNull]
@@ -743,6 +775,7 @@ namespace ProSuite.DomainModel.AO.QA
 			public string FilterExpression { get; }
 
 			public bool QaSqlIsCaseSensitive { get; }
+			public IReadOnlyList<IPreProcessor> PreProcessors { get; }
 		}
 
 		#endregion

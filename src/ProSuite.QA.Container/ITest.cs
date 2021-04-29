@@ -78,20 +78,20 @@ namespace ProSuite.QA.Container
 		IReadOnlyList<IPostProcessor> PostProcessors { get; }
 
 		[CanBeNull]
-		IReadOnlyList<IPreProcessor> PreProcessors { get; }
+		IReadOnlyList<IPreProcessor> GetPreProcessors(int tableIndex);
 	}
 
 	public interface IEditProcessorTest : IProcessorTest
 	{
-		void AddPreProcessor(IPreProcessor proc);
 		void AddPostProcessor(IPostProcessor proc);
+
+		void SetPreProcessors(int tableIndex,
+		                      [CanBeNull] IReadOnlyList<IPreProcessor> preProcessors);
 	}
 
 
 	public interface IPreProcessor : IInvolvesTables
 	{
-		int TableIndex { get; }
-
 		bool VerifyExecute(IRow row);
 	}
 
