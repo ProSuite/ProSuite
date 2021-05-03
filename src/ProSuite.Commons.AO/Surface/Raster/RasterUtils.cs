@@ -130,5 +130,19 @@ namespace ProSuite.Commons.AO.Surface.Raster
 				ComUtils.ReleaseComObject(memoryWs);
 			}
 		}
+
+		public static float GetNoDataValue(IRasterProps rasterProperties)
+		{
+			object noDataValueObj = rasterProperties.NoDataValue;
+
+			if (noDataValueObj == null)
+			{
+				return float.MinValue;
+			}
+
+			float result = ((float[]) noDataValueObj)[0];
+
+			return result;
+		}
 	}
 }
