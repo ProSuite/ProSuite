@@ -217,7 +217,7 @@
 
     </Grid>
 
-    <Border DockPanel.Dock="Bottom" Height="28" BorderBrush="DarkGray" BorderThickness="1">
+    <Border DockPanel.Dock="Bottom" Height="28" BorderBrush="DarkGray" BorderThickness="0, 1, 0, 0">
       <StatusBar Margin="1">
         <StatusBarItem>
           <TextBox Text="{Binding StatusText, Mode=OneWay}" Foreground="{Binding StatusTextColor}"
