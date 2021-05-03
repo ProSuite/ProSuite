@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 
 namespace ProSuite.Commons.AO.Surface.Raster
@@ -13,6 +12,11 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		/// <returns></returns>
 		T GetValue(int column, int row);
 
+		/// <summary>
+		/// All the pixel of the pixel block in row-major order, i.e. all pixels of the first row, then
+		/// all pixels of the second row, etc.
+		/// </summary>
+		/// <returns></returns>
 		IEnumerable<T> AllPixels();
 
 		/// <summary>

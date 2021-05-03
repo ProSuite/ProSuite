@@ -52,10 +52,8 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			Width = rasterProperties.Width;
 			Height = rasterProperties.Height;
 
-			NoDataValue = rasterProperties.NoDataValue;
+			NoDataValue = RasterUtils.GetNoDataValue(rasterProperties);
 		}
-
-		public IRaster BaseRaster => _raster;
 
 		public object NoDataValue { get; set; }
 

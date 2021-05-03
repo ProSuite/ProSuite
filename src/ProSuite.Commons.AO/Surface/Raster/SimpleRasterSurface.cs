@@ -170,6 +170,11 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 		public IEnumerable<ISimpleRaster> GetRasters(double x, double y)
 		{
+			if (_rasterIndex == null)
+			{
+				yield break;
+			}
+
 			foreach (ISimpleRaster simpleRaster in _rasterIndex.Search(new Pnt2D(x, y),
 			                                                           _searchTolerance))
 			{

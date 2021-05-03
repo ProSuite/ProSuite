@@ -30,7 +30,6 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		/// </summary>
 		double PixelSizeY { get; }
 
-		string Path { get; }
 		object NoDataValue { get; set; }
 
 		[NotNull]
