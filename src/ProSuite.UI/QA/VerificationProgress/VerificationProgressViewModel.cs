@@ -54,9 +54,8 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 		private readonly List<EnvelopeXY> _allTiles = new List<EnvelopeXY>();
 
-		private ICommand _openWorkListCommand;
-		private ICommand _zoomToPerimeterCommand;
 		private RelayCommand<VerificationProgressViewModel> _flashProgressCmd;
+		private bool _issueOptionsEnabled;
 
 		#endregion
 
@@ -89,7 +88,11 @@ namespace ProSuite.UI.QA.VerificationProgress
 		public Action<QualityVerification> ShowReportAction { get; set; }
 
 		[CanBeNull]
-		public Action<IQualityVerificationResult> SaveAction { get; set; }
+		public Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool> SaveAction
+		{
+			get;
+			set;
+		}
 
 		[CanBeNull]
 		public Action<IList<EnvelopeXY>> FlashProgressAction { get; set; }
@@ -330,6 +333,9 @@ namespace ProSuite.UI.QA.VerificationProgress
 			}
 		}
 
+		public UpdateIssuesOptionsViewModel UpdateOptions { get; } =
+			new UpdateIssuesOptionsViewModel();
+
 		#endregion
 
 		/// <summary>
@@ -366,6 +372,16 @@ namespace ProSuite.UI.QA.VerificationProgress
 			}
 		}
 
+		public bool IssueOptionsEnabled
+		{
+			get { return _issueOptionsEnabled; }
+			set
+			{
+				_issueOptionsEnabled = value;
+				OnPropertyChanged();
+			}
+		}
+
 		public ICommand ShowReportCommand
 		{
 			get
@@ -386,17 +402,9 @@ namespace ProSuite.UI.QA.VerificationProgress
 		private IQualityVerificationResult VerificationResult =>
 			ProgressTracker.QualityVerificationResult;
 
-		public ICommand OpenWorkListCommand
-		{
-			get => _openWorkListCommand;
-			set => _openWorkListCommand = value;
-		}
+		public ICommand OpenWorkListCommand { get; set; }
 
-		public ICommand ZoomToPerimeterCommand
-		{
-			get => _zoomToPerimeterCommand;
-			set => _zoomToPerimeterCommand = value;
-		}
+		public ICommand ZoomToPerimeterCommand { get; set; }
 
 		public ICommand FlashProgressCommand
 		{
@@ -543,6 +551,8 @@ namespace ProSuite.UI.QA.VerificationProgress
 				             SaveAction != null &&
 				             VerificationResult != null &&
 				             VerificationResult.CanSaveIssues;
+
+				    IssueOptionsEnabled = result;
 			    });
 
 			return result;
@@ -553,7 +563,8 @@ namespace ProSuite.UI.QA.VerificationProgress
 			Try(nameof(SaveIssues),
 			    () =>
 			    {
-				    SaveAction?.Invoke(VerificationResult);
+				    SaveAction?.Invoke(VerificationResult, UpdateOptions.ErrorDeletionType,
+				                       ! UpdateOptions.KeepPreviousIssues);
 
 				    // Once saved, the button should be disabled
 				    SaveAction = null;
