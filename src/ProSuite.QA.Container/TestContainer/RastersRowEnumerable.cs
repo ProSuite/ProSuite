@@ -22,7 +22,7 @@ namespace ProSuite.QA.Container.TestContainer
 		public RastersRowEnumerable(
 			[NotNull] IEnumerable<RasterReference> rasterReferences,
 			[NotNull] ITestProgress progress)
-			: this(rasterReferences.ToHashSet(), progress) { }
+			: this(new HashSet<RasterReference>(rasterReferences), progress) { }
 
 		public RastersRowEnumerable(
 			[NotNull] HashSet<RasterReference> rasters,
