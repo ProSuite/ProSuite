@@ -30,6 +30,7 @@ using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestContainer;
+using Quaestor.LoadReporting;
 
 namespace ProSuite.Microservices.Server.AO.QA
 {
@@ -70,6 +71,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// </summary>
 		public IServiceHealth Health { get; set; }
 
+		/// <summary>
+		/// The current service load to be kept up-to-date by the quality verification service.
+		/// A reference will also be passed to <see cref="LoadReportingGrpcImpl"/> to report the
+		/// current load to interested load balancers. 
+		/// </summary>
+		public ServiceLoad CurrentLoad { get; set; }
+
 		public bool Checkout3DAnalyst { get; set; }
 
 		public override async Task VerifyQuality(
@@ -79,15 +87,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			try
 			{
-				_msg.InfoFormat("Starting verification request from {0}", request.UserName);
-				_msg.DebugFormat("Request details: {0}", request);
-
-				if (Checkout3DAnalyst)
-				{
-					// It must be re-checked out (but somehow it's enough to do it
-					// on the calling thread-pool thread!?)
-					Ensure3dAnalyst();
-				}
+				StartRequest(request);
 
 				Func<ITrackCancel, ServiceCallStatus> func =
 					trackCancel => VerifyQualityCore(request, responseStream, trackCancel);
@@ -105,6 +105,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 				SendFatalException(e, responseStream);
 				SetUnhealthy();
 			}
+			finally
+			{
+				EndRequest();
+			}
 		}
 
 		public override async Task VerifyDataQuality(
@@ -118,21 +122,12 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				Assert.True(await requestStream.MoveNext(), "No request");
 
-				//while (await requestStream.MoveNext())
-				DataVerificationRequest initialrequest =
+				DataVerificationRequest initialRequest =
 					Assert.NotNull(requestStream.Current, "No request");
 
-				request = initialrequest.Request;
+				request = initialRequest.Request;
 
-				_msg.InfoFormat("Starting verification request from {0}", request);
-				_msg.DebugFormat("Request details: {0}", request);
-
-				if (Checkout3DAnalyst)
-				{
-					// It must be re-checked out (but somehow it's enough to do it
-					// on the calling thread-pool thread!?)
-					Ensure3dAnalyst();
-				}
+				StartRequest(request);
 
 				Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest =
 					delegate(DataVerificationResponse r)
@@ -146,7 +141,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				Func<ITrackCancel, ServiceCallStatus> func =
 					trackCancel =>
-						VerifyDataQualityCore(initialrequest, moreDataRequest, responseStream,
+						VerifyDataQualityCore(initialRequest, moreDataRequest, responseStream,
 						                      trackCancel);
 
 				ServiceCallStatus result =
@@ -162,6 +157,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 				SendFatalException(e, responseStream);
 				SetUnhealthy();
 			}
+			finally
+			{
+				EndRequest();
+			}
 		}
 
 		public override async Task VerifyStandaloneXml(
@@ -171,9 +170,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			try
 			{
+				CurrentLoad?.StartRequest();
+
 				_msg.InfoFormat("Starting stand-alone verification request from {0}",
 				                context.Peer);
-				_msg.DebugFormat("Request details: {0}", request);
+				_msg.VerboseDebugFormat("Request details: {0}", request);
 
 				Action<LoggingEvent> action =
 					SendInfoLogAction(responseStream, ServiceCallStatus.Running);
@@ -198,6 +199,30 @@ namespace ProSuite.Microservices.Server.AO.QA
 				SendFatalException(e, responseStream);
 				SetUnhealthy();
 			}
+			finally
+			{
+				CurrentLoad?.EndRequest();
+			}
+		}
+
+		private void StartRequest(VerificationRequest request)
+		{
+			CurrentLoad?.StartRequest();
+
+			_msg.InfoFormat("Starting verification request from {0}", request.UserName);
+			_msg.VerboseDebugFormat("Request details: {0}", request);
+
+			if (Checkout3DAnalyst)
+			{
+				// It must be re-checked out (but somehow it's enough to do it
+				// on the calling thread-pool thread!?)
+				Ensure3dAnalyst();
+			}
+		}
+
+		private void EndRequest()
+		{
+			CurrentLoad?.EndRequest();
 		}
 
 		private static Action<LoggingEvent> SendInfoLogAction(
@@ -415,9 +440,9 @@ namespace ProSuite.Microservices.Server.AO.QA
 				var dataSources = new List<DataSource>();
 				foreach (string replacement in xmlSpecification.DataSourceReplacements)
 				{
-					List<string> replacementStrings = StringUtils.SplitAndTrim(replacement, '>');
+					List<string> replacementStrings = StringUtils.SplitAndTrim(replacement, '|');
 					Assert.AreEqual(2, replacementStrings.Count,
-					                "Data source workspace is not of the format workspace_id > catalog_path");
+					                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
 
 					var dataSource = new DataSource(replacementStrings[0], replacementStrings[0])
 					                 {

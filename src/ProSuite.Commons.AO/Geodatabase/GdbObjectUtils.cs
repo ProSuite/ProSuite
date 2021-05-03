@@ -1776,25 +1776,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			else
 			{
-				object sourceValue = sourceRow.Value[sourceFieldIndex];
-				targetRow.Value[targetFieldIndex] = sourceValue;
+				object value = sourceRow.Value[sourceFieldIndex] ?? DBNull.Value;
+
+				targetRow.Value[targetFieldIndex] = value;
 			}
 		}
-
-		//private static T? GetNullableValue<T>(object value) where T : struct
-		//{
-		//    T? nullableValue;
-		//    if (value == null || value is DBNull)
-		//    {
-		//        nullableValue = null;
-		//    }
-		//    else
-		//    {
-		//        nullableValue = (T)value;
-		//    }
-		//    return nullableValue;
-		//}
-
+		
 		private static int? GetNullableSubtypeCode([CanBeNull] object subtypeFieldValue)
 		{
 			if (subtypeFieldValue == null || subtypeFieldValue is DBNull)
