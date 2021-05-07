@@ -71,9 +71,9 @@ namespace ProSuite.QA.Container
 				return 0;
 			}
 
-			foreach (var preProcessor in containerTest.GetPreProcessors(involvedTableIndex))
+			foreach (var rowFilter in containerTest.GetRowFilters(involvedTableIndex))
 			{
-				if (! preProcessor.VerifyExecute(row))
+				if (! rowFilter.VerifyExecute(row))
 				{
 					applicable = false;
 					return 0;

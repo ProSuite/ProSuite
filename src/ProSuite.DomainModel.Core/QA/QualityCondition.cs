@@ -321,16 +321,16 @@ namespace ProSuite.DomainModel.Core.QA
 			public QualityCondition Transformer { get; set; }
 		}
 
-		private List<QualityCondition> _postProcessors = new List<QualityCondition>();
-		public void AddPostProcessor([NotNull] QualityCondition postProcessor)
+		private List<QualityCondition> _issueFilterConfigurations = new List<QualityCondition>();
+		public void AddIssueFilterConfiguration([NotNull] QualityCondition issueFilterConfiguration)
 		{
-			_postProcessors.Add(postProcessor);
+			_issueFilterConfigurations.Add(issueFilterConfiguration);
 		}
 
 		[NotNull]
-		public IReadOnlyList<QualityCondition> GetPostProcessors()
+		public IReadOnlyList<QualityCondition> GetIssueFilterConfigurations()
 		{
-			return _postProcessors;
+			return _issueFilterConfigurations;
 		}
 
 		public override bool Equals(object obj)

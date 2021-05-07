@@ -12,7 +12,7 @@ namespace ProSuite.QA.Container
 	/// <summary>
 	/// Base class for tests running in the container
 	/// </summary>
-	public abstract partial class ContainerTest : TestBase, IRelatedTablesProvider, IEditProcessorTest
+	public abstract partial class ContainerTest : TestBase, IRelatedTablesProvider, IFilterEditTest
 	{
 		private readonly List<QueryFilterHelper> _filterHelpers;
 
@@ -59,20 +59,20 @@ namespace ProSuite.QA.Container
 
 		public IList<TerrainReference> InvolvedTerrains { get; protected set; }
 
-		private Dictionary<int, IReadOnlyList<IPreProcessor>> _preProssesorDict;
+		private Dictionary<int, IReadOnlyList<IRowFilter>> _rowFilterDict;
 
 
-		private Dictionary<int, IReadOnlyList<IPreProcessor>> PreProssesorDict =>
-			_preProssesorDict ?? (_preProssesorDict = new Dictionary<int, IReadOnlyList<IPreProcessor>>());
+		private Dictionary<int, IReadOnlyList<IRowFilter>> RowFilterDict =>
+			_rowFilterDict ?? (_rowFilterDict = new Dictionary<int, IReadOnlyList<IRowFilter>>());
 
 
-		private List<IPostProcessor> _postProcessors;
-		public IReadOnlyList<IPostProcessor> PostProcessors => _postProcessors;
+		private List<IIssueFilter> _issueFilters;
+		public IReadOnlyList<IIssueFilter> IssueFilters => _issueFilters;
 
-		void IEditProcessorTest.AddPostProcessor(IPostProcessor proc)
+		void IFilterEditTest.AddIssueFilter(IIssueFilter filter)
 		{
-			_postProcessors = _postProcessors ?? new List<IPostProcessor>();
-			_postProcessors.Add(proc);
+			_issueFilters = _issueFilters ?? new List<IIssueFilter>();
+			_issueFilters.Add(filter);
 		}
 
 		public IEnumerable<IGeoDataset> GetInvolvedGeoDatasets()
@@ -137,11 +137,11 @@ namespace ProSuite.QA.Container
 
 		protected override void OnQaError(QaErrorEventArgs args)
 		{
-			if (_postProcessors != null)
+			if (_issueFilters != null)
 			{
-				foreach (IPostProcessor postProcessor in _postProcessors)
+				foreach (IIssueFilter issueFilter in _issueFilters)
 				{
-					postProcessor.PostProcessError(args);
+					issueFilter.VerifyError(args);
 					if (args.Cancel)
 					{
 						return;
@@ -763,22 +763,22 @@ namespace ProSuite.QA.Container
 			                                                   GetSqlCaseSensitivity(tableIndex));
 		}
 
-		protected override void SetPreProcessorsCore(
-			int tableIndex, [CanBeNull] IReadOnlyList<IPreProcessor> preProcessors)
+		protected override void SetRowFiltersCore(
+			int tableIndex, [CanBeNull] IReadOnlyList<IRowFilter> rowFilters)
 		{
-			PreProssesorDict[tableIndex] = preProcessors;
+			RowFilterDict[tableIndex] = rowFilters;
 		}
 
 		[NotNull]
-		public IReadOnlyList<IPreProcessor> GetPreProcessors(int involvedTableIndex)
+		public IReadOnlyList<IRowFilter> GetRowFilters(int involvedTableIndex)
 		{
-			if (! PreProssesorDict.TryGetValue(involvedTableIndex,
-			                                   out IReadOnlyList<IPreProcessor> preProcessors))
+			if (! RowFilterDict.TryGetValue(involvedTableIndex,
+			                                out IReadOnlyList<IRowFilter> rowFilters))
 			{
-				preProcessors = new List<IPreProcessor>();
+				rowFilters = new List<IRowFilter>();
 			}
 
-			return preProcessors ?? new List<IPreProcessor>();
+			return rowFilters ?? new List<IRowFilter>();
 		}
 
 		private int Execute([NotNull] ITable table, int tableIndex,
@@ -786,7 +786,7 @@ namespace ProSuite.QA.Container
 		{
 			var cursor = new EnumCursor(table, queryFilter, ! KeepRows);
 			var errorCount = 0;
-			IReadOnlyList<IPreProcessor> preProcessors = GetPreProcessors(tableIndex);
+			IReadOnlyList<IRowFilter> rowFilters = GetRowFilters(tableIndex);
 
 			foreach (IRow row in cursor)
 			{
@@ -809,9 +809,9 @@ namespace ProSuite.QA.Container
 				}
 
 				bool cancel = false;
-				foreach (var preprocessor in preProcessors)
+				foreach (var rowFilter in rowFilters)
 				{
-					if (! preprocessor.VerifyExecute(row))
+					if (! rowFilter.VerifyExecute(row))
 					{
 						cancel = true;
 						break;

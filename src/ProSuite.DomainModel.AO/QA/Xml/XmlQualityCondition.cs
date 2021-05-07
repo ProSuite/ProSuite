@@ -104,15 +104,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		public bool NeverStoreRelatedGeometryForTableRowIssues { get; set; }
 
 		[CanBeNull]
-		[XmlArray("PostProcessors")]
-		[XmlArrayItem(typeof(XmlInstanceConfiguration), ElementName = "PostProcessor")]
-		public List<string> PostProcessorNames { get; set; }
-
-		[Obsolete("move to XmlDataSetParameterValue")]
-		[CanBeNull]
-		[XmlArray("PreProcessors")]
-		[XmlArrayItem(typeof(XmlInstanceConfiguration), ElementName = "PreProcessor")]
-		public List<XmlInstanceConfiguration> PreProcessors { get; set; }
+		[XmlArray("IssueFilters")]
+		[XmlArrayItem(typeof(XmlInstanceConfiguration), ElementName = "IssueFilter")]
+		public List<string> IssueFilterNames { get; set; }
 
 		[XmlAttribute("createdDate")]
 		public string CreatedDate { get; set; }

@@ -132,7 +132,7 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		[CanBeNull]
-		public List<QualityCondition> PreProcessors { get; set; }
+		public List<QualityCondition> RowFilterConfigurations { get; set; }
 
 		public bool UsedAsReferenceData
 		{

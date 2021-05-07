@@ -282,14 +282,16 @@ namespace ProSuite.DomainModel.AO.QA
 
 			foreach (ITest test in tests)
 			{
-				if (! (test is IEditProcessorTest procTest)) continue;
+				if (! (test is IFilterEditTest filterTest)) continue;
 
-				foreach (QualityCondition postProcessor in c.GetPostProcessors())
+				foreach (QualityCondition issueFilterConfiguration in
+					c.GetIssueFilterConfigurations())
 				{
-					DefaultTestFactory factory = (DefaultTestFactory) TestFactoryUtils.CreateTestFactory(postProcessor);
+					DefaultTestFactory factory = (DefaultTestFactory)
+						TestFactoryUtils.CreateTestFactory(issueFilterConfiguration);
 					Assert.NotNull(factory);
-					IPostProcessor proc = factory.CreateInstance<IPostProcessor>(datasetContext);
-					procTest.AddPostProcessor(proc);
+					IIssueFilter filter = factory.CreateInstance<IIssueFilter>(datasetContext);
+					filterTest.AddIssueFilter(filter);
 				}
 			}
 		}
@@ -412,8 +414,8 @@ namespace ProSuite.DomainModel.AO.QA
 					                           ModelElementUtils.UseCaseSensitiveSql(
 						                           table, dataModel.SqlCaseSensitivity);
 
-					List<IPreProcessor> preProcessors = GetPreProcessors(
-						datasetParameterValue.PreProcessors, datasetContext);
+					List<IRowFilter> preProcessors = GetRowFilters(
+						datasetParameterValue.RowFilterConfigurations, datasetContext);
 
 					tableConstraints.Add(new TableConstraint(
 						                     table, datasetParameterValue.FilterExpression,
@@ -426,24 +428,24 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		[CanBeNull]
-		private static List<IPreProcessor> GetPreProcessors(
-			[CanBeNull]IList<QualityCondition> preProcConfigurations,
+		private static List<IRowFilter> GetRowFilters(
+			[CanBeNull]IList<QualityCondition> rowFilterConfigurations,
 			[NotNull] IOpenDataset context)
 		{
-			if (preProcConfigurations == null)
+			if (rowFilterConfigurations == null)
 			{
 				return null;
 			}
 
-			List<IPreProcessor> procs = new List<IPreProcessor>();
-			foreach (QualityCondition conf in preProcConfigurations)
+			List<IRowFilter> filters = new List<IRowFilter>();
+			foreach (QualityCondition conf in rowFilterConfigurations)
 			{
 				DefaultTestFactory fct = (DefaultTestFactory)TestFactoryUtils.CreateTestFactory(conf);
 				Assert.NotNull(fct, $"Cannot create TestFactor for  {conf}");
-				procs.Add(fct.CreateInstance<IPreProcessor>(context));
+				filters.Add(fct.CreateInstance<IRowFilter>(context));
 			}
 
-			return procs;
+			return filters;
 		}
 
 		[NotNull]
@@ -734,9 +736,9 @@ namespace ProSuite.DomainModel.AO.QA
 
 					test.SetSqlCaseSensitivity(tableIndex, tableConstraint.QaSqlIsCaseSensitive);
 
-					if (test is IEditProcessorTest editProcTest)
+					if (test is IFilterEditTest filterTest)
 					{
-						editProcTest.SetPreProcessors(tableIndex, tableConstraint.PreProcessors);
+						filterTest.SetRowFilters(tableIndex, tableConstraint.RowFilters);
 					}
 				}
 			}
@@ -754,18 +756,18 @@ namespace ProSuite.DomainModel.AO.QA
 			/// <param name="table">The table.</param>
 			/// <param name="filterExpression">The filter expression.</param>
 			/// <param name="qaSqlIsCaseSensitive">Indicates if SQL statements referring to this table should be treated as case-sensitive (only if evaluated by the QA sql engine)</param>
-			/// <param name="preProcessors">non text base filters</param>
+			/// <param name="rowFilters">non text base filters</param>
 			public TableConstraint([NotNull] ITable table,
 			                       [CanBeNull] string filterExpression,
 			                       bool qaSqlIsCaseSensitive,
-			                       [CanBeNull] IReadOnlyList<IPreProcessor> preProcessors = null)
+			                       [CanBeNull] IReadOnlyList<IRowFilter> rowFilters = null)
 			{
 				Assert.ArgumentNotNull(table, nameof(table));
 
 				Table = table;
 				FilterExpression = filterExpression;
 				QaSqlIsCaseSensitive = qaSqlIsCaseSensitive;
-				PreProcessors = preProcessors;
+				RowFilters = rowFilters;
 			}
 
 			[NotNull]
@@ -775,7 +777,7 @@ namespace ProSuite.DomainModel.AO.QA
 			public string FilterExpression { get; }
 
 			public bool QaSqlIsCaseSensitive { get; }
-			public IReadOnlyList<IPreProcessor> PreProcessors { get; }
+			public IReadOnlyList<IRowFilter> RowFilters { get; }
 		}
 
 		#endregion

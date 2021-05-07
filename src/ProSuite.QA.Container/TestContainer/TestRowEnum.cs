@@ -868,27 +868,27 @@ namespace ProSuite.QA.Container.TestContainer
 		{
 			foreach (var test in tests)
 			{
-				if (test.PostProcessors != null)
+				if (test.IssueFilters != null)
 				{
-					foreach (IPostProcessor proc in test.PostProcessors)
+					foreach (IIssueFilter filter in test.IssueFilters)
 					{
-						foreach (ITable table in proc.InvolvedTables)
+						foreach (ITable table in filter.InvolvedTables)
 						{
 							cachedSet.Add(table);
 						}
 
-						if (proc is PostProcessor p)
+						if (filter is IssueFilter f)
 						{
-							p.DataContainer = this;
+							f.DataContainer = this;
 						}
 					}
 				}
 
 				for (int iInvolved = 0; iInvolved < test.InvolvedTables.Count; iInvolved++)
 				{
-					foreach (IPreProcessor proc in test.GetPreProcessors(iInvolved))
+					foreach (IRowFilter filter in test.GetRowFilters(iInvolved))
 					{
-						foreach (ITable table in proc.InvolvedTables)
+						foreach (ITable table in filter.InvolvedTables)
 						{
 							cachedSet.Add(table);
 						}

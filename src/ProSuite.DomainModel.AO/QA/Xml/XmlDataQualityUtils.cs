@@ -437,30 +437,23 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 				if (xmlInstanceConfig is XmlQualityCondition xmlCondition)
 				{
-					if (xmlCondition.PostProcessorNames?.Count > 0)
+					if (xmlCondition.IssueFilterNames?.Count > 0)
 					{
-						var postProcessors = new List<XmlInstanceConfiguration>();
-						foreach (string name in xmlCondition.PostProcessorNames)
+						var issueFilterConfigurations = new List<XmlInstanceConfiguration>();
+						foreach (string name in xmlCondition.IssueFilterNames)
 						{
 							if (! allConfigurations.TryGetValue(
-								    name, out XmlInstanceConfiguration postProcessor))
+								    name, out XmlInstanceConfiguration issueFilterConfiguration))
 							{
 								hasUndefinedWorkspaceReference = true;
 								// TODO: handle missing
 								continue;
 							}
 
-							postProcessors.Add(postProcessor);
+							issueFilterConfigurations.Add(issueFilterConfiguration);
 						}
 
-						AddWorkspaceIds(workspaceIds, postProcessors,
-						                allConfigurations,
-						                ref hasUndefinedWorkspaceReference);
-					}
-
-					if (xmlCondition.PreProcessors != null)
-					{
-						AddWorkspaceIds(workspaceIds, xmlCondition.PreProcessors,
+						AddWorkspaceIds(workspaceIds, issueFilterConfigurations,
 						                allConfigurations,
 						                ref hasUndefinedWorkspaceReference);
 					}
@@ -485,16 +478,16 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				                            .Where(pair => referencedConditionNames.Contains(
 					                                   pair.Key.Name?.Trim()));
 
-			HashSet<string> processorNames = new HashSet<string>();
+			HashSet<string> filterNames = new HashSet<string>();
 			foreach (KeyValuePair<XmlInstanceConfiguration, XmlDataQualityCategory> pair
 				in qualityConditions)
 			{
 				yield return pair;
 
-				AddProcessorNames(processorNames, pair.Key);
+				AddFilterNames(filterNames, pair.Key);
 			}
 
-			if (processorNames.Count > 0)
+			if (filterNames.Count > 0)
 			{
 				var configByName = new Dictionary<string, XmlInstanceConfiguration>();
 				foreach (XmlInstanceConfiguration config in document.QualityConditions)
@@ -513,7 +506,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				{
 					added = false;
 					// TODO: optimize list of unhandled
-					List<string> unhandled = new List<string>(processorNames);
+					List<string> unhandled = new List<string>(filterNames);
 					foreach (string processorName in unhandled)
 					{
 						if (! configByName.TryGetValue(processorName.Trim(),
@@ -522,18 +515,18 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 							Assert.Fail($"instance configuration is missing: {processorName}");
 						}
 
-						added |= AddProcessorNames(processorNames, config);
+						added |= AddFilterNames(filterNames, config);
 					}
 				}
 
 				// return referenced xmlConfigs
-				foreach (string processorName in processorNames)
+				foreach (string filterName in filterNames)
 				{
-					if (! configByName.TryGetValue(processorName.Trim(),
+					if (! configByName.TryGetValue(filterName.Trim(),
 					                               out XmlInstanceConfiguration config))
 					{
 						Assert.Fail(
-							$"instance configuration is missing: {processorName}");
+							$"instance configuration is missing: {filterName}");
 					}
 
 					yield return new KeyValuePair<XmlInstanceConfiguration,
@@ -542,31 +535,31 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 		}
 
-		private static bool AddProcessorNames(HashSet<string> processorNames, XmlInstanceConfiguration config)
+		private static bool AddFilterNames(HashSet<string> filterNames, XmlInstanceConfiguration config)
 		{
 			bool added = false;
 			foreach (XmlTestParameterValue paramValue in config.ParameterValues)
 			{
 				if (!string.IsNullOrWhiteSpace(paramValue.InstanceConfigurationName))
 				{
-					added |= processorNames.Add(paramValue.InstanceConfigurationName);
+					added |= filterNames.Add(paramValue.InstanceConfigurationName);
 				}
 
 				if (paramValue is XmlDatasetTestParameterValue datasetValue
-				    && datasetValue.PreProcessorNames != null)
+				    && datasetValue.RowFilterNames != null)
 				{
-					foreach (string preProcessorName in datasetValue.PreProcessorNames)
+					foreach (string rowFilterName in datasetValue.RowFilterNames)
 					{
-						added |= processorNames.Add(preProcessorName);
+						added |= filterNames.Add(rowFilterName);
 					}
 				}
 			}
 			if (config is XmlQualityCondition xmlCondition
-			    && xmlCondition.PostProcessorNames != null)
+			    && xmlCondition.IssueFilterNames != null)
 			{
-				foreach (string procName in xmlCondition.PostProcessorNames)
+				foreach (string filterName in xmlCondition.IssueFilterNames)
 				{
-					added |= processorNames.Add(procName);
+					added |= filterNames.Add(filterName);
 				}
 			}
 
@@ -837,18 +830,18 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		{
 			if (xmlInstanceConfiration is XmlQualityCondition xmlCondition)
 			{
-				IList<string> postProcNames = xmlCondition.PostProcessorNames;
-				if (postProcNames != null)
+				IList<string> issueFilterNames = xmlCondition.IssueFilterNames;
+				if (issueFilterNames != null)
 				{
-					foreach (string postProcName in postProcNames)
+					foreach (string issueFilterName in issueFilterNames)
 					{
 						if (!instanceConfigsByName.TryGetValue(
-							postProcName, out QualityCondition postProcessor))
+							issueFilterName, out QualityCondition issueFilterConfiguration))
 						{
-							Assert.Fail($"missing post processor named {postProcName}");
+							Assert.Fail($"missing post processor named {issueFilterName}");
 						}
 
-						qualityCondition.AddPostProcessor(postProcessor);
+						qualityCondition.AddIssueFilterConfiguration(issueFilterConfiguration);
 					}
 				}
 			}
@@ -1933,21 +1926,21 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				xmlValue.WhereClause,
 				xmlValue.UsedAsReferenceData);
 
-			if (xmlValue.PreProcessorNames != null)
+			if (xmlValue.RowFilterNames != null)
 			{
-				List<QualityCondition> procs = new List<QualityCondition>();
-				foreach (string procName in xmlValue.PreProcessorNames)
+				List<QualityCondition> rowFilterConfigurations = new List<QualityCondition>();
+				foreach (string filterName in xmlValue.RowFilterNames)
 				{
 					if (! instanceConfigurationsByName.TryGetValue(
-						    procName, out QualityCondition proc))
+						    filterName, out QualityCondition filterConfiguration))
 					{
-						Assert.NotNull(proc, $"Instance configuration {procName} not found");
+						Assert.NotNull(filterConfiguration, $"Instance configuration {filterName} not found");
 					}
 
-					procs.Add(proc);
+					rowFilterConfigurations.Add(filterConfiguration);
 				}
 
-				paramValue.PreProcessors = procs;
+				paramValue.RowFilterConfigurations = rowFilterConfigurations;
 			}
 			return paramValue;
 		}

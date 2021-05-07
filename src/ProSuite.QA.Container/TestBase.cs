@@ -284,22 +284,22 @@ namespace ProSuite.QA.Container
 		}
 	}
 
-	public abstract class PreProcessor : InvolvesTablesBase, IPreProcessor
+	public abstract class RowFilter : InvolvesTablesBase, IRowFilter
 	{
-		protected PreProcessor([NotNull] IEnumerable<ITable> tables)
+		protected RowFilter([NotNull] IEnumerable<ITable> tables)
 			: base(tables) { }
 
 		public abstract bool VerifyExecute(IRow row);
 	}
 
-	public abstract class PostProcessor : InvolvesTablesBase, IPostProcessor
+	public abstract class IssueFilter : InvolvesTablesBase, IIssueFilter
 	{
-		protected PostProcessor([NotNull] IEnumerable<ITable> tables)
+		protected IssueFilter([NotNull] IEnumerable<ITable> tables)
 			: base(tables) { }
 
 		public abstract bool Cancel(QaError error);
 
-		public void PostProcessError(QaErrorEventArgs args)
+		public void VerifyError(QaErrorEventArgs args)
 		{
 			if (args.Cancel == false && Cancel(args.QaError))
 			{
@@ -364,7 +364,7 @@ namespace ProSuite.QA.Container
 			public string Constraint { get; set; }
 			public bool UseCaseSensitiveSQL { get; set; }
 			public bool QueriedOnly { get; set; }
-			public IReadOnlyList<IPreProcessor> PreProcessors { get; set; }
+			public IReadOnlyList<IRowFilter> RowFilters { get; set; }
 		}
 
 		[NotNull]
@@ -460,11 +460,11 @@ namespace ProSuite.QA.Container
 		{
 			_tableProps[tableIndex].UseCaseSensitiveSQL = useCaseSensitiveQaSql;
 		}
-		public void SetPreProcessors(int tableIndex,
-		                             [CanBeNull] IReadOnlyList<IPreProcessor> preProcessors)
+		public void SetRowFilters(int tableIndex,
+		                             [CanBeNull] IReadOnlyList<IRowFilter> rowFilters)
 		{
-			_tableProps[tableIndex].PreProcessors = preProcessors;
-			SetPreProcessorsCore(tableIndex, preProcessors);
+			_tableProps[tableIndex].RowFilters = rowFilters;
+			SetRowFiltersCore(tableIndex, rowFilters);
 		}
 
 		protected void CopyFilters([NotNull] out IList<ISpatialFilter> spatialFilters,
@@ -542,8 +542,8 @@ namespace ProSuite.QA.Container
 		protected virtual void SetConstraintCore(ITable table, int tableIndex,
 		                                         string constraint) { }
 
-		protected virtual void SetPreProcessorsCore(
-			int tableIndex, IReadOnlyList<IPreProcessor> preProcessors)
+		protected virtual void SetRowFiltersCore(
+			int tableIndex, IReadOnlyList<IRowFilter> rowFilters)
 		{ }
 
 		public void SetAreaOfInterest(IPolygon areaOfInterest)

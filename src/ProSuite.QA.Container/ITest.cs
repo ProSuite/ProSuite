@@ -72,25 +72,25 @@ namespace ProSuite.QA.Container
 		void SetAreaOfInterest([CanBeNull] IPolygon area);
 	}
 
-	public interface IProcessorTest
+	public interface IFilterTest
 	{
 		[CanBeNull]
-		IReadOnlyList<IPostProcessor> PostProcessors { get; }
+		IReadOnlyList<IIssueFilter> IssueFilters { get; }
 
 		[CanBeNull]
-		IReadOnlyList<IPreProcessor> GetPreProcessors(int tableIndex);
+		IReadOnlyList<IRowFilter> GetRowFilters(int tableIndex);
 	}
 
-	public interface IEditProcessorTest : IProcessorTest
+	public interface IFilterEditTest : IFilterTest
 	{
-		void AddPostProcessor(IPostProcessor proc);
+		void AddIssueFilter(IIssueFilter filter);
 
-		void SetPreProcessors(int tableIndex,
-		                      [CanBeNull] IReadOnlyList<IPreProcessor> preProcessors);
+		void SetRowFilters(int tableIndex,
+		                   [CanBeNull] IReadOnlyList<IRowFilter> rowFilters);
 	}
 
 
-	public interface IPreProcessor : IInvolvesTables
+	public interface IRowFilter : IInvolvesTables
 	{
 		bool VerifyExecute(IRow row);
 	}
@@ -112,8 +112,8 @@ namespace ProSuite.QA.Container
 		ISearchable DataContainer { get; set; }
 	}
 
-	public interface IPostProcessor : IInvolvesTables
+	public interface IIssueFilter : IInvolvesTables
 	{
-		void PostProcessError(QaErrorEventArgs args);
+		void VerifyError(QaErrorEventArgs args);
 	}
 }

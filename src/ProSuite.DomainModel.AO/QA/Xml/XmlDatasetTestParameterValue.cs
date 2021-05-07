@@ -18,9 +18,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[DefaultValue(null)]
 		public string WorkspaceId { get; set; }
 
-		// TODO: rename
-		[XmlArrayItem(ElementName = "PreProcessorName")] 
+		[XmlArrayItem(ElementName = "RowFilterName")] 
 		[DefaultValue(null)]
-		public List<string> PreProcessorNames { get; set; }
+		public List<string> RowFilterNames { get; set; }
 	}
 }

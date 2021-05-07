@@ -318,15 +318,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 					}
 
 				}
-
-				if (configuration is XmlQualityCondition condition)
-				{
-					if (condition.PreProcessors != null)
-					{
-						AddTestDescriptors(descriptors, condition.PreProcessors,
-						                   xmlTestDescriptorsByName);
-					}
-				}
 			}
 		}
 
