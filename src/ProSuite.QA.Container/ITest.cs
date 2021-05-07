@@ -97,7 +97,11 @@ namespace ProSuite.QA.Container
 
 	public interface ITableTransformer : IInvolvesTables
 	{
-		ITable GetTransformed();
+		object GetTransformed();
+	}
+	public interface ITableTransformer<out T> : ITableTransformer
+	{
+		new T GetTransformed();
 	}
 
 	public interface IDerivedTable

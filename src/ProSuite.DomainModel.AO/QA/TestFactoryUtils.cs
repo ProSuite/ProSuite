@@ -295,27 +295,5 @@ namespace ProSuite.DomainModel.AO.QA
 
 			return result;
 		}
-
-		[NotNull]
-		public static ITable GetTransformedTable([NotNull] QualityCondition transformer,
-		                                         [NotNull] IOpenDataset datasetContext,
-		                                         [NotNull] DatasetTestParameterValue baseTable)
-		{
-			DefaultTestFactory factory = (DefaultTestFactory) CreateTestFactory(transformer);
-			Assert.NotNull(factory);
-			DatasetTestParameterValue baseValue = new DatasetTestParameterValue(
-				factory.Parameters[0], baseTable.DatasetValue, baseTable.FilterExpression);
-			try
-			{
-				transformer.AddParameterValue(baseValue);
-
-				ITableTransformer t = factory.CreateInstance<ITableTransformer>(datasetContext);
-				return t.GetTransformed();
-			}
-			finally
-			{
-				transformer.RemoveParameterValue(baseValue);
-			}
-		}
 	}
 }

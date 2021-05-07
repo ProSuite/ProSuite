@@ -778,7 +778,7 @@ namespace ProSuite.QA.Container
 				preProcessors = new List<IPreProcessor>();
 			}
 
-			return preProcessors;
+			return preProcessors ?? new List<IPreProcessor>();
 		}
 
 		private int Execute([NotNull] ITable table, int tableIndex,
