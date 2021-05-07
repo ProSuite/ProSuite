@@ -56,7 +56,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 			[NotNull] IQualityVerificationProgressTracker progressTracker,
 			[NotNull] Func<Task<ServiceCallStatus>> verificationAction,
 			[CanBeNull] Action<QualityVerification> showReportAction,
-			[CanBeNull] Action<IQualityVerificationResult> saveAction,
+			[CanBeNull] Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool> saveAction,
 			[CanBeNull] ICommand openErrorWorklist,
 			[CanBeNull] ICommand zoomToPerimeter,
 			[CanBeNull] Action<IList<EnvelopeXY>> flashTileProgressAction,
