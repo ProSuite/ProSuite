@@ -139,6 +139,9 @@ namespace ProSuite.Microservices.Server.AO
 			}
 			else
 			{
+				_msg.InfoFormat(
+					"Using arguments from command line (config file is ignored if it exists).");
+
 				var parsedArgs = Parser.Default.ParseArguments<MicroserverArguments>(args);
 
 				parsedArgs.WithParsed(arguments => { result = arguments; });
