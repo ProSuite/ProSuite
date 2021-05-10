@@ -894,7 +894,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			[NotNull] IRow sourceRow,
 			[NotNull] IRow targetRow,
 			[NotNull] IDictionary<int, int> copyIndexMatrix,
-			[CanBeNull] NotificationCollection notifications)
+			NotificationCollection notifications = null)
 		{
 			Assert.ArgumentNotNull(sourceRow, nameof(sourceRow));
 			Assert.ArgumentNotNull(targetRow, nameof(targetRow));

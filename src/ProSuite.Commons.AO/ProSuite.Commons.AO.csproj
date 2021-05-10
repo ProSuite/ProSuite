@@ -82,6 +82,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="EnumCursor.cs" />
     <Compile Include="Geodatabase\AssociationDescription.cs" />
     <Compile Include="Geodatabase\AssociationDescriptionUtils.cs" />
     <Compile Include="Geodatabase\CodedValue.cs" />
