@@ -1,12 +1,22 @@
-#  Possible commandline parameters:
 #
-# -product 
-# 	possible value Server, AddIn 
+# Usage samples:
+#	.\build_prosuite.ps1 -product server -prosdk 2.6 -release -zip    - release version if ProSuite.Server with 2.6 ProSDK and Zip 
+#	.\build_prosuite.ps1											  - test version of AddIn with local ArcGIS Pro Dlls
+#
+#  Possible commandline parameters: 
+#
+# [-product [Server, AddIn]] 
 #	default is AddIn 
-# -proSdk = 2.5,2.6,... (EsriDE.Commons\lib\ESRI\ProSDK\...) without is local ArcGIS Pro
-# -zip output will bo compressed into ProSuite_${Product}_${Platform}_v${NewVersion}.zip - without none 
-# -release - will increase version number v in versions.txt x.v.x.x - without is test version: x.x.v.x
-# -arcgisvers = 10.8 - is relevant for Product = Server, without is 10.8 
+# [-proSdk [2.5,2.6,...]] version of EsriDE.Commons\lib\ESRI\ProSDK 
+# 	default is local ArcGIS Pro
+# [-cpu x86]
+#	default is Any CPU
+# [-zip] output folder will bo compressed
+# 	default none 
+# [-release [Release, Test] will increase version number v in ${Product}.versions.txt x.v.x.x - without is test version: x.x.v.x
+# 	default Test
+# [-arcgisvers = [10.6,10.8] - is relevant only for -product server
+#	default 10.8
 #
 Param(
 	$Cpu = 'Any CPU',
