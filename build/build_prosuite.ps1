@@ -33,7 +33,9 @@ if ($Product) {
 		$Solution = 'ProSuite.Server.sln'
 		$env:VSArcGISVersion="${ArcGISVers}\"
 		$env:VSArcGISProduct=$Product
-		$env:ArcGISAssemblyPath='..\..\Swisstopo.Topgis\EsriDE.Commons\lib\ESRI\Server\'	
+		$env:ArcGISAssemblyPath='..\..\..\Swisstopo.Topgis\EsriDE.Commons\lib\ESRI\Server\'	
+		# TODO probably ProSuite build should not depend on Swisstopo.Topgis repository 
+		#$env:ArcGISAssemblyPath='..\..\..\EsriDE.Commons\lib\ESRI\Server\'	
 	}
 }
 else {
