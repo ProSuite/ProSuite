@@ -33,7 +33,7 @@ if ($Product) {
 		$Solution = 'ProSuite.Server.sln'
 		$env:VSArcGISVersion="${ArcGISVers}\"
 		$env:VSArcGISProduct=$Product
-		$env:ArcGISAssemblyPath='..\..\..\EsriDE.Commons\lib\ESRI\Server'	
+		$env:ArcGISAssemblyPath='..\..\Swisstopo.Topgis\EsriDE.Commons\lib\ESRI\Server\'	
 	}
 }
 else {
