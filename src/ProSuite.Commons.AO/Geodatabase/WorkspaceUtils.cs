@@ -2772,43 +2772,43 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
-		private static IWorkspaceFactory GetOleDbWorkspaceFactory()
+		public static IWorkspaceFactory GetOleDbWorkspaceFactory()
 		{
 			return GetWorkspaceFactory("esriDataSourcesOleDB.OLEDBWorkspaceFactory");
 		}
 
 		[NotNull]
-		private static IWorkspaceFactory GetFileGdbWorkspaceFactory()
+		public static IWorkspaceFactory GetFileGdbWorkspaceFactory()
 		{
 			return GetWorkspaceFactory("esriDataSourcesGDB.FileGDBWorkspaceFactory");
 		}
 
 		[NotNull]
-		private static IWorkspaceFactory GetAccessWorkspaceFactory()
+		public static IWorkspaceFactory GetAccessWorkspaceFactory()
 		{
 			return GetWorkspaceFactory("esriDataSourcesGDB.AccessWorkspaceFactory");
 		}
 
 		[NotNull]
-		private static IWorkspaceFactory GetTinWorkspaceFactory()
+		public static IWorkspaceFactory GetTinWorkspaceFactory()
 		{
 			return GetWorkspaceFactory("esriDataSourcesFile.TinWorkspaceFactory");
 		}
 
 		[NotNull]
-		private static IWorkspaceFactory GetRasterWorkspaceFactory()
+		public static IWorkspaceFactory GetRasterWorkspaceFactory()
 		{
 			return GetWorkspaceFactory("esriDataSourcesRaster.RasterWorkspaceFactory");
 		}
 
 		[NotNull]
-		private static IWorkspaceFactory GetSdeWorkspaceFactory()
+		public static IWorkspaceFactory GetSdeWorkspaceFactory()
 		{
 			return GetWorkspaceFactory("esriDataSourcesGDB.SdeWorkspaceFactory");
 		}
 
 		[NotNull]
-		private static IWorkspaceFactory GetShapefileWorkspaceFactory()
+		public static IWorkspaceFactory GetShapefileWorkspaceFactory()
 		{
 			return GetWorkspaceFactory("esriDataSourcesFile.ShapefileWorkspaceFactory");
 		}
