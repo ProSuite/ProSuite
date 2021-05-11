@@ -14,6 +14,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geometry;
 using ProSuite.Commons.Geometry.Wkb;
 using Wkx;
+using IPnt = ProSuite.Commons.Geometry.IPnt;
 using Point = Wkx.Point;
 using Polygon = Wkx.Polygon;
 
@@ -85,6 +86,98 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			Assert.IsTrue(pnt2D.Equals(geomReader.ReadPoint(new MemoryStream(bytesGeom2D))));
 
 			Assert.IsTrue(pnt3D.Equals(geomReader.ReadPoint(new MemoryStream(bytesGeom3D))));
+		}
+
+		[Test]
+		public void CanReadWriteMultipointXy()
+		{
+			var points = new WKSPointZ[4];
+
+			points[0] = new WKSPointZ {X = 2600000, Y = 1200000, Z = double.NaN};
+			points[1] = new WKSPointZ {X = 2600030, Y = 1200020, Z = double.NaN};
+			points[2] = new WKSPointZ {X = 2600020, Y = 1200030, Z = double.NaN};
+			points[3] = new WKSPointZ {X = 2600040, Y = 1200040, Z = double.NaN};
+
+			ISpatialReference sr =
+				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95);
+
+			IMultipoint multipoint = GeometryFactory.CreateMultipoint(points, sr);
+			GeometryUtils.MakeNonZAware(multipoint);
+
+			WkbGeometryWriter writer = new WkbGeometryWriter();
+
+			byte[] wkb = writer.WriteMultipoint(multipoint);
+
+			// ArcObjects
+			byte[] arcObjectsWkb = GeometryUtils.ToWkb(multipoint);
+			Assert.AreEqual(wkb, arcObjectsWkb);
+
+			// Wkx
+			byte[] wkx = ToChristianSchwarzWkb(ToWkxMultipoint(points, Ordinates.Xy));
+			Assert.AreEqual(wkx, wkb);
+
+			// Bonus test: Geom
+			WkbGeomWriter geomWriter = new WkbGeomWriter();
+			Multipoint<IPnt> multipnt = GeometryConversionUtils.CreateMultipoint(multipoint);
+			byte[] wkbGeom = geomWriter.WriteMultipoint(multipnt, Ordinates.Xy);
+			Assert.AreEqual(wkb, wkbGeom);
+
+			WkbGeometryReader reader = new WkbGeometryReader();
+
+			IMultipoint restored = reader.ReadMultipoint(new MemoryStream(wkb));
+			Assert.IsTrue(GeometryUtils.AreEqual(multipoint, restored));
+
+			// Geom
+			WkbGeomReader geomReader = new WkbGeomReader();
+
+			Multipoint<IPnt> deserializedPnts =
+				geomReader.ReadMultiPoint(new MemoryStream(wkbGeom));
+
+			Assert.IsTrue(
+				GeomRelationUtils.AreMultipointsEqualXY(multipnt, deserializedPnts,
+				                                        double.Epsilon));
+		}
+
+		[Test]
+		public void CanReadWriteMultipointXyz()
+		{
+			var points = new WKSPointZ[4];
+
+			points[0] = new WKSPointZ {X = 2600000, Y = 1200000, Z = 456};
+			points[1] = new WKSPointZ {X = 2600030, Y = 1200020, Z = 457};
+			points[2] = new WKSPointZ {X = 2600020, Y = 1200030, Z = 459};
+			points[3] = new WKSPointZ {X = 2600010, Y = 1200010, Z = 416};
+
+			ISpatialReference sr =
+				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95);
+
+			IMultipoint multipoint = GeometryFactory.CreateMultipoint(points, sr);
+
+			WkbGeometryWriter writer = new WkbGeometryWriter();
+
+			byte[] wkb = writer.WriteMultipoint(multipoint);
+
+			// Wkx
+			byte[] wkx = ToChristianSchwarzWkb(ToWkxMultipoint(points, Ordinates.Xyz));
+			Assert.AreEqual(wkx, wkb);
+
+			// Bonus test: Geom
+			WkbGeomWriter geomWriter = new WkbGeomWriter();
+			Multipoint<IPnt> multipnt = GeometryConversionUtils.CreateMultipoint(multipoint);
+			byte[] wkbGeom = geomWriter.WriteMultipoint(multipnt, Ordinates.Xyz);
+			Assert.AreEqual(wkb, wkbGeom);
+
+			WkbGeometryReader reader = new WkbGeometryReader();
+
+			IMultipoint restored = reader.ReadMultipoint(new MemoryStream(wkb));
+			Assert.IsTrue(GeometryUtils.AreEqual(multipoint, restored));
+
+			// Geom
+			WkbGeomReader geomReader = new WkbGeomReader();
+
+			Multipoint<IPnt> deserializedPnts =
+				geomReader.ReadMultiPoint(new MemoryStream(wkbGeom));
+			Assert.IsTrue(multipnt.Equals(deserializedPnts));
 		}
 
 		[Test]
@@ -890,6 +983,13 @@ namespace ProSuite.Commons.AO.Test.Geometry
 				default:
 					throw new NotImplementedException();
 			}
+		}
+
+		private static MultiPoint ToWkxMultipoint(WKSPointZ[] points, Ordinates xy)
+		{
+			var result = new MultiPoint(points.Select(p => ToWkxPoint(p, xy)));
+
+			return result;
 		}
 	}
 }

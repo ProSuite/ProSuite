@@ -96,17 +96,18 @@ namespace ProSuite.Commons.Geometry.Wkb
 			return memoryStream.ToArray();
 		}
 
-		public byte[] WriteMultipoint([NotNull] ICollection<IPnt> multipoint,
-		                              Ordinates ordinates = Ordinates.Xyz)
+		public byte[] WriteMultipoint<T>([NotNull] Multipoint<T> multipoint,
+		                                 Ordinates ordinates = Ordinates.Xyz) where T : IPnt
 		{
 			MemoryStream memoryStream = InitializeWriter();
 
 			WriteWkbType(WkbGeometryType.MultiPoint, ordinates);
 
-			Writer.Write(multipoint.Count);
+			Writer.Write(multipoint.PointCount);
 
-			foreach (IPnt point in multipoint)
+			foreach (T point in multipoint.GetPoints())
 			{
+				WriteWkbType(WkbGeometryType.Point, ordinates);
 				WritePointCore(point, ordinates);
 			}
 

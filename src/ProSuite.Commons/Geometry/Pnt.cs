@@ -63,7 +63,7 @@ namespace ProSuite.Commons.Geometry
 
 		IBox IBox.Clone()
 		{
-			return Clone();
+			return ClonePnt();
 		}
 
 		double IBox.GetMaxExtent()
@@ -73,7 +73,7 @@ namespace ProSuite.Commons.Geometry
 
 		#endregion
 
-		#region IQaPoint Members
+		#region IPnt Members
 
 		/// <summary>
 		/// returns coordinate of dimension index
@@ -94,6 +94,11 @@ namespace ProSuite.Commons.Geometry
 		{
 			get { return _coordinates[1]; }
 			set { _coordinates[1] = value; }
+		}
+
+		public IPnt Clone()
+		{
+			return ClonePnt();
 		}
 
 		IBox IGmtry.Extent => Extent;
@@ -120,7 +125,7 @@ namespace ProSuite.Commons.Geometry
 		}
 
 		[NotNull]
-		public abstract Pnt Clone();
+		public abstract Pnt ClonePnt();
 
 		[NotNull]
 		public static Pnt Create(int dim)

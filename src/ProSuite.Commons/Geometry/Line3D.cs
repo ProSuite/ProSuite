@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 

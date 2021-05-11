@@ -30,7 +30,7 @@ namespace ProSuite.Commons.Geometry
 
 		public override int Dimension => _miDimension;
 
-		public override Pnt Clone()
+		public override Pnt ClonePnt()
 		{
 			return new Vector((double[]) Coordinates.Clone());
 		}

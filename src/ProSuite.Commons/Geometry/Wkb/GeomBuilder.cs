@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace ProSuite.Commons.Geometry.Wkb
 {
-	public class GeomBuilder : GeometryBuilderBase<Linestring, IPnt>
+	public class GeomBuilder : GeometryBuilderBase<Multipoint<IPnt>, Linestring, IPnt>
 	{
 		private readonly bool _reverseOrder;
 
@@ -24,6 +24,11 @@ namespace ProSuite.Commons.Geometry.Wkb
 			}
 
 			return new Linestring(pointEnum);
+		}
+
+		public override Multipoint<IPnt> CreateMultipoint(IEnumerable<IPnt> points, int? knownPointCount = null)
+		{
+			return new Multipoint<IPnt>(points, knownPointCount);
 		}
 
 		public override IPointFactory<IPnt> GetPointFactory(Ordinates forOrdinates)
