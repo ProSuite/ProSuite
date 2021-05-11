@@ -1,16 +1,20 @@
-#  Possible commanline parameters:
+#  Possible commandline parameters:
 #
-# -product Server, AddIn - without is AddIn 
+# -product 
+# 	possible value Server, AddIn 
+#	default is AddIn 
 # -proSdk = 2.5,2.6,... (EsriDE.Commons\lib\ESRI\ProSDK\...) without is local ArcGIS Pro
 # -zip output will bo compressed into ProSuite_${Product}_${Platform}_v${NewVersion}.zip - without none 
+# -release - will increase version number v in versions.txt x.v.x.x - without is test version: x.x.v.x
 # -arcgisvers = 10.8 - is relevant for Product = Server, without is 10.8 
 #
 Param(
-	$Cpu = 'x64',
+	$Cpu = 'Any CPU',
 	$Product,
 	$ArcGISVers = '10.8',
 	$ProSdk,
-	$Zip
+	[Switch]$Zip,
+	[Switch]$Release
 )
 
 # derived startup parameters 
@@ -33,9 +37,7 @@ if ($Product) {
 		$Solution = 'ProSuite.Server.sln'
 		$env:VSArcGISVersion="${ArcGISVers}\"
 		$env:VSArcGISProduct=$Product
-		$env:ArcGISAssemblyPath='..\..\..\Swisstopo.Topgis\EsriDE.Commons\lib\ESRI\Server\'	
-		# TODO probably ProSuite build should not depend on Swisstopo.Topgis repository 
-		#$env:ArcGISAssemblyPath='..\..\..\EsriDE.Commons\lib\ESRI\Server\'	
+		$env:ArcGISAssemblyPath='..\..\..\EsriDE.Commons\lib\ESRI\Server\'	
 	}
 }
 else {
@@ -86,9 +88,24 @@ $App_BuildDir = $PSScriptRoot
 Set-Location -Path $App_BuildDir
 
 # Assembly versions
-$BuildVersionFile = $App_BuildDir + "\${Product}.version.txt"
-$NewVersion = Get-Content -Path $BuildVersionFile -TotalCount 1
-Write-Host "Version:		${NewVersion} (${BuildVersionFile})`r`n"
+$BuildVersionFilePath = $App_BuildDir + "\${Product}.version.txt"
+
+# Increase versions number 
+#	- for release second number 
+# 	- for test - third number
+$BuildVersionFileContent = Get-Content -Path $BuildVersionFilePath -TotalCount 1
+$BuildVersions = $BuildVersionFileContent.split('.') | % {iex $_}
+if ($Release) {
+	$BuildVersions[1] += 1
+}
+else {
+	$BuildVersions[2] += 1	
+}
+$NewVersion = $BuildVersions -join '.'
+Write-Host $NewVersion,$BuildVersionFileContent
+
+Set-Content -Path $BuildVersionFilePath -Value $NewVersion
+Write-Host "Version:		${NewVersion} (${BuildVersionFilePath})`r`n"
 
 # Start build actions
 Write-Host "Start building .... `r`n"
@@ -130,7 +147,7 @@ $msbuildAbsolutePath = Get-MSBuildAbsolutePath
 $msbuildArgumentList = @(
 	"`"$($mapsSolutionFile.FullName)`"",
 	"/p:Configuration=Release",
-	"/p:Platform=""Any CPU""",
+	"/p:Platform=""${Cpu}""",
 	"/p:OutputPath=`"$($BuildOutputDir)`"",
 	"/p:UseSharedCompilation=false",
 	"/restore",
@@ -145,9 +162,11 @@ Set-AssemblyVersion $Codebase_RootDir 1.0.0.0
 Write-Host "`r`nRestoring ${AssemblyVersionFilePath} from ${AssemblyVersionBackupFilePath}"
 Move-Item $AssemblyVersionBackupFilePath -Destination $AssemblyVersionFilePath -Force
 
+$Cpu = $Cpu -replace ' ',''
+
 if ($Zip) {
-	Get-ChildItem -Path $BuildOutputDir -Exclude *.dylib, *.so | Compress-Archive -Force -DestinationPath $BuildOutputDir\ProSuite_${Product}_${Platform}_v${NewVersion}.zip
-	Write-Host "`r`nArchive $BuildOutputDir\ProSuite_${Product}_${Platform}_v${NewVersion}.zip created"
+	Get-ChildItem -Path $BuildOutputDir -Exclude *.dylib, *.so | Compress-Archive -Force -DestinationPath $BuildOutputDir\ProSuite_${Product}_${Cpu}_v${NewVersion}.zip
+	Write-Host "`r`nArchive $BuildOutputDir\ProSuite_${Product}_${Cpu}_v${NewVersion}.zip created"
 }
 
 Write-Host "`r`nBuild process finished"
