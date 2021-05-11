@@ -82,7 +82,23 @@ namespace ProSuite.Commons.AO.Geodatabase
 			// The Create method returns a workspace name object.
 			IWorkspaceFactory workspaceFactory = GetFileGdbWorkspaceFactory();
 
-			return workspaceFactory.Create(directory, name, null, 0);
+			IWorkspaceName result = null;
+
+			try
+			{
+				result = workspaceFactory.Create(directory, name, null, 0);
+			}
+			catch (COMException e)
+			{
+				if (e.ErrorCode == -2147220902)
+				{
+					throw new IOException("File Geodatabase already exists.");
+				}
+
+				throw;
+			}
+
+			return result;
 		}
 
 		[NotNull]
