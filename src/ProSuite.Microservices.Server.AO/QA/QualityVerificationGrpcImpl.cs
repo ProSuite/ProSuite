@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -38,7 +39,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 	{
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-		private readonly StaTaskScheduler _singleStaThreadScheduler;
+		private readonly StaTaskScheduler _staThreadScheduler;
 
 		private static readonly ThreadAffineUseNameProvider _userNameProvider =
 			new ThreadAffineUseNameProvider();
@@ -59,7 +60,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				maxThreadCount = Environment.ProcessorCount - 1;
 			}
 
-			_singleStaThreadScheduler = new StaTaskScheduler(maxThreadCount);
+			_staThreadScheduler = new StaTaskScheduler(maxThreadCount);
 
 			EnvironmentUtils.SetUserNameProvider(_userNameProvider);
 		}
@@ -78,7 +79,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// </summary>
 		public ServiceLoad CurrentLoad { get; set; }
 
-		public bool Checkout3DAnalyst { get; set; }
+		/// <summary>
+		/// The license checkout action to be performed before any service call is executed.
+		/// By default the lowest available license (basic, standard, advanced) is checked out
+		/// in a 32-bit process, the server license is checked out in a 64-bit process. In case
+		/// a test requires a specific license or an extension, provide a different function.
+		/// </summary>
+		public Func<bool> LicenseAction { get; set; }
 
 		public override async Task VerifyQuality(
 			VerificationRequest request,
@@ -87,14 +94,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			try
 			{
-				StartRequest(request);
+				await StartRequest(request);
 
 				Func<ITrackCancel, ServiceCallStatus> func =
 					trackCancel => VerifyQualityCore(request, responseStream, trackCancel);
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
-						func, context, _singleStaThreadScheduler);
+						func, context, _staThreadScheduler);
 
 				_msg.InfoFormat("Verification {0}", result);
 			}
@@ -127,7 +134,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				request = initialRequest.Request;
 
-				StartRequest(request);
+				await StartRequest(request);
 
 				Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest =
 					delegate(DataVerificationResponse r)
@@ -146,7 +153,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				ServiceCallStatus result =
 					await GrpcServerUtils.ExecuteServiceCall(
-						func, context, _singleStaThreadScheduler);
+						func, context, _staThreadScheduler);
 
 				_msg.InfoFormat("Verification {0}", result);
 			}
@@ -170,7 +177,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			try
 			{
-				CurrentLoad?.StartRequest();
+				await StartRequest(context.Peer, request);
 
 				_msg.InfoFormat("Starting stand-alone verification request from {0}",
 				                context.Peer);
@@ -187,7 +194,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 					ServiceCallStatus result =
 						await GrpcServerUtils.ExecuteServiceCall(
-							func, context, _singleStaThreadScheduler);
+							func, context, _staThreadScheduler);
 
 					_msg.InfoFormat("Verification {0}", result);
 				}
@@ -201,28 +208,55 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 			finally
 			{
-				CurrentLoad?.EndRequest();
+				EndRequest();
 			}
 		}
 
-		private void StartRequest(VerificationRequest request)
+		private async Task StartRequest(VerificationRequest request)
+		{
+			await StartRequest(request.UserName, request);
+		}
+
+		private async Task StartRequest(string peerName, object request)
 		{
 			CurrentLoad?.StartRequest();
 
-			_msg.InfoFormat("Starting verification request from {0}", request.UserName);
-			_msg.VerboseDebugFormat("Request details: {0}", request);
+			_msg.InfoFormat("Starting verification request from {0}", peerName);
 
-			if (Checkout3DAnalyst)
+			if (_msg.IsVerboseDebugEnabled)
 			{
-				// It must be re-checked out (but somehow it's enough to do it
-				// on the calling thread-pool thread!?)
-				Ensure3dAnalyst();
+				_msg.VerboseDebugFormat("Request details: {0}", request);
+			}
+
+			bool licensed = await EnsureLicenseAsync();
+
+			if (! licensed)
+			{
+				_msg.Warn("Could not check out the specified license");
 			}
 		}
 
 		private void EndRequest()
 		{
 			CurrentLoad?.EndRequest();
+		}
+
+		public async Task<bool> EnsureLicenseAsync()
+		{
+			if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+			{
+				return LicenseAction();
+			}
+
+			// Schedule it on an STA thread!
+			CancellationToken cancellationToken = new CancellationToken(false);
+
+			bool result =
+				await Task.Factory.StartNew(
+					LicenseAction, cancellationToken, TaskCreationOptions.LongRunning,
+					_staThreadScheduler);
+
+			return result;
 		}
 
 		private static Action<LoggingEvent> SendInfoLogAction(
@@ -341,24 +375,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return result;
 		}
 
-		private static void Ensure3dAnalyst()
-		{
-			IAoInitialize aoInitialize = new AoInitializeClass();
-
-			bool is3dAvailable =
-				aoInitialize.IsExtensionCheckedOut(
-					esriLicenseExtensionCode.esriLicenseExtensionCode3DAnalyst);
-
-			if (! is3dAvailable)
-			{
-				esriLicenseStatus status =
-					aoInitialize.CheckOutExtension(
-						esriLicenseExtensionCode.esriLicenseExtensionCode3DAnalyst);
-
-				_msg.DebugFormat("3D Analyst checkout status: {0}", status);
-			}
-		}
-
 		private ServiceCallStatus VerifyQualityCore(
 			VerificationRequest request,
 			IServerStreamWriter<VerificationResponse> responseStream,
@@ -473,7 +489,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			catch (Exception e)
 			{
 				_msg.DebugFormat("Error during processing of request {0}", request);
-				_msg.Error("Error verifying quality: ", e);
+				_msg.Error($"Error verifying quality: {e.Message}", e);
 
 				if (! EnvironmentUtils.GetBooleanEnvironmentVariableValue(
 					    "PROSUITE_QA_SERVER_KEEP_SERVING_ON_ERROR"))
