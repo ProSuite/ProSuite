@@ -1781,7 +1781,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				targetRow.Value[targetFieldIndex] = value;
 			}
 		}
-		
+
 		private static int? GetNullableSubtypeCode([CanBeNull] object subtypeFieldValue)
 		{
 			if (subtypeFieldValue == null || subtypeFieldValue is DBNull)
