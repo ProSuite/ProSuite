@@ -17,55 +17,115 @@
 # 	default Test
 # [-arcgisvers = [10.6,10.8] - is relevant only for -product server
 #	default 10.8
-#
+# [-info ] will print out environment variables and quit
+#	
 Param(
 	$Cpu = 'Any CPU',
-	$Product,
+	$Product= 'AddIn',
 	$ArcGISVers = '10.8',
+	$ArcObjects = '10',
 	$ProSdk,
 	[Switch]$Zip,
-	[Switch]$Release
+	[Switch]$Release,
+	[Switch]$Info
 )
 
-# derived startup parameters 
+# Various directories and path variables
+$App_BuildDir = $PSScriptRoot
+Set-Location -Path $App_BuildDir
+
+function Print-Error($Message)
+{
+	Write-Host "`n`rError: *****************************************************************"
+	Write-Host "${Message}`n`r"
+}
 
 # local ArcGIS Pro SDK path is default
 $ProSdkPath = "C:\Program Files\ArcGIS\Pro"
 if ($ProSdk) {
-	$ProSdkPath = "..\..\..\EsriDE.Commons\lib\ESRI\ProSDK\${ProSdk}\"
+	$ProSdkPath = "..\..\EsriDE.Commons\lib\ESRI\ProSDK\${ProSdk}\"
+	$env:ProAssemblyPath="..\${ProSdkPath}"
 }
 else {
 	$ProSdk = "local"
+	$ProSdkPath = "C:\Program Files\ArcGIS\Pro"
+	$env:ProAssemblyPath="${ProSdkPath}"
+}
+if (-Not (Test-Path $ProSdkPath)) {
+	Print-Error("ProAssemblyPath = ${ProSdkPath} does not exist!")
+	exit(1)
 }
 
 # default solution
 $Solution = "ProSuite.sln"
 
-# server specific params
-if ($Product) {
-	if ($Product = 'Server') {
-		$Solution = 'ProSuite.Server.sln'
-		$env:VSArcGISVersion="${ArcGISVers}\"
-		$env:VSArcGISProduct=$Product
-		$env:ArcGISAssemblyPath='..\..\..\EsriDE.Commons\lib\ESRI\Server\'	
-	}
-}
-else {
-	$Product = 'AddIn'	
-}
-
 # Environment Variables for build (should probably be set by the caller)
 $env:TargetFrameworkVersion='v4.8'
-$env:ProAssemblyPath=$ProSdkPath
 
 # In case encryption is used, provide the encryptor factory from a custom location:
 # $env:ProSuiteEncryptorFactoryDir='..\..\..\ProSuite-etc\'
 $env:ProSuiteEncryptorFactoryDir=''
 
-Write-Host "`n`rBuilding product:	${Product}"
+if ($Info) {
+	Write-Host "`n`rEnvironment variables:"
+	Write-Host "--------------------------"
+	Write-Host "TargetFrameworkVersion:		${env:TargetFrameworkVersion}"
+	Write-Host "ProAssemblyPath:		${env:ProAssemblyPath}"
+	Write-Host "ProSuiteEncryptorFactoryDir:		${env:ProSuiteEncryptorFactoryDir}"
+}
+
+# server specific params
+if ($Product -eq 'Server') {
+	
+	$Solution = 'ProSuite.Server.sln'
+	$env:VSArcGISVersion="${ArcGISVers}\"
+	
+	# 
+	if ($ArcObjects -eq '10') {
+		$env:VSArcGISProduct="ArcGIS"
+	}
+	else {
+		if ($ArcObjects -eq '11') {
+			$env:VSArcGISProduct="Server"
+			if ($Cpu -eq "x86") {
+				Print-Error("ArcObjects 11 supports only x64 build!")
+				exit(1)					
+			}
+		}
+		else {
+			Print-Error("Version of ArcObjects can be only 10 or 11!")
+			exit(1)		
+		}
+	}
+	$ServerAssemblyPath = '..\..\EsriDE.Commons\lib\ESRI\Server\'
+	$FullArcGISAssemblyPath = "${ServerAssemblyPath}${ArcGISVers}"
+	if (-Not (Test-Path $FullArcGISAssemblyPath)) {
+		Print-Error("ArcGISAssemblyPath = ${FullArcGISAssemblyPath} does not exist!")
+		exit(1)
+	}
+	
+	$env:ArcGISAssemblyPath="..\${ServerAssemblyPath}"		
+	if ($Info) {
+		Write-Host "VSArcGISVersion:		${env:VSArcGISVersion}"
+		Write-Host "VSArcGISProduct:		${env:VSArcGISProduct}"
+		Write-Host "ArcGISAssemblyPath:		${env:ArcGISAssemblyPath}"
+	}
+}
+
+Write-Host "`n`rBuild parameters:"
+Write-Host "--------------------------"
+Write-Host "Building product:	${Product}"
 Write-Host "Architecture:		${Cpu}"
 Write-Host "ArcGIS Pro SDK:		${ProSdk}"
+Write-Host "Solution:		${Solution}"
+Write-Host "Release build:		${Release}"
+Write-Host "`n`r"
 
+if ($Info) {
+	exit(0)
+}
+
+Write-Host "`r`nBuilding solution ..."
 
 # *** FUNCTION DEFINITIONS
 
@@ -93,10 +153,6 @@ function Get-MSBuildAbsolutePath
 
 # *** BEGIN MAIN SCRIPT
 
-# Various directories and path variables
-$App_BuildDir = $PSScriptRoot
-Set-Location -Path $App_BuildDir
-
 # Assembly versions
 $BuildVersionFilePath = $App_BuildDir + "\${Product}.version.txt"
 
@@ -112,13 +168,10 @@ else {
 	$BuildVersions[2] += 1	
 }
 $NewVersion = $BuildVersions -join '.'
-Write-Host $NewVersion,$BuildVersionFileContent
-
 Set-Content -Path $BuildVersionFilePath -Value $NewVersion
 Write-Host "Version:		${NewVersion} (${BuildVersionFilePath})`r`n"
 
 # Start build actions
-Write-Host "Start building .... `r`n"
 
 # Clean previous build
 $BuildOutputDir = $App_BuildDir + "\output"
@@ -148,8 +201,6 @@ Copy-Item $AssemblyVersionFilePath -Destination $AssemblyVersionBackupFilePath -
 
 Set-AssemblyVersion $Codebase_RootDir $NewVersion
 
-Write-Host "`r`nBuilding solution..."
-
 md -Force $BuildOutputDir | Out-Null
 
 [System.IO.FileInfo] $mapsSolutionFile = $SolutionPath
@@ -163,6 +214,7 @@ $msbuildArgumentList = @(
 	"/restore",
 	"/nodeReuse:false"
 )
+
 $process = Start-Process -FilePath $msbuildAbsolutePath -ArgumentList $msbuildArgumentList -NoNewWindow -Wait
 # TODO $process.ExitCode?
 
@@ -179,4 +231,4 @@ if ($Zip) {
 	Write-Host "`r`nArchive $BuildOutputDir\ProSuite_${Product}_${Cpu}_v${NewVersion}.zip created"
 }
 
-Write-Host "`r`nBuild process finished"
+Write-Host "`r`nBuild process finished`r`n"
