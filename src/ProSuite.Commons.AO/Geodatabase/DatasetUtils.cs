@@ -2,6 +2,7 @@
 using ESRI.ArcGIS.DatasourcesRaster;
 #else
 using ESRI.ArcGIS.DataSourcesRaster;
+using ESRI.ArcGIS.GeoDatabaseExtensions;
 #endif
 using System;
 using System.Collections.Generic;
