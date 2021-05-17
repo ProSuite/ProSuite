@@ -1,36 +1,60 @@
 <ArcGIS defaultAssembly="ProSuiteSolution.dll" defaultNamespace="ProSuite.AGP.Solution"
         xmlns="http://schemas.esri.com/DADF/Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
-  <AddInInfo id="{aca43c2a-8357-4476-8660-e8bc28bdf848}" version="0.1" desktopVersion="2.5.22081">
+  <AddInInfo id="{aca43c2a-8357-4476-8660-e8bc28bdf848}" version="0.2" desktopVersion="2.5.22081">
     <Name>ProSuite</Name>
     <Description>The ProSuite productivity extension for data production, cartographic refinement, and quality assurance</Description>
     <Image>Images\AddinDesktop32.png</Image>
     <Author>The ProSuite Authors</Author>
     <Company></Company>
-    <Date>2020-12-16</Date>
+    <Date>2021-03-16</Date>
     <Subject>Framework</Subject>
     <!-- Note subject can be one or more of these topics:
          Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
   </AddInInfo>
   <categories>
     <updateCategory refID="esri_core_projectContainers">
-      <insertComponent id="ProSuiteItem_FolderContainer"
+      <!--<insertComponent id="ProSuiteItem_FolderContainer"
                        className="ProSuite.AGP.Solution.ProjectItem.ProSuiteProjectItemContainer"
                        insert="before" placeWith="esri_geodatabase_folderConnectionContainer">
         <content type="ProSuiteContainer" displayName="ProSuite"
                  contextMenu="ProSuiteSolution_ProjectItemContainerMenu" />
+      </insertComponent>-->
+      <!-- ATTENTION: for the container it is 'contextMenu' not 'contextMenuID' like for the items-->
+      <insertComponent id="Worklist_WorklistsContainer"
+                       className="ProSuite.AGP.Solution.ProjectItem.WorklistsContainer" insert="before"
+                       placeWith="esri_geodatabase_folderConnectionContainer">
+        <content type="ProSuite.AGP.Solution.ProjectItem.WorklistsContainer" displayName="Work Lists" />
       </insertComponent>
     </updateCategory>
     <updateCategory refID="esri_customItems">
-      <insertComponent id="ProSuiteItem_ProjectItem" className="ProSuite.AGP.Solution.ProjectItem.ProSuiteProjectItem"
-                       containerType="ProSuiteContainer">
-        <content displayName="Worklist" fileExtension="swl" isContainer="true" keywords="worklist"
+      <insertComponent id="Worklist_IssueWorklistItem" className="ProSuite.AGP.Solution.ProjectItem.IssueWorklistItem"
+                       containerType="ProSuite.AGP.Solution.ProjectItem.WorklistsContainer">
+        <content displayName="Issue Work List" fileExtension="iwl" isContainer="false" keywords="work list"
                  contextMenuID="ProSuiteSolution_ProjectItemWorkListContextMenu">
           <filterFlags>
             <type id="File" />
           </filterFlags>
         </content>
       </insertComponent>
+      <insertComponent id="Worklist_SelectionWorklistItem" className="ProSuite.AGP.Solution.ProjectItem.SelectionWorklistItem"
+                       containerType="ProSuite.AGP.Solution.ProjectItem.WorklistsContainer">
+        <content displayName="Selection Work List" fileExtension="swl" isContainer="false" keywords="work list"
+                 contextMenuID="ProSuiteSolution_ProjectItemWorkListContextMenu">
+          <filterFlags>
+            <type id="File" />
+          </filterFlags>
+        </content>
+      </insertComponent>
+      <!--<insertComponent id="ProSuiteItem_ProjectItem" className="ProSuite.AGP.Solution.ProjectItem.ProSuiteProjectItem"
+                       containerType="ProSuiteContainer">
+        <content displayName="Worklist" fileExtension="iwl" isContainer="true" keywords="worklist"
+                 contextMenuID="ProSuiteSolution_ProjectItemWorkListContextMenu">
+          <filterFlags>
+            <type id="File" />
+          </filterFlags>
+        </content>
+      </insertComponent>-->
       <!--<insertComponent id="ProSuiteItem_WorkListItem" className="Clients.AGP.ProSuiteSolution.ProjectItem.ProSuiteProjectItemWorkList">
         <content displayName="WorkListItem" isContainer="false" keywords="WorkListItem" contextMenuID="ProSuiteSolution_WorkListContextMenu" />
       </insertComponent>-->
@@ -65,8 +89,8 @@
           <button refID="ProSuiteTools_QA_StartGPServer" size="middle" />
           <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
-          <button refID="Clients_AGP_ProSuiteSolution_WorkList" size="large" />
-          <button refID="Clients_AGP_ProSuiteSolution_AddWorkList" size="large" />
+          <button refID="WorkLists_CreateIssueWorkList" size="large" />
+          <!--<button refID="Clients_AGP_ProSuiteSolution_AddWorkList" size="large" />-->
         </group>
         <group id="ProSuiteTools_QA_Hidden" caption="" appearsOnAddInTab="false">
           <button refID="Clients_AGP_ProSuiteSolution_WorkLists_AddWorklistButton" />
@@ -79,10 +103,11 @@
         </group>
         <group id="ProSuiteTools_Selection" caption="Selection Tools" keytip="G1">
           <tool refID="ProSuiteTools_Selection_SelectionTool" size="small" />
-          <button refID="WorkLists_CreateSelectionWorkList" size="small" />
-          <button refID="WorkLists_CreateIssueWorkList" size="small" />
-          <button refID="WorkLists_ShowWorkListsButton" size="small" />
           <button refID="esri_mapping_clearSelectionButton" size="small" />
+          <button refID="WorkLists_ShowWorkListsButton" size="small" />
+          <button refID="WorkLists_CreateSelectionWorkList" size="large" />
+          <!--TODO PickerTool test-->
+          <!--<tool refID="ProSuiteTools_PickWorkListItemTool" size="large" />-->
         </group>
       </groups>
       <controls>
@@ -125,14 +150,14 @@
                 largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation32.png">
           <tooltip heading="Show Logs Window">Show Logs Window<disabledText /></tooltip>
         </button>
-        <button id="Clients_AGP_ProSuiteSolution_AddWorkList" caption="Import WorkList" className="ImportWorkListFile"
+        <!--<button id="Clients_AGP_ProSuiteSolution_AddWorkList" caption="Import WorkList" className="ImportWorkListFile"
                 loadOnClick="true"
                 smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png"
                 largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Import Worklist file">
             Import and add worklist file(wl) to project<disabledText />
           </tooltip>
-        </button>
+        </button>-->
         <button id="Clients_AGP_ProSuiteSolution_WorkLists_AddWorklistButton" caption="Add Work List To Current Map" className="WorkLists.AddWorklistButton"
                 loadOnClick="true"
                 smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/AddContent16.png"
@@ -140,23 +165,24 @@
           <tooltip heading="Add Work List To Current Map">Add work list to the active map and open navigator.<disabledText />
           </tooltip>
         </button>
-        <!--<button id="Clients_AGP_ProSuiteSolution_WorkList" caption="WorkList" className="ShowWorkListWindow" loadOnClick="true" smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png" largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
-          <tooltip heading="Show Error Worklist">Show Error Worklist<disabledText /></tooltip>
-        </button>-->
-        <button id="WorkLists_CreateSelectionWorkList" caption="Show Selection WorkList"
-                className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true"
-                smallImage="Images/NavigateSelectionCmd16.png" largeImage="Images/NavigateSelectionCmd32.png">
+        <button id="WorkLists_CreateSelectionWorkList" caption="Show Selection Work List"
+                className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true" 
+                condition="esri_mapping_activeMapView_hasFeatureSelectionCondition"
+                smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateSelectionCmd16.png" 
+                largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateSelectionCmd32.png">
           <tooltip heading="Show Selection Work List">
             Show Selection Work List for iterating on selected items
-            <disabledText />
+            <disabledText>No features selected.</disabledText>
           </tooltip>
         </button>
         <button id="WorkLists_CreateIssueWorkList" caption="Show Issue Work List"
                 className="WorkLists.CreateIssueWorkListButton" loadOnClick="true"
-                smallImage="Images/NavigateErrorsCmd16.png" largeImage="Images/NavigateErrorsCmd32.png">
+                condition="esri_mapping_mapPane"
+                smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateErrorsCmd16.png"
+                largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateErrorsCmd32.png">
           <tooltip heading="Show Issue Work List">
             Show Issue Work List for iterating on issue items
-            <disabledText />
+            <disabledText>No active map.</disabledText>
           </tooltip>
         </button>
         <tool id="ProSuiteTools_Editing_EraseTool" caption="EraseTool " className="Editing.EraseTool"
@@ -202,9 +228,11 @@ O: Additional options
             Select features for use with the selection worklist<disabledText />
           </tooltip>
         </tool>
-        <tool id="ProSuiteTools_PickWorkListItemTool" caption="PickWorkListItem"
-              className="Selection.PickWorkListItemTool" loadOnClick="true" smallImage="Images\SelectionTool.png"
-              largeImage="Images\SelectionTool.png" condition="esri_mapping_mapPane">
+        <tool id="ProSuiteTools_PickWorkListItemTool" caption="Picker Tool"
+              className="Selection.PickWorkListItemTool" loadOnClick="true"
+              smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png"
+              largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png"
+              condition="esri_mapping_mapPane">
           <tooltip heading="Pick WorkItem Tool">
             Pick a workitem for setting it as current work item<disabledText />
           </tooltip>
@@ -216,11 +244,11 @@ O: Additional options
           <tooltip heading="Tooltip Heading">Tooltip text<disabledText /></tooltip>
         </button>
         <button id="WorkLists_ShowWorkListsButton" caption="Open Work List" className="WorkLists.ShowWorkListsButton"
-                loadOnClick="true"
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png"
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
-          <tooltip heading="Show Work Lists for Work List Layers">
-            <disabledText />
+                loadOnClick="true" condition="esri_mapping_mapPane"
+                smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd16.png"
+                largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd32.png">
+          <tooltip heading="Show Work Lists for present Work List Layers in TOC">
+						<disabledText>No active map.</disabledText>
           </tooltip>
         </button>
       </controls>
@@ -239,8 +267,13 @@ O: Additional options
           <button refID="esri_folderConnectionAddButton" />
           <!--<button refID="esri_DeleteItem" />-->
         </menu>
-        <menu id="ProSuiteSolution_ProjectItemWorkListContextMenu" caption="ProSuite Project Item">
+        <menu id="ProSuiteSolution_ProjectItemWorkListContextMenu">
           <button refID="Clients_AGP_ProSuiteSolution_WorkLists_AddWorklistButton" />
+          <button refID="esri_core_rename" />
+          <button refID="esri_DeleteItem" />
+        </menu>
+        <menu id="ProSuiteSolution_ProjectItemContainerWorkListContextMenu">
+          <button refID="esri_itemInfoRefreshButton" />
         </menu>
         <menu id="ProSuiteSolution_WorkListContextMenu" caption="Work list">
           <button refID="esri_DeleteItem" />

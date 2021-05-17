@@ -1,7 +1,7 @@
 using System;
 using System.Text.RegularExpressions;
 
-namespace ProSuite.Processing.Domain
+namespace ProSuite.DomainModel.Core.Processing
 {
 	[Flags]
 	public enum ProcessSelectionType

@@ -27,6 +27,9 @@ namespace ProSuite.Commons.AGP.WPF
 			}
 		}
 
+		// todo daro revise method signature. Could be replaces with
+		// async Task TryAsync([NotNull] Task action, [NotNull] IMsg msg,[CallerMemberName] string caller = null)
+		// ??
 		public static async Task TryAsync([NotNull] Func<Task> func, [NotNull] IMsg msg,
 		                                  [CallerMemberName] string caller = null)
 		{

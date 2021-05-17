@@ -18,7 +18,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 	{
 		private readonly string _templateLayer = "Selection Work List.lyrx";
 
-		public override string FileSuffix => ".xml.swl";
+		public override string FileSuffix => ".swl";
 
 		protected override IEnumerable<BasicFeatureLayer> GetLayers(Map map)
 		{

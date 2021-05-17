@@ -65,9 +65,8 @@
     <Compile Include="Carto\MapUtils.cs" />
     <Compile Include="Carto\SelectionUtils.cs" />
     <Compile Include="Carto\TargetFeatureSelection.cs" />
-    <Compile Include="CIM\CimDatasetReference.cs" />
-    <Compile Include="CIM\CimFeatureWorkspaceReference.cs" />
     <Compile Include="Framework\PaneUtils.cs" />
+    <Compile Include="Framework\ProjectItemUtils.cs" />
     <Compile Include="Framework\QueuedTaskUtils.cs" />
     <Compile Include="Gdb\GdbQueryUtils.cs" />
     <Compile Include="Gdb\GdbRowIdentity.cs" />

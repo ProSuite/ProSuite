@@ -15,7 +15,8 @@ namespace ProSuite.Microservices.Client
 	{
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-		public static IList<ChannelOption> CreateChannelOptions(int maxMessageLength)
+		public static IList<ChannelOption> CreateChannelOptions(int maxMessageLength,
+		                                                        bool disableProxy = false)
 		{
 			var maxMsgSendLengthOption = new ChannelOption(
 				"grpc.max_send_message_length", maxMessageLength);
@@ -28,6 +29,11 @@ namespace ProSuite.Microservices.Client
 				                     maxMsgSendLengthOption,
 				                     maxMsgReceiveLengthOption
 			                     };
+
+			if (disableProxy)
+			{
+				channelOptions.Add(new ChannelOption("grpc.enable_http_proxy", 0));
+			}
 
 			return channelOptions;
 		}
@@ -88,10 +94,15 @@ namespace ProSuite.Microservices.Client
 			ChannelCredentials credentials,
 			int maxMessageLength)
 		{
-			_msg.DebugFormat("Creating channel to {0} on port {1}", host, port);
+			// Sometimes the localhost is not configured as exception in the proxy settings:
+			bool disableProxy =
+				string.Equals(host, "localhost", StringComparison.InvariantCultureIgnoreCase);
+
+			_msg.DebugFormat("Creating channel to {0} on port {1}. Disabling proxy: {2}",
+			                 host, port, disableProxy);
 
 			return new Channel(host, port, credentials,
-			                   CreateChannelOptions(maxMessageLength));
+			                   CreateChannelOptions(maxMessageLength, disableProxy));
 		}
 
 		/// <summary>

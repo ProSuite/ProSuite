@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Windows.Data;
 using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
@@ -10,13 +11,24 @@ using Button = ArcGIS.Desktop.Framework.Contracts.Button;
 
 namespace ProSuite.AGP.Solution.LoggerUI
 {
-    public class ProSuiteLogPaneViewModel : DockPane, IDisposable
+    public class ProSuiteLogPaneViewModel : DockPane, IDisposable, INotifyPropertyChanged
     {
         private const string _dockPaneID = "ProSuiteTools_Logger_ProSuiteLogPane";
 		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
 		public ObservableCollection<LoggingEventItem> LogMessageList { get; set; }
         public readonly object _lockLogMessages = new object();
+
+		private LoggingEventItem _selectedRow;
+		public LoggingEventItem SelectedRow
+		{
+			get => _selectedRow;
+			set 
+			{
+				_selectedRow = value;
+				NotifyPropertyChanged(nameof(SelectedRow));
+			}
+		}
 
 		//private LoggingEventsAppender _appenderDelegate = new LoggingEventsAppender();
 		private readonly List<LogType> _disabledLogTypes = new List<LogType>();
@@ -81,7 +93,7 @@ namespace ProSuite.AGP.Solution.LoggerUI
 
         private RelayCommand _openMessage;
 
-        public ICommand OpenMessage
+        public RelayCommand OpenMessage
         {
             get
             {
@@ -93,8 +105,10 @@ namespace ProSuite.AGP.Solution.LoggerUI
         private void OpenLogMessage(object msg)
         {
             var message = (LoggingEventItem) msg;
-			_msg.Info($"Open message: {message?.Time} {message?.Message}");
+			if (message == null)
+				return;
 
+			//_msg.Info($"Open message: {message?.Time} {message?.Message}");
 			LogMessageActionEvent.Publish(new LogMessageActionEventArgs(message, LogMessageAction.Details));
 		}
 
@@ -108,15 +122,6 @@ namespace ProSuite.AGP.Solution.LoggerUI
                 return _openLinkMessage ??
                        (_openLinkMessage = new RelayCommand(OpenLogLinkMessage, () => true));
             }
-        }
-
-        public static bool Visible
-        {
-	        get
-	        {
-		        var pane = (ProSuiteLogPaneViewModel)FrameworkApplication.DockPaneManager.Find(_dockPaneID);
-		        return pane != null && pane.IsVisible;
-	        }
         }
 
         private static void OpenLogLinkMessage(object msg)
@@ -163,13 +168,13 @@ namespace ProSuite.AGP.Solution.LoggerUI
 			return _disabledLogTypes.Contains(logItem.Type);
 		}
 
-		internal static void ToggleDockWindowVisibility(bool show)
+		internal static void ToggleDockWindowVisibility()
 		{
 			var pane = (ProSuiteLogPaneViewModel)FrameworkApplication.DockPaneManager.Find(_dockPaneID);
 			if (pane == null)
 				return;
 
-			if (show)
+			if (!pane.IsVisible)
 				pane.Activate();
 			else
 				if (pane.IsVisible)
@@ -189,6 +194,20 @@ namespace ProSuite.AGP.Solution.LoggerUI
 				pane.Hide();
 		}
 
+		protected override void OnShow(bool isVisible)
+		{
+			UpdateLogBtn(isVisible);
+		}
+
+		private void UpdateLogBtn(bool visible)
+		{
+			var buttonWrapper = FrameworkApplication.GetPlugInWrapper("ProSuiteTools_Logger_ProSuiteLogPane_ShowButton");
+			if (buttonWrapper == null) return;
+
+			buttonWrapper.Caption = visible? "Hide Log" : "Show Log";
+			buttonWrapper.Checked = visible;
+		}
+
 		internal static void GenerateMockMessages(int number)
 		{
 			var i = 0;
@@ -206,21 +225,13 @@ namespace ProSuite.AGP.Solution.LoggerUI
     /// </summary>
     internal class ProSuiteLogPane_ShowButton : Button
     {
-	    private readonly string _hideLog = "Hide Log";
-	    private readonly string _showLog = "Show Log";
-
 		public ProSuiteLogPane_ShowButton()
 	    {
-		    Caption = ProSuiteLogPaneViewModel.Visible ? _hideLog : _showLog;
-		    IsChecked = ProSuiteLogPaneViewModel.Visible;
 	    }
         protected override void OnClick()
         {
-			IsChecked = !IsChecked;
-			Caption = IsChecked ? _hideLog : _showLog;
-			ProSuiteLogPaneViewModel.ToggleDockWindowVisibility(IsChecked);
+			ProSuiteLogPaneViewModel.ToggleDockWindowVisibility();
 		}
-
 
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Windows.Controls;
 
 namespace ProSuite.AGP.Solution.WorkListUI.Views
