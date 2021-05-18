@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 using Grpc.Core;
+using Grpc.Health.V1;
 using ProSuite.Commons.Cryptography;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -36,6 +38,7 @@ namespace ProSuite.Microservices.Client
 			return channelOptions;
 		}
 
+		[NotNull]
 		public static ChannelCredentials CreateChannelCredentials(
 			bool useTls,
 			[CanBeNull] string clientCertificate = null)
@@ -100,6 +103,84 @@ namespace ProSuite.Microservices.Client
 
 			return new Channel(host, port, credentials,
 			                   CreateChannelOptions(maxMessageLength, disableProxy));
+		}
+
+		/// <summary>
+		/// Determines whether the specified endpoint is connected to the specified service
+		/// that responds with health status 'Serving' .
+		/// </summary>
+		/// <param name="healthClient"></param>
+		/// <param name="serviceName"></param>
+		/// <param name="statusCode">Status code from the RPC call</param>
+		/// <returns></returns>
+		public static bool IsServing([NotNull] Health.HealthClient healthClient,
+		                             [NotNull] string serviceName,
+		                             out StatusCode statusCode)
+		{
+			statusCode = StatusCode.Unknown;
+
+			try
+			{
+				HealthCheckResponse healthResponse =
+					healthClient.Check(new HealthCheckRequest()
+					                   {Service = serviceName});
+
+				statusCode = StatusCode.OK;
+
+				return healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving;
+			}
+			catch (RpcException rpcException)
+			{
+				_msg.Debug($"Error checking health of service {serviceName}", rpcException);
+
+				statusCode = rpcException.StatusCode;
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error checking health of service {serviceName}", e);
+				return false;
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// Determines whether the specified endpoint is connected to the specified service
+		/// that responds with health status 'Serving' .
+		/// </summary>
+		/// <param name="healthClient"></param>
+		/// <param name="serviceName"></param>
+		/// <returns>StatusCode.OK if the service is healthy.</returns>
+		public static async Task<StatusCode> IsServingAsync(
+			[NotNull] Health.HealthClient healthClient,
+			[NotNull] string serviceName)
+		{
+			StatusCode statusCode = StatusCode.Unknown;
+
+			try
+			{
+				HealthCheckResponse healthResponse =
+					await healthClient.CheckAsync(new HealthCheckRequest()
+					                              {Service = serviceName});
+
+				statusCode =
+					healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving
+						? StatusCode.OK
+						: StatusCode.ResourceExhausted;
+			}
+			catch (RpcException rpcException)
+			{
+				_msg.Debug($"Error checking health of service {serviceName}", rpcException);
+
+				statusCode = rpcException.StatusCode;
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error checking health of service {serviceName}", e);
+				return statusCode;
+			}
+
+			return statusCode;
 		}
 	}
 }

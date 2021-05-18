@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Threading;
+using System.Threading.Tasks;
 using CommandLine;
 using Grpc.Core;
 using Grpc.HealthCheck;
@@ -36,8 +36,7 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 
 		private const string _verboseLoggingEnvVar = "PROSUITE_MICROSERVICE_VERBOSE_LOGGING";
 
-		[STAThread]
-		static void Main(string[] args)
+		static async Task Main(string[] args)
 		{
 			try
 			{
@@ -48,10 +47,9 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 
 				while (true)
 				{
-					// Avoid mindless spinning
-					Thread.Sleep(100);
+					await Task.Delay(100);
 
-					if (System.Console.KeyAvailable)
+					if (Environment.UserInteractive && System.Console.KeyAvailable)
 					{
 						if (System.Console.ReadKey(true).Key == ConsoleKey.Q)
 						{
@@ -101,17 +99,10 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 
 				ConfigureLogging(arguments.VerboseLogging, _logConfigFileName);
 
-				var arcGisProductEnvVar = "VSArcGISProduct";
-
-				string vsArcGISProductValue =
-					Environment.GetEnvironmentVariable(arcGisProductEnvVar);
-
 				// Read the RuntimeUtils.Version to initialize it and use fall-back implementation
 				// to avoid subsequent hang once the license has been initialized (this is probably
 				// only relevant for 10.x).
-				_msg.DebugFormat(
-					"Installed ArcGIS Version: {0}. Product Environment Variable {1}: {2}",
-					RuntimeUtils.Version, arcGisProductEnvVar, vsArcGISProductValue);
+				_msg.DebugFormat("Installed ArcGIS Version: {0}.", RuntimeUtils.Version);
 
 				if (configFilePath != null)
 				{
@@ -129,8 +120,7 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 
 				_msg.InfoFormat("Checking out ArcGIS license...");
 
-				ArcGISLicenses lic = new ArcGISLicenses();
-				lic.Checkout();
+				ComUtils.ExecuteInStaThread(CheckoutLicense);
 
 				EnvironmentUtils.SetConfigurationDirectoryProvider(
 					ConfigurationUtils.GetAppDataConfigDirectoryProvider());
@@ -146,8 +136,8 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 			return server;
 		}
 
-		public static Grpc.Core.Server StartServer([NotNull] MicroserverArguments arguments,
-		                                           out IServiceHealth health)
+		private static Grpc.Core.Server StartServer([NotNull] MicroserverArguments arguments,
+		                                            out IServiceHealth health)
 		{
 			// TODO: Move to ProSuite
 			var healthService = new HealthServiceImpl();
@@ -203,13 +193,20 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 			return server;
 		}
 
+		private static bool CheckoutLicense()
+		{
+			ArcGISLicenses lic = new ArcGISLicenses();
+
+			lic.Checkout();
+
+			_msg.Debug("Successfully checked out ArcGIS license.");
+
+			return true;
+		}
+
 		private static void ConfigureLogging(bool verboseRequired,
 		                                     [NotNull] string logConfigFileName)
 		{
-			int processId = Process.GetCurrentProcess().Id;
-
-			//LoggingConfigurator.SetGlobalProperty("LogFileSuffix", $"PID_{processId}");
-
 			AppLoggingConfigurator.Configure(logConfigFileName);
 
 			_msg.ReportMemoryConsumptionOnError = true;

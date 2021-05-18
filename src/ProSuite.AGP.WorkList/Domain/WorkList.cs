@@ -32,7 +32,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		private readonly object _syncLock = new object();
 
 		[NotNull]
-		protected IWorkItemRepository Repository { get; }
+		public IWorkItemRepository Repository { get; }
 
 		[NotNull] private readonly List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
 		[NotNull] private readonly List<GdbRowIdentity> _invalidRows = new List<GdbRowIdentity>(_initialCapacity);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
@@ -8,7 +8,7 @@ namespace ProSuite.Commons.Geometry.SpatialIndex
 {
 	public class SpatialHashSearcher<T> : ISpatialSearcher<T>
 	{
-		private const int _segmentCountThreshold = 200;
+		private const int _itemCountThreshold = 200;
 
 		private readonly SpatialHashIndex<T> _spatialHashIndex;
 
@@ -27,7 +27,7 @@ namespace ProSuite.Commons.Geometry.SpatialIndex
 		public static SpatialHashSearcher<int> CreateSpatialSearcher(
 			[NotNull] Linestring forLinestring)
 		{
-			if (forLinestring.SegmentCount < _segmentCountThreshold)
+			if (forLinestring.SegmentCount < _itemCountThreshold)
 			{
 				// No benefit, probably even up to 300
 				return null;
@@ -62,7 +62,7 @@ namespace ProSuite.Commons.Geometry.SpatialIndex
 		public static SpatialHashSearcher<SegmentIndex> CreateSpatialSearcher(
 			MultiLinestring multiLinestring, double? knownAverageSegmentLength = null)
 		{
-			if (multiLinestring.SegmentCount < _segmentCountThreshold)
+			if (multiLinestring.SegmentCount < _itemCountThreshold)
 			{
 				return null;
 			}
@@ -94,7 +94,7 @@ namespace ProSuite.Commons.Geometry.SpatialIndex
 		public static SpatialHashSearcher<SegmentIndex> CreateSpatialSearcher(
 			MultiLinestring multiLinestring, double gridSize)
 		{
-			if (multiLinestring.SegmentCount < _segmentCountThreshold)
+			if (multiLinestring.SegmentCount < _itemCountThreshold)
 			{
 				return null;
 			}
@@ -104,6 +104,41 @@ namespace ProSuite.Commons.Geometry.SpatialIndex
 				gridSize, multiLinestring.SegmentCount, 5);
 
 			Populate(result, multiLinestring);
+
+			return result;
+		}
+
+		[CanBeNull]
+		public static SpatialHashSearcher<int> CreateSpatialSearcher<TP>(
+			[NotNull] Multipoint<TP> multipoint) where TP : IPnt
+		{
+			if (multipoint.PointCount < _itemCountThreshold)
+			{
+				// No benefit, probably even up to 300
+				return null;
+			}
+
+			var gridSize =
+				EstimateOptimalGridSize(multipoint.PointCount, multipoint);
+
+			// Avoid very small grid sizes for very vertical geometries
+			if (gridSize < double.Epsilon)
+			{
+				return null;
+			}
+
+			return CreateSpatialSearcher(multipoint, gridSize);
+		}
+
+		[NotNull]
+		public static SpatialHashSearcher<int> CreateSpatialSearcher<TP>(
+			Multipoint<TP> multipoint, double gridSize) where TP : IPnt
+		{
+			var result = new SpatialHashSearcher<int>(
+				multipoint.XMin, multipoint.YMin,
+				gridSize, multipoint.PointCount, 5);
+
+			Populate(result, multipoint);
 
 			return result;
 		}
@@ -158,6 +193,28 @@ namespace ProSuite.Commons.Geometry.SpatialIndex
 			}
 
 			return result;
+		}
+
+		public static double EstimateOptimalGridSize(int pointCount, IBoundedXY envelopeXY)
+		{
+			if (pointCount == 0)
+			{
+				// Indexing is not necessary
+				return -1;
+			}
+
+			double geometryHeight = envelopeXY.YMax - envelopeXY.YMin;
+			double geometryWidth = envelopeXY.XMax - envelopeXY.XMin;
+
+			// avoid division by 0
+			geometryHeight = MathUtils.AreEqual(geometryHeight, 0) ? 1 : geometryHeight;
+			geometryWidth = MathUtils.AreEqual(geometryWidth, 0) ? 1 : geometryWidth;
+
+			double pointDensity = pointCount / geometryHeight / geometryWidth;
+
+			double pointSpacing = 1 / Math.Sqrt(pointDensity);
+
+			return pointSpacing * 2;
 		}
 
 		public static double EstimateOptimalGridSize(IEnumerable<Linestring> geometries)
@@ -249,6 +306,16 @@ namespace ProSuite.Commons.Geometry.SpatialIndex
 			yMax = Math.Min(yMax, knownBounds.YMax);
 
 			return Search(xMin, yMin, xMax, yMax, tolerance, predicate);
+		}
+
+		private static void Populate(SpatialHashSearcher<int> spatialSearcher,
+		                             IPointList pointList)
+		{
+			for (var i = 0; i < pointList.PointCount; i++)
+			{
+				IPnt pnt = pointList.GetPoint(i);
+				spatialSearcher.Add(i, pnt.X, pnt.Y, pnt.X, pnt.Y);
+			}
 		}
 
 		private static void Populate(SpatialHashSearcher<int> spatialSearcher,

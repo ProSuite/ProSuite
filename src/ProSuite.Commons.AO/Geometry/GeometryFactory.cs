@@ -2551,6 +2551,17 @@ namespace ProSuite.Commons.AO.Geometry
 		}
 
 		[NotNull]
+		public static IMultipoint CreateEmptyMultipoint(
+			bool zAware, bool mAware, [CanBeNull] ISpatialReference spatialReference = null)
+		{
+			var result = new MultipointClass();
+
+			ConfigureGeometry(result, spatialReference, zAware, mAware, false);
+
+			return result;
+		}
+
+		[NotNull]
 		public static IMultiPatch CreateEmptyMultiPatch([NotNull] IGeometry prototype)
 		{
 			Assert.ArgumentNotNull(prototype, nameof(prototype));

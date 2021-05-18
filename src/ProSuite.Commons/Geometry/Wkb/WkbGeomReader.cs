@@ -112,7 +112,7 @@ namespace ProSuite.Commons.Geometry.Wkb
 			}
 		}
 
-		public IEnumerable<IPnt> ReadMultiPoint(Stream stream)
+		public Multipoint<IPnt> ReadMultiPoint(Stream stream)
 		{
 			using (BinaryReader reader = InitializeReader(stream))
 			{
@@ -125,14 +125,14 @@ namespace ProSuite.Commons.Geometry.Wkb
 						$"Cannot read {geometryType} as point.");
 				}
 
-				uint pointCount = reader.ReadUInt32();
+				int pointCount = checked((int) reader.ReadUInt32());
 
-				IPointFactory<IPnt> builder = new PntFactory();
+				var geometryBuilder = new GeomBuilder(false);
 
-				for (int i = 0; i < pointCount; i++)
-				{
-					yield return ReadPointCore(reader, ordinates, builder);
-				}
+				Multipoint<IPnt> multipoint =
+					ReadMultipointCore(reader, ordinates, pointCount, geometryBuilder);
+
+				return multipoint;
 			}
 		}
 

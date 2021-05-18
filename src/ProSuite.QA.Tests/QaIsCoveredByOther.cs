@@ -1333,7 +1333,7 @@ namespace ProSuite.QA.Tests
 				if (_validUncoveredGeometryConstraint != null &&
 				    _validUncoveredGeometryConstraint.IsFulfilled(part))
 				{
-					return NoError;
+					continue;
 				}
 
 				errorCount += ReportError(partlyCoveredDescription, part,

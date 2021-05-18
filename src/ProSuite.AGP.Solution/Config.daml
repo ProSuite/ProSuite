@@ -20,17 +20,17 @@
         <content type="ProSuiteContainer" displayName="ProSuite"
                  contextMenu="ProSuiteSolution_ProjectItemContainerMenu" />
       </insertComponent>-->
+      <!-- ATTENTION: for the container it is 'contextMenu' not 'contextMenuID' like for the items-->
       <insertComponent id="Worklist_WorklistsContainer"
                        className="ProSuite.AGP.Solution.ProjectItem.WorklistsContainer" insert="before"
                        placeWith="esri_geodatabase_folderConnectionContainer">
-        <content type="ProSuite.AGP.Solution.ProjectItem.WorkListsContainer" displayName="Work Lists" />
+        <content type="ProSuite.AGP.Solution.ProjectItem.WorklistsContainer" displayName="Work Lists" />
       </insertComponent>
     </updateCategory>
     <updateCategory refID="esri_customItems">
       <insertComponent id="Worklist_IssueWorklistItem" className="ProSuite.AGP.Solution.ProjectItem.IssueWorklistItem"
-                       containerType="ProSuite.AGP.Solution.ProjectItem.WorkListsContainer">
-        <!--TODO: Modify the fileExtension attribute to your unique custom item's file extension.-->
-        <content displayName="we have an issue" fileExtension="iwl" isContainer="false" keywords="work list"
+                       containerType="ProSuite.AGP.Solution.ProjectItem.WorklistsContainer">
+        <content displayName="Issue Work List" fileExtension="iwl" isContainer="false" keywords="work list"
                  contextMenuID="ProSuiteSolution_ProjectItemWorkListContextMenu">
           <filterFlags>
             <type id="File" />
@@ -38,8 +38,8 @@
         </content>
       </insertComponent>
       <insertComponent id="Worklist_SelectionWorklistItem" className="ProSuite.AGP.Solution.ProjectItem.SelectionWorklistItem"
-                       containerType="ProSuite.AGP.Solution.ProjectItem.WorkListsContainer">
-        <content displayName="selected stuff" fileExtension="swl" isContainer="false" keywords="work list"
+                       containerType="ProSuite.AGP.Solution.ProjectItem.WorklistsContainer">
+        <content displayName="Selection Work List" fileExtension="swl" isContainer="false" keywords="work list"
                  contextMenuID="ProSuiteSolution_ProjectItemWorkListContextMenu">
           <filterFlags>
             <type id="File" />
@@ -267,8 +267,13 @@ O: Additional options
           <button refID="esri_folderConnectionAddButton" />
           <!--<button refID="esri_DeleteItem" />-->
         </menu>
-        <menu id="ProSuiteSolution_ProjectItemWorkListContextMenu" caption="ProSuite Project Item">
+        <menu id="ProSuiteSolution_ProjectItemWorkListContextMenu">
           <button refID="Clients_AGP_ProSuiteSolution_WorkLists_AddWorklistButton" />
+          <button refID="esri_core_rename" />
+          <button refID="esri_DeleteItem" />
+        </menu>
+        <menu id="ProSuiteSolution_ProjectItemContainerWorkListContextMenu">
+          <button refID="esri_itemInfoRefreshButton" />
         </menu>
         <menu id="ProSuiteSolution_WorkListContextMenu" caption="Work list">
           <button refID="esri_DeleteItem" />

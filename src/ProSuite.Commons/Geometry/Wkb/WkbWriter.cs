@@ -121,9 +121,9 @@ namespace ProSuite.Commons.Geometry.Wkb
 			}
 		}
 
-		private void WritePointCore(IPointList linestring, int index, Ordinates ordinates)
+		protected void WritePointCore(IPointList pointList, int index, Ordinates ordinates)
 		{
-			linestring.GetCoordinates(index, out double x, out double y, out double z);
+			pointList.GetCoordinates(index, out double x, out double y, out double z);
 
 			// NaN is not allowed
 			WriteXyCoordinates(x, y);

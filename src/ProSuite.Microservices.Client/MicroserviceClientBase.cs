@@ -10,6 +10,7 @@ using Grpc.Health.V1;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
+using Quaestor.ServiceDiscovery;
 
 namespace ProSuite.Microservices.Client
 {
@@ -29,10 +30,13 @@ namespace ProSuite.Microservices.Client
 		{
 			HostName = host;
 			Port = port;
+			UseTls = useTls;
+			ClientCertificate = clientCertificate;
 
 			if (Port >= 0)
 			{
-				OpenChannel(useTls, clientCertificate);
+				bool assumeLoadBalancer = host != _localhost;
+				OpenChannel(useTls, clientCertificate, assumeLoadBalancer);
 			}
 			else
 			{
@@ -49,11 +53,21 @@ namespace ProSuite.Microservices.Client
 
 		public int Port { get; private set; }
 
+		protected bool UseTls { get; }
+
+		protected string ClientCertificate { get; }
+
 		[CanBeNull]
 		protected Channel Channel { get; set; }
 
-		[CanBeNull]
+		protected bool ChannelIsLoadBalancer { get; set; }
+
+		[NotNull]
 		protected abstract string ServiceName { get; }
+
+		[NotNull]
+		private string ChannelServiceName =>
+			ChannelIsLoadBalancer ? nameof(ServiceDiscoveryGrpc) : ServiceName;
 
 		public void Disconnect()
 		{
@@ -72,9 +86,9 @@ namespace ProSuite.Microservices.Client
 			}
 		}
 
-		public async Task<bool> AllowStartingLocalServerAsync([NotNull] string executable,
-		                                                      [CanBeNull] string extraArguments =
-			                                                      null)
+		public async Task<bool> AllowStartingLocalServerAsync(
+			[NotNull] string executable,
+			[CanBeNull] string extraArguments = null)
 		{
 			if (! HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase))
 			{
@@ -93,20 +107,22 @@ namespace ProSuite.Microservices.Client
 			return true;
 		}
 
-		public void AllowStartingLocalServer([NotNull] string executable,
+		public bool AllowStartingLocalServer([NotNull] string executable,
 		                                     [CanBeNull] string extraArguments = null)
 		{
 			if (! HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase))
 			{
-				return;
+				return false;
 			}
 
 			if (CanAcceptCalls())
 			{
-				return;
+				return false;
 			}
 
 			StartLocalServer(executable, extraArguments);
+
+			return true;
 		}
 
 		public bool CanAcceptCalls()
@@ -116,19 +132,14 @@ namespace ProSuite.Microservices.Client
 				return false;
 			}
 
-			try
-			{
-				HealthCheckResponse healthResponse =
-					healthClient.Check(new HealthCheckRequest()
-					                   {Service = ServiceName});
+			string serviceName = ChannelServiceName;
 
-				return healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving;
-			}
-			catch (Exception e)
-			{
-				_msg.Debug($"Error checking health of service {ServiceName}", e);
-				return false;
-			}
+			bool result = GrpcUtils.IsServing(healthClient, serviceName, out StatusCode statusCode);
+
+			_msg.DebugFormat("Service {0} is serving at {1}: {2}. Status: {3}", serviceName,
+			                 Channel?.ResolvedTarget, result, statusCode);
+
+			return result;
 		}
 
 		public async Task<bool> CanAcceptCallsAsync()
@@ -138,22 +149,19 @@ namespace ProSuite.Microservices.Client
 				return false;
 			}
 
-			try
-			{
-				HealthCheckResponse healthResponse =
-					await healthClient.CheckAsync(new HealthCheckRequest()
-					                              {Service = ServiceName});
+			string serviceName = ChannelServiceName;
 
-				return healthResponse.Status == HealthCheckResponse.Types.ServingStatus.Serving;
-			}
-			catch (Exception e)
-			{
-				_msg.Debug($"Error checking health of service {ServiceName}", e);
-				return false;
-			}
+			StatusCode statusCode = await GrpcUtils.IsServingAsync(healthClient, serviceName);
+
+			_msg.DebugFormat("Health status for service {0} at {1}: {2}.", serviceName,
+			                 Channel?.ResolvedTarget, statusCode);
+
+			return statusCode == StatusCode.OK;
 		}
 
-		protected void OpenChannel(bool useTls, string clientCertificate = null)
+		protected void OpenChannel(bool useTls,
+		                           string clientCertificate = null,
+		                           bool assumeLoadBalancer = false)
 		{
 			if (string.IsNullOrEmpty(HostName))
 			{
@@ -161,13 +169,22 @@ namespace ProSuite.Microservices.Client
 				return;
 			}
 
-			var enoughForLargeGeometries = (int) Math.Pow(1024, 3);
-
 			ChannelCredentials credentials =
 				GrpcUtils.CreateChannelCredentials(useTls, clientCertificate);
 
-			Channel = GrpcUtils.CreateChannel(
+			var enoughForLargeGeometries = (int) Math.Pow(1024, 3);
+
+			Channel channel = GrpcUtils.CreateChannel(
 				HostName, Port, credentials, enoughForLargeGeometries);
+
+			if (assumeLoadBalancer)
+			{
+				ChannelIsLoadBalancer =
+					IsServingLoadBalancerEndpoint(channel, credentials, ServiceName,
+					                              enoughForLargeGeometries);
+			}
+
+			Channel = channel;
 
 			_msg.DebugFormat("Created grpc channel to {0} on port {1}", HostName, Port);
 
@@ -177,6 +194,40 @@ namespace ProSuite.Microservices.Client
 		}
 
 		protected abstract void ChannelOpenedCore(Channel channel);
+
+		protected static Channel TryGetChannelFromLoadBalancer(Channel lbChannel,
+		                                                       ChannelCredentials credentials,
+		                                                       string serviceName,
+		                                                       int maxMesssageLength)
+		{
+			ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient lbClient =
+				new ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient(lbChannel);
+
+			DiscoverServicesResponse lbResponse = lbClient.DiscoverTopServices(
+				new DiscoverServicesRequest
+				{
+					ServiceName = serviceName,
+					MaxCount = 1
+				});
+
+			if (lbResponse.ServiceLocations.Count > 0)
+			{
+				ServiceLocationMsg serviceLocation = lbResponse.ServiceLocations[0];
+
+				Channel result = GrpcUtils.CreateChannel(serviceLocation.HostName,
+				                                         serviceLocation.Port, credentials,
+				                                         maxMesssageLength);
+
+				_msg.DebugFormat("The load balancer is suggesting {0}", result.ResolvedTarget);
+
+				return result;
+			}
+
+			// Assumption: A load balancer is never also serving real requests -> lets not use it at all!
+			_msg.Debug("The load balancer has no service locations available.");
+
+			return null;
+		}
 
 		private void StartLocalServer(string executable, string extraArguments)
 		{
@@ -200,6 +251,12 @@ namespace ProSuite.Microservices.Client
 
 					foreach (Process process in runningProcesses)
 					{
+						if (process == Process.GetCurrentProcess())
+						{
+							// No suicide!
+							continue;
+						}
+
 						process.Kill();
 					}
 				}
@@ -222,6 +279,51 @@ namespace ProSuite.Microservices.Client
 				ProcessUtils.StartProcess(executable, arguments, useShellExecute, true);
 
 			_msg.DebugFormat("Started microservice in background. Arguments: {0}", arguments);
+		}
+
+		private static bool IsServingLoadBalancerEndpoint(
+			[NotNull] Channel channel,
+			[NotNull] ChannelCredentials credentials,
+			string serviceName,
+			int enoughForLargeGeometries)
+		{
+			var channelHealth = new Health.HealthClient(channel);
+
+			bool isServingEndpoint = GrpcUtils.IsServing(channelHealth, serviceName, out _);
+
+			if (isServingEndpoint)
+			{
+				return false;
+			}
+
+			bool isLoadBalancer = GrpcUtils.IsServing(channelHealth, nameof(ServiceDiscoveryGrpc),
+			                                          out StatusCode lbStatusCode);
+
+			if (isLoadBalancer)
+			{
+				_msg.DebugFormat("{0} is a load balancer address.", channel.ResolvedTarget);
+
+				Channel suggestedLocation =
+					TryGetChannelFromLoadBalancer(channel, credentials, serviceName,
+					                              enoughForLargeGeometries);
+
+				if (suggestedLocation != null)
+				{
+					_msg.DebugFormat("Using serving load balancer at {0}", channel.ResolvedTarget);
+					return true;
+				}
+
+				// Assumption: A load balancer is never also serving real requests -> lets not use it at all!
+				_msg.Debug(
+					"The load balancer has no service locations available. It will not be used.");
+
+				return false;
+			}
+
+			_msg.DebugFormat("No {0} service and no serving load balancer at {1}. Error code: {2}",
+			                 serviceName, channel.ResolvedTarget, lbStatusCode);
+
+			return false;
 		}
 
 		private bool TryGetHealthClient(out Health.HealthClient healthClient)

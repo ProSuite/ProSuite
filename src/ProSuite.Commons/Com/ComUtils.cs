@@ -185,6 +185,37 @@ namespace ProSuite.Commons.Com
 			return tcs.Task;
 		}
 
+		public static T ExecuteInStaThread<T>(Func<T> func)
+		{
+			Exception ex = null;
+
+			T result = default(T);
+			Thread thread = new Thread(() =>
+			{
+				try
+				{
+					result = func();
+				}
+				catch (Exception e)
+				{
+					ex = e;
+				}
+			});
+
+			thread.IsBackground = true;
+			thread.SetApartmentState(ApartmentState.STA);
+			thread.Start();
+
+			thread.Join();
+
+			if (ex != null)
+			{
+				throw ex;
+			}
+
+			return result;
+		}
+
 		private static bool HasPublicParameterlessConstructor([NotNull] Type type)
 		{
 			Assert.ArgumentNotNull(type, nameof(type));

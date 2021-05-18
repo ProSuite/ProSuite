@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
@@ -22,6 +22,8 @@ namespace ProSuite.Commons.Orm.NHibernate
 		// Session factory is thread-safe and global (maintains 2nd level cache)
 		private static ISessionFactory _sessionFactory;
 
+		private readonly string _sessionFactoryErrorMessage;
+
 		// The session is NOT thread safe
 		private ThreadLocal<ISession> _currentSession;
 
@@ -31,19 +33,28 @@ namespace ProSuite.Commons.Orm.NHibernate
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
-			Configuration configuration = configBuilder.GetConfiguration();
+			try
+			{
+				Configuration configuration = configBuilder.GetConfiguration();
 
-			_sessionFactory = configuration.BuildSessionFactory();
+				_sessionFactory = configuration.BuildSessionFactory();
 
-			_msg.DebugStopTiming(
-				watch,
-				"Configured NHibernate and created session factory using the following configuration: {0}",
-				configuration);
+				_msg.DebugStopTiming(
+					watch, "Successfully configured NHibernate and created session factory.");
+			}
+			catch (Exception e)
+			{
+				// Do not throw - in some applications the DDX is optional (such as field admin).
+				_msg.Debug("Failed to create NHibernate session factory.", e);
+
+				_sessionFactoryErrorMessage = e.Message;
+			}
 		}
 
 		public ISession OpenSession(bool withoutTransaction)
 		{
-			Assert.NotNull(_sessionFactory, nameof(_sessionFactory));
+			Assert.NotNull(_sessionFactory,
+			               _sessionFactoryErrorMessage ?? "Session factory is null");
 
 			if (CurrentSession != null && CurrentSession.IsOpen)
 			{
@@ -115,6 +126,8 @@ namespace ProSuite.Commons.Orm.NHibernate
 				return _currentSession.Value;
 			}
 		}
+
+		public bool Configured => _sessionFactory != null;
 
 		/// <summary>
 		/// An idea for a pattern that could be used e.g. by a domain transaction manager.

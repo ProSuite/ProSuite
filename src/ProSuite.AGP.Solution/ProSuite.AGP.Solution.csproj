@@ -135,6 +135,7 @@
     <Compile Include="ProjectItem\ProSuiteProjectItemWorkList.cs" />
     <Compile Include="ProjectItem\IssueWorklistItem.cs" />
     <Compile Include="ProjectItem\SelectionWorklistItem.cs" />
+    <Compile Include="ProjectItem\WorklistItem.cs" />
     <Compile Include="ProjectItem\WorklistsContainer.cs" />
     <Compile Include="Resource.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -455,6 +456,9 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\WorklistsFolder16.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--

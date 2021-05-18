@@ -117,8 +117,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				                                                out xmlSpecificationCategory);
 
 			Assert.ArgumentCondition(xmlQualitySpecification != null,
-			                         "Specification '{0} not found in document",
-			                         qualitySpecificationName);
+			                         $"Specification '{qualitySpecificationName}' not found in document",
+			                         nameof(qualitySpecificationName));
 
 			XmlDataQualityUtils.AssertUniqueElementNames(xmlQualitySpecification);
 
