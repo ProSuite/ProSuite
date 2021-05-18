@@ -4,6 +4,7 @@ using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;

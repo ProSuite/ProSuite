@@ -8,7 +8,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.QA.Container
+namespace ProSuite.Commons.AO
 {
 	public class EnumCursor : IEnumerable<IRow>
 	{

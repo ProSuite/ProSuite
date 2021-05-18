@@ -98,6 +98,56 @@ namespace ProSuite.Commons.AO.Geodatabase
 			                      out primaryKeyField);
 		}
 
+		[NotNull]
+		public static ITable CreateQueryTable(
+			[NotNull] IFeatureWorkspace workspace,
+			[NotNull] string datasetName,
+			[NotNull] string primaryKey,
+			[NotNull] string tables,
+			[NotNull] string whereClause,
+			[CanBeNull] string subfields = null)
+		{
+			Assert.ArgumentNotNull(workspace, nameof(workspace));
+			Assert.ArgumentNotNullOrEmpty(datasetName, nameof(datasetName));
+			Assert.ArgumentNotNullOrEmpty(primaryKey, nameof(primaryKey));
+			Assert.ArgumentNotNullOrEmpty(tables, nameof(tables));
+			Assert.ArgumentNotNullOrEmpty(whereClause, nameof(whereClause));
+
+			IQueryDef queryDef = workspace.CreateQueryDef();
+
+			queryDef.Tables = tables;
+			queryDef.SubFields = GetTableQuerySubfields(subfields, tables, workspace, primaryKey);
+			queryDef.WhereClause = whereClause;
+
+			IQueryName2 queryName = new FeatureQueryNameClass
+			{
+				PrimaryKey = primaryKey,
+				CopyLocally = false,
+				QueryDef = queryDef
+			};
+			
+			var name = ((IDatasetName)queryName);
+			name.WorkspaceName = WorkspaceUtils.GetWorkspaceName(workspace);
+			name.Name = datasetName;
+
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				_msg.Debug("Creating query-based feature class");
+
+				using (_msg.IncrementIndentation())
+				{
+					_msg.DebugFormat("SELECT {0} FROM {1} WHERE {2}",
+									 queryDef.SubFields,
+									 queryDef.Tables,
+									 queryDef.WhereClause);
+					_msg.DebugFormat("Primary key: {0}", queryName.PrimaryKey);
+					_msg.DebugFormat("FClass name: {0}", datasetName);
+				}
+			}
+
+			return (ITable) ((IName) queryName).Open();
+		}
+
 		/// <summary>
 		/// Creates a query-based feature class.
 		/// </summary>
@@ -300,6 +350,19 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return result;
 		}
 
+
+		[NotNull]
+		private static string GetTableQuerySubfields(
+			[CanBeNull] string subfields,
+			[NotNull] string tableNames,
+			[NotNull] IFeatureWorkspace workspace,
+			[NotNull] string primaryKey)
+		{
+			return IsFullFieldList(subfields)
+				       ? GenerateSafeFullFieldList(tableNames, workspace)
+				       : EnsureSubFields(subfields, primaryKey);
+		}
+
 		[NotNull]
 		private static string GetFeatureClassQuerySubfields(
 			[CanBeNull] string subfields,
@@ -323,11 +386,10 @@ namespace ProSuite.Commons.AO.Geodatabase
 		private static string GenerateSafeFullFieldList(
 			[NotNull] string tableNames,
 			[NotNull] IFeatureWorkspace workspace,
-			[NotNull] string shapeFieldName)
+			string shapeFieldName = null)
 		{
 			Assert.ArgumentNotNullOrEmpty(tableNames, nameof(tableNames));
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
-			Assert.ArgumentNotNullOrEmpty(shapeFieldName, nameof(shapeFieldName));
 
 			var fieldNames = new List<string>();
 
@@ -361,7 +423,10 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			// the shape field must be unqualified
-			fieldNames.Add(shapeFieldName);
+			if (shapeFieldName != null)
+			{
+				fieldNames.Add(shapeFieldName);
+			}
 
 			return StringUtils.Concatenate(fieldNames, ",");
 		}
