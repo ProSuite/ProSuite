@@ -70,6 +70,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// in case any error occurs in this service implementation. Later this might be limited to
 		/// specific, serious errors (such as out-of-memory, TNS could not be resolved).
 		/// </summary>
+		[CanBeNull]
 		public IServiceHealth Health { get; set; }
 
 		/// <summary>
@@ -77,6 +78,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// A reference will also be passed to <see cref="LoadReportingGrpcImpl"/> to report the
 		/// current load to interested load balancers. 
 		/// </summary>
+		[CanBeNull]
 		public ServiceLoad CurrentLoad { get; set; }
 
 		/// <summary>
@@ -85,7 +87,20 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// in a 32-bit process, the server license is checked out in a 64-bit process. In case
 		/// a test requires a specific license or an extension, provide a different function.
 		/// </summary>
+		[CanBeNull]
 		public Func<bool> LicenseAction { get; set; }
+
+		/// <summary>
+		/// The report template path for HTML reports.
+		/// </summary>
+		[CanBeNull]
+		public string HtmlReportTemplatePath { get; set; }
+
+		/// <summary>
+		/// The specification template path for the output HTML specification.
+		/// </summary>
+		[CanBeNull]
+		public string QualitySpecificationTemplatePath { get; set; }
 
 		public override async Task VerifyQuality(
 			VerificationRequest request,
@@ -243,6 +258,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public async Task<bool> EnsureLicenseAsync()
 		{
+			if (LicenseAction == null)
+			{
+				return true;
+			}
+
 			if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
 			{
 				return LicenseAction();
@@ -448,8 +468,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				IGeometry perimeter =
 					ProtobufGeometryUtils.FromShapeMsg(parameters.Perimeter);
 
-				XmlBasedVerificationService qaService =
-					CreateXmlBasedStandaloneService(request);
+				XmlBasedVerificationService qaService = new XmlBasedVerificationService(
+					HtmlReportTemplatePath, QualitySpecificationTemplatePath);
 
 				XmlQualitySpecificationMsg xmlSpecification = request.Specification;
 
@@ -476,7 +496,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 						xmlSpecification.Xml,
 						xmlSpecification.SelectedSpecificationName,
 						dataSources, aoi, null, parameters.TileSize,
-						parameters.IssueFileGdbPath, IssueRepositoryType.FileGdb,
+						request.OutputDirectory, IssueRepositoryType.FileGdb,
 						true, trackCancel);
 				}
 				catch (ArgumentException argumentException)
@@ -503,18 +523,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return trackCancel.Continue()
 				       ? ServiceCallStatus.Finished
 				       : ServiceCallStatus.Cancelled;
-		}
-
-		private static XmlBasedVerificationService CreateXmlBasedStandaloneService(
-			[NotNull] StandaloneVerificationRequest request)
-		{
-			// From local xml options?
-			string specificationTemplatePath = null;
-			XmlBasedVerificationService xmlService = new XmlBasedVerificationService(
-				request.Parameters.HtmlTemplatePath,
-				specificationTemplatePath);
-
-			return xmlService;
 		}
 
 		private static IEnumerable<GdbObjRefMsg> GetDeletableAllowedErrorRefs(
