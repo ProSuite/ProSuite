@@ -71,6 +71,17 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 					? VerificationOptionUtils.ReadOptionsXml(optionsXml)
 					: null;
 
+			string issueWorkspaceName =
+				VerificationOptionUtils.GetIssueWorkspaceName(verificationOptions);
+
+			if (ExternalIssueRepositoryUtils.IssueRepositoryExists(
+				outputDirectoryPath, issueWorkspaceName, issueRepositoryType))
+			{
+				_msg.WarnFormat("The {0} workspace '{1}' in {2} already exists",
+				                issueRepositoryType, issueWorkspaceName, outputDirectoryPath);
+				return;
+			}
+
 			IList<KeyValuePair<string, string>> properties =
 				new List<KeyValuePair<string, string>>();
 
@@ -101,7 +112,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				StandaloneVerificationUtils.TryDeleteOutputDirectory(outputDirectoryPath);
 				throw;
 			}
-
 		}
 
 		[NotNull]
@@ -127,11 +137,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			return document;
 		}
-		
+
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		private bool Verify([NotNull] XmlDataQualityDocument document,
 		                    [NotNull] string specificationName,
-							[NotNull] IEnumerable<DataSource> dataSources,
+		                    [NotNull] IEnumerable<DataSource> dataSources,
 		                    double tileSize,
 		                    [NotNull] string directoryPath,
 		                    IssueRepositoryType issureRepositoryType,
@@ -160,7 +170,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 						new XmlBasedQualitySpecificationFactory(modelFactory, datasetOpener);
 
 					qualitySpecification = factory.CreateQualitySpecification(
-						document, specificationName, dataSources, ignoreConditionsForUnknownDatasets);
+						document, specificationName, dataSources,
+						ignoreConditionsForUnknownDatasets);
 				}
 
 				return Verify(qualitySpecification, tileSize, directoryPath,
