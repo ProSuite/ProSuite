@@ -129,7 +129,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				if (e.ErrorCode == -2147220902)
 				{
-					throw new IOException("File Geodatabase already exists.");
+					throw new IOException(
+						$"File Geodatabase {name} already exists in {directory}.");
 				}
 
 				throw;
