@@ -36,7 +36,7 @@ namespace ProSuite.DomainModel.AO.QA
 			{
 				if (dataset is ObjectDataset objectDataset)
 				{
-					return _datasetContext.OpenObjectClass(objectDataset) != null;
+					return _datasetContext.OpenObjectClass(objectDataset);
 				}
 
 				// TODO: Raster, Mosaic
@@ -46,8 +46,13 @@ namespace ProSuite.DomainModel.AO.QA
 			catch (Exception e)
 			{
 				_msg.VerboseDebug($"Error opening dataset {dataset.Name}", e);
-				return false;
+				return null;
 			}
+		}
+
+		public IRelationshipClass OpenRelationshipClass(Association association)
+		{
+			return _datasetContext.OpenRelationshipClass(association);
 		}
 
 		private object OpenKnownDatasetType(IDdxDataset dataset, Type knownType)
@@ -72,11 +77,6 @@ namespace ProSuite.DomainModel.AO.QA
 					(IDdxRasterDataset) dataset);
 
 			throw new ArgumentException($"Unsupported data type {knownType}");
-		}
-
-		public IRelationshipClass OpenRelationshipClass(Association association)
-		{
-			return _datasetContext.OpenRelationshipClass(association);
 		}
 	}
 }
