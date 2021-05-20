@@ -97,7 +97,7 @@ if ($Product -eq 'Server') {
 			exit(1)		
 		}
 	}
-	$ServerAssemblyPath = '..\..\EsriDE.Commons\lib\ESRI\Server\'
+	$ServerAssemblyPath = "..\..\EsriDE.Commons\lib\ESRI\${env:VSArcGISProduct}\"
 	$FullArcGISAssemblyPath = "${ServerAssemblyPath}${ArcGISVers}"
 	if (-Not (Test-Path $FullArcGISAssemblyPath)) {
 		Print-Error("ArcGISAssemblyPath = ${FullArcGISAssemblyPath} does not exist!")
@@ -109,9 +109,10 @@ if ($Product -eq 'Server') {
 		Write-Host "VSArcGISVersion:		${env:VSArcGISVersion}"
 		Write-Host "VSArcGISProduct:		${env:VSArcGISProduct}"
 		Write-Host "ArcGISAssemblyPath:		${env:ArcGISAssemblyPath}"
+		Write-Host "ArcObjects version:		${ArcObjects}"
+		Write-Host "ESRI DLLs:			${env:ArcGISAssemblyPath}\${env:VSArcGISVersion}ESRI.${env:VSArcGISProduct}.*.dll"
 	}
 }
-
 Write-Host "`n`rBuild parameters:"
 Write-Host "--------------------------"
 Write-Host "Building product:	${Product}"
