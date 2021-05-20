@@ -151,6 +151,7 @@
     <Compile Include="Geometry\ChangeAlong\AdjustUtils.cs" />
     <Compile Include="Geometry\ChangeAlong\ChangeGeometryAlongUtils.cs" />
     <Compile Include="Geometry\ChangeAlong\ConnectLineCalculatorBase.cs" />
+    <Compile Include="Geometry\ChangeAlong\CutPolygonSubcurveCalculator.cs" />
     <Compile Include="Geometry\ChangeAlong\CutSubcurve.cs" />
     <Compile Include="Geometry\ChangeAlong\GeometryReshaper.cs" />
     <Compile Include="Geometry\ChangeAlong\GeometryReshaperBase.cs" />
