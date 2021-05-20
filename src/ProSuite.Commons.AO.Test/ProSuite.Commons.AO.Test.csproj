@@ -98,6 +98,8 @@
     <Compile Include="Geometry\ChangeAlong\ExtentProviderMock.cs" />
     <Compile Include="Geometry\ChangeAlong\ReshapeInfoTest.cs" />
     <Compile Include="Geometry\ChangeAlong\ReshapeUtilsTest.cs" />
+    <Compile Include="Geometry\Cut\CutGeometryUtilsTest.cs" />
+    <Compile Include="Geometry\Cut\FeatureCutterTest.cs" />
     <Compile Include="Geometry\GeometryComparisonTest.cs" />
     <Compile Include="Geometry\GeometryFactoryTest.cs" />
     <Compile Include="Geometry\GeometryIssuesReproTest.cs" />
