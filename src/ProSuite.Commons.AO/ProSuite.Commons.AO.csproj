@@ -167,6 +167,7 @@
     <Compile Include="Geometry\ChangeAlong\ReshapeCurveFilterOptions.cs" />
     <Compile Include="Geometry\ChangeAlong\ReshapeResultFilter.cs" />
     <Compile Include="Geometry\ChangeAlong\ReshapeUtils.cs" />
+    <Compile Include="Geometry\ChangeAlong\StaticExtentProvider.cs" />
     <Compile Include="Geometry\ChangeAlong\StickyIntersectionConnectLineCalculator.cs" />
     <Compile Include="Geometry\ChangeAlong\StickyIntersections.cs" />
     <Compile Include="Geometry\ChangeAlong\StickyIntersectionsMultiplePolygonReshaper.cs" />

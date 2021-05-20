@@ -24,6 +24,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		[NotNull]
 		public static AdvancedReshapeResponse Reshape(
 			[NotNull] AdvancedReshapeRequest request)
 		{
