@@ -772,6 +772,9 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 					leftRingCount, rightRingCount);
 			}
 
+			// TODO: Consider checking ReshapeResultFilter.IsReshapeSideAllowed also for non-default side
+			//       Currently it is labelled a reshape line filter only, so it is not really expected (or is it?)
+			//       Consider a warning at least.
 			bool tryNonDefaultSide = ReshapeResultFilter != null &&
 			                         (ReshapeResultFilter.UseNonDefaultReshapeSide ||
 			                          ! ReshapeResultFilter.IsReshapeSideAllowed(this, reshapeSide,

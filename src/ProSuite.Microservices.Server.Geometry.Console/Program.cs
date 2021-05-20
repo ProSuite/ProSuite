@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -20,6 +19,7 @@ using ProSuite.Commons.Xml;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Server.AO;
 using ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape;
+using ProSuite.Microservices.Server.AO.Geometry.ChangeAlong;
 using ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps;
 
 namespace ProSuite.Microservices.Server.Geometry.Console
@@ -159,6 +159,7 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 			                                };
 
 			var advancedReshapeServiceImpl = new AdvancedReshapeGrpcImpl(taskScheduler);
+			var changeAlongServiceImpl = new ChangeAlongGrpcImpl(taskScheduler);
 
 			//health.SetStatus(removeOverlapsServiceImpl.GetType(), true);
 
@@ -176,7 +177,8 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 					Services =
 					{
 						RemoveOverlapsGrpc.BindService(removeOverlapsServiceImpl),
-						ReshapeGrpc.BindService(advancedReshapeServiceImpl)
+						ReshapeGrpc.BindService(advancedReshapeServiceImpl),
+						ChangeAlongGrpc.BindService(changeAlongServiceImpl)
 						//Health.BindService(healthService)
 					},
 					Ports =
