@@ -7,6 +7,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry.ChangeAlong;
 using ProSuite.Commons.AO.Geometry.ZAssignment;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geometry;
@@ -59,6 +60,8 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 				new List<KeyValuePair<IFeature, IList<IFeature>>>(featuresToCut.Count);
 		}
 
+		public IList<IFeature> SourceFeatures => new ReadOnlyList<IFeature>(_featuresToCut);
+
 		public IFlexibleSettingProvider<ChangeAlongZSource> ZSourceProvider { get; set; }
 
 		public bool ContinueOnFailure { get; set; }
@@ -88,7 +91,7 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 		public ICollection<KeyValuePair<IFeature, IList<IFeature>>>
 			InsertedFeaturesByOriginal { get; }
 
-		public ICollection<IFeature> TargetFeatures { private get; set; }
+		public ICollection<IFeature> TargetFeatures { get; set; }
 
 		public Func<IGeometry, IGeometry, bool> FeatureToCutPredicate { get; set; }
 

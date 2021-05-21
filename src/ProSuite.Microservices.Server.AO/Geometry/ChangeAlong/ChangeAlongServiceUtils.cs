@@ -1,13 +1,18 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using Google.Protobuf.Collections;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.ChangeAlong;
+using ProSuite.Commons.AO.Geometry.Cut;
+using ProSuite.Commons.AO.Geometry.ZAssignment;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
@@ -21,24 +26,16 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		#region Calculate reshape/cut lines
+
 		[NotNull]
 		public static CalculateReshapeLinesResponse CalculateReshapeLines(
 			[NotNull] CalculateReshapeLinesRequest request,
 			[CanBeNull] ITrackCancel trackCancel)
 		{
-			Stopwatch watch = Stopwatch.StartNew();
-
-			IList<IFeature> sourceFeatures =
-				ProtobufConversionUtils.FromGdbObjectMsgList(request.SourceFeatures,
-				                                             request.ClassDefinitions);
-
-			IList<IFeature> targetFeatures =
-				ProtobufConversionUtils.FromGdbObjectMsgList(request.TargetFeatures,
-				                                             request.ClassDefinitions);
-
-			_msg.DebugStopTiming(
-				watch,
-				"CalculateReshapeLinesImpl: Unpacked feature lists from request params");
+			GetFeatures(request.SourceFeatures, request.TargetFeatures,
+			            request.ClassDefinitions,
+			            out IList<IFeature> sourceFeatures, out IList<IFeature> targetFeatures);
 
 			IList<CutSubcurve> resultLines = CalculateReshapeLines(
 				sourceFeatures, targetFeatures, request, trackCancel,
@@ -50,41 +47,75 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			return result;
 		}
 
-		//[NotNull]
-		//public static CalculateCutLinesResponse CalculateCutLines(
-		//	[NotNull] CalculateCutLinesRequest request,
-		//	[CanBeNull] ITrackCancel trackCancel)
-		//{
+		[NotNull]
+		public static CalculateCutLinesResponse CalculateCutLines(
+			[NotNull] CalculateCutLinesRequest request,
+			[CanBeNull] ITrackCancel trackCancel)
+		{
+			GetFeatures(request.SourceFeatures, request.TargetFeatures,
+			            request.ClassDefinitions,
+			            out IList<IFeature> sourceFeatures, out IList<IFeature> targetFeatures);
 
-		//}
+			IList<CutSubcurve> resultLines = CalculateCutLines(
+				sourceFeatures, targetFeatures, request, trackCancel,
+				out ReshapeAlongCurveUsability usability);
+
+			CalculateCutLinesResponse
+				result = PackCalculateCutLinesResponse(usability, resultLines);
+
+			return result;
+		}
+
+		private static IList<CutSubcurve> CalculateCutLines(
+			[NotNull] IList<IFeature> sourceFeatures,
+			[NotNull] IList<IFeature> targetFeatures,
+			[NotNull] CalculateCutLinesRequest calculateCutLinesRequest,
+			[CanBeNull] ITrackCancel trackCancel,
+			out ReshapeAlongCurveUsability usability)
+		{
+			Stopwatch watch = Stopwatch.StartNew();
+
+			IEnvelope visibleExtent;
+			ReshapeCurveFilterOptions filterOptions =
+				GetLineFilterOptions(calculateCutLinesRequest.FilterOptions, out visibleExtent);
+
+			TargetBufferOptions targetBufferOptions =
+				GetTargetBufferOptions(calculateCutLinesRequest.TargetBufferOptions);
+
+			IList<CutSubcurve> resultLines = new List<CutSubcurve>();
+
+			usability = ChangeGeometryAlongUtils.CalculateCutCurves(
+				sourceFeatures, targetFeatures, visibleExtent, calculateCutLinesRequest.Tolerance,
+				targetBufferOptions, filterOptions,
+				resultLines, trackCancel);
+
+			_msg.DebugStopTiming(watch, "Calculated {0} reshape lines", resultLines.Count);
+
+			return resultLines;
+		}
 
 		[NotNull]
 		private static IList<CutSubcurve> CalculateReshapeLines(
 			[NotNull] IList<IFeature> sourceFeatures,
 			[NotNull] IList<IFeature> targetFeatures,
-			CalculateReshapeLinesRequest request,
-			ITrackCancel trackCancel,
+			[NotNull] CalculateReshapeLinesRequest request,
+			[CanBeNull] ITrackCancel trackCancel,
 			out ReshapeAlongCurveUsability usability)
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
-			List<IEnvelope> extents;
+			IEnvelope visibleExtent;
 			ReshapeCurveFilterOptions filterOptions =
-				GetLineFilterOptions(request, out extents);
+				GetLineFilterOptions(request.FilterOptions, out visibleExtent);
 
-			TargetBufferOptions targetBufferOptions = GetTargetBufferOptions(request);
+			TargetBufferOptions targetBufferOptions =
+				GetTargetBufferOptions(request.TargetBufferOptions);
 
 			IList<CutSubcurve> resultLines = new List<CutSubcurve>();
 
-			// TODO: Determine the policy on the main map extent vs. any visible extent?
-			IEnvelope visibleExtent = extents?.Count > 0 ? extents[0] : null;
-
-			// TODO: Actual tolerance that can be specified (using double for forward compatibility)
-			bool useMinimalTolerance = MathUtils.AreEqual(0, request.Tolerance);
-
 			usability = ChangeGeometryAlongUtils.CalculateReshapeCurves(
 				sourceFeatures, targetFeatures, visibleExtent,
-				useMinimalTolerance, targetBufferOptions, filterOptions,
+				request.Tolerance, targetBufferOptions, filterOptions,
 				resultLines, trackCancel);
 
 			_msg.DebugStopTiming(watch, "Calculated {0} reshape lines", resultLines.Count);
@@ -93,42 +124,51 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 		}
 
 		private static TargetBufferOptions GetTargetBufferOptions(
-			CalculateReshapeLinesRequest request)
+			[CanBeNull] TargetBufferOptionsMsg targetBufferOptionsMsg)
 		{
-			TargetBufferOptionsMsg targetBufferOptionsMsg = request.TargetBufferOptions;
+			if (targetBufferOptionsMsg == null)
+			{
+				return new TargetBufferOptions();
+			}
 
-			TargetBufferOptions targetBufferOptions =
-				targetBufferOptionsMsg == null
-					? new TargetBufferOptions()
-					: new TargetBufferOptions(
-						targetBufferOptionsMsg.BufferDistance,
-						targetBufferOptionsMsg.BufferMinimumSegmentLength);
+			var targetBufferOptions = new TargetBufferOptions(
+				targetBufferOptionsMsg.BufferDistance,
+				targetBufferOptionsMsg.BufferMinimumSegmentLength);
+
 			return targetBufferOptions;
 		}
 
+		[NotNull]
 		private static ReshapeCurveFilterOptions GetLineFilterOptions(
-			CalculateReshapeLinesRequest request, out List<IEnvelope> extents)
+			[CanBeNull] ReshapeLineFilterOptionsMsg filterOptionsMsg,
+			[CanBeNull] out IEnvelope visibleExtent)
 		{
-			ReshapeLineFilterOptionsMsg filterOptionsMsg = request.FilterOptions;
+			visibleExtent = null;
 
-			ReshapeCurveFilterOptions filterOptions =
-				filterOptionsMsg == null
-					? new ReshapeCurveFilterOptions()
-					: new ReshapeCurveFilterOptions(
-						filterOptionsMsg.ClipLinesOnVisibleExtent,
-						filterOptionsMsg.ExcludeOutsideTolerance,
-						filterOptionsMsg.ExcludeOutsideSource,
-						filterOptionsMsg.ExcludeResultingInOverlaps);
+			if (filterOptionsMsg == null)
+			{
+				return new ReshapeCurveFilterOptions();
+			}
 
-			extents = filterOptionsMsg?.VisibleExtents.Select(
-				                          ProtobufGeometryUtils.FromEnvelopeMsg)
-			                          .ToList();
+			var result = new ReshapeCurveFilterOptions(
+				filterOptionsMsg.ClipLinesOnVisibleExtent,
+				filterOptionsMsg.ExcludeOutsideTolerance,
+				filterOptionsMsg.ExcludeOutsideSource,
+				filterOptionsMsg.ExcludeResultingInOverlaps);
 
-			return filterOptions;
+			List<IEnvelope> extents = filterOptionsMsg.VisibleExtents.Select(
+				                                          ProtobufGeometryUtils.FromEnvelopeMsg)
+			                                          .ToList();
+
+			// TODO: Determine the policy on the main map extent vs. any visible extent?
+			visibleExtent = extents.Count > 0 ? extents[0] : null;
+
+			return result;
 		}
 
 		private static CalculateReshapeLinesResponse PackCalculateReshapeLinesResponse(
-			ReshapeAlongCurveUsability usability, IList<CutSubcurve> resultLines)
+			ReshapeAlongCurveUsability usability,
+			[NotNull] IList<CutSubcurve> resultLines)
 		{
 			Stopwatch watch = Stopwatch.StartNew();
 
@@ -142,22 +182,43 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 				result.ReshapeLines.Add(ToReshapeLineMsg(resultCurve));
 			}
 
-			//foreach (INotification notification in selectableOverlaps.Notifications)
-			//{
-			//	result.Notifications.Add(notification.Message);
-			//}
-
 			_msg.DebugStopTiming(
 				watch, "Packed reshape along calculation results into response");
 
 			return result;
 		}
 
-		#region Apply reshape lines
+		private static CalculateCutLinesResponse PackCalculateCutLinesResponse(
+			ReshapeAlongCurveUsability usability,
+			[NotNull] IList<CutSubcurve> resultLines)
+		{
+			var watch = Stopwatch.StartNew();
+
+			var result = new CalculateCutLinesResponse
+			             {
+				             ReshapeLinesUsability = (int) usability
+			             };
+
+			foreach (CutSubcurve resultCurve in resultLines)
+			{
+				result.CutLines.Add(ToReshapeLineMsg(resultCurve));
+
+				// TODO: result.Notifications
+			}
+
+			_msg.DebugStopTiming(
+				watch, "Packed cut along calculation results into response");
+
+			return result;
+		}
+
+		#endregion
+
+		#region Apply reshape/cut lines
 
 		public static ApplyReshapeLinesResponse ApplyReshapeLines(
-			ApplyReshapeLinesRequest request,
-			ITrackCancel trackCancel)
+			[NotNull] ApplyReshapeLinesRequest request,
+			[CanBeNull] ITrackCancel trackCancel)
 		{
 			var subcurves = new List<CutSubcurve>();
 
@@ -169,43 +230,28 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			GeometryReshaperBase reshaper = CreateReshaper(request);
 
 			var notifications = new NotificationCollection();
+
 			Dictionary<IGeometry, NotificationCollection> reshapedGeometries =
-				reshaper.Reshape(subcurves, notifications,
-				                 request.UseNonDefaultReshapeSide);
+				reshaper.Reshape(subcurves, notifications, request.UseNonDefaultReshapeSide);
 
 			var response = new ApplyReshapeLinesResponse();
 
 			if (reshapedGeometries.Count > 0)
 			{
 				// TODO: CacheGeometrySizes...
-				IList<IFeature> updates = reshaper.Save(reshapedGeometries);
+				IList<IFeature> updatedFeatures = reshaper.Save(reshapedGeometries);
 
-				foreach (IFeature update in updates)
-				{
-					IGeometry newGeometry = update.Shape;
-					ResultFeatureMsg resultProto =
-						new ResultFeatureMsg
-						{
-							UpdatedFeature = ProtobufGdbUtils.ToGdbObjectMsg(
-								update, newGeometry, update.Class.ObjectClassID)
-						};
+				IList<ResultObjectMsg> ResultObjectMsgs =
+					GetResultFeatureMessages(
+						null, updatedFeatures,
+						f => GetNotifications(reshapedGeometries, f),
+						f => reshaper.NotificationIsWarning);
 
-					if (reshapedGeometries.ContainsKey(newGeometry) &&
-					    reshapedGeometries[newGeometry] != null)
-					{
-						foreach (INotification notification in reshapedGeometries[
-							newGeometry])
-						{
-							resultProto.Notifications.Add(notification.Message);
-						}
-					}
-
-					response.ResultFeatures.Add(resultProto);
-				}
+				response.ResultFeatures.AddRange(ResultObjectMsgs);
 			}
 
 			// Calculate new reshape lines based on current source and target states:
-			CalculateReshapeLinesRequest calculationParams = request.CalculationRequest;
+			CalculateReshapeLinesRequest calculationRequest = request.CalculationRequest;
 
 			List<IFeature> newSourceFeatures = reshaper.ReshapeGeometryCloneByFeature.Keys.ToList();
 			IList<IFeature> newTargetFeatures =
@@ -215,7 +261,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 
 			IList<CutSubcurve> newSubcurves =
 				CalculateReshapeLines(newSourceFeatures, newTargetFeatures,
-				                      calculationParams, trackCancel, out curveUsability);
+				                      calculationRequest, trackCancel, out curveUsability);
 
 			response.ReshapeLinesUsability = (int) curveUsability;
 
@@ -227,6 +273,138 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			return response;
 		}
 
+		public static ApplyCutLinesResponse ApplyCutLines(
+			[NotNull] ApplyCutLinesRequest request,
+			[CanBeNull] ITrackCancel trackCancel)
+		{
+			IList<CutSubcurve> cutCurves = request.CutLines.Select(FromReshapeLineMsg).ToList();
+
+			FeatureCutter cutter = CreateFeatureCutter(request, out IList<IFeature> targetFeatures);
+
+			cutter.Cut(cutCurves);
+
+			List<IFeature> storedFeatures = new List<IFeature>();
+
+			var response = new ApplyCutLinesResponse();
+
+			if (cutter.ResultGeometriesByFeature.Count > 0)
+			{
+				cutter.StoreResultFeatures(storedFeatures);
+
+				cutter.LogSuccessfulCut();
+
+				ICollection<KeyValuePair<IFeature, IList<IFeature>>> insertsByOriginal =
+					cutter.InsertedFeaturesByOriginal;
+
+				IList<ResultObjectMsg> ResultObjectMsgs =
+					GetResultFeatureMessages(insertsByOriginal, storedFeatures);
+
+				response.ResultFeatures.AddRange(ResultObjectMsgs);
+
+				// Calculate the new cut lines:
+				List<IFeature> newSourceFeatures = new List<IFeature>(cutter.SourceFeatures);
+
+				newSourceFeatures.AddRange(
+					insertsByOriginal.SelectMany(kvp => kvp.Value));
+
+				var newSubcurves =
+					CalculateCutLines(newSourceFeatures, targetFeatures,
+					                  request.CalculationRequest, trackCancel,
+					                  out ReshapeAlongCurveUsability usability);
+
+				response.CutLinesUsability = (int) usability;
+
+				response.NewCutLines.AddRange(newSubcurves.Select(ToReshapeLineMsg));
+
+				return response;
+			}
+
+			_msg.WarnFormat("The selection was not cut. Please select the lines to cut along");
+
+			return response;
+		}
+
+		[NotNull]
+		private static GeometryReshaperBase CreateReshaper(
+			[NotNull] ApplyReshapeLinesRequest request)
+		{
+			GetFeatures(request.CalculationRequest.SourceFeatures,
+			            request.CalculationRequest.TargetFeatures,
+			            request.CalculationRequest.ClassDefinitions,
+			            out IList<IFeature> sourceFeatures, out IList<IFeature> targetFeatures);
+
+			GeometryReshaperBase reshaper =
+				sourceFeatures.Count == 1
+					? (GeometryReshaperBase) new GeometryReshaper(sourceFeatures[0])
+					: new MultipleGeometriesReshaper(sourceFeatures)
+					  {
+						  MultipleSourcesTreatIndividually = true,
+						  MultipleSourcesTreatAsUnion = false
+					  };
+
+			if (request.InsertVerticesInTarget)
+			{
+				reshaper.TargetFeatures = targetFeatures;
+			}
+
+			IEnvelope visibleExtent;
+			ReshapeCurveFilterOptions filterOptions =
+				GetLineFilterOptions(request.CalculationRequest.FilterOptions, out visibleExtent);
+
+			IEnumerable<IFeature> unallowedOverlapFeatures = null;
+
+			if (filterOptions.ExcludeResultingInOverlaps)
+			{
+				unallowedOverlapFeatures = targetFeatures;
+
+				reshaper.RemoveClosedReshapePathAreas = true;
+			}
+
+			List<IEnvelope> allowedExtents =
+				visibleExtent == null ? null : new List<IEnvelope> {visibleExtent};
+
+			bool useMinimalTolerance = MathUtils.AreEqual(0, request.CalculationRequest.Tolerance);
+
+			reshaper.ResultFilter = new ReshapeResultFilter(allowedExtents,
+			                                                unallowedOverlapFeatures,
+			                                                useMinimalTolerance);
+
+			reshaper.ResultFilter.UseNonDefaultReshapeSide = request.UseNonDefaultReshapeSide;
+
+			reshaper.UseMinimumTolerance = useMinimalTolerance;
+
+			return reshaper;
+		}
+
+		[NotNull]
+		private static FeatureCutter CreateFeatureCutter([NotNull] ApplyCutLinesRequest request,
+		                                                 out IList<IFeature> targetFeatures)
+		{
+			GetFeatures(request.CalculationRequest.SourceFeatures,
+			            request.CalculationRequest.TargetFeatures,
+			            request.CalculationRequest.ClassDefinitions,
+			            out IList<IFeature> sourceFeatures, out targetFeatures);
+
+			ChangeAlongZSource zSource = (ChangeAlongZSource) request.ChangedVerticesZSource;
+
+			DatasetSpecificSettingProvider<ChangeAlongZSource> zSourceProvider =
+				new DatasetSpecificSettingProvider<ChangeAlongZSource>(
+					"Z values for changed vertices", zSource);
+
+			var cutter = new FeatureCutter(sourceFeatures)
+			             {
+				             ZSourceProvider = zSourceProvider
+			             };
+
+			if (request.InsertVerticesInTarget)
+			{
+				cutter.TargetFeatures = targetFeatures;
+			}
+
+			return cutter;
+		}
+
+		[NotNull]
 		private static IList<IFeature> GetUpToDateTargets(
 			[NotNull] GeometryReshaperBase reshaper,
 			[NotNull] CalculateReshapeLinesRequest originalRequest)
@@ -262,77 +440,50 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			return result.ToList();
 		}
 
-		private static GeometryReshaperBase CreateReshaper(
-			ApplyReshapeLinesRequest request)
+		private static IEnumerable<string> GetNotifications(
+			[NotNull] IReadOnlyDictionary<IGeometry, NotificationCollection> reshapedGeometries,
+			[NotNull] IFeature feature)
 		{
-			GeometryReshaperBase result;
-
-			IList<IFeature> sourceFeatures =
-				ProtobufConversionUtils.FromGdbObjectMsgList(
-					request.CalculationRequest.SourceFeatures,
-					request.CalculationRequest.ClassDefinitions);
-
-			IList<IFeature> targetFeatures =
-				ProtobufConversionUtils.FromGdbObjectMsgList(
-					request.CalculationRequest.TargetFeatures,
-					request.CalculationRequest.ClassDefinitions);
-
-			GeometryReshaperBase reshaper =
-				sourceFeatures.Count == 1
-					? (GeometryReshaperBase) new GeometryReshaper(sourceFeatures[0])
-					: new MultipleGeometriesReshaper(sourceFeatures)
-					  {
-						  MultipleSourcesTreatIndividually = true,
-						  MultipleSourcesTreatAsUnion = false
-					  };
-
-			if (request.InsertVerticesInTarget)
+			if (reshapedGeometries == null)
 			{
-				reshaper.TargetFeatures = targetFeatures;
+				throw new ArgumentNullException(nameof(reshapedGeometries));
 			}
 
-			List<IEnvelope> extents;
-			ReshapeCurveFilterOptions filterOptions =
-				GetLineFilterOptions(request.CalculationRequest, out extents);
-
-			IEnumerable<IFeature> unallowedOverlapFeatures = null;
-
-			if (filterOptions.ExcludeResultingInOverlaps)
+			if (reshapedGeometries.TryGetValue(feature.Shape,
+			                                   out NotificationCollection notifications))
 			{
-				unallowedOverlapFeatures = targetFeatures;
-
-				reshaper.RemoveClosedReshapePathAreas = true;
+				foreach (INotification notification in notifications)
+				{
+					yield return notification.Message;
+				}
 			}
-
-			List<IEnvelope> allowedExtents = null;
-
-			//if (filterOptions.OnlyInVisibleExtent)
-			//{
-			//	var extentProvider =
-			//		new VisibleMapExtentProvider(ArcMapUtils.GetMxApplication());
-
-			//	allowedExtents = new List<IEnvelope>();
-			//	allowedExtents.AddRange(extentProvider.GetVisibleLensWindowExtents());
-			//	allowedExtents.Add(extentProvider.GetCurrentExtent());
-			//}
-
-			bool useMinimalTolerance = MathUtils.AreEqual(0, request.CalculationRequest.Tolerance);
-
-			reshaper.ResultFilter = new ReshapeResultFilter(
-				extents, unallowedOverlapFeatures, useMinimalTolerance);
-
-			reshaper.ResultFilter.UseNonDefaultReshapeSide = request.UseNonDefaultReshapeSide;
-
-			reshaper.UseMinimumTolerance = useMinimalTolerance;
-
-			return reshaper;
 		}
 
 		#endregion
 
 		#region Protobuf conversions
 
-		public static ReshapeLineMsg ToReshapeLineMsg(CutSubcurve cutSubcurve)
+		private static void GetFeatures([NotNull] RepeatedField<GdbObjectMsg> requestSourceFeatures,
+		                                [NotNull] RepeatedField<GdbObjectMsg> requestTargetFeatures,
+		                                [NotNull] RepeatedField<ObjectClassMsg> classDefinitions,
+		                                [NotNull] out IList<IFeature> sourceFeatures,
+		                                [NotNull] out IList<IFeature> targetFeatures)
+		{
+			Stopwatch watch = Stopwatch.StartNew();
+
+			sourceFeatures = ProtobufConversionUtils.FromGdbObjectMsgList(requestSourceFeatures,
+				classDefinitions);
+
+			targetFeatures = ProtobufConversionUtils.FromGdbObjectMsgList(requestTargetFeatures,
+				classDefinitions);
+
+			_msg.DebugStopTiming(
+				watch,
+				"CalculateReshapeLinesImpl: Unpacked feature lists from request params");
+		}
+
+		[NotNull]
+		private static ReshapeLineMsg ToReshapeLineMsg([NotNull] CutSubcurve cutSubcurve)
 		{
 			var result = new ReshapeLineMsg();
 
@@ -373,46 +524,48 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			return result;
 		}
 
-		public static CutSubcurve FromReshapeLineMsg(ReshapeLineMsg reshapeCurveProto)
+		[NotNull]
+		private static CutSubcurve FromReshapeLineMsg([NotNull] ReshapeLineMsg reshapeLineMsg)
 		{
-			IPath path = GetPath(reshapeCurveProto.Path);
+			IPath path = Assert.NotNull(GetPath(reshapeLineMsg.Path), "Reshapeline's path is null");
 
 			var result = new CutSubcurve(
-				path, reshapeCurveProto.CanReshape,
-				reshapeCurveProto.IsCandidate,
-				reshapeCurveProto.IsFiltered,
-				GetSegment(reshapeCurveProto.TargetSegmentAtFrom),
-				GetSegment(reshapeCurveProto.TargetSegmentAtTo),
-				PointsFromShapeProtoBuffer(reshapeCurveProto.ExtraTargetInsertPoints));
+				path, reshapeLineMsg.CanReshape,
+				reshapeLineMsg.IsCandidate,
+				reshapeLineMsg.IsFiltered,
+				GetSegment(reshapeLineMsg.TargetSegmentAtFrom),
+				GetSegment(reshapeLineMsg.TargetSegmentAtTo),
+				PointsFromShapeMsg(reshapeLineMsg.ExtraTargetInsertPoints));
 
-			if (reshapeCurveProto.Source != null)
+			if (reshapeLineMsg.Source != null)
 			{
 				result.Source = new GdbObjectReference(
-					reshapeCurveProto.Source.ClassHandle, reshapeCurveProto.Source.ObjectId);
+					reshapeLineMsg.Source.ClassHandle, reshapeLineMsg.Source.ObjectId);
 			}
 
 			return result;
 		}
 
-		private static ISegment GetSegment(ShapeMsg polylineProto)
+		[CanBeNull]
+		private static ISegment GetSegment([CanBeNull] ShapeMsg segmentMsg)
 		{
 			IPolyline polyline =
-				(IPolyline) ProtobufGeometryUtils.FromShapeMsg(polylineProto);
+				(IPolyline) ProtobufGeometryUtils.FromShapeMsg(segmentMsg);
 
 			if (polyline == null || polyline.IsEmpty)
 			{
 				return null;
 			}
 
-			ISegment result = ((ISegmentCollection) polyline).get_Segment(0);
+			ISegment result = ((ISegmentCollection) polyline).Segment[0];
 
 			return result;
 		}
 
-		private static IPath GetPath(ShapeMsg polylineProto)
+		[CanBeNull]
+		private static IPath GetPath([CanBeNull] ShapeMsg polylineMsg)
 		{
-			IPolyline polyline =
-				(IPolyline) ProtobufGeometryUtils.FromShapeMsg(polylineProto);
+			IPolyline polyline = (IPolyline) ProtobufGeometryUtils.FromShapeMsg(polylineMsg);
 
 			if (polyline == null || polyline.IsEmpty)
 			{
@@ -425,9 +578,9 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 		}
 
 		[CanBeNull]
-		private static IList<IPoint> PointsFromShapeProtoBuffer(ShapeMsg shapeBuffer)
+		private static IList<IPoint> PointsFromShapeMsg([CanBeNull] ShapeMsg shapeMsg)
 		{
-			var geometry = ProtobufGeometryUtils.FromShapeMsg(shapeBuffer);
+			var geometry = ProtobufGeometryUtils.FromShapeMsg(shapeMsg);
 
 			if (geometry == null)
 			{
@@ -435,6 +588,98 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			}
 
 			return GeometryUtils.GetPoints(geometry).ToList();
+		}
+
+		[NotNull]
+		private static IList<ResultObjectMsg> GetResultFeatureMessages(
+			[CanBeNull] ICollection<KeyValuePair<IFeature, IList<IFeature>>> insertsByOriginal,
+			[CanBeNull] IEnumerable<IFeature> allResultFeatures,
+			[CanBeNull] Func<IFeature, IEnumerable<string>> notificationsForFeature = null,
+			[CanBeNull] Func<IFeature, bool> warningForFeature = null)
+		{
+			IList<ResultObjectMsg> ResultObjectMsgs = new List<ResultObjectMsg>();
+
+			HashSet<IFeature> allInserts = new HashSet<IFeature>();
+
+			if (insertsByOriginal != null)
+			{
+				foreach (KeyValuePair<IFeature, IList<IFeature>> kvp in insertsByOriginal)
+				{
+					IList<IFeature> inserts = kvp.Value;
+					IFeature original = kvp.Key;
+
+					var originalRef = new GdbObjRefMsg
+					                  {
+						                  ClassHandle = original.Class.ObjectClassID,
+						                  ObjectId = original.OID
+					                  };
+
+					foreach (IFeature insert in inserts)
+					{
+						allInserts.Add(insert);
+
+						var insertMsg =
+							new InsertedObjectMsg
+							{
+								InsertedObject = ProtobufGdbUtils.ToGdbObjectMsg(insert),
+								OriginalReference = originalRef
+							};
+
+						var featureMsg = new ResultObjectMsg
+						                 {
+							                 Insert = insertMsg
+						                 };
+
+						AddNotification(insert, featureMsg, notificationsForFeature,
+						                warningForFeature);
+
+						ResultObjectMsgs.Add(featureMsg);
+					}
+				}
+			}
+
+			if (allResultFeatures != null)
+			{
+				foreach (IFeature resultFeature in allResultFeatures)
+				{
+					if (allInserts.Contains(resultFeature))
+					{
+						continue;
+					}
+
+					ResultObjectMsg updateMsg =
+						new ResultObjectMsg
+						{
+							Update = ProtobufGdbUtils.ToGdbObjectMsg(resultFeature)
+						};
+
+					AddNotification(resultFeature, updateMsg, notificationsForFeature,
+					                warningForFeature);
+
+					ResultObjectMsgs.Add(updateMsg);
+				}
+			}
+
+			return ResultObjectMsgs;
+		}
+
+		private static void AddNotification(IFeature feature, ResultObjectMsg featureMsg,
+		                                    Func<IFeature, IEnumerable<string>>
+			                                    notificationsForFeature,
+		                                    Func<IFeature, bool> warningForFeature)
+		{
+			if (notificationsForFeature != null)
+			{
+				foreach (string notification in notificationsForFeature(feature))
+				{
+					featureMsg.Notifications.Add(notification);
+				}
+			}
+
+			if (warningForFeature != null)
+			{
+				featureMsg.HasWarning = warningForFeature(feature);
+			}
 		}
 
 		#endregion

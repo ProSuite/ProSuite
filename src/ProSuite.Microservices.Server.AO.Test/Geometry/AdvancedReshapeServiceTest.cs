@@ -81,7 +81,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			Assert.AreEqual(1, response.ResultFeatures.Count);
 
-			GdbObjectMsg resultFeatureMsg = response.ResultFeatures[0].UpdatedFeature;
+			GdbObjectMsg resultFeatureMsg = response.ResultFeatures[0].Update;
 
 			Assert.AreEqual(sourceFeature.OID, resultFeatureMsg.ObjectId);
 			Assert.AreEqual(sourceFeature.Class.ObjectClassID, resultFeatureMsg.ClassHandle);
@@ -99,7 +99,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			response = AdvancedReshapeServiceUtils.Reshape(request);
 
 			Assert.AreEqual(1, response.ResultFeatures.Count);
-			resultFeatureMsg = response.ResultFeatures[0].UpdatedFeature;
+			resultFeatureMsg = response.ResultFeatures[0].Update;
 
 			resultPoly = (IPolygon) ProtobufGeometryUtils.FromShapeMsg(resultFeatureMsg.Shape);
 
@@ -169,7 +169,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			Assert.AreEqual(2, response.ResultFeatures.Count);
 
-			GdbObjectMsg resultFeatureMsg = response.ResultFeatures[1].UpdatedFeature;
+			GdbObjectMsg resultFeatureMsg = response.ResultFeatures[1].Update;
 
 			Assert.AreEqual(sourceFeature.OID, resultFeatureMsg.ObjectId);
 			Assert.AreEqual(sourceFeature.Class.ObjectClassID, resultFeatureMsg.ClassHandle);
@@ -181,7 +181,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			Assert.IsTrue(GeometryUtils.AreEqual(resultPolyline.ToPoint, reshapePolyline.ToPoint));
 
-			GdbObjectMsg resultAdjacentFeatureMsg = response.ResultFeatures[0].UpdatedFeature;
+			GdbObjectMsg resultAdjacentFeatureMsg = response.ResultFeatures[0].Update;
 			var resultAdjacentPolyline =
 				(IPolyline) ProtobufGeometryUtils.FromShapeMsg(resultAdjacentFeatureMsg.Shape);
 
@@ -195,7 +195,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			response = AdvancedReshapeServiceUtils.Reshape(request);
 
 			Assert.AreEqual(1, response.ResultFeatures.Count);
-			resultFeatureMsg = response.ResultFeatures[0].UpdatedFeature;
+			resultFeatureMsg = response.ResultFeatures[0].Update;
 
 			resultPolyline = (IPolyline) ProtobufGeometryUtils.FromShapeMsg(resultFeatureMsg.Shape);
 
