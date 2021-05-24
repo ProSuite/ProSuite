@@ -39,6 +39,7 @@
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Catalog">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\Extensions\Catalog\ArcGIS.Desktop.Catalog.dll</HintPath>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Core">
