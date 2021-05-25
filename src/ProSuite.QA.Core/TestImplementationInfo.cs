@@ -120,7 +120,7 @@ namespace ProSuite.QA.Core
 			{
 				var testParameter = new TestParameter(
 					parameter.Name, parameter.ParameterType,
-					TestImplementationUtils.GetDescription(parameter),
+					ParameterizedInstanceUtils.GetDescription(parameter),
 					isConstructorParameter: true);
 
 				object defaultValue;
@@ -140,7 +140,7 @@ namespace ProSuite.QA.Core
 
 				var testParameter = new TestParameter(
 					property.Name, property.PropertyType,
-					TestImplementationUtils.GetDescription(property),
+					ParameterizedInstanceUtils.GetDescription(property),
 					isConstructorParameter: false);
 
 				testParameter.DefaultValue = attribute.DefaultValue;
@@ -199,7 +199,7 @@ namespace ProSuite.QA.Core
 		{
 			ConstructorInfo ctor = TestType.GetConstructors()[_constructorId];
 
-			return TestImplementationUtils.GetDescription(ctor);
+			return ParameterizedInstanceUtils.GetDescription(ctor);
 		}
 
 		public string GetParameterDescription(string parameterName)
@@ -213,7 +213,7 @@ namespace ProSuite.QA.Core
 			{
 				if (string.Equals(parameterInfo.Name, parameterName, stringComparison))
 				{
-					return TestImplementationUtils.GetDescription(parameterInfo);
+					return ParameterizedInstanceUtils.GetDescription(parameterInfo);
 				}
 			}
 
@@ -221,7 +221,7 @@ namespace ProSuite.QA.Core
 			{
 				if (string.Equals(propertyInfo.Name, parameterName, stringComparison))
 				{
-					return TestImplementationUtils.GetDescription(propertyInfo);
+					return ParameterizedInstanceUtils.GetDescription(propertyInfo);
 				}
 			}
 

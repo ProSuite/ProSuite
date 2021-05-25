@@ -43,7 +43,7 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 				              : null;
 
 			TestDescription = testFactory.GetTestDescription();
-			Signature = TestImplementationUtils.GetTestSignature(testFactory);
+			Signature = ParameterizedInstanceUtils.GetTestSignature(testFactory);
 
 			Type testType;
 			if (testDescriptor.TestClass != null)

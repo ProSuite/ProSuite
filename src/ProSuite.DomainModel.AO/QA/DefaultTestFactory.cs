@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -86,93 +84,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 		protected override IList<TestParameter> CreateParameters()
 		{
-			return CreateParameters(TestType, _constructorId);
-		}
-
-		[NotNull]
-		public static IList<TestParameter> CreateParameters([NotNull] Type type,
-		                                                    int constructorId)
-		{
-			ConstructorInfo constr = type.GetConstructors()[constructorId];
-
-			ParameterInfo[] constructorParameters = constr.GetParameters();
-			PropertyInfo[] properties = type.GetProperties();
-
-			var testParameterProperties =
-				new Dictionary<PropertyInfo, TestParameterAttribute>();
-
-			foreach (PropertyInfo propertyInfo in properties)
-			{
-				if (! propertyInfo.CanRead || ! propertyInfo.CanWrite)
-				{
-					continue;
-				}
-
-				var testParameterAttribute =
-					ReflectionUtils.GetAttribute<TestParameterAttribute>(
-						propertyInfo);
-
-				if (testParameterAttribute == null)
-				{
-					continue;
-				}
-
-				var isValid = true;
-				foreach (ParameterInfo constructorParameter in constructorParameters)
-				{
-					if (string.Equals(constructorParameter.Name, propertyInfo.Name,
-					                  StringComparison.InvariantCultureIgnoreCase))
-					{
-						isValid = false;
-
-						_msg.Warn(GetMessageConstructorParameterExistsAlsoAsProperty(
-							          type, constructorId, constructorParameter));
-					}
-				}
-
-				if (isValid)
-				{
-					testParameterProperties.Add(propertyInfo, testParameterAttribute);
-				}
-			}
-
-			var testParameters =
-				new List<TestParameter>(constructorParameters.Length +
-				                        testParameterProperties.Count);
-
-			foreach (ParameterInfo parameter in constructorParameters)
-			{
-				var testParameter = new TestParameter(
-					parameter.Name, parameter.ParameterType,
-					TestImplementationUtils.GetDescription(parameter),
-					isConstructorParameter: true);
-
-				object defaultValue;
-				if (ReflectionUtils.TryGetDefaultValue(parameter, out defaultValue))
-				{
-					testParameter.DefaultValue = defaultValue;
-				}
-
-				testParameters.Add(testParameter);
-			}
-
-			foreach (KeyValuePair<PropertyInfo, TestParameterAttribute> pair in
-				testParameterProperties)
-			{
-				PropertyInfo property = pair.Key;
-				TestParameterAttribute attribute = pair.Value;
-
-				var testParameter = new TestParameter(
-					property.Name, property.PropertyType,
-					TestImplementationUtils.GetDescription(property),
-					isConstructorParameter: false);
-
-				testParameter.DefaultValue = attribute.DefaultValue;
-
-				testParameters.Add(testParameter);
-			}
-
-			return new ReadOnlyList<TestParameter>(testParameters);
+			return ParameterizedInstanceUtils.CreateParameters(TestType, _constructorId);
 		}
 
 		public override string[] TestCategories => ReflectionUtils.GetCategories(TestType);
@@ -181,7 +93,7 @@ namespace ProSuite.DomainModel.AO.QA
 		{
 			ConstructorInfo ctor = TestType.GetConstructors()[_constructorId];
 
-			return TestImplementationUtils.GetDescription(ctor);
+			return ParameterizedInstanceUtils.GetDescription(ctor);
 		}
 
 		public override string GetParameterDescription(string parameterName)
@@ -195,7 +107,7 @@ namespace ProSuite.DomainModel.AO.QA
 			{
 				if (string.Equals(parameterInfo.Name, parameterName, stringComparison))
 				{
-					return TestImplementationUtils.GetDescription(parameterInfo);
+					return ParameterizedInstanceUtils.GetDescription(parameterInfo);
 				}
 			}
 
@@ -203,34 +115,11 @@ namespace ProSuite.DomainModel.AO.QA
 			{
 				if (string.Equals(propertyInfo.Name, parameterName, stringComparison))
 				{
-					return TestImplementationUtils.GetDescription(propertyInfo);
+					return ParameterizedInstanceUtils.GetDescription(propertyInfo);
 				}
 			}
 
 			return null;
-		}
-
-		[NotNull]
-		private static string GetMessageConstructorParameterExistsAlsoAsProperty(
-			[NotNull] Type type,
-			int constructorId,
-			[NotNull] ParameterInfo constructorParameter)
-		{
-			var sb = new StringBuilder();
-
-			sb.AppendFormat(
-				"{0}({1}) has '{2}' as constructor parameter and as TestParameter property.",
-				type.Name, constructorId, constructorParameter.Name);
-			sb.AppendLine();
-
-			sb.AppendFormat(
-				"Parameter values for '{0}' will be assigned to constructor parameter.",
-				constructorParameter.Name);
-			sb.AppendLine();
-
-			sb.AppendLine("Consider to use a different constructor for this test.");
-
-			return sb.ToString();
 		}
 	}
 }

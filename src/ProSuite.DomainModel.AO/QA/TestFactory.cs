@@ -6,7 +6,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
@@ -21,10 +20,8 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA
 {
-	public abstract class TestFactory : ITestImplementationInfo
+	public abstract class TestFactory : ParameterizedInstanceFactory
 	{
-		private IList<TestParameter> _parameters;
-
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		#region Constructors
@@ -33,7 +30,7 @@ namespace ProSuite.DomainModel.AO.QA
 		/// Initializes a new instance of the <see cref="TestFactory"/> class.
 		/// </summary>
 		/// <remarks>required for ClassDescriptor instantiation</remarks>
-		protected TestFactory() : this(null) { }
+		protected TestFactory() { }
 
 		protected TestFactory([CanBeNull] QualityCondition condition)
 		{
@@ -46,59 +43,11 @@ namespace ProSuite.DomainModel.AO.QA
 		public QualityCondition Condition { get; set; }
 
 		[NotNull]
-		public IList<TestParameter> Parameters
-		{
-			get
-			{
-				if (_parameters == null)
-				{
-					_parameters = CreateParameters();
-				}
-
-				return new ReadOnlyList<TestParameter>(_parameters);
-			}
-		}
-
-		[NotNull]
-		public TestParameter GetParameter(string parameterName)
-		{
-			Assert.ArgumentNotNullOrEmpty(parameterName, nameof(parameterName));
-
-			foreach (TestParameter parameter in Parameters)
-			{
-				if (string.Equals(parameterName, parameter.Name,
-				                  StringComparison.OrdinalIgnoreCase))
-				{
-					return parameter;
-				}
-			}
-
-			throw new ArgumentException(string.Format("Unknown test parameter: {0} {1}",
-			                                          parameterName, GetTestTypeDescription()));
-		}
-
-		[NotNull]
-		public virtual string[] TestCategories => ReflectionUtils.GetCategories(GetType());
+		public override string[] TestCategories => ReflectionUtils.GetCategories(GetType());
 
 		[CanBeNull]
-		public virtual string GetTestDescription()
+		public override string GetTestDescription()
 		{
-			return null;
-		}
-
-		[CanBeNull]
-		public virtual string GetParameterDescription([NotNull] string parameterName)
-		{
-			// TODO: revise, case-insensitive match is ok? (parameter name search is insensitive elsewhere)
-			foreach (TestParameter parameter in Parameters)
-			{
-				if (string.Equals(parameter.Name, parameterName,
-				                  StringComparison.OrdinalIgnoreCase))
-				{
-					return parameter.Description;
-				}
-			}
-
 			return null;
 		}
 
@@ -129,8 +78,6 @@ namespace ProSuite.DomainModel.AO.QA
 		//    error = "Not implemented";
 		//    return false;
 		//}
-
-		public abstract string GetTestTypeDescription();
 
 		[Obsolete]
 		public virtual bool Validate(out string error)
@@ -178,7 +125,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 				var testParameter = new TestParameter(
 					constrParam.Name, constrParam.ParameterType,
-					TestImplementationUtils.GetDescription(constrParam),
+					ParameterizedInstanceUtils.GetDescription(constrParam),
 					isConstructorParameter: true);
 
 				parameters.Add(testParameter);
@@ -236,7 +183,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 				var testParameter = new TestParameter(
 					property.Name, property.PropertyType,
-					TestImplementationUtils.GetDescription(property),
+					ParameterizedInstanceUtils.GetDescription(property),
 					isConstructorParameter: false);
 
 				if (testParameterAttribute != null)
@@ -268,9 +215,6 @@ namespace ProSuite.DomainModel.AO.QA
 			ITest test = CreateTestInstance(args);
 			return new[] {test};
 		}
-
-		[NotNull]
-		protected abstract IList<TestParameter> CreateParameters();
 
 		private void AddPrePostProcessors([NotNull] IList<ITest> tests, IOpenDataset datasetContext)
 		{
