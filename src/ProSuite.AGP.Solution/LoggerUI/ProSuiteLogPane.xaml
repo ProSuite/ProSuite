@@ -9,7 +9,7 @@
                  xmlns:loggerUi="clr-namespace:ProSuite.AGP.Solution.LoggerUI"
                  mc:Ignorable="d" 
                  d:DesignHeight="300" d:DesignWidth="300"
-                 d:DataContext="{Binding Path=ui.ProSuiteLogPaneViewModel}">
+                 d:DataContext="{Binding Path=ui.ProSuiteLogPaneViewModel}" IsVisibleChanged="UserControl_IsVisibleChanged">
      <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -37,8 +37,8 @@
                 SelectionMode="Single"
                 ColumnWidth="*"
                 VerticalScrollBarVisibility="Visible"
-                ScrollViewer.ScrollChanged="logMessagesGrid_ScrollChanged"
-                ItemsSource="{Binding Path=LogMessageList, Mode=OneWay}" >
+                SelectedItem="{Binding SelectedRow}"
+                ItemsSource="{Binding Path=LogMessageList, Mode=OneWay}" Loaded="logMessagesGrid_Loaded" >
             <DataGrid.Columns>
                 <DataGridTemplateColumn Width="SizeToCells" IsReadOnly="True" >
                     <DataGridTemplateColumn.CellTemplate>
@@ -66,6 +66,8 @@
             <DataGrid.ContextMenu>
                 <ContextMenu>
                     <MenuItem Header="Clear All Messages" Command="{Binding ClearLogEntries}" />
+                    <MenuItem Header="Show Message Details" Command="{Binding OpenMessage}"  
+                              CommandParameter="{Binding Path=SelectedRow}" />
                     <Separator />
                     <MenuItem Header="Debug Messages" Command="{Binding FilterLogEntries}" CommandParameter="Debug" IsCheckable="true" IsChecked="{Binding DebugLogsAreVisible}"/>
                     <MenuItem Header="Verbose Messages" Command="{Binding FilterLogEntries}" CommandParameter="Verbose" IsCheckable="true" IsChecked="{Binding VerboseLogsAreVisible}"/>
@@ -89,6 +91,11 @@
                     </Setter>
                 </Style>
             </DataGrid.CellStyle>
+            <DataGrid.RowStyle>
+                <Style TargetType="DataGridRow">
+                    <EventSetter Event="MouseRightButtonUp" Handler="logMessagesGrid_MouseRightButtonUp"/>
+                </Style>
+            </DataGrid.RowStyle>            
         </DataGrid>
     </Grid>
 </UserControl>

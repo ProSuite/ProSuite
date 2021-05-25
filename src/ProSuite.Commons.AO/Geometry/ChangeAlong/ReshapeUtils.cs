@@ -204,6 +204,12 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
+			if (! GeometryUtils.IsZAware(polyline) ||
+			    ! GeometryUtils.IsZAware(differentFrom))
+			{
+				return GeometryFactory.CreateEmptyPolyline(polyline);
+			}
+
 			IPolyline intersections1, intersections2;
 			GetSymmetric2DIntersections(polyline, differentFrom,
 			                            out intersections1, out intersections2);

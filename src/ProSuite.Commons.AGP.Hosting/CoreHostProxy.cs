@@ -7,9 +7,15 @@ namespace ProSuite.Commons.AGP.Hosting
 	/// </summary>
 	public static class CoreHostProxy
 	{
-		public static void Initialize()
+		public static void Initialize(
+			bool useServerLicense = false)
 		{
-			Host.Initialize();
+			Host.LicenseProductCode productCode =
+				useServerLicense
+					? Host.LicenseProductCode.ArcGISServer
+					: Host.LicenseProductCode.ArcGISPro;
+
+			Host.Initialize(productCode);
 		}
 	}
 }

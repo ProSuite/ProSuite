@@ -60,7 +60,7 @@ namespace ProSuite.Commons.Geometry
 			return $"{X};{Y};{Z}";
 		}
 
-		public override Pnt Clone()
+		public override Pnt ClonePnt()
 		{
 			return ClonePnt3D();
 		}

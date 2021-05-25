@@ -2,7 +2,7 @@ using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Commons.Callbacks
+namespace ProSuite.Commons.Essentials.Callbacks
 {
 	public class DisposableCallback<T> : IDisposable
 	{
@@ -10,7 +10,7 @@ namespace ProSuite.Commons.Callbacks
 		private readonly T _val;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="DisposableCallback&lt;T&gt;"/> class.
+		/// Initializes a new instance of the <see cref="DisposableCallback{T}"/> class.
 		/// </summary>
 		/// <param name="action">The action.</param>
 		/// <param name="val">The val.</param>

@@ -133,6 +133,15 @@
     <Compile Include="ProjectItem\ProSuiteProjectItemContainer.cs" />
     <Compile Include="ProjectItem\ProjectFileRepository.cs" />
     <Compile Include="ProjectItem\ProSuiteProjectItemWorkList.cs" />
+    <Compile Include="ProjectItem\IssueWorklistItem.cs" />
+    <Compile Include="ProjectItem\SelectionWorklistItem.cs" />
+    <Compile Include="ProjectItem\WorklistItem.cs" />
+    <Compile Include="ProjectItem\WorklistsContainer.cs" />
+    <Compile Include="Resource.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource.resx</DependentUpon>
+    </Compile>
     <Compile Include="Selection\PickWorkListItemTool.cs" />
     <Compile Include="Selection\SelectionTool.cs" />
     <Compile Include="WorkLists\CreateIssueWorkListButton.cs" />
@@ -300,6 +309,10 @@
       <Project>{EAB868E4-D8FD-4AB4-9EDA-A9291E7CFEAB}</Project>
       <Name>ProSuite.Application.Configuration</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj">
+      <Project>{b80740ec-bb68-410c-a617-e79c467f1969}</Project>
+      <Name>ProSuite.Commons.AGP.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">
       <Project>{89F2C583-3022-43F8-9B69-27123836625F}</Project>
       <Name>ProSuite.Commons.AGP</Name>
@@ -335,7 +348,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
-      <Version>1.1.19</Version>
+      <Version>1.1.31</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
@@ -395,10 +408,10 @@
     <AddInContent Include="Images\RemoveOverlapsTool32.png" />
   </ItemGroup>
   <ItemGroup>
-    <AddInContent Include="Images\NavigateErrorsCmd16.png" />
-    <AddInContent Include="Images\NavigateErrorsCmd32.png" />
-    <AddInContent Include="Images\NavigateSelectionCmd16.png" />
-    <AddInContent Include="Images\NavigateSelectionCmd32.png" />
+    <Resource Include="Images\NavigateErrorsCmd16.png" />
+    <Resource Include="Images\NavigateErrorsCmd32.png" />
+    <Resource Include="Images\NavigateSelectionCmd16.png" />
+    <Resource Include="Images\NavigateSelectionCmd32.png" />
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="Images\SelectionTool16.png" />
@@ -430,6 +443,22 @@
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="Images\AdvancedReshapeToolTip.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\NavigateWorklistCmd16.png" />
+    <Resource Include="Images\NavigateWorklistCmd32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\PickerToolCursor.cur" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resource.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\WorklistsFolder16.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--

@@ -11,12 +11,18 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 {
 	public class XmlWorkItemStateRepository : WorkItemStateRepository<XmlWorkItemState, XmlWorkListDefinition>
 	{
-		private readonly string _xmlFilePath;
+		private string _filePath;
 
-		public XmlWorkItemStateRepository(string xmlPath, string name, Type type,
+		public string FilePath
+		{
+			get => _filePath;
+			set => _filePath = value;
+		}
+
+		public XmlWorkItemStateRepository(string filePath, string name, Type type,
 		                                  int? currentItemIndex = null) : base(name, type, currentItemIndex)
 		{
-			_xmlFilePath = xmlPath;
+			_filePath = filePath;
 		}
 
 		public static XmlWorkListDefinition Import(string xmlFilePath)
@@ -31,7 +37,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		protected override void Store(XmlWorkListDefinition definition)
 		{
 			var helper = new XmlSerializationHelper<XmlWorkListDefinition>();
-			helper.SaveToFile(definition, _xmlFilePath);
+			helper.SaveToFile(definition, _filePath);
 		}
 
 		protected override XmlWorkListDefinition CreateDefinition(
@@ -64,12 +70,12 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 
 		protected override List<XmlWorkItemState> ReadStates()
 		{
-			if (! File.Exists(_xmlFilePath))
+			if (! File.Exists(_filePath))
 			{
 				return new List<XmlWorkItemState>();
 			}
 
-			XmlWorkListDefinition definition = Import(_xmlFilePath);
+			XmlWorkListDefinition definition = Import(_filePath);
 
 			return definition.Items.ToList();
 		}
@@ -79,7 +85,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 			var state = new XmlWorkItemState(item.OID, item.Visited, WorkItemStatus.Unknown,
 			                            new XmlGdbRowIdentity(item.Proxy));
 
-			state.Path = item.Proxy.Table.Workspace.Path;
+			state.ConnectionString = item.Proxy.Table.Workspace.ConnectionString;
 
 			return state;
 		}
@@ -107,7 +113,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 				SimpleSet<GdbTableIdentity> tables = pair.Value;
 
 				var xmlWorkspace = new XmlWorkListWorkspace();
-				xmlWorkspace.Path = workspace.Path;
+				xmlWorkspace.ConnectionString = workspace.ConnectionString;
+				xmlWorkspace.WorkspaceFactory = workspace.WorkspaceFactory.ToString();
 				xmlWorkspace.Tables = tables
 				                      .Select(table => new XmlTableReference(table.Id, table.Name))
 				                      .ToList();

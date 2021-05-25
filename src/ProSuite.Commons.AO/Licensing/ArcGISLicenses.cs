@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.esriSystem;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 
@@ -13,25 +12,14 @@ namespace ProSuite.Commons.AO.Licensing
 		private readonly LicenseInitializer _initializer = new LicenseInitializer();
 
 		/// <summary>
-		/// Attempts the check-out of a minimal license acording to the available installations and
-		/// VSArcGISProduct setting.
+		/// Attempts the check-out of a minimal license.
 		/// </summary>
 		public void Checkout(params EsriExtension[] extensions)
 		{
-			string vsArcGISProductValue =
-				Environment.GetEnvironmentVariable("VSArcGISProduct");
-
-			if (vsArcGISProductValue == "Server")
-			{
-				InitializeAo11();
-			}
-			else
-			{
-				Checkout(EnvironmentUtils.Is64BitProcess
-					         ? EsriProduct.ArcGisServerEnterprise
-					         : EsriProduct.ArcView,
-				         extensions);
-			}
+			Checkout(EnvironmentUtils.Is64BitProcess
+				         ? EsriProduct.ArcGisServerEnterprise
+				         : EsriProduct.ArcView,
+			         extensions);
 		}
 
 		public EsriProduct InitializedProduct => (EsriProduct) _initializer.InitializedProduct;
@@ -125,19 +113,6 @@ namespace ProSuite.Commons.AO.Licensing
 		private static esriLicenseExtensionCode GetExtensionCode(EsriExtension extension)
 		{
 			return (esriLicenseExtensionCode) extension;
-		}
-
-		public static void InitializeAo11()
-		{
-			Assert.True(EnvironmentUtils.Is64BitProcess,
-			            "Cannot use product 'Server' in 32 bit process.");
-
-#if Server
-			ArcGIS.Core.Hosting.Host.Initialize();
-			return;
-#endif
-			throw new InvalidOperationException(
-				"Missing preprocessor directive 'Server'");
 		}
 	}
 }

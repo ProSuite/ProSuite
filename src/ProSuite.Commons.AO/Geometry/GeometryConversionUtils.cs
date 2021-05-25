@@ -238,6 +238,23 @@ namespace ProSuite.Commons.AO.Geometry
 			return result;
 		}
 
+		[NotNull]
+		public static Multipoint<IPnt> CreateMultipoint([NotNull] IMultipoint multipoint)
+		{
+			bool zAware = GeometryUtils.IsZAware(multipoint);
+
+			Multipoint<IPnt> result = new Multipoint<IPnt>(
+				GeometryUtils.GetPoints(multipoint).Select(p => CreatePnt(p, zAware)),
+				GeometryUtils.GetPointCount(multipoint));
+
+			return result;
+		}
+
+		private static IPnt CreatePnt(IPoint p, bool pnt3D)
+		{
+			return pnt3D ? (IPnt) new Pnt3D(p.X, p.Y, p.Z) : new Pnt2D(p.X, p.Y);
+		}
+
 		public static MultiPolycurve CreateMultiPolycurve([NotNull] IPolycurve polycurve,
 		                                                  double tolerance = 0,
 		                                                  [CanBeNull] IEnvelope aoi = null)

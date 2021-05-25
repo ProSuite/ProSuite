@@ -89,6 +89,7 @@
     <Compile Include="Geometry\IPointList.cs" />
     <Compile Include="Geometry\ISegmentList.cs" />
     <Compile Include="Geometry\MultipleRingNavigator.cs" />
+    <Compile Include="Geometry\Multipoint.cs" />
     <Compile Include="Geometry\SegmentIntersectionUtils.cs" />
     <Compile Include="Geometry\SingleRingNavigator.cs" />
     <Compile Include="Geometry\SubcurveNavigator.cs" />
@@ -192,9 +193,6 @@
     <Compile Include="CommandLine\UsageTarget.cs" />
     <Compile Include="ConversionUtils.cs" />
     <Compile Include="Cryptography\CryptoUtils.cs" />
-    <Compile Include="Callbacks\DisposableCallback.cs">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="EnumUtils.cs" />
     <Compile Include="Exceptions\Ex.cs" />
     <Compile Include="Exceptions\InvalidConfigurationException.cs">
@@ -232,7 +230,6 @@
     <Compile Include="Collections\CollectionUtils.cs" />
     <Compile Include="Keyboard\KeyboardShortcut.cs" />
     <Compile Include="Misc\Latch.cs" />
-    <Compile Include="Callbacks\NopDisposableCallback.cs" />
     <Compile Include="Notifications\INotification.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Notifications\Notification.cs" />
@@ -241,6 +238,7 @@
     <Compile Include="Collections\SimpleSet.cs" />
     <Compile Include="Collections\PropertyComparer.cs" />
     <Compile Include="Collections\SortableBindingList.cs" />
+    <Compile Include="Text\TaggingUtils.cs" />
     <Compile Include="ThreadAffineUseNameProvider.cs" />
     <Compile Include="Validation\DateMustBeAfterAttribute.cs" />
     <Compile Include="Validation\DateMustBeOnOrAfterAttribute.cs" />

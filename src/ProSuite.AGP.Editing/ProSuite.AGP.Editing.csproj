@@ -39,6 +39,7 @@
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Catalog">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\Extensions\Catalog\ArcGIS.Desktop.Catalog.dll</HintPath>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Core">
@@ -133,7 +134,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
-      <Version>1.1.19</Version>
+      <Version>1.1.31</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

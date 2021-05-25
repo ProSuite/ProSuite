@@ -8,6 +8,7 @@ using log4net.Core;
 using log4net.Repository;
 using log4net.Repository.Hierarchy;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.Callbacks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Logging
@@ -58,6 +59,18 @@ namespace ProSuite.Commons.Logging
 
 			hierarchy.Root.RemoveAppender(appender);
 			return true; // was removed
+		}
+
+		public static IDisposable TemporaryRootAppender([CanBeNull] IAppender appender)
+		{
+			if (appender == null)
+			{
+				return null;
+			}
+
+			AddRootAppender(appender);
+
+			return new DisposableCallback(() => RemoveRootAppender(appender));
 		}
 
 		internal static bool UsePrivateRepository

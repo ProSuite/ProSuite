@@ -39,15 +39,19 @@
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Core, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\Extensions\Core\ArcGIS.Desktop.Core.dll</HintPath>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Editing, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\Extensions\Editing\ArcGIS.Desktop.Editing.dll</HintPath>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Framework, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Desktop.Framework.dll</HintPath>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Mapping, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\Extensions\Mapping\ArcGIS.Desktop.Mapping.dll</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
@@ -65,9 +69,8 @@
     <Compile Include="Carto\MapUtils.cs" />
     <Compile Include="Carto\SelectionUtils.cs" />
     <Compile Include="Carto\TargetFeatureSelection.cs" />
-    <Compile Include="CIM\CimDatasetReference.cs" />
-    <Compile Include="CIM\CimFeatureWorkspaceReference.cs" />
     <Compile Include="Framework\PaneUtils.cs" />
+    <Compile Include="Framework\ProjectItemUtils.cs" />
     <Compile Include="Framework\QueuedTaskUtils.cs" />
     <Compile Include="Gdb\GdbQueryUtils.cs" />
     <Compile Include="Gdb\GdbRowIdentity.cs" />

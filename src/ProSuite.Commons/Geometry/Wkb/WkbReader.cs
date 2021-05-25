@@ -72,8 +72,9 @@ namespace ProSuite.Commons.Geometry.Wkb
 			ordinates = GetOrdinates(type);
 		}
 
-		protected static P ReadPointCore<P>(BinaryReader reader, Ordinates ordinates,
-		                                    IPointFactory<P> pointBuilder)
+		protected static TPoint ReadPointCore<TPoint>(BinaryReader reader,
+		                                              Ordinates ordinates,
+		                                              IPointFactory<TPoint> pointBuilder)
 		{
 			switch (ordinates)
 			{
@@ -102,20 +103,21 @@ namespace ProSuite.Commons.Geometry.Wkb
 		/// <summary>
 		/// Reads a LineString or multiple LineString geometries using the specified reader.
 		/// </summary>
-		/// <typeparam name="L"></typeparam>
-		/// <typeparam name="P"></typeparam>
+		/// <typeparam name="TMultipoint"></typeparam>
+		/// <typeparam name="TLinestring"></typeparam>
+		/// <typeparam name="TPoint"></typeparam>
 		/// <param name="reader"></param>
 		/// <param name="geometryType"></param>
 		/// <param name="ordinates"></param>
 		/// <param name="geometryBuilder"></param>
 		/// <returns></returns>
-		protected static IEnumerable<L> ReadLinestrings<L, P>(
+		protected static IEnumerable<TLinestring> ReadLinestrings<TMultipoint, TLinestring, TPoint>(
 			[NotNull] BinaryReader reader,
 			WkbGeometryType geometryType,
 			Ordinates ordinates,
-			[NotNull] GeometryBuilderBase<L, P> geometryBuilder)
+			[NotNull] GeometryBuilderBase<TMultipoint, TLinestring, TPoint> geometryBuilder)
 		{
-			IEnumerable<L> linestrings;
+			IEnumerable<TLinestring> linestrings;
 
 			if (geometryType == WkbGeometryType.MultiLineString ||
 			    geometryType == WkbGeometryType.Polygon ||
@@ -127,7 +129,7 @@ namespace ProSuite.Commons.Geometry.Wkb
 
 			else if (geometryType == WkbGeometryType.LineString)
 			{
-				L linestring = ReadLinestringCore(reader, ordinates, geometryBuilder);
+				TLinestring linestring = ReadLinestringCore(reader, ordinates, geometryBuilder);
 
 				linestrings = new[] {linestring};
 			}
@@ -140,11 +142,12 @@ namespace ProSuite.Commons.Geometry.Wkb
 			return linestrings;
 		}
 
-		protected static IEnumerable<L> ReadLinestringsCore<L, P>(
+		protected static IEnumerable<TLinestring> ReadLinestringsCore<
+			TMultipoint, TLinestring, TPoint>(
 			[NotNull] BinaryReader reader,
 			Ordinates ordinates,
 			int linestringCount,
-			[NotNull] GeometryBuilderBase<L, P> geometryBuilder)
+			[NotNull] GeometryBuilderBase<TMultipoint, TLinestring, TPoint> geometryBuilder)
 		{
 			for (int i = 0; i < linestringCount; i++)
 			{
@@ -152,30 +155,58 @@ namespace ProSuite.Commons.Geometry.Wkb
 			}
 		}
 
+		protected static TMultipoint ReadMultipointCore<TMultipoint, TLinestring, TPoint>(
+			[NotNull] BinaryReader reader,
+			Ordinates ordinates,
+			int pointCount,
+			[NotNull] GeometryBuilderBase<TMultipoint, TLinestring, TPoint> geometryBuilder)
+		{
+			IPointFactory<TPoint> builder = geometryBuilder.GetPointFactory(ordinates);
+
+			const bool reReadPointTypes = true;
+
+			IEnumerable<TPoint> readPointsCore =
+				ReadPointsCore(reader, ordinates, builder, pointCount, reReadPointTypes);
+
+			return geometryBuilder.CreateMultipoint(readPointsCore, pointCount);
+		}
+
 		/// <summary>
 		/// Reads multiple (>1) line strings, including the initial count.
 		/// </summary>
-		/// <typeparam name="L"></typeparam>
-		/// <typeparam name="P"></typeparam>
+		/// <typeparam name="TMultipoint"></typeparam>
+		/// <typeparam name="TLinestring"></typeparam>
+		/// <typeparam name="TPoint"></typeparam>
 		/// <param name="reader"></param>
 		/// <param name="ordinates"></param>
 		/// <param name="geometryBuilder"></param>
 		/// <returns></returns>
-		private static IEnumerable<L> ReadLinestrings<L, P>(
+		private static IEnumerable<TLinestring> ReadLinestrings<TMultipoint, TLinestring, TPoint>(
 			[NotNull] BinaryReader reader,
 			Ordinates ordinates,
-			[NotNull] GeometryBuilderBase<L, P> geometryBuilder)
+			[NotNull] GeometryBuilderBase<TMultipoint, TLinestring, TPoint> geometryBuilder)
 		{
 			int linestringCount = checked((int) reader.ReadUInt32());
 
 			return ReadLinestrings(reader, ordinates, linestringCount, geometryBuilder);
 		}
 
-		private static IEnumerable<L> ReadLinestrings<L, P>(
+		/// <summary>
+		/// Reads multiple (>1) line strings, without the initial count.
+		/// </summary>
+		/// <typeparam name="TMultipoint"></typeparam>
+		/// <typeparam name="TLinestring"></typeparam>
+		/// <typeparam name="TPoint"></typeparam>
+		/// <param name="reader"></param>
+		/// <param name="expectedOrdinates"></param>
+		/// <param name="linestringCount"></param>
+		/// <param name="geometryBuilder"></param>
+		/// <returns></returns>
+		private static IEnumerable<TLinestring> ReadLinestrings<TMultipoint, TLinestring, TPoint>(
 			[NotNull] BinaryReader reader,
 			Ordinates expectedOrdinates,
 			int linestringCount,
-			[NotNull] GeometryBuilderBase<L, P> geometryBuilder)
+			[NotNull] GeometryBuilderBase<TMultipoint, TLinestring, TPoint> geometryBuilder)
 		{
 			for (int i = 0; i < linestringCount; i++)
 			{
@@ -192,24 +223,42 @@ namespace ProSuite.Commons.Geometry.Wkb
 			}
 		}
 
-		private static L ReadLinestringCore<L, P>(BinaryReader reader, Ordinates ordinates,
-		                                          GeometryBuilderBase<L, P> geometryBuilder)
+		private static TLinestring ReadLinestringCore<TMultipoint, TLinestring, TPoint>(
+			BinaryReader reader, Ordinates ordinates,
+			GeometryBuilderBase<TMultipoint, TLinestring, TPoint> geometryBuilder)
 		{
 			int pointCount = checked((int) reader.ReadUInt32());
 
-			IPointFactory<P> builder = geometryBuilder.GetPointFactory(ordinates);
+			IPointFactory<TPoint> builder = geometryBuilder.GetPointFactory(ordinates);
 
 			return geometryBuilder.CreateLinestring(
 				ReadPointsCore(reader, ordinates, builder, pointCount), pointCount);
 		}
 
-		private static IEnumerable<P> ReadPointsCore<P>([NotNull] BinaryReader reader,
-		                                                Ordinates ordinates,
-		                                                [NotNull] IPointFactory<P> builder,
-		                                                int pointCount)
+		/// <summary>
+		/// Reads the specified number of points, optionally re-reads the type for each point.
+		/// </summary>
+		/// <typeparam name="TPoint"></typeparam>
+		/// <param name="reader"></param>
+		/// <param name="ordinates"></param>
+		/// <param name="builder"></param>
+		/// <param name="pointCount"></param>
+		/// <param name="reReadTypeForEachPoint"></param>
+		/// <returns></returns>
+		private static IEnumerable<TPoint> ReadPointsCore<TPoint>(
+			[NotNull] BinaryReader reader,
+			Ordinates ordinates,
+			[NotNull] IPointFactory<TPoint> builder,
+			int pointCount,
+			bool reReadTypeForEachPoint = false)
 		{
 			for (int i = 0; i < pointCount; i++)
 			{
+				if (reReadTypeForEachPoint)
+				{
+					ReadWkbType(reader, false, out WkbGeometryType _, out Ordinates _);
+				}
+
 				yield return ReadPointCore(reader, ordinates, builder);
 			}
 		}

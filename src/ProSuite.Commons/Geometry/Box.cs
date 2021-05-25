@@ -232,8 +232,8 @@ namespace ProSuite.Commons.Geometry
 		{
 			if (Min == Max)
 			{
-				Min = Min.Clone();
-				Max = Max.Clone();
+				Min = Min.ClonePnt();
+				Max = Max.ClonePnt();
 			}
 
 			for (var i = 0; i < dimension; i++)
@@ -257,8 +257,8 @@ namespace ProSuite.Commons.Geometry
 		{
 			if (Min == Max)
 			{
-				Min = Min.Clone();
-				Max = Max.Clone();
+				Min = Min.ClonePnt();
+				Max = Max.ClonePnt();
 			}
 
 			for (var i = 0; i < dimension; i++)
@@ -285,7 +285,7 @@ namespace ProSuite.Commons.Geometry
 		[NotNull]
 		public Box Clone()
 		{
-			return new Box(Min.Clone(), Max.Clone());
+			return new Box(Min.ClonePnt(), Max.ClonePnt());
 		}
 	}
 }

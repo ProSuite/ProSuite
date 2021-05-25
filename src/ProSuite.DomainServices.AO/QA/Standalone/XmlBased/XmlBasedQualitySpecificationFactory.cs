@@ -117,8 +117,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				                                                out xmlSpecificationCategory);
 
 			Assert.ArgumentCondition(xmlQualitySpecification != null,
-			                         "Specification '{0} not found in document",
-			                         qualitySpecificationName);
+			                         $"Specification '{qualitySpecificationName}' not found in document",
+			                         nameof(qualitySpecificationName));
 
 			XmlDataQualityUtils.AssertUniqueElementNames(xmlQualitySpecification);
 
@@ -390,9 +390,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			Model result = _modelFactory.CreateModel(workspace, modelName, null,
 			                                         databaseName, schemaOwner);
 
-			ISpatialReference spatialReference = GetMainSpatialReference(result,
-				workspaceId,
-				referencedConditions);
+			ISpatialReference spatialReference = GetMainSpatialReference(
+				result, workspaceId, referencedConditions);
 
 			if (spatialReference != null)
 			{
@@ -430,29 +429,27 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				}
 			}
 
-			int maxReferenceCount = int.MinValue;
-			string maxDatasetName = null;
-			foreach (KeyValuePair<string, int> pair in spatialDatasetReferenceCount)
+			foreach (KeyValuePair<string, int> pair in
+				spatialDatasetReferenceCount.OrderByDescending(kvp => kvp.Value))
 			{
-				if (pair.Value <= maxReferenceCount)
+				string datasetName = pair.Key;
+
+				Dataset maxDataset = model.GetDatasetByModelName(datasetName);
+
+				if (maxDataset == null)
 				{
 					continue;
 				}
 
-				maxReferenceCount = pair.Value;
-				maxDatasetName = pair.Key;
+				ISpatialReference spatialReference = GetSpatialReference(maxDataset);
+
+				if (spatialReference != null)
+				{
+					return spatialReference;
+				}
 			}
 
-			if (maxDatasetName == null)
-			{
-				return null;
-			}
-
-			Dataset maxDataset = model.GetDatasetByModelName(maxDatasetName);
-
-			return maxDataset == null
-				       ? null
-				       : GetSpatialReference(maxDataset);
+			return null;
 		}
 
 		[CanBeNull]

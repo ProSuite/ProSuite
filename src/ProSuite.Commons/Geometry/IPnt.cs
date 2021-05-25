@@ -7,5 +7,7 @@ namespace ProSuite.Commons.Geometry
 		double Y { get; set; }
 
 		double this[int index] { get; set; }
+
+		IPnt Clone();
 	}
 }

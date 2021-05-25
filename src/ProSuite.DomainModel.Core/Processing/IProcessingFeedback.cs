@@ -1,7 +1,7 @@
 using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Processing.Domain
+namespace ProSuite.DomainModel.Core.Processing
 {
 	public interface IProcessingFeedback
 	{
@@ -18,7 +18,7 @@ namespace ProSuite.Processing.Domain
 		/// <summary>
 		/// Assume subsequent reports pertain to this feature
 		/// </summary>
-		object CurrentFeature { get; set; } // TODO do not hold feature, use a proxy
+		FeatureProxy CurrentFeature { get; set; }
 
 		void ReportInfo([NotNull] string text);
 
