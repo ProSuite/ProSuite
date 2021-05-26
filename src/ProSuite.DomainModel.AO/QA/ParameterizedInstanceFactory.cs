@@ -26,6 +26,49 @@ namespace ProSuite.DomainModel.AO.QA
 		protected static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		[NotNull]
+		public TestParameterValue CreateDatasetParameterValue(
+			[NotNull] string parameterName,
+			[CanBeNull] Dataset value,
+			string filterExpression = null,
+			bool usedAsReferenceData = false)
+		{
+			Assert.ArgumentNotNullOrEmpty(parameterName, nameof(parameterName));
+
+			TestParameter parameter = GetParameter(parameterName);
+
+			TestParameterTypeUtils.AssertValidDataset(parameter, value);
+
+			var parameterValue = new DatasetTestParameterValue(parameter, value,
+			                                                   filterExpression,
+			                                                   usedAsReferenceData);
+
+			parameterValue.DataType = parameter.Type;
+
+			return parameterValue;
+		}
+
+		[CanBeNull]
+		public ScalarTestParameterValue CreateScalarTestParameterValue(
+			[NotNull] string parameterName,
+			[CanBeNull] object value)
+		{
+			Assert.ArgumentNotNullOrEmpty(parameterName, nameof(parameterName));
+
+			TestParameter parameter = GetParameter(parameterName);
+
+			if (! parameter.IsConstructorParameter && parameter.Type.IsValueType &&
+			    (value == null || value as string == string.Empty))
+			{
+				return null;
+			}
+
+			var parameterValue = new ScalarTestParameterValue(parameter, value);
+			parameterValue.DataType = parameter.Type;
+
+			return parameterValue;
+		}
+
+		[NotNull]
 		protected T Create<T>([NotNull] ParameterizedInstanceConfiguration instanceConfiguration,
 		                      [NotNull] IOpenDataset datasetContext,
 		                      [NotNull] IList<TestParameter> testParameters,
@@ -349,16 +392,15 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (paramVal.Source != null)
 			{
-				if (! (TestFactoryUtils.CreateTestFactory(paramVal.Source)
-					       is DefaultTestFactory fct))
+				if (! (InstanceFactoryUtils.CreateTransformerFactory(paramVal.Source)
+					       is TransformerFactory fct))
 				{
 					throw new ArgumentException(
-						$"Unable to create DefaultTestFactory for {paramVal.Source}");
+						$"Unable to create TransformerFactory for {paramVal.Source}");
 				}
 
 				// TODO: implement for other types
-				ITableTransformer sourceInstance =
-					fct.CreateInstance<ITableTransformer>(datasetContext);
+				ITableTransformer sourceInstance = fct.Create(datasetContext, paramVal.Source);
 				// TODO: Harvest sourceInstance in paramVal. 
 				return sourceInstance.GetTransformed();
 			}

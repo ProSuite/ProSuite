@@ -11,8 +11,8 @@ namespace ProSuite.DomainModel.AO.QA
 	public static class InstanceFactoryUtils
 	{
 		/// <summary>
-		/// Gets the row filter factory, sets the row filter configuration for it and initializes the 
-		/// parameter values for it.
+		/// Gets the row filter factory, sets the row filter configuration for it and initializes
+		/// its  parameter values.
 		/// </summary>
 		/// <returns>RowFilterFactory or null.</returns>
 		[CanBeNull]
@@ -32,6 +32,33 @@ namespace ProSuite.DomainModel.AO.QA
 			if (factory != null)
 			{
 				InitializeParameterValues(factory, rowFilterConfiguration.ParameterValues);
+			}
+
+			return factory;
+		}
+
+		/// <summary>
+		/// Gets the transformer factory, sets the transformer configuration and initializes its 
+		/// parameter values.
+		/// </summary>
+		/// <returns>RowFilterFactory or null.</returns>
+		[CanBeNull]
+		public static TransformerFactory CreateTransformerFactory(
+			[NotNull] TransformerConfiguration transformerConfiguration)
+		{
+			Assert.ArgumentNotNull(transformerConfiguration, nameof(transformerConfiguration));
+
+			if (transformerConfiguration.TransformerDescriptor == null)
+			{
+				return null;
+			}
+
+			TransformerFactory factory =
+				CreateTransformerFactory(transformerConfiguration.TransformerDescriptor);
+
+			if (factory != null)
+			{
+				InitializeParameterValues(factory, transformerConfiguration.ParameterValues);
 			}
 
 			return factory;
@@ -64,6 +91,18 @@ namespace ProSuite.DomainModel.AO.QA
 				       ? new RowFilterFactory(classDescriptor.AssemblyName,
 				                              classDescriptor.TypeName,
 				                              rowFilterDescriptor.ConstructorId)
+				       : null;
+		}
+
+		private static TransformerFactory CreateTransformerFactory(
+			[NotNull] TransformerDescriptor transformerDescriptor)
+		{
+			ClassDescriptor classDescriptor = transformerDescriptor.Class;
+
+			return classDescriptor != null
+				       ? new TransformerFactory(classDescriptor.AssemblyName,
+				                                classDescriptor.TypeName,
+				                                transformerDescriptor.ConstructorId)
 				       : null;
 		}
 	}

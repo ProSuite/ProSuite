@@ -34,20 +34,7 @@ namespace ProSuite.DomainModel.AO.QA
 			Assert.ArgumentNotNull(assemblyName, nameof(assemblyName));
 			Assert.ArgumentNotNull(typeName, nameof(typeName));
 
-			_testType = PrivateAssemblyUtils.LoadType(assemblyName, typeName);
-
-			if (_testType == null)
-			{
-				throw new TypeLoadException(
-					string.Format("{0} does not exist in {1}", typeName, assemblyName));
-			}
-
-			if (TestType.GetConstructors().Length <= constructorId)
-			{
-				throw new TypeLoadException(
-					string.Format("invalid constructorId {0}, {1} has {2} constructors",
-					              constructorId, typeName, TestType.GetConstructors().Length));
-			}
+			_testType = ParameterizedInstanceUtils.LoadType(assemblyName, typeName, constructorId);
 
 			_constructorId = constructorId;
 		}

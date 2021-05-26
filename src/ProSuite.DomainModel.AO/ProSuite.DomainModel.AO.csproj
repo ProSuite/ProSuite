@@ -220,6 +220,7 @@
     <Compile Include="QA\TestReport\TestFactoryIndexEntry.cs" />
     <Compile Include="QA\TestReport\TestIndexEntry.cs" />
     <Compile Include="QA\TestReport\TestReportUtils.cs" />
+    <Compile Include="QA\TransformerFactory.cs" />
     <Compile Include="QA\VerificationContextUtils.cs" />
     <Compile Include="QA\VerificationProgressEventArgs.cs" />
     <Compile Include="QA\Xml\IXmlEntityMetadata.cs" />

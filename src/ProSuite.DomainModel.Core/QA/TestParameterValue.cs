@@ -81,7 +81,7 @@ namespace ProSuite.DomainModel.Core.QA
 		public abstract string StringValue { get; set; }
 
 		[CanBeNull]
-		public QualityCondition Source { get; set; }
+		public TransformerConfiguration Source { get; set; }
 
 		[NotNull]
 		public abstract TestParameterValue Clone();

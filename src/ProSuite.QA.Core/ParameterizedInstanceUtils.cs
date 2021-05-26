@@ -14,6 +14,29 @@ namespace ProSuite.QA.Core
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		[NotNull]
+		public static Type LoadType([NotNull] string assemblyName,
+		                            [NotNull] string typeName,
+		                            int constructorId)
+		{
+			Type result = PrivateAssemblyUtils.LoadType(assemblyName, typeName);
+
+			if (result == null)
+			{
+				throw new TypeLoadException(
+					$"{typeName} does not exist in {assemblyName}");
+			}
+
+			if (result.GetConstructors().Length <= constructorId)
+			{
+				throw new TypeLoadException(
+					$"invalid constructorId {constructorId}, {typeName} has " +
+					$"{result.GetConstructors().Length} constructors");
+			}
+
+			return result;
+		}
+
 		public static T CreateInstance<T>([NotNull] Type type,
 		                                  int constructorId,
 		                                  object[] constructorArgs)

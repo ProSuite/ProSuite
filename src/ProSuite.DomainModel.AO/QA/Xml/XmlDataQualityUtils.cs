@@ -782,7 +782,24 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 						                                  xmlParamValue.TestParameterName);
 					}
 
-					parameterValue.Source = source;
+					// TODO: Use TransformerConfigurations in XML?
+					// Is it possible while maintaining backward compatibility?
+
+					// HACK to make compile:
+					var transformerDescriptor = new TransformerDescriptor(
+						source.TestDescriptor.Name, source.TestDescriptor.TestClass,
+						source.TestDescriptor.TestConstructorId);
+
+					var transformerConfig = new TransformerConfiguration(
+						source.Name, transformerDescriptor, source.Description);
+
+					foreach (TestParameterValue paramValue in source.ParameterValues)
+					{
+						transformerConfig.AddParameterValue(paramValue);
+					}
+					// END HACK
+
+					parameterValue.Source = transformerConfig;
 				}
 				else if (xmlParamValue is XmlDatasetTestParameterValue datasetValue)
 				{

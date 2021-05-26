@@ -164,7 +164,9 @@
     <Compile Include="QA\QualityVerification.cs" />
     <Compile Include="QA\QualityVerificationDataset.cs" />
     <Compile Include="QA\Repositories\ITestDescriptorRepository.cs" />
+    <Compile Include="QA\TransformerConfiguration.cs" />
     <Compile Include="QA\RowFilterConfiguration.cs" />
+    <Compile Include="QA\TransformerDescriptor.cs" />
     <Compile Include="QA\RowFilterDescriptor.cs" />
     <Compile Include="QA\ScalarTestParameterValue.cs" />
     <Compile Include="QA\TestDefinition.cs" />

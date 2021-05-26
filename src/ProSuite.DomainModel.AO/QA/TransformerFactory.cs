@@ -10,42 +10,38 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA
 {
-	/// <summary>
-	/// Factory for IRowFilter instances.
-	/// </summary>
-	public class RowFilterFactory : ParameterizedInstanceFactory
+	public class TransformerFactory : ParameterizedInstanceFactory
 	{
-		[UsedImplicitly] [NotNull] private Type _filterType;
+		[UsedImplicitly] [NotNull] private Type _transformerType;
 		[UsedImplicitly] private int _constructorId;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="RowFilterFactory"/> class.
 		/// </summary>
-		public RowFilterFactory([NotNull] Type type, int constructorId = 0)
+		public TransformerFactory([NotNull] Type type, int constructorId = 0)
 		{
 			Assert.ArgumentNotNull(type, nameof(type));
 
-			_filterType = type;
+			_transformerType = type;
 			_constructorId = constructorId;
 		}
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="RowFilterFactory"/> class.
 		/// </summary>
-		public RowFilterFactory([NotNull] string assemblyName,
-		                        [NotNull] string typeName,
-		                        int constructorId = 0)
+		public TransformerFactory([NotNull] string assemblyName,
+		                          [NotNull] string typeName,
+		                          int constructorId = 0)
 		{
 			Assert.ArgumentNotNull(assemblyName, nameof(assemblyName));
 			Assert.ArgumentNotNull(typeName, nameof(typeName));
 
-			_filterType =
+			_transformerType =
 				ParameterizedInstanceUtils.LoadType(assemblyName, typeName, constructorId);
-
 			_constructorId = constructorId;
 		}
 
-		public Type FilterType => _filterType;
+		public Type TransformerType => _transformerType;
 
 		#region ParameterizedInstanceFactory overrides
 
@@ -54,34 +50,35 @@ namespace ProSuite.DomainModel.AO.QA
 
 		public override string GetTestDescription()
 		{
-			ConstructorInfo ctor = FilterType.GetConstructors()[_constructorId];
+			ConstructorInfo ctor = TransformerType.GetConstructors()[_constructorId];
 
 			return ParameterizedInstanceUtils.GetDescription(ctor);
 		}
 
 		public override string GetTestTypeDescription()
 		{
-			return FilterType.Name;
+			return TransformerType.Name;
 		}
 
 		protected override IList<TestParameter> CreateParameters()
 		{
-			return ParameterizedInstanceUtils.CreateParameters(FilterType, _constructorId);
+			return ParameterizedInstanceUtils.CreateParameters(TransformerType, _constructorId);
 		}
 
 		#endregion
 
 		[NotNull]
-		public IRowFilter Create([NotNull] IOpenDataset datasetContext,
-		                         [NotNull] RowFilterConfiguration rowFilterConfiguration)
+		public ITableTransformer Create([NotNull] IOpenDataset datasetContext,
+		                                [NotNull] TransformerConfiguration transformerConfiguration)
 		{
-			return Create(rowFilterConfiguration, datasetContext, Parameters,
-			              CreateInstance<IRowFilter>);
+			return Create(transformerConfiguration, datasetContext, Parameters,
+			              CreateInstance<ITableTransformer>);
 		}
 
 		private T CreateInstance<T>(object[] args)
 		{
-			return ParameterizedInstanceUtils.CreateInstance<T>(FilterType, _constructorId, args);
+			return ParameterizedInstanceUtils.CreateInstance<T>(
+				TransformerType, _constructorId, args);
 		}
 	}
 }
