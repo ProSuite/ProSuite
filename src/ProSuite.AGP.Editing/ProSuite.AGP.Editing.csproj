@@ -103,7 +103,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
     </Compile>
+    <Compile Include="RemoveOverlaps\PartialRemoveOverlapsOptions.cs" />
     <Compile Include="RemoveOverlaps\RemoveOverlapsFeedback.cs" />
+    <Compile Include="RemoveOverlaps\RemoveOverlapsOptions.cs" />
     <Compile Include="RemoveOverlaps\RemoveOverlapsToolBase.cs" />
     <Compile Include="Selection\FeatureClassInfo.cs" />
     <Compile Include="Selection\GeometryReducer.cs" />
