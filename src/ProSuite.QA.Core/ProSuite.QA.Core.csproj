@@ -49,9 +49,8 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="ITestImplementationInfo.cs" />
-    <Compile Include="ParameterizedInstanceFactory.cs" />
+    <Compile Include="ParameterizedInstanceInfoBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="RowFilterFactory.cs" />
     <Compile Include="TestImplementationInfo.cs" />
     <Compile Include="ParameterizedInstanceUtils.cs" />
     <Compile Include="TestParameter.cs" />

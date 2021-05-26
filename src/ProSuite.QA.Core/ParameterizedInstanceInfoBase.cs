@@ -6,10 +6,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Core
 {
-	/// <summary>
-	/// Base class for test, row-filter, issue-filter, transformer factories.
-	/// </summary>
-	public abstract class ParameterizedInstanceFactory : ITestImplementationInfo
+	public abstract class ParameterizedInstanceInfoBase : ITestImplementationInfo
 	{
 		private IList<TestParameter> _parameters;
 

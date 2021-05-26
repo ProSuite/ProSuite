@@ -14,6 +14,15 @@ namespace ProSuite.QA.Core
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		public static T CreateInstance<T>([NotNull] Type type,
+		                                  int constructorId,
+		                                  object[] constructorArgs)
+		{
+			ConstructorInfo constructor = type.GetConstructors()[constructorId];
+
+			return (T) constructor.Invoke(constructorArgs);
+		}
+
 		[NotNull]
 		public static string GetParameterTypeString([NotNull] TestParameter testParameter)
 		{

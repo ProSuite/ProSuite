@@ -4,8 +4,11 @@ using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
+using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Container;
+using ProSuite.QA.Core;
 
-namespace ProSuite.QA.Core
+namespace ProSuite.DomainModel.AO.QA
 {
 	/// <summary>
 	/// Factory for IRowFilter instances.
@@ -79,5 +82,18 @@ namespace ProSuite.QA.Core
 		}
 
 		#endregion
+
+		[NotNull]
+		public IRowFilter Create([NotNull] IOpenDataset datasetContext,
+		                         [NotNull] RowFilterConfiguration rowFilterConfiguration)
+		{
+			return Create(rowFilterConfiguration, datasetContext, Parameters,
+			              CreateInstance<IRowFilter>);
+		}
+
+		private T CreateInstance<T>(object[] args)
+		{
+			return ParameterizedInstanceUtils.CreateInstance<T>(FilterType, _constructorId, args);
+		}
 	}
 }

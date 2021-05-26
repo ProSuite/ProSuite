@@ -1,15 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
-using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA
 {
@@ -29,35 +26,17 @@ namespace ProSuite.DomainModel.AO.QA
 				return null;
 			}
 
-			TestFactory factory =
-				GetTestFactory(qualityCondition.TestDescriptor);
+			TestFactory factory = GetTestFactory(qualityCondition.TestDescriptor);
 
 			if (factory != null)
 			{
 				factory.Condition = qualityCondition;
-				InitializeParameterValues(factory);
+
+				InstanceFactoryUtils.InitializeParameterValues(
+					factory, qualityCondition.ParameterValues);
 			}
 
 			return factory;
-		}
-
-		private static bool InitializeParameterValues([NotNull] TestFactory factory)
-		{
-			Dictionary<string, TestParameter> parametersByName =
-				factory.Parameters.ToDictionary(
-					testParameter => testParameter.Name);
-
-			foreach (TestParameterValue parameterValue in factory.Condition.ParameterValues)
-			{
-				TestParameter testParameter;
-				if (parametersByName.TryGetValue(parameterValue.TestParameterName,
-				                                 out testParameter))
-				{
-					parameterValue.DataType = testParameter.Type;
-				}
-			}
-
-			return true;
 		}
 
 		/// <summary>

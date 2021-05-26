@@ -170,14 +170,17 @@
     <Compile Include="QA\ErrorTableObject.cs" />
     <Compile Include="QA\ErrorVectorObject.cs" />
     <Compile Include="QA\IErrorObject.cs" />
+    <Compile Include="QA\InstanceFactoryUtils.cs" />
     <Compile Include="QA\IOpenDataset.cs" />
     <Compile Include="QA\IQualityConditionContextAware.cs" />
     <Compile Include="QA\IQualityConditionObjectDatasetResolver.cs" />
     <Compile Include="QA\ITestConfigurator.cs" />
     <Compile Include="QA\ITestParameterDatasetProvider.cs" />
     <Compile Include="QA\IVerificationContext.cs" />
+    <Compile Include="QA\ParameterizedInstanceFactory.cs" />
     <Compile Include="QA\QualityConditionObjectDatasetResolver.cs" />
     <Compile Include="QA\QualityConditionParameterUtils.cs" />
+    <Compile Include="QA\RowFilterFactory.cs" />
     <Compile Include="QA\RowParser.cs" />
     <Compile Include="QA\SimpleDatasetOpener.cs" />
     <Compile Include="QA\SpecificationReport\HtmlDataModel.cs" />

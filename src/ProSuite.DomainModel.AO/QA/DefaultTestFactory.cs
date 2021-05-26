@@ -66,7 +66,7 @@ namespace ProSuite.DomainModel.AO.QA
 			where T : IInvolvesTables
 		{
 			IList<T> created = Create(context, Parameters,
-			                          (args) => new[] {CreateInstance<T>(args)});
+			                          args => new[] {CreateInstance<T>(args)});
 			return created[0];
 		}
 
@@ -77,9 +77,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 		private T CreateInstance<T>(object[] args)
 		{
-			ConstructorInfo constructor = TestType.GetConstructors()[_constructorId];
-
-			return (T) constructor.Invoke(args);
+			return ParameterizedInstanceUtils.CreateInstance<T>(TestType, _constructorId, args);
 		}
 
 		protected override IList<TestParameter> CreateParameters()

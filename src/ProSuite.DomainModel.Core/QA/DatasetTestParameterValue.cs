@@ -13,6 +13,9 @@ namespace ProSuite.DomainModel.Core.QA
 		[UsedImplicitly] private string _filterExpression;
 		[UsedImplicitly] private bool _usedAsReferenceData;
 
+		[UsedImplicitly] private IList<RowFilterConfiguration> _rowFilterConfigurations =
+			new List<RowFilterConfiguration>();
+
 		#region Constructors
 
 		/// <summary>
@@ -132,7 +135,11 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		[CanBeNull]
-		public List<QualityCondition> RowFilterConfigurations { get; set; }
+		public IList<RowFilterConfiguration> RowFilterConfigurations
+		{
+			get => _rowFilterConfigurations;
+			set => _rowFilterConfigurations = value;
+		}
 
 		public bool UsedAsReferenceData
 		{

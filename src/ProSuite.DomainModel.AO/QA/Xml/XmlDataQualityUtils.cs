@@ -1928,16 +1928,26 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 			if (xmlValue.RowFilterNames != null)
 			{
-				List<QualityCondition> rowFilterConfigurations = new List<QualityCondition>();
+				List<RowFilterConfiguration> rowFilterConfigurations = new List<RowFilterConfiguration>();
 				foreach (string filterName in xmlValue.RowFilterNames)
 				{
 					if (! instanceConfigurationsByName.TryGetValue(
-						    filterName, out QualityCondition filterConfiguration))
+						    filterName, out QualityCondition qualityCondition))
 					{
-						Assert.NotNull(filterConfiguration, $"Instance configuration {filterName} not found");
+						Assert.NotNull(qualityCondition, $"Instance configuration {filterName} not found");
 					}
 
-					rowFilterConfigurations.Add(filterConfiguration);
+					// TODO: RowFilterConfiguration directly from XML
+
+					TestDescriptor descriptor = qualityCondition.TestDescriptor;
+
+					RowFilterConfiguration filterConfig = new RowFilterConfiguration(
+						qualityCondition.Name,
+						new RowFilterDescriptor(descriptor.Name,
+						                        descriptor.TestClass,
+						                        descriptor.TestConstructorId));
+
+					rowFilterConfigurations.Add(filterConfig);
 				}
 
 				paramValue.RowFilterConfigurations = rowFilterConfigurations;
