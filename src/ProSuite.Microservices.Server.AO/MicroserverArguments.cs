@@ -43,8 +43,9 @@ namespace ProSuite.Microservices.Server.AO
 
 		[Option('m', "maxparallel", Required = false,
 		        HelpText =
-			        "The maximum number of parallel processes. 0 means one less than the CPU count",
-		        Default = 0)]
+			        "The maximum number of parallel threads to be used for processing. " +
+			        "Below 0 means one less than the CPU count",
+		        Default = -1)]
 		public int MaxParallel { get; set; }
 
 		[Option('v', "verbose", Required = false,
