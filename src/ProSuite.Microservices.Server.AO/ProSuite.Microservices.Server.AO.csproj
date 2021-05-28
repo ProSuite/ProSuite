@@ -92,16 +92,6 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Geodatabase\BackingDataset.cs" />
-    <Compile Include="Geodatabase\BackingDataStore.cs" />
-    <Compile Include="Geodatabase\GdbFeature.cs" />
-    <Compile Include="Geodatabase\GdbFeatureClass.cs" />
-    <Compile Include="Geodatabase\GdbFields.cs" />
-    <Compile Include="Geodatabase\GdbTable.cs" />
-    <Compile Include="Geodatabase\GdbRow.cs" />
-    <Compile Include="Geodatabase\GdbTableContainer.cs" />
-    <Compile Include="Geodatabase\GdbWorkspace.cs" />
-    <Compile Include="Geodatabase\InMemoryDataset.cs" />
     <Compile Include="Geodatabase\RemoteDataset.cs" />
     <Compile Include="Geometry\AdvancedReshape\AdvancedReshapeGrpcImpl.cs" />
     <Compile Include="Geometry\AdvancedReshape\AdvancedReshapeServiceUtils.cs" />
