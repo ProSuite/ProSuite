@@ -6,7 +6,7 @@ using ProSuite.Microservices.Client.AGP;
 namespace ProSuite.AGP.Solution.Editing
 {
 	[UsedImplicitly]
-	public class ReshapeAlongTool : ChangeGeometryAlongToolBase
+	public class ReshapeAlongTool : ReshapeAlongToolBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -9,12 +8,14 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
+using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
-using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
@@ -34,30 +35,17 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		private ChangeAlongFeedback _feedback;
 
-
-		
 		protected ChangeGeometryAlongToolBase()
 		{
 			IsSketchTool = true;
 
 			GeomIsSimpleAsFeature = false;
-
-			//SketchOutputMode = SketchOutputMode.Map;
-			//SketchType = SketchGeometryType.Rectangle;
-
-			//GeomIsSimpleAsFeature = false;
-			//CompleteSketchOnMouseUp = true;
-
-			SelectionCursor = ToolUtils.GetCursor(Resources.ReshapeAlongToolCursor);
-			SelectionCursorShift = ToolUtils.GetCursor(Resources.ReshapeAlongToolCursorShift);
-			
-			TargetSelectionCursor = ToolUtils.GetCursor(Resources.ReshapeAlongToolCursorProcess);
 		}
 
 		protected Cursor TargetSelectionCursor { get; set; }
 
 		protected abstract GeometryProcessingClient MicroserviceClient { get; }
-		
+
 		protected virtual bool CanUseAsTargetLayer(FeatureLayer featureLayer)
 		{
 			return featureLayer.ShapeType == esriGeometryType.esriGeometryPolyline ||
@@ -66,30 +54,25 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected override bool HandleEscape()
 		{
-			if (IsInSubcurvePickingMode())
-			{
-				ResetDerivedGeometries();
-			}
-			else
-			{
-				SelectionUtils.ClearSelection(ActiveMapView.Map);
-				StartSelectionPhase();
-			}
+			QueuedTaskUtils.Run(
+				() =>
+				{
+					if (IsInSubcurvePickingMode())
+					{
+						ResetDerivedGeometries();
+					}
+					else
+					{
+						SelectionUtils.ClearSelection(ActiveMapView.Map);
+						StartSelectionPhase();
+					}
 
-			//if (IsInSelectionPhase())
-			//{
-			//	SelectionUtils.ClearSelection(ActiveMapView.Map);
-			//	StartSelectionPhase();
-			//}
-			//else
-			//{
-
-			//}
+					return true;
+				});
 
 			return true;
 		}
 
-		
 		protected override void OnSelectionPhaseStarted()
 		{
 			// Already set in StartSelectionPhase()
@@ -110,45 +93,77 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			//CompleteSketchOnMouseUp = true;
 		}
 
-		
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
 			_feedback?.DisposeOverlays();
 			_feedback = null;
 		}
 
+		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
+		{
+			if (args.Selection.Count == 0)
+			{
+				ResetDerivedGeometries();
+				StartSelectionPhase();
+			}
 
-		
+			return true;
+		}
+
+		protected override Task OnEditCompletedCore(EditCompletedEventArgs args)
+		{
+			bool requiresRecalculate = args.CompletedType == EditCompletedType.Discard ||
+			                           args.CompletedType == EditCompletedType.Reconcile ||
+			                           args.CompletedType == EditCompletedType.Redo ||
+			                           args.CompletedType == EditCompletedType.Undo;
+
+			if (requiresRecalculate)
+			{
+				QueuedTask.Run(
+					() =>
+					{
+						var selectedFeatures =
+							SelectionUtils.GetSelectedFeatures(ActiveMapView).ToList();
+
+						RefreshCutSubcurves(selectedFeatures, GetCancelableProgressor());
+
+						return true;
+					});
+			}
+
+			return base.OnEditCompletedCore(args);
+		}
+
 		protected override void AfterSelection(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
 		{
-			var selection = ActiveMapView.Map.GetSelection();
+			if (! CanUseSelection(selectedFeatures))
+			{
+				StartSelectionPhase();
 
-			if (! CanUseSelection(selectedFeatures)) return;
+				return;
+			}
 
-			Cursor = TargetSelectionCursor;
-
-			//SketchOutputMode = SketchOutputMode.Map;
-			//SketchType = SketchGeometryType.Rectangle;
+			StartSecondPhase();
 		}
-
-		
 
 		protected override async Task<bool> OnSketchCompleteCoreAsync(
 			Geometry sketchGeometry,
 			CancelableProgressor progressor)
 		{
-			//var result = await QueuedTask.Run(() =>
-			//{
-				var selectedFeatures = SelectionUtils.GetSelectedFeatures(ActiveMapView).ToList();
+			var result = await QueuedTask.Run(async () =>
+			{
+				List<Feature> selectedFeatures =
+					SelectionUtils.GetSelectedFeatures(ActiveMapView).ToList();
 
 				if (IsInSubcurvePickingMode())
 				{
 					Predicate<CutSubcurve> canReshapePredicate =
 						cutSubcurve => GeometryUtils.Contains(sketchGeometry, cutSubcurve.Path);
 
-
-					var cutSubcurves = _changeAlongCurves.ReshapeCutSubcurves.Where(c => canReshapePredicate(c)).ToList();
+					var cutSubcurves = _changeAlongCurves.ReshapeCutSubcurves
+					                                     .Where(c => canReshapePredicate(c))
+					                                     .ToList();
 
 					if (cutSubcurves.Count == 0)
 						// TODO: if nothing hit at all, select target
@@ -158,14 +173,17 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				}
 				else
 				{
-					const TargetFeatureSelection targetFeatureSelection = TargetFeatureSelection.VisibleFeatures;
+					// TODO: maintain target selection to allow add/remove to
+					const TargetFeatureSelection targetFeatureSelection =
+						TargetFeatureSelection.VisibleFeatures;
 
 					//var mapSketch = MapUtils.ToMapGeometry(MapView.Active, (Polygon)sketchGeometry);
 					var mapSketch = sketchGeometry;
 
 					var foundOidsByLayer =
 						MapUtils.FindFeatures(ActiveMapView, mapSketch,
-						                      targetFeatureSelection, CanUseAsTargetLayer, selectedFeatures,
+						                      targetFeatureSelection, CanUseAsTargetLayer,
+						                      selectedFeatures,
 						                      progressor);
 
 					if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
@@ -176,11 +194,14 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 					var targetFeatures = new List<Feature>();
 
-					foreach (var keyValuePair in foundOidsByLayer) targetFeatures.AddRange(keyValuePair.Value);
+					foreach (var keyValuePair in foundOidsByLayer)
+						targetFeatures.AddRange(keyValuePair.Value);
 
-					_changeAlongCurves = targetFeatures.Count > 0
-						                     ? CalculateReshapeCurves(selectedFeatures, targetFeatures, progressor)
-						                     : new ChangeAlongCurves(new List<CutSubcurve>(), ReshapeAlongCurveUsability.NoTarget);
+					_changeAlongCurves =
+						targetFeatures.Count > 0
+							? CalculateReshapeCurves(selectedFeatures, targetFeatures, progressor)
+							: new ChangeAlongCurves(new List<CutSubcurve>(),
+							                        ReshapeAlongCurveUsability.NoTarget);
 
 					if (_changeAlongCurves.HasSelectableCurves)
 					{
@@ -194,11 +215,53 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 				//return SelectAndProcessCutSubcurves(selection, sketch, progressor);
 				return true;
-			//});
+			});
 
-			//return result;
+			return result;
 		}
-		
+
+		protected override bool IsInSelectionPhase()
+		{
+			if (IsInSubcurvePickingMode())
+			{
+				return false;
+			}
+
+			// First or second phase:
+			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
+			{
+				return true;
+			}
+
+			var task = QueuedTask.Run(
+				() =>
+				{
+					IList<Feature> selection =
+						SelectionUtils.GetSelectedFeatures(ActiveMapView).ToList();
+
+					return ! CanUseSelection(selection);
+				});
+
+			return task.Result;
+		}
+
+		private void StartSecondPhase()
+		{
+			Cursor = TargetSelectionCursor;
+
+			SketchOutputMode = SketchOutputMode.Map;
+
+			// NOTE: CompleteSketchOnMouseUp must be set before the sketch geometry type,
+			// otherwise it has no effect!
+			CompleteSketchOnMouseUp = true;
+
+			SketchType = SketchGeometryType.Rectangle;
+
+			UseSnapping = false;
+
+			GeomIsSimpleAsFeature = false;
+		}
+
 		protected void ResetDerivedGeometries()
 		{
 			_feedback.DisposeOverlays();
@@ -208,16 +271,15 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected bool IsInSubcurvePickingMode()
 		{
 			return _changeAlongCurves != null && _changeAlongCurves.HasSelectableCurves &&
-			       !KeyboardUtils.IsModifierPressed(Keys.Shift, true);
+			       ! KeyboardUtils.IsModifierPressed(Keys.Shift, true);
 		}
 
-		
 		private ChangeAlongCurves CalculateReshapeCurves(
 			[NotNull] IList<Feature> selectedFeatures,
-		                                                 [NotNull] IList<Feature> targetFeatures,
-		                                                 [CanBeNull] CancelableProgressor progressor)
+			[NotNull] IList<Feature> targetFeatures,
+			[CanBeNull] CancelableProgressor progressor)
 		{
-			ChangeAlongCurves result = null;
+			ChangeAlongCurves result;
 
 			CancellationToken cancellationToken;
 
@@ -246,15 +308,29 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return result;
 		}
 
-		
-		private async Task<bool> UpdateFeatures(List<Feature> selectedFeatures,
-		                                  List<CutSubcurve> cutSubcurves,
-		                                  CancelableProgressor progressor)
+		private void RefreshCutSubcurves([NotNull] IList<Feature> selectedFeatures,
+		                                 [CanBeNull] CancelableProgressor progressor = null)
 		{
+			if (_changeAlongCurves == null ||
+			    _changeAlongCurves.TargetFeatures == null ||
+			    _changeAlongCurves.TargetFeatures.Count == 0)
+			{
+				return;
+			}
 
+			ChangeAlongCurves newState =
+				CalculateReshapeCurves(selectedFeatures, _changeAlongCurves.TargetFeatures,
+				                       progressor);
 
+			_changeAlongCurves.Update(newState);
 
+			_feedback.Update(_changeAlongCurves);
+		}
 
+		private async Task<bool> UpdateFeatures(List<Feature> selectedFeatures,
+		                                        List<CutSubcurve> cutSubcurves,
+		                                        CancelableProgressor progressor)
+		{
 			CancellationToken cancellationToken =
 				progressor?.CancellationToken ?? new CancellationTokenSource().Token;
 
@@ -275,12 +351,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			//LogReshapeResults(result, selection.Count);
 
 			var success = await GdbPersistenceUtils.SaveInOperationAsync(
-				         "Advanced reshape", resultFeatures);
-
-
+				              "Advanced reshape", resultFeatures);
 
 			return success;
-
 
 			//var sketchPolyline = cutSubcurves[0].Path;
 
@@ -304,7 +377,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			//return editOperationResult;
 		}
-
 
 		private static void UpdateFeatures(
 			EditOperation.IEditContext editContext,

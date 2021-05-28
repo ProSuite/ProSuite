@@ -82,6 +82,7 @@
     <Compile Include="AdvancedReshape\AdvancedReshapeToolBase.cs" />
     <Compile Include="ChangeAlong\ChangeAlongFeedback.cs" />
     <Compile Include="ChangeAlong\ChangeGeometryAlongToolBase.cs" />
+    <Compile Include="ChangeAlong\ReshapeAlongToolBase.cs" />
     <Compile Include="GdbPersistenceUtils.cs" />
     <Compile Include="OneClick\ConstructionToolBase.cs" />
     <Compile Include="OneClick\OneClickToolBase.cs" />
