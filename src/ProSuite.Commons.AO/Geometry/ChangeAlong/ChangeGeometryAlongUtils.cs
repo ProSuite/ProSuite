@@ -100,7 +100,15 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			[NotNull] ISubcurveCalculator curveCalculator,
 			[CanBeNull] ITrackCancel trackCancel = null)
 		{
-			Assert.ArgumentCondition(sourceFeatures.Count > 0, "No selected features");
+			if (sourceFeatures.Count == 0)
+			{
+				return ReshapeAlongCurveUsability.NoSource;
+			}
+
+			if (targetFeatures.Count == 0)
+			{
+				return ReshapeAlongCurveUsability.NoTarget;
+			}
 
 			visibleExtent = visibleExtent ?? UnionExtents(sourceFeatures, targetFeatures);
 
