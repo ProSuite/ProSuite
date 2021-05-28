@@ -52,7 +52,7 @@ namespace ProSuite.Microservices.Client.AGP
 				cancellationToken);
 		}
 
-		[CanBeNull]
+		[NotNull]
 		public ChangeAlongCurves CalculateReshapeLines(
 			[NotNull] IList<Feature> sourceFeatures,
 			[NotNull] IList<Feature> targetFeatures,
