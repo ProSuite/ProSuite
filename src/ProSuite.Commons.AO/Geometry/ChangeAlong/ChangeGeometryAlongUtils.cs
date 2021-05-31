@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
@@ -100,6 +101,15 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			[NotNull] ISubcurveCalculator curveCalculator,
 			[CanBeNull] ITrackCancel trackCancel = null)
 		{
+			Assert.ArgumentCondition(
+				sourceFeatures.All(
+					f => curveCalculator.CanUseSourceGeometryType(
+						DatasetUtils.GetShapeType(f.Class))),
+				"Source feature list contains invalid geometry type(s)");
+
+			Assert.ArgumentCondition(targetFeatures.All(CanUseAsTargetFeature),
+			                         "Target feature list contains invalid features");
+
 			if (sourceFeatures.Count == 0)
 			{
 				return ReshapeAlongCurveUsability.NoSource;
@@ -603,6 +613,16 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			}
 
 			return result;
+		}
+
+		private static bool CanUseAsTargetFeature(IFeature target)
+		{
+
+			esriGeometryType? shapeType = DatasetUtils.GetShapeType(target.Class);
+
+			return shapeType == esriGeometryType.esriGeometryPolygon ||
+			       shapeType == esriGeometryType.esriGeometryPolyline ||
+			       shapeType == esriGeometryType.esriGeometryMultiPatch;
 		}
 	}
 }
