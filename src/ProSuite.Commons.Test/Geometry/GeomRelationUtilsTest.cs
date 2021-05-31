@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Geometry;
@@ -8,6 +9,55 @@ namespace ProSuite.Commons.Test.Geometry
 	[TestFixture]
 	public class GeomRelationUtilsTest
 	{
+		[Test]
+		public void CanDetermineEqualMultipointXyVertical()
+		{
+			Multipoint<IPnt> mp1 = new Multipoint<IPnt>(
+				new[]
+				{
+					new Pnt3D(1234.5678, 9876.54321, 345.6),
+					new Pnt3D(1234.5678, 9876.54321, 355.6),
+					new Pnt3D(1234.5678, 9876.54321, 365.6),
+					new Pnt3D(1234.5678, 9876.54321, 375.6)
+				});
+
+			Multipoint<IPnt> mp2 = new Multipoint<IPnt>(mp1.GetPoints(0, null, true));
+
+			Assert.IsTrue(GeomRelationUtils.AreMultipointsEqualXY(mp1, mp2, 0.00001));
+
+			mp2 = new Multipoint<IPnt>(mp1.GetPoints(0, null, true).Reverse());
+
+			Assert.IsTrue(GeomRelationUtils.AreMultipointsEqualXY(mp1, mp2, 0.00001));
+		}
+
+		[Test]
+		public void CanDetermineEqualMultipointXyChangedOrderWithDuplicates()
+		{
+			Multipoint<IPnt> mp1 = new Multipoint<IPnt>(
+				new[]
+				{
+					new Pnt3D(1234.5678, 9876.54321, 345.6),
+					new Pnt3D(234.5678, 987.54321, 355.6),
+					new Pnt3D(34.5678, 98.54321, 365.6),
+					new Pnt3D(4.5678, 9.54321, 375.6)
+				});
+
+			Multipoint<IPnt> mp2 = new Multipoint<IPnt>(mp1.GetPoints(0, null, true).Reverse());
+
+			mp2.AddPoint(new Pnt3D(34.5678, 98.54321, 365.6));
+
+			Assert.IsTrue(GeomRelationUtils.AreMultipointsEqualXY(mp1, mp2, 0.00001));
+
+			mp2 = new Multipoint<IPnt>(mp2.GetPoints(0, null, true).Reverse());
+
+			Assert.IsTrue(GeomRelationUtils.AreMultipointsEqualXY(mp1, mp2, 0.00001));
+
+			mp2.AddPoint(new Pnt3D(34.4678, 98.64321, 365.6));
+
+			Assert.IsFalse(GeomRelationUtils.AreMultipointsEqualXY(mp1, mp2, 0.00001));
+			Assert.IsTrue(GeomRelationUtils.AreBoundsEqual(mp1, mp2, 0.000001));
+		}
+
 		[Test]
 		public void CanGetContainsXY()
 		{

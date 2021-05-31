@@ -18,6 +18,7 @@ using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geometry;
 using ProSuite.Commons.Geometry.EsriShape;
 using Array = System.Array;
 
@@ -3400,6 +3401,120 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			TestExtendedLine(polyline, targetPolyline, LineEnd.From, 1.0);
 			TestExtendedLine(polyline, targetPolyline, LineEnd.Both, 1.0);
+		}
+
+		[Test]
+		public void HitTestMultipointPerformance()
+		{
+			string filePath = TestData.GetHugeLockergesteinPolygonPath();
+			var bigPoly = (IPolygon) TestUtils.ReadGeometryFromXml(filePath);
+
+			IMultipoint multipoint = GeometryFactory.CreateMultipoint((IPointCollection) bigPoly);
+
+			IPoint testPoint = new PointClass();
+			testPoint.X = 2734500;
+			testPoint.Y = 1200123;
+			testPoint.SpatialReference = bigPoly.SpatialReference;
+
+			IPoint hitPoint = GeometryFactory.Clone(testPoint);
+
+			double hitDistance = 0;
+			int partIndex = 0;
+			int segmentIndex = 0;
+			bool rightSide = false;
+
+			IHitTest hitTest = (IHitTest) multipoint;
+
+			Stopwatch watch = Stopwatch.StartNew();
+
+			// This makes no difference - it seems that multipoint hit test does not use the spatial index
+			GeometryUtils.AllowIndexing(multipoint);
+
+			bool found = hitTest.HitTest(
+				testPoint, 0.01,
+				esriGeometryHitPartType.esriGeometryPartVertex, hitPoint,
+				ref hitDistance, ref partIndex, ref segmentIndex, ref rightSide);
+
+			Assert.IsFalse(found);
+
+			watch.Stop();
+
+			Console.WriteLine("First HitTest (AO): {0}", watch.ElapsedMilliseconds);
+
+			watch.Restart();
+			for (int i = 1000; i < 10000; i += 100)
+			{
+				((IPointCollection) multipoint).QueryPoint(i, testPoint);
+
+				found = hitTest.HitTest(
+					testPoint, 0.01,
+					esriGeometryHitPartType.esriGeometryPartVertex, hitPoint,
+					ref hitDistance, ref partIndex, ref segmentIndex, ref rightSide);
+
+				Assert.IsTrue(found);
+				//index = GeometryUtils.FindHitVertexIndex(multipoint, testPoint, 0.01, out partIdx);
+			}
+
+			watch.Stop();
+			Console.WriteLine("Next 100 HitTests (AO): {0}", watch.ElapsedMilliseconds);
+
+			Multipoint<Commons.Geometry.IPnt> multipnt =
+				GeometryConversionUtils.CreateMultipoint(multipoint);
+
+			Pnt2D testPnt = new Pnt2D(2734500, 1200123);
+
+			watch.Restart();
+			bool anyHit = multipnt
+			              .FindPointIndexes(testPnt, 0.01, useSearchCircle: false,
+			                                allowIndexing: true)
+			              .Any();
+
+			Assert.IsFalse(anyHit);
+
+			watch.Stop();
+
+			Console.WriteLine("First HitTest (Geom): {0}", watch.ElapsedMilliseconds);
+
+			watch.Restart();
+			for (int i = 1000; i < 10000; i += 100)
+			{
+				Commons.Geometry.IPnt pnt = multipnt.GetPoint(i);
+
+				anyHit = multipnt
+				         .FindPointIndexes(pnt, 0.01, useSearchCircle: false,
+				                           allowIndexing: true)
+				         .Any();
+
+				Assert.IsTrue(anyHit);
+			}
+
+			watch.Stop();
+			Console.WriteLine("Next 100 HitTests (Geom): {0}", watch.ElapsedMilliseconds);
+
+			multipnt.SpatialIndex = null;
+			watch.Restart();
+			for (int i = 1000; i < 10000; i += 100)
+			{
+				Commons.Geometry.IPnt pnt = multipnt.GetPoint(i);
+
+				anyHit = multipnt
+				         .FindPointIndexes(pnt, 0.01, useSearchCircle: false,
+				                           allowIndexing: false)
+				         .Any();
+
+				Assert.IsTrue(anyHit);
+			}
+
+			watch.Stop();
+			Console.WriteLine("Next 100 HitTests (Geom, without spatial index): {0}",
+			                  watch.ElapsedMilliseconds);
+
+			// Results:
+			// First HitTest(AO): 10
+			// Next 100 HitTests(AO): 704
+			// First HitTest(Geom): 42
+			// Next 100 HitTests(Geom): 2
+			// Next 100 HitTests(Geom, without spatial index): 21
 		}
 
 		private static void TestExtendedLine(IPolyline polyline,

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using ArcGIS.Core.Geometry;
 using Grpc.Core;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
+using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps;
 using ProSuite.Microservices.Definitions.Geometry;
 
@@ -14,6 +16,7 @@ namespace ProSuite.Microservices.Client.AGP
 	public class GeometryProcessingClient : MicroserviceClientBase
 	{
 		private RemoveOverlapsGrpc.RemoveOverlapsGrpcClient RemoveOverlapsClient { get; set; }
+		private ChangeAlongGrpc.ChangeAlongGrpcClient ChangeAlongClient { get; set; }
 		private ReshapeGrpc.ReshapeGrpcClient ReshapeClient { get; set; }
 
 		public GeometryProcessingClient([NotNull] ClientChannelConfig channelConfig) : base(
@@ -25,6 +28,7 @@ namespace ProSuite.Microservices.Client.AGP
 		protected override void ChannelOpenedCore(Channel channel)
 		{
 			RemoveOverlapsClient = new RemoveOverlapsGrpc.RemoveOverlapsGrpcClient(channel);
+			ChangeAlongClient = new ChangeAlongGrpc.ChangeAlongGrpcClient(channel);
 			ReshapeClient = new ReshapeGrpc.ReshapeGrpcClient(channel);
 		}
 
@@ -46,6 +50,34 @@ namespace ProSuite.Microservices.Client.AGP
 			return RemoveOverlapsClientUtils.RemoveOverlaps(
 				RemoveOverlapsClient, selectedFeatures, overlapsToRemove, overlappingFeatures,
 				cancellationToken);
+		}
+
+		[NotNull]
+		public ChangeAlongCurves CalculateReshapeLines(
+			[NotNull] IList<Feature> sourceFeatures,
+			[NotNull] IList<Feature> targetFeatures,
+			CancellationToken cancellationToken)
+		{
+			return ChangeAlongClientUtils.CalculateReshapeLines(
+				ChangeAlongClient, sourceFeatures, targetFeatures, cancellationToken);
+		}
+
+		[NotNull]
+		public List<ReshapeResultFeature> ApplyReshapeLines(
+			[NotNull] IList<Feature> sourceFeatures,
+			[NotNull] IList<Feature> targetFeatures,
+			[NotNull] IList<CutSubcurve> selectedReshapeLines,
+			CancellationToken cancellationToken,
+			out ChangeAlongCurves newChangeAlongCurves)
+		{
+			if (targetFeatures == null)
+			{
+				throw new ArgumentNullException(nameof(targetFeatures));
+			}
+
+			return ChangeAlongClientUtils.ApplyReshapeCurves(
+				ChangeAlongClient, sourceFeatures, targetFeatures, selectedReshapeLines,
+				cancellationToken, out newChangeAlongCurves);
 		}
 
 		public ReshapeResult TryReshape(

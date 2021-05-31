@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence;
+using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 
@@ -79,6 +80,11 @@ namespace ProSuite.AGP.WorkList
 		protected override async Task SetStatusCoreAsync(IWorkItem item, ISourceClass source)
 		{
 			await Task.Run(() => WorkItemStateRepository.Update(item));
+		}
+
+		protected override void UpdateStateRepositoryCore(string path)
+		{
+			((XmlWorkItemStateRepository) WorkItemStateRepository).FilePath = path;
 		}
 	}
 }

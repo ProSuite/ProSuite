@@ -122,6 +122,11 @@ namespace ProSuite.AGP.WorkList
 			await SetStatusCoreAsync(item, source);
 		}
 
+		public void UpdateStateRepository(string path)
+		{
+			UpdateStateRepositoryCore(path);
+		}
+
 		public Task UpdateAsync(IWorkItem item)
 		{
 			// todo daro: revise
@@ -161,6 +166,8 @@ namespace ProSuite.AGP.WorkList
 				gdb?.Dispose();
 			}
 		}
+
+		protected virtual void UpdateStateRepositoryCore(string path) { }
 
 		protected virtual Task SetStatusCoreAsync([NotNull] IWorkItem item,
 		                                          [NotNull] ISourceClass source)

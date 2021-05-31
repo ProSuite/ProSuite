@@ -23,7 +23,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// <param name="sourceFeatures"></param>
 		/// <param name="targetFeatures"></param>
 		/// <param name="visibleExtent"></param>
-		/// <param name="useMinimalTolerance"></param>
+		/// <param name="tolerance"></param>
 		/// <param name="bufferOptions"></param>
 		/// <param name="filterOptions"></param>
 		/// <param name="resultSubcurves"></param>
@@ -33,28 +33,92 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			[NotNull] IList<IFeature> sourceFeatures,
 			[NotNull] IList<IFeature> targetFeatures,
 			[CanBeNull] IEnvelope visibleExtent,
-			bool useMinimalTolerance,
+			double tolerance,
 			TargetBufferOptions bufferOptions,
 			ReshapeCurveFilterOptions filterOptions,
 			IList<CutSubcurve> resultSubcurves,
-			[CanBeNull] ITrackCancel trackCancel)
+			[CanBeNull] ITrackCancel trackCancel = null)
+		{
+			ISubcurveCalculator curveCalculator = new ReshapableSubcurveCalculator();
+
+			return CalculateChangeAlongCurves(sourceFeatures, targetFeatures, visibleExtent,
+			                                  tolerance, bufferOptions, filterOptions,
+			                                  resultSubcurves, curveCalculator, trackCancel);
+		}
+
+		/// <summary>
+		/// Cut curve calculation.
+		/// </summary>
+		/// <param name="sourceFeatures"></param>
+		/// <param name="targetFeatures"></param>
+		/// <param name="visibleExtent"></param>
+		/// <param name="tolerance"></param>
+		/// <param name="bufferOptions"></param>
+		/// <param name="filterOptions"></param>
+		/// <param name="resultSubcurves"></param>
+		/// <param name="trackCancel"></param>
+		/// <returns></returns>
+		public static ReshapeAlongCurveUsability CalculateCutCurves(
+			[NotNull] IList<IFeature> sourceFeatures,
+			[NotNull] IList<IFeature> targetFeatures,
+			[CanBeNull] IEnvelope visibleExtent,
+			double tolerance,
+			TargetBufferOptions bufferOptions,
+			ReshapeCurveFilterOptions filterOptions,
+			IList<CutSubcurve> resultSubcurves,
+			[CanBeNull] ITrackCancel trackCancel = null)
+		{
+			ISubcurveCalculator curveCalculator = new CutPolygonSubcurveCalculator();
+
+			return CalculateChangeAlongCurves(sourceFeatures, targetFeatures, visibleExtent,
+			                                  tolerance, bufferOptions, filterOptions,
+			                                  resultSubcurves, curveCalculator, trackCancel);
+		}
+
+		/// <summary>
+		/// Limited reshape curve calculation without support for multiple-sources-as-union,
+		/// adjust and preview-calculation.
+		/// </summary>
+		/// <param name="sourceFeatures"></param>
+		/// <param name="targetFeatures"></param>
+		/// <param name="visibleExtent"></param>
+		/// <param name="tolerance"></param>
+		/// <param name="bufferOptions"></param>
+		/// <param name="filterOptions"></param>
+		/// <param name="resultSubcurves"></param>
+		/// <param name="curveCalculator"></param>
+		/// <param name="trackCancel"></param>
+		/// <returns></returns>
+		public static ReshapeAlongCurveUsability CalculateChangeAlongCurves(
+			[NotNull] IList<IFeature> sourceFeatures,
+			[NotNull] IList<IFeature> targetFeatures,
+			[CanBeNull] IEnvelope visibleExtent,
+			double tolerance,
+			[NotNull] TargetBufferOptions bufferOptions,
+			[NotNull] ReshapeCurveFilterOptions filterOptions,
+			IList<CutSubcurve> resultSubcurves,
+			[NotNull] ISubcurveCalculator curveCalculator,
+			[CanBeNull] ITrackCancel trackCancel = null)
 		{
 			Assert.ArgumentCondition(sourceFeatures.Count > 0, "No selected features");
+
+			visibleExtent = visibleExtent ?? UnionExtents(sourceFeatures, targetFeatures);
+
+			// TODO: Actual tolerance that can be specified (using double for forward compatibility)
+			bool useMinimalTolerance = MathUtils.AreEqual(0, tolerance);
 
 			IEnvelope clipExtent =
 				GetClipExtent(visibleExtent,
 				              bufferOptions.BufferTarget ? bufferOptions.BufferDistance : 0);
 
-			ISubcurveCalculator curveCalculator = new ReshapableSubcurveCalculator();
 			curveCalculator.SubcurveFilter =
 				new SubcurveFilter(new StaticExtentProvider(visibleExtent));
 
 			IGeometry targetGeometry = BuildTargetGeometry(targetFeatures, clipExtent);
 
-			string reasonForEmptyTargetLine;
 			IPolyline targetLine = PrepareTargetLine(
 				sourceFeatures, targetGeometry, clipExtent, bufferOptions,
-				out reasonForEmptyTargetLine, trackCancel);
+				out string _, trackCancel);
 
 			if (targetLine == null || targetLine.IsEmpty)
 			{
@@ -504,26 +568,33 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			return false;
 		}
-	}
 
-	public class StaticExtentProvider : IExtentProvider
-	{
-		private readonly List<IEnvelope> _extents;
-
-		public StaticExtentProvider(IEnvelope visibleExtent)
+		[NotNull]
+		private static IEnvelope UnionExtents([NotNull] IList<IFeature> sourceFeatures,
+		                                      [NotNull] IList<IFeature> targetFeatures)
 		{
-			_extents = new List<IEnvelope> {visibleExtent};
-		}
+			IEnvelope result = null;
 
-		public IEnvelope GetCurrentExtent()
-		{
-			return _extents[0];
-		}
+			foreach (IFeature sourceFeature in sourceFeatures)
+			{
+				if (result == null)
+				{
+					result = sourceFeature.Extent;
+				}
+				else
+				{
+					result.Union(sourceFeature.Extent);
+				}
+			}
 
-		public IEnumerable<IEnvelope> GetVisibleLensWindowExtents()
-		{
-			// TODO: Check whether the main map window should be included or not:
-			return _extents;
+			Assert.NotNull(result);
+
+			foreach (IFeature targetFeature in targetFeatures)
+			{
+				result.Union(targetFeature.Extent);
+			}
+
+			return result;
 		}
 	}
 }

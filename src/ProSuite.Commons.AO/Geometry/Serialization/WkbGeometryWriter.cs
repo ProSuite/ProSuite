@@ -27,6 +27,8 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 				{
 					case esriGeometryType.esriGeometryPoint:
 						return WritePoint((IPoint) geometry);
+					case esriGeometryType.esriGeometryMultipoint:
+						return WriteMultipoint((IMultipoint) geometry);
 					case esriGeometryType.esriGeometryPolyline:
 						return WritePolyline((IPolyline) geometry);
 					case esriGeometryType.esriGeometryPolygon:
@@ -58,6 +60,36 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 			WritePointCore(point, ordinates);
 
 			// TODO: Return byte array used for initialization
+			return memoryStream.ToArray();
+		}
+
+		public byte[] WriteMultipoint(IMultipoint multipoint)
+		{
+			MemoryStream memoryStream = InitializeWriter();
+
+			Ordinates ordinates = GetOrdinatesDimension(multipoint);
+
+			WriteWkbType(WkbGeometryType.MultiPoint, ordinates);
+
+			var pointCollection = ((IPointCollection4) multipoint);
+
+			int pointCount = pointCollection.PointCount;
+
+			Writer.Write(pointCount);
+
+			WKSPointZ[] pointArray = GetWksPointArray(pointCollection.PointCount);
+
+			GeometryUtils.QueryWKSPointZs(pointCollection, pointArray);
+
+			var pointList = new WksPointZPointList(pointArray, 0, pointCount);
+
+			for (int i = 0; i < pointCount; i++)
+			{
+				WriteWkbType(WkbGeometryType.Point, ordinates);
+
+				WritePointCore(pointList, i, ordinates);
+			}
+
 			return memoryStream.ToArray();
 		}
 

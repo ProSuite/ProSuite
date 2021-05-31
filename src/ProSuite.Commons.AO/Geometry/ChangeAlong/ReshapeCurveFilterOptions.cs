@@ -2,14 +2,14 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
 	public class ReshapeCurveFilterOptions
 	{
-		public ReshapeCurveFilterOptions(bool onlyInVisibleExtent,
-		                                 double tolerance,
-		                                 bool excludeOutsideSource,
-		                                 bool excludeResultingInOverlaps)
+		public ReshapeCurveFilterOptions(bool onlyInVisibleExtent = false,
+		                                 double excludeTolerance = 0,
+		                                 bool excludeOutsideSource = false,
+		                                 bool excludeResultingInOverlaps = false)
 		{
 			OnlyInVisibleExtent = onlyInVisibleExtent;
 
-			ExcludeTolerance = tolerance;
+			ExcludeTolerance = excludeTolerance;
 
 			ExcludeOutsideSource = excludeOutsideSource;
 			ExcludeResultingInOverlaps = excludeResultingInOverlaps;

@@ -250,6 +250,11 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.True(wl.Current?.Visited);
 		}
 
+		public void Can_go_nearest_if_item_is_Done()
+		{
+
+		}
+
 		[Test]
 		public void Cannot_go_first_again_if_first_item_is_set_done()
 		{

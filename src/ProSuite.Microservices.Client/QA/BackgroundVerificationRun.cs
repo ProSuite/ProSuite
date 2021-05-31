@@ -69,7 +69,11 @@ namespace ProSuite.Microservices.Client.QA
 		public IQualityVerificationProgressTracker Progress { get; }
 
 		[CanBeNull]
-		public Action<IQualityVerificationResult> SaveAction { get; set; }
+		public Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool> SaveAction
+		{
+			get;
+			set;
+		}
 
 		[CanBeNull]
 		public Action<QualityVerification> ShowReportAction { get; set; }

@@ -7,14 +7,14 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 {
 	public class ReshapeResultFeature
 	{
-		private readonly ResultFeatureMsg _resultFeatureMsg;
+		private readonly ResultObjectMsg _resultFeatureMsg;
 
 		public Feature Feature { get; }
 
 		private Geometry _updatedGeometry;
 
 		public ReshapeResultFeature(Feature feature,
-		                            ResultFeatureMsg resultFeatureMsg)
+		                            ResultObjectMsg resultFeatureMsg)
 		{
 			_resultFeatureMsg = resultFeatureMsg;
 			Feature = feature;
@@ -32,7 +32,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 					SpatialReference knownSr = Feature.GetShape().SpatialReference;
 
 					_updatedGeometry =
-						ProtobufConversionUtils.FromShapeMsg(_resultFeatureMsg.UpdatedFeature.Shape,
+						ProtobufConversionUtils.FromShapeMsg(_resultFeatureMsg.Update.Shape,
 						                                     knownSr);
 				}
 

@@ -45,7 +45,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			_path = path;
 		}
 
-		public override string FileSuffix => ".xml.iwl";
+		public override string FileSuffix => ".iwl";
 
 		protected override async Task<bool> TryPrepareSchemaCoreAsync()
 		{

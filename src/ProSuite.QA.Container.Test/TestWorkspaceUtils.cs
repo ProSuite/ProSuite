@@ -72,6 +72,24 @@ namespace ProSuite.QA.Container.Test
 		}
 
 		[NotNull]
+		public static IFeatureWorkspace CreateTestShapefileWorkspace(
+			[NotNull] string gdbName)
+		{
+			string dir = Path.GetTempPath();
+
+			string folder = Path.Combine(dir, gdbName);
+
+			if (Directory.Exists(folder))
+			{
+				Directory.Delete(folder, true);
+			}
+
+			IWorkspaceName wsName = WorkspaceUtils.CreateShapefileWorkspace(dir, gdbName);
+
+			return (IFeatureWorkspace)((IName)wsName).Open();
+		}
+
+		[NotNull]
 		public static ITable CreateSimpleTable(
 			[NotNull] IFeatureWorkspace workspace,
 			[NotNull] string tableName,

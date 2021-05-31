@@ -12,6 +12,26 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 {
 	public static class ExternalIssueRepositoryUtils
 	{
+		public static bool IssueRepositoryExists(
+			[NotNull] string directoryFullPath,
+			[NotNull] string gdbName,
+			IssueRepositoryType issueRepositoryType)
+		{
+			string fullPath = Path.Combine(directoryFullPath, gdbName);
+
+			switch (issueRepositoryType)
+			{
+				case IssueRepositoryType.None:
+					return false;
+				case IssueRepositoryType.FileGdb:
+					return WorkspaceUtils.FileGdbWorkspaceExists(fullPath);
+				case IssueRepositoryType.Shapefiles:
+					return WorkspaceUtils.ShapefileWorkspaceExists(fullPath);
+				default:
+					throw new ArgumentOutOfRangeException(nameof(issueRepositoryType));
+			}
+		}
+
 		[CanBeNull]
 		public static IIssueRepository GetIssueRepository(
 			[NotNull] string gdbFullPath,
@@ -102,7 +122,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 
 				case IssueRepositoryType.Shapefiles:
 					return IssueTableFieldsFactory.GetIssueTableFields(addExceptionFields,
-					                                                   useDbfFieldNames: true);
+						useDbfFieldNames: true);
 
 				default:
 					throw new ArgumentOutOfRangeException(nameof(issueRepositoryType));

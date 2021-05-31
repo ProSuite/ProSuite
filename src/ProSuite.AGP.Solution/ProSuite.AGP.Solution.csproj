@@ -101,6 +101,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Editing\AdvancedReshapeTool.cs" />
+    <Compile Include="Editing\ReshapeAlongTool.cs" />
     <Compile Include="Editing\RemoveOverlapsTool.cs" />
     <Compile Include="LoggerUI\LogMessageActionEvent.cs" />
     <Compile Include="LoggerUI\LogMessageDetailsDialog.xaml.cs">
@@ -135,6 +136,7 @@
     <Compile Include="ProjectItem\ProSuiteProjectItemWorkList.cs" />
     <Compile Include="ProjectItem\IssueWorklistItem.cs" />
     <Compile Include="ProjectItem\SelectionWorklistItem.cs" />
+    <Compile Include="ProjectItem\WorklistItem.cs" />
     <Compile Include="ProjectItem\WorklistsContainer.cs" />
     <Compile Include="Resource.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -347,7 +349,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
-      <Version>1.1.19</Version>
+      <Version>1.1.31</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
@@ -455,6 +457,12 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resource.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\WorklistsFolder16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\ReshapeAlongTool32.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--

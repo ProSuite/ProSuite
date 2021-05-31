@@ -344,7 +344,7 @@ namespace ProSuite.Commons.Geometry
 				return true;
 			}
 
-			return true;
+			return false;
 		}
 
 		public bool IsFirstPointInPart(int vertexIndex)
@@ -444,6 +444,31 @@ namespace ProSuite.Commons.Geometry
 			x = point.X;
 			y = point.Y;
 			z = point[2];
+		}
+
+		public IPnt GetPointAlong(double distanceAlong, bool asRatio)
+		{
+			distanceAlong = asRatio ? GetLength2D() * distanceAlong : distanceAlong;
+
+			double currentDistance = 0;
+			foreach (Line3D segment in _segments)
+			{
+				double nextDistance = currentDistance + segment.Length2D;
+
+				if (nextDistance < distanceAlong)
+				{
+					currentDistance = nextDistance;
+					continue;
+				}
+
+				// It's along the current segment
+				double distanceAlongSegment = distanceAlong - currentDistance;
+
+				return segment.GetPointAlong(distanceAlongSegment, false);
+			}
+
+			throw new ArgumentOutOfRangeException(nameof(distanceAlong),
+			                                      "The provided distance is outside the linestring");
 		}
 
 		public IEnumerable<IPnt> AsEnumerablePoints(bool clone = false)

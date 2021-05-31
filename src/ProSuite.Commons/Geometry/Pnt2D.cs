@@ -48,7 +48,7 @@ namespace ProSuite.Commons.Geometry
 			return $"{X};{Y}";
 		}
 
-		public override Pnt Clone()
+		public override Pnt ClonePnt()
 		{
 			return new Pnt2D(Coordinates[0], Coordinates[1]);
 		}

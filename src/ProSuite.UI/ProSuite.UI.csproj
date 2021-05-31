@@ -109,6 +109,10 @@
     <Compile Include="QA\QualityConditionType.cs" />
     <Compile Include="QA\ResourceLookup\TestTypeImageLookup.cs" />
     <Compile Include="QA\VerificationProgress\BackgroundVerificationUtils.cs" />
+    <Compile Include="QA\VerificationProgress\UpdateIssuesOptionsControl.xaml.cs">
+      <DependentUpon>UpdateIssuesOptionsControl.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="QA\VerificationProgress\UpdateIssuesOptionsViewModel.cs" />
     <Compile Include="QA\VerificationProgress\VerificationProgressViewModel.cs" />
     <Compile Include="QA\VerificationProgress\VerificationProgressWpfControl.xaml.cs">
       <DependentUpon>VerificationProgressWpfControl.xaml</DependentUpon>
@@ -161,6 +165,10 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Page Include="QA\VerificationProgress\UpdateIssuesOptionsControl.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="QA\VerificationProgress\VerificationProgressWpfControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -278,6 +286,10 @@
     <Content Include="Properties\TestTypeImages\TestTypeUnknown.png" />
     <Content Include="Properties\TestTypeImages\Warning.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
+      <Version>1.1.31</Version>
+    </PackageReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

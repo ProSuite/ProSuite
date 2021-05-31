@@ -13,9 +13,11 @@ using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 using ProSuite.Commons.Xml;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Server.AO.QA;
+using Quaestor.LoadReporting;
 
 namespace ProSuite.Microservices.Server.AO
 {
@@ -31,42 +33,109 @@ namespace ProSuite.Microservices.Server.AO
 		/// with the <see cref="IServiceHealth"/> implementation and returns a handle for both.
 		/// </summary>
 		/// <param name="arguments">The microserver command line / config arguments.</param>
-		/// <param name="inputsFactoryMethod">The factory method that creates the
+		/// <param name="inputsFactory">The factory method that creates the
 		/// <see cref="IBackgroundVerificationInputs"/> instance. If no factory is proveded, only
 		/// stand-alone verification (such as XML) can be used.</param>
-		/// <param name="checkout3dAnalyst"></param>
 		/// <param name="markUnhealthyOnExceptions"></param>
 		/// <returns></returns>
-		public static StartedGrpcServer StartVerificationServer(
+		public static StartedGrpcServer<QualityVerificationGrpcImpl> StartVerificationServer(
 			[NotNull] MicroserverArguments arguments,
-			[CanBeNull]
-			Func<VerificationRequest, IBackgroundVerificationInputs> inputsFactoryMethod,
-			bool checkout3dAnalyst,
+			[CanBeNull] Func<VerificationRequest, IBackgroundVerificationInputs> inputsFactory,
 			bool markUnhealthyOnExceptions)
 		{
 			var healthService = new HealthServiceImpl();
 
 			IServiceHealth health = new ServiceHealth(healthService);
 
-			var wuVerificationServiceImpl =
-				new QualityVerificationGrpcImpl(inputsFactoryMethod,
+			LoadReportingGrpcImpl loadReporting = new LoadReportingGrpcImpl();
+
+			ServiceLoad serviceLoad = new ServiceLoad(arguments.MaxParallel);
+
+			loadReporting.AllowMonitoring(nameof(QualityVerificationGrpc), serviceLoad);
+
+			var verificationServiceImpl =
+				new QualityVerificationGrpcImpl(inputsFactory,
 				                                arguments.MaxParallel)
 				{
-					Checkout3DAnalyst = checkout3dAnalyst
+					CurrentLoad = serviceLoad
 				};
 
 			if (markUnhealthyOnExceptions)
 			{
-				wuVerificationServiceImpl.Health = health;
+				verificationServiceImpl.Health = health;
 			}
 
-			health.SetStatus(wuVerificationServiceImpl.GetType(), true);
+			health.SetStatus(verificationServiceImpl.GetType(), true);
 
+			Grpc.Core.Server server =
+				StartGrpcServer(arguments, verificationServiceImpl, healthService, loadReporting);
+
+			_msg.InfoFormat("Service is listening on host {0}, port {1}.", arguments.HostName,
+			                arguments.Port);
+
+			return new StartedGrpcServer<QualityVerificationGrpcImpl>(
+				server, verificationServiceImpl, health);
+		}
+
+		private static Grpc.Core.Server StartGrpcServer(
+			MicroserverArguments arguments,
+			[NotNull] QualityVerificationGrpcImpl verificationServiceImpl,
+			[NotNull] HealthServiceImpl healthService,
+			[NotNull] LoadReportingGrpcImpl loadReporting)
+		{
+			var services = new List<ServerServiceDefinition>(
+				new[]
+				{
+					QualityVerificationGrpc.BindService(verificationServiceImpl),
+					Health.BindService(healthService),
+					LoadReportingGrpc.BindService(loadReporting)
+				});
+
+			return StartGrpcServer(services, arguments);
+		}
+
+		/// <summary>
+		/// Starts the grpc server at the address specified in the microserver arguments parameter
+		/// with the specified services.
+		/// </summary>
+		/// <param name="services">The list of service definitions to be hosted by the server.</param>
+		/// <param name="arguments">The microserver arguments containing the connection details.</param>
+		/// <returns></returns>
+		public static Grpc.Core.Server StartGrpcServer(
+			[NotNull] ICollection<ServerServiceDefinition> services,
+			[NotNull] MicroserverArguments arguments)
+		{
+			return StartGrpcServer(services, arguments.HostName, arguments.Port,
+			                       arguments.Certificate, arguments.PrivateKeyFile,
+			                       arguments.EnforceMutualTls);
+		}
+
+		/// <summary>
+		/// Starts the grpc server at the specified address with the specified services.
+		/// </summary>
+		/// <param name="services">The list of service definitions to be hosted by the server.</param>
+		/// <param name="hostName">The host name.</param>
+		/// <param name="port">The port.</param>
+		/// <param name="certificate">The certificate store's certificate (subject or thumbprint)
+		/// or the PEM file containing the certificate chain.</param>
+		/// <param name="privateKeyFilePath">The PEM file containing the private key (only if the
+		/// certificate was provided by a PEM file.</param>
+		/// <param name="enforceMutualTls">Enforce client authentication.</param>
+		/// <returns></returns>
+		public static Grpc.Core.Server StartGrpcServer(
+			[NotNull] ICollection<ServerServiceDefinition> services,
+			[NotNull] string hostName,
+			int port,
+			string certificate,
+			string privateKeyFilePath,
+			bool enforceMutualTls = false)
+		{
 			ServerCredentials serverCredentials =
-				GrpcServerUtils.GetServerCredentials(arguments.Certificate,
-				                                     arguments.PrivateKeyFile,
-				                                     arguments.EnforceMutualTls);
+				GrpcServerUtils.GetServerCredentials(certificate,
+				                                     privateKeyFilePath,
+				                                     enforceMutualTls);
 
+			// Enough for large geometries
 			var oneGb = (int) Math.Pow(1024, 3);
 
 			IList<ChannelOption> channelOptions = GrpcServerUtils.CreateChannelOptions(oneGb);
@@ -74,23 +143,31 @@ namespace ProSuite.Microservices.Server.AO
 			var server =
 				new Grpc.Core.Server(channelOptions)
 				{
-					Services =
-					{
-						QualityVerificationGrpc.BindService(wuVerificationServiceImpl),
-						Health.BindService(healthService)
-					},
 					Ports =
 					{
-						new ServerPort(arguments.HostName, arguments.Port, serverCredentials)
+						new ServerPort(hostName, port, serverCredentials)
 					}
 				};
 
+			foreach (ServerServiceDefinition serviceDefinition in services)
+			{
+				server.Services.Add(serviceDefinition);
+			}
+
+			_msg.DebugFormat("Starting grpc server on {0} with the following services: {1}",
+			                 ToHttpUrl(hostName, port, certificate != null),
+			                 StringUtils.Concatenate(services, ", "));
+
 			server.Start();
 
-			_msg.InfoFormat("Service is listening on host {0}, port {1}.", arguments.HostName,
-			                arguments.Port);
+			return server;
+		}
 
-			return new StartedGrpcServer(server, health);
+		private static string ToHttpUrl(string hostName, int port, bool useTls)
+		{
+			string protocol = useTls ? "https" : "http";
+
+			return $"{protocol}://{hostName}:{port}";
 		}
 
 		[CanBeNull]
@@ -130,6 +207,9 @@ namespace ProSuite.Microservices.Server.AO
 			}
 			else
 			{
+				_msg.InfoFormat(
+					"Using arguments from command line (config file is ignored if it exists).");
+
 				var parsedArgs = Parser.Default.ParseArguments<MicroserverArguments>(args);
 
 				parsedArgs.WithParsed(arguments => { result = arguments; });
@@ -184,13 +264,13 @@ namespace ProSuite.Microservices.Server.AO
 				_msg.IsVerboseDebugEnabled = true;
 			}
 
-			Assembly executingAssembly = Assembly.GetExecutingAssembly();
+			Assembly exeAssembly = Assert.NotNull(Assembly.GetEntryAssembly());
 
 			string bitness = Environment.Is64BitProcess ? "64 bit" : "32 bit";
 
 			_msg.InfoFormat("Logging configured for {0} ({1}) version {2}",
-			                executingAssembly.Location, bitness,
-			                executingAssembly.GetName().Version);
+			                exeAssembly.Location, bitness,
+			                exeAssembly.GetName().Version);
 
 			if (_msg.IsVerboseDebugEnabled)
 			{

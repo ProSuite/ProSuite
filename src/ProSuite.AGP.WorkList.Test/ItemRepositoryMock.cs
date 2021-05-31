@@ -82,6 +82,11 @@ namespace ProSuite.AGP.WorkList.Test
 			throw new NotImplementedException();
 		}
 
+		public void UpdateStateRepository(string path)
+		{
+			throw new NotImplementedException();
+		}
+
 		public void Dispose() { }
 	}
 }

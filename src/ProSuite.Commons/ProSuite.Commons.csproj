@@ -89,6 +89,7 @@
     <Compile Include="Geometry\IPointList.cs" />
     <Compile Include="Geometry\ISegmentList.cs" />
     <Compile Include="Geometry\MultipleRingNavigator.cs" />
+    <Compile Include="Geometry\Multipoint.cs" />
     <Compile Include="Geometry\SegmentIntersectionUtils.cs" />
     <Compile Include="Geometry\SingleRingNavigator.cs" />
     <Compile Include="Geometry\SubcurveNavigator.cs" />

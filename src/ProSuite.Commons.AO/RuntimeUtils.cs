@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using ESRI.ArcGIS;
 using Microsoft.Win32;
 using ProSuite.Commons.Essentials.Assertions;
@@ -207,7 +208,9 @@ namespace ProSuite.Commons.AO
 		{
 			try
 			{
-				// the following code fails in the 64bit background environment (see COM-221)
+				// the following code fails
+				// - in the 64bit background environment (see COM-221): DllNotFound
+				// - in specific cross-thread situations: InvalidComObject
 				RuntimeInfo runtime = RuntimeManager.ActiveRuntime;
 
 				if (runtime == null)
@@ -235,18 +238,29 @@ namespace ProSuite.Commons.AO
 			}
 			catch (DllNotFoundException e)
 			{
-				_msg.VerboseDebugFormat(
-					"Error accessing RuntimeManager: {0}; trying to get version from assembly",
-					e.Message);
-
-				if (TryGetVersionFromVersionAssembly(out version))
-				{
-					return true;
-				}
-
-				_msg.DebugFormat("Unable to get ArcGIS version from assembly");
-				return false;
+				return HandleErrorAndGetVersionFromAssembly(e, out version);
 			}
+			catch (InvalidComObjectException e)
+			{
+				return HandleErrorAndGetVersionFromAssembly(e, out version);
+			}
+		}
+
+		private static bool HandleErrorAndGetVersionFromAssembly(Exception exception,
+		                                                         out string version)
+		{
+			_msg.DebugFormat(
+				"Error accessing RuntimeManager: {0}; trying to get version from assembly",
+				exception.Message);
+
+			if (TryGetVersionFromVersionAssembly(out version))
+			{
+				return true;
+			}
+
+			_msg.DebugFormat("Unable to get ArcGIS version from assembly");
+
+			return false;
 		}
 
 		private static bool TryGetInstallDirForActiveRuntime(out string installDir)

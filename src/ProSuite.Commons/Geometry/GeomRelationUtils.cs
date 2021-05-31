@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -79,6 +79,90 @@ namespace ProSuite.Commons.Geometry
 			}
 
 			return false;
+		}
+
+		public static bool AreBoundsEqual(
+			[NotNull] IBoundedXY geometry1,
+			[NotNull] IBoundedXY geometry2,
+			double tolerance)
+		{
+			return AreBoundsEqual(
+				geometry1.XMin, geometry1.YMin, geometry1.XMax, geometry1.YMax,
+				geometry2.XMin, geometry2.YMin, geometry2.XMax, geometry2.YMax,
+				tolerance);
+		}
+
+		public static bool AreBoundsEqual(
+			double box1XMin, double box1YMin, double box1XMax, double box1YMax,
+			double box2XMin, double box2YMin, double box2XMax, double box2YMax,
+			double tolerance)
+		{
+			if (! MathUtils.AreEqual(box1XMin, box2XMin, tolerance))
+			{
+				return false;
+			}
+
+			if (! MathUtils.AreEqual(box1YMin, box2YMin, tolerance))
+			{
+				return false;
+			}
+
+			if (! MathUtils.AreEqual(box1XMax, box2XMax, tolerance))
+			{
+				return false;
+			}
+
+			if (! MathUtils.AreEqual(box1YMax, box2YMax, tolerance))
+			{
+				return false;
+			}
+
+			return true;
+		}
+
+		public static bool AreMultipointsEqualXY([NotNull] Multipoint<IPnt> multipoint1,
+		                                         [NotNull] Multipoint<IPnt> multipoint2,
+		                                         double tolerance)
+		{
+			if (ReferenceEquals(multipoint1, multipoint2))
+			{
+				return true;
+			}
+
+			if (! AreBoundsEqual(multipoint1, multipoint2, tolerance))
+			{
+				return false;
+			}
+
+			HashSet<int> foundIndexes = new HashSet<int>();
+
+			foreach (IPnt point in multipoint1.GetPoints())
+			{
+				bool anyFound = false;
+				foreach (int foundIdx in
+					multipoint2.FindPointIndexes(point, tolerance, true))
+				{
+					anyFound = true;
+
+					foundIndexes.Add(foundIdx);
+				}
+
+				if (! anyFound)
+				{
+					return false;
+				}
+			}
+
+			// Check if all points have been found at some point:
+			for (int i = 0; i < multipoint2.PointCount; i++)
+			{
+				if (! foundIndexes.Contains(i))
+				{
+					return false;
+				}
+			}
+
+			return true;
 		}
 
 		public static bool LinesContainXY([NotNull] ISegmentList segments,

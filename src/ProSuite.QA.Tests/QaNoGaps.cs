@@ -39,10 +39,7 @@ namespace ProSuite.QA.Tests
 
 		private Box _allBox;
 		private KnownGaps _knownGaps;
-
-		private static readonly IList<IFeatureClass> _emptyFeatureClasses =
-			new List<IFeatureClass>();
-
+		
 		private readonly int _firstAreaOfInterestClassIndex;
 
 		#region issue codes
@@ -95,7 +92,7 @@ namespace ProSuite.QA.Tests
 		                bool findGapsBelowTolerance)
 			: this(new List<IFeatureClass> {polygonClass}, sliverLimit, maxArea,
 			       subtileWidth, 0,
-			       findGapsBelowTolerance, _emptyFeatureClasses) { }
+			       findGapsBelowTolerance, new List<IFeatureClass>(0)) { }
 
 		[Doc(nameof(DocStrings.QaNoGaps_3))]
 		public QaNoGaps(
@@ -108,7 +105,7 @@ namespace ProSuite.QA.Tests
 			bool findGapsBelowTolerance)
 			: this(polygonClasses, sliverLimit, maxArea,
 			       subtileWidth, 0,
-			       findGapsBelowTolerance, _emptyFeatureClasses) { }
+			       findGapsBelowTolerance, new List<IFeatureClass>(0)) { }
 
 		[Doc(nameof(DocStrings.QaNoGaps_4))]
 		public QaNoGaps(
@@ -144,7 +141,7 @@ namespace ProSuite.QA.Tests
 		                int tileSubdivisionCount)
 			: this(
 				new List<IFeatureClass> {polygonClass}, sliverLimit, maxArea,
-				0, tileSubdivisionCount, false, _emptyFeatureClasses) { }
+				0, tileSubdivisionCount, false, new List<IFeatureClass>()) { }
 
 		[Obsolete]
 		public QaNoGaps([NotNull] IList<IFeatureClass> polygonClasses,
@@ -152,7 +149,7 @@ namespace ProSuite.QA.Tests
 		                double maxArea,
 		                int tileSubdivisionCount)
 			: this(polygonClasses, sliverLimit, maxArea, 0,
-			       tileSubdivisionCount, false, _emptyFeatureClasses) { }
+			       tileSubdivisionCount, false, new List<IFeatureClass>()) { }
 
 		private QaNoGaps([NotNull] IList<IFeatureClass> polygonClasses,
 		                 double sliverLimit, double maxArea,

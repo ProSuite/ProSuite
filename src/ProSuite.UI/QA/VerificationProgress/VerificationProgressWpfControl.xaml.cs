@@ -1,7 +1,9 @@
 using System.Windows;
 using System.Windows.Forms;
+using Microsoft.Xaml.Behaviors;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.UI.WPF;
+using TriggerBase = Microsoft.Xaml.Behaviors.TriggerBase;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace ProSuite.UI.QA.VerificationProgress
@@ -15,6 +17,14 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 		public VerificationProgressWpfControl()
 		{
+			// BUG: Could not load file or assembly 'Microsoft.Xaml.Behaviors, ...'
+			//      when not loaded directly.
+			// https://github.com/microsoft/XamlBehaviorsWpf/issues/86
+			// https://github.com/zspitz/ANTLR4ParseTreeVisualizer/issues/35
+
+			var _ = new DefaultTriggerAttribute(
+				typeof(Trigger), typeof(TriggerBase), null);
+
 			InitializeComponent();
 		}
 
