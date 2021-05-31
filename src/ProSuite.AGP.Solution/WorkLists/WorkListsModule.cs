@@ -544,29 +544,32 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		private void OnProjectItemsChanged(ProjectItemsChangedEventArgs e)
 		{
-			foreach (var item in e.ProjectItemsCollection.OfType<WorklistItem>())
+			if (e.ProjectItemsCollection != null)
 			{
-				switch (e.Action)
+				foreach (var item in e.ProjectItemsCollection.OfType<WorklistItem>())
 				{
-					case NotifyCollectionChangedAction.Replace:
+					switch (e.Action)
+					{
+						case NotifyCollectionChangedAction.Replace:
 
-						Assert.NotNullOrEmpty(item.WorklistName);
-						Assert.True(_registry.Exists(item.WorklistName),
-						            $"Cannot find work list {item.WorklistName} in registry");
+							Assert.NotNullOrEmpty(item.WorklistName);
+							Assert.True(_registry.Exists(item.WorklistName),
+							            $"Cannot find work list {item.WorklistName} in registry");
 
-						IWorkList workList = _registry.Get(item.WorklistName);
-						Assert.NotNull(workList);
+							IWorkList workList = _registry.Get(item.WorklistName);
+							Assert.NotNull(workList);
 
-						workList.Repository.UpdateStateRepository(item.Path);
+							workList.Repository.UpdateStateRepository(item.Path);
 
-						break;
-					case NotifyCollectionChangedAction.Add:
-					case NotifyCollectionChangedAction.Remove:
-					case NotifyCollectionChangedAction.Move:
-					case NotifyCollectionChangedAction.Reset:
-						throw new NotImplementedException();
-					default:
-						throw new ArgumentOutOfRangeException();
+							break;
+						case NotifyCollectionChangedAction.Add:
+						case NotifyCollectionChangedAction.Remove:
+						case NotifyCollectionChangedAction.Move:
+						case NotifyCollectionChangedAction.Reset:
+							throw new NotImplementedException();
+						default:
+							throw new ArgumentOutOfRangeException();
+					}
 				}
 			}
 		}
