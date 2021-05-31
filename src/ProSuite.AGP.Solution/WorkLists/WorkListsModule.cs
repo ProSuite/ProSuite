@@ -46,7 +46,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		[NotNull] private readonly Dictionary<string, string> _uriByWorklistName =
 			new Dictionary<string, string>();
-		
+
 		private IWorkListRegistry _registry;
 		[CanBeNull] private EditEventsRowCacheSynchronizer _synchronizer;
 
@@ -133,8 +133,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 				}
 
 				_viewsByWorklistName.Add(worklist.Name, new WorkListObserver(worklist, item));
-				
-				Uri uri = WorkListUtils.GetDatasource(GetProject().HomeFolderPath, name, environment.FileSuffix);
+
+				Uri uri = WorkListUtils.GetDatasource(GetProject().HomeFolderPath, name,
+				                                      environment.FileSuffix);
 				FeatureLayer layer = AddLayer(uri, name, item.Name);
 
 				// use item name as layer name (and as view display name as well)
@@ -144,14 +145,16 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return Assert.NotNullOrEmpty(worklist.Name);
 		}
 
-		public async Task CreateWorkListAsync([NotNull] WorkEnvironmentBase environment, [NotNull] string name)
+		public async Task CreateWorkListAsync([NotNull] WorkEnvironmentBase environment,
+		                                      [NotNull] string name)
 		{
 			Assert.ArgumentNotNull(environment, nameof(environment));
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
 
 			Assert.False(_registry.Exists(name), $"work list {name} already exists");
 
-			Uri uri = WorkListUtils.GetDatasource(GetProject().HomeFolderPath, name, environment.FileSuffix);
+			Uri uri = WorkListUtils.GetDatasource(GetProject().HomeFolderPath, name,
+			                                      environment.FileSuffix);
 
 			IWorkList worklist = await environment.CreateWorkListAsync(uri.LocalPath, name);
 
@@ -170,8 +173,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 			// wiring work list events, etc. is done in OnDrawComplete
 			// register work list before creating the layer
 			_registry.TryAdd(worklist);
-			
-			Assert.True(ProjectItemUtils.TryAdd(uri.LocalPath, out WorklistItem item), $"cannot add item {worklist.Name}");
+
+			Assert.True(ProjectItemUtils.TryAdd(uri.LocalPath, out WorklistItem item),
+			            $"cannot add item {worklist.Name}");
 
 			if (! _viewsByWorklistName.ContainsKey(worklist.Name))
 			{
@@ -256,7 +260,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 
 			List<string> worklistLayerUris = new List<string>(_uriByWorklistName.Count);
-			worklistLayerUris.AddRange(_uriByWorklistName.Select(pair => $"{pair.Key}:{pair.Value}"));
+			worklistLayerUris.AddRange(
+				_uriByWorklistName.Select(pair => $"{pair.Key}:{pair.Value}"));
 
 			settings.Add("worklistLayerUris", StringUtils.Concatenate(worklistLayerUris, "#"));
 
@@ -273,9 +278,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 		}
 
 		[CanBeNull]
-		private FeatureLayer AddLayer([NotNull] Uri dataSource, string worklistName, [NotNull] string layerName)
+		private FeatureLayer AddLayer([NotNull] Uri dataSource, string worklistName,
+		                              [NotNull] string layerName)
 		{
-			PluginDatasourceConnectionPath connector = new PluginDatasourceConnectionPath(PluginIdentifier, dataSource);
+			PluginDatasourceConnectionPath connector =
+				new PluginDatasourceConnectionPath(PluginIdentifier, dataSource);
 
 			using (var datastore = new PluginDatastore(connector))
 			{
@@ -285,7 +292,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 						LayerFactory.Instance.CreateFeatureLayer((FeatureClass) table,
 						                                         MapView.Active.Map,
 						                                         LayerPosition.AddToTop, layerName);
-
 
 					LayerUtils.SetLayerSelectability(worklistLayer, false);
 
@@ -316,7 +322,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 		//{
 		//	if (_layersByWorklistName.ContainsKey(workList.Name))
 		//	{
-				
+
 		//	}
 		//	if (_layerByWorkList.ContainsKey(workList))
 		//	{
@@ -379,7 +385,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 		private void OnDrawCompleted(MapViewEventArgs e)
 		{
 			string uri = null;
-			foreach (string name in _registry.GetNames().Where(name => _uriByWorklistName.TryGetValue(name, out uri)))
+			foreach (string name in _registry.GetNames()
+			                                 .Where(name => _uriByWorklistName.TryGetValue(
+				                                        name, out uri)))
 			{
 				// Can be null because it's from module settings and those cannot be deleted but only
 				// set to null.
@@ -478,7 +486,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 					ViewUtils.RunOnUIThread(() => { view.View.Title = mapMember.Name; });
 				}
-
 			}, _msg);
 		}
 
@@ -514,7 +521,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			// 2. OnProjectOpenedAsync
 			// 3. OnProjectOpened
 			// 4. Pluggable Datasource Open()
-			
+
 			await Task.Run(() =>
 			{
 				foreach (var item in ProjectItemUtils.Get<WorklistItem>())
@@ -597,10 +604,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 					{
 						// this does NOT call the OnLayerRemovingAsync event handler!!o
 						// OnLayerRemovingAsync is called when the layer is removes manually
-						
+
 						MapView.Active.Map.RemoveLayer(worklistLayer);
 
-						foreach (IWorkList worklist in GetAssociatedWorklists(new Layer[] {worklistLayer}))
+						foreach (IWorkList worklist in GetAssociatedWorklists(
+							new Layer[] {worklistLayer}))
 						{
 							// no need to persist work list state, work list gets deleted
 							Unload(worklist);
@@ -631,7 +639,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			try
 			{
 				var workList = (IWorkList) sender;
-				
+
 				Assert.True(_layersByWorklistName.ContainsKey(workList.Name),
 				            $"sender of {nameof(WorkList_WorkListChanged)} is unknown");
 
@@ -688,9 +696,10 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		private IEnumerable<IWorkList> GetWorklists()
 		{
-			return _layersByWorklistName.Select(pair => GetWorklist(pair.Key)).Where(workList => workList != null);
+			return _layersByWorklistName.Select(pair => GetWorklist(pair.Key))
+			                            .Where(workList => workList != null);
 		}
-		
+
 		[CanBeNull]
 		private IWorkList GetWorklist(string name)
 		{
