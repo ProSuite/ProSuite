@@ -99,6 +99,7 @@
         <group id="ProSuiteTools_Editing" caption="Edit Tools" keytip="G1">
           <tool refID="ProSuiteTools_Editing_EraseTool" size="small" />
           <tool refID="ProSuiteTools_Editing_RemoveOverlapsTool" size="small" />
+          <tool refID="ProSuiteTools_Editing_ReshapeAlongTool" size="small" />
           <tool refID="ProSuiteTools_Editing_AdvancedReshapeTool" size="small" />
         </group>
         <group id="ProSuiteTools_Selection" caption="Selection Tools" keytip="G1">
@@ -198,6 +199,14 @@
               largeImage="Images\RemoveOverlapsTool32.png" condition="esri_mapping_mapPane">
           <tooltip heading="Remove Overlaps Tool">
             Remove a part of a feature that overlaps with other polygon features
+            <disabledText />
+          </tooltip>
+        </tool>
+        <tool id="ProSuiteTools_Editing_ReshapeAlongTool" caption="ReshapeAlongTool"
+              className="Editing.ReshapeAlongTool" loadOnClick="true" smallImage="Images\ReshapeAlongTool16.png"
+              largeImage="Images\ReshapeAlongTool32.png" condition="esri_mapping_mapPane">
+          <tooltip heading="Reshape Along Tool">
+            Reshape along
             <disabledText />
           </tooltip>
         </tool>

@@ -80,7 +80,10 @@ namespace ProSuite.DomainModel.Core.QA
 		/// Initializes a new instance of the <see cref="QualityVerification"/> class.
 		/// </summary>
 		/// <param name="qualitySpecification">The quality specification that was verified.</param>
-		public QualityVerification([NotNull] QualitySpecification qualitySpecification)
+		/// <param name="conditionsToVerify">The actual conditions to be verified, excluding
+		/// disabled elements and conditions which have missing datasets.</param>
+		public QualityVerification([NotNull] QualitySpecification qualitySpecification,
+		                           [CanBeNull] HashSet<QualityCondition> conditionsToVerify = null)
 		{
 			Assert.ArgumentNotNull(qualitySpecification, nameof(qualitySpecification));
 
@@ -97,6 +100,12 @@ namespace ProSuite.DomainModel.Core.QA
 			foreach (QualitySpecificationElement element in qualitySpecification.Elements)
 			{
 				if (! element.Enabled)
+				{
+					continue;
+				}
+
+				if (conditionsToVerify != null &&
+				    ! conditionsToVerify.Contains(element.QualityCondition))
 				{
 					continue;
 				}

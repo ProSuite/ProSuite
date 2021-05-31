@@ -151,6 +151,7 @@
     <Compile Include="Geometry\ChangeAlong\AdjustUtils.cs" />
     <Compile Include="Geometry\ChangeAlong\ChangeGeometryAlongUtils.cs" />
     <Compile Include="Geometry\ChangeAlong\ConnectLineCalculatorBase.cs" />
+    <Compile Include="Geometry\ChangeAlong\CutPolygonSubcurveCalculator.cs" />
     <Compile Include="Geometry\ChangeAlong\CutSubcurve.cs" />
     <Compile Include="Geometry\ChangeAlong\GeometryReshaper.cs" />
     <Compile Include="Geometry\ChangeAlong\GeometryReshaperBase.cs" />
@@ -190,6 +191,9 @@
     <Compile Include="Geometry\Cut\CutResult.cs" />
     <Compile Include="Geometry\Cut\DegenerateMultipatchFootprintAction.cs" />
     <Compile Include="Geometry\Cut\DegenerateResultGeometryException.cs" />
+    <Compile Include="Geometry\Cut\FeatureCutter.cs" />
+    <Compile Include="Geometry\Cut\INetworkFeatureCutter.cs" />
+    <Compile Include="Geometry\DatasetSpecificSettingProvider.cs" />
     <Compile Include="Geometry\ExtractParts\GeometryPart.cs" />
     <Compile Include="Geometry\ExtractParts\PartExtractionUtils.cs" />
     <Compile Include="Geometry\GeometryComparison.cs" />

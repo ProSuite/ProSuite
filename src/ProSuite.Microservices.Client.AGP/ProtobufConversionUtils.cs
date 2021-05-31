@@ -184,6 +184,16 @@ namespace ProSuite.Microservices.Client.AGP
 			return result;
 		}
 
+		public static GdbObjRefMsg ToGdbObjRefMsg([NotNull] Row row)
+		{
+			var result = new GdbObjRefMsg();
+
+			result.ClassHandle = (int) row.GetTable().GetID();
+			result.ObjectId = (int) row.GetObjectID();
+
+			return result;
+		}
+
 		public static GdbObjectMsg ToGdbObjectMsg([NotNull] Feature feature,
 		                                          [NotNull] Geometry geometry,
 		                                          bool useSpatialRefWkId)

@@ -29,6 +29,7 @@ namespace ProSuite.Microservices.Server.AO
 		/// <param name="gdbObjectMessages"></param>
 		/// <param name="objectClassMessages"></param>
 		/// <returns></returns>
+		[NotNull]
 		public static IList<IFeature> FromGdbObjectMsgList(
 			[NotNull] ICollection<GdbObjectMsg> gdbObjectMessages,
 			[NotNull] ICollection<ObjectClassMsg> objectClassMessages)

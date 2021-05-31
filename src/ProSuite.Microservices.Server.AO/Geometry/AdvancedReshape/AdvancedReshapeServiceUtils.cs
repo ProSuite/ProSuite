@@ -234,13 +234,13 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 				IFeature feature = storedFeature;
 				IGeometry newGeometry = storedFeature.Shape;
 
-				var resultFeature = new ResultFeatureMsg();
+				var resultFeature = new ResultObjectMsg();
 
 				GdbObjectMsg resultFeatureMsg =
 					ProtobufGdbUtils.ToGdbObjectMsg(feature, newGeometry,
 					                                storedFeature.Class.ObjectClassID);
 
-				resultFeature.UpdatedFeature = resultFeatureMsg;
+				resultFeature.Update = resultFeatureMsg;
 
 				if (reshapedGeometries.ContainsKey(newGeometry) &&
 				    (reshapedGeometries[newGeometry] != null))

@@ -42,8 +42,31 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			return response;
 		}
 
+		public override async Task<CalculateCutLinesResponse> CalculateCutLines(
+			[NotNull] CalculateCutLinesRequest request,
+			[NotNull] ServerCallContext context)
+		{
+			Stopwatch watch = _msg.DebugStartTiming();
+
+			Func<ITrackCancel, CalculateCutLinesResponse> func =
+				trackCancel =>
+					ChangeAlongServiceUtils.CalculateCutLines(request, trackCancel);
+
+			CalculateCutLinesResponse response =
+				await GrpcServerUtils.ExecuteServiceCall(func, context, _staTaskScheduler, true) ??
+				new CalculateCutLinesResponse();
+
+			_msg.DebugStopTiming(
+				watch, "Calculated {0} cut lines for peer {1} ({2} source features, {3})",
+				response.CutLines.Count, context.Peer, request.SourceFeatures.Count,
+				request.TargetFeatures.Count);
+
+			return response;
+		}
+
 		public override async Task<ApplyReshapeLinesResponse> ApplyReshapeLines(
-			ApplyReshapeLinesRequest request, ServerCallContext context)
+			[NotNull] ApplyReshapeLinesRequest request,
+			[NotNull] ServerCallContext context)
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
@@ -64,24 +87,25 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			return response;
 		}
 
-		public override async Task<CalculateCutLinesResponse> CalculateCutLines(
-			CalculateCutLinesRequest request, ServerCallContext context)
+		public override async Task<ApplyCutLinesResponse> ApplyCutLines(
+			[NotNull] ApplyCutLinesRequest request,
+			[NotNull] ServerCallContext context)
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
-			CalculateCutLinesResponse response = null;
-			//Func<ITrackCancel, CalculateCutLinesResponse> func =
-			//	trackCancel =>
-			//		ChangeAlongServiceUtils.CalculateCutLines(request, trackCancel);
+			Func<ITrackCancel, ApplyCutLinesResponse> func =
+				trackCancel =>
+					ChangeAlongServiceUtils.ApplyCutLines(request, trackCancel);
 
-			//CalculateCutLinesResponse response =
-			//	await GrpcServerUtils.ExecuteServiceCall(func, context, _staTaskScheduler, true) ??
-			//	new CalculateCutLinesResponse();
+			ApplyCutLinesResponse response =
+				await GrpcServerUtils.ExecuteServiceCall(func, context, _staTaskScheduler, true) ??
+				new ApplyCutLinesResponse();
 
-			//_msg.DebugStopTiming(
-			//	watch, "Calculated {0} cut lines for peer {1} ({2} source features, {3})",
-			//	response.CutLines.Count, context.Peer, request.SourceFeatures.Count,
-			//	request.TargetFeatures.Count);
+			_msg.DebugStopTiming(
+				watch,
+				"Applied reshape lines for peer {0} ({1} source features, {2} reshape lines)",
+				context.Peer, request.CalculationRequest.SourceFeatures.Count,
+				request.CutLines.Count);
 
 			return response;
 		}

@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Authentication;
@@ -30,11 +29,49 @@ namespace ProSuite.Commons.AO.Geodatabase
 	{
 		private const string _defaultRepositoryName = "SDE";
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
-		/// Creates a shapefile workspace a given directory, under a given name,
+		/// Determines whether the specified path is a shapefile workspace, i.e. it contains
+		/// at least a shp or dbf file.
+		/// </summary>
+		/// <param name="path"></param>
+		/// <returns></returns>
+		public static bool ShapefileWorkspaceExists([NotNull] string path)
+		{
+			Assert.ArgumentNotNullOrEmpty(path, nameof(path));
+
+			if (! Directory.Exists(path))
+			{
+				return false;
+			}
+
+			IWorkspaceFactory shapefileWorkspaceFactory = GetShapefileWorkspaceFactory();
+
+			return shapefileWorkspaceFactory.IsWorkspace(path);
+		}
+
+		/// <summary>
+		/// Determines whether the specified path is a file GDB workspace.
+		/// </summary>
+		/// <param name="path"></param>
+		/// <returns></returns>
+		public static bool FileGdbWorkspaceExists([NotNull] string path)
+		{
+			Assert.ArgumentNotNullOrEmpty(path, nameof(path));
+
+			if (! path.EndsWith(".gdb", StringComparison.InvariantCultureIgnoreCase))
+			{
+				path = string.Concat(path, ".gdb");
+			}
+
+			IWorkspaceFactory fileGdbWorkspaceFactory = GetFileGdbWorkspaceFactory();
+
+			return fileGdbWorkspaceFactory.IsWorkspace(path);
+		}
+
+		/// <summary>
+		/// Creates a shapefile workspace in a given directory, under a given name,
 		/// and returns the workspace name for it.
 		/// </summary>
 		/// <param name="directory">The directory.</param>
@@ -82,7 +119,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			// The Create method returns a workspace name object.
 			IWorkspaceFactory workspaceFactory = GetFileGdbWorkspaceFactory();
 
-			IWorkspaceName result = null;
+			IWorkspaceName result;
 
 			try
 			{
@@ -92,7 +129,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				if (e.ErrorCode == -2147220902)
 				{
-					throw new IOException("File Geodatabase already exists.");
+					throw new IOException(
+						$"File Geodatabase {name} already exists in {directory}.");
 				}
 
 				throw;

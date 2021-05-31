@@ -101,6 +101,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Editing\AdvancedReshapeTool.cs" />
+    <Compile Include="Editing\ReshapeAlongTool.cs" />
     <Compile Include="Editing\RemoveOverlapsTool.cs" />
     <Compile Include="LoggerUI\LogMessageActionEvent.cs" />
     <Compile Include="LoggerUI\LogMessageDetailsDialog.xaml.cs">
@@ -459,6 +460,9 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\WorklistsFolder16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\ReshapeAlongTool32.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--

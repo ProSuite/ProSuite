@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <root>
   <!-- 
     Microsoft ResX Schema 
@@ -141,6 +141,15 @@
   </data>
   <data name="RemoveOverlapsToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\RemoveOverlapsToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="ReshapeAlongToolCursor" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\ReshapeAlongToolCursor.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="ReshapeAlongToolCursorProcess" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\ReshapeAlongToolCursorProcess.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
+  <data name="ReshapeAlongToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\ReshapeAlongToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
   <data name="SelectionToolNormal" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\SelectionToolNormal.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
