@@ -144,8 +144,8 @@ namespace ProSuite.Microservices.Server.AO
 				Assert.True(File.Exists(privateKeyFilePath),
 				            $"Private key PEM file {privateKeyFilePath} was not found.");
 
-				result = new KeyPair(File.ReadAllText(certificate),
-				                     File.ReadAllText(privateKeyFilePath));
+				result = new KeyPair(File.ReadAllText(privateKeyFilePath),
+				                     File.ReadAllText(certificate));
 
 				_msg.InfoFormat("Using certificate from file {0}", certificate);
 			}
