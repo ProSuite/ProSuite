@@ -19,9 +19,8 @@ namespace ProSuite.Commons.AGP.Carto
 	public static class MapUtils
 	{
 		[NotNull]
-		public static Dictionary<Table, List<long>>
-			GetDistinctSelectionByTable(
-			[NotNull] IEnumerable<BasicFeatureLayer> layers)
+		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
+				[NotNull] IEnumerable<BasicFeatureLayer> layers)
 		{
 			var result = new Dictionary<Table, SimpleSet<long>>();
 			var distinctTableIds = new Dictionary<GdbTableIdentity, Table>();
@@ -174,16 +173,34 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 
 			foreach (var keyValuePair in FindFeatures(
-				mapView, searchGeometry, targetSelectionType, layerPredicate, null,
-				selectedFeatures, cancelableProgressor))
+				mapView, searchGeometry, SpatialRelationship.Intersects, targetSelectionType,
+				layerPredicate, null, selectedFeatures, cancelableProgressor))
 			{
 				yield return keyValuePair;
 			}
 		}
 
+		/// <summary>
+		/// Finds the features in the map by the specified criteria, grouped by feature class
+		/// </summary>
+		/// <param name="mapView">The map view containing the layers to search</param>
+		/// <param name="searchGeometry">The search geometry</param>
+		/// <param name="spatialRelationship">The spatial relationship between the found features
+		/// and the search geometry.</param>
+		/// <param name="targetSelectionType">The target selection type that determines which layers
+		/// are searched.</param>
+		/// <param name="layerPredicate">An extra layer predicate that allows for a more
+		/// fine-granular determination of the layers to be searched.</param>
+		/// <param name="featurePredicate">An extra feature predicate that allows to determine
+		/// criteria on the feature level.</param>
+		/// <param name="selectedFeatures">The selected features, relevant only for
+		/// <see cref="targetSelectionType"/> with value <see cref="TargetFeatureSelection.SameClass"/>. </param>
+		/// <param name="cancelableProgressor"></param>
+		/// <returns></returns>
 		public static IEnumerable<KeyValuePair<FeatureClass, List<Feature>>> FindFeatures(
 			[NotNull] MapView mapView,
 			[NotNull] ArcGIS.Core.Geometry.Geometry searchGeometry,
+			SpatialRelationship spatialRelationship,
 			TargetFeatureSelection targetSelectionType,
 			[CanBeNull] Predicate<FeatureLayer> layerPredicate,
 			[CanBeNull] Predicate<Feature> featurePredicate,
@@ -223,7 +240,8 @@ namespace ProSuite.Commons.AGP.Carto
 
 					featureClass = layers.First().GetFeatureClass();
 
-					QueryFilter filter = GdbQueryUtils.CreateSpatialFilter(searchGeometry);
+					QueryFilter filter =
+						GdbQueryUtils.CreateSpatialFilter(searchGeometry, spatialRelationship);
 					filter.WhereClause = layers.Key;
 
 					IEnumerable<Feature> foundFeatures = GdbQueryUtils
@@ -379,14 +397,14 @@ namespace ProSuite.Commons.AGP.Carto
 			else
 			{
 				clippedGeometry = GeometryUtils.GetClippedPolyline((Polyline) polycurve,
-				                                                   clipExtent);
+					clipExtent);
 			}
 
 			return clippedGeometry;
 		}
 
 		public static ArcGIS.Core.Geometry.Geometry ToMapGeometry(MapView mapView,
-		                                                          Polygon screenGeometry)
+			Polygon screenGeometry)
 		{
 			// TODO: ensure single-part, linear segments
 
@@ -528,7 +546,6 @@ namespace ProSuite.Commons.AGP.Carto
 			return layers.Distinct(new BasicFeatureLayerComparer());
 		}
 
-
 		public static IEnumerable<T> GetRows<T>([NotNull] BasicFeatureLayer layer,
 		                                        [CanBeNull] QueryFilter filter = null)
 			where T : Row
@@ -539,7 +556,7 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				while (cursor.MoveNext())
 				{
-					yield return (T)cursor.Current;
+					yield return (T) cursor.Current;
 				}
 			}
 		}

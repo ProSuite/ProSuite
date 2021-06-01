@@ -184,6 +184,7 @@
     <None Include="Properties\Images\AdvancedReshapeToolCursor.cur" />
     <None Include="Properties\Images\AdvancedReshapeToolCursorShift.cur" />
     <Content Include="Properties\Images\EditSketchCrosshair.cur" />
+    <None Include="Properties\Images\PolygonDrawerCursor.cur" />
     <Content Include="Properties\Images\RemoveOverlapsToolCursor.cur" />
     <Content Include="Properties\Images\RemoveOverlapsToolCursorProcess.cur" />
     <Content Include="Properties\Images\RemoveOverlapsToolCursorShift.cur" />

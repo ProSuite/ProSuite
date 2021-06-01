@@ -212,6 +212,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				CancelableProgressor progressor = GetCancelableProgressor();
 
+				if (SketchType == SketchGeometryType.Polygon)
+				{
+					// Otherwise relational operators and spatial queries return the wrong result
+					sketchGeometry = GeometryUtils.Simplify(sketchGeometry);
+				}
+
 				SketchingMoveType = GetSketchingMoveType(sketchGeometry);
 
 				if (RequiresSelection && IsInSelectionPhase())
@@ -412,6 +418,11 @@ namespace ProSuite.AGP.Editing.OneClick
 					? SelectionCombinationMethod.XOR
 					: SelectionCombinationMethod.New;
 
+			// Polygon-selection allows for more accurate selection in feature-dense areas using contains
+			SpatialRelationship spatialRelationship = SketchType == SketchGeometryType.Polygon
+				                                          ? SpatialRelationship.Contains
+				                                          : SpatialRelationship.Intersects;
+
 			Geometry selectionGeometry;
 			var pickerWindowLocation = new Point(0, 0);
 
@@ -425,7 +436,7 @@ namespace ProSuite.AGP.Editing.OneClick
 						MapView.Active.MapToScreen(selectionGeometry.Extent.Center);
 
 					// find all features spatially related with selectionGeometry
-					return FindFeaturesOfAllLayers(selectionGeometry);
+					return FindFeaturesOfAllLayers(selectionGeometry, spatialRelationship);
 				});
 
 			if (! candidatesOfManyLayers.Any())
@@ -557,7 +568,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		private Dictionary<BasicFeatureLayer, List<long>> FindFeaturesOfAllLayers(
-			Geometry selectionGeometry)
+			Geometry selectionGeometry, SpatialRelationship spatialRelationship)
 		{
 			var featuresPerLayer = new Dictionary<BasicFeatureLayer, List<long>>();
 
@@ -568,7 +579,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				{
 					IEnumerable<long> oids =
 						MapUtils.FilterLayerOidsByGeometry(layer, selectionGeometry,
-						                                   SelectionSettings.SpatialRelationship);
+						                                   spatialRelationship);
 					if (oids.Any())
 					{
 						featuresPerLayer.Add(layer, oids.ToList());

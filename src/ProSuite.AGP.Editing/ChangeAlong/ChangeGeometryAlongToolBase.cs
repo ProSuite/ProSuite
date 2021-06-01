@@ -41,11 +41,14 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			IsSketchTool = true;
 
 			GeomIsSimpleAsFeature = false;
+
+			PolygonSketchCursor = ToolUtils.GetCursor(Resources.PolygonDrawerCursor);
 		}
 
 		protected Cursor TargetSelectionCursor { get; set; }
 		protected Cursor TargetSelectionCursorShift { get; set; }
 
+		protected Cursor PolygonSketchCursor { get; set; }
 
 		protected abstract string EditOperationDescription { get; }
 		protected abstract GeometryProcessingClient MicroserviceClient { get; }
@@ -141,7 +144,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				if (! IsInSubcurveSelectionPhase())
 				{
 					// 2. Phase: target selection:
-					return PickTargets(selection, sketchGeometry, progressor);
+					return SelectTargets(selection, sketchGeometry, progressor);
 				}
 
 				// 3. Phase: reshape/cut line selection:
@@ -153,10 +156,37 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				}
 
 				// No subcurve hit, try target selection instead
-				return PickTargets(selection, sketchGeometry, progressor);
+				return SelectTargets(selection, sketchGeometry, progressor);
 			});
 
 			return result;
+		}
+
+		protected override void OnKeyDownCore(MapViewKeyEventArgs k)
+		{
+			if (k.Key == Key.P)
+			{
+				SketchType = SketchGeometryType.Polygon;
+
+				SetCursor(PolygonSketchCursor);
+			}
+		}
+
+		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
+		{
+			if (k.Key == Key.P)
+			{
+				SketchType = SketchGeometryType.Rectangle;
+
+				if (! IsInSelectionPhase())
+				{
+					SetCursor(TargetSelectionCursor);
+				}
+				else
+				{
+					SetCursor(SelectionCursor);
+				}
+			}
 		}
 
 		protected override void ShiftPressedCore()
@@ -261,7 +291,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			GeomIsSimpleAsFeature = false;
 		}
 
-		private bool PickTargets(List<Feature> selectedFeatures, Geometry sketch,
+		private bool SelectTargets(List<Feature> selectedFeatures, Geometry sketch,
 		                         CancelableProgressor progressor)
 		{
 			// TODO: maintain target selection to allow add/remove to
@@ -273,8 +303,13 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			Predicate<Feature> canUseAsTargetFeature =
 				t => CanUseAsTargetFeature(selectedFeatures, t);
 
+			SpatialRelationship spatialRel =
+				SketchType == SketchGeometryType.Polygon
+					? SpatialRelationship.Contains
+					: SpatialRelationship.Intersects;
+
 			var foundOidsByLayer =
-				MapUtils.FindFeatures(ActiveMapView, sketch,
+				MapUtils.FindFeatures(ActiveMapView, sketch, spatialRel,
 				                      targetFeatureSelection, CanUseAsTargetLayer,
 				                      canUseAsTargetFeature, selectedFeatures, progressor);
 
