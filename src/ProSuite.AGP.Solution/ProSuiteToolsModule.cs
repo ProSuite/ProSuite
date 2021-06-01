@@ -351,29 +351,37 @@ namespace ProSuite.AGP.Solution
 
 		private async Task<bool> StartToolMicroserviceClientAsync()
 		{
-			string executablePath;
-			using (_msg.IncrementIndentation("Searching for microservice deployment ({0})...",
-			                                 _microserverExeName))
+			try
 			{
-				executablePath = ConfigurationUtils.GetProSuiteExecutablePath(_microserverExeName);
-
-				if (executablePath == null)
+				string executablePath;
+				using (_msg.IncrementIndentation("Searching for microservice deployment ({0})...",
+				                                 _microserverExeName))
 				{
-					_msg.Warn(
-						"Cannot find microservice deployment folder. Some edit Tools will be disabled.");
+					executablePath = ConfigurationUtils.GetProSuiteExecutablePath(_microserverExeName);
 
-					return false;
+					if (executablePath == null)
+					{
+						_msg.Warn(
+							"Cannot find microservice deployment folder. Some edit Tools will be disabled.");
+
+						return false;
+					}
 				}
+
+				string configFilePath =
+					ConfigurationUtils.GetConfigFilePath(_microserviceClientConfigXml, false);
+
+				GeometryProcessingClient result =
+					await GrpcClientConfigUtils.StartGeometryProcessingClient(
+						executablePath, configFilePath);
+
+				ToolMicroserviceClient = Assert.NotNull(result);
 			}
-
-			string configFilePath =
-				ConfigurationUtils.GetConfigFilePath(_microserviceClientConfigXml, false);
-
-			GeometryProcessingClient result =
-				await GrpcClientConfigUtils.StartGeometryProcessingClient(
-					executablePath, configFilePath);
-
-			ToolMicroserviceClient = Assert.NotNull(result);
+			catch (Exception e)
+			{
+				_msg.Warn($"Error starting microservice client: {e.Message}", e);
+				return false;
+			}
 
 			return true;
 		}
