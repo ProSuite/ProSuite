@@ -148,6 +148,9 @@
   <data name="ReshapeAlongToolCursorProcess" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\ReshapeAlongToolCursorProcess.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>
+  <data name="ReshapeAlongToolCursorProcessShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Images\ReshapeAlongToolCursorProcessShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
   <data name="ReshapeAlongToolCursorShift" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Images\ReshapeAlongToolCursorShift.cur;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </data>

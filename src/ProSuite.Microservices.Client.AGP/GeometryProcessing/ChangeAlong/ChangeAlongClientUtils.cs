@@ -35,9 +35,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			}
 
 			var result = PopulateReshapeAlongCurves(
-				response.ReshapeLines, (ReshapeAlongCurveUsability) response.ReshapeLinesUsability);
-
-			result.TargetFeatures = targetFeatures;
+				sourceFeatures, targetFeatures, response.ReshapeLines,
+				(ReshapeAlongCurveUsability) response.ReshapeLinesUsability);
 
 			return result;
 		}
@@ -62,9 +61,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			{
 				_msg.Debug($"Error calling remote procedure: {e.Message} ", e);
 
-				//Exception detailedException = GetError(e, calculateOverlapsCall);
-
-				throw e;
+				throw;
 			}
 
 			return response;
@@ -87,26 +84,6 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			// TODO: The other options
 
 			return request;
-		}
-
-		private static ChangeAlongCurves PopulateReshapeAlongCurves(
-			IEnumerable<ReshapeLineMsg> reshapeLineMsgs,
-			ReshapeAlongCurveUsability cutSubcurveUsability)
-		{
-			//PocoDtoMap.Clear();
-
-			IList<CutSubcurve> resultSubcurves = new List<CutSubcurve>();
-			foreach (var reshapeLineMsg in reshapeLineMsgs)
-			{
-				CutSubcurve cutSubcurve = FromReshapeLineMsg(reshapeLineMsg);
-
-				Assert.NotNull(cutSubcurve);
-				resultSubcurves.Add(cutSubcurve);
-
-				//PocoDtoMap.Add(cutSubcurve, reshapeLineMsg);
-			}
-
-			return new ChangeAlongCurves(resultSubcurves, cutSubcurveUsability);
 		}
 
 		[NotNull]
@@ -133,20 +110,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			ApplyReshapeLinesRequest request =
 				CreateApplyReshapeCurvesRequest(sourceFeatures, targetFeatures, selectedSubcurves);
 
-			ApplyReshapeLinesResponse response;
-
-			//try
-			{
-				response = rpcClient.ApplyReshapeLines(request, null, null, cancellationToken);
-			}
-			//catch (Exception e)
-			//{
-			//	_msg.Debug($"Error calling remote procedure: {e.Message} ", e);
-
-			//	//Exception detailedException = GetError(e, calculateOverlapsCall);
-
-			//	throw e;
-			//}
+			ApplyReshapeLinesResponse response =
+				rpcClient.ApplyReshapeLines(request, null, null, cancellationToken);
 
 			List<ResultObjectMsg> responseResultFeatures = response.ResultFeatures.ToList();
 
@@ -164,37 +129,11 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 				resultFeatures.Add(new ReshapeResultFeature(originalFeature, resultObjectMsg));
 			}
 
-			//foreach (var selectedFeature in sourceFeatures)
-			//{
-			//	var resultFeature = CreateResultFeature(selectedFeature, responseResultFeatures);
-
-			//	if (resultFeature != null)
-			//		resultFeatures.Add(resultFeature);
-			//}
-
-			//foreach (var targetFeature in targetFeatures)
-			//{
-			//	var resultFeature = CreateResultFeature(targetFeature, responseResultFeatures);
-
-			//	if (resultFeature != null)
-			//		resultFeatures.Add(resultFeature);
-			//}
-
 			newChangeAlongCurves = PopulateReshapeAlongCurves(
-				response.NewReshapeLines,
+				sourceFeatures, targetFeatures, response.NewReshapeLines,
 				(ReshapeAlongCurveUsability) response.ReshapeLinesUsability);
 
 			return resultFeatures;
-
-			//var result =
-			//	ApplyReshapeCurvesRpc(sourceFeatures, targetFeatures, selectedSubcurves,
-			//	                      cancellationToken, out newChangeAlongCurves);
-
-			//if (cancellationToken.IsCancellationRequested)
-			//	newChangeAlongCurves = new ChangeAlongCurves(new List<CutSubcurve>(0),
-			//	                                             ReshapeAlongCurveUsability.Undefined);
-
-			//return result;
 		}
 
 		private static ApplyReshapeLinesRequest CreateApplyReshapeCurvesRequest(
@@ -220,24 +159,39 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			return result;
 		}
 
-		//private static ReshapeResultFeature CreateResultFeature(Feature clientFeature,
-		//                                                        List<ResultObjectMsg> responseResultFeatures)
-		//{
-		//	var reshapeResult = responseResultFeatures.FirstOrDefault(
-		//		f => clientFeature.GetTable().GetID() == f.UpdatedFeature.Class.ClassId &&
-		//		     clientFeature.GetObjectID() == f.UpdatedFeature.ObjectId);
-
-		//	if (reshapeResult == null) return null;
-
-		//	var newGeometry = ProtoBufUtils.FromShapeProtoBuffer(reshapeResult.UpdatedFeature.Shape);
-
-		//	var resultFeature = new ReshapeResultFeature(clientFeature, newGeometry, reshapeResult.Notifications);
-		//	return resultFeature;
-		//}
-
 		#region Protobuf conversions
 
-		public static CutSubcurve FromReshapeLineMsg(ReshapeLineMsg reshapeLineMsg)
+		private static ChangeAlongCurves PopulateReshapeAlongCurves(
+			[NotNull] IList<Feature> sourceFeatures,
+			[NotNull] IList<Feature> targetFeatures,
+			IEnumerable<ReshapeLineMsg> reshapeLineMsgs,
+			ReshapeAlongCurveUsability cutSubcurveUsability)
+		{
+			IList<CutSubcurve> resultSubcurves = new List<CutSubcurve>();
+			foreach (var reshapeLineMsg in reshapeLineMsgs)
+			{
+				CutSubcurve cutSubcurve = FromReshapeLineMsg(reshapeLineMsg);
+
+				Assert.NotNull(cutSubcurve);
+
+				if (reshapeLineMsg.Source != null)
+				{
+					var sourceRef = new GdbObjectReference(reshapeLineMsg.Source.ClassHandle,
+					                                       reshapeLineMsg.Source.ObjectId);
+
+					cutSubcurve.Source = sourceFeatures.First(f => sourceRef.References(f));
+				}
+
+				resultSubcurves.Add(cutSubcurve);
+			}
+
+			return new ChangeAlongCurves(resultSubcurves, cutSubcurveUsability)
+			       {
+				       TargetFeatures = targetFeatures
+			       };
+		}
+
+		private static CutSubcurve FromReshapeLineMsg(ReshapeLineMsg reshapeLineMsg)
 		{
 			var path = (Polyline) ProtobufConversionUtils.FromShapeMsg(reshapeLineMsg.Path);
 
@@ -280,15 +234,6 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 				ProtobufConversionUtils.ToShapeMsg(subcurve.ExtraTargetInsertPoints);
 
 			return result;
-		}
-
-		private static Segment SegmentFromShapeProtoBuffer(ShapeMsg polylineMsg)
-		{
-			var targetPolylineAtFrom = (Polyline) ProtobufConversionUtils.FromShapeMsg(polylineMsg);
-
-			var targetSegmentAtFrom =
-				targetPolylineAtFrom?.Parts.FirstOrDefault()?.FirstOrDefault();
-			return targetSegmentAtFrom;
 		}
 
 		#endregion

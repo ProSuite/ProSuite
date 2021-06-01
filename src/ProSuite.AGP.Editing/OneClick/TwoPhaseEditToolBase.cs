@@ -86,9 +86,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			return result;
 		}
 
-		protected override bool IsInSelectionPhase()
+		protected override bool IsInSelectionPhase(bool shiftIsPressed)
 		{
-			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
+			if (shiftIsPressed)
 			{
 				return true;
 			}
@@ -137,7 +137,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			if (IsShiftKey(k.Key))
 			{
-				Cursor = IsInSelectionPhase() ? SelectionCursor : SecondPhaseCursor;
+				Cursor = IsInSelectionPhase(true) ? SelectionCursor : SecondPhaseCursor;
 			}
 		}
 

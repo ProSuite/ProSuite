@@ -103,7 +103,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			base.OnToolDeactivateCore(hasMapViewChanged);
 		}
 
-		protected override bool IsInSelectionPhase()
+		protected override bool IsInSelectionPhase(bool shiftIsPressed)
 		{
 			return ! IsInSketchMode;
 		}

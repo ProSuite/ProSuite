@@ -14,7 +14,6 @@ using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
-using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
@@ -245,7 +244,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		                                   IList<Feature> overlappingFeatures,
 		                                   CancelableProgressor progressor)
 		{
-			Overlaps overlaps = null;
+			Overlaps overlaps;
 
 			CancellationToken cancellationToken;
 
@@ -273,53 +272,32 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			return overlaps;
 		}
 
-		private static Overlaps SelectOverlaps(Overlaps overlaps, Geometry sketch)
+		private Overlaps SelectOverlaps(Overlaps overlaps, Geometry sketch)
 		{
 			if (overlaps == null)
 			{
 				return new Overlaps();
 			}
 
-			int selectionTolerancePixels = 3;
+			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(),
+			                                          out bool singlePick);
 
-			bool singlePick = ToolUtils.IsSingleClickSketch(sketch);
-
-			if (singlePick)
-			{
-				sketch = ToolUtils.GetSinglePickSelectionArea(sketch, selectionTolerancePixels);
-			}
-
+			// in case of single pick the line has priority...
 			Overlaps result = overlaps.SelectNewOverlaps(
 				o => o.GeometryType == GeometryType.Polyline &&
-				     IsOverlapSelected(sketch, o, singlePick));
+				     ToolUtils.IsSelected(sketch, o, singlePick));
 
-			// in case of single pick the line has priority
+			// ... over the polygon
 			if (! result.HasOverlaps() || ! singlePick)
 			{
 				result.AddGeometries(overlaps,
 				                     g => g.GeometryType == GeometryType.Polygon &&
-				                          IsOverlapSelected(sketch, g, singlePick));
+				                          ToolUtils.IsSelected(sketch, g, singlePick));
 			}
 
 			return result;
 		}
 
-		private static bool IsOverlapSelected(Geometry sketch, Geometry overlapGeometry,
-		                                      bool singlePick)
-		{
-			if (GeometryUtils.Disjoint(sketch, overlapGeometry))
-			{
-				return false;
-			}
-
-			if (singlePick)
-			{
-				// Any intersection is enough:
-				return true;
-			}
-
-			return GeometryUtils.Contains(sketch, overlapGeometry);
-		}
 
 		#region Search target features
 

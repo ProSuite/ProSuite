@@ -154,10 +154,9 @@ namespace ProSuite.AGP.Editing.OneClick
 				QueuedTaskUtils.Run(
 					delegate
 					{
-						if (IsShiftKey(k.Key) &&
-						    SelectionCursorShift != null && IsInSelectionPhase())
+						if (IsShiftKey(k.Key))
 						{
-							SetCursor(SelectionCursorShift);
+							ShiftPressedCore();
 						}
 
 						OnKeyDownCore(k);
@@ -180,10 +179,9 @@ namespace ProSuite.AGP.Editing.OneClick
 				QueuedTaskUtils.Run(
 					delegate
 					{
-						if (IsShiftKey(k.Key) &&
-						    SelectionCursor != null && IsInSelectionPhase())
+						if (IsShiftKey(k.Key))
 						{
-							SetCursor(SelectionCursor);
+							ShiftReleasedCore();
 						}
 
 						OnKeyUpCore(k);
@@ -231,6 +229,22 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			return false;
+		}
+
+		protected virtual void ShiftPressedCore()
+		{
+			if (SelectionCursorShift != null && IsInSelectionPhase(true))
+			{
+				SetCursor(SelectionCursorShift);
+			}
+		}
+
+		protected virtual void ShiftReleasedCore()
+		{
+			if (SelectionCursor != null && IsInSelectionPhase(true))
+			{
+				SetCursor(SelectionCursor);
+			}
 		}
 
 		protected void StartSelectionPhase()
@@ -354,6 +368,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			return SketchingMoveType.Drag;
+		}
+
+		protected int GetSelectionTolerancePixels()
+		{
+			return SelectionSettings.SelectionTolerancePixels;
 		}
 
 		private Geometry GetSelectionGeometry(Geometry sketchGeometry)
@@ -560,7 +579,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			return featuresPerLayer;
 		}
 
-		protected virtual bool IsInSelectionPhase()
+		protected bool IsInSelectionPhase()
+		{
+			return IsInSelectionPhase(KeyboardUtils.IsModifierPressed(Keys.Shift, true));
+		}
+
+		protected virtual bool IsInSelectionPhase(bool shiftIsPressed)
 		{
 			return false;
 		}

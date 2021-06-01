@@ -174,7 +174,7 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 
 			foreach (var keyValuePair in FindFeatures(
-				mapView, searchGeometry, targetSelectionType, layerPredicate,
+				mapView, searchGeometry, targetSelectionType, layerPredicate, null,
 				selectedFeatures, cancelableProgressor))
 			{
 				yield return keyValuePair;
@@ -186,6 +186,7 @@ namespace ProSuite.Commons.AGP.Carto
 			[NotNull] ArcGIS.Core.Geometry.Geometry searchGeometry,
 			TargetFeatureSelection targetSelectionType,
 			[CanBeNull] Predicate<FeatureLayer> layerPredicate,
+			[CanBeNull] Predicate<Feature> featurePredicate,
 			List<Feature> selectedFeatures,
 			CancelableProgressor cancelableProgressor = null)
 		{
@@ -225,10 +226,14 @@ namespace ProSuite.Commons.AGP.Carto
 					QueryFilter filter = GdbQueryUtils.CreateSpatialFilter(searchGeometry);
 					filter.WhereClause = layers.Key;
 
-					features.AddRange(GdbQueryUtils.GetFeatures(featureClass, filter, false));
+					IEnumerable<Feature> foundFeatures = GdbQueryUtils
+					                                     .GetFeatures(featureClass, filter, false)
+					                                     .Where(f => featurePredicate == null ||
+						                                            featurePredicate(f));
+					features.AddRange(foundFeatures);
 				}
 
-				if (featureClass != null)
+				if (featureClass != null && features.Count > 0)
 				{
 					yield return new KeyValuePair<FeatureClass, List<Feature>>(
 						featureClass, features.DistinctBy(f => f.GetObjectID()).ToList());

@@ -190,6 +190,7 @@
     <None Include="Properties\Images\ReshapeAlongToolCursor.cur" />
     <None Include="Properties\Images\ReshapeAlongToolCursorProcess.cur" />
     <None Include="Properties\Images\ReshapeAlongToolCursorShift.cur" />
+    <None Include="Properties\Images\ReshapeAlongToolCursorProcessShift.cur" />
     <Content Include="Properties\Images\SelectionToolNormal.cur" />
     <Content Include="Properties\Images\SelectionToolNormalShift.cur" />
     <Content Include="Properties\Images\SelectionToolOriginal.cur" />

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -13,8 +14,8 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
+using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
-using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
@@ -43,21 +44,18 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		}
 
 		protected Cursor TargetSelectionCursor { get; set; }
+		protected Cursor TargetSelectionCursorShift { get; set; }
 
+
+		protected abstract string EditOperationDescription { get; }
 		protected abstract GeometryProcessingClient MicroserviceClient { get; }
-
-		protected virtual bool CanUseAsTargetLayer(FeatureLayer featureLayer)
-		{
-			return featureLayer.ShapeType == esriGeometryType.esriGeometryPolyline ||
-			       featureLayer.ShapeType == esriGeometryType.esriGeometryPolygon;
-		}
 
 		protected override bool HandleEscape()
 		{
 			QueuedTaskUtils.Run(
 				() =>
 				{
-					if (IsInSubcurvePickingMode())
+					if (IsInSubcurveSelectionPhase())
 					{
 						ResetDerivedGeometries();
 					}
@@ -72,25 +70,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			return true;
 		}
-
-		protected override void OnSelectionPhaseStarted()
-		{
-			// Already set in StartSelectionPhase()
-			//Cursor = SelectionCursor;
-		}
-
+		
 		protected override void OnToolActivatingCore()
 		{
 			_feedback = new ChangeAlongFeedback();
-
-			// Some of the sketch properties have to be re-set
-
-			// TODO: Test with and without:
-			//SketchOutputMode = SketchOutputMode.Map;
-			//SketchType = SketchGeometryType.Rectangle;
-
-			//GeomIsSimpleAsFeature = false;
-			//CompleteSketchOnMouseUp = true;
 		}
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
@@ -144,7 +127,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				return;
 			}
 
-			StartSecondPhase();
+			StartTargetSelectionPhase();
 		}
 
 		protected override async Task<bool> OnSketchCompleteCoreAsync(
@@ -153,84 +136,67 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			var result = await QueuedTask.Run(async () =>
 			{
-				List<Feature> selectedFeatures =
-					SelectionUtils.GetSelectedFeatures(ActiveMapView).ToList();
+				List<Feature> selection = GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
-				if (IsInSubcurvePickingMode())
+				if (! IsInSubcurveSelectionPhase())
 				{
-					Predicate<CutSubcurve> canReshapePredicate =
-						cutSubcurve => GeometryUtils.Contains(sketchGeometry, cutSubcurve.Path);
-
-					var cutSubcurves = _changeAlongCurves.ReshapeCutSubcurves
-					                                     .Where(c => canReshapePredicate(c))
-					                                     .ToList();
-
-					if (cutSubcurves.Count == 0)
-						// TODO: if nothing hit at all, select target
-						return false;
-
-					return await UpdateFeatures(selectedFeatures, cutSubcurves, progressor);
-				}
-				else
-				{
-					// TODO: maintain target selection to allow add/remove to
-					const TargetFeatureSelection targetFeatureSelection =
-						TargetFeatureSelection.VisibleFeatures;
-
-					//var mapSketch = MapUtils.ToMapGeometry(MapView.Active, (Polygon)sketchGeometry);
-					var mapSketch = sketchGeometry;
-
-					var foundOidsByLayer =
-						MapUtils.FindFeatures(ActiveMapView, mapSketch,
-						                      targetFeatureSelection, CanUseAsTargetLayer,
-						                      selectedFeatures,
-						                      progressor);
-
-					if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
-					{
-						_msg.Warn("Calculation of reshape lines was cancelled.");
-						return false;
-					}
-
-					var targetFeatures = new List<Feature>();
-
-					foreach (var keyValuePair in foundOidsByLayer)
-						targetFeatures.AddRange(keyValuePair.Value);
-
-					_changeAlongCurves =
-						targetFeatures.Count > 0
-							? CalculateReshapeCurves(selectedFeatures, targetFeatures, progressor)
-							: new ChangeAlongCurves(new List<CutSubcurve>(),
-							                        ReshapeAlongCurveUsability.NoTarget);
-
-					if (_changeAlongCurves.HasSelectableCurves)
-					{
-						//Cursor = 
-					}
-
-					_feedback.Update(_changeAlongCurves);
-
-					return true;
+					// 2. Phase: target selection:
+					return PickTargets(selection, sketchGeometry, progressor);
 				}
 
-				//return SelectAndProcessCutSubcurves(selection, sketch, progressor);
-				return true;
+				// 3. Phase: reshape/cut line selection:
+				List<CutSubcurve> cutSubcurves = GetSelectedCutSubcurves(sketchGeometry);
+
+				if (cutSubcurves.Count > 0)
+				{
+					return await UpdateFeatures(selection, cutSubcurves, progressor);
+				}
+
+				// No subcurve hit, try target selection instead
+				return PickTargets(selection, sketchGeometry, progressor);
 			});
 
 			return result;
 		}
 
-		protected override bool IsInSelectionPhase()
+		protected override void ShiftPressedCore()
 		{
-			if (IsInSubcurvePickingMode())
+			if (SelectionCursorShift != null && HasReshapeCurves())
+			{
+				SetCursor(TargetSelectionCursorShift);
+			}
+			else
+			{
+				base.ShiftPressedCore();
+			}
+		}
+
+		protected override void ShiftReleasedCore()
+		{
+			// From the subclass' point of view SHIFT is still pressed:
+			if (!IsInSelectionPhase())
+			{
+				SetCursor(TargetSelectionCursor);
+			}
+			else
+			{
+				base.ShiftReleasedCore();
+			}
+		}
+
+
+		protected override bool IsInSelectionPhase(bool shiftIsPressed)
+		{
+			if (HasReshapeCurves())
 			{
 				return false;
 			}
 
 			// First or second phase:
-			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
+			if (shiftIsPressed)
 			{
-				return true;
+				// With reshape curves and shift it would mean we're in the targest selection phase
+				return ! HasReshapeCurves();
 			}
 
 			var task = QueuedTask.Run(
@@ -245,7 +211,40 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return task.Result;
 		}
 
-		private void StartSecondPhase()
+		private bool HasReshapeCurves()
+		{
+			return _changeAlongCurves != null && _changeAlongCurves.HasSelectableCurves;
+		}
+
+		protected bool IsInSubcurveSelectionPhase()
+		{
+			return HasReshapeCurves() &&
+			       ! KeyboardUtils.IsModifierPressed(Keys.Shift, true);
+		}
+
+		protected virtual bool CanUseAsTargetLayer(FeatureLayer featureLayer)
+		{
+			return featureLayer.ShapeType == esriGeometryType.esriGeometryPolyline ||
+			       featureLayer.ShapeType == esriGeometryType.esriGeometryPolygon;
+		}
+
+		protected virtual bool CanUseAsTargetFeature([NotNull] IList<Feature> selection,
+		                                             [NotNull] Feature testFeature)
+		{
+			foreach (Feature selectedFeature in selection)
+			{
+				if (selectedFeature.GetObjectID() == testFeature.GetObjectID() &&
+				    selectedFeature.GetTable().Handle == testFeature.GetTable().Handle)
+				{
+					// already selected
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		private void StartTargetSelectionPhase()
 		{
 			Cursor = TargetSelectionCursor;
 
@@ -262,16 +261,124 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			GeomIsSimpleAsFeature = false;
 		}
 
+		private bool PickTargets(List<Feature> selectedFeatures, Geometry sketch,
+		                         CancelableProgressor progressor)
+		{
+			// TODO: maintain target selection to allow add/remove to
+			const TargetFeatureSelection targetFeatureSelection =
+				TargetFeatureSelection.VisibleFeatures;
+
+			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(), out bool _);
+
+			Predicate<Feature> canUseAsTargetFeature =
+				t => CanUseAsTargetFeature(selectedFeatures, t);
+
+			var foundOidsByLayer =
+				MapUtils.FindFeatures(ActiveMapView, sketch,
+				                      targetFeatureSelection, CanUseAsTargetLayer,
+				                      canUseAsTargetFeature, selectedFeatures, progressor);
+
+			// TODO: Picker if single click and several found
+
+			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
+			{
+				_msg.Warn("Calculation of reshape lines was cancelled.");
+				return false;
+			}
+
+			IList<Feature> allTargetFeatures =
+				GetDistinctSelectedFeatures(foundOidsByLayer, _changeAlongCurves?.TargetFeatures,
+				                    KeyboardUtils.IsModifierPressed(Keys.Shift));
+
+			_changeAlongCurves =
+				allTargetFeatures.Count > 0
+					? CalculateReshapeCurves(selectedFeatures, allTargetFeatures, progressor)
+					: new ChangeAlongCurves(new List<CutSubcurve>(),
+					                        ReshapeAlongCurveUsability.NoTarget);
+
+			_feedback.Update(_changeAlongCurves);
+
+			return true;
+		}
+
+		private static IList<Feature> GetDistinctSelectedFeatures(
+			[NotNull] IEnumerable<KeyValuePair<FeatureClass, List<Feature>>> foundFeaturesByClass,
+			[CanBeNull] IList<Feature> existingSelection,
+			bool xor)
+		{
+			var resultDictionary = new Dictionary<GdbObjectReference, Feature>();
+
+			if (existingSelection != null)
+			{
+				AddRange(existingSelection, resultDictionary);
+			}
+
+			foreach (var keyValuePair in foundFeaturesByClass)
+			{
+				if (xor)
+				{
+					foreach (Feature selected in keyValuePair.Value)
+					{
+						var selectedObjRef = new GdbObjectReference(
+							selected.GetTable().Handle.ToInt64(),
+							selected.GetObjectID());
+
+						if (resultDictionary.ContainsKey(selectedObjRef))
+						{
+							resultDictionary.Remove(selectedObjRef);
+						}
+						else
+						{
+							resultDictionary.Add(selectedObjRef, selected);
+						}
+					}
+				}
+				else
+				{
+					AddRange(keyValuePair.Value, resultDictionary);
+				}
+			}
+
+			IList<Feature> allTargetFeatures = resultDictionary.Values.ToList();
+
+			return allTargetFeatures;
+		}
+
+		private static void AddRange(
+			[NotNull] IList<Feature> features,
+			[NotNull] IDictionary<GdbObjectReference, Feature> resultDictionary)
+		{
+			foreach (Feature target in features)
+			{
+				var objRef = new GdbObjectReference(target.GetTable().Handle.ToInt64(),
+				                                    target.GetObjectID());
+
+				if (! resultDictionary.ContainsKey(objRef))
+				{
+					resultDictionary.Add(objRef, target);
+				}
+			}
+		}
+
+		private List<CutSubcurve> GetSelectedCutSubcurves(Geometry sketch)
+		{
+			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(),
+			                                   out bool singlePick);
+
+			Predicate<CutSubcurve> canReshapePredicate =
+				cutSubcurve => ToolUtils.IsSelected(sketch, cutSubcurve.Path, singlePick);
+
+			var cutSubcurves = _changeAlongCurves.ReshapeCutSubcurves
+			                                     .Where(c => canReshapePredicate(c))
+			                                     .ToList();
+			return cutSubcurves;
+		}
+
+
 		protected void ResetDerivedGeometries()
 		{
 			_feedback.DisposeOverlays();
 			_changeAlongCurves = null;
-		}
-
-		protected bool IsInSubcurvePickingMode()
-		{
-			return _changeAlongCurves != null && _changeAlongCurves.HasSelectableCurves &&
-			       ! KeyboardUtils.IsModifierPressed(Keys.Shift, true);
 		}
 
 		private ChangeAlongCurves CalculateReshapeCurves(
@@ -351,7 +458,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			//LogReshapeResults(result, selection.Count);
 
 			var success = await GdbPersistenceUtils.SaveInOperationAsync(
-				              "Advanced reshape", resultFeatures);
+				              EditOperationDescription, resultFeatures);
 
 			return success;
 

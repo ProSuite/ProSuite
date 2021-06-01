@@ -24,7 +24,7 @@ namespace ProSuite.AGP.Editing.Selection
 
 		private SelectionSettings _selectionSettings;
 
-		protected override bool IsInSelectionPhase()
+		protected override bool IsInSelectionPhase(bool shiftIsPressed)
 		{
 			return true;
 		}

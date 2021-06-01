@@ -163,6 +163,16 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] ReshapeAlongToolCursorProcessShift {
+            get {
+                object obj = ResourceManager.GetObject("ReshapeAlongToolCursorProcessShift", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] ReshapeAlongToolCursorShift {
             get {
                 object obj = ResourceManager.GetObject("ReshapeAlongToolCursorShift", resourceCulture);
