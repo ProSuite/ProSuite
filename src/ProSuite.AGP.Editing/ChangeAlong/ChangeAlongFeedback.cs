@@ -52,39 +52,62 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			DisposeOverlays();
 
-			if (newCurves == null) return;
+			if (newCurves == null)
+			{
+				return;
+			}
 
-			foreach (var cutSubcurve in newCurves.ReshapeCutSubcurves)
-				if (cutSubcurve.IsFiltered)
-					AddOverlay(cutSubcurve.Path, _filteredReshapeLineSymbol);
-				else if (cutSubcurve.IsReshapeMemberCandidate)
-					AddOverlay(cutSubcurve.Path, _candidateReshapeLineSymbol);
-				else if (cutSubcurve.CanReshape)
-					AddOverlay(cutSubcurve.Path, _reshapeLineSymbol);
-				else
-					AddOverlay(cutSubcurve.Path, _noReshapeLineSymbol);
+			Predicate<CutSubcurve> noReshape = c =>
+				! c.CanReshape && ! c.IsReshapeMemberCandidate && ! c.IsFiltered;
 
-			foreach (var cutSubcurve in newCurves.ReshapeCutSubcurves)
-				if (cutSubcurve.IsFiltered)
+			AddReshapeLines(newCurves.ReshapeCutSubcurves, noReshape, _noReshapeLineSymbol);
+			AddReshapeLines(newCurves.ReshapeCutSubcurves, c => c.IsFiltered,
+			                _filteredReshapeLineSymbol);
+			AddReshapeLines(newCurves.ReshapeCutSubcurves, c => c.IsReshapeMemberCandidate,
+			                _candidateReshapeLineSymbol);
+			AddReshapeLines(newCurves.ReshapeCutSubcurves, c => c.CanReshape,
+			                _reshapeLineSymbol);
+
+			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, noReshape, _noReshapeLineEnd);
+			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, c => c.IsFiltered,
+			                        _filteredLineEnd);
+			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, c => c.IsReshapeMemberCandidate,
+			                        _candidateLineEnd);
+			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, c => c.CanReshape,
+			                        _reshapeLineEnd);
+		}
+
+		public void DisposeOverlays()
+		{
+			foreach (var overlay in _overlays) overlay.Dispose();
+
+			_overlays.Clear();
+		}
+
+		private void AddReshapeLines(IEnumerable<CutSubcurve> subcurves,
+		                             Predicate<CutSubcurve> predicate, CIMLineSymbol symbol)
+		{
+			foreach (var cutSubcurve in subcurves)
+			{
+				if (predicate == null || predicate(cutSubcurve))
 				{
-					AddOverlay(cutSubcurve.FromPoint, _filteredLineEnd);
-					AddOverlay(cutSubcurve.ToPoint, _filteredLineEnd);
+					AddOverlay(cutSubcurve.Path, symbol);
 				}
-				else if (cutSubcurve.IsReshapeMemberCandidate)
+			}
+		}
+
+		private void AddReshapeLineEndpoints(IEnumerable<CutSubcurve> subcurves,
+		                                     Predicate<CutSubcurve> predicate,
+		                                     CIMPointSymbol symbol)
+		{
+			foreach (var cutSubcurve in subcurves)
+			{
+				if (predicate == null || predicate(cutSubcurve))
 				{
-					AddOverlay(cutSubcurve.FromPoint, _candidateLineEnd);
-					AddOverlay(cutSubcurve.ToPoint, _candidateLineEnd);
+					AddOverlay(cutSubcurve.FromPoint, symbol);
+					AddOverlay(cutSubcurve.ToPoint, symbol);
 				}
-				else if (cutSubcurve.CanReshape)
-				{
-					AddOverlay(cutSubcurve.FromPoint, _reshapeLineEnd);
-					AddOverlay(cutSubcurve.ToPoint, _reshapeLineEnd);
-				}
-				else
-				{
-					AddOverlay(cutSubcurve.FromPoint, _noReshapeLineEnd);
-					AddOverlay(cutSubcurve.ToPoint, _noReshapeLineEnd);
-				}
+			}
 		}
 
 		private void AddOverlay(Geometry polyline, CIMSymbol symbol)
@@ -95,17 +118,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			_overlays.Add(addedOverlay);
 		}
 
-		public void DisposeOverlays()
-		{
-			foreach (var overlay in _overlays) overlay.Dispose();
-
-			_overlays.Clear();
-		}
-
 		private static CIMPointSymbol CreateMarkerSymbol(CIMColor color)
 		{
 			var circlePtSymbol =
-				SymbolFactory.Instance.ConstructPointSymbol(ColorFactory.Instance.BlueRGB, 6,
+				SymbolFactory.Instance.ConstructPointSymbol(ColorFactory.Instance.BlueRGB,
+				                                            _markerSize,
 				                                            SimpleMarkerStyle.Circle);
 
 			var marker = Assert.NotNull(circlePtSymbol.SymbolLayers[0] as CIMVectorMarker);
