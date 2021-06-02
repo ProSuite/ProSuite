@@ -8,7 +8,6 @@ using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
@@ -17,12 +16,13 @@ using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Keyboard;
 using ProSuite.Microservices.Client.AGP;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
+using ProSuite.Microservices.Client.AGP.GeometryProcessing;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
 using Cursor = System.Windows.Input.Cursor;
 
@@ -73,7 +73,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			return true;
 		}
-		
+
 		protected override void OnToolActivatingCore()
 		{
 			_feedback = new ChangeAlongFeedback();
@@ -204,7 +204,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected override void ShiftReleasedCore()
 		{
 			// From the subclass' point of view SHIFT is still pressed:
-			if (!IsInSelectionPhase())
+			if (! IsInSelectionPhase())
 			{
 				SetCursor(TargetSelectionCursor);
 			}
@@ -213,7 +213,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				base.ShiftReleasedCore();
 			}
 		}
-
 
 		protected override bool IsInSelectionPhase(bool shiftIsPressed)
 		{
@@ -292,13 +291,14 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		}
 
 		private bool SelectTargets(List<Feature> selectedFeatures, Geometry sketch,
-		                         CancelableProgressor progressor)
+		                           CancelableProgressor progressor)
 		{
 			// TODO: maintain target selection to allow add/remove to
 			const TargetFeatureSelection targetFeatureSelection =
 				TargetFeatureSelection.VisibleFeatures;
 
-			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(), out bool _);
+			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(),
+			                                          out bool _);
 
 			Predicate<Feature> canUseAsTargetFeature =
 				t => CanUseAsTargetFeature(selectedFeatures, t);
@@ -323,7 +323,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			IList<Feature> allTargetFeatures =
 				GetDistinctSelectedFeatures(foundOidsByLayer, _changeAlongCurves?.TargetFeatures,
-				                    KeyboardUtils.IsModifierPressed(Keys.Shift));
+				                            KeyboardUtils.IsModifierPressed(Keys.Shift));
 
 			_changeAlongCurves =
 				allTargetFeatures.Count > 0
@@ -398,7 +398,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		private List<CutSubcurve> GetSelectedCutSubcurves(Geometry sketch)
 		{
 			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(),
-			                                   out bool singlePick);
+			                                          out bool singlePick);
 
 			Predicate<CutSubcurve> canReshapePredicate =
 				cutSubcurve => ToolUtils.IsSelected(sketch, cutSubcurve.Path, singlePick);
@@ -408,7 +408,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			                                     .ToList();
 			return cutSubcurves;
 		}
-
 
 		protected void ResetDerivedGeometries()
 		{
@@ -437,9 +436,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			if (MicroserviceClient != null)
 			{
-				result =
-					MicroserviceClient.CalculateReshapeLines(
-						selectedFeatures, targetFeatures, cancellationToken);
+				result = CalculateChangeAlongCurves(selectedFeatures, targetFeatures,
+				                                    cancellationToken);
+
 				result.TargetFeatures = targetFeatures;
 			}
 			else
@@ -449,6 +448,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			return result;
 		}
+
+		protected abstract ChangeAlongCurves CalculateChangeAlongCurves(
+			[NotNull] IList<Feature> selectedFeatures,
+			[NotNull] IList<Feature> targetFeatures,
+			CancellationToken cancellationToken);
 
 		private void RefreshCutSubcurves([NotNull] IList<Feature> selectedFeatures,
 		                                 [CanBeNull] CancelableProgressor progressor = null)
@@ -477,64 +481,42 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				progressor?.CancellationToken ?? new CancellationTokenSource().Token;
 
 			ChangeAlongCurves newChangeAlongCurves;
-			var updatedFeatures = MicroserviceClient.ApplyReshapeLines(
-				selectedFeatures, _changeAlongCurves.TargetFeatures, cutSubcurves,
-				cancellationToken, out newChangeAlongCurves);
+
+			IList<Feature> targetFeatures = Assert.NotNull(_changeAlongCurves.TargetFeatures);
+
+			List<ResultFeature> updatedFeatures = ChangeFeaturesAlong(
+				selectedFeatures, targetFeatures, cutSubcurves, cancellationToken,
+				out newChangeAlongCurves);
 
 			_changeAlongCurves = newChangeAlongCurves;
 
 			_feedback.Update(_changeAlongCurves);
 
+			// Updates:
 			Dictionary<Feature, Geometry> resultFeatures =
-				updatedFeatures.ToDictionary(r => r.Feature,
-				                             r => r.UpdatedGeometry);
+				updatedFeatures.Where(f => f.ChangeType == RowChangeType.Update)
+				               .ToDictionary(r => r.Feature,
+				                             r => r.NewGeometry);
+
+			// Inserts (in case of cut), grouped by original feature:
+			Dictionary<Feature, IList<Geometry>> insertsByOriginal =
+				updatedFeatures.Where(f => f.ChangeType == RowChangeType.Insert)
+				               .GroupBy(f => f.Feature, f => f.NewGeometry)
+				               .ToDictionary(g => g.Key, g => (IList<Geometry>) g.ToList());
 
 			// TODO
 			//LogReshapeResults(result, selection.Count);
 
 			var success = await GdbPersistenceUtils.SaveInOperationAsync(
-				              EditOperationDescription, resultFeatures);
+				              EditOperationDescription, resultFeatures, insertsByOriginal);
 
 			return success;
-
-			//var sketchPolyline = cutSubcurves[0].Path;
-
-			//// create an edit operation
-			//var editOperation = new EditOperation();
-
-			//editOperation.Name = "Reshape along";
-			//editOperation.ProgressMessage = "Working...";
-			//editOperation.CancelMessage = "Operation canceled";
-			//editOperation.ErrorMessage = "Error creating points";
-
-			//editOperation.Callback(editContext => UpdateFeatures(editContext, updatedFeatures),
-			//                       selectedFeatures.Select(f => f.GetTable()).Distinct());
-
-			//// synchronous execution ok, already on a queued task?!:
-			//var editOperationResult = editOperation.ExecuteAsync();
-
-			//_changeAlongCurves = newChangeAlongCurves;
-
-			//_feedback.Update(_changeAlongCurves);
-
-			//return editOperationResult;
 		}
 
-		private static void UpdateFeatures(
-			EditOperation.IEditContext editContext,
-			List<ReshapeResultFeature> resultFeatures)
-		{
-			foreach (var reshapeResultFeature in resultFeatures)
-			{
-				var feature = reshapeResultFeature.Feature;
-
-				editContext.Invalidate(feature);
-
-				feature.SetShape(reshapeResultFeature.UpdatedGeometry);
-				feature.Store();
-
-				editContext.Invalidate(feature);
-			}
-		}
+		protected abstract List<ResultFeature> ChangeFeaturesAlong(
+			List<Feature> selectedFeatures, [NotNull] IList<Feature> targetFeatures,
+			[NotNull] List<CutSubcurve> cutSubcurves,
+			CancellationToken cancellationToken,
+			out ChangeAlongCurves newChangeAlongCurves);
 	}
 }

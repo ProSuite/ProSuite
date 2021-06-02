@@ -4,8 +4,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 {
 	public class ReshapeResult
 	{
-		public IList<ReshapeResultFeature> ResultFeatures { get; } =
-			new List<ReshapeResultFeature>();
+		public IList<ResultFeature> ResultFeatures { get; } =
+			new List<ResultFeature>();
 
 		public bool OpenJawReshapeHappened { get; set; }
 		public int OpenJawIntersectionCount { get; set; }

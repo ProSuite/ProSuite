@@ -58,7 +58,7 @@ namespace ProSuite.AGP.Editing
 					StoreShape(keyValuePair, editContext);
 				}
 
-				_msg.InfoFormat("Successfully stored {0} updated feature(s).", updates.Count);
+				_msg.InfoFormat("Successfully updated {0} feature(s).", updates.Count);
 			}
 
 			if (copies != null && copies.Count > 0)

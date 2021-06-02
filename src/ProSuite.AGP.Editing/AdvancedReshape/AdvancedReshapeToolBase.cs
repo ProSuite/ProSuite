@@ -258,7 +258,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			CancelableProgressor cancelableProgressor = null)
 		{
 			_feedback.Clear();
-			
+
 			// TODO: cancel all running background tasks...
 
 			var polyline = (Polyline) sketchGeometry;
@@ -290,7 +290,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 				Dictionary<Feature, Geometry> resultFeatures =
 					result.ResultFeatures.ToDictionary(r => r.Feature,
-					                                   r => r.UpdatedGeometry);
+					                                   r => r.NewGeometry);
 
 				LogReshapeResults(result, selection.Count);
 
@@ -349,7 +349,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 						bool updated =
 							await UpdateOpenJawReplacedEndpointAsync(nonDefaultSide, sketchPolyline,
-							                                         polylineSelection);
+								polylineSelection);
 
 						updated |= await UpdatePolygonResultPreviewAsync(
 							           nonDefaultSide, sketchPolyline,
@@ -413,7 +413,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			{
 				var feature = resultFeature.Feature;
 
-				result.Add(feature, resultFeature.UpdatedGeometry);
+				result.Add(feature, resultFeature.NewGeometry);
 
 				string message = StringUtils.Concatenate(resultFeature.Messages, ". ");
 

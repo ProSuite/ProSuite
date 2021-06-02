@@ -1,6 +1,11 @@
+using System.Collections.Generic;
+using System.Threading;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.Logging;
+using ProSuite.Microservices.Client.AGP.GeometryProcessing;
+using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
 
 namespace ProSuite.AGP.Editing.ChangeAlong
 {
@@ -34,6 +39,33 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected override void LogPromptForSelection()
 		{
 			_msg.Info(LocalizableStrings.ReshapeAlongTool_LogPromptForSelection);
+		}
+
+		protected override List<ResultFeature> ChangeFeaturesAlong(
+			List<Feature> selectedFeatures,
+			IList<Feature> targetFeatures,
+			List<CutSubcurve> cutSubcurves,
+			CancellationToken cancellationToken,
+			out ChangeAlongCurves newChangeAlongCurves)
+		{
+			var updatedFeatures = MicroserviceClient.ApplyReshapeLines(
+				selectedFeatures, targetFeatures, cutSubcurves,
+				cancellationToken, out newChangeAlongCurves);
+
+			return updatedFeatures;
+		}
+
+		protected override ChangeAlongCurves CalculateChangeAlongCurves(
+			IList<Feature> selectedFeatures,
+			IList<Feature> targetFeatures,
+			CancellationToken cancellationToken)
+		{
+			ChangeAlongCurves result;
+			result =
+				MicroserviceClient.CalculateReshapeLines(
+					selectedFeatures, targetFeatures, cancellationToken);
+
+			return result;
 		}
 	}
 }

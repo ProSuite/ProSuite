@@ -7,7 +7,6 @@ using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared;
 
@@ -16,6 +15,8 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 	public static class ChangeAlongClientUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		#region Calculate subcurves
 
 		[NotNull]
 		public static ChangeAlongCurves CalculateReshapeLines(
@@ -41,6 +42,30 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			return result;
 		}
 
+		[NotNull]
+		public static ChangeAlongCurves CalculateCutLines(
+			[NotNull] ChangeAlongGrpc.ChangeAlongGrpcClient rpcClient,
+			[NotNull] IList<Feature> sourceFeatures,
+			[NotNull] IList<Feature> targetFeatures,
+			CancellationToken cancellationToken)
+		{
+			var response =
+				CalculateCutCurvesRpc(rpcClient, sourceFeatures, targetFeatures,
+				                      cancellationToken);
+
+			if (response == null || cancellationToken.IsCancellationRequested)
+			{
+				return new ChangeAlongCurves(new List<CutSubcurve>(0),
+				                             ReshapeAlongCurveUsability.Undefined);
+			}
+
+			var result = PopulateReshapeAlongCurves(
+				sourceFeatures, targetFeatures, response.CutLines,
+				(ReshapeAlongCurveUsability) response.ReshapeLinesUsability);
+
+			return result;
+		}
+
 		private static CalculateReshapeLinesResponse CalculateReshapeCurvesRpc(
 			[NotNull] ChangeAlongGrpc.ChangeAlongGrpcClient rpcClient,
 			[NotNull] IList<Feature> selectedFeatures,
@@ -49,22 +74,22 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 		{
 			var request = CreateCalculateReshapeLinesRequest(selectedFeatures, targetFeatures);
 
-			CalculateReshapeLinesResponse response;
+			return TryRpc(
+				request,
+				r => rpcClient.CalculateReshapeLines(r, null, null, cancellationToken));
+		}
 
-			try
-			{
-				response =
-					rpcClient.CalculateReshapeLines(request, null, null,
-					                                cancellationToken);
-			}
-			catch (Exception e)
-			{
-				_msg.Debug($"Error calling remote procedure: {e.Message} ", e);
+		private static CalculateCutLinesResponse CalculateCutCurvesRpc(
+			[NotNull] ChangeAlongGrpc.ChangeAlongGrpcClient rpcClient,
+			[NotNull] IList<Feature> selectedFeatures,
+			[NotNull] IList<Feature> targetFeatures,
+			CancellationToken cancellationToken)
+		{
+			var request = CreateCalculateCutLinesRequest(selectedFeatures, targetFeatures);
 
-				throw;
-			}
-
-			return response;
+			return TryRpc(
+				request,
+				r => rpcClient.CalculateCutLines(r, null, null, cancellationToken));
 		}
 
 		private static CalculateReshapeLinesRequest CreateCalculateReshapeLinesRequest(
@@ -73,27 +98,161 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 		{
 			var request = new CalculateReshapeLinesRequest();
 
-			ProtobufConversionUtils.ToGdbObjectMsgList(selectedFeatures,
-			                                           request.SourceFeatures,
-			                                           request.ClassDefinitions);
-
-			ProtobufConversionUtils.ToGdbObjectMsgList(targetFeatures,
-			                                           request.TargetFeatures,
-			                                           request.ClassDefinitions);
+			PopulateCalculationRequestLists(selectedFeatures, targetFeatures,
+			                                request.SourceFeatures, request.TargetFeatures,
+			                                request.ClassDefinitions);
 
 			// TODO: The other options
 
 			return request;
 		}
 
+		private static CalculateCutLinesRequest CreateCalculateCutLinesRequest(
+			IList<Feature> selectedFeatures,
+			IList<Feature> targetFeatures)
+		{
+			var request = new CalculateCutLinesRequest();
+
+			PopulateCalculationRequestLists(selectedFeatures, targetFeatures,
+			                                request.SourceFeatures, request.TargetFeatures,
+			                                request.ClassDefinitions);
+
+			// TODO: The other options
+
+			return request;
+		}
+
+		private static void PopulateCalculationRequestLists(
+			IList<Feature> selectedFeatures,
+			IList<Feature> targetFeatures,
+			ICollection<GdbObjectMsg> sourceFeatureMsgs,
+			ICollection<GdbObjectMsg> targetFeatureMsgs,
+			ICollection<ObjectClassMsg> classDefinitions)
+		{
+			ProtobufConversionUtils.ToGdbObjectMsgList(selectedFeatures,
+			                                           sourceFeatureMsgs,
+			                                           classDefinitions);
+
+			ProtobufConversionUtils.ToGdbObjectMsgList(targetFeatures,
+			                                           targetFeatureMsgs,
+			                                           classDefinitions);
+		}
+
+		#endregion
+
 		[NotNull]
-		public static List<ReshapeResultFeature> ApplyReshapeCurves(
+		public static List<ResultFeature> ApplyReshapeCurves(
 			[NotNull] ChangeAlongGrpc.ChangeAlongGrpcClient rpcClient,
 			[NotNull] IList<Feature> sourceFeatures,
 			[NotNull] IList<Feature> targetFeatures,
 			[NotNull] IList<CutSubcurve> selectedSubcurves,
 			CancellationToken cancellationToken,
 			out ChangeAlongCurves newChangeAlongCurves)
+		{
+			Dictionary<GdbObjectReference, Feature> featuresByObjRef =
+				CreateFeatureDictionary(sourceFeatures, targetFeatures);
+
+			ApplyReshapeLinesRequest request =
+				CreateApplyReshapeCurvesRequest(sourceFeatures, targetFeatures, selectedSubcurves);
+
+			ApplyReshapeLinesResponse response =
+				rpcClient.ApplyReshapeLines(request, null, null, cancellationToken);
+
+			List<ResultObjectMsg> responseResultFeatures = response.ResultFeatures.ToList();
+
+			var resultFeatures = new List<ResultFeature>();
+
+			foreach (ResultObjectMsg resultObjectMsg in responseResultFeatures)
+			{
+				GdbObjectMsg updateMsg = Assert.NotNull(resultObjectMsg.Update);
+
+				var updateObjRef =
+					new GdbObjectReference(updateMsg.ClassHandle, updateMsg.ObjectId);
+
+				Feature originalFeature = featuresByObjRef[updateObjRef];
+
+				resultFeatures.Add(new ResultFeature(originalFeature, resultObjectMsg));
+			}
+
+			newChangeAlongCurves = PopulateReshapeAlongCurves(
+				sourceFeatures, targetFeatures, response.NewReshapeLines,
+				(ReshapeAlongCurveUsability) response.ReshapeLinesUsability);
+
+			return resultFeatures;
+		}
+
+		[NotNull]
+		public static List<ResultFeature> ApplyCutCurves(
+			[NotNull] ChangeAlongGrpc.ChangeAlongGrpcClient rpcClient,
+			[NotNull] IList<Feature> sourceFeatures,
+			[NotNull] IList<Feature> targetFeatures,
+			[NotNull] IList<CutSubcurve> selectedSubcurves,
+			CancellationToken cancellationToken,
+			out ChangeAlongCurves newChangeAlongCurves)
+		{
+			Dictionary<GdbObjectReference, Feature> featuresByObjRef =
+				CreateFeatureDictionary(sourceFeatures, targetFeatures);
+
+			ApplyCutLinesRequest request =
+				CreateApplyCutCurvesRequest(sourceFeatures, targetFeatures, selectedSubcurves);
+
+			ApplyCutLinesResponse response =
+				rpcClient.ApplyCutLines(request, null, null, cancellationToken);
+
+			List<ResultObjectMsg> responseResultFeatures = response.ResultFeatures.ToList();
+
+			var resultFeatures = new List<ResultFeature>();
+
+			foreach (ResultObjectMsg resultObjectMsg in responseResultFeatures)
+			{
+				GdbObjectReference originalFeatureRef =
+					GetOriginalGdbObjectReference(resultObjectMsg);
+
+				Feature originalFeature = featuresByObjRef[originalFeatureRef];
+
+				ResultFeature resultFeature = new ResultFeature(
+					originalFeature, resultObjectMsg);
+
+				resultFeatures.Add(resultFeature);
+			}
+
+			newChangeAlongCurves = PopulateReshapeAlongCurves(
+				sourceFeatures, targetFeatures, response.NewCutLines,
+				(ReshapeAlongCurveUsability) response.CutLinesUsability);
+
+			return resultFeatures;
+		}
+
+		private static GdbObjectReference GetOriginalGdbObjectReference(
+			[NotNull] ResultObjectMsg resultObjectMsg)
+		{
+			Assert.ArgumentNotNull(nameof(resultObjectMsg));
+
+			// TODO: long int!
+			int classHandle, objectId;
+
+			if (resultObjectMsg.FeatureCase == ResultObjectMsg.FeatureOneofCase.Insert)
+			{
+				InsertedObjectMsg insert = Assert.NotNull(resultObjectMsg.Insert);
+
+				GdbObjRefMsg originalObjRefMsg = insert.OriginalReference;
+
+				classHandle = originalObjRefMsg.ClassHandle;
+				objectId = originalObjRefMsg.ObjectId;
+			}
+			else
+			{
+				GdbObjectMsg updateMsg = Assert.NotNull(resultObjectMsg.Update);
+
+				classHandle = updateMsg.ClassHandle;
+				objectId = updateMsg.ObjectId;
+			}
+
+			return new GdbObjectReference(classHandle, objectId);
+		}
+
+		private static Dictionary<GdbObjectReference, Feature> CreateFeatureDictionary(
+			IList<Feature> sourceFeatures, IList<Feature> targetFeatures)
 		{
 			var featuresByObjRef = new Dictionary<GdbObjectReference, Feature>();
 
@@ -107,33 +266,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 				featuresByObjRef.Add(new GdbObjectReference(targetFeature), targetFeature);
 			}
 
-			ApplyReshapeLinesRequest request =
-				CreateApplyReshapeCurvesRequest(sourceFeatures, targetFeatures, selectedSubcurves);
-
-			ApplyReshapeLinesResponse response =
-				rpcClient.ApplyReshapeLines(request, null, null, cancellationToken);
-
-			List<ResultObjectMsg> responseResultFeatures = response.ResultFeatures.ToList();
-
-			var resultFeatures = new List<ReshapeResultFeature>();
-
-			foreach (ResultObjectMsg resultObjectMsg in responseResultFeatures)
-			{
-				GdbObjectMsg updateMsg = Assert.NotNull(resultObjectMsg.Update);
-
-				var updateObjRef =
-					new GdbObjectReference(updateMsg.ClassHandle, updateMsg.ObjectId);
-
-				Feature originalFeature = featuresByObjRef[updateObjRef];
-
-				resultFeatures.Add(new ReshapeResultFeature(originalFeature, resultObjectMsg));
-			}
-
-			newChangeAlongCurves = PopulateReshapeAlongCurves(
-				sourceFeatures, targetFeatures, response.NewReshapeLines,
-				(ReshapeAlongCurveUsability) response.ReshapeLinesUsability);
-
-			return resultFeatures;
+			return featuresByObjRef;
 		}
 
 		private static ApplyReshapeLinesRequest CreateApplyReshapeCurvesRequest(
@@ -151,6 +284,29 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			foreach (CutSubcurve subcurve in selectedSubcurves)
 			{
 				result.ReshapeLines.Add(ToReshapeLineMsg(subcurve));
+			}
+
+			// TODO: Options
+			result.InsertVerticesInTarget = true;
+
+			return result;
+		}
+
+		private static ApplyCutLinesRequest CreateApplyCutCurvesRequest(
+			IList<Feature> selectedFeatures,
+			IList<Feature> targetFeatures,
+			IList<CutSubcurve> selectedSubcurves)
+		{
+			var result =
+				new ApplyCutLinesRequest
+				{
+					CalculationRequest =
+						CreateCalculateCutLinesRequest(selectedFeatures, targetFeatures)
+				};
+
+			foreach (CutSubcurve subcurve in selectedSubcurves)
+			{
+				result.CutLines.Add(ToReshapeLineMsg(subcurve));
 			}
 
 			// TODO: Options
@@ -237,5 +393,25 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 		}
 
 		#endregion
+
+		private static TResponse TryRpc<TResponse, TRequest>(
+			[NotNull] TRequest request,
+			Func<TRequest, TResponse> func)
+		{
+			TResponse response;
+
+			try
+			{
+				response = func(request);
+			}
+			catch (Exception e)
+			{
+				_msg.Debug($"Error calling remote procedure: {e.Message} ", e);
+
+				throw;
+			}
+
+			return response;
+		}
 	}
 }
