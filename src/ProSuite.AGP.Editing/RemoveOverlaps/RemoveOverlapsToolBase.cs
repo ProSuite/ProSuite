@@ -67,20 +67,6 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			_msg.Info(LocalizableStrings.RemoveOverlapsTool_LogPromptForSelection);
 		}
 
-		protected override bool CanUseSelection(IEnumerable<Feature> selectedFeatures)
-		{
-			// TODO: Is this still needed?
-			IEnumerable<FeatureClass> featureClasses =
-				selectedFeatures.Select(f => f.GetTable()).Distinct();
-
-			return featureClasses.Any(fc =>
-			{
-				GeometryType geometryType = fc.GetDefinition().GetShapeType();
-
-				return CanSelectGeometryType(geometryType);
-			});
-		}
-
 		protected override bool CanSelectGeometryType(GeometryType geometryType)
 		{
 			return geometryType == GeometryType.Polyline ||
