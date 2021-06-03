@@ -16,6 +16,8 @@ namespace ProSuite.AGP.Editing.Selection
 			SelectionCursor = ToolUtils.GetCursor(Resources.SelectionToolNormal);
 			SelectionCursorShift = ToolUtils.GetCursor(Resources.SelectionToolNormalShift);
 
+			SelectOnlyEditFeatures = false;
+
 			SetCursor(SelectionCursor);
 			//SelectionMode = SelectionMode.Normal;
 		}

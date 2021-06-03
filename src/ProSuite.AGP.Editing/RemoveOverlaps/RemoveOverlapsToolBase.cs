@@ -147,8 +147,21 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			var updates = new Dictionary<Feature, Geometry>();
 			var inserts = new Dictionary<Feature, IList<Geometry>>();
 
-			foreach (var resultPerFeature in result.ResultsByFeature)
+			HashSet<long> editableClassHandles =
+				MapUtils.GetLayers<BasicFeatureLayer>(MapView.Active, bfl => bfl.IsEditable)
+				        .Select(l => l.GetTable().Handle.ToInt64()).ToHashSet();
+
+			foreach (OverlapResultGeometries resultPerFeature in result.ResultsByFeature)
 			{
+				if (! GdbPersistenceUtils.CanChange(resultPerFeature.OriginalFeature,
+				                                    editableClassHandles, out string warning))
+				{
+					_msg.WarnFormat("{0}: {1}",
+					                GdbObjectUtils.ToString(resultPerFeature.OriginalFeature),
+					                warning);
+					continue;
+				}
+
 				updates.Add(resultPerFeature.OriginalFeature, resultPerFeature.UpdatedGeometry);
 
 				if (resultPerFeature.InsertGeometries.Count > 0)

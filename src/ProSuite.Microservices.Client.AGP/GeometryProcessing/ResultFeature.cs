@@ -20,6 +20,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 			_resultFeatureMsg = resultFeatureMsg;
 			Feature = feature;
 			ChangeType = ToChangeType(_resultFeatureMsg.FeatureCase);
+			HasWarningMessage = _resultFeatureMsg.HasWarning;
 		}
 
 		public RowChangeType ChangeType { get; }
@@ -61,7 +62,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 
 		public IList<string> Messages => _resultFeatureMsg.Notifications;
 
-		public bool HasWarningMessage => _resultFeatureMsg.HasWarning;
+		public bool HasWarningMessage { get; set; }
 
 		private RowChangeType ToChangeType(ResultObjectMsg.FeatureOneofCase featureCase)
 		{

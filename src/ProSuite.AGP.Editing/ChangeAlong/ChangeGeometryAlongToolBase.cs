@@ -492,17 +492,24 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			_feedback.Update(_changeAlongCurves);
 
+			HashSet<long> editableClassHandles =
+				MapUtils.GetLayers<BasicFeatureLayer>(MapView.Active, bfl => bfl.IsEditable)
+				        .Select(l => l.GetTable().Handle.ToInt64()).ToHashSet();
+
 			// Updates:
 			Dictionary<Feature, Geometry> resultFeatures =
-				updatedFeatures.Where(f => f.ChangeType == RowChangeType.Update)
-				               .ToDictionary(r => r.Feature,
-				                             r => r.NewGeometry);
+				updatedFeatures
+					.Where(f => GdbPersistenceUtils.CanChange(
+						       f, editableClassHandles, RowChangeType.Update))
+					.ToDictionary(r => r.Feature, r => r.NewGeometry);
 
 			// Inserts (in case of cut), grouped by original feature:
 			Dictionary<Feature, IList<Geometry>> insertsByOriginal =
-				updatedFeatures.Where(f => f.ChangeType == RowChangeType.Insert)
-				               .GroupBy(f => f.Feature, f => f.NewGeometry)
-				               .ToDictionary(g => g.Key, g => (IList<Geometry>) g.ToList());
+				updatedFeatures
+					.Where(f => GdbPersistenceUtils.CanChange(
+						       f, editableClassHandles, RowChangeType.Insert))
+					.GroupBy(f => f.Feature, f => f.NewGeometry)
+					.ToDictionary(g => g.Key, g => (IList<Geometry>) g.ToList());
 
 			// TODO
 			//LogReshapeResults(result, selection.Count);
@@ -512,6 +519,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			return success;
 		}
+
+
 
 		protected abstract List<ResultFeature> ChangeFeaturesAlong(
 			List<Feature> selectedFeatures, [NotNull] IList<Feature> targetFeatures,

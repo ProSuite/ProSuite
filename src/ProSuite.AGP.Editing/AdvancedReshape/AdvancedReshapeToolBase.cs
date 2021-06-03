@@ -21,6 +21,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.Microservices.Client.AGP;
+using ProSuite.Microservices.Client.AGP.GeometryProcessing;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
@@ -288,9 +289,15 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					return false;
 				}
 
+				HashSet<long> editableClassHandles =
+					MapUtils.GetLayers<BasicFeatureLayer>(MapView.Active, bfl => bfl.IsEditable)
+					        .Select(l => l.GetTable().Handle.ToInt64()).ToHashSet();
+
 				Dictionary<Feature, Geometry> resultFeatures =
-					result.ResultFeatures.ToDictionary(r => r.Feature,
-					                                   r => r.NewGeometry);
+					result.ResultFeatures
+					      .Where(r => GdbPersistenceUtils.CanChange(
+						             r, editableClassHandles, RowChangeType.Update))
+					      .ToDictionary(r => r.Feature, r => r.NewGeometry);
 
 				LogReshapeResults(result, selection.Count);
 

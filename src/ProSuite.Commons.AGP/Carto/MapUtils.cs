@@ -213,12 +213,9 @@ namespace ProSuite.Commons.AGP.Carto
 			// -> Get the distinct feature classes (TODO: include layer definition queries)
 
 			IEnumerable<FeatureLayer> featureLayers =
-				mapView.Map.GetLayersAsFlattenedList()
-				       .Where(l =>
-					              l is FeatureLayer fl &&
-					              IsLayerApplicable(fl, targetSelectionType, layerPredicate,
-					                                selectedFeatures))
-				       .Cast<FeatureLayer>();
+				GetLayers<FeatureLayer>(
+					mapView, fl => IsLayerApplicable(fl, targetSelectionType, layerPredicate,
+					                                 selectedFeatures));
 
 			IEnumerable<IGrouping<IntPtr, FeatureLayer>> layersGroupedByClass =
 				featureLayers.GroupBy(fl => fl.GetFeatureClass().Handle);
@@ -255,6 +252,28 @@ namespace ProSuite.Commons.AGP.Carto
 				{
 					yield return new KeyValuePair<FeatureClass, List<Feature>>(
 						featureClass, features.DistinctBy(f => f.GetObjectID()).ToList());
+				}
+			}
+		}
+
+		public static IEnumerable<T> GetLayers<T>(
+			[NotNull] MapView mapView,
+			[CanBeNull] Predicate<T> layerPredicate) where  T: Layer
+		{
+
+			foreach (Layer layer in mapView.Map.GetLayersAsFlattenedList())
+			{
+				T matchingTypeLayer = layer as T;
+
+				if (matchingTypeLayer == null)
+				{
+					continue;
+				}
+
+				if (layerPredicate == null ||
+				    layerPredicate(matchingTypeLayer))
+				{
+					yield return matchingTypeLayer;
 				}
 			}
 		}

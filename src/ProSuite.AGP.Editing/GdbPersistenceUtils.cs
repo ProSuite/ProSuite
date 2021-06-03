@@ -1,13 +1,16 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Microservices.Client.AGP.GeometryProcessing;
 
 namespace ProSuite.AGP.Editing
 {
@@ -83,6 +86,55 @@ namespace ProSuite.AGP.Editing
 				}
 
 				_msg.InfoFormat("Successfully created {0} new feature(s).", copies.Count);
+			}
+
+			return true;
+		}
+
+		public static bool CanChange([NotNull] ResultFeature resultFeature,
+		                             [NotNull] HashSet<long> editableClassHandles,
+		                             params RowChangeType[] allowedChangeType)
+		{
+			if (allowedChangeType.All(t => t != resultFeature.ChangeType))
+			{
+				return false;
+			}
+
+			Feature feature = resultFeature.Feature;
+
+			bool result = CanChange(feature, editableClassHandles, out string warning);
+
+			if (! string.IsNullOrEmpty(warning))
+			{
+				resultFeature.Messages.Add(warning);
+				resultFeature.HasWarningMessage = true;
+			}
+
+			return result;
+		}
+
+		public static bool CanChange([NotNull] Feature feature,
+		                             [NotNull] HashSet<long> editableClassHandles,
+		                             out string warnings)
+		{
+			warnings = null;
+
+			FeatureClass featureClass = feature.GetTable();
+
+			if (featureClass == null)
+			{
+				return false;
+			}
+
+			long handle = featureClass.Handle.ToInt64();
+
+			if (! editableClassHandles.Contains(handle))
+			{
+				warnings = "Not updated because the layer is not editable";
+
+				_msg.DebugFormat("Updated feature {0} is not editable!",
+				                 GdbObjectUtils.ToString(feature));
+				return false;
 			}
 
 			return true;

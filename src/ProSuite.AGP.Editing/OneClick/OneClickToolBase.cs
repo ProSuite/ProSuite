@@ -48,6 +48,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected bool RequiresSelection { get; set; } = true;
 
+		protected bool SelectOnlyEditFeatures { get; set; } = true;
+
 		protected virtual SelectionSettings SelectionSettings { get; set; } =
 			new SelectionSettings();
 
@@ -686,6 +688,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			if (! featureLayer.IsSelectable)
+			{
+				return false;
+			}
+
+			if (SelectOnlyEditFeatures &&
+			    ! featureLayer.IsEditable)
 			{
 				return false;
 			}
