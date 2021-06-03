@@ -110,7 +110,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			}
 
 			// TODO: Options
-			bool insertVerticesInTarget = false;
+			bool insertVerticesInTarget = true;
 			_overlappingFeatures = insertVerticesInTarget
 				                       ? overlappingFeatures
 				                       : null;
@@ -168,6 +168,21 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				{
 					inserts.Add(resultPerFeature.OriginalFeature,
 					            resultPerFeature.InsertGeometries);
+				}
+			}
+
+			if (result.TargetFeaturesToUpdate != null)
+			{
+				foreach (KeyValuePair<Feature, Geometry> kvp in result.TargetFeaturesToUpdate)
+				{
+					if (! GdbPersistenceUtils.CanChange(kvp.Key,
+					                                    editableClassHandles, out string warning))
+					{
+						_msg.WarnFormat("{0}: {1}", GdbObjectUtils.ToString(kvp.Key), warning);
+						continue;
+					}
+
+					updates.Add(kvp.Key, kvp.Value);
 				}
 			}
 
