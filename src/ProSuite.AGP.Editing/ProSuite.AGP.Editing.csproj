@@ -82,6 +82,7 @@
     <Compile Include="AdvancedReshape\AdvancedReshapeToolBase.cs" />
     <Compile Include="ChangeAlong\ChangeAlongFeedback.cs" />
     <Compile Include="ChangeAlong\ChangeGeometryAlongToolBase.cs" />
+    <Compile Include="ChangeAlong\ReshapeAlongToolBase.cs" />
     <Compile Include="GdbPersistenceUtils.cs" />
     <Compile Include="OneClick\ConstructionToolBase.cs" />
     <Compile Include="OneClick\OneClickToolBase.cs" />
@@ -183,12 +184,14 @@
     <None Include="Properties\Images\AdvancedReshapeToolCursor.cur" />
     <None Include="Properties\Images\AdvancedReshapeToolCursorShift.cur" />
     <Content Include="Properties\Images\EditSketchCrosshair.cur" />
+    <None Include="Properties\Images\PolygonDrawerCursor.cur" />
     <Content Include="Properties\Images\RemoveOverlapsToolCursor.cur" />
     <Content Include="Properties\Images\RemoveOverlapsToolCursorProcess.cur" />
     <Content Include="Properties\Images\RemoveOverlapsToolCursorShift.cur" />
     <None Include="Properties\Images\ReshapeAlongToolCursor.cur" />
     <None Include="Properties\Images\ReshapeAlongToolCursorProcess.cur" />
     <None Include="Properties\Images\ReshapeAlongToolCursorShift.cur" />
+    <None Include="Properties\Images\ReshapeAlongToolCursorProcessShift.cur" />
     <Content Include="Properties\Images\SelectionToolNormal.cur" />
     <Content Include="Properties\Images\SelectionToolNormalShift.cur" />
     <Content Include="Properties\Images\SelectionToolOriginal.cur" />

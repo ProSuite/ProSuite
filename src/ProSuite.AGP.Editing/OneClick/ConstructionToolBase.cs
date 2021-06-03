@@ -103,7 +103,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			base.OnToolDeactivateCore(hasMapViewChanged);
 		}
 
-		protected override bool IsInSelectionPhase()
+		protected override bool IsInSelectionPhase(bool shiftIsPressed)
 		{
 			return ! IsInSketchMode;
 		}
@@ -172,11 +172,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			{
 				_intermittentSelectionPhase = false;
 
-				// TODO: Maintain selection by using SelectionChanged? Event?
-				IList<Feature> selection =
-					SelectionUtils.GetSelectedFeatures(ActiveMapView).ToList();
-
-				if (CanUseSelection(selection))
+				if (CanUseSelection(ActiveMapView))
 				{
 					StartSketchPhase();
 
@@ -258,9 +254,8 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			// TODO: only if selection was cleared? Generally allow changing the selection through attribute selection?
-			IList<Feature> selection = SelectionUtils.GetSelectedFeatures(ActiveMapView).ToList();
 
-			if (! CanUseSelection(selection))
+			if (! CanUseSelection(ActiveMapView))
 			{
 				//LogPromptForSelection();
 				StartSelectionPhase();
@@ -440,10 +435,9 @@ namespace ProSuite.AGP.Editing.OneClick
 				// sketching is not possible any more and the application appears hanging
 
 				// Try start sketch mode:
-				IList<Feature> selection =
-					SelectionUtils.GetSelectedFeatures(ActiveMapView).ToList();
+				IList<Feature> selection = GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
-				if (CanUseSelection(selection))
+				if (CanUseSelection(ActiveMapView))
 				{
 					AfterSelection(selection, null);
 				}

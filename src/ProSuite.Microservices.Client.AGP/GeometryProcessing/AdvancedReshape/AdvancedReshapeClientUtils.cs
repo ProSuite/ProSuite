@@ -97,7 +97,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 
 				Feature inputFeature = allInputFeatures[objRef];
 
-				var reshapeResultFeature = new ReshapeResultFeature(inputFeature, resultFeatureMsg);
+				var reshapeResultFeature = new ResultFeature(inputFeature, resultFeatureMsg);
 
 				result.ResultFeatures.Add(reshapeResultFeature);
 			}
@@ -168,7 +168,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 
 				Feature inputFeature = allInputFeatures[objRef];
 
-				var reshapeResultFeature = new ReshapeResultFeature(inputFeature, resultFeatureMsg);
+				var reshapeResultFeature = new ResultFeature(inputFeature, resultFeatureMsg);
 
 				result.ResultFeatures.Add(reshapeResultFeature);
 			}

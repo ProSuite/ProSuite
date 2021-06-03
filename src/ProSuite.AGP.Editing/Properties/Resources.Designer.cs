@@ -113,6 +113,16 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] PolygonDrawerCursor {
+            get {
+                object obj = ResourceManager.GetObject("PolygonDrawerCursor", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] RemoveOverlapsToolCursor {
             get {
                 object obj = ResourceManager.GetObject("RemoveOverlapsToolCursor", resourceCulture);
@@ -156,6 +166,16 @@ namespace ProSuite.AGP.Editing.Properties {
         internal static byte[] ReshapeAlongToolCursorProcess {
             get {
                 object obj = ResourceManager.GetObject("ReshapeAlongToolCursorProcess", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] ReshapeAlongToolCursorProcessShift {
+            get {
+                object obj = ResourceManager.GetObject("ReshapeAlongToolCursorProcessShift", resourceCulture);
                 return ((byte[])(obj));
             }
         }

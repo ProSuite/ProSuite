@@ -6,6 +6,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using Grpc.Core;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Microservices.Client.AGP.GeometryProcessing;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps;
@@ -63,7 +64,17 @@ namespace ProSuite.Microservices.Client.AGP
 		}
 
 		[NotNull]
-		public List<ReshapeResultFeature> ApplyReshapeLines(
+		public ChangeAlongCurves CalculateCutLines(
+			[NotNull] IList<Feature> sourceFeatures,
+			[NotNull] IList<Feature> targetFeatures,
+			CancellationToken cancellationToken)
+		{
+			return ChangeAlongClientUtils.CalculateCutLines(
+				ChangeAlongClient, sourceFeatures, targetFeatures, cancellationToken);
+		}
+
+		[NotNull]
+		public List<ResultFeature> ApplyReshapeLines(
 			[NotNull] IList<Feature> sourceFeatures,
 			[NotNull] IList<Feature> targetFeatures,
 			[NotNull] IList<CutSubcurve> selectedReshapeLines,
@@ -76,6 +87,24 @@ namespace ProSuite.Microservices.Client.AGP
 			}
 
 			return ChangeAlongClientUtils.ApplyReshapeCurves(
+				ChangeAlongClient, sourceFeatures, targetFeatures, selectedReshapeLines,
+				cancellationToken, out newChangeAlongCurves);
+		}
+
+		[NotNull]
+		public List<ResultFeature> ApplyCutLines(
+			[NotNull] IList<Feature> sourceFeatures,
+			[NotNull] IList<Feature> targetFeatures,
+			[NotNull] IList<CutSubcurve> selectedReshapeLines,
+			CancellationToken cancellationToken,
+			out ChangeAlongCurves newChangeAlongCurves)
+		{
+			if (targetFeatures == null)
+			{
+				throw new ArgumentNullException(nameof(targetFeatures));
+			}
+
+			return ChangeAlongClientUtils.ApplyCutCurves(
 				ChangeAlongClient, sourceFeatures, targetFeatures, selectedReshapeLines,
 				cancellationToken, out newChangeAlongCurves);
 		}

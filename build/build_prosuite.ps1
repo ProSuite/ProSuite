@@ -1,24 +1,30 @@
 #
 # Usage samples:
-#	.\build_prosuite.ps1 -product server -prosdk 2.6 -release -zip    - release version if ProSuite.Server with 2.6 ProSDK and Zip 
-#	.\build_prosuite.ps1											  - test version of AddIn with local ArcGIS Pro Dlls
-#
-#  Possible commandline parameters: 
-#
-# [-product [Server, AddIn]] 
-#	default is AddIn 
-# [-proSdk [2.5,2.6,...]] version of EsriDE.Commons\lib\ESRI\ProSDK 
-# 	default is local ArcGIS Pro
-# [-cpu x86]
-#	default is Any CPU
-# [-zip] output folder will bo compressed
-# 	default none 
-# [-release [Release, Test] will increase version number v in ${Product}.versions.txt x.v.x.x - without is test version: x.x.v.x
-# 	default Test
-# [-arcgisvers = [10.6,10.8] - is relevant only for -product server
-#	default 10.8
-# [-info ] will print out environment variables and quit
-#	
+
+# .\build_prosuite.ps1 [-product server] [-prosdk 2.5|2.6|2.7|2.8] [-cpu x86|AnyCPU] [-arcgisvers 10.6|10.7|10.8] [-arcobjects 10|11] [-release] [-zip] [-info]
+
+# without -product will compile AddIn
+# without -prosdk will use binaries from local installation of ArcGIS Pro will, otherweise version of EsriDE.Commons\lib\ESRI\ProSDK
+# without -cpu will compile AnyCPU configuration
+# without -arcgisvers will compile with 10.8 binaries (is relevant only for -product server) 
+# without -arcobjects version 10 will be used (environment variable VSArcGISProduct="ArcGIS") –arcobjects 11 means (VSArcGISProduct="Server")
+# without -release will compile test version (will increase version number v in ${Product}.versions.txt x.v.x.x - without is test version: x.x.v.x)
+# switch -zip will compress output folder
+# switch -info will display environment variables, calculated build configuration and quit without building. 
+
+# AddIn für ArcGIS Pro 2.8
+# .\build_prosuite.ps1 -prosdk 2.8 -arcgisvers 10.7 -release [-zip]
+
+# Microservice für lokales ArcMap 10.6
+# .\build_prosuite.ps1 -product server -arcgisvers 10.6 -cpu x86 -release [-zip]
+
+# Microservice für lokales ArcMap 10.8
+# .\build_prosuite.ps1 -product server -arcgisvers 10.8 -cpu x86 -release [-zip]
+
+# Microservice für ArcGIS Server 10.9
+# .\build_prosuite.ps1 -product server -arcgisvers 10.9 -cpu x86 -arcobjects 11 -release [-zip]
+
+	
 Param(
 	$Cpu = 'Any CPU',
 	$Product= 'AddIn',
