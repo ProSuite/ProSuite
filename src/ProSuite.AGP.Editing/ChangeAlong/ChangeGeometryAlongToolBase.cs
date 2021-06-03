@@ -81,7 +81,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
-			_feedback?.DisposeOverlays();
+			ResetDerivedGeometries();
 			_feedback = null;
 		}
 
@@ -109,7 +109,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					() =>
 					{
 						var selectedFeatures =
-							SelectionUtils.GetSelectedFeatures(ActiveMapView).ToList();
+							GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
 						RefreshCutSubcurves(selectedFeatures, GetCancelableProgressor());
 
@@ -123,13 +123,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		protected override void AfterSelection(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
 		{
-			if (! CanUseSelection(selectedFeatures))
-			{
-				StartSelectionPhase();
-
-				return;
-			}
-
 			StartTargetSelectionPhase();
 		}
 
@@ -228,14 +221,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				return ! HasReshapeCurves();
 			}
 
-			var task = QueuedTask.Run(
-				() =>
-				{
-					IList<Feature> selection =
-						SelectionUtils.GetSelectedFeatures(ActiveMapView).ToList();
-
-					return ! CanUseSelection(selection);
-				});
+			var task = QueuedTask.Run(() => ! CanUseSelection(ActiveMapView));
 
 			return task.Result;
 		}
@@ -293,7 +279,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		private bool SelectTargets(List<Feature> selectedFeatures, Geometry sketch,
 		                           CancelableProgressor progressor)
 		{
-			// TODO: maintain target selection to allow add/remove to
 			const TargetFeatureSelection targetFeatureSelection =
 				TargetFeatureSelection.VisibleFeatures;
 
@@ -519,8 +504,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			return success;
 		}
-
-
 
 		protected abstract List<ResultFeature> ChangeFeaturesAlong(
 			List<Feature> selectedFeatures, [NotNull] IList<Feature> targetFeatures,

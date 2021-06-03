@@ -22,6 +22,7 @@ using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Notifications;
 using ProSuite.Commons.UI.Keyboard;
 using Cursor = System.Windows.Input.Cursor;
 using SelectionMode = ProSuite.AGP.Editing.Selection.SelectionMode;
@@ -46,9 +47,22 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private SketchingMoveType SketchingMoveType { get; set; }
 
+		/// <summary>
+		/// Whether this tool requires a selection and the base class should handle the selection phase.
+		/// </summary>
 		protected bool RequiresSelection { get; set; } = true;
 
+		/// <summary>
+		/// Whether the required selection can only contain editable fetures.
+		/// </summary>
 		protected bool SelectOnlyEditFeatures { get; set; } = true;
+
+		/// <summary>
+		/// Whether selected features that are not applicable (e.g. due to wrong geometry type) are
+		/// allowed. Otherwise the selection phase will continue until all selected features are
+		/// usable by the tool. 
+		/// </summary>
+		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
 
 		protected virtual SelectionSettings SelectionSettings { get; set; } =
 			new SelectionSettings();
@@ -92,7 +106,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 						if (RequiresSelection)
 						{
-							ProcessSelection(SelectionUtils.GetSelectedFeatures(ActiveMapView));
+							ProcessSelection(ActiveMapView);
 						}
 
 						return OnToolActivatedCore(hasMapViewChanged);
@@ -561,10 +575,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			MapView activeMapView = MapView.Active;
 
-			await QueuedTask.Run(() =>
-				                     ProcessSelection(
-					                     SelectionUtils.GetSelectedFeatures(activeMapView),
-					                     progressor));
+			await QueuedTask.Run(() => ProcessSelection(activeMapView, progressor));
 
 			return true;
 		}
@@ -618,11 +629,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected abstract void LogPromptForSelection();
 
-		protected virtual bool CanUseSelection([NotNull] IEnumerable<Feature> selectedFeatures)
-		{
-			return selectedFeatures.Any(CanSelectFeatureGeometryType);
-		}
-
 		protected bool CanSelectFeatureGeometryType([NotNull] Feature feature)
 		{
 			GeometryType shapeType = DatasetUtils.GetShapeType(feature.GetTable());
@@ -633,24 +639,35 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual void AfterSelection([NotNull] IList<Feature> selectedFeatures,
 		                                      [CanBeNull] CancelableProgressor progressor) { }
 
-		private void ProcessSelection([NotNull] IEnumerable<Feature> selectedFeatures,
+		private void ProcessSelection([NotNull] MapView activeMapView,
 		                              [CanBeNull] CancelableProgressor progressor = null)
 		{
-			// TODO: currently the selection is retrieved twice. Testing the selection should 
-			// in the success case return it so that it can be passed to AfterSelection
-			// BUT: some genius tools require the selection to be grouped by layer
-			IList<Feature> selection = selectedFeatures.ToList();
+			Dictionary<MapMember, List<long>> selectionByLayer = activeMapView.Map.GetSelection();
 
-			if (! CanUseSelection(selection))
+			NotificationCollection notifications = new NotificationCollection();
+			List<Feature> applicableSelection =
+				GetApplicableSelectedFeatures(selectionByLayer, notifications).ToList();
+
+			int selectionCount = selectionByLayer.Sum(kvp => kvp.Value.Count);
+
+			if (applicableSelection.Count > 0 &&
+			    (AllowNotApplicableFeaturesInSelection ||
+			     applicableSelection.Count == selectionCount))
 			{
+				LogUsingCurrentSelection();
+
+				AfterSelection(applicableSelection, progressor);
+			}
+			else
+			{
+				if (selectionCount > 0)
+				{
+					_msg.InfoFormat(notifications.Concatenate(Environment.NewLine));
+				}
+
 				LogPromptForSelection();
 				StartSelectionPhase();
-				return;
 			}
-
-			LogUsingCurrentSelection();
-
-			AfterSelection(selection, progressor);
 		}
 
 		protected void HandleError(string message, Exception e, bool noMessageBox = false)
@@ -673,66 +690,118 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 		}
 
-		private bool CanSelectFromLayer(Layer layer)
+		private bool CanSelectFromLayer([CanBeNull] Layer layer,
+		                                NotificationCollection notifications = null)
 		{
 			var featureLayer = layer as FeatureLayer;
 
 			if (featureLayer == null)
 			{
+				NotificationUtils.Add(notifications, "No feature layer");
 				return false;
 			}
 
+			string layerName = layer.Name;
+
 			if (! featureLayer.IsVisible)
 			{
+				NotificationUtils.Add(notifications, $"Layer {layerName} not visible");
 				return false;
 			}
 
 			if (! featureLayer.IsSelectable)
 			{
+				NotificationUtils.Add(notifications, $"Layer {layerName} not selectable");
 				return false;
 			}
 
 			if (SelectOnlyEditFeatures &&
 			    ! featureLayer.IsEditable)
 			{
+				NotificationUtils.Add(notifications, $"Layer {layerName} not editable");
 				return false;
 			}
 
 			if (! CanSelectGeometryType(
 				    GeometryUtils.TranslateEsriGeometryType(featureLayer.ShapeType)))
 			{
+				NotificationUtils.Add(notifications,
+				                      $"Layer {layerName}: Cannot use geometry type {featureLayer.ShapeType}");
 				return false;
 			}
 
 			if (featureLayer.GetFeatureClass() == null)
 			{
+				NotificationUtils.Add(notifications, $"Layer {layerName} is invalid");
 				return false;
 			}
 
 			return CanSelectFromLayerCore(featureLayer);
 		}
 
-		protected IEnumerable<Feature> GetApplicableSelectedFeatures(
-			[NotNull] IEnumerable<Feature> selectedFeatures)
+		[Obsolete]
+		protected virtual bool CanUseSelection([NotNull] IEnumerable<Feature> selectedFeatures)
 		{
-			foreach (Feature feature in selectedFeatures)
-			{
-				GeometryType shapeType = DatasetUtils.GetShapeType(feature.GetTable());
+			return selectedFeatures.Any(CanSelectFeatureGeometryType);
+		}
 
-				if (! CanSelectGeometryType(shapeType))
+		protected bool CanUseSelection([NotNull] MapView activeMapView)
+		{
+			Dictionary<MapMember, List<long>> selectionByLayer = activeMapView.Map.GetSelection();
+
+			return CanUseSelection(selectionByLayer);
+		}
+
+		protected bool CanUseSelection([NotNull] Dictionary<MapMember, List<long>> selectionByLayer)
+		{
+			return AllowNotApplicableFeaturesInSelection
+				       ? selectionByLayer.Any(l => CanSelectFromLayer(l.Key as Layer))
+				       : selectionByLayer.All(l => CanSelectFromLayer(l.Key as Layer));
+		}
+
+		protected IEnumerable<Feature> GetApplicableSelectedFeatures(
+			[NotNull] Dictionary<MapMember, List<long>> selectionByLayer,
+			[CanBeNull] NotificationCollection notifications = null)
+		{
+			int filteredCount = 0;
+			int selectionCount = 0;
+
+			foreach (var oidsByLayer in selectionByLayer)
+			{
+				if (! CanSelectFromLayer(oidsByLayer.Key as Layer, notifications))
 				{
+					filteredCount += oidsByLayer.Value.Count;
 					continue;
 				}
 
-				yield return feature;
+				foreach (Feature feature in MapUtils.GetFeatures(
+					oidsByLayer.Key, oidsByLayer.Value))
+				{
+					yield return feature;
+					selectionCount++;
+				}
+			}
+
+			if (filteredCount == 1)
+			{
+				notifications?.Insert(
+					0, new Notification("The selected feature cannot be used by the tool:"));
+			}
+
+			if (filteredCount > 1)
+			{
+				notifications?.Insert(
+					0,
+					new Notification(
+						$"{filteredCount} of {selectionCount + filteredCount} selected features cannot be used by the tool:"));
 			}
 		}
 
 		protected IEnumerable<Feature> GetApplicableSelectedFeatures(MapView activeView)
 		{
-			var selectedFeatures = SelectionUtils.GetSelectedFeatures(activeView);
+			Dictionary<MapMember, List<long>> selectionByLayer = activeView.Map.GetSelection();
 
-			return GetApplicableSelectedFeatures(selectedFeatures);
+			return GetApplicableSelectedFeatures(selectionByLayer);
 		}
 
 		protected virtual bool CanSelectGeometryType(GeometryType geometryType)

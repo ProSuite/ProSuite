@@ -20,7 +20,7 @@ namespace ProSuite.Commons.AGP.Carto
 	{
 		[NotNull]
 		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
-				[NotNull] IEnumerable<BasicFeatureLayer> layers)
+			[NotNull] IEnumerable<BasicFeatureLayer> layers)
 		{
 			var result = new Dictionary<Table, SimpleSet<long>>();
 			var distinctTableIds = new Dictionary<GdbTableIdentity, Table>();
@@ -103,9 +103,29 @@ namespace ProSuite.Commons.AGP.Carto
 		public static IEnumerable<Feature> GetFeatures(
 			KeyValuePair<BasicFeatureLayer, List<long>> layerOids)
 		{
-			var layer = layerOids.Key;
+			BasicFeatureLayer layer = layerOids.Key;
 
-			foreach (var feature in GetFeatures(layer, layerOids.Value)) yield return feature;
+			foreach (var feature in GetFeatures(layer, layerOids.Value))
+			{
+				yield return feature;
+			}
+		}
+
+		public static IEnumerable<Feature> GetFeatures([NotNull] MapMember mapMember,
+		                                               [NotNull] List<long> oidList,
+		                                               bool recycling = false)
+		{
+			var basicFeatureLayer = mapMember as BasicFeatureLayer;
+
+			if (basicFeatureLayer == null)
+			{
+				yield break;
+			}
+
+			foreach (Feature feature in GetFeatures(basicFeatureLayer, oidList, recycling))
+			{
+				yield return feature;
+			}
 		}
 
 		private static IEnumerable<Feature> GetFeatures([CanBeNull] BasicFeatureLayer layer,
@@ -258,9 +278,8 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public static IEnumerable<T> GetLayers<T>(
 			[NotNull] MapView mapView,
-			[CanBeNull] Predicate<T> layerPredicate) where  T: Layer
+			[CanBeNull] Predicate<T> layerPredicate) where T : Layer
 		{
-
 			foreach (Layer layer in mapView.Map.GetLayersAsFlattenedList())
 			{
 				T matchingTypeLayer = layer as T;

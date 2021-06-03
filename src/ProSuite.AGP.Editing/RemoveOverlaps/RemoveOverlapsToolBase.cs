@@ -69,6 +69,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 		protected override bool CanUseSelection(IEnumerable<Feature> selectedFeatures)
 		{
+			// TODO: Is this still needed?
 			IEnumerable<FeatureClass> featureClasses =
 				selectedFeatures.Select(f => f.GetTable()).Distinct();
 
@@ -90,8 +91,6 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
 		                                                   CancelableProgressor progressor)
 		{
-			selectedFeatures = GetApplicableSelectedFeatures(selectedFeatures).ToList();
-
 			IList<Feature> overlappingFeatures =
 				GetOverlappingFeatures(selectedFeatures, progressor);
 
@@ -188,7 +187,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			bool saved = GdbPersistenceUtils.SaveInOperation("Remove overlaps", updates, inserts);
 
-			var currentSelection = SelectionUtils.GetSelectedFeatures(MapView.Active).ToList();
+			var currentSelection = GetApplicableSelectedFeatures(MapView.Active).ToList();
 
 			CalculateDerivedGeometries(currentSelection, progressor);
 
@@ -242,10 +241,10 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			if (IsInSelectionPhase())
 			{
-				var selectedFeatures = MapUtils.GetFeatures(e.Selection).ToList();
-
-				if (CanUseSelection(selectedFeatures))
+				if (CanUseSelection(e.Selection))
 				{
+					var selectedFeatures = GetApplicableSelectedFeatures(e.Selection).ToList();
+
 					AfterSelection(selectedFeatures, progressor);
 
 					var sketch = GetCurrentSketchAsync().Result;
@@ -325,7 +324,6 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			return result;
 		}
-
 
 		#region Search target features
 
