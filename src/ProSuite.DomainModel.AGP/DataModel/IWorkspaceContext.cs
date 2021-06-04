@@ -1,7 +1,7 @@
 using ArcGIS.Core.Data;
 using ProSuite.Commons.AGP.Gdb;
 
-namespace ProSuite.DomainModel.DataModel
+namespace ProSuite.DomainModel.AGP.DataModel
 {
 	public interface IWorkspaceContext : IDatasetContext
 	{

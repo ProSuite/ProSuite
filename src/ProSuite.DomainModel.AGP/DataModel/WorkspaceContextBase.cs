@@ -2,7 +2,7 @@ using ArcGIS.Core.Data;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.DomainModel.DataModel
+namespace ProSuite.DomainModel.AGP.DataModel
 {
 	public abstract class WorkspaceContextBase : IWorkspaceContext
 	{

@@ -1,7 +1,7 @@
 using System;
 using ArcGIS.Core.Data;
 
-namespace ProSuite.DomainModel.DataModel
+namespace ProSuite.DomainModel.AGP.DataModel
 {
 	public interface IDatasetContext : IDisposable
 	{
