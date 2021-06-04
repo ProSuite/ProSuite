@@ -54,6 +54,14 @@ namespace ProSuite.DomainModel.AO.DataModel
 			       geometryTypeShape.IsEqual(shapeType);
 		}
 
+		public static bool IsModelDefaultDatabase([NotNull] IWorkspace workspace,
+		                                          [NotNull] Model model)
+		{
+			return model.IsMasterDatabaseAccessible &&
+			       WorkspaceUtils.IsSameDatabase(model.GetMasterDatabaseWorkspace(),
+			                                     workspace);
+		}
+
 		/// <summary>
 		/// Tries to get the dataset for a given gdb dataset name and an optional workspace, from
 		/// either the primary workspace context or the model master database.

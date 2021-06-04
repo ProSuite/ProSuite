@@ -23,6 +23,71 @@ namespace ProSuite.DomainModel.AO.Workflow
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
+
+		[CanBeNull]
+		public static ObjectDataset GetDataset<P, M>(
+			[NotNull] P project,
+			[NotNull] IObjectClass objectClass,
+			[CanBeNull] Predicate<Dataset> ignoreDataset)
+			where P : Project<M>
+			where M : ProductionModel
+		{
+			Model model = project.ProductionModel;
+
+			if (model == null)
+			{
+				return null;
+			}
+
+			var gdbDatasetName = DatasetUtils.GetName(objectClass);
+
+			_msg.DebugFormat(
+				"Get matching dataset candidate for class {0} in model {1} for project {2}",
+				gdbDatasetName, model.Name, project.Name);
+
+			Dataset dataset;
+			using (_msg.IncrementIndentation())
+			{
+				dataset = GetMatchingDatasetCandidate(
+					objectClass, model,
+					project.UseOnlyModelDefaultDatabase,
+					project.ChildDatabaseWorkspaceFilter,
+					project.ChildDatabaseDatasetNameTransformer,
+					ignoreDataset);
+			}
+
+			if (dataset == null)
+			{
+				_msg.VerboseDebugFormat("No match found");
+				return null;
+			}
+
+			var objectDataset = dataset as ObjectDataset;
+			if (objectDataset == null)
+			{
+				_msg.DebugFormat(
+					"Matching dataset for {0} in model {1} is not an object dataset, ignore",
+					gdbDatasetName,
+					project.ProductionModel.Name);
+
+				return null;
+			}
+
+			if (!ModelContextUtils.HasMatchingGeometryType(objectDataset, objectClass))
+			{
+				_msg.DebugFormat(
+					"Matching dataset for {0} in model {1} has a different geometry type, ignore",
+					gdbDatasetName,
+					project.ProductionModel.Name);
+
+				return null;
+			}
+
+			_msg.DebugFormat("Match found: {0}", objectDataset.Name);
+
+			return objectDataset;
+		}
+
 		[NotNull]
 		public static IEnumerable<WorkspaceAssociation> GetWorkspaceAssociations<P, M>(
 			[NotNull] IWorkspace workspace,
@@ -110,6 +175,82 @@ namespace ProSuite.DomainModel.AO.Workflow
 			[CanBeNull] string transformationPatterns)
 		{
 			return new DatasetNameTransformer(transformationPatterns);
+		}
+
+		[CanBeNull]
+		private static Dataset GetMatchingDatasetCandidate(
+			[NotNull] IObjectClass objectClass,
+			[NotNull] Model model,
+			bool useOnlyModelDefaultDatabase,
+			[NotNull] IWorkspaceFilter childDatabaseWorkspaceFilter,
+			[NotNull] IDatasetNameTransformer datasetNameTransformer,
+			[CanBeNull] Predicate<Dataset> ignoreDataset)
+		{
+			// called when evaluating added layers etc.
+
+			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
+			Assert.ArgumentNotNull(model, nameof(model));
+			Assert.ArgumentNotNull(childDatabaseWorkspaceFilter,
+			                       nameof(childDatabaseWorkspaceFilter));
+
+			IWorkspace workspace = DatasetUtils.GetWorkspace(objectClass);
+
+			string gdbDatasetName = DatasetUtils.GetName(objectClass);
+			string modelDatasetName = model.TranslateToModelElementName(gdbDatasetName);
+
+			Dataset dataset = model.GetDatasetByModelName(modelDatasetName);
+
+			if (dataset != null && (ignoreDataset == null || !ignoreDataset(dataset)))
+			{
+				if (ModelContextUtils.IsModelDefaultDatabase(workspace, model))
+				{
+					// the object class is from the model master database
+					return IsFromOtherMasterDatabaseSchema(model, gdbDatasetName)
+						       ? null
+						       : dataset;
+				}
+			}
+
+			// the object class is not from the model master database
+			if (useOnlyModelDefaultDatabase)
+			{
+				// ... but all other workspaces have to be ignored
+				return null;
+			}
+
+			string reason;
+			if (childDatabaseWorkspaceFilter.Ignore(workspace, out reason))
+			{
+				_msg.DebugFormat("Workspace for object class {0} does not meet " +
+				                 "child database filter criteria for model {1}: {2} ({3})",
+				                 gdbDatasetName, model.Name, reason,
+				                 WorkspaceUtils.GetConnectionString(workspace, true));
+
+				return null;
+			}
+
+			var datasetName = GetModelElementNameForChildDatabaseElement(
+				gdbDatasetName, model, datasetNameTransformer);
+
+			_msg.VerboseDebugFormat(
+				"Dataset name for {0} in model {1} (non-master db): {2}",
+				gdbDatasetName, model.Name, datasetName ?? "<null>");
+
+			return datasetName == null
+				       ? null
+				       : GetDataset(model, datasetName, ignoreDataset);
+		}
+
+		[CanBeNull]
+		private static Dataset GetDataset([NotNull] Model model,
+		                                  [NotNull] string datasetModelName,
+		                                  [CanBeNull] Predicate<Dataset> ignoreDataset)
+		{
+			Dataset dataset = model.GetDatasetByModelName(datasetModelName);
+
+			return ignoreDataset == null || !ignoreDataset(dataset)
+				       ? dataset
+				       : null;
 		}
 
 		/// <summary>
