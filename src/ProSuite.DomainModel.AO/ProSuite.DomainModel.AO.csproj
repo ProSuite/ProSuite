@@ -242,9 +242,11 @@
     </Compile>
     <Compile Include="Workflow\DatasetNameTransformer.cs" />
     <Compile Include="Workflow\IDatasetNameTransformer.cs" />
+    <Compile Include="Workflow\IProjectRepository.cs" />
     <Compile Include="Workflow\IWorkspaceFilter.cs" />
     <Compile Include="Workflow\Project.cs" />
     <Compile Include="Workflow\ProjectUtils.cs" />
+    <Compile Include="Workflow\ProjectWorkspaceBase.cs" />
     <Compile Include="Workflow\QualityVerificationOutsideEditSessionAllowed.cs" />
     <Compile Include="Workflow\WorkspaceFilters\IWorkspaceMatchCriterion.cs" />
     <Compile Include="Workflow\WorkspaceFilters\WorkspaceDbType.cs" />
