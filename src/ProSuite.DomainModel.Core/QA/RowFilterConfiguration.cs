@@ -4,7 +4,7 @@ using ProSuite.Commons.Validation;
 
 namespace ProSuite.DomainModel.Core.QA
 {
-	public class RowFilterConfiguration : ParameterizedInstanceConfiguration
+	public class RowFilterConfiguration : InstanceConfiguration
 	{
 		[UsedImplicitly] private RowFilterDescriptor _rowFilterDescriptor;
 
@@ -24,7 +24,7 @@ namespace ProSuite.DomainModel.Core.QA
 			_rowFilterDescriptor = rowFilterDescriptor;
 		}
 
-		protected override InstanceDescriptor InstanceDescriptor => RowFilterDescriptor;
+		public override InstanceDescriptor InstanceDescriptor => RowFilterDescriptor;
 
 		[Required]
 		public RowFilterDescriptor RowFilterDescriptor

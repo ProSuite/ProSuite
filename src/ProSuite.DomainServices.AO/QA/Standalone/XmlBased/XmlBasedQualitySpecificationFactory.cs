@@ -107,6 +107,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			XmlDataQualityUtils.AssertUniqueWorkspaceIds(document);
 			XmlDataQualityUtils.AssertUniqueTestDescriptorNames(document);
 			XmlDataQualityUtils.AssertUniqueQualityConditionNames(document);
+			XmlDataQualityUtils.AssertUniqueIssueFilterNames(document);
+			XmlDataQualityUtils.AssertUniqueRowFilterNames(document);
+			XmlDataQualityUtils.AssertUniqueTransformerNames(document);
 			XmlDataQualityUtils.AssertUniqueQualitySpecificationNames(document);
 			XmlDataQualityUtils.AssertUniqueQualifiedCategoryNames(document);
 
@@ -125,69 +128,35 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			IDictionary<XmlDataQualityCategory, DataQualityCategory> categoryMap =
 				GetCategoryMap(document);
 
-			IList<KeyValuePair<XmlInstanceConfiguration, XmlDataQualityCategory>>
-				referencedXmlConditionPairs =
-					XmlDataQualityUtils.GetReferencedXmlQualityConditions(
-						                   document, new[] {xmlQualitySpecification})
-					                   .ToList();
-
-			IList<XmlInstanceConfiguration> referencedXmlConditions =
-				referencedXmlConditionPairs.Select(p => p.Key)
-				                           .ToList();
+			XmlQualityConditionsCache cache =
+				XmlDataQualityUtils.GetReferencedXmlQualityConditions(
+					document, new[] {xmlQualitySpecification});
 
 			IList<XmlWorkspace> referencedXmlWorkspaces =
-				XmlDataQualityUtils.GetReferencedWorkspaces(document,
-				                                            referencedXmlConditions);
+				XmlDataQualityUtils.GetReferencedWorkspaces(cache);
 
 			IDictionary<string, Model> modelsByWorkspaceId = GetModelsByWorkspaceId(
-				referencedXmlWorkspaces, dataSources, referencedXmlConditions);
+				referencedXmlWorkspaces, dataSources,
+				cache.EnumReferencedConfigurationInstances().ToList());
 
-			IDictionary<string, TestDescriptor> testDescriptorsByName =
-				GetReferencedTestDescriptorsByName(referencedXmlConditions, document);
+			cache.ReferencedModels = modelsByWorkspaceId;
 
 			var qualityConditions = new Dictionary<string, QualityCondition>(
 				StringComparer.OrdinalIgnoreCase);
 
 			Func<string, IList<Dataset>> getDatasetsByName = name => new List<Dataset>();
 
-			var instanceConfigurationByName = new Dictionary<string, QualityCondition>();
-			var createds = new Dictionary<XmlInstanceConfiguration, QualityCondition>();
-			var xmlConfigByCondition = new Dictionary<QualityCondition, XmlInstanceConfiguration>();
 			foreach (
-				KeyValuePair<XmlInstanceConfiguration, XmlDataQualityCategory> pair in
-				referencedXmlConditionPairs)
+				KeyValuePair<XmlQualityCondition, XmlDataQualityCategory> pair in
+				cache.QualityConditionsWithCategories)
 			{
-				XmlInstanceConfiguration xmlCondition = pair.Key;
-				QualityCondition created = XmlDataQualityUtils.PrepareQualityCondition(
-					xmlCondition, testDescriptorsByName);
+				XmlQualityCondition xmlConfig = pair.Key;
 
-				createds.Add(xmlCondition, created);
-				xmlConfigByCondition.Add(created, xmlCondition);
-				if (xmlCondition.Name != null)
-				{
-					instanceConfigurationByName.Add(xmlCondition.Name, created);
-				}
-			}
+				QualityCondition created = cache.CreateQualityCondition(
+					xmlConfig, getDatasetsByName, ignoreConditionsForUnknownDatasets,
+					out ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters);
 
-			foreach (
-				KeyValuePair<XmlInstanceConfiguration, XmlDataQualityCategory> pair in
-				referencedXmlConditionPairs)
-			{
-				XmlInstanceConfiguration xmlCondition = pair.Key;
-				QualityCondition created = createds[xmlCondition];
-				XmlDataQualityCategory xmlConditionCategory = pair.Value;
-				DataQualityCategory conditionCategory = xmlConditionCategory != null
-					                                        ? categoryMap[xmlConditionCategory]
-					                                        : null;
-
-				ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters;
-				QualityCondition qualityCondition = XmlDataQualityUtils.CompleteQualityCondition(
-					created, xmlCondition, modelsByWorkspaceId,
-					instanceConfigurationByName, xmlConfigByCondition,
-					getDatasetsByName, conditionCategory,
-					ignoreConditionsForUnknownDatasets, out unknownDatasetParameters);
-
-				if (qualityCondition == null)
+				if (created == null)
 				{
 					Assert.True(ignoreConditionsForUnknownDatasets,
 					            "ignoreConditionsForUnknownDatasets");
@@ -198,7 +167,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 						unknownDatasetParameters.Count == 1
 							? "Quality condition '{0}' is ignored because the following dataset is not found: {1}"
 							: "Quality condition '{0}' is ignored because the following datasets are not found: {1}",
-						xmlCondition.Name,
+						xmlConfig.Name,
 						XmlDataQualityUtils.ConcatenateUnknownDatasetNames(
 							unknownDatasetParameters,
 							modelsByWorkspaceId,
@@ -206,7 +175,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				}
 				else
 				{
-					qualityConditions.Add(qualityCondition.Name, qualityCondition);
+					qualityConditions.Add(created.Name, created);
 				}
 			}
 
@@ -264,71 +233,6 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 					AddSubCategories(xmlCategory.SubCategories, category, result);
 				}
 			}
-		}
-
-		[NotNull]
-		private static IDictionary<string, TestDescriptor>
-			GetReferencedTestDescriptorsByName(
-				[NotNull] IEnumerable<XmlInstanceConfiguration> referencedConditions,
-				[NotNull] XmlDataQualityDocument document)
-		{
-			IDictionary<string, XmlTestDescriptor> xmlTestDescriptorsByName =
-				GetXmlTestDescriptorsByName(document);
-
-			var result = new Dictionary<string, TestDescriptor>(
-				StringComparer.OrdinalIgnoreCase);
-
-			AddTestDescriptors(result, referencedConditions, xmlTestDescriptorsByName);
-
-			return result;
-		}
-
-		private static void AddTestDescriptors(
-			[NotNull] Dictionary<string, TestDescriptor> descriptors,
-			[NotNull] IEnumerable<XmlInstanceConfiguration> configurations,
-			[NotNull] IDictionary<string, XmlTestDescriptor> xmlTestDescriptorsByName)
-		{
-			foreach (XmlInstanceConfiguration configuration in configurations)
-			{
-				string testDescriptorName = configuration.TestDescriptorName;
-				if (testDescriptorName == null || descriptors.ContainsKey(testDescriptorName))
-				{
-					continue;
-				}
-
-				XmlTestDescriptor xmlTestDescriptor;
-				if (! xmlTestDescriptorsByName.TryGetValue(testDescriptorName,
-				                                           out xmlTestDescriptor))
-				{
-					throw new InvalidConfigurationException(
-						string.Format(
-							"Test descriptor {0}, referenced in quality condition {1}, not found",
-							testDescriptorName, configuration.Name));
-				}
-
-				descriptors.Add(testDescriptorName,
-				                XmlDataQualityUtils.CreateTestDescriptor(xmlTestDescriptor));
-
-				foreach (XmlTestParameterValue parVal in configuration.ParameterValues)
-				{
-					if (parVal.InstanceConfigurationName != null)
-					{
-						AddTestDescriptors(descriptors, new XmlInstanceConfiguration[]{},
-						                   xmlTestDescriptorsByName);
-					}
-
-				}
-			}
-		}
-
-		[NotNull]
-		private static IDictionary<string, XmlTestDescriptor> GetXmlTestDescriptorsByName(
-			[NotNull] XmlDataQualityDocument document)
-		{
-			return document.TestDescriptors?.ToDictionary(
-				       descriptor => descriptor.Name,
-				       StringComparer.OrdinalIgnoreCase)
-			       ?? new Dictionary<string, XmlTestDescriptor>();
 		}
 
 		[NotNull]

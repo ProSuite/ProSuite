@@ -17,23 +17,23 @@ namespace ProSuite.DomainModel.AO.QA
 		/// </summary>
 		/// <returns>TestFactory or null.</returns>
 		[CanBeNull]
-		public static TestFactory CreateTestFactory([NotNull] QualityCondition qualityCondition)
+		public static TestFactory CreateTestFactory([NotNull] InstanceConfiguration instanceConfiguration)
 		{
-			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
+			Assert.ArgumentNotNull(instanceConfiguration, nameof(instanceConfiguration));
 
-			if (qualityCondition.TestDescriptor == null)
+			if (instanceConfiguration.InstanceDescriptor == null)
 			{
 				return null;
 			}
 
-			TestFactory factory = GetTestFactory(qualityCondition.TestDescriptor);
+			TestFactory factory = GetTestFactory(instanceConfiguration.InstanceDescriptor);
 
 			if (factory != null)
 			{
-				factory.Condition = qualityCondition;
+				factory.Condition = instanceConfiguration;
 
 				InstanceFactoryUtils.InitializeParameterValues(
-					factory, qualityCondition.ParameterValues);
+					factory, instanceConfiguration.ParameterValues);
 			}
 
 			return factory;
@@ -42,23 +42,26 @@ namespace ProSuite.DomainModel.AO.QA
 		/// <summary>
 		/// Gets the test factory. Requires the test class or the test factory descriptor to be defined.
 		/// </summary>
-		/// <param name="testDescriptor"></param>
+		/// <param name="descriptor"></param>
 		/// <returns>TestFactory or null if neither the test class nor the test factory descriptor are defined.</returns>
 		[CanBeNull]
-		public static TestFactory GetTestFactory([NotNull] TestDescriptor testDescriptor)
+		public static TestFactory GetTestFactory([NotNull] InstanceDescriptor descriptor)
 		{
-			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
+			Assert.ArgumentNotNull(descriptor, nameof(descriptor));
 
-			if (testDescriptor.TestClass != null)
+			if (descriptor.Class != null)
 			{
-				return new DefaultTestFactory(testDescriptor.TestClass.AssemblyName,
-				                              testDescriptor.TestClass.TypeName,
-				                              testDescriptor.TestConstructorId);
+				return new DefaultTestFactory(descriptor.Class.AssemblyName,
+				                              descriptor.Class.TypeName,
+				                              descriptor.ConstructorId);
 			}
 
-			if (testDescriptor.TestFactoryDescriptor != null)
+			if (descriptor is TestDescriptor testDescriptor)
 			{
-				return testDescriptor.TestFactoryDescriptor.CreateInstance<TestFactory>();
+				if (testDescriptor.TestFactoryDescriptor != null)
+				{
+					return testDescriptor.TestFactoryDescriptor.CreateInstance<TestFactory>();
+				}
 			}
 
 			return null;

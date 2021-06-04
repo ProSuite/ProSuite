@@ -12,9 +12,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[DefaultValue(null)]
 		public string Value { get; set; }
 
-		[XmlAttribute("instanceConfigurationName")] // TODO : rename?
+		[XmlAttribute("TransformerName")]
 		[DefaultValue(null)]
-		public string InstanceConfigurationName { get; set; }
+		public string TransformerName { get; set; }
 	}
 
 }

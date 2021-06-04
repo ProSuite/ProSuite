@@ -9,7 +9,7 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.Core.QA
 {
-	public class QualityCondition : ParameterizedInstanceConfiguration,
+	public class QualityCondition : InstanceConfiguration,
 	                                IPersistenceAware
 	{
 		private int _cloneId = -1;
@@ -87,7 +87,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 		#endregion
 
-		protected override InstanceDescriptor InstanceDescriptor => TestDescriptor;
+		public override InstanceDescriptor InstanceDescriptor => TestDescriptor;
 
 		[Required]
 		public TestDescriptor TestDescriptor
@@ -270,20 +270,14 @@ namespace ProSuite.DomainModel.Core.QA
 			return TestParameterStringUtils.FormatParameterValues(ParameterValues, maxLength);
 		}
 
-		public class TableTransformer
-		{
-			public int InvolvedTableIndex { get; set; }
-			public QualityCondition Transformer { get; set; }
-		}
-
-		private List<QualityCondition> _issueFilterConfigurations = new List<QualityCondition>();
-		public void AddIssueFilterConfiguration([NotNull] QualityCondition issueFilterConfiguration)
+		private List<IssueFilterConfiguration> _issueFilterConfigurations = new List<IssueFilterConfiguration>();
+		public void AddIssueFilterConfiguration([NotNull] IssueFilterConfiguration issueFilterConfiguration)
 		{
 			_issueFilterConfigurations.Add(issueFilterConfiguration);
 		}
 
 		[NotNull]
-		public IReadOnlyList<QualityCondition> GetIssueFilterConfigurations()
+		public IReadOnlyList<IssueFilterConfiguration> GetIssueFilterConfigurations()
 		{
 			return _issueFilterConfigurations;
 		}
@@ -403,22 +397,6 @@ namespace ProSuite.DomainModel.Core.QA
 			}
 
 			return false;
-		}
-
-		[NotNull]
-		public IEnumerable<Dataset> GetDatasetParameterValues()
-		{
-			foreach (TestParameterValue parameterValue in ParameterValues)
-			{
-				var datasetTestParameterValue = parameterValue as DatasetTestParameterValue;
-
-				Dataset dataset = datasetTestParameterValue?.DatasetValue;
-
-				if (dataset != null)
-				{
-					yield return dataset;
-				}
-			}
 		}
 
 		[NotNull]

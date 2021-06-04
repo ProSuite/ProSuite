@@ -38,7 +38,7 @@ namespace ProSuite.DomainModel.AO.QA
 		#endregion
 
 		[CanBeNull]
-		public QualityCondition Condition { get; set; }
+		public InstanceConfiguration Condition { get; set; }
 
 		[NotNull]
 		public override string[] TestCategories => ReflectionUtils.GetCategories(GetType());
@@ -54,7 +54,7 @@ namespace ProSuite.DomainModel.AO.QA
 		{
 			IList<ITest> tests = Create(datasetContext, Parameters, CreateTestInstances);
 
-			AddPrePostProcessors(tests, datasetContext);
+			AddIssueFilters(tests, datasetContext);
 
 			return tests;
 		}
@@ -216,10 +216,9 @@ namespace ProSuite.DomainModel.AO.QA
 			return new[] {test};
 		}
 
-		private void AddPrePostProcessors([NotNull] IList<ITest> tests, IOpenDataset datasetContext)
+		private void AddIssueFilters([NotNull] IList<ITest> tests, IOpenDataset datasetContext)
 		{
-			QualityCondition c = Condition;
-			if (c == null)
+			if (! (Condition is QualityCondition c))
 			{
 				return;
 			}
@@ -228,7 +227,7 @@ namespace ProSuite.DomainModel.AO.QA
 			{
 				if (! (test is IFilterEditTest filterTest)) continue;
 
-				foreach (QualityCondition issueFilterConfiguration in
+				foreach (var issueFilterConfiguration in
 					c.GetIssueFilterConfigurations())
 				{
 					DefaultTestFactory factory = (DefaultTestFactory)
@@ -310,7 +309,7 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 			catch (Exception e)
 			{
-				QualityCondition condition = Condition;
+				InstanceConfiguration condition = Condition;
 				if (condition == null)
 				{
 					throw new AssertionException(

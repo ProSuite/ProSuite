@@ -29,7 +29,19 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			get { return _parameterValues; }
 		}
 
+		[CanBeNull]
+		[XmlAttribute("uuid")]
+		public string Uuid { get; set; }
+
+		[CanBeNull]
+		[XmlAttribute("versionUuid")]
+		public string VersionUuid { get; set; }
+
 	}
+
+	public class XmlRowFilterConfiguration : XmlInstanceConfiguration { }
+	public class XmlIssueFilterConfiguration : XmlInstanceConfiguration { }
+	public class XmlTransformerConfiguration : XmlInstanceConfiguration { }
 
 	public class XmlQualityCondition : XmlInstanceConfiguration, IXmlEntityMetadata
 	{
@@ -50,14 +62,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 			set { _url = value; }
 		}
-
-		[CanBeNull]
-		[XmlAttribute("uuid")]
-		public string Uuid { get; set; }
-
-		[CanBeNull]
-		[XmlAttribute("versionUuid")]
-		public string VersionUuid { get; set; }
 
 		[CanBeNull]
 		[XmlElement("Description")]

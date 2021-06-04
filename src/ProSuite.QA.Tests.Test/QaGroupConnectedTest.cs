@@ -2063,7 +2063,7 @@ namespace ProSuite.QA.Tests.Test
 				CreateRelGroupConnectedFactory(testWs, "TestRelatedFactoryFc",
 				                               out SimpleModel model);
 
-			QualityCondition condition = fact.Condition;
+			InstanceConfiguration condition = fact.Condition;
 
 			IList<ITest> tests =
 				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));

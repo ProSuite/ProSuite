@@ -4,7 +4,7 @@ using ProSuite.Commons.Validation;
 
 namespace ProSuite.DomainModel.Core.QA
 {
-	public class TransformerConfiguration : ParameterizedInstanceConfiguration
+	public class TransformerConfiguration : InstanceConfiguration
 	{
 		[UsedImplicitly] private TransformerDescriptor _transformerDescriptor;
 
@@ -24,7 +24,7 @@ namespace ProSuite.DomainModel.Core.QA
 			_transformerDescriptor = transformerDescriptor;
 		}
 
-		protected override InstanceDescriptor InstanceDescriptor => TransformerDescriptor;
+		public override InstanceDescriptor InstanceDescriptor => TransformerDescriptor;
 
 		[Required]
 		public TransformerDescriptor TransformerDescriptor

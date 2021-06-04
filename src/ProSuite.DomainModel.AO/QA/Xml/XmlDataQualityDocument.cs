@@ -13,9 +13,20 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[CanBeNull]
 		public List<XmlQualitySpecification> QualitySpecifications { get; set; }
 
-		[XmlArrayItem(typeof(XmlInstanceConfiguration), ElementName = "InstanceConfiguration")]
-		[XmlArrayItem(typeof(XmlQualityCondition), ElementName = "QualityCondition")]
-		public List<XmlInstanceConfiguration> QualityConditions { get; set; }
+		[XmlArrayItem(ElementName = "QualityCondition")]
+		public List<XmlQualityCondition> QualityConditions { get; set; }
+
+		[XmlArrayItem(ElementName = "IssueFilter")]
+		[CanBeNull]
+		public List<XmlIssueFilterConfiguration> IssueFilters { get; set; }
+
+		[XmlArrayItem(ElementName = "RowFilter")]
+		[CanBeNull]
+		public List<XmlRowFilterConfiguration> RowFilters { get; set; }
+
+		[XmlArrayItem(ElementName = "Transformer")]
+		[CanBeNull]
+		public List<XmlTransformerConfiguration> Transformers { get; set; }
 
 		[XmlArrayItem("Category")]
 		[CanBeNull]
@@ -69,24 +80,28 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		public void AddQualityCondition([NotNull] XmlQualityCondition xmlQualityCondition)
 		{
 			Assert.ArgumentNotNull(xmlQualityCondition, nameof(xmlQualityCondition));
-
-			if (QualityConditions == null)
-			{
-				QualityConditions = new List<XmlInstanceConfiguration>();
-			}
-
+			QualityConditions = QualityConditions ?? new List<XmlQualityCondition>();
 			QualityConditions.Add(xmlQualityCondition);
 		}
-		public void AddInstanceConfiguration([NotNull] XmlInstanceConfiguration xmlInstanceConfiguration)
+
+		public void AddIssueFilter([NotNull] XmlIssueFilterConfiguration xmlIssueFilter)
 		{
-			Assert.ArgumentNotNull(xmlInstanceConfiguration, nameof(xmlInstanceConfiguration));
+			Assert.ArgumentNotNull(xmlIssueFilter, nameof(xmlIssueFilter));
+			IssueFilters = IssueFilters ?? new List<XmlIssueFilterConfiguration>();
+			IssueFilters.Add(xmlIssueFilter);
+		}
 
-			if (QualityConditions == null)
-			{
-				QualityConditions = new List<XmlInstanceConfiguration>();
-			}
-
-			QualityConditions.Add(xmlInstanceConfiguration);
+		public void AddRowFilter([NotNull] XmlRowFilterConfiguration xmlRowFilter)
+		{
+			Assert.ArgumentNotNull(xmlRowFilter, nameof(xmlRowFilter));
+			RowFilters = RowFilters ?? new List<XmlRowFilterConfiguration>();
+			RowFilters.Add(xmlRowFilter);
+		}
+		public void AddTransformer([NotNull] XmlTransformerConfiguration xmlTransformer)
+		{
+			Assert.ArgumentNotNull(xmlTransformer, nameof(xmlTransformer));
+			Transformers = Transformers ?? new List<XmlTransformerConfiguration>();
+			Transformers.Add(xmlTransformer);
 		}
 
 		public void AddTestDescriptor([NotNull] XmlTestDescriptor xmlTestDescriptor)
@@ -143,14 +158,14 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		[NotNull]
-		public IEnumerable<KeyValuePair<XmlInstanceConfiguration, XmlDataQualityCategory>>
+		public IEnumerable<KeyValuePair<XmlQualityCondition, XmlDataQualityCategory>>
 			GetAllQualityConditions()
 		{
 			if (QualityConditions != null)
 			{
-				foreach (XmlInstanceConfiguration qc in QualityConditions)
+				foreach (XmlQualityCondition qc in QualityConditions)
 				{
-					yield return new KeyValuePair<XmlInstanceConfiguration, XmlDataQualityCategory>(
+					yield return new KeyValuePair<XmlQualityCondition, XmlDataQualityCategory>(
 						qc, null);
 				}
 			}
@@ -160,7 +175,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				foreach (XmlDataQualityCategory category in Categories)
 				{
 					foreach (
-						KeyValuePair<XmlInstanceConfiguration, XmlDataQualityCategory> pair in
+						KeyValuePair<XmlQualityCondition, XmlDataQualityCategory> pair in
 						GetQualityConditions(category))
 					{
 						yield return pair;
@@ -219,7 +234,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		[NotNull]
-		private IEnumerable<KeyValuePair<XmlInstanceConfiguration, XmlDataQualityCategory>>
+		private IEnumerable<KeyValuePair<XmlQualityCondition, XmlDataQualityCategory>>
 			GetQualityConditions(
 				[NotNull] XmlDataQualityCategory category)
 		{
@@ -227,7 +242,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			{
 				foreach (XmlQualityCondition qc in category.QualityConditions)
 				{
-					yield return new KeyValuePair<XmlInstanceConfiguration, XmlDataQualityCategory>(
+					yield return new KeyValuePair<XmlQualityCondition, XmlDataQualityCategory>(
 						qc, category);
 				}
 			}
@@ -237,7 +252,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				foreach (XmlDataQualityCategory subCategory in category.SubCategories)
 				{
 					foreach (
-						KeyValuePair<XmlInstanceConfiguration, XmlDataQualityCategory> pair in
+						KeyValuePair<XmlQualityCondition, XmlDataQualityCategory> pair in
 						GetQualityConditions(subCategory))
 					{
 						yield return pair;

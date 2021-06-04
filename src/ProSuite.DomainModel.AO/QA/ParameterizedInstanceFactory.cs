@@ -69,7 +69,7 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		[NotNull]
-		protected T Create<T>([NotNull] ParameterizedInstanceConfiguration instanceConfiguration,
+		protected T Create<T>([NotNull] InstanceConfiguration instanceConfiguration,
 		                      [NotNull] IOpenDataset datasetContext,
 		                      [NotNull] IList<TestParameter> testParameters,
 		                      Func<object[], T> createFromArgs) where T : IInvolvesTables

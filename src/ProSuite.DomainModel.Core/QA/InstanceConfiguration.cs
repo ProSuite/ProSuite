@@ -4,10 +4,11 @@ using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Validation;
+using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.Core.QA
 {
-	public abstract class ParameterizedInstanceConfiguration : VersionedEntityWithMetadata,
+	public abstract class InstanceConfiguration : VersionedEntityWithMetadata,
 	                                                           INamed, IAnnotated
 	{
 		#region Persisted fields
@@ -24,10 +25,11 @@ namespace ProSuite.DomainModel.Core.QA
 
 		#endregion
 
-		protected ParameterizedInstanceConfiguration() { }
+		protected InstanceConfiguration() { }
 
-		protected ParameterizedInstanceConfiguration([NotNull] string name,
-		                                             [CanBeNull] string description = "")
+
+		protected InstanceConfiguration([NotNull] string name,
+		                                [CanBeNull] string description = "")
 		{
 			Name = name;
 			Description = description;
@@ -37,7 +39,7 @@ namespace ProSuite.DomainModel.Core.QA
 		public IList<TestParameterValue> ParameterValues =>
 			new ReadOnlyList<TestParameterValue>(_parameterValues);
 
-		protected abstract InstanceDescriptor InstanceDescriptor { get; }
+		public abstract InstanceDescriptor InstanceDescriptor { get; }
 
 		#region INamed, IAnnotated members
 
@@ -76,6 +78,22 @@ namespace ProSuite.DomainModel.Core.QA
 			_parameterValues.Clear();
 		}
 
+		[NotNull]
+		public IEnumerable<Dataset> GetDatasetParameterValues()
+		{
+			foreach (TestParameterValue parameterValue in ParameterValues)
+			{
+				var datasetTestParameterValue = parameterValue as DatasetTestParameterValue;
+
+				Dataset dataset = datasetTestParameterValue?.DatasetValue;
+
+				if (dataset != null)
+				{
+					yield return dataset;
+				}
+			}
+		}
+
 		public override bool Equals(object obj)
 		{
 			if (this == obj)
@@ -83,7 +101,7 @@ namespace ProSuite.DomainModel.Core.QA
 				return true;
 			}
 
-			var instanceConfiguration = obj as ParameterizedInstanceConfiguration;
+			var instanceConfiguration = obj as InstanceConfiguration;
 			if (instanceConfiguration == null)
 			{
 				return false;

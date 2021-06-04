@@ -8,7 +8,7 @@ namespace ProSuite.DomainModel.AO.QA
 {
 	public static class QualityConditionParameterUtils
 	{
-		public static void AddParameterValue(QualityCondition qualityCondition,
+		public static void AddParameterValue(InstanceConfiguration qualityCondition,
 		                                     [NotNull] string parameterName,
 		                                     [CanBeNull] Dataset value,
 		                                     string filterExpression = null,
@@ -17,7 +17,7 @@ namespace ProSuite.DomainModel.AO.QA
 			Assert.ArgumentNotNullOrEmpty(parameterName, nameof(parameterName));
 
 			TestFactory factory =
-				TestFactoryUtils.GetTestFactory(qualityCondition.TestDescriptor);
+				TestFactoryUtils.GetTestFactory(qualityCondition.InstanceDescriptor);
 
 			TestParameter parameter = Assert.NotNull(factory).GetParameter(parameterName);
 
@@ -29,14 +29,14 @@ namespace ProSuite.DomainModel.AO.QA
 			qualityCondition.AddParameterValue(parameterValue);
 		}
 
-		public static void AddParameterValue(QualityCondition qualityCondition,
+		public static void AddParameterValue(IssueFilterConfiguration qualityCondition,
 		                                     [NotNull] string parameterName,
 		                                     [CanBeNull] string value)
 		{
 			AddScalarParameterValue(qualityCondition, parameterName, value);
 		}
 
-		public static void AddParameterValue(QualityCondition qualityCondition,
+		public static void AddParameterValue(InstanceConfiguration qualityCondition,
 		                                     [NotNull] string parameterName,
 		                                     object value)
 		{
@@ -51,14 +51,14 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 		}
 
-		private static void AddScalarParameterValue(QualityCondition qualityCondition,
+		private static void AddScalarParameterValue(InstanceConfiguration qualityCondition,
 		                                            [NotNull] string parameterName,
 		                                            [CanBeNull] object value)
 		{
 			Assert.ArgumentNotNullOrEmpty(parameterName, nameof(parameterName));
 
 			TestFactory factory =
-				TestFactoryUtils.GetTestFactory(qualityCondition.TestDescriptor);
+				TestFactoryUtils.GetTestFactory(qualityCondition.InstanceDescriptor);
 
 			TestParameter parameter = Assert.NotNull(factory).GetParameter(parameterName);
 
