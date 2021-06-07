@@ -91,6 +91,24 @@ namespace ProSuite.AGP.Editing.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Select the targeet line or polygon features to use as cut line..
+        /// </summary>
+        internal static string CutPolygonAlongTool_LogPromptForSelection {
+            get {
+                return ResourceManager.GetString("CutPolygonAlongTool_LogPromptForSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select one or more line or polygon features to cut along other feature(s). Press [O] for additional options.&amp;lt;br&amp;gt;- Press and hold SHIFT to add or remove features from the existing selection.&amp;lt;br&amp;gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click..
+        /// </summary>
+        internal static string CutPolygonAlongTool_LogUsingCurrentSelection {
+            get {
+                return ResourceManager.GetString("CutPolygonAlongTool_LogUsingCurrentSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}&lt;br&gt;Press [ESC] to select one or more different features..
         /// </summary>
         internal static string RemoveOverlapsTool_AfterSelection {

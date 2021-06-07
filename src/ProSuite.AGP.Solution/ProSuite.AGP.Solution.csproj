@@ -101,6 +101,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Editing\AdvancedReshapeTool.cs" />
+    <Compile Include="Editing\CutAlongTool.cs" />
     <Compile Include="Editing\ReshapeAlongTool.cs" />
     <Compile Include="Editing\RemoveOverlapsTool.cs" />
     <Compile Include="LoggerUI\LogMessageActionEvent.cs" />
@@ -463,6 +464,10 @@
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="Images\ReshapeAlongTool32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\CutPolygonAlongTool16.png" />
+    <AddInContent Include="Images\CutPolygonAlongTool32.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--

@@ -100,6 +100,7 @@
           <tool refID="ProSuiteTools_Editing_EraseTool" size="small" />
           <tool refID="ProSuiteTools_Editing_RemoveOverlapsTool" size="small" />
           <tool refID="ProSuiteTools_Editing_ReshapeAlongTool" size="small" />
+          <tool refID="ProSuiteTools_Editing_CutAlongTool" size="small" />
           <tool refID="ProSuiteTools_Editing_AdvancedReshapeTool" size="small" />
         </group>
         <group id="ProSuiteTools_Selection" caption="Selection Tools" keytip="G1">
@@ -207,6 +208,14 @@
               largeImage="Images\ReshapeAlongTool32.png" condition="esri_mapping_mapPane">
           <tooltip heading="Reshape Along Tool">
             Reshape along
+            <disabledText />
+          </tooltip>
+        </tool>
+        <tool id="ProSuiteTools_Editing_CutAlongTool" caption="CutAlongTool"
+              className="Editing.CutAlongTool" loadOnClick="true" smallImage="Images\CutPolygonAlongTool16.png"
+              largeImage="Images\CutPolygonAlongTool32.png" condition="esri_mapping_mapPane">
+          <tooltip heading="Cut Along Tool">
+            Cut along
             <disabledText />
           </tooltip>
         </tool>
