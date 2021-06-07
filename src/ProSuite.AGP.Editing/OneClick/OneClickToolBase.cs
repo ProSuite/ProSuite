@@ -586,7 +586,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			var featuresPerLayer = new Dictionary<BasicFeatureLayer, List<long>>();
 
 			foreach (BasicFeatureLayer layer in
-				MapView.Active.Map.Layers.OfType<BasicFeatureLayer>())
+				MapView.Active.Map.GetLayersAsFlattenedList().OfType<BasicFeatureLayer>())
 			{
 				if (CanSelectFromLayer(layer))
 				{
