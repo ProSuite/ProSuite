@@ -130,10 +130,10 @@
     <value>- Press Enter to re-use the existing selection.</value>
   </data>
   <data name="CutPolygonAlongTool_LogPromptForSelection" xml:space="preserve">
-    <value>Select the targeet line or polygon features to use as cut line.</value>
+    <value>Select one or more line or polygon features to cut along other feature(s). Press [O] for additional options.&lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click.</value>
   </data>
   <data name="CutPolygonAlongTool_LogUsingCurrentSelection" xml:space="preserve">
-    <value>Select one or more line or polygon features to cut along other feature(s). Press [O] for additional options.&amp;lt;br&amp;gt;- Press and hold SHIFT to add or remove features from the existing selection.&amp;lt;br&amp;gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click.</value>
+    <value>Select the target line or polygon features to use as cut line.</value>
   </data>
   <data name="RemoveOverlapsTool_AfterSelection" xml:space="preserve">
     <value>{0}&lt;br&gt;Press [ESC] to select one or more different features.</value>
@@ -148,9 +148,9 @@
     <value>Remove a part of a feature that overlaps with other polygon features.</value>
   </data>
   <data name="ReshapeAlongTool_LogPromptForSelection" xml:space="preserve">
-    <value>Select one or more line or polygon features to align with other feature(s). Press [O] for additional options.&amp;lt;br&amp;gt;- Press and hold SHIFT to add or remove features from the existing selection.&amp;lt;br&amp;gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click.</value>
+    <value>Select one or more line or polygon features to align with other feature(s). Press [O] for additional options. &lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection. &lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click.</value>
   </data>
   <data name="ReshapeAlongTool_LogUsingCurrentSelection" xml:space="preserve">
-    <value>Select the target line or polygon features to align with.&amp;lt;br&amp;gt;Hit [ESC] to select a different feature.</value>
+    <value>Select the target line or polygon features to align with. &lt;br&gt;-Hit [ESC] to select a different feature.</value>
   </data>
 </root>
