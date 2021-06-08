@@ -465,18 +465,16 @@ namespace ProSuite.AGP.Editing.OneClick
 
 					return false;
 				}
-				else
-				{
-					return false;
-				}
+
+				return false;
 			}
 
 			if (SketchingMoveType == SketchingMoveType.Click)
 			{
 				//note if necessary add a virtual core method here for overriding 
 
-				if (GetSelectionSketchMode() == SelectionMode.Original
-				) //alt was pressed: select all xy
+				if (GetSelectionSketchMode() == SelectionMode.Original)
+					//alt was pressed: select all xy
 				{
 					await QueuedTask.Run(() =>
 					{
@@ -536,13 +534,9 @@ namespace ProSuite.AGP.Editing.OneClick
 				//CTRL was pressed: picker shows FC's to select from
 				if (GetSelectionSketchMode() == SelectionMode.UserSelect)
 				{
-					List<IPickableItem> pickingCandidates = await QueuedTask.Run(() =>
-					{
-						List<FeatureClassInfo> featureClassInfos =
-							Selector.GetSelectableFeatureclassInfos();
-
-						return PickableItemAdapter.Get(featureClassInfos);
-					});
+					List<IPickableItem> pickingCandidates =
+						await QueuedTask.Run(
+							() => PickableItemAdapter.Get(GetFcCandidates(candidatesOfManyLayers)));
 
 					var picker = new PickerUI.Picker(pickingCandidates, pickerWindowLocation);
 
@@ -578,6 +572,18 @@ namespace ProSuite.AGP.Editing.OneClick
 			await QueuedTask.Run(() => ProcessSelection(activeMapView, progressor));
 
 			return true;
+		}
+
+		private List<FeatureClassInfo> GetFcCandidates(
+			Dictionary<BasicFeatureLayer, List<long>> candidatesOfManyLayers)
+		{
+			List<FeatureClassInfo> featureClassInfos =
+				Selector.GetSelectableFeatureclassInfos();
+			return featureClassInfos.Where(fcInfo =>
+			{
+				return fcInfo.BelongingLayers.Any(
+					layer => candidatesOfManyLayers.Keys.Contains(layer));
+			}).ToList();
 		}
 
 		private Dictionary<BasicFeatureLayer, List<long>> FindFeaturesOfAllLayers(
