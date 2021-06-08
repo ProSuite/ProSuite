@@ -1,30 +1,26 @@
 #
 # Usage samples:
 
-# .\build_prosuite.ps1 [-product server] [-prosdk 2.5|2.6|2.7|2.8] [-cpu x86|AnyCPU] [-arcgisvers 10.6|10.7|10.8] [-arcobjects 10|11] [-release] [-zip] [-info]
+# .\build_prosuite.ps1 [-product AddIn|Server] [-prosdk 2.6|2.7|2.8] [-cpu x86|AnyCPU] [-arcgisvers 10.4|10.5|10.6|10.7|10.8] [-arcobjects 10|11] [-release] [-zip] [-info]
 
 # without -product will compile AddIn
-# without -prosdk will use binaries from local installation of ArcGIS Pro will, otherweise version of EsriDE.Commons\lib\ESRI\ProSDK
+# without -prosdk will use binaries from local installation of ArcGIS Pro, otherwise version of EsriDE.Commons\lib\ESRI\ProSDK
 # without -cpu will compile AnyCPU configuration
-# without -arcgisvers will compile with 10.8 binaries (is relevant only for -product server) 
+# without -arcgisvers will compile with 10.8 binaries (is relevant only for -product Server) 
 # without -arcobjects version 10 will be used (environment variable VSArcGISProduct="ArcGIS") –arcobjects 11 means (VSArcGISProduct="Server")
-# without -release will compile test version (will increase version number v in ${Product}.versions.txt x.v.x.x - without is test version: x.x.v.x)
+# switch -release will compile release version (will increase version number v in ${Product}.versions.txt x.v.x.x - without is test version: x.x.v.x)
 # switch -zip will compress output folder
-# switch -info will display environment variables, calculated build configuration and quit without building. 
+# switch -info will display environment variables, calculated build configuration and quit without building
 
 # AddIn für ArcGIS Pro 2.8
-# .\build_prosuite.ps1 -prosdk 2.8 -arcgisvers 10.7 -release [-zip]
-
-# Microservice für lokales ArcMap 10.6
-# .\build_prosuite.ps1 -product server -arcgisvers 10.6 -cpu x86 -release [-zip]
+# .\build_prosuite.ps1 -product AddIn -prosdk 2.8 -release
 
 # Microservice für lokales ArcMap 10.8
-# .\build_prosuite.ps1 -product server -arcgisvers 10.8 -cpu x86 -release [-zip]
+# .\build_prosuite.ps1 -product Server -arcgisvers 10.8 -cpu x86 -release -zip
 
 # Microservice für ArcGIS Server 10.9
-# .\build_prosuite.ps1 -product server -arcgisvers 10.9 -cpu x86 -arcobjects 11 -release [-zip]
+# .\build_prosuite.ps1 -product Server -arcgisvers 10.9 -cpu x86 -arcobjects 11 -release -zip
 
-	
 Param(
 	$Cpu = 'Any CPU',
 	$Product= 'AddIn',
@@ -143,19 +139,18 @@ function Set-AssemblyVersion($RootDir, $Version)
 			$_.IsReadOnly = $false
 			(Get-Content -Path $_) -replace '(?<=Assembly(?:File)?Version\(")[^"]*(?="\))', $Version |
 				Set-Content -Path $_ -Encoding utf8
-    }
+		}
 }
 
 function Get-MSBuildAbsolutePath
 {
-    [OutputType([System.IO.FileInfo])]
+	[OutputType([System.IO.FileInfo])]
 
-    $msbuildAbsolutePath = &"${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -prerelease -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
-    if ([object]::Equals($msbuildAbsolutePath, $null))
-    {
-        $msbuildAbsolutePath = Get-ChildItem -Path ${env:ProgramFiles(x86)} -File -Recurse -Filter MSBuild.exe -ErrorAction:SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
-    }
-    return $msbuildAbsolutePath
+	$msbuildAbsolutePath = &"${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe" -latest -prerelease -products * -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe
+	if ([object]::Equals($msbuildAbsolutePath, $null)) {
+		$msbuildAbsolutePath = Get-ChildItem -Path ${env:ProgramFiles(x86)} -File -Recurse -Filter MSBuild.exe -ErrorAction:SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+	}
+	return $msbuildAbsolutePath
 }
 
 # *** BEGIN MAIN SCRIPT
@@ -165,11 +160,12 @@ $BuildVersionFilePath = $App_BuildDir + "\${Product}.version.txt"
 
 # Increase versions number 
 #	- for release second number 
-# 	- for test - third number
+#	- for test - third number
 $BuildVersionFileContent = Get-Content -Path $BuildVersionFilePath -TotalCount 1
 $BuildVersions = $BuildVersionFileContent.split('.') | % {iex $_}
 if ($Release) {
 	$BuildVersions[1] += 1
+	$BuildVersions[2] = 0
 }
 else {
 	$BuildVersions[2] += 1	
@@ -186,7 +182,7 @@ $BuildOutputDir = $App_BuildDir + "\output"
 if (Test-Path ${BuildOutputDir}) {
 	Write-Host "Cleaning previous output at ${BuildOutputDir}..."
 	Remove-Item $BuildOutputDir -Recurse
-	}
+}
 
 # Get location of SharedAssemblyInfo.cs 
 $Codebase_RootDir = $App_BuildDir + "\..\src\"
