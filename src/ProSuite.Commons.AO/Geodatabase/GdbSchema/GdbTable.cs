@@ -16,6 +16,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	public class GdbTable : IObjectClass, ITable, IDataset, ISubtypes, IDatasetEdit,
 	                        IEquatable<IObjectClass>
 	{
+		// TODO: Extra interfaces IGdbTable, IGdbFeatureClass, etc. in Commons with all the relevant properties
 		//private const string _defaultOidFieldName = "OBJECTID";
 
 		private readonly GdbFields _gdbFields = new GdbFields();
