@@ -606,7 +606,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			                                           out TestDescriptor descriptor))
 			{
 				descriptor =
-					XmlDataQualityUtils.CreateInstanceDescriptor<TestDescriptor>(xmlDescriptor);
+					XmlDataQualityUtils.CreateTestDescriptor(xmlDescriptor);
 				_testDescriptorInstances.Add(xmlDescriptor, descriptor);
 			}
 

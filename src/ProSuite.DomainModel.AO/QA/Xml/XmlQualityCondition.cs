@@ -123,8 +123,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		public bool NeverStoreRelatedGeometryForTableRowIssues { get; set; }
 
 		[CanBeNull]
-		[XmlArray("IssueFilters")]
-		[XmlArrayItem(typeof(XmlInstanceConfiguration), ElementName = "IssueFilter")]
+		[XmlArrayItem(ElementName = "IssueFilterName")]
 		public List<string> IssueFilterNames { get; set; }
 
 		[XmlAttribute("createdDate")]

@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
@@ -232,6 +234,45 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 				                                   new DataSource[] { });
 
 			Assert.AreEqual(xmlQualitySpecification.Name, qualitySpecification.Name);
+		}
+
+		[Test]
+		[Ignore("Uses local data")]
+		public void CanReadQualitySpecifications()
+		{
+			using (TextReader xmlReader =
+				new StreamReader(@"c:\temp\QaConfigWithEmptyDatasetsParameters.xml"))
+			{
+				var xmlDoc =
+					XmlDataQualityUtils.ReadXmlDocument(
+						xmlReader, out IList<XmlQualitySpecification> qualitySpecifications);
+
+				var modelFactory =
+					new VerifiedModelFactory(CreateWorkspaceContext,
+					                         new SimpleVerifiedDatasetHarvester());
+
+				var factory =
+					new XmlBasedQualitySpecificationFactory(
+						modelFactory,
+						new SimpleDatasetOpener(new MasterDatabaseDatasetContext()));
+
+				string ws = @"c:\temp\user@topgist.sde";
+				foreach (XmlQualitySpecification spec in qualitySpecifications)
+				{
+					var qualitySpecification = factory.CreateQualitySpecification(
+						xmlDoc, spec.Name ?? string.Empty,
+						new DataSource[]
+						{
+							new DataSource("TLM_QualityAssurance", "TLM_QualityAssurance")
+							{WorkspaceAsText = ws},
+							new DataSource("PRODAS", "PRODAS")
+							{WorkspaceAsText = ws}
+						},
+						ignoreConditionsForUnknownDatasets: true);
+
+					Assert.NotNull(qualitySpecification);
+				}
+			}
 		}
 
 		private void CanCreateQualitySpecificationCore()
