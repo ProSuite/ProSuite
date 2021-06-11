@@ -49,13 +49,16 @@ namespace ProSuite.Microservices.Server.AO
 
 			LoadReportingGrpcImpl loadReporting = new LoadReportingGrpcImpl();
 
-			ServiceLoad serviceLoad = new ServiceLoad(arguments.MaxParallel);
+			int maxThreadCount = arguments.MaxParallel < 0
+				                     ? Environment.ProcessorCount - 1
+				                     : arguments.MaxParallel;
+
+			ServiceLoad serviceLoad = new ServiceLoad(maxThreadCount);
 
 			loadReporting.AllowMonitoring(nameof(QualityVerificationGrpc), serviceLoad);
 
 			var verificationServiceImpl =
-				new QualityVerificationGrpcImpl(inputsFactory,
-				                                arguments.MaxParallel)
+				new QualityVerificationGrpcImpl(inputsFactory, maxThreadCount)
 				{
 					CurrentLoad = serviceLoad
 				};

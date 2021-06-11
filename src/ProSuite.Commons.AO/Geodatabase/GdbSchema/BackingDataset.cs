@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 
-namespace ProSuite.Microservices.Server.AO.Geodatabase
+namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
 	/// <summary>
 	/// Abstraction for the data behind a <see cref="GdbTable"/> in case

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 
-namespace ProSuite.Microservices.Server.AO.Geodatabase
+namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
 	/// <summary>
 	/// Abstraction for the datasets contained in a <see cref="GdbWorkspace"/>
