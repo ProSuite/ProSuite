@@ -83,6 +83,16 @@ namespace ProSuite.Commons.Xml
 
 		[NotNull]
 		public static T Deserialize<T>([NotNull] TextReader textReader,
+		                               [NotNull] string xsdSchema)
+		{
+			Assert.ArgumentNotNull(textReader, nameof(textReader));
+			Assert.ArgumentNotNullOrEmpty(xsdSchema, nameof(xsdSchema));
+
+			return Deserialize<T>(textReader, LoadSchema(xsdSchema));
+		}
+
+		[NotNull]
+		public static T Deserialize<T>([NotNull] TextReader textReader,
 		                               [NotNull] XmlSchema xmlSchema)
 		{
 			Assert.ArgumentNotNull(textReader, nameof(textReader));
