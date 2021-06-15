@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
@@ -18,6 +19,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.ManagedOptions;
 using ProSuite.Microservices.Client.AGP;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps;
 
@@ -30,6 +32,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		private Overlaps _overlaps;
 		private RemoveOverlapsFeedback _feedback;
 		private IList<Feature> _overlappingFeatures;
+		private OverridableSettingsProvider<PartialRemoveOverlapsOptions> _settingsProvider;
+		protected RemoveOverlapsOptions RemoveOverlapsOptions { get; set; }
 
 		protected RemoveOverlapsToolBase()
 		{
@@ -54,12 +58,14 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override void OnToolActivatingCore()
 		{
 			_feedback = new RemoveOverlapsFeedback();
+			// InitializeOptions();
 		}
-
+		
 		protected override void OnToolDeactivateCore(bool hasMapViewChanged)
 		{
 			_feedback?.DisposeOverlays();
 			_feedback = null;
+			_settingsProvider?.StoreLocalConfiguration(RemoveOverlapsOptions.LocalOptions);
 		}
 
 		protected override void LogPromptForSelection()
@@ -67,12 +73,18 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			_msg.Info(LocalizableStrings.RemoveOverlapsTool_LogPromptForSelection);
 		}
 
+		protected virtual string ViewModelXamlId { get; set; }
+
+
+
 		protected override bool CanSelectGeometryType(GeometryType geometryType)
 		{
 			return geometryType == GeometryType.Polyline ||
 			       geometryType == GeometryType.Polygon ||
 			       geometryType == GeometryType.Multipatch;
 		}
+
+		
 
 		protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
 		                                                   CancelableProgressor progressor)
@@ -310,6 +322,43 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			return result;
 		}
+
+		}
+
+		private void InitializeOptions()
+		{
+			if (_settingsProvider == null || _settingsProvider.IsStale(null, null))
+			{
+				_settingsProvider =
+					new OverridableSettingsProvider<PartialRemoveOverlapsOptions>(null, null);
+
+				PartialRemoveOverlapsOptions localConfiguration, centralConfiguration;
+		}
+
+		private void InitializeOptions()
+		{
+			if (_settingsProvider == null || _settingsProvider.IsStale(null, null))
+			{
+				_settingsProvider =
+					new OverridableSettingsProvider<PartialRemoveOverlapsOptions>(null, null);
+
+				PartialRemoveOverlapsOptions localConfiguration, centralConfiguration;
+		}
+
+		private void InitializeOptions()
+		{
+			if (_settingsProvider == null || _settingsProvider.IsStale(null, null))
+			{
+				_settingsProvider =
+					new OverridableSettingsProvider<PartialRemoveOverlapsOptions>(null, null);
+
+				PartialRemoveOverlapsOptions localConfiguration, centralConfiguration;
+				_settingsProvider.GetConfigurations(out localConfiguration, out centralConfiguration);
+
+				RemoveOverlapsOptions =
+					new RemoveOverlapsOptions(centralConfiguration, localConfiguration);
+			}
+			}
 
 		#region Search target features
 

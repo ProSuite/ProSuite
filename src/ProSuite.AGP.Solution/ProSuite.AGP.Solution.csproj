@@ -100,6 +100,11 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="EditingOptionsUI\OverrideToFontStyleConverter.cs" />
+    <Compile Include="EditingOptionsUI\RemoveOverlapsOptions.xaml.cs">
+      <DependentUpon>RemoveOverlapsOptions.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="EditingOptionsUI\RemoveOverlapsOptionsViewModel.cs" />
     <Compile Include="Editing\AdvancedReshapeTool.cs" />
     <Compile Include="Editing\CutAlongTool.cs" />
     <Compile Include="Editing\ReshapeAlongTool.cs" />
@@ -193,6 +198,14 @@
     <Compile Include="WorkListUI\SelectionWorkListVm.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Page Include="EditingOptionsUI\RemoveOverlapsOptions.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="EditingOptionsUI\ToolOptionsResources.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
     <Page Include="LoggerUI\LogMessageDetailsDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
@@ -469,6 +482,7 @@
     <AddInContent Include="Images\CutPolygonAlongTool16.png" />
     <AddInContent Include="Images\CutPolygonAlongTool32.png" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:
