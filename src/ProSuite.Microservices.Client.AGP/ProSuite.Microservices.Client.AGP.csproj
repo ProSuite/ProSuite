@@ -68,7 +68,12 @@
     <Compile Include="GdbObjectReference.cs" />
     <Compile Include="GeometryProcessing\AdvancedReshape\AdvancedReshapeClientUtils.cs" />
     <Compile Include="GeometryProcessing\AdvancedReshape\ReshapeResult.cs" />
-    <Compile Include="GeometryProcessing\AdvancedReshape\ReshapeResultFeature.cs" />
+    <Compile Include="GeometryProcessing\ResultFeature.cs" />
+    <Compile Include="GeometryProcessing\RowChangeType.cs" />
+    <Compile Include="GeometryProcessing\ChangeAlong\ChangeAlongClientUtils.cs" />
+    <Compile Include="GeometryProcessing\ChangeAlong\ChangeAlongCurves.cs" />
+    <Compile Include="GeometryProcessing\ChangeAlong\CutSubcurve.cs" />
+    <Compile Include="GeometryProcessing\ChangeAlong\ReshapeAlongCurveUsability.cs" />
     <Compile Include="GeometryProcessing\RemoveOverlaps\OverlapResultGeometries.cs" />
     <Compile Include="GeometryProcessing\RemoveOverlaps\Overlaps.cs" />
     <Compile Include="GeometryProcessingClient.cs" />

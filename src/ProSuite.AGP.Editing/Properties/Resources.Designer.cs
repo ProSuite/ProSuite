@@ -81,6 +81,46 @@ namespace ProSuite.AGP.Editing.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Bitmap.
+        /// </summary>
+        internal static System.Drawing.Bitmap CutPolygonAlongTool {
+            get {
+                object obj = ResourceManager.GetObject("CutPolygonAlongTool", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] CutPolygonAlongToolCursor {
+            get {
+                object obj = ResourceManager.GetObject("CutPolygonAlongToolCursor", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] CutPolygonAlongToolCursorProcess {
+            get {
+                object obj = ResourceManager.GetObject("CutPolygonAlongToolCursorProcess", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] CutPolygonAlongToolCursorShift {
+            get {
+                object obj = ResourceManager.GetObject("CutPolygonAlongToolCursorShift", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
         internal static byte[] EditSketchCrosshair {
@@ -113,6 +153,16 @@ namespace ProSuite.AGP.Editing.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Byte[].
         /// </summary>
+        internal static byte[] PolygonDrawerCursor {
+            get {
+                object obj = ResourceManager.GetObject("PolygonDrawerCursor", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
         internal static byte[] RemoveOverlapsToolCursor {
             get {
                 object obj = ResourceManager.GetObject("RemoveOverlapsToolCursor", resourceCulture);
@@ -136,6 +186,46 @@ namespace ProSuite.AGP.Editing.Properties {
         internal static byte[] RemoveOverlapsToolCursorShift {
             get {
                 object obj = ResourceManager.GetObject("RemoveOverlapsToolCursorShift", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] ReshapeAlongToolCursor {
+            get {
+                object obj = ResourceManager.GetObject("ReshapeAlongToolCursor", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] ReshapeAlongToolCursorProcess {
+            get {
+                object obj = ResourceManager.GetObject("ReshapeAlongToolCursorProcess", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] ReshapeAlongToolCursorProcessShift {
+            get {
+                object obj = ResourceManager.GetObject("ReshapeAlongToolCursorProcessShift", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Byte[].
+        /// </summary>
+        internal static byte[] ReshapeAlongToolCursorShift {
+            get {
+                object obj = ResourceManager.GetObject("ReshapeAlongToolCursorShift", resourceCulture);
                 return ((byte[])(obj));
             }
         }

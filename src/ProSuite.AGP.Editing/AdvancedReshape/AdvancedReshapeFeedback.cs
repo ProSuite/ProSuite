@@ -7,7 +7,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape;
+using ProSuite.Microservices.Client.AGP.GeometryProcessing;
 
 namespace ProSuite.AGP.Editing.AdvancedReshape
 {
@@ -42,7 +42,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			}
 		}
 
-		public Task<bool> UpdatePreview([CanBeNull] IList<ReshapeResultFeature> resultFeatures)
+		public Task<bool> UpdatePreview([CanBeNull] IList<ResultFeature> resultFeatures)
 		{
 			_polygonPreviewOverlayAdd?.Dispose();
 			_polygonPreviewOverlayRemove?.Dispose();
@@ -55,7 +55,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			var addGeometries = new List<Geometry>(resultFeatures.Count);
 			var removeGeometries = new List<Geometry>(resultFeatures.Count);
 
-			foreach (ReshapeResultFeature resultFeature in resultFeatures)
+			foreach (ResultFeature resultFeature in resultFeatures)
 			{
 				var sourcePoly = resultFeature.Feature.GetShape() as Polygon;
 
@@ -64,7 +64,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					continue;
 				}
 
-				var reshapedPoly = (Polygon) resultFeature.UpdatedGeometry;
+				var reshapedPoly = (Polygon) resultFeature.NewGeometry;
 
 				addGeometries.Add(GeometryEngine.Instance.Difference(reshapedPoly, sourcePoly));
 				removeGeometries.Add(GeometryEngine.Instance.Difference(sourcePoly, reshapedPoly));
