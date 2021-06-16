@@ -1,7 +1,9 @@
-﻿namespace ProSuite.DomainModel.AO.Workflow.WorkspaceFilters
+namespace ProSuite.Commons.Gdb
 {
 	public enum WorkspaceDbType
 	{
+		Unknown,
+		FileSystem,
 		FileGeodatabase,
 		PersonalGeodatabase,
 		ArcSDE,

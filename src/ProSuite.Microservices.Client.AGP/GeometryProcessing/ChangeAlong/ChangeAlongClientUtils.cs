@@ -228,8 +228,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 		{
 			Assert.ArgumentNotNull(nameof(resultObjectMsg));
 
-			// TODO: long int!
-			int classHandle, objectId;
+			long classHandle, objectId;
 
 			if (resultObjectMsg.FeatureCase == ResultObjectMsg.FeatureOneofCase.Insert)
 			{

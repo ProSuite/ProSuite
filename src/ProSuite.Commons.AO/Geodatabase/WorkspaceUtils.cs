@@ -14,6 +14,7 @@ using System.Security.Authentication;
 using System.Threading;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Properties;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Diagnostics;
@@ -940,6 +941,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return false; // different database => different version
 			}
 
+			if (workspace1 is IEquatable<IWorkspace> equatableWorkspace1)
+			{
+				return equatableWorkspace1.Equals(workspace2);
+			}
+
+			if (workspace2 is IEquatable<IWorkspace> equatableWorkspace2)
+			{
+				return equatableWorkspace2.Equals(workspace1);
+			}
+
 			var version1 = workspace1 as IVersion;
 			var version2 = workspace2 as IVersion;
 
@@ -977,6 +988,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				// same workspace instance. obviously the same db
 				return true;
+			}
+
+			if (workspace1 is GdbWorkspace gdbWorkspace1)
+			{
+				return gdbWorkspace1.IsSameDatabase(workspace2);
+			}
+
+			if (workspace2 is GdbWorkspace gdbWorkspace2)
+			{
+				return gdbWorkspace2.IsSameDatabase(workspace1);
 			}
 
 			var versionedWorkspace1 = workspace1 as IVersionedWorkspace;
@@ -1861,8 +1882,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			int pwdStartIndex = pwdSeparator1Index + 1;
 			int pwdSeparator2Index = workspaceConnectionString.IndexOf(";", pwdStartIndex,
-			                                                           StringComparison
-				                                                           .Ordinal);
+				StringComparison
+					.Ordinal);
 
 			int pwdEndIndex = pwdSeparator2Index < 0
 				                  ? workspaceConnectionString.Length - 1

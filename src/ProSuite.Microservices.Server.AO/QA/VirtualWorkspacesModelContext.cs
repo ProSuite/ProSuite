@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.esriSystem;
@@ -53,7 +53,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					"The workspace name does not reference a virtual gdb workspace");
 			}
 
-			int? modelId = gdbWorkspace.WorkspaceHandle;
+			int? modelId = Convert.ToInt32(gdbWorkspace.WorkspaceHandle);
 
 			Assert.NotNull(modelId, "Workspace handle is null");
 

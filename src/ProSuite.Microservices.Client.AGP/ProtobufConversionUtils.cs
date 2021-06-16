@@ -8,9 +8,11 @@ using ArcGIS.Core.Geometry;
 using Google.Protobuf;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Gdb;
 using ProSuite.Commons.Geometry.EsriShape;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Definitions.Shared;
+using Version = ArcGIS.Core.Data.Version;
 
 namespace ProSuite.Microservices.Client.AGP
 {
@@ -299,10 +301,106 @@ namespace ProSuite.Microservices.Client.AGP
 					SpatialReference = ToSpatialReferenceMsg(
 						spatialRef, SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml),
 					GeometryType = (int) geometryType,
-					WorkspaceHandle = 0 //workspace?.GetHashCode() ?? -1
+					WorkspaceHandle = objectClass.GetDatastore().Handle.ToInt64()
 				};
 
 			return result;
+		}
+
+		public static WorkspaceRefMsg ToWorkspaceRefMsg(Datastore datastore)
+		{
+			Version defaultVersion = GetDefaultVersion(datastore);
+
+			var result =
+				new WorkspaceRefMsg()
+				{
+					WorkspaceHandle = datastore.Handle.ToInt64(),
+					WorkspaceDbType = (int) ToWorkspaceDbType(datastore)
+				};
+
+			if (defaultVersion != null)
+			{
+				result.DefaultVersionCreationTicks = defaultVersion.GetCreatedDate().Ticks;
+				result.DefaultVersionDescription = defaultVersion.GetDescription() ?? string.Empty;
+				result.DefaultVersionName = defaultVersion.GetName();
+			}
+			else
+			{
+				result.Path = datastore.GetPath().AbsoluteUri;
+			}
+
+			return result;
+		}
+
+		private static WorkspaceDbType ToWorkspaceDbType(Datastore datastore)
+		{
+			if (datastore is Geodatabase geodatabase)
+			{
+				GeodatabaseType gdbType = geodatabase.GetGeodatabaseType();
+
+				// TODO: Test newer workspace types, such as sqlite, Netezza
+
+				var connector = geodatabase.GetConnector() ;
+
+				if (gdbType == GeodatabaseType.LocalDatabase)
+				{
+					return WorkspaceDbType.FileGeodatabase;
+				}
+
+				if (gdbType == GeodatabaseType.FileSystem)
+				{
+					return WorkspaceDbType.FileSystem;
+				}
+
+				if (gdbType != GeodatabaseType.RemoteDatabase)
+				{
+					return WorkspaceDbType.Unknown;
+				}
+
+				if (connector is DatabaseConnectionProperties connectionProperties)
+				{
+					switch (connectionProperties.DBMS)
+					{
+						case EnterpriseDatabaseType.Oracle:
+							return WorkspaceDbType.ArcSDEOracle;
+						case EnterpriseDatabaseType.Informix:
+							return WorkspaceDbType.ArcSDEInformix;
+						case EnterpriseDatabaseType.SQLServer:
+							return WorkspaceDbType.ArcSDESqlServer;
+						case EnterpriseDatabaseType.PostgreSQL:
+							return WorkspaceDbType.ArcSDEPostgreSQL;
+						case EnterpriseDatabaseType.DB2:
+							return WorkspaceDbType.ArcSDEDB2;
+						default:
+							return WorkspaceDbType.ArcSDE;
+					}
+				}
+
+				// No connection properties (probably SDE file -> TODO: How to find the connection details? Connection string?)
+				return WorkspaceDbType.ArcSDE;
+			}
+
+			return WorkspaceDbType.Unknown;
+		}
+
+		private static Version GetDefaultVersion(Datastore datastore)
+		{
+			if (datastore is Geodatabase geodatabase && geodatabase.IsVersioningSupported())
+			{
+				using (VersionManager versionManager = geodatabase.GetVersionManager())
+				{
+					Version version = versionManager.GetCurrentVersion();
+					Version parent;
+					while ((parent = version.GetParent()) != null)
+					{
+						version = parent;
+					}
+
+					return version;
+				}
+			}
+
+			return null;
 		}
 
 		private static esriGeometryType TranslateAGPShapeType(Table objectClass)

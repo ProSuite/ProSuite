@@ -249,7 +249,6 @@
     <Compile Include="Workflow\ProjectWorkspaceBase.cs" />
     <Compile Include="Workflow\QualityVerificationOutsideEditSessionAllowed.cs" />
     <Compile Include="Workflow\WorkspaceFilters\IWorkspaceMatchCriterion.cs" />
-    <Compile Include="Workflow\WorkspaceFilters\WorkspaceDbType.cs" />
     <Compile Include="Workflow\WorkspaceFilters\WorkspaceDbTypeInfo.cs" />
     <Compile Include="Workflow\WorkspaceFilters\WorkspaceDbTypeMatchCriterion.cs" />
     <Compile Include="Workflow\WorkspaceFilters\WorkspaceFilter.cs" />

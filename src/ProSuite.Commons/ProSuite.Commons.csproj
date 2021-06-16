@@ -79,6 +79,7 @@
     <Compile Include="Com\ComUtils.cs" />
     <Compile Include="DomainModels\ModelElementNameUtils.cs" />
     <Compile Include="Exceptions\ExceptionUtils.cs" />
+    <Compile Include="Gdb\WorkspaceDbType.cs" />
     <Compile Include="Geometry\CrackPoint.cs" />
     <Compile Include="Geometry\EnvelopeXY.cs" />
     <Compile Include="Geometry\EsriShape\EsriShapeFormatUtils.cs" />

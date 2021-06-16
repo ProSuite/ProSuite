@@ -543,7 +543,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			if (reshapeLineMsg.Source != null)
 			{
 				result.Source = new GdbObjectReference(
-					reshapeLineMsg.Source.ClassHandle, reshapeLineMsg.Source.ObjectId);
+					(int) reshapeLineMsg.Source.ClassHandle, (int) reshapeLineMsg.Source.ObjectId);
 			}
 
 			return result;
