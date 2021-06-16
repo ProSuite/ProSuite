@@ -4,7 +4,7 @@ using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Microservices.Server.AO.Geodatabase
+namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
 	public class GdbTableContainer : BackingDataStore
 	{

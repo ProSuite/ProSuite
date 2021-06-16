@@ -6,7 +6,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Microservices.Server.AO.Geodatabase
+namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
 	/// <inheritdoc cref="GdbRow" />
 	public class GdbFeature : GdbRow, IFeature, IFeatureBuffer, IFeatureChanges

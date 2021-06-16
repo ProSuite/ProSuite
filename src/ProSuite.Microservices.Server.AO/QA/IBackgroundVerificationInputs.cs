@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Misc;
@@ -12,7 +13,6 @@ using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA;
 using ProSuite.DomainServices.AO.QA.IssuePersistence;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Server.AO.Geodatabase;
 using ProSuite.QA.Container;
 
 namespace ProSuite.Microservices.Server.AO.QA

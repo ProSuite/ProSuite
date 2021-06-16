@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Grpc.Core;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Definitions.QA;
@@ -11,6 +12,9 @@ namespace ProSuite.Microservices.Client.QA
 
 		public QualityVerificationServiceClient([NotNull] ClientChannelConfig channelConfig)
 			: base(channelConfig) { }
+
+		public QualityVerificationServiceClient([NotNull] IList<ClientChannelConfig> channelConfigs)
+			: base(channelConfigs) { }
 
 		public QualityVerificationServiceClient([NotNull] string host,
 		                                        int port = 5151,
@@ -43,9 +47,17 @@ namespace ProSuite.Microservices.Client.QA
 
 					if (actualChannel == null)
 					{
-						// TODO: Cycle through other client configs
-						throw new InvalidOperationException(
-							"Load balancer has not provided a valid channel");
+						if (TryOpenOtherChannel())
+						{
+							actualChannel = TryGetChannelFromLoadBalancer(
+								Channel, credentials, ServiceName,
+								enoughForLargeGeometries);
+						}
+						else
+						{
+							throw new InvalidOperationException(
+								"Load balancer has not provided a valid channel");
+						}
 					}
 
 					return new QualityVerificationGrpc.QualityVerificationGrpcClient(actualChannel);

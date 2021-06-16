@@ -60,6 +60,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				maxThreadCount = Environment.ProcessorCount - 1;
 			}
 
+			_msg.DebugFormat("{0} parallel requests will be processed", maxThreadCount);
+
 			_staThreadScheduler = new StaTaskScheduler(maxThreadCount);
 
 			EnvironmentUtils.SetUserNameProvider(_userNameProvider);

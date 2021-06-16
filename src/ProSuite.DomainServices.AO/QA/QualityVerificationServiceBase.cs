@@ -773,7 +773,7 @@ namespace ProSuite.DomainServices.AO.QA
 					reportBuilders.Add(datasetsCollector);
 				}
 
-				if (Parameters.VerificationReportPath != null)
+				if (! string.IsNullOrEmpty(Parameters.VerificationReportPath))
 				{
 					_xmlVerificationReportBuilder = new XmlVerificationReportBuilder(
 						Parameters.WriteDetailedVerificationReport

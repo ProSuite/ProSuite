@@ -29,35 +29,39 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		[NotNull]
-		public static XmlDataQualityDocument Deserialize([NotNull] string xmlFilePath)
+		public static XmlDataQualityDocument ReadXmlDocument(
+			[NotNull] TextReader xml,
+			[NotNull] out IList<XmlQualitySpecification> qualitySpecifications)
 		{
-			Assert.ArgumentNotNullOrEmpty(xmlFilePath, nameof(xmlFilePath));
-			Assert.ArgumentCondition(File.Exists(xmlFilePath),
-			                         "File does not exist: {0}", xmlFilePath);
+			Assert.ArgumentNotNull(xml, nameof(xml));
 
-			string schema = Schema.ProSuite_QA_QualitySpecifications_2_0;
+			XmlDataQualityDocument document = Deserialize(xml);
 
-			try
-			{
-				return XmlUtils.DeserializeFile<XmlDataQualityDocument>(xmlFilePath, schema);
-			}
-			catch (Exception e)
-			{
-				throw new XmlDeserializationException(
-					string.Format("Error deserializing file: {0}", e.Message), e);
-			}
+			Assert.ArgumentCondition(document.GetAllQualitySpecifications().Any(),
+			                         "The document does not contain any quality specifications");
+
+			AssertUniqueQualitySpecificationNames(document);
+			AssertUniqueQualityConditionNames(document);
+			AssertUniqueTestDescriptorNames(document);
+
+			qualitySpecifications = document.GetAllQualitySpecifications()
+			                                .Select(p => p.Key)
+			                                .Where(qs => qs.Elements.Count > 0)
+			                                .ToList();
+
+			return document;
 		}
 
 		[NotNull]
-		public static XmlDataQualityDocument DeserializeXml([NotNull] string xml)
+		public static XmlDataQualityDocument Deserialize([NotNull] TextReader xml)
 		{
-			Assert.ArgumentNotNullOrEmpty(xml, nameof(xml));
+			Assert.ArgumentNotNull(xml, nameof(xml));
 
 			string schema = Schema.ProSuite_QA_QualitySpecifications_2_0;
 
 			try
 			{
-				return XmlUtils.DeserializeString<XmlDataQualityDocument>(xml, schema);
+				return XmlUtils.Deserialize<XmlDataQualityDocument>(xml, schema);
 			}
 			catch (Exception e)
 			{
@@ -399,7 +403,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			foreach (XmlQualityCondition xmlQualityCondition in referencedConditions)
 			{
 				foreach (XmlTestParameterValue xmlTestParameterValue in
-					xmlQualityCondition.ParameterValues)
+					xmlQualityCondition.EnumParameterValues(ignoreEmptyValues: true))
 				{
 					var datasetTestParameterValue =
 						xmlTestParameterValue as XmlDatasetTestParameterValue;
@@ -565,7 +569,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			result.Category = category;
 
 			foreach (XmlTestParameterValue xmlTestParameterValue in
-				xmlQualityCondition.ParameterValues)
+				xmlQualityCondition.EnumParameterValues(ignoreEmptyValues: true))
 			{
 				TestParameter testParameter;
 				if (! testParametersByName.TryGetValue(xmlTestParameterValue.TestParameterName,
@@ -1041,7 +1045,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			foreach (XmlQualityCondition xmlQualityCondition in referencedConditions)
 			{
 				foreach (XmlTestParameterValue paramterValue in
-					xmlQualityCondition.ParameterValues)
+					xmlQualityCondition.EnumParameterValues(ignoreEmptyValues: true))
 				{
 					var datasetParameterValue = paramterValue as XmlDatasetTestParameterValue;
 					if (datasetParameterValue == null)

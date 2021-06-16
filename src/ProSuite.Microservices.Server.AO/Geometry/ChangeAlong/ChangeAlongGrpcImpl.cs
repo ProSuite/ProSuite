@@ -36,7 +36,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 				new CalculateReshapeLinesResponse();
 
 			_msg.DebugStopTiming(
-				watch, "Calculated reshape lines for peer {0} ({1} source features, {2})",
+				watch,
+				"Calculated reshape lines for peer {0} ({1} source features, {2}, target features)",
 				context.Peer, request.SourceFeatures.Count, request.TargetFeatures.Count);
 
 			return response;
@@ -57,7 +58,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 				new CalculateCutLinesResponse();
 
 			_msg.DebugStopTiming(
-				watch, "Calculated {0} cut lines for peer {1} ({2} source features, {3})",
+				watch,
+				"Calculated {0} cut lines for peer {1} ({2} source features, {3} target features)",
 				response.CutLines.Count, context.Peer, request.SourceFeatures.Count,
 				request.TargetFeatures.Count);
 

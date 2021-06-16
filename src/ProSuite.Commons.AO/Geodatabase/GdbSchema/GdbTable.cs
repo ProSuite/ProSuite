@@ -2,10 +2,9 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Microservices.Server.AO.Geodatabase
+namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
 	/// <summary>
 	/// Gdb IObjectClass implementation that can be instantiated in memory that typically
@@ -17,6 +16,7 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 	public class GdbTable : IObjectClass, ITable, IDataset, ISubtypes, IDatasetEdit,
 	                        IEquatable<IObjectClass>
 	{
+		// TODO: Extra interfaces IGdbTable, IGdbFeatureClass, etc. in Commons with all the relevant properties
 		//private const string _defaultOidFieldName = "OBJECTID";
 
 		private readonly GdbFields _gdbFields = new GdbFields();
