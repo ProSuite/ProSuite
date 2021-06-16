@@ -6,9 +6,8 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.AO.Test;
 
-namespace ProSuite.Microservices.Server.AO.Test.Geodatabase
+namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 {
 	[TestFixture]
 	public class GdbTableTest

@@ -91,6 +91,8 @@
     <Compile Include="Geodatabase\GdbElementNamePatternTest.cs" />
     <Compile Include="Geodatabase\GdbQueryMethodProfilingTest.cs" />
     <Compile Include="Geodatabase\GdbQueryUtilsTest.cs" />
+    <Compile Include="Geodatabase\GdbSchema\GdbTableTest.cs" />
+    <Compile Include="Geodatabase\GdbSchema\GdbWorkspaceTest.cs" />
     <Compile Include="Geodatabase\GdbSqlUtilsTest.cs" />
     <Compile Include="Geodatabase\RowFormatTest.cs" />
     <Compile Include="Geodatabase\TableJoinUtilsTest.cs" />

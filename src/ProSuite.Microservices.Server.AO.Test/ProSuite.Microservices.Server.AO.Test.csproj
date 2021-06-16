@@ -74,8 +74,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Geodatabase\GdbRowTest.cs" />
-    <Compile Include="Geodatabase\GdbTableTest.cs" />
-    <Compile Include="Geodatabase\GdbWorkspaceTest.cs" />
     <Compile Include="Geometry\AdvancedReshapeServiceTest.cs" />
     <Compile Include="Geometry\ChangeAlongServiceUtilsTest.cs" />
     <Compile Include="Geometry\RemoveOverlapsServiceTest.cs" />
