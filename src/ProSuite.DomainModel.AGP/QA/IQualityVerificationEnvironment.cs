@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.DomainModel.AGP.QA
 {

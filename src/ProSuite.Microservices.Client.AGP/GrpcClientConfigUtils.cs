@@ -5,6 +5,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Xml;
+using ProSuite.Microservices.Client.QA;
 
 namespace ProSuite.Microservices.Client.AGP
 {
@@ -14,20 +15,14 @@ namespace ProSuite.Microservices.Client.AGP
 
 		[NotNull]
 		public static async Task<GeometryProcessingClient> StartGeometryProcessingClient(
-			[NotNull] string executablePath, string configFilePath)
+			[CanBeNull] string executablePath,
+			[CanBeNull] string configFilePath)
 		{
 			ClientChannelConfig clientChannelConfig;
 
 			if (string.IsNullOrEmpty(configFilePath))
 			{
-				_msg.Debug(
-					"Geometry processing microservice client configuration not found, using default settings...");
-
-				clientChannelConfig = new ClientChannelConfig
-				                      {
-					                      HostName = "localhost",
-					                      Port = 5153
-				                      };
+				clientChannelConfig = FallbackToDefaultChannel("Geometry processing", 5153);
 			}
 			else
 			{
@@ -36,9 +31,54 @@ namespace ProSuite.Microservices.Client.AGP
 
 			var result = new GeometryProcessingClient(clientChannelConfig);
 
-			await result.AllowStartingLocalServerAsync(executablePath).ConfigureAwait(false);
+			if (! string.IsNullOrEmpty(executablePath))
+			{
+				await result.AllowStartingLocalServerAsync(executablePath).ConfigureAwait(false);
+			}
 
 			return result;
+		}
+
+		[NotNull]
+		public static async Task<QualityVerificationServiceClient> StartQaServiceClient(
+			[CanBeNull] string executablePath,
+			[CanBeNull] string configFilePath)
+		{
+			ClientChannelConfig clientChannelConfig;
+
+			if (string.IsNullOrEmpty(configFilePath))
+			{
+				clientChannelConfig = FallbackToDefaultChannel("QA", 5151);
+			}
+			else
+			{
+				clientChannelConfig = GetClientChannelConfig(configFilePath);
+			}
+
+			var result = new QualityVerificationServiceClient(clientChannelConfig);
+
+			if (! string.IsNullOrEmpty(executablePath))
+			{
+				await result.AllowStartingLocalServerAsync(executablePath).ConfigureAwait(false);
+			}
+
+			return result;
+		}
+
+		private static ClientChannelConfig FallbackToDefaultChannel(
+			[NotNull] string serviceName, int fallbackPort)
+		{
+			_msg.DebugFormat(
+				"{0} microservice client configuration not found, using default settings...",
+				serviceName);
+
+			var clientChannelConfig = new ClientChannelConfig
+			                          {
+				                          HostName = "localhost",
+				                          Port = fallbackPort
+			                          };
+
+			return clientChannelConfig;
 		}
 
 		private static ClientChannelConfig GetClientChannelConfig([NotNull] string configFilePath)

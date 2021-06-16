@@ -307,12 +307,12 @@ namespace ProSuite.Microservices.Client.AGP
 			return result;
 		}
 
-		public static WorkspaceRefMsg ToWorkspaceRefMsg(Datastore datastore)
+		public static WorkspaceMsg ToWorkspaceRefMsg(Datastore datastore)
 		{
 			Version defaultVersion = GetDefaultVersion(datastore);
 
 			var result =
-				new WorkspaceRefMsg()
+				new WorkspaceMsg
 				{
 					WorkspaceHandle = datastore.Handle.ToInt64(),
 					WorkspaceDbType = (int) ToWorkspaceDbType(datastore)
@@ -340,7 +340,7 @@ namespace ProSuite.Microservices.Client.AGP
 
 				// TODO: Test newer workspace types, such as sqlite, Netezza
 
-				var connector = geodatabase.GetConnector() ;
+				var connector = geodatabase.GetConnector();
 
 				if (gdbType == GeodatabaseType.LocalDatabase)
 				{

@@ -11,18 +11,21 @@ using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Solution.ConfigUI;
 using ProSuite.AGP.Solution.LoggerUI;
 using ProSuite.AGP.Solution.ProjectItem;
+using ProSuite.AGP.Solution.QA;
 using ProSuite.AGP.Solution.WorkLists;
-using ProSuite.AGP.WorkList;
 using ProSuite.Application.Configuration;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.AGP.WPF;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.AGP.QA;
 using ProSuite.Microservices.Client.AGP;
+using ProSuite.Microservices.Client.QA;
 using ProSuite.QA.Configurator;
 using ProSuite.QA.ServiceManager;
 using ProSuite.QA.ServiceManager.Types;
@@ -35,10 +38,16 @@ namespace ProSuite.AGP.Solution
 	{
 		private const string _loggingConfigFile = "prosuite.logging.arcgispro.xml";
 
-		private const string _microserverExeName = "prosuite_microserver_geometry_processing.exe";
+		private const string _microserverToolExeName =
+			"prosuite_microserver_geometry_processing.exe";
 
-		const string _microserviceClientConfigXml =
+		private const string _microserverQaExeName = "prosuite_microserver_qa.exe";
+
+		const string _microserviceToolClientConfigXml =
 			"prosuite.microservice.geometry_processing.client.config.xml";
+
+		private const string _microserviceQaClientConfigXml =
+			"prosuite.microservice.qa.client.config.xml";
 
 		public static event EventHandler<ProSuiteQAConfigEventArgs> OnQAConfigurationChanged;
 
@@ -118,6 +127,8 @@ namespace ProSuite.AGP.Solution
 
 		public GeometryProcessingClient ToolMicroserviceClient { get; private set; }
 
+		public QualityVerificationServiceClient QaMicroserviceClient { get; private set; }
+
 		/// <summary>
 		/// Retrieve the singleton instance to this module here
 		/// </summary>
@@ -129,6 +140,8 @@ namespace ProSuite.AGP.Solution
 					                 "ProSuiteSolution_Module"));
 			}
 		}
+
+		public IQualityVerificationEnvironment QualityVerificationEnvironment { get; private set; }
 
 		private static void UpdateServiceUI(ProSuiteProjectItemConfiguration projectItem)
 		{
@@ -165,7 +178,8 @@ namespace ProSuite.AGP.Solution
 			ProSuiteConfigChangedEvent.Subscribe(OnConfigurationChanged);
 			LogMessageActionEvent.Subscribe(OnLogMessageActionRequested);
 
-			StartToolMicroserviceClientAsync().GetAwaiter();
+			// TODO: Task.Run async?
+			StartMicroservices().ConfigureAwait(false);
 
 			return base.Initialize();
 		}
@@ -330,7 +344,8 @@ namespace ProSuite.AGP.Solution
 				string workListName = WorkListsModule.Current.EnsureUniqueName();
 				var environment = new DatabaseWorkEnvironment();
 
-				await QueuedTask.Run(() => WorkListsModule.Current.CreateWorkListAsync(environment, workListName));
+				await QueuedTask.Run(
+					() => WorkListsModule.Current.CreateWorkListAsync(environment, workListName));
 
 				WorkListsModule.Current.ShowView(workListName);
 			}, _msg);
@@ -343,10 +358,32 @@ namespace ProSuite.AGP.Solution
 				string workListName = WorkListsModule.Current.EnsureUniqueName();
 				var environment = new InMemoryWorkEnvironment();
 
-				await QueuedTask.Run(() => WorkListsModule.Current.CreateWorkListAsync(environment, workListName));
+				await QueuedTask.Run(
+					() => WorkListsModule.Current.CreateWorkListAsync(environment, workListName));
 
 				WorkListsModule.Current.ShowView(workListName);
 			}, _msg);
+		}
+
+		private async Task<bool> StartMicroservices()
+		{
+			bool result = await StartToolMicroserviceClientAsync();
+
+			QualityVerificationServiceClient client = await StartQaMicroserviceClientAsync();
+
+			var qaEnvironment =
+				new QualityVerificationEnvironment(MapView.Active, client.DdxClient);
+
+			ActiveMapViewChangedEvent.Subscribe(e => qaEnvironment.MapViewChanged(e.IncomingView));
+
+			// This event is never fired:
+			// LayersAddedEvent.Subscribe(e => qaEnvironment.MapLayersChanged(e.Layers));
+
+			QualityVerificationEnvironment = qaEnvironment;
+
+			QAConfiguration.Current.SetupGrpcConfiguration(QualityVerificationEnvironment);
+
+			return result;
 		}
 
 		private async Task<bool> StartToolMicroserviceClientAsync()
@@ -354,22 +391,21 @@ namespace ProSuite.AGP.Solution
 			try
 			{
 				string executablePath;
-				using (_msg.IncrementIndentation("Searching for microservice deployment ({0})...",
-				                                 _microserverExeName))
+				using (_msg.IncrementIndentation(
+					"Searching for tool microservice deployment ({0})...", _microserverToolExeName))
 				{
-					executablePath = ConfigurationUtils.GetProSuiteExecutablePath(_microserverExeName);
+					executablePath =
+						ConfigurationUtils.GetProSuiteExecutablePath(_microserverToolExeName);
 
 					if (executablePath == null)
 					{
-						_msg.Warn(
-							"Cannot find microservice deployment folder. Some edit Tools will be disabled.");
-
-						return false;
+						_msg.Warn("Cannot find tool microservice deployment folder. " +
+						          "Some edit Tools might be disabled.");
 					}
 				}
 
 				string configFilePath =
-					ConfigurationUtils.GetConfigFilePath(_microserviceClientConfigXml, false);
+					ConfigurationUtils.GetConfigFilePath(_microserviceToolClientConfigXml, false);
 
 				GeometryProcessingClient result =
 					await GrpcClientConfigUtils.StartGeometryProcessingClient(
@@ -384,6 +420,33 @@ namespace ProSuite.AGP.Solution
 			}
 
 			return true;
+		}
+
+		private async Task<QualityVerificationServiceClient> StartQaMicroserviceClientAsync()
+		{
+			string executablePath;
+			using (_msg.IncrementIndentation("Searching for QA microservice deployment ({0})...",
+			                                 _microserverToolExeName))
+			{
+				executablePath =
+					ConfigurationUtils.GetProSuiteExecutablePath(_microserverQaExeName);
+
+				if (executablePath == null)
+				{
+					_msg.Debug("Cannot find qa microservice deployment folder.");
+				}
+			}
+
+			string configFilePath =
+				ConfigurationUtils.GetConfigFilePath(_microserviceQaClientConfigXml, false);
+
+			QualityVerificationServiceClient result =
+				await GrpcClientConfigUtils.StartQaServiceClient(
+					executablePath, configFilePath);
+
+			QaMicroserviceClient = Assert.NotNull(result);
+
+			return QaMicroserviceClient;
 		}
 	}
 
@@ -532,6 +595,16 @@ namespace ProSuite.AGP.Solution
 		{
 			FillCombo();
 			//Enabled = false;
+
+			ProSuiteToolsModule.Current.QualityVerificationEnvironment
+			                   .QualitySpecificationsRefreshed += QualitySpecificationsRefreshed;
+		}
+
+		private void QualitySpecificationsRefreshed(object sender, EventArgs e)
+		{
+			Clear();
+
+			FillCombo();
 		}
 
 		private void FillCombo()
