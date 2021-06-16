@@ -194,7 +194,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			try
 			{
-				await StartRequest(context.Peer, request);
+				await StartRequest(context.Peer, request, true);
 
 				_msg.InfoFormat("Starting stand-alone verification request from {0}",
 				                context.Peer);
@@ -231,25 +231,28 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private async Task StartRequest(VerificationRequest request)
 		{
-			await StartRequest(request.UserName, request);
+			await StartRequest(request.UserName, request, true);
 		}
 
-		private async Task StartRequest(string peerName, object request)
+		private async Task StartRequest(string peerName, object request, bool requiresLicense)
 		{
 			CurrentLoad?.StartRequest();
 
-			_msg.InfoFormat("Starting verification request from {0}", peerName);
+			_msg.InfoFormat("Starting {0} request from {1}", request.GetType().Name, peerName);
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
 				_msg.VerboseDebugFormat("Request details: {0}", request);
 			}
 
-			bool licensed = await EnsureLicenseAsync();
-
-			if (! licensed)
+			if (requiresLicense)
 			{
-				_msg.Warn("Could not check out the specified license");
+				bool licensed = await EnsureLicenseAsync();
+
+				if (! licensed)
+				{
+					_msg.Warn("Could not check out the specified license");
+				}
 			}
 		}
 

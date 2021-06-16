@@ -170,6 +170,7 @@
     <Compile Include="QA\ErrorPolygonObject.cs" />
     <Compile Include="QA\ErrorTableObject.cs" />
     <Compile Include="QA\ErrorVectorObject.cs" />
+    <Compile Include="QA\IVerificationDataDictionary.cs" />
     <Compile Include="QA\IErrorObject.cs" />
     <Compile Include="QA\IOpenDataset.cs" />
     <Compile Include="QA\IQualityConditionContextAware.cs" />

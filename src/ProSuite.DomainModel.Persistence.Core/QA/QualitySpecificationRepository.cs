@@ -25,6 +25,12 @@ namespace ProSuite.DomainModel.Persistence.Core.QA
 
 			List<int> datasetIds = datasets.Select(dataset => dataset.Id).ToList();
 
+			return Get(datasetIds, excludeHidden);
+		}
+
+		public IList<QualitySpecification> Get(IList<int> datasetIds,
+		                                       bool excludeHidden)
+		{
 			if (datasetIds.Count <= 0)
 			{
 				return new List<QualitySpecification>();

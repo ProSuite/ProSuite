@@ -37,6 +37,41 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return new GdbWorkspace(dataStore);
 		}
 
+		public static GdbWorkspace CreateFromFgdb([NotNull] IWorkspace fileGdbWorkspace,
+		                                          [CanBeNull] BackingDataStore dataStore = null)
+		{
+			if (dataStore == null)
+			{
+				dataStore = new GdbTableContainer();
+			}
+
+			return new GdbWorkspace(dataStore, fileGdbWorkspace.GetHashCode(),
+			                        WorkspaceDbType.FileGeodatabase,
+			                        fileGdbWorkspace.PathName);
+		}
+
+		public static GdbWorkspace CreateFromSdeWorkspace(
+			[NotNull] IVersionedWorkspace sdeWorkspace,
+			[CanBeNull] BackingDataStore dataStore = null)
+		{
+			if (dataStore == null)
+			{
+				dataStore = new GdbTableContainer();
+			}
+
+			string versionName = ((IVersion) sdeWorkspace).VersionName;
+			string defaultVersionName = sdeWorkspace.DefaultVersion.VersionName;
+			string defaultVersionDescription = sdeWorkspace.DefaultVersion.Description;
+
+			DateTime? defaultVersionCreationDate =
+				(DateTime?) sdeWorkspace.DefaultVersion.VersionInfo.Created;
+
+			return new GdbWorkspace(dataStore, sdeWorkspace.GetHashCode(),
+			                        GetWorkspaceDbType((IWorkspace) sdeWorkspace),
+			                        null, versionName, defaultVersionName,
+			                        defaultVersionDescription, defaultVersionCreationDate);
+		}
+
 		/// <summary>
 		/// Initializes a new instance of the <see cref="GdbWorkspace"/> class.
 		/// </summary>
@@ -571,6 +606,68 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 					throw new ArgumentOutOfRangeException(nameof(dbType), dbType,
 					                                      "Unknown DB type");
 			}
+		}
+
+		private static WorkspaceDbType GetWorkspaceDbType(IWorkspace workspace)
+		{
+			switch (workspace.Type)
+			{
+				case esriWorkspaceType.esriFileSystemWorkspace:
+					return WorkspaceDbType.FileSystem;
+
+				case esriWorkspaceType.esriLocalDatabaseWorkspace:
+					if (WorkspaceUtils.IsFileGeodatabase(workspace))
+					{
+						return WorkspaceDbType.FileGeodatabase;
+					}
+					else if (WorkspaceUtils.IsPersonalGeodatabase(workspace))
+					{
+						return WorkspaceDbType.PersonalGeodatabase;
+					}
+
+					break;
+
+				case esriWorkspaceType.esriRemoteDatabaseWorkspace:
+
+					var connectionInfo = workspace as IDatabaseConnectionInfo2;
+					if (connectionInfo != null)
+					{
+						switch (connectionInfo.ConnectionDBMS)
+						{
+							case esriConnectionDBMS.esriDBMS_Unknown:
+								break;
+
+							case esriConnectionDBMS.esriDBMS_Oracle:
+								return WorkspaceDbType.ArcSDEOracle;
+
+							case esriConnectionDBMS.esriDBMS_Informix:
+								return WorkspaceDbType.ArcSDEInformix;
+
+							case esriConnectionDBMS.esriDBMS_SQLServer:
+								return WorkspaceDbType.ArcSDESqlServer;
+
+							case esriConnectionDBMS.esriDBMS_DB2:
+								return WorkspaceDbType.ArcSDEDB2;
+
+							case esriConnectionDBMS.esriDBMS_PostgreSQL:
+								return WorkspaceDbType.ArcSDEPostgreSQL;
+
+							default:
+								throw new ArgumentOutOfRangeException();
+						}
+					}
+					else
+					{
+						return WorkspaceDbType.ArcSDE;
+					}
+
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+
+			return WorkspaceDbType.Unknown;
 		}
 	}
 

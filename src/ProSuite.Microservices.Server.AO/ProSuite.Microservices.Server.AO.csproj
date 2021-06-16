@@ -98,6 +98,7 @@
     <Compile Include="QA\BackgroundVerificationService.cs" />
     <Compile Include="QA\DistributedTestRunner.cs" />
     <Compile Include="QA\IBackgroundVerificationInputs.cs" />
+    <Compile Include="QA\QualityVerificationDdxGrpcImpl.cs" />
     <Compile Include="QA\QualityVerificationGrpcImpl.cs" />
     <Compile Include="QA\SubResponse.cs" />
     <Compile Include="QA\VerificationServiceParameters.cs" />

@@ -11,6 +11,9 @@ namespace ProSuite.DomainModel.Core.QA.Repositories
 		IList<QualitySpecification> Get([NotNull] IList<Dataset> datasets,
 		                                bool excludeHidden = false);
 
+		IList<QualitySpecification> Get([NotNull] IList<int> datasetIds,
+		                                bool excludeHidden);
+
 		[CanBeNull]
 		QualitySpecification Get([NotNull] string name);
 
