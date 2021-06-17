@@ -1,19 +1,19 @@
 namespace ProSuite.DomainModel.AGP.QA
 {
-	public class QualitySpecificationRef
+	public class QualitySpecificationReference
 	{
 		public string Name { get; }
 		public int Id { get; }
 
-		public QualitySpecificationRef(int id, string name)
+		public QualitySpecificationReference(int id, string name)
 		{
 			Id = id;
 			Name = name;
 		}
 
-		protected bool Equals(QualitySpecificationRef other)
+		protected bool Equals(QualitySpecificationReference other)
 		{
-			return Id == other.Id;
+			return Id == other.Id && Name == other.Name;
 		}
 
 		public override bool Equals(object obj)
@@ -33,12 +33,15 @@ namespace ProSuite.DomainModel.AGP.QA
 				return false;
 			}
 
-			return Equals((QualitySpecificationRef) obj);
+			return Equals((QualitySpecificationReference) obj);
 		}
 
 		public override int GetHashCode()
 		{
-			return Id;
+			unchecked
+			{
+				return (Id * 397) ^ (Name != null ? Name.GetHashCode() : 0);
+			}
 		}
 
 		public override string ToString()

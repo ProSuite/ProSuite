@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{5D500C94-FF3A-4BC8-8EDB-3A7177898B81}</ProjectGuid>
+    <ProjectGuid>{1745D9A7-BF58-414E-A840-6A3EE1847FE0}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProSuite.Microservices.Client.AGP</RootNamespace>
-    <AssemblyName>ProSuite.Microservices.Client.AGP</AssemblyName>
+    <RootNamespace>ProSuite.AGP.QA</RootNamespace>
+    <AssemblyName>ProSuite.AGP.QA</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
@@ -17,7 +17,6 @@
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -27,7 +26,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>$(OutputDirectory)\Release\</OutputPath>
@@ -35,66 +33,57 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ArcGIS.Core, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+    <Reference Include="ArcGIS.Core">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
     </Reference>
-    <Reference Include="ArcGIS.Desktop.Framework, PublicKeyToken=8fc3cc631e44ad86">
+    <Reference Include="ArcGIS.Desktop.Catalog">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ProAssemblyPath)\bin\Extensions\Catalog\ArcGIS.Desktop.Catalog.dll</HintPath>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Core">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ProAssemblyPath)\bin\Extensions\Core\ArcGIS.Desktop.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Editing">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ProAssemblyPath)\bin\Extensions\Editing\ArcGIS.Desktop.Editing.dll</HintPath>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Extensions">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ProAssemblyPath)\bin\Extensions\DesktopExtensions\ArcGIS.Desktop.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Framework">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Desktop.Framework.dll</HintPath>
     </Reference>
-    <Reference Include="ProSuite.Microservices.Definitions.Geometry, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
+    <Reference Include="ArcGIS.Desktop.Mapping">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Geometry.dll</HintPath>
+      <HintPath>$(ProAssemblyPath)\bin\Extensions\Mapping\ArcGIS.Desktop.Mapping.dll</HintPath>
     </Reference>
     <Reference Include="ProSuite.Microservices.Definitions.QA, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.dll</HintPath>
     </Reference>
-    <Reference Include="ProSuite.Microservices.Definitions.Shared, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Shared.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="GdbObjectReference.cs" />
-    <Compile Include="GeometryProcessing\AdvancedReshape\AdvancedReshapeClientUtils.cs" />
-    <Compile Include="GeometryProcessing\AdvancedReshape\ReshapeResult.cs" />
-    <Compile Include="GeometryProcessing\ResultFeature.cs" />
-    <Compile Include="GeometryProcessing\RowChangeType.cs" />
-    <Compile Include="GeometryProcessing\ChangeAlong\ChangeAlongClientUtils.cs" />
-    <Compile Include="GeometryProcessing\ChangeAlong\ChangeAlongCurves.cs" />
-    <Compile Include="GeometryProcessing\ChangeAlong\CutSubcurve.cs" />
-    <Compile Include="GeometryProcessing\ChangeAlong\ReshapeAlongCurveUsability.cs" />
-    <Compile Include="GeometryProcessing\RemoveOverlaps\OverlapResultGeometries.cs" />
-    <Compile Include="GeometryProcessing\RemoveOverlaps\Overlaps.cs" />
-    <Compile Include="GeometryProcessingClient.cs" />
-    <Compile Include="GeometryProcessing\RemoveOverlaps\RemoveOverlapsClientUtils.cs" />
-    <Compile Include="GeometryProcessing\RemoveOverlaps\RemoveOverlapsResult.cs" />
-    <Compile Include="GeometryProcessing\RpcCallUtils.cs" />
-    <Compile Include="GrpcClientConfigUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ProtobufConversionUtils.cs" />
-    <Compile Include="QA\DdxUtils.cs" />
-    <Compile Include="QA\ProjectWorkspace.cs" />
+    <Compile Include="ProPlugins\QualitySpecificationsComboBoxBase.cs" />
+    <Compile Include="QualityVerificationEnvironment.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">
-      <Project>{89F2C583-3022-43F8-9B69-27123836625F}</Project>
-      <Name>ProSuite.Commons.AGP</Name>
-    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
       <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
       <Name>ProSuite.Commons.Essentials</Name>
@@ -111,23 +100,10 @@
       <Project>{824DDBE3-EDAF-460B-B513-386A4260C1FF}</Project>
       <Name>ProSuite.DomainModel.AGP</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
-      <Project>{0B48B56F-3A3D-4367-AA76-A356519AF2AB}</Project>
-      <Name>ProSuite.DomainModel.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj">
-      <Project>{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}</Project>
-      <Name>ProSuite.Microservices.Client</Name>
+    <ProjectReference Include="..\ProSuite.Microservices.Client.AGP\ProSuite.Microservices.Client.AGP.csproj">
+      <Project>{5D500C94-FF3A-4BC8-8EDB-3A7177898B81}</Project>
+      <Name>ProSuite.Microservices.Client.AGP</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Google.Protobuf">
-      <Version>3.14.0</Version>
-    </PackageReference>
-    <PackageReference Include="Grpc">
-      <Version>2.36.4</Version>
-    </PackageReference>
-  </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -147,7 +147,8 @@
     <Compile Include="ProjectItem\SelectionWorklistItem.cs" />
     <Compile Include="ProjectItem\WorklistItem.cs" />
     <Compile Include="ProjectItem\WorklistsContainer.cs" />
-    <Compile Include="QA\QualityVerificationEnvironment.cs" />
+    <Compile Include="QA\QualitySpecificationsComboBox.cs" />
+    <Compile Include="QA\XmlVerificationEnvironment.cs" />
     <Compile Include="Resource.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -307,6 +308,10 @@
     <ProjectReference Include="..\ProSuite.AGP.Editing\ProSuite.AGP.Editing.csproj">
       <Project>{EC3D575D-7B9D-467F-BC76-2E093A3126EC}</Project>
       <Name>ProSuite.AGP.Editing</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.AGP.QA\ProSuite.AGP.QA.csproj">
+      <Project>{1745D9A7-BF58-414E-A840-6A3EE1847FE0}</Project>
+      <Name>ProSuite.AGP.QA</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj">
       <Project>{47e134c6-b803-451e-8c33-7c71b158b2ac}</Project>

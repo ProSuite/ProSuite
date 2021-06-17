@@ -13,6 +13,7 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.AGP.QA;
 using ProSuite.AGP.Solution.ConfigUI;
 using ProSuite.AGP.Solution.LoggerUI;
 using ProSuite.AGP.Solution.ProjectItem;
@@ -52,6 +53,9 @@ namespace ProSuite.AGP.Solution
 		public static event EventHandler<ProSuiteQAConfigEventArgs> OnQAConfigurationChanged;
 
 		private static ProSuiteQAManager _qaManager;
+
+		private QualityVerificationEnvironment _ddxVerificationEnvironment;
+		private XmlVerificationEnvironment _xmlGpVerificationEnvironment;
 
 		public static ProSuiteQAManager QAManager
 		{
@@ -107,9 +111,7 @@ namespace ProSuite.AGP.Solution
 				UpdateServiceUI(_qaProjectItem);
 			}
 		}
-
-		public static string CurrentQASpecificationName { get; set; }
-
+		
 		private static ProSuiteToolsModule _this = null;
 
 		private static IMsg msg = null;
@@ -141,7 +143,27 @@ namespace ProSuite.AGP.Solution
 			}
 		}
 
-		public IQualityVerificationEnvironment QualityVerificationEnvironment { get; private set; }
+		public IQualityVerificationEnvironment QualityVerificationEnvironment
+		{
+			get
+			{
+				if (_ddxVerificationEnvironment != null &&
+				    _ddxVerificationEnvironment.ProjectId > 0)
+				{
+					return _ddxVerificationEnvironment;
+				}
+				else
+				{
+					if (_xmlGpVerificationEnvironment == null)
+					{
+						_xmlGpVerificationEnvironment =
+							new XmlVerificationEnvironment(QAManager.SpecificationProvider);
+					}
+
+					return _xmlGpVerificationEnvironment;
+				}
+			}
+		}
 
 		private static void UpdateServiceUI(ProSuiteProjectItemConfiguration projectItem)
 		{
@@ -293,7 +315,7 @@ namespace ProSuite.AGP.Solution
 
 		#endregion
 
-		internal static async Task StartQAGPServerAsync(ProSuiteQAServiceType type)
+		internal static async Task StartQAGPServerAsync(ProSuiteQAServiceType type, string specificationName)
 		{
 			_msg.Info($"StartQAGPServerAsync is called");
 
@@ -308,7 +330,7 @@ namespace ProSuite.AGP.Solution
 
 			// temporary - give path to XML specifications
 			var qaSpecificationsConnection =
-				QAManager.GetQASpecificationsConnection(CurrentQASpecificationName);
+				QAManager.GetQASpecificationsConnection(specificationName);
 
 			// TODO select only available workspaces 
 			var qaParams =
@@ -371,17 +393,16 @@ namespace ProSuite.AGP.Solution
 
 			QualityVerificationServiceClient client = await StartQaMicroserviceClientAsync();
 
-			var qaEnvironment =
+			_ddxVerificationEnvironment =
 				new QualityVerificationEnvironment(MapView.Active, client.DdxClient);
 
-			ActiveMapViewChangedEvent.Subscribe(e => qaEnvironment.MapViewChanged(e.IncomingView));
+			ActiveMapViewChangedEvent.Subscribe(e => _ddxVerificationEnvironment.MapViewChanged(e.IncomingView));
 
 			// This event is never fired:
 			// LayersAddedEvent.Subscribe(e => qaEnvironment.MapLayersChanged(e.Layers));
 
-			QualityVerificationEnvironment = qaEnvironment;
-
-			QAConfiguration.Current.SetupGrpcConfiguration(QualityVerificationEnvironment);
+			// TODO: Only if there is a ddx connection and it works...
+			QAConfiguration.Current.SetupGrpcConfiguration(_ddxVerificationEnvironment);
 
 			return result;
 		}
@@ -441,8 +462,7 @@ namespace ProSuite.AGP.Solution
 				ConfigurationUtils.GetConfigFilePath(_microserviceQaClientConfigXml, false);
 
 			QualityVerificationServiceClient result =
-				await GrpcClientConfigUtils.StartQaServiceClient(
-					executablePath, configFilePath);
+				await GrpcClientConfigUtils.StartQaServiceClient(executablePath, configFilePath);
 
 			QaMicroserviceClient = Assert.NotNull(result);
 
@@ -460,7 +480,14 @@ namespace ProSuite.AGP.Solution
 		{
 			try
 			{
-				await ProSuiteToolsModule.StartQAGPServerAsync(ProSuiteQAServiceType.GPService);
+				string specificationName = ProSuiteToolsModule.Current
+				                                              .QualityVerificationEnvironment
+				                                              .CurrentQualitySpecification?.Name;
+
+				if (specificationName != null)
+				{
+					await ProSuiteToolsModule.StartQAGPServerAsync(ProSuiteQAServiceType.GPService, specificationName);
+				}
 			}
 			catch (Exception ex)
 			{
@@ -477,7 +504,15 @@ namespace ProSuite.AGP.Solution
 		{
 			try
 			{
-				await ProSuiteToolsModule.StartQAGPServerAsync(ProSuiteQAServiceType.GPLocal);
+				string specificationName = ProSuiteToolsModule.Current
+				                                              .QualityVerificationEnvironment
+				                                              .CurrentQualitySpecification?.Name;
+
+				if (specificationName != null)
+				{
+					await ProSuiteToolsModule.StartQAGPServerAsync(
+						ProSuiteQAServiceType.GPLocal, specificationName);
+				}
 			}
 			catch (Exception ex)
 			{
@@ -586,41 +621,6 @@ namespace ProSuite.AGP.Solution
 					ProjectItemType.WorkListDefinition,
 					new List<string>() {filePath});
 			});
-		}
-	}
-
-	sealed class QASpecListComboBox : ComboBox
-	{
-		public QASpecListComboBox()
-		{
-			FillCombo();
-			//Enabled = false;
-
-			ProSuiteToolsModule.Current.QualityVerificationEnvironment
-			                   .QualitySpecificationsRefreshed += QualitySpecificationsRefreshed;
-		}
-
-		private void QualitySpecificationsRefreshed(object sender, EventArgs e)
-		{
-			Clear();
-
-			FillCombo();
-		}
-
-		private void FillCombo()
-		{
-			foreach (var qaSpec in ProSuiteToolsModule.QAManager.GetSpecificationNames())
-			{
-				Add(new ComboBoxItem(qaSpec));
-			}
-
-			// Select first item
-			SelectedItem = ItemCollection.FirstOrDefault();
-		}
-
-		protected override void OnSelectionChange(ComboBoxItem item)
-		{
-			ProSuiteToolsModule.CurrentQASpecificationName = item.Text;
 		}
 	}
 

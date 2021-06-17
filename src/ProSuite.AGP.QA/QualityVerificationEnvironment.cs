@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
@@ -10,35 +11,22 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AGP.QA;
-using ProSuite.Microservices.Client.AGP;
+using ProSuite.Microservices.Client.AGP.QA;
 using ProSuite.Microservices.Definitions.QA;
-using ProSuite.Microservices.Definitions.Shared;
 
-namespace ProSuite.AGP.Solution.QA
+namespace ProSuite.AGP.QA
 {
 	public class QualityVerificationEnvironment : IQualityVerificationEnvironment
 	{
-		// TODO: Consider separate project AGP.QA
 		// TODO: Create WorkContext (work unit) based on map content (with or without DDX access)
 		//private readonly IWorkContext _workContext;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private IList<Table> _editableDatasets;
 		private MapView _mapView;
 		private readonly QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient _ddxClient;
 
-		private IList<QualitySpecificationRef> _qualitySpecifications;
-
-		public QualityVerificationEnvironment(
-			//IWorkContext workContext,
-			IList<Table> editableDatasets,
-			QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
-		{
-			//_workContext = workContext;
-			_editableDatasets = editableDatasets;
-			_ddxClient = ddxClient;
-		}
+		private IList<QualitySpecificationReference> _qualitySpecifications;
 
 		public QualityVerificationEnvironment(
 			//IWorkContext workContext,
@@ -46,7 +34,7 @@ namespace ProSuite.AGP.Solution.QA
 			QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
 		{
 			//_workContext = workContext;
-			_editableDatasets = null;
+
 			_mapView = mapView;
 			_ddxClient = ddxClient;
 		}
@@ -74,17 +62,30 @@ namespace ProSuite.AGP.Solution.QA
 		{
 			const string errorMessage = "Error loading quality verifications";
 
+			_mapView = mapView;
+
 			try
 			{
-				_mapView = mapView;
+				if (_mapView == null)
+				{
+					_qualitySpecifications.Clear();
+					SelectCurrentQualitySpecification(_qualitySpecifications);
+					return;
+				}
 
 				Task<bool> task = LoadEntitiesAsync();
 
 				task.ContinueWith(t =>
 				                  {
-					                  foreach (Exception inner in t.Exception.InnerExceptions)
+					                  ReadOnlyCollection<Exception> inners =
+						                  t.Exception?.InnerExceptions;
+
+					                  if (inners != null)
 					                  {
-						                  LogException(errorMessage, inner);
+						                  foreach (Exception inner in inners)
+						                  {
+							                  LogException(errorMessage, inner);
+						                  }
 					                  }
 
 					                  //var aggException = t.Exception?.Flatten();
@@ -111,10 +112,10 @@ namespace ProSuite.AGP.Solution.QA
 		/// </summary>
 		public int LastCurrentSpecificationId { get; set; } = -1;
 
-		public QualitySpecificationRef CurrentQualitySpecification { get; set; }
+		public QualitySpecificationReference CurrentQualitySpecification { get; set; }
 
-		public IList<QualitySpecificationRef> QualitySpecifications =>
-			_qualitySpecifications ?? new List<QualitySpecificationRef>(0);
+		public IList<QualitySpecificationReference> QualitySpecifications =>
+			_qualitySpecifications ?? new List<QualitySpecificationReference>(0);
 
 		public void RefreshQualitySpecifications()
 		{
@@ -123,9 +124,7 @@ namespace ProSuite.AGP.Solution.QA
 
 		public event EventHandler QualitySpecificationsRefreshed;
 
-		internal List<DatasetMsg> Datasets { get; set; }
-
-		internal int ProjectId { get; set; } = -1;
+		public int ProjectId { get; set; } = -1;
 
 		private async Task<bool> LoadEntitiesAsync()
 		{
@@ -134,67 +133,45 @@ namespace ProSuite.AGP.Solution.QA
 				return false;
 			}
 
-			GetProjectWorkspacesRequest request =
-				await QueuedTask.Run(CreateProjectWorkspacesRequest);
+			List<Table> objectClasses =
+				await QueuedTask.Run(() => GetDatasets().ToList());
 
-			if (request.ObjectClasses.Count > 0)
+			List<ProjectWorkspace> projectWorkspaceCandidates =
+				await DdxUtils.GetProjectWorkspaceCandidates(objectClasses, _ddxClient);
+
+			ProjectWorkspace projectWorkspace =
+				projectWorkspaceCandidates.MaxElementOrDefault(p => p.Datasets.Count);
+
+			if (projectWorkspace == null)
 			{
-				var projectWorkspaceMsg = await LoadProjectWorkspaceAsync(request);
-
-				IList<QualitySpecificationRef> result =
-					await LoadSpecificationsRpcAsync(projectWorkspaceMsg.DatasetIds);
-
-				// if there's a current quality specification, check if it is valid
-				if (CurrentQualitySpecification != null &&
-				    ! result.Contains(CurrentQualitySpecification))
-				{
-					CurrentQualitySpecification = null;
-				}
-
-				// if there is no valid current specification, select one 
-				if (CurrentQualitySpecification == null)
-				{
-					SelectCurrentQualitySpecification(result);
-				}
-
-				_qualitySpecifications = result;
-
-				QualitySpecificationsRefreshed?.Invoke(this, EventArgs.Empty);
+				return false;
 			}
+
+			ProjectId = projectWorkspace.ProjectId;
+			//Datasets = projectWorkspace.Datasets.ToList();
+
+			IList<QualitySpecificationReference> result =
+				await DdxUtils.LoadSpecificationsRpcAsync(projectWorkspace.Datasets,
+				                                          IncludeHiddenSpecifications, _ddxClient);
+
+			// if there's a current quality specification, check if it is valid
+			if (CurrentQualitySpecification != null &&
+			    ! result.Contains(CurrentQualitySpecification))
+			{
+				CurrentQualitySpecification = null;
+			}
+
+			// if there is no valid current specification, select one 
+			if (CurrentQualitySpecification == null)
+			{
+				SelectCurrentQualitySpecification(result);
+			}
+
+			_qualitySpecifications = result;
+
+			QualitySpecificationsRefreshed?.Invoke(this, EventArgs.Empty);
 
 			return _qualitySpecifications.Count > 0;
-		}
-
-		private GetProjectWorkspacesRequest CreateProjectWorkspacesRequest()
-		{
-			var request = new GetProjectWorkspacesRequest();
-
-			List<WorkspaceMsg> workspaceMessages = new List<WorkspaceMsg>();
-
-			foreach (Table table in GetDatasets())
-			{
-				ObjectClassMsg objectClassMsg = ProtobufConversionUtils.ToObjectClassMsg(table);
-
-				request.ObjectClasses.Add(objectClassMsg);
-
-				WorkspaceMsg workspaceMsg =
-					workspaceMessages.FirstOrDefault(
-						wm => wm.WorkspaceHandle == objectClassMsg.WorkspaceHandle);
-
-				if (workspaceMsg == null)
-				{
-					using (Datastore datastore = table.GetDatastore())
-					{
-						workspaceMsg = ProtobufConversionUtils.ToWorkspaceRefMsg(datastore);
-
-						workspaceMessages.Add(workspaceMsg);
-					}
-				}
-			}
-
-			request.Workspaces.AddRange(workspaceMessages);
-
-			return request;
 		}
 
 		private IEnumerable<Table> GetDatasets()
@@ -218,68 +195,18 @@ namespace ProSuite.AGP.Solution.QA
 			}
 		}
 
-		private async Task<IList<QualitySpecificationRef>> LoadSpecificationsRpcAsync(
-			[NotNull] IList<int> datasetIds)
-		{
-			GetSpecificationsRequest request = new GetSpecificationsRequest()
-			                                   {
-				                                   IncludeHidden = IncludeHiddenSpecifications
-			                                   };
-
-			request.DatasetIds.AddRange(datasetIds);
-
-			DateTime timeout = GetTimeout();
-
-			GetSpecificationsResponse response =
-				await _ddxClient.GetQualitySpecificationsAsync(request, null, timeout);
-
-			var result = new List<QualitySpecificationRef>();
-
-			foreach (QualitySpecificationRefMsg specificationMsg in response.QualitySpecifications)
-			{
-				var specification =
-					new QualitySpecificationRef(specificationMsg.QualitySpecificationId,
-					                            specificationMsg.Name);
-
-				result.Add(specification);
-			}
-
-			return result;
-		}
-
-		private async Task<ProjectWorkspaceMsg> LoadProjectWorkspaceAsync(
-			[NotNull] GetProjectWorkspacesRequest request)
-		{
-			DateTime timeout = GetTimeout();
-
-			GetProjectWorkspacesResponse response =
-				await _ddxClient.GetProjectWorkspacesAsync(request, null, timeout);
-
-			// TODO: Use the dialog to select one, in case there are several
-			ProjectWorkspaceMsg result =
-				response.ProjectWorkspaces.MaxElementOrDefault(p => p.DatasetIds.Count);
-
-			if (result != null)
-			{
-				ProjectId = result.ProjectId;
-
-				Datasets = response.Datasets.ToList();
-			}
-
-			return result;
-		}
-
 		private void SelectCurrentQualitySpecification(
-			[NotNull] IList<QualitySpecificationRef> qualitySpecifications)
+			[NotNull] IList<QualitySpecificationReference> qualitySpecifications)
 		{
 			Assert.ArgumentNotNull(qualitySpecifications, nameof(qualitySpecifications));
 
 			if (qualitySpecifications.Count == 0)
 			{
+				CurrentQualitySpecification = null;
 				return;
 			}
 
-			QualitySpecificationRef result;
+			QualitySpecificationReference result;
 
 			if (LastCurrentSpecificationId >= 0)
 			{

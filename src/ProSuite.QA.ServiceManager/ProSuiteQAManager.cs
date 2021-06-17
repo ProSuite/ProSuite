@@ -10,7 +10,7 @@ namespace ProSuite.QA.ServiceManager
 {
 	public class ProSuiteQAManager
 	{
-		private static readonly IMsg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		// QA service provider - GP, microservices, mock, REST, ...
 		IEnumerable<IProSuiteQAServiceProvider> _serviceProviders { get; set; }
@@ -20,7 +20,8 @@ namespace ProSuite.QA.ServiceManager
 
 		public event EventHandler<ProSuiteQAServiceEventArgs> OnStatusChanged;
 
-		public ProSuiteQAManager(IEnumerable<IProSuiteQAServiceProvider> availableServices, IQASpecificationProvider specificationsProvider)
+		public ProSuiteQAManager(IEnumerable<IProSuiteQAServiceProvider> availableServices,
+		                         IQASpecificationProvider specificationsProvider)
 		{
 			_serviceProviders = availableServices;
 			foreach (var service in _serviceProviders)
@@ -36,6 +37,8 @@ namespace ProSuite.QA.ServiceManager
 				return _serviceProviders;
 			}
 		}
+
+		public IQASpecificationProvider SpecificationProvider => _specificationsProvider;
 
 		private void Service_OnStatusChanged(object sender, ProSuiteQAServiceEventArgs e)
 		{

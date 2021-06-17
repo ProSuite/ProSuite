@@ -141,9 +141,9 @@
                 keytip="B1">
           <tooltip heading="QA GP Tool">Check QA for local selection<disabledText /></tooltip>
         </button>
-        <comboBox id="ProSuiteTools_QA_SpecsComboBox" caption=" Specification" className="QASpecListComboBox"
+        <comboBox id="ProSuiteTools_QA_SpecsComboBox" caption=" Specification" className="QA.QualitySpecificationsComboBox"
                   itemWidth="90" extendedCaption="Extended Caption" isEditable="false" isReadOnly="true"
-                  resizable="true">
+                  resizable="true" >
           <tooltip heading="Tooltip Heading">QA specifications<disabledText /></tooltip>
         </comboBox>
         <button id="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" caption="Show Log"

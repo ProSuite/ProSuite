@@ -11,13 +11,13 @@ namespace ProSuite.DomainModel.AGP.QA
 		/// </summary>
 		/// <value>The current quality specification.</value>
 		[CanBeNull]
-		QualitySpecificationRef CurrentQualitySpecification { get; set; }
+		QualitySpecificationReference CurrentQualitySpecification { get; set; }
 
 		/// <summary>
 		/// The list of applicable quality specifications for the current environment.
 		/// </summary>
 		[NotNull]
-		IList<QualitySpecificationRef> QualitySpecifications { get; }
+		IList<QualitySpecificationReference> QualitySpecifications { get; }
 
 		/// <summary>
 		/// Refresh the list of quality verifications.

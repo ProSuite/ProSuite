@@ -78,6 +78,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.CartoTrials", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.DomainModel.AGP", "ProSuite.DomainModel.AGP\ProSuite.DomainModel.AGP.csproj", "{824DDBE3-EDAF-460B-B513-386A4260C1FF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.AGP.QA", "ProSuite.AGP.QA\ProSuite.AGP.QA.csproj", "{1745D9A7-BF58-414E-A840-6A3EE1847FE0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -210,6 +212,10 @@ Global
 		{824DDBE3-EDAF-460B-B513-386A4260C1FF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{824DDBE3-EDAF-460B-B513-386A4260C1FF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{824DDBE3-EDAF-460B-B513-386A4260C1FF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1745D9A7-BF58-414E-A840-6A3EE1847FE0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1745D9A7-BF58-414E-A840-6A3EE1847FE0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1745D9A7-BF58-414E-A840-6A3EE1847FE0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1745D9A7-BF58-414E-A840-6A3EE1847FE0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
