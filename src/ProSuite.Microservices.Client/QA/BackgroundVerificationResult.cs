@@ -68,6 +68,11 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			if (_qualityVerification == null)
 			{
+				if (_domainTransactions == null)
+				{
+					return null;
+				}
+
 				_domainTransactions.UseTransaction(
 					() =>
 					{
