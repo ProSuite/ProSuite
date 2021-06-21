@@ -87,8 +87,10 @@
     <Compile Include="GrpcClientConfigUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProtobufConversionUtils.cs" />
+    <Compile Include="QA\ClientIssueMessageCollector.cs" />
     <Compile Include="QA\DdxUtils.cs" />
     <Compile Include="QA\ProjectWorkspace.cs" />
+    <Compile Include="QA\QAUtils.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">

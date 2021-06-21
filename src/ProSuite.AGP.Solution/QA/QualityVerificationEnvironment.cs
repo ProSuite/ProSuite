@@ -1,42 +1,53 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Progress;
 using ProSuite.DomainModel.AGP.QA;
+using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.Microservices.Client.AGP.QA;
+using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
 
-namespace ProSuite.AGP.QA
+namespace ProSuite.AGP.Solution.QA
 {
 	public class QualityVerificationEnvironment : IQualityVerificationEnvironment
 	{
 		// TODO: Create WorkContext (work unit) based on map content (with or without DDX access)
 		//private readonly IWorkContext _workContext;
 
+		private const string _contextTypeWorkUnit = "Work Unit";
+		private const string _contextTypePerimeter = "Perimeter";
+
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private MapView _mapView;
-		private readonly QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient _ddxClient;
+		private readonly QualityVerificationServiceClient _client;
+		private readonly string _verificationOutputDirectory;
 
 		private IList<QualitySpecificationReference> _qualitySpecifications;
 
 		public QualityVerificationEnvironment(
 			//IWorkContext workContext,
 			MapView mapView,
-			QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
+			QualityVerificationServiceClient client,
+			string verificationOutputDirectory)
 		{
 			//_workContext = workContext;
 
 			_mapView = mapView;
-			_ddxClient = ddxClient;
+			_client = client;
+			_verificationOutputDirectory = verificationOutputDirectory;
 		}
 
 		// TODO: Handle layer added event, if current project workspace is null, load entities
@@ -68,7 +79,7 @@ namespace ProSuite.AGP.QA
 			{
 				if (_mapView == null)
 				{
-					_qualitySpecifications.Clear();
+					_qualitySpecifications?.Clear();
 					SelectCurrentQualitySpecification(_qualitySpecifications);
 					return;
 				}
@@ -107,6 +118,8 @@ namespace ProSuite.AGP.QA
 
 		private bool IncludeHiddenSpecifications { get; set; }
 
+		private ProjectWorkspace ProjectWorkspace { get; set; }
+
 		/// <summary>
 		/// The last current quality specification. This can be used to restore the state of the UI.
 		/// </summary>
@@ -124,6 +137,45 @@ namespace ProSuite.AGP.QA
 
 		public event EventHandler QualitySpecificationsRefreshed;
 
+		public string BackendDisplayName => _client.HostName;
+
+		public async Task<ServiceCallStatus> VerifyExtent(
+			Envelope extent,
+			QualityVerificationProgressTracker progress,
+			[CanBeNull] string resultsPath)
+		{
+			QualitySpecificationReference specification =
+				Assert.NotNull(CurrentQualitySpecification);
+
+			VerificationRequest request =
+				await QueuedTask.Run(
+					() => QAUtils.CreateRequest(ProjectWorkspace, _contextTypePerimeter, "map name",
+					                            specification, extent));
+
+			if (! string.IsNullOrEmpty(resultsPath))
+			{
+				string htmlReport = Path.Combine(resultsPath, Constants.HtmlReportName);
+				string xmlReport = Path.Combine(resultsPath, Constants.VerificationReportName);
+				string gdbDir = Path.Combine(resultsPath, "issues.gdb");
+
+				request.Parameters.HtmlReportPath = htmlReport;
+				request.Parameters.VerificationReportPath = xmlReport;
+				request.Parameters.IssueFileGdbPath = gdbDir;
+			}
+
+			QAUtils.SetVerificationParameters(
+				request, GetTileSize(ProjectWorkspace), false, true,
+				false);
+
+			return await QAUtils.Verify(Assert.NotNull(_client.QaClient), request, progress);
+		}
+
+		private double GetTileSize(ProjectWorkspace projectWorkspace)
+		{
+			// TODO
+			return -1;
+		}
+
 		public int ProjectId { get; set; } = -1;
 
 		private async Task<bool> LoadEntitiesAsync()
@@ -137,22 +189,24 @@ namespace ProSuite.AGP.QA
 				await QueuedTask.Run(() => GetDatasets().ToList());
 
 			List<ProjectWorkspace> projectWorkspaceCandidates =
-				await DdxUtils.GetProjectWorkspaceCandidates(objectClasses, _ddxClient);
+				await DdxUtils.GetProjectWorkspaceCandidates(
+					objectClasses, Assert.NotNull(_client.DdxClient));
 
-			ProjectWorkspace projectWorkspace =
+			ProjectWorkspace =
 				projectWorkspaceCandidates.MaxElementOrDefault(p => p.Datasets.Count);
 
-			if (projectWorkspace == null)
+			if (ProjectWorkspace == null)
 			{
 				return false;
 			}
 
-			ProjectId = projectWorkspace.ProjectId;
+			ProjectId = ProjectWorkspace.ProjectId;
 			//Datasets = projectWorkspace.Datasets.ToList();
 
 			IList<QualitySpecificationReference> result =
-				await DdxUtils.LoadSpecificationsRpcAsync(projectWorkspace.Datasets,
-				                                          IncludeHiddenSpecifications, _ddxClient);
+				await DdxUtils.LoadSpecificationsRpcAsync(ProjectWorkspace.Datasets,
+				                                          IncludeHiddenSpecifications,
+				                                          Assert.NotNull(_client.DdxClient));
 
 			// if there's a current quality specification, check if it is valid
 			if (CurrentQualitySpecification != null &&
@@ -196,11 +250,9 @@ namespace ProSuite.AGP.QA
 		}
 
 		private void SelectCurrentQualitySpecification(
-			[NotNull] IList<QualitySpecificationReference> qualitySpecifications)
+			[CanBeNull] IList<QualitySpecificationReference> qualitySpecifications)
 		{
-			Assert.ArgumentNotNull(qualitySpecifications, nameof(qualitySpecifications));
-
-			if (qualitySpecifications.Count == 0)
+			if (qualitySpecifications == null || qualitySpecifications.Count == 0)
 			{
 				CurrentQualitySpecification = null;
 				return;

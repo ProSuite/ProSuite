@@ -18,5 +18,18 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		public int ProjectId { get; }
 		public IList<int> Datasets { get; }
 		public Datastore Workspace { get; }
+
+		public string GetVersionName()
+		{
+			if (Workspace is Geodatabase geodatabase &&
+			    geodatabase.IsVersioningSupported())
+			{
+				VersionManager versionManager = geodatabase.GetVersionManager();
+
+				return versionManager.GetCurrentVersion().GetName();
+			}
+
+			return null;
+		}
 	}
 }

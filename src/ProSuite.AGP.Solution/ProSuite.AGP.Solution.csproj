@@ -108,6 +108,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Constants.cs" />
     <Compile Include="Editing\AdvancedReshapeTool.cs" />
     <Compile Include="Editing\CutAlongTool.cs" />
     <Compile Include="Editing\ReshapeAlongTool.cs" />
@@ -148,6 +149,11 @@
     <Compile Include="ProjectItem\WorklistItem.cs" />
     <Compile Include="ProjectItem\WorklistsContainer.cs" />
     <Compile Include="QA\QualitySpecificationsComboBox.cs" />
+    <Compile Include="QA\QualityVerificationEnvironment.cs" />
+    <Compile Include="QA\VerifyVisibleExtentCmd.cs" />
+    <Compile Include="QA\VerificationProgressWindow.xaml.cs">
+      <DependentUpon>VerificationProgressWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="QA\XmlVerificationEnvironment.cs" />
     <Compile Include="Resource.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -220,6 +226,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="LoggerUI\ProSuiteLogPane.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="QA\VerificationProgressWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -341,6 +351,10 @@
       <Project>{a227d52c-0536-498f-acf2-2a5a67c3d9ff}</Project>
       <Name>ProSuite.Commons.Logging</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.UI\ProSuite.Commons.UI.csproj">
+      <Project>{fda8452c-41f0-404c-a17d-fba8cb56b935}</Project>
+      <Name>ProSuite.Commons.UI</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
       <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
       <Name>ProSuite.Commons</Name>
@@ -348,6 +362,10 @@
     <ProjectReference Include="..\ProSuite.DomainModel.AGP\ProSuite.DomainModel.AGP.csproj">
       <Project>{824DDBE3-EDAF-460B-B513-386A4260C1FF}</Project>
       <Name>ProSuite.DomainModel.AGP</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
+      <Project>{0B48B56F-3A3D-4367-AA76-A356519AF2AB}</Project>
+      <Name>ProSuite.DomainModel.Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.Microservices.Client.AGP\ProSuite.Microservices.Client.AGP.csproj">
       <Project>{5D500C94-FF3A-4BC8-8EDB-3A7177898B81}</Project>
@@ -364,6 +382,10 @@
     <ProjectReference Include="..\ProSuite.QA.ServiceManager\ProSuite.QA.ServiceManager.csproj">
       <Project>{A3BCF206-8C54-490A-8F5F-1C3C68EBB208}</Project>
       <Name>ProSuite.QA.ServiceManager</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.UI\ProSuite.UI.csproj">
+      <Project>{44C24B7C-FFD8-4968-95A0-9D3C7C77861B}</Project>
+      <Name>ProSuite.UI</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -487,7 +509,12 @@
     <AddInContent Include="Images\CutPolygonAlongTool16.png" />
     <AddInContent Include="Images\CutPolygonAlongTool32.png" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <AddInContent Include="Images\VerifyVisibleExtentCmd16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\VerifyVisibleExtentCmd32.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--
   PackageAction can be:

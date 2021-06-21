@@ -40,17 +40,27 @@ namespace ProSuite.Microservices.Client.QA
 			[NotNull] IQualityVerificationRepository qualityVerificationRepository,
 			[NotNull] IQualityConditionRepository qualityConditionRepository,
 			CancellationTokenSource cancellationTokenSource)
+			: this(verificationRequest, domainTransactions, qualityVerificationRepository,
+			       qualityConditionRepository,
+			       new QualityVerificationProgressTracker
+			       {
+				       CancellationTokenSource = cancellationTokenSource
+			       }) { }
+
+		public BackgroundVerificationRun(
+			[NotNull] VerificationRequest verificationRequest,
+			[NotNull] IDomainTransactionManager domainTransactions,
+			[NotNull] IQualityVerificationRepository qualityVerificationRepository,
+			[NotNull] IQualityConditionRepository qualityConditionRepository,
+			QualityVerificationProgressTracker progress)
 		{
 			VerificationRequest = verificationRequest;
 			_domainTransactions = domainTransactions;
 			_qualityVerificationRepository = qualityVerificationRepository;
 			_qualityConditionRepository = qualityConditionRepository;
-			_cancellationTokenSource = cancellationTokenSource;
+			_cancellationTokenSource = progress.CancellationTokenSource;
 
-			Progress = new QualityVerificationProgressTracker
-			           {
-				           CancellationTokenSource = cancellationTokenSource
-			           };
+			Progress = progress;
 		}
 
 		[NotNull]

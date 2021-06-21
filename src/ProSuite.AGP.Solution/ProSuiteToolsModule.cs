@@ -13,7 +13,6 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
-using ProSuite.AGP.QA;
 using ProSuite.AGP.Solution.ConfigUI;
 using ProSuite.AGP.Solution.LoggerUI;
 using ProSuite.AGP.Solution.ProjectItem;
@@ -111,7 +110,7 @@ namespace ProSuite.AGP.Solution
 				UpdateServiceUI(_qaProjectItem);
 			}
 		}
-		
+
 		private static ProSuiteToolsModule _this = null;
 
 		private static IMsg msg = null;
@@ -315,7 +314,8 @@ namespace ProSuite.AGP.Solution
 
 		#endregion
 
-		internal static async Task StartQAGPServerAsync(ProSuiteQAServiceType type, string specificationName)
+		internal static async Task StartQAGPServerAsync(ProSuiteQAServiceType type,
+		                                                string specificationName)
 		{
 			_msg.Info($"StartQAGPServerAsync is called");
 
@@ -393,10 +393,16 @@ namespace ProSuite.AGP.Solution
 
 			QualityVerificationServiceClient client = await StartQaMicroserviceClientAsync();
 
-			_ddxVerificationEnvironment =
-				new QualityVerificationEnvironment(MapView.Active, client.DdxClient);
+			// TODO: From configuration:
+			string verificationOutputDirectory =
+				Path.Combine(Project.Current.HomeFolderPath, "Verifications");
 
-			ActiveMapViewChangedEvent.Subscribe(e => _ddxVerificationEnvironment.MapViewChanged(e.IncomingView));
+			_ddxVerificationEnvironment =
+				new QualityVerificationEnvironment(MapView.Active, client,
+				                                   verificationOutputDirectory);
+
+			ActiveMapViewChangedEvent.Subscribe(
+				e => _ddxVerificationEnvironment.MapViewChanged(e.IncomingView));
 
 			// This event is never fired:
 			// LayersAddedEvent.Subscribe(e => qaEnvironment.MapLayersChanged(e.Layers));
@@ -486,7 +492,8 @@ namespace ProSuite.AGP.Solution
 
 				if (specificationName != null)
 				{
-					await ProSuiteToolsModule.StartQAGPServerAsync(ProSuiteQAServiceType.GPService, specificationName);
+					await ProSuiteToolsModule.StartQAGPServerAsync(
+						ProSuiteQAServiceType.GPService, specificationName);
 				}
 			}
 			catch (Exception ex)

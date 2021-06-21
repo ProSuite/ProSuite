@@ -37,7 +37,8 @@
           </filterFlags>
         </content>
       </insertComponent>
-      <insertComponent id="Worklist_SelectionWorklistItem" className="ProSuite.AGP.Solution.ProjectItem.SelectionWorklistItem"
+      <insertComponent id="Worklist_SelectionWorklistItem"
+                       className="ProSuite.AGP.Solution.ProjectItem.SelectionWorklistItem"
                        containerType="ProSuite.AGP.Solution.ProjectItem.WorklistsContainer">
         <content displayName="Selection Work List" fileExtension="swl" isContainer="false" keywords="work list"
                  contextMenuID="ProSuiteSolution_ProjectItemWorkListContextMenu">
@@ -89,12 +90,14 @@
           <button refID="ProSuiteTools_QA_StartGPServer" size="middle" />
           <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
+          <button refID="ProSuite_AGP_Solution_QA_VerifyVisibleExtentCmd" size="small" />
           <button refID="WorkLists_CreateIssueWorkList" size="large" />
           <!--<button refID="Clients_AGP_ProSuiteSolution_AddWorkList" size="large" />-->
         </group>
         <group id="ProSuiteTools_QA_Hidden" caption="" appearsOnAddInTab="false">
           <button refID="Clients_AGP_ProSuiteSolution_WorkLists_AddWorklistButton" />
           <button refID="ProSuite_AGP_Solution_WorkListUI_IssueWorkListView" size="large" />
+          
         </group>
         <group id="ProSuiteTools_Editing" caption="Edit Tools" keytip="G1">
           <tool refID="ProSuiteTools_Editing_EraseTool" size="small" />
@@ -141,9 +144,9 @@
                 keytip="B1">
           <tooltip heading="QA GP Tool">Check QA for local selection<disabledText /></tooltip>
         </button>
-        <comboBox id="ProSuiteTools_QA_SpecsComboBox" caption=" Specification" className="QA.QualitySpecificationsComboBox"
-                  itemWidth="90" extendedCaption="Extended Caption" isEditable="false" isReadOnly="true"
-                  resizable="true" >
+        <comboBox id="ProSuiteTools_QA_SpecsComboBox" caption=" Specification"
+                  className="QA.QualitySpecificationsComboBox" itemWidth="90" extendedCaption="Extended Caption"
+                  isEditable="false" isReadOnly="true" resizable="true" rows="32">
           <tooltip heading="Tooltip Heading">QA specifications<disabledText /></tooltip>
         </comboBox>
         <button id="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" caption="Show Log"
@@ -160,17 +163,19 @@
             Import and add worklist file(wl) to project<disabledText />
           </tooltip>
         </button>-->
-        <button id="Clients_AGP_ProSuiteSolution_WorkLists_AddWorklistButton" caption="Add Work List To Current Map" className="WorkLists.AddWorklistButton"
-                loadOnClick="true"
+        <button id="Clients_AGP_ProSuiteSolution_WorkLists_AddWorklistButton" caption="Add Work List To Current Map"
+                className="WorkLists.AddWorklistButton" loadOnClick="true"
                 smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/AddContent16.png"
                 largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/AddContent32.png">
-          <tooltip heading="Add Work List To Current Map">Add work list to the active map and open navigator.<disabledText />
+          <tooltip heading="Add Work List To Current Map">
+            Add work list to the active map and open navigator.
+            <disabledText />
           </tooltip>
         </button>
         <button id="WorkLists_CreateSelectionWorkList" caption="Show Selection Work List"
-                className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true" 
+                className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true"
                 condition="esri_mapping_activeMapView_hasFeatureSelectionCondition"
-                smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateSelectionCmd16.png" 
+                smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateSelectionCmd16.png"
                 largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateSelectionCmd32.png">
           <tooltip heading="Show Selection Work List">
             Show Selection Work List for iterating on selected items
@@ -178,8 +183,7 @@
           </tooltip>
         </button>
         <button id="WorkLists_CreateIssueWorkList" caption="Show Issue Work List"
-                className="WorkLists.CreateIssueWorkListButton" loadOnClick="true"
-                condition="esri_mapping_mapPane"
+                className="WorkLists.CreateIssueWorkListButton" loadOnClick="true" condition="esri_mapping_mapPane"
                 smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateErrorsCmd16.png"
                 largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateErrorsCmd32.png">
           <tooltip heading="Show Issue Work List">
@@ -211,8 +215,8 @@
             <disabledText />
           </tooltip>
         </tool>
-        <tool id="ProSuiteTools_Editing_CutAlongTool" caption="CutAlongTool"
-              className="Editing.CutAlongTool" loadOnClick="true" smallImage="Images\CutPolygonAlongTool16.png"
+        <tool id="ProSuiteTools_Editing_CutAlongTool" caption="CutAlongTool" className="Editing.CutAlongTool"
+              loadOnClick="true" smallImage="Images\CutPolygonAlongTool16.png"
               largeImage="Images\CutPolygonAlongTool32.png" condition="esri_mapping_mapPane">
           <tooltip heading="Cut Along Tool">
             Cut along
@@ -220,22 +224,21 @@
           </tooltip>
         </tool>
         <tool id="ProSuiteTools_Editing_AdvancedReshapeTool" caption="AdvancedReshapeTool"
-              className="Editing.AdvancedReshapeTool" loadOnClick="true"
-              smallImage="Images\AdvancedReshapeTool16.png" largeImage="Images\AdvancedReshapeTool32.png"
-              condition="esri_mapping_mapPane">
+              className="Editing.AdvancedReshapeTool" loadOnClick="true" smallImage="Images\AdvancedReshapeTool16.png"
+              largeImage="Images\AdvancedReshapeTool32.png" condition="esri_mapping_mapPane">
           <tooltip heading="Advanced Reshape" image="Images\AdvancedReshapeToolTip.png">
-Reshape line or polygon feature(s) with advanced options.
+            Reshape line or polygon feature(s) with advanced options.
 
-1. Select feature(s) to reshape
-2. Create the sketch to replaces the segments between intersection points
+            1. Select feature(s) to reshape
+            2. Create the sketch to replaces the segments between intersection points
 
-Shortcuts:
-ESC: Return to selection phase
-R: Reload previous sketch
-S: Use non-default reshape side
-M: Toggle end-junction move in Y-reshape
-N: Target intersection in multi-reshape
-O: Additional options
+            Shortcuts:
+            ESC: Return to selection phase
+            R: Reload previous sketch
+            S: Use non-default reshape side
+            M: Toggle end-junction move in Y-reshape
+            N: Target intersection in multi-reshape
+            O: Additional options
             <disabledText />
           </tooltip>
         </tool>
@@ -246,8 +249,8 @@ O: Additional options
             Select features for use with the selection worklist<disabledText />
           </tooltip>
         </tool>
-        <tool id="ProSuiteTools_PickWorkListItemTool" caption="Picker Tool"
-              className="Selection.PickWorkListItemTool" loadOnClick="true"
+        <tool id="ProSuiteTools_PickWorkListItemTool" caption="Picker Tool" className="Selection.PickWorkListItemTool"
+              loadOnClick="true"
               smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png"
               largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png"
               condition="esri_mapping_mapPane">
@@ -261,12 +264,19 @@ O: Additional options
                 largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
           <tooltip heading="Tooltip Heading">Tooltip text<disabledText /></tooltip>
         </button>
+        <button id="ProSuite_AGP_Solution_QA_VerifyVisibleExtentCmd" caption="Verify Extent"
+                className="ProSuite.AGP.Solution.QA.VerifyVisibleExtentCmd" loadOnClick="true"
+                smallImage="Images\VerifyVisibleExtentCmd16.png" largeImage="Images\VerifyVisibleExtentCmd32.png">
+          <tooltip heading="Verify Visible Extent">
+            Verifies the visible extent based on the selected quality specification<disabledText />
+          </tooltip>
+        </button>
         <button id="WorkLists_ShowWorkListsButton" caption="Open Work List" className="WorkLists.ShowWorkListsButton"
                 loadOnClick="true" condition="esri_mapping_mapPane"
                 smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd16.png"
                 largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd32.png">
           <tooltip heading="Show Work Lists for present Work List Layers in TOC">
-						<disabledText>No active map.</disabledText>
+            <disabledText>No active map.</disabledText>
           </tooltip>
         </button>
       </controls>

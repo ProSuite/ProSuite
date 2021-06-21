@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using ArcGIS.Core.Geometry;
+using ProSuite.Commons.Progress;
 using ProSuite.DomainModel.AGP.QA;
+using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.QA.ServiceManager.Interfaces;
 
 namespace ProSuite.AGP.Solution.QA
@@ -29,6 +33,20 @@ namespace ProSuite.AGP.Solution.QA
 		}
 
 		public event EventHandler QualitySpecificationsRefreshed;
+
+		public string BackendDisplayName { get; }
+
+		public Task<ServiceCallStatus> VerifyExtent(Envelope extent,
+		                                            QualityVerificationProgressTracker progress,
+		                                            string resultsPath)
+		{
+			throw new NotImplementedException();
+		}
+
+		public Task<ServiceCallStatus> VerifyExtent(Envelope extent)
+		{
+			throw new NotImplementedException();
+		}
 
 		private void GetSpecifications()
 		{

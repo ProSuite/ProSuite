@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Progress;
+using ProSuite.DomainModel.Core.QA.VerificationProgress;
 
 namespace ProSuite.DomainModel.AGP.QA
 {
@@ -28,5 +32,11 @@ namespace ProSuite.DomainModel.AGP.QA
 		/// Occurs after the list of quality specifications was refreshed.
 		/// </summary>
 		event EventHandler QualitySpecificationsRefreshed;
+
+		string BackendDisplayName { get; }
+
+		Task<ServiceCallStatus> VerifyExtent([NotNull] Envelope extent,
+		                                     [NotNull] QualityVerificationProgressTracker progress,
+		                                     string resultsPath);
 	}
 }
