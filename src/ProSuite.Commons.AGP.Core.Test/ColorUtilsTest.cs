@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading;
+using ArcGIS.Core.CIM;
 using NUnit.Framework;
 using ProSuite.Commons.AGP.Core.Carto;
 
@@ -144,6 +145,22 @@ namespace ProSuite.Commons.AGP.Test
 			AssertRGB(0, 128, 128, r, g, b, "teal");
 		}
 
+		private readonly string _orangeRedHexRgb = "#FF4500";
+		private readonly string _sandyBrownHexRgb = "#F4A460";
+		private readonly string _sandyBrownHexArgb = "#FFF4A460";
+		private readonly string _paleGreenHexArgb = "#FF98FB98";
+
+		[Test]
+		public void CanParseHexRgb()
+		{
+			CIMRGBColor orangeRed = ColorUtils.ParseHexColor(_orangeRedHexRgb);
+			CIMRGBColor sandyBrown = ColorUtils.ParseHexColor(_sandyBrownHexRgb);
+
+			AssertRGB(255, 69, 0, orangeRed.R, orangeRed.G, orangeRed.B,
+			          nameof(orangeRed));
+			AssertRGB(244, 164, 96, sandyBrown.R, sandyBrown.G, sandyBrown.B,
+			          nameof(sandyBrown));
+		}
 		private static void AssertRGB(float rx, float gx, float bx, float ra, float ga, float ba, string name)
 		{
 			const double delta = 0.501; // allow rounding to integers
