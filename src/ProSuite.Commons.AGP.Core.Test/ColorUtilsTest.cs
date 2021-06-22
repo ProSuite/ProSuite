@@ -153,8 +153,8 @@ namespace ProSuite.Commons.AGP.Test
 		[Test]
 		public void CanParseHexRgb()
 		{
-			CIMRGBColor orangeRed = ColorUtils.ParseHexColor(_orangeRedHexRgb);
-			CIMRGBColor sandyBrown = ColorUtils.ParseHexColor(_sandyBrownHexRgb);
+			CIMRGBColor orangeRed = ColorUtils.ParseHexColorRGB(_orangeRedHexRgb);
+			CIMRGBColor sandyBrown = ColorUtils.ParseHexColorRGB(_sandyBrownHexRgb);
 
 			AssertRGB(255, 69, 0, orangeRed.R, orangeRed.G, orangeRed.B,
 			          nameof(orangeRed));
