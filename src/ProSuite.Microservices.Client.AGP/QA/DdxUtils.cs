@@ -9,6 +9,8 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AGP.QA;
+using ProSuite.DomainModel.AGP.Workflow;
+using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
 
@@ -47,25 +49,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			return candidates;
 		}
 
-		private static void AddSpatialReferences(ICollection<Table> objectClasses,
-		                                         Dictionary<long, SpatialReference>
-			                                         spatialReferencesByWkId)
-		{
-			foreach (Table objectClass in objectClasses)
-			{
-				if (objectClass is FeatureClass featureClass)
-				{
-					SpatialReference sr = DatasetUtils.GetSpatialReference(featureClass);
-
-					if (! spatialReferencesByWkId.ContainsKey(sr.Wkid))
-					{
-						spatialReferencesByWkId.Add(sr.Wkid, sr);
-					}
-				}
-			}
-		}
-
-		public static async Task<IList<QualitySpecificationReference>> LoadSpecificationsRpcAsync(
+		public static async Task<IList<IQualitySpecificationReference>> LoadSpecificationsRpcAsync(
 			[NotNull] IList<int> datasetIds,
 			bool includeHiddenSpecifications,
 			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
@@ -82,7 +66,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			GetSpecificationsResponse response =
 				await ddxClient.GetQualitySpecificationsAsync(request, null, timeout);
 
-			var result = new List<QualitySpecificationReference>();
+			var result = new List<IQualitySpecificationReference>();
 
 			foreach (QualitySpecificationRefMsg specificationMsg in response.QualitySpecifications)
 			{
@@ -202,6 +186,24 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				if (! datastoresByHandle.ContainsKey(handle))
 				{
 					datastoresByHandle.Add(handle, datastore);
+				}
+			}
+		}
+
+		private static void AddSpatialReferences(ICollection<Table> objectClasses,
+		                                         Dictionary<long, SpatialReference>
+			                                         spatialReferencesByWkId)
+		{
+			foreach (Table objectClass in objectClasses)
+			{
+				if (objectClass is FeatureClass featureClass)
+				{
+					SpatialReference sr = DatasetUtils.GetSpatialReference(featureClass);
+
+					if (! spatialReferencesByWkId.ContainsKey(sr.Wkid))
+					{
+						spatialReferencesByWkId.Add(sr.Wkid, sr);
+					}
 				}
 			}
 		}

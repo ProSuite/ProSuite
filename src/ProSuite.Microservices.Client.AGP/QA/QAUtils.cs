@@ -5,6 +5,7 @@ using ProSuite.Commons;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Progress;
 using ProSuite.DomainModel.AGP.QA;
+using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.Microservices.Client.QA;

@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Progress;
+using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 
 namespace ProSuite.DomainModel.AGP.QA
@@ -15,13 +16,13 @@ namespace ProSuite.DomainModel.AGP.QA
 		/// </summary>
 		/// <value>The current quality specification.</value>
 		[CanBeNull]
-		QualitySpecificationReference CurrentQualitySpecification { get; set; }
+		IQualitySpecificationReference CurrentQualitySpecification { get; set; }
 
 		/// <summary>
 		/// The list of applicable quality specifications for the current environment.
 		/// </summary>
 		[NotNull]
-		IList<QualitySpecificationReference> QualitySpecifications { get; }
+		IList<IQualitySpecificationReference> QualitySpecifications { get; }
 
 		/// <summary>
 		/// Refresh the list of quality verifications.
@@ -33,13 +34,10 @@ namespace ProSuite.DomainModel.AGP.QA
 		/// </summary>
 		event EventHandler QualitySpecificationsRefreshed;
 
-		string BackendDisplayName { get; }
-
 		/// <summary>
-		/// The verified data model's spatial reference, i.e. the spatial reference
-		/// in which the verification is executed.
+		/// Display name of the backend, such as 'localhost'
 		/// </summary>
-		SpatialReference SpatialReference { get; }
+		string BackendDisplayName { get; }
 
 		Task<ServiceCallStatus> VerifyExtent([NotNull] Envelope extent,
 		                                     [NotNull] QualityVerificationProgressTracker progress,

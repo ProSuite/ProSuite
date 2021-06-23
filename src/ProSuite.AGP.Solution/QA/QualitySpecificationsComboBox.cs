@@ -1,13 +1,13 @@
 using ProSuite.AGP.QA.ProPlugins;
-using ProSuite.DomainModel.AGP.QA;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.AGP.Workflow;
 
 namespace ProSuite.AGP.Solution.QA
 {
-	sealed class QualitySpecificationsComboBox : QualitySpecificationsComboBoxBase
+	[UsedImplicitly]
+	internal sealed class QualitySpecificationsComboBox : QualitySpecificationsComboBoxBase
 	{
-		public QualitySpecificationsComboBox() : base() { }
-
-		protected override IQualityVerificationEnvironment QualityVerificationEnvironment =>
-			ProSuiteToolsModule.Current.QualityVerificationEnvironment;
+		protected override IMapBasedSessionContext SessionContext =>
+			ProSuiteToolsModule.Current.SessionContext;
 	}
 }

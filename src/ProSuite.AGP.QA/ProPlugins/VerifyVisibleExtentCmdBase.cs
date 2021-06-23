@@ -9,10 +9,14 @@ using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.QA.VerificationProgress;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
+using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.DomainModel.AGP.QA;
+using ProSuite.DomainModel.AGP.Workflow;
+using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.UI.QA.VerificationProgress;
 
@@ -20,14 +24,22 @@ namespace ProSuite.AGP.QA.ProPlugins
 {
 	public abstract class VerifyVisibleExtentCmdBase : Button
 	{
-		protected abstract IQualityVerificationEnvironment QualityVerificationEnvironment { get; }
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		protected abstract IMapBasedSessionContext SessionContext { get; }
 
 		protected abstract Window CreateProgressWindow(
 			VerificationProgressViewModel progressViewModel);
 
 		protected override void OnClick()
 		{
-			if (QualityVerificationEnvironment.CurrentQualitySpecification == null)
+			IQualityVerificationEnvironment qaEnvironment =
+				Assert.NotNull(SessionContext.VerificationEnvironment);
+
+			IQualitySpecificationReference qualitySpecification =
+				qaEnvironment.CurrentQualitySpecification;
+
+			if (qualitySpecification == null)
 			{
 				MessageBox.Show("No Quality Specification is selected", "Verify Extent",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
@@ -43,15 +55,13 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			Envelope currentExtent = MapView.Active.Extent;
 
-			string resultsPath =
-				GetResultsPath(QualityVerificationEnvironment.CurrentQualitySpecification,
-				               Project.Current.HomeFolderPath);
+			string resultsPath = GetResultsPath(qualitySpecification,
+			                                    Project.Current.HomeFolderPath);
 
-			string htmlReport = Path.Combine(resultsPath, HtmlReportName);
+			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
 			var appController = new AgpBackgroundVerificationController(
-				MapView.Active, currentExtent,
-				QualityVerificationEnvironment.SpatialReference);
+				MapView.Active, currentExtent, spatialRef);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel
@@ -60,20 +70,20 @@ namespace ProSuite.AGP.QA.ProPlugins
 					VerificationAction = () => Verify(currentExtent, progressTracker, resultsPath),
 					ApplicationController = appController
 				};
-			
+
 			Window window = CreateProgressWindow(qaProgressViewmodel);
 
 			string actionTitle = "Verify Visible Extent";
 
-			window.Title = $"{actionTitle} ({QualityVerificationEnvironment.BackendDisplayName})";
+			_msg.InfoFormat("{0}: {1}", qualitySpecification.Name, actionTitle);
+
+			window.Title = $"{actionTitle} ({qaEnvironment.BackendDisplayName})";
 
 			window.Show();
 		}
 
-		protected abstract string HtmlReportName { get; }
-
 		private static string GetResultsPath(
-			[NotNull] QualitySpecificationReference qualitySpecification,
+			[NotNull] IQualitySpecificationReference qualitySpecification,
 			[NotNull] string outputFolderPath)
 		{
 			string specificationName =
@@ -96,8 +106,16 @@ namespace ProSuite.AGP.QA.ProPlugins
 		{
 			Task<ServiceCallStatus> verificationTask =
 				await BackgroundTask.Run(
-					() => QualityVerificationEnvironment.VerifyExtent(
-						currentExtent, progressTracker, resultsPath),
+					() =>
+					{
+						IQualityVerificationEnvironment qaEnvironment =
+							SessionContext.VerificationEnvironment;
+
+						Assert.NotNull(qaEnvironment);
+
+						return qaEnvironment.VerifyExtent(
+							currentExtent, progressTracker, resultsPath);
+					},
 					BackgroundProgressor.None);
 
 			return await verificationTask;

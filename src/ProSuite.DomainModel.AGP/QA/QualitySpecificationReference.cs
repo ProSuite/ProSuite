@@ -1,6 +1,8 @@
+using ProSuite.DomainModel.Core.QA;
+
 namespace ProSuite.DomainModel.AGP.QA
 {
-	public class QualitySpecificationReference
+	public class QualitySpecificationReference : IQualitySpecificationReference
 	{
 		public string Name { get; }
 		public int Id { get; }
@@ -42,6 +44,16 @@ namespace ProSuite.DomainModel.AGP.QA
 			{
 				return (Id * 397) ^ (Name != null ? Name.GetHashCode() : 0);
 			}
+		}
+
+		public bool Equals(IQualitySpecificationReference other)
+		{
+			if (other is QualitySpecificationReference otherSpecificationReference)
+			{
+				return Equals(otherSpecificationReference);
+			}
+
+			return false;
 		}
 
 		public override string ToString()

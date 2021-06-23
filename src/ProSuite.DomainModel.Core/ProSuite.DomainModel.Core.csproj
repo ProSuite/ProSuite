@@ -150,6 +150,8 @@
     <Compile Include="QA\ErrorDeletionInPerimeter.cs" />
     <Compile Include="QA\Html\HtmlDataQualityCategoryOptions.cs" />
     <Compile Include="QA\Html\IHtmlDataQualityCategoryOptionsProvider.cs" />
+    <Compile Include="QA\IQualitySpecificationReference.cs" />
+    <Compile Include="QA\IQualitySpecificationReferencesProvider.cs" />
     <Compile Include="QA\Repositories\IDataQualityCategoryRepository.cs" />
     <Compile Include="QA\Repositories\IQualitySpecificationRepository.cs" />
     <Compile Include="QA\Repositories\IQualityVerificationRepository.cs" />

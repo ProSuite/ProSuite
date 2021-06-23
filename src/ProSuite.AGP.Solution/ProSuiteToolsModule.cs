@@ -11,19 +11,20 @@ using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.AGP.QA;
 using ProSuite.AGP.Solution.ConfigUI;
 using ProSuite.AGP.Solution.LoggerUI;
 using ProSuite.AGP.Solution.ProjectItem;
 using ProSuite.AGP.Solution.QA;
+using ProSuite.AGP.Solution.Workflow;
 using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.Application.Configuration;
 using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.DomainModel.AGP.QA;
+using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.Microservices.Client.AGP;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.QA.Configurator;
@@ -52,9 +53,6 @@ namespace ProSuite.AGP.Solution
 		public static event EventHandler<ProSuiteQAConfigEventArgs> OnQAConfigurationChanged;
 
 		private static ProSuiteQAManager _qaManager;
-
-		private QualityVerificationEnvironment _ddxVerificationEnvironment;
-		private XmlVerificationEnvironment _xmlGpVerificationEnvironment;
 
 		public static ProSuiteQAManager QAManager
 		{
@@ -114,6 +112,7 @@ namespace ProSuite.AGP.Solution
 		private static ProSuiteToolsModule _this = null;
 
 		private static IMsg msg = null;
+		private static MapBasedSessionContext _sessionContext;
 
 		private static IMsg _msg
 		{
@@ -142,27 +141,8 @@ namespace ProSuite.AGP.Solution
 			}
 		}
 
-		public IQualityVerificationEnvironment QualityVerificationEnvironment
-		{
-			get
-			{
-				if (_ddxVerificationEnvironment != null &&
-				    _ddxVerificationEnvironment.ProjectId > 0)
-				{
-					return _ddxVerificationEnvironment;
-				}
-				else
-				{
-					if (_xmlGpVerificationEnvironment == null)
-					{
-						_xmlGpVerificationEnvironment =
-							new XmlVerificationEnvironment(QAManager.SpecificationProvider);
-					}
-
-					return _xmlGpVerificationEnvironment;
-				}
-			}
-		}
+		public IMapBasedSessionContext SessionContext =>
+			_sessionContext ?? (_sessionContext = new MapBasedSessionContext());
 
 		private static void UpdateServiceUI(ProSuiteProjectItemConfiguration projectItem)
 		{
@@ -200,7 +180,7 @@ namespace ProSuite.AGP.Solution
 			LogMessageActionEvent.Subscribe(OnLogMessageActionRequested);
 
 			// TODO: Task.Run async?
-			StartMicroservices().ConfigureAwait(false);
+			SetupBackend().ConfigureAwait(false);
 
 			return base.Initialize();
 		}
@@ -387,29 +367,38 @@ namespace ProSuite.AGP.Solution
 			}, _msg);
 		}
 
-		private async Task<bool> StartMicroservices()
+		private async Task<bool> SetupBackend()
 		{
 			bool result = await StartToolMicroserviceClientAsync();
 
 			QualityVerificationServiceClient client = await StartQaMicroserviceClientAsync();
 
-			// TODO: From configuration:
-			string verificationOutputDirectory =
-				Path.Combine(Project.Current.HomeFolderPath, "Verifications");
+			// Make sure the field is initialized:
+			Assert.NotNull(SessionContext);
 
-			_ddxVerificationEnvironment =
-				new QualityVerificationEnvironment(MapView.Active, client,
-				                                   verificationOutputDirectory);
+			_sessionContext.MicroServiceClient = client;
 
-			ActiveMapViewChangedEvent.Subscribe(
-				e => _ddxVerificationEnvironment.MapViewChanged(e.IncomingView));
+			// TODO: If no client channel config file exists, use XML verification provider directly:
+			//verificationEnvironment =
+			//	new QualityVerificationEnvironment(new XmlSpecificationProvider());
+			var verificationEnvironment =
+				new QualityVerificationEnvironment(SessionContext, client);
 
-			// This event is never fired:
-			// LayersAddedEvent.Subscribe(e => qaEnvironment.MapLayersChanged(e.Layers));
+			verificationEnvironment.VerificationService =
+				new VerificationServiceGrpc(client)
+				{
+					HtmlReportName = Constants.HtmlReportName,
+					VerificationReportName = Constants.VerificationReportName
+				};
 
-			// TODO: Only if there is a ddx connection and it works...
-			QAConfiguration.Current.SetupGrpcConfiguration(_ddxVerificationEnvironment);
+			_sessionContext.VerificationEnvironment = verificationEnvironment;
 
+			// TODO: This has no effect any more -> change XML based specification provider
+			QAConfiguration.Current.SetupGrpcConfiguration(verificationEnvironment);
+
+			// ... to implement IQualitySpecificationReferencesProvider instead, such as
+			//verificationEnvironment.FallbackSpecificationProvider = new XmlSpecificationProvider();
+			// in case no Microservice is available. Additionally, implement a second VerificationService subclass.
 			return result;
 		}
 
@@ -486,9 +475,9 @@ namespace ProSuite.AGP.Solution
 		{
 			try
 			{
-				string specificationName = ProSuiteToolsModule.Current
-				                                              .QualityVerificationEnvironment
-				                                              .CurrentQualitySpecification?.Name;
+				string specificationName =
+					ProSuiteToolsModule.Current.SessionContext.VerificationEnvironment
+					                   ?.CurrentQualitySpecification?.Name;
 
 				if (specificationName != null)
 				{
@@ -511,9 +500,9 @@ namespace ProSuite.AGP.Solution
 		{
 			try
 			{
-				string specificationName = ProSuiteToolsModule.Current
-				                                              .QualityVerificationEnvironment
-				                                              .CurrentQualitySpecification?.Name;
+				string specificationName = ProSuiteToolsModule.Current.SessionContext
+				                                              .VerificationEnvironment
+				                                              ?.CurrentQualitySpecification?.Name;
 
 				if (specificationName != null)
 				{

@@ -154,7 +154,6 @@
     <Compile Include="QA\VerificationProgressWindow.xaml.cs">
       <DependentUpon>VerificationProgressWindow.xaml</DependentUpon>
     </Compile>
-    <Compile Include="QA\XmlVerificationEnvironment.cs" />
     <Compile Include="Resource.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -162,6 +161,7 @@
     </Compile>
     <Compile Include="Selection\PickWorkListItemTool.cs" />
     <Compile Include="Selection\SelectionTool.cs" />
+    <Compile Include="Workflow\MapBasedSessionContext.cs" />
     <Compile Include="WorkLists\CreateIssueWorkListButton.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
     <Compile Include="Commons\LayerUtils.cs" />

@@ -2,6 +2,8 @@ using System;
 using System.Linq;
 using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.DomainModel.AGP.QA;
+using ProSuite.DomainModel.AGP.Workflow;
+using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.AGP.QA.ProPlugins
 {
@@ -10,41 +12,70 @@ namespace ProSuite.AGP.QA.ProPlugins
 		protected QualitySpecificationsComboBoxBase()
 		{
 			FillCombo();
-			//Enabled = false;
 
-			// TODO: To ensure that this cannot be created before the QualityVerificationEnvironment exists
-			// -> Create static session context with the QualitySpecificationsRefreshed event
-			// -> Here, subscribe only to that event
-			QualityVerificationEnvironment.QualitySpecificationsRefreshed +=
-				QualitySpecificationsRefreshed;
+			WireEvent();
 		}
 
-		protected abstract IQualityVerificationEnvironment QualityVerificationEnvironment { get; }
+		protected abstract IMapBasedSessionContext SessionContext { get; }
 
-		private void QualitySpecificationsRefreshed(object sender, EventArgs e)
+		protected void QualitySpecificationsRefreshed(object sender, EventArgs e)
 		{
 			Clear();
 
 			FillCombo();
 		}
 
+		private void WireEvent()
+		{
+			SessionContext.QualitySpecificationsRefreshed += QualitySpecificationsRefreshed;
+		}
+
 		private void FillCombo()
 		{
-			foreach (var qaSpec in QualityVerificationEnvironment.QualitySpecifications.Select(
+			IQualityVerificationEnvironment verificationEnvironment =
+				SessionContext.VerificationEnvironment;
+
+			if (verificationEnvironment == null)
+			{
+				Clear();
+				return;
+			}
+
+			foreach (var qaSpec in verificationEnvironment.QualitySpecifications.Select(
 				s => s.Name))
 			{
 				Add(new ComboBoxItem(qaSpec));
 			}
 
-			// Select first item
-			SelectedItem = ItemCollection.FirstOrDefault();
+			IQualitySpecificationReference currentSpecification =
+				verificationEnvironment.CurrentQualitySpecification;
+
+			if (currentSpecification != null)
+			{
+				SelectedItem =
+					ItemCollection.FirstOrDefault(i => Equals(i, currentSpecification.Name));
+			}
+			else
+			{
+				// Select first item
+				SelectedItem = ItemCollection.FirstOrDefault();
+			}
 		}
 
 		protected override void OnSelectionChange(ComboBoxItem item)
 		{
 			// TODO: Binding
-			QualityVerificationEnvironment.CurrentQualitySpecification =
-				QualityVerificationEnvironment.QualitySpecifications.FirstOrDefault(
+			IQualityVerificationEnvironment verificationEnvironment =
+				SessionContext.VerificationEnvironment;
+
+			if (verificationEnvironment == null)
+			{
+				Clear();
+				return;
+			}
+
+			verificationEnvironment.CurrentQualitySpecification =
+				verificationEnvironment.QualitySpecifications.FirstOrDefault(
 					s => s.Name == item.Text);
 		}
 	}

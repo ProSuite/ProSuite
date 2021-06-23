@@ -1,15 +1,17 @@
 using System.Windows;
 using ArcGIS.Desktop.Framework.Controls;
 using ProSuite.AGP.QA.ProPlugins;
-using ProSuite.DomainModel.AGP.QA;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.UI.QA.VerificationProgress;
 
 namespace ProSuite.AGP.Solution.QA
 {
+	[UsedImplicitly]
 	internal class VerifyVisibleExtentCmd : VerifyVisibleExtentCmdBase
 	{
-		protected override IQualityVerificationEnvironment QualityVerificationEnvironment =>
-			ProSuiteToolsModule.Current.QualityVerificationEnvironment;
+		protected override IMapBasedSessionContext SessionContext =>
+			ProSuiteToolsModule.Current.SessionContext;
 
 		protected override Window CreateProgressWindow(
 			VerificationProgressViewModel progressViewModel)
@@ -20,7 +22,5 @@ namespace ProSuite.AGP.Solution.QA
 
 			return window;
 		}
-
-		protected override string HtmlReportName => Constants.HtmlReportName;
 	}
 }

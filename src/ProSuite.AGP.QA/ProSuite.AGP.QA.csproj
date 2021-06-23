@@ -82,10 +82,13 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="DdxSpecificationReferencesProvider.cs" />
     <Compile Include="VerificationProgress\AgpBackgroundVerificationController.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProPlugins\QualitySpecificationsComboBoxBase.cs" />
     <Compile Include="ProPlugins\VerifyVisibleExtentCmdBase.cs" />
+    <Compile Include="VerificationServiceBase.cs" />
+    <Compile Include="VerificationServiceGrpc.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj">

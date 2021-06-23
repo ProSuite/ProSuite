@@ -1,213 +1,171 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Mapping;
-using ProSuite.Commons.Collections;
+using ProSuite.AGP.QA;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.DomainModel.AGP.QA;
+using ProSuite.DomainModel.AGP.Workflow;
+using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
-using ProSuite.Microservices.Client.AGP.QA;
 using ProSuite.Microservices.Client.QA;
-using ProSuite.Microservices.Definitions.QA;
 
 namespace ProSuite.AGP.Solution.QA
 {
 	public class QualityVerificationEnvironment : IQualityVerificationEnvironment
 	{
-		// TODO: Create WorkContext (work unit) based on map content (with or without DDX access)
-		//private readonly IWorkContext _workContext;
-
-		private const string _contextTypeWorkUnit = "Work Unit";
-		private const string _contextTypePerimeter = "Perimeter";
-
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private MapView _mapView;
-		private readonly QualityVerificationServiceClient _client;
-		private readonly string _verificationOutputDirectory;
+		private readonly IMapBasedSessionContext _sessionContext;
 
-		private IList<QualitySpecificationReference> _qualitySpecifications;
+		private IList<IQualitySpecificationReference> _qualitySpecifications =
+			new List<IQualitySpecificationReference>();
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="QualityVerificationEnvironment"/> class.
+		/// This constructor is used to use the gRPC based specification provider.
+		/// </summary>
+		/// <param name="sessionContext"></param>
+		/// <param name="client"></param>
+		public QualityVerificationEnvironment(
+			[NotNull] IMapBasedSessionContext sessionContext,
+			[NotNull] QualityVerificationServiceClient client)
+		{
+			Assert.ArgumentNotNull(sessionContext, nameof(sessionContext));
+
+			_sessionContext = sessionContext;
+
+			_sessionContext.ProjectWorkspaceChanged += ContextProjectWorkspaceChanged;
+
+			SpecificationProvider = new DdxSpecificationReferencesProvider(sessionContext, client);
+		}
 
 		public QualityVerificationEnvironment(
-			//IWorkContext workContext,
-			MapView mapView,
-			QualityVerificationServiceClient client,
-			string verificationOutputDirectory)
+			[NotNull] IQualitySpecificationReferencesProvider specificationProvider)
 		{
-			//_workContext = workContext;
+			Assert.ArgumentNotNull(specificationProvider, nameof(specificationProvider));
 
-			_mapView = mapView;
-			_client = client;
-			_verificationOutputDirectory = verificationOutputDirectory;
+			SpecificationProvider = specificationProvider;
 		}
 
-		// TODO: Handle layer added event, if current project workspace is null, load entities
-		//public void MapLayersChanged(IEnumerable<Layer> layers)
-		//{
-		//	_editableDatasets.Clear();
+		/// <summary>
+		/// The main specification provider to be used to get the available specifications.
+		/// </summary>
+		public IQualitySpecificationReferencesProvider SpecificationProvider { get; set; }
 
-		//	foreach (Layer layer in layers)
-		//	{
-		//		if (layer is FeatureLayer featureLayer)
-		//		{
-		//			_editableDatasets.Add(featureLayer.GetTable());
-		//		}
-		//	}
+		/// <summary>
+		/// A fall-back specification provider, in case the <see cref="SpecificationProvider"/> is
+		/// not available.
+		/// </summary>
+		public IQualitySpecificationReferencesProvider FallbackSpecificationProvider { get; set; }
 
-		//	// TODO: Tables?
-
-		//	LoadQualitySpecifications();
-		//}
-
-		// TODO: Also handle when a new project is loaded
-		public void MapViewChanged(MapView mapView)
-		{
-			const string errorMessage = "Error loading quality verifications";
-
-			_mapView = mapView;
-
-			try
-			{
-				if (_mapView == null)
-				{
-					_qualitySpecifications?.Clear();
-					SelectCurrentQualitySpecification(_qualitySpecifications);
-					return;
-				}
-
-				Task<bool> task = LoadEntitiesAsync();
-
-				task.ContinueWith(t =>
-				                  {
-					                  ReadOnlyCollection<Exception> inners =
-						                  t.Exception?.InnerExceptions;
-
-					                  if (inners != null)
-					                  {
-						                  foreach (Exception inner in inners)
-						                  {
-							                  LogException(errorMessage, inner);
-						                  }
-					                  }
-				                  },
-				                  TaskContinuationOptions.OnlyOnFaulted);
-			}
-			catch (Exception e)
-			{
-				LogException(errorMessage, e);
-			}
-		}
-
-		private static void LogException(string errorMessage, Exception exception)
-		{
-			_msg.Error($"{errorMessage}: {exception.Message}", exception);
-		}
-
-		private bool IncludeHiddenSpecifications { get; set; }
-
-		private ProjectWorkspace ProjectWorkspace { get; set; }
+		/// <summary>
+		/// The application service that performs the verification by using the appropriate
+		/// back-end.
+		/// </summary>
+		public VerificationServiceBase VerificationService { get; set; }
 
 		/// <summary>
 		/// The last current quality specification. This can be used to restore the state of the UI.
 		/// </summary>
-		public int LastCurrentSpecificationId { get; set; } = -1;
+		public IQualitySpecificationReference LastCurrentSpecification { get; set; }
 
-		public QualitySpecificationReference CurrentQualitySpecification { get; set; }
+		public IQualitySpecificationReference CurrentQualitySpecification { get; set; }
 
-		public IList<QualitySpecificationReference> QualitySpecifications =>
-			_qualitySpecifications ?? new List<QualitySpecificationReference>(0);
+		public IList<IQualitySpecificationReference> QualitySpecifications =>
+			_qualitySpecifications ?? new List<IQualitySpecificationReference>(0);
+
+		public string BackendDisplayName => SpecificationProvider.BackendDisplayName;
+		public event EventHandler QualitySpecificationsRefreshed;
 
 		public void RefreshQualitySpecifications()
 		{
-			// TODO
+			LoadQualitySpecifications();
 		}
-
-		public event EventHandler QualitySpecificationsRefreshed;
-
-		public string BackendDisplayName => _client.HostName;
-
-		public SpatialReference SpatialReference => ProjectWorkspace?.ModelSpatialReference;
 
 		public async Task<ServiceCallStatus> VerifyExtent(
 			Envelope extent,
 			QualityVerificationProgressTracker progress,
 			[CanBeNull] string resultsPath)
 		{
-			QualitySpecificationReference specification =
-				Assert.NotNull(CurrentQualitySpecification);
+			IQualitySpecificationReference specification =
+				Assert.NotNull(CurrentQualitySpecification, "No current quality specification");
 
-			VerificationRequest request =
-				await QueuedTask.Run(
-					() => QAUtils.CreateRequest(ProjectWorkspace, _contextTypePerimeter, "map name",
-					                            specification, extent));
+			ProjectWorkspace projectWorkspace =
+				Assert.NotNull(_sessionContext.ProjectWorkspace, "No project workspace");
 
-			if (! string.IsNullOrEmpty(resultsPath))
+			Assert.NotNull(VerificationService);
+
+			var result = await VerificationService.VerifyPerimeter(
+				             specification, extent, projectWorkspace, progress, resultsPath);
+
+			if (result == ServiceCallStatus.Finished)
 			{
-				string htmlReport = Path.Combine(resultsPath, Constants.HtmlReportName);
-				string xmlReport = Path.Combine(resultsPath, Constants.VerificationReportName);
-				string gdbDir = Path.Combine(resultsPath, "issues.gdb");
-
-				request.Parameters.HtmlReportPath = htmlReport;
-				request.Parameters.VerificationReportPath = xmlReport;
-				request.Parameters.IssueFileGdbPath = gdbDir;
+				_msg.InfoFormat(
+					"Successfully finished extent verification. The results have been saved in {0}",
+					resultsPath);
+			}
+			else
+			{
+				_msg.WarnFormat("Extent verification was not finished. Status: {0}", result);
 			}
 
-			QAUtils.SetVerificationParameters(
-				request, GetTileSize(ProjectWorkspace), false, true,
-				false);
-
-			return await QAUtils.Verify(Assert.NotNull(_client.QaClient), request, progress);
+			return result;
 		}
 
-		private double GetTileSize(ProjectWorkspace projectWorkspace)
+		private void ContextProjectWorkspaceChanged(object sender, EventArgs e)
 		{
-			// TODO
-			return -1;
+			LoadQualitySpecifications();
 		}
 
-		public int ProjectId { get; set; } = -1;
-
-		private async Task<bool> LoadEntitiesAsync()
+		private void LoadQualitySpecifications()
 		{
-			if (_mapView == null)
+			Task<bool> task = LoadQualitySpecificationsAsync();
+
+			task.ContinueWith(t =>
+			                  {
+				                  ReadOnlyCollection<Exception> inners =
+					                  t.Exception?.InnerExceptions;
+
+				                  if (inners != null)
+				                  {
+					                  foreach (Exception inner in inners)
+					                  {
+						                  LogException("Error loading quality specifications",
+						                               inner);
+					                  }
+				                  }
+			                  },
+			                  TaskContinuationOptions.OnlyOnFaulted);
+		}
+
+		private async Task<bool> LoadQualitySpecificationsAsync()
+		{
+			if (! SpecificationProvider.CanGetSpecifications())
 			{
-				return false;
+				if (FallbackSpecificationProvider != null)
+				{
+					_qualitySpecifications =
+						await FallbackSpecificationProvider.GetQualitySpecifications();
+				}
+				else
+				{
+					_qualitySpecifications.Clear();
+				}
 			}
-
-			List<Table> objectClasses =
-				await QueuedTask.Run(() => GetDatasets(_mapView).ToList());
-
-			List<ProjectWorkspace> projectWorkspaceCandidates =
-				await DdxUtils.GetProjectWorkspaceCandidates(
-					objectClasses, Assert.NotNull(_client.DdxClient));
-
-			ProjectWorkspace =
-				projectWorkspaceCandidates.MaxElementOrDefault(p => p.Datasets.Count);
-
-			if (ProjectWorkspace == null)
+			else
 			{
-				return false;
+				_qualitySpecifications = await SpecificationProvider.GetQualitySpecifications();
 			}
-
-			ProjectId = ProjectWorkspace.ProjectId;
-
-			IList<QualitySpecificationReference> result =
-				await DdxUtils.LoadSpecificationsRpcAsync(ProjectWorkspace.Datasets,
-				                                          IncludeHiddenSpecifications,
-				                                          Assert.NotNull(_client.DdxClient));
 
 			// if there's a current quality specification, check if it is valid
 			if (CurrentQualitySpecification != null &&
-			    ! result.Contains(CurrentQualitySpecification))
+			    ! _qualitySpecifications.Contains(CurrentQualitySpecification))
 			{
 				CurrentQualitySpecification = null;
 			}
@@ -215,39 +173,16 @@ namespace ProSuite.AGP.Solution.QA
 			// if there is no valid current specification, select one 
 			if (CurrentQualitySpecification == null)
 			{
-				SelectCurrentQualitySpecification(result);
+				SelectCurrentQualitySpecification(_qualitySpecifications);
 			}
-
-			_qualitySpecifications = result;
 
 			QualitySpecificationsRefreshed?.Invoke(this, EventArgs.Empty);
 
 			return _qualitySpecifications.Count > 0;
 		}
 
-		private static IEnumerable<Table> GetDatasets([NotNull] MapView mapView)
-		{
-			IReadOnlyList<Layer> layers = mapView.Map.GetLayersAsFlattenedList();
-
-			foreach (Layer layer in layers)
-			{
-				if (layer is FeatureLayer fl)
-				{
-					Table table = fl.GetTable();
-
-					if (table.GetDatastore() is FileSystemDatastore)
-					{
-						// Shapefile workspaces are not supported
-						continue;
-					}
-
-					yield return table;
-				}
-			}
-		}
-
 		private void SelectCurrentQualitySpecification(
-			[CanBeNull] IList<QualitySpecificationReference> qualitySpecifications)
+			[CanBeNull] IList<IQualitySpecificationReference> qualitySpecifications)
 		{
 			if (qualitySpecifications == null || qualitySpecifications.Count == 0)
 			{
@@ -255,13 +190,11 @@ namespace ProSuite.AGP.Solution.QA
 				return;
 			}
 
-			QualitySpecificationReference result;
-
-			if (LastCurrentSpecificationId >= 0)
+			if (LastCurrentSpecification != null)
 			{
 				// try to load the last one used
-				result = qualitySpecifications.FirstOrDefault(
-					qualitySpecification => qualitySpecification.Id == LastCurrentSpecificationId);
+				IQualitySpecificationReference result = qualitySpecifications.FirstOrDefault(
+					qualitySpecification => qualitySpecification.Equals(LastCurrentSpecification));
 
 				if (result != null)
 				{
@@ -283,34 +216,12 @@ namespace ProSuite.AGP.Solution.QA
 				return;
 			}
 
-			LastCurrentSpecificationId = CurrentQualitySpecification.Id;
+			LastCurrentSpecification = CurrentQualitySpecification;
 		}
 
-		private static DateTime GetTimeout()
+		private static void LogException(string errorMessage, Exception exception)
 		{
-			DateTime timeout = DateTime.Now.AddSeconds(10).ToUniversalTime();
-
-			return timeout;
+			_msg.Error($"{errorMessage}: {exception.Message}", exception);
 		}
 	}
-
-	//public interface IWorkContext
-	//{
-	//	ProductionModel Model { get; }
-
-	//	string Name { get; }
-
-	//	/// <summary>
-	//	/// Gets the editable datasets of a given type.
-	//	/// </summary>
-	//	/// <typeparam name="T">The dataset type to return.</typeparam>
-	//	/// <param name="match">The <see cref="Predicate{T}"/> delegate that defines the
-	//	/// conditions of the datasets to search for.</param>
-	//	/// <param name="includeDeleted">if set to <c>true</c> deleted datasets are included 
-	//	/// in the result, otherwise they are excluded.</param>
-	//	/// <returns></returns>
-	//	[NotNull]
-	//	IList<T> GetEditableDatasets<T>([CanBeNull] Predicate<T> match = null,
-	//	                                bool includeDeleted = false) where T : class, IDdxDataset;
-	//}
 }
