@@ -13,7 +13,9 @@ using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.AO.Workflow;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
+using ProSuite.Microservices.Definitions.Shared;
 using Quaestor.LoadReporting;
 
 namespace ProSuite.Microservices.Server.AO.QA
@@ -190,11 +192,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 							project.ExcludeReadOnlyDatasetsFromProjectWorkspace
 					});
 
+				var srWkId = ProtobufGeometryUtils.ToSpatialReferenceMsg(
+					project.ProductionModel.SpatialReferenceDescriptor.SpatialReference,
+					SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid);
+
 				var modelMsg =
 					new ModelMsg()
 					{
 						ModelId = project.ProductionModel.Id,
-						Name = project.ProductionModel.Name
+						Name = project.ProductionModel.Name,
+						SpatialReference = srWkId
 					};
 
 				IWorkspace masterWorkspace =
