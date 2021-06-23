@@ -869,13 +869,18 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			response.ServiceCallStatus = (int) finalStatus;
 
+			response.Progress = new VerificationProgressMsg();
+
 			if (! string.IsNullOrEmpty(qaServiceCancellationMessage))
 			{
-				response.Progress = new VerificationProgressMsg
-				                    {
-					                    Message = qaServiceCancellationMessage
-				                    };
+				response.Progress.Message = qaServiceCancellationMessage;
 			}
+
+			// Ensure that progress is at 100%:
+			response.Progress.OverallProgressCurrentStep = 10;
+			response.Progress.OverallProgressTotalSteps = 10;
+			response.Progress.DetailedProgressCurrentStep = 10;
+			response.Progress.DetailedProgressTotalSteps = 10;
 
 			PackVerification(verification, response);
 
