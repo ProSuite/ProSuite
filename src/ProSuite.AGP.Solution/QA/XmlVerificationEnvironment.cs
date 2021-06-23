@@ -36,6 +36,8 @@ namespace ProSuite.AGP.Solution.QA
 
 		public string BackendDisplayName { get; }
 
+		public SpatialReference SpatialReference { get; }
+
 		public Task<ServiceCallStatus> VerifyExtent(Envelope extent,
 		                                            QualityVerificationProgressTracker progress,
 		                                            string resultsPath)

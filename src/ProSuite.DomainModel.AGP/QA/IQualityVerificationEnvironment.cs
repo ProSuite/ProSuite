@@ -35,6 +35,12 @@ namespace ProSuite.DomainModel.AGP.QA
 
 		string BackendDisplayName { get; }
 
+		/// <summary>
+		/// The verified data model's spatial reference, i.e. the spatial reference
+		/// in which the verification is executed.
+		/// </summary>
+		SpatialReference SpatialReference { get; }
+
 		Task<ServiceCallStatus> VerifyExtent([NotNull] Envelope extent,
 		                                     [NotNull] QualityVerificationProgressTracker progress,
 		                                     string resultsPath);

@@ -68,6 +68,8 @@ namespace ProSuite.Microservices.Client.QA
 		{
 			if (_qualityVerification == null)
 			{
+				// TODO: Remove this (load the conditions-dictionary up front and provide as parameter)
+				// or use separate implementations 
 				if (_domainTransactions == null)
 				{
 					return null;
@@ -98,6 +100,10 @@ namespace ProSuite.Microservices.Client.QA
 
 			return _qualityVerification;
 		}
+
+		public string HtmlReportPath { get; set; }
+
+		public string IssuesGdbPath { get; set; }
 
 		private QualityVerification GetQualityVerificationTx([NotNull] QualityVerificationMsg msg)
 		{

@@ -6,6 +6,10 @@ namespace ProSuite.DomainModel.Core.QA.VerificationProgress
 
 		QualityVerification GetQualityVerification();
 
+		string HtmlReportPath { get; }
+
+		string IssuesGdbPath { get; }
+
 		bool HasIssues { get; }
 
 		bool CanSaveIssues { get; }

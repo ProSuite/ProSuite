@@ -49,17 +49,20 @@
         </StackPanel.Resources>
         <Button Command="{Binding OpenWorkListCommand}"
                 CommandParameter="{Binding Mode=OneWay}"
-                ToolTip="Open work list (update issues first to see the current state)">
+                ToolTip="{Binding OpenWorkListToolTip}"
+                ToolTipService.ShowOnDisabled="True">
           <Image Source="/ProSuite.UI;component/Properties/Images/NavigateErrorsCmd.png" Stretch="None" />
         </Button>
         <Button Command="{Binding ZoomToPerimeterCommand}"
                 CommandParameter="{Binding Mode=OneWay}"
-                ToolTip="Zoom to verified perimeter">
+                ToolTip="{Binding ZoomToVerifiedPerimeterToolTip}"
+                ToolTipService.ShowOnDisabled="True">
           <Image Source="/ProSuite.UI;component/Properties/Images/ZoomToVerifiedCmd.png" Stretch="None" />
         </Button>
         <Button Command="{Binding FlashProgressCommand}"
                 CommandParameter="{Binding Mode=OneWay}"
-                ToolTip="Flash the current progress during tile verification" ToolTipService.ShowOnDisabled="True">
+                ToolTip="{Binding FlashProgressToolTip}"
+                ToolTipService.ShowOnDisabled="True">
           <Image Source="/ProSuite.UI;component/Properties/Images/FlashProgressCmd.png" Stretch="None" />
         </Button>
       </StackPanel>
@@ -168,7 +171,9 @@
           <!-- Save issues button -->
           <Button x:Name="saveErrors"
                   Margin="8, 8, 0, 8" Width="80" Height="22" Command="{Binding SaveErrorsCommand}"
-                  CommandParameter="{Binding Mode=OneWay}">
+                  CommandParameter="{Binding Mode=OneWay}"
+                  ToolTip="{Binding SaveErrorsToolTip}" 
+                  ToolTipService.ShowOnDisabled="True">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
               <!-- <Image Source="/ProSuite.UI;component/Properties/Images/Save.png" Stretch="None" /> -->
               <Label Padding="0, 0, 0, 0">Save Issues</Label>
@@ -204,7 +209,9 @@
           <!-- Show report button -->
           <Button x:Name="showReport" Content="Show Report"
                   Margin="0" Width="100" Height="22" Command="{Binding ShowReportCommand}"
-                  CommandParameter="{Binding Mode=OneWay}" />
+                  CommandParameter="{Binding Mode=OneWay}" 
+                  ToolTip="{Binding ShowReportToolTip}" 
+                  ToolTipService.ShowOnDisabled="True"/>
 
           <!-- Close/cancel button -->
           <Button x:Name="cancelTests" Content="{Binding CancelButtonText}"
@@ -213,8 +220,6 @@
 
         </StackPanel>
       </Grid>
-
-
     </Grid>
 
     <Border DockPanel.Dock="Bottom" Height="28" BorderBrush="DarkGray" BorderThickness="0, 1, 0, 0">

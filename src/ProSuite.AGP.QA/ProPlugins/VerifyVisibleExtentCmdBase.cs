@@ -1,5 +1,4 @@
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,6 +8,7 @@ using ArcGIS.Core.Threading.Tasks;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.QA.VerificationProgress;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
 using ProSuite.Commons.Progress;
@@ -49,18 +49,18 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			string htmlReport = Path.Combine(resultsPath, HtmlReportName);
 
+			var appController = new AgpBackgroundVerificationController(
+				MapView.Active, currentExtent,
+				QualityVerificationEnvironment.SpatialReference);
+
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel
 				{
 					ProgressTracker = progressTracker,
 					VerificationAction = () => Verify(currentExtent, progressTracker, resultsPath),
-					ShowReportAction = verification => Process.Start(htmlReport),
-					SaveAction = null,
-					OpenWorkListCommand = null,
-					ZoomToPerimeterCommand = null,
-					FlashProgressAction = null
+					ApplicationController = appController
 				};
-
+			
 			Window window = CreateProgressWindow(qaProgressViewmodel);
 
 			string actionTitle = "Verify Visible Extent";
@@ -74,7 +74,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		private static string GetResultsPath(
 			[NotNull] QualitySpecificationReference qualitySpecification,
-		                                     [NotNull] string outputFolderPath)
+			[NotNull] string outputFolderPath)
 		{
 			string specificationName =
 				FileSystemUtils.ReplaceInvalidFileNameChars(

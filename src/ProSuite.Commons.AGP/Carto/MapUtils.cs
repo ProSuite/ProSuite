@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -597,6 +600,83 @@ namespace ProSuite.Commons.AGP.Carto
 					yield return (T) cursor.Current;
 				}
 			}
+		}
+
+		public static async Task<bool> FlashGeometryAsync(
+			[NotNull] MapView mapView,
+			[NotNull] ArcGIS.Core.Geometry.Geometry geometry,
+			CIMSymbolReference symbolReference,
+			int milliseconds = 400)
+		{
+			return await FlashGeometryAsync(mapView, new Overlay(geometry, symbolReference),
+			                                milliseconds);
+		}
+
+		public static async Task<bool> FlashGeometryAsync(
+			[NotNull] MapView mapView,
+			[NotNull] Overlay overlay,
+			int milliseconds = 400)
+		{
+			using (await overlay.AddToMapAsync(mapView))
+			{
+				await Task.Delay(milliseconds);
+			}
+
+			return true;
+		}
+
+		public static async Task<bool> FlashGeometriesAsync(
+			[NotNull] MapView mapView,
+			IEnumerable<Overlay> overlays,
+			int milliseconds = 400)
+		{
+			List<IDisposable> disposables = new List<IDisposable>();
+
+			try
+			{
+				foreach (Overlay overlay in overlays)
+				{
+					disposables.Add(await overlay.AddToMapAsync(mapView));
+				}
+
+				await Task.Delay(milliseconds);
+			}
+			finally
+			{
+				foreach (IDisposable disposable in disposables)
+				{
+					disposable.Dispose();
+				}
+			}
+
+			return true;
+		}
+
+		public static bool FlashGeometries(
+			[NotNull] MapView mapView,
+			IEnumerable<Overlay> overlays,
+			int milliseconds = 400)
+		{
+			List<IDisposable> disposables = new List<IDisposable>();
+
+			try
+			{
+				foreach (Overlay overlay in overlays)
+				{
+					disposables.Add(overlay.AddToMap(mapView));
+				}
+
+				Thread.Sleep(milliseconds);
+			}
+			finally
+			{
+				foreach (IDisposable disposable in disposables)
+				{
+					disposable.Dispose();
+				}
+			}
+
+			return true;
 		}
 	}
 

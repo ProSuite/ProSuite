@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.Microservices.Definitions.QA;
 using ProSuite.Microservices.Definitions.Shared;
@@ -13,16 +16,20 @@ namespace ProSuite.Microservices.Client.AGP.QA
 {
 	public static class DdxUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		public static async Task<List<ProjectWorkspace>> GetProjectWorkspaceCandidates(
 			[NotNull] ICollection<Table> objectClasses,
 			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
 		{
 			var datastoresByHandle = new Dictionary<long, Datastore>();
+			var spatialReferencesByWkId = new Dictionary<long, SpatialReference>();
 
 			GetProjectWorkspacesRequest request =
 				await QueuedTask.Run(() =>
 				{
 					AddWorkspaces(objectClasses, datastoresByHandle);
+					AddSpatialReferences(objectClasses, spatialReferencesByWkId);
 
 					return CreateProjectWorkspacesRequest(objectClasses);
 				});
@@ -34,9 +41,28 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			List<ProjectWorkspace> candidates =
 				await LoadProjectWorkspaceAsync(request, datastoresByHandle,
+				                                spatialReferencesByWkId,
 				                                ddxClient);
 
 			return candidates;
+		}
+
+		private static void AddSpatialReferences(ICollection<Table> objectClasses,
+		                                         Dictionary<long, SpatialReference>
+			                                         spatialReferencesByWkId)
+		{
+			foreach (Table objectClass in objectClasses)
+			{
+				if (objectClass is FeatureClass featureClass)
+				{
+					SpatialReference sr = DatasetUtils.GetSpatialReference(featureClass);
+
+					if (! spatialReferencesByWkId.ContainsKey(sr.Wkid))
+					{
+						spatialReferencesByWkId.Add(sr.Wkid, sr);
+					}
+				}
+			}
 		}
 
 		public static async Task<IList<QualitySpecificationReference>> LoadSpecificationsRpcAsync(
@@ -106,6 +132,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		private static async Task<List<ProjectWorkspace>> LoadProjectWorkspaceAsync(
 			[NotNull] GetProjectWorkspacesRequest request,
 			[NotNull] Dictionary<long, Datastore> datastores,
+			Dictionary<long, SpatialReference> spatialReferencesByWkId,
 			QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
 		{
 			DateTime timeout = GetTimeout();
@@ -118,12 +145,49 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			{
 				Datastore datastore = datastores[projectWorkspaceMsg.WorkspaceHandle];
 
+				ProjectMsg projectMsg =
+					response.Projects.First(p => p.ProjectId == projectWorkspaceMsg.ProjectId);
+
+				ModelMsg modelMsg = response.Models.First(m => m.ModelId == projectMsg.ModelId);
+
+				SpatialReference sr = GetSpatialReference(spatialReferencesByWkId, modelMsg);
+
 				candidates.Add(
 					new ProjectWorkspace(projectWorkspaceMsg.ProjectId,
-					                     projectWorkspaceMsg.DatasetIds.ToList(), datastore));
+					                     projectWorkspaceMsg.DatasetIds.ToList(), datastore, sr));
 			}
 
 			return candidates;
+		}
+
+		private static SpatialReference GetSpatialReference(
+			Dictionary<long, SpatialReference> spatialReferencesByWkId,
+			ModelMsg modelMsg)
+		{
+			if (modelMsg == null || modelMsg.SpatialReference == null)
+			{
+				_msg.Debug("No model provided or model has no spatial reference.");
+				return null;
+			}
+
+			SpatialReferenceMsg srMsg = modelMsg.SpatialReference;
+
+			SpatialReference result = null;
+
+			if (srMsg.FormatCase == SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid)
+			{
+				if (spatialReferencesByWkId.TryGetValue(srMsg.SpatialReferenceWkid, out result))
+				{
+					return result;
+				}
+			}
+
+			QueuedTask.Run(() =>
+			{
+				result = ProtobufConversionUtils.FromSpatialReferenceMsg(srMsg);
+			});
+
+			return result;
 		}
 
 		private static void AddWorkspaces([NotNull] IEnumerable<Table> objectClasses,
@@ -144,7 +208,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 		private static DateTime GetTimeout()
 		{
-			DateTime timeout = DateTime.Now.AddSeconds(20).ToUniversalTime();
+			// Better late than never (if the service has just been started, all the workspaces need to be opened...)
+			DateTime timeout = DateTime.Now.AddSeconds(60).ToUniversalTime();
 
 			return timeout;
 		}

@@ -1,6 +1,8 @@
-﻿using System;
+using System;
 using System.Reflection;
+using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -13,6 +15,7 @@ namespace ProSuite.Commons.UI.WPF
 
 		private readonly Action<T> _execute;
 		private readonly Predicate<T> _canExecute;
+		private bool _previousCanExecute;
 
 		#region Constructors
 
@@ -47,7 +50,16 @@ namespace ProSuite.Commons.UI.WPF
 		{
 			try
 			{
-				return _canExecute?.Invoke((T) parameter) ?? true;
+				bool result = _canExecute?.Invoke((T) parameter) ?? true;
+
+				if (result != _previousCanExecute)
+				{
+					_previousCanExecute = result;
+
+					RaiseCanExecuteChanged(true);
+				}
+
+				return result;
 			}
 			catch (Exception e)
 			{
@@ -55,6 +67,43 @@ namespace ProSuite.Commons.UI.WPF
 
 				throw;
 			}
+		}
+
+		/// <summary>
+		/// In some situations the CommandManager does not figure out that it should re-query
+		/// the can-execute method and the command remains disabled.
+		/// This method will check if the value has changed and if so, fire the appropriate event.
+		/// </summary>
+		/// <param name="knownChanged"></param>
+		/// <param name="parameter"></param>
+		public void RaiseCanExecuteChanged(bool knownChanged = false,
+		                                   object parameter = null)
+		{
+			if (_canExecute == null)
+			{
+				return;
+			}
+
+			if (! knownChanged)
+			{
+				// This will test the Can method an trigger this method with knownChanged == true.
+				CanExecute(parameter);
+			}
+
+			// NOTE: When setting properties on objects that implement INotifyPropertyChanged
+			// from a background thread, WPF automatically invokes the setter on the UI thread
+			// which is necessary to avoid InvalidOperationExceptions ('The calling thread cannot
+			// access this object because a different thread owns it').
+			// However, for raising events this is not the case! The command and the event handler
+			// were created on the UI thread and hence must be accessed on the UI thread:
+			Application.Current.Dispatcher.BeginInvoke(
+				new Action(delegate
+				{
+					// This invokes the CommandManager.RequerySuggested event which fires the
+					// CanExecuteChanged event below.
+					CommandManager.InvalidateRequerySuggested();
+				}),
+				DispatcherPriority.ApplicationIdle);
 		}
 
 		public event EventHandler CanExecuteChanged

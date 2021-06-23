@@ -98,10 +98,6 @@ namespace ProSuite.AGP.Solution.QA
 							                  LogException(errorMessage, inner);
 						                  }
 					                  }
-
-					                  //var aggException = t.Exception?.Flatten();
-
-					                  //LogException(errorMessage, aggException);
 				                  },
 				                  TaskContinuationOptions.OnlyOnFaulted);
 			}
@@ -138,6 +134,8 @@ namespace ProSuite.AGP.Solution.QA
 		public event EventHandler QualitySpecificationsRefreshed;
 
 		public string BackendDisplayName => _client.HostName;
+
+		public SpatialReference SpatialReference => ProjectWorkspace?.ModelSpatialReference;
 
 		public async Task<ServiceCallStatus> VerifyExtent(
 			Envelope extent,
@@ -186,7 +184,7 @@ namespace ProSuite.AGP.Solution.QA
 			}
 
 			List<Table> objectClasses =
-				await QueuedTask.Run(() => GetDatasets().ToList());
+				await QueuedTask.Run(() => GetDatasets(_mapView).ToList());
 
 			List<ProjectWorkspace> projectWorkspaceCandidates =
 				await DdxUtils.GetProjectWorkspaceCandidates(
@@ -201,7 +199,6 @@ namespace ProSuite.AGP.Solution.QA
 			}
 
 			ProjectId = ProjectWorkspace.ProjectId;
-			//Datasets = projectWorkspace.Datasets.ToList();
 
 			IList<QualitySpecificationReference> result =
 				await DdxUtils.LoadSpecificationsRpcAsync(ProjectWorkspace.Datasets,
@@ -228,9 +225,9 @@ namespace ProSuite.AGP.Solution.QA
 			return _qualitySpecifications.Count > 0;
 		}
 
-		private IEnumerable<Table> GetDatasets()
+		private static IEnumerable<Table> GetDatasets([NotNull] MapView mapView)
 		{
-			IReadOnlyList<Layer> layers = _mapView.Map.GetLayersAsFlattenedList();
+			IReadOnlyList<Layer> layers = mapView.Map.GetLayersAsFlattenedList();
 
 			foreach (Layer layer in layers)
 			{

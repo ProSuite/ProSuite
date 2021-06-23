@@ -54,6 +54,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\Extensions\Mapping\ArcGIS.Desktop.Mapping.dll</HintPath>
     </Reference>
+    <Reference Include="ArcGIS.Desktop.Extensions">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ProAssemblyPath)\bin\Extensions\DesktopExtensions\ArcGIS.Desktop.Extensions.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -67,6 +71,7 @@
     </Compile>
     <Compile Include="Carto\LayerUtils.cs" />
     <Compile Include="Carto\MapUtils.cs" />
+    <Compile Include="Carto\Overlay.cs" />
     <Compile Include="Carto\SelectionUtils.cs" />
     <Compile Include="Carto\TargetFeatureSelection.cs" />
     <Compile Include="Framework\PaneUtils.cs" />

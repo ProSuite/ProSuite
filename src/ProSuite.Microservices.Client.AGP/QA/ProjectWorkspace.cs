@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 
 namespace ProSuite.Microservices.Client.AGP.QA
 {
@@ -8,16 +9,19 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		// TODO: Add project, dataset implementations to DomainModel
 		public ProjectWorkspace(int projectId,
 		                        IList<int> datasets,
-		                        Datastore workspace)
+		                        Datastore workspace,
+		                        SpatialReference modelSpatialReference)
 		{
 			ProjectId = projectId;
 			Datasets = datasets;
 			Workspace = workspace;
+			ModelSpatialReference = modelSpatialReference;
 		}
 
 		public int ProjectId { get; }
 		public IList<int> Datasets { get; }
 		public Datastore Workspace { get; }
+		public SpatialReference ModelSpatialReference { get; }
 
 		public string GetVersionName()
 		{

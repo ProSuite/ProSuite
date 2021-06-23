@@ -88,7 +88,7 @@ namespace ProSuite.Microservices.Client.QA
 		[CanBeNull]
 		public Action<QualityVerification> ShowReportAction { get; set; }
 
-		private StaTaskScheduler StaTaskScheduler { get; } = new StaTaskScheduler(1);
+		private StaTaskScheduler StaTaskScheduler { get; set; }
 
 		public async Task<ServiceCallStatus> ExecuteAndProcessMessagesAsync(
 			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient rpcClient,
@@ -103,9 +103,15 @@ namespace ProSuite.Microservices.Client.QA
 		private async Task<ServiceCallStatus> TryExecuteAsync(
 			[NotNull] Func<CancellationTokenSource, Task<bool>> func)
 		{
-			QualityVerificationResult = new BackgroundVerificationResult(
-				ResultIssueCollector, _domainTransactions, _qualityVerificationRepository,
-				_qualityConditionRepository);
+			QualityVerificationResult =
+				new BackgroundVerificationResult(
+					ResultIssueCollector, _domainTransactions,
+					_qualityVerificationRepository,
+					_qualityConditionRepository)
+				{
+					HtmlReportPath = VerificationRequest.Parameters.HtmlReportPath,
+					IssuesGdbPath = VerificationRequest.Parameters.IssueFileGdbPath
+				};
 
 			// The service progress can be used in the non-modal progress dialogue
 			Progress.QualityVerificationResult = QualityVerificationResult;
@@ -206,6 +212,12 @@ namespace ProSuite.Microservices.Client.QA
 
 			Func<bool> getDataFunc = () => SatisfyDataRequest(
 				serverResponseMsg, VerificationDataProvider, dataStream);
+
+			if (StaTaskScheduler == null)
+			{
+				// Only initialize it if it is going to be needed
+				StaTaskScheduler = new StaTaskScheduler(1);
+			}
 
 			bool result =
 				await Task.Factory.StartNew(
