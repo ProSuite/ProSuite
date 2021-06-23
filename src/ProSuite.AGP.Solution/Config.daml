@@ -91,13 +91,14 @@
           <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
           <button refID="ProSuite_AGP_Solution_QA_VerifyVisibleExtentCmd" size="small" />
+          <tool refID="ProSuite_AGP_Solution_QA_VerifyPerimeterTool" size="small" />
+          <button refID="ProSuite_AGP_Solution_QA_VerifySelectionCmd" size="small" />
           <button refID="WorkLists_CreateIssueWorkList" size="large" />
           <!--<button refID="Clients_AGP_ProSuiteSolution_AddWorkList" size="large" />-->
         </group>
         <group id="ProSuiteTools_QA_Hidden" caption="" appearsOnAddInTab="false">
           <button refID="Clients_AGP_ProSuiteSolution_WorkLists_AddWorklistButton" />
           <button refID="ProSuite_AGP_Solution_WorkListUI_IssueWorkListView" size="large" />
-          
         </group>
         <group id="ProSuiteTools_Editing" caption="Edit Tools" keytip="G1">
           <tool refID="ProSuiteTools_Editing_EraseTool" size="small" />
@@ -269,6 +270,20 @@
                 smallImage="Images\VerifyVisibleExtentCmd16.png" largeImage="Images\VerifyVisibleExtentCmd32.png">
           <tooltip heading="Verify Visible Extent">
             Verifies the visible extent based on the selected quality specification<disabledText />
+          </tooltip>
+        </button>
+        <tool id="ProSuite_AGP_Solution_QA_VerifyPerimeterTool" caption="Verify Perimeter"
+              className="ProSuite.AGP.Solution.QA.VerifyPerimeterTool" loadOnClick="true"
+              smallImage="Images\VerifyPerimeterTool16.png" largeImage="Images\VerifyPerimeterTool32.png">
+          <tooltip heading="Draw a box or polygon to verify">
+            Tooltip text<disabledText />
+          </tooltip>
+        </tool>
+        <button id="ProSuite_AGP_Solution_QA_VerifySelectionCmd" caption="Verify Selection"
+                className="ProSuite.AGP.Solution.QA.VerifySelectionCmd" loadOnClick="true"
+                smallImage="Images\VerifySelectionCmd16.png" largeImage="Images\VerifySelectionCmd32.png">
+          <tooltip heading="Verify selected features">
+            Tooltip text<disabledText />
           </tooltip>
         </button>
         <button id="WorkLists_ShowWorkListsButton" caption="Open Work List" className="WorkLists.ShowWorkListsButton"

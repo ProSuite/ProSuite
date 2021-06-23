@@ -150,6 +150,8 @@
     <Compile Include="ProjectItem\WorklistsContainer.cs" />
     <Compile Include="QA\QualitySpecificationsComboBox.cs" />
     <Compile Include="QA\QualityVerificationEnvironment.cs" />
+    <Compile Include="QA\VerifyPerimeterTool.cs" />
+    <Compile Include="QA\VerifySelectionCmd.cs" />
     <Compile Include="QA\VerifyVisibleExtentCmd.cs" />
     <Compile Include="QA\VerificationProgressWindow.xaml.cs">
       <DependentUpon>VerificationProgressWindow.xaml</DependentUpon>
@@ -514,6 +516,12 @@
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="Images\VerifyVisibleExtentCmd32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\VerifyPerimeterTool16.png" />
+    <AddInContent Include="Images\VerifyPerimeterTool32.png" />
+    <AddInContent Include="Images\VerifySelectionCmd16.png" />
+    <AddInContent Include="Images\VerifySelectionCmd32.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--

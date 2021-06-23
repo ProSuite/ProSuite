@@ -8,6 +8,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.AGP.DataModel;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
@@ -125,6 +126,21 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				await ddxClient.GetProjectWorkspacesAsync(request, null, timeout);
 
 			var candidates = new List<ProjectWorkspace>();
+
+			Dictionary<int, BasicDataset> datasetsById = new Dictionary<int, BasicDataset>();
+
+			foreach (DatasetMsg datasetMsg in response.Datasets)
+			{
+				BasicDataset dataset =
+					new BasicDataset(datasetMsg.DatasetId, datasetMsg.Name, null,
+					                 datasetMsg.AliasName);
+
+				if (! datasetsById.ContainsKey(dataset.Id))
+				{
+					datasetsById.Add(dataset.Id, dataset);
+				}
+			}
+
 			foreach (ProjectWorkspaceMsg projectWorkspaceMsg in response.ProjectWorkspaces)
 			{
 				Datastore datastore = datastores[projectWorkspaceMsg.WorkspaceHandle];
@@ -136,9 +152,14 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 				SpatialReference sr = GetSpatialReference(spatialReferencesByWkId, modelMsg);
 
+				List<BasicDataset> datasets = projectWorkspaceMsg.DatasetIds
+				                                                 .Select(datasetId =>
+					                                                 datasetsById[datasetId])
+				                                                 .ToList();
+
 				candidates.Add(
 					new ProjectWorkspace(projectWorkspaceMsg.ProjectId,
-					                     projectWorkspaceMsg.DatasetIds.ToList(), datastore, sr));
+					                     datasets, datastore, sr));
 			}
 
 			return candidates;

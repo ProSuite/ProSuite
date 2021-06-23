@@ -196,16 +196,26 @@ namespace ProSuite.Microservices.Client.AGP
 			return result;
 		}
 
-		public static GdbObjectMsg ToGdbObjectMsg([NotNull] Feature feature,
-		                                          [NotNull] Geometry geometry,
+		public static GdbObjectMsg ToGdbObjectMsg([NotNull] Row feature,
+		                                          [CanBeNull] Geometry geometry,
+		                                          bool useSpatialRefWkId)
+		{
+			Table table = feature.GetTable();
+
+			return ToGdbObjectMsg(feature, geometry, table.GetID(), useSpatialRefWkId);
+		}
+
+		public static GdbObjectMsg ToGdbObjectMsg([NotNull] Row feature,
+		                                          [CanBeNull] Geometry geometry,
+		                                          long objectClassHandle,
 		                                          bool useSpatialRefWkId)
 		{
 			var result = new GdbObjectMsg();
 
-			FeatureClass featureClass = feature.GetTable();
+			Table table = feature.GetTable();
 
 			// Or use handle?
-			result.ClassHandle = (int) featureClass.GetID();
+			result.ClassHandle = objectClassHandle;
 
 			result.ObjectId = (int) feature.GetObjectID();
 

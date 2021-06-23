@@ -1,9 +1,13 @@
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Progress;
+using ProSuite.DomainModel.AGP.DataModel;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
@@ -42,7 +46,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				                     VersionName = projectWorkspace.GetVersionName() ?? string.Empty
 			                     };
 
-			workContextMsg.VerifiedDatasets.AddRange(projectWorkspace.Datasets);
+			workContextMsg.VerifiedDatasets.AddRange(projectWorkspace.GetDatasetIds());
 
 			var specificationMsg = new QualitySpecificationMsg
 			                       {
@@ -107,6 +111,38 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			request.UserName = EnvironmentUtils.UserDisplayName;
 
 			return request;
+		}
+
+		public static void SetObjectsToVerify([NotNull] VerificationRequest request,
+		                                      [CanBeNull] IList<Row> objectsToVerify,
+		                                      [NotNull] ProjectWorkspace projectWorkspace)
+		{
+			if (objectsToVerify == null || objectsToVerify.Count == 0)
+			{
+				return;
+			}
+
+			DatasetLookup datasetLookup = projectWorkspace.GetDatasetLookup();
+
+			Assert.NotNull(datasetLookup, nameof(datasetLookup));
+
+			foreach (Row objToVerify in objectsToVerify)
+			{
+				Geometry geometry = null;
+				if (objToVerify is Feature feature)
+				{
+					geometry = feature.GetShape();
+				}
+
+				BasicDataset objectDatset = datasetLookup.GetDataset(objToVerify.GetTable());
+
+				if (objectDatset != null)
+				{
+					request.Features.Add(
+						ProtobufConversionUtils.ToGdbObjectMsg(
+							objToVerify, geometry, objectDatset.Id, false));
+				}
+			}
 		}
 
 		public static void SetVerificationParameters(

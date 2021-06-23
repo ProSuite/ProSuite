@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Progress;
@@ -21,6 +23,14 @@ namespace ProSuite.AGP.QA
 		public abstract Task<ServiceCallStatus> VerifyPerimeter(
 			[NotNull] IQualitySpecificationReference qualitySpecification,
 			[NotNull] Geometry perimeter,
+			ProjectWorkspace projectWorkspace,
+			[NotNull] QualityVerificationProgressTracker progress,
+			[CanBeNull] string resultsPath);
+
+		public abstract Task<ServiceCallStatus> VerifySelection(
+			[NotNull] IQualitySpecificationReference qualitySpecification,
+			[NotNull] IList<Row> objectsToVerify,
+			[CanBeNull] Geometry perimeter,
 			ProjectWorkspace projectWorkspace,
 			[NotNull] QualityVerificationProgressTracker progress,
 			[CanBeNull] string resultsPath);

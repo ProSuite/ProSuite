@@ -4,9 +4,11 @@ using System.Windows;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Threading.Tasks;
 using ArcGIS.Desktop.Core;
-using ArcGIS.Desktop.Framework.Contracts;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.QA.VerificationProgress;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -19,17 +21,37 @@ using ProSuite.UI.QA.VerificationProgress;
 
 namespace ProSuite.AGP.QA.ProPlugins
 {
-	public abstract class VerifyVisibleExtentCmdBase : Button
+	// TODO: Move OneClickToolBase to ProSuite.AGP as a shared project instead of using AGP.Editing
+	public abstract class VerifyPerimeterToolBase : OneClickToolBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		protected VerifyPerimeterToolBase()
+		{
+			IsSketchTool = true;
+			CompleteSketchOnMouseUp = true;
+			RequiresSelection = false;
+
+			//SelectionCursor = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursor);
+			//SelectionCursorShift = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursorShift);
+		}
 
 		protected abstract IMapBasedSessionContext SessionContext { get; }
 
 		protected abstract Window CreateProgressWindow(
 			VerificationProgressViewModel progressViewModel);
 
-		protected override void OnClick()
+		protected override Task OnToolActivateAsync(bool active)
 		{
+			return base.OnToolActivateAsync(active);
+		}
+
+		protected override Task<bool> OnSketchCompleteCoreAsync(
+			Geometry sketchGeometry,
+			CancelableProgressor progressor)
+		{
+			GeometryUtils.Simplify(sketchGeometry);
+
 			IQualityVerificationEnvironment qaEnvironment =
 				Assert.NotNull(SessionContext.VerificationEnvironment);
 
@@ -40,7 +62,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			{
 				MessageBox.Show("No Quality Specification is selected", "Verify Extent",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
-				return;
+				return Task.FromResult(false);
 			}
 
 			var progressTracker = new QualityVerificationProgressTracker
@@ -48,34 +70,49 @@ namespace ProSuite.AGP.QA.ProPlugins
 				                      CancellationTokenSource = new CancellationTokenSource()
 			                      };
 
-			Envelope currentExtent = MapView.Active.Extent;
-
 			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification,
 			                                                Project.Current.HomeFolderPath);
 
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
 			var appController = new AgpBackgroundVerificationController(
-				MapView.Active, currentExtent, spatialRef);
+				MapView.Active, sketchGeometry, spatialRef);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel
 				{
 					ProgressTracker = progressTracker,
-					VerificationAction = () => Verify(currentExtent, progressTracker, resultsPath),
+					VerificationAction = () => Verify(sketchGeometry, progressTracker, resultsPath),
 					ApplicationController = appController
 				};
 
-			string actionTitle = "Verify Visible Extent";
+			string actionTitle = "Verify Perimeter";
 
 			Window window = CreateProgressWindow(qaProgressViewmodel);
 
 			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
 			                               qaEnvironment.BackendDisplayName, actionTitle);
+
+			return Task.FromResult(true);
+		}
+
+		protected override bool HandleEscape()
+		{
+			return true;
+		}
+
+		protected override void LogUsingCurrentSelection()
+		{
+			_msg.Info("Draw a box or press P and draw a polygon");
+		}
+
+		protected override void LogPromptForSelection()
+		{
+			_msg.Info("Draw a box or press P and draw a polygon");
 		}
 
 		private async Task<ServiceCallStatus> Verify(
-			[NotNull] Envelope currentExtent,
+			[NotNull] Geometry perimeter,
 			[NotNull] QualityVerificationProgressTracker progressTracker,
 			string resultsPath)
 		{
@@ -89,7 +126,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 						Assert.NotNull(qaEnvironment);
 
 						return qaEnvironment.VerifyPerimeter(
-							currentExtent, progressTracker, resultsPath);
+							perimeter, progressTracker, resultsPath);
 					},
 					BackgroundProgressor.None);
 

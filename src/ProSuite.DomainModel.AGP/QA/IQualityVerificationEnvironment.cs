@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Progress;
@@ -39,8 +40,15 @@ namespace ProSuite.DomainModel.AGP.QA
 		/// </summary>
 		string BackendDisplayName { get; }
 
-		Task<ServiceCallStatus> VerifyExtent([NotNull] Envelope extent,
-		                                     [NotNull] QualityVerificationProgressTracker progress,
-		                                     string resultsPath);
+		Task<ServiceCallStatus> VerifyPerimeter(
+			[NotNull] Geometry perimeter,
+			[NotNull] QualityVerificationProgressTracker progress,
+			string resultsPath);
+
+		Task<ServiceCallStatus> VerifySelection(
+			IList<Row> objectsToVerify,
+			[CanBeNull] Geometry perimeter,
+			QualityVerificationProgressTracker progress,
+			[CanBeNull] string resultsPath);
 	}
 }

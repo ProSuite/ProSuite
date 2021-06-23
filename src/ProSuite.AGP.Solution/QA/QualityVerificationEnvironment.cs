@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.QA;
 using ProSuite.Commons.Essentials.Assertions;
@@ -88,8 +89,8 @@ namespace ProSuite.AGP.Solution.QA
 			LoadQualitySpecifications();
 		}
 
-		public async Task<ServiceCallStatus> VerifyExtent(
-			Envelope extent,
+		public async Task<ServiceCallStatus> VerifyPerimeter(
+			Geometry perimeter,
 			QualityVerificationProgressTracker progress,
 			[CanBeNull] string resultsPath)
 		{
@@ -102,18 +103,28 @@ namespace ProSuite.AGP.Solution.QA
 			Assert.NotNull(VerificationService);
 
 			var result = await VerificationService.VerifyPerimeter(
-				             specification, extent, projectWorkspace, progress, resultsPath);
+				             specification, perimeter, projectWorkspace, progress, resultsPath);
 
-			if (result == ServiceCallStatus.Finished)
-			{
-				_msg.InfoFormat(
-					"Successfully finished extent verification. The results have been saved in {0}",
-					resultsPath);
-			}
-			else
-			{
-				_msg.WarnFormat("Extent verification was not finished. Status: {0}", result);
-			}
+			return result;
+		}
+
+		public async Task<ServiceCallStatus> VerifySelection(
+			IList<Row> objectsToVerify,
+			Geometry perimeter,
+			QualityVerificationProgressTracker progress,
+			string resultsPath)
+		{
+			IQualitySpecificationReference specification =
+				Assert.NotNull(CurrentQualitySpecification, "No current quality specification");
+
+			ProjectWorkspace projectWorkspace =
+				Assert.NotNull(_sessionContext.ProjectWorkspace, "No project workspace");
+
+			Assert.NotNull(VerificationService);
+
+			var result = await VerificationService.VerifySelection(
+				             specification, objectsToVerify, perimeter, projectWorkspace, progress,
+				             resultsPath);
 
 			return result;
 		}

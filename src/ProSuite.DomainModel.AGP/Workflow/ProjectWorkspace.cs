@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ProSuite.DomainModel.AGP.DataModel;
 
 namespace ProSuite.DomainModel.AGP.Workflow
 {
@@ -14,7 +16,7 @@ namespace ProSuite.DomainModel.AGP.Workflow
 	{
 		// TODO: Add project, dataset implementations to DomainModel
 		public ProjectWorkspace(int projectId,
-		                        IList<int> datasets,
+		                        IList<BasicDataset> datasets,
 		                        Datastore workspace,
 		                        SpatialReference modelSpatialReference)
 		{
@@ -25,7 +27,7 @@ namespace ProSuite.DomainModel.AGP.Workflow
 		}
 
 		public int ProjectId { get; }
-		public IList<int> Datasets { get; }
+		public IList<BasicDataset> Datasets { get; }
 		public Datastore Workspace { get; }
 		public SpatialReference ModelSpatialReference { get; }
 
@@ -40,6 +42,16 @@ namespace ProSuite.DomainModel.AGP.Workflow
 			}
 
 			return null;
+		}
+
+		public IList<int> GetDatasetIds()
+		{
+			return Datasets.Select(d => d.Id).ToList();
+		}
+
+		public DatasetLookup GetDatasetLookup()
+		{
+			return new DatasetLookup(Datasets);
 		}
 	}
 }

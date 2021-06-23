@@ -42,7 +42,7 @@ namespace ProSuite.AGP.QA
 				return result;
 			}
 
-			return await DdxUtils.LoadSpecificationsRpcAsync(projectWorkspace.Datasets,
+			return await DdxUtils.LoadSpecificationsRpcAsync(projectWorkspace.GetDatasetIds(),
 			                                                 IncludeHiddenSpecifications,
 			                                                 Assert.NotNull(_client.DdxClient));
 		}

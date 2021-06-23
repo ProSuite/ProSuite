@@ -1,12 +1,16 @@
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Threading.Tasks;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Contracts;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.QA.VerificationProgress;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -19,7 +23,7 @@ using ProSuite.UI.QA.VerificationProgress;
 
 namespace ProSuite.AGP.QA.ProPlugins
 {
-	public abstract class VerifyVisibleExtentCmdBase : Button
+	public abstract class VerifySelectionCmdBase : Button
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -38,7 +42,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			if (qualitySpecification == null)
 			{
-				MessageBox.Show("No Quality Specification is selected", "Verify Extent",
+				MessageBox.Show("No Quality Specification is selected", "Verify Selection",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
 				return;
 			}
@@ -48,7 +52,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 				                      CancellationTokenSource = new CancellationTokenSource()
 			                      };
 
-			Envelope currentExtent = MapView.Active.Extent;
+			// Consider getting the extent of the selection:
+			Envelope currentExtent = null; //SelectionUtils.
 
 			string resultsPath = VerifyUtils.GetResultsPath(qualitySpecification,
 			                                                Project.Current.HomeFolderPath);
@@ -62,11 +67,11 @@ namespace ProSuite.AGP.QA.ProPlugins
 				new VerificationProgressViewModel
 				{
 					ProgressTracker = progressTracker,
-					VerificationAction = () => Verify(currentExtent, progressTracker, resultsPath),
+					VerificationAction = () => Verify(progressTracker, resultsPath),
 					ApplicationController = appController
 				};
 
-			string actionTitle = "Verify Visible Extent";
+			string actionTitle = "Verify Selection";
 
 			Window window = CreateProgressWindow(qaProgressViewmodel);
 
@@ -75,10 +80,16 @@ namespace ProSuite.AGP.QA.ProPlugins
 		}
 
 		private async Task<ServiceCallStatus> Verify(
-			[NotNull] Envelope currentExtent,
 			[NotNull] QualityVerificationProgressTracker progressTracker,
 			string resultsPath)
 		{
+			var selection = await QueuedTask.Run(
+				                () =>
+				                {
+					                return SelectionUtils.GetSelectedFeatures(MapView.Active)
+					                                     .Cast<Row>().ToList();
+				                });
+
 			Task<ServiceCallStatus> verificationTask =
 				await BackgroundTask.Run(
 					() =>
@@ -88,8 +99,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 						Assert.NotNull(qaEnvironment);
 
-						return qaEnvironment.VerifyPerimeter(
-							currentExtent, progressTracker, resultsPath);
+						return qaEnvironment.VerifySelection(
+							selection, null, progressTracker, resultsPath);
 					},
 					BackgroundProgressor.None);
 
@@ -98,12 +109,12 @@ namespace ProSuite.AGP.QA.ProPlugins
 			if (result == ServiceCallStatus.Finished)
 			{
 				_msg.InfoFormat(
-					"Successfully finished extent verification. The results have been saved in {0}",
+					"Successfully finished selection verification. The results have been saved in {0}",
 					resultsPath);
 			}
 			else
 			{
-				_msg.WarnFormat("Extent verification was not finished. Status: {0}", result);
+				_msg.WarnFormat("Selection verification was not finished. Status: {0}", result);
 			}
 
 			return result;

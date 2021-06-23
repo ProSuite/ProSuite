@@ -1,6 +1,9 @@
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -55,15 +58,46 @@ namespace ProSuite.AGP.QA
 			return await QAUtils.Verify(Assert.NotNull(_client.QaClient), request, progress);
 		}
 
+		public override async Task<ServiceCallStatus> VerifySelection(
+			IQualitySpecificationReference qualitySpecification,
+			IList<Row> objectsToVerify,
+			Geometry perimeter,
+			ProjectWorkspace projectWorkspace,
+			QualityVerificationProgressTracker progress,
+			string resultsPath)
+		{
+			QualitySpecificationReference specification =
+				qualitySpecification as QualitySpecificationReference;
+
+			Assert.NotNull(specification, "Unexpected type of quality specification");
+
+			VerificationRequest request =
+				await CreateVerificationRequest(specification, perimeter, projectWorkspace,
+				                                resultsPath, objectsToVerify);
+
+			return await QAUtils.Verify(Assert.NotNull(_client.QaClient), request, progress);
+		}
+
 		private async Task<VerificationRequest> CreateVerificationRequest(
 			[NotNull] QualitySpecificationReference specification,
-			[NotNull] Geometry perimeter, [NotNull] ProjectWorkspace projectWorkspace,
-			[CanBeNull] string resultsPath)
+			[CanBeNull] Geometry perimeter,
+			[NotNull] ProjectWorkspace projectWorkspace,
+			[CanBeNull] string resultsPath,
+			[CanBeNull] IList<Row> objectsToVerify = null)
 		{
+			string projectName = Project.Current.Name;
+
 			VerificationRequest request =
 				await QueuedTask.Run(
-					() => QAUtils.CreateRequest(projectWorkspace, _contextTypePerimeter, "map name",
-					                            specification, perimeter));
+					() =>
+					{
+						var result = QAUtils.CreateRequest(projectWorkspace, _contextTypePerimeter,
+						                                   projectName, specification, perimeter);
+
+						QAUtils.SetObjectsToVerify(result, objectsToVerify, projectWorkspace);
+
+						return result;
+					});
 
 			if (! string.IsNullOrEmpty(resultsPath))
 			{

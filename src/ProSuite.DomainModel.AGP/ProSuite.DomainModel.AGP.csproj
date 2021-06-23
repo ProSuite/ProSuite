@@ -50,6 +50,8 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="DataModel\BasicDataset.cs" />
+    <Compile Include="DataModel\DatasetLookup.cs" />
     <Compile Include="DataModel\IDatasetContext.cs" />
     <Compile Include="DataModel\IWorkspaceContext.cs" />
     <Compile Include="DataModel\Model.cs" />
