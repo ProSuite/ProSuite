@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry.Wkb;
+using ProSuite.Commons.Geom.Wkb;
 
 namespace ProSuite.Commons.AO.Geometry.Serialization
 {

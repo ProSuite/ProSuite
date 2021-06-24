@@ -9,7 +9,7 @@ using Google.Protobuf;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Gdb;
-using ProSuite.Commons.Geometry.EsriShape;
+using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Definitions.Shared;
 using Version = ArcGIS.Core.Data.Version;

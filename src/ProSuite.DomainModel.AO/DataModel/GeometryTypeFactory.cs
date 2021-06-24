@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry.EsriShape;
+using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel

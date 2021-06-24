@@ -1,5 +1,5 @@
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geom;
 
 namespace ProSuite.Commons.AO.Geometry
 {

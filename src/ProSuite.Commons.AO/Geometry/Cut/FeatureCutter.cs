@@ -10,8 +10,8 @@ using ProSuite.Commons.AO.Geometry.ZAssignment;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
-using ProSuite.Commons.Geometry.SpatialIndex;
+using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Geometry.Cut

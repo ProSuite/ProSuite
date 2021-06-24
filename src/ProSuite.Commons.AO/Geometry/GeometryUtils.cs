@@ -17,8 +17,8 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
-using ProSuite.Commons.Geometry.EsriShape;
+using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 

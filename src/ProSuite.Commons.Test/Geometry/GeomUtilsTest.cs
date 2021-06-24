@@ -4,8 +4,8 @@ using System.Diagnostics;
 using System.Linq;
 using NUnit.Framework;
 using ProSuite.Commons.Diagnostics;
-using ProSuite.Commons.Geometry;
-using ProSuite.Commons.Geometry.SpatialIndex;
+using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.SpatialIndex;
 
 namespace ProSuite.Commons.Test.Geometry
 {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geom;
 using ProSuite.DomainServices.AO.QA.Issues;
 
 namespace ProSuite.DomainServices.AO.QA.Exceptions

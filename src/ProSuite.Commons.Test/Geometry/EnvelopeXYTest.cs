@@ -1,6 +1,6 @@
 using System;
 using NUnit.Framework;
-using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geom;
 
 namespace ProSuite.Commons.Test.Geometry
 {

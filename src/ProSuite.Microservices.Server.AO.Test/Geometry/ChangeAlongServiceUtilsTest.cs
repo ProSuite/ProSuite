@@ -11,7 +11,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.ChangeAlong;
 using ProSuite.Commons.AO.Geometry.ZAssignment;
 using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geom;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared;
