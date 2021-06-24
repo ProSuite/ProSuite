@@ -7,6 +7,7 @@ using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.AGP.Hosting;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -16,10 +17,16 @@ namespace ProSuite.AGP.WorkList.Test
 	{
 		private Geodatabase _geodatabase;
 		private Table _table0;
-		private string _issuesGdb = @"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\issues.gdb";
-		private string _featureClass = "IssuePolygons";
+
+		private readonly string _issuesGdb =
+			@"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\issues.gdb";
+
+		private readonly string _featureClass = "IssuePolygons";
+
 		//private string _statesXml = @"C:\temp\states.xml";
-		private string _statesXml = @"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\a_selection_work_list.xml";
+		private string _statesXml =
+			@"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\a_selection_work_list.xml";
+
 		private IssueItemRepository _repository;
 
 		[SetUp]
@@ -28,17 +35,19 @@ namespace ProSuite.AGP.WorkList.Test
 			// http://stackoverflow.com/questions/8245926/the-current-synchronizationcontext-may-not-be-used-as-a-taskscheduler
 			SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
 
-			_geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(_issuesGdb, UriKind.Absolute)));
-
+			_geodatabase =
+				new Geodatabase(
+					new FileGeodatabaseConnectionPath(new Uri(_issuesGdb, UriKind.Absolute)));
 
 			_table0 = _geodatabase.OpenDataset<Table>(_featureClass);
 
 			var tablesByGeodatabase = new Dictionary<Geodatabase, List<Table>>
-									  {
-										  {_geodatabase, new List<Table> {_table0}}
-									  };
+			                          {
+				                          {_geodatabase, new List<Table> {_table0}}
+			                          };
 
-			IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
+			IRepository stateRepository =
+				new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 			_repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
 		}
 
@@ -46,7 +55,7 @@ namespace ProSuite.AGP.WorkList.Test
 		public void SetupFixture()
 		{
 			// Host must be initialized on an STA thread:
-			Commons.AGP.Hosting.CoreHostProxy.Initialize();
+			CoreHostProxy.Initialize();
 		}
 
 		[Test]
@@ -86,7 +95,6 @@ namespace ProSuite.AGP.WorkList.Test
 			}
 		}
 
-
 		[Test]
 		public void Can_discard_volatile_visited_state()
 		{
@@ -103,7 +111,7 @@ namespace ProSuite.AGP.WorkList.Test
 				first.Status = WorkItemStatus.Done;
 
 				_repository.UpdateVolatileState(items);
-				
+
 				items = _repository.GetItems().ToList();
 				first = items.First();
 				Assert.True(first.Visited);

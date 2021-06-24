@@ -57,7 +57,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 			_viewModel.DisposeOverlays();
 
-			return _viewModel.SelectedItem ?? null ;
+			return _viewModel.SelectedItem ?? null;
 		}
 
 		[CanBeNull]
@@ -115,6 +115,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 			{
 				vm.SelectedItem = null;
 			}
+
 			vm.DisposeOverlays();
 		}
 
@@ -131,7 +132,6 @@ namespace ProSuite.AGP.Editing.PickerUI
 			window.Left = _windowLocation.X;
 			window.Top = _windowLocation.Y;
 		}
-
 
 		private static void RunOnUIThread(Action action)
 		{

@@ -27,10 +27,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			TargetFeatures = newState.TargetFeatures;
 		}
 
-		public IReadOnlyCollection<CutSubcurve> ReshapeCutSubcurves => _reshapeSubcurves.AsReadOnly();
+		public IReadOnlyCollection<CutSubcurve> ReshapeCutSubcurves =>
+			_reshapeSubcurves.AsReadOnly();
 
-		public bool HasSelectableCurves => _curveUsability == ReshapeAlongCurveUsability.CanReshape ||
-		                                   (_reshapeSubcurves?.Any() ?? false);
+		public bool HasSelectableCurves =>
+			_curveUsability == ReshapeAlongCurveUsability.CanReshape ||
+			(_reshapeSubcurves?.Any() ?? false);
 
 		[CanBeNull]
 		public IList<Feature> TargetFeatures { get; set; }

@@ -222,7 +222,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <returns></returns>
 		public static IEnumerable<KeyValuePair<FeatureClass, List<Feature>>> FindFeatures(
 			[NotNull] MapView mapView,
-			[NotNull] ArcGIS.Core.Geometry.Geometry searchGeometry,
+			[NotNull] Geometry searchGeometry,
 			SpatialRelationship spatialRelationship,
 			TargetFeatureSelection targetSelectionType,
 			[CanBeNull] Predicate<FeatureLayer> layerPredicate,
@@ -346,14 +346,14 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[CanBeNull]
-		private static ArcGIS.Core.Geometry.Geometry GetSearchGeometry(
+		private static Geometry GetSearchGeometry(
 			[NotNull] IList<Feature> intersectingFeatures,
 			[CanBeNull] Envelope clipExtent)
 		{
 			var intersectingGeometries =
 				GetSearchGeometries(intersectingFeatures, clipExtent);
 
-			ArcGIS.Core.Geometry.Geometry result = null;
+			Geometry result = null;
 
 			if (intersectingGeometries.Count != 0)
 			{
@@ -373,11 +373,11 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="clipExtent">The clip extent.</param>
 		/// <returns></returns>
 		[NotNull]
-		private static IList<ArcGIS.Core.Geometry.Geometry> GetSearchGeometries(
+		private static IList<Geometry> GetSearchGeometries(
 			[NotNull] ICollection<Feature> features,
 			[CanBeNull] Envelope clipExtent)
 		{
-			var result = new List<ArcGIS.Core.Geometry.Geometry>(features.Count);
+			var result = new List<Geometry>(features.Count);
 
 			foreach (var geometry in GdbObjectUtils.GetGeometries(features))
 			{
@@ -419,11 +419,11 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[NotNull]
-		private static ArcGIS.Core.Geometry.Geometry GetClippedGeometry(
+		private static Geometry GetClippedGeometry(
 			[NotNull] Multipart polycurve,
 			[NotNull] Envelope clipExtent)
 		{
-			ArcGIS.Core.Geometry.Geometry clippedGeometry;
+			Geometry clippedGeometry;
 
 			if (GeometryUtils.Contains(clipExtent, polycurve))
 			{
@@ -444,8 +444,8 @@ namespace ProSuite.Commons.AGP.Carto
 			return clippedGeometry;
 		}
 
-		public static ArcGIS.Core.Geometry.Geometry ToMapGeometry(MapView mapView,
-			Polygon screenGeometry)
+		public static Geometry ToMapGeometry(MapView mapView,
+		                                     Polygon screenGeometry)
 		{
 			// TODO: ensure single-part, linear segments
 
@@ -466,7 +466,7 @@ namespace ProSuite.Commons.AGP.Carto
 			                                     screenGeometry.Extent.YMin));
 		}
 
-		public static ArcGIS.Core.Geometry.Geometry ToScreenGeometry(
+		public static Geometry ToScreenGeometry(
 			MapView mapView, Polygon mapGeometry)
 		{
 			// TODO: ensure single-part, linear segments
@@ -499,7 +499,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// Returns features filtered by spatial relationship. Honors definition queries on the layer. 
 		/// </summary>
 		public static IEnumerable<Feature> FilterLayerFeaturesByGeometry(
-			BasicFeatureLayer layer, ArcGIS.Core.Geometry.Geometry filterGeometry,
+			BasicFeatureLayer layer, Geometry filterGeometry,
 			SpatialRelationship spatialRelationship = SpatialRelationship.Intersects)
 		{
 			var qf = new SpatialQueryFilter()
@@ -524,7 +524,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// Returns oids of features filtered by spatial relationship. Honors definition queries on the layer. 
 		/// </summary>
 		public static IEnumerable<long> FilterLayerOidsByGeometry(
-			BasicFeatureLayer layer, ArcGIS.Core.Geometry.Geometry filterGeometry,
+			BasicFeatureLayer layer, Geometry filterGeometry,
 			SpatialRelationship spatialRelationship = SpatialRelationship.Intersects)
 		{
 			var qf = new SpatialQueryFilter()
@@ -604,7 +604,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 		public static async Task<bool> FlashGeometryAsync(
 			[NotNull] MapView mapView,
-			[NotNull] ArcGIS.Core.Geometry.Geometry geometry,
+			[NotNull] Geometry geometry,
 			CIMSymbolReference symbolReference,
 			int milliseconds = 400)
 		{

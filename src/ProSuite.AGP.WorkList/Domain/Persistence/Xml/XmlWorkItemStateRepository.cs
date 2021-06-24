@@ -9,7 +9,9 @@ using ProSuite.Commons.Xml;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 {
-	public class XmlWorkItemStateRepository : WorkItemStateRepository<XmlWorkItemState, XmlWorkListDefinition>
+	public class
+		XmlWorkItemStateRepository : WorkItemStateRepository<XmlWorkItemState, XmlWorkListDefinition
+		>
 	{
 		private string _filePath;
 
@@ -20,7 +22,8 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		}
 
 		public XmlWorkItemStateRepository(string filePath, string name, Type type,
-		                                  int? currentItemIndex = null) : base(name, type, currentItemIndex)
+		                                  int? currentItemIndex = null) : base(
+			name, type, currentItemIndex)
 		{
 			_filePath = filePath;
 		}
@@ -54,7 +57,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 			                 {
 				                 Name = Name, TypeName = Type.FullName,
 				                 AssemblyName = Type.Assembly.GetName().Name, Items = states,
-								 CurrentIndex = index
+				                 CurrentIndex = index
 			                 };
 
 			definition.Items = states;
@@ -83,7 +86,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence.Xml
 		protected override XmlWorkItemState CreateState(IWorkItem item)
 		{
 			var state = new XmlWorkItemState(item.OID, item.Visited, WorkItemStatus.Unknown,
-			                            new XmlGdbRowIdentity(item.Proxy));
+			                                 new XmlGdbRowIdentity(item.Proxy));
 
 			state.ConnectionString = item.Proxy.Table.Workspace.ConnectionString;
 

@@ -13,10 +13,11 @@ namespace ProSuite.Commons.AGP.Storage
 		{
 			FileName = filename;
 
-			XmlSerializer serializer = new XmlSerializer(typeof(List<T>), new XmlRootAttribute("Items"));
+			XmlSerializer serializer =
+				new XmlSerializer(typeof(List<T>), new XmlRootAttribute("Items"));
 			using (StreamReader myWriter = new StreamReader(FileName))
 			{
-				items = (IList<T>)serializer.Deserialize(myWriter);
+				items = (IList<T>) serializer.Deserialize(myWriter);
 				myWriter.Close();
 			}
 		}
@@ -25,7 +26,8 @@ namespace ProSuite.Commons.AGP.Storage
 
 		public void SaveChanges()
 		{
-			XmlSerializer serializer = new XmlSerializer(items.GetType(), new XmlRootAttribute("Items"));
+			XmlSerializer serializer =
+				new XmlSerializer(items.GetType(), new XmlRootAttribute("Items"));
 			using (StreamWriter myWriter = new StreamWriter(FileName))
 			{
 				serializer.Serialize(myWriter, items);
@@ -53,5 +55,4 @@ namespace ProSuite.Commons.AGP.Storage
 			items.Remove(item);
 		}
 	}
-
 }

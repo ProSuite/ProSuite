@@ -32,11 +32,11 @@ namespace ProSuite.AGP.WorkList
 		{
 			return Path.Combine(homeFolderPath, WorklistsFolder);
 		}
-		
+
 		[NotNull]
 		public static Uri GetDatasource([NotNull] string homeFolderPath,
-		                         [NotNull] string workListName,
-		                         [NotNull] string fileSuffix)
+		                                [NotNull] string workListName,
+		                                [NotNull] string fileSuffix)
 		{
 			//var baseUri = new Uri("worklist://localhost/");
 			string folder = GetLocalWorklistsFolder(homeFolderPath);
@@ -59,28 +59,36 @@ namespace ProSuite.AGP.WorkList
 
 			Type type = descriptor.GetInstanceType();
 
-			Dictionary<Geodatabase, List<Table>> tablesByGeodatabase = GetTablesByGeodatabase(definition.Workspaces);
+			Dictionary<Geodatabase, List<Table>> tablesByGeodatabase =
+				GetTablesByGeodatabase(definition.Workspaces);
 
 			IRepository stateRepository;
 			IWorkItemRepository repository;
 
 			if (type == typeof(IssueWorkList))
 			{
-				stateRepository = new XmlWorkItemStateRepository(definition.Path, definition.Name, type, definition.CurrentIndex);
+				stateRepository =
+					new XmlWorkItemStateRepository(definition.Path, definition.Name, type,
+					                               definition.CurrentIndex);
 				repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
 			}
 			else if (type == typeof(SelectionWorkList))
 			{
-				stateRepository = new XmlWorkItemStateRepository(definition.Path, definition.Name, type, definition.CurrentIndex);
+				stateRepository =
+					new XmlWorkItemStateRepository(definition.Path, definition.Name, type,
+					                               definition.CurrentIndex);
 
 				Dictionary<long, Table> tablesById =
 					tablesByGeodatabase.Values
 					                   .SelectMany(table => table)
-					                   .ToDictionary(table => new GdbTableIdentity(table).Id, table => table);
+					                   .ToDictionary(table => new GdbTableIdentity(table).Id,
+					                                 table => table);
 
-				Dictionary<Table, List<long>> oidsByTable = GetOidsByTable(definition.Items, tablesById);
+				Dictionary<Table, List<long>> oidsByTable =
+					GetOidsByTable(definition.Items, tablesById);
 
-				repository = new SelectionItemRepository(tablesByGeodatabase, oidsByTable, stateRepository);
+				repository =
+					new SelectionItemRepository(tablesByGeodatabase, oidsByTable, stateRepository);
 			}
 			else
 			{
@@ -98,7 +106,8 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		private static Dictionary<Geodatabase, List<Table>> GetTablesByGeodatabase(ICollection<XmlWorkListWorkspace> workspaces)
+		private static Dictionary<Geodatabase, List<Table>> GetTablesByGeodatabase(
+			ICollection<XmlWorkListWorkspace> workspaces)
 		{
 			var result = new Dictionary<Geodatabase, List<Table>>(workspaces.Count);
 
@@ -137,7 +146,8 @@ namespace ProSuite.AGP.WorkList
 			try
 			{
 				Assert.True(
-					Enum.TryParse(workspace.WorkspaceFactory, ignoreCase: true, out WorkspaceFactory factory),
+					Enum.TryParse(workspace.WorkspaceFactory, ignoreCase: true,
+					              out WorkspaceFactory factory),
 					$"Cannot parse {nameof(WorkspaceFactory)} from string {workspace.WorkspaceFactory}");
 
 				switch (factory)
@@ -165,7 +175,9 @@ namespace ProSuite.AGP.WorkList
 							{
 								AuthenticationMode = authMode,
 								ProjectInstance = builder["project_instance"],
-								Database = builder["server"], // is always null in CIMFeatureDatasetDataConnection
+								Database =
+									builder[
+										"server"], // is always null in CIMFeatureDatasetDataConnection
 								Instance = builder["instance"],
 								Version = builder["version"],
 								Branch = builder["branch"] // ?
@@ -173,20 +185,22 @@ namespace ProSuite.AGP.WorkList
 								//User = builder["user"]
 							};
 
-
-				return new Geodatabase(connectionProperties);
+						return new Geodatabase(connectionProperties);
 					default:
 						throw new ArgumentOutOfRangeException();
 				}
 			}
 			catch (Exception e)
 			{
-				_msg.Debug($"Cannot open geodatabase from connection string {workspace.ConnectionString}", e);
+				_msg.Debug(
+					$"Cannot open geodatabase from connection string {workspace.ConnectionString}",
+					e);
 				return null;
 			}
 		}
 
-		private static List<Table> GetDistinctTables(XmlWorkListWorkspace workspace, Geodatabase geodatabase)
+		private static List<Table> GetDistinctTables(XmlWorkListWorkspace workspace,
+		                                             Geodatabase geodatabase)
 		{
 			var distinctTables = new Dictionary<GdbTableIdentity, Table>();
 			foreach (XmlTableReference tableReference in workspace.Tables)
@@ -202,7 +216,8 @@ namespace ProSuite.AGP.WorkList
 			return distinctTables.Values.ToList();
 		}
 
-		private static Dictionary<Table, List<long>> GetOidsByTable(IEnumerable<XmlWorkItemState> xmlItems, IDictionary<long, Table> tablesById)
+		private static Dictionary<Table, List<long>> GetOidsByTable(
+			IEnumerable<XmlWorkItemState> xmlItems, IDictionary<long, Table> tablesById)
 		{
 			var result = new Dictionary<Table, List<long>>();
 

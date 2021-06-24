@@ -40,15 +40,19 @@ namespace ProSuite.AGP.WorkList.Domain
 			_fieldNameByIssueAttribute.Add(Attributes.TextValue, "TextValue");
 			_fieldNameByIssueAttribute.Add(Attributes.IssueAssignment, "IssueAssignment");
 			_fieldNameByIssueAttribute.Add(Attributes.QualityConditionUuid, "QualityConditionUuid");
-			_fieldNameByIssueAttribute.Add(Attributes.QualityConditionVersionUuid, "QualityConditionVersionUuid");
+			_fieldNameByIssueAttribute.Add(Attributes.QualityConditionVersionUuid,
+			                               "QualityConditionVersionUuid");
 			_fieldNameByIssueAttribute.Add(Attributes.ExceptionStatus, "ExceptionStatus");
 			_fieldNameByIssueAttribute.Add(Attributes.ExceptionNotes, "ExceptionNotes");
 			_fieldNameByIssueAttribute.Add(Attributes.ExceptionCategory, "ExceptionCategory");
 			_fieldNameByIssueAttribute.Add(Attributes.ExceptionOrigin, "ExceptionOrigin");
 			_fieldNameByIssueAttribute.Add(Attributes.ExceptionDefinedDate, "ExceptionDefinedDate");
-			_fieldNameByIssueAttribute.Add(Attributes.ExceptionLastRevisionDate, "ExceptionLastRevisionDate");
-			_fieldNameByIssueAttribute.Add(Attributes.ExceptionRetirementDate, "ExceptionRetirementDate");
-			_fieldNameByIssueAttribute.Add(Attributes.ExceptionShapeMatchCriterion, "ExceptionShapeMatchCriterion");
+			_fieldNameByIssueAttribute.Add(Attributes.ExceptionLastRevisionDate,
+			                               "ExceptionLastRevisionDate");
+			_fieldNameByIssueAttribute.Add(Attributes.ExceptionRetirementDate,
+			                               "ExceptionRetirementDate");
+			_fieldNameByIssueAttribute.Add(Attributes.ExceptionShapeMatchCriterion,
+			                               "ExceptionShapeMatchCriterion");
 
 			foreach (Attributes attribute in attributes)
 			{

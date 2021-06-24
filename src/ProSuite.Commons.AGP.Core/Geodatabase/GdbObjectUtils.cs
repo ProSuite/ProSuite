@@ -4,7 +4,6 @@ using System.Globalization;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using Geometry = ArcGIS.Core.Geometry.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
@@ -38,7 +37,7 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		[NotNull]
-		public static IList<ArcGIS.Core.Geometry.Geometry> GetGeometries(
+		public static IList<Geometry> GetGeometries(
 			[NotNull] IEnumerable<Feature> features)
 		{
 			return features.Select(feature => feature.GetShape()).ToList();

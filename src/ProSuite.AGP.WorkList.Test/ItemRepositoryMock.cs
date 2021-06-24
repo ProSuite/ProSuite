@@ -48,9 +48,7 @@ namespace ProSuite.AGP.WorkList.Test
 			throw new NotImplementedException();
 		}
 
-		public void UpdateVolatileState(IEnumerable<IWorkItem> items)
-		{
-		}
+		public void UpdateVolatileState(IEnumerable<IWorkItem> items) { }
 
 		public void Commit()
 		{

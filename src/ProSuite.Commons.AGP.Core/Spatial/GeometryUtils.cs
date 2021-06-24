@@ -13,7 +13,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return new Coordinate2D(point.X + dx, point.Y + dy);
 		}
 
-		public static int GetPointCount(ArcGIS.Core.Geometry.Geometry geometry)
+		public static int GetPointCount(Geometry geometry)
 		{
 			return geometry?.PointCount ?? 0;
 		}
@@ -25,8 +25,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return a.Union(b);
 		}
 
-		public static ArcGIS.Core.Geometry.Geometry Union(
-			IEnumerable<ArcGIS.Core.Geometry.Geometry> geometries)
+		public static Geometry Union(
+			IEnumerable<Geometry> geometries)
 		{
 			return Engine.Union(geometries);
 		}
@@ -45,8 +45,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return GetClippedPolygon(perimeter, extent);
 		}
 
-		public static ArcGIS.Core.Geometry.Geometry Intersection(
-			ArcGIS.Core.Geometry.Geometry a, ArcGIS.Core.Geometry.Geometry b)
+		public static Geometry Intersection(
+			Geometry a, Geometry b)
 		{
 			if (a == null) return b;
 			if (b == null) return a;
@@ -56,7 +56,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		public static T Generalize<T>(T geometry, double maxDeviation,
 		                              bool removeDegenerateParts = false,
 		                              bool preserveCurves = false)
-			where T : ArcGIS.Core.Geometry.Geometry
+			where T : Geometry
 		{
 			if (maxDeviation < double.Epsilon)
 				return geometry;
@@ -74,15 +74,15 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		}
 
 		public static T Simplify<T>(T geometry, bool forceSimplify = false)
-			where T : ArcGIS.Core.Geometry.Geometry
+			where T : Geometry
 		{
 			if (geometry == null) return null;
 
 			return (T) Engine.SimplifyAsFeature(geometry, forceSimplify);
 		}
 
-		public static bool Contains(ArcGIS.Core.Geometry.Geometry containing,
-		                            ArcGIS.Core.Geometry.Geometry contained,
+		public static bool Contains(Geometry containing,
+		                            Geometry contained,
 		                            bool suppressIndexing = false)
 		{
 			if (containing == null) return false;
@@ -105,8 +105,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return distanceAlong;
 		}
 
-		public static bool Disjoint([NotNull] ArcGIS.Core.Geometry.Geometry geometry1,
-		                            [NotNull] ArcGIS.Core.Geometry.Geometry geometry2,
+		public static bool Disjoint([NotNull] Geometry geometry1,
+		                            [NotNull] Geometry geometry2,
 		                            bool suppressIndexing = false)
 		{
 			if (! suppressIndexing)
@@ -129,7 +129,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		}
 
 		public static T EnsureSpatialReference<T>(T geometry, SpatialReference spatialReference)
-			where T : ArcGIS.Core.Geometry.Geometry
+			where T : Geometry
 		{
 			if (geometry.SpatialReference.IsEqual(spatialReference))
 			{
@@ -139,7 +139,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return (T) Engine.Project(geometry, spatialReference);
 		}
 
-		public static bool HasCurves(this ArcGIS.Core.Geometry.Geometry geometry)
+		public static bool HasCurves(this Geometry geometry)
 		{
 			return geometry is Multipart multipart && multipart.HasCurves;
 		}

@@ -11,7 +11,8 @@ namespace ProSuite.AGP.Solution.ConfigUI
 	{
 		private ObservableCollection<ViewModelBase> _configTabViewModels;
 
-		public ProSuiteConfigViewModel(IEnumerable<ProSuiteQAServerConfiguration> serviceConfigurations)
+		public ProSuiteConfigViewModel(
+			IEnumerable<ProSuiteQAServerConfiguration> serviceConfigurations)
 		{
 			_configTabViewModels = new ObservableCollection<ViewModelBase>();
 
@@ -22,10 +23,7 @@ namespace ProSuite.AGP.Solution.ConfigUI
 
 		public ObservableCollection<ViewModelBase> ConfigTabViewModels
 		{
-			get
-			{
-				return _configTabViewModels;
-			}
+			get { return _configTabViewModels; }
 			set
 			{
 				_configTabViewModels = value;
@@ -41,7 +39,9 @@ namespace ProSuite.AGP.Solution.ConfigUI
 			get
 			{
 				return _cmdSaveSettings ??
-					   (_cmdSaveSettings = new RelayCommand(parameter => CloseSettingsWindow(parameter, true), () => true));
+				       (_cmdSaveSettings =
+					        new RelayCommand(parameter => CloseSettingsWindow(parameter, true),
+					                         () => true));
 			}
 		}
 
@@ -50,16 +50,17 @@ namespace ProSuite.AGP.Solution.ConfigUI
 			get
 			{
 				return _cmdCancelSettings ??
-					   (_cmdCancelSettings = new RelayCommand(parameter => CloseSettingsWindow(parameter, false), () => true));
+				       (_cmdCancelSettings =
+					        new RelayCommand(parameter => CloseSettingsWindow(parameter, false),
+					                         () => true));
 			}
 		}
 
 		private void CloseSettingsWindow(object parameter, bool saveSettings)
 		{
-			ICloseable window = (ICloseable)parameter;
+			ICloseable window = (ICloseable) parameter;
 			if (window != null)
 				window.CloseWindow(saveSettings);
 		}
-
 	}
 }

@@ -35,10 +35,11 @@ namespace ProSuite.AGP.WorkList.Domain
 		public IWorkItemRepository Repository { get; }
 
 		[NotNull] private readonly List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
-		[NotNull] private readonly List<GdbRowIdentity> _invalidRows = new List<GdbRowIdentity>(_initialCapacity);
 
-		[NotNull]
-		private readonly Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
+		[NotNull] private readonly List<GdbRowIdentity> _invalidRows =
+			new List<GdbRowIdentity>(_initialCapacity);
+
+		[NotNull] private readonly Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
 			new Dictionary<GdbRowIdentity, IWorkItem>(_initialCapacity);
 
 		private EventHandler<WorkListChangedEventArgs> _workListChanged;
@@ -111,14 +112,14 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			Repository.SetStatus(item, status);
 
-			OnWorkListChanged(null, new List<long> { item.OID });
+			OnWorkListChanged(null, new List<long> {item.OID});
 		}
 
 		public void SetVisited(IWorkItem item)
 		{
 			Repository.SetVisited(item);
 
-			OnWorkListChanged(null, new List<long> { item.OID });
+			OnWorkListChanged(null, new List<long> {item.OID});
 		}
 
 		public void Commit()
@@ -150,7 +151,8 @@ namespace ProSuite.AGP.WorkList.Domain
 			if (filter is SpatialQueryFilter sf && sf.FilterGeometry != null)
 			{
 				// todo daro: do not use method to build Extent every time
-				query = query.Where(item => Relates(sf.FilterGeometry, sf.SpatialRelationship, item.Extent));
+				query = query.Where(
+					item => Relates(sf.FilterGeometry, sf.SpatialRelationship, item.Extent));
 			}
 
 			if (! ignoreListSettings && AreaOfInterest != null)
@@ -353,7 +355,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
-				_msg.DebugFormat("Getting work items for innermost context ({0} perimeters)", perimeters.Length);
+				_msg.DebugFormat("Getting work items for innermost context ({0} perimeters)",
+				                 perimeters.Length);
 			}
 
 			const CurrentSearchOption currentSearch = CurrentSearchOption.ExcludeCurrent;
@@ -380,15 +383,18 @@ namespace ProSuite.AGP.WorkList.Domain
 					//                                     SpatialSearchOption.Within,
 					//                                     match);
 
-					SpatialQueryFilter filter = GdbQueryUtils.CreateSpatialFilter(intersection, SpatialRelationship.Within);
+					SpatialQueryFilter filter =
+						GdbQueryUtils.CreateSpatialFilter(intersection, SpatialRelationship.Within);
 
-					List<IWorkItem> workItems = GetItems(filter, startIndex, currentSearch, visitedSearch).ToList();
+					List<IWorkItem> workItems =
+						GetItems(filter, startIndex, currentSearch, visitedSearch).ToList();
 
 					if (workItems.Count == 0)
 					{
 						if (_msg.IsVerboseDebugEnabled)
 						{
-							_msg.Debug("No work items fully within the intersection, searching partially contained items");
+							_msg.Debug(
+								"No work items fully within the intersection, searching partially contained items");
 						}
 
 						// todo daro: old implementation
@@ -400,7 +406,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 						filter = GdbQueryUtils.CreateSpatialFilter(intersection);
 
-						workItems = GetItems(filter, startIndex, currentSearch, visitedSearch).ToList();
+						workItems = GetItems(filter, startIndex, currentSearch, visitedSearch)
+							.ToList();
 					}
 
 					if (_msg.IsVerboseDebugEnabled)
@@ -412,6 +419,7 @@ namespace ProSuite.AGP.WorkList.Domain
 					{
 						return workItems;
 					}
+
 					// else: continue with next perimeter
 				}
 			}
@@ -423,8 +431,10 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		private IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, int startIndex = -1,
-		                                        CurrentSearchOption currentSearch = CurrentSearchOption.ExcludeCurrent,
-		                                        VisitedSearchOption visitedSearch = VisitedSearchOption.ExcludeVisited)
+		                                        CurrentSearchOption currentSearch =
+			                                        CurrentSearchOption.ExcludeCurrent,
+		                                        VisitedSearchOption visitedSearch =
+			                                        VisitedSearchOption.ExcludeVisited)
 		{
 			IEnumerable<IWorkItem> query = GetItems(filter, false, startIndex);
 
@@ -476,6 +486,7 @@ namespace ProSuite.AGP.WorkList.Domain
 						// no further intersection, result is empty
 						return intersection;
 					}
+
 					if (projectedPerimeter.IsEmpty)
 					{
 						// no further intersection, result is empty
@@ -621,7 +632,8 @@ namespace ProSuite.AGP.WorkList.Domain
 							else
 							{
 								//MapPoint otherCentroid = GeometryEngine.Instance.Centroid(otherExtent);
-								distance = GeometryEngine.Instance.Distance(projected, otherExtent.Center);
+								distance =
+									GeometryEngine.Instance.Distance(projected, otherExtent.Center);
 							}
 
 							// todo daro: old implentation
@@ -645,6 +657,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 							throw;
 						}
+
 						if (distance < minDistance)
 						{
 							minDistance = distance;
@@ -677,7 +690,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			if (! useCentroid && GeometryUtils.GetPointCount(reference) > maxPointCount)
 			{
-				_msg.Debug("Too many points on reference geometry for searching, using center of envelope");
+				_msg.Debug(
+					"Too many points on reference geometry for searching, using center of envelope");
 				useCentroid = true;
 			}
 
@@ -984,7 +998,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#endregion
 
-		private void OnWorkListChanged([CanBeNull] Envelope extent = null, [CanBeNull] List<long> oids = null)
+		private void OnWorkListChanged([CanBeNull] Envelope extent = null,
+		                               [CanBeNull] List<long> oids = null)
 		{
 			_workListChanged?.Invoke(this, new WorkListChangedEventArgs(extent, oids));
 		}

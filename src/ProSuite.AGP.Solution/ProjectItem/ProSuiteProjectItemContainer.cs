@@ -7,7 +7,8 @@ namespace ProSuite.AGP.Solution.ProjectItem
 {
 	// this is main container for all specific project items
 
-	internal sealed class ProSuiteProjectItemContainer : CustomProjectItemContainer<ProSuiteProjectItem>
+	internal sealed class
+		ProSuiteProjectItemContainer : CustomProjectItemContainer<ProSuiteProjectItem>
 	{
 		//This should be an arbitrary unique string. It must match your <content type="..." 
 		//in the Config.daml for the container
@@ -42,11 +43,10 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		}
 
 		// TODO algr: better icon (similar to ArcGIS Pro project items)
-		public override ImageSource LargeImage => ImageUtils.GetImageSource(@"FolderWithGISData32.png");
+		public override ImageSource LargeImage =>
+			ImageUtils.GetImageSource(@"FolderWithGISData32.png");
 
-		public override Task<ImageSource> SmallImage => Task.FromResult((ImageSource)ImageUtils.GetImageSource(@"FolderWithGISData16.png"));
-
+		public override Task<ImageSource> SmallImage =>
+			Task.FromResult((ImageSource) ImageUtils.GetImageSource(@"FolderWithGISData16.png"));
 	}
-
-
 }

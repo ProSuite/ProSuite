@@ -73,7 +73,8 @@ namespace ProSuite.AGP.WorkList.Datasource
 			                               .Select(item => GetValues(item, _workList.Current))
 			                               .ToList(); // TODO drop ToList, inline
 
-			_msg.DebugStopTiming(watch, $"{nameof(WorkItemTable)}.{nameof(Search)}(): {list.Count} items");
+			_msg.DebugStopTiming(
+				watch, $"{nameof(WorkItemTable)}.{nameof(Search)}(): {list.Count} items");
 
 			return new WorkItemCursor(list);
 		}
@@ -104,7 +105,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 			fields.Add(new PluginField("SHAPE", "Shape", FieldType.Geometry));
 			return fields.ToArray();
 		}
-		
+
 		private Polygon CreatePolygon(IWorkItem item)
 		{
 			Envelope extent = item.Extent;
@@ -113,7 +114,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 			{
 				return PolygonBuilder.CreatePolygon(extent, extent.SpatialReference);
 			}
-			
+
 			item.QueryPoints(out double xmin, out double ymin,
 			                 out double xmax, out double ymax,
 			                 out double zmax);

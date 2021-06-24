@@ -52,6 +52,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 					//_oids = States.Select(item => item.OID).OrderBy(oid => oid).ToList();
 					Refresh();
 				}
+
 				return _oids;
 			}
 		}
@@ -93,7 +94,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			}
 			else
 			{
-				_workspaces.Add(workspace, new SimpleSet<GdbTableIdentity> { table });
+				_workspaces.Add(workspace, new SimpleSet<GdbTableIdentity> {table});
 			}
 
 			state.Visited = item.Visited;

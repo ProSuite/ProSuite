@@ -8,7 +8,7 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 	public static class GeometryFactory
 	{
 		[NotNull]
-		public static T Clone<T>([NotNull] T prototype) where T : ArcGIS.Core.Geometry.Geometry
+		public static T Clone<T>([NotNull] T prototype) where T : Geometry
 		{
 			return (T) prototype.Clone();
 		}

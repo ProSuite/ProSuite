@@ -1,6 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using System.Windows;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -86,7 +87,6 @@ namespace ProSuite.Commons.AGP.WPF
 			return await Task.FromResult(default(T));
 		}
 
-
 		private static void Log([NotNull] IMsg msg, [CanBeNull] string method)
 		{
 			Assert.ArgumentNotNull(msg, nameof(msg));
@@ -98,7 +98,7 @@ namespace ProSuite.Commons.AGP.WPF
 		{
 			Assert.ArgumentNotNull(action, nameof(action));
 
-			if (System.Windows.Application.Current.Dispatcher.CheckAccess())
+			if (Application.Current.Dispatcher.CheckAccess())
 			{
 				//No invoke needed
 				action();
@@ -106,7 +106,7 @@ namespace ProSuite.Commons.AGP.WPF
 			else
 			{
 				//We are not on the UI
-				System.Windows.Application.Current.Dispatcher.BeginInvoke(action);
+				Application.Current.Dispatcher.BeginInvoke(action);
 			}
 		}
 	}

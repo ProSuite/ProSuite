@@ -13,8 +13,9 @@ namespace ProSuite.AGP.Editing.Selection
 		public static List<FeatureClassInfo> GetSelectableFeatureclassInfos()
 		{
 			IEnumerable<FeatureLayer> featureLayers = MapView.Active.Map.GetLayersAsFlattenedList()
-			                                                 .OfType<FeatureLayer>().Where(layer => layer.IsVisible);
-			
+			                                                 .OfType<FeatureLayer>()
+			                                                 .Where(layer => layer.IsVisible);
+
 			IEnumerable<IGrouping<string, FeatureLayer>> layerGroupsByFcName =
 				featureLayers.GroupBy(layer => layer.GetFeatureClass().GetName());
 

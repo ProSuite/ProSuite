@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
 using ArcGIS.Core.CIM;
+using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -231,7 +232,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			return marker;
 		}
 
-		public static ArcGIS.Core.Geometry.Geometry CreateMarkerGeometry(MarkerStyle style)
+		public static Geometry CreateMarkerGeometry(MarkerStyle style)
 		{
 			switch (style)
 			{

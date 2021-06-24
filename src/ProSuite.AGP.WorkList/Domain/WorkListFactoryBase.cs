@@ -51,6 +51,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 				WorkList.Name = Name;
 			}
+
 			return WorkList;
 		}
 	}
