@@ -86,17 +86,21 @@ namespace ProSuite.Commons.UI.WPF
 
 			if (! knownChanged)
 			{
-				// This will test the Can method an trigger this method with knownChanged == true.
+				// This will test the Can method and trigger this method with knownChanged == true.
 				CanExecute(parameter);
+				return;
 			}
 
-			// NOTE: When setting properties on objects that implement INotifyPropertyChanged
+			// NOTE (WinForms): Application.Current is null in ArcMap. Supposedly the non-modal
+			// dialog has it's own message pump which ensures the correct state of the UI.
+
+			// NOTE (WPF): When setting properties on objects that implement INotifyPropertyChanged
 			// from a background thread, WPF automatically invokes the setter on the UI thread
 			// which is necessary to avoid InvalidOperationExceptions ('The calling thread cannot
 			// access this object because a different thread owns it').
 			// However, for raising events this is not the case! The command and the event handler
 			// were created on the UI thread and hence must be accessed on the UI thread:
-			Application.Current.Dispatcher.BeginInvoke(
+			Application.Current?.Dispatcher.BeginInvoke(
 				new Action(delegate
 				{
 					// This invokes the CommandManager.RequerySuggested event which fires the
