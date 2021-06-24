@@ -18,6 +18,7 @@ using ProSuite.AGP.Solution.ProjectItem;
 using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.AGP.WorkList;
 using ProSuite.Application.Configuration;
+using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -39,7 +40,7 @@ namespace ProSuite.AGP.Solution
 
 		const string _microserviceClientConfigXml =
 			"prosuite.microservice.geometry_processing.client.config.xml";
-
+		
 		public static event EventHandler<ProSuiteQAConfigEventArgs> OnQAConfigurationChanged;
 
 		private static ProSuiteQAManager _qaManager;
@@ -166,6 +167,8 @@ namespace ProSuite.AGP.Solution
 			LogMessageActionEvent.Subscribe(OnLogMessageActionRequested);
 
 			StartToolMicroserviceClientAsync().GetAwaiter();
+
+			EnvironmentUtils.SetConfigurationDirectoryProvider(new ConfigurationDirectoryProvider("Esri Switzerland", "Pro Trials"));
 
 			return base.Initialize();
 		}

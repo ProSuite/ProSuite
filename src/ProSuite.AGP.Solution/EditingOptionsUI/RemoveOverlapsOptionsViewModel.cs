@@ -1,9 +1,11 @@
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.AGP.Editing.RemoveOverlaps;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.EditingOptionsUI
 {
+	[UsedImplicitly]
 	internal class RemoveOverlapsOptionsViewModel : DockPane
 	{
 		private const string _dockPaneID = "ProSuite_AGP_Solution_EditingOptionsUI_RemoveOverlapsOptions";
@@ -54,7 +56,10 @@ namespace ProSuite.AGP.Solution.EditingOptionsUI
 		public RemoveOverlapsOptions Options
 		{
 			get => _options;
-			set => _options = value;
+			set
+			{
+				SetProperty(ref _options, value, () => Options);
+			}
 		}
 	}
 	

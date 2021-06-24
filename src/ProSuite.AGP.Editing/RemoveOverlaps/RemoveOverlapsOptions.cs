@@ -1,3 +1,5 @@
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.ManagedOptions;
@@ -8,11 +10,21 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 {
 	public class RemoveOverlapsOptions : OptionsBase<PartialRemoveOverlapsOptions>
 	{
-		public CentralizableSetting<bool> CentralizableLimitOverlapCalculationToExtent { get; }
+		private CentralizableSetting<TargetFeatureSelection> _centralizableTargetFeatureSelection;
+		private CentralizableSetting<bool> _centralizableLimitOverlapCalculationToExtent;
 
+		[UsedImplicitly]
+		public CentralizableSetting<bool> CentralizableLimitOverlapCalculationToExtent
+		{
+			get => _centralizableLimitOverlapCalculationToExtent;
+			set => _centralizableLimitOverlapCalculationToExtent = value;
+		}
+
+		[UsedImplicitly]
 		public CentralizableSetting<TargetFeatureSelection> CentralizableTargetFeatureSelection
 		{
-			get;
+			get => _centralizableTargetFeatureSelection;
+			set => _centralizableTargetFeatureSelection = value;
 		}
 
 		public CentralizableSetting<bool> CentralizableExplodeMultipartResults { get; }
@@ -23,6 +35,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			[CanBeNull] PartialRemoveOverlapsOptions centralOptions,
 			[CanBeNull] PartialRemoveOverlapsOptions localOptions)
 		{
+
 			CentralOptions = centralOptions;
 
 			LocalOptions = localOptions ?? new PartialRemoveOverlapsOptions();
@@ -127,5 +140,13 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		}
 
 		#endregion
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		[NotifyPropertyChangedInvocator]
+		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+		{
+			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+		}
 	}
 }

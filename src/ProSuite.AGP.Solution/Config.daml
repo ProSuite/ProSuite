@@ -1,4 +1,5 @@
 <ArcGIS defaultAssembly="ProSuiteSolution.dll" defaultNamespace="ProSuite.AGP.Solution" xmlns="http://schemas.esri.com/DADF/Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
+  <AddInInfo id="{aca43c2a-8357-4476-8660-e8bc28bdf848}" version="0.3" desktopVersion="2.5.22081">
     <Name>ProSuite</Name>
     <Description>The ProSuite productivity extension for data production, cartographic refinement, and quality assurance</Description>
     <Image>Images\AddinDesktop32.png</Image>
@@ -165,7 +166,7 @@
               className="Editing.CutAlongTool" loadOnClick="true" smallImage="Images\CutPolygonAlongTool16.png"
               largeImage="Images\CutPolygonAlongTool32.png" condition="esri_mapping_mapPane">
           <tooltip heading="Cut Along Tool">
-            Cut along
+            Cut along</tooltip>
         </tool>
         <tool id="ProSuiteTools_Editing_AdvancedReshapeTool" caption="AdvancedReshapeTool" className="Editing.AdvancedReshapeTool" loadOnClick="true" smallImage="Images\AdvancedReshapeTool16.png" largeImage="Images\AdvancedReshapeTool32.png" condition="esri_mapping_mapPane">
           <tooltip heading="Advanced Reshape" image="Images\AdvancedReshapeToolTip.png">

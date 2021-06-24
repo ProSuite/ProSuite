@@ -1,15 +1,34 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:ProSuite.AGP.Solution.EditingOptionsUI">
+                    xmlns:local="clr-namespace:ProSuite.AGP.Solution.EditingOptionsUI"
+                    xmlns:diag="clr-namespace:System.Diagnostics;assembly=WindowsBase"
+                    xmlns:editing="clr-namespace:ProSuite.Commons.AGP.Carto;assembly=ProSuite.Commons.AGP"
+                    >
     
     <local:OverrideToFontStyleConverter x:Key="Converter"/>
+
+    <local:EnumBooleanConverter x:Key="EnumBooleanConverter"/>
 
     <ControlTemplate TargetType="CheckBox" x:Key="CentralizableSettingCheckbox">
         <CheckBox Content="{TemplateBinding Content}"
                   DataContext="{TemplateBinding DataContext}"
-                  IsChecked="{Binding CurrentValue}"
+                  IsChecked="{Binding CurrentValue, diag:PresentationTraceSources.TraceLevel=High}"
                   IsEnabled="{Binding CanOverrideLocally}"
-                  FontStyle="{Binding HasLocalOverride, Mode=OneWay, Converter={StaticResource Converter}}"
+                  FontStyle="{Binding HasLocalOverride, Converter={StaticResource Converter}}"
+                  ToolTipService.ShowOnDisabled="True"
+                  ToolTip="{Binding ToolTip}" 
+                  Margin="6"/>
+    </ControlTemplate>
+
+
+<!-- do not use this templated radio buttons do not propagate IsChecked. Reason yet unknown. -->
+    <ControlTemplate TargetType="RadioButton" x:Key="CentralizableSettingRadioButton">
+        <RadioButton Content="{TemplateBinding Content}"
+                  DataContext="{TemplateBinding DataContext}"
+                  IsChecked="{TemplateBinding IsChecked}"
+                  GroupName="{TemplateBinding GroupName}"
+                  IsEnabled="{Binding CanOverrideLocally}"
+                  FontStyle="{Binding HasLocalOverride, Converter={StaticResource Converter}}"
                   ToolTipService.ShowOnDisabled="True"
                   ToolTip="{Binding ToolTip}" 
                   Margin="6"/>

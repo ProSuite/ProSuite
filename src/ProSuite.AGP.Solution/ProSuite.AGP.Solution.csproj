@@ -101,6 +101,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="EditingOptionsUI\OverrideToFontStyleConverter.cs" />
+    <Compile Include="EditingOptionsUI\EnumBooleanConverter.cs" />
     <Compile Include="EditingOptionsUI\RemoveOverlapsOptions.xaml.cs">
       <DependentUpon>RemoveOverlapsOptions.xaml</DependentUpon>
     </Compile>

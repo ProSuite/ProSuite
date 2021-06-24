@@ -17,11 +17,13 @@ namespace ProSuite.AGP.Solution.Editing
 
 		protected override void ShowOptionsPane()
 		{
-			var view = RemoveOverlapsOptionsViewModel.GetInstance();
+			var viewModel = RemoveOverlapsOptionsViewModel.GetInstance();
 				
-			view.Options = RemoveOverlapsOptions;
+			viewModel.Options = RemoveOverlapsOptions;
 
-			view.Activate();
+			viewModel.Activate(true);
 		}
+
+		
 	}
 }
