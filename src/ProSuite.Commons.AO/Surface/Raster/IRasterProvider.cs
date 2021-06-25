@@ -1,7 +1,6 @@
 using System;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
 
 namespace ProSuite.Commons.AO.Surface.Raster
 {
