@@ -65,7 +65,7 @@ namespace ProSuite.Microservices.Client.QA
 		/// Shows a report for this verification.
 		/// </summary>
 		/// <param name="verificationResult"></param>
-		void ShowReport(IQualityVerificationResult verificationResult);
+		void ShowReport([NotNull] IQualityVerificationResult verificationResult);
 
 		/// <summary>
 		/// Whether showing the report is possible or not.
@@ -74,8 +74,8 @@ namespace ProSuite.Microservices.Client.QA
 		/// <param name="verificationResult"></param>
 		/// <param name="reason">The reason why showing the report is not possible</param>
 		/// <returns></returns>
-		bool CanShowReport(ServiceCallStatus? currentProgressStep,
-		                   IQualityVerificationResult verificationResult,
+		bool CanShowReport([CanBeNull] ServiceCallStatus? currentProgressStep,
+		                   [NotNull] IQualityVerificationResult verificationResult,
 		                   out string reason);
 
 		/// <summary>
@@ -84,7 +84,7 @@ namespace ProSuite.Microservices.Client.QA
 		/// <param name="verificationResult"></param>
 		/// <param name="errorDeletion"></param>
 		/// <param name="updateLatestTestDate"></param>
-		void SaveIssues(IQualityVerificationResult verificationResult,
+		void SaveIssues([NotNull] IQualityVerificationResult verificationResult,
 		                ErrorDeletionInPerimeter errorDeletion,
 		                bool updateLatestTestDate);
 
@@ -94,6 +94,7 @@ namespace ProSuite.Microservices.Client.QA
 		/// <param name="verificationResult"></param>
 		/// <param name="reason"></param>
 		/// <returns></returns>
-		bool CanSaveIssues(IQualityVerificationResult verificationResult, out string reason);
+		bool CanSaveIssues([NotNull] IQualityVerificationResult verificationResult,
+		                   out string reason);
 	}
 }

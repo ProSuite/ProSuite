@@ -19,7 +19,7 @@ namespace ProSuite.Microservices.Client.QA
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		[CanBeNull] private readonly IClientIssueMessageCollector _resultIssueCollector;
-		[NotNull] private readonly IDomainTransactionManager _domainTransactions;
+		[CanBeNull] private readonly IDomainTransactionManager _domainTransactions;
 		private readonly IQualityVerificationRepository _qualityVerificationRepository;
 		private readonly IQualityConditionRepository _qualityConditionRepository;
 
@@ -27,11 +27,16 @@ namespace ProSuite.Microservices.Client.QA
 
 		public QualityVerificationMsg VerificationMsg { get; set; }
 
+		// TODO: Remove DDX-specific stuff and
+		// - either provide the necessary repositories etc. as method parameters where needed
+		// - or handle the the DDX-related stuff in the caller, which should probably always be
+		//   the IApplicationBackgroundVerificationController implementation.
+		// Alternatively create a separate implementation for the interface.
 		public BackgroundVerificationResult(
 			[CanBeNull] IClientIssueMessageCollector resultIssueCollector,
-			[NotNull] IDomainTransactionManager domainTransactions,
-			[NotNull] IQualityVerificationRepository qualityVerificationRepository,
-			[NotNull] IQualityConditionRepository qualityConditionRepository)
+			[CanBeNull] IDomainTransactionManager domainTransactions,
+			[CanBeNull] IQualityVerificationRepository qualityVerificationRepository,
+			[CanBeNull] IQualityConditionRepository qualityConditionRepository)
 		{
 			_resultIssueCollector = resultIssueCollector;
 
@@ -61,20 +66,20 @@ namespace ProSuite.Microservices.Client.QA
 
 		public bool HasQualityVerification()
 		{
-			return VerificationMsg != null;
+			return VerificationMsg != null && _domainTransactions != null;
 		}
 
 		public QualityVerification GetQualityVerification()
 		{
+			// TODO: Load the conditions-dictionary up front and provide as parameter or use
+			// separate implementations if no direct DDX access is available.
+			if (_domainTransactions == null)
+			{
+				return null;
+			}
+
 			if (_qualityVerification == null)
 			{
-				// TODO: Remove this (load the conditions-dictionary up front and provide as parameter)
-				// or use separate implementations 
-				if (_domainTransactions == null)
-				{
-					return null;
-				}
-
 				_domainTransactions.UseTransaction(
 					() =>
 					{

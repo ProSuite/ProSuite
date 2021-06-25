@@ -512,8 +512,9 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 		#endregion
 
+		[NotNull]
 		private IQualityVerificationResult VerificationResult =>
-			ProgressTracker.QualityVerificationResult;
+			Assert.NotNull(ProgressTracker.QualityVerificationResult);
 
 		public async Task<ServiceCallStatus> RunBackgroundVerificationAsync()
 		{

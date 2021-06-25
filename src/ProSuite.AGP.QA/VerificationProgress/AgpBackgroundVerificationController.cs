@@ -154,6 +154,11 @@ namespace ProSuite.AGP.QA.VerificationProgress
 
 		public void ShowReport(IQualityVerificationResult verificationResult)
 		{
+			if (verificationResult.HtmlReportPath == null)
+			{
+				return;
+			}
+
 			Process.Start(verificationResult.HtmlReportPath);
 		}
 
@@ -165,14 +170,6 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			    currentProgressStep == ServiceCallStatus.Undefined)
 			{
 				reason = "Shows the verification report once the verification is completed";
-
-				return false;
-			}
-
-			// TODO: Remove from here
-			if (! verificationResult.HasQualityVerification())
-			{
-				reason = "The verification result does not contain a quality verification";
 
 				return false;
 			}
