@@ -71,6 +71,7 @@
     <Compile Include="DataModel\ForeignKeyAssociation.cs" />
     <Compile Include="DataModel\ForeignKeyAssociationEnd.cs" />
     <Compile Include="DataModel\GeometryType.cs" />
+    <Compile Include="DataModel\GeometryTypeFactory.cs" />
     <Compile Include="DataModel\GeometryTypeGeometricNetwork.cs" />
     <Compile Include="DataModel\GeometryTypeNoGeometry.cs" />
     <Compile Include="DataModel\GeometryTypeRasterDataset.cs" />

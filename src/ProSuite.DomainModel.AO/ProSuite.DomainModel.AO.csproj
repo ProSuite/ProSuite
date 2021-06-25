@@ -83,7 +83,6 @@
     </Compile>
     <Compile Include="DataModel\AttributeUtils.cs" />
     <Compile Include="DataModel\FieldIndexCache.cs" />
-    <Compile Include="DataModel\GeometryTypeFactory.cs" />
     <Compile Include="DataModel\GlobalDatasetLookup.cs" />
     <Compile Include="DataModel\Harvesting\DatasetFeatureDatasetMatchCriterion.cs" />
     <Compile Include="DataModel\Harvesting\DatasetFilter.cs" />

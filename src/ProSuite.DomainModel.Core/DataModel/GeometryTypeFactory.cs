@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.EsriShape;
-using ProSuite.DomainModel.Core.DataModel;
 
-namespace ProSuite.DomainModel.AO.DataModel
+namespace ProSuite.DomainModel.Core.DataModel
 {
 	/// <summary>
 	/// Factory for creating the standard list of geometry types
