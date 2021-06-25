@@ -15,7 +15,6 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.WPF;
-using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.Microservices.Client.QA;
 
@@ -94,25 +93,6 @@ namespace ProSuite.UI.QA.VerificationProgress
 		/// saving or showing the report.
 		/// </summary>
 		public IApplicationBackgroundVerificationController ApplicationController { get; set; }
-
-		/// <summary>
-		/// Action to be called when the 'Show report' button is clicked.
-		/// </summary>
-		[CanBeNull]
-		[Obsolete]
-		public Action<QualityVerification> ShowReportAction { get; set; }
-
-		[CanBeNull]
-		[Obsolete]
-		public Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool> SaveAction
-		{
-			get;
-			set;
-		}
-
-		[CanBeNull]
-		[Obsolete]
-		public Action<IList<EnvelopeXY>> FlashProgressAction { get; set; }
 
 		#endregion
 
@@ -469,7 +449,6 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 				return _openWorkListCommand;
 			}
-			set => _openWorkListCommand = value;
 		}
 
 		public string OpenWorkListToolTip
@@ -495,11 +474,6 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 				return _zoomToPerimeterCommand;
 			}
-			set
-			{
-				_zoomToPerimeterCommand = value;
-				OnPropertyChanged();
-			}
 		}
 
 		public string ZoomToVerifiedPerimeterToolTip
@@ -519,8 +493,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 				if (_flashProgressCmd == null)
 				{
 					_flashProgressCmd = new RelayCommand<VerificationProgressViewModel>(
-						vm => FlashProgress(vm),
-						(vm) => CanFlash());
+						FlashProgress, (vm) => CanFlash());
 				}
 
 				return _flashProgressCmd;
@@ -541,25 +514,6 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 		private IQualityVerificationResult VerificationResult =>
 			ProgressTracker.QualityVerificationResult;
-
-		private bool CanFlash()
-		{
-			if (FlashProgressAction != null)
-			{
-				// TODO: Remove once all environments use the ApplicationController
-				return _allTiles.Count > 0 &&
-				       ProgressTracker.RemoteCallStatus == ServiceCallStatus.Running;
-			}
-
-			string reason = null;
-			bool canFlash = ApplicationController?.CanFlashProgress(
-				                ProgressTracker.RemoteCallStatus, _allTiles,
-				                out reason) == true;
-
-			FlashProgressToolTip = reason ?? "Show the tile verification progress";
-
-			return canFlash;
-		}
 
 		public async Task<ServiceCallStatus> RunBackgroundVerificationAsync()
 		{
@@ -650,21 +604,25 @@ namespace ProSuite.UI.QA.VerificationProgress
 			}
 		}
 
+		private bool CanFlash()
+		{
+			string reason = null;
+			bool canFlash = ApplicationController?.CanFlashProgress(
+				                ProgressTracker.RemoteCallStatus, _allTiles,
+				                out reason) == true;
+
+			FlashProgressToolTip = reason ?? "Show the tile verification progress";
+
+			return canFlash;
+		}
+
 		private void FlashProgress(VerificationProgressViewModel viewModel)
 		{
 			Try(nameof(FlashProgress),
 			    () =>
 			    {
-				    if (FlashProgressAction != null)
-				    {
-					    // TODO: Remove once all environments use the ApplicationController
-					    FlashProgressAction.Invoke(_allTiles);
-				    }
-				    else
-				    {
-					    ApplicationController?.FlashProgress(
-						    _allTiles, ProgressTracker.RemoteCallStatus);
-				    }
+				    ApplicationController?.FlashProgress(
+					    _allTiles, ProgressTracker.RemoteCallStatus);
 			    });
 		}
 
@@ -733,21 +691,13 @@ namespace ProSuite.UI.QA.VerificationProgress
 				    }
 				    else
 				    {
-					    // TODO: Remove once all environments use the ApplicationController
-					    if (SaveAction != null)
-					    {
-						    result = VerificationResult.CanSaveIssues;
-					    }
-					    else
-					    {
-						    string reason = null;
-						    result = VerificationResult != null &&
-						             ApplicationController != null &&
-						             ApplicationController.CanSaveIssues(
-							             VerificationResult, out reason);
+					    string reason = null;
+					    result = VerificationResult != null &&
+					             ApplicationController != null &&
+					             ApplicationController.CanSaveIssues(
+						             VerificationResult, out reason);
 
-						    SaveErrorsToolTip = reason;
-					    }
+					    SaveErrorsToolTip = reason;
 				    }
 
 				    IssueOptionsEnabled = result;
@@ -761,40 +711,16 @@ namespace ProSuite.UI.QA.VerificationProgress
 			Try(nameof(SaveIssues),
 			    () =>
 			    {
-				    if (ApplicationController != null)
-				    {
-					    ApplicationController.SaveIssues(VerificationResult,
-					                                     UpdateOptions.ErrorDeletionType,
-					                                     ! UpdateOptions.KeepPreviousIssues);
-				    }
-				    else
-				    {
-					    // TODO: Remove once all environments use the ApplicationController
-					    SaveAction?.Invoke(VerificationResult, UpdateOptions.ErrorDeletionType,
-					                       ! UpdateOptions.KeepPreviousIssues);
-
-					    // Once saved, the button should be disabled
-					    SaveAction = null;
-				    }
+				    ApplicationController?.SaveIssues(VerificationResult,
+				                                      UpdateOptions.ErrorDeletionType,
+				                                      ! UpdateOptions.KeepPreviousIssues);
 			    });
 		}
 
 		private void ShowReport()
 		{
 			Try(nameof(ShowReport),
-			    () =>
-			    {
-				    if (ApplicationController != null)
-				    {
-					    ApplicationController.ShowReport(VerificationResult);
-				    }
-				    else
-				    {
-					    // TODO: Remove once all environments have beeen moved to AppController
-					    Assert.NotNull(ShowReportAction, "ShowReportAction not set.");
-					    ShowReportAction(VerificationResult.GetQualityVerification());
-				    }
-			    });
+			    () => { ApplicationController?.ShowReport(VerificationResult); });
 		}
 
 		private bool CanShowReport()

@@ -203,18 +203,14 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			void SaveAction(IQualityVerificationResult verificationResult,
 			                ErrorDeletionInPerimeter errorDeletion,
 			                bool updateLatestTestDate) { }
-
-			void ShowReportAction(QualityVerification verification) =>
-				Process.Start(request.Parameters.HtmlReportPath);
-
+			
 			BackgroundVerificationRun verificationRun =
 				new BackgroundVerificationRun(request, null,
 				                              null,
 				                              null, progressTracker)
 				{
 					ResultIssueCollector = clientIssueMessageRepository,
-					SaveAction = SaveAction,
-					ShowReportAction = ShowReportAction
+					SaveAction = SaveAction
 				};
 
 			return verificationRun;

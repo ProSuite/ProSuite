@@ -85,9 +85,6 @@ namespace ProSuite.Microservices.Client.QA
 			set;
 		}
 
-		[CanBeNull]
-		public Action<QualityVerification> ShowReportAction { get; set; }
-
 		private StaTaskScheduler StaTaskScheduler { get; set; }
 
 		public async Task<ServiceCallStatus> ExecuteAndProcessMessagesAsync(
