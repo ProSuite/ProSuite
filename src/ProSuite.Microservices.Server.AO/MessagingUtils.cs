@@ -2,7 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Grpc.Core;
 using log4net.Appender;
-using ProSuite.Commons.Callbacks;
+using ProSuite.Commons.Essentials.Callbacks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 

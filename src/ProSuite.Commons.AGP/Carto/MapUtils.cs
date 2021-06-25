@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -19,8 +22,7 @@ namespace ProSuite.Commons.AGP.Carto
 	public static class MapUtils
 	{
 		[NotNull]
-		public static Dictionary<Table, List<long>>
-			GetDistinctSelectionByTable(
+		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
 			[NotNull] IEnumerable<BasicFeatureLayer> layers)
 		{
 			var result = new Dictionary<Table, SimpleSet<long>>();
@@ -104,9 +106,29 @@ namespace ProSuite.Commons.AGP.Carto
 		public static IEnumerable<Feature> GetFeatures(
 			KeyValuePair<BasicFeatureLayer, List<long>> layerOids)
 		{
-			var layer = layerOids.Key;
+			BasicFeatureLayer layer = layerOids.Key;
 
-			foreach (var feature in GetFeatures(layer, layerOids.Value)) yield return feature;
+			foreach (var feature in GetFeatures(layer, layerOids.Value))
+			{
+				yield return feature;
+			}
+		}
+
+		public static IEnumerable<Feature> GetFeatures([NotNull] MapMember mapMember,
+		                                               [NotNull] List<long> oidList,
+		                                               bool recycling = false)
+		{
+			var basicFeatureLayer = mapMember as BasicFeatureLayer;
+
+			if (basicFeatureLayer == null)
+			{
+				yield break;
+			}
+
+			foreach (Feature feature in GetFeatures(basicFeatureLayer, oidList, recycling))
+			{
+				yield return feature;
+			}
 		}
 
 		private static IEnumerable<Feature> GetFeatures([CanBeNull] BasicFeatureLayer layer,
@@ -174,18 +196,37 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 
 			foreach (var keyValuePair in FindFeatures(
-				mapView, searchGeometry, targetSelectionType, layerPredicate,
-				selectedFeatures, cancelableProgressor))
+				mapView, searchGeometry, SpatialRelationship.Intersects, targetSelectionType,
+				layerPredicate, null, selectedFeatures, cancelableProgressor))
 			{
 				yield return keyValuePair;
 			}
 		}
 
+		/// <summary>
+		/// Finds the features in the map by the specified criteria, grouped by feature class
+		/// </summary>
+		/// <param name="mapView">The map view containing the layers to search</param>
+		/// <param name="searchGeometry">The search geometry</param>
+		/// <param name="spatialRelationship">The spatial relationship between the found features
+		/// and the search geometry.</param>
+		/// <param name="targetSelectionType">The target selection type that determines which layers
+		/// are searched.</param>
+		/// <param name="layerPredicate">An extra layer predicate that allows for a more
+		/// fine-granular determination of the layers to be searched.</param>
+		/// <param name="featurePredicate">An extra feature predicate that allows to determine
+		/// criteria on the feature level.</param>
+		/// <param name="selectedFeatures">The selected features, relevant only for
+		/// <see cref="targetSelectionType"/> with value <see cref="TargetFeatureSelection.SameClass"/>. </param>
+		/// <param name="cancelableProgressor"></param>
+		/// <returns></returns>
 		public static IEnumerable<KeyValuePair<FeatureClass, List<Feature>>> FindFeatures(
 			[NotNull] MapView mapView,
-			[NotNull] ArcGIS.Core.Geometry.Geometry searchGeometry,
+			[NotNull] Geometry searchGeometry,
+			SpatialRelationship spatialRelationship,
 			TargetFeatureSelection targetSelectionType,
 			[CanBeNull] Predicate<FeatureLayer> layerPredicate,
+			[CanBeNull] Predicate<Feature> featurePredicate,
 			List<Feature> selectedFeatures,
 			CancelableProgressor cancelableProgressor = null)
 		{
@@ -195,12 +236,9 @@ namespace ProSuite.Commons.AGP.Carto
 			// -> Get the distinct feature classes (TODO: include layer definition queries)
 
 			IEnumerable<FeatureLayer> featureLayers =
-				mapView.Map.GetLayersAsFlattenedList()
-				       .Where(l =>
-					              l is FeatureLayer fl &&
-					              IsLayerApplicable(fl, targetSelectionType, layerPredicate,
-					                                selectedFeatures))
-				       .Cast<FeatureLayer>();
+				GetLayers<FeatureLayer>(
+					mapView, fl => IsLayerApplicable(fl, targetSelectionType, layerPredicate,
+					                                 selectedFeatures));
 
 			IEnumerable<IGrouping<IntPtr, FeatureLayer>> layersGroupedByClass =
 				featureLayers.GroupBy(fl => fl.GetFeatureClass().Handle);
@@ -222,16 +260,42 @@ namespace ProSuite.Commons.AGP.Carto
 
 					featureClass = layers.First().GetFeatureClass();
 
-					QueryFilter filter = GdbQueryUtils.CreateSpatialFilter(searchGeometry);
+					QueryFilter filter =
+						GdbQueryUtils.CreateSpatialFilter(searchGeometry, spatialRelationship);
 					filter.WhereClause = layers.Key;
 
-					features.AddRange(GdbQueryUtils.GetFeatures(featureClass, filter, false));
+					IEnumerable<Feature> foundFeatures = GdbQueryUtils
+					                                     .GetFeatures(featureClass, filter, false)
+					                                     .Where(f => featurePredicate == null ||
+						                                            featurePredicate(f));
+					features.AddRange(foundFeatures);
 				}
 
-				if (featureClass != null)
+				if (featureClass != null && features.Count > 0)
 				{
 					yield return new KeyValuePair<FeatureClass, List<Feature>>(
 						featureClass, features.DistinctBy(f => f.GetObjectID()).ToList());
+				}
+			}
+		}
+
+		public static IEnumerable<T> GetLayers<T>(
+			[NotNull] MapView mapView,
+			[CanBeNull] Predicate<T> layerPredicate) where T : Layer
+		{
+			foreach (Layer layer in mapView.Map.GetLayersAsFlattenedList())
+			{
+				T matchingTypeLayer = layer as T;
+
+				if (matchingTypeLayer == null)
+				{
+					continue;
+				}
+
+				if (layerPredicate == null ||
+				    layerPredicate(matchingTypeLayer))
+				{
+					yield return matchingTypeLayer;
 				}
 			}
 		}
@@ -282,14 +346,14 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[CanBeNull]
-		private static ArcGIS.Core.Geometry.Geometry GetSearchGeometry(
+		private static Geometry GetSearchGeometry(
 			[NotNull] IList<Feature> intersectingFeatures,
 			[CanBeNull] Envelope clipExtent)
 		{
 			var intersectingGeometries =
 				GetSearchGeometries(intersectingFeatures, clipExtent);
 
-			ArcGIS.Core.Geometry.Geometry result = null;
+			Geometry result = null;
 
 			if (intersectingGeometries.Count != 0)
 			{
@@ -309,11 +373,11 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="clipExtent">The clip extent.</param>
 		/// <returns></returns>
 		[NotNull]
-		private static IList<ArcGIS.Core.Geometry.Geometry> GetSearchGeometries(
+		private static IList<Geometry> GetSearchGeometries(
 			[NotNull] ICollection<Feature> features,
 			[CanBeNull] Envelope clipExtent)
 		{
-			var result = new List<ArcGIS.Core.Geometry.Geometry>(features.Count);
+			var result = new List<Geometry>(features.Count);
 
 			foreach (var geometry in GdbObjectUtils.GetGeometries(features))
 			{
@@ -355,11 +419,11 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[NotNull]
-		private static ArcGIS.Core.Geometry.Geometry GetClippedGeometry(
+		private static Geometry GetClippedGeometry(
 			[NotNull] Multipart polycurve,
 			[NotNull] Envelope clipExtent)
 		{
-			ArcGIS.Core.Geometry.Geometry clippedGeometry;
+			Geometry clippedGeometry;
 
 			if (GeometryUtils.Contains(clipExtent, polycurve))
 			{
@@ -374,14 +438,14 @@ namespace ProSuite.Commons.AGP.Carto
 			else
 			{
 				clippedGeometry = GeometryUtils.GetClippedPolyline((Polyline) polycurve,
-				                                                   clipExtent);
+					clipExtent);
 			}
 
 			return clippedGeometry;
 		}
 
-		public static ArcGIS.Core.Geometry.Geometry ToMapGeometry(MapView mapView,
-		                                                          Polygon screenGeometry)
+		public static Geometry ToMapGeometry(MapView mapView,
+		                                     Polygon screenGeometry)
 		{
 			// TODO: ensure single-part, linear segments
 
@@ -402,7 +466,7 @@ namespace ProSuite.Commons.AGP.Carto
 			                                     screenGeometry.Extent.YMin));
 		}
 
-		public static ArcGIS.Core.Geometry.Geometry ToScreenGeometry(
+		public static Geometry ToScreenGeometry(
 			MapView mapView, Polygon mapGeometry)
 		{
 			// TODO: ensure single-part, linear segments
@@ -435,7 +499,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// Returns features filtered by spatial relationship. Honors definition queries on the layer. 
 		/// </summary>
 		public static IEnumerable<Feature> FilterLayerFeaturesByGeometry(
-			BasicFeatureLayer layer, ArcGIS.Core.Geometry.Geometry filterGeometry,
+			BasicFeatureLayer layer, Geometry filterGeometry,
 			SpatialRelationship spatialRelationship = SpatialRelationship.Intersects)
 		{
 			var qf = new SpatialQueryFilter()
@@ -460,7 +524,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// Returns oids of features filtered by spatial relationship. Honors definition queries on the layer. 
 		/// </summary>
 		public static IEnumerable<long> FilterLayerOidsByGeometry(
-			BasicFeatureLayer layer, ArcGIS.Core.Geometry.Geometry filterGeometry,
+			BasicFeatureLayer layer, Geometry filterGeometry,
 			SpatialRelationship spatialRelationship = SpatialRelationship.Intersects)
 		{
 			var qf = new SpatialQueryFilter()
@@ -523,7 +587,6 @@ namespace ProSuite.Commons.AGP.Carto
 			return layers.Distinct(new BasicFeatureLayerComparer());
 		}
 
-
 		public static IEnumerable<T> GetRows<T>([NotNull] BasicFeatureLayer layer,
 		                                        [CanBeNull] QueryFilter filter = null)
 			where T : Row
@@ -534,9 +597,86 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				while (cursor.MoveNext())
 				{
-					yield return (T)cursor.Current;
+					yield return (T) cursor.Current;
 				}
 			}
+		}
+
+		public static async Task<bool> FlashGeometryAsync(
+			[NotNull] MapView mapView,
+			[NotNull] Geometry geometry,
+			CIMSymbolReference symbolReference,
+			int milliseconds = 400)
+		{
+			return await FlashGeometryAsync(mapView, new Overlay(geometry, symbolReference),
+			                                milliseconds);
+		}
+
+		public static async Task<bool> FlashGeometryAsync(
+			[NotNull] MapView mapView,
+			[NotNull] Overlay overlay,
+			int milliseconds = 400)
+		{
+			using (await overlay.AddToMapAsync(mapView))
+			{
+				await Task.Delay(milliseconds);
+			}
+
+			return true;
+		}
+
+		public static async Task<bool> FlashGeometriesAsync(
+			[NotNull] MapView mapView,
+			IEnumerable<Overlay> overlays,
+			int milliseconds = 400)
+		{
+			List<IDisposable> disposables = new List<IDisposable>();
+
+			try
+			{
+				foreach (Overlay overlay in overlays)
+				{
+					disposables.Add(await overlay.AddToMapAsync(mapView));
+				}
+
+				await Task.Delay(milliseconds);
+			}
+			finally
+			{
+				foreach (IDisposable disposable in disposables)
+				{
+					disposable.Dispose();
+				}
+			}
+
+			return true;
+		}
+
+		public static bool FlashGeometries(
+			[NotNull] MapView mapView,
+			IEnumerable<Overlay> overlays,
+			int milliseconds = 400)
+		{
+			List<IDisposable> disposables = new List<IDisposable>();
+
+			try
+			{
+				foreach (Overlay overlay in overlays)
+				{
+					disposables.Add(overlay.AddToMap(mapView));
+				}
+
+				Thread.Sleep(milliseconds);
+			}
+			finally
+			{
+				foreach (IDisposable disposable in disposables)
+				{
+					disposable.Dispose();
+				}
+			}
+
+			return true;
 		}
 	}
 

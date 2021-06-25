@@ -1,27 +1,32 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Core.Data;
-using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Dialogs;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.AGP.Editing;
 using ProSuite.AGP.Editing.Selection;
-using ProSuite.AGP.Solution.Commons;
 using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using LayerUtils = ProSuite.AGP.Solution.Commons.LayerUtils;
 
 namespace ProSuite.AGP.Solution.Selection
 {
-	internal class PickWorkListItemTool : SelectionToolBase
+	class PickWorkListItemTool : SelectionToolBase
 	{
 		[CanBeNull]
 		public FeatureLayer WorkListLayer { get; set; }
+
+		protected override Cursor SelectionCursor
+		{
+			get => ToolUtils.GetCursor(Resource.PickerToolCursor);
+		}
+
+		protected override void OnToolKeyDown(MapViewKeyEventArgs k)
+		{
+			// ignore modifier keys
+			return;
+		}
 
 		protected override void AfterSelection(IList<Feature> selectedFeatures,
 		                                       CancelableProgressor progressor)
@@ -36,10 +41,17 @@ namespace ProSuite.AGP.Solution.Selection
 			//can select from layer if the layer is a worklist layer
 			if (WorkListsModule.Current.LayersByWorklistName.ContainsValue(featureLayer))
 			{
-				WorkListLayer = featureLayer;
-				ProSuite.Commons.AGP.Carto.LayerUtils.SetLayerSelectability(WorkListLayer, true);
-				return true;
+				FeatureLayer layer = null; // TODO - should be better comparison
+				if (WorkListsModule.Current.LayersByWorklistName.TryGetValue(
+					    WorkListsModule.Current.ActiveWorkListlayer?.Name, out layer)
+				    && layer?.URI == featureLayer.URI)
+				{
+					WorkListLayer = featureLayer;
+					LayerUtils.SetLayerSelectability(WorkListLayer, true);
+					return true;
+				}
 			}
+
 			return false;
 		}
 
@@ -50,12 +62,11 @@ namespace ProSuite.AGP.Solution.Selection
 			{
 				if (WorkListsModule.Current.LayersByWorklistName.ContainsValue(featureLayer))
 				{
-					ProSuite.Commons.AGP.Carto.LayerUtils.SetLayerSelectability(featureLayer, true);
+					LayerUtils.SetLayerSelectability(featureLayer, true);
 				}
 			}
 
 			SelectionUtils.ClearSelection(ActiveMapView.Map);
-
 			return true;
 		}
 
@@ -63,9 +74,8 @@ namespace ProSuite.AGP.Solution.Selection
 		{
 			if (WorkListLayer != null)
 			{
-				ProSuite.Commons.AGP.Carto.LayerUtils.SetLayerSelectability(WorkListLayer, false);
+				LayerUtils.SetLayerSelectability(WorkListLayer, false);
 			}
-			
 		}
 
 		protected override bool CanUseSelection(IEnumerable<Feature> selectedFeatures)

@@ -4,8 +4,8 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
-using Pnt = ProSuite.Commons.Geometry.Pnt;
+using ProSuite.Commons.Geom;
+using Pnt = ProSuite.Commons.Geom.Pnt;
 
 namespace ProSuite.QA.Tests.PointEnumerators
 {

@@ -15,9 +15,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		//TODO: Overload for use in your container create item
 		public ProSuiteProjectItem(string name, string catalogPath, string typeID,
 		                           string containerTypeID) :
-			base(name, catalogPath, typeID, containerTypeID)
-		{
-		}
+			base(name, catalogPath, typeID, containerTypeID) { }
 
 		public override ImageSource LargeImage =>
 			ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset32.png");

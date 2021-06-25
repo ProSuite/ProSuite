@@ -32,18 +32,17 @@ namespace ProSuite.AGP.WorkList.Domain
 		private readonly object _syncLock = new object();
 
 		[NotNull]
-		protected IWorkItemRepository Repository { get; }
+		public IWorkItemRepository Repository { get; }
 
 		[NotNull] private readonly List<IWorkItem> _items = new List<IWorkItem>(_initialCapacity);
-		[NotNull] private readonly List<GdbRowIdentity> _invalidRows = new List<GdbRowIdentity>(_initialCapacity);
 
-		[NotNull]
-		private readonly Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
+		[NotNull] private readonly List<GdbRowIdentity> _invalidRows =
+			new List<GdbRowIdentity>(_initialCapacity);
+
+		[NotNull] private readonly Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
 			new Dictionary<GdbRowIdentity, IWorkItem>(_initialCapacity);
 
 		private EventHandler<WorkListChangedEventArgs> _workListChanged;
-
-		protected WorkList() { }
 
 		protected WorkList(IWorkItemRepository repository, string name)
 		{
@@ -86,7 +85,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public event PropertyChangedEventHandler PropertyChanged;
 
-		public string Name { get; }
+		public string Name { get; set; }
 
 		public abstract string DisplayName { get; }
 
@@ -113,14 +112,14 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			Repository.SetStatus(item, status);
 
-			OnWorkListChanged(null, new List<long> { item.OID });
+			OnWorkListChanged(null, new List<long> {item.OID});
 		}
 
 		public void SetVisited(IWorkItem item)
 		{
 			Repository.SetVisited(item);
 
-			OnWorkListChanged(null, new List<long> { item.OID });
+			OnWorkListChanged(null, new List<long> {item.OID});
 		}
 
 		public void Commit()
@@ -130,11 +129,10 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual IEnumerable<IWorkItem> GetItems(QueryFilter filter = null,
 		                                               bool ignoreListSettings = false,
-		                                               int startIndex = 0)
+		                                               int startIndex = -1)
 		{
 			// Subclass should provide more efficient implementation (e.g. pass filter on to database)
 
-			//IEnumerable<IWorkItem> query = _items.Where(item => _items.IndexOf(item, startIndex) > -1);
 			var query = (IEnumerable<IWorkItem>) _items;
 
 			if (! ignoreListSettings && Visibility != WorkItemVisibility.None)
@@ -153,12 +151,18 @@ namespace ProSuite.AGP.WorkList.Domain
 			if (filter is SpatialQueryFilter sf && sf.FilterGeometry != null)
 			{
 				// todo daro: do not use method to build Extent every time
-				query = query.Where(item => Relates(sf.FilterGeometry, sf.SpatialRelationship, item.Extent));
+				query = query.Where(
+					item => Relates(sf.FilterGeometry, sf.SpatialRelationship, item.Extent));
 			}
 
 			if (! ignoreListSettings && AreaOfInterest != null)
 			{
 				query = query.Where(item => WithinAreaOfInterest(item.Extent, AreaOfInterest));
+			}
+
+			if (startIndex > -1 && startIndex < _items.Count)
+			{
+				query = query.Where(item => _items.IndexOf(item, startIndex) > -1);
 			}
 
 			return query;
@@ -193,23 +197,17 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public virtual void GoFirst()
 		{
-			IWorkItem nextItem = GetFirstVisibleVisitedItemBeforeCurrent();
-			
-			if (nextItem != null)
-			{
-				Assert.False(Equals(nextItem, Current), "current item and next item are equal");
+			IWorkItem current = GetItem(CurrentIndex);
 
-				SetCurrentItem(nextItem, Current);
-			}
-			else
-			{
-				CurrentIndex = 0;
-				IWorkItem item = GetItem(CurrentIndex);
-				if (item != null)
-				{
-					SetCurrentItem(item);
-				}
-			}
+			// todo daro to ?? statement
+			IWorkItem first = GetFirstVisibleVisitedItemBeforeCurrent();
+
+			// todo daro: remove assertion when sure algorithm works
+			//			  CanGoFirst should prevent the assertion
+			Assert.NotNull(first);
+			Assert.False(Equals(first, Current), "current item and first item are equal");
+
+			SetCurrentItemCore(first, current);
 		}
 
 		public virtual bool CanGoNearest()
@@ -220,7 +218,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				if (IsVisible(workItem) && workItem.Status == WorkItemStatus.Todo)
 				{
-					if (!workItem.Visited)
+					if (! workItem.Visited)
 					{
 						return true;
 					}
@@ -247,9 +245,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			Stopwatch watch = _msg.DebugStartTiming();
 
-			// todo daro: don't use start index for now
-			//int startIndex = CurrentIndex + 1;
-			int startIndex = 0;
+			// start after the current item
+			int startIndex = CurrentIndex + 1;
 
 			// first, try to go to an unvisted item
 			bool found = TryGoNearest(contextPerimeters, reference,
@@ -270,53 +267,59 @@ namespace ProSuite.AGP.WorkList.Domain
 				ClearCurrentItem(Current);
 			}
 
-			_msg.DebugStopTiming(watch, "WorkList.GoNearest()");
+			_msg.DebugStopTiming(watch, nameof(GetNearest));
 		}
 
 		public virtual bool CanGoNext()
 		{
-			return GetNextVisibleItem() != null;
+			return GetNextVisitedVisibleItem() != null;
 		}
 
 		public virtual void GoNext()
 		{
-			IWorkItem nextItem = GetNextVisibleItem();
+			IWorkItem next = GetNextVisitedVisibleItem();
 
-			if (nextItem != null)
-			{
-				Assert.False(Equals(nextItem, Current), "current item and next item are equal");
+			// todo daro: remove assertion when sure algorithm works
+			//			  CanGoNext should prevent the assertion
+			Assert.NotNull(next);
+			Assert.False(Equals(next, Current), "current item and next item are equal");
 
-				SetCurrentItem(nextItem, Current);
-			}
+			SetCurrentItemCore(next, Current);
 		}
 
 		public virtual bool CanGoPrevious()
 		{
-			return GetPreviousVisibleItem() != null;
+			return GetPreviousVisitedVisibleItem() != null;
 		}
 
 		public virtual void GoPrevious()
 		{
-			IWorkItem previousItem = GetPreviousVisibleItem();
+			IWorkItem previous = GetPreviousVisitedVisibleItem();
 
-			if (previousItem != null)
-			{
-				Assert.False(Equals(previousItem, Current), "current item and previous item are equal");
+			// todo daro: remove assertion when sure algorithm works
+			//			  CanGoPrevious should prevent the assertion
+			Assert.NotNull(previous);
+			Assert.False(Equals(previous, Current), "current item and previous item are equal");
 
-				SetCurrentItem(previousItem, Current);
-			}
+			SetCurrentItemCore(previous, Current);
 		}
 
 		#endregion
 
-		public virtual void GoToOid(int OID)
+		public virtual void GoToOid(int oid)
 		{
-			var targetItem = _items.FirstOrDefault(item => item.OID == OID);
-			if (targetItem != null)
+			if (Current?.OID == oid)
 			{
-				SetCurrentItem(targetItem, Current);
+				return;
 			}
-			
+
+			var filter = new QueryFilter {ObjectIDs = new[] {(long) oid}};
+			IWorkItem target = GetItems(filter, false).FirstOrDefault();
+
+			if (target != null)
+			{
+				SetCurrentItem(target, Current);
+			}
 		}
 
 		#region Navigation non-public
@@ -352,7 +355,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
-				_msg.DebugFormat("Getting work items for innermost context ({0} perimeters)", perimeters.Length);
+				_msg.DebugFormat("Getting work items for innermost context ({0} perimeters)",
+				                 perimeters.Length);
 			}
 
 			const CurrentSearchOption currentSearch = CurrentSearchOption.ExcludeCurrent;
@@ -379,15 +383,18 @@ namespace ProSuite.AGP.WorkList.Domain
 					//                                     SpatialSearchOption.Within,
 					//                                     match);
 
-					SpatialQueryFilter filter = GdbQueryUtils.CreateSpatialFilter(intersection, SpatialRelationship.Within);
+					SpatialQueryFilter filter =
+						GdbQueryUtils.CreateSpatialFilter(intersection, SpatialRelationship.Within);
 
-					List<IWorkItem> workItems = GetItems(filter, startIndex, currentSearch, visitedSearch).ToList();
+					List<IWorkItem> workItems =
+						GetItems(filter, startIndex, currentSearch, visitedSearch).ToList();
 
 					if (workItems.Count == 0)
 					{
 						if (_msg.IsVerboseDebugEnabled)
 						{
-							_msg.Debug("No work items fully within the intersection, searching partially contained items");
+							_msg.Debug(
+								"No work items fully within the intersection, searching partially contained items");
 						}
 
 						// todo daro: old implementation
@@ -399,7 +406,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 						filter = GdbQueryUtils.CreateSpatialFilter(intersection);
 
-						workItems = GetItems(filter, startIndex, currentSearch, visitedSearch).ToList();
+						workItems = GetItems(filter, startIndex, currentSearch, visitedSearch)
+							.ToList();
 					}
 
 					if (_msg.IsVerboseDebugEnabled)
@@ -411,6 +419,7 @@ namespace ProSuite.AGP.WorkList.Domain
 					{
 						return workItems;
 					}
+
 					// else: continue with next perimeter
 				}
 			}
@@ -421,9 +430,11 @@ namespace ProSuite.AGP.WorkList.Domain
 			return GetItems(null, startIndex, currentSearch, visitedSearch).ToList();
 		}
 
-		private IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, int startIndex = 0,
-		                                        CurrentSearchOption currentSearch = CurrentSearchOption.ExcludeCurrent,
-		                                        VisitedSearchOption visitedSearch = VisitedSearchOption.ExcludeVisited)
+		private IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, int startIndex = -1,
+		                                        CurrentSearchOption currentSearch =
+			                                        CurrentSearchOption.ExcludeCurrent,
+		                                        VisitedSearchOption visitedSearch =
+			                                        VisitedSearchOption.ExcludeVisited)
 		{
 			IEnumerable<IWorkItem> query = GetItems(filter, false, startIndex);
 
@@ -475,6 +486,7 @@ namespace ProSuite.AGP.WorkList.Domain
 						// no further intersection, result is empty
 						return intersection;
 					}
+
 					if (projectedPerimeter.IsEmpty)
 					{
 						// no further intersection, result is empty
@@ -584,39 +596,44 @@ namespace ProSuite.AGP.WorkList.Domain
 			double minDistance = double.MaxValue;
 			IWorkItem nearest = null;
 			IWorkItem firstWithoutGeometry = null;
+			IWorkItem current = Current;
 
-			// todo daro: old implentation
-			//IEnvelope otherExtent = new EnvelopeClass();
-			//IPoint otherCentroid = new PointClass();
-
-			IWorkItem currentItem = Current;
-
-			foreach (IWorkItem workItem in candidates)
+			foreach (IWorkItem item in candidates)
 			{
-				if (workItem == currentItem)
+				if (item == current)
 				{
 					// current item, ignore
 				}
 				else
 				{
-					if (workItem.HasGeometry)
+					if (item.HasGeometry)
 					{
 						// todo daro: old implentation
 						//workItem.QueryExtent(otherExtent);
-						Envelope otherExtent = workItem.Extent;
+						Envelope otherExtent = item.Extent;
+
+						// IWorkItem.Extent from SDE (and reported from ALGR from occasionally from issues.gdb) seems to
+						// to have an unequal SR compared to the referenceGeometry which is the MapView.Current.Extent
+						// when the work list ist opened for the first time.
+						// EMA: while editing the SR resolution might be set to a very small value. This probably does
+						// not happen from FGDB data.
+						// todo daro: find a better solution than reprojecting in foreach loop
+						Geometry projected =
+							GeometryUtils.EnsureSpatialReference(
+								referenceGeometry, otherExtent.SpatialReference);
 
 						double distance;
 						try
 						{
-							if (GeometryEngine.Instance.Disjoint(searchReference, otherExtent))
+							if (GeometryUtils.Disjoint(projected, otherExtent))
 							{
-								distance = GeometryEngine.Instance.Distance(referenceGeometry, otherExtent);
+								distance = GeometryEngine.Instance.Distance(projected, otherExtent);
 							}
 							else
 							{
 								//MapPoint otherCentroid = GeometryEngine.Instance.Centroid(otherExtent);
-								// todo daro inline
-								distance = GeometryEngine.Instance.Distance(referenceGeometry, otherExtent.Center);
+								distance =
+									GeometryEngine.Instance.Distance(projected, otherExtent.Center);
 							}
 
 							// todo daro: old implentation
@@ -640,10 +657,11 @@ namespace ProSuite.AGP.WorkList.Domain
 
 							throw;
 						}
+
 						if (distance < minDistance)
 						{
 							minDistance = distance;
-							nearest = workItem;
+							nearest = item;
 						}
 					}
 					else
@@ -651,7 +669,7 @@ namespace ProSuite.AGP.WorkList.Domain
 						// item without geometry
 						if (firstWithoutGeometry == null)
 						{
-							firstWithoutGeometry = workItem;
+							firstWithoutGeometry = item;
 						}
 					}
 				}
@@ -672,7 +690,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			if (! useCentroid && GeometryUtils.GetPointCount(reference) > maxPointCount)
 			{
-				_msg.Debug("Too many points on reference geometry for searching, using center of envelope");
+				_msg.Debug(
+					"Too many points on reference geometry for searching, using center of envelope");
 				useCentroid = true;
 			}
 
@@ -729,7 +748,14 @@ namespace ProSuite.AGP.WorkList.Domain
 		/// </summary>
 		/// <param name="nextItem"></param>
 		/// <param name="currentItem">The work item.</param>
-		private void SetCurrentItem([NotNull] IWorkItem nextItem, [CanBeNull] IWorkItem currentItem = null)
+		private void SetCurrentItem([NotNull] IWorkItem nextItem, IWorkItem currentItem = null)
+		{
+			ReorderCurrentItem(nextItem);
+
+			SetCurrentItemCore(nextItem, currentItem);
+		}
+
+		private void SetCurrentItemCore([NotNull] IWorkItem nextItem, IWorkItem currentItem = null)
 		{
 			nextItem.Visited = true;
 			CurrentIndex = _items.IndexOf(nextItem);
@@ -742,6 +768,40 @@ namespace ProSuite.AGP.WorkList.Domain
 				           : new List<long> {nextItem.OID};
 
 			OnWorkListChanged(null, oids);
+		}
+
+		private void ReorderCurrentItem([NotNull] IWorkItem nextItem)
+		{
+			// move new item to just after previous current
+			int insertIndex = GetReorderInsertIndex(nextItem);
+
+			// todo daro drop
+			_msg.Debug($"Reorder visited items: {nextItem}, insert index: {insertIndex}");
+
+			WorkListUtils.MoveTo(_items, nextItem, insertIndex);
+		}
+
+		private int GetReorderInsertIndex([NotNull] IWorkItem nextItem)
+		{
+			int firstUnvisitedIndex = _items.FindIndex(item => ! item.Visited);
+
+			int currentItemIndex = _items.IndexOf(nextItem);
+
+			// no unvisited item anymore, don't reorder, just go through the list
+			if (firstUnvisitedIndex < 0)
+			{
+				return currentItemIndex;
+			}
+
+			// move the current item to the first unvisited item index in the list
+			if (firstUnvisitedIndex <= currentItemIndex)
+			{
+				return firstUnvisitedIndex;
+			}
+
+			return firstUnvisitedIndex == 0
+				       ? 0
+				       : firstUnvisitedIndex - 1;
 		}
 
 		[CanBeNull]
@@ -784,7 +844,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		[CanBeNull]
-		private IWorkItem GetNextVisibleItem()
+		private IWorkItem GetNextVisitedVisibleItem()
 		{
 			if (CurrentIndex >= _items.Count - 1)
 			{
@@ -795,10 +855,10 @@ namespace ProSuite.AGP.WorkList.Domain
 			// true if another visible, visited item comes afterwards
 			for (int i = CurrentIndex + 1; i < _items.Count; i++)
 			{
-				IWorkItem workItem = _items[i];
-				if (IsVisible(workItem))
+				IWorkItem item = _items[i];
+				if (item.Visited && IsVisible(item))
 				{
-					return workItem;
+					return item;
 				}
 			}
 
@@ -806,17 +866,27 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		[CanBeNull]
-		private IWorkItem GetPreviousVisibleItem()
+		private IWorkItem GetPreviousVisitedVisibleItem()
 		{
 			if (CurrentIndex <= 0)
 			{
 				// no previous item anymore, current is first item
 				return null;
 			}
-			
-			IWorkItem item = _items[CurrentIndex - 1];
 
-			return IsVisible(item) ? item : null;
+			if (CurrentIndex > 0)
+			{
+				for (int i = CurrentIndex - 1; i >= 0; i--)
+				{
+					IWorkItem item = _items[i];
+					if (item.Visited && IsVisible(item))
+					{
+						return item;
+					}
+				}
+			}
+
+			return null;
 		}
 
 		#endregion
@@ -928,7 +998,8 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#endregion
 
-		private void OnWorkListChanged([CanBeNull] Envelope extent = null, [CanBeNull] List<long> oids = null)
+		private void OnWorkListChanged([CanBeNull] Envelope extent = null,
+		                               [CanBeNull] List<long> oids = null)
 		{
 			_workListChanged?.Invoke(this, new WorkListChangedEventArgs(extent, oids));
 		}
@@ -1059,7 +1130,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 				if (! HasCurrentItem)
 				{
-					SetCurrentItem(item, null);
+					SetCurrentItem(item);
 					// todo daro: WorkListChanged > invalidate map
 				}
 

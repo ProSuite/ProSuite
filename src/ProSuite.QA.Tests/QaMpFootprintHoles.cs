@@ -13,7 +13,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
-using Pnt = ProSuite.Commons.Geometry.Pnt;
+using Pnt = ProSuite.Commons.Geom.Pnt;
 
 namespace ProSuite.QA.Tests
 {

@@ -1,4 +1,3 @@
-
 namespace ProSuite.AGP.WorkList.Domain
 {
 	public abstract class RowReference
@@ -9,5 +8,4 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public abstract object Key { get; }
 	}
-
 }

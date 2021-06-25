@@ -3,6 +3,7 @@ using System.Threading;
 using ArcGIS.Core.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Hosting;
 
 namespace ProSuite.Commons.AGP.Test
 {
@@ -13,7 +14,7 @@ namespace ProSuite.Commons.AGP.Test
 		[OneTimeSetUp]
 		public void OneTimeSetUp()
 		{
-			Hosting.CoreHostProxy.Initialize();
+			CoreHostProxy.Initialize();
 		}
 
 		[Test]

@@ -7,7 +7,7 @@ namespace ProSuite.AGP.Editing.Selection
 {
 	public class FeatureClassInfo
 	{
-		public List<FeatureLayer> BelongingLayers  { get; set; }
+		public List<FeatureLayer> BelongingLayers { get; set; }
 		public FeatureClass FeatureClass { get; set; }
 		public string FeatureClassName { get; set; }
 		public esriGeometryType ShapeType { get; set; }

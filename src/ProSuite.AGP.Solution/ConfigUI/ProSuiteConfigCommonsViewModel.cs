@@ -6,19 +6,12 @@ namespace ProSuite.AGP.Solution.ConfigUI
 	{
 		public string TabName
 		{
-			get
-			{
-				return "Commons";
-			}
+			get { return "Commons"; }
 		}
 
 		public string TabContent
 		{
-			get
-			{
-				return "Commons config content";
-			}
+			get { return "Commons config content"; }
 		}
-
 	}
 }

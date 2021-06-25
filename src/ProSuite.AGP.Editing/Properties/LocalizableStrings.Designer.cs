@@ -91,6 +91,24 @@ namespace ProSuite.AGP.Editing.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Select one or more line or polygon features to cut along other feature(s). Press [O] for additional options.&lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection.&lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click..
+        /// </summary>
+        internal static string CutPolygonAlongTool_LogPromptForSelection {
+            get {
+                return ResourceManager.GetString("CutPolygonAlongTool_LogPromptForSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select the target line or polygon features to use as cut line..
+        /// </summary>
+        internal static string CutPolygonAlongTool_LogUsingCurrentSelection {
+            get {
+                return ResourceManager.GetString("CutPolygonAlongTool_LogUsingCurrentSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to {0}&lt;br&gt;Press [ESC] to select one or more different features..
         /// </summary>
         internal static string RemoveOverlapsTool_AfterSelection {
@@ -123,6 +141,24 @@ namespace ProSuite.AGP.Editing.Properties {
         internal static string RemoveOverlapsTool_Message {
             get {
                 return ResourceManager.GetString("RemoveOverlapsTool_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select one or more line or polygon features to align with other feature(s). Press [O] for additional options. &lt;br&gt;- Press and hold SHIFT to add or remove features from the existing selection. &lt;br&gt;- Press and hold P to draw a polygon that completely contains the features to be selected. Finish the polygon with double-click..
+        /// </summary>
+        internal static string ReshapeAlongTool_LogPromptForSelection {
+            get {
+                return ResourceManager.GetString("ReshapeAlongTool_LogPromptForSelection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Select the target line or polygon features to align with. &lt;br&gt;-Hit [ESC] to select a different feature..
+        /// </summary>
+        internal static string ReshapeAlongTool_LogUsingCurrentSelection {
+            get {
+                return ResourceManager.GetString("ReshapeAlongTool_LogUsingCurrentSelection", resourceCulture);
             }
         }
     }

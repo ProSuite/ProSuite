@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using NUnit.Framework;
-using ProSuite.Commons.Geometry;
-using ProSuite.Commons.Geometry.Wkb;
+using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.Wkb;
 
 namespace ProSuite.Commons.Test.Geometry.Wkb
 {
@@ -32,11 +31,11 @@ namespace ProSuite.Commons.Test.Geometry.Wkb
 			Pnt3D point1 = new Pnt3D(2600001.123, 1200000.987, 432.1);
 			Pnt3D point2 = new Pnt3D(2600002.234, 1200002.876, 321.98);
 
-			IList<IPnt> multipoint = new IPnt[]
-			                         {
-				                         point1,
-				                         point2
-			                         };
+			var multipoint = new Multipoint<IPnt>(new[]
+			                                      {
+				                                      point1,
+				                                      point2
+			                                      });
 
 			WkbGeomWriter writer = new WkbGeomWriter();
 
@@ -44,14 +43,11 @@ namespace ProSuite.Commons.Test.Geometry.Wkb
 
 			WkbGeomReader reader = new WkbGeomReader();
 
-			List<IPnt> deserizalized = reader.ReadMultiPoint(new MemoryStream(bytes)).ToList();
+			Multipoint<IPnt> deserizalized = reader.ReadMultiPoint(new MemoryStream(bytes));
 
-			Assert.AreEqual(multipoint.Count, deserizalized.Count);
+			Assert.AreEqual(multipoint.PointCount, deserizalized.PointCount);
 
-			for (int i = 0; i < multipoint.Count; i++)
-			{
-				Assert.IsTrue(deserizalized[i].Equals(multipoint[i]));
-			}
+			Assert.IsTrue(deserizalized.Equals(multipoint));
 		}
 
 		[Test]

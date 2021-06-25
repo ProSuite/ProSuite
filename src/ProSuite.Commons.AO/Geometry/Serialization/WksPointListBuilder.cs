@@ -2,11 +2,12 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Geometry.Wkb;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom.Wkb;
 
 namespace ProSuite.Commons.AO.Geometry.Serialization
 {
-	public class WksPointListBuilder : GeometryBuilderBase<WKSPointZ[], WKSPointZ>
+	public class WksPointListBuilder : GeometryBuilderBase<WKSPointZ[], WKSPointZ[], WKSPointZ>
 	{
 		private readonly bool _reverseOrder;
 
@@ -20,23 +21,13 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 		{
 			// TODO: Recycle arrays
 
-			Assert.ArgumentNotNull(knownPointCount, nameof(knownPointCount));
+			return CreatePointArray(points, knownPointCount, _reverseOrder);
+		}
 
-			int length = (int) knownPointCount;
-			var result = new WKSPointZ[length];
-
-			int index = _reverseOrder ? length - 1 : 0;
-			foreach (WKSPointZ wksPoint in points)
-			{
-				result[index] = wksPoint;
-
-				if (_reverseOrder)
-					index--;
-				else
-					index++;
-			}
-
-			return result;
+		public override WKSPointZ[] CreateMultipoint(IEnumerable<WKSPointZ> points,
+		                                             int? knownPointCount = null)
+		{
+			return CreatePointArray(points, knownPointCount, false);
 		}
 
 		public override IPointFactory<WKSPointZ> GetPointFactory(Ordinates forOrdinates)
@@ -47,6 +38,30 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 			}
 
 			return new WksPointZFactory();
+		}
+
+		private static WKSPointZ[] CreatePointArray([NotNull] IEnumerable<WKSPointZ> points,
+		                                            int? knownPointCount,
+		                                            bool reverseOrder)
+		{
+			Assert.ArgumentNotNull(knownPointCount, nameof(knownPointCount));
+
+			int length = (int) knownPointCount;
+			var result = new WKSPointZ[length];
+
+			int index = reverseOrder ? length - 1 : 0;
+
+			foreach (WKSPointZ wksPoint in points)
+			{
+				result[index] = wksPoint;
+
+				if (reverseOrder)
+					index--;
+				else
+					index++;
+			}
+
+			return result;
 		}
 	}
 }

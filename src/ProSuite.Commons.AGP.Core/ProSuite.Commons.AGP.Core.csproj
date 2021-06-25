@@ -60,6 +60,10 @@
       <Project>{384763d9-f7a1-4aa2-9abd-ee338cd8d4c1}</Project>
       <Name>ProSuite.Commons.Essentials</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
+      <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
+      <Name>ProSuite.Commons</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

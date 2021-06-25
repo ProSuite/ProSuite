@@ -10,7 +10,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 	public interface IWorkList : IRowCache, IDisposable, INotifyPropertyChanged
 	{
 		[NotNull]
-		string Name { get; }
+		string Name { get; set; }
 
 		[NotNull]
 		string DisplayName { get; }
@@ -29,6 +29,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		IWorkItem Current { get; }
 
 		int CurrentIndex { get; set; }
+		IWorkItemRepository Repository { get; }
 
 		/// <summary>Yield all work items subject to list settings and the given filter.</summary>
 		/// <param name="filter">optional QueryFilter or SpatialQueryFilter</param>

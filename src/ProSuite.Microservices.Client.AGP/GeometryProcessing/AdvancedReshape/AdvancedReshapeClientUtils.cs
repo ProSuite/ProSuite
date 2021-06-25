@@ -89,15 +89,15 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 				return result;
 			}
 
-			foreach (ResultFeatureMsg resultFeatureMsg in reshapeResultMsg.ResultFeatures)
+			foreach (ResultObjectMsg resultFeatureMsg in reshapeResultMsg.ResultFeatures)
 			{
 				GdbObjectReference objRef = new GdbObjectReference(
-					resultFeatureMsg.UpdatedFeature.ClassHandle,
-					resultFeatureMsg.UpdatedFeature.ObjectId);
+					resultFeatureMsg.Update.ClassHandle,
+					resultFeatureMsg.Update.ObjectId);
 
 				Feature inputFeature = allInputFeatures[objRef];
 
-				var reshapeResultFeature = new ReshapeResultFeature(inputFeature, resultFeatureMsg);
+				var reshapeResultFeature = new ResultFeature(inputFeature, resultFeatureMsg);
 
 				result.ResultFeatures.Add(reshapeResultFeature);
 			}
@@ -160,15 +160,15 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 				return result;
 			}
 
-			foreach (ResultFeatureMsg resultFeatureMsg in reshapeResultMsg.ResultFeatures)
+			foreach (ResultObjectMsg resultFeatureMsg in reshapeResultMsg.ResultFeatures)
 			{
 				GdbObjectReference objRef = new GdbObjectReference(
-					resultFeatureMsg.UpdatedFeature.ClassHandle,
-					resultFeatureMsg.UpdatedFeature.ObjectId);
+					resultFeatureMsg.Update.ClassHandle,
+					resultFeatureMsg.Update.ObjectId);
 
 				Feature inputFeature = allInputFeatures[objRef];
 
-				var reshapeResultFeature = new ReshapeResultFeature(inputFeature, resultFeatureMsg);
+				var reshapeResultFeature = new ResultFeature(inputFeature, resultFeatureMsg);
 
 				result.ResultFeatures.Add(reshapeResultFeature);
 			}

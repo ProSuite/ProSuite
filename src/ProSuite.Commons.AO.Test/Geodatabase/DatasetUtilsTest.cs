@@ -15,7 +15,6 @@ using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Logging;
 #if Server
 using ESRI.ArcGIS.DatasourcesRaster;
-
 #else
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif

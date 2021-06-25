@@ -5,8 +5,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 {
 	public class TargetBufferOptions
 	{
-		public TargetBufferOptions(double bufferDistance,
-		                           double bufferMinimumSegmentLength,
+		public TargetBufferOptions(double bufferDistance = 0,
+		                           double bufferMinimumSegmentLength = 0,
 		                           [CanBeNull] IZSettingsModel zSettingsModel = null)
 		{
 			BufferDistance = bufferDistance;

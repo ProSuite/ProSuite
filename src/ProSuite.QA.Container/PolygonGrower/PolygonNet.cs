@@ -5,8 +5,8 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
-using ProSuite.Commons.Geometry.SpatialIndex;
+using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.QA.Container.Geometry;
 using Ao = ESRI.ArcGIS.Geometry;
 

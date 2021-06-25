@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geom;
 
 namespace ProSuite.QA.Container.Geometry
 {

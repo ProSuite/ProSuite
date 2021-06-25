@@ -8,8 +8,12 @@ namespace ProSuite.AGP.Solution.WorkListUI.UiTestData
 		                                             {
 			                                             new InvolvedObjectRow(
 				                                             "Gewässer", "field a", 222333),
-														 new InvolvedObjectRow("Gebäude innerhalb 1", "keyfield ddkd", 222333338),
-														 new InvolvedObjectRow("Siedlungsgebiet Projektiert", "Name", 45333338)
-													 };
+			                                             new InvolvedObjectRow(
+				                                             "Gebäude innerhalb 1", "keyfield ddkd",
+				                                             222333338),
+			                                             new InvolvedObjectRow(
+				                                             "Siedlungsgebiet Projektiert", "Name",
+				                                             45333338)
+		                                             };
 	}
 }

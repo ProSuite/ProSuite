@@ -1,8 +1,8 @@
-using ArcGIS.Desktop.Catalog;
-using ArcGIS.Desktop.Core;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ArcGIS.Desktop.Catalog;
+using ArcGIS.Desktop.Core;
 
 namespace ProSuite.AGP.Solution.ProjectItem
 {
@@ -19,7 +19,8 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		// TODO algr: different icons and context menus?
 		public override IEnumerable<string> GetAll()
 		{
-			var itemFolder = Project.GetItems<FolderConnectionProjectItem>().FirstOrDefault(p => p.Name == FolderName);
+			var itemFolder = Project.GetItems<FolderConnectionProjectItem>()
+			                        .FirstOrDefault(p => p.Name == FolderName);
 			if (itemFolder == null) return new List<string>();
 
 			return Directory.GetFiles(itemFolder.Path, $"*.{FileExtension}");
@@ -39,5 +40,4 @@ namespace ProSuite.AGP.Solution.ProjectItem
 			base.Add(path);
 		}
 	}
-
 }

@@ -11,7 +11,7 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
-using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 

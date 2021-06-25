@@ -68,19 +68,13 @@ namespace ProSuite.AGP.WorkList.Domain
 		public bool Visited
 		{
 			get => _visited;
-			set
-			{
-				_visited = value;
-			}
+			set { _visited = value; }
 		}
 
 		public WorkItemStatus Status
 		{
 			get => _status;
-			set
-			{
-				_status = value;
-			}
+			set { _status = value; }
 		}
 
 		public GdbRowIdentity Proxy { get; }
@@ -129,14 +123,13 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			return GetDescription(row);
 		}
-		
+
 		[CanBeNull]
 		public string GetDescription(Row row)
 		{
 			return row == null
 				       ? "Row not found for work item"
 				       : GetDescriptionCore(row) ?? string.Empty;
-
 		}
 
 		protected virtual string GetDescriptionCore(Row row)

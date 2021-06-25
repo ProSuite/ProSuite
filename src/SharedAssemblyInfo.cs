@@ -2,7 +2,7 @@ using System.Reflection;
 
 [assembly: AssemblyProduct("ProSuite")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyCopyright("© 2020 The ProSuite Authors")]
+[assembly: AssemblyCopyright("© 2020-2021 The ProSuite Authors")]
 [assembly: AssemblyTrademark("")]
 
 #if DEBUG
@@ -11,6 +11,6 @@ using System.Reflection;
 [assembly: AssemblyFileVersion("1.0.0.0")]
 #else
 [assembly: AssemblyConfiguration("Release")]
-[assembly: AssemblyVersion("0.1.0.0")]
-[assembly: AssemblyFileVersion("0.1.0.0")]
+[assembly: AssemblyVersion("0.3.0.0")]
+[assembly: AssemblyFileVersion("0.3.0.0")]
 #endif

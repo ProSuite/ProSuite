@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading;
+using ArcGIS.Core.CIM;
 using NUnit.Framework;
 using ProSuite.Commons.AGP.Core.Carto;
 
@@ -144,7 +145,58 @@ namespace ProSuite.Commons.AGP.Test
 			AssertRGB(0, 128, 128, r, g, b, "teal");
 		}
 
-		private static void AssertRGB(float rx, float gx, float bx, float ra, float ga, float ba, string name)
+		private readonly string _orangeRedHexRgb = "#FF4500";
+		private readonly string _sandyBrownHexRgb = "#F4A460";
+		private readonly string _sandyBrownHexArgb = "#FFF4A460";
+		private readonly string _sandyBrownSemiTransparentHexArgb = "#80F4A460";
+		private readonly string _sandyBrownPrettyTransparentHexArgb = "#33F4A460";
+		private readonly string _paleGreenHexArgb = "#FF98FB98";
+
+		[Test]
+		public void CanParseHexRGB()
+		{
+			CIMRGBColor orangeRed = ColorUtils.ParseHexColorRGB(_orangeRedHexRgb);
+			CIMRGBColor sandyBrown = ColorUtils.ParseHexColorRGB(_sandyBrownHexRgb);
+
+			AssertRGB(255, 69, 0, orangeRed.R, orangeRed.G, orangeRed.B,
+			          nameof(orangeRed));
+			AssertRGB(244, 164, 96, sandyBrown.R, sandyBrown.G, sandyBrown.B,
+			          nameof(sandyBrown));
+		}
+
+		[Test]
+		public void CanParseHexARGB()
+		{
+			CIMRGBColor paleGreen = ColorUtils.ParseHexColorARGB(_paleGreenHexArgb);
+			CIMRGBColor sandyBrown = ColorUtils.ParseHexColorARGB(_sandyBrownHexArgb);
+			CIMRGBColor sandyBrownSemiTransparent =
+				ColorUtils.ParseHexColorARGB(_sandyBrownSemiTransparentHexArgb);
+			CIMRGBColor sandyBrownPrettyTransparent =
+				ColorUtils.ParseHexColorARGB(_sandyBrownPrettyTransparentHexArgb);
+
+			AssertRGB(152, 251, 152, paleGreen.R, paleGreen.G, paleGreen.B,
+			          nameof(paleGreen));
+			Assert.AreEqual(100, paleGreen.Alpha);
+
+			AssertRGB(244, 164, 96, sandyBrown.R, sandyBrown.G, sandyBrown.B,
+			          nameof(sandyBrown));
+			Assert.AreEqual(100, sandyBrown.Alpha);
+
+			AssertRGB(244, 164, 96,
+			          sandyBrownSemiTransparent.R, sandyBrownSemiTransparent.G,
+			          sandyBrownSemiTransparent.B,
+			          nameof(sandyBrownSemiTransparent));
+			Assert.AreEqual(50.2, sandyBrownSemiTransparent.Alpha, 0.01);
+
+			AssertRGB(244, 164, 96,
+			          sandyBrownPrettyTransparent.R, sandyBrownPrettyTransparent.G,
+			          sandyBrownPrettyTransparent.B,
+			          nameof(sandyBrownPrettyTransparent));
+			Assert.AreEqual(20, sandyBrownPrettyTransparent.Alpha);
+		}
+
+		private static void AssertRGB(float rx, float gx, float bx, float ra, float ga, float ba,
+		                              string name)
 		{
 			const double delta = 0.501; // allow rounding to integers
 

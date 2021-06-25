@@ -409,10 +409,6 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			Assert.ArgumentNotNull(qualitySpecification, nameof(qualitySpecification));
 
-			qualityVerification = GetQualityVerification(
-				qualitySpecification,
-				out _elementsByConditionVerification);
-
 			_qualityConditions = new List<QualityCondition>();
 			_testsByCondition = new Dictionary<QualityCondition, IList<ITest>>();
 			_testVerifications = new Dictionary<ITest, TestVerification>();
@@ -423,9 +419,14 @@ namespace ProSuite.DomainServices.AO.QA
 
 			IOpenDataset datasetOpener = CreateDatasetOpener(_verificationContext);
 
-			IList<QualityCondition> orderedQualityConditions =
-				QualitySpecificationUtils.GetOrderedQualityConditions(
-					qualitySpecification, datasetOpener).ToList();
+			HashSet<QualityCondition> orderedQualityConditions =
+				new HashSet<QualityCondition>(
+					QualitySpecificationUtils.GetOrderedQualityConditions(
+						qualitySpecification, datasetOpener));
+			
+			qualityVerification = GetQualityVerification(
+				qualitySpecification, orderedQualityConditions,
+				out _elementsByConditionVerification);
 
 			int index = 0;
 			int count = orderedQualityConditions.Count;
@@ -470,10 +471,11 @@ namespace ProSuite.DomainServices.AO.QA
 		[NotNull]
 		private static QualityVerification GetQualityVerification(
 			[NotNull] QualitySpecification qualitySpecification,
+			[NotNull] HashSet<QualityCondition> conditionsToVerify,
 			[NotNull] out Dictionary<QualityConditionVerification, QualitySpecificationElement>
 				elementsByConditionVerification)
 		{
-			var result = new QualityVerification(qualitySpecification);
+			var result = new QualityVerification(qualitySpecification, conditionsToVerify);
 
 			Dictionary<QualityCondition, QualityConditionVerification> verificationsByCondition
 				= GetConditionVerificationsByCondition(result);
@@ -771,7 +773,7 @@ namespace ProSuite.DomainServices.AO.QA
 					reportBuilders.Add(datasetsCollector);
 				}
 
-				if (Parameters.VerificationReportPath != null)
+				if (! string.IsNullOrEmpty(Parameters.VerificationReportPath))
 				{
 					_xmlVerificationReportBuilder = new XmlVerificationReportBuilder(
 						Parameters.WriteDetailedVerificationReport
@@ -1269,8 +1271,8 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			return _locationBasedQualitySpecification == null ||
 			       _locationBasedQualitySpecification.IsErrorRelevant(errorGeometry,
-			                                                          qualityCondition,
-			                                                          involvedRows);
+				       qualityCondition,
+				       involvedRows);
 		}
 
 		private void container_QaError(object sender, QaErrorEventArgs e)
@@ -1356,12 +1358,12 @@ namespace ProSuite.DomainServices.AO.QA
 			{
 				// set reference geometry
 				IGeometry referenceGeometry = GetReferenceGeometry(qaError.InvolvedRows,
-				                                                   qualityCondition);
+					qualityCondition);
 
 				if (referenceGeometry != null)
 				{
 					qaError = ReferenceGeometryUtils.CreateReferenceGeometryError(qaError,
-					                                                              referenceGeometry);
+						referenceGeometry);
 				}
 			}
 
@@ -1453,7 +1455,7 @@ namespace ProSuite.DomainServices.AO.QA
 					// the error intersects the perimeter -> search in the cached allowed errors
 					AllowedError allowedError =
 						_verificationContextIssueRepository.FindAllowedError(qaError,
-						                                                     qualityCondition);
+							qualityCondition);
 
 					// Traditionally invalidated allowed errors have been deleted before the
 					// verification start. However, in background verification no updates can be

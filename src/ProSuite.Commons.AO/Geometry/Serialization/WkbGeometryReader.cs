@@ -6,7 +6,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry.Wkb;
+using ProSuite.Commons.Geom.Wkb;
 
 namespace ProSuite.Commons.AO.Geometry.Serialization
 {
@@ -25,6 +25,8 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 				{
 					case WkbGeometryType.Point:
 						return ReadPoint(reader, ordinates);
+					case WkbGeometryType.MultiPoint:
+						return ReadMultipoint(reader, ordinates);
 					case WkbGeometryType.LineString:
 					case WkbGeometryType.MultiLineString:
 						return ReadPolyline(reader, geometryType, ordinates);
@@ -67,6 +69,23 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 				}
 
 				return ReadPoint(reader, ordinates);
+			}
+		}
+
+		public IMultipoint ReadMultipoint([NotNull] Stream stream)
+		{
+			using (BinaryReader reader = InitializeReader(stream))
+			{
+				ReadWkbType(reader, true,
+				            out WkbGeometryType geometryType, out Ordinates ordinates);
+
+				if (geometryType != WkbGeometryType.MultiPoint)
+				{
+					throw new NotSupportedException(
+						$"Cannot read {geometryType} as multipoint.");
+				}
+
+				return ReadMultipoint(reader, ordinates);
 			}
 		}
 
@@ -246,6 +265,26 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 			{
 				GeometryUtils.MakeZAware(result);
 			}
+
+			return result;
+		}
+
+		private static IMultipoint ReadMultipoint([NotNull] BinaryReader reader,
+		                                          Ordinates ordinates)
+		{
+			int pointCount = checked((int) reader.ReadUInt32());
+
+			var geometryBuilder = new WksPointListBuilder();
+
+			WKSPointZ[] wksZPoints =
+				ReadMultipointCore(reader, ordinates, pointCount, geometryBuilder);
+
+			bool zAware = ordinates == Ordinates.Xyz || ordinates == Ordinates.Xyzm;
+			bool mAware = ordinates == Ordinates.Xym || ordinates == Ordinates.Xyzm;
+
+			IMultipoint result = GeometryFactory.CreateEmptyMultipoint(zAware, mAware);
+
+			GeometryUtils.SetWKSPointZs(result, wksZPoints);
 
 			return result;
 		}

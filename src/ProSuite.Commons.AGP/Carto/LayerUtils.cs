@@ -28,7 +28,8 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[NotNull]
-		public static FeatureLayerCreationParams CreateLayerParams([NotNull] FeatureClass featureClass)
+		public static FeatureLayerCreationParams CreateLayerParams(
+			[NotNull] FeatureClass featureClass)
 		{
 			var layerParams = new FeatureLayerCreationParams(featureClass);
 
@@ -64,7 +65,6 @@ namespace ProSuite.Commons.AGP.Carto
 			CIMDefinition definition = layerDocument.LayerDefinitions[0];
 			return ((CIMFeatureLayer) definition)?.Renderer as T;
 		}
-
 
 		[NotNull]
 		public static LayerDocument CreateLayerDocument([NotNull] string path)
@@ -132,7 +132,8 @@ namespace ProSuite.Commons.AGP.Carto
 			return map.FindLayer(uri, recursive);
 		}
 
-		public static void SetLayerSelectability([NotNull] FeatureLayer layer, bool selectable = true)
+		public static void SetLayerSelectability([NotNull] FeatureLayer layer,
+		                                         bool selectable = true)
 		{
 			var cimDefinition = (CIMFeatureLayer) layer.GetDefinition();
 			cimDefinition.Selectable = selectable;

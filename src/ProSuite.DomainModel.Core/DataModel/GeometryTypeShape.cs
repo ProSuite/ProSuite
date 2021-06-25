@@ -1,5 +1,5 @@
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry.EsriShape;
+using ProSuite.Commons.Geom.EsriShape;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {

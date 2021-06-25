@@ -9,6 +9,7 @@
     <RootNamespace>ProSuite.Commons.AO.Test</RootNamespace>
     <AssemblyName>ProSuite.Commons.AO.Test</AssemblyName>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.6.1</TargetFrameworkVersion>
+    <VSArcGISProduct Condition=" '$(VSArcGISProduct)' == ''">ArcGIS</VSArcGISProduct>
     <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.6\DotNet</ArcGISAssemblyPath>
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
   </PropertyGroup>
@@ -90,6 +91,8 @@
     <Compile Include="Geodatabase\GdbElementNamePatternTest.cs" />
     <Compile Include="Geodatabase\GdbQueryMethodProfilingTest.cs" />
     <Compile Include="Geodatabase\GdbQueryUtilsTest.cs" />
+    <Compile Include="Geodatabase\GdbSchema\GdbTableTest.cs" />
+    <Compile Include="Geodatabase\GdbSchema\GdbWorkspaceTest.cs" />
     <Compile Include="Geodatabase\GdbSqlUtilsTest.cs" />
     <Compile Include="Geodatabase\RowFormatTest.cs" />
     <Compile Include="Geodatabase\TableJoinUtilsTest.cs" />
@@ -98,6 +101,8 @@
     <Compile Include="Geometry\ChangeAlong\ExtentProviderMock.cs" />
     <Compile Include="Geometry\ChangeAlong\ReshapeInfoTest.cs" />
     <Compile Include="Geometry\ChangeAlong\ReshapeUtilsTest.cs" />
+    <Compile Include="Geometry\Cut\CutGeometryUtilsTest.cs" />
+    <Compile Include="Geometry\Cut\FeatureCutterTest.cs" />
     <Compile Include="Geometry\GeometryComparisonTest.cs" />
     <Compile Include="Geometry\GeometryFactoryTest.cs" />
     <Compile Include="Geometry\GeometryIssuesReproTest.cs" />

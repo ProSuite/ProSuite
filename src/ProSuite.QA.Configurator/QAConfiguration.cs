@@ -4,6 +4,7 @@ using ProSuite.QA.ServiceProviderArcGIS;
 using ProSuite.QA.SpecificationProviderFile;
 using System.Collections.Generic;
 using System.IO;
+using ProSuite.DomainModel.AGP.QA;
 
 namespace ProSuite.QA.Configurator
 {
@@ -17,6 +18,12 @@ namespace ProSuite.QA.Configurator
 
 		// TODO common utils, ...
 		private readonly string _qaInstallationsFolder = @"c:\ProSuite\ArcGisPro\";
+		private IQASpecificationProvider _specificationProvider;
+
+		public void SetupGrpcConfiguration(IQualityVerificationEnvironment verificationEnvironment)
+		{
+			_specificationProvider = new QaSpecificationProviderGrpc(verificationEnvironment);
+		}
 
 		public IEnumerable<IProSuiteQAServiceProvider> GetQAServiceProviders(IEnumerable<ProSuiteQAServerConfiguration> serverConfigs)
 		{
@@ -36,6 +43,11 @@ namespace ProSuite.QA.Configurator
 
 		public IQASpecificationProvider GetQASpecificationsProvider(ProSuiteQASpecificationsConfiguration specConfig)
 		{
+			if (_specificationProvider != null)
+			{
+				return _specificationProvider;
+			}
+
 			return new QASpecificationProviderXml(specConfig.SpecificationsProviderConnection);
 		}
 

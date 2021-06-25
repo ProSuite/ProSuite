@@ -2,6 +2,7 @@
 using ESRI.ArcGIS.DatasourcesRaster;
 #else
 using ESRI.ArcGIS.DataSourcesRaster;
+using ESRI.ArcGIS.GeoDatabaseExtensions;
 #endif
 using System;
 using System.Collections.Generic;
@@ -13,7 +14,6 @@ using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
-using ESRI.ArcGIS.GeoDatabaseExtensions;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
@@ -2176,7 +2176,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 #if !Server
-
 			var topologyName = datasetName as ITopologyName;
 			if (topologyName != null)
 			{

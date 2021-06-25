@@ -1,13 +1,13 @@
-using ArcGIS.Core.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ArcGIS.Core.Data;
 
 namespace ProSuite.Commons.AGP.Storage
 {
 	// now for only one dataset
 	public abstract class GdbRepository<T, TDataset> : IRepository<T> where T : class
-																	  where TDataset : Dataset	
+		where TDataset : Dataset
 	{
 		private readonly string _gdbPath;
 		private readonly string _name;
@@ -20,6 +20,7 @@ namespace ProSuite.Commons.AGP.Storage
 		}
 
 		private Geodatabase _gdbGeodatabase;
+
 		private Geodatabase GdbGeodatabase
 		{
 			get
@@ -29,11 +30,13 @@ namespace ProSuite.Commons.AGP.Storage
 					var uri = new Uri(_gdbPath, UriKind.Absolute);
 					_gdbGeodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 				}
+
 				return _gdbGeodatabase;
 			}
 		}
 
 		private TDataset _gdbDataset;
+
 		private TDataset GdbDataset
 		{
 			get
@@ -45,6 +48,7 @@ namespace ProSuite.Commons.AGP.Storage
 		public Definition GdbTableDefinition => GdbDataset.GetDefinition();
 
 		private IList<T> _query;
+
 		private IList<T> Query
 		{
 			get => _query ?? (_query = QueryGdbTable(GdbDataset));
@@ -52,6 +56,7 @@ namespace ProSuite.Commons.AGP.Storage
 		}
 
 		private QueryFilter _filter;
+
 		public QueryFilter Filter
 		{
 			get => _filter;
@@ -129,6 +134,7 @@ namespace ProSuite.Commons.AGP.Storage
 			{
 				return ReadTableItems(table);
 			}
+
 			return new List<T>();
 		}
 
@@ -147,6 +153,7 @@ namespace ProSuite.Commons.AGP.Storage
 					}
 				}
 			}
+
 			return items;
 		}
 
@@ -165,6 +172,7 @@ namespace ProSuite.Commons.AGP.Storage
 					}
 				}
 			}
+
 			return items;
 		}
 

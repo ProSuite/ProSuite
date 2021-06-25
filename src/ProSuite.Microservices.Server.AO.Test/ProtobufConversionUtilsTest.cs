@@ -7,6 +7,7 @@ using ESRI.ArcGIS.Geometry;
 using Google.Protobuf;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Serialization;
 using ProSuite.Commons.AO.Licensing;

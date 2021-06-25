@@ -1,20 +1,17 @@
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
-using ProSuite.Commons.Geometry.SpatialIndex;
+using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.SpatialIndex;
 
 namespace ProSuite.QA.Container.Geometry
 {
 	public class IndexedPolycurve : IIndexedSegments
 	{
-		#region Nested types
-
-		#endregion
-
 		private readonly BoxTree<SegmentProxy> _boxTree;
 		private readonly List<PartProxy> _partProxies;
 		private readonly IEnvelope _envelope;
@@ -124,27 +121,19 @@ namespace ProSuite.QA.Container.Geometry
 		private IEnumerable<SegmentProxyNeighborhood> GetNeighborhoods(
 			BoxTree<SegmentProxy> neighborBoxTree, double searchDistance, IBox commonBox)
 		{
-			foreach (BoxTree<SegmentProxy>.Neighborhood<SegmentProxy> boxPairs in
-				_boxTree.EnumerateNeighborhoods(neighborBoxTree, searchDistance, commonBox))
-			{
-				SegmentProxyNeighborhood neighborhood =
-					new SegmentProxyNeighborhood
-					{
-						SegmentProxy = boxPairs.Entry.Value,
-						Neighbours = GetSegments(boxPairs.Neighbours)
-					};
-				yield return neighborhood;
-			}
+			return _boxTree.EnumerateNeighborhoods(neighborBoxTree, searchDistance, commonBox)
+			               .Select(boxPairs => new SegmentProxyNeighborhood
+			                                   {
+				                                   SegmentProxy = boxPairs.Entry.Value,
+				                                   Neighbours = GetSegments(boxPairs.Neighbours)
+			                                   });
 		}
 
 		[NotNull]
 		private IEnumerable<SegmentProxy> GetSegments(
 			IEnumerable<BoxTree<SegmentProxy>.TileEntry> tileEntries)
 		{
-			foreach (BoxTree<SegmentProxy>.TileEntry entry in tileEntries)
-			{
-				yield return entry.Value;
-			}
+			return tileEntries.Select(entry => entry.Value);
 		}
 
 		public IEnumerable<SegmentProxy> GetSegments(IBox box)

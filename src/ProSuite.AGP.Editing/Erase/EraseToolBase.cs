@@ -38,7 +38,8 @@ namespace ProSuite.AGP.Editing.Erase
 
 		protected override void LogEnteringSketchMode()
 		{
-			_msg.Info("Sketch a hole or any polygon to be erased from the selection.<br>Press [ESC] to reselect the polygon(s).");
+			_msg.Info(
+				"Sketch a hole or any polygon to be erased from the selection.<br>Press [ESC] to reselect the polygon(s).");
 		}
 
 		protected override void LogPromptForSelection()
@@ -144,7 +145,7 @@ namespace ProSuite.AGP.Editing.Erase
 
 			return result;
 		}
-		
+
 		private static async Task<bool> SaveAsync(IDictionary<Feature, Geometry> result)
 		{
 			// create an edit operation

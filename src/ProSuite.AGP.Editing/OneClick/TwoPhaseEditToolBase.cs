@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Events;
@@ -13,8 +13,6 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.UI.Keyboard;
-using Cursor = System.Windows.Input.Cursor;
 
 namespace ProSuite.AGP.Editing.OneClick
 {
@@ -53,7 +51,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					() =>
 					{
 						var selectedFeatures =
-							SelectionUtils.GetSelectedFeatures(ActiveMapView).ToList();
+							GetApplicableSelectedFeatures(ActiveMapView).ToList();
 
 						CalculateDerivedGeometries(selectedFeatures, GetCancelableProgressor());
 
@@ -86,9 +84,9 @@ namespace ProSuite.AGP.Editing.OneClick
 			return result;
 		}
 
-		protected override bool IsInSelectionPhase()
+		protected override bool IsInSelectionPhase(bool shiftIsPressed)
 		{
-			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
+			if (shiftIsPressed)
 			{
 				return true;
 			}
@@ -98,10 +96,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				{
 					bool result;
 
-					IList<Feature> selection =
-						SelectionUtils.GetSelectedFeatures(ActiveMapView).ToList();
-
-					if (! CanUseSelection(selection))
+					if (! CanUseSelection(ActiveMapView))
 					{
 						result = true;
 					}
@@ -137,7 +132,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			if (IsShiftKey(k.Key))
 			{
-				Cursor = IsInSelectionPhase() ? SelectionCursor : SecondPhaseCursor;
+				Cursor = IsInSelectionPhase(true) ? SelectionCursor : SecondPhaseCursor;
 			}
 		}
 
@@ -174,6 +169,11 @@ namespace ProSuite.AGP.Editing.OneClick
 			if (CanUseDerivedGeometries())
 			{
 				StartSecondPhase();
+			}
+			else
+			{
+				// In case it has not yet been started (e.g. on tool activation with selection)
+				StartSelectionPhase();
 			}
 
 			LogDerivedGeometriesCalculated(progressor);

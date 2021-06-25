@@ -8,7 +8,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 
@@ -2546,6 +2546,17 @@ namespace ProSuite.Commons.AO.Geometry
 			ConfigureGeometry(result, prototype);
 
 			Assert.True(result.IsEmpty, "Oops, new MultipointClass is not empty");
+
+			return result;
+		}
+
+		[NotNull]
+		public static IMultipoint CreateEmptyMultipoint(
+			bool zAware, bool mAware, [CanBeNull] ISpatialReference spatialReference = null)
+		{
+			var result = new MultipointClass();
+
+			ConfigureGeometry(result, spatialReference, zAware, mAware, false);
 
 			return result;
 		}

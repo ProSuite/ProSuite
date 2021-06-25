@@ -5,6 +5,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.RemoveOverlaps;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -12,7 +13,6 @@ using ProSuite.Commons.Logging;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared;
-using ProSuite.Microservices.Server.AO.Geodatabase;
 
 namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 {
@@ -110,8 +110,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 			foreach (OverlapMsg overlapMsg in request.Overlaps)
 			{
 				GdbObjectReference gdbRef = new GdbObjectReference(
-					overlapMsg.OriginalFeatureRef.ClassHandle,
-					overlapMsg.OriginalFeatureRef.ObjectId);
+					(int) overlapMsg.OriginalFeatureRef.ClassHandle,
+					(int) overlapMsg.OriginalFeatureRef.ObjectId);
 
 				IFeatureClass fClass = (IFeatureClass) container.GetByClassId(gdbRef.ClassId);
 

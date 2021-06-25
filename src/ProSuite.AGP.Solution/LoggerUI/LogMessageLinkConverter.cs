@@ -8,7 +8,8 @@ namespace ProSuite.AGP.Solution.LoggerUI
 	// TODO should be this moved to common utils, because GPService need this too?
 	public static class HtmlTextUtils
 	{
-		private static readonly Regex _regex = new Regex("(?<=>)(.*?)(?=<)", RegexOptions.Singleline);
+		private static readonly Regex _regex =
+			new Regex("(?<=>)(.*?)(?=<)", RegexOptions.Singleline);
 
 		public static string GetTagText(string htmlString)
 		{
@@ -47,6 +48,7 @@ namespace ProSuite.AGP.Solution.LoggerUI
 					else
 						return "";
 			}
+
 			return logMsg;
 		}
 
@@ -75,11 +77,13 @@ namespace ProSuite.AGP.Solution.LoggerUI
 			{
 				return string.Empty;
 			}
+
 			int adjustedPosA = posA + a.Length;
 			if (adjustedPosA >= posB)
 			{
 				return string.Empty;
 			}
+
 			return value.Substring(adjustedPosA, posB - adjustedPosA);
 		}
 
@@ -93,6 +97,7 @@ namespace ProSuite.AGP.Solution.LoggerUI
 			{
 				return string.Empty;
 			}
+
 			return value.Substring(0, posA);
 		}
 
@@ -106,13 +111,14 @@ namespace ProSuite.AGP.Solution.LoggerUI
 			{
 				return string.Empty;
 			}
+
 			int adjustedPosA = posA + a.Length;
 			if (adjustedPosA >= value.Length)
 			{
 				return string.Empty;
 			}
+
 			return value.Substring(adjustedPosA);
 		}
 	}
-
 }
