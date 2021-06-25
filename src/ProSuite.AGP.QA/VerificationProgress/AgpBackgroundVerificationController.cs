@@ -141,13 +141,40 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			return true;
 		}
 
-		public void OpenWorkList()
+		public void OpenWorkList(IQualityVerificationResult verificationResult)
 		{
 			throw new NotImplementedException();
 		}
 
-		public bool CanOpenWorkList(out string reason)
+		public bool CanOpenWorkList(ServiceCallStatus? currentProgressStep,
+		                            IQualityVerificationResult verificationResult,
+		                            out string reason)
 		{
+			if (currentProgressStep == ServiceCallStatus.Running ||
+			    currentProgressStep == ServiceCallStatus.Undefined)
+			{
+				reason = "Opens the work list when the verification is completed";
+
+				return false;
+			}
+
+			if (string.IsNullOrEmpty(verificationResult.IssuesGdbPath))
+			{
+				reason = "No issue File Geodatabase has been created";
+
+				return false;
+			}
+
+			if (! File.Exists(verificationResult.IssuesGdbPath))
+			{
+				reason =
+					$"Issue File Geodatabase at {verificationResult.IssuesGdbPath} does not exist or cannot be accessed";
+
+				return false;
+			}
+
+			// TODO: Implement OpenWorkList
+
 			reason = "Opening the work list from here is not yet supported";
 			return false;
 		}
@@ -169,7 +196,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			if (currentProgressStep == ServiceCallStatus.Running ||
 			    currentProgressStep == ServiceCallStatus.Undefined)
 			{
-				reason = "Shows the verification report once the verification is completed";
+				reason = "Shows the verification report when the verification is completed";
 
 				return false;
 			}
@@ -183,7 +210,8 @@ namespace ProSuite.AGP.QA.VerificationProgress
 
 			if (! File.Exists(verificationResult.HtmlReportPath))
 			{
-				reason = "HTML report does not exist or cannot be accessed";
+				reason =
+					$"HTML report at {verificationResult.HtmlReportPath} does not exist or cannot be accessed";
 
 				return false;
 			}

@@ -443,7 +443,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 				if (_openWorkListCommand == null)
 				{
 					_openWorkListCommand = new RelayCommand<VerificationProgressViewModel>(
-						vm => ApplicationController.OpenWorkList(),
+						vm => ApplicationController.OpenWorkList(VerificationResult),
 						vm => CanOpenWorkList());
 				}
 
@@ -642,7 +642,9 @@ namespace ProSuite.UI.QA.VerificationProgress
 		{
 			string reason = null;
 
-			bool result = ApplicationController?.CanOpenWorkList(out reason) ?? false;
+			bool result =
+				ApplicationController?.CanOpenWorkList(ProgressTracker.RemoteCallStatus,
+				                                       VerificationResult, out reason) ?? false;
 
 			OpenWorkListToolTip = reason;
 

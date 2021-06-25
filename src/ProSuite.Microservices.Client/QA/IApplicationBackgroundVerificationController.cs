@@ -52,14 +52,18 @@ namespace ProSuite.Microservices.Client.QA
 		/// <summary>
 		/// Opens the work list associated with the current verification run.
 		/// </summary>
-		void OpenWorkList();
+		void OpenWorkList([NotNull] IQualityVerificationResult verificationResult);
 
 		/// <summary>
 		/// Whether opening a work list with the resulting issues is possible or not.
 		/// </summary>
+		/// <param name="currentProgressStep"></param>
+		/// <param name="verificationResult"></param>
 		/// <param name="reason">The reason why opening the work list is not possible.</param>
 		/// <returns></returns>
-		bool CanOpenWorkList(out string reason);
+		bool CanOpenWorkList([CanBeNull] ServiceCallStatus? currentProgressStep,
+		                     [NotNull] IQualityVerificationResult verificationResult,
+		                     out string reason);
 
 		/// <summary>
 		/// Shows a report for this verification.
