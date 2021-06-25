@@ -601,13 +601,13 @@ namespace ProSuite.QA.Container
 		}
 
 		[NotNull]
-		protected static IList<ITable> CastToTables(params IFeatureClass[] featureClasses)
+		public static IList<ITable> CastToTables(params IFeatureClass[] featureClasses)
 		{
 			return CastToTables((IEnumerable<IFeatureClass>) featureClasses);
 		}
 
 		[NotNull]
-		protected static IList<ITable> CastToTables(
+		public static IList<ITable> CastToTables(
 			[NotNull] IEnumerable<IFeatureClass> featureClasses)
 		{
 			Assert.ArgumentNotNull(featureClasses, nameof(featureClasses));

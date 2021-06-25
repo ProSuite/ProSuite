@@ -381,7 +381,8 @@ namespace ProSuite.QA.Container
 		{
 			RelatedTables related = GetRelatedTables(row);
 
-			return related?.GetInvolvedRows(row) ?? new[] {new InvolvedRow(row)};
+			return related?.GetInvolvedRows(row) ??
+			       InvolvedRowUtils.GetInvolvedRows(row);
 		}
 
 		internal int GetTableIndex([CanBeNull] ITable table, int occurrence)

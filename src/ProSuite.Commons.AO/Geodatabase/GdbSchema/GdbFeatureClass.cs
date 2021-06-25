@@ -13,7 +13,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		                       [NotNull] string name,
 		                       esriGeometryType shapeType,
 		                       [CanBeNull] string aliasName = null,
-		                       [CanBeNull] Func<ITable, BackingDataset> createBackingDataset = null,
+		                       [CanBeNull] Func<GdbTable, BackingDataset> createBackingDataset = null,
 		                       [CanBeNull] IWorkspace workspace = null)
 			: base(objectClassId, name, aliasName, createBackingDataset, workspace)
 		{
@@ -61,9 +61,12 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region IFeatureClass Members
 
-		public IFeature CreateFeature()
+		IFields IFeatureClass.Fields => Fields;
+
+		IFeature IFeatureClass.CreateFeature() => CreateFeature();
+		public GdbFeature CreateFeature()
 		{
-			return (IFeature) CreateObject(GetNextOid());
+			return (GdbFeature) CreateObject(GetNextOid());
 		}
 
 		public IFeature GetFeature(int id)

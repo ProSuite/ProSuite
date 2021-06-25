@@ -12,7 +12,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[DefaultValue(null)]
 		public string Value { get; set; }
 
-		[XmlAttribute("TransformerName")]
+		[XmlAttribute("transformerName")]
 		[DefaultValue(null)]
 		public string TransformerName { get; set; }
 	}

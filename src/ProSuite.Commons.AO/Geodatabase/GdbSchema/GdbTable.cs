@@ -16,7 +16,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	public class GdbTable : IObjectClass, ITable, IDataset, ISubtypes, IDatasetEdit,
 	                        IEquatable<IObjectClass>
 	{
-		//private const string _defaultOidFieldName = "OBJECTID";
+		private const string _defaultOidFieldName = "OBJECTID";
 
 		private readonly GdbFields _gdbFields = new GdbFields();
 		private int _lastUsedOid;
@@ -35,7 +35,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public GdbTable(int objectClassId,
 		                [NotNull] string name,
 		                [CanBeNull] string aliasName = null,
-		                [CanBeNull] Func<ITable, BackingDataset> createBackingDataset = null,
+		                [CanBeNull] Func<GdbTable, BackingDataset> createBackingDataset = null,
 		                [CanBeNull] IWorkspace workspace = null)
 		{
 			ObjectClassID = objectClassId;
@@ -167,7 +167,10 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			throw new NotImplementedException();
 		}
 
-		public IFields Fields => _gdbFields;
+		IFields IClass.Fields => Fields;
+		IFields IObjectClass.Fields => Fields;
+		IFields ITable.Fields => Fields;
+		public GdbFields Fields => _gdbFields;
 
 		public IIndexes Indexes => throw new NotImplementedException();
 

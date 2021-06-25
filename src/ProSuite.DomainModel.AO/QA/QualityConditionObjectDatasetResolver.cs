@@ -119,10 +119,11 @@ namespace ProSuite.DomainModel.AO.QA
 		[CanBeNull]
 		private Dataset GetDatasetByModelNameCore(
 			[NotNull] string modelName,
-			[NotNull] QualityCondition qualityCondition)
+			[NotNull] QualityCondition qualityCondition,
+			bool includeReferencedProcessors = true)
 		{
 			List<Dataset> parameterDatasets =
-				qualityCondition.GetDatasetParameterValues().ToList();
+				qualityCondition.GetDatasetParameterValues(includeReferencedProcessors).ToList();
 
 			// search first for directly involved dataset
 			foreach (Dataset dataset in parameterDatasets)

@@ -104,7 +104,7 @@ namespace ProSuite.QA.Container
 		new T GetTransformed();
 	}
 
-	public interface IDerivedTable
+	public interface ITransformedValue
 	{
 		[NotNull]
 		IList<ITable> InvolvedTables { get; }

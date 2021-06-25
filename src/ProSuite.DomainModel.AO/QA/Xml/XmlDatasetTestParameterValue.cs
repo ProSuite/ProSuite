@@ -18,8 +18,14 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[DefaultValue(null)]
 		public string WorkspaceId { get; set; }
 
-		[XmlArrayItem(ElementName = "RowFilterName")] 
+		[XmlArrayItem(ElementName = "rowfilterName")] 
 		[DefaultValue(null)]
 		public List<string> RowFilterNames { get; set; }
+
+		public bool IsEmpty()
+		{
+			return WorkspaceId == null && string.IsNullOrWhiteSpace(TransformerName);
+		}
+
 	}
 }

@@ -103,7 +103,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			foreach (QualitySpecificationElement element in qualitySpecification.Elements)
 			{
 				QualityCondition condition = element.QualityCondition;
-				foreach (Dataset dataset in condition.GetDatasetParameterValues())
+				foreach (Dataset dataset in condition.GetDatasetParameterValues(
+					includeReferencedProcessors: true))
 				{
 					if (! referenceCountByModel.ContainsKey((Model) dataset.Model))
 					{

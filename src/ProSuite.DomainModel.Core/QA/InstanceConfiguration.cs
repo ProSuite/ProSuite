@@ -78,8 +78,14 @@ namespace ProSuite.DomainModel.Core.QA
 			_parameterValues.Clear();
 		}
 
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <param name="includeReferencedProcessors">include RowFilters, IssueFilters and Transformers</param>
+		/// <returns></returns>
 		[NotNull]
-		public IEnumerable<Dataset> GetDatasetParameterValues()
+		public IEnumerable<Dataset> GetDatasetParameterValues(
+			bool includeReferencedProcessors = false)
 		{
 			foreach (TestParameterValue parameterValue in ParameterValues)
 			{
@@ -90,6 +96,48 @@ namespace ProSuite.DomainModel.Core.QA
 				if (dataset != null)
 				{
 					yield return dataset;
+				}
+			}
+
+			if (includeReferencedProcessors)
+			{
+				foreach (var referencedDataset in EnumReferencedDatasetParameterValues())
+				{
+					yield return referencedDataset;
+				}
+			}
+		}
+
+		protected virtual IEnumerable<Dataset> EnumReferencedDatasetParameterValues()
+		{
+			foreach (TestParameterValue parameterValue in ParameterValues)
+			{
+				var datasetTestParameterValue = parameterValue as DatasetTestParameterValue;
+
+				// Row filters
+				if (datasetTestParameterValue?.RowFilterConfigurations != null)
+				{
+					foreach (var rowFilterConfiguration in
+						datasetTestParameterValue.RowFilterConfigurations)
+					{
+						foreach (Dataset referencedDataset in
+							rowFilterConfiguration.GetDatasetParameterValues(
+								includeReferencedProcessors: true))
+						{
+							yield return referencedDataset;
+						}
+					}
+				}
+
+				// Transformers
+				if (parameterValue.Source != null)
+				{
+					foreach (Dataset referencedDataset in
+						parameterValue.Source.GetDatasetParameterValues(
+							includeReferencedProcessors: true))
+					{
+						yield return referencedDataset;
+					}
 				}
 			}
 		}

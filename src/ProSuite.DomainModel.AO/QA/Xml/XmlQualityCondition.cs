@@ -35,7 +35,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			{
 				if (ignoreEmptyValues &&
 				    paramValue is XmlDatasetTestParameterValue dsValue &&
-				    dsValue.WorkspaceId == null) // TODO: Handle Transformer values!
+				    dsValue.IsEmpty()) 
 				{
 					continue;
 				}

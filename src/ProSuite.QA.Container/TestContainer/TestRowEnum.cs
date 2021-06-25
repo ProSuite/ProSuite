@@ -102,21 +102,16 @@ namespace ProSuite.QA.Container.TestContainer
 			foreach (ContainerTest containerTest in _container.ContainerTests)
 			{
 				containerTest.DataContainer = this;
-				foreach (ITable table in containerTest.InvolvedTables)
-				{
-					if (table is IDerivedTable derived)
-					{
-						derived.DataContainer = this;
-					}
-				}
+
+				SetSearchable(containerTest.InvolvedTables);
 			}
 
 			_rastersRowEnumerable = new RastersRowEnumerable(_testsPerRaster.Keys, _container);
 
-			HashSet<ITable> cachedSet;
+			Dictionary<ITable, double> cachedSet;
 			ClassifyTables(_testsPerTable, out cachedSet, out _nonCachedTables);
 			AddProcessorTables(_container.ContainerTests, cachedSet);
-			_cachedTables = new List<ITable>(cachedSet);
+			_cachedTables = new List<ITable>(cachedSet.Keys);
 
 			_cachedTableCount = _cachedTables.Count;
 
@@ -812,36 +807,48 @@ namespace ProSuite.QA.Container.TestContainer
 			return commonExpression;
 		}
 
+		private void SetSearchable(IEnumerable<ITable> tables)
+		{
+			foreach (ITable table in tables)
+			{
+				if (table is ITransformedValue transformed)
+				{
+					transformed.DataContainer = this;
+
+					SetSearchable(transformed.InvolvedTables);
+				}
+			}
+		}
+
 		// optimize filter to exclude existing large objects
 
 		private static void ClassifyTables(
 			[NotNull] IDictionary<ITable, IList<ContainerTest>> testsPerTable,
-			[NotNull] out HashSet<ITable> cachedTables,
+			[NotNull] out Dictionary<ITable, double> cachedTables,
 			[NotNull] out IList<TableFields> nonCachedTables)
 		{
 			Assert.ArgumentNotNull(testsPerTable, nameof(testsPerTable));
 
-			cachedTables = new HashSet<ITable>();
+			cachedTables = new Dictionary<ITable, double>();
 			nonCachedTables = new List<TableFields>();
 
 			foreach (KeyValuePair<ITable, IList<ContainerTest>> pair in testsPerTable)
 			{
 				ITable table = pair.Key;
 
-				if (table is IDerivedTable derived)
-				{
-					foreach (var baseTable in derived.InvolvedTables)
-					{
-						cachedTables.Add(baseTable);
-					}
-				}
+				AddRecursive(table, cachedTables);
 
 				IList<ContainerTest> tests = pair.Value;
 				GetNeeds(table, tests, out bool queried, out bool geometryUsed);
 
 				if (queried)
 				{
-					cachedTables.Add(table);
+					if (! cachedTables.TryGetValue(table, out double searchDist))
+					{
+						searchDist = 0;
+					}
+
+					cachedTables[table] = Math.Max(searchDist, 0); // TODO
 				}
 				else
 				{
@@ -864,7 +871,27 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 		}
 
-		private void AddProcessorTables(IEnumerable<ContainerTest> tests, HashSet<ITable> cachedSet)
+		private static void AddRecursive(ITable table, Dictionary<ITable, double> cachedTables)
+		{
+			if (! (table is ITransformedValue transformed))
+			{
+				return;
+			}
+
+			foreach (var baseTable in transformed.InvolvedTables)
+			{
+				AddRecursive(baseTable, cachedTables);
+				if (! cachedTables.TryGetValue(baseTable, out double searchDist))
+				{
+					searchDist = 0;
+				}
+
+				cachedTables[baseTable] = Math.Max(searchDist, 0); // TODO
+			}
+		}
+
+		private void AddProcessorTables(IEnumerable<ContainerTest> tests,
+		                                Dictionary<ITable, double> cachedSet)
 		{
 			foreach (var test in tests)
 			{
@@ -874,7 +901,12 @@ namespace ProSuite.QA.Container.TestContainer
 					{
 						foreach (ITable table in filter.InvolvedTables)
 						{
-							cachedSet.Add(table);
+							if (! cachedSet.TryGetValue(table, out double searchDist))
+							{
+								searchDist = 0;
+							}
+
+							cachedSet[table] = Math.Max(searchDist, 0); // TODO
 						}
 
 						if (filter is IssueFilter f)
@@ -890,7 +922,12 @@ namespace ProSuite.QA.Container.TestContainer
 					{
 						foreach (ITable table in filter.InvolvedTables)
 						{
-							cachedSet.Add(table);
+							if (! cachedSet.TryGetValue(table, out double searchDist))
+							{
+								searchDist = 0;
+							}
+
+							cachedSet[table] = Math.Max(searchDist, 0); // TODO
 						}
 					}
 				}

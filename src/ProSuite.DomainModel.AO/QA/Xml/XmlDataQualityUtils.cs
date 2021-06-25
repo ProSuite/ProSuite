@@ -57,8 +57,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		{
 			Assert.ArgumentNotNull(xml, nameof(xml));
 
-			string schema = Schema.ProSuite_QA_QualitySpecifications_2_0;
-
+						// TODO: allow diffferent schemas
+			//string schema = Schema.ProSuite_QA_QualitySpecifications_2_0;
+			string schema = Schema.ProSuite_QA_QualitySpecifications_3_0;
 			try
 			{
 				return XmlUtils.Deserialize<XmlDataQualityDocument>(xml, schema);

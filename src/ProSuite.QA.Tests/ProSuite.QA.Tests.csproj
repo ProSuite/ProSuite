@@ -350,6 +350,9 @@
     <Compile Include="SpatialRelations\QaSpatialRelationSelfBase.cs" />
     <Compile Include="SpatialRelations\QaSpatialRelationUtils.cs" />
     <Compile Include="TestRowReference.cs" />
+    <Compile Include="Transformers\TransformedFeatureClass.cs" />
+    <Compile Include="Transformers\TrDissolve.cs" />
+    <Compile Include="Transformers\TrIntersect.cs" />
     <Compile Include="UnequalField.cs" />
     <Compile Include="UniqueStringsConstraint.cs" />
     <Compile Include="VersionSpecification.cs" />
@@ -435,5 +438,6 @@
     <None Include="Documentation\Extended\de\QaNodeLineCoincidence.docx" />
     <None Include="Documentation\Extended\de\QaNodeLineCoincidence.pdf" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

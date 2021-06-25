@@ -5,8 +5,11 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.QA.Xml
 {
-	[XmlRoot("DataQuality",
-	         Namespace = "urn:EsriDE.ProSuite.QA.QualitySpecifications-2.0")]
+	[XmlRoot("DataQuality"
+	         , Namespace = "urn:EsriDE.ProSuite.QA.QualitySpecifications-3.0"
+						 //TODO: allow 
+//	         , Namespace = "urn:EsriDE.ProSuite.QA.QualitySpecifications-2.0"
+	)]
 	public class XmlDataQualityDocument
 	{
 		[XmlArrayItem("QualitySpecification")]

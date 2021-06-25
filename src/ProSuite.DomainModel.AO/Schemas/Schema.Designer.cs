@@ -63,17 +63,34 @@ namespace ProSuite.DomainModel.AO.Schemas {
         /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
         ///
-        ///&lt;xs:schema xmlns:tns=&quot;urn:ProSuite.QA.QualitySpecifications-2.0&quot; elementFormDefault=&quot;qualified&quot;
+        ///&lt;xs:schema xmlns:tns=&quot;urn:EsriDE.ProSuite.QA.QualitySpecifications-2.0&quot; elementFormDefault=&quot;qualified&quot;
         ///           targetNamespace=&quot;urn:EsriDE.ProSuite.QA.QualitySpecifications-2.0&quot;
         ///           xmlns:xs=&quot;http://www.w3.org/2001/XMLSchema&quot;&gt;
         ///  &lt;xs:element name=&quot;DataQuality&quot; nillable=&quot;true&quot; type=&quot;tns:XmlDataQualityDocument&quot; /&gt;
         ///  &lt;xs:complexType name=&quot;XmlDataQualityDocument&quot;&gt;
         ///    &lt;xs:sequence&gt;
-        ///      &lt;xs:element minOccurs=&quot;0&quot; maxOccurs=&quot;1&quot; name=&quot;QualitySpecifications&quot; type=&quot; [rest of string was truncated]&quot;;.
+        ///      &lt;xs:element minOccurs=&quot;0&quot; maxOccurs=&quot;1&quot; name=&quot;QualitySpecifications&quot; [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string ProSuite_QA_QualitySpecifications_2_0 {
             get {
                 return ResourceManager.GetString("ProSuite_QA_QualitySpecifications_2_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+        ///
+        ///&lt;xs:schema xmlns:tns=&quot;urn:EsriDE.ProSuite.QA.QualitySpecifications-2.0&quot; elementFormDefault=&quot;qualified&quot;
+        ///           targetNamespace=&quot;urn:EsriDE.ProSuite.QA.QualitySpecifications-2.0&quot;
+        ///           xmlns:xs=&quot;http://www.w3.org/2001/XMLSchema&quot;&gt;
+        ///  &lt;xs:element name=&quot;DataQuality&quot; nillable=&quot;true&quot; type=&quot;tns:XmlDataQualityDocument&quot; /&gt;
+        ///  &lt;xs:complexType name=&quot;XmlDataQualityDocument&quot;&gt;
+        ///    &lt;xs:sequence&gt;
+        ///      &lt;xs:element minOccurs=&quot;0&quot; maxOccurs=&quot;1&quot; name=&quot;QualitySpecifications&quot; [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string ProSuite_QA_QualitySpecifications_3_0 {
+            get {
+                return ResourceManager.GetString("ProSuite_QA_QualitySpecifications_3_0", resourceCulture);
             }
         }
     }

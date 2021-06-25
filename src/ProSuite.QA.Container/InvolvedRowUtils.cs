@@ -39,7 +39,33 @@ namespace ProSuite.QA.Container
 		{
 			Assert.ArgumentNotNull(rows, nameof(rows));
 
-			return rows.Select(row => new InvolvedRow(row)).ToList();
+			List<InvolvedRow> involvedRows = new List<InvolvedRow>();
+			foreach (T row in rows)
+			{
+				involvedRows.AddRange(GetInvolvedRowsCore(row));
+			}
+
+			return involvedRows;
+		}
+
+		public const string BaseRowField = "__BaseRows__";
+		private static IEnumerable<InvolvedRow> GetInvolvedRowsCore(IRow row)
+		{
+			int baseRowsField  = row.Fields.FindField(BaseRowField);
+			if (baseRowsField >= 0 && row.get_Value(baseRowsField) is IList<IRow> baseRows)
+			{
+				foreach (var baseRow in baseRows)
+				{
+					foreach (var involvedRow in GetInvolvedRowsCore(baseRow))
+					{
+						yield return involvedRow;
+					}
+				}
+			}
+			else
+			{
+				yield return new InvolvedRow(row);
+			}
 		}
 
 		[NotNull]

@@ -403,7 +403,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			string datasetName = xmlDatasetTestParameterValue.Value;
 			if (string.IsNullOrWhiteSpace(datasetName))
 			{
-				if (testParameter.IsConstructorParameter)
+				if (testParameter.IsConstructorParameter
+				    && string.IsNullOrEmpty(xmlDatasetTestParameterValue.TransformerName))
 				{
 					Assert.NotNullOrEmpty(
 						datasetName,

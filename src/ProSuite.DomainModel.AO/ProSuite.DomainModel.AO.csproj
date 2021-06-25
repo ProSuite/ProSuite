@@ -285,6 +285,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="QA\SpecificationReport\QualitySpecificationReport.cd" />
+    <None Include="Schemas\ProSuite.QA.QualitySpecifications-3.0.xsd">
+      <SubType>Designer</SubType>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="Schemas\ProSuite.QA.QualitySpecifications-2.0.xsd">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>

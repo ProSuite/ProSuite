@@ -469,6 +469,24 @@ namespace ProSuite.DomainModel.Core.QA
 			target._category = _category;
 		}
 
+		protected override IEnumerable<Dataset> EnumReferencedDatasetParameterValues()
+		{
+			foreach (IssueFilterConfiguration issueFilterConfiguration in
+				GetIssueFilterConfigurations())
+			{
+				foreach (Dataset dataset in issueFilterConfiguration.GetDatasetParameterValues(
+					includeReferencedProcessors: true))
+				{
+					yield return dataset;
+				}
+			}
+
+			foreach (Dataset dataset in base.EnumReferencedDatasetParameterValues())
+			{
+				yield return dataset;
+			}
+		}
+
 		#region Implementation of IPersistenceAware
 
 		void IPersistenceAware.OnCreate() { }

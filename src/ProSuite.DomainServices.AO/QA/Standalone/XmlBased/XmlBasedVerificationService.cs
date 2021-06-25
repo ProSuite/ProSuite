@@ -49,7 +49,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		public void ExecuteVerification(
 			[NotNull] string dataQualityXml,
 			[NotNull] string specificationName,
-			[NotNull] List<DataSource> dataSourceReplacements,
+			[NotNull] IList<DataSource> dataSourceReplacements,
 			[CanBeNull] AreaOfInterest areaOfInterest,
 			[CanBeNull] string optionsXml,
 			double tileSize,
