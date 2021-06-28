@@ -172,7 +172,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				return false;
 			}
 
-			if (! File.Exists(verificationResult.IssuesGdbPath))
+			if (! Directory.Exists(verificationResult.IssuesGdbPath))
 			{
 				reason =
 					$"Issue File Geodatabase at {verificationResult.IssuesGdbPath} does not exist or cannot be accessed";
