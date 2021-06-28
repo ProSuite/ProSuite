@@ -123,17 +123,19 @@ namespace ProSuite.AGP.QA.ProPlugins
 			[NotNull] QualityVerificationProgressTracker progressTracker,
 			string resultsPath)
 		{
+			// NOTE: If the background task is not Run( async () => ... but only Run(() => ...
+			// The tool's OnSketchCompleteAsync will be called twice! 
 			Task<ServiceCallStatus> verificationTask =
 				await BackgroundTask.Run(
-					() =>
+					async () =>
 					{
 						IQualityVerificationEnvironment qaEnvironment =
 							SessionContext.VerificationEnvironment;
 
 						Assert.NotNull(qaEnvironment);
 
-						return qaEnvironment.VerifyPerimeter(
-							perimeter, progressTracker, resultsPath);
+						return await qaEnvironment.VerifyPerimeter(
+							       perimeter, progressTracker, resultsPath);
 					},
 					BackgroundProgressor.None);
 
