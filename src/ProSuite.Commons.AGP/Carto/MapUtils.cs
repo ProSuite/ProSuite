@@ -575,6 +575,11 @@ namespace ProSuite.Commons.AGP.Carto
 			return featureLayer?.SelectionCount > 0;
 		}
 
+		public static bool HasSelection([CanBeNull] MapView mapView)
+		{
+			return mapView?.Map?.SelectionCount > 0;
+		}
+
 		public static IEnumerable<Table> Distinct(
 			this IEnumerable<Table> tables)
 		{

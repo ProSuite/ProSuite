@@ -47,6 +47,13 @@ namespace ProSuite.AGP.QA.ProPlugins
 				return;
 			}
 
+			if (! MapUtils.HasSelection(MapView.Active))
+			{
+				MessageBox.Show("No selected features", "Verify Selection",
+				                MessageBoxButton.OK, MessageBoxImage.Warning);
+				return;
+			}
+
 			var progressTracker = new QualityVerificationProgressTracker
 			                      {
 				                      CancellationTokenSource = new CancellationTokenSource()
@@ -84,11 +91,10 @@ namespace ProSuite.AGP.QA.ProPlugins
 			string resultsPath)
 		{
 			var selection = await QueuedTask.Run(
-				                () =>
-				                {
-					                return SelectionUtils.GetSelectedFeatures(MapView.Active)
-					                                     .Cast<Row>().ToList();
-				                });
+				                () => SelectionUtils.GetSelectedFeatures(MapView.Active)
+				                                    .Cast<Row>().ToList());
+
+			Assert.True(selection.Count > 0, "No selection");
 
 			Task<ServiceCallStatus> verificationTask =
 				await BackgroundTask.Run(
