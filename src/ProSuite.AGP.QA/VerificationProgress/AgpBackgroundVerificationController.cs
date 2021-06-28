@@ -150,6 +150,13 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		                            IQualityVerificationResult verificationResult,
 		                            out string reason)
 		{
+			if (verificationResult == null)
+			{
+				reason = "Dialog has not been fully initialized";
+
+				return false;
+			}
+
 			if (currentProgressStep == ServiceCallStatus.Running ||
 			    currentProgressStep == ServiceCallStatus.Undefined)
 			{
@@ -193,6 +200,13 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		                          IQualityVerificationResult verificationResult,
 		                          out string reason)
 		{
+			if (verificationResult == null)
+			{
+				reason = "Dialog has not been fully initialized";
+
+				return false;
+			}
+
 			if (currentProgressStep == ServiceCallStatus.Running ||
 			    currentProgressStep == ServiceCallStatus.Undefined)
 			{

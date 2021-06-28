@@ -443,7 +443,8 @@ namespace ProSuite.UI.QA.VerificationProgress
 				if (_openWorkListCommand == null)
 				{
 					_openWorkListCommand = new RelayCommand<VerificationProgressViewModel>(
-						vm => ApplicationController.OpenWorkList(VerificationResult),
+						vm => ApplicationController.OpenWorkList(
+							Assert.NotNull(VerificationResult)),
 						vm => CanOpenWorkList());
 				}
 
@@ -512,9 +513,9 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 		#endregion
 
-		[NotNull]
+		[CanBeNull]
 		private IQualityVerificationResult VerificationResult =>
-			Assert.NotNull(ProgressTracker.QualityVerificationResult);
+			ProgressTracker.QualityVerificationResult;
 
 		public async Task<ServiceCallStatus> RunBackgroundVerificationAsync()
 		{
@@ -714,7 +715,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 			Try(nameof(SaveIssues),
 			    () =>
 			    {
-				    ApplicationController?.SaveIssues(VerificationResult,
+				    ApplicationController?.SaveIssues(Assert.NotNull(VerificationResult),
 				                                      UpdateOptions.ErrorDeletionType,
 				                                      ! UpdateOptions.KeepPreviousIssues);
 			    });
@@ -723,7 +724,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 		private void ShowReport()
 		{
 			Try(nameof(ShowReport),
-			    () => { ApplicationController?.ShowReport(VerificationResult); });
+			    () => { ApplicationController?.ShowReport(Assert.NotNull(VerificationResult)); });
 		}
 
 		private bool CanShowReport()
