@@ -46,6 +46,13 @@ namespace ProSuite.AGP.QA.ProPlugins
 			return base.OnToolActivateAsync(active);
 		}
 
+		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
+		{
+			SetupRectangleSketch();
+
+			return base.OnToolActivatedCore(hasMapViewChanged);
+		}
+
 		protected override Task<bool> OnSketchCompleteCoreAsync(
 			Geometry sketchGeometry,
 			CancelableProgressor progressor)
