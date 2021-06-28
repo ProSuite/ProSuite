@@ -6,6 +6,7 @@ using ArcGIS.Core.Threading.Tasks;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.Editing;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.QA.VerificationProgress;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -58,6 +59,15 @@ namespace ProSuite.AGP.QA.ProPlugins
 			CancelableProgressor progressor)
 		{
 			GeometryUtils.Simplify(sketchGeometry);
+
+			if (ToolUtils.IsSingleClickSketch(sketchGeometry))
+			{
+				MessageBox.Show(
+					"Invalid perimeter. Please draw a box to define the extent to be verified",
+					"Verify Extent",
+					MessageBoxButton.OK, MessageBoxImage.Warning);
+				return Task.FromResult(false);
+			}
 
 			IQualityVerificationEnvironment qaEnvironment =
 				Assert.NotNull(SessionContext.VerificationEnvironment);
