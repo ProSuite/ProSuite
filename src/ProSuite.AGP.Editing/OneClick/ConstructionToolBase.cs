@@ -332,12 +332,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void StartSketchPhase()
 		{
-			SketchOutputMode = SketchOutputMode.Map;
-
-			SketchType = GetSketchGeometryType();
-
-			UseSnapping = true;
-			CompleteSketchOnMouseUp = false;
+			SetupSketch(GetSketchGeometryType(), SketchOutputMode.Map, true, false);
 
 			SetCursor(SketchCursor);
 
