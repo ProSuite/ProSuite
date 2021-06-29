@@ -3,6 +3,7 @@ using ESRI.ArcGIS.DatasourcesRaster;
 #else
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif
+using System;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -106,7 +107,11 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			IPnt topLeftColumn = new PntClass();
 			topLeftColumn.SetCoords(pixelOffsetX, pixelOffsetY);
 
+			// The memory increase is pretty dramatic...
 			_raster.Read(topLeftColumn, pixelBlock);
+
+			//... if the raster ist not flushed! But even with flushing there is a steady increase.
+			((IRawBlocks) _raster).Flush();
 		}
 
 		public void Dispose()
@@ -122,7 +127,11 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			var rasterProperties = (IRasterProps) _raster;
 			IEnvelope envelope = rasterProperties.Extent;
 
-			return new EnvelopeXY(envelope.XMin, envelope.YMin, envelope.XMax, envelope.YMax);
+			// NOTE: YMin and YMax are inverted (probably due to GDAL)
+			double yMin = Math.Min(envelope.YMin, envelope.YMax);
+			double yMax = Math.Max(envelope.YMin, envelope.YMax);
+
+			return new EnvelopeXY(envelope.XMin, yMin, envelope.XMax, yMax);
 		}
 
 		private static IRaster OpenRaster(string filePath)

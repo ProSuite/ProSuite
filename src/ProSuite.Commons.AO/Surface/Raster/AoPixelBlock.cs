@@ -1,16 +1,16 @@
-using System;
-using System.Collections.Generic;
-using System.Runtime.InteropServices;
 #if Server
 using ESRI.ArcGIS.DatasourcesRaster;
 #else
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif
+using System;
+using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 
 namespace ProSuite.Commons.AO.Surface.Raster
 {
-	public class AoPixelBlock<T> : ISimplePixelBlock<T>, IDisposable
+	public class AoPixelBlock<T> : ISimplePixelBlock<T>
 	{
 		private readonly int _rasterBandIndex;
 		private readonly IPixelBlock3 _pixelBlock;

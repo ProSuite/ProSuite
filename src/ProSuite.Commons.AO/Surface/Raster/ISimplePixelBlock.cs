@@ -1,8 +1,9 @@
+using System;
 using System.Collections.Generic;
 
 namespace ProSuite.Commons.AO.Surface.Raster
 {
-	public interface ISimplePixelBlock<T>
+	public interface ISimplePixelBlock<T> : IDisposable
 	{
 		/// <summary>
 		/// The pixel value at the specified pixel coordinate.

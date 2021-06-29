@@ -28,7 +28,7 @@ namespace ProSuite.QA.Tests.Surface
 
 		public override IGeoDataset GeoDataset => _simpleRasterMosaic;
 
-		public override double CellSize => _simpleRasterMosaic.GetMaxCellSize();
+		public override double CellSize => _simpleRasterMosaic.GetCellSize();
 
 		public override ISimpleSurface CreateSurface(IEnvelope extent)
 		{
