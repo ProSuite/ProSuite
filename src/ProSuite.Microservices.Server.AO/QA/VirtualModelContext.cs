@@ -5,6 +5,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -151,6 +152,13 @@ namespace ProSuite.Microservices.Server.AO.QA
 				ModelElementUtils.GetTerrainDataSources(dataset, OpenObjectClass);
 
 			return new SimpleTerrain(dataset.Name, terrainSources, dataset.PointDensity, null);
+		}
+
+		public SimpleRasterMosaic OpenSimpleRasterMosaic(ISimpleRasterMosaicDataset dataset)
+		{
+			// TODO: Just send the catalog & boundary feature class, assuming the raster paths
+			//       are accessible from anywhere
+			throw new NotImplementedException();
 		}
 
 		public IRelationshipClass OpenRelationshipClass(Association association)
