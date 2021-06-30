@@ -144,5 +144,16 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 			return result;
 		}
+
+		public static double GetMeanCellSize(IRaster raster)
+		{
+			var rasterProps = (IRasterProps) raster;
+
+			IPnt pnt = rasterProps.MeanCellSize();
+
+			double meanCellSize = Math.Abs(pnt.X) + Math.Abs(pnt.Y) / 2;
+
+			return meanCellSize;
+		}
 	}
 }

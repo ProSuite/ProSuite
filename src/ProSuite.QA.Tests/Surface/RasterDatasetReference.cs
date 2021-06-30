@@ -1,7 +1,7 @@
 #if Server
 using ESRI.ArcGIS.DatasourcesRaster;
 #else
-using ESRI.ArcGIS.DataSourcesRaster;
+using ProSuite.QA.Container;
 #endif
 using System;
 using ESRI.ArcGIS.Geodatabase;
@@ -12,7 +12,6 @@ using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.Callbacks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container;
 
 namespace ProSuite.QA.Tests.Surface
 {
@@ -30,7 +29,7 @@ namespace ProSuite.QA.Tests.Surface
 
 		public override IDataset Dataset => (IDataset) _rasterDataset;
 		public override IGeoDataset GeoDataset => (IGeoDataset) _rasterDataset;
-		public override double CellSize => ((IRasterProps) FullRaster).MeanCellSize().X;
+		public override double CellSize => RasterUtils.GetMeanCellSize(FullRaster);
 
 		private IRaster FullRaster =>
 			_fullRaster
@@ -46,7 +45,8 @@ namespace ProSuite.QA.Tests.Surface
 			IDataset disposableDataset = memoryRasterDataset;
 
 			IDisposable disposableCallback =
-				new DisposableCallback(() => RasterUtils.ReleaseMemoryRasterDataset(disposableDataset));
+				new DisposableCallback(
+					() => RasterUtils.ReleaseMemoryRasterDataset(disposableDataset));
 
 			var simpleRasterDataset = new SimpleRasterDataset(
 				clipped, GeometryFactory.CreatePolygon(extent), disposableCallback);
