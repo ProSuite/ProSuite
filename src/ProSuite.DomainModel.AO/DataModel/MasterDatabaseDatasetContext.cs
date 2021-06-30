@@ -1,5 +1,6 @@
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainModel.AO.DataModel
@@ -32,6 +33,11 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		public TerrainReference OpenTerrainReference(ISimpleTerrainDataset dataset)
+		{
+			return ModelElementUtils.TryOpenFromMasterDatabase(dataset);
+		}
+
+		public SimpleRasterMosaic OpenSimpleRasterMosaic(ISimpleRasterMosaicDataset dataset)
 		{
 			return ModelElementUtils.TryOpenFromMasterDatabase(dataset);
 		}

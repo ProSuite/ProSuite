@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ESRI.ArcGIS.DataSourcesRaster;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
@@ -110,6 +112,16 @@ namespace ProSuite.DomainModel.AO.DataModel
 				ModelElementUtils.GetTerrainDataSources(dataset, OpenObjectClass);
 
 			return new SimpleTerrain(dataset.Name, terrainSources, dataset.PointDensity, null);
+		}
+
+		public override SimpleRasterMosaic OpenSimpleRasterMosaic(
+			ISimpleRasterMosaicDataset dataset)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			IMosaicDataset mosaic = DatasetUtils.OpenMosaicDataset(Workspace, dataset.Name);
+
+			return new SimpleRasterMosaic(mosaic);
 		}
 
 		public override IRelationshipClass OpenRelationshipClass(Association association)
