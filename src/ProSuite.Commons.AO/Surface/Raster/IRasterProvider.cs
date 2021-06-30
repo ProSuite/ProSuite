@@ -12,7 +12,6 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		[CanBeNull]
 		ISimpleRaster GetSimpleRaster(double atX, double atY);
 
-		IEnumerable<ISimpleRaster> GetSimpleRasters(double x, double y,
-		                                            double searchTolerance);
+		IEnumerable<ISimpleRaster> GetSimpleRasters([NotNull] IEnvelope envelope);
 	}
 }

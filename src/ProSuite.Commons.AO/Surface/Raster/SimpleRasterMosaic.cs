@@ -24,24 +24,58 @@ namespace ProSuite.Commons.AO.Surface.Raster
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly IMosaicDataset _mosaicDataset;
-
-		private readonly string _mosaicRuleZOrderField;
-		private readonly bool _mosaicRuleDescending;
 		private double? _cellSize;
+		[CanBeNull] private IPolygon _interpolationDomain;
 
 		// TODO: Consider supporting VRT file format directly or
 		//       a polygon feature class with a raster path field and a boundary polygon
 
 		public SimpleRasterMosaic(IMosaicDataset mosaicDataset,
-		                          string mosaicRuleZOrderField = null,
+		                          string mosaicRuleZOrderFieldName = null,
 		                          bool mosaicRuleDescending = false)
 		{
-			_mosaicDataset = mosaicDataset;
+			if (string.IsNullOrEmpty(mosaicRuleZOrderFieldName))
+			{
+				esriMosaicMethod mosaicMethod = mosaicDataset.MosaicFunction.MosaicMethod;
 
-			_mosaicRuleZOrderField = mosaicRuleZOrderField;
-			_mosaicRuleDescending = mosaicRuleDescending;
+				Assert.AreEqual(esriMosaicMethod.esriMosaicAttribute, mosaicMethod,
+				                "Unsupported mosaic method. Currently the only mosaic method is by field order is supported.");
+
+				MosaicRuleZOrderFieldName = mosaicDataset.MosaicFunction.OrderByFieldName;
+				MosaicRuleDescending = ! mosaicDataset.MosaicFunction.Ascending;
+			}
+			else
+			{
+				MosaicRuleZOrderFieldName = mosaicRuleZOrderFieldName;
+				MosaicRuleDescending = mosaicRuleDescending;
+			}
+
+			Name = ((IDataset) mosaicDataset).Name;
+			FullName = ((IDataset) mosaicDataset).FullName;
+
+			CellSizeFieldName = mosaicDataset.MosaicFunction.CellsizeFieldName;
+
+			ItemPathsQuery = (IItemPathsQuery) mosaicDataset;
+
+			BoundaryClass = mosaicDataset.Boundary;
+			CatalogClass = mosaicDataset.Catalog;
 		}
+
+		[CanBeNull]
+		private IFeatureClass BoundaryClass { get; }
+
+		[NotNull]
+		private IFeatureClass CatalogClass { get; }
+
+		[CanBeNull]
+		private string MosaicRuleZOrderFieldName { get; }
+
+		private bool MosaicRuleDescending { get; }
+
+		private string CellSizeFieldName { get; }
+
+		[CanBeNull]
+		private IItemPathsQuery ItemPathsQuery { get; }
 
 		public double GetCellSize()
 		{
@@ -55,45 +89,45 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			return _cellSize ?? double.NaN;
 		}
 
+		#region IRasterProvider members
+
 		public IPolygon GetInterpolationDomain()
 		{
-			IFeatureClass boundary = _mosaicDataset.Boundary;
+			if (_interpolationDomain == null)
+			{
+				if (BoundaryClass != null)
+				{
+					var boundaryFeatures =
+						GdbQueryUtils.GetFeatures(BoundaryClass, false).ToList();
 
-			var boundaryFeatures = GdbQueryUtils.GetFeatures(boundary, false).ToList();
+					_interpolationDomain = (IPolygon) GeometryUtils.UnionFeatures(boundaryFeatures);
+				}
+				else
+				{
+					_msg.Debug("Boundary feature class is null. Unioning all catalog items...");
 
-			return (IPolygon) GeometryUtils.UnionFeatures(boundaryFeatures);
+					var catalogFeatures = GdbQueryUtils.GetFeatures(CatalogClass, false).ToList();
+
+					_interpolationDomain = (IPolygon) GeometryUtils.UnionFeatures(catalogFeatures);
+				}
+			}
+
+			return _interpolationDomain;
 		}
 
-		public IEnumerable<ISimpleRaster> GetSimpleRasters(double x, double y,
-		                                                   double searchTolerance)
+		public IEnumerable<ISimpleRaster> GetSimpleRasters(IEnvelope envelope)
 		{
-			IFeatureClass rasterCatalog = _mosaicDataset.Catalog;
-
-			ISpatialReference spatialReference = DatasetUtils.GetSpatialReference(rasterCatalog);
-
-			Assert.NotNull(spatialReference,
-			               $"Raster catalog {DatasetUtils.GetName(rasterCatalog)} has no spatial reference");
-
-			searchTolerance += SpatialReferenceUtils.GetXyResolution(spatialReference);
-
-			IEnvelope envelope = GeometryFactory.CreateEnvelope(
-				x - searchTolerance, y - searchTolerance,
-				x + searchTolerance, y + searchTolerance, spatialReference);
-
-			return GetCatalogFeatures(rasterCatalog, envelope).Select(CreateSimpleRaster);
+			return GetCatalogFeatures(CatalogClass, envelope).Select(CreateSimpleRaster);
 		}
 
 		public ISimpleRaster GetSimpleRaster(double atX, double atY)
 		{
-			IFeatureClass rasterCatalog = _mosaicDataset.Catalog;
-
 			IPoint searchGeometry = GeometryFactory.CreatePoint(
-				atX, atY, DatasetUtils.GetSpatialReference(rasterCatalog));
+				atX, atY, DatasetUtils.GetSpatialReference(CatalogClass));
 
-			IFeature catalogFeature = GetCatalogFeature(rasterCatalog, searchGeometry);
+			IFeature catalogFeature = GetCatalogFeature(CatalogClass, searchGeometry);
 
 			Marshal.ReleaseComObject(searchGeometry);
-			Marshal.ReleaseComObject(rasterCatalog);
 
 			if (catalogFeature == null)
 			{
@@ -107,14 +141,31 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			return result;
 		}
 
-		public void Dispose() { }
+		public void Dispose()
+		{
+			Marshal.ReleaseComObject(CatalogClass);
+
+			if (BoundaryClass != null)
+			{
+				Marshal.ReleaseComObject(BoundaryClass);
+			}
+
+			if (_interpolationDomain != null)
+			{
+				Marshal.ReleaseComObject(_interpolationDomain);
+				_interpolationDomain = null;
+			}
+		}
+
+		#endregion
 
 		#region IGeoDataset members
 
-		public ISpatialReference SpatialReference =>
-			((IGeoDataset) _mosaicDataset).SpatialReference;
+		public ISpatialReference SpatialReference => ((IGeoDataset) CatalogClass).SpatialReference;
 
-		public IEnvelope Extent => ((IGeoDataset) _mosaicDataset).Extent;
+		public IEnvelope Extent => BoundaryClass != null
+			                           ? ((IGeoDataset) BoundaryClass).Extent
+			                           : ((IGeoDataset) CatalogClass).Extent;
 
 		#endregion
 
@@ -150,9 +201,9 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			throw new NotImplementedException();
 		}
 
-		public string Name => ((IDataset) _mosaicDataset).Name;
+		public string Name { get; }
 
-		public IName FullName => ((IDataset) _mosaicDataset).FullName;
+		public IName FullName { get; }
 
 		public string BrowseName
 		{
@@ -160,15 +211,15 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			set => throw new NotImplementedException();
 		}
 
-		public esriDatasetType Type => ((IDataset) _mosaicDataset).Type;
+		public esriDatasetType Type => esriDatasetType.esriDTMosaicDataset;
+
+		public IWorkspace Workspace => DatasetUtils.GetWorkspace(CatalogClass);
 
 		public string Category => throw new NotImplementedException();
 
 		public IEnumDataset Subsets => throw new NotImplementedException();
 
-		public IWorkspace Workspace => ((IDataset) _mosaicDataset).Workspace;
-
-		public IPropertySet PropertySet => ((IDataset) _mosaicDataset).PropertySet;
+		public IPropertySet PropertySet => throw new NotImplementedException();
 
 		#endregion
 
@@ -180,10 +231,15 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			try
 			{
 				path = GetPathByPathQuery(catalogFeature);
+
+				if (path == null)
+				{
+					path = GetPathViaCatalogItemDataset(catalogFeature);
+				}
 			}
 			catch (Exception e)
 			{
-				_msg.Debug("Error getting path. Trying different method", e);
+				_msg.Debug("Error getting path. Trying different method...", e);
 
 				// Slow but requires no Standard license:
 				path = GetPathViaCatalogItemDataset(catalogFeature);
@@ -208,22 +264,24 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			IQueryFilter spatialFilter =
 				GdbQueryUtils.CreateSpatialFilter(rasterCatalog, searchGeometry);
 
+			// This could be more sophisticated (and slower) if there are non-rectangular catalog
+			// features, which should probably be tested here.
 			var orderedCatalogFeatures = GdbQueryUtils.GetFeatures(
 				rasterCatalog, spatialFilter, false);
 
-			if (! string.IsNullOrEmpty(_mosaicRuleZOrderField))
+			if (! string.IsNullOrEmpty(MosaicRuleZOrderFieldName))
 			{
-				int fieldIndex = rasterCatalog.FindField(_mosaicRuleZOrderField);
+				int fieldIndex = rasterCatalog.FindField(MosaicRuleZOrderFieldName);
 
 				if (fieldIndex < 0)
 				{
 					throw new InvalidConfigurationException(
-						$"Field {_mosaicRuleZOrderField} not found in {DatasetUtils.GetName(rasterCatalog)}");
+						$"Field {MosaicRuleZOrderFieldName} not found in {DatasetUtils.GetName(rasterCatalog)}");
 				}
 
 				Func<IFeature, object> getFieldValue = f => f.get_Value(fieldIndex);
 
-				if (_mosaicRuleDescending)
+				if (MosaicRuleDescending)
 				{
 					orderedCatalogFeatures =
 						orderedCatalogFeatures.OrderByDescending(getFieldValue);
@@ -244,21 +302,26 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			IRasterDataset rasterDataset = rasterCatalogItem.RasterDataset;
 
 			var itemPaths = (IItemPaths) rasterDataset;
+
 			IStringArray stringArray = itemPaths.GetPaths();
 
 			return stringArray.Element[0];
 		}
 
+		[CanBeNull]
 		private string GetPathByPathQuery(IFeature catalogFeature)
 		{
-			var itemPathsQuery = (IItemPathsQuery) _mosaicDataset;
-
-			if (itemPathsQuery.QueryPathsParameters == null)
+			if (ItemPathsQuery == null)
 			{
-				itemPathsQuery.QueryPathsParameters = new QueryPathsParametersClass();
+				return null;
 			}
 
-			IStringArray stringArray = itemPathsQuery.GetItemPaths(catalogFeature);
+			if (ItemPathsQuery.QueryPathsParameters == null)
+			{
+				ItemPathsQuery.QueryPathsParameters = new QueryPathsParametersClass();
+			}
+
+			IStringArray stringArray = ItemPathsQuery.GetItemPaths(catalogFeature);
 
 			string result = stringArray.Element[0];
 
@@ -271,11 +334,16 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
+			if (string.IsNullOrEmpty(CellSizeFieldName))
+			{
+				return null;
+			}
+
 			try
 			{
-				IFeatureClass rasterCatalog = _mosaicDataset.Catalog;
+				IFeatureClass rasterCatalog = CatalogClass;
 
-				string lowPSFieldName = _mosaicDataset.MosaicFunction.CellsizeFieldName;
+				string lowPSFieldName = CellSizeFieldName;
 				int lowPSFieldIndex = rasterCatalog.FindField(lowPSFieldName);
 
 				if (lowPSFieldIndex < 0)
@@ -301,7 +369,7 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			}
 			catch (Exception e)
 			{
-				_msg.Debug($"Error getting cell size from {((IDataset) _mosaicDataset).Name}", e);
+				_msg.Debug($"Error getting cell size from {Name}", e);
 
 				return null;
 			}

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
@@ -21,6 +22,9 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 		private readonly RasterCache _rasterCache;
 
+		private readonly ArrayProvider<WKSPointZ> _wksPointArrayProvider =
+			new ArrayProvider<WKSPointZ>();
+
 		public SimpleRasterSurface(IRasterProvider rasterProvider)
 		{
 			_rasterProvider = rasterProvider;
@@ -32,6 +36,21 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 			_rasterCache = new RasterCache(envelope, GeometryUtils.GetXyTolerance(boundaryEnv));
 		}
+
+		/// <summary>
+		/// If for any of the vertices no valid Z value can be calculated because
+		/// no raster is available a the respective location, null shall be returned
+		/// for the <see cref="Drape"/> and <see cref="SetShapeVerticesZ"/> methods.
+		/// This is consistent with the ArcObjects behaviour.
+		/// </summary>
+		public bool ReturnNullGeometryIfNotCompletelyCovered { get; set; } = true;
+
+		/// <summary>
+		/// The value to return in <see cref="GetZ"/> or to assign to the respective vertices
+		/// for the <see cref="Drape"/> and <see cref="SetShapeVerticesZ"/> methods if no valid
+		/// Z value can be calculated.
+		/// </summary>
+		public double DefaultValueForUnassignedZs { get; set; } = double.NaN;
 
 		#region ISimpleSurface members
 
@@ -48,6 +67,67 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		}
 
 		public double GetZ(double x, double y)
+		{
+			double result = GetZCore(x, y);
+
+			return double.IsNaN(result) ? DefaultValueForUnassignedZs : result;
+		}
+
+		public IGeometry Drape(IGeometry shape, double densifyDistance = double.NaN)
+		{
+			if (double.IsNaN(densifyDistance))
+			{
+				var rasters = GetRasters(shape.Envelope).ToList();
+
+				densifyDistance = rasters.Min(r => Math.Min(r.PixelSizeX, r.PixelSizeY));
+			}
+
+			IGeometry result = GeometryFactory.Clone(shape);
+
+			if (result is IPolycurve polycurve)
+			{
+				polycurve.Densify(densifyDistance, 0);
+			}
+
+			return TryUpdateShapeVerticesZ(result) ? result : null;
+		}
+
+		public IGeometry SetShapeVerticesZ(IGeometry shape)
+		{
+			IGeometry result = GeometryFactory.Clone(shape);
+
+			return TryUpdateShapeVerticesZ(result) ? result : null;
+		}
+
+		public ITin AsTin(IEnvelope extent = null)
+		{
+			throw new NotImplementedException();
+		}
+
+		#endregion
+
+		private bool TryGetZ(double x, double y, out double result)
+		{
+			result = GetZCore(x, y);
+
+			if (double.IsNaN(result))
+			{
+				result = DefaultValueForUnassignedZs;
+
+				return ! ReturnNullGeometryIfNotCompletelyCovered;
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// Returns the interpolated Z value at the specified location or NaN if
+		/// not enough raster pixels can be loaded around the specified x/y values.
+		/// </summary>
+		/// <param name="x"></param>
+		/// <param name="y"></param>
+		/// <returns></returns>
+		private double GetZCore(double x, double y)
 		{
 			ISimpleRaster simpleRaster = GetRaster(x, y);
 
@@ -98,19 +178,84 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			return value;
 		}
 
-		public IGeometry Drape(IGeometry shape, double densifyDistance = double.NaN)
+		private bool TryUpdateShapeVerticesZ(IGeometry shape)
 		{
-			throw new NotImplementedException();
+			if (GeometryUtils.IsMAware(shape) || GeometryUtils.IsPointIDAware(shape))
+			{
+				throw new NotImplementedException("M and ID-aware geometries not yet supported.");
+			}
+
+			GeometryUtils.MakeZAware(shape);
+
+			if (shape is IPoint point)
+			{
+				return TryUpdatePointZ(point);
+			}
+
+			if (shape is IPolycurve)
+			{
+				foreach (IGeometry part in GeometryUtils.GetParts(shape))
+				{
+					IPointCollection4 partPoints = (IPointCollection4) part;
+
+					if (! TryUpdatePointCollection(partPoints))
+					{
+						return false;
+					}
+				}
+
+				return true;
+			}
+
+			// Multipoints:
+			if (shape is IPointCollection4 pointCollection)
+			{
+				return TryUpdatePointCollection(pointCollection);
+			}
+
+			// TODO: Multipatches
+			throw new ArgumentOutOfRangeException(
+				$"Unsupported geometry type: {shape.GeometryType}");
 		}
 
-		public IGeometry SetShapeVerticesZ(IGeometry shape)
+		private bool TryUpdatePointCollection(IPointCollection4 pointCollection)
 		{
-			throw new NotImplementedException();
+			// TODO: Alternative implementation for M/Id aware geometries!
+
+			int pointCount = pointCollection.PointCount;
+
+			WKSPointZ[] wksPointZs = _wksPointArrayProvider.GetArray(pointCount);
+
+			GeometryUtils.QueryWKSPointZs(pointCollection, wksPointZs, 0, pointCount);
+
+			for (int i = 0; i < pointCount; i++)
+			{
+				WKSPointZ pt = wksPointZs[i];
+
+				if (! TryGetZ(pt.X, pt.Y, out double resultZ))
+				{
+					return false;
+				}
+
+				pt.Z = resultZ;
+
+				wksPointZs[i] = pt;
+			}
+
+			GeometryUtils.SetWKSPointZs(pointCollection, wksPointZs, pointCount);
+
+			return true;
 		}
 
-		public ITin AsTin(IEnvelope extent = null)
+		private bool TryUpdatePointZ(IPoint point)
 		{
-			throw new NotImplementedException();
+			if (! TryGetZ(point.X, point.Y, out double resultZ))
+			{
+				return false;
+			}
+
+			point.Z = resultZ;
+			return true;
 		}
 
 		/// <summary>
@@ -249,8 +394,15 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		private IEnumerable<ISimpleRaster> GetRasters(double x, double y,
 		                                              double searchTolerance)
 		{
+			IEnvelope envelope = CreateSearchEnvelope(x, y, searchTolerance);
+
+			return GetRasters(envelope);
+		}
+
+		private IEnumerable<ISimpleRaster> GetRasters(IEnvelope envelope)
+		{
 			// Do not use the cache to make sure we get every possible raster:
-			foreach (var simpleRaster in _rasterProvider.GetSimpleRasters(x, y, searchTolerance))
+			foreach (var simpleRaster in _rasterProvider.GetSimpleRasters(envelope))
 			{
 				Pnt2D centerPoint = simpleRaster.GetEnvelope().GetCenterPoint();
 
@@ -285,7 +437,20 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			return MathUtils.AreEqual(value, noDataValue);
 		}
 
-		#endregion
+		private IEnvelope CreateSearchEnvelope(double x, double y,
+		                                       double searchTolerance)
+		{
+			ISpatialReference spatialReference =
+				_rasterProvider.GetInterpolationDomain().SpatialReference;
+
+			searchTolerance += SpatialReferenceUtils.GetXyResolution(spatialReference);
+
+			IEnvelope envelope = GeometryFactory.CreateEnvelope(
+				x - searchTolerance, y - searchTolerance,
+				x + searchTolerance, y + searchTolerance, spatialReference);
+
+			return envelope;
+		}
 	}
 
 	internal class RasterCache : IDisposable
