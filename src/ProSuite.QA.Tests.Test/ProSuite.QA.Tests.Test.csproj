@@ -151,6 +151,7 @@
     <Compile Include="QaSimpleGeometryTest.cs" />
     <Compile Include="QaSliverPolgonTest.cs" />
     <Compile Include="QaSurfaceSpikesTest.cs" />
+    <Compile Include="QaSurfaceVertexTest.cs" />
     <Compile Include="QaTopoNotNearTest.cs" />
     <Compile Include="QaUniqueTest.cs" />
     <Compile Include="QaUnreferencedRowsTest.cs" />

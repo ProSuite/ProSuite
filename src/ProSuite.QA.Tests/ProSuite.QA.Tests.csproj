@@ -321,6 +321,7 @@
     <Compile Include="QaSliverPolygon.cs" />
     <Compile Include="QaSmooth.cs" />
     <Compile Include="QaSurfaceSpikes.cs" />
+    <Compile Include="QaSurfaceVertex.cs" />
     <Compile Include="QaTouchesOther.cs" />
     <Compile Include="QaTouchesSelf.cs" />
     <Compile Include="QaTrimmedTextFields.cs" />
