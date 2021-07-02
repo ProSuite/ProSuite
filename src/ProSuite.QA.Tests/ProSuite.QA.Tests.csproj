@@ -207,6 +207,7 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Qa3dConstantZ.cs" />
+    <Compile Include="QaGdbConstraint.cs" />
     <Compile Include="QaSurfaceOffset.cs" />
     <Compile Include="QaSurfacePipe.cs" />
     <Compile Include="QaAreaBase.cs" />

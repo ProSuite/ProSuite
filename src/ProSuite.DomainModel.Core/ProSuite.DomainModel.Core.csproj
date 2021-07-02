@@ -85,6 +85,7 @@
     <Compile Include="DataModel\IDdxRasterDataset.cs" />
     <Compile Include="DataModel\IErrorDataset.cs" />
     <Compile Include="DataModel\IModelElement.cs" />
+    <Compile Include="DataModel\Repositories\IObjectCategoryAttributeConstraintRepository.cs" />
     <Compile Include="DataModel\IObjectDataset.cs" />
     <Compile Include="DataModel\IRegisteredGdbObject.cs" />
     <Compile Include="DataModel\ISimpleRasterDataset.cs" />
@@ -98,6 +99,9 @@
     <Compile Include="DataModel\ObjectAttribute.cs" />
     <Compile Include="DataModel\ObjectAttributeType.cs" />
     <Compile Include="DataModel\ObjectCategory.cs" />
+    <Compile Include="DataModel\ObjectCategoryAttributeCondition.cs" />
+    <Compile Include="DataModel\ObjectCategoryAttributeConstraint.cs" />
+    <Compile Include="DataModel\ObjectCategoryNonApplicableAttribute.cs" />
     <Compile Include="DataModel\ObjectDataset.cs" />
     <Compile Include="DataModel\ObjectSubtype.cs" />
     <Compile Include="DataModel\ObjectSubtypeCriterion.cs" />
