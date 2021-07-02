@@ -4789,4 +4789,9 @@ Remark: All feature classes in 'featureClasses' must have the same spatial refer
   <data name="QaZDifferenceSelf_minimumZDifference" xml:space="preserve">
     <value>minimum allowed Z-Difference. Remark: If 'MinimumZDifferenceExpression' is set, this value is not used.</value>
   </data>
+  <data name="QaPseudoNodes_ignoreFieldLists" xml:space="preserve">
+    <value>fields that are not checked for equality (not editable fields are ignored by default).
+For each feature class in 'polylineClasses', the ignore field list must be defined as a string of fields separated by ','.
+The sort order must correspond with 'polylineClasses'.</value>
+  </data>
 </root>
