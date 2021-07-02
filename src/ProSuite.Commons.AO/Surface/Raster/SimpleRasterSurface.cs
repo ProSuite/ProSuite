@@ -5,6 +5,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
@@ -25,11 +26,18 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		private readonly ArrayProvider<WKSPointZ> _wksPointArrayProvider =
 			new ArrayProvider<WKSPointZ>();
 
-		public SimpleRasterSurface(IRasterProvider rasterProvider)
+		public SimpleRasterSurface(IRasterProvider rasterProvider,
+		                           ISpatialReference spatialReference = null)
 		{
 			_rasterProvider = rasterProvider;
 
 			IEnvelope boundaryEnv = _rasterProvider.GetInterpolationDomain().Envelope;
+
+			if (boundaryEnv.SpatialReference == null)
+			{
+				Assert.NotNull(spatialReference, "No spatial reference");
+				boundaryEnv.SpatialReference = spatialReference;
+			}
 
 			EnvelopeXY envelope = new EnvelopeXY(
 				boundaryEnv.XMin, boundaryEnv.YMin, boundaryEnv.XMax, boundaryEnv.YMax);

@@ -6,6 +6,7 @@ using ProSuite.QA.Container;
 using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
@@ -52,7 +53,9 @@ namespace ProSuite.QA.Tests.Surface
 			var simpleRasterDataset = new SimpleRasterDataset(
 				clipped, GeometryFactory.CreatePolygon(extent), disposableCallback);
 
-			return new SimpleRasterSurface(simpleRasterDataset);
+			ISpatialReference spatialReference = ((IGeoDataset) FullRaster).SpatialReference;
+
+			return new SimpleRasterSurface(simpleRasterDataset, spatialReference);
 		}
 
 		public override bool EqualsCore(RasterReference rasterReference)
