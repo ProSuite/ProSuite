@@ -64,10 +64,9 @@ namespace ProSuite.AGP.Solution
 				}
 
 				_qaManager = new ProSuiteQAManager(
-					QAConfiguration.Current.GetQAServiceProviders(
-						QAProjectItem?.ServerConfigurations),
-					QAConfiguration.Current.GetQASpecificationsProvider(
-						QAProjectItem?.SpecificationConfiguration));
+					QAConfiguration.Current.GetQAServiceProviders(QAProjectItem?.ServerConfigurations),
+					QAConfiguration.Current.GetQASpecificationsProvider(QAProjectItem?.SpecificationConfiguration));
+
 				_qaManager.OnStatusChanged += QAManager_OnStatusChanged;
 
 				OnQAConfigurationChanged = _qaManager.OnConfigurationChanged;
@@ -392,8 +391,10 @@ namespace ProSuite.AGP.Solution
 				};
 
 			_sessionContext.VerificationEnvironment = verificationEnvironment;
-
+			_sessionContext.VerificationEnvironment.RefreshQualitySpecifications();
+		
 			// TODO: This has no effect any more -> change XML based specification provider
+			// this is still necessary for GP QA if actual
 			QAConfiguration.Current.SetupGrpcConfiguration(verificationEnvironment);
 
 			// ... to implement IQualitySpecificationReferencesProvider instead, such as
