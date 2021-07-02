@@ -112,6 +112,33 @@ namespace ProSuite.QA.Tests
 			_polylineClasses = null;
 		}
 
+		[Doc(nameof(DocStrings.QaPseudoNodes_0))]
+		public QaPseudoNodes(
+			[Doc(nameof(DocStrings.QaPseudoNodes_polylineClasses))] [NotNull]
+			IList<IFeatureClass>
+				polylineClasses,
+			[Doc(nameof(DocStrings.QaPseudoNodes_ignoreFieldLists))] [NotNull]
+			IList<string> ignoreFieldLists,
+			[Doc(nameof(DocStrings.QaPseudoNodes_validPseudoNodes))] [NotNull]
+			IList<IFeatureClass>
+				validPseudoNodes)
+			: this(polylineClasses, ParseFieldLists(ignoreFieldLists), validPseudoNodes)
+		{ }
+
+		private static List<IList<string>> ParseFieldLists(IList<string> fieldLists)
+		{
+			List<IList<string>> fields = new List<IList<string>>();
+			foreach (string fieldList in fieldLists)
+			{
+				fields.Add(
+					fieldList.Split(new[] {','},
+					                StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim())
+					         .ToList());
+			}
+
+			return fields;
+		}
+
 		[Doc(nameof(DocStrings.QaPseudoNodes_IgnoreLoopEndpoints))]
 		[TestParameter(false)]
 		public bool IgnoreLoopEndpoints { get; set; }

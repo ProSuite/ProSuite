@@ -81,6 +81,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="DataModel\ApplicableAttributes.cs" />
     <Compile Include="DataModel\AttributeUtils.cs" />
     <Compile Include="DataModel\FieldIndexCache.cs" />
     <Compile Include="DataModel\GlobalDatasetLookup.cs" />
