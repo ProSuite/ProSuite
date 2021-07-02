@@ -143,23 +143,31 @@ namespace ProSuite.AGP.Solution
 		public IMapBasedSessionContext SessionContext =>
 			_sessionContext ?? (_sessionContext = new MapBasedSessionContext());
 
-		private static void UpdateServiceUI(ProSuiteProjectItemConfiguration projectItem)
+		private static void UpdateServiceUI(ProSuiteProjectItemConfiguration projectItem = null)
 		{
-			var localService =
-				projectItem.ServerConfigurations.FirstOrDefault(
-					s => (s.ServiceType == ProSuiteQAServiceType.GPLocal && s.IsValid));
-			if (localService != null)
-				FrameworkApplication.State.Activate(ConfigIDs.QA_GPLocal_State);
-			else
-				FrameworkApplication.State.Deactivate(ConfigIDs.QA_GPLocal_State);
-
-			var serverService =
-				projectItem.ServerConfigurations.FirstOrDefault(
-					s => (s.ServiceType == ProSuiteQAServiceType.GPService && s.IsValid));
-			if (serverService != null)
+			if (projectItem == null)
+			{
 				FrameworkApplication.State.Activate(ConfigIDs.QA_GPService_State);
+				FrameworkApplication.State.Activate(ConfigIDs.QA_GPLocal_State);
+			}
 			else
-				FrameworkApplication.State.Deactivate(ConfigIDs.QA_GPService_State);
+			{
+				var localService =
+					projectItem.ServerConfigurations.FirstOrDefault(
+						s => (s.ServiceType == ProSuiteQAServiceType.GPLocal && s.IsValid));
+				if (localService != null)
+					FrameworkApplication.State.Activate(ConfigIDs.QA_GPLocal_State);
+				else
+					FrameworkApplication.State.Deactivate(ConfigIDs.QA_GPLocal_State);
+
+				var serverService =
+					projectItem.ServerConfigurations.FirstOrDefault(
+						s => (s.ServiceType == ProSuiteQAServiceType.GPService && s.IsValid));
+				if (serverService != null)
+					FrameworkApplication.State.Activate(ConfigIDs.QA_GPService_State);
+				else
+					FrameworkApplication.State.Deactivate(ConfigIDs.QA_GPService_State);
+			}
 		}
 
 		#region Overrides
@@ -394,8 +402,11 @@ namespace ProSuite.AGP.Solution
 			_sessionContext.VerificationEnvironment.RefreshQualitySpecifications();
 		
 			// TODO: This has no effect any more -> change XML based specification provider
+
 			// this is still necessary for GP QA if actual
 			QAConfiguration.Current.SetupGrpcConfiguration(verificationEnvironment);
+			// enable GP Buttons 
+			UpdateServiceUI(); 
 
 			// ... to implement IQualitySpecificationReferencesProvider instead, such as
 			//verificationEnvironment.FallbackSpecificationProvider = new XmlSpecificationProvider();
