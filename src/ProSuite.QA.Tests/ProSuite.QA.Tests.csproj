@@ -178,14 +178,6 @@
     <Compile Include="Network\QaGroupNetworkBase.cs" />
     <Compile Include="Network\QaNetworkBase.cs" />
     <Compile Include="NonLinearSegmentType.cs" />
-    <Compile Include="Obsolete\QaIntersect.cs" />
-    <Compile Include="Obsolete\QaInvalidGeometry.cs" />
-    <Compile Include="Obsolete\QaLineConnection.cs" />
-    <Compile Include="Obsolete\QaLineNeighborAreas.cs" />
-    <Compile Include="Obsolete\QaMinPointDistance.cs" />
-    <Compile Include="Obsolete\QaMpFootprintHasInnerRing.cs" />
-    <Compile Include="Obsolete\QaOrphanNodesObsolete.cs" />
-    <Compile Include="Obsolete\QaRouteMeasures.cs" />
     <Compile Include="OffsetSpecification.cs" />
     <Compile Include="OrphanErrorType.cs" />
     <Compile Include="OverlappingMeasures.cs" />
