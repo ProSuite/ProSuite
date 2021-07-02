@@ -44,8 +44,7 @@ namespace ProSuite.QA.Tests.Surface
 				return false;
 			}
 
-			return _simpleRasterMosaic == other._simpleRasterMosaic && // TODO
-			       _mosaicDefinitionBytes.SequenceEqual(other._mosaicDefinitionBytes);
+			return _simpleRasterMosaic.Equals(other._simpleRasterMosaic);
 		}
 
 		public override int GetHashCodeCore()

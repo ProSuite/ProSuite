@@ -20,7 +20,8 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Surface.Raster
 {
-	public class SimpleRasterMosaic : IRasterProvider, IDataset, IGeoDataset
+	public class SimpleRasterMosaic : IRasterProvider, IDataset, IGeoDataset,
+	                                  IEquatable<SimpleRasterMosaic>
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -220,6 +221,71 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		public IEnumDataset Subsets => throw new NotImplementedException();
 
 		public IPropertySet PropertySet => throw new NotImplementedException();
+
+		#endregion
+
+		#region Equality members
+
+		public bool Equals(SimpleRasterMosaic other)
+		{
+			if (ReferenceEquals(null, other))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, other))
+			{
+				return true;
+			}
+
+			var classComparer = new ObjectClassComparer(ObjectClassEquality.SameTableSameVersion);
+
+			return Name == other.Name &&
+			       classComparer.Equals(CatalogClass, other.CatalogClass) &&
+			       classComparer.Equals(BoundaryClass, other.BoundaryClass) &&
+			       MosaicRuleZOrderFieldName == other.MosaicRuleZOrderFieldName &&
+			       MosaicRuleDescending == other.MosaicRuleDescending &&
+			       CellSizeFieldName == other.CellSizeFieldName;
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != this.GetType())
+			{
+				return false;
+			}
+
+			return Equals((SimpleRasterMosaic) obj);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				int hashCode = (Name != null ? Name.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^
+				           (BoundaryClass != null ? BoundaryClass.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ CatalogClass.GetHashCode();
+				hashCode = (hashCode * 397) ^
+				           (MosaicRuleZOrderFieldName != null
+					            ? MosaicRuleZOrderFieldName.GetHashCode()
+					            : 0);
+				hashCode = (hashCode * 397) ^ MosaicRuleDescending.GetHashCode();
+				hashCode = (hashCode * 397) ^
+				           (CellSizeFieldName != null ? CellSizeFieldName.GetHashCode() : 0);
+				return hashCode;
+			}
+		}
 
 		#endregion
 
