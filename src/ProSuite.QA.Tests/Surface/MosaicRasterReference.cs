@@ -25,6 +25,8 @@ namespace ProSuite.QA.Tests.Surface
 
 		public override double CellSize => _simpleRasterMosaic.GetCellSize();
 
+		public override bool AssumeInMemory => false;
+
 		public override ISimpleSurface CreateSurface(IEnvelope extent)
 		{
 			return new SimpleRasterSurface(_simpleRasterMosaic);

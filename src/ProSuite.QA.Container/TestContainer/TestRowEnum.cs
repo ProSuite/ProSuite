@@ -105,7 +105,8 @@ namespace ProSuite.QA.Container.TestContainer
 				containerTest.DataContainer = this;
 			}
 
-			_rastersRowEnumerable = new RastersRowEnumerable(_testsPerRaster.Keys, _container);
+			_rastersRowEnumerable =
+				new RastersRowEnumerable(_testsPerRaster.Keys, _container, tileSize);
 
 			ClassifyTables(_testsPerTable, out _cachedTables, out _nonCachedTables);
 

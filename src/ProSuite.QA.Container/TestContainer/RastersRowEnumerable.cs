@@ -21,12 +21,14 @@ namespace ProSuite.QA.Container.TestContainer
 
 		public RastersRowEnumerable(
 			[NotNull] IEnumerable<RasterReference> rasterReferences,
-			[NotNull] ITestProgress progress)
-			: this(new HashSet<RasterReference>(rasterReferences), progress) { }
+			[NotNull] ITestProgress progress,
+			double defaultTileSize)
+			: this(new HashSet<RasterReference>(rasterReferences), progress, defaultTileSize) { }
 
 		public RastersRowEnumerable(
 			[NotNull] HashSet<RasterReference> rasters,
-			[NotNull] ITestProgress progress)
+			[NotNull] ITestProgress progress,
+			double defaultTileSize)
 		{
 			Assert.ArgumentNotNull(rasters, nameof(rasters));
 			Assert.ArgumentNotNull(progress, nameof(progress));
@@ -56,28 +58,29 @@ namespace ProSuite.QA.Container.TestContainer
 
 			// TODO: adapt cellsize according to minDx
 
-			MaxRasterPointCount = _defaultMaxRasterPointCount;
+			CalculateTileSize(rasters, defaultTileSize);
 		}
 
-		public int MaxRasterPointCount
+		private void CalculateTileSize(IEnumerable<RasterReference> rasters,
+		                               double defaultTileSize)
 		{
-			get { return _maxRasterPointCount; }
-			set
-			{
-				_maxRasterPointCount = value;
+			double sum = 0;
 
-				double sum = 0;
-				foreach (var raster in _rastersDict)
+			foreach (var raster in rasters)
+			{
+				if (raster.AssumeInMemory)
 				{
 					double dx = raster.CellSize;
 					sum += 1 / (dx * dx);
 				}
-
-				TileSize = Math.Sqrt(_maxRasterPointCount / sum);
 			}
+
+			TileSize = sum > 0
+				           ? Math.Sqrt(_defaultMaxRasterPointCount / sum)
+				           : defaultTileSize;
 		}
 
-		public double TileSize { get; set; }
+		private double TileSize { get; set; }
 
 		[PublicAPI]
 		public double SearchDistance { get; set; }
