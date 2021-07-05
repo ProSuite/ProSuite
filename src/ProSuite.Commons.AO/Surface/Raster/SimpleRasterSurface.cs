@@ -189,16 +189,16 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 		private bool TryUpdateShapeVerticesZ(IGeometry shape)
 		{
-			if (GeometryUtils.IsMAware(shape) || GeometryUtils.IsPointIDAware(shape))
-			{
-				throw new NotImplementedException("M and ID-aware geometries not yet supported.");
-			}
-
 			GeometryUtils.MakeZAware(shape);
 
 			if (shape is IPoint point)
 			{
 				return TryUpdatePointZ(point);
+			}
+
+			if (GeometryUtils.IsMAware(shape) || GeometryUtils.IsPointIDAware(shape))
+			{
+				return TryUpdateExistingVerticesPreserveMs(shape);
 			}
 
 			if (shape is IPolycurve)
@@ -252,6 +252,27 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			}
 
 			GeometryUtils.SetWKSPointZs(pointCollection, wksPointZs, pointCount);
+
+			return true;
+		}
+
+		private bool TryUpdateExistingVerticesPreserveMs(IGeometry shape)
+		{
+			IPointCollection pointCollection = (IPointCollection) shape;
+
+			int pointCount = pointCollection.PointCount;
+
+			for (int i = 0; i < pointCount; i++)
+			{
+				pointCollection.QueryPoint(i, _queryPoint);
+
+				if (! TryUpdatePointZ(_queryPoint))
+				{
+					return false;
+				}
+
+				pointCollection.UpdatePoint(i, _queryPoint);
+			}
 
 			return true;
 		}
