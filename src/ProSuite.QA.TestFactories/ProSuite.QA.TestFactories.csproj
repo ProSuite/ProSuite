@@ -83,7 +83,6 @@
     <Compile Include="HierarchicalConstraintUtils.cs" />
     <Compile Include="LineConnectionConfigurator.cs" />
     <Compile Include="LinePolyOverlapConfigurator.cs" />
-    <Compile Include="Obsolete\QaMinPointDistanceFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QaAngleFactory.cs" />
     <Compile Include="QaConstraintsListFactory.cs" />

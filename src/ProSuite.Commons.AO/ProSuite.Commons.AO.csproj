@@ -147,6 +147,7 @@
     <Compile Include="Geodatabase\VersionEventsObjectCacheSynchronizer.cs" />
     <Compile Include="Geodatabase\WorkspaceComparison.cs" />
     <Compile Include="Geodatabase\WorkspaceUtils.cs" />
+    <Compile Include="Geometry\ApplyZService.cs" />
     <Compile Include="Geometry\ArrayProvider.cs" />
     <Compile Include="Geometry\BoundaryLoopUtils.cs" />
     <Compile Include="Geometry\BufferFactory.cs" />
@@ -190,6 +191,12 @@
     <Compile Include="Geometry\Cracking\PartialChopperToolOptions.cs" />
     <Compile Include="Geometry\Cracking\PartialCrackerToolOptions.cs" />
     <Compile Include="Geometry\Cracking\ShortSegmentsUtils.cs" />
+    <Compile Include="Geometry\CreateFootprint\CreateFootprintUtils.cs" />
+    <Compile Include="Geometry\CreateFootprint\FootprintOptions.cs" />
+    <Compile Include="Geometry\CreateFootprint\FootprintSourceTargetMapping.cs" />
+    <Compile Include="Geometry\CreateFootprint\FootprintZCalculator.cs" />
+    <Compile Include="Geometry\CreateFootprint\PartialFootprintOptions.cs" />
+    <Compile Include="Geometry\CreateFootprint\ZCalculationMethod.cs" />
     <Compile Include="Geometry\CutPolyline.cs" />
     <Compile Include="Geometry\Cut\CutGeometryUtils.cs" />
     <Compile Include="Geometry\Cut\CutResult.cs" />

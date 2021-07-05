@@ -7886,6 +7886,17 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to fields that are not checked for equality (not editable fields are ignored by default).
+        ///For each feature class in &apos;polylineClasses&apos;, the ignore field list must be defined as a string of fields separated by &apos;,&apos;.
+        ///The sort order must correspond with &apos;polylineClasses&apos;..
+        /// </summary>
+        public static string QaPseudoNodes_ignoreFieldLists {
+            get {
+                return ResourceManager.GetString("QaPseudoNodes_ignoreFieldLists", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to fields that are not checked for equality (not editable fields are ignored by default).
         ///For each feature class in &apos;polylineClasses&apos;, the ignore fields must be defined.
         ///The sort order must correspond with &apos;polylineClasses&apos;..
         /// </summary>
