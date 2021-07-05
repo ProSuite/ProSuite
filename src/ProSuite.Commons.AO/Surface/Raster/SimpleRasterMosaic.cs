@@ -31,35 +31,53 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		// TODO: Consider supporting VRT file format directly or
 		//       a polygon feature class with a raster path field and a boundary polygon
 
-		public SimpleRasterMosaic(IMosaicDataset mosaicDataset,
-		                          string mosaicRuleZOrderFieldName = null,
-		                          bool mosaicRuleDescending = false)
+		public SimpleRasterMosaic(IMosaicDataset mosaicDataset)
+			: this(((IDataset) mosaicDataset).Name, mosaicDataset.Catalog, mosaicDataset.Boundary,
+			       mosaicDataset.MosaicFunction.OrderByFieldName,
+			       ! mosaicDataset.MosaicFunction.Ascending, null,
+			       mosaicDataset.MosaicFunction.CellsizeFieldName)
 		{
-			if (string.IsNullOrEmpty(mosaicRuleZOrderFieldName))
-			{
-				esriMosaicMethod mosaicMethod = mosaicDataset.MosaicFunction.MosaicMethod;
+			esriMosaicMethod mosaicMethod = mosaicDataset.MosaicFunction.MosaicMethod;
 
-				Assert.AreEqual(esriMosaicMethod.esriMosaicAttribute, mosaicMethod,
-				                "Unsupported mosaic method. Currently the only mosaic method is by field order is supported.");
+			Assert.AreEqual(esriMosaicMethod.esriMosaicAttribute, mosaicMethod,
+			                "Unsupported mosaic method. Currently the only mosaic method is by field order is supported.");
 
-				MosaicRuleZOrderFieldName = mosaicDataset.MosaicFunction.OrderByFieldName;
-				MosaicRuleDescending = ! mosaicDataset.MosaicFunction.Ascending;
-			}
-			else
-			{
-				MosaicRuleZOrderFieldName = mosaicRuleZOrderFieldName;
-				MosaicRuleDescending = mosaicRuleDescending;
-			}
-
-			Name = ((IDataset) mosaicDataset).Name;
 			FullName = ((IDataset) mosaicDataset).FullName;
 
-			CellSizeFieldName = mosaicDataset.MosaicFunction.CellsizeFieldName;
-
 			ItemPathsQuery = (IItemPathsQuery) mosaicDataset;
+		}
 
-			BoundaryClass = mosaicDataset.Boundary;
-			CatalogClass = mosaicDataset.Catalog;
+		/// <summary>
+		/// Initializes a new instance of the <see cref="SimpleRasterMosaic"/> class.
+		/// </summary>
+		/// <param name="name"></param>
+		/// <param name="catalogClass"></param>
+		/// <param name="boundaryClass"></param>
+		/// <param name="mosaicRuleZOrderFieldName">The field name that contains the rasters' Z-order.</param>
+		/// <param name="mosaicRuleDescending">Whether the rasters' Z-order numbers should be considered
+		/// descending.</param>
+		/// <param name="rasterPathFieldName">The raster path field name to use for getting the
+		/// actual raster from the catalog class.</param>
+		/// <param name="cellSizeFieldName">The field name containing the rasters' cell sizes.</param>
+		public SimpleRasterMosaic([NotNull] string name,
+		                          [NotNull] IFeatureClass catalogClass,
+		                          [CanBeNull] IFeatureClass boundaryClass,
+		                          [NotNull] string mosaicRuleZOrderFieldName,
+		                          bool mosaicRuleDescending,
+		                          string rasterPathFieldName,
+		                          string cellSizeFieldName)
+		{
+			Name = name;
+
+			MosaicRuleZOrderFieldName = mosaicRuleZOrderFieldName;
+			MosaicRuleDescending = mosaicRuleDescending;
+
+			CellSizeFieldName = cellSizeFieldName;
+
+			RasterPathFieldName = rasterPathFieldName;
+
+			BoundaryClass = boundaryClass;
+			CatalogClass = catalogClass;
 		}
 
 		[CanBeNull]
@@ -74,6 +92,8 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		private bool MosaicRuleDescending { get; }
 
 		private string CellSizeFieldName { get; }
+
+		private string RasterPathFieldName { get; }
 
 		[CanBeNull]
 		private IItemPathsQuery ItemPathsQuery { get; }
@@ -293,14 +313,22 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		{
 			string path;
 
-			// Faster but requires Standard or Advanced license:
 			try
 			{
-				path = GetPathByPathQuery(catalogFeature);
-
-				if (path == null)
+				if (! string.IsNullOrEmpty(RasterPathFieldName))
 				{
-					path = GetPathViaCatalogItemDataset(catalogFeature);
+					// In case there is a text field, read it directly:
+					path = GdbObjectUtils.ReadRowStringValue(catalogFeature, RasterPathFieldName);
+				}
+				else
+				{
+					// Faster but requires Standard or Advanced license:
+					path = GetPathByPathQuery(catalogFeature);
+
+					if (path == null)
+					{
+						path = GetPathViaCatalogItemDataset(catalogFeature);
+					}
 				}
 			}
 			catch (Exception e)
@@ -361,6 +389,11 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			return orderedCatalogFeatures;
 		}
 
+		/// <summary>
+		/// The slow option that uses a basic license.
+		/// </summary>
+		/// <param name="catalogFeature"></param>
+		/// <returns></returns>
 		private static string GetPathViaCatalogItemDataset(IFeature catalogFeature)
 		{
 			var rasterCatalogItem = (IRasterCatalogItem) catalogFeature;
@@ -374,6 +407,11 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			return stringArray.Element[0];
 		}
 
+		/// <summary>
+		/// The fast option that uses an editor license.
+		/// </summary>
+		/// <param name="catalogFeature"></param>
+		/// <returns></returns>
 		[CanBeNull]
 		private string GetPathByPathQuery(IFeature catalogFeature)
 		{

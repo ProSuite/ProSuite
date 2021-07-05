@@ -18,5 +18,21 @@ namespace ProSuite.DomainModel.Core.DataModel
 			: base(name, abbreviation, aliasName) { }
 
 		public override string TypeDescription => "Mosaic Dataset";
+
+		// TODO: Harvested or manually configure the following prperties in the DDX
+		// -> No separate DTO modelling is needed for VirtualModelContext!
+		// TODO: Separate hierachies Simple vs GdbMosaic, move these properties up to interface
+
+		//public VectorDataset CatalogDataset { get; set; }
+
+		//public VectorDataset BoundaryDataset { get; set; }
+
+		//public string MosaicRuleZOrderFieldName { get; set; }
+
+		//public bool MosaicRuleDescending { get; set; }
+
+		//public string CellSizeFieldName { get; set; }
+
+		//public string RasterPathFieldName { get; set; }
 	}
 }
