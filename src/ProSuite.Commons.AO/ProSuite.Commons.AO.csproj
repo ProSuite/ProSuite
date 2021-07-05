@@ -321,6 +321,7 @@
     <Compile Include="Surface\SimpleTerrainDataSource.cs" />
     <Compile Include="Surface\TerrainReference.cs" />
     <Compile Include="Surface\TinCreationUtils.cs" />
+    <Compile Include="Surface\TinSurfaceInterpolation.cs" />
     <Compile Include="UIDUtils.cs" />
   </ItemGroup>
   <ItemGroup>
