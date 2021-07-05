@@ -1,10 +1,6 @@
-#if Server
-using ESRI.ArcGIS.DatasourcesRaster;
-#else
-using ProSuite.Commons.AO.Surface;
-#endif
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
