@@ -6,7 +6,6 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
-using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Container.TestContainer
 {
@@ -15,9 +14,6 @@ namespace ProSuite.QA.Container.TestContainer
 		private const int _defaultMaxRasterPointCount = 4096 * 4096;
 		[NotNull] private readonly HashSet<RasterReference> _rastersDict;
 		[NotNull] private readonly ITestProgress _progress;
-
-		private readonly Box _extent;
-		private int _maxRasterPointCount;
 
 		public RastersRowEnumerable(
 			[NotNull] IEnumerable<RasterReference> rasterReferences,
@@ -35,28 +31,6 @@ namespace ProSuite.QA.Container.TestContainer
 
 			_rastersDict = rasters;
 			_progress = progress;
-
-			IEnvelope extent = null;
-			var minDx = double.MaxValue;
-			foreach (RasterReference raster in rasters)
-			{
-				
-				if (extent == null)
-				{
-					extent = raster.GeoDataset.Extent.Envelope;
-				}
-				else
-				{
-					extent.Union(raster.GeoDataset.Extent.Envelope);
-				}
-			}
-
-			if (extent != null)
-			{
-				_extent = QaGeometryUtils.CreateBox(extent);
-			}
-
-			// TODO: adapt cellsize according to minDx
 
 			CalculateTileSize(rasters, defaultTileSize);
 		}
