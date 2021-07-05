@@ -4,7 +4,7 @@ using ProSuite.Commons.Geom;
 
 namespace ProSuite.Commons.AO.Surface.Raster
 {
-	public interface ISimpleRaster : IDisposable
+	public interface ISimpleRaster : IDisposable, IEquatable<ISimpleRaster>
 	{
 		/// <summary>
 		/// The X coordinate of the origin (i.e. top left of the raster extent) in georeferenced space.

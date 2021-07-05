@@ -26,6 +26,9 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		private readonly ArrayProvider<WKSPointZ> _wksPointArrayProvider =
 			new ArrayProvider<WKSPointZ>();
 
+		private readonly IEnvelope _queryEnvelope = new EnvelopeClass();
+		private readonly IPoint _queryPoint = new PointClass();
+
 		public SimpleRasterSurface(IRasterProvider rasterProvider,
 		                           ISpatialReference spatialReference = null)
 		{
@@ -85,9 +88,7 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		{
 			if (double.IsNaN(densifyDistance))
 			{
-				var rasters = GetRasters(shape.Envelope).ToList();
-
-				densifyDistance = rasters.Min(r => Math.Min(r.PixelSizeX, r.PixelSizeY));
+				densifyDistance = DetermineDensifyDistance(shape);
 			}
 
 			IGeometry result = GeometryFactory.Clone(shape);
@@ -383,7 +384,6 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 		private ISimpleRaster GetRaster(double x, double y)
 		{
-			// TODO: Get all rasters in an extent, Z-order stuff
 			ISimpleRaster simpleRaster = _rasterCache.GetRasters(x, y).FirstOrDefault();
 
 			if (simpleRaster == null)
@@ -409,19 +409,24 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 		private IEnumerable<ISimpleRaster> GetRasters(IEnvelope envelope)
 		{
-			// Do not use the cache to make sure we get every possible raster:
+			HashSet<ISimpleRaster> foundRasters = new HashSet<ISimpleRaster>();
+
+			foreach (ISimpleRaster simpleRaster in _rasterCache.GetRasters(envelope))
+			{
+				foundRasters.Add(simpleRaster);
+
+				yield return simpleRaster;
+			}
+
+			// Find additional rasters that have not been added to the cache:
 			foreach (var simpleRaster in _rasterProvider.GetSimpleRasters(envelope))
 			{
-				Pnt2D centerPoint = simpleRaster.GetEnvelope().GetCenterPoint();
-
-				// Currently we assume to cache exactly 0 or 1 raster at a specific location
-				// TODO: Proper Equality comparison
-				bool alreadyCached = _rasterCache.GetRasters(centerPoint.X, centerPoint.Y).Any();
-
-				if (! alreadyCached)
+				if (foundRasters.Contains(simpleRaster))
 				{
-					_rasterCache.AddRaster(simpleRaster);
+					continue;
 				}
+
+				_rasterCache.AddRaster(simpleRaster);
 
 				yield return simpleRaster;
 			}
@@ -443,6 +448,20 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		private static bool IsNoData(float value, float noDataValue)
 		{
 			return MathUtils.AreEqual(value, noDataValue);
+		}
+
+		private double DetermineDensifyDistance(IGeometry shape)
+		{
+			shape.QueryEnvelope(_queryEnvelope);
+
+			foreach (ISimpleRaster r in GetRasters(_queryEnvelope))
+			{
+				return Math.Min(r.PixelSizeX, r.PixelSizeY);
+			}
+
+			double tolerance = GeometryUtils.GetXyTolerance(shape);
+
+			return tolerance * 2 * Math.Sqrt(2);
 		}
 
 		private IEnvelope CreateSearchEnvelope(double x, double y,
@@ -484,6 +503,29 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 			foreach (ISimpleRaster simpleRaster in _rasterIndex.Search(new Pnt2D(x, y),
 				_searchTolerance))
+			{
+				if (GeomRelationUtils.AreBoundsDisjoint(simpleRaster.GetEnvelope(), x, y,
+				                                        _searchTolerance))
+				{
+					continue;
+				}
+
+				yield return simpleRaster;
+			}
+		}
+
+		public IEnumerable<ISimpleRaster> GetRasters(IEnvelope envelope)
+		{
+			if (_rasterIndex == null)
+			{
+				yield break;
+			}
+
+			envelope.QueryCoords(out double xMin, out double yMin,
+			                     out double xMax, out double yMax);
+
+			foreach (ISimpleRaster simpleRaster in _rasterIndex.Search(
+				xMin, yMin, xMax, yMax, _searchTolerance))
 			{
 				yield return simpleRaster;
 			}

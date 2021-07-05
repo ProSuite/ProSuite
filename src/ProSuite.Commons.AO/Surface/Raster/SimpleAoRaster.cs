@@ -21,13 +21,15 @@ namespace ProSuite.Commons.AO.Surface.Raster
 	public class SimpleAoRaster : ISimpleRaster
 	{
 		private readonly IRaster _raster;
+		private EnvelopeXY _envelopeXY;
 
 		private const int _bandCount = 1;
 		private const rstPixelType _pixelType = rstPixelType.PT_FLOAT;
 
 		public SimpleAoRaster(string filePath) : this(OpenRaster(filePath))
 		{
-			Path = filePath;
+			// In order to make equality comparer/GetHashCode more consistent.
+			Path = System.IO.Path.GetFullPath(filePath);
 		}
 
 		public SimpleAoRaster(IRaster raster)
@@ -124,6 +126,50 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 		public EnvelopeXY GetEnvelope()
 		{
+			if (_envelopeXY == null)
+			{
+				_envelopeXY = CreateEnvelopeXY();
+			}
+
+			return _envelopeXY;
+		}
+
+		#region Equality members
+
+		public bool Equals(ISimpleRaster other)
+		{
+			return Equals((object) other);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != this.GetType())
+			{
+				return false;
+			}
+
+			return Equals((SimpleAoRaster) obj);
+		}
+
+		public override int GetHashCode()
+		{
+			return (Path != null ? StringComparer.OrdinalIgnoreCase.GetHashCode(Path) : 0);
+		}
+
+		#endregion
+
+		private EnvelopeXY CreateEnvelopeXY()
+		{
 			var rasterProperties = (IRasterProps) _raster;
 			IEnvelope envelope = rasterProperties.Extent;
 
@@ -140,6 +186,11 @@ namespace ProSuite.Commons.AO.Surface.Raster
 				(IRasterDataset2) DatasetUtils.OpenRasterDataset(filePath);
 
 			return rasterDataset.CreateFullRaster();
+		}
+
+		protected bool Equals(SimpleAoRaster other)
+		{
+			return string.Equals(Path, other.Path, StringComparison.OrdinalIgnoreCase);
 		}
 	}
 }
