@@ -5,12 +5,16 @@ namespace ProSuite.DomainModel.AGP.QA
 	public class QualitySpecificationReference : IQualitySpecificationReference
 	{
 		public string Name { get; }
+
+		public string Connection { get; }
+
 		public int Id { get; }
 
-		public QualitySpecificationReference(int id, string name)
+		public QualitySpecificationReference(int id, string name, string connection = "")
 		{
 			Id = id;
 			Name = name;
+			Connection = connection;
 		}
 
 		protected bool Equals(QualitySpecificationReference other)

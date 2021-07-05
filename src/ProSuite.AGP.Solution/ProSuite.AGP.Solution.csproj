@@ -385,6 +385,10 @@
       <Project>{A3BCF206-8C54-490A-8F5F-1C3C68EBB208}</Project>
       <Name>ProSuite.QA.ServiceManager</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.QA.SpecificationProviderFile\ProSuite.QA.SpecificationProviderFile.csproj">
+      <Project>{61FA8DE4-D5E8-49C3-88CF-1F806DD6B020}</Project>
+      <Name>ProSuite.QA.SpecificationProviderFile</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.UI\ProSuite.UI.csproj">
       <Project>{44C24B7C-FFD8-4968-95A0-9D3C7C77861B}</Project>
       <Name>ProSuite.UI</Name>

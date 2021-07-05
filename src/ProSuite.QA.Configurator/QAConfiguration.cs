@@ -5,6 +5,7 @@ using ProSuite.QA.SpecificationProviderFile;
 using System.Collections.Generic;
 using System.IO;
 using ProSuite.DomainModel.AGP.QA;
+using ProSuite.DomainModel.Core.QA;
 
 namespace ProSuite.QA.Configurator
 {
@@ -18,7 +19,7 @@ namespace ProSuite.QA.Configurator
 
 		// TODO common utils, ...
 		private readonly string _qaInstallationsFolder = @"c:\ProSuite\ArcGisPro\";
-		private IQASpecificationProvider _specificationProvider;
+		private IQualitySpecificationReferencesProvider _specificationProvider;
 
 		public void SetupGrpcConfiguration(IQualityVerificationEnvironment verificationEnvironment)
 		{
@@ -41,7 +42,7 @@ namespace ProSuite.QA.Configurator
 			return listOfQAServiceProviders;
 		}
 
-		public IQASpecificationProvider GetQASpecificationsProvider(ProSuiteQASpecificationsConfiguration specConfig)
+		public IQualitySpecificationReferencesProvider GetQASpecificationsProvider(ProSuiteQASpecificationsConfiguration specConfig)
 		{
 			if (_specificationProvider != null)
 			{

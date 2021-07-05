@@ -15,6 +15,8 @@ using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.Microservices.Client.QA;
+using ProSuite.QA.Configurator;
+using ProSuite.QA.SpecificationProviderFile;
 
 namespace ProSuite.AGP.Solution.QA
 {
@@ -44,6 +46,7 @@ namespace ProSuite.AGP.Solution.QA
 			_sessionContext.ProjectWorkspaceChanged += ContextProjectWorkspaceChanged;
 
 			SpecificationProvider = new DdxSpecificationReferencesProvider(sessionContext, client);
+			FallbackSpecificationProvider = new QASpecificationProviderXml(QAConfiguration.Current.DefaultQASpecConfig.SpecificationsProviderConnection);
 		}
 
 		public QualityVerificationEnvironment(
@@ -52,6 +55,7 @@ namespace ProSuite.AGP.Solution.QA
 			Assert.ArgumentNotNull(specificationProvider, nameof(specificationProvider));
 
 			SpecificationProvider = specificationProvider;
+			FallbackSpecificationProvider = new QASpecificationProviderXml(QAConfiguration.Current.DefaultQASpecConfig.SpecificationsProviderConnection);
 		}
 
 		/// <summary>

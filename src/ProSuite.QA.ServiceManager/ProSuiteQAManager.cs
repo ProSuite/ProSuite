@@ -1,4 +1,5 @@
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.ServiceManager.Interfaces;
 using ProSuite.QA.ServiceManager.Types;
 using System;
@@ -16,12 +17,12 @@ namespace ProSuite.QA.ServiceManager
 		IEnumerable<IProSuiteQAServiceProvider> _serviceProviders { get; set; }
 
 		// QA specifications provider - XML, DDX, ....
-		IQASpecificationProvider _specificationsProvider { get; set; }
+		IQualitySpecificationReferencesProvider _specificationsProvider { get; set; }
 
 		public event EventHandler<ProSuiteQAServiceEventArgs> OnStatusChanged;
 
 		public ProSuiteQAManager(IEnumerable<IProSuiteQAServiceProvider> availableServices,
-		                         IQASpecificationProvider specificationsProvider)
+		                         IQualitySpecificationReferencesProvider specificationsProvider)
 		{
 			_serviceProviders = availableServices;
 			foreach (var service in _serviceProviders)
@@ -38,17 +39,12 @@ namespace ProSuite.QA.ServiceManager
 			}
 		}
 
-		public IQASpecificationProvider SpecificationProvider => _specificationsProvider;
+		public IQualitySpecificationReferencesProvider SpecificationProvider => _specificationsProvider;
 
 		private void Service_OnStatusChanged(object sender, ProSuiteQAServiceEventArgs e)
 		{
 			_msg.Info($"{e.State}: {e.Data}");
 			OnStatusChanged?.Invoke(this, e);
-		}
-
-		public IList<string> GetSpecificationNames()
-		{
-			return _specificationsProvider?.GetQASpecificationNames() ?? new List<string>() {"not available"};
 		}
 
 		public void OnConfigurationChanged(object sender, ProSuiteQAConfigEventArgs e)
@@ -97,9 +93,10 @@ namespace ProSuite.QA.ServiceManager
 			}
 		}
 
-		public string GetQASpecificationsConnection(string currentQASpecificationName)
+		public async Task<string> GetQASpecificationsConnection(string currentQASpecificationName)
 		{
-			return _specificationsProvider?.GetQASpecificationsConnection(currentQASpecificationName);
+			var spec = await _specificationsProvider?.GetQualitySpecification(currentQASpecificationName);
+			return spec.Connection;
 		}
 	}
 
