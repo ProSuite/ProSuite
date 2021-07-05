@@ -58,6 +58,7 @@
     <Compile Include="DataModel\AttributeType.cs" />
     <Compile Include="DataModel\CopyPolicy.cs" />
     <Compile Include="DataModel\Dataset.cs" />
+    <Compile Include="DataModel\DatasetAccessException.cs" />
     <Compile Include="DataModel\DatasetCategory.cs" />
     <Compile Include="DataModel\DdxModel.cs" />
     <Compile Include="DataModel\ErrorLineDataset.cs" />
@@ -67,6 +68,7 @@
     <Compile Include="DataModel\ErrorTableDataset.cs" />
     <Compile Include="DataModel\ErrorType.cs" />
     <Compile Include="DataModel\ErrorVectorDataset.cs" />
+    <Compile Include="DataModel\FieldNotFoundException.cs" />
     <Compile Include="DataModel\FieldType.cs" />
     <Compile Include="DataModel\ForeignKeyAssociation.cs" />
     <Compile Include="DataModel\ForeignKeyAssociationEnd.cs" />
@@ -85,6 +87,8 @@
     <Compile Include="DataModel\IDdxRasterDataset.cs" />
     <Compile Include="DataModel\IErrorDataset.cs" />
     <Compile Include="DataModel\IModelElement.cs" />
+    <Compile Include="DataModel\ModelElementAccessException.cs" />
+    <Compile Include="DataModel\RelationshipClassAccessException.cs" />
     <Compile Include="DataModel\Repositories\IObjectCategoryAttributeConstraintRepository.cs" />
     <Compile Include="DataModel\IObjectDataset.cs" />
     <Compile Include="DataModel\IRegisteredGdbObject.cs" />
