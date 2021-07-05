@@ -6,14 +6,12 @@ using ProSuite.QA.Container;
 using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.Callbacks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.QA.Container;
 
 namespace ProSuite.QA.Tests.Surface
 {

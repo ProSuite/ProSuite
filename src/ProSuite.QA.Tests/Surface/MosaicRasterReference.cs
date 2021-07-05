@@ -1,5 +1,3 @@
-using System.Linq;
-using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Surface;
@@ -13,15 +11,12 @@ namespace ProSuite.QA.Tests.Surface
 	public class MosaicRasterReference : RasterReference
 	{
 		[NotNull] private readonly SimpleRasterMosaic _simpleRasterMosaic;
-		[NotNull] private readonly byte[] _mosaicDefinitionBytes;
 
 		public MosaicRasterReference([NotNull] SimpleRasterMosaic simpleRasterMosaic)
 		{
 			Assert.ArgumentNotNull(simpleRasterMosaic, nameof(simpleRasterMosaic));
 
 			_simpleRasterMosaic = simpleRasterMosaic;
-
-			_mosaicDefinitionBytes = GetMosaicDefinitionBytes(simpleRasterMosaic);
 		}
 
 		public override IDataset Dataset => _simpleRasterMosaic;
@@ -49,20 +44,7 @@ namespace ProSuite.QA.Tests.Surface
 
 		public override int GetHashCodeCore()
 		{
-			return _simpleRasterMosaic.GetHashCode(); // TODO
-		}
-
-		[NotNull]
-		private static byte[] GetMosaicDefinitionBytes([NotNull] SimpleRasterMosaic raster)
-		{
-			return Encoding.UTF8.GetBytes("TODO"); // TODO
-			//IImageServerLayer previewLayer = mosaicLayer.PreviewLayer;
-
-			//IImageServiceInfo serviceInfo = previewLayer?.ServiceInfo;
-
-			//return serviceInfo != null
-			//	       ? SerializationUtils.SerializeComObject(serviceInfo)
-			//	       : new byte[] { };
+			return _simpleRasterMosaic.GetHashCode();
 		}
 	}
 }
