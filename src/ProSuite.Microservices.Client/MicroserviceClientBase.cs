@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
@@ -23,6 +24,11 @@ namespace ProSuite.Microservices.Client
 		private Health.HealthClient _healthClient;
 		private Process _startedProcess;
 
+		[CanBeNull] private readonly IList<ClientChannelConfig> _allChannelConfigs;
+
+		private string _executable;
+		private string _executableArguments;
+
 		protected MicroserviceClientBase([NotNull] string host = _localhost,
 		                                 int port = 5151,
 		                                 bool useTls = false,
@@ -35,7 +41,9 @@ namespace ProSuite.Microservices.Client
 
 			if (Port >= 0)
 			{
-				bool assumeLoadBalancer = host != _localhost;
+				bool assumeLoadBalancer =
+					! host.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase);
+
 				OpenChannel(useTls, clientCertificate, assumeLoadBalancer);
 			}
 			else
@@ -49,18 +57,27 @@ namespace ProSuite.Microservices.Client
 			: this(channelConfig.HostName, channelConfig.Port, channelConfig.UseTls,
 			       channelConfig.ClientCertificate) { }
 
-		public string HostName { get; }
+		protected MicroserviceClientBase([NotNull] IList<ClientChannelConfig> channelConfigs)
+			: this(channelConfigs[0])
+		{
+			if (channelConfigs.Count > 1)
+			{
+				_allChannelConfigs = channelConfigs;
+			}
+		}
+
+		public string HostName { get; private set; }
 
 		public int Port { get; private set; }
 
-		protected bool UseTls { get; }
+		protected bool UseTls { get; private set; }
 
-		protected string ClientCertificate { get; }
+		protected string ClientCertificate { get; private set; }
 
 		[CanBeNull]
-		protected Channel Channel { get; set; }
+		protected Channel Channel { get; private set; }
 
-		protected bool ChannelIsLoadBalancer { get; set; }
+		protected bool ChannelIsLoadBalancer { get; private set; }
 
 		[NotNull]
 		protected abstract string ServiceName { get; }
@@ -90,6 +107,13 @@ namespace ProSuite.Microservices.Client
 			[NotNull] string executable,
 			[CanBeNull] string extraArguments = null)
 		{
+			if (_allChannelConfigs != null)
+			{
+				// Remember in case we need to switch to different channel later on
+				_executable = executable;
+				_executableArguments = extraArguments;
+			}
+
 			if (! HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase))
 			{
 				return false;
@@ -110,12 +134,19 @@ namespace ProSuite.Microservices.Client
 		public bool AllowStartingLocalServer([NotNull] string executable,
 		                                     [CanBeNull] string extraArguments = null)
 		{
+			if (_allChannelConfigs != null)
+			{
+				// Remember in case we need to switch to different channel later on
+				_executable = executable;
+				_executableArguments = extraArguments;
+			}
+
 			if (! HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase))
 			{
 				return false;
 			}
 
-			if (CanAcceptCalls())
+			if (CanAcceptCalls(false))
 			{
 				return false;
 			}
@@ -125,7 +156,7 @@ namespace ProSuite.Microservices.Client
 			return true;
 		}
 
-		public bool CanAcceptCalls()
+		public bool CanAcceptCalls(bool allowFailOver = false)
 		{
 			if (! TryGetHealthClient(out Health.HealthClient healthClient))
 			{
@@ -136,13 +167,19 @@ namespace ProSuite.Microservices.Client
 
 			bool result = GrpcUtils.IsServing(healthClient, serviceName, out StatusCode statusCode);
 
-			_msg.DebugFormat("Service {0} is serving at {1}: {2}. Status: {3}", serviceName,
-			                 Channel?.ResolvedTarget, result, statusCode);
+			_msg.DebugFormat("Service {0} is serving at {1}: {2}. Status: {3}. Channel state: {4}",
+			                 serviceName, Channel?.ResolvedTarget, result, statusCode,
+			                 Channel?.State);
+
+			if (! result && allowFailOver)
+			{
+				result = TryOpenOtherChannel();
+			}
 
 			return result;
 		}
 
-		public async Task<bool> CanAcceptCallsAsync()
+		public async Task<bool> CanAcceptCallsAsync(bool allowFailOver = false)
 		{
 			if (! TryGetHealthClient(out Health.HealthClient healthClient))
 			{
@@ -153,8 +190,13 @@ namespace ProSuite.Microservices.Client
 
 			StatusCode statusCode = await GrpcUtils.IsServingAsync(healthClient, serviceName);
 
-			_msg.DebugFormat("Health status for service {0} at {1}: {2}.", serviceName,
-			                 Channel?.ResolvedTarget, statusCode);
+			_msg.DebugFormat("Health status for service {0} at {1}: {2}. Channel state: {3}",
+			                 serviceName, Channel?.ResolvedTarget, statusCode, Channel?.State);
+
+			if (statusCode != StatusCode.OK && allowFailOver)
+			{
+				return TryOpenOtherChannel();
+			}
 
 			return statusCode == StatusCode.OK;
 		}
@@ -193,12 +235,64 @@ namespace ProSuite.Microservices.Client
 			ChannelOpenedCore(Channel);
 		}
 
+		protected bool TryOpenOtherChannel()
+		{
+			if (_allChannelConfigs == null)
+			{
+				_msg.DebugFormat(
+					"No fail-over connections defined, trying the same channel again...");
+
+				return RetrySameChannel();
+			}
+
+			string currentHost = HostName;
+			int currentPort = Port;
+
+			foreach (ClientChannelConfig otherChannel in _allChannelConfigs)
+			{
+				if (otherChannel.HostName == currentHost &&
+				    otherChannel.Port == currentPort)
+				{
+					// This is the one currently being used. We want to check the others only.
+					continue;
+				}
+
+				_msg.DebugFormat("Trying alternate channel {0}...", otherChannel);
+
+				bool assumeLoadBalancer =
+					! otherChannel.HostName.Equals(_localhost,
+					                               StringComparison.InvariantCultureIgnoreCase);
+
+				HostName = otherChannel.HostName;
+				Port = otherChannel.Port;
+				UseTls = otherChannel.UseTls;
+				ClientCertificate = otherChannel.ClientCertificate;
+
+				OpenChannel(otherChannel.UseTls, otherChannel.ClientCertificate,
+				            assumeLoadBalancer);
+
+				// In case of localhost and known server exe:
+				if (! string.IsNullOrEmpty(_executable) &&
+				    AllowStartingLocalServer(_executable, _executableArguments))
+				{
+					return true;
+				}
+
+				if (CanAcceptCalls(allowFailOver: false))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
 		protected abstract void ChannelOpenedCore(Channel channel);
 
 		protected static Channel TryGetChannelFromLoadBalancer(Channel lbChannel,
 		                                                       ChannelCredentials credentials,
 		                                                       string serviceName,
-		                                                       int maxMesssageLength)
+		                                                       int maxMessageLength)
 		{
 			ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient lbClient =
 				new ServiceDiscoveryGrpc.ServiceDiscoveryGrpcClient(lbChannel);
@@ -216,7 +310,7 @@ namespace ProSuite.Microservices.Client
 
 				Channel result = GrpcUtils.CreateChannel(serviceLocation.HostName,
 				                                         serviceLocation.Port, credentials,
-				                                         maxMesssageLength);
+				                                         maxMessageLength);
 
 				_msg.DebugFormat("The load balancer is suggesting {0}", result.ResolvedTarget);
 
@@ -322,6 +416,35 @@ namespace ProSuite.Microservices.Client
 
 			_msg.DebugFormat("No {0} service and no serving load balancer at {1}. Error code: {2}",
 			                 serviceName, channel.ResolvedTarget, lbStatusCode);
+
+			return false;
+		}
+
+		private bool RetrySameChannel()
+		{
+			// TEST for TOP-5412 (re-use same channel or always create new channel?)
+
+			if (CanAcceptCalls(allowFailOver: false))
+			{
+				// TODO: Consider changing the time-out
+				_msg.DebugFormat("Second try worked!");
+
+				return true;
+			}
+
+			_msg.DebugFormat(
+				"Second try failed as well, creating a new channel and trying for the third (and last) time.");
+			bool assumeLoadBalancer =
+				! HostName.Equals(_localhost, StringComparison.InvariantCultureIgnoreCase);
+
+			OpenChannel(UseTls, ClientCertificate, assumeLoadBalancer);
+
+			if (CanAcceptCalls(allowFailOver: false))
+			{
+				_msg.DebugFormat("Third try worked!");
+
+				return true;
+			}
 
 			return false;
 		}

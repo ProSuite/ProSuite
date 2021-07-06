@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace ProSuite.AGP.Solution.WorkListUI
+﻿namespace ProSuite.AGP.Solution.WorkListUI
 {
-	class WorkListViewBase
-	{
-	}
+	class WorkListViewBase { }
 }

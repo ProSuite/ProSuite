@@ -185,14 +185,6 @@
     <Compile Include="Network\QaGroupNetworkBase.cs" />
     <Compile Include="Network\QaNetworkBase.cs" />
     <Compile Include="NonLinearSegmentType.cs" />
-    <Compile Include="Obsolete\QaIntersect.cs" />
-    <Compile Include="Obsolete\QaInvalidGeometry.cs" />
-    <Compile Include="Obsolete\QaLineConnection.cs" />
-    <Compile Include="Obsolete\QaLineNeighborAreas.cs" />
-    <Compile Include="Obsolete\QaMinPointDistance.cs" />
-    <Compile Include="Obsolete\QaMpFootprintHasInnerRing.cs" />
-    <Compile Include="Obsolete\QaOrphanNodesObsolete.cs" />
-    <Compile Include="Obsolete\QaRouteMeasures.cs" />
     <Compile Include="OffsetSpecification.cs" />
     <Compile Include="OrphanErrorType.cs" />
     <Compile Include="OverlappingMeasures.cs" />
@@ -214,6 +206,9 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Qa3dConstantZ.cs" />
+    <Compile Include="QaGdbConstraint.cs" />
+    <Compile Include="QaSurfaceOffset.cs" />
+    <Compile Include="QaSurfacePipe.cs" />
     <Compile Include="QaAreaBase.cs" />
     <Compile Include="QaBorderSense.cs" />
     <Compile Include="QaCentroids.cs" />
@@ -326,6 +321,8 @@
     <Compile Include="QaSimpleGeometry.cs" />
     <Compile Include="QaSliverPolygon.cs" />
     <Compile Include="QaSmooth.cs" />
+    <Compile Include="QaSurfaceSpikes.cs" />
+    <Compile Include="QaSurfaceVertex.cs" />
     <Compile Include="QaTouchesOther.cs" />
     <Compile Include="QaTouchesSelf.cs" />
     <Compile Include="QaTrimmedTextFields.cs" />
@@ -357,6 +354,9 @@
     <Compile Include="SpatialRelations\QaSpatialRelationOtherBase.cs" />
     <Compile Include="SpatialRelations\QaSpatialRelationSelfBase.cs" />
     <Compile Include="SpatialRelations\QaSpatialRelationUtils.cs" />
+    <Compile Include="Surface\MosaicRasterReference.cs" />
+    <Compile Include="Surface\RasterDatasetReference.cs" />
+    <Compile Include="Surface\SurfaceUtils.cs" />
     <Compile Include="TestRowReference.cs" />
     <Compile Include="UnequalField.cs" />
     <Compile Include="UniqueStringsConstraint.cs" />
@@ -456,5 +456,6 @@
       <Version>2.36.4</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

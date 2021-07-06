@@ -1,4 +1,5 @@
 using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -11,12 +12,21 @@ namespace ProSuite.QA.Container
 		public abstract int GetHashCodeCore();
 
 		[NotNull]
-		public abstract IRaster CreateFullRaster();
-
-		public abstract ISimpleSurface CreateSurface(IRaster raster);
+		public abstract ISimpleSurface CreateSurface([NotNull] IEnvelope extent);
 
 		[NotNull]
-		public abstract IDataset RasterDataset { get; }
+		public abstract IDataset Dataset { get; }
+
+		[NotNull]
+		public abstract IGeoDataset GeoDataset { get; }
+
+		public abstract double CellSize { get; }
+
+		/// <summary>
+		/// Whether the raster should be assumed to be fully loaded into memory and therefore
+		/// requires a sub-tiling to avoid out-of-memory situations.
+		/// </summary>
+		public virtual bool AssumeInMemory => true;
 
 		public override bool Equals(object obj)
 		{

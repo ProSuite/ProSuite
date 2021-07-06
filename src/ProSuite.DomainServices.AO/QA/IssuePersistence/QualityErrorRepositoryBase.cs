@@ -596,7 +596,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 
 					int referenceCount;
 					bool isReferenced = referenceCounts.TryGetValue(qualityCondition.Id,
-					                                                out referenceCount) &&
+						                    out referenceCount) &&
 					                    referenceCount > 0;
 
 					if (! isReferenced)
@@ -776,7 +776,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 						"The quality conditions are required when there is an object selection");
 
 					var determineDeletableRow = new DeletableErrorRowFilter(issueWriter,
-					                                                        objectSelection);
+						objectSelection);
 
 					issueWriter.DeleteErrorObjects(queryFilter,
 					                               determineDeletableRow,
@@ -796,6 +796,12 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		{
 			Assert.ArgumentNotNull(qaError, nameof(qaError));
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
+
+			if (! IssueDatasets.GetIssueWriters().Any())
+			{
+				// No issue datasets, no allowed errors
+				return false;
+			}
 
 			QaError comparableError = AllowedErrorUtils.GetForAllowedErrorComparison(
 				qaError, IssueDatasets.SpatialReference,
@@ -838,6 +844,11 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		{
 			Assert.ArgumentNotNull(qaError, nameof(qaError));
 			Assert.ArgumentNotNull(qualityCondition, nameof(qualityCondition));
+
+			if (AllowedErrorList.Count == 0)
+			{
+				return null;
+			}
 
 			return AllowedErrorUtils.FindAllowedErrorInSortedList(
 				AllowedErrorList, qaError, qualityCondition,
@@ -955,9 +966,17 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			{
 				if (_allowedErrors == null)
 				{
-					_allowedErrors = new List<AllowedError>(
-						GetAllowedErrors(VerifiedQualityConditions));
-					_allowedErrors.Sort();
+					if (IssueDatasets.GetIssueWriters().Any())
+					{
+						_allowedErrors = new List<AllowedError>(
+							GetAllowedErrors(VerifiedQualityConditions));
+						_allowedErrors.Sort();
+					}
+					else
+					{
+						// No issue datasets, no allowed errors:
+						_allowedErrors = new List<AllowedError>(0);
+					}
 				}
 
 				return _allowedErrors;

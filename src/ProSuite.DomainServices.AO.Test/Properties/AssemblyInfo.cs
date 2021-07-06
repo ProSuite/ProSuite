@@ -1,4 +1,4 @@
-using System.Threading;
+﻿using System.Threading;
 using NUnit.Framework;
 
 // nunit apartment model

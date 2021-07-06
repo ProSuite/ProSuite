@@ -56,7 +56,8 @@ namespace ProSuite.Commons.AGP.GP
 		public static async Task<bool> CreateDomainAsync([NotNull] string workspace,
 		                                                 [NotNull] string domainName,
 		                                                 [CanBeNull] string description = null,
-		                                                 esriFieldType type = esriFieldType.esriFieldTypeInteger,
+		                                                 esriFieldType type =
+			                                                 esriFieldType.esriFieldTypeInteger,
 		                                                 DomainType domainType = DomainType.Coded)
 		{
 			Assert.ArgumentNotNullOrEmpty(workspace, nameof(workspace));
@@ -92,7 +93,8 @@ namespace ProSuite.Commons.AGP.GP
 			}
 
 			IReadOnlyList<string> parameters =
-				Geoprocessing.MakeValueArray(workspace, domainName, description, fieldType, $"{domainType}");
+				Geoprocessing.MakeValueArray(workspace, domainName, description, fieldType,
+				                             $"{domainType}");
 
 			return await ExecuteAsync(tool, parameters);
 		}
@@ -115,7 +117,8 @@ namespace ProSuite.Commons.AGP.GP
 
 		public static async Task<bool> AssignDefaultToFieldAsync([NotNull] string table,
 		                                                         [NotNull] string fieldName,
-		                                                         [CanBeNull] object defaultValue = null)
+		                                                         [CanBeNull] object defaultValue =
+			                                                         null)
 		{
 			Assert.ArgumentNotNullOrEmpty(table, nameof(table));
 			Assert.ArgumentNotNullOrEmpty(fieldName, nameof(fieldName));

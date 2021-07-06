@@ -32,5 +32,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		void SetVisited(IWorkItem item);
 
 		Task SetStatus(IWorkItem item, WorkItemStatus status);
+
+		void UpdateStateRepository(string path);
 	}
 }

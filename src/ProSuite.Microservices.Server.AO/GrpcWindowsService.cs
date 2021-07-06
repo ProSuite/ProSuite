@@ -6,11 +6,15 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.Microservices.Server.AO
 {
-	public class GrpcWindowsService : ServiceBase
+	/// <summary>
+	/// Windows service that wraps a Grpc service implementation T.
+	/// </summary>
+	/// <typeparam name="T"></typeparam>
+	public class GrpcWindowsService<T> : ServiceBase where T : class
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly Func<string[], StartedGrpcServer> _serverStart;
+		private readonly Func<string[], StartedGrpcServer<T>> _serverStart;
 
 		[CanBeNull] private Grpc.Core.Server _server;
 
@@ -18,8 +22,9 @@ namespace ProSuite.Microservices.Server.AO
 		private Timer _timer;
 		private readonly double _interval = 3 * 1000;
 
-		public GrpcWindowsService([NotNull] string serviceName,
-		                          [NotNull] Func<string[], StartedGrpcServer> serverStart)
+		public GrpcWindowsService(
+			[NotNull] string serviceName,
+			[NotNull] Func<string[], StartedGrpcServer<T>> serverStart)
 		{
 			_serverStart = serverStart;
 			ServiceName = serviceName;
@@ -51,7 +56,7 @@ namespace ProSuite.Microservices.Server.AO
 			Try(nameof(OnStart),
 			    () =>
 			    {
-				    StartedGrpcServer started = _serverStart(args);
+				    StartedGrpcServer<T> started = _serverStart(args);
 
 				    _server = started.Server;
 

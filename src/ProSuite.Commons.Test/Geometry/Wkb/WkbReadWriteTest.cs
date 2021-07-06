@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.IO;
 using NUnit.Framework;
-using ProSuite.Commons.Geometry;
-using ProSuite.Commons.Geometry.Wkb;
+using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.Wkb;
 
 namespace ProSuite.Commons.Test.Geometry.Wkb
 {

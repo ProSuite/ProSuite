@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -48,7 +49,7 @@ namespace ProSuite.DomainServices.AO.QA
 					break;
 				case Step.RasterLoaded:
 				{
-					IDataset ds = ((RasterReference) args.Tag).RasterDataset;
+					IDataset ds = ((RasterReference) args.Tag).Dataset;
 					Add(_datasetLoadTimes, ds, dt);
 				}
 					break;

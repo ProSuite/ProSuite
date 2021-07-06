@@ -60,6 +60,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				maxThreadCount = Environment.ProcessorCount - 1;
 			}
 
+			_msg.DebugFormat("{0} parallel requests will be processed", maxThreadCount);
+
 			_staThreadScheduler = new StaTaskScheduler(maxThreadCount);
 
 			EnvironmentUtils.SetUserNameProvider(_userNameProvider);
@@ -70,6 +72,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// in case any error occurs in this service implementation. Later this might be limited to
 		/// specific, serious errors (such as out-of-memory, TNS could not be resolved).
 		/// </summary>
+		[CanBeNull]
 		public IServiceHealth Health { get; set; }
 
 		/// <summary>
@@ -77,6 +80,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// A reference will also be passed to <see cref="LoadReportingGrpcImpl"/> to report the
 		/// current load to interested load balancers. 
 		/// </summary>
+		[CanBeNull]
 		public ServiceLoad CurrentLoad { get; set; }
 
 		/// <summary>
@@ -85,7 +89,20 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// in a 32-bit process, the server license is checked out in a 64-bit process. In case
 		/// a test requires a specific license or an extension, provide a different function.
 		/// </summary>
+		[CanBeNull]
 		public Func<bool> LicenseAction { get; set; }
+
+		/// <summary>
+		/// The report template path for HTML reports.
+		/// </summary>
+		[CanBeNull]
+		public string HtmlReportTemplatePath { get; set; }
+
+		/// <summary>
+		/// The specification template path for the output HTML specification.
+		/// </summary>
+		[CanBeNull]
+		public string QualitySpecificationTemplatePath { get; set; }
 
 		public override async Task VerifyQuality(
 			VerificationRequest request,
@@ -177,7 +194,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		{
 			try
 			{
-				await StartRequest(context.Peer, request);
+				await StartRequest(context.Peer, request, true);
 
 				_msg.InfoFormat("Starting stand-alone verification request from {0}",
 				                context.Peer);
@@ -214,25 +231,28 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		private async Task StartRequest(VerificationRequest request)
 		{
-			await StartRequest(request.UserName, request);
+			await StartRequest(request.UserName, request, true);
 		}
 
-		private async Task StartRequest(string peerName, object request)
+		private async Task StartRequest(string peerName, object request, bool requiresLicense)
 		{
 			CurrentLoad?.StartRequest();
 
-			_msg.InfoFormat("Starting verification request from {0}", peerName);
+			_msg.InfoFormat("Starting {0} request from {1}", request.GetType().Name, peerName);
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
 				_msg.VerboseDebugFormat("Request details: {0}", request);
 			}
 
-			bool licensed = await EnsureLicenseAsync();
-
-			if (! licensed)
+			if (requiresLicense)
 			{
-				_msg.Warn("Could not check out the specified license");
+				bool licensed = await EnsureLicenseAsync();
+
+				if (! licensed)
+				{
+					_msg.Warn("Could not check out the specified license");
+				}
 			}
 		}
 
@@ -243,6 +263,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public async Task<bool> EnsureLicenseAsync()
 		{
+			if (LicenseAction == null)
+			{
+				return true;
+			}
+
 			if (Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
 			{
 				return LicenseAction();
@@ -448,8 +473,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				IGeometry perimeter =
 					ProtobufGeometryUtils.FromShapeMsg(parameters.Perimeter);
 
-				XmlBasedVerificationService qaService =
-					CreateXmlBasedStandaloneService(request);
+				XmlBasedVerificationService qaService = new XmlBasedVerificationService(
+					HtmlReportTemplatePath, QualitySpecificationTemplatePath);
 
 				XmlQualitySpecificationMsg xmlSpecification = request.Specification;
 
@@ -476,7 +501,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 						xmlSpecification.Xml,
 						xmlSpecification.SelectedSpecificationName,
 						dataSources, aoi, null, parameters.TileSize,
-						parameters.IssueFileGdbPath, IssueRepositoryType.FileGdb,
+						request.OutputDirectory, IssueRepositoryType.FileGdb,
 						true, trackCancel);
 				}
 				catch (ArgumentException argumentException)
@@ -503,18 +528,6 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return trackCancel.Continue()
 				       ? ServiceCallStatus.Finished
 				       : ServiceCallStatus.Cancelled;
-		}
-
-		private static XmlBasedVerificationService CreateXmlBasedStandaloneService(
-			[NotNull] StandaloneVerificationRequest request)
-		{
-			// From local xml options?
-			string specificationTemplatePath = null;
-			XmlBasedVerificationService xmlService = new XmlBasedVerificationService(
-				request.Parameters.HtmlTemplatePath,
-				specificationTemplatePath);
-
-			return xmlService;
 		}
 
 		private static IEnumerable<GdbObjRefMsg> GetDeletableAllowedErrorRefs(
@@ -856,13 +869,18 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			response.ServiceCallStatus = (int) finalStatus;
 
+			response.Progress = new VerificationProgressMsg();
+
 			if (! string.IsNullOrEmpty(qaServiceCancellationMessage))
 			{
-				response.Progress = new VerificationProgressMsg
-				                    {
-					                    Message = qaServiceCancellationMessage
-				                    };
+				response.Progress.Message = qaServiceCancellationMessage;
 			}
+
+			// Ensure that progress is at 100%:
+			response.Progress.OverallProgressCurrentStep = 10;
+			response.Progress.OverallProgressTotalSteps = 10;
+			response.Progress.DetailedProgressCurrentStep = 10;
+			response.Progress.DetailedProgressTotalSteps = 10;
 
 			PackVerification(verification, response);
 

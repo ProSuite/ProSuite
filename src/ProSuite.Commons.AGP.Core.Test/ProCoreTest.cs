@@ -1,6 +1,7 @@
 using System.Threading;
 using ArcGIS.Core.Geometry;
 using NUnit.Framework;
+using ProSuite.Commons.AGP.Hosting;
 
 namespace ProSuite.Commons.AGP.Test
 {
@@ -14,7 +15,7 @@ namespace ProSuite.Commons.AGP.Test
 		[OneTimeSetUp]
 		public void OneTimeSetUp()
 		{
-			Hosting.CoreHostProxy.Initialize();
+			CoreHostProxy.Initialize();
 		}
 
 		[Test]
@@ -49,7 +50,9 @@ namespace ProSuite.Commons.AGP.Test
 
 			MapPoint pt3Copy = MapPointBuilder.CreateMapPoint(pt3);
 			Assert.True(pt3Copy.IsEqual(pt3));
-			Assert.False(ReferenceEquals(pt3, pt3Copy)); // Note: since geoms are immutable, returning *same* would be ok, but here test for behavior
+			Assert.False(
+				ReferenceEquals(
+					pt3, pt3Copy)); // Note: since geoms are immutable, returning *same* would be ok, but here test for behavior
 		}
 
 		[Test]

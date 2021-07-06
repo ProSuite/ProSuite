@@ -1,5 +1,3 @@
-using ArcGIS.Desktop.Framework;
-
 namespace ProSuite.AGP.Solution
 {
 	public static class ConfigIDs

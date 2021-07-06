@@ -159,7 +159,6 @@
     <Compile Include="RasterReference.cs" />
     <Compile Include="RasterRow.cs" />
     <Compile Include="RowReference.cs" />
-    <Compile Include="TerrainReference.cs" />
     <Compile Include="TestBase.cs" />
     <Compile Include="TestCategories\AttributeTestAttribute.cs" />
     <Compile Include="TestCategories\EdgeMatchTestAttribute.cs" />

@@ -9,7 +9,7 @@ namespace ProSuite.AGP.WorkList
 	public static class IssueUtils
 	{
 		// should this be un IssueUtils or IssueAttributeReader ?
-		private static readonly string[] _idValueSeparator = { "||" };
+		private static readonly string[] _idValueSeparator = {"||"};
 
 		//public IList<InvolvedTable> ParseInvolvedTables( string involvedTablesString,
 		//	  IAlternateKeyConverter alternateKeyConverter = null)
@@ -23,7 +23,7 @@ namespace ProSuite.AGP.WorkList
 			const char fieldNameSeparator = ':';
 
 			string[] tableStrings = involvedTablesString.Split(
-				 new[] { tableStringSeparator }, StringSplitOptions.RemoveEmptyEntries);
+				new[] {tableStringSeparator}, StringSplitOptions.RemoveEmptyEntries);
 
 			var result = new List<InvolvedTable>(tableStrings.Length);
 
@@ -44,7 +44,7 @@ namespace ProSuite.AGP.WorkList
 				if (index == 0)
 				{
 					Assert.AreEqual(tableHeaderStart, tableString[0], errorFormat,
-									involvedTablesString);
+					                involvedTablesString);
 					tableNameStartIndex = 1;
 				}
 				else
@@ -58,17 +58,18 @@ namespace ProSuite.AGP.WorkList
 				{
 					// there is a key field name
 					fieldName = tableString.Substring(
-						 fieldNameSeparatorIndex + 1,
-						 tableHeaderEndIndex - fieldNameSeparatorIndex - 1);
+						fieldNameSeparatorIndex + 1,
+						tableHeaderEndIndex - fieldNameSeparatorIndex - 1);
 					tableName = tableString.Substring(tableNameStartIndex,
-													  fieldNameSeparatorIndex - tableNameStartIndex);
+					                                  fieldNameSeparatorIndex -
+					                                  tableNameStartIndex);
 				}
 				else
 				{
 					// no key field name
 					fieldName = null;
 					tableName = tableString.Substring(tableNameStartIndex,
-													  tableHeaderEndIndex - tableNameStartIndex);
+					                                  tableHeaderEndIndex - tableNameStartIndex);
 				}
 
 				List<RowReference> rowReferences;
@@ -77,7 +78,7 @@ namespace ProSuite.AGP.WorkList
 				{
 					string idString = tableString.Substring(tableHeaderEndIndex + 1);
 					string[] ids = idString.Split(_idValueSeparator,
-												  StringSplitOptions.RemoveEmptyEntries);
+					                              StringSplitOptions.RemoveEmptyEntries);
 
 					rowReferences = new List<RowReference>(ids.Length);
 
@@ -93,8 +94,8 @@ namespace ProSuite.AGP.WorkList
 							catch (FormatException formatException)
 							{
 								throw new AssertionException(
-									 string.Format(errorFormat, involvedTablesString),
-									 formatException);
+									string.Format(errorFormat, involvedTablesString),
+									formatException);
 							}
 
 							rowReferences.Add(new OIDRowReference(oid));
@@ -116,8 +117,8 @@ namespace ProSuite.AGP.WorkList
 				result.Add(new InvolvedTable(tableName, rowReferences, fieldName));
 				index++;
 			}
+
 			return result;
 		}
-
 	}
 }

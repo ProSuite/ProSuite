@@ -1,6 +1,6 @@
 using System;
 using ESRI.ArcGIS.esriSystem;
-using ProSuite.Commons.Geometry.Wkb;
+using ProSuite.Commons.Geom.Wkb;
 
 namespace ProSuite.Commons.AO.Geometry.Serialization
 {

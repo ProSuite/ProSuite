@@ -44,6 +44,10 @@
     <Compile Include="QAConfiguration.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ProSuite.DomainModel.AGP\ProSuite.DomainModel.AGP.csproj">
+      <Project>{824DDBE3-EDAF-460B-B513-386A4260C1FF}</Project>
+      <Name>ProSuite.DomainModel.AGP</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.QA.ServiceManager\ProSuite.QA.ServiceManager.csproj">
       <Project>{A3BCF206-8C54-490A-8F5F-1C3C68EBB208}</Project>
       <Name>ProSuite.QA.ServiceManager</Name>

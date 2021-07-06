@@ -96,6 +96,21 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			get { return _parameterValues; }
 		}
 
+		public IEnumerable<XmlTestParameterValue> EnumParameterValues(bool ignoreEmptyValues = true)
+		{
+			foreach (XmlTestParameterValue paramValue in _parameterValues)
+			{
+				if (ignoreEmptyValues &&
+				    paramValue is XmlDatasetTestParameterValue dsValue &&
+				    dsValue.WorkspaceId == null) // TODO: Handle Transformer values!
+				{
+					continue;
+				}
+
+				yield return paramValue;
+			}
+		}
+
 		[XmlAttribute("createdDate")]
 		public string CreatedDate { get; set; }
 

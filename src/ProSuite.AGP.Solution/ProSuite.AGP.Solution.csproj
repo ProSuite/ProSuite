@@ -78,6 +78,14 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\ESRI.ArcGIS.ItemIndex.dll</HintPath>
     </Reference>
+    <Reference Include="ProSuite.Microservices.Definitions.QA, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.dll</HintPath>
+    </Reference>
+    <Reference Include="ProSuite.Microservices.Definitions.Shared, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Shared.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Compression" />
@@ -100,7 +108,10 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Constants.cs" />
     <Compile Include="Editing\AdvancedReshapeTool.cs" />
+    <Compile Include="Editing\CutAlongTool.cs" />
+    <Compile Include="Editing\ReshapeAlongTool.cs" />
     <Compile Include="Editing\RemoveOverlapsTool.cs" />
     <Compile Include="LoggerUI\LogMessageActionEvent.cs" />
     <Compile Include="LoggerUI\LogMessageDetailsDialog.xaml.cs">
@@ -133,8 +144,26 @@
     <Compile Include="ProjectItem\ProSuiteProjectItemContainer.cs" />
     <Compile Include="ProjectItem\ProjectFileRepository.cs" />
     <Compile Include="ProjectItem\ProSuiteProjectItemWorkList.cs" />
+    <Compile Include="ProjectItem\IssueWorklistItem.cs" />
+    <Compile Include="ProjectItem\SelectionWorklistItem.cs" />
+    <Compile Include="ProjectItem\WorklistItem.cs" />
+    <Compile Include="ProjectItem\WorklistsContainer.cs" />
+    <Compile Include="QA\QualitySpecificationsComboBox.cs" />
+    <Compile Include="QA\QualityVerificationEnvironment.cs" />
+    <Compile Include="QA\VerifyPerimeterTool.cs" />
+    <Compile Include="QA\VerifySelectionCmd.cs" />
+    <Compile Include="QA\VerifyVisibleExtentCmd.cs" />
+    <Compile Include="QA\VerificationProgressWindow.xaml.cs">
+      <DependentUpon>VerificationProgressWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="Resource.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resource.resx</DependentUpon>
+    </Compile>
     <Compile Include="Selection\PickWorkListItemTool.cs" />
     <Compile Include="Selection\SelectionTool.cs" />
+    <Compile Include="Workflow\MapBasedSessionContext.cs" />
     <Compile Include="WorkLists\CreateIssueWorkListButton.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
     <Compile Include="Commons\LayerUtils.cs" />
@@ -199,6 +228,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="LoggerUI\ProSuiteLogPane.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="QA\VerificationProgressWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
@@ -288,6 +321,10 @@
       <Project>{EC3D575D-7B9D-467F-BC76-2E093A3126EC}</Project>
       <Name>ProSuite.AGP.Editing</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.AGP.QA\ProSuite.AGP.QA.csproj">
+      <Project>{1745D9A7-BF58-414E-A840-6A3EE1847FE0}</Project>
+      <Name>ProSuite.AGP.QA</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj">
       <Project>{47e134c6-b803-451e-8c33-7c71b158b2ac}</Project>
       <Name>ProSuite.AGP.WorkList.Contracts</Name>
@@ -299,6 +336,10 @@
     <ProjectReference Include="..\ProSuite.Application.Configuration\ProSuite.Application.Configuration.csproj">
       <Project>{EAB868E4-D8FD-4AB4-9EDA-A9291E7CFEAB}</Project>
       <Name>ProSuite.Application.Configuration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj">
+      <Project>{b80740ec-bb68-410c-a617-e79c467f1969}</Project>
+      <Name>ProSuite.Commons.AGP.Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">
       <Project>{89F2C583-3022-43F8-9B69-27123836625F}</Project>
@@ -312,9 +353,21 @@
       <Project>{a227d52c-0536-498f-acf2-2a5a67c3d9ff}</Project>
       <Name>ProSuite.Commons.Logging</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.UI\ProSuite.Commons.UI.csproj">
+      <Project>{fda8452c-41f0-404c-a17d-fba8cb56b935}</Project>
+      <Name>ProSuite.Commons.UI</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
       <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
       <Name>ProSuite.Commons</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.DomainModel.AGP\ProSuite.DomainModel.AGP.csproj">
+      <Project>{824DDBE3-EDAF-460B-B513-386A4260C1FF}</Project>
+      <Name>ProSuite.DomainModel.AGP</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
+      <Project>{0B48B56F-3A3D-4367-AA76-A356519AF2AB}</Project>
+      <Name>ProSuite.DomainModel.Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.Microservices.Client.AGP\ProSuite.Microservices.Client.AGP.csproj">
       <Project>{5D500C94-FF3A-4BC8-8EDB-3A7177898B81}</Project>
@@ -332,10 +385,14 @@
       <Project>{A3BCF206-8C54-490A-8F5F-1C3C68EBB208}</Project>
       <Name>ProSuite.QA.ServiceManager</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.UI\ProSuite.UI.csproj">
+      <Project>{44C24B7C-FFD8-4968-95A0-9D3C7C77861B}</Project>
+      <Name>ProSuite.UI</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
-      <Version>1.1.19</Version>
+      <Version>1.1.31</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
@@ -395,10 +452,10 @@
     <AddInContent Include="Images\RemoveOverlapsTool32.png" />
   </ItemGroup>
   <ItemGroup>
-    <AddInContent Include="Images\NavigateErrorsCmd16.png" />
-    <AddInContent Include="Images\NavigateErrorsCmd32.png" />
-    <AddInContent Include="Images\NavigateSelectionCmd16.png" />
-    <AddInContent Include="Images\NavigateSelectionCmd32.png" />
+    <Resource Include="Images\NavigateErrorsCmd16.png" />
+    <Resource Include="Images\NavigateErrorsCmd32.png" />
+    <Resource Include="Images\NavigateSelectionCmd16.png" />
+    <Resource Include="Images\NavigateSelectionCmd32.png" />
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="Images\SelectionTool16.png" />
@@ -430,6 +487,41 @@
   </ItemGroup>
   <ItemGroup>
     <AddInContent Include="Images\AdvancedReshapeToolTip.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\NavigateWorklistCmd16.png" />
+    <Resource Include="Images\NavigateWorklistCmd32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\PickerToolCursor.cur" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Resource.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resource.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\WorklistsFolder16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\ReshapeAlongTool32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\CutPolygonAlongTool16.png" />
+    <AddInContent Include="Images\CutPolygonAlongTool32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\VerifyVisibleExtentCmd16.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\VerifyVisibleExtentCmd32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <AddInContent Include="Images\VerifyPerimeterTool16.png" />
+    <AddInContent Include="Images\VerifyPerimeterTool32.png" />
+    <AddInContent Include="Images\VerifySelectionCmd16.png" />
+    <AddInContent Include="Images\VerifySelectionCmd32.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--

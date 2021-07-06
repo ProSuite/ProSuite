@@ -7,8 +7,10 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Gdb;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.QA;
@@ -29,6 +31,7 @@ namespace ProSuite.Microservices.Server.AO
 		/// <param name="gdbObjectMessages"></param>
 		/// <param name="objectClassMessages"></param>
 		/// <returns></returns>
+		[NotNull]
 		public static IList<IFeature> FromGdbObjectMsgList(
 			[NotNull] ICollection<GdbObjectMsg> gdbObjectMessages,
 			[NotNull] ICollection<ObjectClassMsg> objectClassMessages)
@@ -62,7 +65,7 @@ namespace ProSuite.Microservices.Server.AO
 			out GdbWorkspace workspace)
 		{
 			GdbTableContainer container = null;
-			int? workspaceHandle = null;
+			long? workspaceHandle = null;
 			workspace = null;
 
 			foreach (ObjectClassMsg objectClassMsg in objectClassMessages)
@@ -73,10 +76,7 @@ namespace ProSuite.Microservices.Server.AO
 
 					container = new GdbTableContainer();
 
-					workspace = new GdbWorkspace(container)
-					            {
-						            WorkspaceHandle = objectClassMsg.WorkspaceHandle
-					            };
+					workspace = new GdbWorkspace(container, workspaceHandle);
 				}
 				else
 				{
@@ -111,13 +111,46 @@ namespace ProSuite.Microservices.Server.AO
 			return container;
 		}
 
+		public static GdbWorkspace CreateGdbWorkspace(
+			[NotNull] WorkspaceMsg workspaceMessage,
+			[NotNull] IEnumerable<ObjectClassMsg> objectClassMessages)
+		{
+			var container = new GdbTableContainer();
+
+			DateTime? defaultCreationDate =
+				workspaceMessage.DefaultVersionCreationTicks == 0
+					? (DateTime?) null
+					: new DateTime(workspaceMessage.DefaultVersionCreationTicks);
+
+			var gdbWorkspace = new GdbWorkspace(container, workspaceMessage.WorkspaceHandle,
+			                                    (WorkspaceDbType) workspaceMessage.WorkspaceDbType,
+			                                    EmptyToNull(workspaceMessage.Path),
+			                                    EmptyToNull(workspaceMessage.VersionName),
+			                                    EmptyToNull(workspaceMessage.DefaultVersionName),
+			                                    EmptyToNull(
+				                                    workspaceMessage.DefaultVersionDescription),
+			                                    defaultCreationDate);
+
+			foreach (ObjectClassMsg objectClassMsg in objectClassMessages)
+			{
+				Assert.AreEqual(gdbWorkspace.WorkspaceHandle, objectClassMsg.WorkspaceHandle,
+				                "Not all object classes are from the provided workspace");
+
+				GdbTable gdbTable = FromObjectClassMsg(objectClassMsg, gdbWorkspace);
+
+				container.TryAdd(gdbTable);
+			}
+
+			return gdbWorkspace;
+		}
+
 		public static IList<GdbWorkspace> CreateSchema(
 			[NotNull] IEnumerable<ObjectClassMsg> objectClassMessages,
 			[CanBeNull] ICollection<ObjectClassMsg> relClassMessages = null,
 			Func<DataVerificationResponse, DataVerificationRequest> moreDataRequest = null)
 		{
 			var result = new List<GdbWorkspace>();
-			foreach (IGrouping<int, ObjectClassMsg> classGroup in objectClassMessages.GroupBy(
+			foreach (IGrouping<long, ObjectClassMsg> classGroup in objectClassMessages.GroupBy(
 				c => c.WorkspaceHandle))
 			{
 				GdbTableContainer gdbTableContainer =
@@ -144,6 +177,28 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
+		public static IList<GdbWorkspace> CreateSchema(
+			[NotNull] IEnumerable<ObjectClassMsg> objectClassMessages,
+			[NotNull] ICollection<WorkspaceMsg> workspaceMessages)
+		{
+			var result = new List<GdbWorkspace>();
+
+			foreach (IGrouping<long, ObjectClassMsg> classGroup in objectClassMessages.GroupBy(
+				c => c.WorkspaceHandle))
+			{
+				long workspaceHandle = classGroup.Key;
+
+				WorkspaceMsg workspaceMsg =
+					workspaceMessages.Single(wm => wm.WorkspaceHandle == workspaceHandle);
+
+				GdbWorkspace gdbWorkspace = CreateGdbWorkspace(workspaceMsg, classGroup);
+
+				result.Add(gdbWorkspace);
+			}
+
+			return result;
+		}
+
 		public static GdbTable FromObjectClassMsg(
 			[NotNull] ObjectClassMsg objectClassMsg,
 			[CanBeNull] IWorkspace workspace,
@@ -154,14 +209,14 @@ namespace ProSuite.Microservices.Server.AO
 			GdbTable result;
 			if (geometryType == esriGeometryType.esriGeometryNull)
 			{
-				result = new GdbTable(objectClassMsg.ClassHandle,
+				result = new GdbTable((int) objectClassMsg.ClassHandle,
 				                      objectClassMsg.Name, objectClassMsg.Alias,
 				                      createBackingDataset, workspace);
 			}
 			else
 			{
 				result = new GdbFeatureClass(
-					         objectClassMsg.ClassHandle,
+					         (int) objectClassMsg.ClassHandle,
 					         objectClassMsg.Name,
 					         (esriGeometryType) objectClassMsg.GeometryType,
 					         objectClassMsg.Alias,
@@ -214,7 +269,7 @@ namespace ProSuite.Microservices.Server.AO
 			[NotNull] GdbTableContainer tableContainer)
 		{
 			var featureClass =
-				(IFeatureClass) tableContainer.GetByClassId(gdbObjectMsg.ClassHandle);
+				(IFeatureClass) tableContainer.GetByClassId((int) gdbObjectMsg.ClassHandle);
 
 			GdbFeature result = CreateGdbFeature(gdbObjectMsg, featureClass);
 
@@ -232,7 +287,7 @@ namespace ProSuite.Microservices.Server.AO
 			}
 			else
 			{
-				result = new GdbRow(gdbObjectMsg.ObjectId, (IObjectClass) table);
+				result = new GdbRow((int) gdbObjectMsg.ObjectId, (IObjectClass) table);
 			}
 
 			ReadMsgValues(gdbObjectMsg, result, table);
@@ -248,7 +303,7 @@ namespace ProSuite.Microservices.Server.AO
 			IGeometry shape =
 				ProtobufGeometryUtils.FromShapeMsg(gdbObjectMsg.Shape, classSpatialRef);
 
-			var result = new GdbFeature(gdbObjectMsg.ObjectId, featureClass)
+			var result = new GdbFeature((int) gdbObjectMsg.ObjectId, featureClass)
 			             {
 				             Shape = shape
 			             };
@@ -315,6 +370,11 @@ namespace ProSuite.Microservices.Server.AO
 						throw new ArgumentOutOfRangeException();
 				}
 			}
+		}
+
+		public static string EmptyToNull(string value)
+		{
+			return string.IsNullOrEmpty(value) ? null : value;
 		}
 	}
 }

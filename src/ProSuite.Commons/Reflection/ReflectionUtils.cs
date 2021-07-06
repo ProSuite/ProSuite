@@ -420,7 +420,7 @@ namespace ProSuite.Commons.Reflection
 				return null;
 			}
 
-			if (type.IsGenericTypeDefinition)
+			if (type.IsGenericType)
 			{
 				Type genericType = type.GetGenericTypeDefinition();
 				Assert.NotNull(genericType, "generic type is null");

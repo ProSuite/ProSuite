@@ -15,16 +15,13 @@ namespace ProSuite.AGP.WorkList
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		// TODO DARO environment should be stateless. get state from module
-		[CanBeNull]
-		public string UniqueName { get; private set; }
-
 		public abstract string FileSuffix { get; }
 
 		[NotNull]
-		public async Task<IWorkList> CreateWorkListAsync([NotNull] string homeFolderPath, [NotNull] string uniqueName)
+		public async Task<IWorkList> CreateWorkListAsync([NotNull] string definitionFilePath,
+		                                                 [NotNull] string uniqueName)
 		{
-			Assert.ArgumentNotNullOrEmpty(homeFolderPath, nameof(homeFolderPath));
+			Assert.ArgumentNotNullOrEmpty(definitionFilePath, nameof(definitionFilePath));
 			Assert.ArgumentNotNullOrEmpty(uniqueName, nameof(uniqueName));
 
 			Map map = MapView.Active.Map;
@@ -34,20 +31,18 @@ namespace ProSuite.AGP.WorkList
 				return await Task.FromResult(default(IWorkList));
 			}
 
-			BasicFeatureLayer[] featureLayers = await Task.WhenAll(GetLayers(map).Select(EnsureStatusFieldCoreAsync));
+			BasicFeatureLayer[] featureLayers =
+				await Task.WhenAll(GetLayers(map).Select(EnsureStatusFieldCoreAsync));
 
-			// create new name if worklist do not have one (stored in XML)
-			//UniqueName = GetWorklistId() ?? GetWorkListName(context);
-			UniqueName = uniqueName;
+			//string path = WorkListUtils.GetUri(definitionFilePath, uniqueName, FileSuffix).LocalPath;
+			_msg.Debug($"Create work list state repository in {definitionFilePath}");
 
-			string path = WorkListUtils.GetUri(homeFolderPath, uniqueName, FileSuffix).LocalPath;
-			_msg.Debug($"Create work list state repository in {path}");
+			IRepository stateRepository = CreateStateRepositoryCore(definitionFilePath, uniqueName);
 
-			IRepository stateRepository = CreateStateRepositoryCore(path, UniqueName);
+			IWorkItemRepository repository =
+				CreateItemRepositoryCore(featureLayers, stateRepository);
 
-			IWorkItemRepository repository = CreateItemRepositoryCore(featureLayers, stateRepository);
-
-			return CreateWorkListCore(repository, UniqueName);
+			return CreateWorkListCore(repository, uniqueName);
 		}
 
 		public LayerDocument GetLayerDocument()
@@ -63,13 +58,16 @@ namespace ProSuite.AGP.WorkList
 		protected abstract IEnumerable<BasicFeatureLayer> GetLayers(Map map);
 
 		// todo daro: revise purpose of this method
-		protected abstract Task<BasicFeatureLayer> EnsureStatusFieldCoreAsync(BasicFeatureLayer featureLayer);
+		protected abstract Task<BasicFeatureLayer> EnsureStatusFieldCoreAsync(
+			BasicFeatureLayer featureLayer);
 
-		protected abstract IWorkList CreateWorkListCore(IWorkItemRepository repository, string name);
+		protected abstract IWorkList
+			CreateWorkListCore(IWorkItemRepository repository, string name);
 
 		protected abstract IRepository CreateStateRepositoryCore(string path, string workListName);
 
-		protected abstract IWorkItemRepository CreateItemRepositoryCore(IEnumerable<BasicFeatureLayer> featureLayers, IRepository stateRepository);
+		protected abstract IWorkItemRepository CreateItemRepositoryCore(
+			IEnumerable<BasicFeatureLayer> featureLayers, IRepository stateRepository);
 
 		protected abstract LayerDocument GetLayerDocumentCore();
 

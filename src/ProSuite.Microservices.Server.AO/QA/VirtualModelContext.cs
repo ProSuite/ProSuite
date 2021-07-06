@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -140,6 +143,21 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 		public IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset)
 		{
+			throw new NotImplementedException();
+		}
+
+		public TerrainReference OpenTerrainReference(ISimpleTerrainDataset dataset)
+		{
+			IList<SimpleTerrainDataSource> terrainSources =
+				ModelElementUtils.GetTerrainDataSources(dataset, OpenObjectClass);
+
+			return new SimpleTerrain(dataset.Name, terrainSources, dataset.PointDensity, null);
+		}
+
+		public SimpleRasterMosaic OpenSimpleRasterMosaic(ISimpleRasterMosaicDataset dataset)
+		{
+			// TODO: Just send the catalog & boundary feature class, assuming the raster paths
+			//       are accessible from anywhere
 			throw new NotImplementedException();
 		}
 

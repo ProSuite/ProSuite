@@ -6,6 +6,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -42,6 +43,48 @@ namespace ProSuite.AGP.Editing
 			MapPoint sketchPoint = CreatePointFromSketchPolygon(sketchGeometry);
 
 			return BufferGeometryByPixels(sketchPoint, selectionTolerancePixels);
+		}
+
+		public static Geometry SketchToSearchGeometry(Geometry sketch, int selectionTolerancePixels,
+		                                              out bool isSinglePick)
+		{
+			isSinglePick = IsSingleClickSketch(sketch);
+
+			if (isSinglePick)
+			{
+				sketch = GetSinglePickSelectionArea(
+					sketch, selectionTolerancePixels);
+			}
+
+			return sketch;
+		}
+
+		/// <summary>
+		/// Determines if the provided sketch selects the specified derived geometry.
+		/// </summary>
+		/// <param name="sketch">The sketch geometry to be used as test geometry.
+		/// In case of a single point make sure it has been buffered by the search tolerance.</param>
+		/// <param name="derivedGeometry"></param>
+		/// <param name="singlePick">For single pick, the derived geometry only needs to intersect
+		/// to be considered selected. Otherwise, the derived geometry must be fully contained in
+		/// the sketch.</param>
+		/// <returns></returns>
+		public static bool IsSelected([NotNull] Geometry sketch,
+		                              [NotNull] Geometry derivedGeometry,
+		                              bool singlePick)
+		{
+			if (GeometryUtils.Disjoint(sketch, derivedGeometry))
+			{
+				return false;
+			}
+
+			if (singlePick)
+			{
+				// Any intersection is enough:
+				return true;
+			}
+
+			return GeometryUtils.Contains(sketch, derivedGeometry);
 		}
 
 		private static MapPoint CreatePointFromSketchPolygon(Geometry sketchGeometry)

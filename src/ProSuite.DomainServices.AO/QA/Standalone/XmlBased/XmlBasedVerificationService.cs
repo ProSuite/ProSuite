@@ -59,8 +59,12 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			ITrackCancel cancelTracker = null)
 		{
 			IList<XmlQualitySpecification> qualitySpecifications;
-			XmlDataQualityDocument document = ReadXmlDocument(dataQualityXml,
-			                                                  out qualitySpecifications);
+			XmlDataQualityDocument document;
+			using (TextReader xmlReader = new StringReader(dataQualityXml))
+			{
+				document = XmlDataQualityUtils.ReadXmlDocument(xmlReader,
+				                                               out qualitySpecifications);
+			}
 
 			_msg.DebugFormat("Available specifications: {0}",
 			                 StringUtils.Concatenate(qualitySpecifications.Select(s => s.Name),
@@ -70,6 +74,17 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				StringUtils.IsNotEmpty(optionsXml)
 					? VerificationOptionUtils.ReadOptionsXml(optionsXml)
 					: null;
+
+			string issueWorkspaceName =
+				VerificationOptionUtils.GetIssueWorkspaceName(verificationOptions);
+
+			if (ExternalIssueRepositoryUtils.IssueRepositoryExists(
+				outputDirectoryPath, issueWorkspaceName, issueRepositoryType))
+			{
+				_msg.WarnFormat("The {0} workspace '{1}' in {2} already exists",
+				                issueRepositoryType, issueWorkspaceName, outputDirectoryPath);
+				return;
+			}
 
 			IList<KeyValuePair<string, string>> properties =
 				new List<KeyValuePair<string, string>>();
@@ -101,37 +116,12 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				StandaloneVerificationUtils.TryDeleteOutputDirectory(outputDirectoryPath);
 				throw;
 			}
-
 		}
 
-		[NotNull]
-		private static XmlDataQualityDocument ReadXmlDocument(
-			[NotNull] string xml,
-			[NotNull] out IList<XmlQualitySpecification> qualitySpecifications)
-		{
-			Assert.ArgumentNotNullOrEmpty(xml, nameof(xml));
-
-			XmlDataQualityDocument document = XmlDataQualityUtils.DeserializeXml(xml);
-
-			Assert.ArgumentCondition(document.GetAllQualitySpecifications().Any(),
-			                         "The document does not contain any quality specifications");
-
-			XmlDataQualityUtils.AssertUniqueQualitySpecificationNames(document);
-			XmlDataQualityUtils.AssertUniqueQualityConditionNames(document);
-			XmlDataQualityUtils.AssertUniqueTestDescriptorNames(document);
-
-			qualitySpecifications = document.GetAllQualitySpecifications()
-			                                .Select(p => p.Key)
-			                                .Where(qs => qs.Elements.Count > 0)
-			                                .ToList();
-
-			return document;
-		}
-		
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		private bool Verify([NotNull] XmlDataQualityDocument document,
 		                    [NotNull] string specificationName,
-							[NotNull] IEnumerable<DataSource> dataSources,
+		                    [NotNull] IEnumerable<DataSource> dataSources,
 		                    double tileSize,
 		                    [NotNull] string directoryPath,
 		                    IssueRepositoryType issureRepositoryType,
@@ -160,7 +150,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 						new XmlBasedQualitySpecificationFactory(modelFactory, datasetOpener);
 
 					qualitySpecification = factory.CreateQualitySpecification(
-						document, specificationName, dataSources, ignoreConditionsForUnknownDatasets);
+						document, specificationName, dataSources,
+						ignoreConditionsForUnknownDatasets);
 				}
 
 				return Verify(qualitySpecification, tileSize, directoryPath,

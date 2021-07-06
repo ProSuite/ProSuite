@@ -18,7 +18,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 	{
 		private readonly string _templateLayer = "Selection Work List.lyrx";
 
-		public override string FileSuffix => ".xml.swl";
+		public override string FileSuffix => ".swl";
 
 		protected override IEnumerable<BasicFeatureLayer> GetLayers(Map map)
 		{
@@ -42,7 +42,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return new XmlWorkItemStateRepository(path, workListName, type);
 		}
 
-		protected override IWorkItemRepository CreateItemRepositoryCore(IEnumerable<BasicFeatureLayer> featureLayers, IRepository stateRepository)
+		protected override IWorkItemRepository CreateItemRepositoryCore(
+			IEnumerable<BasicFeatureLayer> featureLayers, IRepository stateRepository)
 		{
 			List<BasicFeatureLayer> layers = featureLayers.ToList();
 

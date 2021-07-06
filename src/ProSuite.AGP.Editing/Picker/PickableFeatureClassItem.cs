@@ -14,10 +14,10 @@ namespace ProSuite.AGP.Editing.Picker
 {
 	public class PickableFeatureClassItem : IPickableItem
 	{
-		private string _itemText;
+		private readonly string _itemText;
 		private bool _isSelected;
 		[CanBeNull] private Geometry _geometry;
-		private Uri _itemImageUri;
+		private readonly Uri _itemImageUri;
 		private List<FeatureLayer> _belongingFeatureLayers;
 		private BitmapImage _img = null;
 
@@ -45,8 +45,6 @@ namespace ProSuite.AGP.Editing.Picker
 			set => _geometry = value;
 		}
 
-		
-
 		public ImageSource ItemImageSource
 		{
 			get
@@ -55,6 +53,7 @@ namespace ProSuite.AGP.Editing.Picker
 				{
 					_img = new BitmapImage(_itemImageUri);
 				}
+
 				return _img;
 			}
 		}
@@ -83,13 +82,16 @@ namespace ProSuite.AGP.Editing.Picker
 					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/LineGeometry.bmp");
 			}
 
-			if (geometryType == esriGeometryType.esriGeometryPolygon || geometryType == esriGeometryType.esriGeometryMultiPatch)
+			if (geometryType == esriGeometryType.esriGeometryPolygon ||
+			    geometryType == esriGeometryType.esriGeometryMultiPatch)
 			{
 				return new Uri(
-					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PolygonGeometry.bmp",UriKind.Absolute);
+					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PolygonGeometry.bmp",
+					UriKind.Absolute);
 			}
 
-			return new Uri(@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PointGeometry.bmp");
+			return new Uri(
+				@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PointGeometry.bmp");
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;

@@ -66,7 +66,19 @@
       <DependentUpon>DatasetCatalogControl.cs</DependentUpon>
     </Compile>
     <Compile Include="DataModel\DatasetTypeImageLookup.cs" />
+    <Compile Include="DataModel\ResourceLookup\AssociationEndImageLookup.cs" />
+    <Compile Include="DataModel\ResourceLookup\AssociationImageLookup.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\AssociationEndImages.Designer.cs">
+      <DependentUpon>AssociationEndImages.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="Properties\AssociationImages.Designer.cs">
+      <DependentUpon>AssociationImages.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
     <Compile Include="Properties\DatasetTypeImages.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -76,6 +88,16 @@
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
+    </Compile>
+    <Compile Include="Properties\QualitySpecificationImages.Designer.cs">
+      <DependentUpon>QualitySpecificationImages.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Compile Include="Properties\QualityVerificationImages.Designer.cs">
+      <DependentUpon>QualityVerificationImages.resx</DependentUpon>
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -107,6 +129,8 @@
     </Compile>
     <Compile Include="QA\ParameterValueListItem.cs" />
     <Compile Include="QA\QualityConditionType.cs" />
+    <Compile Include="QA\ResourceLookup\QualitySpecificationImageLookup.cs" />
+    <Compile Include="QA\ResourceLookup\QualityVerificationImageLookup.cs" />
     <Compile Include="QA\ResourceLookup\TestTypeImageLookup.cs" />
     <Compile Include="QA\VerificationProgress\BackgroundVerificationUtils.cs" />
     <Compile Include="QA\VerificationProgress\UpdateIssuesOptionsControl.xaml.cs">
@@ -209,6 +233,16 @@
       <DependentUpon>DatasetCatalogControl.cs</DependentUpon>
       <SubType>Designer</SubType>
     </EmbeddedResource>
+    <EmbeddedResource Include="Properties\AssociationEndImages.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>AssociationEndImages.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\AssociationImages.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>AssociationImages.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Properties\DatasetTypeImages.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>DatasetTypeImages.Designer.cs</LastGenOutput>
@@ -217,6 +251,14 @@
     <EmbeddedResource Include="Properties\LocalizableStrings.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>LocalizableStrings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\QualitySpecificationImages.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>QualitySpecificationImages.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\QualityVerificationImages.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>QualityVerificationImages.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -269,6 +311,19 @@
     <Content Include="Properties\DatasetTypeImages\DatasetTypeTerrain.png" />
     <Content Include="Properties\DatasetTypeImages\DatasetTypeTopology.png" />
     <Content Include="Properties\DatasetTypeImages\DatasetTypeUnknown.png" />
+    <Content Include="Properties\Images\AssociationDeleted.gif" />
+    <Content Include="Properties\Images\AssociationEndDeleted.gif" />
+    <Content Include="Properties\Images\AssociationEndManyToMany1.gif" />
+    <Content Include="Properties\Images\AssociationEndManyToMany2.gif" />
+    <Content Include="Properties\Images\AssociationEndManyToOne.gif" />
+    <Content Include="Properties\Images\AssociationEndOneToMany.gif" />
+    <Content Include="Properties\Images\AssociationEndOneToOneFK.gif" />
+    <Content Include="Properties\Images\AssociationEndOneToOnePK.gif" />
+    <Content Include="Properties\Images\AssociationEndUnknown.gif" />
+    <Content Include="Properties\Images\AssociationManyToMany.gif" />
+    <Content Include="Properties\Images\AssociationManyToOne.gif" />
+    <Content Include="Properties\Images\AssociationOneToOne.gif" />
+    <Content Include="Properties\Images\AssociationUnknown.gif" />
     <Content Include="Properties\Images\DatasetCategory.png" />
     <Content Include="Properties\Images\DatasetCategorySelected.png" />
     <Content Include="Properties\Images\Empty.bmp" />
@@ -279,6 +334,11 @@
     <Content Include="Properties\Images\Half.bmp" />
     <Resource Include="Properties\Images\NavigateErrorsCmd.png" />
     <Content Include="Properties\Images\OK.png" />
+    <Content Include="Properties\Images\QualitySpecification.png" />
+    <Content Include="Properties\Images\QualitySpecificationHidden.png" />
+    <Content Include="Properties\Images\QualityVerificationFulfilledNoIssues.gif" />
+    <Content Include="Properties\Images\QualityVerificationFulfilledWarnings.gif" />
+    <Content Include="Properties\Images\QualityVerificationNotFulfilled.gif" />
     <Content Include="Properties\Images\Warning.png" />
     <Resource Include="Properties\Images\ZoomToVerifiedCmd.png" />
     <Content Include="Properties\TestTypeImages\Prohibition.png" />

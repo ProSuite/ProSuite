@@ -8,7 +8,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geom;
 
 namespace ProSuite.QA.Tests.Coincidence
 {

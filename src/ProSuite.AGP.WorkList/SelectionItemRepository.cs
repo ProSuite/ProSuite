@@ -1,9 +1,10 @@
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence;
+using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.Assertions;
 
@@ -17,12 +18,14 @@ namespace ProSuite.AGP.WorkList
 		// todo daro: rafactor SelectionItemRepository(Dictionary<IWorkspaceContext, GdbTableIdentity>, Dictionary<GdbTableIdentity, List<long>>)
 		public SelectionItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase,
 		                               Dictionary<Table, List<long>> selection,
-		                               IRepository stateRepository) : base(tablesByGeodatabase, stateRepository)
+		                               IRepository stateRepository) : base(
+			tablesByGeodatabase, stateRepository)
 		{
 			foreach (var pair in selection)
 			{
 				var id = new GdbTableIdentity(pair.Key);
-				ISourceClass sourceClass = GeodatabaseBySourceClasses.Keys.FirstOrDefault(s => s.Uses(id));
+				ISourceClass sourceClass =
+					GeodatabaseBySourceClasses.Keys.FirstOrDefault(s => s.Uses(id));
 
 				if (sourceClass == null)
 				{
@@ -58,14 +61,15 @@ namespace ProSuite.AGP.WorkList
 			return new SelectionSourceClass(identity);
 		}
 
-		protected override IEnumerable<Row> GetRowsCore(ISourceClass sourceClass, QueryFilter filter, bool recycle)
+		protected override IEnumerable<Row> GetRowsCore(ISourceClass sourceClass,
+		                                                QueryFilter filter, bool recycle)
 		{
 			Assert.True(_oidsBySource.TryGetValue(sourceClass, out List<long> oids),
 			            "unexpected source class");
 
 			if (filter == null)
 			{
-				filter = new QueryFilter { ObjectIDs = new ReadOnlyCollection<long>(oids) };
+				filter = new QueryFilter {ObjectIDs = oids};
 			}
 
 			if (filter is SpatialQueryFilter spatialFilter)
@@ -74,6 +78,16 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			return base.GetRowsCore(sourceClass, filter, recycle);
+		}
+
+		protected override async Task SetStatusCoreAsync(IWorkItem item, ISourceClass source)
+		{
+			await Task.Run(() => WorkItemStateRepository.Update(item));
+		}
+
+		protected override void UpdateStateRepositoryCore(string path)
+		{
+			((XmlWorkItemStateRepository) WorkItemStateRepository).FilePath = path;
 		}
 	}
 }

@@ -19,7 +19,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			[CanBeNull] IEnumerable<IFeature> unallowedOverlapGeometries,
 			bool useMinimalTolerance)
 		{
-			_allowedExtents = allowedExtents;
+			// Set allowed extents only if there are any. Otherwise everything will be filtered.
+			_allowedExtents = allowedExtents?.Count > 0 ? allowedExtents : null;
 
 			if (unallowedOverlapGeometries != null)
 			{

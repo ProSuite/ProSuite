@@ -14,7 +14,6 @@ using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
-using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
@@ -68,19 +67,6 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			_msg.Info(LocalizableStrings.RemoveOverlapsTool_LogPromptForSelection);
 		}
 
-		protected override bool CanUseSelection(IEnumerable<Feature> selectedFeatures)
-		{
-			IEnumerable<FeatureClass> featureClasses =
-				selectedFeatures.Select(f => f.GetTable()).Distinct();
-
-			return featureClasses.Any(fc =>
-			{
-				GeometryType geometryType = fc.GetDefinition().GetShapeType();
-
-				return CanSelectGeometryType(geometryType);
-			});
-		}
-
 		protected override bool CanSelectGeometryType(GeometryType geometryType)
 		{
 			return geometryType == GeometryType.Polyline ||
@@ -91,8 +77,6 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		protected override void CalculateDerivedGeometries(IList<Feature> selectedFeatures,
 		                                                   CancelableProgressor progressor)
 		{
-			selectedFeatures = GetApplicableSelectedFeatures(selectedFeatures).ToList();
-
 			IList<Feature> overlappingFeatures =
 				GetOverlappingFeatures(selectedFeatures, progressor);
 
@@ -111,7 +95,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			}
 
 			// TODO: Options
-			bool insertVerticesInTarget = false;
+			bool insertVerticesInTarget = true;
 			_overlappingFeatures = insertVerticesInTarget
 				                       ? overlappingFeatures
 				                       : null;
@@ -148,8 +132,21 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			var updates = new Dictionary<Feature, Geometry>();
 			var inserts = new Dictionary<Feature, IList<Geometry>>();
 
-			foreach (var resultPerFeature in result.ResultsByFeature)
+			HashSet<long> editableClassHandles =
+				MapUtils.GetLayers<BasicFeatureLayer>(MapView.Active, bfl => bfl.IsEditable)
+				        .Select(l => l.GetTable().Handle.ToInt64()).ToHashSet();
+
+			foreach (OverlapResultGeometries resultPerFeature in result.ResultsByFeature)
 			{
+				if (! GdbPersistenceUtils.CanChange(resultPerFeature.OriginalFeature,
+				                                    editableClassHandles, out string warning))
+				{
+					_msg.WarnFormat("{0}: {1}",
+					                GdbObjectUtils.ToString(resultPerFeature.OriginalFeature),
+					                warning);
+					continue;
+				}
+
 				updates.Add(resultPerFeature.OriginalFeature, resultPerFeature.UpdatedGeometry);
 
 				if (resultPerFeature.InsertGeometries.Count > 0)
@@ -159,9 +156,24 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				}
 			}
 
+			if (result.TargetFeaturesToUpdate != null)
+			{
+				foreach (KeyValuePair<Feature, Geometry> kvp in result.TargetFeaturesToUpdate)
+				{
+					if (! GdbPersistenceUtils.CanChange(kvp.Key,
+					                                    editableClassHandles, out string warning))
+					{
+						_msg.WarnFormat("{0}: {1}", GdbObjectUtils.ToString(kvp.Key), warning);
+						continue;
+					}
+
+					updates.Add(kvp.Key, kvp.Value);
+				}
+			}
+
 			bool saved = GdbPersistenceUtils.SaveInOperation("Remove overlaps", updates, inserts);
 
-			var currentSelection = SelectionUtils.GetSelectedFeatures(MapView.Active).ToList();
+			var currentSelection = GetApplicableSelectedFeatures(MapView.Active).ToList();
 
 			CalculateDerivedGeometries(currentSelection, progressor);
 
@@ -215,10 +227,10 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			if (IsInSelectionPhase())
 			{
-				var selectedFeatures = MapUtils.GetFeatures(e.Selection).ToList();
-
-				if (CanUseSelection(selectedFeatures))
+				if (CanUseSelection(e.Selection))
 				{
+					var selectedFeatures = GetApplicableSelectedFeatures(e.Selection).ToList();
+
 					AfterSelection(selectedFeatures, progressor);
 
 					var sketch = GetCurrentSketchAsync().Result;
@@ -245,7 +257,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 		                                   IList<Feature> overlappingFeatures,
 		                                   CancelableProgressor progressor)
 		{
-			Overlaps overlaps = null;
+			Overlaps overlaps;
 
 			CancellationToken cancellationToken;
 
@@ -273,52 +285,30 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			return overlaps;
 		}
 
-		private static Overlaps SelectOverlaps(Overlaps overlaps, Geometry sketch)
+		private Overlaps SelectOverlaps(Overlaps overlaps, Geometry sketch)
 		{
 			if (overlaps == null)
 			{
 				return new Overlaps();
 			}
 
-			int selectionTolerancePixels = 3;
+			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(),
+			                                          out bool singlePick);
 
-			bool singlePick = ToolUtils.IsSingleClickSketch(sketch);
-
-			if (singlePick)
-			{
-				sketch = ToolUtils.GetSinglePickSelectionArea(sketch, selectionTolerancePixels);
-			}
-
+			// in case of single pick the line has priority...
 			Overlaps result = overlaps.SelectNewOverlaps(
 				o => o.GeometryType == GeometryType.Polyline &&
-				     IsOverlapSelected(sketch, o, singlePick));
+				     ToolUtils.IsSelected(sketch, o, singlePick));
 
-			// in case of single pick the line has priority
+			// ... over the polygon
 			if (! result.HasOverlaps() || ! singlePick)
 			{
 				result.AddGeometries(overlaps,
 				                     g => g.GeometryType == GeometryType.Polygon &&
-				                          IsOverlapSelected(sketch, g, singlePick));
+				                          ToolUtils.IsSelected(sketch, g, singlePick));
 			}
 
 			return result;
-		}
-
-		private static bool IsOverlapSelected(Geometry sketch, Geometry overlapGeometry,
-		                                      bool singlePick)
-		{
-			if (GeometryUtils.Disjoint(sketch, overlapGeometry))
-			{
-				return false;
-			}
-
-			if (singlePick)
-			{
-				// Any intersection is enough:
-				return true;
-			}
-
-			return GeometryUtils.Contains(sketch, overlapGeometry);
 		}
 
 		#region Search target features

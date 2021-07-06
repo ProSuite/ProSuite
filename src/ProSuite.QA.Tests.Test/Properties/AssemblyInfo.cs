@@ -1,5 +1,4 @@
-using System;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading;
 using NUnit.Framework;
@@ -13,7 +12,7 @@ using NUnit.Framework;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Esri Schweiz AG")]
 [assembly: AssemblyProduct("ProSuite.QA.Tests.Test")]
-[assembly: AssemblyCopyright("Copyright © Esri Schweiz AG")]
+[assembly: AssemblyCopyright("Copyright Â© Esri Schweiz AG")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

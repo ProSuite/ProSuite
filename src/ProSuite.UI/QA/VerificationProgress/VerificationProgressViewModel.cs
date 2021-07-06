@@ -10,13 +10,13 @@ using System.Windows.Media;
 using ProSuite.Commons;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.UI.Dialogs;
 using ProSuite.Commons.UI.WPF;
-using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
+using ProSuite.Microservices.Client.QA;
 
 namespace ProSuite.UI.QA.VerificationProgress
 {
@@ -56,6 +56,13 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 		private RelayCommand<VerificationProgressViewModel> _flashProgressCmd;
 		private bool _issueOptionsEnabled;
+		private string _showReportToolTip;
+		private string _saveErrorsToolTip;
+		private string _flashProgressToolTip;
+		private ICommand _zoomToPerimeterCommand;
+		private string _zoomToVerifiedPerimeterToolTip;
+		private ICommand _openWorkListCommand;
+		private string _openWorkListToolTip;
 
 		#endregion
 
@@ -82,20 +89,10 @@ namespace ProSuite.UI.QA.VerificationProgress
 		public Func<Task<ServiceCallStatus>> VerificationAction { get; set; }
 
 		/// <summary>
-		/// Action to be called when the 'Show report' button is clicked.
+		/// The gateway into application-specific actions, such as flashing the current progress,
+		/// saving or showing the report.
 		/// </summary>
-		[CanBeNull]
-		public Action<QualityVerification> ShowReportAction { get; set; }
-
-		[CanBeNull]
-		public Action<IQualityVerificationResult, ErrorDeletionInPerimeter, bool> SaveAction
-		{
-			get;
-			set;
-		}
-
-		[CanBeNull]
-		public Action<IList<EnvelopeXY>> FlashProgressAction { get; set; }
+		public IApplicationBackgroundVerificationController ApplicationController { get; set; }
 
 		#endregion
 
@@ -338,6 +335,8 @@ namespace ProSuite.UI.QA.VerificationProgress
 
 		#endregion
 
+		#region Buttons
+
 		/// <summary>
 		/// The action that closes the host window.
 		/// </summary>
@@ -382,6 +381,25 @@ namespace ProSuite.UI.QA.VerificationProgress
 			}
 		}
 
+		public string SaveErrorsToolTip
+		{
+			get
+			{
+				if (string.IsNullOrEmpty(_saveErrorsToolTip))
+				{
+					ApplicationController?.CanSaveIssues(VerificationResult,
+					                                     out _saveErrorsToolTip);
+				}
+
+				return _saveErrorsToolTip;
+			}
+			set
+			{
+				_saveErrorsToolTip = value;
+				OnPropertyChanged();
+			}
+		}
+
 		public ICommand ShowReportCommand
 		{
 			get
@@ -391,20 +409,82 @@ namespace ProSuite.UI.QA.VerificationProgress
 					_showReportCommand =
 						new RelayCommand<VerificationProgressViewModel>(
 							vm => ShowReport(),
-							vm =>
-								CanShowReport());
+							vm => CanShowReport());
 				}
 
 				return _showReportCommand;
 			}
 		}
 
-		private IQualityVerificationResult VerificationResult =>
-			ProgressTracker.QualityVerificationResult;
+		public string ShowReportToolTip
+		{
+			get
+			{
+				if (string.IsNullOrEmpty(_showReportToolTip))
+				{
+					ApplicationController?.CanShowReport(ProgressTracker.RemoteCallStatus,
+					                                     VerificationResult,
+					                                     out _showReportToolTip);
+				}
 
-		public ICommand OpenWorkListCommand { get; set; }
+				return _showReportToolTip;
+			}
+			set
+			{
+				_showReportToolTip = value;
+				OnPropertyChanged();
+			}
+		}
 
-		public ICommand ZoomToPerimeterCommand { get; set; }
+		public ICommand OpenWorkListCommand
+		{
+			get
+			{
+				if (_openWorkListCommand == null)
+				{
+					_openWorkListCommand = new RelayCommand<VerificationProgressViewModel>(
+						vm => ApplicationController.OpenWorkList(VerificationResult),
+						vm => CanOpenWorkList());
+				}
+
+				return _openWorkListCommand;
+			}
+		}
+
+		public string OpenWorkListToolTip
+		{
+			get => _openWorkListToolTip;
+			set
+			{
+				_openWorkListToolTip = value;
+				OnPropertyChanged();
+			}
+		}
+
+		public ICommand ZoomToPerimeterCommand
+		{
+			get
+			{
+				if (_zoomToPerimeterCommand == null)
+				{
+					_zoomToPerimeterCommand = new RelayCommand<VerificationProgressViewModel>(
+						vm => ApplicationController.ZoomToVerifiedPerimeter(),
+						vm => CanZoomToPerimeter());
+				}
+
+				return _zoomToPerimeterCommand;
+			}
+		}
+
+		public string ZoomToVerifiedPerimeterToolTip
+		{
+			get => _zoomToVerifiedPerimeterToolTip;
+			set
+			{
+				_zoomToVerifiedPerimeterToolTip = value;
+				OnPropertyChanged();
+			}
+		}
 
 		public ICommand FlashProgressCommand
 		{
@@ -413,14 +493,28 @@ namespace ProSuite.UI.QA.VerificationProgress
 				if (_flashProgressCmd == null)
 				{
 					_flashProgressCmd = new RelayCommand<VerificationProgressViewModel>(
-						(vm) => FlashProgressAction?.Invoke(_allTiles),
-						(vm) => FlashProgressAction != null && _allTiles.Count > 0 &&
-						        ProgressTracker.RemoteCallStatus == ServiceCallStatus.Running);
+						FlashProgress, (vm) => CanFlash());
 				}
 
 				return _flashProgressCmd;
 			}
 		}
+
+		public string FlashProgressToolTip
+		{
+			get => _flashProgressToolTip;
+			set
+			{
+				_flashProgressToolTip = value;
+				OnPropertyChanged();
+			}
+		}
+
+		#endregion
+
+		[NotNull]
+		private IQualityVerificationResult VerificationResult =>
+			Assert.NotNull(ProgressTracker.QualityVerificationResult);
 
 		public async Task<ServiceCallStatus> RunBackgroundVerificationAsync()
 		{
@@ -511,6 +605,52 @@ namespace ProSuite.UI.QA.VerificationProgress
 			}
 		}
 
+		private bool CanFlash()
+		{
+			string reason = null;
+			bool canFlash = ApplicationController?.CanFlashProgress(
+				                ProgressTracker.RemoteCallStatus, _allTiles,
+				                out reason) == true;
+
+			FlashProgressToolTip = reason ?? "Show the tile verification progress";
+
+			return canFlash;
+		}
+
+		private void FlashProgress(VerificationProgressViewModel viewModel)
+		{
+			Try(nameof(FlashProgress),
+			    () =>
+			    {
+				    ApplicationController?.FlashProgress(
+					    _allTiles, ProgressTracker.RemoteCallStatus);
+			    });
+		}
+
+		private bool CanZoomToPerimeter()
+		{
+			string reason = null;
+
+			bool result = ApplicationController?.CanZoomToVerifiedPerimeter(out reason) ?? false;
+
+			ZoomToVerifiedPerimeterToolTip = reason ?? "Zoom to the verification perimeter";
+
+			return result;
+		}
+
+		private bool CanOpenWorkList()
+		{
+			string reason = null;
+
+			bool result =
+				ApplicationController?.CanOpenWorkList(ProgressTracker.RemoteCallStatus,
+				                                       VerificationResult, out reason) ?? false;
+
+			OpenWorkListToolTip = reason;
+
+			return result;
+		}
+
 		private void CancelOrClose()
 		{
 			Try(nameof(CancelOrClose),
@@ -547,10 +687,21 @@ namespace ProSuite.UI.QA.VerificationProgress
 					    ProgressTracker?.RemoteCallStatus == ServiceCallStatus.Finished ||
 					    ProgressTracker?.RemoteCallStatus == ServiceCallStatus.Failed;
 
-				    result = saveableStatus &&
-				             SaveAction != null &&
-				             VerificationResult != null &&
-				             VerificationResult.CanSaveIssues;
+				    if (! saveableStatus)
+				    {
+					    SaveErrorsToolTip = "Save found issues once the verification is finished";
+					    result = false;
+				    }
+				    else
+				    {
+					    string reason = null;
+					    result = VerificationResult != null &&
+					             ApplicationController != null &&
+					             ApplicationController.CanSaveIssues(
+						             VerificationResult, out reason);
+
+					    SaveErrorsToolTip = reason;
+				    }
 
 				    IssueOptionsEnabled = result;
 			    });
@@ -563,22 +714,16 @@ namespace ProSuite.UI.QA.VerificationProgress
 			Try(nameof(SaveIssues),
 			    () =>
 			    {
-				    SaveAction?.Invoke(VerificationResult, UpdateOptions.ErrorDeletionType,
-				                       ! UpdateOptions.KeepPreviousIssues);
-
-				    // Once saved, the button should be disabled
-				    SaveAction = null;
+				    ApplicationController?.SaveIssues(VerificationResult,
+				                                      UpdateOptions.ErrorDeletionType,
+				                                      ! UpdateOptions.KeepPreviousIssues);
 			    });
 		}
 
 		private void ShowReport()
 		{
 			Try(nameof(ShowReport),
-			    () =>
-			    {
-				    Assert.NotNull(ShowReportAction, "ShowReportAction not set.");
-				    ShowReportAction(VerificationResult.GetQualityVerification());
-			    });
+			    () => { ApplicationController?.ShowReport(VerificationResult); });
 		}
 
 		private bool CanShowReport()
@@ -588,9 +733,14 @@ namespace ProSuite.UI.QA.VerificationProgress
 			Try(nameof(CanShowReport),
 			    () =>
 			    {
-				    result = ShowReportAction != null &&
+				    string reason = null;
+
+				    result = ApplicationController != null &&
 				             VerificationResult != null &&
-				             VerificationResult.HasQualityVerification();
+				             ApplicationController.CanShowReport(
+					             ProgressTracker.RemoteCallStatus, VerificationResult, out reason);
+
+				    ShowReportToolTip = reason;
 			    });
 
 			return result;
@@ -659,6 +809,15 @@ namespace ProSuite.UI.QA.VerificationProgress
 					if (ProgressTracker.CurrentTile != null)
 					{
 						CurrentTile = ProgressTracker.CurrentTile;
+
+						// Trigger the flash command's CanExecuteChanged:
+						_flashProgressCmd?.RaiseCanExecuteChanged();
+
+						//Application.Current.Dispatcher.BeginInvoke(
+						//	new Action(delegate
+						//	{
+						//		CommandManager.InvalidateRequerySuggested();
+						//	}));
 					}
 
 					break;
