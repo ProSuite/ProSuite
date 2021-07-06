@@ -10,9 +10,11 @@ using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Gdb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Microservices.Definitions.QA.Test;
+using ProSuite.Microservices.Definitions.Shared;
 
 namespace ProSuite.Microservices.Server.AO.QualityTestService
 {
@@ -110,9 +112,10 @@ namespace ProSuite.Microservices.Server.AO.QualityTestService
 			}
 		}
 
-		protected IDictionary<ITable, TestDatasetMsg> FromTestDatasetMsgs(ExecuteTestRequest request)
+		protected IDictionary<ITable, TestDatasetMsg> FromTestDatasetMsgs(
+			ExecuteTestRequest request)
 		{
-			IDictionary<int, IWorkspace> workspaces = new Dictionary<int, IWorkspace>();
+			IDictionary<long, IWorkspace> workspaces = new Dictionary<long, IWorkspace>();
 
 			foreach (WorkspaceMsg workspaceMsg in request.Workspaces)
 			{
@@ -121,7 +124,7 @@ namespace ProSuite.Microservices.Server.AO.QualityTestService
 				IPropertySet propertySet = PropertySetUtils.GetPropertySet(dictionary);
 
 				IWorkspaceFactory workspaceFactory =
-					GetWorkspaceFactory(workspaceMsg.WorkspaceType);
+					GetWorkspaceFactory((WorkspaceDbType) workspaceMsg.WorkspaceDbType);
 
 				IWorkspace workspace =
 					WorkspaceUtils.OpenWorkspace(workspaceFactory, propertySet, 0);
@@ -133,39 +136,40 @@ namespace ProSuite.Microservices.Server.AO.QualityTestService
 
 			foreach (TestDatasetMsg involvedDatasetMsg in request.InvolvedTables)
 			{
-				int workspaceIndex = involvedDatasetMsg.ClassDefinition.WorkspaceHandle;
+				long workspaceIndex = involvedDatasetMsg.ClassDefinition.WorkspaceHandle;
 
 				IFeatureWorkspace featureWorkspace = (IFeatureWorkspace) workspaces[workspaceIndex];
 
 				ITable table = featureWorkspace.OpenTable(involvedDatasetMsg.ClassDefinition.Name);
-				
+
 				result.Add(table, involvedDatasetMsg);
 			}
 
 			return result;
 		}
 
-		private static IWorkspaceFactory GetWorkspaceFactory(
-			WorkspaceMsg.Types.WorkspaceType workspaceType)
+		private static IWorkspaceFactory GetWorkspaceFactory(WorkspaceDbType workspaceType)
 		{
-			if (workspaceType == WorkspaceMsg.Types.WorkspaceType.FileGeodatabase)
+			if (workspaceType == WorkspaceDbType.FileGeodatabase)
 			{
 				return WorkspaceUtils.GetFileGdbWorkspaceFactory();
 			}
 
-			if (workspaceType == WorkspaceMsg.Types.WorkspaceType.SdeGeodatabase)
-			{
-				return WorkspaceUtils.GetSdeWorkspaceFactory();
-			}
-
-			if (workspaceType == WorkspaceMsg.Types.WorkspaceType.ShapefileWorkspace)
+			if (workspaceType == WorkspaceDbType.FileSystem)
 			{
 				return WorkspaceUtils.GetShapefileWorkspaceFactory();
 			}
 
-			if (workspaceType == WorkspaceMsg.Types.WorkspaceType.PersonalGeodatabase)
+			if (workspaceType == WorkspaceDbType.PersonalGeodatabase)
 			{
 				return WorkspaceUtils.GetAccessWorkspaceFactory();
+			}
+
+			var esriWorkspaceType = WorkspaceUtils.ToEsriWorkspaceType(workspaceType);
+
+			if (esriWorkspaceType == esriWorkspaceType.esriRemoteDatabaseWorkspace)
+			{
+				return WorkspaceUtils.GetSdeWorkspaceFactory();
 			}
 
 			throw new ArgumentOutOfRangeException(nameof(workspaceType));

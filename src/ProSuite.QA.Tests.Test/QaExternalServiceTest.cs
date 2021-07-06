@@ -252,7 +252,8 @@ namespace ProSuite.QA.Tests.Test
 				List<string> filterExpressions =
 					request.InvolvedTables.Select(it => it.FilterExpression).ToList();
 
-				IList<IFeatureClass> featureClasses = involvedDatasets.Keys.Cast<IFeatureClass>().ToList();
+				IList<IFeatureClass> featureClasses =
+					involvedDatasets.Keys.Cast<IFeatureClass>().ToList();
 
 				IQueryFilter filter0 = GetQueryFilter(aoi, featureClasses, filterExpressions, 0);
 
@@ -305,7 +306,7 @@ namespace ProSuite.QA.Tests.Test
 					                         {
 						                         Dataset = involvedDataset.ClassDefinition
 					                         };
-					
+
 					involvedObjectsMsg.ObjectIds.Add(feature1.OID);
 
 					issue.InvolvedObjects.Add(involvedObjectsMsg);

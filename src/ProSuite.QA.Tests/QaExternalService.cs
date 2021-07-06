@@ -14,6 +14,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Gdb;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Client.QualityTestService;
 using ProSuite.Microservices.Definitions.QA.Test;
@@ -173,12 +174,12 @@ namespace ProSuite.QA.Tests
 
 		private static WorkspaceMsg ToWorkspaceMsg(IWorkspace workspace, int handleId)
 		{
-			WorkspaceMsg.Types.WorkspaceType workspaceType = GetWorkspaceType(workspace);
+			WorkspaceDbType workspaceType = WorkspaceUtils.GetWorkspaceDbType(workspace);
 
 			var result = new WorkspaceMsg
 			             {
 				             WorkspaceHandle = handleId,
-				             WorkspaceType = workspaceType
+				             WorkspaceDbType = (int) workspaceType
 			             };
 
 			IPropertySet propSet = workspace.ConnectionProperties;
@@ -203,37 +204,12 @@ namespace ProSuite.QA.Tests
 				                      {
 					                      Key = keyValuePair.Key,
 					                      Value = value
-				};
+				                      };
 
 				result.ConnectionProperties.Add(kvp);
 			}
 
 			return result;
-		}
-
-		private static WorkspaceMsg.Types.WorkspaceType GetWorkspaceType(IWorkspace workspace)
-		{
-			if (WorkspaceUtils.IsFileGeodatabase(workspace))
-			{
-				return WorkspaceMsg.Types.WorkspaceType.FileGeodatabase;
-			}
-
-			if (WorkspaceUtils.IsSDEGeodatabase(workspace))
-			{
-				return WorkspaceMsg.Types.WorkspaceType.SdeGeodatabase;
-			}
-
-			if (WorkspaceUtils.IsShapefileWorkspace(workspace))
-			{
-				return WorkspaceMsg.Types.WorkspaceType.ShapefileWorkspace;
-			}
-
-			if (WorkspaceUtils.IsPersonalGeodatabase(workspace))
-			{
-				return WorkspaceMsg.Types.WorkspaceType.PersonalGeodatabase;
-			}
-
-			return WorkspaceMsg.Types.WorkspaceType.Unknown;
 		}
 
 		private async Task<int> ExecuteAndProcessMessagesAsync(
