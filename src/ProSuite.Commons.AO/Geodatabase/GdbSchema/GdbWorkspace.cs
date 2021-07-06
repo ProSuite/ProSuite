@@ -67,7 +67,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				(DateTime?) sdeWorkspace.DefaultVersion.VersionInfo.Created;
 
 			return new GdbWorkspace(dataStore, sdeWorkspace.GetHashCode(),
-			                        GetWorkspaceDbType((IWorkspace) sdeWorkspace),
+			                        WorkspaceUtils.GetWorkspaceDbType((IWorkspace) sdeWorkspace),
 			                        null, versionName, defaultVersionName,
 			                        defaultVersionDescription, defaultVersionCreationDate);
 		}
@@ -608,67 +608,6 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 		}
 
-		private static WorkspaceDbType GetWorkspaceDbType(IWorkspace workspace)
-		{
-			switch (workspace.Type)
-			{
-				case esriWorkspaceType.esriFileSystemWorkspace:
-					return WorkspaceDbType.FileSystem;
-
-				case esriWorkspaceType.esriLocalDatabaseWorkspace:
-					if (WorkspaceUtils.IsFileGeodatabase(workspace))
-					{
-						return WorkspaceDbType.FileGeodatabase;
-					}
-					else if (WorkspaceUtils.IsPersonalGeodatabase(workspace))
-					{
-						return WorkspaceDbType.PersonalGeodatabase;
-					}
-
-					break;
-
-				case esriWorkspaceType.esriRemoteDatabaseWorkspace:
-
-					var connectionInfo = workspace as IDatabaseConnectionInfo2;
-					if (connectionInfo != null)
-					{
-						switch (connectionInfo.ConnectionDBMS)
-						{
-							case esriConnectionDBMS.esriDBMS_Unknown:
-								break;
-
-							case esriConnectionDBMS.esriDBMS_Oracle:
-								return WorkspaceDbType.ArcSDEOracle;
-
-							case esriConnectionDBMS.esriDBMS_Informix:
-								return WorkspaceDbType.ArcSDEInformix;
-
-							case esriConnectionDBMS.esriDBMS_SQLServer:
-								return WorkspaceDbType.ArcSDESqlServer;
-
-							case esriConnectionDBMS.esriDBMS_DB2:
-								return WorkspaceDbType.ArcSDEDB2;
-
-							case esriConnectionDBMS.esriDBMS_PostgreSQL:
-								return WorkspaceDbType.ArcSDEPostgreSQL;
-
-							default:
-								throw new ArgumentOutOfRangeException();
-						}
-					}
-					else
-					{
-						return WorkspaceDbType.ArcSDE;
-					}
-
-					break;
-
-				default:
-					throw new ArgumentOutOfRangeException();
-			}
-
-			return WorkspaceDbType.Unknown;
-		}
 	}
 
 	internal class GdbWorkspaceName : IName, IWorkspaceName2

@@ -20,6 +20,7 @@ using ProSuite.Commons.Com;
 using ProSuite.Commons.Diagnostics;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Gdb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
@@ -2712,6 +2713,68 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				datasetNames.Reset();
 			}
+		}
+
+		public static WorkspaceDbType GetWorkspaceDbType(IWorkspace workspace)
+		{
+			switch (workspace.Type)
+			{
+				case esriWorkspaceType.esriFileSystemWorkspace:
+					return WorkspaceDbType.FileSystem;
+
+				case esriWorkspaceType.esriLocalDatabaseWorkspace:
+					if (IsFileGeodatabase(workspace))
+					{
+						return WorkspaceDbType.FileGeodatabase;
+					}
+					else if (IsPersonalGeodatabase(workspace))
+					{
+						return WorkspaceDbType.PersonalGeodatabase;
+					}
+
+					break;
+
+				case esriWorkspaceType.esriRemoteDatabaseWorkspace:
+
+					var connectionInfo = workspace as IDatabaseConnectionInfo2;
+					if (connectionInfo != null)
+					{
+						switch (connectionInfo.ConnectionDBMS)
+						{
+							case esriConnectionDBMS.esriDBMS_Unknown:
+								break;
+
+							case esriConnectionDBMS.esriDBMS_Oracle:
+								return WorkspaceDbType.ArcSDEOracle;
+
+							case esriConnectionDBMS.esriDBMS_Informix:
+								return WorkspaceDbType.ArcSDEInformix;
+
+							case esriConnectionDBMS.esriDBMS_SQLServer:
+								return WorkspaceDbType.ArcSDESqlServer;
+
+							case esriConnectionDBMS.esriDBMS_DB2:
+								return WorkspaceDbType.ArcSDEDB2;
+
+							case esriConnectionDBMS.esriDBMS_PostgreSQL:
+								return WorkspaceDbType.ArcSDEPostgreSQL;
+
+							default:
+								throw new ArgumentOutOfRangeException();
+						}
+					}
+					else
+					{
+						return WorkspaceDbType.ArcSDE;
+					}
+
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+
+			return WorkspaceDbType.Unknown;
 		}
 
 		#region Non-public methods
