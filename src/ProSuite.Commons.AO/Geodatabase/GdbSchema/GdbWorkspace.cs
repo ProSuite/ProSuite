@@ -187,7 +187,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public esriWorkspaceType Type
 		{
-			get => ToEsriWorkspaceType(DbType);
+			get => WorkspaceUtils.ToEsriWorkspaceType(DbType);
 		}
 
 		string IDataset.Category => throw new NotImplementedException();
@@ -560,27 +560,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		}
 
 		#endregion
-
-		private static esriWorkspaceType ToEsriWorkspaceType(WorkspaceDbType dbType)
-		{
-			switch (dbType)
-			{
-				case WorkspaceDbType.FileGeodatabase:
-				case WorkspaceDbType.PersonalGeodatabase:
-					return esriWorkspaceType.esriLocalDatabaseWorkspace;
-				case WorkspaceDbType.ArcSDE:
-				case WorkspaceDbType.ArcSDESqlServer:
-				case WorkspaceDbType.ArcSDEOracle:
-				case WorkspaceDbType.ArcSDEPostgreSQL:
-				case WorkspaceDbType.ArcSDEInformix:
-				case WorkspaceDbType.ArcSDEDB2:
-					return esriWorkspaceType.esriRemoteDatabaseWorkspace;
-				default:
-					throw new ArgumentOutOfRangeException(nameof(dbType), dbType,
-					                                      "Unknown DB type");
-			}
-		}
-
+		
 		private static esriConnectionDBMS ToEsriConnectionDbms(WorkspaceDbType dbType)
 		{
 			switch (dbType)

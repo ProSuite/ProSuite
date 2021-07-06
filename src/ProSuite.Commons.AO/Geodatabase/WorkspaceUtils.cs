@@ -2777,6 +2777,26 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return WorkspaceDbType.Unknown;
 		}
 
+		public static esriWorkspaceType ToEsriWorkspaceType(WorkspaceDbType dbType)
+		{
+			switch (dbType)
+			{
+				case WorkspaceDbType.FileGeodatabase:
+				case WorkspaceDbType.PersonalGeodatabase:
+					return esriWorkspaceType.esriLocalDatabaseWorkspace;
+				case WorkspaceDbType.ArcSDE:
+				case WorkspaceDbType.ArcSDESqlServer:
+				case WorkspaceDbType.ArcSDEOracle:
+				case WorkspaceDbType.ArcSDEPostgreSQL:
+				case WorkspaceDbType.ArcSDEInformix:
+				case WorkspaceDbType.ArcSDEDB2:
+					return esriWorkspaceType.esriRemoteDatabaseWorkspace;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(dbType), dbType,
+					                                      "Unknown DB type");
+			}
+		}
+
 		#region Non-public methods
 
 		private static int GetPasswordKeywordIndex([NotNull] string connectionString,
