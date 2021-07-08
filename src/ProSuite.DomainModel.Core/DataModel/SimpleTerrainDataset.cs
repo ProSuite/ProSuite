@@ -9,6 +9,71 @@ namespace ProSuite.DomainModel.Core.DataModel
 {
 	public abstract class SimpleTerrainDataset : Dataset, ISimpleTerrainDataset
 	{
+		public class Comparer : IEqualityComparer<SimpleTerrainDataset>
+		{
+			bool IEqualityComparer<SimpleTerrainDataset>.Equals(
+				SimpleTerrainDataset x, SimpleTerrainDataset y)
+			{
+				if (x == null || y == null)
+				{
+					return false;
+				}
+
+				if (x == y)
+				{
+					return true;
+				}
+
+				//if (x.Name != y.Name)
+				//{
+				//	return false;
+				//}
+				if (x.PointDensity != y.PointDensity)
+				{
+					return false;
+				}
+
+				if (x.Sources.Count != y.Sources.Count)
+				{
+					return false;
+				}
+
+				for (int iSource = 0; iSource < x.Sources.Count; iSource++)
+				{
+					TerrainSourceDataset xSource = x.Sources[iSource];
+					TerrainSourceDataset ySource = y.Sources[iSource];
+
+					if (xSource.SurfaceFeatureType != ySource.SurfaceFeatureType)
+					{
+						return false;
+					}
+
+					if (xSource.Dataset != ySource.Dataset)
+					{
+						return false;
+					}
+
+					if (xSource.WhereClause != ySource.WhereClause)
+					{
+						return false;
+					}
+				}
+
+				return true;
+			}
+
+			int IEqualityComparer<SimpleTerrainDataset>.GetHashCode(SimpleTerrainDataset obj)
+			{
+				if (obj.Sources.Count > 0)
+				{
+					return obj.Sources[0].Dataset.GetHashCode() +
+					       29 * obj.Sources.Count.GetHashCode();
+				}
+
+				return obj.PointDensity.GetHashCode();
+			}
+		}
+
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -113,5 +178,18 @@ namespace ProSuite.DomainModel.Core.DataModel
 		private LayerFile DefaultSymbology => _defaultSymbology;
 
 		#endregion
+	}
+
+	public class XmlSimpleTerrainDataset
+	{
+		public string Name { get; set; }
+		public double PointDensity { get; set; }
+		public List<XmlTerrainSource> Sources { get; set; }
+	}
+
+	public class XmlTerrainSource
+	{
+		public string Dataset { get; set; }
+		public TinSurfaceType Type { get; set; }
 	}
 }

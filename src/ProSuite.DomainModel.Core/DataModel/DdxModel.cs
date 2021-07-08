@@ -7,6 +7,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Validation;
+using ProSuite.Commons.Xml;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
@@ -28,6 +29,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		private SqlCaseSensitivity _sqlCaseSensitivity = SqlCaseSensitivity.SameAsDatabase;
 
 		private bool _specialDatasetsAssigned;
+		private Dictionary<SimpleTerrainDataset, SimpleTerrainDataset> _terrainDatasets;
 
 		/// <summary>
 		/// Name of the schema owner, e.g. "TOPGIS_TLM"
@@ -298,7 +300,38 @@ namespace ProSuite.DomainModel.Core.DataModel
 		[CanBeNull]
 		public Dataset GetDatasetByModelName([NotNull] string name, bool includeDeleted = false)
 		{
-			return GetDatasetCore(name, includeDeleted);
+			Dataset dataset = GetDatasetCore(name, includeDeleted);
+
+			if (dataset != null)
+			{
+				return dataset;
+			}
+
+			XmlSerializationHelper<XmlSimpleTerrainDataset> terrainHelper =
+				new XmlSerializationHelper<XmlSimpleTerrainDataset>();
+			if (terrainHelper.CanDeserializeString(name))
+			{
+				var key = SimpleTerrainDatasetUtils.Create(
+					xmlDefinition: name,
+					(dsName) => GetDatasetByModelName(dsName) as VectorDataset);
+
+				key.Model = this;
+
+				_terrainDatasets = _terrainDatasets ??
+				                   new Dictionary<SimpleTerrainDataset, SimpleTerrainDataset>(
+					                   new SimpleTerrainDataset.Comparer());
+				if (_terrainDatasets.TryGetValue(key, out SimpleTerrainDataset existing))
+				{
+					dataset = existing;
+				}
+				else
+				{
+					_terrainDatasets.Add(key, key);
+					dataset = key;
+				}
+			}
+
+			return dataset;
 		}
 
 		/// <summary>
