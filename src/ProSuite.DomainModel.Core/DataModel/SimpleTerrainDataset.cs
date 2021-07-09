@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -7,6 +8,8 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
+	public class ModelSimpleTerrainDataset : SimpleTerrainDataset { }
+
 	public abstract class SimpleTerrainDataset : Dataset, ISimpleTerrainDataset
 	{
 		public class Comparer : IEqualityComparer<SimpleTerrainDataset>
@@ -81,6 +84,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		[UsedImplicitly] private string _featureDatasetName;
 		[UsedImplicitly] private double _pointDensity;
 
+		private readonly List<TerrainSourceDataset> _sources = new List<TerrainSourceDataset>();
 		#region Constructors
 
 		/// <summary>
@@ -91,7 +95,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		protected SimpleTerrainDataset(IList<TerrainSourceDataset> sources)
 		{
-			Sources = sources;
+			_sources = new List<TerrainSourceDataset>(sources);
 		}
 
 		/// <summary>
@@ -144,6 +148,17 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		public int TerrainId => Id;
 
+				//TODO : set Abbreviation
+		public string NameAndAbbr
+		{
+			get => Name;
+			set
+			{
+				Name = value;
+				Abbreviation = value;
+			}
+		}
+
 		public double PointDensity
 		{
 			get => _pointDensity;
@@ -160,7 +175,60 @@ namespace ProSuite.DomainModel.Core.DataModel
 			}
 		}
 
-		public IList<TerrainSourceDataset> Sources { get; }
+		public IReadOnlyList<TerrainSourceDataset> Sources => _sources;
+
+		public void AddSourceDataset(TerrainSourceDataset sourceDataset)
+		{
+			Assert.ArgumentNotNull(sourceDataset, nameof(sourceDataset));
+
+			if (Sources.Count > 0 && sourceDataset.Dataset.Model.Id != ModelId)
+			{
+				throw new ArgumentException(
+					"Cannot add a dataset to the surface from a different model than the existing datasets.");
+			}
+
+			_sources.Add(sourceDataset);
+		}
+
+		public bool RemoveSourceDataset([NotNull] IVectorDataset dataset)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			TerrainSourceDataset sourceDataset =
+				_sources.FirstOrDefault(ds => ds.Dataset.Equals(dataset));
+			if (sourceDataset != null)
+			{
+				_sources.Remove(sourceDataset);
+				return true;
+			}
+
+			return false;
+		}
+
+
+		public int ModelId
+		{
+			get
+			{
+				int result = -1;
+
+				foreach (var dataset in _sources.Select(nd => nd.Dataset))
+				{
+					if (result < 0)
+					{
+						result = dataset.Model.Id;
+					}
+					else
+					{
+						Assert.AreEqual(result, dataset.Model.Id,
+						                "The surface {0} contains datasets from different models",
+						                Name);
+					}
+				}
+
+				return result;
+			}
+		}
 
 		#endregion
 
