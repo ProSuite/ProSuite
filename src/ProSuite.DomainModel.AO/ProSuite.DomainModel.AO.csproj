@@ -83,7 +83,6 @@
     </Compile>
     <Compile Include="DataModel\AttributeUtils.cs" />
     <Compile Include="DataModel\FieldIndexCache.cs" />
-    <Compile Include="DataModel\GeometryTypeFactory.cs" />
     <Compile Include="DataModel\GlobalDatasetLookup.cs" />
     <Compile Include="DataModel\Harvesting\DatasetFeatureDatasetMatchCriterion.cs" />
     <Compile Include="DataModel\Harvesting\DatasetFilter.cs" />
@@ -117,6 +116,7 @@
     <Compile Include="DataModel\MasterDatabaseWorkspaceContext.cs" />
     <Compile Include="DataModel\MasterDatabaseWorkspaceContextLookup.cs" />
     <Compile Include="DataModel\Model.cs" />
+    <Compile Include="DataModel\ModelContextUtils.cs" />
     <Compile Include="DataModel\ModelElementUtils.cs" />
     <Compile Include="DataModel\ObjectObject.cs" />
     <Compile Include="DataModel\ProductionModel.cs" />
@@ -169,6 +169,7 @@
     <Compile Include="QA\ErrorPolygonObject.cs" />
     <Compile Include="QA\ErrorTableObject.cs" />
     <Compile Include="QA\ErrorVectorObject.cs" />
+    <Compile Include="QA\IVerificationDataDictionary.cs" />
     <Compile Include="QA\IErrorObject.cs" />
     <Compile Include="QA\IOpenDataset.cs" />
     <Compile Include="QA\IQualityConditionContextAware.cs" />
@@ -239,6 +240,21 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Schema.resx</DependentUpon>
     </Compile>
+    <Compile Include="Workflow\DatasetNameTransformer.cs" />
+    <Compile Include="Workflow\IDatasetNameTransformer.cs" />
+    <Compile Include="Workflow\IProjectRepository.cs" />
+    <Compile Include="Workflow\IWorkspaceFilter.cs" />
+    <Compile Include="Workflow\Project.cs" />
+    <Compile Include="Workflow\ProjectUtils.cs" />
+    <Compile Include="Workflow\ProjectWorkspaceBase.cs" />
+    <Compile Include="Workflow\QualityVerificationOutsideEditSessionAllowed.cs" />
+    <Compile Include="Workflow\WorkspaceFilters\IWorkspaceMatchCriterion.cs" />
+    <Compile Include="Workflow\WorkspaceFilters\WorkspaceDbTypeInfo.cs" />
+    <Compile Include="Workflow\WorkspaceFilters\WorkspaceDbTypeMatchCriterion.cs" />
+    <Compile Include="Workflow\WorkspaceFilters\WorkspaceFilter.cs" />
+    <Compile Include="Workflow\WorkspaceFilters\WorkspaceFilterFactory.cs" />
+    <Compile Include="Workflow\WorkspaceFilters\WorkspaceMatchCriterionConjunction.cs" />
+    <Compile Include="Workflow\WorkspaceFilters\WorkspacePathMatchCriterion.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">

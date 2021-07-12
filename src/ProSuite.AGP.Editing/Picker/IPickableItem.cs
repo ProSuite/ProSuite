@@ -12,7 +12,7 @@ namespace ProSuite.AGP.Editing.Picker
 		bool IsSelected { get; set; }
 
 		[CanBeNull]
-		Geometry Geometry  { get; set; }
+		Geometry Geometry { get; set; }
 
 		ImageSource ItemImageSource { get; }
 	}

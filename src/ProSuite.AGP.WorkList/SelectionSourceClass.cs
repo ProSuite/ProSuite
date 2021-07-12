@@ -4,7 +4,6 @@ namespace ProSuite.AGP.WorkList
 {
 	public class SelectionSourceClass : SourceClass
 	{
-		public SelectionSourceClass(GdbTableIdentity identity) : base(identity)
-		{ }
+		public SelectionSourceClass(GdbTableIdentity identity) : base(identity) { }
 	}
 }

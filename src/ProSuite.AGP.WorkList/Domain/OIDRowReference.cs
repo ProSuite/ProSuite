@@ -28,10 +28,12 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				return false;
 			}
+
 			if (ReferenceEquals(this, other))
 			{
 				return true;
 			}
+
 			return _oid == other._oid;
 		}
 
@@ -41,15 +43,18 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				return false;
 			}
+
 			if (ReferenceEquals(this, obj))
 			{
 				return true;
 			}
+
 			if (obj.GetType() != GetType())
 			{
 				return false;
 			}
-			return Equals((OIDRowReference)obj);
+
+			return Equals((OIDRowReference) obj);
 		}
 
 		public override int GetHashCode()

@@ -10,6 +10,7 @@ using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.AGP.Hosting;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -30,9 +31,9 @@ namespace ProSuite.AGP.WorkList.Test
 			// http://stackoverflow.com/questions/8245926/the-current-synchronizationcontext-may-not-be-used-as-a-taskscheduler
 			SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
 
-
-			_geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(_emptyIssuesGdb, UriKind.Absolute)));
-
+			_geodatabase =
+				new Geodatabase(
+					new FileGeodatabaseConnectionPath(new Uri(_emptyIssuesGdb, UriKind.Absolute)));
 
 			_table0 = _geodatabase.OpenDataset<Table>(_featureClass0);
 			_table1 = _geodatabase.OpenDataset<Table>(_featureClass1);
@@ -42,7 +43,8 @@ namespace ProSuite.AGP.WorkList.Test
 				                          {_geodatabase, new List<Table> {_table0, _table1}}
 			                          };
 
-			IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
+			IRepository stateRepository =
+				new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 			_repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
 		}
 
@@ -60,8 +62,7 @@ namespace ProSuite.AGP.WorkList.Test
 		{
 			// Host must be initialized on an STA thread:
 			//Host.Initialize();
-			Commons.AGP.Hosting.CoreHostProxy.Initialize();
-
+			CoreHostProxy.Initialize();
 
 			_poly0 = PolygonConstruction
 			         .StartPolygon(0, 0, 0)
@@ -78,10 +79,12 @@ namespace ProSuite.AGP.WorkList.Test
 			         .ClosePolygon();
 		}
 
-		private const string _emptyIssuesGdb = @"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\issues_empty.gdb";
+		private const string _emptyIssuesGdb =
+			@"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\issues_empty.gdb";
+
 		private string _featureClassName = "IssuePolygons";
-		private string _featureClass0 = "featureClass0";
-		private string _featureClass1 = "featureClass1";
+		private readonly string _featureClass0 = "featureClass0";
+		private readonly string _featureClass1 = "featureClass1";
 
 		[Test]
 		public void Foo()
@@ -103,7 +106,7 @@ namespace ProSuite.AGP.WorkList.Test
 				workList.SetStatus(item, WorkItemStatus.Done);
 
 				item = workList.GetItems(null, true).ToList()[0];
-				
+
 				// WorkItemStatus.Done
 				Assert.AreEqual(WorkItemStatus.Done, item.Status);
 			}

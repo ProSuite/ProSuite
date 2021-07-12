@@ -21,7 +21,8 @@ namespace ProSuite.AGP.WorkList
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		protected GdbItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase, IRepository workItemStateRepository)
+		protected GdbItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase,
+		                            IRepository workItemStateRepository)
 		{
 			RegisterDatasets(tablesByGeodatabase);
 
@@ -30,7 +31,8 @@ namespace ProSuite.AGP.WorkList
 
 		protected IRepository WorkItemStateRepository { get; }
 
-		public Dictionary<ISourceClass, Geodatabase> GeodatabaseBySourceClasses { get; } = new Dictionary<ISourceClass, Geodatabase>();
+		public Dictionary<ISourceClass, Geodatabase> GeodatabaseBySourceClasses { get; } =
+			new Dictionary<ISourceClass, Geodatabase>();
 
 		public IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, bool recycle = true)
 		{
@@ -48,15 +50,18 @@ namespace ProSuite.AGP.WorkList
 					yield return WorkItemStateRepository.Refresh(item);
 				}
 
-				_msg.DebugStopTiming(watch, $"{nameof(GetItems)}() {sourceClass.Name}: {count} items");
+				_msg.DebugStopTiming(
+					watch, $"{nameof(GetItems)}() {sourceClass.Name}: {count} items");
 			}
 
 			// return GeodatabaseBySourceClasses.Keys.SelectMany(sourceClass => GetItemsCore(sourceClass, filter, recycle));
 		}
 
-		public IEnumerable<IWorkItem> GetItems(GdbTableIdentity tableId, QueryFilter filter, bool recycle = true)
+		public IEnumerable<IWorkItem> GetItems(GdbTableIdentity tableId, QueryFilter filter,
+		                                       bool recycle = true)
 		{
-			foreach (ISourceClass sourceClass in GeodatabaseBySourceClasses.Keys.Where(source => source.Uses(tableId)))
+			foreach (ISourceClass sourceClass in GeodatabaseBySourceClasses.Keys.Where(
+				source => source.Uses(tableId)))
 			{
 				int count = 0;
 
@@ -68,7 +73,8 @@ namespace ProSuite.AGP.WorkList
 					yield return CreateWorkItemCore(row, sourceClass);
 				}
 
-				_msg.DebugStopTiming(watch, $"{nameof(GetItems)}() {sourceClass.Name}: {count} items");
+				_msg.DebugStopTiming(
+					watch, $"{nameof(GetItems)}() {sourceClass.Name}: {count} items");
 			}
 
 			// return GeodatabaseBySourceClasses.Keys.Where(source => source.Uses(table)).SelectMany(sourceClass => GetItemsCore(sourceClass, filter, recycle));
@@ -79,7 +85,8 @@ namespace ProSuite.AGP.WorkList
 			GdbTableIdentity tableId = item.Proxy.Table;
 
 			// todo daro: log message
-			ISourceClass source = GeodatabaseBySourceClasses.Keys.FirstOrDefault(sc => sc.Uses(tableId));
+			ISourceClass source =
+				GeodatabaseBySourceClasses.Keys.FirstOrDefault(sc => sc.Uses(tableId));
 			Assert.NotNull(source);
 
 			Row row = GetRow(source, item.Proxy.ObjectId);
@@ -115,7 +122,8 @@ namespace ProSuite.AGP.WorkList
 		{
 			GdbTableIdentity tableId = item.Proxy.Table;
 
-			ISourceClass source = GeodatabaseBySourceClasses.Keys.FirstOrDefault(s => s.Uses(tableId));
+			ISourceClass source =
+				GeodatabaseBySourceClasses.Keys.FirstOrDefault(s => s.Uses(tableId));
 			Assert.NotNull(source);
 
 			// todo daro: read / restore item again from db? restore pattern in case of failure?
@@ -175,7 +183,8 @@ namespace ProSuite.AGP.WorkList
 			return Task.FromResult(0);
 		}
 
-		protected virtual IEnumerable<Row> GetRowsCore([NotNull] ISourceClass sourceClass, [CanBeNull] QueryFilter filter, bool recycle)
+		protected virtual IEnumerable<Row> GetRowsCore([NotNull] ISourceClass sourceClass,
+		                                               [CanBeNull] QueryFilter filter, bool recycle)
 		{
 			Table table = OpenFeatureClass(sourceClass);
 
@@ -193,13 +202,15 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		[CanBeNull]
-		protected virtual WorkListStatusSchema CreateStatusSchemaCore([NotNull] FeatureClassDefinition definition)
+		protected virtual WorkListStatusSchema CreateStatusSchemaCore(
+			[NotNull] FeatureClassDefinition definition)
 		{
 			return null;
 		}
 
 		[CanBeNull]
-		protected virtual IAttributeReader CreateAttributeReaderCore([NotNull] FeatureClassDefinition definition)
+		protected virtual IAttributeReader CreateAttributeReaderCore(
+			[NotNull] FeatureClassDefinition definition)
 		{
 			return null;
 		}
@@ -209,15 +220,18 @@ namespace ProSuite.AGP.WorkList
 
 		[NotNull]
 		protected abstract ISourceClass CreateSourceClassCore(GdbTableIdentity identity,
-		                                                      [CanBeNull] IAttributeReader attributeReader,
-		                                                      [CanBeNull] WorkListStatusSchema statusSchema);
+		                                                      [CanBeNull]
+		                                                      IAttributeReader attributeReader,
+		                                                      [CanBeNull]
+		                                                      WorkListStatusSchema statusSchema);
 
 		private void RegisterDatasets(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase)
 		{
 			foreach (var pair in tablesByGeodatabase)
 			{
 				Geodatabase geodatabase = pair.Key;
-				var definitions = geodatabase.GetDefinitions<FeatureClassDefinition>().ToLookup(d => d.GetName());
+				var definitions = geodatabase.GetDefinitions<FeatureClassDefinition>()
+				                             .ToLookup(d => d.GetName());
 
 				foreach (Table table in pair.Value)
 				{
@@ -248,13 +262,15 @@ namespace ProSuite.AGP.WorkList
 		//		       : null;
 		//}
 
-		private ISourceClass CreateSourceClass(GdbTableIdentity identity, FeatureClassDefinition definition)
+		private ISourceClass CreateSourceClass(GdbTableIdentity identity,
+		                                       FeatureClassDefinition definition)
 		{
 			IAttributeReader attributeReader = CreateAttributeReaderCore(definition);
 
 			WorkListStatusSchema statusSchema = CreateStatusSchemaCore(definition);
 
-			ISourceClass sourceClass = CreateSourceClassCore(identity, attributeReader, statusSchema);
+			ISourceClass sourceClass =
+				CreateSourceClassCore(identity, attributeReader, statusSchema);
 
 			return sourceClass;
 		}

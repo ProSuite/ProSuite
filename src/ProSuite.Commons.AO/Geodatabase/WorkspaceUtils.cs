@@ -8,13 +8,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Security.Authentication;
 using System.Threading;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Properties;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Diagnostics;
@@ -30,11 +30,49 @@ namespace ProSuite.Commons.AO.Geodatabase
 	{
 		private const string _defaultRepositoryName = "SDE";
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
-		/// Creates a shapefile workspace a given directory, under a given name,
+		/// Determines whether the specified path is a shapefile workspace, i.e. it contains
+		/// at least a shp or dbf file.
+		/// </summary>
+		/// <param name="path"></param>
+		/// <returns></returns>
+		public static bool ShapefileWorkspaceExists([NotNull] string path)
+		{
+			Assert.ArgumentNotNullOrEmpty(path, nameof(path));
+
+			if (! Directory.Exists(path))
+			{
+				return false;
+			}
+
+			IWorkspaceFactory shapefileWorkspaceFactory = GetShapefileWorkspaceFactory();
+
+			return shapefileWorkspaceFactory.IsWorkspace(path);
+		}
+
+		/// <summary>
+		/// Determines whether the specified path is a file GDB workspace.
+		/// </summary>
+		/// <param name="path"></param>
+		/// <returns></returns>
+		public static bool FileGdbWorkspaceExists([NotNull] string path)
+		{
+			Assert.ArgumentNotNullOrEmpty(path, nameof(path));
+
+			if (! path.EndsWith(".gdb", StringComparison.InvariantCultureIgnoreCase))
+			{
+				path = string.Concat(path, ".gdb");
+			}
+
+			IWorkspaceFactory fileGdbWorkspaceFactory = GetFileGdbWorkspaceFactory();
+
+			return fileGdbWorkspaceFactory.IsWorkspace(path);
+		}
+
+		/// <summary>
+		/// Creates a shapefile workspace in a given directory, under a given name,
 		/// and returns the workspace name for it.
 		/// </summary>
 		/// <param name="directory">The directory.</param>
@@ -82,7 +120,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			// The Create method returns a workspace name object.
 			IWorkspaceFactory workspaceFactory = GetFileGdbWorkspaceFactory();
 
-			IWorkspaceName result = null;
+			IWorkspaceName result;
 
 			try
 			{
@@ -92,7 +130,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				if (e.ErrorCode == -2147220902)
 				{
-					throw new IOException("File Geodatabase already exists.");
+					throw new IOException(
+						$"File Geodatabase {name} already exists in {directory}.");
 				}
 
 				throw;
@@ -902,6 +941,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return false; // different database => different version
 			}
 
+			if (workspace1 is IEquatable<IWorkspace> equatableWorkspace1)
+			{
+				return equatableWorkspace1.Equals(workspace2);
+			}
+
+			if (workspace2 is IEquatable<IWorkspace> equatableWorkspace2)
+			{
+				return equatableWorkspace2.Equals(workspace1);
+			}
+
 			var version1 = workspace1 as IVersion;
 			var version2 = workspace2 as IVersion;
 
@@ -939,6 +988,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				// same workspace instance. obviously the same db
 				return true;
+			}
+
+			if (workspace1 is GdbWorkspace gdbWorkspace1)
+			{
+				return gdbWorkspace1.IsSameDatabase(workspace2);
+			}
+
+			if (workspace2 is GdbWorkspace gdbWorkspace2)
+			{
+				return gdbWorkspace2.IsSameDatabase(workspace1);
 			}
 
 			var versionedWorkspace1 = workspace1 as IVersionedWorkspace;
@@ -1823,8 +1882,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			int pwdStartIndex = pwdSeparator1Index + 1;
 			int pwdSeparator2Index = workspaceConnectionString.IndexOf(";", pwdStartIndex,
-			                                                           StringComparison
-				                                                           .Ordinal);
+				StringComparison
+					.Ordinal);
 
 			int pwdEndIndex = pwdSeparator2Index < 0
 				                  ? workspaceConnectionString.Length - 1

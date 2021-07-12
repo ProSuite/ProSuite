@@ -1,5 +1,5 @@
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geom;
 using ProSuite.Microservices.Definitions.Shared;
 
 namespace ProSuite.Microservices.Client

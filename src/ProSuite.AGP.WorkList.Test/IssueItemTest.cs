@@ -5,6 +5,7 @@ using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.AGP.Hosting;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -12,9 +13,10 @@ namespace ProSuite.AGP.WorkList.Test
 	[Apartment(ApartmentState.STA)]
 	public class IssueItemTest
 	{
+		private const string _emptyIssuesGdb =
+			@"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\dev\OSM_Full_20200821_153100\issues.gdb";
 
-		private const string _emptyIssuesGdb = @"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\dev\OSM_Full_20200821_153100\issues.gdb";
-		private string _issuePointsFeatureClassName = "IssuePoints";
+		private readonly string _issuePointsFeatureClassName = "IssuePoints";
 		private Geodatabase _geodatabase;
 		private FeatureClass _issuePoints;
 
@@ -24,7 +26,9 @@ namespace ProSuite.AGP.WorkList.Test
 			// http://stackoverflow.com/questions/8245926/the-current-synchronizationcontext-may-not-be-used-as-a-taskscheduler
 			SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
 
-			_geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(_emptyIssuesGdb, UriKind.Absolute)));
+			_geodatabase =
+				new Geodatabase(
+					new FileGeodatabaseConnectionPath(new Uri(_emptyIssuesGdb, UriKind.Absolute)));
 
 			// todo daro: test IssueRows as well!
 			_issuePoints = _geodatabase.OpenDataset<FeatureClass>(_issuePointsFeatureClassName);
@@ -41,7 +45,7 @@ namespace ProSuite.AGP.WorkList.Test
 		public void SetupFixture()
 		{
 			// Host must be initialized on an STA thread:
-			Commons.AGP.Hosting.CoreHostProxy.Initialize();
+			CoreHostProxy.Initialize();
 		}
 
 		[Test]

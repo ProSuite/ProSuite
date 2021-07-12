@@ -39,6 +39,7 @@
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Catalog">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\Extensions\Catalog\ArcGIS.Desktop.Catalog.dll</HintPath>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Core">
@@ -79,6 +80,10 @@
     </Compile>
     <Compile Include="AdvancedReshape\AdvancedReshapeFeedback.cs" />
     <Compile Include="AdvancedReshape\AdvancedReshapeToolBase.cs" />
+    <Compile Include="ChangeAlong\ChangeAlongFeedback.cs" />
+    <Compile Include="ChangeAlong\ChangeGeometryAlongToolBase.cs" />
+    <Compile Include="ChangeAlong\CutAlongToolBase.cs" />
+    <Compile Include="ChangeAlong\ReshapeAlongToolBase.cs" />
     <Compile Include="GdbPersistenceUtils.cs" />
     <Compile Include="OneClick\ConstructionToolBase.cs" />
     <Compile Include="OneClick\OneClickToolBase.cs" />
@@ -102,7 +107,9 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
     </Compile>
+    <Compile Include="RemoveOverlaps\PartialRemoveOverlapsOptions.cs" />
     <Compile Include="RemoveOverlaps\RemoveOverlapsFeedback.cs" />
+    <Compile Include="RemoveOverlaps\RemoveOverlapsOptions.cs" />
     <Compile Include="RemoveOverlaps\RemoveOverlapsToolBase.cs" />
     <Compile Include="Selection\FeatureClassInfo.cs" />
     <Compile Include="Selection\GeometryReducer.cs" />
@@ -129,11 +136,12 @@
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">
-      <Version>1.1.19</Version>
+      <Version>1.1.31</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
@@ -176,10 +184,18 @@
     <Resource Include="PickerUI\Images\PolygonGeometry.bmp" />
     <None Include="Properties\Images\AdvancedReshapeToolCursor.cur" />
     <None Include="Properties\Images\AdvancedReshapeToolCursorShift.cur" />
+    <None Include="Properties\Images\CutPolygonAlongToolCursor.cur" />
+    <None Include="Properties\Images\CutPolygonAlongToolCursorProcess.cur" />
+    <None Include="Properties\Images\CutPolygonAlongToolCursorShift.cur" />
     <Content Include="Properties\Images\EditSketchCrosshair.cur" />
+    <None Include="Properties\Images\PolygonDrawerCursor.cur" />
     <Content Include="Properties\Images\RemoveOverlapsToolCursor.cur" />
     <Content Include="Properties\Images\RemoveOverlapsToolCursorProcess.cur" />
     <Content Include="Properties\Images\RemoveOverlapsToolCursorShift.cur" />
+    <None Include="Properties\Images\ReshapeAlongToolCursor.cur" />
+    <None Include="Properties\Images\ReshapeAlongToolCursorProcess.cur" />
+    <None Include="Properties\Images\ReshapeAlongToolCursorShift.cur" />
+    <None Include="Properties\Images\ReshapeAlongToolCursorProcessShift.cur" />
     <Content Include="Properties\Images\SelectionToolNormal.cur" />
     <Content Include="Properties\Images\SelectionToolNormalShift.cur" />
     <Content Include="Properties\Images\SelectionToolOriginal.cur" />

@@ -38,10 +38,6 @@
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ESRI.ArcGIS.DataSourcesGDB, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.$(VSArcGISProduct).DataSourcesGDB.dll</HintPath>
-    </Reference>
     <Reference Include="ESRI.ArcGIS.DataSourcesRaster, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.$(VSArcGISProduct).DataSourcesRaster.dll</HintPath>
@@ -49,10 +45,6 @@
     <Reference Include="ESRI.ArcGIS.Geodatabase, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.$(VSArcGISProduct).Geodatabase.dll</HintPath>
-    </Reference>
-    <Reference Include="ESRI.ArcGIS.GeoDatabaseExtensions, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.$(VSArcGISProduct).GeoDatabaseExtensions.dll</HintPath>
     </Reference>
     <Reference Include="ESRI.ArcGIS.Geometry, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -81,30 +73,17 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.ServiceProcess" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Geodatabase\BackingDataset.cs" />
-    <Compile Include="Geodatabase\BackingDataStore.cs" />
-    <Compile Include="Geodatabase\GdbFeature.cs" />
-    <Compile Include="Geodatabase\GdbFeatureClass.cs" />
-    <Compile Include="Geodatabase\GdbFields.cs" />
-    <Compile Include="Geodatabase\GdbTable.cs" />
-    <Compile Include="Geodatabase\GdbRow.cs" />
-    <Compile Include="Geodatabase\GdbTableContainer.cs" />
-    <Compile Include="Geodatabase\GdbWorkspace.cs" />
-    <Compile Include="Geodatabase\InMemoryDataset.cs" />
     <Compile Include="Geodatabase\RemoteDataset.cs" />
     <Compile Include="Geometry\AdvancedReshape\AdvancedReshapeGrpcImpl.cs" />
     <Compile Include="Geometry\AdvancedReshape\AdvancedReshapeServiceUtils.cs" />
+    <Compile Include="Geometry\ChangeAlong\ChangeAlongGrpcImpl.cs" />
+    <Compile Include="Geometry\ChangeAlong\ChangeAlongServiceUtils.cs" />
     <Compile Include="Geometry\RemoveOverlaps\RemoveOverlapsGrpcImpl.cs" />
     <Compile Include="Geometry\RemoveOverlaps\RemoveOverlapsServiceUtils.cs" />
     <Compile Include="GrpcServerUtils.cs" />
@@ -119,6 +98,7 @@
     <Compile Include="QA\BackgroundVerificationService.cs" />
     <Compile Include="QA\DistributedTestRunner.cs" />
     <Compile Include="QA\IBackgroundVerificationInputs.cs" />
+    <Compile Include="QA\QualityVerificationDdxGrpcImpl.cs" />
     <Compile Include="QA\QualityVerificationGrpcImpl.cs" />
     <Compile Include="QA\SubResponse.cs" />
     <Compile Include="QA\VerificationServiceParameters.cs" />

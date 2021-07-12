@@ -1,0 +1,18 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:ProSuite.AGP.Solution.EditingOptionsUI">
+    
+    <local:OverrideToFontStyleConverter x:Key="Converter"/>
+
+    <ControlTemplate TargetType="CheckBox" x:Key="CentralizableSettingCheckbox">
+        <CheckBox Content="{TemplateBinding Content}"
+                  DataContext="{TemplateBinding DataContext}"
+                  IsChecked="{Binding CurrentValue}"
+                  IsEnabled="{Binding CanOverrideLocally}"
+                  FontStyle="{Binding HasLocalOverride, Mode=OneWay, Converter={StaticResource Converter}}"
+                  ToolTipService.ShowOnDisabled="True"
+                  ToolTip="{Binding ToolTip}" 
+                  Margin="6"/>
+    </ControlTemplate>
+
+</ResourceDictionary>

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -24,6 +25,12 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return a.Union(b);
 		}
 
+		public static Geometry Union(
+			IEnumerable<Geometry> geometries)
+		{
+			return Engine.Union(geometries);
+		}
+
 		public static Polyline Boundary(Polygon polygon)
 		{
 			if (polygon == null) return null;
@@ -38,7 +45,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return GetClippedPolygon(perimeter, extent);
 		}
 
-		public static Geometry Intersection(Geometry a, Geometry b)
+		public static Geometry Intersection(
+			Geometry a, Geometry b)
 		{
 			if (a == null) return b;
 			if (b == null) return a;
@@ -47,7 +55,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 
 		public static T Generalize<T>(T geometry, double maxDeviation,
 		                              bool removeDegenerateParts = false,
-		                              bool preserveCurves = false) where T : Geometry
+		                              bool preserveCurves = false)
+			where T : Geometry
 		{
 			if (maxDeviation < double.Epsilon)
 				return geometry;
@@ -64,7 +73,8 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return Engine.SimplifyPolyline(polyline, simplifyType, forceSimplify);
 		}
 
-		public static T Simplify<T>(T geometry, bool forceSimplify = false) where T : Geometry
+		public static T Simplify<T>(T geometry, bool forceSimplify = false)
+			where T : Geometry
 		{
 			if (geometry == null) return null;
 

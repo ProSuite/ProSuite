@@ -15,8 +15,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 
 		public SelectionWorklistItem(string name, string catalogPath, string typeID,
 		                             string containerType) : base(
-			name, catalogPath, typeID, containerType)
-		{ }
+			name, catalogPath, typeID, containerType) { }
 
 		public override ImageSource LargeImage =>
 			ImageUtils.GetImageSource(@"NavigateSelectionCmd32.png");

@@ -13,21 +13,23 @@ namespace ProSuite.AGP.Editing.Picker
 			List<IPickableItem> pickableItems = new List<IPickableItem>();
 			foreach (var info in featureClassInfos)
 			{
-
-				pickableItems.Add(new PickableFeatureClassItem(info.FeatureClass, info.ShapeType, info.BelongingLayers));
+				pickableItems.Add(
+					new PickableFeatureClassItem(info.FeatureClass, info.ShapeType,
+					                             info.BelongingLayers));
 			}
 
 			return pickableItems;
 		}
 
-		public static List<IPickableItem> Get(Dictionary<BasicFeatureLayer, List<long>> layersWithOids)
+		public static List<IPickableItem> Get(
+			Dictionary<BasicFeatureLayer, List<long>> layersWithOids)
 		{
 			List<PickableFeatureItem> pickableFeatureItems =
 				new List<PickableFeatureItem>();
 
 			foreach (var layerWithOids in layersWithOids)
 			{
-				var kvpList = new List<KeyValuePair<BasicFeatureLayer, List<long>>> { layerWithOids };
+				var kvpList = new List<KeyValuePair<BasicFeatureLayer, List<long>>> {layerWithOids};
 				var featuresOfLayer = MapUtils.GetFeatures(kvpList);
 
 				foreach (var feature in featuresOfLayer)

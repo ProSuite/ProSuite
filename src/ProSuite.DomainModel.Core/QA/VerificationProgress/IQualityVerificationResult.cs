@@ -1,10 +1,19 @@
+using ProSuite.Commons.Essentials.CodeAnnotations;
+
 namespace ProSuite.DomainModel.Core.QA.VerificationProgress
 {
 	public interface IQualityVerificationResult
 	{
 		bool HasQualityVerification();
 
+		[CanBeNull]
 		QualityVerification GetQualityVerification();
+
+		[CanBeNull]
+		string HtmlReportPath { get; }
+
+		[CanBeNull]
+		string IssuesGdbPath { get; }
 
 		bool HasIssues { get; }
 

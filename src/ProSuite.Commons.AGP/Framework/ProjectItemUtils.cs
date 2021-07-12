@@ -30,7 +30,8 @@ namespace ProSuite.Commons.AGP.Framework
 
 				// after renaming the item it is missing the extension (although we explicitly
 				// assign a extension to the item), e.g. "worklist"
-				if (string.Equals(item.Name, Path.GetFileNameWithoutExtension(name), StringComparison.OrdinalIgnoreCase))
+				if (string.Equals(item.Name, Path.GetFileNameWithoutExtension(name),
+				                  StringComparison.OrdinalIgnoreCase))
 				{
 					return item;
 				}
@@ -38,7 +39,7 @@ namespace ProSuite.Commons.AGP.Framework
 
 			return null;
 		}
-		
+
 		public static IEnumerable<T> GetItemsStartingWith<T>([NotNull] string substring)
 			where T : Item
 		{
@@ -75,7 +76,8 @@ namespace ProSuite.Commons.AGP.Framework
 			return true;
 		}
 
-		public static bool TryAdd<T>([NotNull] string path, ItemFactory.ItemType type, [CanBeNull] out T item)
+		public static bool TryAdd<T>([NotNull] string path, ItemFactory.ItemType type,
+		                             [CanBeNull] out T item)
 			where T : Item
 		{
 			Assert.ArgumentNotNullOrEmpty(path, nameof(path));

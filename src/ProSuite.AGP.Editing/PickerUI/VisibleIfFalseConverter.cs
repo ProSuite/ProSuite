@@ -5,7 +5,7 @@ using System.Windows.Data;
 
 namespace ProSuite.AGP.Editing.PickerUI
 {
-	class VisibleIfFalseConverter:IValueConverter
+	class VisibleIfFalseConverter : IValueConverter
 	{
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{
@@ -14,6 +14,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 				bool boolvalue = (bool) value;
 				return boolvalue ? Visibility.Collapsed : Visibility.Visible;
 			}
+
 			return Visibility.Hidden;
 		}
 

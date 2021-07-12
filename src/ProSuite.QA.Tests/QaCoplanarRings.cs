@@ -9,8 +9,8 @@ using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.PointEnumerators;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
-using IPnt = ProSuite.Commons.Geometry.IPnt;
+using ProSuite.Commons.Geom;
+using IPnt = ProSuite.Commons.Geom.IPnt;
 
 namespace ProSuite.QA.Tests
 {

@@ -1,11 +1,10 @@
-using System;
+using System.Text;
+using System.Windows.Input;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ProSuite.AGP.Solution.ConfigUI;
 using ProSuite.Commons;
 using ProSuite.Commons.Logging;
-using System.Text;
-using System.Windows.Input;
 
 namespace ProSuite.AGP.Solution.LoggerUI
 {
@@ -14,7 +13,7 @@ namespace ProSuite.AGP.Solution.LoggerUI
 		public LogMessageDetailsViewModel(LoggingEventItem logItem)
 		{
 			LogItem = logItem;
-		}	
+		}
 
 		public LoggingEventItem LogItem { get; }
 
@@ -31,12 +30,22 @@ namespace ProSuite.AGP.Solution.LoggerUI
 		public string ClipboardMessage => BuildStringForClipboard();
 
 		private RelayCommand _cmdCopyDetails;
+
 		public ICommand CmdCopyDetails => _cmdCopyDetails ??
-		                                  (_cmdCopyDetails = new RelayCommand(parameter => CloseSettingsWindow(parameter, true), () => true));
+		                                  (_cmdCopyDetails =
+			                                   new RelayCommand(
+				                                   parameter =>
+					                                   CloseSettingsWindow(parameter, true),
+				                                   () => true));
 
 		private RelayCommand _cmdCancelDetails;
+
 		public ICommand CmdCancelDetails => _cmdCancelDetails ??
-											(_cmdCancelDetails = new RelayCommand(parameter => CloseSettingsWindow(parameter, false), () => true));
+		                                    (_cmdCancelDetails =
+			                                     new RelayCommand(
+				                                     parameter =>
+					                                     CloseSettingsWindow(parameter, false),
+				                                     () => true));
 
 		private string BuildStringForClipboard()
 		{
@@ -47,11 +56,12 @@ namespace ProSuite.AGP.Solution.LoggerUI
 			sb.AppendLine($"User:\t\t{CurrentUser}");
 			sb.AppendLine($"Source:\t\t{LogItem.Source}");
 			sb.AppendLine($"Message:\t{LogItem.Message}");
-			if (!String.IsNullOrEmpty(LogItem.ExceptionMessage))
+			if (! string.IsNullOrEmpty(LogItem.ExceptionMessage))
 			{
 				sb.AppendLine($"Exception:");
 				sb.AppendLine($"{LogItem.ExceptionMessage}");
 			}
+
 			return sb.ToString();
 		}
 
@@ -59,7 +69,7 @@ namespace ProSuite.AGP.Solution.LoggerUI
 		{
 			var sb = new StringBuilder();
 			sb.AppendLine($"{LogItem.Message}");
-			if (! String.IsNullOrEmpty(LogItem.ExceptionMessage))
+			if (! string.IsNullOrEmpty(LogItem.ExceptionMessage))
 			{
 				sb.AppendLine($"Exception:");
 				sb.AppendLine($"{LogItem.ExceptionMessage}");
@@ -70,7 +80,7 @@ namespace ProSuite.AGP.Solution.LoggerUI
 
 		private void CloseSettingsWindow(object parameter, bool saveSettings)
 		{
-			ICloseable window = (ICloseable)parameter;
+			ICloseable window = (ICloseable) parameter;
 			window?.CloseWindow(saveSettings);
 		}
 	}

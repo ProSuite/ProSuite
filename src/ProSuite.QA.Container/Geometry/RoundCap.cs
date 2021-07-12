@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geom;
 
 namespace ProSuite.QA.Container.Geometry
 {

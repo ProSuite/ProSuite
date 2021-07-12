@@ -10,6 +10,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using Path = System.IO.Path;
@@ -49,7 +50,7 @@ namespace ProSuite.Commons.AO.Test
 				logDirs.Add(assemblyDir);
 
 				DirectoryInfo parent = Directory.GetParent(assemblyDir);
-				if (parent.Exists)
+				if (parent?.Exists == true)
 				{
 					logDirs.Add(parent.FullName);
 				}
@@ -181,6 +182,68 @@ namespace ProSuite.Commons.AO.Test
 			reader.ReadFrom((IStream) stream);
 
 			return (IGeometry) serializer.ReadObject(reader, null, null);
+		}
+
+		public static void TryDeleteDirectory(string testFile)
+		{
+			string tempDir = Path.GetDirectoryName(testFile);
+
+			Assert.NotNull(tempDir);
+
+			try
+			{
+				FileSystemUtils.DeleteDirectory(tempDir, true);
+			}
+			catch (Exception e)
+			{
+				Console.WriteLine(e.Message);
+			}
+		}
+
+		public static string PrepareTestFileInTemp(string tempDirName, string originalFilePath)
+		{
+			TryDeleteTempDir(tempDirName);
+
+			return CopyFileToTemp(originalFilePath, tempDirName);
+		}
+
+		private static void TryDeleteTempDir(string tempDirName)
+		{
+			string testDir = GetTempDirPath(tempDirName);
+
+			if (Directory.Exists(testDir))
+			{
+				FileSystemUtils.DeleteDirectory(testDir, true, true);
+			}
+		}
+
+		private static string CopyFileToTemp(string filePath,
+		                                     string tempDirName = null)
+		{
+			string localTempDir = GetTempDirPath(tempDirName);
+
+			Directory.CreateDirectory(localTempDir);
+
+			string fileName = Path.GetFileName(filePath);
+
+			string newFilePath = Path.Combine(localTempDir, fileName);
+
+			File.Copy(filePath, newFilePath);
+
+			return newFilePath;
+		}
+
+		private static string GetTempDirPath([CanBeNull] string tempDirName)
+		{
+			if (tempDirName == null)
+			{
+				tempDirName = Path.GetDirectoryName(Path.GetRandomFileName());
+
+				Assert.NotNull(tempDirName);
+			}
+
+			string localTempDir = Path.Combine(Path.GetTempPath(), tempDirName);
+			return localTempDir;
 		}
 	}
 }

@@ -16,6 +16,8 @@ namespace ProSuite.AGP.Editing.Selection
 			SelectionCursor = ToolUtils.GetCursor(Resources.SelectionToolNormal);
 			SelectionCursorShift = ToolUtils.GetCursor(Resources.SelectionToolNormalShift);
 
+			SelectOnlyEditFeatures = false;
+
 			SetCursor(SelectionCursor);
 			//SelectionMode = SelectionMode.Normal;
 		}
@@ -24,7 +26,7 @@ namespace ProSuite.AGP.Editing.Selection
 
 		private SelectionSettings _selectionSettings;
 
-		protected override bool IsInSelectionPhase()
+		protected override bool IsInSelectionPhase(bool shiftIsPressed)
 		{
 			return true;
 		}

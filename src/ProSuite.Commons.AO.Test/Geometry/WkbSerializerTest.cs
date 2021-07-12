@@ -11,10 +11,10 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Serialization;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
-using ProSuite.Commons.Geometry.Wkb;
+using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.Wkb;
 using Wkx;
-using IPnt = ProSuite.Commons.Geometry.IPnt;
+using IPnt = ProSuite.Commons.Geom.IPnt;
 using Point = Wkx.Point;
 using Polygon = Wkx.Polygon;
 

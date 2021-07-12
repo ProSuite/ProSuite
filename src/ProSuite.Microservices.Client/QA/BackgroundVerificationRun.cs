@@ -8,7 +8,7 @@ using ProSuite.Commons.Com;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.DomainModel.Core.QA;
@@ -40,17 +40,27 @@ namespace ProSuite.Microservices.Client.QA
 			[NotNull] IQualityVerificationRepository qualityVerificationRepository,
 			[NotNull] IQualityConditionRepository qualityConditionRepository,
 			CancellationTokenSource cancellationTokenSource)
+			: this(verificationRequest, domainTransactions, qualityVerificationRepository,
+			       qualityConditionRepository,
+			       new QualityVerificationProgressTracker
+			       {
+				       CancellationTokenSource = cancellationTokenSource
+			       }) { }
+
+		public BackgroundVerificationRun(
+			[NotNull] VerificationRequest verificationRequest,
+			[NotNull] IDomainTransactionManager domainTransactions,
+			[NotNull] IQualityVerificationRepository qualityVerificationRepository,
+			[NotNull] IQualityConditionRepository qualityConditionRepository,
+			QualityVerificationProgressTracker progress)
 		{
 			VerificationRequest = verificationRequest;
 			_domainTransactions = domainTransactions;
 			_qualityVerificationRepository = qualityVerificationRepository;
 			_qualityConditionRepository = qualityConditionRepository;
-			_cancellationTokenSource = cancellationTokenSource;
+			_cancellationTokenSource = progress.CancellationTokenSource;
 
-			Progress = new QualityVerificationProgressTracker
-			           {
-				           CancellationTokenSource = cancellationTokenSource
-			           };
+			Progress = progress;
 		}
 
 		[NotNull]
@@ -75,10 +85,7 @@ namespace ProSuite.Microservices.Client.QA
 			set;
 		}
 
-		[CanBeNull]
-		public Action<QualityVerification> ShowReportAction { get; set; }
-
-		private StaTaskScheduler StaTaskScheduler { get; } = new StaTaskScheduler(1);
+		private StaTaskScheduler StaTaskScheduler { get; set; }
 
 		public async Task<ServiceCallStatus> ExecuteAndProcessMessagesAsync(
 			[NotNull] QualityVerificationGrpc.QualityVerificationGrpcClient rpcClient,
@@ -93,9 +100,15 @@ namespace ProSuite.Microservices.Client.QA
 		private async Task<ServiceCallStatus> TryExecuteAsync(
 			[NotNull] Func<CancellationTokenSource, Task<bool>> func)
 		{
-			QualityVerificationResult = new BackgroundVerificationResult(
-				ResultIssueCollector, _domainTransactions, _qualityVerificationRepository,
-				_qualityConditionRepository);
+			QualityVerificationResult =
+				new BackgroundVerificationResult(
+					ResultIssueCollector, _domainTransactions,
+					_qualityVerificationRepository,
+					_qualityConditionRepository)
+				{
+					HtmlReportPath = VerificationRequest.Parameters.HtmlReportPath,
+					IssuesGdbPath = VerificationRequest.Parameters.IssueFileGdbPath
+				};
 
 			// The service progress can be used in the non-modal progress dialogue
 			Progress.QualityVerificationResult = QualityVerificationResult;
@@ -196,6 +209,12 @@ namespace ProSuite.Microservices.Client.QA
 
 			Func<bool> getDataFunc = () => SatisfyDataRequest(
 				serverResponseMsg, VerificationDataProvider, dataStream);
+
+			if (StaTaskScheduler == null)
+			{
+				// Only initialize it if it is going to be needed
+				StaTaskScheduler = new StaTaskScheduler(1);
+			}
 
 			bool result =
 				await Task.Factory.StartNew(

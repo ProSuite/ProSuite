@@ -5,6 +5,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.ChangeAlong;
 using ProSuite.Commons.AO.Geometry.LinearNetwork;
@@ -16,7 +17,6 @@ using ProSuite.Commons.Notifications;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared;
-using ProSuite.Microservices.Server.AO.Geodatabase;
 
 namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 {
@@ -24,6 +24,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		[NotNull]
 		public static AdvancedReshapeResponse Reshape(
 			[NotNull] AdvancedReshapeRequest request)
 		{
@@ -233,13 +234,13 @@ namespace ProSuite.Microservices.Server.AO.Geometry.AdvancedReshape
 				IFeature feature = storedFeature;
 				IGeometry newGeometry = storedFeature.Shape;
 
-				var resultFeature = new ResultFeatureMsg();
+				var resultFeature = new ResultObjectMsg();
 
 				GdbObjectMsg resultFeatureMsg =
 					ProtobufGdbUtils.ToGdbObjectMsg(feature, newGeometry,
 					                                storedFeature.Class.ObjectClassID);
 
-				resultFeature.UpdatedFeature = resultFeatureMsg;
+				resultFeature.Update = resultFeatureMsg;
 
 				if (reshapedGeometries.ContainsKey(newGeometry) &&
 				    (reshapedGeometries[newGeometry] != null))

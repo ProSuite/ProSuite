@@ -184,13 +184,13 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 		                                          List<Feature> updateFeatures)
 		{
 			// consider using anything unique as an identifier, e.g. a GUID
-			int classId = featureBuffer.ClassHandle;
-			int objectId = featureBuffer.ObjectId;
+			long classId = featureBuffer.ClassHandle;
+			long objectId = featureBuffer.ObjectId;
 
 			return GetOriginalFeature(objectId, classId, updateFeatures);
 		}
 
-		private static Feature GetOriginalFeature(int objectId, int classId,
+		private static Feature GetOriginalFeature(long objectId, long classId,
 		                                          List<Feature> updateFeatures)
 		{
 			return updateFeatures.First(f => f.GetObjectID() == objectId &&

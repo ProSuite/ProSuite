@@ -18,8 +18,8 @@ using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
-using ProSuite.Commons.Geometry.EsriShape;
+using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.EsriShape;
 using Array = System.Array;
 
 namespace ProSuite.Commons.AO.Test.Geometry
@@ -3458,7 +3458,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			watch.Stop();
 			Console.WriteLine("Next 100 HitTests (AO): {0}", watch.ElapsedMilliseconds);
 
-			Multipoint<Commons.Geometry.IPnt> multipnt =
+			Multipoint<Commons.Geom.IPnt> multipnt =
 				GeometryConversionUtils.CreateMultipoint(multipoint);
 
 			Pnt2D testPnt = new Pnt2D(2734500, 1200123);
@@ -3478,7 +3478,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			watch.Restart();
 			for (int i = 1000; i < 10000; i += 100)
 			{
-				Commons.Geometry.IPnt pnt = multipnt.GetPoint(i);
+				Commons.Geom.IPnt pnt = multipnt.GetPoint(i);
 
 				anyHit = multipnt
 				         .FindPointIndexes(pnt, 0.01, useSearchCircle: false,
@@ -3495,7 +3495,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			watch.Restart();
 			for (int i = 1000; i < 10000; i += 100)
 			{
-				Commons.Geometry.IPnt pnt = multipnt.GetPoint(i);
+				Commons.Geom.IPnt pnt = multipnt.GetPoint(i);
 
 				anyHit = multipnt
 				         .FindPointIndexes(pnt, 0.01, useSearchCircle: false,

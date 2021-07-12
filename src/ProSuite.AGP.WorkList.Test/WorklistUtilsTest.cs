@@ -2,6 +2,7 @@ using System.Threading;
 using NUnit.Framework;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
+using ProSuite.Commons.AGP.Hosting;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -9,7 +10,8 @@ namespace ProSuite.AGP.WorkList.Test
 	[Apartment(ApartmentState.STA)]
 	public class WorklistUtilsTest
 	{
-		private string _path = @"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\work_list_definition_pointing_to_sde.xml.swl";
+		private readonly string _path =
+			@"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\work_list_definition_pointing_to_sde.xml.swl";
 
 		[SetUp]
 		public void SetUp()
@@ -19,16 +21,14 @@ namespace ProSuite.AGP.WorkList.Test
 		}
 
 		[TearDown]
-		public void TearDown()
-		{
-		}
+		public void TearDown() { }
 
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
 			// Host must be initialized on an STA thread:
 			//Host.Initialize();
-			Commons.AGP.Hosting.CoreHostProxy.Initialize();
+			CoreHostProxy.Initialize();
 		}
 
 		[Test]

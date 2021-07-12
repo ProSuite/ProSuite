@@ -6,7 +6,7 @@ using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Tests.Network;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geom;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
