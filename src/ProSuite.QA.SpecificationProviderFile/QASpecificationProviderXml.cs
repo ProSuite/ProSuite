@@ -14,7 +14,7 @@ namespace ProSuite.QA.SpecificationProviderFile
 		public string BackendDisplayName => SpecificationsFolder;
 		public bool CanGetSpecifications()
 		{
-			return AvailableSpecifications.Any();
+			return AvailableSpecifications?.Any() == true;
 		}
 
 		public async Task<IList<IQualitySpecificationReference>> GetQualitySpecifications()
