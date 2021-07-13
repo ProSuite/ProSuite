@@ -62,7 +62,7 @@ namespace ProSuite.Microservices.Client.QA
 		/// <param name="reason">The reason why opening the work list is not possible.</param>
 		/// <returns></returns>
 		bool CanOpenWorkList([CanBeNull] ServiceCallStatus? currentProgressStep,
-		                     [NotNull] IQualityVerificationResult verificationResult,
+		                     [CanBeNull] IQualityVerificationResult verificationResult,
 		                     out string reason);
 
 		/// <summary>
@@ -79,7 +79,7 @@ namespace ProSuite.Microservices.Client.QA
 		/// <param name="reason">The reason why showing the report is not possible</param>
 		/// <returns></returns>
 		bool CanShowReport([CanBeNull] ServiceCallStatus? currentProgressStep,
-		                   [NotNull] IQualityVerificationResult verificationResult,
+		                   [CanBeNull] IQualityVerificationResult verificationResult,
 		                   out string reason);
 
 		/// <summary>
@@ -98,7 +98,7 @@ namespace ProSuite.Microservices.Client.QA
 		/// <param name="verificationResult"></param>
 		/// <param name="reason"></param>
 		/// <returns></returns>
-		bool CanSaveIssues([NotNull] IQualityVerificationResult verificationResult,
+		bool CanSaveIssues([CanBeNull] IQualityVerificationResult verificationResult,
 		                   out string reason);
 	}
 }

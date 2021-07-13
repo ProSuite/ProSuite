@@ -263,17 +263,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			Cursor = TargetSelectionCursor;
 
-			SketchOutputMode = SketchOutputMode.Map;
-
-			// NOTE: CompleteSketchOnMouseUp must be set before the sketch geometry type,
-			// otherwise it has no effect!
-			CompleteSketchOnMouseUp = true;
-
-			SketchType = SketchGeometryType.Rectangle;
-
-			UseSnapping = false;
-
-			GeomIsSimpleAsFeature = false;
+			SetupRectangleSketch();
 		}
 
 		private bool SelectTargets(List<Feature> selectedFeatures, Geometry sketch,

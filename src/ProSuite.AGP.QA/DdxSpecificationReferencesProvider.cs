@@ -46,5 +46,10 @@ namespace ProSuite.AGP.QA
 			                                                 IncludeHiddenSpecifications,
 			                                                 Assert.NotNull(_client.DdxClient));
 		}
+
+		public Task<IQualitySpecificationReference> GetQualitySpecification(string name)
+		{
+			return null;
+		}
 	}
 }

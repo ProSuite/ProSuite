@@ -271,18 +271,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected void StartSelectionPhase()
 		{
-			SketchOutputMode = SelectionSettings.SketchOutputMode;
-
-			// NOTE: CompleteSketchOnMouseUp must be set before the sketch geometry type,
-			// otherwise it has no effect!
-			CompleteSketchOnMouseUp = true;
-
-			SketchType = SelectionSettings.SketchGeometryType;
-
-			UseSnapping = false;
-
-			GeomIsSimpleAsFeature = false;
-
+			SetupSketch(SelectionSettings.SketchGeometryType, SelectionSettings.SketchOutputMode);
+			
 			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
 			{
 				SetCursor(SelectionCursorShift);
@@ -293,6 +283,35 @@ namespace ProSuite.AGP.Editing.OneClick
 			}
 
 			OnSelectionPhaseStarted();
+		}
+
+		/// <summary>
+		/// Sets up the tool for a sketch that is typically used to select things (features, graphics, etc.)
+		/// </summary>
+		protected void SetupRectangleSketch()
+		{
+			SetupSketch(SketchGeometryType.Rectangle);
+		}
+
+		protected void SetupSketch(SketchGeometryType? sketchType,
+		                           SketchOutputMode sketchOutputMode = SketchOutputMode.Map,
+		                           bool useSnapping = false,
+		                           bool completeSketchOnMouseUp = true,
+		                           bool enforceSimpleSketch = false)
+		{
+
+			SketchOutputMode = sketchOutputMode;
+
+			// NOTE: CompleteSketchOnMouseUp must be set before the sketch geometry type,
+			// otherwise it has no effect!
+			CompleteSketchOnMouseUp = completeSketchOnMouseUp;
+
+			SketchType = sketchType;
+
+			UseSnapping = useSnapping;
+
+			GeomIsSimpleAsFeature = enforceSimpleSketch;
+
 		}
 
 		protected virtual void OnSelectionPhaseStarted() { }

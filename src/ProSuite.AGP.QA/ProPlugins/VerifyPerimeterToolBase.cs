@@ -6,6 +6,7 @@ using ArcGIS.Core.Threading.Tasks;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.AGP.Editing;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.QA.VerificationProgress;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -46,11 +47,27 @@ namespace ProSuite.AGP.QA.ProPlugins
 			return base.OnToolActivateAsync(active);
 		}
 
+		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
+		{
+			SetupRectangleSketch();
+
+			return base.OnToolActivatedCore(hasMapViewChanged);
+		}
+
 		protected override Task<bool> OnSketchCompleteCoreAsync(
 			Geometry sketchGeometry,
 			CancelableProgressor progressor)
 		{
 			GeometryUtils.Simplify(sketchGeometry);
+
+			if (ToolUtils.IsSingleClickSketch(sketchGeometry))
+			{
+				MessageBox.Show(
+					"Invalid perimeter. Please draw a box to define the extent to be verified",
+					"Verify Extent",
+					MessageBoxButton.OK, MessageBoxImage.Warning);
+				return Task.FromResult(false);
+			}
 
 			IQualityVerificationEnvironment qaEnvironment =
 				Assert.NotNull(SessionContext.VerificationEnvironment);
@@ -116,17 +133,19 @@ namespace ProSuite.AGP.QA.ProPlugins
 			[NotNull] QualityVerificationProgressTracker progressTracker,
 			string resultsPath)
 		{
+			// NOTE: If the background task is not Run( async () => ... but only Run(() => ...
+			// The tool's OnSketchCompleteAsync will be called twice! 
 			Task<ServiceCallStatus> verificationTask =
 				await BackgroundTask.Run(
-					() =>
+					async () =>
 					{
 						IQualityVerificationEnvironment qaEnvironment =
 							SessionContext.VerificationEnvironment;
 
 						Assert.NotNull(qaEnvironment);
 
-						return qaEnvironment.VerifyPerimeter(
-							perimeter, progressTracker, resultsPath);
+						return await qaEnvironment.VerifyPerimeter(
+							       perimeter, progressTracker, resultsPath);
 					},
 					BackgroundProgressor.None);
 
