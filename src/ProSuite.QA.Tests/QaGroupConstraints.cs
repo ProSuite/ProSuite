@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
