@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Xml;
 using NUnit.Framework;
 using ProSuite.Commons.Xml;
@@ -47,5 +47,7 @@ namespace ProSuite.Commons.Test.Xml
 
 			Assert.AreEqual("#aaaa[0x0B]bbb[0x0C]#", escaped);
 		}
+
+		
 	}
 }

@@ -25,5 +25,12 @@ namespace ProSuite.DomainModel.Core.QA
 		/// </summary>
 		/// <returns></returns>
 		Task<IList<IQualitySpecificationReference>> GetQualitySpecifications();
+
+		/// <summary>
+		/// Get the quality specification by name - for GP compatibility .
+		/// </summary>
+		/// <returns></returns>
+		Task<IQualitySpecificationReference> GetQualitySpecification(string name);
+
 	}
 }

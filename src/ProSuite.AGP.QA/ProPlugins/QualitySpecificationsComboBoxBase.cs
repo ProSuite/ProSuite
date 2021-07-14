@@ -53,7 +53,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			if (currentSpecification != null)
 			{
 				SelectedItem =
-					ItemCollection.FirstOrDefault(i => Equals(i, currentSpecification.Name));
+					ItemCollection.FirstOrDefault(i => Equals(((ComboBoxItem)i).Text, currentSpecification.Name));
 			}
 			else
 			{

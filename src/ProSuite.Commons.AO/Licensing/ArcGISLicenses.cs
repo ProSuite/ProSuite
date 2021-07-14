@@ -22,7 +22,7 @@ namespace ProSuite.Commons.AO.Licensing
 			         extensions);
 		}
 
-		public EsriProduct InitializedProduct => (EsriProduct) _initializer.InitializedProduct;
+		public EsriProduct InitializedProduct { get; private set; }
 
 		public void Checkout(EsriProduct product, params EsriExtension[] extensions)
 		{
@@ -47,6 +47,10 @@ namespace ProSuite.Commons.AO.Licensing
 				throw new InvalidOperationException(
 					$"Cannot check out license ({product}, {StringUtils.Concatenate(esriExtensionCodes, ", ")})");
 			}
+
+			// The _initializer is thread-affine and cannot be used from another thread.
+			// Therefore, set the property here:
+			InitializedProduct = (EsriProduct) _initializer.InitializedProduct;
 		}
 
 		public esriLicenseStatus CheckoutExtension(esriLicenseExtensionCode extensionCode)

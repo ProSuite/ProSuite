@@ -183,17 +183,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			Cursor = SecondPhaseCursor;
 
-			SketchOutputMode = SketchOutputMode.Map;
-
-			// NOTE: CompleteSketchOnMouseUp must be set before the sketch geometry type,
-			// otherwise it has no effect!
-			CompleteSketchOnMouseUp = true;
-
-			SketchType = SketchGeometryType.Rectangle;
-
-			UseSnapping = false;
-
-			GeomIsSimpleAsFeature = false;
+			SetupRectangleSketch();
 		}
 	}
 }

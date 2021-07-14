@@ -77,6 +77,7 @@
     <Compile Include="QA\IVerificationDataProvider.cs" />
     <Compile Include="QA\QualityVerificationServiceClient.cs" />
     <Compile Include="MicroserviceClientBase.cs" />
+    <Compile Include="QA\StandAloneAppVerificationController.cs" />
     <Compile Include="QualityTestService\ExternalTestClient.cs" />
   </ItemGroup>
   <ItemGroup>
