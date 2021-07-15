@@ -213,6 +213,7 @@ namespace ProSuite.AGP.Solution
 			LogMessageActionEvent.Unsubscribe(OnLogMessageActionRequested);
 
 			ToolMicroserviceClient?.Disconnect();
+			QaMicroserviceClient?.Disconnect();
 		}
 
 		/// <summary>
