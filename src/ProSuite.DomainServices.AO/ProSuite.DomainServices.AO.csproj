@@ -303,6 +303,7 @@
     <Compile Include="QA\VerifiedDataModel\VerifiedDatasetHarvesterBase.cs" />
     <Compile Include="QA\VerifiedDataModel\VerifiedModel.cs" />
     <Compile Include="QA\VerifiedDataModel\VerifiedModelFactory.cs" />
+    <Compile Include="QA\VerifiedDataModel\VerifiedSimpleRasterMosaicDataset.cs" />
     <Compile Include="QA\VerifiedDataModel\VerifiedTableDataset.cs" />
     <Compile Include="QA\VerifiedDataModel\VerifiedVectorDataset.cs" />
     <Compile Include="Schemas\Schema.Designer.cs">

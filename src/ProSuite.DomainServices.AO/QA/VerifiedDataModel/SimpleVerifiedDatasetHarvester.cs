@@ -11,7 +11,8 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 
 			bool isSupportedType =
 				datasetName.Type == esriDatasetType.esriDTFeatureClass ||
-				datasetName.Type == esriDatasetType.esriDTTable;
+				datasetName.Type == esriDatasetType.esriDTTable ||
+				datasetName.Type == esriDatasetType.esriDTMosaicDataset;
 
 			if (isSupportedType)
 			{
@@ -33,6 +34,11 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			if (datasetName is ITableName)
 			{
 				return GetTableDataset(datasetName);
+			}
+
+			if (datasetName is IMosaicDatasetName)
+			{
+				return GetRasterMosaicDataset(datasetName);
 			}
 
 			return null;

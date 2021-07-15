@@ -131,6 +131,38 @@ namespace ProSuite.Commons.Xml
 			}
 		}
 
+		public bool CanDeserializeString([NotNull] string xmlContent)
+		{
+			Assert.ArgumentNotNullOrEmpty(xmlContent, nameof(xmlContent));
+
+			if (xmlContent.TrimStart().StartsWith("<") != true)
+			{
+				return false;
+			}
+
+			try
+			{
+				using (var reader = XmlReader.Create(new StringReader(xmlContent)))
+				{
+					return CanDeserialize(reader);
+				}
+			}
+			catch
+			{
+				return false;
+			}
+		}
+
+		public bool CanDeserialize([NotNull] XmlReader reader)
+		{
+			Assert.ArgumentNotNull(reader, nameof(reader));
+
+			XmlSerializer serializer = GetSerializer();
+
+			return serializer.CanDeserialize(reader);
+		}
+
+
 		[NotNull]
 		private XmlSerializer GetSerializer()
 		{
