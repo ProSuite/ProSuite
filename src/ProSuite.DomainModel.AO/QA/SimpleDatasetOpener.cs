@@ -5,6 +5,8 @@ using ESRI.ArcGIS.DataSourcesRaster;
 #endif
 using System;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
@@ -37,6 +39,16 @@ namespace ProSuite.DomainModel.AO.QA
 				if (dataset is ObjectDataset objectDataset)
 				{
 					return _datasetContext.OpenObjectClass(objectDataset);
+				}
+
+				if (dataset is ISimpleTerrainDataset simpleTerrainDataset)
+				{
+					return _datasetContext.OpenTerrainReference(simpleTerrainDataset);
+				}
+
+				if (dataset is ISimpleRasterMosaicDataset simpleRasterMosaicDataset)
+				{
+					return _datasetContext.OpenSimpleRasterMosaic(simpleRasterMosaicDataset);
 				}
 
 				// TODO: Raster, Mosaic
@@ -75,6 +87,13 @@ namespace ProSuite.DomainModel.AO.QA
 			if (typeof(IRasterDataset2) == knownType)
 				return (IRasterDataset2) _datasetContext.OpenRasterDataset(
 					(IDdxRasterDataset) dataset);
+
+			if (typeof(SimpleRasterMosaic) == knownType)
+				return _datasetContext.OpenSimpleRasterMosaic(
+					(ISimpleRasterMosaicDataset) dataset);
+
+			if (typeof(TerrainReference) == knownType)
+				return _datasetContext.OpenTerrainReference((ISimpleTerrainDataset) dataset);
 
 			throw new ArgumentException($"Unsupported data type {knownType}");
 		}

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container.TestContainer;
@@ -84,11 +85,8 @@ namespace ProSuite.QA.Container
 			{
 				foreach (RasterReference raster in InvolvedRasters)
 				{
-					geoDataset = raster.RasterDataset as IGeoDataset;
-					if (geoDataset != null)
-					{
-						yield return geoDataset;
-					}
+					geoDataset = raster.GeoDataset;
+					yield return geoDataset;
 				}
 			}
 		}
@@ -592,9 +590,9 @@ namespace ProSuite.QA.Container
 				ITable table = InvolvedTables[tableIndex];
 
 				filterHelpers[tableIndex] = new QueryFilterHelper(table,
-				                                                  GetConstraint(tableIndex),
-				                                                  GetSqlCaseSensitivity(
-					                                                  tableIndex));
+					GetConstraint(tableIndex),
+					GetSqlCaseSensitivity(
+						tableIndex));
 				spatialFilters[tableIndex] = new SpatialFilterClass();
 
 				ConfigureQueryFilter(tableIndex, spatialFilters[tableIndex]);

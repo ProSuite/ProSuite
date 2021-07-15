@@ -81,6 +81,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="DataModel\ApplicableAttributes.cs" />
     <Compile Include="DataModel\AttributeUtils.cs" />
     <Compile Include="DataModel\FieldIndexCache.cs" />
     <Compile Include="DataModel\GlobalDatasetLookup.cs" />
@@ -144,6 +145,7 @@
     <Compile Include="Geodatabase\SdeDirectConnectionProvider.cs" />
     <Compile Include="Geodatabase\SdeDirectDbUserConnectionProvider.cs" />
     <Compile Include="Geodatabase\SdeDirectOsaConnectionProvider.cs" />
+    <Compile Include="DataModel\ITerrainSource.cs" />
     <Compile Include="Processing\GdbProcessUtils.cs" />
     <Compile Include="Processing\IGdbProcess.cs" />
     <Compile Include="Processing\IGdbProcessManager.cs" />

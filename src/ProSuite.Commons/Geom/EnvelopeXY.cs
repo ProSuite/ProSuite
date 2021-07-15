@@ -45,6 +45,14 @@ namespace ProSuite.Commons.Geom
 				YMax = other.YMax;
 		}
 
+		public Pnt2D GetCenterPoint()
+		{
+			double centerX = (XMin + XMax) / 2;
+			double centerY = (YMin + YMax) / 2;
+
+			return new Pnt2D(centerX, centerY);
+		}
+
 		[SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
 		public bool Equals([CanBeNull] EnvelopeXY other,
 		                   double tolerance)

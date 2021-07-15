@@ -1,40 +1,30 @@
-#if Server
-using ESRI.ArcGIS.DatasourcesRaster;
-#else
-using ESRI.ArcGIS.DataSourcesRaster;
-#endif
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
-using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Container.TestContainer
 {
 	internal class RastersRowEnumerable
 	{
 		private const int _defaultMaxRasterPointCount = 4096 * 4096;
-		[NotNull] private readonly IDictionary<RasterReference, IRaster> _rastersDict;
+		[NotNull] private readonly HashSet<RasterReference> _rastersDict;
 		[NotNull] private readonly ITestProgress _progress;
-
-		private readonly Box _extent;
-		private int _maxRasterPointCount;
 
 		public RastersRowEnumerable(
 			[NotNull] IEnumerable<RasterReference> rasterReferences,
-			[NotNull] ITestProgress progress)
-			: this(rasterReferences.ToDictionary(
-				       r => r,
-				       r => r.CreateFullRaster()), progress) { }
+			[NotNull] ITestProgress progress,
+			double defaultTileSize)
+			: this(new HashSet<RasterReference>(rasterReferences), progress, defaultTileSize) { }
 
 		public RastersRowEnumerable(
-			[NotNull] IDictionary<RasterReference, IRaster> rasters,
-			[NotNull] ITestProgress progress)
+			[NotNull] HashSet<RasterReference> rasters,
+			[NotNull] ITestProgress progress,
+			double defaultTileSize)
 		{
 			Assert.ArgumentNotNull(rasters, nameof(rasters));
 			Assert.ArgumentNotNull(progress, nameof(progress));
@@ -42,51 +32,29 @@ namespace ProSuite.QA.Container.TestContainer
 			_rastersDict = rasters;
 			_progress = progress;
 
-			IEnvelope extent = null;
-			var minDx = double.MaxValue;
-			foreach (var raster in rasters.Values)
-			{
-				var props = (IRasterProps) raster;
-				minDx = Math.Min(props.MeanCellSize().X, minDx);
-				if (extent == null)
-				{
-					extent = props.Extent.Envelope;
-				}
-				else
-				{
-					extent.Union(props.Extent.Envelope);
-				}
-			}
-
-			if (extent != null)
-			{
-				_extent = QaGeometryUtils.CreateBox(extent);
-			}
-
-			// TODO: adapt cellsize according to minDx
-
-			MaxRasterPointCount = _defaultMaxRasterPointCount;
+			CalculateTileSize(rasters, defaultTileSize);
 		}
 
-		public int MaxRasterPointCount
+		private void CalculateTileSize(IEnumerable<RasterReference> rasters,
+		                               double defaultTileSize)
 		{
-			get { return _maxRasterPointCount; }
-			set
-			{
-				_maxRasterPointCount = value;
+			double sum = 0;
 
-				double sum = 0;
-				foreach (IRaster raster in _rastersDict.Values)
+			foreach (var raster in rasters)
+			{
+				if (raster.AssumeInMemory)
 				{
-					double dx = ((IRasterProps) raster).MeanCellSize().X;
+					double dx = raster.CellSize;
 					sum += 1 / (dx * dx);
 				}
-
-				TileSize = Math.Sqrt(_maxRasterPointCount / sum);
 			}
+
+			TileSize = sum > 0
+				           ? Math.Sqrt(_defaultMaxRasterPointCount / sum)
+				           : defaultTileSize;
 		}
 
-		public double TileSize { get; set; }
+		private double TileSize { get; set; }
 
 		[PublicAPI]
 		public double SearchDistance { get; set; }
@@ -153,10 +121,9 @@ namespace ProSuite.QA.Container.TestContainer
 					IEnvelope rasterBox = GeometryFactory.CreateEnvelope(
 						rasterXMin, rasterYMin, rasterXMax, rasterYMax);
 
-					var rows = _rastersDict.Select(p => new RasterRow(
-						                               rasterBox, p.Key, p.Value, 0,
-						                               _progress))
-					                       .ToList();
+					var rows = _rastersDict
+					           .Select(p => new RasterRow(rasterBox, p, _progress))
+					           .ToList();
 
 					foreach (RasterRow rasterRow in rows)
 					{

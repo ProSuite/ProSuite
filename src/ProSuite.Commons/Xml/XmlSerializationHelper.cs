@@ -104,6 +104,34 @@ namespace ProSuite.Commons.Xml
 		}
 
 		[NotNull]
+		public T ReadFromString([NotNull] string xmlContent,
+		                      [CanBeNull] Action<string> receiveNotification)
+		{
+			Assert.ArgumentNotNullOrEmpty(xmlContent, nameof(xmlContent));
+
+			XmlSerializer serializer = GetSerializer();
+
+			try
+			{
+				// make accessible for event handlers
+				_receiveNotification = receiveNotification;
+
+				WireEvents(serializer);
+
+				using (var stream = new StringReader(xmlContent))
+				{
+					object result = serializer.Deserialize(stream);
+					return (T) result;
+				}
+			}
+			finally
+			{
+				UnwireEvents(serializer);
+				_receiveNotification = null;
+			}
+		}
+
+		[NotNull]
 		private XmlSerializer GetSerializer()
 		{
 			return _serializer ?? (_serializer = new XmlSerializer(typeof(T)));

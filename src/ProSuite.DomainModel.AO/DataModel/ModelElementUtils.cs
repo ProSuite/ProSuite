@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -50,8 +53,18 @@ namespace ProSuite.DomainModel.AO.DataModel
 			IWorkspaceContext masterDatabaseWorkspaceContext =
 				model.MasterDatabaseWorkspaceContext;
 
-			return masterDatabaseWorkspaceContext != null &&
-			       masterDatabaseWorkspaceContext.Contains(dataset);
+			if (masterDatabaseWorkspaceContext == null)
+			{
+				return false;
+			}
+
+			if (dataset is IDatasetCollection datasetCollection)
+			{
+				return datasetCollection.ContainedDatasets.All(
+					containedDataset => masterDatabaseWorkspaceContext.Contains(containedDataset));
+			}
+
+			return masterDatabaseWorkspaceContext.Contains(dataset);
 		}
 
 		[CanBeNull]
@@ -59,7 +72,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			[NotNull] IVectorDataset dataset, bool allowAlways = false)
 		{
 			IDatasetContext context = GetMasterDatabaseWorkspaceContext(dataset,
-			                                                            allowAlways);
+				allowAlways);
 			return context?.OpenFeatureClass(dataset);
 		}
 
@@ -68,7 +81,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			[NotNull] IObjectDataset dataset, bool allowAlways = false)
 		{
 			IDatasetContext context = GetMasterDatabaseWorkspaceContext(dataset,
-			                                                            allowAlways);
+				allowAlways);
 			return context?.OpenObjectClass(dataset);
 		}
 
@@ -77,7 +90,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			[NotNull] Association association, bool allowAlways = false)
 		{
 			IWorkspaceContext context = GetMasterDatabaseWorkspaceContext(association,
-			                                                              allowAlways);
+				allowAlways);
 			return context?.OpenRelationshipClass(association);
 		}
 
@@ -86,8 +99,48 @@ namespace ProSuite.DomainModel.AO.DataModel
 		                                                       bool allowAlways = false)
 		{
 			IDatasetContext context = GetMasterDatabaseWorkspaceContext(dataset,
-			                                                            allowAlways);
+				allowAlways);
 			return context?.OpenRasterDataset(dataset);
+		}
+
+		[CanBeNull]
+		public static TerrainReference TryOpenFromMasterDatabase(
+			ISimpleTerrainDataset dataset, bool allowAlways = false)
+		{
+			IDatasetContext context = GetMasterDatabaseWorkspaceContext(dataset,
+				allowAlways);
+
+			return context?.OpenTerrainReference(dataset);
+		}
+
+		[CanBeNull]
+		public static SimpleRasterMosaic TryOpenFromMasterDatabase(
+			ISimpleRasterMosaicDataset dataset, bool allowAlways = false)
+		{
+			IDatasetContext context = GetMasterDatabaseWorkspaceContext(dataset,
+				allowAlways);
+
+			return context?.OpenSimpleRasterMosaic(dataset);
+		}
+
+		[NotNull]
+		public static List<SimpleTerrainDataSource> GetTerrainDataSources(
+			[NotNull] ISimpleTerrainDataset dataset,
+			[NotNull] Func<IObjectDataset, IObjectClass> openDataset)
+		{
+			var terrainSources = new List<SimpleTerrainDataSource>();
+			foreach (TerrainSourceDataset source in dataset.Sources)
+			{
+				IFeatureClass featureClass =
+					Assert.NotNull((IFeatureClass) openDataset(source.Dataset));
+
+				terrainSources.Add(new SimpleTerrainDataSource(
+					                   featureClass,
+					                   (esriTinSurfaceType) source.SurfaceFeatureType,
+					                   source.WhereClause));
+			}
+
+			return terrainSources;
 		}
 
 		[CanBeNull]

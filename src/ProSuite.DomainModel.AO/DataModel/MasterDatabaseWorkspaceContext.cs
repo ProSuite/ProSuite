@@ -1,5 +1,13 @@
+#if Server
+using ESRI.ArcGIS.DatasourcesRaster;
+#else
+using ESRI.ArcGIS.DataSourcesRaster;
+#endif
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -68,6 +76,24 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return DatasetUtils.OpenRasterDataset(Workspace, GetGdbElementName(dataset));
 
 			//return _workspaceProxy.OpenRasterDataset(GetGdbElementName(dataset));
+		}
+
+		public override TerrainReference OpenTerrainReference(ISimpleTerrainDataset dataset)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			IList<SimpleTerrainDataSource> terrainSources =
+				ModelElementUtils.GetTerrainDataSources(dataset, OpenObjectClass);
+
+			return new SimpleTerrain(dataset.Name, terrainSources, dataset.PointDensity, null);
+		}
+
+		public override SimpleRasterMosaic OpenSimpleRasterMosaic(
+			ISimpleRasterMosaicDataset dataset)
+		{
+			IMosaicDataset mosaic = DatasetUtils.OpenMosaicDataset(Workspace, dataset.Name);
+
+			return new SimpleRasterMosaic(mosaic);
 		}
 
 		public override IRelationshipClass OpenRelationshipClass(Association association)

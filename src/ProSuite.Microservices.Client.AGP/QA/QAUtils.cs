@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -46,7 +45,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 				                     VersionName = projectWorkspace.GetVersionName() ?? string.Empty
 			                     };
 
-			workContextMsg.VerifiedDatasets.AddRange(projectWorkspace.GetDatasetIds());
+			workContextMsg.VerifiedDatasetIds.AddRange(projectWorkspace.GetDatasetIds());
 
 			var specificationMsg = new QualitySpecificationMsg
 			                       {
@@ -203,7 +202,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			void SaveAction(IQualityVerificationResult verificationResult,
 			                ErrorDeletionInPerimeter errorDeletion,
 			                bool updateLatestTestDate) { }
-			
+
 			BackgroundVerificationRun verificationRun =
 				new BackgroundVerificationRun(request, null,
 				                              null,
