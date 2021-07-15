@@ -386,6 +386,9 @@ namespace ProSuite.AGP.Solution
 
 			_sessionContext.MicroServiceClient = client;
 
+			// In case the map is already loaded: Set up the project workspace:
+			await _sessionContext.TrySelectProjectWorkspaceFromFocusMapAsync();
+
 			// TODO: If no client channel config file exists, use XML verification provider directly:
 			//verificationEnvironment =
 			//	new QualityVerificationEnvironment(new XmlSpecificationProvider());
