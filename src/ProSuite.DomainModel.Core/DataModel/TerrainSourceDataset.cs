@@ -1,4 +1,5 @@
 using System;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.DataModel
@@ -15,6 +16,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 		                            TinSurfaceType surfaceFeatureType,
 		                            [CanBeNull] string whereClause = null)
 		{
+			Assert.NotNull(dataset, nameof(dataset));
+
 			_dataset = dataset;
 			_surfaceFeatureType = surfaceFeatureType;
 			_whereClause = whereClause;

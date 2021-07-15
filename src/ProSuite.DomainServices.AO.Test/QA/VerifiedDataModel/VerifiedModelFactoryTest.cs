@@ -47,12 +47,15 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 
 			int tableCount = model.GetDatasets<TableDataset>().Count;
 			int vectorCount = model.GetDatasets<VectorDataset>().Count;
+			int simpleRasterMosaicCount = model.GetDatasets<SimpleRasterMosaicDataset>().Count;
 
 			Assert.Greater(tableCount, 0);
 			Assert.Greater(vectorCount, 0);
+			Assert.Greater(simpleRasterMosaicCount, 0);
 
 			Console.WriteLine("Vector datasets: {0}", vectorCount);
 			Console.WriteLine("Table datasets: {0}", tableCount);
+			Console.WriteLine("Simple raster mosaic datasets: {0}", simpleRasterMosaicCount);
 
 			foreach (var objectDataset in model.GetDatasets<ObjectDataset>())
 			{
