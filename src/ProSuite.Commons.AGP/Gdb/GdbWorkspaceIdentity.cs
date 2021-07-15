@@ -54,7 +54,7 @@ namespace ProSuite.Commons.AGP.Gdb
 		public WorkspaceFactory WorkspaceFactory { get; }
 
 		[CanBeNull]
-		public T CreateConnector<T>() where T: Connector
+		public T CreateConnector<T>() where T : Connector
 		{
 			Type type = typeof(T);
 			if (type == typeof(DatabaseConnectionProperties))
@@ -64,8 +64,10 @@ namespace ProSuite.Commons.AGP.Gdb
 
 			if (type == typeof(FileGeodatabaseConnectionPath))
 			{
-				return new FileGeodatabaseConnectionPath(new Uri(ConnectionString, UriKind.Absolute)) as T;
+				return new FileGeodatabaseConnectionPath(
+					       new Uri(ConnectionString, UriKind.Absolute)) as T;
 			}
+
 			return null;
 		}
 
@@ -95,7 +97,8 @@ namespace ProSuite.Commons.AGP.Gdb
 		{
 			return string.Equals(_instance, other._instance) &&
 			       string.Equals(_version, other._version) &&
-			       string.Equals(_user, other._user) && Equals(ConnectionString, other.ConnectionString);
+			       string.Equals(_user, other._user) &&
+			       Equals(ConnectionString, other.ConnectionString);
 		}
 
 		public override bool Equals(object obj)

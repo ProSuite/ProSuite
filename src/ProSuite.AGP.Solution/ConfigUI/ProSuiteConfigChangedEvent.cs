@@ -12,7 +12,8 @@ namespace ProSuite.AGP.Solution.ConfigUI
 		public ProSuiteQASpecificationsConfiguration SpecificationsConfiguration { get; set; }
 
 		// temporary only QA specific parameters
-		public ProSuiteConfigEventArgs(IEnumerable<ProSuiteQAServerConfiguration> serverConfigs, ProSuiteQASpecificationsConfiguration specificationsConfig)
+		public ProSuiteConfigEventArgs(IEnumerable<ProSuiteQAServerConfiguration> serverConfigs,
+		                               ProSuiteQASpecificationsConfiguration specificationsConfig)
 		{
 			ServerConfigurations = serverConfigs;
 			SpecificationsConfiguration = specificationsConfig;
@@ -21,24 +22,29 @@ namespace ProSuite.AGP.Solution.ConfigUI
 
 	public class ProSuiteConfigChangedEvent : CompositePresentationEvent<ProSuiteConfigEventArgs>
 	{
-		public static SubscriptionToken Subscribe(Action<ProSuiteConfigEventArgs> action, bool keepSubscriberReferenceAlive = false)
+		public static SubscriptionToken Subscribe(Action<ProSuiteConfigEventArgs> action,
+		                                          bool keepSubscriberReferenceAlive = false)
 		{
 			return FrameworkApplication.EventAggregator.GetEvent<ProSuiteConfigChangedEvent>()
-				.Register(action, keepSubscriberReferenceAlive);
+			                           .Register(action, keepSubscriberReferenceAlive);
 		}
 
 		public static void Unsubscribe(Action<ProSuiteConfigEventArgs> subscriber)
 		{
-			FrameworkApplication.EventAggregator.GetEvent<ProSuiteConfigChangedEvent>().Unregister(subscriber);
+			FrameworkApplication.EventAggregator.GetEvent<ProSuiteConfigChangedEvent>()
+			                    .Unregister(subscriber);
 		}
+
 		public static void Unsubscribe(SubscriptionToken token)
 		{
-			FrameworkApplication.EventAggregator.GetEvent<ProSuiteConfigChangedEvent>().Unregister(token);
+			FrameworkApplication.EventAggregator.GetEvent<ProSuiteConfigChangedEvent>()
+			                    .Unregister(token);
 		}
 
 		internal static void Publish(ProSuiteConfigEventArgs payload)
 		{
-			FrameworkApplication.EventAggregator.GetEvent<ProSuiteConfigChangedEvent>().Broadcast(payload);
+			FrameworkApplication.EventAggregator.GetEvent<ProSuiteConfigChangedEvent>()
+			                    .Broadcast(payload);
 		}
 	}
 }

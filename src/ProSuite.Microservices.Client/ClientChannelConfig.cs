@@ -68,5 +68,12 @@ namespace ProSuite.Microservices.Client
 
 		[CanBeNull]
 		public string ClientCertificate { get; set; }
+
+		public override string ToString()
+		{
+			string scheme = UseTls ? "https" : "http";
+
+			return $"{scheme}://{HostName}:{Port}";
+		}
 	}
 }

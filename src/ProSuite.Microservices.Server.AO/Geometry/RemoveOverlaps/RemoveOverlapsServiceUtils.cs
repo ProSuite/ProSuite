@@ -110,8 +110,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 			foreach (OverlapMsg overlapMsg in request.Overlaps)
 			{
 				GdbObjectReference gdbRef = new GdbObjectReference(
-					overlapMsg.OriginalFeatureRef.ClassHandle,
-					overlapMsg.OriginalFeatureRef.ObjectId);
+					(int) overlapMsg.OriginalFeatureRef.ClassHandle,
+					(int) overlapMsg.OriginalFeatureRef.ObjectId);
 
 				IFeatureClass fClass = (IFeatureClass) container.GetByClassId(gdbRef.ClassId);
 

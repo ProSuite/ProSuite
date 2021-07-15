@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using ArcGIS.Core.CIM;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -10,8 +11,6 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using Polygon = ArcGIS.Core.Geometry.Polygon;
-using Polyline = ArcGIS.Core.Geometry.Polyline;
 
 namespace ProSuite.AGP.Editing.PickerUI
 {
@@ -105,7 +104,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 			get { return _pickableItems.Where(item => item.IsSelected).ToList(); }
 		}
 
-		private void AddOverlay(ArcGIS.Core.Geometry.Geometry geometry,
+		private void AddOverlay(Geometry geometry,
 		                        CIMSymbol symbol)
 		{
 			IDisposable addedOverlay =

@@ -1,8 +1,15 @@
+#if Server
+using ESRI.ArcGIS.DatasourcesRaster;
+#else
+using ESRI.ArcGIS.DataSourcesRaster;
+#endif
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
@@ -101,6 +108,26 @@ namespace ProSuite.DomainModel.AO.DataModel
 				       : DatasetUtils.OpenRasterDataset(Workspace, workspaceDataset.Name);
 		}
 
+		public override TerrainReference OpenTerrainReference(ISimpleTerrainDataset dataset)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			IList<SimpleTerrainDataSource> terrainSources =
+				ModelElementUtils.GetTerrainDataSources(dataset, OpenObjectClass);
+
+			return new SimpleTerrain(dataset.Name, terrainSources, dataset.PointDensity, null);
+		}
+
+		public override SimpleRasterMosaic OpenSimpleRasterMosaic(
+			ISimpleRasterMosaicDataset dataset)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			IMosaicDataset mosaic = DatasetUtils.OpenMosaicDataset(Workspace, dataset.Name);
+
+			return new SimpleRasterMosaic(mosaic);
+		}
+
 		public override IRelationshipClass OpenRelationshipClass(Association association)
 		{
 			Assert.ArgumentNotNull(association, nameof(association));
@@ -151,7 +178,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 			WorkspaceAssociation workspaceAssociation;
 			return _workspaceAssociationByRelClassName.TryGetValue(relationshipClassName,
-			                                                       out workspaceAssociation)
+				       out workspaceAssociation)
 				       ? workspaceAssociation.Association
 				       : null;
 		}

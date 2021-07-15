@@ -14,9 +14,9 @@ using ProSuite.Commons;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
-using IPnt = ProSuite.Commons.Geometry.IPnt;
-using Pnt = ProSuite.Commons.Geometry.Pnt;
+using ProSuite.Commons.Geom;
+using IPnt = ProSuite.Commons.Geom.IPnt;
+using Pnt = ProSuite.Commons.Geom.Pnt;
 
 namespace ProSuite.QA.Tests
 {

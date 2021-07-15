@@ -1,5 +1,7 @@
+using System.IO;
 using System.Threading;
 using NUnit.Framework;
+using ProSuite.Commons.AGP.Hosting;
 using ProSuite.Commons.Testing;
 
 namespace ProSuite.AGP.WorkList.Test
@@ -8,7 +10,9 @@ namespace ProSuite.AGP.WorkList.Test
 	[Apartment(ApartmentState.STA)]
 	public class InvolvedTablesTest
 	{
-		private string issueGdbPath = @"c:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\sample_issues\issues.gdb";
+		private string issueGdbPath =
+			@"c:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\sample_issues\issues.gdb";
+
 		private string _featureClassName = "IssuePolygons";
 
 		//[SetUp]
@@ -21,14 +25,14 @@ namespace ProSuite.AGP.WorkList.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			Commons.AGP.Hosting.CoreHostProxy.Initialize();
+			CoreHostProxy.Initialize();
 		}
 
 		[Test]
 		public void CanFindTestData()
 		{
 			var path = new TestDataLocator().GetPath("IssuePolygons.xml");
-			Assert.True(System.IO.File.Exists(path));
+			Assert.True(File.Exists(path));
 		}
 
 		//[Test]

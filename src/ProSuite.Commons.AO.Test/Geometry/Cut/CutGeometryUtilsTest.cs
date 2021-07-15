@@ -6,7 +6,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.Cut;
 using ProSuite.Commons.AO.Geometry.ZAssignment;
 using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geom;
 
 namespace ProSuite.Commons.AO.Test.Geometry.Cut
 {

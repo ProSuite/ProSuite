@@ -13,7 +13,9 @@ namespace ProSuite.Commons.AGP.WPF
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private const string _errortitle = "An error has occurred";
-		private const string _failuretitle = "Attention"; // todo daro think of a better title. Warning? Ooops? Shit?
+
+		private const string
+			_failuretitle = "Attention"; // todo daro think of a better title. Warning? Ooops? Shit?
 
 		public static void HandleError([NotNull] Exception exception,
 		                               [CanBeNull] IMsg msg,

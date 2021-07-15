@@ -58,6 +58,7 @@
     <Compile Include="DataModel\AttributeType.cs" />
     <Compile Include="DataModel\CopyPolicy.cs" />
     <Compile Include="DataModel\Dataset.cs" />
+    <Compile Include="DataModel\DatasetAccessException.cs" />
     <Compile Include="DataModel\DatasetCategory.cs" />
     <Compile Include="DataModel\DdxModel.cs" />
     <Compile Include="DataModel\ErrorLineDataset.cs" />
@@ -67,10 +68,12 @@
     <Compile Include="DataModel\ErrorTableDataset.cs" />
     <Compile Include="DataModel\ErrorType.cs" />
     <Compile Include="DataModel\ErrorVectorDataset.cs" />
+    <Compile Include="DataModel\FieldNotFoundException.cs" />
     <Compile Include="DataModel\FieldType.cs" />
     <Compile Include="DataModel\ForeignKeyAssociation.cs" />
     <Compile Include="DataModel\ForeignKeyAssociationEnd.cs" />
     <Compile Include="DataModel\GeometryType.cs" />
+    <Compile Include="DataModel\GeometryTypeFactory.cs" />
     <Compile Include="DataModel\GeometryTypeGeometricNetwork.cs" />
     <Compile Include="DataModel\GeometryTypeNoGeometry.cs" />
     <Compile Include="DataModel\GeometryTypeRasterDataset.cs" />
@@ -79,12 +82,19 @@
     <Compile Include="DataModel\GeometryTypeTerrain.cs" />
     <Compile Include="DataModel\GeometryTypeTopology.cs" />
     <Compile Include="DataModel\IAttributes.cs" />
+    <Compile Include="DataModel\IDatasetCollection.cs" />
     <Compile Include="DataModel\IDdxDataset.cs" />
     <Compile Include="DataModel\IDdxRasterDataset.cs" />
     <Compile Include="DataModel\IErrorDataset.cs" />
     <Compile Include="DataModel\IModelElement.cs" />
+    <Compile Include="DataModel\ModelElementAccessException.cs" />
+    <Compile Include="DataModel\RelationshipClassAccessException.cs" />
+    <Compile Include="DataModel\Repositories\IObjectCategoryAttributeConstraintRepository.cs" />
     <Compile Include="DataModel\IObjectDataset.cs" />
     <Compile Include="DataModel\IRegisteredGdbObject.cs" />
+    <Compile Include="DataModel\ISimpleRasterDataset.cs" />
+    <Compile Include="DataModel\ISimpleRasterMosaicDataset.cs" />
+    <Compile Include="DataModel\ISimpleTerrainDataset.cs" />
     <Compile Include="DataModel\ISpatialDataset.cs" />
     <Compile Include="DataModel\ITableDataset.cs" />
     <Compile Include="DataModel\IVectorDataset.cs" />
@@ -93,6 +103,9 @@
     <Compile Include="DataModel\ObjectAttribute.cs" />
     <Compile Include="DataModel\ObjectAttributeType.cs" />
     <Compile Include="DataModel\ObjectCategory.cs" />
+    <Compile Include="DataModel\ObjectCategoryAttributeCondition.cs" />
+    <Compile Include="DataModel\ObjectCategoryAttributeConstraint.cs" />
+    <Compile Include="DataModel\ObjectCategoryNonApplicableAttribute.cs" />
     <Compile Include="DataModel\ObjectDataset.cs" />
     <Compile Include="DataModel\ObjectSubtype.cs" />
     <Compile Include="DataModel\ObjectSubtypeCriterion.cs" />
@@ -106,8 +119,12 @@
     <Compile Include="DataModel\Repositories\IDatasetRepository.cs" />
     <Compile Include="DataModel\Repositories\IGeometryTypeRepository.cs" />
     <Compile Include="DataModel\Repositories\IObjectCategoryRepository.cs" />
+    <Compile Include="DataModel\SimpleRasterDataset.cs" />
+    <Compile Include="DataModel\SimpleRasterMosaicDataset.cs" />
+    <Compile Include="DataModel\SimpleTerrainDataset.cs" />
     <Compile Include="DataModel\SqlCaseSensitivity.cs" />
     <Compile Include="DataModel\TableDataset.cs" />
+    <Compile Include="DataModel\TinSurfaceType.cs" />
     <Compile Include="DataModel\UnknownAttributeRole.cs" />
     <Compile Include="DataModel\VariantValueFactory.cs" />
     <Compile Include="DataModel\VectorDataset.cs" />
@@ -150,6 +167,8 @@
     <Compile Include="QA\ErrorDeletionInPerimeter.cs" />
     <Compile Include="QA\Html\HtmlDataQualityCategoryOptions.cs" />
     <Compile Include="QA\Html\IHtmlDataQualityCategoryOptionsProvider.cs" />
+    <Compile Include="QA\IQualitySpecificationReference.cs" />
+    <Compile Include="QA\IQualitySpecificationReferencesProvider.cs" />
     <Compile Include="QA\InstanceDescriptor.cs" />
     <Compile Include="QA\InstanceConfiguration.cs" />
     <Compile Include="QA\IssueFilterConfiguration.cs" />
@@ -182,6 +201,7 @@
     <Compile Include="QA\VerificationProgress\QualityVerificationProgressTracker.cs" />
     <Compile Include="QA\VerificationProgress\VerificationProgressStep.cs" />
     <Compile Include="QA\VerificationProgress\VerificationProgressType.cs" />
+    <Compile Include="DataModel\TerrainSourceDataset.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">

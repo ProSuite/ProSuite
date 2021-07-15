@@ -91,7 +91,10 @@
     <Compile Include="Geodatabase\GdbElementNamePatternTest.cs" />
     <Compile Include="Geodatabase\GdbQueryMethodProfilingTest.cs" />
     <Compile Include="Geodatabase\GdbQueryUtilsTest.cs" />
+    <Compile Include="Geodatabase\GdbSchema\GdbTableTest.cs" />
+    <Compile Include="Geodatabase\GdbSchema\GdbWorkspaceTest.cs" />
     <Compile Include="Geodatabase\GdbSqlUtilsTest.cs" />
+    <Compile Include="Geodatabase\ProCompatibilityTest.cs" />
     <Compile Include="Geodatabase\RowFormatTest.cs" />
     <Compile Include="Geodatabase\TableJoinUtilsTest.cs" />
     <Compile Include="Geodatabase\TableSortUtilsTest.cs" />
@@ -118,6 +121,7 @@
     <Compile Include="ProComparisonTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Surface\RectangularTilingUtilsTest.cs" />
+    <Compile Include="Surface\SimpleRasterSurfaceTest.cs" />
     <Compile Include="TestCategory.cs" />
     <Compile Include="TestData.cs" />
     <Compile Include="TestSupport\FeatureClassMock.cs" />

@@ -7,11 +7,13 @@ using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
-using ProSuite.Commons.Geometry.SpatialIndex;
+using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Container.Geometry;
@@ -106,7 +108,8 @@ namespace ProSuite.QA.Container.TestContainer
 				SetSearchable(containerTest.InvolvedTables);
 			}
 
-			_rastersRowEnumerable = new RastersRowEnumerable(_testsPerRaster.Keys, _container);
+			_rastersRowEnumerable =
+				new RastersRowEnumerable(_testsPerRaster.Keys, _container, tileSize);
 
 			Dictionary<ITable, double> cachedSet;
 			ClassifyTables(_testsPerTable, out cachedSet, out _nonCachedTables);
@@ -293,7 +296,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			foreach (RasterReference rasterReference in _testsPerRaster.Keys)
 			{
-				yield return (IGeoDataset) rasterReference.RasterDataset;
+				yield return rasterReference.GeoDataset;
 			}
 		}
 

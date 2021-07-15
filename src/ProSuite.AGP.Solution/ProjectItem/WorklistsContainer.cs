@@ -57,7 +57,6 @@ namespace ProSuite.AGP.Solution.ProjectItem
 
 		//	return item;
 		//}
-
 		public override Task DeleteAsync(IEnumerable<Item> items)
 		{
 			return base.DeleteAsync(items);

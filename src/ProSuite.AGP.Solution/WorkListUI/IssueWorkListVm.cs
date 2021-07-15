@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -8,9 +11,6 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
@@ -129,13 +129,15 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		private async void FlashInvolvedSelected()
 		{
-			ViewUtils.Try(async() =>
+			ViewUtils.Try(async () =>
 			{
-				FeatureLayer involvedLayer = await GetFeatureLayerByFeatureClassName(SelectedInvolvedObject.Name);
+				FeatureLayer involvedLayer =
+					await GetFeatureLayerByFeatureClassName(SelectedInvolvedObject.Name);
 				if (involvedLayer == null)
 				{
 					return;
 				}
+
 				MapView.Active.FlashFeature(involvedLayer, SelectedInvolvedObject.ObjectId);
 			}, _msg);
 		}
@@ -150,7 +152,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			ViewUtils.Try(async () =>
 			{
-				Dictionary<BasicFeatureLayer, List<long>> featureSet = await GetInvolvedFeatureSet();
+				Dictionary<BasicFeatureLayer, List<long>>
+					featureSet = await GetInvolvedFeatureSet();
 				await MapView.Active.ZoomToAsync(featureSet);
 			}, _msg);
 		}
@@ -159,14 +162,15 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			ViewUtils.Try(async () =>
 			{
-				Dictionary<BasicFeatureLayer, List<long>> involvedFeatureClasses = await GetInvolvedFeatureSet();
+				Dictionary<BasicFeatureLayer, List<long>> involvedFeatureClasses =
+					await GetInvolvedFeatureSet();
 
 				await QueuedTask.Run(() =>
 				{
 					SelectionUtils.ClearSelection(MapView.Active.Map);
 					foreach (var involvedFeatureClass in involvedFeatureClasses)
 					{
-						var qf = new QueryFilter() { ObjectIDs = involvedFeatureClass.Value };
+						var qf = new QueryFilter() {ObjectIDs = involvedFeatureClass.Value};
 						involvedFeatureClass.Key.Select(qf, SelectionCombinationMethod.Add);
 					}
 				});
@@ -201,16 +205,17 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		private void ZoomInvolvedSelected()
 		{
-			ViewUtils.Try(async() =>
+			ViewUtils.Try(async () =>
 			{
-				Layer involvedLayer = await GetFeatureLayerByFeatureClassName(SelectedInvolvedObject.Name);
+				Layer involvedLayer =
+					await GetFeatureLayerByFeatureClassName(SelectedInvolvedObject.Name);
 				if (involvedLayer == null)
 				{
 					return;
 				}
 
 				await MapView.Active.ZoomToAsync(involvedLayer as FeatureLayer,
-										   SelectedInvolvedObject.ObjectId);
+				                                 SelectedInvolvedObject.ObjectId);
 			}, _msg);
 		}
 

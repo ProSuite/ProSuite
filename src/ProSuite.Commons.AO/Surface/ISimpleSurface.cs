@@ -20,5 +20,8 @@ namespace ProSuite.Commons.AO.Surface
 
 		[CanBeNull]
 		ITin AsTin([CanBeNull] IEnvelope extent = null);
+
+		[CanBeNull]
+		IRaster AsRaster();
 	}
 }

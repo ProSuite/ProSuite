@@ -37,7 +37,8 @@ namespace ProSuite.AGP.Editing.Picker
 		{
 			if (geometry.GeometryType == GeometryType.Point)
 			{
-				return new Uri(@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PointGeometry.bmp");
+				return new Uri(
+					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PointGeometry.bmp");
 			}
 
 			if (geometry.GeometryType == GeometryType.Polyline)
@@ -85,6 +86,7 @@ namespace ProSuite.AGP.Editing.Picker
 				{
 					_img = new BitmapImage(_itemImageUri);
 				}
+
 				return _img;
 			}
 		}

@@ -55,9 +55,12 @@ namespace ProSuite.AGP.Solution.WorkLists
 				return false;
 			}
 
-			using (Geodatabase geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute))))
+			using (Geodatabase geodatabase =
+				new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)))
+			)
 			{
-				if (geodatabase.GetDomains().Any(domain => string.Equals(_domainName, domain.GetName())))
+				if (geodatabase.GetDomains()
+				               .Any(domain => string.Equals(_domainName, domain.GetName())))
 				{
 					_msg.Debug($"Domain {_domainName} already exists in {_path}");
 					return true;
@@ -66,9 +69,12 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			// the GP tool is going to fail on creating a domain with the same name
 			await Task.WhenAll(
-				GeoprocessingUtils.CreateDomainAsync(_path, _domainName, "Correction status for work list"),
-				GeoprocessingUtils.AddCodedValueToDomainAsync(_path, _domainName, 100, "Not Corrected"),
-				GeoprocessingUtils.AddCodedValueToDomainAsync(_path, _domainName, 200, "Corrected"));
+				GeoprocessingUtils.CreateDomainAsync(_path, _domainName,
+				                                     "Correction status for work list"),
+				GeoprocessingUtils.AddCodedValueToDomainAsync(
+					_path, _domainName, 100, "Not Corrected"),
+				GeoprocessingUtils.AddCodedValueToDomainAsync(
+					_path, _domainName, 200, "Corrected"));
 
 			return true;
 		}
@@ -81,7 +87,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 
 			// todo daro: ensure layers are not already in map
-			using (Geodatabase geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute))))
+			using (Geodatabase geodatabase =
+				new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)))
+			)
 			{
 				IEnumerable<string> featureClassNames =
 					geodatabase.GetDefinitions<FeatureClassDefinition>()
@@ -90,7 +98,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				foreach (string featureClassName in featureClassNames)
 				{
-					using (var featureClass = geodatabase.OpenDataset<FeatureClass>(featureClassName))
+					using (var featureClass =
+						geodatabase.OpenDataset<FeatureClass>(featureClassName))
 					{
 						FeatureLayer featureLayer = LayerFactory.Instance.CreateFeatureLayer(
 							featureClass, MapView.Active.Map, LayerPosition.AddToTop);
@@ -135,7 +144,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return new XmlWorkItemStateRepository(path, workListName, type);
 		}
 
-		protected override IWorkItemRepository CreateItemRepositoryCore(IEnumerable<BasicFeatureLayer> featureLayers, IRepository stateRepository)
+		protected override IWorkItemRepository CreateItemRepositoryCore(
+			IEnumerable<BasicFeatureLayer> featureLayers, IRepository stateRepository)
 		{
 			Dictionary<Geodatabase, List<Table>> tables = MapUtils.GetDistinctTables(featureLayers);
 
@@ -154,7 +164,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			const string title = "Select Existing Issue Geodatabase";
 			var browseFilter =
-				BrowseProjectFilter.GetFilter(DAML.Filter.esri_browseDialogFilters_geodatabases_file);
+				BrowseProjectFilter.GetFilter(
+					DAML.Filter.esri_browseDialogFilters_geodatabases_file);
 
 			return GetSelectedItemPath(title, ItemFilters.geodatabases, browseFilter);
 		}

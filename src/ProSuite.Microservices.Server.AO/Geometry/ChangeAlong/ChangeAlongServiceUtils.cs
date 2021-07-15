@@ -183,7 +183,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			}
 
 			_msg.DebugStopTiming(
-				watch, "Packed reshape along calculation results into response");
+				watch, "Packed {0} reshape along calculation results into response",
+				resultLines.Count);
 
 			return result;
 		}
@@ -207,7 +208,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			}
 
 			_msg.DebugStopTiming(
-				watch, "Packed cut along calculation results into response");
+				watch, "Packed {0} cut along calculation results into response",
+				resultLines.Count);
 
 			return result;
 		}
@@ -479,7 +481,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 
 			_msg.DebugStopTiming(
 				watch,
-				"CalculateReshapeLinesImpl: Unpacked feature lists from request params");
+				"CalculateReshapeLinesImpl: Unpacked {0} source and {1} target features from request params",
+				sourceFeatures.Count, targetFeatures.Count);
 		}
 
 		[NotNull]
@@ -540,7 +543,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			if (reshapeLineMsg.Source != null)
 			{
 				result.Source = new GdbObjectReference(
-					reshapeLineMsg.Source.ClassHandle, reshapeLineMsg.Source.ObjectId);
+					(int) reshapeLineMsg.Source.ClassHandle, (int) reshapeLineMsg.Source.ObjectId);
 			}
 
 			return result;

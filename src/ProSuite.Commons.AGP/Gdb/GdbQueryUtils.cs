@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -13,12 +14,12 @@ namespace ProSuite.Commons.AGP.Gdb
 		{
 			Assert.ArgumentNotNull(oids, nameof(oids));
 
-			return new QueryFilter { ObjectIDs = oids };
+			return new QueryFilter {ObjectIDs = oids};
 		}
 
 		[NotNull]
 		public static SpatialQueryFilter CreateSpatialFilter(
-			[NotNull] ArcGIS.Core.Geometry.Geometry filterGeometry,
+			[NotNull] Geometry filterGeometry,
 			SpatialRelationship spatialRelationship = SpatialRelationship.Intersects,
 			SearchOrder searchOrder = SearchOrder.Spatial)
 		{

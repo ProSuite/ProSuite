@@ -10,7 +10,6 @@ using ProSuite.Commons.AO.Licensing;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared;
-using ProSuite.Microservices.Server.AO.Geodatabase;
 using ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps;
 
 namespace ProSuite.Microservices.Server.AO.Test.Geometry
@@ -116,8 +115,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			ResultGeometriesByFeature resultByFeature = removeResponse.ResultsByFeature[0];
 
 			GdbObjectReference originalObjRef = new GdbObjectReference(
-				resultByFeature.OriginalFeatureRef.ClassHandle,
-				resultByFeature.OriginalFeatureRef.ObjectId);
+				(int) resultByFeature.OriginalFeatureRef.ClassHandle,
+				(int) resultByFeature.OriginalFeatureRef.ObjectId);
 
 			Assert.AreEqual(new GdbObjectReference(sourceFeature), originalObjRef);
 
@@ -207,8 +206,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			ResultGeometriesByFeature resultByFeature = removeResponse.ResultsByFeature[0];
 
 			GdbObjectReference originalObjRef = new GdbObjectReference(
-				resultByFeature.OriginalFeatureRef.ClassHandle,
-				resultByFeature.OriginalFeatureRef.ObjectId);
+				(int) resultByFeature.OriginalFeatureRef.ClassHandle,
+				(int) resultByFeature.OriginalFeatureRef.ObjectId);
 
 			Assert.AreEqual(new GdbObjectReference(sourceFeature), originalObjRef);
 

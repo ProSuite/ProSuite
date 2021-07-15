@@ -420,9 +420,10 @@ namespace ProSuite.DomainServices.AO.QA
 			IOpenDataset datasetOpener = CreateDatasetOpener(_verificationContext);
 
 			HashSet<QualityCondition> orderedQualityConditions =
-				QualitySpecificationUtils.GetOrderedQualityConditions(
-					qualitySpecification, datasetOpener).ToHashSet();
-
+				new HashSet<QualityCondition>(
+					QualitySpecificationUtils.GetOrderedQualityConditions(
+						qualitySpecification, datasetOpener));
+			
 			qualityVerification = GetQualityVerification(
 				qualitySpecification, orderedQualityConditions,
 				out _elementsByConditionVerification);

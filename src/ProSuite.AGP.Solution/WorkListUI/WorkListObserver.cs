@@ -74,7 +74,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				}
 
 				_view.Closed += _view_Closed;
-				
+
 				_view.Show();
 			});
 		}

@@ -4,7 +4,7 @@ using System.Linq;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using NUnit.Framework;
 using ProSuite.Commons.Collections;
-using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geom;
 
 namespace ProSuite.Commons.Test.Geometry
 {

@@ -14,8 +14,8 @@ using ProSuite.QA.Tests.Properties;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
-using ProSuite.Commons.Geometry.SpatialIndex;
+using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
 

@@ -1,5 +1,7 @@
+using System.Collections.Generic;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 
 namespace ProSuite.Commons.AGP.Core.Spatial
 {
@@ -29,6 +31,29 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 		{
 			if (envelope == null) return null;
 			return PolygonBuilder.CreatePolygon(envelope, sref);
+		}
+
+		[NotNull]
+		public static Polyline CreatePolyline([NotNull] EnvelopeXY envelope,
+		                                      [CanBeNull] SpatialReference sref = null)
+		{
+			return PolylineBuilder.CreatePolyline(To2DCoordinates(envelope), sref);
+		}
+
+		[NotNull]
+		public static Polygon CreatePolygon([NotNull] EnvelopeXY envelope,
+		                                    [CanBeNull] SpatialReference sref = null)
+		{
+			return PolygonBuilder.CreatePolygon(To2DCoordinates(envelope), sref);
+		}
+
+		public static IEnumerable<Coordinate2D> To2DCoordinates([NotNull] EnvelopeXY envelope)
+		{
+			yield return new Coordinate2D(envelope.XMin, envelope.YMin);
+			yield return new Coordinate2D(envelope.XMin, envelope.YMax);
+			yield return new Coordinate2D(envelope.XMax, envelope.YMax);
+			yield return new Coordinate2D(envelope.XMax, envelope.YMin);
+			yield return new Coordinate2D(envelope.XMin, envelope.YMin);
 		}
 
 		public static Polygon CreateBezierCircle(double radius = 1, MapPoint center = null)

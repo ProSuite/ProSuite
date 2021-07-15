@@ -1,17 +1,17 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
-using System;
-using System.Collections.Generic;
-using System.IO;
 
 namespace ProSuite.AGP.Solution.ProjectItem
 {
-	public class ProjectFileRepository 
+	public class ProjectFileRepository
 	{
-		Msg _msg = new Msg(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+		readonly Msg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		private readonly string _containerName = "ProSuiteContainer";
 
@@ -54,11 +54,11 @@ namespace ProSuite.AGP.Solution.ProjectItem
 			QueuedTask.Run(() =>
 			{
 				var itemFolder = GetProjectItemFolderPath();
-				if (!String.IsNullOrEmpty(itemFolder))
+				if (! string.IsNullOrEmpty(itemFolder))
 				{
 					_msg.Info($"Add file {path}");
 					File.Copy(path,
-							  Path.Combine(itemFolder, Path.GetFileName(path)), true);
+					          Path.Combine(itemFolder, Path.GetFileName(path)), true);
 				}
 			});
 		}
@@ -81,7 +81,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 				}
 			}
 
-			if (!folderItemPresent)
+			if (! folderItemPresent)
 			{
 				var folderItem = new ProSuiteProjectItem(
 					ItemName,
@@ -97,12 +97,10 @@ namespace ProSuite.AGP.Solution.ProjectItem
 					Project.SetDirty(); //enable save
 				}
 			}
+
 			return folderItemPresent ? itemFullPath : null;
 		}
 
 		#endregion
-
 	}
-
 }
-

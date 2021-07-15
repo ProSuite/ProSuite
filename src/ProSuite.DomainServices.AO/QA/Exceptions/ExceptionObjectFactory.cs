@@ -8,7 +8,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
-using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Text;
 using ProSuite.DomainServices.AO.QA.Issues;
 

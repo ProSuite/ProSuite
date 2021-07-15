@@ -37,12 +37,6 @@
     <DocumentationFile>$(OutputDirectory)\Release\ProSuite.Commons.AO.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
-  <ItemGroup Condition="'$(VSArcGISProduct)' == 'Server'">
-    <Reference Include="ArcGIS.CoreHost, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(ProAssemblyPath)\bin\ArcGIS.CoreHost.dll</HintPath>
-    </Reference>
-  </ItemGroup>
   <ItemGroup>
     <Reference Include="ESRI.ArcGIS.DataSourcesGDB, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -82,6 +76,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="EnumCursor.cs" />
     <Compile Include="Geodatabase\AssociationDescription.cs" />
     <Compile Include="Geodatabase\AssociationDescriptionUtils.cs" />
     <Compile Include="Geodatabase\CodedValue.cs" />
@@ -142,6 +137,20 @@
     <Compile Include="Geodatabase\RelationshipClassUtils.cs" />
     <Compile Include="Geodatabase\RowFormat.cs" />
     <Compile Include="Geodatabase\RowProxy.cs" />
+    <Compile Include="Geodatabase\SchemaInfo\AllPropertiesConverter.cs" />
+    <Compile Include="Geodatabase\SchemaInfo\CoordinateSystemProperties.cs" />
+    <Compile Include="Geodatabase\SchemaInfo\ExtentProperties.cs" />
+    <Compile Include="Geodatabase\SchemaInfo\FeatureClassProperties.cs" />
+    <Compile Include="Geodatabase\SchemaInfo\GeographicCoordinateSystemProperties.cs" />
+    <Compile Include="Geodatabase\SchemaInfo\MDomainProperties.cs" />
+    <Compile Include="Geodatabase\SchemaInfo\ObjectClassProperties.cs" />
+    <Compile Include="Geodatabase\SchemaInfo\ProjectedCoordinateSystemProperties.cs" />
+    <Compile Include="Geodatabase\SchemaInfo\PropertyCategories.cs" />
+    <Compile Include="Geodatabase\SchemaInfo\SpatialReferenceProperties.cs" />
+    <Compile Include="Geodatabase\SchemaInfo\TableProperties.cs" />
+    <Compile Include="Geodatabase\SchemaInfo\WorkspaceProperties.cs" />
+    <Compile Include="Geodatabase\SchemaInfo\XYDomainProperties.cs" />
+    <Compile Include="Geodatabase\SchemaInfo\ZDomainProperties.cs" />
     <Compile Include="Geodatabase\SegmentAngleComparisonService.cs" />
     <Compile Include="Geodatabase\Subtype.cs" />
     <Compile Include="Geodatabase\SyntheticFeature.cs" />
@@ -153,6 +162,7 @@
     <Compile Include="Geodatabase\VersionEventsObjectCacheSynchronizer.cs" />
     <Compile Include="Geodatabase\WorkspaceComparison.cs" />
     <Compile Include="Geodatabase\WorkspaceUtils.cs" />
+    <Compile Include="Geometry\ApplyZService.cs" />
     <Compile Include="Geometry\ArrayProvider.cs" />
     <Compile Include="Geometry\BoundaryLoopUtils.cs" />
     <Compile Include="Geometry\BufferFactory.cs" />
@@ -196,6 +206,12 @@
     <Compile Include="Geometry\Cracking\PartialChopperToolOptions.cs" />
     <Compile Include="Geometry\Cracking\PartialCrackerToolOptions.cs" />
     <Compile Include="Geometry\Cracking\ShortSegmentsUtils.cs" />
+    <Compile Include="Geometry\CreateFootprint\CreateFootprintUtils.cs" />
+    <Compile Include="Geometry\CreateFootprint\FootprintOptions.cs" />
+    <Compile Include="Geometry\CreateFootprint\FootprintSourceTargetMapping.cs" />
+    <Compile Include="Geometry\CreateFootprint\FootprintZCalculator.cs" />
+    <Compile Include="Geometry\CreateFootprint\PartialFootprintOptions.cs" />
+    <Compile Include="Geometry\CreateFootprint\ZCalculationMethod.cs" />
     <Compile Include="Geometry\CutPolyline.cs" />
     <Compile Include="Geometry\Cut\CutGeometryUtils.cs" />
     <Compile Include="Geometry\Cut\CutResult.cs" />
@@ -214,6 +230,7 @@
     <Compile Include="Geometry\GeometryProperties.cs" />
     <Compile Include="Geometry\GeometryUtils.cs" />
     <Compile Include="Geometry\IArrayProvider.cs" />
+    <Compile Include="Geometry\ICoordinateTransformer.cs" />
     <Compile Include="Geometry\IFlexibleSettingProvider.cs" />
     <Compile Include="Geometry\IntersectionConstraint.cs" />
     <Compile Include="Geometry\IntersectionMatrix.cs" />
@@ -286,10 +303,26 @@
     <Compile Include="SerializationUtils.cs" />
     <Compile Include="StreamUtils.cs" />
     <Compile Include="Surface\BorderPointTileAllocationPolicy.cs" />
+    <Compile Include="Surface\FeatureTinGenerator.cs" />
     <Compile Include="Surface\ISimpleSurface.cs" />
+    <Compile Include="Surface\ITinGenerator.cs" />
+    <Compile Include="Surface\Raster\AoPixelBlock.cs" />
+    <Compile Include="Surface\Raster\IRasterProvider.cs" />
+    <Compile Include="Surface\Raster\ISimplePixelBlock.cs" />
+    <Compile Include="Surface\Raster\ISimpleRaster.cs" />
+    <Compile Include="Surface\Raster\RasterUtils.cs" />
+    <Compile Include="Surface\Raster\SimpleAoRaster.cs" />
+    <Compile Include="Surface\Raster\SimpleRasterDataset.cs" />
+    <Compile Include="Surface\Raster\SimpleRasterMosaic.cs" />
+    <Compile Include="Surface\Raster\SimpleRasterSurface.cs" />
     <Compile Include="Surface\RectangularTileIndex.cs" />
     <Compile Include="Surface\RectangularTilingStructure.cs" />
     <Compile Include="Surface\RectangularTilingUtils.cs" />
+    <Compile Include="Surface\SimpleTerrain.cs" />
+    <Compile Include="Surface\SimpleTerrainDataSource.cs" />
+    <Compile Include="Surface\TerrainReference.cs" />
+    <Compile Include="Surface\TinCreationUtils.cs" />
+    <Compile Include="Surface\TinSurfaceInterpolation.cs" />
     <Compile Include="UIDUtils.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -12,6 +12,7 @@ using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.AGP.Hosting;
 
 namespace ProSuite.AGP.WorkList.Test
 {
@@ -32,10 +33,10 @@ namespace ProSuite.AGP.WorkList.Test
 			// http://stackoverflow.com/questions/8245926/the-current-synchronizationcontext-may-not-be-used-as-a-taskscheduler
 			SynchronizationContext.SetSynchronizationContext(new SynchronizationContext());
 
-			
-			_geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(_emptyIssuesGdb, UriKind.Absolute)));
+			_geodatabase =
+				new Geodatabase(
+					new FileGeodatabaseConnectionPath(new Uri(_emptyIssuesGdb, UriKind.Absolute)));
 
-			
 			_table0 = _geodatabase.OpenDataset<Table>(_featureClass0);
 			_table1 = _geodatabase.OpenDataset<Table>(_featureClass1);
 
@@ -44,7 +45,8 @@ namespace ProSuite.AGP.WorkList.Test
 				                          {_geodatabase, new List<Table> {_table0, _table1}}
 			                          };
 
-			IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
+			IRepository stateRepository =
+				new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
 			_repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
 		}
 
@@ -62,8 +64,7 @@ namespace ProSuite.AGP.WorkList.Test
 		{
 			// Host must be initialized on an STA thread:
 			//Host.Initialize();
-			Commons.AGP.Hosting.CoreHostProxy.Initialize();
-
+			CoreHostProxy.Initialize();
 
 			_poly0 = PolygonConstruction
 			         .StartPolygon(0, 0, 0)
@@ -80,10 +81,12 @@ namespace ProSuite.AGP.WorkList.Test
 			         .ClosePolygon();
 		}
 
-		private const string _emptyIssuesGdb = @"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\issues_empty.gdb";
-		private string _featureClassName = "IssuePolygons";
-		private string _featureClass0 = "featureClass0";
-		private string _featureClass1 = "featureClass1";
+		private const string _emptyIssuesGdb =
+			@"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\issues_empty.gdb";
+
+		private readonly string _featureClassName = "IssuePolygons";
+		private readonly string _featureClass0 = "featureClass0";
+		private readonly string _featureClass1 = "featureClass1";
 
 		#region work list navigation tests
 
@@ -94,8 +97,9 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item2 = new WorkItemMock(2);
 			IWorkItem item3 = new WorkItemMock(3);
 			IWorkItem item4 = new WorkItemMock(4);
-			var repository = new ItemRepositoryMock(new List<IWorkItem> {item1, item2, item3, item4});
-			
+			var repository =
+				new ItemRepositoryMock(new List<IWorkItem> {item1, item2, item3, item4});
+
 			IWorkList wl = new MemoryQueryWorkList(repository, "work list");
 
 			wl.GoNext();
@@ -127,7 +131,8 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item2 = new WorkItemMock(2);
 			IWorkItem item3 = new WorkItemMock(3);
 			IWorkItem item4 = new WorkItemMock(4);
-			var repository = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
+			var repository =
+				new ItemRepositoryMock(new List<IWorkItem> {item1, item2, item3, item4});
 
 			IWorkList wl = new MemoryQueryWorkList(repository, "work list");
 
@@ -165,7 +170,8 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item2 = new WorkItemMock(2);
 			IWorkItem item3 = new WorkItemMock(3);
 			IWorkItem item4 = new WorkItemMock(4);
-			var repository = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
+			var repository =
+				new ItemRepositoryMock(new List<IWorkItem> {item1, item2, item3, item4});
 
 			IWorkList wl = new MemoryQueryWorkList(repository, "work list");
 
@@ -210,7 +216,7 @@ namespace ProSuite.AGP.WorkList.Test
 			var repository = new ItemRepositoryMock(new[] {item7, item10, item15});
 
 			IWorkList wl = new MemoryQueryWorkList(repository, nameof(Can_go_nearest));
-			
+
 			Geometry reference = PolygonConstruction.CreateMapPoint(11, 0, 0);
 
 			// go to item10
@@ -250,10 +256,7 @@ namespace ProSuite.AGP.WorkList.Test
 			Assert.True(wl.Current?.Visited);
 		}
 
-		public void Can_go_nearest_if_item_is_Done()
-		{
-
-		}
+		public void Can_go_nearest_if_item_is_Done() { }
 
 		[Test]
 		public void Cannot_go_first_again_if_first_item_is_set_done()
@@ -262,7 +265,8 @@ namespace ProSuite.AGP.WorkList.Test
 			IWorkItem item2 = new WorkItemMock(2);
 			IWorkItem item3 = new WorkItemMock(3);
 			IWorkItem item4 = new WorkItemMock(4);
-			var repository = new ItemRepositoryMock(new List<IWorkItem> { item1, item2, item3, item4 });
+			var repository =
+				new ItemRepositoryMock(new List<IWorkItem> {item1, item2, item3, item4});
 
 			IWorkList wl = new MemoryQueryWorkList(repository, "work list");
 
@@ -343,14 +347,15 @@ namespace ProSuite.AGP.WorkList.Test
 
 				var inserts = new Dictionary<Table, List<long>>();
 				var deletes = new Dictionary<Table, List<long>>();
-				var updates = new Dictionary<Table, List<long>> {{_table0, new List<long> {1}}, {_table1, new List<long> {1}}};
+				var updates = new Dictionary<Table, List<long>>
+				              {{_table0, new List<long> {1}}, {_table1, new List<long> {1}}};
 
 				((IRowCache) workList).ProcessChanges(inserts, deletes, updates);
 
 				var items = workList.GetItems().ToList();
 				Assert.AreEqual(2, items.Count);
 
-				List<long> ids = items.Select(i => i.OID).ToList().ConvertAll(i => (long)i);
+				List<long> ids = items.Select(i => i.OID).ToList().ConvertAll(i => (long) i);
 				QueryFilter filter = GdbQueryUtils.CreateFilter(ids);
 
 				foreach (IWorkItem item in workList.GetItems(filter))
@@ -427,13 +432,16 @@ namespace ProSuite.AGP.WorkList.Test
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 
 				var table = geodatabase.OpenDataset<Table>(_featureClassName);
-				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase = new Dictionary<Geodatabase, List<Table>>
+				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase =
+					new Dictionary<Geodatabase, List<Table>>
 					{
 						{geodatabase, new List<Table> {table}}
 					};
 
-				IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
-				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
+				IRepository stateRepository =
+					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
+				IWorkItemRepository repository =
+					new IssueItemRepository(tablesByGeodatabase, stateRepository);
 
 				IWorkList workList = new MemoryQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -474,13 +482,16 @@ namespace ProSuite.AGP.WorkList.Test
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 				var table = geodatabase.OpenDataset<Table>(_featureClassName);
-				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase = new Dictionary<Geodatabase, List<Table>>
-				                                                           {
-					                                                           {geodatabase, new List<Table> {table}}
-				                                                           };
+				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase =
+					new Dictionary<Geodatabase, List<Table>>
+					{
+						{geodatabase, new List<Table> {table}}
+					};
 
-				IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
-				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
+				IRepository stateRepository =
+					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
+				IWorkItemRepository repository =
+					new IssueItemRepository(tablesByGeodatabase, stateRepository);
 
 				IWorkList workList = new MemoryQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
@@ -530,17 +541,20 @@ namespace ProSuite.AGP.WorkList.Test
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 
 				var table = geodatabase.OpenDataset<Table>(_featureClassName);
-				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase = new Dictionary<Geodatabase, List<Table>>
-				                                                           {
-					                                                           {geodatabase, new List<Table> {table}}
-				                                                           };
+				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase =
+					new Dictionary<Geodatabase, List<Table>>
+					{
+						{geodatabase, new List<Table> {table}}
+					};
 
-				IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
-				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
+				IRepository stateRepository =
+					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
+				IWorkItemRepository repository =
+					new IssueItemRepository(tablesByGeodatabase, stateRepository);
 
 				IWorkList workList = new GdbQueryWorkList(repository, "work list");
 				workList.AreaOfInterest = areaOfInterest;
-				
+
 				var filter = GdbQueryUtils.CreateSpatialFilter(areaOfInterest);
 
 				var watch = new Stopwatch();
@@ -578,13 +592,16 @@ namespace ProSuite.AGP.WorkList.Test
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 				var table = geodatabase.OpenDataset<Table>(_featureClassName);
-				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase = new Dictionary<Geodatabase, List<Table>>
-				                                                           {
-					                                                           {geodatabase, new List<Table> {table}}
-				                                                           };
+				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase =
+					new Dictionary<Geodatabase, List<Table>>
+					{
+						{geodatabase, new List<Table> {table}}
+					};
 
-				IRepository stateRepository = new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
-				IWorkItemRepository repository = new IssueItemRepository(tablesByGeodatabase, stateRepository);
+				IRepository stateRepository =
+					new XmlWorkItemStateRepository(@"C:\temp\states.xml", null, null);
+				IWorkItemRepository repository =
+					new IssueItemRepository(tablesByGeodatabase, stateRepository);
 
 				IWorkList workList = new GdbQueryWorkList(repository, "work list");
 

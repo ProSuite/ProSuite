@@ -37,7 +37,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		}
 
 		/// <remarks>CMYK components are in 0..100</remarks>
-		public static CIMCMYKColor CreateCMYK(int cyan, int magenta, int yellow, int black, int alpha = 100)
+		public static CIMCMYKColor CreateCMYK(int cyan, int magenta, int yellow, int black,
+		                                      int alpha = 100)
 		{
 			return new CIMCMYKColor {C = cyan, M = magenta, Y = yellow, K = black, Alpha = alpha};
 		}
@@ -67,6 +68,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		{
 			return new CIMHSVColor {H = hue, S = saturation, V = value, Alpha = alpha};
 		}
+
 		public static T SetAlpha<T>(this T color, float alpha) where T : CIMColor
 		{
 			if (color != null)
@@ -140,7 +142,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 				case CIMCMYKColor cmyk:
 					return cmyk.ToRGB();
 				default:
-					throw new NotSupportedException($"Cannot convert from {color.GetType().Name} to RGB");
+					throw new NotSupportedException(
+						$"Cannot convert from {color.GetType().Name} to RGB");
 			}
 		}
 
@@ -168,7 +171,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 				case CIMHSLColor hsl:
 					return hsl.ToRGB().ToGray();
 				default:
-					throw new NotSupportedException($"Cannot convert from {color.GetType().Name} to Gray");
+					throw new NotSupportedException(
+						$"Cannot convert from {color.GetType().Name} to Gray");
 			}
 		}
 
@@ -202,7 +206,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 			if (color is CIMCMYKColor cmyk)
 			{
-				return string.Format(invariant, "CMYK({0:F0},{1:F0},{2:F0},{3:F0})", cmyk.C, cmyk.M, cmyk.Y, cmyk.K);
+				return string.Format(invariant, "CMYK({0:F0},{1:F0},{2:F0},{3:F0})", cmyk.C, cmyk.M,
+				                     cmyk.Y, cmyk.K);
 			}
 
 			if (color is CIMGrayColor gray)
@@ -276,7 +281,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 			if (text[i] == '#')
 			{
-				return ParseHexColor(text.Substring(i));
+				return ParseHexColorRGB(text.Substring(i));
 			}
 
 			int j = i;
@@ -298,7 +303,8 @@ namespace ProSuite.Commons.AGP.Core.Carto
 				SkipWhiteSpace(text, ref i);
 
 				j = i;
-				while (i < text.Length && ! char.IsWhiteSpace(text[i]) && text[i] != ',' && text[i] != ')')
+				while (i < text.Length && ! char.IsWhiteSpace(text[i]) && text[i] != ',' &&
+				       text[i] != ')')
 				{
 					i += 1;
 				}
@@ -394,7 +400,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 				$"Unknown color model: \"{model}\" (use one of RGB, CMYK, Gray, HLS, HSV)");
 		}
 
-		public static CIMRGBColor ParseHexColor(string text)
+		public static CIMRGBColor ParseHexColorRGB(string text)
 		{
 			if (text == null) return null;
 
@@ -408,21 +414,58 @@ namespace ProSuite.Commons.AGP.Core.Carto
 					return CreateRGB(r + 16 * r, g + 16 * g, b + 16 * b);
 			}
 
-			if (text.Length == 7)
+			if (text.Length == 7 && text[0] == '#')
 			{
-				int rr = GetHexValue(text[1]);
-				int r = GetHexValue(text[2]);
-				int g = GetHexValue(text[3]);
-				int gg = GetHexValue(text[4]);
-				int b = GetHexValue(text[5]);
-				int bb = GetHexValue(text[6]);
+				string rHex = text.Substring(1, 2);
+				string gHex = text.Substring(3, 2);
+				string bHex = text.Substring(5, 2);
 
-				if (text[0] == '#' && rr >= 0 && r >= 0 && gg >= 0 && g >= 0 && bb >= 0 && b >= 0)
-					return CreateRGB(r + 16 * rr, g + 16 * gg, b + 16 * bb);
+				if (TryParseHex(rHex, out int red) &&
+				    TryParseHex(gHex, out int green) &&
+				    TryParseHex(bHex, out int blue))
+				{
+					return CreateRGB(red, green, blue);
+				}
 			}
 
 			throw new FormatException(
 				$"Expect #RGB or #RRGGBB with hex digits R,G,B, but got: {text}");
+		}
+
+		public static CIMRGBColor ParseHexColorARGB(string text)
+		{
+			if (text[0] != '#' || text.Length != 9)
+			{
+				ThrowARGBFormatException(text);
+			}
+
+			CIMRGBColor result = ParseHexColorRGB($"#{text.Substring(3)}");
+
+			string alphaString = text.Substring(1, 2);
+
+			if (int.TryParse(alphaString, NumberStyles.HexNumber,
+			                 CultureInfo.InvariantCulture, out int alphaInt))
+			{
+				result.SetAlphaValue(alphaInt * 100 / 255d);
+			}
+			else
+			{
+				ThrowARGBFormatException(text);
+			}
+
+			return result;
+		}
+
+		private static void ThrowARGBFormatException(string text)
+		{
+			throw new FormatException(
+				$"Expect #AARRGGBB with hex digits A,R,G,B, but got: {text}");
+		}
+
+		private static bool TryParseHex(string text, out int result)
+		{
+			return int.TryParse(text, NumberStyles.HexNumber, CultureInfo.InvariantCulture,
+			                    out result);
 		}
 
 		private static int GetHexValue(char c)
@@ -510,7 +553,9 @@ namespace ProSuite.Commons.AGP.Core.Carto
 		/// If you need a non-opaque alpha, use <see cref="SetAlpha{T}"/>
 		/// in a LINQ Select clause.
 		/// </summary>
-		public static IEnumerable<CIMRGBColor> RandomColors(float saturation = 60f, float lightness = 80f, float startHue = -1f)
+		public static IEnumerable<CIMRGBColor> RandomColors(float saturation = 60f,
+		                                                    float lightness = 80f,
+		                                                    float startHue = -1f)
 		{
 			const double invphi = 0.618033988749895; // 1/phi
 			double hue;
@@ -531,6 +576,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 
 				yield return new CIMRGBColor {R = r, G = g, B = b};
 			}
+
 			// ReSharper disable once IteratorNeverReturns
 		}
 

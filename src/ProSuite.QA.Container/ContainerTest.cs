@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO;
+using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container.TestContainer;
@@ -100,11 +102,8 @@ namespace ProSuite.QA.Container
 			{
 				foreach (RasterReference raster in InvolvedRasters)
 				{
-					geoDataset = raster.RasterDataset as IGeoDataset;
-					if (geoDataset != null)
-					{
-						yield return geoDataset;
-					}
+					geoDataset = raster.GeoDataset;
+					yield return geoDataset;
 				}
 			}
 		}
@@ -611,6 +610,78 @@ namespace ProSuite.QA.Container
 			return TestUtils.GetUniqueSpatialReference(
 				this,
 				requireEqualVerticalCoordinateSystems: false);
+		}
+
+		protected void CopyFilters([NotNull] out IList<ISpatialFilter> spatialFilters,
+		                           [NotNull] out IList<QueryFilterHelper> filterHelpers)
+		{
+			int tableCount = InvolvedTables.Count;
+
+			spatialFilters = new ISpatialFilter[tableCount];
+			filterHelpers = new QueryFilterHelper[tableCount];
+
+			for (var tableIndex = 0; tableIndex < tableCount; tableIndex++)
+			{
+				ITable table = InvolvedTables[tableIndex];
+
+				filterHelpers[tableIndex] = new QueryFilterHelper(table,
+					GetConstraint(tableIndex),
+					GetSqlCaseSensitivity(
+						tableIndex));
+				spatialFilters[tableIndex] = new SpatialFilterClass();
+
+				ConfigureQueryFilter(tableIndex, spatialFilters[tableIndex]);
+			}
+		}
+
+		/// <summary>
+		/// Adapts IQueryFilter so that it conforms to the needs of the test
+		/// </summary>
+		protected virtual void ConfigureQueryFilter(int tableIndex,
+		                                            [NotNull] IQueryFilter queryFilter)
+		{
+			Assert.ArgumentNotNull(queryFilter, nameof(queryFilter));
+
+			ITable table = InvolvedTables[tableIndex];
+			string constraint = GetConstraint(tableIndex);
+
+			queryFilter.AddField(table.OIDFieldName);
+
+			var featureClass = table as IFeatureClass;
+
+			// add shape field
+			if (featureClass != null)
+			{
+				queryFilter.AddField(featureClass.ShapeFieldName);
+			}
+
+			// add subtype field
+			var subtypes = table as ISubtypes;
+			if (subtypes != null)
+			{
+				if (subtypes.HasSubtype)
+				{
+					queryFilter.AddField(subtypes.SubtypeFieldName);
+				}
+			}
+
+			// add where clause fields
+			if (constraint != null)
+			{
+				foreach (
+					string fieldName in
+					ExpressionUtils.GetExpressionFieldNames(table, constraint))
+				{
+					queryFilter.AddField(fieldName);
+					// .AddField checks for multiple entries !					
+				}
+
+				queryFilter.WhereClause = constraint;
+			}
+			else
+			{
+				queryFilter.WhereClause = constraint;
+			}
 		}
 
 		/// <summary>

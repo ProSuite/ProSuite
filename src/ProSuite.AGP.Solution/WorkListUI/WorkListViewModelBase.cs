@@ -438,8 +438,10 @@ namespace ProSuite.AGP.Solution.WorkListUI
 					_lastActiveTool = FrameworkApplication.CurrentTool;
 
 				WorkListsModule.Current.WorkItemPicked += Current_WorkItemPicked;
-				WorkListsModule.Current.ActiveWorkListlayer = CurrentWorkList; // only current worklist will select invoked picker
-				return FrameworkApplication.SetCurrentToolAsync(ConfigIDs.Editing_PickWorkListItemTool);
+				WorkListsModule.Current.ActiveWorkListlayer =
+					CurrentWorkList; // only current worklist will select invoked picker
+				return FrameworkApplication.SetCurrentToolAsync(
+					ConfigIDs.Editing_PickWorkListItemTool);
 			}, _msg);
 		}
 
@@ -493,10 +495,10 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		public virtual void NavigatorUnloaded()
 		{
-			if(!string.IsNullOrEmpty(_lastActiveTool))
+			if (! string.IsNullOrEmpty(_lastActiveTool))
 				FrameworkApplication.SetCurrentToolAsync(_lastActiveTool);
 			// TODO this for test only
-			if (WorkListsModule.Current.ActiveWorkListlayer?.Name == CurrentWorkList.Name )
+			if (WorkListsModule.Current.ActiveWorkListlayer?.Name == CurrentWorkList.Name)
 				WorkListsModule.Current.ActiveWorkListlayer = null;
 		}
 

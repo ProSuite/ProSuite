@@ -43,7 +43,8 @@ namespace ProSuite.AGP.WorkList
 			}
 			catch (Exception e)
 			{
-				_msg.Error($"Error get value from row {row} with index {_statusSchema.FieldIndex}", e);
+				_msg.Error($"Error get value from row {row} with index {_statusSchema.FieldIndex}",
+				           e);
 
 				return WorkItemStatus.Todo;
 			}
@@ -61,7 +62,8 @@ namespace ProSuite.AGP.WorkList
 				return WorkItemStatus.Done;
 			}
 
-			_msg.Debug($"Unknown {nameof(WorkItemStatus)} value {value}, return {nameof(WorkItemStatus.Todo)}");
+			_msg.Debug(
+				$"Unknown {nameof(WorkItemStatus)} value {value}, return {nameof(WorkItemStatus.Todo)}");
 
 			return WorkItemStatus.Todo;
 		}

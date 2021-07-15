@@ -51,6 +51,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Geometry.dll</HintPath>
     </Reference>
+    <Reference Include="ProSuite.Microservices.Definitions.QA, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.dll</HintPath>
+    </Reference>
     <Reference Include="ProSuite.Microservices.Definitions.Shared, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Shared.dll</HintPath>
@@ -68,7 +72,12 @@
     <Compile Include="GdbObjectReference.cs" />
     <Compile Include="GeometryProcessing\AdvancedReshape\AdvancedReshapeClientUtils.cs" />
     <Compile Include="GeometryProcessing\AdvancedReshape\ReshapeResult.cs" />
-    <Compile Include="GeometryProcessing\AdvancedReshape\ReshapeResultFeature.cs" />
+    <Compile Include="GeometryProcessing\ResultFeature.cs" />
+    <Compile Include="GeometryProcessing\RowChangeType.cs" />
+    <Compile Include="GeometryProcessing\ChangeAlong\ChangeAlongClientUtils.cs" />
+    <Compile Include="GeometryProcessing\ChangeAlong\ChangeAlongCurves.cs" />
+    <Compile Include="GeometryProcessing\ChangeAlong\CutSubcurve.cs" />
+    <Compile Include="GeometryProcessing\ChangeAlong\ReshapeAlongCurveUsability.cs" />
     <Compile Include="GeometryProcessing\RemoveOverlaps\OverlapResultGeometries.cs" />
     <Compile Include="GeometryProcessing\RemoveOverlaps\Overlaps.cs" />
     <Compile Include="GeometryProcessingClient.cs" />
@@ -78,8 +87,15 @@
     <Compile Include="GrpcClientConfigUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProtobufConversionUtils.cs" />
+    <Compile Include="QA\ClientIssueMessageCollector.cs" />
+    <Compile Include="QA\DdxUtils.cs" />
+    <Compile Include="QA\QAUtils.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj">
+      <Project>{B80740EC-BB68-410C-A617-E79C467F1969}</Project>
+      <Name>ProSuite.Commons.AGP.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.AGP\ProSuite.Commons.AGP.csproj">
       <Project>{89F2C583-3022-43F8-9B69-27123836625F}</Project>
       <Name>ProSuite.Commons.AGP</Name>
@@ -95,6 +111,14 @@
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
       <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
       <Name>ProSuite.Commons</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.DomainModel.AGP\ProSuite.DomainModel.AGP.csproj">
+      <Project>{824DDBE3-EDAF-460B-B513-386A4260C1FF}</Project>
+      <Name>ProSuite.DomainModel.AGP</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
+      <Project>{0B48B56F-3A3D-4367-AA76-A356519AF2AB}</Project>
+      <Name>ProSuite.DomainModel.Core</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj">
       <Project>{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}</Project>

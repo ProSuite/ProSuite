@@ -5,11 +5,11 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geometry;
-using ProSuite.Commons.Geometry.SpatialIndex;
+using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.QA.Container.Geometry;
-using IPnt = ProSuite.Commons.Geometry.IPnt;
-using Pnt = ProSuite.Commons.Geometry.Pnt;
+using IPnt = ProSuite.Commons.Geom.IPnt;
+using Pnt = ProSuite.Commons.Geom.Pnt;
 
 namespace ProSuite.QA.Container.TestContainer
 {

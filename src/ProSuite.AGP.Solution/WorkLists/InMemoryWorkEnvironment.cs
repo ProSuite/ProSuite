@@ -42,7 +42,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return new XmlWorkItemStateRepository(path, workListName, type);
 		}
 
-		protected override IWorkItemRepository CreateItemRepositoryCore(IEnumerable<BasicFeatureLayer> featureLayers, IRepository stateRepository)
+		protected override IWorkItemRepository CreateItemRepositoryCore(
+			IEnumerable<BasicFeatureLayer> featureLayers, IRepository stateRepository)
 		{
 			List<BasicFeatureLayer> layers = featureLayers.ToList();
 

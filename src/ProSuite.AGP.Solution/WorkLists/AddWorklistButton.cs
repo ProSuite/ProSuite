@@ -38,7 +38,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 					return;
 				}
 
-				string worklistName = await QueuedTask.Run(() => WorkListsModule.Current.ShowWorklist(environment, path));
+				string worklistName =
+					await QueuedTask.Run(
+						() => WorkListsModule.Current.ShowWorklist(environment, path));
 				Assert.NotNullOrEmpty(worklistName);
 
 				WorkListsModule.Current.ShowView(worklistName, worklistName);

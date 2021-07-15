@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Surface;
+using ProSuite.Commons.AO.Surface.Raster;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Notifications;
@@ -91,16 +93,19 @@ namespace ProSuite.DomainModel.AO.QA
 			return InnerModelContext.CanOpen(dataset);
 		}
 
+				[CLSCompliant(false)]
 		public IFeatureClass OpenFeatureClass(IVectorDataset dataset)
 		{
 			return InnerModelContext.OpenFeatureClass(dataset);
 		}
 
+		[CLSCompliant(false)]
 		public ITable OpenTable(IObjectDataset dataset)
 		{
 			return InnerModelContext.OpenTable(dataset);
 		}
 
+		[CLSCompliant(false)]
 		public IObjectClass OpenObjectClass(IObjectDataset dataset)
 		{
 			return InnerModelContext.OpenObjectClass(dataset);
@@ -116,6 +121,16 @@ namespace ProSuite.DomainModel.AO.QA
 
 		//	return modelContextEx.OpenTerrain(dataset);
 		//}
+		[CLSCompliant(false)]
+		public TerrainReference OpenTerrainReference(ISimpleTerrainDataset dataset)
+		{
+			return InnerModelContext.OpenTerrainReference(dataset);
+		}
+
+		public SimpleRasterMosaic OpenSimpleRasterMosaic(ISimpleRasterMosaicDataset dataset)
+		{
+			return InnerModelContext.OpenSimpleRasterMosaic(dataset);
+		}
 
 		//public ITopology OpenTopology(ITopologyDataset dataset)
 		//{
@@ -139,6 +154,7 @@ namespace ProSuite.DomainModel.AO.QA
 		//	return modelContextEx.OpenGeometricNetwork(dataset);
 		//}
 
+		[CLSCompliant(false)]
 		public IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset)
 		{
 			return InnerModelContext.OpenRasterDataset(dataset);

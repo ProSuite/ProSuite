@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Runtime.InteropServices;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -7,7 +7,7 @@ namespace ProSuite.Commons
 	public static class SystemUtils
 	{
 		[DllImport("kernel32.dll", SetLastError = true)]
-		[return : MarshalAs(UnmanagedType.Bool)]
+		[return: MarshalAs(UnmanagedType.Bool)]
 		private static extern bool IsWow64Process(IntPtr hProcess,
 		                                          [MarshalAs(UnmanagedType.Bool)] out bool
 			                                          isWow64);
@@ -43,6 +43,13 @@ namespace ProSuite.Commons
 				       IsWow64Process(GetCurrentProcess(), out isWow64) && isWow64;
 			}
 		}
+
+		/// <summary>
+		/// Whether the current process is large address aware in case it is a 32 bit
+		/// process. This is irrelevant for 64-bit processes. To be set by the aware
+		/// executable.
+		/// </summary>
+		public static bool IsLargeAddressAware { get; set; }
 
 		private static bool ModuleContainsFunction([NotNull] string moduleName,
 		                                           [NotNull] string methodName)

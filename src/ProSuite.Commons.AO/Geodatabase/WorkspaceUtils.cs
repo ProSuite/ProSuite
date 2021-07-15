@@ -14,11 +14,13 @@ using System.Security.Authentication;
 using System.Threading;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Properties;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Diagnostics;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Gdb;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Text;
@@ -940,6 +942,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return false; // different database => different version
 			}
 
+			if (workspace1 is IEquatable<IWorkspace> equatableWorkspace1)
+			{
+				return equatableWorkspace1.Equals(workspace2);
+			}
+
+			if (workspace2 is IEquatable<IWorkspace> equatableWorkspace2)
+			{
+				return equatableWorkspace2.Equals(workspace1);
+			}
+
 			var version1 = workspace1 as IVersion;
 			var version2 = workspace2 as IVersion;
 
@@ -977,6 +989,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				// same workspace instance. obviously the same db
 				return true;
+			}
+
+			if (workspace1 is GdbWorkspace gdbWorkspace1)
+			{
+				return gdbWorkspace1.IsSameDatabase(workspace2);
+			}
+
+			if (workspace2 is GdbWorkspace gdbWorkspace2)
+			{
+				return gdbWorkspace2.IsSameDatabase(workspace1);
 			}
 
 			var versionedWorkspace1 = workspace1 as IVersionedWorkspace;
@@ -1861,8 +1883,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			int pwdStartIndex = pwdSeparator1Index + 1;
 			int pwdSeparator2Index = workspaceConnectionString.IndexOf(";", pwdStartIndex,
-			                                                           StringComparison
-				                                                           .Ordinal);
+				StringComparison
+					.Ordinal);
 
 			int pwdEndIndex = pwdSeparator2Index < 0
 				                  ? workspaceConnectionString.Length - 1
@@ -2690,6 +2712,88 @@ namespace ProSuite.Commons.AO.Geodatabase
 			finally
 			{
 				datasetNames.Reset();
+			}
+		}
+
+		public static WorkspaceDbType GetWorkspaceDbType(IWorkspace workspace)
+		{
+			switch (workspace.Type)
+			{
+				case esriWorkspaceType.esriFileSystemWorkspace:
+					return WorkspaceDbType.FileSystem;
+
+				case esriWorkspaceType.esriLocalDatabaseWorkspace:
+					if (IsFileGeodatabase(workspace))
+					{
+						return WorkspaceDbType.FileGeodatabase;
+					}
+					else if (IsPersonalGeodatabase(workspace))
+					{
+						return WorkspaceDbType.PersonalGeodatabase;
+					}
+
+					break;
+
+				case esriWorkspaceType.esriRemoteDatabaseWorkspace:
+
+					var connectionInfo = workspace as IDatabaseConnectionInfo2;
+					if (connectionInfo != null)
+					{
+						switch (connectionInfo.ConnectionDBMS)
+						{
+							case esriConnectionDBMS.esriDBMS_Unknown:
+								break;
+
+							case esriConnectionDBMS.esriDBMS_Oracle:
+								return WorkspaceDbType.ArcSDEOracle;
+
+							case esriConnectionDBMS.esriDBMS_Informix:
+								return WorkspaceDbType.ArcSDEInformix;
+
+							case esriConnectionDBMS.esriDBMS_SQLServer:
+								return WorkspaceDbType.ArcSDESqlServer;
+
+							case esriConnectionDBMS.esriDBMS_DB2:
+								return WorkspaceDbType.ArcSDEDB2;
+
+							case esriConnectionDBMS.esriDBMS_PostgreSQL:
+								return WorkspaceDbType.ArcSDEPostgreSQL;
+
+							default:
+								throw new ArgumentOutOfRangeException();
+						}
+					}
+					else
+					{
+						return WorkspaceDbType.ArcSDE;
+					}
+
+					break;
+
+				default:
+					throw new ArgumentOutOfRangeException();
+			}
+
+			return WorkspaceDbType.Unknown;
+		}
+
+		public static esriWorkspaceType ToEsriWorkspaceType(WorkspaceDbType dbType)
+		{
+			switch (dbType)
+			{
+				case WorkspaceDbType.FileGeodatabase:
+				case WorkspaceDbType.PersonalGeodatabase:
+					return esriWorkspaceType.esriLocalDatabaseWorkspace;
+				case WorkspaceDbType.ArcSDE:
+				case WorkspaceDbType.ArcSDESqlServer:
+				case WorkspaceDbType.ArcSDEOracle:
+				case WorkspaceDbType.ArcSDEPostgreSQL:
+				case WorkspaceDbType.ArcSDEInformix:
+				case WorkspaceDbType.ArcSDEDB2:
+					return esriWorkspaceType.esriRemoteDatabaseWorkspace;
+				default:
+					throw new ArgumentOutOfRangeException(nameof(dbType), dbType,
+					                                      "Unknown DB type");
 			}
 		}
 

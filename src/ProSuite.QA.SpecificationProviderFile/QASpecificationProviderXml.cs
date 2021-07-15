@@ -1,32 +1,48 @@
+using ProSuite.DomainModel.Core.QA;
 using System;
-using ProSuite.QA.ServiceManager.Interfaces;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
+using ProSuite.DomainModel.AGP.QA;
 
 namespace ProSuite.QA.SpecificationProviderFile
 {
-	public class QASpecificationProviderXml : IQASpecificationProvider
+
+	public class QASpecificationProviderXml : IQualitySpecificationReferencesProvider
 	{
-		// temporary specification storage - string (xml path)
-		private Dictionary<string,string> _availableSpecifications = null;
+		public string BackendDisplayName => SpecificationsFolder;
+		public bool CanGetSpecifications()
+		{
+			return AvailableSpecifications.Any();
+		}
 
-		private Dictionary<string, string> AvailableSpecifications =>
-			_availableSpecifications ?? (_availableSpecifications = ReadSpecifications());
+		public async Task<IList<IQualitySpecificationReference>> GetQualitySpecifications()
+		{
+			return AvailableSpecifications.Values.ToList();
+		}
 
-		// TODO reset speclist when folder changes
+		public async Task<IQualitySpecificationReference> GetQualitySpecification(string name)
+		{
+			return AvailableSpecifications.FirstOrDefault(spec => spec.Key == name).Value;
+		}
+
 		private string SpecificationsFolder { get; set; }
+		private IDictionary<string, IQualitySpecificationReference> _availableSpecifications = null;
+
+		private IDictionary<string, IQualitySpecificationReference> AvailableSpecifications =>
+			_availableSpecifications ?? (_availableSpecifications = ReadSpecifications());
 
 		public QASpecificationProviderXml(string specificationsFolder)
 		{
 			SpecificationsFolder = specificationsFolder;
 		}
-
-		private Dictionary<string,string> ReadSpecifications()
+		
+		private IDictionary<string, IQualitySpecificationReference> ReadSpecifications()
 		{
 			try
 			{
-				var tempData = new Dictionary<string,string>();
+				var tempData = new Dictionary<string, IQualitySpecificationReference>();
 
 				List<string> files =
 					new List<string>(Directory.EnumerateFiles(SpecificationsFolder));
@@ -35,7 +51,7 @@ namespace ProSuite.QA.SpecificationProviderFile
 					var specName = Path.GetFileNameWithoutExtension(file).Replace(".qa", "");
 					if (!tempData.ContainsKey(specName))
 					{
-						tempData.Add(specName,file);
+						tempData.Add(specName, new QualitySpecificationReference(-1, specName, file));
 					}
 				}
 				return tempData;
@@ -46,14 +62,6 @@ namespace ProSuite.QA.SpecificationProviderFile
 			}
 		}
 
-		public IList<string> GetQASpecificationNames()
-		{
-			return AvailableSpecifications?.Keys.ToList();
-		}
-
-		public string GetQASpecificationsConnection(string name)
-		{
-			return AvailableSpecifications.FirstOrDefault(spec=>spec.Key == name).Value;
-		}
 	}
+
 }

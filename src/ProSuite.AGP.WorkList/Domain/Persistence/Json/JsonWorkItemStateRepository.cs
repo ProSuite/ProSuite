@@ -6,30 +6,33 @@ using ProSuite.Commons.Collections;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence.Json
 {
-	public class JsonWorkItemStateRepository : WorkItemStateRepository<JsonWorkItemState, JsonBasedWorkListDefinition>
+	public class
+		JsonWorkItemStateRepository : WorkItemStateRepository<JsonWorkItemState,
+			JsonBasedWorkListDefinition>
 	{
 		protected override void Store(JsonBasedWorkListDefinition definition)
 		{
-			throw new System.NotImplementedException();
+			throw new NotImplementedException();
 		}
 
 		protected override JsonBasedWorkListDefinition CreateDefinition(
 			Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> tablesByWorkspace,
 			List<JsonWorkItemState> states)
 		{
-			throw new System.NotImplementedException();
+			throw new NotImplementedException();
 		}
 
 		protected override JsonWorkItemState CreateState(IWorkItem item)
 		{
-			throw new System.NotImplementedException();
+			throw new NotImplementedException();
 		}
 
 		protected override List<JsonWorkItemState> ReadStates()
 		{
-			throw new System.NotImplementedException();
+			throw new NotImplementedException();
 		}
 
-		public JsonWorkItemStateRepository(string name, Type type, int? currentItemIndex = null) : base(name, type, currentItemIndex){}
+		public JsonWorkItemStateRepository(string name, Type type, int? currentItemIndex = null) :
+			base(name, type, currentItemIndex) { }
 	}
 }

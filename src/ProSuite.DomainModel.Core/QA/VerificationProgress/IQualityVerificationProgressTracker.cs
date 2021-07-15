@@ -1,5 +1,5 @@
 using System.ComponentModel;
-using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Progress;
 
 namespace ProSuite.DomainModel.Core.QA.VerificationProgress

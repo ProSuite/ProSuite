@@ -1,3 +1,8 @@
+#if Server
+using ESRI.ArcGIS.DatasourcesRaster;
+#else
+using ESRI.ArcGIS.DataSourcesRaster;
+#endif
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,12 +17,8 @@ using OSGeo.GDAL;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.Essentials.System;
 using ProSuite.Commons.Logging;
-#if Server
-using ESRI.ArcGIS.DatasourcesRaster;
-#else
-using ESRI.ArcGIS.DataSourcesRaster;
-#endif
 
 namespace ProSuite.Commons.AO.Test.Geodatabase
 {
@@ -204,7 +205,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[Category(TestCategory.Sde)]
 		public void CanOpenRasterFileFromMosaicDatasetUsingSpatialQueryGdal_Learning()
 		{
-			// TODO: Corrext GDAL native reference. Work-around: copy the x64 directory to the output dir
+			// TODO: Correct GDAL native reference. Work-around: copy the x64 directory to the output dir
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
 
 			IMosaicDataset mosaicDataset = DatasetUtils.OpenMosaicDataset(workspace,
@@ -219,6 +220,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IQueryFilter spatialFilter =
 				GdbQueryUtils.CreateSpatialFilter(rasterCatalog, winterthurLL);
 
+			// In case of DllNotFoundException, copy the appropriate dlls from the gdal subdirectory to the bin
 			Gdal.AllRegister();
 
 			IStringArray stringArray;
@@ -229,12 +231,9 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			Assert.True(features.Count > 0);
 
-			var itemPathsQuery = (IItemPathsQuery) mosaicDataset;
-			itemPathsQuery.QueryPathsParameters = new QueryPathsParametersClass();
+			string rasterPath = GetPathViaCatalogItemDataset(features[0]);
 
-			stringArray = itemPathsQuery.GetItemPaths(features[0]);
-
-			string rasterPath = stringArray.Element[0];
+			Console.WriteLine("Opening raster dataset {0}...", rasterPath);
 
 			Dataset ds = Gdal.Open(rasterPath, Access.GA_ReadOnly);
 
@@ -287,6 +286,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				Console.WriteLine("   PaletteInterp: " +
 				                  band.GetRasterColorInterpretation().ToString());
 
+				double noDataValue;
+				int hasNoDataValue;
+				band.GetNoDataValue(out noDataValue, out hasNoDataValue);
+
+				Console.WriteLine("   Has NoData value: " + hasNoDataValue);
+				Console.WriteLine("   NoData value: " + noDataValue);
+
 				band.GetBlockSize(out int blockSizeX, out int blockSizeY);
 
 				Console.WriteLine("   Block Size (" + blockSizeX + "," + blockSizeY + ")");
@@ -305,7 +311,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				int pxlOffsetX = (int) Math.Floor((winterthurLL.X - originX) / pixelSizeX);
 				int pxlOffsetY = (int) Math.Floor((winterthurLL.Y - originY) / pixelSizeY);
 
-				double[] buffer = new double[1];
+				// NOTE: ReadBlock is not available (and generally discouraged anyway)
+				float[] buffer = new float[1];
 				band.ReadRaster(pxlOffsetX, pxlOffsetY, 1, 1, buffer, 1, 1, 0, 0);
 
 				double z = buffer[0];
@@ -314,7 +321,52 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				//       reads in a similar area very fast (TEST!) - probably the same as IRaster behaviour.
 				// TODO: Bilinear interpolation if it's not the middle of a pixel!
 				Console.WriteLine("Z value at {0}, {1}: {2}", winterthurLL.X, winterthurLL.Y, z);
+
+				// Test for pixel acess - the boundary behaviour is different (bounds are checked!)
+				// But the performance is 3 times as fast! Memory is almost stable after disposal.
+				Random random = new Random();
+
+				double minimumX = originX + 1;
+				double width = (17500 / 4d) - 2;
+				double minimumY = originY + 1;
+				double height = (12000 / 4d) - 2;
+
+				Stopwatch pixelWatch = Stopwatch.StartNew();
+
+				int count = 10000;
+
+				Console.WriteLine("Memory before: {0}", GetMemoryConsumptionText(out long pbOrig));
+
+				float[] pixelBuffer4 = new float[4];
+
+				for (int i = 0; i < count; i++)
+				{
+					double x = minimumX + random.NextDouble() * width;
+					double y = minimumY + random.NextDouble() * height;
+
+					pxlOffsetX = (int) Math.Floor((x - originX) / pixelSizeX);
+					pxlOffsetY = (int) Math.Floor((originY - y) / pixelSizeY);
+
+					band.ReadRaster(pxlOffsetX, pxlOffsetY, 2, 2, pixelBuffer4, 2, 2, 0, 0);
+
+					float v00 = pixelBuffer4[0];
+					float v10 = pixelBuffer4[1];
+					float v01 = pixelBuffer4[2];
+					float v11 = pixelBuffer4[3];
+				}
+
+				Console.WriteLine($"Time: {pixelWatch.ElapsedMilliseconds} ms");
+
+				Console.WriteLine("Memory after: {0}", GetMemoryConsumptionText(out long pbAfter));
+
+				// END Pixel access
+
+				band.Dispose();
 			}
+
+			ds.Dispose();
+
+			Console.WriteLine("Memory after disposal: {0}", GetMemoryConsumptionText(out _));
 		}
 
 		[Test]
@@ -357,6 +409,37 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			bool isDBNull = readback2 == DBNull.Value;
 
 			Assert.IsTrue(isNull || isDBNull);
+		}
+
+		private static string GetMemoryConsumptionText(out long privateBytesMB)
+		{
+			long virtualBytes;
+			long privateBytes;
+			long workingSet;
+			ProcessUtils.GetMemorySize(out virtualBytes, out privateBytes, out workingSet);
+
+			const int mb = 1024 * 1024;
+
+			privateBytesMB = privateBytes / mb;
+
+			return string.Format(
+				"VB:{0:N0} PB:{1:N0} WS:{2:N0}",
+				virtualBytes / mb,
+				privateBytesMB,
+				workingSet / mb);
+		}
+
+		private static string GetPathViaCatalogItemDataset(IFeature catalogFeature)
+		{
+			var rasterCatalogItem = (IRasterCatalogItem) catalogFeature;
+
+			IRasterDataset rasterDataset = rasterCatalogItem.RasterDataset;
+
+			var itemPaths = (IItemPaths) rasterDataset;
+
+			IStringArray stringArray = itemPaths.GetPaths();
+
+			return stringArray.Element[0];
 		}
 	}
 }

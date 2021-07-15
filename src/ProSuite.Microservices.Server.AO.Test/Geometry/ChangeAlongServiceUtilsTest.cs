@@ -11,11 +11,10 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Geometry.ChangeAlong;
 using ProSuite.Commons.AO.Geometry.ZAssignment;
 using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.Geometry;
+using ProSuite.Commons.Geom;
 using ProSuite.Microservices.AO;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared;
-using ProSuite.Microservices.Server.AO.Geodatabase;
 using ProSuite.Microservices.Server.AO.Geometry.ChangeAlong;
 
 namespace ProSuite.Microservices.Server.AO.Test.Geometry
@@ -89,7 +88,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			GdbObjectMsg updatedFeatureMsg = applyResponse.ResultFeatures[0].Update;
 
 			GdbObjectReference resultFeatureObjRef = new GdbObjectReference(
-				updatedFeatureMsg.ClassHandle, updatedFeatureMsg.ObjectId);
+				(int) updatedFeatureMsg.ClassHandle, (int) updatedFeatureMsg.ObjectId);
 
 			Assert.AreEqual(new GdbObjectReference(sourceFeature), resultFeatureObjRef);
 
@@ -116,7 +115,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			updatedFeatureMsg = applyResponse.ResultFeatures[0].Update;
 
 			resultFeatureObjRef = new GdbObjectReference(
-				updatedFeatureMsg.ClassHandle, updatedFeatureMsg.ObjectId);
+				(int) updatedFeatureMsg.ClassHandle, (int) updatedFeatureMsg.ObjectId);
 
 			Assert.AreEqual(new GdbObjectReference(sourceFeature), resultFeatureObjRef);
 
@@ -390,7 +389,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			GdbObjectMsg updatedFeatureMsg = applyResponse.ResultFeatures[0].Update;
 
 			GdbObjectReference resultFeatureObjRef = new GdbObjectReference(
-				updatedFeatureMsg.ClassHandle, updatedFeatureMsg.ObjectId);
+				(int) updatedFeatureMsg.ClassHandle, (int) updatedFeatureMsg.ObjectId);
 
 			Assert.AreEqual(new GdbObjectReference(sourceFeature), resultFeatureObjRef);
 
@@ -457,7 +456,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			GdbObjectMsg updatedFeatureMsg = applyResponse.ResultFeatures[0].Update;
 
 			GdbObjectReference resultFeatureObjRef = new GdbObjectReference(
-				updatedFeatureMsg.ClassHandle, updatedFeatureMsg.ObjectId);
+				(int) updatedFeatureMsg.ClassHandle, (int) updatedFeatureMsg.ObjectId);
 
 			Assert.AreEqual(new GdbObjectReference(sourceFeature), resultFeatureObjRef);
 
@@ -602,8 +601,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 					r => r.FeatureCase == ResultObjectMsg.FeatureOneofCase.Update);
 
 			GdbObjectReference updateObjRef =
-				new GdbObjectReference(updateResultMsg.Update.ClassHandle,
-				                       updateResultMsg.Update.ObjectId);
+				new GdbObjectReference((int) updateResultMsg.Update.ClassHandle,
+				                       (int) updateResultMsg.Update.ObjectId);
 
 			Assert.AreEqual(new GdbObjectReference(sourceFeature), updateObjRef);
 
@@ -899,7 +898,8 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 					r => r.FeatureCase == ResultObjectMsg.FeatureOneofCase.Update).Update;
 
 			GdbObjectReference updatedObjRef =
-				new GdbObjectReference(updatedFeatureMsg.ClassHandle, updatedFeatureMsg.ObjectId);
+				new GdbObjectReference((int) updatedFeatureMsg.ClassHandle,
+				                       (int) updatedFeatureMsg.ObjectId);
 
 			Assert.AreEqual(new GdbObjectReference(source1Feature), updatedObjRef);
 
@@ -1078,11 +1078,11 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 			switch (resultObjectMsg.FeatureCase)
 			{
 				case ResultObjectMsg.FeatureOneofCase.Update:
-					return resultObjectMsg.Update.ObjectId;
+					return (int) resultObjectMsg.Update.ObjectId;
 				case ResultObjectMsg.FeatureOneofCase.Insert:
-					return resultObjectMsg.Insert.InsertedObject.ObjectId;
+					return (int) resultObjectMsg.Insert.InsertedObject.ObjectId;
 				case ResultObjectMsg.FeatureOneofCase.Delete:
-					return resultObjectMsg.Delete.ObjectId;
+					return (int) resultObjectMsg.Delete.ObjectId;
 				default:
 					return -1;
 			}

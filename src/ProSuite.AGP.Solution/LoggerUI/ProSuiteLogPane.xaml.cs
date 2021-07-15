@@ -1,10 +1,12 @@
-using ProSuite.Commons.Logging;
 using System;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Threading;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Solution.LoggerUI
 {
@@ -12,19 +14,19 @@ namespace ProSuite.AGP.Solution.LoggerUI
 	/// Interaction logic for ProSuiteLogPaneView.xaml
 	/// </summary>
 	public partial class ProSuiteLogPaneView : UserControl
-    {
-        public ProSuiteLogPaneView()
-        {
-            InitializeComponent();
+	{
+		public ProSuiteLogPaneView()
+		{
+			InitializeComponent();
 		}
 
-		private void logMessagesGrid_MouseRightButtonUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+		private void logMessagesGrid_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
 		{
 			DataGridRow row = sender as DataGridRow;
 			logMessagesGrid.SelectedItem = row.Item;
 		}
 
-		private void logMessagesGrid_Loaded(object sender, System.Windows.RoutedEventArgs e)
+		private void logMessagesGrid_Loaded(object sender, RoutedEventArgs e)
 		{
 			var items = (logMessagesGrid.ItemsSource as ObservableCollection<LoggingEventItem>);
 
@@ -42,16 +44,21 @@ namespace ProSuite.AGP.Solution.LoggerUI
 
 		private void ScrollMessagesToEnd()
 		{
-			logMessagesGrid.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action)(() =>
-			{
-				if (logMessagesGrid.Items != null && logMessagesGrid.Items.Count > 0)
-				{
-					logMessagesGrid.ScrollIntoView(logMessagesGrid.Items[logMessagesGrid.Items.Count - 1]);
-				}
-			}));
+			logMessagesGrid.Dispatcher.BeginInvoke(DispatcherPriority.Normal, (Action) (() =>
+					                                       {
+						                                       if (logMessagesGrid.Items != null &&
+							                                       logMessagesGrid.Items.Count > 0)
+						                                       {
+							                                       logMessagesGrid.ScrollIntoView(
+								                                       logMessagesGrid.Items[
+									                                       logMessagesGrid.Items
+										                                       .Count - 1]);
+						                                       }
+					                                       }));
 		}
 
-		private void UserControl_IsVisibleChanged(object sender, System.Windows.DependencyPropertyChangedEventArgs e)
+		private void UserControl_IsVisibleChanged(object sender,
+		                                          DependencyPropertyChangedEventArgs e)
 		{
 			if (IsVisible)
 				ScrollMessagesToEnd();

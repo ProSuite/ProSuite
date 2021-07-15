@@ -59,6 +59,10 @@
       <Project>{d6540148-8790-4c77-8a65-518bd10487d7}</Project>
       <Name>ProSuite.Commons.AGP.Hosting</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
+      <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
+      <Name>ProSuite.Commons</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

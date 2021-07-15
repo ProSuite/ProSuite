@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
-using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Solution.Commons
@@ -19,21 +18,26 @@ namespace ProSuite.AGP.Solution.Commons
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public static async Task<IList<FeatureLayer>> AddFeaturesToMap(string groupLayer, string path, string featureName = null, IList<string> layernames = null, bool select = true)
-        {
+		public static async Task<IList<FeatureLayer>> AddFeaturesToMap(
+			string groupLayer, string path, string featureName = null,
+			IList<string> layernames = null, bool select = true)
+		{
 			// is map visible?
 			if (MapView.Active == null) return null;
 			if (string.IsNullOrEmpty(path)) return null;
 
 			// are data zipped?
-			var featuresGdb = path.Replace("\n", string.Empty).Replace("\r", string.Empty).Replace(@"\\", @"\");
-			if (string.Equals(Path.GetExtension(featuresGdb), ".zip", StringComparison.OrdinalIgnoreCase))
+			var featuresGdb = path.Replace("\n", string.Empty).Replace("\r", string.Empty)
+			                      .Replace(@"\\", @"\");
+			if (string.Equals(Path.GetExtension(featuresGdb), ".zip",
+			                  StringComparison.OrdinalIgnoreCase))
 			{
 				var extractDir = Path.GetDirectoryName(path);
 				if (extractDir == null) return null;
 				ZipFile.ExtractToDirectory(path, extractDir);
-				featuresGdb = Path.Combine(extractDir, Path.GetFileNameWithoutExtension(path), featureName);
-				if (!Directory.Exists(featuresGdb)) return null;
+				featuresGdb = Path.Combine(extractDir, Path.GetFileNameWithoutExtension(path),
+				                           featureName);
+				if (! Directory.Exists(featuresGdb)) return null;
 			}
 
 			var layerList = new List<FeatureLayer>();
@@ -45,12 +49,15 @@ namespace ProSuite.AGP.Solution.Commons
 
 					// TODO get layernames from workspace if null?
 
-					var newGroupLayer = LayerFactory.Instance.CreateGroupLayer(MapView.Active.Map, 0, groupLayer);
+					var newGroupLayer =
+						LayerFactory.Instance.CreateGroupLayer(MapView.Active.Map, 0, groupLayer);
 					Envelope commonExtent = null;
 
 					foreach (var layername in layernames)
 					{
-						var featureLayer = LayerFactory.Instance.CreateFeatureLayer(new Uri(Path.Combine(featuresGdb, layername)), newGroupLayer);
+						var featureLayer =
+							LayerFactory.Instance.CreateFeatureLayer(
+								new Uri(Path.Combine(featuresGdb, layername)), newGroupLayer);
 						layerList.Add(featureLayer);
 						commonExtent = featureLayer.QueryExtent();
 					}
@@ -72,7 +79,7 @@ namespace ProSuite.AGP.Solution.Commons
 				}
 			});
 			return layerList;
-        }
+		}
 
 		public static void SelectLayersInMap(IEnumerable<FeatureLayer> layers = null)
 		{
@@ -99,23 +106,25 @@ namespace ProSuite.AGP.Solution.Commons
 			{
 				FrameworkApplication.AddNotification(new Notification
 				                                     {
-					Message = "QA results are added to map",
-					Title = "ProSuite Tools",
-					ImageUrl = PackUriForResource("AddInDesktop32.png").AbsoluteUri
-				});
+					                                     Message = "QA results are added to map",
+					                                     Title = "ProSuite Tools",
+					                                     ImageUrl =
+						                                     PackUriForResource(
+							                                     "AddInDesktop32.png").AbsoluteUri
+				                                     });
 			});
 		}
 
 		private static Uri PackUriForResource(string resourceName, string folderName = "Images")
 		{
 			string asm = Path.GetFileNameWithoutExtension(
-				System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
+				Assembly.GetExecutingAssembly().CodeBase);
 			string uriString = folderName.Length > 0
-				? string.Format("pack://application:,,,/{0};component/{1}/{2}", asm, folderName, resourceName)
-				: string.Format("pack://application:,,,/{0};component/{1}", asm, resourceName);
+				                   ? string.Format("pack://application:,,,/{0};component/{1}/{2}",
+				                                   asm, folderName, resourceName)
+				                   : string.Format("pack://application:,,,/{0};component/{1}", asm,
+				                                   resourceName);
 			return new Uri(uriString, UriKind.Absolute);
 		}
-
-
 	}
 }
