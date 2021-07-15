@@ -42,11 +42,11 @@ namespace ProSuite.QA.Tests
 
 		protected override void AddRequestParameters(ExecuteTestRequest request)
 		{
-			request.Parameter.Add(_layerFile);
-			request.Parameter.Add(_conflictLayerFile);
-			request.Parameter.Add(_conflictDistance);
-			request.Parameter.Add(_lineConnectionAllowance);
-			request.Parameter.Add(_referenceScale.ToString(CultureInfo.InvariantCulture));
+			request.Parameters.Add(_layerFile);
+			request.Parameters.Add(_conflictLayerFile);
+			request.Parameters.Add(_conflictDistance);
+			request.Parameters.Add(_lineConnectionAllowance);
+			request.Parameters.Add(_referenceScale.ToString(CultureInfo.InvariantCulture));
 		}
 	}
 }

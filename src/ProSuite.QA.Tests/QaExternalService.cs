@@ -28,7 +28,7 @@ namespace ProSuite.QA.Tests
 
 		protected override void AddRequestParameters(ExecuteTestRequest request)
 		{
-			request.Parameter.Add(_parameters);
+			request.Parameters.Add(_parameters);
 		}
 	}
 }
