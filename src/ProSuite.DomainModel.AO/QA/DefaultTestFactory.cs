@@ -34,7 +34,7 @@ namespace ProSuite.DomainModel.AO.QA
 			Assert.ArgumentNotNull(assemblyName, nameof(assemblyName));
 			Assert.ArgumentNotNull(typeName, nameof(typeName));
 
-			_testType = ParameterizedInstanceUtils.LoadType(assemblyName, typeName, constructorId);
+			_testType = InstanceUtils.LoadType(assemblyName, typeName, constructorId);
 
 			_constructorId = constructorId;
 		}
@@ -64,12 +64,12 @@ namespace ProSuite.DomainModel.AO.QA
 
 		private T CreateInstance<T>(object[] args)
 		{
-			return ParameterizedInstanceUtils.CreateInstance<T>(TestType, _constructorId, args);
+			return InstanceUtils.CreateInstance<T>(TestType, _constructorId, args);
 		}
 
 		protected override IList<TestParameter> CreateParameters()
 		{
-			return ParameterizedInstanceUtils.CreateParameters(TestType, _constructorId);
+			return InstanceUtils.CreateParameters(TestType, _constructorId);
 		}
 
 		public override string[] TestCategories => ReflectionUtils.GetCategories(TestType);
@@ -78,7 +78,7 @@ namespace ProSuite.DomainModel.AO.QA
 		{
 			ConstructorInfo ctor = TestType.GetConstructors()[_constructorId];
 
-			return ParameterizedInstanceUtils.GetDescription(ctor);
+			return InstanceUtils.GetDescription(ctor);
 		}
 
 		public override string GetParameterDescription(string parameterName)
@@ -92,7 +92,7 @@ namespace ProSuite.DomainModel.AO.QA
 			{
 				if (string.Equals(parameterInfo.Name, parameterName, stringComparison))
 				{
-					return ParameterizedInstanceUtils.GetDescription(parameterInfo);
+					return InstanceUtils.GetDescription(parameterInfo);
 				}
 			}
 
@@ -100,7 +100,7 @@ namespace ProSuite.DomainModel.AO.QA
 			{
 				if (string.Equals(propertyInfo.Name, parameterName, stringComparison))
 				{
-					return ParameterizedInstanceUtils.GetDescription(propertyInfo);
+					return InstanceUtils.GetDescription(propertyInfo);
 				}
 			}
 

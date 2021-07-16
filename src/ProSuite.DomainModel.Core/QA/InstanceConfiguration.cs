@@ -130,10 +130,10 @@ namespace ProSuite.DomainModel.Core.QA
 				}
 
 				// Transformers
-				if (parameterValue.Source != null)
+				if (parameterValue.ValueSource != null)
 				{
 					foreach (Dataset referencedDataset in
-						parameterValue.Source.GetDatasetParameterValues(
+						parameterValue.ValueSource.GetDatasetParameterValues(
 							includeReferencedProcessors: true))
 					{
 						yield return referencedDataset;

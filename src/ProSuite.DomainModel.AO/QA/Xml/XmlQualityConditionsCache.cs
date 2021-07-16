@@ -284,7 +284,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 						                                  xmlParamValue.TestParameterName);
 					}
 
-					parameterValue.Source = transformerConfig;
+					parameterValue.ValueSource = transformerConfig;
 				}
 				else if (xmlParamValue is XmlDatasetTestParameterValue datasetValue)
 				{

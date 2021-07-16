@@ -180,7 +180,7 @@
     <Compile Include="QA\ITestConfigurator.cs" />
     <Compile Include="QA\ITestParameterDatasetProvider.cs" />
     <Compile Include="QA\IVerificationContext.cs" />
-    <Compile Include="QA\ParameterizedInstanceFactory.cs" />
+    <Compile Include="QA\InstanceFactory.cs" />
     <Compile Include="QA\QualityConditionObjectDatasetResolver.cs" />
     <Compile Include="QA\QualityConditionParameterUtils.cs" />
     <Compile Include="QA\RowFilterFactory.cs" />

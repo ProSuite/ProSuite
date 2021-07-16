@@ -6,7 +6,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Core
 {
-	public abstract class ParameterizedInstanceInfoBase : ITestImplementationInfo
+	public abstract class InstanceInfoBase : ITestImplementationInfo
 	{
 		private IList<TestParameter> _parameters;
 

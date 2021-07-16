@@ -13,7 +13,7 @@ namespace ProSuite.DomainModel.AO.QA
 	/// <summary>
 	/// Factory for IRowFilter instances.
 	/// </summary>
-	public class RowFilterFactory : ParameterizedInstanceFactory
+	public class RowFilterFactory : InstanceFactory
 	{
 		[UsedImplicitly] [NotNull] private Type _filterType;
 		[UsedImplicitly] private int _constructorId;
@@ -40,7 +40,7 @@ namespace ProSuite.DomainModel.AO.QA
 			Assert.ArgumentNotNull(typeName, nameof(typeName));
 
 			_filterType =
-				ParameterizedInstanceUtils.LoadType(assemblyName, typeName, constructorId);
+				InstanceUtils.LoadType(assemblyName, typeName, constructorId);
 
 			_constructorId = constructorId;
 		}
@@ -56,7 +56,7 @@ namespace ProSuite.DomainModel.AO.QA
 		{
 			ConstructorInfo ctor = FilterType.GetConstructors()[_constructorId];
 
-			return ParameterizedInstanceUtils.GetDescription(ctor);
+			return InstanceUtils.GetDescription(ctor);
 		}
 
 		public override string GetTestTypeDescription()
@@ -66,7 +66,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 		protected override IList<TestParameter> CreateParameters()
 		{
-			return ParameterizedInstanceUtils.CreateParameters(FilterType, _constructorId);
+			return InstanceUtils.CreateParameters(FilterType, _constructorId);
 		}
 
 		#endregion
@@ -81,7 +81,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 		private T CreateInstance<T>(object[] args)
 		{
-			return ParameterizedInstanceUtils.CreateInstance<T>(FilterType, _constructorId, args);
+			return InstanceUtils.CreateInstance<T>(FilterType, _constructorId, args);
 		}
 	}
 }

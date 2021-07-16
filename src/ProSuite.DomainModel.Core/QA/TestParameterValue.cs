@@ -16,6 +16,7 @@ namespace ProSuite.DomainModel.Core.QA
 		[UsedImplicitly] private readonly string _testParameterName;
 
 		private Type _dataType;
+		private TransformerConfiguration _valueSource;
 
 		#region Constructors
 
@@ -82,7 +83,11 @@ namespace ProSuite.DomainModel.Core.QA
 		public abstract string StringValue { get; set; }
 
 		[CanBeNull]
-		public TransformerConfiguration Source { get; set; }
+		public TransformerConfiguration ValueSource
+		{
+			get { return _valueSource;}
+			set { _valueSource = value; }
+		}
 
 		[NotNull]
 		public abstract TestParameterValue Clone();

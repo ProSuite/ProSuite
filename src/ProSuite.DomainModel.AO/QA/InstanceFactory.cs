@@ -21,7 +21,7 @@ namespace ProSuite.DomainModel.AO.QA
 	/// <summary>
 	/// Base class for test, row-filter, issue-filter, transformer factories.
 	/// </summary>
-	public abstract class ParameterizedInstanceFactory : ParameterizedInstanceInfoBase
+	public abstract class InstanceFactory : InstanceInfoBase
 	{
 		protected static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -390,17 +390,17 @@ namespace ProSuite.DomainModel.AO.QA
 			Assert.ArgumentNotNull(parameter, nameof(parameter));
 			Assert.ArgumentNotNull(datasetContext, nameof(datasetContext));
 
-			if (paramVal.Source != null)
+			if (paramVal.ValueSource != null)
 			{
-				if (! (InstanceFactoryUtils.CreateTransformerFactory(paramVal.Source)
+				if (! (InstanceFactoryUtils.CreateTransformerFactory(paramVal.ValueSource)
 					       is TransformerFactory fct))
 				{
 					throw new ArgumentException(
-						$"Unable to create TransformerFactory for {paramVal.Source}");
+						$"Unable to create TransformerFactory for {paramVal.ValueSource}");
 				}
 
 				// TODO: implement for other types
-				ITableTransformer sourceInstance = fct.Create(datasetContext, paramVal.Source);
+				ITableTransformer sourceInstance = fct.Create(datasetContext, paramVal.ValueSource);
 				// TODO: Harvest sourceInstance in paramVal. 
 				return sourceInstance.GetTransformed();
 			}

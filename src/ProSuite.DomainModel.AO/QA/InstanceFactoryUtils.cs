@@ -65,7 +65,7 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		public static void InitializeParameterValues(
-			[NotNull] ParameterizedInstanceFactory factory,
+			[NotNull] InstanceFactory factory,
 			[NotNull] IEnumerable<TestParameterValue> parameterValues)
 		{
 			Dictionary<string, TestParameter> parametersByName =

@@ -10,7 +10,7 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA
 {
-	public class TransformerFactory : ParameterizedInstanceFactory
+	public class TransformerFactory : InstanceFactory
 	{
 		[UsedImplicitly] [NotNull] private Type _transformerType;
 		[UsedImplicitly] private int _constructorId;
@@ -37,7 +37,7 @@ namespace ProSuite.DomainModel.AO.QA
 			Assert.ArgumentNotNull(typeName, nameof(typeName));
 
 			_transformerType =
-				ParameterizedInstanceUtils.LoadType(assemblyName, typeName, constructorId);
+				InstanceUtils.LoadType(assemblyName, typeName, constructorId);
 			_constructorId = constructorId;
 		}
 
@@ -52,7 +52,7 @@ namespace ProSuite.DomainModel.AO.QA
 		{
 			ConstructorInfo ctor = TransformerType.GetConstructors()[_constructorId];
 
-			return ParameterizedInstanceUtils.GetDescription(ctor);
+			return InstanceUtils.GetDescription(ctor);
 		}
 
 		public override string GetTestTypeDescription()
@@ -62,7 +62,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 		protected override IList<TestParameter> CreateParameters()
 		{
-			return ParameterizedInstanceUtils.CreateParameters(TransformerType, _constructorId);
+			return InstanceUtils.CreateParameters(TransformerType, _constructorId);
 		}
 
 		#endregion
@@ -77,7 +77,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 		private T CreateInstance<T>(object[] args)
 		{
-			return ParameterizedInstanceUtils.CreateInstance<T>(
+			return InstanceUtils.CreateInstance<T>(
 				TransformerType, _constructorId, args);
 		}
 	}

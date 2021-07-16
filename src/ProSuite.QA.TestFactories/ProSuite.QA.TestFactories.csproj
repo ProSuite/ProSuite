@@ -38,6 +38,9 @@
     <DocumentationFile>$(OutputDirectory)\Release\ProSuite.QA.TestFactories.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="ESRI.ArcGIS.DataSourcesGDB, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

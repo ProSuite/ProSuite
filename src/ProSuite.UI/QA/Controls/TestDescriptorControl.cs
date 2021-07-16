@@ -66,7 +66,7 @@ namespace ProSuite.UI.QA.Controls
 			{
 				_textBoxSignature.Text = testImplementationInfo == null
 					                         ? "Unable to create test signature"
-					                         : ParameterizedInstanceUtils.GetTestSignature(
+					                         : InstanceUtils.GetTestSignature(
 						                         testImplementationInfo);
 			}
 			catch (Exception e)

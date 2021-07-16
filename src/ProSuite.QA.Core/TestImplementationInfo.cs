@@ -30,7 +30,7 @@ namespace ProSuite.QA.Core
 			Assert.ArgumentNotNull(assemblyName, nameof(assemblyName));
 			Assert.ArgumentNotNull(typeName, nameof(typeName));
 
-			_testType = ParameterizedInstanceUtils.LoadType(assemblyName, typeName, constructorId);
+			_testType = InstanceUtils.LoadType(assemblyName, typeName, constructorId);
 			_constructorId = constructorId;
 		}
 
@@ -55,7 +55,7 @@ namespace ProSuite.QA.Core
 				if (_parameters == null)
 				{
 					_parameters =
-						ParameterizedInstanceUtils.CreateParameters(TestType, _constructorId);
+						InstanceUtils.CreateParameters(TestType, _constructorId);
 				}
 
 				return new ReadOnlyList<TestParameter>(_parameters);
@@ -68,7 +68,7 @@ namespace ProSuite.QA.Core
 		{
 			ConstructorInfo ctor = TestType.GetConstructors()[_constructorId];
 
-			return ParameterizedInstanceUtils.GetDescription(ctor);
+			return InstanceUtils.GetDescription(ctor);
 		}
 
 		public string GetParameterDescription(string parameterName)
@@ -82,7 +82,7 @@ namespace ProSuite.QA.Core
 			{
 				if (string.Equals(parameterInfo.Name, parameterName, stringComparison))
 				{
-					return ParameterizedInstanceUtils.GetDescription(parameterInfo);
+					return InstanceUtils.GetDescription(parameterInfo);
 				}
 			}
 
@@ -90,7 +90,7 @@ namespace ProSuite.QA.Core
 			{
 				if (string.Equals(propertyInfo.Name, parameterName, stringComparison))
 				{
-					return ParameterizedInstanceUtils.GetDescription(propertyInfo);
+					return InstanceUtils.GetDescription(propertyInfo);
 				}
 			}
 

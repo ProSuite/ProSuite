@@ -10,7 +10,7 @@ using ProSuite.Commons.Reflection;
 
 namespace ProSuite.QA.Core
 {
-	public static class ParameterizedInstanceUtils
+	public static class InstanceUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 

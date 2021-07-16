@@ -20,7 +20,7 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA
 {
-	public abstract class TestFactory : ParameterizedInstanceFactory
+	public abstract class TestFactory : InstanceFactory
 	{
 		#region Constructors
 
@@ -125,7 +125,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 				var testParameter = new TestParameter(
 					constrParam.Name, constrParam.ParameterType,
-					ParameterizedInstanceUtils.GetDescription(constrParam),
+					InstanceUtils.GetDescription(constrParam),
 					isConstructorParameter: true);
 
 				parameters.Add(testParameter);
@@ -183,7 +183,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 				var testParameter = new TestParameter(
 					property.Name, property.PropertyType,
-					ParameterizedInstanceUtils.GetDescription(property),
+					InstanceUtils.GetDescription(property),
 					isConstructorParameter: false);
 
 				if (testParameterAttribute != null)
