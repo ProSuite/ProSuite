@@ -122,6 +122,7 @@
     <Compile Include="DataModel\SimpleRasterDataset.cs" />
     <Compile Include="DataModel\SimpleRasterMosaicDataset.cs" />
     <Compile Include="DataModel\SimpleTerrainDataset.cs" />
+    <Compile Include="DataModel\SimpleTerrainDatasetUtils.cs" />
     <Compile Include="DataModel\SqlCaseSensitivity.cs" />
     <Compile Include="DataModel\TableDataset.cs" />
     <Compile Include="DataModel\TinSurfaceType.cs" />

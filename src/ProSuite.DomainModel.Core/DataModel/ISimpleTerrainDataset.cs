@@ -8,6 +8,6 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		double PointDensity { get; }
 
-		IList<TerrainSourceDataset> Sources { get; }
+		IReadOnlyList<TerrainSourceDataset> Sources { get; }
 	}
 }
