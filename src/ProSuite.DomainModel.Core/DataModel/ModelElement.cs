@@ -27,7 +27,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		public virtual string DisplayName => Name;
 
-		public DdxModel Model
+		public virtual DdxModel Model
 		{
 			get { return _model; }
 			set { _model = value; }

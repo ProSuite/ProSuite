@@ -19,7 +19,6 @@ namespace ProSuite.DomainModel.Core.DataModel
 		// Or mix table-per-hierarchy with table-per-class mapping.
 		// Another difference is that these datasets are not harvested but created in the DDX.
 		// Completely different approach: So far it's just relevant for the QualityVerificationDataset. Use just the dataset name instead?
-		private static readonly string _geometryTypeName = "SimpleTerrain";
 
 		public static SimpleTerrainDataset Create(
 			[NotNull] string xmlDefinition,
@@ -64,7 +63,6 @@ namespace ProSuite.DomainModel.Core.DataModel
 			{
 				Name = name;
 				PointDensity = pointDensity;
-				GeometryType = new GeometryTypeTerrain(_geometryTypeName);
 			}
 		}
 	}
