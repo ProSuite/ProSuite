@@ -63,9 +63,9 @@ namespace ProSuite.UI.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Prohibition {
+        internal static System.Drawing.Bitmap TestTypeProhibition {
             get {
-                object obj = ResourceManager.GetObject("Prohibition", resourceCulture);
+                object obj = ResourceManager.GetObject("TestTypeProhibition", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace ProSuite.UI.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Stop {
+        internal static System.Drawing.Bitmap TestTypeStop {
             get {
-                object obj = ResourceManager.GetObject("Stop", resourceCulture);
+                object obj = ResourceManager.GetObject("TestTypeStop", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -93,9 +93,9 @@ namespace ProSuite.UI.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Warning {
+        internal static System.Drawing.Bitmap TestTypeWarning {
             get {
-                object obj = ResourceManager.GetObject("Warning", resourceCulture);
+                object obj = ResourceManager.GetObject("TestTypeWarning", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

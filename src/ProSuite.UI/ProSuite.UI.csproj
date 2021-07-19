@@ -76,9 +76,9 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="Properties\AssociationImages.Designer.cs">
-      <DependentUpon>AssociationImages.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
+      <DependentUpon>AssociationImages.resx</DependentUpon>
     </Compile>
     <Compile Include="Properties\DatasetTypeImages.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -101,9 +101,9 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <Compile Include="Properties\QualityVerificationImages.Designer.cs">
-      <DependentUpon>QualityVerificationImages.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
+      <DependentUpon>QualityVerificationImages.resx</DependentUpon>
     </Compile>
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
@@ -246,8 +246,8 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\AssociationImages.resx">
       <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>AssociationImages.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
+      <LastGenOutput>AssociationImages.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\DatasetTypeImages.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -278,6 +278,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\TestTypeImages.resx">
       <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
       <LastGenOutput>TestTypeImages.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Include="QA\Controls\QualityConditionControl.resx">
@@ -310,6 +311,19 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Properties\AssociationEndImages\AssociationEndDeleted.png" />
+    <Content Include="Properties\AssociationEndImages\AssociationEndManyToMany1.png" />
+    <Content Include="Properties\AssociationEndImages\AssociationEndManyToMany2.png" />
+    <Content Include="Properties\AssociationEndImages\AssociationEndManyToOne.png" />
+    <Content Include="Properties\AssociationEndImages\AssociationEndOneToMany.png" />
+    <Content Include="Properties\AssociationEndImages\AssociationEndOneToOneFK.png" />
+    <Content Include="Properties\AssociationEndImages\AssociationEndOneToOnePK.png" />
+    <Content Include="Properties\AssociationEndImages\AssociationEndUnknown.png" />
+    <Content Include="Properties\AssociationImages\AssociationDeleted.png" />
+    <Content Include="Properties\AssociationImages\AssociationManyToMany.png" />
+    <Content Include="Properties\AssociationImages\AssociationManyToOne.png" />
+    <Content Include="Properties\AssociationImages\AssociationOneToOne.png" />
+    <Content Include="Properties\AssociationImages\AssociationUnknown.png" />
     <Content Include="Properties\DatasetTypeImages\DatasetTypeDeleted.png" />
     <Content Include="Properties\DatasetTypeImages\DatasetTypeGeometricNetwork.png" />
     <Content Include="Properties\DatasetTypeImages\DatasetTypeLine.png" />
@@ -334,19 +348,6 @@
     <Content Include="Properties\FieldTypeImages\FieldTypeUnknown.png" />
     <Content Include="Properties\FieldTypeImages\FieldTypeUUID.png" />
     <Content Include="Properties\FieldTypeImages\FieldTypeXml.png" />
-    <Content Include="Properties\Images\AssociationDeleted.gif" />
-    <Content Include="Properties\Images\AssociationEndDeleted.gif" />
-    <Content Include="Properties\Images\AssociationEndManyToMany1.gif" />
-    <Content Include="Properties\Images\AssociationEndManyToMany2.gif" />
-    <Content Include="Properties\Images\AssociationEndManyToOne.gif" />
-    <Content Include="Properties\Images\AssociationEndOneToMany.gif" />
-    <Content Include="Properties\Images\AssociationEndOneToOneFK.gif" />
-    <Content Include="Properties\Images\AssociationEndOneToOnePK.gif" />
-    <Content Include="Properties\Images\AssociationEndUnknown.gif" />
-    <Content Include="Properties\Images\AssociationManyToMany.gif" />
-    <Content Include="Properties\Images\AssociationManyToOne.gif" />
-    <Content Include="Properties\Images\AssociationOneToOne.gif" />
-    <Content Include="Properties\Images\AssociationUnknown.gif" />
     <Content Include="Properties\Images\DatasetCategory.png" />
     <Content Include="Properties\Images\DatasetCategorySelected.png" />
     <Content Include="Properties\Images\Empty.bmp" />
@@ -359,15 +360,15 @@
     <Content Include="Properties\Images\OK.png" />
     <Content Include="Properties\Images\QualitySpecification.png" />
     <Content Include="Properties\Images\QualitySpecificationHidden.png" />
-    <Content Include="Properties\Images\QualityVerificationFulfilledNoIssues.gif" />
-    <Content Include="Properties\Images\QualityVerificationFulfilledWarnings.gif" />
-    <Content Include="Properties\Images\QualityVerificationNotFulfilled.gif" />
+    <Content Include="Properties\Images\QualityVerificationFulfilledNoIssues.png" />
+    <Content Include="Properties\Images\QualityVerificationFulfilledWarnings.png" />
+    <Content Include="Properties\Images\QualityVerificationNotFulfilled.png" />
     <Content Include="Properties\Images\Warning.png" />
     <Resource Include="Properties\Images\ZoomToVerifiedCmd.png" />
-    <Content Include="Properties\TestTypeImages\Prohibition.png" />
-    <Content Include="Properties\TestTypeImages\Stop.png" />
+    <Content Include="Properties\TestTypeImages\TestTypeProhibition.png" />
+    <Content Include="Properties\TestTypeImages\TestTypeStop.png" />
     <Content Include="Properties\TestTypeImages\TestTypeUnknown.png" />
-    <Content Include="Properties\TestTypeImages\Warning.png" />
+    <Content Include="Properties\TestTypeImages\TestTypeWarning.png" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf">

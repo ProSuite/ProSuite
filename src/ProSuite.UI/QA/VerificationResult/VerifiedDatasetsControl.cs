@@ -315,18 +315,20 @@ namespace ProSuite.UI.QA.VerificationResult
 			private readonly string _datasetName;
 			private readonly Image _datasetType;
 
-			private static readonly Image _allowImage = (Bitmap) TestTypeImages.Warning.Clone();
+			private static readonly Image _allowImage =
+				(Bitmap) TestTypeImages.TestTypeWarning.Clone();
 
 			private static readonly Image _continueImage =
-				(Bitmap) TestTypeImages.Prohibition.Clone();
+				(Bitmap) TestTypeImages.TestTypeProhibition.Clone();
 
 			private static readonly Image _errorsImage = (Bitmap) Resources.Error.Clone();
-
 			private static readonly Image _noErrorsImage = (Bitmap) Resources.OK.Clone();
-			private static readonly Image _stopImage = (Bitmap) TestTypeImages.Stop.Clone();
+
+			private static readonly Image _stopImage =
+				(Bitmap) TestTypeImages.TestTypeStop.Clone();
 
 			private static readonly Image _warningImage =
-				(Bitmap) TestTypeImages.Warning.Clone();
+				(Bitmap) TestTypeImages.TestTypeWarning.Clone();
 
 			private static readonly SortedList<string, Image> _datasetImageList;
 

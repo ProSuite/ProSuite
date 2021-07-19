@@ -11,7 +11,7 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 	{
 		private const string _imageKeyDeleted = "ase.deleted";
 		private const string _imageKeyUnknown = "ase.unknown";
-		private static Dictionary<AssociationEndType, AssociationEndImage> _imageMap;
+		[CanBeNull] private static Dictionary<AssociationEndType, AssociationEndImage> _imageMap;
 
 		[NotNull]
 		public static Image GetImage([NotNull] AssociationEnd associationEnd)
@@ -45,8 +45,8 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 				_imageMap = CreateImageMap();
 			}
 
-			AssociationEndImage associationEndImage;
-			if (_imageMap.TryGetValue(associationEndType, out associationEndImage))
+			if (_imageMap.TryGetValue(associationEndType,
+			                          out AssociationEndImage associationEndImage))
 			{
 				imageKey = associationEndImage.Key;
 				return associationEndImage.Image;
@@ -59,71 +59,68 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 		[NotNull]
 		private static Dictionary<AssociationEndType, AssociationEndImage> CreateImageMap()
 		{
-			var map = new Dictionary<AssociationEndType, AssociationEndImage>();
-
-			map.Add(AssociationEndType.Unknown,
-			        new AssociationEndImage(0, AssociationEndImages.AssociationEndUnknown,
-			                                "ase.unk"));
-
-			map.Add(AssociationEndType.OneToOneFK,
-			        new AssociationEndImage(1,
-			                                AssociationEndImages.AssociationEndOneToOneFK,
-			                                "ase.1->1"));
-
-			map.Add(AssociationEndType.OneToOnePK,
-			        new AssociationEndImage(2,
-			                                AssociationEndImages.AssociationEndOneToOnePK,
-			                                "ase.1<-1"));
-
-			map.Add(AssociationEndType.ManyToOne,
-			        new AssociationEndImage(3,
-			                                AssociationEndImages.AssociationEndManyToOne,
-			                                "ase.n:1"));
-
-			map.Add(AssociationEndType.OneToMany,
-			        new AssociationEndImage(4,
-			                                AssociationEndImages.AssociationEndOneToMany,
-			                                "ase.1:n"));
-
-			map.Add(AssociationEndType.ManyToManyEnd1,
-			        new AssociationEndImage(5,
-			                                AssociationEndImages.AssociationEndManyToMany1,
-			                                "ase.n:m"));
-
-			map.Add(AssociationEndType.ManyToManyEnd2,
-			        new AssociationEndImage(6,
-			                                AssociationEndImages.AssociationEndManyToMany2,
-			                                "ase.m:n"));
-
-			return map;
+			return new Dictionary<AssociationEndType, AssociationEndImage>
+			       {
+				       {
+					       AssociationEndType.Unknown,
+					       new AssociationEndImage(0, AssociationEndImages.AssociationEndUnknown,
+					                               "ase.unk")
+				       },
+				       {
+					       AssociationEndType.OneToOneFK,
+					       new AssociationEndImage(1, AssociationEndImages.AssociationEndOneToOneFK,
+					                               "ase.1->1")
+				       },
+				       {
+					       AssociationEndType.OneToOnePK,
+					       new AssociationEndImage(2, AssociationEndImages.AssociationEndOneToOnePK,
+					                               "ase.1<-1")
+				       },
+				       {
+					       AssociationEndType.ManyToOne,
+					       new AssociationEndImage(3, AssociationEndImages.AssociationEndManyToOne,
+					                               "ase.n:1")
+				       },
+				       {
+					       AssociationEndType.OneToMany,
+					       new AssociationEndImage(4, AssociationEndImages.AssociationEndOneToMany,
+					                               "ase.1:n")
+				       },
+				       {
+					       AssociationEndType.ManyToManyEnd1,
+					       new AssociationEndImage(
+						       5, AssociationEndImages.AssociationEndManyToMany1, "ase.n:m")
+				       },
+				       {
+					       AssociationEndType.ManyToManyEnd2,
+					       new AssociationEndImage(
+						       6, AssociationEndImages.AssociationEndManyToMany2, "ase.m:n")
+				       }
+			       };
 		}
+
+		#region Nested type: AssociationEndImage
 
 		private class AssociationEndImage
 		{
-			private readonly string _key;
-			private readonly Image _image;
-
-			public AssociationEndImage(int defaultSort, [NotNull] Image image,
-			                           [NotNull] string key)
+			public AssociationEndImage(int defaultSort, [NotNull] Image image, [NotNull] string key)
 			{
 				Assert.ArgumentNotNullOrEmpty(key, nameof(key));
 				Assert.ArgumentNotNull(image, nameof(image));
 
-				_key = key;
-				_image = image;
+				Key = key;
+				Image = image;
 
-				_image.Tag = defaultSort;
+				Image.Tag = defaultSort;
 			}
 
-			public string Key
-			{
-				get { return _key; }
-			}
+			[NotNull]
+			public string Key { get; }
 
-			public Image Image
-			{
-				get { return _image; }
-			}
+			[NotNull]
+			public Image Image { get; }
 		}
+
+		#endregion
 	}
 }
