@@ -11,7 +11,7 @@ using ProSuite.Commons.Misc;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.UI.DataModel;
+using ProSuite.UI.DataModel.ResourceLookup;
 using ProSuite.UI.Properties;
 
 namespace ProSuite.UI.QA.VerificationResult

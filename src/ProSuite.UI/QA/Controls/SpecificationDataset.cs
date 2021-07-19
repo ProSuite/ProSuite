@@ -5,7 +5,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.UI.DataModel;
+using ProSuite.UI.DataModel.ResourceLookup;
 using ProSuite.UI.Properties;
 
 namespace ProSuite.UI.QA.Controls

@@ -65,7 +65,7 @@
     <Compile Include="DataModel\DatasetCatalogControl.Designer.cs">
       <DependentUpon>DatasetCatalogControl.cs</DependentUpon>
     </Compile>
-    <Compile Include="DataModel\DatasetTypeImageLookup.cs" />
+    <Compile Include="DataModel\ResourceLookup\DatasetTypeImageLookup.cs" />
     <Compile Include="DataModel\ResourceLookup\AssociationEndImageLookup.cs" />
     <Compile Include="DataModel\ResourceLookup\AssociationImageLookup.cs" />
     <Compile Include="DataModel\ResourceLookup\FieldTypeImageLookup.cs" />
