@@ -91,7 +91,7 @@ namespace ProSuite.QA.Tests.Test
 			List<ITable> tables = new[] {fcBahn, fcStrasse}.Cast<ITable>().ToList();
 
 			var test = new QaExternalGraphicConflict(fcBahn, lyrEisenbahn, fcStrasse, lyrStrasse,
-			                                         "100Meters", "20Meters", 50000, connectionUrl);
+			                                         "100 meters", "20 meters", 50000, connectionUrl);
 
 			using (var testRunner = new QaTestRunner(test))
 			{
