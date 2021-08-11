@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Security.AccessControl;
+using System.Security.Principal;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -74,6 +76,16 @@ namespace ProSuite.QA.Tests.Test
 			}
 			ZipFile.ExtractToDirectory(zippedTestdata, unitTestData);
 
+			// Get directory access info
+			DirectoryInfo dinfo = new DirectoryInfo(unitTestData);
+			DirectorySecurity dSecurity = dinfo.GetAccessControl();
+
+			// Add the FileSystemAccessRule to the security settings. 
+			dSecurity.AddAccessRule(new FileSystemAccessRule(new SecurityIdentifier(WellKnownSidType.WorldSid, null), FileSystemRights.FullControl, InheritanceFlags.ObjectInherit | InheritanceFlags.ContainerInherit, PropagationFlags.InheritOnly, AccessControlType.Allow));
+
+			// Set the access control
+			dinfo.SetAccessControl(dSecurity);
+
 			IFeatureWorkspace featureWorkspace =
 				WorkspaceUtils.OpenFileGdbFeatureWorkspace(testFgdb);
 			
@@ -103,6 +115,36 @@ namespace ProSuite.QA.Tests.Test
 				//Assert.Greater(qaError.InvolvedRows.Count, 0);
 
 				//Assert.AreEqual("Strasse", qaError.InvolvedRows[0].TableName);
+			}
+		}
+
+		[Test]
+		[Category(TestCategory.Sde)]
+		public void TestSdeWorkspace()
+		{
+			var workspace = TestUtils.OpenUserWorkspaceOracle();
+
+			IFeatureClass fcStr =
+				DatasetUtils.OpenFeatureClass(workspace, "TOPGIS_TLM.TLM_STRASSE");
+			IFeatureClass fcBahn =
+				DatasetUtils.OpenFeatureClass(workspace, "TOPGIS_TLM.TLM_EISENBAHN");
+
+			ISpatialReference sr = DatasetUtils.GetSpatialReference(fcStr);
+
+			IEnvelope envelope = GeometryFactory.CreateEnvelope(
+				2664000, 1211000, 2665500, 1213500, sr);
+
+			string connectionUrl = $"http://{Localhost}:{Port}";
+
+			List<ITable> tables = new[] { fcBahn, fcStr }.Cast<ITable>().ToList();
+
+			var test = new QaExternalService(tables, connectionUrl, string.Empty);
+
+			using (var testRunner = new QaTestRunner(test))
+			{
+				testRunner.Execute(envelope);
+
+				Assert.Greater(testRunner.Errors.Count, 0);
 			}
 		}
 
