@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Xml;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.DomainModels;
@@ -25,6 +26,12 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 {
 	public static class XmlDataQualityUtils
 	{
+		private enum QaSpecVersion
+		{
+			v2_0,
+			v3_0
+		}
+
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -57,18 +64,65 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		{
 			Assert.ArgumentNotNull(xml, nameof(xml));
 
-						// TODO: allow diffferent schemas
-			//string schema = Schema.ProSuite_QA_QualitySpecifications_2_0;
-			string schema = Schema.ProSuite_QA_QualitySpecifications_3_0;
+			// TODO: allow diffferent schemas
+			string schema = GetSchema(xml, out QaSpecVersion version);
 			try
 			{
-				return XmlUtils.Deserialize<XmlDataQualityDocument>(xml, schema);
+				switch (version)
+				{
+					case (QaSpecVersion.v2_0):
+						return XmlUtils.Deserialize<XmlDataQualityDocument20>(xml, schema);
+					case (QaSpecVersion.v3_0):
+						return XmlUtils.Deserialize<XmlDataQualityDocument30>(xml, schema);
+					default:
+						throw new InvalidOperationException("Unknown schema");
+				}
 			}
 			catch (Exception e)
 			{
 				throw new XmlDeserializationException(
 					string.Format("Error deserializing xml: {0}", e.Message), e);
 			}
+		}
+
+		private static string GetSchema(TextReader xml, out QaSpecVersion version)
+		{
+			string schema = null;
+			version = QaSpecVersion.v3_0;
+
+			if (xml is StreamReader r)
+			{
+				using (var reader = XmlReader.Create(r.BaseStream))
+				{
+					while (reader.Read())
+					{
+						if (reader.NodeType == XmlNodeType.Element)
+						{
+							for (int iAttr = 0; iAttr < reader.AttributeCount; iAttr++)
+							{
+								reader.MoveToAttribute(iAttr);
+								if (reader.Name == "xmlns" && reader.Value ==
+								    "urn:EsriDE.ProSuite.QA.QualitySpecifications-2.0")
+								{
+									schema = Schema.ProSuite_QA_QualitySpecifications_2_0;
+									version = QaSpecVersion.v2_0;
+								}
+							}
+
+							break;
+						}
+					}
+				}
+
+				r.BaseStream.Seek(0, SeekOrigin.Begin);
+			}
+
+			if (schema == null)
+			{
+				schema = Schema.ProSuite_QA_QualitySpecifications_3_0;
+			}
+
+			return schema;
 		}
 
 		public static void AssertUniqueWorkspaceIds(
@@ -481,7 +535,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 						AddWorkspaceIds(workspaceIds, new[] {transformerConfiguration},
 						                conditionsCache,
 						                ref hasUndefinedWorkspaceReference);
-
 					}
 
 					var datasetTestParameterValue =
@@ -497,7 +550,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 						var rowFilterConfigurations = new List<XmlInstanceConfiguration>();
 						foreach (string name in datasetTestParameterValue.RowFilterNames)
 						{
-							if (!conditionsCache.TryGetRowFilter(
+							if (! conditionsCache.TryGetRowFilter(
 								    name, out XmlRowFilterConfiguration rowFilterConfiguration))
 							{
 								hasUndefinedWorkspaceReference = true;
@@ -512,6 +565,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 						                conditionsCache,
 						                ref hasUndefinedWorkspaceReference);
 					}
+
 					if (string.IsNullOrEmpty(datasetTestParameterValue.WorkspaceId))
 					{
 						if (string.IsNullOrWhiteSpace(xmlTestParameterValue.TransformerName))

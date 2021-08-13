@@ -5,11 +5,12 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.QA.Xml
 {
-	[XmlRoot("DataQuality"
-	         , Namespace = "urn:EsriDE.ProSuite.QA.QualitySpecifications-3.0"
-						 //TODO: allow 
-//	         , Namespace = "urn:EsriDE.ProSuite.QA.QualitySpecifications-2.0"
-	)]
+	[XmlRoot("DataQuality", Namespace = "urn:EsriDE.ProSuite.QA.QualitySpecifications-3.0")]
+	public class XmlDataQualityDocument30 : XmlDataQualityDocument { }
+
+	[XmlRoot("DataQuality", Namespace = "urn:EsriDE.ProSuite.QA.QualitySpecifications-2.0")]
+	public class XmlDataQualityDocument20 : XmlDataQualityDocument { }
+
 	public class XmlDataQualityDocument
 	{
 		[XmlArrayItem("QualitySpecification")]
@@ -100,6 +101,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			RowFilters = RowFilters ?? new List<XmlRowFilterConfiguration>();
 			RowFilters.Add(xmlRowFilter);
 		}
+
 		public void AddTransformer([NotNull] XmlTransformerConfiguration xmlTransformer)
 		{
 			Assert.ArgumentNotNull(xmlTransformer, nameof(xmlTransformer));
