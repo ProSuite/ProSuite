@@ -7,7 +7,6 @@ using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.AO.Surface;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
@@ -131,12 +130,14 @@ namespace ProSuite.QA.Tests.Test
 			IWorkspace dtmWs = TestDataUtils.OpenTopgisTlm();
 
 			var model = new SimpleModel("model", dtmWs);
+			model.AddDataset(new ModelVectorDataset("TOPGIS_TLM.TLM_DTM_MASSENPUNKTE"));
+			model.AddDataset(new ModelVectorDataset("TOPGIS_TLM.TLM_DTM_BRUCHKANTE"));
 			Dataset mds1 =
 				model.AddDataset(
 					//new ModelSimpleTerrainDataset("TOPGIS_TLM.TLM_DTM_TERRAIN",
 					//                              "TOPGIS_TLM.TLM_DTM")
-					new ModelSimpleTerrainDataset(sb.ToString())
-				);
+					SimpleTerrainDatasetUtils.Create(
+						sb.ToString(), (n) => model.GetDatasetByModelName(n) as VectorDataset));
 
 			var clsDesc = new ClassDescriptor(typeof(QaSurfaceSpikes));
 			var tstDesc = new TestDescriptor("QaSurfaceSpikes", clsDesc, testConstructorId: 0);

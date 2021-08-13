@@ -84,6 +84,14 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			return dataset;
 		}
 
+		protected Dataset GetRasterMosaicDataset(IDatasetName datasetName)
+		{
+			return new VerifiedSimpleRasterMosaicDataset(datasetName.Name)
+			       {
+				       GeometryType = GetGeometryType<GeometryTypeRasterMosaic>()
+			       };
+		}
+
 		[CanBeNull]
 		protected T GetGeometryType<T>() where T : GeometryType
 		{

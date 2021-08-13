@@ -110,6 +110,7 @@
     <Compile Include="DataModel\IModelContext.cs" />
     <Compile Include="DataModel\IModelRepository.cs" />
     <Compile Include="DataModel\IQueryTableContext.cs" />
+    <Compile Include="DataModel\ISimpleTerrainDatasetRepository.cs" />
     <Compile Include="DataModel\IVirtualModelContext.cs" />
     <Compile Include="DataModel\IWorkspaceContext.cs" />
     <Compile Include="DataModel\IWorkspaceContextLookup.cs" />
@@ -145,7 +146,6 @@
     <Compile Include="Geodatabase\SdeDirectConnectionProvider.cs" />
     <Compile Include="Geodatabase\SdeDirectDbUserConnectionProvider.cs" />
     <Compile Include="Geodatabase\SdeDirectOsaConnectionProvider.cs" />
-    <Compile Include="DataModel\ITerrainSource.cs" />
     <Compile Include="Processing\GdbProcessUtils.cs" />
     <Compile Include="Processing\IGdbProcess.cs" />
     <Compile Include="Processing\IGdbProcessManager.cs" />
