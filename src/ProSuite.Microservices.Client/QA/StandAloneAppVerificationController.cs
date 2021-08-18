@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Progress;
@@ -44,7 +45,7 @@ namespace ProSuite.Microservices.Client.QA
 			return false;
 		}
 
-		public void OpenWorkList(IQualityVerificationResult verificationResult)
+		public Task OpenWorkList(IQualityVerificationResult verificationResult)
 		{
 			throw new NotImplementedException();
 		}

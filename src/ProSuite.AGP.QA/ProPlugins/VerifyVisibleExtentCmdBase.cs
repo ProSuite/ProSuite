@@ -7,6 +7,7 @@ using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.QA.VerificationProgress;
+using ProSuite.Commons.AGP;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -27,6 +28,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract Window CreateProgressWindow(
 			VerificationProgressViewModel progressViewModel);
+		
+		protected abstract IProSuiteFacade ProSuiteImpl { get; }
 
 		protected override void OnClick()
 		{
@@ -55,8 +58,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
-			var appController = new AgpBackgroundVerificationController(
-				MapView.Active, currentExtent, spatialRef);
+			var appController = new AgpBackgroundVerificationController(ProSuiteImpl, MapView.Active, currentExtent, spatialRef);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel
