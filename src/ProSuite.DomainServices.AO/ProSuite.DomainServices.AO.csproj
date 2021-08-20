@@ -283,6 +283,7 @@
     <Compile Include="QA\VerificationReports\Xml\XmlExceptionObject.cs" />
     <Compile Include="QA\VerificationReports\Xml\XmlExceptionStatistics.cs" />
     <Compile Include="QA\VerificationReports\Xml\XmlGdbObjectReference.cs" />
+    <Compile Include="QA\VerificationReports\Xml\XmlInstanceConfiguration.cs" />
     <Compile Include="QA\VerificationReports\Xml\XmlInvolvedTable.cs" />
     <Compile Include="QA\VerificationReports\Xml\XmlIssue.cs" />
     <Compile Include="QA\VerificationReports\Xml\XmlQualityConditionExceptions.cs" />

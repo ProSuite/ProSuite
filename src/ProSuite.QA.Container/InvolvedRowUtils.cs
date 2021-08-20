@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -49,9 +48,10 @@ namespace ProSuite.QA.Container
 		}
 
 		public const string BaseRowField = "__BaseRows__";
+
 		private static IEnumerable<InvolvedRow> GetInvolvedRowsCore(IRow row)
 		{
-			int baseRowsField  = row.Fields.FindField(BaseRowField);
+			int baseRowsField = row.Fields.FindField(BaseRowField);
 			if (baseRowsField >= 0 && row.get_Value(baseRowsField) is IList<IRow> baseRows)
 			{
 				foreach (var baseRow in baseRows)
@@ -64,7 +64,23 @@ namespace ProSuite.QA.Container
 			}
 			else
 			{
-				yield return new InvolvedRow(row);
+				if (((IDataset) row.Table).FullName is IQueryName qn)
+				{
+					foreach (string table in qn.QueryDef.Tables.Split(','))
+					{
+						string t = table.Trim();
+						string oidField = $"{t}.OBJECTID";
+						int iOid = row.Table.FindField(oidField);
+						if (iOid >= 0)
+						{
+							yield return new InvolvedRow(t, (int) row.Value[iOid]);
+						}
+					}
+				}
+				else
+				{
+					yield return new InvolvedRow(row);
+				}
 			}
 		}
 

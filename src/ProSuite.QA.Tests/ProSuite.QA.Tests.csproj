@@ -172,6 +172,7 @@
     <Compile Include="MonotonicityDirection.cs" />
     <Compile Include="MonotonicitySequence.cs" />
     <Compile Include="MultiPatchUtils.cs" />
+    <Compile Include="Network\NetworkBuilder.cs" />
     <Compile Include="Network\QaConnectionCountRule.cs" />
     <Compile Include="Network\QaConnectionRule.cs" />
     <Compile Include="Network\QaConnectionRuleHelper.cs" />
@@ -353,6 +354,7 @@
     <Compile Include="Transformers\TransformedFeatureClass.cs" />
     <Compile Include="Transformers\TrDissolve.cs" />
     <Compile Include="Transformers\TrIntersect.cs" />
+    <Compile Include="Transformers\TrTableJoin.cs" />
     <Compile Include="UnequalField.cs" />
     <Compile Include="UniqueStringsConstraint.cs" />
     <Compile Include="VersionSpecification.cs" />
