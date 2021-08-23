@@ -11,15 +11,15 @@ namespace ProSuite.DomainModel.Core.DataModel
 		[UsedImplicitly] ShortInteger = 0, // esriFieldTypeSmallInteger
 		[UsedImplicitly] LongInteger = 1, // esriFieldTypeInteger
 		[UsedImplicitly] Float = 2, // esriFieldTypeSingle
-		[UsedImplicitly] Double = 3,
-		[UsedImplicitly] Text = 4,
-		[UsedImplicitly] Date = 5,
-		[UsedImplicitly] ObjectID = 6,
-		[UsedImplicitly] Geometry = 7,
-		[UsedImplicitly] Blob = 8,
-		[UsedImplicitly] Raster = 9,
-		[UsedImplicitly] Guid = 10,
-		[UsedImplicitly] GlobalID = 11,
-		[UsedImplicitly] Xml = 12
+		[UsedImplicitly] Double = 3, // esriFieldTypeDouble
+		[UsedImplicitly] Text = 4, // esriFieldTypeString
+		[UsedImplicitly] Date = 5, //esriFieldTypeDate
+		[UsedImplicitly] ObjectID = 6, // esriFieldTypeOID
+		[UsedImplicitly] Geometry = 7, // esriFieldTypeGeometry
+		[UsedImplicitly] Blob = 8, // esriFieldTypeBlob
+		[UsedImplicitly] Raster = 9, // esriFieldTypeRaster
+		[UsedImplicitly] Guid = 10, // esriFieldTypeGUID
+		[UsedImplicitly] GlobalID = 11, // esriFieldTypeGlobalID
+		[UsedImplicitly] Xml = 12 // esriFieldTypeXML
 	}
 }

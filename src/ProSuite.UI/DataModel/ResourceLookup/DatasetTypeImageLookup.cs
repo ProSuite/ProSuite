@@ -7,7 +7,7 @@ using ProSuite.Commons.Geom.EsriShape;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.UI.Properties;
 
-namespace ProSuite.UI.DataModel
+namespace ProSuite.UI.DataModel.ResourceLookup
 {
 	/// <summary>
 	/// Provides the icons for the various dataset types.

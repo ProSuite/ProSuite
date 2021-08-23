@@ -42,11 +42,20 @@ namespace ProSuite.Microservices.Server.AO.QA
 		public ServiceLoad CurrentLoad { get; set; }
 
 		/// <summary>
+		/// The license checkout action to be performed before any service call is executed.
+		/// By default the lowest available license (basic, standard, advanced) is checked out
+		/// in a 32-bit process, the server license is checked out in a 64-bit process. In case
+		/// a test requires a specific license or an extension, provide a different function.
+		/// </summary>
+		[CanBeNull]
+		public Func<Task<bool>> LicenseAction { get; set; }
+
+		/// <summary>
 		/// The data dictionary facade that wraps the necessary repositories.
 		/// </summary>
 		public IVerificationDataDictionary<TModel> VerificationDdx { get; set; }
 
-		public override Task<GetProjectWorkspacesResponse> GetProjectWorkspaces(
+		public override async Task<GetProjectWorkspacesResponse> GetProjectWorkspaces(
 			GetProjectWorkspacesRequest request,
 			ServerCallContext context)
 		{
@@ -54,7 +63,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			try
 			{
-				StartRequest(context.Peer, request);
+				await StartRequestAsync(context.Peer, request);
 
 				_msg.InfoFormat("Getting project workspaces for {0}", context.Peer);
 				_msg.VerboseDebugFormat("Request details: {0}", request);
@@ -77,10 +86,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 				EndRequest();
 			}
 
-			return Task.FromResult(response);
+			return response;
 		}
 
-		public override Task<GetSpecificationsResponse> GetQualitySpecifications(
+		public override async Task<GetSpecificationsResponse> GetQualitySpecifications(
 			GetSpecificationsRequest request,
 			ServerCallContext context)
 		{
@@ -88,7 +97,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			try
 			{
-				StartRequest(context.Peer, request);
+				await StartRequestAsync(context.Peer, request);
 
 				_msg.InfoFormat("Getting quality specifications for {0}", context.Peer);
 
@@ -122,7 +131,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				EndRequest();
 			}
 
-			return Task.FromResult(response);
+			return response;
 		}
 
 		private GetProjectWorkspacesResponse GetProjectWorkspacesCore(
@@ -233,7 +242,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return response;
 		}
 
-		private void StartRequest(string peerName, object request)
+		private async Task<bool> StartRequestAsync(string peerName, object request,
+		                                           bool requiresLicense = true)
 		{
 			CurrentLoad?.StartRequest();
 
@@ -243,6 +253,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				_msg.VerboseDebugFormat("Request details: {0}", request);
 			}
+
+			return await EnsureLicenseAsync();
 		}
 
 		private void EndRequest()
@@ -259,6 +271,16 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				Health?.SetStatus(GetType(), false);
 			}
+		}
+
+		public async Task<bool> EnsureLicenseAsync()
+		{
+			if (LicenseAction == null)
+			{
+				return true;
+			}
+
+			return await LicenseAction();
 		}
 	}
 }

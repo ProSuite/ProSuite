@@ -349,6 +349,10 @@
       <Project>{D51693C1-F9F6-425D-8CD6-8DFBF5A52F6F}</Project>
       <Name>ProSuite.QA.Container</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj">
+      <Project>{01CBBA9E-0D4D-439F-9147-6A5685884A65}</Project>
+      <Name>ProSuite.QA.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\LocalizableStrings.de-CH.resx" />

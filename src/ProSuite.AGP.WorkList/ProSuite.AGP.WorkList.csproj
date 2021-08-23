@@ -88,6 +88,7 @@
     <Compile Include="Domain\IWorkItemState.cs" />
     <Compile Include="Domain\IWorkListDefinition.cs" />
     <Compile Include="IWorkListObserver.cs" />
+    <Compile Include="OpenWorklistButtonBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Domain\Persistence\IRepository.cs" />
     <Compile Include="Domain\Persistence\WorkItemStateRepository.cs" />

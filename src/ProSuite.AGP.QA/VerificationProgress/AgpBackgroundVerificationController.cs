@@ -7,10 +7,13 @@ using System.Threading.Tasks;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
+using ProSuite.Commons.AGP;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Framework;
+using ProSuite.Commons.AGP.WPF;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
@@ -25,6 +28,7 @@ namespace ProSuite.AGP.QA.VerificationProgress
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		private readonly IProSuiteFacade _proSuiteFacade;
 		private readonly MapView _mapView;
 		[CanBeNull] private readonly Geometry _verifiedPerimeter;
 		[CanBeNull] private readonly SpatialReference _verificationSpatialReference;
@@ -32,14 +36,20 @@ namespace ProSuite.AGP.QA.VerificationProgress
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AgpBackgroundVerificationController"/> class.
 		/// </summary>
+		/// <param name="proSuiteFacade"></param>
 		/// <param name="mapView"></param>
 		/// <param name="verifiedPerimeter"></param>
 		/// <param name="verificationSpatialReference"></param>
 		public AgpBackgroundVerificationController(
+			[NotNull] IProSuiteFacade proSuiteFacade,
 			[NotNull] MapView mapView,
 			[CanBeNull] Geometry verifiedPerimeter,
 			[CanBeNull] SpatialReference verificationSpatialReference)
 		{
+			Assert.ArgumentNotNull(proSuiteFacade, nameof(proSuiteFacade));
+			Assert.ArgumentNotNull(mapView, nameof(mapView));
+
+			_proSuiteFacade = proSuiteFacade;
 			_mapView = mapView;
 			_verifiedPerimeter = verifiedPerimeter;
 			_verificationSpatialReference = verificationSpatialReference;
@@ -141,9 +151,9 @@ namespace ProSuite.AGP.QA.VerificationProgress
 			return true;
 		}
 
-		public void OpenWorkList(IQualityVerificationResult verificationResult)
+		public async Task OpenWorkList(IQualityVerificationResult verificationResult)
 		{
-			throw new NotImplementedException();
+			await ViewUtils.TryAsync(_proSuiteFacade.OpenIssueWorklistAsync(verificationResult.IssuesGdbPath), _msg);
 		}
 
 		public bool CanOpenWorkList(ServiceCallStatus? currentProgressStep,
@@ -180,10 +190,14 @@ namespace ProSuite.AGP.QA.VerificationProgress
 				return false;
 			}
 
-			// TODO: Implement OpenWorkList
+			if (! verificationResult.HasIssues)
+			{
+				reason = "No issues";
+				return false;
+			}
 
-			reason = "Opening the work list from here is not yet supported";
-			return false;
+			reason = null;
+			return true;
 		}
 
 		public void ShowReport(IQualityVerificationResult verificationResult)

@@ -647,7 +647,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 				ApplicationController?.CanOpenWorkList(ProgressTracker.RemoteCallStatus,
 				                                       VerificationResult, out reason) ?? false;
 
-			OpenWorkListToolTip = reason;
+			OpenWorkListToolTip = reason ?? "Open Issue Work List";
 
 			return result;
 		}

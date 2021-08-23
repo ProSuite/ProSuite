@@ -14,7 +14,7 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 
 		[Option('p', "port", Required = false,
 		        HelpText = "The port.",
-		        Default = 5151)]
+		        Default = 5153)]
 		public int Port { get; set; }
 
 		[Option('c', "certificate", Required = false,

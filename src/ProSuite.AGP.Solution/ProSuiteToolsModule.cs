@@ -64,8 +64,10 @@ namespace ProSuite.AGP.Solution
 				}
 
 				_qaManager = new ProSuiteQAManager(
-					QAConfiguration.Current.GetQAServiceProviders(QAProjectItem?.ServerConfigurations),
-					QAConfiguration.Current.GetQASpecificationsProvider(QAProjectItem?.SpecificationConfiguration));
+					QAConfiguration.Current.GetQAServiceProviders(
+						QAProjectItem?.ServerConfigurations),
+					QAConfiguration.Current.GetQASpecificationsProvider(
+						QAProjectItem?.SpecificationConfiguration));
 
 				_qaManager.OnStatusChanged += QAManager_OnStatusChanged;
 
@@ -213,6 +215,7 @@ namespace ProSuite.AGP.Solution
 			LogMessageActionEvent.Unsubscribe(OnLogMessageActionRequested);
 
 			ToolMicroserviceClient?.Disconnect();
+			QaMicroserviceClient?.Disconnect();
 		}
 
 		/// <summary>
@@ -351,7 +354,7 @@ namespace ProSuite.AGP.Solution
 			{
 				throw new NotImplementedException();
 				string workListName = WorkListsModule.Current.EnsureUniqueName();
-				var environment = new DatabaseWorkEnvironment();
+				var environment = new IssueWorklistEnvironment();
 
 				await QueuedTask.Run(
 					() => WorkListsModule.Current.CreateWorkListAsync(environment, workListName));
@@ -385,6 +388,9 @@ namespace ProSuite.AGP.Solution
 
 			_sessionContext.MicroServiceClient = client;
 
+			// In case the map is already loaded: Set up the project workspace:
+			await _sessionContext.TrySelectProjectWorkspaceFromFocusMapAsync();
+
 			// TODO: If no client channel config file exists, use XML verification provider directly:
 			//verificationEnvironment =
 			//	new QualityVerificationEnvironment(new XmlSpecificationProvider());
@@ -400,13 +406,13 @@ namespace ProSuite.AGP.Solution
 
 			_sessionContext.VerificationEnvironment = verificationEnvironment;
 			_sessionContext.VerificationEnvironment.RefreshQualitySpecifications();
-		
+
 			// TODO: This has no effect any more -> change XML based specification provider
 
 			// this is still necessary for GP QA if actual
 			QAConfiguration.Current.SetupGrpcConfiguration(verificationEnvironment);
 			// enable GP Buttons 
-			UpdateServiceUI(); 
+			UpdateServiceUI();
 
 			// ... to implement IQualitySpecificationReferencesProvider instead, such as
 			//verificationEnvironment.FallbackSpecificationProvider = new XmlSpecificationProvider();
@@ -454,7 +460,7 @@ namespace ProSuite.AGP.Solution
 		{
 			string executablePath;
 			using (_msg.IncrementIndentation("Searching for QA microservice deployment ({0})...",
-			                                 _microserverToolExeName))
+			                                 _microserverQaExeName))
 			{
 				executablePath =
 					ConfigurationUtils.GetProSuiteExecutablePath(_microserverQaExeName);

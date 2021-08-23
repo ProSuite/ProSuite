@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.InteropServices;
 
-[assembly: AssemblyTitle("ProSuite.DomainModel")]
+[assembly: AssemblyTitle("ProSuite.DomainModel.AGP")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyCulture("")]
 
