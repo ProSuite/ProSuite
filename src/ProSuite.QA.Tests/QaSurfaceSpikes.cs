@@ -14,7 +14,6 @@ using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
-	[CLSCompliant(false)]
 	[TerrainTest]
 	public class QaSurfaceSpikes : ContainerTest
 	{

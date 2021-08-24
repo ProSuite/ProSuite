@@ -152,7 +152,6 @@ namespace ProSuite.QA.Tests
 			_asRatio = asRatio;
 
 			_interpolateTolerance = 2 * GeometryUtils.GetXyResolution(featureClass);
-			ISimpleSurface x;
 		}
 
 		[Doc(nameof(DocStrings.Qa3dPipe_4))]

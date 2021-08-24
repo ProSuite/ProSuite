@@ -223,7 +223,6 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			// In case of DllNotFoundException, copy the appropriate dlls from the gdal subdirectory to the bin
 			Gdal.AllRegister();
 
-			IStringArray stringArray;
 			Stopwatch watch = Stopwatch.StartNew();
 
 			List<IFeature> features = GdbQueryUtils.GetFeatures(
