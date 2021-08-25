@@ -174,8 +174,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 			// register work list before creating the layer
 			_registry.TryAdd(worklist);
 
-			Assert.True(ProjectItemUtils.TryAdd(uri.LocalPath, out WorklistItem item),
-			            $"cannot add item {worklist.Name}");
+			if (! ProjectItemUtils.TryAdd(uri.LocalPath, out WorklistItem item))
+			{
+				// maybe the work list is empty > makes no sense to store a
+				// definition file for an empty work list
+				_msg.Debug($"could not add {worklist.Name}");
+				_msg.Debug($"work item count {worklist.Count()}");
+			}
 
 			if (! _viewsByWorklistName.ContainsKey(worklist.Name))
 			{

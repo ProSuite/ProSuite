@@ -183,6 +183,7 @@
     <Compile Include="WorkLists\WorkListsModule.cs" />
     <Compile Include="WorkListUI\InvolvedObjectRow.cs" />
     <Compile Include="WorkListUI\InvolvedTableVm.cs" />
+    <Compile Include="WorkListUI\NoWorkItemViewModel.cs" />
     <Compile Include="WorkListUI\UiTestData\InvolvedObjectMock.cs" />
     <Compile Include="WorkListUI\Views\IssueCountControl.xaml.cs">
       <DependentUpon>IssueCountControl.xaml</DependentUpon>

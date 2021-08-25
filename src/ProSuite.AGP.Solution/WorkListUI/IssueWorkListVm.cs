@@ -9,6 +9,7 @@ using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.WPF;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
@@ -16,9 +17,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 {
 	public class IssueWorkListVm : WorkListViewModelBase
 	{
-		private WorkItemVmBase _currentWorkItem;
 		private string _qualityCondition;
-		private List<InvolvedObjectRow> _involvedObjectRows;
+		private IEnumerable<InvolvedObjectRow> _involvedObjectRows;
 		private string _errorDescription;
 		private RelayCommand _zoomInvolvedAllCmd;
 		private RelayCommand _zoomInvolvedSelectedCmd;
@@ -26,31 +26,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private RelayCommand _flashInvolvedSelectedCmd;
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public IssueWorkListVm(IWorkList workList)
-		{
-			CurrentWorkList = workList;
-			CurrentWorkItem = new IssueWorkItemVm(CurrentWorkList.Current as IssueItem);
-		}
-
-		public override WorkItemVmBase CurrentWorkItem
-		{
-			get => new IssueWorkItemVm(CurrentWorkList.Current as IssueItem);
-			set
-			{
-				SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem);
-				Status = CurrentWorkItem.Status;
-				Visited = CurrentWorkItem.Visited;
-				InvolvedObjectRows = CompileInvolvedRows();
-				if (CurrentWorkItem is IssueWorkItemVm issueWorkItemVm)
-				{
-					QualityCondition = issueWorkItemVm.QualityCondition;
-					ErrorDescription = issueWorkItemVm.ErrorDescription;
-				}
-
-				CurrentIndex = CurrentWorkList.CurrentIndex;
-				Count = GetCount();
-			}
-		}
+		public IssueWorkListVm([NotNull] IWorkList workList) : base(workList) { }
 
 		public string QualityCondition
 		{
@@ -83,7 +59,23 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			get => "Select Involved Objects";
 		}
 
-		public List<InvolvedObjectRow> InvolvedObjectRows
+		protected override void SetCurrentItemCore(IWorkItem item)
+		{
+			Assert.ArgumentNotNull(item, nameof(item));
+
+			var vm = new IssueWorkItemVm((IssueItem) item, CurrentWorkList);
+
+			CurrentWorkItem = vm;
+
+			InvolvedObjectRows =
+				vm.IssueItem.InIssueInvolvedTables.SelectMany(
+					InvolvedObjectRow.CreateObjectRows);
+			
+			QualityCondition = vm.QualityCondition;
+			ErrorDescription = vm.ErrorDescription;
+		}
+
+		public IEnumerable<InvolvedObjectRow> InvolvedObjectRows
 		{
 			get => CompileInvolvedRows();
 			set { SetProperty(ref _involvedObjectRows, value, () => InvolvedObjectRows); }
@@ -93,7 +85,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			get
 			{
-				_zoomInvolvedAllCmd = new RelayCommand(ZoomInvolvedAll, () => true);
+				_zoomInvolvedAllCmd = new RelayCommand(ZoomInvolvedAll, () => InvolvedObjectRows.Any());
 				return _zoomInvolvedAllCmd;
 			}
 		}
@@ -112,7 +104,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			get
 			{
-				_flashInvolvedAllCmd = new RelayCommand(FlashInvolvedAll, () => true);
+				_flashInvolvedAllCmd = new RelayCommand(FlashInvolvedAll, () => InvolvedObjectRows.Any());
 				return _flashInvolvedAllCmd;
 			}
 		}
@@ -219,22 +211,15 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}, _msg);
 		}
 
-		private List<InvolvedObjectRow> CompileInvolvedRows()
+		private IEnumerable<InvolvedObjectRow> CompileInvolvedRows()
 		{
-			var issueWorkItemVm = CurrentWorkItem as IssueWorkItemVm;
-			List<InvolvedObjectRow> involvedRows = new List<InvolvedObjectRow>();
-
-			if (issueWorkItemVm == null)
+			if (! (CurrentWorkItem is IssueWorkItemVm issueWorkItemVm))
 			{
-				return involvedRows;
+				return Enumerable.Empty<InvolvedObjectRow>();
 			}
 
-			foreach (var table in issueWorkItemVm.IssueItem.InIssueInvolvedTables)
-			{
-				involvedRows.AddRange(InvolvedObjectRow.CreateObjectRows(table));
-			}
-
-			return involvedRows;
+			return issueWorkItemVm.IssueItem.InIssueInvolvedTables.SelectMany(
+				table => InvolvedObjectRow.CreateObjectRows(table));
 		}
 	}
 }

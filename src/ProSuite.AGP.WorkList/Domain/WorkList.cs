@@ -91,7 +91,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		// NOTE: An empty work list should return null and not an empty envelope.
 		//		 Pluggable Datasource cannot handle an empty envelope.
-		public Envelope Extent { get; protected set; }
+		public Envelope Extent { get; private set; }
 
 		public virtual IWorkItem Current => GetItem(CurrentIndex);
 
@@ -902,7 +902,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		// todo daro: drop or refactor
-		protected static Envelope GetExtentFromItems(IEnumerable<IWorkItem> items)
+		[CanBeNull]
+		private static Envelope GetExtentFromItems([CanBeNull] IEnumerable<IWorkItem> items)
 		{
 			double xmin = double.MaxValue, ymin = double.MaxValue, zmin = double.MaxValue;
 			double xmax = double.MinValue, ymax = double.MinValue, zmax = double.MinValue;

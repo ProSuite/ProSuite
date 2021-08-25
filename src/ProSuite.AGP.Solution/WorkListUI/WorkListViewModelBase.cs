@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
@@ -27,7 +26,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private const double _seconds = 0.3;
 		private IWorkList _currentWorkList;
 		private int _currentIndex;
-		private WorkItemStatus _status;
 		private bool _visited;
 		private string _count;
 		private RelayCommand _goNextItemCmd;
@@ -109,7 +107,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			get
 			{
-				_zoomToAllCmd = new RelayCommand(() => ZoomToAllAsync(), () => true);
+				_zoomToAllCmd = new RelayCommand(() => ZoomToAllAsync(), () => CurrentWorkList.Extent != null);
 				return _zoomToAllCmd;
 			}
 		}
@@ -171,42 +169,25 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}
 		}
 
-		public WorkItemStatus Status
-		{
-			get => CurrentWorkItem.Status;
-			set
-			{
-				if (CurrentWorkItem.Status != value && CurrentWorkList.Current != null)
-				{
-					CurrentWorkItem.Status = value;
-
-					// NOTE: has to run inside QueuedTask because it triggers an event
-					//		 which does MapView.Active.Invalidate
-					QueuedTask.Run(() =>
-					{
-						CurrentWorkList.SetStatus(CurrentWorkList.Current, value);
-					});
-
-					Project.Current.SetDirty();
-
-					Count = GetCount();
-				}
-
-				SetProperty(ref _status, value, () => Status);
-			}
-		}
-
-		// todo daro: of type IWorkList?
 		public IWorkList CurrentWorkList
 		{
 			get => _currentWorkList;
 
-			set { SetProperty(ref _currentWorkList, value, () => CurrentWorkList); }
+			private set { SetProperty(ref _currentWorkList, value, () => CurrentWorkList); }
 		}
 
-		public abstract WorkItemVmBase CurrentWorkItem { get; set; }
+		public virtual WorkItemVmBase CurrentWorkItem
+		{
+			get => _currentWorkItem;
+			set
+			{
+				SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem);
+				
+				Count = GetCount();
+			}
+		}
 
-		public bool Visited
+		protected bool Visited
 		{
 			get => CurrentWorkItem.Visited;
 			set
@@ -261,12 +242,34 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				QueuedTask.Run(() =>
 				{
 					CurrentWorkList.GoPrevious();
-					CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
+
+					SetCurrentItem(CurrentWorkList.Current);
 				});
 			}, _msg);
 		}
 
 		private bool? _autoZoomMode = true;
+		private WorkItemVmBase _currentWorkItem;
+
+		protected WorkListViewModelBase([NotNull] IWorkList workList)
+		{
+			Assert.ArgumentNotNull(workList, nameof(workList));
+
+			CurrentWorkList = workList;
+			SetCurrentItem(workList.Current);
+		}
+
+		private void SetCurrentItem([CanBeNull] IWorkItem item)
+		{
+			if (item == null)
+			{
+				CurrentWorkItem = new NoWorkItemViewModel();
+			}
+			else
+			{
+				SetCurrentItemCore(item);
+			}
+		}
 
 		public bool? AutoZoomMode
 		{
@@ -289,7 +292,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				QueuedTask.Run(() =>
 				{
 					CurrentWorkList.GoNearest(GetReferenceGeometry(MapView.Active.Extent));
-					CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
+					
+					SetCurrentItem(CurrentWorkList.Current);
 
 					if (_autoZoomMode != null && _autoZoomMode.Value)
 					{
@@ -298,6 +302,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				});
 			}, _msg);
 		}
+
+		protected abstract void SetCurrentItemCore([NotNull] IWorkItem item);
 
 		[NotNull]
 		private Geometry GetReferenceGeometry([NotNull] Envelope visibleExtent,
@@ -413,7 +419,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				QueuedTask.Run(() =>
 				{
 					CurrentWorkList.GoFirst();
-					CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
+					
+					SetCurrentItem(CurrentWorkList.Current);
 				});
 			}, _msg);
 		}
@@ -425,7 +432,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				QueuedTask.Run(() =>
 				{
 					CurrentWorkList.GoNext();
-					CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
+					
+					SetCurrentItem(CurrentWorkList.Current);
 				});
 			}, _msg);
 		}
@@ -467,7 +475,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 					}
 
 					CurrentWorkList.GoToOid(selectedItem.OID);
-					CurrentWorkItem = new WorkItemVmBase(CurrentWorkList.Current);
+					
+					SetCurrentItem(CurrentWorkList.Current);
 				});
 			}, _msg);
 		}

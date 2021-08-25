@@ -1,29 +1,18 @@
-using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
 	public class SelectionWorkListVm : WorkListViewModelBase
 	{
-		private WorkItemVmBase _currentWorkItem;
+		public SelectionWorkListVm([NotNull] IWorkList workList) : base(workList) { }
 
-		public SelectionWorkListVm(IWorkList workList)
+		protected override void SetCurrentItemCore(IWorkItem item)
 		{
-			CurrentWorkList = workList;
-			CurrentWorkItem = new SelectionWorkItemVm(CurrentWorkList.Current as SelectionItem);
-		}
+			Assert.ArgumentNotNull(item, nameof(item));
 
-		public override WorkItemVmBase CurrentWorkItem
-		{
-			get => new SelectionWorkItemVm(CurrentWorkList.Current as SelectionItem);
-			set
-			{
-				SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem);
-				Status = CurrentWorkItem.Status;
-				Visited = CurrentWorkItem.Visited;
-				CurrentIndex = CurrentWorkList.CurrentIndex;
-				Count = GetCount();
-			}
+			CurrentWorkItem = new SelectionWorkItemVm(item, CurrentWorkList);
 		}
 	}
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Collections;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Domain.Persistence
@@ -114,6 +115,13 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 
 		public void Commit()
 		{
+			// could be an empty work list > don't store definition file
+			if (_workspaces.Count == 0)
+			{
+				Assert.True(_states.Count == 0, "work item states but no workspaces");
+				return;
+			}
+
 			Store(CreateDefinition(_workspaces, _states));
 
 			Refresh();

@@ -1,53 +1,72 @@
+using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Contracts;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.AGP.WPF;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
-	public class WorkItemVmBase : PropertyChangedBase
+	public abstract class WorkItemVmBase : PropertyChangedBase
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		[NotNull] private readonly IWorkItem _workItem;
+		[NotNull] private readonly IWorkList _workList;
+		private readonly string _description;
 		private WorkItemStatus _status;
 		private bool _visited;
-		private const string NoItem = "no current item";
 
-		public WorkItemVmBase(IWorkItem workItem)
+		// ReSharper disable once NotNullMemberIsNotInitialized
+		protected WorkItemVmBase() { }
+
+		protected WorkItemVmBase([NotNull] IWorkItem workItem, [NotNull] IWorkList workList)
 		{
-			WorkItem = workItem;
+			Assert.ArgumentNotNull(workItem, nameof(workItem));
+			Assert.ArgumentNotNull(workList, nameof(workList));
+
+			_workItem = workItem;
+			_workList = workList;
+
+			_description = workItem.Description;
+			_status = workItem.Status;
+			_visited = workItem.Visited;
 		}
 
-		protected IWorkItem WorkItem { get; set; }
-
-		public string Description
-		{
-			get { return WorkItem == null ? NoItem : WorkItem.Description; }
-			set { }
-		}
+		[CanBeNull]
+		public string Description => _description;
 
 		public WorkItemStatus Status
 		{
-			get { return WorkItem?.Status ?? WorkItemStatus.Todo; }
+			get => _status;
 			set
 			{
-				if (WorkItem != null)
+				// don't set status if it doesn't changes
+				if (_status == value)
 				{
-					WorkItem.Status = value;
+					return;
 				}
 
+				ViewUtils.Try(
+					() =>
+					{
+						_workItem.Status = value;
+
+						QueuedTask.Run(() => { _workList.SetStatus(_workItem, value); });
+					},
+					_msg);
+
 				SetProperty(ref _status, value, () => Status);
+
+				Project.Current.SetDirty();
 			}
 		}
 
 		public bool Visited
 		{
-			get { return WorkItem?.Visited ?? false; }
-			set
-			{
-				if (WorkItem != null)
-				{
-					WorkItem.Visited = value;
-				}
-
-				SetProperty(ref _visited, value, () => Visited);
-			}
+			get => _visited;
+			set { SetProperty(ref _visited, value, () => Visited); }
 		}
 	}
 }

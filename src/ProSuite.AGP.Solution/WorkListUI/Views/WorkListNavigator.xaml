@@ -79,8 +79,14 @@
                 <ToolBar>
                     <DockPanel LastChildFill="True">
                         <Label DockPanel.Dock="Left"  Content="Status: " />
-                        <CheckBox VerticalAlignment="Center" IsChecked="{Binding Status, Mode=TwoWay, 
-                        Converter={StaticResource StatusEnumBooleanConverter}}"/>
+                        <CheckBox VerticalAlignment="Center">
+	                        <CheckBox.Style>
+		                        <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Type CheckBox}}">
+			                        <Setter Property="IsChecked"
+			                                Value="{Binding CurrentWorkItem.Status, Mode=TwoWay, Converter={StaticResource StatusEnumBooleanConverter}, UpdateSourceTrigger=PropertyChanged}" />
+		                        </Style>
+	                        </CheckBox.Style>
+                        </CheckBox>
                     </DockPanel>
                     <Separator Margin="5,0" />
                     <StackPanel  Orientation="Horizontal">
