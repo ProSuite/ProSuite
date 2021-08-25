@@ -87,6 +87,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 		}
 
+		// todo daro return Window?
 		public void ShowView([NotNull] string worklistName, string displayName = null)
 		{
 			if (_viewsByWorklistName.TryGetValue(worklistName, out IWorkListObserver view))

@@ -17,6 +17,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		protected override async Task OnClickCore(WorkEnvironmentBase environment)
 		{
+			Assert.ArgumentNotNull(environment, nameof(environment));
+
 			await ProSuiteUtils.OpenWorklistAsync(environment);
 		}
 

@@ -302,6 +302,8 @@ namespace ProSuite.AGP.WorkList
 			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
 			List<XmlWorkListWorkspace> workspaces = definition.Workspaces;
 
+			Assert.True(workspaces.Count > 0, $"no workspaces in {worklistDefinitionFile}");
+
 			string result = workspaces[0].ConnectionString;
 
 			if (workspaces.Count > 0)
