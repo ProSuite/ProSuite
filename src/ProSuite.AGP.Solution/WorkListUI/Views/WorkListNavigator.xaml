@@ -84,6 +84,7 @@
 		                        <Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Type CheckBox}}">
 			                        <Setter Property="IsChecked"
 			                                Value="{Binding CurrentWorkItem.Status, Mode=TwoWay, Converter={StaticResource StatusEnumBooleanConverter}, UpdateSourceTrigger=PropertyChanged}" />
+                                    <Setter Property="IsEnabled" Value="{Binding CurrentWorkItem.CanSetStatus, Mode=OneWay}" />
 		                        </Style>
 	                        </CheckBox.Style>
                         </CheckBox>

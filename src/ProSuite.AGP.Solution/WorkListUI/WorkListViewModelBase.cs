@@ -26,7 +26,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private const double _seconds = 0.3;
 		private IWorkList _currentWorkList;
 		private int _currentIndex;
-		private bool _visited;
 		private string _count;
 		private RelayCommand _goNextItemCmd;
 		private RelayCommand _goFirstItemCmd;
@@ -184,16 +183,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem);
 				
 				Count = GetCount();
-			}
-		}
-
-		protected bool Visited
-		{
-			get => CurrentWorkItem.Visited;
-			set
-			{
-				CurrentWorkItem.Visited = value;
-				SetProperty(ref _visited, value, () => Visited);
 			}
 		}
 

@@ -12,11 +12,9 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	public abstract class WorkItemVmBase : PropertyChangedBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
-		[NotNull] private readonly IWorkItem _workItem;
+		[CanBeNull] private readonly IWorkItem _workItem;
 		[NotNull] private readonly IWorkList _workList;
-		private readonly string _description;
 		private WorkItemStatus _status;
-		private bool _visited;
 
 		// ReSharper disable once NotNullMemberIsNotInitialized
 		protected WorkItemVmBase() { }
@@ -29,13 +27,14 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			_workItem = workItem;
 			_workList = workList;
 
-			_description = workItem.Description;
+			Description = workItem.Description;
 			_status = workItem.Status;
-			_visited = workItem.Visited;
 		}
 
 		[CanBeNull]
-		public string Description => _description;
+		public string Description { get; }
+
+		public bool CanSetStatus => _workItem != null;
 
 		public WorkItemStatus Status
 		{
@@ -43,7 +42,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			set
 			{
 				// don't set status if it doesn't changes
-				if (_status == value)
+				if (_status == value || _workItem == null)
 				{
 					return;
 				}
@@ -61,12 +60,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 				Project.Current.SetDirty();
 			}
-		}
-
-		public bool Visited
-		{
-			get => _visited;
-			set { SetProperty(ref _visited, value, () => Visited); }
 		}
 	}
 }
