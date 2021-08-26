@@ -162,22 +162,18 @@ namespace ProSuite.AGP.Solution.Workflow
 
 		private static IEnumerable<Table> GetDatasets([NotNull] MapView mapView)
 		{
-			IReadOnlyList<Layer> layers = mapView.Map.GetLayersAsFlattenedList();
-
-			foreach (Layer layer in layers)
+			foreach (FeatureLayer layer in mapView.Map.GetLayersAsFlattenedList()
+			                                      .OfType<FeatureLayer>())
 			{
-				if (layer is FeatureLayer fl)
+				Table table = layer.GetTable();
+
+				if (table?.GetDatastore() is FileSystemDatastore)
 				{
-					Table table = fl.GetTable();
-
-					if (table.GetDatastore() is FileSystemDatastore)
-					{
-						// Shapefile workspaces are not supported
-						continue;
-					}
-
-					yield return table;
+					// Shapefile workspaces are not supported
+					continue;
 				}
+
+				yield return table;
 			}
 		}
 
