@@ -4,28 +4,23 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Internal.CIM;
-using ArcGIS.Desktop.Catalog;
-using ArcGIS.Desktop.Core;
-using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
 using ProSuite.AGP.WorkList.Domain.Persistence.Xml;
-using ProSuite.Application.Configuration;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.GP;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
-namespace ProSuite.AGP.Solution.WorkLists
+namespace ProSuite.AGP.QA.Worklist
 {
-	public class DatabaseWorkEnvironment : WorkEnvironmentBase
+	public abstract class IssueWorklistEnvironmentBase : WorkEnvironmentBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly string _templateLayer = "Selection Work List.lyrx";
 		private readonly string _domainName = "CORRECTION_STATUS_CD";
 
 		private readonly List<string> _issueFeatureClassNames = new List<string>
@@ -38,9 +33,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		[CanBeNull] private readonly string _path;
 
-		public DatabaseWorkEnvironment() : this(BrowseGeodatabase()) { }
-
-		public DatabaseWorkEnvironment([CanBeNull] string path)
+		protected IssueWorklistEnvironmentBase([CanBeNull] string path)
 		{
 			_path = path;
 		}
@@ -150,44 +143,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 			Dictionary<Geodatabase, List<Table>> tables = MapUtils.GetDistinctTables(featureLayers);
 
 			return new IssueItemRepository(tables, stateRepository);
-		}
-
-		protected override LayerDocument GetLayerDocumentCore()
-		{
-			string path = ConfigurationUtils.GetConfigFilePath(_templateLayer);
-
-			return LayerUtils.CreateLayerDocument(path);
-		}
-
-		[CanBeNull]
-		private static string BrowseGeodatabase()
-		{
-			const string title = "Select Existing Issue Geodatabase";
-			var browseFilter =
-				BrowseProjectFilter.GetFilter(
-					DAML.Filter.esri_browseDialogFilters_geodatabases_file);
-
-			return GetSelectedItemPath(title, ItemFilters.geodatabases, browseFilter);
-		}
-
-		[CanBeNull]
-		private static string GetSelectedItemPath(string title, string filter,
-		                                          BrowseProjectFilter browseFilter)
-		{
-			var dialog = new OpenItemDialog
-			             {
-				             BrowseFilter = browseFilter,
-				             Filter = filter,
-				             Title = title
-			             };
-
-			if (dialog.ShowDialog().HasValue && dialog.Items.ToList().Count > 0)
-			{
-				return dialog.Items.FirstOrDefault()?.Path;
-			}
-
-			_msg.Info("No Issue Geodatabase selected");
-			return null;
 		}
 	}
 }

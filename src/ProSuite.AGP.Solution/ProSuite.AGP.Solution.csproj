@@ -163,6 +163,8 @@
     </Compile>
     <Compile Include="Selection\PickWorkListItemTool.cs" />
     <Compile Include="Selection\SelectionTool.cs" />
+    <Compile Include="ProSuiteFacadeImpl.cs" />
+    <Compile Include="ProSuiteUtils.cs" />
     <Compile Include="Workflow\MapBasedSessionContext.cs" />
     <Compile Include="WorkLists\CreateIssueWorkListButton.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
@@ -175,8 +177,8 @@
     <Compile Include="LoggerUI\ProSuiteLogPaneViewModel.cs" />
     <Compile Include="ProSuiteToolsModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WorkLists\DatabaseWorkEnvironment.cs" />
     <Compile Include="WorkLists\AddWorklistButton.cs" />
+    <Compile Include="WorkLists\IssueWorklistEnvironment.cs" />
     <Compile Include="WorkLists\ShowWorkListsButton.cs" />
     <Compile Include="WorkLists\WorkListsModule.cs" />
     <Compile Include="WorkListUI\InvolvedObjectRow.cs" />

@@ -128,6 +128,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 			[NotNull] ISimpleTerrainDataset dataset,
 			[NotNull] Func<IObjectDataset, IObjectClass> openDataset)
 		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
 			var terrainSources = new List<SimpleTerrainDataSource>();
 			foreach (TerrainSourceDataset source in dataset.Sources)
 			{

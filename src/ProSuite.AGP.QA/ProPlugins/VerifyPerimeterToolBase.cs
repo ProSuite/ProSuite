@@ -9,6 +9,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.QA.VerificationProgress;
+using ProSuite.Commons.AGP;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -22,6 +23,7 @@ using ProSuite.UI.QA.VerificationProgress;
 
 namespace ProSuite.AGP.QA.ProPlugins
 {
+	// todo daro: extract common base classe for VerifyPerimeterToolBase, VerifySelectionCmdBase, VerifyVisibleExtentCmdBase
 	// TODO: Move OneClickToolBase to ProSuite.AGP as a shared project instead of using AGP.Editing
 	public abstract class VerifyPerimeterToolBase : OneClickToolBase
 	{
@@ -41,6 +43,8 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract Window CreateProgressWindow(
 			VerificationProgressViewModel progressViewModel);
+		
+		protected abstract IProSuiteFacade ProSuiteImpl { get; }
 
 		protected override Task OnToolActivateAsync(bool active)
 		{
@@ -93,7 +97,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
 			var appController = new AgpBackgroundVerificationController(
-				MapView.Active, sketchGeometry, spatialRef);
+				ProSuiteImpl, MapView.Active, sketchGeometry, spatialRef);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel

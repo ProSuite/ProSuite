@@ -5,34 +5,34 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.UI.DataModel;
+using ProSuite.UI.DataModel.ResourceLookup;
 using ProSuite.UI.Properties;
 
 namespace ProSuite.UI.QA.Controls
 {
 	public class SpecificationDataset
 	{
-		private static readonly Image _allowImage = (Bitmap) TestTypeImages.Warning.Clone();
+		private static readonly Image _allowImage =
+			(Bitmap) TestTypeImages.TestTypeWarning.Clone();
 
 		private static readonly Image _continueImage =
-			(Bitmap) TestTypeImages.Prohibition.Clone();
+			(Bitmap) TestTypeImages.TestTypeProhibition.Clone();
 
-		private static readonly SortedList<string, Image> _datasetImageList;
 		private static readonly Image _errorsImage = (Bitmap) Resources.Error.Clone();
-
 		private static readonly Image _noErrorsImage = (Bitmap) Resources.OK.Clone();
-		private static readonly Image _stopImage = (Bitmap) TestTypeImages.Stop.Clone();
+
+		private static readonly Image _stopImage =
+			(Bitmap) TestTypeImages.TestTypeStop.Clone();
 
 		private static readonly Image _warningImage =
-			(Bitmap) TestTypeImages.Warning.Clone();
+			(Bitmap) TestTypeImages.TestTypeWarning.Clone();
+
+		private static readonly SortedList<string, Image> _datasetImageList;
 
 		private readonly DatasetTestParameterValue _datasetTestParameterValue;
 
-		#region constructors
+		#region Constructors
 
-		/// <summary>
-		/// Initializes the <see cref="SpecificationDataset"/> class.
-		/// </summary>
 		static SpecificationDataset()
 		{
 			ImageList list = DatasetTypeImageLookup.CreateImageList();

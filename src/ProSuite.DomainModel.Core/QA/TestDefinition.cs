@@ -11,14 +11,17 @@ namespace ProSuite.DomainModel.Core.QA
 		private readonly string _testFactoryAssemblyName;
 		private readonly string _testFactoryTypeName;
 		private readonly string _testTypeName;
+		private readonly string _testName;
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="TestDefinition"/> class.
+		/// Initializes a new instance of the <see cref="TestDefinition" /> class.
 		/// </summary>
 		/// <param name="testDescriptor">The test descriptor for which the definition should be created.</param>
 		public TestDefinition([NotNull] TestDescriptor testDescriptor)
 		{
 			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
+			
+			_testName = testDescriptor.Name;
 
 			if (testDescriptor.TestClass != null)
 			{
@@ -32,6 +35,9 @@ namespace ProSuite.DomainModel.Core.QA
 				_testFactoryAssemblyName = testDescriptor.TestFactoryDescriptor.AssemblyName;
 			}
 		}
+
+		[NotNull]
+		public string Name => _testName;
 
 		#region IEquatable<TestDefinition> Members
 
@@ -51,7 +57,8 @@ namespace ProSuite.DomainModel.Core.QA
 			       Equals(other._testAssemblyName, _testAssemblyName) &&
 			       other._testConstructorIndex == _testConstructorIndex &&
 			       Equals(other._testFactoryTypeName, _testFactoryTypeName) &&
-			       Equals(other._testFactoryAssemblyName, _testFactoryAssemblyName);
+			       Equals(other._testFactoryAssemblyName, _testFactoryAssemblyName) ||
+			       Equals(other._testName, _testName);
 		}
 
 		#endregion
@@ -93,6 +100,7 @@ namespace ProSuite.DomainModel.Core.QA
 				result = (result * 397) ^ (_testFactoryAssemblyName != null
 					                           ? _testFactoryAssemblyName.GetHashCode()
 					                           : 0);
+				result = (result * 397) ^ (_testName != null ? _testName.GetHashCode() : 0);
 				return result;
 			}
 		}

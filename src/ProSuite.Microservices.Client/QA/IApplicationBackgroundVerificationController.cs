@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Progress;
@@ -52,7 +53,7 @@ namespace ProSuite.Microservices.Client.QA
 		/// <summary>
 		/// Opens the work list associated with the current verification run.
 		/// </summary>
-		void OpenWorkList([NotNull] IQualityVerificationResult verificationResult);
+		Task OpenWorkList([NotNull] IQualityVerificationResult verificationResult);
 
 		/// <summary>
 		/// Whether opening a work list with the resulting issues is possible or not.
