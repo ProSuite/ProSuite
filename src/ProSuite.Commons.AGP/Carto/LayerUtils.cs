@@ -132,6 +132,11 @@ namespace ProSuite.Commons.AGP.Carto
 			return map.FindLayer(uri, recursive);
 		}
 
+		public static IEnumerable<T> GetLayers<T>(this Map map) where T : Layer
+		{
+			return map.GetLayersAsFlattenedList().OfType<T>();
+		}
+
 		public static void SetLayerSelectability([NotNull] FeatureLayer layer,
 		                                         bool selectable = true)
 		{
