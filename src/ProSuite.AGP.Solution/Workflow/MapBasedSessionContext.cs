@@ -163,12 +163,16 @@ namespace ProSuite.AGP.Solution.Workflow
 
 		private static IEnumerable<Table> GetDatasets([NotNull] MapView mapView)
 		{
-			foreach (FeatureLayer layer in mapView.Map.GetLayers<FeatureLayer>())
-			{
-				Table table = layer.GetTable();
+			Map map = mapView.Map;
 
-				// table can be null if layer's data source is broken
-				if (table?.GetDatastore() is FileSystemDatastore)
+			if (map == null)
+			{
+				yield break;
+			}
+
+			foreach (Table table in map.GetTables())
+			{
+				if (table.GetDatastore() is FileSystemDatastore)
 				{
 					// Shapefile workspaces are not supported
 					continue;

@@ -132,9 +132,59 @@ namespace ProSuite.Commons.AGP.Carto
 			return map.FindLayer(uri, recursive);
 		}
 
-		public static IEnumerable<T> GetLayers<T>(this Map map) where T : Layer
+		public static IEnumerable<T> GetLayers<T>([NotNull] this Map map) where T : Layer
 		{
+			Assert.ArgumentNotNull(map, nameof(map));
+
 			return map.GetLayersAsFlattenedList().OfType<T>();
+		}
+
+		/// <summary>
+		/// Get tables only from feature layers with established
+		/// data source. If the data source of the feature layer
+		/// is broken FeatureLayer.GetTable() returns null.
+		/// </summary>
+		/// <param name="map"></param>
+		public static IEnumerable<Table> GetTables([NotNull] this Map map)
+		{
+			Assert.ArgumentNotNull(map, nameof(map));
+
+			return map.GetLayers<FeatureLayer>().GetTables();
+		}
+
+		
+		/// <summary>
+		/// Get tables only from feature layers with established
+		/// data source. If the data source of the feature layer
+		/// is broken FeatureLayer.GetTable() returns null.
+		/// </summary>
+		/// <param name="featureLayers"></param>
+		public static IEnumerable<Table> GetTables(
+			[NotNull] this IEnumerable<BasicFeatureLayer> featureLayers)
+		{
+			Assert.ArgumentNotNull(featureLayers, nameof(featureLayers));
+
+			return featureLayers.Select(fl => fl.GetTable()).Where(table => table != null);
+		}
+
+		/// <summary>
+		/// Gets the ObjectIDs of selected features from feature
+		/// layers with valid data source.
+		/// Even tough a layer data source is broken the BasicFeatureLayer.SelectionCount
+		/// can return a valid result.
+		/// </summary>
+		/// <param name="layer"></param>
+		/// <remarks>
+		/// Altough a layer data source is broken BasicFeatureLayer.SelectionCount
+		/// can return a valid result.
+		/// </remarks>
+		public static IEnumerable<long> GetSelectionOids([NotNull] this BasicFeatureLayer layer)
+		{
+			Assert.ArgumentNotNull(layer, nameof(layer));
+
+			Selection selection = layer.GetSelection();
+
+			return selection == null ? Enumerable.Empty<long>() : selection.GetObjectIDs();
 		}
 
 		public static void SetLayerSelectability([NotNull] FeatureLayer layer,

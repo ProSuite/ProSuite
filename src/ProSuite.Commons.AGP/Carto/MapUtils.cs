@@ -30,9 +30,15 @@ namespace ProSuite.Commons.AGP.Carto
 
 			foreach (BasicFeatureLayer layer in layers.Where(HasSelection))
 			{
-				IReadOnlyList<long> selection = layer.GetSelection().GetObjectIDs();
+				IEnumerable<long> selection = layer.GetSelectionOids();
 
 				Table table = layer.GetTable();
+
+				if (table == null)
+				{
+					continue;
+				}
+
 				var tableId = new GdbTableIdentity(table);
 
 				if (! distinctTableIds.ContainsKey(tableId))
@@ -60,7 +66,7 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			var result = new Dictionary<Geodatabase, SimpleSet<Table>>();
 
-			foreach (Table table in layers.Select(layer => layer.GetTable()).Distinct())
+			foreach (Table table in layers.GetTables().Distinct())
 			{
 				var geodatabase = (Geodatabase) table.GetDatastore();
 
@@ -86,8 +92,10 @@ namespace ProSuite.Commons.AGP.Carto
 
 				if (featureLayer == null) continue;
 
-				foreach (var feature in GetFeatures(featureLayer, oidsByMapMember.Value))
+				foreach (Feature feature in GetFeatures(featureLayer, oidsByMapMember.Value))
+				{
 					yield return feature;
+				}
 			}
 		}
 
