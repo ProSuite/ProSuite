@@ -30,11 +30,11 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		private bool? _autoZoomMode = true;
 		private string _count;
-		private int _currentIndex;
-		private WorkItemVmBase _currentWorkItem;
-		private IWorkList _currentWorkList;
 		private string _previouslyActiveTool;
+		private IWorkList _currentWorkList;
+		private WorkItemVisibility _visibility;
 		private InvolvedObjectRow _selectedInvolvedObject;
+		private WorkItemViewModelBase _currentItemViewModel;
 
 		protected WorkListViewModelBase([NotNull] IWorkList workList)
 		{
@@ -48,7 +48,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			if (item == null)
 			{
-				CurrentWorkItem = new NoWorkItemViewModel();
+				CurrentItemViewModel = new NoWorkItemViewModel();
 			}
 			else
 			{
@@ -136,7 +136,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 					long oid = CurrentWorkList.Current.Proxy.ObjectId;
 
-					SelectionUtils.ClearSelection(MapView.Active.Map);
+					SelectionUtils.ClearSelection();
 					
 					layer.Select(new QueryFilter {ObjectIDs = new List<long> {oid}},
 					             SelectionCombinationMethod.Add);
@@ -462,15 +462,15 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			get => _currentWorkList;
 
-			private set { SetProperty(ref _currentWorkList, value, () => CurrentWorkList); }
+			private set => SetProperty(ref _currentWorkList, value, () => CurrentWorkList);
 		}
 
-		public WorkItemVmBase CurrentWorkItem
+		public WorkItemViewModelBase CurrentItemViewModel
 		{
-			get => _currentWorkItem;
+			get => _currentItemViewModel;
 			protected set
 			{
-				SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem);
+				SetProperty(ref _currentItemViewModel, value, () => CurrentItemViewModel);
 
 				Count = GetCount();
 			}
@@ -483,19 +483,18 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		public InvolvedObjectRow SelectedInvolvedObject
 		{
 			get => _selectedInvolvedObject;
-			set { SetProperty(ref _selectedInvolvedObject, value, () => SelectedInvolvedObject); }
+			set => SetProperty(ref _selectedInvolvedObject, value, () => SelectedInvolvedObject);
 		}
 
 		public string Count
 		{
 			get => _count;
-			set { SetProperty(ref _count, value, () => Count); }
+			set => SetProperty(ref _count, value, () => Count);
 		}
 
 		public int CurrentIndex
 		{
 			get => CurrentWorkList.CurrentIndex;
-			set { SetProperty(ref _currentIndex, value, () => CurrentIndex); }
 		}
 
 		public virtual string ToolTip => "Select Current Work Item";

@@ -290,7 +290,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				}
 
 				HashSet<long> editableClassHandles =
-					MapUtils.GetLayers<BasicFeatureLayer>(MapView.Active, bfl => bfl.IsEditable)
+					MapUtils.GetLayers<BasicFeatureLayer>(bfl => bfl.IsEditable)
 					        .Select(l => l.GetTable().Handle.ToInt64()).ToHashSet();
 
 				Dictionary<Feature, Geometry> resultFeatures =

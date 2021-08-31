@@ -165,6 +165,7 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
+		// todo daro: drop MapView from method signature, see GetLayers<T> below
 		/// <summary>
 		/// Finds the distinct visible features in the map that intersect the selected
 		/// features and that fulfill the target-selection-type criteria.
@@ -244,9 +245,8 @@ namespace ProSuite.Commons.AGP.Carto
 			// -> Get the distinct feature classes (TODO: include layer definition queries)
 
 			IEnumerable<FeatureLayer> featureLayers =
-				GetLayers<FeatureLayer>(
-					mapView, fl => IsLayerApplicable(fl, targetSelectionType, layerPredicate,
-					                                 selectedFeatures));
+				GetLayers<FeatureLayer>(fl => IsLayerApplicable(fl, targetSelectionType, layerPredicate,
+				                                                selectedFeatures));
 
 			IEnumerable<IGrouping<IntPtr, FeatureLayer>> layersGroupedByClass =
 				featureLayers.GroupBy(fl => fl.GetFeatureClass().Handle);
@@ -288,30 +288,8 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		// todo daro move to LayerUtils?
-		public static IEnumerable<T> GetLayers<T>(
-			[NotNull] MapView mapView,
-			[CanBeNull] Predicate<T> layerPredicate) where T : Layer
-		{
-			foreach (Layer layer in mapView.Map.GetLayersAsFlattenedList())
-			{
-				T matchingTypeLayer = layer as T;
-
-				if (matchingTypeLayer == null)
-				{
-					continue;
-				}
-
-				if (layerPredicate == null ||
-				    layerPredicate(matchingTypeLayer))
-				{
-					yield return matchingTypeLayer;
-				}
-			}
-		}
-		
-		// todo daro move to LayerUtils?
-		public static IEnumerable<T> GetLayers<T>(
-			[CanBeNull] Predicate<T> layerPredicate) where T : Layer
+		public static IEnumerable<T> GetLayers<T>([CanBeNull] Predicate<T> layerPredicate)
+			where T : Layer
 		{
 			MapView mapView = MapView.Active;
 
@@ -320,9 +298,7 @@ namespace ProSuite.Commons.AGP.Carto
 				yield break;
 			}
 
-			Map map = mapView.Map;
-
-			foreach (Layer layer in map.GetLayersAsFlattenedList())
+			foreach (Layer layer in mapView.Map.GetLayersAsFlattenedList())
 			{
 				var matchingTypeLayer = layer as T;
 

@@ -5,11 +5,10 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
              xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
-             xmlns:test="clr-namespace:ProSuite.AGP.Solution.WorkListUI.UiTestData"
              xmlns:workListUi="clr-namespace:ProSuite.AGP.Solution.WorkListUI"
              mc:Ignorable="d"
              d:DesignWidth="400"
-             d:DataContext="{d:DesignInstance Type=workListUi:IssueWorkListVm}">
+             d:DataContext="{d:DesignInstance Type=workListUi:IssueWorkListViewModel}">
     <UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>

@@ -480,7 +480,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				{
 					//no candidate (user clicked into empty space): clear selection
 					await QueuedTask.Run(
-						() => { SelectionUtils.ClearSelection(ActiveMapView.Map); });
+						() => { SelectionUtils.ClearSelection(); });
 
 					return false;
 				}

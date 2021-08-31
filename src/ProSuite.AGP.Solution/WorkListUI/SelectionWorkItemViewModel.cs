@@ -3,9 +3,9 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
-	public class SelectionWorkItemVm : WorkItemVmBase
+	public class SelectionWorkItemViewModel : WorkItemViewModelBase
 	{
-		public SelectionWorkItemVm([NotNull] IWorkItem workItem, [NotNull] IWorkList worklist) :
+		public SelectionWorkItemViewModel([NotNull] IWorkItem workItem, [NotNull] IWorkList worklist) :
 			base(workItem, worklist) { }
 	}
 }

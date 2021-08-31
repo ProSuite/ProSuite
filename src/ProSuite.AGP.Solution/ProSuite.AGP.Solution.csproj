@@ -184,19 +184,18 @@
     <Compile Include="WorkListUI\InvolvedObjectRow.cs" />
     <Compile Include="WorkListUI\InvolvedTableVm.cs" />
     <Compile Include="WorkListUI\NoWorkItemViewModel.cs" />
-    <Compile Include="WorkListUI\UiTestData\InvolvedObjectMock.cs" />
     <Compile Include="WorkListUI\Views\IssueCountControl.xaml.cs">
       <DependentUpon>IssueCountControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WorkListUI\IssueWorkItemVm.cs" />
+    <Compile Include="WorkListUI\IssueWorkItemViewModel.cs" />
     <Compile Include="WorkListUI\Views\IssueWorkListView.xaml.cs">
       <DependentUpon>IssueWorkListView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WorkListUI\IssueWorkListVm.cs" />
+    <Compile Include="WorkListUI\IssueWorkListViewModel.cs" />
     <Compile Include="WorkListUI\ShowIssueWorkListView.cs" />
     <Compile Include="WorkListUI\StatusConverter.cs" />
-    <Compile Include="WorkListUI\SelectionWorkItemVm.cs" />
-    <Compile Include="WorkListUI\WorkItemVmBase.cs" />
+    <Compile Include="WorkListUI\SelectionWorkItemViewModel.cs" />
+    <Compile Include="WorkListUI\WorkItemViewModelBase.cs" />
     <Compile Include="WorkListUI\Views\WorkListDetails.xaml.cs">
       <DependentUpon>WorkListDetails.xaml</DependentUpon>
     </Compile>
@@ -211,7 +210,7 @@
     <Compile Include="WorkListUI\WorkListViewFactory.cs" />
     <Compile Include="WorkListUI\WorkListViewModelBase.cs" />
     <Compile Include="WorkLists\InMemoryWorkEnvironment.cs" />
-    <Compile Include="WorkListUI\SelectionWorkListVm.cs" />
+    <Compile Include="WorkListUI\SelectionWorkListViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="LoggerUI\LogMessageDetailsDialog.xaml">
@@ -529,6 +528,9 @@
     <AddInContent Include="Images\VerifyPerimeterTool32.png" />
     <AddInContent Include="Images\VerifySelectionCmd16.png" />
     <AddInContent Include="Images\VerifySelectionCmd32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="WorkListUI\UiTestData\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--

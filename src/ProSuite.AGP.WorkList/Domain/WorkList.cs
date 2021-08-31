@@ -431,10 +431,8 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		private IEnumerable<IWorkItem> GetItems(QueryFilter filter = null, int startIndex = -1,
-		                                        CurrentSearchOption currentSearch =
-			                                        CurrentSearchOption.ExcludeCurrent,
-		                                        VisitedSearchOption visitedSearch =
-			                                        VisitedSearchOption.ExcludeVisited)
+		                                        CurrentSearchOption currentSearch = CurrentSearchOption.ExcludeCurrent,
+		                                        VisitedSearchOption visitedSearch = VisitedSearchOption.ExcludeVisited)
 		{
 			IEnumerable<IWorkItem> query = GetItems(filter, false, startIndex);
 

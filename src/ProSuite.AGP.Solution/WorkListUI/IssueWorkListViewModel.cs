@@ -15,7 +15,7 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
-	public class IssueWorkListVm : WorkListViewModelBase
+	public class IssueWorkListViewModel : WorkListViewModelBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private string _errorDescription;
@@ -23,13 +23,13 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		private string _qualityCondition;
 
-		public IssueWorkListVm([NotNull] IWorkList workList) : base(workList) { }
+		public IssueWorkListViewModel([NotNull] IWorkList workList) : base(workList) { }
 
 		public string QualityCondition
 		{
 			get
 			{
-				if (CurrentWorkItem is IssueWorkItemVm issueWorkItemVm)
+				if (CurrentItemViewModel is IssueWorkItemViewModel issueWorkItemVm)
 				{
 					return issueWorkItemVm.QualityCondition;
 				}
@@ -43,7 +43,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			get
 			{
-				if (CurrentWorkItem is IssueWorkItemVm issueWorkItemVm)
+				if (CurrentItemViewModel is IssueWorkItemViewModel issueWorkItemVm)
 				{
 					return issueWorkItemVm.ErrorDescription;
 				}
@@ -65,9 +65,9 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			Assert.ArgumentNotNull(item, nameof(item));
 
-			var vm = new IssueWorkItemVm((IssueItem) item, CurrentWorkList);
+			var vm = new IssueWorkItemViewModel((IssueItem) item, CurrentWorkList);
 
-			CurrentWorkItem = vm;
+			CurrentItemViewModel = vm;
 
 			InvolvedObjectRows =
 				vm.IssueItem.InIssueInvolvedTables.SelectMany(
@@ -83,7 +83,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			{
 				return QueuedTask.Run(() =>
 				{
-					SelectionUtils.ClearSelection(MapView.Active.Map);
+					SelectionUtils.ClearSelection();
 
 					foreach (KeyValuePair<BasicFeatureLayer, List<long>> pair in
 						GetInvolvedFeaturesByLayer())
@@ -169,7 +169,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		private IEnumerable<InvolvedObjectRow> CompileInvolvedRows()
 		{
-			if (! (CurrentWorkItem is IssueWorkItemVm issueWorkItemVm))
+			if (! (CurrentItemViewModel is IssueWorkItemViewModel issueWorkItemVm))
 			{
 				return Enumerable.Empty<InvolvedObjectRow>();
 			}

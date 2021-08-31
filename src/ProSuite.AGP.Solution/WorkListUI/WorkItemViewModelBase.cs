@@ -9,7 +9,7 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
-	public abstract class WorkItemVmBase : PropertyChangedBase
+	public abstract class WorkItemViewModelBase : PropertyChangedBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		[CanBeNull] private readonly IWorkItem _workItem;
@@ -17,9 +17,9 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private WorkItemStatus _status;
 
 		// ReSharper disable once NotNullMemberIsNotInitialized
-		protected WorkItemVmBase() { }
+		protected WorkItemViewModelBase() { }
 
-		protected WorkItemVmBase([NotNull] IWorkItem workItem, [NotNull] IWorkList workList)
+		protected WorkItemViewModelBase([NotNull] IWorkItem workItem, [NotNull] IWorkList workList)
 		{
 			Assert.ArgumentNotNull(workItem, nameof(workItem));
 			Assert.ArgumentNotNull(workList, nameof(workList));
