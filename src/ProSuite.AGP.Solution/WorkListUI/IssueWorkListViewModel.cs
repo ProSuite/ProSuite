@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -144,10 +145,15 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private Dictionary<BasicFeatureLayer, List<long>> GetInvolvedFeaturesByLayer()
 		{
 			var featuresByLayer = new Dictionary<BasicFeatureLayer, List<long>>();
-
+			
 			foreach (InvolvedObjectRow row in InvolvedObjectRows)
 			{
-				var layer = LayerUtils.FindLayers(row.Name).FirstOrDefault() as FeatureLayer;
+				FeatureLayer layer =
+					MapUtils.GetLayers<FeatureLayer>(
+						lyr => string.Equals(
+							lyr.GetFeatureClass().GetName(),
+							row.Name,
+							StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
 
 				if (layer == null)
 				{
