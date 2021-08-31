@@ -7,6 +7,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
+using ArcGIS.Desktop.Framework.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Solution.WorkLists;
@@ -24,231 +25,26 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	public abstract class WorkListViewModelBase : PropertyChangedBase
 	{
 		private const double _seconds = 0.3;
-		private IWorkList _currentWorkList;
-		private int _currentIndex;
-		private string _count;
-		private RelayCommand _goNextItemCmd;
-		private RelayCommand _goFirstItemCmd;
-		private RelayCommand _goPreviousItemCmd;
-		private RelayCommand _zoomToCmd;
-		private RelayCommand _panToCmd;
-		private RelayCommand _zoomToAllCmd;
-		private RelayCommand _pickWorkItemCmd;
-		private RelayCommand _goNearestItemCmd;
-		private RelayCommand _flashCurrentFeatureCmd;
-		private InvolvedObjectRow _selectedInvolvedObject;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
-		private RelayCommand _selectCurrentFeatureCmd;
-		private string _lastActiveTool = null;
-
-		public ICommand ClearSelectionCmd =>
-			FrameworkApplication.GetPlugInWrapper(
-				DAML.Button.esri_mapping_clearSelectionButton) as ICommand;
-
-		public ICommand PreviousExtentCmd =>
-			FrameworkApplication.GetPlugInWrapper(
-				DAML.Button.esri_mapping_prevExtentButton) as ICommand;
-
-		public ICommand NextExtentCmd =>
-			FrameworkApplication.GetPlugInWrapper(
-				DAML.Button.esri_mapping_nextExtentButton) as ICommand;
-
-		public ICommand ZoomInCmd =>
-			FrameworkApplication.GetPlugInWrapper(
-				DAML.Button.esri_mapping_fixedZoomInButton) as ICommand;
-
-		public ICommand ZoomOutCmd =>
-			FrameworkApplication.GetPlugInWrapper(
-				DAML.Button.esri_mapping_fixedZoomOutButton) as ICommand;
-
-		//Utility method to consolidate UI update logic
-		public void RunOnUIThread(Action action)
-		{
-			if (FrameworkApplication.Current.Dispatcher.CheckAccess())
-				action(); //No invoke needed
-			else
-				//We are not on the UI
-				FrameworkApplication.Current.Dispatcher.BeginInvoke(action);
-		}
-
-		public RelayCommand GoNextItemCmd
-		{
-			get
-			{
-				_goNextItemCmd = new RelayCommand(execute: () => GoNextItem(),
-				                                  canExecute: () => CurrentWorkList.CanGoNext());
-				return _goNextItemCmd;
-			}
-		}
-
-		public RelayCommand GoNearestItemCmd
-		{
-			get
-			{
-				_goNearestItemCmd =
-					new RelayCommand(() => GoNearestItem(), () => CurrentWorkList.CanGoNearest());
-				return _goNearestItemCmd;
-			}
-		}
-
-		public RelayCommand GoFirstItemCmd
-		{
-			get
-			{
-				_goFirstItemCmd =
-					new RelayCommand(() => GoFirstItem(), () => CurrentWorkList.CanGoFirst());
-				return _goFirstItemCmd;
-			}
-		}
-
-		public RelayCommand ZoomToAllCmd
-		{
-			get
-			{
-				_zoomToAllCmd = new RelayCommand(() => ZoomToAllAsync(), () => CurrentWorkList.Extent != null);
-				return _zoomToAllCmd;
-			}
-		}
-
-		public RelayCommand GoPreviousItemCmd
-		{
-			get
-			{
-				_goPreviousItemCmd =
-					new RelayCommand(() => GoPreviousItem(), () => CurrentWorkList.CanGoPrevious());
-				return _goPreviousItemCmd;
-			}
-		}
-
-		public ICommand ZoomToCmd
-		{
-			get
-			{
-				_zoomToCmd = new RelayCommand(ZoomToAsync, () => CurrentWorkList.Current != null);
-				return _zoomToCmd;
-			}
-		}
-
-		public RelayCommand PanToCmd
-		{
-			get
-			{
-				_panToCmd = new RelayCommand(PanToAsync, () => CurrentWorkList.Current != null);
-				return _panToCmd;
-			}
-		}
-
-		public RelayCommand PickWorkItemCmd
-		{
-			get
-			{
-				_pickWorkItemCmd = new RelayCommand(PickWorkItem, () => true);
-				return _pickWorkItemCmd;
-			}
-		}
-
-		public RelayCommand SelectCurrentFeatureCmd
-		{
-			get
-			{
-				_selectCurrentFeatureCmd =
-					new RelayCommand(SelectCurrentFeature, () => CurrentWorkList.Current != null);
-				return _selectCurrentFeatureCmd;
-			}
-		}
-
-		public RelayCommand FlashCurrentFeatureCmd
-		{
-			get
-			{
-				_flashCurrentFeatureCmd =
-					new RelayCommand(FlashCurrentFeature, () => CurrentWorkList.Current != null);
-				return _flashCurrentFeatureCmd;
-			}
-		}
-
-		public IWorkList CurrentWorkList
-		{
-			get => _currentWorkList;
-
-			private set { SetProperty(ref _currentWorkList, value, () => CurrentWorkList); }
-		}
-
-		public virtual WorkItemVmBase CurrentWorkItem
-		{
-			get => _currentWorkItem;
-			set
-			{
-				SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem);
-				
-				Count = GetCount();
-			}
-		}
-
-		public IList<WorkItemVisibility> Visibility
-		{
-			get => Enum.GetValues(typeof(WorkItemVisibility)).Cast<WorkItemVisibility>()
-			           .ToList();
-			set { }
-		}
-
-		public InvolvedObjectRow SelectedInvolvedObject
-		{
-			get { return _selectedInvolvedObject; }
-			set { SetProperty(ref _selectedInvolvedObject, value, () => SelectedInvolvedObject); }
-		}
-
-		public string GetCount()
-		{
-			int all = CurrentWorkList.Count(null, true);
-			int toDo = CurrentWorkList
-			           .GetItems(null, true).Count(item => item.Status == WorkItemStatus.Todo);
-			return $"{CurrentIndex + 1} of {all} ({toDo} todo, {all} total)";
-		}
-
-		public string Count
-		{
-			get => _count;
-			set { SetProperty(ref _count, value, () => Count); }
-		}
-
-		public int CurrentIndex
-		{
-			get => CurrentWorkList.CurrentIndex;
-			set { SetProperty(ref _currentIndex, value, () => CurrentIndex); }
-		}
-
-		public virtual string ToolTip
-		{
-			get => "Select Current Work Item";
-		}
-
-		protected void GoPreviousItem()
-		{
-			ViewUtils.Try(() =>
-			{
-				QueuedTask.Run(() =>
-				{
-					CurrentWorkList.GoPrevious();
-
-					SetCurrentItem(CurrentWorkList.Current);
-				});
-			}, _msg);
-		}
 
 		private bool? _autoZoomMode = true;
+		private string _count;
+		private int _currentIndex;
 		private WorkItemVmBase _currentWorkItem;
+		private IWorkList _currentWorkList;
+		private string _previouslyActiveTool;
+		private InvolvedObjectRow _selectedInvolvedObject;
 
 		protected WorkListViewModelBase([NotNull] IWorkList workList)
 		{
 			Assert.ArgumentNotNull(workList, nameof(workList));
 
 			CurrentWorkList = workList;
-			SetCurrentItem(workList.Current);
+			SetCurrent(workList.Current);
 		}
 
-		private void SetCurrentItem([CanBeNull] IWorkItem item)
+		private void SetCurrent([CanBeNull] IWorkItem item)
 		{
 			if (item == null)
 			{
@@ -260,39 +56,215 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}
 		}
 
-		public bool? AutoZoomMode
-		{
-			get => _autoZoomMode;
-			set
-			{
-				if (! ShiftPressed())
-				{
-					return;
-				}
+		protected abstract void SetCurrentItemCore([NotNull] IWorkItem item);
 
-				SetProperty(ref _autoZoomMode, value, () => AutoZoomMode);
+		private async Task ZoomToAsync()
+		{
+			if (ShiftPressed())
+			{
+				return;
 			}
+
+			IWorkItem item = CurrentWorkList.Current;
+
+			if (item == null)
+			{
+				return;
+			}
+
+			Envelope envelope = await QueuedTask.Run(() => GetEnvelope(item));
+
+			await MapView.Active.ZoomToAsync(envelope, TimeSpan.FromSeconds(_seconds));
 		}
 
-		protected void GoNearestItem()
+		private async Task ZoomToAllAsync()
+		{
+			await MapView.Active.ZoomToAsync(CurrentWorkList.Extent, TimeSpan.FromSeconds(_seconds));
+		}
+
+		private async Task PanToAsync()
+		{
+			IWorkItem item = CurrentWorkList.Current;
+
+			if (item == null)
+			{
+				return;
+			}
+
+			Envelope envelope = await QueuedTask.Run(() => GetEnvelope(item));
+
+			await MapView.Active.PanToAsync(envelope, TimeSpan.FromSeconds(_seconds));
+		}
+
+		private static bool ShiftPressed()
+		{
+			return (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift;
+		}
+
+		private async void PickItemAsync()
+		{
+			await ViewUtils.TryAsync(() =>
+			{
+				// only current worklist will select invoked picker
+				WorkListsModule.Current.ActiveWorkListlayer = CurrentWorkList;
+
+				return FrameworkApplication.SetCurrentToolAsync(ConfigIDs.Editing_PickWorkItemTool);
+			}, _msg);
+		}
+
+		protected virtual async void SelectCurrentFeatureAsync()
+		{
+			await ViewUtils.TryAsync(() =>
+			{
+				return QueuedTask.Run(() =>
+				{
+					IWorkItem item = Assert.NotNull(CurrentWorkList.Current);
+
+					string tableName = item.Proxy.Table.Name;
+
+					FeatureLayer layer =
+						MapUtils.GetLayers<FeatureLayer>(
+							lyr => string.Equals(
+								lyr.GetFeatureClass().GetName(),
+								tableName,
+								StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+
+					if (layer == null)
+					{
+						return;
+					}
+
+					long oid = CurrentWorkList.Current.Proxy.ObjectId;
+
+					SelectionUtils.ClearSelection(MapView.Active.Map);
+					
+					layer.Select(new QueryFilter {ObjectIDs = new List<long> {oid}},
+					             SelectionCombinationMethod.Add);
+				});
+			}, _msg);
+		}
+
+		private async Task FlashCurrentFeatureAsync()
+		{
+			await ViewUtils.TryAsync(() =>
+			{
+				return QueuedTask.Run(() =>
+				{
+					IWorkItem item = Assert.NotNull(CurrentWorkList.Current);
+
+					string tableName = item.Proxy.Table.Name;
+
+					FeatureLayer layer =
+						MapUtils.GetLayers<FeatureLayer>(
+							lyr => string.Equals(
+								lyr.GetFeatureClass().GetName(),
+								tableName,
+								StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+
+					if (layer == null)
+					{
+						return;
+					}
+
+					long oid = CurrentWorkList.Current.Proxy.ObjectId;
+
+					MapView.Active.FlashFeature(layer, oid);
+				});
+			}, _msg);
+		}
+
+		// todo daro can featureClassName be null?
+
+		[NotNull]
+		private static Envelope GetEnvelope([NotNull] IWorkItem item)
+		{
+			item.QueryPoints(out double xmin, out double ymin,
+			                 out double xmax, out double ymax,
+			                 out double zmax);
+
+			return EnvelopeBuilder.CreateEnvelope(new Coordinate3D(xmin, ymin, zmax),
+			                                      new Coordinate3D(xmax, ymax, zmax),
+			                                      item.Extent.SpatialReference)
+			                      .Expand(1.1, 1.1, true);
+		}
+
+		#region Navigation
+
+		// todo daro refactor
+		private string GetCount()
+		{
+			int all = CurrentWorkList.Count(null, true);
+			int toDo = CurrentWorkList
+			           .GetItems(null, true).Count(item => item.Status == WorkItemStatus.Todo);
+			return $"{CurrentIndex + 1} of {all} ({toDo} todo, {all} total)";
+		}
+
+		private void GoFirstItem()
 		{
 			ViewUtils.Try(() =>
 			{
 				QueuedTask.Run(() =>
 				{
-					CurrentWorkList.GoNearest(GetReferenceGeometry(MapView.Active.Extent));
-					
-					SetCurrentItem(CurrentWorkList.Current);
+					CurrentWorkList.GoFirst();
 
-					if (_autoZoomMode != null && _autoZoomMode.Value)
-					{
-						ZoomTo();
-					}
+					SetCurrent(CurrentWorkList.Current);
 				});
 			}, _msg);
 		}
 
-		protected abstract void SetCurrentItemCore([NotNull] IWorkItem item);
+		private async Task GoPreviousAsync()
+		{
+			await ViewUtils.TryAsync(() =>
+			{
+				return QueuedTask.Run(() =>
+				{
+					CurrentWorkList.GoPrevious();
+
+					SetCurrent(CurrentWorkList.Current);
+				});
+			}, _msg);
+		}
+
+		private async Task GoNextAsync()
+		{
+			await ViewUtils.TryAsync(() =>
+			{
+				return QueuedTask.Run(() =>
+				{
+					CurrentWorkList.GoNext();
+
+					SetCurrent(CurrentWorkList.Current);
+				});
+			}, _msg);
+		}
+
+		private async Task GoNearestAsync()
+		{
+			await ViewUtils.TryAsync(() =>
+			{
+				return QueuedTask.Run(() =>
+				{
+					CurrentWorkList.GoNearest(GetReferenceGeometry(MapView.Active.Extent));
+
+					SetCurrent(CurrentWorkList.Current);
+
+					if (_autoZoomMode == null || ! _autoZoomMode.Value)
+					{
+						return;
+					}
+
+					IWorkItem item = CurrentWorkList.Current;
+
+					if (item == null)
+					{
+						return;
+					}
+
+					MapView.Active.ZoomTo(GetEnvelope(item),
+					                      TimeSpan.FromSeconds(_seconds));
+				});
+			}, _msg);
+		}
 
 		[NotNull]
 		private Geometry GetReferenceGeometry([NotNull] Envelope visibleExtent,
@@ -301,8 +273,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			Assert.ArgumentNotNull(visibleExtent, nameof(visibleExtent));
 			Assert.ArgumentCondition(! visibleExtent.IsEmpty, "visible extent is empty");
 
-			Geometry reference;
-			if (TryGetReferenceGeometry(visibleExtent, candidate, out reference))
+			if (TryGetReferenceGeometry(visibleExtent, candidate, out Geometry reference))
 			{
 				return Assert.NotNull(reference, "reference is null");
 			}
@@ -320,7 +291,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		}
 
 		private static bool TryGetReferenceGeometry(
-			[NotNull] Envelope visibleExtent,
+			[NotNull] Geometry visibleExtent,
 			[CanBeNull] Geometry candidateReferenceGeometry,
 			[CanBeNull] out Geometry referenceGeometry)
 		{
@@ -346,113 +317,60 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			return false;
 		}
 
-		protected void ZoomTo()
-		{
-			IWorkItem item = CurrentWorkList.Current;
+		#endregion
 
-			if (item == null)
+		#region Loaded / unloaded UserControl
+
+		private void OnLoaded()
+		{
+			WireEvents();
+		}
+
+		private async Task OnUnloadedAsync()
+		{
+			UnwireEvents();
+
+			if (string.Equals(FrameworkApplication.CurrentTool,
+			                  ConfigIDs.Editing_PickWorkItemTool) &&
+			    ! string.IsNullOrEmpty(_previouslyActiveTool))
 			{
-				return;
+				await FrameworkApplication.SetCurrentToolAsync(_previouslyActiveTool);
 			}
 
-			MapView.Active.ZoomTo(GetEnvelope(item), TimeSpan.FromSeconds(_seconds));
-		}
-
-		private async Task ZoomToAsync()
-		{
-			if (ShiftPressed())
+			// TODO this for test only
+			if (WorkListsModule.Current.ActiveWorkListlayer?.Name == CurrentWorkList.Name)
 			{
-				return;
+				WorkListsModule.Current.ActiveWorkListlayer = null;
 			}
-
-			IWorkItem item = CurrentWorkList.Current;
-
-			if (item == null)
-			{
-				return;
-			}
-
-			Envelope envelope = await QueuedTask.Run(() => GetEnvelope(item));
-
-			await MapView.Active.ZoomToAsync(envelope, TimeSpan.FromSeconds(_seconds));
 		}
 
-		private static bool ShiftPressed()
+		#endregion
+
+		#region Events
+
+		private void WireEvents()
 		{
-			return (Keyboard.Modifiers & ModifierKeys.Shift) == ModifierKeys.Shift;
+			ActiveToolChangedEvent.Subscribe(OnActiveToolChanged);
+			WorkListsModule.Current.WorkItemPicked += Current_WorkItemPicked;
 		}
 
-		private async Task PanToAsync()
+		private void UnwireEvents()
 		{
-			IWorkItem item = CurrentWorkList.Current;
-
-			if (item == null)
-			{
-				return;
-			}
-
-			var envelope = await QueuedTask.Run(() => GetEnvelope(item));
-
-			await MapView.Active.PanToAsync(envelope, TimeSpan.FromSeconds(_seconds));
+			ActiveToolChangedEvent.Unsubscribe(OnActiveToolChanged);
+			WorkListsModule.Current.WorkItemPicked -= Current_WorkItemPicked;
 		}
 
-		private async Task ZoomToAllAsync()
-		{
-			await MapView.Active.ZoomToAsync(CurrentWorkList.Extent);
-		}
-
-		protected void GoFirstItem()
-		{
-			ViewUtils.Try(() =>
-			{
-				QueuedTask.Run(() =>
-				{
-					CurrentWorkList.GoFirst();
-					
-					SetCurrentItem(CurrentWorkList.Current);
-				});
-			}, _msg);
-		}
-
-		protected void GoNextItem()
-		{
-			ViewUtils.Try(() =>
-			{
-				QueuedTask.Run(() =>
-				{
-					CurrentWorkList.GoNext();
-					
-					SetCurrentItem(CurrentWorkList.Current);
-				});
-			}, _msg);
-		}
-
-		private async void PickWorkItem()
+		private async void Current_WorkItemPicked(object sender, WorkItemPickArgs e)
 		{
 			await ViewUtils.TryAsync(() =>
 			{
-				if (FrameworkApplication.CurrentTool != ConfigIDs.Editing_PickWorkListItemTool)
-					_lastActiveTool = FrameworkApplication.CurrentTool;
-
-				WorkListsModule.Current.WorkItemPicked += Current_WorkItemPicked;
-				WorkListsModule.Current.ActiveWorkListlayer =
-					CurrentWorkList; // only current worklist will select invoked picker
-				return FrameworkApplication.SetCurrentToolAsync(
-					ConfigIDs.Editing_PickWorkListItemTool);
-			}, _msg);
-		}
-
-		private void Current_WorkItemPicked(object sender, WorkItemPickArgs e)
-		{
-			ViewUtils.Try(() =>
-			{
-				QueuedTask.Run(() =>
+				return QueuedTask.Run(() =>
 				{
-					var OID = e.features.First().GetObjectID();
+					long OID = e.features.First().GetObjectID();
 
 					QueryFilter filter = GdbQueryUtils.CreateFilter(new[] {OID});
 					IWorkItem selectedItem = CurrentWorkList.GetItems(filter).FirstOrDefault();
-					foreach (var item in CurrentWorkList.GetItems(null, false))
+					foreach (IWorkItem item in CurrentWorkList.GetItems())
 					{
 						Console.WriteLine(item.OID);
 						Console.WriteLine(item.Extent.ToJson());
@@ -464,112 +382,138 @@ namespace ProSuite.AGP.Solution.WorkListUI
 					}
 
 					CurrentWorkList.GoToOid(selectedItem.OID);
-					
-					SetCurrentItem(CurrentWorkList.Current);
+
+					SetCurrent(CurrentWorkList.Current);
 				});
 			}, _msg);
 		}
 
-		public virtual void SelectCurrentFeature()
+		private void OnActiveToolChanged(ToolEventArgs obj)
 		{
-			ViewUtils.Try(() =>
+			_previouslyActiveTool = obj.CurrentID;
+		}
+
+		#endregion
+
+		#region Commands
+
+		public ICommand ClearSelectionCommand =>
+			FrameworkApplication.GetPlugInWrapper(
+				DAML.Button.esri_mapping_clearSelectionButton) as ICommand;
+
+		public ICommand PreviousExtentCommand =>
+			FrameworkApplication.GetPlugInWrapper(
+				DAML.Button.esri_mapping_prevExtentButton) as ICommand;
+
+		public ICommand NextExtentCommand =>
+			FrameworkApplication.GetPlugInWrapper(
+				DAML.Button.esri_mapping_nextExtentButton) as ICommand;
+
+		public ICommand ZoomInCommand =>
+			FrameworkApplication.GetPlugInWrapper(
+				DAML.Button.esri_mapping_fixedZoomInButton) as ICommand;
+
+		public ICommand ZoomOutCommand =>
+			FrameworkApplication.GetPlugInWrapper(
+				DAML.Button.esri_mapping_fixedZoomOutButton) as ICommand;
+
+		public ICommand LoadedCommand =>
+			new RelayCommand(OnLoaded);
+
+		public ICommand UnloadedCommand =>
+			new RelayCommand(OnUnloadedAsync);
+
+		public ICommand GoNextItemCommand =>
+			new RelayCommand(GoNextAsync, () => CurrentWorkList.CanGoNext());
+
+		public ICommand GoNearestItemCommand =>
+			new RelayCommand(GoNearestAsync, () => CurrentWorkList.CanGoNearest());
+
+		public ICommand GoFirstItemCommand =>
+			new RelayCommand(GoFirstItem, () => CurrentWorkList.CanGoFirst());
+
+		public ICommand ZoomToAllCommand =>
+			new RelayCommand(ZoomToAllAsync, () => CurrentWorkList.Extent != null);
+
+		public ICommand GoPreviousItemCommand =>
+			new RelayCommand(GoPreviousAsync, () => CurrentWorkList.CanGoPrevious());
+
+		public ICommand ZoomToCommand =>
+			new RelayCommand(ZoomToAsync, () => CurrentWorkList.Current != null);
+
+		public ICommand PanToCommand =>
+			new RelayCommand(PanToAsync, () => CurrentWorkList.Current != null);
+
+		public ICommand PickWorkItemCommand =>
+			new RelayCommand(PickItemAsync, () => true);
+
+		public ICommand SelectCurrentFeatureCommand =>
+			new RelayCommand(SelectCurrentFeatureAsync,
+			                 () => CurrentWorkList.Current != null);
+
+		public ICommand FlashCurrentFeatureCmd =>
+			new RelayCommand(FlashCurrentFeatureAsync, () => CurrentWorkList.Current != null);
+
+		#endregion
+
+		#region Properties
+
+		public IWorkList CurrentWorkList
+		{
+			get => _currentWorkList;
+
+			private set { SetProperty(ref _currentWorkList, value, () => CurrentWorkList); }
+		}
+
+		public WorkItemVmBase CurrentWorkItem
+		{
+			get => _currentWorkItem;
+			protected set
 			{
-				QueuedTask.Run(() =>
+				SetProperty(ref _currentWorkItem, value, () => CurrentWorkItem);
+
+				Count = GetCount();
+			}
+		}
+
+		public IList<WorkItemVisibility> Visibility =>
+			Enum.GetValues(typeof(WorkItemVisibility)).Cast<WorkItemVisibility>()
+			    .ToList();
+
+		public InvolvedObjectRow SelectedInvolvedObject
+		{
+			get => _selectedInvolvedObject;
+			set { SetProperty(ref _selectedInvolvedObject, value, () => SelectedInvolvedObject); }
+		}
+
+		public string Count
+		{
+			get => _count;
+			set { SetProperty(ref _count, value, () => Count); }
+		}
+
+		public int CurrentIndex
+		{
+			get => CurrentWorkList.CurrentIndex;
+			set { SetProperty(ref _currentIndex, value, () => CurrentIndex); }
+		}
+
+		public virtual string ToolTip => "Select Current Work Item";
+
+		public bool? AutoZoomMode
+		{
+			get => _autoZoomMode;
+			set
+			{
+				if (! ShiftPressed())
 				{
-					Dictionary<BasicFeatureLayer, List<long>> featureSet =
-						new Dictionary<BasicFeatureLayer, List<long>>();
+					return;
+				}
 
-					var oid = CurrentWorkList.Current.Proxy.ObjectId;
-					var layers = GetLayersOfFeatureClass(CurrentWorkList.Current.Proxy.Table.Name);
-					SelectionUtils.ClearSelection(MapView.Active.Map);
-					foreach (var layer in layers)
-					{
-						var qf = new QueryFilter() {ObjectIDs = new List<long> {oid}};
-						layer.Select(qf, SelectionCombinationMethod.Add);
-					}
-				});
-			}, _msg);
+				SetProperty(ref _autoZoomMode, value, () => AutoZoomMode);
+			}
 		}
 
-		public virtual void NavigatorUnloaded()
-		{
-			if (! string.IsNullOrEmpty(_lastActiveTool))
-				FrameworkApplication.SetCurrentToolAsync(_lastActiveTool);
-			// TODO this for test only
-			if (WorkListsModule.Current.ActiveWorkListlayer?.Name == CurrentWorkList.Name)
-				WorkListsModule.Current.ActiveWorkListlayer = null;
-		}
-
-		private void FlashCurrentFeature()
-		{
-			ViewUtils.Try(() =>
-			{
-				QueuedTask.Run(() =>
-				{
-					var fcName = CurrentWorkList.Current.Proxy.Table.Name;
-					var oid = CurrentWorkList.Current.Proxy.ObjectId;
-
-					IEnumerable<BasicFeatureLayer> layers = GetLayersOfFeatureClass(fcName);
-
-					Dictionary<BasicFeatureLayer, List<long>> featureSet =
-						new Dictionary<BasicFeatureLayer, List<long>>();
-
-					foreach (var layer in layers)
-					{
-						if (featureSet.Keys.Contains(layer))
-						{
-							featureSet[layer].Add(oid);
-						}
-						else
-						{
-							featureSet.Add(layer, new List<long> {oid});
-						}
-					}
-
-					MapView.Active.FlashFeature(featureSet);
-				});
-			}, _msg);
-		}
-
-		protected IEnumerable<FeatureLayer> GetLayersOfFeatureClass(string fcName)
-		{
-			IEnumerable<FeatureLayer> featureLayers = MapView.Active.Map.Layers
-			                                                 .OfType<FeatureLayer>();
-
-			return ! featureLayers.Any()
-				       ? featureLayers
-				       : featureLayers.Where(layer => layer.GetFeatureClass().GetName() == fcName);
-		}
-
-		[CanBeNull]
-		protected FeatureLayer GetFeatureLayerByName(string name)
-		{
-			return MapView.Active.Map.GetLayersAsFlattenedList()
-			              .Where(candidate => candidate is BasicFeatureLayer)
-			              .FirstOrDefault(layer => layer.Name == name) as FeatureLayer;
-		}
-
-		[CanBeNull]
-		protected async Task<FeatureLayer> GetFeatureLayerByFeatureClassName(string name)
-		{
-			return await QueuedTask.Run(() =>
-			{
-				var layers = MapView.Active.Map.GetLayersAsFlattenedList().OfType<FeatureLayer>();
-				return layers.FirstOrDefault(layer => layer.GetFeatureClass().GetName() == name);
-			});
-		}
-
-		[NotNull]
-		private static Envelope GetEnvelope([NotNull] IWorkItem item)
-		{
-			item.QueryPoints(out double xmin, out double ymin,
-			                 out double xmax, out double ymax,
-			                 out double zmax);
-
-			return EnvelopeBuilder.CreateEnvelope(new Coordinate3D(xmin, ymin, zmax),
-			                                      new Coordinate3D(xmax, ymax, zmax),
-			                                      item.Extent.SpatialReference)
-			                      .Expand(1.1, 1.1, true);
-		}
+		#endregion
 	}
 }

@@ -58,7 +58,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 		public Dictionary<string, FeatureLayer> LayersByWorklistName => _layersByWorklistName;
 
 		public IWorkList ActiveWorkListlayer { get; internal set; }
-
+		
 		public event EventHandler<WorkItemPickArgs> WorkItemPicked;
 
 		public void ShowView()
@@ -542,7 +542,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			});
 		}
 
-		private async Task OnProjectSavingAsync(ProjectEventArgs arg)
+		private async Task OnProjectSavingAsync(ProjectEventArgs e)
 		{
 			await Task.Run(() =>
 			{

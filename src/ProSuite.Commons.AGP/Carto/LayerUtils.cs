@@ -99,19 +99,16 @@ namespace ProSuite.Commons.AGP.Carto
 		}
 
 		[NotNull]
-		public static IEnumerable<string> GetUri([NotNull] string mapMemberName)
-		{
-			// todo daro What if mapMember is map itself? Can it be found with this method?
-			return GetUri(MapView.Active.Map, mapMemberName);
-		}
-
-		[NotNull]
 		public static IEnumerable<string> GetUri(Map map, [NotNull] string mapMemberName)
 		{
-			// todo daro What if mapMember is map itself? Can it be found with this method?
-			IReadOnlyList<Layer> layers = map.FindLayers(mapMemberName);
+			Assert.ArgumentNotNull(mapMemberName, nameof(mapMemberName));
 
-			return layers.Select(GetUri);
+			MapView mapView = MapView.Active;
+
+			// todo daro What if mapMember is map itself? Can it be found with this method?
+			return mapView == null
+				       ? Enumerable.Empty<string>()
+				       : map.FindLayers(mapMemberName).Select(GetUri);
 		}
 
 		[NotNull]
@@ -120,25 +117,44 @@ namespace ProSuite.Commons.AGP.Carto
 			return mapMember.URI;
 		}
 
+		public static IEnumerable<Layer> FindLayers([NotNull] string name,
+		                                            bool recursive = true)
+		{
+			Assert.ArgumentNotNull(name, nameof(name));
+
+			MapView mapView = MapView.Active;
+
+			return mapView == null
+				       ? Enumerable.Empty<Layer>()
+				       : mapView.Map.FindLayers(name, recursive);
+		}
+
+		// todo daro: move to MapUtils?
 		[CanBeNull]
-		public static Layer GetLayer([NotNull] string uri)
+		public static Layer GetLayer([NotNull] string uri, bool recursive = true)
 		{
-			return GetLayer(MapView.Active.Map, uri);
+			Assert.ArgumentNotNull(uri, nameof(uri));
+
+			MapView mapView = MapView.Active;
+
+			return mapView.Map.FindLayer(uri, recursive);
 		}
 
-		[CanBeNull]
-		public static Layer GetLayer([NotNull] Map map, [NotNull] string uri, bool recursive = true)
+		// todo daro: move to MapUtils?
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="map"></param>
+		/// <remarks>Doesn't throw an exception if there is no map</remarks>
+		/// <returns></returns>
+		public static IEnumerable<T> GetLayers<T>([CanBeNull] this Map map) where T : Layer
 		{
-			return map.FindLayer(uri, recursive);
+			return map == null ? Enumerable.Empty<T>() : map.GetLayersAsFlattenedList().OfType<T>();
 		}
 
-		public static IEnumerable<T> GetLayers<T>([NotNull] this Map map) where T : Layer
-		{
-			Assert.ArgumentNotNull(map, nameof(map));
-
-			return map.GetLayersAsFlattenedList().OfType<T>();
-		}
-
+		
+		// todo daro: move to MapUtils?
 		/// <summary>
 		/// Get tables only from feature layers with established
 		/// data source. If the data source of the feature layer

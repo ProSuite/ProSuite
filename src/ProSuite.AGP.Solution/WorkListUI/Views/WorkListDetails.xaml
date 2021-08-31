@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
-             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+             xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:test="clr-namespace:ProSuite.AGP.Solution.WorkListUI.UiTestData"
              xmlns:workListUi="clr-namespace:ProSuite.AGP.Solution.WorkListUI"
              mc:Ignorable="d"
@@ -42,17 +42,17 @@
 
         <ToolBarTray Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2">
             <ToolBar>
-                <Button Command="{Binding ZoomInvolvedAllCmd }">
+                <Button Command="{Binding ZoomInvolvedAllCommand }">
                     <Image Source="../Images/ZoomInvolvedAll16.png"  Stretch="UniformToFill" ToolTip="Zoom to all involved features" />
                 </Button>
-                <Button Command="{Binding ZoomInvolvedSelectedCmd }">
+                <Button Command="{Binding ZoomInvolvedSelectedCommand }">
                     <Image Source="../Images/ZoomInvolvedSel16.png"  Stretch="UniformToFill"  ToolTip="Zoom to selected involved features" />
                 </Button>
                 <Separator />
-                <Button Command="{Binding FlashInvolvedAllCmd}">
+                <Button Command="{Binding FlashInvolvedAllCommand}">
                     <Image Source="../Images/FlashInvolvedAll16.png" Stretch="UniformToFill" ToolTip="Flash all involved features" />
                 </Button>
-                <Button Command="{Binding FlashInvolvedSelectedCmd }">
+                <Button Command="{Binding FlashInvolvedSelectedCommand }">
                     <Image Source="../Images/FlashInvolvedSel16.png"  Stretch="UniformToFill" ToolTip="Flash selected involved features" />
                 </Button>
             </ToolBar>
@@ -69,11 +69,11 @@
                 <DataGridTextColumn Width="*" Header="Object ID" Binding="{Binding ObjectId}" />
             </DataGrid.Columns>
 
-            <i:Interaction.Triggers>
-                <i:EventTrigger EventName="MouseDoubleClick">
-                    <i:InvokeCommandAction Command="{Binding FlashInvolvedSelectedCmd}" />
-                </i:EventTrigger>
-            </i:Interaction.Triggers>
+            <behaviors:Interaction.Triggers>
+                <behaviors:EventTrigger EventName="MouseDoubleClick">
+                    <behaviors:InvokeCommandAction Command="{Binding FlashInvolvedSelectedCommand}" />
+                </behaviors:EventTrigger>
+            </behaviors:Interaction.Triggers>
 
         </DataGrid>
     </Grid>

@@ -287,6 +287,7 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
+		// todo daro move to LayerUtils?
 		public static IEnumerable<T> GetLayers<T>(
 			[NotNull] MapView mapView,
 			[CanBeNull] Predicate<T> layerPredicate) where T : Layer
@@ -294,6 +295,36 @@ namespace ProSuite.Commons.AGP.Carto
 			foreach (Layer layer in mapView.Map.GetLayersAsFlattenedList())
 			{
 				T matchingTypeLayer = layer as T;
+
+				if (matchingTypeLayer == null)
+				{
+					continue;
+				}
+
+				if (layerPredicate == null ||
+				    layerPredicate(matchingTypeLayer))
+				{
+					yield return matchingTypeLayer;
+				}
+			}
+		}
+		
+		// todo daro move to LayerUtils?
+		public static IEnumerable<T> GetLayers<T>(
+			[CanBeNull] Predicate<T> layerPredicate) where T : Layer
+		{
+			MapView mapView = MapView.Active;
+
+			if (mapView == null)
+			{
+				yield break;
+			}
+
+			Map map = mapView.Map;
+
+			foreach (Layer layer in map.GetLayersAsFlattenedList())
+			{
+				var matchingTypeLayer = layer as T;
 
 				if (matchingTypeLayer == null)
 				{

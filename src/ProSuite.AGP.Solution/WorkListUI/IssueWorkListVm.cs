@@ -17,14 +17,11 @@ namespace ProSuite.AGP.Solution.WorkListUI
 {
 	public class IssueWorkListVm : WorkListViewModelBase
 	{
-		private string _qualityCondition;
-		private IEnumerable<InvolvedObjectRow> _involvedObjectRows;
-		private string _errorDescription;
-		private RelayCommand _zoomInvolvedAllCmd;
-		private RelayCommand _zoomInvolvedSelectedCmd;
-		private RelayCommand _flashInvolvedAllCmd;
-		private RelayCommand _flashInvolvedSelectedCmd;
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		private string _errorDescription;
+		private IEnumerable<InvolvedObjectRow> _involvedObjectRows;
+
+		private string _qualityCondition;
 
 		public IssueWorkListVm([NotNull] IWorkList workList) : base(workList) { }
 
@@ -36,7 +33,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				{
 					return issueWorkItemVm.QualityCondition;
 				}
-				else return string.Empty;
+
+				return string.Empty;
 			}
 			set { SetProperty(ref _qualityCondition, value, () => QualityCondition); }
 		}
@@ -49,14 +47,18 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				{
 					return issueWorkItemVm.ErrorDescription;
 				}
-				else return string.Empty;
+
+				return string.Empty;
 			}
 			set { SetProperty(ref _errorDescription, value, () => QualityCondition); }
 		}
 
-		public override string ToolTip
+		public override string ToolTip => "Select Involved Objects";
+
+		public IEnumerable<InvolvedObjectRow> InvolvedObjectRows
 		{
-			get => "Select Involved Objects";
+			get => CompileInvolvedRows();
+			private set { SetProperty(ref _involvedObjectRows, value, () => InvolvedObjectRows); }
 		}
 
 		protected override void SetCurrentItemCore(IWorkItem item)
@@ -70,145 +72,99 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			InvolvedObjectRows =
 				vm.IssueItem.InIssueInvolvedTables.SelectMany(
 					InvolvedObjectRow.CreateObjectRows);
-			
+
 			QualityCondition = vm.QualityCondition;
 			ErrorDescription = vm.ErrorDescription;
 		}
 
-		public IEnumerable<InvolvedObjectRow> InvolvedObjectRows
+		protected override async void SelectCurrentFeatureAsync()
 		{
-			get => CompileInvolvedRows();
-			set { SetProperty(ref _involvedObjectRows, value, () => InvolvedObjectRows); }
-		}
-
-		public RelayCommand ZoomInvolvedAllCmd
-		{
-			get
+			await ViewUtils.TryAsync(() =>
 			{
-				_zoomInvolvedAllCmd = new RelayCommand(ZoomInvolvedAll, () => InvolvedObjectRows.Any());
-				return _zoomInvolvedAllCmd;
-			}
-		}
-
-		public RelayCommand ZoomInvolvedSelectedCmd
-		{
-			get
-			{
-				_zoomInvolvedSelectedCmd =
-					new RelayCommand(ZoomInvolvedSelected, () => SelectedInvolvedObject != null);
-				return _zoomInvolvedSelectedCmd;
-			}
-		}
-
-		public RelayCommand FlashInvolvedAllCmd
-		{
-			get
-			{
-				_flashInvolvedAllCmd = new RelayCommand(FlashInvolvedAll, () => InvolvedObjectRows.Any());
-				return _flashInvolvedAllCmd;
-			}
-		}
-
-		public RelayCommand FlashInvolvedSelectedCmd
-		{
-			get
-			{
-				_flashInvolvedSelectedCmd =
-					new RelayCommand(FlashInvolvedSelected, () => SelectedInvolvedObject != null);
-				return _flashInvolvedSelectedCmd;
-			}
-		}
-
-		private async void FlashInvolvedSelected()
-		{
-			ViewUtils.Try(async () =>
-			{
-				FeatureLayer involvedLayer =
-					await GetFeatureLayerByFeatureClassName(SelectedInvolvedObject.Name);
-				if (involvedLayer == null)
-				{
-					return;
-				}
-
-				MapView.Active.FlashFeature(involvedLayer, SelectedInvolvedObject.ObjectId);
-			}, _msg);
-		}
-
-		private async void FlashInvolvedAll()
-		{
-			var featureSet = await GetInvolvedFeatureSet();
-			MapView.Active.FlashFeature(featureSet);
-		}
-
-		private void ZoomInvolvedAll()
-		{
-			ViewUtils.Try(async () =>
-			{
-				Dictionary<BasicFeatureLayer, List<long>>
-					featureSet = await GetInvolvedFeatureSet();
-				await MapView.Active.ZoomToAsync(featureSet);
-			}, _msg);
-		}
-
-		public override void SelectCurrentFeature()
-		{
-			ViewUtils.Try(async () =>
-			{
-				Dictionary<BasicFeatureLayer, List<long>> involvedFeatureClasses =
-					await GetInvolvedFeatureSet();
-
-				await QueuedTask.Run(() =>
+				return QueuedTask.Run(() =>
 				{
 					SelectionUtils.ClearSelection(MapView.Active.Map);
-					foreach (var involvedFeatureClass in involvedFeatureClasses)
+
+					foreach (KeyValuePair<BasicFeatureLayer, List<long>> pair in
+						GetInvolvedFeaturesByLayer())
 					{
-						var qf = new QueryFilter() {ObjectIDs = involvedFeatureClass.Value};
-						involvedFeatureClass.Key.Select(qf, SelectionCombinationMethod.Add);
+						pair.Key.Select(new QueryFilter {ObjectIDs = pair.Value},
+						                SelectionCombinationMethod.Add);
 					}
 				});
 			}, _msg);
 		}
 
-		[CanBeNull]
-		private async Task<Dictionary<BasicFeatureLayer, List<long>>> GetInvolvedFeatureSet()
+		private void FlashSelectedInvolvedFeature()
 		{
-			Dictionary<BasicFeatureLayer, List<long>> featureSet =
-				new Dictionary<BasicFeatureLayer, List<long>>();
+			ViewUtils.Try(() =>
+			{
+				if (LayerUtils.FindLayers(SelectedInvolvedObject.Name).FirstOrDefault() is
+					    FeatureLayer involvedLayer)
+				{
+					MapView.Active.FlashFeature(involvedLayer, SelectedInvolvedObject.ObjectId);
+				}
+				else
+				{
+					_msg.DebugFormat("No layer with name {0}", SelectedInvolvedObject.Name);
+				}
+			}, _msg);
+		}
+
+		private void FlashAllInvolvedFeatures()
+		{
+			ViewUtils.Try(() => MapView.Active.FlashFeature(GetInvolvedFeaturesByLayer()), _msg);
+		}
+
+		private async Task ZoomToSelectedInvolvedFeatureAsync()
+		{
+			await ViewUtils.TryAsync(() =>
+			{
+				if (LayerUtils.FindLayers(SelectedInvolvedObject.Name).FirstOrDefault() is
+					    FeatureLayer involvedLayer)
+				{
+					return MapView.Active.ZoomToAsync(involvedLayer,
+					                                  SelectedInvolvedObject.ObjectId);
+				}
+
+				_msg.DebugFormat("No layer with name {0}", SelectedInvolvedObject.Name);
+				return Task.FromResult(0);
+
+			}, _msg);
+		}
+
+		private async Task ZoomToAllInvolvedFeaturesAsync()
+		{
+			await ViewUtils.TryAsync(() => MapView.Active.ZoomToAsync(GetInvolvedFeaturesByLayer()),
+			                         _msg);
+		}
+
+		// todo daro move to IssueUtils?
+		[NotNull]
+		private Dictionary<BasicFeatureLayer, List<long>> GetInvolvedFeaturesByLayer()
+		{
+			var featuresByLayer = new Dictionary<BasicFeatureLayer, List<long>>();
+
 			foreach (InvolvedObjectRow row in InvolvedObjectRows)
 			{
-				FeatureLayer involvedLayer = await GetFeatureLayerByFeatureClassName(row.Name);
-				if (involvedLayer == null)
+				var layer = LayerUtils.FindLayers(row.Name).FirstOrDefault() as FeatureLayer;
+
+				if (layer == null)
 				{
 					continue;
 				}
 
-				if (featureSet.Keys.Contains(involvedLayer))
+				if (featuresByLayer.ContainsKey(layer))
 				{
-					featureSet[involvedLayer].Add(row.ObjectId);
+					featuresByLayer[layer].Add(row.ObjectId);
 				}
 				else
 				{
-					featureSet.Add(involvedLayer, new List<long> {row.ObjectId});
+					featuresByLayer.Add(layer, new List<long> {row.ObjectId});
 				}
 			}
 
-			return featureSet;
-		}
-
-		private void ZoomInvolvedSelected()
-		{
-			ViewUtils.Try(async () =>
-			{
-				Layer involvedLayer =
-					await GetFeatureLayerByFeatureClassName(SelectedInvolvedObject.Name);
-				if (involvedLayer == null)
-				{
-					return;
-				}
-
-				await MapView.Active.ZoomToAsync(involvedLayer as FeatureLayer,
-				                                 SelectedInvolvedObject.ObjectId);
-			}, _msg);
+			return featuresByLayer;
 		}
 
 		private IEnumerable<InvolvedObjectRow> CompileInvolvedRows()
@@ -221,5 +177,21 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			return issueWorkItemVm.IssueItem.InIssueInvolvedTables.SelectMany(
 				table => InvolvedObjectRow.CreateObjectRows(table));
 		}
+
+		#region Commands
+
+		public RelayCommand ZoomInvolvedAllCommand =>
+			new RelayCommand(ZoomToAllInvolvedFeaturesAsync, () => InvolvedObjectRows.Any());
+
+		public RelayCommand ZoomInvolvedSelectedCommand =>
+			new RelayCommand(ZoomToSelectedInvolvedFeatureAsync, () => SelectedInvolvedObject != null);
+
+		public RelayCommand FlashInvolvedAllCommand =>
+			new RelayCommand(FlashAllInvolvedFeatures, () => InvolvedObjectRows.Any());
+
+		public RelayCommand FlashInvolvedSelectedCommand =>
+			new RelayCommand(FlashSelectedInvolvedFeature, () => SelectedInvolvedObject != null);
+
+		#endregion
 	}
 }
