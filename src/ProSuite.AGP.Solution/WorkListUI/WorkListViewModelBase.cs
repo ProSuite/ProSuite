@@ -488,9 +488,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}
 		}
 
-		public IList<WorkItemVisibility> VisibilityItemsSource =>
-			Enum.GetValues(typeof(WorkItemVisibility)).Cast<WorkItemVisibility>()
-			    .ToList();
+		public IEnumerable<WorkItemVisibility> VisibilityItemsSource =>
+			new[] {WorkItemVisibility.Todo, WorkItemVisibility.All};
 
 		public InvolvedObjectRow SelectedInvolvedObject
 		{
