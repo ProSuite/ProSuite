@@ -30,7 +30,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			get
 			{
-				if (CurrentItemViewModel is IssueWorkItemViewModel issueWorkItemVm)
+				if (CurrentItemViewModel is IssueItemViewModel issueWorkItemVm)
 				{
 					return issueWorkItemVm.QualityCondition;
 				}
@@ -44,7 +44,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			get
 			{
-				if (CurrentItemViewModel is IssueWorkItemViewModel issueWorkItemVm)
+				if (CurrentItemViewModel is IssueItemViewModel issueWorkItemVm)
 				{
 					return issueWorkItemVm.ErrorDescription;
 				}
@@ -66,7 +66,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			Assert.ArgumentNotNull(item, nameof(item));
 
-			var vm = new IssueWorkItemViewModel((IssueItem) item, this);
+			var vm = new IssueItemViewModel((IssueItem) item, this);
 
 			CurrentItemViewModel = vm;
 
@@ -175,7 +175,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		private IEnumerable<InvolvedObjectRow> CompileInvolvedRows()
 		{
-			if (! (CurrentItemViewModel is IssueWorkItemViewModel issueWorkItemVm))
+			if (! (CurrentItemViewModel is IssueItemViewModel issueWorkItemVm))
 			{
 				return Enumerable.Empty<InvolvedObjectRow>();
 			}

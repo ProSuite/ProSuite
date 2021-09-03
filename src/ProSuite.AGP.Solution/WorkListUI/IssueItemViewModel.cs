@@ -3,12 +3,11 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
-	public class IssueWorkItemViewModel : WorkItemViewModelBase
+	public class IssueItemViewModel : WorkItemViewModelBase
 	{
-		// todo daro: rename to IssueItemViewModel
 		// todo daro: extract interface from WorkListViewModelBase to pass as parameter?
-		public IssueWorkItemViewModel([NotNull] IssueItem item,
-		                              [NotNull] WorkListViewModelBase viewModel)
+		public IssueItemViewModel([NotNull] IssueItem item,
+		                          [NotNull] WorkListViewModelBase viewModel)
 			: base(item, viewModel)
 		{
 			IssueItem = item;

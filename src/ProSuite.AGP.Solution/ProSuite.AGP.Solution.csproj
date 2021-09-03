@@ -187,14 +187,14 @@
     <Compile Include="WorkListUI\Views\IssueCountControl.xaml.cs">
       <DependentUpon>IssueCountControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WorkListUI\IssueWorkItemViewModel.cs" />
+    <Compile Include="WorkListUI\IssueItemViewModel.cs" />
     <Compile Include="WorkListUI\Views\IssueWorkListView.xaml.cs">
       <DependentUpon>IssueWorkListView.xaml</DependentUpon>
     </Compile>
     <Compile Include="WorkListUI\IssueWorkListViewModel.cs" />
     <Compile Include="WorkListUI\ShowIssueWorkListView.cs" />
     <Compile Include="WorkListUI\StatusConverter.cs" />
-    <Compile Include="WorkListUI\SelectionWorkItemViewModel.cs" />
+    <Compile Include="WorkListUI\SelectionItemViewModel.cs" />
     <Compile Include="WorkListUI\WorkItemViewModelBase.cs" />
     <Compile Include="WorkListUI\Views\WorkListDetails.xaml.cs">
       <DependentUpon>WorkListDetails.xaml</DependentUpon>

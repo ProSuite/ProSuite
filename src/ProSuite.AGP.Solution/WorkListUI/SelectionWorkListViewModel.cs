@@ -12,7 +12,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			Assert.ArgumentNotNull(item, nameof(item));
 
-			CurrentItemViewModel = new SelectionWorkItemViewModel(item, this);
+			CurrentItemViewModel = new SelectionItemViewModel(item, this);
 		}
 	}
 }

@@ -115,7 +115,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			return $"{Proxy}: {Status}, {Visited}";
 		}
 
-		[CanBeNull]
+		[NotNull]
 		public string GetDescription()
 		{
 			// todo daro: this is copied from the old world. Why not set description in constructor?
@@ -124,7 +124,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			return GetDescription(row);
 		}
 
-		[CanBeNull]
+		[NotNull]
 		public string GetDescription(Row row)
 		{
 			return row == null

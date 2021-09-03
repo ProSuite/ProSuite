@@ -1,7 +1,6 @@
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.Assertions;
@@ -13,14 +12,17 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	public abstract class WorkItemViewModelBase : PropertyChangedBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		[CanBeNull] private readonly IWorkItem _workItem;
-		[NotNull] private readonly WorkListViewModelBase _viewModel;
+		[CanBeNull] private readonly WorkListViewModelBase _viewModel;
+		[CanBeNull] private readonly string _description;
 		private WorkItemStatus _status;
 
 		// ReSharper disable once NotNullMemberIsNotInitialized
 		protected WorkItemViewModelBase() { }
 
-		protected WorkItemViewModelBase([NotNull] IWorkItem workItem, [NotNull] WorkListViewModelBase viewModel)
+		protected WorkItemViewModelBase([NotNull] IWorkItem workItem,
+		                                [NotNull] WorkListViewModelBase viewModel)
 		{
 			Assert.ArgumentNotNull(workItem, nameof(workItem));
 			Assert.ArgumentNotNull(viewModel, nameof(viewModel));
@@ -28,12 +30,12 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			_workItem = workItem;
 			_viewModel = viewModel;
 
-			Description = workItem.Description;
+			_description = workItem.Description;
 			_status = workItem.Status;
 		}
 
 		[CanBeNull]
-		public string Description { get; }
+		public virtual string Description => _description;
 
 		public bool CanSetStatus => _workItem != null;
 
@@ -53,9 +55,9 @@ namespace ProSuite.AGP.Solution.WorkListUI
 					{
 						_workItem.Status = value;
 
-						IWorkList worklist = _viewModel.CurrentWorkList;
+						IWorkList worklist = _viewModel?.CurrentWorkList;
 
-						QueuedTask.Run(() => { worklist.SetStatus(_workItem, value); });
+						QueuedTask.Run(() => { worklist?.SetStatus(_workItem, value); });
 						          //.ContinueWith(t => _viewModel.GoNearestCore());
 
 						// todo daro: make async

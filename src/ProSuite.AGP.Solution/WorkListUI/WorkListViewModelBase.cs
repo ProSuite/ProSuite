@@ -470,6 +470,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		#region Properties
 
+		[NotNull]
 		public IWorkList CurrentWorkList
 		{
 			get => _currentWorkList;

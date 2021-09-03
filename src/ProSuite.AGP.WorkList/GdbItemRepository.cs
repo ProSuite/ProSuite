@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
@@ -295,11 +294,6 @@ namespace ProSuite.AGP.WorkList
 			}
 
 			return count;
-		}
-
-		public IEnumerable<PluginField> GetFields(IEnumerable<string> fieldNames = null)
-		{
-			throw new NotImplementedException();
 		}
 
 		#endregion
