@@ -4,7 +4,6 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
-using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 
@@ -46,11 +45,12 @@ namespace ProSuite.QA.Tests.Transformers
 		private class Tfc : GdbFeatureClass, ITransformedValue
 		{
 			public Tfc(IFeatureClass intersected, IFeatureClass intersecting)
-				: base(1, "intersectResult", intersected.ShapeType,
-				       createBackingDataset: (t) => new Transformed(t, intersected, intersecting),
+				: base(-1, "intersectResult", intersected.ShapeType,
+				       createBackingDataset: (t) =>
+					       new Transformed((Tfc) t, intersected, intersecting),
 				       workspace: new GdbWorkspace(new TransformedWs()))
 			{
-				InvolvedTables = new List<ITable> { (ITable)intersected, (ITable)intersecting };
+				InvolvedTables = new List<ITable> {(ITable) intersected, (ITable) intersecting};
 
 				IGeometryDef geomDef =
 					intersected.Fields.Field[
@@ -63,12 +63,14 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			public IList<ITable> InvolvedTables { get; }
+
 			public ISearchable DataContainer
 			{
 				get => BackingDs.DataContainer;
 				set => BackingDs.DataContainer = value;
 			}
-			public TransformedFeatureClass BackingDs => (Transformed)BackingDataset;
+
+			public TransformedFeatureClass BackingDs => (Transformed) BackingDataset;
 		}
 
 		private class TransformedWs : BackingDataStore
@@ -101,10 +103,10 @@ namespace ProSuite.QA.Tests.Transformers
 			private readonly IFeatureClass _intersecting;
 
 			public Transformed(
-				[NotNull] GdbTable gdbTable,
+				[NotNull] Tfc gdbTable,
 				[NotNull] IFeatureClass intersected,
 				[NotNull] IFeatureClass intersecting)
-						:base(gdbTable, ProcessBase.CastToTables(intersected, intersecting))
+				: base(gdbTable, ProcessBase.CastToTables(intersected, intersecting))
 			{
 				_intersected = intersected;
 				_intersecting = intersecting;
@@ -143,13 +145,14 @@ namespace ProSuite.QA.Tests.Transformers
 					{
 						IGeometry intersectingGeom = ((IFeature) intersecting).Shape;
 						var op = (ITopologicalOperator) ((IFeature) toIntersect).Shape;
-						if (((IRelationalOperator)op).Disjoint(intersectingGeom))
+						if (((IRelationalOperator) op).Disjoint(intersectingGeom))
 						{
 							continue;
 						}
+
 						IGeometry intersected = op.Intersect(
-													intersectingGeom,
-													esriGeometryDimension.esriGeometry1Dimension); // TODO
+							intersectingGeom,
+							esriGeometryDimension.esriGeometry1Dimension); // TODO
 
 						if (intersected.IsEmpty)
 						{
@@ -166,7 +169,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 						f.set_Value(
 							Resulting.FindField(InvolvedRowUtils.BaseRowField),
-							new List<IRow> { toIntersect, intersecting }); // TODO
+							new List<IRow> {toIntersect, intersecting}); // TODO
 
 						yield return f;
 					}

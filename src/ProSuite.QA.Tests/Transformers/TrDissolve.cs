@@ -19,6 +19,7 @@ namespace ProSuite.QA.Tests.Transformers
 	{
 		private readonly Tfc _dissolvedFc;
 		private IList<string> _attributes;
+		private IList<string> _groupBy;
 
 		public IList<ITable> InvolvedTables { get; }
 
@@ -39,25 +40,41 @@ namespace ProSuite.QA.Tests.Transformers
 			set
 			{
 				_attributes = value;
+				AddFields(value, addUniqueField: true);
+			}
+		}
 
-				ITable fc = InvolvedTables[0];
-				List<IField> attrs = new List<IField>();
-				if (Attributes != null)
+		[TestParameter]
+		public IList<string> GroupBy
+		{
+			get => _groupBy;
+			set
+			{
+				_groupBy = value;
+				AddFields(value, addUniqueField: false);
+			}
+		}
+
+		private void AddFields([CanBeNull] IList<string> fieldNames, bool addUniqueField)
+		{
+			if (fieldNames == null)
+			{
+				return;
+			}
+
+			ITable fc = InvolvedTables[0];
+
+			foreach (string fieldName in fieldNames)
+			{
+				int iField = fc.FindField(fieldName);
+				if (iField < 0)
 				{
-					foreach (string attribute in value)
-					{
-						int iField = fc.FindField(attribute);
-						if (iField < 0)
-						{
-							throw new InvalidOperationException(
-								$"Unkown field '{attribute}' in '{DatasetUtils.GetName(fc)}'");
-						}
-
-						attrs.Add(fc.Fields.Field[iField]);
-					}
+					throw new InvalidOperationException(
+						$"Unkown field '{fieldName}' in '{DatasetUtils.GetName(fc)}'");
 				}
 
-				_dissolvedFc.AddFields(attrs);
+				_dissolvedFc.AddField(fc.Fields.Field[iField], iField,
+				                      addUniqueField);
 			}
 		}
 
@@ -87,9 +104,11 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private class Tfc : GdbFeatureClass, ITransformedValue
 		{
+			private List<FieldInfo> _dissolveFields;
+
 			public Tfc(IFeatureClass dissolve)
-				: base(1, "dissolveResult", dissolve.ShapeType,
-				       createBackingDataset: (t) => new Transformed(t, dissolve),
+				: base(-1, "dissolveResult", dissolve.ShapeType,
+				       createBackingDataset: (t) => new Transformed((Tfc) t, dissolve),
 				       workspace: new GdbWorkspace(new TransformedWs()))
 			{
 				InvolvedTables = new List<ITable> {(ITable) dissolve};
@@ -104,15 +123,24 @@ namespace ProSuite.QA.Tests.Transformers
 						geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM));
 			}
 
-			public void AddFields(List<IField> fields)
+			[NotNull]
+			public IList<FieldInfo> DissolveFields =>
+				_dissolveFields ?? (_dissolveFields = new List<FieldInfo>());
+
+			public void AddField(IField field, int sourceIndex, bool addUniqueField)
 			{
-				foreach (var field in fields)
+				Fields.AddFields(FieldUtils.CreateField(field.Name, field.Type));
+				FieldInfo fi = new FieldInfo(field.Name, Fields.FindField(field.Name), sourceIndex);
+				if (addUniqueField)
 				{
-					Fields.AddFields(FieldUtils.CreateField(field.Name, field.Type));
+					string uniqueName = $"{field.Name}_unique";
 					Fields.AddFields(
-						FieldUtils.CreateField($"{field.Name}_unique",
+						FieldUtils.CreateField(uniqueName,
 						                       esriFieldType.esriFieldTypeSmallInteger));
+					fi.SetUnique(uniqueName, Fields.FindField(uniqueName));
 				}
+
+				DissolveFields.Add(fi);
 			}
 
 			public string Constraint
@@ -169,7 +197,7 @@ namespace ProSuite.QA.Tests.Transformers
 			private QueryFilterHelper _constraitHelper;
 
 			public Transformed(
-				[NotNull] GdbTable gdbTable,
+				[NotNull] Tfc gdbTable,
 				[NotNull] IFeatureClass dissolve) :
 				base(gdbTable, ProcessBase.CastToTables(dissolve))
 			{
@@ -203,6 +231,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override IEnumerable<IRow> Search(IQueryFilter filter, bool recycling)
 			{
+				// TODO: implement GroupBy
 				_builder = _builder ?? new NetworkBuilder(includeBorderNodes: true);
 				_builder.ClearAll();
 				IEnvelope fullBox = null;
@@ -325,33 +354,11 @@ namespace ProSuite.QA.Tests.Transformers
 					dissolved.set_Value(
 						Resulting.FindField(InvolvedRowUtils.BaseRowField),
 						rows);
+					dissolved.set_Value(
+						Resulting.FindField(InvolvedRowUtils.BaseRowCountField),
+						rows.Count);
 
-					// first 3 fields: baseRows, oid, shape
-					for (int iField = 3; iField < Resulting.Fields.FieldCount; iField++)
-					{
-						IField f = Resulting.Fields.get_Field(iField);
-						int iOrig = rows[0].Table.FindField(f.Name);
-						if (iOrig >= 0)
-						{
-							object value = null;
-							bool unique = true;
-							foreach (IRow row in rows)
-							{
-								object v = row.Value[iOrig];
-								if (value == null)
-								{
-									value = v;
-								}
-								else if (! value.Equals(v))
-								{
-									unique = false;
-								}
-							}
-
-							dissolved.set_Value(iField, value);
-							dissolved.set_Value(iField + 1, unique ? 1 : 0);
-						}
-					}
+					FieldInfo.SetGroupValue(dissolved, rows, ((Tfc) Resulting).DissolveFields);
 
 					if (_constraitHelper?.MatchesConstraint(dissolved) != false)
 					{

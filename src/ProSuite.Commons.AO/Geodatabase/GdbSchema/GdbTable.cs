@@ -24,6 +24,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		private IName _fullName;
 
+		private static int _nextObjectClassId;
+
 		/// <summary>
 		///     Initializes a new instance of the <see cref="GdbTable" /> class.
 		/// </summary>
@@ -38,7 +40,18 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		                [CanBeNull] Func<GdbTable, BackingDataset> createBackingDataset = null,
 		                [CanBeNull] IWorkspace workspace = null)
 		{
-			ObjectClassID = objectClassId;
+			if (objectClassId > 0)
+			{
+				ObjectClassID = objectClassId;
+			}
+			else
+			{
+				// TODO: this is a workaround for default GdbWorkspace-instances are considered equal in some cases
+				// TODO how should GdbWorkspaces be distinguished ? (BackingWorkspace?)
+				_nextObjectClassId++;
+				ObjectClassID = _nextObjectClassId;
+			}
+
 			Name = name;
 			AliasName = aliasName;
 

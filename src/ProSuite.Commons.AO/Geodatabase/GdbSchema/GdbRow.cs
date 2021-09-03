@@ -96,7 +96,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public IObjectClass Class => _gdbTable;
 
-		public object get_Value(int index)
+		public virtual object get_Value(int index)
 		{
 			var name = Convert.ToString(index);
 

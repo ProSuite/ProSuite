@@ -1,11 +1,11 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -20,14 +20,16 @@ namespace ProSuite.QA.Tests.Transformers
 		public GdbFeatureClass Resulting => _resulting;
 		protected IReadOnlyList<QueryFilterHelper> QueryHelpers => _queryHelpers;
 
-		protected TransformedFeatureClass([NotNull] GdbTable gdbTable, IList<ITable> involvedTables)
+		protected TransformedFeatureClass([NotNull] GdbFeatureClass gdbTable,
+		                                  IList<ITable> involvedTables)
 		{
 			_involvedTables = involvedTables;
 			_queryHelpers = _involvedTables.Select(t => new QueryFilterHelper(t, null, false))
 			                               .ToList();
 
 			gdbTable.AddField(FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField));
-			_resulting = (GdbFeatureClass) gdbTable;
+			gdbTable.AddField(FieldUtils.CreateIntegerField(InvolvedRowUtils.BaseRowCountField));
+			_resulting = gdbTable;
 		}
 
 		public void SetConstraint(int tableIndex, string condition)
