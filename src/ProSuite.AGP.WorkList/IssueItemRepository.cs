@@ -58,9 +58,15 @@ namespace ProSuite.AGP.WorkList
 			                           Attributes.IssueCode);
 		}
 
+		protected override long GetNextOid(Row row)
+		{
+			// use the row OID as item OID
+			return row.GetObjectID();
+		}
+
 		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass source)
 		{
-			int id = CreateItemIDCore(row, source);
+			long id = GetNextOid(row);
 
 			IAttributeReader reader = ((DatabaseSourceClass) source).AttributeReader;
 

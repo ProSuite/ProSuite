@@ -34,7 +34,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#region constructors
 
-		protected WorkItem(int id, [NotNull] Row row) : this(id, new GdbRowIdentity(row))
+		protected WorkItem(long id, [NotNull] Row row) : this(id, new GdbRowIdentity(row))
 		{
 			var feature = row as Feature;
 
@@ -43,14 +43,14 @@ namespace ProSuite.AGP.WorkList.Domain
 			Description = GetDescription(feature);
 		}
 
-		protected WorkItem(int id, GdbRowIdentity identity)
+		protected WorkItem(long id, GdbRowIdentity identity)
 		{
 			OID = id;
 			Proxy = identity;
 			Status = WorkItemStatus.Todo;
 		}
 
-		protected WorkItem(int id, Geometry geometry) : this(id, default(GdbRowIdentity))
+		protected WorkItem(long id, Geometry geometry) : this(id, default(GdbRowIdentity))
 		{
 			SetGeometry(geometry);
 		}
@@ -61,7 +61,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#region IWorkItem
 
-		public int OID { get; set; }
+		public long OID { get; set; }
 
 		public long ObjectID => Proxy.ObjectId;
 
@@ -134,8 +134,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		protected virtual string GetDescriptionCore(Row row)
 		{
-			// todo daro: GetTable() might be a performance issue?
-			return $"{DatasetUtils.GetTableDisplayName(row.GetTable())} ID={row.GetObjectID()}";
+			return $"{DatasetUtils.GetTableDisplayName(row.GetTable())} OID {row.GetObjectID()} (item ID {OID})";
 		}
 
 		[CanBeNull]

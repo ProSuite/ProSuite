@@ -47,7 +47,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		void GoFirst();
 
-		void GoToOid(int oid);
+		void GoToOid(long oid);
 
 		bool CanGoNearest();
 

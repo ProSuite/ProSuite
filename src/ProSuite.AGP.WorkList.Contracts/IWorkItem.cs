@@ -9,7 +9,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// <summary>
 		/// work item id
 		/// </summary>
-		int OID { get; }
+		long OID { get; }
 
 		bool Visited { get; set; }
 		GdbRowIdentity Proxy { get; }

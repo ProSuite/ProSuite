@@ -19,6 +19,8 @@ namespace ProSuite.AGP.WorkList
 	public abstract class GdbItemRepository : IWorkItemRepository
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		
+		private int _lastUsedOid;
 
 		protected GdbItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase,
 		                            IRepository workItemStateRepository)
@@ -298,12 +300,9 @@ namespace ProSuite.AGP.WorkList
 
 		#endregion
 
-		protected virtual int CreateItemIDCore(Row row, ISourceClass source)
+		protected virtual long GetNextOid([NotNull] Row row)
 		{
-			long oid = row.GetObjectID();
-
-			// oid = 666, tableId = 42 => 42666
-			return (int) (Math.Pow(10, Math.Floor(Math.Log10(oid) + 1)) * source.Id + oid);
+			return ++_lastUsedOid;
 		}
 
 		protected IWorkItem RefreshState(IWorkItem item)

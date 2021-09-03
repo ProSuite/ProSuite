@@ -319,7 +319,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#endregion
 
-		public virtual void GoToOid(int oid)
+		public virtual void GoToOid(long oid)
 		{
 			if (Current?.OID == oid)
 			{
