@@ -41,6 +41,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			Assert.ArgumentNotNull(workList, nameof(workList));
 
 			CurrentWorkList = workList;
+			_visibility = workList.Visibility;
 			SetCurrent(workList.Current);
 		}
 
@@ -186,6 +187,15 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			                                      new Coordinate3D(xmax, ymax, zmax),
 			                                      item.Extent.SpatialReference)
 			                      .Expand(1.1, 1.1, true);
+		}
+
+		private async Task SetVisiblityAsync()
+		{
+			await ViewUtils.TryAsync(
+				() =>
+				{
+					return QueuedTask.Run(() => { CurrentWorkList.Visibility = _visibility; });
+				}, _msg);
 		}
 
 		#region Navigation
@@ -454,6 +464,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		public ICommand FlashCurrentFeatureCmd =>
 			new RelayCommand(FlashCurrentFeatureAsync, () => CurrentWorkList.Current != null);
 
+		public ICommand VisibilityChangedCommand => new RelayCommand(SetVisiblityAsync, () => true);
+
 		#endregion
 
 		#region Properties
@@ -476,7 +488,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}
 		}
 
-		public IList<WorkItemVisibility> Visibility =>
+		public IList<WorkItemVisibility> VisibilityItemsSource =>
 			Enum.GetValues(typeof(WorkItemVisibility)).Cast<WorkItemVisibility>()
 			    .ToList();
 
@@ -511,6 +523,12 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 				SetProperty(ref _autoZoomMode, value, () => AutoZoomMode);
 			}
+		}
+
+		public WorkItemVisibility Visibility
+		{
+			get => _visibility;
+			set => SetProperty(ref _visibility, value, () => Visibility);
 		}
 
 		#endregion

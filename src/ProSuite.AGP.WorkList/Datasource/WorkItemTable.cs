@@ -69,7 +69,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			Stopwatch watch = _msg.DebugStartTiming();
 
-			List<object[]> list = _workList.GetItems(queryFilter, true)
+			List<object[]> list = _workList.GetItems(queryFilter)
 			                               .Select(item => GetValues(item, _workList.Current))
 			                               .ToList(); // TODO drop ToList, inline
 

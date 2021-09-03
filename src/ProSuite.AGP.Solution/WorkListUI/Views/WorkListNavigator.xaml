@@ -100,8 +100,15 @@
 					<Separator Margin="5,0" />
 					<StackPanel Orientation="Horizontal">
 						<Label Content="Show" />
-						<ComboBox SelectedItem="{Binding CurrentWorkList.Visibility}" 
-						          ItemsSource="{Binding Visibility}" />
+						<ComboBox SelectedItem="{Binding Visibility}" 
+						          ItemsSource="{Binding VisibilityItemsSource}">
+							<behaviors:Interaction.Triggers>
+								<behaviors:EventTrigger EventName="SelectionChanged">
+									<behaviors:InvokeCommandAction Command="{Binding VisibilityChangedCommand}"/>
+									                               <!--CommandParameter="{Binding ElementName=VisibilityComboBox,Path=SelectedItem}"/>-->
+								</behaviors:EventTrigger>
+							</behaviors:Interaction.Triggers>
+						</ComboBox>
 					</StackPanel>
 					<Separator Margin="7,0" />
 					<Button Command="{Binding SelectCurrentFeatureCommand}" 

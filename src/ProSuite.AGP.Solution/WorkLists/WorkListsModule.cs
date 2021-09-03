@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
@@ -635,15 +636,14 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		private void WorkList_WorkListChanged(object sender, WorkListChangedEventArgs e)
 		{
-			List<long> oids = e.Items;
-
-			if (oids == null)
-			{
-				return;
-			}
-
 			try
 			{
+				MapView mapView = MapView.Active;
+				if (mapView == null)
+				{
+					return;
+				}
+
 				var workList = (IWorkList) sender;
 
 				Assert.True(_layersByWorklistName.ContainsKey(workList.Name),
@@ -656,8 +656,17 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				FeatureLayer workListLayer = _layersByWorklistName[workList.Name];
 
-				MapView.Active.Invalidate(new Dictionary<Layer, List<long>>
-				                          {{workListLayer, oids}});
+				List<long> oids = e.Items;
+				Envelope extent = e.Extent;
+
+				if (oids == null && extent == null)
+				{
+					mapView.Invalidate(workListLayer, mapView.Extent);
+					return;
+				}
+
+				mapView.Invalidate(new Dictionary<Layer, List<long>>
+				                   {{workListLayer, oids}});
 			}
 			catch (Exception exc)
 			{

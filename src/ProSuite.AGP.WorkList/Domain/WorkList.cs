@@ -43,6 +43,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			new Dictionary<GdbRowIdentity, IWorkItem>(_initialCapacity);
 
 		private EventHandler<WorkListChangedEventArgs> _workListChanged;
+		private WorkItemVisibility _visibility;
 
 		protected WorkList(IWorkItemRepository repository, string name)
 		{
@@ -97,7 +98,20 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public int CurrentIndex { get; set; }
 
-		public WorkItemVisibility Visibility { get; set; }
+		public WorkItemVisibility Visibility
+		{
+			get => _visibility;
+			set
+			{
+				// invalidate those items with invalid (old) status
+				if (_visibility != value)
+				{
+					OnWorkListChanged();
+				}
+
+				_visibility = value;
+			}
+		}
 
 		public Polygon AreaOfInterest { get; set; }
 
