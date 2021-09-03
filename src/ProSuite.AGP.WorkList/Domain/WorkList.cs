@@ -42,7 +42,6 @@ namespace ProSuite.AGP.WorkList.Domain
 		[NotNull] private readonly Dictionary<GdbRowIdentity, IWorkItem> _rowMap =
 			new Dictionary<GdbRowIdentity, IWorkItem>(_initialCapacity);
 
-		private EventHandler<WorkListChangedEventArgs> _workListChanged;
 		private WorkItemVisibility _visibility;
 
 		protected WorkList(IWorkItemRepository repository, string name)
@@ -78,12 +77,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			Extent = GetExtentFromItems(_items);
 		}
 
-		public event EventHandler<WorkListChangedEventArgs> WorkListChanged
-		{
-			add { _workListChanged += value; }
-			remove { _workListChanged -= value; }
-		}
-
 		public event PropertyChangedEventHandler PropertyChanged;
 
 		public string Name { get; set; }
@@ -113,6 +106,8 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
+
+
 		public Polygon AreaOfInterest { get; set; }
 
 		public virtual bool QueryLanguageSupported { get; } = false;
@@ -126,7 +121,11 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			Repository.SetStatus(item, status);
 
-			OnWorkListChanged(null, new List<long> {item.OID});
+			// If a item visibility changes to Done the item is not part
+			// of the work list anymore, respectively GetItems(QuerFilter, bool, int)
+			// does not return the Done-item anymore. Therefor use the item's Extent
+			// to invalidate the work list layer.
+			OnWorkListChanged(item.Extent);
 		}
 
 		public void SetVisited(IWorkItem item)
@@ -1011,10 +1010,12 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#endregion
 
-		private void OnWorkListChanged([CanBeNull] Envelope extent = null,
-		                               [CanBeNull] List<long> oids = null)
+		// https://blog.stephencleary.com/2012/02/async-and-await.html
+		// The primary use case for async void methods is event handlers.
+		private async void OnWorkListChanged([CanBeNull] Envelope extent = null,
+		                                     [CanBeNull] List<long> oids = null)
 		{
-			_workListChanged?.Invoke(this, new WorkListChangedEventArgs(extent, oids));
+			await WorklistChangedEvent.PublishAsync(new WorkListChangedEventArgs(this, extent, oids));
 		}
 
 		public void Invalidate()

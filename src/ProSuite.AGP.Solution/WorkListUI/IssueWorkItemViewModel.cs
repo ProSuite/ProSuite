@@ -1,4 +1,3 @@
-using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -6,9 +5,11 @@ namespace ProSuite.AGP.Solution.WorkListUI
 {
 	public class IssueWorkItemViewModel : WorkItemViewModelBase
 	{
-		// todo daro: rename to IssueWorkItemViewModel or IssueWorkitemViewModel
-		public IssueWorkItemViewModel([NotNull] IssueItem item, [NotNull] IWorkList worklist)
-			: base(item, worklist)
+		// todo daro: rename to IssueItemViewModel
+		// todo daro: extract interface from WorkListViewModelBase to pass as parameter?
+		public IssueWorkItemViewModel([NotNull] IssueItem item,
+		                              [NotNull] WorkListViewModelBase viewModel)
+			: base(item, viewModel)
 		{
 			IssueItem = item;
 		}

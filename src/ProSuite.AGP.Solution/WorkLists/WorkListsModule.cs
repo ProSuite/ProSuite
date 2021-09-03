@@ -378,14 +378,53 @@ namespace ProSuite.AGP.Solution.WorkLists
 			MapMemberPropertiesChangedEvent.Unsubscribe(OnMapMemberPropertiesChanged);
 		}
 
-		private void WireEvents(IWorkList workList)
+		private async Task WorklistChanged(WorkListChangedEventArgs e)
 		{
-			workList.WorkListChanged += WorkList_WorkListChanged;
-		}
+			try
+			{
+				MapView mapView = MapView.Active;
+				if (mapView == null)
+				{
+					return;
+				}
 
-		private void UnwireEvents(IWorkList workList)
-		{
-			workList.WorkListChanged -= WorkList_WorkListChanged;
+				var workList = (IWorkList) e.Sender;
+
+				Assert.True(_layersByWorklistName.ContainsKey(workList.Name),
+				            $"sender of {nameof(WorklistChanged)} is unknown");
+
+				if (! _layersByWorklistName.ContainsKey(workList.Name))
+				{
+					return;
+				}
+
+				FeatureLayer workListLayer = _layersByWorklistName[workList.Name];
+
+				List<long> oids = e.Items;
+
+				if (oids != null)
+				{
+					Assert.Null(e.Extent, "{0} has to be null", nameof(e.Items));
+
+					// invalidate with OIDs
+					mapView.Invalidate(new Dictionary<Layer, List<long>> {{workListLayer, oids}});
+					return;
+				}
+
+				Envelope extent = e.Extent ?? mapView.Extent;
+
+				if (extent != null)
+				{
+					Assert.Null(oids, "{0} has to be null", nameof(oids));
+
+					// alternatively invalidate with Envelope
+					mapView.Invalidate(workListLayer, extent);
+				}
+			}
+			catch (Exception exc)
+			{
+				_msg.Error("Error invalidating work list layer", exc);
+			}
 		}
 
 		// todo daro: move to OnMapViewInitialized?
@@ -429,7 +468,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				_layersByWorklistName.Add(workList.Name, worklistLayer);
 
-				WireEvents(workList);
+				WorklistChangedEvent.Subscribe(WorklistChanged, this);
 
 				// todo daro: maybe we need a dictionary of synchronizers
 				_synchronizer = new EditEventsRowCacheSynchronizer(workList);
@@ -634,46 +673,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 			//Item firstOrDefault = items?.FirstOrDefault(i => string.Equals(folderName, i.Name));
 		}
 
-		private void WorkList_WorkListChanged(object sender, WorkListChangedEventArgs e)
-		{
-			try
-			{
-				MapView mapView = MapView.Active;
-				if (mapView == null)
-				{
-					return;
-				}
-
-				var workList = (IWorkList) sender;
-
-				Assert.True(_layersByWorklistName.ContainsKey(workList.Name),
-				            $"sender of {nameof(WorkList_WorkListChanged)} is unknown");
-
-				if (! _layersByWorklistName.ContainsKey(workList.Name))
-				{
-					return;
-				}
-
-				FeatureLayer workListLayer = _layersByWorklistName[workList.Name];
-
-				List<long> oids = e.Items;
-				Envelope extent = e.Extent;
-
-				if (oids == null && extent == null)
-				{
-					mapView.Invalidate(workListLayer, mapView.Extent);
-					return;
-				}
-
-				mapView.Invalidate(new Dictionary<Layer, List<long>>
-				                   {{workListLayer, oids}});
-			}
-			catch (Exception exc)
-			{
-				_msg.Error("Error invalidating work list layer", exc);
-			}
-		}
-
 		#endregion
 
 		public virtual void OnWorkItemPicked(WorkItemPickArgs e)
@@ -704,7 +703,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			// ensure folder exists before commit
 			FileSystemUtils.EnsureFolderExists(GetLocalWorklistsFolder());
 
-			UnwireEvents(workList);
+			WorklistChangedEvent.Unsubscribe(WorklistChanged);
 
 			_layersByWorklistName.Remove(workList.Name);
 		}

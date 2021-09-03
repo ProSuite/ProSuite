@@ -66,7 +66,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			Assert.ArgumentNotNull(item, nameof(item));
 
-			var vm = new IssueWorkItemViewModel((IssueItem) item, CurrentWorkList);
+			var vm = new IssueWorkItemViewModel((IssueItem) item, this);
 
 			CurrentItemViewModel = vm;
 

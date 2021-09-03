@@ -1,6 +1,7 @@
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.Assertions;
@@ -13,19 +14,19 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		[CanBeNull] private readonly IWorkItem _workItem;
-		[NotNull] private readonly IWorkList _workList;
+		[NotNull] private readonly WorkListViewModelBase _viewModel;
 		private WorkItemStatus _status;
 
 		// ReSharper disable once NotNullMemberIsNotInitialized
 		protected WorkItemViewModelBase() { }
 
-		protected WorkItemViewModelBase([NotNull] IWorkItem workItem, [NotNull] IWorkList workList)
+		protected WorkItemViewModelBase([NotNull] IWorkItem workItem, [NotNull] WorkListViewModelBase viewModel)
 		{
 			Assert.ArgumentNotNull(workItem, nameof(workItem));
-			Assert.ArgumentNotNull(workList, nameof(workList));
+			Assert.ArgumentNotNull(viewModel, nameof(viewModel));
 
 			_workItem = workItem;
-			_workList = workList;
+			_viewModel = viewModel;
 
 			Description = workItem.Description;
 			_status = workItem.Status;
@@ -52,7 +53,14 @@ namespace ProSuite.AGP.Solution.WorkListUI
 					{
 						_workItem.Status = value;
 
-						QueuedTask.Run(() => { _workList.SetStatus(_workItem, value); });
+						IWorkList worklist = _viewModel.CurrentWorkList;
+
+						QueuedTask.Run(() => { worklist.SetStatus(_workItem, value); });
+						          //.ContinueWith(t => _viewModel.GoNearestCore());
+
+						// todo daro: make async
+						// todo daro: create an event aggregator that propagates this through the whole application?
+						//_viewModel.GoNearestCore();
 					},
 					_msg);
 

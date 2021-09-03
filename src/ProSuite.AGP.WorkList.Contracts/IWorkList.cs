@@ -69,8 +69,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		void Commit();
 
-		event EventHandler<WorkListChangedEventArgs> WorkListChanged;
-
 		void SetStatus([NotNull] IWorkItem item, WorkItemStatus status);
 	}
 }
