@@ -42,7 +42,12 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 			CurrentWorkList = workList;
 			_visibility = workList.Visibility;
+
 			SetCurrent(workList.Current);
+
+			RememberCurrentTool(FrameworkApplication.CurrentTool);
+
+			WireEvents();
 		}
 
 		private void SetCurrent([CanBeNull] IWorkItem item)
@@ -331,11 +336,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		#region Loaded / unloaded UserControl
 
-		private void OnLoaded()
-		{
-			WireEvents();
-		}
-
 		private async Task OnUnloadedAsync()
 		{
 			UnwireEvents();
@@ -398,9 +398,26 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}, _msg);
 		}
 
-		private void OnActiveToolChanged(ToolEventArgs obj)
+		private void OnActiveToolChanged(ToolEventArgs e)
 		{
-			_previouslyActiveTool = obj.CurrentID;
+			// do not remember pick work item tool
+			if (string.Equals(FrameworkApplication.CurrentTool, ConfigIDs.Editing_PickWorkItemTool))
+			{
+				return;
+			}
+
+			RememberCurrentTool(e.CurrentID);
+		}
+
+		private void RememberCurrentTool([NotNull] string currentTool)
+		{
+			Assert.ArgumentNotNullOrEmpty(currentTool, nameof(currentTool));
+
+			Assert.False(
+				string.Equals(FrameworkApplication.CurrentTool, ConfigIDs.Editing_PickWorkItemTool),
+				"don't remember {0}", ConfigIDs.Editing_PickWorkItemTool);
+
+			_previouslyActiveTool = currentTool;
 		}
 
 		#endregion
@@ -426,9 +443,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		public ICommand ZoomOutCommand =>
 			FrameworkApplication.GetPlugInWrapper(
 				DAML.Button.esri_mapping_fixedZoomOutButton) as ICommand;
-
-		public ICommand LoadedCommand =>
-			new RelayCommand(OnLoaded);
 
 		public ICommand UnloadedCommand =>
 			new RelayCommand(OnUnloadedAsync);
