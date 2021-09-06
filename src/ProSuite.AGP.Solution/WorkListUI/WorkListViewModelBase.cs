@@ -424,25 +424,101 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		#region Commands
 
-		public ICommand ClearSelectionCommand =>
-			FrameworkApplication.GetPlugInWrapper(
-				DAML.Button.esri_mapping_clearSelectionButton) as ICommand;
+		private IPlugInWrapper _previousExtentWrapper;
+		private IPlugInWrapper _nextExtentWrapper;
+		private IPlugInWrapper _zoomInWrapper;
+		private IPlugInWrapper _zoomOutWrapper;
+		private IPlugInWrapper _clearSelectionWrapper;
 
-		public ICommand PreviousExtentCommand =>
-			FrameworkApplication.GetPlugInWrapper(
-				DAML.Button.esri_mapping_prevExtentButton) as ICommand;
+		public ICommand ClearSelectionCommand
+		{
+			get
+			{
+				if (_clearSelectionWrapper == null)
+				{
+					_clearSelectionWrapper =
+						FrameworkApplication.GetPlugInWrapper(
+							DAML.Button.esri_mapping_clearSelectionButton);
+				}
 
-		public ICommand NextExtentCommand =>
-			FrameworkApplication.GetPlugInWrapper(
-				DAML.Button.esri_mapping_nextExtentButton) as ICommand;
+				return (ICommand) _clearSelectionWrapper;
+			}
+		}
 
-		public ICommand ZoomInCommand =>
-			FrameworkApplication.GetPlugInWrapper(
-				DAML.Button.esri_mapping_fixedZoomInButton) as ICommand;
+		public ICommand PreviousExtentCommand
+		{
+			get
+			{
+				if (_previousExtentWrapper == null)
+				{
+					_previousExtentWrapper =
+						FrameworkApplication.GetPlugInWrapper(
+							DAML.Button.esri_mapping_prevExtentButton);
+				}
 
-		public ICommand ZoomOutCommand =>
-			FrameworkApplication.GetPlugInWrapper(
-				DAML.Button.esri_mapping_fixedZoomOutButton) as ICommand;
+				return (ICommand) _previousExtentWrapper;
+			}
+		}
+
+		public ICommand NextExtentCommand
+		{
+			get
+			{
+				if (_nextExtentWrapper == null)
+				{
+					_nextExtentWrapper =
+						FrameworkApplication.GetPlugInWrapper(
+							DAML.Button.esri_mapping_nextExtentButton);
+				}
+
+				return (ICommand) _nextExtentWrapper;
+			}
+		}
+
+		public ICommand ZoomInCommand
+		{
+			get
+			{
+				if (_zoomInWrapper == null)
+				{
+					_zoomInWrapper =
+						FrameworkApplication.GetPlugInWrapper(
+							DAML.Button.esri_mapping_fixedZoomInButton);
+				}
+
+				return (ICommand) _zoomInWrapper;
+			}
+		}
+
+		public ICommand ZoomOutCommand
+		{
+			get
+			{
+				if (_zoomOutWrapper == null)
+				{
+					_zoomOutWrapper =
+						FrameworkApplication.GetPlugInWrapper(
+							DAML.Button.esri_mapping_fixedZoomOutButton);
+				}
+				
+				return (ICommand) _zoomOutWrapper;
+			}
+		}
+
+		public string ClearSelectionTooltipHeading => _clearSelectionWrapper.TooltipHeading;
+		public string ClearSelectionTooltip => _clearSelectionWrapper.Tooltip;
+
+		public string PreviousExtentTooltipHeading => _previousExtentWrapper.TooltipHeading;
+		public string PreviousExtentTooltip => _previousExtentWrapper.Tooltip;
+		
+		public string NextExtentTooltipHeading => _nextExtentWrapper.TooltipHeading;
+		public string NextExtentTooltip => _nextExtentWrapper.Tooltip;
+
+		public string ZoomInTooltipHeading => _zoomInWrapper.TooltipHeading;
+		public string ZoomInTooltip => _zoomInWrapper.Tooltip;
+
+		public string ZoomOutTooltipHeding => _zoomOutWrapper.TooltipHeading;
+		public string ZoomOutTooltip => _zoomOutWrapper.Tooltip;
 
 		public ICommand UnloadedCommand =>
 			new RelayCommand(OnUnloadedAsync);

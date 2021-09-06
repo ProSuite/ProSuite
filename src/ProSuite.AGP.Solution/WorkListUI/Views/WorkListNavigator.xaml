@@ -25,19 +25,19 @@
 		</Grid.RowDefinitions>
 		<ToolBarTray Grid.Row="0">
 			<ToolBar>
-				<Button Command="{Binding GoFirstItemCommand}">
+				<Button Command="{Binding GoFirstCommand}">
 					<Image Source="../Images/GoFirst16.png" ToolTip="First" Stretch="UniformToFill" />
 				</Button>
-				<Button Command="{Binding GoPreviousItemCommand}">
+				<Button Command="{Binding GoPreviousCommand}">
 					<Image Source="../Images/GoBack16.png" ToolTip="Previous" Stretch="UniformToFill" />
 				</Button>
-				<Button Command="{Binding GoNextItemCommand}">
+				<Button Command="{Binding GoNextCommand}">
 					<Image Source="../Images/GoNext16.png" ToolTip="Next" Stretch="UniformToFill" />
 				</Button>
-				<Button Command="{Binding GoNearestItemCommand}">
+				<Button Command="{Binding GoNearestCommand}">
 					<Image Source="../Images/GoNearest16.png" ToolTip="Go to Nearest" Stretch="UniformToFill" />
 				</Button>
-				<Button Command="{Binding PickWorkItemCommand}">
+				<Button Command="{Binding PickItemCommand}">
 					<Image Source="../Images/PickWorkItemTool16.png" ToolTip="Pick Work Item On Map" Stretch="UniformToFill" />
 				</Button>
 				<Separator />
@@ -57,26 +57,60 @@
 				</Button>
 				<Separator />
 				<Button Command="{Binding ClearSelectionCommand}">
-					<Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/clearselection16.png"
-					       Stretch="UniformToFill" />
+					<Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/clearselection16.png" Stretch="UniformToFill" />
+					<Button.ToolTip>
+						<TextBlock>
+							<Run FontWeight="Bold" Text="{Binding ClearSelectionTooltipHeading, Mode=OneWay}" />
+							<LineBreak />
+							<Run Text="{Binding ClearSelectionTooltip, Mode=OneWay}" />
+						</TextBlock>
+					</Button.ToolTip>
 				</Button>
 				<Button Command="{Binding PreviousExtentCommand}">
 					<Image
 						Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericBlueLeftArrowLongTail16.png"
 						Stretch="UniformToFill" />
+					<Button.ToolTip>
+						<TextBlock>
+							<Run FontWeight="Bold" Text="{Binding PreviousExtentTooltipHeading, Mode=OneWay}" />
+							<LineBreak/>
+							<Run Text="{Binding PreviousExtentTooltip, Mode=OneWay}" />
+						</TextBlock>
+					</Button.ToolTip>
 				</Button>
 				<Button Command="{Binding NextExtentCommand}">
 					<Image
 						Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericBlueRightArrowLongTail16.png"
 						Stretch="UniformToFill" />
+					<Button.ToolTip>
+						<TextBlock>
+							<Run FontWeight="Bold" Text="{Binding NextExtentTooltipHeading, Mode=OneWay}" />
+							<LineBreak/>
+							<Run Text="{Binding NextExtentTooltip, Mode=OneWay}" />
+						</TextBlock>
+					</Button.ToolTip>
 				</Button>
 				<Button Command="{Binding ZoomInCommand}">
 					<Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/zoomfixedzoomin_b_16.png"
 					       Stretch="UniformToFill" />
+					<Button.ToolTip>
+						<TextBlock>
+							<Run FontWeight="Bold" Text="{Binding ZoomInTooltipHeading, Mode=OneWay}" />
+							<LineBreak/>
+							<Run Text="{Binding ZoomInTooltip, Mode=OneWay}" />
+						</TextBlock>
+					</Button.ToolTip>
 				</Button>
 				<Button Command="{Binding ZoomOutCommand}">
 					<Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/zoomfixedzoomout_b_16.png"
 					       Stretch="UniformToFill" />
+					<Button.ToolTip>
+						<TextBlock>
+							<Run FontWeight="Bold" Text="{Binding ZoomOutTooltipHeding, Mode=OneWay}" />
+							<LineBreak/>
+							<Run Text="{Binding ZoomOutTooltip, Mode=OneWay}" />
+						</TextBlock>
+					</Button.ToolTip>
 				</Button>
 				<Separator />
 			</ToolBar>
