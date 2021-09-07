@@ -135,7 +135,7 @@
 					<StackPanel Orientation="Horizontal">
 						<Label Content="Show" />
 						<ComboBox SelectedItem="{Binding Visibility}" 
-						          ItemsSource="{Binding VisibilityItemsSource}">
+						          ItemsSource="{Binding VisibilityItemsSource}" Width="50" >
 							<behaviors:Interaction.Triggers>
 								<behaviors:EventTrigger EventName="SelectionChanged">
 									<behaviors:InvokeCommandAction Command="{Binding VisibilityChangedCommand}"/>
