@@ -47,6 +47,7 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="ClassDescriptor.cs" />
+    <Compile Include="Commands\ICommandDescriptorRepository.cs" />
     <Compile Include="Processing\CartoProcess.cs" />
     <Compile Include="Commands\CommandDescriptor.cs" />
     <Compile Include="Commands\CommandKey.cs" />
