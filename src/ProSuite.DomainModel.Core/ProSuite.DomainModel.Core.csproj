@@ -47,6 +47,9 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="ClassDescriptor.cs" />
+    <Compile Include="Commands\CommandDescriptor.cs" />
+    <Compile Include="Commands\CommandKey.cs" />
+    <Compile Include="Commands\CommandType.cs" />
     <Compile Include="DataModel\Association.cs" />
     <Compile Include="DataModel\AssociationAttribute.cs" />
     <Compile Include="DataModel\AssociationCardinality.cs" />
