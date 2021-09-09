@@ -23,7 +23,8 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
-	public abstract class WorkListViewModelBase : PropertyChangedBase
+	public abstract class WorkListViewModelBase<TWorklist> : PropertyChangedBase
+		where TWorklist : class, IWorkList
 	{
 		private const double _seconds = 0.3;
 
@@ -382,9 +383,15 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		private async Task WorklistChanged(WorkListChangedEventArgs e)
 		{
-			var workList = (IWorkList) e.Sender;
+			if (e.Sender is TWorklist workList)
+			{
+				if (workList.Current == null)
+				{
+					return;
+				}
 
-			await SetCurrentAsync(workList.Current);
+				await SetCurrentAsync(workList.Current);
+			}
 		}
 
 		private async void Current_WorkItemPicked(object sender, WorkItemPickArgs e)

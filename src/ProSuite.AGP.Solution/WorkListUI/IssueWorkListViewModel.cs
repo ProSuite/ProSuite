@@ -16,7 +16,7 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
-	public class IssueWorkListViewModel : WorkListViewModelBase
+	public class IssueWorkListViewModel : WorkListViewModelBase<IssueWorkList>
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 		private string _errorDescription;
@@ -66,7 +66,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			Assert.ArgumentNotNull(item, nameof(item));
 
-			var vm = new IssueItemViewModel((IssueItem) item, this);
+			var vm = new IssueItemViewModel((IssueItem) item, CurrentWorkList);
 
 			CurrentItemViewModel = vm;
 

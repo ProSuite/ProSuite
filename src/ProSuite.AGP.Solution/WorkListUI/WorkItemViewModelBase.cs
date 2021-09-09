@@ -15,24 +15,24 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[CanBeNull] private readonly WorkListViewModelBase _viewModel;
+		[CanBeNull] private readonly IWorkList _workList;
 		[CanBeNull] private readonly IWorkItem _workItem;
 
 		// ReSharper disable once NotNullMemberIsNotInitialized
 		protected WorkItemViewModelBase() { }
 
 		protected WorkItemViewModelBase([NotNull] IWorkItem workItem,
-		                                [NotNull] WorkListViewModelBase viewModel)
+		                                [NotNull] IWorkList workList)
 		{
 			Assert.ArgumentNotNull(workItem, nameof(workItem));
-			Assert.ArgumentNotNull(viewModel, nameof(viewModel));
+			Assert.ArgumentNotNull(workList, nameof(workList));
 
 			_workItem = workItem;
-			_viewModel = viewModel;
+			_workList = workList;
 		}
 
 		[CanBeNull]
-		public virtual string Description => _workItem.Description;
+		public virtual string Description => _workItem?.Description;
 
 		public WorkItemStatus Status
 		{
@@ -66,7 +66,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 			await ViewUtils.TryAsync(() =>
 			{
-				IWorkList worklist = _viewModel?.CurrentWorkList;
+				IWorkList worklist = _workList;
 
 				return QueuedTask.Run(() => { worklist?.SetStatus(_workItem, status); });
 			}, _msg);

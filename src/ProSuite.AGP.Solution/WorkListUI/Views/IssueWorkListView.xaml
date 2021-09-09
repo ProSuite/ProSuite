@@ -9,7 +9,7 @@
                     xmlns:workListUi="clr-namespace:ProSuite.AGP.Solution.WorkListUI"
                     mc:Ignorable="d"
                     Title="{Binding Path=CurrentWorkList.DisplayName}"
-                    d:DataContext="{d:DesignInstance Type=workListUi:WorkListViewModelBase}"
+                    d:DataContext="{d:DesignInstance Type=workListUi:IssueWorkListViewModel}"
                     WindowStartupLocation="CenterOwner" SizeToContent="WidthAndHeight" ShowInTaskbar="False"
                     MinWidth="450" MinHeight="250">
 
