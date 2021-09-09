@@ -15,7 +15,8 @@
 				<extensions:DesignOnlyResourceDictionary
 					Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
 			</ResourceDictionary.MergedDictionaries>
-			<workListUi:StatusConverter x:Key="StatusEnumBooleanConverter" />
+			<workListUi:StatusToBooleanConverter x:Key="StatusToBooleanConverter" />
+			<workListUi:BooleanToStatusConverter x:Key="BooleanToStatusConverter"/>
 		</ResourceDictionary>
 	</UserControl.Resources>
 	<Grid>
@@ -121,14 +122,17 @@
 				<ToolBar>
 					<DockPanel LastChildFill="True">
 						<Label DockPanel.Dock="Left" Content="Status: " />
-						<CheckBox VerticalAlignment="Center">
-							<CheckBox.Style>
+						<CheckBox Name="StatusCheckBox" VerticalAlignment="Center" 
+						          Command="{Binding CurrentItemViewModel.SetStatusCommand}"
+						          CommandParameter="{Binding ElementName=StatusCheckBox, Path=IsChecked, Converter={StaticResource BooleanToStatusConverter}}"
+						          IsChecked="{Binding CurrentItemViewModel.Status, Mode=OneWay, Converter={StaticResource StatusToBooleanConverter}}">
+							<!--<CheckBox.Style>
 								<Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Type CheckBox}}">
 									<Setter Property="IsChecked"
 									        Value="{Binding CurrentItemViewModel.Status, Mode=TwoWay, Converter={StaticResource StatusEnumBooleanConverter}, UpdateSourceTrigger=PropertyChanged}" />
 									<Setter Property="IsEnabled" Value="{Binding CurrentItemViewModel.CanSetStatus, Mode=OneWay}" />
 								</Style>
-							</CheckBox.Style>
+							</CheckBox.Style>-->
 						</CheckBox>
 					</DockPanel>
 					<Separator Margin="5,0" />

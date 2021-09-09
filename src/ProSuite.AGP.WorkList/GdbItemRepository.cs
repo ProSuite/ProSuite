@@ -121,6 +121,8 @@ namespace ProSuite.AGP.WorkList
 
 		public async Task SetStatus(IWorkItem item, WorkItemStatus status)
 		{
+			item.Status = status;
+
 			GdbTableIdentity tableId = item.Proxy.Table;
 
 			ISourceClass source =

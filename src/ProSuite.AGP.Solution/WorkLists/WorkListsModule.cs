@@ -404,8 +404,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				if (oids != null)
 				{
-					Assert.Null(e.Extent, "{0} has to be null", nameof(e.Items));
-
 					// invalidate with OIDs
 					mapView.Invalidate(new Dictionary<Layer, List<long>> {{workListLayer, oids}});
 					return;
@@ -415,8 +413,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				if (extent != null)
 				{
-					Assert.Null(oids, "{0} has to be null", nameof(oids));
-
 					// alternatively invalidate with Envelope
 					mapView.Invalidate(workListLayer, extent);
 				}

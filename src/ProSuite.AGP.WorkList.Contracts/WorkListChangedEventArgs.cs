@@ -7,9 +7,10 @@ namespace ProSuite.AGP.WorkList.Contracts
 {
 	public class WorkListChangedEventArgs
 	{
+		// todo daro order parameters, make items optional
 		public WorkListChangedEventArgs([NotNull] object sender,
 		                                [CanBeNull] Envelope extent,
-		                                [CanBeNull] List<long> items)
+		                                [CanBeNull] List<long> items = null)
 		{
 			Assert.ArgumentNotNull(sender, nameof(sender));
 

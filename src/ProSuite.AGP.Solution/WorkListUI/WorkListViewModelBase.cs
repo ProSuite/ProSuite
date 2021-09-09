@@ -11,6 +11,7 @@ using ArcGIS.Desktop.Framework.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Solution.WorkLists;
+using ProSuite.AGP.WorkList;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Spatial;
@@ -29,9 +30,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private bool? _autoZoomMode = true;
-		private string _count;
 		private string _previouslyActiveTool;
-		private IWorkList _currentWorkList;
 		private WorkItemVisibility _visibility;
 		private InvolvedObjectRow _selectedInvolvedObject;
 		private WorkItemViewModelBase _currentItemViewModel;
@@ -60,6 +59,11 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			{
 				SetCurrentItemCore(item);
 			}
+		}
+
+		private async Task SetCurrentAsync([NotNull] IWorkItem item)
+		{
+			await ViewUtils.TryAsync(() => { return Task.Run(() => SetCurrent(item)); }, _msg);
 		}
 
 		protected abstract void SetCurrentItemCore([NotNull] IWorkItem item);
@@ -159,7 +163,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 					IWorkItem item = Assert.NotNull(CurrentWorkList.Current);
 
 					string tableName = item.Proxy.Table.Name;
-
+					
+					// todo daro can featureClassName be null, e.g. if data source is broken?
 					FeatureLayer layer =
 						MapUtils.GetLayers<FeatureLayer>(
 							lyr => string.Equals(
@@ -178,8 +183,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				});
 			}, _msg);
 		}
-
-		// todo daro can featureClassName be null?
 
 		[NotNull]
 		private static Envelope GetEnvelope([NotNull] IWorkItem item)
@@ -204,14 +207,23 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		}
 
 		#region Navigation
-
-		// todo daro refactor
+		
 		private string GetCount()
 		{
-			int all = CurrentWorkList.Count(null, true);
-			int toDo = CurrentWorkList
-			           .GetItems(null, true).Count(item => item.Status == WorkItemStatus.Todo);
-			return $"{CurrentIndex + 1} of {all} ({toDo} todo, {all} total)";
+			int all = 0;
+			int toDo = 0;
+
+			foreach (IWorkItem item in CurrentWorkList.GetItems(null, true))
+			{
+				if (item.Status == WorkItemStatus.Todo)
+				{
+					toDo += 1;
+				}
+
+				all += 1;
+			}
+			
+			return $"{CurrentWorkList.CurrentIndex + 1} of {all} ({toDo} todo, {all} total)";
 		}
 
 		private void GoFirstItem()
@@ -221,8 +233,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				QueuedTask.Run(() =>
 				{
 					CurrentWorkList.GoFirst();
-
-					SetCurrent(CurrentWorkList.Current);
 				});
 			}, _msg);
 		}
@@ -234,8 +244,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				return QueuedTask.Run(() =>
 				{
 					CurrentWorkList.GoPrevious();
-
-					SetCurrent(CurrentWorkList.Current);
 				});
 			}, _msg);
 		}
@@ -247,8 +255,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				return QueuedTask.Run(() =>
 				{
 					CurrentWorkList.GoNext();
-
-					SetCurrent(CurrentWorkList.Current);
 				});
 			}, _msg);
 		}
@@ -260,8 +266,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				return QueuedTask.Run(() =>
 				{
 					CurrentWorkList.GoNearest(GetReferenceGeometry(MapView.Active.Extent));
-
-					SetCurrent(CurrentWorkList.Current);
 
 					if (_autoZoomMode == null || ! _autoZoomMode.Value)
 					{
@@ -361,13 +365,26 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private void WireEvents()
 		{
 			ActiveToolChangedEvent.Subscribe(OnActiveToolChanged);
+
+			WorklistChangedEvent.Subscribe(WorklistChanged, this);
+
 			WorkListsModule.Current.WorkItemPicked += Current_WorkItemPicked;
 		}
 
 		private void UnwireEvents()
 		{
 			ActiveToolChangedEvent.Unsubscribe(OnActiveToolChanged);
+
+			WorklistChangedEvent.Unsubscribe(WorklistChanged);
+
 			WorkListsModule.Current.WorkItemPicked -= Current_WorkItemPicked;
+		}
+
+		private async Task WorklistChanged(WorkListChangedEventArgs e)
+		{
+			var workList = (IWorkList) e.Sender;
+
+			await SetCurrentAsync(workList.Current);
 		}
 
 		private async void Current_WorkItemPicked(object sender, WorkItemPickArgs e)
@@ -380,11 +397,6 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 					QueryFilter filter = GdbQueryUtils.CreateFilter(new[] {OID});
 					IWorkItem selectedItem = CurrentWorkList.GetItems(filter).FirstOrDefault();
-					foreach (IWorkItem item in CurrentWorkList.GetItems())
-					{
-						Console.WriteLine(item.OID);
-						Console.WriteLine(item.Extent.ToJson());
-					}
 
 					if (selectedItem == null)
 					{
@@ -401,7 +413,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private void OnActiveToolChanged(ToolEventArgs e)
 		{
 			// do not remember pick work item tool
-			if (string.Equals(FrameworkApplication.CurrentTool, ConfigIDs.Editing_PickWorkItemTool))
+			if (string.Equals(FrameworkApplication.CurrentTool, ConfigIDs.Editing_PickWorkItemTool) ||
+			    string.IsNullOrEmpty(e.CurrentID))
 			{
 				return;
 			}
@@ -520,22 +533,21 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		public string ZoomOutTooltipHeding => _zoomOutWrapper.TooltipHeading;
 		public string ZoomOutTooltip => _zoomOutWrapper.Tooltip;
 
-		public ICommand UnloadedCommand =>
-			new RelayCommand(OnUnloadedAsync);
+		public ICommand UnloadedCommand => new RelayCommand(OnUnloadedAsync);
 
-		public ICommand GoNextItemCommand =>
+		public ICommand GoNextCommand =>
 			new RelayCommand(GoNextAsync, () => CurrentWorkList.CanGoNext());
 
-		public ICommand GoNearestItemCommand =>
+		public ICommand GoNearestCommand =>
 			new RelayCommand(GoNearestAsync, () => CurrentWorkList.CanGoNearest());
 
-		public ICommand GoFirstItemCommand =>
+		public ICommand GoFirstCommand =>
 			new RelayCommand(GoFirstItem, () => CurrentWorkList.CanGoFirst());
 
 		public ICommand ZoomToAllCommand =>
 			new RelayCommand(ZoomToAllAsync, () => CurrentWorkList.Extent != null);
 
-		public ICommand GoPreviousItemCommand =>
+		public ICommand GoPreviousCommand =>
 			new RelayCommand(GoPreviousAsync, () => CurrentWorkList.CanGoPrevious());
 
 		public ICommand ZoomToCommand =>
@@ -544,7 +556,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		public ICommand PanToCommand =>
 			new RelayCommand(PanToAsync, () => CurrentWorkList.Current != null);
 
-		public ICommand PickWorkItemCommand =>
+		public ICommand PickItemCommand =>
 			new RelayCommand(PickItemAsync, () => true);
 
 		public ICommand SelectCurrentFeatureCommand =>
@@ -561,12 +573,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		#region Properties
 
 		[NotNull]
-		public IWorkList CurrentWorkList
-		{
-			get => _currentWorkList;
-
-			private set => SetProperty(ref _currentWorkList, value, () => CurrentWorkList);
-		}
+		public IWorkList CurrentWorkList { get; }
 
 		public WorkItemViewModelBase CurrentItemViewModel
 		{
@@ -575,7 +582,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			{
 				SetProperty(ref _currentItemViewModel, value, () => CurrentItemViewModel);
 
-				Count = GetCount();
+				NotifyPropertyChanged(nameof(Count));
 			}
 		}
 
@@ -588,16 +595,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			set => SetProperty(ref _selectedInvolvedObject, value, () => SelectedInvolvedObject);
 		}
 
-		public string Count
-		{
-			get => _count;
-			set => SetProperty(ref _count, value, () => Count);
-		}
-
-		public int CurrentIndex
-		{
-			get => CurrentWorkList.CurrentIndex;
-		}
+		public string Count => GetCount();
 
 		public virtual string ToolTip => "Select Current Work Item";
 
