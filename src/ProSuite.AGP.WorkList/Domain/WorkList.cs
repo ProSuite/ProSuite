@@ -318,14 +318,14 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#endregion
 
-		public virtual void GoToOid(long oid)
+		public virtual void GoTo(long oid)
 		{
 			if (Current?.OID == oid)
 			{
 				return;
 			}
 
-			var filter = new QueryFilter {ObjectIDs = new[] {(long) oid}};
+			var filter = new QueryFilter {ObjectIDs = new[] {oid}};
 			IWorkItem target = GetItems(filter, false).FirstOrDefault();
 
 			if (target != null)
@@ -911,6 +911,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				       : null;
 		}
 
+		// todo daro: to Utils? Compare with EnvelopeBuilderEx
 		// todo daro: drop or refactor
 		[CanBeNull]
 		private static Envelope GetExtentFromItems([CanBeNull] IEnumerable<IWorkItem> items)
@@ -1198,17 +1199,11 @@ namespace ProSuite.AGP.WorkList.Domain
 		private bool HasCurrentItem => CurrentIndex >= 0 &&
 		                               CurrentIndex < _items.Count;
 
-		[NotifyPropertyChangedInvocator]
-		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-		{
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-		}
-
 		#region IEquatable implementation
 
 		public bool Equals(WorkList other)
 		{
-			return string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase);
+			return string.Equals(Name, other?.Name, StringComparison.OrdinalIgnoreCase);
 		}
 
 		public override bool Equals(object obj)

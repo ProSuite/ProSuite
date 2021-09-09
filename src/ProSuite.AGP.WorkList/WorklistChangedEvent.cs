@@ -49,6 +49,7 @@ namespace ProSuite.AGP.WorkList
 			_tokens.Add(token);
 		}
 
+		// todo daro revise!
 		protected override void OnUnsubscribe(object param, SubscriptionToken token)
 		{
 			if (_tokens.Contains(token))

@@ -403,7 +403,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 						return;
 					}
 
-					CurrentWorkList.GoToOid(selectedItem.OID);
+					CurrentWorkList.GoTo(selectedItem.OID);
 
 					SetCurrent(CurrentWorkList.Current);
 				});
