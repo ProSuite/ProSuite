@@ -28,7 +28,6 @@ namespace ProSuite.QA.Tests.Transformers
 			                               .ToList();
 
 			gdbTable.AddField(FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField));
-			gdbTable.AddField(FieldUtils.CreateIntegerField(InvolvedRowUtils.BaseRowCountField));
 			_resulting = gdbTable;
 		}
 

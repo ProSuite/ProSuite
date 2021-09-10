@@ -366,6 +366,24 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
+		public static esriFieldType GetFieldType(Type dataType)
+		{
+			if (dataType == typeof(int))
+				return esriFieldType.esriFieldTypeInteger;
+			if (dataType == typeof(short))
+				return esriFieldType.esriFieldTypeSmallInteger;
+			if (dataType == typeof(bool))
+				return esriFieldType.esriFieldTypeSmallInteger;
+			if (dataType == typeof(float))
+				return esriFieldType.esriFieldTypeSingle;
+			if (dataType == typeof(double))
+				return esriFieldType.esriFieldTypeDouble;
+			if (dataType == typeof(string))
+				return esriFieldType.esriFieldTypeString;
+			throw new NotImplementedException($"Unhandled type {dataType}");
+		}
+
+		[NotNull]
 		public static object ConvertAttributeValue(
 			[CanBeNull] object sourceValue,
 			esriFieldType sourceType,

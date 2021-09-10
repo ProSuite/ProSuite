@@ -48,7 +48,6 @@ namespace ProSuite.QA.Container
 		}
 
 		public const string BaseRowField = "__BaseRows__";
-		public const string BaseRowCountField = "BaseRowCount";
 
 		private static IEnumerable<InvolvedRow> GetInvolvedRowsCore(IRow row)
 		{

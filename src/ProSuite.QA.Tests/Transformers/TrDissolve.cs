@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -10,6 +12,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 using ProSuite.QA.Tests.Network;
 
@@ -40,7 +43,7 @@ namespace ProSuite.QA.Tests.Transformers
 			set
 			{
 				_attributes = value;
-				AddFields(value, addUniqueField: true);
+				AddFields(value);
 			}
 		}
 
@@ -51,11 +54,12 @@ namespace ProSuite.QA.Tests.Transformers
 			set
 			{
 				_groupBy = value;
-				AddFields(value, addUniqueField: false);
 			}
 		}
 
-		private void AddFields([CanBeNull] IList<string> fieldNames, bool addUniqueField)
+		// TODO: handle multiple method calls
+		// TODO: Unify with TrSpatialJoin
+		private void AddFields([CanBeNull] IList<string> fieldNames)
 		{
 			if (fieldNames == null)
 			{
@@ -64,17 +68,17 @@ namespace ProSuite.QA.Tests.Transformers
 
 			ITable fc = InvolvedTables[0];
 
-			foreach (string fieldName in fieldNames)
-			{
-				int iField = fc.FindField(fieldName);
-				if (iField < 0)
-				{
-					throw new InvalidOperationException(
-						$"Unkown field '{fieldName}' in '{DatasetUtils.GetName(fc)}'");
-				}
+			Dictionary<string, string> expressionDict = ExpressionUtils.GetFieldDict(fieldNames);
+			Dictionary<string, string> aliasFieldDict = ExpressionUtils.CreateAliases(expressionDict);
 
-				_dissolvedFc.AddField(fc.Fields.Field[iField], iField,
-				                      addUniqueField);
+			TableView tv =
+				TableViewFactory.Create(fc, expressionDict, aliasFieldDict, isGrouped: true); 
+
+			_dissolvedFc.TableView = tv;
+
+			foreach (string field in expressionDict.Keys)
+			{
+				_dissolvedFc.AddCustomField(field);
 			}
 		}
 
@@ -104,7 +108,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private class Tfc : GdbFeatureClass, ITransformedValue
 		{
-			private List<FieldInfo> _dissolveFields;
+			public TableView TableView { get; set; }
 
 			public Tfc(IFeatureClass dissolve)
 				: base(-1, "dissolveResult", dissolve.ShapeType,
@@ -123,24 +127,14 @@ namespace ProSuite.QA.Tests.Transformers
 						geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM));
 			}
 
-			[NotNull]
-			public IList<FieldInfo> DissolveFields =>
-				_dissolveFields ?? (_dissolveFields = new List<FieldInfo>());
-
-			public void AddField(IField field, int sourceIndex, bool addUniqueField)
+			public List<FieldInfo> CustomFields { get; private set; }
+			public void AddCustomField(string field)
 			{
-				Fields.AddFields(FieldUtils.CreateField(field.Name, field.Type));
-				FieldInfo fi = new FieldInfo(field.Name, Fields.FindField(field.Name), sourceIndex);
-				if (addUniqueField)
-				{
-					string uniqueName = $"{field.Name}_unique";
-					Fields.AddFields(
-						FieldUtils.CreateField(uniqueName,
-						                       esriFieldType.esriFieldTypeSmallInteger));
-					fi.SetUnique(uniqueName, Fields.FindField(uniqueName));
-				}
+				IField f = FieldUtils.CreateField(field, FieldUtils.GetFieldType(TableView.GetColumn(field).DataType));
+				Fields.AddFields(f);
 
-				DissolveFields.Add(fi);
+				CustomFields = CustomFields ?? new List<FieldInfo>();
+				CustomFields.Add(new FieldInfo(field, Fields.FindField(field), -1));
 			}
 
 			public string Constraint
@@ -354,11 +348,23 @@ namespace ProSuite.QA.Tests.Transformers
 					dissolved.set_Value(
 						Resulting.FindField(InvolvedRowUtils.BaseRowField),
 						rows);
-					dissolved.set_Value(
-						Resulting.FindField(InvolvedRowUtils.BaseRowCountField),
-						rows.Count);
 
-					FieldInfo.SetGroupValue(dissolved, rows, ((Tfc) Resulting).DissolveFields);
+					Tfc r = (Tfc) Resulting;
+					r.TableView.ClearRows();
+					DataRow tableRow = null;
+					foreach (IRow row in rows)
+					{
+						tableRow = r.TableView.Add(row);
+					}
+
+					if (tableRow != null)
+					{
+						foreach (FieldInfo fieldInfo in r.CustomFields)
+						{
+							dissolved.set_Value(fieldInfo.Index, tableRow[fieldInfo.Name]);
+						}
+					}
+					r.TableView.ClearRows();
 
 					if (_constraitHelper?.MatchesConstraint(dissolved) != false)
 					{

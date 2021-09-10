@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
 
 namespace ProSuite.QA.Tests.Transformers
@@ -17,7 +19,8 @@ namespace ProSuite.QA.Tests.Transformers
 		private readonly IFeatureClass _t1;
 		private readonly Tfc _transformedFc;
 
-		private IList<string> _attributes;
+		private IList<string> _t0Attributes;
+		private IList<string> _t1Attributes;
 
 		public IList<ITable> InvolvedTables { get; }
 
@@ -31,7 +34,8 @@ namespace ProSuite.QA.Tests.Transformers
 			_transformedFc = new Tfc(_t0, _t1);
 		}
 
-		[TestParameter]
+		// Remark: Grouped must come in Code before T1Attributes !
+		[TestParameter] 
 		public bool Grouped
 		{
 			get => _transformedFc.Grouped;
@@ -39,36 +43,46 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter]
-		public IList<string> Attributes
+		public IList<string> T0Attributes
 		{
-			get => _attributes;
+			get => _t0Attributes;
 			set
 			{
-				_attributes = value;
-				AddFields(value, addUniqueField: true);
+				_t0Attributes = value;
+				AddFields(value, InvolvedTables[0], isGrouped: false);
 			}
 		}
 
-		private void AddFields([CanBeNull] IList<string> fieldNames, bool addUniqueField)
+		[TestParameter]
+		public IList<string> T1Attributes
+		{
+			get => _t1Attributes;
+			set
+			{
+				_t1Attributes = value;
+				AddFields(value, InvolvedTables[1], isGrouped: _transformedFc.Grouped);
+			}
+		}
+
+		private void AddFields([CanBeNull] IList<string> fieldNames, ITable sourceTable, bool isGrouped)
 		{
 			if (fieldNames == null)
 			{
 				return;
 			}
 
-			ITable fc = InvolvedTables[1];
+			Dictionary<string, string> expressionDict = ExpressionUtils.GetFieldDict(fieldNames);
+			Dictionary<string, string> aliasFieldDict = ExpressionUtils.CreateAliases(expressionDict);
 
-			foreach (string fieldName in fieldNames)
+			TableView tv = TableViewFactory.Create(sourceTable, expressionDict, aliasFieldDict, isGrouped);
+
+			_transformedFc.TableViews =
+				_transformedFc.TableViews ?? new Dictionary<ITable, TableView>();
+			_transformedFc.TableViews[sourceTable] = tv;
+
+			foreach (string field in expressionDict.Keys)
 			{
-				int iField = fc.FindField(fieldName);
-				if (iField < 0)
-				{
-					throw new InvalidOperationException(
-						$"Unkown field '{fieldName}' in '{DatasetUtils.GetName(fc)}'");
-				}
-
-				_transformedFc.AddField(fc.Fields.Field[iField], iField,
-				                        addUniqueField);
+				_transformedFc.AddField(field, tv);
 			}
 		}
 
@@ -88,7 +102,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private class Tfc : GdbFeatureClass, ITransformedValue
 		{
-			private List<FieldInfo> _joinFields;
+			public Dictionary<ITable, TableView> TableViews { get; set; }
 
 			public Tfc(IFeatureClass t0, IFeatureClass t1)
 				: base(-1, "intersectResult", t0.ShapeType,
@@ -103,15 +117,9 @@ namespace ProSuite.QA.Tests.Transformers
 				Fields.AddFields(
 					FieldUtils.CreateOIDField(),
 					FieldUtils.CreateShapeField(
-						t0.ShapeType, // TODO: only true for intersecting is Polygon FC
+						t0.ShapeType, 
 						geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM));
-
-				AddFields(t0, "t0");
-				AddFields(t1, "t1");
 			}
-
-			public List<FieldInfo> JoinFields =>
-				_joinFields ?? (_joinFields = new List<FieldInfo>());
 
 			public bool Grouped { get; set; }
 
@@ -120,29 +128,21 @@ namespace ProSuite.QA.Tests.Transformers
 				return new TfcFeature(oid, this);
 			}
 
-			private void AddFields(IFeatureClass fc, string prefix)
+			public Dictionary<TableView, List<FieldInfo>> CalcFields { get; private set; }
+			public void AddField(string field, TableView tableView)
 			{
-				for (int iField = 0; iField < fc.Fields.FieldCount; iField++)
-				{
-					IField f = fc.Fields.Field[iField];
-					Fields.AddFields(FieldUtils.CreateField($"{prefix}.{f.Name}", f.Type));
-				}
-			}
+				IField f = FieldUtils.CreateField(field, FieldUtils.GetFieldType(tableView.GetColumn(field).DataType));
+				Fields.AddFields(f);
 
-			public void AddField(IField field, int sourceIndex, bool addUniqueField)
-			{
-				Fields.AddFields(FieldUtils.CreateField(field.Name, field.Type));
-				FieldInfo fi = new FieldInfo(field.Name, Fields.FindField(field.Name), sourceIndex);
-				if (addUniqueField)
+				CalcFields = CalcFields ?? new Dictionary<TableView, List<FieldInfo>>();
+
+				if (! CalcFields.TryGetValue(tableView, out List<FieldInfo> fieldInfos))
 				{
-					string uniqueName = $"{field.Name}_unique";
-					Fields.AddFields(
-						FieldUtils.CreateField(uniqueName,
-						                       esriFieldType.esriFieldTypeSmallInteger));
-					fi.SetUnique(uniqueName, Fields.FindField(uniqueName));
+					fieldInfos = new List<FieldInfo>();
+					CalcFields.Add(tableView, fieldInfos);
 				}
 
-				JoinFields.Add(fi);
+				fieldInfos.Add(new FieldInfo(field, Fields.FindField(field), -1));
 			}
 
 			public IList<ITable> InvolvedTables { get; }
@@ -256,14 +256,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 						if (! grouped)
 						{
-							GdbFeature f = Resulting.CreateFeature();
-							f.Shape = ((IFeature) toJoin).Shape;
-							f.Store();
-
-							f.set_Value(
-								Resulting.FindField(InvolvedRowUtils.BaseRowField),
-								new List<IRow> {toJoin, joined}); // TODO
-
+							GdbFeature f = CreateFeature(toJoin, new []{joined}); Resulting.CreateFeature();
 							yield return f;
 						}
 						else
@@ -274,21 +267,57 @@ namespace ProSuite.QA.Tests.Transformers
 
 					if (joineds.Count > 0)
 					{
-						GdbFeature f = Resulting.CreateFeature();
-						f.Shape = ((IFeature) toJoin).Shape;
-						f.Store();
-
-						List<IRow> involved = new List<IRow>(joineds.Count + 1);
-						involved.Add(toJoin);
-						involved.AddRange(joineds);
-						f.set_Value(
-							Resulting.FindField(InvolvedRowUtils.BaseRowField),
-							involved); // TODO
-
-						FieldInfo.SetGroupValue(f, joineds, ((Tfc) Resulting).JoinFields);
+						GdbFeature f = CreateFeature(toJoin, joineds);
 						yield return f;
 					}
 				}
+
+			}
+
+			private GdbFeature CreateFeature(IRow toJoin, IList<IRow> joineds)
+			{
+				GdbFeature f = Resulting.CreateFeature();
+				f.Shape = ((IFeature) toJoin).Shape;
+				f.Store();
+
+				List<IRow> involved = new List<IRow>(joineds.Count + 1);
+				involved.Add(toJoin);
+				involved.AddRange(joineds);
+				f.set_Value(
+					Resulting.FindField(InvolvedRowUtils.BaseRowField),
+					involved);
+
+
+				SetValues(f, new[] {toJoin});
+				SetValues(f, joineds);
+
+				return f;
+			}
+
+			private void SetValues(GdbFeature feature, IList<IRow> sources)
+			{
+				Tfc r = (Tfc)Resulting;
+
+				TableView tv = null;
+				DataRow tableRow = null;
+				foreach (IRow row in sources)
+				{
+					if (tv == null)
+					{
+						r.TableViews?.TryGetValue(row.Table, out tv);
+					}
+					tableRow = tv?.Add(row);
+				}
+
+				if (tableRow != null)
+				{
+					foreach (FieldInfo fieldInfo in r.CalcFields[tv])
+					{
+						feature.set_Value(fieldInfo.Index, tableRow[fieldInfo.Name]);
+					}
+				}
+				tv?.ClearRows();
+
 			}
 		}
 	}

@@ -16,15 +16,6 @@ namespace ProSuite.QA.Tests.Transformers
 		public int Index { get; }
 		public int SourceIndex { get; }
 
-		public string UniqueName { get; private set; }
-		public int UniqueIndex { get; private set; }
-
-		public void SetUnique(string uniqueName, int uniqueIndex)
-		{
-			UniqueName = uniqueName;
-			UniqueIndex = uniqueIndex;
-		}
-
 		public static void SetGroupValue(IRow groupRow, IList<IRow> groupedRows,
 		                                 IEnumerable<FieldInfo> fieldInfos)
 		{
@@ -48,10 +39,6 @@ namespace ProSuite.QA.Tests.Transformers
 					}
 
 					groupRow.set_Value(fi.Index, value);
-					if (! string.IsNullOrWhiteSpace(fi.UniqueName))
-					{
-						groupRow.set_Value(fi.UniqueIndex, unique ? 1 : 0);
-					}
 				}
 			}
 		}

@@ -119,6 +119,16 @@ namespace ProSuite.QA.Container.TestSupport
 			return ConstraintView.Table.Columns.IndexOf(columnName);
 		}
 
+		public DataColumn GetColumn([NotNull] string columnName)
+		{
+			if (ConstraintView == null)
+			{
+				return null;
+			}
+
+			return ConstraintView.Table.Columns[columnName];
+		}
+
 		public string GetColumnName(int columnIndex)
 		{
 			return ConstraintView?.Table.Columns[columnIndex].ColumnName;
