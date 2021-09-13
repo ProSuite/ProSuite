@@ -40,13 +40,12 @@ namespace ProSuite.DomainModel.AO.QA
 			return factory;
 		}
 
-		private static bool InitializeParameterValues([NotNull] TestFactory factory)
+		private static void InitializeParameterValues([NotNull] TestFactory factory)
 		{
-			Dictionary<string, TestParameter> parametersByName =
-				factory.Parameters.ToDictionary(
-					testParameter => testParameter.Name);
+			var parametersByName = factory.Parameters.ToDictionary(testParameter => testParameter.Name);
+			var parameterValues = factory.Condition?.ParameterValues ?? Enumerable.Empty<TestParameterValue>();
 
-			foreach (TestParameterValue parameterValue in factory.Condition.ParameterValues)
+			foreach (TestParameterValue parameterValue in parameterValues)
 			{
 				TestParameter testParameter;
 				if (parametersByName.TryGetValue(parameterValue.TestParameterName,
@@ -55,8 +54,6 @@ namespace ProSuite.DomainModel.AO.QA
 					parameterValue.DataType = testParameter.Type;
 				}
 			}
-
-			return true;
 		}
 
 		/// <summary>
@@ -203,8 +200,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 		public static bool IsObsolete([NotNull] Type testType, int constructorIndex)
 		{
-			string message;
-			return IsObsolete(testType, constructorIndex, out message);
+			return IsObsolete(testType, constructorIndex, out _);
 		}
 
 		public static bool IsObsolete([NotNull] Type testType,

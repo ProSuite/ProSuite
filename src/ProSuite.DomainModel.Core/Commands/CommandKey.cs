@@ -4,8 +4,8 @@ namespace ProSuite.DomainModel.Core.Commands
 {
 	public class CommandKey : IEquatable<CommandKey>
 	{
-		private Guid _clsid;
-		private int? _subtype;
+		private readonly Guid _clsid;
+		private readonly int? _subtype;
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="CommandKey"/> struct.
@@ -22,9 +22,10 @@ namespace ProSuite.DomainModel.Core.Commands
 
 		public bool Equals(CommandKey commandKey)
 		{
-			return
-				Equals(_clsid, commandKey._clsid) &&
-				Equals(_subtype, commandKey._subtype);
+			if (commandKey is null) return false;
+
+			return Equals(_clsid, commandKey._clsid) &&
+			       Equals(_subtype, commandKey._subtype);
 		}
 
 		#endregion
