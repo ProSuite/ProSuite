@@ -60,15 +60,15 @@ namespace ProSuite.QA.TestFactories
 		}
 
 		protected override object[] Args(
-			[NotNull] IOpenDataset datasetContext,
-			[NotNull] IList<TestParameter> testParameters,
-			[NotNull] out List<TableConstraint> tableParameters)
+			IOpenDataset datasetContext,
+			IList<TestParameter> testParameters,
+			out List<TableConstraint> tableParameters)
 		{
 			object[] objParams = base.Args(datasetContext, testParameters, out tableParameters);
 
 			var objects = new object[2];
 			objects[0] = objParams[0];
-			objects[1] = ((double) objParams[1]) * Math.PI / 180.0;
+			objects[1] = (double) objParams[1] * Math.PI / 180.0;
 
 			return objects;
 		}

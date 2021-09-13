@@ -873,7 +873,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 		private static void AssertEqual(IMultiPatch multipatch1, IMultiPatch multipatch2)
 		{
-			var originalCollection = ((IGeometryCollection) multipatch1);
+			var originalCollection = (IGeometryCollection) multipatch1;
 			Assert.AreEqual(originalCollection.GeometryCount,
 			                ((IGeometryCollection) multipatch2).GeometryCount);
 
@@ -909,7 +909,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 		private static byte[] ToChristianSchwarzWkb(IPoint point)
 		{
-			Point wkxPoint = (GeometryUtils.IsZAware(point))
+			Point wkxPoint = GeometryUtils.IsZAware(point)
 				                 ? new Point(point.X, point.Y, point.Z)
 				                 : new Point(point.X, point.Y);
 

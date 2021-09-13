@@ -42,7 +42,7 @@ namespace ProSuite.Commons.CommandLine
 					continue;
 				}
 
-				return (i + 1) > _args.Length - 1
+				return i + 1 > _args.Length - 1
 					       ? null // there's no argument after the identifier
 					       : _args[i + 1];
 			}

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -67,7 +67,7 @@ namespace ProSuite.QA.Container
 
 				ITable table = (ITable) FeatureClass;
 				_tableIndex = Test.AddInvolvedTable(
-					table, default(string), default(bool), queriedOnly: true);
+					table, default, default, queriedOnly: true);
 
 				test.PostProcessError += ValidateError;
 			}

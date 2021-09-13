@@ -562,7 +562,7 @@ namespace ProSuite.QA.Tests
 			double dx = Math.Abs(x0 - x1);
 			double dy = Math.Abs(y0 - y1);
 
-			return (dx * dx) + (dy * dy);
+			return dx * dx + dy * dy;
 		}
 
 		[CanBeNull]

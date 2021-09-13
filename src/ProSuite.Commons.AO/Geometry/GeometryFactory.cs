@@ -518,7 +518,7 @@ namespace ProSuite.Commons.AO.Geometry
 			object emptyRef = Type.Missing;
 
 			IPolyline polylline = new PolylineClass();
-			((ISegmentCollection) polylline).AddSegment(((ISegment) circle), ref emptyRef,
+			((ISegmentCollection) polylline).AddSegment((ISegment) circle, ref emptyRef,
 			                                            ref emptyRef);
 			polylline.Densify(segmentLength, 0);
 			if (! polylline.IsClosed)
@@ -936,7 +936,7 @@ namespace ProSuite.Commons.AO.Geometry
 					}
 				}
 
-				IGeometry itemToAdd = (clone ?? geometry);
+				IGeometry itemToAdd = clone ?? geometry;
 
 				collection.AddGeometry(itemToAdd, ref emptyRef, ref emptyRef);
 			}
@@ -1257,22 +1257,21 @@ namespace ProSuite.Commons.AO.Geometry
 			[CanBeNull] bool? makeMAware = null)
 		{
 			// Allow also high-level geometries as baseGeometry:
-			if (baseGeometry is IPolygon)
+			if (baseGeometry is IPolygon polygon)
 			{
 				// TODO: respect spatial ref and ZM-awareness
-				return CreatePolyline((IPolygon) baseGeometry);
+				return CreatePolyline(polygon);
 			}
 
-			if (baseGeometry is IPolyline)
+			if (baseGeometry is IPolyline polyline)
 			{
-				return CreatePolyline((IPolyline) baseGeometry,
+				return CreatePolyline(polyline,
 				                      spatialReference, makeZAware, makeMAware);
 			}
 
-			if (baseGeometry is ISegment)
+			if (baseGeometry is ISegment segment)
 			{
-				return CreatePolyline((ISegment) baseGeometry, spatialReference, makeZAware,
-				                      makeMAware);
+				return CreatePolyline(segment, spatialReference, makeZAware, makeMAware);
 			}
 
 			if (baseGeometry != null)
@@ -1551,14 +1550,14 @@ namespace ProSuite.Commons.AO.Geometry
 		                             bool? makeZAware,
 		                             bool? makeMAware)
 		{
-			if (baseGeometry is IZAware)
+			if (baseGeometry is IZAware zAware)
 			{
-				((IZAware) newGeometry).ZAware = makeZAware ?? ((IZAware) baseGeometry).ZAware;
+				((IZAware) newGeometry).ZAware = makeZAware ?? zAware.ZAware;
 			}
 
-			if (baseGeometry is IMAware)
+			if (baseGeometry is IMAware mAware)
 			{
-				((IMAware) newGeometry).MAware = makeMAware ?? ((IMAware) baseGeometry).MAware;
+				((IMAware) newGeometry).MAware = makeMAware ?? mAware.MAware;
 			}
 		}
 
@@ -1864,30 +1863,26 @@ namespace ProSuite.Commons.AO.Geometry
 				return polygon;
 			}
 
-			var basePolygon = baseGeometry as IPolygon;
-			if (basePolygon != null)
+			if (baseGeometry is IPolygon basePolygon)
 			{
 				polygon = Clone(basePolygon);
 			}
 			else
 			{
-				var baseEnvelope = baseGeometry as IEnvelope;
-				if (baseEnvelope != null)
+				if (baseGeometry is IEnvelope baseEnvelope)
 				{
 					polygon = CreatePolygon(baseEnvelope);
 				}
 				else
 				{
-					var segmentCollection = baseGeometry as ISegmentCollection;
-
-					if (segmentCollection != null)
+					if (baseGeometry is ISegmentCollection segmentCollection)
 					{
 						polygon = CreatePolygon(segmentCollection, spatialReference, null, null);
 					}
-					else if (baseGeometry is IMultiPatch)
+					else if (baseGeometry is IMultiPatch multiPatch)
 					{
-						polygon = CreatePolygon((IMultiPatch) baseGeometry, spatialReference, true,
-						                        GeometryUtils.IsMAware(baseGeometry));
+						polygon = CreatePolygon(multiPatch, spatialReference, true,
+						                        GeometryUtils.IsMAware(multiPatch));
 					}
 					else
 					{
@@ -2377,10 +2372,8 @@ namespace ProSuite.Commons.AO.Geometry
 		public static IRing CreateCircle(IPoint point1, IPoint point2,
 		                                 IPoint point3, double minSegmentLenght)
 		{
-			IPoint centerPoint;
-			double radius;
 			return CreateCircle(point1, point2, point3, minSegmentLenght,
-			                    out radius, out centerPoint);
+			                    out double _, out IPoint _);
 		}
 
 		[CanBeNull]
@@ -2388,9 +2381,8 @@ namespace ProSuite.Commons.AO.Geometry
 		                                 IPoint point3, double minSegmentLenght,
 		                                 out double radius)
 		{
-			IPoint centerPoint;
 			return CreateCircle(point1, point2, point3, minSegmentLenght,
-			                    out radius, out centerPoint);
+			                    out radius, out IPoint _);
 		}
 
 		[CanBeNull]
@@ -2684,14 +2676,14 @@ namespace ProSuite.Commons.AO.Geometry
 				return geometry;
 			}
 
-			if (geometry is IPointCollection)
+			if (geometry is IPointCollection pointCollection)
 			{
-				return CreateMultipoint((IPointCollection) geometry);
+				return CreateMultipoint(pointCollection);
 			}
 
-			if (geometry is IPoint)
+			if (geometry is IPoint point)
 			{
-				return CreateMultipoint((IPoint) geometry);
+				return CreateMultipoint(point);
 			}
 
 			throw new NotSupportedException(
@@ -2712,31 +2704,29 @@ namespace ProSuite.Commons.AO.Geometry
 				return geometry;
 			}
 
-			if (geometry is IPoint)
+			if (geometry is IPoint point1)
 			{
-				return CreatePolylineFromPoint((IPoint) geometry, expansionDistance);
+				return CreatePolylineFromPoint(point1, expansionDistance);
 			}
 
-			if (geometry is IMultiPatch)
+			if (geometry is IMultiPatch multiPatch)
 			{
-				return
-					((ITopologicalOperator) CreatePolygon((IMultiPatch) geometry)).Boundary;
+				return ((ITopologicalOperator) CreatePolygon(multiPatch)).Boundary;
 			}
 
-			if (geometry is IPointCollection)
+			if (geometry is IPointCollection pointCollection)
 			{
 				IPoint point = new PointClass();
 
 				try
 				{
-					var points = (IPointCollection) geometry;
-					int pointCount = points.PointCount;
+					int pointCount = pointCollection.PointCount;
 
 					var polys = new List<IGeometry>(pointCount);
 
 					for (var i = 0; i < pointCount; i++)
 					{
-						points.QueryPoint(i, point);
+						pointCollection.QueryPoint(i, point);
 
 						polys.Add(CreatePolylineFromPoint(point, expansionDistance));
 					}
@@ -2775,30 +2765,29 @@ namespace ProSuite.Commons.AO.Geometry
 				return GeometryUtils.GeneralizedBuffer(geometry, expansionDistance);
 			}
 
-			if (geometry is IPoint)
+			if (geometry is IPoint point1)
 			{
-				return CreatePolygonFromPoint((IPoint) geometry, expansionDistance);
+				return CreatePolygonFromPoint(point1, expansionDistance);
 			}
 
-			if (geometry is IMultiPatch)
+			if (geometry is IMultiPatch multiPatch)
 			{
-				return CreatePolygon((IMultiPatch) geometry);
+				return CreatePolygon(multiPatch);
 			}
 
-			if (geometry is IPointCollection)
+			if (geometry is IPointCollection pointCollection)
 			{
 				IPoint point = new PointClass();
 
 				try
 				{
-					var points = (IPointCollection) geometry;
-					int pointCount = points.PointCount;
+					int pointCount = pointCollection.PointCount;
 
 					var polys = new List<IGeometry>(pointCount);
 
 					for (var i = 0; i < pointCount; i++)
 					{
-						points.QueryPoint(i, point);
+						pointCollection.QueryPoint(i, point);
 
 						polys.Add(CreatePolygonFromPoint(point, expansionDistance));
 					}

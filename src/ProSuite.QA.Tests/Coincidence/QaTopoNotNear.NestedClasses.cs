@@ -205,9 +205,8 @@ namespace ProSuite.QA.Tests.Coincidence
 			public SubClosedCurve GetSubcurveAt(double value)
 			{
 				IList<SubClosedCurve> connected;
-				IList<SubClosedCurve> selfConnected;
 				GetSubcurves(BaseSegments, SegmentNeighbors.Values, 0, 0, false, out connected,
-				             out selfConnected);
+				             out IList<SubClosedCurve> _);
 
 				foreach (SubClosedCurve candidate in connected)
 				{
@@ -562,9 +561,8 @@ namespace ProSuite.QA.Tests.Coincidence
 				}
 
 				IList<ConnectedSegmentParts> connecteds;
-				IList<ConnectedSegmentParts> nearSelfs;
 				GetConnectedParts(baseSegments, new[] {filteredParts}, 0, 0, false,
-				                  out connecteds, out nearSelfs);
+				                  out connecteds, out IList<ConnectedSegmentParts> _);
 
 				return connecteds;
 			}
@@ -1604,9 +1602,7 @@ namespace ProSuite.QA.Tests.Coincidence
 									new SegmentHull(neighborProxy, rowDistance, cap, cap));
 							IList<double[]> limits;
 							bool coincident;
-							NearSegment nearStart, nearEnd;
-							segmentPair.CutCurveHull(0, out limits, out nearStart, out nearEnd,
-							                         out coincident);
+							segmentPair.CutCurveHull(0, out limits, out _, out _, out coincident);
 							if (coincident)
 							{
 								return true;
@@ -1945,23 +1941,13 @@ namespace ProSuite.QA.Tests.Coincidence
 								return true;
 							}
 
-							ISegmentProxy neighborSegment =
-								neighboredPart.NeighborProxy;
-							return (partsToRemove.PartIndex !=
-							        neighborSegment
-								        .PartIndex ||
-							        partsToRemove
-								        .FullMinFraction >
-							        neighborSegment
-								        .SegmentIndex ||
-							        partsToRemove
-								        .FullMaxFraction <=
-							        neighborSegment
-								        .SegmentIndex);
+							ISegmentProxy neighborSegment = neighboredPart.NeighborProxy;
+							return partsToRemove.PartIndex != neighborSegment.PartIndex ||
+							       partsToRemove.FullMinFraction > neighborSegment.SegmentIndex ||
+							       partsToRemove.FullMaxFraction <= neighborSegment.SegmentIndex;
 						});
 
-					var copy =
-						new NeighboredSegmentsSubpart(part, copyNeighbors);
+					var copy = new NeighboredSegmentsSubpart(part, copyNeighbors);
 
 					parts.Add(copy);
 				}
@@ -2005,8 +1991,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			internal void RecalculateConnectedCurves()
 			{
-				var recalceds =
-					new List<ConnectedSegmentsSubpart>(BaseSegments.Count);
+				var recalceds = new List<ConnectedSegmentsSubpart>(BaseSegments.Count);
 
 				foreach (ConnectedSegmentsSubpart linePart in BaseSegments)
 				{
@@ -2394,10 +2379,8 @@ namespace ProSuite.QA.Tests.Coincidence
 					NeighboredSegmentsSubpart baseSegments = parts[partIndex];
 
 					IList<SubClosedCurve> connectedParts;
-					IList<SubClosedCurve> selfConnected;
 					GetSubcurves(baseSegments.BaseSegments, baseSegments.SegmentNeighbors.Values, 0,
-					             0, false,
-					             out connectedParts, out selfConnected);
+					             0, false, out connectedParts, out IList<SubClosedCurve> _);
 
 					SubClosedCurve endPart = null;
 					foreach (SubClosedCurve endPartCandidate in connectedParts)
@@ -2890,8 +2873,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			public int GetHashCode(SegmentPart obj)
 			{
 				int code = obj.FullMin.GetHashCode();
-				var nbObj = obj as SegmentPartWithNeighbor;
-				if (nbObj != null)
+				if (obj is SegmentPartWithNeighbor nbObj)
 				{
 					code = code ^
 					       7 * (nbObj.NeighborFeature.OID.GetHashCode() ^

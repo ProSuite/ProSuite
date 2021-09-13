@@ -545,7 +545,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			unchecked
 			{
 				int hashCode =
-					(_defaultVersionName != null ? _defaultVersionName.GetHashCode() : 0);
+					_defaultVersionName != null ? _defaultVersionName.GetHashCode() : 0;
 				hashCode = (hashCode * 397) ^
 				           (_versionName != null ? _versionName.GetHashCode() : 0);
 				hashCode = (hashCode * 397) ^

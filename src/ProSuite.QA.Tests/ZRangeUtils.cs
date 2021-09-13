@@ -13,9 +13,7 @@ namespace ProSuite.QA.Tests
 		public static double GetSplitRatio(double fromZ, double toZ,
 		                                   double splitAtZ)
 		{
-			double zAtSplitPoint;
-			return GetSplitRatio(fromZ, toZ, splitAtZ,
-			                     null, out zAtSplitPoint);
+			return GetSplitRatio(fromZ, toZ, splitAtZ, null, out double _);
 		}
 
 		public static double GetSplitRatio(double fromZ, double toZ,
@@ -25,8 +23,8 @@ namespace ProSuite.QA.Tests
 		{
 			const double defaultRatio = 0.5;
 
-			if (! ((fromZ >= splitAtZ && toZ <= splitAtZ) ||
-			       (fromZ <= splitAtZ && toZ >= splitAtZ)))
+			if (! (fromZ >= splitAtZ && toZ <= splitAtZ ||
+			       fromZ <= splitAtZ && toZ >= splitAtZ))
 			{
 				// The splitAtZ value is *not* between fromZ and toZ: 
 				// This may be the case when one of the bounds is outside the z range but allowed.
@@ -65,7 +63,7 @@ namespace ProSuite.QA.Tests
 				               ? (fromZ - splitAtZ) / (fromZ - toZ)
 				               : (splitAtZ - fromZ) / (toZ - fromZ);
 
-			Assert.ArgumentCondition((ratio >= 0 && ratio <= 1),
+			Assert.ArgumentCondition(0 <= ratio && ratio <= 1,
 			                         "Split ratio must be between 0 and 1, actual value is {0}",
 			                         ratio);
 
@@ -135,10 +133,8 @@ namespace ProSuite.QA.Tests
 		                                        [NotNull] out ISegment fromSegment,
 		                                        [NotNull] out ISegment toSegment)
 		{
-			double zAtSplitPoint;
 			SplitSegmentAtZValue(segment, fromZ, toZ, splitAtZ, null,
-			                     out fromSegment, out toSegment,
-			                     out zAtSplitPoint);
+			                     out fromSegment, out toSegment, out double _);
 		}
 
 		public static void SplitSegmentAtZValue([NotNull] ISegment segment,
@@ -165,10 +161,8 @@ namespace ProSuite.QA.Tests
 			[NotNull] ZRangeErrorSegments errorSegmentsAtEnd,
 			[NotNull] ZRangeErrorSegments errorSegmentsAtStart)
 		{
-			const bool startsOnFirstSegment = false;
 			var result = new ZRangeErrorSegments(errorSegmentsAtEnd.ZRangeRelation,
-			                                     errorSegmentsAtEnd.SpatialReference,
-			                                     startsOnFirstSegment)
+			                                     errorSegmentsAtEnd.SpatialReference)
 			             {EndsOnLastSegment = false};
 
 			result.AddSegments(errorSegmentsAtEnd);

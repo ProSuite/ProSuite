@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
@@ -99,7 +99,6 @@ namespace ProSuite.QA.Container.Geometry
 
 		#endregion
 
-		[NotNull]
 		public IList<WKSPointZ> Points => _points;
 
 		public int SegmentCount { get; }

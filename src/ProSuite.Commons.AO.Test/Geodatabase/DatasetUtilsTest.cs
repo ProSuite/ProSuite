@@ -162,7 +162,6 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			IQueryFilter spatialFilter =
 				GdbQueryUtils.CreateSpatialFilter(rasterCatalog, winterthur);
 
-			IStringArray stringArray;
 			Stopwatch watch = Stopwatch.StartNew();
 
 			int count = 0;
@@ -174,7 +173,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 				IRasterDataset rasterDataset = rasterCatalogItem.RasterDataset;
 				var itemPaths = (IItemPaths) rasterDataset;
-				stringArray = itemPaths.GetPaths();
+				IStringArray stringArray = itemPaths.GetPaths();
 				Marshal.ReleaseComObject(rasterDataset);
 
 				Assert.AreEqual(1, stringArray.Count);
@@ -222,9 +221,6 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			// In case of DllNotFoundException, copy the appropriate dlls from the gdal subdirectory to the bin
 			Gdal.AllRegister();
-
-			IStringArray stringArray;
-			Stopwatch watch = Stopwatch.StartNew();
 
 			List<IFeature> features = GdbQueryUtils.GetFeatures(
 				rasterCatalog, spatialFilter, false).ToList();
@@ -327,15 +323,15 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				Random random = new Random();
 
 				double minimumX = originX + 1;
-				double width = (17500 / 4d) - 2;
+				double width = 17500 / 4d - 2;
 				double minimumY = originY + 1;
-				double height = (12000 / 4d) - 2;
+				double height = 12000 / 4d - 2;
 
 				Stopwatch pixelWatch = Stopwatch.StartNew();
 
 				int count = 10000;
 
-				Console.WriteLine("Memory before: {0}", GetMemoryConsumptionText(out long pbOrig));
+				Console.WriteLine("Memory before: {0}", GetMemoryConsumptionText(out _));
 
 				float[] pixelBuffer4 = new float[4];
 
@@ -357,7 +353,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 				Console.WriteLine($"Time: {pixelWatch.ElapsedMilliseconds} ms");
 
-				Console.WriteLine("Memory after: {0}", GetMemoryConsumptionText(out long pbAfter));
+				Console.WriteLine("Memory after: {0}", GetMemoryConsumptionText(out _));
 
 				// END Pixel access
 
@@ -394,17 +390,13 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			row.set_Value(fieldIndex, null);
 			object readback1 = row.get_Value(fieldIndex);
 			Console.WriteLine(@"get_Value(set_Value(null)) is {0}",
-			                  (readback1 == null)
-				                  ? "null"
-				                  : readback1.GetType().ToString());
+			                  readback1?.GetType().ToString() ?? "null");
 
 			row.set_Value(fieldIndex, DBNull.Value);
 
 			object readback2 = row.get_Value(fieldIndex);
 			Console.WriteLine(@"get_Value(set_Value(DBNull.Value)) is {0}",
-			                  (readback2 == null)
-				                  ? "null"
-				                  : readback2.GetType().ToString());
+			                  readback2?.GetType().ToString() ?? "null");
 			bool isNull = readback2 == null;
 			bool isDBNull = readback2 == DBNull.Value;
 

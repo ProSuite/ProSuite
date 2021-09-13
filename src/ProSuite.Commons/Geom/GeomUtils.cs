@@ -188,7 +188,7 @@ return : Point2D : lines cut each other at Point (non parallel)
 
 			// parallel lines 
 			det = dir0.VectorProduct(p);
-			f = (det * det) / dir0.OrigDist2(2);
+			f = det * det / dir0.OrigDist2(2);
 			return null;
 		}
 
@@ -202,10 +202,9 @@ return : Point2D : lines cut each other at Point (non parallel)
 			Pnt s1 = 0.5 * (p1 + p2);
 			Pnt dir1 = p2 - p1;
 
-			double f;
 			return CutDirDir(s0,
 			                 new Pnt2D(dir0.Y, -dir0.X), s1,
-			                 new Pnt2D(dir1.Y, -dir1.X), out f);
+			                 new Pnt2D(dir1.Y, -dir1.X), out double _);
 		}
 
 		public static double TriArea([NotNull] Pnt2D p0,

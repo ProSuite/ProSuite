@@ -16,7 +16,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 		{
 			Assert.ArgumentNotNull(text, nameof(text));
 
-			int paddingCount = (text.Length / 3) + 1;
+			int paddingCount = text.Length / 3 + 1;
 
 			return text + new string(' ', paddingCount);
 		}

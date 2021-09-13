@@ -43,7 +43,7 @@ namespace ProSuite.Commons.Misc
 		/// </returns>
 		public bool IsWithin()
 		{
-			return (DateTime.Now.Ticks - _startedTicks) < _durationTicks;
+			return DateTime.Now.Ticks - _startedTicks < _durationTicks;
 		}
 	}
 }

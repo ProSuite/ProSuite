@@ -800,8 +800,7 @@ namespace ProSuite.QA.Tests
 			else
 			{
 				int localCoveredClassIndex = coveredClassIndex - _coveringClassesCount;
-				index = (localCoveredClassIndex * _coveringClassesCount) +
-				        coveringClassIndex;
+				index = localCoveredClassIndex * _coveringClassesCount + coveringClassIndex;
 			}
 
 			return _isCoveringConditions[index];
@@ -862,8 +861,8 @@ namespace ProSuite.QA.Tests
 
 			esriGeometryType coveringShapeType = coveringGeometry.GeometryType;
 
-			if ((coveringShapeType == esriGeometryType.esriGeometryPolygon ||
-			     coveringShapeType == esriGeometryType.esriGeometryMultiPatch))
+			if (coveringShapeType == esriGeometryType.esriGeometryPolygon ||
+			    coveringShapeType == esriGeometryType.esriGeometryMultiPatch)
 			{
 				// the covering shape type is (at least) 2-dimensional
 				// -> try cheaper methods to determine if the covered feature is contained
@@ -909,12 +908,9 @@ namespace ProSuite.QA.Tests
 			}
 			else
 			{
-				double xMax;
-				double yMax;
 				parameters.TileEnvelope.QueryCoords(out _tileEnvelopeXMin,
 				                                    out _tileEnvelopeYMin,
-				                                    out xMax,
-				                                    out yMax);
+				                                    out double _, out double _);
 			}
 		}
 
@@ -930,7 +926,7 @@ namespace ProSuite.QA.Tests
 			EvictCoveringGeometryCacheEntries(tileEnvelope);
 
 			IEnvelope testRunEnvelope = args.AllBox;
-			bool isLastTile = (args.State == TileState.Final);
+			bool isLastTile = args.State == TileState.Final;
 			var errorCount = 0;
 
 			foreach (
@@ -990,9 +986,7 @@ namespace ProSuite.QA.Tests
 		{
 			double xMax;
 			double yMax;
-			double xMin;
-			double yMin;
-			tileEnvelope.QueryCoords(out xMin, out yMin, out xMax, out yMax);
+			tileEnvelope.QueryCoords(out double _, out double _, out xMax, out yMax);
 
 			foreach (KeyValuePair<int, CoveringGeometryCache> pair in _coveringGeometryCaches)
 			{
@@ -1109,9 +1103,8 @@ namespace ProSuite.QA.Tests
 			}
 
 			SimpleSet<int> featuresKnownCovered;
-			if (
-				! _featuresKnownCovered.TryGetValue(tableIndex,
-				                                    out featuresKnownCovered))
+			if (! _featuresKnownCovered.TryGetValue(tableIndex,
+			                                        out featuresKnownCovered))
 			{
 				featuresKnownCovered = new SimpleSet<int>();
 				_featuresKnownCovered.Add(tableIndex, featuresKnownCovered);
@@ -1772,9 +1765,7 @@ namespace ProSuite.QA.Tests
 					envelope = ShapeEnvelopeTemplate;
 				}
 
-				double xMax;
-				double yMax;
-				envelope.QueryCoords(out xMin, out yMin, out xMax, out yMax);
+				envelope.QueryCoords(out xMin, out yMin, out double _, out double _);
 			}
 
 			private class SecondaryFilter
@@ -2007,7 +1998,7 @@ namespace ProSuite.QA.Tests
 				{
 					Entry entry = pair.Value;
 
-					if (! entry.HasGeoemtry || isEntryEvictable(entry))
+					if (! entry.HasGeometry || isEntryEvictable(entry))
 					{
 						yield return new KeyValuePair<int, Entry>(pair.Key, entry);
 					}
@@ -2035,14 +2026,11 @@ namespace ProSuite.QA.Tests
 					{
 						geometry.QueryEnvelope(envelopeTemplate);
 
-						double xMin;
-						double yMin;
-						envelopeTemplate.QueryCoords(out xMin, out yMin,
-						                             out _xMax, out _yMax);
+						envelopeTemplate.QueryCoords(out _, out _, out _xMax, out _yMax);
 					}
 				}
 
-				public bool HasGeoemtry => ! (double.IsNaN(_xMax) || double.IsNaN(_yMax));
+				public bool HasGeometry => ! (double.IsNaN(_xMax) || double.IsNaN(_yMax));
 
 				public int PointCount { get; }
 

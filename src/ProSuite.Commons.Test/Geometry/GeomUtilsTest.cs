@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -104,14 +104,10 @@ namespace ProSuite.Commons.Test.Geometry
 			Linestring linestring2 =
 				new Linestring(CreateRandomPoints(pointCount, 2600000, 1200000, 400));
 
-			Stopwatch watch;
-			int foundCountBoxtree;
-			int foundSpatialHash;
-			int envelopeIntersections;
 			double tolerance = 0.01;
 
 			MemoryUsageInfo memUsageBox = new MemoryUsageInfo();
-			watch = Stopwatch.StartNew();
+			var watch = Stopwatch.StartNew();
 
 			linestring2.SpatialIndex =
 				BoxTreeSearcher<int>.CreateSpatialSearcher(linestring2);
@@ -122,16 +118,14 @@ namespace ProSuite.Commons.Test.Geometry
 				$"Linestring ({pointCount}) - Box tree created: {watch.ElapsedMilliseconds}ms. PB: {memUsageBox.Refresh().PrivateBytesDelta:N0}");
 
 			watch = Stopwatch.StartNew();
-			foundCountBoxtree = 0;
-			envelopeIntersections = 0;
+			var foundCountBoxtree = 0;
 			foreach (Line3D line3D in linestring1)
 			{
 				int foundInEnv = linestring2.FindSegments(
 					line3D.XMin, line3D.YMin, line3D.XMax,
 					line3D.YMax, tolerance).Count();
 
-				if (foundInEnv > 0)
-					envelopeIntersections++;
+				if (foundInEnv > 0) { }
 
 				foundCountBoxtree += foundInEnv;
 			}
@@ -151,16 +145,14 @@ namespace ProSuite.Commons.Test.Geometry
 				$"Linestring ({pointCount}) - spatial hash created: {watch.ElapsedMilliseconds}ms. PB: {memUsageHash.Refresh().PrivateBytesDelta:N0}");
 
 			watch = Stopwatch.StartNew();
-			foundSpatialHash = 0;
-			envelopeIntersections = 0;
+			var foundSpatialHash = 0;
 			foreach (Line3D line3D in linestring1)
 			{
 				int foundInEnv = linestring2.FindSegments(
 					line3D.XMin, line3D.YMin, line3D.XMax,
 					line3D.YMax, tolerance).Count();
 
-				if (foundInEnv > 0)
-					envelopeIntersections++;
+				if (foundInEnv > 0) { }
 
 				foundSpatialHash += foundInEnv;
 			}
@@ -187,15 +179,13 @@ namespace ProSuite.Commons.Test.Geometry
 
 			watch = Stopwatch.StartNew();
 			foundSpatialHash = 0;
-			envelopeIntersections = 0;
 			foreach (Line3D line3D in linestring1)
 			{
 				int foundInEnv = poly2.FindSegments(
 					line3D.XMin, line3D.YMin, line3D.XMax,
 					line3D.YMax, tolerance).Count();
 
-				if (foundInEnv > 0)
-					envelopeIntersections++;
+				if (foundInEnv > 0) { }
 
 				foundSpatialHash += foundInEnv;
 			}
@@ -246,7 +236,7 @@ namespace ProSuite.Commons.Test.Geometry
 
 				result.X += (random.NextDouble() - 0.5) * averageLength;
 				result.Y += (random.NextDouble() - 0.5) * averageLength;
-				result.Z = (random.NextDouble()) * averageLength;
+				result.Z = random.NextDouble() * averageLength;
 
 				yield return result;
 			}

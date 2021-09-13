@@ -78,7 +78,8 @@ namespace ProSuite.UI.QA.Controls
 			var element = e.Node.Tag as QualitySpecificationElement;
 			QualityCondition qualityCondition = element?.QualityCondition;
 
-			e.Node.NodeFont = (qualityCondition?.Updated ?? false)
+			bool updated = qualityCondition?.Updated ?? false;
+			e.Node.NodeFont = updated
 				                  ? new Font(((TreeView) sender).Font, FontStyle.Italic)
 				                  : ((TreeView) sender).Font;
 

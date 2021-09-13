@@ -643,8 +643,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			{
 				if (reshapeType == RingReshapeType.InsideAndOutside)
 				{
-					RingReshapeSideOfLine okSide;
-					if (ReshapePathCrossCutsReplacedSegments(out okSide))
+					if (ReshapePathCrossCutsReplacedSegments(out _))
 					{
 						// This should not happen, because there is always one of the two with no boundary loops
 						NotificationUtils.Add(notifications,
@@ -1062,8 +1061,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		/// <returns></returns>
 		private bool ReshapePathCrossCutsReplacedSegments()
 		{
-			RingReshapeSideOfLine okSide;
-			return ReshapePathCrossCutsReplacedSegments(out okSide);
+			return ReshapePathCrossCutsReplacedSegments(out _);
 		}
 
 		/// <summary>
@@ -1169,7 +1167,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		private void RepairPartIndexToReshape()
 		{
-			var geometryCollection = ((IGeometryCollection) GeometryToReshape);
+			var geometryCollection = (IGeometryCollection) GeometryToReshape;
 
 			for (var i = 0; i < geometryCollection.GeometryCount; i++)
 			{
@@ -1423,7 +1421,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			//const double maxReplacementToRingRatio = 0.1;
 			if (replacementRatio > maxReplacementToRingRatio &&
-			    replacementRatio < (1.0 - maxReplacementToRingRatio))
+			    replacementRatio < 1.0 - maxReplacementToRingRatio)
 			{
 				// be extremely conservative: if the two options are anywhere close to each other
 				// -> use conventional mechanism.
@@ -1444,7 +1442,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			if (pointsWereSwapped)
 			{
-				result = (result == RingReshapeSideOfLine.Left)
+				result = result == RingReshapeSideOfLine.Left
 					         ? RingReshapeSideOfLine.Right
 					         : RingReshapeSideOfLine.Left;
 			}

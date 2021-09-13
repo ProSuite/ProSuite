@@ -67,7 +67,7 @@ namespace ProSuite.Commons
 			// use IsDefined if not case-insensitive
 			if (! ignoreCase && ! Enum.IsDefined(typeof(T), value))
 			{
-				result = default(T);
+				result = default;
 				return false;
 			}
 
@@ -78,7 +78,7 @@ namespace ProSuite.Commons
 			}
 			catch (Exception)
 			{
-				result = default(T);
+				result = default;
 				return false;
 			}
 		}

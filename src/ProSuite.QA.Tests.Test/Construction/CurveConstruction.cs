@@ -201,7 +201,7 @@ namespace ProSuite.QA.Tests.Test.Construction
 		[NotNull]
 		public IPolygon ClosePolygon(bool noSimplify = false)
 		{
-			var poly = ((IPolygon) Curve);
+			var poly = (IPolygon) Curve;
 			poly.Close();
 			if (! noSimplify)
 			{

@@ -142,7 +142,7 @@ namespace ProSuite.Commons.UI.Logging
 			// wraps around after a few weeks.
 			int tickCount = Environment.TickCount;
 			bool forceRefresh = tickCount < _lastRefreshTickCount ||
-			                    (_lastRefreshTickCount + _refreshIntervalMs) < tickCount;
+			                    _lastRefreshTickCount + _refreshIntervalMs < tickCount;
 
 			if (forceRefresh)
 			{

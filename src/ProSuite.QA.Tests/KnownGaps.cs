@@ -261,13 +261,11 @@ namespace ProSuite.QA.Tests
 			{
 				intersection.QueryEnvelope(intersectionEnvelope);
 
-				double xMin;
-				double yMin;
 				double xMax;
 				double yMax;
-				intersectionEnvelope.QueryCoords(out xMin, out yMin, out xMax, out yMax);
+				intersectionEnvelope.QueryCoords(out _, out _, out xMax, out yMax);
 
-				if (xMax >= (tileXMax - tolerance) || yMax >= (tileYMax - tolerance))
+				if (xMax >= tileXMax - tolerance || yMax >= tileYMax - tolerance)
 				{
 					remaining.Add(intersection);
 				}

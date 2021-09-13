@@ -358,6 +358,7 @@ namespace ProSuite.Commons.Test.Geometry
 				Assert.AreEqual(testPoint1ExpectedZ, found.Z);
 			}
 
+			Assert.NotNull(linestring);
 			Pnt3D point = linestring[2].StartPoint;
 			linestring.UpdatePoint(2, point.X, point.Y, double.NaN);
 
@@ -419,6 +420,7 @@ namespace ProSuite.Commons.Test.Geometry
 				Assert.False(linestring.GetPoints().Any(p => double.IsNaN(p.Z)));
 			}
 
+			Assert.NotNull(linestring);
 			Pnt3D point = linestring[2].StartPoint;
 			linestring.UpdatePoint(2, point.X, point.Y, double.NaN);
 

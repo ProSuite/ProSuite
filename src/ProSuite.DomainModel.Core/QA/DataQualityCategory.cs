@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Text;
@@ -304,7 +304,7 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			unchecked
 			{
-				int hashCode = (_uuid != null ? _uuid.GetHashCode() : 0);
+				int hashCode = _uuid != null ? _uuid.GetHashCode() : 0;
 				hashCode = (hashCode * 397) ^ (_name != null ? _name.GetHashCode() : 0);
 				hashCode = (hashCode * 397) ^
 				           (_parentCategory != null ? _parentCategory.GetHashCode() : 0);

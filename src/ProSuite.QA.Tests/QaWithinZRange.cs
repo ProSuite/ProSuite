@@ -127,7 +127,7 @@ namespace ProSuite.QA.Tests
 			if (_hasPointGeometry)
 			{
 				double z = ((IPoint) geometry).Z;
-				return (z >= _minimumZValue && z <= _maximumZValue) || IsAllowed(z);
+				return z >= _minimumZValue && z <= _maximumZValue || IsAllowed(z);
 			}
 
 			geometry.QueryEnvelope(_envelopeTemplate);
@@ -216,10 +216,7 @@ namespace ProSuite.QA.Tests
 			var errorPointsAbove = new List<IPoint>();
 
 			IPoint currentPoint;
-			int partIndex;
-			int segmentIndex;
-
-			enumPoints.Next(out currentPoint, out partIndex, out segmentIndex);
+			enumPoints.Next(out currentPoint, out int _, out int _);
 
 			double zMax = double.MinValue;
 			double zMin = double.MaxValue;
@@ -249,7 +246,7 @@ namespace ProSuite.QA.Tests
 					}
 				}
 
-				enumPoints.Next(out currentPoint, out partIndex, out segmentIndex);
+				enumPoints.Next(out currentPoint, out int _, out int _);
 			}
 
 			var errorCount = 0;
@@ -259,7 +256,7 @@ namespace ProSuite.QA.Tests
 				errorCount += ReportError(GetErrorMessageBelow(errorPointsBelow, zMin),
 				                          GetErrorGeometry(errorPointsBelow),
 				                          null, _shapeFieldName,
-				                          (IRow) feature);
+				                          feature);
 			}
 
 			if (errorPointsAbove.Count > 0)
@@ -269,7 +266,7 @@ namespace ProSuite.QA.Tests
 				errorCount += ReportError(message,
 				                          GetErrorGeometry(errorPointsAbove),
 				                          null, _shapeFieldName,
-				                          (IRow) feature);
+				                          feature);
 			}
 
 			return errorCount;

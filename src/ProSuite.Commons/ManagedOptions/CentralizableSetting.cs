@@ -1,4 +1,4 @@
-﻿using System.ComponentModel;
+using System.ComponentModel;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -89,7 +89,7 @@ namespace ProSuite.Commons.ManagedOptions
 				{
 					resultValue = (T) _localSetting.Value;
 				}
-				else if (_centralSetting != null && _centralSetting.Value != null)
+				else if (_centralSetting?.Value != null)
 				{
 					resultValue = (T) _centralSetting.Value;
 				}
@@ -130,7 +130,7 @@ namespace ProSuite.Commons.ManagedOptions
 			NotifyCurrentValueChanged("CurrentValue");
 
 			HasLocalOverride = _centralSetting == null ||
-			                   (value != null && ! value.Equals(_centralSetting.Value));
+			                   value != null && ! value.Equals(_centralSetting.Value);
 
 			CheckTooltipChange(oldTooltip);
 		}

@@ -87,15 +87,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(relClass, nameof(relClass));
 
-			string shapeFieldName;
-			esriGeometryType geometryType;
-			string primaryKeyField;
 			return CreateQueryDef(new List<IRelationshipClass> {relClass},
-			                      joinType,
-			                      includeOnlyOIDFields, excludeShapeField,
-			                      out shapeFieldName,
-			                      out geometryType,
-			                      out primaryKeyField);
+			                      joinType, includeOnlyOIDFields, excludeShapeField,
+			                      out string _, out esriGeometryType _, out string _);
 		}
 
 		[NotNull]
@@ -125,8 +119,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				CopyLocally = false,
 				QueryDef = queryDef
 			};
-			
-			var name = ((IDatasetName)queryName);
+
+			var name = (IDatasetName) queryName;
 			name.WorkspaceName = WorkspaceUtils.GetWorkspaceName(workspace);
 			name.Name = datasetName;
 
@@ -192,7 +186,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			((IFeatureClassName) queryName).ShapeFieldName = shapeFieldName;
 
-			var name = ((IDatasetName) queryName);
+			var name = (IDatasetName) queryName;
 			name.WorkspaceName = WorkspaceUtils.GetWorkspaceName(workspace);
 			name.Name = datasetName;
 

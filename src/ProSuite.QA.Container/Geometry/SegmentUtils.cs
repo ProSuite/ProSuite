@@ -48,10 +48,7 @@ namespace ProSuite.QA.Container.Geometry
 		                                             [NotNull] Pnt nearPoint,
 		                                             bool as3D)
 		{
-			double? offset;
-			bool? onRightSide;
-			return GetClosestPointFraction(segmentProxy, nearPoint, out offset, out onRightSide,
-			                               as3D);
+			return GetClosestPointFraction(segmentProxy, nearPoint, out _, out _, as3D);
 		}
 
 		public static double GetClosestPointFraction([NotNull] SegmentProxy segmentProxy,
@@ -118,7 +115,7 @@ namespace ProSuite.QA.Container.Geometry
 			object emptyRef = Type.Missing;
 
 			IPolygon circle = new PolygonClass();
-			((ISegmentCollection) circle).AddSegment(((ISegment) arc), ref emptyRef,
+			((ISegmentCollection) circle).AddSegment((ISegment) arc, ref emptyRef,
 			                                         ref emptyRef);
 
 			limits = GetLimits(segmentProxy, circle);
@@ -194,7 +191,7 @@ namespace ProSuite.QA.Container.Geometry
 			// Lösung der quadratischen Gleichung:
 			//r1, r2 = (-b -+ ((b^2 - 4ac)^0.5))/2a
 
-			double dDet = (b * b) - 4.0 * a * c;
+			double dDet = b * b - 4.0 * a * c;
 
 			if (dDet >= 0)
 			{
@@ -217,7 +214,7 @@ namespace ProSuite.QA.Container.Geometry
 		                                   out double tMin,
 		                                   out double tMax)
 		{
-			Pnt p = (p0 - center);
+			Pnt p = p0 - center;
 
 			double a = l0 * l0; // a = square length of l0
 			double b = 2 * (p * l0);

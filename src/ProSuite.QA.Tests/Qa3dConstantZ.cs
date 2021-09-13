@@ -120,7 +120,7 @@ namespace ProSuite.QA.Tests
 			                                      zMin, zMax);
 			IssueCode issueCode = GetIssueCode(modalZPointCount);
 
-			if (errorPointCount > (points.PointCount / 2))
+			if (errorPointCount > points.PointCount / 2)
 			{
 				// more than half the points are errors --> don't report individually	
 				IGeometry errorGeometry = GeometryFactory.Clone(shape);

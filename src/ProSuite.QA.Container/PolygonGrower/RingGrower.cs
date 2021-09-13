@@ -212,10 +212,10 @@ namespace ProSuite.QA.Container.PolygonGrower
 					polyEnvelope.QueryCoords(out polyXMin, out polyYMin,
 					                         out polyXMax, out polyYMax);
 
-					if ((polyXMin + _tolerance >= envXMin &&
-					     polyYMin + _tolerance >= envYMin &&
-					     polyXMax - _tolerance <= envXMax &&
-					     polyYMax - _tolerance <= envYMax))
+					if (polyXMin + _tolerance >= envXMin &&
+					    polyYMin + _tolerance >= envYMin &&
+					    polyXMax - _tolerance <= envXMax &&
+					    polyYMax - _tolerance <= envYMax)
 					{
 						insideList.Add(pair.Value);
 					}
