@@ -1,7 +1,7 @@
 namespace ProSuite.AGP.Solution.WorkListUI
 {
-	public class NoWorkItemViewModel : WorkItemVmBase
+	public class NoWorkItemViewModel : WorkItemViewModelBase
 	{
-		public string Description => "no current item";
+		public override string Description => "no current item";
 	}
 }

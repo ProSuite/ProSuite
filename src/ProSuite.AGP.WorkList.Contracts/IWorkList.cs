@@ -47,7 +47,7 @@ namespace ProSuite.AGP.WorkList.Contracts
 
 		void GoFirst();
 
-		void GoToOid(int oid);
+		void GoTo(long oid);
 
 		bool CanGoNearest();
 
@@ -68,8 +68,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 		void SetVisited([NotNull] IWorkItem item);
 
 		void Commit();
-
-		event EventHandler<WorkListChangedEventArgs> WorkListChanged;
 
 		void SetStatus([NotNull] IWorkItem item, WorkItemStatus status);
 	}

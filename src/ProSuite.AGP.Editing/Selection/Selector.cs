@@ -62,7 +62,7 @@ namespace ProSuite.AGP.Editing.Selection
 				//since SelectionCombinationMethod.New is only applied to
 				//the current layer but selections of other layers remain,
 				//we manually need to clear all selections first. 
-				SelectionUtils.ClearSelection(MapView.Active.Map);
+				SelectionUtils.ClearSelection();
 			}
 
 			foreach (KeyValuePair<BasicFeatureLayer, List<long>> kvp in featuresPerLayer)
@@ -85,7 +85,7 @@ namespace ProSuite.AGP.Editing.Selection
 				//since SelectionCombinationMethod.New is only applied to
 				//the current layer but selections of other layers remain,
 				//we manually need to clear all selections first. 
-				SelectionUtils.ClearSelection(MapView.Active.Map);
+				SelectionUtils.ClearSelection();
 			}
 
 			SelectionUtils.SelectFeatures(featuresOfLayer.Key, method, featuresOfLayer.Value);

@@ -227,7 +227,7 @@ namespace ProSuite.AGP.Editing.OneClick
 							}
 							else
 							{
-								SelectionUtils.ClearSelection(ActiveMapView.Map);
+								SelectionUtils.ClearSelection();
 
 								StartSelectionPhase();
 							}
@@ -236,7 +236,7 @@ namespace ProSuite.AGP.Editing.OneClick
 					else
 					{
 						ClearSketchAsync();
-						SelectionUtils.ClearSelection(ActiveMapView.Map);
+						SelectionUtils.ClearSelection();
 					}
 
 					return true;

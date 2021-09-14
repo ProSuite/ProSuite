@@ -4,10 +4,10 @@ namespace ProSuite.AGP.Solution.WorkListUI.Views
 {
 	public partial class IssueWorkListView
 	{
-		public IssueWorkListView([NotNull] IssueWorkListVm vm)
+		public IssueWorkListView([NotNull] IssueWorkListViewModel viewModel)
 		{
 			InitializeComponent();
-			DataContext = vm;
+			DataContext = viewModel;
 		}
 	}
 }

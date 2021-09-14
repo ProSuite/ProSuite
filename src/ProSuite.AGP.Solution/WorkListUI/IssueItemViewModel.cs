@@ -4,11 +4,11 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.WorkListUI
 {
-	public class IssueWorkItemVm : WorkItemVmBase
+	public class IssueItemViewModel : WorkItemViewModelBase
 	{
-		// todo daro: rename to IssueWorkItemViewModel or IssueWorkitemViewModel
-		public IssueWorkItemVm([NotNull] IssueItem item, [NotNull] IWorkList worklist)
-			: base(item, worklist)
+		public IssueItemViewModel([NotNull] IssueItem item,
+		                          [NotNull] IWorkList workList)
+			: base(item, workList)
 		{
 			IssueItem = item;
 		}

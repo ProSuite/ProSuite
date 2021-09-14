@@ -17,7 +17,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 		protected Type Type { get; }
 
 		private List<TState> _states;
-		private List<int> _oids;
+		private List<long> _oids;
 
 		private readonly Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>> _workspaces =
 			new Dictionary<GdbWorkspaceIdentity, SimpleSet<GdbTableIdentity>>();
@@ -42,7 +42,7 @@ namespace ProSuite.AGP.WorkList.Domain.Persistence
 			}
 		}
 
-		private List<int> Oids
+		private List<long> Oids
 		{
 			get
 			{

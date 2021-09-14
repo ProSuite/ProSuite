@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
+using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
@@ -58,7 +59,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 		public Dictionary<string, FeatureLayer> LayersByWorklistName => _layersByWorklistName;
 
 		public IWorkList ActiveWorkListlayer { get; internal set; }
-
+		
 		public event EventHandler<WorkItemPickArgs> WorkItemPicked;
 
 		public void ShowView()
@@ -377,14 +378,49 @@ namespace ProSuite.AGP.Solution.WorkLists
 			MapMemberPropertiesChangedEvent.Unsubscribe(OnMapMemberPropertiesChanged);
 		}
 
-		private void WireEvents(IWorkList workList)
+		private async Task WorklistChanged(WorkListChangedEventArgs e)
 		{
-			workList.WorkListChanged += WorkList_WorkListChanged;
-		}
+			try
+			{
+				MapView mapView = MapView.Active;
+				if (mapView == null)
+				{
+					return;
+				}
 
-		private void UnwireEvents(IWorkList workList)
-		{
-			workList.WorkListChanged -= WorkList_WorkListChanged;
+				var workList = (IWorkList) e.Sender;
+
+				Assert.True(_layersByWorklistName.ContainsKey(workList.Name),
+				            $"sender of {nameof(WorklistChanged)} is unknown");
+
+				if (! _layersByWorklistName.ContainsKey(workList.Name))
+				{
+					return;
+				}
+
+				FeatureLayer workListLayer = _layersByWorklistName[workList.Name];
+
+				List<long> oids = e.Items;
+
+				if (oids != null)
+				{
+					// invalidate with OIDs
+					mapView.Invalidate(new Dictionary<Layer, List<long>> {{workListLayer, oids}});
+					return;
+				}
+
+				Envelope extent = e.Extent ?? mapView.Extent;
+
+				if (extent != null)
+				{
+					// alternatively invalidate with Envelope
+					mapView.Invalidate(workListLayer, extent);
+				}
+			}
+			catch (Exception exc)
+			{
+				_msg.Error("Error invalidating work list layer", exc);
+			}
 		}
 
 		// todo daro: move to OnMapViewInitialized?
@@ -428,7 +464,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				_layersByWorklistName.Add(workList.Name, worklistLayer);
 
-				WireEvents(workList);
+				WorklistChangedEvent.Subscribe(WorklistChanged, this);
 
 				// todo daro: maybe we need a dictionary of synchronizers
 				_synchronizer = new EditEventsRowCacheSynchronizer(workList);
@@ -542,7 +578,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			});
 		}
 
-		private async Task OnProjectSavingAsync(ProjectEventArgs arg)
+		private async Task OnProjectSavingAsync(ProjectEventArgs e)
 		{
 			await Task.Run(() =>
 			{
@@ -633,38 +669,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 			//Item firstOrDefault = items?.FirstOrDefault(i => string.Equals(folderName, i.Name));
 		}
 
-		private void WorkList_WorkListChanged(object sender, WorkListChangedEventArgs e)
-		{
-			List<long> oids = e.Items;
-
-			if (oids == null)
-			{
-				return;
-			}
-
-			try
-			{
-				var workList = (IWorkList) sender;
-
-				Assert.True(_layersByWorklistName.ContainsKey(workList.Name),
-				            $"sender of {nameof(WorkList_WorkListChanged)} is unknown");
-
-				if (! _layersByWorklistName.ContainsKey(workList.Name))
-				{
-					return;
-				}
-
-				FeatureLayer workListLayer = _layersByWorklistName[workList.Name];
-
-				MapView.Active.Invalidate(new Dictionary<Layer, List<long>>
-				                          {{workListLayer, oids}});
-			}
-			catch (Exception exc)
-			{
-				_msg.Error("Error invalidating work list layer", exc);
-			}
-		}
-
 		#endregion
 
 		public virtual void OnWorkItemPicked(WorkItemPickArgs e)
@@ -695,7 +699,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			// ensure folder exists before commit
 			FileSystemUtils.EnsureFolderExists(GetLocalWorklistsFolder());
 
-			UnwireEvents(workList);
+			WorklistChangedEvent.Unsubscribe(WorklistChanged);
 
 			_layersByWorklistName.Remove(workList.Name);
 		}
