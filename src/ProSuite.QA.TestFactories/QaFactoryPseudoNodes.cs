@@ -12,7 +12,7 @@ using ProSuite.QA.Tests;
 namespace ProSuite.QA.TestFactories
 {
 	[UsedImplicitly]
-	[LinearNetworkTest]
+	[InternallyUsedTest]
 	public class QaFactoryPseudoNodes : TestFactory
 	{
 		[NotNull]
