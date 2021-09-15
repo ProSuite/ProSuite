@@ -502,11 +502,9 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			SetMinimumTolerance(intersectionTarget);
 			SetMinimumTolerance(sourceGeometry);
 
-			IPolyline smallToleranceIntersectionLines;
 			// get the Z values from the targets -> first geometry
 			IPointCollection smallToleranceIntersections =
-				GetIntersectionPoints(intersectionTarget, sourceGeometry, IntersectionPointOption,
-				                      out smallToleranceIntersectionLines);
+				GetIntersectionPoints(intersectionTarget, sourceGeometry, IntersectionPointOption, out _);
 
 			bool useSnapping = SnapTolerance != null &&
 			                   ! double.IsNaN((double) SnapTolerance) &&
@@ -717,12 +715,10 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				int vertexIndex in
 				GeometryUtils.FindVertexIndices(allCrackPoints, atPoint, snapTolerance))
 			{
-				bool differentInZ;
 				IPoint crackPoint = allCrackPoints.get_Point(vertexIndex);
 
 				if (IsPerfectlyMatching(crackPoint, atPoint, xyResolution, zResolution,
-				                        out differentWithinTolerance,
-				                        out differentInZ))
+				                        out differentWithinTolerance, out bool _))
 				{
 					// there is a perfectly matching crack point -> add it anyway, just in case there is no existing vertex in the source
 					return crackPoint;
@@ -992,8 +988,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			// TODO: take into account points to be deleted on this very segment?
 
 			// NOTE: right on the vertex is ok (in chopping mode)
-			return (distanceToFrom > searchTolerance && distanceToFrom < MinimumSegmentLength) ||
-			       (distanceToTo > searchTolerance && distanceToTo < MinimumSegmentLength);
+			return distanceToFrom > searchTolerance && distanceToFrom < MinimumSegmentLength ||
+			       distanceToTo > searchTolerance && distanceToTo < MinimumSegmentLength;
 		}
 
 		[CanBeNull]

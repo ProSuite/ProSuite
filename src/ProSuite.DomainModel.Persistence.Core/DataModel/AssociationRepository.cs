@@ -13,12 +13,12 @@ namespace ProSuite.DomainModel.Persistence.Core.DataModel
 	{
 		#region IAssociationRepository Members
 
-		public IList<Association> Get([NotNull] string name)
+		public IList<Association> Get(string name)
 		{
 			return Get(name, false);
 		}
 
-		public IList<Association> Get([NotNull] string name, bool includeDeleted)
+		public IList<Association> Get(string name, bool includeDeleted)
 		{
 			using (ISession session = OpenSession(true))
 			{

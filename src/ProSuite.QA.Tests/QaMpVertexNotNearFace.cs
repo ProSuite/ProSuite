@@ -317,8 +317,8 @@ namespace ProSuite.QA.Tests
 			double dzMax = point[2] - zMax;
 
 			if (PlaneCoincidence >= 0 &&
-			    (dzMax - PlaneCoincidence) < 0 &&
-			    (dzMin - PlaneCoincidence) < 0)
+			    dzMax - PlaneCoincidence < 0 &&
+			    dzMin - PlaneCoincidence < 0)
 			{
 				// TODO : is this the right criteria to ignore checks?
 				return NoError;

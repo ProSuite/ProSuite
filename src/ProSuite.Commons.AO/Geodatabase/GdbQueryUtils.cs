@@ -604,8 +604,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return true;
 			}
 
-			if (geometry is IPolyline && (envelope.Height < minimumDimension &&
-			                              envelope.Width < minimumDimension))
+			if (geometry is IPolyline &&
+			    envelope.Height < minimumDimension &&
+			    envelope.Width < minimumDimension)
 			{
 				return true;
 			}
@@ -653,12 +654,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 			double dy = 0;
 			if (envelope.Width < minimumSize)
 			{
-				dx = ((minimumSize - envelope.Width) / 2);
+				dx = (minimumSize - envelope.Width) / 2;
 			}
 
 			if (envelope.Height < minimumSize)
 			{
-				dy = ((minimumSize - envelope.Height) / 2);
+				dy = (minimumSize - envelope.Height) / 2;
 			}
 
 			if (dx > 0 || dy > 0)

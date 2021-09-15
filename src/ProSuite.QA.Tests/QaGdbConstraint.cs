@@ -44,8 +44,7 @@ namespace ProSuite.QA.Tests
 		{
 			_attrRules = new List<IAttributeRule>();
 
-			var validation = table as IValidation;
-			if (validation != null)
+			if (table is IValidation validation)
 			{
 				IEnumRule rules = validation.Rules;
 				rules.Reset();
@@ -68,7 +67,7 @@ namespace ProSuite.QA.Tests
 
 		public override bool IsGeometryUsedTable(int tableIndex)
 		{
-			return (AreaOfInterest != null);
+			return AreaOfInterest != null;
 		}
 
 		public override bool RetestRowsPerIntersectedTile(int tableIndex)

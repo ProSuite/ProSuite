@@ -221,12 +221,12 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			if (! _vertexCoincidenceChecker.VerifyWithinFeature && (feature1 == feature2))
+			if (! _vertexCoincidenceChecker.VerifyWithinFeature && feature1 == feature2)
 			{
 				return NoError;
 			}
 
-			if (_allowedNonCoincidenceConditionSql != null && (feature1 != feature2))
+			if (_allowedNonCoincidenceConditionSql != null && feature1 != feature2)
 			{
 				if (_allowedNonCoincidenceCondition == null)
 				{
@@ -237,10 +237,9 @@ namespace ProSuite.QA.Tests
 						GetSqlCaseSensitivity());
 				}
 
-				string conditionMessage;
 				if (_allowedNonCoincidenceCondition.IsFulfilled(row1, tableIndex1,
 				                                                row2, tableIndex2,
-				                                                out conditionMessage))
+				                                                out string _))
 				{
 					// non-coincidence is allowed between these two features
 					return NoError;

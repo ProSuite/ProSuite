@@ -386,9 +386,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 				nearX = offLine.X - onLine.X;
 				nearY = offLine.Y - onLine.Y;
 				xMax = onLine.X;
-				onRightSide = ((nearY < 0) == startOnLine)
-					              ? 1
-					              : -1;
+				onRightSide = (nearY < 0) == startOnLine ? 1 : -1;
 				return true;
 			}
 
@@ -400,9 +398,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 				{
 					nearX = nX;
 					nearY = nY;
-					onRightSide = ((nearY < 0) == startOnLine)
-						              ? 1
-						              : -1;
+					onRightSide = (nearY < 0) == startOnLine ? 1 : -1;
 					return true;
 				}
 			}

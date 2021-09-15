@@ -145,7 +145,7 @@ namespace ProSuite.Commons.UI.WinForms
 			int x = clickLocation.X;
 			int y = clickLocation.Y;
 
-			if (workingArea.Right < (x + control.Width))
+			if (workingArea.Right < x + control.Width)
 			{
 				// try to open the control to the left
 				x = clickLocation.X - control.Width;
@@ -157,7 +157,7 @@ namespace ProSuite.Commons.UI.WinForms
 				}
 			}
 
-			if (workingArea.Bottom < (y + control.Height))
+			if (workingArea.Bottom < y + control.Height)
 			{
 				// try to open the control to the top
 				y = clickLocation.Y - control.Height;
@@ -290,8 +290,7 @@ namespace ProSuite.Commons.UI.WinForms
 		private static Control GetHighestParentWithMultipleChildren(
 			[NotNull] Control control)
 		{
-			int whocares;
-			return GetHighestParentWithMultipleChildren(control, out whocares);
+			return GetHighestParentWithMultipleChildren(control, out int _);
 		}
 
 		[CanBeNull]

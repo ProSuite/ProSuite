@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong
@@ -8,13 +8,11 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		private readonly double _x;
 		private readonly double _y;
 
-		private readonly int _digitsForCoordinateComparison = 7;
+		private readonly int _digitsForCoordinateComparison;
 
 		private readonly List<CutSubcurve> _connectedSubcurves;
 
-		public SubcurveNode(double x, double y) : this(x, y, 7) { }
-
-		public SubcurveNode(double x, double y, int digitsForCoordinateComparison)
+		public SubcurveNode(double x, double y, int digitsForCoordinateComparison = 7)
 		{
 			_digitsForCoordinateComparison = digitsForCoordinateComparison;
 

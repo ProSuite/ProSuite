@@ -45,6 +45,7 @@ namespace ProSuite.Commons.Globalization
 				return DescriptionValue;
 			}
 		}
+
 		public string ResourceName => _resourceName;
 	}
 }

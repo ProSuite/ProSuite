@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -459,8 +459,8 @@ namespace ProSuite.Commons.Geom
 					deviationIsBackward = ! deviationIsBackward;
 				}
 
-				if ((deviationIsBackward && forwardAlongTarget) ||
-				    (! deviationIsBackward && ! forwardAlongTarget))
+				if (deviationIsBackward && forwardAlongTarget ||
+				    ! deviationIsBackward && ! forwardAlongTarget)
 				{
 					return null;
 				}

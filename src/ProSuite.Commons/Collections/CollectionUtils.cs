@@ -173,7 +173,7 @@ namespace ProSuite.Commons.Collections
 				throw new ArgumentOutOfRangeException(nameof(index));
 			}
 
-			if (count < 0 || (index + count) > array.Length)
+			if (count < 0 || index + count > array.Length)
 			{
 				throw new ArgumentOutOfRangeException(nameof(count));
 			}
@@ -382,8 +382,7 @@ namespace ProSuite.Commons.Collections
 		                                   [CanBeNull] object yValue)
 		{
 			// If values implement IComparer
-			var comparable = xValue as IComparable;
-			if (comparable != null)
+			if (xValue is IComparable comparable)
 			{
 				return comparable.CompareTo(yValue);
 			}
@@ -449,15 +448,14 @@ namespace ProSuite.Commons.Collections
 
 			if (nullCount > 0 && nullCount == highestCount)
 			{
-				yield return default(T);
+				yield return default;
 			}
 		}
 
 		[NotNull]
 		public static IDictionary<T, int> GetFrequencies<T>([NotNull] IEnumerable<T> values)
 		{
-			int nullCount;
-			return GetFrequencies(values, out nullCount);
+			return GetFrequencies(values, out int _);
 		}
 
 		[NotNull]
@@ -607,9 +605,7 @@ namespace ProSuite.Commons.Collections
 				}
 			}
 
-			return gotAny
-				       ? maxElement
-				       : default(TSource);
+			return gotAny ? maxElement : default;
 		}
 
 		[NotNull]
@@ -633,7 +629,7 @@ namespace ProSuite.Commons.Collections
 				double upperDouble = lowerDouble + partitionSize;
 
 				int upperIndex = (int) Math.Round(upperDouble) - 1;
-				int count = (upperIndex - lowerIndex) + 1;
+				int count = upperIndex - lowerIndex + 1;
 				if (count > 0)
 				{
 					yield return list.GetRange(lowerIndex, count);

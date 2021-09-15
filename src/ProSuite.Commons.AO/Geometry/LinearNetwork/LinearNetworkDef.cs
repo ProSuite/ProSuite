@@ -207,9 +207,9 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork
 		{
 			unchecked
 			{
-				int hashCode = (_defaultJunctionClass != null
-					                ? _defaultJunctionClass.GetHashCode()
-					                : 0);
+				int hashCode = _defaultJunctionClass != null
+					               ? _defaultJunctionClass.GetHashCode()
+					               : 0;
 				hashCode = (hashCode * 397) ^ _defaultSubtype.GetHashCode();
 
 				foreach (var classDef in NetworkClassDefinitions)

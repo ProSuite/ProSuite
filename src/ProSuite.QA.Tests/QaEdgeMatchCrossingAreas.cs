@@ -907,7 +907,7 @@ namespace ProSuite.QA.Tests
 		private static double GetDistance([NotNull] IPolyline polyline,
 		                                  [NotNull] IPolygon polygon)
 		{
-			var proximity = ((IProximityOperator) polygon);
+			var proximity = (IProximityOperator) polygon;
 
 			return proximity.ReturnDistance(polyline);
 		}
@@ -1475,10 +1475,8 @@ namespace ProSuite.QA.Tests
 			                                      WKSEnvelope allWksBox)
 			{
 				return
-					(EdgeMatchUtils.VerifyHandled(borderConnection.Feature, tileWksBox,
-					                              allWksBox) ||
-					 EdgeMatchUtils.VerifyHandled(borderConnection.BorderFeature, tileWksBox,
-					                              allWksBox));
+					EdgeMatchUtils.VerifyHandled(borderConnection.Feature, tileWksBox, allWksBox) ||
+					EdgeMatchUtils.VerifyHandled(borderConnection.BorderFeature, tileWksBox, allWksBox);
 			}
 		}
 

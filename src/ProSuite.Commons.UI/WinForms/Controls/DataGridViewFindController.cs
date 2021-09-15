@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -283,13 +283,13 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 			bool shiftPressed = KeyboardUtils.IsModifierPressed(Keys.Shift);
 
-			if ((e.KeyCode == Keys.Down || (e.KeyCode == Keys.Return && ! shiftPressed)))
+			if (e.KeyCode == Keys.Down || e.KeyCode == Keys.Return && ! shiftPressed)
 			{
 				MoveToNext();
 				e.Handled = true;
 			}
 
-			if (e.KeyCode == Keys.Up || (e.KeyCode == Keys.Return && shiftPressed))
+			if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Return && shiftPressed)
 			{
 				MoveToPrevious();
 				e.Handled = true;
@@ -381,7 +381,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			_toolsView.FindResultStatusText = GetFindResultStatusText(findResultCount,
 			                                                          currentFindResult);
 
-			bool moveButtonsEnabled = (findResultCount > 1);
+			bool moveButtonsEnabled = findResultCount > 1;
 
 			_toolsView.MoveNextEnabled = moveButtonsEnabled;
 			_toolsView.MovePreviousEnabled = moveButtonsEnabled;

@@ -1201,7 +1201,7 @@ namespace ProSuite.Commons.AO.Geometry
 				for (var index = 0; index < geometryCount; index++)
 				{
 					IGeometry part = collection.Geometry[index];
-					if ((part is IArea) && ((IArea) part).Area > 0)
+					if (part is IArea area && area.Area > 0)
 					{
 						positiveParts++;
 					}
@@ -2639,12 +2639,12 @@ namespace ProSuite.Commons.AO.Geometry
 
 			if (envelope.Width < minimumSize)
 			{
-				dx = ((minimumSize - envelope.Width) / 2);
+				dx = (minimumSize - envelope.Width) / 2;
 			}
 
 			if (envelope.Height < minimumSize)
 			{
-				dy = ((minimumSize - envelope.Height) / 2);
+				dy = (minimumSize - envelope.Height) / 2;
 			}
 
 			if (dx > 0 || dy > 0)
@@ -3020,8 +3020,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 				// It seems that IndexedEnumVertices on Multipoint geometries
 				// gives an empty point to signal end of enumeration
-				while (! PointTemplate.IsEmpty &&
-				       (partIndex >= 0) && (vertexIndex >= 0))
+				while (! PointTemplate.IsEmpty && partIndex >= 0 && vertexIndex >= 0)
 				{
 					if (GetPointDistance(searchPoint, PointTemplate) <= searchTolerance2D)
 					{
@@ -4480,7 +4479,7 @@ namespace ProSuite.Commons.AO.Geometry
 					{
 						ISegment segment = segments.Segment[segIndex];
 
-						if ((partLength + segment.Length) < minSegmentLength)
+						if (partLength + segment.Length < minSegmentLength)
 						{
 							int removePointIndex = segIndex + 1;
 
@@ -4581,7 +4580,7 @@ namespace ProSuite.Commons.AO.Geometry
 				secondLine.PutCoords(secondSegment.FromPoint, secondSegment.ToPoint);
 			}
 
-			double angle = (180 * (secondLine.Angle - firstLine.Angle)) / Math.PI;
+			double angle = 180 * (secondLine.Angle - firstLine.Angle) / Math.PI;
 			angle = angle % 360;
 
 			if (angle < 0)
@@ -7285,7 +7284,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 			foreach (IGeometry geometry in geometries)
 			{
-				if (! madeZAware && (IsZAware(geometry)))
+				if (! madeZAware && IsZAware(geometry))
 				{
 					MakeZAware(extent);
 					madeZAware = true;
@@ -7482,7 +7481,7 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 
 			double scalarProduct = xAP * xAB + yAP * yAB;
-			double squaredProjection = (scalarProduct * scalarProduct) / squaredLengthAB;
+			double squaredProjection = scalarProduct * scalarProduct / squaredLengthAB;
 
 			return squaredLengthAP - squaredProjection;
 		}
@@ -7540,15 +7539,15 @@ namespace ProSuite.Commons.AO.Geometry
 			double ymax;
 			envelope.QueryCoords(out xmin, out ymin, out xmax, out ymax);
 
-			centerX = xmin + ((xmax - xmin) / 2);
-			centerY = ymin + ((ymax - ymin) / 2);
+			centerX = xmin + (xmax - xmin) / 2;
+			centerY = ymin + (ymax - ymin) / 2;
 
 			if (IsZAware(envelope))
 			{
 				double zmin = envelope.ZMin;
 				double zmax = envelope.ZMax;
 
-				centerZ = zmin + ((zmax - zmin) / 2);
+				centerZ = zmin + (zmax - zmin) / 2;
 			}
 			else
 			{
@@ -9537,7 +9536,7 @@ namespace ProSuite.Commons.AO.Geometry
 					break;
 				}
 
-				if (partIndex == maxPartIndex && (partCount > maxPartIndex + 1))
+				if (partIndex == maxPartIndex && partCount > maxPartIndex + 1)
 				{
 					sb.AppendFormat("... omitted {0} part{1}",
 					                skippedPartCount,
@@ -10245,7 +10244,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 				// current segment (segment ending in current vertex)
 				ignoreCurrentSegment = ignoredSegmentIndexes != null &&
-				                       ((segmentIndex < 0 && ignorePreviousSegment) ||
+				                       (segmentIndex < 0 && ignorePreviousSegment ||
 				                        ignoredSegmentIndexes.Contains(segmentIndex));
 
 				if (ignoreCurrentSegment)
@@ -10414,7 +10413,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 			double zDifference = toZValue - fromZValue;
 
-			return fromZValue + ((fromDistance / segment.Length) * zDifference);
+			return fromZValue + fromDistance / segment.Length * zDifference;
 		}
 
 		private static IGeometry GetPartBySecondOpinionHitTest(

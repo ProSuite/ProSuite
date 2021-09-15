@@ -358,8 +358,8 @@ namespace ProSuite.QA.Tests
 			double dyCompare = compareY - connectY;
 			double dySegment = otherSegmentEndY - connectY;
 
-			distanceSquaredToComparePoint = (dxCompare * dxCompare) + (dyCompare * dyCompare);
-			double prod = (dxCompare * dxSegment) + (dyCompare * dySegment);
+			distanceSquaredToComparePoint = dxCompare * dxCompare + dyCompare * dyCompare;
+			double prod = dxCompare * dxSegment + dyCompare * dySegment;
 
 			if (_is3D)
 			{

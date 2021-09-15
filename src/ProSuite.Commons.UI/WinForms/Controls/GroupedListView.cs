@@ -352,7 +352,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 				internalItem.NameLabel.DoubleClick += item_DoubleClick;
 			}
 
-			if ((SmallImageList != null) &&
+			if (SmallImageList != null &&
 			    ! string.IsNullOrEmpty(internalItem.UserItem.ImageKey))
 			{
 				internalItem.PictureBox.Image =
@@ -445,8 +445,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			{
 				// no line for filler label at bottom
 			}
-			else if ((control != null) &&
-			         (_tableLayoutPanel.GetColumnSpan(control)) > 1)
+			else if (control != null && _tableLayoutPanel.GetColumnSpan(control) > 1)
 			{
 				var lineRectangle = new Rectangle(
 					cellBounds.X, cellBounds.Bottom - 2, rowWidth, 2);
@@ -527,16 +526,15 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 		private void item_CheckStateChanged(object sender, EventArgs e)
 		{
-			if (! _handleEvents || (! (sender is CheckBox)))
+			if (! _handleEvents || ! (sender is CheckBox))
 			{
 				return;
 			}
 
 			var checkBox = (CheckBox) sender;
 
-			if ((checkBox.Tag is InternalItem) && checkBox.Enabled)
+			if (checkBox.Tag is InternalItem item && checkBox.Enabled)
 			{
-				var item = (InternalItem) checkBox.Tag;
 				ItemCheckEventArgs eventArgs;
 
 				int itemIndex = _itemList.IndexOf(item);
@@ -573,14 +571,14 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 		private void item_DoubleClick(object sender, EventArgs e)
 		{
-			if (! _handleEvents || (! (sender is Control)))
+			if (! _handleEvents || ! (sender is Control))
 			{
 				return;
 			}
 
 			var control = (Control) sender;
 
-			if (! control.Enabled || (! (control.Tag is InternalItem)))
+			if (! control.Enabled || ! (control.Tag is InternalItem))
 			{
 				return;
 			}

@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using ProSuite.Commons.Geom;
 
 namespace ProSuite.Commons.Test.Geometry
@@ -46,13 +46,10 @@ namespace ProSuite.Commons.Test.Geometry
 
 			SegmentIntersection intersection =
 				AssertLinearIntersection(line1, line2, tolerance, true);
+			Assert.NotNull(intersection);
 
-			double startAlongSource;
-			Pnt3D sourceStart =
-				intersection.GetLinearIntersectionStart(line1, out startAlongSource);
-
-			double endAlongSource;
-			Pnt3D sourceEnd = intersection.GetLinearIntersectionEnd(line1, out endAlongSource);
+			//Pnt3D sourceStart = intersection.GetLinearIntersectionStart(line1, out _);
+			//Pnt3D sourceEnd = intersection.GetLinearIntersectionEnd(line1, out _);
 
 			line2.ReverseOrientation();
 			AssertLinearIntersection(line1, line2, tolerance, false);

@@ -33,7 +33,7 @@ namespace ProSuite.AGP.Solution.Selection
 		{
 			WorkListsModule.Current.OnWorkItemPicked(new WorkItemPickArgs
 			                                         {features = selectedFeatures.ToList()});
-			SelectionUtils.ClearSelection(ActiveMapView.Map);
+			SelectionUtils.ClearSelection();
 		}
 
 		protected override bool CanSelectFromLayerCore(FeatureLayer featureLayer)
@@ -66,7 +66,7 @@ namespace ProSuite.AGP.Solution.Selection
 				}
 			}
 
-			SelectionUtils.ClearSelection(ActiveMapView.Map);
+			SelectionUtils.ClearSelection();
 			return true;
 		}
 

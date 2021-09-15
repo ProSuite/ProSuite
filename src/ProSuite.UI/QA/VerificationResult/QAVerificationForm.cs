@@ -55,7 +55,7 @@ namespace ProSuite.UI.QA.VerificationResult
 			_viewIndexGridDatasets = items.Add("Verified Datasets");
 			_viewIndexTreeLayers = items.Add("Quality Conditions by Dataset");
 			_viewIndexTreeHierarchic = items.Add("Quality Conditions by Involved Datasets");
-			_viewIndexTreeConditionsByCategory = items.Add(("Quality Conditions by Category"));
+			_viewIndexTreeConditionsByCategory = items.Add("Quality Conditions by Category");
 
 			_toolStripComboBoxView.SelectedIndex = _viewIndexGridConditions;
 

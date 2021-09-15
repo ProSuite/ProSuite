@@ -8,9 +8,8 @@ using System.Xml;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
-using ProSuite.DomainModel.Core.Processing;
 
-namespace ProSuite.DomainModel.AO.Processing.Reporting
+namespace ProSuite.DomainModel.Core.Processing.Reporting
 {
 	public class HtmlProcessReportBuilder : IProcessReportBuilder
 	{
@@ -513,18 +512,18 @@ a.obsoleteIndex { color:Red; text-decoration: line-through; }
 				RegisteredDescription = registeredDescription;
 
 				Name = processType.Name;
-				Description = GdbProcessUtils.GetProcessDescription(processType);
-				Obsolete = GdbProcessUtils.IsObsolete(processType, out ObsoleteMessage);
+				Description = GdbProcessCoreUtils.GetProcessDescription(processType);
+				Obsolete = GdbProcessCoreUtils.IsObsolete(processType, out ObsoleteMessage);
 				Assembly = processType.Assembly;
 
-				IList<PropertyInfo> props = GdbProcessUtils.GetProcessParameters(processType);
+				IList<PropertyInfo> props = GdbProcessCoreUtils.GetProcessParameters(processType);
 				ProcessTypeParameters = new List<ProcessTypeParameter>(props.Count);
 
 				foreach (PropertyInfo property in props)
 				{
 					string name = property.Name;
-					string type = GdbProcessUtils.GetParameterDisplayType(property);
-					string description = GdbProcessUtils.GetParameterDescription(property);
+					string type = GdbProcessCoreUtils.GetParameterDisplayType(property);
+					string description = GdbProcessCoreUtils.GetParameterDescription(property);
 
 					ProcessTypeParameters.Add(new ProcessTypeParameter(name, type, description));
 				}

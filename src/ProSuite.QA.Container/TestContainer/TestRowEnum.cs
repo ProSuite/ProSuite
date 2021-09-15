@@ -860,7 +860,7 @@ namespace ProSuite.QA.Container.TestContainer
 					// if the geometry is not to be used for a feature class,
 					// don't get the shape field. Exception: Access Gdb (spatial queries
 					// do not work there if shape field is missing)
-					bool excludeShapeField = ! geometryUsed && (table is IFeatureClass) &&
+					bool excludeShapeField = ! geometryUsed && table is IFeatureClass &&
 					                         ! IsInLocalDatabaseWorkspace(table);
 
 					const string allFields = "*";
@@ -1211,8 +1211,8 @@ namespace ProSuite.QA.Container.TestContainer
 		private void UpdateXYOccurance(IEnumerable<CachedRow> cachedRows, Tile tile)
 		{
 			double tileEpsilon = _tileSize / 1000;
-			bool notFirstTileColumn = tile.Box.Min.X > (_testRunBox.Min.X + tileEpsilon);
-			bool notFirstTileRow = tile.Box.Min.Y > (_testRunBox.Min.Y + tileEpsilon);
+			bool notFirstTileColumn = tile.Box.Min.X > _testRunBox.Min.X + tileEpsilon;
+			bool notFirstTileRow = tile.Box.Min.Y > _testRunBox.Min.Y + tileEpsilon;
 
 			foreach (CachedRow cachedRow in cachedRows)
 			{

@@ -84,7 +84,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 					Assert.IsNotNull(result);
 					Assert.AreEqual(dsName, result.Name);
 					Assert.AreEqual(2, ds.Attributes.Count);
-					Assert.AreEqual(2, (new List<ObjectAttribute>(ds.GetAttributes())).Count);
+					Assert.AreEqual(2, new List<ObjectAttribute>(ds.GetAttributes()).Count);
 
 					ObjectAttribute field1 = ds.GetAttribute("field1");
 					ObjectAttribute field2 = ds.GetAttribute("field2");
@@ -129,8 +129,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 
 					Assert.IsNotNull(result);
 					Assert.AreEqual(1, result.AssociationEnds.Count);
-					Assert.AreEqual(
-						1, (new List<AssociationEnd>(result.GetAssociationEnds())).Count);
+					Assert.AreEqual(1, new List<AssociationEnd>(result.GetAssociationEnds()).Count);
 					AssociationEnd associationEnd = result.AssociationEnds[0];
 
 					Assert.AreEqual(ds1, associationEnd.ObjectDataset);

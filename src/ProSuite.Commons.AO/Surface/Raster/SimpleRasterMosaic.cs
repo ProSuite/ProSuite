@@ -292,7 +292,7 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		{
 			unchecked
 			{
-				int hashCode = (Name != null ? Name.GetHashCode() : 0);
+				int hashCode = Name != null ? Name.GetHashCode() : 0;
 				hashCode = (hashCode * 397) ^
 				           (BoundaryClass != null ? BoundaryClass.GetHashCode() : 0);
 				hashCode = (hashCode * 397) ^ CatalogClass.GetHashCode();

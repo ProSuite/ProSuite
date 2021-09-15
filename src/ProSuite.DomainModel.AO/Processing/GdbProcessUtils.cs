@@ -4,45 +4,19 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Text.RegularExpressions;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Reflection;
-using ProSuite.Commons.Text;
-using ProSuite.DomainModel.AO.Processing.Reporting;
 using ProSuite.DomainModel.Core.Processing;
+using ProSuite.DomainModel.Core.Processing.Reporting;
 
 namespace ProSuite.DomainModel.AO.Processing
 {
 	public static class GdbProcessUtils
 	{
-		public static bool IsGdbProcessType([NotNull] Type candidateType)
-		{
-			Assert.ArgumentNotNull(candidateType, nameof(candidateType));
-
-			Type testType = typeof(IGdbProcess);
-
-			return testType.IsAssignableFrom(candidateType) &&
-			       candidateType.IsPublic && ! candidateType.IsAbstract;
-		}
-
-		public static bool IsObsolete([NotNull] Type processType, out string message)
-		{
-			return ReflectionUtils.IsObsolete(processType, out message);
-		}
-
-		/// <summary>
-		/// Get the process's description (as specified with the Doc attribute).
-		/// </summary>
-		[NotNull]
-		public static string GetProcessDescription(Type processType)
-		{
-			return ReflectionUtils.GetDescription(processType) ?? string.Empty;
-		}
-
 		#region Process parameters
 
 		[NotNull]
@@ -57,50 +31,9 @@ namespace ProSuite.DomainModel.AO.Processing
 			}
 
 			return type.GetProperties(BindingFlags.Instance | BindingFlags.Public)
-			           .Where(IsProcessParameter)
-			           .OrderBy(GetParameterOrder)
+			           .Where(GdbProcessCoreUtils.IsProcessParameter)
+			           .OrderBy(GdbProcessCoreUtils.GetParameterOrder)
 			           .ToList();
-		}
-
-		public static bool IsProcessParameter([NotNull] PropertyInfo property)
-		{
-			Assert.ArgumentNotNull(property, nameof(property));
-
-			// Process parameters are public get/set properties with the Parameter attribute:
-			// TODO - How to check for public?
-			return property.CanRead && property.CanWrite &&
-			       property.IsDefined(typeof(ParameterAttribute), false);
-		}
-
-		public static int GetParameterOrder([CanBeNull] ICustomAttributeProvider property)
-		{
-			ParameterAttribute attr = GetParameterAttribute(property);
-			return attr?.Order ?? int.MaxValue;
-		}
-
-		[CanBeNull]
-		public static string GetParameterGroup([CanBeNull] ICustomAttributeProvider provider)
-		{
-			ParameterAttribute attr = GetParameterAttribute(provider);
-			return attr?.Group;
-		}
-
-		[CanBeNull]
-		private static ParameterAttribute GetParameterAttribute(
-			[CanBeNull] ICustomAttributeProvider provider)
-		{
-			if (provider == null)
-			{
-				return null;
-			}
-
-			const bool inherit = true;
-			object[] attributes = provider.GetCustomAttributes(
-				typeof(ParameterAttribute), inherit);
-
-			// ParameterAttribute has AttributeUsage AllowMultiple=false,
-			// so the first ParameterAttribute we find will be the only one.
-			return attributes.OfType<ParameterAttribute>().FirstOrDefault();
 		}
 
 		public static string GetParameterDescription([NotNull] IGdbProcess process)
@@ -111,8 +44,8 @@ namespace ProSuite.DomainModel.AO.Processing
 
 			Type type = process.GetType();
 
-			sb.AppendFormat("GdbProcess Parameters (Name: {0}, Type: {1}):", process.Name,
-			                type.Name);
+			sb.AppendFormat("GdbProcess Parameters (Name: {0}, Type: {1}):",
+			                process.Name, type.Name);
 
 			foreach (PropertyInfo property in GetProcessParameters(type))
 			{
@@ -123,116 +56,14 @@ namespace ProSuite.DomainModel.AO.Processing
 			return sb.ToString();
 		}
 
-		[NotNull]
-		public static string GetParameterInfoRTF([NotNull] PropertyInfo property)
+		private static bool IsGdbProcessType(Type candidateType)
 		{
-			Assert.ArgumentNotNull(property, nameof(property));
+			if (candidateType == null) return false;
 
-			string displayType = GetParameterDisplayType(property);
-			string description = GetParameterDescription(property);
+			Type testType = typeof(IGdbProcess);
 
-			var rtf = new RichTextBuilder();
-			rtf.FontSize(8);
-			rtf.Bold(property.Name).Text(" (").Text(displayType).Text(")");
-			rtf.LineBreak();
-			rtf.Text(description);
-
-			return rtf.ToRtf();
-		}
-
-		/// <summary>
-		/// Get the parameter's description (as specified with the Doc attribute).
-		/// </summary>
-		[NotNull]
-		public static string GetParameterDescription([NotNull] PropertyInfo property)
-		{
-			string raw = ReflectionUtils.GetDescription(property) ?? string.Empty;
-
-			return DescriptionPlaceholderRegex.Replace(
-				raw, m => ExpandDescriptionPlaceholder(m, property));
-		}
-
-		private static readonly Regex DescriptionPlaceholderRegex =
-			new Regex(@"{{\s*([A-Za-z0-9_. ]+)\s*}}");
-
-		private static string ExpandDescriptionPlaceholder(Match match,
-		                                                   PropertyInfo property)
-		{
-			string text = match.Groups[1].Value;
-
-			// recognize: [parameter.]Name, [parameter.]Type, [parameter.]Values
-
-			string[] parts = Regex.Split(text, @"\s*\.\s*");
-			string key = null;
-
-			if (parts.Length == 2 && parts[0] == "parameter")
-				key = parts[1].Trim();
-			else if (parts.Length == 1)
-				key = parts[0].Trim();
-
-			switch (key)
-			{
-				case "Name":
-					return property.Name;
-				case "Type":
-					return property.PropertyType.Name;
-				case "Values":
-					return GetParameterDisplayValues(property) ?? match.Value;
-			}
-
-			return match.Value; // do not expand
-		}
-
-		[NotNull]
-		public static string GetParameterDisplayType([NotNull] PropertyInfo property)
-		{
-			ParameterAttribute attr = GetParameterAttribute(property);
-			if (attr != null && ! string.IsNullOrEmpty(attr.DisplayType))
-			{
-				return attr.DisplayType;
-			}
-
-			// Translate a few common types to "user friendly" names:
-
-			if (property.PropertyType == typeof(bool))
-			{
-				return "Boolean";
-			}
-
-			if (property.PropertyType == typeof(int))
-			{
-				return "Integer";
-			}
-
-			if (property.PropertyType == typeof(double))
-			{
-				return "Number";
-			}
-
-			if (property.PropertyType == typeof(string))
-			{
-				return "String";
-			}
-
-			// All other types use their technical name:
-
-			return property.PropertyType.Name;
-		}
-
-		[CanBeNull]
-		public static string GetParameterDisplayValues([NotNull] PropertyInfo property)
-		{
-			if (property.PropertyType == typeof(bool))
-			{
-				return "False, True";
-			}
-
-			if (property.PropertyType.IsEnum)
-			{
-				return string.Join(", ", Enum.GetNames(property.PropertyType));
-			}
-
-			return null; // cannot enumerate values
+			return testType.IsAssignableFrom(candidateType) &&
+			       candidateType.IsPublic && ! candidateType.IsAbstract;
 		}
 
 		#endregion

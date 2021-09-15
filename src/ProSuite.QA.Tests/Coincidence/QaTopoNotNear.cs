@@ -872,10 +872,8 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			IList<ConnectedSegmentParts> connectedPartsList;
 
-			IList<ConnectedSegmentParts> selfConnectedParts;
 			GetConnectedParts(part.BaseSegments, part.SegmentNeighbors.Values,
-			                  0, 0, Is3D,
-			                  out connectedPartsList, out selfConnectedParts);
+			                  0, 0, Is3D, out connectedPartsList, out _);
 
 			foreach (ConnectedSegmentParts connectedParts in connectedPartsList)
 			{
@@ -1942,9 +1940,8 @@ namespace ProSuite.QA.Tests.Coincidence
 				adapter.AdaptAssymetry(splittedParts);
 			}
 
-			if (UnconnectedLineCapStyle == LineCapStyle.Butt
-			    || (EndCapStyle == LineCapStyle.Butt &&
-			        ! string.IsNullOrEmpty(JunctionIsEndExpression)))
+			if (UnconnectedLineCapStyle == LineCapStyle.Butt ||
+			    EndCapStyle == LineCapStyle.Butt && ! string.IsNullOrEmpty(JunctionIsEndExpression))
 			{
 				var adapter = new LineEndsAdapter(
 					              NearDistanceProvider, Is3D,

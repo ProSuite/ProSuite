@@ -100,7 +100,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		public bool IsFinal
 		{
-			get { return (Current == Total); }
+			get { return Current == Total; }
 		}
 
 		public bool IsPreprocess

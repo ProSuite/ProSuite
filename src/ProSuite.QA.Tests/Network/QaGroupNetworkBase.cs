@@ -741,7 +741,7 @@ namespace ProSuite.QA.Tests.Network
 				preRow = nextRow;
 			}
 
-			isComplete = (nextNode != null);
+			isComplete = nextNode != null;
 
 			return leaf;
 		}
@@ -832,9 +832,7 @@ namespace ProSuite.QA.Tests.Network
 		private List<List<object>> ReadGroupValues(
 			[NotNull] IRow row, int tableIndex)
 		{
-			int readErrors;
-			return ReadGroupValues(row, tableIndex, out readErrors,
-			                       reportErrors: false);
+			return ReadGroupValues(row, tableIndex, out int _, false);
 		}
 
 		[CanBeNull]

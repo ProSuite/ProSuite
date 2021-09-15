@@ -30,9 +30,15 @@ namespace ProSuite.Commons.AGP.Carto
 
 			foreach (BasicFeatureLayer layer in layers.Where(HasSelection))
 			{
-				IReadOnlyList<long> selection = layer.GetSelection().GetObjectIDs();
+				IEnumerable<long> selection = layer.GetSelectionOids();
 
 				Table table = layer.GetTable();
+
+				if (table == null)
+				{
+					continue;
+				}
+
 				var tableId = new GdbTableIdentity(table);
 
 				if (! distinctTableIds.ContainsKey(tableId))
@@ -60,7 +66,7 @@ namespace ProSuite.Commons.AGP.Carto
 		{
 			var result = new Dictionary<Geodatabase, SimpleSet<Table>>();
 
-			foreach (Table table in layers.Select(layer => layer.GetTable()).Distinct())
+			foreach (Table table in layers.GetTables().Distinct())
 			{
 				var geodatabase = (Geodatabase) table.GetDatastore();
 
@@ -86,8 +92,10 @@ namespace ProSuite.Commons.AGP.Carto
 
 				if (featureLayer == null) continue;
 
-				foreach (var feature in GetFeatures(featureLayer, oidsByMapMember.Value))
+				foreach (Feature feature in GetFeatures(featureLayer, oidsByMapMember.Value))
+				{
 					yield return feature;
+				}
 			}
 		}
 
@@ -157,6 +165,7 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
+		// todo daro: drop MapView from method signature, see GetLayers<T> below
 		/// <summary>
 		/// Finds the distinct visible features in the map that intersect the selected
 		/// features and that fulfill the target-selection-type criteria.
@@ -236,9 +245,8 @@ namespace ProSuite.Commons.AGP.Carto
 			// -> Get the distinct feature classes (TODO: include layer definition queries)
 
 			IEnumerable<FeatureLayer> featureLayers =
-				GetLayers<FeatureLayer>(
-					mapView, fl => IsLayerApplicable(fl, targetSelectionType, layerPredicate,
-					                                 selectedFeatures));
+				GetLayers<FeatureLayer>(fl => IsLayerApplicable(fl, targetSelectionType, layerPredicate,
+				                                                selectedFeatures));
 
 			IEnumerable<IGrouping<IntPtr, FeatureLayer>> layersGroupedByClass =
 				featureLayers.GroupBy(fl => fl.GetFeatureClass().Handle);
@@ -279,13 +287,20 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
-		public static IEnumerable<T> GetLayers<T>(
-			[NotNull] MapView mapView,
-			[CanBeNull] Predicate<T> layerPredicate) where T : Layer
+		// todo daro move to LayerUtils?
+		public static IEnumerable<T> GetLayers<T>([CanBeNull] Predicate<T> layerPredicate)
+			where T : Layer
 		{
+			MapView mapView = MapView.Active;
+
+			if (mapView == null)
+			{
+				yield break;
+			}
+
 			foreach (Layer layer in mapView.Map.GetLayersAsFlattenedList())
 			{
-				T matchingTypeLayer = layer as T;
+				var matchingTypeLayer = layer as T;
 
 				if (matchingTypeLayer == null)
 				{

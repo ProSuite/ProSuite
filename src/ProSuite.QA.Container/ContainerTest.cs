@@ -726,7 +726,7 @@ namespace ProSuite.QA.Container
 			ISpatialFilter filter = _defaultFilters[involvedTableIndex];
 			QueryFilterHelper defaultHelper = _defaultFilterHelpers[involvedTableIndex];
 
-			QueryFilterHelper whereHelper = (string.IsNullOrWhiteSpace(where))
+			QueryFilterHelper whereHelper = string.IsNullOrWhiteSpace(where)
 				                                ? new QueryFilterHelper(
 					                                table, where, GetSqlCaseSensitivity(table))
 				                                : null;

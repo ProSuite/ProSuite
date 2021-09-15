@@ -170,13 +170,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 					return IsSameObjectClass(objectClass1, objectClass2);
 
 				case ObjectClassEquality.SameTableSameVersion:
-					return (objectClass1 == objectClass2) ||
-					       (IsSameObjectClass(objectClass1, objectClass2) &&
-					        WorkspaceUtils.IsSameVersion(GetWorkspace(objectClass1),
-					                                     GetWorkspace(objectClass2)));
+					return objectClass1 == objectClass2 ||
+					       IsSameObjectClass(objectClass1, objectClass2) &&
+					       WorkspaceUtils.IsSameVersion(GetWorkspace(objectClass1),
+					                                    GetWorkspace(objectClass2));
 
 				case ObjectClassEquality.SameDatasetName:
-					return (objectClass1 == objectClass2) ||
+					return objectClass1 == objectClass2 ||
 					       string.Equals(((IDataset) objectClass1).Name,
 					                     ((IDataset) objectClass2).Name);
 
@@ -407,8 +407,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			string rasterFullName = Path.Combine(directory, rasterName);
 
 			// rasterName might be a directory (e.g. grid) or a file (e.g. tif)
-			if ((! Directory.Exists(rasterFullName)) &&
-			    (! File.Exists(rasterFullName)))
+			if (! Directory.Exists(rasterFullName) && ! File.Exists(rasterFullName))
 			{
 				Ex.Throw<FileNotFoundException>("File or directory not found: {0}",
 				                                rasterFullName);
@@ -813,16 +812,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			var versionedObj = dataset as IVersionedObject;
 
-			return (versionedObj != null && versionedObj.IsRegisteredAsVersioned);
+			return versionedObj != null && versionedObj.IsRegisteredAsVersioned;
 		}
 
 		public static bool IsRegisteredAsObjectClass([NotNull] ITable table)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
-			var objectClass = table as IObjectClass;
-
-			return objectClass != null
+			return table is IObjectClass objectClass
 				       ? IsRegisteredAsObjectClass(objectClass)
 				       : IsRegisteredAsObjectClass(GetWorkspace(table), GetName(table));
 		}
@@ -833,9 +830,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
 
-			var workspaceManage = workspace as IFeatureWorkspaceManage;
-
-			return workspaceManage != null && workspaceManage.IsRegisteredAsObjectClass(name);
+			return workspace is IFeatureWorkspaceManage workspaceManage &&
+			       workspaceManage.IsRegisteredAsObjectClass(name);
 		}
 
 		public static bool IsRegisteredAsObjectClass([NotNull] IObjectClass objectClass)
@@ -850,19 +846,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			string ownerName;
 
-			var sqlSyntax = workspace as ISQLSyntax;
-			if (sqlSyntax == null)
+			if (workspace is ISQLSyntax sqlSyntax)
 			{
-				ownerName = string.Empty;
+				sqlSyntax.ParseTableName(fullTableName, out _, out ownerName, out _);
 			}
 			else
 			{
-				string tableName;
-				string dbName;
-				sqlSyntax.ParseTableName(fullTableName,
-				                         out dbName,
-				                         out ownerName,
-				                         out tableName);
+				ownerName = string.Empty;
 			}
 
 			return ownerName;
@@ -914,18 +904,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			string tableName;
 
-			var sqlSyntax = workspace as ISQLSyntax;
-			if (sqlSyntax == null)
+			if (workspace is ISQLSyntax sqlSyntax)
 			{
-				tableName = fullTableName;
+				sqlSyntax.ParseTableName(fullTableName, out _, out _, out tableName);
 			}
 			else
 			{
-				string outVal1, outVal2;
-				sqlSyntax.ParseTableName(fullTableName,
-				                         out outVal1,
-				                         out outVal2,
-				                         out tableName);
+				tableName = fullTableName;
 			}
 
 			return tableName;
@@ -1011,7 +996,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// Create a 'Query Layer' type of feature class. Unlike the QueryFeatureClasses created
 		/// by TableJoinUtils, this creates a class with unqualified field names.
 		/// </summary>
-		/// <param name="sqlWorksace">The workspace</param>
+		/// <param name="sqlWorkspace">The workspace</param>
 		/// <param name="sql">The query that contains a single shape field column which can
 		/// be found in the sde column registry.</param>
 		/// <param name="name">The name of the table / feature class which will be adapted
@@ -1020,27 +1005,27 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="xyTolerance">The xyTolerance </param>
 		/// <returns></returns>
 		public static ITable CreateQueryLayerClass(
-			[NotNull] ISqlWorkspace sqlWorksace,
+			[NotNull] ISqlWorkspace sqlWorkspace,
 			[NotNull] string sql,
 			[NotNull] string name,
 			[CanBeNull] string oidFieldName = null,
 			double xyTolerance = double.NaN)
 		{
 			IQueryDescription queryDescription =
-				CreateQueryDescription(sqlWorksace, sql, oidFieldName, xyTolerance);
+				CreateQueryDescription(sqlWorkspace, sql, oidFieldName, xyTolerance);
 
-			return CreateQueryLayerClass(sqlWorksace, queryDescription, name);
+			return CreateQueryLayerClass(sqlWorkspace, queryDescription, name);
 		}
 
 		public static IQueryDescription CreateQueryDescription(
-			[NotNull] ISqlWorkspace sqlWorksace,
+			[NotNull] ISqlWorkspace sqlWorkspace,
 			[NotNull] string sql,
 			[CanBeNull] string oidFieldName = null,
 			double xyTolerance = double.NaN)
 		{
 			_msg.DebugFormat("Getting query layer description for {0}", sql);
 
-			IQueryDescription queryDescription = sqlWorksace.GetQueryDescription(sql);
+			IQueryDescription queryDescription = sqlWorkspace.GetQueryDescription(sql);
 
 			if (! string.IsNullOrEmpty(oidFieldName))
 			{
@@ -1205,21 +1190,20 @@ namespace ProSuite.Commons.AO.Geodatabase
 		                                  [CanBeNull] out string ownerName,
 		                                  [NotNull] out string tableName)
 		{
-			var sqlSyntax = workspace as ISQLSyntax;
-
-			if (sqlSyntax == null)
+			if (workspace is ISQLSyntax sqlSyntax)
+			{
+				sqlSyntax.ParseTableName(fullTableName,
+				                         out databaseName,
+				                         out ownerName,
+				                         out tableName);
+			}
+			else
 			{
 				databaseName = string.Empty;
 				ownerName = string.Empty;
 
 				tableName = fullTableName;
-				return;
 			}
-
-			sqlSyntax.ParseTableName(fullTableName,
-			                         out databaseName,
-			                         out ownerName,
-			                         out tableName);
 		}
 
 		/// <summary>
@@ -1232,21 +1216,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public static string GetOwnerName([NotNull] IFeatureWorkspace workspace,
 		                                  [NotNull] string fullTableName)
 		{
-			var sqlSyntax = workspace as ISQLSyntax;
-			if (sqlSyntax == null)
+			if (workspace is ISQLSyntax sqlSyntax)
 			{
-				return string.Empty;
+				string ownerName;
+				sqlSyntax.ParseTableName(fullTableName, out _, out ownerName, out _);
+
+				return ownerName;
 			}
 
-			string dbName;
-			string tableName;
-			string ownerName;
-			sqlSyntax.ParseTableName(fullTableName,
-			                         out dbName,
-			                         out ownerName,
-			                         out tableName);
-
-			return ownerName;
+			return string.Empty;
 		}
 
 		public static string GetOwnerName([NotNull] IDatasetName datasetName)
@@ -1492,8 +1470,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				            esriDatasetType.esriDTFeatureClass,
 				            esriDatasetType.esriDTTable))
 			{
-				var objectClass = dataset as IObjectClass;
-				if (objectClass != null)
+				if (dataset is IObjectClass objectClass)
 				{
 					yield return objectClass;
 				}
@@ -1845,9 +1822,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			// Allow specific IEquatable<IObjectClass> implementation in mock objects or synthetic features
-			var equatableObj = class1 as IEquatable<IObjectClass>;
 
-			if (equatableObj != null)
+			if (class1 is IEquatable<IObjectClass> equatableObj)
 			{
 				return equatableObj.Equals(class2);
 			}
@@ -1878,11 +1854,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 			var dataset1 = (IDataset) class1;
 			var dataset2 = (IDataset) class2;
 
-			if (dataset1.FullName is IDatasetName2 && dataset2.FullName is IDatasetName2)
+			if (dataset1.FullName is IDatasetName2 dsName1 &&
+			    dataset2.FullName is IDatasetName2 dsName2)
 			{
-				var dsName1 = (IDatasetName2) dataset1.FullName;
-				var dsName2 = (IDatasetName2) dataset2.FullName;
-
 				if (! dsName1.Name.Equals(dsName2.Name))
 				{
 					return false;
@@ -2810,26 +2784,26 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
 
-			if (dataset is IFeatureClass)
+			if (dataset is IFeatureClass featureClass)
 			{
-				return ((IFeatureClass) dataset).FeatureDataset;
+				return featureClass.FeatureDataset;
 			}
 
 #if !Server
-			if (dataset is ITerrain)
+			if (dataset is ITerrain terrain)
 			{
-				return ((ITerrain) dataset).FeatureDataset;
+				return terrain.FeatureDataset;
 			}
 
-			if (dataset is ITopology)
+			if (dataset is ITopology topology)
 			{
-				return ((ITopology) dataset).FeatureDataset;
+				return topology.FeatureDataset;
 			}
 #endif
 
-			if (dataset is IRelationshipClass)
+			if (dataset is IRelationshipClass relationshipClass)
 			{
-				return ((IRelationshipClass) dataset).FeatureDataset;
+				return relationshipClass.FeatureDataset;
 			}
 
 			return null;
@@ -3370,10 +3344,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				ISpatialReference spatialReference = geoDataset.SpatialReference;
 
-				var ds = dataset as IDataset;
-				string datasetName = ds == null
-					                     ? "<unnamed>"
-					                     : ds.Name;
+				string datasetName = dataset is IDataset ds ? ds.Name : "<unnamed>";
 
 				if (result == null)
 				{
@@ -3805,13 +3776,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		                                        [NotNull] string ownerName,
 		                                        [NotNull] ISQLSyntax sqlSyntax)
 		{
-			string dbName;
 			string datasetOwnerName;
-			string tableName;
-			sqlSyntax.ParseTableName(fullName,
-			                         out dbName,
-			                         out datasetOwnerName,
-			                         out tableName);
+			sqlSyntax.ParseTableName(fullName, out _, out datasetOwnerName, out _);
 
 			if (string.IsNullOrEmpty(datasetOwnerName))
 			{

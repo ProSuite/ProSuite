@@ -11,9 +11,16 @@ namespace ProSuite.Commons.AGP.Carto
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public static void ClearSelection(Map map)
+		public static void ClearSelection()
 		{
-			Dictionary<MapMember, List<long>> selection = map.GetSelection();
+			MapView mapView = MapView.Active;
+
+			if (mapView == null)
+			{
+				return;
+			}
+
+			Dictionary<MapMember, List<long>> selection = mapView.Map.GetSelection();
 
 			foreach (MapMember mapMembersWithSelection in selection.Keys)
 			{

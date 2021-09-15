@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -401,8 +401,8 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 				private bool Intersects(BoxTile yTile, double[] searchExtent)
 				{
-					return (yTile.MinInParentSplitDim <= searchExtent[1] &&
-					        yTile.MaxInParentSplitDim >= searchExtent[0]);
+					return yTile.MinInParentSplitDim <= searchExtent[1] &&
+					       yTile.MaxInParentSplitDim >= searchExtent[0];
 				}
 
 				private double[] GetSearchExtent(int dim)

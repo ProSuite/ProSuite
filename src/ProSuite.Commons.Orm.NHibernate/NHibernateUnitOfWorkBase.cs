@@ -1,15 +1,11 @@
 using System;
-using System.Reflection;
 using NHibernate;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.Orm.NHibernate
 {
 	public abstract class NHibernateUnitOfWorkBase
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
-
 		[UsedImplicitly]
 		public ISessionProvider SessionManager { set; get; }
 

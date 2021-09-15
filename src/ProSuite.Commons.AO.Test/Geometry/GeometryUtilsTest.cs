@@ -305,8 +305,6 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		[Test]
 		public void CanAreCongruentWithinToleranceNoZ()
 		{
-			long milliseconds;
-
 			var p00 = new Pt(0, 0);
 			var p10 = new Pt(1, 0);
 			var p01 = new Pt(0, 1);
@@ -333,7 +331,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 				sameFromPoint,
 				"Oops, poly1 and poly2 have same FromPoint.");
 
-			bool congruent = TimedCongruenceTest(poly1, poly2, 1, out milliseconds);
+			bool congruent = TimedCongruenceTest(poly1, poly2, 1, out long _);
 			Assert.IsTrue(congruent);
 		}
 
@@ -449,7 +447,6 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		public void CanAreCongruentWithinToleranceOnPolygons()
 		{
 			bool congruent;
-			long milliseconds;
 
 			const double xyTolerance = 0.1;
 			const double zTolerance = 0.1;
@@ -478,29 +475,29 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			// Polygon is congruent with its clone, even with weedFactor=0:
 			Console.WriteLine(@"{0}Testing 1 ~ 2", _newLine);
-			congruent = TimedCongruenceTest(poly1, poly2, 0, out milliseconds);
+			congruent = TimedCongruenceTest(poly1, poly2, 0, out long _);
 			Assert.IsTrue(congruent);
 
 			// Polygons 1 and 3 have different vertex ordering but are congruent:
 			Console.WriteLine(@"{0}Testing 1 ~ 3", _newLine);
-			congruent = TimedCongruenceTest(poly1, poly3, 0, out milliseconds);
+			congruent = TimedCongruenceTest(poly1, poly3, 0, out long _);
 			Assert.IsTrue(congruent);
 
 			// Polygons 1 and 4 are congruent (within tolerance), but to assert this,
 			// the congruence testing routine must weed the start/end point of poly4!
 			Console.WriteLine(@"{0}Testing 1 ~ 4 (no tolerance)", _newLine);
-			congruent = TimedCongruenceTest(poly1, poly4, 0, out milliseconds);
+			congruent = TimedCongruenceTest(poly1, poly4, 0, out long _);
 			Assert.IsFalse(congruent);
 			Console.WriteLine(@"{0}Testing 1 ~ 4", _newLine);
-			congruent = TimedCongruenceTest(poly1, poly4, 1, out milliseconds);
+			congruent = TimedCongruenceTest(poly1, poly4, 1, out long _);
 			Assert.IsTrue(congruent);
 
 			// Polygon 5 has a vertex that differs in Z only:
 			Console.WriteLine(@"{0}Testing 1 ~ 5 (no tolerance)", _newLine);
-			congruent = TimedCongruenceTest(poly1, poly5, 0, out milliseconds);
+			congruent = TimedCongruenceTest(poly1, poly5, 0, out long _);
 			Assert.IsFalse(congruent);
 			Console.WriteLine(@"{0}Testing 1 ~ 5", _newLine);
-			congruent = TimedCongruenceTest(poly1, poly5, 1, out milliseconds);
+			congruent = TimedCongruenceTest(poly1, poly5, 1, out long _);
 			Assert.IsTrue(congruent);
 		}
 
@@ -508,7 +505,6 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		public void CanAreCongruentWithinToleranceOnPolylines()
 		{
 			bool congruent;
-			long milliseconds;
 
 			ISpatialReference sr = CreateSpatialReference(0.0125, 0.0125);
 
@@ -529,22 +525,22 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			// Line is congruent with itself (same instance):
 			Console.WriteLine(@"{0}Testing 1 ~ 1 (no tolerance)", _newLine);
-			congruent = TimedCongruenceTest(line1, line1, 0, out milliseconds);
+			congruent = TimedCongruenceTest(line1, line1, 0, out long _);
 			Assert.IsTrue(congruent);
 
 			// Line is congruent with itself (cloned instance):
 			Console.WriteLine(@"{0}Testing 1 ~ 2 (no tolerance)", _newLine);
-			congruent = TimedCongruenceTest(line1, line2, 0, out milliseconds);
+			congruent = TimedCongruenceTest(line1, line2, 0, out long _);
 			Assert.IsTrue(congruent);
 
 			// Lines 1 and 3 are different (small tolerance):
 			Console.WriteLine(@"{0}Testing 1 ~ 3 (small tolerance)", _newLine);
-			congruent = TimedCongruenceTest(line1, line3, 1, out milliseconds);
+			congruent = TimedCongruenceTest(line1, line3, 1, out long _);
 			Assert.IsFalse(congruent);
 
 			// Lines 1 and 3 are congruent (much larger tolerance):
 			Console.WriteLine(@"{0}Testing 1 ~ 3 (much more tolerance)", _newLine);
-			congruent = TimedCongruenceTest(line1, line3, 20, out milliseconds);
+			congruent = TimedCongruenceTest(line1, line3, 20, out long _);
 			Assert.IsTrue(congruent);
 		}
 
@@ -564,12 +560,11 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			// Self intersections are reported by ArcObjects but the description is 'translated' to short-segments
 			const bool allowNonPlanarLines = false;
-			string nonSimpleReasonDescription;
 			GeometryNonSimpleReason? nonSimpleReason;
 			bool isSimple = GeometryUtils.IsGeometrySimple(polyline,
 			                                               polyline.SpatialReference,
 			                                               allowNonPlanarLines,
-			                                               out nonSimpleReasonDescription,
+			                                               out string _,
 			                                               out nonSimpleReason);
 			Assert.IsFalse(isSimple);
 			Assert.AreEqual(GeometryNonSimpleReason.ShortSegments, nonSimpleReason);
@@ -582,7 +577,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			isSimple = GeometryUtils.IsGeometrySimple(polyline,
 			                                          lv95ReducedTolerance,
 			                                          allowNonPlanarLines,
-			                                          out nonSimpleReasonDescription,
+			                                          out string _,
 			                                          out nonSimpleReason);
 
 			// Now it is still reported as non-simple but not as short segment any more (0.0005 > 0.0004)
@@ -594,7 +589,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			isSimple = GeometryUtils.IsGeometrySimple(polyline,
 			                                          lv95,
 			                                          allowNonPlanarLines,
-			                                          out nonSimpleReasonDescription,
+			                                          out string _,
 			                                          out nonSimpleReason);
 			Assert.IsTrue(isSimple);
 		}
@@ -617,13 +612,10 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			// Self intersections are reported because the segments are not actually smaller than the tolerance:
 			const bool allowNonPlanarLines = false;
-			string nonSimpleReasonDescription;
-			GeometryNonSimpleReason? nonSimpleReason;
 			bool isSimple = GeometryUtils.IsGeometrySimple(polyline,
 			                                               polyline.SpatialReference,
 			                                               allowNonPlanarLines,
-			                                               out nonSimpleReasonDescription,
-			                                               out nonSimpleReason);
+			                                               out _, out _);
 			Assert.IsFalse(isSimple);
 
 			// now with reduced tolerance:
@@ -634,8 +626,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			isSimple = GeometryUtils.IsGeometrySimple(polyline,
 			                                          lv95ReducedTolerance,
 			                                          allowNonPlanarLines,
-			                                          out nonSimpleReasonDescription,
-			                                          out nonSimpleReason);
+			                                          out _, out _);
 
 			Assert.IsFalse(isSimple);
 
@@ -644,8 +635,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			isSimple = GeometryUtils.IsGeometrySimple(polyline,
 			                                          lv95ReducedTolerance,
 			                                          allowNonPlanarLines,
-			                                          out nonSimpleReasonDescription,
-			                                          out nonSimpleReason);
+			                                          out _, out _);
 
 			Assert.IsFalse(isSimple);
 
@@ -654,8 +644,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			isSimple = GeometryUtils.IsGeometrySimple(polyline,
 			                                          lv95ReducedTolerance,
 			                                          allowNonPlanarLines,
-			                                          out nonSimpleReasonDescription,
-			                                          out nonSimpleReason);
+			                                          out _, out _);
 
 			Assert.IsTrue(isSimple);
 
@@ -664,8 +653,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			isSimple = GeometryUtils.IsGeometrySimple(polyline,
 			                                          lv95,
 			                                          allowNonPlanarLines,
-			                                          out nonSimpleReasonDescription,
-			                                          out nonSimpleReason);
+			                                          out _, out _);
 			Assert.IsTrue(isSimple);
 		}
 
@@ -957,9 +945,8 @@ namespace ProSuite.Commons.AO.Test.Geometry
 				GeometryFactory.CreateEmptyGeometry(
 					esriGeometryType.esriGeometryMultiPatch);
 
-			IGeometry converted;
 			bool canConvert = GeometryUtils.TryConvertGeometry(
-				multipatch, esriGeometryType.esriGeometryPolygon, out converted);
+				multipatch, esriGeometryType.esriGeometryPolygon, out IGeometry _);
 
 			Assert.IsFalse(canConvert);
 		}
@@ -2382,10 +2369,10 @@ namespace ProSuite.Commons.AO.Test.Geometry
 				              splitPoints[1],
 				              ((ICurve) lineCollection.get_Geometry(1)).FromPoint));
 			double deltaXsqr = Math.Pow(
-				(((ICurve) lineCollection.get_Geometry(1)).FromPoint).X -
+				((ICurve) lineCollection.get_Geometry(1)).FromPoint.X -
 				splitPoints[1].X, 2);
 			double deltaYsqr = Math.Pow(
-				(((ICurve) lineCollection.get_Geometry(1)).FromPoint).Y -
+				((ICurve) lineCollection.get_Geometry(1)).FromPoint.Y -
 				splitPoints[1].Y, 2);
 
 			double distance = Math.Sqrt(deltaXsqr + deltaYsqr);
@@ -2425,18 +2412,15 @@ namespace ProSuite.Commons.AO.Test.Geometry
 				GeometryFactory.CreatePoint(1000, 1000, 40),
 				GeometryFactory.CreatePoint(1001, 1001));
 
-			var createParts = false;
 			IList<IPoint> ensuredVertices = GeometryUtils.CrackPolycurve(
-				polyline, splitPoint,
-				true, createParts,
-				null);
+				polyline, splitPoint, true, false);
 			Assert.AreEqual(2, ensuredVertices.Count);
 
 			polyline = GeometryFactory.Clone(polylineOriginal);
 
-			createParts = true;
+			const bool createParts = true;
 			ensuredVertices = GeometryUtils.CrackPolycurve(polyline, splitPoint, true,
-			                                               createParts, null);
+			                                               createParts);
 			Assert.AreEqual(2, ensuredVertices.Count);
 		}
 
@@ -2672,12 +2656,11 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			string filePath = TestData.GetInvertedRingPolygonPath();
 			var poly = (IPolygon) ReadGeometryFromXML(filePath);
 
-			string description;
 			GeometryNonSimpleReason? nonSimpleReason;
 
 			Assert.IsFalse(GeometryUtils.IsGeometrySimple(
 				               poly, poly.SpatialReference, true,
-				               out description, out nonSimpleReason));
+				               out string _, out nonSimpleReason));
 
 			Assert.AreEqual(GeometryNonSimpleReason.IncorrectRingOrientation,
 			                nonSimpleReason);
@@ -2688,7 +2671,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			// The inner ring is still wrong:
 			Assert.IsFalse(GeometryUtils.IsGeometrySimple(
 				               poly, poly.SpatialReference, true,
-				               out description, out nonSimpleReason));
+				               out string _, out nonSimpleReason));
 
 			Assert.AreEqual(GeometryNonSimpleReason.IncorrectRingOrientation,
 			                nonSimpleReason);
@@ -2697,7 +2680,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			Assert.IsTrue(GeometryUtils.IsGeometrySimple(
 				              poly, poly.SpatialReference, true,
-				              out description, out nonSimpleReason));
+				              out string _, out nonSimpleReason));
 		}
 
 		[Test]
@@ -2760,7 +2743,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			//		 a tolerance is used which is far too large!
 			IPolygon circle =
 				GeometryFactory.CreateCircleArcPolygon(
-					GeometryFactory.CreatePoint(2600000, 1200000), 50, false);
+					GeometryFactory.CreatePoint(2600000, 1200000), 50);
 
 			circle.SpatialReference =
 				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95);
@@ -2789,7 +2772,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			//		 a tolerance is used which is far too large!
 			IPolygon circle =
 				GeometryFactory.CreateCircleArcPolygon(
-					GeometryFactory.CreatePoint(2600000, 1200000), 50, false);
+					GeometryFactory.CreatePoint(2600000, 1200000), 50);
 
 			circle.SpatialReference =
 				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95);
@@ -2808,7 +2791,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		{
 			IPolygon circle =
 				GeometryFactory.CreateCircleArcPolygon(
-					GeometryFactory.CreatePoint(2600000, 1200000), 50, false);
+					GeometryFactory.CreatePoint(2600000, 1200000), 50);
 
 			circle.SpatialReference =
 				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95);
@@ -3308,7 +3291,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			Assert.AreEqual(0, ringCount);
 			Assert.IsFalse(polygon.IsEmpty);
 
-			ringCount = GeometryUtils.GetExteriorRingCount(polygon, true);
+			ringCount = GeometryUtils.GetExteriorRingCount(polygon);
 
 			Assert.AreEqual(0, ringCount);
 			Assert.IsTrue(polygon.IsEmpty);
@@ -3593,11 +3576,9 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			var watch = new Stopwatch();
 			watch.Start();
 
-			string description;
-			GeometryNonSimpleReason? reason;
 			bool simple = GeometryUtils.IsGeometrySimple(
 				polygon, polygon.SpatialReference,
-				true, out description, out reason);
+				true, out string _, out GeometryNonSimpleReason? _);
 
 			Assert.True(simple);
 
@@ -3613,13 +3594,10 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			watch.Reset();
 			watch.Start();
 
-			var topoOp = polygon as ITopologicalOperator3;
-
-			if (topoOp != null)
+			if (polygon is ITopologicalOperator3 topoOp)
 			{
 				topoOp.IsKnownSimple_2 = false;
-				esriNonSimpleReasonEnum esriReason;
-				simple = topoOp.get_IsSimpleEx(out esriReason);
+				simple = topoOp.get_IsSimpleEx(out esriNonSimpleReasonEnum _);
 				Assert.True(simple);
 			}
 
@@ -3963,7 +3941,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			geoColl.AddGeometry(ring, ref missing, ref missing);
 
 			// Create and add inner rings (= holes)
-			double innerSideLength = sideLength / (1 + (2 * holesInXAndY));
+			double innerSideLength = sideLength / (1 + 2 * holesInXAndY);
 			for (var i = 0; i < holesInXAndY; i++)
 			{
 				double llx = xOffset + (innerSideLength + 2 * i * innerSideLength);

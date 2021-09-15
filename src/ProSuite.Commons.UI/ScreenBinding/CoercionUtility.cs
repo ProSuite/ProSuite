@@ -47,7 +47,7 @@ namespace ProSuite.Commons.UI.ScreenBinding
 
 			if (propertyType.IsGenericType)
 			{
-				if (Equals(propertyType.GetGenericTypeDefinition(), (typeof(Nullable<>))))
+				if (Equals(propertyType.GetGenericTypeDefinition(), typeof(Nullable<>)))
 				{
 					propertyType = propertyType.GetGenericArguments()[0];
 				}

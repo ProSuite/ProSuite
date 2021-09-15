@@ -135,7 +135,10 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 			return _defaultSort[key];
 		}
 
-		#region Non-public members
+		public static int GetDefaultSortIndex([NotNull] Image image)
+		{
+			return GetDefaultSortIndex(GetImageKey(image));
+		}
 
 		[NotNull]
 		public static Image GetImage(GeometryType geometryType)
@@ -162,7 +165,7 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 
 			if (geometryType is GeometryTypeShape)
 			{
-				return GetImage(((GeometryTypeShape) geometryType).ShapeType);
+				return GetImage(((GeometryTypeShape)geometryType).ShapeType);
 			}
 
 			if (geometryType is GeometryTypeRasterMosaic)
@@ -212,7 +215,5 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 				       ? key
 				       : _keyUnknown;
 		}
-
-		#endregion
 	}
 }

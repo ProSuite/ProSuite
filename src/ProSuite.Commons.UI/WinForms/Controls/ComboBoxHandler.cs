@@ -50,13 +50,11 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 		}
 
 		[CanBeNull]
-		public T GetSelectedValue([CanBeNull] T defaultValue = default(T))
+		public T GetSelectedValue([CanBeNull] T defaultValue = default)
 		{
 			var item = (ComboItem) ComboBox.SelectedItem;
 
-			return (item != null)
-				       ? item.Value
-				       : defaultValue;
+			return item != null ? item.Value : defaultValue;
 		}
 
 		public void SetSelectedValue(T value)

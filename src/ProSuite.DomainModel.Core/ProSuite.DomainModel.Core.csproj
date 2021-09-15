@@ -47,6 +47,11 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="ClassDescriptor.cs" />
+    <Compile Include="Commands\ICommandDescriptorRepository.cs" />
+    <Compile Include="Processing\CartoProcess.cs" />
+    <Compile Include="Commands\CommandDescriptor.cs" />
+    <Compile Include="Commands\CommandKey.cs" />
+    <Compile Include="Commands\CommandType.cs" />
     <Compile Include="DataModel\Association.cs" />
     <Compile Include="DataModel\AssociationAttribute.cs" />
     <Compile Include="DataModel\AssociationCardinality.cs" />
@@ -129,7 +134,14 @@
     <Compile Include="DataModel\UnknownAttributeRole.cs" />
     <Compile Include="DataModel\VariantValueFactory.cs" />
     <Compile Include="DataModel\VectorDataset.cs" />
+    <Compile Include="Processing\CartoProcessGroup.cs" />
+    <Compile Include="Processing\CartoProcessParameter.cs" />
+    <Compile Include="Processing\CartoProcessType.cs" />
     <Compile Include="Processing\FeatureProxy.cs" />
+    <Compile Include="Processing\GdbProcessCoreUtils.cs" />
+    <Compile Include="Processing\ICartoProcessGroupRepository.cs" />
+    <Compile Include="Processing\ICartoProcessRepository.cs" />
+    <Compile Include="Processing\ICartoProcessTypeRepository.cs" />
     <Compile Include="Processing\IProcessingDebug.cs" />
     <Compile Include="Processing\IProcessingFeedback.cs" />
     <Compile Include="Processing\IProcessReportBuilder.cs" />
@@ -138,6 +150,7 @@
     <Compile Include="Processing\ProcessDatasetName.cs" />
     <Compile Include="Processing\ProcessExecutionType.cs" />
     <Compile Include="Processing\ProcessSelectionType.cs" />
+    <Compile Include="Processing\Reporting\HtmlProcessReportBuilder.cs" />
     <Compile Include="QA\CustomQualitySpecification.cs" />
     <Compile Include="QA\DataQualityCategory.cs" />
     <Compile Include="QA\DataQualityCategoryComparer.cs" />

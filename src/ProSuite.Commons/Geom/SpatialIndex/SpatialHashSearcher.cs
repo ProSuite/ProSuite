@@ -178,7 +178,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 
 			Assert.NotNull(fullExtent);
 
-			double maxTileCount = (fullExtent.Width * fullExtent.Height) /
+			double maxTileCount = fullExtent.Width * fullExtent.Height /
 			                      (averageEnvLateralLength * averageEnvLateralLength);
 
 			if (double.IsNaN(gridSize))

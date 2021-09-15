@@ -66,7 +66,7 @@ namespace ProSuite.Commons.Geom
 				return Coordinates[0].GetHashCode();
 			}
 
-			return (Coordinates[0].GetHashCode() ^ Coordinates[1].GetHashCode());
+			return Coordinates[0].GetHashCode() ^ Coordinates[1].GetHashCode();
 		}
 
 		public double LengthSquared => GetLengthSquared(Dimension);

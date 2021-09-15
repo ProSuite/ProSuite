@@ -19,16 +19,16 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		public int FindField(string name)
 		{
 			return _fields.FindIndex(
-				field => (field.Name.Equals(
+				field => field.Name.Equals(
 					name,
-					StringComparison.OrdinalIgnoreCase)));
+					StringComparison.OrdinalIgnoreCase));
 		}
 
 		public int FindFieldByAliasName(string name)
 		{
 			return _fields.FindIndex(
-				field => (field.AliasName.Equals(
-					name, StringComparison.OrdinalIgnoreCase)));
+				field => field.AliasName.Equals(
+					name, StringComparison.OrdinalIgnoreCase));
 		}
 
 		public int FieldCount => _fields.Count;

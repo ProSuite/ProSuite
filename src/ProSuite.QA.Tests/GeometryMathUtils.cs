@@ -167,7 +167,7 @@ namespace ProSuite.QA.Tests
 			// Lösung der quadratischen Gleichung:
 			//r1, r2 = (-b -+ ((b^2 - 4ac)^0.5))/2a
 
-			double dDet = (b * b) - 4.0 * a * c;
+			double dDet = b * b - 4.0 * a * c;
 
 			if (dDet >= 0)
 			{
