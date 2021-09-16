@@ -896,7 +896,7 @@ namespace ProSuite.Processing.Utils
 						case Instruction.Neg:
 							value = stack.Pop();
 							Assert.True(value is bool, "Bug: Neg: bad type on stack");
-							result = ! ((bool) value);
+							result = ! (bool) value;
 							stack.Push(result);
 							break;
 
@@ -906,7 +906,7 @@ namespace ProSuite.Processing.Utils
 							while (! Equals(value, Instruction.Mark))
 							{
 								Assert.True(value is bool, "Bug: And: bad type on stack");
-								if (! ((bool) value)) result = false;
+								if (! (bool) value) result = false;
 								value = stack.Pop();
 							}
 
@@ -1005,8 +1005,8 @@ namespace ProSuite.Processing.Utils
 			// Therefore, for example, "1.0F is double" is false and
 			// so is typeof(double).IsAssignableFrom(typeof(float)).
 
-			if ((aKind == CompareKind.Floating && bKind == CompareKind.Integer) ||
-			    (aKind == CompareKind.Integer && bKind == CompareKind.Floating))
+			if (aKind == CompareKind.Floating && bKind == CompareKind.Integer ||
+			    aKind == CompareKind.Integer && bKind == CompareKind.Floating)
 			{
 				double aa = Convert.ToDouble(a);
 				double bb = Convert.ToDouble(b);

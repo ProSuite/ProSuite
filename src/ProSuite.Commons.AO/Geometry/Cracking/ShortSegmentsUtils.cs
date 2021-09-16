@@ -204,7 +204,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				}
 			}
 
-			string msgFormat = (featureCount == 1)
+			string msgFormat = featureCount == 1
 				                   ? "Removed {0} segment(s) from {1} geometry"
 				                   : "Removed {0} segment(s) from {1} geometries";
 

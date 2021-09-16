@@ -61,7 +61,8 @@ namespace ProSuite.QA.Container.Geometry
 				return false;
 			}
 
-			return MaxOffset <= 0 || (StartCap.IsFullDeflatable && EndCap.IsFullDeflatable);
+			return MaxOffset <= 0 ||
+			       StartCap.IsFullDeflatable && EndCap.IsFullDeflatable;
 		}
 
 		public override string ToString()

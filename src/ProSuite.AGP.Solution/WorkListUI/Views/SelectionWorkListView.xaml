@@ -6,27 +6,30 @@
                     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
                     xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
                     xmlns:views="clr-namespace:ProSuite.AGP.Solution.WorkListUI.Views"
+                    xmlns:workListUi="clr-namespace:ProSuite.AGP.Solution.WorkListUI"
                     mc:Ignorable="d"
                     Title="{Binding Path=CurrentWorkList.DisplayName}"
                     d:DesignWidth="400"
-                    WindowStartupLocation="CenterOwner" SizeToContent="WidthAndHeight" ShowInTaskbar="False">
+                    d:DataContext="{d:DesignInstance Type=workListUi:SelectionWorkListViewModel}"
+                    WindowStartupLocation="CenterOwner" SizeToContent="WidthAndHeight" ShowInTaskbar="False"
+                    MinWidth="450" MinHeight="128">
 
-    <controls:ProWindow.Resources>
-        <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <extensions:DesignOnlyResourceDictionary
-                    Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
-            </ResourceDictionary.MergedDictionaries>
-        </ResourceDictionary>
-    </controls:ProWindow.Resources>
+	<controls:ProWindow.Resources>
+		<ResourceDictionary>
+			<ResourceDictionary.MergedDictionaries>
+				<extensions:DesignOnlyResourceDictionary
+					Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
+			</ResourceDictionary.MergedDictionaries>
+		</ResourceDictionary>
+	</controls:ProWindow.Resources>
 
-    <Grid Margin="5">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+	<Grid Margin="5">
+		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto" />
+			<RowDefinition Height="Auto" />
+		</Grid.RowDefinitions>
 
-        <views:WorkListNavigator Grid.Row="0" DataContext="{Binding}" />
-        <views:IssueCountControl Grid.Row="1" DataContext="{Binding}" />
-    </Grid>
+		<views:WorkListNavigator Grid.Row="0" />
+		<views:IssueCountControl Grid.Row="1" />
+	</Grid>
 </controls:ProWindow>

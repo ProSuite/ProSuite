@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -364,7 +364,7 @@ namespace ProSuite.Commons.Collections
 
 			if (dictionary == null)
 			{
-				value = default(TValue);
+				value = default;
 				return false;
 			}
 

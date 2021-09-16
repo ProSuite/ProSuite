@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.AGP.WorkList.Contracts;
@@ -125,7 +124,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			// of the work list anymore, respectively GetItems(QuerFilter, bool, int)
 			// does not return the Done-item anymore. Therefor use the item's Extent
 			// to invalidate the work list layer.
-			OnWorkListChanged(item.Extent);
+			OnWorkListChanged();
 		}
 
 		public void SetVisited(IWorkItem item)
@@ -319,14 +318,14 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		#endregion
 
-		public virtual void GoToOid(long oid)
+		public virtual void GoTo(long oid)
 		{
 			if (Current?.OID == oid)
 			{
 				return;
 			}
 
-			var filter = new QueryFilter {ObjectIDs = new[] {(long) oid}};
+			var filter = new QueryFilter {ObjectIDs = new[] {oid}};
 			IWorkItem target = GetItems(filter, false).FirstOrDefault();
 
 			if (target != null)
@@ -912,6 +911,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				       : null;
 		}
 
+		// todo daro: to Utils? Compare with EnvelopeBuilderEx
 		// todo daro: drop or refactor
 		[CanBeNull]
 		private static Envelope GetExtentFromItems([CanBeNull] IEnumerable<IWorkItem> items)
@@ -1015,6 +1015,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		private async void OnWorkListChanged([CanBeNull] Envelope extent = null,
 		                                     [CanBeNull] List<long> oids = null)
 		{
+			// todo daro oids to IEnumerable<>?
 			await WorklistChangedEvent.PublishAsync(new WorkListChangedEventArgs(this, extent, oids));
 		}
 
@@ -1022,6 +1023,12 @@ namespace ProSuite.AGP.WorkList.Domain
 		{
 			try
 			{
+				if (_invalidRows.Count == 0)
+				{
+					OnWorkListChanged();
+					return;
+				}
+
 				var invalidItems = new List<long>(_invalidRows.Count);
 
 				foreach (IWorkItem item in _invalidRows.Where(row => _rowMap.ContainsKey(row))
@@ -1049,7 +1056,7 @@ namespace ProSuite.AGP.WorkList.Domain
 			               deletes.Values.Sum(list => list.Count) +
 			               updates.Values.Sum(list => list.Count);
 
-			var invalidItems = new List<long>(capacity);
+			var invalidItems = new List<IWorkItem>(capacity);
 
 			foreach (var insert in inserts)
 			{
@@ -1078,12 +1085,16 @@ namespace ProSuite.AGP.WorkList.Domain
 				// ObjectIds of source feature not the work item OIDs.
 				//IEnumerable<IWorkItem> workItems = GetItems(filter);
 			}
-
-			OnWorkListChanged(null, invalidItems);
+			
+			// If a item visibility changes to Done the item is not part
+			// of the work list anymore, respectively GetItems(QuerFilter, bool, int)
+			// does not return the Done-item anymore. Therefor use the item's Extent
+			// to invalidate the work list layer.
+			OnWorkListChanged();
 		}
 
-		private void ProcessDeletes(GdbTableIdentity tableId, List<long> oids,
-		                            ICollection<long> invalidItems)
+		private void ProcessDeletes(GdbTableIdentity tableId, IEnumerable<long> oids,
+		                            ICollection<IWorkItem> invalidItems)
 		{
 			foreach (long oid in oids)
 			{
@@ -1099,7 +1110,7 @@ namespace ProSuite.AGP.WorkList.Domain
 				{
 					RemoveWorkItem(item);
 
-					invalidItems.Add(item.OID);
+					invalidItems.Add(item);
 				}
 			}
 
@@ -1128,7 +1139,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		}
 
 		private void ProcessInserts(GdbTableIdentity tableId, List<long> oids,
-		                            ICollection<long> invalidItems)
+		                            List<IWorkItem> invalidItems)
 		{
 			var filter = new QueryFilter {ObjectIDs = oids};
 
@@ -1150,17 +1161,17 @@ namespace ProSuite.AGP.WorkList.Domain
 
 				UpdateExtent(item.Extent);
 
-				invalidItems.Add(item.OID);
+				invalidItems.Add(item);
 			}
 		}
 
 		private void UpdateExtent(Envelope itemExtent)
 		{
-			Extent = Extent.Union(itemExtent);
+			Extent = Extent?.Union(itemExtent);
 		}
 
 		private void ProcessUpdates(GdbTableIdentity tableId, IEnumerable<long> oids,
-		                            ICollection<long> invalidItems)
+		                            List<IWorkItem> invalidItems)
 		{
 			foreach (long oid in oids)
 			{
@@ -1172,7 +1183,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 					_invalidRows.Add(rowId);
 
-					invalidItems.Add(item.OID);
+					invalidItems.Add(item);
 				}
 			}
 		}
@@ -1188,17 +1199,11 @@ namespace ProSuite.AGP.WorkList.Domain
 		private bool HasCurrentItem => CurrentIndex >= 0 &&
 		                               CurrentIndex < _items.Count;
 
-		[NotifyPropertyChangedInvocator]
-		protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-		{
-			PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-		}
-
 		#region IEquatable implementation
 
 		public bool Equals(WorkList other)
 		{
-			return string.Equals(Name, other.Name, StringComparison.OrdinalIgnoreCase);
+			return string.Equals(Name, other?.Name, StringComparison.OrdinalIgnoreCase);
 		}
 
 		public override bool Equals(object obj)

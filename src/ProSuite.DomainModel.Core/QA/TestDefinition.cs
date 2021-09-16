@@ -87,9 +87,7 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			unchecked
 			{
-				int result = (_testTypeName != null
-					              ? _testTypeName.GetHashCode()
-					              : 0);
+				int result = _testTypeName != null ? _testTypeName.GetHashCode() : 0;
 				result = (result * 397) ^ (_testAssemblyName != null
 					                           ? _testAssemblyName.GetHashCode()
 					                           : 0);

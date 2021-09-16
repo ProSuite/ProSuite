@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics.CodeAnalysis;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -454,8 +454,7 @@ namespace ProSuite.Commons.Geom
 		[CanBeNull]
 		public Pnt3D GetLinearIntersectionStartOnTarget([NotNull] Line3D targetSegment)
 		{
-			double factorAlongTarget;
-			return GetLinearIntersectionStartOnTarget(targetSegment, out factorAlongTarget);
+			return GetLinearIntersectionStartOnTarget(targetSegment, out double _);
 		}
 
 		/// <summary>
@@ -532,8 +531,7 @@ namespace ProSuite.Commons.Geom
 		[CanBeNull]
 		public Pnt3D GetLinearIntersectionEndOnTarget([NotNull] Line3D targetSegment)
 		{
-			double factorAlongTarget;
-			return GetLinearIntersectionEndOnTarget(targetSegment, out factorAlongTarget);
+			return GetLinearIntersectionEndOnTarget(targetSegment, out double _);
 		}
 
 		/// <summary>
@@ -796,9 +794,8 @@ namespace ProSuite.Commons.Geom
 				return sourceSegment;
 			}
 
-			double startFactor, endFactor;
-			Pnt3D fromPoint = GetLinearIntersectionStart(sourceSegment, out startFactor);
-			Pnt3D toPoint = GetLinearIntersectionEnd(sourceSegment, out endFactor);
+			Pnt3D fromPoint = GetLinearIntersectionStart(sourceSegment, out double _);
+			Pnt3D toPoint = GetLinearIntersectionEnd(sourceSegment, out double _);
 
 			var segment = new Line3D(fromPoint, toPoint);
 
@@ -896,8 +893,8 @@ namespace ProSuite.Commons.Geom
 			//    stretch, the pseudo-linear intersection can be safely ignored. In TouchesXY() 
 			//    probably all pseudo-linear intersections should be ignored?!
 
-			if ((SourceStartIntersects ^ SourceEndIntersects) &&
-			    (TargetStartIntersects ^ TargetEndIntersects))
+			if (SourceStartIntersects ^ SourceEndIntersects &&
+			    TargetStartIntersects ^ TargetEndIntersects)
 			{
 				Pnt3D sourcePoint = SourceStartIntersects
 					                    ? sourceLine.StartPoint
@@ -908,8 +905,7 @@ namespace ProSuite.Commons.Geom
 
 				if (SourceStartIntersects && _source1Factor > 0 && _source1Factor < 1)
 				{
-					double sourceEndFactor;
-					Pnt3D touchPoint = GetLinearIntersectionEnd(sourceLine, out sourceEndFactor);
+					Pnt3D touchPoint = GetLinearIntersectionEnd(sourceLine, out _);
 
 					return IsBelowThreshold(sourcePoint, touchPoint, nonIntersectingTargetPnt,
 					                        tolerance);
@@ -917,9 +913,7 @@ namespace ProSuite.Commons.Geom
 
 				if (SourceEndIntersects && _source2Factor > 0 && _source2Factor < 1)
 				{
-					double sourceInteriorFactor;
-					Pnt3D touchPoint =
-						GetLinearIntersectionStart(sourceLine, out sourceInteriorFactor);
+					Pnt3D touchPoint = GetLinearIntersectionStart(sourceLine, out _);
 
 					return IsBelowThreshold(sourcePoint, touchPoint, nonIntersectingTargetPnt,
 					                        tolerance);

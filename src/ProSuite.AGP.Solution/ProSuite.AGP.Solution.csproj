@@ -181,6 +181,7 @@
     <Compile Include="WorkLists\IssueWorklistEnvironment.cs" />
     <Compile Include="WorkLists\ShowWorkListsButton.cs" />
     <Compile Include="WorkLists\WorkListsModule.cs" />
+    <Compile Include="WorkListUI\BooleanToStatusConverter.cs" />
     <Compile Include="WorkListUI\InvolvedObjectRow.cs" />
     <Compile Include="WorkListUI\InvolvedTableVm.cs" />
     <Compile Include="WorkListUI\NoWorkItemViewModel.cs" />
@@ -193,7 +194,7 @@
     </Compile>
     <Compile Include="WorkListUI\IssueWorkListViewModel.cs" />
     <Compile Include="WorkListUI\ShowIssueWorkListView.cs" />
-    <Compile Include="WorkListUI\StatusConverter.cs" />
+    <Compile Include="WorkListUI\StatusToBooleanConverter.cs" />
     <Compile Include="WorkListUI\SelectionItemViewModel.cs" />
     <Compile Include="WorkListUI\WorkItemViewModelBase.cs" />
     <Compile Include="WorkListUI\Views\WorkListDetails.xaml.cs">

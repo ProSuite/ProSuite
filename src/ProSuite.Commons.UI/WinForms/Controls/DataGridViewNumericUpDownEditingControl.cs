@@ -128,17 +128,14 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			{
 				case Keys.Right:
 				{
-					var textBox = Controls[1] as TextBox;
-					if (textBox != null)
+					if (Controls[1] is TextBox textBox)
 					{
 						// If the end of the selection is at the end of the string,
 						// let the DataGridView treat the key message
-						if ((RightToLeft == RightToLeft.No &&
-						     ! (textBox.SelectionLength == 0 &&
-						        textBox.SelectionStart == textBox.Text.Length)) ||
-						    (RightToLeft == RightToLeft.Yes &&
-						     ! (textBox.SelectionLength == 0 &&
-						        textBox.SelectionStart == 0)))
+						if (RightToLeft == RightToLeft.No &&
+						    ! (textBox.SelectionLength == 0 && textBox.SelectionStart == textBox.Text.Length) ||
+						    RightToLeft == RightToLeft.Yes &&
+						    ! (textBox.SelectionLength == 0 && textBox.SelectionStart == 0))
 						{
 							return true;
 						}
@@ -149,18 +146,15 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 				case Keys.Left:
 				{
-					var textBox = Controls[1] as TextBox;
-					if (textBox != null)
+					if (Controls[1] is TextBox textBox)
 					{
 						// If the end of the selection is at the begining of the string
 						// or if the entire text is selected and we did not start editing,
 						// send this character to the dataGridView, else process the key message
-						if ((RightToLeft == RightToLeft.No &&
-						     ! (textBox.SelectionLength == 0 &&
-						        textBox.SelectionStart == 0)) ||
-						    (RightToLeft == RightToLeft.Yes &&
-						     ! (textBox.SelectionLength == 0 &&
-						        textBox.SelectionStart == textBox.Text.Length)))
+						if (RightToLeft == RightToLeft.No &&
+						    ! (textBox.SelectionLength == 0 && textBox.SelectionStart == 0) ||
+						    RightToLeft == RightToLeft.Yes &&
+						    ! (textBox.SelectionLength == 0 && textBox.SelectionStart == textBox.Text.Length))
 						{
 							return true;
 						}
@@ -193,8 +187,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 				case Keys.End:
 				{
 					// Let the grid handle the key if the entire text is selected.
-					var textBox = Controls[1] as TextBox;
-					if (textBox != null)
+					if (Controls[1] is TextBox textBox)
 					{
 						if (textBox.SelectionLength != textBox.Text.Length)
 						{
@@ -208,8 +201,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 				case Keys.Delete:
 				{
 					// Let the grid handle the key if the carret is at the end of the text.
-					var textBox = Controls[1] as TextBox;
-					if (textBox != null)
+					if (Controls[1] is TextBox textBox)
 					{
 						if (textBox.SelectionLength > 0 ||
 						    textBox.SelectionStart < textBox.Text.Length)
@@ -237,10 +229,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 				// Prevent the Value from being set to Maximum or Minimum when the cell is being painted.
 				UserEdit = (context & DataGridViewDataErrorContexts.Display) == 0;
 				return
-					Value.ToString((ThousandsSeparator
-						                ? "N"
-						                : "F") +
-					               DecimalPlaces);
+					Value.ToString((ThousandsSeparator ? "N" : "F") + DecimalPlaces);
 			}
 			finally
 			{
@@ -254,8 +243,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 		/// </summary>
 		public virtual void PrepareEditingControlForEdit(bool selectAll)
 		{
-			var textBox = Controls[1] as TextBox;
-			if (textBox != null)
+			if (Controls[1] is TextBox textBox)
 			{
 				if (selectAll)
 				{
@@ -352,8 +340,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 		/// </summary>
 		protected override bool ProcessKeyEventArgs(ref Message m)
 		{
-			var textBox = Controls[1] as TextBox;
-			if (textBox != null)
+			if (Controls[1] is TextBox textBox)
 			{
 				SendMessage(textBox.Handle, m.Msg, m.WParam, m.LParam);
 				return true;

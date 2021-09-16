@@ -381,10 +381,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			[NotNull] XmlDataQualityDocument document,
 			[NotNull] IEnumerable<XmlQualityCondition> referencedConditions)
 		{
-			bool hasUndefinedWorkspaceReference;
-			return GetReferencedWorkspaces(document,
-			                               referencedConditions,
-			                               out hasUndefinedWorkspaceReference);
+			return GetReferencedWorkspaces(document, referencedConditions, out bool _);
 		}
 
 		[NotNull]
@@ -1446,7 +1443,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		private static IEnumerable<DataQualityCategory> GetSorted(
 			[NotNull] IEnumerable<DataQualityCategory> categories)
 		{
-			return categories.OrderBy((c => string.Format("{0}#{1}", c.ListOrder, c.Name)));
+			return categories.OrderBy(c => string.Format("{0}#{1}", c.ListOrder, c.Name));
 		}
 
 		[NotNull]

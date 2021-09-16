@@ -134,7 +134,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		protected virtual string GetDescriptionCore(Row row)
 		{
-			return $"{DatasetUtils.GetTableDisplayName(row.GetTable())} OID {row.GetObjectID()} (item ID {OID})";
+			return $"{DatasetUtils.GetTableDisplayName(row.GetTable())} OID={row.GetObjectID()} (item ID={OID})";
 		}
 
 		[CanBeNull]

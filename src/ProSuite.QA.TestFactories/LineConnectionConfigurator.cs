@@ -60,18 +60,14 @@ namespace ProSuite.QA.TestFactories
 
 			foreach (KeyValuePair<string, VectorDataset> pair in lineClasses)
 			{
-				string field;
-				IList<Subtype> subtypes;
-				GetSubtypes(pair.Value, out field, out subtypes);
+				GetSubtypes(pair.Value, out string field, out IList<Subtype> subtypes);
 
 				AssignSubtypes(matrix.LineTypes, pair.Value.Name, field, subtypes);
 			}
 
 			foreach (KeyValuePair<string, VectorDataset> pair in nodeClasses)
 			{
-				string field;
-				IList<Subtype> subtypes;
-				GetSubtypes(pair.Value, out field, out subtypes);
+				GetSubtypes(pair.Value, out string field, out IList<Subtype> subtypes);
 
 				foreach (IList<ConnectionType> nodeType in matrix.Nodes.Keys)
 				{
@@ -146,9 +142,7 @@ namespace ProSuite.QA.TestFactories
 					     iNodeLayer < featureClassCount;
 					     iNodeLayer++)
 					{
-						string b = (iNodeLayer == iMatrix + lineFeatureClassCount)
-							           ? _true
-							           : _false;
+						string b = iNodeLayer == iMatrix + lineFeatureClassCount ? _true : _false;
 
 						TestParameterValue dummyNode = new ScalarTestParameterValue(rule, b);
 						rules.Add(dummyNode);
@@ -180,9 +174,7 @@ namespace ProSuite.QA.TestFactories
 			     lineFeatureClassIndex++)
 			{
 				IObjectDataset ds = vectorDatasets[lineFeatureClassIndex];
-				string field;
-				IList<Subtype> subtypes;
-				GetSubtypes(ds, out field, out subtypes);
+				GetSubtypes(ds, out string field, out IList<Subtype> subtypes);
 
 				foreach (KeyValuePair<IList<ConnectionType>, int[,]> pair in matrix.Nodes)
 				{
@@ -219,7 +211,10 @@ namespace ProSuite.QA.TestFactories
 				return;
 			}
 
-			Assert.ArgumentNotNullOrEmpty(field, "field is null but subtype list is specified");
+			if (string.IsNullOrEmpty(field))
+			{
+				throw new ArgumentException($"{nameof(field)} is null but {nameof(subtypes)} list is specified");
+			}
 
 			foreach (ConnectionType connectionType in connectionTypes)
 			{
@@ -644,8 +639,7 @@ namespace ProSuite.QA.TestFactories
 							            string.Format(
 								            "Unknown subtype {0} of layer {1} in rule {2}",
 								            subtype, layer, rule));
-							int e;
-							if (maxConnections.TryGetValue(idx, out e))
+							if (maxConnections.TryGetValue(idx, out int e))
 							{
 								Assert.True(count == e,
 								            string.Format(
@@ -758,8 +752,7 @@ namespace ProSuite.QA.TestFactories
 				{
 					string rule = rules[iRule + lineFeatureClassIndex].StringValue.Split(';')[0];
 
-					bool boolValue;
-					if (bool.TryParse(rule, out boolValue)) // rule == "false" / "true"
+					if (bool.TryParse(rule, out bool _)) // rule == "false" / "true"
 					{
 						continue;
 					}
@@ -808,8 +801,7 @@ namespace ProSuite.QA.TestFactories
 
 				condition = condition.Trim();
 				string layer = datasets[i].Name;
-				bool b;
-				if (bool.TryParse(condition, out b))
+				if (bool.TryParse(condition, out bool b))
 				{
 					if (b)
 					{
@@ -911,7 +903,7 @@ namespace ProSuite.QA.TestFactories
 			int iStart = 0;
 			while (iStart >= 0)
 			{
-				int iEnd = uStatement.IndexOf(and, iStart);
+				int iEnd = uStatement.IndexOf(and, iStart, StringComparison.Ordinal);
 				string condition;
 				if (iEnd > 0)
 				{
@@ -954,7 +946,7 @@ namespace ProSuite.QA.TestFactories
 			for (int i = 1; i < n; i++)
 			{
 				string statement = statements[i];
-				int sd = statement.IndexOf(":"); // Statement to assign variable --> sd > 0
+				int sd = statement.IndexOf(":", StringComparison.Ordinal); // Statement to assign variable --> sd > 0
 				if (sd < 0)
 				{
 					Assert.Null(maxCondition,
@@ -979,17 +971,16 @@ namespace ProSuite.QA.TestFactories
 			for (int i = 1; i < n; i++)
 			{
 				string statement = statements[i];
-				int sd = statement.IndexOf(":"); // Statement to assign variable --> sd > 0
+				int sd = statement.IndexOf(":", StringComparison.Ordinal); // Statement to assign variable --> sd > 0
 				if (sd < 0)
 				{
 					continue;
 				}
 
-				int se = statement.IndexOf("=");
+				int se = statement.IndexOf("=", StringComparison.Ordinal);
 				if (se < 0)
 				{
-					bool b;
-					bool.TryParse(statement.Substring(sd + 1), out b);
+					bool.TryParse(statement.Substring(sd + 1), out bool b);
 					Assert.True(b, "unexpected statement " + statement);
 					Assert.True(varSubtypes == null, "unexpected rule " + rule);
 					varSubtypes = new Dictionary<string, int>();
@@ -1211,6 +1202,10 @@ namespace ProSuite.QA.TestFactories
 
 			public int Compare(List<int> x, List<int> y)
 			{
+				if (x == null && y == null) return 0;
+				if (x == null) return -1;
+				if (y == null) return +1;
+
 				int nx = x.Count;
 				int ny = y.Count;
 				int n = Math.Max(nx, ny);

@@ -194,7 +194,7 @@ namespace ProSuite.Commons.AO.Geometry
 				}
 			}
 
-			return (i1 == coords1.Length) && (i2 == coords2.Length);
+			return i1 == coords1.Length && i2 == coords2.Length;
 		}
 	}
 }

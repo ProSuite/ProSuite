@@ -370,8 +370,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 			else
 			{
 				var attributeConfiguratorFactory =
-					((IAttributeConfiguratorFactory)
-						_attributeConfiguratorFactoryClassDescriptor.CreateInstance());
+					(IAttributeConfiguratorFactory)
+					_attributeConfiguratorFactoryClassDescriptor.CreateInstance();
 
 				attributeConfigurator =
 					attributeConfiguratorFactory.Create(existingAttributeTypes);
@@ -626,8 +626,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 				return null;
 			}
 
-			var factory = ((IDatasetListBuilderFactory)
-				              _datasetListBuilderFactoryClassDescriptor.CreateInstance());
+			var factory = (IDatasetListBuilderFactory)
+				_datasetListBuilderFactoryClassDescriptor.CreateInstance();
 
 			factory.SetGeometryTypes(geometryTypes);
 			return factory;
@@ -645,8 +645,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 			else
 			{
 				var attributeConfiguratorFactory =
-					((IAttributeConfiguratorFactory)
-						_attributeConfiguratorFactoryClassDescriptor.CreateInstance());
+					(IAttributeConfiguratorFactory)
+					_attributeConfiguratorFactoryClassDescriptor.CreateInstance();
 
 				attributeConfigurator =
 					attributeConfiguratorFactory.Create(existingAttributeTypes);
@@ -739,11 +739,10 @@ namespace ProSuite.DomainModel.AO.DataModel
 				{
 					string databaseName;
 					string ownerName;
-					string tableName;
 					DatasetUtils.ParseTableName(workspace, gdbDatasetName,
 					                            out databaseName,
 					                            out ownerName,
-					                            out tableName);
+					                            out string _);
 					if (! string.IsNullOrEmpty(ownerName))
 					{
 						ownerNames.Add(ownerName);
@@ -1106,11 +1105,10 @@ namespace ProSuite.DomainModel.AO.DataModel
 			string schemaOwnerName = null;
 			if (WorkspaceUtils.UsesQualifiedDatasetNames(workspace))
 			{
-				string tableName;
 				DatasetUtils.ParseTableName(workspace, relClassName,
 				                            out databaseName,
 				                            out schemaOwnerName,
-				                            out tableName);
+				                            out string _);
 			}
 
 			if (association == null)

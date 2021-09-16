@@ -44,7 +44,7 @@ namespace ProSuite.Commons.UI.Keyboard
 		{
 			if (exclusive)
 			{
-				return (Control.ModifierKeys == modifier);
+				return Control.ModifierKeys == modifier;
 			}
 
 			return (Control.ModifierKeys & modifier) != 0;

@@ -1,4 +1,4 @@
-﻿using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.ManagedOptions;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Reflection;
@@ -185,7 +185,6 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			return result;
 		}
 
-		[CanBeNull]
 		public override string GetLocalOverridesMessage()
 		{
 			const string optionsName = "Chopper Tool Options";

@@ -40,7 +40,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		public bool AddAutomaticSourceTargetPairs { get; set; }
 
-		public IList<IPoint> UsedTargetIntersections { get; private set; }
+		public IList<IPoint> UsedTargetIntersections { get; }
 
 		/// <summary>
 		/// Reshapes several polygons or several polylines along the specified reshape path.
@@ -723,9 +723,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				//									 usablePathOnTarget, false,
 				//									 out connectLineAtEnd);
 
-				IPoint sourcePoint;
 				if (! connectLineCalculator.IsTargetIntersectionPoint(usablePathOnTarget.ToPoint,
-				                                                      out sourcePoint))
+				                                                      out IPoint _))
 				{
 					// try adding the next part of the sketch to the usable part
 					continue;
@@ -935,14 +934,10 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			IPoint nearestPoint = ((IProximityOperator) crossingPoints).ReturnNearestPoint(
 				connectPoint, esriSegmentExtension.esriNoExtension);
 
-			bool splitHappened;
-			int newPartIdx;
-			int newSegmentIdx;
 			highLevelConnectline.SplitAtPoint(nearestPoint, false, true,
-			                                  out splitHappened, out newPartIdx,
-			                                  out newSegmentIdx);
+			                                  out bool _, out int _, out int _);
 
-			var connectLineParts = ((IGeometryCollection) highLevelConnectline);
+			var connectLineParts = (IGeometryCollection) highLevelConnectline;
 
 			IPath result;
 			if (GeometryUtils.AreEqualInXY(highLevelConnectline.FromPoint, connectPoint))

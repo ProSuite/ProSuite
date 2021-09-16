@@ -359,9 +359,7 @@ namespace ProSuite.Commons.UI.ScreenBinding.Elements
 		{
 			object rawValue = Accessor.GetValue(_target);
 
-			return rawValue == null
-				       ? default(PROPERTYTYPE)
-				       : (PROPERTYTYPE) rawValue;
+			return rawValue == null ? default : (PROPERTYTYPE) rawValue;
 		}
 
 		private void StoreValue()

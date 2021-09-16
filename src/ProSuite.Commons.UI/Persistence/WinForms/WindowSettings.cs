@@ -31,9 +31,9 @@ namespace ProSuite.Commons.UI.Persistence.WinForms
 
 		#endregion
 
-		public bool HasSize => (_width != _undefined && _height != _undefined);
+		public bool HasSize => _width != _undefined && _height != _undefined;
 
-		public bool HasLocation => (_left != _undefined && _top != _undefined);
+		public bool HasLocation => _left != _undefined && _top != _undefined;
 
 		public int Width
 		{

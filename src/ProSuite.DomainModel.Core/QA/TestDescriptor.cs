@@ -320,9 +320,7 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			unchecked
 			{
-				int result = (_name != null
-					              ? _name.GetHashCode()
-					              : 0);
+				int result = _name != null ? _name.GetHashCode() : 0;
 				result = (result * 397) ^ (_testClass != null
 					                           ? _testClass.GetHashCode()
 					                           : 0);

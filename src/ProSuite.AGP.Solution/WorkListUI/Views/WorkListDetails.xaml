@@ -28,7 +28,7 @@
         </Grid.RowDefinitions>
 
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="120" />
+            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
@@ -57,15 +57,15 @@
             </ToolBar>
 
         </ToolBarTray>
-        <DataGrid Grid.ColumnSpan="2" Grid.Column="0" Grid.Row="3" HorizontalAlignment="Stretch"
+        <DataGrid Grid.ColumnSpan="2" Grid.Column="0" Grid.Row="3"
                   AutoGenerateColumns="False"
                   ItemsSource="{Binding InvolvedObjectRows}" SelectedItem="{Binding SelectedInvolvedObject}"
                   SelectionMode="Single" IsReadOnly="True">
             <!--d:DataContext="{d:DesignInstance {x:Type test:InvolvedObjectMock}, IsDesignTimeCreatable=True }-->
             <DataGrid.Columns>
-                <DataGridTextColumn Width="150" Header="Table" Binding="{Binding Name}" />
-                <DataGridTextColumn Width="150" Header="Subtype" Binding="{Binding KeyField}" />
-                <DataGridTextColumn Width="*" Header="Object ID" Binding="{Binding ObjectId}" />
+                <DataGridTextColumn Width="Auto" Header="Table" Binding="{Binding Name}" />
+                <DataGridTextColumn Width="Auto" Header="Subtype" Binding="{Binding KeyField}" />
+                <DataGridTextColumn Width="Auto" Header="Object ID" Binding="{Binding ObjectId}" />
             </DataGrid.Columns>
 
             <behaviors:Interaction.Triggers>

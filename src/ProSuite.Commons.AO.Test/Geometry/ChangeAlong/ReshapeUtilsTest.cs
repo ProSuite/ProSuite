@@ -1065,7 +1065,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.ChangeAlong
 			geoColl.AddGeometry(ring, ref missing, ref missing);
 
 			// Create and add inner rings (= holes)
-			double innerSideLength = sideLength / (1 + (2 * holesInXAndY));
+			double innerSideLength = sideLength / (1 + 2 * holesInXAndY);
 			for (var i = 0; i < holesInXAndY; i++)
 			{
 				double llx = xOffset + (innerSideLength + 2 * i * innerSideLength);

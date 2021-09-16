@@ -180,9 +180,9 @@ namespace ProSuite.AGP.WorkList
 										"server"], // is always null in CIMFeatureDatasetDataConnection
 								Instance = builder["instance"],
 								Version = builder["version"],
-								Branch = builder["branch"] // ?
-								//Password = builder["encrypted_password"],
-								//User = builder["user"]
+								Branch = builder["branch"], // ?
+								Password = builder["encrypted_password"],
+								User = builder["user"]
 							};
 
 						return new Geodatabase(connectionProperties);

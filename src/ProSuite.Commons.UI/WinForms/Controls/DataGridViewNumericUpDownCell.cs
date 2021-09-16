@@ -221,12 +221,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			get
 			{
 				Type valueType = base.ValueType;
-				if (valueType != null)
-				{
-					return valueType;
-				}
-
-				return _defaultValueType;
+				return valueType ?? _defaultValueType;
 			}
 		}
 
@@ -275,22 +270,20 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 		public override void DetachEditingControl()
 		{
 			DataGridView dataGridView = DataGridView;
-			if (dataGridView == null || dataGridView.EditingControl == null)
+			if (dataGridView?.EditingControl == null)
 			{
 				throw new InvalidOperationException(
 					"Cell is detached or its grid has no editing control.");
 			}
 
-			var numericUpDown = dataGridView.EditingControl as NumericUpDown;
-			if (numericUpDown != null)
+			if (dataGridView.EditingControl is NumericUpDown numericUpDown)
 			{
 				// Editing controls get recycled. Indeed, when a DataGridViewNumericUpDownCell cell gets edited
 				// after another DataGridViewNumericUpDownCell cell, the same editing control gets reused for 
 				// performance reasons (to avoid an unnecessary control destruction and creation). 
 				// Here the undo buffer of the TextBox inside the NumericUpDown control gets cleared to avoid
 				// interferences between the editing sessions.
-				var textBox = numericUpDown.Controls[1] as TextBox;
-				if (textBox != null)
+				if (numericUpDown.Controls[1] is TextBox textBox)
 				{
 					textBox.ClearUndo();
 				}
@@ -433,8 +426,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 		{
 			base.InitializeEditingControl(rowIndex, initialFormattedValue,
 			                              dataGridViewCellStyle);
-			var numericUpDown = DataGridView.EditingControl as NumericUpDown;
-			if (numericUpDown != null)
+			if (DataGridView.EditingControl is NumericUpDown numericUpDown)
 			{
 				numericUpDown.BorderStyle = BorderStyle.None;
 				numericUpDown.DecimalPlaces = DecimalPlaces;
@@ -443,14 +435,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 				numericUpDown.Minimum = Minimum;
 				numericUpDown.ThousandsSeparator = ThousandsSeparator;
 				var initialFormattedValueStr = initialFormattedValue as string;
-				if (initialFormattedValueStr == null)
-				{
-					numericUpDown.Text = string.Empty;
-				}
-				else
-				{
-					numericUpDown.Text = initialFormattedValueStr;
-				}
+				numericUpDown.Text = initialFormattedValueStr ?? string.Empty;
 			}
 		}
 
@@ -466,11 +451,11 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 			string negativeSignStr = numberFormatInfo.NegativeSign;
 			if (! string.IsNullOrEmpty(negativeSignStr) && negativeSignStr.Length == 1)
 			{
-				negativeSignKey = (Keys) (VkKeyScan(negativeSignStr[0]));
+				negativeSignKey = (Keys) VkKeyScan(negativeSignStr[0]);
 			}
 
 			if ((char.IsDigit((char) e.KeyCode) ||
-			     (e.KeyCode >= Keys.NumPad0 && e.KeyCode <= Keys.NumPad9) ||
+			     e.KeyCode >= Keys.NumPad0 && e.KeyCode <= Keys.NumPad9 ||
 			     negativeSignKey == e.KeyCode ||
 			     Keys.Subtract == e.KeyCode) &&
 			    ! e.Shift && ! e.Alt && ! e.Control)
@@ -522,12 +507,8 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 				return false;
 			}
 
-			var numericUpDownEditingControl =
-				DataGridView.EditingControl as DataGridViewNumericUpDownEditingControl;
-			return
-				numericUpDownEditingControl != null &&
-				rowIndex ==
-				((IDataGridViewEditingControl) numericUpDownEditingControl).EditingControlRowIndex;
+			return DataGridView.EditingControl is DataGridViewNumericUpDownEditingControl control &&
+			       rowIndex == ((IDataGridViewEditingControl) control).EditingControlRowIndex;
 		}
 
 		/// <summary>

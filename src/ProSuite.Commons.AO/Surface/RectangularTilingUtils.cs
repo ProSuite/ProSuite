@@ -123,8 +123,8 @@ namespace ProSuite.Commons.AO.Surface
 		                                 out double xMin, out double yMin,
 		                                 out double xMax, out double yMax)
 		{
-			xMin = originX + (index.East * tileWidth);
-			yMin = originY + (index.North * tileHeight);
+			xMin = originX + index.East * tileWidth;
+			yMin = originY + index.North * tileHeight;
 			xMax = xMin + tileWidth;
 			yMax = yMin + tileHeight;
 		}
@@ -146,7 +146,7 @@ namespace ProSuite.Commons.AO.Surface
 			minIndex = null;
 			for (int index = startIndex; index <= endIndex; index++)
 			{
-				double tileXMin = origin + (index * tileSize);
+				double tileXMin = origin + index * tileSize;
 				if (tileXMin >= constraintMinimum)
 				{
 					minIndex = index;
@@ -157,7 +157,7 @@ namespace ProSuite.Commons.AO.Surface
 			maxIndex = null;
 			for (int index = endIndex; index >= startIndex; index--)
 			{
-				double tileXMin = origin + (index * tileSize);
+				double tileXMin = origin + index * tileSize;
 				if (tileXMin <= constraintMaximum)
 				{
 					maxIndex = index;

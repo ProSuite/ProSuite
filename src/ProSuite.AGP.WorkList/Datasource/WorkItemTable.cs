@@ -15,10 +15,10 @@ namespace ProSuite.AGP.WorkList.Datasource
 	public class WorkItemTable : PluginTableTemplate
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		private readonly IReadOnlyList<PluginField> _fields;
+		private readonly string _tableName;
 
 		private readonly IWorkList _workList;
-		private readonly string _tableName;
-		private readonly IReadOnlyList<PluginField> _fields;
 
 		public WorkItemTable(IWorkList workList, string tableName)
 		{
@@ -48,22 +48,6 @@ namespace ProSuite.AGP.WorkList.Datasource
 		{
 			return GeometryType.Polygon;
 		}
-
-		#region Native RowCount
-
-		// First shot: not supported; but we probably could easily!
-
-		public override bool IsNativeRowCountSupported()
-		{
-			return false;
-		}
-
-		public override int GetNativeRowCount()
-		{
-			throw new NotSupportedException();
-		}
-
-		#endregion
 
 		public override PluginCursorTemplate Search(QueryFilter queryFilter)
 		{
@@ -137,5 +121,21 @@ namespace ProSuite.AGP.WorkList.Datasource
 					return false;
 			}
 		}
+
+		#region Native RowCount
+
+		// First shot: not supported; but we probably could easily!
+
+		public override bool IsNativeRowCountSupported()
+		{
+			return false;
+		}
+
+		public override int GetNativeRowCount()
+		{
+			throw new NotSupportedException();
+		}
+
+		#endregion
 	}
 }

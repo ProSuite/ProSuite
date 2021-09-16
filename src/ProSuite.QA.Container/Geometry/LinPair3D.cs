@@ -1,4 +1,4 @@
-﻿using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 
 namespace ProSuite.QA.Container.Geometry
@@ -10,7 +10,7 @@ namespace ProSuite.QA.Container.Geometry
 
 		protected override bool GetIsParallel()
 		{
-			bool isParallel = (L0xl12 == 0);
+			bool isParallel = L0xl12 == 0;
 
 			return isParallel;
 		}

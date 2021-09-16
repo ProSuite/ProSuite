@@ -460,12 +460,11 @@ namespace ProSuite.QA.Tests
 
 					var referenceFeature = (IFeature) referenceRow;
 
-					string conditionMessage;
 					if (validConstraint != null &&
 					    validConstraint.HasConstraint &&
 					    validConstraint.IsFulfilled(feature, pointClassIndex,
 					                                referenceFeature, referenceClassIndex,
-					                                out conditionMessage))
+					                                out string _))
 					{
 						continue;
 					}
@@ -510,7 +509,7 @@ namespace ProSuite.QA.Tests
 								            referenceFeature)
 							            : false;
 
-						double useDistance = (onRightSide == flip)
+						double useDistance = onRightSide == flip
 							                     ? standardDistance
 							                     : rightSideDistance.Value;
 						if (distance > useDistance)
@@ -783,7 +782,7 @@ namespace ProSuite.QA.Tests
 			return ((IProximityOperator) point).ReturnDistance(nearestPoint);
 		}
 
-		public static bool UseQueryPointAndDistance { get; set; } = false;
+		public static bool UseQueryPointAndDistance { get; set; }
 
 		private static double GetDistanceToCurve(
 			[NotNull] IPoint point,

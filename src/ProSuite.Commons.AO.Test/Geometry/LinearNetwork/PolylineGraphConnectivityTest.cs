@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
@@ -104,7 +104,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 			Assert.AreEqual(2, connectivity.GetIncidentEdges(junction).Count());
 
 			// Reverse the partially outside feature:
-			var feature1Shape = ((IPolyline) feature1.ShapeCopy);
+			var feature1Shape = (IPolyline) feature1.ShapeCopy;
 			feature1Shape.ReverseOrientation();
 			feature1.Shape = feature1Shape;
 

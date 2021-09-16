@@ -260,9 +260,8 @@ namespace ProSuite.Commons.UI.Persistence.WinForms
 		{
 			// if the form implements IWindowSettingsTarget, give it a
 			// chance to store internal settings
-			if (_form is IWindowSettingsTarget)
+			if (_form is IWindowSettingsTarget target)
 			{
-				var target = (IWindowSettingsTarget) _form;
 				target.SaveSettings(settings);
 			}
 		}
@@ -271,9 +270,8 @@ namespace ProSuite.Commons.UI.Persistence.WinForms
 		{
 			// if the form implements IWindowSettingsTarget, give it a
 			// chance to restore internal settings
-			if (_form is IWindowSettingsTarget)
+			if (_form is IWindowSettingsTarget target)
 			{
-				var target = (IWindowSettingsTarget) _form;
 				target.RestoreSettings(settings);
 			}
 		}
@@ -297,17 +295,17 @@ namespace ProSuite.Commons.UI.Persistence.WinForms
 
 			// try to restore location. Make sure that location is within current
 			// screen dimensions
-			int left = (settings.Left > maxLeft)
+			int left = settings.Left > maxLeft
 				           ? maxLeft
-				           : ((settings.Left < minLeft)
-					              ? minLeft
-					              : settings.Left);
+				           : settings.Left < minLeft
+					           ? minLeft
+					           : settings.Left;
 
-			int top = (settings.Top > maxTop)
+			int top = settings.Top > maxTop
 				          ? maxTop
-				          : ((settings.Top < minTop)
-					             ? minTop
-					             : settings.Top);
+				          : settings.Top < minTop
+					          ? minTop
+					          : settings.Top;
 
 			_form.StartPosition = FormStartPosition.Manual;
 			_form.Location = new Point(left, top);
@@ -325,10 +323,10 @@ namespace ProSuite.Commons.UI.Persistence.WinForms
 
 			// try to restore location. Make sure that location is within current
 			// screen dimensions
-			int width = (settings.Width > maxWidth)
+			int width = settings.Width > maxWidth
 				            ? maxWidth
 				            : settings.Width;
-			int height = (settings.Height > maxHeight)
+			int height = settings.Height > maxHeight
 				             ? maxHeight
 				             : settings.Height;
 

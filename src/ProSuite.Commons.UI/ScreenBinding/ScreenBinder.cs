@@ -198,7 +198,7 @@ namespace ProSuite.Commons.UI.ScreenBinding
 
 		public IScreenElement FindElementForControl(object control)
 		{
-			return _allElements.Find(element => (element.Control == control));
+			return _allElements.Find(element => element.Control == control);
 		}
 
 		public IScreenElement FindElement(string labelOrAlias)
@@ -209,7 +209,7 @@ namespace ProSuite.Commons.UI.ScreenBinding
 		public IBoundScreenElement FindElementByField(string fieldName)
 		{
 			return (IBoundScreenElement) _boundElements.Find(
-				boundPart => (Equals(boundPart.FieldName, fieldName)));
+				boundPart => Equals(boundPart.FieldName, fieldName));
 		}
 
 		public void SetDefaultValues()

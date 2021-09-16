@@ -29,13 +29,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		public bool CanWrite(IWorkspace workspace)
 		{
-			var workspaceEdit = workspace as IWorkspaceEdit;
-			if (workspaceEdit == null)
-			{
-				return false;
-			}
-
-			return workspaceEdit.IsBeingEdited() && CanWriteInContext(workspace);
+			return workspace is IWorkspaceEdit workspaceEdit &&
+			       workspaceEdit.IsBeingEdited() && CanWriteInContext(workspace);
 		}
 
 		/// <summary>
@@ -115,7 +110,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				var editWs2 = workspace as IWorkspaceEdit2; // not implemented for shapefiles
 
 				bool isBeingEdited = editWs.IsBeingEdited();
-				bool isInEditOperation = (editWs2 != null && editWs2.IsInEditOperation);
+				bool isInEditOperation = editWs2 != null && editWs2.IsInEditOperation;
 
 				if ((state & EditStateInfo.MustNotBeEditing) != 0)
 				{
@@ -219,9 +214,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 						}
 					}
 
-					if (! _aborted &&
-					    (! isInEditOperation &&
-					     (state & EditStateInfo.KeepOperation) == 0) ||
+					if (! _aborted && ! isInEditOperation && (state & EditStateInfo.KeepOperation) == 0 ||
 					    (state & EditStateInfo.StopOperation) != 0)
 					{
 						// if the edit operation violates rule engine rules, the edit operation won't succeed. However
@@ -230,8 +223,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 						StopEditOperation(description);
 					}
 
-					if ((! isBeingEdited &&
-					     (state & EditStateInfo.KeepEditing) == 0) ||
+					if (! isBeingEdited && (state & EditStateInfo.KeepEditing) == 0 ||
 					    (state & EditStateInfo.StopEditing) != 0)
 					{
 						StopEditing(true);
@@ -243,14 +235,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 				{
 					try // Clean up
 					{
-						var comEx = ex as COMException;
 						string message =
-							comEx == null
-								? string.Format("Error executing operation: {0} ({1})",
-								                description, ex.Message)
-								: string.Format(
+							ex is COMException comEx
+								? string.Format(
 									"Error executing operation: {0} ({1}; Error Code: {2})",
-									description, comEx.Message, comEx.ErrorCode);
+									description, comEx.Message, comEx.ErrorCode)
+								: string.Format("Error executing operation: {0} ({1})",
+								                description, ex.Message);
 
 						_msg.Debug(message);
 
@@ -353,9 +344,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				if (ReconcileRedefinedVersion &&
 				    ex.ErrorCode == (int) fdoError.FDO_E_VERSION_REDEFINED)
 				{
-					var version = _workspaceEdit as IVersion2;
-
-					if (version != null)
+					if (_workspaceEdit is IVersion2 version)
 					{
 						if (! ((IVersionEdit2) version).Reconcile(version.VersionName))
 						{

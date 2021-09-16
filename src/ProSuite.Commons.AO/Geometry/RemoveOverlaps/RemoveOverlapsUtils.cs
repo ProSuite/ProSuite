@@ -229,8 +229,8 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 				}
 
 				if (overlap.GeometryType != resultGeometryType ||
-				    (selectionArea != null &&
-				     GeometryUtils.Disjoint(selectionArea, overlap)))
+				    selectionArea != null &&
+				    GeometryUtils.Disjoint(selectionArea, overlap))
 				{
 					continue;
 				}
@@ -290,8 +290,7 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 					fromGeometryCollection))
 			{
 				if (selectionArea == null ||
-				    (! selectionAreaMustContain &&
-				     GeometryUtils.Intersects(selectionArea, highLevelPart)) ||
+				    ! selectionAreaMustContain && GeometryUtils.Intersects(selectionArea, highLevelPart) ||
 				    GeometryUtils.Contains(selectionArea, highLevelPart))
 				{
 					if (result == null)
@@ -313,14 +312,9 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 		private static IEnumerable<IGeometry> GetSelectableHighLevelParts(
 			[NotNull] IGeometryCollection fromGeometryCollection)
 		{
-			var fromPolygon = fromGeometryCollection as IPolygon;
-
-			if (fromPolygon != null)
+			if (fromGeometryCollection is IPolygon fromPolygon)
 			{
-				foreach (
-					IPolygon part in
-					GeometryUtils.GetConnectedComponents(
-						(IPolygon) fromGeometryCollection))
+				foreach (IPolygon part in GeometryUtils.GetConnectedComponents(fromPolygon))
 				{
 					yield return part;
 				}

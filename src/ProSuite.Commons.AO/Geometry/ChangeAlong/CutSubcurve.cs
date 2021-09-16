@@ -452,7 +452,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			// exclude the ones that directly connect different parts - cannot be usedd
 			if (TouchAtToPoint && TouchAtFromPoint &&
-			    (_touchingDifferentParts != null && (bool) _touchingDifferentParts))
+			    _touchingDifferentParts != null && (bool) _touchingDifferentParts)
 			{
 				return false;
 			}
@@ -526,8 +526,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				return false;
 			}
 
-			if ((atNode == subcurve.FromNode && subcurve.TouchAtFromPoint) ||
-			    (atNode == subcurve.ToNode && subcurve.TouchAtToPoint))
+			if (atNode == subcurve.FromNode && subcurve.TouchAtFromPoint ||
+			    atNode == subcurve.ToNode && subcurve.TouchAtToPoint)
 			{
 				checkedNodes.Add(atNode);
 				intermediateCurves.Add(subcurve);
@@ -704,10 +704,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			IPoint connectPoint = GeometryFactory.CreatePoint(mergeNode.X, mergeNode.Y,
 			                                                  newPath.SpatialReference);
 
-			int partIdx;
 			int? connectIndex = GeometryUtils.FindHitVertexIndex(
-				newPath, connectPoint, GeometryUtils.GetXyTolerance(newPath),
-				out partIdx);
+				newPath, connectPoint, GeometryUtils.GetXyTolerance(newPath), out int _);
 
 			if (connectIndex != null)
 			{

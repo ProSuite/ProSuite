@@ -792,7 +792,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			Predicate<IField> includeTarget =
 				exceptShape
-					? (field => field.Type != esriFieldType.esriFieldTypeGeometry)
+					? field => field.Type != esriFieldType.esriFieldTypeGeometry
 					: (Predicate<IField>) null;
 
 			IDictionary<int, int> copyIndexMatrix = CreateCopyIndexMatrix(
@@ -935,7 +935,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Predicate<IField> includeTarget =
 				exceptShape
-					? (field => field.Type != esriFieldType.esriFieldTypeGeometry)
+					? field => field.Type != esriFieldType.esriFieldTypeGeometry
 					: (Predicate<IField>) null;
 
 			return CreateCopyIndexMatrix(sourceClass, targetClass, includeTarget);

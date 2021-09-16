@@ -215,7 +215,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			IEnvelope testRunEnvelope = args.AllBox;
-			bool isLastTile = (args.State == TileState.Final);
+			bool isLastTile = args.State == TileState.Final;
 
 			try
 			{

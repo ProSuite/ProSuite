@@ -9,8 +9,8 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 		public int Compare(HtmlQualitySpecificationElement q1,
 		                   HtmlQualitySpecificationElement q2)
 		{
-			return string.Compare(q1.QualityCondition.Name,
-			                      q2.QualityCondition.Name,
+			return string.Compare(q1?.QualityCondition.Name,
+			                      q2?.QualityCondition.Name,
 			                      StringComparison.CurrentCulture);
 		}
 	}

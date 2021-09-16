@@ -8,14 +8,15 @@
              xmlns:behaviors="http://schemas.microsoft.com/xaml/behaviors"
              mc:Ignorable="d"
              d:DesignHeight="450" d:DesignWidth="400"
-             d:DataContext="{d:DesignInstance Type=workListUi:WorkListViewModelBase}">
+             d:DataContext="{d:DesignInstance Type=workListUi:IssueWorkListViewModel}">
 	<UserControl.Resources>
 		<ResourceDictionary>
 			<ResourceDictionary.MergedDictionaries>
 				<extensions:DesignOnlyResourceDictionary
 					Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml" />
 			</ResourceDictionary.MergedDictionaries>
-			<workListUi:StatusConverter x:Key="StatusEnumBooleanConverter" />
+			<workListUi:StatusToBooleanConverter x:Key="StatusToBooleanConverter" />
+			<workListUi:BooleanToStatusConverter x:Key="BooleanToStatusConverter"/>
 		</ResourceDictionary>
 	</UserControl.Resources>
 	<Grid>
@@ -25,19 +26,19 @@
 		</Grid.RowDefinitions>
 		<ToolBarTray Grid.Row="0">
 			<ToolBar>
-				<Button Command="{Binding GoFirstItemCommand}">
+				<Button Command="{Binding GoFirstCommand}">
 					<Image Source="../Images/GoFirst16.png" ToolTip="First" Stretch="UniformToFill" />
 				</Button>
-				<Button Command="{Binding GoPreviousItemCommand}">
+				<Button Command="{Binding GoPreviousCommand}">
 					<Image Source="../Images/GoBack16.png" ToolTip="Previous" Stretch="UniformToFill" />
 				</Button>
-				<Button Command="{Binding GoNextItemCommand}">
+				<Button Command="{Binding GoNextCommand}">
 					<Image Source="../Images/GoNext16.png" ToolTip="Next" Stretch="UniformToFill" />
 				</Button>
-				<Button Command="{Binding GoNearestItemCommand}">
+				<Button Command="{Binding GoNearestCommand}">
 					<Image Source="../Images/GoNearest16.png" ToolTip="Go to Nearest" Stretch="UniformToFill" />
 				</Button>
-				<Button Command="{Binding PickWorkItemCommand}">
+				<Button Command="{Binding PickItemCommand}">
 					<Image Source="../Images/PickWorkItemTool16.png" ToolTip="Pick Work Item On Map" Stretch="UniformToFill" />
 				</Button>
 				<Separator />
@@ -57,26 +58,60 @@
 				</Button>
 				<Separator />
 				<Button Command="{Binding ClearSelectionCommand}">
-					<Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/clearselection16.png"
-					       Stretch="UniformToFill" />
+					<Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/clearselection16.png" Stretch="UniformToFill" />
+					<Button.ToolTip>
+						<TextBlock>
+							<Run FontWeight="Bold" Text="{Binding ClearSelectionTooltipHeading, Mode=OneWay}" />
+							<LineBreak />
+							<Run Text="{Binding ClearSelectionTooltip, Mode=OneWay}" />
+						</TextBlock>
+					</Button.ToolTip>
 				</Button>
 				<Button Command="{Binding PreviousExtentCommand}">
 					<Image
 						Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericBlueLeftArrowLongTail16.png"
 						Stretch="UniformToFill" />
+					<Button.ToolTip>
+						<TextBlock>
+							<Run FontWeight="Bold" Text="{Binding PreviousExtentTooltipHeading, Mode=OneWay}" />
+							<LineBreak/>
+							<Run Text="{Binding PreviousExtentTooltip, Mode=OneWay}" />
+						</TextBlock>
+					</Button.ToolTip>
 				</Button>
 				<Button Command="{Binding NextExtentCommand}">
 					<Image
 						Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericBlueRightArrowLongTail16.png"
 						Stretch="UniformToFill" />
+					<Button.ToolTip>
+						<TextBlock>
+							<Run FontWeight="Bold" Text="{Binding NextExtentTooltipHeading, Mode=OneWay}" />
+							<LineBreak/>
+							<Run Text="{Binding NextExtentTooltip, Mode=OneWay}" />
+						</TextBlock>
+					</Button.ToolTip>
 				</Button>
 				<Button Command="{Binding ZoomInCommand}">
 					<Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/zoomfixedzoomin_b_16.png"
 					       Stretch="UniformToFill" />
+					<Button.ToolTip>
+						<TextBlock>
+							<Run FontWeight="Bold" Text="{Binding ZoomInTooltipHeading, Mode=OneWay}" />
+							<LineBreak/>
+							<Run Text="{Binding ZoomInTooltip, Mode=OneWay}" />
+						</TextBlock>
+					</Button.ToolTip>
 				</Button>
 				<Button Command="{Binding ZoomOutCommand}">
 					<Image Source="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/zoomfixedzoomout_b_16.png"
 					       Stretch="UniformToFill" />
+					<Button.ToolTip>
+						<TextBlock>
+							<Run FontWeight="Bold" Text="{Binding ZoomOutTooltipHeding, Mode=OneWay}" />
+							<LineBreak/>
+							<Run Text="{Binding ZoomOutTooltip, Mode=OneWay}" />
+						</TextBlock>
+					</Button.ToolTip>
 				</Button>
 				<Separator />
 			</ToolBar>
@@ -87,21 +122,24 @@
 				<ToolBar>
 					<DockPanel LastChildFill="True">
 						<Label DockPanel.Dock="Left" Content="Status: " />
-						<CheckBox VerticalAlignment="Center">
-							<CheckBox.Style>
+						<CheckBox Name="StatusCheckBox" VerticalAlignment="Center" 
+						          Command="{Binding CurrentItemViewModel.SetStatusCommand}"
+						          CommandParameter="{Binding ElementName=StatusCheckBox, Path=IsChecked, Converter={StaticResource BooleanToStatusConverter}}"
+						          IsChecked="{Binding CurrentItemViewModel.Status, Mode=OneWay, Converter={StaticResource StatusToBooleanConverter}}">
+							<!--<CheckBox.Style>
 								<Style TargetType="{x:Type CheckBox}" BasedOn="{StaticResource {x:Type CheckBox}}">
 									<Setter Property="IsChecked"
 									        Value="{Binding CurrentItemViewModel.Status, Mode=TwoWay, Converter={StaticResource StatusEnumBooleanConverter}, UpdateSourceTrigger=PropertyChanged}" />
 									<Setter Property="IsEnabled" Value="{Binding CurrentItemViewModel.CanSetStatus, Mode=OneWay}" />
 								</Style>
-							</CheckBox.Style>
+							</CheckBox.Style>-->
 						</CheckBox>
 					</DockPanel>
 					<Separator Margin="5,0" />
 					<StackPanel Orientation="Horizontal">
 						<Label Content="Show" />
 						<ComboBox SelectedItem="{Binding Visibility}" 
-						          ItemsSource="{Binding VisibilityItemsSource}">
+						          ItemsSource="{Binding VisibilityItemsSource}" Width="50" >
 							<behaviors:Interaction.Triggers>
 								<behaviors:EventTrigger EventName="SelectionChanged">
 									<behaviors:InvokeCommandAction Command="{Binding VisibilityChangedCommand}"/>
@@ -118,12 +156,15 @@
 				</ToolBar>
 			</ToolBarTray>
 		</StackPanel>
+
 	</Grid>
 
 	<behaviors:Interaction.Triggers>
-		<behaviors:EventTrigger EventName="Loaded">
+		<!-- The Loaded event does fire before the DataContext is set and the view model does not get notified
+		about the fired event. Call WirsEvents() in the view model's constructor. -->
+		<!--<behaviors:EventTrigger EventName="Loaded">
 			<behaviors:InvokeCommandAction Command="{Binding LoadedCommand}" />
-		</behaviors:EventTrigger>
+		</behaviors:EventTrigger>-->
 		<behaviors:EventTrigger EventName="Unloaded">
 			<behaviors:InvokeCommandAction Command="{Binding UnloadedCommand}" />
 		</behaviors:EventTrigger>

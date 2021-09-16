@@ -3,7 +3,6 @@ using System;
 
 namespace ProSuite.Commons.Logging
 {
-
 	public enum LogType
 	{
 		Info,
@@ -16,14 +15,13 @@ namespace ProSuite.Commons.Logging
 
 	public class LoggingEventItem
 	{
-
 		public LoggingEventItem(LoggingEvent logEvent)
 		{
 			Type = Log4NetUtils.MapLogLevelToLogType(logEvent.Level);
 			Time = logEvent.TimeStamp;
 			Message = logEvent.RenderedMessage;
 			Source = logEvent.LoggerName;
-			ExceptionMessage = logEvent.ExceptionObject?.StackTrace ?? String.Empty;
+			ExceptionMessage = logEvent.ExceptionObject?.StackTrace ?? string.Empty;
 		}
 
 		public LogType Type { get;}

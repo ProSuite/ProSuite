@@ -73,8 +73,8 @@ namespace ProSuite.Commons.Geom
 			double endDistance2 = intersectionLine.EndPoint.Dist2(toPointOnTarget, 3);
 
 			bool differentInZ =
-				(! double.IsNaN(startDistance2) && startDistance2 > toleranceSquared) ||
-				(! double.IsNaN(endDistance2) && endDistance2 > toleranceSquared);
+				! double.IsNaN(startDistance2) && startDistance2 > toleranceSquared ||
+				! double.IsNaN(endDistance2) && endDistance2 > toleranceSquared;
 
 			return differentInZ;
 		}
@@ -1510,8 +1510,7 @@ namespace ProSuite.Commons.Geom
 
 			bool fromToIsSegment =
 				MathUtils.AreEqual(thisIndex, previousIndex) ||
-				(previousIndex == 0 &&
-				 MathUtils.AreEqual(thisIndex, vertexCount - 1));
+				previousIndex == 0 && MathUtils.AreEqual(thisIndex, vertexCount - 1);
 
 			int nextIndex = toIntersection.GetNextRingVertexIndex(vertexCount);
 

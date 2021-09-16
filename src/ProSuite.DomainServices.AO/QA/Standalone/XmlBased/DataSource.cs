@@ -229,8 +229,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		}
 
 		public bool HasWorkspaceInformation => ! string.IsNullOrEmpty(_catalogPath) ||
-		                                       (! string.IsNullOrEmpty(_connectionString) &&
-		                                        ! string.IsNullOrEmpty(_factoryProgId));
+		                                       ! string.IsNullOrEmpty(_connectionString) &&
+		                                       ! string.IsNullOrEmpty(_factoryProgId);
 
 		public bool ReferencesValidWorkspace
 		{

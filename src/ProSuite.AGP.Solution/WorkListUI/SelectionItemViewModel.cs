@@ -6,7 +6,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	public class SelectionItemViewModel : WorkItemViewModelBase
 	{
 		public SelectionItemViewModel([NotNull] IWorkItem workItem,
-		                              [NotNull] WorkListViewModelBase viewModel) :
-			base(workItem, viewModel) { }
+		                              [NotNull] IWorkList workList) :
+			base(workItem, workList) { }
 	}
 }

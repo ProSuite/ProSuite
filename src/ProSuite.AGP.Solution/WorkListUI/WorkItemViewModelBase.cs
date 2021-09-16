@@ -1,4 +1,6 @@
+using System.Windows.Input;
 using ArcGIS.Desktop.Core;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.WorkList.Contracts;
@@ -13,63 +15,61 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		[CanBeNull] private readonly IWorkList _workList;
 		[CanBeNull] private readonly IWorkItem _workItem;
-		[CanBeNull] private readonly WorkListViewModelBase _viewModel;
-		[CanBeNull] private readonly string _description;
-		private WorkItemStatus _status;
 
 		// ReSharper disable once NotNullMemberIsNotInitialized
 		protected WorkItemViewModelBase() { }
 
 		protected WorkItemViewModelBase([NotNull] IWorkItem workItem,
-		                                [NotNull] WorkListViewModelBase viewModel)
+		                                [NotNull] IWorkList workList)
 		{
 			Assert.ArgumentNotNull(workItem, nameof(workItem));
-			Assert.ArgumentNotNull(viewModel, nameof(viewModel));
+			Assert.ArgumentNotNull(workList, nameof(workList));
 
 			_workItem = workItem;
-			_viewModel = viewModel;
-
-			_description = workItem.Description;
-			_status = workItem.Status;
+			_workList = workList;
 		}
 
 		[CanBeNull]
-		public virtual string Description => _description;
-
-		public bool CanSetStatus => _workItem != null;
+		public virtual string Description => _workItem?.Description;
 
 		public WorkItemStatus Status
 		{
-			get => _status;
-			set
+			get => _workItem?.Status ?? WorkItemStatus.Unknown;
+			private set
 			{
-				// don't set status if it doesn't changes
-				if (_status == value || _workItem == null)
+				if (_workItem == null)
 				{
 					return;
 				}
 
-				ViewUtils.Try(
-					() =>
-					{
-						_workItem.Status = value;
+				_workItem.Status = value;
 
-						IWorkList worklist = _viewModel?.CurrentWorkList;
-
-						QueuedTask.Run(() => { worklist?.SetStatus(_workItem, value); });
-						          //.ContinueWith(t => _viewModel.GoNearestCore());
-
-						// todo daro: make async
-						// todo daro: create an event aggregator that propagates this through the whole application?
-						//_viewModel.GoNearestCore();
-					},
-					_msg);
-
-				SetProperty(ref _status, value, () => Status);
-
-				Project.Current.SetDirty();
+				NotifyPropertyChanged(nameof(Status));
 			}
+		}
+
+		public ICommand SetStatusCommand =>
+			new RelayCommand(SetStatusAsync, () => _workItem != null);
+
+		private async void SetStatusAsync(object parameter)
+		{
+			if (_workItem == null)
+			{
+				return;
+			}
+
+			var status = (WorkItemStatus) parameter;
+
+			Project.Current.SetDirty();
+
+			await ViewUtils.TryAsync(() =>
+			{
+				IWorkList worklist = _workList;
+
+				return QueuedTask.Run(() => { worklist?.SetStatus(_workItem, status); });
+			}, _msg);
 		}
 	}
 }
