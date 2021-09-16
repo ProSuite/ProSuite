@@ -43,7 +43,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract Window CreateProgressWindow(
 			VerificationProgressViewModel progressViewModel);
-		
+
 		protected abstract IProSuiteFacade ProSuiteImpl { get; }
 
 		protected override Task OnToolActivateAsync(bool active)
@@ -63,6 +63,13 @@ namespace ProSuite.AGP.QA.ProPlugins
 			CancelableProgressor progressor)
 		{
 			GeometryUtils.Simplify(sketchGeometry);
+
+			if (SessionContext?.VerificationEnvironment == null)
+			{
+				MessageBox.Show("No quality verification environment is configured.",
+				                "Verify Extent", MessageBoxButton.OK, MessageBoxImage.Warning);
+				return Task.FromResult(false);
+			}
 
 			if (ToolUtils.IsSingleClickSketch(sketchGeometry))
 			{

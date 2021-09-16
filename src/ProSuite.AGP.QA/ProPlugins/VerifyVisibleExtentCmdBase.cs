@@ -28,11 +28,18 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract Window CreateProgressWindow(
 			VerificationProgressViewModel progressViewModel);
-		
+
 		protected abstract IProSuiteFacade ProSuiteImpl { get; }
 
 		protected override void OnClick()
 		{
+			if (SessionContext?.VerificationEnvironment == null)
+			{
+				MessageBox.Show("No quality verification environment is configured.",
+				                "Verify Extent", MessageBoxButton.OK, MessageBoxImage.Warning);
+				return;
+			}
+
 			IQualityVerificationEnvironment qaEnvironment =
 				Assert.NotNull(SessionContext.VerificationEnvironment);
 
@@ -58,7 +65,9 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
-			var appController = new AgpBackgroundVerificationController(ProSuiteImpl, MapView.Active, currentExtent, spatialRef);
+			var appController =
+				new AgpBackgroundVerificationController(ProSuiteImpl, MapView.Active, currentExtent,
+				                                        spatialRef);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel

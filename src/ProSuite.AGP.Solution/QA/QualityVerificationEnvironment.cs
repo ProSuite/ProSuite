@@ -46,16 +46,18 @@ namespace ProSuite.AGP.Solution.QA
 			_sessionContext.ProjectWorkspaceChanged += ContextProjectWorkspaceChanged;
 
 			SpecificationProvider = new DdxSpecificationReferencesProvider(sessionContext, client);
-			FallbackSpecificationProvider = new QASpecificationProviderXml(QAConfiguration.Current.DefaultQASpecConfig.SpecificationsProviderConnection);
+			FallbackSpecificationProvider = new QASpecificationProviderXml(
+				QAConfiguration.Current.DefaultQASpecConfig.SpecificationsProviderConnection);
 		}
 
-		public QualityVerificationEnvironment(
-			[NotNull] IQualitySpecificationReferencesProvider specificationProvider)
+		/// <summary>
+		/// Initializes a new instance of the <see cref="QualityVerificationEnvironment"/> class.
+		/// This constructor is used to use the XML based specification provider.
+		/// </summary>
+		public QualityVerificationEnvironment()
 		{
-			Assert.ArgumentNotNull(specificationProvider, nameof(specificationProvider));
-
-			SpecificationProvider = specificationProvider;
-			FallbackSpecificationProvider = new QASpecificationProviderXml(QAConfiguration.Current.DefaultQASpecConfig.SpecificationsProviderConnection);
+			SpecificationProvider = new QASpecificationProviderXml(
+				QAConfiguration.Current.DefaultQASpecConfig.SpecificationsProviderConnection);
 		}
 
 		/// <summary>

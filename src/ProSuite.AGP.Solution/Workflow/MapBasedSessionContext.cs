@@ -66,6 +66,34 @@ namespace ProSuite.AGP.Solution.Workflow
 		public bool DdxAccessDisabled =>
 			MicroServiceClient == null || ! MicroServiceClient.CanAcceptCalls();
 
+		public string GetDdxBasedVerificationDisabledReason
+		{
+			get
+			{
+				if (VerificationEnvironment == null)
+				{
+					return "No quality verification environment is configured";
+				}
+
+				if (DdxAccessDisabled)
+				{
+					return "Microservice not running or unable to accept calls";
+				}
+
+				if (ProjectWorkspace == null)
+				{
+					return "No project workspace identified from the map layers.";
+				}
+
+				if (VerificationEnvironment.CurrentQualitySpecification == null)
+				{
+					return "No quality specification is selected.";
+				}
+
+				return null;
+			}
+		}
+
 		public ProjectWorkspace ProjectWorkspace { get; private set; }
 
 		public event EventHandler ProjectWorkspaceChanged;
@@ -77,7 +105,8 @@ namespace ProSuite.AGP.Solution.Workflow
 		{
 			if (DdxAccessDisabled)
 			{
-				throw new InvalidOperationException("No Data Dictionary access");
+				throw new InvalidOperationException(
+					"No Data Dictionary based verification service.");
 			}
 
 			List<ProjectWorkspace> projectWorkspaceCandidates =
@@ -89,12 +118,19 @@ namespace ProSuite.AGP.Solution.Workflow
 
 		public async Task<bool> TrySelectProjectWorkspaceFromFocusMapAsync()
 		{
-			if (DdxAccessDisabled)
-			{
-				throw new InvalidOperationException("No Data Dictionary access");
-			}
+			Assert.False(DdxAccessDisabled,
+			             "No Data Dictionary based verification service available.");
 
-			return await SelectProjectWorkspaceAsync(MapView.Active);
+			try
+			{
+				return await SelectProjectWorkspaceAsync(MapView.Active);
+			}
+			catch (Exception e)
+			{
+				_msg.Warn("Error selecting project workspace.", e);
+
+				return false;
+			}
 		}
 
 		private void MapViewChanged(MapView incomingMapView)
