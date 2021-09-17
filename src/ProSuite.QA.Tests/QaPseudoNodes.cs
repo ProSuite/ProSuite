@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests
 	/// Check if there are pseudonodes across several line layers
 	/// </summary>
 	[UsedImplicitly]
-	[InternallyUsedTest]
+	[LinearNetworkTest]
 	public class QaPseudoNodes : QaNetworkBase
 	{
 		private readonly IList<IList<string>> _ignoreFields;
@@ -47,6 +47,7 @@ namespace ProSuite.QA.Tests
 		#endregion
 
 		[Doc(nameof(DocStrings.QaPseudoNodes_0))]
+		[InternallyUsedTest]
 		public QaPseudoNodes(
 			[Doc(nameof(DocStrings.QaPseudoNodes_polylineClasses))] [NotNull]
 			IList<IFeatureClass>
@@ -84,6 +85,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[Doc(nameof(DocStrings.QaPseudoNodes_2))]
+		[InternallyUsedTest]
 		public QaPseudoNodes(
 				[Doc(nameof(DocStrings.QaPseudoNodes_polylineClasses))] [NotNull]
 				IList<IFeatureClass>
