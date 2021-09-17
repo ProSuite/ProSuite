@@ -14,6 +14,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		private const double _lineWidth = 3;
 		private const double _markerSize = 6;
 		private readonly CIMLineSymbol _candidateReshapeLineSymbol;
+		private readonly CIMLineSymbol _preselectedLineSymbol;
 		private readonly CIMLineSymbol _filteredReshapeLineSymbol;
 
 		private readonly CIMLineSymbol _noReshapeLineSymbol;
@@ -21,6 +22,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		private readonly List<IDisposable> _overlays = new List<IDisposable>();
 		private readonly CIMLineSymbol _reshapeLineSymbol;
 		private readonly CIMPointSymbol _candidateLineEnd;
+		private readonly CIMPointSymbol _preselectedLineEnd;
 		private readonly CIMPointSymbol _filteredLineEnd;
 
 		private readonly CIMPointSymbol _noReshapeLineEnd;
@@ -38,6 +40,10 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			_candidateReshapeLineSymbol =
 				SymbolFactory.Instance.ConstructLineSymbol(yellow, _lineWidth);
 
+			var blue = ColorFactory.Instance.CreateRGBColor(0, 0, 255);
+			_preselectedLineSymbol =
+				SymbolFactory.Instance.ConstructLineSymbol(blue, _lineWidth);
+
 			var grey = ColorFactory.Instance.CreateRGBColor(100, 100, 100);
 			_filteredReshapeLineSymbol =
 				SymbolFactory.Instance.ConstructLineSymbol(grey, _lineWidth);
@@ -45,6 +51,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			_noReshapeLineEnd = CreateMarkerSymbol(red);
 			_reshapeLineEnd = CreateMarkerSymbol(green);
 			_candidateLineEnd = CreateMarkerSymbol(yellow);
+			_preselectedLineEnd = CreateMarkerSymbol(blue);
 			_filteredLineEnd = CreateMarkerSymbol(grey);
 		}
 
@@ -60,19 +67,27 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			Predicate<CutSubcurve> noReshape = c =>
 				! c.CanReshape && ! c.IsReshapeMemberCandidate && ! c.IsFiltered;
 
+			Predicate<CutSubcurve> isCandidate = c =>
+				c.IsReshapeMemberCandidate && ! newCurves.PreSelectedSubcurves.Contains(c);
+
+			Predicate<CutSubcurve> isPreSelected = c => newCurves.PreSelectedSubcurves.Contains(c);
+
 			AddReshapeLines(newCurves.ReshapeCutSubcurves, noReshape, _noReshapeLineSymbol);
 			AddReshapeLines(newCurves.ReshapeCutSubcurves, c => c.IsFiltered,
 			                _filteredReshapeLineSymbol);
-			AddReshapeLines(newCurves.ReshapeCutSubcurves, c => c.IsReshapeMemberCandidate,
+			AddReshapeLines(newCurves.ReshapeCutSubcurves, isCandidate,
 			                _candidateReshapeLineSymbol);
+			AddReshapeLines(newCurves.ReshapeCutSubcurves, isPreSelected, _preselectedLineSymbol);
 			AddReshapeLines(newCurves.ReshapeCutSubcurves, c => c.CanReshape,
 			                _reshapeLineSymbol);
 
 			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, noReshape, _noReshapeLineEnd);
 			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, c => c.IsFiltered,
 			                        _filteredLineEnd);
-			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, c => c.IsReshapeMemberCandidate,
-			                        _candidateLineEnd);
+			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, isCandidate, _candidateLineEnd);
+			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, isPreSelected,
+			                        _preselectedLineEnd);
+
 			AddReshapeLineEndpoints(newCurves.ReshapeCutSubcurves, c => c.CanReshape,
 			                        _reshapeLineEnd);
 		}

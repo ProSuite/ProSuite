@@ -37,7 +37,7 @@ namespace ProSuite.AGP.Editing
 			return ! hasExtent;
 		}
 
-		public static Geometry GetSinglePickSelectionArea(Geometry sketchGeometry,
+		public static Geometry GetSinglePickSelectionArea([NotNull] Geometry sketchGeometry,
 		                                                  int selectionTolerancePixels)
 		{
 			MapPoint sketchPoint = CreatePointFromSketchPolygon(sketchGeometry);
@@ -45,7 +45,8 @@ namespace ProSuite.AGP.Editing
 			return BufferGeometryByPixels(sketchPoint, selectionTolerancePixels);
 		}
 
-		public static Geometry SketchToSearchGeometry(Geometry sketch, int selectionTolerancePixels,
+		public static Geometry SketchToSearchGeometry([NotNull] Geometry sketch,
+		                                              int selectionTolerancePixels,
 		                                              out bool isSinglePick)
 		{
 			isSinglePick = IsSingleClickSketch(sketch);

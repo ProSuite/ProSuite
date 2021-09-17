@@ -370,7 +370,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 		}
 
-		private List<CutSubcurve> GetSelectedCutSubcurves(Geometry sketch)
+		private List<CutSubcurve> GetSelectedCutSubcurves([NotNull] Geometry sketch)
 		{
 			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(),
 			                                          out bool singlePick);
@@ -378,9 +378,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			Predicate<CutSubcurve> canReshapePredicate =
 				cutSubcurve => ToolUtils.IsSelected(sketch, cutSubcurve.Path, singlePick);
 
-			var cutSubcurves = _changeAlongCurves.ReshapeCutSubcurves
-			                                     .Where(c => canReshapePredicate(c))
-			                                     .ToList();
+			_changeAlongCurves.PreSelectCurves(canReshapePredicate);
+
+			var cutSubcurves =
+				_changeAlongCurves.GetSelectedReshapeCurves(canReshapePredicate, true);
+
 			return cutSubcurves;
 		}
 
@@ -463,7 +465,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				selectedFeatures, targetFeatures, cutSubcurves, cancellationToken,
 				out newChangeAlongCurves);
 
-			_changeAlongCurves = newChangeAlongCurves;
+			if (updatedFeatures.Count > 0)
+			{
+				// This also clears the PreSelected reshape curves
+				_changeAlongCurves = newChangeAlongCurves;
+			}
 
 			_feedback.Update(_changeAlongCurves);
 
