@@ -266,24 +266,24 @@
           <tooltip heading="Tooltip Heading">Tooltip text<disabledText /></tooltip>
         </button>
         <button id="ProSuite_AGP_Solution_QA_VerifyVisibleExtentCmd" caption="Verify Extent"
-                className="ProSuite.AGP.Solution.QA.VerifyVisibleExtentCmd" loadOnClick="true"
+                className="ProSuite.AGP.Solution.QA.VerifyVisibleExtentCmd" loadOnClick="false"
                 smallImage="Images\VerifyVisibleExtentCmd16.png" largeImage="Images\VerifyVisibleExtentCmd32.png">
           <tooltip heading="Verify Visible Extent">
-            Verifies the visible extent based on the selected quality specification<disabledText />
+            Verifies the visible extent based on the selected quality specification.<disabledText />
           </tooltip>
         </button>
         <tool id="ProSuite_AGP_Solution_QA_VerifyPerimeterTool" caption="Verify Perimeter"
-              className="ProSuite.AGP.Solution.QA.VerifyPerimeterTool" loadOnClick="true"
+              className="ProSuite.AGP.Solution.QA.VerifyPerimeterTool" loadOnClick="false"
               smallImage="Images\VerifyPerimeterTool16.png" largeImage="Images\VerifyPerimeterTool32.png">
-          <tooltip heading="Draw a box or polygon to verify">
-            Tooltip text<disabledText />
+          <tooltip heading="Verify features in a box">
+            Verifies features intersecting a user-defined box, based on the selected quality specification.<disabledText />
           </tooltip>
         </tool>
         <button id="ProSuite_AGP_Solution_QA_VerifySelectionCmd" caption="Verify Selection"
-                className="ProSuite.AGP.Solution.QA.VerifySelectionCmd" loadOnClick="true"
+                className="ProSuite.AGP.Solution.QA.VerifySelectionCmd" loadOnClick="false"
                 smallImage="Images\VerifySelectionCmd16.png" largeImage="Images\VerifySelectionCmd32.png">
-          <tooltip heading="Verify selected features">
-            Tooltip text<disabledText />
+          <tooltip heading="Verify Selection">
+            Verifies the selected features based on the selected quality specification.<disabledText />
           </tooltip>
         </button>
         <button id="WorkLists_ShowWorkListsButton" caption="Open Work List" className="WorkLists.ShowWorkListsButton"

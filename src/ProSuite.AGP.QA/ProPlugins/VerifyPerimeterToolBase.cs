@@ -37,6 +37,13 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			//SelectionCursor = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursor);
 			//SelectionCursorShift = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursorShift);
+
+			Register();
+		}
+
+		private void Register()
+		{
+			VerificationPlugInController.GetInstance(SessionContext).Register(this);
 		}
 
 		protected abstract IMapBasedSessionContext SessionContext { get; }

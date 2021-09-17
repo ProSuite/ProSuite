@@ -163,38 +163,44 @@ namespace ProSuite.AGP.Solution.QA
 
 		private async Task<bool> LoadQualitySpecificationsAsync()
 		{
-			if (! SpecificationProvider.CanGetSpecifications())
+			try
 			{
-				if (FallbackSpecificationProvider != null &&
-				    FallbackSpecificationProvider.CanGetSpecifications())
+				if (! SpecificationProvider.CanGetSpecifications())
 				{
-					_qualitySpecifications =
-						await FallbackSpecificationProvider.GetQualitySpecifications();
+					if (FallbackSpecificationProvider != null &&
+					    FallbackSpecificationProvider.CanGetSpecifications())
+					{
+						_qualitySpecifications =
+							await FallbackSpecificationProvider.GetQualitySpecifications();
+					}
+					else
+					{
+						_qualitySpecifications.Clear();
+					}
 				}
 				else
 				{
-					_qualitySpecifications.Clear();
+					_qualitySpecifications = await SpecificationProvider.GetQualitySpecifications();
+				}
+
+				// if there's a current quality specification, check if it is valid
+				if (CurrentQualitySpecification != null &&
+				    ! _qualitySpecifications.Contains(CurrentQualitySpecification))
+				{
+					CurrentQualitySpecification = null;
+				}
+
+				// if there is no valid current specification, select one 
+				if (CurrentQualitySpecification == null)
+				{
+					SelectCurrentQualitySpecification(_qualitySpecifications);
 				}
 			}
-			else
+			finally
 			{
-				_qualitySpecifications = await SpecificationProvider.GetQualitySpecifications();
+				// Even if the process failed, let them know
+				QualitySpecificationsRefreshed?.Invoke(this, EventArgs.Empty);
 			}
-
-			// if there's a current quality specification, check if it is valid
-			if (CurrentQualitySpecification != null &&
-			    ! _qualitySpecifications.Contains(CurrentQualitySpecification))
-			{
-				CurrentQualitySpecification = null;
-			}
-
-			// if there is no valid current specification, select one 
-			if (CurrentQualitySpecification == null)
-			{
-				SelectCurrentQualitySpecification(_qualitySpecifications);
-			}
-
-			QualitySpecificationsRefreshed?.Invoke(this, EventArgs.Empty);
 
 			return _qualitySpecifications.Count > 0;
 		}

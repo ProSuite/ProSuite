@@ -28,6 +28,16 @@ namespace ProSuite.AGP.QA.ProPlugins
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		protected VerifySelectionCmdBase()
+		{
+			Register();
+		}
+
+		private void Register()
+		{
+			VerificationPlugInController.GetInstance(SessionContext).Register(this);
+		}
+
 		protected abstract IMapBasedSessionContext SessionContext { get; }
 
 		protected abstract Window CreateProgressWindow(

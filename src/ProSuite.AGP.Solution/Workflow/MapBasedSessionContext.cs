@@ -7,6 +7,8 @@ using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.AGP.QA;
+using ProSuite.AGP.Solution.QA;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
@@ -34,6 +36,43 @@ namespace ProSuite.AGP.Solution.Workflow
 			// TODO: Add layer event and if no PW is loaded: Try load
 		}
 
+		public async Task<IQualityVerificationEnvironment> InitializeVerificationEnvironment()
+		{
+			bool canAccessDdx = MicroServiceClient != null &&
+			                    await MicroServiceClient.CanAcceptCallsAsync();
+
+			QualityVerificationEnvironment verificationEnvironment;
+			if (! canAccessDdx)
+			{
+				// If no client channel can be established, use XML verification provider directly
+				verificationEnvironment = new QualityVerificationEnvironment();
+
+				// TODO: Consider setting up GP verification environment and use the same Tools/Commands
+			}
+			else
+			{
+				// In case the map is already loaded: Set up the project workspace:
+				await TrySelectProjectWorkspaceFromFocusMapAsync();
+
+				verificationEnvironment =
+					new QualityVerificationEnvironment(this, MicroServiceClient);
+
+				verificationEnvironment.VerificationService =
+					new VerificationServiceGrpc(MicroServiceClient)
+					{
+						HtmlReportName = Constants.HtmlReportName,
+						VerificationReportName = Constants.VerificationReportName
+					};
+			}
+
+			VerificationEnvironment = verificationEnvironment;
+			VerificationEnvironment.RefreshQualitySpecifications();
+
+			// Update the enabled / disabled reason properties of interested tools and buttons:
+
+			return verificationEnvironment;
+		}
+
 		public IQualityVerificationEnvironment VerificationEnvironment
 		{
 			get => _verificationEnvironment;
@@ -55,44 +94,10 @@ namespace ProSuite.AGP.Solution.Workflow
 			}
 		}
 
-		private EventHandler VerificationEnvironmentQualitySpecificationsRefreshed()
-		{
-			return (sender, e) =>
-				QualitySpecificationsRefreshed?.Invoke(this, EventArgs.Empty);
-		}
-
 		public QualityVerificationServiceClient MicroServiceClient { get; set; }
 
 		public bool DdxAccessDisabled =>
 			MicroServiceClient == null || ! MicroServiceClient.CanAcceptCalls();
-
-		public string GetDdxBasedVerificationDisabledReason
-		{
-			get
-			{
-				if (VerificationEnvironment == null)
-				{
-					return "No quality verification environment is configured";
-				}
-
-				if (DdxAccessDisabled)
-				{
-					return "Microservice not running or unable to accept calls";
-				}
-
-				if (ProjectWorkspace == null)
-				{
-					return "No project workspace identified from the map layers.";
-				}
-
-				if (VerificationEnvironment.CurrentQualitySpecification == null)
-				{
-					return "No quality specification is selected.";
-				}
-
-				return null;
-			}
-		}
 
 		public ProjectWorkspace ProjectWorkspace { get; private set; }
 
@@ -131,6 +136,35 @@ namespace ProSuite.AGP.Solution.Workflow
 
 				return false;
 			}
+		}
+
+		public bool CanVerifyQuality(out string reason)
+		{
+			if (VerificationEnvironment == null)
+			{
+				reason = "No quality verification environment has been initialized.";
+				return false;
+			}
+
+			if (DdxAccessDisabled)
+			{
+				reason = "The verification microservice is not running or unable to accept calls";
+				return false;
+			}
+
+			if (ProjectWorkspace == null)
+			{
+				reason = "No project workspace could be inferred from the map layers.";
+				return false;
+			}
+
+			if (VerificationEnvironment.CurrentQualitySpecification == null)
+			{
+				reason = "No quality specification is selected.";
+			}
+
+			reason = null;
+			return true;
 		}
 
 		private void MapViewChanged(MapView incomingMapView)
@@ -227,6 +261,12 @@ namespace ProSuite.AGP.Solution.Workflow
 		private static void LogException(string errorMessage, Exception exception)
 		{
 			_msg.Error($"{errorMessage}: {exception.Message}", exception);
+		}
+
+		private EventHandler VerificationEnvironmentQualitySpecificationsRefreshed()
+		{
+			return (sender, e) =>
+				QualitySpecificationsRefreshed?.Invoke(this, EventArgs.Empty);
 		}
 	}
 }

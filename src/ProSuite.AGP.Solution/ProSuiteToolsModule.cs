@@ -12,11 +12,9 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping.Events;
-using ProSuite.AGP.QA;
 using ProSuite.AGP.Solution.ConfigUI;
 using ProSuite.AGP.Solution.LoggerUI;
 using ProSuite.AGP.Solution.ProjectItem;
-using ProSuite.AGP.Solution.QA;
 using ProSuite.AGP.Solution.Workflow;
 using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.Application.Configuration;
@@ -24,6 +22,7 @@ using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.Microservices.Client.AGP;
 using ProSuite.Microservices.Client.QA;
@@ -386,37 +385,13 @@ namespace ProSuite.AGP.Solution
 			{
 				toolsClientStarted = await StartToolMicroserviceClientAsync();
 
-				QualityVerificationServiceClient qaClient = await StartQaMicroserviceClientAsync();
-
 				// Make sure the field is initialized:
 				Assert.NotNull(SessionContext);
 
-				_sessionContext.MicroServiceClient = qaClient;
+				_sessionContext.MicroServiceClient = await StartQaMicroserviceClientAsync();
 
-				QualityVerificationEnvironment verificationEnvironment;
-				if (_sessionContext.DdxAccessDisabled)
-				{
-					// If no client channel can be established, use XML verification provider directly
-					verificationEnvironment = new QualityVerificationEnvironment();
-				}
-				else
-				{
-					// In case the map is already loaded: Set up the project workspace:
-					await _sessionContext.TrySelectProjectWorkspaceFromFocusMapAsync();
-
-					verificationEnvironment =
-						new QualityVerificationEnvironment(SessionContext, qaClient);
-
-					verificationEnvironment.VerificationService =
-						new VerificationServiceGrpc(qaClient)
-						{
-							HtmlReportName = Constants.HtmlReportName,
-							VerificationReportName = Constants.VerificationReportName
-						};
-				}
-
-				_sessionContext.VerificationEnvironment = verificationEnvironment;
-				_sessionContext.VerificationEnvironment.RefreshQualitySpecifications();
+				IQualityVerificationEnvironment verificationEnvironment =
+					await _sessionContext.InitializeVerificationEnvironment();
 
 				// this is still necessary for GP QA (Consider implementing a second VerificationService subclass for GP QA):
 				QAConfiguration.Current.SetupGrpcConfiguration(verificationEnvironment);
