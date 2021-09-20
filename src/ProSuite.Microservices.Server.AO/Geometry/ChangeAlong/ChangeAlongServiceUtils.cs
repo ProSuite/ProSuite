@@ -243,13 +243,16 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 				// TODO: CacheGeometrySizes...
 				IList<IFeature> updatedFeatures = reshaper.Save(reshapedGeometries);
 
-				IList<ResultObjectMsg> ResultObjectMsgs =
+				IList<ResultObjectMsg> resultObjectMsgs =
 					GetResultFeatureMessages(
 						null, updatedFeatures,
-						f => GetNotifications(reshapedGeometries, f),
+						f => GetNotifications(reshapedGeometries, reshaper, f),
 						f => reshaper.NotificationIsWarning);
 
-				response.ResultFeatures.AddRange(ResultObjectMsgs);
+				response.ResultFeatures.AddRange(resultObjectMsgs);
+
+				reshaper.LogSuccessfulReshape(reshapedGeometries.Keys,
+				                              esriUnits.esriMeters, esriUnits.esriMeters);
 			}
 
 			// Calculate new reshape lines based on current source and target states:
@@ -444,6 +447,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 
 		private static IEnumerable<string> GetNotifications(
 			[NotNull] IReadOnlyDictionary<IGeometry, NotificationCollection> reshapedGeometries,
+			GeometryReshaperBase reshaper,
 			[NotNull] IFeature feature)
 		{
 			if (reshapedGeometries == null)
@@ -451,12 +455,32 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 				throw new ArgumentNullException(nameof(reshapedGeometries));
 			}
 
-			if (reshapedGeometries.TryGetValue(feature.Shape,
+			IGeometry updatedGeometry = feature.Shape;
+
+			if (reshapedGeometries.TryGetValue(updatedGeometry,
 			                                   out NotificationCollection notifications))
 			{
 				foreach (INotification notification in notifications)
 				{
 					yield return notification.Message;
+				}
+			}
+
+			if (! reshaper.NotificationIsWarning)
+			{
+				// Add the standard size text information
+
+				var proj = updatedGeometry.SpatialReference as IProjectedCoordinateSystem;
+				int coordinateUnitFactoryCode = proj.CoordinateUnit.FactoryCode;
+
+				esriUnits linearUnits = esriUnits.esriMeters;
+
+				string sizeChangeMessage = reshaper.GetSizeChangeMessage(
+					updatedGeometry, feature, linearUnits, linearUnits);
+
+				if (! string.IsNullOrEmpty(sizeChangeMessage))
+				{
+					yield return sizeChangeMessage;
 				}
 			}
 		}

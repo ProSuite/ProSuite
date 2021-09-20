@@ -7,6 +7,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.AGP.Gdb;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -201,6 +202,8 @@ namespace ProSuite.AGP.Editing
 		                               Geometry geometry,
 		                               EditOperation.IEditContext editContext)
 		{
+			_msg.DebugFormat("Updating shape of {0}...", GdbObjectUtils.ToString(feature));
+
 			if (geometry.IsEmpty)
 			{
 				throw new Exception("One or more updates geometries have become empty.");

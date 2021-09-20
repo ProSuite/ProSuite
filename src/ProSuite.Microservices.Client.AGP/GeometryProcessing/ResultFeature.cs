@@ -2,20 +2,22 @@ using System;
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Definitions.Shared;
 
 namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 {
 	public class ResultFeature
 	{
-		private readonly ResultObjectMsg _resultFeatureMsg;
+		[NotNull] private readonly ResultObjectMsg _resultFeatureMsg;
 
+		[NotNull]
 		public Feature Feature { get; }
 
 		private Geometry _updatedGeometry;
 
-		public ResultFeature(Feature feature,
-		                     ResultObjectMsg resultFeatureMsg)
+		public ResultFeature([NotNull] Feature feature,
+		                     [NotNull] ResultObjectMsg resultFeatureMsg)
 		{
 			_resultFeatureMsg = resultFeatureMsg;
 			Feature = feature;
