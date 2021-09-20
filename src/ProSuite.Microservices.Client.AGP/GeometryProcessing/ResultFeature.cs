@@ -15,6 +15,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 		public Feature Feature { get; }
 
 		private Geometry _updatedGeometry;
+		private long _newObjectId;
 
 		public ResultFeature([NotNull] Feature feature,
 		                     [NotNull] ResultObjectMsg resultFeatureMsg)
@@ -78,5 +79,12 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing
 					                                      $"Unsupported change type: {featureCase}");
 			}
 		}
+
+		public void SetNewOid(long newObjectId)
+		{
+			_newObjectId = newObjectId;
+		}
+
+
 	}
 }

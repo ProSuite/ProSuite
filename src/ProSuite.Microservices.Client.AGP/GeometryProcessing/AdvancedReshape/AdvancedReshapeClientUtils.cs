@@ -177,13 +177,15 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.AdvancedReshape
 		}
 
 		private static void AddInputFeatures(
-			[NotNull] IList<Feature> features,
-			[NotNull] Dictionary<GdbObjectReference, Feature> toDictionary)
+			[NotNull] IEnumerable<Feature> features,
+			[NotNull] IDictionary<GdbObjectReference, Feature> toDictionary)
 		{
 			foreach (Feature selectedFeature in features)
 			{
-				toDictionary.Add(new GdbObjectReference(selectedFeature),
-				                 selectedFeature);
+				GdbObjectReference objectReference =
+					ProtobufConversionUtils.ToObjectReferenceWithUniqueClassId(selectedFeature);
+
+				toDictionary.Add(objectReference, selectedFeature);
 			}
 		}
 

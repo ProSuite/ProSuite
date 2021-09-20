@@ -317,6 +317,18 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 					                  request.CalculationRequest, trackCancel,
 					                  out ReshapeAlongCurveUsability usability);
 
+				// TODO: Ideally, new features can also be referenced by the CutSubcurve's Source
+				// And the ObjectIDs would be re-assigned after the store happened on the client.
+				// However, for the time being, clear the Source property if it references a new row
+				foreach (CutSubcurve newSubcurve in newSubcurves)
+				{
+					if (newSubcurve.Source != null &&
+					    newSourceFeatures.Any(f => newSubcurve.Source.Value.References(f)))
+					{
+						newSubcurve.Source = null;
+					}
+				}
+
 				response.CutLinesUsability = (int) usability;
 
 				response.NewCutLines.AddRange(newSubcurves.Select(ToReshapeLineMsg));
@@ -624,7 +636,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			[CanBeNull] Func<IFeature, IEnumerable<string>> notificationsForFeature = null,
 			[CanBeNull] Func<IFeature, bool> warningForFeature = null)
 		{
-			IList<ResultObjectMsg> ResultObjectMsgs = new List<ResultObjectMsg>();
+			IList<ResultObjectMsg> resultObjectMsgs = new List<ResultObjectMsg>();
 
 			HashSet<IFeature> allInserts = new HashSet<IFeature>();
 
@@ -660,7 +672,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 						AddNotification(insert, featureMsg, notificationsForFeature,
 						                warningForFeature);
 
-						ResultObjectMsgs.Add(featureMsg);
+						resultObjectMsgs.Add(featureMsg);
 					}
 				}
 			}
@@ -683,11 +695,11 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 					AddNotification(resultFeature, updateMsg, notificationsForFeature,
 					                warningForFeature);
 
-					ResultObjectMsgs.Add(updateMsg);
+					resultObjectMsgs.Add(updateMsg);
 				}
 			}
 
-			return ResultObjectMsgs;
+			return resultObjectMsgs;
 		}
 
 		private static void AddNotification(IFeature feature, ResultObjectMsg featureMsg,

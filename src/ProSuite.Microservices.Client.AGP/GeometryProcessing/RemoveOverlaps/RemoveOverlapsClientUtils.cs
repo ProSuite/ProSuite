@@ -194,7 +194,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 		                                          List<Feature> updateFeatures)
 		{
 			return updateFeatures.First(f => f.GetObjectID() == objectId &&
-			                                 f.GetTable().GetID() == classId);
+			                                 ProtobufConversionUtils.GetUniqueClassId(f) == classId);
 		}
 
 		private static RemoveOverlapsRequest CreateRemoveOverlapsRequest(
