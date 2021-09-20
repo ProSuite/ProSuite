@@ -275,7 +275,8 @@ namespace ProSuite.Commons.Geom
 					T foundPoint = _points[foundPointIdx];
 
 					bool withinTolerance =
-						IsWithinTolerance(foundPoint, searchPoint, tolerance, useSearchCircle);
+						GeomRelationUtils.IsWithinTolerance(foundPoint, searchPoint, tolerance,
+						                                    useSearchCircle);
 
 					if (withinTolerance)
 					{
@@ -288,7 +289,8 @@ namespace ProSuite.Commons.Geom
 				for (var i = 0; i < PointCount; i++)
 				{
 					bool withinTolerance =
-						IsWithinTolerance(_points[i], searchPoint, tolerance, useSearchCircle);
+						GeomRelationUtils.IsWithinTolerance(_points[i], searchPoint, tolerance,
+						                                    useSearchCircle);
 
 					if (withinTolerance)
 					{
@@ -331,48 +333,6 @@ namespace ProSuite.Commons.Geom
 			{
 				YMax = point.Y;
 			}
-		}
-
-		private bool IsWithinTolerance(IPnt testPoint, IPnt searchPoint, double tolerance,
-		                               bool useSearchCircle)
-		{
-			bool withinSearchBox = IsWithinBox(testPoint, searchPoint, tolerance);
-
-			if (! withinSearchBox)
-			{
-				return false;
-			}
-
-			if (! useSearchCircle)
-			{
-				return true;
-			}
-
-			double distanceSquaredXY = GetDistanceSquaredXY(searchPoint, testPoint);
-
-			double searchToleranceSquared = tolerance * tolerance;
-
-			return distanceSquaredXY <= searchToleranceSquared;
-		}
-
-		private static bool IsWithinBox(IPnt testPoint, IPnt searchBoxCenterPoint, double tolerance)
-		{
-			return
-				MathUtils.AreEqual(testPoint.X, searchBoxCenterPoint.X, tolerance) &&
-				MathUtils.AreEqual(testPoint.Y, searchBoxCenterPoint.Y, tolerance);
-		}
-
-		private static double GetDistanceSquaredXY([NotNull] IPnt point1, IPnt point2)
-		{
-			double dx = point2.X - point1.X;
-
-			double result = dx * dx;
-
-			double dy = point2.Y - point1.Y;
-
-			result += dy * dy;
-
-			return result;
 		}
 
 		private void SetEmpty()

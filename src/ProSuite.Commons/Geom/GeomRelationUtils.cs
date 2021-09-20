@@ -120,6 +120,36 @@ namespace ProSuite.Commons.Geom
 			return true;
 		}
 
+
+		public static bool IsWithinTolerance(IPnt testPoint, IPnt searchPoint, double tolerance,
+		                                     bool useSearchCircle)
+		{
+			bool withinSearchBox = IsWithinBox(testPoint, searchPoint, tolerance);
+
+			if (!withinSearchBox)
+			{
+				return false;
+			}
+
+			if (!useSearchCircle)
+			{
+				return true;
+			}
+
+			double distanceSquaredXY = GeomUtils.GetDistanceSquaredXY(searchPoint, testPoint);
+
+			double searchToleranceSquared = tolerance * tolerance;
+
+			return distanceSquaredXY <= searchToleranceSquared;
+		}
+
+		public static bool IsWithinBox(IPnt testPoint, IPnt searchBoxCenterPoint, double tolerance)
+		{
+			return
+				MathUtils.AreEqual(testPoint.X, searchBoxCenterPoint.X, tolerance) &&
+				MathUtils.AreEqual(testPoint.Y, searchBoxCenterPoint.Y, tolerance);
+		}
+		
 		public static bool AreMultipointsEqualXY([NotNull] Multipoint<IPnt> multipoint1,
 		                                         [NotNull] Multipoint<IPnt> multipoint2,
 		                                         double tolerance)
@@ -166,7 +196,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		public static bool LinesContainXY([NotNull] ISegmentList segments,
-		                                  [NotNull] Pnt3D testPoint,
+		                                  [NotNull] IPnt testPoint,
 		                                  double tolerance)
 		{
 			foreach (KeyValuePair<int, Line3D> segmentsAroundPoint in
@@ -236,7 +266,7 @@ namespace ProSuite.Commons.Geom
 		/// <param name="tolerance"></param>
 		/// <returns></returns>
 		public static bool PolycurveContainsXY([NotNull] ISegmentList closedPolycurve,
-		                                       [NotNull] Pnt3D testPoint,
+		                                       [NotNull] IPnt testPoint,
 		                                       double tolerance)
 		{
 			if (AreBoundsDisjoint(closedPolycurve, testPoint.X, testPoint.Y, tolerance))

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
@@ -96,8 +96,7 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		public static IEnumerable<SegmentIntersection>
-			GetFilteredIntersectionsOrderedAlongSourceSegments(
+		public static IEnumerable<SegmentIntersection> GetFilteredIntersectionsOrderedAlongSourceSegments(
 				[NotNull] IEnumerable<SegmentIntersection> intersections,
 				[NotNull] ISegmentList source)
 		{
@@ -228,6 +227,60 @@ namespace ProSuite.Commons.Geom
 			TryAddLinearIntersectionStretch(startPoint, previousLinearEnd, result);
 
 			return result;
+		}
+
+		/// <summary>
+		/// Returns the distance of the point along the line expressed as ratio (factor).
+		/// If the point is within the tolerance of the line's start or end point, the 
+		/// factor will be snapped to 0 or 1, respectively. If the point is not on the line,
+		/// NaN is  returned.
+		/// </summary>
+		/// <param name="line"></param>
+		/// <param name="point"></param>
+		/// <param name="tolerance">The distance tolerance to check start/end-point proximity.</param>
+		/// <returns></returns>
+		public static double GetPointFactorWithinLine([NotNull] Line3D line,
+		                                              [NotNull] IPnt point,
+		                                              double tolerance)
+		{
+			double pointFactorOnLine;
+
+			double pointDistanceToLine = line.GetDistanceXYPerpendicularSigned(
+				point, out pointFactorOnLine);
+
+			// Consider remembering the side of the point for subsequent operations
+			pointDistanceToLine = Math.Abs(pointDistanceToLine);
+
+			if (pointDistanceToLine > tolerance)
+			{
+				// Too far off, no intersection
+				return double.NaN;
+			}
+
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
+			if (pointFactorOnLine == 0 ||
+			    // ReSharper disable once CompareOfFloatsByEqualityOperator
+			    pointFactorOnLine == 1)
+			{
+				return pointFactorOnLine;
+			}
+
+			// If within tolerance to From/To-point: snap to 0/1
+			double tolerance2 = tolerance * tolerance;
+
+			if (pointFactorOnLine < 0.5 &&
+			    IsWithinDistanceXY(point, line.StartPoint, tolerance2))
+			{
+				// line.Start == point, use line.Start
+				pointFactorOnLine = 0;
+			}
+			else if (IsWithinDistanceXY(point, line.EndPoint, tolerance2))
+			{
+				// line.End == point, use line.End
+				pointFactorOnLine = 1;
+			}
+
+			return pointFactorOnLine;
 		}
 
 		private static IEnumerable<SegmentIntersection> GetSegmentIntersectionsXY(
@@ -571,6 +624,12 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return null;
+		}
+
+		private static bool IsWithinDistanceXY(IPnt point1, IPnt point2,
+		                                       double distanceSquared)
+		{
+			return GeomUtils.GetDistanceSquaredXY(point1, point2) <= distanceSquared;
 		}
 	}
 }

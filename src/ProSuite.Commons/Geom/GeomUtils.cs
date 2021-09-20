@@ -668,5 +668,25 @@ return : Point2D : lines cut each other at Point (non parallel)
 
 			return area;
 		}
+
+		public static double GetDistanceSquaredXY([NotNull] IPnt point1, [NotNull] IPnt point2)
+		{
+			double dx = point2.X - point1.X;
+
+			double result = dx * dx;
+
+			double dy = point2.Y - point1.Y;
+
+			result += dy * dy;
+
+			return result;
+		}
+
+		public static double GetDistanceXY([NotNull] IPnt point1, [NotNull] IPnt point2)
+		{
+			double distanceSquared = GetDistanceSquaredXY(point1, point2);
+
+			return Math.Sqrt(distanceSquared);
+		}
 	}
 }

@@ -52,6 +52,118 @@ namespace ProSuite.Commons.Geom
 
 		#region Factory methods
 
+		[CanBeNull]
+		public static IntersectionPoint3D CreatePointPointIntersection(
+			[NotNull] IPnt sourcePoint,
+			int sourceIndex,
+			[NotNull] IPointList targetPoints,
+			int targetIndex,
+			double tolerance)
+		{
+			IPnt targetPoint = targetPoints.GetPoint(targetIndex);
+
+			if (GeomUtils.GetDistanceSquaredXY(sourcePoint, targetPoint) > tolerance * tolerance)
+			{
+				return null;
+			}
+
+			IntersectionPoint3D result = new IntersectionPoint3D(new Pnt3D(sourcePoint), sourceIndex)
+			                             {
+				                             VirtualTargetVertex = targetIndex,
+				                             Type = IntersectionPointType.TouchingInPoint
+			                             };
+
+			return result;
+		}
+
+		/// <summary>
+		/// Create an intersection point originating from a point that intsersects a segment.
+		/// </summary>
+		/// <param name="sourcePoint">The source point</param>
+		/// <param name="targetSegments">The target segment list</param>
+		/// <param name="sourceIndex"></param>
+		/// <param name="targetIndex">The (global) target segment index</param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		[CanBeNull]
+		public static IntersectionPoint3D CreatePointLineIntersection(IPnt sourcePoint,
+			ISegmentList targetSegments,
+			int sourceIndex,
+			int targetIndex,
+			double tolerance)
+		{
+			Line3D targetSegment = targetSegments.GetSegment(targetIndex);
+
+			int targetSegmentIndex = targetSegments.GetLocalSegmentIndex(
+				targetIndex, out int targetPartIndex);
+
+			double pointTargetFactor = SegmentIntersectionUtils.GetPointFactorWithinLine(
+				targetSegment, sourcePoint, tolerance);
+
+			if (double.IsNaN(pointTargetFactor))
+			{
+				return null;
+			}
+
+			// TODO: Clone also in other factory methods!?
+			IntersectionPoint3D result = new IntersectionPoint3D(new Pnt3D(sourcePoint), sourceIndex)
+			                             {
+				                             VirtualTargetVertex = targetSegmentIndex + pointTargetFactor,
+				                             Type = IntersectionPointType.TouchingInPoint
+			                             };
+
+			result.TargetPartIndex = targetPartIndex;
+
+			return result;
+		}
+
+
+		/// <summary>
+		/// Create an intersection point originating from a line that intsersects a point. The intersection
+		/// point properties (XYZ) are taken from the source line.
+		/// </summary>
+		/// <param name="sourceSegments">The source segment list</param>
+		/// <param name="targetPoint">The target point</param>
+		/// <param name="sourceIndex">The (global) source segment index</param>
+		/// <param name="targetIndex">The target point index</param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		[CanBeNull]
+		public static IntersectionPoint3D CreateLinePointIntersection(
+			ISegmentList sourceSegments,
+			IPnt targetPoint,
+			int sourceIndex,
+			int targetIndex,
+			double tolerance)
+		{
+			Line3D sourceSegment = sourceSegments.GetSegment(sourceIndex);
+
+			int sourceSegmentIndex = sourceSegments.GetLocalSegmentIndex(
+				sourceIndex, out int sourcePartIndex);
+
+			double pointSourceFactor = SegmentIntersectionUtils.GetPointFactorWithinLine(
+				sourceSegment, targetPoint, tolerance);
+
+			if (double.IsNaN(pointSourceFactor))
+			{
+				return null;
+			}
+
+			Pnt3D sourcePoint = GetSourcePoint(sourceSegment, sourceSegmentIndex, pointSourceFactor,
+			                                   out double virtualSourceIndex);
+
+			// TODO: Clone also in other factory methods!?
+			IntersectionPoint3D result = new IntersectionPoint3D(sourcePoint, virtualSourceIndex)
+			                             {
+				                             VirtualTargetVertex = targetIndex,
+				                             Type = IntersectionPointType.TouchingInPoint
+			                             };
+
+			result.SourcePartIndex = sourcePartIndex;
+
+			return result;
+		}
+
 		[NotNull]
 		public static IntersectionPoint3D CreateSingleIntersectionPoint(
 			[NotNull] SegmentIntersection intersection,
@@ -70,25 +182,8 @@ namespace ProSuite.Commons.Geom
 			Pnt3D point;
 			double sourceIndex;
 
-			// ReSharper disable once CompareOfFloatsByEqualityOperator
-			if (targetIntersectionFactorOnSource == 0)
-			{
-				point = sourceSegment.StartPoint;
-				sourceIndex = sourceSegmentIndex;
-			}
-			// ReSharper disable once CompareOfFloatsByEqualityOperator
-			else if (targetIntersectionFactorOnSource == 1)
-			{
-				point = sourceSegment.EndPoint;
-				sourceIndex = sourceSegmentIndex + 1;
-			}
-			else
-			{
-				point = sourceSegment.GetPointAlong(
-					targetIntersectionFactorOnSource.Value, true);
-				sourceIndex = sourceSegmentIndex +
-				              targetIntersectionFactorOnSource.Value;
-			}
+			point = GetSourcePoint(sourceSegment, sourceSegmentIndex,
+			                       targetIntersectionFactorOnSource.Value, out sourceIndex);
 
 			IntersectionPoint3D result = new IntersectionPoint3D(point, sourceIndex, intersection)
 			                             {
@@ -112,6 +207,34 @@ namespace ProSuite.Commons.Geom
 			result.TargetPartIndex = targetPartIdx;
 
 			return result;
+		}
+
+		private static Pnt3D GetSourcePoint(Line3D sourceSegment, int sourceSegmentIndex,
+		                                    double targetIntersectionFactorOnSource,
+		                                    out double virtualSourceIndex)
+		{
+			Pnt3D point;
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
+			if (targetIntersectionFactorOnSource == 0)
+			{
+				point = sourceSegment.StartPointCopy;
+				virtualSourceIndex = sourceSegmentIndex;
+			}
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
+			else if (targetIntersectionFactorOnSource == 1)
+			{
+				point = sourceSegment.EndPointCopy;
+				virtualSourceIndex = sourceSegmentIndex + 1;
+			}
+			else
+			{
+				point = sourceSegment.GetPointAlong(
+					targetIntersectionFactorOnSource, true);
+				virtualSourceIndex = sourceSegmentIndex +
+				                     targetIntersectionFactorOnSource;
+			}
+
+			return point;
 		}
 
 		private static double CalculateVirtualTargetVertex(ISegmentList targetSegments,
@@ -245,6 +368,22 @@ namespace ProSuite.Commons.Geom
 		{
 			return Type == IntersectionPointType.LinearIntersectionEnd &&
 			       source.EndPoint.Equals(Point);
+		}
+
+		public bool IsAtTargetRingEndPoint(ISegmentList target)
+		{
+			Linestring targetPart = target.GetPart(TargetPartIndex);
+
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
+			return targetPart.PointCount - 1 == VirtualTargetVertex && target.IsClosed;
+		}
+
+		public bool IsAtSourceRingEndPoint(ISegmentList source)
+		{
+			Linestring sourcePart = source.GetPart(SourcePartIndex);
+
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
+			return sourcePart.PointCount - 1 == VirtualSourceVertex && source.IsClosed;
 		}
 
 		public int GetLocalSourceIntersectionSegmentIdx(Linestring source,

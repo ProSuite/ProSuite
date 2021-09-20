@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -89,8 +89,10 @@ namespace ProSuite.Commons.Geom
 		/// Finds the segments whose extent intersects the extent of the specified search geometry.
 		/// </summary>
 		/// <param name="searchGeometry">The geometry whose bounds are used to search</param>
-		/// <param name="tolerance"></param>
-		/// <param name="allowIndexing">Whether a spatial should be created if appropriate.</param>
+		/// <param name="tolerance">The search tolerance in both x and y. The search can be performed
+		/// inside a box for performance reasons, i.e. the segment distance to the search point can be
+		/// up to Sqrt(2) * tolerance.</param>
+		/// <param name="allowIndexing">Whether a spatial index should be created if appropriate.</param>
 		/// <param name="predicate">A predicate that allows quick filtering by segment index.</param>
 		/// <returns>The found segments with their segment index.</returns>
 		IEnumerable<KeyValuePair<int, Line3D>> FindSegments(

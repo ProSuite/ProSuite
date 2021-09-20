@@ -1,6 +1,8 @@
 using System;
+using System.Globalization;
 using NUnit.Framework;
 using ProSuite.Commons.Geom;
+using ProSuite.Commons.Globalization;
 
 namespace ProSuite.Commons.Test.Geometry
 {
@@ -19,12 +21,18 @@ namespace ProSuite.Commons.Test.Geometry
 			Assert.AreEqual(
 				"XMin: 2600000.1234 YMin: 1200000.987654 XMax: 2601000.12 YMax: 1201000.98", text);
 
-			string formatted = envelope.Format(envelope, 2);
+			Console.WriteLine(CultureInfoUtils.GetCultureInfoDescription(CultureInfo.CurrentCulture));
+
+			string formatted = null;
+			CultureInfoUtils.ExecuteUsing(CultureInfo.GetCultureInfo("de-CH"),
+			                              () =>
+			                              {
+				                              formatted = envelope.Format(envelope, 2);
+			                              });
 
 			Console.WriteLine(formatted);
-
 			Assert.AreEqual(
-				"XMin: 2'600'000.12 YMin: 1'200'000.99 XMax: 2'601'000.12 YMax: 1'201'000.98",
+				"XMin: 2’600’000.12 YMin: 1’200’000.99 XMax: 2’601’000.12 YMax: 1’201’000.98",
 				formatted);
 		}
 

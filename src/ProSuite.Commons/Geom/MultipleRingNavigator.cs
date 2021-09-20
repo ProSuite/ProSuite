@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -44,8 +44,9 @@ namespace ProSuite.Commons.Geom
 						//       at least some intersection point ->
 						// includeLinearIntersectionIntermediateRingStartEndPoints must be true
 						var intersectionsForSource =
-							GeomTopoOpUtils.GetIntersectionPoints(sourceRing, Target, Tolerance,
-							                                      includeLinearIntersectionIntermediateRingStartEndPoints);
+							GeomTopoOpUtils.GetIntersectionPoints(
+								(ISegmentList) sourceRing, (ISegmentList) Target, Tolerance,
+								includeLinearIntersectionIntermediateRingStartEndPoints);
 
 						foreach (IntersectionPoint3D intersectionPoint in intersectionsForSource)
 						{

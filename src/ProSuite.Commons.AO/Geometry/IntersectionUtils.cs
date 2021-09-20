@@ -366,6 +366,29 @@ namespace ProSuite.Commons.AO.Geometry
 			if (geometry1.GeometryType == esriGeometryType.esriGeometryMultipoint ||
 			    geometry2.GeometryType == esriGeometryType.esriGeometryMultipoint)
 			{
+				if (UseCustomIntersect &&
+				    ! GeometryUtils.HasNonLinearSegments(geometry1) &&
+				    ! GeometryUtils.HasNonLinearSegments(geometry2) &&
+				    ! GeometryUtils.IsMAware(geometry1))
+				{
+					double xyTolerance = GeometryUtils.GetXyTolerance(geometry1);
+
+					if (geometry1 is IMultipoint multipointSource)
+					{
+						return GetIntersectionPointsXY(multipointSource, geometry2, xyTolerance);
+					}
+
+					if (geometry1 is IPolycurve polycurveSource)
+					{
+						return GetIntersectionPointsXY(polycurveSource, geometry2, xyTolerance);
+					}
+
+					if (geometry1 is IMultiPatch multipatchSource)
+					{
+						return GetIntersectionPointsXY(multipatchSource, geometry2, xyTolerance);
+					}
+				}
+
 				// NOTE: At 10.0 it was observed that the intersection between a multipoint and a polygon
 				//		 was empty unless the multipoint contained only one point
 				// TODO: repro case, if it ever happens again
@@ -423,10 +446,10 @@ namespace ProSuite.Commons.AO.Geometry
 
 				// if the highLevelGeometry1 is a multipatch the intersection can be of type Polyline,
 				// especially when empty
-				var intersectionMultippoint = intersection as IMultipoint;
-				if (intersectionMultippoint != null)
+				var intersectionMultipoint = intersection as IMultipoint;
+				if (intersectionMultipoint != null)
 				{
-					return intersectionMultippoint;
+					return intersectionMultipoint;
 				}
 
 				if (intersection.IsEmpty)
@@ -778,6 +801,222 @@ namespace ProSuite.Commons.AO.Geometry
 		}
 
 		public static IMultipoint GetIntersectionPointsXY(
+			[NotNull] IMultipoint multipoint1,
+			[NotNull] IGeometry geometry2,
+			double tolerance)
+		{
+			// TODO: Use clone to improve performance
+			IMultipoint result = GeometryFactory.CreateEmptyMultipoint(multipoint1);
+
+			IEnvelope curve1Envelope = multipoint1.Envelope;
+
+			// Currently assuming the input comes snapped to resolution/tolerance (directly from GDB):
+			tolerance +=
+				MathUtils.GetDoubleSignificanceEpsilon(
+					curve1Envelope.XMax, curve1Envelope.YMax);
+
+			var pntList = GeometryConversionUtils.CreateMultipoint(multipoint1);
+
+			IEnumerable<IntersectionPoint3D> intersectionPoints;
+			if (geometry2 is IPolycurve polycurve2)
+			{
+				// Note: Getting the paths from the GeometryCollection takes a large percentage of the entire method
+				MultiPolycurve otherLinestrings =
+					GeometryConversionUtils.CreateMultiPolycurve(
+						polycurve2, tolerance, curve1Envelope);
+
+				bool includeRingInteriorPoints = polycurve2 is IPolygon;
+
+				intersectionPoints = GeomTopoOpUtils.GetIntersectionPoints(
+					pntList, otherLinestrings, tolerance, includeRingInteriorPoints);
+			}
+			else if (geometry2 is IMultiPatch multipatch2)
+			{
+				var intersectionPointList = new List<IntersectionPoint3D>();
+				foreach (RingGroup ringGroup in GeometryConversionUtils.CreateRingGroups(multipatch2))
+				{
+					intersectionPointList.AddRange(
+						GeomTopoOpUtils.GetIntersectionPoints(
+							pntList, ringGroup, tolerance, true));
+				}
+
+				intersectionPoints = intersectionPointList;
+			}
+			else if (geometry2 is IMultipoint multipoint2)
+			{
+				Multipoint<IPnt> otherPoints = GeometryConversionUtils.CreateMultipoint(multipoint2);
+
+				intersectionPoints = GeomTopoOpUtils.GetIntersectionPoints(
+					pntList, otherPoints, tolerance);
+			}
+			else if (geometry2 is IPoint point)
+			{
+				IPnt targetPoint =
+					GeometryConversionUtils.CreatePnt(point, GeometryUtils.IsZAware(point));
+
+				intersectionPoints =
+					GeomTopoOpUtils.GetIntersectionPoints(pntList, targetPoint, tolerance);
+			}
+			else
+			{
+				throw new ArgumentOutOfRangeException(
+					$"Unsupported geometry type: {geometry2.GeometryType}");
+			}
+
+			GeometryConversionUtils.AddPoints(
+				intersectionPoints.Select(ip => ip.Point), result);
+
+			GeometryUtils.Simplify(result);
+
+			return result;
+		}
+		
+		public static IMultipoint GetIntersectionPointsXY(
+			[NotNull] IPolycurve polycurve1,
+			[NotNull] IGeometry geometry2,
+			double tolerance)
+		{
+			if (geometry2 is IPolycurve polycurve2)
+			{
+				return GetIntersectionPointsXY(polycurve1, polycurve2, tolerance);
+			}
+
+			if (geometry2 is IMultipoint multipoint2)
+			{
+				return GetIntersectionPointsXY(polycurve1, multipoint2, tolerance);
+			}
+
+			if (geometry2 is IPoint point)
+			{
+				// TODO: Proper implementation
+				return GetIntersectionPointsXY(polycurve1, GeometryFactory.CreateMultipoint(point),
+				                               tolerance);
+			}
+
+			if (geometry2 is IMultiPatch multipatch2)
+			{
+				return GetIntersectionPointsXY(polycurve1, multipatch2, tolerance);
+			}
+
+			throw new ArgumentOutOfRangeException(
+				$"Unsupported geometry type: {geometry2.GeometryType}");
+		}
+		
+		public static IMultipoint GetIntersectionPointsXY(
+			[NotNull] IMultiPatch multipatch1,
+			[NotNull] IGeometry geometry2,
+			double tolerance)
+		{
+			// TODO: Use clone to improve performance
+			IMultipoint result = GeometryFactory.CreateEmptyMultipoint(multipatch1);
+
+			IEnvelope curve1Envelope = multipatch1.Envelope;
+
+			// Currently assuming the input comes snapped to resolution/tolerance (directly from GDB):
+			tolerance +=
+				MathUtils.GetDoubleSignificanceEpsilon(
+					curve1Envelope.XMax, curve1Envelope.YMax);
+
+			var pntList = GeometryConversionUtils.CreateMultipoint(multipoint1);
+
+			var intersectionPointList = new List<IntersectionPoint3D>();
+
+			MultiPolycurve otherLinestrings = null;
+			bool includeRingInteriorPoints = false;
+			IPointList otherPoints = null;
+			List<RingGroup> otherRingGroups = null;
+			IPnt otherPoint = null;
+
+			IEnumerable <IntersectionPoint3D> intersectionPoints;
+			if (geometry2 is IPolycurve polycurve2)
+			{
+				// Note: Getting the paths from the GeometryCollection takes a large percentage of the entire method
+				otherLinestrings =
+					GeometryConversionUtils.CreateMultiPolycurve(
+						polycurve2, tolerance, curve1Envelope);
+
+				includeRingInteriorPoints = polycurve2 is IPolygon;
+			}
+			else if (geometry2 is IMultipoint multipoint2)
+			{
+				otherPoints = GeometryConversionUtils.CreateMultipoint(multipoint2);
+			}
+			else if (geometry2 is IMultiPatch multipatch2)
+			{
+				otherRingGroups =
+					GeometryConversionUtils.CreateRingGroups(multipatch2).ToList();
+			}
+			else if (geometry2 is IPoint point)
+			{
+				otherPoint =
+					GeometryConversionUtils.CreatePnt(point, GeometryUtils.IsZAware(point));
+			}
+			else
+			{
+				throw new ArgumentOutOfRangeException(
+					$"Unsupported geometry type: {geometry2.GeometryType}");
+			}
+
+			foreach (RingGroup ringGroup in GeometryConversionUtils.CreateRingGroups(multipatch1))
+			{
+				if (otherLinestrings != null)
+				{
+					intersectionPointList.AddRange(
+						GeomTopoOpUtils.GetIntersectionPoints(
+							ringGroup, otherLinestrings, tolerance, includeRingInteriorPoints));
+				}
+				else if (otherPoints != null)
+				{
+					intersectionPointList.AddRange(
+						GeomTopoOpUtils.GetIntersectionPoints(
+							ringGroup, otherPoints, tolerance, true));
+				}
+				else if (otherRingGroups != null)
+				{
+					foreach (RingGroup ringGroup2 in otherRingGroups)
+					{
+						intersectionPointList.AddRange(
+							GeomTopoOpUtils.GetIntersectionPoints(
+								ringGroup, ringGroup2, tolerance));
+					}
+				}
+				else if (otherPoint = ! null)
+				{
+					intersectionPointList.AddRange(
+						GeomTopoOpUtils.GetIntersectionPoints((ISegmentList)ringGroup, otherPoint, tolerance, true);
+				}
+			}
+
+
+
+
+			
+
+			else if (geometry2 is IPoint point)
+			{
+				IPnt targetPoint =
+					GeometryConversionUtils.CreatePnt(point, GeometryUtils.IsZAware(point));
+
+				intersectionPoints =
+					GeomTopoOpUtils.GetIntersectionPoints(pntList, targetPoint, tolerance);
+			}
+			else
+			{
+				throw new ArgumentOutOfRangeException(
+					$"Unsupported geometry type: {geometry2.GeometryType}");
+			}
+
+			GeometryConversionUtils.AddPoints(
+				intersectionPoints.Select(ip => ip.Point), result);
+
+			GeometryUtils.Simplify(result);
+
+			return result;
+
+		}
+
+
+		public static IMultipoint GetIntersectionPointsXY(
 			[NotNull] IPolycurve polycurve1,
 			[NotNull] IPolycurve polycurve2,
 			double tolerance,
@@ -806,7 +1045,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 				var intersectionPoints =
 					GeomTopoOpUtils.GetIntersectionPoints(
-						path1Linestring, otherLinestrings, tolerance,
+						(ISegmentList) path1Linestring, (ISegmentList) otherLinestrings, tolerance,
 						false);
 
 				if (intersectionPoints.Count == 0)
@@ -833,6 +1072,74 @@ namespace ProSuite.Commons.AO.Geometry
 			return result;
 		}
 
+		public static IMultipoint GetIntersectionPointsXY(
+			[NotNull] IPolycurve polycurve1,
+			[NotNull] IMultipoint multipoint2,
+			double tolerance)
+		{
+			// TODO: Use clone to improve performance
+			IMultipoint result = GeometryFactory.CreateEmptyMultipoint(polycurve1);
+
+			IEnvelope curve1Envelope = polycurve1.Envelope;
+
+			// Currently assuming the input comes snapped to resolution/tolerance (directly from GDB):
+			tolerance +=
+				MathUtils.GetDoubleSignificanceEpsilon(curve1Envelope.XMax, curve1Envelope.YMax);
+
+			// TODO: Make segment finding symmetrical in order to profit from a potential spatial index
+			//       on the source
+			Multipoint<IPnt> otherPoints = GeometryConversionUtils.CreateMultipoint(multipoint2);
+			
+			bool includeRingInteriorPoints = polycurve1 is IPolygon;
+
+			foreach (IPath path1 in GeometryUtils.GetPaths(polycurve1))
+			{
+				Linestring path1Linestring = GeometryConversionUtils.GetLinestring(path1);
+
+				var intersectionPoints =
+					GeomTopoOpUtils.GetIntersectionPoints(
+						(ISegmentList) path1Linestring, (IPointList) otherPoints, tolerance,
+						includeRingInteriorPoints);
+
+				GeometryConversionUtils.AddPoints(
+					intersectionPoints.Select(ip => ip.Point), result);
+			}
+
+			GeometryUtils.Simplify(result);
+
+			return result;
+		}
+		
+		public static IMultipoint GetIntersectionPointsXY(
+			[NotNull] IPolycurve polycurve1,
+			[NotNull] IMultiPatch multipatch2,
+			double tolerance)
+		{
+			// TODO: Use clone to improve performance
+			IMultipoint result = GeometryFactory.CreateEmptyMultipoint(polycurve1);
+
+			IEnvelope curve1Envelope = polycurve1.Envelope;
+
+			// Currently assuming the input comes snapped to resolution/tolerance (directly from GDB):
+			tolerance +=
+				MathUtils.GetDoubleSignificanceEpsilon(curve1Envelope.XMax, curve1Envelope.YMax);
+
+			ISegmentList sourceSegments = GeometryConversionUtils.CreateMultiPolycurve(polycurve1);
+
+			var intersectionPointList = new List<IntersectionPoint3D>();
+			foreach (RingGroup ringGroup in GeometryConversionUtils.CreateRingGroups(multipatch2))
+			{
+				intersectionPointList.AddRange(
+					GeomTopoOpUtils.GetIntersectionPoints(
+						sourceSegments, ringGroup, tolerance, true));
+			}
+
+			GeometryConversionUtils.AddPoints(intersectionPointList.Select(ip => ip.Point), result);
+			
+			GeometryUtils.Simplify(result);
+
+			return result;
+		}
 		public static IPolyline GetIntersectionLinesXY(
 			IPolycurve polycurve1,
 			IPolycurve polycurve2,
