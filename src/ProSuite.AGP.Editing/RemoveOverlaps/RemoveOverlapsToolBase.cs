@@ -171,7 +171,26 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				}
 			}
 
-			bool saved = GdbPersistenceUtils.SaveInOperation("Remove overlaps", updates, inserts);
+			IEnumerable<Dataset> datasets =
+				GdbPersistenceUtils.GetDatasets(updates.Keys, inserts.Keys);
+
+			var newFeatures = new List<Feature>();
+
+			bool saved = GdbPersistenceUtils.ExecuteInTransaction(
+				editContext =>
+				{
+					_msg.DebugFormat("Saving {0} updates and {1} inserts...", updates.Count,
+					                 inserts.Count);
+
+					GdbPersistenceUtils.UpdateTx(editContext, updates);
+
+					newFeatures.AddRange(GdbPersistenceUtils.InsertTx(editContext, inserts));
+
+					return true;
+				},
+				"Remove overlaps", datasets);
+
+			ToolUtils.SelectNewFeatures(newFeatures, MapView.Active);
 
 			var currentSelection = GetApplicableSelectedFeatures(MapView.Active).ToList();
 
@@ -179,7 +198,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			return saved;
 		}
-
+		
 		protected override void ResetDerivedGeometries()
 		{
 			_overlaps = null;

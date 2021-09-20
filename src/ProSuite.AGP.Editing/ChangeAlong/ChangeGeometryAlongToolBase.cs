@@ -8,6 +8,7 @@ using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
@@ -146,6 +147,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 				if (cutSubcurves.Count > 0)
 				{
+					if (selection.Count == 0)
+					{
+						_msg.Warn("No usable selected features.");
+						return false;
+					}
+
 					return await UpdateFeatures(selection, cutSubcurves, progressor);
 				}
 
@@ -486,17 +493,29 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					.ToDictionary(r => r.Feature, r => r.NewGeometry);
 
 			// Inserts (in case of cut), grouped by original feature:
-			Dictionary<Feature, IList<Geometry>> insertsByOriginal =
-				updatedFeatures
-					.Where(f => IsStoreRequired(
-						       f, editableClassHandles, RowChangeType.Insert))
-					.GroupBy(f => f.Feature, f => f.NewGeometry)
-					.ToDictionary(g => g.Key, g => (IList<Geometry>) g.ToList());
+			var inserts = updatedFeatures
+			              .Where(
+				              f => IsStoreRequired(f, editableClassHandles, RowChangeType.Insert))
+			              .ToList();
 
 			LogReshapeResults(updatedFeatures, resultFeatures);
 
-			var success = await GdbPersistenceUtils.SaveInOperationAsync(
-				              EditOperationDescription, resultFeatures, insertsByOriginal);
+			List<Feature> newFeatures = new List<Feature>();
+
+			bool success = await GdbPersistenceUtils.ExecuteInTransactionAsync(
+				               delegate(EditOperation.IEditContext editContext)
+				               {
+					               GdbPersistenceUtils.UpdateTx(editContext, resultFeatures);
+
+					               newFeatures.AddRange(
+						               GdbPersistenceUtils.InsertTx(editContext, inserts));
+
+					               return true;
+				               },
+				               EditOperationDescription,
+				               GdbPersistenceUtils.GetDatasets(resultFeatures.Keys));
+
+			ToolUtils.SelectNewFeatures(newFeatures, MapView.Active);
 
 			return success;
 		}
@@ -514,7 +533,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			Geometry originalGeometry = feature.GetShape();
 
-			if (originalGeometry != null &&
+			if (changeType == RowChangeType.Update &&
+			    originalGeometry != null &&
 			    originalGeometry.IsEqual(resultFeature.NewGeometry))
 			{
 				_msg.DebugFormat("The geometry of feature {0} is unchanged. It will not be stored",

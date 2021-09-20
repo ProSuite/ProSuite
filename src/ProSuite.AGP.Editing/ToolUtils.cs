@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
@@ -86,6 +87,22 @@ namespace ProSuite.AGP.Editing
 			}
 
 			return GeometryUtils.Contains(sketch, derivedGeometry);
+		}
+
+		/// <summary>
+		/// Selects the specified features but only in the layers that already have a selection.
+		/// </summary>
+		/// <param name="newFeatures"></param>
+		/// <param name="mapView"></param>
+		public static void SelectNewFeatures(List<Feature> newFeatures,
+		                                     MapView mapView)
+		{
+			List<BasicFeatureLayer> layersWithSelection = mapView.Map.GetSelection().Keys
+			                                                     .Where(l => l is BasicFeatureLayer)
+			                                                     .Cast<BasicFeatureLayer>()
+			                                                     .ToList();
+
+			SelectionUtils.SelectFeatures(newFeatures, layersWithSelection);
 		}
 
 		private static MapPoint CreatePointFromSketchPolygon(Geometry sketchGeometry)
