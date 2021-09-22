@@ -101,6 +101,8 @@ namespace ProSuite.Microservices.Client.AGP
 			[CanBeNull] ShapeMsg shapeMsg,
 			[CanBeNull] SpatialReference knownSpatialReference = null)
 		{
+			// TODO: Make sure all callers provide a spatial reference! Otherwise the VCS might get lost.
+
 			if (shapeMsg == null) return null;
 
 			if (shapeMsg.FormatCase == ShapeMsg.FormatOneofCase.None) return null;
@@ -135,6 +137,21 @@ namespace ProSuite.Microservices.Client.AGP
 			}
 
 			return result;
+		}
+
+		public static List<Geometry> FromShapeMsgList(
+			[NotNull] ICollection<ShapeMsg> shapeBufferList,
+			SpatialReference spatialReference)
+		{
+			var geometryList = new List<Geometry>(shapeBufferList.Count);
+
+			foreach (var shapeMsg in shapeBufferList)
+			{
+				var geometry = FromShapeMsg(shapeMsg, spatialReference);
+				geometryList.Add(geometry);
+			}
+
+			return geometryList;
 		}
 
 		private static Envelope FromEnvelopeMsg([CanBeNull] EnvelopeMsg envProto,
@@ -462,20 +479,6 @@ namespace ProSuite.Microservices.Client.AGP
 			}
 
 			return esriGeometryType.esriGeometryNull;
-		}
-
-		public static List<Geometry> FromShapeMsgList(
-			[NotNull] ICollection<ShapeMsg> shapeBufferList)
-		{
-			var geometryList = new List<Geometry>(shapeBufferList.Count);
-
-			foreach (var selectableOverlap in shapeBufferList)
-			{
-				var geometry = FromShapeMsg(selectableOverlap);
-				geometryList.Add(geometry);
-			}
-
-			return geometryList;
 		}
 
 		private static Geometry FromEsriShapeBuffer([NotNull] byte[] byteArray,
