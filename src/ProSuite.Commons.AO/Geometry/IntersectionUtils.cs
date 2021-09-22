@@ -828,6 +828,10 @@ namespace ProSuite.Commons.AO.Geometry
 				}
 			}
 
+			// This (i.e. snapping to spatial reference) causes TOP-5470. Intersection points must be as
+			// accurate as possible, otherwise the participating segments will not be found any more
+			// in downstream operations! What we report here should probably be as accurate as possible.
+			// Alternatively use the Geom explicit intersection points.
 			GeometryUtils.Simplify(result);
 
 			return result;
