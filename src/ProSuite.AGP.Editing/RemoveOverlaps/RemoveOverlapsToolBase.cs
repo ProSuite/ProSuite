@@ -138,20 +138,19 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			foreach (OverlapResultGeometries resultPerFeature in result.ResultsByFeature)
 			{
-				if (! GdbPersistenceUtils.CanChange(resultPerFeature.OriginalFeature,
-				                                    editableClassHandles, out string warning))
+				Feature originalFeature = resultPerFeature.OriginalFeature;
+				Geometry updatedGeometry = resultPerFeature.UpdatedGeometry;
+
+				if (! IsStoreRequired(originalFeature, updatedGeometry, editableClassHandles))
 				{
-					_msg.WarnFormat("{0}: {1}",
-					                GdbObjectUtils.ToString(resultPerFeature.OriginalFeature),
-					                warning);
 					continue;
 				}
 
-				updates.Add(resultPerFeature.OriginalFeature, resultPerFeature.UpdatedGeometry);
+				updates.Add(originalFeature, updatedGeometry);
 
 				if (resultPerFeature.InsertGeometries.Count > 0)
 				{
-					inserts.Add(resultPerFeature.OriginalFeature,
+					inserts.Add(originalFeature,
 					            resultPerFeature.InsertGeometries);
 				}
 			}
@@ -160,10 +159,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			{
 				foreach (KeyValuePair<Feature, Geometry> kvp in result.TargetFeaturesToUpdate)
 				{
-					if (! GdbPersistenceUtils.CanChange(kvp.Key,
-					                                    editableClassHandles, out string warning))
+					if (! IsStoreRequired(kvp.Key, kvp.Value, editableClassHandles))
 					{
-						_msg.WarnFormat("{0}: {1}", GdbObjectUtils.ToString(kvp.Key), warning);
 						continue;
 					}
 
@@ -198,7 +195,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			return saved;
 		}
-		
+
 		protected override void ResetDerivedGeometries()
 		{
 			_overlaps = null;
@@ -328,6 +325,32 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			}
 
 			return result;
+		}
+
+		private static bool IsStoreRequired(Feature originalFeature, Geometry updatedGeometry,
+		                                    HashSet<long> editableClassHandles)
+		{
+			if (! GdbPersistenceUtils.CanChange(originalFeature,
+			                                    editableClassHandles, out string warning))
+			{
+				_msg.DebugFormat("{0}: {1}",
+				                 GdbObjectUtils.ToString(originalFeature),
+				                 warning);
+				return false;
+			}
+
+			Geometry originalGeometry = originalFeature.GetShape();
+
+			if (originalGeometry != null &&
+			    originalGeometry.IsEqual(updatedGeometry))
+			{
+				_msg.DebugFormat("The geometry of feature {0} is unchanged. It will not be stored",
+				                 GdbObjectUtils.ToString(originalFeature));
+
+				return false;
+			}
+
+			return true;
 		}
 
 		#region Search target features
