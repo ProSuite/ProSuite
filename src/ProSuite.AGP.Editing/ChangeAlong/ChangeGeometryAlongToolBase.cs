@@ -64,7 +64,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					}
 					else
 					{
-						SelectionUtils.ClearSelection(ActiveMapView.Map);
+						SelectionUtils.ClearSelection();
 						StartSelectionPhase();
 					}
 
@@ -468,7 +468,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			_feedback.Update(_changeAlongCurves);
 
 			HashSet<long> editableClassHandles =
-				MapUtils.GetLayers<BasicFeatureLayer>(MapView.Active, bfl => bfl.IsEditable)
+				MapUtils.GetLayers<BasicFeatureLayer>(bfl => bfl.IsEditable)
 				        .Select(l => l.GetTable().Handle.ToInt64()).ToHashSet();
 
 			// Updates:

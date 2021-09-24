@@ -113,7 +113,7 @@
           <button refID="WorkLists_ShowWorkListsButton" size="small" />
           <button refID="WorkLists_CreateSelectionWorkList" size="large" />
           <!--TODO PickerTool test-->
-          <!--<tool refID="ProSuiteTools_PickWorkListItemTool" size="large" />-->
+          <!--<tool refID="ProSuiteTools_PickWorkItemTool" size="large" />-->
         </group>
       </groups>
       <controls>
@@ -173,22 +173,22 @@
             <disabledText />
           </tooltip>
         </button>
-        <button id="WorkLists_CreateSelectionWorkList" caption="Show Selection Work List"
+        <button id="WorkLists_CreateSelectionWorkList" caption="Open Selection Work List"
                 className="WorkLists.CreateSelectionWorkListButton" loadOnClick="true"
                 condition="esri_mapping_activeMapView_hasFeatureSelectionCondition"
                 smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateSelectionCmd16.png"
                 largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateSelectionCmd32.png">
-          <tooltip heading="Show Selection Work List">
-            Show Selection Work List for iterating on selected items
+          <tooltip heading="Open Selection Work List">
+            Open Selection Work List for iterating on selected items
             <disabledText>No features selected.</disabledText>
           </tooltip>
         </button>
-        <button id="WorkLists_CreateIssueWorkList" caption="Show Issue Work List"
+        <button id="WorkLists_CreateIssueWorkList" caption="Open Issue Work List"
                 className="WorkLists.CreateIssueWorkListButton" loadOnClick="true" condition="esri_mapping_mapPane"
                 smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateErrorsCmd16.png"
                 largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateErrorsCmd32.png">
-          <tooltip heading="Show Issue Work List">
-            Show Issue Work List for iterating on issue items
+          <tooltip heading="Open Issue Work List">
+            Open Issue Work List for iterating on issue items
             <disabledText>No active map.</disabledText>
           </tooltip>
         </button>
@@ -250,7 +250,7 @@
             Select features for use with the selection worklist<disabledText />
           </tooltip>
         </tool>
-        <tool id="ProSuiteTools_PickWorkListItemTool" caption="Picker Tool" className="Selection.PickWorkListItemTool"
+        <tool id="ProSuiteTools_PickWorkItemTool" caption="Picker Tool" className="Selection.PickWorkListItemTool"
               loadOnClick="true"
               smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png"
               largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png"
@@ -290,7 +290,7 @@
                 loadOnClick="true" condition="esri_mapping_mapPane"
                 smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd16.png"
                 largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd32.png">
-          <tooltip heading="Show Work Lists for present Work List Layers in TOC">
+          <tooltip heading="Open Work Lists for present Work List Layers in TOC">
             <disabledText>No active map.</disabledText>
           </tooltip>
         </button>

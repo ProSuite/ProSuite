@@ -208,9 +208,8 @@ namespace ProSuite.Commons.UI.Persistence.WinForms
 		{
 			// if the form implements IFormStateAware<T>, give it a
 			// chance to store internal form state
-			var target = Form as IFormStateAware<T>;
 
-			if (target != null)
+			if (Form is IFormStateAware<T> target)
 			{
 				target.GetState(formState);
 			}
@@ -244,17 +243,17 @@ namespace ProSuite.Commons.UI.Persistence.WinForms
 
 			// try to restore location. Make sure that location is within current
 			// screen dimensions
-			int left = (formState.Left > maxLeft)
+			int left = formState.Left > maxLeft
 				           ? maxLeft
-				           : ((formState.Left < minLeft)
-					              ? minLeft
-					              : formState.Left);
+				           : formState.Left < minLeft
+					           ? minLeft
+					           : formState.Left;
 
 			int top = formState.Top > maxTop
 				          ? maxTop
-				          : (formState.Top < minTop
-					             ? minTop
-					             : formState.Top);
+				          : formState.Top < minTop
+					          ? minTop
+					          : formState.Top;
 
 			// log 
 			if (_msg.IsVerboseDebugEnabled)

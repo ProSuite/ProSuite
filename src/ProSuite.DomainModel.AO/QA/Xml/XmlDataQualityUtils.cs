@@ -1599,7 +1599,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		private static IEnumerable<DataQualityCategory> GetSorted(
 			[NotNull] IEnumerable<DataQualityCategory> categories)
 		{
-			return categories.OrderBy((c => string.Format("{0}#{1}", c.ListOrder, c.Name)));
+			return categories.OrderBy(c => string.Format("{0}#{1}", c.ListOrder, c.Name));
 		}
 
 		[NotNull]

@@ -24,7 +24,7 @@ namespace ProSuite.QA.Tests.PointEnumerators
 			var wksPoints = new WKSPointZ[points.PointCount];
 			GeometryUtils.QueryWKSPointZs(points, wksPoints);
 
-			if (envelope == null || (((IRelationalOperator) envelope).Contains(feature.Shape)))
+			if (envelope == null || ((IRelationalOperator) envelope).Contains(feature.Shape))
 			{
 				_wksPoints = wksPoints;
 			}

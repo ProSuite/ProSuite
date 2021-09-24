@@ -96,7 +96,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			double xyResolution = spatialReferenceResolution.XYResolution[true];
 
-			return (xyResolution * Math.Sqrt(2)) /
+			return xyResolution * Math.Sqrt(2) /
 			       Math.Tan(maximumSegmentAngleDifferenceRadians) /
 			       maximumRoundingEffectRatio;
 		}
@@ -293,8 +293,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				{
 					if (! _isClosed.HasValue)
 					{
-						var curve = _points as ICurve;
-						_isClosed = curve != null && curve.IsClosed;
+						_isClosed = _points is ICurve curve && curve.IsClosed;
 					}
 
 					return _isClosed.Value;

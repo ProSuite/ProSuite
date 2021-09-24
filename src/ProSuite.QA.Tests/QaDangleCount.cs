@@ -182,8 +182,7 @@ namespace ProSuite.QA.Tests
 
 					// TODO revise for tolerance
 					if ((dangleCount.XMax > tileXMax || dangleCount.YMax > tileYMax) &&
-					    (dangleCount.XMax <= testRunXMax &&
-					     dangleCount.YMax <= testRunYMax))
+					    dangleCount.XMax <= testRunXMax && dangleCount.YMax <= testRunYMax)
 					{
 						continue;
 					}

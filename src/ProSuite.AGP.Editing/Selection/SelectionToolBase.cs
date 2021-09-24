@@ -1,4 +1,7 @@
+using System.Collections.Generic;
 using System.Windows.Forms;
+using ArcGIS.Core.Data;
+using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
@@ -19,7 +22,7 @@ namespace ProSuite.AGP.Editing.Selection
 			SelectOnlyEditFeatures = false;
 
 			SetCursor(SelectionCursor);
-			//SelectionMode = SelectionMode.Normal;
+			
 		}
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -29,6 +32,11 @@ namespace ProSuite.AGP.Editing.Selection
 		protected override bool IsInSelectionPhase(bool shiftIsPressed)
 		{
 			return true;
+		}
+
+		protected override void AfterSelection(IList<Feature> selectedFeatures, CancelableProgressor progressor)
+		{
+			StartSelectionPhase();
 		}
 
 		protected override void OnKeyDownCore(MapViewKeyEventArgs k)

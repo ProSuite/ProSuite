@@ -89,7 +89,7 @@ namespace ProSuite.Commons.AO.Geometry
 			double xx = sum_xx - sum_x * sum_x / size;
 			double yy = sum_yy - sum_y * sum_y / size;
 			double zz = sum_zz - sum_z * sum_z / size;
-			double e = (xx + yy + zz);
+			double e = xx + yy + zz;
 			double epsilon = 1.0e-8 * (e * e);
 
 			double denZ;
@@ -150,7 +150,7 @@ namespace ProSuite.Commons.AO.Geometry
 			double zy = sum_zy - sum_z * sum_y / size;
 			double xy = sum_xy - sum_x * sum_y / size;
 
-			den = (xy * xy - xx * yy);
+			den = xy * xy - xx * yy;
 
 			cy = (zx * xy - zy * xx) / den;
 			cx = (zy * xy - zx * yy) / den;
@@ -329,9 +329,9 @@ namespace ProSuite.Commons.AO.Geometry
 
 		private static double GetLength2(WKSPointZ vector)
 		{
-			return (vector.X * vector.X +
-			        vector.Y * vector.Y +
-			        vector.Z * vector.Z);
+			return vector.X * vector.X +
+			       vector.Y * vector.Y +
+			       vector.Z * vector.Z;
 		}
 	}
 }

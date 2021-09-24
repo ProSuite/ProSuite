@@ -97,8 +97,8 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 		                                                       int hWnd = 0)
 		{
 			Assert.NotNull(_userName, "username not defined");
-			string password = (Assert.NotNull(_encryptedPassword,
-			                                  "password not defined")).PlainTextValue;
+			string password = Assert.NotNull(_encryptedPassword,
+			                                 "password not defined").PlainTextValue;
 
 			return OpenWorkspace(_userName, password, versionName, hWnd);
 		}

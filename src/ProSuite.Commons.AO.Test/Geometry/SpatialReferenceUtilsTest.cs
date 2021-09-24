@@ -363,7 +363,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 				                               comparePrecision, compareVCS);
 			}
 
-			double perIteration = ((double) watch.ElapsedMilliseconds) / iterations;
+			double perIteration = (double) watch.ElapsedMilliseconds / iterations;
 			Console.WriteLine(@"AreEqual (precision compare): {0:N6} ms", perIteration);
 
 			Assert.Less(perIteration, 0.05, "AreEqual takes too long");
@@ -387,7 +387,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 				                               comparePrecision, compareVCS);
 			}
 
-			double perIteration = ((double) watch.ElapsedMilliseconds) / iterations;
+			double perIteration = (double) watch.ElapsedMilliseconds / iterations;
 			Console.WriteLine(@"AreEqual (precision compare): {0:N6} ms", perIteration);
 
 			Assert.Less(perIteration, 0.05, "AreEqual takes too long");

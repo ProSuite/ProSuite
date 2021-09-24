@@ -71,7 +71,7 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 
 			WriteWkbType(WkbGeometryType.MultiPoint, ordinates);
 
-			var pointCollection = ((IPointCollection4) multipoint);
+			var pointCollection = (IPointCollection4) multipoint;
 
 			int pointCount = pointCollection.PointCount;
 

@@ -29,7 +29,7 @@ namespace ProSuite.QA.Container
 			{
 				return ! Recycled
 					       ? null
-					       : (_recycleUnique ?? (_recycleUnique = Guid.NewGuid()));
+					       : _recycleUnique ?? (_recycleUnique = Guid.NewGuid());
 			}
 		}
 

@@ -1091,7 +1091,7 @@ namespace ProSuite.QA.Tests
 		private static double GetDistance([NotNull] IPoint point,
 		                                  [NotNull] IPolyline polyline)
 		{
-			var proximity = ((IProximityOperator) polyline);
+			var proximity = (IProximityOperator) polyline;
 			return proximity.ReturnDistance(point);
 		}
 

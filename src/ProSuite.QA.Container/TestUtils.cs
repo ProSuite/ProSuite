@@ -102,7 +102,8 @@ namespace ProSuite.QA.Container
 		                                        [CanBeNull] TableView tableView)
 		{
 			IQueryFilter filter;
-			if (constraintArea != null || (queryArea != null && table is IFeatureClass))
+			if (constraintArea != null ||
+			    queryArea != null && table is IFeatureClass)
 			{
 				ISpatialFilter s = new SpatialFilterClass();
 
@@ -185,15 +186,14 @@ namespace ProSuite.QA.Container
 					continue;
 				}
 
-				string datasetName = geoDataset is IDataset
-					                     ? ((IDataset) geoDataset).Name
+				string datasetName = geoDataset is IDataset dataset
+					                     ? dataset.Name
 					                     : "raster";
 				_msg.DebugFormat("Adding extent of {0}: {1}",
 				                 datasetName,
 				                 GeometryUtils.Format(datasetExtent));
 
-				var featureClass = geoDataset as IFeatureClass;
-				if (featureClass != null)
+				if (geoDataset is IFeatureClass featureClass)
 				{
 					double xyTolerance;
 					if (DatasetUtils.TryGetXyTolerance(featureClass, out xyTolerance))
@@ -236,10 +236,8 @@ namespace ProSuite.QA.Container
 		[CanBeNull]
 		public static IGeometry GetShapeCopy([NotNull] IRow row)
 		{
-			if (row is IFeature)
+			if (row is IFeature feature)
 			{
-				var feature = (IFeature) row;
-
 				// TODO optimize
 				// - feature.Extent creates a copy (feature.Shape.QueryEnvelope() does not)
 				// - the feature may really have no geometry (shapefield was in subfields), in this case the additional get just makes it slow
@@ -305,8 +303,7 @@ namespace ProSuite.QA.Container
 		{
 			Assert.ArgumentNotNull(test, nameof(test));
 
-			var containerTest = test as ContainerTest;
-			if (containerTest != null)
+			if (test is ContainerTest containerTest)
 			{
 				foreach (IGeoDataset involvedGeoDataset in containerTest
 					.GetInvolvedGeoDatasets())
@@ -318,8 +315,7 @@ namespace ProSuite.QA.Container
 			{
 				foreach (ITable table in test.InvolvedTables)
 				{
-					var geoDataset = table as IGeoDataset;
-					if (geoDataset != null)
+					if (table is IGeoDataset geoDataset)
 					{
 						yield return geoDataset;
 					}
@@ -546,12 +542,9 @@ namespace ProSuite.QA.Container
 		                                         [NotNull] IEnvelope tileEnvelope,
 		                                         [CanBeNull] IEnvelope testRunEnvelope)
 		{
-			double tileXMin;
-			double tileYMin;
 			double tileXMax;
 			double tileYMax;
-			tileEnvelope.QueryCoords(out tileXMin, out tileYMin,
-			                         out tileXMax, out tileYMax);
+			tileEnvelope.QueryCoords(out _, out _, out tileXMax, out tileYMax);
 
 			if (featureXMax > tileXMax || featureYMax > tileYMax)
 			{
@@ -846,9 +839,7 @@ namespace ProSuite.QA.Container
 			double result = 0;
 			foreach (ITest test in tests)
 			{
-				var containerTest = test as ContainerTest;
-
-				if (containerTest != null)
+				if (test is ContainerTest containerTest)
 				{
 					result = Math.Max(result, containerTest.SearchDistance);
 				}
@@ -883,9 +874,8 @@ namespace ProSuite.QA.Container
 				}
 
 				var cached = false;
-				var containerTest = test as ContainerTest;
 
-				if (containerTest != null)
+				if (test is ContainerTest containerTest)
 				{
 					foreach (ITable table in containerTest.InvolvedTables)
 					{

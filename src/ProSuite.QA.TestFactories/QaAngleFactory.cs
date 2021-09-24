@@ -70,7 +70,7 @@ namespace ProSuite.QA.TestFactories
 
 			var objects = new object[3];
 			objects[0] = objParams[0];
-			objects[1] = ((double) objParams[1]) * Math.PI / 180.0;
+			objects[1] = (double) objParams[1] * Math.PI / 180.0;
 			objects[2] = objParams[2];
 
 			return objects;

@@ -553,8 +553,8 @@ namespace ProSuite.QA.Tests.Coincidence
 				((IFeature) rowKey.Row).Shape.QueryEnvelope(_removeBox);
 				IEnvelope box = args.CurrentEnvelope;
 				if (box == null ||
-				    (_removeBox.XMax + SearchDistance <= box.XMax &&
-				     _removeBox.YMax + SearchDistance <= box.YMax))
+				    _removeBox.XMax + SearchDistance <= box.XMax &&
+				    _removeBox.YMax + SearchDistance <= box.YMax)
 				{
 					remove.Add(rowKey);
 				}
@@ -2074,15 +2074,13 @@ namespace ProSuite.QA.Tests.Coincidence
 					nearDistance = Row1 == neighborRow
 						               ? _distance1 * 2
 						               : _distance1 +
-						                 (_expressions[neighborTableIndex].GetDouble(neighborRow) ??
-						                  0);
+						                 (_expressions[neighborTableIndex].GetDouble(neighborRow) ?? 0);
 				}
 				else
 				{
 					nearDistance = Row1 == neighborRow
 						               ? _distance1
-						               : (_expressions[neighborTableIndex].GetDouble(neighborRow) ??
-						                  0);
+						               : _expressions[neighborTableIndex].GetDouble(neighborRow) ?? 0;
 				}
 
 				return nearDistance;

@@ -319,7 +319,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		                                    [NotNull] string aliasName,
 		                                    bool allowProperCasing)
 		{
-			if (allowProperCasing && (Equals(name, aliasName) && Equals(name, name.ToUpper())))
+			if (allowProperCasing && Equals(name, aliasName) && Equals(name, name.ToUpper()))
 			{
 				// there is no alias name defined, and the field name is all uppercase
 
@@ -421,7 +421,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 					return Convert.ToDouble(sourceValue, formatProvider);
 
 				case esriFieldType.esriFieldTypeString:
-					return Convert.ToString(sourceValue, formatProvider);
+					return Convert.ToString(sourceValue, formatProvider) ?? string.Empty; // silence R#
 
 				case esriFieldType.esriFieldTypeDate:
 					return Convert.ToDateTime(sourceValue, formatProvider);
@@ -429,7 +429,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				case esriFieldType.esriFieldTypeGlobalID:
 				case esriFieldType.esriFieldTypeGUID:
 					string stringValue = Convert.ToString(sourceValue, formatProvider);
-					return new Guid(stringValue);
+					return new Guid(stringValue ?? string.Empty); // silence R#
 
 				case esriFieldType.esriFieldTypeXML:
 				case esriFieldType.esriFieldTypeGeometry:
@@ -453,16 +453,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return v2.Equals(Convert.ToInt32(v1));
 			}
 
-			if (v1 is float)
+			if (v1 is float f1)
 			{
-				if (v2 is float)
+				if (v2 is float f2)
 				{
-					return MathUtils.AreSignificantDigitsEqual((float) v1, (float) v2);
+					return MathUtils.AreSignificantDigitsEqual(f1, f2);
 				}
 
-				if (v2 is double)
+				if (v2 is double d2)
 				{
-					return MathUtils.AreSignificantDigitsEqual((float) v1, (double) v2);
+					return MathUtils.AreSignificantDigitsEqual(f1, d2);
 				}
 			}
 
@@ -471,21 +471,21 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return Convert.ToInt32(v2).Equals(v1);
 			}
 
-			if (v1 is double)
+			if (v1 is double d1)
 			{
-				if (v2 is double)
+				if (v2 is double d2)
 				{
-					return MathUtils.AreSignificantDigitsEqual((double) v1, (double) v2);
+					return MathUtils.AreSignificantDigitsEqual(d1, d2);
 				}
 
-				if (v2 is float)
+				if (v2 is float f2)
 				{
-					return MathUtils.AreSignificantDigitsEqual((float) v2, (double) v1);
+					return MathUtils.AreSignificantDigitsEqual(f2, d1);
 				}
 			}
 
-			if ((v1 is DBNull && v2 == null) ||
-			    (v1 == null && v2 is DBNull))
+			if (v1 is DBNull && v2 == null ||
+			    v1 == null && v2 is DBNull)
 			{
 				// treat null and DBNull the same
 				return true;

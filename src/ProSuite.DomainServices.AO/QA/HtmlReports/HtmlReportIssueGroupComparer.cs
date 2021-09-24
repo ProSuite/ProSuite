@@ -16,8 +16,8 @@ namespace ProSuite.DomainServices.AO.QA.HtmlReports
 		{
 			if (_sortOnAffectedComponent)
 			{
-				int component = string.CompareOrdinal(g1.AffectedComponent,
-				                                      g2.AffectedComponent);
+				int component = string.CompareOrdinal(g1?.AffectedComponent,
+				                                      g2?.AffectedComponent);
 
 				if (component != 0)
 				{
@@ -26,8 +26,8 @@ namespace ProSuite.DomainServices.AO.QA.HtmlReports
 			}
 
 			// TODO extend ordering logic
-			return string.Compare(g1.QualityConditionName,
-			                      g2.QualityConditionName,
+			return string.Compare(g1?.QualityConditionName,
+			                      g2?.QualityConditionName,
 			                      StringComparison.Ordinal);
 		}
 	}

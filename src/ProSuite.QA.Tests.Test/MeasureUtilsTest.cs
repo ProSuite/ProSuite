@@ -251,7 +251,7 @@ namespace ProSuite.QA.Tests.Test
 
 			IList<IPoint> points;
 			IPolyline subcurves = MeasureUtils.GetSubcurves(polyline, 150,
-			                                                150 + (_mTolerance / 100),
+			                                                150 + _mTolerance / 100,
 			                                                out points);
 
 			Console.WriteLine(GeometryUtils.ToString(subcurves));
@@ -273,7 +273,7 @@ namespace ProSuite.QA.Tests.Test
 
 			IList<IPoint> points;
 			IPolyline subcurves = MeasureUtils.GetSubcurves(polyline, 150,
-			                                                150 + (_mTolerance * 2), out points);
+			                                                150 + _mTolerance * 2, out points);
 
 			Console.WriteLine(GeometryUtils.ToString(subcurves));
 

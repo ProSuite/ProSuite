@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using ArcGIS.Core.Data;
-using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
@@ -20,6 +19,8 @@ namespace ProSuite.AGP.WorkList
 	public abstract class GdbItemRepository : IWorkItemRepository
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		
+		private int _lastUsedOid;
 
 		protected GdbItemRepository(Dictionary<Geodatabase, List<Table>> tablesByGeodatabase,
 		                            IRepository workItemStateRepository)
@@ -120,6 +121,8 @@ namespace ProSuite.AGP.WorkList
 
 		public async Task SetStatus(IWorkItem item, WorkItemStatus status)
 		{
+			item.Status = status;
+
 			GdbTableIdentity tableId = item.Proxy.Table;
 
 			ISourceClass source =
@@ -297,19 +300,11 @@ namespace ProSuite.AGP.WorkList
 			return count;
 		}
 
-		public IEnumerable<PluginField> GetFields(IEnumerable<string> fieldNames = null)
-		{
-			throw new NotImplementedException();
-		}
-
 		#endregion
 
-		protected virtual int CreateItemIDCore(Row row, ISourceClass source)
+		protected virtual long GetNextOid([NotNull] Row row)
 		{
-			long oid = row.GetObjectID();
-
-			// oid = 666, tableId = 42 => 42666
-			return (int) (Math.Pow(10, Math.Floor(Math.Log10(oid) + 1)) * source.Id + oid);
+			return ++_lastUsedOid;
 		}
 
 		protected IWorkItem RefreshState(IWorkItem item)

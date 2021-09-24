@@ -116,7 +116,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			QueuedTaskUtils.Run(
 				() =>
 				{
-					SelectionUtils.ClearSelection(ActiveMapView.Map);
+					SelectionUtils.ClearSelection();
 
 					ResetDerivedGeometries();
 

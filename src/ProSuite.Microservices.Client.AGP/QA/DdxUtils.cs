@@ -22,7 +22,7 @@ namespace ProSuite.Microservices.Client.AGP.QA
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static async Task<List<ProjectWorkspace>> GetProjectWorkspaceCandidates(
-			[NotNull] ICollection<Table> objectClasses,
+			[NotNull] ICollection<Table> tables,
 			[NotNull] QualityVerificationDdxGrpc.QualityVerificationDdxGrpcClient ddxClient)
 		{
 			var datastoresByHandle = new Dictionary<long, Datastore>();
@@ -31,10 +31,10 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			GetProjectWorkspacesRequest request =
 				await QueuedTask.Run(() =>
 				{
-					AddWorkspaces(objectClasses, datastoresByHandle);
-					AddSpatialReferences(objectClasses, spatialReferencesByWkId);
+					AddWorkspaces(tables, datastoresByHandle);
+					AddSpatialReferences(tables.OfType<FeatureClass>(), spatialReferencesByWkId);
 
-					return CreateProjectWorkspacesRequest(objectClasses);
+					return CreateProjectWorkspacesRequest(tables);
 				});
 
 			if (request.ObjectClasses.Count == 0)
@@ -195,14 +195,14 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			return result;
 		}
 
-		private static void AddWorkspaces([NotNull] IEnumerable<Table> objectClasses,
-		                                  [NotNull] Dictionary<long, Datastore> datastoresByHandle)
+		private static void AddWorkspaces(
+			[NotNull] IEnumerable<Table> tables,
+			[NotNull] IDictionary<long, Datastore> datastoresByHandle)
 		{
-			foreach (Table objectClass in objectClasses)
+			foreach (Datastore datastore in tables.Select(table => table?.GetDatastore())
+			                                      .Where(datastore => datastore != null))
 			{
-				Datastore datastore = objectClass.GetDatastore();
-
-				long handle = datastore.Handle.ToInt64();
+				var handle = datastore.Handle.ToInt64();
 
 				if (! datastoresByHandle.ContainsKey(handle))
 				{
@@ -211,20 +211,16 @@ namespace ProSuite.Microservices.Client.AGP.QA
 			}
 		}
 
-		private static void AddSpatialReferences(ICollection<Table> objectClasses,
-		                                         Dictionary<long, SpatialReference>
-			                                         spatialReferencesByWkId)
+		private static void AddSpatialReferences(
+			[NotNull] IEnumerable<FeatureClass> featureClasses,
+			[NotNull] IDictionary<long, SpatialReference> spatialReferencesByWkId)
 		{
-			foreach (Table objectClass in objectClasses)
+			foreach (SpatialReference sr in featureClasses.Select(fc => fc?.GetSpatialReference())
+			                                              .Where(sr => sr != null))
 			{
-				if (objectClass is FeatureClass featureClass)
+				if (! spatialReferencesByWkId.ContainsKey(sr.Wkid))
 				{
-					SpatialReference sr = DatasetUtils.GetSpatialReference(featureClass);
-
-					if (! spatialReferencesByWkId.ContainsKey(sr.Wkid))
-					{
-						spatialReferencesByWkId.Add(sr.Wkid, sr);
-					}
+					spatialReferencesByWkId.Add(sr.Wkid, sr);
 				}
 			}
 		}

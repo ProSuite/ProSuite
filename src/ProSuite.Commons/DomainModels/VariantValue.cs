@@ -238,9 +238,7 @@ namespace ProSuite.Commons.DomainModels
 				return true;
 			}
 
-			object result;
-			return ConversionUtils.TryParseTo(GetType(type),
-			                                  _stringValue, _culture, out result);
+			return ConversionUtils.TryParseTo(GetType(type), _stringValue, _culture, out _);
 		}
 
 		public bool IsValidValue([CanBeNull] object value)
@@ -257,14 +255,12 @@ namespace ProSuite.Commons.DomainModels
 
 			if (_type == VariantValueType.Null)
 			{
-				VariantValueType variantType;
-				return TryGetValueType(value, out variantType);
+				return TryGetValueType(value, out VariantValueType _);
 			}
 
-			object result;
 			return ConversionUtils.TryParseTo(GetType(_type),
 			                                  GetStringValue(value), _culture,
-			                                  out result);
+			                                  out object _);
 		}
 	}
 }

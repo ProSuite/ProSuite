@@ -126,9 +126,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 			{
 				LineList<TDirectedRow> list = GetAnyRing();
 
-				return list == null
-					       ? 0
-					       : list.Orientation();
+				return list?.Orientation() ?? 0;
 			}
 
 			double xMax = 0;
@@ -299,7 +297,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 		[CanBeNull]
 		public LineList<TDirectedRow> RemoveEnds()
 		{
-			if (! (((IRelationalOperator) FromPoint).Equals(ToPoint)))
+			if (! ((IRelationalOperator) FromPoint).Equals(ToPoint))
 			{
 				throw new InvalidOperationException(
 					"invalid context for calling of method");
@@ -347,7 +345,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 					if (removedList._directedRows.Count == 0)
 					{
 						removedList = null;
-						dir0 = default(TDirectedRow);
+						dir0 = default;
 					}
 					else
 					{
@@ -356,7 +354,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 				}
 				else
 				{
-					dir0 = default(TDirectedRow);
+					dir0 = default;
 				}
 			}
 
@@ -384,7 +382,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 		[CanBeNull]
 		private LineList<TDirectedRow> GetAnyRing()
 		{
-			if (! (((IRelationalOperator) FromPoint).Equals(ToPoint)))
+			if (! ((IRelationalOperator) FromPoint).Equals(ToPoint))
 			{
 				throw new InvalidOperationException(
 					"invalid context for calling of method");

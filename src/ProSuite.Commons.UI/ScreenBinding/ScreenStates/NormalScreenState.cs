@@ -3,7 +3,7 @@ namespace ProSuite.Commons.UI.ScreenBinding.ScreenStates
 	public class NormalScreenState : IScreenState
 	{
 		private readonly ControlSet _all;
-		private readonly ControlSet _internalSet = new ControlSet();
+		private readonly ControlSet _internalSet;// = new ControlSet();
 
 		public NormalScreenState(ControlSet all)
 		{

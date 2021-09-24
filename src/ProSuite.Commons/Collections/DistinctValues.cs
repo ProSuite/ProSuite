@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -65,7 +65,7 @@ namespace ProSuite.Commons.Collections
 
 			if (_nullCount > maxCount)
 			{
-				value = default(T);
+				value = default;
 				count = _nullCount;
 
 				return true;
@@ -79,7 +79,7 @@ namespace ProSuite.Commons.Collections
 				return true;
 			}
 
-			value = default(T);
+			value = default;
 			count = 0;
 
 			return false;

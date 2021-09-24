@@ -15,10 +15,10 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		[NotNull] private readonly IWorkList _worklist;
-		[NotNull] private readonly WorklistItem _item;
+		[CanBeNull] private readonly WorklistItem _item;
 		[CanBeNull] private ProWindow _view;
 
-		public WorkListObserver(IWorkList worklist, WorklistItem item)
+		public WorkListObserver([NotNull] IWorkList worklist, [CanBeNull] WorklistItem item)
 		{
 			Assert.ArgumentNotNull(worklist, nameof(worklist));
 
@@ -47,8 +47,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		public void Show(string title)
 		{
-			_item.DisableDelete(true);
-			_item.DisableRename(true);
+			_item?.DisableDelete(true);
+			_item?.DisableRename(true);
 
 			if (_view != null)
 			{
@@ -92,8 +92,8 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				// in WPF a closed window cannot be re-openend again
 				_view.Closed -= _view_Closed;
 				_view = null;
-				_item.DisableDelete(false);
-				_item.DisableRename(false);
+				_item?.DisableDelete(false);
+				_item?.DisableRename(false);
 				// todo daro
 				// set item to null?
 			}, _msg);

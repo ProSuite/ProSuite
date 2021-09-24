@@ -647,7 +647,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		{
 			IPolyline polyWithHole =
 				GeometryFactory.CreatePolyline(
-					(IGeometry) TestUtils.ReadGeometryFromXml(
+					TestUtils.ReadGeometryFromXml(
 						TestUtils.GetGeometryTestDataPath("PolygonWithHole.xml")));
 
 			IPolyline polyWithHoleClone = GeometryFactory.Clone(polyWithHole);
@@ -684,7 +684,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			Console.WriteLine("No linear intersections:");
 
 			polyWithHole = GeometryFactory.CreatePolyline(
-				(IGeometry) TestUtils.ReadGeometryFromXml(
+				TestUtils.ReadGeometryFromXml(
 					TestUtils.GetGeometryTestDataPath("PolygonWithHole.xml")));
 
 			GeometryUtils.MoveGeometry(polyWithHoleClone, 1.8, 0.9);
@@ -716,7 +716,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			// Huge Lockergestein
 			string filePath = TestData.GetHugeLockergesteinPolygonPath();
 			IPolyline bigPoly = GeometryFactory.CreatePolyline(
-				(IGeometry) TestUtils.ReadGeometryFromXml(filePath));
+				TestUtils.ReadGeometryFromXml(filePath));
 			IPolyline bigPoly2 = GeometryFactory.Clone(bigPoly);
 
 			//GeometryUtils.MoveGeometry(bigPoly2, 2.5, 6.3);
@@ -773,7 +773,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		{
 			IPolyline polyWithHole =
 				GeometryFactory.CreatePolyline(
-					(IGeometry) TestUtils.ReadGeometryFromXml(
+					TestUtils.ReadGeometryFromXml(
 						TestUtils.GetGeometryTestDataPath("PolygonWithHole.xml")));
 
 			IPolyline polyWithHoleClone = GeometryFactory.Clone(polyWithHole);
@@ -814,7 +814,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			Console.WriteLine("No linear intersections:");
 
 			polyWithHole = GeometryFactory.CreatePolyline(
-				(IGeometry) TestUtils.ReadGeometryFromXml(
+				TestUtils.ReadGeometryFromXml(
 					TestUtils.GetGeometryTestDataPath("PolygonWithHole.xml")));
 
 			GeometryUtils.MoveGeometry(polyWithHoleClone, 1.8, 0.9);
@@ -851,7 +851,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			// Huge Lockergestein
 			string filePath = TestData.GetHugeLockergesteinPolygonPath();
 			IPolyline bigPoly = GeometryFactory.CreatePolyline(
-				(IGeometry) TestUtils.ReadGeometryFromXml(filePath));
+				TestUtils.ReadGeometryFromXml(filePath));
 			IPolyline bigPoly2 = GeometryFactory.Clone(bigPoly);
 
 			Console.WriteLine();
@@ -1515,8 +1515,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 				polygon, 0.1);
 
 			Assert.AreEqual(6.96580967114, ((IArea) result).Area, 0.000001);
-			string reason;
-			Assert.IsTrue(GeometryUtils.IsGeometrySimple(result, sr, false, out reason));
+			Assert.IsTrue(GeometryUtils.IsGeometrySimple(result, sr, false, out _));
 
 			var resultSecondRun =
 				IntersectionUtils.RemoveRingLinearSelfIntersections(result, 0.1, 0.02);
@@ -1530,14 +1529,14 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			result = IntersectionUtils.RemoveRingLinearSelfIntersections(polygon, 0.13);
 
-			Assert.IsTrue(GeometryUtils.IsGeometrySimple(result, sr, false, out reason));
+			Assert.IsTrue(GeometryUtils.IsGeometrySimple(result, sr, false, out _));
 			Assert.AreEqual(7.06456, ((IArea) result).Area, 0.0001);
 
 			// With a nice orthogonal cut-off:
 			result = IntersectionUtils.RemoveRingLinearSelfIntersections(polygon, 0.13, 0.02);
 
 			Assert.AreEqual(7.063891, ((IArea) result).Area, 0.0001);
-			Assert.IsTrue(GeometryUtils.IsGeometrySimple(result, sr, false, out reason));
+			Assert.IsTrue(GeometryUtils.IsGeometrySimple(result, sr, false, out _));
 
 			// Second time (requires smaller tolerance because of small segment length at cut-off
 			resultSecondRun =

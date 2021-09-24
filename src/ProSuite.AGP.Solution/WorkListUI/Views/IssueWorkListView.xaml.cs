@@ -1,11 +1,13 @@
+using ProSuite.Commons.Essentials.CodeAnnotations;
+
 namespace ProSuite.AGP.Solution.WorkListUI.Views
 {
 	public partial class IssueWorkListView
 	{
-		public IssueWorkListView(WorkListViewModelBase vm)
+		public IssueWorkListView([NotNull] IssueWorkListViewModel viewModel)
 		{
 			InitializeComponent();
-			DataContext = vm;
+			DataContext = viewModel;
 		}
 	}
 }

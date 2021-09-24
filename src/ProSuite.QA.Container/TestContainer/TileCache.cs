@@ -167,22 +167,19 @@ namespace ProSuite.QA.Container.TestContainer
 			// filterHelper.PointSearchOnlyWithinTile
 			if (filterHelper.ForNetwork)
 			{
-				var filterPoint = filterGeometry as IPoint;
-				if (filterPoint != null)
+				if (filterGeometry is IPoint filterPoint)
 				{
 					// search only if the point is within the tile box
 					// (or left/below of test run box)
 
-					double x;
-					double y;
-					filterPoint.QueryCoords(out x, out y);
+					filterPoint.QueryCoords(out double x, out double y);
 
 					Pnt tileMin = CurrentTileBox.Min;
 					Pnt tileMax = CurrentTileBox.Max;
 					IPnt testRunMin = _testRunBox.Min;
 
-					if ((x <= tileMin.X && x > testRunMin.X) || x > tileMax.X ||
-					    (y <= tileMin.Y && y > testRunMin.Y) || y > tileMax.Y)
+					if (x <= tileMin.X && x > testRunMin.X || x > tileMax.X ||
+					    y <= tileMin.Y && y > testRunMin.Y || y > tileMax.Y)
 					{
 						// outside of tile box, return empty list
 						return result;
@@ -211,11 +208,7 @@ namespace ProSuite.QA.Container.TestContainer
 					filterGeometry.QueryEnvelope(_envelopeTemplate);
 				}
 
-				double xmin;
-				double ymin;
-				double xmax;
-				double ymax;
-				_envelopeTemplate.QueryCoords(out xmin, out ymin, out xmax, out ymax);
+				_envelopeTemplate.QueryCoords(out double xmin, out double ymin, out _, out _);
 
 				cacheGeometryOverlapsLeftTile = xmin < CurrentTileBox?.Min.X &&
 				                                xmin > _testRunBox.Min.X;

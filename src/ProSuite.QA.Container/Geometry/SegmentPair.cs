@@ -179,7 +179,7 @@ namespace ProSuite.QA.Container.Geometry
 			var coincident = true;
 
 			Pnt segmentStart = segment.GetStart(is3D);
-			Pnt segmentEnd = segment.GetEnd(is3D);
+			//Pnt segmentEnd = segment.GetEnd(is3D);
 
 			Pnt hullStart = hull.GetStart(is3D);
 			Pnt hullEnd = hull.GetEnd(is3D);
@@ -197,7 +197,7 @@ namespace ProSuite.QA.Container.Geometry
 				distFromSegToHull = dx * dx + dy * dy;
 			}
 
-			bool isInverse = (distFromSegFromHull > distFromSegToHull);
+			bool isInverse = distFromSegFromHull > distFromSegToHull;
 			Pnt hullMatchSegFrom;
 			Pnt hullMatchSegTo;
 
@@ -219,9 +219,8 @@ namespace ProSuite.QA.Container.Geometry
 
 				if (spatialReference != null && spatialReference.HasZPrecision())
 				{
-					double falseZ;
 					double zUnits;
-					spatialReference.GetZFalseOriginAndUnits(out falseZ, out zUnits);
+					spatialReference.GetZFalseOriginAndUnits(out double _, out zUnits);
 					zPrecision = 1 / zUnits;
 				}
 

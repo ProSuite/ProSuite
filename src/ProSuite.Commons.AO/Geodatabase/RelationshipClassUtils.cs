@@ -799,10 +799,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentCondition(tables.Count > 1, "2 tables required");
 
 			Assert.ArgumentCondition(
-				(IsOriginClass(relationshipClass, tables[0]) &&
-				 IsDestinationClass(relationshipClass, tables[1])) ||
-				(IsDestinationClass(relationshipClass, tables[0]) &&
-				 IsOriginClass(relationshipClass, tables[1])),
+				IsOriginClass(relationshipClass, tables[0]) && IsDestinationClass(relationshipClass, tables[1]) ||
+				IsDestinationClass(relationshipClass, tables[0]) && IsOriginClass(relationshipClass, tables[1]),
 				"tables must be origin/destination of relationship class");
 
 			return TableJoinUtils.CreateQueryTable(
@@ -881,8 +879,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				T sourceObject = pair.Key;
 				IObject relatedObject = pair.Value;
 
-				IObject existingRelatedObject;
-				if (result.TryGetValue(sourceObject, out existingRelatedObject))
+				if (result.TryGetValue(sourceObject, out IObject _))
 				{
 					string newLine = Environment.NewLine;
 

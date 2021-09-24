@@ -38,17 +38,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
     </Reference>
-    <Reference Include="ArcGIS.Desktop.Catalog">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(ProAssemblyPath)\bin\Extensions\Catalog\ArcGIS.Desktop.Catalog.dll</HintPath>
-    </Reference>
     <Reference Include="ArcGIS.Desktop.Core">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\Extensions\Core\ArcGIS.Desktop.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="ArcGIS.Desktop.Editing">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(ProAssemblyPath)\bin\Extensions\Editing\ArcGIS.Desktop.Editing.dll</HintPath>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Extensions">
       <SpecificVersion>False</SpecificVersion>
@@ -70,11 +62,6 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>

@@ -48,7 +48,7 @@ namespace ProSuite.AGP.WorkList
 
 		protected override IWorkItem CreateWorkItemCore(Row row, ISourceClass source)
 		{
-			int id = CreateItemIDCore(row, source);
+			long id = GetNextOid(row);
 
 			return RefreshState(new SelectionItem(id, row));
 		}

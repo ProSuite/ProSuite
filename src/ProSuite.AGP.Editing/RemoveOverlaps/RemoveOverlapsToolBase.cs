@@ -133,7 +133,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			var inserts = new Dictionary<Feature, IList<Geometry>>();
 
 			HashSet<long> editableClassHandles =
-				MapUtils.GetLayers<BasicFeatureLayer>(MapView.Active, bfl => bfl.IsEditable)
+				MapUtils.GetLayers<BasicFeatureLayer>(bfl => bfl.IsEditable)
 				        .Select(l => l.GetTable().Handle.ToInt64()).ToHashSet();
 
 			foreach (OverlapResultGeometries resultPerFeature in result.ResultsByFeature)

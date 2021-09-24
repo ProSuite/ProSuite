@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using ProSuite.AGP.WorkList;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.WorkLists
@@ -10,6 +11,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 	{
 		protected override async Task OnClickCore(WorkEnvironmentBase environment)
 		{
+			Assert.ArgumentNotNull(environment, nameof(environment));
+
 			await ProSuiteUtils.OpenWorklistAsync(environment);
 		}
 

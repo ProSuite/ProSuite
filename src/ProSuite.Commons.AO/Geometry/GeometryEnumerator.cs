@@ -53,7 +53,7 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				if (_count == null)
 				{
-					_count = (new List<T>(_geometries)).Count;
+					_count = new List<T>(_geometries).Count;
 				}
 
 				return _count.Value;

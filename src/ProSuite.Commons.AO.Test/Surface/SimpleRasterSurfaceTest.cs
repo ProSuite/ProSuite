@@ -69,7 +69,7 @@ namespace ProSuite.Commons.AO.Test.Surface
 			double z10 = simpleRasterSurface.GetZ(x + resolution, y);
 			double z11 = simpleRasterSurface.GetZ(x + resolution, y + resolution);
 
-			double centerZ = simpleRasterSurface.GetZ(x + (resolution / 2), y + (resolution / 2));
+			double centerZ = simpleRasterSurface.GetZ(x + resolution / 2, y + resolution / 2);
 
 			// Simple case for bilinear interpolation:
 			double expected = (z00 + z01 + z10 + z11) / 4d;

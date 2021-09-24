@@ -64,7 +64,7 @@ namespace ProSuite.QA.Container.TestSupport
 					return string.Format(radiansFormat, radians);
 
 				case AngleUnit.Degree:
-					string degreeFormat = "{0:" + format + "}°";
+					string degreeFormat = "{0:" + format + "}Â°";
 					return string.Format(degreeFormat, MathUtils.ToDegrees(radians));
 
 				default:
@@ -118,11 +118,11 @@ namespace ProSuite.QA.Container.TestSupport
 			// TODO scientificLimit lowered; calculation of number of digits seems to be incorrect for E format
 			const double scientificLimit = 0.000001;
 			if ((Math.Abs(v0) < double.Epsilon ||
-			     (Math.Log10(Math.Abs(v0)) < numberOfDigits &&
-			      Math.Abs(v0) < scientificLimit)) &&
+			     Math.Log10(Math.Abs(v0)) < numberOfDigits &&
+			     Math.Abs(v0) < scientificLimit) &&
 			    (Math.Abs(v1) < double.Epsilon ||
-			     (Math.Log10(Math.Abs(v1)) < numberOfDigits &&
-			      Math.Abs(v1) < scientificLimit)))
+			     Math.Log10(Math.Abs(v1)) < numberOfDigits &&
+			     Math.Abs(v1) < scientificLimit))
 			{
 				formatType = "E";
 			}
@@ -214,22 +214,19 @@ namespace ProSuite.QA.Container.TestSupport
 
 		internal static double GetLengthUnitFactor(
 			[NotNull] ISpatialReference spatialReference,
-			esriUnits esriUnits,
-			double referenceScale)
+			esriUnits esriUnits, double referenceScale)
 		{
-			var pc = spatialReference as IProjectedCoordinateSystem;
-
-			if (pc == null)
+			if (spatialReference is IProjectedCoordinateSystem pc)
 			{
-				return 1;
+				double f = UnitConverter.ConvertUnits(1, esriUnits.esriMeters, esriUnits);
+
+				f *= pc.CoordinateUnit.MetersPerUnit;
+				f *= referenceScale;
+
+				return f;
 			}
 
-			double f = UnitConverter.ConvertUnits(1, esriUnits.esriMeters, esriUnits);
-
-			f = f * pc.CoordinateUnit.MetersPerUnit;
-			f = f * referenceScale;
-
-			return f;
+			return 1;
 		}
 
 		internal static string GetUnitString(esriUnits lengthUnit)
@@ -277,9 +274,8 @@ namespace ProSuite.QA.Container.TestSupport
 				return true;
 			}
 
-			if (v1 is double)
+			if (v1 is double d1)
 			{
-				var d1 = (double) v1;
 				if (double.IsNaN(d1) || double.IsInfinity(d1))
 				{
 					return true;

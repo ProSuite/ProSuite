@@ -163,7 +163,7 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 		public override int GetHashCode()
 		{
-			return (Path != null ? StringComparer.OrdinalIgnoreCase.GetHashCode(Path) : 0);
+			return Path != null ? StringComparer.OrdinalIgnoreCase.GetHashCode(Path) : 0;
 		}
 
 		#endregion
