@@ -86,7 +86,7 @@
           <button refID="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" size="large" />
         </group>
         <group id="ProSuiteTools_QA" caption="QA" keytip="G1">
-          <button refID="ProSuiteTools_QA_StartErrorsDockPane" size="large" />
+          <!--<button refID="ProSuiteTools_QA_StartErrorsDockPane" size="large" />-->
           <button refID="ProSuiteTools_QA_StartGPServer" size="middle" />
           <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
@@ -124,13 +124,13 @@
                 keytip="B1">
           <tooltip heading="Show Config">ProSuite Configuration<disabledText /></tooltip>
         </button>
-        <button id="ProSuiteTools_QA_StartErrorsDockPane" caption="QA Error Processing"
+        <!--<button id="ProSuiteTools_QA_StartErrorsDockPane" caption="QA Error Processing"
                 className="StartQAErrorsDockPane" loadOnClick="true"
                 smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerSession16.png"
                 largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerSession32.png"
                 keytip="B1">
           <tooltip heading="QA GP Tool">Show QA error worklist<disabledText /></tooltip>
-        </button>
+        </button>-->
         <button id="ProSuiteTools_QA_StartGPServer" caption="Start QA GPService" className="StartQAGPTool"
                 loadOnClick="true" condition="prosuite_qa_gpservice_enabled"
                 smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerConnection16.png"
