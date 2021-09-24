@@ -276,7 +276,7 @@ namespace ProSuite.QA.Tests.Network
 			IRow row = tableIndexRow.GetRow(InvolvedTables);
 			RelatedTables related = GetRelatedTables(row);
 
-			return related?.GetInvolvedRows(row) ?? new[] {new InvolvedRow(row)};
+			return related?.GetInvolvedRows(row) ?? new InvolvedRows {new InvolvedRow(row)};
 		}
 
 		#region nested classes

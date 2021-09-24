@@ -1,16 +1,15 @@
 using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Test;
-using ProSuite.QA.Tests.Test.TestData;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container.Test;
+using ProSuite.QA.Tests.Test.TestData;
+using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -24,7 +23,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			_lic.Checkout(EsriProduct.ArcEditor);
 
 			const string databaseName = "TestUnique";
 
@@ -85,8 +84,8 @@ namespace ProSuite.QA.Tests.Test
 					sref, 1000));
 
 			IFeatureClass featureClass = DatasetUtils.CreateSimpleFeatureClass(_pgdbWorkspace,
-			                                                                   "TestUniqueStrings",
-			                                                                   fields);
+				"TestUniqueStrings",
+				fields);
 
 			for (var i = 0; i < 10; i++)
 			{
@@ -220,11 +219,11 @@ namespace ProSuite.QA.Tests.Test
 					sref, 1000));
 
 			IFeatureClass featureClass1 = DatasetUtils.CreateSimpleFeatureClass(_pgdbWorkspace,
-			                                                                    "TestUniqueStringsMulti1",
-			                                                                    fields);
+				"TestUniqueStringsMulti1",
+				fields);
 			IFeatureClass featureClass2 = DatasetUtils.CreateSimpleFeatureClass(_pgdbWorkspace,
-			                                                                    "TestUniqueStringsMulti2",
-			                                                                    fields);
+				"TestUniqueStringsMulti2",
+				fields);
 
 			for (var i = 0; i < 10; i++)
 			{
@@ -290,8 +289,8 @@ namespace ProSuite.QA.Tests.Test
 					sref, 1000));
 
 			IFeatureClass featureClass1 = DatasetUtils.CreateSimpleFeatureClass(_fgdbWorkspace,
-			                                                                    "TestUniqueGuid",
-			                                                                    fields);
+				"TestUniqueGuid",
+				fields);
 
 			for (var i = 0; i < 10; i++)
 			{
@@ -440,7 +439,7 @@ namespace ProSuite.QA.Tests.Test
 			// TableSort verification
 			int sortCount = 0;
 			ITableSort tableSort = TableSortUtils.CreateTableSort(relTable,
-			                                                      firstUniqueFieldName);
+				firstUniqueFieldName);
 
 			tableSort.Compare = new FieldSortCallback();
 			tableSort.QueryFilter = null;
@@ -691,8 +690,8 @@ namespace ProSuite.QA.Tests.Test
 				fields.AddField(FieldUtils.CreateField(uniqueFieldName,
 				                                       esriFieldType.esriFieldTypeInteger));
 				ITable table = TestWorkspaceUtils.CreateSimpleTable(workspace, "RelateUnique1",
-				                                                    fields,
-				                                                    null);
+					fields,
+					null);
 				tableOrig = table;
 			}
 			ITable tableRel;
@@ -702,8 +701,8 @@ namespace ProSuite.QA.Tests.Test
 				fields.AddField(FieldUtils.CreateField(foreignKeyFieldName,
 				                                       esriFieldType.esriFieldTypeInteger));
 				ITable table = TestWorkspaceUtils.CreateSimpleTable(workspace, "RelateUnique2",
-				                                                    fields,
-				                                                    null);
+					fields,
+					null);
 				tableRel = table;
 			}
 			IRelationshipClass rel = TestWorkspaceUtils.CreateSimpleMNRelationship(

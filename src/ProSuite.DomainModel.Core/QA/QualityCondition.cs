@@ -57,7 +57,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// Initializes a new instance of the <see cref="QualityCondition"/> class.
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
-		protected QualityCondition() : this(assignUuids : false) { }
+		protected QualityCondition() : this(assignUuids: false) { }
 
 		public QualityCondition(bool assignUuids)
 		{
@@ -270,11 +270,17 @@ namespace ProSuite.DomainModel.Core.QA
 			return TestParameterStringUtils.FormatParameterValues(ParameterValues, maxLength);
 		}
 
-		private List<IssueFilterConfiguration> _issueFilterConfigurations = new List<IssueFilterConfiguration>();
-		public void AddIssueFilterConfiguration([NotNull] IssueFilterConfiguration issueFilterConfiguration)
+		private readonly List<IssueFilterConfiguration> _issueFilterConfigurations =
+			new List<IssueFilterConfiguration>();
+
+		public void AddIssueFilterConfiguration(
+			[NotNull] IssueFilterConfiguration issueFilterConfiguration)
 		{
 			_issueFilterConfigurations.Add(issueFilterConfiguration);
 		}
+
+		[CanBeNull]
+		public string IssueFilterExpression { get; set; }
 
 		[NotNull]
 		public IReadOnlyList<IssueFilterConfiguration> GetIssueFilterConfigurations()
@@ -285,7 +291,7 @@ namespace ProSuite.DomainModel.Core.QA
 		[NotNull]
 		internal QualityCondition Clone()
 		{
-			var clone = new QualityCondition(assignUuids : false)
+			var clone = new QualityCondition(assignUuids: false)
 			            {
 				            Uuid = Uuid,
 				            VersionUuid = VersionUuid,
@@ -301,7 +307,7 @@ namespace ProSuite.DomainModel.Core.QA
 		[NotNull]
 		public QualityCondition CreateCopy()
 		{
-			var copy = new QualityCondition(assignUuids : true);
+			var copy = new QualityCondition(assignUuids: true);
 
 			CopyProperties(copy);
 
@@ -496,7 +502,5 @@ namespace ProSuite.DomainModel.Core.QA
 		void IPersistenceAware.OnDelete() { }
 
 		#endregion
-
-		
 	}
 }

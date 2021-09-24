@@ -10,6 +10,7 @@ namespace ProSuite.QA.Container
 	{
 		[NotNull]
 		IList<ITable> InvolvedTables { get; }
+
 		/// <summary>
 		/// limits the data to execute corresponding to condition
 		/// </summary>
@@ -19,6 +20,7 @@ namespace ProSuite.QA.Container
 
 		void SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql);
 	}
+
 	public interface ITest : IInvolvesTables
 	{
 		/// <summary>
@@ -83,12 +85,11 @@ namespace ProSuite.QA.Container
 
 	public interface IFilterEditTest : IFilterTest
 	{
-		void AddIssueFilter(IIssueFilter filter);
+		void SetIssueFilters([CanBeNull] string expression, IList<IIssueFilter> issueFilters);
 
 		void SetRowFilters(int tableIndex,
 		                   [CanBeNull] IReadOnlyList<IRowFilter> rowFilters);
 	}
-
 
 	public interface IRowFilter : IInvolvesTables
 	{
@@ -99,6 +100,7 @@ namespace ProSuite.QA.Container
 	{
 		object GetTransformed();
 	}
+
 	public interface ITableTransformer<out T> : ITableTransformer
 	{
 		new T GetTransformed();
@@ -114,6 +116,8 @@ namespace ProSuite.QA.Container
 
 	public interface IIssueFilter : IInvolvesTables
 	{
-		void VerifyError(QaErrorEventArgs args);
+		string Name { get; set; }
+
+		bool Check(QaErrorEventArgs args);
 	}
 }

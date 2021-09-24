@@ -234,13 +234,13 @@ namespace ProSuite.QA.Container
 		                          [CanBeNull] IGeometry errorGeometry,
 		                          [CanBeNull] IssueCode issueCode,
 		                          [CanBeNull] string affectedComponent,
-		                          [NotNull] IEnumerable<InvolvedRow> involvedRows,
+		                          [NotNull] InvolvedRows involvedRows,
 		                          [CanBeNull] IEnumerable<object> values = null)
 		{
 			var args = new QaErrorEventArgs(new QaError(this, description, involvedRows,
 			                                            errorGeometry,
 			                                            issueCode, affectedComponent,
-			                                            values: values));
+			                                            values: values), involvedRows.TestedRows);
 			PostProcessError?.Invoke(this, args);
 			if (args.Cancel)
 			{
@@ -248,6 +248,11 @@ namespace ProSuite.QA.Container
 			}
 
 			OnQaError(args);
+			if (args.Cancel)
+			{
+				return 0;
+			}
+
 			return 1;
 		}
 
@@ -295,25 +300,18 @@ namespace ProSuite.QA.Container
 
 	public abstract class IssueFilter : InvolvesTablesBase, IIssueFilter
 	{
+		public string Name { get; set; }
+
 		protected IssueFilter([NotNull] IEnumerable<ITable> tables)
 			: base(tables) { }
 
-		public abstract bool Cancel(QaError error);
-
-		public void VerifyError(QaErrorEventArgs args)
-		{
-			if (args.Cancel == false && Cancel(args.QaError))
-			{
-				args.Cancel = true;
-			}
-		}
+		public abstract bool Check(QaErrorEventArgs error);
 	}
 
 	public abstract class InvolvesTablesBase : ProcessBase, IInvolvesTables
 	{
 		protected InvolvesTablesBase([NotNull] IEnumerable<ITable> tables)
-			: base(tables)
-		{ }
+			: base(tables) { }
 
 		internal ISearchable DataContainer { get; set; }
 
@@ -323,6 +321,7 @@ namespace ProSuite.QA.Container
 				this,
 				requireEqualVerticalCoordinateSystems: false);
 		}
+
 		[NotNull]
 		protected IEnumerable<IRow> Search([NotNull] ITable table,
 		                                   [NotNull] IQueryFilter queryFilter,
@@ -353,8 +352,8 @@ namespace ProSuite.QA.Container
 
 			return cursor;
 		}
-
 	}
+
 	/// <summary>
 	/// Base class for tests
 	/// </summary>
@@ -382,13 +381,12 @@ namespace ProSuite.QA.Container
 				{
 					Assert.NotNull(featureClass, "list entry is null");
 
-					union.Add((ITable)featureClass);
+					union.Add((ITable) featureClass);
 				}
 			}
 
 			return union;
 		}
-
 
 		protected const AngleUnit DefaultAngleUnit = AngleUnit.Radiant;
 		private IPolygon _areaOfInterest;
@@ -461,8 +459,9 @@ namespace ProSuite.QA.Container
 		{
 			_tableProps[tableIndex].UseCaseSensitiveSQL = useCaseSensitiveQaSql;
 		}
+
 		public void SetRowFilters(int tableIndex,
-		                             [CanBeNull] IReadOnlyList<IRowFilter> rowFilters)
+		                          [CanBeNull] IReadOnlyList<IRowFilter> rowFilters)
 		{
 			_tableProps[tableIndex].RowFilters = rowFilters;
 			SetRowFiltersCore(tableIndex, rowFilters);
@@ -544,8 +543,7 @@ namespace ProSuite.QA.Container
 		                                         string constraint) { }
 
 		protected virtual void SetRowFiltersCore(
-			int tableIndex, IReadOnlyList<IRowFilter> rowFilters)
-		{ }
+			int tableIndex, IReadOnlyList<IRowFilter> rowFilters) { }
 
 		public void SetAreaOfInterest(IPolygon areaOfInterest)
 		{

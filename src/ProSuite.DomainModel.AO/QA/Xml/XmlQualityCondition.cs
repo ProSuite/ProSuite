@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Xml.Serialization;
@@ -8,8 +7,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 {
 	public class XmlInstanceConfiguration
 	{
-		[NotNull]
-		private readonly List<XmlTestParameterValue> _parameterValues =
+		[NotNull] private readonly List<XmlTestParameterValue> _parameterValues =
 			new List<XmlTestParameterValue>();
 
 		[CanBeNull]
@@ -35,7 +33,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			{
 				if (ignoreEmptyValues &&
 				    paramValue is XmlDatasetTestParameterValue dsValue &&
-				    dsValue.IsEmpty()) 
+				    dsValue.IsEmpty())
 				{
 					continue;
 				}
@@ -51,11 +49,12 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[CanBeNull]
 		[XmlAttribute("versionUuid")]
 		public string VersionUuid { get; set; }
-
 	}
 
 	public class XmlRowFilterConfiguration : XmlInstanceConfiguration { }
+
 	public class XmlIssueFilterConfiguration : XmlInstanceConfiguration { }
+
 	public class XmlTransformerConfiguration : XmlInstanceConfiguration { }
 
 	public class XmlQualityCondition : XmlInstanceConfiguration, IXmlEntityMetadata
@@ -63,7 +62,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[CanBeNull] private string _description;
 		[CanBeNull] private string _notes;
 		[CanBeNull] private string _url;
-
 
 		[CanBeNull]
 		[XmlAttribute("url")]
@@ -123,8 +121,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		public bool NeverStoreRelatedGeometryForTableRowIssues { get; set; }
 
 		[CanBeNull]
-		[XmlArrayItem(ElementName = "IssueFilterName")]
-		public List<string> IssueFilterNames { get; set; }
+		public XmlFilterExpression IssueFilterExpression { get; set; }
 
 		[XmlAttribute("createdDate")]
 		public string CreatedDate { get; set; }

@@ -20,6 +20,7 @@ using ProSuite.DomainModel.AO.Schemas;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
+using ProSuite.QA.Container;
 using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA.Xml
@@ -581,11 +582,14 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 				if (xmlInstanceConfig is XmlQualityCondition xmlCondition)
 				{
+					IList<string> issueFilterNames =
+						GetFilterNames(
+							xmlCondition.IssueFilterExpression?.Expression);
 					// Handle issue filters
-					if (xmlCondition.IssueFilterNames?.Count > 0)
+					if (issueFilterNames != null)
 					{
 						var issueFilterConfigurations = new List<XmlInstanceConfiguration>();
-						foreach (string name in xmlCondition.IssueFilterNames)
+						foreach (string name in issueFilterNames)
 						{
 							if (! conditionsCache.TryGetIssueFilter(
 								    name, out XmlIssueFilterConfiguration issueFilterConfiguration))
@@ -604,6 +608,31 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					}
 				}
 			}
+		}
+
+		[CanBeNull]
+		public static IList<string> GetFilterNames([CanBeNull] string filterExpression)
+		{
+			if (string.IsNullOrEmpty(filterExpression))
+			{
+				return null;
+			}
+
+			IList<string> filterNames = null;
+			foreach (string token in ExpressionUtils.GetExpressionTokens(
+				filterExpression))
+			{
+				const StringComparison ii = StringComparison.InvariantCultureIgnoreCase;
+				if (token.Equals("AND", ii) || token.Equals("OR") || token.Equals("NOT"))
+				{
+					continue;
+				}
+
+				filterNames = filterNames ?? new List<string>();
+				filterNames.Add(token);
+			}
+
+			return filterNames;
 		}
 
 		[NotNull]

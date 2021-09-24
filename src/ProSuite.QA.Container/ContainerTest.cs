@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Data;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO;
@@ -54,7 +55,6 @@ namespace ProSuite.QA.Container
 
 		#endregion
 
-
 		protected internal double TerrainTolerance { get; set; }
 
 		public IList<RasterReference> InvolvedRasters { get; protected set; }
@@ -63,18 +63,19 @@ namespace ProSuite.QA.Container
 
 		private Dictionary<int, IReadOnlyList<IRowFilter>> _rowFilterDict;
 
-
 		private Dictionary<int, IReadOnlyList<IRowFilter>> RowFilterDict =>
 			_rowFilterDict ?? (_rowFilterDict = new Dictionary<int, IReadOnlyList<IRowFilter>>());
 
-
+		public string IssueFilterExpression { get; private set; }
 		private List<IIssueFilter> _issueFilters;
 		public IReadOnlyList<IIssueFilter> IssueFilters => _issueFilters;
 
-		void IFilterEditTest.AddIssueFilter(IIssueFilter filter)
+		void IFilterEditTest.SetIssueFilters(string expression, IList<IIssueFilter> issueFilters)
 		{
 			_issueFilters = _issueFilters ?? new List<IIssueFilter>();
-			_issueFilters.Add(filter);
+			_issueFilters.AddRange(issueFilters);
+
+			IssueFilterExpression = expression;
 		}
 
 		public IEnumerable<IGeoDataset> GetInvolvedGeoDatasets()
@@ -134,21 +135,70 @@ namespace ProSuite.QA.Container
 		[PublicAPI]
 		protected bool KeepRows { get; set; }
 
+		private DataView _issueFilterView;
+
 		protected override void OnQaError(QaErrorEventArgs args)
 		{
 			if (_issueFilters != null)
 			{
+				if (args.Cancel)
+				{
+					return;
+				}
+
+				EnsureIssueFilter();
+
+				DataRow filterRow = null;
 				foreach (IIssueFilter issueFilter in _issueFilters)
 				{
-					issueFilter.VerifyError(args);
-					if (args.Cancel)
+					bool fulFilled = issueFilter.Check(args);
+					if (fulFilled && string.IsNullOrWhiteSpace(IssueFilterExpression))
 					{
+						args.Cancel = true;
 						return;
 					}
+
+					if (_issueFilterView != null)
+					{
+						filterRow = filterRow ?? _issueFilterView.Table.NewRow();
+						filterRow[issueFilter.Name] = fulFilled;
+					}
 				}
+
+				filterRow?.Table.Rows.Add(filterRow);
+				filterRow?.AcceptChanges();
+
+				if (_issueFilterView?.Count == 1)
+				{
+					args.Cancel = true;
+					return;
+				}
+
+				_issueFilterView?.Table.Clear();
+				_issueFilterView?.Table.AcceptChanges();
 			}
 
 			base.OnQaError(args);
+		}
+
+		private void EnsureIssueFilter()
+		{
+			if (_issueFilterView != null)
+			{
+				return;
+			}
+
+			if (! string.IsNullOrWhiteSpace(IssueFilterExpression))
+			{
+				DataTable tbl = new DataTable();
+				foreach (IIssueFilter issueFilter in _issueFilters)
+				{
+					tbl.Columns.Add(issueFilter.Name, typeof(bool));
+				}
+
+				_issueFilterView = new DataView(tbl);
+				_issueFilterView.RowFilter = IssueFilterExpression;
+			}
 		}
 
 		#region ITest Members
@@ -376,12 +426,13 @@ namespace ProSuite.QA.Container
 		/// </summary>
 		/// <param name="row"></param>
 		/// <returns></returns>
-		protected IList<InvolvedRow> GetInvolvedRows([NotNull] IRow row)
+		protected InvolvedRows GetInvolvedRows([NotNull] IRow row)
 		{
 			RelatedTables related = GetRelatedTables(row);
 
-			return related?.GetInvolvedRows(row) ??
-			       InvolvedRowUtils.GetInvolvedRows(row);
+			InvolvedRows involvedRows = related?.GetInvolvedRows(row) ??
+			                            InvolvedRowUtils.GetInvolvedRows(row);
+			return involvedRows;
 		}
 
 		internal int GetTableIndex([CanBeNull] ITable table, int occurrence)

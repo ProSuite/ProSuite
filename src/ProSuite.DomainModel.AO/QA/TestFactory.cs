@@ -227,6 +227,7 @@ namespace ProSuite.DomainModel.AO.QA
 			{
 				if (! (test is IFilterEditTest filterTest)) continue;
 
+				IList<IIssueFilter> filters = new List<IIssueFilter>();
 				foreach (var issueFilterConfiguration in
 					c.GetIssueFilterConfigurations())
 				{
@@ -234,7 +235,13 @@ namespace ProSuite.DomainModel.AO.QA
 						TestFactoryUtils.CreateTestFactory(issueFilterConfiguration);
 					Assert.NotNull(factory);
 					IIssueFilter filter = factory.CreateInstance<IIssueFilter>(datasetContext);
-					filterTest.AddIssueFilter(filter);
+					filter.Name = issueFilterConfiguration.Name;
+					filters.Add(filter);
+				}
+
+				if (filters.Count > 0)
+				{
+					filterTest.SetIssueFilters(c.IssueFilterExpression, filters);
 				}
 			}
 		}

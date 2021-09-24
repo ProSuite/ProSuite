@@ -27,21 +27,22 @@ namespace ProSuite.QA.Container
 		}
 
 		[NotNull]
-		public static IList<InvolvedRow> GetInvolvedRows(params IRow[] rows)
+		public static InvolvedRows GetInvolvedRows(params IRow[] rows)
 		{
 			return GetInvolvedRows((IEnumerable<IRow>) rows);
 		}
 
 		[NotNull]
-		public static IList<InvolvedRow> GetInvolvedRows<T>([NotNull] IEnumerable<T> rows)
+		public static InvolvedRows GetInvolvedRows<T>([NotNull] IEnumerable<T> rows)
 			where T : IRow
 		{
 			Assert.ArgumentNotNull(rows, nameof(rows));
 
-			List<InvolvedRow> involvedRows = new List<InvolvedRow>();
+			InvolvedRows involvedRows = new InvolvedRows();
 			foreach (T row in rows)
 			{
 				involvedRows.AddRange(GetInvolvedRowsCore(row));
+				involvedRows.TestedRows.Add(row);
 			}
 
 			return involvedRows;

@@ -330,7 +330,15 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			[NotNull] XmlQualityCondition xmlCondition,
 			[NotNull] DatasetSettings datasetSettings)
 		{
-			IList<string> issueFilterNames = xmlCondition.IssueFilterNames;
+			string issueFilterExpression = xmlCondition.IssueFilterExpression?.Expression;
+			if (string.IsNullOrWhiteSpace(issueFilterExpression))
+			{
+				return;
+			}
+
+			IList<string> issueFilterNames =
+				XmlDataQualityUtils.GetFilterNames(issueFilterExpression);
+
 			if (issueFilterNames == null)
 			{
 				return;
@@ -349,6 +357,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					GetIssueFilterConfiguration(xmlIssueFilterConfiguration, datasetSettings);
 				qualityCondition.AddIssueFilterConfiguration(issueFilterConfiguration);
 			}
+
+			qualityCondition.IssueFilterExpression = issueFilterExpression;
 		}
 
 		[NotNull]
@@ -512,20 +522,25 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		{
 			yield return config;
 
-			if (config is XmlQualityCondition xmlCondition &&
-			    xmlCondition.IssueFilterNames != null)
+			if (config is XmlQualityCondition xmlCondition)
 			{
-				foreach (string filterName in xmlCondition.IssueFilterNames)
+				IList<string> filterNames =
+					XmlDataQualityUtils.GetFilterNames(
+						xmlCondition.IssueFilterExpression?.Expression);
+				if (filterNames != null)
 				{
-					if (! IssueFilters.TryGetValue(filterName,
-					                               out XmlIssueFilterConfiguration filter))
+					foreach (string filterName in filterNames)
 					{
-						Assert.Fail($"missing issue filter {filterName}");
-					}
+						if (! IssueFilters.TryGetValue(filterName,
+						                               out XmlIssueFilterConfiguration filter))
+						{
+							Assert.Fail($"missing issue filter {filterName}");
+						}
 
-					foreach (var referenced in EnumReferencedConfigurationInstances(filter))
-					{
-						yield return referenced;
+						foreach (var referenced in EnumReferencedConfigurationInstances(filter))
+						{
+							yield return referenced;
+						}
 					}
 				}
 			}

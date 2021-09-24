@@ -234,6 +234,7 @@
     <Compile Include="QA\Xml\XmlDataQualityUtils.cs" />
     <Compile Include="QA\Xml\XmlDatasetTestParameterValue.cs" />
     <Compile Include="QA\Xml\XmlDeserializationException.cs" />
+    <Compile Include="QA\Xml\XmlFilterExpression.cs" />
     <Compile Include="QA\Xml\XmlQualityCondition.cs" />
     <Compile Include="QA\Xml\XmlQualityConditionsCache.cs" />
     <Compile Include="QA\Xml\XmlQualitySpecification.cs" />
