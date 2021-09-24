@@ -154,6 +154,7 @@
     <Compile Include="IssueCodes\MustTouchIssueCodes.cs" />
     <Compile Include="IssueCodes\OverlapsIssueCodes.cs" />
     <Compile Include="IssueCodes\TouchesIssueCodes.cs" />
+    <Compile Include="IssueFilters\IfInvolvedRows.cs" />
     <Compile Include="IValueTransformation.cs" />
     <Compile Include="KeySets\GuidKeySet.cs" />
     <Compile Include="KeySets\IKeySet.cs" />

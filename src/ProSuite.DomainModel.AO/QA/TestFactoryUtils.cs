@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -7,6 +8,7 @@ using ProSuite.Commons.Reflection;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA
 {
@@ -46,9 +48,8 @@ namespace ProSuite.DomainModel.AO.QA
 
 			foreach (TestParameterValue parameterValue in parameterValues)
 			{
-				TestParameter testParameter;
 				if (parametersByName.TryGetValue(parameterValue.TestParameterName,
-				                                 out testParameter))
+				                                 out TestParameter testParameter))
 				{
 					parameterValue.DataType = testParameter.Type;
 				}

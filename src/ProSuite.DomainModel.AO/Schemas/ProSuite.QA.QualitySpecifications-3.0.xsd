@@ -10,6 +10,7 @@
       <xs:element minOccurs="0" maxOccurs="1" name="QualityConditions" type="tns:ArrayOfXmlQualityCondition" />
       <xs:element minOccurs="0" maxOccurs="1" name="Categories" type="tns:ArrayOfXmlDataQualityCategory" />
       <xs:element minOccurs="0" maxOccurs="1" name="Transformers" type="tns:ArrayOfXmlTransformer" />
+      <xs:element minOccurs="0" maxOccurs="1" name="IssueFilters" type="tns:ArrayOfXmlIssueFilter" />
       <xs:element minOccurs="0" maxOccurs="1" name="TestDescriptors" type="tns:ArrayOfXmlTestDescriptor" />
       <xs:element minOccurs="0" maxOccurs="1" name="Workspaces" type="tns:ArrayOfXmlWorkspace" />
     </xs:sequence>
@@ -66,6 +67,7 @@
       <xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string" />
       <xs:element minOccurs="0" maxOccurs="1" name="Notes" type="xs:string" />
       <xs:element minOccurs="0" maxOccurs="1" name="Parameters" type="tns:ArrayOfChoice1" />
+      <xs:element minOccurs="0" maxOccurs="1" name="IssueFilterNames" type="tns:ArrayOfIssueFilter" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" />
     <xs:attribute name="testDescriptor" type="xs:string" />
@@ -86,6 +88,11 @@
       <xs:element minOccurs="1" maxOccurs="1" name="Scalar" nillable="true" type="tns:XmlScalarTestParameterValue" />
       <xs:element minOccurs="1" maxOccurs="1" name="Dataset" nillable="true" type="tns:XmlDatasetTestParameterValue" />
     </xs:choice>
+  </xs:complexType>
+  <xs:complexType name="ArrayOfIssueFilter">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="IssueFilterName" type="xs:string"/>
+    </xs:sequence>
   </xs:complexType>
   <xs:complexType name="XmlScalarTestParameterValue">
     <xs:complexContent mixed="false">
@@ -138,6 +145,28 @@
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="XmlTransformer">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string" />
+      <xs:element minOccurs="0" maxOccurs="1" name="Notes" type="xs:string" />
+      <xs:element minOccurs="0" maxOccurs="1" name="Parameters" type="tns:ArrayOfChoice1" />
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" />
+    <xs:attribute name="testDescriptor" type="xs:string" />
+    <xs:attribute name="url" type="xs:string" />
+    <xs:attribute name="uuid" type="xs:string" />
+    <xs:attribute name="versionUuid" type="xs:string" />
+    <xs:attribute name="createdDate" type="xs:string" />
+    <xs:attribute name="createdByUser" type="xs:string" />
+    <xs:attribute name="lastChangedDate" type="xs:string" />
+    <xs:attribute name="lastChangedByUser" type="xs:string" />
+  </xs:complexType>
+  <xs:complexType name="ArrayOfXmlIssueFilter">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="IssueFilter" nillable="true"
+                  type="tns:XmlIssueFilter" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="XmlIssueFilter">
     <xs:sequence>
       <xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string" />
       <xs:element minOccurs="0" maxOccurs="1" name="Notes" type="xs:string" />
