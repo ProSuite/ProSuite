@@ -151,11 +151,12 @@ namespace ProSuite.AGP.WorkList
 			{
 				var databaseSourceClass = (DatabaseSourceClass) source;
 
-				string description = GetOperationDescription(item.Status);
+				string description = GetOperationDescription(item);
 
 				_msg.Info($"{description}, {item.Proxy}");
 
 				var operation = new EditOperation {Name = description};
+				// todo daro CancelMessage, AbortMessage
 
 				string fieldName = databaseSourceClass.StatusFieldName;
 				object value = databaseSourceClass.GetValue(item.Status);
@@ -175,21 +176,21 @@ namespace ProSuite.AGP.WorkList
 			}
 		}
 
-		private static string GetOperationDescription(WorkItemStatus status)
+		private static string GetOperationDescription(IWorkItem item)
 		{
 			string operationDescription;
-			switch (status)
+			switch (item.Status)
 			{
 				case WorkItemStatus.Todo:
-					operationDescription = "Set status of work item to 'Not Corrected'";
+					operationDescription = $"Set status of work item OID={item.OID} to 'Not Corrected'";
 					break;
 
 				case WorkItemStatus.Done:
-					operationDescription = "Set status of work item to 'Corrected'";
+					operationDescription = $"Set status of work item OID={item.OID} to 'Corrected'";
 					break;
 
 				default:
-					throw new ArgumentException($"Invalid status for operation: {status}");
+					throw new ArgumentException($"Invalid status for operation: {item}");
 			}
 
 			return operationDescription;
