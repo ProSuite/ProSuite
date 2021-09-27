@@ -110,6 +110,11 @@
     <Compile Include="QA\DatasetReports\Xml\XmlRange.cs" />
     <Compile Include="QA\DatasetReports\Xml\XmlSpatialReferenceDescriptor.cs" />
     <Compile Include="QA\DatasetReports\Xml\XmlSpatialReferenceDescriptorUtils.cs" />
+    <Compile Include="QA\Standalone\RuleBased\Category.cs" />
+    <Compile Include="QA\Standalone\RuleBased\HtmlReportModel.cs" />
+    <Compile Include="QA\Standalone\RuleBased\HtmlReportWriter.cs" />
+    <Compile Include="QA\Standalone\RuleBased\IObjectDatasetLookup.cs" />
+    <Compile Include="QA\Standalone\RuleBased\VerifiedModelUtils.cs" />
     <Compile Include="QA\VerificationDataDictionary.cs" />
     <Compile Include="QA\Standalone\BufferedIssueWriter.cs" />
     <Compile Include="QA\Standalone\IIssueWriter.cs" />
@@ -395,6 +400,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Include="QA\Standalone\RuleBased\HtmlReportModel.cd" />
     <None Include="QA\Standalone\XmlBased\XmlBasedVerificationReportModel.cd" />
     <None Include="Schemas\ProSuite.QA.XmlBasedVerificationOptions-1.0.xsd">
       <SubType>Designer</SubType>
@@ -402,8 +408,6 @@
     </None>
     <None Include="Schemas\update_XmlBasedVerificationOptions.bat" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="QA\Standalone\RuleBased\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
