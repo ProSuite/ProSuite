@@ -238,11 +238,11 @@ namespace ProSuite.Commons.AO.Test
 			return newFilePath;
 		}
 
-		private static string GetTempDirPath([CanBeNull] string tempDirName)
+		public static string GetTempDirPath([CanBeNull] string tempDirName)
 		{
 			if (tempDirName == null)
 			{
-				tempDirName = Path.GetDirectoryName(Path.GetRandomFileName());
+				tempDirName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
 
 				Assert.NotNull(tempDirName);
 			}

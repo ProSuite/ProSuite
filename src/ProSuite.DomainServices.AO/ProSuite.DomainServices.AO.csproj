@@ -114,6 +114,7 @@
     <Compile Include="QA\Standalone\RuleBased\HtmlReportModel.cs" />
     <Compile Include="QA\Standalone\RuleBased\HtmlReportWriter.cs" />
     <Compile Include="QA\Standalone\RuleBased\IObjectDatasetLookup.cs" />
+    <Compile Include="QA\Standalone\XmlBased\SpecificationElement.cs" />
     <Compile Include="QA\Standalone\RuleBased\VerifiedModelUtils.cs" />
     <Compile Include="QA\VerificationDataDictionary.cs" />
     <Compile Include="QA\Standalone\BufferedIssueWriter.cs" />

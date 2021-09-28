@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -20,6 +21,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
 using ProSuite.Commons.Text;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.AO.QA.Xml;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.DomainServices.AO.QA;
@@ -103,6 +105,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 		/// </summary>
 		[CanBeNull]
 		public string QualitySpecificationTemplatePath { get; set; }
+
+		public IList<XmlTestDescriptor> SupportedTestDescriptors { get; set; }
 
 		public override async Task VerifyQuality(
 			VerificationRequest request,
@@ -473,43 +477,37 @@ namespace ProSuite.Microservices.Server.AO.QA
 				IGeometry perimeter =
 					ProtobufGeometryUtils.FromShapeMsg(parameters.Perimeter);
 
+				var aoi = perimeter == null ? null : new AreaOfInterest(perimeter);
+
 				XmlBasedVerificationService qaService = new XmlBasedVerificationService(
 					HtmlReportTemplatePath, QualitySpecificationTemplatePath);
 
-				XmlQualitySpecificationMsg xmlSpecification = request.Specification;
+				QualitySpecification qualitySpecification = null;
 
-				var dataSources = new List<DataSource>();
-				foreach (string replacement in xmlSpecification.DataSourceReplacements)
+				switch (request.SpecificationCase)
 				{
-					List<string> replacementStrings = StringUtils.SplitAndTrim(replacement, '|');
-					Assert.AreEqual(2, replacementStrings.Count,
-					                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
+					case StandaloneVerificationRequest.SpecificationOneofCase.XmlSpecification:
+					{
+						XmlQualitySpecificationMsg xmlSpecification = request.XmlSpecification;
 
-					var dataSource = new DataSource(replacementStrings[0], replacementStrings[0])
-					                 {
-						                 WorkspaceAsText = replacementStrings[1]
-					                 };
+						qualitySpecification =
+							SetupQualitySpecification(xmlSpecification, qaService);
+						break;
+					}
+					case StandaloneVerificationRequest.SpecificationOneofCase.XmlConditions:
+					{
+						XmlConditionListSpecificationMsg xmlConditionsSpec = request.XmlConditions;
 
-					dataSources.Add(dataSource);
+						qualitySpecification =
+							SetupQualitySpecification(xmlConditionsSpec, qaService);
+						break;
+					}
+					default: throw new ArgumentOutOfRangeException();
 				}
 
-				var aoi = perimeter == null ? null : new AreaOfInterest(perimeter);
-
-				try
-				{
-					qaService.ExecuteVerification(
-						xmlSpecification.Xml,
-						xmlSpecification.SelectedSpecificationName,
-						dataSources, aoi, null, parameters.TileSize,
-						request.OutputDirectory, IssueRepositoryType.FileGdb,
-						true, trackCancel);
-				}
-				catch (ArgumentException argumentException)
-				{
-					_msg.Warn("Argument exception", argumentException);
-
-					return ServiceCallStatus.Failed;
-				}
+				qaService.ExecuteVerification(
+					qualitySpecification, aoi, null, parameters.TileSize,
+					request.OutputDirectory, IssueRepositoryType.FileGdb, trackCancel);
 			}
 			catch (Exception e)
 			{
@@ -525,9 +523,84 @@ namespace ProSuite.Microservices.Server.AO.QA
 				return ServiceCallStatus.Failed;
 			}
 
+			// TODO: Final result message (error, warning count, row count with stop conditions, fulfilled)
+
 			return trackCancel.Continue()
 				       ? ServiceCallStatus.Finished
 				       : ServiceCallStatus.Cancelled;
+		}
+
+		private static QualitySpecification SetupQualitySpecification(
+			XmlQualitySpecificationMsg xmlSpecification, XmlBasedVerificationService qaService)
+		{
+			QualitySpecification qualitySpecification;
+			var dataSources = new List<DataSource>();
+			foreach (string replacement in xmlSpecification.DataSourceReplacements)
+			{
+				List<string> replacementStrings =
+					StringUtils.SplitAndTrim(replacement, '|');
+				Assert.AreEqual(2, replacementStrings.Count,
+				                "Data source workspace is not of the format \"workspace_id | catalog_path\"");
+
+				var dataSource =
+					new DataSource(replacementStrings[0], replacementStrings[0])
+					{
+						WorkspaceAsText = replacementStrings[1]
+					};
+
+				dataSources.Add(dataSource);
+			}
+
+			qualitySpecification =
+				qaService.SetupQualitySpecification(
+					xmlSpecification.Xml, xmlSpecification.SelectedSpecificationName,
+					dataSources);
+			return qualitySpecification;
+		}
+
+		private QualitySpecification SetupQualitySpecification(
+			XmlConditionListSpecificationMsg xmlConditionsSpecificationMsg,
+			XmlBasedVerificationService qaService)
+		{
+			if (SupportedTestDescriptors == null || SupportedTestDescriptors.Count == 0)
+			{
+				throw new InvalidOperationException(
+					"No xml test descriptors have been set up.");
+			}
+
+			var dataSources = xmlConditionsSpecificationMsg.DataSources.Select(
+				dsMsg => new DataSource(dsMsg.ModelName, dsMsg.Id, dsMsg.ModelName,
+				                        dsMsg.SchemaOwner, dsMsg.CatalogPath)).ToList();
+
+			var specificationElements = new List<SpecificationElement>();
+
+			foreach (XmlQualitySpecificationElementMsg specificationElementMsg in
+				xmlConditionsSpecificationMsg.Elements)
+			{
+				string conditionXml = specificationElementMsg.XmlCondition;
+
+				using (TextReader xmlReader = new StringReader(conditionXml))
+				{
+					XmlQualityCondition condition =
+						XmlDataQualityUtils.DeserializeCondition(xmlReader);
+
+					var specificationElement =
+						new SpecificationElement(condition,
+						                         specificationElementMsg.CategoryName)
+						{
+							AllowErrors = specificationElementMsg.AllowErrors,
+							StopOnError = specificationElementMsg.StopOnError
+						};
+
+					specificationElements.Add(specificationElement);
+				}
+			}
+
+			QualitySpecification qualitySpecification = qaService.SetupQualitySpecification(
+				xmlConditionsSpecificationMsg.Name, SupportedTestDescriptors, specificationElements,
+				dataSources, false);
+
+			return qualitySpecification;
 		}
 
 		private static IEnumerable<GdbObjRefMsg> GetDeletableAllowedErrorRefs(

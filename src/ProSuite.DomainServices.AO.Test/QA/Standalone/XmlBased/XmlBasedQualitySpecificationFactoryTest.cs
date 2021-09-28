@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Threading;
@@ -6,6 +7,7 @@ using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.DataModel;
@@ -234,6 +236,36 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			Assert.AreEqual(xmlQualitySpecification.Name, qualitySpecification.Name);
 		}
 
+		[Test]
+		public void CanCreateConditionListBasedQualitySpecification()
+		{
+			const string specificationName = "TestSpec";
+			const string condition1Name = "Str_Simple";
+			string gdbPath = TestData.GetGdb1Path();
+			const string featureClassName = "lines";
+
+			QualitySpecification qualitySpecification =
+				CreateConditionBasedQualitySpecification(condition1Name, featureClassName,
+				                                         specificationName, gdbPath);
+
+			Assert.AreEqual(specificationName, qualitySpecification.Name);
+			Assert.AreEqual(2, qualitySpecification.Elements.Count);
+
+			QualitySpecificationElement element1 = qualitySpecification.Elements[0];
+			Assert.IsTrue(element1.Enabled);
+			Assert.IsTrue(element1.QualityCondition.StopOnError);
+			Assert.IsFalse(element1.QualityCondition.AllowErrors);
+			Assert.AreEqual(condition1Name, element1.QualityCondition.Name);
+			Assert.NotNull(element1.QualityCondition.Category);
+			Assert.AreEqual("Geometry", element1.QualityCondition.Category?.Name);
+
+			var fclassValue =
+				element1.QualityCondition.ParameterValues[0] as DatasetTestParameterValue;
+
+			Assert.NotNull(fclassValue?.DatasetValue);
+			Assert.AreEqual(featureClassName, fclassValue.DatasetValue.Name);
+		}
+
 		private void CanCreateQualitySpecificationCore()
 		{
 			var locator = TestDataLocator.Create("ProSuite", @"QA\TestData");
@@ -340,6 +372,108 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			[NotNull] IFeatureWorkspace workspace)
 		{
 			return new MasterDatabaseWorkspaceContext(workspace, model);
+		}
+
+		public static QualitySpecification CreateConditionBasedQualitySpecification(
+			string condition1Name, string featureClassName,
+			string specificationName, string gdbPath)
+		{
+			var modelFactory =
+				new VerifiedModelFactory(CreateWorkspaceContext,
+				                         new SimpleVerifiedDatasetHarvester());
+
+			var factory = new XmlBasedQualitySpecificationFactory(
+				modelFactory, new SimpleDatasetOpener(new MasterDatabaseDatasetContext()));
+
+			XmlTestDescriptor xmlTest1 =
+				new XmlTestDescriptor()
+				{
+					Name = "SimpleGeometry(0)",
+					TestClass =
+						new XmlClassDescriptor()
+						{
+							AssemblyName = "ProSuite.QA.Tests",
+							TypeName = "ProSuite.QA.Tests.QaSimpleGeometry",
+							ConstructorId = 0
+						}
+				};
+
+			XmlTestDescriptor xmlTest2 =
+				new XmlTestDescriptor()
+				{
+					Name = "GdbConstraintFactory",
+					TestFactoryDescriptor =
+						new XmlClassDescriptor()
+						{
+							AssemblyName = "ProSuite.QA.TestFactories",
+							TypeName = "ProSuite.QA.TestFactories.QaGdbConstraintFactory"
+						},
+				};
+
+			var xmlDescriptors = new List<XmlTestDescriptor> {xmlTest1, xmlTest2};
+
+			const string workspaceId = "TestID";
+
+			XmlQualityCondition xmlCondition1 =
+				new XmlQualityCondition
+				{
+					TestDescriptorName = "SimpleGeometry(0)",
+					Name = condition1Name,
+					StopOnError = Override.True,
+					ParameterValues =
+					{
+						new XmlDatasetTestParameterValue()
+						{
+							TestParameterName = "featureClass",
+							Value = featureClassName,
+							WorkspaceId = workspaceId
+						}
+					}
+				};
+
+			XmlQualityCondition xmlCondition2 =
+				new XmlQualityCondition
+				{
+					TestDescriptorName = "GdbConstraintFactory",
+					Name = "Str_GdbConstraints",
+					AllowErrors = Override.True,
+					ParameterValues =
+					{
+						new XmlDatasetTestParameterValue
+						{
+							TestParameterName = "table",
+							Value = featureClassName,
+							WorkspaceId = workspaceId,
+							WhereClause = "[OBJEKTART] IS NOT NULL"
+						},
+						new XmlScalarTestParameterValue()
+						{
+							TestParameterName = "AllowNullValuesForCodedValueDomains",
+							Value = "True",
+						}
+					}
+				};
+
+			var specificationElements = new List<SpecificationElement>
+			                            {
+				                            new SpecificationElement(xmlCondition1, "Geometry"),
+				                            new SpecificationElement(xmlCondition2, "Attributes")
+				                            {
+					                            // Override value from condition
+					                            AllowErrors = false
+				                            }
+			                            };
+
+			QualitySpecification qualitySpecification =
+				factory.CreateQualitySpecification(specificationName, xmlDescriptors,
+				                                   specificationElements,
+				                                   new[]
+				                                   {
+					                                   new DataSource(
+						                                   "Test DataSource", workspaceId, gdbPath)
+				                                   },
+				                                   false);
+			return qualitySpecification;
 		}
 	}
 }
