@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
@@ -83,9 +83,7 @@ namespace ProSuite.Commons.Geom
 						continue;
 					}
 
-					MultiLinestring updatedUnCut;
-					RingGroup cookie;
-					TryCutCookie(unusedCutRing, unCutParts, out updatedUnCut, out cookie, true);
+					TryCutCookie(unusedCutRing, unCutParts, out _, out _, true);
 				}
 			}
 
@@ -220,27 +218,27 @@ namespace ProSuite.Commons.Geom
 					continue;
 				}
 
-				RingGroup updatedCut;
-				if (TryCutCookie(unusedCutRing, leftPolys, out updatedCut, out cookie))
+				if (TryCutCookie(unusedCutRing, leftPolys, out RingGroup _, out cookie))
 				{
 					clipPolys.Add(cookie);
 					continue;
 				}
 
-				if (TryCutCookie(unusedCutRing, rightPolys, out updatedCut, out cookie))
+				if (TryCutCookie(unusedCutRing, rightPolys, out RingGroup _, out cookie))
 				{
 					clipPolys.Add(cookie);
 					continue;
 				}
 
-				if (TryCutCookie(unusedCutRing, bothSidePolys, out updatedCut, out cookie))
+				if (TryCutCookie(unusedCutRing, bothSidePolys, out RingGroup _, out cookie))
 				{
 					clipPolys.Add(cookie);
 				}
 			}
 
-			return (rightPolys.Count > 0 && leftPolys.Count > 0) ||
-			       undefinedSidePolys.Count > 1 || clipPolys.Count > 0;
+			return rightPolys.Count > 0 && leftPolys.Count > 0 ||
+			       undefinedSidePolys.Count > 1 ||
+			       clipPolys.Count > 0;
 		}
 
 		#region Single ring operations - remove dependency on correct subcurve navigator!

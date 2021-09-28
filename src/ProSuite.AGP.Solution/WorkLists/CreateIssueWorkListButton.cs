@@ -1,30 +1,24 @@
-using ArcGIS.Desktop.Framework.Contracts;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ProSuite.Commons.AGP.WPF;
+using System.Threading.Tasks;
+using ProSuite.AGP.WorkList;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Solution.WorkLists
 {
+	// todo daro change name to OpenIssueWorklistButton?
 	[UsedImplicitly]
-	internal class CreateIssueWorkListButton : Button
+	internal class CreateIssueWorkListButton : OpenWorklistButtonBase
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
-		protected override async void OnClick()
+		protected override async Task OnClickCore(WorkEnvironmentBase environment)
 		{
-			await ViewUtils.TryAsync(async () =>
-			{
-				// has to be outside QueuedTask because of OpenItemDialog
-				var environment = new DatabaseWorkEnvironment();
+			Assert.ArgumentNotNull(environment, nameof(environment));
 
-				string name = WorkListsModule.Current.EnsureUniqueName();
+			await ProSuiteUtils.OpenWorklistAsync(environment);
+		}
 
-				await QueuedTask.Run(
-					() => WorkListsModule.Current.CreateWorkListAsync(environment, name));
-
-				WorkListsModule.Current.ShowView(name);
-			}, _msg);
+		protected override WorkEnvironmentBase CreateEnvironment(string path = null)
+		{
+			return new IssueWorklistEnvironment();
 		}
 	}
 }

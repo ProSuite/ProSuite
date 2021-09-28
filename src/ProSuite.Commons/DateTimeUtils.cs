@@ -129,7 +129,7 @@ namespace ProSuite.Commons
 
 			double averageWaitTimeSec = maxTimeSec - minTimeSec;
 
-			double waitSec = minTimeSec + (averageWaitTimeSec * random.NextDouble());
+			double waitSec = minTimeSec + averageWaitTimeSec * random.NextDouble();
 
 			return TimeSpan.FromSeconds(waitSec);
 		}

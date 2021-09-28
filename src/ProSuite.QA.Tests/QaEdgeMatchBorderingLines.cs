@@ -1034,7 +1034,7 @@ namespace ProSuite.QA.Tests
 		private static double GetDistance([NotNull] IPolyline polyline,
 		                                  [NotNull] IPolyline neighbor)
 		{
-			var proximity = ((IProximityOperator) neighbor);
+			var proximity = (IProximityOperator) neighbor;
 
 			return proximity.ReturnDistance(polyline);
 		}
@@ -1313,9 +1313,8 @@ namespace ProSuite.QA.Tests
 			protected override bool VerifyHandled(BorderConnection borderConnection,
 			                                      WKSEnvelope tileBox, WKSEnvelope allBox)
 			{
-				return (EdgeMatchUtils.VerifyHandled(borderConnection.Feature, tileBox, allBox) ||
-				        EdgeMatchUtils.VerifyHandled(borderConnection.BorderFeature, tileBox,
-				                                     allBox));
+				return EdgeMatchUtils.VerifyHandled(borderConnection.Feature, tileBox, allBox) ||
+				       EdgeMatchUtils.VerifyHandled(borderConnection.BorderFeature, tileBox, allBox);
 			}
 		}
 

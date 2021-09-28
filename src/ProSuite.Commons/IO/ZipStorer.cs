@@ -277,7 +277,7 @@ namespace ProSuite.Commons.IO
 
 				result.Add(entry);
 
-				byteIndex += (46 + fileNameSize + extraFieldSize + commentSize);
+				byteIndex += 46 + fileNameSize + extraFieldSize + commentSize;
 			}
 
 			return result;

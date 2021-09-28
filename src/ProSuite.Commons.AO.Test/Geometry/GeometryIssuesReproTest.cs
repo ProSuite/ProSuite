@@ -1466,7 +1466,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			Assert.IsTrue(hasDuplicateVertex);
 
-			var topologicalOperator3 = ((ITopologicalOperator3) poly);
+			var topologicalOperator3 = (ITopologicalOperator3) poly;
 
 			topologicalOperator3.IsKnownSimple_2 = false;
 

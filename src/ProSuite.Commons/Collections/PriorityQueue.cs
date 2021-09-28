@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -117,7 +117,7 @@ namespace ProSuite.Commons.Collections
 			if (_count < _capacity)
 			{
 				Add(item);
-				return default(T);
+				return default;
 			}
 
 			if (_capacity < 1 || Priority(item, _heap[1]))
@@ -147,7 +147,7 @@ namespace ProSuite.Commons.Collections
 
 			var top = _heap[1]; // save the top item
 			_heap[1] = _heap[_count]; // move last to first
-			_heap[_count] = default(T); // free reference to item
+			_heap[_count] = default; // free reference to item
 			_count--; // one item less in queue
 			_version += 1; // collection modified
 
@@ -307,7 +307,7 @@ namespace ProSuite.Commons.Collections
 			// Replace removed item with last item and fix the heap:
 
 			_heap[index] = _heap[_count];
-			_heap[_count] = default(T); // release reference
+			_heap[_count] = default; // release reference
 
 			_count -= 1; // one less entry
 			_version += 1; // collection modified
@@ -359,7 +359,7 @@ namespace ProSuite.Commons.Collections
 			{
 				_version = _pq._version;
 				_index = 1; // rewind
-				_current = default(T);
+				_current = default;
 			}
 
 			public bool MoveNext()
@@ -376,7 +376,7 @@ namespace ProSuite.Commons.Collections
 					return true;
 				}
 
-				_current = default(T);
+				_current = default;
 				return false;
 			}
 
@@ -395,7 +395,7 @@ namespace ProSuite.Commons.Collections
 				// Position at end, so MoveNext would return false:
 
 				_index = _pq._count + 1;
-				_current = default(T);
+				_current = default;
 			}
 
 			#endregion

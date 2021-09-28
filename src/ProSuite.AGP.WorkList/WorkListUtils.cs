@@ -180,9 +180,9 @@ namespace ProSuite.AGP.WorkList
 										"server"], // is always null in CIMFeatureDatasetDataConnection
 								Instance = builder["instance"],
 								Version = builder["version"],
-								Branch = builder["branch"] // ?
-								//Password = builder["encrypted_password"],
-								//User = builder["user"]
+								Branch = builder["branch"], // ?
+								Password = builder["encrypted_password"],
+								User = builder["user"]
 							};
 
 						return new Geodatabase(connectionProperties);
@@ -301,6 +301,8 @@ namespace ProSuite.AGP.WorkList
 
 			XmlWorkListDefinition definition = helper.ReadFromFile(worklistDefinitionFile);
 			List<XmlWorkListWorkspace> workspaces = definition.Workspaces;
+
+			Assert.True(workspaces.Count > 0, $"no workspaces in {worklistDefinitionFile}");
 
 			string result = workspaces[0].ConnectionString;
 

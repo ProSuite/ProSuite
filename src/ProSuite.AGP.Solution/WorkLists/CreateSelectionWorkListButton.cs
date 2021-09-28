@@ -1,28 +1,24 @@
-using ArcGIS.Desktop.Framework.Contracts;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ProSuite.Commons.AGP.WPF;
+using System.Threading.Tasks;
+using ProSuite.AGP.WorkList;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Solution.WorkLists
 {
+	// todo daro change name to OpenSelectionWorklistButton?
 	[UsedImplicitly]
-	internal class CreateSelectionWorkListButton : Button
+	internal class CreateSelectionWorkListButton : OpenWorklistButtonBase
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
-		protected override async void OnClick()
+		protected override async Task OnClickCore(WorkEnvironmentBase environment)
 		{
-			await ViewUtils.TryAsync(async () =>
-			{
-				string name = WorkListsModule.Current.EnsureUniqueName();
+			Assert.ArgumentNotNull(environment, nameof(environment));
 
-				await QueuedTask.Run(
-					() => WorkListsModule.Current.CreateWorkListAsync(
-						new InMemoryWorkEnvironment(), name));
+			await ProSuiteUtils.OpenWorklistAsync(environment);
+		}
 
-				WorkListsModule.Current.ShowView(name);
-			}, _msg);
+		protected override WorkEnvironmentBase CreateEnvironment(string path = null)
+		{
+			return new InMemoryWorkEnvironment();
 		}
 	}
 }

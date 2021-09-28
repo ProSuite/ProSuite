@@ -743,8 +743,7 @@ namespace ProSuite.Commons.AO.Geometry
 				// check if within the tolerance - performance could be improved if comparer could directly handle
 				// the tolerance.
 				bool useTolerance = Math.Abs(_xyTolerance) > double.Epsilon ||
-				                    (! double.IsNaN(_zTolerance) &&
-				                     Math.Abs(_zTolerance) > double.Epsilon);
+				                    ! double.IsNaN(_zTolerance) && Math.Abs(_zTolerance) > double.Epsilon;
 
 				if (useTolerance &&
 				    GeometryUtils.IsSamePoint(currentCoord, coordinateToMatch,

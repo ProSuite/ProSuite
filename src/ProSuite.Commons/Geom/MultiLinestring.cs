@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -134,7 +134,7 @@ namespace ProSuite.Commons.Geom
 
 		public override int GetHashCode()
 		{
-			int hashCode = (Linestrings != null ? Linestrings.GetHashCode() : 0);
+			int hashCode = Linestrings != null ? Linestrings.GetHashCode() : 0;
 
 			return hashCode;
 		}
@@ -153,14 +153,12 @@ namespace ProSuite.Commons.Geom
 
 		public bool IsFirstPointInPart(int vertexIndex)
 		{
-			int partIndex;
-			return IsFirstPointInPart(vertexIndex, out partIndex);
+			return IsFirstPointInPart(vertexIndex, out int _);
 		}
 
 		public bool IsLastPointInPart(int vertexIndex)
 		{
-			int partIndex;
-			return IsLastPointInPart(vertexIndex, out partIndex);
+			return IsLastPointInPart(vertexIndex, out int _);
 		}
 
 		public bool IsFirstPointInPart(int vertexIndex, out int partIndex)

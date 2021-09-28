@@ -5,6 +5,7 @@ using System.Windows.Forms;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.UI.DataModel.ResourceLookup;
 
 namespace ProSuite.UI.DataModel
 {
@@ -50,24 +51,15 @@ namespace ProSuite.UI.DataModel
 			}
 		}
 
-		public int DatasetCount
-		{
-			get { return _groupedListView.CountItems(); }
-		}
+		public int DatasetCount => _groupedListView.CountItems();
 
-		public int CategoryCount
-		{
-			get { return _groupedListView.Groups.Count; }
-		}
+		public int CategoryCount => _groupedListView.Groups.Count;
 
 		public event EventHandler DatasetsChanged;
 
 		protected virtual void OnDatasetListChanged(EventArgs e)
 		{
-			if (DatasetsChanged != null)
-			{
-				DatasetsChanged(this, e);
-			}
+			DatasetsChanged?.Invoke(this, e);
 		}
 
 		public override Size GetPreferredSize(Size proposedSize)

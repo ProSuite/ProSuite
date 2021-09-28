@@ -30,9 +30,9 @@ namespace ProSuite.UI.QA.ResourceLookup
 		/// </summary>
 		static TestTypeImageLookup()
 		{
-			_mapKeyToImage.Add(_keyWarning, TestTypeImages.Warning);
-			_mapKeyToImage.Add(_keyProhibition, TestTypeImages.Prohibition);
-			_mapKeyToImage.Add(_keyStop, TestTypeImages.Stop);
+			_mapKeyToImage.Add(_keyWarning, TestTypeImages.TestTypeWarning);
+			_mapKeyToImage.Add(_keyProhibition, TestTypeImages.TestTypeProhibition);
+			_mapKeyToImage.Add(_keyStop, TestTypeImages.TestTypeStop);
 			_mapKeyToImage.Add(_keyUnknown, TestTypeImages.TestTypeUnknown);
 
 			foreach (KeyValuePair<string, Image> pair in _mapKeyToImage)

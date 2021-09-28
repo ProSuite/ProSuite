@@ -38,17 +38,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
     </Reference>
-    <Reference Include="ArcGIS.Desktop.Catalog">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(ProAssemblyPath)\bin\Extensions\Catalog\ArcGIS.Desktop.Catalog.dll</HintPath>
-    </Reference>
     <Reference Include="ArcGIS.Desktop.Core">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\Extensions\Core\ArcGIS.Desktop.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="ArcGIS.Desktop.Editing">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(ProAssemblyPath)\bin\Extensions\Editing\ArcGIS.Desktop.Editing.dll</HintPath>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Extensions">
       <SpecificVersion>False</SpecificVersion>
@@ -70,11 +62,6 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
@@ -82,6 +69,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Worklist\IssueWorklistEnvironmentBase.cs" />
     <Compile Include="DdxSpecificationReferencesProvider.cs" />
     <Compile Include="ProPlugins\VerifyPerimeterToolBase.cs" />
     <Compile Include="ProPlugins\VerifySelectionCmdBase.cs" />
@@ -97,6 +85,14 @@
     <ProjectReference Include="..\ProSuite.AGP.Editing\ProSuite.AGP.Editing.csproj">
       <Project>{EC3D575D-7B9D-467F-BC76-2E093A3126EC}</Project>
       <Name>ProSuite.AGP.Editing</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.AGP.WorkList.Contracts\ProSuite.AGP.WorkList.Contracts.csproj">
+      <Project>{47e134c6-b803-451e-8c33-7c71b158b2ac}</Project>
+      <Name>ProSuite.AGP.WorkList.Contracts</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.AGP.WorkList\ProSuite.AGP.WorkList.csproj">
+      <Project>{2efe37c6-29a4-4e51-8c9f-d7b895f9ce6d}</Project>
+      <Name>ProSuite.AGP.WorkList</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons.AGP.Core\ProSuite.Commons.AGP.Core.csproj">
       <Project>{B80740EC-BB68-410C-A617-E79C467F1969}</Project>

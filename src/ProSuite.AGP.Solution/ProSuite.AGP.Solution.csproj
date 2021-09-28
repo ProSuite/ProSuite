@@ -163,6 +163,8 @@
     </Compile>
     <Compile Include="Selection\PickWorkListItemTool.cs" />
     <Compile Include="Selection\SelectionTool.cs" />
+    <Compile Include="ProSuiteFacadeImpl.cs" />
+    <Compile Include="ProSuiteUtils.cs" />
     <Compile Include="Workflow\MapBasedSessionContext.cs" />
     <Compile Include="WorkLists\CreateIssueWorkListButton.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
@@ -175,25 +177,26 @@
     <Compile Include="LoggerUI\ProSuiteLogPaneViewModel.cs" />
     <Compile Include="ProSuiteToolsModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WorkLists\DatabaseWorkEnvironment.cs" />
     <Compile Include="WorkLists\AddWorklistButton.cs" />
+    <Compile Include="WorkLists\IssueWorklistEnvironment.cs" />
     <Compile Include="WorkLists\ShowWorkListsButton.cs" />
     <Compile Include="WorkLists\WorkListsModule.cs" />
+    <Compile Include="WorkListUI\BooleanToStatusConverter.cs" />
     <Compile Include="WorkListUI\InvolvedObjectRow.cs" />
     <Compile Include="WorkListUI\InvolvedTableVm.cs" />
-    <Compile Include="WorkListUI\UiTestData\InvolvedObjectMock.cs" />
+    <Compile Include="WorkListUI\NoWorkItemViewModel.cs" />
     <Compile Include="WorkListUI\Views\IssueCountControl.xaml.cs">
       <DependentUpon>IssueCountControl.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WorkListUI\IssueWorkItemVm.cs" />
+    <Compile Include="WorkListUI\IssueItemViewModel.cs" />
     <Compile Include="WorkListUI\Views\IssueWorkListView.xaml.cs">
       <DependentUpon>IssueWorkListView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="WorkListUI\IssueWorkListVm.cs" />
+    <Compile Include="WorkListUI\IssueWorkListViewModel.cs" />
     <Compile Include="WorkListUI\ShowIssueWorkListView.cs" />
-    <Compile Include="WorkListUI\StatusConverter.cs" />
-    <Compile Include="WorkListUI\SelectionWorkItemVm.cs" />
-    <Compile Include="WorkListUI\WorkItemVmBase.cs" />
+    <Compile Include="WorkListUI\StatusToBooleanConverter.cs" />
+    <Compile Include="WorkListUI\SelectionItemViewModel.cs" />
+    <Compile Include="WorkListUI\WorkItemViewModelBase.cs" />
     <Compile Include="WorkListUI\Views\WorkListDetails.xaml.cs">
       <DependentUpon>WorkListDetails.xaml</DependentUpon>
     </Compile>
@@ -208,7 +211,7 @@
     <Compile Include="WorkListUI\WorkListViewFactory.cs" />
     <Compile Include="WorkListUI\WorkListViewModelBase.cs" />
     <Compile Include="WorkLists\InMemoryWorkEnvironment.cs" />
-    <Compile Include="WorkListUI\SelectionWorkListVm.cs" />
+    <Compile Include="WorkListUI\SelectionWorkListViewModel.cs" />
   </ItemGroup>
   <ItemGroup>
     <Page Include="LoggerUI\LogMessageDetailsDialog.xaml">
@@ -526,6 +529,9 @@
     <AddInContent Include="Images\VerifyPerimeterTool32.png" />
     <AddInContent Include="Images\VerifySelectionCmd16.png" />
     <AddInContent Include="Images\VerifySelectionCmd32.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="WorkListUI\UiTestData\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!--

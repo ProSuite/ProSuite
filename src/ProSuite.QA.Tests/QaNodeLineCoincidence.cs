@@ -329,9 +329,9 @@ namespace ProSuite.QA.Tests
 								"Unconnected node is too close to path {0} on same polyline: {1}",
 								tooClosePath.PathIndex,
 								FormatLengthComparison(tooClosePath.Distance,
-								                       (Math.Abs(tooClosePath.Distance -
-								                                 searchDistance) <
-								                        double.Epsilon)
+								                       Math.Abs(tooClosePath.Distance -
+								                                searchDistance) <
+								                       double.Epsilon
 									                       ? "="
 									                       : "<",
 								                       searchDistance, _spatialReference));

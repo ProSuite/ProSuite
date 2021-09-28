@@ -183,10 +183,10 @@ namespace ProSuite.DomainModel.Core.QA
 				return false;
 			}
 
-			bool equal = (TestParameterName == o.TestParameterName &&
-			              DatasetValue == o.DatasetValue &&
-			              FilterExpression == o.FilterExpression &&
-			              UsedAsReferenceData == o.UsedAsReferenceData);
+			bool equal = TestParameterName == o.TestParameterName &&
+			             DatasetValue == o.DatasetValue &&
+			             FilterExpression == o.FilterExpression &&
+			             UsedAsReferenceData == o.UsedAsReferenceData;
 
 			return equal;
 		}

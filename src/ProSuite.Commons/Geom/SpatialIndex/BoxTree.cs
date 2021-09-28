@@ -620,7 +620,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 				}
 			}
 
-			// für genuegend unterteilte Tiles (sonst ev. Min.X == 0 o.ae.):
+			// fÃ¼r genuegend unterteilte Tiles (sonst ev. Min.X == 0 o.ae.):
 			// Debug.Assert(currentBox.Equals(mMainBox)); 
 			return null;
 		}
@@ -842,7 +842,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 					}
 					else
 					{
-						if ((dMin <= tx1) == false)
+						if (dMin <= tx1 == false)
 						{
 							BoxTile child = this;
 							BoxTile parent = _parent;

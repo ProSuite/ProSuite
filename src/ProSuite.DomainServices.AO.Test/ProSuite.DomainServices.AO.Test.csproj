@@ -68,6 +68,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QA\DatasetReports\ObjectClassReportBuilderTest.cs" />
+    <Compile Include="QA\DatasetReports\Xml\XmlSpatialReferenceDescriptorUtilsTest.cs" />
     <Compile Include="QA\ErrorRepositoryUtilsTest.cs" />
     <Compile Include="QA\Exceptions\ExceptionObjectAffectedComponentPredicateTest.cs" />
     <Compile Include="QA\Exceptions\ExceptionObjectInvolvedRowsIndexTest.cs" />

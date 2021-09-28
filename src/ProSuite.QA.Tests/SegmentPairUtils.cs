@@ -118,10 +118,10 @@ namespace ProSuite.QA.Tests
 
 		private static bool HasCommonSegment(ISegmentPair x, ISegmentPair y)
 		{
-			return (AreEqualSegments(x.BaseSegment, y.BaseSegment) ||
-			        AreEqualSegments(x.BaseSegment, y.RelatedSegment) ||
-			        AreEqualSegments(x.RelatedSegment, y.BaseSegment) ||
-			        AreEqualSegments(x.RelatedSegment, y.RelatedSegment));
+			return AreEqualSegments(x.BaseSegment, y.BaseSegment) ||
+			       AreEqualSegments(x.BaseSegment, y.RelatedSegment) ||
+			       AreEqualSegments(x.RelatedSegment, y.BaseSegment) ||
+			       AreEqualSegments(x.RelatedSegment, y.RelatedSegment);
 		}
 
 		private static bool AreEqualSegments(SegmentProxy x, SegmentProxy y)

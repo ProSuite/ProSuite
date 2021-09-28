@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
@@ -44,8 +44,8 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
 
-			FeatureClassMock edgeClass, junctionClass;
-			LinearNetworkDef networkDef = CreateSimpleNetworkDef(out edgeClass, out junctionClass);
+			FeatureClassMock edgeClass;
+			LinearNetworkDef networkDef = CreateSimpleNetworkDef(out edgeClass, out _);
 
 			var networkFeatureFinder = new NetworkFeatureFinderMock();
 
@@ -220,8 +220,8 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
 
-			FeatureClassMock edgeClass, junctionClass;
-			LinearNetworkDef networkDef = CreateSimpleNetworkDef(out edgeClass, out junctionClass);
+			FeatureClassMock edgeClass;
+			LinearNetworkDef networkDef = CreateSimpleNetworkDef(out edgeClass, out _);
 
 			var networkFeatureFinder = new NetworkFeatureFinderMock();
 
@@ -269,8 +269,8 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
 
-			FeatureClassMock edgeClass, junctionClass;
-			LinearNetworkDef networkDef = CreateSimpleNetworkDef(out edgeClass, out junctionClass);
+			FeatureClassMock edgeClass;
+			LinearNetworkDef networkDef = CreateSimpleNetworkDef(out edgeClass, out _);
 
 			var networkFeatureFinder = new NetworkFeatureFinderMock();
 
@@ -344,8 +344,8 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
 
-			FeatureClassMock edgeClass, junctionClass;
-			LinearNetworkDef networkDef = CreateSimpleNetworkDef(out edgeClass, out junctionClass);
+			FeatureClassMock edgeClass;
+			LinearNetworkDef networkDef = CreateSimpleNetworkDef(out edgeClass, out _);
 
 			var networkFeatureFinder = new NetworkFeatureFinderMock();
 
@@ -399,8 +399,8 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
 
-			FeatureClassMock edgeClass, junctionClass;
-			LinearNetworkDef networkDef = CreateSimpleNetworkDef(out edgeClass, out junctionClass);
+			FeatureClassMock edgeClass;
+			LinearNetworkDef networkDef = CreateSimpleNetworkDef(out edgeClass, out _);
 
 			var networkFeatureFinder = new NetworkFeatureFinderMock();
 
@@ -517,8 +517,8 @@ namespace ProSuite.Commons.AO.Test.Geometry.LinearNetwork
 			ISpatialReference sr = SpatialReferenceUtils.CreateSpatialReference(
 				WellKnownHorizontalCS.LV95, WellKnownVerticalCS.LHN95);
 
-			FeatureClassMock edgeClass, junctionClass;
-			LinearNetworkDef networkDef = CreateSimpleNetworkDef(out edgeClass, out junctionClass);
+			FeatureClassMock edgeClass;
+			LinearNetworkDef networkDef = CreateSimpleNetworkDef(out edgeClass, out _);
 
 			var networkFeatureFinder = new NetworkFeatureFinderMock();
 

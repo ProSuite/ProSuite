@@ -9,6 +9,10 @@ namespace ProSuite.DomainServices.AO.QA.HtmlReports
 		public int Compare(HtmlReportDataQualityCategory c1,
 		                   HtmlReportDataQualityCategory c2)
 		{
+			if (c1 == null && c2 == null) return 0;
+			if (c1 == null) return -1;
+			if (c2 == null) return +1;
+
 			if (c1.IsUndefinedCategory != c2.IsUndefinedCategory)
 			{
 				return c1.IsUndefinedCategory

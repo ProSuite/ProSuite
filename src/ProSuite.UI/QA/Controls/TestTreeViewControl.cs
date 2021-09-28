@@ -9,7 +9,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.UI.DataModel;
+using ProSuite.UI.DataModel.ResourceLookup;
 using ProSuite.UI.Properties;
 
 //using ProSuite.UI.QA.VerificationResult;
@@ -52,9 +52,9 @@ namespace ProSuite.UI.QA.Controls
 
 			images.Add(_none, new Bitmap(16, 16));
 
-			images.Add(_allowErrors, TestTypeImages.Warning);
-			images.Add(_continueOnErrors, TestTypeImages.Prohibition);
-			images.Add(_stopOnErrors, TestTypeImages.Stop);
+			images.Add(_allowErrors, TestTypeImages.TestTypeWarning);
+			images.Add(_continueOnErrors, TestTypeImages.TestTypeProhibition);
+			images.Add(_stopOnErrors, TestTypeImages.TestTypeStop);
 
 			images.Add(_imageKeyNoIssues, Resources.OK);
 			images.Add(_imageKeyWarning, Resources.Warning);
@@ -78,7 +78,8 @@ namespace ProSuite.UI.QA.Controls
 			var element = e.Node.Tag as QualitySpecificationElement;
 			QualityCondition qualityCondition = element?.QualityCondition;
 
-			e.Node.NodeFont = (qualityCondition?.Updated ?? false)
+			bool updated = qualityCondition?.Updated ?? false;
+			e.Node.NodeFont = updated
 				                  ? new Font(((TreeView) sender).Font, FontStyle.Italic)
 				                  : ((TreeView) sender).Font;
 

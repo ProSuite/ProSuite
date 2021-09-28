@@ -126,7 +126,7 @@ namespace ProSuite.QA.Tests
 
 		public override bool IsGeometryUsedTable(int tableIndex)
 		{
-			return (AreaOfInterest != null);
+			return AreaOfInterest != null;
 		}
 
 		public override bool RetestRowsPerIntersectedTile(int tableIndex)
@@ -143,7 +143,7 @@ namespace ProSuite.QA.Tests
 				object value = row.get_Value(fieldIndex);
 
 				string fieldName;
-				if (value == null || (value is DBNull))
+				if (value == null || value is DBNull)
 				{
 					string description =
 						string.Format("Required field has null value: {0}",

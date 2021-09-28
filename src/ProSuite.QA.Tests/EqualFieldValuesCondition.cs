@@ -293,7 +293,7 @@ namespace ProSuite.QA.Tests
 
 			fieldName = fieldDefinition.Substring(0, separatorIndex).Trim();
 
-			if ((separatorIndex + 1) == fieldDefinition.Length)
+			if (separatorIndex + 1 == fieldDefinition.Length)
 			{
 				// separator is last character
 				multiValueSeparator = null;

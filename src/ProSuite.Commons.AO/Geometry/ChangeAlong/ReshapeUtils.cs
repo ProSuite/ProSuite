@@ -662,8 +662,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 				// NOTE: Intersection points with multipatches are not found
 				if (targetShape.GeometryType == esriGeometryType.esriGeometryMultiPatch ||
-				    (useTargetPolygonsBoundary &&
-				     targetShape.GeometryType == esriGeometryType.esriGeometryPolygon))
+				    useTargetPolygonsBoundary &&
+				    targetShape.GeometryType == esriGeometryType.esriGeometryPolygon)
 				{
 					IGeometry boundary = GeometryUtils.GetBoundary(targetShape);
 					Marshal.ReleaseComObject(targetShape);
@@ -1791,8 +1791,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 				bool ringIsExterior = IsExteriorRing(allRings, ring);
 				bool reshapedIsExterior = IsExteriorRing(allRings, reshapedRing);
-				if ((reshapedIsExterior == ringIsExterior && ringIsInAddedArea) ||
-				    (reshapedIsExterior != ringIsExterior && ! ringIsInAddedArea))
+				if (reshapedIsExterior == ringIsExterior && ringIsInAddedArea ||
+				    reshapedIsExterior != ringIsExterior && ! ringIsInAddedArea)
 				{
 					allRings.RemoveGeometries(ringIndex, 1);
 					return true;
@@ -2925,7 +2925,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		{
 			double startDangleLength = startDangle?.Length ?? 0;
 
-			return (! CanUseForOpenJaw(endDangle)) ||
+			return ! CanUseForOpenJaw(endDangle) ||
 			       endDangle.Length < startDangleLength;
 		}
 
@@ -3337,7 +3337,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				// return the longer part if the reshape line cuts across the polyline to reshape
 				double part0Length = ((IPath) splitResult.Geometry[0]).Length;
 				double part1Length = ((IPath) splitResult.Geometry[1]).Length;
-				List<int> removePart = (part0Length < part1Length)
+				List<int> removePart = part0Length < part1Length
 					                       ? new List<int> {0}
 					                       : new List<int> {1};
 

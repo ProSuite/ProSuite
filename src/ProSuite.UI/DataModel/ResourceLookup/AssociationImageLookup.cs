@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.UI.Properties;
 
@@ -10,15 +11,17 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 	{
 		private const string _imageKeyDeleted = "asc.deleted";
 		private const string _imageKeyUnknown = "asc.unknown";
-		private static Dictionary<AssociationCardinality, AssociationImage> _imageMap;
+		[CanBeNull] private static IDictionary<AssociationCardinality, AssociationImage> _imageMap;
 
-		public static Image GetImage(Association association)
+		[NotNull]
+		public static Image GetImage([NotNull] Association association)
 		{
-			string imageKey;
-			return GetImage(association, out imageKey);
+			return GetImage(association, out string _);
 		}
 
-		public static Image GetImage(Association association, out string imageKey)
+		[NotNull]
+		public static Image GetImage([NotNull] Association association,
+		                             [NotNull] out string imageKey)
 		{
 			Assert.ArgumentNotNull(association, nameof(association));
 
@@ -29,21 +32,19 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 				return GetImage(association.Cardinality, out imageKey);
 			}
 
-			// TODO special "deleted association" image
 			imageKey = _imageKeyDeleted;
-			return AssociationImages.AssociationUnknown;
+			return AssociationImages.AssociationDeleted;
 		}
 
 		public static Image GetImage(AssociationCardinality cardinality,
-		                             out string imageKey)
+		                             [NotNull] out string imageKey)
 		{
 			if (_imageMap == null)
 			{
 				_imageMap = CreateImageMap();
 			}
 
-			AssociationImage associationImage;
-			if (_imageMap.TryGetValue(cardinality, out associationImage))
+			if (_imageMap.TryGetValue(cardinality, out AssociationImage associationImage))
 			{
 				imageKey = associationImage.Key;
 				return associationImage.Image;
@@ -53,37 +54,37 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 			return AssociationImages.AssociationUnknown;
 		}
 
-		private static Dictionary<AssociationCardinality, AssociationImage> CreateImageMap
-			()
+		[NotNull]
+		private static IDictionary<AssociationCardinality, AssociationImage> CreateImageMap()
 		{
-			var map =
-				new Dictionary<AssociationCardinality, AssociationImage>();
-
-			map.Add(AssociationCardinality.Unknown,
-			        new AssociationImage(0, AssociationImages.AssociationUnknown,
-			                             "asc.unk"));
-
-			map.Add(AssociationCardinality.OneToOne,
-			        new AssociationImage(1,
-			                             AssociationImages.AssociationOneToOne,
-			                             "asc.1:1"));
-
-			map.Add(AssociationCardinality.OneToMany,
-			        new AssociationImage(2,
-			                             AssociationImages.AssociationManyToOne,
-			                             "asc.1:n"));
-
-			map.Add(AssociationCardinality.ManyToMany,
-			        new AssociationImage(3,
-			                             AssociationImages.AssociationManyToMany,
-			                             "asc.n:m"));
-
-			return map;
+			return new Dictionary<AssociationCardinality, AssociationImage>
+			       {
+				       {
+					       AssociationCardinality.Unknown,
+					       new AssociationImage(0, AssociationImages.AssociationUnknown, "asc.unk")
+				       },
+				       {
+					       AssociationCardinality.OneToOne,
+					       new AssociationImage(1, AssociationImages.AssociationOneToOne, "asc.1:1")
+				       },
+				       {
+					       AssociationCardinality.OneToMany,
+					       new AssociationImage(2, AssociationImages.AssociationManyToOne,
+					                            "asc.1:n")
+				       },
+				       {
+					       AssociationCardinality.ManyToMany,
+					       new AssociationImage(3, AssociationImages.AssociationManyToMany,
+					                            "asc.n:m")
+				       }
+			       };
 		}
+
+		#region Nested type: AssociationImage
 
 		private class AssociationImage
 		{
-			public AssociationImage(int defaultSort, Image image, string key)
+			public AssociationImage(int defaultSort, [NotNull] Image image, [NotNull] string key)
 			{
 				Assert.ArgumentNotNullOrEmpty(key, nameof(key));
 				Assert.ArgumentNotNull(image, nameof(image));
@@ -94,9 +95,13 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 				Image.Tag = defaultSort;
 			}
 
+			[NotNull]
 			public string Key { get; }
 
+			[NotNull]
 			public Image Image { get; }
 		}
+
+		#endregion
 	}
 }

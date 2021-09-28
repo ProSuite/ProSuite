@@ -1,5 +1,6 @@
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.WorkList.Contracts
 {
@@ -8,12 +9,13 @@ namespace ProSuite.AGP.WorkList.Contracts
 		/// <summary>
 		/// work item id
 		/// </summary>
-		int OID { get; }
+		long OID { get; }
 
 		bool Visited { get; set; }
 		GdbRowIdentity Proxy { get; }
 		WorkItemStatus Status { get; set; }
 		Envelope Extent { get; }
+		[CanBeNull]
 		string Description { get; }
 		GeometryType? GeometryType { get; }
 		bool HasGeometry { get; set; }

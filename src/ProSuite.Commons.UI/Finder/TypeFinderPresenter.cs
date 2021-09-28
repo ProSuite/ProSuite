@@ -89,7 +89,7 @@ namespace ProSuite.Commons.UI.Finder
 			{
 				if (! typeof(T).IsAssignableFrom(type) ||
 				    type.IsAbstract ||
-				    (_match != null && ! _match(type)))
+				    _match != null && ! _match(type))
 				{
 					continue;
 				}

@@ -7,6 +7,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
+using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -162,22 +163,22 @@ namespace ProSuite.AGP.Solution.Workflow
 
 		private static IEnumerable<Table> GetDatasets([NotNull] MapView mapView)
 		{
-			IReadOnlyList<Layer> layers = mapView.Map.GetLayersAsFlattenedList();
+			Map map = mapView.Map;
 
-			foreach (Layer layer in layers)
+			if (map == null)
 			{
-				if (layer is FeatureLayer fl)
+				yield break;
+			}
+
+			foreach (Table table in map.GetTables())
+			{
+				if (table.GetDatastore() is FileSystemDatastore)
 				{
-					Table table = fl.GetTable();
-
-					if (table.GetDatastore() is FileSystemDatastore)
-					{
-						// Shapefile workspaces are not supported
-						continue;
-					}
-
-					yield return table;
+					// Shapefile workspaces are not supported
+					continue;
 				}
+
+				yield return table;
 			}
 		}
 

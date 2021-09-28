@@ -35,7 +35,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DocumentationFile>$(OutputDirectory)\Release\ProSuite.DomainModel.AGP.xml</DocumentationFile>
-    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.DomainModel.AGP.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>

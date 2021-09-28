@@ -721,7 +721,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				                              fromPoint,
 				                              tolerance).ToList();
 
-			var targetCollection = ((IGeometryCollection) targetPolyline);
+			var targetCollection = (IGeometryCollection) targetPolyline;
 
 			if (hitPartIndexes.Count == 1)
 			{

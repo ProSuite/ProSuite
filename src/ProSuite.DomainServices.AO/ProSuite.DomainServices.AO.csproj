@@ -98,6 +98,23 @@
     <Compile Include="QA\AreaOfInterestWriter.cs" />
     <Compile Include="QA\AreaSpecification\AreaSpecification.cs" />
     <Compile Include="QA\AreaSpecification\AreaSpecificationBasedQualitySpecification.cs" />
+    <Compile Include="QA\DatasetReports\FieldValueRange.cs" />
+    <Compile Include="QA\DatasetReports\ObjectClassReportBuilder.cs" />
+    <Compile Include="QA\DatasetReports\Xml\FeatureClassReport.cs" />
+    <Compile Include="QA\DatasetReports\Xml\FieldDescriptor.cs" />
+    <Compile Include="QA\DatasetReports\Xml\FieldDistinctValue.cs" />
+    <Compile Include="QA\DatasetReports\Xml\FieldDistinctValues.cs" />
+    <Compile Include="QA\DatasetReports\Xml\FieldStatistics.cs" />
+    <Compile Include="QA\DatasetReports\Xml\ObjectClassReport.cs" />
+    <Compile Include="QA\DatasetReports\Xml\TableReport.cs" />
+    <Compile Include="QA\DatasetReports\Xml\XmlRange.cs" />
+    <Compile Include="QA\DatasetReports\Xml\XmlSpatialReferenceDescriptor.cs" />
+    <Compile Include="QA\DatasetReports\Xml\XmlSpatialReferenceDescriptorUtils.cs" />
+    <Compile Include="QA\Standalone\RuleBased\Category.cs" />
+    <Compile Include="QA\Standalone\RuleBased\HtmlReportModel.cs" />
+    <Compile Include="QA\Standalone\RuleBased\HtmlReportWriter.cs" />
+    <Compile Include="QA\Standalone\RuleBased\IObjectDatasetLookup.cs" />
+    <Compile Include="QA\Standalone\RuleBased\VerifiedModelUtils.cs" />
     <Compile Include="QA\VerificationDataDictionary.cs" />
     <Compile Include="QA\Standalone\BufferedIssueWriter.cs" />
     <Compile Include="QA\Standalone\IIssueWriter.cs" />
@@ -349,6 +366,10 @@
       <Project>{D51693C1-F9F6-425D-8CD6-8DFBF5A52F6F}</Project>
       <Name>ProSuite.QA.Container</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj">
+      <Project>{01CBBA9E-0D4D-439F-9147-6A5685884A65}</Project>
+      <Name>ProSuite.QA.Core</Name>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\LocalizableStrings.de-CH.resx" />
@@ -379,6 +400,7 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <None Include="QA\Standalone\RuleBased\HtmlReportModel.cd" />
     <None Include="QA\Standalone\XmlBased\XmlBasedVerificationReportModel.cd" />
     <None Include="Schemas\ProSuite.QA.XmlBasedVerificationOptions-1.0.xsd">
       <SubType>Designer</SubType>

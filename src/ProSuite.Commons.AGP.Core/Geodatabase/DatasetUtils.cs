@@ -31,9 +31,12 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			}
 		}
 
-		public static SpatialReference GetSpatialReference(FeatureClass featureClass)
+		[CanBeNull]
+		public static SpatialReference GetSpatialReference([NotNull] this FeatureClass featureClass)
 		{
-			return featureClass?.GetDefinition()?.GetSpatialReference();
+			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+
+			return featureClass.GetDefinition()?.GetSpatialReference();
 		}
 
 		public static bool IsSameClass(Table featureClass1, Table featureClass2)

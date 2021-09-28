@@ -335,10 +335,7 @@ namespace ProSuite.Commons.Geom
 		public double GetDistancePerpendicular(Pnt3D point, bool inXY)
 		{
 			// Could theoretically be faster with using the cross-product variant with Z=0
-			double distanceAlongRatio;
-			Pnt3D pointOnLine;
-			return GetDistancePerpendicular(point, inXY, out distanceAlongRatio,
-			                                out pointOnLine);
+			return GetDistancePerpendicular(point, inXY, out double _, out Pnt3D _);
 		}
 
 		public bool ExtentIntersects([NotNull] IBox box,
@@ -708,13 +705,11 @@ namespace ProSuite.Commons.Geom
 				return false;
 			}
 
-			bool startEqual = (StartPoint != null && cmpr.StartPoint != null &&
-			                   StartPoint.Equals(cmpr.StartPoint)) ||
-			                  (StartPoint == null && cmpr.StartPoint == null);
+			bool startEqual = StartPoint != null && cmpr.StartPoint != null && StartPoint.Equals(cmpr.StartPoint) ||
+			                  StartPoint == null && cmpr.StartPoint == null;
 
-			bool endEqual = (EndPoint != null && cmpr.EndPoint != null &&
-			                 EndPoint.Equals(cmpr.EndPoint)) ||
-			                (EndPoint == null && cmpr.EndPoint == null);
+			bool endEqual = EndPoint != null && cmpr.EndPoint != null && EndPoint.Equals(cmpr.EndPoint) ||
+			                EndPoint == null && cmpr.EndPoint == null;
 
 			return startEqual && endEqual;
 		}

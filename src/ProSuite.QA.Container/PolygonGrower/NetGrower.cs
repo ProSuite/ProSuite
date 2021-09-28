@@ -72,7 +72,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 			foreach (TDirectedRow row in lineList)
 			{
 				if (row.FromNode.RowsCount == 1 ||
-				    (row.ToNode != null && row.ToNode.RowsCount == 1))
+				    row.ToNode != null && row.ToNode.RowsCount == 1)
 				{
 					endNodes.Add(row);
 				}

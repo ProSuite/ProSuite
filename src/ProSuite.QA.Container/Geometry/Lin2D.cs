@@ -28,7 +28,7 @@ namespace ProSuite.QA.Container.Geometry
 
 		public double L2
 		{
-			get { return _l2 ?? (_l2 = (L.X * L.X + L.Y * L.Y)).Value; }
+			get { return _l2 ?? (_l2 = L.X * L.X + L.Y * L.Y).Value; }
 		}
 
 		private Pnt _lNormal;

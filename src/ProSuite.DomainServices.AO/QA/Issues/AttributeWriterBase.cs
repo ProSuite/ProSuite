@@ -146,7 +146,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 
 			return testDescriptor == null
 				       ? string.Empty
-				       : (testDescriptor.Name ?? string.Empty);
+				       : testDescriptor.Name ?? string.Empty;
 		}
 
 		[NotNull]
@@ -157,7 +157,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 
 			return testDescriptor == null
 				       ? string.Empty
-				       : (testDescriptor.Description ?? string.Empty);
+				       : testDescriptor.Description ?? string.Empty;
 		}
 
 		[NotNull]
@@ -167,7 +167,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 			DataQualityCategory category = qualityCondition.Category;
 			return category == null
 				       ? string.Empty
-				       : (GetCategoryText(category) ?? string.Empty);
+				       : GetCategoryText(category) ?? string.Empty;
 		}
 
 		[CanBeNull]

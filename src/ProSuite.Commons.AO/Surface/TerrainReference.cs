@@ -1,7 +1,6 @@
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using System;
 
 namespace ProSuite.Commons.AO.Surface
 {
@@ -35,7 +34,7 @@ namespace ProSuite.Commons.AO.Surface
 				return true;
 			}
 
-			if (obj.GetType() != this.GetType())
+			if (obj.GetType() != GetType())
 			{
 				return false;
 			}

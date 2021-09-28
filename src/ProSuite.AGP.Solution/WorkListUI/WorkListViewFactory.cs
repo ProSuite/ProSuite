@@ -18,9 +18,9 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			switch (workList)
 			{
 				case SelectionWorkList _:
-					return new SelectionWorkListView(new SelectionWorkListVm(workList));
+					return new SelectionWorkListView(new SelectionWorkListViewModel(workList));
 				case IssueWorkList _:
-					return new IssueWorkListView(new IssueWorkListVm(workList));
+					return new IssueWorkListView(new IssueWorkListViewModel(workList));
 				default:
 					throw new ArgumentOutOfRangeException(
 						$"Unkown work list type {workList.GetType()}");

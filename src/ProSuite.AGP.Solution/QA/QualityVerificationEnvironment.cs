@@ -163,7 +163,8 @@ namespace ProSuite.AGP.Solution.QA
 		{
 			if (! SpecificationProvider.CanGetSpecifications())
 			{
-				if (FallbackSpecificationProvider != null)
+				if (FallbackSpecificationProvider != null &&
+				    FallbackSpecificationProvider.CanGetSpecifications())
 				{
 					_qualitySpecifications =
 						await FallbackSpecificationProvider.GetQualitySpecifications();

@@ -41,17 +41,14 @@ namespace ProSuite.Commons.UI.Env
 		/// <summary>
 		/// Gets the first extension of a specific type.
 		/// </summary>
-		/// <typeparam name="T"></typeparam>
-		/// <returns></returns>
 		public T GetExtension<T>()
 		{
 			if (_extensions == null)
 			{
-				return default(T);
+				return default;
 			}
 
-			return (T) _extensions.Find(
-				delegate(object obj) { return obj is T; });
+			return (T) _extensions.Find(obj => obj is T);
 		}
 	}
 }

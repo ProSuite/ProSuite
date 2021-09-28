@@ -543,7 +543,7 @@ namespace ProSuite.Processing.Test.Evaluation
 
 			try
 			{
-				Assert.AreEqual("1,2", (1.2).ToString(CultureInfo.CurrentCulture));
+				Assert.AreEqual("1,2", Convert.ToString(1.2, CultureInfo.CurrentCulture));
 
 				Assert.AreEqual("1.2", env.Invoke(fconcat, Args(1.2)));
 				Assert.AreEqual("1.23.4", env.Invoke(fconcat, Args(1.2, 3.4)));

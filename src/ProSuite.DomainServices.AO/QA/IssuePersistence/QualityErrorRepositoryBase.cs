@@ -702,7 +702,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 				}
 				else
 				{
-					if ((idListBuilder.Length + idString.Length + 1) > maxLength)
+					if (idListBuilder.Length + idString.Length + 1 > maxLength)
 					{
 						// the concatenated list gets too long, delete current batch
 						DeleteIssues(filter, idListBuilder.ToString(),

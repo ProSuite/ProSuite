@@ -53,7 +53,7 @@ namespace ProSuite.Commons.UI.ScreenBinding.Elements
 				            return CoercionUtility.Coerce(accessor, rawValue);
 			            };
 
-			_format = delegate(object o) { return o.ToString(); };
+			_format = o => o.ToString();
 		}
 
 		#endregion

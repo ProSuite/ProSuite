@@ -69,7 +69,7 @@ namespace ProSuite.QA.Tests
 
 		public static bool IsInvalidValue(double m, double invalidValue)
 		{
-			return (double.IsNaN(m) && double.IsNaN(invalidValue)) ||
+			return double.IsNaN(m) && double.IsNaN(invalidValue) ||
 			       Math.Abs(m - invalidValue) < double.Epsilon;
 		}
 
