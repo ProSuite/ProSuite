@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
@@ -482,7 +481,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				XmlBasedVerificationService qaService = new XmlBasedVerificationService(
 					HtmlReportTemplatePath, QualitySpecificationTemplatePath);
 
-				QualitySpecification qualitySpecification = null;
+				QualitySpecification qualitySpecification;
 
 				switch (request.SpecificationCase)
 				{
@@ -494,12 +493,14 @@ namespace ProSuite.Microservices.Server.AO.QA
 							SetupQualitySpecification(xmlSpecification, qaService);
 						break;
 					}
-					case StandaloneVerificationRequest.SpecificationOneofCase.XmlConditions:
+					case StandaloneVerificationRequest.SpecificationOneofCase
+					                                  .ConditionListSpecification:
 					{
-						XmlConditionListSpecificationMsg xmlConditionsSpec = request.XmlConditions;
+						ConditionListSpecificationMsg conditionListSpec =
+							request.ConditionListSpecification;
 
 						qualitySpecification =
-							SetupQualitySpecification(xmlConditionsSpec, qaService);
+							SetupQualitySpecification(conditionListSpec, qaService);
 						break;
 					}
 					default: throw new ArgumentOutOfRangeException();
@@ -559,7 +560,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 
 		private QualitySpecification SetupQualitySpecification(
-			XmlConditionListSpecificationMsg xmlConditionsSpecificationMsg,
+			ConditionListSpecificationMsg conditionsSpecificationMsg,
 			XmlBasedVerificationService qaService)
 		{
 			if (SupportedTestDescriptors == null || SupportedTestDescriptors.Count == 0)
@@ -568,36 +569,83 @@ namespace ProSuite.Microservices.Server.AO.QA
 					"No xml test descriptors have been set up.");
 			}
 
-			var dataSources = xmlConditionsSpecificationMsg.DataSources.Select(
+			var dataSources = conditionsSpecificationMsg.DataSources.Select(
 				dsMsg => new DataSource(dsMsg.ModelName, dsMsg.Id, dsMsg.ModelName,
 				                        dsMsg.SchemaOwner, dsMsg.CatalogPath)).ToList();
 
 			var specificationElements = new List<SpecificationElement>();
 
-			foreach (XmlQualitySpecificationElementMsg specificationElementMsg in
-				xmlConditionsSpecificationMsg.Elements)
+			foreach (QualitySpecificationElementMsg specificationElementMsg in
+				conditionsSpecificationMsg.Elements)
 			{
-				string conditionXml = specificationElementMsg.XmlCondition;
+				QualityConditionMsg conditionMsg = specificationElementMsg.Condition;
 
-				using (TextReader xmlReader = new StringReader(conditionXml))
+				// Temporary - TODO: Remove de-tour via xml condition
+
+				var parameterList = new List<XmlTestParameterValue>();
+				foreach (ParameterMsg parameterMsg in conditionMsg.Parameters)
 				{
-					XmlQualityCondition condition =
-						XmlDataQualityUtils.DeserializeCondition(xmlReader);
+					XmlTestParameterValue xmlParameter;
+					if (StringUtils.IsNotEmpty(parameterMsg.WorkspaceId))
+					{
+						xmlParameter = new XmlDatasetTestParameterValue()
+						               {
+							               TestParameterName = parameterMsg.Name,
+							               Value = parameterMsg.Value,
+							               WorkspaceId = parameterMsg.WorkspaceId,
+							               WhereClause = parameterMsg.WhereClause
+						               };
+					}
+					else
+					{
+						xmlParameter = new XmlScalarTestParameterValue()
+						               {
+							               TestParameterName = parameterMsg.Name,
+							               Value = parameterMsg.Value
+						               };
+					}
 
-					var specificationElement =
-						new SpecificationElement(condition,
-						                         specificationElementMsg.CategoryName)
-						{
-							AllowErrors = specificationElementMsg.AllowErrors,
-							StopOnError = specificationElementMsg.StopOnError
-						};
-
-					specificationElements.Add(specificationElement);
+					parameterList.Add(xmlParameter);
 				}
+
+				XmlQualityCondition xmlCondition =
+					new XmlQualityCondition()
+					{
+						Name = specificationElementMsg.Condition.Name,
+						TestDescriptorName = specificationElementMsg.Condition.TestDescriptorName
+					};
+
+				xmlCondition.ParameterValues.AddRange(parameterList);
+
+				var specificationElement =
+					new SpecificationElement(xmlCondition,
+					                         specificationElementMsg.CategoryName)
+					{
+						AllowErrors = specificationElementMsg.AllowErrors,
+						StopOnError = specificationElementMsg.StopOnError
+					};
+
+				specificationElements.Add(specificationElement);
+
+				//using (TextReader xmlReader = new StringReader(conditionXml))
+				//{
+				//	XmlQualityCondition condition =
+				//		XmlDataQualityUtils.DeserializeCondition(xmlReader);
+
+				//	var specificationElement =
+				//		new SpecificationElement(condition,
+				//		                         specificationElementMsg.CategoryName)
+				//		{
+				//			AllowErrors = specificationElementMsg.AllowErrors,
+				//			StopOnError = specificationElementMsg.StopOnError
+				//		};
+
+				//	specificationElements.Add(specificationElement);
+				//}
 			}
 
 			QualitySpecification qualitySpecification = qaService.SetupQualitySpecification(
-				xmlConditionsSpecificationMsg.Name, SupportedTestDescriptors, specificationElements,
+				conditionsSpecificationMsg.Name, SupportedTestDescriptors, specificationElements,
 				dataSources, false);
 
 			return qualitySpecification;
