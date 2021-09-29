@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -57,6 +59,24 @@ namespace ProSuite.Commons.AGP.Carto
 					_msg.VerboseDebug(
 						$"Selected OIDs {StringUtils.Concatenate(selection.GetObjectIDs(), ", ")} " +
 						$"from {featureLayer.Name}");
+				}
+			}
+		}
+
+		public static void SelectFeatures([NotNull] IEnumerable<Feature> features,
+		                                  [NotNull] IList<BasicFeatureLayer> inLayers)
+		{
+			foreach (IGrouping<IntPtr, Feature> featuresByClassHandle in features.GroupBy(
+				f => f.GetTable().Handle))
+			{
+				long classHandle = featuresByClassHandle.Key.ToInt64();
+
+				List<long> objectIds = featuresByClassHandle.Select(f => f.GetObjectID()).ToList();
+
+				foreach (var layer in inLayers.Where(
+					fl => fl.GetTable().Handle.ToInt64() == classHandle))
+				{
+					SelectFeatures(layer, SelectionCombinationMethod.Add, objectIds);
 				}
 			}
 		}

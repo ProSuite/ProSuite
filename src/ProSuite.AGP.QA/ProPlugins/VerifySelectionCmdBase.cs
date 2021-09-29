@@ -28,15 +28,32 @@ namespace ProSuite.AGP.QA.ProPlugins
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		protected VerifySelectionCmdBase()
+		{
+			Register();
+		}
+
+		private void Register()
+		{
+			VerificationPlugInController.GetInstance(SessionContext).Register(this);
+		}
+
 		protected abstract IMapBasedSessionContext SessionContext { get; }
 
 		protected abstract Window CreateProgressWindow(
 			VerificationProgressViewModel progressViewModel);
-		
+
 		protected abstract IProSuiteFacade ProSuiteImpl { get; }
 
 		protected override void OnClick()
 		{
+			if (SessionContext?.VerificationEnvironment == null)
+			{
+				MessageBox.Show("No quality verification environment is configured.",
+				                "Verify Selection", MessageBoxButton.OK, MessageBoxImage.Warning);
+				return;
+			}
+
 			IQualityVerificationEnvironment qaEnvironment =
 				Assert.NotNull(SessionContext.VerificationEnvironment);
 
@@ -45,7 +62,7 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			if (qualitySpecification == null)
 			{
-				MessageBox.Show("No Quality Specification is selected", "Verify Selection",
+				MessageBox.Show("No quality specification is selected", "Verify Selection",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
 				return;
 			}
@@ -69,7 +86,6 @@ namespace ProSuite.AGP.QA.ProPlugins
 			                                                Project.Current.HomeFolderPath);
 
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
-			
 
 			var appController = new AgpBackgroundVerificationController(ProSuiteImpl,
 				MapView.Active, currentExtent, spatialRef);

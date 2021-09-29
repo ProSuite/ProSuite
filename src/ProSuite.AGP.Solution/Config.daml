@@ -1,13 +1,13 @@
 <ArcGIS defaultAssembly="ProSuiteSolution.dll" defaultNamespace="ProSuite.AGP.Solution"
         xmlns="http://schemas.esri.com/DADF/Registry" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://schemas.esri.com/DADF/Registry file:///C:/Program%20Files/ArcGIS/Pro/bin/ArcGIS.Desktop.Framework.xsd">
-  <AddInInfo id="{aca43c2a-8357-4476-8660-e8bc28bdf848}" version="0.3" desktopVersion="2.5.22081">
+  <AddInInfo id="{aca43c2a-8357-4476-8660-e8bc28bdf848}" version="0.4" desktopVersion="2.5.22081">
     <Name>ProSuite</Name>
     <Description>The ProSuite productivity extension for data production, cartographic refinement, and quality assurance</Description>
     <Image>Images\AddinDesktop32.png</Image>
     <Author>The ProSuite Authors</Author>
     <Company></Company>
-    <Date>2021-06-08</Date>
+    <Date>2021-09-24</Date>
     <Subject>Framework</Subject>
     <!-- Note subject can be one or more of these topics:
          Content, Framework, Editing, Geodatabase, Geometry, Geoprocessing, Layouts, Map Authoring, Map Exploration -->
@@ -86,7 +86,7 @@
           <button refID="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" size="large" />
         </group>
         <group id="ProSuiteTools_QA" caption="QA" keytip="G1">
-          <button refID="ProSuiteTools_QA_StartErrorsDockPane" size="large" />
+          <!--<button refID="ProSuiteTools_QA_StartErrorsDockPane" size="large" />-->
           <button refID="ProSuiteTools_QA_StartGPServer" size="middle" />
           <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
@@ -124,13 +124,13 @@
                 keytip="B1">
           <tooltip heading="Show Config">ProSuite Configuration<disabledText /></tooltip>
         </button>
-        <button id="ProSuiteTools_QA_StartErrorsDockPane" caption="QA Error Processing"
+        <!--<button id="ProSuiteTools_QA_StartErrorsDockPane" caption="QA Error Processing"
                 className="StartQAErrorsDockPane" loadOnClick="true"
                 smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerSession16.png"
                 largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerSession32.png"
                 keytip="B1">
           <tooltip heading="QA GP Tool">Show QA error worklist<disabledText /></tooltip>
-        </button>
+        </button>-->
         <button id="ProSuiteTools_QA_StartGPServer" caption="Start QA GPService" className="StartQAGPTool"
                 loadOnClick="true" condition="prosuite_qa_gpservice_enabled"
                 smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerConnection16.png"
@@ -266,24 +266,24 @@
           <tooltip heading="Tooltip Heading">Tooltip text<disabledText /></tooltip>
         </button>
         <button id="ProSuite_AGP_Solution_QA_VerifyVisibleExtentCmd" caption="Verify Extent"
-                className="ProSuite.AGP.Solution.QA.VerifyVisibleExtentCmd" loadOnClick="true"
+                className="ProSuite.AGP.Solution.QA.VerifyVisibleExtentCmd" loadOnClick="false"
                 smallImage="Images\VerifyVisibleExtentCmd16.png" largeImage="Images\VerifyVisibleExtentCmd32.png">
           <tooltip heading="Verify Visible Extent">
-            Verifies the visible extent based on the selected quality specification<disabledText />
+            Verifies the visible extent based on the selected quality specification.<disabledText />
           </tooltip>
         </button>
         <tool id="ProSuite_AGP_Solution_QA_VerifyPerimeterTool" caption="Verify Perimeter"
-              className="ProSuite.AGP.Solution.QA.VerifyPerimeterTool" loadOnClick="true"
+              className="ProSuite.AGP.Solution.QA.VerifyPerimeterTool" loadOnClick="false"
               smallImage="Images\VerifyPerimeterTool16.png" largeImage="Images\VerifyPerimeterTool32.png">
-          <tooltip heading="Draw a box or polygon to verify">
-            Tooltip text<disabledText />
+          <tooltip heading="Verify features in a box">
+            Verifies features intersecting a user-defined box, based on the selected quality specification.<disabledText />
           </tooltip>
         </tool>
         <button id="ProSuite_AGP_Solution_QA_VerifySelectionCmd" caption="Verify Selection"
-                className="ProSuite.AGP.Solution.QA.VerifySelectionCmd" loadOnClick="true"
+                className="ProSuite.AGP.Solution.QA.VerifySelectionCmd" loadOnClick="false"
                 smallImage="Images\VerifySelectionCmd16.png" largeImage="Images\VerifySelectionCmd32.png">
-          <tooltip heading="Verify selected features">
-            Tooltip text<disabledText />
+          <tooltip heading="Verify Selection">
+            Verifies the selected features based on the selected quality specification.<disabledText />
           </tooltip>
         </button>
         <button id="WorkLists_ShowWorkListsButton" caption="Open Work List" className="WorkLists.ShowWorkListsButton"

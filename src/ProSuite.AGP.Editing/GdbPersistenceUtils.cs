@@ -23,11 +23,7 @@ namespace ProSuite.AGP.Editing
 			[CanBeNull] IDictionary<Feature, Geometry> updates,
 			[CanBeNull] IDictionary<Feature, IList<Geometry>> copies = null)
 		{
-			var editOperation = new EditOperation();
-
-			EditorTransaction transaction = new EditorTransaction(editOperation);
-
-			return await transaction.ExecuteAsync(
+			return await ExecuteInTransactionAsync(
 				       editContext => StoreTx(editContext, updates, copies),
 				       description, GetDatasets(updates?.Keys, copies?.Keys));
 		}
@@ -37,13 +33,43 @@ namespace ProSuite.AGP.Editing
 			[CanBeNull] IDictionary<Feature, Geometry> updates,
 			[CanBeNull] IDictionary<Feature, IList<Geometry>> copies = null)
 		{
+			return ExecuteInTransaction(
+				editContext => StoreTx(editContext, updates, copies), description,
+				GetDatasets(updates?.Keys, copies?.Keys));
+		}
+
+		public static bool ExecuteInTransaction(
+			Func<EditOperation.IEditContext, bool> function,
+			[NotNull] string description,
+			IEnumerable<Dataset> datasets)
+		{
 			var editOperation = new EditOperation();
 
 			EditorTransaction transaction = new EditorTransaction(editOperation);
 
-			return transaction.Execute(
-				editContext => StoreTx(editContext, updates, copies),
-				description, GetDatasets(updates?.Keys, copies?.Keys));
+			bool result = false;
+			bool executeResult = transaction.Execute(
+				editContext => result = function(editContext),
+				description, datasets);
+
+			return result && executeResult;
+		}
+
+		public static async Task<bool> ExecuteInTransactionAsync(
+			Func<EditOperation.IEditContext, bool> function,
+			[NotNull] string description,
+			IEnumerable<Dataset> datasets)
+		{
+			var editOperation = new EditOperation();
+
+			EditorTransaction transaction = new EditorTransaction(editOperation);
+
+			bool result = false;
+			bool executeResult = await transaction.ExecuteAsync(
+				                     editContext => result = function(editContext),
+				                     description, datasets);
+
+			return result && executeResult;
 		}
 
 		public static bool StoreTx(
@@ -54,6 +80,57 @@ namespace ProSuite.AGP.Editing
 			_msg.DebugFormat("Saving {0} updates and {1} inserts...", updates?.Count ?? 0,
 			                 copies?.Count ?? 0);
 
+			UpdateTx(editContext, updates);
+
+			if (copies != null && copies.Count > 0)
+			{
+				InsertTx(editContext, copies);
+			}
+
+			return true;
+		}
+
+		public static Feature InsertTx([NotNull] EditOperation.IEditContext editContext,
+		                               [NotNull] Feature originalFeature,
+		                               [NotNull] Geometry newGeometry)
+		{
+			FeatureClass featureClass = originalFeature.GetTable();
+
+			RowBuffer rowBuffer = DuplicateRow(originalFeature);
+
+			SetShape(rowBuffer, newGeometry, featureClass);
+
+			Feature newFeature = featureClass.CreateRow(rowBuffer);
+
+			StoreShape(newFeature, newGeometry, editContext);
+
+			return newFeature;
+		}
+
+		public static IEnumerable<Feature> InsertTx(
+			[NotNull] EditOperation.IEditContext editContext,
+			[NotNull] IDictionary<Feature, IList<Geometry>> copies)
+		{
+			int insertCount = 0;
+
+			foreach (KeyValuePair<Feature, IList<Geometry>> keyValuePair in copies)
+			{
+				Feature originalFeature = keyValuePair.Key;
+				IList<Geometry> newGeometries = keyValuePair.Value;
+
+				foreach (Geometry newGeometry in newGeometries)
+				{
+					yield return InsertTx(editContext, originalFeature, newGeometry);
+					insertCount++;
+				}
+			}
+
+			_msg.InfoFormat("Successfully created {0} new feature(s).", insertCount);
+		}
+
+		public static void UpdateTx(EditOperation.IEditContext editContext,
+		                            IDictionary<Feature, Geometry> updates)
+		{
 			if (updates != null && updates.Count > 0)
 			{
 				foreach (KeyValuePair<Feature, Geometry> keyValuePair in updates)
@@ -63,32 +140,22 @@ namespace ProSuite.AGP.Editing
 
 				_msg.InfoFormat("Successfully updated {0} feature(s).", updates.Count);
 			}
+		}
 
-			if (copies != null && copies.Count > 0)
+		public static IEnumerable<Feature> InsertTx(
+			[NotNull] EditOperation.IEditContext editContext,
+			[NotNull] IEnumerable<ResultFeature> insertResults)
+		{
+			foreach (ResultFeature insert in insertResults)
 			{
-				foreach (KeyValuePair<Feature, IList<Geometry>> keyValuePair in copies)
-				{
-					Feature originalFeature = keyValuePair.Key;
-					IList<Geometry> newGeometries = keyValuePair.Value;
+				Feature originalFeatue = insert.Feature;
 
-					FeatureClass featureClass = originalFeature.GetTable();
+				Feature newFeature = InsertTx(editContext, originalFeatue, insert.NewGeometry);
 
-					foreach (Geometry newGeometry in newGeometries)
-					{
-						RowBuffer rowBuffer = DuplicateRow(originalFeature);
+				yield return newFeature;
 
-						SetShape(rowBuffer, newGeometry, featureClass);
-
-						Feature newFeature = featureClass.CreateRow(rowBuffer);
-
-						StoreShape(newFeature, newGeometry, editContext);
-					}
-				}
-
-				_msg.InfoFormat("Successfully created {0} new feature(s).", copies.Count);
+				insert.SetNewOid(newFeature.GetObjectID());
 			}
-
-			return true;
 		}
 
 		public static bool CanChange([NotNull] ResultFeature resultFeature,
@@ -201,6 +268,8 @@ namespace ProSuite.AGP.Editing
 		                               Geometry geometry,
 		                               EditOperation.IEditContext editContext)
 		{
+			_msg.DebugFormat("Updating shape of {0}...", GdbObjectUtils.ToString(feature));
+
 			if (geometry.IsEmpty)
 			{
 				throw new Exception("One or more updates geometries have become empty.");
@@ -212,7 +281,7 @@ namespace ProSuite.AGP.Editing
 			editContext.Invalidate(feature);
 		}
 
-		private static IEnumerable<Dataset> GetDatasets(params IEnumerable<Feature>[] featureLists)
+		public static IEnumerable<Dataset> GetDatasets(params IEnumerable<Feature>[] featureLists)
 		{
 			foreach (IEnumerable<Feature> collection in featureLists)
 			{

@@ -551,13 +551,18 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 					GeometryUtils.GetXyTolerance(targetGeometryToUpdate),
 					allowZDifference))
 				{
-					if (resultingTargets.ContainsKey(targetFeature))
+					// TODO: Equality comparison should not be necessary if EnsurePointsExistInTarget)= method returns false
+					// if no update happened (e.g. because vertex is replaced by the very same point)
+					if (! GeometryUtils.AreEqual(targetGeometryToUpdate, targetFeature.Shape))
 					{
-						resultingTargets[targetFeature] = targetGeometryToUpdate;
-					}
-					else
-					{
-						resultingTargets.Add(targetFeature, targetGeometryToUpdate);
+						if (resultingTargets.ContainsKey(targetFeature))
+						{
+							resultingTargets[targetFeature] = targetGeometryToUpdate;
+						}
+						else
+						{
+							resultingTargets.Add(targetFeature, targetGeometryToUpdate);
+						}
 					}
 				}
 			}

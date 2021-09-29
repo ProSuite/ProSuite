@@ -551,8 +551,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			progressFeedback?.SetRange(0, geometriesByFeature.Count);
 
-			foreach (KeyValuePair<IFeature, IGeometry> keyValuePair in geometriesByFeature
-			)
+			foreach (KeyValuePair<IFeature, IGeometry> keyValuePair in geometriesByFeature)
 			{
 				if (trackCancel != null && ! trackCancel.Continue())
 				{

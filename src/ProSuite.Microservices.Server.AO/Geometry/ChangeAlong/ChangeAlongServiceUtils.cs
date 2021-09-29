@@ -243,13 +243,16 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 				// TODO: CacheGeometrySizes...
 				IList<IFeature> updatedFeatures = reshaper.Save(reshapedGeometries);
 
-				IList<ResultObjectMsg> ResultObjectMsgs =
+				IList<ResultObjectMsg> resultObjectMsgs =
 					GetResultFeatureMessages(
 						null, updatedFeatures,
-						f => GetNotifications(reshapedGeometries, f),
+						f => GetNotifications(reshapedGeometries, reshaper, f),
 						f => reshaper.NotificationIsWarning);
 
-				response.ResultFeatures.AddRange(ResultObjectMsgs);
+				response.ResultFeatures.AddRange(resultObjectMsgs);
+
+				reshaper.LogSuccessfulReshape(reshapedGeometries.Keys,
+				                              esriUnits.esriMeters, esriUnits.esriMeters);
 			}
 
 			// Calculate new reshape lines based on current source and target states:
@@ -313,6 +316,18 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 					CalculateCutLines(newSourceFeatures, targetFeatures,
 					                  request.CalculationRequest, trackCancel,
 					                  out ReshapeAlongCurveUsability usability);
+
+				// TODO: Ideally, new features can also be referenced by the CutSubcurve's Source
+				// And the ObjectIDs would be re-assigned after the store happened on the client.
+				// However, for the time being, clear the Source property if it references a new row
+				foreach (CutSubcurve newSubcurve in newSubcurves)
+				{
+					if (newSubcurve.Source != null &&
+					    newSourceFeatures.Any(f => newSubcurve.Source.Value.References(f)))
+					{
+						newSubcurve.Source = null;
+					}
+				}
 
 				response.CutLinesUsability = (int) usability;
 
@@ -444,6 +459,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 
 		private static IEnumerable<string> GetNotifications(
 			[NotNull] IReadOnlyDictionary<IGeometry, NotificationCollection> reshapedGeometries,
+			GeometryReshaperBase reshaper,
 			[NotNull] IFeature feature)
 		{
 			if (reshapedGeometries == null)
@@ -451,12 +467,32 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 				throw new ArgumentNullException(nameof(reshapedGeometries));
 			}
 
-			if (reshapedGeometries.TryGetValue(feature.Shape,
+			IGeometry updatedGeometry = feature.Shape;
+
+			if (reshapedGeometries.TryGetValue(updatedGeometry,
 			                                   out NotificationCollection notifications))
 			{
 				foreach (INotification notification in notifications)
 				{
 					yield return notification.Message;
+				}
+			}
+
+			if (! reshaper.NotificationIsWarning)
+			{
+				// Add the standard size text information
+
+				var proj = updatedGeometry.SpatialReference as IProjectedCoordinateSystem;
+				int coordinateUnitFactoryCode = proj.CoordinateUnit.FactoryCode;
+
+				esriUnits linearUnits = esriUnits.esriMeters;
+
+				string sizeChangeMessage = reshaper.GetSizeChangeMessage(
+					updatedGeometry, feature, linearUnits, linearUnits);
+
+				if (! string.IsNullOrEmpty(sizeChangeMessage))
+				{
+					yield return sizeChangeMessage;
 				}
 			}
 		}
@@ -600,7 +636,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 			[CanBeNull] Func<IFeature, IEnumerable<string>> notificationsForFeature = null,
 			[CanBeNull] Func<IFeature, bool> warningForFeature = null)
 		{
-			IList<ResultObjectMsg> ResultObjectMsgs = new List<ResultObjectMsg>();
+			IList<ResultObjectMsg> resultObjectMsgs = new List<ResultObjectMsg>();
 
 			HashSet<IFeature> allInserts = new HashSet<IFeature>();
 
@@ -636,7 +672,7 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 						AddNotification(insert, featureMsg, notificationsForFeature,
 						                warningForFeature);
 
-						ResultObjectMsgs.Add(featureMsg);
+						resultObjectMsgs.Add(featureMsg);
 					}
 				}
 			}
@@ -659,11 +695,11 @@ namespace ProSuite.Microservices.Server.AO.Geometry.ChangeAlong
 					AddNotification(resultFeature, updateMsg, notificationsForFeature,
 					                warningForFeature);
 
-					ResultObjectMsgs.Add(updateMsg);
+					resultObjectMsgs.Add(updateMsg);
 				}
 			}
 
-			return ResultObjectMsgs;
+			return resultObjectMsgs;
 		}
 
 		private static void AddNotification(IFeature feature, ResultObjectMsg featureMsg,

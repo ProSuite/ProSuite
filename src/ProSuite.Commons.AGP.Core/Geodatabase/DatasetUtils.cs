@@ -32,6 +32,14 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		}
 
 		[CanBeNull]
+		public static SpatialReference GetSpatialReference([NotNull] Feature feature)
+		{
+			Assert.ArgumentNotNull(feature, nameof(feature));
+
+			return GetSpatialReference(feature.GetTable());
+		}
+
+		[CanBeNull]
 		public static SpatialReference GetSpatialReference([NotNull] this FeatureClass featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
