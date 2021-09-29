@@ -629,7 +629,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					throw new InvalidConfigurationException(
 						string.Format(
 							"The name '{0}' as a test parameter in quality condition '{1}' " +
-							"defined in import document does not match test descriptor.",
+							"does not match test descriptor.",
 							xmlTestParameterValue.TestParameterName,
 							xmlQualityCondition.Name));
 				}
