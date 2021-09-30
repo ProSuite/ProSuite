@@ -570,8 +570,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 			}
 
 			var dataSources = conditionsSpecificationMsg.DataSources.Select(
-				dsMsg => new DataSource(dsMsg.ModelName, dsMsg.Id, dsMsg.ModelName,
-				                        dsMsg.SchemaOwner, dsMsg.CatalogPath)).ToList();
+				dsMsg => new DataSource(dsMsg.ModelName, dsMsg.Id, dsMsg.CatalogPath,
+				                        dsMsg.Database, dsMsg.SchemaOwner)).ToList();
 
 			var specificationElements = new List<SpecificationElement>();
 

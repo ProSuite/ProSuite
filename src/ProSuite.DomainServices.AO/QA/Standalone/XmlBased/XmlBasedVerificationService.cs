@@ -92,10 +92,12 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			[CanBeNull] AreaOfInterest areaOfInterest,
 			[CanBeNull] string optionsXml,
 			double tileSize,
-			string outputDirectoryPath,
+			[NotNull] string outputDirectoryPath,
 			IssueRepositoryType issueRepositoryType = IssueRepositoryType.FileGdb,
 			ITrackCancel cancelTracker = null)
 		{
+			Assert.NotNullOrEmpty(outputDirectoryPath, "Output directory path is null or empty.");
+
 			XmlVerificationOptions verificationOptions =
 				StringUtils.IsNotEmpty(optionsXml)
 					? VerificationOptionUtils.ReadOptionsXml(optionsXml)
