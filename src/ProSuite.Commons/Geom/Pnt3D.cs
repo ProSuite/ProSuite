@@ -4,7 +4,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geom
 {
-	public sealed class Pnt3D : Pnt, IBoundedXY
+	public sealed class Pnt3D : Pnt
 	{
 		public Pnt3D() : base(3) { }
 
@@ -28,6 +28,13 @@ namespace ProSuite.Commons.Geom
 			Coordinates[0] = v[0];
 			Coordinates[1] = v[1];
 			Coordinates[2] = v[2];
+		}
+		
+		public Pnt3D(IPnt pnt) : base(3)
+		{
+			Coordinates[0] = pnt[0];
+			Coordinates[1] = pnt[1];
+			Coordinates[2] = pnt.Dimension == 3 ? pnt[2] : double.NaN;
 		}
 
 		public double Z
@@ -106,7 +113,7 @@ namespace ProSuite.Commons.Geom
 			       EqualOrBothNan(Coordinates[2], other.Z, tolerance);
 		}
 
-		public bool EqualsXY(Pnt3D other, double tolerance)
+		public bool EqualsXY(IPnt other, double tolerance)
 		{
 			if (other == null)
 			{
@@ -154,13 +161,5 @@ namespace ProSuite.Commons.Geom
 
 			return MathUtils.AreEqual(v1, v2, tolerance);
 		}
-
-		public double XMin => X;
-
-		public double YMin => Y;
-
-		public double XMax => X;
-
-		public double YMax => Y;
 	}
 }

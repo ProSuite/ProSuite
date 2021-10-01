@@ -23,7 +23,7 @@ using ProSuite.UI.QA.VerificationProgress;
 
 namespace ProSuite.AGP.QA.ProPlugins
 {
-	// todo daro: extract common base classe for VerifyPerimeterToolBase, VerifySelectionCmdBase, VerifyVisibleExtentCmdBase
+	// todo daro: extract common base class for VerifyPerimeterToolBase, VerifySelectionCmdBase, VerifyVisibleExtentCmdBase
 	// TODO: Move OneClickToolBase to ProSuite.AGP as a shared project instead of using AGP.Editing
 	public abstract class VerifyPerimeterToolBase : OneClickToolBase
 	{
@@ -37,13 +37,20 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			//SelectionCursor = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursor);
 			//SelectionCursorShift = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursorShift);
+
+			Register();
+		}
+
+		private void Register()
+		{
+			VerificationPlugInController.GetInstance(SessionContext).Register(this);
 		}
 
 		protected abstract IMapBasedSessionContext SessionContext { get; }
 
 		protected abstract Window CreateProgressWindow(
 			VerificationProgressViewModel progressViewModel);
-		
+
 		protected abstract IProSuiteFacade ProSuiteImpl { get; }
 
 		protected override Task OnToolActivateAsync(bool active)
@@ -63,6 +70,13 @@ namespace ProSuite.AGP.QA.ProPlugins
 			CancelableProgressor progressor)
 		{
 			GeometryUtils.Simplify(sketchGeometry);
+
+			if (SessionContext?.VerificationEnvironment == null)
+			{
+				MessageBox.Show("No quality verification environment is configured.",
+				                "Verify Extent", MessageBoxButton.OK, MessageBoxImage.Warning);
+				return Task.FromResult(false);
+			}
 
 			if (ToolUtils.IsSingleClickSketch(sketchGeometry))
 			{

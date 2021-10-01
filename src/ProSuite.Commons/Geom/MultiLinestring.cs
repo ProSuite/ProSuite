@@ -304,7 +304,11 @@ namespace ProSuite.Commons.Geom
 			UpdateSpatialIndex(linestring, Linestrings.Count - 1);
 
 			CacheStartIndexes();
+
+			AddLinestringCore(linestring);
 		}
+
+		protected virtual void AddLinestringCore(Linestring linestring) { }
 
 		public void InsertLinestring(int index, Linestring linestring)
 		{
@@ -315,7 +319,11 @@ namespace ProSuite.Commons.Geom
 			SpatialIndex = null;
 
 			CacheStartIndexes();
+
+			InsertLinestringCore(index, linestring);
 		}
+
+		protected virtual void InsertLinestringCore(int index, Linestring linestring) { }
 
 		public bool RemoveLinestring(Linestring linestring)
 		{
@@ -330,8 +338,12 @@ namespace ProSuite.Commons.Geom
 
 			CacheStartIndexes();
 
+			RemoveLinestringCore(linestring);
+
 			return result;
 		}
+
+		protected virtual void RemoveLinestringCore(Linestring linestring) { }
 
 		public double GetLength2D()
 		{

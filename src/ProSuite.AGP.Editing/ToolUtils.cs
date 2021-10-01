@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.Data;
@@ -37,7 +38,7 @@ namespace ProSuite.AGP.Editing
 			return ! hasExtent;
 		}
 
-		public static Geometry GetSinglePickSelectionArea(Geometry sketchGeometry,
+		public static Geometry GetSinglePickSelectionArea([NotNull] Geometry sketchGeometry,
 		                                                  int selectionTolerancePixels)
 		{
 			MapPoint sketchPoint = CreatePointFromSketchPolygon(sketchGeometry);
@@ -45,7 +46,8 @@ namespace ProSuite.AGP.Editing
 			return BufferGeometryByPixels(sketchPoint, selectionTolerancePixels);
 		}
 
-		public static Geometry SketchToSearchGeometry(Geometry sketch, int selectionTolerancePixels,
+		public static Geometry SketchToSearchGeometry([NotNull] Geometry sketch,
+		                                              int selectionTolerancePixels,
 		                                              out bool isSinglePick)
 		{
 			isSinglePick = IsSingleClickSketch(sketch);
@@ -85,6 +87,22 @@ namespace ProSuite.AGP.Editing
 			}
 
 			return GeometryUtils.Contains(sketch, derivedGeometry);
+		}
+
+		/// <summary>
+		/// Selects the specified features but only in the layers that already have a selection.
+		/// </summary>
+		/// <param name="newFeatures"></param>
+		/// <param name="mapView"></param>
+		public static void SelectNewFeatures(List<Feature> newFeatures,
+		                                     MapView mapView)
+		{
+			List<BasicFeatureLayer> layersWithSelection = mapView.Map.GetSelection().Keys
+			                                                     .Where(l => l is BasicFeatureLayer)
+			                                                     .Cast<BasicFeatureLayer>()
+			                                                     .ToList();
+
+			SelectionUtils.SelectFeatures(newFeatures, layersWithSelection);
 		}
 
 		private static MapPoint CreatePointFromSketchPolygon(Geometry sketchGeometry)

@@ -12,11 +12,9 @@ using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping.Events;
-using ProSuite.AGP.QA;
 using ProSuite.AGP.Solution.ConfigUI;
 using ProSuite.AGP.Solution.LoggerUI;
 using ProSuite.AGP.Solution.ProjectItem;
-using ProSuite.AGP.Solution.QA;
 using ProSuite.AGP.Solution.Workflow;
 using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.Application.Configuration;
@@ -24,6 +22,7 @@ using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.Microservices.Client.AGP;
 using ProSuite.Microservices.Client.QA;
@@ -379,45 +378,32 @@ namespace ProSuite.AGP.Solution
 
 		private async Task<bool> SetupBackend()
 		{
-			bool result = await StartToolMicroserviceClientAsync();
+			bool toolsClientStarted = false;
 
-			QualityVerificationServiceClient client = await StartQaMicroserviceClientAsync();
+			// NOTE: This method is used with ConfigureAwait(false) and must not throw or the application will crash!
+			try
+			{
+				toolsClientStarted = await StartToolMicroserviceClientAsync();
 
-			// Make sure the field is initialized:
-			Assert.NotNull(SessionContext);
+				// Make sure the field is initialized:
+				Assert.NotNull(SessionContext);
 
-			_sessionContext.MicroServiceClient = client;
+				_sessionContext.MicroServiceClient = await StartQaMicroserviceClientAsync();
 
-			// In case the map is already loaded: Set up the project workspace:
-			await _sessionContext.TrySelectProjectWorkspaceFromFocusMapAsync();
+				IQualityVerificationEnvironment verificationEnvironment =
+					await _sessionContext.InitializeVerificationEnvironment();
 
-			// TODO: If no client channel config file exists, use XML verification provider directly:
-			//verificationEnvironment =
-			//	new QualityVerificationEnvironment(new XmlSpecificationProvider());
-			var verificationEnvironment =
-				new QualityVerificationEnvironment(SessionContext, client);
+				// this is still necessary for GP QA (Consider implementing a second VerificationService subclass for GP QA):
+				QAConfiguration.Current.SetupGrpcConfiguration(verificationEnvironment);
+				// enable GP Buttons 
+				UpdateServiceUI();
+			}
+			catch (Exception e)
+			{
+				_msg.Error("Error setting up backend", e);
+			}
 
-			verificationEnvironment.VerificationService =
-				new VerificationServiceGrpc(client)
-				{
-					HtmlReportName = Constants.HtmlReportName,
-					VerificationReportName = Constants.VerificationReportName
-				};
-
-			_sessionContext.VerificationEnvironment = verificationEnvironment;
-			_sessionContext.VerificationEnvironment.RefreshQualitySpecifications();
-
-			// TODO: This has no effect any more -> change XML based specification provider
-
-			// this is still necessary for GP QA if actual
-			QAConfiguration.Current.SetupGrpcConfiguration(verificationEnvironment);
-			// enable GP Buttons 
-			UpdateServiceUI();
-
-			// ... to implement IQualitySpecificationReferencesProvider instead, such as
-			//verificationEnvironment.FallbackSpecificationProvider = new XmlSpecificationProvider();
-			// in case no Microservice is available. Additionally, implement a second VerificationService subclass.
-			return result;
+			return toolsClientStarted;
 		}
 
 		private async Task<bool> StartToolMicroserviceClientAsync()
@@ -449,7 +435,7 @@ namespace ProSuite.AGP.Solution
 			}
 			catch (Exception e)
 			{
-				_msg.Warn($"Error starting microservice client: {e.Message}", e);
+				_msg.Warn($"Error starting microservice client for edit tools: {e.Message}", e);
 				return false;
 			}
 
@@ -458,28 +444,39 @@ namespace ProSuite.AGP.Solution
 
 		private async Task<QualityVerificationServiceClient> StartQaMicroserviceClientAsync()
 		{
-			string executablePath;
-			using (_msg.IncrementIndentation("Searching for QA microservice deployment ({0})...",
-			                                 _microserverQaExeName))
+			try
 			{
-				executablePath =
-					ConfigurationUtils.GetProSuiteExecutablePath(_microserverQaExeName);
-
-				if (executablePath == null)
+				string executablePath;
+				using (_msg.IncrementIndentation(
+					"Searching for QA microservice deployment ({0})...",
+					_microserverQaExeName))
 				{
-					_msg.Debug("Cannot find qa microservice deployment folder.");
+					executablePath =
+						ConfigurationUtils.GetProSuiteExecutablePath(_microserverQaExeName);
+
+					if (executablePath == null)
+					{
+						_msg.Debug("Cannot find qa microservice deployment folder.");
+					}
 				}
+
+				string configFilePath =
+					ConfigurationUtils.GetConfigFilePath(_microserviceQaClientConfigXml, false);
+
+				QualityVerificationServiceClient result =
+					await GrpcClientConfigUtils.StartQaServiceClient(
+						executablePath, configFilePath);
+
+				QaMicroserviceClient = Assert.NotNull(result);
+
+				return QaMicroserviceClient;
 			}
-
-			string configFilePath =
-				ConfigurationUtils.GetConfigFilePath(_microserviceQaClientConfigXml, false);
-
-			QualityVerificationServiceClient result =
-				await GrpcClientConfigUtils.StartQaServiceClient(executablePath, configFilePath);
-
-			QaMicroserviceClient = Assert.NotNull(result);
-
-			return QaMicroserviceClient;
+			catch (Exception e)
+			{
+				_msg.Warn(
+					$"Error starting microservice client for quality verification: {e.Message}", e);
+				return null;
+			}
 		}
 	}
 

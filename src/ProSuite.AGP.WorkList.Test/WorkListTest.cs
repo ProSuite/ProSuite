@@ -23,8 +23,8 @@ namespace ProSuite.AGP.WorkList.Test
 		private Polygon _poly0;
 		private Polygon _poly1;
 		private Geodatabase _geodatabase;
-		private Table _table0;
-		private Table _table1;
+		private Table _issuePoints;
+		private Table _issueLines;
 		private IWorkItemRepository _repository;
 
 		[SetUp]
@@ -37,12 +37,12 @@ namespace ProSuite.AGP.WorkList.Test
 				new Geodatabase(
 					new FileGeodatabaseConnectionPath(new Uri(_emptyIssuesGdb, UriKind.Absolute)));
 
-			_table0 = _geodatabase.OpenDataset<Table>(_featureClass0);
-			_table1 = _geodatabase.OpenDataset<Table>(_featureClass1);
+			_issuePoints = _geodatabase.OpenDataset<Table>(_issuePointsName);
+			_issueLines = _geodatabase.OpenDataset<Table>(_issueLinesName);
 
 			var tablesByGeodatabase = new Dictionary<Geodatabase, List<Table>>
 			                          {
-				                          {_geodatabase, new List<Table> {_table0, _table1}}
+				                          {_geodatabase, new List<Table> {_issuePoints, _issueLines}}
 			                          };
 
 			IRepository stateRepository =
@@ -53,8 +53,8 @@ namespace ProSuite.AGP.WorkList.Test
 		[TearDown]
 		public void TearDown()
 		{
-			_table0?.Dispose();
-			_table1?.Dispose();
+			_issuePoints?.Dispose();
+			_issueLines?.Dispose();
 			_geodatabase?.Dispose();
 			//_repository?.Dispose();
 		}
@@ -84,28 +84,26 @@ namespace ProSuite.AGP.WorkList.Test
 		private const string _emptyIssuesGdb =
 			@"C:\git\ProSuite\src\ProSuite.AGP.WorkList.Test\TestData\issues_empty.gdb";
 
-		private readonly string _featureClassName = "IssuePolygons";
-		private readonly string _featureClass0 = "featureClass0";
-		private readonly string _featureClass1 = "featureClass1";
+		private readonly string _issuePolygons = "IssuePolygons";
+		private readonly string _issuePointsName = "IssuePoints";
+		private readonly string _issueLinesName = "IssueLines";
 
 		#region work list navigation tests
 
 		[Test]
 		public void Can_go_next()
 		{
-			IWorkItem item1 = new WorkItemMock(1);
-			IWorkItem item2 = new WorkItemMock(2);
-			IWorkItem item3 = new WorkItemMock(3);
-			IWorkItem item4 = new WorkItemMock(4);
+			// The items have to be visible to enable the work list to go to the next item.
+			// Normally GoNearest() sets Item.Visible = true.
+			IWorkItem item1 = new WorkItemMock(1) {Visited = true};
+			IWorkItem item2 = new WorkItemMock(2) {Visited = true};
+			IWorkItem item3 = new WorkItemMock(3) {Visited = true};
+			IWorkItem item4 = new WorkItemMock(4) {Visited = true};
 			var repository =
 				new ItemRepositoryMock(new List<IWorkItem> {item1, item2, item3, item4});
 
 			IWorkList wl = new MemoryQueryWorkList(repository, "work list");
-
-			wl.GoNext();
-			Assert.AreEqual(item1, wl.Current);
-			Assert.True(wl.Current?.Visited);
-
+			
 			wl.GoNext();
 			Assert.AreEqual(item2, wl.Current);
 			Assert.True(wl.Current?.Visited);
@@ -117,11 +115,9 @@ namespace ProSuite.AGP.WorkList.Test
 			wl.GoNext();
 			Assert.AreEqual(item4, wl.Current);
 			Assert.True(wl.Current?.Visited);
-
-			// end of work list, current item is the same as before
-			wl.GoNext();
+			
+			Assert.False(wl.CanGoNext());
 			Assert.AreEqual(item4, wl.Current);
-			Assert.True(wl.Current?.Visited);
 		}
 
 		[Test]
@@ -298,8 +294,8 @@ namespace ProSuite.AGP.WorkList.Test
 		[Test]
 		public void Can_handle_WorkList_extent_on_insert()
 		{
-			InsertFeature(_featureClass0, _poly0);
-			InsertFeature(_featureClass1, _poly0);
+			InsertFeature(_issuePointsName, _poly0);
+			InsertFeature(_issueLinesName, _poly0);
 
 			try
 			{
@@ -308,9 +304,9 @@ namespace ProSuite.AGP.WorkList.Test
 
 				Assert.AreEqual(2, workList.GetItems().ToList().Count);
 
-				InsertFeature(_featureClass0, _poly1);
+				InsertFeature(_issuePointsName, _poly1);
 
-				var inserts = new Dictionary<Table, List<long>> {{_table0, new List<long> {2}}};
+				var inserts = new Dictionary<Table, List<long>> {{_issuePoints, new List<long> {2}}};
 				var deletes = new Dictionary<Table, List<long>>();
 				var updates = new Dictionary<Table, List<long>>();
 
@@ -324,16 +320,16 @@ namespace ProSuite.AGP.WorkList.Test
 			}
 			finally
 			{
-				DeleteAllRows(_featureClass0);
-				DeleteAllRows(_featureClass1);
+				DeleteAllRows(_issuePointsName);
+				DeleteAllRows(_issueLinesName);
 			}
 		}
 
 		[Test]
 		public void Can_handle_WorkList_extent_on_update()
 		{
-			InsertFeature(_featureClass0, _poly0);
-			InsertFeature(_featureClass1, _poly0);
+			InsertFeature(_issuePointsName, _poly0);
+			InsertFeature(_issueLinesName, _poly0);
 
 			try
 			{
@@ -342,13 +338,13 @@ namespace ProSuite.AGP.WorkList.Test
 
 				Assert.AreEqual(2, workList.GetItems().ToList().Count);
 
-				UpdateFeatureGeometry(_featureClass0, _poly1);
-				UpdateFeatureGeometry(_featureClass1, _poly1);
+				UpdateFeatureGeometry(_issuePointsName, _poly1);
+				UpdateFeatureGeometry(_issueLinesName, _poly1);
 
 				var inserts = new Dictionary<Table, List<long>>();
 				var deletes = new Dictionary<Table, List<long>>();
 				var updates = new Dictionary<Table, List<long>>
-				              {{_table0, new List<long> {1}}, {_table1, new List<long> {1}}};
+				              {{_issuePoints, new List<long> {1}}, {_issueLines, new List<long> {1}}};
 
 				((IRowCache) workList).ProcessChanges(inserts, deletes, updates);
 
@@ -367,16 +363,16 @@ namespace ProSuite.AGP.WorkList.Test
 			}
 			finally
 			{
-				DeleteAllRows(_featureClass0);
-				DeleteAllRows(_featureClass1);
+				DeleteAllRows(_issuePointsName);
+				DeleteAllRows(_issueLinesName);
 			}
 		}
 
 		[Test]
 		public void Can_handle_WorkList_extent_on_delete()
 		{
-			InsertFeature(_featureClass0, _poly0);
-			InsertFeature(_featureClass1, _poly1);
+			InsertFeature(_issuePointsName, _poly0);
+			InsertFeature(_issueLinesName, _poly1);
 
 			try
 			{
@@ -386,10 +382,10 @@ namespace ProSuite.AGP.WorkList.Test
 
 				Assert.AreEqual(2, workList.GetItems().ToList().Count);
 
-				DeleteRow(_featureClass1);
+				DeleteRow(_issueLinesName);
 
 				var inserts = new Dictionary<Table, List<long>>();
-				var deletes = new Dictionary<Table, List<long>> {{_table1, new List<long> {1}}};
+				var deletes = new Dictionary<Table, List<long>> {{_issueLines, new List<long> {1}}};
 				var updates = new Dictionary<Table, List<long>>();
 
 				((IRowCache) workList).ProcessChanges(inserts, deletes, updates);
@@ -400,8 +396,8 @@ namespace ProSuite.AGP.WorkList.Test
 			}
 			finally
 			{
-				DeleteAllRows(_featureClass0);
-				DeleteAllRows(_featureClass1);
+				DeleteAllRows(_issuePointsName);
+				DeleteAllRows(_issueLinesName);
 			}
 		}
 
@@ -423,7 +419,7 @@ namespace ProSuite.AGP.WorkList.Test
 			                         .ClosePolygon();
 
 			var rowCount = 4;
-			TestUtils.InsertRows(_emptyIssuesGdb, _featureClassName, polygon, rowCount);
+			TestUtils.InsertRows(_emptyIssuesGdb, _issuePolygons, polygon, rowCount);
 
 			try
 			{
@@ -431,7 +427,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 
-				var table = geodatabase.OpenDataset<Table>(_featureClassName);
+				var table = geodatabase.OpenDataset<Table>(_issuePolygons);
 				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase =
 					new Dictionary<Geodatabase, List<Table>>
 					{
@@ -452,7 +448,7 @@ namespace ProSuite.AGP.WorkList.Test
 			}
 			finally
 			{
-				TestUtils.DeleteAllRows(_emptyIssuesGdb, _featureClassName);
+				TestUtils.DeleteAllRows(_emptyIssuesGdb, _issuePolygons);
 			}
 		}
 
@@ -474,14 +470,14 @@ namespace ProSuite.AGP.WorkList.Test
 			                         .ClosePolygon();
 
 			var rowCount = 10000;
-			TestUtils.InsertRows(_emptyIssuesGdb, _featureClassName, polygon, rowCount);
+			TestUtils.InsertRows(_emptyIssuesGdb, _issuePolygons, polygon, rowCount);
 
 			try
 			{
 				var uri = new Uri(_emptyIssuesGdb, UriKind.Absolute);
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
-				var table = geodatabase.OpenDataset<Table>(_featureClassName);
+				var table = geodatabase.OpenDataset<Table>(_issuePolygons);
 				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase =
 					new Dictionary<Geodatabase, List<Table>>
 					{
@@ -510,7 +506,7 @@ namespace ProSuite.AGP.WorkList.Test
 			}
 			finally
 			{
-				TestUtils.DeleteAllRows(_emptyIssuesGdb, _featureClassName);
+				TestUtils.DeleteAllRows(_emptyIssuesGdb, _issuePolygons);
 			}
 		}
 
@@ -532,7 +528,7 @@ namespace ProSuite.AGP.WorkList.Test
 			                         .ClosePolygon();
 
 			var rowCount = 10000;
-			TestUtils.InsertRows(_emptyIssuesGdb, _featureClassName, polygon, rowCount);
+			TestUtils.InsertRows(_emptyIssuesGdb, _issuePolygons, polygon, rowCount);
 
 			try
 			{
@@ -540,7 +536,7 @@ namespace ProSuite.AGP.WorkList.Test
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
 
-				var table = geodatabase.OpenDataset<Table>(_featureClassName);
+				var table = geodatabase.OpenDataset<Table>(_issuePolygons);
 				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase =
 					new Dictionary<Geodatabase, List<Table>>
 					{
@@ -569,7 +565,7 @@ namespace ProSuite.AGP.WorkList.Test
 			}
 			finally
 			{
-				TestUtils.DeleteAllRows(_emptyIssuesGdb, _featureClassName);
+				TestUtils.DeleteAllRows(_emptyIssuesGdb, _issuePolygons);
 			}
 		}
 
@@ -584,14 +580,14 @@ namespace ProSuite.AGP.WorkList.Test
 			                  .ClosePolygon();
 
 			var rowCount = 4;
-			TestUtils.InsertRows(_emptyIssuesGdb, _featureClassName, polygon, rowCount);
+			TestUtils.InsertRows(_emptyIssuesGdb, _issuePolygons, polygon, rowCount);
 
 			try
 			{
 				var uri = new Uri(_emptyIssuesGdb, UriKind.Absolute);
 
 				var geodatabase = new Geodatabase(new FileGeodatabaseConnectionPath(uri));
-				var table = geodatabase.OpenDataset<Table>(_featureClassName);
+				var table = geodatabase.OpenDataset<Table>(_issuePolygons);
 				Dictionary<Geodatabase, List<Table>> tablesByGeodatabase =
 					new Dictionary<Geodatabase, List<Table>>
 					{
@@ -614,7 +610,7 @@ namespace ProSuite.AGP.WorkList.Test
 			}
 			finally
 			{
-				TestUtils.DeleteAllRows(_emptyIssuesGdb, _featureClassName);
+				TestUtils.DeleteAllRows(_emptyIssuesGdb, _issuePolygons);
 			}
 		}
 

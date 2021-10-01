@@ -27,9 +27,6 @@ namespace ProSuite.Microservices.Client.AGP
 		/// <param name="objectId">The object id (OID field value).</param>
 		public GdbObjectReference(long classId, long objectId)
 		{
-			Assert.ArgumentCondition(classId >= 0, "Invalid class id");
-			Assert.ArgumentCondition(objectId >= 0, "Invalid object id");
-
 			ClassId = classId;
 			ObjectId = objectId;
 		}

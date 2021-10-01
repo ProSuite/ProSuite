@@ -90,7 +90,8 @@ namespace ProSuite.Microservices.Client.AGP.QA
 
 			foreach (Table table in objectClasses)
 			{
-				ObjectClassMsg objectClassMsg = ProtobufConversionUtils.ToObjectClassMsg(table);
+				ObjectClassMsg objectClassMsg = ProtobufConversionUtils.ToObjectClassMsg(
+					table, Convert.ToInt32(table.GetID()));
 
 				request.ObjectClasses.Add(objectClassMsg);
 

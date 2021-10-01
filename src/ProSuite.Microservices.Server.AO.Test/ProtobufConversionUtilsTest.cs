@@ -264,7 +264,7 @@ namespace ProSuite.Microservices.Server.AO.Test
 			var featureClass = (GdbFeatureClass) feature.Class;
 
 			GdbFeature rehydrated = ProtobufConversionUtils.FromGdbFeatureMsg(
-				dehydrated, new GdbTableContainer(new[] {featureClass}));
+				dehydrated, () => featureClass);
 
 			AssertSameFeature(feature, rehydrated);
 		}

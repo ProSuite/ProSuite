@@ -476,6 +476,58 @@ namespace ProSuite.Commons.Geom
 			return GetPoints(0, null, clone);
 		}
 
+		public IEnumerable<int> FindPointIndexes(IPnt searchPoint,
+		                                         double xyTolerance = double.Epsilon,
+		                                         bool useSearchCircle = false,
+		                                         bool allowIndexing = true)
+		{
+			if (SpatialIndex == null && allowIndexing &&
+			    SegmentCount > AllowIndexingThreshold)
+			{
+				SpatialIndex = SpatialHashSearcher<int>.CreateSpatialSearcher(this);
+			}
+
+			if (SpatialIndex != null)
+			{
+				foreach (int foundSegmentIdx in SpatialIndex.Search(searchPoint.X, searchPoint.Y,
+					searchPoint.X, searchPoint.Y, xyTolerance))
+				{
+					Line3D segment = this[foundSegmentIdx];
+
+					bool withinTolerance =
+						GeomRelationUtils.IsWithinTolerance(segment.StartPoint, searchPoint,
+						                                    xyTolerance, useSearchCircle);
+
+					if (withinTolerance)
+					{
+						yield return foundSegmentIdx;
+					}
+				}
+			}
+			else
+			{
+				for (var i = 0; i < SegmentCount; i++)
+				{
+					;
+					bool withinTolerance =
+						GeomRelationUtils.IsWithinTolerance(_segments[i].StartPoint, searchPoint,
+						                                    xyTolerance, useSearchCircle);
+
+					if (withinTolerance)
+					{
+						yield return i;
+					}
+				}
+			}
+
+			bool isEndPoint = EndPoint.EqualsXY(searchPoint, xyTolerance);
+
+			if (isEndPoint)
+			{
+				yield return PointCount - 1;
+			}
+		}
+
 		public Pnt3D GetPoint3D(int pointIndex, bool clone = false)
 		{
 			// Line count + 1 - 1:
@@ -496,7 +548,8 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
-		/// Returns the index of a vertex that is within the tolerance of the specified point.
+		/// Returns the index of a vertex that is within the tolerance of the specified point. The tolerance is
+		/// applied separately in X, Y and, if required, Z.
 		/// </summary>
 		/// <param name="point">The search point.</param>
 		/// <param name="inXY">Whether or not only the XY coordinates should be compared.</param>
@@ -508,50 +561,23 @@ namespace ProSuite.Commons.Geom
 		                         double tolerance = double.Epsilon,
 		                         bool allowIndexing = true)
 		{
-			if (SpatialIndex == null && allowIndexing &&
-			    SegmentCount > AllowIndexingThreshold)
+			foreach (int foundXY in FindPointIndexes(point, tolerance, false, allowIndexing))
 			{
-				SpatialIndex = SpatialHashSearcher<int>.CreateSpatialSearcher(this);
-			}
-
-			if (SpatialIndex != null)
-			{
-				foreach (int foundSegmentIdx in SpatialIndex.Search(point, tolerance))
+				if (inXY)
 				{
-					Line3D segment = this[foundSegmentIdx];
-
-					bool found = inXY
-						             ? segment.StartPoint.EqualsXY(point, tolerance)
-						             : segment.StartPoint.Equals(point, tolerance);
-
-					if (found)
-					{
-						return foundSegmentIdx;
-					}
+					return foundXY;
 				}
-			}
-			else
-			{
-				for (var i = 0; i < SegmentCount; i++)
+
+				if (! (GetPoint(foundXY) is Pnt3D foundPoint))
 				{
-					bool found = inXY
-						             ? _segments[i].StartPoint.EqualsXY(point, tolerance)
-						             : _segments[i].StartPoint.Equals(point, tolerance);
-
-					if (found)
-					{
-						return i;
-					}
+					throw new InvalidOperationException(
+						"Cannot determine 3D location for 2D point");
 				}
-			}
 
-			bool isEndPoint = inXY
-				                  ? EndPoint.EqualsXY(point, tolerance)
-				                  : EndPoint.Equals(point, tolerance);
-
-			if (isEndPoint)
-			{
-				return PointCount - 1;
+				if (MathUtils.AreEqual(foundPoint.Z, point.Z, tolerance))
+				{
+					return foundXY;
+				}
 			}
 
 			return null;

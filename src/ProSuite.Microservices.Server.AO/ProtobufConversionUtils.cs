@@ -24,9 +24,8 @@ namespace ProSuite.Microservices.Server.AO
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		/// <summary>
-		/// Converts a list of features which are assumed to come from a single
-		/// workspace, i.e. all their object class IDs are unique within their
-		/// workspace.
+		/// Converts the specified messages into a list of features that reference
+		/// a GdbTable or GdbFeatureClass which, however have null workspaces.
 		/// </summary>
 		/// <param name="gdbObjectMessages"></param>
 		/// <param name="objectClassMessages"></param>
@@ -36,9 +35,38 @@ namespace ProSuite.Microservices.Server.AO
 			[NotNull] ICollection<GdbObjectMsg> gdbObjectMessages,
 			[NotNull] ICollection<ObjectClassMsg> objectClassMessages)
 		{
-			GdbTableContainer container = CreateGdbTableContainer(objectClassMessages, null, out _);
+			IDictionary<long, IFeatureClass> classesByHandle =
+				CreateGdbClassByHandleDictionary(objectClassMessages);
 
-			return FromGdbObjectMsgList(gdbObjectMessages, container);
+			var result = new List<IFeature>();
+
+			foreach (GdbObjectMsg gdbObjectMsg in gdbObjectMessages)
+			{
+				GdbFeature remoteFeature = FromGdbFeatureMsg(
+					gdbObjectMsg, () => classesByHandle[gdbObjectMsg.ClassHandle]);
+
+				result.Add(remoteFeature);
+			}
+
+			return result;
+		}
+
+		private static IDictionary<long, IFeatureClass> CreateGdbClassByHandleDictionary(
+			[NotNull] ICollection<ObjectClassMsg> objectClassMsgs)
+		{
+			var result = new Dictionary<long, IFeatureClass>();
+
+			foreach (ObjectClassMsg classMsg in objectClassMsgs)
+			{
+				if (! result.ContainsKey(classMsg.ClassHandle))
+				{
+					IFeatureClass gdbTable = (IFeatureClass) FromObjectClassMsg(classMsg, null);
+
+					result.Add(classMsg.ClassHandle, gdbTable);
+				}
+			}
+
+			return result;
 		}
 
 		public static IList<IFeature> FromGdbObjectMsgList(
@@ -51,7 +79,9 @@ namespace ProSuite.Microservices.Server.AO
 
 			foreach (GdbObjectMsg gdbObjectMsg in gdbObjectMessages)
 			{
-				GdbFeature remoteFeature = FromGdbFeatureMsg(gdbObjectMsg, container);
+				GdbFeature remoteFeature = FromGdbFeatureMsg(
+					gdbObjectMsg,
+					() => (IFeatureClass) container.GetByClassId((int) gdbObjectMsg.ClassHandle));
 
 				result.Add(remoteFeature);
 			}
@@ -266,10 +296,10 @@ namespace ProSuite.Microservices.Server.AO
 
 		public static GdbFeature FromGdbFeatureMsg(
 			[NotNull] GdbObjectMsg gdbObjectMsg,
-			[NotNull] GdbTableContainer tableContainer)
+			[NotNull] Func<IFeatureClass> getClass)
 		{
-			var featureClass =
-				(IFeatureClass) tableContainer.GetByClassId((int) gdbObjectMsg.ClassHandle);
+			IFeatureClass featureClass = getClass();
+				//(IFeatureClass) tableContainer.GetByClassId((int) gdbObjectMsg.ClassHandle);
 
 			GdbFeature result = CreateGdbFeature(gdbObjectMsg, featureClass);
 

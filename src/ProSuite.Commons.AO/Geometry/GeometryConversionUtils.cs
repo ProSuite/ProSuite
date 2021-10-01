@@ -250,7 +250,7 @@ namespace ProSuite.Commons.AO.Geometry
 			return result;
 		}
 
-		private static IPnt CreatePnt(IPoint p, bool pnt3D)
+		public static IPnt CreatePnt(IPoint p, bool pnt3D)
 		{
 			return pnt3D ? (IPnt) new Pnt3D(p.X, p.Y, p.Z) : new Pnt2D(p.X, p.Y);
 		}
@@ -374,6 +374,39 @@ namespace ProSuite.Commons.AO.Geometry
 			var result = new RingGroup(exteriorRing, interiorRings);
 
 			return result;
+		}
+
+		public static IEnumerable<RingGroup> CreateRingGroups(
+			[NotNull] IMultiPatch multipatch,
+			bool enforcePositiveOrientation = true)
+		{
+			foreach (GeometryPart multipatchPart in GeometryPart.FromGeometry(multipatch))
+			{
+				RingGroup ringGroup = CreateRingGroup(multipatchPart);
+
+				if (enforcePositiveOrientation &&
+				    ringGroup.ClockwiseOriented == false)
+				{
+					// Point intersect rings even if they are facing downward (with negative orientation)
+					ringGroup.ReverseOrientation();
+				}
+
+				yield return ringGroup;
+			}
+		}
+
+		public static Polyhedron CreatePolyhedron(IMultiPatch multipatch)
+		{
+			var ringGroups = new List<RingGroup>();
+
+			foreach (GeometryPart multipatchPart in GeometryPart.FromGeometry(multipatch))
+			{
+				RingGroup ringGroup = CreateRingGroup(multipatchPart);
+
+				ringGroups.Add(ringGroup);
+			}
+
+			return new Polyhedron(ringGroups);
 		}
 
 		public static Linestring CreateLinestring([NotNull] IGeometry path,

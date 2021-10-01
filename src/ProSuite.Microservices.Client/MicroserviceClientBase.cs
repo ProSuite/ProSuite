@@ -372,7 +372,8 @@ namespace ProSuite.Microservices.Client
 			_startedProcess =
 				ProcessUtils.StartProcess(executable, arguments, useShellExecute, true);
 
-			_msg.DebugFormat("Started microservice in background. Arguments: {0}", arguments);
+			_msg.DebugFormat("Started microservice {0} in background. Arguments: {1}",
+			                 Path.GetFileNameWithoutExtension(executable), arguments);
 		}
 
 		private static bool IsServingLoadBalancerEndpoint(

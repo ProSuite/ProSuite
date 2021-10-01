@@ -1,6 +1,6 @@
 namespace ProSuite.Commons.Geom
 {
-	public interface IPnt : IGmtry
+	public interface IPnt : IGmtry, IBoundedXY
 	{
 		double X { get; set; }
 
