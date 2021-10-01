@@ -1,0 +1,101 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<ClassDiagram MajorVersion="1" MinorVersion="1" MembersFormat="NameAndType">
+  <Class Name="ProSuite.DomainServices.AO.QA.Standalone.RuleBased.HtmlReportModel">
+    <Position X="2.25" Y="0.75" Width="3" />
+    <Members>
+      <Field Name="_issueGroups" Hidden="true" />
+      <Field Name="_verificationReport" Hidden="true" />
+      <Method Name="GetTestIdentifier" Hidden="true" />
+      <Method Name="HtmlReportModel" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>BUQAA4MgihgAgAQgAAgABBQAAAIGIABIFCAgQERAggA=</HashCode>
+      <FileName>QA\Standalone\RuleBased\HtmlReportModel.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsCollectionAssociation>
+      <Property Name="IssueGroups" />
+      <Property Name="CategoryIssueGroups" />
+      <Property Name="CategoriesWithIssues" />
+      <Property Name="RootCategories" />
+    </ShowAsCollectionAssociation>
+  </Class>
+  <Class Name="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlReportIssueGroup">
+    <Position X="9.75" Y="7.5" Width="2.75" />
+    <Members>
+      <Field Name="_issueGroup" Hidden="true" />
+      <Field Name="_issueTypeError" Hidden="true" />
+      <Field Name="_issueTypeWarning" Hidden="true" />
+      <Method Name="HtmlReportIssueGroup" Hidden="true" />
+      <Property Name="IssueCountFormatted" Hidden="true" />
+      <Property Name="QualityCondition" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>AIIDIECAEAAkKBSAEAABAQAAAAAVEAAAAABAgAAogAA=</HashCode>
+      <FileName>QA\HtmlReports\HtmlReportIssueGroup.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlReportDataQualityCategory">
+    <Position X="9.5" Y="0.75" Width="2.75" />
+    <Members>
+      <Field Name="_category" Hidden="true" />
+      <Field Name="_categoryComparer" Hidden="true" />
+      <Field Name="_issueGroupComparer" Hidden="true" />
+      <Field Name="_issueGroups" Hidden="true" />
+      <Field Name="_issueGroupsRequireSorting" Hidden="true" />
+      <Field Name="_qualityConditionComparer" Hidden="true" />
+      <Field Name="_qualityConditions" Hidden="true" />
+      <Field Name="_subCategories" Hidden="true" />
+      <Field Name="_uniqueName" Hidden="true" />
+      <Method Name="AddIssueGroup" Hidden="true" />
+      <Method Name="Equals" Hidden="true" />
+      <Method Name="GetDisplayName" Hidden="true" />
+      <Method Name="GetHashCode" Hidden="true" />
+      <Method Name="HtmlReportDataQualityCategory" Hidden="true" />
+      <Method Name="Include" Hidden="true" />
+      <Method Name="IncludeSubCategory" Hidden="true" />
+      <Property Name="IssueCountFormatted" Hidden="true" />
+      <Method Name="ToString" Hidden="true" />
+    </Members>
+    <AssociationLine Name="ParentCategory" Type="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlReportDataQualityCategory">
+      <MemberNameLabel ManuallyPlaced="true">
+        <Position X="-0.109" Y="0.388" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <AssociationLine Name="SubCategories" Type="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlReportDataQualityCategory">
+      <MemberNameLabel ManuallyPlaced="true" ManuallySized="true">
+        <Position X="-1.694" Y="0.315" Height="0.182" Width="3.494" />
+      </MemberNameLabel>
+    </AssociationLine>
+    <TypeIdentifier>
+      <HashCode>AAECIADAAAEkDBQFgMCATCUIAAAFAIgJARCAAgA4EEA=</HashCode>
+      <FileName>QA\HtmlReports\HtmlReportDataQualityCategory.cs</FileName>
+    </TypeIdentifier>
+    <ShowAsAssociation>
+      <Property Name="ParentCategory" />
+    </ShowAsAssociation>
+    <ShowAsCollectionAssociation>
+      <Property Name="SubCategories" />
+      <Property Name="IssueGroups" />
+      <Property Name="QualityConditions" />
+    </ShowAsCollectionAssociation>
+    <Lollipop Position="0.2" Collapsed="true" />
+  </Class>
+  <Class Name="ProSuite.DomainServices.AO.QA.HtmlReports.HtmlReportQualityCondition">
+    <Position X="14" Y="0.75" Width="2.75" />
+    <Members>
+      <Field Name="_issueTypeError" Hidden="true" />
+      <Field Name="_issueTypeWarning" Hidden="true" />
+      <Field Name="_qualityCondition" Hidden="true" />
+      <Method Name="HtmlReportQualityCondition" Hidden="true" />
+    </Members>
+    <TypeIdentifier>
+      <HashCode>BICCAECAAAAEABAAEIAAAAAAAAARAAEAAABAAAAoEAA=</HashCode>
+      <FileName>QA\HtmlReports\HtmlReportQualityCondition.cs</FileName>
+    </TypeIdentifier>
+  </Class>
+  <Class Name="ProSuite.DomainModel.AO.QA.SpecificationReport.HtmlTexts">
+    <Position X="13.5" Y="5.75" Width="3.25" />
+    <TypeIdentifier />
+  </Class>
+  <Font Name="Segoe UI" Size="9" />
+</ClassDiagram>

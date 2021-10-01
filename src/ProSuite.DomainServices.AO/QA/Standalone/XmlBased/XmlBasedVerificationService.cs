@@ -24,12 +24,13 @@ using ProSuite.DomainServices.AO.QA.VerificationReports;
 using ProSuite.DomainServices.AO.QA.VerificationReports.Xml;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
 using Path = System.IO.Path;
+using XmlTestDescriptor = ProSuite.DomainModel.AO.QA.Xml.XmlTestDescriptor;
 
 namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 {
 	/// <summary>
-	/// Standalone (i.e. non-DDX dependent) verification service based on a xml specification.
-	/// This should probably be driven by a separate gRPC service that uses a simpler request/response.
+	/// Standalone (i.e. non-DDX dependent) verification service based on a xml specification or
+	/// based on a list of conditions (defined via xml).
 	/// </summary>
 	public class XmlBasedVerificationService
 	{
@@ -46,17 +47,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			_qualitySpecificationTemplatePath = qualitySpecificationTemplatePath;
 		}
 
-		public void ExecuteVerification(
+		public QualitySpecification SetupQualitySpecification(
 			[NotNull] string dataQualityXml,
 			[NotNull] string specificationName,
 			[NotNull] IList<DataSource> dataSourceReplacements,
-			[CanBeNull] AreaOfInterest areaOfInterest,
-			[CanBeNull] string optionsXml,
-			double tileSize,
-			string outputDirectoryPath,
-			IssueRepositoryType issueRepositoryType = IssueRepositoryType.FileGdb,
-			bool ignoreConditionsForUnknownDatasets = true,
-			ITrackCancel cancelTracker = null)
+			bool ignoreConditionsForUnknownDatasets = true)
 		{
 			IList<XmlQualitySpecification> qualitySpecifications;
 			XmlDataQualityDocument document;
@@ -69,6 +64,39 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			_msg.DebugFormat("Available specifications: {0}",
 			                 StringUtils.Concatenate(qualitySpecifications.Select(s => s.Name),
 			                                         ", "));
+
+			return SetupQualitySpecification(document, specificationName, dataSourceReplacements,
+			                                 ignoreConditionsForUnknownDatasets);
+		}
+
+		public QualitySpecification SetupQualitySpecification(
+			[NotNull] string specificationName,
+			IList<XmlTestDescriptor> supportedDescriptors,
+			[NotNull] IList<SpecificationElement> specificationElements,
+			[NotNull] IEnumerable<DataSource> dataSources,
+			bool ignoreConditionsForUnknownDatasets)
+		{
+			XmlBasedQualitySpecificationFactory factory = CreateSpecificationFactory();
+
+			QualitySpecification result = factory.CreateQualitySpecification(
+				specificationName, supportedDescriptors, specificationElements, dataSources,
+				ignoreConditionsForUnknownDatasets);
+
+			result.Name = specificationName;
+
+			return result;
+		}
+
+		public void ExecuteVerification(
+			[NotNull] QualitySpecification specification,
+			[CanBeNull] AreaOfInterest areaOfInterest,
+			[CanBeNull] string optionsXml,
+			double tileSize,
+			[NotNull] string outputDirectoryPath,
+			IssueRepositoryType issueRepositoryType = IssueRepositoryType.FileGdb,
+			ITrackCancel cancelTracker = null)
+		{
+			Assert.NotNullOrEmpty(outputDirectoryPath, "Output directory path is null or empty.");
 
 			XmlVerificationOptions verificationOptions =
 				StringUtils.IsNotEmpty(optionsXml)
@@ -98,13 +126,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				int exceptionCount;
 				int unusedExceptionObjectCount;
 				int rowCountWithStopConditions;
-				bool fulfilled = Verify(document, specificationName, dataSourceReplacements,
-				                        tileSize, outputDirectoryPath,
+				bool fulfilled = Verify(specification, tileSize, outputDirectoryPath,
 				                        issueRepositoryType, properties,
 				                        verificationOptions,
 				                        areaOfInterest,
 				                        cancelTracker,
-				                        ignoreConditionsForUnknownDatasets,
 				                        out errorCount,
 				                        out warningCount,
 				                        out exceptionCount,
@@ -138,21 +164,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		{
 			try
 			{
-				QualitySpecification qualitySpecification;
-				using (_msg.IncrementIndentation("Setting up quality specification"))
-				{
-					var modelFactory = new VerifiedModelFactory(
-						CreateSimpleWorkspaceContext, new SimpleVerifiedDatasetHarvester());
-
-					var datasetOpener = new SimpleDatasetOpener(new MasterDatabaseDatasetContext());
-
-					var factory =
-						new XmlBasedQualitySpecificationFactory(modelFactory, datasetOpener);
-
-					qualitySpecification = factory.CreateQualitySpecification(
-						document, specificationName, dataSources,
-						ignoreConditionsForUnknownDatasets);
-				}
+				QualitySpecification qualitySpecification =
+					SetupQualitySpecification(document, specificationName, dataSources,
+					                          ignoreConditionsForUnknownDatasets);
 
 				return Verify(qualitySpecification, tileSize, directoryPath,
 				              issureRepositoryType, properties, verificationOptions,
@@ -167,6 +181,37 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			{
 				GC.Collect();
 			}
+		}
+
+		private static QualitySpecification SetupQualitySpecification(
+			[NotNull] XmlDataQualityDocument document,
+			[NotNull] string specificationName,
+			[NotNull] IEnumerable<DataSource> dataSources,
+			bool ignoreConditionsForUnknownDatasets)
+		{
+			QualitySpecification qualitySpecification;
+			using (_msg.IncrementIndentation("Setting up quality specification"))
+			{
+				XmlBasedQualitySpecificationFactory factory = CreateSpecificationFactory();
+
+				qualitySpecification = factory.CreateQualitySpecification(
+					document, specificationName, dataSources,
+					ignoreConditionsForUnknownDatasets);
+			}
+
+			return qualitySpecification;
+		}
+
+		private static XmlBasedQualitySpecificationFactory CreateSpecificationFactory()
+		{
+			var modelFactory = new VerifiedModelFactory(
+				CreateSimpleWorkspaceContext, new SimpleVerifiedDatasetHarvester());
+
+			var datasetOpener = new SimpleDatasetOpener(new MasterDatabaseDatasetContext());
+
+			var factory =
+				new XmlBasedQualitySpecificationFactory(modelFactory, datasetOpener);
+			return factory;
 		}
 
 		private bool Verify([NotNull] QualitySpecification qualitySpecification,

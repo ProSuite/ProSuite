@@ -86,6 +86,25 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 		}
 
+		
+		[NotNull]
+		public static XmlQualityCondition DeserializeCondition([NotNull] TextReader xml)
+		{
+			Assert.ArgumentNotNull(xml, nameof(xml));
+
+			string schema = Schema.ProSuite_QA_QualitySpecifications_2_0;
+
+			try
+			{
+				return XmlUtils.Deserialize<XmlQualityCondition>(xml, schema);
+			}
+			catch (Exception e)
+			{
+				throw new XmlDeserializationException(
+					string.Format("Error deserializing xml: {0}", e.Message), e);
+			}
+		}
+		
 		private static string GetSchema(TextReader xml, out QaSpecVersion version)
 		{
 			string schema = null;
@@ -338,14 +357,22 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		{
 			Assert.ArgumentNotNull(document, nameof(document));
 
-			if (document.TestDescriptors == null)
+			List<XmlTestDescriptor> testDescriptors = document.TestDescriptors;
+
+			if (testDescriptors == null)
 			{
 				return;
 			}
 
+			AssertUniqueTestDescriptorNames(testDescriptors);
+		}
+
+		public static void AssertUniqueTestDescriptorNames(
+			[NotNull] IEnumerable<XmlTestDescriptor> testDescriptors)
+		{
 			var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-			foreach (XmlTestDescriptor testDescriptor in document.TestDescriptors)
+			foreach (XmlTestDescriptor testDescriptor in testDescriptors)
 			{
 				string name = testDescriptor.Name;
 				Assert.True(StringUtils.IsNotEmpty(name),
@@ -680,6 +707,25 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			                    instanceConfigsByName,
 			                    category,
 			                    ignoreMissingConditions);
+
+			return result;
+		}
+
+		[NotNull]
+		public static QualitySpecification CreateQualitySpecification(
+			string name,
+			[NotNull] IDictionary<string, QualityCondition> qualityConditionsByName,
+			[NotNull] IEnumerable<QualitySpecificationElement> specificationElements)
+		{
+			Assert.ArgumentNotNull(qualityConditionsByName, nameof(qualityConditionsByName));
+
+			var result = new QualitySpecification(name);
+
+			foreach (QualitySpecificationElement element in specificationElements)
+			{
+				result.AddElement(element.QualityCondition, element.StopOnError,
+				                  element.AllowErrors);
+			}
 
 			return result;
 		}

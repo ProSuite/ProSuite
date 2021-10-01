@@ -39,6 +39,36 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		/// <summary>
 		/// Initializes a new instance of the <see cref="DataSource"/> class.
 		/// </summary>
+		/// <param name="displayName">The name.</param>
+		/// <param name="id">The id.</param>
+		/// <param name="databaseName"></param>
+		/// <param name="schemaOwner"></param>
+		/// <param name="catalogPath">The catalog path.</param>
+		public DataSource([NotNull] string displayName, [NotNull] string id,
+		                  [NotNull] string catalogPath,
+		                  [CanBeNull] string databaseName = null,
+		                  [CanBeNull] string schemaOwner = null)
+			: this(displayName, id)
+		{
+			Assert.ArgumentNotNullOrEmpty(displayName, nameof(displayName));
+			Assert.ArgumentNotNull(id, nameof(id)); // may be empty
+
+			DisplayName = displayName;
+			ID = id;
+
+			DatabaseName = databaseName;
+			SchemaOwner = schemaOwner;
+
+			if (StringUtils.IsNotEmpty(catalogPath))
+			{
+				_catalogPath = catalogPath;
+				_workspaceAsText = _catalogPath;
+			}
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="DataSource"/> class.
+		/// </summary>
 		/// <param name="xmlWorkspace">The XML workspace.</param>
 		public DataSource([NotNull] XmlWorkspace xmlWorkspace)
 			: this(xmlWorkspace.ModelName, xmlWorkspace.ID)
@@ -102,7 +132,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				return WorkspaceUtils.OpenWorkspace(_connectionString, _factoryProgId);
 			}
 
-			throw new InvalidOperationException("Workspace connection parameters not defined");
+			throw new InvalidOperationException(
+				$"Workspace connection parameters not defined for data source {ID}");
 		}
 
 		[NotNull]
