@@ -75,46 +75,31 @@ namespace ProSuite.AGP.WorkList
 				           Status = ((DatabaseSourceClass) source).GetStatus(row),
 
 				           IssueCode = reader.GetValue<string>(row, Attributes.IssueCode),
-				           IssueCodeDescription =
-					           reader.GetValue<string>(row, Attributes.IssueCodeDescription),
-				           InvolvedObjects =
-					           reader.GetValue<string>(row, Attributes.InvolvedObjects),
-				           QualityCondition =
-					           reader.GetValue<string>(row, Attributes.QualityConditionName),
+				           IssueCodeDescription = reader.GetValue<string>(row, Attributes.IssueCodeDescription),
+				           InvolvedObjects = reader.GetValue<string>(row, Attributes.InvolvedObjects),
+				           QualityCondition = reader.GetValue<string>(row, Attributes.QualityConditionName),
 				           TestName = reader.GetValue<string>(row, Attributes.TestName),
-				           TestDescription =
-					           reader.GetValue<string>(row, Attributes.TestDescription),
+				           TestDescription = reader.GetValue<string>(row, Attributes.TestDescription),
 				           TestType = reader.GetValue<string>(row, Attributes.TestType),
 				           IssueSeverity = reader.GetValue<string>(row, Attributes.IssueSeverity),
 				           StopCondition = reader.GetValue<string>(row, Attributes.IsStopCondition),
 				           Category = reader.GetValue<string>(row, Attributes.Category),
-				           AffectedComponent =
-					           reader.GetValue<string>(row, Attributes.AffectedComponent),
+				           AffectedComponent = reader.GetValue<string>(row, Attributes.AffectedComponent),
 				           Url = reader.GetValue<string>(row, Attributes.Url),
 				           DoubleValue1 = reader.GetValue<double?>(row, Attributes.DoubleValue1),
 				           DoubleValue2 = reader.GetValue<double?>(row, Attributes.DoubleValue2),
 				           TextValue = reader.GetValue<string>(row, Attributes.TextValue),
-				           IssueAssignment =
-					           reader.GetValue<string>(row, Attributes.IssueAssignment),
-				           QualityConditionUuid =
-					           reader.GetValue<string>(row, Attributes.QualityConditionUuid),
-				           QualityConditionVersionUuid =
-					           reader.GetValue<string>(row, Attributes.QualityConditionVersionUuid),
-				           ExceptionStatus =
-					           reader.GetValue<string>(row, Attributes.ExceptionStatus),
+				           IssueAssignment = reader.GetValue<string>(row, Attributes.IssueAssignment),
+				           QualityConditionUuid = reader.GetValue<string>(row, Attributes.QualityConditionUuid),
+				           QualityConditionVersionUuid = reader.GetValue<string>(row, Attributes.QualityConditionVersionUuid),
+				           ExceptionStatus = reader.GetValue<string>(row, Attributes.ExceptionStatus),
 				           ExceptionNotes = reader.GetValue<string>(row, Attributes.ExceptionNotes),
-				           ExceptionCategory =
-					           reader.GetValue<string>(row, Attributes.ExceptionCategory),
-				           ExceptionOrigin =
-					           reader.GetValue<string>(row, Attributes.ExceptionOrigin),
-				           ExceptionDefinedDate =
-					           reader.GetValue<string>(row, Attributes.ExceptionDefinedDate),
-				           ExceptionLastRevisionDate =
-					           reader.GetValue<string>(row, Attributes.ExceptionLastRevisionDate),
-				           ExceptionRetirementDate =
-					           reader.GetValue<string>(row, Attributes.ExceptionRetirementDate),
-				           ExceptionShapeMatchCriterion =
-					           reader.GetValue<string>(row, Attributes.ExceptionShapeMatchCriterion)
+				           ExceptionCategory = reader.GetValue<string>(row, Attributes.ExceptionCategory),
+				           ExceptionOrigin = reader.GetValue<string>(row, Attributes.ExceptionOrigin),
+				           ExceptionDefinedDate = reader.GetValue<string>(row, Attributes.ExceptionDefinedDate),
+				           ExceptionLastRevisionDate = reader.GetValue<string>(row, Attributes.ExceptionLastRevisionDate),
+				           ExceptionRetirementDate = reader.GetValue<string>(row, Attributes.ExceptionRetirementDate),
+				           ExceptionShapeMatchCriterion = reader.GetValue<string>(row, Attributes.ExceptionShapeMatchCriterion)
 			           };
 
 			item.InIssueInvolvedTables = IssueUtils.ParseInvolvedTables(item.InvolvedObjects);

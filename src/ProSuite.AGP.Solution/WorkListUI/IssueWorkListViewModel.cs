@@ -103,7 +103,14 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				if (LayerUtils.FindLayers(SelectedInvolvedObject.Name).FirstOrDefault() is
 					    FeatureLayer involvedLayer)
 				{
-					MapView.Active.FlashFeature(involvedLayer, SelectedInvolvedObject.ObjectId);
+					MapView mapView = MapView.Active;
+
+					if (mapView == null)
+					{
+						return;
+					}
+
+					mapView.FlashFeature(involvedLayer, SelectedInvolvedObject.ObjectId);
 				}
 				else
 				{
@@ -137,13 +144,21 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				if (LayerUtils.FindLayers(SelectedInvolvedObject.Name).FirstOrDefault() is
 					    FeatureLayer involvedLayer)
 				{
-					return MapView.Active.ZoomToAsync(involvedLayer,
-					                                  SelectedInvolvedObject.ObjectId);
+					MapView mapView = MapView.Active;
+
+					if (mapView == null)
+					{
+						return Task.FromResult(0);
+					}
+
+					return mapView.ZoomToAsync(involvedLayer,
+					                           SelectedInvolvedObject.ObjectId,
+					                           TimeSpan.FromSeconds(Seconds));
 				}
 
 				_msg.DebugFormat("No layer with name {0}", SelectedInvolvedObject.Name);
-				return Task.FromResult(0);
 
+				return Task.FromResult(0);
 			}, _msg);
 		}
 
