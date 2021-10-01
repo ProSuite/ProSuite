@@ -26,7 +26,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 	public abstract class WorkListViewModelBase<TWorklist> : PropertyChangedBase
 		where TWorklist : class, IWorkList
 	{
-		private const double _seconds = 0.3;
+		protected readonly double Seconds = 0.3;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -85,12 +85,12 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 			Envelope envelope = await QueuedTask.Run(() => GetEnvelope(item));
 
-			await MapView.Active.ZoomToAsync(envelope, TimeSpan.FromSeconds(_seconds));
+			await MapView.Active.ZoomToAsync(envelope, TimeSpan.FromSeconds(Seconds));
 		}
 
 		private async Task ZoomToAllAsync()
 		{
-			await MapView.Active.ZoomToAsync(CurrentWorkList.Extent, TimeSpan.FromSeconds(_seconds));
+			await MapView.Active.ZoomToAsync(CurrentWorkList.Extent, TimeSpan.FromSeconds(Seconds));
 		}
 
 		private async Task PanToAsync()
@@ -104,7 +104,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 			Envelope envelope = await QueuedTask.Run(() => GetEnvelope(item));
 
-			await MapView.Active.PanToAsync(envelope, TimeSpan.FromSeconds(_seconds));
+			await MapView.Active.PanToAsync(envelope, TimeSpan.FromSeconds(Seconds));
 		}
 
 		private static bool ShiftPressed()
@@ -281,7 +281,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 					}
 
 					MapView.Active.ZoomTo(GetEnvelope(item),
-					                      TimeSpan.FromSeconds(_seconds));
+					                      TimeSpan.FromSeconds(Seconds));
 				});
 			}, _msg);
 		}

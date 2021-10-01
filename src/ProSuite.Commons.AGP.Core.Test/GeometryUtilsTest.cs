@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using System.Threading;
 using ArcGIS.Core.Geometry;
 using NUnit.Framework;
@@ -44,6 +46,60 @@ namespace ProSuite.Commons.AGP.Test
 			Assert.AreEqual(GeometryType.Polyline, boundary.GeometryType);
 			Assert.True(boundary.HasCurves, "did not preserve curves");
 			Assert.AreEqual(polygon.PointCount, boundary.PointCount);
+		}
+
+		[Test]
+		public void Can_get_nearest_vertex()
+		{
+			var coords = new List<MapPoint>
+						 {
+							 MapPointBuilder.CreateMapPoint(140, 0, SpatialReferences.WebMercator),
+							 MapPointBuilder.CreateMapPoint(160, 0, SpatialReferences.WebMercator),
+							 MapPointBuilder.CreateMapPoint(175, 0, SpatialReferences.WebMercator),
+							 MapPointBuilder.CreateMapPoint(-175, 10, SpatialReferences.WebMercator),
+							 MapPointBuilder.CreateMapPoint(-145, 10, SpatialReferences.WebMercator),
+							 MapPointBuilder.CreateMapPoint(-125, 10, SpatialReferences.WebMercator)
+						 };
+
+			//var coords = new List<MapPoint>
+			//			 {
+			//				 MapPointBuilder.CreateMapPoint(140, 0, SpatialReferences.WebMercator),
+			//				 MapPointBuilder.CreateMapPoint(160, 0, SpatialReferences.WebMercator),
+			//				 MapPointBuilder.CreateMapPoint(175, 0, SpatialReferences.WebMercator),
+			//				 MapPointBuilder.CreateMapPoint(185, 10, SpatialReferences.WebMercator),
+			//				 MapPointBuilder.CreateMapPoint(215, 10, SpatialReferences.WebMercator),
+			//				 MapPointBuilder.CreateMapPoint(225, 10, SpatialReferences.WebMercator)
+			//			 };
+
+			Polyline line =
+				PolylineBuilder.CreatePolyline(coords);
+
+			Polyline dateline =
+				PolylineBuilder.CreatePolyline(new List<MapPoint>
+				                               {
+					                               MapPointBuilder.CreateMapPoint(180, 90, SpatialReferences.WebMercator),
+					                               MapPointBuilder.CreateMapPoint(180, -90, SpatialReferences.WebMercator)
+				                               });
+
+			Geometry intersection =
+				GeometryEngine.Instance.Intersection(line, dateline,
+				                                     GeometryDimension.esriGeometry0Dimension);
+
+			var multipoint = intersection as Multipoint;
+
+			if (multipoint != null)
+			{
+				for (var i = 0; i < multipoint.PointCount; i++)
+				{
+					MapPoint point = multipoint.Points[i];
+					ProximityResult result = GeometryEngine.Instance.NearestVertex(intersection, point);
+
+					MapPoint resultPoint = result.Point;
+
+					Console.WriteLine($"x: {resultPoint.X}");
+					Console.WriteLine($"y: {resultPoint.Y}");
+				}
+			}
 		}
 	}
 }

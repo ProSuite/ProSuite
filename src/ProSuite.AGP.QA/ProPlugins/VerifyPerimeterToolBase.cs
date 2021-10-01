@@ -23,7 +23,7 @@ using ProSuite.UI.QA.VerificationProgress;
 
 namespace ProSuite.AGP.QA.ProPlugins
 {
-	// todo daro: extract common base classe for VerifyPerimeterToolBase, VerifySelectionCmdBase, VerifyVisibleExtentCmdBase
+	// todo daro: extract common base class for VerifyPerimeterToolBase, VerifySelectionCmdBase, VerifyVisibleExtentCmdBase
 	// TODO: Move OneClickToolBase to ProSuite.AGP as a shared project instead of using AGP.Editing
 	public abstract class VerifyPerimeterToolBase : OneClickToolBase
 	{
