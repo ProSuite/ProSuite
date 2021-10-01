@@ -51,7 +51,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 				return string.Empty;
 			}
-			set { SetProperty(ref _errorDescription, value, () => QualityCondition); }
+			set { SetProperty(ref _errorDescription, value, () => ErrorDescription); }
 		}
 
 		public override string ToolTip => "Select Involved Objects";
