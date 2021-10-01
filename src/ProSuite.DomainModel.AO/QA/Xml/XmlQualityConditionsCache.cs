@@ -376,145 +376,60 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			[NotNull] string qualityConditionName,
 			[NotNull] DatasetSettings datasetSettings)
 		{
-			Dataset dataset = GetDataset(xmlDatasetTestParameterValue,
-			                             testParameter,
-			                             qualityConditionName,
-			                             datasetSettings);
+			var referenceModels =
+				Assert.NotNull(ReferencedModels, $"{nameof(ReferencedModels)} not set");
 
-			if (dataset == null)
-			{
-				if (! testParameter.IsConstructorParameter)
-				{
-					return new DatasetTestParameterValue(testParameter, dataset,
-					                                     xmlDatasetTestParameterValue.WhereClause,
-					                                     xmlDatasetTestParameterValue
-						                                     .UsedAsReferenceData);
-				}
-
-				// Exception must already be thrown in GetDataset()
-				Assert.True(datasetSettings.IgnoreUnknownDatasets,
-				            nameof(datasetSettings.IgnoreUnknownDatasets));
-
-				return null;
-			}
-
-			TestParameterTypeUtils.AssertValidDataset(testParameter, dataset);
-			return CreateDatasetTestParameterValue(testParameter, xmlDatasetTestParameterValue,
-			                                       dataset, datasetSettings);
-		}
-
-		[CanBeNull]
-		private Dataset GetDataset(
-			[NotNull] XmlDatasetTestParameterValue xmlDatasetTestParameterValue,
-			[NotNull] TestParameter testParameter,
-			[NotNull] string qualityConditionName,
-			[NotNull] DatasetSettings datasetSettings)
-		{
-			string datasetName = xmlDatasetTestParameterValue.Value;
-			if (string.IsNullOrWhiteSpace(datasetName))
-			{
-				if (testParameter.IsConstructorParameter
-				    && string.IsNullOrEmpty(xmlDatasetTestParameterValue.TransformerName))
-				{
-					Assert.NotNullOrEmpty(
-						datasetName,
-						"Dataset is not defined for constructor-parameter '{0}' in quality condition '{1}'",
-						testParameter.Name, qualityConditionName);
-				}
-
-				return null;
-			}
-
-			string workspaceId = xmlDatasetTestParameterValue.WorkspaceId;
-
-			if (StringUtils.IsNotEmpty(workspaceId))
-			{
-				Model model;
-				Assert.True(TryGetValueModel(workspaceId, out model),
-				            "No matching model found for workspace id '{0}'", workspaceId);
-
-				return ModelElementUtils.GetDatasetFromStoredName(datasetName,
-					model, datasetSettings.IgnoreUnknownDatasets);
-			}
-
-			if (StringUtils.IsNullOrEmptyOrBlank(workspaceId))
-			{
-				const string defaultModelId = "";
-
-				if (TryGetValueModel(defaultModelId, out Model defaultModel))
-				{
-					// there is a default model
-					return ModelElementUtils.GetDatasetFromStoredName(datasetName,
-						defaultModel, datasetSettings.IgnoreUnknownDatasets);
-				}
-			}
-
-			// no workspace id for dataset, and there is no default model
-
-			IList<Dataset> datasets = datasetSettings.GetDatasetsByName(datasetName);
-
-			Assert.False(datasets.Count > 1,
-			             "More than one dataset found with name '{0}', for parameter '{1}' in quality condition '{2}'",
-			             datasetName, testParameter.Name, qualityConditionName);
-
-			if (datasets.Count == 0)
-			{
-				if (datasetSettings.IgnoreUnknownDatasets)
-				{
-					return null;
-				}
-
-				Assert.False(datasets.Count == 0,
-				             "Dataset '{0}' for parameter '{1}' in quality condition '{2}' not found",
-				             datasetName, testParameter.Name, qualityConditionName);
-			}
-
-			return datasets[0];
-		}
-
-		private bool TryGetValueModel(string workspaceId, out Model model)
-		{
-			if (ReferencedModels == null)
-			{
-				throw new InvalidOperationException($"{nameof(ReferencedModels)} not set");
-			}
-
-			return ReferencedModels.TryGetValue(workspaceId, out model);
+			return XmlDataQualityUtils.CreateDatasetTestParameterValue(
+				testParameter, xmlDatasetTestParameterValue, qualityConditionName, referenceModels,
+				datasetSettings.GetDatasetsByName, datasetSettings.IgnoreUnknownDatasets,
+				filternames => GetRowFilterConfigurations(filternames, datasetSettings));
 		}
 
 		[NotNull]
 		private TestParameterValue CreateDatasetTestParameterValue(
 			[NotNull] TestParameter testParameter,
-			[NotNull] XmlDatasetTestParameterValue xmlValue,
+			[NotNull] XmlDatasetTestParameterValue xmlDatasetTestParameterValue,
 			[CanBeNull] Dataset dataset,
 			[NotNull] DatasetSettings datasetSettings)
 		{
 			var paramValue = new DatasetTestParameterValue(
 				testParameter, dataset,
-				xmlValue.WhereClause,
-				xmlValue.UsedAsReferenceData);
+				xmlDatasetTestParameterValue.WhereClause,
+				xmlDatasetTestParameterValue.UsedAsReferenceData);
 
-			if (xmlValue.RowFilterNames != null)
+			IList<string> rowFilterNames = xmlDatasetTestParameterValue.RowFilterNames;
+
+			if (rowFilterNames != null)
 			{
-				List<RowFilterConfiguration> rowFilterConfigurations =
-					new List<RowFilterConfiguration>();
-				foreach (string filterName in xmlValue.RowFilterNames)
-				{
-					if (! TryGetRowFilter(
-						    filterName, out XmlRowFilterConfiguration xmlRowFilter))
-					{
-						Assert.Fail($"Row filter {filterName} not found");
-					}
-
-					RowFilterConfiguration
-						rowFilter = GetRowFilterConfiguration(xmlRowFilter, datasetSettings);
-					rowFilterConfigurations.Add(rowFilter);
-				}
+				IList<RowFilterConfiguration> rowFilterConfigurations =
+					GetRowFilterConfigurations(rowFilterNames, datasetSettings);
 
 				paramValue.RowFilterConfigurations = rowFilterConfigurations;
 			}
 
 			return paramValue;
+		}
+
+		private IList<RowFilterConfiguration> GetRowFilterConfigurations(
+			IEnumerable<string> rowFilterNames,
+			DatasetSettings datasetSettings)
+		{
+			List<RowFilterConfiguration> rowFilterConfigurations =
+				new List<RowFilterConfiguration>();
+			foreach (string filterName in rowFilterNames)
+			{
+				if (! TryGetRowFilter(
+					    filterName, out XmlRowFilterConfiguration xmlRowFilter))
+				{
+					Assert.Fail($"Row filter {filterName} not found");
+				}
+
+				RowFilterConfiguration
+					rowFilter = GetRowFilterConfiguration(xmlRowFilter, datasetSettings);
+				rowFilterConfigurations.Add(rowFilter);
+			}
+
+			return rowFilterConfigurations;
 		}
 
 		public IEnumerable<XmlInstanceConfiguration> EnumReferencedConfigurationInstances(

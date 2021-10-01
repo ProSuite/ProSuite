@@ -282,13 +282,22 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 		}
 
+
 		public static void AssertUniqueQualityConditionNames(
 			[NotNull] XmlDataQualityDocument document)
 		{
 			Assert.ArgumentNotNull(document, nameof(document));
 
-			AssertUniqueInstanceConfigurationNames(
-				document.GetAllQualityConditions().Select(p => p.Key), "quality condition");
+			IEnumerable<XmlQualityCondition> xmlQualityConditions =
+				document.GetAllQualityConditions().Select(p => p.Key);
+
+			AssertUniqueQualityConditionNames(xmlQualityConditions);
+		}
+
+		public static void AssertUniqueQualityConditionNames(
+			[NotNull] IEnumerable<XmlQualityCondition> xmlQualityConditions)
+		{
+			AssertUniqueInstanceConfigurationNames(xmlQualityConditions, "quality condition");
 		}
 
 		public static void AssertUniqueIssueFilterNames(
@@ -807,33 +816,269 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				return null;
 			}
 
-			result.Description = xmlQualityCondition.Description;
-			result.Notes = xmlQualityCondition.Notes;
-			result.Url = xmlQualityCondition.Url;
-			result.AllowErrorsOverride = TranslateOverride(xmlQualityCondition.AllowErrors);
-			result.StopOnErrorOverride = TranslateOverride(xmlQualityCondition.StopOnError);
-			result.NeverFilterTableRowsUsingRelatedGeometry =
-				xmlQualityCondition.NeverFilterTableRowsUsingRelatedGeometry;
-			result.NeverStoreRelatedGeometryForTableRowIssues =
-				xmlQualityCondition.NeverStoreRelatedGeometryForTableRowIssues;
-
-			string uuid = xmlQualityCondition.Uuid;
-			if (StringUtils.IsNotEmpty(uuid))
-			{
-				result.Uuid = uuid;
-			}
-
-			string versionUuid = xmlQualityCondition.VersionUuid;
-			if (StringUtils.IsNotEmpty(versionUuid))
-			{
-				result.VersionUuid = versionUuid;
-			}
-
-			ImportMetadata(result, xmlQualityCondition);
-
-			result.Category = category;
+			InitializeProperties(result, xmlQualityCondition, category);
 
 			return result;
+		}
+
+		[CanBeNull]
+		public static QualityCondition CreateQualityConditionLegacy(
+			[NotNull] XmlQualityCondition xmlQualityCondition,
+			[NotNull] TestDescriptor testDescriptor,
+			[NotNull] IDictionary<string, Model> modelsByWorkspaceId,
+			[NotNull] Func<string, IList<Dataset>> getDatasetsByName,
+			[CanBeNull] DataQualityCategory category,
+			bool ignoreForUnknownDatasets,
+			out ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters)
+		{
+			Assert.ArgumentNotNull(xmlQualityCondition, nameof(xmlQualityCondition));
+			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
+			Assert.ArgumentNotNull(modelsByWorkspaceId, nameof(modelsByWorkspaceId));
+			Assert.ArgumentNotNull(getDatasetsByName, nameof(getDatasetsByName));
+
+			unknownDatasetParameters = new List<XmlDatasetTestParameterValue>();
+
+			TestFactory testFactory =
+				Assert.NotNull(TestFactoryUtils.GetTestFactory(testDescriptor));
+
+			Dictionary<string, TestParameter> testParametersByName =
+				testFactory.Parameters.ToDictionary(
+					parameter => parameter.Name,
+					StringComparer.OrdinalIgnoreCase);
+
+			var result = new QualityCondition(xmlQualityCondition.Name, testDescriptor);
+
+			InitializeProperties(result, xmlQualityCondition, category);
+
+			foreach (XmlTestParameterValue xmlTestParameterValue in
+				xmlQualityCondition.EnumParameterValues(ignoreEmptyValues: true))
+			{
+				TestParameter testParameter;
+				if (! testParametersByName.TryGetValue(xmlTestParameterValue.TestParameterName,
+				                                       out testParameter))
+				{
+					throw new InvalidConfigurationException(
+						string.Format(
+							"The name '{0}' as a test parameter in quality condition '{1}' " +
+							"does not match test descriptor.",
+							xmlTestParameterValue.TestParameterName,
+							xmlQualityCondition.Name));
+				}
+
+				TestParameterValue parameterValue;
+
+				var datasetValue = xmlTestParameterValue as XmlDatasetTestParameterValue;
+				if (datasetValue != null)
+				{
+					parameterValue = CreateDatasetTestParameterValue(
+						testParameter, datasetValue,
+						Assert.NotNullOrEmpty(xmlQualityCondition.Name),
+						modelsByWorkspaceId, getDatasetsByName, ignoreForUnknownDatasets,
+						f => null);
+
+					if (parameterValue == null)
+					{
+						unknownDatasetParameters.Add(datasetValue);
+					}
+				}
+				else
+				{
+					var scalarValue = xmlTestParameterValue as XmlScalarTestParameterValue;
+					if (scalarValue != null)
+					{
+						parameterValue = CreateScalarTestParameterValue(testParameter, scalarValue);
+					}
+					else
+					{
+						throw new InvalidProgramException("Unhandled TestParameterValue " +
+						                                  xmlTestParameterValue.TestParameterName);
+					}
+				}
+
+				if (parameterValue != null)
+				{
+					result.AddParameterValue(parameterValue);
+				}
+			}
+
+			if (unknownDatasetParameters.Count > 0)
+			{
+				Assert.True(ignoreForUnknownDatasets, "ignoreForUnknownDatasets");
+
+				return null;
+			}
+
+			return result;
+		}
+
+		private static void InitializeProperties(QualityCondition qualityCondition,
+		                                         XmlQualityCondition fromXmlQualityCondition,
+		                                         DataQualityCategory category)
+		{
+			qualityCondition.Description = fromXmlQualityCondition.Description;
+			qualityCondition.Notes = fromXmlQualityCondition.Notes;
+			qualityCondition.Url = fromXmlQualityCondition.Url;
+			qualityCondition.AllowErrorsOverride =
+				TranslateOverride(fromXmlQualityCondition.AllowErrors);
+			qualityCondition.StopOnErrorOverride =
+				TranslateOverride(fromXmlQualityCondition.StopOnError);
+			qualityCondition.NeverFilterTableRowsUsingRelatedGeometry =
+				fromXmlQualityCondition.NeverFilterTableRowsUsingRelatedGeometry;
+			qualityCondition.NeverStoreRelatedGeometryForTableRowIssues =
+				fromXmlQualityCondition.NeverStoreRelatedGeometryForTableRowIssues;
+
+			string uuid = fromXmlQualityCondition.Uuid;
+			if (StringUtils.IsNotEmpty(uuid))
+			{
+				qualityCondition.Uuid = uuid;
+			}
+
+			string versionUuid = fromXmlQualityCondition.VersionUuid;
+			if (StringUtils.IsNotEmpty(versionUuid))
+			{
+				qualityCondition.VersionUuid = versionUuid;
+			}
+
+			ImportMetadata(qualityCondition, fromXmlQualityCondition);
+
+			qualityCondition.Category = category;
+		}
+
+		[CanBeNull]
+		public static TestParameterValue CreateDatasetTestParameterValue(
+			[NotNull] TestParameter testParameter,
+			[NotNull] XmlDatasetTestParameterValue xmlDatasetTestParameterValue,
+			[NotNull] string qualityConditionName,
+			[NotNull] IDictionary<string, Model> modelsByWorkspaceId,
+			[NotNull] Func<string, IList<Dataset>> getDatasetsByName,
+			bool ignoreForUnknownDatasets,
+			[NotNull] Func<IEnumerable<string>, IList<RowFilterConfiguration>> rowFilterProvider)
+		{
+			Dataset dataset = GetDataset(xmlDatasetTestParameterValue,
+			                             testParameter,
+			                             qualityConditionName,
+			                             modelsByWorkspaceId,
+			                             getDatasetsByName,
+			                             ignoreForUnknownDatasets);
+
+			if (dataset == null)
+			{
+				if (! testParameter.IsConstructorParameter)
+				{
+					return new DatasetTestParameterValue(testParameter, dataset,
+					                                     xmlDatasetTestParameterValue.WhereClause,
+					                                     xmlDatasetTestParameterValue
+						                                     .UsedAsReferenceData);
+				}
+
+				// Exception must already be thrown in GetDataset()
+				Assert.True(ignoreForUnknownDatasets, "ignoreForUnknownDatasets");
+
+				return null;
+			}
+
+			TestParameterTypeUtils.AssertValidDataset(testParameter, dataset);
+
+			return CreateDatasetTestParameterValue(testParameter, xmlDatasetTestParameterValue,
+			                                       dataset, rowFilterProvider);
+		}
+
+		[NotNull]
+		private static TestParameterValue CreateDatasetTestParameterValue(
+			[NotNull] TestParameter testParameter,
+			[NotNull] XmlDatasetTestParameterValue xmlValue,
+			[CanBeNull] Dataset dataset,
+			[NotNull] Func<IEnumerable<string>, IList<RowFilterConfiguration>> rowFilterProvider)
+		{
+			var paramValue = new DatasetTestParameterValue(
+				testParameter, dataset,
+				xmlValue.WhereClause,
+				xmlValue.UsedAsReferenceData);
+
+			if (xmlValue.RowFilterNames != null)
+			{
+				IList<RowFilterConfiguration> rowFilterConfigurations =
+					rowFilterProvider(xmlValue.RowFilterNames);
+
+				paramValue.RowFilterConfigurations = rowFilterConfigurations;
+			}
+
+			return paramValue;
+		}
+
+		[CanBeNull]
+		private static Dataset GetDataset(
+			[NotNull] XmlDatasetTestParameterValue xmlDatasetTestParameterValue,
+			// ReSharper disable once UnusedParameter.Local
+			[NotNull] TestParameter testParameter,
+			// ReSharper disable once UnusedParameter.Local
+			[NotNull] string qualityConditionName,
+			[NotNull] IDictionary<string, Model> modelsByWorkspaceId,
+			[NotNull] Func<string, IList<Dataset>> getDatasetsByName,
+			bool ignoreUnknownDataset)
+		{
+			string datasetName = xmlDatasetTestParameterValue.Value;
+			if (string.IsNullOrWhiteSpace(datasetName))
+			{
+				if (testParameter.IsConstructorParameter)
+				{
+					Assert.NotNullOrEmpty(
+						datasetName,
+						"Dataset is not defined for constructor-parameter '{0}' in quality condition '{1}'",
+						testParameter.Name, qualityConditionName);
+				}
+
+				return null;
+			}
+
+			string workspaceId = xmlDatasetTestParameterValue.WorkspaceId;
+
+			if (StringUtils.IsNotEmpty(workspaceId))
+			{
+				Model model;
+				Assert.True(modelsByWorkspaceId.TryGetValue(workspaceId, out model),
+				            "No matching model found for workspace id '{0}'", workspaceId);
+
+				return ModelElementUtils.GetDatasetFromStoredName(datasetName,
+					model,
+					ignoreUnknownDataset);
+			}
+
+			if (StringUtils.IsNullOrEmptyOrBlank(workspaceId))
+			{
+				const string defaultModelId = "";
+
+				Model defaultModel;
+				if (modelsByWorkspaceId.TryGetValue(defaultModelId, out defaultModel))
+				{
+					// there is a default model
+					return ModelElementUtils.GetDatasetFromStoredName(datasetName,
+						defaultModel,
+						ignoreUnknownDataset);
+				}
+			}
+
+			// no workspace id for dataset, and there is no default model
+
+			IList<Dataset> datasets = getDatasetsByName(datasetName);
+
+			Assert.False(datasets.Count > 1,
+			             "More than one dataset found with name '{0}', for parameter '{1}' in quality condition '{2}'",
+			             datasetName, testParameter.Name, qualityConditionName);
+
+			if (datasets.Count == 0)
+			{
+				if (ignoreUnknownDataset)
+				{
+					return null;
+				}
+
+				Assert.False(datasets.Count == 0,
+				             "Dataset '{0}' for parameter '{1}' in quality condition '{2}' not found",
+				             datasetName, testParameter.Name, qualityConditionName);
+			}
+
+			return datasets[0];
 		}
 
 		[NotNull]

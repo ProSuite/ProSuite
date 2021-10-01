@@ -106,6 +106,15 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			}
 		}
 
+		/// <summary>
+		/// Creates a full specification from the specified xml document with support for row
+		/// filters, issue filters and transformers.
+		/// </summary>
+		/// <param name="document"></param>
+		/// <param name="qualitySpecificationName"></param>
+		/// <param name="dataSources"></param>
+		/// <param name="ignoreConditionsForUnknownDatasets"></param>
+		/// <returns></returns>
 		private QualitySpecification CreateQualitySpecificationCore(
 			[NotNull] XmlDataQualityDocument document,
 			[NotNull] string qualitySpecificationName,
@@ -141,23 +150,21 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			IDictionary<XmlDataQualityCategory, DataQualityCategory> categoryMap =
 				GetCategoryMap(document);
 
-			XmlQualityConditionsCache cache =
+			XmlQualityConditionsCache xmlDocumentCache =
 				XmlDataQualityUtils.GetReferencedXmlQualityConditions(
 					document, new[] {xmlQualitySpecification});
 
 			IList<XmlWorkspace> referencedXmlWorkspaces =
-				XmlDataQualityUtils.GetReferencedWorkspaces(cache);
+				XmlDataQualityUtils.GetReferencedWorkspaces(xmlDocumentCache);
 
 			IDictionary<string, Model> modelsByWorkspaceId = GetModelsByWorkspaceId(
 				referencedXmlWorkspaces, dataSources,
-				cache.EnumReferencedConfigurationInstances().ToList());
+				xmlDocumentCache.EnumReferencedConfigurationInstances().ToList());
 
-			cache.ReferencedModels = modelsByWorkspaceId;
-
+			xmlDocumentCache.ReferencedModels = modelsByWorkspaceId;
+			
 			Dictionary<string, QualityCondition> qualityConditions =
-				CreateQualityConditions(referencedXmlConditionPairs,
-				                        testDescriptorsByName,
-				                        categoryMap,
+				CreateQualityConditions(xmlDocumentCache,
 				                        modelsByWorkspaceId,
 				                        ignoreConditionsForUnknownDatasets);
 
@@ -171,6 +178,17 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				ignoreConditionsForUnknownDatasets);
 		}
 
+		/// <summary>
+		/// Creates a simple specification from the provided xml test descriptors and specification
+		/// elements. Currently no special features (row filters, issue filters, transformers) are
+		/// supported.
+		/// </summary>
+		/// <param name="name"></param>
+		/// <param name="xmlDescriptors"></param>
+		/// <param name="specificationElements"></param>
+		/// <param name="dataSources"></param>
+		/// <param name="ignoreConditionsForUnknownDatasets"></param>
+		/// <returns></returns>
 		private QualitySpecification CreateQualitySpecificationCore(
 			[NotNull] string name,
 			[NotNull] IList<XmlTestDescriptor> xmlDescriptors,
@@ -245,6 +263,41 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		}
 
 		private static Dictionary<string, QualityCondition> CreateQualityConditions(
+			XmlQualityConditionsCache xmlDocumentCache,
+			IDictionary<string, Model> modelsByWorkspaceId,
+			bool ignoreConditionsForUnknownDatasets)
+		{
+			var qualityConditions = new Dictionary<string, QualityCondition>(
+				StringComparer.OrdinalIgnoreCase);
+
+			Func<string, IList<Dataset>> getDatasetsByName = name => new List<Dataset>();
+
+			foreach (KeyValuePair<XmlQualityCondition, XmlDataQualityCategory> pair in
+				xmlDocumentCache.QualityConditionsWithCategories)
+			{
+				XmlQualityCondition xmlCondition = pair.Key;
+
+				QualityCondition createdCondition = xmlDocumentCache.CreateQualityCondition(
+					xmlCondition, getDatasetsByName, ignoreConditionsForUnknownDatasets,
+					out ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters);
+
+				if (createdCondition == null)
+				{
+					HandleNoConditionCreated(xmlCondition, modelsByWorkspaceId,
+					                         ignoreConditionsForUnknownDatasets,
+					                         unknownDatasetParameters);
+				}
+				else
+				{
+					qualityConditions.Add(createdCondition.Name, createdCondition);
+				}
+			}
+
+			return qualityConditions;
+		}
+
+
+		private static Dictionary<string, QualityCondition> CreateQualityConditions(
 			[NotNull] IList<KeyValuePair<XmlQualityCondition, DataQualityCategory>> conditions,
 			[NotNull] IDictionary<string, TestDescriptor> testDescriptorsByName,
 			IDictionary<string, Model> modelsByWorkspaceId,
@@ -257,37 +310,53 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			foreach (KeyValuePair<XmlQualityCondition, DataQualityCategory> pair in conditions)
 			{
-				XmlQualityCondition xmlConfig = pair.Key;
+				XmlQualityCondition xmlCondition = pair.Key;
 				DataQualityCategory conditionCategory = pair.Value;
 
-				QualityCondition created = cache.CreateQualityCondition(
-					xmlConfig, getDatasetsByName, ignoreConditionsForUnknownDatasets,
-					out ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters);
+				ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters;
+				QualityCondition qualityCondition = XmlDataQualityUtils.CreateQualityConditionLegacy(
+					xmlCondition,
+					testDescriptorsByName[xmlCondition.TestDescriptorName],
+					modelsByWorkspaceId,
+					getDatasetsByName,
+					conditionCategory,
+					ignoreConditionsForUnknownDatasets,
+					out unknownDatasetParameters);
 
-				if (created == null)
+				if (qualityCondition == null)
 				{
-					Assert.True(ignoreConditionsForUnknownDatasets,
-					            "ignoreConditionsForUnknownDatasets");
-					Assert.True(unknownDatasetParameters.Count > 0,
-					            "Unexpected number of unknown datasets");
-
-					_msg.WarnFormat(
-						unknownDatasetParameters.Count == 1
-							? "Quality condition '{0}' is ignored because the following dataset is not found: {1}"
-							: "Quality condition '{0}' is ignored because the following datasets are not found: {1}",
-						xmlConfig.Name,
-						XmlDataQualityUtils.ConcatenateUnknownDatasetNames(
-							unknownDatasetParameters,
-							modelsByWorkspaceId,
-							DataSource.AnonymousId));
+					HandleNoConditionCreated(xmlCondition, modelsByWorkspaceId,
+					                         ignoreConditionsForUnknownDatasets,
+					                         unknownDatasetParameters);
 				}
 				else
 				{
-					qualityConditions.Add(created.Name, created);
+					qualityConditions.Add(qualityCondition.Name, qualityCondition);
 				}
 			}
 
 			return qualityConditions;
+		}
+
+		private static void HandleNoConditionCreated(XmlQualityCondition xmlCondition,
+		                                             IDictionary<string, Model> modelsByWorkspaceId,
+		                                             bool ignoreConditionsForUnknownDatasets,
+		                                             ICollection<XmlDatasetTestParameterValue> unknownDatasetParameters)
+		{
+			Assert.True(ignoreConditionsForUnknownDatasets,
+			            "ignoreConditionsForUnknownDatasets");
+			Assert.True(unknownDatasetParameters.Count > 0,
+			            "Unexpected number of unknown datasets");
+
+			_msg.WarnFormat(
+				unknownDatasetParameters.Count == 1
+					? "Quality condition '{0}' is ignored because the following dataset is not found: {1}"
+					: "Quality condition '{0}' is ignored because the following datasets are not found: {1}",
+				xmlCondition.Name,
+				XmlDataQualityUtils.ConcatenateUnknownDatasetNames(
+					unknownDatasetParameters,
+					modelsByWorkspaceId,
+					DataSource.AnonymousId));
 		}
 
 		[NotNull]
@@ -353,6 +422,39 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			}
 		}
 
+		private static IDictionary<string, TestDescriptor> GetReferencedTestDescriptorsByName(
+			[NotNull] IEnumerable<XmlQualityCondition> referencedConditions,
+			[NotNull] IDictionary<string, XmlTestDescriptor> xmlTestDescriptorsByName)
+		{
+			var result = new Dictionary<string, TestDescriptor>(
+				StringComparer.OrdinalIgnoreCase);
+
+			foreach (XmlQualityCondition condition in referencedConditions)
+			{
+				string testDescriptorName = condition.TestDescriptorName;
+				if (testDescriptorName == null || result.ContainsKey(testDescriptorName))
+				{
+					continue;
+				}
+
+				XmlTestDescriptor xmlTestDescriptor;
+				if (!xmlTestDescriptorsByName.TryGetValue(testDescriptorName,
+				                                          out xmlTestDescriptor))
+				{
+					throw new InvalidConfigurationException(
+						string.Format(
+							"Test descriptor {0}, referenced in quality condition {1}, not found",
+							testDescriptorName, condition.Name));
+				}
+
+				result.Add(testDescriptorName,
+				           XmlDataQualityUtils.CreateTestDescriptor(xmlTestDescriptor));
+			}
+
+			return result;
+		}
+
+
 		private IDictionary<string, Model> GetModelsByWorkspaceId(
 			[NotNull] IEnumerable<XmlWorkspace> xmlWorkspaces,
 			[NotNull] IEnumerable<DataSource> dataSources,
@@ -399,6 +501,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			return result;
 		}
 
+
 		[NotNull]
 		private IDictionary<string, Model> GetModelsByWorkspaceId(
 			[NotNull] IEnumerable<DataSource> allDataSources,
@@ -419,6 +522,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 
 			return result;
 		}
+
 
 		[NotNull]
 		private Model CreateModel(
