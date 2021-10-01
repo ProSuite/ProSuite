@@ -376,8 +376,9 @@ namespace ProSuite.Commons.AO.Geometry
 			return result;
 		}
 
-		public static IEnumerable<RingGroup> CreateRingGroups(IMultiPatch multipatch,
-		                                                      bool enforcePositiveOrientation = true)
+		public static IEnumerable<RingGroup> CreateRingGroups(
+			[NotNull] IMultiPatch multipatch,
+			bool enforcePositiveOrientation = true)
 		{
 			foreach (GeometryPart multipatchPart in GeometryPart.FromGeometry(multipatch))
 			{
@@ -392,6 +393,20 @@ namespace ProSuite.Commons.AO.Geometry
 
 				yield return ringGroup;
 			}
+		}
+
+		public static Polyhedron CreatePolyhedron(IMultiPatch multipatch)
+		{
+			var ringGroups = new List<RingGroup>();
+
+			foreach (GeometryPart multipatchPart in GeometryPart.FromGeometry(multipatch))
+			{
+				RingGroup ringGroup = CreateRingGroup(multipatchPart);
+
+				ringGroups.Add(ringGroup);
+			}
+
+			return new Polyhedron(ringGroups);
 		}
 
 		public static Linestring CreateLinestring([NotNull] IGeometry path,

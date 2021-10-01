@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ProSuite.Commons.Essentials.Assertions;
 
 namespace ProSuite.Commons.Geom.Wkb
 {
@@ -134,6 +135,80 @@ namespace ProSuite.Commons.Geom.Wkb
 
 				return multipoint;
 			}
+		}
+
+		public IList<Polyhedron> ReadMultiSurface(Stream stream)
+		{
+			using (BinaryReader reader = InitializeReader(stream))
+			{
+				ReadWkbType(reader, true,
+				            out WkbGeometryType geometryType, out Ordinates ordinates);
+
+				if (geometryType != WkbGeometryType.MultiSurface)
+				{
+					throw new NotSupportedException(
+						$"Cannot read {geometryType} as multi-surface.");
+				}
+
+				List<Polyhedron> result = ReadMultiSurfaceCore(reader, ordinates);
+
+				return result;
+			}
+		}
+
+		private List<Polyhedron> ReadMultiSurfaceCore(BinaryReader reader,
+		                                              Ordinates expectedOrdinates)
+		{
+			var result = new List<Polyhedron>();
+
+			int polyhedraCount = checked((int) reader.ReadUInt32());
+
+			for (int i = 0; i < polyhedraCount; i++)
+			{
+				WkbGeometryType geometryType;
+				Ordinates ordinates;
+				ReadWkbType(reader, false,
+				            out geometryType, out ordinates);
+
+				Assert.AreEqual(WkbGeometryType.PolyhedralSurface, geometryType,
+				                "Unexpected geometry type");
+
+				Assert.AreEqual(expectedOrdinates, ordinates,
+				                "Unexpected ordinates dimension");
+
+				Polyhedron polyhedron = ReadPolyhedronCore(reader);
+
+				result.Add(polyhedron);
+			}
+
+			return result;
+		}
+
+		private Polyhedron ReadPolyhedronCore(BinaryReader reader)
+		{
+			int polygonCount = checked((int) reader.ReadUInt32());
+
+			var ringGroups = new List<RingGroup>();
+
+			for (int p = 0; p < polygonCount; p++)
+			{
+				WkbGeometryType geometryType;
+				Ordinates expectedOrdinates;
+				ReadWkbType(reader, false,
+				            out geometryType, out expectedOrdinates);
+
+				Assert.AreEqual(WkbGeometryType.Polygon, geometryType,
+				                "Unexpected geometry type");
+
+				RingGroup ringGroup = ReadPolygonCore(reader, expectedOrdinates);
+
+				if (ringGroup.PartCount == 0) continue;
+
+				ringGroups.Add(ringGroup);
+			}
+
+			var polyhedron = new Polyhedron(ringGroups);
+			return polyhedron;
 		}
 
 		private RingGroup ReadPolygonCore(BinaryReader reader, Ordinates ordinates)

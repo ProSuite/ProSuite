@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -67,15 +66,17 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 			}
 		}
 
-		public IEnumerable<int> FindPointIndexes(IPnt searchPoint, double tolerance = double.Epsilon,
-		                                         bool useSearchCircle = false, bool allowIndexing = true)
+		public IEnumerable<int> FindPointIndexes(IPnt searchPoint,
+		                                         double xyTolerance = double.Epsilon,
+		                                         bool useSearchCircle = false,
+		                                         bool allowIndexing = true)
 		{
 			for (var i = 0; i < PointCount; i++)
 			{
 				// TODO: Spatial index support
 				bool withinBox =
 					IsWithinBoxXY(searchPoint.X, searchPoint.Y,
-					              _wksPoints[i].X, _wksPoints[i].Y, tolerance);
+					              _wksPoints[i].X, _wksPoints[i].Y, xyTolerance);
 
 				if (! withinBox)
 				{
@@ -85,7 +86,8 @@ namespace ProSuite.Commons.AO.Geometry.Serialization
 				if (useSearchCircle)
 				{
 					if (GeomRelationUtils.IsWithinTolerance(
-						new Pnt2D(_wksPoints[i].X, _wksPoints[i].Y), searchPoint, tolerance, true))
+						new Pnt2D(_wksPoints[i].X, _wksPoints[i].Y), searchPoint, xyTolerance,
+						true))
 					{
 						yield return i;
 					}
