@@ -4112,6 +4112,152 @@ namespace ProSuite.Commons.Test.Geometry
 			MathUtils.AreEqual(plane1.GetDistanceAbs(p1.X, p1.Y, p1[2]), 0);
 		}
 
+		[Test]
+		public void CanSimplifyMultipoint()
+		{
+			Multipoint<IPnt> original = new Multipoint<IPnt>(
+				new[]
+				{
+					new Pnt3D(2600000, 1200000, 453),
+					new Pnt3D(2600009, 1200002, 454),
+					new Pnt3D(2600008, 1200003, 455),
+					new Pnt3D(2600007, 1200004, 456),
+					new Pnt3D(2600006, 1200005, 457),
+					new Pnt3D(2600005, 1200006, 458),
+					new Pnt3D(2600007.001, 1200004.001, 456.001), // almost duplicate in xyz
+					new Pnt3D(2600004, 1200007, 459)
+				});
+
+			Multipoint<IPnt> test =
+				new Multipoint<IPnt>(original.GetPoints(0, null, true));
+
+			//
+			// 3D simplify:
+			GeomTopoOpUtils.Simplify(test, 0.01, 0.01);
+
+			// Structurally equal: No (different point order)
+			Assert.IsFalse(original.Equals(test));
+
+			// Equal in 3D: No (simplified)
+			Assert.IsFalse(GeomRelationUtils.AreEqual(original, test, 0.0, 0.0));
+
+			// Equal in 2D: Yes (simplified, but occupies the same XY-space)
+			Assert.IsTrue(GeomRelationUtils.AreEqualXY(original, test, 0.01));
+
+			// Cluster center is found:
+			Pnt3D expectedClusteredPoint = new Pnt3D(2600007.0005, 1200004.0005, 456.0005);
+			var foundPoint = test.FindPointIndexes(expectedClusteredPoint).ToList();
+
+			Assert.AreEqual(1, foundPoint.Count);
+
+			// Ensure point Z:
+			Assert.IsTrue(expectedClusteredPoint.Equals(test.GetPoint(foundPoint[0])));
+
+			// 1 point eliminated
+			Assert.AreEqual(original.PointCount - 1, test.PointCount);
+
+			//
+			// 2D simplify:
+			test = new Multipoint<IPnt>(original.GetPoints(0, null, true));
+			GeomTopoOpUtils.Simplify(test, 0.01);
+
+			// Structurally equal: No (different point order)
+			Assert.IsFalse(original.Equals(test));
+
+			// Equal in 3D: Yes, within 1cm (simplified but occupies the same XYZ space)
+			Assert.IsTrue(GeomRelationUtils.AreEqual(original, test, 0.01, 0.01));
+
+			// Equal in 3D: No, within 0.5mm 
+			Assert.IsFalse(GeomRelationUtils.AreEqual(original, test, 0.0005, 0.0005));
+
+			// Equal in 2D: Yes within 1cm (simplified, but occupies the same XY-space)
+			Assert.IsTrue(GeomRelationUtils.AreEqualXY(original, test, 0.01));
+
+			// Equal in 2D: No, within 0.5mm (simplified, but occupies the same XY-space)
+			Assert.IsFalse(GeomRelationUtils.AreEqualXY(original, test, 0.0005));
+
+			// Cluster center is found:
+			foundPoint = test.FindPointIndexes(expectedClusteredPoint).ToList();
+
+			Assert.AreEqual(1, foundPoint.Count);
+
+			// Ensure point Z:
+			Assert.IsTrue(expectedClusteredPoint.Equals(test.GetPoint(foundPoint[0])));
+
+			// 1 point eliminated
+			Assert.AreEqual(original.PointCount - 1, test.PointCount);
+
+			////
+			//// Clustering in 2D while keeping different Zs:
+			original.AddPoint(new Pnt3D(2600007, 1200004, 458));
+		}
+
+		[Test]
+		public void CanSimplifyMultipointAlreadySimple()
+		{
+			Multipoint<IPnt> original = new Multipoint<IPnt>(
+				new[]
+				{
+					new Pnt3D(2600000, 1200000, 453),
+					new Pnt3D(2600009, 1200002, 454),
+					new Pnt3D(2600008, 1200003, 455),
+					new Pnt3D(2600007, 1200004, 456),
+					new Pnt3D(2600006, 1200005, 457),
+					new Pnt3D(2600005, 1200006, 458),
+					new Pnt3D(2600004, 1200007, 459)
+				});
+
+			Multipoint<IPnt> test =
+				new Multipoint<IPnt>(original.GetPoints(0, null, true));
+
+			//
+			// 3D simplify:
+			GeomTopoOpUtils.Simplify(test, 0.01, 0.01);
+
+			// Structurally equal: Yes (nothing happened)
+			Assert.IsTrue(original.Equals(test));
+
+			Assert.IsTrue(GeomRelationUtils.AreEqualXY(original, test, 0.0));
+			Assert.IsTrue(GeomRelationUtils.AreEqual(original, test, 0.0, 0.0));
+
+			// 2D simplify:
+			GeomTopoOpUtils.Simplify(test, 0.01, 0.01);
+
+			Assert.IsTrue(original.Equals(test));
+			Assert.IsTrue(GeomRelationUtils.AreEqualXY(original, test, 0.0));
+			Assert.IsTrue(GeomRelationUtils.AreEqual(original, test, 0.0, 0.0));
+
+			// 3D simple, but not 2D:
+			original.AddPoint(new Pnt3D(2600007, 1200004, 458));
+
+			test = new Multipoint<IPnt>(original.GetPoints(0, null, true));
+
+			//
+			// 3D simplify:
+			GeomTopoOpUtils.Simplify(test, 0.1, 0.1);
+
+			// Structurally equal: No
+			Assert.IsFalse(original.Equals(test));
+
+			// Clementini equals: yes
+			Assert.IsTrue(GeomRelationUtils.AreEqualXY(original, test, 0.0));
+			Assert.IsTrue(GeomRelationUtils.AreEqual(original, test, 0.0, 0.0));
+
+			//
+			// 2D simplify:
+			test = new Multipoint<IPnt>(original.GetPoints(0, null, true));
+			GeomTopoOpUtils.Simplify(original, 0.01);
+
+			// Structurally equal: No
+			Assert.IsFalse(original.Equals(test));
+
+			// Equal in 3D: No (simplified)
+			Assert.IsFalse(GeomRelationUtils.AreEqual(original, test, 0.0, 0.0));
+
+			// Equal in 2D: Yes (simplified, but occupies the same XY-space)
+			Assert.IsTrue(GeomRelationUtils.AreEqualXY(original, test, 0.0));
+		}
+
 		private void AssertCanDeleteLinearSelfIntersections(Linestring linestring,
 		                                                    double tolerance,
 		                                                    int expectedPartCount,

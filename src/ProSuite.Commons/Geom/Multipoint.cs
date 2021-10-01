@@ -7,7 +7,7 @@ using ProSuite.Commons.Geom.SpatialIndex;
 
 namespace ProSuite.Commons.Geom
 {
-	public class Multipoint<T> : IPointList, IBoundedXY, IEquatable<Multipoint<T>> where T : IPnt
+	public class Multipoint<T> : IPointList, IEquatable<Multipoint<T>> where T : IPnt
 	{
 		private readonly List<T> _points;
 
@@ -188,6 +188,19 @@ namespace ProSuite.Commons.Geom
 			return $"Point count: {PointCount}";
 		}
 
+		public void SetEmpty()
+		{
+			_points.Clear();
+
+			XMin = double.NaN;
+			YMin = double.NaN;
+			XMax = double.NaN;
+			YMax = double.NaN;
+
+			//_boundingBox = null;
+			//SpatialIndex = null;
+		}
+
 		public void AddPoints(IEnumerable<T> points)
 		{
 			foreach (T point in points)
@@ -247,7 +260,7 @@ namespace ProSuite.Commons.Geom
 		/// A potential Z value is ignored.
 		/// </summary>
 		/// <param name="searchPoint">The search point.</param>
-		/// <param name="tolerance">The search tolerance.</param>
+		/// <param name="xyTolerance">The search tolerance.</param>
 		/// <param name="useSearchCircle">Whether the search is performed within an actual circle,
 		/// i.e. the tolerance is the XY distance threshold. If false, the search is performed
 		/// within the box defined by 2*2 times the tolerance.
@@ -256,7 +269,7 @@ namespace ProSuite.Commons.Geom
 		/// <returns></returns>
 		[NotNull]
 		public IEnumerable<int> FindPointIndexes([NotNull] IPnt searchPoint,
-		                                         double tolerance = double.Epsilon,
+		                                         double xyTolerance = double.Epsilon,
 		                                         bool useSearchCircle = false,
 		                                         bool allowIndexing = true)
 		{
@@ -270,12 +283,12 @@ namespace ProSuite.Commons.Geom
 			{
 				// No need to add the tolerance to the search box, it is added by the index
 				foreach (int foundPointIdx in SpatialIndex.Search(
-					searchPoint.X, searchPoint.Y, searchPoint.X, searchPoint.Y, tolerance))
+					searchPoint.X, searchPoint.Y, searchPoint.X, searchPoint.Y, xyTolerance))
 				{
 					T foundPoint = _points[foundPointIdx];
 
 					bool withinTolerance =
-						GeomRelationUtils.IsWithinTolerance(foundPoint, searchPoint, tolerance,
+						GeomRelationUtils.IsWithinTolerance(foundPoint, searchPoint, xyTolerance,
 						                                    useSearchCircle);
 
 					if (withinTolerance)
@@ -289,7 +302,7 @@ namespace ProSuite.Commons.Geom
 				for (var i = 0; i < PointCount; i++)
 				{
 					bool withinTolerance =
-						GeomRelationUtils.IsWithinTolerance(_points[i], searchPoint, tolerance,
+						GeomRelationUtils.IsWithinTolerance(_points[i], searchPoint, xyTolerance,
 						                                    useSearchCircle);
 
 					if (withinTolerance)
@@ -314,6 +327,11 @@ namespace ProSuite.Commons.Geom
 
 		private void UpdateBounds([NotNull] IPnt point)
 		{
+			if (double.IsNaN(XMin))
+			{
+				InitializeBounds();
+			}
+
 			if (point.X < XMin)
 			{
 				XMin = point.X;
@@ -335,18 +353,13 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		private void SetEmpty()
+		private void InitializeBounds()
 		{
-			_points.Clear();
+			XMin = double.MaxValue;
+			YMin = double.MaxValue;
 
-			XMin = double.NaN;
-			YMin = double.NaN;
-			XMax = double.NaN;
-			YMax = double.NaN;
-
-			//_boundingBox = null;
-
-			//SpatialIndex = null;
+			XMax = double.MinValue;
+			YMax = double.MinValue;
 		}
 	}
 }

@@ -1082,7 +1082,7 @@ namespace ProSuite.Commons.Geom
 			double tolerance)
 		{
 			List<double> vertexDistances = GetSnappedVertexDistances(ringPoints, plane,
-			                                                         tolerance);
+				tolerance);
 
 			if (vertexDistances.TrueForAll(d => Math.Abs(d) < tolerance))
 			{
@@ -1448,8 +1448,8 @@ namespace ProSuite.Commons.Geom
 				if (previous != null)
 				{
 					bool ringHasSegmentInPlane = IsRingSegmentInPlane(previous, current,
-					                                                  vertexDistances
-						                                                  .Count);
+						vertexDistances
+							.Count);
 
 					if (ringHasSegmentInPlane)
 					{
@@ -1629,7 +1629,6 @@ namespace ProSuite.Commons.Geom
 
 		#region 2D Intersection
 
-
 		/// <summary>
 		/// Returns the points from the source point list that intersect the target segment list.
 		/// The target segments are interpreted as linestring, i.e. even in case it is a 2-dimensional
@@ -1661,7 +1660,6 @@ namespace ProSuite.Commons.Geom
 				yield return result;
 			}
 		}
-
 
 		/// <summary>
 		/// Returns the points from the source point list that intersect the target segment list.
@@ -1716,7 +1714,8 @@ namespace ProSuite.Commons.Geom
 				IPnt sourcePoint = sourcePoints.GetPoint(i);
 
 				foreach (var intersectionPoint in GetIntersectionPoints(
-					sourcePoint, i, targetSegments, tolerance, includeRingInteriorPoints, includeRingStartEndPointDuplicates))
+					sourcePoint, i, targetSegments, tolerance, includeRingInteriorPoints,
+					includeRingStartEndPointDuplicates))
 				{
 					yield return intersectionPoint;
 				}
@@ -1796,7 +1795,8 @@ namespace ProSuite.Commons.Geom
 			}
 
 			if (includeRingInteriorPoints && ! foundSegmentIntersection &&
-			    sourceSegments.IsClosed && GeomRelationUtils.PolycurveContainsXY(sourceSegments, targetPoint, tolerance))
+			    sourceSegments.IsClosed &&
+			    GeomRelationUtils.PolycurveContainsXY(sourceSegments, targetPoint, tolerance))
 			{
 				// TODO: Consider finding out the source part index
 				yield return new IntersectionPoint3D(new Pnt3D(targetPoint), double.NaN)
@@ -1837,7 +1837,8 @@ namespace ProSuite.Commons.Geom
 				IPnt targetPoint = targetPoints.GetPoint(i);
 
 				foreach (var intersectionPoint in GetIntersectionPoints(
-					sourceSegments, targetPoint, i, tolerance, includeRingInteriorPoints, includeRingStartEndPointDuplicates))
+					sourceSegments, targetPoint, i, tolerance, includeRingInteriorPoints,
+					includeRingStartEndPointDuplicates))
 				{
 					yield return intersectionPoint;
 				}
@@ -1973,10 +1974,11 @@ namespace ProSuite.Commons.Geom
 			bool foundSegmentIntersection = false;
 			IntersectionPoint3D targetFromPointIntersection = null;
 			IntersectionPoint3D previousIntersection = null;
-			foreach (KeyValuePair<int, Line3D> segmentByIndex in targetSegments.FindSegments(sourcePoint, tolerance))
+			foreach (KeyValuePair<int, Line3D> segmentByIndex in targetSegments.FindSegments(
+				sourcePoint, tolerance))
 			{
 				int targetIndex = segmentByIndex.Key;
-				
+
 				IntersectionPoint3D intersectionPoint =
 					IntersectionPoint3D.CreatePointLineIntersection(
 						sourcePoint, targetSegments, sourceIndex, targetIndex, tolerance);
@@ -2019,8 +2021,9 @@ namespace ProSuite.Commons.Geom
 				previousIntersection = intersectionPoint;
 			}
 
-			if (includeRingInteriorPoints && !foundSegmentIntersection &&
-			    targetSegments.IsClosed && GeomRelationUtils.PolycurveContainsXY(targetSegments, sourcePoint, tolerance))
+			if (includeRingInteriorPoints && ! foundSegmentIntersection &&
+			    targetSegments.IsClosed &&
+			    GeomRelationUtils.PolycurveContainsXY(targetSegments, sourcePoint, tolerance))
 			{
 				// TODO: Consider finding out the source part index
 				yield return new IntersectionPoint3D(new Pnt3D(sourcePoint), double.NaN)
@@ -2040,7 +2043,7 @@ namespace ProSuite.Commons.Geom
 			{
 				var linearSelfIntersections = new List<SegmentIntersection>(
 					SegmentIntersectionUtils.GetRelevantSelfIntersectionsXY(i, linestring[i],
-					                                                        linestring, tolerance)
+						                        linestring, tolerance)
 					                        .Where(li => li.HasLinearIntersection));
 
 				filteredSelfIntersections.AddRange(linearSelfIntersections);
@@ -2592,6 +2595,189 @@ namespace ProSuite.Commons.Geom
 			return allSegments.Count < crackedSelfIntersections.SegmentCount;
 		}
 
+		#region Simplify
+
+		/// <summary>
+		/// Performs basic clustering on the specified points using the provided tolerance as minimum
+		/// distance. M values and PointIDs are disregarded and lost in the output!
+		/// </summary>
+		/// <param name="multipoint"></param>
+		/// <param name="xyTolerance"></param>
+		/// <param name="zTolerance"></param>
+		public static void Simplify<T>([NotNull] Multipoint<T> multipoint,
+		                               double xyTolerance,
+		                               double zTolerance = double.NaN) where T : IPnt
+		{
+			// NOTE: AO-Simplify on the multipoint cannot be used because it uses the resolution instead
+			// of the tolerance:
+			// "For multipoints, Simplify snaps all x-, y-, z-, and m-coordinates to the grid of the associated 
+			// spatial reference, and removes identical points. A point is identical to another point when the 
+			// two have identical x,y coordinates (after snapping) and when attributes for which it is aware are 
+			// identical to the attributes for which the other point is aware."
+
+			if (multipoint.PointCount == 0)
+			{
+				return;
+			}
+
+			// First cluster the XY coordinates for all Z values, then cluster the Z values:
+			List<T> coords = multipoint.GetPoints().ToList();
+
+			IList<KeyValuePair<T, List<T>>> clusters2D =
+				GroupPoints(coords, xyTolerance, double.NaN);
+
+			if (clusters2D.Count == coords.Count)
+			{
+				// No actual clustering has taken place
+				return;
+			}
+
+			// Consider maintaining the awareness on the high-level geometry:
+			if (double.IsNaN(zTolerance) || ! (multipoint.GetPoint(0) is Pnt3D))
+			{
+				ReplacePoints(multipoint, clusters2D.Select(c => c.Key));
+				return;
+			}
+
+			// Include the various Z-levels
+			coords.Clear();
+			foreach (KeyValuePair<T, List<T>> cluster2D in clusters2D)
+			{
+				T xyCenter = cluster2D.Key;
+
+				foreach (T pnt in cluster2D.Value)
+				{
+					Pnt3D pntZ = (Pnt3D) (IPnt) pnt;
+					coords.Add((T) (IPnt) new Pnt3D(xyCenter.X, xyCenter.Y, pntZ.Z));
+				}
+			}
+
+			IList<KeyValuePair<T, List<T>>> clusters3D =
+				GroupPoints(coords, xyTolerance, zTolerance);
+
+			ReplacePoints(multipoint, clusters3D.Select(c => c.Key));
+		}
+
+		[NotNull]
+		public static IList<KeyValuePair<T, List<T>>> GroupPoints<T>([NotNull] List<T> coords,
+			double xyTolerance,
+			double zTolerance) where T : IPnt
+		{
+			Assert.ArgumentNotNull(coords, nameof(coords));
+
+			IComparer<T> comparer = new PntComparer<T>(! double.IsNaN(zTolerance));
+			coords.Sort(comparer);
+
+			var toleranceGroups = new List<List<T>>();
+			var currentGroup = new List<T> {coords[0]};
+
+			for (var i = 1; i < coords.Count; i++)
+			{
+				if (! ArePointsEqual(coords, i - 1, i, xyTolerance, zTolerance))
+				{
+					toleranceGroups.Add(currentGroup);
+					currentGroup = new List<T> {coords[i]};
+
+					continue;
+				}
+
+				currentGroup.Add(coords[i]);
+			}
+
+			if (currentGroup.Count > 0)
+			{
+				toleranceGroups.Add(currentGroup);
+			}
+
+			var result = new List<KeyValuePair<T, List<T>>>();
+
+			// For strict interpretation of tolerance: Consider splitting clusters that are too large (Divisive Hierarchical clustering)
+			foreach (List<T> groupedPoints in toleranceGroups)
+			{
+				if (groupedPoints.Count == 1)
+				{
+					result.Add(new KeyValuePair<T, List<T>>(groupedPoints[0], groupedPoints));
+				}
+				else
+				{
+					T center = GetCenterPoint(groupedPoints);
+
+					result.Add(new KeyValuePair<T, List<T>>(center, groupedPoints));
+				}
+			}
+
+			return result;
+		}
+
+		private static void ReplacePoints<T>([NotNull] Multipoint<T> multipoint,
+		                                     [NotNull] IEnumerable<T> newPoints) where T : IPnt
+		{
+			multipoint.SetEmpty();
+
+			foreach (T newPoint in newPoints)
+			{
+				multipoint.AddPoint(newPoint);
+			}
+		}
+
+		/// <summary>
+		/// Determines whether the coordinate values at the specified indexes are within
+		/// the appropriate tolerance. To compare ony in XY, provide NaN as zTolerance.
+		/// </summary>
+		/// <param name="points"></param>
+		/// <param name="index1"></param>
+		/// <param name="index2"></param>
+		/// <param name="xyTolerance"></param>
+		/// <param name="zTolerance"></param>
+		/// <returns></returns>
+		private static bool ArePointsEqual<T>(
+			[NotNull] IList<T> points,
+			int index1, int index2,
+			double xyTolerance, double zTolerance) where T : IPnt
+		{
+			if (index1 < 0 || index1 >= points.Count)
+			{
+				return false;
+			}
+
+			if (index2 < 0 || index2 >= points.Count)
+			{
+				return false;
+			}
+
+			IPnt a = points[index1];
+			IPnt b = points[index2];
+
+			return GeomRelationUtils.AreEqual(a, b, xyTolerance, zTolerance);
+		}
+
+		private static T GetCenterPoint<T>(IList<T> points) where T : IPnt
+		{
+			var centerX = points.Average(p => p.X);
+			var centerY = points.Average(p => p.Y);
+
+			double centerZ = 0;
+			foreach (T point in points)
+			{
+				if (point is Pnt3D pnt3D)
+				{
+					centerZ += pnt3D.Z;
+				}
+				else
+				{
+					centerZ = double.NaN;
+				}
+			}
+
+			centerZ /= points.Count;
+
+			return double.IsNaN(centerZ)
+				       ? (T) (IPnt) new Pnt2D(centerX, centerY)
+				       : (T) (IPnt) new Pnt3D(centerX, centerY, centerZ);
+		}
+
+		#endregion
+
 		#region Self intersections
 
 		private static bool TryCrackLinearSelfIntersections(
@@ -3035,7 +3221,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		public static IEnumerable<RingGroup> GetConnectedComponents(MultiLinestring rings,
-		                                                            double tolerance)
+			double tolerance)
 		{
 			RingGroup singleResult = rings as RingGroup;
 
@@ -3176,7 +3362,7 @@ namespace ProSuite.Commons.Geom
 					Linestring thisCurve = connectedLinestrings[thisCurveIdx];
 
 					int? startIdxThisCurve =
-						thisCurve.FindPointIdx(startPoint, inXY : true);
+						thisCurve.FindPointIdx(startPoint, inXY: true);
 
 					if (startIdxThisCurve != null)
 					{

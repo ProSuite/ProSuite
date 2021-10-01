@@ -476,8 +476,10 @@ namespace ProSuite.Commons.Geom
 			return GetPoints(0, null, clone);
 		}
 
-		public IEnumerable<int> FindPointIndexes(IPnt searchPoint, double tolerance = double.Epsilon,
-		                                         bool useSearchCircle = false, bool allowIndexing = true)
+		public IEnumerable<int> FindPointIndexes(IPnt searchPoint,
+		                                         double xyTolerance = double.Epsilon,
+		                                         bool useSearchCircle = false,
+		                                         bool allowIndexing = true)
 		{
 			if (SpatialIndex == null && allowIndexing &&
 			    SegmentCount > AllowIndexingThreshold)
@@ -488,13 +490,13 @@ namespace ProSuite.Commons.Geom
 			if (SpatialIndex != null)
 			{
 				foreach (int foundSegmentIdx in SpatialIndex.Search(searchPoint.X, searchPoint.Y,
-					searchPoint.X, searchPoint.Y, tolerance))
+					searchPoint.X, searchPoint.Y, xyTolerance))
 				{
 					Line3D segment = this[foundSegmentIdx];
 
 					bool withinTolerance =
 						GeomRelationUtils.IsWithinTolerance(segment.StartPoint, searchPoint,
-						                                    tolerance, useSearchCircle);
+						                                    xyTolerance, useSearchCircle);
 
 					if (withinTolerance)
 					{
@@ -509,7 +511,7 @@ namespace ProSuite.Commons.Geom
 					;
 					bool withinTolerance =
 						GeomRelationUtils.IsWithinTolerance(_segments[i].StartPoint, searchPoint,
-						                                    tolerance, useSearchCircle);
+						                                    xyTolerance, useSearchCircle);
 
 					if (withinTolerance)
 					{
@@ -518,7 +520,7 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
-			bool isEndPoint = EndPoint.EqualsXY(searchPoint, tolerance);
+			bool isEndPoint = EndPoint.EqualsXY(searchPoint, xyTolerance);
 
 			if (isEndPoint)
 			{
