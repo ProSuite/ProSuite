@@ -9,6 +9,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -136,6 +137,11 @@ namespace ProSuite.QA.Container.TestContainer
 
 			_tileCache = new TileCache(_cachedTables, _testRunBox, _container,
 			                           _testsPerTable);
+			foreach (KeyValuePair<ITable, double> pair in cachedSet)
+			{
+				_tileCache.OverlappingFeatures.AdaptSearchTolerance(pair.Key, pair.Value);
+			}
+
 			_uniqueIdProviders = new UniqueIdProvider[_cachedTables.Count];
 			for (var i = 0; i < _cachedTables.Count; i++)
 			{
@@ -235,6 +241,33 @@ namespace ProSuite.QA.Container.TestContainer
 		                                     IGeometry cacheGeometry)
 		{
 			return Search(table, queryFilter, filterHelper, cacheGeometry);
+		}
+
+		WKSEnvelope ISearchable.CurrentTileExtent
+		{
+			get
+			{
+				IBox b = _tileCache?.CurrentTileBox;
+				if (b == null)
+				{
+					return new WKSEnvelope();
+				}
+
+				WKSEnvelope ext =
+					WksGeometryUtils.CreateWksEnvelope(b.Min.X, b.Min.Y, b.Max.X, b.Max.Y);
+				return ext;
+			}
+		}
+
+		IEnvelope ISearchable.GetLoadedExtent(ITable table)
+		{
+			int tableIndex = _cachedTables.IndexOf(table);
+			return _tileCache?.LoadedExtents[tableIndex];
+		}
+
+		double ISearchable.GetSearchTolerance(ITable table)
+		{
+			return _tileCache.OverlappingFeatures.GetSearchTolerance(table);
 		}
 
 		#endregion
@@ -889,7 +922,8 @@ namespace ProSuite.QA.Container.TestContainer
 					searchDist = 0;
 				}
 
-				cachedTables[baseTable] = Math.Max(searchDist, 0); // TODO
+				double search = transformed is IHasSearchDistance has ? has.SearchDistance : 0;
+				cachedTables[baseTable] = Math.Max(searchDist, search);
 			}
 		}
 
@@ -904,12 +938,15 @@ namespace ProSuite.QA.Container.TestContainer
 					{
 						foreach (ITable table in filter.InvolvedTables)
 						{
+							AddRecursive(table, cachedSet);
 							if (! cachedSet.TryGetValue(table, out double searchDist))
 							{
 								searchDist = 0;
 							}
 
-							cachedSet[table] = Math.Max(searchDist, 0); // TODO
+							double filterSearch =
+								filter is IHasSearchDistance has ? has.SearchDistance : 0;
+							cachedSet[table] = Math.Max(searchDist, filterSearch);
 						}
 
 						if (filter is IssueFilter f)
@@ -925,12 +962,15 @@ namespace ProSuite.QA.Container.TestContainer
 					{
 						foreach (ITable table in filter.InvolvedTables)
 						{
+							AddRecursive(table, cachedSet);
 							if (! cachedSet.TryGetValue(table, out double searchDist))
 							{
 								searchDist = 0;
 							}
 
-							cachedSet[table] = Math.Max(searchDist, 0); // TODO
+							double filterSearch =
+								filter is IHasSearchDistance has ? has.SearchDistance : 0;
+							cachedSet[table] = Math.Max(searchDist, filterSearch);
 						}
 					}
 				}
@@ -1287,13 +1327,14 @@ namespace ProSuite.QA.Container.TestContainer
 
 			ISpatialFilter loadSpatialFilter =
 				GetLoadSpatialFilter(table, tile.SpatialFilter, notInExpression);
+			IEnvelope loadExtent = GeometryFactory.Clone((IEnvelope) loadSpatialFilter.Geometry);
 
 			AddRowsToCache(cachedRows, table, loadSpatialFilter, _uniqueIdProviders[tableIndex],
 			               ref allBox);
 
 			UpdateXYOccurance(cachedRows.Values, tile);
 
-			_tileCache.CreateBoxTree(tableIndex, cachedRows.Values, allBox);
+			_tileCache.CreateBoxTree(tableIndex, cachedRows.Values, allBox, loadExtent);
 
 			if (_loadedRowCountPerTable != null)
 			{

@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
-using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
@@ -20,6 +20,14 @@ namespace ProSuite.QA.Tests.Transformers
 {
 	public class TrDissolve : ITableTransformer<IFeatureClass>
 	{
+		public enum Option
+		{
+			WithinTile,
+			WithinSearch,
+			LoadMissing
+		}
+
+		private const Option _defaultOption = Option.WithinSearch;
 		private readonly Tfc _dissolvedFc;
 		private IList<string> _attributes;
 		private IList<string> _groupBy;
@@ -31,10 +39,22 @@ namespace ProSuite.QA.Tests.Transformers
 			InvolvedTables = new List<ITable> {(ITable) featureclass};
 
 			_dissolvedFc = new Tfc(featureclass);
+			DissolveOption = _defaultOption;
 		}
 
 		[TestParameter]
-		public double Search { get; set; }
+		public double Search
+		{
+			get => _dissolvedFc.SearchDistance;
+			set => _dissolvedFc.SearchDistance = value;
+		}
+
+		[TestParameter(_defaultOption)]
+		public Option DissolveOption
+		{
+			get => _dissolvedFc.DissolveOption;
+			set => _dissolvedFc.DissolveOption = value;
+		}
 
 		[TestParameter]
 		public IList<string> Attributes
@@ -51,10 +71,7 @@ namespace ProSuite.QA.Tests.Transformers
 		public IList<string> GroupBy
 		{
 			get => _groupBy;
-			set
-			{
-				_groupBy = value;
-			}
+			set { _groupBy = value; }
 		}
 
 		// TODO: handle multiple method calls
@@ -69,10 +86,11 @@ namespace ProSuite.QA.Tests.Transformers
 			ITable fc = InvolvedTables[0];
 
 			Dictionary<string, string> expressionDict = ExpressionUtils.GetFieldDict(fieldNames);
-			Dictionary<string, string> aliasFieldDict = ExpressionUtils.CreateAliases(expressionDict);
+			Dictionary<string, string> aliasFieldDict =
+				ExpressionUtils.CreateAliases(expressionDict);
 
 			TableView tv =
-				TableViewFactory.Create(fc, expressionDict, aliasFieldDict, isGrouped: true); 
+				TableViewFactory.Create(fc, expressionDict, aliasFieldDict, isGrouped: true);
 
 			_dissolvedFc.TableView = tv;
 
@@ -106,7 +124,7 @@ namespace ProSuite.QA.Tests.Transformers
 			_dissolvedFc.BackingDs.SetSqlCaseSensitivity(tableIndex, useCaseSensitiveQaSql);
 		}
 
-		private class Tfc : GdbFeatureClass, ITransformedValue
+		private class Tfc : GdbFeatureClass, ITransformedValue, IHasSearchDistance
 		{
 			public TableView TableView { get; set; }
 
@@ -127,10 +145,16 @@ namespace ProSuite.QA.Tests.Transformers
 						geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM));
 			}
 
+			public double SearchDistance { get; set; }
+			public Option DissolveOption { get; set; }
+
 			public List<FieldInfo> CustomFields { get; private set; }
+
 			public void AddCustomField(string field)
 			{
-				IField f = FieldUtils.CreateField(field, FieldUtils.GetFieldType(TableView.GetColumn(field).DataType));
+				IField f =
+					FieldUtils.CreateField(
+						field, FieldUtils.GetFieldType(TableView.GetColumn(field).DataType));
 				Fields.AddFields(f);
 
 				CustomFields = CustomFields ?? new List<FieldInfo>();
@@ -185,6 +209,9 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private class Transformed : TransformedFeatureClass
 		{
+			private readonly static TableIndexRowComparer
+				_rowComparer = new TableIndexRowComparer();
+
 			private readonly IFeatureClass _dissolve;
 			private NetworkBuilder _builder;
 			private string _constraint;
@@ -223,23 +250,43 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 			}
 
+			private IEnumerable<IRow> GetBaseFeatures(IQueryFilter filter, bool recycling)
+			{
+				if (DataContainer != null)
+				{
+					var ext = DataContainer.GetLoadedExtent((ITable) _dissolve);
+					if (filter is ISpatialFilter sf &&
+					    ((IRelationalOperator) ext).Contains(sf.Geometry))
+					{
+						return DataContainer.Search(
+							(ITable) _dissolve, filter, QueryHelpers[0]);
+					}
+				}
+
+				IQueryFilter f = (IQueryFilter) ((IClone) filter).Clone();
+				f.WhereClause = QueryHelpers[0].TableView.Constraint;
+				return new EnumCursor((ITable) _dissolve, f, recycle: recycling);
+			}
+
 			public override IEnumerable<IRow> Search(IQueryFilter filter, bool recycling)
 			{
 				// TODO: implement GroupBy
 				_builder = _builder ?? new NetworkBuilder(includeBorderNodes: true);
 				_builder.ClearAll();
+				IRelationalOperator queryEnv =
+					(IRelationalOperator) (filter as ISpatialFilter)?.Geometry.Envelope;
 				IEnvelope fullBox = null;
-				foreach (IFeature baseRow in DataContainer.Search(
-					(ITable) _dissolve, filter, QueryHelpers[0]))
+				foreach (var baseRow in GetBaseFeatures(filter, recycling))
 				{
+					IFeature baseFeature = (IFeature) baseRow;
 					_builder.AddNetElements(baseRow, 0);
 					if (fullBox == null)
 					{
-						fullBox = GeometryFactory.Clone(baseRow.Shape.Envelope);
+						fullBox = GeometryFactory.Clone(baseFeature.Shape.Envelope);
 					}
 					else
 					{
-						fullBox.Union(baseRow.Shape.Envelope);
+						fullBox.Union(baseFeature.Shape.Envelope);
 					}
 				}
 
@@ -256,69 +303,13 @@ namespace ProSuite.QA.Tests.Transformers
 					yield break;
 				}
 
-				Dictionary<DirectedRow, List<DirectedRow>> dissolvedDict =
-					new Dictionary<DirectedRow, List<DirectedRow>>(
-						new PathRowComparer(new TableIndexRowComparer()));
-				foreach (List<DirectedRow> connectedRows in _builder.ConnectedLinesList)
-				{
-					if (connectedRows.Count == 2)
-					{
-						dissolvedDict.TryGetValue(connectedRows[0],
-						                          out List<DirectedRow> connected0);
+				Tfc r = (Tfc) Resulting;
 
-						dissolvedDict.TryGetValue(connectedRows[1],
-						                          out List<DirectedRow> connected1);
-
-						if (connected0 == null && connected1 == null)
-						{
-							List<DirectedRow> connected =
-								new List<DirectedRow> {connectedRows[0], connectedRows[1]};
-							dissolvedDict.Add(connectedRows[0], connected);
-							dissolvedDict.Add(connectedRows[1], connected);
-						}
-						else if (connected0 == null)
-						{
-							connected1.Add(connectedRows[0]);
-							dissolvedDict.Add(connectedRows[0], connected1);
-						}
-						else if (connected1 == null)
-						{
-							connected0.Add(connectedRows[1]);
-							dissolvedDict.Add(connectedRows[1], connected0);
-						}
-						else
-						{
-							if (connected0 != connected1)
-							{
-								connected0.AddRange(connected1);
-								foreach (DirectedRow row in connected0)
-								{
-									dissolvedDict[row] = connected0;
-								}
-
-								connected1.Clear();
-							}
-							else
-							{
-								// no action needed
-							}
-						}
-					}
-					else
-					{
-						foreach (DirectedRow connectedRow in connectedRows)
-						{
-							if (! dissolvedDict.ContainsKey(connectedRow))
-							{
-								dissolvedDict.Add(connectedRow,
-								                  new List<DirectedRow> {connectedRow});
-							}
-						}
-					}
-				}
+				ConnectedBuilder connectedBuilder = new ConnectedBuilder(this);
+				connectedBuilder.Build(_builder, queryEnv);
 
 				HashSet<List<DirectedRow>> dissolvedSet = new HashSet<List<DirectedRow>>();
-				foreach (List<DirectedRow> value in dissolvedDict.Values)
+				foreach (List<DirectedRow> value in connectedBuilder.DissolvedDict.Values)
 				{
 					dissolvedSet.Add(value);
 				}
@@ -349,27 +340,190 @@ namespace ProSuite.QA.Tests.Transformers
 						Resulting.FindField(InvolvedRowUtils.BaseRowField),
 						rows);
 
-					Tfc r = (Tfc) Resulting;
-					r.TableView.ClearRows();
-					DataRow tableRow = null;
-					foreach (IRow row in rows)
+					if (r.CustomFields?.Count > 0)
 					{
-						tableRow = r.TableView.Add(row);
-					}
-
-					if (tableRow != null)
-					{
-						foreach (FieldInfo fieldInfo in r.CustomFields)
+						r.TableView.ClearRows();
+						DataRow tableRow = null;
+						foreach (IRow row in rows)
 						{
-							dissolved.set_Value(fieldInfo.Index, tableRow[fieldInfo.Name]);
+							tableRow = r.TableView.Add(row);
 						}
+
+						if (tableRow != null)
+						{
+							foreach (FieldInfo fieldInfo in r.CustomFields)
+							{
+								dissolved.set_Value(fieldInfo.Index, tableRow[fieldInfo.Name]);
+							}
+						}
+
+						r.TableView.ClearRows();
 					}
-					r.TableView.ClearRows();
 
 					if (_constraitHelper?.MatchesConstraint(dissolved) != false)
 					{
 						dissolved.Store();
 						yield return dissolved;
+					}
+				}
+			}
+
+			private class ConnectedBuilder
+			{
+				private readonly Dictionary<DirectedRow, List<DirectedRow>> _dissolvedDict;
+				private readonly Transformed _r;
+				private readonly HashSet<DirectedRow> _handledRows;
+				private readonly List<DirectedRow> _missing;
+
+				private ISpatialFilter _filter;
+
+				public ConnectedBuilder(Transformed r)
+				{
+					_dissolvedDict =
+						new Dictionary<DirectedRow, List<DirectedRow>>(
+							new PathRowComparer(_rowComparer));
+					_missing = new List<DirectedRow>();
+					_handledRows = new HashSet<DirectedRow>(new DirectedRowComparer(_rowComparer));
+
+					_r = r;
+				}
+
+				public Dictionary<DirectedRow, List<DirectedRow>> DissolvedDict => _dissolvedDict;
+
+				public void Build(NetworkBuilder network, IRelationalOperator queryEnv)
+				{
+					_dissolvedDict.Clear();
+					_missing.Clear();
+					_handledRows.Clear();
+					foreach (List<DirectedRow> connectedRows in network.ConnectedLinesList)
+					{
+						Add(connectedRows, queryEnv);
+						connectedRows.ForEach(x => _handledRows.Add(x));
+					}
+
+					while (_missing.Count > 0)
+					{
+						HandleMissing(queryEnv);
+					}
+				}
+
+				private void HandleMissing(IRelationalOperator queryEnv)
+				{
+					List<DirectedRow> missing = new List<DirectedRow>(_missing);
+					_missing.Clear();
+
+					foreach (DirectedRow directedRow in missing)
+					{
+						_filter = _filter ?? new SpatialFilterClass();
+						ISpatialFilter f = _filter;
+						f.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
+						f.Geometry = directedRow.FromPoint;
+						List<IRow> baseFeatures =
+							new List<IRow>(_r.GetBaseFeatures(f, recycling: false));
+
+						if (baseFeatures.Count == 1)
+						{
+							Add(new List<DirectedRow> {directedRow}, queryEnv: null);
+							_handledRows.Add(directedRow);
+							continue;
+						}
+
+						if (baseFeatures.Count > 2)
+						{
+							// TODO: handle multipart geometries
+							// if singlePartGeometry:
+							Add(new List<DirectedRow> {directedRow}, queryEnv: null);
+							_handledRows.Add(directedRow);
+							continue;
+						}
+
+						// baseFeatures.Count = 2
+						var localBuilder = new NetworkBuilder(includeBorderNodes: true);
+						baseFeatures.ForEach(
+							x => localBuilder.AddNetElements(x, 0));
+						IEnvelope b = GeometryFactory.Clone(f.Geometry.Envelope);
+						b.Expand(1, 1, asRatio: false);
+						b.QueryWKSCoords(out WKSEnvelope box);
+						localBuilder.BuildNet(box, box, 0);
+
+						foreach (List<DirectedRow> directedRows in localBuilder
+							.ConnectedLinesList)
+						{
+							if (directedRows.FirstOrDefault(x => ! _handledRows.Contains(x)) ==
+							    null)
+							{
+								continue;
+							}
+
+							Add(directedRows, queryEnv);
+							directedRows.ForEach(x => _handledRows.Add(x));
+						}
+					}
+				}
+
+				private void Add(List<DirectedRow> connectedRows, IRelationalOperator queryEnv)
+				{
+					if (connectedRows.Count == 2)
+					{
+						_dissolvedDict.TryGetValue(connectedRows[0],
+						                           out List<DirectedRow> connected0);
+
+						_dissolvedDict.TryGetValue(connectedRows[1],
+						                           out List<DirectedRow> connected1);
+
+						if (connected0 == null && connected1 == null)
+						{
+							List<DirectedRow> connected =
+								new List<DirectedRow> {connectedRows[0], connectedRows[1]};
+							_dissolvedDict.Add(connectedRows[0], connected);
+							_dissolvedDict.Add(connectedRows[1], connected);
+						}
+						else if (connected0 == null)
+						{
+							connected1.Add(connectedRows[0]);
+							_dissolvedDict.Add(connectedRows[0], connected1);
+						}
+						else if (connected1 == null)
+						{
+							connected0.Add(connectedRows[1]);
+							_dissolvedDict.Add(connectedRows[1], connected0);
+						}
+						else
+						{
+							if (connected0 != connected1)
+							{
+								connected0.AddRange(connected1);
+								foreach (DirectedRow row in connected0)
+								{
+									_dissolvedDict[row] = connected0;
+								}
+
+								connected1.Clear();
+							}
+							else
+							{
+								// no action needed
+							}
+						}
+					}
+					else
+					{
+						if (((Tfc) _r.Resulting).DissolveOption == Option.LoadMissing &&
+						    connectedRows.Count == 1 &&
+						    queryEnv?.Contains(connectedRows[0].FromPoint) == false)
+						{
+							_missing.Add(connectedRows[0]);
+							return;
+						}
+
+						foreach (DirectedRow connectedRow in connectedRows)
+						{
+							if (! _dissolvedDict.ContainsKey(connectedRow))
+							{
+								_dissolvedDict.Add(connectedRow,
+								                   new List<DirectedRow> {connectedRow});
+							}
+						}
 					}
 				}
 			}

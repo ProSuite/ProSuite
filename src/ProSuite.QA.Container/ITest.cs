@@ -106,6 +106,11 @@ namespace ProSuite.QA.Container
 		new T GetTransformed();
 	}
 
+	public interface IHasSearchDistance
+	{
+		double SearchDistance { get; }
+	}
+
 	public interface ITransformedValue
 	{
 		[NotNull]

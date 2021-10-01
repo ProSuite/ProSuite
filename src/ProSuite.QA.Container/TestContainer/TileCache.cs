@@ -23,6 +23,7 @@ namespace ProSuite.QA.Container.TestContainer
 		private readonly ITestContainer _container;
 		private readonly int _cachedTableCount;
 		private readonly IDictionary<ITable, IList<ContainerTest>> _testsPerTable;
+		private readonly IEnvelope[] _loadedExtents;
 
 		private double _maximumSearchTolerance;
 		private double[][] _searchToleranceFromTo;
@@ -44,6 +45,7 @@ namespace ProSuite.QA.Container.TestContainer
 			_cachedTableCount = cachedTables.Count;
 			_rowBoxTrees = new RowBoxTree[_cachedTables.Count];
 			_xyToleranceByTableIndex = GetXYTolerancePerTable(_cachedTables);
+			_loadedExtents = new IEnvelope[_cachedTableCount];
 			IgnoredRowsByTableAndTest = new List<IList<BaseRow>>[_cachedTableCount];
 			OverlappingFeatures = new OverlappingFeatures(_container.MaxCachedPointCount);
 
@@ -51,6 +53,7 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		public OverlappingFeatures OverlappingFeatures { get; }
+		public IReadOnlyList<IEnvelope> LoadedExtents => _loadedExtents;
 
 		public List<IList<BaseRow>>[] IgnoredRowsByTableAndTest { get; }
 
@@ -81,7 +84,7 @@ namespace ProSuite.QA.Container.TestContainer
 				result[tableIndex] = geoDataset == null
 					                     ? defaultTolerance
 					                     : GeometryUtils.GetXyTolerance(geoDataset,
-					                                                    defaultTolerance);
+						                     defaultTolerance);
 
 				tableIndex++;
 			}
@@ -188,7 +191,7 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 
 			List<BoxTree<CachedRow>.TileEntry> searchList = SearchList(filterGeometry,
-			                                                           tableIndex);
+				tableIndex);
 			if (searchList == null || searchList.Count == 0)
 			{
 				return result;
@@ -461,9 +464,10 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		public void CreateBoxTree(int tableIndex, [NotNull] IEnumerable<CachedRow> cachedRows,
-		                          [CanBeNull] IBox allBox)
+		                          [CanBeNull] IBox allBox, IEnvelope loadedEnvelope)
 		{
 			_rowBoxTrees[tableIndex] = CreateBoxTree(cachedRows, allBox);
+			_loadedExtents[tableIndex] = loadedEnvelope;
 		}
 
 		[NotNull]

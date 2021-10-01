@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -12,7 +13,11 @@ namespace ProSuite.QA.Container
 		///// returns the extent of the area for which data are currently loaded in the cache of the ISearchable instance
 		///// Querying data outside this extend may return incomplete data
 		///// </summary>
-		//WKSEnvelope CurrentTileExtent { get; }
+		WKSEnvelope CurrentTileExtent { get; }
+
+		IEnvelope GetLoadedExtent(ITable table);
+
+		double GetSearchTolerance(ITable table);
 
 		IEnumerable<IRow> Search([NotNull] ITable table,
 		                         [NotNull] IQueryFilter queryFilter,
