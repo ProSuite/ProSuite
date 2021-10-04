@@ -30,7 +30,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="ProSuite.Microservices.Definitions.Shared, Version=0.2.0.0, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
+    <Reference Include="ProSuite.Microservices.Definitions.Shared, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Shared.dll</HintPath>
     </Reference>
