@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Linq;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 
 namespace ProSuite.Commons.AGP.Core.Spatial
@@ -68,6 +70,53 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 				MapPoint mapPoint = pointCollection[i];
 				yield return new Pnt3D(mapPoint.X, mapPoint.Y, mapPoint.Z);
 			}
+		}
+
+		public static Multipatch CreateMultipatch([NotNull] Polyhedron polyhedron,
+		                                          [CanBeNull] SpatialReference spatialReference)
+		{
+			MultipatchBuilderEx mpBuilder = new MultipatchBuilderEx(spatialReference);
+
+			var patches = new List<Patch>();
+
+			foreach (RingGroup ringGroup in polyhedron.RingGroups)
+			{
+				Linestring exteriorRing = ringGroup.ExteriorRing;
+
+				if (exteriorRing == null)
+				{
+					continue;
+				}
+
+				Patch firstRing = ToPatch(exteriorRing, esriPatchType.FirstRing, mpBuilder);
+
+				patches.Add(firstRing);
+
+				foreach (Linestring interiorRing in ringGroup.InteriorRings)
+				{
+					Patch interiorPatch = ToPatch(interiorRing, esriPatchType.Ring, mpBuilder);
+
+					patches.Add(interiorPatch);
+				}
+			}
+
+			mpBuilder.Patches = patches;
+
+			Multipatch multipatch = mpBuilder.ToGeometry() as Multipatch;
+
+			return multipatch;
+		}
+
+		private static Patch ToPatch([NotNull] Linestring linestring,
+		                             esriPatchType patchType,
+		                             MultipatchBuilderEx patchBuilder)
+		{
+			Patch result = patchBuilder.MakePatch(patchType);
+
+			result.Coords = linestring.GetPoints().Select(
+				pnt => new Coordinate3D(pnt.X, pnt.Y, pnt.Z)).ToList();
+
+			return result;
 		}
 	}
 }
