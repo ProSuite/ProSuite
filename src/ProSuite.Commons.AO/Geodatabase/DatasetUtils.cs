@@ -3764,8 +3764,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				}
 				else
 				{
-					_msg.VerboseDebugFormat("Dataset name returned more than once: {0}",
-					                        datasetName.Name);
+					_msg.VerboseDebug(() => $"Dataset name returned more than once: {datasetName.Name}");
 				}
 
 				datasetName = enumDatasetNames.Next();

@@ -46,8 +46,7 @@ namespace ProSuite.QA.Container.TestSupport
 				}
 				catch (Exception e)
 				{
-					_msg.VerboseDebugFormat("Unable to convert '{0}' to type {1}: {2}",
-					                        name, typeof(T).Name, e.Message);
+					_msg.VerboseDebug(() => $"Unable to convert '{name}' to type {typeof(T).Name}: {e.Message}", e);
 					_valueDict.Add(code, null);
 				}
 			}

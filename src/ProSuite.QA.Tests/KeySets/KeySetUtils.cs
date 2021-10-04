@@ -106,9 +106,8 @@ namespace ProSuite.QA.Tests.KeySets
 
 				if (! added)
 				{
-					_msg.VerboseDebugFormat(
-						"Ignored duplicate key found in field '{0}' in table '{1}': {2}",
-						keyField, tableName, key);
+					_msg.VerboseDebug(
+						() => $"Ignored duplicate key found in field '{keyField}' in table '{tableName}': {key}");
 				}
 			}
 

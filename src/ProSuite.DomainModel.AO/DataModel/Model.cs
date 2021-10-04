@@ -700,7 +700,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 				if (gdbDatasetNames.Contains(gdbDatasetName))
 				{
-					_msg.VerboseDebug("Ignoring duplicate dataset name");
+					_msg.VerboseDebug(() => "Ignoring duplicate dataset name");
 					// in postgres workspaces, feature classes are also reported as
 					// table datasets --> ignore duplicates
 					continue;
