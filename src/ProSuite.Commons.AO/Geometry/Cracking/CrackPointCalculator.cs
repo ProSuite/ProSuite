@@ -94,7 +94,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 		public bool ContinueOnException { get; set; }
 
-		public bool UseCustomIntersect { get; set; }
+		public bool UseCustomIntersect { get; set; } = true;
 
 		/// <summary>
 		/// Sets the current data resolution to the resolution of the provided feature's feature class. This improves

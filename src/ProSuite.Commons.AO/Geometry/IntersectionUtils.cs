@@ -363,6 +363,11 @@ namespace ProSuite.Commons.AO.Geometry
 					return GetIntersectionPointsXY(multipointSource, geometry2, xyTolerance);
 				}
 
+				if (geometry1 is IPolyline polyline)
+				{
+					return GetIntersectionPointsXY(polyline, geometry2, xyTolerance);
+				}
+
 				if (geometry1 is IMultiPatch multipatchSource)
 				{
 					// Use footprint for consistency with AO implementation:
@@ -1050,12 +1055,12 @@ namespace ProSuite.Commons.AO.Geometry
 
 			double zTolerance = planar ? double.NaN : tolerance;
 
+			// Snapping to spatial reference causes TOP-5470. Intersection points must be as
+			// accurate as possible, otherwise the participating segments will not be found any more
+			// in downstream operations! This simplify only clusters but does not snap. As opposed
+			// to multipoint simplification (which uses the resolution) this uses the tolerance.
 			GeomTopoOpUtils.Simplify(resultMultipnt, tolerance, zTolerance);
 
-			// This (i.e. snapping to spatial reference) causes TOP-5470. Intersection points must be as
-			// accurate as possible, otherwise the participating segments will not be found any more
-			// in downstream operations! What we report here should probably be as accurate as possible.
-			// Alternatively use the Geom explicit intersection points.
 			// TODO: Use clone to improve performance
 			IMultipoint result = GeometryFactory.CreateEmptyMultipoint(polycurve1);
 			GeometryConversionUtils.AddPoints(resultMultipnt.GetPoints(), result);
