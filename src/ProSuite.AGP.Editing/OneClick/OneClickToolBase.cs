@@ -89,7 +89,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override Task OnToolActivateAsync(bool hasMapViewChanged)
 		{
-			_msg.VerboseDebug("OnToolActivateAsync");
+			_msg.VerboseDebug(() => "OnToolActivateAsync");
 
 			MapPropertyChangedEvent.Subscribe(OnPropertyChanged);
 			MapSelectionChangedEvent.Subscribe(OnMapSelectionChanged);
@@ -122,7 +122,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override Task OnToolDeactivateAsync(bool hasMapViewChanged)
 		{
-			_msg.VerboseDebug("OnToolDeactivateAsync");
+			_msg.VerboseDebug(() => "OnToolDeactivateAsync");
 
 			MapPropertyChangedEvent.Unsubscribe(OnPropertyChanged);
 			MapSelectionChangedEvent.Unsubscribe(OnMapSelectionChanged);
@@ -144,7 +144,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnToolKeyDown(MapViewKeyEventArgs k)
 		{
-			_msg.VerboseDebug("OnToolKeyDown");
+			_msg.VerboseDebug(() => "OnToolKeyDown");
 
 			try
 			{
@@ -188,7 +188,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnToolKeyUp(MapViewKeyEventArgs k)
 		{
-			_msg.VerboseDebug("OnToolKeyUp");
+			_msg.VerboseDebug(() => "OnToolKeyUp");
 
 			try
 			{
@@ -216,7 +216,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override async Task<bool> OnSketchCompleteAsync(Geometry sketchGeometry)
 		{
-			_msg.VerboseDebug("OnSketchCompleteAsync");
+			_msg.VerboseDebug(() => "OnSketchCompleteAsync");
 
 			if (sketchGeometry == null)
 			{
@@ -334,7 +334,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void OnMapSelectionChanged(MapSelectionChangedEventArgs args)
 		{
-			_msg.VerboseDebug("OnMapSelectionChanged");
+			_msg.VerboseDebug(() => "OnMapSelectionChanged");
 
 			try
 			{
@@ -355,7 +355,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private Task OnEditCompleted(EditCompletedEventArgs args)
 		{
-			_msg.VerboseDebug("OnEditCompleted");
+			_msg.VerboseDebug(() => "OnEditCompleted");
 
 			try
 			{

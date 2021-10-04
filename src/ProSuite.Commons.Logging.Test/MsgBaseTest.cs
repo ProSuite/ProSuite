@@ -70,7 +70,10 @@ namespace ProSuite.Commons.Logging.Test
 			const int count = 1000000;
 			var watch = new Stopwatch();
 			watch.Start();
-			for (var i = 0; i < count; i++) msg.VerboseDebugFormat("iteration {0}", i);
+			for (var i = 0; i < count; i++)
+			{
+				msg.VerboseDebug(() => $"iteration {i}");
+			}
 			watch.Stop();
 
 			Console.Out.WriteLine(

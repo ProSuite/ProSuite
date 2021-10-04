@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ProSuite.Commons.Essentials.Assertions;
 
 namespace ProSuite.Commons.Geom.Wkb
 {
@@ -19,6 +20,52 @@ namespace ProSuite.Commons.Geom.Wkb
 		/// assumeWkbPolygonsClockwise should be set to true.</param>
 		public WkbGeomReader(bool assumeWkbPolygonsClockwise = false)
 			: base(assumeWkbPolygonsClockwise) { }
+
+		public IBoundedXY ReadGeometry(Stream stream, out WkbGeometryType geometryType)
+		{
+			using (BinaryReader reader = InitializeReader(stream))
+			{
+				ReadWkbType(reader, true,
+				            out geometryType, out Ordinates ordinates);
+
+				if (geometryType == WkbGeometryType.MultiSurface)
+				{
+					List<Polyhedron> polyhedra = ReadMultiSurfaceCore(reader, ordinates);
+
+					if (polyhedra.Count == 0)
+					{
+						return Polyhedron.CreateEmpty();
+					}
+
+					if (polyhedra.Count == 1)
+					{
+						return polyhedra[0];
+					}
+
+					throw new NotImplementedException(
+						"Multi-Polyhedra not yet implemented as container type");
+				}
+
+				if (geometryType == WkbGeometryType.PolyhedralSurface)
+				{
+					return ReadPolyhedronCore(reader);
+				}
+
+				if (geometryType == WkbGeometryType.MultiPoint)
+				{
+					return ReadMultipointCore(reader, ordinates);
+				}
+
+				if (geometryType == WkbGeometryType.MultiLineString ||
+				    geometryType == WkbGeometryType.MultiPolygon)
+				{
+					return ReadMultiPolycurveCore(reader, geometryType, ordinates);
+				}
+
+				throw new NotImplementedException(
+					$"Geometry type {geometryType} not yet supported for Wkb deserialization");
+			}
+		}
 
 		public IPnt ReadPoint(Stream stream)
 		{
@@ -46,16 +93,7 @@ namespace ProSuite.Commons.Geom.Wkb
 				ReadWkbType(reader, true,
 				            out WkbGeometryType geometryType, out Ordinates ordinates);
 
-				bool reverseOrder = geometryType == WkbGeometryType.Polygon ||
-				                    geometryType == WkbGeometryType.MultiPolygon &&
-				                    ! AssumeWkbPolygonsClockwise;
-
-				GeomBuilder geometryBuilder = new GeomBuilder(reverseOrder);
-
-				IEnumerable<Linestring> linestrings =
-					ReadLinestrings(reader, geometryType, ordinates, geometryBuilder);
-
-				return new MultiPolycurve(linestrings);
+				return ReadMultiPolycurveCore(reader, geometryType, ordinates);
 			}
 		}
 
@@ -125,15 +163,98 @@ namespace ProSuite.Commons.Geom.Wkb
 						$"Cannot read {geometryType} as point.");
 				}
 
-				int pointCount = checked((int) reader.ReadUInt32());
-
-				var geometryBuilder = new GeomBuilder(false);
-
-				Multipoint<IPnt> multipoint =
-					ReadMultipointCore(reader, ordinates, pointCount, geometryBuilder);
+				Multipoint<IPnt> multipoint = ReadMultipointCore(reader, ordinates);
 
 				return multipoint;
 			}
+		}
+
+		public IList<Polyhedron> ReadMultiSurface(Stream stream)
+		{
+			using (BinaryReader reader = InitializeReader(stream))
+			{
+				ReadWkbType(reader, true,
+				            out WkbGeometryType geometryType, out Ordinates ordinates);
+
+				if (geometryType != WkbGeometryType.MultiSurface)
+				{
+					throw new NotSupportedException(
+						$"Cannot read {geometryType} as multi-surface.");
+				}
+
+				List<Polyhedron> result = ReadMultiSurfaceCore(reader, ordinates);
+
+				return result;
+			}
+		}
+
+		private MultiPolycurve ReadMultiPolycurveCore(BinaryReader reader,
+		                                              WkbGeometryType geometryType,
+		                                              Ordinates ordinates)
+		{
+			bool reverseOrder = geometryType == WkbGeometryType.Polygon ||
+			                    geometryType == WkbGeometryType.MultiPolygon &&
+			                    ! AssumeWkbPolygonsClockwise;
+
+			GeomBuilder geometryBuilder = new GeomBuilder(reverseOrder);
+
+			IEnumerable<Linestring> linestrings =
+				ReadLinestrings(reader, geometryType, ordinates, geometryBuilder);
+
+			return new MultiPolycurve(linestrings);
+		}
+
+		private List<Polyhedron> ReadMultiSurfaceCore(BinaryReader reader,
+		                                              Ordinates expectedOrdinates)
+		{
+			var result = new List<Polyhedron>();
+
+			int polyhedraCount = checked((int) reader.ReadUInt32());
+
+			for (int i = 0; i < polyhedraCount; i++)
+			{
+				ReadWkbType(reader, false,
+				            out WkbGeometryType geometryType, out Ordinates ordinates);
+
+				Assert.AreEqual(WkbGeometryType.PolyhedralSurface, geometryType,
+				                "Unexpected geometry type");
+
+				Assert.AreEqual(expectedOrdinates, ordinates,
+				                "Unexpected ordinates dimension");
+
+				Polyhedron polyhedron = ReadPolyhedronCore(reader);
+
+				result.Add(polyhedron);
+			}
+
+			return result;
+		}
+
+		private Polyhedron ReadPolyhedronCore(BinaryReader reader)
+		{
+			int polygonCount = checked((int) reader.ReadUInt32());
+
+			var ringGroups = new List<RingGroup>();
+
+			for (int p = 0; p < polygonCount; p++)
+			{
+				WkbGeometryType geometryType;
+				Ordinates expectedOrdinates;
+				ReadWkbType(reader, false,
+				            out geometryType, out expectedOrdinates);
+
+				Assert.AreEqual(WkbGeometryType.Polygon, geometryType,
+				                "Unexpected geometry type");
+
+				RingGroup ringGroup = ReadPolygonCore(reader, expectedOrdinates);
+
+				if (ringGroup.PartCount == 0) continue;
+
+				ringGroups.Add(ringGroup);
+			}
+
+			var polyhedron = new Polyhedron(ringGroups);
+			return polyhedron;
 		}
 
 		private RingGroup ReadPolygonCore(BinaryReader reader, Ordinates ordinates)

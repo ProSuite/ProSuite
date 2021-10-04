@@ -314,7 +314,8 @@ namespace ProSuite.QA.Tests
 				MathUtils.GetDoubleSignificanceEpsilon(lines1.XMax, lines1.YMax);
 
 			var intersectionPoints =
-				GeomTopoOpUtils.GetIntersectionPoints(lines1, lines2, xyTolerance);
+				GeomTopoOpUtils.GetIntersectionPoints((ISegmentList) lines1, (ISegmentList) lines2,
+				                                      xyTolerance);
 			var nanTargetVertices =
 				intersectionPoints.Where(p => double.IsNaN(p.VirtualTargetVertex));
 

@@ -974,14 +974,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				if (StringUtils.IsNotEmpty(queryDef.WhereClause))
 				{
-					_msg.VerboseDebugFormat("Created Query Def: SELECT {0} FROM {1} WHERE {2}",
-					                        queryDef.SubFields, queryDef.Tables,
-					                        queryDef.WhereClause);
+					_msg.VerboseDebug(() => $"Created Query Def: SELECT {queryDef.SubFields} FROM {queryDef.Tables} WHERE {queryDef.WhereClause}");
 				}
 				else
 				{
-					_msg.VerboseDebugFormat("Created Query Def: SELECT {0} FROM {1}",
-					                        queryDef.SubFields, queryDef.Tables);
+					_msg.VerboseDebug(() => $"Created Query Def: SELECT {queryDef.SubFields} FROM {queryDef.Tables}");
 				}
 			}
 

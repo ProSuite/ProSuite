@@ -134,7 +134,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 				geomReader.ReadMultiPoint(new MemoryStream(wkbGeom));
 
 			Assert.IsTrue(
-				GeomRelationUtils.AreMultipointsEqualXY(multipnt, deserializedPnts,
+				GeomRelationUtils.AreEqualXY(multipnt, deserializedPnts,
 				                                        double.Epsilon));
 		}
 

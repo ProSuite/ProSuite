@@ -1636,8 +1636,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 				if (_msg.IsVerboseDebugEnabled)
 				{
-					_msg.VerboseDebugFormat("Geometry that needed 2 SimplifyNetwork calls: {0}",
-					                        ToString(polyline));
+					_msg.VerboseDebug(() => $"Geometry that needed 2 SimplifyNetwork calls: {ToString(polyline)}");
 				}
 			}
 		}
@@ -1666,7 +1665,7 @@ namespace ProSuite.Commons.AO.Geometry
 			if (! double.IsNaN(defaultZ))
 			{
 				// if it still contains NaN values set all NULL values to defaultZ
-				_msg.VerboseDebugFormat("Setting all Z values to {0}", defaultZ);
+				_msg.VerboseDebug(() => $"Setting all Z values to {defaultZ}");
 				ApplyConstantZ(geometry, defaultZ);
 			}
 		}
@@ -1682,7 +1681,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 			if (! HasUndefinedZValues(geometry))
 			{
-				_msg.VerboseDebug("Geometry is considered z simple");
+				_msg.VerboseDebug(() => "Geometry is considered z simple");
 				return true;
 			}
 
@@ -1703,11 +1702,11 @@ namespace ProSuite.Commons.AO.Geometry
 
 			if (! canSimplify)
 			{
-				_msg.VerboseDebug("Non-simple Zs cannot be calculated (too few Z values)");
+				_msg.VerboseDebug(() => "Non-simple Zs cannot be calculated (too few Z values)");
 				return false;
 			}
 
-			_msg.VerboseDebug("Calculating non-simple Zs");
+			_msg.VerboseDebug(() => "Calculating non-simple Zs");
 
 			// try interpolation if it's a line or poly and already has some Zs
 			geometryZ.CalculateNonSimpleZs();
@@ -3118,8 +3117,8 @@ namespace ProSuite.Commons.AO.Geometry
 
 				if (segments == null)
 				{
-					_msg.VerboseDebug(
-						"FindHitSegmentIndex: Non-segments multipatch parts are not supported.");
+					_msg.VerboseDebug(() =>
+						                  "FindHitSegmentIndex: Non-segments multipatch parts are not supported.");
 					continue;
 				}
 
@@ -5024,7 +5023,7 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 
 			// TODO revise - why not keep as NaN (which is valid for M values?)
-			_msg.VerboseDebug("Setting missing M values to 0");
+			_msg.VerboseDebug(() => "Setting missing M values to 0");
 			ReplaceUndefinedMValuesNoCopy(geometry, 0);
 		}
 
@@ -5999,17 +5998,15 @@ namespace ProSuite.Commons.AO.Geometry
 
 					if (pointCount > 2)
 					{
-						_msg.VerboseDebugFormat("Interpolating path {0} with {1} points",
-						                        partIndex, pointCount);
+						_msg.VerboseDebug(() => $"Interpolating path {partIndex} with {pointCount} points");
 
 						polyLineZ.InterpolateZsBetween(partIndex, 0, partIndex,
 						                               pointCount - 1);
 					}
 					else
 					{
-						_msg.VerboseDebugFormat(
-							"Path {0} has insufficient point count for interpolation: {1}",
-							partIndex, pointCount);
+						_msg.VerboseDebug(
+							() => $"Path {partIndex} has insufficient point count for interpolation: {pointCount}");
 					}
 				}
 				else
@@ -6077,7 +6074,7 @@ namespace ProSuite.Commons.AO.Geometry
 					}
 					else
 					{
-						_msg.VerboseDebug("Z value could not be found. Keeping old value");
+						_msg.VerboseDebug(() => "Z value could not be found. Keeping old value");
 					}
 				}
 			}
@@ -6092,7 +6089,7 @@ namespace ProSuite.Commons.AO.Geometry
 				}
 				else
 				{
-					_msg.VerboseDebug("Z value could not be found. Keeping old value");
+					_msg.VerboseDebug(() => "Z value could not be found. Keeping old value");
 				}
 			}
 			else
@@ -6489,8 +6486,8 @@ namespace ProSuite.Commons.AO.Geometry
 						eVertex.put_M(newMValue);
 					}
 
-					_msg.VerboseDebugFormat(
-						"Querying next vertex. Current: <part> {0} <vertex> {1}", part, vertex);
+					_msg.VerboseDebug(
+						() => $"Querying next vertex. Current: <part> {part} <vertex> {vertex}");
 
 					eVertex.QueryNext(point, out part, out vertex);
 				}
@@ -8998,11 +8995,7 @@ namespace ProSuite.Commons.AO.Geometry
 				//    exists at the desired split point' rather than 'a split was needed at the desired split point'
 				result.Add(usablePoint.Key);
 
-				if (_msg.IsVerboseDebugEnabled)
-				{
-					_msg.VerboseDebugFormat("Split happened at {0}|{1}: {2}", usablePoint.Key.X,
-					                        usablePoint.Key.Y, splitHappened);
-				}
+				_msg.VerboseDebug(() => $"Split happened at {usablePoint.Key.X}|{usablePoint.Key.Y}: {splitHappened}");
 			}
 
 			if (result.Count > 0)
@@ -9061,8 +9054,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 				if (! enumSplitPoints.SplitHappened && _msg.IsVerboseDebugEnabled)
 				{
-					_msg.VerboseDebugFormat("Path not split at point {0}/{1}",
-					                        splitPoint.X, splitPoint.Y);
+					_msg.VerboseDebug(() => $"Path not split at point {splitPoint.X}/{splitPoint.Y}");
 				}
 
 				enumSplitPoints.Next(out splitPoint, out splitPart, out splitVertex);

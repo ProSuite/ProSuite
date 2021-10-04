@@ -2551,7 +2551,9 @@ namespace ProSuite.Commons.Test.Geometry
 			Assert.AreEqual(expectedIntersections, intersections.Count);
 
 			IList<IntersectionPoint3D> intersectionPoints =
-				GeomTopoOpUtils.GetIntersectionPoints(linestring1, linestring2, tolerance);
+				GeomTopoOpUtils.GetIntersectionPoints((ISegmentList) linestring1,
+				                                      (ISegmentList) linestring2,
+				                                      tolerance);
 
 			Assert.AreEqual(expectedIntersections, intersectionPoints.Count);
 
@@ -2561,7 +2563,7 @@ namespace ProSuite.Commons.Test.Geometry
 			// packaged into multilinestrings
 			intersectionPoints =
 				GeomTopoOpUtils.GetIntersectionPoints(
-					linestring1, new MultiPolycurve(new[] {linestring2}), tolerance);
+					(ISegmentList)linestring1, new MultiPolycurve(new[] {linestring2}), tolerance);
 
 			Assert.AreEqual(expectedIntersections, intersectionPoints.Count);
 			Assert.True(intersectionPoints.All(p => expectedType == p.Type));
@@ -2576,7 +2578,9 @@ namespace ProSuite.Commons.Test.Geometry
 			Assert.AreEqual(expectedIntersections, intersections.Count);
 
 			intersectionPoints =
-				GeomTopoOpUtils.GetIntersectionPoints(linestring2, linestring1, tolerance);
+				GeomTopoOpUtils.GetIntersectionPoints((ISegmentList) linestring2,
+				                                      (ISegmentList) linestring1,
+				                                      tolerance);
 
 			Assert.AreEqual(expectedIntersections, intersectionPoints.Count);
 			Assert.True(intersectionPoints.All(p => expectedType == p.Type));
@@ -2585,7 +2589,7 @@ namespace ProSuite.Commons.Test.Geometry
 			// other way round, as multilinestrings:
 			intersectionPoints =
 				GeomTopoOpUtils.GetIntersectionPoints(
-					linestring2, new MultiPolycurve(new[] {linestring1}), tolerance);
+					(ISegmentList) linestring2, new MultiPolycurve(new[] {linestring1}), tolerance);
 
 			Assert.AreEqual(expectedIntersections, intersectionPoints.Count);
 			Assert.True(intersectionPoints.All(p => expectedType == p.Type));
@@ -2633,7 +2637,7 @@ namespace ProSuite.Commons.Test.Geometry
 
 			IList<IntersectionPoint3D> intersectionPoints =
 				GeomTopoOpUtils.GetIntersectionPoints(
-					linestring1, linestring2, tolerance,
+					(ISegmentList)linestring1, (ISegmentList)linestring2, tolerance,
 					includeLinearIntersectionIntermediateRingStartEndPoints,
 					includeLinearIntersectionIntermediatePoints);
 
@@ -2713,6 +2717,207 @@ namespace ProSuite.Commons.Test.Geometry
 
 			return intersectionPoints.Select(ip => ip.Point).ToList();
 		}
+
+		[Test]
+		public void CanGetIntersectionPointsBetweenMultipointAndRing()
+		{
+			List<Pnt3D> ring = new List<Pnt3D>();
+			ring.Add(new Pnt3D(0, 0, 9));
+			ring.Add(new Pnt3D(0, 100, 9));
+			ring.Add(new Pnt3D(100, 100, 9));
+			ring.Add(new Pnt3D(100, 0, 9));
+			ring.Add(new Pnt3D(0, 0, 9));
+
+			Multipoint<Pnt3D> sourceMultipoint = new Multipoint<Pnt3D>(2);
+			// on the segment, between vertices
+			sourceMultipoint.AddPoint(new Pnt3D(0, 40, 6));
+			// on a vertex
+			sourceMultipoint.AddPoint(new Pnt3D(100, 100, 25));
+			// on the start/end vertex of the ring
+			sourceMultipoint.AddPoint(new Pnt3D(0, 0, 6));
+			// non-intersecting
+			sourceMultipoint.AddPoint(new Pnt3D(35, 33, 21));
+
+			Linestring targetRing = new Linestring(ring, true);
+
+			IList<IntersectionPoint3D> result =
+				GeomTopoOpUtils
+					.GetIntersectionPoints((IPointList) sourceMultipoint, (ISegmentList) targetRing,
+					                       0.001, false).ToList();
+
+			Assert.AreEqual(3, result.Count);
+			Assert.IsTrue(sourceMultipoint.GetPoint(0).Equals(result[0].Point));
+			Assert.IsTrue(sourceMultipoint.GetPoint(1).Equals(result[1].Point));
+			Assert.IsTrue(sourceMultipoint.GetPoint(2).Equals(result[2].Point));
+
+			result =
+				GeomTopoOpUtils.GetIntersectionPoints(sourceMultipoint, targetRing, 0.001, false, true)
+				               .ToList();
+
+			Assert.AreEqual(4, result.Count);
+			Assert.IsTrue(sourceMultipoint.GetPoint(2).Equals(result[3].Point));
+
+			result =
+				GeomTopoOpUtils.GetIntersectionPoints(sourceMultipoint, targetRing, 0.001, true, false)
+				               .ToList();
+
+			Assert.AreEqual(4, result.Count);
+			Assert.IsTrue(sourceMultipoint.GetPoint(3).Equals(result[3].Point));
+		}
+
+		[Test]
+		public void CanGetIntersectionPointsBetweenRingAndMultipoint()
+		{
+			List<Pnt3D> ring = new List<Pnt3D>();
+			ring.Add(new Pnt3D(0, 0, 9));
+			ring.Add(new Pnt3D(0, 100, 9));
+			ring.Add(new Pnt3D(100, 100, 9));
+			ring.Add(new Pnt3D(100, 0, 9));
+			ring.Add(new Pnt3D(0, 0, 9));
+
+			Multipoint<Pnt3D> targetMultipoint = new Multipoint<Pnt3D>(2);
+			// on the segment, between vertices
+			targetMultipoint.AddPoint(new Pnt3D(0, 40, 6));
+			// on a vertex
+			targetMultipoint.AddPoint(new Pnt3D(100, 100, 25));
+			// on the start/end vertex of the ring
+			targetMultipoint.AddPoint(new Pnt3D(0, 0, 6));
+			// area-interior intersecting 
+			targetMultipoint.AddPoint(new Pnt3D(35, 33, 21));
+
+			Linestring sourceRing = new Linestring(ring, true);
+
+			IList<IntersectionPoint3D> result =
+				GeomTopoOpUtils
+					.GetIntersectionPoints((ISegmentList) sourceRing, (IPointList) targetMultipoint,
+					                       0.001, false).ToList();
+
+			Assert.AreEqual(3, result.Count);
+			Assert.AreEqual(9, result[0].Point.Z);
+			Assert.IsTrue(ring[2].Equals(result[1].Point));
+			Assert.IsTrue(ring[0].Equals(result[2].Point));
+			
+			result =
+				GeomTopoOpUtils.GetIntersectionPoints(sourceRing, targetMultipoint, 0.001, false, true).ToList();
+
+			Assert.AreEqual(4, result.Count);
+			Assert.IsTrue(ring[4].Equals(result[3].Point));
+
+			result =
+				GeomTopoOpUtils.GetIntersectionPoints(sourceRing, targetMultipoint, 0.001, true, false).ToList();
+
+			Assert.AreEqual(4, result.Count);
+			Assert.IsTrue(targetMultipoint.GetPoint(3).Equals(result[3].Point));
+		}
+		
+		[Test]
+		public void CanGetIntersectionPointsBetweenMultipointAndMultipoint()
+		{
+			List<Pnt3D> source = new List<Pnt3D>();
+			source.Add(new Pnt3D(0, 0, 9));
+			source.Add(new Pnt3D(0, 100, 9));
+			source.Add(new Pnt3D(100, 100, 9));
+			source.Add(new Pnt3D(100, 0, 9));
+			source.Add(new Pnt3D(0, 0, 9));
+
+			Multipoint<Pnt3D> sourceMultipoint = new Multipoint<Pnt3D>(source);
+
+			Multipoint<Pnt3D> targetMultipoint = new Multipoint<Pnt3D>(2);
+			// on the segment, between vertices
+			targetMultipoint.AddPoint(new Pnt3D(0, 40, 6));
+			// on a vertex
+			targetMultipoint.AddPoint(new Pnt3D(100, 100, 25));
+			// on the start/end vertex of the ring
+			targetMultipoint.AddPoint(new Pnt3D(0, 0, 6));
+			// area-interior intersecting 
+			targetMultipoint.AddPoint(new Pnt3D(35, 33, 21));
+
+			var result =
+				GeomTopoOpUtils.GetIntersectionPoints((IPointList) sourceMultipoint,
+				                                      targetMultipoint,
+				                                      0.001).ToList();
+
+			Assert.AreEqual(3, result.Count);
+			Assert.AreEqual(9, result[0].Point.Z);
+			Assert.IsTrue(source[2].Equals(result[1].Point));
+			Assert.IsTrue(source[0].Equals(result[2].Point));
+
+			result =
+				GeomTopoOpUtils.GetIntersectionPoints((IPointList)targetMultipoint,
+				                                      sourceMultipoint,
+				                                      0.001).ToList();
+
+			Assert.AreEqual(3, result.Count);
+			Assert.AreEqual(25, result[0].Point.Z);
+			Assert.IsTrue(targetMultipoint.GetPoint(2).Equals(result[1].Point));
+			Assert.IsTrue(targetMultipoint.GetPoint(2).Equals(result[2].Point));
+		}
+		
+		[Test]
+		public void CanGetIntersectionPointsBetweenMultipointAndPoint()
+		{
+			List<Pnt3D> source = new List<Pnt3D>();
+			source.Add(new Pnt3D(0, 0, 9));
+			source.Add(new Pnt3D(0, 100, 9));
+			source.Add(new Pnt3D(100, 100, 9));
+			source.Add(new Pnt3D(100, 0, 9));
+			source.Add(new Pnt3D(0, 0, 9));
+
+			Multipoint<Pnt3D> sourceMultipoint = new Multipoint<Pnt3D>(source);
+
+			Pnt3D targetPointNonIntersecting = new Pnt3D(0, 40, 6);
+			Pnt3D targetPointSinglePointIntersection = new Pnt3D(100, 100, 25);
+			Pnt3D targetPointDoubleIntersection = new Pnt3D(0, 0, 6);
+			
+			var result =
+				GeomTopoOpUtils.GetIntersectionPoints((IPointList)sourceMultipoint,
+				                                      targetPointNonIntersecting,
+				                                      0.001).ToList();
+
+			Assert.AreEqual(0, result.Count);
+
+			result =
+				GeomTopoOpUtils.GetIntersectionPoints(targetPointNonIntersecting,
+				                                      sourceMultipoint,
+				                                      0.001).ToList();
+
+			Assert.AreEqual(0, result.Count);
+
+			result =
+				GeomTopoOpUtils.GetIntersectionPoints(sourceMultipoint,
+				                                      targetPointSinglePointIntersection,
+				                                      0.001).ToList();
+
+			Assert.AreEqual(1, result.Count);
+			Assert.AreEqual(9, result[0].Point.Z);
+
+			result =
+				GeomTopoOpUtils.GetIntersectionPoints(targetPointSinglePointIntersection,
+				                                      sourceMultipoint,
+				                                      0.001).ToList();
+
+			Assert.AreEqual(1, result.Count);
+			Assert.AreEqual(25, result[0].Point.Z);
+
+			result =
+				GeomTopoOpUtils.GetIntersectionPoints(sourceMultipoint,
+				                                      targetPointDoubleIntersection,
+				                                      0.001).ToList();
+
+			Assert.AreEqual(2, result.Count);
+			Assert.IsTrue(sourceMultipoint.GetPoint(0).Equals(result[0].Point));
+			Assert.IsTrue(sourceMultipoint.GetPoint(4).Equals(result[1].Point));
+
+			result =
+				GeomTopoOpUtils.GetIntersectionPoints(targetPointDoubleIntersection,
+				                                      sourceMultipoint,
+				                                      0.001).ToList();
+
+			Assert.AreEqual(2, result.Count);
+			Assert.IsTrue(targetPointDoubleIntersection.Equals(result[0].Point));
+			Assert.IsTrue(targetPointDoubleIntersection.Equals(result[1].Point));
+		}
+
 
 		[Test]
 		public void CanDeleteLinearSelfIntersectionTypeStrait()
@@ -3905,6 +4110,152 @@ namespace ProSuite.Commons.Test.Geometry
 			Pnt p1 = p0 + 100000 * v;
 
 			MathUtils.AreEqual(plane1.GetDistanceAbs(p1.X, p1.Y, p1[2]), 0);
+		}
+
+		[Test]
+		public void CanSimplifyMultipoint()
+		{
+			Multipoint<IPnt> original = new Multipoint<IPnt>(
+				new[]
+				{
+					new Pnt3D(2600000, 1200000, 453),
+					new Pnt3D(2600009, 1200002, 454),
+					new Pnt3D(2600008, 1200003, 455),
+					new Pnt3D(2600007, 1200004, 456),
+					new Pnt3D(2600006, 1200005, 457),
+					new Pnt3D(2600005, 1200006, 458),
+					new Pnt3D(2600007.001, 1200004.001, 456.001), // almost duplicate in xyz
+					new Pnt3D(2600004, 1200007, 459)
+				});
+
+			Multipoint<IPnt> test =
+				new Multipoint<IPnt>(original.GetPoints(0, null, true));
+
+			//
+			// 3D simplify:
+			GeomTopoOpUtils.Simplify(test, 0.01, 0.01);
+
+			// Structurally equal: No (different point order)
+			Assert.IsFalse(original.Equals(test));
+
+			// Equal in 3D: No (simplified)
+			Assert.IsFalse(GeomRelationUtils.AreEqual(original, test, 0.0, 0.0));
+
+			// Equal in 2D: Yes (simplified, but occupies the same XY-space)
+			Assert.IsTrue(GeomRelationUtils.AreEqualXY(original, test, 0.01));
+
+			// Cluster center is found:
+			Pnt3D expectedClusteredPoint = new Pnt3D(2600007.0005, 1200004.0005, 456.0005);
+			var foundPoint = test.FindPointIndexes(expectedClusteredPoint).ToList();
+
+			Assert.AreEqual(1, foundPoint.Count);
+
+			// Ensure point Z:
+			Assert.IsTrue(expectedClusteredPoint.Equals(test.GetPoint(foundPoint[0])));
+
+			// 1 point eliminated
+			Assert.AreEqual(original.PointCount - 1, test.PointCount);
+
+			//
+			// 2D simplify:
+			test = new Multipoint<IPnt>(original.GetPoints(0, null, true));
+			GeomTopoOpUtils.Simplify(test, 0.01);
+
+			// Structurally equal: No (different point order)
+			Assert.IsFalse(original.Equals(test));
+
+			// Equal in 3D: Yes, within 1cm (simplified but occupies the same XYZ space)
+			Assert.IsTrue(GeomRelationUtils.AreEqual(original, test, 0.01, 0.01));
+
+			// Equal in 3D: No, within 0.5mm 
+			Assert.IsFalse(GeomRelationUtils.AreEqual(original, test, 0.0005, 0.0005));
+
+			// Equal in 2D: Yes within 1cm (simplified, but occupies the same XY-space)
+			Assert.IsTrue(GeomRelationUtils.AreEqualXY(original, test, 0.01));
+
+			// Equal in 2D: No, within 0.5mm (simplified, but occupies the same XY-space)
+			Assert.IsFalse(GeomRelationUtils.AreEqualXY(original, test, 0.0005));
+
+			// Cluster center is found:
+			foundPoint = test.FindPointIndexes(expectedClusteredPoint).ToList();
+
+			Assert.AreEqual(1, foundPoint.Count);
+
+			// Ensure point Z:
+			Assert.IsTrue(expectedClusteredPoint.Equals(test.GetPoint(foundPoint[0])));
+
+			// 1 point eliminated
+			Assert.AreEqual(original.PointCount - 1, test.PointCount);
+
+			////
+			//// Clustering in 2D while keeping different Zs:
+			original.AddPoint(new Pnt3D(2600007, 1200004, 458));
+		}
+
+		[Test]
+		public void CanSimplifyMultipointAlreadySimple()
+		{
+			Multipoint<IPnt> original = new Multipoint<IPnt>(
+				new[]
+				{
+					new Pnt3D(2600000, 1200000, 453),
+					new Pnt3D(2600009, 1200002, 454),
+					new Pnt3D(2600008, 1200003, 455),
+					new Pnt3D(2600007, 1200004, 456),
+					new Pnt3D(2600006, 1200005, 457),
+					new Pnt3D(2600005, 1200006, 458),
+					new Pnt3D(2600004, 1200007, 459)
+				});
+
+			Multipoint<IPnt> test =
+				new Multipoint<IPnt>(original.GetPoints(0, null, true));
+
+			//
+			// 3D simplify:
+			GeomTopoOpUtils.Simplify(test, 0.01, 0.01);
+
+			// Structurally equal: Yes (nothing happened)
+			Assert.IsTrue(original.Equals(test));
+
+			Assert.IsTrue(GeomRelationUtils.AreEqualXY(original, test, 0.0));
+			Assert.IsTrue(GeomRelationUtils.AreEqual(original, test, 0.0, 0.0));
+
+			// 2D simplify:
+			GeomTopoOpUtils.Simplify(test, 0.01, 0.01);
+
+			Assert.IsTrue(original.Equals(test));
+			Assert.IsTrue(GeomRelationUtils.AreEqualXY(original, test, 0.0));
+			Assert.IsTrue(GeomRelationUtils.AreEqual(original, test, 0.0, 0.0));
+
+			// 3D simple, but not 2D:
+			original.AddPoint(new Pnt3D(2600007, 1200004, 458));
+
+			test = new Multipoint<IPnt>(original.GetPoints(0, null, true));
+
+			//
+			// 3D simplify:
+			GeomTopoOpUtils.Simplify(test, 0.1, 0.1);
+
+			// Structurally equal: No
+			Assert.IsFalse(original.Equals(test));
+
+			// Clementini equals: yes
+			Assert.IsTrue(GeomRelationUtils.AreEqualXY(original, test, 0.0));
+			Assert.IsTrue(GeomRelationUtils.AreEqual(original, test, 0.0, 0.0));
+
+			//
+			// 2D simplify:
+			test = new Multipoint<IPnt>(original.GetPoints(0, null, true));
+			GeomTopoOpUtils.Simplify(original, 0.01);
+
+			// Structurally equal: No
+			Assert.IsFalse(original.Equals(test));
+
+			// Equal in 3D: No (simplified)
+			Assert.IsFalse(GeomRelationUtils.AreEqual(original, test, 0.0, 0.0));
+
+			// Equal in 2D: Yes (simplified, but occupies the same XY-space)
+			Assert.IsTrue(GeomRelationUtils.AreEqualXY(original, test, 0.0));
 		}
 
 		private void AssertCanDeleteLinearSelfIntersections(Linestring linestring,

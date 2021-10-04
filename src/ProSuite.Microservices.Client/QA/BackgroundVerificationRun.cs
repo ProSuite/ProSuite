@@ -341,7 +341,7 @@ namespace ProSuite.Microservices.Client.QA
 				return;
 			}
 
-			_msg.VerboseDebug($"{DateTime.Now} - {progressMsg}");
+			_msg.VerboseDebug(() => $"{DateTime.Now} - {progressMsg}");
 
 			_msg.DebugFormat(
 				"Received service progress of type {0}/{1}: {2} / {3}",

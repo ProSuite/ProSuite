@@ -56,7 +56,7 @@ namespace ProSuite.Commons.AGP.Carto
 			{
 				if (_msg.IsVerboseDebugEnabled)
 				{
-					_msg.VerboseDebug(
+					_msg.Debug(
 						$"Selected OIDs {StringUtils.Concatenate(selection.GetObjectIDs(), ", ")} " +
 						$"from {featureLayer.Name}");
 				}

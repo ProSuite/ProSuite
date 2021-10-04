@@ -23,11 +23,11 @@ namespace ProSuite.Commons.Test.Geometry
 
 			Multipoint<IPnt> mp2 = new Multipoint<IPnt>(mp1.GetPoints(0, null, true));
 
-			Assert.IsTrue(GeomRelationUtils.AreMultipointsEqualXY(mp1, mp2, 0.00001));
+			Assert.IsTrue(GeomRelationUtils.AreEqualXY(mp1, mp2, 0.00001));
 
 			mp2 = new Multipoint<IPnt>(mp1.GetPoints(0, null, true).Reverse());
 
-			Assert.IsTrue(GeomRelationUtils.AreMultipointsEqualXY(mp1, mp2, 0.00001));
+			Assert.IsTrue(GeomRelationUtils.AreEqualXY(mp1, mp2, 0.00001));
 		}
 
 		[Test]
@@ -46,15 +46,15 @@ namespace ProSuite.Commons.Test.Geometry
 
 			mp2.AddPoint(new Pnt3D(34.5678, 98.54321, 365.6));
 
-			Assert.IsTrue(GeomRelationUtils.AreMultipointsEqualXY(mp1, mp2, 0.00001));
+			Assert.IsTrue(GeomRelationUtils.AreEqualXY(mp1, mp2, 0.00001));
 
 			mp2 = new Multipoint<IPnt>(mp2.GetPoints(0, null, true).Reverse());
 
-			Assert.IsTrue(GeomRelationUtils.AreMultipointsEqualXY(mp1, mp2, 0.00001));
+			Assert.IsTrue(GeomRelationUtils.AreEqualXY(mp1, mp2, 0.00001));
 
 			mp2.AddPoint(new Pnt3D(34.4678, 98.64321, 365.6));
 
-			Assert.IsFalse(GeomRelationUtils.AreMultipointsEqualXY(mp1, mp2, 0.00001));
+			Assert.IsFalse(GeomRelationUtils.AreEqualXY(mp1, mp2, 0.00001));
 			Assert.IsTrue(GeomRelationUtils.AreBoundsEqual(mp1, mp2, 0.000001));
 		}
 

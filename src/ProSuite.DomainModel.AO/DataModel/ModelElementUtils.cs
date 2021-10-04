@@ -172,20 +172,12 @@ namespace ProSuite.DomainModel.AO.DataModel
 			switch (caseSensitivity)
 			{
 				case SqlCaseSensitivity.CaseInsensitive:
-					if (_msg.IsVerboseDebugEnabled)
-					{
-						_msg.VerboseDebugFormat("{0}: not case sensitive",
-						                        DatasetUtils.GetName(table));
-					}
+					_msg.VerboseDebug(() => $"{DatasetUtils.GetName(table)}: not case sensitive");
 
 					return false;
 
 				case SqlCaseSensitivity.CaseSensitive:
-					if (_msg.IsVerboseDebugEnabled)
-					{
-						_msg.VerboseDebugFormat("{0}: case sensitive",
-						                        DatasetUtils.GetName(table));
-					}
+					_msg.VerboseDebug(() => $"{DatasetUtils.GetName(table)}: case sensitive");
 
 					return true;
 
@@ -195,10 +187,9 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 					if (_msg.IsVerboseDebugEnabled)
 					{
-						_msg.VerboseDebugFormat(sqlSyntax == null
-							                        ? "{0}: database case sensitivity: UNKNOWN (use {1})"
-							                        : "{0}: database case sensitivity: {1}",
-						                        DatasetUtils.GetName(table), result);
+						_msg.VerboseDebug(() => sqlSyntax == null
+							                        ? $"{DatasetUtils.GetName(table)}: database case sensitivity: UNKNOWN (use {result})"
+							                        : $"{DatasetUtils.GetName(table)}: database case sensitivity: {result}");
 					}
 
 					return result;

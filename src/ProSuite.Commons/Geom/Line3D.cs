@@ -355,7 +355,7 @@ namespace ProSuite.Commons.Geom
 			return true;
 		}
 
-		public bool ExtentIntersectsXY(Line3D other, double tolerance)
+		public bool ExtentIntersectsXY(IBoundedXY other, double tolerance)
 		{
 			return ExtentIntersectsXY(other.XMin, other.YMin, other.XMax, other.YMax,
 			                          tolerance);
@@ -370,9 +370,9 @@ namespace ProSuite.Commons.Geom
 			                                             tolerance);
 		}
 
-		public bool IntersectsPointXY([NotNull] Pnt3D point, double tolerance)
+		public bool IntersectsPointXY([NotNull] IPnt point, double tolerance)
 		{
-			if (! ExtentIntersects(point, tolerance, true))
+			if (! ExtentIntersectsXY(point, tolerance))
 			{
 				return false;
 			}
@@ -543,7 +543,7 @@ namespace ProSuite.Commons.Geom
 		/// projection of the test point falls within the line, below 0 if it is before the start point,
 		/// greater than 1 if it is after the end point.</param>
 		/// <returns></returns>
-		public double GetDistanceXYPerpendicularSigned(Pnt3D testPoint,
+		public double GetDistanceXYPerpendicularSigned(IPnt testPoint,
 		                                               out double distanceAlongRatio)
 		{
 			double vX = testPoint.X - StartPoint.X;
@@ -578,7 +578,7 @@ namespace ProSuite.Commons.Geom
 			{
 				// 0-length line or vertical line: Distance to StartPoint
 				distanceAlongRatio = 0;
-				return StartPoint.GetDistance(testPoint, inXY : true);
+				return GeomUtils.GetDistanceXY(StartPoint, testPoint);
 			}
 
 			return 0;

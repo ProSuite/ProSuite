@@ -51,7 +51,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 				return string.Empty;
 			}
-			set { SetProperty(ref _errorDescription, value, () => QualityCondition); }
+			set { SetProperty(ref _errorDescription, value, () => ErrorDescription); }
 		}
 
 		public override string ToolTip => "Select Involved Objects";
@@ -103,7 +103,14 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				if (LayerUtils.FindLayers(SelectedInvolvedObject.Name).FirstOrDefault() is
 					    FeatureLayer involvedLayer)
 				{
-					MapView.Active.FlashFeature(involvedLayer, SelectedInvolvedObject.ObjectId);
+					MapView mapView = MapView.Active;
+
+					if (mapView == null)
+					{
+						return;
+					}
+
+					mapView.FlashFeature(involvedLayer, SelectedInvolvedObject.ObjectId);
 				}
 				else
 				{
@@ -112,9 +119,22 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			}, _msg);
 		}
 
-		private void FlashAllInvolvedFeatures()
+		private async Task FlashAllInvolvedFeaturesAsync()
 		{
-			ViewUtils.Try(() => MapView.Active.FlashFeature(GetInvolvedFeaturesByLayer()), _msg);
+			await ViewUtils.TryAsync(() =>
+			{
+				return QueuedTask.Run(() =>
+				{
+					MapView mapView = MapView.Active;
+
+					if (mapView == null)
+					{
+						return;
+					}
+					
+					mapView.FlashFeature(GetInvolvedFeaturesByLayer());
+				});
+			}, _msg);
 		}
 
 		private async Task ZoomToSelectedInvolvedFeatureAsync()
@@ -124,20 +144,40 @@ namespace ProSuite.AGP.Solution.WorkListUI
 				if (LayerUtils.FindLayers(SelectedInvolvedObject.Name).FirstOrDefault() is
 					    FeatureLayer involvedLayer)
 				{
-					return MapView.Active.ZoomToAsync(involvedLayer,
-					                                  SelectedInvolvedObject.ObjectId);
+					MapView mapView = MapView.Active;
+
+					if (mapView == null)
+					{
+						return Task.FromResult(0);
+					}
+
+					return mapView.ZoomToAsync(involvedLayer,
+					                           SelectedInvolvedObject.ObjectId,
+					                           TimeSpan.FromSeconds(Seconds));
 				}
 
 				_msg.DebugFormat("No layer with name {0}", SelectedInvolvedObject.Name);
-				return Task.FromResult(0);
 
+				return Task.FromResult(0);
 			}, _msg);
 		}
 
 		private async Task ZoomToAllInvolvedFeaturesAsync()
 		{
-			await ViewUtils.TryAsync(() => MapView.Active.ZoomToAsync(GetInvolvedFeaturesByLayer()),
-			                         _msg);
+			await ViewUtils.TryAsync(() =>
+			{
+				return QueuedTask.Run(() =>
+				{
+					MapView mapView = MapView.Active;
+
+					if (mapView == null)
+					{
+						return;
+					}
+
+					mapView.ZoomTo(GetInvolvedFeaturesByLayer(), TimeSpan.FromSeconds(Seconds));
+				});
+			}, _msg);
 		}
 
 		// todo daro move to IssueUtils?
@@ -193,7 +233,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			new RelayCommand(ZoomToSelectedInvolvedFeatureAsync, () => SelectedInvolvedObject != null);
 
 		public RelayCommand FlashInvolvedAllCommand =>
-			new RelayCommand(FlashAllInvolvedFeatures, () => InvolvedObjectRows.Any());
+			new RelayCommand(FlashAllInvolvedFeaturesAsync, () => InvolvedObjectRows.Any());
 
 		public RelayCommand FlashInvolvedSelectedCommand =>
 			new RelayCommand(FlashSelectedInvolvedFeature, () => SelectedInvolvedObject != null);

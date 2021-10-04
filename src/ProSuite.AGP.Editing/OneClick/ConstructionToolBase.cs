@@ -88,7 +88,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnToolActivatingCore()
 		{
-			_msg.VerboseDebug("OnToolActivatingCore");
+			_msg.VerboseDebug(() => "OnToolActivatingCore");
 
 			if (! RequiresSelection)
 			{
@@ -124,7 +124,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnKeyDownCore(MapViewKeyEventArgs k)
 		{
-			_msg.VerboseDebug("OnKeyDownCore");
+			_msg.VerboseDebug(() => "OnKeyDownCore");
 
 			if (IsShiftKey(k.Key))
 			{
@@ -166,7 +166,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override void OnKeyUpCore(MapViewKeyEventArgs k)
 		{
-			_msg.VerboseDebug("OnKeyUpCore");
+			_msg.VerboseDebug(() => "OnKeyUpCore");
 
 			if (IsShiftKey(k.Key))
 			{
@@ -246,7 +246,7 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected override bool OnMapSelectionChangedCore(MapSelectionChangedEventArgs args)
 		{
-			_msg.VerboseDebug("OnMapSelectionChangedCore");
+			_msg.VerboseDebug(() => "OnMapSelectionChangedCore");
 
 			if (ActiveMapView == null)
 			{
@@ -268,7 +268,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			Geometry sketchGeometry,
 			CancelableProgressor progressor)
 		{
-			_msg.VerboseDebug("OnSketchCompleteCoreAsync");
+			_msg.VerboseDebug(() => "OnSketchCompleteCoreAsync");
 
 			if (IsInSketchMode)
 			{

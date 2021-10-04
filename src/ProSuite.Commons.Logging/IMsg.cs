@@ -61,12 +61,19 @@ namespace ProSuite.Commons.Logging
 		/// <value>The maximum indentation level.</value>
 		int MaximumIndentationLevel { get; }
 
+		[Obsolete("Use VerboseDebug with Func<string> or Debug in conjunction with IsVerboseDebugEnabled")]
 		[StringFormatMethod("format")]
 		void VerboseDebugFormat(string format, params object[] args);
 
+		[Obsolete("Use VerboseDebug with Func<string> or Debug in conjunction with IsVerboseDebugEnabled")]
 		void VerboseDebug(object message);
 
+		[Obsolete("Use VerboseDebug with Func<string> or Debug in conjunction with IsVerboseDebugEnabled")]
 		void VerboseDebug(object message, Exception exception);
+
+		void VerboseDebug(Func<string> message);
+
+		void VerboseDebug(Func<string> message, Exception exception);
 
 		/// <summary>
 		/// Logs a formatted message string with the Debug level.

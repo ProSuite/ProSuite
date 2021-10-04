@@ -30,6 +30,18 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		#region IBoundedXY members
+
+		public double XMin => X;
+
+		public double YMin => Y;
+
+		public double XMax => X;
+
+		public double YMax => Y;
+
+		#endregion
+		
 		#region IBox Members
 
 		bool IBox.Contains(IPnt p)

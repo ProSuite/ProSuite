@@ -1188,27 +1188,26 @@ namespace ProSuite.Commons.Geom
 			double tolerance,
 			double? knownTargetEndFactor = null)
 		{
-			_source1Factor = GetPointFactorWithinLine(otherLine, thisLine.StartPoint,
-			                                          tolerance);
+			_source1Factor = SegmentIntersectionUtils.GetPointFactorWithinLine(
+				otherLine, thisLine.StartPoint, tolerance);
 
 			// Consider removing extra property SourceStartIntersects and compute like this:
 			//SingleInteriorIntersectionFactor == null && _source1Factor >= 0 && _source1Factor <= 1;
 			SourceStartIntersects = _source1Factor >= 0 && _source1Factor <= 1;
 
-			_source2Factor = GetPointFactorWithinLine(otherLine, thisLine.EndPoint,
-			                                          tolerance);
+			_source2Factor = SegmentIntersectionUtils.GetPointFactorWithinLine(
+				otherLine, thisLine.EndPoint, tolerance);
 			SourceEndIntersects = _source2Factor >= 0 && _source2Factor <= 1;
 
 			double targetStartFactor = knownTargetEndFactor ??
-			                           GetPointFactorWithinLine(
-				                           thisLine, otherLine.StartPoint,
-				                           tolerance);
+			                           SegmentIntersectionUtils.GetPointFactorWithinLine(
+				                           thisLine, otherLine.StartPoint, tolerance);
 			if (! double.IsNaN(targetStartFactor))
 			{
 				TargetStartFactor = targetStartFactor;
 			}
 
-			double targetEndFactor = GetPointFactorWithinLine(
+			double targetEndFactor = SegmentIntersectionUtils.GetPointFactorWithinLine(
 				thisLine, otherLine.EndPoint, tolerance);
 
 			if (! double.IsNaN(targetEndFactor))
@@ -1242,66 +1241,6 @@ namespace ProSuite.Commons.Geom
 					}
 				}
 			}
-		}
-
-		/// <summary>
-		/// Returns the distance of the point along the line expressed as ratio (factor).
-		/// If the point is within the tolerance of the line's start or end point, the 
-		/// factor will be snapped to 0 or 1, respectively. If the point is not on the line,
-		/// NaN is  returned.
-		/// </summary>
-		/// <param name="line"></param>
-		/// <param name="point"></param>
-		/// <param name="tolerance">The distance tolerance to check start/end-point proximity.</param>
-		/// <returns></returns>
-		private static double GetPointFactorWithinLine([NotNull] Line3D line,
-		                                               [NotNull] Pnt3D point,
-		                                               double tolerance)
-		{
-			double pointFactorOnLine;
-
-			double pointDistanceToLine = line.GetDistanceXYPerpendicularSigned(
-				point, out pointFactorOnLine);
-
-			// Consider remembering the side of the point for subsequent operations
-			pointDistanceToLine = Math.Abs(pointDistanceToLine);
-
-			if (pointDistanceToLine > tolerance)
-			{
-				// Too far off, no intersection
-				return double.NaN;
-			}
-
-			// ReSharper disable once CompareOfFloatsByEqualityOperator
-			if (pointFactorOnLine == 0 ||
-			    // ReSharper disable once CompareOfFloatsByEqualityOperator
-			    pointFactorOnLine == 1)
-			{
-				return pointFactorOnLine;
-			}
-
-			// If within tolerance to From/To-point: snap to 0/1
-			double tolerance2 = tolerance * tolerance;
-
-			if (pointFactorOnLine < 0.5 &&
-			    IsWithinDistanceXY(point, line.StartPoint, tolerance2))
-			{
-				// line.Start == point, use line.Start
-				pointFactorOnLine = 0;
-			}
-			else if (IsWithinDistanceXY(point, line.EndPoint, tolerance2))
-			{
-				// line.End == point, use line.End
-				pointFactorOnLine = 1;
-			}
-
-			return pointFactorOnLine;
-		}
-
-		private static bool IsWithinDistanceXY(Pnt3D point1, Pnt3D point2,
-		                                       double distanceSquared)
-		{
-			return point1.Dist2(point2, 2) <= distanceSquared;
 		}
 
 		#endregion

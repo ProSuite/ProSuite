@@ -1,15 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using Google.Protobuf;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Gdb;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
+using ProSuite.Commons.Geom.Wkb;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Definitions.Shared;
 using Version = ArcGIS.Core.Data.Version;
@@ -123,9 +127,9 @@ namespace ProSuite.Microservices.Client.AGP
 					break;
 				case ShapeMsg.FormatOneofCase.Wkb:
 
-					throw new NotSupportedException(
-						"WKB format is currently not supported in AGP client.");
+					result = FromWkb(shapeMsg.Wkb.ToByteArray(), sr);
 
+					break;
 				case ShapeMsg.FormatOneofCase.Envelope:
 
 					result = FromEnvelopeMsg(shapeMsg.Envelope, sr);
@@ -189,10 +193,18 @@ namespace ProSuite.Microservices.Client.AGP
 			Assert.ArgumentCondition(spatialRef != null,
 			                         "Spatial reference must not be null");
 
-			var result = new ShapeMsg
-			             {
-				             EsriShape = ByteString.CopyFrom(geometry.ToEsriShape())
-			             };
+			ShapeMsg result = new ShapeMsg();
+
+			if (geometry.GeometryType == GeometryType.Multipatch)
+			{
+				// Do not use esri shape because it arrives as empty geometry on the other side
+				Multipatch multipatch = (Multipatch) geometry;
+				result.Wkb = GetWkbByteString(multipatch);
+			}
+			else
+			{
+				result.EsriShape = ByteString.CopyFrom(geometry.ToEsriShape());
+			}
 
 			result.SpatialReference = ToSpatialReferenceMsg(
 				spatialRef,
@@ -523,6 +535,37 @@ namespace ProSuite.Microservices.Client.AGP
 			}
 
 			return result;
+		}
+
+		private static ByteString GetWkbByteString(Multipatch multipatch)
+		{
+			Polyhedron polyhedron = GeomConversionUtils.CreatePolyhedron(multipatch);
+
+			WkbGeomWriter wkbWriter = new WkbGeomWriter();
+			byte[] wkb = wkbWriter.WriteMultiSurface(polyhedron);
+
+			// TODO: Consider using FromStream and avoid the extra copying step
+			return ByteString.CopyFrom(wkb);
+		}
+
+		private static Geometry FromWkb([NotNull] byte[] wkb,
+		                                [CanBeNull] SpatialReference spatialReference)
+		{
+			// TODO: Use ReadOnlyMemory<byte> to avoid extra copy step
+
+			WkbGeomReader wkbReader = new WkbGeomReader();
+
+			Stream memoryStream = new MemoryStream(wkb);
+			IBoundedXY geom = wkbReader.ReadGeometry(memoryStream, out WkbGeometryType wkbType);
+
+			// Currently the only type that cannot be transferred via esri shape:
+			if (wkbType == WkbGeometryType.PolyhedralSurface ||
+			    wkbType == WkbGeometryType.MultiSurface)
+			{
+				return GeomConversionUtils.CreateMultipatch((Polyhedron) geom, spatialReference);
+			}
+
+			throw new NotImplementedException();
 		}
 	}
 }

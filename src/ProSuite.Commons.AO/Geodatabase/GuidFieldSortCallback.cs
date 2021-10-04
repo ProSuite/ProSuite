@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Logging;
@@ -24,9 +24,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				if (fieldSortIndex > 0)
 				{
-					_msg.VerboseDebugFormat(
-						"Assuming equal IDs: value1 {0}, value2 {1}, fieldIndex {2}, fieldSortIndex {3}",
-						value1, value2, fieldIndex, fieldSortIndex);
+					_msg.VerboseDebug(
+						() => $"Assuming equal IDs: value1 {value1}, value2 {value2}, fieldIndex {fieldIndex}, fieldSortIndex {fieldSortIndex}");
 
 					return 0;
 				}

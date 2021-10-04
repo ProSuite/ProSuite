@@ -113,5 +113,40 @@ namespace ProSuite.Commons.Geom.Wkb
 
 			return memoryStream.ToArray();
 		}
+
+		public byte[] WriteMultiSurface([NotNull] Polyhedron polyhedron,
+		                                Ordinates ordinates = Ordinates.Xyz)
+		{
+			return WriteMultiSurface(new List<Polyhedron> {polyhedron}, ordinates);
+		}
+
+		public byte[] WriteMultiSurface([NotNull] IList<Polyhedron> multiPolyhedron,
+		                                Ordinates ordinates = Ordinates.Xyz)
+		{
+			MemoryStream memoryStream = InitializeWriter();
+
+			WriteWkbType(WkbGeometryType.MultiSurface, ordinates);
+
+			Writer.Write(multiPolyhedron.Count);
+
+			foreach (Polyhedron polyhedron in multiPolyhedron)
+			{
+				WriteWkbType(WkbGeometryType.PolyhedralSurface, ordinates);
+
+				Writer.Write(polyhedron.RingGroups.Count);
+
+				foreach (RingGroup ringGroup in polyhedron.RingGroups)
+				{
+					WriteWkbType(WkbGeometryType.Polygon, ordinates);
+
+					IList<IPointList> rings =
+						ringGroup.GetLinestrings().Cast<IPointList>().ToList();
+
+					WritePolygonCore(rings, ordinates);
+				}
+			}
+
+			return memoryStream.ToArray();
+		}
 	}
 }

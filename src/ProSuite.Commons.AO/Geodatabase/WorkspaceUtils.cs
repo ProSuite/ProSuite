@@ -275,9 +275,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			var workspaceFactory = (IWorkspaceFactory2) GetFileGdbWorkspaceFactory();
 
-			_msg.VerboseDebugFormat(
-				"Opening file geodatabase workspace using connection string {0}",
-				connectionString);
+			_msg.VerboseDebug(
+				() => $"Opening file geodatabase workspace using connection string {connectionString}");
 
 			return OpenWorkspace(workspaceFactory, connectionString);
 		}
@@ -342,9 +341,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			var factory = (IWorkspaceFactory2) GetAccessWorkspaceFactory();
 
-			_msg.VerboseDebugFormat(
-				"Opening personal geodatabase workspace using connection string {0}",
-				connectionString);
+			_msg.VerboseDebug(
+				() => $"Opening personal geodatabase workspace using connection string {connectionString}");
 
 			return OpenWorkspace(factory, connectionString);
 		}

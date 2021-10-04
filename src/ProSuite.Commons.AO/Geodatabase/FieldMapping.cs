@@ -97,7 +97,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 					break;
 
 				case FieldValueTransferLogLevel.VerboseDebug:
-					_msg.VerboseDebug(message);
+					_msg.VerboseDebug(() => message);
 					break;
 
 				case FieldValueTransferLogLevel.Info:

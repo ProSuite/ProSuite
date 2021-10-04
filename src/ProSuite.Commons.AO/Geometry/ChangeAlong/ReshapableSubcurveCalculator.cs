@@ -327,8 +327,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			if (intersectionPoints.PointCount == 0 ||
 			    GeometryUtils.Disjoint(cuttingGeometry, highLevelCurveToSplit))
 			{
-				_msg.VerboseDebugFormat(
-					"GetCutSubcurves: No intersections / disjoint geometries");
+				_msg.VerboseDebug(
+					() => "GetCutSubcurves: No intersections / disjoint geometries");
 
 				yield return
 					CreateCutSubcurve(curveToSplit, null, nodes, null, target,
