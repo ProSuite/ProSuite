@@ -2497,11 +2497,9 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			((ISpatialReferenceTolerance) polyline.SpatialReference).XYTolerance = 0.0125;
 			((ISpatialReferenceTolerance) polyline.SpatialReference).ZTolerance = 0.0125;
 
-			string nonSimpleReason;
 			bool simple = GeometryUtils.IsGeometrySimple(
 				polyline, polyline.SpatialReference,
-				false,
-				out nonSimpleReason);
+				false, out string _);
 
 			Assert.IsFalse(simple);
 		}
@@ -2549,11 +2547,9 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			((ISpatialReferenceTolerance) polyline.SpatialReference).ZTolerance = 0.0125;
 			((ISpatialReferenceTolerance) polyline.SpatialReference).MTolerance = 0.01;
 
-			string nonSimpleReason;
 			bool simple = GeometryUtils.IsGeometrySimple(
 				polyline, polyline.SpatialReference,
-				false,
-				out nonSimpleReason);
+				false, out string _);
 
 			// detects self-intersections despite M awareness
 			Assert.IsFalse(simple);
@@ -2565,10 +2561,9 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			string filePath = TestData.GetSelfIntersectingPolygonPath();
 			var poly = (IPolygon) ReadGeometryFromXML(filePath);
 
-			string description;
 			GeometryNonSimpleReason? nonSimpleReason;
 			Assert.False(GeometryUtils.IsGeometrySimple(poly, poly.SpatialReference, true,
-			                                            out description,
+			                                            out string _,
 			                                            out nonSimpleReason));
 
 			Assert.AreEqual(GeometryNonSimpleReason.SelfIntersections, nonSimpleReason);
@@ -2583,7 +2578,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			// Short segments wins (because normally self-intersections are also reported for short segments
 			// TODO: add overload with bool ignoreShortSegments
 			Assert.False(GeometryUtils.IsGeometrySimple(poly, poly.SpatialReference, true,
-			                                            out description,
+			                                            out string _,
 			                                            out nonSimpleReason));
 
 			Assert.AreEqual(GeometryNonSimpleReason.ShortSegments, nonSimpleReason);
@@ -2595,11 +2590,9 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			string filePath = TestData.GetUnclosedPolygonPath();
 			var poly = (IPolygon) ReadGeometryFromXML(filePath);
 
-			string description;
 			GeometryNonSimpleReason? nonSimpleReason;
 			Assert.False(GeometryUtils.IsGeometrySimple(poly, poly.SpatialReference, true,
-			                                            out description,
-			                                            out nonSimpleReason));
+			                                            out string _, out nonSimpleReason));
 
 			Assert.IsTrue(nonSimpleReason == GeometryNonSimpleReason.UnclosedRing);
 
@@ -2612,8 +2605,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			// TODO: add overload with bool ignoreShortSegments
 			Assert.False(GeometryUtils.IsGeometrySimple(poly, poly.SpatialReference, true,
-			                                            out description,
-			                                            out nonSimpleReason));
+			                                            out string _, out nonSimpleReason));
 
 			Assert.IsTrue(
 				nonSimpleReason == GeometryNonSimpleReason.IncorrectSegmentOrientation ||
@@ -2626,15 +2618,13 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			string filePath = TestData.GetDuplicateVertexPolygonPath();
 			var poly = (IPolygon) ReadGeometryFromXML(filePath);
 
-			string description;
 			GeometryNonSimpleReason? nonSimpleReason;
 
 			// NOTE: Duplicate points are currently (10.2.2) not found by get_isSimpleEx
 			// (see Repro_ITopologicalOperator3GetIsSimpleExDoesNotFind0LengthSegments)
 			// But the clean tool does (because it does not rely on IsGeometrySimple)
 			Assert.True(GeometryUtils.IsGeometrySimple(poly, poly.SpatialReference, true,
-			                                           out description,
-			                                           out nonSimpleReason));
+			                                           out string _, out nonSimpleReason));
 
 			// Simplify to make it correct:
 			GeometryUtils.Simplify(poly);
@@ -2643,8 +2633,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			((ISegmentCollection) poly).get_Segment(2).ReverseOrientation();
 
 			Assert.False(GeometryUtils.IsGeometrySimple(poly, poly.SpatialReference, true,
-			                                            out description,
-			                                            out nonSimpleReason));
+			                                            out string _, out nonSimpleReason));
 
 			Assert.AreEqual(GeometryNonSimpleReason.IncorrectSegmentOrientation,
 			                nonSimpleReason);
@@ -2680,7 +2669,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			Assert.IsTrue(GeometryUtils.IsGeometrySimple(
 				              poly, poly.SpatialReference, true,
-				              out string _, out nonSimpleReason));
+				              out string _, out _));
 		}
 
 		[Test]

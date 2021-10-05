@@ -54,13 +54,9 @@ namespace ProSuite.Commons.AO.Geometry
 			double yMin;
 			double zMin;
 
-			double xMax;
-			double yMax;
-			double zMax;
+			spatialReference.GetDomain(out xMin, out double _, out yMin, out double _);
 
-			spatialReference.GetDomain(out xMin, out xMax, out yMin, out yMax);
-
-			spatialReference.GetZDomain(out zMin, out zMax);
+			spatialReference.GetZDomain(out zMin, out double _);
 
 			Initialize(xyTolerance, zTolerance, xMin, yMin, zMin);
 		}

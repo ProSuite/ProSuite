@@ -53,8 +53,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.ShortestPath
 
 			if (spatialReference != null)
 			{
-				double xMax, yMax;
-				spatialReference.GetDomain(out _originX, out xMax, out _originY, out yMax);
+				spatialReference.GetDomain(out _originX, out _, out _originY, out _);
 
 				_resolution = SpatialReferenceUtils.GetXyResolution(spatialReference);
 			}
@@ -212,8 +211,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.ShortestPath
 			int nodeIndex;
 			if (! TryGetNodeIndex(nodeLocation, out nodeIndex))
 			{
-				List<AdjacentNode> adjacentNodes;
-				nodeIndex = AddNode(nodeLocation, out adjacentNodes);
+				nodeIndex = AddNode(nodeLocation, out List<AdjacentNode> _);
 			}
 
 			NodeIndexesByNodeReference.Add(new GdbObjectReference(nodeFeature), nodeIndex);
@@ -355,8 +353,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.ShortestPath
 			}
 
 			// Add the interior node and the split edges:
-			List<AdjacentNode> connectedNodes;
-			int thisNodeIndex = AddNode(location, out connectedNodes);
+			int thisNodeIndex = AddNode(location, out List<AdjacentNode> _);
 
 			AddConnectivity(gdbObjRef, fromIndex, thisNodeIndex, weightToLocation,
 			                respectLineOrientation);

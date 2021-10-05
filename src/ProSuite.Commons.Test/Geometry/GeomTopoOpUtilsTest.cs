@@ -4090,8 +4090,7 @@ namespace ProSuite.Commons.Test.Geometry
 			var plane1 = new Plane3D(7.5, 29.1, -33.243, 28);
 			var plane2 = new Plane3D(7.5, 29.1, -33.243, -12);
 
-			Pnt3D pt;
-			Assert.IsNull(GeomTopoOpUtils.IntersectPlanes(plane1, plane2, out pt));
+			Assert.IsNull(GeomTopoOpUtils.IntersectPlanes(plane1, plane2, out Pnt3D _));
 		}
 
 		[Test]

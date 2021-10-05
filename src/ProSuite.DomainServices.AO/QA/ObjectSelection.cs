@@ -73,8 +73,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 		public bool Contains(InvolvedRow involvedRow, QualityCondition qualityCondition)
 		{
-			bool unknownTable;
-			return Contains(involvedRow, qualityCondition, out unknownTable);
+			return Contains(involvedRow, qualityCondition, out bool _);
 		}
 
 		public bool Contains(InvolvedRow involvedRow, QualityCondition qualityCondition,

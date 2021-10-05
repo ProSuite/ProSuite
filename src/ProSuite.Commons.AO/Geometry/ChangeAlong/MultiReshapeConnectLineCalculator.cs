@@ -38,9 +38,9 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		public IPoint TargetConnectPointFrom { set; private get; }
 		public IPoint TargetConnectPointTo { set; private get; }
 
-		public NotificationCollection Notifications { get; private set; }
+		public NotificationCollection Notifications { get; }
 
-		public NotificationCollection FallbackNotifications { get; private set; }
+		public NotificationCollection FallbackNotifications { get; }
 
 		public override IPath FindConnection(ICurve sourceReplacementPath,
 		                                     ICurve reshapePath, bool searchForward,
@@ -51,9 +51,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				                                ? sourceReplacementPath.FromPoint
 				                                : sourceReplacementPath.ToPoint;
 
-			int partIndex;
 			int? sourceReplacementEndIdxOnTarget = GeometryUtils.FindHitSegmentIndex(
-				reshapePath, sourceReplacementPoint, _tolerance, out partIndex);
+				reshapePath, sourceReplacementPoint, _tolerance, out int _);
 
 			IPath result;
 
@@ -247,9 +246,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		                                          double tolerance)
 		{
 			// Always gets the previous segment in case of To-Point (even for the 0th)
-			int partIndex;
 			int segmentIndex = SegmentReplacementUtils.GetSegmentIndex(
-				curveToReshape, sourceConnectPoint, tolerance, out partIndex);
+				curveToReshape, sourceConnectPoint, tolerance, out int _);
 
 			ISegment sourceSegment =
 				((ISegmentCollection) curveToReshape).Segment[segmentIndex];

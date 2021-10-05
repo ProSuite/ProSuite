@@ -73,12 +73,8 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 				return null;
 			}
 
-			double maxDeviation;
-			string message;
-
 			bool? coplanar = AreCoplanar(
-				pntList, sourcePlane, coplanarityTolerance, out maxDeviation,
-				out message);
+				pntList, sourcePlane, coplanarityTolerance, out double _, out string _);
 
 			if (coplanar == null || ! coplanar.Value)
 			{

@@ -2606,10 +2606,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				IPath singleCutReshapePath = GetSingleCutReshapePath(
 					reshapeLine, intersectionPoints, out splitPoint);
 
-				string message;
 				useFromPoint = ReplaceFromPointInSingleCutOpenJaw(
-					pathToReshape, singleCutReshapePath, splitPoint, tryNonDefaultSide,
-					out message);
+					pathToReshape, singleCutReshapePath, splitPoint, tryNonDefaultSide, out _);
 			}
 			else
 			{
@@ -2678,10 +2676,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				highLevelReshapePath, intersectionPoints, out firstSplitPoint,
 				out lastSplitPoint);
 
-			IPath startDangle, endDangle;
 			TrimReshapePath(reshapePath, splittedReshapeLine, firstSplitPoint,
-			                lastSplitPoint,
-			                out startDangle, out endDangle);
+			                lastSplitPoint, out IPath _, out IPath _);
 
 			foreach (IPath path in GeometryUtils.GetPaths((IGeometry) splittedReshapeLine)
 			)
@@ -2982,23 +2978,18 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		                                               IPoint lastSplitPoint)
 		{
 			double pointDistanceToFrom = GeometryUtils.GetDistanceAlongCurve(
-				pathToReshape,
-				pointOnLine,
-				false);
+				pathToReshape, pointOnLine);
 
 			double otherPointDistanceFrom;
 			if (GeometryUtils.AreEqualInXY(pointOnLine, firstSplitPoint))
 			{
 				otherPointDistanceFrom = GeometryUtils.GetDistanceAlongCurve(
-					pathToReshape,
-					lastSplitPoint, false);
+					pathToReshape, lastSplitPoint);
 			}
 			else if (GeometryUtils.AreEqualInXY(pointOnLine, lastSplitPoint))
 			{
 				otherPointDistanceFrom = GeometryUtils.GetDistanceAlongCurve(
-					pathToReshape,
-					firstSplitPoint,
-					false);
+					pathToReshape, firstSplitPoint);
 			}
 			else
 			{

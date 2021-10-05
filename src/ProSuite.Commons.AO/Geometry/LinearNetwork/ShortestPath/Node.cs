@@ -14,8 +14,7 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.ShortestPath
 			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
 
 			double originX, originY;
-			double xMax, yMax;
-			spatialReference.GetDomain(out originX, out xMax, out originY, out yMax);
+			spatialReference.GetDomain(out originX, out _, out originY, out _);
 
 			double scale = 1 / SpatialReferenceUtils.GetXyResolution(spatialReference);
 

@@ -604,8 +604,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 				var key = new SegmentPart(segmentProxy, 0, 1, true);
 				// SegmentPart key = new SegmentPart(segmentsSubpart.PartIndex, iSegment, 0, 1, true);
-				SegmentParts segmentParts;
-				segmentsSubpart.SegmentNeighbors.TryGetValue(key, out segmentParts);
+				segmentsSubpart.SegmentNeighbors.TryGetValue(key, out SegmentParts _);
 
 				return new SegmentProxyInfo(segmentProxy, segmentsSubpart);
 			}
@@ -618,7 +617,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				                         segmentPart.PartIndex, fullFraction);
 
 				List<NeighboredSegmentsSubpart> continuations =
-					continuationFinder.GetContinuations(p, new List<SegmentsSubpart>(), false);
+					continuationFinder.GetContinuations(p, new List<SegmentsSubpart>());
 				if (continuations == null)
 				{
 					return AdaptUnconnected;

@@ -15,8 +15,7 @@ namespace ProSuite.QA.Tests.Test
 		public static void OneError([NotNull] QaTestRunnerBase runner,
 		                            [NotNull] string issueCodeId)
 		{
-			QaError error;
-			OneError(runner, issueCodeId, out error);
+			OneError(runner, issueCodeId, out QaError _);
 		}
 
 		public static void OneError([NotNull] QaTestRunnerBase runner,

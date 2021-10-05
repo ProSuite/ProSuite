@@ -72,9 +72,7 @@ namespace ProSuite.Commons.Diagnostics
 		{
 			long virtualBytes;
 			long privateBytes;
-			long workingSet;
-			ProcessUtils.GetMemorySize(_process, out virtualBytes, out privateBytes,
-			                           out workingSet);
+			ProcessUtils.GetMemorySize(_process, out virtualBytes, out privateBytes, out _);
 
 			_previousVirtualBytes = VirtualBytes;
 			VirtualBytes = virtualBytes;

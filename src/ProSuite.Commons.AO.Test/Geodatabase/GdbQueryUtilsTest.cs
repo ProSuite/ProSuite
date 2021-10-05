@@ -521,16 +521,15 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				SpatialReferenceUtils.GetXyResolution(Assert.NotNull(spatialReference));
 
 			IGeometry validGeometry;
-			string message;
 			Assert.False(GdbQueryUtils.IsValidFilterGeometry(
-				             subResolutionEnv, xyResolution, out validGeometry, out message),
+				             subResolutionEnv, xyResolution, out validGeometry, out string _),
 			             "Sub-resolution polygon should not be valid");
 			Assert.NotNull(validGeometry);
 			Assert.False(subResolutionEnv == validGeometry,
 			             "Corrected geometry must be different to input");
 
 			Assert.True(GdbQueryUtils.IsValidFilterGeometry(
-				            validGeometry, xyResolution, out validGeometry, out message),
+				            validGeometry, xyResolution, out validGeometry, out string _),
 			            "Corrected geometry should be valid");
 
 			IQueryFilter filter = GdbQueryUtils.CreateSpatialFilter(
@@ -643,16 +642,15 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 
 			// NOTE: Multipatch implements IRelationalOperator since a while!
 			IGeometry validGeometry;
-			string message;
 			Assert.True(GdbQueryUtils.IsValidFilterGeometry(
-				            multiPatch, xyResolution, out validGeometry, out message),
+				            multiPatch, xyResolution, out validGeometry, out string _),
 			            "Multipatch should be valid");
 			Assert.NotNull(validGeometry);
 			Assert.True(multiPatch == validGeometry,
 			            "Multipatch should be valid");
 
 			Assert.True(GdbQueryUtils.IsValidFilterGeometry(
-				            validGeometry, xyResolution, out validGeometry, out message),
+				            validGeometry, xyResolution, out validGeometry, out string _),
 			            "Corrected geometry should be valid");
 
 			IQueryFilter filter = GdbQueryUtils.CreateSpatialFilter(
@@ -680,11 +678,10 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 				Assert.NotNull(DatasetUtils.GetSpatialReference(fc));
 
 			IGeometry validGeometry;
-			string message;
 			Assert.False(GdbQueryUtils.IsValidFilterGeometry(
 				             nonZSimpleEnvelope,
 				             SpatialReferenceUtils.GetXyResolution(spatialReference),
-				             out validGeometry, out message),
+				             out validGeometry, out string _),
 			             "Search geometry should not be valid");
 
 			Assert.NotNull(validGeometry);
@@ -705,9 +702,8 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			emptyPoly.SpatialReference = ((IGeoDataset) fc).SpatialReference;
 
 			IGeometry validGeometry;
-			string message;
 			Assert.False(GdbQueryUtils.IsValidFilterGeometry(
-				             emptyPoly, 0.001, out validGeometry, out message),
+				             emptyPoly, 0.001, out validGeometry, out string _),
 			             "Empty polygon should not be valid");
 
 			Assert.Null(validGeometry);

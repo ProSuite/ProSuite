@@ -122,12 +122,11 @@ namespace ProSuite.QA.Tests
 
 			if (! IsKnownDuplicate(oid1, oid2))
 			{
-				string errorDescription;
 				if (QaSpatialRelationUtils.AreDuplicates(
 					row1, tableIndex1,
 					row2, tableIndex2,
 					_validRelationConstraint,
-					out errorDescription))
+					out string _))
 				{
 					AddDuplicate(oid1, oid2);
 				}

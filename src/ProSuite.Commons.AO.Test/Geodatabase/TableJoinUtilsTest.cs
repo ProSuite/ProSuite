@@ -1404,8 +1404,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		private static HashSet<int> GetIntSet([NotNull] ITable table,
 		                                      [NotNull] string intFieldName)
 		{
-			int nullValueCount;
-			return GetIntSet(table, intFieldName, out nullValueCount);
+			return GetIntSet(table, intFieldName, out int _);
 		}
 
 		[NotNull]

@@ -826,11 +826,10 @@ namespace ProSuite.QA.Tests
 			// TODO revise, handle any non-numeric cases explicitly
 			string keyString = string.Format(CultureInfo.InvariantCulture, "{0}", value);
 
-			double numericValue;
 			if (! double.TryParse(keyString,
 			                      NumberStyles.Number,
 			                      CultureInfo.InvariantCulture,
-			                      out numericValue))
+			                      out double _))
 			{
 				// the key is neither a string, nor a guid, nor numeric
 				return string.Format("'{0}'", keyString);

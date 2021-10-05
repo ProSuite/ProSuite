@@ -747,9 +747,7 @@ namespace ProSuite.Commons.Geom
 
 			foreach (Linestring unusedCutRing in containedExistingIslands)
 			{
-				RingGroup cookieInCookie;
-				Assert.True(TryCutCookie(resultCookie, unusedCutRing, tolerance,
-				                         out cookieInCookie),
+				Assert.True(TryCutCookie(resultCookie, unusedCutRing, tolerance, out _),
 				            "Inner ring in cookie cutter cannot be cut from result cookie");
 			}
 
@@ -825,8 +823,7 @@ namespace ProSuite.Commons.Geom
 		                                          out IntersectionPoint3D touchPoint)
 		{
 			IList<IntersectionPoint3D> intersectionPoints =
-				GeomTopoOpUtils.GetIntersectionPoints(polygon,
-				                                      (ISegmentList) containedRing, tolerance);
+				GeomTopoOpUtils.GetIntersectionPoints(polygon, containedRing, tolerance);
 
 			ringsAreEqual = false;
 			touchPoint = null;

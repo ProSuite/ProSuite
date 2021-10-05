@@ -125,9 +125,7 @@ namespace ProSuite.QA.Tests
 			if (! anyTouching)
 			{
 				// could be an error; but maybe there's a touching feature in a later tile
-				PendingFeature pendingFeature;
-				_crossTileFeatureState.FlagFeatureAsSuspicious(tableIndex, feature,
-				                                               out pendingFeature);
+				_crossTileFeatureState.FlagFeatureAsSuspicious(tableIndex, feature, out _);
 			}
 
 			return NoError;

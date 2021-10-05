@@ -298,8 +298,7 @@ namespace ProSuite.DomainModel.Core.QA
 		[NotNull]
 		public QualitySpecification Union([NotNull] QualitySpecification other)
 		{
-			int equal;
-			return Union(other, out equal);
+			return Union(other, out int _);
 		}
 
 		/// <summary>
