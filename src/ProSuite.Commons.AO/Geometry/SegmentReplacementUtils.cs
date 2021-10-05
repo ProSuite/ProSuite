@@ -786,9 +786,8 @@ namespace ProSuite.Commons.AO.Geometry
 				if (distanceAlong < minimumSegmentLength ||
 				    segment.Length - distanceAlong < minimumSegmentLength)
 				{
-					_msg.VerboseDebugFormat(
-						"Unable to insert vertex because of violated minimum segment length. Distance along segment: {0}, segment: {1}",
-						distanceAlong, segment.Length);
+					_msg.VerboseDebug(
+						() => $"Unable to insert vertex because of violated minimum segment length. Distance along segment: {distanceAlong}, segment: {segment.Length}");
 
 					return false;
 				}
@@ -1335,12 +1334,7 @@ namespace ProSuite.Commons.AO.Geometry
 			Assert.ArgumentCondition(geometry is ISegmentCollection,
 			                         "geometry must be ISegmentCollection");
 
-			if (_msg.IsVerboseDebugEnabled)
-			{
-				_msg.VerboseDebugFormat("Retrieving segment {0} from part {1} in geometry {2}",
-				                        localSegmentIndex, partIndex,
-				                        GeometryUtils.ToString(geometry));
-			}
+			_msg.VerboseDebug(() => $"Retrieving segment {localSegmentIndex} from part {partIndex} in geometry {GeometryUtils.ToString(geometry)}");
 
 			var geometryCollection = geometry as IGeometryCollection;
 

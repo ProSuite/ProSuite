@@ -175,8 +175,8 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 
 			if (! coplanar)
 			{
-				_msg.VerboseDebug(
-					$"Coplanarity of point {maxDistancePoint} with plane {plane} is violated: {maxDistance}m");
+				_msg.VerboseDebug(() =>
+					                  $"Coplanarity of point {maxDistancePoint} with plane {plane} is violated: {maxDistance}m");
 				message =
 					$"Coplanarity of the plane is violated by {maxDistance} at point {maxDistancePoint}";
 			}

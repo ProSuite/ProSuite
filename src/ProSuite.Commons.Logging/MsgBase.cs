@@ -204,6 +204,14 @@ namespace ProSuite.Commons.Logging
 			}
 		}
 
+		public void VerboseDebug(Func<string> message)
+		{
+			if (IsVerboseDebugEnabled)
+			{
+				DebugCore(message());
+			}
+		}
+
 		public void Debug(object message)
 		{
 			if (_log.IsDebugEnabled)
@@ -217,6 +225,14 @@ namespace ProSuite.Commons.Logging
 			if (IsVerboseDebugEnabled)
 			{
 				DebugCore(Format(message), exception);
+			}
+		}
+
+		public void VerboseDebug(Func<string> message, Exception exception)
+		{
+			if (IsVerboseDebugEnabled)
+			{
+				DebugCore(message(), exception);
 			}
 		}
 

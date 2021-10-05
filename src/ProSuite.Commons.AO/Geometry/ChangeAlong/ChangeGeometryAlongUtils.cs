@@ -558,9 +558,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 				result.AddRange(individualResultList);
 
-				_msg.VerboseDebugFormat(
-					"Individual geometry's subcurve calculation result: {0}",
-					individualResult);
+				_msg.VerboseDebug(
+					() => $"Individual geometry's subcurve calculation result: {individualResult}");
 
 				Marshal.ReleaseComObject(sourceGeometry);
 			}

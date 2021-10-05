@@ -541,9 +541,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 				// NOTE: Check every single large-tolerance intersection. It could be that the intersection point count is equal
 				//       but the points are in very different locations (small tolerance intersection also reports wrong points)
-				_msg.VerboseDebugFormat(
-					"Comparing large tolerance intersecion points with small tolerance: {0}. Intersection points with (snap-)tolerance: {1}",
-					smallToleranceIntersections.PointCount, largeToleranceIntersections.PointCount);
+				_msg.VerboseDebug(
+					() => $"Comparing large tolerance intersecion points with small tolerance: {smallToleranceIntersections.PointCount}. Intersection points with (snap-)tolerance: {largeToleranceIntersections.PointCount}");
 
 				for (var i = 0; i < largeToleranceIntersections.PointCount; i++)
 				{
@@ -555,9 +554,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 					if (snappedExtraPoint != null)
 					{
-						_msg.VerboseDebugFormat(
-							"Using extra large-tolerance intersection point at {0} | {1}",
-							snappedExtraPoint.X, snappedExtraPoint.Y);
+						_msg.VerboseDebug(
+							() => $"Using extra large-tolerance intersection point at {snappedExtraPoint.X} | {snappedExtraPoint.Y}");
 
 						AddPoint(snappedExtraPoint, smallToleranceIntersections);
 					}
@@ -840,9 +838,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			if (Perimeter != null &&
 			    ! GeometryUtils.Contains(Perimeter, intersectionPoint))
 			{
-				_msg.VerboseDebugFormat(
-					"Filtering large tolerance point because it is outside the perimeter: {0}",
-					GeometryUtils.ToString(intersectionPoint));
+				_msg.VerboseDebug(
+					() => $"Filtering large tolerance point because it is outside the perimeter: {GeometryUtils.ToString(intersectionPoint)}");
 
 				return null;
 			}
@@ -1012,12 +1009,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			                                 snapType,
 			                                 out targetVertex, out snapDistance);
 
-			if (_msg.IsVerboseDebugEnabled)
-			{
-				_msg.VerboseDebugFormat(
-					"Point {0}|{1} was snapped: {2}. snapDistance: {3}. New location: {4}",
-					point.X, point.Y, snapped, snapDistance, GeometryUtils.ToString(targetVertex));
-			}
+			_msg.VerboseDebug(
+				() => $"Point {point.X}|{point.Y} was snapped: {snapped}. snapDistance: {snapDistance}. New location: {GeometryUtils.ToString(targetVertex)}");
 
 			if (! snapped)
 			{
@@ -1065,14 +1058,10 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 					result = true;
 				}
 
-				if (_msg.IsVerboseDebugEnabled)
-				{
-					_msg.VerboseDebugFormat(
-						closestCrackPointDistance < tolerance
-							? "PointIsNear: Found closer point at {0} units of {1}"
-							: "PointIsNear: Found no closer point at {0} units of {1}",
-						closestCrackPointDistance, point);
-				}
+				_msg.VerboseDebug(() =>
+					                  closestCrackPointDistance < tolerance
+						                  ? $"PointIsNear: Found closer point at {closestCrackPointDistance} units of {point}"
+						                  : $"PointIsNear: Found no closer point at {closestCrackPointDistance} units of {point}");
 			}
 
 			return result;

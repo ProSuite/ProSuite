@@ -459,9 +459,8 @@ namespace ProSuite.DomainModel.AO.QA
 				if (scalarParameterValue.DataType == null)
 				{
 					scalarParameterValue.DataType = parameter.Type;
-					_msg.VerboseDebugFormat(
-						"DataType of scalarParameterValue {0} needed to be initialized.",
-						scalarParameterValue.TestParameterName);
+					_msg.VerboseDebug(
+						() => $"DataType of scalarParameterValue {scalarParameterValue.TestParameterName} needed to be initialized.");
 				}
 
 				return scalarParameterValue.GetValue();

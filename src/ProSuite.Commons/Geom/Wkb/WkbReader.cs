@@ -155,6 +155,19 @@ namespace ProSuite.Commons.Geom.Wkb
 			}
 		}
 
+		protected static Multipoint<IPnt> ReadMultipointCore(
+			[NotNull] BinaryReader reader,
+			Ordinates ordinates)
+		{
+			int pointCount = checked((int) reader.ReadUInt32());
+
+			var geometryBuilder = new GeomBuilder(false);
+
+			Multipoint<IPnt> multipoint =
+				ReadMultipointCore(reader, ordinates, pointCount, geometryBuilder);
+			return multipoint;
+		}
+
 		protected static TMultipoint ReadMultipointCore<TMultipoint, TLinestring, TPoint>(
 			[NotNull] BinaryReader reader,
 			Ordinates ordinates,

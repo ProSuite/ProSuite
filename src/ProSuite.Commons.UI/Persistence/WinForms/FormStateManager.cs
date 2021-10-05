@@ -148,7 +148,7 @@ namespace ProSuite.Commons.UI.Persistence.WinForms
 		private void ApplyFormState([NotNull] T formState,
 		                            FormStateRestoreOption restoreOption)
 		{
-			_msg.VerboseDebugFormat("Applying form state for {0}", Form.Name);
+			_msg.VerboseDebug(() => $"Applying form state for {Form.Name}");
 
 			using (_msg.IncrementIndentation())
 			{
@@ -288,7 +288,7 @@ namespace ProSuite.Commons.UI.Persistence.WinForms
 				             : formState.Height;
 
 			// log
-			_msg.VerboseDebugFormat("Restore size: {0} {1}", width, height);
+			_msg.VerboseDebug(() => $"Restore size: {width} {height}");
 
 			// apply
 			Form.Size = new Size(width, height);

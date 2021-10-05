@@ -291,7 +291,7 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 			catch (Exception e)
 			{
-				_msg.VerboseDebug($"Error opening dataset {dataset.Name}", e);
+				_msg.VerboseDebug(() => $"Error opening dataset {dataset.Name}", e);
 				return false;
 			}
 		}

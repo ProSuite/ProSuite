@@ -33,7 +33,7 @@ namespace ProSuite.Microservices.Server.AO
 			catch (InvalidOperationException ex)
 			{
 				// For example: System.InvalidOperationException: Only one write can be pending at a time
-				_msg.VerboseDebug("Error sending response to the client", ex);
+				_msg.VerboseDebug(() => "Error sending response to the client", ex);
 
 				return false;
 			}

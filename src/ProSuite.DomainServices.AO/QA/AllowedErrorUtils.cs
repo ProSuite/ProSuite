@@ -63,12 +63,7 @@ namespace ProSuite.DomainServices.AO.QA
 				ITable table = pair.Key;
 				DatasetUtils.DeleteRows(table, oids);
 
-				if (_msg.IsVerboseDebugEnabled)
-				{
-					_msg.VerboseDebugFormat("Deleted from {0}: {1}",
-					                        DatasetUtils.GetName(table),
-					                        StringUtils.Concatenate(oids, ", "));
-				}
+				_msg.VerboseDebug(() => $"Deleted from {DatasetUtils.GetName(table)}: {StringUtils.Concatenate(oids, ", ")}");
 
 				_msg.DebugStopTiming(watch, "Deleted {0} allowed errors in {1}",
 				                     oids.Count, DatasetUtils.GetName(table));

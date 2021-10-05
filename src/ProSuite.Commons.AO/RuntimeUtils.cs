@@ -298,9 +298,8 @@ namespace ProSuite.Commons.AO
 			}
 			catch (DllNotFoundException e)
 			{
-				_msg.VerboseDebugFormat(
-					"Error accessing RuntimeManager: {0}.",
-					e.Message);
+				_msg.VerboseDebug(
+					() => $"Error accessing RuntimeManager: {e.Message}.", e);
 
 				return false;
 			}
