@@ -100,8 +100,8 @@ namespace ProSuite.Commons.Reflection
 			{
 				string substituteType = typeName.Replace(assemblyName, substituteAssembly);
 
-				_msg.Debug(
-					$"Failed loading type {typeName} from {assemblyName}, trying {substituteType} from {substituteAssembly}");
+				_msg.DebugFormat("Failed loading type {0} from {1}, trying {2} from {3}",
+				                 typeName, assemblyName, substituteType, substituteAssembly);
 
 				return LoadType(Assert.NotNull(substituteAssembly), substituteType,
 				                new Dictionary<string, string>(0));
