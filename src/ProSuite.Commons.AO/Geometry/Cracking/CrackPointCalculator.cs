@@ -84,6 +84,20 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 		public double? DataZResolution { get; set; }
 
+		/// <summary>
+		/// An optional xy-tolerance that will be used to determine whether two coordinates are
+		/// 'exactly' equal, i.e. no cracking should be performed. If it is not set, half the
+		/// data resolution will be used.
+		/// </summary>
+		public double? EqualityToleranceXY { get; set; }
+
+		/// <summary>
+		/// An optional z-tolerance that will be used to determine whether two coordinates are
+		/// 'exactly' equal, i.e. no cracking should be performed. If it is not set, half the
+		/// data resolution will be used.
+		/// </summary>
+		public double? EqualityToleranceZ { get; set; }
+
 		[CanBeNull]
 		public Func<IGeometry, IGeometry> TargetTransformation { get; set; }
 
@@ -416,14 +430,15 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		/// </summary>
 		/// <param name="point1"></param>
 		/// <param name="point2"></param>
-		/// <param name="xyResolution"></param>
-		/// <param name="zResolution"></param>
+		/// <param name="equalityToleranceXY"></param>
+		/// <param name="equalityToleranceZ"></param>
 		/// <param name="differentWithinTolerance"></param>
 		/// <param name="differentInZ"></param>
 		/// <returns></returns>
 		private static bool IsPerfectlyMatching([NotNull] IPoint point1,
 		                                        [NotNull] IPoint point2,
-		                                        double xyResolution, double zResolution,
+		                                        double equalityToleranceXY,
+		                                        double equalityToleranceZ,
 		                                        out bool differentWithinTolerance,
 		                                        out bool differentInZ)
 		{
@@ -436,19 +451,15 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			differentInZ = false;
 
-			// The crack point can be exactly between the two vertices that are different by 1 resolution:
-			double epsilon = MathUtils.GetDoubleSignificanceEpsilon(point1.X, point1.Y);
-			double equalToleranceXY = xyResolution / 2 - epsilon;
-
 			differentWithinTolerance =
-				! MathUtils.AreEqual(point1.X, point2.X, equalToleranceXY) ||
-				! MathUtils.AreEqual(point1.Y, point2.Y, equalToleranceXY);
+				! MathUtils.AreEqual(point1.X, point2.X, equalityToleranceXY) ||
+				! MathUtils.AreEqual(point1.Y, point2.Y, equalityToleranceXY);
 
 			if (GeometryUtils.IsZAware(point2) && GeometryUtils.IsZAware(point1))
 			{
 				double dZ = Math.Abs(point1.Z - point2.Z);
 
-				differentInZ = dZ >= zResolution / 2 - epsilon;
+				differentInZ = dZ >= equalityToleranceZ;
 
 				differentWithinTolerance |= differentInZ &&
 				                            dZ < GeometryUtils.GetZTolerance(point1);
@@ -504,7 +515,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			// get the Z values from the targets -> first geometry
 			IPointCollection smallToleranceIntersections =
-				GetIntersectionPoints(intersectionTarget, sourceGeometry, IntersectionPointOption, out _);
+				GetIntersectionPoints(intersectionTarget, sourceGeometry, IntersectionPointOption,
+				                      out _);
 
 			bool useSnapping = SnapTolerance != null &&
 			                   ! double.IsNaN((double) SnapTolerance) &&
@@ -738,18 +750,44 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 		private double GetXyResolution([NotNull] IGeometry fallbackGeometry)
 		{
+			// Externally defined equality tolerance:
+			if (EqualityToleranceXY != null)
+			{
+				return EqualityToleranceXY.Value;
+			}
+
 			double xyResolution = DataXyResolution ??
 			                      GeometryUtils.GetXyResolution(fallbackGeometry);
 
-			return xyResolution;
+			IEnvelope envelope = fallbackGeometry.Envelope;
+
+			double epsilon = MathUtils.GetDoubleSignificanceEpsilon(envelope.XMax, envelope.YMax);
+
+			// The crack point can be exactly between the two vertices that are different by 1 resolution.
+			// Therefore, subtract an epsilon:
+			double equalToleranceXY = xyResolution / 2 - epsilon;
+
+			return equalToleranceXY;
 		}
 
 		private double GetZResolution([NotNull] IGeometry fallbackGeometry)
 		{
+			// Externally defined equality tolerance:
+			if (EqualityToleranceZ != null)
+			{
+				return EqualityToleranceZ.Value;
+			}
+
 			double zResolution = DataZResolution ??
 			                     GeometryUtils.GetZResolution(fallbackGeometry);
 
-			return zResolution;
+			IEnvelope envelope = fallbackGeometry.Envelope;
+
+			double epsilon = MathUtils.GetDoubleSignificanceEpsilon(envelope.XMax, envelope.YMax);
+
+			double equalToleranceZ = zResolution / 2 - epsilon;
+
+			return equalToleranceZ;
 		}
 
 		[NotNull]
@@ -857,7 +895,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			IPoint sourcePoint = sourceCurve == null
 				                     ? intersectionPoint
 				                     : GetPointOnTargetWithSourceZ(intersectionPoint,
-				                                                   sourceCurve);
+					                     sourceCurve);
 
 			IPoint snappedPoint = SnapToGeometry(
 				sourcePoint, targetGeometry, largeTolerance,
@@ -957,9 +995,9 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			// TODO: ensure that even with large search tolerance always the closest segment is found
 			int? segmentIndex = GeometryUtils.FindHitSegmentIndex(originalPolycurve,
-			                                                      intersectionPoint,
-			                                                      searchTolerance,
-			                                                      out partIndex);
+				intersectionPoint,
+				searchTolerance,
+				out partIndex);
 
 			// This can happen because of  Repro_IHitTest_HitTest_DoesNotFindHitSegmentIfSearchPointCloseToVertex 
 			// -> work-around? re-implement with box tree!
@@ -970,10 +1008,10 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			// TODO: consider non-linear segments
 			double distanceToFrom = GeometryUtils.GetPointDistance3D(pointToInsert,
-			                                                         segment.FromPoint);
+				segment.FromPoint);
 
 			double distanceToTo = GeometryUtils.GetPointDistance3D(pointToInsert,
-			                                                       segment.ToPoint);
+				segment.ToPoint);
 
 			// TODO: handle Z-only difference by making sure the Z values get updated in targets too
 			if (_msg.IsVerboseDebugEnabled)
