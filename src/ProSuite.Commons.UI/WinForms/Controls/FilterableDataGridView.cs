@@ -94,7 +94,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 		private void FilterRowsCore(
 			[NotNull] Func<DataGridViewRow, bool> isRowVisible)
 		{
-			_msg.VerboseDebug("FilterableDataGridView.FilterRowsCore");
+			_msg.VerboseDebug(() => "FilterableDataGridView.FilterRowsCore");
 
 			bool wasIgnored = _ignoreRowStateChange;
 

@@ -1003,9 +1003,8 @@ namespace ProSuite.QA.Tests
 				double evictableXMax = xMax + tolerance;
 				double evictableYMax = yMax + tolerance;
 
-				_msg.VerboseDebugFormat(
-					"Removing cache entries for (xMax <= {0} && yMax <= {1}) for covering class index {2}",
-					evictableXMax, evictableYMax, coveringClassIndex);
+				_msg.VerboseDebug(
+					() => $"Removing cache entries for (xMax <= {evictableXMax} && yMax <= {evictableYMax}) for covering class index {coveringClassIndex}");
 
 				// remove all entries that are fully to the left/bottom of the tile upper/right boundary 
 				// (plus the tolerance, since the tolerance is guaranteed to be applied for searching 
@@ -1919,8 +1918,7 @@ namespace ProSuite.QA.Tests
 
 				if (_pointCount > _maximumPointCount)
 				{
-					_msg.VerboseDebugFormat("Maximum point count exceeded: {0} > {1}",
-					                        _pointCount, _maximumPointCount);
+					_msg.VerboseDebug(() => $"Maximum point count exceeded: {_pointCount} > {_maximumPointCount}");
 
 					foreach (int oid in GetSmallestEntries(_pointCount - _maximumPointCount))
 					{
@@ -1981,7 +1979,7 @@ namespace ProSuite.QA.Tests
 
 					_entries.Remove(oid);
 
-					_msg.VerboseDebugFormat("Removing covering feature {0} from cache", oid);
+					_msg.VerboseDebug(() => $"Removing covering feature {oid} from cache");
 
 					_pointCount -= entry.PointCount;
 				}

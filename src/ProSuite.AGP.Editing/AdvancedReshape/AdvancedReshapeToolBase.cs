@@ -141,7 +141,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		protected override async Task<bool> OnSketchModifiedAsync()
 		{
-			_msg.VerboseDebug("OnSketchModifiedAsync");
+			_msg.VerboseDebug(() => "OnSketchModifiedAsync");
 
 			if (_updateFeedbackTask != null)
 			{
@@ -214,7 +214,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 		//protected override void OnKeyUpCore(MapViewKeyEventArgs k)
 		//{
-		//	_msg.VerboseDebug("OnKeyUpCore");
+		//	_msg.VerboseDebug(() => "OnKeyUpCore");
 
 		//	if (k.Key == _keyToggleNonDefaultSide)
 		//	{

@@ -259,7 +259,19 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 				}
 			}
 
-			return Assert.NotNull(result, "spatialReference");
+			if (result != null)
+			{
+				return result;
+			}
+
+			if (! GetIssueWriters().Any())
+			{
+				throw new InvalidOperationException(
+					"No issue feature classes could be loaded. Make sure the project has issue datasets.");
+			}
+
+			throw new InvalidOperationException(
+				"The issue datasets in the project have no spatial reference.");
 		}
 
 		#endregion

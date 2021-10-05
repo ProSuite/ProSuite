@@ -292,23 +292,12 @@ namespace ProSuite.Commons.AO.Surface
 		{
 			IEnvelope result = GeometryFactory.Clone(searchedExtent);
 
-			if (_msg.IsVerboseDebugEnabled)
-			{
-				_msg.VerboseDebugFormat(
-					"Enlarging searched extent: {0}{1} {0}Current TIN: {0}{2} {0}for AOI {0}{3}",
-					Environment.NewLine,
-					GeometryUtils.ToString(searchedExtent),
-					GeometryUtils.ToString(currentInterpolationDomain),
-					GeometryUtils.ToString(areaOfInterest));
-			}
+			_msg.VerboseDebug(
+				() => $"Enlarging searched extent: {Environment.NewLine}{GeometryUtils.ToString(searchedExtent)} {Environment.NewLine}Current TIN: {Environment.NewLine}{GeometryUtils.ToString(currentInterpolationDomain)} {Environment.NewLine}for AOI {Environment.NewLine}{GeometryUtils.ToString(areaOfInterest)}");
 
 			if (ExceedsMaxExtent(searchedExtent, maxExtent))
 			{
-				if (_msg.IsVerboseDebugEnabled)
-				{
-					_msg.VerboseDebugFormat("Max extent {0} is exceeded",
-					                        GeometryUtils.ToString(maxExtent));
-				}
+				_msg.VerboseDebug(() => $"Max extent {GeometryUtils.ToString(maxExtent)} is exceeded");
 
 				return null;
 			}

@@ -2818,12 +2818,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				}
 			}
 
-			if (_msg.IsVerboseDebugEnabled)
-			{
-				_msg.VerboseDebugFormat(
-					"The reshape path was split into {0} parts by the geometry to reshape, the trimmed reshape path's length is {1}",
-					splittedReshapeLine.GeometryCount, trimmedLine.Length);
-			}
+			_msg.VerboseDebug(
+				() => $"The reshape path was split into {splittedReshapeLine.GeometryCount} parts by the geometry to reshape, the trimmed reshape path's length is {trimmedLine.Length}");
 
 			Marshal.ReleaseComObject(splittedReshapeLine);
 

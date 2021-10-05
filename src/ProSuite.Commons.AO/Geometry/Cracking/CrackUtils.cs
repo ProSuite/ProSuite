@@ -79,18 +79,16 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			if (selectedFeature.Shape.GeometryType == esriGeometryType.esriGeometryPoint ||
 			    selectedFeature.Shape.GeometryType == esriGeometryType.esriGeometryMultipoint)
 			{
-				_msg.VerboseDebugFormat(
-					"Feature {0} is not of a supported geometry type. It will be disregarded.",
-					GdbObjectUtils.ToString(selectedFeature));
+				_msg.VerboseDebug(
+					() => $"Feature {GdbObjectUtils.ToString(selectedFeature)} is not of a supported geometry type. It will be disregarded.");
 
 				return null;
 			}
 
 			if (inExtent != null && GeometryUtils.Disjoint(selectedFeature.Shape, inExtent))
 			{
-				_msg.VerboseDebugFormat(
-					"Feature {0} is outside the extent of interest. It will be disregarded.",
-					GdbObjectUtils.ToString(selectedFeature));
+				_msg.VerboseDebug(
+					() => $"Feature {GdbObjectUtils.ToString(selectedFeature)} is outside the extent of interest. It will be disregarded.");
 
 				return null;
 			}
@@ -281,8 +279,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			IPointCollection clustered = ClusterPoints(allIntersections,
 			                                           toVertexInfo.SnapTolerance);
 
-			_msg.VerboseDebugFormat("Calculated {0} intersections in {1} ring pairs.",
-			                        allIntersections.PointCount, calculationCount);
+			_msg.VerboseDebug(() => $"Calculated {allIntersections.PointCount} intersections in {calculationCount} ring pairs.");
 
 			IList<CrackPoint> crackPoints = crackPointCalculator.DetermineCrackPoints(
 				clustered, inputGeometry, (IPolyline) polylineSalad, inputGeometry);
@@ -646,9 +643,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
-				_msg.VerboseDebugFormat("Identified {0} points to weed. Weeded geometry: {1}",
-				                        weededPoints.PointCount,
-				                        GeometryUtils.ToString(weededCurve));
+				_msg.VerboseDebug(() => $"Identified {weededPoints.PointCount} points to weed. Weeded geometry: {GeometryUtils.ToString(weededCurve)}");
 			}
 
 			return weededPoints;

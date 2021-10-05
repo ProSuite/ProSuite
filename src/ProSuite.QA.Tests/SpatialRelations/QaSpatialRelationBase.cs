@@ -167,11 +167,7 @@ namespace ProSuite.QA.Tests.SpatialRelations
 				IRow row in
 				Search(relatedTable, intersectsFilter, relatedFilterHelper, cacheShape))
 			{
-				if (_msg.IsVerboseDebugEnabled)
-				{
-					_msg.VerboseDebugFormat("not disjoint (row found: {0})",
-					                        GdbObjectUtils.ToString(row));
-				}
+				_msg.VerboseDebug(() => $"not disjoint (row found: {GdbObjectUtils.ToString(row)})");
 
 				return false;
 			}

@@ -53,12 +53,12 @@ namespace ProSuite.Commons.Reflection
 
 				if (string.IsNullOrEmpty(name.CodeBase))
 				{
-					_msg.VerboseDebugFormat("Loading assembly from {0}", name);
+					_msg.VerboseDebug(() => $"Loading assembly from {name}");
 				}
 				else
 				{
-					_msg.VerboseDebugFormat("Loading assembly from {0} (codebase: {1})",
-					                        name, name.CodeBase);
+					_msg.VerboseDebug(
+						() => $"Loading assembly from {name} (codebase: {name.CodeBase})");
 				}
 
 				assembly = Assembly.Load(name);

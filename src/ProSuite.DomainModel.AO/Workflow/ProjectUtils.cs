@@ -58,7 +58,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 
 			if (dataset == null)
 			{
-				_msg.VerboseDebugFormat("No match found");
+				_msg.VerboseDebug(() => "No match found");
 				return null;
 			}
 
@@ -232,9 +232,8 @@ namespace ProSuite.DomainModel.AO.Workflow
 			var datasetName = GetModelElementNameForChildDatabaseElement(
 				gdbDatasetName, model, datasetNameTransformer);
 
-			_msg.VerboseDebugFormat(
-				"Dataset name for {0} in model {1} (non-master db): {2}",
-				gdbDatasetName, model.Name, datasetName ?? "<null>");
+			_msg.VerboseDebug(
+				() => $"Dataset name for {gdbDatasetName} in model {model.Name} (non-master db): {datasetName ?? "<null>"}");
 
 			return datasetName == null
 				       ? null
@@ -282,9 +281,8 @@ namespace ProSuite.DomainModel.AO.Workflow
 			    ! string.Equals(masterDatabaseSchemaOwner, owner,
 			                    StringComparison.OrdinalIgnoreCase))
 			{
-				_msg.VerboseDebugFormat(
-					"Dataset {0} is from master database of model {1}, but from a different schema: {2} (<> {3})",
-					gdbElementName, model.Name, owner, masterDatabaseSchemaOwner);
+				_msg.VerboseDebug(
+					() => $"Dataset {gdbElementName} is from master database of model {model.Name}, but from a different schema: {owner} (<> {masterDatabaseSchemaOwner})");
 
 				return true;
 			}
@@ -312,10 +310,8 @@ namespace ProSuite.DomainModel.AO.Workflow
 				project.ChildDatabaseDatasetNameTransformer,
 				model, isModelMasterDatabase);
 
-			_msg.VerboseDebugFormat(
-				"Association name for {0} in model {1} (from master db: {2}): {3}",
-				datasetName.Name, model.Name, isModelMasterDatabase,
-				modelName ?? "<null>");
+			_msg.VerboseDebug(
+				() => $"Association name for {datasetName.Name} in model {model.Name} (from master db: {isModelMasterDatabase}): {modelName ?? "<null>"}");
 
 			if (modelName == null)
 			{
@@ -345,7 +341,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 
 			if (DoNotMatchChildDatabaseForQualifiedModelElements())
 			{
-				_msg.VerboseDebugFormat(
+				_msg.VerboseDebug(() =>
 					"Matching child database datasets for qualified model elements is disabled");
 
 				// restore previous behavior: don't try to match child database elements for
@@ -355,8 +351,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 
 			if (ModelElementNameUtils.IsQualifiedName(gdbElementName))
 			{
-				_msg.VerboseDebugFormat(
-					"Gdb element name is qualified, and model uses qualified names");
+				_msg.VerboseDebug(() => "Gdb element name is qualified, and model uses qualified names");
 
 				// gdb element name is also qualified, but from child database
 				// rely on transformer for changing schema owner/database name, if required.
@@ -367,16 +362,15 @@ namespace ProSuite.DomainModel.AO.Workflow
 
 			if (string.IsNullOrEmpty(model.DefaultDatabaseSchemaOwner))
 			{
-				_msg.VerboseDebugFormat(
-					"Gdb element name is unqualified, but qualified model has no unique schema owner " +
-					"to allow name qualification");
+				_msg.VerboseDebug(() =>
+					                  "Gdb element name is unqualified, but qualified model has no unique schema owner " +
+					                  "to allow name qualification");
 
 				// default database schema owner is not known, cannot qualify name
 				return null; // give up
 			}
 
-			_msg.VerboseDebugFormat(
-				"Using unique master database schema information to qualify dataset name");
+			_msg.VerboseDebug(() => "Using unique master database schema information to qualify dataset name");
 
 			string transformedName = datasetNameTransformer.TransformName(gdbElementName);
 

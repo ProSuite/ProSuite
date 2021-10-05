@@ -201,7 +201,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				_msg.InfoFormat("Starting stand-alone verification request from {0}",
 				                context.Peer);
-				_msg.VerboseDebugFormat("Request details: {0}", request);
+				_msg.VerboseDebug(() => $"Request details: {request}");
 
 				Action<LoggingEvent> action =
 					SendInfoLogAction(responseStream, ServiceCallStatus.Running);
@@ -245,7 +245,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
-				_msg.VerboseDebugFormat("Request details: {0}", request);
+				_msg.VerboseDebug(() => $"Request details: {request}");
 			}
 
 			if (requiresLicense)
@@ -958,7 +958,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			catch (InvalidOperationException ex)
 			{
 				// For example: System.InvalidOperationException: Only one write can be pending at a time
-				_msg.VerboseDebug("Error sending progress to the client", ex);
+				_msg.VerboseDebug(() => "Error sending progress to the client", ex);
 
 				// The issues would be lost, so put them back into the collection
 				foreach (IssueMsg issue in response.Issues)

@@ -81,8 +81,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			bool use2DLengthOnly,
 			[CanBeNull] IGeometry perimeter)
 		{
-			_msg.VerboseDebugFormat("Getting short segments for {0}",
-			                        GdbObjectUtils.ToString(forFeatureVertexInfo.Feature));
+			_msg.VerboseDebug(() => $"Getting short segments for {GdbObjectUtils.ToString(forFeatureVertexInfo.Feature)}");
 
 			var minimumSegmentLength =
 				(double) Assert.NotNull(forFeatureVertexInfo.MinimumSegmentLength);
@@ -304,12 +303,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			featureVertexInfo.SimplifyCrackPoints();
 
-			if (_msg.IsVerboseDebugEnabled)
-			{
-				_msg.VerboseDebugFormat(
-					"Cutting input geometry with protected points. Generalization Info: {0}",
-					featureVertexInfo.ToString(true));
-			}
+			_msg.VerboseDebug(
+				() => $"Cutting input geometry with protected points. Generalization Info: {featureVertexInfo.ToString(true)}");
 
 			IPolyline originalGeometry = featureVertexInfo.OriginalClippedPolyline;
 
@@ -353,9 +348,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
-				_msg.VerboseDebugFormat("Original feature {0} splitted by protected points: {1}",
-				                        GdbObjectUtils.ToString(feature),
-				                        GeometryUtils.ToString((IGeometry) splittedResult));
+				_msg.VerboseDebug(() => $"Original feature {GdbObjectUtils.ToString(feature)} splitted by protected points: {GeometryUtils.ToString((IGeometry) splittedResult)}");
 			}
 
 			return splittedResult as IPolycurve;
