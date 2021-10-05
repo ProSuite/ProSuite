@@ -433,7 +433,7 @@ namespace ProSuite.QA.Tests
 								_indexedMultipatch.GetSegment(partIndex, segmentIndex));
 						}
 
-						Plane plane = QaGeometryUtils.CreatePlane((IEnumerable<SegmentProxy>) segments);
+						Plane plane = QaGeometryUtils.CreatePlane(segments);
 
 						if (Math.Abs(plane.GetNormalVector().Z) < double.Epsilon)
 						{

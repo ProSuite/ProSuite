@@ -1249,8 +1249,8 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			var awarePoints = (IPointCollection) awareGeometry;
 			for (var i = 0; i < awarePoints.PointCount; i++)
 			{
-				Assert.IsTrue(awarePoints.get_Point(i).Z == 1000);
-				Assert.IsTrue(awarePoints.get_Point(i).M == 0);
+				Assert.AreEqual(awarePoints.get_Point(i).Z, 1000);
+				Assert.AreEqual(awarePoints.get_Point(i).M, 0);
 			}
 		}
 
@@ -1276,8 +1276,8 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			for (var i = 0; i < awarePoints.PointCount; i++)
 			{
 				// must preserve Zs
-				Assert.IsTrue(awarePoints.get_Point(i).Z == 700);
-				Assert.IsTrue(awarePoints.get_Point(i).M == 0);
+				Assert.AreEqual(awarePoints.get_Point(i).Z, 700);
+				Assert.AreEqual(awarePoints.get_Point(i).M, 0);
 			}
 		}
 
@@ -1308,11 +1308,11 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			var awarePoints = (IPointCollection) awareGeometry;
 			for (var i = 0; i < awarePoints.PointCount; i++)
 			{
-				Assert.IsTrue(awarePoints.get_Point(i).Z == 800);
+				Assert.AreEqual(awarePoints.get_Point(i).Z, 800);
 
 				if (i == 2)
 				{
-					Assert.IsTrue(awarePoints.get_Point(i).M == 0.5);
+					Assert.AreEqual(awarePoints.get_Point(i).M, 0.5);
 				}
 				else
 				{
