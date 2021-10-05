@@ -37,7 +37,7 @@ namespace ProSuite.Commons.ManagedOptions
 			get
 			{
 				// the XML tag can be missing or the value can be nil
-				if (_centralSetting == null || _centralSetting.Value == null)
+				if (_centralSetting?.Value == null)
 				{
 					return false;
 				}
@@ -76,8 +76,7 @@ namespace ProSuite.Commons.ManagedOptions
 			return ! CurrentValue.Equals(CentralValue);
 		}
 
-		public bool HasCentralValue
-			=> _centralSetting != null && _centralSetting.Value != null;
+		public bool HasCentralValue => _centralSetting?.Value != null;
 
 		public T CurrentValue
 		{

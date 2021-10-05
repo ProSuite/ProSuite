@@ -286,7 +286,7 @@ namespace ProSuite.UI.QA.Controls
 				qualityConditionVerifications)
 			{
 				QualityCondition qualityCondition = specificationDataset.QualityCondition;
-				if (qualityCondition == null || qualityCondition.Category == null)
+				if (qualityCondition?.Category == null)
 				{
 					noCategoryItem.SpecificationDatasets.Add(specificationDataset);
 				}
@@ -504,14 +504,12 @@ namespace ProSuite.UI.QA.Controls
 			foreach (DictionaryEntry pair in parents)
 			{
 				object child = pair.Value;
-				if (child is IDictionary)
+				if (child is IDictionary childDict)
 				{
-					var childDict = (IDictionary) child;
 					SortSpecifications(childDict, specSorter);
 				}
-				else if (child is List<SpecificationDataset>)
+				else if (child is List<SpecificationDataset> specList)
 				{
-					var specList = (List<SpecificationDataset>) child;
 					specList.Sort(specSorter);
 				}
 			}
@@ -613,30 +611,27 @@ namespace ProSuite.UI.QA.Controls
 				object parent = pair.Key;
 				TreeNodeCollection childNodes;
 
-				if (parent is DatasetCategoryItem)
+				if (parent is DatasetCategoryItem datasetCategoryItem)
 				{
-					if (parents.Count == 1 && ((DatasetCategoryItem) parent).IsNull)
+					if (parents.Count == 1 && datasetCategoryItem.IsNull)
 					{
 						childNodes = nodes;
 					}
 					else
 					{
-						var datasetCategoryItem = (DatasetCategoryItem) parent;
 						TreeNode parentNode = nodes.Add(datasetCategoryItem.Name);
 						parentNode.Tag = datasetCategoryItem;
 						childNodes = parentNode.Nodes;
 					}
 				}
-				else if (parent is Dataset)
+				else if (parent is Dataset dataset)
 				{
-					var dataset = (Dataset) parent;
 					TreeNode parentNode = nodes.Add(dataset.AliasName);
 					parentNode.Tag = dataset;
 					childNodes = parentNode.Nodes;
 				}
-				else if (parent is SpecificationDataset)
+				else if (parent is SpecificationDataset specificationDataset)
 				{
-					var specificationDataset = (SpecificationDataset) parent;
 					TreeNode parentNode = AddNode(nodes, specificationDataset);
 					childNodes = parentNode.Nodes;
 				}
@@ -647,23 +642,21 @@ namespace ProSuite.UI.QA.Controls
 				}
 
 				object child = pair.Value;
-				if (child is IDictionary)
+				if (child is IDictionary childDict)
 				{
-					var childDict = (IDictionary) child;
 					BuildTree(childNodes, childDict);
 				}
-				else if (child is IList)
+				else if (child is IList subList)
 				{
-					var subList = (IList) child;
 					foreach (object sub in subList)
 					{
-						if (sub is IDictionary)
+						if (sub is IDictionary dictionary)
 						{
-							BuildTree(childNodes, (IDictionary) sub);
+							BuildTree(childNodes, dictionary);
 						}
-						else if (sub is SpecificationDataset)
+						else if (sub is SpecificationDataset specDataset)
 						{
-							AddNode(childNodes, (SpecificationDataset) sub);
+							AddNode(childNodes, specDataset);
 						}
 						else
 						{

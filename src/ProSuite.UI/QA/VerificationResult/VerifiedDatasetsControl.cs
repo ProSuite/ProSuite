@@ -129,9 +129,7 @@ namespace ProSuite.UI.QA.VerificationResult
 				qualityVerification.GetVerificationDataset(dataset);
 
 			return new VerifiedDatasetItem(conditionVerification, dataset,
-			                               verifiedDataset == null
-				                               ? 0
-				                               : verifiedDataset.LoadTime);
+			                               verifiedDataset?.LoadTime ?? 0);
 		}
 
 		[Browsable(false)]

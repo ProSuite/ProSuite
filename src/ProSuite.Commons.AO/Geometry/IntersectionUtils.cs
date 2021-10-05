@@ -1399,7 +1399,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 				var geometry = topoOp as IGeometry;
 
-				if (geometry == null || geometry.SpatialReference == null)
+				if (geometry?.SpatialReference == null)
 				{
 					_msg.DebugFormat("Error in Difference(): {0}", comEx.Message);
 

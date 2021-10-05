@@ -908,7 +908,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				                   ? sourceTolerance
 				                   : targetTolerance;
 
-			double searchTolerance = SnapTolerance != null && SnapTolerance > tolerance
+			double searchTolerance = SnapTolerance > tolerance
 				                         ? (double) SnapTolerance
 				                         : tolerance;
 

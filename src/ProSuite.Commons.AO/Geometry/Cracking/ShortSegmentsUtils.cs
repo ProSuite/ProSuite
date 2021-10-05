@@ -378,7 +378,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			[NotNull] IPointCollection fromWeededPoints,
 			[CanBeNull] FeatureVertexInfo featureVertexInfo)
 		{
-			if (featureVertexInfo == null || featureVertexInfo.CrackPointCollection == null)
+			if (featureVertexInfo?.CrackPointCollection == null)
 			{
 				return null;
 			}

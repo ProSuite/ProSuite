@@ -164,7 +164,7 @@ namespace ProSuite.DomainModel.Core.QA.DependencyGraph
 		{
 			DataQualityCategory category = dependency.QualityCondition.Category;
 
-			return category == null ? null : category.GetQualifiedName();
+			return category?.GetQualifiedName();
 		}
 
 		[NotNull]

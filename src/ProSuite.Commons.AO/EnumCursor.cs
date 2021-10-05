@@ -107,9 +107,9 @@ namespace ProSuite.Commons.AO
 			{
 				Marshal.ReleaseComObject(_cursor);
 			}
-			else if (_cursor is IDisposable)
+			else if (_cursor is IDisposable disposable)
 			{
-				((IDisposable) _cursor).Dispose();
+				disposable.Dispose();
 			}
 
 			_cursor = null;
@@ -163,25 +163,15 @@ namespace ProSuite.Commons.AO
 		                                    [CanBeNull] string where,
 		                                    bool spatial)
 		{
-			var ds = table as IDataset;
-			string name = "(unknown)";
-			if (ds != null)
-			{
-				name = ds.Name;
-			}
-
-			string sSpatial = "";
-			if (spatial)
-			{
-				sSpatial = " (spatially) ";
-			}
+			string name = table is IDataset ds ? ds.Name : "(unknown)";
+			string spatially = spatial ? "(spatially) " : string.Empty;
 
 			if (! string.IsNullOrEmpty(where))
 			{
 				where = "WHERE " + where;
 			}
 
-			return $"Error {sSpatial}querying {fields} FROM {name} {where}";
+			return $"Error {spatially}querying {fields} FROM {name} {where}";
 		}
 
 		#region Nested type: RowEnumerator

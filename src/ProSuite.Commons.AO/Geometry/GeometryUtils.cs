@@ -994,9 +994,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 			var geometryCollection = geometry as IGeometryCollection;
 
-			return geometryCollection == null
-				       ? 1
-				       : geometryCollection.GeometryCount;
+			return geometryCollection?.GeometryCount ?? 1;
 		}
 
 		/// <summary>
@@ -6797,9 +6795,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 			ISpatialReference spatialReference = geoDataset.SpatialReference;
 
-			return spatialReference == null
-				       ? defaultTolerance
-				       : ((ISpatialReferenceTolerance) spatialReference).XYTolerance;
+			return ((ISpatialReferenceTolerance) spatialReference)?.XYTolerance ?? defaultTolerance;
 		}
 
 		public static void SetMinimumXyTolerance([NotNull] IGeometry geometry)
@@ -7756,7 +7752,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 			var poly = (IPolygon4) polygon;
 
-			IGeometryCollection componentBag = null;
+			IGeometryCollection componentBag;
 
 			try
 			{
@@ -8222,8 +8218,7 @@ namespace ProSuite.Commons.AO.Geometry
 			//       -> calculate 2D geometry
 
 			Assert.ArgumentNotNull(segmentCollection, nameof(segmentCollection));
-			Assert.ArgumentCondition(perimeter == null ||
-			                         perimeter.SpatialReference == null ||
+			Assert.ArgumentCondition(perimeter?.SpatialReference == null ||
 			                         SpatialReferenceUtils.AreEqual(
 				                         ((IGeometry) segmentCollection).SpatialReference,
 				                         perimeter.SpatialReference),

@@ -1290,10 +1290,9 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			if (allInvolvedPlanes.Count == 2)
 			{
 				// snap to line
-				double distanceAlong;
 				Pnt3D pointOnLine;
 				if (planePlaneIntersection.GetDistancePerpendicular(
-					    vertexPnt, false, out distanceAlong, out pointOnLine) > tolerance)
+					    vertexPnt, false, out double _, out pointOnLine) > tolerance)
 				{
 					return GetFallbackCrackPointToInsert(crackPoint, existingVertex, thisRingPlane,
 					                                     tolerance);
@@ -1384,7 +1383,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			var lineToSplit = (IPolyline) lineFeature.ShapeCopy;
 
-			if (maxSplitPointDistanceToLine != null && maxSplitPointDistanceToLine > 0)
+			if (maxSplitPointDistanceToLine > 0)
 			{
 				// For proper snapping of the existing vertices to the split point, otherwise short segments could result
 				CrackPolycurve(lineToSplit, splitPoints, maxSplitPointDistanceToLine);

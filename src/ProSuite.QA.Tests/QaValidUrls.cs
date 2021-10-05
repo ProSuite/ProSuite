@@ -224,7 +224,7 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			Assert.True(_maximumThreadCount != null && _maximumThreadCount > 1,
+			Assert.True(_maximumThreadCount > 1,
 			            "Unexpected maximum thread count: [{0}]", _maximumThreadCount);
 
 			try
