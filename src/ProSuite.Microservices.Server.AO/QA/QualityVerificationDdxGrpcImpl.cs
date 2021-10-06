@@ -66,7 +66,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 				await StartRequestAsync(context.Peer, request);
 
 				_msg.InfoFormat("Getting project workspaces for {0}", context.Peer);
-				_msg.VerboseDebugFormat("Request details: {0}", request);
+				_msg.VerboseDebug(() => $"Request details: {request}");
 
 				response = GetProjectWorkspacesCore(request);
 
@@ -251,7 +251,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
-				_msg.VerboseDebugFormat("Request details: {0}", request);
+				_msg.VerboseDebug(() => $"Request details: {request}");
 			}
 
 			return await EnsureLicenseAsync();

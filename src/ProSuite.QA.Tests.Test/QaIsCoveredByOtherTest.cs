@@ -1467,11 +1467,10 @@ namespace ProSuite.QA.Tests.Test
 		                                         bool coveringZAware = false,
 		                                         bool coveredZAware = false)
 		{
-			IFeatureClass areaOfInterestClass;
 			CreatePolygonFeatureClasses(testName,
 			                            out coveringClass,
 			                            out coveredClass,
-			                            out areaOfInterestClass,
+			                            out IFeatureClass _,
 			                            coveringZAware, coveredZAware);
 		}
 

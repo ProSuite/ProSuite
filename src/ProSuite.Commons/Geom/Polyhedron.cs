@@ -12,6 +12,15 @@ namespace ProSuite.Commons.Geom
 	/// </summary>
 	public class Polyhedron : MultiLinestring
 	{
+		public static IBoundedXY CreateEmpty()
+		{
+			var result = new Polyhedron(new List<RingGroup>(0));
+
+			result.SetEmpty();
+
+			return result;
+		}
+
 		public IReadOnlyList<RingGroup> RingGroups { get; private set; }
 
 		public Polyhedron(IList<RingGroup> ringGroups)

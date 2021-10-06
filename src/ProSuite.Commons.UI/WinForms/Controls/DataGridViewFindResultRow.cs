@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.UI.WinForms.Controls
@@ -14,9 +14,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 		public bool HasFindResultInCell(int columnIndex)
 		{
-			DataGridViewFindResultCell cell;
-
-			return TryGetCell(columnIndex, out cell);
+			return TryGetCell(columnIndex, out _);
 		}
 
 		public bool TryGetCell(int columnIndex, out DataGridViewFindResultCell foundCell)

@@ -65,11 +65,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 						ProtobufGeometryUtils.ToShapeMsg(
 							geometry, shapeFormat, srFormat));
 
-					if (_msg.IsVerboseDebugEnabled)
-					{
-						_msg.VerboseDebug(
-							$"Calculated overlap: {GeometryUtils.ToString(geometry)}");
-					}
+					_msg.VerboseDebug(
+						() => $"Calculated overlap: {GeometryUtils.ToString(geometry)}");
 				}
 
 				result.Overlaps.Add(overlapsMsg);

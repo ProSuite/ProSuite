@@ -39,9 +39,7 @@ namespace ProSuite.Commons.Validation
 				GetCustomAttribute(property, typeof(MaximumStringLengthAttribute)) as
 					MaximumStringLengthAttribute;
 
-			return attribute == null
-				       ? (int?) null
-				       : attribute._length;
+			return attribute?._length;
 		}
 	}
 }

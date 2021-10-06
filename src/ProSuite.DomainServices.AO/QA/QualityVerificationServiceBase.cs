@@ -1320,7 +1320,7 @@ namespace ProSuite.DomainServices.AO.QA
 			if (! IsErrorRelevant(qaError, qualityCondition,
 			                      conditionVerification.AllowErrors))
 			{
-				_msg.VerboseDebug("Issue is not relevant for current verification context");
+				_msg.VerboseDebug(() => "Issue is not relevant for current verification context");
 
 				return false;
 			}

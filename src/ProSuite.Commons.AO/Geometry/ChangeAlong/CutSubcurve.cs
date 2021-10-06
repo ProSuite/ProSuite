@@ -125,9 +125,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 							_msg.Debug("Assigning true");
 						}
 
-						_msg.VerboseDebugFormat(
-							"Assigning {0} to IsReshapeMemberCandidate of {1}",
-							_isReshapeMemberCandidate, this);
+						_msg.VerboseDebug(
+							() => $"Assigning {_isReshapeMemberCandidate} to IsReshapeMemberCandidate of {this}");
 					}
 				}
 
@@ -457,7 +456,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				return false;
 			}
 
-			_msg.VerboseDebug("GetIsReshapeMemberCandidate: Trying to connect.");
+			_msg.VerboseDebug(() => "GetIsReshapeMemberCandidate: Trying to connect.");
 
 			// traverse graph by first starting with FromNode to try to connect to the line to be reshaped
 			if (TryCanConnect(FromNode, cutSubcurve => ! cutSubcurve.IsFiltered))

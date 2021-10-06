@@ -142,8 +142,7 @@ namespace ProSuite.Commons.AO
 			Assert.ArgumentNotNull(propertyName, nameof(propertyName));
 
 			object objkeys;
-			object objvalues;
-			propertySet.GetAllProperties(out objkeys, out objvalues);
+			propertySet.GetAllProperties(out objkeys, out object _);
 
 			var keys = (string[]) objkeys;
 

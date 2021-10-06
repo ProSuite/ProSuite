@@ -333,9 +333,7 @@ namespace ProSuite.QA.Tests
 		{
 			feature.Shape.QueryEnvelope(_queryBox);
 
-			double xMin;
-			double yMin;
-			_queryBox.QueryCoords(out xMin, out yMin, out xMax, out yMax);
+			_queryBox.QueryCoords(out double _, out double _, out xMax, out yMax);
 		}
 
 		private int Check([NotNull] IFeature feature,

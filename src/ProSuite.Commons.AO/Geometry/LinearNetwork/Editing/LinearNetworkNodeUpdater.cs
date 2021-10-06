@@ -466,12 +466,8 @@ namespace ProSuite.Commons.AO.Geometry.LinearNetwork.Editing
 		{
 			Assert.ArgumentNotNull(thirdEdge, nameof(thirdEdge));
 
-			if (_msg.IsVerboseDebugEnabled)
-			{
-				_msg.VerboseDebugFormat(
-					"The third connected edge {0} is prolonged with cut-off line {1}",
-					GdbObjectUtils.ToString(thirdEdge), GeometryUtils.ToString(cutOffLine));
-			}
+			_msg.VerboseDebug(
+				() => $"The third connected edge {GdbObjectUtils.ToString(thirdEdge)} is prolonged with cut-off line {GeometryUtils.ToString(cutOffLine)}");
 
 			// add the cut off line to the third edge, take along the junction
 			// (if using MaintainConnectivityStretchLastSegment here, it can result in 

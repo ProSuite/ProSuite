@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -171,7 +171,7 @@ namespace ProSuite.Commons.DotLiquid
 		//private static void LogBindableProperties(
 		//    [NotNull] IEnumerable<KeyValuePair<string, object>> bindableProperties)
 		//{
-		//    _msg.VerboseDebug("Bindable properties:");
+		//    _msg.VerboseDebug(() => "Bindable properties:");
 
 		//    using (_msg.IncrementIndentation())
 		//    {
@@ -188,11 +188,11 @@ namespace ProSuite.Commons.DotLiquid
 		//    var hash = value as IDictionary<string, object>;
 		//    if (hash == null)
 		//    {
-		//        _msg.VerboseDebugFormat("{0}: {1}", name, value ?? "<null>");
+		//        _msg.VerboseDebug(() => "{0}: {1}", name, value ?? "<null>");
 		//    }
 		//    else
 		//    {
-		//        _msg.VerboseDebugFormat("{0} ({1} properties)", name, hash.Count);
+		//        _msg.VerboseDebug(() => "{0} ({1} properties)", name, hash.Count);
 
 		//        using (_msg.IncrementIndentation())
 		//        {

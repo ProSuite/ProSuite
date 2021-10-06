@@ -45,9 +45,7 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 					GetMapping(footprintOptions.SourceTargetMappings,
 					           feature);
 
-				int? targetSubtype;
-				IFeatureClass targetClass = GetTargetClass(mapping, targetClassCollection,
-				                                           out targetSubtype);
+				IFeatureClass targetClass = GetTargetClass(mapping, targetClassCollection, out _);
 
 				double? bufferDistance = GetBufferDistance(mapping, feature);
 
@@ -182,9 +180,7 @@ namespace ProSuite.Commons.AO.Geometry.CreateFootprint
 				return;
 			}
 
-			int? targetSubtype;
-			IFeatureClass targetClass = GetTargetClass(mapping, targetClasses,
-			                                           out targetSubtype);
+			IFeatureClass targetClass = GetTargetClass(mapping, targetClasses, out _);
 
 			if (targetClass == null)
 			{

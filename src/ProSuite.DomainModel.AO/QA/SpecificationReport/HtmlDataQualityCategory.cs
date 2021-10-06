@@ -156,9 +156,7 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 		{
 			get
 			{
-				return _category == null
-					       ? 0
-					       : _category.ListOrder;
+				return _category?.ListOrder ?? 0;
 			}
 		}
 

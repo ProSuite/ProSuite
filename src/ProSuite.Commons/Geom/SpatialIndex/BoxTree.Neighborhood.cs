@@ -572,16 +572,13 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 						    nextParent._searchingTile.Child0 == null)
 						{
 							// MoveUp;
-							while (nextParent != null && nextParent._parent != null &&
-							       nextParent._parent._searchingTile != null &&
-							       nextParent._parent._searchingTile.Child1 ==
-							       nextParent._searchingTile)
+							while (nextParent?._parent?._searchingTile != null &&
+							       nextParent._parent._searchingTile.Child1 == nextParent._searchingTile)
 							{
 								nextParent = nextParent._parent;
 							}
 
-							if (nextParent == null || nextParent._parent == null ||
-							    nextParent._parent._searchingTile == null)
+							if (nextParent._parent?._searchingTile == null)
 							{
 								return null;
 							}

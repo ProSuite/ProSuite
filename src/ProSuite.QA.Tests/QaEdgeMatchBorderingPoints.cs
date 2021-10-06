@@ -328,12 +328,11 @@ namespace ProSuite.QA.Tests
 
 			int borderClassIndex;
 			int neighborBorderClassIndex;
-			ICollection<int> sameSidePointClassIndexes;
 			IEnumerable<int> neighborPointClassIndexes = GetNeighborPointClassIndexes(
 				tableIndex,
 				out borderClassIndex,
 				out neighborBorderClassIndex,
-				out sameSidePointClassIndexes);
+				out ICollection<int> _);
 
 			if (neighborPointClassIndexes == null)
 			{

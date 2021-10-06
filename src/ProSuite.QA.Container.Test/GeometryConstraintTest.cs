@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Globalization;
 using ESRI.ArcGIS.Geometry;
@@ -632,8 +632,7 @@ namespace ProSuite.QA.Container.Test
 		private static void AssertFulfilled([NotNull] string expression,
 		                                    [CanBeNull] IGeometry geometry)
 		{
-			string values;
-			AssertFulfilled(expression, geometry, out values);
+			AssertFulfilled(expression, geometry, out string _);
 		}
 
 		private static void AssertFulfilled([NotNull] string expression,

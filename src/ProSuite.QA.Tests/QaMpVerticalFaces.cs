@@ -236,7 +236,7 @@ namespace ProSuite.QA.Tests
 					}
 				}
 
-				Plane plane = QaGeometryUtils.CreatePlane((IEnumerable<SegmentProxy>) partSegments);
+				Plane plane = QaGeometryUtils.CreatePlane(partSegments);
 				_latestPartSegments = partSegments;
 
 				return new VerticalFace(plane, zMax - zMin);

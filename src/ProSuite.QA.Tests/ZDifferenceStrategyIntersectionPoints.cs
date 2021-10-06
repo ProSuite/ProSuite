@@ -224,7 +224,7 @@ namespace ProSuite.QA.Tests
 			// NOTE for efficiency, this should only be calculated if an error would otherwise be reported
 			// (requires reconstruction of the ring geometry)
 			// -> add method to IIntersectionPoint to measure the actual distance to the ring (0 if inside)
-			return (IEnumerable<IIntersectionPoint>) GetPoints(vertices)
+			return GetPoints(vertices)
 				.Select(v => GetIntersectionPoint(segmentsPlane.Plane, v));
 		}
 
@@ -314,7 +314,7 @@ namespace ProSuite.QA.Tests
 				MathUtils.GetDoubleSignificanceEpsilon(lines1.XMax, lines1.YMax);
 
 			var intersectionPoints =
-				GeomTopoOpUtils.GetIntersectionPoints((ISegmentList) lines1, (ISegmentList) lines2,
+				GeomTopoOpUtils.GetIntersectionPoints(lines1, (ISegmentList) lines2,
 				                                      xyTolerance);
 			var nanTargetVertices =
 				intersectionPoints.Where(p => double.IsNaN(p.VirtualTargetVertex));

@@ -114,28 +114,18 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 				return;
 			}
 
-			IList<KeyValuePair<string, string>> properties =
-				new List<KeyValuePair<string, string>>();
+			var properties = new List<KeyValuePair<string, string>>();
 
 			Directory.CreateDirectory(outputDirectoryPath);
 
 			try
 			{
-				int errorCount;
-				int warningCount;
-				int exceptionCount;
-				int unusedExceptionObjectCount;
-				int rowCountWithStopConditions;
 				bool fulfilled = Verify(specification, tileSize, outputDirectoryPath,
 				                        issueRepositoryType, properties,
 				                        verificationOptions,
 				                        areaOfInterest,
 				                        cancelTracker,
-				                        out errorCount,
-				                        out warningCount,
-				                        out exceptionCount,
-				                        out unusedExceptionObjectCount,
-				                        out rowCountWithStopConditions);
+				                        out int _, out int _, out int _, out int _, out int _);
 			}
 			catch (Exception)
 			{

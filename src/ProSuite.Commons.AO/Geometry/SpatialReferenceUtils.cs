@@ -147,9 +147,7 @@ namespace ProSuite.Commons.AO.Geometry
 			bool setDefaultXyDomain)
 		{
 			ISpatialReference sref;
-			int bytesRead;
-			Factory.CreateESRISpatialReference(spatialReferenceInfo, out sref,
-			                                   out bytesRead);
+			Factory.CreateESRISpatialReference(spatialReferenceInfo, out sref, out int _);
 
 			if (setDefaultXyDomain)
 			{
@@ -576,8 +574,7 @@ namespace ProSuite.Commons.AO.Geometry
 			var esriSref = (IESRISpatialReferenceGEN) sref;
 
 			string srString;
-			int byteCount;
-			esriSref.ExportToESRISpatialReference(out srString, out byteCount);
+			esriSref.ExportToESRISpatialReference(out srString, out int _);
 
 			Assert.NotNull(srString, "output string is null");
 
@@ -908,9 +905,8 @@ namespace ProSuite.Commons.AO.Geometry
 				return string.Empty;
 			}
 
-			int bytes;
 			string result;
-			esriSref.ExportToESRISpatialReference2(out result, out bytes);
+			esriSref.ExportToESRISpatialReference2(out result, out int _);
 
 			return result;
 		}
@@ -923,9 +919,7 @@ namespace ProSuite.Commons.AO.Geometry
 			                       nameof(esriSpatialReferenceString));
 
 			IESRISpatialReferenceGEN2 result = new ProjectedCoordinateSystemClass();
-			int bytesRead;
-			result.ImportFromESRISpatialReference(esriSpatialReferenceString,
-			                                      out bytesRead);
+			result.ImportFromESRISpatialReference(esriSpatialReferenceString, out int _);
 
 			return (ISpatialReference) result;
 		}

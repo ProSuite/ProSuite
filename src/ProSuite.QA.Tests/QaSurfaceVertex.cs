@@ -442,8 +442,7 @@ namespace ProSuite.QA.Tests
 			{
 				vList.SetAt(point.Part, point.Vertex);
 				IPoint p;
-				int part, vertex;
-				vList.Next(out p, out part, out vertex);
+				vList.Next(out p, out int _, out int _);
 
 				multi.AddPoint(p, ref missing, ref missing);
 			}

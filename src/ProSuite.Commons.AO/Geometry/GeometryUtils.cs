@@ -994,9 +994,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 			var geometryCollection = geometry as IGeometryCollection;
 
-			return geometryCollection == null
-				       ? 1
-				       : geometryCollection.GeometryCount;
+			return geometryCollection?.GeometryCount ?? 1;
 		}
 
 		/// <summary>
@@ -1636,8 +1634,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 				if (_msg.IsVerboseDebugEnabled)
 				{
-					_msg.VerboseDebugFormat("Geometry that needed 2 SimplifyNetwork calls: {0}",
-					                        ToString(polyline));
+					_msg.VerboseDebug(() => $"Geometry that needed 2 SimplifyNetwork calls: {ToString(polyline)}");
 				}
 			}
 		}
@@ -1666,7 +1663,7 @@ namespace ProSuite.Commons.AO.Geometry
 			if (! double.IsNaN(defaultZ))
 			{
 				// if it still contains NaN values set all NULL values to defaultZ
-				_msg.VerboseDebugFormat("Setting all Z values to {0}", defaultZ);
+				_msg.VerboseDebug(() => $"Setting all Z values to {defaultZ}");
 				ApplyConstantZ(geometry, defaultZ);
 			}
 		}
@@ -1682,7 +1679,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 			if (! HasUndefinedZValues(geometry))
 			{
-				_msg.VerboseDebug("Geometry is considered z simple");
+				_msg.VerboseDebug(() => "Geometry is considered z simple");
 				return true;
 			}
 
@@ -1703,11 +1700,11 @@ namespace ProSuite.Commons.AO.Geometry
 
 			if (! canSimplify)
 			{
-				_msg.VerboseDebug("Non-simple Zs cannot be calculated (too few Z values)");
+				_msg.VerboseDebug(() => "Non-simple Zs cannot be calculated (too few Z values)");
 				return false;
 			}
 
-			_msg.VerboseDebug("Calculating non-simple Zs");
+			_msg.VerboseDebug(() => "Calculating non-simple Zs");
 
 			// try interpolation if it's a line or poly and already has some Zs
 			geometryZ.CalculateNonSimpleZs();
@@ -2297,8 +2294,7 @@ namespace ProSuite.Commons.AO.Geometry
 		{
 			double offsetDistance = bufferDistance * -1;
 
-			string message;
-			var offset = (IPolygon) ConstructOffset(polygon, offsetDistance, out message);
+			var offset = (IPolygon) ConstructOffset(polygon, offsetDistance, out string _);
 
 			if (offset == null)
 			{
@@ -3118,8 +3114,8 @@ namespace ProSuite.Commons.AO.Geometry
 
 				if (segments == null)
 				{
-					_msg.VerboseDebug(
-						"FindHitSegmentIndex: Non-segments multipatch parts are not supported.");
+					_msg.VerboseDebug(() =>
+						                  "FindHitSegmentIndex: Non-segments multipatch parts are not supported.");
 					continue;
 				}
 
@@ -3454,30 +3450,10 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <summary>
 		/// Returns the distance of the specified point along the specified curve.
 		/// </summary>
-		/// <param name="targetCurve"></param>
-		/// <param name="point"></param>
-		/// <returns></returns>
 		public static double GetDistanceAlongCurve([NotNull] ICurve targetCurve,
-		                                           [NotNull] IPoint point)
+		                                           [NotNull] IPoint point, bool asRatio = false)
 		{
-			const bool asRatio = false;
-			IPoint pointOnCurve;
-			return GetDistanceAlongCurve(targetCurve, point, asRatio, out pointOnCurve);
-		}
-
-		/// <summary>
-		/// Returns the distance of the specified point along the specified curve.
-		/// </summary>
-		/// <param name="targetCurve"></param>
-		/// <param name="point"></param>
-		/// <param name="asRatio"></param>
-		/// <returns></returns>
-		public static double GetDistanceAlongCurve([NotNull] ICurve targetCurve,
-		                                           [NotNull] IPoint point,
-		                                           bool asRatio)
-		{
-			IPoint pointOnCurve;
-			return GetDistanceAlongCurve(targetCurve, point, asRatio, out pointOnCurve);
+			return GetDistanceAlongCurve(targetCurve, point, asRatio, out IPoint _);
 		}
 
 		/// <summary>
@@ -4034,11 +4010,8 @@ namespace ProSuite.Commons.AO.Geometry
 		                                   [NotNull] out T simpleGeometry)
 			where T : IGeometry
 		{
-			string nonSimpleReason;
-
 			if (IsGeometrySimple(immutableGeometry, immutableGeometry.SpatialReference,
-			                     true,
-			                     out nonSimpleReason))
+			                     true, out string _))
 			{
 				simpleGeometry = immutableGeometry;
 				return false;
@@ -4072,9 +4045,8 @@ namespace ProSuite.Commons.AO.Geometry
 			bool allowNonPlanarLines,
 			[NotNull] out string nonSimpleReasonDescription)
 		{
-			GeometryNonSimpleReason? nonSimpleReason;
 			return IsGeometrySimple(geometry, targetSpatialReference, allowNonPlanarLines,
-			                        out nonSimpleReasonDescription, out nonSimpleReason);
+			                        out nonSimpleReasonDescription, out _);
 		}
 
 		/// <summary>
@@ -5024,7 +4996,7 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 
 			// TODO revise - why not keep as NaN (which is valid for M values?)
-			_msg.VerboseDebug("Setting missing M values to 0");
+			_msg.VerboseDebug(() => "Setting missing M values to 0");
 			ReplaceUndefinedMValuesNoCopy(geometry, 0);
 		}
 
@@ -5999,17 +5971,15 @@ namespace ProSuite.Commons.AO.Geometry
 
 					if (pointCount > 2)
 					{
-						_msg.VerboseDebugFormat("Interpolating path {0} with {1} points",
-						                        partIndex, pointCount);
+						_msg.VerboseDebug(() => $"Interpolating path {partIndex} with {pointCount} points");
 
 						polyLineZ.InterpolateZsBetween(partIndex, 0, partIndex,
 						                               pointCount - 1);
 					}
 					else
 					{
-						_msg.VerboseDebugFormat(
-							"Path {0} has insufficient point count for interpolation: {1}",
-							partIndex, pointCount);
+						_msg.VerboseDebug(
+							() => $"Path {partIndex} has insufficient point count for interpolation: {pointCount}");
 					}
 				}
 				else
@@ -6055,7 +6025,6 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 
 			var vertices = geometry as IPointCollection;
-			double distance;
 			if (vertices != null)
 			{
 				IPoint vertex = new PointClass();
@@ -6068,7 +6037,7 @@ namespace ProSuite.Commons.AO.Geometry
 					vertices.QueryPoint(i, vertex);
 
 					double zValue = GetExtrapolatedZValue(
-						vertex, source, searchDistance, out distance);
+						vertex, source, searchDistance, out double _);
 
 					if (! double.IsNaN(zValue))
 					{
@@ -6077,22 +6046,21 @@ namespace ProSuite.Commons.AO.Geometry
 					}
 					else
 					{
-						_msg.VerboseDebug("Z value could not be found. Keeping old value");
+						_msg.VerboseDebug(() => "Z value could not be found. Keeping old value");
 					}
 				}
 			}
-			else if (geometry is IPoint)
+			else if (geometry is IPoint point)
 			{
-				double zValue = GetExtrapolatedZValue((IPoint) geometry,
-				                                      source, out distance);
+				double zValue = GetExtrapolatedZValue(point, source, out double _);
 
 				if (! double.IsNaN(zValue))
 				{
-					((IPoint) geometry).Z = zValue;
+					point.Z = zValue;
 				}
 				else
 				{
-					_msg.VerboseDebug("Z value could not be found. Keeping old value");
+					_msg.VerboseDebug(() => "Z value could not be found. Keeping old value");
 				}
 			}
 			else
@@ -6104,8 +6072,7 @@ namespace ProSuite.Commons.AO.Geometry
 		public static double GetExtrapolatedZValue([NotNull] IPoint point,
 		                                           [NotNull] IGeometry source)
 		{
-			double distanceToZSource;
-			return GetExtrapolatedZValue(point, source, out distanceToZSource);
+			return GetExtrapolatedZValue(point, source, out double _);
 		}
 
 		public static double GetExtrapolatedZValue([NotNull] IPoint point,
@@ -6489,8 +6456,8 @@ namespace ProSuite.Commons.AO.Geometry
 						eVertex.put_M(newMValue);
 					}
 
-					_msg.VerboseDebugFormat(
-						"Querying next vertex. Current: <part> {0} <vertex> {1}", part, vertex);
+					_msg.VerboseDebug(
+						() => $"Querying next vertex. Current: <part> {part} <vertex> {vertex}");
 
 					eVertex.QueryNext(point, out part, out vertex);
 				}
@@ -6797,9 +6764,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 			ISpatialReference spatialReference = geoDataset.SpatialReference;
 
-			return spatialReference == null
-				       ? defaultTolerance
-				       : ((ISpatialReferenceTolerance) spatialReference).XYTolerance;
+			return ((ISpatialReferenceTolerance) spatialReference)?.XYTolerance ?? defaultTolerance;
 		}
 
 		public static void SetMinimumXyTolerance([NotNull] IGeometry geometry)
@@ -7756,7 +7721,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 			var poly = (IPolygon4) polygon;
 
-			IGeometryCollection componentBag = null;
+			IGeometryCollection componentBag;
 
 			try
 			{
@@ -8222,8 +8187,7 @@ namespace ProSuite.Commons.AO.Geometry
 			//       -> calculate 2D geometry
 
 			Assert.ArgumentNotNull(segmentCollection, nameof(segmentCollection));
-			Assert.ArgumentCondition(perimeter == null ||
-			                         perimeter.SpatialReference == null ||
+			Assert.ArgumentCondition(perimeter?.SpatialReference == null ||
 			                         SpatialReferenceUtils.AreEqual(
 				                         ((IGeometry) segmentCollection).SpatialReference,
 				                         perimeter.SpatialReference),
@@ -8965,18 +8929,17 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				bool splitHappened;
 				int newPartIdx;
-				int newSegmentIdx;
 
 				if (projectOnto)
 				{
 					// use the presumably cheaper method
 					polycurve.SplitAtDistance(usablePoint.Value, false, createParts,
-					                          out splitHappened, out newPartIdx, out newSegmentIdx);
+					                          out splitHappened, out newPartIdx, out int _);
 				}
 				else
 				{
 					polycurve.SplitAtPoint(usablePoint.Key, false, createParts,
-					                       out splitHappened, out newPartIdx, out newSegmentIdx);
+					                       out splitHappened, out newPartIdx, out int _);
 				}
 
 				// NOTE: if createParts == true: empty parts are generated, otherwise no empty segment is created and
@@ -8998,11 +8961,7 @@ namespace ProSuite.Commons.AO.Geometry
 				//    exists at the desired split point' rather than 'a split was needed at the desired split point'
 				result.Add(usablePoint.Key);
 
-				if (_msg.IsVerboseDebugEnabled)
-				{
-					_msg.VerboseDebugFormat("Split happened at {0}|{1}: {2}", usablePoint.Key.X,
-					                        usablePoint.Key.Y, splitHappened);
-				}
+				_msg.VerboseDebug(() => $"Split happened at {usablePoint.Key.X}|{usablePoint.Key.Y}: {splitHappened}");
 			}
 
 			if (result.Count > 0)
@@ -9043,11 +9002,10 @@ namespace ProSuite.Commons.AO.Geometry
 					splitPoints.EnumVertices, projectOnto, createParts, cutOffDistance);
 
 			IPoint splitPoint;
-			int splitPart, splitVertex;
 
 			enumSplitPoints.Reset();
 
-			enumSplitPoints.Next(out splitPoint, out splitPart, out splitVertex);
+			enumSplitPoints.Next(out splitPoint, out int _, out int _);
 
 			var splitHappened = false;
 
@@ -9061,11 +9019,10 @@ namespace ProSuite.Commons.AO.Geometry
 
 				if (! enumSplitPoints.SplitHappened && _msg.IsVerboseDebugEnabled)
 				{
-					_msg.VerboseDebugFormat("Path not split at point {0}/{1}",
-					                        splitPoint.X, splitPoint.Y);
+					_msg.VerboseDebug(() => $"Path not split at point {splitPoint.X}/{splitPoint.Y}");
 				}
 
-				enumSplitPoints.Next(out splitPoint, out splitPart, out splitVertex);
+				enumSplitPoints.Next(out splitPoint, out int _, out int _);
 			}
 
 			if (splitHappened)
@@ -9102,11 +9059,10 @@ namespace ProSuite.Commons.AO.Geometry
 			IPolyline originalPolyline = GeometryFactory.Clone(polyline);
 
 			bool splitHappened;
-			int newPartIndex, newSegmentIndex;
+			int newPartIndex;
 
 			originalPolyline.SplitAtPoint(splitPoint, projectSplitPointOntoLine, true,
-			                              out splitHappened,
-			                              out newPartIndex, out newSegmentIndex);
+			                              out splitHappened, out newPartIndex, out int _);
 
 			if (! splitHappened)
 			{
@@ -9633,10 +9589,8 @@ namespace ProSuite.Commons.AO.Geometry
 			try
 			{
 				string value;
-				if (geometry is ITopologicalOperator3)
+				if (geometry is ITopologicalOperator3 topoOp3)
 				{
-					var topoOp3 = (ITopologicalOperator3) geometry;
-
 					sb.AppendFormat("Is known simple: {0}", topoOp3.IsKnownSimple);
 					sb.AppendLine();
 
@@ -9647,9 +9601,9 @@ namespace ProSuite.Commons.AO.Geometry
 
 					value = string.Format("{0} ({1})", topoOp3.IsSimple, reason);
 				}
-				else if (geometry is ITopologicalOperator)
+				else if (geometry is ITopologicalOperator topoOp)
 				{
-					value = ((ITopologicalOperator) geometry).IsSimple.ToString();
+					value = topoOp.IsSimple.ToString();
 				}
 				else
 				{
@@ -10490,8 +10444,7 @@ namespace ProSuite.Commons.AO.Geometry
 				// Remedy: read label point. However, in some cases, such as very small areas, even getting 
 				// the label point presumably performs a simplify which results in the polygon to become empty (s. CanGetExteriorRingCountForNonSimplePolygon)
 				// Therefore the clone must be used if allowSimplify is false.
-				IPoint labelPoint;
-				if (! TryGetLabelPoint(simplified, out labelPoint))
+				if (! TryGetLabelPoint(simplified, out IPoint _))
 				{
 					_msg.Debug(
 						"Getting the label point failed. Most likely the polygon was very small.");

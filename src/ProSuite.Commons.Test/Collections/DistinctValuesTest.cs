@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NUnit.Framework;
 using ProSuite.Commons.Collections;
 
@@ -55,10 +55,7 @@ namespace ProSuite.Commons.Test.Collections
 		{
 			var distinctValues = new DistinctValues<string>();
 
-			string value;
-			int count;
-
-			Assert.IsFalse(distinctValues.TryGetMostFrequentValue(out value, out count));
+			Assert.IsFalse(distinctValues.TryGetMostFrequentValue(out string _, out int _));
 		}
 
 		[Test]

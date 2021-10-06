@@ -40,9 +40,7 @@ namespace ProSuite.Commons.Validation
 				GetCustomAttribute(property, typeof(LessThanOrEqualAttribute)) as
 					LessThanOrEqualAttribute;
 
-			return attribute == null
-				       ? double.MaxValue
-				       : attribute._maxValue;
+			return attribute?._maxValue ?? double.MaxValue;
 		}
 	}
 }

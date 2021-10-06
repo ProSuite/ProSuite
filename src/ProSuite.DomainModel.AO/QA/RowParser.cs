@@ -68,8 +68,7 @@ namespace ProSuite.DomainModel.AO.QA
 			var result = new InvolvedRows();
 
 			var valueIndex = 0;
-			int testIndex;
-			if (valueIndex < values.Count && int.TryParse(values[valueIndex], out testIndex))
+			if (valueIndex < values.Count && int.TryParse(values[valueIndex], out int _))
 			{
 				// values[valueIdx + 1] is TestName
 				valueIndex += 2;

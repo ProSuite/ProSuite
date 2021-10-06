@@ -94,8 +94,7 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 				if (trackCancel != null && ! trackCancel.Continue())
 					yield break;
 
-				_msg.VerboseDebugFormat("Calculating overlap from {0}",
-				                        GdbObjectUtils.ToString(targetFeature));
+				_msg.VerboseDebug(() => $"Calculating overlap from {GdbObjectUtils.ToString(targetFeature)}");
 
 				IGeometry targetGeometry = targetFeature.Shape;
 
@@ -162,7 +161,7 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 			IGeometry intersection = IntersectionUtils.Intersect(
 				sourceGeometry, targetToIntersect, dimension);
 
-			_msg.VerboseDebug("Simplifying...");
+			_msg.VerboseDebug(() => "Simplifying...");
 
 			GeometryUtils.Simplify(intersection);
 

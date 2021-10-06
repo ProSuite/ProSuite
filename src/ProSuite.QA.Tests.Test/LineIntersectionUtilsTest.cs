@@ -212,7 +212,6 @@ namespace ProSuite.QA.Tests.Test
 			bool reportOverlaps,
 			double vertexSearchDistance)
 		{
-			IPoint outPoint;
 			return LineIntersectionUtils.HasInvalidIntersection(
 				polyline1, polyline2,
 				allowedEndpointInteriorIntersections,
@@ -220,7 +219,7 @@ namespace ProSuite.QA.Tests.Test
 				_pointTemplate1,
 				_pointTemplate2,
 				vertexSearchDistance,
-				out outPoint);
+				out IPoint _);
 		}
 
 		[NotNull]

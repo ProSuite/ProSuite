@@ -419,8 +419,7 @@ namespace ProSuite.QA.Tests
 				{
 					if (filterHelpers == null)
 					{
-						IList<ISpatialFilter> spatialFilters;
-						CopyFilters(out spatialFilters, out filterHelpers);
+						CopyFilters(out _, out filterHelpers);
 					}
 
 					filterHelper = filterHelpers[tableIndex];

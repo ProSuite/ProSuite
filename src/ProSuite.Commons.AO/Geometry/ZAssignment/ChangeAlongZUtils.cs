@@ -73,12 +73,8 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 				return null;
 			}
 
-			double maxDeviation;
-			string message;
-
 			bool? coplanar = AreCoplanar(
-				pntList, sourcePlane, coplanarityTolerance, out maxDeviation,
-				out message);
+				pntList, sourcePlane, coplanarityTolerance, out double _, out string _);
 
 			if (coplanar == null || ! coplanar.Value)
 			{
@@ -175,8 +171,8 @@ namespace ProSuite.Commons.AO.Geometry.ZAssignment
 
 			if (! coplanar)
 			{
-				_msg.VerboseDebug(
-					$"Coplanarity of point {maxDistancePoint} with plane {plane} is violated: {maxDistance}m");
+				_msg.VerboseDebug(() =>
+					                  $"Coplanarity of point {maxDistancePoint} with plane {plane} is violated: {maxDistance}m");
 				message =
 					$"Coplanarity of the plane is violated by {maxDistance} at point {maxDistancePoint}";
 			}

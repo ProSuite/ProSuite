@@ -70,6 +70,7 @@ namespace ProSuite.Commons.Validation
 
 			string stringValue = rawValue.ToString();
 
+			// ReSharper disable once ConditionIsAlwaysTrueOrFalse
 			if (stringValue == null) // ignore R# (ToString() implementation might be incorrect)
 			{
 				if (! _optional)

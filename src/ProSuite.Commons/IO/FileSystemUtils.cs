@@ -384,7 +384,7 @@ namespace ProSuite.Commons.IO
 
 			try
 			{
-				_msg.Debug($"Try to create folder {path}");
+				_msg.DebugFormat("Try to create folder {0}", path);
 				Directory.CreateDirectory(path);
 
 				return true;

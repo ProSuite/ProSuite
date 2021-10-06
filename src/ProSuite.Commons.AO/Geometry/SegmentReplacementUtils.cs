@@ -74,12 +74,10 @@ namespace ProSuite.Commons.AO.Geometry
 			                           null);
 
 			const bool pointIsSegmentFromPoint = true;
-			int partIndex;
 			int firstSegmentIndex = GetSegmentIndex(pathToReshape, firstCutPoint, tolerance,
-			                                        out partIndex, pointIsSegmentFromPoint);
+			                                        out int _, pointIsSegmentFromPoint);
 
-			int lastSegmentIndex = GetSegmentIndex(pathToReshape, lastCutPoint, tolerance,
-			                                       out partIndex);
+			int lastSegmentIndex = GetSegmentIndex(pathToReshape, lastCutPoint, tolerance, out _);
 
 			var segments = (ISegmentCollection) pathToReshape;
 
@@ -344,18 +342,16 @@ namespace ProSuite.Commons.AO.Geometry
 		                                       [NotNull] IPoint lastPoint,
 		                                       [NotNull] IRing ring)
 		{
-			const bool asRatio = false;
-
 			double startDistance = GeometryUtils.GetDistanceAlongCurve(
-				ring, firstPoint, asRatio);
+				ring, firstPoint);
 
 			double endDistance = GeometryUtils.GetDistanceAlongCurve(
-				ring, lastPoint, asRatio);
+				ring, lastPoint);
 
 			const bool useRingOrientation = false;
 
 			var result = (IPath) ring.GetSubcurveEx(
-				startDistance, endDistance, asRatio, ! ring.IsExterior, useRingOrientation);
+				startDistance, endDistance, false, ! ring.IsExterior, useRingOrientation);
 
 			if (MathUtils.AreEqual(startDistance, endDistance) && ! result.IsEmpty)
 			{
@@ -399,13 +395,11 @@ namespace ProSuite.Commons.AO.Geometry
 
 			const bool asRatio = false;
 
-			IPoint startPointOnCurve;
 			double startDistance = GeometryUtils.GetDistanceAlongCurve(
-				curve, firstPoint, asRatio, out startPointOnCurve);
+				curve, firstPoint, asRatio, out IPoint _);
 
-			IPoint endPointOnCurve;
 			double endDistance = GeometryUtils.GetDistanceAlongCurve(
-				curve, lastPoint, asRatio, out endPointOnCurve);
+				curve, lastPoint, asRatio, out IPoint _);
 
 			ICurve result;
 			curve.GetSubcurve(startDistance, endDistance, asRatio, out result);
@@ -485,11 +479,9 @@ namespace ProSuite.Commons.AO.Geometry
 			else
 			{
 				const bool allowNoMatch = false;
-				int partIndex;
 				segmentIndex = GetSegmentIndex(
-					(IGeometry) segmentCollection, segmentPoint, searchToleranceXy, out partIndex,
-					pointIsSegmentFromPoint,
-					allowNoMatch);
+					(IGeometry) segmentCollection, segmentPoint, searchToleranceXy,
+					out int _, pointIsSegmentFromPoint, allowNoMatch);
 			}
 
 			if (segmentIndex == null)
@@ -786,9 +778,8 @@ namespace ProSuite.Commons.AO.Geometry
 				if (distanceAlong < minimumSegmentLength ||
 				    segment.Length - distanceAlong < minimumSegmentLength)
 				{
-					_msg.VerboseDebugFormat(
-						"Unable to insert vertex because of violated minimum segment length. Distance along segment: {0}, segment: {1}",
-						distanceAlong, segment.Length);
+					_msg.VerboseDebug(
+						() => $"Unable to insert vertex because of violated minimum segment length. Distance along segment: {distanceAlong}, segment: {segment.Length}");
 
 					return false;
 				}
@@ -1335,12 +1326,7 @@ namespace ProSuite.Commons.AO.Geometry
 			Assert.ArgumentCondition(geometry is ISegmentCollection,
 			                         "geometry must be ISegmentCollection");
 
-			if (_msg.IsVerboseDebugEnabled)
-			{
-				_msg.VerboseDebugFormat("Retrieving segment {0} from part {1} in geometry {2}",
-				                        localSegmentIndex, partIndex,
-				                        GeometryUtils.ToString(geometry));
-			}
+			_msg.VerboseDebug(() => $"Retrieving segment {localSegmentIndex} from part {partIndex} in geometry {GeometryUtils.ToString(geometry)}");
 
 			var geometryCollection = geometry as IGeometryCollection;
 
@@ -2424,10 +2410,9 @@ namespace ProSuite.Commons.AO.Geometry
 		                                    ISegmentCollection inSegmentCollection,
 		                                    double compareTolerance)
 		{
-			int part;
 			int? localIndex =
 				GeometryUtils.FindHitSegmentIndex((IGeometry) inSegmentCollection,
-				                                  segment.FromPoint, compareTolerance, out part);
+				                                  segment.FromPoint, compareTolerance, out int _);
 
 			Assert.NotNull(localIndex, "Segment not found any more.");
 

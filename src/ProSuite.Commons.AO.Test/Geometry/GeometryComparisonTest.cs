@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using ESRI.ArcGIS.esriSystem;
@@ -354,13 +354,10 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			IPolygon simplifiedPolygon = GeometryFactory.Clone(sourcePolygon);
 
 			const bool allowNonPlanarLines = false;
-			string nonSimpleReasonDescription;
-			GeometryNonSimpleReason? nonSimpleReason;
 			bool isSimple = GeometryUtils.IsGeometrySimple(sourcePolygon,
 			                                               lv95,
 			                                               allowNonPlanarLines,
-			                                               out nonSimpleReasonDescription,
-			                                               out nonSimpleReason);
+			                                               out _, out _);
 			Assert.IsFalse(isSimple);
 
 			// do not allow reorder so we can check that parallel duplicates are not
@@ -561,13 +558,10 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			IPolyline simplifiedPolyline = GeometryFactory.Clone(sourcePolyline);
 
 			const bool allowNonPlanarLines = false;
-			string nonSimpleReasonDescription;
-			GeometryNonSimpleReason? nonSimpleReason;
 			bool isSimple = GeometryUtils.IsGeometrySimple(sourcePolyline,
 			                                               lv95,
 			                                               allowNonPlanarLines,
-			                                               out nonSimpleReasonDescription,
-			                                               out nonSimpleReason);
+			                                               out _, out _);
 			Assert.IsFalse(isSimple);
 
 			GeometryUtils.Simplify(simplifiedPolyline, true, ! allowNonPlanarLines);

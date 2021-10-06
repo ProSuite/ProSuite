@@ -86,9 +86,7 @@ namespace ProSuite.UI.QA.Controls
 		private void BindTo([NotNull] QualityCondition qualityCondition)
 		{
 			_textBoxName.Text = qualityCondition.Name;
-			_textBoxCategory.Text = qualityCondition.Category == null
-				                        ? null
-				                        : qualityCondition.Category.GetQualifiedName();
+			_textBoxCategory.Text = qualityCondition.Category?.GetQualifiedName();
 
 			_textBoxTest.Text = qualityCondition.TestDescriptor == null
 				                    ? "<not defined>"
