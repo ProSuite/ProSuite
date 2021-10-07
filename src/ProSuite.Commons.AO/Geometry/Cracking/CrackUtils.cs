@@ -249,7 +249,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				                          : GeometryFactory.CreatePolyline(inputGeometry);
 
 			IList<CrackPoint> crackPoints = crackPointCalculator.DetermineCrackPoints3d(
-				clusteredIntersections, inputGeometry, polylineSalad, segmentSalad);
+				clusteredIntersections, inputGeometry, polylineSalad, null);
 
 			toVertexInfo.AddCrackPoints(crackPoints);
 		}

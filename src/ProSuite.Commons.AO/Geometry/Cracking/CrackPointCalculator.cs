@@ -177,9 +177,13 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				if (UseCustomIntersect)
 				{
 					IntersectionUtils.UseCustomIntersect = true;
+					result = GetIntersectionPointsCustom(sourceGeometry,
+					                                     transformedIntersectionTarget);
 				}
-
-				result = GetIntersectionPoints(sourceGeometry, transformedIntersectionTarget);
+				else
+				{
+					result = GetIntersectionPoints(sourceGeometry, transformedIntersectionTarget);
+				}
 			}
 			finally
 			{
@@ -339,26 +343,29 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 					                                       out targetVertexDifferentWithinTolerance,
 					                                       out targetVertexDifferentInZ);
 
-					//// With the new intersection logic we have a crack point at each Z-level
-					//bool hasUncrackedSegment = HasUncrackedExtraMultipatchSegments(
-					//	optimizedPolyline, point);
+					// With the new intersection logic we have a crack point at each Z-level
+					// But un-cracked segments can still be there (even if a source point exists
+					// an uncracked segment might co-exist) in multipatches...
+					bool hasUncrackedSegment = HasUncrackedExtraMultipatchSegments(
+						optimizedPolyline, aoPoint);
 
-					//// Uncracked segments always win over (almost-matching) points
-					//if (hasUncrackedSegment)
-					//{
-					//	targetVertexDifferentInZ = false;
-					//	targetVertexDifferentWithinTolerance = false;
-					//}
+					// Uncracked segments always win over (almost-matching) points
+					if (hasUncrackedSegment)
+					{
+						targetVertexDifferentInZ = false;
+						targetVertexDifferentWithinTolerance = false;
+					}
 
 					if (hasSourcePoint &&
-					    ! targetVertexDifferentWithinTolerance) // && !hasUncrackedSegment)
+					    ! targetVertexDifferentWithinTolerance && ! hasUncrackedSegment)
 					{
 						// there is a perfectly matching source point and no other crackable segments
 						continue;
 					}
 				}
 
-				// TODO: When doing self-intersections in 3D space, snapping might have no benefit!
+				// TODO: When doing self-intersections in 3D space, snapping might have no benefit.
+				//       The clustering initially finds the 'average' xy locations (with stacked 
 				//       A planarity-preserving intersection strategy would be better -> see CrackMultipatch()
 				IPnt pntToInsert = Snap3d(point, snapTarget, snapTolerance);
 

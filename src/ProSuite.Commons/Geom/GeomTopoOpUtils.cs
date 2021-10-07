@@ -2636,7 +2636,8 @@ namespace ProSuite.Commons.Geom
 
 		/// <summary>
 		/// Performs basic clustering on the specified points using the provided tolerances as
-		/// minimum distance.
+		/// minimum distance. The clustering is performed separately and independently in xy and
+		/// in z.
 		/// </summary>
 		/// <param name="items"></param>
 		/// <param name="getPoint">The function that gets the item's point to be used for
@@ -2715,35 +2716,56 @@ namespace ProSuite.Commons.Geom
 
 			items.Sort((item1, item2) => comparer.Compare(getPoint(item1), getPoint(item2)));
 
-			var toleranceGroups = new List<List<T>>();
-			var currentGroup = new List<T> {items[0]};
+			var finishedGroups = new List<List<T>>();
+			var activeGroups = new List<List<T>>();
 
+			var currentGroup = new List<T> {items[0]};
+			activeGroups.Add(currentGroup);
+
+			// line sweeping while maintaining groups within the xy tolerance band:
 			for (var i = 1; i < items.Count; i++)
 			{
-				var item1 = items[i - 1];
-				var item2 = items[i];
+				IPnt currentPoint = getPoint(items[i]);
 
-				if (! GeomRelationUtils.AreEqual(getPoint(item1), getPoint(item2),
-				                                 xyTolerance, zTolerance))
+				bool assigned = false;
+				// if the right-most (i.e. last) item of an active group has dX > xyTolerance,
+				// it cannot grow any more -> emit to finished groups
+				foreach (List<T> activeGroup in activeGroups.ToList())
 				{
-					toleranceGroups.Add(currentGroup);
-					currentGroup = new List<T> {item2};
+					T rightMostItem = activeGroup[activeGroup.Count - 1];
+					IPnt rightMostPoint = getPoint(rightMostItem);
 
-					continue;
+					double deltaX = currentPoint.X - rightMostPoint.X;
+
+					if (deltaX > xyTolerance)
+					{
+						finishedGroups.Add(activeGroup);
+						activeGroups.Remove(activeGroup);
+					}
+					else if (GeomRelationUtils.AreEqual(currentPoint, rightMostPoint,
+					                                    xyTolerance, zTolerance))
+					{
+						// add the point (theoretically comparison should be done with the group's center)
+						// and all other groups should be considered, but our tolerance is typically small...
+						activeGroup.Add(items[i]);
+						assigned = true;
+						break;
+					}
 				}
 
-				currentGroup.Add(item2);
+				if (! assigned)
+				{
+					var newGroup = new List<T> {items[i]};
+					activeGroups.Add(newGroup);
+				}
 			}
 
-			if (currentGroup.Count > 0)
-			{
-				toleranceGroups.Add(currentGroup);
-			}
+			finishedGroups.AddRange(activeGroups);
 
 			var result = new List<KeyValuePair<IPnt, List<T>>>();
 
 			// For strict interpretation of tolerance: Consider splitting clusters that are too large (Divisive Hierarchical clustering)
-			foreach (List<T> groupedPoints in toleranceGroups)
+			foreach (List<T> groupedPoints in finishedGroups)
 			{
 				if (groupedPoints.Count == 1)
 				{
@@ -2760,7 +2782,7 @@ namespace ProSuite.Commons.Geom
 
 			return result;
 		}
-
+		
 		private static void ReplacePoints<T>([NotNull] Multipoint<T> multipoint,
 		                                     [NotNull] IEnumerable<T> newPoints) where T : IPnt
 		{

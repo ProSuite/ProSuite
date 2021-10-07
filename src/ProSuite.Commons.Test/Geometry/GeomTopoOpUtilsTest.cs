@@ -4258,6 +4258,24 @@ namespace ProSuite.Commons.Test.Geometry
 			Assert.IsTrue(GeomRelationUtils.AreEqualXY(original, test, 0.0));
 		}
 
+		[Test]
+		public void CanClusterPoints()
+		{
+			List<Pnt2D> points = new List<Pnt2D>
+			                     {
+									 new Pnt2D(30,30),
+									 new Pnt2D(31,35),
+									 new Pnt2D(31.5,30),
+									 new Pnt2D(32, 25),
+									 new Pnt2D(32.1, 34.9)
+			                     };
+
+			IList<KeyValuePair<IPnt, List<Pnt2D>>> keyValuePairs =
+				GeomTopoOpUtils.Cluster(points, p => p, 2);
+
+			Assert.AreEqual(3, keyValuePairs.Count);
+		}
+
 		private void AssertCanDeleteLinearSelfIntersections(Linestring linestring,
 		                                                    double tolerance,
 		                                                    int expectedPartCount,
