@@ -38,7 +38,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 		public static bool UseCustomIntersect { get; set; } =
 			EnvironmentUtils.GetBooleanEnvironmentVariableValue(
-				"PROSUITE_USE_CUSTOM_INTERSECT");
+				"PROSUITE_USE_CUSTOM_INTERSECT", true);
 
 		[NotNull]
 		public static IList<IGeometry> GetAllIntersectionList([NotNull] IGeometry g1,
