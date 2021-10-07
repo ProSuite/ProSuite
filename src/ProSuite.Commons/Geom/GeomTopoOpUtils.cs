@@ -2598,12 +2598,13 @@ namespace ProSuite.Commons.Geom
 		#region Simplify
 
 		/// <summary>
-		/// Performs basic clustering on the specified points using the provided tolerance as minimum
-		/// distance. M values and PointIDs are disregarded and lost in the output!
+		/// Performs basic clustering on the specified points using the provided tolerances as
+		/// minimum distance. M values and PointIDs are disregarded and lost in the output!
 		/// </summary>
 		/// <param name="multipoint"></param>
-		/// <param name="xyTolerance"></param>
-		/// <param name="zTolerance"></param>
+		/// <param name="xyTolerance">The xy tolerance</param>
+		/// <param name="zTolerance">The z tolerance or NaN, if no vertical clustering should be
+		/// performed.</param>
 		public static void Simplify<T>([NotNull] Multipoint<T> multipoint,
 		                               double xyTolerance,
 		                               double zTolerance = double.NaN) where T : IPnt
@@ -2623,65 +2624,113 @@ namespace ProSuite.Commons.Geom
 			// First cluster the XY coordinates for all Z values, then cluster the Z values:
 			List<T> coords = multipoint.GetPoints().ToList();
 
-			IList<KeyValuePair<T, List<T>>> clusters2D =
-				GroupPoints(coords, xyTolerance, double.NaN);
+			IList<KeyValuePair<IPnt, List<T>>> clusters3D =
+				Cluster(coords, pnt => pnt, xyTolerance, zTolerance);
 
-			if (clusters2D.Count == coords.Count)
+			IEnumerable<T> newPoints = clusters3D.Select(c => (T) c.Key);
+
+			ReplacePoints(multipoint, newPoints);
+		}
+
+		/// <summary>
+		/// Performs basic clustering on the specified points using the provided tolerances as
+		/// minimum distance.
+		/// </summary>
+		/// <param name="items"></param>
+		/// <param name="getPoint">The function that gets the item's point to be used for
+		/// clustering.</param>
+		/// <param name="xyTolerance">The xy clustering tolerance</param>
+		/// <param name="zTolerance">The z tolerance or NaN, if no vertical clustering should be
+		/// performed.</param>
+		public static IList<KeyValuePair<IPnt, List<T>>> Cluster<T>(
+			[NotNull] List<T> items,
+			[NotNull] Func<T, IPnt> getPoint,
+			double xyTolerance,
+			double zTolerance = double.NaN)
+		{
+			var result = new List<KeyValuePair<IPnt, List<T>>>();
+
+			if (items.Count == 0)
+			{
+				return result;
+			}
+
+			// First cluster the XY coordinates for all Z values, then cluster the Z values:
+
+			IList<KeyValuePair<IPnt, List<T>>> clusters2D =
+				Group(items, getPoint, xyTolerance, double.NaN);
+
+			if (clusters2D.Count == items.Count)
 			{
 				// No actual clustering has taken place
-				return;
+				return clusters2D;
 			}
 
 			// Consider maintaining the awareness on the high-level geometry:
-			if (double.IsNaN(zTolerance) || ! (multipoint.GetPoint(0) is Pnt3D))
+			if (double.IsNaN(zTolerance) || ! (getPoint(items[0]) is Pnt3D))
 			{
-				ReplacePoints(multipoint, clusters2D.Select(c => c.Key));
-				return;
+				// No clustering by Zs
+				return clusters2D;
 			}
 
-			// Include the various Z-levels
-			coords.Clear();
-			foreach (KeyValuePair<T, List<T>> cluster2D in clusters2D)
+			var xySnapped = new List<KeyValuePair<IPnt, T>>();
+			foreach (KeyValuePair<IPnt, List<T>> cluster2D in clusters2D)
 			{
-				T xyCenter = cluster2D.Key;
+				// Include the various Z-levels for the xy-snapped-groups
+				IPnt xyCenter = cluster2D.Key;
 
-				foreach (T pnt in cluster2D.Value)
+				foreach (T itemInCluster2D in cluster2D.Value)
 				{
-					Pnt3D pntZ = (Pnt3D) (IPnt) pnt;
-					coords.Add((T) (IPnt) new Pnt3D(xyCenter.X, xyCenter.Y, pntZ.Z));
+					Pnt3D pntZ = (Pnt3D) getPoint(itemInCluster2D);
+
+					xySnapped.Add(
+						new KeyValuePair<IPnt, T>(new Pnt3D(xyCenter.X, xyCenter.Y, pntZ.Z),
+						                          itemInCluster2D));
 				}
 			}
 
-			IList<KeyValuePair<T, List<T>>> clusters3D =
-				GroupPoints(coords, xyTolerance, zTolerance);
+			foreach (var cluster3D in Group(xySnapped, pair => pair.Key, xyTolerance,
+			                                zTolerance))
+			{
+				List<T> clusterItems = cluster3D.Value.Select(kvp => kvp.Value).ToList();
 
-			ReplacePoints(multipoint, clusters3D.Select(c => c.Key));
+				result.Add(new KeyValuePair<IPnt, List<T>>(cluster3D.Key, clusterItems));
+			}
+
+			return result;
 		}
 
 		[NotNull]
-		public static IList<KeyValuePair<T, List<T>>> GroupPoints<T>([NotNull] List<T> coords,
+		private static IList<KeyValuePair<IPnt, List<T>>> Group<T>(
+			[NotNull] List<T> items,
+			Func<T, IPnt> getPoint,
 			double xyTolerance,
-			double zTolerance) where T : IPnt
+			double zTolerance)
 		{
-			Assert.ArgumentNotNull(coords, nameof(coords));
+			Assert.ArgumentNotNull(items, nameof(items));
 
-			IComparer<T> comparer = new PntComparer<T>(! double.IsNaN(zTolerance));
-			coords.Sort(comparer);
+			IComparer<IPnt> comparer = new PntComparer<IPnt>(! double.IsNaN(zTolerance));
+
+			items.Sort((item1, item2) => comparer.Compare(getPoint(item1), getPoint(item2)));
 
 			var toleranceGroups = new List<List<T>>();
-			var currentGroup = new List<T> {coords[0]};
+			var currentGroup = new List<T> {items[0]};
 
-			for (var i = 1; i < coords.Count; i++)
+			for (var i = 1; i < items.Count; i++)
 			{
-				if (! ArePointsEqual(coords, i - 1, i, xyTolerance, zTolerance))
+				var item1 = items[i - 1];
+				var item2 = items[i];
+
+				if (! GeomRelationUtils.AreEqual(getPoint(item1), getPoint(item2),
+				                                 xyTolerance, zTolerance))
 				{
 					toleranceGroups.Add(currentGroup);
-					currentGroup = new List<T> {coords[i]};
+					currentGroup = new List<T> {item2};
 
 					continue;
 				}
 
-				currentGroup.Add(coords[i]);
+				currentGroup.Add(item2);
 			}
 
 			if (currentGroup.Count > 0)
@@ -2689,20 +2738,21 @@ namespace ProSuite.Commons.Geom
 				toleranceGroups.Add(currentGroup);
 			}
 
-			var result = new List<KeyValuePair<T, List<T>>>();
+			var result = new List<KeyValuePair<IPnt, List<T>>>();
 
 			// For strict interpretation of tolerance: Consider splitting clusters that are too large (Divisive Hierarchical clustering)
 			foreach (List<T> groupedPoints in toleranceGroups)
 			{
 				if (groupedPoints.Count == 1)
 				{
-					result.Add(new KeyValuePair<T, List<T>>(groupedPoints[0], groupedPoints));
+					IPnt singleGroupPoint = getPoint(groupedPoints[0]);
+					result.Add(new KeyValuePair<IPnt, List<T>>(singleGroupPoint, groupedPoints));
 				}
 				else
 				{
-					T center = GetCenterPoint(groupedPoints);
+					IPnt center = GetCenter(groupedPoints, getPoint);
 
-					result.Add(new KeyValuePair<T, List<T>>(center, groupedPoints));
+					result.Add(new KeyValuePair<IPnt, List<T>>(center, groupedPoints));
 				}
 			}
 
@@ -2720,44 +2770,16 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		/// <summary>
-		/// Determines whether the coordinate values at the specified indexes are within
-		/// the appropriate tolerance. To compare ony in XY, provide NaN as zTolerance.
-		/// </summary>
-		/// <param name="points"></param>
-		/// <param name="index1"></param>
-		/// <param name="index2"></param>
-		/// <param name="xyTolerance"></param>
-		/// <param name="zTolerance"></param>
-		/// <returns></returns>
-		private static bool ArePointsEqual<T>(
-			[NotNull] IList<T> points,
-			int index1, int index2,
-			double xyTolerance, double zTolerance) where T : IPnt
+		private static IPnt GetCenter<T>([NotNull] IList<T> items,
+		                                 [NotNull] Func<T, IPnt> getPoint)
 		{
-			if (index1 < 0 || index1 >= points.Count)
-			{
-				return false;
-			}
+			var points = items.Select(i => getPoint(i)).ToList();
 
-			if (index2 < 0 || index2 >= points.Count)
-			{
-				return false;
-			}
-
-			IPnt a = points[index1];
-			IPnt b = points[index2];
-
-			return GeomRelationUtils.AreEqual(a, b, xyTolerance, zTolerance);
-		}
-
-		private static T GetCenterPoint<T>(IList<T> points) where T : IPnt
-		{
 			var centerX = points.Average(p => p.X);
 			var centerY = points.Average(p => p.Y);
 
 			double centerZ = 0;
-			foreach (T point in points)
+			foreach (IPnt point in points)
 			{
 				if (point is Pnt3D pnt3D)
 				{
@@ -2772,8 +2794,8 @@ namespace ProSuite.Commons.Geom
 			centerZ /= points.Count;
 
 			return double.IsNaN(centerZ)
-				       ? (T) (IPnt) new Pnt2D(centerX, centerY)
-				       : (T) (IPnt) new Pnt3D(centerX, centerY, centerZ);
+				       ? (IPnt) new Pnt2D(centerX, centerY)
+				       : new Pnt3D(centerX, centerY, centerZ);
 		}
 
 		#endregion

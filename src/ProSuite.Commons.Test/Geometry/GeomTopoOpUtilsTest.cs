@@ -4213,8 +4213,8 @@ namespace ProSuite.Commons.Test.Geometry
 			// 3D simplify:
 			GeomTopoOpUtils.Simplify(test, 0.01, 0.01);
 
-			// Structurally equal: Yes (nothing happened)
-			Assert.IsTrue(original.Equals(test));
+			// Structurally equal: Never (even if nothing happens happened)
+			Assert.IsFalse(original.Equals(test));
 
 			Assert.IsTrue(GeomRelationUtils.AreEqualXY(original, test, 0.0));
 			Assert.IsTrue(GeomRelationUtils.AreEqual(original, test, 0.0, 0.0));
@@ -4222,7 +4222,8 @@ namespace ProSuite.Commons.Test.Geometry
 			// 2D simplify:
 			GeomTopoOpUtils.Simplify(test, 0.01, 0.01);
 
-			Assert.IsTrue(original.Equals(test));
+			// Structurally equal: Never (even if nothing happens happened)
+			Assert.IsFalse(original.Equals(test));
 			Assert.IsTrue(GeomRelationUtils.AreEqualXY(original, test, 0.0));
 			Assert.IsTrue(GeomRelationUtils.AreEqual(original, test, 0.0, 0.0));
 
