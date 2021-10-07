@@ -1495,8 +1495,8 @@ namespace ProSuite.Commons.Geom
 		                                         int vertexCount)
 		{
 			// intersection points cutting the ring segment between index 7 and 8 have an index of 7.5
-			bool bothIntersectionsAreRingVertices = fromIntersection.IsRingVertex() &&
-			                                        toIntersection.IsRingVertex();
+			bool bothIntersectionsAreRingVertices = fromIntersection.IsSourceVertex() &&
+			                                        toIntersection.IsSourceVertex();
 
 			if (! bothIntersectionsAreRingVertices)
 			{
@@ -2302,7 +2302,8 @@ namespace ProSuite.Commons.Geom
 		[NotNull]
 		public static IList<IntersectionPoint3D> GetSelfIntersections(
 			[NotNull] ISegmentList segments,
-			double tolerance)
+			double tolerance,
+			bool includeLinearIntersectionIntermediatePoints = false)
 		{
 			var selfIntersections = new List<SegmentIntersection>();
 
@@ -2320,7 +2321,8 @@ namespace ProSuite.Commons.Geom
 
 			IList<IntersectionPoint3D> intersectionPoints =
 				SegmentIntersectionUtils.CollectIntersectionPoints(
-					sortedRelevantIntersections, segments, segments, tolerance);
+					sortedRelevantIntersections, segments, segments, tolerance,
+					includeLinearIntersectionIntermediatePoints);
 
 			return intersectionPoints;
 		}

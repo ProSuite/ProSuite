@@ -67,11 +67,12 @@ namespace ProSuite.Commons.Geom
 				return null;
 			}
 
-			IntersectionPoint3D result = new IntersectionPoint3D(new Pnt3D(sourcePoint), sourceIndex)
-			                             {
-				                             VirtualTargetVertex = targetIndex,
-				                             Type = IntersectionPointType.TouchingInPoint
-			                             };
+			IntersectionPoint3D result =
+				new IntersectionPoint3D(new Pnt3D(sourcePoint), sourceIndex)
+				{
+					VirtualTargetVertex = targetIndex,
+					Type = IntersectionPointType.TouchingInPoint
+				};
 
 			return result;
 		}
@@ -106,17 +107,17 @@ namespace ProSuite.Commons.Geom
 			}
 
 			// TODO: Clone also in other factory methods!?
-			IntersectionPoint3D result = new IntersectionPoint3D(new Pnt3D(sourcePoint), sourceIndex)
-			                             {
-				                             VirtualTargetVertex = targetSegmentIndex + pointTargetFactor,
-				                             Type = IntersectionPointType.TouchingInPoint
-			                             };
+			IntersectionPoint3D result =
+				new IntersectionPoint3D(new Pnt3D(sourcePoint), sourceIndex)
+				{
+					VirtualTargetVertex = targetSegmentIndex + pointTargetFactor,
+					Type = IntersectionPointType.TouchingInPoint
+				};
 
 			result.TargetPartIndex = targetPartIndex;
 
 			return result;
 		}
-
 
 		/// <summary>
 		/// Create an intersection point originating from a line that intsersects a point. The intersection
@@ -353,9 +354,14 @@ namespace ProSuite.Commons.Geom
 
 		#endregion
 
-		public bool IsRingVertex()
+		public bool IsSourceVertex()
 		{
 			return MathUtils.AreEqual(VirtualSourceVertex % 1, 0);
+		}
+
+		public bool IsTargetVertex()
+		{
+			return MathUtils.AreEqual(VirtualTargetVertex % 1, 0);
 		}
 
 		public bool IsLinearIntersectionStartAtStartPoint(Linestring source)
@@ -402,7 +408,7 @@ namespace ProSuite.Commons.Geom
 
 		public int GetNextRingVertexIndex(int vertexCount)
 		{
-			if (! IsRingVertex())
+			if (! IsSourceVertex())
 			{
 				return (int) Math.Ceiling(VirtualSourceVertex);
 			}
@@ -416,7 +422,7 @@ namespace ProSuite.Commons.Geom
 
 		public int GetPreviousRingVertexIndex(int vertexCount)
 		{
-			if (! IsRingVertex())
+			if (! IsSourceVertex())
 			{
 				return (int) Math.Floor(VirtualSourceVertex);
 			}

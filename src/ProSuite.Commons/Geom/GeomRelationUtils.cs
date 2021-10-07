@@ -55,6 +55,15 @@ namespace ProSuite.Commons.Geom
 			return false;
 		}
 
+		public static bool AreDisjoint([NotNull] EnvelopeXY envelope,
+		                               [NotNull] IPnt point,
+		                               double tolerance)
+		{
+			return AreDisjoint(envelope.XMin, envelope.YMin,
+			                   envelope.XMax, envelope.YMax,
+			                   point.X, point.Y, tolerance);
+		}
+
 		public static bool AreDisjoint(
 			double box1XMin, double box1YMin, double box1XMax, double box1YMax,
 			double pointX, double pointY, double tolerance)
