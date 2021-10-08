@@ -119,6 +119,11 @@ namespace ProSuite.QA.Container
 		ISearchable DataContainer { get; set; }
 	}
 
+	public interface ITransformedTable
+	{
+		void SetKnownTransformedRows([CanBeNull] IEnumerable<IRow> knownRows);
+	}
+
 	public interface IIssueFilter : IInvolvesTables
 	{
 		string Name { get; set; }

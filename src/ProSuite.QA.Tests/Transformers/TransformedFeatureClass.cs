@@ -9,6 +9,16 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.QA.Tests.Transformers
 {
+	public abstract class TransformedFeatureClass<T> : TransformedFeatureClass
+		where T : GdbFeatureClass
+	{
+		protected TransformedFeatureClass([NotNull] T gdbTable,
+		                                  IList<ITable> involvedTables)
+			: base(gdbTable, involvedTables) { }
+
+		public new T Resulting => (T) base.Resulting;
+	}
+
 	public abstract class TransformedFeatureClass : BackingDataset
 	{
 		private readonly IList<ITable> _involvedTables;
@@ -24,8 +34,9 @@ namespace ProSuite.QA.Tests.Transformers
 		                                  IList<ITable> involvedTables)
 		{
 			_involvedTables = involvedTables;
-			_queryHelpers = _involvedTables.Select(t => new QueryFilterHelper(t, null, false))
-			                               .ToList();
+			_queryHelpers = _involvedTables
+			                .Select(t => new QueryFilterHelper(t, null, false) {RepeatCachedRows = true})
+			                .ToList();
 
 			gdbTable.AddField(FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField));
 			_resulting = gdbTable;
@@ -35,9 +46,11 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			if (tableIndex >= 0 && tableIndex < _involvedTables.Count)
 			{
-				_queryHelpers[tableIndex] = new QueryFilterHelper(
-					_involvedTables[tableIndex], condition,
-					_queryHelpers[tableIndex]?.TableView?.CaseSensitive ?? true);
+				_queryHelpers[tableIndex] =
+					new QueryFilterHelper(
+						_involvedTables[tableIndex], condition,
+						_queryHelpers[tableIndex]?.TableView?.CaseSensitive ?? true)
+					{RepeatCachedRows = true};
 			}
 			else
 			{

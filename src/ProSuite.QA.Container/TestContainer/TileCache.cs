@@ -165,7 +165,7 @@ namespace ProSuite.QA.Container.TestContainer
 			IList<IRow> result = new List<IRow>();
 
 			// TODO explain network queries
-			bool repeatCachedRows = filterHelper.ForNetwork;
+			bool repeatCachedRows = filterHelper.RepeatCachedRows ?? filterHelper.ForNetwork;
 
 			// filterHelper.PointSearchOnlyWithinTile
 			if (filterHelper.ForNetwork)

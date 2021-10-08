@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -489,12 +490,18 @@ namespace ProSuite.QA.Container.TestContainer
 				{
 					tileRowIndex++;
 
+					cachedRowSearchTolerance = cachedRowSearchTolerance ??
+					                           _tileCache.OverlappingFeatures.GetSearchTolerance(
+						                           cachedTable);
+
+					CachedRow cachedRow = entry.Value;
 					if (testsPerTable == null)
 					{
+						_tileCache.OverlappingFeatures.RegisterTestedFeature(
+							cachedRow, cachedRowSearchTolerance.Value, null);
 						continue;
 					}
 
-					CachedRow cachedRow = entry.Value;
 					if (cachedRow.DisjointFromExecuteArea)
 					{
 						continue;
@@ -505,9 +512,6 @@ namespace ProSuite.QA.Container.TestContainer
 						testsPerTable, cachedRow.Feature, tile.SpatialFilter.Geometry,
 						out IList<ContainerTest> reducedTests);
 
-					cachedRowSearchTolerance = cachedRowSearchTolerance ??
-					                           _tileCache.OverlappingFeatures.GetSearchTolerance(
-						                           cachedTable);
 
 					_tileCache.OverlappingFeatures.RegisterTestedFeature(
 						cachedRow, cachedRowSearchTolerance.Value, reducedTests);
@@ -1496,48 +1500,57 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 
 			// get data from database
-			foreach (IRow row in GetRows(table, filter))
+			try
 			{
-				var feature = (IFeature) row;
-				IGeometry shape = feature.Shape;
-
-				if (shape == null || shape.IsEmpty)
+				(table as ITransformedTable)?.SetKnownTransformedRows(
+					cachedRows.Values.Select(x => x.Feature));
+				foreach (IRow row in GetRows(table, filter))
 				{
-					_msg.DebugFormat(
-						"Skipping feature with null/empty geometry (not added to tile cache): {0}",
-						GdbObjectUtils.ToString(feature));
+					var feature = (IFeature) row;
+					IGeometry shape = feature.Shape;
 
-					continue;
+					if (shape == null || shape.IsEmpty)
+					{
+						_msg.DebugFormat(
+							"Skipping feature with null/empty geometry (not added to tile cache): {0}",
+							GdbObjectUtils.ToString(feature));
+
+						continue;
+					}
+
+					var keyRow = new CachedRow(feature, uniqueIdProvider);
+					CachedRow cachedRow;
+					if (cachedRows.TryGetValue(keyRow, out cachedRow))
+					{
+						cachedRow.UpdateFeature(feature, uniqueIdProvider);
+					}
+					else
+					{
+						cachedRow = new CachedRow(feature, uniqueIdProvider);
+						// cachedRow must always be added to cachedRows, even if disjoint !
+						// otherwise it may be processed several times
+						cachedRows.Add(keyRow, cachedRow);
+					}
+
+					IBox cachedRowExtent = cachedRow.Extent;
+
+					bool disjoint = IsDisjointFromExecuteArea(feature.Shape);
+
+					cachedRow.DisjointFromExecuteArea = disjoint;
+
+					if (allBox == null)
+					{
+						allBox = cachedRowExtent.Clone();
+					}
+					else
+					{
+						allBox.Include(cachedRowExtent);
+					}
 				}
-
-				var keyRow = new CachedRow(feature, uniqueIdProvider);
-				CachedRow cachedRow;
-				if (cachedRows.TryGetValue(keyRow, out cachedRow))
-				{
-					cachedRow.UpdateFeature(feature, uniqueIdProvider);
-				}
-				else
-				{
-					cachedRow = new CachedRow(feature, uniqueIdProvider);
-					// cachedRow must always be added to cachedRows, even if disjoint !
-					// otherwise it may be processed several times
-					cachedRows.Add(keyRow, cachedRow);
-				}
-
-				IBox cachedRowExtent = cachedRow.Extent;
-
-				bool disjoint = IsDisjointFromExecuteArea(feature.Shape);
-
-				cachedRow.DisjointFromExecuteArea = disjoint;
-
-				if (allBox == null)
-				{
-					allBox = cachedRowExtent.Clone();
-				}
-				else
-				{
-					allBox.Include(cachedRowExtent);
-				}
+			}
+			finally
+			{
+				(table as ITransformedTable)?.SetKnownTransformedRows(null);
 			}
 
 			foreach (CachedRow cachedRow in rowsWithoutCachedFeature)

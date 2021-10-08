@@ -10,7 +10,10 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.PolygonGrower;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
@@ -20,14 +23,13 @@ namespace ProSuite.QA.Tests.Transformers
 {
 	public class TrDissolve : ITableTransformer<IFeatureClass>
 	{
-		public enum Option
+		public enum SearchOption
 		{
-			WithinTile,
-			WithinSearch,
-			LoadMissing
+			Tile,
+			All
 		}
 
-		private const Option _defaultOption = Option.WithinSearch;
+		private const SearchOption _defaultSearchOption = SearchOption.Tile;
 		private readonly Tfc _dissolvedFc;
 		private IList<string> _attributes;
 		private IList<string> _groupBy;
@@ -39,7 +41,7 @@ namespace ProSuite.QA.Tests.Transformers
 			InvolvedTables = new List<ITable> {(ITable) featureclass};
 
 			_dissolvedFc = new Tfc(featureclass);
-			DissolveOption = _defaultOption;
+			NeighborSearchOption = _defaultSearchOption;
 		}
 
 		[TestParameter]
@@ -49,11 +51,11 @@ namespace ProSuite.QA.Tests.Transformers
 			set => _dissolvedFc.SearchDistance = value;
 		}
 
-		[TestParameter(_defaultOption)]
-		public Option DissolveOption
+		[TestParameter(_defaultSearchOption)]
+		public SearchOption NeighborSearchOption
 		{
-			get => _dissolvedFc.DissolveOption;
-			set => _dissolvedFc.DissolveOption = value;
+			get => _dissolvedFc.NeighborSearchOption;
+			set => _dissolvedFc.NeighborSearchOption = value;
 		}
 
 		[TestParameter]
@@ -108,7 +110,11 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter]
-		public bool CompleteMissingParts { get; set; } // TODO: implement behavior
+		public bool CreateMultipartFeatures
+		{
+			get => _dissolvedFc.CreateMultipartFeatures;
+			set => _dissolvedFc.CreateMultipartFeatures = value;
+		}
 
 		public IFeatureClass GetTransformed() => _dissolvedFc;
 
@@ -124,7 +130,7 @@ namespace ProSuite.QA.Tests.Transformers
 			_dissolvedFc.BackingDs.SetSqlCaseSensitivity(tableIndex, useCaseSensitiveQaSql);
 		}
 
-		private class Tfc : GdbFeatureClass, ITransformedValue, IHasSearchDistance
+		private class Tfc : GdbFeatureClass, ITransformedTable, ITransformedValue, IHasSearchDistance
 		{
 			public TableView TableView { get; set; }
 
@@ -146,8 +152,8 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			public double SearchDistance { get; set; }
-			public Option DissolveOption { get; set; }
-
+			public SearchOption NeighborSearchOption { get; set; }
+			public bool CreateMultipartFeatures { get; set; }
 			public List<FieldInfo> CustomFields { get; private set; }
 
 			public void AddCustomField(string field)
@@ -182,6 +188,23 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			public TransformedFeatureClass BackingDs => (Transformed) BackingDataset;
+
+						[CanBeNull]
+			public BoxTree<IFeature> KnownRows { get; private set; }
+
+			public void SetKnownTransformedRows(IEnumerable<IRow> knownRows)
+			{
+				if (NeighborSearchOption != SearchOption.All)
+				{
+					return;
+				}
+
+				KnownRows = BoxTreeUtils.CreateBoxTree(
+					knownRows?.Select(x => x as IFeature),
+					getBox: x => x?.Shape != null
+						             ? QaGeometryUtils.CreateBox(x.Shape)
+						             : null);
+			}
 		}
 
 		private class TransformedWs : BackingDataStore
@@ -207,9 +230,9 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
-		private class Transformed : TransformedFeatureClass
+		private class Transformed : TransformedFeatureClass<Tfc>
 		{
-			private readonly static TableIndexRowComparer
+			private static readonly TableIndexRowComparer
 				_rowComparer = new TableIndexRowComparer();
 
 			private readonly IFeatureClass _dissolve;
@@ -279,6 +302,26 @@ namespace ProSuite.QA.Tests.Transformers
 				foreach (var baseRow in GetBaseFeatures(filter, recycling))
 				{
 					IFeature baseFeature = (IFeature) baseRow;
+					if (Resulting.KnownRows != null)
+					{
+						bool isKnown = false;
+						foreach (BoxTree<IFeature>.TileEntry entry in
+							Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(baseFeature.Extent)))
+						{
+							if (((IRelationalOperator2) baseFeature.Shape).Overlaps(
+								entry.Value.Shape))
+							{
+								isKnown = true;
+								break;
+							}
+						}
+
+						if (isKnown)
+						{
+							continue;
+						}
+					}
+
 					_builder.AddNetElements(baseRow, 0);
 					if (fullBox == null)
 					{
@@ -290,7 +333,17 @@ namespace ProSuite.QA.Tests.Transformers
 					}
 				}
 
-				if (fullBox == null)
+				if (Resulting.KnownRows != null && filter is ISpatialFilter sp)
+				{
+					foreach (BoxTree<IFeature>.TileEntry entry in
+						Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(sp.Geometry)))
+					{
+						yield return entry.Value;
+					}
+				}
+
+
+					if (fullBox == null)
 				{
 					yield break;
 				}
@@ -303,16 +356,27 @@ namespace ProSuite.QA.Tests.Transformers
 					yield break;
 				}
 
-				Tfc r = (Tfc) Resulting;
-
 				ConnectedBuilder connectedBuilder = new ConnectedBuilder(this);
 				connectedBuilder.Build(_builder, queryEnv);
 
+								// Get unique dissolved set
 				HashSet<List<DirectedRow>> dissolvedSet = new HashSet<List<DirectedRow>>();
 				foreach (List<DirectedRow> value in connectedBuilder.DissolvedDict.Values)
 				{
-					dissolvedSet.Add(value);
+					if (dissolvedSet.Add(value)) 
+					{
+						if (Resulting.CreateMultipartFeatures)
+						{
+							// there can be duplicate directedRows in value, remove them
+							HashSet<DirectedRow> simpleSet =
+								new HashSet<DirectedRow>(new PathRowComparer(_rowComparer));
+							value.ForEach(x => simpleSet.Add(x));
+							value.Clear();
+							value.AddRange(simpleSet);
+						}
+					}
 				}
+
 
 				foreach (List<DirectedRow> dissolvedRows in dissolvedSet)
 				{
@@ -340,6 +404,7 @@ namespace ProSuite.QA.Tests.Transformers
 						Resulting.FindField(InvolvedRowUtils.BaseRowField),
 						rows);
 
+					Tfc r = Resulting;
 					if (r.CustomFields?.Count > 0)
 					{
 						r.TableView.ClearRows();
@@ -417,7 +482,10 @@ namespace ProSuite.QA.Tests.Transformers
 						_filter = _filter ?? new SpatialFilterClass();
 						ISpatialFilter f = _filter;
 						f.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
-						f.Geometry = directedRow.FromPoint;
+						IEnvelope queryGeom = directedRow.FromPoint.Envelope;
+						double tolerance = GeometryUtils.GetXyTolerance(queryGeom);
+						queryGeom.Expand(tolerance, tolerance, false);
+						f.Geometry = queryGeom;
 						List<IRow> baseFeatures =
 							new List<IRow>(_r.GetBaseFeatures(f, recycling: false));
 
@@ -430,13 +498,15 @@ namespace ProSuite.QA.Tests.Transformers
 
 						if (baseFeatures.Count > 2)
 						{
-							// TODO: handle multipart geometries
-							// if singlePartGeometry:
-							Add(new List<DirectedRow> {directedRow}, queryEnv: null);
-							_handledRows.Add(directedRow);
-							continue;
+							if (!_r.Resulting.CreateMultipartFeatures)
+							{
+								Add(new List<DirectedRow> {directedRow}, queryEnv: null);
+								_handledRows.Add(directedRow);
+								continue;
+							}
 						}
 
+						// TODO: handle multipart geometries
 						// baseFeatures.Count = 2
 						var localBuilder = new NetworkBuilder(includeBorderNodes: true);
 						baseFeatures.ForEach(
@@ -463,6 +533,19 @@ namespace ProSuite.QA.Tests.Transformers
 
 				private void Add(List<DirectedRow> connectedRows, IRelationalOperator queryEnv)
 				{
+					if (! _r.Resulting.CreateMultipartFeatures)
+					{
+						AddSinglepart(connectedRows, queryEnv);
+					}
+					else
+					{
+						JoinConnectedRows(connectedRows, queryEnv);
+					}
+				}
+
+				private void AddSinglepart(List<DirectedRow> connectedRows, IRelationalOperator queryEnv)
+				{
+
 					if (connectedRows.Count == 2)
 					{
 						_dissolvedDict.TryGetValue(connectedRows[0],
@@ -474,7 +557,7 @@ namespace ProSuite.QA.Tests.Transformers
 						if (connected0 == null && connected1 == null)
 						{
 							List<DirectedRow> connected =
-								new List<DirectedRow> {connectedRows[0], connectedRows[1]};
+								new List<DirectedRow> { connectedRows[0], connectedRows[1] };
 							_dissolvedDict.Add(connectedRows[0], connected);
 							_dissolvedDict.Add(connectedRows[1], connected);
 						}
@@ -508,7 +591,7 @@ namespace ProSuite.QA.Tests.Transformers
 					}
 					else
 					{
-						if (((Tfc) _r.Resulting).DissolveOption == Option.LoadMissing &&
+						if (_r.Resulting.NeighborSearchOption == SearchOption.All &&
 						    connectedRows.Count == 1 &&
 						    queryEnv?.Contains(connectedRows[0].FromPoint) == false)
 						{
@@ -518,12 +601,62 @@ namespace ProSuite.QA.Tests.Transformers
 
 						foreach (DirectedRow connectedRow in connectedRows)
 						{
-							if (! _dissolvedDict.ContainsKey(connectedRow))
+							if (!_dissolvedDict.ContainsKey(connectedRow))
 							{
 								_dissolvedDict.Add(connectedRow,
-								                   new List<DirectedRow> {connectedRow});
+								                   new List<DirectedRow> { connectedRow });
 							}
 						}
+					}
+				}
+
+				private void JoinConnectedRows(List<DirectedRow> connectedRows, IRelationalOperator queryEnv)
+				{
+					List<DirectedRow> allRows = null;
+					bool updateNeeded = false;
+					foreach (DirectedRow connectedRow in connectedRows)
+					{
+						if (_dissolvedDict.TryGetValue(connectedRow,
+						                               out List<DirectedRow> connecteds))
+						{
+							if (allRows == null)
+							{
+								allRows = connecteds;
+								if (connectedRows.Count > 1)
+								{
+									allRows.AddRange(connectedRows);
+									updateNeeded = true;
+								}
+							}
+							else if (allRows != connecteds)
+							{
+								allRows.AddRange(connecteds);
+								updateNeeded = true;
+							}
+						}
+						else
+						{
+							if (allRows == null)
+							{
+								allRows = new List<DirectedRow>(connectedRows);
+								updateNeeded = true;
+							}
+						}
+					}
+
+					if (updateNeeded)
+					{
+						foreach (DirectedRow directedRow in allRows)
+						{
+							_dissolvedDict[directedRow] = allRows;
+						}
+					}
+
+					if (_r.Resulting.NeighborSearchOption == SearchOption.All &&
+					    connectedRows.Count > 0 &&
+					    queryEnv?.Contains(connectedRows[0].FromPoint) == false)
+					{
+						_missing.Add(connectedRows[0]);
 					}
 				}
 			}
