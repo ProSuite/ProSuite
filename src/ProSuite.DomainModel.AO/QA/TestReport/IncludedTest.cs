@@ -1,10 +1,10 @@
-﻿using System.Reflection;
+using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
-	internal abstract class IncludedTest : IncludedTestBase
+	public abstract class IncludedTest : IncludedTestBase
 	{
 		private readonly TestFactory _testFactory;
 

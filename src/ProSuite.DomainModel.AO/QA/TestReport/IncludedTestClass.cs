@@ -8,7 +8,7 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
-	internal class IncludedTestClass : IncludedTestBase, IComparable<IncludedTestClass>
+	public class IncludedTestClass : IncludedTestBase, IComparable<IncludedTestClass>
 	{
 		private readonly Type _testType;
 

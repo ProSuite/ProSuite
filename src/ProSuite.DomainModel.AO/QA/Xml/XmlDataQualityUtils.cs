@@ -1803,7 +1803,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		[NotNull]
-		private static XmlTestDescriptor CreateXmlTestDescriptor(
+		public static XmlTestDescriptor CreateXmlTestDescriptor(
 			[NotNull] TestDescriptor testDescriptor, bool exportMetadata)
 		{
 			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
