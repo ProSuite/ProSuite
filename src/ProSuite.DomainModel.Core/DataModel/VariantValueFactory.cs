@@ -44,8 +44,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		public static bool IsSupported(FieldType fieldType)
 		{
-			VariantValueType valueType;
-			return TryGetValueType(fieldType, out valueType);
+			return TryGetValueType(fieldType, out VariantValueType _);
 		}
 
 		private static bool TryGetValueType(FieldType fieldType,

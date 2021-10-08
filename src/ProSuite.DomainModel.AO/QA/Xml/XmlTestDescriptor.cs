@@ -70,9 +70,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 		public void SetExecutionPriority(int? executionPriority)
 		{
-			ExecutionPriority = executionPriority == null
-				                    ? _nullExecutionPriority
-				                    : executionPriority.Value;
+			ExecutionPriority = executionPriority ?? _nullExecutionPriority;
 		}
 	}
 }

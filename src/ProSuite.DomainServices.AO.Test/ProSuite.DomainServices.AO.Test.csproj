@@ -68,6 +68,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="QA\DatasetReports\ObjectClassReportBuilderTest.cs" />
+    <Compile Include="QA\DatasetReports\Xml\XmlSpatialReferenceDescriptorUtilsTest.cs" />
     <Compile Include="QA\ErrorRepositoryUtilsTest.cs" />
     <Compile Include="QA\Exceptions\ExceptionObjectAffectedComponentPredicateTest.cs" />
     <Compile Include="QA\Exceptions\ExceptionObjectInvolvedRowsIndexTest.cs" />
@@ -85,6 +87,7 @@
     <Compile Include="QA\Standalone\XmlBased\KeyFieldLookupTest.cs" />
     <Compile Include="QA\Standalone\XmlBased\VerificationOptionUtilsTest.cs" />
     <Compile Include="QA\Standalone\XmlBased\XmlBasedQualitySpecificationFactoryTest.cs" />
+    <Compile Include="QA\Standalone\XmlBased\XmlBasedVerificationServiceTest.cs" />
     <Compile Include="QA\VerifiedDataModel\VerifiedModelFactoryTest.cs" />
   </ItemGroup>
   <ItemGroup>

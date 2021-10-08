@@ -80,15 +80,8 @@ namespace ProSuite.QA.Container.TestSupport
 
 		public bool IsFulfilled(
 			[NotNull] IRow row1, int tableIndex1,
-			[NotNull] IRow row2, int tableIndex2)
-		{
-			return IsFulfilled(row1, tableIndex1, row2, tableIndex2, null);
-		}
-
-		public bool IsFulfilled(
-			[NotNull] IRow row1, int tableIndex1,
 			[NotNull] IRow row2, int tableIndex2,
-			[CanBeNull] IDictionary<string, object> overridingFieldValues)
+			[CanBeNull] IDictionary<string, object> overridingFieldValues = null)
 		{
 			if (Condition == null)
 			{
@@ -96,12 +89,10 @@ namespace ProSuite.QA.Container.TestSupport
 			}
 
 			const bool returnEmptyConditionMessage = true;
-			string conditionMessage;
-			IColumnNames errorColumnNames;
 			return IsFulfilled(row1, tableIndex1, row2, tableIndex2,
-			                   out conditionMessage,
+			                   out string _,
 			                   returnEmptyConditionMessage,
-			                   out errorColumnNames,
+			                   out IColumnNames _,
 			                   overridingFieldValues);
 		}
 
@@ -117,9 +108,8 @@ namespace ProSuite.QA.Container.TestSupport
 		                        [NotNull] out string conditionMessage,
 		                        [CanBeNull] IDictionary<string, object> overridingFieldValues)
 		{
-			IColumnNames errorView;
 			return IsFulfilled(row1, tableIndex1, row2, tableIndex2,
-			                   out conditionMessage, out errorView,
+			                   out conditionMessage, out IColumnNames _,
 			                   overridingFieldValues);
 		}
 

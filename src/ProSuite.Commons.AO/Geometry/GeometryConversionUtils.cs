@@ -453,6 +453,18 @@ namespace ProSuite.Commons.AO.Geometry
 			                                      false);
 		}
 
+		public static EnvelopeXY CreateEnvelopeXY([NotNull] IEnvelope envelope)
+		{
+			return new EnvelopeXY(envelope.XMin, envelope.YMin, envelope.XMax, envelope.YMax);
+		}
+
+		public static IPoint CreatePoint(IPnt pnt, ISpatialReference spatialReference)
+		{
+			double z = pnt is Pnt3D pnt3D ? pnt3D.Z : double.NaN;
+
+			return GeometryFactory.CreatePoint(pnt.X, pnt.Y, z, double.NaN, spatialReference);
+		}
+
 		private static void AddToMultipatch(IMultiPatch result, IPolygon poly,
 		                                    bool invert, int? pointId)
 		{

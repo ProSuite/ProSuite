@@ -508,7 +508,6 @@ namespace ProSuite.Commons.Geom
 			{
 				for (var i = 0; i < SegmentCount; i++)
 				{
-					;
 					bool withinTolerance =
 						GeomRelationUtils.IsWithinTolerance(_segments[i].StartPoint, searchPoint,
 						                                    xyTolerance, useSearchCircle);

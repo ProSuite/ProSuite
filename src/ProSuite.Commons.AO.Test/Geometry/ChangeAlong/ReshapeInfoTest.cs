@@ -438,8 +438,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.ChangeAlong
 
 			reshapeInfo.ReshapeResultFilter = new ReshapeResultFilter(tryReshapeNonDefaultSide);
 
-			IList<int> allParts;
-			reshapeInfo.IdentifyUniquePartIndexToReshape(out allParts);
+			reshapeInfo.IdentifyUniquePartIndexToReshape(out IList<int> _);
 
 			Assert.IsTrue(ReshapeUtils.ReshapePolygonOrMultipatch(reshapeInfo));
 

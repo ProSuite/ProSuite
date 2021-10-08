@@ -109,12 +109,11 @@ namespace ProSuite.QA.Tests
 
 			foreach (QaConnectionRuleHelper ruleHelper in _ruleHelpers)
 			{
-				if (ruleHelper.MainRuleFilterHelpers[tableIndex] == null)
+				string constraint = ruleHelper.MainRuleFilterHelpers[tableIndex]?.Constraint;
+				if (constraint == null)
 				{
 					continue;
 				}
-
-				string constraint = ruleHelper.MainRuleFilterHelpers[tableIndex].Constraint;
 
 				foreach (
 					string fieldName in ExpressionUtils.GetExpressionFieldNames(table, constraint))
@@ -163,9 +162,9 @@ namespace ProSuite.QA.Tests
 				DataRow helperRow = baseHelper.Add(row.Row);
 				Assert.NotNull(helperRow, "no row returned");
 
-				if (netElement is DirectedRow)
+				if (netElement is DirectedRow directedRow)
 				{
-					helperRow[StartsIn] = ! ((DirectedRow) netElement).IsBackward;
+					helperRow[StartsIn] = ! directedRow.IsBackward;
 				}
 			}
 
@@ -210,9 +209,7 @@ namespace ProSuite.QA.Tests
 		{
 			TableView helper = ruleHelper.MainRuleFilterHelpers[tableIndex];
 
-			return helper == null
-				       ? _tableFilterHelpers[tableIndex].FilteredRowCount
-				       : helper.FilteredRowCount;
+			return helper?.FilteredRowCount ?? _tableFilterHelpers[tableIndex].FilteredRowCount;
 		}
 	}
 }

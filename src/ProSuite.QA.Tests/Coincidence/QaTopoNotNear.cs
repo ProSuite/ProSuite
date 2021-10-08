@@ -1836,8 +1836,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				IList<SubClosedCurve> selfConnected;
 
 				GetSubcurves(part.BaseSegments, part.SegmentNeighbors.Values, 0,
-				             0, false,
-				             out connectedParts, out selfConnected);
+				             0, false, out connectedParts, out selfConnected);
 				if (connectedParts.Count != 1)
 				{
 					return true;

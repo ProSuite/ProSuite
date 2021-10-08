@@ -209,19 +209,19 @@ namespace ProSuite.QA.Tests
 				                                        _lengthFieldIndex);
 			}
 
-			if (feature.Shape is IPolygon)
+			if (feature.Shape is IPolygon polygon)
 			{
-				return new PolygonRingsSliverAreaProvider((IPolygon) feature.Shape);
+				return new PolygonRingsSliverAreaProvider(polygon);
 			}
 
-			if (feature.Shape is IMultiPatch)
+			if (feature.Shape is IMultiPatch multiPatch)
 			{
 				var indexedMultiPatchFeature = feature as IIndexedMultiPatchFeature;
 
 				IIndexedMultiPatch indexedMultiPatch =
 					indexedMultiPatchFeature != null
 						? indexedMultiPatchFeature.IndexedMultiPatch
-						: QaGeometryUtils.CreateIndexedMultiPatch((IMultiPatch) feature.Shape);
+						: QaGeometryUtils.CreateIndexedMultiPatch(multiPatch);
 
 				return new MultiPatchPartsSliverAreaProvider(indexedMultiPatch);
 			}
@@ -382,7 +382,7 @@ namespace ProSuite.QA.Tests
 				}
 
 				List<Pnt> planePoints = QaGeometryUtils.GetPoints(partSegments);
-				Plane plane = QaGeometryUtils.CreatePlane((IEnumerable<SegmentProxy>) partSegments);
+				Plane plane = QaGeometryUtils.CreatePlane(partSegments);
 
 				QaGeometryUtils.CalculateProjectedArea(plane, planePoints, out area, out perimeter);
 

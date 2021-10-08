@@ -605,10 +605,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.ImportExceptions
 		private static Guid GetLineageUuid([NotNull] DistinctValues<Guid> distinctGuids)
 		{
 			Guid mostFrequentLineageGuid;
-			int count;
 			return distinctGuids.TryGetMostFrequentValue(
-				       out mostFrequentLineageGuid,
-				       out count)
+				       out mostFrequentLineageGuid, out int _)
 				       ? mostFrequentLineageGuid
 				       : Guid.NewGuid();
 		}

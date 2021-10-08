@@ -286,7 +286,7 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 			                                     elementComparer);
 			reportCategories.Add(key, result);
 
-			if (category != null && category.ParentCategory != null)
+			if (category?.ParentCategory != null)
 			{
 				HtmlDataQualityCategory parent = AddDataQualityCategory(category.ParentCategory,
 				                                                        categoryComparer,
@@ -339,9 +339,7 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 				return null;
 			}
 
-			return categoryOptionsProvider == null
-				       ? null
-				       : categoryOptionsProvider.GetCategoryOptions(category.Uuid);
+			return categoryOptionsProvider?.GetCategoryOptions(category.Uuid);
 		}
 	}
 }

@@ -1245,8 +1245,7 @@ namespace ProSuite.QA.Tests
 						               ToNode = connected.FromNode
 					               };
 
-					int nodeErrors;
-					NodeGroups nextNode = GetNextNode(inverted, out nodeErrors);
+					NodeGroups nextNode = GetNextNode(inverted, out int _);
 
 					if (nextNode == null)
 					{
@@ -1411,8 +1410,7 @@ namespace ProSuite.QA.Tests
 								               ToNode = connected.FromNode
 							               };
 
-							int nodeErrors;
-							NodeGroups nextNode = GetNextNode(inverted, out nodeErrors);
+							NodeGroups nextNode = GetNextNode(inverted, out int _);
 
 							if (nextNode == null)
 							{

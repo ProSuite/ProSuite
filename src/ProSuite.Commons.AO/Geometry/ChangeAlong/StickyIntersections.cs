@@ -608,9 +608,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		                                          double tolerance)
 		{
 			// Always gets the previous segment in case of To-Point (even for the 0th)
-			int partIndex;
 			int segmentIndex = SegmentReplacementUtils.GetSegmentIndex(
-				ofPath, sourceConnectPoint, tolerance, out partIndex);
+				ofPath, sourceConnectPoint, tolerance, out int _);
 
 			ISegment sourceSegment =
 				((ISegmentCollection) ofPath).Segment[segmentIndex];

@@ -1468,7 +1468,7 @@ namespace ProSuite.QA.Tests
 					? _isCoveringConditions[0]
 					: null;
 
-			if (isCoveringCondition == null || isCoveringCondition.Condition == null)
+			if (isCoveringCondition?.Condition == null)
 			{
 				return shapeField;
 			}

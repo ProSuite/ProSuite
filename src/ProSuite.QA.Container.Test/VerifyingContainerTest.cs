@@ -22,9 +22,7 @@ namespace ProSuite.QA.Container.Test
 
 		protected override int ExecuteCore(IRow row, int tableIndex)
 		{
-			return OnExecuteCore == null
-				       ? NoError
-				       : OnExecuteCore(row, tableIndex);
+			return OnExecuteCore?.Invoke(row, tableIndex) ?? NoError;
 		}
 
 		protected override int CompleteTileCore(TileInfo args)
@@ -56,9 +54,7 @@ namespace ProSuite.QA.Container.Test
 				}
 			}
 
-			return OnCompleteTile == null
-				       ? NoError
-				       : OnCompleteTile(args);
+			return OnCompleteTile?.Invoke(args) ?? NoError;
 		}
 	}
 }

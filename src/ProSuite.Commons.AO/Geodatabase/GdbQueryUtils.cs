@@ -524,10 +524,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				message =
 					$"Search geometry with type {inputGeometry.GeometryType} not implement IRelationalOperator";
 
-				var multiPatch = inputGeometry as IMultiPatch;
-
 				// NOTE: Multipatch implements IRelationalOperator since 10.0
-				if (multiPatch != null)
+				if (inputGeometry is IMultiPatch multiPatch)
 				{
 					IPolygon searchPoly = GeometryFactory.CreatePolygon(multiPatch);
 
@@ -1419,8 +1417,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				                      SubFields = subfields
 			                      };
 
-			var featureClass = objectClass as IFeatureClass;
-			if (featureClass != null)
+			if (objectClass is IFeatureClass featureClass)
 			{
 				IFeatureCursor cursor = OpenCursor(featureClass, recycling, filter);
 
@@ -1495,9 +1492,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public static int Count([NotNull] IObjectClass objectClass,
 		                        [NotNull] IQueryFilter filter)
 		{
-			var featureClass = objectClass as IFeatureClass;
-
-			if (featureClass != null)
+			if (objectClass is IFeatureClass featureClass)
 			{
 				return featureClass.FeatureCount(filter);
 			}
@@ -1544,8 +1539,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			int rowCount = 0;
 
-			var featureClass = table as IFeatureClass;
-			if (featureClass != null)
+			if (table is IFeatureClass featureClass)
 			{
 				IFeatureCursor cursor = OpenCursor(featureClass, recycle, filter);
 				try
@@ -1605,7 +1599,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				var spatialFilter = filter as ISpatialFilter;
 
-				if (spatialFilter != null && spatialFilter.Geometry != null)
+				if (spatialFilter?.Geometry != null)
 				{
 					using (_msg.IncrementIndentation())
 					{
@@ -1712,14 +1706,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			var spatialFilter = filter as ISpatialFilter;
 
-			var filter2 = filter as IQueryFilter2;
-			if (filter2 != null)
+			if (filter is IQueryFilter2 filter2)
 			{
 				_msg.DebugFormat("SpatialResolution: {0}", filter2.SpatialResolution);
 			}
 
-			var filterDefinition = filter as IQueryFilterDefinition;
-			if (filterDefinition != null)
+			if (filter is IQueryFilterDefinition filterDefinition)
 			{
 				_msg.DebugFormat("PostfixClause: {0}", filterDefinition.PostfixClause);
 
@@ -1738,8 +1730,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				}
 			}
 
-			var filterDefinition2 = filter as IQueryFilterDefinition2;
-			if (filterDefinition2 != null)
+			if (filter is IQueryFilterDefinition2 filterDefinition2)
 			{
 				_msg.DebugFormat("PrefixClause: {0}", filterDefinition2.PrefixClause);
 			}
@@ -1773,10 +1764,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 					}
 					else
 					{
-						{
-							_msg.Debug("Output spatial reference:");
-							_msg.Debug(SpatialReferenceUtils.ToString(spatialReference));
-						}
+						_msg.Debug("Output spatial reference:");
+						_msg.Debug(SpatialReferenceUtils.ToString(spatialReference));
 					}
 				}
 			}
@@ -1788,22 +1777,5 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return ComUtils.CreateObject<IGeoDatabaseBridge>(
 				"esriGeoDatabase.GeoDatabaseHelper");
 		}
-
-		#region Nested type: RowComparer
-
-		private class RowComparer : IComparer<KeyValuePair<IObject, IFeature>>
-		{
-			#region IComparer<KeyValuePair<IObject,IFeature>> Members
-
-			public int Compare(KeyValuePair<IObject, IFeature> x,
-			                   KeyValuePair<IObject, IFeature> y)
-			{
-				return Comparer<int>.Default.Compare(x.Key.OID, y.Key.OID);
-			}
-
-			#endregion
-		}
-
-		#endregion
 	}
 }

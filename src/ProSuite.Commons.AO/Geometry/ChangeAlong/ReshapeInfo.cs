@@ -1372,10 +1372,10 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			else
 			{
 				double firstPointDistance = GeometryUtils.GetDistanceAlongCurve(
-					ringToReshape, cutReshapePath.FromPoint, false);
+					ringToReshape, cutReshapePath.FromPoint);
 
 				double secondPointDistance = GeometryUtils.GetDistanceAlongCurve(
-					ringToReshape, cutReshapePath.ToPoint, false);
+					ringToReshape, cutReshapePath.ToPoint);
 
 				NotificationUtils.Add(Notifications,
 				                      "Used simplified determination of reshape side");

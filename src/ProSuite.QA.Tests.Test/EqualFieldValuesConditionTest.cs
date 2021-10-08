@@ -642,8 +642,7 @@ namespace ProSuite.QA.Tests.Test
 		                      [CanBeNull] string value2,
 		                      params string[] options)
 		{
-			string message;
-			return AreEqual(value1, value2, out message, options);
+			return AreEqual(value1, value2, out string _, options);
 		}
 
 		private bool AreEqual([CanBeNull] string value1,

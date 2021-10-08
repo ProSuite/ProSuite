@@ -456,7 +456,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			Assert.NotNull(pointOnAdjustLine, "Connection does not touch adjust line.");
 
 			double distance = GeometryUtils.GetDistanceAlongCurve(
-				fullAdjustLine, pointOnAdjustLine, false);
+				fullAdjustLine, pointOnAdjustLine);
 
 			connectPoint = pointOnAdjustLine;
 

@@ -418,13 +418,14 @@ namespace ProSuite.Commons.Geom
 			}
 			else
 			{
-				int i = 0;
-				foreach (Line3D segment in this)
+				for (int i = 0; i < SegmentCount; i++)
 				{
 					if (predicate != null && ! predicate(i))
 					{
 						continue;
 					}
+
+					Line3D segment = this[i];
 
 					if (segment.ExtentIntersectsXY(
 						xMin, yMin, xMax, yMax, tolerance))
@@ -432,8 +433,6 @@ namespace ProSuite.Commons.Geom
 						//var identifier = new SegmentIndex(p, s);
 						yield return new KeyValuePair<int, Line3D>(i, segment);
 					}
-
-					i++;
 				}
 			}
 		}

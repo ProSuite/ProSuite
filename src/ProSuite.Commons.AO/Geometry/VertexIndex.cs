@@ -1,4 +1,4 @@
-﻿namespace ProSuite.Commons.AO.Geometry
+namespace ProSuite.Commons.AO.Geometry
 {
 	public struct VertexIndex
 	{
@@ -28,7 +28,7 @@
 				return false;
 			}
 
-			return obj is VertexIndex && Equals((VertexIndex) obj);
+			return obj is VertexIndex index && Equals(index);
 		}
 
 		public override int GetHashCode()

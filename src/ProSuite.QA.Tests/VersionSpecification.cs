@@ -44,11 +44,11 @@ namespace ProSuite.QA.Tests
 		public VersionSpecification(int majorVersion, int? minorVersion, int? bugfixVersion)
 		{
 			Assert.ArgumentCondition(majorVersion > 0,
-			                         "Invalid major version: {0}", (object) majorVersion);
+			                         "Invalid major version: {0}", majorVersion);
 			Assert.ArgumentCondition(minorVersion == null || minorVersion > 0,
-			                         "Invalid minor version: {0}", (object) minorVersion);
+			                         "Invalid minor version: {0}", minorVersion);
 			Assert.ArgumentCondition(bugfixVersion == null || bugfixVersion > 0,
-			                         "Invalid bugfix version: {0}", (object) bugfixVersion);
+			                         "Invalid bugfix version: {0}", bugfixVersion);
 			Assert.ArgumentCondition(bugfixVersion == null || minorVersion != null,
 			                         "If minor version is undefined then bugfix version must not be defined");
 
@@ -101,7 +101,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			// major and minor are equal
-			return BugfixVersion != null && BugfixVersion < bugfix;
+			return BugfixVersion < bugfix;
 		}
 
 		public bool IsGreaterThan(int major, int minor, int bugfix)
@@ -128,7 +128,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			// major and minor are equal
-			return BugfixVersion != null && BugfixVersion > bugfix;
+			return BugfixVersion > bugfix;
 		}
 
 		public bool Equals(VersionSpecification other)

@@ -1695,12 +1695,10 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		private static bool IsOrientedAlong(ICurve curve1, ICurve alongCurve2)
 		{
 			double fromDistance = GeometryUtils.GetDistanceAlongCurve(alongCurve2,
-			                                                          curve1.FromPoint,
-			                                                          false);
+			                                                          curve1.FromPoint);
 
 			double toDistance = GeometryUtils.GetDistanceAlongCurve(alongCurve2,
-			                                                        curve1.ToPoint,
-			                                                        false);
+			                                                        curve1.ToPoint);
 
 			return toDistance > fromDistance;
 		}
@@ -2178,9 +2176,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			IGeometry originalUnion =
 				GeometryUtils.UnionFeatures(ReshapeGeometryCloneByFeature.Keys.ToList());
 
-			IList<IRing> exteriorRings;
-			IList<IRing> interiorRings = GeometryUtils.GetRings(originalUnion,
-			                                                    out exteriorRings);
+			IList<IRing> interiorRings = GeometryUtils.GetRings(originalUnion, out _);
 
 			if (interiorRings.Count > 0)
 			{

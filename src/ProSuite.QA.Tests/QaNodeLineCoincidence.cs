@@ -209,7 +209,7 @@ namespace ProSuite.QA.Tests
 				                     ? (double?) ((IPolyline) shape).Length
 				                     : null;
 
-			if (lineLength != null && lineLength.Value <= SearchDistance)
+			if (lineLength <= SearchDistance)
 			{
 				// special treatment for lines with length <= search distance
 				errorCount += CheckShortLineNodes(feature, tableIndex, shape, lineLength.Value);

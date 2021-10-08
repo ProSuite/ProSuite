@@ -38,7 +38,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 		public static bool UseCustomIntersect { get; set; } =
 			EnvironmentUtils.GetBooleanEnvironmentVariableValue(
-				"PROSUITE_USE_CUSTOM_INTERSECT");
+				"PROSUITE_USE_CUSTOM_INTERSECT", true);
 
 		[NotNull]
 		public static IList<IGeometry> GetAllIntersectionList([NotNull] IGeometry g1,
@@ -361,6 +361,11 @@ namespace ProSuite.Commons.AO.Geometry
 				if (geometry1 is IMultipoint multipointSource)
 				{
 					return GetIntersectionPointsXY(multipointSource, geometry2, xyTolerance);
+				}
+
+				if (geometry1 is IPolyline polyline)
+				{
+					return GetIntersectionPointsXY(polyline, geometry2, xyTolerance);
 				}
 
 				if (geometry1 is IMultiPatch multipatchSource)
@@ -1050,6 +1055,10 @@ namespace ProSuite.Commons.AO.Geometry
 
 			double zTolerance = planar ? double.NaN : tolerance;
 
+			// Snapping to spatial reference causes TOP-5470. Intersection points must be as
+			// accurate as possible, otherwise the participating segments will not be found any more
+			// in downstream operations! This simplify only clusters but does not snap. As opposed
+			// to multipoint simplification (which uses the resolution) this uses the tolerance.
 			GeomTopoOpUtils.Simplify(resultMultipnt, tolerance, zTolerance);
 
 			// TODO: Use clone to improve performance
@@ -1395,7 +1404,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 				var geometry = topoOp as IGeometry;
 
-				if (geometry == null || geometry.SpatialReference == null)
+				if (geometry?.SpatialReference == null)
 				{
 					_msg.DebugFormat("Error in Difference(): {0}", comEx.Message);
 

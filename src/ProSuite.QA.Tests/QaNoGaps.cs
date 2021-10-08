@@ -404,11 +404,9 @@ namespace ProSuite.QA.Tests
 			Assert.ArgumentNotNull(features, nameof(features));
 			Assert.ArgumentNotNull(knownGaps, nameof(knownGaps));
 
-			WKSEnvelope tileBox;
-			WKSEnvelope clipBox;
 			IEnvelope clipEnvelope =
 				GetClipEnvelope(tileEnvelope, allBox, _tolerance,
-				                out tileBox, out clipBox);
+				                out WKSEnvelope _, out WKSEnvelope _);
 
 			IList<IGeometry> geometriesToRelease;
 			IList<IGeometry> clippedPolygons;
@@ -619,8 +617,7 @@ namespace ProSuite.QA.Tests
 		{
 			foreach (IPolygon polygon in polygons)
 			{
-				bool copied;
-				IPolygon clipped = GetClippedPolygon(polygon, clipEnvelope, out copied);
+				IPolygon clipped = GetClippedPolygon(polygon, clipEnvelope, out bool _);
 
 				if (! clipped.IsEmpty)
 				{

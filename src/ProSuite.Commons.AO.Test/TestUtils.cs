@@ -143,13 +143,18 @@ namespace ProSuite.Commons.AO.Test
 			return CreateMockFeature(geometry);
 		}
 
-		public static IFeature CreateMockFeature(IGeometry geometry)
+		public static IFeature CreateMockFeature(IGeometry geometry,
+		                                         double featureClassTolerance = 0.0125,
+		                                         double featureClassResolution = 0.00125)
 		{
 			var spatialRef =
 				(ISpatialReferenceTolerance) ((IClone) geometry.SpatialReference).Clone();
 
-			spatialRef.XYTolerance = 0.0125;
-			((ISpatialReferenceResolution) spatialRef).set_XYResolution(true, 0.00125);
+			// Use a defined tolerance / resolution because the geometry might come from an
+			// edit session with extremely small resolution and/or changed tolerance.
+			spatialRef.XYTolerance = featureClassTolerance;
+			((ISpatialReferenceResolution) spatialRef).set_XYResolution(
+				true, featureClassResolution);
 
 			var mockFeatureClass =
 				new FeatureClassMock(_lastClassId++, "MockFeatureClass", geometry.GeometryType,
@@ -233,11 +238,11 @@ namespace ProSuite.Commons.AO.Test
 			return newFilePath;
 		}
 
-		private static string GetTempDirPath([CanBeNull] string tempDirName)
+		public static string GetTempDirPath([CanBeNull] string tempDirName)
 		{
 			if (tempDirName == null)
 			{
-				tempDirName = Path.GetDirectoryName(Path.GetRandomFileName());
+				tempDirName = Path.GetFileNameWithoutExtension(Path.GetRandomFileName());
 
 				Assert.NotNull(tempDirName);
 			}

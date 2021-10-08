@@ -103,9 +103,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 				return false;
 			}
 
-			ExceptionObject exceptionObject;
-			return _exceptionObjectEvaluator.ExistsExceptionFor(qaError, element,
-			                                                    out exceptionObject);
+			return _exceptionObjectEvaluator.ExistsExceptionFor(qaError, element, out _);
 		}
 
 		[NotNull]

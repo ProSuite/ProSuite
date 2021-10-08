@@ -76,15 +76,10 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			[CanBeNull] AreaOfInterest areaOfInterest,
 			[CanBeNull] ITrackCancel trackCancel)
 		{
-			int errorCount;
-			int warningCount;
-			int rowCountWithStopConditions;
 			return Verify(qualitySpecification, datasetContext, datasetResolver,
 			              issueRepository, exceptionObjectRepository, tileSize,
 			              getKeyFieldName, areaOfInterest, trackCancel,
-			              out errorCount,
-			              out warningCount,
-			              out rowCountWithStopConditions);
+			              out int _, out int _, out int _);
 		}
 
 		/// <summary>

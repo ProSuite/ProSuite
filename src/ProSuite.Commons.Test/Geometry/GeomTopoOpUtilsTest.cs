@@ -4090,8 +4090,7 @@ namespace ProSuite.Commons.Test.Geometry
 			var plane1 = new Plane3D(7.5, 29.1, -33.243, 28);
 			var plane2 = new Plane3D(7.5, 29.1, -33.243, -12);
 
-			Pnt3D pt;
-			Assert.IsNull(GeomTopoOpUtils.IntersectPlanes(plane1, plane2, out pt));
+			Assert.IsNull(GeomTopoOpUtils.IntersectPlanes(plane1, plane2, out Pnt3D _));
 		}
 
 		[Test]
@@ -4214,8 +4213,8 @@ namespace ProSuite.Commons.Test.Geometry
 			// 3D simplify:
 			GeomTopoOpUtils.Simplify(test, 0.01, 0.01);
 
-			// Structurally equal: Yes (nothing happened)
-			Assert.IsTrue(original.Equals(test));
+			// Structurally equal: Never (even if nothing happens happened)
+			Assert.IsFalse(original.Equals(test));
 
 			Assert.IsTrue(GeomRelationUtils.AreEqualXY(original, test, 0.0));
 			Assert.IsTrue(GeomRelationUtils.AreEqual(original, test, 0.0, 0.0));
@@ -4223,7 +4222,8 @@ namespace ProSuite.Commons.Test.Geometry
 			// 2D simplify:
 			GeomTopoOpUtils.Simplify(test, 0.01, 0.01);
 
-			Assert.IsTrue(original.Equals(test));
+			// Structurally equal: Never (even if nothing happens happened)
+			Assert.IsFalse(original.Equals(test));
 			Assert.IsTrue(GeomRelationUtils.AreEqualXY(original, test, 0.0));
 			Assert.IsTrue(GeomRelationUtils.AreEqual(original, test, 0.0, 0.0));
 
@@ -4256,6 +4256,24 @@ namespace ProSuite.Commons.Test.Geometry
 
 			// Equal in 2D: Yes (simplified, but occupies the same XY-space)
 			Assert.IsTrue(GeomRelationUtils.AreEqualXY(original, test, 0.0));
+		}
+
+		[Test]
+		public void CanClusterPoints()
+		{
+			List<Pnt2D> points = new List<Pnt2D>
+			                     {
+									 new Pnt2D(30,30),
+									 new Pnt2D(31,35),
+									 new Pnt2D(31.5,30),
+									 new Pnt2D(32, 25),
+									 new Pnt2D(32.1, 34.9)
+			                     };
+
+			IList<KeyValuePair<IPnt, List<Pnt2D>>> keyValuePairs =
+				GeomTopoOpUtils.Cluster(points, p => p, 2);
+
+			Assert.AreEqual(3, keyValuePairs.Count);
 		}
 
 		private void AssertCanDeleteLinearSelfIntersections(Linestring linestring,

@@ -16,10 +16,10 @@ namespace ProSuite.UI.QA.Controls
 				       ? "<no category>"
 				       : category.Name;
 
-			IsRootCategory = category == null || category.ParentCategory == null;
+			IsRootCategory = category?.ParentCategory == null;
 		}
 
-		public bool IsRootCategory { get; private set; }
+		public bool IsRootCategory { get; }
 
 		[UsedImplicitly]
 		public bool IsUndefinedCategory { get; private set; }
@@ -28,7 +28,7 @@ namespace ProSuite.UI.QA.Controls
 		public DataQualityCategory Category { get; }
 
 		[NotNull]
-		public string Name { get; private set; }
+		public string Name { get; }
 
 		[NotNull]
 		public List<DataQualityCategoryItem> SubCategories { get; } =
