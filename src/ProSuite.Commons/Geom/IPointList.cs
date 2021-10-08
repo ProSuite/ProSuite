@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geom
 {
@@ -24,7 +25,7 @@ namespace ProSuite.Commons.Geom
 		/// </param>
 		/// <param name="allowIndexing"></param>
 		/// <returns></returns>
-		IEnumerable<int> FindPointIndexes(IPnt searchPoint,
+		IEnumerable<int> FindPointIndexes([NotNull] IPnt searchPoint,
 		                                  double xyTolerance = double.Epsilon,
 		                                  bool useSearchCircle = false,
 		                                  bool allowIndexing = true);

@@ -823,7 +823,8 @@ namespace ProSuite.Commons.Geom
 		                                          out IntersectionPoint3D touchPoint)
 		{
 			IList<IntersectionPoint3D> intersectionPoints =
-				GeomTopoOpUtils.GetIntersectionPoints(polygon, containedRing, tolerance);
+				GeomTopoOpUtils.GetIntersectionPoints((ISegmentList) polygon, containedRing,
+				                                      tolerance);
 
 			ringsAreEqual = false;
 			touchPoint = null;

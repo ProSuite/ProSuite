@@ -971,7 +971,8 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				intersectionPointList.AddRange(
 					GeomTopoOpUtils.GetIntersectionPoints(
-						sourcePolyhedron, otherLinestrings, tolerance, false));
+						(ISegmentList) sourcePolyhedron, (ISegmentList) otherLinestrings, tolerance,
+						false));
 			}
 			else if (otherPoints != null)
 			{
@@ -1134,7 +1135,7 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				intersectionPointList.AddRange(
 					GeomTopoOpUtils.GetIntersectionPoints(
-						sourceSegments, ringGroup, tolerance, true));
+						(ISegmentList) sourceSegments, (ISegmentList) ringGroup, tolerance, true));
 			}
 
 			Multipoint<Pnt3D> resultMultipnt =
