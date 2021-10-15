@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry.CreateFootprint;
@@ -11,10 +12,10 @@ namespace ProSuite.QA.Tests.Transformers
 		public TrFootprint([NotNull] IFeatureClass multipatchClass)
 			: base(multipatchClass, esriGeometryType.esriGeometryPolygon) { }
 
-		protected override IGeometry Transform(IGeometry source)
+		protected override IEnumerable<IGeometry> Transform(IGeometry source)
 		{
 			IMultiPatch patch = (IMultiPatch) source;
-			return CreateFootprintUtils.GetFootprint(patch);
+			yield return CreateFootprintUtils.GetFootprint(patch);
 		}
 	}
 }

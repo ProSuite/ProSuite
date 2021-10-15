@@ -6,7 +6,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
 {
-	public class InvolvedRow : IComparable<InvolvedRow>, IEquatable<InvolvedRow>
+	public class InvolvedRow : Involved, IComparable<InvolvedRow>, IEquatable<InvolvedRow>
 	{
 		private const int _oidForEntireTable = -1;
 
@@ -57,6 +57,11 @@ namespace ProSuite.QA.Container
 
 		[NotNull]
 		public string TableName { get; }
+
+		public override IEnumerable<InvolvedRow> EnumInvolvedRows()
+		{
+			yield return this;
+		}
 
 		#region IComparable<InvolvedRow> Members
 

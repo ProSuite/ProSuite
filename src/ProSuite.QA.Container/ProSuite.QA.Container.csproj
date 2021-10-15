@@ -74,6 +74,8 @@
     <Compile Include="AggregatedTestIssueCodes.cs" />
     <Compile Include="BeginTileParameters.cs" />
     <Compile Include="ContainerTest.Nested.cs" />
+    <Compile Include="Involved.cs" />
+    <Compile Include="InvolvedNested.cs" />
     <Compile Include="QaErrorGeometry.cs" />
     <Compile Include="ExpressionUtils.cs" />
     <Compile Include="GeometryConstraint.cs" />

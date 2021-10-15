@@ -10,7 +10,6 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
@@ -130,7 +129,8 @@ namespace ProSuite.QA.Tests.Transformers
 			_dissolvedFc.BackingDs.SetSqlCaseSensitivity(tableIndex, useCaseSensitiveQaSql);
 		}
 
-		private class Tfc : GdbFeatureClass, ITransformedTable, ITransformedValue, IHasSearchDistance
+		private class Tfc : GdbFeatureClass, ITransformedTable, ITransformedValue,
+		                    IHasSearchDistance
 		{
 			public TableView TableView { get; set; }
 
@@ -189,7 +189,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public TransformedFeatureClass BackingDs => (Transformed) BackingDataset;
 
-						[CanBeNull]
+			[CanBeNull]
 			public BoxTree<IFeature> KnownRows { get; private set; }
 
 			public void SetKnownTransformedRows(IEnumerable<IRow> knownRows)
@@ -299,27 +299,47 @@ namespace ProSuite.QA.Tests.Transformers
 				IRelationalOperator queryEnv =
 					(IRelationalOperator) (filter as ISpatialFilter)?.Geometry.Envelope;
 				IEnvelope fullBox = null;
+				Dictionary<IFeature, Involved> involvedDict = new Dictionary<IFeature, Involved>();
 				foreach (var baseRow in GetBaseFeatures(filter, recycling))
 				{
 					IFeature baseFeature = (IFeature) baseRow;
-					if (Resulting.KnownRows != null)
+					Involved baseInvolved = null;
+					bool isKnown = false;
+					// Alternative: Involved Rows check
+					foreach (Involved knownInvolved in EnumKnownInvolveds(
+						baseFeature, Resulting.KnownRows, involvedDict))
 					{
-						bool isKnown = false;
-						foreach (BoxTree<IFeature>.TileEntry entry in
-							Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(baseFeature.Extent)))
-						{
-							if (((IRelationalOperator2) baseFeature.Shape).Overlaps(
-								entry.Value.Shape))
-							{
-								isKnown = true;
-								break;
-							}
-						}
+						baseInvolved =
+							baseInvolved ??
+							InvolvedRowUtils.EnumInvolved(new[] {baseFeature}).First();
 
-						if (isKnown)
+						if ((knownInvolved as InvolvedNested)?.BaseRows
+						                                     .Contains(baseInvolved) == true)
 						{
-							continue;
+							isKnown = true;
+							break;
 						}
+					}
+
+					// Alternative: Geometric check
+					//if (Resulting.KnownRows != null)
+					//{
+					//	foreach (BoxTree<IFeature>.TileEntry entry in
+					//		Resulting.KnownRows.Search(
+					//			QaGeometryUtils.CreateBox(baseFeature.Extent)))
+					//	{
+					//		if (((IRelationalOperator) baseFeature.Shape).Within(entry.Value.Shape))
+					//			// Remark: use Within ! (Overlaps() = false, if relation is within!)
+					//		{
+					//			isKnown = true;
+					//			break;
+					//		}
+					//	}
+					//}
+
+					if (isKnown)
+					{
+						continue;
 					}
 
 					_builder.AddNetElements(baseRow, 0);
@@ -342,8 +362,7 @@ namespace ProSuite.QA.Tests.Transformers
 					}
 				}
 
-
-					if (fullBox == null)
+				if (fullBox == null)
 				{
 					yield break;
 				}
@@ -359,11 +378,11 @@ namespace ProSuite.QA.Tests.Transformers
 				ConnectedBuilder connectedBuilder = new ConnectedBuilder(this);
 				connectedBuilder.Build(_builder, queryEnv);
 
-								// Get unique dissolved set
+				// Get unique dissolved set
 				HashSet<List<DirectedRow>> dissolvedSet = new HashSet<List<DirectedRow>>();
 				foreach (List<DirectedRow> value in connectedBuilder.DissolvedDict.Values)
 				{
-					if (dissolvedSet.Add(value)) 
+					if (dissolvedSet.Add(value))
 					{
 						if (Resulting.CreateMultipartFeatures)
 						{
@@ -376,7 +395,6 @@ namespace ProSuite.QA.Tests.Transformers
 						}
 					}
 				}
-
 
 				foreach (List<DirectedRow> dissolvedRows in dissolvedSet)
 				{
@@ -498,7 +516,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 						if (baseFeatures.Count > 2)
 						{
-							if (!_r.Resulting.CreateMultipartFeatures)
+							if (! _r.Resulting.CreateMultipartFeatures)
 							{
 								Add(new List<DirectedRow> {directedRow}, queryEnv: null);
 								_handledRows.Add(directedRow);
@@ -543,9 +561,9 @@ namespace ProSuite.QA.Tests.Transformers
 					}
 				}
 
-				private void AddSinglepart(List<DirectedRow> connectedRows, IRelationalOperator queryEnv)
+				private void AddSinglepart(List<DirectedRow> connectedRows,
+				                           IRelationalOperator queryEnv)
 				{
-
 					if (connectedRows.Count == 2)
 					{
 						_dissolvedDict.TryGetValue(connectedRows[0],
@@ -557,7 +575,7 @@ namespace ProSuite.QA.Tests.Transformers
 						if (connected0 == null && connected1 == null)
 						{
 							List<DirectedRow> connected =
-								new List<DirectedRow> { connectedRows[0], connectedRows[1] };
+								new List<DirectedRow> {connectedRows[0], connectedRows[1]};
 							_dissolvedDict.Add(connectedRows[0], connected);
 							_dissolvedDict.Add(connectedRows[1], connected);
 						}
@@ -601,16 +619,17 @@ namespace ProSuite.QA.Tests.Transformers
 
 						foreach (DirectedRow connectedRow in connectedRows)
 						{
-							if (!_dissolvedDict.ContainsKey(connectedRow))
+							if (! _dissolvedDict.ContainsKey(connectedRow))
 							{
 								_dissolvedDict.Add(connectedRow,
-								                   new List<DirectedRow> { connectedRow });
+								                   new List<DirectedRow> {connectedRow});
 							}
 						}
 					}
 				}
 
-				private void JoinConnectedRows(List<DirectedRow> connectedRows, IRelationalOperator queryEnv)
+				private void JoinConnectedRows(List<DirectedRow> connectedRows,
+				                               IRelationalOperator queryEnv)
 				{
 					List<DirectedRow> allRows = null;
 					bool updateNeeded = false;

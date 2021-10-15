@@ -1,22 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
 
 namespace ProSuite.QA.Tests.Transformers
 {
-	public interface IGeometryTransformer
-	{
-		IGeometry Transform(IGeometry source);
-	}
-
 	[UsedImplicitly]
 	public abstract class TrGeometryTransform : ITableTransformer<IFeatureClass>,
-	                                            IGeometryTransformer
+	                                            IGeometryTransformer, IContainerTransformer
 	{
 		private readonly IFeatureClass _fc;
 		private readonly Tfc _transformedFc;
@@ -47,11 +45,29 @@ namespace ProSuite.QA.Tests.Transformers
 			_transformedFc.BackingDs.SetSqlCaseSensitivity(tableIndex, useCaseSensitiveQaSql);
 		}
 
-		IGeometry IGeometryTransformer.Transform(IGeometry source) => Transform(source);
+		IEnumerable<IGeometry> IGeometryTransformer.Transform(IGeometry source) =>
+			Transform(source);
 
-		protected abstract IGeometry Transform(IGeometry source);
+		protected abstract IEnumerable<IGeometry> Transform(IGeometry source);
 
-		private class Tfc : GdbFeatureClass, ITransformedValue
+		bool IContainerTransformer.IsGeneratedFrom(Involved involved, Involved source) =>
+			IsGeneratedFrom(involved, source);
+
+		protected virtual bool IsGeneratedFrom(Involved involved, Involved source)
+		{
+			if (! (involved is InvolvedNested i))
+			{
+				return false;
+			}
+
+			bool isGenereated = i.BaseRows.Contains(source);
+			return isGenereated;
+		}
+
+		bool IContainerTransformer.HandlesContainer => HandlesContainer;
+		protected virtual bool HandlesContainer => true;
+
+		private class Tfc : GdbFeatureClass, ITransformedValue, ITransformedTable
 		{
 			public Tfc(IFeatureClass fc, esriGeometryType derivedShapeType,
 			           IGeometryTransformer transformer)
@@ -96,6 +112,18 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				get => BackingDs.DataContainer;
 				set => BackingDs.DataContainer = value;
+			}
+
+			[CanBeNull]
+			public BoxTree<IFeature> KnownRows { get; private set; }
+
+			public void SetKnownTransformedRows(IEnumerable<IRow> knownRows)
+			{
+				KnownRows = BoxTreeUtils.CreateBoxTree(
+					knownRows?.Select(x => x as IFeature),
+					getBox: x => x?.Shape != null
+						             ? QaGeometryUtils.CreateBox(x.Shape)
+						             : null);
 			}
 
 			public TransformedFeatureClass BackingDs => (Transformed) BackingDataset;
@@ -146,9 +174,8 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
-		private class Transformed : TransformedFeatureClass
+		private class Transformed : TransformedFeatureClass<Tfc>
 		{
-			private readonly Tfc _tfc; // == Resulting
 			private readonly IFeatureClass _t0;
 
 			public Transformed(
@@ -156,7 +183,6 @@ namespace ProSuite.QA.Tests.Transformers
 				[NotNull] IFeatureClass t0)
 				: base(tfc, ProcessBase.CastToTables(t0))
 			{
-				_tfc = tfc;
 				_t0 = t0;
 				Resulting.SpatialReference = ((IGeoDataset) t0).SpatialReference;
 			}
@@ -176,20 +202,68 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override IEnumerable<IRow> Search(IQueryFilter filter, bool recycling)
 			{
+				var involvedDict = new Dictionary<IFeature, Involved>();
+
 				foreach (var row in DataContainer.Search(
 					(ITable) _t0, filter, QueryHelpers[0]))
 				{
-					GdbFeature f = Resulting.CreateFeature();
-					f.Shape = _tfc.Transformer.Transform(((IFeature) row).Shape);
-					f.Store();
+					IFeature baseFeature = (IFeature) row;
 
-					List<IRow> involved = new List<IRow> {row};
-					f.set_Value(
-						Resulting.FindField(InvolvedRowUtils.BaseRowField),
-						involved); // TODO
+					if (IsKnown(baseFeature, involvedDict))
+					{
+						continue;
+					}
 
-					yield return f;
+					IGeometry geom = baseFeature.Shape;
+					foreach (IGeometry transformed in Resulting.Transformer.Transform(geom))
+					{
+						GdbFeature f = Resulting.CreateFeature();
+						f.Shape = transformed;
+						f.Store();
+
+						List<IRow> involved = new List<IRow> {row};
+						f.set_Value(
+							Resulting.FindField(InvolvedRowUtils.BaseRowField),
+							involved); // TODO: set fields
+
+						yield return f;
+					}
 				}
+
+				if ((Resulting.Transformer as IContainerTransformer)?.HandlesContainer == true &&
+				    Resulting.KnownRows != null && filter is ISpatialFilter sp)
+				{
+					foreach (BoxTree<IFeature>.TileEntry entry in
+						Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(sp.Geometry)))
+					{
+						yield return entry.Value;
+					}
+				}
+			}
+
+			private bool IsKnown(
+				[NotNull] IFeature baseFeature,
+				[NotNull] Dictionary<IFeature, Involved> involvedDict)
+			{
+				if (! (Resulting.Transformer is IContainerTransformer ct))
+				{
+					return false;
+				}
+
+				Involved baseInvolved = null;
+				foreach (var knownInvolved in EnumKnownInvolveds(
+					baseFeature, Resulting.KnownRows, involvedDict))
+				{
+					baseInvolved =
+						baseInvolved ??
+						InvolvedRowUtils.EnumInvolved(new[] {baseFeature}).First();
+					if (ct.IsGeneratedFrom(knownInvolved, baseInvolved))
+					{
+						return true;
+					}
+				}
+
+				return false;
 			}
 		}
 	}

@@ -41,48 +41,56 @@ namespace ProSuite.QA.Container
 			InvolvedRows involvedRows = new InvolvedRows();
 			foreach (T row in rows)
 			{
-				involvedRows.AddRange(GetInvolvedRowsCore(row));
+				involvedRows.AddRange(GetInvolvedCore(row).EnumInvolvedRows());
 				involvedRows.TestedRows.Add(row);
 			}
 
 			return involvedRows;
 		}
 
+		public static IEnumerable<Involved> EnumInvolved<T>([NotNull] IEnumerable<T> rows)
+			where T : IRow
+		{
+			foreach (T row in rows)
+			{
+				yield return GetInvolvedCore(row);
+			}
+		}
+
 		public const string BaseRowField = "__BaseRows__";
 
-		private static IEnumerable<InvolvedRow> GetInvolvedRowsCore(IRow row)
+		private static Involved GetInvolvedCore(IRow row)
 		{
 			int baseRowsField = row.Fields.FindField(BaseRowField);
 			if (baseRowsField >= 0 && row.get_Value(baseRowsField) is IList<IRow> baseRows)
 			{
+				List<Involved> involveds = new List<Involved>();
 				foreach (var baseRow in baseRows)
 				{
-					foreach (var involvedRow in GetInvolvedRowsCore(baseRow))
-					{
-						yield return involvedRow;
-					}
+					involveds.Add(GetInvolvedCore(baseRow));
 				}
+
+				return new InvolvedNested(((IDataset) row.Table).Name, involveds);
 			}
-			else
+
+			if (((IDataset) row.Table).FullName is IQueryName qn)
 			{
-				if (((IDataset) row.Table).FullName is IQueryName qn)
+				List<Involved> involveds = new List<Involved>();
+				foreach (string table in qn.QueryDef.Tables.Split(','))
 				{
-					foreach (string table in qn.QueryDef.Tables.Split(','))
+					string t = table.Trim();
+					string oidField = $"{t}.OBJECTID";
+					int iOid = row.Table.FindField(oidField);
+					if (iOid >= 0)
 					{
-						string t = table.Trim();
-						string oidField = $"{t}.OBJECTID";
-						int iOid = row.Table.FindField(oidField);
-						if (iOid >= 0)
-						{
-							yield return new InvolvedRow(t, (int) row.Value[iOid]);
-						}
+						involveds.Add(new InvolvedRow(t, (int) row.Value[iOid]));
 					}
 				}
-				else
-				{
-					yield return new InvolvedRow(row);
-				}
+
+				return new InvolvedNested(((IDataset) row.Table).Name, involveds);
 			}
+
+			return new InvolvedRow(row);
 		}
 
 		[NotNull]

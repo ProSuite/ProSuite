@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
@@ -11,11 +12,10 @@ namespace ProSuite.QA.Tests.Transformers
 		public TrLineToPoly([NotNull] IFeatureClass closedLineClass)
 			: base(closedLineClass, esriGeometryType.esriGeometryPolygon) { }
 
-		protected override IGeometry Transform(IGeometry source)
+		protected override IEnumerable<IGeometry> Transform(IGeometry source)
 		{
-			IPolyline line = (IPolyline)source;
-			return GeometryFactory.CreatePolygon(line);
+			IPolyline line = (IPolyline) source;
+			yield return GeometryFactory.CreatePolygon(line);
 		}
 	}
-
 }
