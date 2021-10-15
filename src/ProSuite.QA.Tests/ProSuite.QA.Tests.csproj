@@ -369,6 +369,7 @@
     <Compile Include="Transformers\TrDissolve.cs" />
     <Compile Include="Transformers\TrFootprint.cs" />
     <Compile Include="Transformers\TrGeometryTransform.cs" />
+    <Compile Include="Transformers\TrGeometryToPoints.cs" />
     <Compile Include="Transformers\TrLineToPoly.cs" />
     <Compile Include="Transformers\TrSpatialJoin.cs" />
     <Compile Include="Transformers\TrIntersect.cs" />
