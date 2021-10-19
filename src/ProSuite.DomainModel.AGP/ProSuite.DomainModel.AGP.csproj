@@ -58,6 +58,7 @@
     <Compile Include="DataModel\WorkspaceContextBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QA\IQualityVerificationEnvironment.cs" />
+    <Compile Include="QA\IssueGdbSchema.cs" />
     <Compile Include="QA\QualitySpecificationReference.cs" />
     <Compile Include="Workflow\IMapBasedSessionContext.cs" />
     <Compile Include="Workflow\ProjectWorkspace.cs" />

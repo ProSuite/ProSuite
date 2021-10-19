@@ -18,7 +18,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		protected override WorkEnvironmentBase CreateEnvironment(string path = null)
 		{
-			return new IssueWorklistEnvironment();
+			return new IssueWorkListEnvironment();
 		}
 	}
 }

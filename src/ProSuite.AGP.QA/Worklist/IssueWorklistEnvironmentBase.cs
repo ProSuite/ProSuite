@@ -14,26 +14,19 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.GP;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.AGP.QA;
 
-namespace ProSuite.AGP.QA.Worklist
+namespace ProSuite.AGP.QA.WorkList
 {
-	public abstract class IssueWorklistEnvironmentBase : WorkEnvironmentBase
+	public abstract class IssueWorkListEnvironmentBase : WorkEnvironmentBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly string _domainName = "CORRECTION_STATUS_CD";
 
-		private readonly List<string> _issueFeatureClassNames = new List<string>
-		                                                        {
-			                                                        "IssueLines",
-			                                                        "IssueMultiPatches",
-			                                                        "IssuePoints", "IssuePolygons",
-			                                                        "IssueRows"
-		                                                        };
-
 		[CanBeNull] private readonly string _path;
 
-		protected IssueWorklistEnvironmentBase([CanBeNull] string path)
+		protected IssueWorkListEnvironmentBase([CanBeNull] string path)
 		{
 			_path = path;
 		}
@@ -65,9 +58,9 @@ namespace ProSuite.AGP.QA.Worklist
 				GeoprocessingUtils.CreateDomainAsync(_path, _domainName,
 				                                     "Correction status for work list"),
 				GeoprocessingUtils.AddCodedValueToDomainAsync(
-					_path, _domainName, 100, "Not Corrected"),
+					_path, _domainName, (int) IssueCorrectionStatus.NotCorrected, "Not Corrected"),
 				GeoprocessingUtils.AddCodedValueToDomainAsync(
-					_path, _domainName, 200, "Corrected"));
+					_path, _domainName, (int) IssueCorrectionStatus.Corrected, "Corrected"));
 
 			return true;
 		}
@@ -87,7 +80,7 @@ namespace ProSuite.AGP.QA.Worklist
 				IEnumerable<string> featureClassNames =
 					geodatabase.GetDefinitions<FeatureClassDefinition>()
 					           .Select(definition => definition.GetName())
-					           .Where(name => _issueFeatureClassNames.Contains(name));
+					           .Where(name => IssueGdbSchema.IssueFeatureClassNames.Contains(name));
 
 				foreach (string featureClassName in featureClassNames)
 				{

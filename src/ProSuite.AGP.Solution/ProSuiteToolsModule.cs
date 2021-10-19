@@ -353,7 +353,7 @@ namespace ProSuite.AGP.Solution
 			{
 				throw new NotImplementedException();
 				string workListName = WorkListsModule.Current.EnsureUniqueName();
-				var environment = new IssueWorklistEnvironment();
+				var environment = new IssueWorkListEnvironment();
 
 				await QueuedTask.Run(
 					() => WorkListsModule.Current.CreateWorkListAsync(environment, workListName));

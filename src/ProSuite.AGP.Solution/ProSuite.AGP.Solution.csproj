@@ -150,6 +150,7 @@
     <Compile Include="ProjectItem\WorklistsContainer.cs" />
     <Compile Include="QA\QualitySpecificationsComboBox.cs" />
     <Compile Include="QA\QualityVerificationEnvironment.cs" />
+    <Compile Include="QA\SelectIssueFeaturesTool.cs" />
     <Compile Include="QA\VerifyPerimeterTool.cs" />
     <Compile Include="QA\VerifySelectionCmd.cs" />
     <Compile Include="QA\VerifyVisibleExtentCmd.cs" />
@@ -178,7 +179,7 @@
     <Compile Include="ProSuiteToolsModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WorkLists\AddWorklistButton.cs" />
-    <Compile Include="WorkLists\IssueWorklistEnvironment.cs" />
+    <Compile Include="WorkLists\IssueWorkListEnvironment.cs" />
     <Compile Include="WorkLists\ShowWorkListsButton.cs" />
     <Compile Include="WorkLists\WorkListsModule.cs" />
     <Compile Include="WorkListUI\BooleanToStatusConverter.cs" />
@@ -434,10 +435,6 @@
     <Resource Include="Images\FolderError_16x.png" />
   </ItemGroup>
   <ItemGroup>
-    <AddInContent Include="Images\CutHoleTool16.png" />
-    <AddInContent Include="Images\CutHoleTool32.png" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="WorkListUI\Images\PanTo16.png" />
   </ItemGroup>
   <ItemGroup>
@@ -451,12 +448,6 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="WorkListUI\Images\ZoomToAll16.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <AddInContent Include="Images\RemoveOverlapsTool16.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <AddInContent Include="Images\RemoveOverlapsTool32.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\NavigateErrorsCmd16.png" />
@@ -489,13 +480,6 @@
     <Resource Include="WorkListUI\Images\SelectFeatures32.png" />
   </ItemGroup>
   <ItemGroup>
-    <AddInContent Include="Images\AdvancedReshapeTool16.png" />
-    <AddInContent Include="Images\AdvancedReshapeTool32.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <AddInContent Include="Images\AdvancedReshapeToolTip.png" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Images\NavigateWorklistCmd16.png" />
     <Resource Include="Images\NavigateWorklistCmd32.png" />
   </ItemGroup>
@@ -512,23 +496,27 @@
     <Resource Include="Images\WorklistsFolder16.png" />
   </ItemGroup>
   <ItemGroup>
+    <AddInContent Include="Images\AdvancedReshapeTool16.png" />
+    <AddInContent Include="Images\AdvancedReshapeTool32.png" />
+    <AddInContent Include="Images\AdvancedReshapeToolTip.png" />
+    <AddInContent Include="Images\CutHoleTool16.png" />
+    <AddInContent Include="Images\CutHoleTool32.png" />
+    <AddInContent Include="Images\CutPolygonAlongTool16.png" />
+    <AddInContent Include="Images\CutPolygonAlongTool32.png" />
+    <AddInContent Include="Images\RemoveOverlapsTool16.png" />
+    <AddInContent Include="Images\RemoveOverlapsTool32.png" />
+    <AddInContent Include="Images\ReshapeAlongTool16.png" />
     <AddInContent Include="Images\ReshapeAlongTool32.png" />
   </ItemGroup>
   <ItemGroup>
-    <AddInContent Include="Images\CutPolygonAlongTool16.png" />
-    <AddInContent Include="Images\CutPolygonAlongTool32.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <AddInContent Include="Images\VerifyVisibleExtentCmd16.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <AddInContent Include="Images\VerifyVisibleExtentCmd32.png" />
-  </ItemGroup>
-  <ItemGroup>
+    <AddInContent Include="Images\SelectIssueFeaturesTool16.png" />
+    <AddInContent Include="Images\SelectIssueFeaturesTool32.png" />
     <AddInContent Include="Images\VerifyPerimeterTool16.png" />
     <AddInContent Include="Images\VerifyPerimeterTool32.png" />
     <AddInContent Include="Images\VerifySelectionCmd16.png" />
     <AddInContent Include="Images\VerifySelectionCmd32.png" />
+    <AddInContent Include="Images\VerifyVisibleExtentCmd16.png" />
+    <AddInContent Include="Images\VerifyVisibleExtentCmd32.png" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="WorkListUI\UiTestData\" />

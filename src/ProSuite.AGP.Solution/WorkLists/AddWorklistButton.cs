@@ -51,7 +51,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 				string gdbPath = WorkListUtils.GetIssueGeodatabasePath(selectedPath);
 				Assert.NotNull(gdbPath, "issue geodatabase does not exist");
 
-				return new IssueWorklistEnvironment(gdbPath);
+				return new IssueWorkListEnvironment(gdbPath);
 			}
 
 			return null;

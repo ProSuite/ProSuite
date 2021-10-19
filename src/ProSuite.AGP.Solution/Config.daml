@@ -94,6 +94,7 @@
           <tool refID="ProSuite_AGP_Solution_QA_VerifyPerimeterTool" size="small" />
           <button refID="ProSuite_AGP_Solution_QA_VerifySelectionCmd" size="small" />
           <button refID="WorkLists_CreateIssueWorkList" size="large" />
+          <tool refID="ProSuite_AGP_Solution_QA_SelectIssueFeaturesTool" size="small" />
           <!--<button refID="Clients_AGP_ProSuiteSolution_AddWorkList" size="large" />-->
         </group>
         <group id="ProSuiteTools_QA_Hidden" caption="" appearsOnAddInTab="false">
@@ -247,7 +248,7 @@
               loadOnClick="true" smallImage="Images\SelectionTool16.png" largeImage="Images\SelectionTool32.png"
               condition="esri_mapping_mapPane">
           <tooltip heading="Selection Tool">
-            Select features for use with the selection worklist<disabledText />
+            Select features.<disabledText />
           </tooltip>
         </tool>
         <tool id="ProSuiteTools_PickWorkItemTool" caption="Picker Tool" className="Selection.PickWorkListItemTool"
@@ -286,6 +287,13 @@
             Verifies the selected features based on the selected quality specification.<disabledText />
           </tooltip>
         </button>
+        <tool id="ProSuite_AGP_Solution_QA_SelectIssueFeaturesTool" caption="Select Issue Features"
+              className="ProSuite.AGP.Solution.QA.SelectIssueFeaturesTool" loadOnClick="false"
+              smallImage="Images\SelectIssueFeaturesTool16.png" largeImage="Images\SelectIssueFeaturesTool32.png">
+          <tooltip heading="Select Issue Features">
+            Select issue features.<disabledText />
+          </tooltip>
+        </tool>
         <button id="WorkLists_ShowWorkListsButton" caption="Open Work List" className="WorkLists.ShowWorkListsButton"
                 loadOnClick="true" condition="esri_mapping_mapPane"
                 smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd16.png"
