@@ -356,7 +356,9 @@ namespace ProSuite.Commons.AO.Geometry
 			if (UseCustomIntersect &&
 			    ! GeometryUtils.HasNonLinearSegments(geometry1) &&
 			    ! GeometryUtils.HasNonLinearSegments(geometry2) &&
-			    ! GeometryUtils.IsMAware(geometry1))
+			    ! GeometryUtils.IsMAware(geometry1) &&
+			    intersectionPointOption ==
+			    IntersectionPointOptions.IncludeLinearIntersectionEndpoints)
 			{
 				bool planar = ! GeometryUtils.IsZAware(geometry1);
 
