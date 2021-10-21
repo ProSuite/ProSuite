@@ -356,16 +356,21 @@ namespace ProSuite.Commons.AO.Geometry
 			if (UseCustomIntersect &&
 			    ! GeometryUtils.HasNonLinearSegments(geometry1) &&
 			    ! GeometryUtils.HasNonLinearSegments(geometry2) &&
-			    ! GeometryUtils.IsMAware(geometry1))
+			    ! GeometryUtils.IsMAware(geometry1) &&
+			    intersectionPointOption ==
+			    IntersectionPointOptions.IncludeLinearIntersectionEndpoints)
 			{
+				bool planar = ! GeometryUtils.IsZAware(geometry1);
+
 				if (geometry1 is IMultipoint multipointSource)
 				{
-					return GetIntersectionPointsXY(multipointSource, geometry2, xyTolerance);
+					return GetIntersectionPointsXY(multipointSource, geometry2, xyTolerance,
+					                               planar);
 				}
 
 				if (geometry1 is IPolyline polyline)
 				{
-					return GetIntersectionPointsXY(polyline, geometry2, xyTolerance);
+					return GetIntersectionPointsXY(polyline, geometry2, xyTolerance, planar);
 				}
 
 				if (geometry1 is IMultiPatch multipatchSource)
@@ -875,8 +880,8 @@ namespace ProSuite.Commons.AO.Geometry
 					$"Unsupported geometry type: {geometry2.GeometryType}");
 			}
 
-			Multipoint<Pnt3D> resultMultipnt =
-				new Multipoint<Pnt3D>(intersectionPoints.Select(ip => ip.Point));
+			Multipoint<IPnt> resultMultipnt =
+				new Multipoint<IPnt>(intersectionPoints.Select(ip => ip.Point));
 
 			double zTolerance = planar ? double.NaN : tolerance;
 
@@ -890,11 +895,12 @@ namespace ProSuite.Commons.AO.Geometry
 		public static IMultipoint GetIntersectionPointsXY(
 			[NotNull] IPolycurve polycurve1,
 			[NotNull] IGeometry geometry2,
-			double tolerance)
+			double tolerance,
+			bool planar = false)
 		{
 			if (geometry2 is IPolycurve polycurve2)
 			{
-				return GetIntersectionPointsXY(polycurve1, polycurve2, tolerance);
+				return GetIntersectionPointsXY(polycurve1, polycurve2, tolerance, null, planar);
 			}
 
 			if (geometry2 is IMultipoint multipoint2)
@@ -906,12 +912,12 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				// TODO: Proper implementation
 				return GetIntersectionPointsXY(polycurve1, GeometryFactory.CreateMultipoint(point),
-				                               tolerance);
+				                               tolerance, planar);
 			}
 
 			if (geometry2 is IMultiPatch multipatch2)
 			{
-				return GetIntersectionPointsXY(polycurve1, multipatch2, tolerance);
+				return GetIntersectionPointsXY(polycurve1, multipatch2, tolerance, planar);
 			}
 
 			throw new ArgumentOutOfRangeException(
@@ -971,7 +977,8 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				intersectionPointList.AddRange(
 					GeomTopoOpUtils.GetIntersectionPoints(
-						sourcePolyhedron, otherLinestrings, tolerance, false));
+						(ISegmentList) sourcePolyhedron, (ISegmentList) otherLinestrings, tolerance,
+						false));
 			}
 			else if (otherPoints != null)
 			{
@@ -1022,7 +1029,7 @@ namespace ProSuite.Commons.AO.Geometry
 				GeometryConversionUtils.CreateMultiPolycurve(
 					polycurve2, tolerance, curve1Envelope);
 
-			Multipoint<Pnt3D> resultMultipnt = Multipoint<Pnt3D>.CreateEmpty<Pnt3D>();
+			Multipoint<IPnt> resultMultipnt = Multipoint<IPnt>.CreateEmpty();
 
 			// Note: For polygons with many rings it is more efficient to have 1 spatial index
 			//       and process the segment intersections across rings
@@ -1089,7 +1096,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 			bool includeRingInteriorPoints = polycurve1 is IPolygon;
 
-			Multipoint<Pnt3D> resultMultipnt = Multipoint<Pnt3D>.CreateEmpty<Pnt3D>();
+			Multipoint<IPnt> resultMultipnt = Multipoint<IPnt>.CreateEmpty();
 
 			foreach (IPath path1 in GeometryUtils.GetPaths(polycurve1))
 			{
@@ -1134,7 +1141,7 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				intersectionPointList.AddRange(
 					GeomTopoOpUtils.GetIntersectionPoints(
-						sourceSegments, ringGroup, tolerance, true));
+						(ISegmentList) sourceSegments, (ISegmentList) ringGroup, tolerance, true));
 			}
 
 			Multipoint<Pnt3D> resultMultipnt =

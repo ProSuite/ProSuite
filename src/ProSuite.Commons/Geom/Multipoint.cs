@@ -20,6 +20,15 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
+		public static Multipoint<IPnt> CreateEmpty(int capacity = 0)
+		{
+			var result = new Multipoint<IPnt>(capacity);
+
+			result.SetEmpty();
+
+			return result;
+		}
+
 		public Multipoint(int capacity)
 		{
 			_points = new List<T>(capacity);
