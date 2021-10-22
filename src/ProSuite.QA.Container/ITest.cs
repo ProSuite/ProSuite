@@ -87,13 +87,8 @@ namespace ProSuite.QA.Container
 	{
 		void SetIssueFilters([CanBeNull] string expression, IList<IIssueFilter> issueFilters);
 
-		void SetRowFilters(int tableIndex,
+		void SetRowFilters(int tableIndex, [CanBeNull] string expression,
 		                   [CanBeNull] IReadOnlyList<IRowFilter> rowFilters);
-	}
-
-	public interface IRowFilter : IInvolvesTables
-	{
-		bool VerifyExecute(IRow row);
 	}
 
 	public interface ITableTransformer : IInvolvesTables
@@ -124,10 +119,18 @@ namespace ProSuite.QA.Container
 		void SetKnownTransformedRows([CanBeNull] IEnumerable<IRow> knownRows);
 	}
 
-	public interface IIssueFilter : IInvolvesTables
+	public interface INamedFilter : IInvolvesTables
 	{
 		string Name { get; set; }
+	}
 
+	public interface IRowFilter : INamedFilter
+	{
+		bool VerifyExecute(IRow row);
+	}
+
+	public interface IIssueFilter : INamedFilter
+	{
 		bool Check(QaErrorEventArgs args);
 	}
 }

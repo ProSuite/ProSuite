@@ -61,12 +61,23 @@ namespace ProSuite.QA.Container
 
 		public IList<TerrainReference> InvolvedTerrains { get; protected set; }
 
-		private Dictionary<int, IReadOnlyList<IRowFilter>> _rowFilterDict;
+		private Dictionary<int, string> _rowFiltersExpressionDict;
 
-		private Dictionary<int, IReadOnlyList<IRowFilter>> RowFilterDict =>
-			_rowFilterDict ?? (_rowFilterDict = new Dictionary<int, IReadOnlyList<IRowFilter>>());
+		private Dictionary<int, string> RowFiltersExpressionDict =>
+			_rowFiltersExpressionDict ??
+			(_rowFiltersExpressionDict = new Dictionary<int, string>());
 
-		public string IssueFilterExpression { get; private set; }
+		private Dictionary<int, IReadOnlyList<IRowFilter>> _rowFiltersDict;
+
+		private Dictionary<int, IReadOnlyList<IRowFilter>> RowFiltersDict =>
+			_rowFiltersDict ?? (_rowFiltersDict = new Dictionary<int, IReadOnlyList<IRowFilter>>());
+
+		private Dictionary<int, DataView> _rowFiltersViewDict;
+
+		private Dictionary<int, DataView> RowFiltersViewDict =>
+			_rowFiltersViewDict ?? (_rowFiltersViewDict = new Dictionary<int, DataView>());
+
+		public string IssueFiltersExpression { get; private set; }
 		private List<IIssueFilter> _issueFilters;
 		public IReadOnlyList<IIssueFilter> IssueFilters => _issueFilters;
 
@@ -75,7 +86,7 @@ namespace ProSuite.QA.Container
 			_issueFilters = _issueFilters ?? new List<IIssueFilter>();
 			_issueFilters.AddRange(issueFilters);
 
-			IssueFilterExpression = expression;
+			IssueFiltersExpression = expression;
 		}
 
 		public IEnumerable<IGeoDataset> GetInvolvedGeoDatasets()
@@ -135,7 +146,7 @@ namespace ProSuite.QA.Container
 		[PublicAPI]
 		protected bool KeepRows { get; set; }
 
-		private DataView _issueFilterView;
+		private DataView _issueFiltersView;
 
 		protected override void OnQaError(QaErrorEventArgs args)
 		{
@@ -148,57 +159,69 @@ namespace ProSuite.QA.Container
 
 				EnsureIssueFilter();
 
-				DataRow filterRow = null;
-				foreach (IIssueFilter issueFilter in _issueFilters)
-				{
-					bool fulFilled = issueFilter.Check(args);
-					if (fulFilled && string.IsNullOrWhiteSpace(IssueFilterExpression))
-					{
-						args.Cancel = true;
-						return;
-					}
-
-					if (_issueFilterView != null)
-					{
-						filterRow = filterRow ?? _issueFilterView.Table.NewRow();
-						filterRow[issueFilter.Name] = fulFilled;
-					}
-				}
-
-				filterRow?.Table.Rows.Add(filterRow);
-				filterRow?.AcceptChanges();
-
-				if (_issueFilterView?.Count == 1)
+				if (IsFulfilled(_issueFiltersView, _issueFilters,
+				                filter => filter.Check(args)))
 				{
 					args.Cancel = true;
-					return;
 				}
-
-				_issueFilterView?.Table.Clear();
-				_issueFilterView?.Table.AcceptChanges();
 			}
 
 			base.OnQaError(args);
 		}
 
-		private void EnsureIssueFilter()
+		private static bool IsFulfilled<T>(DataView filtersView, IEnumerable<T> filters,
+		                                   Func<T, bool> fulfilledFunc)
+			where T : INamedFilter
 		{
-			if (_issueFilterView != null)
+			DataRow filterRow = null;
+			foreach (T filter in filters)
 			{
-				return;
-			}
-
-			if (! string.IsNullOrWhiteSpace(IssueFilterExpression))
-			{
-				DataTable tbl = new DataTable();
-				foreach (IIssueFilter issueFilter in _issueFilters)
+				bool fulFilled = fulfilledFunc(filter);
+				if (fulFilled && string.IsNullOrWhiteSpace(filtersView?.RowFilter))
 				{
-					tbl.Columns.Add(issueFilter.Name, typeof(bool));
+					return true;
 				}
 
-				_issueFilterView = new DataView(tbl);
-				_issueFilterView.RowFilter = IssueFilterExpression;
+				if (filtersView != null)
+				{
+					filterRow = filterRow ?? filtersView.Table.NewRow();
+					filterRow[filter.Name] = fulFilled;
+				}
 			}
+
+			filterRow?.Table.Rows.Add(filterRow);
+			filterRow?.AcceptChanges();
+
+			bool fulfilled = filtersView?.Count == 1;
+			filtersView?.Table.Clear();
+			filtersView?.Table.AcceptChanges();
+
+			return fulfilled;
+		}
+
+		private void EnsureIssueFilter()
+		{
+			_issueFiltersView = _issueFiltersView ??
+			                    GetFiltersView(IssueFiltersExpression, _issueFilters);
+		}
+
+		private static DataView GetFiltersView<T>(string filtersExpression, IEnumerable<T> filters)
+			where T : INamedFilter
+		{
+			if (string.IsNullOrWhiteSpace(filtersExpression))
+			{
+				return null;
+			}
+
+			DataTable tbl = new DataTable();
+			foreach (T issueFilter in filters)
+			{
+				tbl.Columns.Add(issueFilter.Name, typeof(bool));
+			}
+
+			DataView filtersView = new DataView(tbl);
+			filtersView.RowFilter = filtersExpression;
+			return filtersView;
 		}
 
 		#region ITest Members
@@ -887,16 +910,17 @@ namespace ProSuite.QA.Container
 		}
 
 		protected override void SetRowFiltersCore(
-			int tableIndex, [CanBeNull] IReadOnlyList<IRowFilter> rowFilters)
+			int tableIndex, string rowFiltersExpression, IReadOnlyList<IRowFilter> rowFilters)
 		{
-			RowFilterDict[tableIndex] = rowFilters;
+			RowFiltersExpressionDict[tableIndex] = rowFiltersExpression;
+			RowFiltersDict[tableIndex] = rowFilters;
 		}
 
 		[NotNull]
 		public IReadOnlyList<IRowFilter> GetRowFilters(int involvedTableIndex)
 		{
-			if (! RowFilterDict.TryGetValue(involvedTableIndex,
-			                                out IReadOnlyList<IRowFilter> rowFilters))
+			if (! RowFiltersDict.TryGetValue(involvedTableIndex,
+			                                 out IReadOnlyList<IRowFilter> rowFilters))
 			{
 				rowFilters = new List<IRowFilter>();
 			}
@@ -909,7 +933,6 @@ namespace ProSuite.QA.Container
 		{
 			var cursor = new EnumCursor(table, queryFilter, ! KeepRows);
 			var errorCount = 0;
-			IReadOnlyList<IRowFilter> rowFilters = GetRowFilters(tableIndex);
 
 			foreach (IRow row in cursor)
 			{
@@ -931,15 +954,7 @@ namespace ProSuite.QA.Container
 					}
 				}
 
-				bool cancel = false;
-				foreach (var rowFilter in rowFilters)
-				{
-					if (! rowFilter.VerifyExecute(row))
-					{
-						cancel = true;
-						break;
-					}
-				}
+				bool cancel = RowFiltersCancel(row, tableIndex);
 
 				if (! cancel)
 				{
@@ -948,6 +963,24 @@ namespace ProSuite.QA.Container
 			}
 
 			return errorCount;
+		}
+
+		public bool RowFiltersCancel(IRow row, int tableIndex)
+		{
+			bool cancel = false;
+			RowFiltersDict.TryGetValue(tableIndex, out IReadOnlyList<IRowFilter> filters);
+			if (filters?.Count > 0)
+			{
+				if (! RowFiltersViewDict.TryGetValue(tableIndex, out DataView view))
+				{
+					RowFiltersExpressionDict.TryGetValue(tableIndex, out string expression);
+					RowFiltersViewDict[tableIndex] = GetFiltersView(expression, filters);
+				}
+
+				cancel = IsFulfilled(view, filters, filter => ! filter.VerifyExecute(row));
+			}
+
+			return cancel;
 		}
 
 		private class TestProgress : ITestProgress

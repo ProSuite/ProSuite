@@ -86,7 +86,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 		}
 
-		
 		[NotNull]
 		public static XmlQualityCondition DeserializeCondition([NotNull] TextReader xml)
 		{
@@ -104,7 +103,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					string.Format("Error deserializing xml: {0}", e.Message), e);
 			}
 		}
-		
+
 		private static string GetSchema(TextReader xml, out QaSpecVersion version)
 		{
 			string schema = null;
@@ -281,7 +280,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				uuids.Add(trimmedUuid);
 			}
 		}
-
 
 		public static void AssertUniqueQualityConditionNames(
 			[NotNull] XmlDataQualityDocument document)
@@ -581,11 +579,13 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 						continue;
 					}
 
+					IList<string> rowFilterNames =
+						GetFilterNames(datasetTestParameterValue.RowFilterExpression?.Expression);
 					// Handle row filters
-					if (datasetTestParameterValue.RowFilterNames != null)
+					if (rowFilterNames != null)
 					{
 						var rowFilterConfigurations = new List<XmlInstanceConfiguration>();
-						foreach (string name in datasetTestParameterValue.RowFilterNames)
+						foreach (string name in rowFilterNames)
 						{
 							if (! conditionsCache.TryGetRowFilter(
 								    name, out XmlRowFilterConfiguration rowFilterConfiguration))
@@ -995,11 +995,14 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				xmlValue.WhereClause,
 				xmlValue.UsedAsReferenceData);
 
-			if (xmlValue.RowFilterNames != null)
+			string rowFilterExpression = xmlValue.RowFilterExpression?.Expression;
+			IList<string> rowFilterNames = GetFilterNames(rowFilterExpression);
+			if (rowFilterNames != null)
 			{
 				IList<RowFilterConfiguration> rowFilterConfigurations =
-					rowFilterProvider(xmlValue.RowFilterNames);
+					rowFilterProvider(rowFilterNames);
 
+				paramValue.RowFiltersExpression = rowFilterExpression;
 				paramValue.RowFilterConfigurations = rowFilterConfigurations;
 			}
 

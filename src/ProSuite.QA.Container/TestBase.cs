@@ -292,6 +292,8 @@ namespace ProSuite.QA.Container
 
 	public abstract class RowFilter : InvolvesTablesBase, IRowFilter
 	{
+		public string Name { get; set; }
+
 		protected RowFilter([NotNull] IEnumerable<ITable> tables)
 			: base(tables) { }
 
@@ -364,6 +366,7 @@ namespace ProSuite.QA.Container
 			public string Constraint { get; set; }
 			public bool UseCaseSensitiveSQL { get; set; }
 			public bool QueriedOnly { get; set; }
+			public string RowFiltersExpression { get; set; }
 			public IReadOnlyList<IRowFilter> RowFilters { get; set; }
 		}
 
@@ -460,11 +463,12 @@ namespace ProSuite.QA.Container
 			_tableProps[tableIndex].UseCaseSensitiveSQL = useCaseSensitiveQaSql;
 		}
 
-		public void SetRowFilters(int tableIndex,
+		public void SetRowFilters(int tableIndex, [CanBeNull] string rowFiltersExpression,
 		                          [CanBeNull] IReadOnlyList<IRowFilter> rowFilters)
 		{
+			_tableProps[tableIndex].RowFiltersExpression = rowFiltersExpression;
 			_tableProps[tableIndex].RowFilters = rowFilters;
-			SetRowFiltersCore(tableIndex, rowFilters);
+			SetRowFiltersCore(tableIndex, rowFiltersExpression, rowFilters);
 		}
 
 		protected void CopyFilters([NotNull] out IList<ISpatialFilter> spatialFilters,
@@ -543,7 +547,8 @@ namespace ProSuite.QA.Container
 		                                         string constraint) { }
 
 		protected virtual void SetRowFiltersCore(
-			int tableIndex, IReadOnlyList<IRowFilter> rowFilters) { }
+			int tableIndex, [CanBeNull] string rowFiltersExpression,
+			[CanBeNull] IReadOnlyList<IRowFilter> rowFilters) { }
 
 		public void SetAreaOfInterest(IPolygon areaOfInterest)
 		{

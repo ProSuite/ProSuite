@@ -512,7 +512,6 @@ namespace ProSuite.QA.Container.TestContainer
 						testsPerTable, cachedRow.Feature, tile.SpatialFilter.Geometry,
 						out IList<ContainerTest> reducedTests);
 
-
 					_tileCache.OverlappingFeatures.RegisterTestedFeature(
 						cachedRow, cachedRowSearchTolerance.Value, reducedTests);
 
@@ -975,6 +974,11 @@ namespace ProSuite.QA.Container.TestContainer
 							double filterSearch =
 								filter is IHasSearchDistance has ? has.SearchDistance : 0;
 							cachedSet[table] = Math.Max(searchDist, filterSearch);
+						}
+
+						if (filter is RowFilter f)
+						{
+							f.DataContainer = this;
 						}
 					}
 				}

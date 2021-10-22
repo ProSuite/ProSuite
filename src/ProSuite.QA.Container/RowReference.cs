@@ -71,13 +71,10 @@ namespace ProSuite.QA.Container
 				return 0;
 			}
 
-			foreach (var rowFilter in containerTest.GetRowFilters(involvedTableIndex))
+			if (containerTest.RowFiltersCancel(row, involvedTableIndex))
 			{
-				if (! rowFilter.VerifyExecute(row))
-				{
-					applicable = false;
-					return 0;
-				}
+				applicable = false;
+				return 0;
 			}
 
 			// the test is applicable for the row, run it

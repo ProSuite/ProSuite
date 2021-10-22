@@ -397,13 +397,18 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				xmlDatasetTestParameterValue.WhereClause,
 				xmlDatasetTestParameterValue.UsedAsReferenceData);
 
-			IList<string> rowFilterNames = xmlDatasetTestParameterValue.RowFilterNames;
+			string rowFiltersExpression =
+				xmlDatasetTestParameterValue.RowFilterExpression?.Expression;
 
-			if (rowFilterNames != null)
+			if (rowFiltersExpression != null)
 			{
+				IList<string> rowFilterNames =
+					XmlDataQualityUtils.GetFilterNames(rowFiltersExpression);
+
 				IList<RowFilterConfiguration> rowFilterConfigurations =
 					GetRowFilterConfigurations(rowFilterNames, datasetSettings);
 
+				paramValue.RowFiltersExpression = rowFiltersExpression;
 				paramValue.RowFilterConfigurations = rowFilterConfigurations;
 			}
 
@@ -476,10 +481,13 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 					}
 				}
 
-				if (parameterValue is XmlDatasetTestParameterValue dsValue &&
-				    dsValue.RowFilterNames != null)
+				if (parameterValue is XmlDatasetTestParameterValue dsValue)
 				{
-					foreach (string filterName in dsValue.RowFilterNames)
+					IList<string> rowFilterNames =
+						XmlDataQualityUtils.GetFilterNames(dsValue.RowFilterExpression?.Expression)
+						?? new List<string>();
+
+					foreach (string filterName in rowFilterNames)
 					{
 						if (! RowFilters.TryGetValue(filterName,
 						                             out XmlRowFilterConfiguration filter))

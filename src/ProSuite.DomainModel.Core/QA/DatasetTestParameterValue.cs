@@ -16,6 +16,8 @@ namespace ProSuite.DomainModel.Core.QA
 		[UsedImplicitly] private IList<RowFilterConfiguration> _rowFilterConfigurations =
 			new List<RowFilterConfiguration>();
 
+		[UsedImplicitly] private string _rowFiltersExpression;
+
 		#region Constructors
 
 		/// <summary>
@@ -139,6 +141,13 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			get => _rowFilterConfigurations;
 			set => _rowFilterConfigurations = value;
+		}
+
+		[CanBeNull]
+		public string RowFiltersExpression
+		{
+			get => _rowFiltersExpression;
+			set => _rowFiltersExpression = value;
 		}
 
 		public bool UsedAsReferenceData

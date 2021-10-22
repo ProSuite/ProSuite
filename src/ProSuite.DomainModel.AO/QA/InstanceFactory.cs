@@ -207,7 +207,8 @@ namespace ProSuite.DomainModel.AO.QA
 
 					if (instance is IFilterEditTest filterTest)
 					{
-						filterTest.SetRowFilters(tableIndex, tableConstraint.RowFilters);
+						filterTest.SetRowFilters(tableIndex, tableConstraint.RowFiltersExpression,
+						                         tableConstraint.RowFilters);
 					}
 				}
 			}
@@ -367,12 +368,14 @@ namespace ProSuite.DomainModel.AO.QA
 					                           ModelElementUtils.UseCaseSensitiveSql(
 						                           table, dataModel.SqlCaseSensitivity);
 
-					List<IRowFilter> preProcessors = GetRowFilters(
+					List<IRowFilter> rowFilters = GetRowFilters(
 						datasetParameterValue.RowFilterConfigurations, datasetContext);
 
 					tableConstraints.Add(new TableConstraint(
 						                     table, datasetParameterValue.FilterExpression,
-						                     useCaseSensitiveSql, preProcessors));
+						                     useCaseSensitiveSql,
+						                     datasetParameterValue.RowFiltersExpression,
+						                     rowFilters));
 				}
 			}
 
@@ -503,7 +506,9 @@ namespace ProSuite.DomainModel.AO.QA
 				Assert.NotNull(rowFilterFactory,
 				               $"Cannot create RowFilterFactory for {rowFilterConfig}");
 
-				filters.Add(rowFilterFactory.Create(context, rowFilterConfig));
+				IRowFilter filter = rowFilterFactory.Create(context, rowFilterConfig);
+				filter.Name = rowFilterConfig.Name;
+				filters.Add(filter);
 			}
 
 			return filters;
@@ -517,10 +522,12 @@ namespace ProSuite.DomainModel.AO.QA
 			/// <param name="table">The table.</param>
 			/// <param name="filterExpression">The filter expression.</param>
 			/// <param name="qaSqlIsCaseSensitive">Indicates if SQL statements referring to this table should be treated as case-sensitive (only if evaluated by the QA sql engine)</param>
-			/// <param name="rowFilters">non text base filters</param>
+			/// <param name="rowFiltersExpression">condition of the non text based filters, formulated by AND/OR combinations of IRowFilter.Name </param>
+			/// <param name="rowFilters">non text based filters</param>
 			public TableConstraint([NotNull] ITable table,
 			                       [CanBeNull] string filterExpression,
 			                       bool qaSqlIsCaseSensitive,
+			                       [CanBeNull] string rowFiltersExpression = null,
 			                       [CanBeNull] IReadOnlyList<IRowFilter> rowFilters = null)
 			{
 				Assert.ArgumentNotNull(table, nameof(table));
@@ -528,6 +535,7 @@ namespace ProSuite.DomainModel.AO.QA
 				Table = table;
 				FilterExpression = filterExpression;
 				QaSqlIsCaseSensitive = qaSqlIsCaseSensitive;
+				RowFiltersExpression = rowFiltersExpression;
 				RowFilters = rowFilters;
 			}
 
@@ -538,6 +546,11 @@ namespace ProSuite.DomainModel.AO.QA
 			public string FilterExpression { get; }
 
 			public bool QaSqlIsCaseSensitive { get; }
+
+			[CanBeNull]
+			public string RowFiltersExpression { get; }
+
+			[CanBeNull]
 			public IReadOnlyList<IRowFilter> RowFilters { get; }
 		}
 	}

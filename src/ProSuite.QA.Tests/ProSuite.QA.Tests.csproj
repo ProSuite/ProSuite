@@ -345,6 +345,7 @@
     <Compile Include="QaZDifferenceOther.cs" />
     <Compile Include="QaZDifferenceSelf.cs" />
     <Compile Include="RouteMeasures.cs" />
+    <Compile Include="RowFilters\RfExecuteArea.cs" />
     <Compile Include="Schema\DomainUsage.cs" />
     <Compile Include="Schema\FieldSpecification.cs" />
     <Compile Include="Schema\FieldSpecifications.cs" />
