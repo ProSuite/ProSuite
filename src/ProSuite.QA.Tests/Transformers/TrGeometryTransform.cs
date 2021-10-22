@@ -16,24 +16,29 @@ namespace ProSuite.QA.Tests.Transformers
 	public abstract class TrGeometryTransform : ITableTransformer<IFeatureClass>,
 	                                            IGeometryTransformer, IContainerTransformer
 	{
-		private readonly IFeatureClass _fc;
 		private readonly Tfc _transformedFc;
-
-		private IList<string> _attributes;
 
 		public IList<ITable> InvolvedTables { get; }
 
 		protected TrGeometryTransform([NotNull] IFeatureClass fc, esriGeometryType derivedShapeType)
 		{
-			_fc = fc;
 			InvolvedTables = new List<ITable> {(ITable) fc};
 
-			_transformedFc = new Tfc(_fc, derivedShapeType, this);
+			_transformedFc = new Tfc(fc, derivedShapeType, this);
+			// ReSharper disable once VirtualMemberCallInConstructor
+			AddCustomAttributes(_transformedFc);
 		}
 
 		public IFeatureClass GetTransformed() => _transformedFc;
 
 		object ITableTransformer.GetTransformed() => GetTransformed();
+
+		protected virtual void AddCustomAttributes(GdbFeatureClass transformedFc) { }
+
+		protected IFeature CreateFeature()
+		{
+			return _transformedFc.CreateFeature();
+		}
 
 		void IInvolvesTables.SetConstraint(int tableIndex, string condition)
 		{
@@ -45,10 +50,10 @@ namespace ProSuite.QA.Tests.Transformers
 			_transformedFc.BackingDs.SetSqlCaseSensitivity(tableIndex, useCaseSensitiveQaSql);
 		}
 
-		IEnumerable<IGeometry> IGeometryTransformer.Transform(IGeometry source) =>
-			Transform(source);
+		IEnumerable<IFeature> IGeometryTransformer.Transform(IGeometry source)
+			=> Transform(source);
 
-		protected abstract IEnumerable<IGeometry> Transform(IGeometry source);
+		protected abstract IEnumerable<IFeature> Transform(IGeometry source);
 
 		bool IContainerTransformer.IsGeneratedFrom(Involved involved, Involved source) =>
 			IsGeneratedFrom(involved, source);
@@ -215,16 +220,17 @@ namespace ProSuite.QA.Tests.Transformers
 					}
 
 					IGeometry geom = baseFeature.Shape;
-					foreach (IGeometry transformed in Resulting.Transformer.Transform(geom))
+					foreach (IFeature featureWithTransformedGeom
+						in Resulting.Transformer.Transform(geom))
 					{
-						GdbFeature f = Resulting.CreateFeature();
-						f.Shape = transformed;
-						f.Store();
+						IFeature f = featureWithTransformedGeom;
 
 						List<IRow> involved = new List<IRow> {row};
 						f.set_Value(
-							Resulting.FindField(InvolvedRowUtils.BaseRowField),
-							involved); // TODO: set fields
+							f.Table.FindField(InvolvedRowUtils.BaseRowField),
+							involved);
+
+						f.Store();
 
 						yield return f;
 					}

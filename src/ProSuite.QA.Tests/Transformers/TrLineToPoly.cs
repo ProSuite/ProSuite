@@ -3,19 +3,36 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Core;
 
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
 	public class TrLineToPoly : TrGeometryTransform
 	{
-		public TrLineToPoly([NotNull] IFeatureClass closedLineClass)
-			: base(closedLineClass, esriGeometryType.esriGeometryPolygon) { }
+		private const PolylineUsage _defaultPolylineUsage =
+			PolylineUsage.AsPolygonIfClosedElseIgnore;
 
-		protected override IEnumerable<IGeometry> Transform(IGeometry source)
+		public TrLineToPoly([NotNull] IFeatureClass closedLineClass)
+			: base(closedLineClass, esriGeometryType.esriGeometryPolygon)
+		{
+			PolylineUsage = _defaultPolylineUsage;
+		}
+
+		[TestParameter(_defaultPolylineUsage)]
+		public PolylineUsage PolylineUsage { get; set; }
+
+		protected override IEnumerable<IFeature> Transform(IGeometry source)
 		{
 			IPolyline line = (IPolyline) source;
-			yield return GeometryFactory.CreatePolygon(line);
+			if (PolylineUsage == PolylineUsage.AsPolygonIfClosedElseIgnore && ! line.IsClosed)
+			{
+				yield break;
+			}
+
+			IFeature feature = CreateFeature();
+			feature.Shape = GeometryFactory.CreatePolygon(line);
+			yield return feature;
 		}
 	}
 }

@@ -12,10 +12,12 @@ namespace ProSuite.QA.Tests.Transformers
 		public TrFootprint([NotNull] IFeatureClass multipatchClass)
 			: base(multipatchClass, esriGeometryType.esriGeometryPolygon) { }
 
-		protected override IEnumerable<IGeometry> Transform(IGeometry source)
+		protected override IEnumerable<IFeature> Transform(IGeometry source)
 		{
 			IMultiPatch patch = (IMultiPatch) source;
-			yield return CreateFootprintUtils.GetFootprint(patch);
+			IFeature feature = CreateFeature();
+			feature.Shape = CreateFootprintUtils.GetFootprint(patch);
+			yield return feature;
 		}
 	}
 }

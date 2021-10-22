@@ -31,7 +31,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 		[Test]
 		public void GeometryToPoints()
 		{
-			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrDissolve");
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrGeomToPoints");
 
 			IFeatureClass lineFc =
 				CreateFeatureClass(ws, "lineFc", esriGeometryType.esriGeometryPolyline);
@@ -70,6 +70,84 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
+			}
+		}
+
+		[Test]
+		public void MultilineToLine()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrMultiline");
+
+			IFeatureClass lineFc =
+				CreateFeatureClass(ws, "lineFc", esriGeometryType.esriGeometryPolyline);
+
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Shape = CurveConstruction.StartLine(0, 0).LineTo(70, 70)
+				                           .MoveTo(10, 0).LineTo(20, 5).Curve;
+				f.Store();
+			}
+
+			TrMultilineToLine tr = new TrMultilineToLine(lineFc);
+			QaMinLength test = new QaMinLength(tr.GetTransformed(), 100);
+			{
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(2, runner.Errors.Count);
+			}
+			test.SetConstraint(0, $"{TrMultilineToLine.AttrPartIndex} = 0");
+			{
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(1, runner.Errors.Count);
+			}
+		}
+
+		[Test]
+		public void MultipolyToPoly()
+		{
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("TrMultipoly");
+
+			IFeatureClass lineFc =
+				CreateFeatureClass(ws, "lineFc", esriGeometryType.esriGeometryPolygon);
+
+			{
+				IFeature f = lineFc.CreateFeature();
+				f.Shape =
+					CurveConstruction
+						.StartPoly(0, 0).LineTo(30, 0).LineTo(30, 30).LineTo(0, 30).LineTo(0, 0)
+						.MoveTo(10, 10).LineTo(10, 20).LineTo(20, 20).LineTo(20, 10).LineTo(10, 10)
+						.MoveTo(22, 22).LineTo(22, 24).LineTo(24, 24).LineTo(24, 22).LineTo(22, 22)
+						.MoveTo(13, 13).LineTo(17, 13).LineTo(17, 17).LineTo(13, 17).LineTo(13, 13)
+						.MoveTo(40, 40).LineTo(50, 40).LineTo(50, 50).LineTo(40, 50).LineTo(40, 40)
+						.ClosePolygon();
+				f.Store();
+			}
+
+			TrMultipolygonToPolygon tr = new TrMultipolygonToPolygon(lineFc);
+			QaMinArea test = new QaMinArea(tr.GetTransformed(), 850);
+			{
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(3, runner.Errors.Count);
+			}
+			{
+				tr.TransformedParts = TrMultipolygonToPolygon.PolygonPart.OuterRings;
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(2, runner.Errors.Count);
+			}
+			{
+				tr.TransformedParts = TrMultipolygonToPolygon.PolygonPart.InnerRings;
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(2, runner.Errors.Count);
+			}
+			{
+				tr.TransformedParts = TrMultipolygonToPolygon.PolygonPart.AllRings;
+				var runner = new QaContainerTestRunner(1000, test);
+				runner.Execute();
+				Assert.AreEqual(4, runner.Errors.Count);
 			}
 		}
 
