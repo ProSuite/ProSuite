@@ -95,6 +95,7 @@
           <button refID="ProSuite_AGP_Solution_QA_VerifySelectionCmd" size="small" />
           <button refID="WorkLists_CreateIssueWorkList" size="large" />
           <tool refID="ProSuite_AGP_Solution_QA_SelectIssueFeaturesTool" size="small" />
+          <button refID="ProSuite_AGP_Solution_QA_SelectInvolvedObjectsCmd" size="small" />
           <!--<button refID="Clients_AGP_ProSuiteSolution_AddWorkList" size="large" />-->
         </group>
         <group id="ProSuiteTools_QA_Hidden" caption="" appearsOnAddInTab="false">
@@ -294,6 +295,13 @@
             Select issue features.<disabledText />
           </tooltip>
         </tool>
+        <button id="ProSuite_AGP_Solution_QA_SelectInvolvedObjectsCmd" caption="Select Involved Objects"
+                className="ProSuite.AGP.Solution.QA.SelectInvolvedObjectsCmd" loadOnClick="false"
+                smallImage="Images\SelectInvolvedObjectsCmd16.png" largeImage="Images\SelectInvolvedObjectsCmd32.png">
+          <tooltip heading="Select Involved Objects">
+            Select involved objects.<disabledText />
+          </tooltip>
+        </button>
         <button id="WorkLists_ShowWorkListsButton" caption="Open Work List" className="WorkLists.ShowWorkListsButton"
                 loadOnClick="true" condition="esri_mapping_mapPane"
                 smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd16.png"

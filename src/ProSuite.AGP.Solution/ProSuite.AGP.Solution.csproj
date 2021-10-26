@@ -150,6 +150,7 @@
     <Compile Include="ProjectItem\WorklistsContainer.cs" />
     <Compile Include="QA\QualitySpecificationsComboBox.cs" />
     <Compile Include="QA\QualityVerificationEnvironment.cs" />
+    <Compile Include="QA\SelectInvolvedObjectsCmd.cs" />
     <Compile Include="QA\SelectIssueFeaturesTool.cs" />
     <Compile Include="QA\VerifyPerimeterTool.cs" />
     <Compile Include="QA\VerifySelectionCmd.cs" />
@@ -509,6 +510,8 @@
     <AddInContent Include="Images\ReshapeAlongTool32.png" />
   </ItemGroup>
   <ItemGroup>
+    <AddInContent Include="Images\SelectInvolvedObjectsCmd16.png" />
+    <AddInContent Include="Images\SelectInvolvedObjectsCmd32.png" />
     <AddInContent Include="Images\SelectIssueFeaturesTool16.png" />
     <AddInContent Include="Images\SelectIssueFeaturesTool32.png" />
     <AddInContent Include="Images\VerifyPerimeterTool16.png" />
