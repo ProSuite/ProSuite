@@ -65,9 +65,9 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 		}
 
-		public static Linestring GetLinestring(IPath path1)
+		public static Linestring GetLinestring(IPath path)
 		{
-			IEnumerable<Pnt3D> path1Pnts3D = GetPnts3D(path1);
+			IEnumerable<Pnt3D> path1Pnts3D = GetPnts3D(path);
 
 			return new Linestring(path1Pnts3D);
 		}
@@ -255,6 +255,75 @@ namespace ProSuite.Commons.AO.Geometry
 			return pnt3D ? (IPnt) new Pnt3D(p.X, p.Y, p.Z) : new Pnt2D(p.X, p.Y);
 		}
 
+		/// <summary>
+		/// Creates a multi-polycurve from the provided polycurve with special consideration for
+		/// non-linear segments.
+		/// </summary>
+		/// <param name="polycurve"></param>
+		/// <param name="omitNonLinearSegments">If true, non-linear segments will be skipped,
+		/// otherwise non-linear segments will be stroked (linearized).</param>
+		/// <param name="tolerance"></param>
+		/// <param name="aoi"></param>
+		/// <returns></returns>
+		public static MultiPolycurve CreateMultiPolycurve([NotNull] IPolycurve polycurve,
+		                                                  bool omitNonLinearSegments,
+		                                                  double tolerance = 0,
+		                                                  [CanBeNull] IEnvelope aoi = null)
+		{
+			var result = new List<Linestring>();
+
+			bool hasNonLinearSegments = GeometryUtils.HasNonLinearSegments(polycurve);
+
+			if (! hasNonLinearSegments)
+			{
+				return CreateMultiPolycurve(polycurve, tolerance, aoi);
+			}
+
+			if (! omitNonLinearSegments)
+			{
+				// Linearize:
+				polycurve = GeometryFactory.Clone(polycurve);
+				GeometryUtils.EnsureLinearized(polycurve, tolerance);
+
+				return CreateMultiPolycurve(polycurve, tolerance, aoi);
+			}
+
+			// Omit non-linear segments:
+			IEnumerable<IPath> paths = GeometryUtils.GetPaths(polycurve);
+
+			foreach (IPath path in paths.Where(p => ! IsDisjoint(p, aoi)))
+			{
+				List<Linestring> pathLinestrings =
+					GetLinearLinestrings(path).ToList();
+
+				// allow merging the last with the first in case the second segment is omitted
+				// (e.g. because it is non-linear)
+				int lastIdx = pathLinestrings.Count - 1;
+
+				if (pathLinestrings.Count > 1 &&
+				    pathLinestrings[0].StartPoint.Equals(
+					    pathLinestrings[lastIdx].EndPoint))
+				{
+					var lastAndFirst = new List<Linestring>
+					                   {
+						                   pathLinestrings[lastIdx],
+						                   pathLinestrings[0]
+					                   };
+
+					Linestring newFirst =
+						GeomTopoOpUtils.MergeConnectedLinestrings(
+							lastAndFirst, null, tolerance);
+
+					pathLinestrings[0] = newFirst;
+					pathLinestrings.RemoveAt(lastIdx);
+				}
+
+				result.AddRange(pathLinestrings);
+			}
+
+			return new MultiPolycurve(result);
+		}
+
 		public static MultiPolycurve CreateMultiPolycurve([NotNull] IPolycurve polycurve,
 		                                                  double tolerance = 0,
 		                                                  [CanBeNull] IEnvelope aoi = null)
@@ -273,19 +342,14 @@ namespace ProSuite.Commons.AO.Geometry
 		{
 			var result = new MultiPolycurve(new List<Linestring>());
 
-			IEnvelope envelope = new EnvelopeClass();
-
 			foreach (IPath path in paths)
 			{
-				if (aoi != null && ! aoi.IsEmpty)
+				if (IsDisjoint(path, aoi))
 				{
-					path.QueryEnvelope(envelope);
-
-					if (GeometryUtils.Disjoint(aoi, envelope, tolerance))
-					{
-						continue;
-					}
+					continue;
 				}
+
+				// TODO: Consider filtering segments also by AOI
 
 				// linestring without spatial index
 				Linestring linestring = CreateLinestring(path, int.MaxValue);
@@ -425,7 +489,6 @@ namespace ProSuite.Commons.AO.Geometry
 
 				linestring.SpatialIndex =
 					SpatialHashSearcher<int>.CreateSpatialSearcher(linestring, gridSize);
-				//linestring.SpatialIndex = BoxTreeSearcher<int>.CreateSpatialSearcher(linestring);
 			}
 
 			return linestring;
@@ -435,12 +498,21 @@ namespace ProSuite.Commons.AO.Geometry
 			[NotNull] IEnumerable<IntersectionPath3D> intersectionPaths,
 			[NotNull] ISpatialReference spatialReference)
 		{
+			IEnumerable<Linestring> linestrings = intersectionPaths.Select(ip => ip.Segments);
+
+			return CreatePolyline(linestrings, spatialReference);
+		}
+
+		public static IPolyline CreatePolyline(
+			[NotNull] IEnumerable<Linestring> linestrings,
+			[NotNull] ISpatialReference spatialReference)
+		{
 			var paths = new List<IPath>();
 
-			foreach (IntersectionPath3D lineString in intersectionPaths)
+			foreach (Linestring lineString in linestrings)
 			{
 				List<IPoint> points =
-					lineString.Segments.GetPoints()
+					lineString.GetPoints()
 					          .Select(p => GeometryFactory.CreatePoint(p.X, p.Y, p.Z))
 					          .ToList();
 
@@ -463,6 +535,101 @@ namespace ProSuite.Commons.AO.Geometry
 			double z = pnt is Pnt3D pnt3D ? pnt3D.Z : double.NaN;
 
 			return GeometryFactory.CreatePoint(pnt.X, pnt.Y, z, double.NaN, spatialReference);
+		}
+
+		private static IEnumerable<Linestring> GetLinearLinestrings(
+			[NotNull] IPath path,
+			[CanBeNull] IEnvelope aoi = null)
+		{
+			IPoint fromPoint = new PointClass();
+			IPoint toPoint = new PointClass();
+
+			Pnt3D startPnt = null;
+
+			List<Line3D> currentLines = new List<Line3D>();
+
+			bool zAware = GeometryUtils.IsZAware(path);
+			if (GeometryUtils.HasNonLinearSegments(path))
+			{
+				bool restart = true;
+				foreach (ISegment segment in GetSegments(path))
+				{
+					if (segment.GeometryType == esriGeometryType.esriGeometryLine)
+					{
+						if (restart || startPnt == null)
+						{
+							segment.QueryFromPoint(fromPoint);
+							startPnt = CreatePnt3d(fromPoint, zAware);
+						}
+
+						segment.QueryToPoint(toPoint);
+
+						Pnt3D endPnt = CreatePnt3d(toPoint, zAware);
+						Line3D line3D = new Line3D(startPnt, endPnt);
+
+						currentLines.Add(line3D);
+
+						startPnt = endPnt;
+						restart = false;
+					}
+					else
+					{
+						if (currentLines.Count > 0)
+						{
+							yield return new Linestring(currentLines);
+						}
+
+						currentLines.Clear();
+						restart = true;
+					}
+				}
+
+				if (currentLines.Count > 0)
+				{
+					yield return new Linestring(currentLines);
+				}
+			}
+			else
+			{
+				yield return GetLinestring(path);
+			}
+		}
+
+		private static Pnt3D CreatePnt3d(IPoint point, bool useZ)
+		{
+			double z = useZ ? point.Z : double.NaN;
+
+			return new Pnt3D(point.X, point.Y, z);
+		}
+
+		private static IEnumerable<ISegment> GetSegments(IPath path)
+		{
+			var allSegments = (ISegmentCollection) path;
+
+			ISegment segment;
+
+			for (var i = 0; i < allSegments.SegmentCount; i++)
+			{
+				allSegments.QuerySegments(i, 1, out segment);
+
+				yield return segment;
+			}
+		}
+
+		private static bool IsDisjoint([NotNull] IPath path,
+		                               [CanBeNull] IEnvelope aoi)
+		{
+			if (aoi == null || aoi.IsEmpty)
+			{
+				return false;
+			}
+
+			IEnvelope envelope = new EnvelopeClass();
+			double xyTolerance = GeometryUtils.GetXyTolerance(path);
+
+			path.QueryEnvelope(envelope);
+
+			return GeometryUtils.Disjoint(aoi, envelope, xyTolerance);
 		}
 
 		private static void AddToMultipatch(IMultiPatch result, IPolygon poly,

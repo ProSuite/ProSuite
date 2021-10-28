@@ -9281,7 +9281,7 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <param name="polycurve"></param>
 		/// <param name="maximumTolerance">The maximum tolerance that will subsequently be used for
 		/// generalization. The actual tolerance applied in the linearization is much smaller.</param>
-		private static void EnsureLinearized(IPolycurve polycurve, double maximumTolerance)
+		public static void EnsureLinearized(IPolycurve polycurve, double maximumTolerance)
 		{
 			if (HasNonLinearSegments(polycurve))
 			{

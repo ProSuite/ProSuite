@@ -1627,12 +1627,69 @@ namespace ProSuite.Commons.Geom
 
 		#endregion
 
+		#region Difference
+
+		/// <summary>
+		/// Returns the points from the source point list that are different from the target segment list.
+		/// The target segments are interpreted as linestring, i.e. even in case it is a 2-dimensional
+		/// geometry (i.e. closed rings), points completely within are not considered intersecting.
+		/// X,Y,Z values are taken from the source.
+		/// </summary>
+		/// <param name="sourcePoints"></param>
+		/// <param name="targetPoints"></param>
+		/// <param name="tolerance"></param>
+		/// <param name="in3d"></param>
+		/// <returns></returns>
+		public static IEnumerable<IPnt> GetDifferencePoints(
+			[NotNull] IPointList sourcePoints,
+			[NotNull] IPointList targetPoints,
+			double tolerance,
+			bool in3d)
+		{
+			foreach (var sourcePoint in sourcePoints.AsEnumerablePoints())
+			{
+				if (! PointExists(targetPoints, sourcePoint, tolerance, in3d))
+				{
+					yield return sourcePoint;
+				}
+			}
+		}
+
+		public static bool PointExists(IPointList inPointList,
+		                               IPnt atPoint,
+		                               double tolerance,
+		                               bool compareZs)
+		{
+			foreach (var pointIdx in
+				inPointList.FindPointIndexes(atPoint, tolerance, true))
+			{
+				if (compareZs)
+				{
+					// Compare z values:
+					Pnt3D targetPnt3d = inPointList.GetPoint(pointIdx) as Pnt3D;
+					Pnt3D sourcePnt3d = atPoint as Pnt3D;
+
+					if (sourcePnt3d != null && targetPnt3d != null &&
+					    MathUtils.AreEqual(sourcePnt3d.Z, targetPnt3d.Z, tolerance))
+					{
+						return true;
+					}
+				}
+				else
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		#endregion
+
 		#region 2D Intersection
 
 		/// <summary>
-		/// Returns the points from the source point list that intersect the target segment list.
-		/// The target segments are interpreted as linestring, i.e. even in case it is a 2-dimensional
-		/// geometry (i.e. closed rings), points completely within are not considered intersecting.
+		/// Returns the points from the source point list that intersect the target point.
 		/// X,Y,Z values are taken from the source.
 		/// </summary>
 		/// <param name="sourcePoints"></param>
@@ -1662,9 +1719,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
-		/// Returns the points from the source point list that intersect the target segment list.
-		/// The target segments are interpreted as linestring, i.e. even in case it is a 2-dimensional
-		/// geometry (i.e. closed rings), points completely within are not considered intersecting.
+		/// Returns the points from the source point list that intersect the target point list.
 		/// X,Y,Z values are taken from the source.
 		/// </summary>
 		/// <param name="sourcePoints"></param>

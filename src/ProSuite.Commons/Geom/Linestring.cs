@@ -519,7 +519,7 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
-			bool isEndPoint = EndPoint.EqualsXY(searchPoint, xyTolerance);
+			bool isEndPoint = EndPoint?.EqualsXY(searchPoint, xyTolerance) ?? false;
 
 			if (isEndPoint)
 			{

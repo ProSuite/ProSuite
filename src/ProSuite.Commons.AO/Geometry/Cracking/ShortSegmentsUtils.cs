@@ -216,6 +216,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		/// <param name="forFeatureVertexInfos"></param>
 		/// <param name="weedTolerance"></param>
 		/// <param name="only2D"></param>
+		/// <param name="omitNonLinearSegments"></param>
 		/// <param name="inPerimeter"></param>
 		/// <param name="trackCancel"></param>
 		/// <returns></returns>
@@ -223,6 +224,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			[NotNull] IEnumerable<FeatureVertexInfo> forFeatureVertexInfos,
 			double weedTolerance,
 			bool only2D,
+			bool omitNonLinearSegments,
 			[CanBeNull] IGeometry inPerimeter,
 			[CanBeNull] ITrackCancel trackCancel)
 		{
@@ -247,7 +249,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 					try
 					{
 						weededPoints = CrackUtils.GetWeedPoints(
-							originalGeometry, weedTolerance, only2D, inPerimeter);
+							originalGeometry, weedTolerance, only2D, inPerimeter, omitNonLinearSegments);
 					}
 					catch (Exception e)
 					{

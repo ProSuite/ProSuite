@@ -653,8 +653,87 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		/// <param name="weedTolerance"></param>
 		/// <param name="only2D"></param>
 		/// <param name="inPerimeter"></param>
+		/// <param name="omitNonLinearSegments"></param>
 		/// <returns></returns>
 		public static IPointCollection GetWeedPoints(
+			[NotNull] IPolycurve polycurve,
+			double weedTolerance,
+			bool only2D,
+			[CanBeNull] IGeometry inPerimeter = null,
+			bool omitNonLinearSegments = true)
+		{
+			// NOTE regarding standard weed/generalize:
+			// For non-linear segments, it is not implemented in 3D and inserts arbitrary
+			// results depending on the subdivision of curves. Additionally, removing segments
+			// would require a simplify which also inserts undesired vertices at self intersections
+			// For additional issues see repro-tests.
+			MultiPolycurve multiPolycurve = GeometryConversionUtils.CreateMultiPolycurve(
+				polycurve, omitNonLinearSegments);
+
+			if (! GeometryUtils.IsZAware(polycurve))
+			{
+				only2D = true;
+			}
+
+			MultiPolycurve weededPolycurve =
+				GeomUtils.Generalize(multiPolycurve, weedTolerance, only2D);
+
+			if (multiPolycurve.IsEmpty)
+			{
+				return new MultipointClass();
+			}
+
+			double xyTolerance = GeometryUtils.GetXyTolerance(polycurve);
+
+			EnvelopeXY envelopeXY =
+				inPerimeter != null
+					? GeometryConversionUtils.CreateEnvelopeXY(inPerimeter.Envelope)
+					: null;
+
+			IEnumerable<IPnt> weededPoints =
+				GeomTopoOpUtils.GetDifferencePoints(
+					multiPolycurve, weededPolycurve, xyTolerance, ! only2D);
+
+			Multipoint<IPnt> weededMultipoint = new Multipoint<IPnt>(weededPoints);
+
+			GeomTopoOpUtils.Simplify(weededMultipoint, xyTolerance);
+
+			IPointCollection result =
+				(IPointCollection) GeometryFactory.CreateEmptyMultipoint(polycurve);
+
+			foreach (IPnt weededPoint in weededMultipoint.GetPoints())
+			{
+				if (envelopeXY != null &&
+				    GeomRelationUtils.AreBoundsDisjoint(weededPoint, envelopeXY, xyTolerance))
+				{
+					continue;
+				}
+
+				result.AddPoint(
+					GeometryConversionUtils.CreatePoint(weededPoint, polycurve.SpatialReference));
+			}
+
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				_msg.VerboseDebug(
+					() =>
+						$"Identified {result.PointCount} points to weed. Weeded geometry: " +
+						$"{weededPolycurve}");
+			}
+
+			return result;
+		}
+
+		/// <summary>
+		/// Gets the points that are removed by the Douglas-Peucker algorithm using the specified
+		/// tolerance. Non-linear segments are ignored as IPolycurve.Generalize adds additional vertices. 
+		/// </summary>
+		/// <param name="polycurve"></param>
+		/// <param name="weedTolerance"></param>
+		/// <param name="only2D"></param>
+		/// <param name="inPerimeter"></param>
+		/// <returns></returns>
+		public static IPointCollection GetWeedPointsLegacy(
 			[NotNull] IPolycurve polycurve, double weedTolerance, bool only2D,
 			[CanBeNull] IGeometry inPerimeter)
 		{
@@ -772,7 +851,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 				GeometryUtils.Simplify(multipatchAsPolyline, true, true);
 
-				weededPoints = GetWeedPoints(multipatchAsPolyline, tolerance, false, perimeter);
+				weededPoints =
+					GetWeedPoints(multipatchAsPolyline, tolerance, false, perimeter);
 			}
 			else
 			{
@@ -1024,6 +1104,12 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				if (! resultGeometries.TryGetValue(feature, out updateGeometry))
 				{
 					updateGeometry = feature.ShapeCopy;
+
+					if (vertexInfo.LinearizeSegments && updateGeometry is IPolycurve polycurve)
+					{
+						GeometryUtils.EnsureLinearized(polycurve, 0);
+					}
+
 					resultGeometries.Add(feature, updateGeometry);
 				}
 

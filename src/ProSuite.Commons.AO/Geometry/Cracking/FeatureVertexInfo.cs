@@ -147,6 +147,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 		public double? MinimumSegmentLength { get; set; }
 
+		public bool LinearizeSegments { get; set; }
+
 		[NotNull]
 		public IPolyline OriginalClippedPolyline
 		{

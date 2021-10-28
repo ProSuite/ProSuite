@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -733,6 +734,122 @@ return : Point2D : lines cut each other at Point (non parallel)
 			double distanceSquared = GetDistanceSquaredXY(point1, point2);
 
 			return Math.Sqrt(distanceSquared);
+		}
+
+		public static MultiPolycurve Generalize([NotNull] MultiPolycurve multiPolycurve,
+		                                        double maxDeviation,
+		                                        bool inXY)
+		{
+			var result = multiPolycurve.GetLinestrings()
+			                           .Select(linestring =>
+				                                   Generalize(linestring, maxDeviation, inXY))
+			                           .ToList();
+
+			return new MultiPolycurve(result);
+		}
+
+		public static Linestring Generalize(Linestring linestring, double maxDeviation, bool inXY)
+		{
+			var pointList = linestring.GetPoints().ToList();
+
+			var result = new List<Pnt3D>();
+			RamerDouglasPeucker(pointList, maxDeviation, result, inXY);
+
+			// For closed rings: requires extra check for start/end point:
+			if (WeedFromToPoint(result, maxDeviation, inXY))
+			{
+				// Drop last point
+				result.RemoveAt(result.Count - 1);
+
+				// Update first to re-close the ring:
+				result[0] = result[result.Count - 1].ClonePnt3D();
+			}
+
+			return new Linestring(result);
+		}
+
+		public static void RamerDouglasPeucker([NotNull] IList<Pnt3D> pointList,
+		                                       double maxAllowedDeviation,
+		                                       [NotNull] List<Pnt3D> result,
+		                                       bool inXY)
+		{
+			if (pointList.Count < 2)
+			{
+				throw new ArgumentOutOfRangeException(nameof(pointList),
+				                                      $"Too few points ({pointList.Count})");
+			}
+
+			// Ensure all points have Z values if 3D distance is used
+			if (! inXY && pointList.Any(p => double.IsNaN(p.Z)))
+			{
+				throw new ArgumentException(
+					"Cannot generalize points without Z using 3D distance.");
+			}
+
+			// Find the point with the maximum perpendicular distance to the base line
+			double maxDist = 0.0;
+			int maxDistIdx = 0;
+			int lastIdx = pointList.Count - 1;
+
+			for (int i = 1; i < lastIdx; ++i)
+			{
+				var baseLine = new Line3D(pointList[0], pointList[lastIdx]);
+
+				double dist = baseLine.GetDistancePerpendicular(pointList[i], inXY);
+
+				if (dist > maxDist)
+				{
+					maxDistIdx = i;
+					maxDist = dist;
+				}
+			}
+
+			// If maxDist is greater than maxAllowedDeviation: recursively generalize
+			if (maxDist > maxAllowedDeviation)
+			{
+				// Split the line sequence:
+				List<Pnt3D> recResults1 = new List<Pnt3D>();
+				List<Pnt3D> recResults2 = new List<Pnt3D>();
+				List<Pnt3D> firstSequence = pointList.Take(maxDistIdx + 1).ToList();
+				List<Pnt3D> lastSequence = pointList.Skip(maxDistIdx).ToList();
+				RamerDouglasPeucker(firstSequence, maxAllowedDeviation, recResults1, inXY);
+				RamerDouglasPeucker(lastSequence, maxAllowedDeviation, recResults2, inXY);
+
+				// Add to final result
+				result.AddRange(recResults1.Take(recResults1.Count - 1));
+				result.AddRange(recResults2);
+				Assert.False(result.Count < 0, "Unexpected result point count");
+			}
+			else
+			{
+				// All points are within max deviation: Only start and end point
+				result.Clear();
+				result.Add(pointList[0]);
+				result.Add(pointList[pointList.Count - 1]);
+			}
+		}
+
+		private static bool WeedFromToPoint([NotNull] List<Pnt3D> pointList,
+		                                    double maxAllowedDeviation,
+		                                    bool inXY)
+		{
+			if (pointList.Count <= 3)
+			{
+				return false;
+			}
+
+			int lastIdx = pointList.Count - 1;
+
+			if (! pointList[0].Equals(pointList[lastIdx]))
+			{
+				return false;
+			}
+
+			var baseLine = new Line3D(pointList[lastIdx - 1], pointList[1]);
+
+			double dist = baseLine.GetDistancePerpendicular(pointList[0], inXY);
+
+			return dist < maxAllowedDeviation;
 		}
 	}
 }
