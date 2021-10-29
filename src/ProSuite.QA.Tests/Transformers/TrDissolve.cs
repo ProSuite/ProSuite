@@ -16,6 +16,7 @@ using ProSuite.QA.Container.Geometry;
 using ProSuite.QA.Container.PolygonGrower;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
+using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.Network;
 
 namespace ProSuite.QA.Tests.Transformers
@@ -35,7 +36,9 @@ namespace ProSuite.QA.Tests.Transformers
 
 		public IList<ITable> InvolvedTables { get; }
 
-		public TrDissolve([NotNull] IFeatureClass featureclass)
+		[Doc(nameof(DocStrings.TrDissolve_0))]
+		public TrDissolve([NotNull]     [Doc(nameof(DocStrings.TrDissolve_featureclass))]
+		                  IFeatureClass featureclass)
 		{
 			InvolvedTables = new List<ITable> {(ITable) featureclass};
 
@@ -44,6 +47,7 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter]
+		[Doc(nameof(DocStrings.TrDissolve_SearchDistance))]
 		public double Search
 		{
 			get => _dissolvedFc.SearchDistance;
@@ -51,6 +55,7 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter(_defaultSearchOption)]
+		[Doc(nameof(DocStrings.TrDissolve_NeighborSearchOption))]
 		public SearchOption NeighborSearchOption
 		{
 			get => _dissolvedFc.NeighborSearchOption;
@@ -58,6 +63,7 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter]
+		[Doc(nameof(DocStrings.TrDissolve_Attributes))]
 		public IList<string> Attributes
 		{
 			get => _attributes;
@@ -69,6 +75,7 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter]
+		[Doc(nameof(DocStrings.TrDissolve_GroupBy))]
 		public IList<string> GroupBy
 		{
 			get => _groupBy;
@@ -102,6 +109,7 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter]
+		[Doc(nameof(DocStrings.TrDissolve_Constraint))]
 		public string Constraint
 		{
 			get => _dissolvedFc.Constraint;
@@ -109,6 +117,7 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter]
+		[Doc(nameof(DocStrings.TrDissolve_CreateMultipartFeatures))]
 		public bool CreateMultipartFeatures
 		{
 			get => _dissolvedFc.CreateMultipartFeatures;

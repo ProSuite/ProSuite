@@ -4,6 +4,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -13,13 +14,16 @@ namespace ProSuite.QA.Tests.Transformers
 		private const PolylineUsage _defaultPolylineUsage =
 			PolylineUsage.AsPolygonIfClosedElseIgnore;
 
-		public TrLineToPoly([NotNull] IFeatureClass closedLineClass)
+		[Doc(nameof(DocStrings.TrLineToPoly_0))]
+		public TrLineToPoly(
+			[NotNull][Doc(nameof(DocStrings.TrLineToPoly_closedLineClass))] IFeatureClass closedLineClass)
 			: base(closedLineClass, esriGeometryType.esriGeometryPolygon)
 		{
 			PolylineUsage = _defaultPolylineUsage;
 		}
 
 		[TestParameter(_defaultPolylineUsage)]
+		[Doc(nameof(DocStrings.TrLineToPoly_PolylineUsage))]
 		public PolylineUsage PolylineUsage { get; set; }
 
 		protected override IEnumerable<IFeature> Transform(IGeometry source)

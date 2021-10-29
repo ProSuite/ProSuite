@@ -3,13 +3,16 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
 	public class TrPolyToLine : TrGeometryTransform
 	{
-		public TrPolyToLine([NotNull] IFeatureClass featureClass)
+		[Doc(nameof(DocStrings.TrPolyToLine_0))]
+		public TrPolyToLine([NotNull] [Doc(nameof(DocStrings.TrPolyToLine_featureClass))]
+		                    IFeatureClass featureClass)
 			: base(featureClass, esriGeometryType.esriGeometryPolyline) { }
 
 		protected override IEnumerable<IFeature> Transform(IGeometry source)

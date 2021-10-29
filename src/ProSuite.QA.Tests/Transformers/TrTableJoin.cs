@@ -3,6 +3,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -17,8 +18,16 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private ITable _joined;
 
-		public TrTableJoin([NotNull] ITable t0, [NotNull] ITable t1,
-		                   [NotNull] string relationName, JoinType joinType)
+		[Doc(nameof(DocStrings.TrTableJoin_0))]
+		public TrTableJoin(
+			[NotNull] [Doc(nameof(DocStrings.TrTableJoin_t0))]
+			ITable t0,
+			[NotNull] [Doc(nameof(DocStrings.TrTableJoin_t1))]
+			ITable t1,
+			[NotNull] [Doc(nameof(DocStrings.TrTableJoin_relationName))]
+			string relationName,
+			[Doc(nameof(DocStrings.TrTableJoin_joinType))]
+			JoinType joinType)
 		{
 			_t0 = t0;
 			_t1 = t1;

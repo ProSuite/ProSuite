@@ -5,6 +5,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -14,7 +15,9 @@ namespace ProSuite.QA.Tests.Transformers
 		public const string AttrPartIndex = "PartIndex";
 		private int? _iAttrPart;
 
-		public TrMultilineToLine([NotNull] IFeatureClass featureClass)
+		[Doc(nameof(DocStrings.TrMultilineToLine_0))]
+		public TrMultilineToLine([NotNull] [Doc(nameof(DocStrings.TrMultilineToLine_featureClass))]
+		                         IFeatureClass featureClass)
 			: base(featureClass, esriGeometryType.esriGeometryPolyline) { }
 
 		protected override void AddCustomAttributes(GdbFeatureClass transformedFc)

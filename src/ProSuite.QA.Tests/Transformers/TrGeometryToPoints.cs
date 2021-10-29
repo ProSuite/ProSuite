@@ -4,6 +4,7 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -17,7 +18,10 @@ namespace ProSuite.QA.Tests.Transformers
 		private int? _iAttrPart;
 		private int? _iAttrVertex;
 
-		public TrGeometryToPoints([NotNull] IFeatureClass featureClass,
+		[Doc(nameof(DocStrings.TrGeometryToPoints_0))]
+		public TrGeometryToPoints([NotNull] [Doc(nameof(DocStrings.TrGeometryToPoints_featureClass))]
+		                          IFeatureClass featureClass,
+		                          [Doc(nameof(DocStrings.TrGeometryToPoints_component))]
 		                          GeometryComponent component)
 			: base(featureClass, esriGeometryType.esriGeometryPoint)
 		{

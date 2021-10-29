@@ -6,6 +6,7 @@ using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -30,7 +31,10 @@ namespace ProSuite.QA.Tests.Transformers
 		private int? _iAttrOuterRing;
 		private int? _iAttrInnerRing;
 
-		public TrMultipolygonToPolygon([NotNull] IFeatureClass featureClass)
+		[Doc(nameof(DocStrings.TrMultipolygonToPolygon_0))]
+		public TrMultipolygonToPolygon(
+			[NotNull] [Doc(nameof(DocStrings.TrMultipolygonToPolygon_featureClass))]
+			IFeatureClass featureClass)
 			: base(featureClass, esriGeometryType.esriGeometryPolygon) { }
 
 		protected override void AddCustomAttributes(GdbFeatureClass transformedFc)
@@ -42,6 +46,7 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		[TestParameter(_defaultPolygonPart)]
+		[Doc(nameof(DocStrings.TrMultipolygonToPolygon_TransformedParts))]
 		public PolygonPart TransformedParts { get; set; }
 
 		protected override IEnumerable<IFeature> Transform(IGeometry source)

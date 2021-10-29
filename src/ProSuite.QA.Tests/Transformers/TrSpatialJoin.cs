@@ -9,6 +9,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -24,8 +25,11 @@ namespace ProSuite.QA.Tests.Transformers
 
 		public IList<ITable> InvolvedTables { get; }
 
-		public TrSpatialJoin([NotNull] IFeatureClass t0,
-		                     [NotNull] IFeatureClass t1)
+		[Doc(nameof(DocStrings.TrSpatialJoin_0))]
+		public TrSpatialJoin([NotNull]    [Doc(nameof(DocStrings.TrSpatialJoin_t0))]
+		                     IFeatureClass t0,
+		                     [NotNull]    [Doc(nameof(DocStrings.TrSpatialJoin_t1))]
+		                     IFeatureClass t1)
 		{
 			_t0 = t0;
 			_t1 = t1;
@@ -35,14 +39,15 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		// Remark: Grouped must come in Code before T1Attributes !
-		[TestParameter] 
+		[TestParameter] [Doc(nameof(DocStrings.TrSpatialJoin_Grouped))]
+
 		public bool Grouped
 		{
 			get => _transformedFc.Grouped;
 			set => _transformedFc.Grouped = value;
 		}
 
-		[TestParameter]
+		[TestParameter] [Doc(nameof(DocStrings.TrSpatialJoin_T0Attributes))]
 		public IList<string> T0Attributes
 		{
 			get => _t0Attributes;
@@ -53,7 +58,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
-		[TestParameter]
+		[TestParameter] [Doc(nameof(DocStrings.TrSpatialJoin_T1Attributes))]
 		public IList<string> T1Attributes
 		{
 			get => _t1Attributes;
@@ -64,7 +69,8 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
-		private void AddFields([CanBeNull] IList<string> fieldNames, ITable sourceTable, bool isGrouped)
+		private void AddFields([CanBeNull] IList<string> fieldNames, ITable sourceTable,
+		                       bool isGrouped)
 		{
 			if (fieldNames == null)
 			{
@@ -72,9 +78,11 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			Dictionary<string, string> expressionDict = ExpressionUtils.GetFieldDict(fieldNames);
-			Dictionary<string, string> aliasFieldDict = ExpressionUtils.CreateAliases(expressionDict);
+			Dictionary<string, string> aliasFieldDict =
+				ExpressionUtils.CreateAliases(expressionDict);
 
-			TableView tv = TableViewFactory.Create(sourceTable, expressionDict, aliasFieldDict, isGrouped);
+			TableView tv =
+				TableViewFactory.Create(sourceTable, expressionDict, aliasFieldDict, isGrouped);
 
 			_transformedFc.TableViews =
 				_transformedFc.TableViews ?? new Dictionary<ITable, TableView>();
@@ -117,7 +125,7 @@ namespace ProSuite.QA.Tests.Transformers
 				Fields.AddFields(
 					FieldUtils.CreateOIDField(),
 					FieldUtils.CreateShapeField(
-						t0.ShapeType, 
+						t0.ShapeType,
 						geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM));
 			}
 
@@ -129,9 +137,12 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			public Dictionary<TableView, List<FieldInfo>> CalcFields { get; private set; }
+
 			public void AddField(string field, TableView tableView)
 			{
-				IField f = FieldUtils.CreateField(field, FieldUtils.GetFieldType(tableView.GetColumn(field).DataType));
+				IField f =
+					FieldUtils.CreateField(
+						field, FieldUtils.GetFieldType(tableView.GetColumn(field).DataType));
 				Fields.AddFields(f);
 
 				CalcFields = CalcFields ?? new Dictionary<TableView, List<FieldInfo>>();
@@ -256,7 +267,8 @@ namespace ProSuite.QA.Tests.Transformers
 
 						if (! grouped)
 						{
-							GdbFeature f = CreateFeature(toJoin, new []{joined}); Resulting.CreateFeature();
+							GdbFeature f = CreateFeature(toJoin, new[] {joined});
+							Resulting.CreateFeature();
 							yield return f;
 						}
 						else
@@ -271,7 +283,6 @@ namespace ProSuite.QA.Tests.Transformers
 						yield return f;
 					}
 				}
-
 			}
 
 			private GdbFeature CreateFeature(IRow toJoin, IList<IRow> joineds)
@@ -287,7 +298,6 @@ namespace ProSuite.QA.Tests.Transformers
 					Resulting.FindField(InvolvedRowUtils.BaseRowField),
 					involved);
 
-
 				SetValues(f, new[] {toJoin});
 				SetValues(f, joineds);
 
@@ -296,7 +306,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			private void SetValues(GdbFeature feature, IList<IRow> sources)
 			{
-				Tfc r = (Tfc)Resulting;
+				Tfc r = (Tfc) Resulting;
 
 				TableView tv = null;
 				DataRow tableRow = null;
@@ -306,6 +316,7 @@ namespace ProSuite.QA.Tests.Transformers
 					{
 						r.TableViews?.TryGetValue(row.Table, out tv);
 					}
+
 					tableRow = tv?.Add(row);
 				}
 
@@ -316,8 +327,8 @@ namespace ProSuite.QA.Tests.Transformers
 						feature.set_Value(fieldInfo.Index, tableRow[fieldInfo.Name]);
 					}
 				}
-				tv?.ClearRows();
 
+				tv?.ClearRows();
 			}
 		}
 	}
