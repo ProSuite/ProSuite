@@ -203,6 +203,29 @@ namespace ProSuite.Commons.AO.Geometry
 			return ring;
 		}
 
+		public static IPointCollection CreatePointCollection(
+			[NotNull] IPolycurve templateGeometry,
+			[NotNull] IEnumerable<IPnt> points,
+			[CanBeNull] EnvelopeXY insideAoi = null,
+			double xyTolerance = 0)
+		{
+			IPointCollection result =
+				(IPointCollection) GeometryFactory.CreateEmptyMultipoint(templateGeometry);
+
+			foreach (IPnt pnt in points)
+			{
+				if (insideAoi != null &&
+				    GeomRelationUtils.AreBoundsDisjoint(pnt, insideAoi, xyTolerance))
+				{
+					continue;
+				}
+
+				result.AddPoint(CreatePoint(pnt, templateGeometry.SpatialReference));
+			}
+
+			return result;
+		}
+
 		public static IList<Linestring> PrepareIntersectingLinestrings(
 			[NotNull] IPolycurve polycurve,
 			[CanBeNull] IEnvelope aoi,

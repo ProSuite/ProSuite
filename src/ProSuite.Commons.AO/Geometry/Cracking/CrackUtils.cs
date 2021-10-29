@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -175,7 +176,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 					continue;
 				}
 
-				toVertexInfo.AddCrackPoints(targetFeature, crackPointCalculator);
+				AddCrackPoints(toVertexInfo, targetFeature, crackPointCalculator);
 			}
 		}
 
@@ -196,8 +197,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				FeatureVertexInfo vertexInfo1 = pair.Key;
 				FeatureVertexInfo vertexInfo2 = pair.Value;
 
-				vertexInfo1.AddCrackPoints(vertexInfo2.Feature, crackPointCalculator);
-				vertexInfo2.AddCrackPoints(vertexInfo1.Feature, crackPointCalculator);
+				AddCrackPoints(vertexInfo1, vertexInfo2.Feature, crackPointCalculator);
+				AddCrackPoints(vertexInfo2, vertexInfo1.Feature, crackPointCalculator);
 			}
 		}
 
@@ -367,6 +368,70 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			}
 
 			return result;
+		}
+
+		public static void AddCrackPoints(
+			FeatureVertexInfo featureVertexInfo,
+			[NotNull] IFeature targetFeature,
+			[NotNull] CrackPointCalculator crackPointCalculator)
+		{
+			IFeature sourceFeature = featureVertexInfo.Feature;
+
+			Stopwatch watch =
+				_msg.DebugStartTiming("Calculating intersection points between {0} and {1}",
+				                      GdbObjectUtils.ToString(sourceFeature),
+				                      GdbObjectUtils.ToString(targetFeature));
+
+			IPointCollection intersectionPoints = null;
+			try
+			{
+				IGeometry targetGeometry = targetFeature.ShapeCopy;
+				IGeometry originalGeometry = sourceFeature.Shape;
+				IPolyline clippedSource = featureVertexInfo.OriginalClippedPolyline;
+
+				GeometryUtils.EnsureSpatialReference(targetGeometry,
+				                                     clippedSource.SpatialReference);
+
+				crackPointCalculator.SetDataResolution(sourceFeature);
+
+				IGeometry intersectionTarget;
+				intersectionPoints = crackPointCalculator.GetIntersectionPoints(
+					clippedSource, targetGeometry, out intersectionTarget);
+
+				featureVertexInfo.AddIntersectionPoints(intersectionPoints);
+
+				IList<CrackPoint> crackPoints = crackPointCalculator.DetermineCrackPoints(
+					intersectionPoints, originalGeometry, clippedSource, intersectionTarget);
+
+				// TODO: rename to AddNonCrackablePoints / sort out whether drawing can happen straight from List<CrackPoint>
+				featureVertexInfo.AddCrackPoints(crackPoints);
+
+				if (intersectionTarget != null && intersectionTarget != targetGeometry)
+				{
+					Marshal.ReleaseComObject(intersectionTarget);
+				}
+
+				Marshal.ReleaseComObject(targetGeometry);
+			}
+			catch (Exception e)
+			{
+				string message =
+					$"Error calculationg crack points with target feature {RowFormat.Format(targetFeature)}: {e.Message}";
+
+				_msg.Debug(message, e);
+
+				if (crackPointCalculator.ContinueOnException)
+				{
+					crackPointCalculator.FailedOperations.Add(sourceFeature.OID, message);
+				}
+				else
+				{
+					throw;
+				}
+			}
+
+			_msg.DebugStopTiming(watch, "Calculated and processed {0} intersection points",
+			                     intersectionPoints?.PointCount);
 		}
 
 		#endregion
@@ -699,19 +764,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			GeomTopoOpUtils.Simplify(weededMultipoint, xyTolerance);
 
 			IPointCollection result =
-				(IPointCollection) GeometryFactory.CreateEmptyMultipoint(polycurve);
-
-			foreach (IPnt weededPoint in weededMultipoint.GetPoints())
-			{
-				if (envelopeXY != null &&
-				    GeomRelationUtils.AreBoundsDisjoint(weededPoint, envelopeXY, xyTolerance))
-				{
-					continue;
-				}
-
-				result.AddPoint(
-					GeometryConversionUtils.CreatePoint(weededPoint, polycurve.SpatialReference));
-			}
+				GeometryConversionUtils.CreatePointCollection(
+					polycurve, weededMultipoint.GetPoints(), envelopeXY, xyTolerance);
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
