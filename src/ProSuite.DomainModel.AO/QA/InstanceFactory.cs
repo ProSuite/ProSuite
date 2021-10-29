@@ -449,7 +449,31 @@ namespace ProSuite.DomainModel.AO.QA
 		private object GetArgumentValue([NotNull] TestParameter parameter,
 		                                [NotNull] IList valueList)
 		{
-			if (parameter.ArrayDimension == 0)
+			int valueDimension = -1;
+			if (parameter.ArrayDimension > 1)
+			{
+				valueDimension = 0;
+				Type currentType = valueList.GetType();
+				object currentValue = valueList;
+				while (currentType.IsArray || (currentType.IsGenericType &&
+				                               typeof(IEnumerable).IsAssignableFrom(currentType) &&
+				                               currentType.GetGenericArguments().Length == 1))
+				{
+					currentType = typeof(object);
+					foreach (object item in (IEnumerable) currentValue)
+					{
+						if (item != null)
+						{
+							currentType = item.GetType();
+							currentValue = item;
+							valueDimension++;
+							break;
+						}
+					}
+				}
+			}
+
+			if (parameter.ArrayDimension == 0 || valueDimension == parameter.ArrayDimension + 1)
 			{
 				if (valueList.Count != 1)
 				{
@@ -462,7 +486,7 @@ namespace ProSuite.DomainModel.AO.QA
 				return valueList[0];
 			}
 
-			if (parameter.ArrayDimension == 1)
+			if (parameter.ArrayDimension == 1 || valueDimension == parameter.ArrayDimension)
 			{
 				int arrayDimension = parameter.ArrayDimension;
 				Type paramType = parameter.Type;

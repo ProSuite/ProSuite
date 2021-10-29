@@ -188,6 +188,7 @@
     <Compile Include="TopologicalLineTest.cs" />
     <Compile Include="Transformer\TrGeometryTransformTest.cs" />
     <Compile Include="Transformer\TrDissolveTest.cs" />
+    <Compile Include="Transformer\TrRule.cs" />
     <Compile Include="VersionSpecificationTest.cs" />
     <Compile Include="WebServer.cs" />
     <Compile Include="ZDifferenceStrategyIntersectionPointsTest.cs" />
