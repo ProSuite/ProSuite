@@ -523,8 +523,7 @@ namespace ProSuite.Commons.AO.Geometry
 
 		private static bool MustIntersect(IntersectionConstraint constraint)
 		{
-			Dimension dimension;
-			return MustIntersect(constraint, out dimension);
+			return MustIntersect(constraint, out Dimension _);
 		}
 
 		private static bool MustIntersect(IntersectionConstraint constraint,

@@ -751,7 +751,7 @@ namespace ProSuite.UI.QA.VerificationProgress
 		{
 			if (! string.IsNullOrEmpty(methodName))
 			{
-				_msg.VerboseDebugFormat("VerificationProgressViewModel.{0}", methodName);
+				_msg.VerboseDebug(() => $"VerificationProgressViewModel.{methodName}");
 			}
 
 			try

@@ -53,12 +53,12 @@ namespace ProSuite.Commons.Reflection
 
 				if (string.IsNullOrEmpty(name.CodeBase))
 				{
-					_msg.VerboseDebugFormat("Loading assembly from {0}", name);
+					_msg.VerboseDebug(() => $"Loading assembly from {name}");
 				}
 				else
 				{
-					_msg.VerboseDebugFormat("Loading assembly from {0} (codebase: {1})",
-					                        name, name.CodeBase);
+					_msg.VerboseDebug(
+						() => $"Loading assembly from {name} (codebase: {name.CodeBase})");
 				}
 
 				assembly = Assembly.Load(name);
@@ -100,8 +100,8 @@ namespace ProSuite.Commons.Reflection
 			{
 				string substituteType = typeName.Replace(assemblyName, substituteAssembly);
 
-				_msg.Debug(
-					$"Failed loading type {typeName} from {assemblyName}, trying {substituteType} from {substituteAssembly}");
+				_msg.DebugFormat("Failed loading type {0} from {1}, trying {2} from {3}",
+				                 typeName, assemblyName, substituteType, substituteAssembly);
 
 				return LoadType(Assert.NotNull(substituteAssembly), substituteType,
 				                new Dictionary<string, string>(0));

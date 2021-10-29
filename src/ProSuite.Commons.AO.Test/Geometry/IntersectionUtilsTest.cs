@@ -586,6 +586,14 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			Console.WriteLine("GeomUtils.GetIntersectionPointsXY: {0}",
 			                  watch.ElapsedMilliseconds);
 
+			var mp1 = GeometryConversionUtils.CreateMultipoint((IMultipoint) intersection1);
+			var mp2 = GeometryConversionUtils.CreateMultipoint((IMultipoint) intersection2);
+
+			Assert.True(GeomRelationUtils.AreEqual(mp1, mp2, 0.00001));
+
+			// Otherwise the point order is not the same and IRelationalOp.AreEqual is false
+			// (because multipoints use IClone equals)
+			GeometryUtils.Simplify((IGeometry) intersection2);
 			Assert.True(GeometryUtils.AreEqual((IGeometry) intersection1,
 			                                   (IGeometry) intersection2));
 
@@ -936,6 +944,212 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			//Huge Lockergestein point count: 92436 (compared with moved clone)
 			//TopologicalOperator.Difference (1281785.80707641m difference length): 1879
 			//GeomTopoOpUtils.GetDifferenceLinesXY (1282557.49223316m difference length): 1489
+		}
+
+		[Test]
+		public void CanGetMultipatchIntersectionPointsXY()
+		{
+			// {FE286920-3D4C-4CB3-AC22-51056B97A23F} from TLM:
+			IMultiPatch multipatch =
+				(IMultiPatch) TestUtils.ReadGeometryFromXml(
+					TestUtils.GetGeometryTestDataPath("MultipatchWithVerticalWalls.xml"));
+
+			ISpatialReference lv95 = multipatch.SpatialReference;
+
+			// NOTE: AO multipatch intersections return non-z-aware points
+			//		 -> compare to planar intersection points
+			// NOTE: AO multipatch intersection uses the footprint rather than each ring separately
+			//		 -> must be accounted for in general method, otherwise extra intersection points
+			//          are reported on touching boundaries.
+
+			//
+			// Multipatch-Polyline
+			//
+			IPolyline cutLine = GeometryFactory.CreateLine(
+				GeometryFactory.CreatePoint(2574923.000, 1196869.000, 500, 0.1, lv95),
+				GeometryFactory.CreatePoint(2574920.000, 1196878.000, 500, 0.3, lv95),
+				GeometryFactory.CreatePoint(2574910.000, 1196870.000, 500, 0.3, lv95));
+
+			double tolerance = GeometryUtils.GetXyTolerance(multipatch);
+
+			IntersectionUtils.UseCustomIntersect = false;
+			IMultipoint intersectionPointsMultipatchLineAo =
+				IntersectionUtils.GetIntersectionPoints(multipatch, cutLine);
+
+			// Expected: 2 points at the outer boundary
+			Assert.AreEqual(2, GeometryUtils.GetPointCount(intersectionPointsMultipatchLineAo));
+
+			// Compare with 
+			IntersectionUtils.UseCustomIntersect = true;
+			IMultipoint intersectionPointsMultipatchLineCustom =
+				IntersectionUtils.GetIntersectionPoints(multipatch, cutLine);
+
+			// Expected: 2 points at the outer boundary
+			Assert.AreEqual(
+				2, GeometryUtils.GetPointCount(intersectionPointsMultipatchLineCustom));
+
+			// NOTE from the documentation: "For multipoints, IRelationalOperator::Equals delegates to IClone::IsEqual"
+			// Therefore GeometryUtils.AreEqualInXY is false!
+			Assert.IsTrue(
+				GeomRelationUtils.AreEqualXY
+				(GeometryConversionUtils.CreateMultipoint(intersectionPointsMultipatchLineAo),
+				 GeometryConversionUtils.CreateMultipoint(intersectionPointsMultipatchLineCustom),
+				 tolerance));
+
+			// Extra functionality in GetIntersectionPointsXY: PLANAR
+			IMultipoint intersectionPointsMultipatchPolylinePlanar =
+				IntersectionUtils.GetIntersectionPointsXY(multipatch, cutLine, tolerance, true);
+
+			// Has extra point because all rings are intersected with all rings:
+			Assert.AreEqual(
+				3, GeometryUtils.GetPointCount(intersectionPointsMultipatchPolylinePlanar));
+			Assert.IsTrue(GeometryUtils.Contains(intersectionPointsMultipatchPolylinePlanar,
+			                                     intersectionPointsMultipatchLineAo));
+
+			// Extra functionality in GetIntersectionPointsXY: NON-PLANAR (reporting multiple intersections on different Zs)
+			IMultipoint intersectionPointsMultipatchPolylineNonPlanar =
+				IntersectionUtils.GetIntersectionPointsXY(multipatch, cutLine, tolerance, false);
+
+			// Has extra point because at the touching boundaries both rings report an intersection:
+			Assert.AreEqual(
+				4, GeometryUtils.GetPointCount(intersectionPointsMultipatchPolylineNonPlanar));
+
+			Assert.IsTrue(GeometryUtils.Contains(intersectionPointsMultipatchPolylineNonPlanar,
+			                                     intersectionPointsMultipatchLineAo));
+
+			//
+			// Multipatch-Multipoint
+			IMultipoint targetMultipoint = intersectionPointsMultipatchLineAo;
+			IntersectionUtils.UseCustomIntersect = false;
+			IMultipoint intersectionPointsMultipatchMultipointAo =
+				IntersectionUtils.GetIntersectionPoints(multipatch, targetMultipoint);
+
+			IntersectionUtils.UseCustomIntersect = true;
+			IMultipoint intersectionPointsMultipatchMultipointXY =
+				IntersectionUtils.GetIntersectionPoints(multipatch, targetMultipoint);
+
+			// AO output is non-Z-aware. Use Geom-Equals because IRelationalOperator::Equals delegates to IClone
+			Assert.IsTrue(
+				GeomRelationUtils.AreEqualXY
+				(GeometryConversionUtils.CreateMultipoint(intersectionPointsMultipatchMultipointAo),
+				 GeometryConversionUtils.CreateMultipoint(intersectionPointsMultipatchMultipointXY),
+				 tolerance));
+
+			Assert.AreEqual(GeometryUtils.GetPointCount(intersectionPointsMultipatchMultipointAo),
+			                GeometryUtils.GetPointCount(intersectionPointsMultipatchMultipointXY));
+
+			// GetIntersectionPointsXY (PLANAR: same as AO but with Z values):
+			intersectionPointsMultipatchMultipointXY =
+				IntersectionUtils.GetIntersectionPointsXY(multipatch, targetMultipoint, tolerance,
+				                                          true);
+
+			Assert.AreEqual(
+				2, GeometryUtils.GetPointCount(intersectionPointsMultipatchMultipointXY));
+
+			// The targetMultipatch is not Z-aware
+			Assert.IsTrue(
+				GeomRelationUtils.AreEqualXY(
+					GeometryConversionUtils.CreateMultipoint(targetMultipoint),
+					GeometryConversionUtils.CreateMultipoint(
+						intersectionPointsMultipatchMultipointXY),
+					tolerance));
+
+			GeometryUtils.MakeNonZAware(intersectionPointsMultipatchMultipointXY);
+
+			Assert.IsTrue(
+				GeomRelationUtils.AreEqual
+				(GeometryConversionUtils.CreateMultipoint(targetMultipoint),
+				 GeometryConversionUtils.CreateMultipoint(intersectionPointsMultipatchMultipointXY),
+				 tolerance, tolerance));
+
+			// GetIntersectionPointsXY (NON-PLANAR: has extra point at differenz Z):
+			intersectionPointsMultipatchMultipointXY =
+				IntersectionUtils.GetIntersectionPointsXY(multipatch, targetMultipoint, tolerance,
+				                                          false);
+
+			Assert.AreEqual(
+				3, GeometryUtils.GetPointCount(intersectionPointsMultipatchMultipointXY));
+
+			//
+			// Multipatch-Point
+			IPoint pointTarget =
+				((IPointCollection) intersectionPointsMultipatchMultipointXY).get_Point(0);
+
+			IntersectionUtils.UseCustomIntersect = false;
+			IMultipoint intersectionPointsMultipatchPointAo =
+				IntersectionUtils.GetIntersectionPoints(multipatch, pointTarget);
+
+			IntersectionUtils.UseCustomIntersect = true;
+			IMultipoint intersectionPointsMultipatchPointXY =
+				IntersectionUtils.GetIntersectionPoints(multipatch, pointTarget);
+
+			GeometryUtils.AreEqual(intersectionPointsMultipatchPointAo,
+			                       intersectionPointsMultipatchPointXY);
+
+			intersectionPointsMultipatchPointXY =
+				IntersectionUtils.GetIntersectionPointsXY(multipatch, pointTarget, tolerance);
+
+			GeometryUtils.AreEqualInXY(pointTarget, intersectionPointsMultipatchPointXY);
+
+			//
+			// Multipatch-Multipatch
+			IMultiPatch multipatchTarget = GeometryFactory.Clone(multipatch);
+			GeometryUtils.MoveGeometry(multipatchTarget, 3, 0);
+
+			IntersectionUtils.UseCustomIntersect = false;
+			IMultipoint intersectionPointsMultipatchMultipatchAo =
+				IntersectionUtils.GetIntersectionPoints(multipatch, multipatchTarget);
+
+			IntersectionUtils.UseCustomIntersect = true;
+			IMultipoint intersectionPointsMultipatchMultipatchXY =
+				IntersectionUtils.GetIntersectionPoints(multipatch, multipatchTarget);
+
+			// AO output is non-Z-aware. Use Geom-Equals because IRelationalOperator::Equals delegates to IClone
+			Assert.IsTrue(
+				GeomRelationUtils.AreEqualXY
+				(GeometryConversionUtils.CreateMultipoint(intersectionPointsMultipatchMultipatchAo),
+				 GeometryConversionUtils.CreateMultipoint(intersectionPointsMultipatchMultipatchXY),
+				 tolerance));
+
+			Assert.AreEqual(GeometryUtils.GetPointCount(intersectionPointsMultipatchMultipatchAo),
+			                GeometryUtils.GetPointCount(intersectionPointsMultipatchMultipatchXY));
+
+			// GetIntersectionPointsXY (PLANAR): Extra points on the touching ring boundaries in the entierior
+			intersectionPointsMultipatchMultipatchXY =
+				IntersectionUtils.GetIntersectionPointsXY(multipatch, multipatchTarget, tolerance,
+				                                          true);
+
+			Assert.AreEqual(
+				4, GeometryUtils.GetPointCount(intersectionPointsMultipatchMultipatchXY));
+
+			//
+			// Multipatch-Polygon
+			IPolygon polygonTarget = GeometryFactory.CreatePolygon(multipatchTarget);
+			IntersectionUtils.UseCustomIntersect = false;
+			IMultipoint intersectionPointsMultipatchPolygonAo =
+				IntersectionUtils.GetIntersectionPoints(multipatch, polygonTarget);
+
+			IntersectionUtils.UseCustomIntersect = true;
+			IMultipoint intersectionPointsMultipatchPolygonXY =
+				IntersectionUtils.GetIntersectionPoints(multipatch, polygonTarget);
+
+			// AO output is non-Z-aware. Use Geom-Equals because IRelationalOperator::Equals delegates to IClone
+			Assert.IsTrue(
+				GeomRelationUtils.AreEqualXY
+				(GeometryConversionUtils.CreateMultipoint(intersectionPointsMultipatchPolygonAo),
+				 GeometryConversionUtils.CreateMultipoint(intersectionPointsMultipatchPolygonXY),
+				 tolerance));
+
+			Assert.AreEqual(GeometryUtils.GetPointCount(intersectionPointsMultipatchPolygonAo),
+			                GeometryUtils.GetPointCount(intersectionPointsMultipatchPolygonXY));
+
+			// GetIntersectionPointsXY (PLANAR): Extra points on the touching ring boundaries in the entierior
+			intersectionPointsMultipatchMultipatchXY =
+				IntersectionUtils.GetIntersectionPointsXY(multipatch, polygonTarget, tolerance,
+				                                          true);
+
+			Assert.AreEqual(
+				3, GeometryUtils.GetPointCount(intersectionPointsMultipatchMultipatchXY));
 		}
 
 		[Test]

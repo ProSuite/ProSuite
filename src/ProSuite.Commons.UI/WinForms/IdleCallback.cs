@@ -29,7 +29,7 @@ namespace ProSuite.Commons.UI.WinForms
 		{
 			if (_pending)
 			{
-				_msg.VerboseDebug("Callback already pending - ignored");
+				_msg.VerboseDebug(() => "Callback already pending - ignored");
 				return;
 			}
 
@@ -47,8 +47,9 @@ namespace ProSuite.Commons.UI.WinForms
 				_synchronizationContext = new WindowsFormsSynchronizationContext();
 			}
 
-			_msg.VerboseDebugFormat("Scheduling delayed processing (thread: {0})",
-			                        Thread.CurrentThread.ManagedThreadId);
+			_msg.VerboseDebug(
+				() =>
+					$"Scheduling delayed processing (thread: {Thread.CurrentThread.ManagedThreadId})");
 
 			try
 			{

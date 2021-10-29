@@ -982,7 +982,7 @@ namespace ProSuite.QA.TestFactories
 		protected virtual SortedDictionary<string, object> GetCodeValuesCore(
 			[NotNull] IField field, [NotNull] IObjectClass table)
 		{
-			_msg.VerboseDebugFormat("Reading values for field {0}", field.Name);
+			_msg.VerboseDebug(() => $"Reading values for field {field.Name}");
 
 			SortedDictionary<string, object> codeValues;
 			var codedValueDomain = field.Domain as ICodedValueDomain;
@@ -1015,8 +1015,7 @@ namespace ProSuite.QA.TestFactories
 
 			foreach (KeyValuePair<object, string> pair in valueCodes)
 			{
-				_msg.VerboseDebugFormat("Adding key / value pair {0} / {1} to result", pair.Value,
-				                        pair.Key);
+				_msg.VerboseDebug(() => $"Adding key / value pair {pair.Value} / {pair.Key} to result");
 
 				codeValues.Add(pair.Value, pair.Key);
 			}

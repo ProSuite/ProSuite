@@ -195,6 +195,58 @@ namespace ProSuite.Commons.Test.Geometry.Wkb
 			Assert.IsTrue(deserialized.Equals(polygon));
 		}
 
+		[Test]
+		public void CanWriteAndReadPolyhedron()
+		{
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 8),
+				            new Pnt3D(100, 100, 5),
+				            new Pnt3D(100, 20, 9)
+			            };
+
+			var disjoint = new List<Pnt3D>();
+			disjoint.Add(new Pnt3D(140, -10, 0));
+			disjoint.Add(new Pnt3D(140, 30, 23));
+			disjoint.Add(new Pnt3D(300, 30, 56));
+			disjoint.Add(new Pnt3D(300, -10, 0));
+
+			RingGroup poly1 = CreatePoly(ring1);
+			poly1.AddInteriorRing(new Linestring(new[]
+			                                     {
+				                                     new Pnt3D(25, 50, 0),
+				                                     new Pnt3D(50, 50, 0),
+				                                     new Pnt3D(50, 75, 0),
+				                                     new Pnt3D(25, 75, 0),
+				                                     new Pnt3D(25, 50, 0)
+			                                     }
+			                      ));
+
+			Linestring disjointRing = CreateRing(disjoint);
+
+			var poly2 = new RingGroup(disjointRing);
+
+			Polyhedron polyhedron = new Polyhedron(new List<RingGroup>
+			                                       {
+				                                       poly1, poly2
+			                                       });
+
+			WkbGeomWriter writer = new WkbGeomWriter();
+
+			byte[] bytes = writer.WriteMultiSurface(polyhedron);
+
+			WkbGeomReader reader = new WkbGeomReader();
+			IList<Polyhedron> deserializedMultiSurface =
+				reader.ReadMultiSurface(new MemoryStream(bytes));
+
+			Assert.AreEqual(1, deserializedMultiSurface.Count);
+
+			var deserializedPolyhedron = deserializedMultiSurface[0];
+
+			Assert.IsTrue(deserializedPolyhedron.Equals(polyhedron));
+		}
+
 		private static RingGroup CreatePoly(List<Pnt3D> points)
 		{
 			Linestring ring = CreateRing(points);

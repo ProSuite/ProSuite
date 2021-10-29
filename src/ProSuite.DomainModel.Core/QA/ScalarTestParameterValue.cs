@@ -284,32 +284,25 @@ namespace ProSuite.DomainModel.Core.QA
 				return false;
 			}
 
-			bool boolResult;
-			if (bool.TryParse(PersistedStringValue, out boolResult))
+			if (bool.TryParse(PersistedStringValue, out bool _))
 			{
 				type = typeof(bool);
 			}
 
 			var culture = _persistedCulture;
 
-			int intResult;
-			if (int.TryParse(PersistedStringValue, NumberStyles.Any, culture,
-			                 out intResult))
+			if (int.TryParse(PersistedStringValue, NumberStyles.Any, culture, out int _))
 			{
 				type = typeof(int);
 			}
 
-			double doubleResult;
-			if (double.TryParse(PersistedStringValue, NumberStyles.Any,
-			                    culture, out doubleResult))
+			if (double.TryParse(PersistedStringValue, NumberStyles.Any, culture, out double _))
 			{
 				type = typeof(double);
 			}
 
-			DateTime dateTimeResult;
 			if (DateTime.TryParse(PersistedStringValue, culture,
-			                      DateTimeStyles.None,
-			                      out dateTimeResult))
+			                      DateTimeStyles.None, out DateTime _))
 			{
 				type = typeof(DateTime);
 			}

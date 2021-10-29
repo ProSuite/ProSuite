@@ -1082,7 +1082,7 @@ namespace ProSuite.Commons.Geom
 			double tolerance)
 		{
 			List<double> vertexDistances = GetSnappedVertexDistances(ringPoints, plane,
-			                                                         tolerance);
+				tolerance);
 
 			if (vertexDistances.TrueForAll(d => Math.Abs(d) < tolerance))
 			{
@@ -1448,8 +1448,8 @@ namespace ProSuite.Commons.Geom
 				if (previous != null)
 				{
 					bool ringHasSegmentInPlane = IsRingSegmentInPlane(previous, current,
-					                                                  vertexDistances
-						                                                  .Count);
+						vertexDistances
+							.Count);
 
 					if (ringHasSegmentInPlane)
 					{
@@ -1495,8 +1495,8 @@ namespace ProSuite.Commons.Geom
 		                                         int vertexCount)
 		{
 			// intersection points cutting the ring segment between index 7 and 8 have an index of 7.5
-			bool bothIntersectionsAreRingVertices = fromIntersection.IsRingVertex() &&
-			                                        toIntersection.IsRingVertex();
+			bool bothIntersectionsAreRingVertices = fromIntersection.IsSourceVertex() &&
+			                                        toIntersection.IsSourceVertex();
 
 			if (! bothIntersectionsAreRingVertices)
 			{
@@ -1630,10 +1630,227 @@ namespace ProSuite.Commons.Geom
 		#region 2D Intersection
 
 		/// <summary>
-		/// Gets the intersection points between 2 linestrings. Z values are taken from the source.
+		/// Returns the points from the source point list that intersect the target segment list.
+		/// The target segments are interpreted as linestring, i.e. even in case it is a 2-dimensional
+		/// geometry (i.e. closed rings), points completely within are not considered intersecting.
+		/// X,Y,Z values are taken from the source.
 		/// </summary>
-		/// <param name="linestring1"></param>
-		/// <param name="linestring2"></param>
+		/// <param name="sourcePoints"></param>
+		/// <param name="targetPoint"></param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		public static IEnumerable<IntersectionPoint3D> GetIntersectionPoints(
+			[NotNull] IPointList sourcePoints,
+			[NotNull] IPnt targetPoint,
+			double tolerance)
+		{
+			foreach (IntersectionPoint3D invertedIntersectionPoint in
+				GetIntersectionPoints(targetPoint, sourcePoints, tolerance))
+			{
+				// The source was used as target, therefore the intersection point must be adapted:
+				int sourceVertex = (int) invertedIntersectionPoint.VirtualTargetVertex;
+				IPnt sourcePoint = sourcePoints.GetPoint(sourceVertex);
+				var result = new IntersectionPoint3D(new Pnt3D(sourcePoint), sourceVertex)
+				             {
+					             VirtualTargetVertex =
+						             invertedIntersectionPoint.VirtualSourceVertex,
+					             Type = IntersectionPointType.TouchingInPoint
+				             };
+
+				yield return result;
+			}
+		}
+
+		/// <summary>
+		/// Returns the points from the source point list that intersect the target segment list.
+		/// The target segments are interpreted as linestring, i.e. even in case it is a 2-dimensional
+		/// geometry (i.e. closed rings), points completely within are not considered intersecting.
+		/// X,Y,Z values are taken from the source.
+		/// </summary>
+		/// <param name="sourcePoints"></param>
+		/// <param name="targetPoints"></param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		public static IEnumerable<IntersectionPoint3D> GetIntersectionPoints(
+			[NotNull] IPointList sourcePoints,
+			[NotNull] IPointList targetPoints,
+			double tolerance)
+		{
+			for (int i = 0; i < sourcePoints.PointCount; i++)
+			{
+				IPnt sourcePoint = sourcePoints.GetPoint(i);
+
+				foreach (var intersectionPoint in GetIntersectionPoints(
+					sourcePoint, targetPoints, tolerance, i))
+				{
+					yield return intersectionPoint;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Returns the points from the source point list that intersect the target segment list.
+		/// The target segments are interpreted as linestring, i.e. even in case it is a 2-dimensional
+		/// geometry (i.e. closed rings), points completely within are not considered intersecting.
+		/// X,Y,Z values are taken from the source.
+		/// </summary>
+		/// <param name="sourcePoints"></param>
+		/// <param name="targetSegments"></param>
+		/// <param name="tolerance"></param>
+		/// <param name="includeRingInteriorPoints"></param>
+		/// <param name="includeRingStartEndPointDuplicates">Whether the intersections at the
+		/// start- and end-point of a closed target should be reported as two distinct intersection
+		/// points or whether only the start point intersection should be reported</param>
+		/// <returns></returns>
+		public static IEnumerable<IntersectionPoint3D> GetIntersectionPoints(
+			[NotNull] IPointList sourcePoints,
+			[NotNull] ISegmentList targetSegments,
+			double tolerance,
+			bool includeRingInteriorPoints,
+			bool includeRingStartEndPointDuplicates = false)
+		{
+			for (int i = 0; i < sourcePoints.PointCount; i++)
+			{
+				IPnt sourcePoint = sourcePoints.GetPoint(i);
+
+				foreach (var intersectionPoint in GetIntersectionPoints(
+					sourcePoint, i, targetSegments, tolerance, includeRingInteriorPoints,
+					includeRingStartEndPointDuplicates))
+				{
+					yield return intersectionPoint;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Returns all the intersection points between the source segment list and the target point.
+		/// Z values are taken from the source.
+		/// </summary>
+		/// <param name="sourceSegments">The source point which will determine the XYZ values of the found
+		/// intersection point(s).</param>
+		/// <param name="targetPoint">The target point</param>
+		/// <param name="targetPointIndex">The index of the target point</param>
+		/// <param name="tolerance"></param>
+		/// <param name="includeRingInteriorPoints"></param>
+		/// <param name="includeRingStartEndPointDuplicates">Whether the intersections at the
+		/// start- and end-point of a closed target should be reported as two distinct intersection
+		/// points or whether only the start point intersection should be reported.</param>
+		/// <returns></returns>
+		public static IEnumerable<IntersectionPoint3D> GetIntersectionPoints(
+			[NotNull] ISegmentList sourceSegments,
+			[NotNull] IPnt targetPoint,
+			int targetPointIndex,
+			double tolerance,
+			bool includeRingInteriorPoints,
+			bool includeRingStartEndPointDuplicates = false)
+		{
+			bool foundSegmentIntersection = false;
+			IntersectionPoint3D sourceFromPointIntersection = null;
+			IntersectionPoint3D previousIntersection = null;
+			foreach (KeyValuePair<int, Line3D> segmentByIndex in
+				sourceSegments.FindSegments(targetPoint, tolerance))
+			{
+				int sourceIndex = segmentByIndex.Key;
+
+				IntersectionPoint3D intersectionPoint =
+					IntersectionPoint3D.CreateLinePointIntersection(
+						sourceSegments, targetPoint, sourceIndex, targetPointIndex, tolerance);
+
+				if (intersectionPoint == null)
+				{
+					previousIntersection = null;
+					continue;
+				}
+
+				if (! includeRingStartEndPointDuplicates)
+				{
+					// Filter duplicate intersections at ring From/To point:
+					if (intersectionPoint.VirtualSourceVertex == 0)
+					{
+						// Remember intersection of from point:
+						sourceFromPointIntersection = intersectionPoint;
+					}
+					else if (sourceFromPointIntersection != null &&
+					         intersectionPoint.SourcePartIndex ==
+					         sourceFromPointIntersection.SourcePartIndex &&
+					         intersectionPoint.IsAtSourceRingEndPoint(sourceSegments))
+					{
+						previousIntersection = intersectionPoint;
+						continue;
+					}
+				}
+
+				// Filter duplicates of the type (previous segment end point == this segment start point).
+				if (previousIntersection == null ||
+				    // ReSharper disable once CompareOfFloatsByEqualityOperator
+				    previousIntersection.VirtualSourceVertex !=
+				    intersectionPoint.VirtualSourceVertex ||
+				    previousIntersection.SourcePartIndex != intersectionPoint.SourcePartIndex)
+				{
+					yield return intersectionPoint;
+					foundSegmentIntersection = true;
+				}
+
+				previousIntersection = intersectionPoint;
+			}
+
+			if (includeRingInteriorPoints && ! foundSegmentIntersection &&
+			    sourceSegments.IsClosed &&
+			    GeomRelationUtils.PolycurveContainsXY(sourceSegments, targetPoint, tolerance))
+			{
+				// TODO: Consider finding out the source part index
+				yield return new IntersectionPoint3D(new Pnt3D(targetPoint), double.NaN)
+				             {
+					             Type = IntersectionPointType.AreaInterior
+				             };
+			}
+		}
+
+		/// <summary>
+		/// Returns the points from the source segment list that intersect the target points.
+		/// The target segments are interpreted as linestring, i.e. even in case it is a 2-dimensional
+		/// geometry (i.e. closed rings), points completely within are not considered intersecting.
+		/// X,Y,Z values are taken from the source.
+		/// </summary>
+		/// <param name="sourceSegments"></param>
+		/// <param name="targetPoints"></param>
+		/// <param name="tolerance"></param>
+		/// <param name="includeRingInteriorPoints"></param>
+		/// <param name="includeRingStartEndPointDuplicates">Whether the intersections at the
+		/// start- and end-point of a closed target should be reported as two distinct intersection
+		/// points or whether only the start point intersection should be reported</param>
+		/// <returns></returns>
+		public static IEnumerable<IntersectionPoint3D> GetIntersectionPoints(
+			[NotNull] ISegmentList sourceSegments,
+			[NotNull] IPointList targetPoints,
+			double tolerance,
+			bool includeRingInteriorPoints,
+			bool includeRingStartEndPointDuplicates = false)
+		{
+			if (GeomRelationUtils.AreBoundsDisjoint(sourceSegments, targetPoints, tolerance))
+			{
+				yield break;
+			}
+
+			for (int i = 0; i < targetPoints.PointCount; i++)
+			{
+				IPnt targetPoint = targetPoints.GetPoint(i);
+
+				foreach (var intersectionPoint in GetIntersectionPoints(
+					sourceSegments, targetPoint, i, tolerance, includeRingInteriorPoints,
+					includeRingStartEndPointDuplicates))
+				{
+					yield return intersectionPoint;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Gets the intersection points between 2 segment lists, such as line strings, polylines or polygon boundaries.
+		/// Z values are taken from the source.
+		/// </summary>
+		/// <param name="sourceSegments"></param>
+		/// <param name="targetSegments"></param>
 		/// <param name="tolerance"></param>
 		/// <param name="includeLinearIntersectionIntermediateRingStartEndPoints">
 		/// Whether the start/end points of rings that are on the interior of a linear intersection
@@ -1642,15 +1859,15 @@ namespace ProSuite.Commons.Geom
 		/// along linear intersections should be included in the result.</param>
 		/// <returns></returns>
 		public static IList<IntersectionPoint3D> GetIntersectionPoints(
-			[NotNull] ISegmentList linestring1,
-			[NotNull] ISegmentList linestring2,
+			[NotNull] ISegmentList sourceSegments,
+			[NotNull] ISegmentList targetSegments,
 			double tolerance,
 			bool includeLinearIntersectionIntermediateRingStartEndPoints = true,
 			bool includeLinearIntersectionIntermediatePoints = false)
 		{
 			List<SegmentIntersection> intersections =
 				SegmentIntersectionUtils.GetSegmentIntersectionsXY(
-					linestring1, linestring2, tolerance).ToList();
+					sourceSegments, targetSegments, tolerance).ToList();
 
 			if (intersections.Count == 0)
 			{
@@ -1658,7 +1875,7 @@ namespace ProSuite.Commons.Geom
 			}
 
 			IList<IntersectionPoint3D> intersectionPoints = GetIntersectionPoints(
-				linestring1, linestring2, tolerance, intersections,
+				sourceSegments, targetSegments, tolerance, intersections,
 				includeLinearIntersectionIntermediateRingStartEndPoints,
 				includeLinearIntersectionIntermediatePoints);
 
@@ -1702,6 +1919,120 @@ namespace ProSuite.Commons.Geom
 			return intersectionPoints;
 		}
 
+		/// <summary>
+		/// Returns all the intersection points between the source point and the target point list.
+		/// Z values are taken from the source.
+		/// </summary>
+		/// <param name="sourcePoint">The source point which will determine the XYZ values of the found
+		/// intersection point(s).</param>
+		/// <param name="sourceIndex">The index of the source point</param>
+		/// <param name="targetPoints">The target point list</param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		public static IEnumerable<IntersectionPoint3D> GetIntersectionPoints(
+			[NotNull] IPnt sourcePoint,
+			[NotNull] IPointList targetPoints,
+			double tolerance,
+			int sourceIndex = 0)
+		{
+			foreach (int targetIndex in targetPoints.FindPointIndexes(
+				sourcePoint, tolerance))
+			{
+				IntersectionPoint3D intersectionPoint =
+					IntersectionPoint3D.CreatePointPointIntersection(
+						sourcePoint, sourceIndex, targetPoints, targetIndex, tolerance);
+
+				if (intersectionPoint != null)
+				{
+					yield return intersectionPoint;
+				}
+			}
+		}
+
+		/// <summary>
+		/// Returns all the intersection points between the source point and the target a segment list.
+		/// Z values are taken from the source.
+		/// </summary>
+		/// <param name="sourcePoint">The source point which will determine the XYZ values of the found
+		/// intersection point(s).</param>
+		/// <param name="sourceIndex">The index of the source point</param>
+		/// <param name="targetSegments">The target segment list</param>
+		/// <param name="tolerance"></param>
+		/// <param name="includeRingInteriorPoints"></param>
+		/// <param name="includeRingStartEndPointDuplicates">Whether the intersections at the
+		/// start- and end-point of a closed target should be reported as two distinct intersection
+		/// points or whether only the start point intersection should be reported.</param>
+		/// <returns></returns>
+		public static IEnumerable<IntersectionPoint3D> GetIntersectionPoints(
+			[NotNull] IPnt sourcePoint,
+			int sourceIndex,
+			[NotNull] ISegmentList targetSegments,
+			double tolerance,
+			bool includeRingInteriorPoints,
+			bool includeRingStartEndPointDuplicates = false)
+		{
+			bool foundSegmentIntersection = false;
+			IntersectionPoint3D targetFromPointIntersection = null;
+			IntersectionPoint3D previousIntersection = null;
+			foreach (KeyValuePair<int, Line3D> segmentByIndex in targetSegments.FindSegments(
+				sourcePoint, tolerance))
+			{
+				int targetIndex = segmentByIndex.Key;
+
+				IntersectionPoint3D intersectionPoint =
+					IntersectionPoint3D.CreatePointLineIntersection(
+						sourcePoint, targetSegments, sourceIndex, targetIndex, tolerance);
+
+				if (intersectionPoint == null)
+				{
+					previousIntersection = null;
+					continue;
+				}
+
+				if (! includeRingStartEndPointDuplicates)
+				{
+					// Filter duplicate intersections at ring From/To point:
+					if (intersectionPoint.VirtualTargetVertex == 0)
+					{
+						// Remember intersection of from point:
+						targetFromPointIntersection = intersectionPoint;
+					}
+					else if (targetFromPointIntersection != null &&
+					         intersectionPoint.TargetPartIndex ==
+					         targetFromPointIntersection.TargetPartIndex &&
+					         intersectionPoint.IsAtTargetRingEndPoint(targetSegments))
+					{
+						previousIntersection = intersectionPoint;
+						continue;
+					}
+				}
+
+				// Filter duplicates of the type (previous segment end point == this segment start point).
+				if (previousIntersection == null ||
+				    // ReSharper disable once CompareOfFloatsByEqualityOperator
+				    previousIntersection.VirtualTargetVertex !=
+				    intersectionPoint.VirtualTargetVertex ||
+				    previousIntersection.TargetPartIndex != intersectionPoint.TargetPartIndex)
+				{
+					yield return intersectionPoint;
+					foundSegmentIntersection = true;
+				}
+
+				previousIntersection = intersectionPoint;
+			}
+
+			if (includeRingInteriorPoints && ! foundSegmentIntersection &&
+			    targetSegments.IsClosed &&
+			    GeomRelationUtils.PolycurveContainsXY(targetSegments, sourcePoint, tolerance))
+			{
+				// TODO: Consider finding out the source part index
+				yield return new IntersectionPoint3D(new Pnt3D(sourcePoint), double.NaN)
+				             {
+					             Type = IntersectionPointType.AreaInterior
+				             };
+			}
+		}
+
 		public static IList<IntersectionPoint3D> GetSelfIntersectionPoints(
 			[NotNull] ISegmentList linestring,
 			double tolerance)
@@ -1712,7 +2043,7 @@ namespace ProSuite.Commons.Geom
 			{
 				var linearSelfIntersections = new List<SegmentIntersection>(
 					SegmentIntersectionUtils.GetRelevantSelfIntersectionsXY(i, linestring[i],
-					                                                        linestring, tolerance)
+						                        linestring, tolerance)
 					                        .Where(li => li.HasLinearIntersection));
 
 				filteredSelfIntersections.AddRange(linearSelfIntersections);
@@ -1971,7 +2302,8 @@ namespace ProSuite.Commons.Geom
 		[NotNull]
 		public static IList<IntersectionPoint3D> GetSelfIntersections(
 			[NotNull] ISegmentList segments,
-			double tolerance)
+			double tolerance,
+			bool includeLinearIntersectionIntermediatePoints = false)
 		{
 			var selfIntersections = new List<SegmentIntersection>();
 
@@ -1989,7 +2321,8 @@ namespace ProSuite.Commons.Geom
 
 			IList<IntersectionPoint3D> intersectionPoints =
 				SegmentIntersectionUtils.CollectIntersectionPoints(
-					sortedRelevantIntersections, segments, segments, tolerance);
+					sortedRelevantIntersections, segments, segments, tolerance,
+					includeLinearIntersectionIntermediatePoints);
 
 			return intersectionPoints;
 		}
@@ -2263,6 +2596,233 @@ namespace ProSuite.Commons.Geom
 
 			return allSegments.Count < crackedSelfIntersections.SegmentCount;
 		}
+
+		#region Simplify
+
+		/// <summary>
+		/// Performs basic clustering on the specified points using the provided tolerances as
+		/// minimum distance. M values and PointIDs are disregarded and lost in the output!
+		/// </summary>
+		/// <param name="multipoint"></param>
+		/// <param name="xyTolerance">The xy tolerance</param>
+		/// <param name="zTolerance">The z tolerance or NaN, if no vertical clustering should be
+		/// performed.</param>
+		public static void Simplify<T>([NotNull] Multipoint<T> multipoint,
+		                               double xyTolerance,
+		                               double zTolerance = double.NaN) where T : IPnt
+		{
+			// NOTE: AO-Simplify on the multipoint cannot be used because it uses the resolution instead
+			// of the tolerance:
+			// "For multipoints, Simplify snaps all x-, y-, z-, and m-coordinates to the grid of the associated 
+			// spatial reference, and removes identical points. A point is identical to another point when the 
+			// two have identical x,y coordinates (after snapping) and when attributes for which it is aware are 
+			// identical to the attributes for which the other point is aware."
+
+			if (multipoint.PointCount == 0)
+			{
+				return;
+			}
+
+			// First cluster the XY coordinates for all Z values, then cluster the Z values:
+			List<T> coords = multipoint.GetPoints().ToList();
+
+			IList<KeyValuePair<IPnt, List<T>>> clusters3D =
+				Cluster(coords, pnt => pnt, xyTolerance, zTolerance);
+
+			IEnumerable<T> newPoints = clusters3D.Select(c => (T) c.Key);
+
+			ReplacePoints(multipoint, newPoints);
+		}
+
+		/// <summary>
+		/// Performs basic clustering on the specified points using the provided tolerances as
+		/// minimum distance. The clustering is performed separately and independently in xy and
+		/// in z.
+		/// </summary>
+		/// <param name="items"></param>
+		/// <param name="getPoint">The function that gets the item's point to be used for
+		/// clustering.</param>
+		/// <param name="xyTolerance">The xy clustering tolerance</param>
+		/// <param name="zTolerance">The z tolerance or NaN, if no vertical clustering should be
+		/// performed.</param>
+		public static IList<KeyValuePair<IPnt, List<T>>> Cluster<T>(
+			[NotNull] List<T> items,
+			[NotNull] Func<T, IPnt> getPoint,
+			double xyTolerance,
+			double zTolerance = double.NaN)
+		{
+			var result = new List<KeyValuePair<IPnt, List<T>>>();
+
+			if (items.Count == 0)
+			{
+				return result;
+			}
+
+			// First cluster the XY coordinates for all Z values, then cluster the Z values:
+
+			IList<KeyValuePair<IPnt, List<T>>> clusters2D =
+				Group(items, getPoint, xyTolerance, double.NaN);
+
+			if (clusters2D.Count == items.Count)
+			{
+				// No actual clustering has taken place
+				return clusters2D;
+			}
+
+			// Consider maintaining the awareness on the high-level geometry:
+			if (double.IsNaN(zTolerance) || ! (getPoint(items[0]) is Pnt3D))
+			{
+				// No clustering by Zs
+				return clusters2D;
+			}
+
+			var xySnapped = new List<KeyValuePair<IPnt, T>>();
+			foreach (KeyValuePair<IPnt, List<T>> cluster2D in clusters2D)
+			{
+				// Include the various Z-levels for the xy-snapped-groups
+				IPnt xyCenter = cluster2D.Key;
+
+				foreach (T itemInCluster2D in cluster2D.Value)
+				{
+					Pnt3D pntZ = (Pnt3D) getPoint(itemInCluster2D);
+
+					xySnapped.Add(
+						new KeyValuePair<IPnt, T>(new Pnt3D(xyCenter.X, xyCenter.Y, pntZ.Z),
+						                          itemInCluster2D));
+				}
+			}
+
+			foreach (var cluster3D in Group(xySnapped, pair => pair.Key, xyTolerance,
+			                                zTolerance))
+			{
+				List<T> clusterItems = cluster3D.Value.Select(kvp => kvp.Value).ToList();
+
+				result.Add(new KeyValuePair<IPnt, List<T>>(cluster3D.Key, clusterItems));
+			}
+
+			return result;
+		}
+
+		[NotNull]
+		private static IList<KeyValuePair<IPnt, List<T>>> Group<T>(
+			[NotNull] List<T> items,
+			Func<T, IPnt> getPoint,
+			double xyTolerance,
+			double zTolerance)
+		{
+			Assert.ArgumentNotNull(items, nameof(items));
+
+			IComparer<IPnt> comparer = new PntComparer<IPnt>(! double.IsNaN(zTolerance));
+
+			items.Sort((item1, item2) => comparer.Compare(getPoint(item1), getPoint(item2)));
+
+			var finishedGroups = new List<List<T>>();
+			var activeGroups = new List<List<T>>();
+
+			var currentGroup = new List<T> {items[0]};
+			activeGroups.Add(currentGroup);
+
+			// line sweeping while maintaining groups within the xy tolerance band:
+			for (var i = 1; i < items.Count; i++)
+			{
+				IPnt currentPoint = getPoint(items[i]);
+
+				bool assigned = false;
+				// if the right-most (i.e. last) item of an active group has dX > xyTolerance,
+				// it cannot grow any more -> emit to finished groups
+				foreach (List<T> activeGroup in activeGroups.ToList())
+				{
+					T rightMostItem = activeGroup[activeGroup.Count - 1];
+					IPnt rightMostPoint = getPoint(rightMostItem);
+
+					double deltaX = currentPoint.X - rightMostPoint.X;
+
+					if (deltaX > xyTolerance)
+					{
+						finishedGroups.Add(activeGroup);
+						activeGroups.Remove(activeGroup);
+					}
+					else if (GeomRelationUtils.AreEqual(currentPoint, rightMostPoint,
+					                                    xyTolerance, zTolerance))
+					{
+						// add the point (theoretically comparison should be done with the group's center)
+						// and all other groups should be considered, but our tolerance is typically small...
+						activeGroup.Add(items[i]);
+						assigned = true;
+						break;
+					}
+				}
+
+				if (! assigned)
+				{
+					var newGroup = new List<T> {items[i]};
+					activeGroups.Add(newGroup);
+				}
+			}
+
+			finishedGroups.AddRange(activeGroups);
+
+			var result = new List<KeyValuePair<IPnt, List<T>>>();
+
+			// For strict interpretation of tolerance: Consider splitting clusters that are too large (Divisive Hierarchical clustering)
+			foreach (List<T> groupedPoints in finishedGroups)
+			{
+				if (groupedPoints.Count == 1)
+				{
+					IPnt singleGroupPoint = getPoint(groupedPoints[0]);
+					result.Add(new KeyValuePair<IPnt, List<T>>(singleGroupPoint, groupedPoints));
+				}
+				else
+				{
+					IPnt center = GetCenter(groupedPoints, getPoint);
+
+					result.Add(new KeyValuePair<IPnt, List<T>>(center, groupedPoints));
+				}
+			}
+
+			return result;
+		}
+		
+		private static void ReplacePoints<T>([NotNull] Multipoint<T> multipoint,
+		                                     [NotNull] IEnumerable<T> newPoints) where T : IPnt
+		{
+			multipoint.SetEmpty();
+
+			foreach (T newPoint in newPoints)
+			{
+				multipoint.AddPoint(newPoint);
+			}
+		}
+
+		private static IPnt GetCenter<T>([NotNull] IList<T> items,
+		                                 [NotNull] Func<T, IPnt> getPoint)
+		{
+			var points = items.Select(i => getPoint(i)).ToList();
+
+			var centerX = points.Average(p => p.X);
+			var centerY = points.Average(p => p.Y);
+
+			double centerZ = 0;
+			foreach (IPnt point in points)
+			{
+				if (point is Pnt3D pnt3D)
+				{
+					centerZ += pnt3D.Z;
+				}
+				else
+				{
+					centerZ = double.NaN;
+				}
+			}
+
+			centerZ /= points.Count;
+
+			return double.IsNaN(centerZ)
+				       ? (IPnt) new Pnt2D(centerX, centerY)
+				       : new Pnt3D(centerX, centerY, centerZ);
+		}
+
+		#endregion
 
 		#region Self intersections
 
@@ -2707,7 +3267,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		public static IEnumerable<RingGroup> GetConnectedComponents(MultiLinestring rings,
-		                                                            double tolerance)
+			double tolerance)
 		{
 			RingGroup singleResult = rings as RingGroup;
 
@@ -2848,7 +3408,7 @@ namespace ProSuite.Commons.Geom
 					Linestring thisCurve = connectedLinestrings[thisCurveIdx];
 
 					int? startIdxThisCurve =
-						thisCurve.FindPointIdx(startPoint, inXY : true);
+						thisCurve.FindPointIdx(startPoint, inXY: true);
 
 					if (startIdxThisCurve != null)
 					{

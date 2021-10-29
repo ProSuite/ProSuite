@@ -14,6 +14,7 @@ using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
+using IPnt = ProSuite.Commons.Geom.IPnt;
 
 namespace ProSuite.Commons.AO.Geometry.Cracking
 {
@@ -57,8 +58,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			foreach (IFeature selectedFeature in selectedFeatures)
 			{
 				FeatureVertexInfo vertexInfo = CreateFeatureVertexInfo(selectedFeature, inExtent,
-				                                                       snapTolerance,
-				                                                       minimumSegmentLength);
+					snapTolerance,
+					minimumSegmentLength);
 				if (vertexInfo != null)
 				{
 					result.Add(vertexInfo);
@@ -79,18 +80,18 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			if (selectedFeature.Shape.GeometryType == esriGeometryType.esriGeometryPoint ||
 			    selectedFeature.Shape.GeometryType == esriGeometryType.esriGeometryMultipoint)
 			{
-				_msg.VerboseDebugFormat(
-					"Feature {0} is not of a supported geometry type. It will be disregarded.",
-					GdbObjectUtils.ToString(selectedFeature));
+				_msg.VerboseDebug(
+					() => $"Feature {GdbObjectUtils.ToString(selectedFeature)} is not of a " +
+					      "supported geometry type. It will be disregarded.");
 
 				return null;
 			}
 
 			if (inExtent != null && GeometryUtils.Disjoint(selectedFeature.Shape, inExtent))
 			{
-				_msg.VerboseDebugFormat(
-					"Feature {0} is outside the extent of interest. It will be disregarded.",
-					GdbObjectUtils.ToString(selectedFeature));
+				_msg.VerboseDebug(
+					() => $"Feature {GdbObjectUtils.ToString(selectedFeature)} is outside " +
+					      "the extent of interest. It will be disregarded.");
 
 				return null;
 			}
@@ -165,7 +166,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				IGeometry sourceShape = toVertexInfo.Feature.Shape;
 				IGeometry targetShape = targetFeature.Shape;
 				bool cannotIntersect = crackPointCalculator.CannotIntersect(sourceShape,
-				                                                            targetShape);
+					targetShape);
 				Marshal.ReleaseComObject(sourceShape);
 				Marshal.ReleaseComObject(targetShape);
 
@@ -200,6 +201,59 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			}
 		}
 
+		public static void AddSelfIntersectionCrackPoints3d(
+			[NotNull] FeatureVertexInfo toVertexInfo,
+			[NotNull] CrackPointCalculator crackPointCalculator,
+			[CanBeNull] ISpatialReference processingSpatialReference = null,
+			[CanBeNull] ITrackCancel trackCancel = null)
+		{
+			// TODO: Consider moving this to CrackPointCalculator
+			crackPointCalculator.SetDataResolution(toVertexInfo.Feature);
+
+			IGeometry inputGeometry =
+				EnsureInputGeometryProjection(toVertexInfo, processingSpatialReference);
+
+			var inputMultipatch = inputGeometry as IMultiPatch;
+
+			var segmentSalad =
+				inputMultipatch != null
+					? (ISegmentList) GeometryConversionUtils.CreatePolyhedron(inputMultipatch)
+					: GeometryConversionUtils.CreateMultiPolycurve((IPolycurve) inputGeometry);
+
+			bool useSnapping =
+				crackPointCalculator.SnapTolerance != null &&
+				! double.IsNaN((double) crackPointCalculator.SnapTolerance) &&
+				crackPointCalculator.SnapTolerance > 0.0;
+
+			double tolerance = useSnapping
+				                   ? (double) crackPointCalculator.SnapTolerance
+				                   : GeometryUtils.GetXyTolerance(inputGeometry);
+
+			IList<IntersectionPoint3D> intersectionPoints =
+				GeomTopoOpUtils.GetSelfIntersections(segmentSalad, tolerance, true);
+
+			// Filter the segment interior-segment interior intersections:
+			var vertexIntersections =
+				intersectionPoints.Where(
+					ip => ip.IsSourceVertex() || ip.VirtualTargetVertex % 1 == 0).ToList();
+
+			// 3D-clustering, even if In3D == false, otherwise the averaged Z values result in
+			// crack points where no crack point should be detected.
+			IList<KeyValuePair<IPnt, List<IntersectionPoint3D>>> clusteredIntersections =
+				GeomTopoOpUtils.Cluster(vertexIntersections, ip => ip.Point, tolerance, tolerance);
+
+			// Legacy - directly use ISegmentList also in crackPointCalculator.DetermineCrackPoints
+			IPolyline polylineSalad = inputMultipatch != null
+				                          ? (IPolyline) GeometryFactory.CreatePolyline(
+					                          inputMultipatch)
+				                          : GeometryFactory.CreatePolyline(inputGeometry);
+
+			IList<CrackPoint> crackPoints = crackPointCalculator.DetermineCrackPoints3d(
+				clusteredIntersections, segmentSalad, inputGeometry, polylineSalad, null);
+
+			toVertexInfo.AddCrackPoints(crackPoints);
+		}
+
 		/// <summary>
 		/// Calculates the crack points between the geometry parts of the specified FeatureVertexInfo's feature
 		/// and adds them to its CrackPoints.
@@ -214,15 +268,17 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			[CanBeNull] ISpatialReference processingSpatialReference = null,
 			[CanBeNull] ITrackCancel trackCancel = null)
 		{
-			IGeometry inputGeometry;
-			if (processingSpatialReference != null)
+			IGeometry inputGeometry =
+				EnsureInputGeometryProjection(toVertexInfo, processingSpatialReference);
+
+			if (IntersectionUtils.UseCustomIntersect &&
+			    ! GeometryUtils.HasNonLinearSegments(inputGeometry) &&
+			    ! GeometryUtils.IsMAware(inputGeometry))
 			{
-				inputGeometry = toVertexInfo.Feature.ShapeCopy;
-				GeometryUtils.EnsureSpatialReference(inputGeometry, toVertexInfo.Feature);
-			}
-			else
-			{
-				inputGeometry = toVertexInfo.Feature.Shape;
+				AddSelfIntersectionCrackPoints3d(toVertexInfo, crackPointCalculator,
+				                                 processingSpatialReference, trackCancel);
+
+				return;
 			}
 
 			var inputMultipatch = inputGeometry as IMultiPatch;
@@ -281,8 +337,10 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			IPointCollection clustered = ClusterPoints(allIntersections,
 			                                           toVertexInfo.SnapTolerance);
 
-			_msg.VerboseDebugFormat("Calculated {0} intersections in {1} ring pairs.",
-			                        allIntersections.PointCount, calculationCount);
+			_msg.VerboseDebug(
+				() =>
+					$"Calculated {allIntersections.PointCount} intersections in {calculationCount} " +
+					"ring pairs.");
 
 			IList<CrackPoint> crackPoints = crackPointCalculator.DetermineCrackPoints(
 				clustered, inputGeometry, (IPolyline) polylineSalad, inputGeometry);
@@ -646,9 +704,10 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
-				_msg.VerboseDebugFormat("Identified {0} points to weed. Weeded geometry: {1}",
-				                        weededPoints.PointCount,
-				                        GeometryUtils.ToString(weededCurve));
+				_msg.VerboseDebug(
+					() =>
+						$"Identified {weededPoints.PointCount} points to weed. Weeded geometry: " +
+						$"{GeometryUtils.ToString(weededCurve)}");
 			}
 
 			return weededPoints;
@@ -852,7 +911,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				ICollection<WKSPointZ> weededPoints = weededPointsDictionary.Keys;
 
 				IList<WKSPointZ> filteredPoints = FilterPointsOutsidePerimeter(weededPoints,
-				                                                               inPerimeter);
+					inPerimeter);
 
 				result = CreateMultipoint(filteredPoints, spatialReference);
 			}
@@ -1290,10 +1349,9 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			if (allInvolvedPlanes.Count == 2)
 			{
 				// snap to line
-				double distanceAlong;
 				Pnt3D pointOnLine;
 				if (planePlaneIntersection.GetDistancePerpendicular(
-					    vertexPnt, false, out distanceAlong, out pointOnLine) > tolerance)
+					    vertexPnt, false, out double _, out pointOnLine) > tolerance)
 				{
 					return GetFallbackCrackPointToInsert(crackPoint, existingVertex, thisRingPlane,
 					                                     tolerance);
@@ -1384,7 +1442,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			var lineToSplit = (IPolyline) lineFeature.ShapeCopy;
 
-			if (maxSplitPointDistanceToLine != null && maxSplitPointDistanceToLine > 0)
+			if (maxSplitPointDistanceToLine > 0)
 			{
 				// For proper snapping of the existing vertices to the split point, otherwise short segments could result
 				CrackPolycurve(lineToSplit, splitPoints, maxSplitPointDistanceToLine);
@@ -1480,6 +1538,24 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			}
 
 			return (IPointCollection) GeometryFactory.CreateMultipoint(clusteredWksPoints, sr);
+		}
+
+		private static IGeometry EnsureInputGeometryProjection(FeatureVertexInfo toVertexInfo,
+		                                                       ISpatialReference
+			                                                       processingSpatialReference)
+		{
+			IGeometry inputGeometry;
+			if (processingSpatialReference != null)
+			{
+				inputGeometry = toVertexInfo.Feature.ShapeCopy;
+				GeometryUtils.EnsureSpatialReference(inputGeometry, toVertexInfo.Feature);
+			}
+			else
+			{
+				inputGeometry = toVertexInfo.Feature.Shape;
+			}
+
+			return inputGeometry;
 		}
 
 		#endregion

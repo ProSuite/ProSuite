@@ -413,17 +413,17 @@ namespace ProSuite.QA.Tests.Test
 			IEnumerable<MMonotonicitySequence> result =
 				MeasureUtils.GetMonotonicitySequences((ISegmentCollection) polyline,
 				                                      esriMonotinicityEnum.esriValueDecreases);
-			Assert.IsTrue(1 == result.Count());
+			Assert.AreEqual(1, result.Count());
 
 			MMonotonicitySequence[] sequences = result.ToArray();
 
 			Assert.IsTrue(sequences[0].MonotonicityType ==
 			              esriMonotinicityEnum.esriValueDecreases);
 
-			Assert.IsTrue(sequences[0].Segments.Count == 1);
+			Assert.AreEqual(1, sequences[0].Segments.Count);
 
-			Assert.IsTrue(sequences[0].Segments[0].FromPoint.M == 200);
-			Assert.IsTrue(sequences[0].Segments[0].ToPoint.M == 100);
+			Assert.AreEqual(sequences[0].Segments[0].FromPoint.M, 200);
+			Assert.AreEqual(sequences[0].Segments[0].ToPoint.M, 100);
 		}
 
 		[Test]
@@ -450,22 +450,22 @@ namespace ProSuite.QA.Tests.Test
 			Assert.IsTrue(sequences[0].MonotonicityType ==
 			              esriMonotinicityEnum.esriValueDecreases);
 
-			Assert.IsTrue(sequences[0].Segments.Count == 3);
+			Assert.AreEqual(3, sequences[0].Segments.Count);
 
-			Assert.IsTrue(sequences[0].Segments[0].FromPoint.M == -100);
-			Assert.IsTrue(sequences[0].Segments[0].ToPoint.M == -200);
-			Assert.IsTrue(sequences[0].Segments[1].FromPoint.M == -200);
-			Assert.IsTrue(sequences[0].Segments[1].ToPoint.M == -300);
-			Assert.IsTrue(sequences[0].Segments[2].FromPoint.M == -300);
-			Assert.IsTrue(sequences[0].Segments[2].ToPoint.M == -400);
+			Assert.AreEqual(-100, sequences[0].Segments[0].FromPoint.M);
+			Assert.AreEqual(-200, sequences[0].Segments[0].ToPoint.M);
+			Assert.AreEqual(-200, sequences[0].Segments[1].FromPoint.M);
+			Assert.AreEqual(-300, sequences[0].Segments[1].ToPoint.M);
+			Assert.AreEqual(-300, sequences[0].Segments[2].FromPoint.M);
+			Assert.AreEqual(-400, sequences[0].Segments[2].ToPoint.M);
 
 			Assert.IsTrue(sequences[1].MonotonicityType ==
 			              esriMonotinicityEnum.esriValueDecreases);
 
-			Assert.IsTrue(sequences[1].Segments.Count == 1);
+			Assert.AreEqual(1, sequences[1].Segments.Count);
 
-			Assert.IsTrue(sequences[1].Segments[0].FromPoint.M == -200);
-			Assert.IsTrue(sequences[1].Segments[0].ToPoint.M == -300);
+			Assert.AreEqual(-200, sequences[1].Segments[0].FromPoint.M);
+			Assert.AreEqual(-300, sequences[1].Segments[0].ToPoint.M);
 		}
 
 		[Test]
@@ -491,45 +491,45 @@ namespace ProSuite.QA.Tests.Test
 			IEnumerable<MMonotonicitySequence> result =
 				MeasureUtils.GetMonotonicitySequences((ISegmentCollection) polyline,
 				                                      monotonicityTypes);
-			Assert.IsTrue(4 == result.Count());
+			Assert.AreEqual(4, result.Count());
 
 			MMonotonicitySequence[] sequences = result.ToArray();
 
 			Assert.IsTrue(sequences[0].MonotonicityType ==
 			              esriMonotinicityEnum.esriValueIncreases);
 
-			Assert.IsTrue(sequences[0].Segments.Count == 2);
+			Assert.AreEqual(2, sequences[0].Segments.Count);
 
-			Assert.IsTrue(sequences[0].Segments[0].FromPoint.M == 0);
-			Assert.IsTrue(sequences[0].Segments[0].ToPoint.M == 1);
-			Assert.IsTrue(sequences[0].Segments[1].FromPoint.M == 1);
-			Assert.IsTrue(sequences[0].Segments[1].ToPoint.M == 8);
+			Assert.AreEqual(0, sequences[0].Segments[0].FromPoint.M);
+			Assert.AreEqual(1, sequences[0].Segments[0].ToPoint.M);
+			Assert.AreEqual(1, sequences[0].Segments[1].FromPoint.M);
+			Assert.AreEqual(8, sequences[0].Segments[1].ToPoint.M);
 
 			Assert.IsTrue(sequences[1].MonotonicityType ==
 			              esriMonotinicityEnum.esriValueDecreases);
 
-			Assert.IsTrue(sequences[1].Segments.Count == 1);
+			Assert.AreEqual(1, sequences[1].Segments.Count);
 
-			Assert.IsTrue(sequences[1].Segments[0].FromPoint.M == 8);
-			Assert.IsTrue(sequences[1].Segments[0].ToPoint.M == 2);
+			Assert.AreEqual(8, sequences[1].Segments[0].FromPoint.M);
+			Assert.AreEqual(2, sequences[1].Segments[0].ToPoint.M);
 
 			Assert.IsTrue(sequences[2].MonotonicityType ==
 			              esriMonotinicityEnum.esriValueIncreases);
 
-			Assert.IsTrue(sequences[2].Segments.Count == 1);
+			Assert.AreEqual(1, sequences[2].Segments.Count);
 
-			Assert.IsTrue(sequences[2].Segments[0].FromPoint.M == 2);
-			Assert.IsTrue(sequences[2].Segments[0].ToPoint.M == 12);
+			Assert.AreEqual(2, sequences[2].Segments[0].FromPoint.M);
+			Assert.AreEqual(12, sequences[2].Segments[0].ToPoint.M);
 
 			Assert.IsTrue(sequences[3].MonotonicityType ==
 			              esriMonotinicityEnum.esriValueDecreases);
 
-			Assert.IsTrue(sequences[3].Segments.Count == 2);
+			Assert.AreEqual(2, sequences[3].Segments.Count);
 
-			Assert.IsTrue(sequences[3].Segments[0].FromPoint.M == 12);
-			Assert.IsTrue(sequences[3].Segments[0].ToPoint.M == 0);
-			Assert.IsTrue(sequences[3].Segments[1].FromPoint.M == 0);
-			Assert.IsTrue(sequences[3].Segments[1].ToPoint.M == -1);
+			Assert.AreEqual(12, sequences[3].Segments[0].FromPoint.M);
+			Assert.AreEqual(0, sequences[3].Segments[0].ToPoint.M);
+			Assert.AreEqual(0, sequences[3].Segments[1].FromPoint.M);
+			Assert.AreEqual(-1, sequences[3].Segments[1].ToPoint.M);
 		}
 
 		[Test]
@@ -546,20 +546,20 @@ namespace ProSuite.QA.Tests.Test
 			IEnumerable<MMonotonicitySequence> result =
 				MeasureUtils.GetMonotonicitySequences((ISegmentCollection) polyline,
 				                                      esriMonotinicityEnum.esriValuesEmpty);
-			Assert.IsTrue(1 == result.Count());
+			Assert.AreEqual(1, result.Count());
 
 			MMonotonicitySequence[] sequences = result.ToArray();
 
 			Assert.IsTrue(sequences[0].MonotonicityType ==
 			              esriMonotinicityEnum.esriValuesEmpty);
 
-			Assert.IsTrue(sequences[0].Segments.Count == 3);
+			Assert.AreEqual(3, sequences[0].Segments.Count);
 
-			Assert.IsTrue(sequences[0].Segments[0].FromPoint.M == 100);
+			Assert.AreEqual(100, sequences[0].Segments[0].FromPoint.M);
 			Assert.IsTrue(double.IsNaN(sequences[0].Segments[0].ToPoint.M));
 			Assert.IsTrue(double.IsNaN(sequences[0].Segments[1].FromPoint.M));
-			Assert.IsTrue(sequences[0].Segments[1].ToPoint.M == 100);
-			Assert.IsTrue(sequences[0].Segments[2].FromPoint.M == 100);
+			Assert.AreEqual(100, sequences[0].Segments[1].ToPoint.M);
+			Assert.AreEqual(100, sequences[0].Segments[2].FromPoint.M);
 			Assert.IsTrue(double.IsNaN(sequences[0].Segments[2].ToPoint.M));
 		}
 

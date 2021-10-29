@@ -25,8 +25,7 @@ namespace ProSuite.Commons.UI.WPF
 
 		void AssociatedObject_Click(object sender, RoutedEventArgs e)
 		{
-			Button source = sender as Button;
-			if (source != null && source.ContextMenu != null)
+			if (sender is Button source && source.ContextMenu != null)
 			{
 				// Only open the ContextMenu when it is not already open. If it is already open,
 				// when the button is pressed the ContextMenu will lose focus and automatically close.

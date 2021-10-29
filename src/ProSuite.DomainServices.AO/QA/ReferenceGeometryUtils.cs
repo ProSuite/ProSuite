@@ -326,13 +326,12 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 			else
 			{
-				bool hasAnyAssociationsToFeatureClasses;
 				foreach (IList<IRelationshipClass> relClassChain
 					in GetRelationshipClassChainsToVerifiedFeatureClasses(
 						objectDataset,
 						verificationContext,
 						isRelevantVectorDataset,
-						out hasAnyAssociationsToFeatureClasses))
+						out bool _))
 				{
 					foreach (IGeometry shape in
 						GetReferenceGeometries(obj, relClassChain))

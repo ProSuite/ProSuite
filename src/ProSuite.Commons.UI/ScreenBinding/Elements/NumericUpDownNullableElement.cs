@@ -97,9 +97,7 @@ namespace ProSuite.Commons.UI.ScreenBinding.Elements
 
 		private void SelectAll()
 		{
-			int length = BoundControl.Text == null
-				             ? 0
-				             : BoundControl.Text.Length;
+			int length = BoundControl.Text?.Length ?? 0;
 
 			BoundControl.Select(0, length);
 		}

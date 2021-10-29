@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using Google.Protobuf.Collections;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
@@ -27,13 +29,10 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 		{
 			var watch = Stopwatch.StartNew();
 
-			IList<IFeature> sourceFeatures =
-				ProtobufConversionUtils.FromGdbObjectMsgList(
-					request.SourceFeatures, request.ClassDefinitions);
-
-			IList<IFeature> targetFeatures =
-				ProtobufConversionUtils.FromGdbObjectMsgList(
-					request.TargetFeatures, request.ClassDefinitions);
+			GetFeatures(request.SourceFeatures, request.TargetFeatures,
+			            request.ClassDefinitions,
+			            out IList<IFeature> sourceFeatures,
+			            out IList<IFeature> targetFeatures);
 
 			_msg.DebugStopTiming(watch, "Unpacked feature lists from request params");
 
@@ -66,11 +65,8 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 						ProtobufGeometryUtils.ToShapeMsg(
 							geometry, shapeFormat, srFormat));
 
-					if (_msg.IsVerboseDebugEnabled)
-					{
-						_msg.VerboseDebug(
-							$"Calculated overlap: {GeometryUtils.ToString(geometry)}");
-					}
+					_msg.VerboseDebug(
+						() => $"Calculated overlap: {GeometryUtils.ToString(geometry)}");
 				}
 
 				result.Overlaps.Add(overlapsMsg);
@@ -94,16 +90,21 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 			bool explodeMultiparts = request.ExplodeMultipartResults;
 			bool storeOverlapsAsNewFeatures = request.StoreOverlapsAsNewFeatures;
 
-			GdbTableContainer container = ProtobufConversionUtils.CreateGdbTableContainer(
-				request.ClassDefinitions, null, out _);
+			//GdbTableContainer container = ProtobufConversionUtils.CreateGdbTableContainer(
+			//	request.ClassDefinitions, null, out _);
 
-			IList<IFeature> selectedFeatureList =
-				ProtobufConversionUtils.FromGdbObjectMsgList(
-					request.SourceFeatures, container);
+			//IList<IFeature> selectedFeatureList =
+			//	ProtobufConversionUtils.FromGdbObjectMsgList(
+			//		request.SourceFeatures, container);
 
-			IList<IFeature> targetFeaturesForVertexInsertion =
-				ProtobufConversionUtils.FromGdbObjectMsgList(
-					request.UpdatableTargetFeatures, container);
+			//IList<IFeature> targetFeaturesForVertexInsertion =
+			//	ProtobufConversionUtils.FromGdbObjectMsgList(
+			//		request.UpdatableTargetFeatures, container);
+
+			GetFeatures(request.SourceFeatures, request.UpdatableTargetFeatures,
+			            request.ClassDefinitions,
+			            out IList<IFeature> selectedFeatureList,
+			            out IList<IFeature> targetFeaturesForVertexInsertion);
 
 			Overlaps overlaps = new Overlaps();
 
@@ -113,8 +114,11 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 					(int) overlapMsg.OriginalFeatureRef.ClassHandle,
 					(int) overlapMsg.OriginalFeatureRef.ObjectId);
 
-				IFeatureClass fClass = (IFeatureClass) container.GetByClassId(gdbRef.ClassId);
-
+				IFeatureClass fClass =
+					selectedFeatureList
+						.Select(f => f.Class)
+						.First(c => c.ObjectClassID == gdbRef.ClassId) as IFeatureClass;
+				
 				List<IGeometry> overlapGeometries =
 					ProtobufGeometryUtils.FromShapeMsgList<IGeometry>(
 						overlapMsg.Overlaps,
@@ -156,6 +160,26 @@ namespace ProSuite.Microservices.Server.AO.Geometry.RemoveOverlaps
 			response.ResultHasMultiparts = result.ResultHasMultiparts;
 
 			return response;
+		}
+
+		private static void GetFeatures([NotNull] RepeatedField<GdbObjectMsg> requestSourceFeatures,
+		                                [NotNull] RepeatedField<GdbObjectMsg> requestTargetFeatures,
+		                                [NotNull] RepeatedField<ObjectClassMsg> classDefinitions,
+		                                [NotNull] out IList<IFeature> sourceFeatures,
+		                                [NotNull] out IList<IFeature> targetFeatures)
+		{
+			Stopwatch watch = Stopwatch.StartNew();
+
+			sourceFeatures = ProtobufConversionUtils.FromGdbObjectMsgList(requestSourceFeatures,
+				classDefinitions);
+
+			targetFeatures = ProtobufConversionUtils.FromGdbObjectMsgList(requestTargetFeatures,
+				classDefinitions);
+
+			_msg.DebugStopTiming(
+				watch,
+				"CalculateReshapeLinesImpl: Unpacked {0} source and {1} target features from request params",
+				sourceFeatures.Count, targetFeatures.Count);
 		}
 
 		private static OverlapsRemover RemoveOverlaps(

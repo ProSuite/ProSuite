@@ -69,6 +69,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="ProPlugins\VerificationPlugInController.cs" />
     <Compile Include="Worklist\IssueWorklistEnvironmentBase.cs" />
     <Compile Include="DdxSpecificationReferencesProvider.cs" />
     <Compile Include="ProPlugins\VerifyPerimeterToolBase.cs" />

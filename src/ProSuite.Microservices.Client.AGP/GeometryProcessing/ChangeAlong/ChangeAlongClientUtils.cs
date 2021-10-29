@@ -36,7 +36,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			}
 
 			var result = PopulateReshapeAlongCurves(
-				sourceFeatures, targetFeatures, response.ReshapeLines,
+				targetFeatures, response.ReshapeLines,
 				(ReshapeAlongCurveUsability) response.ReshapeLinesUsability);
 
 			return result;
@@ -60,7 +60,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			}
 
 			var result = PopulateReshapeAlongCurves(
-				sourceFeatures, targetFeatures, response.CutLines,
+				targetFeatures, response.CutLines,
 				(ReshapeAlongCurveUsability) response.ReshapeLinesUsability);
 
 			return result;
@@ -130,12 +130,10 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			ICollection<ObjectClassMsg> classDefinitions)
 		{
 			ProtobufConversionUtils.ToGdbObjectMsgList(selectedFeatures,
-			                                           sourceFeatureMsgs,
-			                                           classDefinitions);
+			                                           sourceFeatureMsgs, classDefinitions);
 
 			ProtobufConversionUtils.ToGdbObjectMsgList(targetFeatures,
-			                                           targetFeatureMsgs,
-			                                           classDefinitions);
+			                                           targetFeatureMsgs, classDefinitions);
 		}
 
 		#endregion
@@ -175,7 +173,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			}
 
 			newChangeAlongCurves = PopulateReshapeAlongCurves(
-				sourceFeatures, targetFeatures, response.NewReshapeLines,
+				targetFeatures, response.NewReshapeLines,
 				(ReshapeAlongCurveUsability) response.ReshapeLinesUsability);
 
 			return resultFeatures;
@@ -217,7 +215,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			}
 
 			newChangeAlongCurves = PopulateReshapeAlongCurves(
-				sourceFeatures, targetFeatures, response.NewCutLines,
+				targetFeatures, response.NewCutLines,
 				(ReshapeAlongCurveUsability) response.CutLinesUsability);
 
 			return resultFeatures;
@@ -257,12 +255,16 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 
 			foreach (Feature sourceFeature in sourceFeatures)
 			{
-				featuresByObjRef.Add(new GdbObjectReference(sourceFeature), sourceFeature);
+				featuresByObjRef.Add(
+					ProtobufConversionUtils.ToObjectReferenceWithUniqueClassId(sourceFeature),
+					sourceFeature);
 			}
 
 			foreach (Feature targetFeature in targetFeatures)
 			{
-				featuresByObjRef.Add(new GdbObjectReference(targetFeature), targetFeature);
+				featuresByObjRef.Add(
+					ProtobufConversionUtils.ToObjectReferenceWithUniqueClassId(targetFeature),
+					targetFeature);
 			}
 
 			return featuresByObjRef;
@@ -317,7 +319,6 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 		#region Protobuf conversions
 
 		private static ChangeAlongCurves PopulateReshapeAlongCurves(
-			[NotNull] IList<Feature> sourceFeatures,
 			[NotNull] IList<Feature> targetFeatures,
 			IEnumerable<ReshapeLineMsg> reshapeLineMsgs,
 			ReshapeAlongCurveUsability cutSubcurveUsability)
@@ -329,12 +330,13 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 
 				Assert.NotNull(cutSubcurve);
 
-				if (reshapeLineMsg.Source != null)
-				{
-					var sourceRef = new GdbObjectReference(reshapeLineMsg.Source.ClassHandle,
-					                                       reshapeLineMsg.Source.ObjectId);
+				GdbObjRefMsg sourceObjRefMsg = reshapeLineMsg.Source;
 
-					cutSubcurve.Source = sourceFeatures.First(f => sourceRef.References(f));
+				if (sourceObjRefMsg != null)
+				{
+					cutSubcurve.Source =
+						new GdbObjectReference(sourceObjRefMsg.ClassHandle,
+						                       sourceObjRefMsg.ObjectId);
 				}
 
 				resultSubcurves.Add(cutSubcurve);
@@ -377,7 +379,11 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 
 			if (subcurve.Source != null)
 			{
-				result.Source = ProtobufConversionUtils.ToGdbObjRefMsg(subcurve.Source);
+				result.Source = new GdbObjRefMsg
+				                {
+					                ClassHandle = subcurve.Source.Value.ClassId,
+					                ObjectId = subcurve.Source.Value.ObjectId
+				                };
 			}
 
 			result.TargetSegmentAtFrom =

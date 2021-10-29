@@ -72,12 +72,12 @@ namespace ProSuite.Commons.AO.Geometry
 			return new Linestring(path1Pnts3D);
 		}
 
-		public static void AddPoints(IEnumerable<Pnt3D> points, IMultipoint toResult)
+		public static void AddPoints(IEnumerable<IPnt> points, IMultipoint toResult)
 		{
-			Func<Pnt3D, WKSPointZ> createPoint;
+			Func<IPnt, WKSPointZ> createPoint;
 
 			if (GeometryUtils.IsZAware(toResult))
-				createPoint = p => WKSPointZUtils.CreatePoint(p.X, p.Y, p.Z);
+				createPoint = WKSPointZUtils.CreatePoint;
 			else
 				createPoint =
 					p => WKSPointZUtils.CreatePoint(p.X, p.Y, double.NaN);
@@ -90,9 +90,9 @@ namespace ProSuite.Commons.AO.Geometry
 		public static void AddPaths([NotNull] IList<Linestring> linestringsToAdd,
 		                            [NotNull] IPolyline toResult)
 		{
-			Func<Pnt3D, WKSPointZ> createPoint;
+			Func<IPnt, WKSPointZ> createPoint;
 			if (GeometryUtils.IsZAware(toResult))
-				createPoint = p => WKSPointZUtils.CreatePoint(p.X, p.Y, p.Z);
+				createPoint = WKSPointZUtils.CreatePoint;
 			else
 				createPoint = p => WKSPointZUtils.CreatePoint(p.X, p.Y, double.NaN);
 
@@ -250,7 +250,7 @@ namespace ProSuite.Commons.AO.Geometry
 			return result;
 		}
 
-		private static IPnt CreatePnt(IPoint p, bool pnt3D)
+		public static IPnt CreatePnt(IPoint p, bool pnt3D)
 		{
 			return pnt3D ? (IPnt) new Pnt3D(p.X, p.Y, p.Z) : new Pnt2D(p.X, p.Y);
 		}
@@ -376,6 +376,39 @@ namespace ProSuite.Commons.AO.Geometry
 			return result;
 		}
 
+		public static IEnumerable<RingGroup> CreateRingGroups(
+			[NotNull] IMultiPatch multipatch,
+			bool enforcePositiveOrientation = true)
+		{
+			foreach (GeometryPart multipatchPart in GeometryPart.FromGeometry(multipatch))
+			{
+				RingGroup ringGroup = CreateRingGroup(multipatchPart);
+
+				if (enforcePositiveOrientation &&
+				    ringGroup.ClockwiseOriented == false)
+				{
+					// Point intersect rings even if they are facing downward (with negative orientation)
+					ringGroup.ReverseOrientation();
+				}
+
+				yield return ringGroup;
+			}
+		}
+
+		public static Polyhedron CreatePolyhedron(IMultiPatch multipatch)
+		{
+			var ringGroups = new List<RingGroup>();
+
+			foreach (GeometryPart multipatchPart in GeometryPart.FromGeometry(multipatch))
+			{
+				RingGroup ringGroup = CreateRingGroup(multipatchPart);
+
+				ringGroups.Add(ringGroup);
+			}
+
+			return new Polyhedron(ringGroups);
+		}
+
 		public static Linestring CreateLinestring([NotNull] IGeometry path,
 		                                          int createSpatialIndexThreshold = 300)
 		{
@@ -418,6 +451,18 @@ namespace ProSuite.Commons.AO.Geometry
 
 			return GeometryFactory.CreatePolyline(paths, spatialReference, true,
 			                                      false);
+		}
+
+		public static EnvelopeXY CreateEnvelopeXY([NotNull] IEnvelope envelope)
+		{
+			return new EnvelopeXY(envelope.XMin, envelope.YMin, envelope.XMax, envelope.YMax);
+		}
+
+		public static IPoint CreatePoint(IPnt pnt, ISpatialReference spatialReference)
+		{
+			double z = pnt is Pnt3D pnt3D ? pnt3D.Z : double.NaN;
+
+			return GeometryFactory.CreatePoint(pnt.X, pnt.Y, z, double.NaN, spatialReference);
 		}
 
 		private static void AddToMultipatch(IMultiPatch result, IPolygon poly,

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
@@ -52,6 +53,15 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return false;
+		}
+
+		public static bool AreDisjoint([NotNull] EnvelopeXY envelope,
+		                               [NotNull] IPnt point,
+		                               double tolerance)
+		{
+			return AreDisjoint(envelope.XMin, envelope.YMin,
+			                   envelope.XMax, envelope.YMax,
+			                   point.X, point.Y, tolerance);
 		}
 
 		public static bool AreDisjoint(
@@ -120,9 +130,186 @@ namespace ProSuite.Commons.Geom
 			return true;
 		}
 
-		public static bool AreMultipointsEqualXY([NotNull] Multipoint<IPnt> multipoint1,
-		                                         [NotNull] Multipoint<IPnt> multipoint2,
-		                                         double tolerance)
+		public static bool AreEqual<T>([NotNull] T pnt1, [NotNull] T pnt2,
+		                               double xyTolerance, double zTolerance) where T : IPnt
+		{
+			double z1 = double.NaN;
+			double z2 = double.NaN;
+			if (double.IsNaN(zTolerance))
+			{
+				z1 = double.NaN;
+				z2 = double.NaN;
+			}
+			else
+			{
+				if (pnt1 is Pnt3D a3D)
+				{
+					z1 = a3D.Z;
+				}
+
+				if (pnt2 is Pnt3D b3D)
+				{
+					z2 = b3D.Z;
+				}
+			}
+
+			return AreEqual(pnt1.X, pnt1.Y, z1, pnt2.X, pnt2.Y, z2,
+			                xyTolerance, zTolerance);
+		}
+
+		public static bool AreEqual(double x1, double y1, double z1,
+		                            double x2, double y2, double z2,
+		                            double xyTolerance, double zTolerance)
+		{
+			double dx = x1 - x2;
+			double dy = y1 - y2;
+			double dd = dx * dx + dy * dy;
+			double xyToleranceSquared = xyTolerance * xyTolerance;
+
+			if (dd <= xyToleranceSquared)
+			{
+				if (double.IsNaN(zTolerance))
+				{
+					// No Z tolerance given: ignore Z coords
+					return true;
+				}
+
+				if (double.IsNaN(z1) && double.IsNaN(z2))
+				{
+					// Both Z coords are NaN:
+					return true;
+				}
+
+				if (double.IsNaN(z1) || double.IsNaN(z2))
+				{
+					// One Z coord is valid, the other is NaN:
+					return false;
+				}
+
+				double dz = Math.Abs(z1 - z2);
+				return dz <= zTolerance;
+			}
+
+			return false;
+		}
+
+		public static bool IsWithinTolerance(IPnt testPoint, IPnt searchPoint, double tolerance,
+		                                     bool useSearchCircle)
+		{
+			bool withinSearchBox = IsWithinBox(testPoint, searchPoint, tolerance);
+
+			if (! withinSearchBox)
+			{
+				return false;
+			}
+
+			if (! useSearchCircle)
+			{
+				return true;
+			}
+
+			double distanceSquaredXY = GeomUtils.GetDistanceSquaredXY(searchPoint, testPoint);
+
+			double searchToleranceSquared = tolerance * tolerance;
+
+			return distanceSquaredXY <= searchToleranceSquared;
+		}
+
+		public static bool IsWithinBox(IPnt testPoint, IPnt searchBoxCenterPoint, double tolerance)
+		{
+			return
+				MathUtils.AreEqual(testPoint.X, searchBoxCenterPoint.X, tolerance) &&
+				MathUtils.AreEqual(testPoint.Y, searchBoxCenterPoint.Y, tolerance);
+		}
+
+		/// <summary>
+		/// Determines whether the two sets of points occupy the same XY space (XYZ if the
+		/// zTolerance is set and both have z values), i.e. the symmetric difference is empty
+		/// (Clementini-style).
+		/// </summary>
+		/// <param name="multipoint1"></param>
+		/// <param name="multipoint2"></param>
+		/// <param name="xyTolerance"></param>
+		/// <param name="zTolerance">The z tolerance</param>
+		/// <returns></returns>
+		public static bool AreEqual([NotNull] Multipoint<IPnt> multipoint1,
+		                            [NotNull] Multipoint<IPnt> multipoint2,
+		                            double xyTolerance,
+		                            double zTolerance = double.NaN)
+		{
+			if (double.IsNaN(zTolerance))
+			{
+				return AreEqualXY(multipoint1, multipoint2, xyTolerance);
+			}
+
+			if (ReferenceEquals(multipoint1, multipoint2))
+			{
+				return true;
+			}
+
+			if (! AreBoundsEqual(multipoint1, multipoint2, xyTolerance))
+			{
+				return false;
+			}
+
+			HashSet<int> foundIndexes = new HashSet<int>();
+
+			foreach (IPnt point in multipoint1.GetPoints())
+			{
+				bool anyFound = false;
+				foreach (int foundIdx in
+					multipoint2.FindPointIndexes(point, xyTolerance, true))
+				{
+					Pnt3D searchPoint = point as Pnt3D;
+					Pnt3D foundPoint = multipoint2.GetPoint(foundIdx) as Pnt3D;
+
+					double z1 = searchPoint?.Z ?? double.NaN;
+					double z2 = foundPoint?.Z ?? double.NaN;
+					if ((searchPoint == null) != (foundPoint == null))
+					{
+						// one is null, the other not
+						continue;
+					}
+
+					// both nan or equal in Z
+					if ((double.IsNaN(z1) && double.IsNaN(z2)) ||
+					    MathUtils.AreEqual(z1, z2, zTolerance))
+					{
+						anyFound = true;
+
+						foundIndexes.Add(foundIdx);
+					}
+				}
+
+				if (! anyFound)
+				{
+					return false;
+				}
+			}
+
+			// Check if all points have been found at some point:
+			for (int i = 0; i < multipoint2.PointCount; i++)
+			{
+				if (! foundIndexes.Contains(i))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		/// <summary>
+		/// Determines whether the two sets of points occupy the same XY space, i.e. the symmetric
+		/// difference is empty (clementini-style).
+		/// </summary>
+		/// <param name="multipoint1"></param>
+		/// <param name="multipoint2"></param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		public static bool AreEqualXY([NotNull] Multipoint<IPnt> multipoint1,
+		                              [NotNull] Multipoint<IPnt> multipoint2,
+		                              double tolerance)
 		{
 			if (ReferenceEquals(multipoint1, multipoint2))
 			{
@@ -166,7 +353,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		public static bool LinesContainXY([NotNull] ISegmentList segments,
-		                                  [NotNull] Pnt3D testPoint,
+		                                  [NotNull] IPnt testPoint,
 		                                  double tolerance)
 		{
 			foreach (KeyValuePair<int, Line3D> segmentsAroundPoint in
@@ -236,7 +423,7 @@ namespace ProSuite.Commons.Geom
 		/// <param name="tolerance"></param>
 		/// <returns></returns>
 		public static bool PolycurveContainsXY([NotNull] ISegmentList closedPolycurve,
-		                                       [NotNull] Pnt3D testPoint,
+		                                       [NotNull] IPnt testPoint,
 		                                       double tolerance)
 		{
 			if (AreBoundsDisjoint(closedPolycurve, testPoint.X, testPoint.Y, tolerance))

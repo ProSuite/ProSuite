@@ -39,12 +39,12 @@ namespace ProSuite.Commons.Collections
 				yValue = GetPropertyValue(yWord, _property.Name);
 			}
 
-			if (xValue is Image && ((Image) xValue).Tag != null)
+			if ((xValue as Image)?.Tag != null)
 			{
 				xValue = ((Image) xValue).Tag;
 			}
 
-			if (yValue is Image && ((Image) yValue).Tag != null)
+			if ((yValue as Image)?.Tag != null)
 			{
 				yValue = ((Image) yValue).Tag;
 			}

@@ -95,7 +95,7 @@ namespace ProSuite.Commons.Geom.SpatialIndex
 				if (_msg.IsVerboseDebugEnabled &&
 				    tileGeometryRefs.Count >= _estimatedItemsPerTile)
 				{
-					_msg.VerboseDebugFormat(
+					_msg.DebugFormat(
 						"Numer of items in tile {0} is exceeding the estimated maximum and now contains {1} items",
 						intersectedTileIdx, tileGeometryRefs.Count + 1);
 				}

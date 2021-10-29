@@ -110,8 +110,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			if (ShortSegments != null)
 			{
 				result.ShortSegments = ShortSegmentsUtils.GetFilteredSegments(ShortSegments,
-				                                                              subSelectionPerimeter,
-				                                                              true);
+					subSelectionPerimeter,
+					true);
 			}
 
 			if (NonRemovableShortSegments != null)
@@ -387,6 +387,24 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			IPointCollection pointCollection = CrackPointCollection;
 
 			return GetPoints(pointCollection, inArea);
+		}
+
+		[NotNull]
+		public IList<CrackPoint> GetCrackPoints3d([CanBeNull] IGeometry inArea)
+		{
+			IList<CrackPoint> result;
+
+			if (inArea == null)
+			{
+				result = CrackPoints;
+			}
+			else
+			{
+				result = CrackPoints?.Where(cp => GeometryUtils.Contains(inArea, cp.Point))
+				                    .ToList();
+			}
+
+			return result ?? new List<CrackPoint>(0);
 		}
 
 		[CanBeNull]

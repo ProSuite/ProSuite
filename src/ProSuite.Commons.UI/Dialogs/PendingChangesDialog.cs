@@ -95,7 +95,7 @@ namespace ProSuite.Commons.UI.Dialogs
 			{
 				if (! _hasPendingChanges)
 				{
-					_msg.VerboseDebug("no pending changes");
+					_msg.VerboseDebug(() => "no pending changes");
 					return false;
 				}
 
@@ -106,10 +106,8 @@ namespace ProSuite.Commons.UI.Dialogs
 
 				if (! CanHandlePendingChanges())
 				{
-					_msg.VerboseDebugFormat(
-						"Cannot handle pending changes. Reason: saving {0}, aborting {1}, can save {2}",
-						_saving,
-						_aborting, _canSave);
+					_msg.VerboseDebug(() =>
+						$"Cannot handle pending changes. Reason: saving {_saving}, aborting {_aborting}, can save {_canSave}");
 					return false;
 				}
 

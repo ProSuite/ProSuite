@@ -136,9 +136,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public bool IsBeingEdited()
 		{
-			return _workspace == null ||
-			       ! (_workspace is IWorkspaceEdit workspaceEdit) ||
-			       workspaceEdit.IsBeingEdited();
+			return ! (_workspace is IWorkspaceEdit workspaceEdit) || workspaceEdit.IsBeingEdited();
 		}
 
 		#endregion

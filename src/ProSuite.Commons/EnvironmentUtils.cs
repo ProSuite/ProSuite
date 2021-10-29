@@ -50,7 +50,8 @@ namespace ProSuite.Commons
 			return result;
 		}
 
-		public static bool GetBooleanEnvironmentVariableValue([NotNull] string variableName)
+		public static bool GetBooleanEnvironmentVariableValue([NotNull] string variableName,
+		                                                      bool defaultValue = false)
 		{
 			Assert.ArgumentNotNullOrEmpty(variableName, nameof(variableName));
 
@@ -58,7 +59,7 @@ namespace ProSuite.Commons
 
 			if (string.IsNullOrEmpty(value))
 			{
-				return false;
+				return defaultValue;
 			}
 
 			return new[] {"yes", "true", "1"}.Any(

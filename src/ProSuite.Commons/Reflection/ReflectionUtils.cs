@@ -48,8 +48,7 @@ namespace ProSuite.Commons.Reflection
 		public static bool IsObsolete(
 			[NotNull] ICustomAttributeProvider attributeProvider)
 		{
-			string message;
-			return IsObsolete(attributeProvider, out message);
+			return IsObsolete(attributeProvider, out string _);
 		}
 
 		/// <summary>

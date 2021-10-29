@@ -8,6 +8,7 @@ using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ArcGIS.Desktop.Editing;
 using ArcGIS.Desktop.Editing.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
@@ -15,6 +16,7 @@ using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -145,6 +147,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 				if (cutSubcurves.Count > 0)
 				{
+					if (selection.Count == 0)
+					{
+						_msg.Warn("No usable selected features.");
+						return false;
+					}
+
 					return await UpdateFeatures(selection, cutSubcurves, progressor);
 				}
 
@@ -370,7 +378,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			}
 		}
 
-		private List<CutSubcurve> GetSelectedCutSubcurves(Geometry sketch)
+		private List<CutSubcurve> GetSelectedCutSubcurves([NotNull] Geometry sketch)
 		{
 			sketch = ToolUtils.SketchToSearchGeometry(sketch, GetSelectionTolerancePixels(),
 			                                          out bool singlePick);
@@ -378,9 +386,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			Predicate<CutSubcurve> canReshapePredicate =
 				cutSubcurve => ToolUtils.IsSelected(sketch, cutSubcurve.Path, singlePick);
 
-			var cutSubcurves = _changeAlongCurves.ReshapeCutSubcurves
-			                                     .Where(c => canReshapePredicate(c))
-			                                     .ToList();
+			_changeAlongCurves.PreSelectCurves(canReshapePredicate);
+
+			var cutSubcurves =
+				_changeAlongCurves.GetSelectedReshapeCurves(canReshapePredicate, true);
+
 			return cutSubcurves;
 		}
 
@@ -463,7 +473,11 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				selectedFeatures, targetFeatures, cutSubcurves, cancellationToken,
 				out newChangeAlongCurves);
 
-			_changeAlongCurves = newChangeAlongCurves;
+			if (updatedFeatures.Count > 0)
+			{
+				// This also clears the PreSelected reshape curves
+				_changeAlongCurves = newChangeAlongCurves;
+			}
 
 			_feedback.Update(_changeAlongCurves);
 
@@ -474,25 +488,75 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			// Updates:
 			Dictionary<Feature, Geometry> resultFeatures =
 				updatedFeatures
-					.Where(f => GdbPersistenceUtils.CanChange(
+					.Where(f => IsStoreRequired(
 						       f, editableClassHandles, RowChangeType.Update))
 					.ToDictionary(r => r.Feature, r => r.NewGeometry);
 
 			// Inserts (in case of cut), grouped by original feature:
-			Dictionary<Feature, IList<Geometry>> insertsByOriginal =
-				updatedFeatures
-					.Where(f => GdbPersistenceUtils.CanChange(
-						       f, editableClassHandles, RowChangeType.Insert))
-					.GroupBy(f => f.Feature, f => f.NewGeometry)
-					.ToDictionary(g => g.Key, g => (IList<Geometry>) g.ToList());
+			var inserts = updatedFeatures
+			              .Where(
+				              f => IsStoreRequired(f, editableClassHandles, RowChangeType.Insert))
+			              .ToList();
 
-			// TODO
-			//LogReshapeResults(result, selection.Count);
+			LogReshapeResults(updatedFeatures, resultFeatures);
 
-			var success = await GdbPersistenceUtils.SaveInOperationAsync(
-				              EditOperationDescription, resultFeatures, insertsByOriginal);
+			List<Feature> newFeatures = new List<Feature>();
+
+			bool success = await GdbPersistenceUtils.ExecuteInTransactionAsync(
+				               delegate(EditOperation.IEditContext editContext)
+				               {
+					               GdbPersistenceUtils.UpdateTx(editContext, resultFeatures);
+
+					               newFeatures.AddRange(
+						               GdbPersistenceUtils.InsertTx(editContext, inserts));
+
+					               return true;
+				               },
+				               EditOperationDescription,
+				               GdbPersistenceUtils.GetDatasets(resultFeatures.Keys));
+
+			ToolUtils.SelectNewFeatures(newFeatures, MapView.Active);
 
 			return success;
+		}
+
+		private static bool IsStoreRequired([NotNull] ResultFeature resultFeature,
+		                                    [NotNull] HashSet<long> editableClassHandles,
+		                                    RowChangeType changeType)
+		{
+			if (! GdbPersistenceUtils.CanChange(resultFeature, editableClassHandles, changeType))
+			{
+				return false;
+			}
+
+			Feature feature = resultFeature.Feature;
+
+			Geometry originalGeometry = feature.GetShape();
+
+			if (changeType == RowChangeType.Update &&
+			    originalGeometry != null &&
+			    originalGeometry.IsEqual(resultFeature.NewGeometry))
+			{
+				_msg.DebugFormat("The geometry of feature {0} is unchanged. It will not be stored",
+				                 GdbObjectUtils.ToString(feature));
+
+				return false;
+			}
+
+			return true;
+		}
+
+		private void LogReshapeResults(List<ResultFeature> updatedFeatures,
+		                               Dictionary<Feature, Geometry> savedUpdates)
+		{
+			foreach (ResultFeature resultFeature in updatedFeatures)
+			{
+				if (savedUpdates.ContainsKey(resultFeature.Feature) &&
+				    resultFeature.Messages.Count == 1)
+				{
+					_msg.Info(resultFeature.Messages[0]);
+				}
+			}
 		}
 
 		protected abstract List<ResultFeature> ChangeFeaturesAlong(

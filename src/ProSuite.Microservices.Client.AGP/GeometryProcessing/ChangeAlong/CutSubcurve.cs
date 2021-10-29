@@ -1,6 +1,4 @@
-using System;
 using System.Reflection;
-using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -110,15 +108,14 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 		///     sources are treated individually to identify for which feature a specific reshape curve is appliccable.
 		/// </summary>
 		[CanBeNull]
-		[CLSCompliant(false)]
-		public Feature Source { get; set; }
+		public GdbObjectReference? Source { get; set; }
 
 		protected bool Equals([NotNull] CutSubcurve other)
 		{
 			return IsReshapeMemberCandidate == other.IsReshapeMemberCandidate &&
 			       IsFiltered == other.IsFiltered &&
 			       CanReshape == other.CanReshape &&
-			       Equals(other.Source?.Handle, Source?.Handle) &&
+			       Equals(other.Source, Source) &&
 			       ToPointIsStitchPoint == other.ToPointIsStitchPoint &&
 			       FromPointIsStitchPoint == other.FromPointIsStitchPoint &&
 			       Path.IsEqual(other.Path);

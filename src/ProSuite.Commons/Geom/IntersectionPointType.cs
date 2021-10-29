@@ -1,4 +1,4 @@
-﻿namespace ProSuite.Commons.Geom
+namespace ProSuite.Commons.Geom
 {
 	public enum IntersectionPointType
 	{
@@ -7,6 +7,7 @@
 		TouchingInPoint,
 		LinearIntersectionStart,
 		LinearIntersectionEnd,
-		LinearIntersectionIntermediate
+		LinearIntersectionIntermediate,
+		AreaInterior
 	}
 }

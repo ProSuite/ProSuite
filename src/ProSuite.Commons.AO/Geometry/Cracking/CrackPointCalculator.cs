@@ -9,7 +9,9 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
+using IPnt = ProSuite.Commons.Geom.IPnt;
 
 namespace ProSuite.Commons.AO.Geometry.Cracking
 {
@@ -84,6 +86,20 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 		public double? DataZResolution { get; set; }
 
+		/// <summary>
+		/// An optional xy-tolerance that will be used to determine whether two coordinates are
+		/// 'exactly' equal, i.e. no cracking should be performed. If it is not set, half the
+		/// data resolution will be used.
+		/// </summary>
+		public double? EqualityToleranceXY { get; set; }
+
+		/// <summary>
+		/// An optional z-tolerance that will be used to determine whether two coordinates are
+		/// 'exactly' equal, i.e. no cracking should be performed. If it is not set, half the
+		/// data resolution will be used.
+		/// </summary>
+		public double? EqualityToleranceZ { get; set; }
+
 		[CanBeNull]
 		public Func<IGeometry, IGeometry> TargetTransformation { get; set; }
 
@@ -94,7 +110,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 		public bool ContinueOnException { get; set; }
 
-		public bool UseCustomIntersect { get; set; }
+		public bool UseCustomIntersect { get; set; } = IntersectionUtils.UseCustomIntersect;
 
 		/// <summary>
 		/// Sets the current data resolution to the resolution of the provided feature's feature class. This improves
@@ -161,9 +177,13 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				if (UseCustomIntersect)
 				{
 					IntersectionUtils.UseCustomIntersect = true;
+					result = GetIntersectionPointsCustom(sourceGeometry,
+					                                     transformedIntersectionTarget);
 				}
-
-				result = GetIntersectionPoints(sourceGeometry, transformedIntersectionTarget);
+				else
+				{
+					result = GetIntersectionPoints(sourceGeometry, transformedIntersectionTarget);
+				}
 			}
 			finally
 			{
@@ -243,6 +263,119 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				CrackPoint crackPoint = CreateCrackPoint(point, pointToInsert, optimizedPolyline,
 				                                         targetVertexDifferentInZ,
 				                                         targetVertexDifferentWithinTolerance);
+
+				result.Add(crackPoint);
+
+				// also add to planar crack points
+				if (! crackPoint.ViolatesMinimumSegmentLength)
+				{
+					if (AllCrackPoints == null)
+					{
+						AllCrackPoints =
+							(IPointCollection) GeometryFactory.CreateEmptyMultipoint(
+								originalGeometry);
+					}
+
+					TryAddCrackPoint(crackPoint, AllCrackPoints);
+				}
+			}
+
+			return result;
+		}
+
+		public IList<CrackPoint> DetermineCrackPoints3d(
+			[NotNull] IList<KeyValuePair<IPnt, List<IntersectionPoint3D>>> clusteredIntersections,
+			[NotNull] ISegmentList originalSegments,
+			[NotNull] IGeometry originalGeometry,
+			[NotNull] IPolyline optimizedPolyline,
+			[CanBeNull] ISegmentList snapTarget)
+		{
+			var result = new List<CrackPoint>(clusteredIntersections.Count);
+
+			EnvelopeXY envelopeXY = null;
+			if (Perimeter != null)
+			{
+				envelopeXY = GeometryConversionUtils.CreateEnvelopeXY(Perimeter);
+			}
+
+			double snapTolerance = SnapTolerance ?? GeometryUtils.GetXyTolerance(originalGeometry);
+
+			foreach (var kvp in clusteredIntersections)
+			{
+				IPnt point = kvp.Key;
+				double z = point is Pnt3D pnt3D ? pnt3D.Z : double.NaN;
+				IPoint aoPoint =
+					GeometryFactory.CreatePoint(point.X, point.Y, z, double.NaN,
+					                            originalGeometry.SpatialReference);
+
+				if (envelopeXY != null &&
+				    GeomRelationUtils.AreDisjoint(envelopeXY, point, snapTolerance))
+				{
+					continue;
+				}
+
+				var targetVertexDifferentInZ = false;
+				var targetVertexDifferentWithinTolerance = false;
+
+				if (AddCrackPointsOnExistingVertices)
+				{
+					// if chopping: only skip crack points that are line end points
+					var originalPolyline = originalGeometry as IPolyline;
+
+					// except on end points of the original polylines
+
+					// TODO: Implement points touching lines:
+					// GeomRelationUtils.TouchesXY()
+
+					if (originalPolyline != null &&
+					    (GeometryUtils.AreEqualInXY(originalPolyline.FromPoint, aoPoint) ||
+					     GeometryUtils.AreEqualInXY(originalPolyline.ToPoint, aoPoint)))
+					{
+						continue;
+					}
+				}
+				else
+				{
+					// if not chopping: skip crack points that are existing vertices
+					bool hasSourcePoint = HasMatchingPoint3d(originalSegments, point, snapTolerance,
+					                                         out
+					                                         targetVertexDifferentWithinTolerance,
+					                                         out targetVertexDifferentInZ);
+
+					// With the new intersection logic we have a crack point at each Z-level
+					// But un-cracked segments can still be there (even if a source point exists
+					// an uncracked segment might co-exist) in multipatches...
+					bool hasUncrackedSegment = HasUncrackedExtraMultipatchSegments(
+						optimizedPolyline, aoPoint);
+
+					// Uncracked segments always win over (almost-matching) points
+					if (hasUncrackedSegment)
+					{
+						targetVertexDifferentInZ = false;
+						targetVertexDifferentWithinTolerance = false;
+					}
+
+					if (hasSourcePoint &&
+					    ! targetVertexDifferentWithinTolerance && ! hasUncrackedSegment)
+					{
+						// there is a perfectly matching source point and no other crackable segments
+						continue;
+					}
+				}
+
+				// TODO: When doing self-intersections in 3D space, snapping might have no benefit.
+				//       The clustering initially finds the 'average' xy locations (with stacked 
+				//       A planarity-preserving intersection strategy would be better -> see CrackMultipatch()
+				IPnt pntToInsert = Snap3d(point, snapTarget, snapTolerance);
+
+				IPoint pointToInsert =
+					GeometryConversionUtils.CreatePoint(pntToInsert,
+					                                    originalGeometry.SpatialReference);
+
+				CrackPoint crackPoint = CreateCrackPoint(aoPoint, pointToInsert, optimizedPolyline,
+				                                         targetVertexDifferentInZ,
+				                                         targetVertexDifferentWithinTolerance);
+				crackPoint.Intersections = kvp.Value;
 
 				result.Add(crackPoint);
 
@@ -410,20 +543,100 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			return pointFound;
 		}
 
+		private bool HasMatchingPoint3d([NotNull] ISegmentList originalSegments,
+		                                [NotNull] IPnt atPoint,
+		                                double tolerance,
+		                                out bool differentWithinTolerance,
+		                                out bool differentInZ)
+		{
+			differentWithinTolerance = false;
+			differentInZ = false;
+
+			// TODO: Separate segments from vertices, include the HasUncrackedSegments method
+			// TODO: Use the original intersection points from the cluster
+			var existingPoints =
+				GeomTopoOpUtils.GetIntersectionPoints(
+					               (IPointList) originalSegments, atPoint, tolerance)
+				               .Select(ip => ip.Point)
+				               .ToList();
+
+			// Alternative:
+			//IPointList originalPoints = (IPointList) originalSegments;
+			//var existingPointIndexes = originalPoints.FindPointIndexes(atPoint,
+			//	                                         tolerance, true)
+			//                                         .ToList();
+
+			//var existingPoints = new List<IPnt>();
+			//foreach (int existingPointIndex in existingPointIndexes)
+			//{
+			//	existingPoints.Add(originalPoints.GetPoint(existingPointIndex));
+			//}
+
+			//IList<IPoint> existingPoints =
+			//	GeometryUtils.FindPoints(originalPoints, atPoint,
+			//	                         GeometryUtils.GetXyTolerance(originalPoints)).ToList();
+
+			if (existingPoints.Count == 0)
+			{
+				// NOTE: This sometimes happens because IRelationalOperator.Contains is too relaxed regarding the tolerance
+				//       -> RelationalOperator seems to check the tolerance against delta-x and delta-y separately
+				_msg.DebugFormat("No point found in the original geometry. Point: {0}.", atPoint);
+
+				return false;
+			}
+
+			double xyResolution = GetXyResolution(atPoint);
+			double zResolution = GetZResolution(atPoint);
+
+			var pointFound = false;
+			foreach (Pnt3D existingPoint in existingPoints)
+			{
+				bool thisPointWithinTolerance, thisPointDifferentInZ;
+				if (IsPerfectlyMatching(
+					atPoint, existingPoint, xyResolution, zResolution,
+					tolerance, out thisPointWithinTolerance, out thisPointDifferentInZ))
+				{
+					pointFound = true;
+					continue;
+				}
+
+				if (thisPointWithinTolerance)
+				{
+					// always fix points that are almost coincident:
+					differentWithinTolerance = true;
+				}
+
+				if (! In3D)
+				{
+					// 2D intersection is good enough
+					continue;
+				}
+
+				if (thisPointDifferentInZ)
+				{
+					// perfect match
+					differentInZ = true;
+				}
+			}
+
+			return pointFound;
+		}
+
 		/// <summary>
 		/// Determines whether the two points that are expected to be expected relational-operator-equal
 		/// are exactly equal (i.e. equal to the point that they would end up exactly on store)
 		/// </summary>
 		/// <param name="point1"></param>
 		/// <param name="point2"></param>
-		/// <param name="xyResolution"></param>
-		/// <param name="zResolution"></param>
+		/// <param name="equalityToleranceXY"></param>
+		/// <param name="equalityToleranceZ"></param>
 		/// <param name="differentWithinTolerance"></param>
 		/// <param name="differentInZ"></param>
 		/// <returns></returns>
 		private static bool IsPerfectlyMatching([NotNull] IPoint point1,
 		                                        [NotNull] IPoint point2,
-		                                        double xyResolution, double zResolution,
+		                                        double equalityToleranceXY,
+		                                        double equalityToleranceZ,
 		                                        out bool differentWithinTolerance,
 		                                        out bool differentInZ)
 		{
@@ -436,22 +649,66 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			differentInZ = false;
 
-			// The crack point can be exactly between the two vertices that are different by 1 resolution:
-			double epsilon = MathUtils.GetDoubleSignificanceEpsilon(point1.X, point1.Y);
-			double equalToleranceXY = xyResolution / 2 - epsilon;
-
 			differentWithinTolerance =
-				! MathUtils.AreEqual(point1.X, point2.X, equalToleranceXY) ||
-				! MathUtils.AreEqual(point1.Y, point2.Y, equalToleranceXY);
+				! MathUtils.AreEqual(point1.X, point2.X, equalityToleranceXY) ||
+				! MathUtils.AreEqual(point1.Y, point2.Y, equalityToleranceXY);
 
 			if (GeometryUtils.IsZAware(point2) && GeometryUtils.IsZAware(point1))
 			{
 				double dZ = Math.Abs(point1.Z - point2.Z);
 
-				differentInZ = dZ >= zResolution / 2 - epsilon;
+				differentInZ = dZ >= equalityToleranceZ;
 
 				differentWithinTolerance |= differentInZ &&
 				                            dZ < GeometryUtils.GetZTolerance(point1);
+			}
+
+			return ! differentWithinTolerance && ! differentInZ;
+		}
+
+		/// <summary>
+		/// Determines whether the two points that are expected to be expected relational-operator-equal
+		/// are exactly equal (i.e. equal to the point that they would end up exactly on store)
+		/// </summary>
+		/// <param name="point1"></param>
+		/// <param name="point2"></param>
+		/// <param name="equalityToleranceXY"></param>
+		/// <param name="equalityToleranceZ"></param>
+		/// <param name="tolerance"></param>
+		/// <param name="differentWithinTolerance"></param>
+		/// <param name="differentInZ"></param>
+		/// <returns></returns>
+		private static bool IsPerfectlyMatching([NotNull] IPnt point1,
+		                                        [NotNull] IPnt point2,
+		                                        double equalityToleranceXY,
+		                                        double equalityToleranceZ,
+		                                        double tolerance,
+		                                        out bool differentWithinTolerance,
+		                                        out bool differentInZ)
+		{
+			// within resolution is ok, there can be very small differences
+			// but in the real world they can be 0.99999 of the resolution (see unit test
+			// CanCalculateCrackPoints_Multipatch_UnsnappedVerticesDifferentBy1Resolution)
+			// The resolution of the geometry is sometimes (FGDB in issues.mxd) the data resolution
+			// and sometimes (SDE) a very small number.
+			// Half a resolution seems safe and reasonable
+
+			differentInZ = false;
+
+			differentWithinTolerance =
+				! MathUtils.AreEqual(point1.X, point2.X, equalityToleranceXY) ||
+				! MathUtils.AreEqual(point1.Y, point2.Y, equalityToleranceXY);
+
+			double z1 = point1 is Pnt3D pnt3d1 ? pnt3d1.Z : double.NaN;
+			double z2 = point2 is Pnt3D pnt3d2 ? pnt3d2.Z : double.NaN;
+
+			if (! double.IsNaN(z1) && ! double.IsNaN(z2))
+			{
+				double dZ = Math.Abs(z1 - z2);
+
+				differentInZ = dZ >= equalityToleranceZ;
+
+				differentWithinTolerance |= differentInZ && dZ < tolerance;
 			}
 
 			return ! differentWithinTolerance && ! differentInZ;
@@ -467,6 +724,15 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			// Add all points, they should already coincide in XY if snapped, in Z they should be allowed to differ (3D cracking)
 			AddPoint(crackPoint.Point, toPlanarCrackPoints);
+		}
+
+		[NotNull]
+		private IPointCollection GetIntersectionPointsCustom(
+			[NotNull] IPolyline sourceGeometry,
+			[NotNull] IGeometry intersectionTarget)
+		{
+			return GetIntersectionPoints(intersectionTarget, sourceGeometry,
+			                             IntersectionPointOption, out _);
 		}
 
 		[NotNull]
@@ -504,7 +770,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			// get the Z values from the targets -> first geometry
 			IPointCollection smallToleranceIntersections =
-				GetIntersectionPoints(intersectionTarget, sourceGeometry, IntersectionPointOption, out _);
+				GetIntersectionPoints(intersectionTarget, sourceGeometry, IntersectionPointOption,
+				                      out _);
 
 			bool useSnapping = SnapTolerance != null &&
 			                   ! double.IsNaN((double) SnapTolerance) &&
@@ -541,9 +808,10 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 				// NOTE: Check every single large-tolerance intersection. It could be that the intersection point count is equal
 				//       but the points are in very different locations (small tolerance intersection also reports wrong points)
-				_msg.VerboseDebugFormat(
-					"Comparing large tolerance intersecion points with small tolerance: {0}. Intersection points with (snap-)tolerance: {1}",
-					smallToleranceIntersections.PointCount, largeToleranceIntersections.PointCount);
+				_msg.VerboseDebug(
+					() => $"Comparing large tolerance intersecion points with small " +
+					      $"tolerance: {smallToleranceIntersections.PointCount}. Intersection " +
+					      $"points with (snap-)tolerance: {largeToleranceIntersections.PointCount}");
 
 				for (var i = 0; i < largeToleranceIntersections.PointCount; i++)
 				{
@@ -555,9 +823,10 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 					if (snappedExtraPoint != null)
 					{
-						_msg.VerboseDebugFormat(
-							"Using extra large-tolerance intersection point at {0} | {1}",
-							snappedExtraPoint.X, snappedExtraPoint.Y);
+						_msg.VerboseDebug(
+							() =>
+								$"Using extra large-tolerance intersection point at " +
+								$"{snappedExtraPoint.X} | {snappedExtraPoint.Y}");
 
 						AddPoint(snappedExtraPoint, smallToleranceIntersections);
 					}
@@ -693,6 +962,74 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			return crackPointAtSourcePoint ?? snappedPoint ?? point;
 		}
 
+		[NotNull]
+		private IPnt Snap3d([NotNull] IPnt point,
+		                    [CanBeNull] ISegmentList snapTarget,
+		                    double snapTolerance)
+		{
+			List<Pnt3D> allCrackPoints = null;
+
+			if (AllCrackPoints != null)
+			{
+				allCrackPoints = GeometryUtils.GetPoints(AllCrackPoints, true)
+				                              .Select(p => new Pnt3D(p.X, p.Y, p.Z)).ToList();
+			}
+
+			// if the local crack point is exactly on an existing crack point (AllCrackPoints)
+			//    -> Use this matching previously created crack point to avoid swapping Z values
+			bool sourcePointDifferentToCrackPoint;
+			IPnt crackPointAtSourcePoint = FindCrackPoint3d(
+				allCrackPoints, point, snapTolerance, out sourcePointDifferentToCrackPoint);
+
+			if (crackPointAtSourcePoint != null && ! sourcePointDifferentToCrackPoint)
+			{
+				return crackPointAtSourcePoint;
+			}
+
+			// snap to the target geometry's *vertices* (consider snapping to edges too?)
+			Pnt3D snappedPoint = SnapToGeometry3d(point, snapTarget, snapTolerance,
+			                                      esriGeometryHitPartType.esriGeometryPartVertex);
+
+			if (snappedPoint != null)
+			{
+				if (UseSourceZs)
+				{
+					// fix Z
+					double sourceZ = point is Pnt3D pnt3d ? pnt3d.Z : double.NaN;
+					snappedPoint.Z = sourceZ;
+				}
+
+				// if the target point is exactly on an existing crack point -> use it!
+				bool targetPointDifferentToCrackPoint;
+				IPnt crackPointAtTargetPoint = FindCrackPoint3d(
+					allCrackPoints, snappedPoint, snapTolerance,
+					out targetPointDifferentToCrackPoint);
+
+				if (crackPointAtTargetPoint != null && ! targetPointDifferentToCrackPoint)
+				{
+					return snappedPoint;
+				}
+
+				if (crackPointAtTargetPoint != null && crackPointAtSourcePoint != null)
+				{
+					// crack point nearby, what to do: snap to it, when the same as the crackPointAtSourcePoint? When within snap tolerance?
+					if (GeomUtils.GetDistanceXYZ(point, crackPointAtSourcePoint) <
+					    GeomUtils.GetDistanceXYZ(point, crackPointAtTargetPoint))
+					{
+						return crackPointAtSourcePoint;
+					}
+
+					if (GeomUtils.GetDistanceXYZ(point, crackPointAtTargetPoint) < snapTolerance)
+					{
+						// TODO: only if intersection point is also within snap distance of crackPointAtTarget (avoid double-snapping)
+						return crackPointAtTargetPoint;
+					}
+				}
+			}
+
+			return crackPointAtSourcePoint ?? snappedPoint ?? point;
+		}
+
 		[CanBeNull]
 		private IPoint FindCrackPoint([CanBeNull] IPointCollection allCrackPoints,
 		                              [NotNull] IPoint atPoint,
@@ -736,20 +1073,127 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			return result;
 		}
 
+		[CanBeNull]
+		private IPnt FindCrackPoint3d([CanBeNull] IEnumerable<IPnt> allCrackPoints,
+		                              [NotNull] IPnt atPoint,
+		                              double snapTolerance,
+		                              out bool differentWithinTolerance)
+		{
+			differentWithinTolerance = false;
+
+			if (allCrackPoints == null)
+			{
+				return null;
+			}
+
+			IPnt result = null;
+
+			double xyResolution = GetXyResolution(atPoint);
+			double zResolution = GetZResolution(atPoint);
+
+			foreach (IPnt crackPoint in allCrackPoints)
+			{
+				if (! GeomRelationUtils.IsWithinTolerance(crackPoint, atPoint, snapTolerance, true))
+				{
+					continue;
+				}
+
+				if (IsPerfectlyMatching(crackPoint, atPoint, xyResolution, zResolution,
+				                        snapTolerance, out differentWithinTolerance, out bool _))
+				{
+					// there is a perfectly matching crack point -> add it anyway, just in case there is no existing vertex in the source
+					return crackPoint;
+				}
+
+				if (result != null)
+				{
+					// TODO: identify the one with the smallest difference in XY / Z, if there are several with different Zs
+					// TODO: ensure the total distance between the original source point and the snapped result is not > snap distance
+				}
+
+				if (differentWithinTolerance)
+				{
+					result = crackPoint;
+				}
+			}
+
+			return result;
+		}
+
 		private double GetXyResolution([NotNull] IGeometry fallbackGeometry)
 		{
-			double xyResolution = DataXyResolution ??
-			                      GeometryUtils.GetXyResolution(fallbackGeometry);
+			if (_envelopeTemplate1 == null)
+			{
+				_envelopeTemplate1 = fallbackGeometry.Envelope;
+			}
+			else
+			{
+				fallbackGeometry.QueryEnvelope(_envelopeTemplate1);
+			}
 
-			return xyResolution;
+			return GetXyResolution(
+				GeometryConversionUtils.CreateEnvelopeXY(_envelopeTemplate1),
+				GeometryUtils.GetXyResolution(fallbackGeometry));
+		}
+
+		private double GetXyResolution(IBoundedXY envelope,
+		                               double fallBackResolution = double.NaN)
+		{
+			// Externally defined equality tolerance:
+			if (EqualityToleranceXY != null)
+			{
+				return EqualityToleranceXY.Value;
+			}
+
+			double xyResolution = DataXyResolution ?? fallBackResolution;
+
+			Assert.NotNaN(xyResolution,
+			              "Neither the EqualityToleranceXY nor the DataXyResolution is defined.");
+
+			double epsilon = MathUtils.GetDoubleSignificanceEpsilon(envelope.XMax, envelope.YMax);
+
+			// The crack point can be exactly between the two vertices that are different by 1 resolution.
+			// Therefore, subtract an epsilon:
+			double equalToleranceXY = xyResolution / 2 - epsilon;
+
+			return equalToleranceXY;
 		}
 
 		private double GetZResolution([NotNull] IGeometry fallbackGeometry)
 		{
-			double zResolution = DataZResolution ??
-			                     GeometryUtils.GetZResolution(fallbackGeometry);
+			if (_envelopeTemplate1 == null)
+			{
+				_envelopeTemplate1 = fallbackGeometry.Envelope;
+			}
+			else
+			{
+				fallbackGeometry.QueryEnvelope(_envelopeTemplate1);
+			}
 
-			return zResolution;
+			return GetZResolution(
+				GeometryConversionUtils.CreateEnvelopeXY(_envelopeTemplate1),
+				GeometryUtils.GetZResolution(fallbackGeometry));
+		}
+
+		private double GetZResolution(IBoundedXY envelope,
+		                              double fallBackResolution = double.NaN)
+		{
+			// Externally defined equality tolerance:
+			if (EqualityToleranceZ != null)
+			{
+				return EqualityToleranceZ.Value;
+			}
+
+			double zResolution = DataZResolution ?? fallBackResolution;
+
+			Assert.NotNaN(zResolution,
+			              "Neither the EqualityToleranceZ nor the DataZResolution is defined.");
+
+			double epsilon = MathUtils.GetDoubleSignificanceEpsilon(envelope.XMax, envelope.YMax);
+
+			double equalToleranceZ = zResolution / 2 - epsilon;
+
+			return equalToleranceZ;
 		}
 
 		[NotNull]
@@ -840,9 +1284,9 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			if (Perimeter != null &&
 			    ! GeometryUtils.Contains(Perimeter, intersectionPoint))
 			{
-				_msg.VerboseDebugFormat(
-					"Filtering large tolerance point because it is outside the perimeter: {0}",
-					GeometryUtils.ToString(intersectionPoint));
+				_msg.VerboseDebug(
+					() =>
+						$"Filtering large tolerance point because it is outside the perimeter: {GeometryUtils.ToString(intersectionPoint)}");
 
 				return null;
 			}
@@ -857,7 +1301,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			IPoint sourcePoint = sourceCurve == null
 				                     ? intersectionPoint
 				                     : GetPointOnTargetWithSourceZ(intersectionPoint,
-				                                                   sourceCurve);
+					                     sourceCurve);
 
 			IPoint snappedPoint = SnapToGeometry(
 				sourcePoint, targetGeometry, largeTolerance,
@@ -908,7 +1352,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				                   ? sourceTolerance
 				                   : targetTolerance;
 
-			double searchTolerance = SnapTolerance != null && SnapTolerance > tolerance
+			double searchTolerance = SnapTolerance > tolerance
 				                         ? (double) SnapTolerance
 				                         : tolerance;
 
@@ -937,7 +1381,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				{
 					_msg.DebugFormat("Crack point {0}|{1} is within tolerance of 2 different " +
 					                 "segments' interior. It is marked as 'violating minimum " +
-					                 "segment length' avoid a cut-back.",
+					                 "segment length' to avoid a cut-back.",
 					                 pointToInsert.X, pointToInsert.Y);
 					return true;
 				}
@@ -957,9 +1401,9 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			// TODO: ensure that even with large search tolerance always the closest segment is found
 			int? segmentIndex = GeometryUtils.FindHitSegmentIndex(originalPolycurve,
-			                                                      intersectionPoint,
-			                                                      searchTolerance,
-			                                                      out partIndex);
+				intersectionPoint,
+				searchTolerance,
+				out partIndex);
 
 			// This can happen because of  Repro_IHitTest_HitTest_DoesNotFindHitSegmentIfSearchPointCloseToVertex 
 			// -> work-around? re-implement with box tree!
@@ -970,10 +1414,10 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			// TODO: consider non-linear segments
 			double distanceToFrom = GeometryUtils.GetPointDistance3D(pointToInsert,
-			                                                         segment.FromPoint);
+				segment.FromPoint);
 
 			double distanceToTo = GeometryUtils.GetPointDistance3D(pointToInsert,
-			                                                       segment.ToPoint);
+				segment.ToPoint);
 
 			// TODO: handle Z-only difference by making sure the Z values get updated in targets too
 			if (_msg.IsVerboseDebugEnabled)
@@ -1012,12 +1456,9 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			                                 snapType,
 			                                 out targetVertex, out snapDistance);
 
-			if (_msg.IsVerboseDebugEnabled)
-			{
-				_msg.VerboseDebugFormat(
-					"Point {0}|{1} was snapped: {2}. snapDistance: {3}. New location: {4}",
-					point.X, point.Y, snapped, snapDistance, GeometryUtils.ToString(targetVertex));
-			}
+			_msg.VerboseDebug(
+				() =>
+					$"Point {point.X}|{point.Y} was snapped: {snapped}. snapDistance: {snapDistance}. New location: {GeometryUtils.ToString(targetVertex)}");
 
 			if (! snapped)
 			{
@@ -1025,6 +1466,83 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			}
 
 			return targetVertex;
+		}
+
+		[CanBeNull]
+		private static Pnt3D SnapToGeometry3d([NotNull] IPnt point,
+		                                      [CanBeNull] ISegmentList targetGeometry,
+		                                      [CanBeNull] double? snapTolerance,
+		                                      esriGeometryHitPartType snapType)
+		{
+			Assert.ArgumentNotNull(point, nameof(point));
+
+			if (targetGeometry == null || snapTolerance == null ||
+			    double.IsNaN((double) snapTolerance))
+			{
+				return null;
+			}
+
+			IPnt closestTargetVertex = null;
+			double closestDistanceSquared = double.MaxValue;
+
+			foreach (IntersectionPoint3D intersectionPoint in GeomTopoOpUtils.GetIntersectionPoints(
+				point, 0, targetGeometry, snapTolerance.Value, false))
+			{
+				if (snapType == esriGeometryHitPartType.esriGeometryPartVertex &&
+				    intersectionPoint.VirtualTargetVertex % 1 == 0)
+				{
+					Linestring targetLinestring =
+						targetGeometry.GetPart(intersectionPoint.TargetPartIndex);
+
+					IPnt targetPnt =
+						targetLinestring.GetPoint((int) intersectionPoint.VirtualTargetVertex);
+
+					double distanceSquared = GeomUtils.GetDistanceSquaredXYZ(point, targetPnt);
+
+					if (distanceSquared < closestDistanceSquared)
+					{
+						closestDistanceSquared = distanceSquared;
+						closestTargetVertex = targetPnt;
+					}
+				}
+				else if (snapType == esriGeometryHitPartType.esriGeometryPartBoundary &&
+				         intersectionPoint.VirtualTargetVertex % 1 != 0)
+				{
+					Linestring targetLinestring =
+						targetGeometry.GetPart(intersectionPoint.TargetPartIndex);
+
+					int localTargetIntersectionSegmentIdx =
+						intersectionPoint.GetLocalTargetIntersectionSegmentIdx(
+							targetLinestring, out double distanceAlongRatio);
+
+					IPnt targetPnt = targetLinestring.Segments[localTargetIntersectionSegmentIdx]
+					                                 .GetPointAlong(distanceAlongRatio, true);
+
+					double distanceSquared = GeomUtils.GetDistanceSquaredXYZ(point, targetPnt);
+
+					if (distanceSquared < closestDistanceSquared)
+					{
+						closestDistanceSquared = distanceSquared;
+						closestTargetVertex = targetPnt;
+					}
+				}
+			}
+
+			bool snapped = (closestDistanceSquared < snapTolerance.Value * snapTolerance.Value);
+
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				_msg.VerboseDebugFormat(
+					"Point {0}|{1} was snapped: {2}. 3D-snapDistance squared: {3}. New location: {4}",
+					point.X, point.Y, snapped, closestDistanceSquared, closestTargetVertex);
+			}
+
+			if (! snapped)
+			{
+				return null;
+			}
+
+			return new Pnt3D(closestTargetVertex);
 		}
 
 		private static bool TryGetTargetPoint([NotNull] IPoint point,
@@ -1065,14 +1583,10 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 					result = true;
 				}
 
-				if (_msg.IsVerboseDebugEnabled)
-				{
-					_msg.VerboseDebugFormat(
-						closestCrackPointDistance < tolerance
-							? "PointIsNear: Found closer point at {0} units of {1}"
-							: "PointIsNear: Found no closer point at {0} units of {1}",
-						closestCrackPointDistance, point);
-				}
+				_msg.VerboseDebug(() =>
+					                  closestCrackPointDistance < tolerance
+						                  ? $"PointIsNear: Found closer point at {closestCrackPointDistance} units of {point}"
+						                  : $"PointIsNear: Found no closer point at {closestCrackPointDistance} units of {point}");
 			}
 
 			return result;

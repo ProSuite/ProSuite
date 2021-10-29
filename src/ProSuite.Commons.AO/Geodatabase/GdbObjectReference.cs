@@ -26,9 +26,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="objectId">The object id (OID field value).</param>
 		public GdbObjectReference(int classId, int objectId)
 		{
-			Assert.ArgumentCondition(classId >= 0, "Invalid class id");
-			Assert.ArgumentCondition(objectId >= 0, "Invalid object id");
-
 			ClassId = classId;
 			ObjectId = objectId;
 		}

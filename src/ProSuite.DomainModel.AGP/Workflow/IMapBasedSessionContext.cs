@@ -10,7 +10,7 @@ namespace ProSuite.DomainModel.AGP.Workflow
 	public interface IMapBasedSessionContext
 	{
 		/// <summary>
-		/// Whether the data dictionary can be accessed (by the microservices).
+		/// Whether the data dictionary can be accessed or not (by the microservices).
 		/// </summary>
 		bool DdxAccessDisabled { get; }
 
@@ -31,5 +31,13 @@ namespace ProSuite.DomainModel.AGP.Workflow
 			[NotNull] ICollection<Table> objectClasses);
 
 		Task<bool> TrySelectProjectWorkspaceFromFocusMapAsync();
+
+		/// <summary>
+		/// Whether the current quality specification can be verified or not and, if it cannot
+		/// be verified the reason why.
+		/// </summary>
+		/// <param name="reason"></param>
+		/// <returns></returns>
+		bool CanVerifyQuality(out string reason);
 	}
 }

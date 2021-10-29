@@ -546,7 +546,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 		private void _dataGridView_Sorted(object sender, EventArgs e)
 		{
-			_msg.VerboseDebug("DataGridViewFindController._dataGridView_Sorted");
+			_msg.VerboseDebug(() => "DataGridViewFindController._dataGridView_Sorted");
 
 			if (! string.IsNullOrEmpty(_findText))
 			{
@@ -556,7 +556,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 		private void _dataGridView_Paint(object sender, PaintEventArgs e)
 		{
-			_msg.VerboseDebug("DataGridViewFindController._dataGridView_Paint");
+			_msg.VerboseDebug(() => "DataGridViewFindController._dataGridView_Paint");
 
 			if (! _hasPendingFind)
 			{
@@ -567,7 +567,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 			if (! string.IsNullOrEmpty(_findText))
 			{
-				_msg.VerboseDebug("Applying filter (delayed)");
+				_msg.VerboseDebug(() => "Applying filter (delayed)");
 
 				// ReSharper disable once RedundantArgumentName
 				Find(_findText, keepSelection : _sortingEventRegistered);

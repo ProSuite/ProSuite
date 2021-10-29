@@ -250,12 +250,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			[NotNull] string undoMessage,
 			[NotNull] IDictionary<IGeometry, NotificationCollection> reshapedGeometries)
 		{
-			// for showing size difference after store:
-			if (_originalFeatureSize == null)
-			{
-				CacheOriginalFeatureSize();
-			}
-
 			IList<IFeature> result = new List<IFeature>();
 
 			transaction.Execute(
@@ -275,6 +269,12 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			[NotNull] IDictionary<IGeometry, NotificationCollection> reshapedGeometries)
 		{
 			var result = new HashSet<IFeature>();
+
+			// for showing size difference after store:
+			if (_originalFeatureSize == null)
+			{
+				CacheOriginalFeatureSize();
+			}
 
 			foreach (
 				KeyValuePair<IFeature, IGeometry> keyValuePair in
@@ -462,7 +462,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		protected void UpdateTargets()
 		{
 			ICollection<IFeature> targetFeatures = Assert.NotNull(TargetFeatures,
-			                                                      "Target features not set.");
+				"Target features not set.");
 			Assert.NotNull(UpdatedTargets, "Updated target features not set.");
 
 			// Remove the non-source points and update the points that are almost at a source point 
@@ -594,21 +594,42 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				IFeature feature = keyValuePair.Key;
 				IGeometry updatedGeometry = keyValuePair.Value;
 
-				double sizeChangeMapUnits =
-					ReshapeUtils.GetAreaOrLength(updatedGeometry) -
-					_originalFeatureSize[feature];
+				string message =
+					GetSizeChangeMessage(updatedGeometry, feature, mapUnits, distanceUnits);
 
-				string sizeChangeText = GetSizeChangeText(
-					sizeChangeMapUnits, distanceUnits,
-					mapUnits,
-					updatedGeometry);
-
-				result.Add(string.Format("{0} was reshaped and is now {1}",
-				                         RowFormat.Format(feature, true),
-				                         sizeChangeText));
+				if (! string.IsNullOrEmpty(message))
+				{
+					result.Add(message);
+				}
 			}
 
 			return result;
+		}
+
+		[CanBeNull]
+		public string GetSizeChangeMessage([NotNull] IGeometry updatedGeometry,
+		                                   [NotNull] IFeature feature,
+		                                   esriUnits mapUnits,
+		                                   esriUnits distanceUnits)
+		{
+			if (_originalFeatureSize == null || ! _originalFeatureSize.ContainsKey(feature))
+			{
+				return null;
+			}
+
+			double sizeChangeMapUnits =
+				ReshapeUtils.GetAreaOrLength(updatedGeometry) -
+				_originalFeatureSize[feature];
+
+			string sizeChangeText = GetSizeChangeText(
+				sizeChangeMapUnits, distanceUnits,
+				mapUnits,
+				updatedGeometry);
+
+			string message = string.Format("{0} was reshaped and is now {1}",
+			                               RowFormat.Format(feature, true),
+			                               sizeChangeText);
+			return message;
 		}
 
 		protected void AddToRefreshArea(IEnumerable<ReshapeInfo> reshapeInfos)
@@ -789,7 +810,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			if (ReshapeUtils.EnsurePointsExistInTarget(
 				    targetGeometry, _potentialTargetInsertPoints, xyTolerance) &&
-			    ! updatedTargets.ContainsKey(targetFeature))
+			    ! updatedTargets.ContainsKey(targetFeature) &&
+			    ! GeometryUtils.AreEqual(targetFeature.Shape, targetGeometry))
 			{
 				updatedTargets.Add(targetFeature, targetGeometry);
 			}

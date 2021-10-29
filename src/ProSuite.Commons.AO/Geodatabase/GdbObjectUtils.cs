@@ -287,9 +287,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (value == DBNull.Value)
 			{
-				_msg.VerboseDebugFormat(
-					"ReadRowValue: Field value at <index> {0} of row is null.",
-					fieldIndex);
+				_msg.VerboseDebug(
+					() => $"ReadRowValue: Field value at <index> {fieldIndex} of row is null.");
 
 				return null;
 			}
@@ -363,9 +362,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (value == DBNull.Value)
 			{
-				_msg.VerboseDebugFormat(
-					"ReadRowValue: Field value at <index> {0} of row is null.",
-					fieldIndex);
+				_msg.VerboseDebug(
+					() => $"ReadRowValue: Field value at <index> {fieldIndex} of row is null.");
 
 				return null;
 			}
@@ -453,9 +451,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (value == null || value == DBNull.Value)
 			{
-				_msg.VerboseDebugFormat(
-					"ConvertRowValue: Field value at <index> {0} of row is null.",
-					fieldIndex);
+				_msg.VerboseDebug(
+					()=> $"ConvertRowValue: Field value at <index> {fieldIndex} of row is null.");
 
 				return null;
 			}
@@ -551,8 +548,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			progressFeedback?.SetRange(0, geometriesByFeature.Count);
 
-			foreach (KeyValuePair<IFeature, IGeometry> keyValuePair in geometriesByFeature
-			)
+			foreach (KeyValuePair<IFeature, IGeometry> keyValuePair in geometriesByFeature)
 			{
 				if (trackCancel != null && ! trackCancel.Continue())
 				{
@@ -586,8 +582,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			catch (COMException e)
 			{
 				// This sometimes happens with some query name based tables (the shape property is null or throws E_FAIL)
-				_msg.Debug(
-					$"Error getting shape of feature {ToString(feature)}", e);
+				_msg.Debug($"Error getting shape of feature {ToString(feature)}", e);
 
 				var featureClass = (IFeatureClass) feature.Class;
 
@@ -604,12 +599,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 					featureShape = (IGeometry) feature.Value[shapeFieldIdx];
 
-					if (_msg.IsVerboseDebugEnabled)
-					{
-						_msg.DebugFormat(
-							"The shape extracted from the value of the shape field is {0}",
-							GeometryUtils.ToString(featureShape));
-					}
+						_msg.VerboseDebug(
+							() => $"The shape extracted from the value of the shape field is {GeometryUtils.ToString(featureShape)}");
 				}
 				else
 				{
@@ -646,7 +637,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 						// NOTE: If the projection does not happen here (possible for simple features) it will happen in Store() 
 						// -> we can't fix it here, caller has to project back to map SR
 						_msg.VerboseDebug(
-							"SetFeatureShape: Spatial reference of feature class and existing feature's shape are not equal. The feature's shape will be left with a different SR.");
+							() => "SetFeatureShape: Spatial reference of feature class and existing feature's shape are not equal. The feature's shape will be left with a different SR.");
 					}
 
 					Marshal.ReleaseComObject(oldShape);
@@ -691,11 +682,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				}
 			}
 
-			if (_msg.IsVerboseDebugEnabled)
-			{
-				_msg.VerboseDebugFormat("Setting shape: {0}",
-				                        GeometryUtils.ToString(newGeometry));
-			}
+			_msg.VerboseDebug(() => $"Setting shape: {GeometryUtils.ToString(newGeometry)}");
 
 			try
 			{

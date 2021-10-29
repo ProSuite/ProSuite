@@ -91,7 +91,7 @@ namespace ProSuite.Commons.AGP.WPF
 		{
 			Assert.ArgumentNotNull(msg, nameof(msg));
 
-			msg.VerboseDebug($"{method}");
+			msg.VerboseDebug(() => $"{method}");
 		}
 
 		public static void RunOnUIThread([NotNull] Action action)

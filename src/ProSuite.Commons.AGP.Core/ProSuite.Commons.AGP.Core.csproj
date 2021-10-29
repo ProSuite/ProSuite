@@ -52,6 +52,7 @@
     <Compile Include="Geodatabase\GdbObjectUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Spatial\ControlPointUtils.cs" />
+    <Compile Include="Spatial\GeomConversionUtils.cs" />
     <Compile Include="Spatial\GeometryFactory.cs" />
     <Compile Include="Spatial\GeometryUtils.cs" />
   </ItemGroup>

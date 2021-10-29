@@ -96,9 +96,7 @@ namespace ProSuite.QA.Tests
 
 			IGeometry shape = feature.Shape;
 
-			bool searchGeometryIsExpanded;
-			IGeometry searchGeometry = GetSearchGeometry(feature, tableIndex,
-			                                             out searchGeometryIsExpanded);
+			IGeometry searchGeometry = GetSearchGeometry(feature, tableIndex, out bool _);
 
 			var anyRelated = false;
 

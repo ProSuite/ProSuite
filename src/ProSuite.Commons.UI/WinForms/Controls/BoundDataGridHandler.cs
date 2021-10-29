@@ -292,8 +292,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
-				_msg.VerboseDebugFormat("Restoring selection ({0} row(s))",
-				                        selectionState.SelectionCount);
+				_msg.VerboseDebug(() => $"Restoring selection ({selectionState.SelectionCount} row(s))");
 			}
 
 			DataGridViewUtils.RestoreSelection(_dataGridView, selectionState);
@@ -393,7 +392,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 		private void _dataGridView_Sorted(object sender, EventArgs e)
 		{
-			_msg.VerboseDebugFormat("BoundDataGridHandler._dataGridView_Sorted");
+			_msg.VerboseDebug(() => "BoundDataGridHandler._dataGridView_Sorted");
 
 			// if there are selected rows to restore, do it now
 			if (_savedSelection == null)
@@ -408,7 +407,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 		private void _dataGridView_SortingColumn(object sender, SortingColumnEventArgs e)
 		{
-			_msg.VerboseDebugFormat("BoundDataGridHandler._dataGridView_SortingColumn");
+			_msg.VerboseDebug(() => "BoundDataGridHandler._dataGridView_SortingColumn");
 
 			// the user is sorting on a column - remember the selected rows
 			_savedSelection = GetSelectionState();
@@ -416,8 +415,7 @@ namespace ProSuite.Commons.UI.WinForms.Controls
 
 		private void _dataGridView_SelectionChanged(object sender, EventArgs e)
 		{
-			_msg.VerboseDebugFormat(
-				"BoundDataGridHandler._dataGridView_SelectionChanged");
+			_msg.VerboseDebug(() => "BoundDataGridHandler._dataGridView_SelectionChanged");
 
 			// while sorting the grid, this event is also raised
 

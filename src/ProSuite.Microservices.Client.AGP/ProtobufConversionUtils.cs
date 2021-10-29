@@ -1,15 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Reflection;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using Google.Protobuf;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Gdb;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.EsriShape;
+using ProSuite.Commons.Geom.Wkb;
 using ProSuite.Commons.Logging;
 using ProSuite.Microservices.Definitions.Shared;
 using Version = ArcGIS.Core.Data.Version;
@@ -101,6 +105,8 @@ namespace ProSuite.Microservices.Client.AGP
 			[CanBeNull] ShapeMsg shapeMsg,
 			[CanBeNull] SpatialReference knownSpatialReference = null)
 		{
+			// TODO: Make sure all callers provide a spatial reference! Otherwise the VCS might get lost.
+
 			if (shapeMsg == null) return null;
 
 			if (shapeMsg.FormatCase == ShapeMsg.FormatOneofCase.None) return null;
@@ -121,9 +127,9 @@ namespace ProSuite.Microservices.Client.AGP
 					break;
 				case ShapeMsg.FormatOneofCase.Wkb:
 
-					throw new NotSupportedException(
-						"WKB format is currently not supported in AGP client.");
+					result = FromWkb(shapeMsg.Wkb.ToByteArray(), sr);
 
+					break;
 				case ShapeMsg.FormatOneofCase.Envelope:
 
 					result = FromEnvelopeMsg(shapeMsg.Envelope, sr);
@@ -135,6 +141,21 @@ namespace ProSuite.Microservices.Client.AGP
 			}
 
 			return result;
+		}
+
+		public static List<Geometry> FromShapeMsgList(
+			[NotNull] ICollection<ShapeMsg> shapeBufferList,
+			SpatialReference spatialReference)
+		{
+			var geometryList = new List<Geometry>(shapeBufferList.Count);
+
+			foreach (var shapeMsg in shapeBufferList)
+			{
+				var geometry = FromShapeMsg(shapeMsg, spatialReference);
+				geometryList.Add(geometry);
+			}
+
+			return geometryList;
 		}
 
 		private static Envelope FromEnvelopeMsg([CanBeNull] EnvelopeMsg envProto,
@@ -172,10 +193,18 @@ namespace ProSuite.Microservices.Client.AGP
 			Assert.ArgumentCondition(spatialRef != null,
 			                         "Spatial reference must not be null");
 
-			var result = new ShapeMsg
-			             {
-				             EsriShape = ByteString.CopyFrom(geometry.ToEsriShape())
-			             };
+			ShapeMsg result = new ShapeMsg();
+
+			if (geometry.GeometryType == GeometryType.Multipatch)
+			{
+				// Do not use esri shape because it arrives as empty geometry on the other side
+				Multipatch multipatch = (Multipatch) geometry;
+				result.Wkb = GetWkbByteString(multipatch);
+			}
+			else
+			{
+				result.EsriShape = ByteString.CopyFrom(geometry.ToEsriShape());
+			}
 
 			result.SpatialReference = ToSpatialReferenceMsg(
 				spatialRef,
@@ -190,7 +219,7 @@ namespace ProSuite.Microservices.Client.AGP
 		{
 			var result = new GdbObjRefMsg();
 
-			result.ClassHandle = (int) row.GetTable().GetID();
+			result.ClassHandle = (int) GetUniqueClassId(row);
 			result.ObjectId = (int) row.GetObjectID();
 
 			return result;
@@ -202,7 +231,7 @@ namespace ProSuite.Microservices.Client.AGP
 		{
 			Table table = feature.GetTable();
 
-			return ToGdbObjectMsg(feature, geometry, table.GetID(), useSpatialRefWkId);
+			return ToGdbObjectMsg(feature, geometry, GetUniqueClassId(table), useSpatialRefWkId);
 		}
 
 		public static GdbObjectMsg ToGdbObjectMsg([NotNull] Row feature,
@@ -212,8 +241,6 @@ namespace ProSuite.Microservices.Client.AGP
 		{
 			var result = new GdbObjectMsg();
 
-			Table table = feature.GetTable();
-
 			// Or use handle?
 			result.ClassHandle = objectClassHandle;
 
@@ -222,12 +249,6 @@ namespace ProSuite.Microservices.Client.AGP
 			result.Shape = ToShapeMsg(geometry, useSpatialRefWkId);
 
 			return result;
-		}
-
-		public static GdbObjectMsg ToGdbObjectMsg(Feature gdbFeature,
-		                                          bool useSpatialRefWkId)
-		{
-			return ToGdbObjectMsg(gdbFeature, gdbFeature.GetShape(), useSpatialRefWkId);
 		}
 
 		public static void ToGdbObjectMsgList(
@@ -250,6 +271,7 @@ namespace ProSuite.Microservices.Client.AGP
 			foreach (Feature feature in features)
 			{
 				FeatureClass featureClass = feature.GetTable();
+				int uniqueClassId = GetUniqueClassId(featureClass);
 
 				Geometry shape = feature.GetShape();
 
@@ -258,11 +280,11 @@ namespace ProSuite.Microservices.Client.AGP
 				// - FeatureClassDefintion.GetSpatialReference()
 				// In case of a large feature count, they should be avoided on a per-feature basis:
 
-				if (! classesByClassId.ContainsKey(featureClass.GetID()))
+				if (! classesByClassId.ContainsKey(uniqueClassId))
 				{
-					resultGdbClasses.Add(ToObjectClassMsg(featureClass));
+					resultGdbClasses.Add(ToObjectClassMsg(featureClass, uniqueClassId));
 
-					classesByClassId.Add(featureClass.GetID(), featureClass);
+					classesByClassId.Add(uniqueClassId, featureClass);
 
 					SpatialReference featureClassSpatialRef =
 						featureClass.GetDefinition().GetSpatialReference();
@@ -273,14 +295,6 @@ namespace ProSuite.Microservices.Client.AGP
 						omitDetailedShapeSpatialRef = false;
 					}
 				}
-				else
-				{
-					// TODO: Better solution: hash class ID with workspace handle in ToObjectClassMsg()
-					// Make sure they are from the same workspace to avoid conflicting class ids
-					Assert.AreEqual(classesByClassId[featureClass.GetID()].GetDatastore().Handle,
-					                featureClass.GetDatastore().Handle,
-					                "Conflicting class id from different workspaces. Please report.");
-				}
 
 				resultGdbObjects.Add(ToGdbObjectMsg(feature, shape, omitDetailedShapeSpatialRef));
 			}
@@ -288,8 +302,42 @@ namespace ProSuite.Microservices.Client.AGP
 			_msg.DebugStopTiming(watch, "Converted {0} features to DTOs", resultGdbObjects.Count);
 		}
 
+		public static int GetUniqueClassId(Row row)
+		{
+			return GetUniqueClassId(row.GetTable());
+		}
+
+		public static int GetUniqueClassId(Table table)
+		{
+			// NOTE: We cannot use the table handle because it is a 64-bit integer!
+			// On the server side, it will be converted to a 32-bit integer which changes its value
+			// -> it cannot be used to re-associate the returned feature message with the local class!
+
+			// In theory, this could be non-unique and needs to be compared to a process-wide dictionary
+			// containing this ID and the table handle...
+			unchecked
+			{
+				return (table.GetID().GetHashCode() * 397) ^
+				       table.GetDatastore().Handle.GetHashCode();
+			}
+		}
+
+		/// <summary>
+		/// Turns the specified row into a <see cref="GdbObjectReference"/> with a (virtually)
+		/// unique 32-bit integer class id.
+		/// </summary>
+		/// <param name="row"></param>
+		/// <returns></returns>
+		public static GdbObjectReference ToObjectReferenceWithUniqueClassId(Row row)
+		{
+			int uniqueClassId = GetUniqueClassId(row);
+
+			return new GdbObjectReference(uniqueClassId, row.GetObjectID());
+		}
+
 		public static ObjectClassMsg ToObjectClassMsg(
 			[NotNull] Table objectClass,
+			int classHandle,
 			[CanBeNull] SpatialReference spatialRef = null)
 		{
 			esriGeometryType geometryType = TranslateAGPShapeType(objectClass);
@@ -307,7 +355,7 @@ namespace ProSuite.Microservices.Client.AGP
 				{
 					Name = name,
 					Alias = aliasName,
-					ClassHandle = (int) objectClass.GetID(),
+					ClassHandle = classHandle,
 					SpatialReference = ToSpatialReferenceMsg(
 						spatialRef, SpatialReferenceMsg.FormatOneofCase.SpatialReferenceEsriXml),
 					GeometryType = (int) geometryType,
@@ -445,20 +493,6 @@ namespace ProSuite.Microservices.Client.AGP
 			return esriGeometryType.esriGeometryNull;
 		}
 
-		public static List<Geometry> FromShapeMsgList(
-			[NotNull] ICollection<ShapeMsg> shapeBufferList)
-		{
-			var geometryList = new List<Geometry>(shapeBufferList.Count);
-
-			foreach (var selectableOverlap in shapeBufferList)
-			{
-				var geometry = FromShapeMsg(selectableOverlap);
-				geometryList.Add(geometry);
-			}
-
-			return geometryList;
-		}
-
 		private static Geometry FromEsriShapeBuffer([NotNull] byte[] byteArray,
 		                                            [CanBeNull] SpatialReference spatialReference)
 		{
@@ -501,6 +535,37 @@ namespace ProSuite.Microservices.Client.AGP
 			}
 
 			return result;
+		}
+
+		private static ByteString GetWkbByteString(Multipatch multipatch)
+		{
+			Polyhedron polyhedron = GeomConversionUtils.CreatePolyhedron(multipatch);
+
+			WkbGeomWriter wkbWriter = new WkbGeomWriter();
+			byte[] wkb = wkbWriter.WriteMultiSurface(polyhedron);
+
+			// TODO: Consider using FromStream and avoid the extra copying step
+			return ByteString.CopyFrom(wkb);
+		}
+
+		private static Geometry FromWkb([NotNull] byte[] wkb,
+		                                [CanBeNull] SpatialReference spatialReference)
+		{
+			// TODO: Use ReadOnlyMemory<byte> to avoid extra copy step
+
+			WkbGeomReader wkbReader = new WkbGeomReader();
+
+			Stream memoryStream = new MemoryStream(wkb);
+			IBoundedXY geom = wkbReader.ReadGeometry(memoryStream, out WkbGeometryType wkbType);
+
+			// Currently the only type that cannot be transferred via esri shape:
+			if (wkbType == WkbGeometryType.PolyhedralSurface ||
+			    wkbType == WkbGeometryType.MultiSurface)
+			{
+				return GeomConversionUtils.CreateMultipatch((Polyhedron) geom, spatialReference);
+			}
+
+			throw new NotImplementedException();
 		}
 	}
 }

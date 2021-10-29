@@ -62,7 +62,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.dll</HintPath>
     </Reference>
-    <Reference Include="ProSuite.Microservices.Definitions.QA.Test, Version=0.1.1.0, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
+    <Reference Include="ProSuite.Microservices.Definitions.QA.Test, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.Test.dll</HintPath>
     </Reference>
@@ -113,6 +113,12 @@
     <Compile Include="ServiceHealth.cs" />
     <Compile Include="StartedGrpcServer.cs" />
     <Compile Include="TrackCancellationToken.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="..\..\lib\licenses\CommandLineParser.license.txt">
+      <Link>Licenses\CommandLineParser.license.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommandLineParser">

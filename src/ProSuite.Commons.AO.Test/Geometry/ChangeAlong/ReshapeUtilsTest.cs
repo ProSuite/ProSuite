@@ -253,7 +253,6 @@ namespace ProSuite.Commons.AO.Test.Geometry.ChangeAlong
 			                              GeometryFactory.CreatePolyline(targetPoly),
 			                              cutSubcurves, null);
 
-			int count = cutSubcurves.Count;
 			double totalLength = cutSubcurves.Sum(subcurve => subcurve.Path.Length);
 
 			// NOTE: There is no actual Z-difference. For the more sophisticated version see
@@ -412,10 +411,8 @@ namespace ProSuite.Commons.AO.Test.Geometry.ChangeAlong
 
 			var reshapeInfo = new ReshapeInfo(multiPatch, reshapePath, null);
 
-			IList<ReshapeInfo> singleReshapes;
-
 			ReshapeUtils.ReshapeAllGeometryParts(reshapeInfo, reshapePath,
-			                                     out singleReshapes);
+			                                     out IList<ReshapeInfo> _);
 
 			var reshapedRing = (IRing) ((IGeometryCollection) multiPatch).Geometry[0];
 
@@ -506,10 +503,8 @@ namespace ProSuite.Commons.AO.Test.Geometry.ChangeAlong
 				                  NonPlanar = true
 			                  };
 
-			IList<ReshapeInfo> singleReshapes;
-
 			ReshapeUtils.ReshapeAllGeometryParts(reshapeInfo, reshapePath,
-			                                     out singleReshapes);
+			                                     out IList<ReshapeInfo> _);
 
 			var reshapedRing = (IRing) ((IGeometryCollection) multipatch).Geometry[0];
 
@@ -615,9 +610,8 @@ namespace ProSuite.Commons.AO.Test.Geometry.ChangeAlong
 			var reshapeInfo = new ReshapeInfo(multipatch, reshapePath, null)
 			                  {NonPlanar = true};
 
-			IList<ReshapeInfo> singleReshapes;
 			ReshapeUtils.ReshapeAllGeometryParts(reshapeInfo, reshapePath,
-			                                     out singleReshapes);
+			                                     out IList<ReshapeInfo> _);
 
 			var reshapedRing = (IRing) ((IGeometryCollection) multipatch).Geometry[0];
 
@@ -669,7 +663,7 @@ namespace ProSuite.Commons.AO.Test.Geometry.ChangeAlong
 			reshapeInfo.RingReshapeSide = RingReshapeSideOfLine.Right;
 
 			ReshapeUtils.ReshapeAllGeometryParts(reshapeInfo, reshapePath,
-			                                     out singleReshapes);
+			                                     out IList<ReshapeInfo> _);
 
 			reshapedRing = (IRing) ((IGeometryCollection) multipatch).Geometry[0];
 
