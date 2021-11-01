@@ -154,7 +154,7 @@ namespace ProSuite.AGP.Solution.Workflow
 
 			if (ProjectWorkspace == null)
 			{
-				reason = "No project workspace could be inferred from the map layers.";
+				reason = "No project workspace could be inferred from the current map layers.";
 				return false;
 			}
 

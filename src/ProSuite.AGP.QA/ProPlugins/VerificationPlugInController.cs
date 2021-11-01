@@ -45,6 +45,11 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 				SetInitialState(verificationCommandOrTool);
 			}
+
+			bool enabled = _sessionContext.CanVerifyQuality(out string disabledReason);
+
+			// It could be already set up and no extra refresh event is expected:
+			SetState(enabled, disabledReason);
 		}
 
 		private static void SetInitialState([NotNull] PlugIn verificationCommandOrTool)
@@ -63,6 +68,12 @@ namespace ProSuite.AGP.QA.ProPlugins
 		{
 			bool enabled = _sessionContext.CanVerifyQuality(out string disabledReason);
 
+			SetState(enabled, disabledReason);
+		}
+
+		private void SetState(bool enabled,
+		                      string disabledReason)
+		{
 			foreach (PlugIn plugin in _verificationPlugins)
 			{
 				plugin.Enabled = enabled;
