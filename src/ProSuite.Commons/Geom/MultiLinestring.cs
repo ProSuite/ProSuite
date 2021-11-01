@@ -88,12 +88,13 @@ namespace ProSuite.Commons.Geom
 
 			if (Count != other.Count)
 			{
+				// Check number of linestrings
 				return false;
 			}
 
 			for (int i = 0; i < Count; i++)
 			{
-				if (! this[i].Equals(other[i]))
+				if (! GetLinestring(i).Equals(other.GetLinestring(i)))
 				{
 					return false;
 				}
