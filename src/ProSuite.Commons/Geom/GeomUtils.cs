@@ -736,6 +736,59 @@ return : Point2D : lines cut each other at Point (non parallel)
 			return Math.Sqrt(distanceSquared);
 		}
 
+		public static IEnumerable<SegmentIndex> GetShortSegmentIndexes(
+			ISegmentList segmentList,
+			double minimumSegmentLength,
+			bool use3dLength,
+			[CanBeNull] IBoundedXY perimeter)
+		{
+			for (int partIdx = 0; partIdx < segmentList.PartCount; partIdx++)
+			{
+				Linestring linestring = segmentList.GetPart(partIdx);
+
+				foreach (int localIndex in GetShortSegmentIndexes(
+					linestring, minimumSegmentLength, use3dLength, perimeter))
+				{
+					yield return new SegmentIndex(partIdx, localIndex);
+				}
+			}
+		}
+
+		public static IEnumerable<int> GetShortSegmentIndexes(
+			Linestring linestring,
+			double minimumSegmentLength,
+			bool use3dLength,
+			[CanBeNull] IBoundedXY perimeter)
+		{
+			double minLengthSquared = minimumSegmentLength * minimumSegmentLength;
+
+			int index = 0;
+			foreach (Line3D segment in linestring.Segments)
+			{
+				if (perimeter == null ||
+				    ! GeomRelationUtils.AreBoundsDisjoint(segment, perimeter, 0))
+				{
+					double lengthSquared = segment.Length2DSquared;
+
+					if (use3dLength)
+					{
+						double dZ = segment.DeltaZ;
+
+						Assert.False(double.IsNaN(dZ), "Segment has NaN (Z) coordinates");
+
+						lengthSquared += dZ * dZ;
+					}
+
+					if (lengthSquared < minLengthSquared)
+					{
+						yield return index;
+					}
+				}
+
+				index++;
+			}
+		}
+
 		public static MultiPolycurve Generalize([NotNull] MultiPolycurve multiPolycurve,
 		                                        double maxDeviation,
 		                                        bool inXY)
@@ -752,8 +805,30 @@ return : Point2D : lines cut each other at Point (non parallel)
 		{
 			var pointList = linestring.GetPoints().ToList();
 
+			// NOTE: The standard Ramer-Douglas-Peucker is sensitive to the point order (and the start point)
+			//       Make sure that at least for identical stretches the result is always the same.
+			bool reversed = false;
+			if (linestring.IsClosed)
+			{
+				if (! linestring.ClockwiseOriented == true)
+				{
+					pointList.Reverse();
+					reversed = true;
+				}
+			}
+			else if (! IsMoreSouthEast(linestring.StartPoint, linestring.EndPoint))
+			{
+				pointList.Reverse();
+				reversed = true;
+			}
+
 			var result = new List<Pnt3D>();
 			RamerDouglasPeucker(pointList, maxDeviation, result, inXY);
+
+			if (reversed)
+			{
+				result.Reverse();
+			}
 
 			// For closed rings: requires extra check for start/end point:
 			if (WeedFromToPoint(result, maxDeviation, inXY))
@@ -797,10 +872,35 @@ return : Point2D : lines cut each other at Point (non parallel)
 
 				double dist = baseLine.GetDistancePerpendicular(pointList[i], inXY);
 
+				if (dist < maxDist)
+				{
+					continue;
+				}
+
 				if (dist > maxDist)
 				{
 					maxDistIdx = i;
 					maxDist = dist;
+				}
+				else
+				{
+					//// Equal distance: use more north-western point
+					//if (pointList[i].X > pointList[maxDistIdx].X)
+					//{
+					//	maxDistIdx = i;
+					//	maxDist = dist;
+					//}
+					//else if (pointList[i].X < pointList[maxDistIdx].X)
+					//{
+					//	continue;
+					//}
+
+					//// same x value:
+					//if (pointList[i].Y > pointList[maxDistIdx].Y)
+					//{
+					//	maxDistIdx = i;
+					//	maxDist = dist;
+					//}
 				}
 			}
 
@@ -827,6 +927,30 @@ return : Point2D : lines cut each other at Point (non parallel)
 				result.Add(pointList[0]);
 				result.Add(pointList[pointList.Count - 1]);
 			}
+		}
+
+		private static bool IsMoreSouthEast(Pnt3D point1, Pnt3D point2)
+		{
+			if (point1.Y < point2.Y)
+			{
+				// It's more south
+				return true;
+			}
+
+			if (point1.Y > point2.Y)
+			{
+				// It's more north
+				return false;
+			}
+
+			// Same Y coordinate - Check X:
+			if (point1.X < point2.X)
+			{
+				// It's more east:
+				return true;
+			}
+
+			return false;
 		}
 
 		private static bool WeedFromToPoint([NotNull] List<Pnt3D> pointList,

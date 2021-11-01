@@ -8,15 +8,17 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry.Cracking;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 using ProSuite.Commons.Progress;
 
-namespace ProSuite.Commons.AO.Geometry.Cracking
+namespace ProSuite.Commons.AO.Geometry.Generalize
 {
-	public static class ShortSegmentsUtils
+	public static class GeneralizeUtils
 	{
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
@@ -56,8 +58,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				try
 				{
 					IList<esriSegmentInfo> removableSegments = CalculateShortSegments(vertexInfo,
-					                                                                  use2DLengthOnly,
-					                                                                  perimeter);
+						use2DLengthOnly,
+						perimeter);
 
 					shortSegmentCount += removableSegments.Count;
 					shortFeatureCount++;
@@ -81,7 +83,9 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			bool use2DLengthOnly,
 			[CanBeNull] IGeometry perimeter)
 		{
-			_msg.VerboseDebug(() => $"Getting short segments for {GdbObjectUtils.ToString(forFeatureVertexInfo.Feature)}");
+			_msg.VerboseDebug(
+				() =>
+					$"Getting short segments for {GdbObjectUtils.ToString(forFeatureVertexInfo.Feature)}");
 
 			var minimumSegmentLength =
 				(double) Assert.NotNull(forFeatureVertexInfo.MinimumSegmentLength);
@@ -122,10 +126,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			[CanBeNull] ITrackCancel cancel,
 			[CanBeNull] NotificationCollection notifications)
 		{
-			if (progressFeedback != null)
-			{
-				progressFeedback.SetRange(0, fromFeatures.Count);
-			}
+			progressFeedback?.SetRange(0, fromFeatures.Count);
 
 			var featureCount = 0;
 			var totalRemovedCount = 0;
@@ -244,16 +245,21 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				{
 					// intersect on perimeter and cut into separate paths at protected points
 					IPolycurve originalGeometry = GetOriginalGeometry(feature,
-					                                                  featureVertexInfo);
+						featureVertexInfo);
 					IPointCollection weededPoints;
 					try
 					{
 						weededPoints = CrackUtils.GetWeedPoints(
-							originalGeometry, weedTolerance, only2D, inPerimeter, omitNonLinearSegments);
+							originalGeometry, weedTolerance, only2D, inPerimeter,
+							omitNonLinearSegments,
+							DatasetUtils.GetSpatialReference(featureVertexInfo.Feature));
 					}
 					catch (Exception e)
 					{
-						_msg.Debug("Generalisation error.", e);
+						_msg.Debug(
+							$"Generalisation error for geometry {GeometryUtils.ToXmlString(originalGeometry)}",
+							e);
+
 						_msg.WarnFormat("Cannot generalize {0}: {1}", RowFormat.Format(feature),
 						                e.Message);
 						continue;
@@ -279,7 +285,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 					// -> consider only cutting at intersection points between sources (shared line end points)
 					// NOTE: sometimes the intersection is rather inaccurate -> this still reduces points!
 					featureVertexInfo.NonDeletablePoints = RemoveProtectedPoints(weededPoints,
-					                                                             featureVertexInfo);
+						featureVertexInfo);
 
 					featureVertexInfo.PointsToDelete = weededPoints;
 				}
@@ -306,7 +312,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			featureVertexInfo.SimplifyCrackPoints();
 
 			_msg.VerboseDebug(
-				() => $"Cutting input geometry with protected points. Generalization Info: {featureVertexInfo.ToString(true)}");
+				() =>
+					$"Cutting input geometry with protected points. Generalization Info: {featureVertexInfo.ToString(true)}");
 
 			IPolyline originalGeometry = featureVertexInfo.OriginalClippedPolyline;
 
@@ -350,7 +357,9 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
-				_msg.VerboseDebug(() => $"Original feature {GdbObjectUtils.ToString(feature)} splitted by protected points: {GeometryUtils.ToString((IGeometry) splittedResult)}");
+				_msg.VerboseDebug(
+					() =>
+						$"Original feature {GdbObjectUtils.ToString(feature)} splitted by protected points: {GeometryUtils.ToString((IGeometry) splittedResult)}");
 			}
 
 			return splittedResult as IPolycurve;
@@ -383,7 +392,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			IPointCollection protectedPoints = featureVertexInfo.CrackPointCollection;
 
 			IPointCollection removedPoints = CrackUtils.RemovePoints(fromWeededPoints,
-			                                                         protectedPoints);
+				protectedPoints);
 
 			//// TODO: Also remove those weed points that would change an adjacent segment on which there is
 			//// a crack point (i.e. one without pre-existing vertex)
@@ -486,10 +495,41 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			bool use3DLength = GeometryUtils.IsZAware(polycurve) && ! use2DLengthOnly;
 
-			IList<esriSegmentInfo> shortSegments =
-				GeometryUtils.GetShortSegments((ISegmentCollection) polycurve,
-				                               minimumSegmentLength, use3DLength,
-				                               projectedPerimeter);
+			IList<esriSegmentInfo> shortSegments;
+			if (GeometryUtils.HasNonLinearSegments(polycurve) ||
+			    ! IntersectionUtils.UseCustomIntersect)
+			{
+				shortSegments =
+					GeometryUtils.GetShortSegments((ISegmentCollection) polycurve,
+					                               minimumSegmentLength, use3DLength,
+					                               projectedPerimeter);
+			}
+			else
+			{
+				MultiPolycurve multiPolycurve =
+					GeometryConversionUtils.CreateMultiPolycurve(polycurve);
+
+				EnvelopeXY aoi =
+					inPerimeter != null
+						? GeometryConversionUtils.CreateEnvelopeXY(inPerimeter.Envelope)
+						: null;
+
+				shortSegments = new List<esriSegmentInfo>();
+				foreach (SegmentIndex segmentIndex in GeomUtils.GetShortSegmentIndexes(
+					multiPolycurve, minimumSegmentLength, use3DLength, aoi))
+				{
+					esriSegmentInfo segInfo = new esriSegmentInfo();
+					segInfo.iPart = segmentIndex.PartIndex;
+					segInfo.iRelSegment = segmentIndex.LocalIndex;
+					segInfo.iAbsSegment =
+						multiPolycurve.GetGlobalSegmentIndex(
+							segmentIndex.PartIndex, segmentIndex.LocalIndex);
+					segInfo.pSegment =
+						((ISegmentCollection) polycurve).get_Segment(segInfo.iAbsSegment);
+
+					shortSegments.Add(segInfo);
+				}
+			}
 
 			if (projectedPerimeter != inPerimeter)
 			{
@@ -534,6 +574,44 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			}
 
 			return filteredSegments;
+		}
+
+		public static void CalculateProtectionPoints(
+			[NotNull] ICollection<FeatureVertexInfo> generalizationInfos,
+			[NotNull] ICollection<IFeature> selectedFeatures,
+			IList<IFeature> vertexProtectingFeatures,
+			bool linearizeNonLinearSegments,
+			TargetFeatureSelection vertexProtectingFeatureSelection,
+			ITrackCancel trackCancel)
+		{
+			_msg.DebugFormat(
+				"Calculating topologically important vertices for {0} selected features...",
+				selectedFeatures.Count);
+
+			// Against unselected targets: use intersection point option 'all points'
+			CrackPointCalculator crackPointCalculator = CreateProtectedPointsCalculator();
+
+			crackPointCalculator.NonLinearSegmentTreatment =
+				linearizeNonLinearSegments
+					? NonLinearSegmentHandling.Linearize
+					: NonLinearSegmentHandling.Omit;
+
+			IEnumerable<IFeature> targetFeatures = vertexProtectingFeatures.Where(
+				vertexProtectingFeature => ! selectedFeatures.Contains(vertexProtectingFeature));
+
+			CrackUtils.AddTargetIntersectionCrackPoints(
+				generalizationInfos, targetFeatures, vertexProtectingFeatureSelection,
+				crackPointCalculator, trackCancel);
+
+			// Against selected targets: use intersection point option 'linear intersection end points'
+			// assuming that previously matching vertices from different features get weeded the same way
+			crackPointCalculator.IntersectionPointOption =
+				IntersectionPointOptions.IncludeLinearIntersectionEndpoints;
+
+			CrackUtils.AddTargetIntersectionCrackPoints(
+				generalizationInfos,
+				vertexProtectingFeatures.Where(selectedFeatures.Contains),
+				vertexProtectingFeatureSelection, crackPointCalculator, trackCancel);
 		}
 
 		/// <summary>

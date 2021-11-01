@@ -428,6 +428,76 @@ namespace ProSuite.Commons.Test.Geometry
 			Assert.False(double.IsNaN(linestring[2].StartPoint.Z));
 		}
 
+		[Test]
+		public void CanSnapToResolution()
+		{
+			var ring = new List<Pnt3D>();
+
+			// ring1: horizontal:
+			ring.Add(new Pnt3D(2600000.0001234, 1200000.0004321, 500.0004321));
+			ring.Add(new Pnt3D(2600080.0001234, 1200060.0004321, 500.0004321));
+			ring.Add(new Pnt3D(2600080.0001234, 1200030.0004321, 540.0004321));
+			ring.Add(new Pnt3D(2600080.0001234, 1200000.0004321, 530.0004321));
+
+			EnvelopeXY bbAfterSnap = new EnvelopeXY(2600000, 1200000, 2600080, 1200060);
+
+			for (var i = 0; i < ring.Count; i++)
+			{
+				Pnt3D[] array1 = ring.ToArray();
+				CollectionUtils.Rotate(array1, i);
+				var rotatedRing = new List<Pnt3D>(array1);
+
+				rotatedRing.Add((Pnt3D) rotatedRing[0].Clone());
+
+				Linestring original = new Linestring(rotatedRing);
+				Linestring snapped = original.Clone();
+
+				int rightMostBottom = snapped.RightMostBottomIndex;
+
+				snapped.SnapToResolution(0.001, 2000000, 1000000, 0);
+
+				Assert.AreEqual(rightMostBottom, snapped.RightMostBottomIndex);
+
+				Assert.IsTrue(GeomRelationUtils.AreBoundsEqual(original, snapped, 0.001));
+				Assert.IsTrue(GeomRelationUtils.AreBoundsEqual(bbAfterSnap, snapped, 0));
+			}
+		}
+
+		[Test]
+		public void CanSnapToResolutionChangingRightMostBottomVertex()
+		{
+			var ring = new List<Pnt3D>();
+
+			// ring1: horizontal:
+			ring.Add(new Pnt3D(2600000.000, 1200000.00, 500.0004321));
+			ring.Add(new Pnt3D(2600080.0001234, 1200060.0004321, 500.0004321));
+			ring.Add(new Pnt3D(2600080.0001234, 1200030.0004321, 540.0004321));
+			ring.Add(new Pnt3D(2600080.0001234, 1200000.0004321, 530.0004321));
+
+			for (var i = 0; i < ring.Count; i++)
+			{
+				Pnt3D[] array1 = ring.ToArray();
+				CollectionUtils.Rotate(array1, i);
+				var rotatedRing = new List<Pnt3D>(array1);
+
+				rotatedRing.Add((Pnt3D) rotatedRing[0].Clone());
+
+				Linestring original = new Linestring(rotatedRing);
+				Linestring snapped = original.Clone();
+
+				int rightMostBottom = snapped.RightMostBottomIndex;
+
+				Assert.AreEqual((ring.Count - i) % ring.Count, rightMostBottom);
+				snapped.SnapToResolution(0.001, 2000000, 1000000, 0);
+
+				int expected = (ring.Count - i - 1) % ring.Count;
+				Assert.AreEqual(expected, snapped.RightMostBottomIndex);
+
+				Assert.AreEqual(540d, snapped.GetPoints().Max(p => p.Z));
+				Assert.AreEqual(500d, snapped.GetPoints().Min(p => p.Z));
+			}
+		}
+
 		private static Pnt3D GetRightMostBottomPoint(Linestring linestring)
 		{
 			return linestring.GetPoints(linestring.RightMostBottomIndex, 1, true).First();

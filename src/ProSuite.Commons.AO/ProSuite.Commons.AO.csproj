@@ -203,9 +203,10 @@
     <Compile Include="Geometry\Cracking\CrackUtils.cs" />
     <Compile Include="Geometry\Cracking\FeatureVertexInfo.cs" />
     <Compile Include="Geometry\Cracking\ICrackingOptions.cs" />
+    <Compile Include="Geometry\Cracking\NonLinearSegmentHandling.cs" />
     <Compile Include="Geometry\Cracking\PartialChopperToolOptions.cs" />
     <Compile Include="Geometry\Cracking\PartialCrackerToolOptions.cs" />
-    <Compile Include="Geometry\Cracking\ShortSegmentsUtils.cs" />
+    <Compile Include="Geometry\Generalize\GeneralizeUtils.cs" />
     <Compile Include="Geometry\CreateFootprint\CreateFootprintUtils.cs" />
     <Compile Include="Geometry\CreateFootprint\FootprintOptions.cs" />
     <Compile Include="Geometry\CreateFootprint\FootprintSourceTargetMapping.cs" />
@@ -222,6 +223,8 @@
     <Compile Include="Geometry\DatasetSpecificSettingProvider.cs" />
     <Compile Include="Geometry\ExtractParts\GeometryPart.cs" />
     <Compile Include="Geometry\ExtractParts\PartExtractionUtils.cs" />
+    <Compile Include="Geometry\Generalize\AdvancedGeneralizeOptions.cs" />
+    <Compile Include="Geometry\Generalize\PartialAdvancedGeneralizeOptions.cs" />
     <Compile Include="Geometry\GeometryComparison.cs" />
     <Compile Include="Geometry\GeometryConversionUtils.cs" />
     <Compile Include="Geometry\GeometryEnumerator.cs" />

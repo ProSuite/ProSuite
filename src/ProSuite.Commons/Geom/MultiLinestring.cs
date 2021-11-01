@@ -315,6 +315,22 @@ namespace ProSuite.Commons.Geom
 			return partStartIndex + localPointIndex;
 		}
 
+		public void SnapToResolution(double resolution,
+		                             double xOrigin,
+		                             double yOrigin,
+		                             double zOrigin = double.NaN)
+		{
+			InitializeBounds();
+
+			foreach (Linestring linestring in Linestrings)
+			{
+				linestring.SnapToResolution(resolution, xOrigin, yOrigin, zOrigin);
+				UpdateBounds(linestring);
+			}
+
+			SpatialIndex = null;
+		}
+
 		#endregion
 
 		public bool IsFirstSegmentInPart(int segmentIndex)
@@ -595,6 +611,15 @@ namespace ProSuite.Commons.Geom
 			{
 				YMax = additionalLinestring.YMax;
 			}
+		}
+
+		private void InitializeBounds()
+		{
+			XMin = double.MaxValue;
+			YMin = double.MaxValue;
+
+			XMax = double.MinValue;
+			YMax = double.MinValue;
 		}
 
 		private void UpdateSpatialIndex([NotNull] Linestring additionalLinestring,

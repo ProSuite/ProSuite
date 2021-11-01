@@ -8127,7 +8127,8 @@ namespace ProSuite.Commons.AO.Geometry
 			double minimumSegmentLength)
 		{
 			const IPolygon perimeter = null;
-			return GetShortSegments(polycurve, minimumSegmentLength, perimeter);
+			bool use3dLength = IsZAware(polycurve);
+			return GetShortSegments(polycurve, minimumSegmentLength, perimeter, use3dLength);
 		}
 
 		/// <summary>
@@ -8138,14 +8139,16 @@ namespace ProSuite.Commons.AO.Geometry
 		/// <param name="minimumSegmentLength">The minimum segment length that is not considered too short.</param>
 		/// <param name="perimeter">The polygon or envelope withing which the segments shall be processed. The
 		/// perimeter must have the same spatial reference as the segmentCollection.</param>
+		/// <param name="use3DLength">Whether the 3D length should be used if the polycurve is Z-aware.</param>
 		/// <returns>A list of esriSegmentInfo with all short segments.</returns>
 		[NotNull]
 		public static IList<esriSegmentInfo> GetShortSegments(
 			[NotNull] IPolycurve polyCurve,
 			double minimumSegmentLength,
-			[CanBeNull] IGeometry perimeter)
+			[CanBeNull] IGeometry perimeter,
+			bool use3DLength)
 		{
-			bool use3DLength = IsZAware(polyCurve);
+			use3DLength = use3DLength && IsZAware(polyCurve);
 
 			return new List<esriSegmentInfo>(
 				GetShortSegments((ISegmentCollection) polyCurve, minimumSegmentLength,
@@ -8154,7 +8157,8 @@ namespace ProSuite.Commons.AO.Geometry
 
 		public static bool HasShortSegments(
 			[NotNull] ISegmentCollection segmentCollection,
-			double minimumSegmentLength, bool use3DLength,
+			double minimumSegmentLength,
+			bool use3DLength,
 			[CanBeNull] IPolygon perimeter = null)
 		{
 			return GetShortSegmentsCore(segmentCollection,
@@ -8167,7 +8171,8 @@ namespace ProSuite.Commons.AO.Geometry
 		[NotNull]
 		public static IList<esriSegmentInfo> GetShortSegments(
 			[NotNull] ISegmentCollection segmentCollection,
-			double minimumSegmentLength, bool use3DLength,
+			double minimumSegmentLength,
+			bool use3DLength,
 			[CanBeNull] IGeometry perimeter = null)
 		{
 			return GetShortSegmentsCore(segmentCollection,
@@ -8180,7 +8185,8 @@ namespace ProSuite.Commons.AO.Geometry
 		[NotNull]
 		private static IEnumerable<esriSegmentInfo> GetShortSegmentsCore(
 			[NotNull] ISegmentCollection segmentCollection,
-			double minimumSegmentLength, bool use3DLength,
+			double minimumSegmentLength,
+			bool use3DLength,
 			[CanBeNull] IGeometry perimeter)
 		{
 			// TODO: in case the geometry has Z values (it might still be non-Z aware)

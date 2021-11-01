@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry.Generalize;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -109,7 +109,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			if (ShortSegments != null)
 			{
-				result.ShortSegments = ShortSegmentsUtils.GetFilteredSegments(ShortSegments,
+				result.ShortSegments = GeneralizeUtils.GetFilteredSegments(ShortSegments,
 					subSelectionPerimeter,
 					true);
 			}
@@ -117,8 +117,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			if (NonRemovableShortSegments != null)
 			{
 				result.NonRemovableShortSegments =
-					ShortSegmentsUtils.GetFilteredSegments(NonRemovableShortSegments,
-					                                       subSelectionPerimeter, true);
+					GeneralizeUtils.GetFilteredSegments(NonRemovableShortSegments,
+					                                    subSelectionPerimeter, true);
 			}
 
 			return result;
@@ -267,7 +267,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				//}
 			}
 		}
-		
+
 		public void AddIntersectionPoints([CanBeNull] IPointCollection pointCollection)
 		{
 			if (pointCollection == null || ((IGeometry) pointCollection).IsEmpty)

@@ -1669,9 +1669,22 @@ namespace ProSuite.Commons.Geom
 					Pnt3D targetPnt3d = inPointList.GetPoint(pointIdx) as Pnt3D;
 					Pnt3D sourcePnt3d = atPoint as Pnt3D;
 
-					if (sourcePnt3d != null && targetPnt3d != null &&
-					    MathUtils.AreEqual(sourcePnt3d.Z, targetPnt3d.Z, tolerance))
+					if (sourcePnt3d != null && targetPnt3d != null)
 					{
+						if (double.IsNaN(sourcePnt3d.Z) && double.IsNaN(targetPnt3d.Z))
+						{
+							return true;
+						}
+
+						if (MathUtils.AreEqual(sourcePnt3d.Z, targetPnt3d.Z, tolerance))
+						{
+							return true;
+						}
+					}
+
+					if (sourcePnt3d == null && targetPnt3d == null)
+					{
+						// Both have no Z value
 						return true;
 					}
 				}
@@ -2837,7 +2850,7 @@ namespace ProSuite.Commons.Geom
 
 			return result;
 		}
-		
+
 		private static void ReplacePoints<T>([NotNull] Multipoint<T> multipoint,
 		                                     [NotNull] IEnumerable<T> newPoints) where T : IPnt
 		{

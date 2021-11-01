@@ -712,20 +712,25 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 		/// <summary>
 		/// Gets the points that are removed by the Douglas-Peucker algorithm using the specified
-		/// tolerance. Non-linear segments are ignored as IPolycurve.Generalize adds additional vertices. 
+		/// tolerance. Non-linear segments are handled according to the <see cref="omitNonLinearSegments"/>
+		/// parameter.
 		/// </summary>
 		/// <param name="polycurve"></param>
-		/// <param name="weedTolerance"></param>
-		/// <param name="only2D"></param>
-		/// <param name="inPerimeter"></param>
-		/// <param name="omitNonLinearSegments"></param>
+		/// <param name="weedTolerance">The tolerance (max allowable offset of the original geometry).</param>
+		/// <param name="only2D">Whether the 2D distance should be compared with the weed tolerance
+		/// even if the polycurve is z-aware.</param>
+		/// <param name="inPerimeter">The area of interest</param>
+		/// <param name="omitNonLinearSegments">Whether non-linear segments should be ignored or linearized</param>
+		/// <param name="dataSpatialReference">The data spatial reference used to snap coordinates.
+		/// This is important when non-linear segments are linearized.</param>
 		/// <returns></returns>
 		public static IPointCollection GetWeedPoints(
 			[NotNull] IPolycurve polycurve,
 			double weedTolerance,
 			bool only2D,
 			[CanBeNull] IGeometry inPerimeter = null,
-			bool omitNonLinearSegments = true)
+			bool omitNonLinearSegments = true,
+			ISpatialReference dataSpatialReference = null)
 		{
 			// NOTE regarding standard weed/generalize:
 			// For non-linear segments, it is not implemented in 3D and inserts arbitrary
@@ -734,6 +739,18 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			// For additional issues see repro-tests.
 			MultiPolycurve multiPolycurve = GeometryConversionUtils.CreateMultiPolycurve(
 				polycurve, omitNonLinearSegments);
+
+			if (! omitNonLinearSegments && dataSpatialReference != null)
+			{
+				// Linearization results in un-even and slighty different values. Must be snapped
+				// to avoid non-deterministic generalization.
+				Assert.NotNull(dataSpatialReference)
+				      .GetDomain(out double xOrigin, out _, out double yOrigin, out _);
+				dataSpatialReference.GetZDomain(out double zOrigin, out _);
+				double resolution = SpatialReferenceUtils.GetXyResolution(dataSpatialReference);
+
+				multiPolycurve.SnapToResolution(resolution, xOrigin, yOrigin, zOrigin);
+			}
 
 			if (! GeometryUtils.IsZAware(polycurve))
 			{

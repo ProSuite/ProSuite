@@ -112,6 +112,9 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 		public bool UseCustomIntersect { get; set; } = IntersectionUtils.UseCustomIntersect;
 
+		public NonLinearSegmentHandling NonLinearSegmentTreatment { get; set; } =
+			NonLinearSegmentHandling.UseLegacyIntersect;
+
 		/// <summary>
 		/// Sets the current data resolution to the resolution of the provided feature's feature class. This improves
 		/// the detection of almost-coincident points (closer than tolerance) in ArcMap (where the resolution is 
@@ -172,9 +175,18 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			bool origIntersect = IntersectionUtils.UseCustomIntersect;
 
+			bool useCustomIntersect = UseCustomIntersect;
+
+			if (NonLinearSegmentTreatment == NonLinearSegmentHandling.UseLegacyIntersect &&
+			    (GeometryUtils.HasNonLinearSegments(sourceGeometry) ||
+			     GeometryUtils.HasNonLinearSegments(intersectionTarget)))
+			{
+				useCustomIntersect = false;
+			}
+
 			try
 			{
-				if (UseCustomIntersect)
+				if (useCustomIntersect)
 				{
 					IntersectionUtils.UseCustomIntersect = true;
 					result = GetIntersectionPointsCustom(sourceGeometry,
@@ -731,8 +743,12 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			[NotNull] IPolyline sourceGeometry,
 			[NotNull] IGeometry intersectionTarget)
 		{
-			return GetIntersectionPoints(intersectionTarget, sourceGeometry,
-			                             IntersectionPointOption, out _);
+			var resultPoints = GetClusteredIntersectionPoints(sourceGeometry, intersectionTarget);
+
+			IPointCollection result = GeometryConversionUtils.CreatePointCollection(
+				sourceGeometry, resultPoints.Select(kvp => kvp.Key).ToList());
+
+			return result;
 		}
 
 		[NotNull]
@@ -1671,6 +1687,137 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				result.AddPointCollection(result2);
 
 				GeometryUtils.Simplify((IGeometry) result);
+			}
+
+			return result;
+		}
+
+		[NotNull]
+		private IList<KeyValuePair<IPnt, List<IntersectionPoint3D>>> GetClusteredIntersectionPoints(
+			[NotNull] IGeometry sourceGeometry,
+			[NotNull] IGeometry intersectionTarget)
+		{
+			if (CannotIntersect(intersectionTarget, sourceGeometry))
+			{
+				IMultipoint emptyResult = GeometryFactory.CreateMultipoint();
+				emptyResult.SpatialReference = intersectionTarget.SpatialReference;
+
+				return new List<KeyValuePair<IPnt, List<IntersectionPoint3D>>>(0);
+			}
+
+			double snapTolerance = SnapTolerance ?? GeometryUtils.GetXyTolerance(sourceGeometry);
+
+			bool omitNonLinearSegments = NonLinearSegmentTreatment == NonLinearSegmentHandling.Omit;
+
+			bool includeIntermediatePoints =
+				IntersectionPointOption ==
+				IntersectionPointOptions.IncludeLinearIntersectionAllPoints;
+
+			// TODO: Rather than swapping source and target, add method to intersection point that gets the
+			// target point so hte Z value can be taken directly.
+			List<IntersectionPoint3D> intersectionPoints =
+				UseSourceZs
+					? GetIntersectionPoints3d(sourceGeometry, intersectionTarget, snapTolerance,
+					                          omitNonLinearSegments, includeIntermediatePoints)
+					: GetIntersectionPoints3d(intersectionTarget, sourceGeometry, snapTolerance,
+					                          omitNonLinearSegments, includeIntermediatePoints);
+
+			if (In3D)
+			{
+				// add the other intersection set as well - this is to get the intersections 
+				// at the same XY-location with different Z values. For example there could be
+				// a missing point in the source at Z1 but because at Z2 there is already a
+				// vertex that is reported with UseSourceZ we would miss the extra intersection at Z1
+
+				// TODO: Consider just inverting the intersection points: source->target and vice versa.
+				intersectionPoints.AddRange(
+					UseSourceZs
+						? GetIntersectionPoints3d(intersectionTarget, sourceGeometry, snapTolerance,
+						                          omitNonLinearSegments, includeIntermediatePoints)
+						: GetIntersectionPoints3d(sourceGeometry, intersectionTarget, snapTolerance,
+						                          omitNonLinearSegments,
+						                          includeIntermediatePoints));
+			}
+
+			// 3D-clustering, even if In3D == false, otherwise the averaged Z values result in
+			// crack points where no crack point should be detected.
+			IList<KeyValuePair<IPnt, List<IntersectionPoint3D>>> clusteredIntersections =
+				GeomTopoOpUtils.Cluster(intersectionPoints, ip => ip.Point, snapTolerance,
+				                        snapTolerance);
+
+			return clusteredIntersections;
+		}
+
+		private static List<IntersectionPoint3D> GetIntersectionPoints3d(
+			[NotNull] IGeometry sourceGeometry,
+			[NotNull] IGeometry intersectionTarget,
+			double snapTolerance,
+			bool omitNonLinearSegments,
+			bool includeIntermediatePoints)
+		{
+			List<IntersectionPoint3D> intersectionPoints;
+
+			ISegmentList sourceSegments = ToSegmentList(sourceGeometry, omitNonLinearSegments);
+
+			if (sourceSegments == null &&
+			    sourceGeometry is IMultipoint sourceMultipoint)
+			{
+				// Source is multipoint
+				var sourcePnts = GeometryConversionUtils.CreateMultipoint(sourceMultipoint);
+
+				return GeomTopoOpUtils.GetIntersectionPoints(
+					sourcePnts, ToSegmentList(intersectionTarget, omitNonLinearSegments),
+					snapTolerance, false).ToList();
+			}
+
+			Assert.NotNull(sourceSegments);
+
+			ISegmentList targetSegments = ToSegmentList(intersectionTarget, omitNonLinearSegments);
+
+			if (targetSegments != null)
+			{
+				intersectionPoints =
+					GeomTopoOpUtils.GetIntersectionPoints(sourceSegments, targetSegments,
+					                                      snapTolerance, false,
+					                                      includeIntermediatePoints).ToList();
+			}
+			else if (intersectionTarget is IMultipoint multipoint)
+			{
+				IPointList targetPoints = GeometryConversionUtils.CreateMultipoint(multipoint);
+				intersectionPoints =
+					GeomTopoOpUtils.GetIntersectionPoints(sourceSegments, targetPoints,
+					                                      snapTolerance, false).ToList();
+			}
+			else
+			{
+				IPoint targetPoint = intersectionTarget as IPoint;
+				Assert.True(targetPoint != null, "Unsupported target geometry type");
+
+				IPnt pnt = GeometryConversionUtils.CreatePnt(targetPoint, true);
+
+				intersectionPoints =
+					GeomTopoOpUtils.GetIntersectionPoints(
+						               sourceSegments, pnt, 0, snapTolerance, false)
+					               .ToList();
+			}
+
+			return intersectionPoints;
+		}
+
+		private static ISegmentList ToSegmentList([NotNull] IGeometry polycurveOrMultipatch,
+		                                          bool omitNonLinearSegments)
+		{
+			ISegmentList result = null;
+
+			if (polycurveOrMultipatch is IMultiPatch targetMultipatch)
+			{
+				result = GeometryConversionUtils.CreatePolyhedron(targetMultipatch);
+			}
+			else if (polycurveOrMultipatch is IPolycurve targetPolycurve)
+			{
+				result =
+					GeometryConversionUtils.CreateMultiPolycurve(
+						targetPolycurve, omitNonLinearSegments);
 			}
 
 			return result;
