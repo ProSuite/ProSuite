@@ -5,6 +5,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using Array = System.Array;
 
 namespace ProSuite.Commons.AO.Geometry
@@ -20,6 +21,21 @@ namespace ProSuite.Commons.AO.Geometry
 			result.Z = z;
 
 			return result;
+		}
+
+		public static WKSPointZ CreatePoint(IPnt pnt)
+		{
+			double z;
+			if (pnt is Pnt3D pnt3D)
+			{
+				z = pnt3D.Z;
+			}
+			else
+			{
+				z = double.NaN;
+			}
+
+			return CreatePoint(pnt.X, pnt.Y, z);
 		}
 
 		public static WKSPointZ CreatePoint([NotNull] IPoint point)
@@ -132,7 +148,7 @@ namespace ProSuite.Commons.AO.Geometry
 				if (groupedPoints.Count == 1)
 				{
 					result.Add(new KeyValuePair<WKSPointZ, List<WKSPointZ>>(groupedPoints[0],
-					                                                        groupedPoints));
+						           groupedPoints));
 				}
 				else
 				{

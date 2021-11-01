@@ -285,14 +285,12 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 		public IList<CrackPoint> DetermineCrackPoints3d(
 			[NotNull] IList<KeyValuePair<IPnt, List<IntersectionPoint3D>>> clusteredIntersections,
+			[NotNull] ISegmentList originalSegments,
 			[NotNull] IGeometry originalGeometry,
 			[NotNull] IPolyline optimizedPolyline,
 			[CanBeNull] ISegmentList snapTarget)
 		{
 			var result = new List<CrackPoint>(clusteredIntersections.Count);
-
-			IMultipoint originalPoints =
-				GeometryFactory.CreateMultipoint((IPointCollection) originalGeometry);
 
 			EnvelopeXY envelopeXY = null;
 			if (Perimeter != null)
@@ -339,9 +337,10 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				else
 				{
 					// if not chopping: skip crack points that are existing vertices
-					bool hasSourcePoint = HasMatchingPoint(originalPoints, aoPoint,
-					                                       out targetVertexDifferentWithinTolerance,
-					                                       out targetVertexDifferentInZ);
+					bool hasSourcePoint = HasMatchingPoint3d(originalSegments, point, snapTolerance,
+					                                         out
+					                                         targetVertexDifferentWithinTolerance,
+					                                         out targetVertexDifferentInZ);
 
 					// With the new intersection logic we have a crack point at each Z-level
 					// But un-cracked segments can still be there (even if a source point exists
@@ -517,6 +516,85 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				if (IsPerfectlyMatching(
 					atPoint, existingPoint, xyResolution, zResolution, out thisPointWithinTolerance,
 					out thisPointDifferentInZ))
+				{
+					pointFound = true;
+					continue;
+				}
+
+				if (thisPointWithinTolerance)
+				{
+					// always fix points that are almost coincident:
+					differentWithinTolerance = true;
+				}
+
+				if (! In3D)
+				{
+					// 2D intersection is good enough
+					continue;
+				}
+
+				if (thisPointDifferentInZ)
+				{
+					// perfect match
+					differentInZ = true;
+				}
+			}
+
+			return pointFound;
+		}
+
+		private bool HasMatchingPoint3d([NotNull] ISegmentList originalSegments,
+		                                [NotNull] IPnt atPoint,
+		                                double tolerance,
+		                                out bool differentWithinTolerance,
+		                                out bool differentInZ)
+		{
+			differentWithinTolerance = false;
+			differentInZ = false;
+
+			// TODO: Separate segments from vertices, include the HasUncrackedSegments method
+			// TODO: Use the original intersection points from the cluster
+			var existingPoints =
+				GeomTopoOpUtils.GetIntersectionPoints(
+					               (IPointList) originalSegments, atPoint, tolerance)
+				               .Select(ip => ip.Point)
+				               .ToList();
+
+			// Alternative:
+			//IPointList originalPoints = (IPointList) originalSegments;
+			//var existingPointIndexes = originalPoints.FindPointIndexes(atPoint,
+			//	                                         tolerance, true)
+			//                                         .ToList();
+
+			//var existingPoints = new List<IPnt>();
+			//foreach (int existingPointIndex in existingPointIndexes)
+			//{
+			//	existingPoints.Add(originalPoints.GetPoint(existingPointIndex));
+			//}
+
+			//IList<IPoint> existingPoints =
+			//	GeometryUtils.FindPoints(originalPoints, atPoint,
+			//	                         GeometryUtils.GetXyTolerance(originalPoints)).ToList();
+
+			if (existingPoints.Count == 0)
+			{
+				// NOTE: This sometimes happens because IRelationalOperator.Contains is too relaxed regarding the tolerance
+				//       -> RelationalOperator seems to check the tolerance against delta-x and delta-y separately
+				_msg.DebugFormat("No point found in the original geometry. Point: {0}.", atPoint);
+
+				return false;
+			}
+
+			double xyResolution = GetXyResolution(atPoint);
+			double zResolution = GetZResolution(atPoint);
+
+			var pointFound = false;
+			foreach (Pnt3D existingPoint in existingPoints)
+			{
+				bool thisPointWithinTolerance, thisPointDifferentInZ;
+				if (IsPerfectlyMatching(
+					atPoint, existingPoint, xyResolution, zResolution,
+					tolerance, out thisPointWithinTolerance, out thisPointDifferentInZ))
 				{
 					pointFound = true;
 					continue;

@@ -72,12 +72,12 @@ namespace ProSuite.Commons.AO.Geometry
 			return new Linestring(path1Pnts3D);
 		}
 
-		public static void AddPoints(IEnumerable<Pnt3D> points, IMultipoint toResult)
+		public static void AddPoints(IEnumerable<IPnt> points, IMultipoint toResult)
 		{
-			Func<Pnt3D, WKSPointZ> createPoint;
+			Func<IPnt, WKSPointZ> createPoint;
 
 			if (GeometryUtils.IsZAware(toResult))
-				createPoint = p => WKSPointZUtils.CreatePoint(p.X, p.Y, p.Z);
+				createPoint = WKSPointZUtils.CreatePoint;
 			else
 				createPoint =
 					p => WKSPointZUtils.CreatePoint(p.X, p.Y, double.NaN);
@@ -90,9 +90,9 @@ namespace ProSuite.Commons.AO.Geometry
 		public static void AddPaths([NotNull] IList<Linestring> linestringsToAdd,
 		                            [NotNull] IPolyline toResult)
 		{
-			Func<Pnt3D, WKSPointZ> createPoint;
+			Func<IPnt, WKSPointZ> createPoint;
 			if (GeometryUtils.IsZAware(toResult))
-				createPoint = p => WKSPointZUtils.CreatePoint(p.X, p.Y, p.Z);
+				createPoint = WKSPointZUtils.CreatePoint;
 			else
 				createPoint = p => WKSPointZUtils.CreatePoint(p.X, p.Y, double.NaN);
 

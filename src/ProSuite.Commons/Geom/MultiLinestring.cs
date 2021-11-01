@@ -7,7 +7,7 @@ using ProSuite.Commons.Geom.SpatialIndex;
 
 namespace ProSuite.Commons.Geom
 {
-	public abstract class MultiLinestring : ISegmentList, IEquatable<MultiLinestring>
+	public abstract class MultiLinestring : ISegmentList, IPointList, IEquatable<MultiLinestring>
 	{
 		protected List<Linestring> Linestrings { get; }
 
@@ -207,7 +207,115 @@ namespace ProSuite.Commons.Geom
 				vertexIndex - lastStartPointIdx);
 		}
 
+		#region IPointList members and point index methods
+
 		public int PointCount => SegmentCount + Linestrings.Count;
+
+		public IPnt GetPoint(int pointIndex, bool clone = false)
+		{
+			int localPointIndex = GetLocalPointIndex(pointIndex, out int partIndex);
+
+			return Linestrings[partIndex].GetPoint(localPointIndex, clone);
+		}
+
+		public void GetCoordinates(int pointIndex, out double x, out double y, out double z)
+		{
+			IPnt point = GetPoint(pointIndex);
+
+			x = point.X;
+			y = point.Y;
+			z = point[2];
+		}
+
+		public IEnumerable<IPnt> AsEnumerablePoints(bool clone = false)
+		{
+			return GetPoints(clone);
+		}
+
+		public IEnumerable<int> FindPointIndexes(IPnt searchPoint,
+		                                         double xyTolerance = double.Epsilon,
+		                                         bool useSearchCircle = false,
+		                                         bool allowIndexing = true)
+		{
+			if (SpatialIndex == null && allowIndexing &&
+			    SegmentCount > AllowIndexingThreshold)
+			{
+				SpatialIndex = SpatialHashSearcher<int>.CreateSpatialSearcher(this);
+			}
+
+			if (SpatialIndex != null)
+			{
+				foreach (var foundSegmentIdx in SpatialIndex.Search(searchPoint.X, searchPoint.Y,
+					searchPoint.X, searchPoint.Y, xyTolerance))
+				{
+					Line3D segment =
+						GetSegment(foundSegmentIdx.PartIndex, foundSegmentIdx.LocalIndex);
+
+					bool withinTolerance =
+						GeomRelationUtils.IsWithinTolerance(segment.StartPoint, searchPoint,
+						                                    xyTolerance, useSearchCircle);
+
+					if (withinTolerance)
+					{
+						yield return GetGlobalPointIndex(foundSegmentIdx.PartIndex,
+						                                 foundSegmentIdx.LocalIndex);
+					}
+
+					if (Linestrings[foundSegmentIdx.PartIndex]
+						    .IsLastSegmentInPart(foundSegmentIdx.LocalIndex) &&
+					    Linestrings[foundSegmentIdx.PartIndex].EndPoint
+					                                          .EqualsXY(searchPoint, xyTolerance))
+					{
+						yield return GetGlobalPointIndex(foundSegmentIdx.PartIndex,
+						                                 foundSegmentIdx.LocalIndex + 1);
+					}
+				}
+			}
+			else
+			{
+				for (var i = 0; i < PartCount; i++)
+				{
+					Linestring linestring = Linestrings[i];
+
+					foreach (int localIndex in linestring.FindPointIndexes(
+						searchPoint, xyTolerance, useSearchCircle, allowIndexing))
+					{
+						yield return GetGlobalPointIndex(i, localIndex);
+					}
+				}
+			}
+		}
+
+		public int GetLocalPointIndex(int globalPointIndex, out int partIndex)
+		{
+			// TODO: Start with GetLowerBound and convert from segment indexes to point idx.
+
+			int localPointIndex = globalPointIndex;
+			partIndex = 0;
+			foreach (Linestring linestring in Linestrings)
+			{
+				if (localPointIndex < linestring.PointCount)
+				{
+					return localPointIndex;
+				}
+
+				localPointIndex -= linestring.PointCount;
+
+				partIndex++;
+			}
+
+			throw new ArgumentOutOfRangeException($"Invalid global index: {globalPointIndex}");
+		}
+
+		public int GetGlobalPointIndex(int partIndex, int localPointIndex)
+		{
+			// TODO: Unit tests
+			int partStartIndex = _startSegmentIndexes[partIndex] + partIndex;
+
+			return partStartIndex + localPointIndex;
+		}
+
+		#endregion
 
 		public bool IsFirstSegmentInPart(int segmentIndex)
 		{

@@ -2700,7 +2700,7 @@ namespace ProSuite.Commons.Test.Geometry
 
 			IList<IntersectionPoint3D> intersectionPointsPolyCurves =
 				GeomTopoOpUtils.GetIntersectionPoints(
-					polycurve1, polycurve2, tolerance,
+					(ISegmentList) polycurve1, (ISegmentList) polycurve2, tolerance,
 					includeLinearIntersectionIntermediateRingStartEndPoints,
 					includeLinearIntersectionIntermediatePoints);
 
