@@ -1504,35 +1504,11 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			foreach (IntersectionPoint3D intersectionPoint in GeomTopoOpUtils.GetIntersectionPoints(
 				point, 0, targetGeometry, snapTolerance.Value, false))
 			{
-				if (snapType == esriGeometryHitPartType.esriGeometryPartVertex &&
+				if (snapType == esriGeometryHitPartType.esriGeometryPartBoundary ||
+				    snapType == esriGeometryHitPartType.esriGeometryPartVertex &&
 				    intersectionPoint.VirtualTargetVertex % 1 == 0)
 				{
-					Linestring targetLinestring =
-						targetGeometry.GetPart(intersectionPoint.TargetPartIndex);
-
-					IPnt targetPnt =
-						targetLinestring.GetPoint((int) intersectionPoint.VirtualTargetVertex);
-
-					double distanceSquared = GeomUtils.GetDistanceSquaredXYZ(point, targetPnt);
-
-					if (distanceSquared < closestDistanceSquared)
-					{
-						closestDistanceSquared = distanceSquared;
-						closestTargetVertex = targetPnt;
-					}
-				}
-				else if (snapType == esriGeometryHitPartType.esriGeometryPartBoundary &&
-				         intersectionPoint.VirtualTargetVertex % 1 != 0)
-				{
-					Linestring targetLinestring =
-						targetGeometry.GetPart(intersectionPoint.TargetPartIndex);
-
-					int localTargetIntersectionSegmentIdx =
-						intersectionPoint.GetLocalTargetIntersectionSegmentIdx(
-							targetLinestring, out double distanceAlongRatio);
-
-					IPnt targetPnt = targetLinestring.Segments[localTargetIntersectionSegmentIdx]
-					                                 .GetPointAlong(distanceAlongRatio, true);
+					Pnt3D targetPnt = intersectionPoint.GetTargetPoint(targetGeometry);
 
 					double distanceSquared = GeomUtils.GetDistanceSquaredXYZ(point, targetPnt);
 
@@ -1548,9 +1524,10 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			if (_msg.IsVerboseDebugEnabled)
 			{
-				_msg.VerboseDebugFormat(
-					"Point {0}|{1} was snapped: {2}. 3D-snapDistance squared: {3}. New location: {4}",
-					point.X, point.Y, snapped, closestDistanceSquared, closestTargetVertex);
+				_msg.VerboseDebug(
+					() => $"Point {point.X}|{point.Y} was snapped: {snapped}. " +
+					      $"3D-snapDistance squared: {closestDistanceSquared}. " +
+					      $"New location: {closestTargetVertex}");
 			}
 
 			if (! snapped)

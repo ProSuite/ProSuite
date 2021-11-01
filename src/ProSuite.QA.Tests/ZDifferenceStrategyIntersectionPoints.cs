@@ -4,10 +4,6 @@ using System.Linq;
 using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.PointEnumerators;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
@@ -16,6 +12,10 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.PointEnumerators;
 
 namespace ProSuite.QA.Tests
 {
@@ -101,7 +101,7 @@ namespace ProSuite.QA.Tests
 			{
 				var point = (IPoint) shape2;
 				yield return new Pnt3DIntersectionPoint(new Pnt3D(point.X, point.Y,
-				                                                  GetZ(point, shape1)),
+					                                        GetZ(point, shape1)),
 				                                        spatialReference, point.Z);
 			}
 			else if (IsBasedOnLineStrings(shape1) && ! IsBasedOnLineStrings(shape2))
@@ -333,14 +333,12 @@ namespace ProSuite.QA.Tests
 			                                               GetZ(p, lines2)));
 		}
 
-		private static double GetZ([NotNull] IntersectionPoint3D point,
+		private static double GetZ([NotNull] IntersectionPoint3D intersectionPoint,
 		                           [NotNull] Linestring linestring)
 		{
-			double factor;
-			var segmentIndex = point.GetLocalTargetIntersectionSegmentIdx(linestring,
-			                                                              out factor);
+			Pnt3D targetPoint = intersectionPoint.GetTargetPoint(linestring);
 
-			return linestring.GetSegment(segmentIndex).GetPointAlong(factor, true).Z;
+			return targetPoint.Z;
 		}
 
 		private static double GetZ([NotNull] IPoint point,

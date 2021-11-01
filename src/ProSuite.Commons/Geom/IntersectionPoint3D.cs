@@ -6,6 +6,9 @@ namespace ProSuite.Commons.Geom
 {
 	public class IntersectionPoint3D
 	{
+		/// <summary>
+		/// The intersection point taken from the source (i.e. with the source's Z value).
+		/// </summary>
 		public Pnt3D Point { get; }
 
 		/// <summary>
@@ -404,6 +407,21 @@ namespace ProSuite.Commons.Geom
 		{
 			return GetLocalIntersectionSegmentIdx(target, VirtualTargetVertex,
 			                                      out distanceAlongAsRatio);
+		}
+
+		/// <summary>
+		/// Gets the intersection point taken from the target (i.e. with the target's Z value).
+		/// The X,Y coordinates can be different to the <see cref="Point"/> by up to the tolerance.
+		/// </summary>
+		/// <param name="target"></param>
+		/// <returns></returns>
+		public Pnt3D GetTargetPoint(ISegmentList target)
+		{
+			Linestring targetPart = target.GetPart(TargetPartIndex);
+
+			int segmentIndex = GetLocalTargetIntersectionSegmentIdx(targetPart, out double factor);
+
+			return targetPart.GetSegment(segmentIndex).GetPointAlong(factor, true);
 		}
 
 		public int GetNextRingVertexIndex(int vertexCount)

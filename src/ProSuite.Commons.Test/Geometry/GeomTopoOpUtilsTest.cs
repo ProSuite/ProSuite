@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using NUnit.Framework;
 using ProSuite.Commons.Collections;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 
 namespace ProSuite.Commons.Test.Geometry
@@ -2563,7 +2563,7 @@ namespace ProSuite.Commons.Test.Geometry
 			// packaged into multilinestrings
 			intersectionPoints =
 				GeomTopoOpUtils.GetIntersectionPoints(
-					(ISegmentList)linestring1, new MultiPolycurve(new[] {linestring2}), tolerance);
+					(ISegmentList) linestring1, new MultiPolycurve(new[] {linestring2}), tolerance);
 
 			Assert.AreEqual(expectedIntersections, intersectionPoints.Count);
 			Assert.True(intersectionPoints.All(p => expectedType == p.Type));
@@ -2637,7 +2637,7 @@ namespace ProSuite.Commons.Test.Geometry
 
 			IList<IntersectionPoint3D> intersectionPoints =
 				GeomTopoOpUtils.GetIntersectionPoints(
-					(ISegmentList)linestring1, (ISegmentList)linestring2, tolerance,
+					(ISegmentList) linestring1, (ISegmentList) linestring2, tolerance,
 					includeLinearIntersectionIntermediateRingStartEndPoints,
 					includeLinearIntersectionIntermediatePoints);
 
@@ -2672,22 +2672,19 @@ namespace ProSuite.Commons.Test.Geometry
 				Assert.True(sourceSegment.IntersectsPointXY(pointAlong, 0.0001));
 				Assert.True(targetSegment.IntersectsPointXY(pointAlong, 0.0001));
 
-				localSegmentIdx =
-					intersectionPoint.GetLocalTargetIntersectionSegmentIdx(linestring2, out factor);
+				pointAlong = intersectionPoint.GetTargetPoint(linestring2);
 
-				pointAlong =
-					linestring2.GetSegment(localSegmentIdx).GetPointAlong(factor, true);
 				Assert.True(pointAlong.EqualsXY(intersectionPoint.Point, 0.0001));
 			}
 
 			// Test the same as MultiPolycurve with other linestrings
 			Linestring dummyLinestring = new Linestring(path1Points.Select(p =>
-			                                                               {
-				                                                               var moved =
-					                                                               p.ClonePnt3D();
-				                                                               moved.X += 1234;
-				                                                               return moved;
-			                                                               }));
+			{
+				var moved =
+					p.ClonePnt3D();
+				moved.X += 1234;
+				return moved;
+			}));
 			MultiPolycurve polycurve1 = new MultiPolycurve(new[]
 			                                               {
 				                                               dummyLinestring,
@@ -2751,15 +2748,17 @@ namespace ProSuite.Commons.Test.Geometry
 			Assert.IsTrue(sourceMultipoint.GetPoint(2).Equals(result[2].Point));
 
 			result =
-				GeomTopoOpUtils.GetIntersectionPoints(sourceMultipoint, targetRing, 0.001, false, true)
-				               .ToList();
+				GeomTopoOpUtils
+					.GetIntersectionPoints(sourceMultipoint, targetRing, 0.001, false, true)
+					.ToList();
 
 			Assert.AreEqual(4, result.Count);
 			Assert.IsTrue(sourceMultipoint.GetPoint(2).Equals(result[3].Point));
 
 			result =
-				GeomTopoOpUtils.GetIntersectionPoints(sourceMultipoint, targetRing, 0.001, true, false)
-				               .ToList();
+				GeomTopoOpUtils
+					.GetIntersectionPoints(sourceMultipoint, targetRing, 0.001, true, false)
+					.ToList();
 
 			Assert.AreEqual(4, result.Count);
 			Assert.IsTrue(sourceMultipoint.GetPoint(3).Equals(result[3].Point));
@@ -2796,20 +2795,24 @@ namespace ProSuite.Commons.Test.Geometry
 			Assert.AreEqual(9, result[0].Point.Z);
 			Assert.IsTrue(ring[2].Equals(result[1].Point));
 			Assert.IsTrue(ring[0].Equals(result[2].Point));
-			
+
 			result =
-				GeomTopoOpUtils.GetIntersectionPoints(sourceRing, targetMultipoint, 0.001, false, true).ToList();
+				GeomTopoOpUtils
+					.GetIntersectionPoints(sourceRing, targetMultipoint, 0.001, false, true)
+					.ToList();
 
 			Assert.AreEqual(4, result.Count);
 			Assert.IsTrue(ring[4].Equals(result[3].Point));
 
 			result =
-				GeomTopoOpUtils.GetIntersectionPoints(sourceRing, targetMultipoint, 0.001, true, false).ToList();
+				GeomTopoOpUtils
+					.GetIntersectionPoints(sourceRing, targetMultipoint, 0.001, true, false)
+					.ToList();
 
 			Assert.AreEqual(4, result.Count);
 			Assert.IsTrue(targetMultipoint.GetPoint(3).Equals(result[3].Point));
 		}
-		
+
 		[Test]
 		public void CanGetIntersectionPointsBetweenMultipointAndMultipoint()
 		{
@@ -2843,7 +2846,7 @@ namespace ProSuite.Commons.Test.Geometry
 			Assert.IsTrue(source[0].Equals(result[2].Point));
 
 			result =
-				GeomTopoOpUtils.GetIntersectionPoints((IPointList)targetMultipoint,
+				GeomTopoOpUtils.GetIntersectionPoints((IPointList) targetMultipoint,
 				                                      sourceMultipoint,
 				                                      0.001).ToList();
 
@@ -2852,7 +2855,7 @@ namespace ProSuite.Commons.Test.Geometry
 			Assert.IsTrue(targetMultipoint.GetPoint(2).Equals(result[1].Point));
 			Assert.IsTrue(targetMultipoint.GetPoint(2).Equals(result[2].Point));
 		}
-		
+
 		[Test]
 		public void CanGetIntersectionPointsBetweenMultipointAndPoint()
 		{
@@ -2868,9 +2871,9 @@ namespace ProSuite.Commons.Test.Geometry
 			Pnt3D targetPointNonIntersecting = new Pnt3D(0, 40, 6);
 			Pnt3D targetPointSinglePointIntersection = new Pnt3D(100, 100, 25);
 			Pnt3D targetPointDoubleIntersection = new Pnt3D(0, 0, 6);
-			
+
 			var result =
-				GeomTopoOpUtils.GetIntersectionPoints((IPointList)sourceMultipoint,
+				GeomTopoOpUtils.GetIntersectionPoints((IPointList) sourceMultipoint,
 				                                      targetPointNonIntersecting,
 				                                      0.001).ToList();
 
@@ -2918,7 +2921,6 @@ namespace ProSuite.Commons.Test.Geometry
 			Assert.IsTrue(targetPointDoubleIntersection.Equals(result[1].Point));
 		}
 
-
 		[Test]
 		public void CanDeleteLinearSelfIntersectionTypeStrait()
 		{
@@ -2943,11 +2945,11 @@ namespace ProSuite.Commons.Test.Geometry
 			const double tolerance = 2.1;
 
 			WithRotatedLinestring(ring, l => AssertCanDeleteLinearSelfIntersections(
-				                            l, tolerance, 2, 10, 4000));
+				                      l, tolerance, 2, 10, 4000));
 
 			// including extra vertex:
 			WithRotatedLinestring(ring, l => AssertCanDeleteLinearSelfIntersections(
-				                            l, tolerance, 2, 12, 4000, 1));
+				                      l, tolerance, 2, 12, 4000, 1));
 		}
 
 		[Test]
@@ -2972,10 +2974,10 @@ namespace ProSuite.Commons.Test.Geometry
 			const double tolerance = 2.1;
 
 			WithRotatedLinestring(ring, l => AssertCanDeleteLinearSelfIntersections(
-				                            l, tolerance, 1, 5, 2000));
+				                      l, tolerance, 1, 5, 2000));
 
 			WithRotatedLinestring(ring, l => AssertCanDeleteLinearSelfIntersections(
-				                            l, tolerance, 1, 6, 2000, 1));
+				                      l, tolerance, 1, 6, 2000, 1));
 		}
 
 		[Test]
@@ -3000,10 +3002,10 @@ namespace ProSuite.Commons.Test.Geometry
 			const double tolerance = 2.1;
 
 			WithRotatedLinestring(ring, l => AssertCanDeleteLinearSelfIntersections(
-				                            l, tolerance, 1, 5, 2000));
+				                      l, tolerance, 1, 5, 2000));
 
 			WithRotatedLinestring(ring, l => AssertCanDeleteLinearSelfIntersections(
-				                            l, tolerance, 1, 6, 2000, 1));
+				                      l, tolerance, 1, 6, 2000, 1));
 		}
 
 		[Test]
@@ -3029,10 +3031,10 @@ namespace ProSuite.Commons.Test.Geometry
 			const double tolerance = 2.1;
 
 			WithRotatedLinestring(ring, l => AssertCanDeleteLinearSelfIntersections(
-				                            l, tolerance, 1, 7, 10000));
+				                      l, tolerance, 1, 7, 10000));
 
 			WithRotatedLinestring(ring, l => AssertCanDeleteLinearSelfIntersections(
-				                            l, tolerance, 1, 7, 10000, 1));
+				                      l, tolerance, 1, 7, 10000, 1));
 		}
 
 		[Test]
@@ -4263,11 +4265,11 @@ namespace ProSuite.Commons.Test.Geometry
 		{
 			List<Pnt2D> points = new List<Pnt2D>
 			                     {
-									 new Pnt2D(30,30),
-									 new Pnt2D(31,35),
-									 new Pnt2D(31.5,30),
-									 new Pnt2D(32, 25),
-									 new Pnt2D(32.1, 34.9)
+				                     new Pnt2D(30, 30),
+				                     new Pnt2D(31, 35),
+				                     new Pnt2D(31.5, 30),
+				                     new Pnt2D(32, 25),
+				                     new Pnt2D(32.1, 34.9)
 			                     };
 
 			IList<KeyValuePair<IPnt, List<Pnt2D>>> keyValuePairs =
