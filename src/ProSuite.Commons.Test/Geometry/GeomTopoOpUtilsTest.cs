@@ -287,6 +287,76 @@ namespace ProSuite.Commons.Test.Geometry
 		}
 
 		[Test]
+		public void CanCutOverlappingXYwithCorrectZ()
+		{
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 100),
+				            new Pnt3D(0, 100, 100),
+				            new Pnt3D(100, 100, 100),
+				            new Pnt3D(100, 0, 100)
+			            };
+
+			var overlapping = new List<Pnt3D>();
+			overlapping.Add(new Pnt3D(40, -10, 40));
+			overlapping.Add(new Pnt3D(40, 30, 40));
+			overlapping.Add(new Pnt3D(200, 30, 40));
+			overlapping.Add(new Pnt3D(200, -10, 40));
+
+			RingGroup source = new RingGroup(CreateRing(ring1));
+			var targetLine = CreateRing(overlapping);
+
+			// The general consensus is that if possible, the target Zs should be used
+			// at the intersection points.
+			var expected = CreateRing(new List<Pnt3D>
+			                          {
+				                          new Pnt3D(0, 0, 100),
+				                          new Pnt3D(0, 100, 100),
+				                          new Pnt3D(100, 100, 100),
+				                          new Pnt3D(100, 30, 40),
+				                          new Pnt3D(40, 30, 40),
+				                          new Pnt3D(40, 0, 40)
+			                          });
+
+			var expectedRingGroup = new RingGroup(expected);
+
+			IList<RingGroup> result = CutPlanarBothWays(source, targetLine, 2, 0);
+
+			Assert.IsTrue(expectedRingGroup.Equals(result[0]));
+
+			// The same with pre-existing vertices in the source at the intersection locations:
+			ring1 = new List<Pnt3D>
+			        {
+				        new Pnt3D(0, 0, 100),
+				        new Pnt3D(0, 100, 100),
+				        new Pnt3D(100, 100, 100),
+				        new Pnt3D(100, 30, 100),
+				        new Pnt3D(100, 0, 100),
+				        new Pnt3D(40, 0, 100)
+			        };
+
+			source = new RingGroup(CreateRing(ring1));
+
+			result = CutPlanarBothWays(source, targetLine, 2, 0);
+
+			Assert.IsTrue(expectedRingGroup.Equals(result[0]));
+
+			// But the source Z is used if the target line has no Zs:
+			foreach (Pnt3D pnt in targetLine.GetPoints())
+			{
+				pnt.Z = double.NaN;
+			}
+
+			expected.GetPoint3D(3).Z = 100;
+			expected.GetPoint3D(4).Z = double.NaN;
+			expected.GetPoint3D(5).Z = 100;
+
+			result = CutPlanarBothWays(source, targetLine, 2, 0);
+
+			Assert.IsTrue(expectedRingGroup.Equals(result[0]));
+		}
+
+		[Test]
 		public void CanCutWithInnerRing()
 		{
 			var ring1 = new List<Pnt3D>

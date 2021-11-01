@@ -79,8 +79,6 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cut
 				IPolyline zDifference =
 					ReshapeUtils.GetZOnlyDifference(resultAsPolyline, cutLine);
 
-				// ArcObjects uses the cutLine's Z also at the intersection points.
-				// Do the same in CustomIntersect?
 				Assert.IsNull(zDifference);
 			}
 		}

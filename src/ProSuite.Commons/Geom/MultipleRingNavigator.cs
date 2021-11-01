@@ -12,8 +12,8 @@ namespace ProSuite.Commons.Geom
 		private IList<IntersectionPoint3D> _intersectionPoints;
 		private IList<IntersectionPoint3D> _targetTargetIntersectionPoints;
 
-		public MultipleRingNavigator([NotNull] MultiLinestring sourceRings,
-		                             [NotNull] MultiLinestring targets,
+		public MultipleRingNavigator([NotNull] ISegmentList sourceRings,
+		                             [NotNull] ISegmentList targets,
 		                             double tolerance,
 		                             bool allowTargetTargetIntersections = false)
 			: base(sourceRings, targets, tolerance)
@@ -81,6 +81,20 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		public override SubcurveNavigator Clone()
+		{
+			var result = new MultipleRingNavigator(Source, Target, Tolerance,
+			                                       _allowTargetTargetIntersections)
+			             {
+				             _intersectionPoints = _intersectionPoints,
+				             _targetTargetIntersectionPoints = _targetTargetIntersectionPoints,
+				             PreferredTurnDirection = PreferredTurnDirection,
+				             PreferTargetZsAtIntersections = PreferTargetZsAtIntersections
+			             };
+
+			return result;
+		}
+
 		protected override Linestring GetSourcePart(int partIndex)
 		{
 			return Source.GetPart(partIndex);
@@ -111,7 +125,7 @@ namespace ProSuite.Commons.Geom
 			double distanceAlongSource;
 			int sourceSegmentIdx =
 				intersection.GetLocalSourceIntersectionSegmentIdx(sourceRing,
-				                                                  out distanceAlongSource);
+					out distanceAlongSource);
 
 			Line3D alongSourceLine = distanceAlongSource < 1
 				                         ? sourceRing[sourceSegmentIdx]

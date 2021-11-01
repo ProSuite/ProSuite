@@ -28,6 +28,65 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cut
 		}
 
 		[Test]
+		public void CanCutPolygonWithZSourceTarget()
+		{
+			ISpatialReference lv95 = SpatialReferenceUtils.CreateSpatialReference(
+				WellKnownHorizontalCS.LV95);
+
+			IPolygon originalPoly = GeometryFactory.CreatePolygon(
+				GeometryFactory.CreateEnvelope(2600000, 1200000, 500, 100, 100, lv95));
+
+			IPolyline cutLine = GeometryFactory.CreateLine(
+				GeometryFactory.CreatePoint(2600000 - 100, 1200020, 699),
+				GeometryFactory.CreatePoint(2600000 - 40, 1200020, 699),
+				GeometryFactory.CreatePoint(2600000 - 40, 1200040, 699),
+				GeometryFactory.CreatePoint(2600000 + 40, 1200040, 699),
+				GeometryFactory.CreatePoint(2600000 + 40, 1200020, 699),
+				GeometryFactory.CreatePoint(2600000 + 100, 1200020, 699));
+
+			cutLine.SpatialReference = lv95;
+
+			GeometryUtils.MakeZAware(cutLine);
+
+			bool customIntersectOrig = IntersectionUtils.UseCustomIntersect;
+
+			try
+			{
+				IntersectionUtils.UseCustomIntersect = false;
+
+				const ChangeAlongZSource zSource = ChangeAlongZSource.Target;
+				var resultsAo =
+					CutGeometryUtils.TryCut(originalPoly, cutLine, zSource);
+
+				IntersectionUtils.UseCustomIntersect = true;
+				var resultsGeom =
+					CutGeometryUtils.TryCut(originalPoly, cutLine, zSource);
+
+				Assert.NotNull(resultsAo);
+				Assert.NotNull(resultsGeom);
+
+				Assert.True(GeometryUtils.AreEqualInXY(resultsAo[0], resultsGeom[0]));
+				Assert.True(GeometryUtils.AreEqualInXY(resultsAo[1], resultsGeom[1]));
+
+				Assert.AreEqual(0,
+				                IntersectionUtils.GetZOnlyDifferenceLines(
+					                                 (IPolycurve) resultsAo[0],
+					                                 (IPolycurve) resultsGeom[0], 0.001)
+				                                 .Length);
+
+				Assert.AreEqual(0,
+				                IntersectionUtils.GetZOnlyDifferenceLines(
+					                                 (IPolycurve) resultsAo[1],
+					                                 (IPolycurve) resultsGeom[1], 0.001)
+				                                 .Length);
+			}
+			finally
+			{
+				IntersectionUtils.UseCustomIntersect = customIntersectOrig;
+			}
+		}
+
+		[Test]
 		public void CanCutPolygonWithZSourcePlane()
 		{
 			ISpatialReference lv95 = SpatialReferenceUtils.CreateSpatialReference(

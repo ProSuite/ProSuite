@@ -133,8 +133,8 @@ namespace ProSuite.Commons.Geom
 		/// <param name="avoidMultipartResults"></param>
 		/// <param name="subcurveNavigator"></param>
 		/// <returns></returns>
-		public static IList<MultiLinestring> CutXY([NotNull] MultiLinestring sourceRings,
-		                                           [NotNull] MultiLinestring cutLines,
+		public static IList<MultiLinestring> CutXY([NotNull] ISegmentList sourceRings,
+		                                           [NotNull] ISegmentList cutLines,
 		                                           double tolerance,
 		                                           bool avoidMultipartResults = false,
 		                                           SubcurveNavigator subcurveNavigator = null)
@@ -142,10 +142,11 @@ namespace ProSuite.Commons.Geom
 			Assert.ArgumentCondition(sourceRings.IsClosed,
 			                         "sourceRings must be closed.");
 
-			if (subcurveNavigator == null)
-			{
-				subcurveNavigator = new MultipleRingNavigator(sourceRings, cutLines, tolerance);
-			}
+			subcurveNavigator = subcurveNavigator == null
+				                    ? new MultipleRingNavigator(sourceRings, cutLines, tolerance)
+				                    : subcurveNavigator.Clone();
+
+			subcurveNavigator.PreferTargetZsAtIntersections = true;
 
 			var ringOperator = new RingOperator(subcurveNavigator);
 
