@@ -99,7 +99,7 @@
           <!--<button refID="Clients_AGP_ProSuiteSolution_AddWorkList" size="large" />-->
         </group>
         <group id="ProSuiteTools_QA_Hidden" caption="" appearsOnAddInTab="false">
-          <button refID="Clients_AGP_ProSuiteSolution_WorkLists_AddWorklistButton" />
+          <button refID="Clients_AGP_ProSuiteSolution_WorkLists_AddWorkListButton" />
           <button refID="ProSuite_AGP_Solution_WorkListUI_IssueWorkListView" size="large" />
         </group>
         <group id="ProSuiteTools_Editing" caption="Edit Tools" keytip="G1">
@@ -166,8 +166,8 @@
             Import and add worklist file(wl) to project<disabledText />
           </tooltip>
         </button>-->
-        <button id="Clients_AGP_ProSuiteSolution_WorkLists_AddWorklistButton" caption="Add Work List To Current Map"
-                className="WorkLists.AddWorklistButton" loadOnClick="true"
+        <button id="Clients_AGP_ProSuiteSolution_WorkLists_AddWorkListButton" caption="Add Work List To Current Map"
+                className="WorkLists.AddWorkListButton" loadOnClick="true"
                 smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/AddContent16.png"
                 largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/AddContent32.png">
           <tooltip heading="Add Work List To Current Map">
@@ -327,7 +327,7 @@
           <!--<button refID="esri_DeleteItem" />-->
         </menu>
         <menu id="ProSuiteSolution_ProjectItemWorkListContextMenu">
-          <button refID="Clients_AGP_ProSuiteSolution_WorkLists_AddWorklistButton" />
+          <button refID="Clients_AGP_ProSuiteSolution_WorkLists_AddWorkListButton" />
           <button refID="esri_core_rename" />
           <button refID="esri_DeleteItem" />
         </menu>

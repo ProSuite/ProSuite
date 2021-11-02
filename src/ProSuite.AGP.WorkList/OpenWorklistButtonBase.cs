@@ -6,7 +6,7 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList
 {
-	public abstract class OpenWorklistButtonBase : Button
+	public abstract class OpenWorkListButtonBase : Button
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 

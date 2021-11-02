@@ -367,7 +367,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			ActiveToolChangedEvent.Subscribe(OnActiveToolChanged);
 
-			WorklistChangedEvent.Subscribe(WorklistChanged, this);
+			WorkListChangedEvent.Subscribe(WorklistChanged, this);
 
 			WorkListsModule.Current.WorkItemPicked += Current_WorkItemPicked;
 		}
@@ -376,7 +376,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			ActiveToolChangedEvent.Unsubscribe(OnActiveToolChanged);
 
-			WorklistChangedEvent.Unsubscribe(WorklistChanged);
+			WorkListChangedEvent.Unsubscribe(WorklistChanged);
 
 			WorkListsModule.Current.WorkItemPicked -= Current_WorkItemPicked;
 		}
@@ -400,7 +400,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 			{
 				return QueuedTask.Run(() =>
 				{
-					long OID = e.features.First().GetObjectID();
+					long OID = e.Features.First().GetObjectID();
 
 					QueryFilter filter = GdbQueryUtils.CreateFilter(new[] {OID});
 					IWorkItem selectedItem = CurrentWorkList.GetItems(filter).FirstOrDefault();

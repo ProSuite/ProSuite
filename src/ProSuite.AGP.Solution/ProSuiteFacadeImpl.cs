@@ -10,23 +10,23 @@ namespace ProSuite.AGP.Solution
 {
 	public class ProSuiteImpl : IProSuiteFacade
 	{
-		public async Task OpenSelectionWorklistAsync()
+		public async Task OpenSelectionWorkListAsync()
 		{
 			WorkEnvironmentBase environment = new InMemoryWorkEnvironment();
 
-			await OpenWorklist(environment);
+			await OpenWorkList(environment);
 		}
 
-		public async Task OpenIssueWorklistAsync(string issuesGdbPath)
+		public async Task OpenIssueWorkListAsync(string issuesGdbPath)
 		{
 			WorkEnvironmentBase environment = string.IsNullOrEmpty(issuesGdbPath)
 				                                  ? new IssueWorkListEnvironment()
 				                                  : new IssueWorkListEnvironment(issuesGdbPath);
 
-			await OpenWorklist(environment);
+			await OpenWorkList(environment);
 		}
 
-		public static async Task OpenWorklist([NotNull] WorkEnvironmentBase environment)
+		public static async Task OpenWorkList([NotNull] WorkEnvironmentBase environment)
 		{
 			Assert.ArgumentNotNull(environment, nameof(environment));
 

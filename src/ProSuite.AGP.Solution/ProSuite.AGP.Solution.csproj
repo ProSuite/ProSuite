@@ -179,7 +179,7 @@
     <Compile Include="LoggerUI\ProSuiteLogPaneViewModel.cs" />
     <Compile Include="ProSuiteToolsModule.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="WorkLists\AddWorklistButton.cs" />
+    <Compile Include="WorkLists\AddWorkListButton.cs" />
     <Compile Include="WorkLists\IssueWorkListEnvironment.cs" />
     <Compile Include="WorkLists\ShowWorkListsButton.cs" />
     <Compile Include="WorkLists\WorkListsModule.cs" />

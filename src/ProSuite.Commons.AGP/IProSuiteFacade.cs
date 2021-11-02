@@ -4,8 +4,8 @@ namespace ProSuite.Commons.AGP
 {
 	public interface IProSuiteFacade
 	{
-		Task OpenSelectionWorklistAsync();
+		Task OpenSelectionWorkListAsync();
 
-		Task OpenIssueWorklistAsync(string issuesGdbPath = null);
+		Task OpenIssueWorkListAsync(string issuesGdbPath = null);
 	}
 }

@@ -11,7 +11,7 @@ using ProSuite.Commons.Logging;
 namespace ProSuite.AGP.Solution.WorkLists
 {
 	[UsedImplicitly]
-	internal class AddWorklistButton : OpenWorklistButtonBase
+	internal class AddWorkListButton : OpenWorkListButtonBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
@@ -19,7 +19,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			Assert.ArgumentNotNull(environment, nameof(environment));
 
-			await ProSuiteUtils.OpenWorklistAsync(environment);
+			await ProSuiteUtils.OpenWorkListAsync(environment);
 		}
 
 		protected override WorkEnvironmentBase CreateEnvironment(string path = null)

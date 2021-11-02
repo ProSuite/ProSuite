@@ -1016,7 +1016,7 @@ namespace ProSuite.AGP.WorkList.Domain
 		                                     [CanBeNull] List<long> oids = null)
 		{
 			// todo daro oids to IEnumerable<>?
-			await WorklistChangedEvent.PublishAsync(new WorkListChangedEventArgs(this, extent, oids));
+			await WorkListChangedEvent.PublishAsync(new WorkListChangedEventArgs(this, extent, oids));
 		}
 
 		public void Invalidate()

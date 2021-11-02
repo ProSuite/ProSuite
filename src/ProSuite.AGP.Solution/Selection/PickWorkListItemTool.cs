@@ -32,17 +32,17 @@ namespace ProSuite.AGP.Solution.Selection
 		                                       CancelableProgressor progressor)
 		{
 			WorkListsModule.Current.OnWorkItemPicked(new WorkItemPickArgs
-			                                         {features = selectedFeatures.ToList()});
+			                                         {Features = selectedFeatures.ToList()});
 			SelectionUtils.ClearSelection();
 		}
 
 		protected override bool CanSelectFromLayerCore(FeatureLayer featureLayer)
 		{
 			//can select from layer if the layer is a worklist layer
-			if (WorkListsModule.Current.LayersByWorklistName.ContainsValue(featureLayer))
+			if (WorkListsModule.Current.LayersByWorkListName.ContainsValue(featureLayer))
 			{
 				FeatureLayer layer = null; // TODO - should be better comparison
-				if (WorkListsModule.Current.LayersByWorklistName.TryGetValue(
+				if (WorkListsModule.Current.LayersByWorkListName.TryGetValue(
 					    WorkListsModule.Current.ActiveWorkListlayer?.Name, out layer)
 				    && layer?.URI == featureLayer.URI)
 				{
@@ -60,7 +60,7 @@ namespace ProSuite.AGP.Solution.Selection
 			var featureLayers = ActiveMapView.Map.Layers.OfType<FeatureLayer>();
 			foreach (FeatureLayer featureLayer in featureLayers)
 			{
-				if (WorkListsModule.Current.LayersByWorklistName.ContainsValue(featureLayer))
+				if (WorkListsModule.Current.LayersByWorkListName.ContainsValue(featureLayer))
 				{
 					LayerUtils.SetLayerSelectability(featureLayer, true);
 				}

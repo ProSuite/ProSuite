@@ -11,21 +11,21 @@ namespace ProSuite.AGP.Solution
 		private static IProSuiteFacade _facade;
 		public static IProSuiteFacade Facade => _facade ?? (_facade = new ProSuiteImpl());
 
-		public static Task OpenIssueWorklistAsync(string issuesGdbPath = null)
+		public static Task OpenIssueWorkListAsync(string issuesGdbPath = null)
 		{
-			return Facade.OpenIssueWorklistAsync(issuesGdbPath);
+			return Facade.OpenIssueWorkListAsync(issuesGdbPath);
 		}
 
-		public static Task OpenSelectionWorklistAsync()
+		public static Task OpenSelectionWorkListAsync()
 		{
-			return Facade.OpenSelectionWorklistAsync();
+			return Facade.OpenSelectionWorkListAsync();
 		}
 
-		public static Task OpenWorklistAsync([NotNull] WorkEnvironmentBase environment)
+		public static Task OpenWorkListAsync([NotNull] WorkEnvironmentBase environment)
 		{
 			Assert.ArgumentNotNull(environment, nameof(environment));
 
-			return ProSuiteImpl.OpenWorklist(environment);
+			return ProSuiteImpl.OpenWorkList(environment);
 		}
 	}
 }
