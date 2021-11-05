@@ -304,7 +304,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 					if (! _uriByWorkListName.ContainsKey(worklistName))
 					{
-						_uriByWorkListName.Add(worklistName, LayerUtils.GetUri(worklistLayer));
+						_uriByWorkListName.Add(worklistName, MapUtils.GetUri(worklistLayer));
 					}
 
 					return worklistLayer;
@@ -513,7 +513,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 					MapMember mapMember = mapMembers[index];
 
-					string uri = LayerUtils.GetUri(mapMember);
+					string uri = MapUtils.GetUri(mapMember);
 					string name = WorkListUtils.ParseName(uri);
 
 					if (! _viewsByWorkListName.TryGetValue(name, out IWorkListObserver view))
