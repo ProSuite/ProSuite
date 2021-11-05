@@ -10980,6 +10980,15 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Attributes that are copied from source featureclass to resulting featureclass.
+        /// </summary>
+        public static string TrGeometryTransform_Attributes {
+            get {
+                return ResourceManager.GetString("TrGeometryTransform_Attributes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Transforms closed lines of &apos;closedLineClass&apos; to polygons.
         /// </summary>
         public static string TrLineToPoly_0 {

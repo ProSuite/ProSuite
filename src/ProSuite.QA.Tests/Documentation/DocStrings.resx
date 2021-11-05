@@ -4911,4 +4911,7 @@ If 'Grouped'=true, the attributes must be defined by Group-Expressions like COUN
   <data name="TrTableJoin_t1" xml:space="preserve">
     <value>table to join with 't0'</value>
   </data>
+  <data name="TrGeometryTransform_Attributes" xml:space="preserve">
+    <value>Attributes that are copied from source featureclass to resulting featureclass</value>
+  </data>
 </root>

@@ -61,7 +61,7 @@ namespace ProSuite.QA.Container.TestSupport
 					// parse/remove/use case sensitivity hint
 					bool? caseSensitivityOverride;
 					value = ExpressionUtils.ParseCaseSensitivityHint(value,
-					                                                 out caseSensitivityOverride);
+						out caseSensitivityOverride);
 					if (caseSensitivityOverride != null)
 					{
 						view.Table.CaseSensitive = caseSensitivityOverride.Value;
@@ -94,6 +94,20 @@ namespace ProSuite.QA.Container.TestSupport
 			DataView view = Assert.NotNull(ConstraintView, "constraint view not initialized");
 
 			return view.Table.Columns.Add(columnName, type);
+		}
+
+		public DataColumn AddColumn([NotNull] ColumnInfo columnInfo)
+		{
+			DataView view = Assert.NotNull(ConstraintView, "constraint view not initialized");
+
+			for (int iCol = _columnInfos.Count; iCol < view.Table.Columns.Count; iCol++)
+			{
+				_columnInfos.Add(null);
+			}
+
+			ColumnInfo ci = columnInfo;
+			_columnInfos.Add(columnInfo);
+			return view.Table.Columns.Add(ci.ColumnName, ci.ColumnType);
 		}
 
 		public void ClearRows()

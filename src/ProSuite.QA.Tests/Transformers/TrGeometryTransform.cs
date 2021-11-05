@@ -9,6 +9,8 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Core;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -27,6 +29,14 @@ namespace ProSuite.QA.Tests.Transformers
 			_transformedFc = new Tfc(fc, derivedShapeType, this);
 			// ReSharper disable once VirtualMemberCallInConstructor
 			AddCustomAttributes(_transformedFc);
+		}
+
+		[TestParameter]
+		[Doc(nameof(DocStrings.TrGeometryTransform_Attributes))]
+		public IList<string> Attributes
+		{
+			get => ((Transformed) _transformedFc.BackingDs).Attributes;
+			set => ((Transformed) _transformedFc.BackingDs).Attributes = value;
 		}
 
 		public IFeatureClass GetTransformed() => _transformedFc;
@@ -205,6 +215,66 @@ namespace ProSuite.QA.Tests.Transformers
 				return _t0.FeatureCount(queryFilter);
 			}
 
+			private IList<string> _attributes;
+
+			public IList<string> Attributes
+			{
+				get => _attributes;
+				set
+				{
+					_attributes = value;
+					if (_attributes != null)
+					{
+						foreach (string attr in _attributes)
+						{
+							int iSource = _t0.FindField(attr);
+							if (iSource < 0)
+							{
+								throw new InvalidOperationException(
+									$"Field {attr} does not exist in {DatasetUtils.GetName(_t0)}");
+							}
+
+							Resulting.AddField(_t0.Fields.Field[iSource]);
+						}
+					}
+
+					_attrDict = null;
+				}
+			}
+
+			private Dictionary<int, int> _attrDict;
+
+			[NotNull]
+			private Dictionary<int, int> AttrDict
+			{
+				get
+				{
+					if (_attrDict == null)
+					{
+						Dictionary<int, int> dict = new Dictionary<int, int>();
+						if (_attributes != null)
+						{
+							foreach (string attr in _attributes)
+							{
+								int iSource = _t0.FindField(attr);
+								int iTarget = Resulting.FindField(attr);
+								dict.Add(iTarget, iSource);
+							}
+						}
+
+						_attrDict = dict;
+					}
+
+					return _attrDict;
+				}
+			}
+
+			private int? _idxBaseRowField;
+
+			private int IdxBaseRowField =>
+				_idxBaseRowField ??
+				(_idxBaseRowField = Resulting.FindField(InvolvedRowUtils.BaseRowField)).Value;
+
 			public override IEnumerable<IRow> Search(IQueryFilter filter, bool recycling)
 			{
 				var involvedDict = new Dictionary<IFeature, Involved>();
@@ -226,9 +296,14 @@ namespace ProSuite.QA.Tests.Transformers
 						IFeature f = featureWithTransformedGeom;
 
 						List<IRow> involved = new List<IRow> {row};
-						f.set_Value(
-							f.Table.FindField(InvolvedRowUtils.BaseRowField),
-							involved);
+						f.Value[IdxBaseRowField] = involved;
+
+						foreach (var pair in AttrDict)
+						{
+							int iTarget = pair.Key;
+							int iSource = pair.Value;
+							f.Value[iTarget] = baseFeature.Value[iSource];
+						}
 
 						f.Store();
 

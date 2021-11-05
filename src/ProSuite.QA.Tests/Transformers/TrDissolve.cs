@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -9,6 +10,7 @@ using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom.SpatialIndex;
 using ProSuite.QA.Container;
@@ -32,12 +34,11 @@ namespace ProSuite.QA.Tests.Transformers
 		private const SearchOption _defaultSearchOption = SearchOption.Tile;
 		private readonly Tfc _dissolvedFc;
 		private IList<string> _attributes;
-		private IList<string> _groupBy;
 
 		public IList<ITable> InvolvedTables { get; }
 
 		[Doc(nameof(DocStrings.TrDissolve_0))]
-		public TrDissolve([NotNull]     [Doc(nameof(DocStrings.TrDissolve_featureclass))]
+		public TrDissolve([NotNull] [Doc(nameof(DocStrings.TrDissolve_featureclass))]
 		                  IFeatureClass featureclass)
 		{
 			InvolvedTables = new List<ITable> {(ITable) featureclass};
@@ -70,7 +71,7 @@ namespace ProSuite.QA.Tests.Transformers
 			set
 			{
 				_attributes = value;
-				AddFields(value);
+				AddFields(value, isGrouped: true);
 			}
 		}
 
@@ -78,13 +79,16 @@ namespace ProSuite.QA.Tests.Transformers
 		[Doc(nameof(DocStrings.TrDissolve_GroupBy))]
 		public IList<string> GroupBy
 		{
-			get => _groupBy;
-			set { _groupBy = value; }
+			get => _dissolvedFc.GroupBy;
+			set
+			{
+				AddFields(value, isGrouped: false);
+				_dissolvedFc.GroupBy = value;
+			}
 		}
 
-		// TODO: handle multiple method calls
 		// TODO: Unify with TrSpatialJoin
-		private void AddFields([CanBeNull] IList<string> fieldNames)
+		private void AddFields([CanBeNull] IList<string> fieldNames, bool isGrouped)
 		{
 			if (fieldNames == null)
 			{
@@ -97,10 +101,20 @@ namespace ProSuite.QA.Tests.Transformers
 			Dictionary<string, string> aliasFieldDict =
 				ExpressionUtils.CreateAliases(expressionDict);
 
-			TableView tv =
-				TableViewFactory.Create(fc, expressionDict, aliasFieldDict, isGrouped: true);
-
-			_dissolvedFc.TableView = tv;
+			TableView tv = _dissolvedFc.TableView;
+			if (tv == null)
+			{
+				tv = TableViewFactory.Create(fc, expressionDict, aliasFieldDict, isGrouped);
+				_dissolvedFc.TableView = tv;
+			}
+			else
+			{
+				foreach (string fieldName in fieldNames)
+				{
+					FieldColumnInfo ci = FieldColumnInfo.Create(fc, fieldName);
+					tv.AddColumn(ci);
+				}
+			}
 
 			foreach (string field in expressionDict.Keys)
 			{
@@ -142,6 +156,7 @@ namespace ProSuite.QA.Tests.Transformers
 		                    IHasSearchDistance
 		{
 			public TableView TableView { get; set; }
+			[CanBeNull] private IList<string> _groupBy;
 
 			public Tfc(IFeatureClass dissolve)
 				: base(-1, "dissolveResult", dissolve.ShapeType,
@@ -164,6 +179,12 @@ namespace ProSuite.QA.Tests.Transformers
 			public SearchOption NeighborSearchOption { get; set; }
 			public bool CreateMultipartFeatures { get; set; }
 			public List<FieldInfo> CustomFields { get; private set; }
+
+			public IList<string> GroupBy
+			{
+				get => _groupBy;
+				set => _groupBy = value;
+			}
 
 			public void AddCustomField(string field)
 			{
@@ -573,65 +594,70 @@ namespace ProSuite.QA.Tests.Transformers
 				private void AddSinglepart(List<DirectedRow> connectedRows,
 				                           IRelationalOperator queryEnv)
 				{
-					if (connectedRows.Count == 2)
+					List<List<DirectedRow>> groups =
+						new List<List<DirectedRow>>(GetGroupedRows(connectedRows));
+					if (_r.Resulting.NeighborSearchOption == SearchOption.All &&
+					    queryEnv?.Contains(connectedRows[0].FromPoint) == false &&
+					    groups.Any(x => x.Count < 3))
 					{
-						_dissolvedDict.TryGetValue(connectedRows[0],
-						                           out List<DirectedRow> connected0);
+						_missing.Add(connectedRows[0]);
+						return;
+					}
 
-						_dissolvedDict.TryGetValue(connectedRows[1],
-						                           out List<DirectedRow> connected1);
+					foreach (List<DirectedRow> groupedRows in groups)
+					{
+						if (groupedRows.Count == 2)
+						{
+							_dissolvedDict.TryGetValue(groupedRows[0],
+							                           out List<DirectedRow> connected0);
 
-						if (connected0 == null && connected1 == null)
-						{
-							List<DirectedRow> connected =
-								new List<DirectedRow> {connectedRows[0], connectedRows[1]};
-							_dissolvedDict.Add(connectedRows[0], connected);
-							_dissolvedDict.Add(connectedRows[1], connected);
-						}
-						else if (connected0 == null)
-						{
-							connected1.Add(connectedRows[0]);
-							_dissolvedDict.Add(connectedRows[0], connected1);
-						}
-						else if (connected1 == null)
-						{
-							connected0.Add(connectedRows[1]);
-							_dissolvedDict.Add(connectedRows[1], connected0);
-						}
-						else
-						{
-							if (connected0 != connected1)
+							_dissolvedDict.TryGetValue(groupedRows[1],
+							                           out List<DirectedRow> connected1);
+
+							if (connected0 == null && connected1 == null)
 							{
-								connected0.AddRange(connected1);
-								foreach (DirectedRow row in connected0)
-								{
-									_dissolvedDict[row] = connected0;
-								}
-
-								connected1.Clear();
+								List<DirectedRow> connected =
+									new List<DirectedRow> {groupedRows[0], groupedRows[1]};
+								_dissolvedDict.Add(groupedRows[0], connected);
+								_dissolvedDict.Add(groupedRows[1], connected);
+							}
+							else if (connected0 == null)
+							{
+								connected1.Add(groupedRows[0]);
+								_dissolvedDict.Add(groupedRows[0], connected1);
+							}
+							else if (connected1 == null)
+							{
+								connected0.Add(groupedRows[1]);
+								_dissolvedDict.Add(groupedRows[1], connected0);
 							}
 							else
 							{
-								// no action needed
+								if (connected0 != connected1)
+								{
+									connected0.AddRange(connected1);
+									foreach (DirectedRow row in connected0)
+									{
+										_dissolvedDict[row] = connected0;
+									}
+
+									connected1.Clear();
+								}
+								else
+								{
+									// no action needed
+								}
 							}
 						}
-					}
-					else
-					{
-						if (_r.Resulting.NeighborSearchOption == SearchOption.All &&
-						    connectedRows.Count == 1 &&
-						    queryEnv?.Contains(connectedRows[0].FromPoint) == false)
+						else
 						{
-							_missing.Add(connectedRows[0]);
-							return;
-						}
-
-						foreach (DirectedRow connectedRow in connectedRows)
-						{
-							if (! _dissolvedDict.ContainsKey(connectedRow))
+							foreach (DirectedRow connectedRow in groupedRows)
 							{
-								_dissolvedDict.Add(connectedRow,
-								                   new List<DirectedRow> {connectedRow});
+								if (! _dissolvedDict.ContainsKey(connectedRow))
+								{
+									_dissolvedDict.Add(connectedRow,
+									                   new List<DirectedRow> {connectedRow});
+								}
 							}
 						}
 					}
@@ -640,43 +666,46 @@ namespace ProSuite.QA.Tests.Transformers
 				private void JoinConnectedRows(List<DirectedRow> connectedRows,
 				                               IRelationalOperator queryEnv)
 				{
-					List<DirectedRow> allRows = null;
-					bool updateNeeded = false;
-					foreach (DirectedRow connectedRow in connectedRows)
+					foreach (List<DirectedRow> groupedRows in GetGroupedRows(connectedRows))
 					{
-						if (_dissolvedDict.TryGetValue(connectedRow,
-						                               out List<DirectedRow> connecteds))
+						List<DirectedRow> allRows = null;
+						bool updateNeeded = false;
+						foreach (DirectedRow connectedRow in groupedRows)
 						{
-							if (allRows == null)
+							if (_dissolvedDict.TryGetValue(connectedRow,
+							                               out List<DirectedRow> connecteds))
 							{
-								allRows = connecteds;
-								if (connectedRows.Count > 1)
+								if (allRows == null)
 								{
-									allRows.AddRange(connectedRows);
+									allRows = connecteds;
+									if (groupedRows.Count > 1)
+									{
+										allRows.AddRange(groupedRows);
+										updateNeeded = true;
+									}
+								}
+								else if (allRows != connecteds)
+								{
+									allRows.AddRange(connecteds);
 									updateNeeded = true;
 								}
 							}
-							else if (allRows != connecteds)
+							else
 							{
-								allRows.AddRange(connecteds);
-								updateNeeded = true;
+								if (allRows == null)
+								{
+									allRows = new List<DirectedRow>(groupedRows);
+									updateNeeded = true;
+								}
 							}
 						}
-						else
-						{
-							if (allRows == null)
-							{
-								allRows = new List<DirectedRow>(connectedRows);
-								updateNeeded = true;
-							}
-						}
-					}
 
-					if (updateNeeded)
-					{
-						foreach (DirectedRow directedRow in allRows)
+						if (updateNeeded)
 						{
-							_dissolvedDict[directedRow] = allRows;
+							foreach (DirectedRow directedRow in allRows)
+							{
+								_dissolvedDict[directedRow] = allRows;
+							}
 						}
 					}
 
@@ -687,6 +716,103 @@ namespace ProSuite.QA.Tests.Transformers
 						_missing.Add(connectedRows[0]);
 					}
 				}
+
+				private Dictionary<string, int> _fields;
+
+				private IEnumerable<List<DirectedRow>> GetGroupedRows(
+					List<DirectedRow> connectedRows)
+				{
+					IList<string> groupBys = _r.Resulting.GroupBy;
+					if (! (groupBys.Count > 0))
+					{
+						yield return connectedRows;
+						yield break;
+					}
+
+					if (_fields == null)
+					{
+						IFields f = connectedRows.First().Row.Row.Fields;
+						var fields = new Dictionary<string, int>();
+						foreach (string groupBy in groupBys)
+						{
+							int idx = f.FindField(groupBy);
+							Assert.True(idx >= 0, $"Unknonw field '{groupBy}'");
+							fields.Add(groupBy, idx);
+						}
+
+						_fields = fields;
+					}
+
+					Dictionary<List<object>, List<DirectedRow>> groupDict =
+						new Dictionary<List<object>, List<DirectedRow>>(new ListComparer());
+					foreach (DirectedRow connectedRow in connectedRows)
+					{
+						List<object> key = new List<object>(groupBys.Count);
+						IRow r = connectedRow.Row.Row;
+						foreach (int idx in _fields.Values)
+						{
+							key.Add(r.Value[idx]);
+						}
+
+						if (! groupDict.TryGetValue(key, out List<DirectedRow> group))
+						{
+							group = new List<DirectedRow>();
+							groupDict.Add(key, group);
+						}
+
+						group.Add(connectedRow);
+					}
+
+					foreach (KeyValuePair<List<object>, List<DirectedRow>> pair in groupDict)
+					{
+						yield return pair.Value;
+					}
+				}
+			}
+		}
+
+		private class ListComparer : IComparer<List<object>>, IEqualityComparer<List<object>>
+		{
+			public int Compare(List<object> x, List<object> y)
+			{
+				if (x == y) return 0;
+				if (x == null) return -1;
+				if (y == null) return +1;
+
+				int nx = x.Count;
+				int ny = y.Count;
+				int d = nx.CompareTo(ny);
+				if (d != 0)
+				{
+					return d;
+				}
+
+				for (int i = 0; i < nx; i++)
+				{
+					d = Comparer.Default.Compare(x[i], y[i]);
+					if (d != 0)
+					{
+						return d;
+					}
+				}
+
+				return 0;
+			}
+
+			public bool Equals(List<object> x, List<object> y)
+			{
+				return Compare(x, y) == 0;
+			}
+
+			public int GetHashCode(List<object> x)
+			{
+				int hashCode = 1;
+				foreach (object o in x)
+				{
+					hashCode = 29 * hashCode + (o?.GetHashCode() ?? 0);
+				}
+
+				return hashCode;
 			}
 		}
 	}

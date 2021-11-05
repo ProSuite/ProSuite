@@ -167,6 +167,7 @@ namespace ProSuite.QA.Container.TestSupport
 			{
 				fieldAliasDict.Add(pair.Value, pair.Key);
 			}
+
 			TableView tv = Create(table, joined, aliasDict: fieldAliasDict, useAsConstraint: false);
 
 			if (expressionDict.Count > 0)
@@ -200,16 +201,15 @@ namespace ProSuite.QA.Container.TestSupport
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
-			if (expression == null || expression.Trim().Length == 0)
+			if (string.IsNullOrWhiteSpace(expression))
 			{
 				// this filter helper won't do much
 				return new TableView(new ColumnInfo[] { }, null);
 			}
 
 			// read/remove case sensitivity override from expression
-			bool? caseSensitivityOverride;
 			expression = ExpressionUtils.ParseCaseSensitivityHint(expression,
-				out caseSensitivityOverride);
+				out bool? caseSensitivityOverride);
 
 			if (caseSensitivityOverride != null)
 			{
@@ -261,6 +261,7 @@ namespace ProSuite.QA.Container.TestSupport
 				{
 					alias = columnInfo.ColumnName;
 				}
+
 				dataTable.Columns.Add(alias, columnInfo.ColumnType);
 			}
 
