@@ -40,6 +40,18 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[CanBeNull]
 		public List<XmlTestDescriptor> TestDescriptors { get; set; }
 
+		[XmlArrayItem("TransformerDescriptor")]
+		[CanBeNull]
+		public List<XmlTransformerDescriptor> TransformerDescriptors { get; set; }
+
+		[XmlArrayItem("IssueFilterDescriptor")]
+		[CanBeNull]
+		public List<XmlIssueFilterDescriptor> IssueFilterDescriptors { get; set; }
+
+		[XmlArrayItem("RowFilterDescriptor")]
+		[CanBeNull]
+		public List<XmlRowFilterDescriptor> RowFilterDescriptors { get; set; }
+
 		[XmlArrayItem("Workspace")]
 		[CanBeNull]
 		public List<XmlWorkspace> Workspaces { get; set; }

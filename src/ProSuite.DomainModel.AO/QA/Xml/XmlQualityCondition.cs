@@ -7,16 +7,14 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 {
 	public class XmlInstanceConfiguration
 	{
+		[CanBeNull] private string _description;
+
 		[NotNull] private readonly List<XmlTestParameterValue> _parameterValues =
 			new List<XmlTestParameterValue>();
 
 		[CanBeNull]
 		[XmlAttribute("name")]
 		public string Name { get; set; }
-
-		[CanBeNull]
-		[XmlAttribute("testDescriptor")]
-		public string TestDescriptorName { get; set; }
 
 		[NotNull]
 		[XmlArray("Parameters")]
@@ -25,6 +23,20 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		public List<XmlTestParameterValue> ParameterValues
 		{
 			get { return _parameterValues; }
+		}
+
+		[CanBeNull]
+		[XmlElement("Description")]
+		[DefaultValue(null)]
+		public string Description
+		{
+			get
+			{
+				return string.IsNullOrEmpty(_description)
+					       ? null
+					       : _description;
+			}
+			set { _description = value; }
 		}
 
 		public IEnumerable<XmlTestParameterValue> EnumParameterValues(bool ignoreEmptyValues = true)
@@ -51,15 +63,29 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		public string VersionUuid { get; set; }
 	}
 
-	public class XmlRowFilterConfiguration : XmlInstanceConfiguration { }
+	public class XmlRowFilterConfiguration : XmlInstanceConfiguration
+	{
+		[CanBeNull]
+		[XmlAttribute("rowFilterDescriptor")]
+		public string RowFilterDescriptorName { get; set; }
+	}
 
-	public class XmlIssueFilterConfiguration : XmlInstanceConfiguration { }
+	public class XmlIssueFilterConfiguration : XmlInstanceConfiguration
+	{
+		[CanBeNull]
+		[XmlAttribute("issueFilterDescriptor")]
+		public string IssueFilterDescriptorName { get; set; }
+	}
 
-	public class XmlTransformerConfiguration : XmlInstanceConfiguration { }
+	public class XmlTransformerConfiguration : XmlInstanceConfiguration
+	{
+		[CanBeNull]
+		[XmlAttribute("transformerDescriptor")]
+		public string TransformerDescriptorName { get; set; }
+	}
 
 	public class XmlQualityCondition : XmlInstanceConfiguration, IXmlEntityMetadata
 	{
-		[CanBeNull] private string _description;
 		[CanBeNull] private string _notes;
 		[CanBeNull] private string _url;
 
@@ -77,18 +103,8 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		[CanBeNull]
-		[XmlElement("Description")]
-		[DefaultValue(null)]
-		public string Description
-		{
-			get
-			{
-				return string.IsNullOrEmpty(_description)
-					       ? null
-					       : _description;
-			}
-			set { _description = value; }
-		}
+		[XmlAttribute("testDescriptor")]
+		public string TestDescriptorName { get; set; }
 
 		[CanBeNull]
 		[XmlElement("Notes")]

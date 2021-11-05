@@ -13,6 +13,9 @@
       <xs:element minOccurs="0" maxOccurs="1" name="IssueFilters" type="tns:ArrayOfXmlIssueFilter" />
       <xs:element minOccurs="0" maxOccurs="1" name="RowFilters" type="tns:ArrayOfXmlRowFilter" />
       <xs:element minOccurs="0" maxOccurs="1" name="TestDescriptors" type="tns:ArrayOfXmlTestDescriptor" />
+      <xs:element minOccurs="0" maxOccurs="1" name="TransformerDescriptors" type="tns:ArrayOfXmlTransformerDescriptor" />
+      <xs:element minOccurs="0" maxOccurs="1" name="IssueFilterDescriptors" type="tns:ArrayOfXmlIssueFilterDescriptor" />
+      <xs:element minOccurs="0" maxOccurs="1" name="RowFilterDescriptors" type="tns:ArrayOfXmlRowFilterDescriptor" />
       <xs:element minOccurs="0" maxOccurs="1" name="Workspaces" type="tns:ArrayOfXmlWorkspace" />
     </xs:sequence>
   </xs:complexType>
@@ -153,7 +156,7 @@
       <xs:element minOccurs="0" maxOccurs="1" name="Parameters" type="tns:ArrayOfChoice1" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" />
-    <xs:attribute name="testDescriptor" type="xs:string" />
+    <xs:attribute name="transformerDescriptor" type="xs:string" />
     <xs:attribute name="url" type="xs:string" />
     <xs:attribute name="uuid" type="xs:string" />
     <xs:attribute name="versionUuid" type="xs:string" />
@@ -175,7 +178,7 @@
       <xs:element minOccurs="0" maxOccurs="1" name="Parameters" type="tns:ArrayOfChoice1" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" />
-    <xs:attribute name="testDescriptor" type="xs:string" />
+    <xs:attribute name="issueFilterDescriptor" type="xs:string" />
     <xs:attribute name="url" type="xs:string" />
     <xs:attribute name="uuid" type="xs:string" />
     <xs:attribute name="versionUuid" type="xs:string" />
@@ -197,7 +200,7 @@
       <xs:element minOccurs="0" maxOccurs="1" name="Parameters" type="tns:ArrayOfChoice1" />
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" />
-    <xs:attribute name="testDescriptor" type="xs:string" />
+    <xs:attribute name="rowFilterDescriptor" type="xs:string" />
     <xs:attribute name="url" type="xs:string" />
     <xs:attribute name="uuid" type="xs:string" />
     <xs:attribute name="versionUuid" type="xs:string" />
@@ -223,6 +226,57 @@
     <xs:attribute default="-1" name="executionPriority" type="xs:int" />
     <xs:attribute default="false" name="stopOnError" type="xs:boolean" />
     <xs:attribute default="false" name="allowErrors" type="xs:boolean" />
+    <xs:attribute name="createdDate" type="xs:string" />
+    <xs:attribute name="createdByUser" type="xs:string" />
+    <xs:attribute name="lastChangedDate" type="xs:string" />
+    <xs:attribute name="lastChangedByUser" type="xs:string" />
+  </xs:complexType>
+  <xs:complexType name="ArrayOfXmlTransformerDescriptor">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="TransformerDescriptor" nillable="true"
+                  type="tns:XmlTransformerDescriptor" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="XmlTransformerDescriptor">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string" />
+      <xs:element minOccurs="0" maxOccurs="1" name="TransformerClass" type="tns:XmlClassDescriptor" />
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" />
+    <xs:attribute name="createdDate" type="xs:string" />
+    <xs:attribute name="createdByUser" type="xs:string" />
+    <xs:attribute name="lastChangedDate" type="xs:string" />
+    <xs:attribute name="lastChangedByUser" type="xs:string" />
+  </xs:complexType>
+  <xs:complexType name="ArrayOfXmlIssueFilterDescriptor">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="IssueFilterDescriptor" nillable="true"
+                  type="tns:XmlIssueFilterDescriptor" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="XmlIssueFilterDescriptor">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string" />
+      <xs:element minOccurs="0" maxOccurs="1" name="IssueFilterClass" type="tns:XmlClassDescriptor" />
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" />
+    <xs:attribute name="createdDate" type="xs:string" />
+    <xs:attribute name="createdByUser" type="xs:string" />
+    <xs:attribute name="lastChangedDate" type="xs:string" />
+    <xs:attribute name="lastChangedByUser" type="xs:string" />
+  </xs:complexType>
+  <xs:complexType name="ArrayOfXmlRowFilterDescriptor">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="unbounded" name="RowFilterDescriptor" nillable="true"
+                  type="tns:XmlRowFilterDescriptor" />
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="XmlRowFilterDescriptor">
+    <xs:sequence>
+      <xs:element minOccurs="0" maxOccurs="1" name="Description" type="xs:string" />
+      <xs:element minOccurs="0" maxOccurs="1" name="RowFilterClass" type="tns:XmlClassDescriptor" />
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" />
     <xs:attribute name="createdDate" type="xs:string" />
     <xs:attribute name="createdByUser" type="xs:string" />
     <xs:attribute name="lastChangedDate" type="xs:string" />

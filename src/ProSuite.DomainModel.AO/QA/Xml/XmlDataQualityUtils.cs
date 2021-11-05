@@ -777,10 +777,10 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 		[NotNull]
 		public static QualityCondition PrepareInstanceConfiguration(
-			[NotNull] XmlInstanceConfiguration xmlInstanceConfiguration,
+			[NotNull] XmlQualityCondition xmlQualityCondition,
 			[NotNull] IDictionary<string, TestDescriptor> testDescriptorsByName)
 		{
-			string testDescriptorName = xmlInstanceConfiguration.TestDescriptorName;
+			string testDescriptorName = xmlQualityCondition.TestDescriptorName;
 			Assert.True(StringUtils.IsNotEmpty(testDescriptorName), "test descriptor name");
 
 			TestDescriptor testDescriptor;
@@ -789,10 +789,10 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			{
 				Assert.Fail(
 					"Test descriptor '{0}' referenced in quality condition '{1}' does not exist", // TODO '... quality condition ...' correct?
-					testDescriptorName, xmlInstanceConfiguration.Name);
+					testDescriptorName, xmlQualityCondition.Name);
 			}
 
-			var result = new QualityCondition(xmlInstanceConfiguration.Name, testDescriptor);
+			var result = new QualityCondition(xmlQualityCondition.Name, testDescriptor);
 
 			return result;
 		}
@@ -1291,16 +1291,16 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 		[NotNull]
 		public static T CreateInstanceDescriptor<T>(
-			[NotNull] XmlTestDescriptor xmlTestDescriptor)
+			[NotNull] XmlDescriptor xmlTestDescriptor)
 			where T : InstanceDescriptor, new()
 		{
 			Assert.ArgumentNotNull(xmlTestDescriptor, nameof(xmlTestDescriptor));
 
-			Assert.NotNull(xmlTestDescriptor.TestClass);
+			Assert.NotNull(xmlTestDescriptor.ClassDescriptor);
 			T result = new T();
 			result.Name = xmlTestDescriptor.Name;
-			result.Class = CreateClassDescriptor(xmlTestDescriptor.TestClass);
-			result.ConstructorId = xmlTestDescriptor.TestClass.ConstructorId;
+			result.Class = CreateClassDescriptor(xmlTestDescriptor.ClassDescriptor);
+			result.ConstructorId = xmlTestDescriptor.ClassDescriptor.ConstructorId;
 
 			result.Description = xmlTestDescriptor.Description;
 

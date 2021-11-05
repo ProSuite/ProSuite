@@ -41,6 +41,9 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		private Dictionary<string, XmlTransformerConfiguration> _transformers;
 
 		private Dictionary<string, XmlTestDescriptor> _testDescriptors;
+		private Dictionary<string, XmlRowFilterDescriptor> _rowFilterDescriptors;
+		private Dictionary<string, XmlIssueFilterDescriptor> _issueFilterDescriptors;
+		private Dictionary<string, XmlTransformerDescriptor> _transformerDescriptors;
 
 		[CanBeNull]
 		private Dictionary<XmlRowFilterConfiguration, RowFilterConfiguration> _rowFilterInstances;
@@ -72,6 +75,26 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		private Dictionary<string, XmlTestDescriptor> TestDescriptors => _testDescriptors ??
 			(_testDescriptors = _document.TestDescriptors?.ToDictionary(x => x.Name) ??
 			                    new Dictionary<string, XmlTestDescriptor>());
+
+		[NotNull]
+		private Dictionary<string, XmlRowFilterDescriptor> RowFilterDescriptors =>
+			_rowFilterDescriptors ??
+			(_rowFilterDescriptors = _document.RowFilterDescriptors?.ToDictionary(x => x.Name) ??
+			                         new Dictionary<string, XmlRowFilterDescriptor>());
+
+		[NotNull]
+		private Dictionary<string, XmlIssueFilterDescriptor> IssueFilterDescriptors =>
+			_issueFilterDescriptors ??
+			(_issueFilterDescriptors =
+				 _document.IssueFilterDescriptors?.ToDictionary(x => x.Name) ??
+				 new Dictionary<string, XmlIssueFilterDescriptor>());
+
+		[NotNull]
+		private Dictionary<string, XmlTransformerDescriptor> TransformerDescriptors =>
+			_transformerDescriptors ??
+			(_transformerDescriptors =
+				 _document.TransformerDescriptors?.ToDictionary(x => x.Name) ??
+				 new Dictionary<string, XmlTransformerDescriptor>());
 
 		public List<XmlWorkspace> Workspaces => _document.Workspaces;
 
@@ -122,10 +145,12 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			if (! _rowFilterInstances.TryGetValue(xmlRowFilter,
 			                                      out RowFilterConfiguration rowFilter))
 			{
-				if (! TestDescriptors.TryGetValue(Assert.NotNull(xmlRowFilter.TestDescriptorName),
-				                                  out XmlTestDescriptor xmlDesc))
+				if (! RowFilterDescriptors.TryGetValue(
+					    Assert.NotNull(xmlRowFilter.RowFilterDescriptorName),
+					    out XmlRowFilterDescriptor xmlDesc))
 				{
-					Assert.Fail($"Test descriptor not found for {xmlRowFilter.TestDescriptorName}");
+					Assert.Fail(
+						$"Test descriptor not found for {xmlRowFilter.RowFilterDescriptorName}");
 				}
 
 				rowFilter =
@@ -150,11 +175,12 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			if (! _issueFilterInstances.TryGetValue(xmlIssueFilter,
 			                                        out IssueFilterConfiguration issueFilter))
 			{
-				if (! TestDescriptors.TryGetValue(Assert.NotNull(xmlIssueFilter.TestDescriptorName),
-				                                  out XmlTestDescriptor xmlDesc))
+				if (! IssueFilterDescriptors.TryGetValue(
+					    Assert.NotNull(xmlIssueFilter.IssueFilterDescriptorName),
+					    out XmlIssueFilterDescriptor xmlDesc))
 				{
 					Assert.Fail(
-						$"Test descriptor not found for {xmlIssueFilter.TestDescriptorName}");
+						$"Test descriptor not found for {xmlIssueFilter.IssueFilterDescriptorName}");
 				}
 
 				issueFilter =
@@ -515,11 +541,12 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			if (! _transformerInstances.TryGetValue(xmlTransformer,
 			                                        out TransformerConfiguration transformer))
 			{
-				if (! TestDescriptors.TryGetValue(Assert.NotNull(xmlTransformer.TestDescriptorName),
-				                                  out XmlTestDescriptor xmlDesc))
+				if (! TransformerDescriptors.TryGetValue(
+					    Assert.NotNull(xmlTransformer.TransformerDescriptorName),
+					    out XmlTransformerDescriptor xmlDesc))
 				{
 					Assert.Fail(
-						$"Test descriptor not found for {xmlTransformer.TestDescriptorName}");
+						$"Test descriptor not found for {xmlTransformer.TransformerDescriptorName}");
 				}
 
 				transformer =
