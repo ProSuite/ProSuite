@@ -196,39 +196,39 @@
         </button>
         <tool id="ProSuiteTools_Editing_EraseTool" caption="EraseTool " className="Editing.EraseTool"
               loadOnClick="true" smallImage="Images\CutHoleTool16.png" largeImage="Images\CutHoleTool32.png"
-              condition="esri_mapping_mapPane">
+              condition="esri_editing_EditingMapCondition">
           <tooltip heading="Erase Tool">
             Erase parts of the selected features or cut a hole into a polygon
-            <disabledText />
+            <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
         </tool>
         <tool id="ProSuiteTools_Editing_RemoveOverlapsTool" caption="RemoveOverlapsTool"
               className="Editing.RemoveOverlapsTool" loadOnClick="true" smallImage="Images\RemoveOverlapsTool16.png"
-              largeImage="Images\RemoveOverlapsTool32.png" condition="esri_mapping_mapPane">
+              largeImage="Images\RemoveOverlapsTool32.png" condition="esri_editing_EditingMapCondition">
           <tooltip heading="Remove Overlaps Tool">
             Remove a part of a feature that overlaps with other polygon features
-            <disabledText />
+            <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
         </tool>
         <tool id="ProSuiteTools_Editing_ReshapeAlongTool" caption="ReshapeAlongTool"
               className="Editing.ReshapeAlongTool" loadOnClick="true" smallImage="Images\ReshapeAlongTool16.png"
-              largeImage="Images\ReshapeAlongTool32.png" condition="esri_mapping_mapPane">
+              largeImage="Images\ReshapeAlongTool32.png" condition="esri_editing_EditingMapCondition">
           <tooltip heading="Reshape Along Tool">
             Reshape along
-            <disabledText />
+            <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
         </tool>
         <tool id="ProSuiteTools_Editing_CutAlongTool" caption="CutAlongTool" className="Editing.CutAlongTool"
               loadOnClick="true" smallImage="Images\CutPolygonAlongTool16.png"
-              largeImage="Images\CutPolygonAlongTool32.png" condition="esri_mapping_mapPane">
+              largeImage="Images\CutPolygonAlongTool32.png" condition="esri_editing_EditingMapCondition">
           <tooltip heading="Cut Along Tool">
             Cut along
-            <disabledText />
+            <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
         </tool>
         <tool id="ProSuiteTools_Editing_AdvancedReshapeTool" caption="AdvancedReshapeTool"
               className="Editing.AdvancedReshapeTool" loadOnClick="true" smallImage="Images\AdvancedReshapeTool16.png"
-              largeImage="Images\AdvancedReshapeTool32.png" condition="esri_mapping_mapPane">
+              largeImage="Images\AdvancedReshapeTool32.png" condition="esri_editing_EditingMapCondition">
           <tooltip heading="Advanced Reshape" image="Images\AdvancedReshapeToolTip.png">
             Reshape line or polygon feature(s) with advanced options.
 
@@ -242,7 +242,7 @@
             M: Toggle end-junction move in Y-reshape
             N: Target intersection in multi-reshape
             O: Additional options
-            <disabledText />
+            <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
         </tool>
         <tool id="ProSuiteTools_Selection_SelectionTool" caption="Selection" className="Selection.SelectionTool"
