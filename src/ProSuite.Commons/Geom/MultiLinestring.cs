@@ -562,6 +562,67 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		public IEnumerable<int> FindParts(
+			IBoundedXY searchGeometry,
+			double tolerance, bool allowIndexing = true)
+		{
+			if (GeomRelationUtils.AreBoundsDisjoint(this, searchGeometry, tolerance))
+			{
+				yield break;
+			}
+
+			if (GeomRelationUtils.IsContained(this, searchGeometry, tolerance))
+			{
+				foreach (int partIdx in Enumerable.Range(0, PartCount))
+				{
+					yield return partIdx;
+				}
+			}
+
+			// Some geometries have a ridiculous amount of parts!
+			if (SpatialIndex == null && allowIndexing &&
+			    PartCount > AllowIndexingThreshold)
+			{
+				SpatialIndex = SpatialHashSearcher<SegmentIndex>.CreateSpatialSearcher(this);
+			}
+
+			HashSet<int> foundParts = new HashSet<int>(PartCount);
+
+			if (SpatialIndex != null)
+			{
+				foreach (SegmentIndex segmentIndex in SpatialIndex.Search(
+					searchGeometry.XMin, searchGeometry.YMin, searchGeometry.XMax,
+					searchGeometry.YMax,
+					this, tolerance))
+				{
+					if (foundParts.Contains(segmentIndex.PartIndex))
+					{
+						continue;
+					}
+
+					Line3D segment = GetSegment(segmentIndex.PartIndex, segmentIndex.LocalIndex);
+
+					if (segment.ExtentIntersectsXY(searchGeometry, tolerance))
+					{
+						foundParts.Add(segmentIndex.PartIndex);
+						yield return segmentIndex.PartIndex;
+					}
+				}
+			}
+			else
+			{
+				for (int i = 0; i < PartCount; i++)
+				{
+					IBoundedXY part = GetPart(i);
+
+					if (! GeomRelationUtils.AreBoundsDisjoint(this, part, tolerance))
+					{
+						yield return i;
+					}
+				}
+			}
+		}
+
 		public void ReverseOrientation()
 		{
 			foreach (Linestring linestring in Linestrings)
