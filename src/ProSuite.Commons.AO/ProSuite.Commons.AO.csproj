@@ -292,7 +292,6 @@
     <Compile Include="Geometry\WksGeometryUtils.cs" />
     <Compile Include="Geometry\WKSPointZComparer.cs" />
     <Compile Include="Geometry\WKSPointZUtils.cs" />
-    <Compile Include="Geometry\ZAssignment\ChangeAlongZSource.cs" />
     <Compile Include="Geometry\ZAssignment\ChangeAlongZUtils.cs" />
     <Compile Include="Geometry\ZAssignment\DtmSubMode.cs" />
     <Compile Include="Geometry\ZAssignment\IDrapeZ.cs" />
