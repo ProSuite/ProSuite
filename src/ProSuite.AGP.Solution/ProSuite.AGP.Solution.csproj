@@ -194,7 +194,6 @@
       <DependentUpon>IssueWorkListView.xaml</DependentUpon>
     </Compile>
     <Compile Include="WorkListUI\IssueWorkListViewModel.cs" />
-    <Compile Include="WorkListUI\ShowIssueWorkListView.cs" />
     <Compile Include="WorkListUI\StatusToBooleanConverter.cs" />
     <Compile Include="WorkListUI\SelectionItemViewModel.cs" />
     <Compile Include="WorkListUI\WorkItemViewModelBase.cs" />
