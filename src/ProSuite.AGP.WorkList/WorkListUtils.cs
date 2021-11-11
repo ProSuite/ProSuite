@@ -346,5 +346,12 @@ namespace ProSuite.AGP.WorkList
 
 			CollectionUtils.MoveTo(items, movingItem, insertIndex);
 		}
+
+		public static PluginDatastore GetPluginDatastore([NotNull] Uri dataSource)
+		{
+			Assert.ArgumentNotNull(dataSource, nameof(dataSource));
+
+			return new PluginDatastore(new PluginDatasourceConnectionPath(PluginIdentifier, dataSource));
+		}
 	}
 }
