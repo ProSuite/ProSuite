@@ -820,7 +820,7 @@ namespace ProSuite.Microservices.Server.AO.Test.Geometry
 
 			foreach (MultiPolycurve multiPolycurve in multiPolycurves)
 			{
-				bool? coplanar = ChangeAlongZUtils.AreCoplanar(
+				bool? coplanar = ChangeZUtils.AreCoplanar(
 					multiPolycurve.GetPoints().ToList(), sourcePlane,
 					0.01, out double _, out string _);
 
