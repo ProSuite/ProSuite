@@ -138,7 +138,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			// is work list layer already loaded?
 			if (_layersByWorklistName.TryGetValue(worklist.Name, out FeatureLayer worklistLayer))
 			{
-				string message = string.Format("Layer for Work List {0} already loaded:{1}",
+				string message = string.Format("Work List {0} is already loaded: layer {1}",
 				                               worklist.DisplayName, worklistLayer.Name);
 				_msg.Info(message);
 
@@ -193,8 +193,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 			// register work list before creating the layer
 			_registry.TryAdd(worklist);
 
-			if (! ProjectItemUtils.TryAdd(environment.GetDefinitionFile(worklist).LocalPath,
-			                              out WorklistItem item))
+			string path = environment.GetDefinitionFile(worklist.DisplayName).LocalPath;
+
+			if (! ProjectItemUtils.TryAdd(path, out WorklistItem item))
 			{
 				// maybe the work list is empty > makes no sense to store a
 				// definition file for an empty work list
@@ -301,39 +302,16 @@ namespace ProSuite.AGP.Solution.WorkLists
 		#endregion
 
 		[NotNull]
-		public string EnsureUniqueName()
+		public static string EnsureUniqueName()
 		{
 			//todo daro: use GUID as identifier?
 			return $"{Guid.NewGuid()}".Replace('-', '_').ToLower();
 		}
 
-		[NotNull]
-		private static Project GetProject()
-		{
-			Project current = Project.Current;
-			Assert.NotNull(current, "no project");
-			return current;
-		}
-
 		private static string GetLocalWorklistsFolder()
 		{
-			return WorkListUtils.GetLocalWorklistsFolder(GetProject().HomeFolderPath);
+			return WorkListUtils.GetLocalWorklistsFolder(Project.Current.HomeFolderPath);
 		}
-
-		//public void RemoveWorkListLayer(IWorkList workList)
-		//{
-		//	if (_layersByWorklistName.ContainsKey(workList.Name))
-		//	{
-
-		//	}
-		//	if (_layerByWorkList.ContainsKey(workList))
-		//	{
-		//		_layerByWorkList.Remove(workList);
-		//		Layer layer = MapView.Active.Map.GetLayersAsFlattenedList()
-		//							 .First(l => l.Name == workList.Name);
-		//		QueuedTask.Run(() => MapView.Active.Map.RemoveLayer(layer));
-		//	}
-		//}
 
 		#region Events
 
@@ -352,8 +330,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 			ProjectOpenedAsyncEvent.Subscribe(OnProjectOpendedAsync);
 			ProjectSavingEvent.Subscribe(OnProjectSavingAsync);
 
-			ProjectItemsChangedEvent.Subscribe(OnProjectItemsChanged);
-			ProjectItemRemovingEvent.Subscribe(OnProjectItemRemoving);
+			ProjectItemsChangedEvent.Subscribe(OnProjectItemsChangedAsync);
+			ProjectItemRemovingEvent.Subscribe(OnProjectItemRemovingAsync);
 
 			MapMemberPropertiesChangedEvent.Subscribe(OnMapMemberPropertiesChanged);
 		}
@@ -367,8 +345,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 			ProjectOpenedAsyncEvent.Unsubscribe(OnProjectOpendedAsync);
 			ProjectSavingEvent.Unsubscribe(OnProjectSavingAsync);
 
-			ProjectItemsChangedEvent.Unsubscribe(OnProjectItemsChanged);
-			ProjectItemRemovingEvent.Unsubscribe(OnProjectItemRemoving);
+			ProjectItemsChangedEvent.Unsubscribe(OnProjectItemsChangedAsync);
+			ProjectItemRemovingEvent.Unsubscribe(OnProjectItemRemovingAsync);
 
 			MapMemberPropertiesChangedEvent.Unsubscribe(OnMapMemberPropertiesChanged);
 		}
@@ -394,7 +372,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 					Assert.True(_layersByWorklistName.ContainsKey(workList.Name),
 								$"sender of {nameof(WorklistChanged)} is unknown");
 
-					if (!_layersByWorklistName.ContainsKey(workList.Name))
+					if (! _layersByWorklistName.ContainsKey(workList.Name))
 					{
 						return;
 					}
@@ -544,22 +522,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 			});
 		}
 
-		private static void Flatten([NotNull] IEnumerable<Layer> layers,
-		                            [NotNull] ICollection<Layer> flattenedLayers)
-		{
-			foreach (Layer layer in layers)
-			{
-				if (layer is ILayerContainer container)
-				{
-					Flatten(container.Layers, flattenedLayers);
-				}
-				else
-				{
-					flattenedLayers.Add(layer);
-				}
-			}
-		}
-
 		private async Task OnProjectOpendedAsync(ProjectEventArgs e)
 		{
 			// 1) Check all existing project items.
@@ -613,7 +575,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}), _msg);
 		}
 
-		private async void OnProjectItemsChanged(ProjectItemsChangedEventArgs e)
+		private async void OnProjectItemsChangedAsync(ProjectItemsChangedEventArgs e)
 		{
 			await ViewUtils.TryAsync(QueuedTask.Run(() =>
 			{
@@ -680,31 +642,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}), _msg);
 		}
 
-		private void RenameView(MapMember mapMember)
-		{
-			string uri = LayerUtils.GetUri(mapMember);
-			string name = WorkListUtils.ParseName(uri);
-
-			if (! _viewsByWorklistName.TryGetValue(name, out IWorkListObserver view))
-			{
-				return;
-			}
-
-			if (view.View == null)
-			{
-				return;
-			}
-
-			ViewUtils.RunOnUIThread(() => { view.View.Title = mapMember.Name; });
-		}
-
-		private async Task OnProjectItemRemoving(ProjectItemRemovingEventArgs e)
+		private async Task OnProjectItemRemovingAsync(ProjectItemRemovingEventArgs e)
 		{
 			await ViewUtils.TryAsync(QueuedTask.Run(() =>
 			{
 				foreach (var item in e.ProjectItems.OfType<WorklistItem>())
 				{
-					string name = WorkListUtils.GetName(item.Path);
+					string name = WorkListUtils.GetWorklistName(item.Path);
 					Assert.NotNullOrEmpty(name);
 
 					//Item container = Project.Current.GetProjectItemContainer(WorklistsContainer.ContainerTypeName);
@@ -745,6 +689,40 @@ namespace ProSuite.AGP.Solution.WorkLists
 		}
 
 		#endregion
+
+		private static void Flatten([NotNull] IEnumerable<Layer> layers,
+		                            [NotNull] ICollection<Layer> flattenedLayers)
+		{
+			foreach (Layer layer in layers)
+			{
+				if (layer is ILayerContainer container)
+				{
+					Flatten(container.Layers, flattenedLayers);
+				}
+				else
+				{
+					flattenedLayers.Add(layer);
+				}
+			}
+		}
+
+		private void RenameView(MapMember mapMember)
+		{
+			string uri = LayerUtils.GetUri(mapMember);
+			string name = WorkListUtils.ParseName(uri);
+
+			if (! _viewsByWorklistName.TryGetValue(name, out IWorkListObserver view))
+			{
+				return;
+			}
+
+			if (view.View == null)
+			{
+				return;
+			}
+
+			ViewUtils.RunOnUIThread(() => { view.View.Title = mapMember.Name; });
+		}
 
 		public virtual void OnWorkItemPicked(WorkItemPickArgs e)
 		{
