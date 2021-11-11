@@ -174,5 +174,13 @@ namespace ProSuite.Commons
 		{
 			return ! IsWeekEnd(dateTime);
 		}
+
+		public static DateTime RoundUp(DateTime dateTime, TimeSpan roundingInterval)
+		{
+			return new DateTime(
+				(dateTime.Ticks + roundingInterval.Ticks - 1) /
+				roundingInterval.Ticks * roundingInterval.Ticks, dateTime.Kind);
+		}
+
 	}
 }
