@@ -96,7 +96,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		public override IReadOnlyList<string> GetTableNames()
 		{
-			return _tableNames ?? new string[0];
+			return _tableNames ?? Array.Empty<string>();
 		}
 
 		public override bool IsQueryLanguageSupported()

@@ -109,8 +109,6 @@ namespace ProSuite.AGP.WorkList.Domain
 			}
 		}
 
-
-
 		public Polygon AreaOfInterest { get; set; }
 
 		public virtual bool QueryLanguageSupported { get; } = false;
