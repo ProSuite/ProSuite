@@ -389,41 +389,48 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		private async Task WorklistChanged(WorkListChangedEventArgs e)
 		{
+			// NOTE daro:
+			// If the following code is put into a await ViewUtils.TryAsync(QueuedTask.Run(() =>{}, _msg)
+			// there is a strange race condition when adding a second work list. So far the code works without it.
+			// Examine it later!
 			try
 			{
-				MapView mapView = MapView.Active;
-				if (mapView == null)
+				foreach (MapView mapView in FrameworkApplication.Panes.OfType<IMapPane>()
+				                                                .Select(mapPane => mapPane.MapView))
 				{
-					return;
-				}
+					if (mapView == null || !mapView.IsReady)
+					{
+						continue;
+					}
 
-				var workList = (IWorkList) e.Sender;
+					var workList = (IWorkList)e.Sender;
 
-				Assert.True(_layersByWorklistName.ContainsKey(workList.Name),
-				            $"sender of {nameof(WorklistChanged)} is unknown");
+					Assert.True(_layersByWorklistName.ContainsKey(workList.Name),
+								$"sender of {nameof(WorklistChanged)} is unknown");
 
-				if (! _layersByWorklistName.ContainsKey(workList.Name))
-				{
-					return;
-				}
+					if (!_layersByWorklistName.ContainsKey(workList.Name))
+					{
+						return;
+					}
 
-				FeatureLayer workListLayer = _layersByWorklistName[workList.Name];
+					FeatureLayer workListLayer = _layersByWorklistName[workList.Name];
 
-				List<long> oids = e.Items;
+					List<long> oids = e.Items;
 
-				if (oids != null)
-				{
-					// invalidate with OIDs
-					mapView.Invalidate(new Dictionary<Layer, List<long>> {{workListLayer, oids}});
-					return;
-				}
+					if (oids != null)
+					{
+						// invalidate with OIDs
+						mapView.Invalidate(new Dictionary<Layer, List<long>> { { workListLayer, oids } });
+						continue;
+					}
 
-				Envelope extent = e.Extent ?? mapView.Extent;
+					Envelope extent = e.Extent ?? mapView.Extent;
 
-				if (extent != null)
-				{
-					// alternatively invalidate with Envelope
-					mapView.Invalidate(workListLayer, extent);
+					if (extent != null)
+					{
+						// alternatively invalidate with Envelope
+						mapView.Invalidate(workListLayer, extent);
+					}
 				}
 			}
 			catch (Exception exc)
