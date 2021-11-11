@@ -749,7 +749,7 @@ namespace ProSuite.Commons.Geom
 			double dirAbsZ = Math.Abs(direction[2]);
 
 			// TODO: Use plane.Epsilon?
-			if (MathUtils.AreEqual(dirAbsY, 0) &&
+			if (MathUtils.AreEqual(dirAbsX, 0) &&
 			    MathUtils.AreEqual(dirAbsY, 0) &&
 			    MathUtils.AreEqual(dirAbsZ, 0))
 			{
