@@ -34,7 +34,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 	[UsedImplicitly]
 	public class WorkListsModule : Module
 	{
-
 		private static WorkListsModule _instance;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
@@ -529,20 +528,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 					MapMember mapMember = mapMembers[index];
 
-					string uri = LayerUtils.GetUri(mapMember);
-					string name = WorkListUtils.ParseName(uri);
-
-					if (! _viewsByWorklistName.TryGetValue(name, out IWorkListObserver view))
-					{
-						continue;
-					}
-
-					if (view.View == null)
-					{
-						continue;
-					}
-
-					ViewUtils.RunOnUIThread(() => { view.View.Title = mapMember.Name; });
+					RenameView(mapMember);
 				}
 			}, _msg);
 		}
@@ -691,7 +677,22 @@ namespace ProSuite.AGP.Solution.WorkLists
 							throw new ArgumentOutOfRangeException();
 					}
 				}
+		private void RenameView(MapMember mapMember)
+		{
+			string uri = LayerUtils.GetUri(mapMember);
+			string name = WorkListUtils.ParseName(uri);
+
+			if (! _viewsByWorklistName.TryGetValue(name, out IWorkListObserver view))
+			{
+				return;
 			}
+
+			if (view.View == null)
+			{
+				return;
+			}
+
+			ViewUtils.RunOnUIThread(() => { view.View.Title = mapMember.Name; });
 		}
 
 		private async Task OnProjectItemRemoving(ProjectItemRemovingEventArgs e)

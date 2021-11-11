@@ -32,14 +32,14 @@ namespace ProSuite.AGP.Solution.WorkLists
 				return null;
 			}
 
-			_msg.Debug($"Open work list from file {selectedPath}");
+			_msg.Debug($"Open work list from file {path}");
 
-			if (! File.Exists(selectedPath))
+			if (! File.Exists(path))
 			{
 				return null;
 			}
 
-			string extension = Path.GetExtension(selectedPath);
+			string extension = Path.GetExtension(path);
 
 			if (string.Equals(extension, ".swl"))
 			{
@@ -48,7 +48,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			if (string.Equals(extension, ".iwl"))
 			{
-				string gdbPath = WorkListUtils.GetIssueGeodatabasePath(selectedPath);
+				string gdbPath = WorkListUtils.GetIssueGeodatabasePath(path);
 				Assert.NotNull(gdbPath, "issue geodatabase does not exist");
 
 				return new IssueWorkListEnvironment(gdbPath);
