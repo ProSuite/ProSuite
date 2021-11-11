@@ -32,6 +32,7 @@ namespace ProSuite.AGP.QA.WorkList
 		}
 
 		public override string FileSuffix => ".iwl";
+		public override string DisplayName => "Issue Work List";
 
 		protected override async Task<bool> TryPrepareSchemaCoreAsync()
 		{
@@ -118,9 +119,13 @@ namespace ProSuite.AGP.QA.WorkList
 			return featureLayer;
 		}
 
-		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository, string name)
+		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,
+		                                                string uniqueName,
+		                                                string displayName = null)
 		{
-			return new IssueWorkList(repository, name);
+			string name = ! string.IsNullOrEmpty(displayName) ? displayName : DisplayName;
+
+			return new IssueWorkList(repository, uniqueName, name);
 		}
 
 		protected override IRepository CreateStateRepositoryCore(string path, string workListName)

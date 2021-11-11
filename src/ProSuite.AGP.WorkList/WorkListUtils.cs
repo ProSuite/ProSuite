@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
+using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
@@ -26,6 +27,7 @@ namespace ProSuite.AGP.WorkList
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private const string WorklistsFolder = "Worklists";
+		private const string PluginIdentifier = "ProSuite_WorkListDatasource";
 
 		[NotNull]
 		public static string GetLocalWorklistsFolder(string homeFolderPath)
@@ -51,9 +53,11 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		[NotNull]
-		public static IWorkList Create([NotNull] XmlWorkListDefinition definition)
+		public static IWorkList Create([NotNull] XmlWorkListDefinition definition,
+		                               [NotNull] string displayName)
 		{
 			Assert.ArgumentNotNull(definition, nameof(definition));
+			Assert.ArgumentNotNullOrEmpty(displayName, nameof(displayName));
 
 			var descriptor = new ClassDescriptor(definition.TypeName, definition.AssemblyName);
 
@@ -97,7 +101,7 @@ namespace ProSuite.AGP.WorkList
 
 			try
 			{
-				return descriptor.CreateInstance<IWorkList>(repository, definition.Name);
+				return descriptor.CreateInstance<IWorkList>(repository, definition.Name, displayName);
 			}
 			catch (Exception e)
 			{

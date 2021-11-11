@@ -43,11 +43,15 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		private WorkItemVisibility _visibility;
 
-		protected WorkList(IWorkItemRepository repository, string name)
+		protected WorkList([NotNull] IWorkItemRepository repository,
+		                   [NotNull] string name,
+		                   [CanBeNull] string displayName = null)
 		{
 			Repository = repository;
 
-			Name = name ?? string.Empty;
+			Name = name;
+
+			DisplayName = ! string.IsNullOrEmpty(displayName) ? displayName : name;
 
 			Visibility = WorkItemVisibility.Todo;
 			AreaOfInterest = null;
@@ -80,7 +84,7 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public string Name { get; set; }
 
-		public abstract string DisplayName { get; }
+		public string DisplayName { get; set; }
 
 		// NOTE: An empty work list should return null and not an empty envelope.
 		//		 Pluggable Datasource cannot handle an empty envelope.

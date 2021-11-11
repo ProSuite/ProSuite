@@ -33,7 +33,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 	[UsedImplicitly]
 	public class WorkListsModule : Module
 	{
-		private const string PluginIdentifier = "ProSuite_WorkListDatasource";
 
 		private static WorkListsModule _instance;
 
@@ -89,11 +88,20 @@ namespace ProSuite.AGP.Solution.WorkLists
 		}
 
 		// todo daro return Window?
-		public void ShowView([NotNull] string worklistName, string displayName = null)
+		public void ShowView([NotNull] string worklistName)
 		{
-			if (_viewsByWorklistName.TryGetValue(worklistName, out IWorkListObserver view))
+			if (! _viewsByWorklistName.TryGetValue(worklistName, out IWorkListObserver view))
 			{
-				view.Show(displayName);
+				return;
+			}
+
+			if (_layersByWorklistName.TryGetValue(worklistName, out FeatureLayer layer))
+			{
+				view.Show(layer.Name);
+			}
+			else
+			{
+				view.Show();
 			}
 		}
 

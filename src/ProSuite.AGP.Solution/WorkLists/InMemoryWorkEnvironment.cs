@@ -17,7 +17,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 	public class InMemoryWorkEnvironment : WorkEnvironmentBase
 	{
 		private readonly string _templateLayer = "Selection Work List.lyrx";
-
+		
+		public override string DisplayName => "Selection Work List";
 		public override string FileSuffix => ".swl";
 
 		protected override IEnumerable<BasicFeatureLayer> GetLayers(Map map)
@@ -60,9 +61,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return LayerUtils.CreateLayerDocument(path);
 		}
 
-		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository, string name)
+		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,
+		                                                string uniqueName,
+		                                                string displayName = null)
 		{
-			return new SelectionWorkList(repository, name);
+			string name = ! string.IsNullOrEmpty(displayName) ? displayName : DisplayName;
+
+			return new SelectionWorkList(repository, uniqueName, name);
 		}
 	}
 }
