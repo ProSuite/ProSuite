@@ -551,7 +551,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 		{
 			await Task.Run(() =>
 			{
-				foreach (IWorkList worklist in GetAssociatedWorklists(e.Layers))
+				var flattenedLayers = new List<Layer>();
+
+				Flatten(e.Layers, flattenedLayers);
+
+				foreach (IWorkList worklist in GetAssociatedWorklists(flattenedLayers))
 				{
 					Unload(worklist);
 
@@ -565,6 +569,22 @@ namespace ProSuite.AGP.Solution.WorkLists
 					//workList.Dispose();
 				}
 			});
+		}
+
+		private static void Flatten([NotNull] IEnumerable<Layer> layers,
+		                            [NotNull] ICollection<Layer> flattenedLayers)
+		{
+			foreach (Layer layer in layers)
+			{
+				if (layer is ILayerContainer container)
+				{
+					Flatten(container.Layers, flattenedLayers);
+				}
+				else
+				{
+					flattenedLayers.Add(layer);
+				}
+			}
 		}
 
 		private async Task OnProjectOpendedAsync(ProjectEventArgs e)
