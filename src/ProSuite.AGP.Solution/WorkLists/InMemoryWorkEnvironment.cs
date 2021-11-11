@@ -21,9 +21,21 @@ namespace ProSuite.AGP.Solution.WorkLists
 		public override string DisplayName => "Selection Work List";
 		public override string FileSuffix => ".swl";
 
-		protected override IEnumerable<BasicFeatureLayer> GetLayers(Map map)
+		protected override ILayerContainerEdit GetContainer()
 		{
-			Dictionary<MapMember, List<long>> selection = map.GetSelection();
+			return MapView.Active.Map;
+		}
+
+		protected override IEnumerable<BasicFeatureLayer> GetLayersCore()
+		{
+			MapView mapView = MapView.Active;
+
+			if (mapView == null)
+			{
+				return Enumerable.Empty<BasicFeatureLayer>();
+			}
+
+			Dictionary<MapMember, List<long>> selection = mapView.Map.GetSelection();
 
 			return selection.Count >= 1
 				       ? selection.Keys.OfType<BasicFeatureLayer>()

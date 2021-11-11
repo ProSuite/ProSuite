@@ -15,14 +15,28 @@ namespace ProSuite.AGP.WorkList
 			// has to be outside QueuedTask because of OpenItemDialog
 			// AND ouside of Task.Run because OptenItemDialog has to be
 			// in UI thread.
+
+			string path = null;
 			WorkEnvironmentBase environment = null;
 
-			ViewUtils.Try(() => { environment = CreateEnvironment(); }, _msg);
+			ViewUtils.Try(() =>
+			{
+				path = GetWorklistPathCore();
 
-			await ViewUtils.TryAsync(OnClickCore(environment), _msg);
+				environment = CreateEnvironment(path);
+			}, _msg);
+
+			await ViewUtils.TryAsync(OnClickCore(environment, path), _msg);
 		}
 
-		protected abstract Task OnClickCore([NotNull] WorkEnvironmentBase environment);
+		[CanBeNull]
+		protected virtual string GetWorklistPathCore()
+		{
+			return null;
+		}
+
+		protected abstract Task OnClickCore([NotNull] WorkEnvironmentBase environment,
+		                                    string path = null);
 
 		[CanBeNull]
 		protected abstract WorkEnvironmentBase CreateEnvironment(string path = null);

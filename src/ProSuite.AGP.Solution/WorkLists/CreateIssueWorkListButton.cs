@@ -9,11 +9,12 @@ namespace ProSuite.AGP.Solution.WorkLists
 	[UsedImplicitly]
 	internal class CreateIssueWorkListButton : OpenWorklistButtonBase
 	{
-		protected override async Task OnClickCore(WorkEnvironmentBase environment)
+		protected override async Task OnClickCore(WorkEnvironmentBase environment,
+		                                          string path = null)
 		{
 			Assert.ArgumentNotNull(environment, nameof(environment));
 
-			await ProSuiteUtils.OpenWorklistAsync(environment);
+			await ProSuiteUtils.CreateWorklistAsync(environment);
 		}
 
 		protected override WorkEnvironmentBase CreateEnvironment(string path = null)

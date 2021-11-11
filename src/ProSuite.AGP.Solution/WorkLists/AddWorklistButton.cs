@@ -15,19 +15,25 @@ namespace ProSuite.AGP.Solution.WorkLists
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		protected override async Task OnClickCore(WorkEnvironmentBase environment)
+		protected override async Task OnClickCore(WorkEnvironmentBase environment,
+		                                          string path = null)
 		{
 			Assert.ArgumentNotNull(environment, nameof(environment));
+			Assert.ArgumentNotNullOrEmpty(path, nameof(path));
 
-			await ProSuiteUtils.OpenWorklistAsync(environment);
+			await ProSuiteUtils.OpenWorklistAsync(environment, path);
+		}
+
+		protected override string GetWorklistPathCore()
+		{
+			var window = FrameworkApplication.ActiveWindow as IProjectWindow;
+
+			return window?.SelectedItems.FirstOrDefault()?.Path;
 		}
 
 		protected override WorkEnvironmentBase CreateEnvironment(string path = null)
 		{
-			var window = FrameworkApplication.ActiveWindow as IProjectWindow;
-			string selectedPath = window?.SelectedItems.FirstOrDefault()?.Path;
-
-			if (string.IsNullOrEmpty(selectedPath))
+			if (string.IsNullOrEmpty(path))
 			{
 				return null;
 			}
