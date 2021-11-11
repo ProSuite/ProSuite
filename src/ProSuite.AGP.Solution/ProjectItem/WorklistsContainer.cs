@@ -37,7 +37,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 			}
 
 			item.IncludeInPackages(true);
-			item.WorklistName = WorkListUtils.GetName(path);
+			item.WorklistName = WorkListUtils.GetWorklistName(path);
 			Add(item);
 
 			return item;

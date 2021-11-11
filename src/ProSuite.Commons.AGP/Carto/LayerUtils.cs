@@ -32,7 +32,6 @@ namespace ProSuite.Commons.AGP.Carto
 			[NotNull] FeatureClass featureClass)
 		{
 			var layerParams = new FeatureLayerCreationParams(featureClass);
-
 			// todo daro: apply renderer here from template
 
 			// LayerDocument is null!
