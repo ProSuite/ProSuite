@@ -28,7 +28,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Text;
 
 namespace ProSuite.AGP.Solution.WorkLists
 {
@@ -39,14 +38,12 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		// todo daro Layer instead of FeatureLayer
 		[NotNull] private readonly Dictionary<string, FeatureLayer> _layersByWorklistName =
 			new Dictionary<string, FeatureLayer>();
 
 		[NotNull] private readonly Dictionary<string, IWorkListObserver> _viewsByWorklistName =
 			new Dictionary<string, IWorkListObserver>();
-
-		[NotNull] private readonly Dictionary<string, string> _uriByWorklistName =
-			new Dictionary<string, string>();
 
 		private IWorkListRegistry _registry;
 		[CanBeNull] private EditEventsRowCacheSynchronizer _synchronizer;
@@ -158,11 +155,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 				_viewsByWorklistName.Add(worklist.Name, new WorkListObserver(worklist, item));
 			}
 
-			if (! _uriByWorklistName.ContainsKey(worklist.Name))
-			{
-				_uriByWorklistName.Add(worklist.Name, worklistLayer.URI);
-			}
-
 			return worklist;
 		}
 
@@ -210,11 +202,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 				_viewsByWorklistName.Add(worklist.Name, new WorkListObserver(worklist, item));
 			}
 
-			if (! _uriByWorklistName.ContainsKey(worklist.Name))
-			{
-				_uriByWorklistName.Add(worklist.Name, worklistLayer.URI);
-			}
-
 			return worklist;
 		}
 
@@ -249,53 +236,13 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		protected override Task OnReadSettingsAsync(ModuleSettingsReader settings)
 		{
-			// should never be null
-			if (settings == null)
-			{
-				return base.OnReadSettingsAsync(settings);
-			}
-
-			// no crashes when:
-			// settings[""] = null;
-			// settings = null;
-
-			if (! (settings.Get("worklistLayerUris") is string uris))
-			{
-				return base.OnReadSettingsAsync(settings);
-			}
-
-			foreach (string pair in uris.Trim().Split('#'))
-			{
-				string[] tokens = pair.Trim().Split(':');
-
-				string worklistName = tokens[0];
-
-				if (_uriByWorklistName.ContainsKey(worklistName))
-				{
-					continue;
-				}
-
-				_uriByWorklistName.Add(worklistName, tokens[1]);
-			}
-
 			return base.OnReadSettingsAsync(settings);
 		}
-
+		
+		// NOTE daro Method is only called when project is dirty.
+		// NOTE daro OnWriteSettingsAsync is called twice on creating a project.
 		protected override Task OnWriteSettingsAsync(ModuleSettingsWriter settings)
 		{
-			// todo daro Methond is only called when project is dirty.
-			// todo daro OnWriteSettingsAsync is called twice on creating a project.
-			if (_uriByWorklistName.Count <= 0)
-			{
-				return base.OnWriteSettingsAsync(settings);
-			}
-
-			List<string> worklistLayerUris = new List<string>(_uriByWorklistName.Count);
-			worklistLayerUris.AddRange(
-				_uriByWorklistName.Select(pair => $"{pair.Key}:{pair.Value}"));
-
-			settings.Add("worklistLayerUris", StringUtils.Concatenate(worklistLayerUris, "#"));
-
 			return base.OnWriteSettingsAsync(settings);
 		}
 
@@ -362,11 +309,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 				foreach (MapView mapView in FrameworkApplication.Panes.OfType<IMapPane>()
 				                                                .Select(mapPane => mapPane.MapView))
 				{
-					if (mapView == null || !mapView.IsReady)
+					if (mapView == null || ! mapView.IsReady)
 					{
 						continue;
 					}
-
+					
 					var workList = (IWorkList)e.Sender;
 
 					Assert.True(_layersByWorklistName.ContainsKey(workList.Name),
@@ -403,51 +350,46 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 		}
 
+		// todo daro to WorkListUtils
+		private static IEnumerable<Layer> GetWorklistLayers(IEnumerable<Layer> layers, string worklistName)
+		{
+			return layers.Where(layer =>
+			{
+				string name = WorkListUtils.GetName(layer.URI);
+				return string.Equals(worklistName, name, StringComparison.OrdinalIgnoreCase);
+			});
+		}
+
 		// todo daro: move to OnMapViewInitialized?
 		private void OnDrawCompleted(MapViewEventArgs e)
 		{
-			string uri = null;
-			foreach (string name in _registry.GetNames()
-			                                 .Where(name => _uriByWorklistName.TryGetValue(
-				                                        name, out uri)))
+			IReadOnlyList<Layer> layers = e.MapView.Map.GetLayersAsFlattenedList();
+
+			foreach (string name in _registry.GetNames())
 			{
-				// Can be null because it's from module settings and those cannot be deleted but only
-				// set to null.
-				if (string.IsNullOrEmpty(uri))
+				foreach (FeatureLayer worklistLayer in GetWorklistLayers(layers, name).Cast<FeatureLayer>())
 				{
-					continue;
+					if (worklistLayer == null)
+					{
+						continue;
+					}
+
+					IWorkList workList = _registry.Get(name);
+					Assert.NotNull(workList);
+
+					// safety check, a new work list is already added
+					if (_layersByWorklistName.ContainsKey(workList.Name))
+					{
+						continue;
+					}
+
+					_layersByWorklistName.Add(workList.Name, worklistLayer);
+
+					WorklistChangedEvent.Subscribe(WorklistChanged, this);
+
+					// todo daro: maybe we need a dictionary of synchronizers
+					_synchronizer = new EditEventsRowCacheSynchronizer(workList);
 				}
-
-				var worklistLayer = e.MapView.Map.FindLayer(uri) as FeatureLayer;
-
-				// todo daro Read the custom project settings and the URI of the created work list layers.
-				//			 Don't do layer name comparison.
-				//			 Stop giving the work list layer the name of the work list. The map (work list uri <> work list name)
-				//			 is managed with the custom project settings.
-				//			 For the moment the work list layers data source remains the work list file name. It feels the right way, e.g.
-				//			 in ArcGIS the data source is broken too if its name changes.
-				//LayerUtils.GetLayer("work list uri");
-
-				if (worklistLayer == null)
-				{
-					continue;
-				}
-
-				IWorkList workList = _registry.Get(name);
-				Assert.NotNull(workList);
-
-				// safety check, a new work list is already added
-				if (_layersByWorklistName.ContainsKey(workList.Name))
-				{
-					continue;
-				}
-
-				_layersByWorklistName.Add(workList.Name, worklistLayer);
-
-				WorklistChangedEvent.Subscribe(WorklistChanged, this);
-
-				// todo daro: maybe we need a dictionary of synchronizers
-				_synchronizer = new EditEventsRowCacheSynchronizer(workList);
 			}
 		}
 
