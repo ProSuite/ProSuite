@@ -4,6 +4,7 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
@@ -599,11 +600,16 @@ namespace ProSuite.AGP.Solution.WorkLists
 			});
 		}
 
-		private void OnProjectItemsChanged(ProjectItemsChangedEventArgs e)
+		private async void OnProjectItemsChanged(ProjectItemsChangedEventArgs e)
 		{
-			if (e.ProjectItemsCollection != null)
+			await ViewUtils.TryAsync(QueuedTask.Run(() =>
 			{
-				foreach (var item in e.ProjectItemsCollection.OfType<WorklistItem>())
+				if (e.ProjectItemsCollection == null)
+				{
+					return;
+				}
+
+				foreach (WorklistItem item in e.ProjectItemsCollection.OfType<WorklistItem>())
 				{
 					switch (e.Action)
 					{
@@ -613,14 +619,44 @@ namespace ProSuite.AGP.Solution.WorkLists
 							Assert.True(_registry.Exists(item.WorklistName),
 							            $"Cannot find work list {item.WorklistName} in registry");
 
-							IWorkList workList = _registry.Get(item.WorklistName);
-							Assert.NotNull(workList);
+							// TODO daro: replace work list in registry. it's not enough to set new path
+							// there should always be the guid as name in the registry
+							// name of *.iwl file is ok for display name
+							// work list name is also the uri of layer and its data source
+							// work list display name is the layer alias
 
-							workList.Repository.UpdateStateRepository(item.Path);
+							Assert.True(_registry.Remove(item.WorklistName),
+							            $"failed to remove work list {item.WorklistName}");
+
+							var factory = new XmlBasedWorkListFactory(item.Path, item.WorklistName);
+
+							Assert.True(_registry.TryAdd(factory),
+							            $"Cannot add work list {item.WorklistName}");
+
+							_msg.Debug($"Add work list {item.WorklistName} from file {item.Path}");
+
+							// The following situation: the work list layer (e.g. named "foo") is already in TOC
+							if (_layersByWorklistName.TryGetValue(item.WorklistName, out FeatureLayer worklistLayer))
+							{
+								PluginDatastore datastore = WorkListUtils.GetPluginDatastore(new Uri(item.Path));
+								string connectionString = datastore.GetConnectionString();
+
+								var connection = new CIMStandardDataConnection
+								                 {
+									                 WorkspaceConnectionString = connectionString,
+									                 WorkspaceFactory = WorkspaceFactory.Custom,
+									                 DatasetType = esriDatasetType.esriDTFeatureClass,
+									                 Dataset = item.WorklistName
+								                 };
+
+								worklistLayer.SetDataConnection(connection);
+							}
 
 							break;
 						case NotifyCollectionChangedAction.Add:
 						case NotifyCollectionChangedAction.Remove:
+
+						// Item is never removed. It is always deleted.
 						case NotifyCollectionChangedAction.Move:
 						case NotifyCollectionChangedAction.Reset:
 							throw new NotImplementedException();
