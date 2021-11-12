@@ -282,6 +282,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 			// 4. OnDrawCompleted
 
 			//MapViewInitializedEvent.Subscribe(OnMapViewInitialized
+			MapClosedEvent.Subscribe(OnMapClosedAsync);
+
 			LayersAddedEvent.Subscribe(OnLayerAdded);
 			LayersRemovingEvent.Subscribe(OnLayerRemovingAsync);
 			DrawCompleteEvent.Subscribe(OnDrawCompletedAsync);
@@ -298,6 +300,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 		private void UnwireEvents()
 		{
 			//MapViewInitializedEvent.Unsubscribe(OnMapViewInitialized);
+
+			MapClosedEvent.Unsubscribe(OnMapClosedAsync);
 			LayersAddedEvent.Unsubscribe(OnLayerAdded);
 			LayersRemovingEvent.Unsubscribe(OnLayerRemovingAsync);
 			DrawCompleteEvent.Unsubscribe(OnDrawCompletedAsync);
@@ -448,6 +452,19 @@ namespace ProSuite.AGP.Solution.WorkLists
 					RenameView(mapMember);
 				}
 			}, _msg);
+		}
+
+		private async void OnMapClosedAsync(MapClosedEventArgs e)
+		{
+			await ViewUtils.TryAsync(QueuedTask.Run(() =>
+			{
+				// ToList() is important because items are being removed
+				// from _layersByWorklistName
+				foreach (IWorkList workList in GetLoadedWorkLists().ToList())
+				{
+					Unload(workList);
+				}
+			}), _msg);
 		}
 
 		private async Task OnLayerRemovingAsync(LayersRemovingEventArgs e)
