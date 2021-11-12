@@ -9,6 +9,11 @@ namespace ProSuite.AGP.WorkList.Test
 		public GdbQueryWorkList(IWorkItemRepository repository, string name) :
 			base(repository, name) { }
 
+		protected override string GetDisplayNameCore()
+		{
+			return "Query work list";
+		}
+
 		public override IEnumerable<IWorkItem> GetItems(QueryFilter filter = null,
 		                                                bool ignoreListSettings = false,
 		                                                int startIndex = -1)

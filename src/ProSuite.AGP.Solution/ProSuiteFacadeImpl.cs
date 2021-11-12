@@ -33,14 +33,15 @@ namespace ProSuite.AGP.Solution
 		{
 			Assert.ArgumentNotNull(environment, nameof(environment));
 
-			string name = WorkListsModule.Current.EnsureUniqueName();
+			string name = WorkListsModule.EnsureUniqueName();
 			Assert.NotNullOrEmpty(name);
 
 			// todo daro use BackgroundTask?
-			await QueuedTask.Run(
-				() => WorkListsModule.Current.CreateWorkListAsync(environment, name));
+			IWorkList workList =
+				await QueuedTask.Run(
+					() => WorkListsModule.Current.CreateWorkListAsync(environment, name));
 
-			WorkListsModule.Current.ShowView(name);
+			WorkListsModule.Current.ShowView(workList);
 		}
 
 		public static async Task OpenWorklist([NotNull] WorkEnvironmentBase environment,
@@ -58,7 +59,7 @@ namespace ProSuite.AGP.Solution
 				return;
 			}
 
-			WorkListsModule.Current.ShowView(worklist.Name);
+			WorkListsModule.Current.ShowView(worklist);
 		}
 	}
 }

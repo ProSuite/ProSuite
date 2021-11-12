@@ -36,9 +36,9 @@ namespace ProSuite.AGP.WorkList
 		}
 
 		[NotNull]
-		public static Uri GetDatasource([NotNull] string homeFolderPath,
-		                                [NotNull] string workListName,
-		                                [NotNull] string fileSuffix)
+		public static string GetDatasource([NotNull] string homeFolderPath,
+		                                   [NotNull] string workListName,
+		                                   [NotNull] string fileSuffix)
 		{
 			//var baseUri = new Uri("worklist://localhost/");
 			string folder = GetLocalWorklistsFolder(homeFolderPath);
@@ -46,10 +46,10 @@ namespace ProSuite.AGP.WorkList
 			if (! FileSystemUtils.EnsureFolderExists(folder))
 			{
 				Assert.True(Directory.Exists(homeFolderPath), $"{homeFolderPath} does not exist");
-				return new Uri(homeFolderPath);
+				return homeFolderPath;
 			}
 
-			return new Uri(Path.Combine(folder, $"{workListName}{fileSuffix}"));
+			return Path.Combine(folder, $"{workListName}{fileSuffix}");
 		}
 
 		[NotNull]

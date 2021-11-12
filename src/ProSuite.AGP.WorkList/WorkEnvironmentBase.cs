@@ -20,7 +20,6 @@ namespace ProSuite.AGP.WorkList
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public abstract string FileSuffix { get; }
-		public abstract string DisplayName { get; }
 
 		[NotNull]
 		public async Task<IWorkList> CreateWorkListAsync([NotNull] string uniqueName,
@@ -36,11 +35,10 @@ namespace ProSuite.AGP.WorkList
 			BasicFeatureLayer[] featureLayers =
 				await Task.WhenAll(GetLayersCore().Select(EnsureStatusFieldCoreAsync));
 
-			string fileName = string.IsNullOrEmpty(displayName) ? DisplayName : displayName;
+			string fileName = string.IsNullOrEmpty(displayName) ? uniqueName : displayName;
 
-			string definitionFilePath = GetDefinitionFile(fileName).LocalPath;
-
-			//string path = WorkListUtils.GetUri(definitionFilePath, uniqueName, FileSuffix).LocalPath;
+			string definitionFilePath = GetDefinitionFile(fileName);
+			
 			_msg.Debug($"Create work list state repository in {definitionFilePath}");
 
 			IRepository stateRepository = CreateStateRepositoryCore(definitionFilePath, uniqueName);
@@ -48,12 +46,32 @@ namespace ProSuite.AGP.WorkList
 			IWorkItemRepository repository =
 				CreateItemRepositoryCore(featureLayers, stateRepository);
 
-			return CreateWorkListCore(repository, uniqueName, fileName);
+			return CreateWorkListCore(repository, uniqueName, displayName);
 		}
 
 		public LayerDocument GetLayerDocument()
 		{
 			return GetLayerDocumentCore();
+		}
+
+		public FeatureLayer AddLayer([NotNull] IWorkList worklist, string path)
+		{
+			FeatureLayer worklistLayer =
+				CreateWorklistLayer(worklist, path, GetContainer());
+
+			LayerUtils.SetLayerSelectability(worklistLayer, false);
+
+			LayerUtils.ApplyRenderer(worklistLayer, GetLayerDocument());
+
+			return worklistLayer;
+		}
+
+		public string GetDefinitionFile([NotNull] string worklistDisplayName)
+		{
+			Assert.ArgumentNotNullOrEmpty(worklistDisplayName, nameof(worklistDisplayName));
+
+			return WorkListUtils.GetDatasource(
+				Project.Current.HomeFolderPath, worklistDisplayName, FileSuffix);
 		}
 
 		/// <summary>
@@ -80,7 +98,7 @@ namespace ProSuite.AGP.WorkList
 		protected abstract IWorkList
 			CreateWorkListCore([NotNull] IWorkItemRepository repository,
 			                   [NotNull] string uniqueName,
-			                   [CanBeNull] string displayName = null);
+			                   [CanBeNull] string displayName);
 
 		protected abstract IRepository CreateStateRepositoryCore(string path, string workListName);
 
@@ -94,24 +112,10 @@ namespace ProSuite.AGP.WorkList
 			return typeof(T);
 		}
 
-		public FeatureLayer AddLayer([NotNull] IWorkList worklist)
-		{
-			FeatureLayer worklistLayer =
-				CreateWorklistLayer(worklist,
-				                    GetDefinitionFile(worklist.DisplayName),
-				                    GetContainer());
-
-			LayerUtils.SetLayerSelectability(worklistLayer, false);
-
-			LayerUtils.ApplyRenderer(worklistLayer, GetLayerDocument());
-
-			return worklistLayer;
-		}
-
 		[NotNull]
 		private static FeatureLayer CreateWorklistLayer(
 			[NotNull] IWorkList worklist,
-			[NotNull] Uri dataSource,
+			[NotNull] string path,
 			[NotNull] ILayerContainerEdit layerContainer)
 		{
 			PluginDatastore datastore = null;
@@ -119,7 +123,7 @@ namespace ProSuite.AGP.WorkList
 
 			try
 			{
-				datastore = WorkListUtils.GetPluginDatastore(dataSource);
+				datastore = WorkListUtils.GetPluginDatastore(new Uri(path, UriKind.Absolute));
 				
 				table = datastore.OpenTable(worklist.Name);
 				Assert.NotNull(table);
@@ -134,17 +138,6 @@ namespace ProSuite.AGP.WorkList
 				datastore?.Dispose();
 				table?.Dispose();
 			}
-		}
-
-		public Uri GetDefinitionFile(IWorkList worklist)
-		{
-			return GetDefinitionFile(worklist.DisplayName);
-		}
-		
-		public Uri GetDefinitionFile(string worklistName)
-		{
-			return WorkListUtils.GetDatasource(
-				Project.Current.HomeFolderPath, worklistName, FileSuffix);
 		}
 	}
 }
