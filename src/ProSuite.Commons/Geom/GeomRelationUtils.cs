@@ -457,7 +457,7 @@ namespace ProSuite.Commons.Geom
 		/// counter-clockwise.</param>
 		/// <returns>Null, if the point is on the boundary, true if the point is inside the ring.</returns>
 		public static bool? AreaContainsXY([NotNull] Linestring closedRing,
-		                                   [NotNull] Pnt3D testPoint,
+		                                   [NotNull] IPnt testPoint,
 		                                   double tolerance,
 		                                   bool disregardingOrientation = false)
 		{
@@ -498,7 +498,7 @@ namespace ProSuite.Commons.Geom
 		/// <param name="tolerance"></param>
 		/// <returns>Null, if the point is on the boundary, true if the point is inside the ring.</returns>
 		public static bool? AreaContainsXY([NotNull] ISegmentList closedRings,
-		                                   [NotNull] Pnt3D testPoint,
+		                                   [NotNull] IPnt testPoint,
 		                                   double tolerance)
 		{
 			Assert.ArgumentCondition(closedRings.IsClosed, "Rings must be closed");

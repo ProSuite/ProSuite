@@ -204,11 +204,13 @@ namespace ProSuite.Commons.Geom
 		[NotNull]
 		public static IList<RingGroup> CutPlanar(
 			[NotNull] RingGroup sourcePoly,
-			[NotNull] MultiLinestring cutLines,
+			[NotNull] ISegmentList cutLines,
 			double tolerance)
 		{
+			IList<Linestring> cutLinestrings = GeomUtils.GetLinestrings(cutLines).ToList();
+
 			bool cutLinesAreVertical =
-				cutLines.GetLinestrings().All(l => CutLineIsVertical(l, tolerance));
+				cutLinestrings.All(l => CutLineIsVertical(l, tolerance));
 
 			if (cutLinesAreVertical)
 			{
@@ -256,6 +258,45 @@ namespace ProSuite.Commons.Geom
 		                                        double tolerance)
 		{
 			return RemoveXY(fromSource, new List<Linestring> {ringToRemove}, tolerance);
+		}
+
+		public static MultiLinestring GetIntersectionAreasXY(
+			[NotNull] MultiLinestring sourceRings,
+			[NotNull] MultiLinestring targetRings,
+			double tolerance,
+			ChangeAlongZSource zSource = ChangeAlongZSource.Target)
+		{
+			Assert.ArgumentCondition(sourceRings.IsClosed, "Source must be closed.");
+			Assert.ArgumentCondition(targetRings.IsClosed, "Target must be closed.");
+
+			if (zSource != ChangeAlongZSource.Target)
+			{
+				targetRings = targetRings.Clone();
+				targetRings.DropZs();
+			}
+
+			Plane3D plane = null;
+			if (zSource == ChangeAlongZSource.SourcePlane)
+			{
+				plane = ChangeZUtils.GetSourcePlane(sourceRings.GetPoints().ToList(), tolerance);
+			}
+
+			var subcurveNavigator = new MultipleRingNavigator(sourceRings, targetRings, tolerance);
+
+			var ringOperator = new RingOperator(subcurveNavigator);
+
+			MultiLinestring result = ringOperator.IntersectXY();
+
+			if (plane != null)
+			{
+				result.AssignUndefinedZs(plane);
+			}
+			else
+			{
+				result.InterpolateUndefinedZs();
+			}
+
+			return result;
 		}
 
 		public static MultiLinestring GetUnionAreasXY([NotNull] MultiLinestring sourceRings,
@@ -389,9 +430,12 @@ namespace ProSuite.Commons.Geom
 		                                            Linestring target,
 		                                            double tolerance)
 		{
-			var ringOperator = new RingOperator(sourceRing, target, tolerance);
+			MultipleRingNavigator ringNavigator =
+				new MultipleRingNavigator(sourceRing, target, tolerance);
 
-			return ringOperator.IntersectXY();
+			var ringOperator = new RingOperator(ringNavigator);
+
+			return ringOperator.IntersectXY().GetLinestrings().ToList();
 		}
 
 		/// <summary>
@@ -639,7 +683,7 @@ namespace ProSuite.Commons.Geom
 		public static bool IsOnTheRightSide([NotNull] Pnt3D previousRingVertex,
 		                                    [NotNull] Pnt3D ringVertex,
 		                                    [NotNull] Pnt3D nextRingVertex,
-		                                    [NotNull] Pnt3D testPoint)
+		                                    [NotNull] IPnt testPoint)
 		{
 			bool isRightOfNextSegment = GeomUtils.IsLeftXY(
 				                            ringVertex,
@@ -2207,10 +2251,10 @@ namespace ProSuite.Commons.Geom
 
 		#region Cut / Intersect
 
-		public static RotationAxis GetPreferredRotationAxis(Linestring linestring)
+		public static RotationAxis GetPreferredRotationAxis(IBoundedXY geometry)
 		{
-			bool rotationAxisX = linestring.XMax - linestring.XMin >
-			                     linestring.YMax - linestring.YMin;
+			bool rotationAxisX = geometry.XMax - geometry.XMin >
+			                     geometry.YMax - geometry.YMin;
 
 			return rotationAxisX ? RotationAxis.X : RotationAxis.Y;
 		}
@@ -3303,6 +3347,21 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
+		private static ISegmentList RotateSegments([NotNull] ISegmentList segmentList,
+		                                           RotationAxis rotationAxis)
+		{
+			if (segmentList is Linestring linestring)
+			{
+				return Rotate(linestring, rotationAxis);
+			}
+			else if (segmentList is RingGroup ringGroup)
+			{
+				return RotateRingGroup(ringGroup, rotationAxis);
+			}
+
+			throw new NotImplementedException("Rotation for geometry type not yet supported");
+		}
+
 		private static RingGroup RotateRingGroup(RingGroup ringGroup,
 		                                         RotationAxis rotationAxis)
 		{
@@ -3318,11 +3377,11 @@ namespace ProSuite.Commons.Geom
 
 		private static IEnumerable<RingGroup> CutVerticalRingGroup(
 			[NotNull] RingGroup source,
-			[NotNull] MultiLinestring matchingCutLines,
+			[NotNull] ISegmentList matchingCutLines,
 			double tolerance)
 		{
 			RotationAxis verticalCutRotation =
-				GetPreferredRotationAxis(source.ExteriorRing);
+				GetPreferredRotationAxis(source);
 
 			IList<MultiLinestring> cutResult =
 				CutVerticalRingGroup(source, matchingCutLines, tolerance, verticalCutRotation)
@@ -3376,14 +3435,14 @@ namespace ProSuite.Commons.Geom
 
 		private static IEnumerable<MultiLinestring> CutVerticalRingGroup(
 			[NotNull] RingGroup source,
-			[NotNull] MultiLinestring matchingCutLines,
+			[NotNull] ISegmentList matchingCutLines,
 			double tolerance,
 			RotationAxis rotationAxis)
 		{
 			var sourceToCutXY = RotateRingGroup(source, rotationAxis);
 
 			MultiPolycurve cutLinesXY = new MultiPolycurve(
-				Rotate(matchingCutLines.GetLinestrings(), rotationAxis));
+				Rotate(GeomUtils.GetLinestrings(matchingCutLines), rotationAxis));
 
 			bool reverseOrientation = sourceToCutXY.ClockwiseOriented == false;
 

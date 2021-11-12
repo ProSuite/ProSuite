@@ -3467,6 +3467,233 @@ namespace ProSuite.Commons.Test.Geometry
 			Assert.AreEqual(expectedArea, result.GetArea2D());
 		}
 
+		[Test]
+		public void CanIntersectXYSimpleRings()
+		{
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(100, 50, 9),
+				            new Pnt3D(100, 20, 9)
+			            };
+
+			var overlapping = new List<Pnt3D>();
+			overlapping.Add(new Pnt3D(40, -10, 0));
+			overlapping.Add(new Pnt3D(40, 30, 0));
+			overlapping.Add(new Pnt3D(200, 30, 0));
+			overlapping.Add(new Pnt3D(200, -10, 0));
+
+			RingGroup poly1 = CreatePoly(ring1);
+			Linestring overlap = CreateRing(overlapping);
+			var target = new MultiPolycurve(new[] {overlap});
+
+			const double tolerance = 0.01;
+
+			MultiLinestring intersectionResult = GeomTopoOpUtils.GetIntersectionAreasXY(
+				poly1, target, tolerance);
+
+			Assert.AreEqual(1, intersectionResult.PartCount);
+			Assert.AreEqual(true, intersectionResult.GetLinestring(0).ClockwiseOriented);
+
+			var expected = CreateRing(new List<Pnt3D>
+			                          {
+				                          new Pnt3D(100, 30, 9),
+				                          new Pnt3D(100, 20, 9),
+				                          new Pnt3D(40, 8, 9),
+				                          new Pnt3D(40, 30, 0)
+			                          });
+
+			Assert.AreEqual(expected.GetArea2D(), intersectionResult.GetArea2D(), 0.0001);
+
+			// And vice versa:
+			intersectionResult = GeomTopoOpUtils.GetIntersectionAreasXY(
+				target, poly1, tolerance);
+
+			Assert.AreEqual(1, intersectionResult.PartCount);
+			Assert.AreEqual(true, intersectionResult.GetLinestring(0).ClockwiseOriented);
+
+			Assert.AreEqual(expected.GetArea2D(), intersectionResult.GetArea2D(), 0.0001);
+
+			// TODO: Fix union for touching rings
+			// Double-check:
+			//MultiLinestring difference = GeomTopoOpUtils.GetDifferenceAreasXY(
+			//	poly1, target, tolerance);
+
+			//MultiLinestring reunion = GeomTopoOpUtils.GetUnionAreasXY(
+			//	intersectionResult, difference, tolerance);
+
+			//Assert.AreEqual(poly1.GetArea2D(), reunion.GetArea2D(), 0.0001);
+		}
+
+		[Test]
+		public void CanIntersectXYContainedRings()
+		{
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(100, 50, 9),
+				            new Pnt3D(100, 20, 9)
+			            };
+
+			var ring2 = new List<Pnt3D>
+			            {
+				            new Pnt3D(20, 20, 9),
+				            new Pnt3D(20, 50, 9),
+				            new Pnt3D(40, 50, 9),
+				            new Pnt3D(40, 20, 9)
+			            };
+
+			RingGroup source = CreatePoly(ring1);
+			RingGroup target = CreatePoly(ring2);
+
+			const double tolerance = 0.01;
+
+			MultiLinestring intersection = GeomTopoOpUtils.GetIntersectionAreasXY(
+				source, target, tolerance);
+
+			Assert.AreEqual(1, intersection.PartCount);
+			Assert.AreEqual(true, intersection.GetLinestring(0).ClockwiseOriented);
+
+			var expected = CreateRing(ring2);
+			double expectedArea = expected.GetArea2D();
+
+			Assert.AreEqual(expectedArea, intersection.GetArea2D(), 0.0001);
+
+			// and vice-versa:
+			intersection = GeomTopoOpUtils.GetIntersectionAreasXY(
+				target, source, tolerance);
+
+			Assert.AreEqual(1, intersection.PartCount);
+			Assert.AreEqual(true, intersection.GetLinestring(0).ClockwiseOriented);
+
+			Assert.AreEqual(expectedArea, intersection.GetArea2D(), 0.0001);
+
+			// In case the target is equal to a source hole -> The intersection should be empty
+			Linestring interiorRing = CreateRing(ring2);
+			interiorRing.ReverseOrientation();
+			source.AddInteriorRing(interiorRing);
+
+			intersection = GeomTopoOpUtils.GetIntersectionAreasXY(
+				source, target, tolerance);
+
+			Assert.AreEqual(0, intersection.PartCount);
+
+			// and vice-versa:
+			intersection = GeomTopoOpUtils.GetIntersectionAreasXY(
+				target, source, tolerance);
+
+			Assert.AreEqual(0, intersection.PartCount);
+		}
+
+		[Test]
+		public void CanIntersectXYDisjoint()
+		{
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(100, 100, 9),
+				            new Pnt3D(100, 20, 9)
+			            };
+
+			var disjoint = new List<Pnt3D>();
+			disjoint.Add(new Pnt3D(140, -10, 0));
+			disjoint.Add(new Pnt3D(140, 30, 0));
+			disjoint.Add(new Pnt3D(300, 30, 0));
+			disjoint.Add(new Pnt3D(300, -10, 0));
+
+			RingGroup poly1 = CreatePoly(ring1);
+			Linestring overlap = CreateRing(disjoint);
+
+			const double tolerance = 0.01;
+
+			var target = new MultiPolycurve(new[] {overlap});
+			MultiLinestring result =
+				GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
+			Assert.IsTrue(result.IsEmpty);
+
+			// Now the same with the target inside a source-island:
+			poly1.AddInteriorRing(new Linestring(new[]
+			                                     {
+				                                     new Pnt3D(25, 50, 0),
+				                                     new Pnt3D(50, 50, 0),
+				                                     new Pnt3D(50, 75, 0),
+				                                     new Pnt3D(25, 75, 0),
+				                                     new Pnt3D(25, 50, 0)
+			                                     }
+			                      ));
+
+			target.AddLinestring(new Linestring(new[]
+			                                    {
+				                                    new Pnt3D(30, 55, 0),
+				                                    new Pnt3D(45, 55, 0),
+				                                    new Pnt3D(45, 70, 0),
+				                                    new Pnt3D(30, 70, 0),
+				                                    new Pnt3D(30, 55, 0)
+			                                    }
+			                     ));
+
+			result = GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
+			Assert.IsTrue(result.IsEmpty);
+
+			// vice versa
+			result = GeomTopoOpUtils.GetIntersectionAreasXY(target, poly1, tolerance);
+			Assert.IsTrue(result.IsEmpty);
+		}
+
+		[Test]
+		public void CanIntersectXYIdentical()
+		{
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(100, 50, 9),
+				            new Pnt3D(100, 20, 9)
+			            };
+
+			RingGroup poly1 = CreatePoly(ring1);
+			Linestring equalRing = poly1.ExteriorRing.Clone();
+
+			const double tolerance = 0.01;
+
+			var target = new MultiPolycurve(new[] {equalRing});
+			MultiLinestring result =
+				GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
+
+			Assert.AreEqual(1, result.PartCount);
+			Assert.AreEqual(true, result.GetLinestring(0).ClockwiseOriented);
+
+			Assert.AreEqual(poly1.GetArea2D(), result.GetArea2D(), 0.0001);
+
+			// And in case one of them has a hole:
+			poly1.AddInteriorRing(new Linestring(new[]
+			                                     {
+				                                     new Pnt3D(20, 40, 0),
+				                                     new Pnt3D(50, 40, 0),
+				                                     new Pnt3D(50, 60, 0),
+				                                     new Pnt3D(20, 60, 0),
+				                                     new Pnt3D(20, 40, 0)
+			                                     }
+			                      ));
+
+			result = GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
+
+			Assert.AreEqual(2, result.PartCount);
+			Assert.AreEqual(true, result.GetLinestring(0).ClockwiseOriented);
+			Assert.AreEqual(false, result.GetLinestring(1).ClockwiseOriented);
+			Assert.AreEqual(poly1.GetArea2D(), result.GetArea2D(), 0.0001);
+
+			// vice versa:
+			result = GeomTopoOpUtils.GetIntersectionAreasXY(target, poly1, tolerance);
+
+			Assert.AreEqual(2, result.PartCount);
+			Assert.AreEqual(true, result.GetLinestring(0).ClockwiseOriented);
+			Assert.AreEqual(false, result.GetLinestring(1).ClockwiseOriented);
+			Assert.AreEqual(poly1.GetArea2D(), result.GetArea2D(), 0.0001);
+		}
 		#region 3D ring intersection
 
 		[Test]

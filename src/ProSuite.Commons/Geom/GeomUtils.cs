@@ -736,6 +736,14 @@ return : Point2D : lines cut each other at Point (non parallel)
 			return Math.Sqrt(distanceSquared);
 		}
 
+		public static IEnumerable<Linestring> GetLinestrings([NotNull] ISegmentList segmentList)
+		{
+			for (int i = 0; i < segmentList.PartCount; i++)
+			{
+				yield return segmentList.GetPart(i);
+			}
+		}
+
 		public static IEnumerable<SegmentIndex> GetShortSegmentIndexes(
 			ISegmentList segmentList,
 			double minimumSegmentLength,

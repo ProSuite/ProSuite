@@ -202,6 +202,26 @@ namespace ProSuite.Commons.Geom
 			throw new NotImplementedException();
 		}
 
+		public override IEnumerable<Linestring> GetEqualSourceRings()
+		{
+			throw new NotImplementedException();
+		}
+
+		public override IEnumerable<IntersectionPoint3D> GetEqualRingsSourceStartIntersection()
+		{
+			throw new NotImplementedException();
+		}
+
+		public override IEnumerable<Linestring> GetSourceRingsCompletelyWithinTarget()
+		{
+			throw new NotImplementedException();
+		}
+
+		public override IEnumerable<Linestring> GetTargetRingsCompletelyWithinSource()
+		{
+			throw new NotImplementedException();
+		}
+
 		private void GetAlongTargetDirectionChanges(
 			[NotNull] IntersectionPoint3D intersection,
 			[NotNull] Line3D entryLine,

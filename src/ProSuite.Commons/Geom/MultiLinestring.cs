@@ -740,5 +740,13 @@ namespace ProSuite.Commons.Geom
 		}
 
 		public abstract MultiLinestring Clone();
+
+		public void DropZs()
+		{
+			foreach (Pnt3D point in GetPoints())
+			{
+				point.Z = double.NaN;
+			}
+		}
 	}
 }

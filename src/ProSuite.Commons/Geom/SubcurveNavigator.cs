@@ -135,6 +135,8 @@ namespace ProSuite.Commons.Geom
 		public IList<Linestring> FollowSubcurvesClockwise(
 			[NotNull] ICollection<IntersectionPoint3D> startIntersections)
 		{
+			Assert.ArgumentCondition(Source.IsClosed, "Source ring(s) must be closed.");
+
 			IList<Linestring> result = new List<Linestring>();
 			var subcurveInfos = new List<IntersectionRun>();
 
@@ -596,6 +598,19 @@ namespace ProSuite.Commons.Geom
 		public abstract IEnumerable<Linestring> GetNonIntersectedTargets();
 
 		public abstract bool AreIntersectionPointsNonSequential();
+
+		public abstract IEnumerable<Linestring> GetEqualSourceRings();
+
+		public abstract IEnumerable<IntersectionPoint3D> GetEqualRingsSourceStartIntersection();
+
+		/// <summary>
+		/// Gets the source rings that are completely within the target geometry. Source
+		/// rings that are equal to a target ring are excluded.
+		/// </summary>
+		/// <returns></returns>
+		public abstract IEnumerable<Linestring> GetSourceRingsCompletelyWithinTarget();
+
+		public abstract IEnumerable<Linestring> GetTargetRingsCompletelyWithinSource();
 
 		private void CalculateIntersections()
 		{
