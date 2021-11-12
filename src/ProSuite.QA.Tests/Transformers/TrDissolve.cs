@@ -723,7 +723,7 @@ namespace ProSuite.QA.Tests.Transformers
 					List<DirectedRow> connectedRows)
 				{
 					IList<string> groupBys = _r.Resulting.GroupBy;
-					if (! (groupBys.Count > 0))
+					if (! (groupBys?.Count > 0))
 					{
 						yield return connectedRows;
 						yield break;

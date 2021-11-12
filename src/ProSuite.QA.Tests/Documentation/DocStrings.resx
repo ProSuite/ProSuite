@@ -4914,4 +4914,9 @@ If 'Grouped'=true, the attributes must be defined by Group-Expressions like COUN
   <data name="TrGeometryTransform_Attributes" xml:space="preserve">
     <value>Attributes that are copied from source featureclass to resulting featureclass</value>
   </data>
+  <data name="TrSpatialJoin_OuterJoin" xml:space="preserve">
+    <value>Default = false.Left outer Join.
+If true: transform features from t0-features that have no spatial relation to any feature of t1
+If false: ignore features from t0 that have no spatial relation to any feature of t1</value>
+  </data>
 </root>

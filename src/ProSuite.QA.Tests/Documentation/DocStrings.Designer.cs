@@ -11104,6 +11104,17 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Default = false.Left outer Join.
+        ///If true: transform features from t0-features that have no spatial relation to any feature of t1
+        ///If false: ignore features from t0 that have no spatial relation to any feature of t1.
+        /// </summary>
+        public static string TrSpatialJoin_OuterJoin {
+            get {
+                return ResourceManager.GetString("TrSpatialJoin_OuterJoin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Feature class that provides the shape for the new features.
         /// </summary>
         public static string TrSpatialJoin_t0 {

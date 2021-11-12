@@ -26,9 +26,9 @@ namespace ProSuite.QA.Tests.Transformers
 		public IList<ITable> InvolvedTables { get; }
 
 		[Doc(nameof(DocStrings.TrSpatialJoin_0))]
-		public TrSpatialJoin([NotNull]    [Doc(nameof(DocStrings.TrSpatialJoin_t0))]
+		public TrSpatialJoin([NotNull] [Doc(nameof(DocStrings.TrSpatialJoin_t0))]
 		                     IFeatureClass t0,
-		                     [NotNull]    [Doc(nameof(DocStrings.TrSpatialJoin_t1))]
+		                     [NotNull] [Doc(nameof(DocStrings.TrSpatialJoin_t1))]
 		                     IFeatureClass t1)
 		{
 			_t0 = t0;
@@ -39,15 +39,24 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		// Remark: Grouped must come in Code before T1Attributes !
-		[TestParameter] [Doc(nameof(DocStrings.TrSpatialJoin_Grouped))]
-
+		[TestParameter]
+		[Doc(nameof(DocStrings.TrSpatialJoin_Grouped))]
 		public bool Grouped
 		{
 			get => _transformedFc.Grouped;
 			set => _transformedFc.Grouped = value;
 		}
 
-		[TestParameter] [Doc(nameof(DocStrings.TrSpatialJoin_T0Attributes))]
+		[TestParameter]
+		[Doc(nameof(DocStrings.TrSpatialJoin_OuterJoin))]
+		public bool OuterJoin
+		{
+			get => _transformedFc.OuterJoin;
+			set => _transformedFc.OuterJoin = value;
+		}
+
+		[TestParameter]
+		[Doc(nameof(DocStrings.TrSpatialJoin_T0Attributes))]
 		public IList<string> T0Attributes
 		{
 			get => _t0Attributes;
@@ -58,7 +67,8 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
-		[TestParameter] [Doc(nameof(DocStrings.TrSpatialJoin_T1Attributes))]
+		[TestParameter]
+		[Doc(nameof(DocStrings.TrSpatialJoin_T1Attributes))]
 		public IList<string> T1Attributes
 		{
 			get => _t1Attributes;
@@ -130,6 +140,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			public bool Grouped { get; set; }
+			public bool OuterJoin { get; set; }
 
 			protected override IObject CreateObject(int oid)
 			{
@@ -255,9 +266,11 @@ namespace ProSuite.QA.Tests.Transformers
 					var op = (IRelationalOperator) ((IFeature) toJoin).Shape;
 
 					List<IRow> joineds = new List<IRow>();
+					bool outerJoin = ((Tfc) Resulting).OuterJoin;
 					foreach (var joined in DataContainer.Search(
 						(ITable) _t1, joinFilter, QueryHelpers[1]))
 					{
+						outerJoin = false;
 						IGeometry joinedGeom = ((IFeature) joined).Shape;
 						// TODO implement different relations
 						if (op.Disjoint(joinedGeom))
@@ -277,7 +290,7 @@ namespace ProSuite.QA.Tests.Transformers
 						}
 					}
 
-					if (joineds.Count > 0)
+					if (joineds.Count > 0 || outerJoin)
 					{
 						GdbFeature f = CreateFeature(toJoin, joineds);
 						yield return f;

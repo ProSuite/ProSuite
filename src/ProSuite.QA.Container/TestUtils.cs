@@ -1216,11 +1216,13 @@ namespace ProSuite.QA.Container
 				case esriFieldType.esriFieldTypeOID:
 					return typeof(int);
 
+				case esriFieldType.esriFieldTypeGUID:
+				case esriFieldType.esriFieldTypeGlobalID:
+					return typeof(Guid);
+
 				case esriFieldType.esriFieldTypeGeometry:
 				case esriFieldType.esriFieldTypeBlob:
 				case esriFieldType.esriFieldTypeRaster:
-				case esriFieldType.esriFieldTypeGUID:
-				case esriFieldType.esriFieldTypeGlobalID:
 				case esriFieldType.esriFieldTypeXML:
 					return typeof(object);
 
