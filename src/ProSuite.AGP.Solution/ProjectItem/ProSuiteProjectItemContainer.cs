@@ -16,7 +16,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 
 		public ProSuiteProjectItemContainer() : base(ContainerName)
 		{
-			this.ContextMenuID = "ProSuiteSolution_AddFoldersMenu";
+			ContextMenuID = "ProSuiteSolution_AddFoldersMenu";
 		}
 
 		/// <summary>
@@ -47,6 +47,6 @@ namespace ProSuite.AGP.Solution.ProjectItem
 			ImageUtils.GetImageSource(@"FolderWithGISData32.png");
 
 		public override Task<ImageSource> SmallImage =>
-			Task.FromResult((ImageSource) ImageUtils.GetImageSource(@"FolderWithGISData16.png"));
+			Task.FromResult(ImageUtils.GetImageSource(@"FolderWithGISData16.png"));
 	}
 }

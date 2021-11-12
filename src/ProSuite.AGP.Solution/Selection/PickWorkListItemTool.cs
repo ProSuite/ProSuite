@@ -41,7 +41,7 @@ namespace ProSuite.AGP.Solution.Selection
 			//can select from layer if the layer is a worklist layer
 			if (WorkListsModule.Current.LayersByWorklistName.ContainsValue(featureLayer))
 			{
-				FeatureLayer layer = null; // TODO - should be better comparison
+				FeatureLayer layer; // TODO - should be better comparison
 				if (WorkListsModule.Current.LayersByWorklistName.TryGetValue(
 					    WorkListsModule.Current.ActiveWorkListlayer?.Name, out layer)
 				    && layer?.URI == featureLayer.URI)

@@ -18,8 +18,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 
 		public ProSuiteProjectItemConfiguration(
 			IEnumerable<ProSuiteQAServerConfiguration> serverConfigs,
-			ProSuiteQASpecificationsConfiguration specificationConfig) :
-			base()
+			ProSuiteQASpecificationsConfiguration specificationConfig)
 		{
 			ServerConfigurations = serverConfigs;
 			SpecificationConfiguration = specificationConfig;
@@ -29,7 +28,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 			ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset32.png");
 
 		public override Task<ImageSource> SmallImage => Task.FromResult(
-			(ImageSource) ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset16.png"));
+			ImageUtils.GetImageSource(@"GeodatabaseFeatureDataset16.png"));
 
 		//TODO algr: IsContainer = true will allow create subitem(s) from one file
 		public override bool IsContainer => false; //true;
@@ -37,7 +36,7 @@ namespace ProSuite.AGP.Solution.ProjectItem
 		//TODO algr: this is necessary only for IsContainer = true
 		public override void Fetch()
 		{
-			this.ClearChildren();
+			ClearChildren();
 
 			// serialize configuration info
 			var helper = new XmlSerializationHelper<IEnumerable<ProSuiteQAServerConfiguration>>();

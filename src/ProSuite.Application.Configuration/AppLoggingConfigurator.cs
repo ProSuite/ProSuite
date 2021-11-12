@@ -1,4 +1,3 @@
-using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -7,9 +6,6 @@ namespace ProSuite.Application.Configuration
 {
 	public static class AppLoggingConfigurator
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
-
 		public static bool UsePrivateConfiguration
 		{
 			get { return LoggingConfigurator.UsePrivateConfiguration; }

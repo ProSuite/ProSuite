@@ -1,7 +1,5 @@
-using System.Reflection;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 
 namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 {
@@ -12,9 +10,6 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 	public class CutSubcurve
 	{
 		#region Field declarations
-
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		private readonly bool _isReshapeMemberCandidate;
 
@@ -133,7 +128,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 				return true;
 			}
 
-			if (obj.GetType() != this.GetType())
+			if (obj.GetType() != GetType())
 			{
 				return false;
 			}
