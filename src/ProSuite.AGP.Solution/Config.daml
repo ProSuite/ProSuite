@@ -283,16 +283,18 @@
         </button>
         <tool id="ProSuite_AGP_Solution_QA_SelectIssueFeaturesTool" caption="Select Issue Features"
               className="ProSuite.AGP.Solution.QA.SelectIssueFeaturesTool" loadOnClick="false"
-              smallImage="Images\SelectIssueFeaturesTool16.png" largeImage="Images\SelectIssueFeaturesTool32.png">
+              smallImage="Images\SelectIssueFeaturesTool16.png" largeImage="Images\SelectIssueFeaturesTool32.png"
+              condition="esri_mapping_mapPane">
           <tooltip heading="Select Issue Features">
-            Select issue features.<disabledText />
+            Select issue features from issue layers.<disabledText />
           </tooltip>
         </tool>
         <button id="ProSuite_AGP_Solution_QA_SelectInvolvedObjectsCmd" caption="Select Involved Objects"
                 className="ProSuite.AGP.Solution.QA.SelectInvolvedObjectsCmd" loadOnClick="false"
-                smallImage="Images\SelectInvolvedObjectsCmd16.png" largeImage="Images\SelectInvolvedObjectsCmd32.png">
+                smallImage="Images\SelectInvolvedObjectsCmd16.png" largeImage="Images\SelectInvolvedObjectsCmd32.png"
+                condition="esri_mapping_mapPane">
           <tooltip heading="Select Involved Objects">
-            Select involved objects.<disabledText />
+            Select involved objects based on the currently selected issues.<disabledText />
           </tooltip>
         </button>
         <button id="WorkLists_ShowWorkListsButton" caption="Open Work List" className="WorkLists.ShowWorkListsButton"

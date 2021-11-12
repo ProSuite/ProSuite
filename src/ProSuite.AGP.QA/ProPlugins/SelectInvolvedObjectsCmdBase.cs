@@ -34,28 +34,41 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			if (! MapUtils.HasSelection(mapView))
 			{
-				_msg.Debug("No selected features");
+				_msg.Debug("No features or rows selected");
 				return;
 			}
 
-			//get selected issue features from issue layers
+			//get selected issue objects from issue layers
 			List<Row> issueObjects = new List<Row>();
 
-			var selection = await QueuedTask.Run(
-				                () => SelectionUtils.GetSelectedFeatures(mapView)
-				                                    .Cast<Row>().ToList());
+			var layers = MapUtils.GetLayers<FeatureLayer>(
+				fl => IssueGdbSchema.IssueFeatureClassNames.Contains(
+					fl.GetFeatureClass().GetName()));
 
-			foreach (Row row in selection)
+			foreach (FeatureLayer layer in layers)
 			{
-				var table = row.GetTable();
-
-				if (IssueGdbSchema.IssueFeatureClassNames.Contains(table.GetName()))
-				{
-					issueObjects.Add(row);
-				}
+				issueObjects.AddRange(
+					await QueuedTask.Run(() => SelectionUtils.GetSelectedFeatures(layer)));
 			}
 
-			//get involved rows from issue features
+			var tables = MapUtils.GetStandaloneTables(
+				tbl => IssueGdbSchema.IssueFeatureClassNames.Contains(
+					tbl.GetTable().GetName()));
+
+			foreach (StandaloneTable table in tables)
+			{
+				issueObjects.AddRange(
+					await QueuedTask.Run(() => StandaloneTableUtils.GetSelectedRows(table)));
+			}
+
+			_msg.DebugFormat("{0} issue objects selected", issueObjects.Count);
+
+			if (issueObjects.Count == 0)
+			{
+				return;
+			}
+
+			//get involved rows (OIDs grouped by table) from issue objects
 			Dictionary<string, List<long>> involvedRows = new Dictionary<string, List<long>>();
 
 			foreach (Row issueObject in issueObjects)
@@ -78,7 +91,9 @@ namespace ProSuite.AGP.QA.ProPlugins
 				}
 			}
 
-			//select features based on involved rows
+			_msg.DebugFormat("Involved rows found from {0} object classes.", involvedRows.Count);
+
+			//select features or rows based on involved rows
 			foreach (KeyValuePair<string, List<long>> keyValuePair in involvedRows)
 			{
 				FeatureLayer layer =
@@ -88,12 +103,31 @@ namespace ProSuite.AGP.QA.ProPlugins
 							keyValuePair.Key,
 							StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
 
-				await QueuedTask.Run(
-					() =>
-						layer?.Select(
-							new QueryFilter { ObjectIDs = keyValuePair.Value },
-							SelectionCombinationMethod.Add)
-				);
+				if (layer != null)
+				{
+					await QueuedTask.Run(() => layer.Select(
+						                     new QueryFilter { ObjectIDs = keyValuePair.Value },
+						                     SelectionCombinationMethod.Add));
+					continue;
+				}
+
+				StandaloneTable table =
+					MapUtils.GetStandaloneTables(
+						tbl => string.Equals(
+							tbl.GetTable().GetName(),
+							keyValuePair.Key,
+							StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+
+				if (table != null)
+				{
+					await QueuedTask.Run(() => table.Select(
+						                     new QueryFilter { ObjectIDs = keyValuePair.Value },
+						                     SelectionCombinationMethod.Add));
+					continue;
+				}
+
+				_msg.DebugFormat("No layer or standalone table for object class {0} found.",
+				                 keyValuePair.Key);
 			}
 		}
 	}

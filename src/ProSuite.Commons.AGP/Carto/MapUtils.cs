@@ -314,6 +314,25 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
+		public static IEnumerable<StandaloneTable> GetStandaloneTables(
+			[CanBeNull] Predicate<StandaloneTable> tablePredicate)
+		{
+			MapView mapView = MapView.Active;
+
+			if (mapView == null)
+			{
+				yield break;
+			}
+
+			foreach (StandaloneTable table in mapView.Map.StandaloneTables)
+			{
+				if (tablePredicate == null || tablePredicate(table))
+				{
+					yield return table;
+				}
+			}
+		}
+
 		private static bool IsLayerApplicable(
 			[CanBeNull] FeatureLayer featureLayer,
 			TargetFeatureSelection targetSelectionType,
