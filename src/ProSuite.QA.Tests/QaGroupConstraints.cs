@@ -491,6 +491,23 @@ namespace ProSuite.QA.Tests
 
 			bool caseSensitivity = GetSqlCaseSensitivity(tableIndex);
 
+			// TODO: solve differently (include Involved Rows in TableIndexRow?)
+			if (_relatedTables == null && _tables.Count == 1)
+			{
+				IDataset ds = (IDataset) _tables[0];
+				if (ds.FullName is IQueryName qn)
+				{
+					IFeatureWorkspace ws = (IFeatureWorkspace) ds.Workspace;
+					List<ITable> relTables = new List<ITable>();
+					foreach (string tableName in qn.QueryDef.Tables.Split(','))
+					{
+						relTables.Add(ws.OpenTable(tableName));
+					}
+
+					SetRelatedTables(relTables);
+				}
+			}
+
 			if (_relatedTables != null)
 			{
 				foreach (var rt in _relatedTables.Related

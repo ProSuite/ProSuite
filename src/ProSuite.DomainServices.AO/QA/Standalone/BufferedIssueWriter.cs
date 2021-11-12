@@ -231,6 +231,12 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			IObjectDataset objectDataset = _datasetResolver.GetDatasetByInvolvedRowTableName(
 				involvedRow.TableName, element.QualityCondition);
 
+			if (objectDataset == null)
+			{
+								// TODO: Solve differently
+				return null;
+			}
+
 			Assert.NotNull(objectDataset,
 			               "Unable to resolve object dataset for table name {0} and quality condition {1}",
 			               involvedRow.TableName, element.QualityCondition.Name);

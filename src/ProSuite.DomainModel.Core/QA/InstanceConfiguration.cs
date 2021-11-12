@@ -82,20 +82,35 @@ namespace ProSuite.DomainModel.Core.QA
 		/// 
 		/// </summary>
 		/// <param name="includeReferencedProcessors">include RowFilters, IssueFilters and Transformers</param>
+		/// <param name="includeSourceDatasets">include Transformers of dataset sources</param>
 		/// <returns></returns>
 		[NotNull]
 		public IEnumerable<Dataset> GetDatasetParameterValues(
-			bool includeReferencedProcessors = false)
+			bool includeReferencedProcessors = false, bool includeSourceDatasets = false)
 		{
 			foreach (TestParameterValue parameterValue in ParameterValues)
 			{
 				var datasetTestParameterValue = parameterValue as DatasetTestParameterValue;
 
-				Dataset dataset = datasetTestParameterValue?.DatasetValue;
+				if (datasetTestParameterValue == null)
+				{
+					continue;
+				}
+
+				Dataset dataset = datasetTestParameterValue.DatasetValue;
 
 				if (dataset != null)
 				{
 					yield return dataset;
+				}
+				else if (includeSourceDatasets && datasetTestParameterValue.ValueSource != null)
+				{
+					foreach (Dataset referencedDataset in
+						datasetTestParameterValue.ValueSource.GetDatasetParameterValues(
+							includeSourceDatasets: true))
+					{
+						yield return referencedDataset;
+					}
 				}
 			}
 
