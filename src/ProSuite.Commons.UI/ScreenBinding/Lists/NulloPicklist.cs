@@ -62,11 +62,11 @@ namespace ProSuite.Commons.UI.ScreenBinding.Lists
 			comboBox.SelectedItem = originalValue;
 		}
 
-		public IList Values => new string[0];
+		public IList Values => Array.Empty<string>();
 
 		public IEnumerator GetEnumerator()
 		{
-			return new string[0].GetEnumerator();
+			return Array.Empty<string>().GetEnumerator();
 		}
 
 		#endregion

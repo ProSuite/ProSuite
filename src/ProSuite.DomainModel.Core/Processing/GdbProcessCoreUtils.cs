@@ -42,7 +42,7 @@ namespace ProSuite.DomainModel.Core.Processing
 		{
 			// TODO Merge this method with GdbProcessUtils.GetProcessParameters (once possible)
 
-			if (type == null) return new PropertyInfo[0];
+			if (type == null) return Array.Empty<PropertyInfo>();
 
 			// TODO check if GdbProcessUtils.IsGdbProcessType(type)
 

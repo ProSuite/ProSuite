@@ -51,7 +51,7 @@ namespace ProSuite.Commons.UI.ScreenBinding
 		public NotificationMessage[] Validate(object target)
 		{
 			return target == null
-				       ? new NotificationMessage[0]
+				       ? Array.Empty<NotificationMessage>()
 				       : Validator.ValidateField(target, InnerProperty.Name);
 		}
 
