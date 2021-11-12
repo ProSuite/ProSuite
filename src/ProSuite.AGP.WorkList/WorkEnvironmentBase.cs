@@ -36,11 +36,10 @@ namespace ProSuite.AGP.WorkList
 			BasicFeatureLayer[] featureLayers =
 				await Task.WhenAll(GetLayersCore().Select(EnsureStatusFieldCoreAsync));
 
-			string fileName = string.IsNullOrEmpty(displayName) ? DisplayName : displayName;
+			string fileName = string.IsNullOrEmpty(displayName) ? uniqueName : displayName;
 
 			string definitionFilePath = GetDefinitionFile(fileName).LocalPath;
-
-			//string path = WorkListUtils.GetUri(definitionFilePath, uniqueName, FileSuffix).LocalPath;
+			
 			_msg.Debug($"Create work list state repository in {definitionFilePath}");
 
 			IRepository stateRepository = CreateStateRepositoryCore(definitionFilePath, uniqueName);
@@ -54,6 +53,28 @@ namespace ProSuite.AGP.WorkList
 		public LayerDocument GetLayerDocument()
 		{
 			return GetLayerDocumentCore();
+		}
+
+		public FeatureLayer AddLayer([NotNull] IWorkList worklist)
+		{
+			FeatureLayer worklistLayer =
+				CreateWorklistLayer(worklist,
+				                    GetDefinitionFile(worklist.DisplayName),
+				                    GetContainer());
+
+			LayerUtils.SetLayerSelectability(worklistLayer, false);
+
+			LayerUtils.ApplyRenderer(worklistLayer, GetLayerDocument());
+
+			return worklistLayer;
+		}
+
+		public Uri GetDefinitionFile([NotNull] string worklistDisplayName)
+		{
+			Assert.ArgumentNotNullOrEmpty(worklistDisplayName, nameof(worklistDisplayName));
+
+			return WorkListUtils.GetDatasource(
+				Project.Current.HomeFolderPath, worklistDisplayName, FileSuffix);
 		}
 
 		/// <summary>
@@ -94,20 +115,6 @@ namespace ProSuite.AGP.WorkList
 			return typeof(T);
 		}
 
-		public FeatureLayer AddLayer([NotNull] IWorkList worklist)
-		{
-			FeatureLayer worklistLayer =
-				CreateWorklistLayer(worklist,
-				                    GetDefinitionFile(worklist.DisplayName),
-				                    GetContainer());
-
-			LayerUtils.SetLayerSelectability(worklistLayer, false);
-
-			LayerUtils.ApplyRenderer(worklistLayer, GetLayerDocument());
-
-			return worklistLayer;
-		}
-
 		[NotNull]
 		private static FeatureLayer CreateWorklistLayer(
 			[NotNull] IWorkList worklist,
@@ -134,17 +141,6 @@ namespace ProSuite.AGP.WorkList
 				datastore?.Dispose();
 				table?.Dispose();
 			}
-		}
-
-		public Uri GetDefinitionFile(IWorkList worklist)
-		{
-			return GetDefinitionFile(worklist.DisplayName);
-		}
-		
-		public Uri GetDefinitionFile(string worklistName)
-		{
-			return WorkListUtils.GetDatasource(
-				Project.Current.HomeFolderPath, worklistName, FileSuffix);
 		}
 	}
 }
