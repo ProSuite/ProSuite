@@ -41,7 +41,7 @@ namespace ProSuite.AGP.Solution
 				await QueuedTask.Run(
 					() => WorkListsModule.Current.CreateWorkListAsync(environment, name));
 
-			WorkListsModule.Current.ShowView(workList, environment.DisplayName);
+			WorkListsModule.Current.ShowView(workList);
 		}
 
 		public static async Task OpenWorklist([NotNull] WorkEnvironmentBase environment,
@@ -59,7 +59,7 @@ namespace ProSuite.AGP.Solution
 				return;
 			}
 
-			WorkListsModule.Current.ShowView(worklist, environment.DisplayName);
+			WorkListsModule.Current.ShowView(worklist);
 		}
 	}
 }

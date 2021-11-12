@@ -18,7 +18,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 	{
 		private readonly string _templateLayer = "Selection Work List.lyrx";
 		
-		public override string DisplayName => "Selection Work List";
 		public override string FileSuffix => ".swl";
 
 		protected override ILayerContainerEdit GetContainer()
@@ -75,11 +74,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,
 		                                                string uniqueName,
-		                                                string displayName = null)
+		                                                string displayName)
 		{
-			string name = ! string.IsNullOrEmpty(displayName) ? displayName : DisplayName;
-
-			return new SelectionWorkList(repository, uniqueName, name);
+			return new SelectionWorkList(repository, uniqueName, displayName);
 		}
 	}
 }

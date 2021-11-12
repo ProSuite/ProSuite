@@ -88,7 +88,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			}
 		}
 		
-		public void ShowView([NotNull] IWorkList worklist, string displayName)
+		public void ShowView([NotNull] IWorkList worklist)
 		{
 			Assert.ArgumentCondition(_registry.Exists(worklist.Name),
 			                         $"work list {worklist.Name} does not exist");
@@ -98,7 +98,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 				return;
 			}
 			
-			view.Show(displayName);
+			view.Show(worklist.DisplayName);
 		}
 
 		[CanBeNull]
@@ -151,7 +151,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 			{
 				// assertion is a no-op to avoid resharper warning
 				Assert.NotNull(environment.LoadLayers().ToList());
-				environment.AddLayer(worklist);
+				environment.AddLayer(worklist, path);
 			}
 
 			if (! _viewsByWorklistName.ContainsKey(worklist.Name))
@@ -188,8 +188,10 @@ namespace ProSuite.AGP.Solution.WorkLists
 			// wiring work list events, etc. is done in OnDrawComplete
 			// register work list before creating the layer
 			_registry.TryAdd(worklist);
+			
+			string fileName = string.IsNullOrEmpty(displayName) ? uniqueName : displayName;
 
-			string path = environment.GetDefinitionFile(worklist.DisplayName).LocalPath;
+			string path = environment.GetDefinitionFile(fileName);
 
 			if (! ProjectItemUtils.TryAdd(path, out WorklistItem item))
 			{
@@ -199,7 +201,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 				_msg.Debug($"work item count {worklist.Count()}");
 			}
 
-			environment.AddLayer(worklist);
+			environment.AddLayer(worklist, path);
 
 			if (! _viewsByWorklistName.ContainsKey(worklist.Name))
 			{

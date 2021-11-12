@@ -42,16 +42,16 @@ namespace ProSuite.AGP.WorkList.Domain
 			new Dictionary<GdbRowIdentity, IWorkItem>(_initialCapacity);
 
 		private WorkItemVisibility _visibility;
+		private readonly string _displayName;
 
 		protected WorkList([NotNull] IWorkItemRepository repository,
 		                   [NotNull] string name,
-		                   [CanBeNull] string displayName = null)
+		                   string displayName = null)
 		{
-			Repository = repository;
-
+			_displayName = displayName;
 			Name = name;
 
-			DisplayName = ! string.IsNullOrEmpty(displayName) ? displayName : name;
+			Repository = repository;
 
 			Visibility = WorkItemVisibility.Todo;
 			AreaOfInterest = null;
@@ -84,7 +84,19 @@ namespace ProSuite.AGP.WorkList.Domain
 
 		public string Name { get; set; }
 
-		public string DisplayName { get; set; }
+		public string DisplayName
+		{
+			get
+			{
+				if (string.IsNullOrEmpty(_displayName))
+				{
+					return GetDisplayNameCore();
+				}
+				return _displayName;
+			}
+		}
+
+		protected abstract string GetDisplayNameCore();
 
 		// NOTE: An empty work list should return null and not an empty envelope.
 		//		 Pluggable Datasource cannot handle an empty envelope.
