@@ -11,7 +11,7 @@ namespace ProSuite.Commons.Logging.Inspector
 		{
 			CaptureCapacity = captureCapacity;
 			StartTime = startTime;
-			CapturedEvents = capturedEvents ?? new LogInspectorEntry[0];
+			CapturedEvents = capturedEvents ?? Array.Empty<LogInspectorEntry>();
 			SnapshotTime = snapshotTime ?? DateTime.Now;
 		}
 
