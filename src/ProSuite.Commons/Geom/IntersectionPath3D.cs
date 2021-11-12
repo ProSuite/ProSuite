@@ -1,4 +1,4 @@
-﻿using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geom
 {
@@ -21,6 +21,12 @@ namespace ProSuite.Commons.Geom
 			Segments = segments;
 			RingPlaneTopology = ringPlaneTopology;
 		}
+
+		[CanBeNull]
+		public IntersectionPoint3D StartIntersection { get; set; }
+
+		[CanBeNull]
+		public IntersectionPoint3D EndIntersection { get; set; }
 
 		public override string ToString()
 		{

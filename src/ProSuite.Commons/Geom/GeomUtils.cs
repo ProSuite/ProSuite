@@ -937,6 +937,21 @@ return : Point2D : lines cut each other at Point (non parallel)
 			}
 		}
 
+		public static bool IsVertical([NotNull] ISegmentList segmentList, double tolerance)
+		{
+			for (int i = 0; i < segmentList.PartCount; i++)
+			{
+				Linestring linestring = segmentList.GetPart(i);
+
+				if (! linestring.IsVerticalRing(tolerance))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
 		private static bool IsMoreSouthEast(Pnt3D point1, Pnt3D point2)
 		{
 			if (point1.Y < point2.Y)

@@ -3694,6 +3694,161 @@ namespace ProSuite.Commons.Test.Geometry
 			Assert.AreEqual(false, result.GetLinestring(1).ClockwiseOriented);
 			Assert.AreEqual(poly1.GetArea2D(), result.GetArea2D(), 0.0001);
 		}
+
+		[Test]
+		public void CanGetIntersectionLinesXYLineAlongRing()
+		{
+			// Get the lines within a polygon and a line along & within a polygon:
+
+			var path1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(-5, 50, 2),
+				            new Pnt3D(0, 50, 2),
+				            new Pnt3D(200, 50, 2)
+			            };
+
+			var ring2 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(100, 50, 9),
+				            new Pnt3D(100, 20, 9)
+			            };
+
+			Linestring sourceLinestring = new Linestring(path1);
+
+			RingGroup targetPoly = CreatePoly(ring2);
+
+			var intersectionLinesXY =
+				GeomTopoOpUtils.GetRingIntersectionLinesXY(
+					sourceLinestring, targetPoly, 0.001).ToList();
+
+			Assert.AreEqual(1, intersectionLinesXY.Count);
+
+			var expectedInterior = new Linestring(new[]
+			                                      {
+				                                      new Pnt3D(0, 50, 2),
+				                                      new Pnt3D(100, 50, 2)
+			                                      });
+
+			Assert.IsTrue(intersectionLinesXY[0].Segments.Equals(expectedInterior));
+
+			// With a stretch along the boundary:
+			path1 = new List<Pnt3D>
+			        {
+				        new Pnt3D(-5, 50, 2),
+				        new Pnt3D(0, 50, 2),
+				        new Pnt3D(100, 50, 2),
+				        new Pnt3D(100, 20, 2)
+			        };
+
+			sourceLinestring = new Linestring(path1);
+
+			intersectionLinesXY =
+				GeomTopoOpUtils.GetRingIntersectionLinesXY(
+					sourceLinestring, targetPoly, 0.001).ToList();
+
+			Assert.AreEqual(2, intersectionLinesXY.Count);
+			
+			Assert.IsTrue(intersectionLinesXY[0].Segments.Equals(expectedInterior));
+
+			Assert.IsTrue(intersectionLinesXY[1].Segments.Equals(
+				              new Linestring(new[]
+				                             {
+					                             new Pnt3D(100, 50, 2),
+					                             new Pnt3D(100, 20, 2)
+				                             })));
+
+
+			// Excluded target boundary line:
+			intersectionLinesXY =
+				GeomTopoOpUtils.GetRingIntersectionLinesXY(
+					sourceLinestring, targetPoly, 0.001, true).ToList();
+
+			Assert.AreEqual(1, intersectionLinesXY.Count);
+			Assert.IsTrue(intersectionLinesXY[0].Segments.Equals(expectedInterior));
+		}
+
+		[Test]
+		public void CanGetIntersectionLinesXYLineWithinRing()
+		{
+			// Get the lines completely within a polygon:
+			var path1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(5, 50, 2),
+				            new Pnt3D(70, 50, 2)
+			            };
+
+			var ring2 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(100, 50, 9),
+				            new Pnt3D(100, 20, 9)
+			            };
+
+			Linestring containedSource = new Linestring(path1);
+
+			RingGroup targetPoly = CreatePoly(ring2);
+
+			var intersectionLinesXY =
+				GeomTopoOpUtils.GetRingIntersectionLinesXY(
+					containedSource, targetPoly, 0.001).ToList();
+
+			Assert.AreEqual(1, intersectionLinesXY.Count);
+
+			Assert.IsTrue(intersectionLinesXY[0].Segments.Equals(containedSource));
+
+			// Starting from the inside with touch:
+			path1 = new List<Pnt3D>
+			        {
+				        new Pnt3D(50, 50, 2),
+				        new Pnt3D(100, 40, 2),
+			        };
+
+			containedSource = new Linestring(path1);
+
+			intersectionLinesXY =
+				GeomTopoOpUtils.GetRingIntersectionLinesXY(
+					containedSource, targetPoly, 0.001).ToList();
+
+			Assert.AreEqual(1, intersectionLinesXY.Count);
+			Assert.IsTrue(intersectionLinesXY[0].Segments.Equals(containedSource));
+
+			// Reversed:
+			containedSource.ReverseOrientation();
+			intersectionLinesXY =
+				GeomTopoOpUtils.GetRingIntersectionLinesXY(
+					containedSource, targetPoly, 0.001).ToList();
+			Assert.AreEqual(1, intersectionLinesXY.Count);
+			Assert.IsTrue(intersectionLinesXY[0].Segments.Equals(containedSource));
+
+			// Partially along the boundary:
+			path1.Add(new Pnt3D(100, 0, 2));
+			var containedAndAlongBoundary = new Linestring(path1);
+
+			intersectionLinesXY =
+				GeomTopoOpUtils.GetRingIntersectionLinesXY(
+					containedAndAlongBoundary, targetPoly, 0.001).ToList();
+
+			Assert.AreEqual(2, intersectionLinesXY.Count);
+			containedSource.ReverseOrientation();
+			Assert.IsTrue(intersectionLinesXY[0].Segments.Equals(containedSource));
+			Assert.IsTrue(intersectionLinesXY[1].Segments.Equals(new Linestring(new[]
+				                                                     {
+					                                                     new Pnt3D(100, 40, 2),
+					                                                     new Pnt3D(100, 20, 2)
+				                                                     })));
+
+			// Excluded target boundary line:
+			intersectionLinesXY =
+				GeomTopoOpUtils.GetRingIntersectionLinesXY(
+					containedAndAlongBoundary, targetPoly, 0.001, true).ToList();
+
+			Assert.AreEqual(1, intersectionLinesXY.Count);
+			Assert.IsTrue(intersectionLinesXY[0].Segments.Equals(containedSource));
+		}
+
 		#region 3D ring intersection
 
 		[Test]
