@@ -1,9 +1,8 @@
-using ArcGIS.Desktop.Framework.Controls;
 using ProSuite.AGP.Solution.ConfigUI;
 
 namespace ProSuite.AGP.Solution.LoggerUI
 {
-	public partial class LogMessageDetailsDialog : ProWindow, ICloseable
+	public partial class LogMessageDetailsDialog : ICloseable
 	{
 		public LogMessageDetailsDialog()
 		{

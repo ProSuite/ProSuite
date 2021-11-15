@@ -34,7 +34,7 @@ namespace ProSuite.AGP.Editing.Selection
 				string featureClassName = fClass.GetName();
 				esriGeometryType gType = belongingLayers.First().ShapeType;
 
-				var featureClassInfo = new FeatureClassInfo()
+				var featureClassInfo = new FeatureClassInfo
 				                       {
 					                       BelongingLayers = belongingLayers,
 					                       FeatureClass = fClass,

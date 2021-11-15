@@ -277,7 +277,7 @@ namespace ProSuite.Commons.Geom
 		/// <param name="allowIndexing"></param>
 		/// <returns></returns>
 		[NotNull]
-		public IEnumerable<int> FindPointIndexes([NotNull] IPnt searchPoint,
+		public IEnumerable<int> FindPointIndexes(IPnt searchPoint,
 		                                         double xyTolerance = double.Epsilon,
 		                                         bool useSearchCircle = false,
 		                                         bool allowIndexing = true)

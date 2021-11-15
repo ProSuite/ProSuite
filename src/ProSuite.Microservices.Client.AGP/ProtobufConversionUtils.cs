@@ -219,7 +219,7 @@ namespace ProSuite.Microservices.Client.AGP
 		{
 			var result = new GdbObjRefMsg();
 
-			result.ClassHandle = (int) GetUniqueClassId(row);
+			result.ClassHandle = GetUniqueClassId(row);
 			result.ObjectId = (int) row.GetObjectID();
 
 			return result;

@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
@@ -8,7 +7,6 @@ using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 using ProSuite.Commons.Notifications;
 using ProSuite.Microservices.Definitions.Geometry;
 using ProSuite.Microservices.Definitions.Shared;
@@ -17,8 +15,6 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps
 {
 	public static class RemoveOverlapsClientUtils
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
-
 		#region Calculate Overlaps
 
 		[CanBeNull]
