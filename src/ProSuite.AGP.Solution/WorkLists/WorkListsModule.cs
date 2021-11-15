@@ -633,10 +633,6 @@ namespace ProSuite.AGP.Solution.WorkLists
 					string name = WorkListUtils.GetWorklistName(item.Path);
 					Assert.NotNullOrEmpty(name);
 
-					Item container = Project.Current.GetProjectItemContainer(WorklistsContainer.ContainerTypeName);
-					var worklistsContainer = container as WorklistsContainer;
-					worklistsContainer?.Refresh();
-
 					if (! _layersByWorklistName.TryGetValue(name, out List<FeatureLayer> layers))
 					{
 						continue;

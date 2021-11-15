@@ -352,13 +352,6 @@ namespace ProSuite.AGP.Solution
 			await ViewUtils.TryAsync(async () =>
 			{
 				throw new NotImplementedException();
-				string workListName = WorkListsModule.Current.EnsureUniqueName();
-				var environment = new IssueWorkListEnvironment();
-
-				await QueuedTask.Run(
-					() => WorkListsModule.Current.CreateWorkListAsync(environment, workListName));
-
-				WorkListsModule.Current.ShowView(workListName);
 			}, _msg);
 		}
 
@@ -366,13 +359,7 @@ namespace ProSuite.AGP.Solution
 		{
 			await ViewUtils.TryAsync(async () =>
 			{
-				string workListName = WorkListsModule.Current.EnsureUniqueName();
-				var environment = new InMemoryWorkEnvironment();
-
-				await QueuedTask.Run(
-					() => WorkListsModule.Current.CreateWorkListAsync(environment, workListName));
-
-				WorkListsModule.Current.ShowView(workListName);
+				throw new NotImplementedException();
 			}, _msg);
 		}
 

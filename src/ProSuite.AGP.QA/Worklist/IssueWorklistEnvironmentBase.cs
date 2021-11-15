@@ -102,8 +102,15 @@ namespace ProSuite.AGP.QA.WorkList
 					using (var featureClass =
 						geodatabase.OpenDataset<FeatureClass>(featureClassName))
 					{
-						FeatureLayer featureLayer = LayerFactory.Instance.CreateFeatureLayer(
-							featureClass, GetContainer());
+						ILayerContainerEdit layerContainer = GetContainer();
+
+						if (layerContainer == null)
+						{
+							continue;
+						}
+
+						FeatureLayer featureLayer =
+							LayerFactory.Instance.CreateFeatureLayer(featureClass, layerContainer);
 
 						featureLayer.SetExpanded(false);
 						// let Pro options decide whether newly added layers are visible

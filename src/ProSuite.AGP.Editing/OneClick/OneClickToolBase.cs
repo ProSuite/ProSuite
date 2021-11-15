@@ -606,22 +606,28 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		private Dictionary<BasicFeatureLayer, List<long>> FindFeaturesOfAllLayers(
-			Geometry selectionGeometry, SpatialRelationship spatialRelationship)
+			[NotNull] Geometry selectionGeometry,
+			SpatialRelationship spatialRelationship)
 		{
 			var featuresPerLayer = new Dictionary<BasicFeatureLayer, List<long>>();
 
-			foreach (BasicFeatureLayer layer in
-				MapView.Active.Map.GetLayersAsFlattenedList().OfType<BasicFeatureLayer>())
+			if (! MapUtils.TryGetActiveView(out MapView mapView))
 			{
-				if (CanSelectFromLayer(layer))
+				return featuresPerLayer;
+			}
+
+			foreach (BasicFeatureLayer layer in mapView.Map.GetLayersAsFlattenedList()
+			                                           .OfType<BasicFeatureLayer>()
+			                                           .Where(layer => CanSelectFromLayer(layer)))
+			{
+				List<long> oids =
+					MapUtils.FilterLayerOidsByGeometry(layer,
+					                                   selectionGeometry,
+					                                   spatialRelationship).ToList();
+
+				if (oids.Any())
 				{
-					IEnumerable<long> oids =
-						MapUtils.FilterLayerOidsByGeometry(layer, selectionGeometry,
-						                                   spatialRelationship);
-					if (oids.Any())
-					{
-						featuresPerLayer.Add(layer, oids.ToList());
-					}
+					featuresPerLayer.Add(layer, oids);
 				}
 			}
 
