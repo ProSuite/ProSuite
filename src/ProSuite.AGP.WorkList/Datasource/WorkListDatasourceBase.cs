@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
+using System.IO;
 using System.Web;
 using ArcGIS.Core.Data.PluginDatastore;
 using ProSuite.AGP.WorkList.Contracts;
@@ -42,7 +42,21 @@ namespace ProSuite.AGP.WorkList.Datasource
 			path = HttpUtility.UrlDecode(path);
 			path = HttpUtility.UrlDecode(path);
 
-			string name = WorkListUtils.GetName(path);
+			if (! File.Exists(path))
+			{
+				_msg.Debug($"{path} does not exists");
+			}
+
+			string name = WorkListUtils.GetWorklistName(path);
+
+			// the following situation: when work list layer is already in TOC
+			// and its data source (work list definition file) is renamed
+			// Pro still opens the old data source (old file name) which
+			// doesn't exist anymore
+			if (string.IsNullOrEmpty(name))
+			{
+				return;
+			}
 
 			_tableNames = new ReadOnlyCollection<string>(
 				new List<string>
@@ -59,7 +73,6 @@ namespace ProSuite.AGP.WorkList.Datasource
 		public override PluginTableTemplate OpenTable([NotNull] string name)
 		{
 			Assert.ArgumentNotNull(name, nameof(name));
-			Assert.ArgumentCondition(_tableNames.Contains(name), $"Unknown table name {name}");
 
 			// The given name is one of those returned by GetTableNames()
 			_msg.Debug($"Open table '{name}'");
@@ -83,7 +96,7 @@ namespace ProSuite.AGP.WorkList.Datasource
 
 		public override IReadOnlyList<string> GetTableNames()
 		{
-			return _tableNames ?? new string[0];
+			return _tableNames ?? Array.Empty<string>();
 		}
 
 		public override bool IsQueryLanguageSupported()

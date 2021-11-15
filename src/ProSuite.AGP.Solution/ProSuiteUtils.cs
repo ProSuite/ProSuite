@@ -21,11 +21,20 @@ namespace ProSuite.AGP.Solution
 			return Facade.OpenSelectionWorkListAsync();
 		}
 
-		public static Task OpenWorkListAsync([NotNull] WorkEnvironmentBase environment)
+		public static Task CreateWorkListAsync([NotNull] WorkEnvironmentBase environment)
 		{
 			Assert.ArgumentNotNull(environment, nameof(environment));
 
-			return ProSuiteImpl.OpenWorkList(environment);
+			return ProSuiteImpl.CreateWorkList(environment);
+		}
+
+		public static Task OpenWorkListAsync([NotNull] WorkEnvironmentBase environment,
+		                                     [NotNull] string path)
+		{
+			Assert.ArgumentNotNull(environment, nameof(environment));
+			Assert.ArgumentNotNullOrEmpty(path, nameof(path));
+
+			return ProSuiteImpl.OpenWorkList(environment, path);
 		}
 	}
 }

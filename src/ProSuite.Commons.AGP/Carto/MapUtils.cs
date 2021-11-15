@@ -21,6 +21,19 @@ namespace ProSuite.Commons.AGP.Carto
 {
 	public static class MapUtils
 	{
+		/// <summary>
+		/// Asserts an active MapView.
+		/// </summary>
+		/// <returns>a not null map</returns>
+		[NotNull]
+		public static Map GetActiveMap()
+		{
+			MapView mapView = MapView.Active;
+			Assert.NotNull(mapView, "no active MapView");
+
+			return mapView.Map;
+		}
+
 		[NotNull]
 		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
 			[NotNull] IEnumerable<BasicFeatureLayer> layers)

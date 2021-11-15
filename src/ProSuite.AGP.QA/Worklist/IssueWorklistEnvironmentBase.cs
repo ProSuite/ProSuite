@@ -65,7 +65,23 @@ namespace ProSuite.AGP.QA.WorkList
 			return true;
 		}
 
-		protected override IEnumerable<BasicFeatureLayer> GetLayers(Map map)
+		public override IEnumerable<BasicFeatureLayer> LoadLayers()
+		{
+			return GetLayersCore();
+		}
+
+		protected override ILayerContainerEdit GetContainer()
+		{
+			var groupLayerName = "QA";
+
+			GroupLayer groupLayer = MapView.Active.Map.FindLayers(groupLayerName)
+			                               .OfType<GroupLayer>().FirstOrDefault();
+
+			return groupLayer ??
+			       LayerFactory.Instance.CreateGroupLayer(MapView.Active.Map, 0, groupLayerName);
+		}
+
+		protected override IEnumerable<BasicFeatureLayer> GetLayersCore()
 		{
 			if (string.IsNullOrEmpty(_path))
 			{
@@ -74,8 +90,7 @@ namespace ProSuite.AGP.QA.WorkList
 
 			// todo daro: ensure layers are not already in map
 			using (Geodatabase geodatabase =
-				new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)))
-			)
+				new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute))))
 			{
 				IEnumerable<string> featureClassNames =
 					geodatabase.GetDefinitions<FeatureClassDefinition>()
@@ -87,11 +102,19 @@ namespace ProSuite.AGP.QA.WorkList
 					using (var featureClass =
 						geodatabase.OpenDataset<FeatureClass>(featureClassName))
 					{
-						FeatureLayer featureLayer = LayerFactory.Instance.CreateFeatureLayer(
-							featureClass, MapView.Active.Map, LayerPosition.AddToTop);
+						ILayerContainerEdit layerContainer = GetContainer();
+
+						if (layerContainer == null)
+						{
+							continue;
+						}
+
+						FeatureLayer featureLayer =
+							LayerFactory.Instance.CreateFeatureLayer(featureClass, layerContainer);
 
 						featureLayer.SetExpanded(false);
-						featureLayer.SetVisibility(false);
+						// let Pro options decide whether newly added layers are visible
+						//featureLayer.SetVisibility(false);
 
 						yield return featureLayer;
 					}
@@ -118,9 +141,11 @@ namespace ProSuite.AGP.QA.WorkList
 			return featureLayer;
 		}
 
-		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository, string name)
+		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,
+		                                                string uniqueName,
+		                                                string displayName)
 		{
-			return new IssueWorkList(repository, name);
+			return new IssueWorkList(repository, uniqueName, displayName);
 		}
 
 		protected override IRepository CreateStateRepositoryCore(string path, string workListName)

@@ -30,7 +30,7 @@ namespace ProSuite.Commons.UI.ScreenBinding.Lists
 		public int CompareTo(object obj)
 		{
 			var peer = (ListValue) obj;
-			return Display.CompareTo(peer.Display);
+			return string.Compare(Display, peer.Display, StringComparison.CurrentCulture);
 		}
 
 		#endregion

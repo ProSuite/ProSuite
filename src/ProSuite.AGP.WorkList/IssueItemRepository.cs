@@ -125,6 +125,7 @@ namespace ProSuite.AGP.WorkList
 		protected override async Task SetStatusCoreAsync(IWorkItem item, ISourceClass source)
 		{
 			Table table = OpenFeatureClass(source);
+			Assert.NotNull(table);
 
 			try
 			{
@@ -135,8 +136,15 @@ namespace ProSuite.AGP.WorkList
 				_msg.Info($"{description}, {item.Proxy}");
 
 				var operation = new EditOperation {Name = description};
-				// todo daro CancelMessage, AbortMessage
+				operation.Callback(context =>
+				{
+					// ReSharper disable once AccessToDisposedClosure
+					Row row = GdbQueryUtils.GetRow(table, item.ObjectID);
+					context.Invalidate(row);
 
+				}, table);
+
+				// todo daro CancelMessage, AbortMessage
 				string fieldName = databaseSourceClass.StatusFieldName;
 				object value = databaseSourceClass.GetValue(item.Status);
 
@@ -151,7 +159,7 @@ namespace ProSuite.AGP.WorkList
 			}
 			finally
 			{
-				table?.Dispose();
+				table.Dispose();
 			}
 		}
 

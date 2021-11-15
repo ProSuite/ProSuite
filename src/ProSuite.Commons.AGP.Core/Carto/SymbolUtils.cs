@@ -379,7 +379,7 @@ namespace ProSuite.Commons.AGP.Core.Carto
 			if (layer == null)
 				throw new ArgumentNullException(nameof(layer));
 
-			layer.Effects = effects ?? new CIMGeometricEffect[0];
+			layer.Effects = effects ?? Array.Empty<CIMGeometricEffect>();
 
 			return layer;
 		}

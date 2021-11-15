@@ -4,6 +4,7 @@ using System.IO;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
+using ArcGIS.Desktop.Mapping.Events;
 using ESRI.ArcGIS.ItemIndex;
 using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.Assertions;
@@ -145,6 +146,11 @@ namespace ProSuite.AGP.Solution.ProjectItem
 				       Path = Path,
 				       Type = WorklistsContainer.ContainerTypeName
 			       };
+		}
+
+		public override string ToString()
+		{
+			return $"{WorklistName} {Path}";
 		}
 	}
 }

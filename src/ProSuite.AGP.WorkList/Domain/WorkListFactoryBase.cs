@@ -47,7 +47,9 @@ namespace ProSuite.AGP.WorkList.Domain
 			{
 				XmlWorkListDefinition definition = XmlWorkItemStateRepository.Import(_path);
 
-				WorkList = WorkListUtils.Create(definition);
+				string displayName = WorkListUtils.GetName(_path);
+
+				WorkList = WorkListUtils.Create(definition, displayName);
 
 				WorkList.Name = Name;
 			}

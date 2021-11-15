@@ -22,6 +22,11 @@ namespace ProSuite.Commons.UI.ScreenBinding.Drivers
 				                            BindingFlags.Instance | BindingFlags.Public |
 				                            BindingFlags.NonPublic);
 
+			if (minfo == null)
+			{
+				throw new InvalidOperationException($"No such method: On{eventName}");
+			}
+
 			ParameterInfo[] param = minfo.GetParameters();
 
 			Type parameterType = param[0].ParameterType;

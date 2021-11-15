@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.Microservices.Definitions.QA;
@@ -11,8 +9,6 @@ namespace ProSuite.Microservices.Client.AGP.QA
 {
 	public class ClientIssueMessageCollector : IClientIssueMessageCollector
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
-
 		private readonly List<IssueMsg> _issueMessages;
 
 		public ClientIssueMessageCollector()

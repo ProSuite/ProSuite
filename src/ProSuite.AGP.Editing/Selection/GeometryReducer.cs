@@ -27,12 +27,10 @@ namespace ProSuite.AGP.Editing.Selection
 			}
 
 			//several features of the same layer
-			if (candidates.First().Value.Count() > 1)
+			if (candidates.First().Value.Count > 1)
 			{
 				return true;
 			}
-
-			;
 
 			return false;
 		}

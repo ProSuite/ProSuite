@@ -129,7 +129,7 @@ namespace ProSuite.Commons.UI.ScreenBinding.Elements
 		public NotificationMessage[] Validate()
 		{
 			return _target == null
-				       ? new NotificationMessage[0]
+				       ? Array.Empty<NotificationMessage>()
 				       : Accessor.Validate(_target);
 		}
 

@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.WorkList.Contracts;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.WorkList.Domain
 {
@@ -9,11 +11,16 @@ namespace ProSuite.AGP.WorkList.Domain
 
 	public class AttributeReader : IAttributeReader
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		[NotNull] private readonly IDictionary<Attributes, int> _fieldIndexByAttribute =
 			new Dictionary<Attributes, int>();
 
 		[NotNull] private readonly IDictionary<Attributes, string> _fieldNameByIssueAttribute =
 			new Dictionary<Attributes, string>();
+
+		[NotNull] private readonly Dictionary<string, int> _fieldIndexByName =
+			new Dictionary<string, int>();
 
 		public AttributeReader(TableDefinition definition, params Attributes[] attributes)
 		{
@@ -56,9 +63,28 @@ namespace ProSuite.AGP.WorkList.Domain
 
 			foreach (Attributes attribute in attributes)
 			{
-				// todo daro: inline
-				int fieldIndex = definition.FindField(GetName(attribute));
-				_fieldIndexByAttribute.Add(attribute, fieldIndex);
+				string fieldName = GetName(attribute);
+
+				int index = -1;
+				if (fieldName != null)
+				{
+					index = definition.FindField(fieldName);
+				}
+				else
+				{
+					_msg.Debug($"Field {attribute} is not registered");
+				}
+
+
+				if (fieldName != null && index > 0)
+				{
+					_fieldIndexByAttribute.Add(attribute, index);
+					_fieldIndexByName.Add(fieldName, index);
+				}
+				else
+				{
+					_msg.Debug($"Cannot find field {fieldName}");
+				}
 			}
 		}
 
@@ -81,6 +107,34 @@ namespace ProSuite.AGP.WorkList.Domain
 			object value = row[fieldIndex];
 
 			return value == null ? default : (T) value;
+		}
+
+		public AttributeReader AddValue(Dictionary<string, object> attributes, 
+		                                object value,
+		                                Attributes attribute)
+		{
+			Assert.ArgumentNotNull(attributes, nameof(attributes));
+			Assert.ArgumentNotNull(value, nameof(value));
+
+			var fieldName = attribute.ToString();
+
+			Assert.True(_fieldIndexByAttribute.ContainsKey(attribute),
+			            $"No field index for attribute {fieldName}");
+
+			Assert.True(_fieldNameByIssueAttribute.ContainsKey(attribute), 
+			            $"No field name for attribute {fieldName}");
+
+			string upperCaseFieldName = fieldName.ToUpper();
+
+			Assert.True(_fieldIndexByName.ContainsKey(upperCaseFieldName), 
+			            $"No field index for field name {upperCaseFieldName}");
+
+			Assert.False(attributes.ContainsKey(upperCaseFieldName),
+			             $"Field {upperCaseFieldName} already added to attributes dictionary");
+			
+			attributes.Add(upperCaseFieldName, value);
+
+			return this;
 		}
 	}
 }

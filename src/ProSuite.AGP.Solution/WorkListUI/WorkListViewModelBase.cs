@@ -64,7 +64,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 
 		private async Task SetCurrentAsync([NotNull] IWorkItem item)
 		{
-			await ViewUtils.TryAsync(() => { return Task.Run(() => SetCurrent(item)); }, _msg);
+			await ViewUtils.TryAsync(Task.Run(() => SetCurrent(item)), _msg);
 		}
 
 		protected abstract void SetCurrentItemCore([NotNull] IWorkItem item);

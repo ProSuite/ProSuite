@@ -22,7 +22,6 @@ namespace ProSuite.Commons.UI.ScreenBinding.Elements
 		public bool IsLatched
 		{
 			get { return false; }
-			set { }
 		}
 
 		public IScreenElement FindElement(string labelOrAlias)

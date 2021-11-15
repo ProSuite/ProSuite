@@ -28,7 +28,7 @@ namespace ProSuite.QA.SpecificationProviderFile
 		}
 
 		private string SpecificationsFolder { get; set; }
-		private IDictionary<string, IQualitySpecificationReference> _availableSpecifications = null;
+		private IDictionary<string, IQualitySpecificationReference> _availableSpecifications;
 
 		private IDictionary<string, IQualitySpecificationReference> AvailableSpecifications =>
 			_availableSpecifications ?? (_availableSpecifications = ReadSpecifications());

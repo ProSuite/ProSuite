@@ -10,7 +10,6 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing.PickerUI
 {
@@ -19,8 +18,6 @@ namespace ProSuite.AGP.Editing.PickerUI
 		private readonly CIMLineSymbol _highlightLineSymbol;
 		private readonly CIMPolygonSymbol _highlightPolygonSymbol;
 		private readonly CIMPointSymbol _highlightPointSymbol;
-
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public PickerViewModel(List<IPickableItem> pickingCandidates,
 		                       bool isSingleMode)
