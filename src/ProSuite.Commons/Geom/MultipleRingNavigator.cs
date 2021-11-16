@@ -311,7 +311,7 @@ namespace ProSuite.Commons.Geom
 
 				if (SourceEqualsTargetXY(intersectionPoints, Tolerance))
 				{
-					yield return intersectionPoints.SingleOrDefault(
+					yield return intersectionPoints.First(
 						i => i.Type == IntersectionPointType.LinearIntersectionStart);
 				}
 			}
@@ -349,16 +349,17 @@ namespace ProSuite.Commons.Geom
 				{
 					// TODO: Handle boundary loops, islands touching outer rings etc.
 
-					foreach (IntersectionPoint3D intersectionPoint in intersectionPoints)
+					foreach (int targetPartIndex in GetIntersectingTargetPartIndexes(
+						intersectionPoints))
 					{
-						Linestring targetRing = Target.GetPart(intersectionPoint.TargetPartIndex);
+						Linestring targetRing = Target.GetPart(targetPartIndex);
 
 						var relevantIntersections = intersectionPoints.Where(
-							ip => ip.TargetPartIndex == intersectionPoint.TargetPartIndex).ToList();
+							ip => ip.TargetPartIndex == targetPartIndex).ToList();
 
 						if (GeomRelationUtils.WithinAreaXY(
-							    sourceRing, targetRing,
-							    relevantIntersections, Tolerance, false) == true)
+							    sourceRing, targetRing, relevantIntersections, Tolerance,
+							    false) == true)
 						{
 							yield return sourceRing;
 						}
@@ -398,20 +399,10 @@ namespace ProSuite.Commons.Geom
 				else
 				{
 					// TODO: Handle boundary loops, islands touching outer rings etc.
-
-					foreach (IntersectionPoint3D intersectionPoint in intersectionPoints)
+					// TODO: Leverage known intersection points
+					if (GeomRelationUtils.PolycurveContainsXY(Source, targetRing, Tolerance))
 					{
-						Linestring sourceRing = Source.GetPart(intersectionPoint.SourcePartIndex);
-
-						var relevantIntersections = intersectionPoints.Where(
-							ip => ip.SourcePartIndex == intersectionPoint.SourcePartIndex).ToList();
-
-						if (GeomRelationUtils.WithinAreaXY(
-							    targetRing, sourceRing,
-							    relevantIntersections, Tolerance, false) == true)
-						{
-							yield return targetRing;
-						}
+						yield return targetRing;
 					}
 				}
 			}
@@ -620,30 +611,56 @@ namespace ProSuite.Commons.Geom
 		private static bool SourceEqualsTargetXY(
 			[NotNull] IList<IntersectionPoint3D> intersectionPoints, double tolerance)
 		{
-			if (intersectionPoints.Count != 2)
+			IPnt startPoint = null;
+			IntersectionPoint3D previous = null;
+
+			if (intersectionPoints.Count == 0)
 			{
 				return false;
 			}
 
-			if (intersectionPoints[0].TargetPartIndex != intersectionPoints[1].TargetPartIndex)
+			foreach (IntersectionPoint3D intersectionPoint in
+				intersectionPoints.OrderBy(i => i.VirtualSourceVertex))
+			{
+				if (startPoint == null)
+				{
+					if (intersectionPoint.Type != IntersectionPointType.LinearIntersectionStart)
+					{
+						return false;
+					}
+
+					startPoint = intersectionPoint.Point;
+				}
+
+				if (previous != null)
+				{
+					if (previous.Type == IntersectionPointType.LinearIntersectionEnd)
+					{
+						if (intersectionPoint.Type != IntersectionPointType.LinearIntersectionStart)
+						{
+							return false;
+						}
+
+						if (! previous.Point.Equals(intersectionPoint.Point))
+						{
+							return false;
+						}
+					}
+					else if (intersectionPoint.Type != IntersectionPointType.LinearIntersectionEnd)
+					{
+						return false;
+					}
+				}
+
+				previous = intersectionPoint;
+			}
+
+			if (! Assert.NotNull(startPoint).Equals(previous.Point))
 			{
 				return false;
 			}
 
-			var startIntersection =
-				intersectionPoints.SingleOrDefault(
-					i => i.Type == IntersectionPointType.LinearIntersectionStart);
-
-			var endIntersection =
-				intersectionPoints.SingleOrDefault(
-					i => i.Type == IntersectionPointType.LinearIntersectionEnd);
-
-			if (startIntersection == null || endIntersection == null)
-			{
-				return false;
-			}
-
-			return startIntersection.Point.EqualsXY(endIntersection.Point, tolerance);
+			return true;
 		}
 
 		private static IEnumerable<Linestring> GetUnused(ISegmentList linestrings,
@@ -718,6 +735,13 @@ namespace ProSuite.Commons.Geom
 			//}
 
 			return IntersectionsAlongTarget[nextAlongTargetIdx];
+		}
+
+		private static IEnumerable<int> GetIntersectingTargetPartIndexes(
+			IEnumerable<IntersectionPoint3D> intersectionPoints)
+		{
+			return intersectionPoints.GroupBy(i => i.TargetPartIndex)
+			                         .Select(i => i.First().TargetPartIndex);
 		}
 	}
 }

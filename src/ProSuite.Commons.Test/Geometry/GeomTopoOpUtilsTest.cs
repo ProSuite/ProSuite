@@ -3696,6 +3696,64 @@ namespace ProSuite.Commons.Test.Geometry
 		}
 
 		[Test]
+		public void CanGetIntersectionAreaXYSourceInsideIsland()
+		{
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 9),
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(100, 50, 9),
+				            new Pnt3D(100, 20, 9)
+			            };
+
+			RingGroup poly1 = CreatePoly(ring1);
+			Linestring equalRing = poly1.ExteriorRing.Clone();
+
+			const double tolerance = 0.01;
+
+			// One of them has a hole:
+			var interiorRingPoints = new[]
+			                         {
+				                         new Pnt3D(20, 40, 0),
+				                         new Pnt3D(50, 40, 0),
+				                         new Pnt3D(50, 60, 0),
+				                         new Pnt3D(20, 60, 0)
+			                         }.ToList();
+
+			var interiorRing = new Linestring(GetRotatedRing(interiorRingPoints, 0));
+
+			poly1.AddInteriorRing(interiorRing);
+
+			// Which is filled by a ring that has the same segments:
+			Linestring filledHole = interiorRing.Clone();
+			filledHole.ReverseOrientation();
+			MultiLinestring target = new MultiPolycurve(new[] {filledHole});
+
+			MultiLinestring result =
+				GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
+
+			Assert.IsTrue(result.IsEmpty);
+
+			filledHole = new Linestring(GetRotatedRing(interiorRingPoints, 1));
+
+			filledHole.ReverseOrientation();
+			target = new MultiPolycurve(new[] {filledHole});
+
+			result = GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
+			Assert.IsTrue(result.IsEmpty);
+
+			// Now the filling is not complete but only partial:
+			interiorRingPoints.RemoveAt(1);
+			filledHole = new Linestring(GetRotatedRing(interiorRingPoints, 1));
+
+			filledHole.ReverseOrientation();
+			target = new MultiPolycurve(new[] {filledHole});
+
+			result = GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
+			Assert.IsTrue(result.IsEmpty);
+		}
+
+		[Test]
 		public void CanGetIntersectionLinesXYLineAlongRing()
 		{
 			// Get the lines within a polygon and a line along & within a polygon:
@@ -3749,7 +3807,7 @@ namespace ProSuite.Commons.Test.Geometry
 					sourceLinestring, targetPoly, 0.001).ToList();
 
 			Assert.AreEqual(2, intersectionLinesXY.Count);
-			
+
 			Assert.IsTrue(intersectionLinesXY[0].Segments.Equals(expectedInterior));
 
 			Assert.IsTrue(intersectionLinesXY[1].Segments.Equals(
@@ -3758,7 +3816,6 @@ namespace ProSuite.Commons.Test.Geometry
 					                             new Pnt3D(100, 50, 2),
 					                             new Pnt3D(100, 20, 2)
 				                             })));
-
 
 			// Excluded target boundary line:
 			intersectionLinesXY =
