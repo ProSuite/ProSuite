@@ -262,6 +262,25 @@ namespace ProSuite.Commons.Geom
 
 		public static MultiLinestring GetIntersectionAreasXY(
 			[NotNull] MultiLinestring sourceRings,
+			[NotNull] Polyhedron targetPolyhedron,
+			double tolerance,
+			ChangeAlongZSource zSource = ChangeAlongZSource.Target)
+		{
+			// TODO: Implement that target rings can intersect each other as this is the case for polyhedrons.
+			//       -> performs much better because a single spatial index could be used.
+
+			var result = new List<MultiLinestring>();
+			foreach (var targetRingGroup in targetPolyhedron.RingGroups)
+			{
+				result.Add(
+					GetIntersectionAreasXY(sourceRings, targetRingGroup, tolerance, zSource));
+			}
+
+			return new MultiPolycurve(result);
+		}
+
+		public static MultiLinestring GetIntersectionAreasXY(
+			[NotNull] MultiLinestring sourceRings,
 			[NotNull] MultiLinestring targetRings,
 			double tolerance,
 			ChangeAlongZSource zSource = ChangeAlongZSource.Target)
@@ -750,6 +769,26 @@ namespace ProSuite.Commons.Geom
 			return new Box(min, max);
 		}
 
+		public static IBox UnionBoxes([NotNull] IBox box1, [NotNull] IBox box2)
+		{
+			Assert.ArgumentNotNull(box1, nameof(box1));
+			Assert.ArgumentNotNull(box2, nameof(box2));
+
+			Assert.ArgumentCondition(box1.Dimension == box2.Dimension,
+			                         "Box dimensions are not equal");
+
+			// Consider separate and explicit 2D/3D imlementations...
+			var min = new Vector(box1.Dimension);
+			var max = new Vector(box1.Dimension);
+			for (var i = 0; i < box1.Dimension; i++)
+			{
+				min[i] = Math.Min(box1.Min[i], box2.Min[i]);
+				max[i] = Math.Max(box1.Max[i], box2.Max[i]);
+			}
+
+			return new Box(min, max);
+		}
+
 		/// <summary>
 		/// Gets the intersecting straight line r of two planes in vector form:
 		/// <b><i>r</i></b> = p0 + s * <b><i>v</i></b>
@@ -887,6 +926,173 @@ namespace ProSuite.Commons.Geom
 
 			return new Line3D(line1.GetPointAlong(r0, true),
 			                  line1.GetPointAlong(r1, true));
+		}
+
+		/// <summary>
+		/// Calculates the XY-intersected source rings and then 3D-cuts them with the target rings.
+		/// </summary>
+		/// <param name="source"></param>
+		/// <param name="target"></param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		public static IList<RingGroup> GetIntersectionAreas3D([NotNull] Polyhedron source,
+		                                                      [NotNull] Polyhedron target,
+		                                                      double tolerance)
+		{
+			// First: Split source and target at boundaries in XY.
+			// The 2D intersection assumes 'XY-correct' orientation for the time being (positive outer rings).
+			var xySplitSourceRings = new List<RingGroup>();
+			var xySplitTargetRings = new List<RingGroup>();
+			foreach (RingGroup sourceRingGroup in source.RingGroups)
+			{
+				MultiLinestring intersectionAreasXY =
+					GetIntersectionAreasXY(sourceRingGroup, target, tolerance,
+					                       ChangeAlongZSource.SourcePlane);
+
+				xySplitSourceRings.AddRange(GetConnectedComponents(intersectionAreasXY, tolerance));
+			}
+
+			foreach (RingGroup targetRingGroup in target.RingGroups)
+			{
+				MultiLinestring intersectionAreasXY =
+					GetIntersectionAreasXY(targetRingGroup, source, tolerance,
+					                       ChangeAlongZSource.SourcePlane);
+
+				xySplitTargetRings.AddRange(GetConnectedComponents(intersectionAreasXY, tolerance));
+			}
+
+			// Second: Calculate 3D cut lines and cut the source along them
+			// Build a new polyhedron to leverage the spatial index:
+			Polyhedron xyCutTarget = new Polyhedron(xySplitTargetRings);
+
+			var result = new List<RingGroup>();
+			foreach (RingGroup sourceRing in xySplitSourceRings)
+			{
+				var intersectionPaths = new List<IntersectionPath3D>();
+
+				foreach (RingGroup targetRing in xyCutTarget.FindRingGroups(sourceRing, tolerance))
+				{
+					IList<IntersectionPath3D> intersections = GetCoplanarPolygonIntersectionLines3D(
+						sourceRing, targetRing, tolerance, true);
+
+					if (intersections != null)
+					{
+						intersectionPaths.AddRange(intersections);
+					}
+				}
+
+				if (intersectionPaths.Count == 0)
+				{
+					result.Add(sourceRing);
+				}
+				else
+				{
+					var cutLines = new MultiPolycurve(intersectionPaths.Select(ip => ip.Segments));
+
+					result.AddRange(CutPlanar(sourceRing, cutLines, tolerance));
+				}
+			}
+
+			return result;
+		}
+
+		/// <summary>
+		/// Calculates the 3D intersection lines between coplanar source and coplanar target rings.
+		/// </summary>
+		/// <param name="ringGroup1"></param>
+		/// <param name="ringGroup2"></param>
+		/// <param name="tolerance"></param>
+		/// <param name="excludeBoundaryIntersections"></param>
+		/// <returns></returns>
+		public static IList<IntersectionPath3D> GetCoplanarPolygonIntersectionLines3D(
+			[NotNull] RingGroup ringGroup1,
+			[NotNull] RingGroup ringGroup2,
+			double tolerance,
+			bool excludeBoundaryIntersections = false)
+		{
+			if (ringGroup1 == null)
+			{
+				throw new ArgumentNullException(nameof(ringGroup1));
+			}
+
+			var ring1Points = ringGroup1.ExteriorRing.GetPoints().ToList();
+			var ring2Points = ringGroup2.ExteriorRing.GetPoints().ToList();
+
+			IBox box1 = GeomUtils.GetBoundingBox3D(ring1Points);
+
+			IBox box2 = GeomUtils.GetBoundingBox3D(ring2Points);
+
+			IBox bbIntersection = IntersectBoxes(box1, box2);
+
+			if (bbIntersection == null)
+			{
+				return null;
+			}
+
+			Plane3D plane1 = Plane3D.FitPlane(ring1Points, true);
+			Plane3D plane2 = Plane3D.FitPlane(ring2Points, true);
+
+			AssertCoplanarity(ring1Points, plane1, tolerance);
+			AssertCoplanarity(ring2Points, plane2, tolerance);
+
+			Pnt3D p0;
+			Vector direction = IntersectPlanes(plane1, plane2, out p0);
+
+			if (direction == null || MathUtils.AreEqual(direction.LengthSquared, 0))
+			{
+				if (! plane1.IsCoincident(plane2))
+				{
+					// Planes are parallel but not coincident - no intersection
+					return null;
+				}
+
+				// else: coincident. TODO: Rotate if vertical (2 vertical coincident planes!).
+				MultiLinestring resultRings = GetIntersectionAreasXY(
+					ringGroup1, ringGroup2, tolerance);
+
+				var result = new List<IntersectionPath3D>();
+				foreach (Linestring resultRing in resultRings.GetLinestrings())
+				{
+					result.Add(
+						new IntersectionPath3D(resultRing, RingPlaneTopology.InPlane));
+				}
+
+				return result;
+			}
+
+			IBox bbUnion = UnionBoxes(box1, box2);
+
+			Line3D planePlaneIntersectionInBox =
+				Line3D.ConstructInBox(Assert.NotNull(p0), direction, bbUnion);
+
+			if (planePlaneIntersectionInBox == null ||
+			    planePlaneIntersectionInBox.Length3D < tolerance)
+			{
+				return null;
+			}
+
+			Linestring cutStraight = new Linestring(new[] {planePlaneIntersectionInBox});
+
+			var cutLines1 =
+				GetRingIntersectionLinesPlanar(cutStraight, ringGroup1, tolerance,
+				                               excludeBoundaryIntersections)
+					.ToList();
+			var cutLines2 =
+				GetRingIntersectionLinesPlanar(cutStraight, ringGroup2, tolerance,
+				                               excludeBoundaryIntersections)
+					.ToList();
+
+			IList<IntersectionPath3D> ringGroup1PlaneIntersections =
+				cutLines1.Select(cl => new IntersectionPath3D(cl, RingPlaneTopology.InPlane))
+				         .ToList();
+			IList<IntersectionPath3D> ringGroup2PlaneIntersections =
+				cutLines2.Select(cl => new IntersectionPath3D(cl, RingPlaneTopology.InPlane))
+				         .ToList();
+
+			IList<IntersectionPath3D> intersections = GetIntersectionLines3D(
+				ringGroup1PlaneIntersections, ringGroup2PlaneIntersections, tolerance);
+
+			return intersections.Count == 0 ? null : intersections;
 		}
 
 		/// <summary>

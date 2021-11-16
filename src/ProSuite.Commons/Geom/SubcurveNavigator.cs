@@ -224,7 +224,7 @@ namespace ProSuite.Commons.Geom
 			       ! nextIntersection.Point.Equals(startIntersection.Point))
 			{
 				Assert.True(count++ <= IntersectionPoints.Count,
-				            "Intersections seen twice");
+				            "Intersections seen twice. Make sure there are no self intersections of the target.");
 
 				if (nextIntersection != null)
 				{
