@@ -482,13 +482,20 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 		}
 
-		public static Polyhedron CreatePolyhedron(IMultiPatch multipatch)
+		public static Polyhedron CreatePolyhedron(IMultiPatch multipatch,
+		                                          bool assumePartVertexIds = false)
 		{
 			var ringGroups = new List<RingGroup>();
 
 			foreach (GeometryPart multipatchPart in GeometryPart.FromGeometry(multipatch))
 			{
 				RingGroup ringGroup = CreateRingGroup(multipatchPart);
+
+				if (assumePartVertexIds &&
+				    GeometryUtils.HasUniqueVertexId(multipatchPart.FirstGeometry, out int vertexId))
+				{
+					ringGroup.Id = vertexId;
+				}
 
 				ringGroups.Add(ringGroup);
 			}
@@ -542,6 +549,11 @@ namespace ProSuite.Commons.AO.Geometry
 				IPath path = GeometryFactory.CreatePath(points);
 
 				paths.Add(path);
+			}
+
+			if (paths.Count == 0)
+			{
+				return GeometryFactory.CreateEmptyPolyline(spatialReference, true);
 			}
 
 			return GeometryFactory.CreatePolyline(paths, spatialReference, true,
