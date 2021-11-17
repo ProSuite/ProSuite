@@ -192,39 +192,57 @@
         </button>
         <tool id="ProSuiteTools_Editing_EraseTool" caption="Erase" className="Editing.EraseTool"
               loadOnClick="true" smallImage="Images\CutHoleTool16.png" largeImage="Images\CutHoleTool32.png"
-              condition="esri_editing_EditingMapCondition">
+              condition="esri_editing_EditingMapCondition"
+              categoryRefID="esri_editing_CommandList">
           <tooltip heading="Erase">
             Erase parts of the selected features or cut a hole into a polygon.
             <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
+          <content L_group="ProSuite Tools" gallery2d="false" gallery3d="false"/>
         </tool>
         <tool id="ProSuiteTools_Editing_RemoveOverlapsTool" caption="Remove Overlaps"
               className="Editing.RemoveOverlapsTool" loadOnClick="true" smallImage="Images\RemoveOverlapsTool16.png"
-              largeImage="Images\RemoveOverlapsTool32.png" condition="esri_editing_EditingMapCondition">
+              largeImage="Images\RemoveOverlapsTool32.png" condition="esri_editing_EditingMapCondition"
+              categoryRefID="esri_editing_CommandList">
           <tooltip heading="Remove Overlaps">
             Remove a part of a feature that overlaps with other polygon features.
             <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
+          <content L_group="ProSuite Tools" gallery2d="false" gallery3d="false"/>
         </tool>
         <tool id="ProSuiteTools_Editing_ReshapeAlongTool" caption="Reshape Along"
               className="Editing.ReshapeAlongTool" loadOnClick="true" smallImage="Images\ReshapeAlongTool16.png"
-              largeImage="Images\ReshapeAlongTool32.png" condition="esri_editing_EditingMapCondition">
+              largeImage="Images\ReshapeAlongTool32.png" condition="esri_editing_EditingMapCondition"
+              categoryRefID="esri_editing_CommandList">
           <tooltip heading="Reshape Along">
             Reshape the selected line or polygon feature(s) along other features.
             <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
+          <!-- To create a custom tool palette in the Modify Features pane use the content XML element below.
+					Using <content R_group results in a "Other" tool palette. 
+					See: https://www.esri.com/content/dam/esrisites/en-us/events/conferences/2020/developer-summit/arcgis-pro-sdk-for-net-advanced-editing-with-focus-on-ui-customization.pdf 
+					-->
+          <content L_group="ProSuite Tools" gallery2d="false" gallery3d="false"/>
         </tool>
         <tool id="ProSuiteTools_Editing_CutAlongTool" caption="Cut Along" className="Editing.CutAlongTool"
               loadOnClick="true" smallImage="Images\CutPolygonAlongTool16.png"
-              largeImage="Images\CutPolygonAlongTool32.png" condition="esri_editing_EditingMapCondition">
+              largeImage="Images\CutPolygonAlongTool32.png" condition="esri_editing_EditingMapCondition"
+              categoryRefID="esri_editing_CommandList">
           <tooltip heading="Cut Along">
             Cut the selected polygon feature(s) along other features.
             <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
+          <!-- This adds the custom tool right at the beginning of the first ootb tool palette.
+					The caption is the display name in the tool palette 
+					The attributes gallery2d and gallery3d specify whether the tool is shown in the favorites group in the gallery for 2D or 3D editing tools on the Edit ribbon.
+					See: https://github.com/esri/arcgis-pro-sdk/wiki/ProGuide-Editing-Tool -->
+          <!--<content L_group="Alignment" gallery2d="false" gallery3d="false" insert="before" placeWith="esri_editing_EditVerticesMove"/>-->
+          <content L_group="ProSuite Tools" gallery2d="false" gallery3d="false"/>
         </tool>
         <tool id="ProSuiteTools_Editing_AdvancedReshapeTool" caption="Advanced Reshape"
               className="Editing.AdvancedReshapeTool" loadOnClick="true" smallImage="Images\AdvancedReshapeTool16.png"
-              largeImage="Images\AdvancedReshapeTool32.png" condition="esri_editing_EditingMapCondition">
+              largeImage="Images\AdvancedReshapeTool32.png" condition="esri_editing_EditingMapCondition"
+              categoryRefID="esri_editing_CommandList">
           <tooltip heading="Advanced Reshape" image="Images\AdvancedReshapeToolTip.png">
             Reshape line or polygon feature(s) with advanced options.
 
@@ -240,6 +258,7 @@
             O: Additional options
             <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
+          <content L_group="ProSuite Tools" gallery2d="false" gallery3d="false"/>
         </tool>
         <tool id="ProSuiteTools_Selection_SelectionTool" caption="Select" className="Selection.SelectionTool"
               loadOnClick="true" smallImage="Images\SelectionTool16.png" largeImage="Images\SelectionTool32.png"
