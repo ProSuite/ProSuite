@@ -90,25 +90,25 @@
           <button refID="ProSuiteTools_QA_StartGPServer" size="middle" />
           <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
-          <button refID="ProSuite_AGP_Solution_QA_VerifyVisibleExtentCmd" size="small" />
-          <tool refID="ProSuite_AGP_Solution_QA_VerifyPerimeterTool" size="small" />
-          <button refID="ProSuite_AGP_Solution_QA_VerifySelectionCmd" size="small" />
+          <button refID="ProSuite_AGP_Solution_QA_VerifyVisibleExtentCmd" size="middle" />
+          <tool refID="ProSuite_AGP_Solution_QA_VerifyPerimeterTool" size="middle" />
+          <button refID="ProSuite_AGP_Solution_QA_VerifySelectionCmd" size="middle" />
           <button refID="WorkLists_CreateIssueWorkList" size="large" />
-          <tool refID="ProSuite_AGP_Solution_QA_SelectIssueFeaturesTool" size="small" />
-          <button refID="ProSuite_AGP_Solution_QA_SelectInvolvedObjectsCmd" size="small" />
+          <tool refID="ProSuite_AGP_Solution_QA_SelectIssueFeaturesTool" size="middle" />
+          <button refID="ProSuite_AGP_Solution_QA_SelectInvolvedObjectsCmd" size="middle" />
           <!--<button refID="Clients_AGP_ProSuiteSolution_AddWorkList" size="large" />-->
         </group>
-          <tool refID="ProSuiteTools_Editing_EraseTool" size="small" />
-          <tool refID="ProSuiteTools_Editing_RemoveOverlapsTool" size="small" />
-          <tool refID="ProSuiteTools_Editing_ReshapeAlongTool" size="small" />
-          <tool refID="ProSuiteTools_Editing_CutAlongTool" size="small" />
-          <tool refID="ProSuiteTools_Editing_AdvancedReshapeTool" size="small" />
         <group id="ProSuiteTools_Editing" caption="Edit" keytip="G1">
+          <tool refID="ProSuiteTools_Editing_EraseTool" size="middle" />
+          <tool refID="ProSuiteTools_Editing_RemoveOverlapsTool" size="middle" />
+          <tool refID="ProSuiteTools_Editing_ReshapeAlongTool" size="middle" />
+          <tool refID="ProSuiteTools_Editing_CutAlongTool" size="middle" />
+          <tool refID="ProSuiteTools_Editing_AdvancedReshapeTool" size="middle" />
         </group>
-          <tool refID="ProSuiteTools_Selection_SelectionTool" size="small" />
-          <button refID="esri_mapping_clearSelectionButton" size="small" />
-          <button refID="WorkLists_ShowWorkListsButton" size="small" />
         <group id="ProSuiteTools_Selection" caption="Selection" keytip="G1">
+          <tool refID="ProSuiteTools_Selection_SelectionTool" size="middle" />
+          <button refID="esri_mapping_clearSelectionButton" size="middle" />
+          <button refID="WorkLists_ShowWorkListsButton" size="middle" />
           <button refID="WorkLists_CreateSelectionWorkList" size="large" />
           <!--TODO PickerTool test-->
           <!--<tool refID="ProSuiteTools_PickWorkItemTool" size="large" />-->
