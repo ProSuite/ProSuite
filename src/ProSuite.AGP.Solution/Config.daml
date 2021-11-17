@@ -98,9 +98,6 @@
           <button refID="ProSuite_AGP_Solution_QA_SelectInvolvedObjectsCmd" size="small" />
           <!--<button refID="Clients_AGP_ProSuiteSolution_AddWorkList" size="large" />-->
         </group>
-        <group id="ProSuiteTools_QA_Hidden" caption="" appearsOnAddInTab="false">
-          <button refID="Clients_AGP_ProSuiteSolution_WorkLists_AddWorkListButton" />
-        </group>
         <group id="ProSuiteTools_Editing" caption="Edit Tools" keytip="G1">
           <tool refID="ProSuiteTools_Editing_EraseTool" size="small" />
           <tool refID="ProSuiteTools_Editing_RemoveOverlapsTool" size="small" />
