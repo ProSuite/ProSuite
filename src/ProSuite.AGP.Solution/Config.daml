@@ -190,39 +190,39 @@
             <disabledText>No active map.</disabledText>
           </tooltip>
         </button>
-        <tool id="ProSuiteTools_Editing_EraseTool" caption="EraseTool " className="Editing.EraseTool"
+        <tool id="ProSuiteTools_Editing_EraseTool" caption="Erase" className="Editing.EraseTool"
               loadOnClick="true" smallImage="Images\CutHoleTool16.png" largeImage="Images\CutHoleTool32.png"
               condition="esri_editing_EditingMapCondition">
-          <tooltip heading="Erase Tool">
+          <tooltip heading="Erase">
             Erase parts of the selected features or cut a hole into a polygon.
             <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
         </tool>
-        <tool id="ProSuiteTools_Editing_RemoveOverlapsTool" caption="RemoveOverlapsTool"
+        <tool id="ProSuiteTools_Editing_RemoveOverlapsTool" caption="Remove Overlaps"
               className="Editing.RemoveOverlapsTool" loadOnClick="true" smallImage="Images\RemoveOverlapsTool16.png"
               largeImage="Images\RemoveOverlapsTool32.png" condition="esri_editing_EditingMapCondition">
-          <tooltip heading="Remove Overlaps Tool">
+          <tooltip heading="Remove Overlaps">
             Remove a part of a feature that overlaps with other polygon features.
             <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
         </tool>
-        <tool id="ProSuiteTools_Editing_ReshapeAlongTool" caption="ReshapeAlongTool"
+        <tool id="ProSuiteTools_Editing_ReshapeAlongTool" caption="Reshape Along"
               className="Editing.ReshapeAlongTool" loadOnClick="true" smallImage="Images\ReshapeAlongTool16.png"
               largeImage="Images\ReshapeAlongTool32.png" condition="esri_editing_EditingMapCondition">
-          <tooltip heading="Reshape Along Tool">
+          <tooltip heading="Reshape Along">
             Reshape the selected line or polygon feature(s) along other features.
             <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
         </tool>
-        <tool id="ProSuiteTools_Editing_CutAlongTool" caption="CutAlongTool" className="Editing.CutAlongTool"
+        <tool id="ProSuiteTools_Editing_CutAlongTool" caption="Cut Along" className="Editing.CutAlongTool"
               loadOnClick="true" smallImage="Images\CutPolygonAlongTool16.png"
               largeImage="Images\CutPolygonAlongTool32.png" condition="esri_editing_EditingMapCondition">
-          <tooltip heading="Cut Along Tool">
+          <tooltip heading="Cut Along">
             Cut the selected polygon feature(s) along other features.
             <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
         </tool>
-        <tool id="ProSuiteTools_Editing_AdvancedReshapeTool" caption="AdvancedReshapeTool"
+        <tool id="ProSuiteTools_Editing_AdvancedReshapeTool" caption="Advanced Reshape"
               className="Editing.AdvancedReshapeTool" loadOnClick="true" smallImage="Images\AdvancedReshapeTool16.png"
               largeImage="Images\AdvancedReshapeTool32.png" condition="esri_editing_EditingMapCondition">
           <tooltip heading="Advanced Reshape" image="Images\AdvancedReshapeToolTip.png">
@@ -241,19 +241,19 @@
             <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
         </tool>
-        <tool id="ProSuiteTools_Selection_SelectionTool" caption="Selection" className="Selection.SelectionTool"
+        <tool id="ProSuiteTools_Selection_SelectionTool" caption="Select" className="Selection.SelectionTool"
               loadOnClick="true" smallImage="Images\SelectionTool16.png" largeImage="Images\SelectionTool32.png"
               condition="esri_mapping_mapPane">
-          <tooltip heading="Selection Tool">
+          <tooltip heading="Select">
             Select features.<disabledText />
           </tooltip>
         </tool>
-        <tool id="ProSuiteTools_PickWorkItemTool" caption="Picker Tool" className="Selection.PickWorkListItemTool"
+        <tool id="ProSuiteTools_PickWorkItemTool" caption="Pick Work Item" className="Selection.PickWorkListItemTool"
               loadOnClick="true"
               smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png"
               largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png"
               condition="esri_mapping_mapPane">
-          <tooltip heading="Pick WorkItem Tool">
+          <tooltip heading="Pick Work Item">
             Sets a current work item.<disabledText />
           </tooltip>
         </tool>
