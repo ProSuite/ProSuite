@@ -152,7 +152,7 @@
                 className="LoggerUI.ProSuiteLogPane_ShowButton" loadOnClick="false"
                 smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation16.png"
                 largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation32.png">
-          <tooltip heading="Show Logs Window">Show Logs Window<disabledText /></tooltip>
+          <tooltip heading="Show Logs Window">Show Logs Window.<disabledText /></tooltip>
         </button>
         <!--<button id="Clients_AGP_ProSuiteSolution_AddWorkList" caption="Import WorkList" className="ImportWorkListFile"
                 loadOnClick="true"
@@ -177,7 +177,7 @@
                 smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateSelectionCmd16.png"
                 largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateSelectionCmd32.png">
           <tooltip heading="Open Selection Work List">
-            Open Selection Work List for iterating on selected items
+            Open Selection Work List for iterating on selected items.
             <disabledText>No features selected.</disabledText>
           </tooltip>
         </button>
@@ -186,7 +186,7 @@
                 smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateErrorsCmd16.png"
                 largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateErrorsCmd32.png">
           <tooltip heading="Open Issue Work List">
-            Open Issue Work List for iterating on issue items
+            Open Issue Work List for iterating on issue items.
             <disabledText>No active map.</disabledText>
           </tooltip>
         </button>
@@ -194,7 +194,7 @@
               loadOnClick="true" smallImage="Images\CutHoleTool16.png" largeImage="Images\CutHoleTool32.png"
               condition="esri_editing_EditingMapCondition">
           <tooltip heading="Erase Tool">
-            Erase parts of the selected features or cut a hole into a polygon
+            Erase parts of the selected features or cut a hole into a polygon.
             <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
         </tool>
@@ -202,7 +202,7 @@
               className="Editing.RemoveOverlapsTool" loadOnClick="true" smallImage="Images\RemoveOverlapsTool16.png"
               largeImage="Images\RemoveOverlapsTool32.png" condition="esri_editing_EditingMapCondition">
           <tooltip heading="Remove Overlaps Tool">
-            Remove a part of a feature that overlaps with other polygon features
+            Remove a part of a feature that overlaps with other polygon features.
             <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
         </tool>
@@ -210,7 +210,7 @@
               className="Editing.ReshapeAlongTool" loadOnClick="true" smallImage="Images\ReshapeAlongTool16.png"
               largeImage="Images\ReshapeAlongTool32.png" condition="esri_editing_EditingMapCondition">
           <tooltip heading="Reshape Along Tool">
-            Reshape along
+            Reshape the selected line or polygon feature(s) along other features.
             <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
         </tool>
@@ -218,7 +218,7 @@
               loadOnClick="true" smallImage="Images\CutPolygonAlongTool16.png"
               largeImage="Images\CutPolygonAlongTool32.png" condition="esri_editing_EditingMapCondition">
           <tooltip heading="Cut Along Tool">
-            Cut along
+            Cut the selected polygon feature(s) along other features.
             <disabledText>Click the Edit button to enable this command.</disabledText>
           </tooltip>
         </tool>
@@ -254,7 +254,7 @@
               largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png"
               condition="esri_mapping_mapPane">
           <tooltip heading="Pick WorkItem Tool">
-            Pick a workitem for setting it as current work item<disabledText />
+            Sets a current work item.<disabledText />
           </tooltip>
         </tool>
         <button id="ProSuite_AGP_Solution_QA_VerifyVisibleExtentCmd" caption="Verify Extent"
