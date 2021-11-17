@@ -34,7 +34,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 			_windowLocation = pickerWindowLocation;
 		}
 
-		[CanBeNull]
+		[ItemCanBeNull]
 		public async Task<IPickableItem> PickSingle()
 		{
 			if (_candidateList.Count == 0)
@@ -104,6 +104,60 @@ namespace ProSuite.AGP.Editing.PickerUI
 			}
 
 			return pickCandidates;
+		}
+
+		public static List<IPickableItem> CreatePickableFeatureItems(
+			IEnumerable<FeatureClassSelection> selectionByClasses)
+		{
+			var pickCandidates = new List<IPickableItem>();
+
+			foreach (FeatureClassSelection classSelection in selectionByClasses)
+			{
+				foreach (Feature feature in classSelection.Features)
+				{
+					var text = GetPickerItemText(feature, classSelection.FeatureLayer);
+
+					var featureItem =
+						new PickableFeatureItem(classSelection.FeatureLayer, feature, text);
+
+					pickCandidates.Add(featureItem);
+				}
+			}
+
+			return pickCandidates;
+		}
+
+		private static string GetPickerItemText([NotNull] Feature feature,
+		                                        [CanBeNull] BasicFeatureLayer layer = null)
+		{
+			if (layer != null)
+			{
+				string[] displayExpressions =
+					layer.QueryDisplayExpressions(new[] {feature.GetObjectID()});
+			}
+
+			string className = layer == null ? feature.GetTable().GetName() : layer.Name;
+
+			FeatureClassDefinition classDefinition = feature.GetTable().GetDefinition();
+
+			string subtypeField = classDefinition.GetSubtypeField();
+
+			string subtypeName = null;
+			if (! string.IsNullOrEmpty(subtypeField))
+			{
+				int? subtypeCode = feature[subtypeField] as int?;
+				Subtype subtype = classDefinition.GetSubtypes()
+				                                 .FirstOrDefault(st => st.GetCode() == subtypeCode);
+
+				if (subtype != null)
+				{
+					subtypeName = subtype.GetName();
+				}
+			}
+
+			return string.IsNullOrEmpty(subtypeName)
+				       ? $"{className} ID: {feature.GetObjectID()}"
+				       : $"{className} ({subtypeName}) ID: {feature.GetObjectID()}";
 		}
 
 		private void ShowPickerControl(PickerViewModel vm)

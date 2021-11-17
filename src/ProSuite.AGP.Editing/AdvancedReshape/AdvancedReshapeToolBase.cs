@@ -386,7 +386,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			// TODO: Use linear network classes as defined in reshape options
 			TargetFeatureSelection targetFeatureSelection = TargetFeatureSelection.SameClass;
 
-			IEnumerable<KeyValuePair<FeatureClass, List<Feature>>> foundOidsByClass =
+			IEnumerable<FeatureClassSelection> featureClassSelections =
 				MapUtils.FindFeatures(
 					ActiveMapView, selection, targetFeatureSelection,
 					layer => layer.ShapeType == esriGeometryType.esriGeometryPolyline,
@@ -400,9 +400,9 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			var foundFeatures = new List<Feature>();
 
-			foreach (var keyValuePair in foundOidsByClass)
+			foreach (var keyValuePair in featureClassSelections)
 			{
-				foundFeatures.AddRange(keyValuePair.Value);
+				foundFeatures.AddRange(keyValuePair.Features);
 			}
 
 			foundFeatures.RemoveAll(
@@ -427,7 +427,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 				if (! string.IsNullOrEmpty(message))
 				{
 					message =
-						$"{feature.GetTable().GetDefinition().GetAliasName()} <oid> {feature.GetObjectID()}: {message}";
+						$"{DatasetUtils.GetAliasName(feature.GetTable())} <oid> {feature.GetObjectID()}: {message}";
 
 					if (resultFeature.HasWarningMessage)
 					{

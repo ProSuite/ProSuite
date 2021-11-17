@@ -366,7 +366,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			TargetFeatureSelection targetFeatureSelection = TargetFeatureSelection.VisibleFeatures;
 
-			IEnumerable<KeyValuePair<FeatureClass, List<Feature>>> foundOidsByClass =
+			IEnumerable<FeatureClassSelection> featureClassSelections =
 				MapUtils.FindFeatures(ActiveMapView, selection, targetFeatureSelection,
 				                      CanOverlapLayer, inExtent, cancellabelProgressor);
 
@@ -378,9 +378,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			var foundFeatures = new List<Feature>();
 
-			foreach (var keyValuePair in foundOidsByClass)
+			foreach (var classSelection in featureClassSelections)
 			{
-				foundFeatures.AddRange(keyValuePair.Value);
+				foundFeatures.AddRange(classSelection.Features);
 			}
 
 			// Remove the selected features from the set of overlapping features.

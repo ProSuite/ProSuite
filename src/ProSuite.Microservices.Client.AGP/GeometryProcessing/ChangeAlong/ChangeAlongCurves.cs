@@ -2,27 +2,33 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 {
 	public class ChangeAlongCurves
 	{
-		private ReshapeAlongCurveUsability _curveUsability;
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly List<CutSubcurve> _reshapeSubcurves;
 
 		public ChangeAlongCurves([NotNull] IEnumerable<CutSubcurve> subcurves,
 		                         ReshapeAlongCurveUsability curveUsability)
 		{
-			_curveUsability = curveUsability;
+			CurveUsability = curveUsability;
 			_reshapeSubcurves = new List<CutSubcurve>(subcurves);
 		}
+
+		public ReshapeAlongCurveUsability CurveUsability { get; private set; }
 
 		public IList<CutSubcurve> PreSelectedSubcurves { get; } = new List<CutSubcurve>();
 
 		public void Update([NotNull] ChangeAlongCurves newState)
 		{
-			_curveUsability = newState._curveUsability;
+			CurveUsability = newState.CurveUsability;
 
 			_reshapeSubcurves.Clear();
 			_reshapeSubcurves.AddRange(newState.ReshapeCutSubcurves);
@@ -34,7 +40,7 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			_reshapeSubcurves.AsReadOnly();
 
 		public bool HasSelectableCurves =>
-			_curveUsability == ReshapeAlongCurveUsability.CanReshape ||
+			CurveUsability == ReshapeAlongCurveUsability.CanReshape ||
 			(_reshapeSubcurves?.Any() ?? false);
 
 		[CanBeNull]
@@ -83,6 +89,43 @@ namespace ProSuite.Microservices.Client.AGP.GeometryProcessing.ChangeAlong
 			}
 
 			return result;
+		}
+
+		public void LogTargetSelection()
+		{
+			string selectedTargetsMsg;
+			var message = string.Empty;
+
+			if (TargetFeatures == null || TargetFeatures.Count == 0)
+			{
+				selectedTargetsMsg = message;
+			}
+			else
+			{
+				string featuresDescription =
+					StringUtils.Concatenate(
+						TargetFeatures,
+						target =>
+							$"{DatasetUtils.GetAliasName(target.GetTable())} {target.GetObjectID()}",
+						", ");
+
+				if (TargetFeatures.Count == 1)
+				{
+					message = $"Selected target feature: {featuresDescription}";
+				}
+				else
+				{
+					message =
+						$"{TargetFeatures.Count} selected target features: {featuresDescription}";
+				}
+
+				selectedTargetsMsg = message;
+			}
+
+			if (! string.IsNullOrEmpty(selectedTargetsMsg))
+			{
+				_msg.Info(selectedTargetsMsg);
+			}
 		}
 
 		/// <summary>

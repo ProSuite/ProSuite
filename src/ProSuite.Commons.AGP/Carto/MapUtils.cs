@@ -195,7 +195,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <param name="cancelableProgressor">The progress/cancel tracker.</param>
 		/// <returns>The found features in the same spatial reference as the provided selected features</returns>
 		[NotNull]
-		public static IEnumerable<KeyValuePair<FeatureClass, List<Feature>>> FindFeatures(
+		public static IEnumerable<FeatureClassSelection> FindFeatures(
 			[NotNull] MapView mapView,
 			[NotNull] Dictionary<MapMember, List<long>> intersectingSelectedFeatures,
 			TargetFeatureSelection targetSelectionType,
@@ -242,7 +242,7 @@ namespace ProSuite.Commons.AGP.Carto
 		/// <see cref="targetSelectionType"/> with value <see cref="TargetFeatureSelection.SameClass"/>. </param>
 		/// <param name="cancelableProgressor"></param>
 		/// <returns></returns>
-		public static IEnumerable<KeyValuePair<FeatureClass, List<Feature>>> FindFeatures(
+		public static IEnumerable<FeatureClassSelection> FindFeatures(
 			[NotNull] MapView mapView,
 			[NotNull] Geometry searchGeometry,
 			SpatialRelationship spatialRelationship,
@@ -269,6 +269,7 @@ namespace ProSuite.Commons.AGP.Carto
 				// One query per distinct definition query, then make OIDs distinct
 
 				FeatureClass featureClass = null;
+				FeatureLayer featureLayer = null;
 				List<Feature> features = new List<Feature>();
 				foreach (IGrouping<string, FeatureLayer> layers in layersInClass.GroupBy(
 					fl => fl.DefinitionQuery))
@@ -279,7 +280,8 @@ namespace ProSuite.Commons.AGP.Carto
 						yield break;
 					}
 
-					featureClass = layers.First().GetFeatureClass();
+					featureLayer = layers.First();
+					featureClass = featureLayer.GetFeatureClass();
 
 					QueryFilter filter =
 						GdbQueryUtils.CreateSpatialFilter(searchGeometry, spatialRelationship);
@@ -294,8 +296,9 @@ namespace ProSuite.Commons.AGP.Carto
 
 				if (featureClass != null && features.Count > 0)
 				{
-					yield return new KeyValuePair<FeatureClass, List<Feature>>(
-						featureClass, features.DistinctBy(f => f.GetObjectID()).ToList());
+					yield return new FeatureClassSelection(
+						featureClass, features.DistinctBy(f => f.GetObjectID()).ToList(),
+						featureLayer);
 				}
 			}
 		}
