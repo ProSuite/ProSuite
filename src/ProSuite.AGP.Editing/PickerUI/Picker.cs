@@ -9,6 +9,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing.PickerUI
@@ -96,8 +97,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 			var pickCandidates = new List<IPickableItem>();
 			foreach (Feature feature in MapUtils.GetFeatures(featuresOfLayer))
 			{
-				var text =
-					$"{featuresOfLayer.Key.Name}: {feature.GetObjectID()}";
+				var text = GetPickerItemText(feature, featuresOfLayer.Key);
 				var featureItem =
 					new PickableFeatureItem(featuresOfLayer.Key, feature, text);
 				pickCandidates.Add(featureItem);
@@ -130,34 +130,12 @@ namespace ProSuite.AGP.Editing.PickerUI
 		private static string GetPickerItemText([NotNull] Feature feature,
 		                                        [CanBeNull] BasicFeatureLayer layer = null)
 		{
-			if (layer != null)
-			{
-				string[] displayExpressions =
-					layer.QueryDisplayExpressions(new[] {feature.GetObjectID()});
-			}
+			// TODO: Alternatively allow using layer.QueryDisplayExpressions. But typically this is just the OID which is not very useful -> Requires configuration
+			// string[] displayExpressions = layer.QueryDisplayExpressions(new[] { feature.GetObjectID() });
 
 			string className = layer == null ? feature.GetTable().GetName() : layer.Name;
 
-			FeatureClassDefinition classDefinition = feature.GetTable().GetDefinition();
-
-			string subtypeField = classDefinition.GetSubtypeField();
-
-			string subtypeName = null;
-			if (! string.IsNullOrEmpty(subtypeField))
-			{
-				int? subtypeCode = feature[subtypeField] as int?;
-				Subtype subtype = classDefinition.GetSubtypes()
-				                                 .FirstOrDefault(st => st.GetCode() == subtypeCode);
-
-				if (subtype != null)
-				{
-					subtypeName = subtype.GetName();
-				}
-			}
-
-			return string.IsNullOrEmpty(subtypeName)
-				       ? $"{className} ID: {feature.GetObjectID()}"
-				       : $"{className} ({subtypeName}) ID: {feature.GetObjectID()}";
+			return GdbObjectUtils.GetDisplayValue(feature, className);
 		}
 
 		private void ShowPickerControl(PickerViewModel vm)

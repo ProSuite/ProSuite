@@ -18,6 +18,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 using ProSuite.Microservices.Client.AGP;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps;
 
@@ -157,6 +158,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			if (result.TargetFeaturesToUpdate != null)
 			{
+				var updatedTargets = new List<Feature>();
 				foreach (KeyValuePair<Feature, Geometry> kvp in result.TargetFeaturesToUpdate)
 				{
 					if (! IsStoreRequired(kvp.Key, kvp.Value, editableClassHandles))
@@ -164,8 +166,13 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 						continue;
 					}
 
+					updatedTargets.Add(kvp.Key);
 					updates.Add(kvp.Key, kvp.Value);
 				}
+
+				_msg.InfoFormat("Target features with potential vertex insertions: {0}",
+				                StringUtils.Concatenate(updatedTargets,
+				                                        GdbObjectUtils.GetDisplayValue, ", "));
 			}
 
 			IEnumerable<Dataset> datasets =
