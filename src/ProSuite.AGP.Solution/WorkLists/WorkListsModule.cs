@@ -628,7 +628,7 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 			await ViewUtils.TryAsync(QueuedTask.Run(() =>
 			{
-				foreach (var item in e.ProjectItems.OfType<WorklistItem>())
+				foreach (var item in e.ProjectItems.OfType<WorklistItem>().Where(item => File.Exists(item.Path)))
 				{
 					string name = WorkListUtils.GetWorklistName(item.Path);
 					Assert.NotNullOrEmpty(name);
