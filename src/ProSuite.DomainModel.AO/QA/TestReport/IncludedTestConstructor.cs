@@ -1,10 +1,10 @@
-﻿using System;
+using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
-	internal class IncludedTestConstructor : IncludedTest,
-	                                         IComparable<IncludedTestConstructor>
+	public class IncludedTestConstructor : IncludedTest,
+	                                       IComparable<IncludedTestConstructor>
 	{
 		private readonly Type _testType;
 		private readonly int _constructorIndex;
@@ -45,13 +45,15 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 		public override string Key
 		{
-			get { return string.Format("{0}:{1}", _testType.FullName, _constructorIndex); }
+			get { return string.Format("{0}:{1}", _testType.FullName, ConstructorIndex); }
 		}
 
 		public override string IndexTooltip
 		{
 			get { return TestFactory.GetTestDescription(); }
 		}
+
+		public int ConstructorIndex => _constructorIndex;
 
 		#endregion
 	}

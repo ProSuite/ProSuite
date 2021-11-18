@@ -100,7 +100,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			ViewUtils.Try(() =>
 			{
-				if (LayerUtils.FindLayers(SelectedInvolvedObject.Name).FirstOrDefault() is
+				if (MapUtils.FindLayers(SelectedInvolvedObject.Name).FirstOrDefault() is
 					    FeatureLayer involvedLayer)
 				{
 					MapView mapView = MapView.Active;
@@ -141,7 +141,7 @@ namespace ProSuite.AGP.Solution.WorkListUI
 		{
 			await ViewUtils.TryAsync(() =>
 			{
-				if (LayerUtils.FindLayers(SelectedInvolvedObject.Name).FirstOrDefault() is
+				if (MapUtils.FindLayers(SelectedInvolvedObject.Name).FirstOrDefault() is
 					    FeatureLayer involvedLayer)
 				{
 					MapView mapView = MapView.Active;

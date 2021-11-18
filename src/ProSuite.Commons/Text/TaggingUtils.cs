@@ -58,7 +58,7 @@ namespace ProSuite.Commons.Text
 		[NotNull]
 		public static string[] SplitTags(string tags)
 		{
-			if (string.IsNullOrWhiteSpace(tags)) return new string[0];
+			if (string.IsNullOrWhiteSpace(tags)) return Array.Empty<string>();
 			var array = tags.Split(Separators.ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 			return array.Select(t => t.Trim()).Where(t => t.Length > 0).ToArray();
 		}

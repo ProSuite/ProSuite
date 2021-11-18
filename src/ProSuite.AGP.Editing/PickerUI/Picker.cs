@@ -57,7 +57,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 			_viewModel.DisposeOverlays();
 
-			return _viewModel.SelectedItem ?? null;
+			return _viewModel.SelectedItem;
 		}
 
 		[CanBeNull]
@@ -87,7 +87,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 			_viewModel.DisposeOverlays();
 
-			return _viewModel.SelectedItems.ToList() ?? null;
+			return _viewModel.SelectedItems.ToList();
 		}
 
 		public static List<IPickableItem> CreatePickableFeatureItems(

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using ProSuite.Commons.Essentials.Assertions;
@@ -8,7 +8,7 @@ using ProSuite.QA.Container;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
-	internal abstract class IncludedTestBase : IComparable<IncludedTestBase>
+	public abstract class IncludedTestBase : IComparable<IncludedTestBase>
 	{
 		private readonly Assembly _assembly;
 		private readonly bool _obsolete;

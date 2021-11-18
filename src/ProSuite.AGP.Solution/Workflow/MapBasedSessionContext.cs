@@ -154,7 +154,7 @@ namespace ProSuite.AGP.Solution.Workflow
 
 			if (ProjectWorkspace == null)
 			{
-				reason = "No project workspace could be inferred from the map layers.";
+				reason = "No project workspace could be inferred from the current map layers.";
 				return false;
 			}
 
@@ -240,7 +240,8 @@ namespace ProSuite.AGP.Solution.Workflow
 				yield break;
 			}
 
-			foreach (Table table in map.GetTables())
+			//TODO: we are missing Standalone tables here, maybe other types of Layers as well
+			foreach (Table table in map.GetLayers<FeatureLayer>().GetTables())
 			{
 				if (table.GetDatastore() is FileSystemDatastore)
 				{

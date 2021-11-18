@@ -12,7 +12,6 @@ namespace ProSuite.AGP.WorkList.Contracts
 		[NotNull]
 		string Name { get; set; }
 
-		[NotNull]
 		string DisplayName { get; }
 
 		[CanBeNull]

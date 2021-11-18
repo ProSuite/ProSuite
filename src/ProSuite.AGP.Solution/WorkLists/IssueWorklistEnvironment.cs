@@ -3,8 +3,7 @@ using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.QA;
-using ProSuite.AGP.QA.Worklist;
+using ProSuite.AGP.QA.WorkList;
 using ProSuite.Application.Configuration;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -12,15 +11,15 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Solution.WorkLists
 {
-	public class IssueWorklistEnvironment : IssueWorklistEnvironmentBase
+	public class IssueWorkListEnvironment : IssueWorkListEnvironmentBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly string _templateLayer = "Selection Work List.lyrx";
 
-		public IssueWorklistEnvironment([CanBeNull] string path) : base(path) { }
+		public IssueWorkListEnvironment([CanBeNull] string path) : base(path) { }
 
-		public IssueWorklistEnvironment() : base(BrowseGeodatabase()) { }
+		public IssueWorkListEnvironment() : base(BrowseGeodatabase()) { }
 
 		protected override LayerDocument GetLayerDocumentCore()
 		{

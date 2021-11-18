@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace ProSuite.QA.ServiceManager.Types
 {
 	public class ProSuiteQASpecificationsConfiguration

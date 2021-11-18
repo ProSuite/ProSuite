@@ -4,14 +4,13 @@ using Microsoft.Xaml.Behaviors;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.UI.WPF;
 using TriggerBase = Microsoft.Xaml.Behaviors.TriggerBase;
-using UserControl = System.Windows.Controls.UserControl;
 
 namespace ProSuite.UI.QA.VerificationProgress
 {
 	/// <summary>
 	/// Interaction logic for VerificationProgressWpfControl.xaml
 	/// </summary>
-	public partial class VerificationProgressWpfControl : UserControl, IWinFormHostable
+	public partial class VerificationProgressWpfControl : IWinFormHostable
 	{
 		private Form _hostWinForm;
 

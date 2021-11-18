@@ -6,7 +6,7 @@ namespace ProSuite.Commons.UI.ScreenBinding.Lists
 {
 	public class FancyPicklist : Picklist<ListValue>
 	{
-		public FancyPicklist() : base(new ListValue[0])
+		public FancyPicklist() : base(Array.Empty<ListValue>())
 		{
 			Configure();
 		}

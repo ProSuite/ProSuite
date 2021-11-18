@@ -951,16 +951,16 @@ namespace ProSuite.Commons.Test.Geometry
 				                       new Pnt3D(40, 70, 0)
 			                       };
 
-			Linestring target = new Linestring(targetWithDangle);
+			Linestring target1 = new Linestring(targetWithDangle);
 			targetWithDangle.Reverse();
-			Linestring flippedTarget = new Linestring(targetWithDangle);
+			Linestring flippedTarget1 = new Linestring(targetWithDangle);
 
-			// Theoratically the already visited intersections would get removed:
+			// Theoretically the already visited intersections would get removed:
 			WithRotatedLinestring(ring1,
 			                      delegate
 			                      {
-				                      CutPlanar(poly, target, 2, 0);
-				                      CutPlanar(poly, flippedTarget, 2, 0);
+				                      CutPlanar(poly, target1, 2, 0);
+				                      CutPlanar(poly, flippedTarget1, 2, 0);
 			                      });
 
 			// This requires the dangle-filter when classifying the intersections as in-/out-bound:
@@ -971,15 +971,15 @@ namespace ProSuite.Commons.Test.Geometry
 				                   new Pnt3D(80, 70, 0)
 			                   };
 
-			target = new Linestring(targetWithDangle);
+			var target2 = new Linestring(targetWithDangle);
 			targetWithDangle.Reverse();
-			flippedTarget = new Linestring(targetWithDangle);
+			var flippedTarget2 = new Linestring(targetWithDangle);
 
 			WithRotatedLinestring(ring1,
 			                      delegate
 			                      {
-				                      CutPlanar(poly, target, 2, 0);
-				                      CutPlanar(poly, flippedTarget, 2, 0);
+				                      CutPlanar(poly, target2, 2, 0);
+				                      CutPlanar(poly, flippedTarget2, 2, 0);
 			                      });
 
 			// Starting at the outside with one proper cut and one non-cutting dangle
@@ -991,15 +991,15 @@ namespace ProSuite.Commons.Test.Geometry
 				                   new Pnt3D(20, 50, 0)
 			                   };
 
-			target = new Linestring(targetWithDangle);
+			var target3 = new Linestring(targetWithDangle);
 			targetWithDangle.Reverse();
-			flippedTarget = new Linestring(targetWithDangle);
+			var flippedTarget3 = new Linestring(targetWithDangle);
 
 			WithRotatedLinestring(ring1,
 			                      delegate
 			                      {
-				                      CutPlanar(poly, target, 2, 0);
-				                      CutPlanar(poly, flippedTarget, 2, 0);
+				                      CutPlanar(poly, target3, 2, 0);
+				                      CutPlanar(poly, flippedTarget3, 2, 0);
 			                      });
 
 			targetWithDangle = new List<Pnt3D>
@@ -1010,15 +1010,15 @@ namespace ProSuite.Commons.Test.Geometry
 				                   new Pnt3D(85, 50, 0)
 			                   };
 
-			target = new Linestring(targetWithDangle);
+			var target4 = new Linestring(targetWithDangle);
 			targetWithDangle.Reverse();
-			flippedTarget = new Linestring(targetWithDangle);
+			var flippedTarget4 = new Linestring(targetWithDangle);
 
 			WithRotatedLinestring(ring1,
 			                      delegate
 			                      {
-				                      CutPlanar(poly, target, 2, 0);
-				                      CutPlanar(poly, flippedTarget, 2, 0);
+				                      CutPlanar(poly, target4, 2, 0);
+				                      CutPlanar(poly, flippedTarget4, 2, 0);
 			                      });
 		}
 
@@ -1045,15 +1045,15 @@ namespace ProSuite.Commons.Test.Geometry
 				                        new Pnt3D(50, 100, 0)
 			                        };
 
-			Linestring target = new Linestring(targetWithCutBack);
+			var target1 = new Linestring(targetWithCutBack);
 			targetWithCutBack.Reverse();
-			Linestring flippedTarget = new Linestring(targetWithCutBack);
+			var flippedTarget1 = new Linestring(targetWithCutBack);
 
 			WithRotatedLinestring(ring1,
 			                      delegate
 			                      {
-				                      CutPlanar(poly, target, 3, 0);
-				                      CutPlanar(poly, flippedTarget, 3, 0);
+				                      CutPlanar(poly, target1, 3, 0);
+				                      CutPlanar(poly, flippedTarget1, 3, 0);
 			                      });
 
 			targetWithCutBack = new List<Pnt3D>
@@ -1066,15 +1066,15 @@ namespace ProSuite.Commons.Test.Geometry
 				                    new Pnt3D(60, 100, 0)
 			                    };
 
-			target = new Linestring(targetWithCutBack);
+			var target2 = new Linestring(targetWithCutBack);
 			targetWithCutBack.Reverse();
-			flippedTarget = new Linestring(targetWithCutBack);
+			var flippedTarget2 = new Linestring(targetWithCutBack);
 
 			WithRotatedLinestring(ring1,
 			                      delegate
 			                      {
-				                      CutPlanar(poly, target, 3, 0);
-				                      CutPlanar(poly, flippedTarget, 3, 0);
+				                      CutPlanar(poly, target2, 3, 0);
+				                      CutPlanar(poly, flippedTarget2, 3, 0);
 			                      });
 		}
 
@@ -1609,15 +1609,12 @@ namespace ProSuite.Commons.Test.Geometry
 			ring2.Add(new Pnt3D(100, 0, 9));
 			ring2.Add(new Pnt3D(110, 50, 9));
 
-			IList<Pnt3D> intersectionPointsXY;
-
-			List<Pnt3D> rotatedRing;
 			for (var i = 0; i < 4; i++)
 			{
-				rotatedRing = GetRotatedRing(ring1, i);
+				List<Pnt3D> rotatedRing = GetRotatedRing(ring1, i);
 
 				const bool includedRingStarts = false;
-				intersectionPointsXY = GetIntersectionPointsXY(
+				IList<Pnt3D> intersectionPointsXY = GetIntersectionPointsXY(
 					rotatedRing, ring2, 0.0001, includedRingStarts);
 
 				var intersectionPointsXYOtherSource =
@@ -1687,10 +1684,9 @@ namespace ProSuite.Commons.Test.Geometry
 			ring2.Add(new Pnt3D(30, 2, 9));
 			ring2.Add(new Pnt3D(20, 0, 9));
 
-			List<Pnt3D> rotatedRing;
 			for (var i = 0; i < 4; i++)
 			{
-				rotatedRing = GetRotatedRing(ring1, i);
+				List<Pnt3D> rotatedRing = GetRotatedRing(ring1, i);
 
 				IList<Pnt3D> intersectionPointsXY = GetIntersectionPointsXY(
 					rotatedRing, ring2, 0.0001, false);
@@ -1742,10 +1738,9 @@ namespace ProSuite.Commons.Test.Geometry
 			ring2.Add(new Pnt3D(30, 2, 9));
 			ring2.Add(new Pnt3D(20, 0, 9));
 
-			List<Pnt3D> rotatedRing;
 			for (var i = 0; i < 4; i++)
 			{
-				rotatedRing = GetRotatedRing(ring1, i);
+				List<Pnt3D> rotatedRing = GetRotatedRing(ring1, i);
 
 				var sourceLinestring = new Linestring(rotatedRing);
 				double totalLength = sourceLinestring.GetLength2D();
@@ -2809,7 +2804,7 @@ namespace ProSuite.Commons.Test.Geometry
 
 			IList<IntersectionPoint3D> result =
 				GeomTopoOpUtils
-					.GetIntersectionPoints((IPointList) sourceMultipoint, (ISegmentList) targetRing,
+					.GetIntersectionPoints(sourceMultipoint, targetRing,
 					                       0.001, false).ToList();
 
 			Assert.AreEqual(3, result.Count);
@@ -2858,7 +2853,7 @@ namespace ProSuite.Commons.Test.Geometry
 
 			IList<IntersectionPoint3D> result =
 				GeomTopoOpUtils
-					.GetIntersectionPoints((ISegmentList) sourceRing, (IPointList) targetMultipoint,
+					.GetIntersectionPoints(sourceRing, targetMultipoint,
 					                       0.001, false).ToList();
 
 			Assert.AreEqual(3, result.Count);
@@ -2893,7 +2888,7 @@ namespace ProSuite.Commons.Test.Geometry
 			source.Add(new Pnt3D(100, 0, 9));
 			source.Add(new Pnt3D(0, 0, 9));
 
-			Multipoint<Pnt3D> sourceMultipoint = new Multipoint<Pnt3D>(source);
+			IPointList sourceMultipoint = new Multipoint<Pnt3D>(source);
 
 			Multipoint<Pnt3D> targetMultipoint = new Multipoint<Pnt3D>(2);
 			// on the segment, between vertices
@@ -2906,7 +2901,7 @@ namespace ProSuite.Commons.Test.Geometry
 			targetMultipoint.AddPoint(new Pnt3D(35, 33, 21));
 
 			var result =
-				GeomTopoOpUtils.GetIntersectionPoints((IPointList) sourceMultipoint,
+				GeomTopoOpUtils.GetIntersectionPoints(sourceMultipoint,
 				                                      targetMultipoint,
 				                                      0.001).ToList();
 
@@ -2916,7 +2911,7 @@ namespace ProSuite.Commons.Test.Geometry
 			Assert.IsTrue(source[0].Equals(result[2].Point));
 
 			result =
-				GeomTopoOpUtils.GetIntersectionPoints((IPointList) targetMultipoint,
+				GeomTopoOpUtils.GetIntersectionPoints(targetMultipoint,
 				                                      sourceMultipoint,
 				                                      0.001).ToList();
 
@@ -2936,14 +2931,14 @@ namespace ProSuite.Commons.Test.Geometry
 			source.Add(new Pnt3D(100, 0, 9));
 			source.Add(new Pnt3D(0, 0, 9));
 
-			Multipoint<Pnt3D> sourceMultipoint = new Multipoint<Pnt3D>(source);
+			IPointList sourceMultipoint = new Multipoint<Pnt3D>(source);
 
 			Pnt3D targetPointNonIntersecting = new Pnt3D(0, 40, 6);
 			Pnt3D targetPointSinglePointIntersection = new Pnt3D(100, 100, 25);
 			Pnt3D targetPointDoubleIntersection = new Pnt3D(0, 0, 6);
 
 			var result =
-				GeomTopoOpUtils.GetIntersectionPoints((IPointList) sourceMultipoint,
+				GeomTopoOpUtils.GetIntersectionPoints(sourceMultipoint,
 				                                      targetPointNonIntersecting,
 				                                      0.001).ToList();
 

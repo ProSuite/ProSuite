@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
@@ -35,6 +35,46 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			Assert.ArgumentNotNull(assemblies, nameof(assemblies));
 
 			var builder = new HtmlReportBuilder(writer, "ProSuite QA Test Documentation");
+
+			builder.AddHeaderItem("ProSuite Version",
+			                      ReflectionUtils.GetAssemblyVersionString(
+				                      Assembly.GetExecutingAssembly()));
+
+			builder.IncludeObsolete = false;
+			builder.IncludeAssemblyInfo = true;
+
+			IncludeTestClasses(builder, assemblies);
+			IncludeTestFactories(builder, assemblies);
+
+			builder.WriteReport();
+		}
+
+		public static void WritePythonTestClasses([NotNull] IList<Assembly> assemblies,
+		                                          [NotNull] TextWriter writer)
+		{
+			Assert.ArgumentNotNull(assemblies, nameof(assemblies));
+
+			var builder = new PythonClassBuilder(writer);
+
+			builder.AddHeaderItem("ProSuite Version",
+			                      ReflectionUtils.GetAssemblyVersionString(
+				                      Assembly.GetExecutingAssembly()));
+
+			builder.IncludeObsolete = false;
+			builder.IncludeAssemblyInfo = true;
+
+			IncludeTestClasses(builder, assemblies);
+			IncludeTestFactories(builder, assemblies);
+
+			builder.WriteReport();
+		}
+
+		public static void WriteXmlTestDescriptors([NotNull] IList<Assembly> assemblies,
+		                                           [NotNull] TextWriter writer)
+		{
+			Assert.ArgumentNotNull(assemblies, nameof(assemblies));
+
+			var builder = new XmlTestDescriptorsBuilder(writer, null);
 
 			builder.AddHeaderItem("ProSuite Version",
 			                      ReflectionUtils.GetAssemblyVersionString(

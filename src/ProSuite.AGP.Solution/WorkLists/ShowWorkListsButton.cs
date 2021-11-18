@@ -10,9 +10,9 @@ namespace ProSuite.AGP.Solution.WorkLists
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		protected override void OnClick()
+		protected override async void OnClick()
 		{
-			ViewUtils.Try(() => WorkListsModule.Current.ShowView(), _msg);
+			await ViewUtils.TryAsync(WorkListsModule.Current.ShowViewAsync(), _msg);
 		}
 	}
 }

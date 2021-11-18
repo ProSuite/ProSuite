@@ -49,24 +49,9 @@ namespace ProSuite.Microservices.Server.AO
 
 			LoadReportingGrpcImpl loadReporting = new LoadReportingGrpcImpl();
 
-			int maxThreadCount = arguments.MaxParallel < 0
-				                     ? Environment.ProcessorCount - 1
-				                     : arguments.MaxParallel;
-
-			ServiceLoad serviceLoad = new ServiceLoad(maxThreadCount);
-
-			loadReporting.AllowMonitoring(nameof(QualityVerificationGrpc), serviceLoad);
-
-			var verificationServiceImpl =
-				new QualityVerificationGrpcImpl(inputsFactory, maxThreadCount)
-				{
-					CurrentLoad = serviceLoad
-				};
-
-			if (markUnhealthyOnExceptions)
-			{
-				verificationServiceImpl.Health = health;
-			}
+			QualityVerificationGrpcImpl verificationServiceImpl =
+				CreateQualityVerificationGrpc(arguments, inputsFactory, loadReporting,
+				                              markUnhealthyOnExceptions ? health : null);
 
 			health.SetStatus(verificationServiceImpl.GetType(), true);
 
@@ -78,6 +63,39 @@ namespace ProSuite.Microservices.Server.AO
 
 			return new StartedGrpcServer<QualityVerificationGrpcImpl>(
 				server, verificationServiceImpl, health);
+		}
+
+		public static QualityVerificationGrpcImpl CreateQualityVerificationGrpc(
+			[NotNull] MicroserverArguments arguments,
+			[CanBeNull] Func<VerificationRequest, IBackgroundVerificationInputs> inputsFactory,
+			[CanBeNull] LoadReportingGrpcImpl loadReporting,
+			[CanBeNull] IServiceHealth health)
+		{
+			int maxThreadCount = arguments.MaxParallel < 0
+				                     ? Environment.ProcessorCount - 1
+				                     : arguments.MaxParallel;
+
+			ServiceLoad serviceLoad = null;
+
+			if (loadReporting != null)
+			{
+				serviceLoad = new ServiceLoad(maxThreadCount);
+
+				loadReporting.AllowMonitoring(nameof(QualityVerificationGrpc), serviceLoad);
+			}
+
+			var verificationServiceImpl =
+				new QualityVerificationGrpcImpl(inputsFactory, maxThreadCount)
+				{
+					CurrentLoad = serviceLoad
+				};
+
+			if (health != null)
+			{
+				verificationServiceImpl.Health = health;
+			}
+
+			return verificationServiceImpl;
 		}
 
 		private static Grpc.Core.Server StartGrpcServer(

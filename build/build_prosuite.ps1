@@ -1,19 +1,19 @@
 #
 # Usage samples:
 
-# .\build_prosuite.ps1 [-product AddIn|Server] [-prosdk 2.6|2.7|2.8] [-cpu x86|AnyCPU] [-arcgisvers 10.4|10.5|10.6|10.7|10.8] [-arcobjects 10|11] [-release] [-zip] [-info]
+# .\build_prosuite.ps1 [-product AddIn|Server] [-prosdk 2.6|2.7|2.8|2.9] [-cpu x86|AnyCPU] [-arcgisvers 10.4|10.5|10.6|10.7|10.8] [-arcobjects 10|11] [-release] [-zip] [-info]
 
 # without -product will compile AddIn
 # without -prosdk will use binaries from local installation of ArcGIS Pro, otherwise version of EsriDE.Commons\lib\ESRI\ProSDK
 # without -cpu will compile AnyCPU configuration
 # without -arcgisvers will compile with 10.8 binaries (is relevant only for -product Server) 
-# without -arcobjects version 10 will be used (environment variable VSArcGISProduct="ArcGIS") –arcobjects 11 means (VSArcGISProduct="Server")
+# without -arcobjects version 10 will be used (environment variable VSArcGISProduct="ArcGIS") -arcobjects 11 means (VSArcGISProduct="Server")
 # switch -release will compile release version (will increase version number v in ${Product}.versions.txt x.v.x.x - without is test version: x.x.v.x)
 # switch -zip will compress output folder
 # switch -info will display environment variables, calculated build configuration and quit without building
 
-# AddIn für ArcGIS Pro 2.8
-# .\build_prosuite.ps1 -product AddIn -prosdk 2.8 -release
+# AddIn für ArcGIS Pro 2.9
+# .\build_prosuite.ps1 -product AddIn -prosdk 2.9 -release
 
 # Microservice für lokales ArcMap 10.8
 # .\build_prosuite.ps1 -product Server -arcgisvers 10.8 -cpu x86 -release -zip

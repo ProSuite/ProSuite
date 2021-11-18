@@ -13,25 +13,16 @@ using ProSuite.QA.Core;
 
 namespace ProSuite.DomainModel.AO.QA.TestReport
 {
-	public class HtmlReportBuilder : IReportBuilder
+	public class HtmlReportBuilder : ReportBuilderBase
 	{
 		private readonly List<KeyValuePair<string, string>> _headerItems =
 			new List<KeyValuePair<string, string>>();
 
 		private readonly XmlElement _htmlTable;
 
-		private readonly IDictionary<Type, IncludedTestClass> _includedTestClasses =
-			new Dictionary<Type, IncludedTestClass>();
-
-		private readonly List<IncludedTestFactory> _includedTestFactories =
-			new List<IncludedTestFactory>();
-
 		private readonly TextWriter _textWriter;
 		private readonly string _title;
 		private readonly XmlDocument _xmlDocument;
-
-		private bool _includeAssemblyInfo;
-		private bool _includeObsolete;
 
 		private const int _indexColumnCount = 3;
 		private const string _noCategory = "No Category";
@@ -88,101 +79,19 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 		#region IReportBuilder Members
 
-		public bool IncludeAssemblyInfo
-		{
-			get { return _includeAssemblyInfo; }
-			set { _includeAssemblyInfo = value; }
-		}
-
-		/// <summary>
-		/// Gets or sets a value indicating whether obsolete tests or factories are
-		/// included.
-		/// </summary>
-		/// <value><c>true</c> if obsolete tests or factories should be included; otherwise, <c>false</c>.</value>
-		public bool IncludeObsolete
-		{
-			get { return _includeObsolete; }
-			set { _includeObsolete = value; }
-		}
-
-		public void AddHeaderItem(string name, string value)
+		public override void AddHeaderItem(string name, string value)
 		{
 			_headerItems.Add(new KeyValuePair<string, string>(name, value));
 		}
 
-		public void IncludeTestFactory(Type testFactoryType)
+		public override void WriteReport()
 		{
-			var testFactory = new IncludedTestFactory(testFactoryType);
-
-			if (! _includeObsolete && testFactory.Obsolete)
-			{
-				return;
-			}
-
-			if (testFactory.InternallyUsed)
-			{
-				return;
-			}
-
-			_includedTestFactories.Add(testFactory);
-		}
-
-		public void IncludeTest(Type testType, int constructorIndex)
-		{
-			var newTestClass = false;
-			IncludedTestClass testClass;
-			if (! _includedTestClasses.TryGetValue(testType, out testClass))
-			{
-				testClass = new IncludedTestClass(testType);
-
-				if (! _includeObsolete && testClass.Obsolete)
-				{
-					return;
-				}
-
-				if (testClass.InternallyUsed)
-				{
-					return;
-				}
-
-				// this test class is to be added, if the constructor is not obsolete
-				newTestClass = true;
-			}
-
-			if (testClass.Obsolete)
-			{
-				return;
-			}
-
-			IncludedTestConstructor testConstructor =
-				testClass.CreateTestConstructor(constructorIndex);
-
-			if (! _includeObsolete && testConstructor.Obsolete)
-			{
-				return;
-			}
-
-			if (testConstructor.InternallyUsed)
-			{
-				return;
-			}
-
-			testClass.IncludeConstructor(testConstructor);
-
-			if (newTestClass)
-			{
-				_includedTestClasses.Add(testType, testClass);
-			}
-		}
-
-		public void WriteReport()
-		{
-			_includedTestFactories.Sort();
+			IncludedTestFactories.Sort();
 
 			List<IncludedTestBase> includedTests =
 				GetSortedTestClasses().Cast<IncludedTestBase>().ToList();
 
-			includedTests.AddRange(_includedTestFactories.Cast<IncludedTestBase>());
+			includedTests.AddRange(IncludedTestFactories.Cast<IncludedTestBase>());
 
 			WriteHeader();
 
@@ -306,12 +215,12 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			}
 
 			AddHeaderRow("Test Classes",
-			             _includedTestClasses.Count.ToString(CultureInfo.InvariantCulture));
+			             IncludedTestClasses.Count.ToString(CultureInfo.InvariantCulture));
 			AddHeaderRow("Test Class Constructors",
-			             GetTestConstructorCount(_includedTestClasses.Values)
+			             GetTestConstructorCount(IncludedTestClasses.Values)
 				             .ToString(CultureInfo.InvariantCulture));
 			AddHeaderRow("Test Factories",
-			             _includedTestFactories.Count.ToString(CultureInfo.InvariantCulture));
+			             IncludedTestFactories.Count.ToString(CultureInfo.InvariantCulture));
 			AddHeaderRow("Report Created", DateTime.Now.ToString(CultureInfo.InvariantCulture));
 		}
 
@@ -319,8 +228,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		{
 			var categories = new Dictionary<string, List<IncludedTestBase>>();
 
-			ExtractCategories(categories, _includedTestClasses.Values);
-			ExtractCategories(categories, _includedTestFactories.ToArray());
+			ExtractCategories(categories, IncludedTestClasses.Values);
+			ExtractCategories(categories, IncludedTestFactories.ToArray());
 
 			var indexEntries = new List<IndexEntry>();
 
@@ -354,7 +263,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		private void WriteAlphabeticalIndex()
 		{
 			var indexEntries = new List<IndexEntry>();
-			if (_includedTestClasses.Count > 0)
+			if (IncludedTestClasses.Count > 0)
 			{
 				indexEntries.Add(new SectionTitleIndexEntry("Tests:"));
 
@@ -364,10 +273,10 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				}
 			}
 
-			if (_includedTestFactories.Count > 0)
+			if (IncludedTestFactories.Count > 0)
 			{
 				indexEntries.Add(new SectionTitleIndexEntry("Test Factories:"));
-				foreach (IncludedTestFactory factory in _includedTestFactories)
+				foreach (IncludedTestFactory factory in IncludedTestFactories)
 				{
 					indexEntries.Add(new TestFactoryIndexEntry(factory));
 				}
@@ -506,16 +415,6 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			{
 				result += includedTestClass.TestConstructors.Count;
 			}
-
-			return result;
-		}
-
-		[NotNull]
-		private IEnumerable<IncludedTestClass> GetSortedTestClasses()
-		{
-			var result = new List<IncludedTestClass>(_includedTestClasses.Values);
-
-			result.Sort();
 
 			return result;
 		}
@@ -753,7 +652,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			_htmlTable.AppendChild(categoryRow);
 
-			if (_includeAssemblyInfo)
+			if (IncludeAssemblyInfo)
 			{
 				var implementationPattern = "";
 

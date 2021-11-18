@@ -193,7 +193,7 @@ namespace ProSuite.Processing.Utils
 			return result;
 		}
 
-		private static readonly int[] _emptyIntArray = new int[0];
-		private static readonly double[] _emptyDoubleArray = new double[0];
+		private static readonly int[] _emptyIntArray = Array.Empty<int>();
+		private static readonly double[] _emptyDoubleArray = Array.Empty<double>();
 	}
 }
