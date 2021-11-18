@@ -14,28 +14,37 @@ using ProSuite.QA.Tests.Documentation;
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
-	public class TrSpatialJoin : ITableTransformer<IFeatureClass>
+	public class TrSpatialJoin : InvolvesTablesBase, ITableTransformer<IFeatureClass>
 	{
-		private readonly IFeatureClass _t0;
-		private readonly IFeatureClass _t1;
 		private readonly Tfc _transformedFc;
 
 		private IList<string> _t0Attributes;
 		private IList<string> _t1Attributes;
-
-		public IList<ITable> InvolvedTables { get; }
 
 		[Doc(nameof(DocStrings.TrSpatialJoin_0))]
 		public TrSpatialJoin([NotNull] [Doc(nameof(DocStrings.TrSpatialJoin_t0))]
 		                     IFeatureClass t0,
 		                     [NotNull] [Doc(nameof(DocStrings.TrSpatialJoin_t1))]
 		                     IFeatureClass t1)
+			: base(CastToTables(t0, t1))
 		{
-			_t0 = t0;
-			_t1 = t1;
-			InvolvedTables = new List<ITable> {(ITable) t0, (ITable) t1};
+			_transformedFc = new Tfc(t0, t1, this);
+		}
 
-			_transformedFc = new Tfc(_t0, _t1);
+		[TestParameter]
+		[Doc(nameof(DocStrings.TrSpatialJoin_Constraint))]
+		public string Constraint
+		{
+			get => _transformedFc.Constraint;
+			set => _transformedFc.Constraint = value;
+		}
+
+		[TestParameter]
+		[Doc(nameof(DocStrings.TrSpatialJoin_OuterJoin))]
+		public bool OuterJoin
+		{
+			get => _transformedFc.OuterJoin;
+			set => _transformedFc.OuterJoin = value;
 		}
 
 		// Remark: Grouped must come in Code before T1Attributes !
@@ -45,14 +54,6 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			get => _transformedFc.Grouped;
 			set => _transformedFc.Grouped = value;
-		}
-
-		[TestParameter]
-		[Doc(nameof(DocStrings.TrSpatialJoin_OuterJoin))]
-		public bool OuterJoin
-		{
-			get => _transformedFc.OuterJoin;
-			set => _transformedFc.OuterJoin = value;
 		}
 
 		[TestParameter]
@@ -118,15 +119,26 @@ namespace ProSuite.QA.Tests.Transformers
 			_transformedFc.BackingDs.SetSqlCaseSensitivity(tableIndex, useCaseSensitiveQaSql);
 		}
 
+		private class JoinConstraint : RowPairCondition
+		{
+			public JoinConstraint([NotNull] string constraint, bool caseSensitive)
+				: base(constraint, isDirected: true, undefinedConditionIsFulfilled: true,
+				       row1Alias: "T0", row2Alias: "T1", caseSensitive: caseSensitive,
+				       conciseMessage: true) { }
+		}
+
 		private class Tfc : GdbFeatureClass, ITransformedValue
 		{
-			public Dictionary<ITable, TableView> TableViews { get; set; }
+			private string _constraintSql;
+			private JoinConstraint _constraint;
+			private readonly TrSpatialJoin _parent;
 
-			public Tfc(IFeatureClass t0, IFeatureClass t1)
+			public Tfc(IFeatureClass t0, IFeatureClass t1, TrSpatialJoin parent)
 				: base(-1, "intersectResult", t0.ShapeType,
 				       createBackingDataset: (t) => new Transformed((Tfc) t, t0, t1),
 				       workspace: new GdbWorkspace(new TransformedWs()))
 			{
+				_parent = parent;
 				InvolvedTables = new List<ITable> {(ITable) t0, (ITable) t1};
 
 				IGeometryDef geomDef =
@@ -139,8 +151,27 @@ namespace ProSuite.QA.Tests.Transformers
 						geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM));
 			}
 
+			public Dictionary<ITable, TableView> TableViews { get; set; }
 			public bool Grouped { get; set; }
 			public bool OuterJoin { get; set; }
+
+			public string Constraint
+			{
+				get => _constraintSql;
+				set
+				{
+					_constraintSql = value;
+					_constraint = null;
+				}
+			}
+
+			public bool HasFulfilledConstraint(IRow t0, IRow t1)
+			{
+				_constraint = _constraint
+				              ?? new JoinConstraint(Constraint,
+				                                    caseSensitive: _parent.GetSqlCaseSensitivity());
+				return _constraint.IsFulfilled(t0, 0, t1, 1, out string conditionMessage);
+			}
 
 			protected override IObject CreateObject(int oid)
 			{
@@ -232,7 +263,7 @@ namespace ProSuite.QA.Tests.Transformers
 				[NotNull] Tfc gdbTable,
 				[NotNull] IFeatureClass t0,
 				[NotNull] IFeatureClass t1)
-				: base(gdbTable, ProcessBase.CastToTables(t0, t1))
+				: base(gdbTable, CastToTables(t0, t1))
 			{
 				_t0 = t0;
 				_t1 = t1;
@@ -258,7 +289,8 @@ namespace ProSuite.QA.Tests.Transformers
 				ISpatialFilter joinFilter = new SpatialFilterClass();
 				joinFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 
-				bool grouped = ((Tfc) Resulting).Grouped;
+				Tfc res = (Tfc) this.Resulting;
+				bool grouped = res.Grouped;
 				foreach (var toJoin in DataContainer.Search(
 					(ITable) _t0, filter, QueryHelpers[0]))
 				{
@@ -266,11 +298,17 @@ namespace ProSuite.QA.Tests.Transformers
 					var op = (IRelationalOperator) ((IFeature) toJoin).Shape;
 
 					List<IRow> joineds = new List<IRow>();
-					bool outerJoin = ((Tfc) Resulting).OuterJoin;
+					bool outerJoin = res.OuterJoin;
 					foreach (var joined in DataContainer.Search(
 						(ITable) _t1, joinFilter, QueryHelpers[1]))
 					{
+						if (! res.HasFulfilledConstraint(toJoin, joined))
+						{
+							continue;
+						}
+
 						outerJoin = false;
+
 						IGeometry joinedGeom = ((IFeature) joined).Shape;
 						// TODO implement different relations
 						if (op.Disjoint(joinedGeom))
@@ -281,7 +319,7 @@ namespace ProSuite.QA.Tests.Transformers
 						if (! grouped)
 						{
 							GdbFeature f = CreateFeature(toJoin, new[] {joined});
-							Resulting.CreateFeature();
+							res.CreateFeature();
 							yield return f;
 						}
 						else

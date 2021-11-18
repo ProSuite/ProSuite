@@ -11093,6 +11093,17 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Constraint on spatially joined features. Only spatially joined feature pairs that fulfill the constraint will be transformed to resulting features.
+        ///The involved features are aliased using &quot;T0&quot; and T1&quot;.
+        ///Example: T0.Level = T1.Level.
+        /// </summary>
+        public static string TrSpatialJoin_Constraint {
+            get {
+                return ResourceManager.GetString("TrSpatialJoin_Constraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Default = false.
         ///If false: create one feature for each (t0,t1)-feature pair that intersects
         ///if true: create one feature for each feature in &apos;t0&apos;, that intersects any feature of &apos;t1&apos;.

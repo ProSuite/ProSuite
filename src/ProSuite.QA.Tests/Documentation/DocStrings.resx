@@ -4919,4 +4919,9 @@ If 'Grouped'=true, the attributes must be defined by Group-Expressions like COUN
 If true: transform features from t0-features that have no spatial relation to any feature of t1
 If false: ignore features from t0 that have no spatial relation to any feature of t1</value>
   </data>
+  <data name="TrSpatialJoin_Constraint" xml:space="preserve">
+    <value>Constraint on spatially joined features. Only spatially joined feature pairs that fulfill the constraint will be transformed to resulting features.
+The involved features are aliased using "T0" and T1".
+Example: T0.Level = T1.Level</value>
+  </data>
 </root>
