@@ -491,7 +491,6 @@ namespace ProSuite.QA.Tests
 
 			bool caseSensitivity = GetSqlCaseSensitivity(tableIndex);
 
-			// TODO: solve differently (include Involved Rows in TableIndexRow?)
 			if (_relatedTables == null && _tables.Count == 1)
 			{
 				IDataset ds = (IDataset) _tables[0];
@@ -501,7 +500,16 @@ namespace ProSuite.QA.Tests
 					List<ITable> relTables = new List<ITable>();
 					foreach (string tableName in qn.QueryDef.Tables.Split(','))
 					{
-						relTables.Add(ws.OpenTable(tableName));
+						ITable relTable = ws.OpenTable(tableName);
+						if (relTable.HasOID &&
+						    relTable.OIDFieldName.Equals(
+							    "RID", StringComparison.InvariantCultureIgnoreCase))
+						{
+							// Ignore relation tables
+							continue;
+						}
+
+						relTables.Add(relTable);
 					}
 
 					SetRelatedTables(relTables);
