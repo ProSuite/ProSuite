@@ -169,7 +169,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 		{
 			if (k.Key == Key.P)
 			{
-				SetupSketch(SketchGeometryType.Polygon, SketchOutputMode.Screen);
+				SetupSketch(SketchGeometryType.Polygon);
 
 				SetCursor(PolygonSketchCursor);
 			}
