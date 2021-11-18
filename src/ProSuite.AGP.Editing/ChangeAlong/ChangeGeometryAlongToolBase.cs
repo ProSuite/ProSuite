@@ -594,8 +594,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				              f => IsStoreRequired(f, editableClassHandles, RowChangeType.Insert))
 			              .ToList();
 
-			LogReshapeResults(updatedFeatures, resultFeatures);
-
 			List<Feature> newFeatures = new List<Feature>();
 
 			bool success = await GdbPersistenceUtils.ExecuteInTransactionAsync(
@@ -610,6 +608,8 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				               },
 				               EditOperationDescription,
 				               GdbPersistenceUtils.GetDatasets(resultFeatures.Keys));
+
+			LogReshapeResults(updatedFeatures, resultFeatures);
 
 			ToolUtils.SelectNewFeatures(newFeatures, MapView.Active);
 
