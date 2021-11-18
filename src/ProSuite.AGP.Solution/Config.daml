@@ -82,7 +82,6 @@
       </tabs>
       <groups>
         <group id="ProSuiteTools_Commons" caption="Commons" keytip="G1">
-          <button refID="ProSuiteTools_Commons_ShowLog" size="large" />
           <button refID="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" size="large" />
         </group>
         <group id="ProSuiteTools_QA" caption="QA" keytip="G1">
