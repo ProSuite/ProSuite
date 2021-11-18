@@ -170,9 +170,12 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 					updates.Add(kvp.Key, kvp.Value);
 				}
 
-				_msg.InfoFormat("Target features with potential vertex insertions: {0}",
-				                StringUtils.Concatenate(updatedTargets,
-				                                        GdbObjectUtils.GetDisplayValue, ", "));
+				if (updatedTargets.Count > 0)
+				{
+					_msg.InfoFormat("Target features with potential vertex insertions: {0}",
+				                 StringUtils.Concatenate(updatedTargets,
+				                                         GdbObjectUtils.GetDisplayValue, ", "));
+				}
 			}
 
 			IEnumerable<Dataset> datasets =
