@@ -85,7 +85,6 @@
           <button refID="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" size="large" />
         </group>
         <group id="ProSuiteTools_QA" caption="QA" keytip="G1">
-          <!--<button refID="ProSuiteTools_QA_StartErrorsDockPane" size="large" />-->
           <button refID="ProSuiteTools_QA_StartGPServer" size="middle" />
           <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
@@ -95,7 +94,6 @@
           <button refID="WorkLists_CreateIssueWorkList" size="large" />
           <tool refID="ProSuite_AGP_Solution_QA_SelectIssueFeaturesTool" size="middle" />
           <button refID="ProSuite_AGP_Solution_QA_SelectInvolvedObjectsCmd" size="middle" />
-          <!--<button refID="Clients_AGP_ProSuiteSolution_AddWorkList" size="large" />-->
         </group>
         <group id="ProSuiteTools_Editing" caption="Edit" keytip="G1">
           <tool refID="ProSuiteTools_Editing_EraseTool" size="middle" />
@@ -109,8 +107,6 @@
           <button refID="esri_mapping_clearSelectionButton" size="middle" />
           <button refID="WorkLists_ShowWorkListsButton" size="middle" />
           <button refID="WorkLists_CreateSelectionWorkList" size="large" />
-          <!--TODO PickerTool test-->
-          <!--<tool refID="ProSuiteTools_PickWorkItemTool" size="large" />-->
         </group>
       </groups>
       <controls>
