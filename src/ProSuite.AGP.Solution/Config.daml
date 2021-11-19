@@ -84,7 +84,7 @@
         <group id="ProSuiteTools_Commons" caption="Commons" keytip="G1">
           <button refID="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" size="large" />
         </group>
-        <group id="ProSuiteTools_QA" caption="QA" keytip="G1">
+        <group id="ProSuiteTools_QA" caption="Quality Assurance" keytip="G1">
           <button refID="ProSuiteTools_QA_StartGPServer" size="middle" />
           <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
