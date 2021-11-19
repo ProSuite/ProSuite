@@ -141,7 +141,9 @@ namespace ProSuite.Commons.AGP.GP
 			IReadOnlyList<KeyValuePair<string, string>> environments =
 				Geoprocessing.MakeEnvironmentArray(overwriteoutput: true);
 
-			IGPResult result = await Geoprocessing.ExecuteToolAsync(tool, parameters, environments);
+			IGPResult result =
+				await Geoprocessing.ExecuteToolAsync(tool, parameters, environments, null, null,
+				                                     GPExecuteToolFlags.None);
 
 			if (! result.IsFailed)
 			{
