@@ -82,7 +82,7 @@ namespace ProSuite.AGP.Solution.LoggerUI
 			return true;
 		}
 
-		public bool DebugLogsAreVisible { set; get; } = true;
+		public bool DebugLogsAreVisible { set; get; }
 
 		public bool VerboseLogsAreVisible
 		{
@@ -141,6 +141,8 @@ namespace ProSuite.AGP.Solution.LoggerUI
 		{
 			LogMessageList = new ObservableCollection<LoggingEventItem>();
 			BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
+
+			FilterLogs(null);
 
 			LoggingEventsAppender.OnNewLogMessage += Logger_OnNewLogMessage;
 		}
