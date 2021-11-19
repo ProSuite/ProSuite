@@ -11,7 +11,7 @@ using ProSuite.Commons.Logging;
 namespace ProSuite.AGP.Solution.WorkLists
 {
 	[UsedImplicitly]
-	internal class AddWorklistButton : OpenWorkListButtonBase
+	internal class AddWorkListButton : OpenWorkListButtonBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 

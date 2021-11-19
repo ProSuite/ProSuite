@@ -161,13 +161,21 @@
             Import and add worklist file(wl) to project<disabledText />
           </tooltip>
         </button>-->
-        <button id="Clients_AGP_ProSuiteSolution_WorkLists_AddWorkListButton" caption="Add Work List To Current Map"
-                className="WorkLists.AddWorkListButton" loadOnClick="true"
+        <button id="WorkLists_ShowWorkListsButton" caption="Open Work List"
+                className="WorkLists.ShowWorkListsButton" loadOnClick="true" condition="esri_mapping_mapPane"
+                smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd16.png"
+                largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd32.png">
+          <tooltip heading="Open Work Lists for present Work List Layers in TOC">
+            <disabledText>No active map.</disabledText>
+          </tooltip>
+        </button>
+        <button id="WorkLists_AddWorkListButton" caption="Add Work List To Current Map"
+                className="WorkLists.AddWorkListButton" loadOnClick="true" condition="esri_mapping_mapPane"
                 smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/AddContent16.png"
                 largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/AddContent32.png">
           <tooltip heading="Add Work List To Current Map">
             Add work list to the active map and open navigator.
-            <disabledText />
+            <disabledText>No active map.</disabledText>
           </tooltip>
         </button>
         <button id="WorkLists_CreateSelectionWorkList" caption="Selection Work List"
@@ -312,14 +320,6 @@
             Select involved objects based on the currently selected issues.<disabledText />
           </tooltip>
         </button>
-        <button id="WorkLists_ShowWorkListsButton" caption="Open Work List" className="WorkLists.ShowWorkListsButton"
-                loadOnClick="true" condition="esri_mapping_mapPane"
-                smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd16.png"
-                largeImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd32.png">
-          <tooltip heading="Open Work Lists for present Work List Layers in TOC">
-            <disabledText>No active map.</disabledText>
-          </tooltip>
-        </button>
       </controls>
       <dockPanes>
         <dockPane id="ProSuiteTools_Logger_ProSuiteLogPane" caption="ProSuite Logs"
@@ -337,7 +337,7 @@
           <!--<button refID="esri_DeleteItem" />-->
         </menu>
         <menu id="ProSuiteSolution_ProjectItemWorkListContextMenu">
-          <button refID="Clients_AGP_ProSuiteSolution_WorkLists_AddWorkListButton" />
+          <button refID="WorkLists_AddWorkListButton" />
           <button refID="esri_core_rename" />
           <button refID="esri_DeleteItem" />
         </menu>
