@@ -103,10 +103,10 @@
           <tool refID="ProSuiteTools_Editing_AdvancedReshapeTool" size="middle" />
         </group>
         <group id="ProSuiteTools_Selection" caption="Selection" keytip="G1">
-          <tool refID="ProSuiteTools_Selection_SelectionTool" size="middle" />
-          <button refID="esri_mapping_clearSelectionButton" size="middle" />
-          <button refID="WorkLists_ShowWorkListsButton" size="middle" />
+          <tool refID="ProSuiteTools_Selection_SelectionTool" size="large" />
           <button refID="WorkLists_CreateSelectionWorkList" size="large" />
+          <button refID="WorkLists_ShowWorkListsButton" size="middle" />
+          <button refID="esri_mapping_clearSelectionButton" size="middle" />
         </group>
       </groups>
       <controls>
