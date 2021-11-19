@@ -3,20 +3,19 @@
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
                  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"   
-                 xmlns:ui="clr-namespace:ProSuite.AGP.Solution"
-                 xmlns:esri="http://schemas.esri.com/arcgis/runtime/2013"
+                 xmlns:viewModel="clr-namespace:ProSuite.AGP.Solution.LoggerUI"
                  xmlns:extensions="clr-namespace:ArcGIS.Desktop.Extensions;assembly=ArcGIS.Desktop.Extensions"
-                 xmlns:loggerUi="clr-namespace:ProSuite.AGP.Solution.LoggerUI"
                  mc:Ignorable="d" 
                  d:DesignHeight="300" d:DesignWidth="300"
-                 d:DataContext="{Binding Path=ui.ProSuiteLogPaneViewModel}" IsVisibleChanged="UserControl_IsVisibleChanged">
-     <UserControl.Resources>
+                 d:DataContext="{d:DesignInstance Type=viewModel:ProSuiteLogPaneViewModel}" 
+                 IsVisibleChanged="UserControl_IsVisibleChanged">
+	<UserControl.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <extensions:DesignOnlyResourceDictionary Source="pack://application:,,,/ArcGIS.Desktop.Framework;component\Themes\Default.xaml"/>
             </ResourceDictionary.MergedDictionaries>
-            <loggerUi:LogMessageImageConverter x:Key="LogMessageImageConverter"/>
-            <loggerUi:LogMessageLinkConverter x:Key="LogMessageLinkConverter"/>
+            <viewModel:LogMessageImageConverter x:Key="LogMessageImageConverter"/>
+            <viewModel:LogMessageLinkConverter x:Key="LogMessageLinkConverter"/>
         </ResourceDictionary>
     </UserControl.Resources>
     <Grid>
@@ -54,7 +53,7 @@
                         <DataTemplate>
                             <TextBlock>
                                 <TextBlock Text="{Binding Path=Message, Converter={StaticResource LogMessageLinkConverter}, ConverterParameter='first'}"></TextBlock>
-                                <Hyperlink Command="loggerUi:ProSuiteLogPaneViewModel.OpenLinkMessage" CommandParameter="{Binding}">
+                                <Hyperlink Command="viewModel:ProSuiteLogPaneViewModel.OpenLinkMessage" CommandParameter="{Binding}">
                                     <TextBlock Text="{Binding Path=Message, Converter={StaticResource LogMessageLinkConverter}, ConverterParameter='link'}"/>
                                 </Hyperlink>
                                 <TextBlock Text="{Binding Path=Message, Converter={StaticResource LogMessageLinkConverter}, ConverterParameter='last'}"></TextBlock>
@@ -64,14 +63,16 @@
                 </DataGridTemplateColumn>
             </DataGrid.Columns>
             <DataGrid.ContextMenu>
-                <ContextMenu>
-                    <MenuItem Header="Clear All Messages" Command="{Binding ClearLogEntries}" />
-                    <MenuItem Header="Show Message Details" Command="{Binding OpenMessage}"  
-                              CommandParameter="{Binding Path=SelectedRow}" />
-                    <Separator />
-                    <MenuItem Header="Debug Messages" Command="{Binding FilterLogEntries}" CommandParameter="Debug" IsCheckable="true" IsChecked="{Binding DebugLogsAreVisible}"/>
-                    <MenuItem Header="Verbose Messages" Command="{Binding FilterLogEntries}" CommandParameter="Verbose" IsCheckable="true" IsChecked="{Binding VerboseLogsAreVisible}"/>
-                </ContextMenu>
+	            <ContextMenu>
+		            <MenuItem Header="Clear All Messages" Command="{Binding ClearLogEntries}" />
+		            <MenuItem Header="Show Message Details" Command="{Binding OpenMessage}"
+		                      CommandParameter="{Binding Path=SelectedRow}" />
+		            <Separator />
+		            <MenuItem Header="Debug Messages" Command="{Binding FilterLogEntries}" CommandParameter="Debug"
+		                      IsCheckable="true" IsChecked="{Binding DebugLogsAreVisible}" />
+		            <MenuItem Header="Verbose Messages" Command="{Binding FilterLogEntries}" CommandParameter="Verbose"
+		                      IsCheckable="true" IsChecked="{Binding VerboseLogsAreVisible}" />
+	            </ContextMenu>
             </DataGrid.ContextMenu>
             <DataGrid.InputBindings>
                 <MouseBinding Gesture="LeftDoubleClick" 
