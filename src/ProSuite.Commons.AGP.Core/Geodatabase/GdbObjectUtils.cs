@@ -36,6 +36,37 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 			return string.Format("oid={0} table={1}", oid, tableName);
 		}
 
+		public static string GetDisplayValue(Row row)
+		{
+			string className = DatasetUtils.GetAliasName(row.GetTable());
+
+			return GetDisplayValue(row, className);
+		}
+
+		public static string GetDisplayValue(Row row, string className)
+		{
+			var classDefinition = row.GetTable().GetDefinition();
+
+			string subtypeField = classDefinition.GetSubtypeField();
+
+			string subtypeName = null;
+			if (! string.IsNullOrEmpty(subtypeField))
+			{
+				int? subtypeCode = row[subtypeField] as int?;
+				Subtype subtype = classDefinition.GetSubtypes()
+				                                 .FirstOrDefault(st => st.GetCode() == subtypeCode);
+
+				if (subtype != null)
+				{
+					subtypeName = subtype.GetName();
+				}
+			}
+
+			return string.IsNullOrEmpty(subtypeName)
+				       ? $"{className} ID: {row.GetObjectID()}"
+				       : $"{className} ({subtypeName}) ID: {row.GetObjectID()}";
+		}
+
 		[NotNull]
 		public static IList<Geometry> GetGeometries(
 			[NotNull] IEnumerable<Feature> features)

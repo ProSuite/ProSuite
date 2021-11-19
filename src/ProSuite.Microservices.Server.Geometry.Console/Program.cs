@@ -10,6 +10,7 @@ using Grpc.HealthCheck;
 using ProSuite.Application.Configuration;
 using ProSuite.Commons;
 using ProSuite.Commons.AO;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Com;
 using ProSuite.Commons.Essentials.Assertions;
@@ -126,6 +127,9 @@ namespace ProSuite.Microservices.Server.Geometry.Console
 					ConfigurationUtils.GetAppDataConfigDirectoryProvider());
 
 				server = StartServer(arguments, out health);
+
+				// For the moment, let's be prudent:
+				IntersectionUtils.UseCustomIntersect = false;
 			}
 			catch (Exception ex)
 			{

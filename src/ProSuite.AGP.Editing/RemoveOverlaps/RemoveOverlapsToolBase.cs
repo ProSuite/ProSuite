@@ -18,6 +18,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Text;
 using ProSuite.Microservices.Client.AGP;
 using ProSuite.Microservices.Client.AGP.GeometryProcessing.RemoveOverlaps;
 
@@ -157,6 +158,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			if (result.TargetFeaturesToUpdate != null)
 			{
+				var updatedTargets = new List<Feature>();
 				foreach (KeyValuePair<Feature, Geometry> kvp in result.TargetFeaturesToUpdate)
 				{
 					if (! IsStoreRequired(kvp.Key, kvp.Value, editableClassHandles))
@@ -164,7 +166,15 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 						continue;
 					}
 
+					updatedTargets.Add(kvp.Key);
 					updates.Add(kvp.Key, kvp.Value);
+				}
+
+				if (updatedTargets.Count > 0)
+				{
+					_msg.InfoFormat("Target features with potential vertex insertions: {0}",
+				                 StringUtils.Concatenate(updatedTargets,
+				                                         GdbObjectUtils.GetDisplayValue, ", "));
 				}
 			}
 
@@ -324,7 +334,77 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				                          ToolUtils.IsSelected(sketch, g, singlePick));
 			}
 
+			if (singlePick)
+			{
+				// Filter to the smallest overlap
+				foreach (var overlap in result.OverlapGeometries)
+				{
+					IList<Geometry> geometries = overlap.Value;
+
+					if (geometries.Count > 1)
+					{
+						Geometry smallest = GetSmallestGeometry(geometries);
+
+						geometries.Clear();
+						geometries.Add(smallest);
+					}
+				}
+			}
+
 			return result;
+		}
+
+		/// <summary>
+		/// Returns a reference to the smallest (area for IArea objects, length for ICurve objects) 
+		/// geometry of the given geometries. If several  geometries have the largest size, the first 
+		/// in the list will be returned.
+		/// </summary>
+		/// <param name="geometries">The geometries which must all be of the same geometry type.</param>
+		/// <returns></returns>
+		public static T GetSmallestGeometry<T>([NotNull] IEnumerable<T> geometries)
+			where T : Geometry
+		{
+			Geometry smallestPart = null;
+			double smallestSize = double.PositiveInfinity;
+
+			foreach (T candidate in geometries)
+			{
+				double candidateSize = GetGeometrySize(candidate);
+
+				if (candidateSize < smallestSize)
+				{
+					smallestPart = candidate;
+					smallestSize = candidateSize;
+				}
+			}
+
+			return (T) smallestPart;
+		}
+
+		/// <summary>
+		/// Returns a value that indicates the size of the specified geometry:
+		/// - Multipatch, Polygon, Ring: 2D area
+		/// - Polyline, Path, Segment: 2D length
+		/// - Multipoint: Point count
+		/// - Point: 0
+		/// </summary>
+		/// <param name="geometry"></param>
+		/// <returns></returns>
+		public static double GetGeometrySize([NotNull] Geometry geometry)
+		{
+			var multipart = geometry as Multipart;
+
+			if (multipart != null && multipart.Area > 0)
+			{
+				return Math.Abs(multipart.Area);
+			}
+
+			if (multipart != null)
+			{
+				return multipart.Length;
+			}
+
+			return 0;
 		}
 
 		private static bool IsStoreRequired(Feature originalFeature, Geometry updatedGeometry,
@@ -366,7 +446,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			TargetFeatureSelection targetFeatureSelection = TargetFeatureSelection.VisibleFeatures;
 
-			IEnumerable<KeyValuePair<FeatureClass, List<Feature>>> foundOidsByClass =
+			IEnumerable<FeatureClassSelection> featureClassSelections =
 				MapUtils.FindFeatures(ActiveMapView, selection, targetFeatureSelection,
 				                      CanOverlapLayer, inExtent, cancellabelProgressor);
 
@@ -378,9 +458,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			var foundFeatures = new List<Feature>();
 
-			foreach (var keyValuePair in foundOidsByClass)
+			foreach (var classSelection in featureClassSelections)
 			{
-				foundFeatures.AddRange(keyValuePair.Value);
+				foundFeatures.AddRange(classSelection.Features);
 			}
 
 			// Remove the selected features from the set of overlapping features.

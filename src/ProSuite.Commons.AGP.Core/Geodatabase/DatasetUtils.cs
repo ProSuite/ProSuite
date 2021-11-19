@@ -3,6 +3,7 @@ using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.AGP.Core.Geodatabase
 {
@@ -13,21 +14,48 @@ namespace ProSuite.Commons.AGP.Core.Geodatabase
 		{
 			TableDefinition definition = table.GetDefinition();
 			string name = definition.GetName();
-			string alias = definition.GetAliasName();
+			string alias = GetAliasName(definition);
 
-			if (! string.Equals(name, alias, StringComparison.CurrentCultureIgnoreCase)
-			) // TODO really CurrentCulture?
+			if (string.Equals(name, alias, StringComparison.CurrentCultureIgnoreCase))
 			{
-				return alias;
+				// the alias name is equal to the name (but may have different case)
+				// un-qualify the alias name to preserve it's case.
+				using (var datastore = table.GetDatastore())
+				{
+					var sqlSyntax = datastore.GetSQLSyntax();
+					// TODO why using alias here and not name?
+					if (sqlSyntax == null) return alias;
+					var parts = sqlSyntax.ParseTableName(alias);
+					return parts.Item3;
+				}
 			}
 
-			using (var datastore = table.GetDatastore())
+			return alias;
+		}
+
+		public static string GetAliasName([NotNull] Table table)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+
+			return GetAliasName(table.GetDefinition());
+		}
+
+		[NotNull]
+		public static string GetAliasName([NotNull] TableDefinition definition)
+		{
+			Assert.ArgumentNotNull(definition, nameof(definition));
+
+			try
 			{
-				var sqlSyntax = datastore.GetSQLSyntax();
-				// TODO why using alias here and not name?
-				if (sqlSyntax == null) return alias;
-				var parts = sqlSyntax.ParseTableName(alias);
-				return parts.Item3;
+				string aliasName = definition.GetAliasName();
+
+				return StringUtils.IsNotEmpty(aliasName)
+					       ? aliasName
+					       : definition.GetName();
+			}
+			catch (NotImplementedException)
+			{
+				return definition.GetName();
 			}
 		}
 

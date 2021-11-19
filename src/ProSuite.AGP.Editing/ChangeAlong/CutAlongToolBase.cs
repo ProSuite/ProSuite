@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using ArcGIS.Core.Data;
@@ -54,14 +55,66 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			return updatedFeatures;
 		}
 
+		protected override void LogAfterPickTarget(
+			ReshapeAlongCurveUsability reshapeCurveUsability)
+		{
+			if (reshapeCurveUsability == ReshapeAlongCurveUsability.CanReshape)
+			{
+				string selectReshapeLinesMsg =
+					string.Format(
+						"Select a line to cut along by clicking on it, " +
+						"draw a box to select lines completely within the box or press P " +
+						"and draw a polygon to select lines completely within" +
+						Environment.NewLine +
+						"Select additional target features while holding SHIFT.");
+
+				//if (ChangeAlongCurves.ReshapeAlongOptions.DontShowDialog)
+				//{
+				//	selectReshapeLinesMsg += Environment.NewLine +
+				//	                         string.Format(
+				//		                         "Press [{0}] for additional options.",
+				//		                         OptionsFormKey);
+				//}
+
+				_msg.Info(selectReshapeLinesMsg);
+			}
+			else
+			{
+				if (reshapeCurveUsability == ReshapeAlongCurveUsability.NoTarget)
+				{
+					_msg.Info(
+						"No target feature selected. Select one or more target line or polygon " +
+						"features to cut along. Press ESC to select a different feature.");
+				}
+				else if (reshapeCurveUsability ==
+				         ReshapeAlongCurveUsability.AlreadyCongruent)
+				{
+					_msg.Info(
+						"Source and target features are already congruent. Select a different target feature.");
+				}
+				else
+				{
+					if (ChangeAlongCurves.HasSelectableCurves)
+					{
+						_msg.InfoFormat(
+							"Not enough or ambiguous cut lines. " +
+							"Add additional targets or select yellow candidate lines.");
+					}
+					else
+					{
+						_msg.InfoFormat(
+							"Unable to use target(s) to cut along. Add additional targets while holding SHIFT");
+					}
+				}
+			}
+		}
+
 		protected override ChangeAlongCurves CalculateChangeAlongCurves(
 			IList<Feature> selectedFeatures, IList<Feature> targetFeatures,
 			CancellationToken cancellationToken)
 		{
-			ChangeAlongCurves result;
-			result =
-				MicroserviceClient.CalculateCutLines(
-					selectedFeatures, targetFeatures, cancellationToken);
+			ChangeAlongCurves result = MicroserviceClient.CalculateCutLines(
+				selectedFeatures, targetFeatures, cancellationToken);
 
 			return result;
 		}
