@@ -132,10 +132,10 @@ namespace ProSuite.AGP.WorkList
 				table = datastore.OpenTable(worklist.Name);
 				Assert.NotNull(table);
 
-				return LayerFactory.Instance.CreateFeatureLayer((FeatureClass) table,
-				                                                layerContainer,
-				                                                LayerPosition.AddToTop,
-				                                                worklist.DisplayName);
+				return LayerFactory.Instance.CreateLayer<FeatureLayer>(
+					WorkListUtils.CreateLayerParams((FeatureClass) table, worklist.DisplayName),
+					layerContainer,
+					LayerPosition.AddToTop);
 			}
 			finally
 			{

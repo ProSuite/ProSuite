@@ -27,27 +27,6 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
-		[NotNull]
-		public static FeatureLayerCreationParams CreateLayerParams(
-			[NotNull] FeatureClass featureClass)
-		{
-			var layerParams = new FeatureLayerCreationParams(featureClass);
-			// todo daro: apply renderer here from template
-
-			// LayerDocument is null!
-			//LayerDocument template
-			//CIMDefinition layerDefinition = layerParams.LayerDocument.LayerDefinitions[0];
-
-			//var uniqueValueRenderer = GetRenderer<CIMUniqueValueRenderer>(template);
-
-			//if (uniqueValueRenderer != null)
-			//{
-			//	((CIMFeatureLayer) layerDefinition).Renderer = uniqueValueRenderer;
-			//}
-
-			return layerParams;
-		}
-
 		//private static CIMUniqueValueRenderer GetUniqueValueRenderer(LayerDocument template)
 		//{
 		//	CIMLayerDocument templateLayerDocument = template.GetCIMLayerDocument();
@@ -133,14 +112,6 @@ namespace ProSuite.Commons.AGP.Carto
 		public static bool HasSelection([CanBeNull] BasicFeatureLayer layer)
 		{
 			return layer?.SelectionCount > 0;
-		}
-
-		public static void SetLayerSelectability([NotNull] BasicFeatureLayer layer,
-		                                         bool selectable = true)
-		{
-			var cimDefinition = (CIMFeatureLayer) layer.GetDefinition();
-			cimDefinition.Selectable = selectable;
-			layer.SetDefinition(cimDefinition);
 		}
 	}
 }

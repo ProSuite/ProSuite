@@ -5,6 +5,7 @@ using System.Linq;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
+using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.WorkList.Contracts;
 using ProSuite.AGP.WorkList.Domain;
 using ProSuite.AGP.WorkList.Domain.Persistence;
@@ -356,6 +357,39 @@ namespace ProSuite.AGP.WorkList
 			Assert.ArgumentNotNull(dataSource, nameof(dataSource));
 
 			return new PluginDatastore(new PluginDatasourceConnectionPath(PluginIdentifier, dataSource));
+		}
+
+		[NotNull]
+		public static FeatureLayerCreationParams CreateLayerParams(
+			[NotNull] FeatureClass featureClass, string alias = null)
+		{
+			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+
+			if (string.IsNullOrEmpty(alias))
+			{
+				alias = featureClass.GetName();
+			}
+
+			var layerParams = new FeatureLayerCreationParams(featureClass)
+			                  {
+				                  IsVisible = true,
+				                  Name = alias
+			                  };
+
+			// todo daro: apply renderer here from template
+
+			// LayerDocument is null!
+			//LayerDocument template
+			//CIMDefinition layerDefinition = layerParams.LayerDocument.LayerDefinitions[0];
+
+			//var uniqueValueRenderer = GetRenderer<CIMUniqueValueRenderer>(template);
+
+			//if (uniqueValueRenderer != null)
+			//{
+			//	((CIMFeatureLayer) layerDefinition).Renderer = uniqueValueRenderer;
+			//}
+
+			return layerParams;
 		}
 	}
 }
