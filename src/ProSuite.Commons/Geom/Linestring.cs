@@ -446,6 +446,34 @@ namespace ProSuite.Commons.Geom
 			z = point[2];
 		}
 
+		public void SnapToResolution(double resolution,
+		                             double xOrigin,
+		                             double yOrigin,
+		                             double zOrigin = double.NaN)
+		{
+			InitializeBounds();
+
+			int pointIdx = 0;
+			Pnt3D previous = null;
+			foreach (Pnt3D point in GetPoints())
+			{
+				point.X = xOrigin + Math.Round((point.X - xOrigin) / resolution) * resolution;
+				point.Y = yOrigin + Math.Round((point.Y - yOrigin) / resolution) * resolution;
+
+				if (! double.IsNaN(zOrigin) && ! double.IsNaN(point.Z))
+				{
+					point.Z = zOrigin + Math.Round((point.Z - zOrigin) / resolution) * resolution;
+				}
+
+				UpdateBounds(point, pointIdx, _segments, previous);
+
+				previous = point;
+				pointIdx++;
+			}
+
+			SpatialIndex = null;
+		}
+
 		public IPnt GetPointAlong(double distanceAlong, bool asRatio)
 		{
 			distanceAlong = asRatio ? GetLength2D() * distanceAlong : distanceAlong;
@@ -519,7 +547,7 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
-			bool isEndPoint = EndPoint.EqualsXY(searchPoint, xyTolerance);
+			bool isEndPoint = EndPoint?.EqualsXY(searchPoint, xyTolerance) ?? false;
 
 			if (isEndPoint)
 			{
@@ -1228,7 +1256,7 @@ namespace ProSuite.Commons.Geom
 				{
 					if (previouslyAdded != null)
 					{
-						currentRightMostLowestPnt = Assert.NotNull(previouslyAdded);
+						currentRightMostLowestPnt = previouslyAdded;
 					}
 					else
 					{
@@ -1253,6 +1281,19 @@ namespace ProSuite.Commons.Geom
 			{
 				YMax = point.Y;
 			}
+
+			_boundingBox = null;
+		}
+
+		private void InitializeBounds()
+		{
+			XMin = double.MaxValue;
+			YMin = double.MaxValue;
+
+			XMax = double.MinValue;
+			YMax = double.MinValue;
+
+			RightMostBottomIndex = -1;
 
 			_boundingBox = null;
 		}

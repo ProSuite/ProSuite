@@ -1,4 +1,4 @@
-﻿namespace ProSuite.Commons.AO.Geometry.ZAssignment
+namespace ProSuite.Commons.Geom
 {
 	/// <summary>
 	/// Simple Z handling options for edit tools that change a source feature along

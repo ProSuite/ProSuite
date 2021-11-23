@@ -158,6 +158,20 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
+		public void CanToString()
+		{
+			var lv95 = SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95);
+
+			string xmlString = SpatialReferenceUtils.ToXmlString(lv95);
+
+			Console.WriteLine(xmlString);
+
+			ISpatialReference deserialized = SpatialReferenceUtils.FromXmlString(xmlString);
+
+			Assert.IsTrue(SpatialReferenceUtils.AreEqual(lv95, deserialized));
+		}
+
+		[Test]
 		public void CanCompareAllComponentsFastEnough()
 		{
 			Stopwatch watch = Stopwatch.StartNew();

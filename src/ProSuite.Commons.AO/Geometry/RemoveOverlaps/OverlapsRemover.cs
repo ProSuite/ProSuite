@@ -241,7 +241,7 @@ namespace ProSuite.Commons.AO.Geometry.RemoveOverlaps
 			Plane3D plane = null;
 			if (zSource == ChangeAlongZSource.SourcePlane)
 			{
-				plane = ChangeAlongZUtils.GetSourcePlane(
+				plane = ChangeZUtils.GetSourcePlane(
 					GeometryConversionUtils.GetPntList(fromGeometry),
 					GeometryUtils.GetZTolerance(fromGeometry));
 			}

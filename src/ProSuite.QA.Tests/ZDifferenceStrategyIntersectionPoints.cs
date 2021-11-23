@@ -4,10 +4,6 @@ using System.Linq;
 using System.Reflection;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.Geometry;
-using ProSuite.QA.Tests.IssueCodes;
-using ProSuite.QA.Tests.PointEnumerators;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
@@ -16,6 +12,10 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Misc;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.Geometry;
+using ProSuite.QA.Tests.IssueCodes;
+using ProSuite.QA.Tests.PointEnumerators;
 
 namespace ProSuite.QA.Tests
 {
@@ -101,7 +101,7 @@ namespace ProSuite.QA.Tests
 			{
 				var point = (IPoint) shape2;
 				yield return new Pnt3DIntersectionPoint(new Pnt3D(point.X, point.Y,
-				                                                  GetZ(point, shape1)),
+					                                        GetZ(point, shape1)),
 				                                        spatialReference, point.Z);
 			}
 			else if (IsBasedOnLineStrings(shape1) && ! IsBasedOnLineStrings(shape2))
@@ -116,21 +116,13 @@ namespace ProSuite.QA.Tests
 			}
 			else if (IsBasedOnLineStrings(shape1) && IsBasedOnLineStrings(shape2))
 			{
-				var lineStrings1 = getLineStrings1?.Invoke().ToList() ??
-				                   GetLineStrings(shape1);
-				var lineStrings2 = getLineStrings2?.Invoke().ToList() ??
-				                   GetLineStrings(shape2);
+				ISegmentList linestrings1 = GetSegmentList(shape1);
+				ISegmentList linestrings2 = GetSegmentList(shape2);
 
 				// linestrings (from multipatch or polycurve) to other linestrings (multipatch/polycurve)
-				foreach (var p in lineStrings1
-					.SelectMany(
-						l1 => lineStrings2
-						      .Where(l2 => l1.ExtentsIntersectXY(l2, xyTolerance))
-						      .SelectMany(l2 => GetIntersections(
-							                  l1, l2,
-							                  spatialReference, xyTolerance))))
+				foreach (var p in GetIntersections(
+					linestrings1, linestrings2, spatialReference, xyTolerance))
 				{
-					// TODO filter out points on line endpoints
 					yield return p;
 				}
 			}
@@ -140,6 +132,20 @@ namespace ProSuite.QA.Tests
 				throw new ArgumentException(
 					$@"Unexpected geometry combination: {shape1.GeometryType}/{shape2.GeometryType}");
 			}
+		}
+
+		private static ISegmentList GetSegmentList(IGeometry geometry)
+		{
+			if (geometry is IPolycurve polycurve)
+			{
+				return GeometryConversionUtils.CreateMultiPolycurve(polycurve, false);
+			}
+			else if (geometry is IMultiPatch multipatch)
+			{
+				return GeometryConversionUtils.CreatePolyhedron(multipatch);
+			}
+
+			return null;
 		}
 
 		public static IEnumerable<Either<NonPlanarError, IEnumerable<IIntersectionPoint>>>
@@ -304,8 +310,8 @@ namespace ProSuite.QA.Tests
 		}
 
 		private static IEnumerable<Pnt3DIntersectionPoint> GetIntersections(
-			Linestring lines1,
-			Linestring lines2,
+			ISegmentList lines1,
+			ISegmentList lines2,
 			ISpatialReference spatialReference,
 			double xyTolerance)
 		{
@@ -314,8 +320,7 @@ namespace ProSuite.QA.Tests
 				MathUtils.GetDoubleSignificanceEpsilon(lines1.XMax, lines1.YMax);
 
 			var intersectionPoints =
-				GeomTopoOpUtils.GetIntersectionPoints(lines1, (ISegmentList) lines2,
-				                                      xyTolerance);
+				GeomTopoOpUtils.GetIntersectionPoints(lines1, lines2, xyTolerance);
 			var nanTargetVertices =
 				intersectionPoints.Where(p => double.IsNaN(p.VirtualTargetVertex));
 
@@ -333,14 +338,12 @@ namespace ProSuite.QA.Tests
 			                                               GetZ(p, lines2)));
 		}
 
-		private static double GetZ([NotNull] IntersectionPoint3D point,
-		                           [NotNull] Linestring linestring)
+		private static double GetZ([NotNull] IntersectionPoint3D intersectionPoint,
+		                           [NotNull] ISegmentList segmentList)
 		{
-			double factor;
-			var segmentIndex = point.GetLocalTargetIntersectionSegmentIdx(linestring,
-			                                                              out factor);
+			Pnt3D targetPoint = intersectionPoint.GetTargetPoint(segmentList);
 
-			return linestring.GetSegment(segmentIndex).GetPointAlong(factor, true).Z;
+			return targetPoint.Z;
 		}
 
 		private static double GetZ([NotNull] IPoint point,

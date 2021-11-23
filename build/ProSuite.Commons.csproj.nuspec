@@ -3,20 +3,22 @@
   <metadata>
     <id>ProSuite.Commons</id>
     <version>$version$</version>
-    <authors>Esri Schweiz AG</authors>
+    <authors>The ProSuite Authors</authors>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <license type="expression">MIT</license>
     <description>ProSuite support library</description>
     <releaseNotes></releaseNotes>
-    <copyright>EsriSchweizAG</copyright>
+    <copyright>2021 The ProSuite Authors</copyright>
     <tags>GIS ArcGIS</tags>
     <dependencies>
       <group targetFramework=".NETFramework4.8">
-	    <dependency id="log4net" version="2.0" />
+        <!--Vulnerability in log4net before 2.0.10; Nuget version is a minimum,
+        see https://docs.microsoft.com/en-us/nuget/concepts/package-versioning-->
+        <dependency id="log4net" version="2.0.12" />
       </group>
     </dependencies>
   </metadata>
-    <files>
-		<file src="..\bin\Release\*.dll" target="lib\$target$" />
-    </files>  
+  <files>
+    <file src="..\bin\Release\*.dll" target="lib\$target$" />
+  </files>
 </package>
