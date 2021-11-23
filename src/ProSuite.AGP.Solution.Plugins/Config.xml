@@ -5,10 +5,10 @@
   <Name>ProSuite.AGP.WorkList.PluginDatasource</Name>
   <AddInID>{90f49e0f-e7e9-47ff-82e5-f964441ca2e3}</AddInID>
   <Description>ProSuite Plugins for ArcGIS Pro</Description>
-  <Version>0.4</Version>
+  <Version>0.5</Version>
   <Author>The ProSuite Authors</Author>
   <Company></Company>
-  <Date>2021-09-24</Date>
+  <Date>2021-11-23</Date>
   <Targets>
     <Target name="ArcGISPro" version="2.5" />
   </Targets>
