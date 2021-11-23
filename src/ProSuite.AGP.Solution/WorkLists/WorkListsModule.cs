@@ -4,6 +4,8 @@ using System.Collections.Specialized;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Windows;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Data.PluginDatastore;
 using ArcGIS.Core.Geometry;
@@ -26,27 +28,22 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
-using ProSuite.Commons.Text;
 
 namespace ProSuite.AGP.Solution.WorkLists
 {
 	[UsedImplicitly]
 	public class WorkListsModule : Module
 	{
-		private const string PluginIdentifier = "ProSuite_WorkListDatasource";
-
 		private static WorkListsModule _instance;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[NotNull] private readonly Dictionary<string, FeatureLayer> _layersByWorklistName =
-			new Dictionary<string, FeatureLayer>();
+		// todo daro Layer instead of FeatureLayer
+		[NotNull] private readonly Dictionary<string, List<FeatureLayer>> _layersByWorklistName =
+			new Dictionary<string, List<FeatureLayer>>();
 
 		[NotNull] private readonly Dictionary<string, IWorkListObserver> _viewsByWorklistName =
 			new Dictionary<string, IWorkListObserver>();
-
-		[NotNull] private readonly Dictionary<string, string> _uriByWorklistName =
-			new Dictionary<string, string>();
 
 		private IWorkListRegistry _registry;
 		[CanBeNull] private EditEventsRowCacheSynchronizer _synchronizer;
@@ -56,20 +53,20 @@ namespace ProSuite.AGP.Solution.WorkLists
 				              (WorkListsModule) FrameworkApplication.FindModule(
 					              "ProSuite_WorkList_Module"));
 
-		public Dictionary<string, FeatureLayer> LayersByWorklistName => _layersByWorklistName;
-
 		public IWorkList ActiveWorkListlayer { get; internal set; }
 		
 		public event EventHandler<WorkItemPickArgs> WorkItemPicked;
 
-		public void ShowView()
+		public async Task ShowViewAsync()
 		{
-			foreach (IWorkList worklist in GetWorklists())
+			var workLists = await QueuedTask.Run(() => GetLoadedWorkLists().ToList());
+
+			foreach (IWorkList worklist in workLists)
 			{
 				// after Pro start up there is no view yet
 				if (! _viewsByWorklistName.ContainsKey(worklist.Name))
 				{
-					WorklistItem item = ProjectItemUtils.Get<WorklistItem>(worklist.Name);
+					WorklistItem item = ProjectItemUtils.Get<WorklistItem>(worklist.DisplayName);
 					Assert.NotNull(item);
 
 					_viewsByWorklistName.Add(worklist.Name, new WorkListObserver(worklist, item));
@@ -77,9 +74,12 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 				IWorkListObserver view = _viewsByWorklistName[worklist.Name];
 
-				if (_layersByWorklistName.TryGetValue(worklist.Name, out FeatureLayer layer))
+				if (_layersByWorklistName.TryGetValue(worklist.Name, out List<FeatureLayer> worklistLayers))
 				{
-					view.Show(layer.Name);
+					// find the work list layer in the active map
+					Layer activeWorklistLayer = GetActiveWorklistLayers(worklistLayers).First();
+
+					view.Show(activeWorklistLayer.Name);
 				}
 				else
 				{
@@ -87,82 +87,95 @@ namespace ProSuite.AGP.Solution.WorkLists
 				}
 			}
 		}
-
-		// todo daro return Window?
-		public void ShowView([NotNull] string worklistName, string displayName = null)
+		
+		public void ShowView([NotNull] IWorkList worklist)
 		{
-			if (_viewsByWorklistName.TryGetValue(worklistName, out IWorkListObserver view))
+			Assert.ArgumentCondition(_registry.Exists(worklist.Name),
+			                         $"work list {worklist.Name} does not exist");
+
+			if (! _viewsByWorklistName.TryGetValue(worklist.Name, out IWorkListObserver view))
 			{
-				view.Show(displayName);
+				return;
 			}
+			
+			view.Show(worklist.DisplayName);
 		}
 
-		[NotNull]
-		public string ShowWorklist([NotNull] WorkEnvironmentBase environment, [NotNull] string path)
+		[CanBeNull]
+		public async Task<IWorkList> ShowWorklist([NotNull] WorkEnvironmentBase environment, [NotNull] string path)
 		{
 			Assert.ArgumentNotNull(environment, nameof(environment));
 			Assert.ArgumentNotNullOrEmpty(path, nameof(path));
 
-			IWorkList worklist;
+			string name = WorkListUtils.GetWorklistName(path)?.ToLower();
+			Assert.NotNullOrEmpty(name);
+			
+			IWorkList worklist = _registry.Get(name);
 
-			string name = WorkListUtils.GetName(path).ToLower();
-			if (_registry.Exists(name))
+			// show a work list that is not a project item and thus unknown
+			if (worklist == null)
 			{
-				worklist = _registry.Get(name);
+				string displayName = WorkListUtils.GetName(path);
+				return await CreateWorkListAsync(environment, name, displayName);
+			}
+
+			WorklistItem item = ProjectItemUtils.Get<WorklistItem>(Path.GetFileName(path));
+
+			if (item == null && ! ProjectItemUtils.TryAdd(path, out item))
+			{
+				// work list item is null when  path is missing file extension (e.g. .iwl, .swl)
+				var message = $"Cannot determine work list type from file ${path}";
+
+				_msg.Debug(message);
+
+				ErrorHandler.Show(message, "Unknown work list file", MessageBoxButton.OK,
+				                  MessageBoxImage.Exclamation);
+				return null;
+			}
+
+			// is work list layer already loaded?
+			if (_layersByWorklistName.TryGetValue(worklist.Name, out List<FeatureLayer> worklistLayers))
+			{
+				// check whether layer is part of active map
+				foreach (Layer worklistLayer in GetActiveWorklistLayers(worklistLayers))
+				{
+					string message = string.Format("Work List {0} is already loaded: layer {1}",
+				                                 worklist.DisplayName, worklistLayer.Name);
+					_msg.Info(message);
+
+					ErrorHandler.Show(message, "Work List Layer", MessageBoxButton.OK,
+					                  MessageBoxImage.Information);
+				}
 			}
 			else
 			{
-				var factory = new XmlBasedWorkListFactory(path, name);
-
-				if (_registry.TryAdd(factory))
-				{
-					_msg.Debug($"Add work list {name} from file {path}");
-				}
-
-				worklist = _registry.Get(name);
+				// assertion is a no-op to avoid resharper warning
+				Assert.NotNull(environment.LoadLayers().ToList());
+				environment.AddLayer(worklist, path);
 			}
-
-			Assert.NotNull(worklist);
 
 			if (! _viewsByWorklistName.ContainsKey(worklist.Name))
 			{
-				var item = ProjectItemUtils.Get<WorklistItem>(Path.GetFileName(path));
-
-				if (item == null)
-				{
-					Assert.True(ProjectItemUtils.TryAdd(path, out item), $"Cannot add item {path}");
-					Assert.NotNull(item);
-				}
-
 				_viewsByWorklistName.Add(worklist.Name, new WorkListObserver(worklist, item));
-
-				Uri uri = WorkListUtils.GetDatasource(GetProject().HomeFolderPath, name,
-				                                      environment.FileSuffix);
-				FeatureLayer layer = AddLayer(uri, name, item.Name);
-
-				// use item name as layer name (and as view display name as well)
-				LayerUtils.ApplyRenderer(layer, environment.GetLayerDocument());
 			}
 
-			return Assert.NotNullOrEmpty(worklist.Name);
+			return worklist;
 		}
 
-		public async Task CreateWorkListAsync([NotNull] WorkEnvironmentBase environment,
-		                                      [NotNull] string name)
+		public async Task<IWorkList> CreateWorkListAsync([NotNull] WorkEnvironmentBase environment,
+		                                                 [NotNull] string uniqueName,
+		                                                 [CanBeNull] string displayName = null)
 		{
 			Assert.ArgumentNotNull(environment, nameof(environment));
-			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
+			Assert.ArgumentNotNullOrEmpty(uniqueName, nameof(uniqueName));
 
-			Assert.False(_registry.Exists(name), $"work list {name} already exists");
+			Assert.False(_registry.Exists(uniqueName), $"work list {uniqueName} already exists");
 
-			Uri uri = WorkListUtils.GetDatasource(GetProject().HomeFolderPath, name,
-			                                      environment.FileSuffix);
-
-			IWorkList worklist = await environment.CreateWorkListAsync(uri.LocalPath, name);
+			IWorkList worklist = await environment.CreateWorkListAsync(uniqueName, displayName);
 
 			if (worklist == null)
 			{
-				return;
+				return null;
 			}
 
 			// after creation go to nearest item
@@ -175,8 +188,12 @@ namespace ProSuite.AGP.Solution.WorkLists
 			// wiring work list events, etc. is done in OnDrawComplete
 			// register work list before creating the layer
 			_registry.TryAdd(worklist);
+			
+			string fileName = string.IsNullOrEmpty(displayName) ? uniqueName : displayName;
 
-			if (! ProjectItemUtils.TryAdd(uri.LocalPath, out WorklistItem item))
+			string path = environment.GetDefinitionFile(fileName);
+
+			if (! ProjectItemUtils.TryAdd(path, out WorklistItem item))
 			{
 				// maybe the work list is empty > makes no sense to store a
 				// definition file for an empty work list
@@ -184,14 +201,14 @@ namespace ProSuite.AGP.Solution.WorkLists
 				_msg.Debug($"work item count {worklist.Count()}");
 			}
 
+			environment.AddLayer(worklist, path);
+
 			if (! _viewsByWorklistName.ContainsKey(worklist.Name))
 			{
 				_viewsByWorklistName.Add(worklist.Name, new WorkListObserver(worklist, item));
 			}
 
-			FeatureLayer layer = AddLayer(uri, name, worklist.DisplayName);
-
-			LayerUtils.ApplyRenderer(layer, environment.GetLayerDocument());
+			return worklist;
 		}
 
 		#region Module overrides
@@ -207,138 +224,52 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return base.Initialize();
 		}
 
-		protected override void Uninitialize()
+		protected override async void Uninitialize()
 		{
 			_msg.Debug($"{nameof(Uninitialize)} {nameof(WorkListsModule)}");
 
 			_synchronizer?.Dispose();
 
-			foreach (IWorkList workList in GetWorklists())
+			await ViewUtils.TryAsync(QueuedTask.Run(() =>
 			{
-				workList?.Dispose();
-			}
+				foreach (IWorkList workList in GetLoadedWorkLists())
+				{
+					workList?.Dispose();
+				}
+			}), _msg);
 
 			UnwireEvents();
 
 			base.Uninitialize();
 		}
 
+		// ReSharper disable once RedundantOverriddenMember
 		protected override Task OnReadSettingsAsync(ModuleSettingsReader settings)
 		{
-			// should never be null
-			if (settings == null)
-			{
-				return base.OnReadSettingsAsync(settings);
-			}
-
-			// no crashes when:
-			// settings[""] = null;
-			// settings = null;
-
-			if (! (settings.Get("worklistLayerUris") is string uris))
-			{
-				return base.OnReadSettingsAsync(settings);
-			}
-
-			foreach (string pair in uris.Trim().Split('#'))
-			{
-				string[] tokens = pair.Trim().Split(':');
-
-				string worklistName = tokens[0];
-
-				if (_uriByWorklistName.ContainsKey(worklistName))
-				{
-					continue;
-				}
-
-				_uriByWorklistName.Add(worklistName, tokens[1]);
-			}
-
 			return base.OnReadSettingsAsync(settings);
 		}
-
+		
+		// NOTE daro Method is only called when project is dirty.
+		// NOTE daro OnWriteSettingsAsync is called twice on creating a project.
+		// ReSharper disable once RedundantOverriddenMember
 		protected override Task OnWriteSettingsAsync(ModuleSettingsWriter settings)
 		{
-			// todo daro Methond is only called when project is dirty.
-			// todo daro OnWriteSettingsAsync is called twice on creating a project.
-			if (_uriByWorklistName.Count <= 0)
-			{
-				return base.OnWriteSettingsAsync(settings);
-			}
-
-			List<string> worklistLayerUris = new List<string>(_uriByWorklistName.Count);
-			worklistLayerUris.AddRange(
-				_uriByWorklistName.Select(pair => $"{pair.Key}:{pair.Value}"));
-
-			settings.Add("worklistLayerUris", StringUtils.Concatenate(worklistLayerUris, "#"));
-
 			return base.OnWriteSettingsAsync(settings);
 		}
 
 		#endregion
 
 		[NotNull]
-		public string EnsureUniqueName()
+		public static string EnsureUniqueName()
 		{
 			//todo daro: use GUID as identifier?
 			return $"{Guid.NewGuid()}".Replace('-', '_').ToLower();
 		}
 
-		[CanBeNull]
-		private FeatureLayer AddLayer([NotNull] Uri dataSource, string worklistName,
-		                              [NotNull] string layerName)
-		{
-			PluginDatasourceConnectionPath connector =
-				new PluginDatasourceConnectionPath(PluginIdentifier, dataSource);
-
-			using (var datastore = new PluginDatastore(connector))
-			{
-				using (Table table = datastore.OpenTable(worklistName))
-				{
-					FeatureLayer worklistLayer =
-						LayerFactory.Instance.CreateFeatureLayer((FeatureClass) table,
-						                                         MapView.Active.Map,
-						                                         LayerPosition.AddToTop, layerName);
-
-					LayerUtils.SetLayerSelectability(worklistLayer, false);
-
-					if (! _uriByWorklistName.ContainsKey(worklistName))
-					{
-						_uriByWorklistName.Add(worklistName, LayerUtils.GetUri(worklistLayer));
-					}
-
-					return worklistLayer;
-				}
-			}
-		}
-
-		[NotNull]
-		private static Project GetProject()
-		{
-			Project current = Project.Current;
-			Assert.NotNull(current, "no project");
-			return current;
-		}
-
 		private static string GetLocalWorklistsFolder()
 		{
-			return WorkListUtils.GetLocalWorklistsFolder(GetProject().HomeFolderPath);
+			return WorkListUtils.GetLocalWorklistsFolder(Project.Current.HomeFolderPath);
 		}
-
-		//public void RemoveWorkListLayer(IWorkList workList)
-		//{
-		//	if (_layersByWorklistName.ContainsKey(workList.Name))
-		//	{
-
-		//	}
-		//	if (_layerByWorkList.ContainsKey(workList))
-		//	{
-		//		_layerByWorkList.Remove(workList);
-		//		Layer layer = MapView.Active.Map.GetLayersAsFlattenedList()
-		//							 .First(l => l.Name == workList.Name);
-		//		QueuedTask.Run(() => MapView.Active.Map.RemoveLayer(layer));
-		//	}
-		//}
 
 		#region Events
 
@@ -350,15 +281,18 @@ namespace ProSuite.AGP.Solution.WorkLists
 			// 3. OnMapViewInitialized
 			// 4. OnDrawCompleted
 
-			//MapViewInitializedEvent.Subscribe(OnMapViewInitialized);
+			//MapViewInitializedEvent.Subscribe(OnMapViewInitialized
+			MapClosedEvent.Subscribe(OnMapClosedAsync);
+
+			LayersAddedEvent.Subscribe(OnLayerAdded);
 			LayersRemovingEvent.Subscribe(OnLayerRemovingAsync);
-			DrawCompleteEvent.Subscribe(OnDrawCompleted);
+			DrawCompleteEvent.Subscribe(OnDrawCompletedAsync);
 
 			ProjectOpenedAsyncEvent.Subscribe(OnProjectOpendedAsync);
 			ProjectSavingEvent.Subscribe(OnProjectSavingAsync);
 
-			ProjectItemsChangedEvent.Subscribe(OnProjectItemsChanged);
-			ProjectItemRemovingEvent.Subscribe(OnProjectItemRemoving);
+			ProjectItemsChangedEvent.Subscribe(OnProjectItemsChangedAsync);
+			ProjectItemRemovingEvent.Subscribe(OnProjectItemRemovingAsync);
 
 			MapMemberPropertiesChangedEvent.Subscribe(OnMapMemberPropertiesChanged);
 		}
@@ -366,55 +300,64 @@ namespace ProSuite.AGP.Solution.WorkLists
 		private void UnwireEvents()
 		{
 			//MapViewInitializedEvent.Unsubscribe(OnMapViewInitialized);
+
+			MapClosedEvent.Unsubscribe(OnMapClosedAsync);
+			LayersAddedEvent.Unsubscribe(OnLayerAdded);
 			LayersRemovingEvent.Unsubscribe(OnLayerRemovingAsync);
-			DrawCompleteEvent.Unsubscribe(OnDrawCompleted);
+			DrawCompleteEvent.Unsubscribe(OnDrawCompletedAsync);
 
 			ProjectOpenedAsyncEvent.Unsubscribe(OnProjectOpendedAsync);
 			ProjectSavingEvent.Unsubscribe(OnProjectSavingAsync);
 
-			ProjectItemsChangedEvent.Unsubscribe(OnProjectItemsChanged);
-			ProjectItemRemovingEvent.Unsubscribe(OnProjectItemRemoving);
+			ProjectItemsChangedEvent.Unsubscribe(OnProjectItemsChangedAsync);
+			ProjectItemRemovingEvent.Unsubscribe(OnProjectItemRemovingAsync);
 
 			MapMemberPropertiesChangedEvent.Unsubscribe(OnMapMemberPropertiesChanged);
 		}
 
 		private async Task WorklistChanged(WorkListChangedEventArgs e)
 		{
+			// todo daro ViewUtils!
+			// NOTE daro:
+			// If the following code is put into a await ViewUtils.TryAsync(QueuedTask.Run(() =>{}, _msg)
+			// there is a strange race condition when adding a second work list. So far the code works without it.
+			// Examine it later!
 			try
 			{
-				MapView mapView = MapView.Active;
-				if (mapView == null)
-				{
-					return;
-				}
-
 				var workList = (IWorkList) e.Sender;
 
 				Assert.True(_layersByWorklistName.ContainsKey(workList.Name),
 				            $"sender of {nameof(WorklistChanged)} is unknown");
 
-				if (! _layersByWorklistName.ContainsKey(workList.Name))
+				List<FeatureLayer> worklistLayers = _layersByWorklistName[workList.Name];
+
+				foreach (MapView mapView in FrameworkApplication.Panes.OfType<IMapPane>()
+				                                                .Select(mapPane => mapPane.MapView))
 				{
-					return;
-				}
+					if (mapView == null || ! mapView.IsReady)
+					{
+						continue;
+					}
 
-				FeatureLayer workListLayer = _layersByWorklistName[workList.Name];
+					foreach (FeatureLayer worklistLayer in worklistLayers)
+					{
+						List<long> oids = e.Items;
 
-				List<long> oids = e.Items;
+						if (oids != null)
+						{
+							// invalidate with OIDs
+							mapView.Invalidate(new Dictionary<Layer, List<long>> { { worklistLayer, oids } });
+							continue;
+						}
 
-				if (oids != null)
-				{
-					// invalidate with OIDs
-					mapView.Invalidate(new Dictionary<Layer, List<long>> {{workListLayer, oids}});
-					return;
-				}
+						Envelope extent = e.Extent ?? mapView.Extent;
 
-				Envelope extent = e.Extent ?? mapView.Extent;
-
-				if (extent != null)
-				{
-					// alternatively invalidate with Envelope
-					mapView.Invalidate(workListLayer, extent);
+						if (extent != null)
+						{
+							// alternatively invalidate with Envelope
+							mapView.Invalidate(worklistLayer, extent);
+						}
+					}
 				}
 			}
 			catch (Exception exc)
@@ -424,51 +367,44 @@ namespace ProSuite.AGP.Solution.WorkLists
 		}
 
 		// todo daro: move to OnMapViewInitialized?
-		private void OnDrawCompleted(MapViewEventArgs e)
+		private async void OnDrawCompletedAsync(MapViewEventArgs e)
 		{
-			string uri = null;
-			foreach (string name in _registry.GetNames()
-			                                 .Where(name => _uriByWorklistName.TryGetValue(
-				                                        name, out uri)))
+			IReadOnlyList<Layer> layers = e.MapView.Map.GetLayersAsFlattenedList();
+
+			await QueuedTask.Run(() =>
 			{
-				// Can be null because it's from module settings and those cannot be deleted but only
-				// set to null.
-				if (string.IsNullOrEmpty(uri))
+				foreach (string name in _registry.GetNames())
 				{
-					continue;
+					foreach (FeatureLayer worklistLayer in GetWorklistLayers(layers, name).Cast<FeatureLayer>())
+					{
+						Assert.NotNull(worklistLayer);
+
+						if (_layersByWorklistName.TryGetValue(name, out List<FeatureLayer> worklistLayers))
+						{
+							// safety check, a new work list is already added
+							if (worklistLayers.Contains(worklistLayer))
+							{
+								continue;
+							}
+
+							worklistLayers.Add(worklistLayer);
+						}
+						else
+						{
+							_layersByWorklistName.Add(
+								name, new List<FeatureLayer> { worklistLayer });
+						}
+
+						IWorkList workList = _registry.Get(name);
+						Assert.NotNull(workList);
+
+						WorkListChangedEvent.Subscribe(WorklistChanged, this);
+
+						// todo daro: maybe we need a dictionary of synchronizers
+						_synchronizer = new EditEventsRowCacheSynchronizer(workList);
+					}
 				}
-
-				var worklistLayer = e.MapView.Map.FindLayer(uri) as FeatureLayer;
-
-				// todo daro Read the custom project settings and the URI of the created work list layers.
-				//			 Don't do layer name comparison.
-				//			 Stop giving the work list layer the name of the work list. The map (work list uri <> work list name)
-				//			 is managed with the custom project settings.
-				//			 For the moment the work list layers data source remains the work list file name. It feels the right way, e.g.
-				//			 in ArcGIS the data source is broken too if its name changes.
-				//LayerUtils.GetLayer("work list uri");
-
-				if (worklistLayer == null)
-				{
-					continue;
-				}
-
-				IWorkList workList = _registry.Get(name);
-				Assert.NotNull(workList);
-
-				// safety check, a new work list is already added
-				if (_layersByWorklistName.ContainsKey(workList.Name))
-				{
-					continue;
-				}
-
-				_layersByWorklistName.Add(workList.Name, worklistLayer);
-
-				WorklistChangedEvent.Subscribe(WorklistChanged, this);
-
-				// todo daro: maybe we need a dictionary of synchronizers
-				_synchronizer = new EditEventsRowCacheSynchronizer(workList);
-			}
+			});
 		}
 
 		// todo daro Use MapViewInitialized or DrawComplete?
@@ -513,29 +449,33 @@ namespace ProSuite.AGP.Solution.WorkLists
 
 					MapMember mapMember = mapMembers[index];
 
-					string uri = LayerUtils.GetUri(mapMember);
-					string name = WorkListUtils.ParseName(uri);
-
-					if (! _viewsByWorklistName.TryGetValue(name, out IWorkListObserver view))
-					{
-						continue;
-					}
-
-					if (view.View == null)
-					{
-						continue;
-					}
-
-					ViewUtils.RunOnUIThread(() => { view.View.Title = mapMember.Name; });
+					RenameView(mapMember);
 				}
 			}, _msg);
 		}
 
+		private async void OnMapClosedAsync(MapClosedEventArgs e)
+		{
+			await ViewUtils.TryAsync(QueuedTask.Run(() =>
+			{
+				// ToList() is important because items are being removed
+				// from _layersByWorklistName
+				foreach (IWorkList workList in GetLoadedWorkLists().ToList())
+				{
+					Unload(workList);
+				}
+			}), _msg);
+		}
+
 		private async Task OnLayerRemovingAsync(LayersRemovingEventArgs e)
 		{
-			await Task.Run(() =>
+			await ViewUtils.TryAsync(QueuedTask.Run(() =>
 			{
-				foreach (IWorkList worklist in GetAssociatedWorklists(e.Layers))
+				var flattenedLayers = new List<Layer>();
+
+				Flatten(e.Layers, flattenedLayers);
+
+				foreach (IWorkList worklist in GetWorklists(flattenedLayers))
 				{
 					Unload(worklist);
 
@@ -548,7 +488,11 @@ namespace ProSuite.AGP.Solution.WorkLists
 					// exception, e.g. on SetStatus
 					//workList.Dispose();
 				}
-			});
+			}), _msg);
+		}
+
+		private void OnLayerAdded(LayerEventsArgs e)
+		{
 		}
 
 		private async Task OnProjectOpendedAsync(ProjectEventArgs e)
@@ -564,38 +508,56 @@ namespace ProSuite.AGP.Solution.WorkLists
 			// 3. OnProjectOpened
 			// 4. Pluggable Datasource Open()
 
-			await Task.Run(() =>
+			await ViewUtils.TryAsync(QueuedTask.Run(() =>
 			{
+				// A work list file might have been deleted in the file system (outside Pro)
+				// and the file is still a project item because Pro got not notified.
+				// or
+				// Open a project, open another project, re-open the first project > the work list factory
+				// has already been added. Assert.True(_registry.TryAdd(factory)) would fail.
+				// => don't us an assertion here, just try to add 
 				foreach (var item in ProjectItemUtils.Get<WorklistItem>())
 				{
-					var factory = new XmlBasedWorkListFactory(item.Path, item.WorklistName);
-
-					if (_registry.TryAdd(factory))
+					if (File.Exists(item.Path))
 					{
-						_msg.Debug($"Add work list {item.WorklistName} from file {item.Path}");
+						var factory = new XmlBasedWorkListFactory(item.Path, item.WorklistName);
+
+						if (_registry.TryAdd(factory))
+						{
+							_msg.Debug($"Add work list {item.WorklistName} from file {item.Path}");
+						}
+					}
+					else
+					{
+						ProjectItemUtils.Remove(item);
 					}
 				}
-			});
+			}), _msg);
 		}
 
 		private async Task OnProjectSavingAsync(ProjectEventArgs e)
 		{
-			await Task.Run(() =>
+			await ViewUtils.TryAsync(QueuedTask.Run(() =>
 			{
 				FileSystemUtils.EnsureFolderExists(GetLocalWorklistsFolder());
 
-				foreach (IWorkList workList in GetWorklists())
+				foreach (IWorkList workList in GetLoadedWorkLists())
 				{
 					workList.Commit();
 				}
-			});
+			}), _msg);
 		}
 
-		private void OnProjectItemsChanged(ProjectItemsChangedEventArgs e)
+		private async void OnProjectItemsChangedAsync(ProjectItemsChangedEventArgs e)
 		{
-			if (e.ProjectItemsCollection != null)
+			await ViewUtils.TryAsync(QueuedTask.Run(() =>
 			{
-				foreach (var item in e.ProjectItemsCollection.OfType<WorklistItem>())
+				if (e.ProjectItemsCollection == null)
+				{
+					return;
+				}
+
+				foreach (WorklistItem item in e.ProjectItemsCollection.OfType<WorklistItem>())
 				{
 					switch (e.Action)
 					{
@@ -605,14 +567,47 @@ namespace ProSuite.AGP.Solution.WorkLists
 							Assert.True(_registry.Exists(item.WorklistName),
 							            $"Cannot find work list {item.WorklistName} in registry");
 
-							IWorkList workList = _registry.Get(item.WorklistName);
-							Assert.NotNull(workList);
+							// TODO daro: replace work list in registry. it's not enough to set new path
+							// there should always be the guid as name in the registry
+							// name of *.iwl file is ok for display name
+							// work list name is also the uri of layer and its data source
+							// work list display name is the layer alias
 
-							workList.Repository.UpdateStateRepository(item.Path);
+							Assert.True(_registry.Remove(item.WorklistName),
+							            $"failed to remove work list {item.WorklistName}");
+
+							var factory = new XmlBasedWorkListFactory(item.Path, item.WorklistName);
+
+							Assert.True(_registry.TryAdd(factory),
+							            $"Cannot add work list {item.WorklistName}");
+
+							_msg.Debug($"Add work list {item.WorklistName} from file {item.Path}");
+
+							// The following situation: the work list layer (e.g. named "foo") is already in TOC
+							if (_layersByWorklistName.TryGetValue(item.WorklistName, out List<FeatureLayer> layers))
+							{
+								foreach (FeatureLayer worklistLayer in layers)
+								{
+									PluginDatastore datastore = WorkListUtils.GetPluginDatastore(new Uri(item.Path));
+									string connectionString = datastore.GetConnectionString();
+
+									var connection = new CIMStandardDataConnection
+									                 {
+										                 WorkspaceConnectionString = connectionString,
+										                 WorkspaceFactory = WorkspaceFactory.Custom,
+										                 DatasetType = esriDatasetType.esriDTFeatureClass,
+										                 Dataset = item.WorklistName
+									                 };
+
+									worklistLayer.SetDataConnection(connection);
+								}
+							}
 
 							break;
 						case NotifyCollectionChangedAction.Add:
 						case NotifyCollectionChangedAction.Remove:
+
+						// Item is never removed. It is always deleted.
 						case NotifyCollectionChangedAction.Move:
 						case NotifyCollectionChangedAction.Reset:
 							throw new NotImplementedException();
@@ -620,72 +615,159 @@ namespace ProSuite.AGP.Solution.WorkLists
 							throw new ArgumentOutOfRangeException();
 					}
 				}
-			}
+			}), _msg);
 		}
 
-		private async Task OnProjectItemRemoving(ProjectItemRemovingEventArgs e)
+		private async Task OnProjectItemRemovingAsync(ProjectItemRemovingEventArgs e)
 		{
-			await ViewUtils.TryAsync(QueuedTask.Run(() =>
-			{
-				foreach (var item in e.ProjectItems.OfType<WorklistItem>())
-				{
-					string name = WorkListUtils.GetName(item.Path);
-					Assert.NotNullOrEmpty(name);
-
-					//Item container = Project.Current.GetProjectItemContainer(WorklistsContainer.ContainerTypeName);
-					//var worklistsContainer = container as WorklistsContainer;
-					//worklistsContainer?.Refresh();
-
-					//foreach (Item cont in Project.Current.ProjectItemContainers)
-					//{
-					//	string contType = cont.Type;
-					//	string contTypeID = cont.TypeID;
-					//}
-
-					if (_layersByWorklistName.TryGetValue(name, out FeatureLayer worklistLayer))
-					{
-						// this does NOT call the OnLayerRemovingAsync event handler!!o
-						// OnLayerRemovingAsync is called when the layer is removes manually
-
-						MapView.Active.Map.RemoveLayer(worklistLayer);
-
-						foreach (IWorkList worklist in GetAssociatedWorklists(
-							new Layer[] {worklistLayer}))
-						{
-							// no need to persist work list state, work list gets deleted
-							Unload(worklist);
-
-							Assert.True(_registry.Remove(worklist),
-							            $"Cannot remove work list {worklist.Name} from registry");
-						}
-					}
-				}
-			}), _msg);
-
 			// NOTE collapses Worklists folder, refresh of folder would be better
 			//var projectItem = ProjectItemUtils.Get<MapProjectItem>().ToList();
 			//List<Item> items = projectItem?.GetItems()?.ToList();
 			//string folderName = "Worklists";
 			//Item firstOrDefault = items?.FirstOrDefault(i => string.Equals(folderName, i.Name));
+
+			await ViewUtils.TryAsync(QueuedTask.Run(() =>
+			{
+				foreach (var item in e.ProjectItems.OfType<WorklistItem>().Where(item => File.Exists(item.Path)))
+				{
+					string name = WorkListUtils.GetWorklistName(item.Path);
+					Assert.NotNullOrEmpty(name);
+
+					if (! _layersByWorklistName.TryGetValue(name, out List<FeatureLayer> layers))
+					{
+						continue;
+					}
+
+					foreach (Map map in FrameworkApplication.Panes.OfType<IMapPane>().Select(mapPane => mapPane.MapView.Map))
+					{
+						// Removing a layer that's not part of a layer container throws an exception.
+						// Check whether the layers are part of the map.
+						foreach (Layer worklistLayer in GetActiveWorklistLayers(layers, map))
+						{
+							// this does NOT call the OnLayerRemovingAsync event handler!!
+							// OnLayerRemovingAsync is called when the layer is removes manually
+							map.RemoveLayer(worklistLayer);
+						}
+					}
+
+					IWorkList worklist = _registry.Get(name);
+					Assert.NotNull(worklist);
+
+					// no need to persist work list state, work list gets deleted
+					Unload(worklist);
+
+					Assert.True(_registry.Remove(worklist),
+					            $"Cannot remove work list {worklist.Name} from registry");
+				}
+			}), _msg);
 		}
 
 		#endregion
 
-		public virtual void OnWorkItemPicked(WorkItemPickArgs e)
+		private static void Flatten([NotNull] IEnumerable<Layer> layers,
+		                            [NotNull] ICollection<Layer> flattenedLayers)
 		{
-			WorkItemPicked?.Invoke(null, e);
+			foreach (Layer layer in layers)
+			{
+				if (layer is ILayerContainer container)
+				{
+					Flatten(container.Layers, flattenedLayers);
+				}
+				else
+				{
+					flattenedLayers.Add(layer);
+				}
+			}
+		}
+
+		private void RenameView(MapMember mapMember)
+		{
+			string uri = MapUtils.GetUri(mapMember);
+			string name = WorkListUtils.ParseName(uri);
+
+			if (! _viewsByWorklistName.TryGetValue(name, out IWorkListObserver view))
+			{
+				return;
+			}
+
+			if (view.View == null)
+			{
+				return;
+			}
+
+			ViewUtils.RunOnUIThread(() => { view.View.Title = mapMember.Name; });
+		}
+		
+		// todo daro to WorkListUtils
+		/// <summary>
+		/// Finds all work list layers in the active map.
+		/// </summary>
+		/// <param name="worklistLayers">all work list layers</param>
+		private static IEnumerable<Layer> GetActiveWorklistLayers(
+			[NotNull] IEnumerable<FeatureLayer> worklistLayers)
+		{
+
+			return GetActiveWorklistLayers(worklistLayers, MapUtils.GetActiveMap());
+		}
+
+		
+		/// <summary>
+		/// Finds all work list layers in the layer container.
+		/// </summary>
+		/// <param name="worklistLayers">all work list layers</param>
+		/// <param name="container">map or group layer</param>
+		/// <returns></returns>
+		private static IEnumerable<Layer> GetActiveWorklistLayers(
+			[NotNull] IEnumerable<FeatureLayer> worklistLayers,
+			[NotNull] ILayerContainer container)
+		{
+
+			return worklistLayers.Select(layer => container.FindLayer(layer.URI))
+			                     .Where(layer => layer != null);
+		}
+
+		// todo daro to WorkListUtils
+		private static IEnumerable<Layer> GetWorklistLayers([NotNull] IEnumerable<Layer> layers,
+		                                                    [NotNull] string worklistName)
+		{
+			return layers.Where(layer =>
+			{
+				var connection = layer.GetDataConnection() as CIMStandardDataConnection;
+
+				return string.Equals(worklistName, connection?.Dataset,
+				                     StringComparison.OrdinalIgnoreCase);
+			});
+		}
+		
+		[NotNull]
+		private IEnumerable<IWorkList> GetWorklists([NotNull] IEnumerable<Layer> layers)
+		{
+			return layers.Select(GetWorklist).Where(worklist => worklist != null);
+		}
+
+		[CanBeNull]
+		private IWorkList GetWorklist(Layer layer)
+		{
+			var connection = layer.GetDataConnection() as CIMStandardDataConnection;
+
+			return connection == null ? null : _registry.Get(connection.Dataset);
 		}
 
 		/// <summary>
-		/// Returns the work lists if there is one associated with a given work list layer
+		/// Work lists with a work list layer in the TOC.
 		/// </summary>
-		/// <param name="layers">Any layer, doesn't have to be a work list layers</param>
-		private IEnumerable<IWorkList> GetAssociatedWorklists([NotNull] IEnumerable<Layer> layers)
+		[NotNull]
+		private IEnumerable<IWorkList> GetLoadedWorkLists()
 		{
-			return _layersByWorklistName
-			       .Where(pair => layers.Contains(pair.Value))
-			       .Select(pair => GetWorklist(pair.Key))
-			       .Where(worklist => worklist != null).ToList();
+			IEnumerable<FeatureLayer> loadedLayers =
+				_layersByWorklistName.Values.SelectMany(layers => layers);
+
+			return GetWorklists(loadedLayers);
+		}
+
+		public virtual void OnWorkItemPicked(WorkItemPickArgs e)
+		{
+			WorkItemPicked?.Invoke(null, e);
 		}
 
 		private void Unload([NotNull] IWorkList workList)
@@ -699,26 +781,19 @@ namespace ProSuite.AGP.Solution.WorkLists
 			// ensure folder exists before commit
 			FileSystemUtils.EnsureFolderExists(GetLocalWorklistsFolder());
 
-			WorklistChangedEvent.Unsubscribe(WorklistChanged);
+			WorkListChangedEvent.Unsubscribe(WorklistChanged);
 
 			_layersByWorklistName.Remove(workList.Name);
 		}
 
-		private IEnumerable<IWorkList> GetWorklists()
+		public bool IsWorklistLayer([NotNull] FeatureLayer featureLayer)
 		{
-			return _layersByWorklistName.Select(pair => GetWorklist(pair.Key))
-			                            .Where(workList => workList != null);
-		}
-
-		[CanBeNull]
-		private IWorkList GetWorklist(string name)
-		{
-			return _registry.Get(name);
+			return _layersByWorklistName.Values.SelectMany(layer => layer).Contains(featureLayer);
 		}
 	}
 
 	public class WorkItemPickArgs : EventArgs
 	{
-		public List<Feature> features { get; set; }
+		public List<Feature> Features { get; set; }
 	}
 }

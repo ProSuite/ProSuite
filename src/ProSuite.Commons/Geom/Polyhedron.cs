@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.Geom
 {
@@ -67,6 +68,27 @@ namespace ProSuite.Commons.Geom
 			{
 				group.RemoveLinestring(linestring);
 			}
+		}
+
+		public IEnumerable<RingGroup> FindRingGroups([NotNull] IBoundedXY searchGeometry,
+		                                             double tolerance)
+		{
+			HashSet<RingGroup> found = new HashSet<RingGroup>();
+
+			foreach (int ringIndex in FindParts(searchGeometry, tolerance))
+			{
+				Linestring foundLinestring = GetPart(ringIndex);
+
+				foreach (RingGroup ringGroup in RingGroups)
+				{
+					if (ringGroup.GetLinestrings().Any(l => l == foundLinestring))
+					{
+						found.Add(ringGroup);
+					}
+				}
+			}
+
+			return found;
 		}
 
 		public MultiLinestring GetXYFootprint(double tolerance)

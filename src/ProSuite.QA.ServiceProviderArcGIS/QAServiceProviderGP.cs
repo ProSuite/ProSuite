@@ -158,7 +158,7 @@ namespace ProSuite.QA.ServiceProviderArcGIS
 		private ProSuiteQAResponse FormatProSuiteResponse(IGPResult result)
 		{
 			// TODO return response data by Finished event or here?
-			return new ProSuiteQAResponse()
+			return new ProSuiteQAResponse
 			{
 				Error = ParseGPResultError(result),
 				ErrorMessage = result.ErrorMessages.FirstOrDefault()?.Text,
@@ -174,7 +174,7 @@ namespace ProSuite.QA.ServiceProviderArcGIS
 			if (result?.ReturnValue == null) return null;
 
 			// TODO - should set return data type
-			return result.Values.FirstOrDefault()?.ToString();
+			return result.Values.FirstOrDefault();
 		}
 
 		private ProSuiteQAError ParseGPResultError(IGPResult result)

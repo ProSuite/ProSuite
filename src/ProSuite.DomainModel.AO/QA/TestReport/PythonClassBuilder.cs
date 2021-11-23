@@ -50,9 +50,9 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		{
 			sb.AppendLine("from datetime import datetime");
 			sb.AppendLine("from typing import List");
-			sb.AppendLine("from Condition import Condition");
-			sb.AppendLine("from Parameter import Parameter");
-			sb.AppendLine("from Dataset import Dataset");
+			sb.AppendLine("from ProPy.Condition import Condition");
+			sb.AppendLine("from ProPy.Parameter import Parameter");
+			sb.AppendLine("from ProPy.Dataset import Dataset");
 
 			sb.AppendLine();
 			sb.AppendLine();
@@ -61,7 +61,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		private static void CreatePythonClass(IEnumerable<IncludedTestBase> includedTests,
 		                                      StringBuilder sb)
 		{
-			sb.AppendLine("class prosuite:");
+			sb.AppendLine("class ProSuite:");
 
 			foreach (IncludedTestBase includedTest in includedTests)
 			{
@@ -102,22 +102,67 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			             sb);
 		}
 
+		//TODO improve text wrapper. Need to handle existing carriage returns, take care intendation is always correct. 
+		private static string WrapText(string text, int myLimit)
+		{
+			if (text == null || ! text.Contains(" ")) return text;
+
+			string[] words = text.Split(' ');
+
+			StringBuilder wrappedText = new StringBuilder();
+
+			string line = "";
+			foreach (string word in words)
+			{
+				if ((line + word).Length > myLimit)
+				{
+					wrappedText.AppendLine(line);
+					line = "        ";
+				}
+
+				line += string.Format("{0} ", word);
+			}
+
+			if (line.Length > 0)
+				wrappedText.AppendLine(line);
+			return wrappedText.ToString();
+		}
+
 		private static void AppendMethod(string methodName, string methodSignature,
 		                                 TestFactory testFactory,
 		                                 string conditionConstructorSignature, StringBuilder sb)
 		{
+			//string testDescription = WrapText(testFactory.GetTestDescription(), 100);
+
 			sb.AppendLine();
 			sb.AppendLine($"    @classmethod");
 			sb.AppendLine($"    def {methodName}({methodSignature}) -> Condition:");
+			//sb.AppendLine($"        \"\"\"");
+			//sb.AppendLine($"        {testDescription}        \"\"\"");
 			sb.AppendLine($"        result = Condition({conditionConstructorSignature})");
 
 			foreach (TestParameter testParameter in testFactory.Parameters)
 			{
 				string snakeCasePythonName = ToUnderscoreCase(testParameter.Name);
-				string parameterConstructor =
-					$"Parameter(\"{testParameter.Name}\", {snakeCasePythonName})";
 
-				sb.AppendLine($"        result.parameters.append({parameterConstructor})");
+				if (testParameter.ArrayDimension > 0)
+				{
+					string parameterConstructor =
+						$"Parameter(\"{testParameter.Name}\", element)";
+					sb.AppendLine($"        if type({snakeCasePythonName}) == list:");
+					sb.AppendLine($"            for element in {snakeCasePythonName}:");
+					sb.AppendLine(
+						$"                result.parameters.append({parameterConstructor})");
+					sb.AppendLine($"        else:");
+					sb.AppendLine(
+						$"            result.parameters.append(Parameter(\"{testParameter.Name}\", {snakeCasePythonName}))");
+				}
+				else
+				{
+					string parameterConstructor =
+						$"Parameter(\"{testParameter.Name}\", {snakeCasePythonName})";
+					sb.AppendLine($"        result.parameters.append({parameterConstructor})");
+				}
 			}
 
 			sb.AppendLine($"        result.generate_name()");

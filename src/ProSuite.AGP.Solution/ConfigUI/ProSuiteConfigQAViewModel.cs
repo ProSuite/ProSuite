@@ -85,12 +85,12 @@ namespace ProSuite.AGP.Solution.ConfigUI
 		// TODO algr: this should be moved to file utils
 		private string SelectFileItem(BrowseProjectFilter projectFilter)
 		{
-			var dlg = new OpenItemDialog()
+			var dlg = new OpenItemDialog
 			          {
 				          BrowseFilter = projectFilter,
 				          Title = "Browse file ..."
 			          };
-			if (! dlg.ShowDialog().Value)
+			if (dlg.ShowDialog() != true)
 				return "";
 
 			return dlg.Items.First()?.Path;

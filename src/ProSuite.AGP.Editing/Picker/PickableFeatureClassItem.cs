@@ -19,7 +19,7 @@ namespace ProSuite.AGP.Editing.Picker
 		[CanBeNull] private Geometry _geometry;
 		private readonly Uri _itemImageUri;
 		private List<FeatureLayer> _belongingFeatureLayers;
-		private BitmapImage _img = null;
+		private BitmapImage _img;
 
 		public PickableFeatureClassItem(FeatureClass featureClass, esriGeometryType geometryType,
 		                                List<FeatureLayer> belongingFeatureLayers)
@@ -38,7 +38,6 @@ namespace ProSuite.AGP.Editing.Picker
 			set => _isSelected = value;
 		}
 
-		[CanBeNull]
 		public Geometry Geometry
 		{
 			get => _geometry;

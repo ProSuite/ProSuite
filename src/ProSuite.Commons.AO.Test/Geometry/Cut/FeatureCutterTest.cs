@@ -10,6 +10,7 @@ using ProSuite.Commons.AO.Geometry.ChangeAlong;
 using ProSuite.Commons.AO.Geometry.Cut;
 using ProSuite.Commons.AO.Geometry.ZAssignment;
 using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.Geom;
 
 namespace ProSuite.Commons.AO.Test.Geometry.Cut
 {
@@ -79,8 +80,6 @@ namespace ProSuite.Commons.AO.Test.Geometry.Cut
 				IPolyline zDifference =
 					ReshapeUtils.GetZOnlyDifference(resultAsPolyline, cutLine);
 
-				// ArcObjects uses the cutLine's Z also at the intersection points.
-				// Do the same in CustomIntersect?
 				Assert.IsNull(zDifference);
 			}
 		}

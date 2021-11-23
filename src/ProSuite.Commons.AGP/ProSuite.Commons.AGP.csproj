@@ -69,10 +69,12 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
+    <Compile Include="Carto\FeatureClassSelection.cs" />
     <Compile Include="Carto\LayerUtils.cs" />
     <Compile Include="Carto\MapUtils.cs" />
     <Compile Include="Carto\Overlay.cs" />
     <Compile Include="Carto\SelectionUtils.cs" />
+    <Compile Include="Carto\StandaloneTableUtils.cs" />
     <Compile Include="Carto\TargetFeatureSelection.cs" />
     <Compile Include="Framework\PaneUtils.cs" />
     <Compile Include="Framework\ProjectItemUtils.cs" />

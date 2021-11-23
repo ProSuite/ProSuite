@@ -11,6 +11,7 @@ using ProSuite.Commons.AO.Geometry.Cut;
 using ProSuite.Commons.AO.Geometry.ZAssignment;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom;
 using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong

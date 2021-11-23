@@ -47,6 +47,18 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		public override SubcurveNavigator Clone()
+		{
+			var result = new SingleRingNavigator(_sourceRing, _target, Tolerance);
+
+			result._intersectionPoints = _intersectionPoints;
+
+			result.PreferredTurnDirection = PreferredTurnDirection;
+			result.PreferTargetZsAtIntersections = PreferTargetZsAtIntersections;
+
+			return result;
+		}
+
 		protected override Linestring GetSourcePart(int partIndex)
 		{
 			return _sourceRing;
@@ -64,7 +76,7 @@ namespace ProSuite.Commons.Geom
 			double distanceAlongSource;
 			int sourceSegmentIdx =
 				intersection.GetLocalSourceIntersectionSegmentIdx(_sourceRing,
-				                                                  out distanceAlongSource);
+					out distanceAlongSource);
 			Line3D entryLine =
 				GetEntryLine(intersection, _sourceRing, _target, alongSource, forward);
 
@@ -186,6 +198,26 @@ namespace ProSuite.Commons.Geom
 		}
 
 		public override bool AreIntersectionPointsNonSequential()
+		{
+			throw new NotImplementedException();
+		}
+
+		public override IEnumerable<Linestring> GetEqualSourceRings()
+		{
+			throw new NotImplementedException();
+		}
+
+		public override IEnumerable<IntersectionPoint3D> GetEqualRingsSourceStartIntersection()
+		{
+			throw new NotImplementedException();
+		}
+
+		public override IEnumerable<Linestring> GetSourceRingsCompletelyWithinTarget()
+		{
+			throw new NotImplementedException();
+		}
+
+		public override IEnumerable<Linestring> GetTargetRingsCompletelyWithinSource()
 		{
 			throw new NotImplementedException();
 		}

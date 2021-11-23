@@ -1731,12 +1731,12 @@ namespace ProSuite.Commons.AO.Test.Geometry
 				1001);
 
 			IList<esriSegmentInfo> segmentInfos =
-				GeometryUtils.GetShortSegments(polyline, 1.4, null);
+				GeometryUtils.GetShortSegments(polyline, 1.4, null, true);
 
 			Assert.AreEqual(0, segmentInfos.Count);
 
 			segmentInfos =
-				GeometryUtils.GetShortSegments(polyline, 1.5, null);
+				GeometryUtils.GetShortSegments(polyline, 1.5, null, true);
 
 			Assert.AreEqual(1, segmentInfos.Count);
 
@@ -1745,7 +1745,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			// non-Z-aware geometry uses 2D length
 			segmentInfos =
-				GeometryUtils.GetShortSegments(polyline, 1.4, null);
+				GeometryUtils.GetShortSegments(polyline, 1.4, null, true);
 
 			Assert.AreEqual(0, segmentInfos.Count);
 

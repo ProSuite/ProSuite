@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <log4net>
-  
+
   <!-- Appender configuration -->
 
   <appender name="DebugFileAppender" type="log4net.Appender.RollingFileAppender">
@@ -55,21 +55,20 @@
     </layout>
   </appender>
 
-    <appender name="LoggingEventsAppender" type="ProSuite.Commons.Logging.LoggingEventsAppender">
-	    <layout type="log4net.Layout.PatternLayout">
-		    <conversionPattern value="%date [%thread] %-5level %logger [%property{NDC}] - %message%newline" />
-	    </layout>
-    </appender>
-	
+  <appender name="LoggingEventsAppender" type="ProSuite.Commons.Logging.LoggingEventsAppender">
+    <layout type="log4net.Layout.PatternLayout">
+      <conversionPattern value="%date [%thread] %-5level %logger [%property{NDC}] - %message%newline" />
+    </layout>
+  </appender>
+
   <!-- Logger configuration -->
- 
+
   <root>
-    <level value="ALL"/>
+    <level value="ALL" />
     <appender-ref ref="DebugFileAppender" />
-    <appender-ref ref="ErrorFileAppender" />	  
+    <appender-ref ref="ErrorFileAppender" />
     <appender-ref ref="LoggingEventsAppender" />
-  </root>	
-	
+  </root>
   --><!-- only for nh sql debugging, very verbose --><!--
   <logger name="NHibernate.SQL">
     <level value="ERROR" />

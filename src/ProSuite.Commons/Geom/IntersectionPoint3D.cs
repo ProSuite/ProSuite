@@ -6,6 +6,9 @@ namespace ProSuite.Commons.Geom
 {
 	public class IntersectionPoint3D
 	{
+		/// <summary>
+		/// The intersection point taken from the source (i.e. with the source's Z value).
+		/// </summary>
 		public Pnt3D Point { get; }
 
 		/// <summary>
@@ -51,6 +54,17 @@ namespace ProSuite.Commons.Geom
 		}
 
 		#region Factory methods
+
+		[NotNull]
+		public static IntersectionPoint3D CreateAreaInteriorIntersection(
+			[NotNull] Pnt3D sourcePoint,
+			int sourceIndex)
+		{
+			return new IntersectionPoint3D(sourcePoint, sourceIndex)
+			       {
+				       Type = IntersectionPointType.AreaInterior
+			       };
+		}
 
 		[CanBeNull]
 		public static IntersectionPoint3D CreatePointPointIntersection(
@@ -406,6 +420,21 @@ namespace ProSuite.Commons.Geom
 			                                      out distanceAlongAsRatio);
 		}
 
+		/// <summary>
+		/// Gets the intersection point taken from the target (i.e. with the target's Z value).
+		/// The X,Y coordinates can be different to the <see cref="Point"/> by up to the tolerance.
+		/// </summary>
+		/// <param name="target"></param>
+		/// <returns></returns>
+		public Pnt3D GetTargetPoint(ISegmentList target)
+		{
+			Linestring targetPart = target.GetPart(TargetPartIndex);
+
+			int segmentIndex = GetLocalTargetIntersectionSegmentIdx(targetPart, out double factor);
+
+			return targetPart.GetSegment(segmentIndex).GetPointAlong(factor, true);
+		}
+
 		public int GetNextRingVertexIndex(int vertexCount)
 		{
 			if (! IsSourceVertex())
@@ -707,6 +736,112 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return result;
+		}
+
+		public bool? IsOnTheRightSideOfTarget(ISegmentList target,
+		                                      IPnt testPoint,
+		                                      bool disregardOrientation = false)
+		{
+			Assert.True(target.IsClosed, "Target must be closed ring(s)");
+
+			Linestring targetRing = target.GetPart(TargetPartIndex);
+
+			double targetRatio;
+			int targetSegmentIdx =
+				GetLocalTargetIntersectionSegmentIdx(targetRing, out targetRatio);
+
+			Line3D targetSegment = targetRing[targetSegmentIdx];
+
+			if (targetRatio > 0 && targetRatio < 1)
+			{
+				// The intersection is on the target segment's interior
+				return targetSegment.IsLeftXY(testPoint) < 0;
+			}
+
+			Line3D previousSegment, nextSegment;
+
+			// Intersection at source vertex 0 or 1 -> get the 2 adjacent segments
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
+			if (targetRatio == 0)
+			{
+				previousSegment =
+					targetRing.PreviousSegmentInRing(targetSegmentIdx, true);
+
+				nextSegment = SegmentIntersection.IsTargetZeroLength2D
+					              ? targetRing.NextSegmentInRing(targetSegmentIdx, true)
+					              : targetSegment;
+			}
+			else // sourceRatio == 1
+			{
+				previousSegment = SegmentIntersection.IsTargetZeroLength2D
+					                  ? targetRing.PreviousSegmentInRing(
+						                  targetSegmentIdx, true)
+					                  : targetSegment;
+				nextSegment = targetRing.NextSegmentInRing(targetSegmentIdx, true);
+			}
+
+			bool result = GeomTopoOpUtils.IsOnTheRightSide(previousSegment.StartPoint, Point,
+			                                               nextSegment.EndPoint, testPoint);
+
+			if (! disregardOrientation && targetRing.ClockwiseOriented == false)
+			{
+				result = ! result;
+			}
+
+			return result;
+		}
+
+		public bool? SourceContinuesInbound([NotNull] ISegmentList source,
+		                                    [NotNull] ISegmentList targetArea)
+		{
+			Linestring sourceLinestring = source.GetPart(SourcePartIndex);
+			Linestring targetRing = targetArea.GetPart(TargetPartIndex);
+
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
+			if (VirtualSourceVertex == sourceLinestring.PointCount - 1 &&
+			    ! sourceLinestring.IsClosed)
+			{
+				// Last point, cannot continue
+				return null;
+			}
+
+			if (Type == IntersectionPointType.LinearIntersectionStart ||
+			    Type == IntersectionPointType.LinearIntersectionIntermediate)
+			{
+				// Continues along target
+				return null;
+			}
+
+			if (Type == IntersectionPointType.AreaInterior)
+			{
+				// Hard to know but assuming simple geometry, the interior is on the right:
+				return true;
+			}
+
+			double factor;
+			if (Type == IntersectionPointType.LinearIntersectionEnd)
+			{
+				factor = SegmentIntersection.GetLinearIntersectionEndFactor(true);
+			}
+			else
+			{
+				factor = SegmentIntersection.GetIntersectionPointFactorAlongSource();
+			}
+
+			Line3D segment;
+
+			if (factor < 1)
+			{
+				segment = sourceLinestring[SegmentIntersection.SourceIndex];
+			}
+			else
+			{
+				segment = sourceLinestring.NextSegment(SegmentIntersection.SourceIndex);
+			}
+
+			Pnt3D sourceContinuationPoint = Assert.NotNull(segment).EndPoint;
+
+			return IsOnTheRightSideOfTarget(targetRing, sourceContinuationPoint);
 		}
 
 		private static int GetLocalIntersectionSegmentIdx([NotNull] Linestring forSegments,

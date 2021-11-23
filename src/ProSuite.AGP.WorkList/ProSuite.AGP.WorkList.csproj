@@ -40,6 +40,11 @@
     <Reference Include="ArcGIS.Core">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ProAssemblyPath)\bin\ArcGIS.Core.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="ArcGIS.Desktop.Core">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>$(ProAssemblyPath)\bin\Extensions\Core\ArcGIS.Desktop.Core.dll</HintPath>
     </Reference>
     <Reference Include="ArcGIS.Desktop.Editing">
       <SpecificVersion>False</SpecificVersion>
@@ -88,7 +93,7 @@
     <Compile Include="Domain\IWorkItemState.cs" />
     <Compile Include="Domain\IWorkListDefinition.cs" />
     <Compile Include="IWorkListObserver.cs" />
-    <Compile Include="OpenWorklistButtonBase.cs" />
+    <Compile Include="OpenWorkListButtonBase.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Domain\Persistence\IRepository.cs" />
     <Compile Include="Domain\Persistence\WorkItemStateRepository.cs" />
@@ -106,7 +111,7 @@
     <Compile Include="Domain\Persistence\Xml\XmlGdbRowIdentity.cs" />
     <Compile Include="Domain\Persistence\Xml\XmlWorkItemStateRepository.cs" />
     <Compile Include="Domain\Persistence\Xml\XmlWorkItemState.cs" />
-    <Compile Include="WorklistChangedEvent.cs" />
+    <Compile Include="WorkListChangedEvent.cs" />
     <Compile Include="WorkListUtils.cs" />
   </ItemGroup>
   <ItemGroup>

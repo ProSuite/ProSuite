@@ -80,6 +80,8 @@
     <Compile Include="DomainModels\ModelElementNameUtils.cs" />
     <Compile Include="Exceptions\ExceptionUtils.cs" />
     <Compile Include="Gdb\WorkspaceDbType.cs" />
+    <Compile Include="Geom\ChangeAlongZSource.cs" />
+    <Compile Include="Geom\ChangeZUtils.cs" />
     <Compile Include="Geom\CrackPoint.cs" />
     <Compile Include="Geom\EnvelopeXY.cs" />
     <Compile Include="Geom\EsriShape\EsriShapeFormatUtils.cs" />

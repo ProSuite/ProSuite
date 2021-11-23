@@ -1,5 +1,3 @@
-using ArcGIS.Desktop.Framework.Controls;
-
 namespace ProSuite.AGP.Solution.ConfigUI
 {
 	public interface ICloseable
@@ -10,7 +8,7 @@ namespace ProSuite.AGP.Solution.ConfigUI
 	/// <summary>
 	/// Interaction logic for ProSuiteConfigDialog.xaml
 	/// </summary>
-	public partial class ProSuiteConfigDialog : ProWindow, ICloseable
+	public partial class ProSuiteConfigDialog : ICloseable
 	{
 		public ProSuiteConfigDialog()
 		{

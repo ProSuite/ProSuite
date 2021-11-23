@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
@@ -22,6 +22,11 @@ namespace ProSuite.Commons.Geom
 			Target = target;
 			Tolerance = tolerance;
 		}
+
+		/// <summary>
+		/// Whether the cut rings should get the target's Z values at the intersection points.
+		/// </summary>
+		public bool PreferTargetZsAtIntersections { get; set; }
 
 		public ISegmentList Source { get; }
 
@@ -130,6 +135,8 @@ namespace ProSuite.Commons.Geom
 		public IList<Linestring> FollowSubcurvesClockwise(
 			[NotNull] ICollection<IntersectionPoint3D> startIntersections)
 		{
+			Assert.ArgumentCondition(Source.IsClosed, "Source ring(s) must be closed.");
+
 			IList<Linestring> result = new List<Linestring>();
 			var subcurveInfos = new List<IntersectionRun>();
 
@@ -217,7 +224,7 @@ namespace ProSuite.Commons.Geom
 			       ! nextIntersection.Point.Equals(startIntersection.Point))
 			{
 				Assert.True(count++ <= IntersectionPoints.Count,
-				            "Intersections seen twice");
+				            "Intersections seen twice. Make sure there are no self intersections of the target.");
 
 				if (nextIntersection != null)
 				{
@@ -269,6 +276,8 @@ namespace ProSuite.Commons.Geom
 				previousIntersection = nextIntersection;
 			}
 		}
+
+		public abstract SubcurveNavigator Clone();
 
 		protected abstract Linestring GetSourcePart(int partIndex);
 
@@ -530,10 +539,22 @@ namespace ProSuite.Commons.Geom
 				toIndex, toDistanceAlongAsRatio,
 				false);
 
+			if (PreferTargetZsAtIntersections)
+			{
+				Pnt3D startPoint = subcurve.StartPoint.ClonePnt3D();
+				Pnt3D endPoint = subcurve.EndPoint.ClonePnt3D();
+
+				PreferTargetZ(fromIntersection, startPoint);
+				PreferTargetZ(toIntersection, endPoint);
+
+				subcurve.ReplacePoint(0, startPoint);
+				subcurve.ReplacePoint(subcurve.SegmentCount, endPoint);
+			}
+
 			return subcurve;
 		}
 
-		protected static Linestring GetTargetSubcurve(
+		protected Linestring GetTargetSubcurve(
 			[NotNull] Linestring target,
 			[NotNull] IntersectionPoint3D fromIntersection,
 			[NotNull] IntersectionPoint3D toIntersection,
@@ -556,8 +577,18 @@ namespace ProSuite.Commons.Geom
 				false, ! forward);
 
 			// Replace the start / end with the actual intersection (correct source Z, exactly matching previous subcurve end)
-			subcurve.ReplacePoint(0, fromIntersection.Point);
-			subcurve.ReplacePoint(subcurve.SegmentCount, toIntersection.Point);
+			Pnt3D startPoint = fromIntersection.Point.ClonePnt3D();
+			Pnt3D endPoint = toIntersection.Point.ClonePnt3D();
+
+			// But set the preferred Z from the target, if desired:
+			if (PreferTargetZsAtIntersections)
+			{
+				PreferTargetZ(fromIntersection, startPoint);
+				PreferTargetZ(toIntersection, endPoint);
+			}
+
+			subcurve.ReplacePoint(0, startPoint);
+			subcurve.ReplacePoint(subcurve.SegmentCount, endPoint);
 
 			return subcurve;
 		}
@@ -567,6 +598,19 @@ namespace ProSuite.Commons.Geom
 		public abstract IEnumerable<Linestring> GetNonIntersectedTargets();
 
 		public abstract bool AreIntersectionPointsNonSequential();
+
+		public abstract IEnumerable<Linestring> GetEqualSourceRings();
+
+		public abstract IEnumerable<IntersectionPoint3D> GetEqualRingsSourceStartIntersection();
+
+		/// <summary>
+		/// Gets the source rings that are completely within the target geometry. Source
+		/// rings that are equal to a target ring are excluded.
+		/// </summary>
+		/// <returns></returns>
+		public abstract IEnumerable<Linestring> GetSourceRingsCompletelyWithinTarget();
+
+		public abstract IEnumerable<Linestring> GetTargetRingsCompletelyWithinSource();
 
 		private void CalculateIntersections()
 		{
@@ -644,6 +688,16 @@ namespace ProSuite.Commons.Geom
 			            intersectionPoint.IsOnTheRightSide(source, nextPntAlongTarget, true);
 			isOutbound = previousPntAlongTarget != null &&
 			             intersectionPoint.IsOnTheRightSide(source, previousPntAlongTarget, true);
+		}
+
+		private void PreferTargetZ(IntersectionPoint3D atIntersection, Pnt3D resultPoint)
+		{
+			Pnt3D targetPointAtFrom = atIntersection.GetTargetPoint(Target);
+
+			if (! double.IsNaN(targetPointAtFrom.Z))
+			{
+				resultPoint.Z = targetPointAtFrom.Z;
+			}
 		}
 
 		private class IntersectionRun

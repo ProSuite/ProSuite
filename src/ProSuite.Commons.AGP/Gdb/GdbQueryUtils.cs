@@ -33,6 +33,13 @@ namespace ProSuite.Commons.AGP.Gdb
 			       };
 		}
 
+		public static Feature GetFeature([NotNull] FeatureClass featureClass, long oid)
+		{
+			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+
+			return GetRow<Feature>(featureClass, oid);
+		}
+
 		public static IEnumerable<Feature> GetFeatures(
 			[NotNull] Table featureClass,
 			[CanBeNull] QueryFilter filter,

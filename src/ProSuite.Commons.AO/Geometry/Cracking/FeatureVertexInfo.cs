@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry.Generalize;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -109,7 +109,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 			if (ShortSegments != null)
 			{
-				result.ShortSegments = ShortSegmentsUtils.GetFilteredSegments(ShortSegments,
+				result.ShortSegments = GeneralizeUtils.GetFilteredSegments(ShortSegments,
 					subSelectionPerimeter,
 					true);
 			}
@@ -117,8 +117,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			if (NonRemovableShortSegments != null)
 			{
 				result.NonRemovableShortSegments =
-					ShortSegmentsUtils.GetFilteredSegments(NonRemovableShortSegments,
-					                                       subSelectionPerimeter, true);
+					GeneralizeUtils.GetFilteredSegments(NonRemovableShortSegments,
+					                                    subSelectionPerimeter, true);
 			}
 
 			return result;
@@ -146,6 +146,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		public double? SnapTolerance { get; }
 
 		public double? MinimumSegmentLength { get; set; }
+
+		public bool LinearizeSegments { get; set; }
 
 		[NotNull]
 		public IPolyline OriginalClippedPolyline
@@ -266,71 +268,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			}
 		}
 
-		public void AddCrackPoints([NotNull] IFeature targetFeature,
-		                           [NotNull] CrackPointCalculator crackPointCalculator)
-		{
-			// TODO: consider moving this to CrackUtils
-			Stopwatch watch =
-				_msg.DebugStartTiming("Calculating intersection points between {0} and {1}",
-				                      GdbObjectUtils.ToString(Feature),
-				                      GdbObjectUtils.ToString(targetFeature));
-
-			IPointCollection intersectionPoints = null;
-			try
-			{
-				IGeometry targetGeometry = targetFeature.ShapeCopy;
-				IGeometry originalGeometry = Feature.Shape;
-				IPolyline clippedSource = OriginalClippedPolyline;
-
-				GeometryUtils.EnsureSpatialReference(targetGeometry,
-				                                     clippedSource.SpatialReference);
-
-				crackPointCalculator.SetDataResolution(Feature);
-
-				IGeometry intersectionTarget;
-				intersectionPoints = crackPointCalculator.GetIntersectionPoints(
-					clippedSource, targetGeometry, out intersectionTarget);
-
-				// TODO: if the target has a vertex closish (wrt tolerance) to the actual intersection point
-				//		 the intersection point is somewhere in between. Consider snapping intersection points
-				//		 to target vertices (this might be the start of clustering!) or use minimal tolerance!
-				AddIntersectionPoints(intersectionPoints);
-
-				IList<CrackPoint> crackPoints = crackPointCalculator.DetermineCrackPoints(
-					intersectionPoints, originalGeometry, clippedSource, intersectionTarget);
-
-				// TODO: rename to AddNonCrackablePoints / sort out whether drawing can happen straight from List<CrackPoint>
-				AddCrackPoints(crackPoints);
-
-				if (intersectionTarget != null && intersectionTarget != targetGeometry)
-				{
-					Marshal.ReleaseComObject(intersectionTarget);
-				}
-
-				Marshal.ReleaseComObject(targetGeometry);
-			}
-			catch (Exception e)
-			{
-				string message =
-					$"Error calculationg crack points with target feature {RowFormat.Format(targetFeature)}: {e.Message}";
-
-				_msg.Debug(message, e);
-
-				if (crackPointCalculator.ContinueOnException)
-				{
-					crackPointCalculator.FailedOperations.Add(Feature.OID, message);
-				}
-				else
-				{
-					throw;
-				}
-			}
-
-			_msg.DebugStopTiming(watch, "Calculated and processed {0} intersection points",
-			                     intersectionPoints?.PointCount);
-		}
-
-		private void AddIntersectionPoints([CanBeNull] IPointCollection pointCollection)
+		public void AddIntersectionPoints([CanBeNull] IPointCollection pointCollection)
 		{
 			if (pointCollection == null || ((IGeometry) pointCollection).IsEmpty)
 			{
