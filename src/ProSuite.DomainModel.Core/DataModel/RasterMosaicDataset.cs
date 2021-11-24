@@ -2,24 +2,24 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
-	public abstract class SimpleRasterMosaicDataset : Dataset, ISimpleRasterMosaicDataset
+	public abstract class RasterMosaicDataset : Dataset, IRasterMosaicDataset
 	{
-		protected SimpleRasterMosaicDataset() { }
+		protected RasterMosaicDataset() { }
 
-		protected SimpleRasterMosaicDataset([NotNull] string name) : base(name) { }
+		protected RasterMosaicDataset([NotNull] string name) : base(name) { }
 
-		protected SimpleRasterMosaicDataset([NotNull] string name,
-		                                    [CanBeNull] string abbreviation)
+		protected RasterMosaicDataset([NotNull] string name,
+		                              [CanBeNull] string abbreviation)
 			: base(name, abbreviation) { }
 
-		protected SimpleRasterMosaicDataset([NotNull] string name,
-		                                    [CanBeNull] string abbreviation,
-		                                    [CanBeNull] string aliasName)
+		protected RasterMosaicDataset([NotNull] string name,
+		                              [CanBeNull] string abbreviation,
+		                              [CanBeNull] string aliasName)
 			: base(name, abbreviation, aliasName) { }
 
 		public override string TypeDescription => "Mosaic Dataset";
 
-		// TODO: Harvested or manually configure the following prperties in the DDX
+		// TODO: Harvested or manually configure the following properties in the DDX
 		// -> No separate DTO modelling is needed for VirtualModelContext!
 		// TODO: Separate hierachies Simple vs GdbMosaic, move these properties up to interface
 

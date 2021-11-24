@@ -47,7 +47,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return terrainRef;
 		}
 
-		public SimpleRasterMosaic OpenSimpleRasterMosaic(ISimpleRasterMosaicDataset dataset)
+		public SimpleRasterMosaic OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
 			return ModelElementUtils.TryOpenFromMasterDatabase(dataset);
 		}

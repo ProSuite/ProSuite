@@ -26,7 +26,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		TerrainReference OpenTerrainReference([NotNull] ISimpleTerrainDataset dataset);
 
 		[CanBeNull]
-		SimpleRasterMosaic OpenSimpleRasterMosaic([NotNull] ISimpleRasterMosaicDataset dataset);
+		SimpleRasterMosaic OpenSimpleRasterMosaic([NotNull] IRasterMosaicDataset dataset);
 
 		[CanBeNull]
 		IRelationshipClass OpenRelationshipClass([NotNull] Association association);

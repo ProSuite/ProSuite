@@ -93,17 +93,26 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc = DatasetUtils.CreateSimpleFeatureClass(ws, "VerifyErrorHasZ",
 				fields);
 
+			// Too far from terrain:
 			IFeature f1 = fc.CreateFeature();
-			f1.Shape = CurveConstruction.StartLine(10, 10, 5)
-			                            .LineTo(20, 20, 5)
+			f1.Shape = CurveConstruction.StartLine(2690010, 1254010, 5)
+			                            .LineTo(2690020, 1254020, 5)
 			                            .Curve;
 			f1.Store();
 
+			// Terrain is missing
 			IFeature f2 = fc.CreateFeature();
 			f2.Shape = CurveConstruction.StartLine(30, 50, 15)
 			                            .LineTo(20, 50, 15)
 			                            .Curve;
 			f2.Store();
+
+			// Correct
+			IFeature f3 = fc.CreateFeature();
+			f3.Shape = CurveConstruction.StartLine(2690010, 1254010, 445)
+			                            .LineTo(2690020, 1254020, 445)
+			                            .Curve;
+			f3.Store();
 
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
 
@@ -114,7 +123,7 @@ namespace ProSuite.QA.Tests.Test
 
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute();
-			Assert.AreEqual(runner.Errors.Count, 1);
+			Assert.AreEqual(2, runner.Errors.Count);
 		}
 
 		[Test]

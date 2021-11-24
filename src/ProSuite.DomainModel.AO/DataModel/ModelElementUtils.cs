@@ -115,7 +115,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[CanBeNull]
 		public static SimpleRasterMosaic TryOpenFromMasterDatabase(
-			ISimpleRasterMosaicDataset dataset, bool allowAlways = false)
+			IRasterMosaicDataset dataset, bool allowAlways = false)
 		{
 			IDatasetContext context = GetMasterDatabaseWorkspaceContext(dataset,
 				allowAlways);
