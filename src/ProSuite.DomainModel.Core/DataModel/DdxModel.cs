@@ -318,8 +318,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 				key.Model = this;
 
 				_terrainDatasets = _terrainDatasets ??
-				                   new Dictionary<SimpleTerrainDataset, SimpleTerrainDataset>(
-					                   new SimpleTerrainDataset.Comparer());
+				                   new Dictionary<SimpleTerrainDataset, SimpleTerrainDataset>();
+
 				if (_terrainDatasets.TryGetValue(key, out SimpleTerrainDataset existing))
 				{
 					dataset = existing;
