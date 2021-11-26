@@ -48,6 +48,7 @@
     </Compile>
     <Compile Include="ClassDescriptor.cs" />
     <Compile Include="Commands\ICommandDescriptorRepository.cs" />
+    <Compile Include="DataModel\ModelSimpleTerrainDataset.cs" />
     <Compile Include="Processing\CartoProcess.cs" />
     <Compile Include="Commands\CommandDescriptor.cs" />
     <Compile Include="Commands\CommandKey.cs" />
@@ -127,7 +128,6 @@
     <Compile Include="DataModel\SimpleRasterDataset.cs" />
     <Compile Include="DataModel\RasterMosaicDataset.cs" />
     <Compile Include="DataModel\SimpleTerrainDataset.cs" />
-    <Compile Include="DataModel\SimpleTerrainDatasetUtils.cs" />
     <Compile Include="DataModel\SqlCaseSensitivity.cs" />
     <Compile Include="DataModel\TableDataset.cs" />
     <Compile Include="DataModel\TinSurfaceType.cs" />

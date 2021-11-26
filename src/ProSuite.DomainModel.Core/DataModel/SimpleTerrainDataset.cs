@@ -6,8 +6,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
-	public class ModelSimpleTerrainDataset : SimpleTerrainDataset { }
-
 	public abstract class SimpleTerrainDataset : Dataset, ISimpleTerrainDataset
 	{
 		private static readonly string _geometryTypeName = "Terrain";
@@ -28,7 +26,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 			GeometryType = new GeometryTypeTerrain(_geometryTypeName);
 		}
 
-		protected SimpleTerrainDataset(IList<TerrainSourceDataset> sources)
+		protected SimpleTerrainDataset(IEnumerable<TerrainSourceDataset> sources)
 		{
 			_sources = new List<TerrainSourceDataset>(sources);
 			GeometryType = new GeometryTypeTerrain(_geometryTypeName);
@@ -226,16 +224,4 @@ namespace ProSuite.DomainModel.Core.DataModel
 		#endregion
 	}
 
-	public class XmlSimpleTerrainDataset
-	{
-		public string Name { get; set; }
-		public double PointDensity { get; set; }
-		public List<XmlTerrainSource> Sources { get; set; }
-	}
-
-	public class XmlTerrainSource
-	{
-		public string Dataset { get; set; }
-		public TinSurfaceType Type { get; set; }
-	}
 }
