@@ -14,26 +14,19 @@ using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.GP;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.AGP.QA;
 
-namespace ProSuite.AGP.QA.Worklist
+namespace ProSuite.AGP.QA.WorkList
 {
-	public abstract class IssueWorklistEnvironmentBase : WorkEnvironmentBase
+	public abstract class IssueWorkListEnvironmentBase : WorkEnvironmentBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private readonly string _domainName = "CORRECTION_STATUS_CD";
 
-		private readonly List<string> _issueFeatureClassNames = new List<string>
-		                                                        {
-			                                                        "IssueLines",
-			                                                        "IssueMultiPatches",
-			                                                        "IssuePoints", "IssuePolygons",
-			                                                        "IssueRows"
-		                                                        };
-
 		[CanBeNull] private readonly string _path;
 
-		protected IssueWorklistEnvironmentBase([CanBeNull] string path)
+		protected IssueWorkListEnvironmentBase([CanBeNull] string path)
 		{
 			_path = path;
 		}
@@ -65,14 +58,30 @@ namespace ProSuite.AGP.QA.Worklist
 				GeoprocessingUtils.CreateDomainAsync(_path, _domainName,
 				                                     "Correction status for work list"),
 				GeoprocessingUtils.AddCodedValueToDomainAsync(
-					_path, _domainName, 100, "Not Corrected"),
+					_path, _domainName, (int) IssueCorrectionStatus.NotCorrected, "Not Corrected"),
 				GeoprocessingUtils.AddCodedValueToDomainAsync(
-					_path, _domainName, 200, "Corrected"));
+					_path, _domainName, (int) IssueCorrectionStatus.Corrected, "Corrected"));
 
 			return true;
 		}
 
-		protected override IEnumerable<BasicFeatureLayer> GetLayers(Map map)
+		public override IEnumerable<BasicFeatureLayer> LoadLayers()
+		{
+			return GetLayersCore();
+		}
+
+		protected override ILayerContainerEdit GetContainer()
+		{
+			var groupLayerName = "QA";
+
+			GroupLayer groupLayer = MapView.Active.Map.FindLayers(groupLayerName)
+			                               .OfType<GroupLayer>().FirstOrDefault();
+
+			return groupLayer ??
+			       LayerFactory.Instance.CreateGroupLayer(MapView.Active.Map, 0, groupLayerName);
+		}
+
+		protected override IEnumerable<BasicFeatureLayer> GetLayersCore()
 		{
 			if (string.IsNullOrEmpty(_path))
 			{
@@ -81,24 +90,31 @@ namespace ProSuite.AGP.QA.Worklist
 
 			// todo daro: ensure layers are not already in map
 			using (Geodatabase geodatabase =
-				new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute)))
-			)
+				new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute))))
 			{
 				IEnumerable<string> featureClassNames =
 					geodatabase.GetDefinitions<FeatureClassDefinition>()
 					           .Select(definition => definition.GetName())
-					           .Where(name => _issueFeatureClassNames.Contains(name));
+					           .Where(name => IssueGdbSchema.IssueFeatureClassNames.Contains(name));
 
 				foreach (string featureClassName in featureClassNames)
 				{
 					using (var featureClass =
 						geodatabase.OpenDataset<FeatureClass>(featureClassName))
 					{
-						FeatureLayer featureLayer = LayerFactory.Instance.CreateFeatureLayer(
-							featureClass, MapView.Active.Map, LayerPosition.AddToTop);
+						ILayerContainerEdit layerContainer = GetContainer();
+
+						if (layerContainer == null)
+						{
+							continue;
+						}
+
+						FeatureLayer featureLayer =
+							LayerFactory.Instance.CreateFeatureLayer(featureClass, layerContainer);
 
 						featureLayer.SetExpanded(false);
-						featureLayer.SetVisibility(false);
+						// let Pro options decide whether newly added layers are visible
+						//featureLayer.SetVisibility(false);
 
 						yield return featureLayer;
 					}
@@ -125,9 +141,11 @@ namespace ProSuite.AGP.QA.Worklist
 			return featureLayer;
 		}
 
-		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository, string name)
+		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,
+		                                                string uniqueName,
+		                                                string displayName)
 		{
-			return new IssueWorkList(repository, name);
+			return new IssueWorkList(repository, uniqueName, displayName);
 		}
 
 		protected override IRepository CreateStateRepositoryCore(string path, string workListName)

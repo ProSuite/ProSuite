@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Reflection;
 using System.Windows.Data;
 using ArcGIS.Desktop.Framework;
@@ -10,7 +9,7 @@ using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Solution.LoggerUI
 {
-	public class ProSuiteLogPaneViewModel : DockPane, IDisposable, INotifyPropertyChanged
+	public class ProSuiteLogPaneViewModel : DockPane, IDisposable
 	{
 		private const string _dockPaneID = "ProSuiteTools_Logger_ProSuiteLogPane";
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
@@ -143,7 +142,7 @@ namespace ProSuite.AGP.Solution.LoggerUI
 			LogMessageList = new ObservableCollection<LoggingEventItem>();
 			BindingOperations.CollectionRegistering += BindingOperations_CollectionRegistering;
 
-			LoggingEventsAppender.OnNewLogMessage += this.Logger_OnNewLogMessage;
+			LoggingEventsAppender.OnNewLogMessage += Logger_OnNewLogMessage;
 		}
 
 		private void BindingOperations_CollectionRegistering(
@@ -189,7 +188,7 @@ namespace ProSuite.AGP.Solution.LoggerUI
 
 		public void Dispose()
 		{
-			LoggingEventsAppender.OnNewLogMessage -= this.Logger_OnNewLogMessage;
+			LoggingEventsAppender.OnNewLogMessage -= Logger_OnNewLogMessage;
 
 			var pane =
 				(ProSuiteLogPaneViewModel) FrameworkApplication.DockPaneManager.Find(_dockPaneID);

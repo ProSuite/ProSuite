@@ -32,38 +32,35 @@ namespace ProSuite.AGP.Solution.Selection
 		                                       CancelableProgressor progressor)
 		{
 			WorkListsModule.Current.OnWorkItemPicked(new WorkItemPickArgs
-			                                         {features = selectedFeatures.ToList()});
+			                                         {Features = selectedFeatures.ToList()});
 			SelectionUtils.ClearSelection();
 		}
 
 		protected override bool CanSelectFromLayerCore(FeatureLayer featureLayer)
 		{
-			//can select from layer if the layer is a worklist layer
-			if (WorkListsModule.Current.LayersByWorklistName.ContainsValue(featureLayer))
+			WorkListsModule workListsModule = WorkListsModule.Current;
+			
+			if (! workListsModule.IsWorklistLayer(featureLayer))
 			{
-				FeatureLayer layer = null; // TODO - should be better comparison
-				if (WorkListsModule.Current.LayersByWorklistName.TryGetValue(
-					    WorkListsModule.Current.ActiveWorkListlayer?.Name, out layer)
-				    && layer?.URI == featureLayer.URI)
-				{
-					WorkListLayer = featureLayer;
-					LayerUtils.SetLayerSelectability(WorkListLayer, true);
-					return true;
-				}
+				return false;
 			}
 
-			return false;
+			WorkListLayer = featureLayer;
+
+			LayerUtils.SetLayerSelectability(WorkListLayer);
+
+			return true;
 		}
 
 		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
 		{
-			var featureLayers = ActiveMapView.Map.Layers.OfType<FeatureLayer>();
-			foreach (FeatureLayer featureLayer in featureLayers)
+			WorkListsModule module = WorkListsModule.Current;
+
+			foreach (FeatureLayer layer in ActiveMapView.Map.GetLayersAsFlattenedList()
+			                                            .OfType<FeatureLayer>()
+			                                            .Where(lyr => module.IsWorklistLayer(lyr)))
 			{
-				if (WorkListsModule.Current.LayersByWorklistName.ContainsValue(featureLayer))
-				{
-					LayerUtils.SetLayerSelectability(featureLayer, true);
-				}
+				LayerUtils.SetLayerSelectability(layer);
 			}
 
 			SelectionUtils.ClearSelection();

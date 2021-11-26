@@ -124,7 +124,7 @@ namespace ProSuite.DomainModel.AO.QA
 			return InnerModelContext.OpenTerrainReference(dataset);
 		}
 
-		public SimpleRasterMosaic OpenSimpleRasterMosaic(ISimpleRasterMosaicDataset dataset)
+		public SimpleRasterMosaic OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
 			return InnerModelContext.OpenSimpleRasterMosaic(dataset);
 		}

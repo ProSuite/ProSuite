@@ -12,8 +12,8 @@ namespace ProSuite.Commons.Geom
 		private IList<IntersectionPoint3D> _intersectionPoints;
 		private IList<IntersectionPoint3D> _targetTargetIntersectionPoints;
 
-		public MultipleRingNavigator([NotNull] MultiLinestring sourceRings,
-		                             [NotNull] MultiLinestring targets,
+		public MultipleRingNavigator([NotNull] ISegmentList sourceRings,
+		                             [NotNull] ISegmentList targets,
 		                             double tolerance,
 		                             bool allowTargetTargetIntersections = false)
 			: base(sourceRings, targets, tolerance)
@@ -81,6 +81,20 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		public override SubcurveNavigator Clone()
+		{
+			var result = new MultipleRingNavigator(Source, Target, Tolerance,
+			                                       _allowTargetTargetIntersections)
+			             {
+				             _intersectionPoints = _intersectionPoints,
+				             _targetTargetIntersectionPoints = _targetTargetIntersectionPoints,
+				             PreferredTurnDirection = PreferredTurnDirection,
+				             PreferTargetZsAtIntersections = PreferTargetZsAtIntersections
+			             };
+
+			return result;
+		}
+
 		protected override Linestring GetSourcePart(int partIndex)
 		{
 			return Source.GetPart(partIndex);
@@ -111,7 +125,7 @@ namespace ProSuite.Commons.Geom
 			double distanceAlongSource;
 			int sourceSegmentIdx =
 				intersection.GetLocalSourceIntersectionSegmentIdx(sourceRing,
-				                                                  out distanceAlongSource);
+					out distanceAlongSource);
 
 			Line3D alongSourceLine = distanceAlongSource < 1
 				                         ? sourceRing[sourceSegmentIdx]
@@ -255,6 +269,143 @@ namespace ProSuite.Commons.Geom
 		public override IEnumerable<Linestring> GetNonIntersectedSourceRings()
 		{
 			return GetUnused(Source, IntersectedSourcePartIndexes);
+		}
+
+		public override IEnumerable<Linestring> GetEqualSourceRings()
+		{
+			foreach (int unCutSourceIdx in GetUnusedIndexes(
+				Source.PartCount, IntersectedSourcePartIndexes))
+			{
+				// No inbound/outbound, but possibly linear intersection starting/ending in the same point:
+
+				var intersectionPoints = IntersectionsAlongSource
+				                         .Where(i => i.SourcePartIndex == unCutSourceIdx)
+				                         .ToList();
+
+				if (intersectionPoints.Count == 2 &&
+				    intersectionPoints[0].TargetPartIndex ==
+				    intersectionPoints[1].TargetPartIndex &&
+				    intersectionPoints.Any(
+					    i => i.Type == IntersectionPointType.LinearIntersectionStart) &&
+				    intersectionPoints.Any(
+					    i => i.Type == IntersectionPointType.LinearIntersectionEnd) &&
+				    intersectionPoints[0].Point
+				                         .EqualsXY(intersectionPoints[1].Point,
+				                                   Tolerance))
+				{
+					yield return Source.GetPart(unCutSourceIdx);
+				}
+			}
+		}
+
+		public override IEnumerable<IntersectionPoint3D> GetEqualRingsSourceStartIntersection()
+		{
+			foreach (int unCutSourceIdx in GetUnusedIndexes(
+				Source.PartCount, IntersectedSourcePartIndexes))
+			{
+				// No inbound/outbound, but possibly linear intersection starting/ending in the same point:
+
+				var intersectionPoints = IntersectionsAlongSource
+				                         .Where(i => i.SourcePartIndex == unCutSourceIdx)
+				                         .ToList();
+
+				if (SourceEqualsTargetXY(intersectionPoints, Tolerance))
+				{
+					yield return intersectionPoints.First(
+						i => i.Type == IntersectionPointType.LinearIntersectionStart);
+				}
+			}
+		}
+
+		public override IEnumerable<Linestring> GetSourceRingsCompletelyWithinTarget()
+		{
+			foreach (int unCutSourceIdx in GetUnusedIndexes(
+				Source.PartCount, IntersectedSourcePartIndexes))
+			{
+				// No inbound/outbound, but possibly touching or linear intersections
+
+				var intersectionPoints = IntersectionsAlongSource
+				                         .Where(i => i.SourcePartIndex == unCutSourceIdx)
+				                         .ToList();
+
+				if (SourceEqualsTargetXY(intersectionPoints, Tolerance))
+				{
+					// Equal rings are already provided by GetEqualRingsSourceStartIntersection
+					continue;
+				}
+
+				Linestring sourceRing = GetSourcePart(unCutSourceIdx);
+
+				// Now there should only be linear intersections on the same side and touching intersections
+				if (intersectionPoints.Count == 0)
+				{
+					if (GeomRelationUtils.PolycurveContainsXY(
+						Target, sourceRing.StartPoint, Tolerance))
+					{
+						yield return sourceRing;
+					}
+				}
+				else
+				{
+					// TODO: Handle boundary loops, islands touching outer rings etc.
+
+					foreach (int targetPartIndex in GetIntersectingTargetPartIndexes(
+						intersectionPoints))
+					{
+						Linestring targetRing = Target.GetPart(targetPartIndex);
+
+						var relevantIntersections = intersectionPoints.Where(
+							ip => ip.TargetPartIndex == targetPartIndex).ToList();
+
+						if (GeomRelationUtils.WithinAreaXY(
+							    sourceRing, targetRing, relevantIntersections, Tolerance,
+							    false) == true)
+						{
+							yield return sourceRing;
+						}
+					}
+				}
+			}
+		}
+
+		public override IEnumerable<Linestring> GetTargetRingsCompletelyWithinSource()
+		{
+			foreach (int unCutTargetIdx in GetUnusedIndexes(
+				Target.PartCount, IntersectedTargetPartIndexes))
+			{
+				// No inbound/outbound, but possibly touching or linear intersections
+
+				var intersectionPoints = IntersectionsAlongTarget
+				                         .Where(i => i.TargetPartIndex == unCutTargetIdx)
+				                         .ToList();
+
+				if (SourceEqualsTargetXY(intersectionPoints, Tolerance))
+				{
+					// Equal rings are already provided by GetEqualRingsSourceStartIntersection
+					continue;
+				}
+
+				Linestring targetRing = Target.GetPart(unCutTargetIdx);
+
+				// Now there should only be linear intersections on the same side and touching intersections
+				if (intersectionPoints.Count == 0)
+				{
+					if (GeomRelationUtils.PolycurveContainsXY(
+						Source, targetRing.StartPoint, Tolerance))
+					{
+						yield return targetRing;
+					}
+				}
+				else
+				{
+					// TODO: Handle boundary loops, islands touching outer rings etc.
+					// TODO: Leverage known intersection points
+					if (GeomRelationUtils.PolycurveContainsXY(Source, targetRing, Tolerance))
+					{
+						yield return targetRing;
+					}
+				}
+			}
 		}
 
 		public override IEnumerable<Linestring> GetNonIntersectedTargets()
@@ -457,19 +608,83 @@ namespace ProSuite.Commons.Geom
 			return true;
 		}
 
+		private static bool SourceEqualsTargetXY(
+			[NotNull] IList<IntersectionPoint3D> intersectionPoints, double tolerance)
+		{
+			IPnt startPoint = null;
+			IntersectionPoint3D previous = null;
+
+			if (intersectionPoints.Count == 0)
+			{
+				return false;
+			}
+
+			foreach (IntersectionPoint3D intersectionPoint in
+				intersectionPoints.OrderBy(i => i.VirtualSourceVertex))
+			{
+				if (startPoint == null)
+				{
+					if (intersectionPoint.Type != IntersectionPointType.LinearIntersectionStart)
+					{
+						return false;
+					}
+
+					startPoint = intersectionPoint.Point;
+				}
+
+				if (previous != null)
+				{
+					if (previous.Type == IntersectionPointType.LinearIntersectionEnd)
+					{
+						if (intersectionPoint.Type != IntersectionPointType.LinearIntersectionStart)
+						{
+							return false;
+						}
+
+						if (! previous.Point.Equals(intersectionPoint.Point))
+						{
+							return false;
+						}
+					}
+					else if (intersectionPoint.Type != IntersectionPointType.LinearIntersectionEnd)
+					{
+						return false;
+					}
+				}
+
+				previous = intersectionPoint;
+			}
+
+			if (! Assert.NotNull(startPoint).Equals(previous.Point))
+			{
+				return false;
+			}
+
+			return true;
+		}
+
 		private static IEnumerable<Linestring> GetUnused(ISegmentList linestrings,
 		                                                 HashSet<int> usedIndexes)
 		{
-			for (int i = 0; i < linestrings.PartCount; i++)
+			foreach (int i in GetUnusedIndexes(linestrings.PartCount, usedIndexes))
+			{
+				Linestring cutLine = linestrings.GetPart(i);
+
+				yield return cutLine;
+			}
+		}
+
+		private static IEnumerable<int> GetUnusedIndexes(int partCount,
+		                                                 HashSet<int> usedIndexes)
+		{
+			for (int i = 0; i < partCount; i++)
 			{
 				if (usedIndexes.Contains(i))
 				{
 					continue;
 				}
 
-				Linestring cutLine = linestrings.GetPart(i);
-
-				yield return cutLine;
+				yield return i;
 			}
 		}
 
@@ -520,6 +735,13 @@ namespace ProSuite.Commons.Geom
 			//}
 
 			return IntersectionsAlongTarget[nextAlongTargetIdx];
+		}
+
+		private static IEnumerable<int> GetIntersectingTargetPartIndexes(
+			IEnumerable<IntersectionPoint3D> intersectionPoints)
+		{
+			return intersectionPoints.GroupBy(i => i.TargetPartIndex)
+			                         .Select(i => i.First().TargetPartIndex);
 		}
 	}
 }

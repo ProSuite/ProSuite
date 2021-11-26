@@ -2,13 +2,13 @@ using System;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Tests.Test.Construction;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Tests.Test.Construction;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -121,19 +121,36 @@ namespace ProSuite.QA.Tests.Test
 			const double z2 = 300;
 			var g1 = GeometryFactory.CreateCircleArcPolygon(
 				GeometryFactory.CreatePoint(100, 100, z1), 10);
+
+			// NOTE: A single segment circle always has Z == NaN, no matter what!
+			IMultipoint splitPoints = GeometryFactory.CreateMultipoint(
+				GeometryFactory.CreatePoint(90, 100, z1),
+				GeometryFactory.CreatePoint(110, 100, z1));
+			GeometryUtils.CrackPolycurve(g1, (IPointCollection) splitPoints, false, false);
+
+			GeometryUtils.MakeZAware(g1);
+			GeometryUtils.ConstantZ(g1, z1);
+
+			// Otherwise it is Z aware but the Z values remain NaN
+			GeometryUtils.SimplifyZ(g1);
+
 			var g2 = GeometryFactory.CreateCircleArcPolygon(
 				GeometryFactory.CreatePoint(90, 90, z2), 10);
 
-			GeometryUtils.MakeZAware(g1);
-			GeometryUtils.MakeZAware(g2);
+			// NOTE: A single segment circle always has Z == NaN, no matter what!
+			splitPoints = GeometryFactory.CreateMultipoint(
+				GeometryFactory.CreatePoint(80, 90, z2),
+				GeometryFactory.CreatePoint(100, 90, z2));
+			GeometryUtils.CrackPolycurve(g2, (IPointCollection) splitPoints, false, false);
 
-			GeometryUtils.ConstantZ(g1, z1);
-			GeometryUtils.ConstantZ(g2, z1);
+			GeometryUtils.MakeZAware(g2);
+			GeometryUtils.ConstantZ(g2, z2);
+			GeometryUtils.SimplifyZ(g2);
 
 			Check(g1, g2, 2,
 			      (p, i) =>
-				      At(i == 0, Equals(90, 100, z1, p.Point)) &&
-				      At(i == 1, Equals(100, 90, z1, p.Point)));
+				      At(i == 1, Equals(90, 100, z1, p.Point)) &&
+				      At(i == 0, Equals(100, 90, z1, p.Point)));
 		}
 
 		[Test]
@@ -143,22 +160,32 @@ namespace ProSuite.QA.Tests.Test
 			var z2 = 200.0;
 			var g1 = GeometryFactory.CreateCircleArcPolygon(
 				GeometryFactory.CreatePoint(100, 100, z1), 10);
-			var g2 = GeometryFactory.CreatePolygon(0, 0, 100, 200);
+
+			// NOTE: A single segment circle always has Z == NaN, no matter what!
+			IMultipoint splitPoints = GeometryFactory.CreateMultipoint(
+				GeometryFactory.CreatePoint(90, 100, z1),
+				GeometryFactory.CreatePoint(110, 100, z1));
+			GeometryUtils.CrackPolycurve(g1, (IPointCollection) splitPoints, false, false);
 
 			GeometryUtils.MakeZAware(g1);
-			GeometryUtils.MakeZAware(g2);
-
 			GeometryUtils.ConstantZ(g1, z1);
-			GeometryUtils.ConstantZ(g2, z2);
+
+			// Otherwise it is Z aware but the Z values remain NaN
+			GeometryUtils.SimplifyZ(g1);
+
+			var g2 = GeometryFactory.CreatePolygon(0, 0, 100, 200, z2);
+
+			Assert.IsTrue(GeometryUtils.IsZAware(g1));
+			Assert.IsTrue(GeometryUtils.IsZAware(g2));
 
 			Check(g1, g2, 2,
 			      (p, i) =>
-				      At(i == 0, Equals(100, 110, z1, p.Point)) &&
-				      At(i == 1, Equals(100, 90, z1, p.Point)));
+				      At(i == 0, Equals(100, 90, z1, p.Point)) &&
+				      At(i == 1, Equals(100, 110, z1, p.Point)));
 			Check(g2, g1, 2,
 			      (p, i) =>
-				      At(i == 0, Equals(100, 90, z2, p.Point)) && // TODO revise
-				      At(i == 1, Equals(100, 110, z2, p.Point))); // TODO revise
+				      At(i == 0, Equals(100, 110, z2, p.Point)) && // TODO revise
+				      At(i == 1, Equals(100, 90, z2, p.Point))); // TODO revise
 		}
 
 		[Test]

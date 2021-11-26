@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.Core.QA;
-using ProSuite.QA.ServiceManager.Interfaces;
 
 namespace ProSuite.QA.SpecificationProviderFile
 {

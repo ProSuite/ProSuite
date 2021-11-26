@@ -13,7 +13,7 @@ namespace ProSuite.AGP.Solution.LoggerUI
 	/// <summary>
 	/// Interaction logic for ProSuiteLogPaneView.xaml
 	/// </summary>
-	public partial class ProSuiteLogPaneView : UserControl
+	public partial class ProSuiteLogPaneView
 	{
 		public ProSuiteLogPaneView()
 		{
@@ -23,12 +23,12 @@ namespace ProSuite.AGP.Solution.LoggerUI
 		private void logMessagesGrid_MouseRightButtonUp(object sender, MouseButtonEventArgs e)
 		{
 			DataGridRow row = sender as DataGridRow;
-			logMessagesGrid.SelectedItem = row.Item;
+			logMessagesGrid.SelectedItem = row?.Item;
 		}
 
 		private void logMessagesGrid_Loaded(object sender, RoutedEventArgs e)
 		{
-			var items = (logMessagesGrid.ItemsSource as ObservableCollection<LoggingEventItem>);
+			var items = logMessagesGrid.ItemsSource as ObservableCollection<LoggingEventItem>;
 
 			if (items == null)
 				return;
@@ -39,7 +39,7 @@ namespace ProSuite.AGP.Solution.LoggerUI
 		private void CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
 		{
 			var msSecDelay = 500; // delay to scroll to end to last message - cancealable?
-			Task.Delay(msSecDelay).ContinueWith((_) => ScrollMessagesToEnd());
+			Task.Delay(msSecDelay).ContinueWith(_ => ScrollMessagesToEnd());
 		}
 
 		private void ScrollMessagesToEnd()

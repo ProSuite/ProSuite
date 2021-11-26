@@ -1,4 +1,5 @@
-﻿using System.Linq;
+using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using ProSuite.Commons.Geom;
 
@@ -167,6 +168,30 @@ namespace ProSuite.Commons.Test.Geometry
 
 			Assert.AreEqual(multilinestring.GetSegment(0), nextSegment);
 			Assert.AreEqual(multilinestring.GetSegment(0, 0), nextSegment);
+		}
+
+		[Test]
+		public void CanSnapToResolution()
+		{
+			var ring = new List<Pnt3D>();
+
+			ring.Add(new Pnt3D(2600000.0001234, 1200000.0004321, 500.0004321));
+			ring.Add(new Pnt3D(2600080.0001234, 1200060.0004321, 500.0004321));
+			ring.Add(new Pnt3D(2600080.0001234, 1200030.0004321, 540.0004321));
+			ring.Add(new Pnt3D(2600080.0001234, 1200000.0004321, 530.0004321));
+
+			Linestring l = new Linestring(ring);
+
+			var multiPolycurve = new MultiPolycurve(new[] {l});
+
+			MultiLinestring snapped = multiPolycurve.Clone();
+
+			snapped.SnapToResolution(0.001, 2000000, 1000000);
+
+			Assert.IsTrue(GeomRelationUtils.AreBoundsEqual(multiPolycurve, snapped, 0.001));
+
+			EnvelopeXY bbAfterSnap = new EnvelopeXY(2600000, 1200000, 2600080, 1200060);
+			Assert.IsTrue(GeomRelationUtils.AreBoundsEqual(bbAfterSnap, snapped, 0));
 		}
 	}
 }

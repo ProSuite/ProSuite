@@ -218,12 +218,15 @@
     <Compile Include="QA\TestReport\IncludedTestFactory.cs" />
     <Compile Include="QA\TestReport\IndexEntry.cs" />
     <Compile Include="QA\TestReport\IReportBuilder.cs" />
+    <Compile Include="QA\TestReport\PythonClassBuilder.cs" />
+    <Compile Include="QA\TestReport\ReportBuilderBase.cs" />
     <Compile Include="QA\TestReport\SectionTitleIndexEntry.cs" />
     <Compile Include="QA\TestReport\TestClassIndexEntry.cs" />
     <Compile Include="QA\TestReport\TestFactoryIndexEntry.cs" />
     <Compile Include="QA\TestReport\TestIndexEntry.cs" />
     <Compile Include="QA\TestReport\TestReportUtils.cs" />
     <Compile Include="QA\TransformerFactory.cs" />
+    <Compile Include="QA\TestReport\XmlTestDescriptorsBuilder.cs" />
     <Compile Include="QA\VerificationContextUtils.cs" />
     <Compile Include="QA\VerificationProgressEventArgs.cs" />
     <Compile Include="QA\Xml\IXmlEntityMetadata.cs" />

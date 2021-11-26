@@ -1,4 +1,3 @@
-using ArcGIS.Desktop.Framework.Controls;
 using ProSuite.UI.QA.VerificationProgress;
 
 namespace ProSuite.AGP.Solution.QA
@@ -6,7 +5,7 @@ namespace ProSuite.AGP.Solution.QA
 	/// <summary>
 	/// Interaction logic for VerificationProgressWindow.xaml
 	/// </summary>
-	public partial class VerificationProgressWindow : ProWindow
+	public partial class VerificationProgressWindow
 	{
 		public VerificationProgressWindow(VerificationProgressViewModel viewModel)
 		{

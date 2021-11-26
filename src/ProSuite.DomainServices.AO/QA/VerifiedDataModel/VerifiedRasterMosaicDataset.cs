@@ -3,8 +3,8 @@ using ProSuite.DomainModel.Core.DataModel;
 
 namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 {
-	public class VerifiedSimpleRasterMosaicDataset : SimpleRasterMosaicDataset
+	public class VerifiedRasterMosaicDataset : RasterMosaicDataset
 	{
-		public VerifiedSimpleRasterMosaicDataset([NotNull] string name) : base(name) { }
+		public VerifiedRasterMosaicDataset([NotNull] string name) : base(name) { }
 	}
 }

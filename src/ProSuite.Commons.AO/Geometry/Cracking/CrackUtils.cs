@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -175,7 +176,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 					continue;
 				}
 
-				toVertexInfo.AddCrackPoints(targetFeature, crackPointCalculator);
+				AddCrackPoints(toVertexInfo, targetFeature, crackPointCalculator);
 			}
 		}
 
@@ -196,8 +197,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				FeatureVertexInfo vertexInfo1 = pair.Key;
 				FeatureVertexInfo vertexInfo2 = pair.Value;
 
-				vertexInfo1.AddCrackPoints(vertexInfo2.Feature, crackPointCalculator);
-				vertexInfo2.AddCrackPoints(vertexInfo1.Feature, crackPointCalculator);
+				AddCrackPoints(vertexInfo1, vertexInfo2.Feature, crackPointCalculator);
+				AddCrackPoints(vertexInfo2, vertexInfo1.Feature, crackPointCalculator);
 			}
 		}
 
@@ -367,6 +368,70 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			}
 
 			return result;
+		}
+
+		public static void AddCrackPoints(
+			FeatureVertexInfo featureVertexInfo,
+			[NotNull] IFeature targetFeature,
+			[NotNull] CrackPointCalculator crackPointCalculator)
+		{
+			IFeature sourceFeature = featureVertexInfo.Feature;
+
+			Stopwatch watch =
+				_msg.DebugStartTiming("Calculating intersection points between {0} and {1}",
+				                      GdbObjectUtils.ToString(sourceFeature),
+				                      GdbObjectUtils.ToString(targetFeature));
+
+			IPointCollection intersectionPoints = null;
+			try
+			{
+				IGeometry targetGeometry = targetFeature.ShapeCopy;
+				IGeometry originalGeometry = sourceFeature.Shape;
+				IPolyline clippedSource = featureVertexInfo.OriginalClippedPolyline;
+
+				GeometryUtils.EnsureSpatialReference(targetGeometry,
+				                                     clippedSource.SpatialReference);
+
+				crackPointCalculator.SetDataResolution(sourceFeature);
+
+				IGeometry intersectionTarget;
+				intersectionPoints = crackPointCalculator.GetIntersectionPoints(
+					clippedSource, targetGeometry, out intersectionTarget);
+
+				featureVertexInfo.AddIntersectionPoints(intersectionPoints);
+
+				IList<CrackPoint> crackPoints = crackPointCalculator.DetermineCrackPoints(
+					intersectionPoints, originalGeometry, clippedSource, intersectionTarget);
+
+				// TODO: rename to AddNonCrackablePoints / sort out whether drawing can happen straight from List<CrackPoint>
+				featureVertexInfo.AddCrackPoints(crackPoints);
+
+				if (intersectionTarget != null && intersectionTarget != targetGeometry)
+				{
+					Marshal.ReleaseComObject(intersectionTarget);
+				}
+
+				Marshal.ReleaseComObject(targetGeometry);
+			}
+			catch (Exception e)
+			{
+				string message =
+					$"Error calculationg crack points with target feature {RowFormat.Format(targetFeature)}: {e.Message}";
+
+				_msg.Debug(message, e);
+
+				if (crackPointCalculator.ContinueOnException)
+				{
+					crackPointCalculator.FailedOperations.Add(sourceFeature.OID, message);
+				}
+				else
+				{
+					throw;
+				}
+			}
+
+			_msg.DebugStopTiming(watch, "Calculated and processed {0} intersection points",
+			                     intersectionPoints?.PointCount);
 		}
 
 		#endregion
@@ -647,6 +712,91 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 		/// <summary>
 		/// Gets the points that are removed by the Douglas-Peucker algorithm using the specified
+		/// tolerance. Non-linear segments are handled according to the <see cref="omitNonLinearSegments"/>
+		/// parameter.
+		/// </summary>
+		/// <param name="polycurve"></param>
+		/// <param name="weedTolerance">The tolerance (max allowable offset of the original geometry).</param>
+		/// <param name="only2D">Whether the 2D distance should be compared with the weed tolerance
+		/// even if the polycurve is z-aware.</param>
+		/// <param name="inPerimeter">The area of interest</param>
+		/// <param name="omitNonLinearSegments">Whether non-linear segments should be ignored or linearized</param>
+		/// <param name="dataSpatialReference">The data spatial reference used to snap coordinates.
+		/// This is important when non-linear segments are linearized.</param>
+		/// <returns></returns>
+		public static IPointCollection GetWeedPoints(
+			[NotNull] IPolycurve polycurve,
+			double weedTolerance,
+			bool only2D,
+			[CanBeNull] IGeometry inPerimeter = null,
+			bool omitNonLinearSegments = true,
+			ISpatialReference dataSpatialReference = null)
+		{
+			// NOTE regarding standard weed/generalize:
+			// For non-linear segments, it is not implemented in 3D and inserts arbitrary
+			// results depending on the subdivision of curves. Additionally, removing segments
+			// would require a simplify which also inserts undesired vertices at self intersections
+			// For additional issues see repro-tests.
+			MultiPolycurve multiPolycurve = GeometryConversionUtils.CreateMultiPolycurve(
+				polycurve, omitNonLinearSegments);
+
+			if (! omitNonLinearSegments && dataSpatialReference != null)
+			{
+				// Linearization results in un-even and slighty different values. Must be snapped
+				// to avoid non-deterministic generalization.
+				Assert.NotNull(dataSpatialReference)
+				      .GetDomain(out double xOrigin, out _, out double yOrigin, out _);
+				dataSpatialReference.GetZDomain(out double zOrigin, out _);
+				double resolution = SpatialReferenceUtils.GetXyResolution(dataSpatialReference);
+
+				multiPolycurve.SnapToResolution(resolution, xOrigin, yOrigin, zOrigin);
+			}
+
+			if (! GeometryUtils.IsZAware(polycurve))
+			{
+				only2D = true;
+			}
+
+			MultiPolycurve weededPolycurve =
+				GeomUtils.Generalize(multiPolycurve, weedTolerance, only2D);
+
+			if (multiPolycurve.IsEmpty)
+			{
+				return new MultipointClass();
+			}
+
+			double xyTolerance = GeometryUtils.GetXyTolerance(polycurve);
+
+			EnvelopeXY envelopeXY =
+				inPerimeter != null
+					? GeometryConversionUtils.CreateEnvelopeXY(inPerimeter.Envelope)
+					: null;
+
+			IEnumerable<IPnt> weededPoints =
+				GeomTopoOpUtils.GetDifferencePoints(
+					multiPolycurve, weededPolycurve, xyTolerance, ! only2D);
+
+			Multipoint<IPnt> weededMultipoint = new Multipoint<IPnt>(weededPoints);
+
+			GeomTopoOpUtils.Simplify(weededMultipoint, xyTolerance);
+
+			IPointCollection result =
+				GeometryConversionUtils.CreatePointCollection(
+					polycurve, weededMultipoint.GetPoints(), envelopeXY, xyTolerance);
+
+			if (_msg.IsVerboseDebugEnabled)
+			{
+				_msg.VerboseDebug(
+					() =>
+						$"Identified {result.PointCount} points to weed. Weeded geometry: " +
+						$"{weededPolycurve}");
+			}
+
+			return result;
+		}
+
+		/// <summary>
+		/// Gets the points that are removed by the Douglas-Peucker algorithm using the specified
 		/// tolerance. Non-linear segments are ignored as IPolycurve.Generalize adds additional vertices. 
 		/// </summary>
 		/// <param name="polycurve"></param>
@@ -654,7 +804,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 		/// <param name="only2D"></param>
 		/// <param name="inPerimeter"></param>
 		/// <returns></returns>
-		public static IPointCollection GetWeedPoints(
+		public static IPointCollection GetWeedPointsLegacy(
 			[NotNull] IPolycurve polycurve, double weedTolerance, bool only2D,
 			[CanBeNull] IGeometry inPerimeter)
 		{
@@ -772,7 +922,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 
 				GeometryUtils.Simplify(multipatchAsPolyline, true, true);
 
-				weededPoints = GetWeedPoints(multipatchAsPolyline, tolerance, false, perimeter);
+				weededPoints =
+					GetWeedPoints(multipatchAsPolyline, tolerance, false, perimeter);
 			}
 			else
 			{
@@ -1024,6 +1175,12 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				if (! resultGeometries.TryGetValue(feature, out updateGeometry))
 				{
 					updateGeometry = feature.ShapeCopy;
+
+					if (vertexInfo.LinearizeSegments && updateGeometry is IPolycurve polycurve)
+					{
+						GeometryUtils.EnsureLinearized(polycurve, 0);
+					}
+
 					resultGeometries.Add(feature, updateGeometry);
 				}
 

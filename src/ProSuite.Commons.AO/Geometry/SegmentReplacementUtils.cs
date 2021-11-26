@@ -365,7 +365,7 @@ namespace ProSuite.Commons.AO.Geometry
 					IGeometry highLevelRing = GeometryUtils.GetHighLevelGeometry(ring, true);
 
 					startPoint.Z = GeometryUtils.GetZValueFromGeometry(highLevelRing,
-					                                                   result.FromPoint);
+						result.FromPoint);
 
 					Marshal.ReleaseComObject(highLevelRing);
 
@@ -456,7 +456,7 @@ namespace ProSuite.Commons.AO.Geometry
 			if (segmentIndex == null)
 			{
 				throw new InvalidOperationException(string.Format("No segment found at {0}, {1}",
-				                                                  segmentPoint.X, segmentPoint.Y));
+					                                    segmentPoint.X, segmentPoint.Y));
 			}
 
 			return segmentIndex.Value;
@@ -487,7 +487,7 @@ namespace ProSuite.Commons.AO.Geometry
 			if (segmentIndex == null)
 			{
 				throw new InvalidOperationException(string.Format("No segment found at {0}, {1}",
-				                                                  segmentPoint.X, segmentPoint.Y));
+					                                    segmentPoint.X, segmentPoint.Y));
 			}
 
 			return segmentIndex.Value;
@@ -521,8 +521,8 @@ namespace ProSuite.Commons.AO.Geometry
 			Assert.False(segmentPoint.IsEmpty, "segmentPoint parameter must not be empty.");
 
 			int? segmentIndex = GeometryUtils.FindHitSegmentIndex(geometry, segmentPoint,
-			                                                      searchTolerance,
-			                                                      out partIndex);
+				searchTolerance,
+				out partIndex);
 
 			if (segmentIndex == null)
 			{
@@ -703,7 +703,7 @@ namespace ProSuite.Commons.AO.Geometry
 			IPoint toPoint = cutSegment.ToPoint;
 
 			double vertexDistanceToFromPoint = GeometryUtils.GetPointDistance3D(vertex,
-			                                                                    fromPoint);
+				fromPoint);
 			double vertexDistanceToToPoint = GeometryUtils.GetPointDistance3D(vertex, toPoint);
 
 			var collection = inGeometry as IGeometryCollection;
@@ -779,7 +779,8 @@ namespace ProSuite.Commons.AO.Geometry
 				    segment.Length - distanceAlong < minimumSegmentLength)
 				{
 					_msg.VerboseDebug(
-						() => $"Unable to insert vertex because of violated minimum segment length. Distance along segment: {distanceAlong}, segment: {segment.Length}");
+						() =>
+							$"Unable to insert vertex because of violated minimum segment length. Distance along segment: {distanceAlong}, segment: {segment.Length}");
 
 					return false;
 				}
@@ -797,7 +798,7 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				// not the same as global segment index!
 				int globalPointIndex = GeometryUtils.GetGlobalIndex((IGeometry) allSegments,
-				                                                    partIndex, localSegmentIndex);
+					partIndex, localSegmentIndex);
 
 				UpdateVertex(vertex, globalPointIndex, (ICurve) allSegments, false);
 			}
@@ -888,8 +889,8 @@ namespace ProSuite.Commons.AO.Geometry
 			const bool assumeIntersecting = true;
 			var intersections =
 				(IPointCollection) IntersectionUtils.GetIntersectionPoints(originalGeometry,
-				                                                           replacementGeometry,
-				                                                           assumeIntersecting);
+					replacementGeometry,
+					assumeIntersecting);
 
 			_msg.DebugFormat(
 				"Found {0} intersections (potential phantom point inserts) between original and replacement geometry",
@@ -1326,7 +1327,9 @@ namespace ProSuite.Commons.AO.Geometry
 			Assert.ArgumentCondition(geometry is ISegmentCollection,
 			                         "geometry must be ISegmentCollection");
 
-			_msg.VerboseDebug(() => $"Retrieving segment {localSegmentIndex} from part {partIndex} in geometry {GeometryUtils.ToString(geometry)}");
+			_msg.VerboseDebug(
+				() =>
+					$"Retrieving segment {localSegmentIndex} from part {partIndex} in geometry {GeometryUtils.ToString(geometry)}");
 
 			var geometryCollection = geometry as IGeometryCollection;
 
@@ -1353,8 +1356,8 @@ namespace ProSuite.Commons.AO.Geometry
 			bool pointIsSegmentFromPoint)
 		{
 			IList<int> foundIndexes2D = GeometryUtils.FindSegmentIndices(segmentCollection,
-			                                                             segmentPoint,
-			                                                             searchToleranceXy);
+				segmentPoint,
+				searchToleranceXy);
 
 			foreach (int foundIndex in foundIndexes2D)
 			{
@@ -1621,8 +1624,8 @@ namespace ProSuite.Commons.AO.Geometry
 						}
 
 						int localSegmentIndex = GetLocalSegmentIndex(fromPolycurve,
-						                                             absSegmentIndex,
-						                                             segmentInfo.iPart);
+							absSegmentIndex,
+							segmentInfo.iPart);
 
 						if (TryRemoveSegment(fromPolycurve, localSegmentIndex,
 						                     segmentInfo.iPart, protectedPoints))
@@ -1672,7 +1675,7 @@ namespace ProSuite.Commons.AO.Geometry
 			{
 				IList<esriSegmentInfo> remainingShortSegmentInfos =
 					GeometryUtils.GetShortSegments(polycurve,
-					                               minimumSegmentLength, inPerimeter);
+					                               minimumSegmentLength, inPerimeter, use3DLength);
 
 				shortSegmentDeleted = DeleteShortestSegment(polycurve,
 				                                            remainingShortSegmentInfos,
@@ -1785,9 +1788,9 @@ namespace ProSuite.Commons.AO.Geometry
 		{
 			bool removeEntireSegment;
 			int? localVertexToRemove = GetLocalVertexIndexToRemove(localSegmentIndex, partIndex,
-			                                                       fromGeometry,
-			                                                       protectedPoints,
-			                                                       out removeEntireSegment);
+				fromGeometry,
+				protectedPoints,
+				out removeEntireSegment);
 
 			return localVertexToRemove != null || removeEntireSegment;
 		}
@@ -1801,9 +1804,9 @@ namespace ProSuite.Commons.AO.Geometry
 			// because point removal (sometimes) leads to the destruction of adjacent non-linear segments
 			bool removeEntireSegment;
 			int? localVertexToRemove = GetLocalVertexIndexToRemove(localSegmentIndex, partIndex,
-			                                                       fromGeometry,
-			                                                       protectedPoints,
-			                                                       out removeEntireSegment);
+				fromGeometry,
+				protectedPoints,
+				out removeEntireSegment);
 
 			if (removeEntireSegment)
 			{
@@ -1833,8 +1836,8 @@ namespace ProSuite.Commons.AO.Geometry
 			var segmentCollection = (ISegmentCollection) fromGeometry;
 
 			int globalSegmentIndex = GeometryUtils.GetGlobalSegmentIndex(fromGeometry,
-			                                                             partIndex,
-			                                                             localSegmentIndex);
+				partIndex,
+				localSegmentIndex);
 
 			var segmentsToRemove = new List<int> {globalSegmentIndex};
 

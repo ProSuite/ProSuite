@@ -130,6 +130,64 @@ namespace ProSuite.Commons.Geom
 			return true;
 		}
 
+		/// <summary>
+		/// Determines whether <see cref="geometry1"/> is contained in <see cref="geometry2"/>.
+		/// </summary>
+		/// <param name="geometry1">The test geometry.</param>
+		/// <param name="geometry2">The containing geometry.</param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		public static bool IsContained([NotNull] IBoundedXY geometry1,
+		                               [NotNull] IBoundedXY geometry2,
+		                               double tolerance)
+		{
+			return IsContained(
+				geometry1.XMin, geometry1.YMin, geometry1.XMax, geometry1.YMax,
+				geometry2.XMin, geometry2.YMin, geometry2.XMax, geometry2.YMax,
+				tolerance);
+		}
+
+		/// <summary>
+		/// Determines whether box1 is contained in box2.
+		/// </summary>
+		/// <param name="box1XMin"></param>
+		/// <param name="box1YMin"></param>
+		/// <param name="box1XMax"></param>
+		/// <param name="box1YMax"></param>
+		/// <param name="box2XMin"></param>
+		/// <param name="box2YMin"></param>
+		/// <param name="box2XMax"></param>
+		/// <param name="box2YMax"></param>
+		/// <param name="tolerance"></param>
+		/// <returns></returns>
+		public static bool IsContained(
+			double box1XMin, double box1YMin, double box1XMax, double box1YMax,
+			double box2XMin, double box2YMin, double box2XMax, double box2YMax,
+			double tolerance)
+		{
+			if (box1XMax + tolerance > box2XMax)
+			{
+				return false;
+			}
+
+			if (box1XMin - tolerance < box2XMin)
+			{
+				return false;
+			}
+
+			if (box1YMax + tolerance > box2YMax)
+			{
+				return false;
+			}
+
+			if (box1YMin - tolerance < box2YMin)
+			{
+				return false;
+			}
+
+			return true;
+		}
+
 		public static bool AreEqual<T>([NotNull] T pnt1, [NotNull] T pnt2,
 		                               double xyTolerance, double zTolerance) where T : IPnt
 		{
@@ -457,7 +515,7 @@ namespace ProSuite.Commons.Geom
 		/// counter-clockwise.</param>
 		/// <returns>Null, if the point is on the boundary, true if the point is inside the ring.</returns>
 		public static bool? AreaContainsXY([NotNull] Linestring closedRing,
-		                                   [NotNull] Pnt3D testPoint,
+		                                   [NotNull] IPnt testPoint,
 		                                   double tolerance,
 		                                   bool disregardingOrientation = false)
 		{
@@ -498,7 +556,7 @@ namespace ProSuite.Commons.Geom
 		/// <param name="tolerance"></param>
 		/// <returns>Null, if the point is on the boundary, true if the point is inside the ring.</returns>
 		public static bool? AreaContainsXY([NotNull] ISegmentList closedRings,
-		                                   [NotNull] Pnt3D testPoint,
+		                                   [NotNull] IPnt testPoint,
 		                                   double tolerance)
 		{
 			Assert.ArgumentCondition(closedRings.IsClosed, "Rings must be closed");

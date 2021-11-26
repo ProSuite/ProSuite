@@ -34,6 +34,43 @@ namespace ProSuite.Commons.Geom
 		/// Returns the difference between source and target.
 		/// </summary>
 		/// <returns>The difference, i.e. source areas that are not part of the target.</returns>
+		public MultiLinestring IntersectXY()
+		{
+			Assert.ArgumentCondition(_subcurveNavigator.Source.IsClosed, "Source must be closed.");
+			Assert.ArgumentCondition(_subcurveNavigator.Target.IsClosed, "Target must be closed.");
+
+			// Based on Weiler–Atherton clipping algorithm, added specific logic for linear intersections and multi-parts.
+			IList<Linestring> rightRings = GetRightSideRings(true, true);
+
+			// Build the result polygons from the outer rings:
+			List<RingGroup> resultPolys = ExtractOuterRings(rightRings);
+
+			var containedTargetRings =
+				_subcurveNavigator.GetTargetRingsCompletelyWithinSource().ToList();
+
+			resultPolys.AddRange(ExtractOuterRings(containedTargetRings));
+
+			// Now assign the left over inner rings from the rightRings (cut rings and source islands inside the target)
+			// and from the containedTargetRings (i.e. target islands inside the source).
+			var unassignedInnerRings = new MultiPolycurve(new List<Linestring>(0));
+			AssignInteriorRings(rightRings, resultPolys, unassignedInnerRings,
+			                    _subcurveNavigator.Tolerance);
+			AssignInteriorRings(containedTargetRings, resultPolys, unassignedInnerRings,
+			                    _subcurveNavigator.Tolerance);
+
+			Assert.AreEqual(0, unassignedInnerRings.PartCount,
+			                "Unexpected un-assignable interior ring.");
+
+			// Assign closed cut lines completely contained by an outer ring (and not by an inner ring)
+			List<MultiLinestring> results = new List<MultiLinestring>(resultPolys);
+
+			return new MultiPolycurve(results);
+		}
+
+		/// <summary>
+		/// Returns the difference between source and target.
+		/// </summary>
+		/// <returns>The difference, i.e. source areas that are not part of the target.</returns>
 		public MultiLinestring DifferenceXY()
 		{
 			Assert.ArgumentCondition(_subcurveNavigator.Source.IsClosed, "Source must be closed.");
@@ -276,35 +313,6 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
-		/// Calculates the overlap between the source and the target. If the target is disjoint or within
-		/// the source, an empty list is returned.
-		/// </summary>
-		/// <returns></returns>
-		public IList<Linestring> IntersectXY()
-		{
-			Assert.True(_sourceRing.ClockwiseOriented == true,
-			            "The source is not oriented clockwise or it is vertical.");
-			Assert.True(_target.IsClosed, "The target is not a closed linestring.");
-
-			Assert.NotNull(_target.ClockwiseOriented, "The target is vertical");
-
-			if (SourceEqualsTargetXY())
-			{
-				// Target equals source in XY - return source if both are positive:
-				Linestring resultRing =
-					IsExterior(_sourceRing) && IsExterior(_target)
-						? _sourceRing.Clone()
-						: Linestring.CreateEmpty();
-
-				return new List<Linestring> {resultRing};
-			}
-
-			return _target.ClockwiseOriented.Value
-				       ? GetRightSideRings()
-				       : GetLeftSideRings();
-		}
-
-		/// <summary>
 		/// Cuts the source ring using the target and returns separate lists 
 		/// of result rings on the left/right side of the cut line.
 		/// </summary>
@@ -393,6 +401,31 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return assignmentCount;
+		}
+
+		/// <summary>
+		/// Creates the list of result ring groups with the rings from the collection of input
+		/// rings that have positive orientation (outer rings). They are removed from the input
+		/// list.
+		/// </summary>
+		/// <param name="fromRings"></param>
+		/// <returns></returns>
+		private static List<RingGroup> ExtractOuterRings(
+			[NotNull] ICollection<Linestring> fromRings)
+		{
+			var result = new List<RingGroup>();
+
+			foreach (Linestring processedResultRing in fromRings.ToList())
+			{
+				if (processedResultRing.ClockwiseOriented != false)
+				{
+					result.Add(new RingGroup(processedResultRing));
+					fromRings.Remove(processedResultRing);
+				}
+				else { }
+			}
+
+			return result;
 		}
 
 		/// <summary>
@@ -512,10 +545,41 @@ namespace ProSuite.Commons.Geom
 				_subcurveNavigator.IntersectionsInboundTarget.ToList());
 		}
 
-		private IList<Linestring> GetRightSideRings()
+		private IList<Linestring> GetRightSideRings(bool includeEqualRings = false,
+		                                            bool includeInsideRings = false)
 		{
-			return _subcurveNavigator.FollowSubcurvesClockwise(
+			IList<Linestring> result = _subcurveNavigator.FollowSubcurvesClockwise(
 				_subcurveNavigator.IntersectionsOutboundTarget.ToList());
+
+			if (includeEqualRings)
+			{
+				foreach (IntersectionPoint3D intersectionPoint in
+					_subcurveNavigator.GetEqualRingsSourceStartIntersection())
+				{
+					Linestring sourceRing =
+						_subcurveNavigator.Source.GetPart(intersectionPoint.SourcePartIndex);
+					Linestring targetRing =
+						_subcurveNavigator.Target.GetPart(intersectionPoint.TargetPartIndex);
+
+					if (sourceRing.ClockwiseOriented != null &&
+					    sourceRing.ClockwiseOriented == targetRing.ClockwiseOriented)
+					{
+						// The interior of a positive ring is on the right side of another positive ring
+						result.Add(sourceRing);
+					}
+				}
+			}
+
+			if (includeInsideRings)
+			{
+				foreach (Linestring containedSourceRing in
+					_subcurveNavigator.GetSourceRingsCompletelyWithinTarget())
+				{
+					result.Add(containedSourceRing);
+				}
+			}
+
+			return result;
 		}
 
 		private IList<Tuple<Linestring, Linestring>> GetEqualBoundaryRingPairs()
@@ -737,8 +801,8 @@ namespace ProSuite.Commons.Geom
 				polygon.RemoveLinestring(containingRing);
 
 				Linestring withBoundaryLoop = CreateWithBoundaryLoop(containingRing, interiorRing,
-				                                                     outerRingIntersection,
-				                                                     tolerance);
+					outerRingIntersection,
+					tolerance);
 
 				polygon.InsertLinestring(parentRingIdx, withBoundaryLoop);
 			}

@@ -154,7 +154,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return new SimpleTerrain(dataset.Name, terrainSources, dataset.PointDensity, null);
 		}
 
-		public SimpleRasterMosaic OpenSimpleRasterMosaic(ISimpleRasterMosaicDataset dataset)
+		public SimpleRasterMosaic OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
 			// TODO: Just send the catalog & boundary feature class, assuming the raster paths
 			//       are accessible from anywhere

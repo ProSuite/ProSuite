@@ -7,7 +7,6 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Validation;
-using ProSuite.Commons.Xml;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
@@ -307,28 +306,17 @@ namespace ProSuite.DomainModel.Core.DataModel
 				return dataset;
 			}
 
-			XmlSerializationHelper<XmlSimpleTerrainDataset> terrainHelper =
-				new XmlSerializationHelper<XmlSimpleTerrainDataset>();
-			if (terrainHelper.CanDeserializeString(name))
+			// TODO: Create ModelExtensions that can be added dynamically?
+			// ModelExtensions.FirstOrDefault(me => me.CanCreateDataset(name))?.Create(name, (dsName) => GetDatasetByModelName(dsName) as VectorDataset));
+
+			// Do we need this? Should we add XmlModelExtensions that transport things like simple terrains?
+			if (ModelSimpleTerrainDataset.CanCreateDataset(name))
 			{
-				var key = SimpleTerrainDatasetUtils.Create(
-					xmlDefinition: name,
-					(dsName) => GetDatasetByModelName(dsName) as VectorDataset);
+				var terrainDataset = ModelSimpleTerrainDataset.Create(name, this,
+					dsName => GetDatasetByModelName(dsName));
 
-				key.Model = this;
-
-				_terrainDatasets = _terrainDatasets ??
-				                   new Dictionary<SimpleTerrainDataset, SimpleTerrainDataset>(
-					                   new SimpleTerrainDataset.Comparer());
-				if (_terrainDatasets.TryGetValue(key, out SimpleTerrainDataset existing))
-				{
-					dataset = existing;
-				}
-				else
-				{
-					_terrainDatasets.Add(key, key);
-					dataset = key;
-				}
+				_datasets.Add(terrainDataset);
+				_datasetIndex.Add(name, terrainDataset);
 			}
 
 			return dataset;

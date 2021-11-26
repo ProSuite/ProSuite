@@ -62,7 +62,7 @@ namespace ProSuite.QA.ServiceManager
 		{
 			var service = GetQAService(request.ServiceType);
 			if (service == null)  // throw? 
-				return new ProSuiteQAResponse()
+				return new ProSuiteQAResponse
 				{
 					Error = ProSuiteQAError.ServiceUnavailable
 				};

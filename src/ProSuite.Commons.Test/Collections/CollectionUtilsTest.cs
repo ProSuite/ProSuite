@@ -379,7 +379,7 @@ namespace ProSuite.Commons.Test.Collections
 			// and is defined in class CollectionUtils.
 
 			string[] seq = {"foo", "bar", "linq", "quux"};
-			var empty = new string[0];
+			var empty = Array.Empty<string>();
 
 			Assert.AreEqual("linq", seq.MaxElement(s => s.Length));
 
@@ -403,7 +403,7 @@ namespace ProSuite.Commons.Test.Collections
 			// MaxElementOrDefault() extends IEnumerable<T>
 			// and is defined in class CollectionUtils.
 
-			var empty = new string[0];
+			var empty = Array.Empty<string>();
 			string[] seq = {"foo", "bar", "linq", "quux"};
 
 			Assert.IsNull(empty.MaxElementOrDefault(s => s.Length));

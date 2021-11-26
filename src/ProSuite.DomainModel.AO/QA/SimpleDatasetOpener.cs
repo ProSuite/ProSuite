@@ -46,7 +46,7 @@ namespace ProSuite.DomainModel.AO.QA
 					return _datasetContext.OpenTerrainReference(simpleTerrainDataset);
 				}
 
-				if (dataset is ISimpleRasterMosaicDataset simpleRasterMosaicDataset)
+				if (dataset is IRasterMosaicDataset simpleRasterMosaicDataset)
 				{
 					return _datasetContext.OpenSimpleRasterMosaic(simpleRasterMosaicDataset);
 				}
@@ -89,8 +89,7 @@ namespace ProSuite.DomainModel.AO.QA
 					(IDdxRasterDataset) dataset);
 
 			if (typeof(SimpleRasterMosaic) == knownType)
-				return _datasetContext.OpenSimpleRasterMosaic(
-					(ISimpleRasterMosaicDataset) dataset);
+				return _datasetContext.OpenSimpleRasterMosaic((IRasterMosaicDataset) dataset);
 
 			if (typeof(TerrainReference) == knownType)
 				return _datasetContext.OpenTerrainReference((ISimpleTerrainDataset) dataset);

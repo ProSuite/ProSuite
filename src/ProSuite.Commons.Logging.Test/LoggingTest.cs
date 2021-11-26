@@ -1,3 +1,4 @@
+using System;
 using log4net;
 using NUnit.Framework;
 
@@ -10,7 +11,7 @@ namespace ProSuite.Commons.Logging.Test
 		public void CanConfigure()
 		{
 			const string fileName = "NoSuchFileHere";
-			var searchDirs = new string[0];
+			var searchDirs = Array.Empty<string>();
 			const bool useDefaultConfiguration = true;
 
 			// Must not throw because a log config file is considered optional!

@@ -266,6 +266,15 @@ namespace ProSuite.QA.TestFactories {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to list of fields to check. If defined, only field values belonging to &apos;fields&apos; get validated. Otherwise, all field values get validated..
+        /// </summary>
+        internal static string QaGdbConstraintFactory_Fields {
+            get {
+                return ResourceManager.GetString("QaGdbConstraintFactory_Fields", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to table with subtypes and domains.
         /// </summary>
         internal static string QaGdbConstraintFactory_table {

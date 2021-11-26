@@ -21,6 +21,19 @@ namespace ProSuite.Commons.AGP.Carto
 {
 	public static class MapUtils
 	{
+		/// <summary>
+		/// Asserts an active MapView.
+		/// </summary>
+		/// <returns>a not null map</returns>
+		[NotNull]
+		public static Map GetActiveMap()
+		{
+			MapView mapView = MapView.Active;
+			Assert.NotNull(mapView, "no active MapView");
+
+			return mapView.Map;
+		}
+
 		[NotNull]
 		public static Dictionary<Table, List<long>> GetDistinctSelectionByTable(
 			[NotNull] IEnumerable<BasicFeatureLayer> layers)
@@ -28,7 +41,7 @@ namespace ProSuite.Commons.AGP.Carto
 			var result = new Dictionary<Table, SimpleSet<long>>();
 			var distinctTableIds = new Dictionary<GdbTableIdentity, Table>();
 
-			foreach (BasicFeatureLayer layer in layers.Where(HasSelection))
+			foreach (BasicFeatureLayer layer in layers.Where(LayerUtils.HasSelection))
 			{
 				IEnumerable<long> selection = layer.GetSelectionOids();
 
@@ -72,7 +85,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 				if (! result.ContainsKey(geodatabase))
 				{
-					result.Add(geodatabase, new SimpleSet<Table> {table});
+					result.Add(geodatabase, new SimpleSet<Table> { table });
 				}
 				else
 				{
@@ -275,7 +288,7 @@ namespace ProSuite.Commons.AGP.Carto
 					IEnumerable<Feature> foundFeatures = GdbQueryUtils
 					                                     .GetFeatures(featureClass, filter, false)
 					                                     .Where(f => featurePredicate == null ||
-						                                            featurePredicate(f));
+					                                                 featurePredicate(f));
 					features.AddRange(foundFeatures);
 				}
 
@@ -287,7 +300,6 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
-		// todo daro move to LayerUtils?
 		public static IEnumerable<T> GetLayers<T>([CanBeNull] Predicate<T> layerPredicate)
 			where T : Layer
 		{
@@ -311,6 +323,25 @@ namespace ProSuite.Commons.AGP.Carto
 				    layerPredicate(matchingTypeLayer))
 				{
 					yield return matchingTypeLayer;
+				}
+			}
+		}
+
+		public static IEnumerable<StandaloneTable> GetStandaloneTables(
+			[CanBeNull] Predicate<StandaloneTable> tablePredicate)
+		{
+			MapView mapView = MapView.Active;
+
+			if (mapView == null)
+			{
+				yield break;
+			}
+
+			foreach (StandaloneTable table in mapView.Map.StandaloneTables)
+			{
+				if (tablePredicate == null || tablePredicate(table))
+				{
+					yield return table;
 				}
 			}
 		}
@@ -517,14 +548,12 @@ namespace ProSuite.Commons.AGP.Carto
 			BasicFeatureLayer layer, Geometry filterGeometry,
 			SpatialRelationship spatialRelationship = SpatialRelationship.Intersects)
 		{
-			var qf = new SpatialQueryFilter()
-			         {
-				         FilterGeometry = filterGeometry,
-				         SpatialRelationship = spatialRelationship
-			         };
+			QueryFilter filter =
+				GdbQueryUtils.CreateSpatialFilter(filterGeometry, spatialRelationship);
+
 			var features = new List<Feature>();
 
-			using (RowCursor rowCursor = layer.Search(qf))
+			using (RowCursor rowCursor = layer.Search(filter))
 			{
 				while (rowCursor.MoveNext())
 				{
@@ -542,14 +571,12 @@ namespace ProSuite.Commons.AGP.Carto
 			BasicFeatureLayer layer, Geometry filterGeometry,
 			SpatialRelationship spatialRelationship = SpatialRelationship.Intersects)
 		{
-			var qf = new SpatialQueryFilter()
-			         {
-				         FilterGeometry = filterGeometry,
-				         SpatialRelationship = spatialRelationship
-			         };
+			QueryFilter filter =
+				GdbQueryUtils.CreateSpatialFilter(filterGeometry, spatialRelationship);
+
 			var oids = new List<long>();
 
-			using (RowCursor rowCursor = layer.Search(qf))
+			using (RowCursor rowCursor = layer.Search(filter))
 			{
 				while (rowCursor.MoveNext())
 				{
@@ -585,11 +612,6 @@ namespace ProSuite.Commons.AGP.Carto
 			return GeometryEngine.Instance.Distance(mapPoint, radiusMapPoint);
 		}
 
-		public static bool HasSelection([CanBeNull] BasicFeatureLayer featureLayer)
-		{
-			return featureLayer?.SelectionCount > 0;
-		}
-
 		public static bool HasSelection([CanBeNull] MapView mapView)
 		{
 			return mapView?.Map?.SelectionCount > 0;
@@ -605,21 +627,6 @@ namespace ProSuite.Commons.AGP.Carto
 			this IEnumerable<BasicFeatureLayer> layers)
 		{
 			return layers.Distinct(new BasicFeatureLayerComparer());
-		}
-
-		public static IEnumerable<T> GetRows<T>([NotNull] BasicFeatureLayer layer,
-		                                        [CanBeNull] QueryFilter filter = null)
-			where T : Row
-		{
-			Assert.ArgumentNotNull(layer, nameof(layer));
-
-			using (RowCursor cursor = layer.Search(filter))
-			{
-				while (cursor.MoveNext())
-				{
-					yield return (T) cursor.Current;
-				}
-			}
 		}
 
 		public static async Task<bool> FlashGeometryAsync(
@@ -697,6 +704,59 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 
 			return true;
+		}
+
+		[NotNull]
+		public static IEnumerable<string> GetUri(Map map, [NotNull] string mapMemberName)
+		{
+			Assert.ArgumentNotNull(mapMemberName, nameof(mapMemberName));
+
+			MapView mapView = MapView.Active;
+
+			// todo daro What if mapMember is map itself? Can it be found with this method?
+			return mapView == null
+				       ? Enumerable.Empty<string>()
+				       : map.FindLayers(mapMemberName).Select(GetUri);
+		}
+
+		[NotNull]
+		public static string GetUri([NotNull] MapMember mapMember)
+		{
+			return mapMember.URI;
+		}
+
+		public static IEnumerable<Layer> FindLayers([NotNull] string name,
+		                                            bool recursive = true)
+		{
+			Assert.ArgumentNotNull(name, nameof(name));
+
+			MapView mapView = MapView.Active;
+
+			return mapView == null
+				       ? Enumerable.Empty<Layer>()
+				       : mapView.Map.FindLayers(name, recursive);
+		}
+
+		[CanBeNull]
+		public static Layer GetLayer([NotNull] string uri, bool recursive = true)
+		{
+			Assert.ArgumentNotNull(uri, nameof(uri));
+
+			MapView mapView = MapView.Active;
+
+			return mapView.Map.FindLayer(uri, recursive);
+		}
+
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="map"></param>
+		/// <remarks>Doesn't throw an exception if there is no map</remarks>
+		/// <returns></returns>
+		public static IEnumerable<T> GetLayers<T>([CanBeNull] this Map map) where T : Layer
+		{
+			return map == null ? Enumerable.Empty<T>() : map.GetLayersAsFlattenedList().OfType<T>();
 		}
 	}
 

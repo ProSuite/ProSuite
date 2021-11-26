@@ -10,7 +10,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.AGP.WorkList
 {
 	[UsedImplicitly]
-	public class WorklistChangedEvent : RegisteredPresentationEvent<object, WorkListChangedEventArgs>
+	public class WorkListChangedEvent : RegisteredPresentationEvent<object, WorkListChangedEventArgs>
 	{
 		private readonly HashSet<SubscriptionToken> _tokens = new HashSet<SubscriptionToken>();
 
@@ -18,24 +18,24 @@ namespace ProSuite.AGP.WorkList
 		public static SubscriptionToken Subscribe(Func<WorkListChangedEventArgs, Task> action,
 		                                          object receiver, bool keepSubscriberAlive = false)
 		{
-			return FrameworkApplication.EventAggregator.GetEvent<WorklistChangedEvent>()
+			return FrameworkApplication.EventAggregator.GetEvent<WorkListChangedEvent>()
 			                           .Register(receiver, action, keepSubscriberAlive);
 		}
 
 		public static void Unsubscribe(Func<WorkListChangedEventArgs, Task> action)
 		{
-			FrameworkApplication.EventAggregator.GetEvent<WorklistChangedEvent>()
+			FrameworkApplication.EventAggregator.GetEvent<WorkListChangedEvent>()
 			                    .Unregister(action);
 		}
 
 		public static void Unsubscribe(SubscriptionToken token)
 		{
-			FrameworkApplication.EventAggregator.GetEvent<WorklistChangedEvent>().Unregister(token);
+			FrameworkApplication.EventAggregator.GetEvent<WorkListChangedEvent>().Unregister(token);
 		}
 
 		public static async Task PublishAsync(WorkListChangedEventArgs e)
 		{
-			await FrameworkApplication.EventAggregator.GetEvent<WorklistChangedEvent>()
+			await FrameworkApplication.EventAggregator.GetEvent<WorkListChangedEvent>()
 			                          .BroadcastAsync(e);
 		}
 
@@ -55,7 +55,7 @@ namespace ProSuite.AGP.WorkList
 			if (_tokens.Contains(token))
 			{
 				Assert.True(_tokens.Remove(token), "{0} was not subscribed",
-				            nameof(WorklistChangedEvent));
+				            nameof(WorkListChangedEvent));
 			}
 		}
 	}

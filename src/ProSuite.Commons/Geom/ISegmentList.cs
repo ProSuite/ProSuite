@@ -120,5 +120,7 @@ namespace ProSuite.Commons.Geom
 		int GetLocalSegmentIndex(int globalSegmentIndex, out int linestringIndex);
 
 		int GetGlobalSegmentIndex(int linestringIndex, int localSegmentIndex);
+
+		void ReverseOrientation();
 	}
 }

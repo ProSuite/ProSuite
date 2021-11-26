@@ -20,7 +20,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 		private void OnCloseExecuted(object sender, ExecutedRoutedEventArgs e)
 		{
-			this.Close();
+			Close();
 		}
 
 		private void Window_Deactivated(object sender, EventArgs e)

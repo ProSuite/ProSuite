@@ -100,20 +100,12 @@ namespace ProSuite.Commons.AGP.Carto
 				yield break;
 			}
 
-			RowCursor cursor = selection.Search(null, false);
-
-			try
+			using (RowCursor cursor = selection.Search(null, false))
 			{
 				while (cursor.MoveNext())
 				{
-					var feature = (Feature) cursor.Current;
-
-					yield return feature;
+					yield return (Feature) cursor.Current;
 				}
-			}
-			finally
-			{
-				cursor.Dispose();
 			}
 		}
 	}

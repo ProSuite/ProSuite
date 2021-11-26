@@ -88,12 +88,13 @@ namespace ProSuite.Commons.Geom
 
 			if (Count != other.Count)
 			{
+				// Check number of linestrings
 				return false;
 			}
 
 			for (int i = 0; i < Count; i++)
 			{
-				if (! this[i].Equals(other[i]))
+				if (! GetLinestring(i).Equals(other.GetLinestring(i)))
 				{
 					return false;
 				}
@@ -313,6 +314,22 @@ namespace ProSuite.Commons.Geom
 			int partStartIndex = _startSegmentIndexes[partIndex] + partIndex;
 
 			return partStartIndex + localPointIndex;
+		}
+
+		public void SnapToResolution(double resolution,
+		                             double xOrigin,
+		                             double yOrigin,
+		                             double zOrigin = double.NaN)
+		{
+			InitializeBounds();
+
+			foreach (Linestring linestring in Linestrings)
+			{
+				linestring.SnapToResolution(resolution, xOrigin, yOrigin, zOrigin);
+				UpdateBounds(linestring);
+			}
+
+			SpatialIndex = null;
 		}
 
 		#endregion
@@ -545,6 +562,67 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		public IEnumerable<int> FindParts(
+			IBoundedXY searchGeometry,
+			double tolerance, bool allowIndexing = true)
+		{
+			if (GeomRelationUtils.AreBoundsDisjoint(this, searchGeometry, tolerance))
+			{
+				yield break;
+			}
+
+			if (GeomRelationUtils.IsContained(this, searchGeometry, tolerance))
+			{
+				foreach (int partIdx in Enumerable.Range(0, PartCount))
+				{
+					yield return partIdx;
+				}
+			}
+
+			// Some geometries have a ridiculous amount of parts!
+			if (SpatialIndex == null && allowIndexing &&
+			    PartCount > AllowIndexingThreshold)
+			{
+				SpatialIndex = SpatialHashSearcher<SegmentIndex>.CreateSpatialSearcher(this);
+			}
+
+			HashSet<int> foundParts = new HashSet<int>(PartCount);
+
+			if (SpatialIndex != null)
+			{
+				foreach (SegmentIndex segmentIndex in SpatialIndex.Search(
+					searchGeometry.XMin, searchGeometry.YMin, searchGeometry.XMax,
+					searchGeometry.YMax,
+					this, tolerance))
+				{
+					if (foundParts.Contains(segmentIndex.PartIndex))
+					{
+						continue;
+					}
+
+					Line3D segment = GetSegment(segmentIndex.PartIndex, segmentIndex.LocalIndex);
+
+					if (segment.ExtentIntersectsXY(searchGeometry, tolerance))
+					{
+						foundParts.Add(segmentIndex.PartIndex);
+						yield return segmentIndex.PartIndex;
+					}
+				}
+			}
+			else
+			{
+				for (int i = 0; i < PartCount; i++)
+				{
+					IBoundedXY part = GetPart(i);
+
+					if (! GeomRelationUtils.AreBoundsDisjoint(this, part, tolerance))
+					{
+						yield return i;
+					}
+				}
+			}
+		}
+
 		public void ReverseOrientation()
 		{
 			foreach (Linestring linestring in Linestrings)
@@ -595,6 +673,15 @@ namespace ProSuite.Commons.Geom
 			{
 				YMax = additionalLinestring.YMax;
 			}
+		}
+
+		private void InitializeBounds()
+		{
+			XMin = double.MaxValue;
+			YMin = double.MaxValue;
+
+			XMax = double.MinValue;
+			YMax = double.MinValue;
 		}
 
 		private void UpdateSpatialIndex([NotNull] Linestring additionalLinestring,
@@ -653,5 +740,13 @@ namespace ProSuite.Commons.Geom
 		}
 
 		public abstract MultiLinestring Clone();
+
+		public void DropZs()
+		{
+			foreach (Pnt3D point in GetPoints())
+			{
+				point.Z = double.NaN;
+			}
+		}
 	}
 }
