@@ -89,7 +89,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		public override SimpleRasterMosaic OpenSimpleRasterMosaic(
-			ISimpleRasterMosaicDataset dataset)
+			IRasterMosaicDataset dataset)
 		{
 			IMosaicDataset mosaic = DatasetUtils.OpenMosaicDataset(Workspace, dataset.Name);
 

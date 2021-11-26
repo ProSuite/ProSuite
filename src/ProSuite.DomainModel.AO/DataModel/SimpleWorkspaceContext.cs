@@ -119,7 +119,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		}
 
 		public override SimpleRasterMosaic OpenSimpleRasterMosaic(
-			ISimpleRasterMosaicDataset dataset)
+			IRasterMosaicDataset dataset)
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
 

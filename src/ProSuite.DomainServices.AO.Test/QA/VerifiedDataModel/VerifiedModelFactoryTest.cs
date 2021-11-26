@@ -47,7 +47,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 
 			int tableCount = model.GetDatasets<TableDataset>().Count;
 			int vectorCount = model.GetDatasets<VectorDataset>().Count;
-			int simpleRasterMosaicCount = model.GetDatasets<SimpleRasterMosaicDataset>().Count;
+			int simpleRasterMosaicCount = model.GetDatasets<RasterMosaicDataset>().Count;
 
 			Assert.Greater(tableCount, 0);
 			Assert.Greater(vectorCount, 0);
