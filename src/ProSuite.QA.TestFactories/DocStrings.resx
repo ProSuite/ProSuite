@@ -388,4 +388,7 @@ with
   <data name="QaTopoNotNearPolyFactory_referenceSubtypes" xml:space="preserve">
     <value>test relevant subtype codes of 'reference'. features with subtypes that are not in 'referenceSubtypes' are not tested.</value>
   </data>
+  <data name="QaGdbConstraintFactory_Fields" xml:space="preserve">
+    <value>list of fields to check. If defined, only field values belonging to 'fields' get validated. Otherwise, all field values get validated.</value>
+  </data>
 </root>

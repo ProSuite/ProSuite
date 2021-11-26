@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests.Constraints
 {
@@ -30,7 +30,8 @@ namespace ProSuite.QA.Tests.Constraints
 		public static List<ConstraintNode> GetGdbConstraints(
 			[NotNull] ITable table,
 			bool allowNullForCodedValueDomains = true,
-			bool allowNullForRangeDomains = true)
+			bool allowNullForRangeDomains = true,
+			HashSet<string> checkFields = null)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
@@ -41,14 +42,15 @@ namespace ProSuite.QA.Tests.Constraints
 				var subtypes = table as ISubtypes;
 				if (subtypes != null)
 				{
-					rootNodes.AddRange(GetAttributeRuleNodes(table,
-					                                         subtypes,
-					                                         allowNullForCodedValueDomains,
-					                                         allowNullForRangeDomains));
+					rootNodes.AddRange(GetAttributeRuleNodes(
+						                   table, subtypes,
+						                   allowNullForCodedValueDomains,
+						                   allowNullForRangeDomains,
+						                   checkFields));
 				}
 			}
 
-			if (table.HasOID)
+			if (table.HasOID && (checkFields?.Contains(table.OIDFieldName) ?? true))
 			{
 				rootNodes.Add(CreateObjectIDConstraint(table));
 			}
@@ -80,7 +82,8 @@ namespace ProSuite.QA.Tests.Constraints
 			[NotNull] ITable table,
 			[NotNull] ISubtypes subtypes,
 			bool allowNullForCodedValueDomains,
-			bool allowNullForRangeDomains)
+			bool allowNullForRangeDomains,
+			[CanBeNull] HashSet<string> checkFields_)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(subtypes, nameof(subtypes));
@@ -119,7 +122,7 @@ namespace ProSuite.QA.Tests.Constraints
 				int subtype = attributeRule.SubtypeCode;
 
 				IField field = TryGetField(table, attributeRule);
-				if (field == null)
+				if (field == null || checkFields_?.Contains(field.Name) == false)
 				{
 					continue;
 				}
@@ -130,7 +133,7 @@ namespace ProSuite.QA.Tests.Constraints
 					if (! subtypeNodes.TryGetValue(subtype, out subtypeParentNode))
 					{
 						subtypeParentNode = CreateSubtypeParentNode(subtype,
-						                                            subtypeField);
+							subtypeField);
 
 						subtypeNodes.Add(subtype, subtypeParentNode);
 
@@ -144,7 +147,7 @@ namespace ProSuite.QA.Tests.Constraints
 				if (domainConstraint != null)
 				{
 					ConstraintNode domainNode = CreateDomainValueConstraint(field,
-					                                                        domainConstraint);
+						domainConstraint);
 
 					if (subtypeParentNode != null)
 					{
