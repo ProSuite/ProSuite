@@ -139,9 +139,9 @@
     <Compile Include="Processing\CartoProcessType.cs" />
     <Compile Include="Processing\FeatureProxy.cs" />
     <Compile Include="Processing\GdbProcessCoreUtils.cs" />
-    <Compile Include="Processing\ICartoProcessGroupRepository.cs" />
-    <Compile Include="Processing\ICartoProcessRepository.cs" />
-    <Compile Include="Processing\ICartoProcessTypeRepository.cs" />
+    <Compile Include="Processing\Repositories\ICartoProcessGroupRepository.cs" />
+    <Compile Include="Processing\Repositories\ICartoProcessRepository.cs" />
+    <Compile Include="Processing\Repositories\ICartoProcessTypeRepository.cs" />
     <Compile Include="Processing\IProcessingDebug.cs" />
     <Compile Include="Processing\IProcessingFeedback.cs" />
     <Compile Include="Processing\IProcessReportBuilder.cs" />
