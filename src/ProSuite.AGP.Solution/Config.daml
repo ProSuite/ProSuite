@@ -270,6 +270,13 @@
             Select features.<disabledText />
           </tooltip>
         </tool>
+        <button id="ProSuiteTools_Selection_SelectionToolButton" caption="Select" className="Selection.SelectionToolButton"
+                loadOnClick="true" smallImage="Images\SelectionTool16.png" largeImage="Images\SelectionTool32.png"
+                condition="esri_mapping_mapPane">
+          <tooltip heading="Select">
+            Select features.<disabledText />
+          </tooltip>
+        </button>
         <tool id="ProSuiteTools_PickWorkItemTool" caption="Pick Work Item" className="Selection.PickWorkListItemTool"
               loadOnClick="true"
               smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png"

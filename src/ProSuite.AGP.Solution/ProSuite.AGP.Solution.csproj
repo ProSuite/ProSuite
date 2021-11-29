@@ -167,6 +167,7 @@
     <Compile Include="Selection\SelectionTool.cs" />
     <Compile Include="ProSuiteFacadeImpl.cs" />
     <Compile Include="ProSuiteUtils.cs" />
+    <Compile Include="Selection\SelectionToolButton.cs" />
     <Compile Include="Workflow\MapBasedSessionContext.cs" />
     <Compile Include="WorkLists\CreateIssueWorkListButton.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
