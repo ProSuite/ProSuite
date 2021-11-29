@@ -296,7 +296,7 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			[CanBeNull] CancelableProgressor progressor)
 		{
 			const TargetFeatureSelection targetFeatureSelection =
-				TargetFeatureSelection.VisibleFeatures;
+				TargetFeatureSelection.VisibleSelectableFeatures;
 
 			bool isSingleClick = false;
 			Point pickerWindowLocation = new Point();
