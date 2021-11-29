@@ -70,27 +70,65 @@ namespace ProSuite.QA.Tests.Test
 			QualityConditionParameterUtils.AddParameterValue(
 				condition, "AllowNullValuesForCodedValueDomains", false);
 
-			var factory = new QaGdbConstraintFactory {Condition = condition};
+			{
+				var factory = new QaGdbConstraintFactory {Condition = condition};
 
-			IList<ITest> tests =
-				factory.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+				IList<ITest> tests =
+					factory.CreateTests(
+						new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
 
-			Assert.AreEqual(1, tests.Count);
+				Assert.AreEqual(1, tests.Count);
 
-			var runner = new QaTestRunner(tests[0]);
+				var runner = new QaTestRunner(tests[0]);
 
-			runner.Execute();
+				runner.Execute();
 
-			Assert.AreEqual(3, runner.Errors.Count);
-			Assert.AreEqual(
-				"Domain table1_cv - Invalid value combination: CVFIELD = <null>",
-				runner.Errors[0].Description);
-			Assert.AreEqual(
-				"Domain table1_cv - Invalid value combination: CVFIELD = 4",
-				runner.Errors[1].Description);
-			Assert.AreEqual(
-				"Domain table1_range - Invalid value combination: RANGEFIELD = 200",
-				runner.Errors[2].Description);
+				Assert.AreEqual(3, runner.Errors.Count);
+				Assert.AreEqual(
+					"Domain table1_cv - Invalid value combination: CVFIELD = <null>",
+					runner.Errors[0].Description);
+				Assert.AreEqual(
+					"Domain table1_cv - Invalid value combination: CVFIELD = 4",
+					runner.Errors[1].Description);
+				Assert.AreEqual(
+					"Domain table1_range - Invalid value combination: RANGEFIELD = 200",
+					runner.Errors[2].Description);
+			}
+
+			{
+				QualityCondition condWithFields = condition.CreateCopy();
+				QualityConditionParameterUtils.AddParameterValue(
+					condWithFields, "Fields", "CvField");
+
+				var factory = new QaGdbConstraintFactory {Condition = condWithFields};
+
+				IList<ITest> tests =
+					factory.CreateTests(
+						new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+
+				Assert.AreEqual(1, tests.Count);
+				var runner = new QaTestRunner(tests[0]);
+				runner.Execute();
+				Assert.AreEqual(2, runner.Errors.Count);
+			}
+			{
+				QualityCondition condWithFields = condition.CreateCopy();
+				QualityConditionParameterUtils.AddParameterValue(
+					condWithFields, "Fields", "CvField");
+				QualityConditionParameterUtils.AddParameterValue(
+					condWithFields, "Fields", "RangeField");
+
+				var factory = new QaGdbConstraintFactory {Condition = condWithFields};
+
+				IList<ITest> tests =
+					factory.CreateTests(
+						new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+
+				Assert.AreEqual(1, tests.Count);
+				var runner = new QaTestRunner(tests[0]);
+				runner.Execute();
+				Assert.AreEqual(3, runner.Errors.Count);
+			}
 		}
 
 		[Test]
@@ -156,9 +194,8 @@ namespace ProSuite.QA.Tests.Test
 		{
 			int cvFieldIndex;
 			int rangeFieldIndex;
-			ITable table = CreateTestTable("table3",
-			                               out cvFieldIndex,
-			                               out rangeFieldIndex);
+			ITable table = CreateTestTable(
+				"table3", out cvFieldIndex, out rangeFieldIndex);
 
 			var row1 = table.CreateRow();
 			row1.Store();
@@ -205,8 +242,9 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[NotNull]
-		private ITable CreateTestTable([NotNull] string tableName, out int cvFieldIndex,
-		                               out int rangeFieldIndex)
+		private ITable CreateTestTable(
+			[NotNull] string tableName, out int cvFieldIndex,
+			out int rangeFieldIndex, IList<IField> specialFields = null)
 		{
 			IRangeDomain rangeDomain = DomainUtils.CreateRangeDomain(
 				tableName + "_range",
@@ -230,11 +268,16 @@ namespace ProSuite.QA.Tests.Test
 			IField rangeField = FieldUtils.CreateIntegerField("RangeField");
 			((IFieldEdit) rangeField).Domain_2 = (IDomain) rangeDomain;
 
+			List<IField> fields = new List<IField>
+			                      {FieldUtils.CreateOIDField(), cvField, rangeField};
+			if (specialFields != null)
+			{
+				fields.AddRange(specialFields);
+			}
+
 			ITable table = DatasetUtils.CreateTable(_testWs,
 			                                        tableName,
-			                                        FieldUtils.CreateOIDField(),
-			                                        cvField,
-			                                        rangeField);
+			                                        fields.ToArray());
 
 			cvFieldIndex = table.FindField(cvField.Name);
 			rangeFieldIndex = table.FindField(rangeField.Name);

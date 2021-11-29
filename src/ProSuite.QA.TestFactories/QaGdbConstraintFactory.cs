@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
-using ProSuite.QA.Tests;
-using ProSuite.QA.Tests.Constraints;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Core;
+using ProSuite.QA.Tests;
+using ProSuite.QA.Tests.Constraints;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -17,6 +17,8 @@ namespace ProSuite.QA.TestFactories
 	[AttributeTest]
 	public class QaGdbConstraintFactory : TestFactory
 	{
+		private const string _fields = "Fields";
+
 		private const string _allowNullValuesForCodedValueDomains =
 			"AllowNullValuesForCodedValueDomains";
 
@@ -39,7 +41,7 @@ namespace ProSuite.QA.TestFactories
 
 		public override string GetTestTypeDescription()
 		{
-			return typeof(QaConstraint).Name;
+			return nameof(QaConstraint);
 		}
 
 		protected override IList<TestParameter> CreateParameters()
@@ -63,7 +65,12 @@ namespace ProSuite.QA.TestFactories
 				                         isConstructorParameter: false)
 				       {
 					       DefaultValue = true
-				       }
+				       },
+				       new TestParameter(_fields,
+				                         typeof(IList<string>),
+				                         description: DocStrings
+					                         .QaGdbConstraintFactory_Fields,
+				                         isConstructorParameter: false),
 			       }.AsReadOnly();
 		}
 
@@ -87,7 +94,7 @@ namespace ProSuite.QA.TestFactories
 			Assert.AreEqual(1, constructorArguments.Length,
 			                "unexpected constructor argument count");
 
-			var allArguments = new List<object>(3) {constructorArguments[0]};
+			var allArguments = new List<object>(4) {constructorArguments[0]};
 
 			foreach (TestParameter parameter in testParameters)
 			{
@@ -97,8 +104,7 @@ namespace ProSuite.QA.TestFactories
 					continue;
 				}
 
-				object value;
-				if (! TryGetArgumentValue(parameter, datasetContext, out value))
+				if (! TryGetArgumentValue(parameter, datasetContext, out object value))
 				{
 					value = parameter.DefaultValue;
 				}
@@ -111,17 +117,21 @@ namespace ProSuite.QA.TestFactories
 
 		protected override IList<ITest> CreateTestInstances(object[] args)
 		{
-			Assert.AreEqual(3, args.Length, "Unexpected argument count");
+			Assert.AreEqual(4, args.Length, "Unexpected argument count");
 
 			var table = (ITable) args[0];
 			var allowNullValuesForCodedValueDomains = (bool) args[1];
 			var allowNullValuesForRangeDomains = (bool) args[2];
+			var fieldsToCheck = (IList<string>) args[3];
 
 			var result = new List<ITest>(2);
 
+			HashSet<string> fieldsToCheckDict =
+				fieldsToCheck?.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+
 			IList<ConstraintNode> nodes = GdbConstraintUtils.GetGdbConstraints(
 				table, allowNullValuesForCodedValueDomains,
-				allowNullValuesForRangeDomains);
+				allowNullValuesForRangeDomains, fieldsToCheckDict);
 
 			if (nodes.Count > 0)
 			{
@@ -132,22 +142,36 @@ namespace ProSuite.QA.TestFactories
 
 			IList<string> fields = GdbConstraintUtils.GetUuidFields(table);
 
-			if (fields.Count > 0)
+			IList<string> checkFields = fields;
+			if (fieldsToCheck != null)
 			{
-				var validUuidTest = new QaValue(table, fields);
+				checkFields = new List<string>();
+				foreach (string field in fields)
+				{
+					if (fieldsToCheckDict.Contains(field))
+					{
+						checkFields.Add(field);
+					}
+				}
+			}
+
+			if (checkFields.Count > 0)
+			{
+				var validUuidTest = new QaValue(table, checkFields);
 				result.Add(validUuidTest);
 			}
 
 			return result;
 		}
 
-		protected override void SetPropertyValue(ITest test, TestParameter testParameter,
+		protected override void SetPropertyValue(object test, TestParameter testParameter,
 		                                         object value)
 		{
 			var ignoredParameters = new[]
 			                        {
 				                        _allowNullValuesForCodedValueDomains,
-				                        _allowNullValuesForRangeDomains
+				                        _allowNullValuesForRangeDomains,
+				                        _fields
 			                        };
 
 			if (ignoredParameters.Any(
