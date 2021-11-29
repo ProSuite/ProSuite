@@ -85,7 +85,6 @@
           <button refID="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" size="large" />
         </group>
         <group id="ProSuiteTools_QA" caption="Quality Assurance" keytip="G1">
-          <button refID="ProSuiteTools_QA_StartGPServer" size="middle" />
           <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
           <button refID="ProSuite_AGP_Solution_QA_VerifyVisibleExtentCmd" size="middle" />
@@ -110,13 +109,6 @@
         </group>
       </groups>
       <controls>
-        <button id="ProSuiteTools_QA_StartGPServer" caption="Start QA GPService" className="StartQAGPTool"
-                loadOnClick="true" condition="prosuite_qa_gpservice_enabled"
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerConnection16.png"
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerConnection32.png"
-                keytip="B1">
-          <tooltip heading="QA GP Tool">Execute QA GP Tool on Server with XML<disabledText /></tooltip>
-        </button>
         <button id="ProSuiteTools_QA_StartExtent" caption="Start QA" className="StartQAGPExtent" loadOnClick="true"
                 condition="prosuite_qa_gplocal_enabled"
                 smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerBatchJobFile16.png"
