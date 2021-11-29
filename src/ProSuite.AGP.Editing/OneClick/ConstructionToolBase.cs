@@ -35,6 +35,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected ConstructionToolBase()
 		{
+			ContextMenuID = "esri_editing_SketchContextMenu";
+
 			IsSketchTool = true;
 			SketchOutputMode = SketchOutputMode.Screen;
 
