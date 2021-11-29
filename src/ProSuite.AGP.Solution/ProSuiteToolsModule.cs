@@ -488,41 +488,5 @@ namespace ProSuite.AGP.Solution
 		}
 	}
 
-	internal class StartQAErrorsDockPane : Button
-	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
-
-		StartQAErrorsDockPane()
-		{
-			//Enabled = false;
-		}
-
-		protected override async void OnClick()
-		{
-			try
-			{
-				// performance test
-				//QueuedTask.Run(() =>
-				//{
-				//	ProSuiteLogPaneViewModel.GenerateMockMessages(10000);
-				//});
-
-				// temporary solution for WorkList
-				//await QueuedTask.Run(() =>
-				//{
-				//	var pane = FrameworkApplication.DockPaneManager.Find("esri_dataReviewer_evaluateFeaturesPane");
-				//	bool visible = pane.IsVisible;
-				//	pane.Activate();
-				//});
-
-				await ProSuiteToolsModule.Current.ShowSelectionWorkList();
-			}
-			catch (Exception ex)
-			{
-				_msg.Error(ex.Message);
-			}
-		}
-	}
-
 	#endregion
 }

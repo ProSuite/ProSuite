@@ -110,13 +110,6 @@
         </group>
       </groups>
       <controls>
-        <!--<button id="ProSuiteTools_QA_StartErrorsDockPane" caption="QA Error Processing"
-                className="StartQAErrorsDockPane" loadOnClick="true"
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerSession16.png"
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerSession32.png"
-                keytip="B1">
-          <tooltip heading="QA GP Tool">Show QA error worklist<disabledText /></tooltip>
-        </button>-->
         <button id="ProSuiteTools_QA_StartGPServer" caption="Start QA GPService" className="StartQAGPTool"
                 loadOnClick="true" condition="prosuite_qa_gpservice_enabled"
                 smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerConnection16.png"
