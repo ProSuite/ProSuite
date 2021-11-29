@@ -524,40 +524,5 @@ namespace ProSuite.AGP.Solution
 		}
 	}
 
-	internal class ImportWorkListFile : Button
-	{
-		// TODO algr: temporary tests
-		protected override void OnClick()
-		{
-			var bf = new BrowseProjectFilter();
-			bf.AddCanBeTypeId(
-				"ProSuiteItem_ProjectItem"); //TypeID for the ".wlist" custom project item
-
-			// for subitem allow to browse inside and add as type
-			//bf.AddDoBrowseIntoTypeId("ProSuiteItem_ProjectItemWorkListFile");
-			//bf.AddCanBeTypeId("ProSuiteItem_WorkListItem"); //subitem 
-			bf.Name = "Work List";
-
-			var openItemDialog = new OpenItemDialog
-			                     {
-				                     Title = "Add Work List",
-				                     //InitialLocation = "",
-				                     BrowseFilter = bf
-			                     };
-			bool? result = openItemDialog.ShowDialog();
-			if (result != null && (result.Value == false || ! openItemDialog.Items.Any())) return;
-
-			var item = openItemDialog.Items.FirstOrDefault();
-			string filePath = item?.Path;
-
-			QueuedTask.Run(() =>
-			{
-				ProjectRepository.Current.AddProjectFileItems(
-					ProjectItemType.WorkListDefinition,
-					new List<string> {filePath});
-			});
-		}
-	}
-
 	#endregion
 }
