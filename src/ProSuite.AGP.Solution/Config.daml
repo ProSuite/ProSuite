@@ -85,7 +85,6 @@
           <button refID="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" size="large" />
         </group>
         <group id="ProSuiteTools_QA" caption="Quality Assurance" keytip="G1">
-          <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
           <button refID="ProSuite_AGP_Solution_QA_VerifyVisibleExtentCmd" size="middle" />
           <tool refID="ProSuite_AGP_Solution_QA_VerifyPerimeterTool" size="middle" />
@@ -109,13 +108,6 @@
         </group>
       </groups>
       <controls>
-        <button id="ProSuiteTools_QA_StartExtent" caption="Start QA" className="StartQAGPExtent" loadOnClick="true"
-                condition="prosuite_qa_gplocal_enabled"
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerBatchJobFile16.png"
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerBatchJobFile32.png"
-                keytip="B1">
-          <tooltip heading="QA GP Tool">Check QA for local selection<disabledText /></tooltip>
-        </button>
         <comboBox id="ProSuiteTools_QA_SpecsComboBox" caption=" Specification"
                   className="QA.QualitySpecificationsComboBox" itemWidth="90" extendedCaption="Extended Caption"
                   isEditable="false" isReadOnly="true" resizable="true" rows="32">

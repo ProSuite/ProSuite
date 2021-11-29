@@ -435,32 +435,4 @@ namespace ProSuite.AGP.Solution
 			}
 		}
 	}
-
-	#region UI commands
-	internal class StartQAGPExtent : Button
-	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
-
-		protected override async void OnClick()
-		{
-			try
-			{
-				string specificationName = ProSuiteToolsModule.Current.SessionContext
-				                                              .VerificationEnvironment
-				                                              ?.CurrentQualitySpecification?.Name;
-
-				if (specificationName != null)
-				{
-					await ProSuiteToolsModule.StartQAGPServerAsync(
-						ProSuiteQAServiceType.GPLocal, specificationName);
-				}
-			}
-			catch (Exception ex)
-			{
-				_msg.Error(ex.Message);
-			}
-		}
-	}
-
-	#endregion
 }
