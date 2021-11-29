@@ -110,13 +110,6 @@
         </group>
       </groups>
       <controls>
-        <button id="ProSuiteTools_Commons_ShowLog" caption="Configuration" className="ShowConfigWindow"
-                loadOnClick="true"
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GeodatabaseFeatureDataset16.png"
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GeodatabaseFeatureDataset32.png"
-                keytip="B1">
-          <tooltip heading="Show Config">ProSuite Configuration<disabledText /></tooltip>
-        </button>
         <!--<button id="ProSuiteTools_QA_StartErrorsDockPane" caption="QA Error Processing"
                 className="StartQAErrorsDockPane" loadOnClick="true"
                 smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerSession16.png"

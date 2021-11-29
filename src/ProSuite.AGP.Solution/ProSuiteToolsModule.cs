@@ -524,35 +524,6 @@ namespace ProSuite.AGP.Solution
 		}
 	}
 
-	internal class ShowConfigWindow : Button
-	{
-		private ProSuiteConfigDialog _prosuiteconfigdialog;
-
-		protected override void OnClick()
-		{
-			//already open?
-			if (_prosuiteconfigdialog != null)
-				return;
-
-			// clone 
-			var tempQAConfiguration = ProSuiteToolsModule.QAProjectItem.ServerConfigurations
-			                                             .ToList().ConvertAll(
-				                                             x => new ProSuiteQAServerConfiguration(
-					                                             x));
-
-			_prosuiteconfigdialog = new ProSuiteConfigDialog();
-			_prosuiteconfigdialog.Owner = FrameworkApplication.Current.MainWindow;
-			_prosuiteconfigdialog.DataContext = new ProSuiteConfigViewModel(tempQAConfiguration);
-			_prosuiteconfigdialog.Closed += (o, e) => { _prosuiteconfigdialog = null; };
-
-			if (_prosuiteconfigdialog.ShowDialog() ?? true)
-			{
-				ProSuiteConfigChangedEvent.Publish(
-					new ProSuiteConfigEventArgs(tempQAConfiguration, null));
-			}
-		}
-	}
-
 	internal class ImportWorkListFile : Button
 	{
 		// TODO algr: temporary tests
