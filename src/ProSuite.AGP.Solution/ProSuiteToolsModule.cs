@@ -15,7 +15,6 @@ using ProSuite.AGP.Solution.ConfigUI;
 using ProSuite.AGP.Solution.LoggerUI;
 using ProSuite.AGP.Solution.ProjectItem;
 using ProSuite.AGP.Solution.Workflow;
-using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.Application.Configuration;
 using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.Assertions;
@@ -121,7 +120,6 @@ namespace ProSuite.AGP.Solution
 					msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 				return msg;
 			}
-			set => msg = value;
 		}
 
 		public GeometryProcessingClient ToolMicroserviceClient { get; private set; }
@@ -184,6 +182,7 @@ namespace ProSuite.AGP.Solution
 			
 			ProSuiteConfigChangedEvent.Subscribe(OnConfigurationChanged);
 			LogMessageActionEvent.Subscribe(OnLogMessageActionRequested);
+			ProjectOpenedAsyncEvent.Subscribe(OnProjectOpenedAsync);
 
 			// TODO: Task.Run async?
 			SetupBackend().ConfigureAwait(false);
@@ -209,6 +208,7 @@ namespace ProSuite.AGP.Solution
 			
 			ProSuiteConfigChangedEvent.Unsubscribe(OnConfigurationChanged);
 			LogMessageActionEvent.Unsubscribe(OnLogMessageActionRequested);
+			ProjectOpenedAsyncEvent.Unsubscribe(OnProjectOpenedAsync);
 
 			ToolMicroserviceClient?.Disconnect();
 			QaMicroserviceClient?.Disconnect();
@@ -232,11 +232,6 @@ namespace ProSuite.AGP.Solution
 		private static void QAManager_OnStatusChanged(object sender, ProSuiteQAServiceEventArgs e)
 		{
 			//_msg.Info($"ProSuiteModule: {e.State}");
-		}
-
-		private void OnProjectItemsChanged(ProjectItemsChangedEventArgs obj)
-		{
-			//_msg.Info($"OnProjectItemsChanged Name: {obj.ProjectItem.Name} Action: {obj.Action}");
 		}
 
 		private void OnConfigurationChanged(ProSuiteConfigEventArgs configArgs)
@@ -270,25 +265,9 @@ namespace ProSuite.AGP.Solution
 				_msg.Debug("Unkown LogMessage action");
 		}
 
-		internal static void StartQAGPServer(ProSuiteQAServiceType type)
+		private async Task OnProjectOpenedAsync(ProjectEventArgs arg)
 		{
-			_msg.Info("StartQAGPServer is called");
-
-			// TODO temporary 
-			var serviceConfig = _qaProjectItem.ServerConfigurations.FirstOrDefault(
-				c => c.ServiceType == ProSuiteQAServiceType.GPService);
-			if (serviceConfig == null)
-			{
-				_msg.Error("Server config does not exist");
-				return;
-			}
-
-			var xml = @"\\vsdev2414\prosuite_server_trials\xml\polygonCovering.qa.xml";
-
-			var qaParams =
-				$"{serviceConfig.ServiceConnection},{xml},{serviceConfig.DefaultTileSize},,,{serviceConfig.DefaultOutputFolder},,,,{serviceConfig.DefaultCompressValue}";
-			var response = QAManager.StartQATesting(new ProSuiteQARequest(type, qaParams));
-			_msg.Info("StartQAGPServer is ended");
+			await SetupBackend();
 		}
 
 		#endregion
