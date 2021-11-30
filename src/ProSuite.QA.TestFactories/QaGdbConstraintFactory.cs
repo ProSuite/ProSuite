@@ -126,8 +126,10 @@ namespace ProSuite.QA.TestFactories
 
 			var result = new List<ITest>(2);
 
-			HashSet<string> fieldsToCheckDict =
-				fieldsToCheck?.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+			var fieldsToCheckDict =
+				fieldsToCheck != null
+					? new HashSet<string>(fieldsToCheck, StringComparer.InvariantCultureIgnoreCase)
+					: null;
 
 			IList<ConstraintNode> nodes = GdbConstraintUtils.GetGdbConstraints(
 				table, allowNullValuesForCodedValueDomains,
@@ -164,7 +166,7 @@ namespace ProSuite.QA.TestFactories
 			return result;
 		}
 
-		protected override void SetPropertyValue(object test, TestParameter testParameter,
+		protected override void SetPropertyValue(ITest test, TestParameter testParameter,
 		                                         object value)
 		{
 			var ignoredParameters = new[]
