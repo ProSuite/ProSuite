@@ -3,7 +3,7 @@ using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 
-namespace ProSuite.DomainModel.Core.Processing
+namespace ProSuite.DomainModel.Core.Processing.Repositories
 {
 	public interface ICartoProcessRepository : IRepository<CartoProcess>
 	{
