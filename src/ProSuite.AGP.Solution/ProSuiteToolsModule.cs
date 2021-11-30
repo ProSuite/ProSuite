@@ -11,7 +11,6 @@ using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Solution.ConfigUI;
 using ProSuite.AGP.Solution.LoggerUI;
 using ProSuite.AGP.Solution.ProjectItem;
@@ -182,8 +181,7 @@ namespace ProSuite.AGP.Solution
 			InitLoggerConfiguration();
 
 			//ProjectItemsChangedEvent.Subscribe(OnProjectItemsChanged);
-
-			LayersAddedEvent.Subscribe(OnLayerAdded);
+			
 			ProSuiteConfigChangedEvent.Subscribe(OnConfigurationChanged);
 			LogMessageActionEvent.Subscribe(OnLogMessageActionRequested);
 
@@ -208,8 +206,7 @@ namespace ProSuite.AGP.Solution
 		protected override void Uninitialize()
 		{
 			base.Uninitialize();
-
-			LayersAddedEvent.Unsubscribe(OnLayerAdded);
+			
 			ProSuiteConfigChangedEvent.Unsubscribe(OnConfigurationChanged);
 			LogMessageActionEvent.Unsubscribe(OnLogMessageActionRequested);
 
@@ -240,13 +237,6 @@ namespace ProSuite.AGP.Solution
 		private void OnProjectItemsChanged(ProjectItemsChangedEventArgs obj)
 		{
 			//_msg.Info($"OnProjectItemsChanged Name: {obj.ProjectItem.Name} Action: {obj.Action}");
-		}
-
-		private void OnLayerAdded(LayerEventsArgs obj)
-		{
-			_msg.Info("OnLayerAdded event");
-
-			// TODO update available QA specifications - bind combo box to list?
 		}
 
 		private void OnConfigurationChanged(ProSuiteConfigEventArgs configArgs)

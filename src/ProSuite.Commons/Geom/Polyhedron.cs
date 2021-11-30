@@ -73,7 +73,7 @@ namespace ProSuite.Commons.Geom
 		public IEnumerable<RingGroup> FindRingGroups([NotNull] IBoundedXY searchGeometry,
 		                                             double tolerance)
 		{
-			HashSet<RingGroup> found = new HashSet<RingGroup>(RingGroups.Count);
+			HashSet<RingGroup> found = new HashSet<RingGroup>();
 
 			foreach (int ringIndex in FindParts(searchGeometry, tolerance))
 			{

@@ -9,6 +9,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing.PickerUI
@@ -34,7 +35,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 			_windowLocation = pickerWindowLocation;
 		}
 
-		[CanBeNull]
+		[ItemCanBeNull]
 		public async Task<IPickableItem> PickSingle()
 		{
 			if (_candidateList.Count == 0)
@@ -96,14 +97,45 @@ namespace ProSuite.AGP.Editing.PickerUI
 			var pickCandidates = new List<IPickableItem>();
 			foreach (Feature feature in MapUtils.GetFeatures(featuresOfLayer))
 			{
-				var text =
-					$"{featuresOfLayer.Key.Name}: {feature.GetObjectID()}";
+				var text = GetPickerItemText(feature, featuresOfLayer.Key);
 				var featureItem =
 					new PickableFeatureItem(featuresOfLayer.Key, feature, text);
 				pickCandidates.Add(featureItem);
 			}
 
 			return pickCandidates;
+		}
+
+		public static List<IPickableItem> CreatePickableFeatureItems(
+			IEnumerable<FeatureClassSelection> selectionByClasses)
+		{
+			var pickCandidates = new List<IPickableItem>();
+
+			foreach (FeatureClassSelection classSelection in selectionByClasses)
+			{
+				foreach (Feature feature in classSelection.Features)
+				{
+					var text = GetPickerItemText(feature, classSelection.FeatureLayer);
+
+					var featureItem =
+						new PickableFeatureItem(classSelection.FeatureLayer, feature, text);
+
+					pickCandidates.Add(featureItem);
+				}
+			}
+
+			return pickCandidates;
+		}
+
+		private static string GetPickerItemText([NotNull] Feature feature,
+		                                        [CanBeNull] BasicFeatureLayer layer = null)
+		{
+			// TODO: Alternatively allow using layer.QueryDisplayExpressions. But typically this is just the OID which is not very useful -> Requires configuration
+			// string[] displayExpressions = layer.QueryDisplayExpressions(new[] { feature.GetObjectID() });
+
+			string className = layer == null ? feature.GetTable().GetName() : layer.Name;
+
+			return GdbObjectUtils.GetDisplayValue(feature, className);
 		}
 
 		private void ShowPickerControl(PickerViewModel vm)

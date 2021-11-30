@@ -67,7 +67,7 @@ namespace ProSuite.AGP.QA.WorkList
 
 		public override IEnumerable<BasicFeatureLayer> LoadLayers()
 		{
-			return GetLayersCore();
+			return GetLayersCore(GetFeatureClassesCore());
 		}
 
 		protected override ILayerContainerEdit GetContainer()
@@ -81,7 +81,28 @@ namespace ProSuite.AGP.QA.WorkList
 			       LayerFactory.Instance.CreateGroupLayer(MapView.Active.Map, 0, groupLayerName);
 		}
 
-		protected override IEnumerable<BasicFeatureLayer> GetLayersCore()
+		protected override IEnumerable<BasicFeatureLayer> GetLayersCore(
+			IEnumerable<FeatureClass> featureClasses)
+		{
+			ILayerContainerEdit layerContainer = GetContainer();
+
+			if (layerContainer == null)
+			{
+				return Enumerable.Empty<BasicFeatureLayer>();
+			}
+
+			return featureClasses.Select(fc =>
+			{
+				FeatureLayer featureLayer =
+					LayerFactory.Instance.CreateFeatureLayer(fc, layerContainer);
+
+				featureLayer.SetExpanded(false);
+
+				return featureLayer;
+			});
+		}
+
+		protected override IEnumerable<FeatureClass> GetFeatureClassesCore()
 		{
 			if (string.IsNullOrEmpty(_path))
 			{
@@ -90,7 +111,8 @@ namespace ProSuite.AGP.QA.WorkList
 
 			// todo daro: ensure layers are not already in map
 			using (Geodatabase geodatabase =
-				new Geodatabase(new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute))))
+				new Geodatabase(
+					new FileGeodatabaseConnectionPath(new Uri(_path, UriKind.Absolute))))
 			{
 				IEnumerable<string> featureClassNames =
 					geodatabase.GetDefinitions<FeatureClassDefinition>()
@@ -99,46 +121,32 @@ namespace ProSuite.AGP.QA.WorkList
 
 				foreach (string featureClassName in featureClassNames)
 				{
-					using (var featureClass =
-						geodatabase.OpenDataset<FeatureClass>(featureClassName))
-					{
-						ILayerContainerEdit layerContainer = GetContainer();
+					var featureClass = geodatabase.OpenDataset<FeatureClass>(featureClassName);
 
-						if (layerContainer == null)
-						{
-							continue;
-						}
-
-						FeatureLayer featureLayer =
-							LayerFactory.Instance.CreateFeatureLayer(featureClass, layerContainer);
-
-						featureLayer.SetExpanded(false);
-						// let Pro options decide whether newly added layers are visible
-						//featureLayer.SetVisibility(false);
-
-						yield return featureLayer;
-					}
+					yield return featureClass;
 				}
 			}
 		}
 
-		protected override async Task<BasicFeatureLayer> EnsureStatusFieldCoreAsync(
-			BasicFeatureLayer featureLayer)
+		protected override async Task<FeatureClass> EnsureStatusFieldCoreAsync(
+			FeatureClass featureClass)
 		{
 			const string fieldName = "STATUS";
 
+			string path = featureClass.GetPath().LocalPath;
+
 			// the GP tool is not going to fail on adding a field with the same name
 			Task<bool> addField =
-				GeoprocessingUtils.AddFieldAsync(featureLayer.Name, fieldName, "Status",
+				GeoprocessingUtils.AddFieldAsync(path, fieldName, "Status",
 				                                 esriFieldType.esriFieldTypeInteger, null, null,
 				                                 null, true, false, _domainName);
 
 			Task<bool> assignDefaultValue =
-				GeoprocessingUtils.AssignDefaultToFieldAsync(featureLayer.Name, fieldName, 100);
+				GeoprocessingUtils.AssignDefaultToFieldAsync(path, fieldName, 100);
 
 			await Task.WhenAll(addField, assignDefaultValue);
 
-			return featureLayer;
+			return featureClass;
 		}
 
 		protected override IWorkList CreateWorkListCore(IWorkItemRepository repository,

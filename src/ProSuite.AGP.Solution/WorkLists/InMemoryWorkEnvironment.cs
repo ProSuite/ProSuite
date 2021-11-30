@@ -25,7 +25,8 @@ namespace ProSuite.AGP.Solution.WorkLists
 			return MapView.Active.Map;
 		}
 
-		protected override IEnumerable<BasicFeatureLayer> GetLayersCore()
+		protected override IEnumerable<BasicFeatureLayer> GetLayersCore(
+			IEnumerable<FeatureClass> featureClasses)
 		{
 			MapView mapView = MapView.Active;
 
@@ -41,10 +42,15 @@ namespace ProSuite.AGP.Solution.WorkLists
 				       : Enumerable.Empty<BasicFeatureLayer>();
 		}
 
-		protected override async Task<BasicFeatureLayer> EnsureStatusFieldCoreAsync(
-			BasicFeatureLayer featureLayer)
+		protected override IEnumerable<FeatureClass> GetFeatureClassesCore()
 		{
-			return await Task.FromResult(featureLayer);
+			return Enumerable.Empty<FeatureClass>();
+		}
+
+		protected override async Task<FeatureClass> EnsureStatusFieldCoreAsync(
+			FeatureClass featureClass)
+		{
+			return await Task.FromResult(featureClass);
 		}
 
 		protected override IRepository CreateStateRepositoryCore(string path, string workListName)

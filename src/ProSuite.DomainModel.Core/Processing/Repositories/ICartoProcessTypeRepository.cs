@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.DomainModel.Core.Processing
+namespace ProSuite.DomainModel.Core.Processing.Repositories
 {
 	public interface ICartoProcessTypeRepository : IRepository<CartoProcessType>
 	{

@@ -62,9 +62,9 @@ namespace ProSuite.Commons.AGP.Gdb
 
 			bool result = _editOperation.Execute();
 
-			if (! result && _exception != null)
+			if (HasError(result, out Exception exception))
 			{
-				throw _exception;
+				throw exception;
 			}
 
 			return result;
@@ -76,12 +76,41 @@ namespace ProSuite.Commons.AGP.Gdb
 
 			bool result = await _editOperation.ExecuteAsync();
 
-			if (! result && _exception != null)
+			if (HasError(result, out Exception exception))
 			{
-				throw new AggregateException("Edit operation failed", _exception);
+				throw exception;
 			}
 
 			return result;
+		}
+
+		private bool HasError(bool executeResult, out Exception exception)
+		{
+			exception = null;
+
+			if (executeResult)
+			{
+				return false;
+			}
+
+			_msg.Debug("The edit operation failed.");
+
+			if (_exception != null)
+			{
+				_msg.Debug("The exception from the call-back is: ", _exception);
+
+				exception = new AggregateException(
+					$"Edit operation failed: {_exception.Message}", _exception);
+			}
+			else if (_editOperation.ErrorMessage != null)
+			{
+				_msg.DebugFormat("The message from the operation execution is: {0}",
+				                 _editOperation.ErrorMessage);
+				exception = new AggregateException(
+					$"Edit operation failed: {_editOperation.ErrorMessage}");
+			}
+
+			return true;
 		}
 
 		private Action<EditOperation.IEditContext> GetWrappedAction(

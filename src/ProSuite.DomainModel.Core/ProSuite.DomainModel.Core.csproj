@@ -139,9 +139,9 @@
     <Compile Include="Processing\CartoProcessType.cs" />
     <Compile Include="Processing\FeatureProxy.cs" />
     <Compile Include="Processing\GdbProcessCoreUtils.cs" />
-    <Compile Include="Processing\ICartoProcessGroupRepository.cs" />
-    <Compile Include="Processing\ICartoProcessRepository.cs" />
-    <Compile Include="Processing\ICartoProcessTypeRepository.cs" />
+    <Compile Include="Processing\Repositories\ICartoProcessGroupRepository.cs" />
+    <Compile Include="Processing\Repositories\ICartoProcessRepository.cs" />
+    <Compile Include="Processing\Repositories\ICartoProcessTypeRepository.cs" />
     <Compile Include="Processing\IProcessingDebug.cs" />
     <Compile Include="Processing\IProcessingFeedback.cs" />
     <Compile Include="Processing\IProcessReportBuilder.cs" />
@@ -151,6 +151,13 @@
     <Compile Include="Processing\ProcessExecutionType.cs" />
     <Compile Include="Processing\ProcessSelectionType.cs" />
     <Compile Include="Processing\Reporting\HtmlProcessReportBuilder.cs" />
+    <Compile Include="Processing\Xml\XmlCartoProcess.cs" />
+    <Compile Include="Processing\Xml\XmlCartoProcessesDocument.cs" />
+    <Compile Include="Processing\Xml\XmlCartoProcessGroup.cs" />
+    <Compile Include="Processing\Xml\XmlCartoProcessParameter.cs" />
+    <Compile Include="Processing\Xml\XmlCartoProcessType.cs" />
+    <Compile Include="Processing\Xml\XmlCartoProcessUtils.cs" />
+    <Compile Include="Processing\Xml\XmlClassDescriptor.cs" />
     <Compile Include="QA\CustomQualitySpecification.cs" />
     <Compile Include="QA\DataQualityCategory.cs" />
     <Compile Include="QA\DataQualityCategoryComparer.cs" />

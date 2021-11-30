@@ -32,24 +32,25 @@ namespace ProSuite.AGP.WorkList
 				return await Task.FromResult(default(IWorkList));
 			}
 
-			BasicFeatureLayer[] featureLayers =
-				await Task.WhenAll(GetLayersCore().Select(EnsureStatusFieldCoreAsync));
-
 			string fileName = string.IsNullOrEmpty(displayName) ? uniqueName : displayName;
 
 			string definitionFilePath = GetDefinitionFile(fileName);
-			
-			_msg.Debug($"Create work list state repository in {definitionFilePath}");
 
 			IRepository stateRepository = CreateStateRepositoryCore(definitionFilePath, uniqueName);
 
+			_msg.Debug($"Create work list state repository in {definitionFilePath}");
+
+			// todo daro: dispose feature classes?
+			FeatureClass[] featureClasses =
+				await Task.WhenAll(GetFeatureClassesCore().Select(EnsureStatusFieldCoreAsync));
+
 			IWorkItemRepository repository =
-				CreateItemRepositoryCore(featureLayers, stateRepository);
+				CreateItemRepositoryCore(GetLayersCore(featureClasses), stateRepository);
 
 			return CreateWorkListCore(repository, uniqueName, displayName);
 		}
 
-		public LayerDocument GetLayerDocument()
+		private LayerDocument GetLayerDocument()
 		{
 			return GetLayerDocumentCore();
 		}
@@ -89,11 +90,13 @@ namespace ProSuite.AGP.WorkList
 			return await Task.FromResult(true);
 		}
 
-		protected abstract IEnumerable<BasicFeatureLayer> GetLayersCore();
+		protected abstract IEnumerable<BasicFeatureLayer> GetLayersCore(
+			[NotNull] IEnumerable<FeatureClass> featureClasses);
 
-		// todo daro: revise purpose of this method
-		protected abstract Task<BasicFeatureLayer> EnsureStatusFieldCoreAsync(
-			BasicFeatureLayer featureLayer);
+		protected abstract IEnumerable<FeatureClass> GetFeatureClassesCore();
+
+		protected abstract Task<FeatureClass> EnsureStatusFieldCoreAsync(
+			[NotNull] FeatureClass featureClass);
 
 		protected abstract IWorkList
 			CreateWorkListCore([NotNull] IWorkItemRepository repository,
@@ -102,6 +105,7 @@ namespace ProSuite.AGP.WorkList
 
 		protected abstract IRepository CreateStateRepositoryCore(string path, string workListName);
 
+		// todo daro to IEnumerable<Table>
 		protected abstract IWorkItemRepository CreateItemRepositoryCore(
 			IEnumerable<BasicFeatureLayer> featureLayers, IRepository stateRepository);
 
@@ -128,10 +132,10 @@ namespace ProSuite.AGP.WorkList
 				table = datastore.OpenTable(worklist.Name);
 				Assert.NotNull(table);
 
-				return LayerFactory.Instance.CreateFeatureLayer((FeatureClass) table,
-				                                                layerContainer,
-				                                                LayerPosition.AddToTop,
-				                                                worklist.DisplayName);
+				return LayerFactory.Instance.CreateLayer<FeatureLayer>(
+					WorkListUtils.CreateLayerParams((FeatureClass) table, worklist.DisplayName),
+					layerContainer,
+					LayerPosition.AddToTop);
 			}
 			finally
 			{
