@@ -22,7 +22,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 		// Session factory is thread-safe and global (maintains 2nd level cache)
 		private static ISessionFactory _sessionFactory;
 
-		private readonly string _sessionFactoryErrorMessage;
+		private readonly string _sessionFactoryErrorMessage = "Session factory is null";
 
 		// The session is NOT thread safe
 		private ThreadLocal<ISession> _currentSession;
@@ -47,14 +47,15 @@ namespace ProSuite.Commons.Orm.NHibernate
 				// Do not throw - in some applications the DDX is optional (such as field admin).
 				_msg.Debug("Failed to create NHibernate session factory.", e);
 
-				_sessionFactoryErrorMessage = e.Message;
+				_sessionFactoryErrorMessage += ! string.IsNullOrEmpty(e.Message)
+					                               ? $": {e.Message}"
+					                               : ": Unknown error";
 			}
 		}
 
 		public ISession OpenSession(bool withoutTransaction)
 		{
-			Assert.NotNull(_sessionFactory,
-			               _sessionFactoryErrorMessage ?? "Session factory is null");
+			Assert.NotNull(_sessionFactory, _sessionFactoryErrorMessage);
 
 			if (CurrentSession != null && CurrentSession.IsOpen)
 			{
@@ -84,23 +85,23 @@ namespace ProSuite.Commons.Orm.NHibernate
 		/// <returns></returns>
 		public ISession CreateDisposableSession()
 		{
-			ISession nhibernateSession;
+			ISession nHibernateSession;
 
 			bool isOutermost;
 
 			if (CurrentSession == null)
 			{
-				nhibernateSession = OpenSession(false);
+				nHibernateSession = OpenSession(false);
 				isOutermost = true;
 			}
 			else
 			{
 				// Use existing session an make sure it is not disposed (by wrapping it)
-				nhibernateSession = CurrentSession;
+				nHibernateSession = CurrentSession;
 				isOutermost = false;
 			}
 
-			return new SessionWrapper(nhibernateSession, isOutermost);
+			return new SessionWrapper(nHibernateSession, isOutermost);
 		}
 
 		public ISession CurrentSession
@@ -109,8 +110,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 			{
 				if (_currentSession == null)
 				{
-					_currentSession = new ThreadLocal<ISession>(
-						() => null);
+					_currentSession = new ThreadLocal<ISession>(() => null);
 				}
 
 				if (! _currentSession.IsValueCreated)
