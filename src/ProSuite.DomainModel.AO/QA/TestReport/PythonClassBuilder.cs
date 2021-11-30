@@ -50,9 +50,9 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		{
 			sb.AppendLine("from datetime import datetime");
 			sb.AppendLine("from typing import List");
-			sb.AppendLine("from ProPy.Condition import Condition");
-			sb.AppendLine("from ProPy.Parameter import Parameter");
-			sb.AppendLine("from ProPy.Dataset import Dataset");
+			sb.AppendLine("from ProSuite.Condition import Condition");
+			sb.AppendLine("from ProSuite.Parameter import Parameter");
+			sb.AppendLine("from ProSuite.Dataset import Dataset");
 
 			sb.AppendLine();
 			sb.AppendLine();
@@ -61,7 +61,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		private static void CreatePythonClass(IEnumerable<IncludedTestBase> includedTests,
 		                                      StringBuilder sb)
 		{
-			sb.AppendLine("class ProSuite:");
+			sb.AppendLine("class TestFactory:");
 
 			foreach (IncludedTestBase includedTest in includedTests)
 			{
@@ -133,12 +133,13 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		                                 string conditionConstructorSignature, StringBuilder sb)
 		{
 			//string testDescription = WrapText(testFactory.GetTestDescription(), 100);
+			string testDescription = testFactory.GetTestDescription();
 
 			sb.AppendLine();
 			sb.AppendLine($"    @classmethod");
 			sb.AppendLine($"    def {methodName}({methodSignature}) -> Condition:");
-			//sb.AppendLine($"        \"\"\"");
-			//sb.AppendLine($"        {testDescription}        \"\"\"");
+			sb.AppendLine($"        \"\"\"");
+			sb.AppendLine($"        {testDescription}        \"\"\"");
 			sb.AppendLine($"        result = Condition({conditionConstructorSignature})");
 
 			foreach (TestParameter testParameter in testFactory.Parameters)
