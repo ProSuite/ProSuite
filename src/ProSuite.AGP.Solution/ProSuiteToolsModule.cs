@@ -272,57 +272,6 @@ namespace ProSuite.AGP.Solution
 
 		#endregion
 
-		internal static async Task StartQAGPServerAsync(ProSuiteQAServiceType type,
-		                                                string specificationName)
-		{
-			_msg.Info("StartQAGPServerAsync is called");
-
-			// TODO get envelope, selected data, selected QA spec, config,  ....
-			var serviceConfig = _qaProjectItem.ServerConfigurations.FirstOrDefault(
-				c => c.ServiceType == ProSuiteQAServiceType.GPLocal);
-			if (serviceConfig == null)
-			{
-				_msg.Error("Server config does not exist");
-				return;
-			}
-
-			// temporary - give path to XML specifications
-			var qaSpecificationsConnection =
-				QAManager.GetQASpecificationsConnection(specificationName);
-
-			// TODO select only available workspaces 
-			var qaParams =
-				$"{qaSpecificationsConnection},{serviceConfig.DefaultTileSize},,,{serviceConfig.DefaultOutputFolder},,,,{serviceConfig.DefaultCompressValue}";
-
-			var response =
-				await QAManager.StartQATestingAsync(new ProSuiteQARequest(type, qaParams));
-			if (response.Error == ProSuiteQAError.None)
-			{
-				_msg.Info($"StartQAGPServerAsync result {response.ResponseData}");
-
-				if (response.ResponseData != null)
-				{
-					var issuesGdb = Path.Combine(response.ResponseData.ToString(), "issues.gdb");
-					if (Directory.Exists(issuesGdb))
-					{
-						// TODO fire event to open worklist?
-						await OpenIssuesWorklist(issuesGdb);
-					}
-				}
-			}
-			else
-			{
-				_msg.Error($"StartQAGPServerAsync is failed: ${response.Error}");
-			}
-		}
-
-		public static async Task OpenIssuesWorklist([NotNull] string wlpath)
-		{
-			await ViewUtils.TryAsync(async () =>
-			{
-				throw new NotImplementedException();
-			}, _msg);
-		}
 
 		public async Task ShowSelectionWorkList()
 		{
