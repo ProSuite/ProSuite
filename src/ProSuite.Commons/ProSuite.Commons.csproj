@@ -267,6 +267,7 @@
     <Compile Include="Validation\ValidTokenAttribute.cs" />
     <Compile Include="ISettingsPersister.cs" />
     <Compile Include="Xml\XmlColor.cs" />
+    <Compile Include="Xml\XmlNamedEntity.cs" />
     <Compile Include="Xml\XmlSettingsPersister.cs" />
     <Compile Include="Xml\XmlSerializationHelper.cs" />
     <Compile Include="Xml\XmlUtils.cs" />
