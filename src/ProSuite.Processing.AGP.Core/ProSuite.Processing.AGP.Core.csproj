@@ -74,6 +74,10 @@
       <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
       <Name>ProSuite.Commons</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
+      <Project>{0B48B56F-3A3D-4367-AA76-A356519AF2AB}</Project>
+      <Name>ProSuite.DomainModel.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Processing\ProSuite.Processing.csproj">
       <Project>{0b72e886-b428-48ed-ba96-9cd6fcc5e171}</Project>
       <Name>ProSuite.Processing</Name>
