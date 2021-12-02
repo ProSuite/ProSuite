@@ -55,7 +55,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 				datasets.Add(new TerrainSourceDataset(sourceDataset, source.Type));
 			}
 
-			return new ModelSimpleTerrainDataset(datasets)
+			return new ModelSimpleTerrainDataset(xml.Name, datasets)
 			       {
 				       Name = xml.Name,
 				       PointDensity = xml.PointDensity
@@ -64,8 +64,10 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		public ModelSimpleTerrainDataset() { }
 
-		public ModelSimpleTerrainDataset(IEnumerable<TerrainSourceDataset> sources) :
-			base(sources) { }
+		public ModelSimpleTerrainDataset(
+			[NotNull] string name,
+			[NotNull] IEnumerable<TerrainSourceDataset> sources)
+			: base(name, sources) { }
 	}
 
 	// Open questions for later:

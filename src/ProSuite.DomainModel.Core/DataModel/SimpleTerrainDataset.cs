@@ -26,30 +26,11 @@ namespace ProSuite.DomainModel.Core.DataModel
 			GeometryType = new GeometryTypeTerrain(_geometryTypeName);
 		}
 
-		protected SimpleTerrainDataset(IEnumerable<TerrainSourceDataset> sources)
+		protected SimpleTerrainDataset([NotNull] string name,
+		                               [NotNull] IEnumerable<TerrainSourceDataset> sources)
+			: base(name)
 		{
 			_sources = new List<TerrainSourceDataset>(sources);
-			GeometryType = new GeometryTypeTerrain(_geometryTypeName);
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="SimpleTerrainDataset"/> class.
-		/// </summary>
-		/// <param name="name">The name.</param>
-		protected SimpleTerrainDataset([NotNull] string name)
-			: this(name, name) { }
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="SimpleTerrainDataset"/> class.
-		/// </summary>
-		/// <param name="name">The name.</param>
-		/// <param name="abbreviation">The dataset abbreviation.</param>
-		/// <param name="aliasName">Alias name for the dataset.</param>
-		protected SimpleTerrainDataset([NotNull] string name,
-		                               [CanBeNull] string abbreviation,
-		                               [CanBeNull] string aliasName = null)
-			: base(name, abbreviation, aliasName)
-		{
 			GeometryType = new GeometryTypeTerrain(_geometryTypeName);
 		}
 
