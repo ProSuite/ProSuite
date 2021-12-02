@@ -72,6 +72,7 @@
     <Compile Include="ProPlugins\SelectInvolvedObjectsCmdBase.cs" />
     <Compile Include="ProPlugins\SelectIssueFeaturesToolBase.cs" />
     <Compile Include="ProPlugins\VerificationPlugInController.cs" />
+    <Compile Include="ProPlugins\VerifyLastCmdBase.cs" />
     <Compile Include="WorkList\IssueWorkListEnvironmentBase.cs" />
     <Compile Include="DdxSpecificationReferencesProvider.cs" />
     <Compile Include="ProPlugins\VerifyPerimeterToolBase.cs" />
