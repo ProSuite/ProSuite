@@ -59,8 +59,6 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		#region ISimpleTerrainDataset Members
 
-		public int TerrainId => Id;
-
 		public double PointDensity
 		{
 			get => _pointDensity;
@@ -189,8 +187,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 			}
 		}
 
-		private bool SourcesAreEqual(IList<TerrainSourceDataset> a,
-		                             IList<TerrainSourceDataset> b)
+		private static bool SourcesAreEqual([NotNull] IList<TerrainSourceDataset> a,
+		                                    [NotNull] IList<TerrainSourceDataset> b)
 		{
 			if (a.Count != b.Count)
 			{
@@ -207,7 +205,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 					return false;
 				}
 
-				if (sourceA.Dataset != sourceB.Dataset)
+				if (! sourceA.Dataset.Equals(sourceB.Dataset))
 				{
 					return false;
 				}
@@ -223,5 +221,4 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		#endregion
 	}
-
 }
