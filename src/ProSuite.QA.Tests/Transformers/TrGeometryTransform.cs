@@ -88,7 +88,7 @@ namespace ProSuite.QA.Tests.Transformers
 			           IGeometryTransformer transformer)
 				: base(-1, "derivedGeometry", derivedShapeType,
 				       createBackingDataset: (t) => new Transformed((Tfc) t, fc),
-				       workspace: new GdbWorkspace(new TransformedWs()))
+				       workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
 				Transformer = transformer;
 				InvolvedTables = new List<ITable> {(ITable) fc};
@@ -163,29 +163,6 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 
 				return base.get_Value(index);
-			}
-		}
-
-		private class TransformedWs : BackingDataStore
-		{
-			public override void ExecuteSql(string sqlStatement)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IEnumerable<IDataset> GetDatasets(esriDatasetType datasetType)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override ITable OpenQueryTable(string relationshipClassName)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override ITable OpenTable(string name)
-			{
-				throw new NotImplementedException();
 			}
 		}
 

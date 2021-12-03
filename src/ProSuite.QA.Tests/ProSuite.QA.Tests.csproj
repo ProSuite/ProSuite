@@ -368,6 +368,7 @@
     <Compile Include="Transformers\IContainerTransformer.cs" />
     <Compile Include="Transformers\IGeometryTransformer.cs" />
     <Compile Include="Transformers\TransformedFeatureClass.cs" />
+    <Compile Include="Transformers\TransformerWorkspace.cs" />
     <Compile Include="Transformers\TrDissolve.cs" />
     <Compile Include="Transformers\TrFootprint.cs" />
     <Compile Include="Transformers\TrPolyToLine.cs" />
@@ -377,6 +378,7 @@
     <Compile Include="Transformers\TrLineToPoly.cs" />
     <Compile Include="Transformers\TrSpatialJoin.cs" />
     <Compile Include="Transformers\TrIntersect.cs" />
+    <Compile Include="Transformers\TrTableAppend.cs" />
     <Compile Include="Transformers\TrTableJoin.cs" />
     <Compile Include="Transformers\TrMultipolygonToPolygon.cs" />
     <Compile Include="UnequalField.cs" />

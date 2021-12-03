@@ -91,6 +91,7 @@
     <Compile Include="Geodatabase\EnumerableCursor.cs" />
     <Compile Include="Geodatabase\GdbSchema\BackingDataset.cs" />
     <Compile Include="Geodatabase\GdbSchema\BackingDataStore.cs" />
+    <Compile Include="Geodatabase\GdbSchema\CursorImpl.cs" />
     <Compile Include="Geodatabase\GdbSchema\GdbFeature.cs" />
     <Compile Include="Geodatabase\GdbSchema\GdbFeatureClass.cs" />
     <Compile Include="Geodatabase\GdbSchema\GdbFields.cs" />
@@ -99,6 +100,9 @@
     <Compile Include="Geodatabase\GdbSchema\GdbTableContainer.cs" />
     <Compile Include="Geodatabase\GdbSchema\GdbWorkspace.cs" />
     <Compile Include="Geodatabase\GdbSchema\InMemoryDataset.cs" />
+    <Compile Include="Geodatabase\GdbSchema\VirtualRow.cs" />
+    <Compile Include="Geodatabase\GdbSchema\VirtualTable.cs" />
+    <Compile Include="Geodatabase\GdbSchema\VirtualWorkspace.cs" />
     <Compile Include="Geodatabase\IWorkspaceDbConnectionProvider.cs" />
     <Compile Include="Geodatabase\ObjectClassComparer.cs" />
     <Compile Include="Geodatabase\FeatureStorageUtils.cs" />
