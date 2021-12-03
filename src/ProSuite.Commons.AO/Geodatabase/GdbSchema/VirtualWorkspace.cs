@@ -51,104 +51,6 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		protected virtual long? VirtualWorkspaceHandle { get; set; }
 
-		internal class Name : IName, IWorkspaceName2
-		{
-			private readonly VirtualWorkspace _workspace;
-
-			private string _connectionString;
-
-			public Name(VirtualWorkspace workspace)
-			{
-				_workspace = workspace;
-
-				// Used for comparison. Assumption: model-workspace relationship is 1-1
-				// Once various versions should be supported, this will have to be more fancy.
-				_connectionString =
-					$"Provider=VirtualWorkspace.Name;Data Source={workspace.VirtualWorkspaceHandle}";
-			}
-
-			#region IName members
-
-			public object Open()
-			{
-				return _workspace;
-			}
-
-			public string NameString { get; set; }
-
-			#endregion
-
-			#region IWorkspaceName members
-
-			string IWorkspaceName.PathName
-			{
-				get => _workspace.VirtualPathName;
-				set => throw new NotImplementedException();
-			}
-
-			string IWorkspaceName.WorkspaceFactoryProgID
-			{
-				get => throw new NotImplementedException();
-				set => throw new NotImplementedException();
-			}
-
-			string IWorkspaceName.BrowseName
-			{
-				get => throw new NotImplementedException();
-				set => throw new NotImplementedException();
-			}
-
-			IWorkspaceFactory IWorkspaceName.WorkspaceFactory =>
-				throw new NotImplementedException();
-
-			IPropertySet IWorkspaceName.ConnectionProperties
-			{
-				get => throw new NotImplementedException();
-				set => throw new NotImplementedException();
-			}
-
-			public esriWorkspaceType Type => _workspace.VirtualWorkspaceType;
-
-			string IWorkspaceName.Category => throw new NotImplementedException();
-
-			#endregion
-
-			IPropertySet IWorkspaceName2.ConnectionProperties
-			{
-				get => throw new NotImplementedException();
-				set => throw new NotImplementedException();
-			}
-
-			IWorkspaceFactory IWorkspaceName2.WorkspaceFactory =>
-				throw new NotImplementedException();
-
-			string IWorkspaceName2.Category => throw new NotImplementedException();
-
-			string IWorkspaceName2.ConnectionString
-			{
-				get => _connectionString;
-				set => _connectionString = value;
-			}
-
-			string IWorkspaceName2.WorkspaceFactoryProgID
-			{
-				get => throw new NotImplementedException();
-				set => throw new NotImplementedException();
-			}
-
-			string IWorkspaceName2.BrowseName
-			{
-				get => throw new NotImplementedException();
-				set => throw new NotImplementedException();
-			}
-
-			string IWorkspaceName2.PathName
-			{
-				get => _workspace.VirtualPathName;
-				set => throw new NotImplementedException();
-			}
-		}
-
 		string IDataset.BrowseName
 		{
 			get => VirtualBrowseName;
@@ -427,5 +329,136 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		protected virtual IEnumDomain Virtualget_DomainsByFieldType(esriFieldType fieldType) =>
 			throw new NotImplementedException("Implement in derived class");
+
+		private class Name : IName, IWorkspaceName2
+		{
+			private readonly VirtualWorkspace _workspace;
+
+			private string _connectionString;
+
+			public Name(VirtualWorkspace workspace)
+			{
+				_workspace = workspace;
+
+				// Used for comparison. Assumption: model-workspace relationship is 1-1
+				// Once various versions should be supported, this will have to be more fancy.
+				_connectionString =
+					$"Provider=VirtualWorkspace.Name;Data Source={workspace.VirtualWorkspaceHandle}";
+			}
+
+			#region IName members
+
+			public object Open()
+			{
+				return _workspace;
+			}
+
+			public string ConnectionString
+			{
+				get { return VirtualConnectionString; }
+				set { VirtualConnectionString = value; }
+			}
+
+			protected virtual string VirtualConnectionString
+			{
+				get { return _connectionString; }
+				set { _connectionString = value; }
+			}
+
+			public string NameString { get; set; }
+
+			#endregion
+
+			#region IWorkspaceName members
+
+			string IWorkspaceName.PathName
+			{
+				get => VirtualPathName;
+				set => VirtualPathName = value;
+			}
+
+			string IWorkspaceName2.PathName
+			{
+				get => VirtualPathName;
+				set => VirtualPathName = value;
+			}
+
+			protected virtual string VirtualPathName
+			{
+				get => _workspace.VirtualPathName;
+				set => throw new NotImplementedException("Implement in derived class");
+			}
+
+			string IWorkspaceName.WorkspaceFactoryProgID
+			{
+				get => VirtualWorkspaceFactoryProgID;
+				set => VirtualWorkspaceFactoryProgID = value;
+			}
+
+			string IWorkspaceName2.WorkspaceFactoryProgID
+			{
+				get => VirtualWorkspaceFactoryProgID;
+				set => VirtualWorkspaceFactoryProgID = value;
+			}
+
+			protected virtual string VirtualWorkspaceFactoryProgID
+			{
+				get => throw new NotImplementedException("Implement in derived class");
+				set => throw new NotImplementedException("Implement in derived class");
+			}
+
+			string IWorkspaceName.BrowseName
+			{
+				get => VirtualBrowseName;
+				set => VirtualBrowseName = value;
+			}
+
+			string IWorkspaceName2.BrowseName
+			{
+				get => VirtualBrowseName;
+				set => VirtualBrowseName = value;
+			}
+
+			protected virtual string VirtualBrowseName
+			{
+				get => throw new NotImplementedException("Implement in derived class");
+				set => throw new NotImplementedException("Implement in derived class");
+			}
+
+			IWorkspaceFactory IWorkspaceName.WorkspaceFactory => VirtualWorkspaceFactory;
+			IWorkspaceFactory IWorkspaceName2.WorkspaceFactory => VirtualWorkspaceFactory;
+
+			protected virtual IWorkspaceFactory VirtualWorkspaceFactory =>
+				throw new NotImplementedException("Implement in derived class");
+
+			IPropertySet IWorkspaceName.ConnectionProperties
+			{
+				get => VirtualConnectionProperties;
+				set => VirtualConnectionProperties = value;
+			}
+
+			IPropertySet IWorkspaceName2.ConnectionProperties
+			{
+				get => VirtualConnectionProperties;
+				set => VirtualConnectionProperties = value;
+			}
+
+			protected virtual IPropertySet VirtualConnectionProperties
+			{
+				get => throw new NotImplementedException("Implement in derived class");
+				set => throw new NotImplementedException("Implement in derived class");
+			}
+
+			public esriWorkspaceType Type => _workspace.VirtualWorkspaceType;
+
+			string IWorkspaceName.Category => VirtualCategory;
+			string IWorkspaceName2.Category => VirtualCategory;
+
+			protected virtual string VirtualCategory =>
+				throw new NotImplementedException("Implement in derived class");
+
+			#endregion
+		}
+
 	}
 }
