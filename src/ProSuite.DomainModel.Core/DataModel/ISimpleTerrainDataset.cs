@@ -4,8 +4,6 @@ namespace ProSuite.DomainModel.Core.DataModel
 {
 	public interface ISimpleTerrainDataset : ISpatialDataset, IDatasetCollection
 	{
-		int TerrainId { get; }
-
 		double PointDensity { get; }
 
 		IReadOnlyList<TerrainSourceDataset> Sources { get; }

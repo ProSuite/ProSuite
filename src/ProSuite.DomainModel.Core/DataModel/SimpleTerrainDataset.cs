@@ -26,30 +26,11 @@ namespace ProSuite.DomainModel.Core.DataModel
 			GeometryType = new GeometryTypeTerrain(_geometryTypeName);
 		}
 
-		protected SimpleTerrainDataset(IEnumerable<TerrainSourceDataset> sources)
+		protected SimpleTerrainDataset([NotNull] string name,
+		                               [NotNull] IEnumerable<TerrainSourceDataset> sources)
+			: base(name)
 		{
 			_sources = new List<TerrainSourceDataset>(sources);
-			GeometryType = new GeometryTypeTerrain(_geometryTypeName);
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="SimpleTerrainDataset"/> class.
-		/// </summary>
-		/// <param name="name">The name.</param>
-		protected SimpleTerrainDataset([NotNull] string name)
-			: this(name, name) { }
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="SimpleTerrainDataset"/> class.
-		/// </summary>
-		/// <param name="name">The name.</param>
-		/// <param name="abbreviation">The dataset abbreviation.</param>
-		/// <param name="aliasName">Alias name for the dataset.</param>
-		protected SimpleTerrainDataset([NotNull] string name,
-		                               [CanBeNull] string abbreviation,
-		                               [CanBeNull] string aliasName = null)
-			: base(name, abbreviation, aliasName)
-		{
 			GeometryType = new GeometryTypeTerrain(_geometryTypeName);
 		}
 
@@ -58,8 +39,6 @@ namespace ProSuite.DomainModel.Core.DataModel
 		public override string TypeDescription => "SimpleTerrain";
 
 		#region ISimpleTerrainDataset Members
-
-		public int TerrainId => Id;
 
 		public double PointDensity
 		{
@@ -189,8 +168,8 @@ namespace ProSuite.DomainModel.Core.DataModel
 			}
 		}
 
-		private bool SourcesAreEqual(IList<TerrainSourceDataset> a,
-		                             IList<TerrainSourceDataset> b)
+		private static bool SourcesAreEqual([NotNull] IList<TerrainSourceDataset> a,
+		                                    [NotNull] IList<TerrainSourceDataset> b)
 		{
 			if (a.Count != b.Count)
 			{
@@ -207,7 +186,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 					return false;
 				}
 
-				if (sourceA.Dataset != sourceB.Dataset)
+				if (! sourceA.Dataset.Equals(sourceB.Dataset))
 				{
 					return false;
 				}
@@ -223,5 +202,4 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		#endregion
 	}
-
 }

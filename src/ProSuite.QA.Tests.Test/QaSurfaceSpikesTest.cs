@@ -141,9 +141,8 @@ namespace ProSuite.QA.Tests.Test
 			var ts2 = new TerrainSourceDataset(breaklns, TinSurfaceType.HardLine);
 
 			var simpleTerrainDataset = new ModelSimpleTerrainDataset(
-				                           new[] {ts1, ts2})
+				                           "TestSimpleTerrainDs", new[] {ts1, ts2})
 			                           {
-				                           Name = "TestSimpleTerrainDs",
 				                           Abbreviation = "DTM",
 				                           PointDensity = 7.8125
 			                           };

@@ -586,7 +586,7 @@ namespace ProSuite.Commons.Geom
 				SpatialIndex = SpatialHashSearcher<SegmentIndex>.CreateSpatialSearcher(this);
 			}
 
-			HashSet<int> foundParts = new HashSet<int>(PartCount);
+			HashSet<int> foundParts = new HashSet<int>();
 
 			if (SpatialIndex != null)
 			{
