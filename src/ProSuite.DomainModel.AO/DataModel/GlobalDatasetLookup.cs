@@ -105,6 +105,14 @@ namespace ProSuite.DomainModel.AO.DataModel
 			                                  workspace);
 		}
 
+		public TopologyDataset GetDataset(ITopology topology)
+		{
+			IFeatureWorkspace featureWorkspace =
+				(IFeatureWorkspace) TopologyUtils.GetWorkspace(topology);
+
+			return (TopologyDataset) GetDataset(featureWorkspace, TopologyUtils.GetName(topology));
+		}
+
 		public Dataset GetDataset(IFeatureWorkspace workspace, string gdbDatasetName)
 		{
 			return GetDataset(gdbDatasetName, (IWorkspace) workspace);

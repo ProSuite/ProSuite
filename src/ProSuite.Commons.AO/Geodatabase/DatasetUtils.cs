@@ -1319,9 +1319,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 			foreach (esriDatasetType datasetType in datasetTypes)
 			{
 				foreach (IDatasetName datasetName in GetDatasetNames(featureWorkspace,
-				                                                     datasetType,
-				                                                     featureDatasetNames,
-				                                                     owner))
+					datasetType,
+					featureDatasetNames,
+					owner))
 				{
 					yield return datasetName;
 				}
@@ -1515,6 +1515,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(featureClassContainer, nameof(featureClassContainer));
 
 			IEnumFeatureClass enumFeatureClass = featureClassContainer.Classes;
+
+			return GetFeatureClasses(enumFeatureClass);
+		}
+
+		[NotNull]
+		public static IEnumerable<IFeatureClass> GetFeatureClasses(
+			[NotNull] IEnumFeatureClass enumFeatureClass)
+		{
 			enumFeatureClass.Reset();
 
 			IFeatureClass featureClass = enumFeatureClass.Next();
@@ -3764,7 +3772,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 				}
 				else
 				{
-					_msg.VerboseDebug(() => $"Dataset name returned more than once: {datasetName.Name}");
+					_msg.VerboseDebug(
+						() => $"Dataset name returned more than once: {datasetName.Name}");
 				}
 
 				datasetName = enumDatasetNames.Next();

@@ -174,6 +174,8 @@ namespace ProSuite.DomainModel.AO.Workflow
 
 		public abstract IObjectClass OpenObjectClass(IObjectDataset dataset);
 
+		public abstract ITopology OpenTopology(ITopologyDataset dataset);
+
 		public abstract IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset);
 
 		public abstract TerrainReference OpenTerrainReference(ISimpleTerrainDataset dataset);

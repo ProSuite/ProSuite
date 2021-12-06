@@ -20,6 +20,9 @@ namespace ProSuite.DomainModel.AO.DataModel
 		IObjectClass OpenObjectClass([NotNull] IObjectDataset dataset);
 
 		[CanBeNull]
+		ITopology OpenTopology([NotNull] ITopologyDataset dataset);
+
+		[CanBeNull]
 		IRasterDataset OpenRasterDataset([NotNull] IDdxRasterDataset dataset);
 
 		[CanBeNull]

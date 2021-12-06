@@ -92,6 +92,14 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			       };
 		}
 
+		protected Dataset GetTopologyDataset(IDatasetName datasetName)
+		{
+			return new VerifiedTopologyDataset(datasetName.Name)
+			       {
+				       GeometryType = GetGeometryType<GeometryTypeTopology>()
+			       };
+		}
+
 		[CanBeNull]
 		protected T GetGeometryType<T>() where T : GeometryType
 		{

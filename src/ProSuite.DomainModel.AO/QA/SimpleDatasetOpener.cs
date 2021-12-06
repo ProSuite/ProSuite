@@ -51,7 +51,12 @@ namespace ProSuite.DomainModel.AO.QA
 					return _datasetContext.OpenSimpleRasterMosaic(simpleRasterMosaicDataset);
 				}
 
-				// TODO: Raster, Mosaic
+				if (dataset is ITopologyDataset topologyDataset)
+				{
+					return _datasetContext.OpenTopology(topologyDataset);
+				}
+
+				// TODO: Raster
 
 				return null;
 			}
@@ -76,6 +81,9 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (typeof(ITable) == knownType)
 				return _datasetContext.OpenTable((IObjectDataset) dataset);
+
+			if (typeof(ITopology) == knownType)
+				return _datasetContext.OpenTopology((ITopologyDataset) dataset);
 
 			if (typeof(IMosaicDataset) == knownType)
 				return (IMosaicDataset) _datasetContext.OpenRasterDataset(

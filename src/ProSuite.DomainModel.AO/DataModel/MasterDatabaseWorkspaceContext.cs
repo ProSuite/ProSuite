@@ -69,6 +69,13 @@ namespace ProSuite.DomainModel.AO.DataModel
 			//	spatialReferenceDescriptor);
 		}
 
+		public override ITopology OpenTopology(ITopologyDataset dataset)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			return TopologyUtils.OpenTopology(FeatureWorkspace, GetGdbElementName(dataset));
+		}
+
 		public override IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset)
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));

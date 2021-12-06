@@ -36,6 +36,11 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 				return GetTableDataset(datasetName);
 			}
 
+			if (datasetName is ITopologyName)
+			{
+				return GetTopologyDataset(datasetName);
+			}
+
 			if (datasetName is IMosaicDatasetName)
 			{
 				return GetRasterMosaicDataset(datasetName);

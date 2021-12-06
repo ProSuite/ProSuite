@@ -123,6 +123,16 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return context?.OpenSimpleRasterMosaic(dataset);
 		}
 
+		[CanBeNull]
+		public static ITopology TryOpenFromMasterDatabase(
+			ITopologyDataset dataset, bool allowAlways = false)
+		{
+			IDatasetContext context = GetMasterDatabaseWorkspaceContext(dataset,
+				allowAlways);
+
+			return context?.OpenTopology(dataset);
+		}
+
 		[NotNull]
 		public static List<SimpleTerrainDataSource> GetTerrainDataSources(
 			[NotNull] ISimpleTerrainDataset dataset,

@@ -141,6 +141,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return (IObjectClass) OpenTable(dataset);
 		}
 
+		public ITopology OpenTopology(ITopologyDataset dataset)
+		{
+			throw new NotImplementedException();
+		}
+
 		public IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset)
 		{
 			throw new NotImplementedException();
