@@ -16,6 +16,8 @@ namespace ProSuite.Commons.DomainModels
 
 		void NewTransaction(ReattachStateOption reattachStateOption, Action procedure);
 
+		T ReadOnlyTransaction<T>(Func<T> function);
+
 		void Reattach<T>(ICollection<T> collection) where T : class;
 
 		void Reattach(Entity entity);
