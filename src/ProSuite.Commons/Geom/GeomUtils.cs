@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Geom.Wkb;
 
 namespace ProSuite.Commons.Geom
 {
@@ -950,6 +952,55 @@ return : Point2D : lines cut each other at Point (non parallel)
 			}
 
 			return true;
+		}
+
+		public static byte[] ToWkb([NotNull] ISegmentList geometry)
+		{
+			WkbGeomWriter geometryWriter = new WkbGeomWriter();
+
+			return geometryWriter.WriteGeometry(geometry);
+		}
+
+		public static byte[] ToWkb<T>([NotNull] Multipoint<T> multipoint) where T : IPnt
+		{
+			WkbGeomWriter geometryWriter = new WkbGeomWriter();
+
+			Ordinates ordinates = typeof(T) == typeof(Pnt3D) ? Ordinates.Xyz : Ordinates.Xy;
+
+			return geometryWriter.WriteMultipoint(multipoint, ordinates);
+		}
+
+		public static byte[] ToWkb<T>([NotNull] T point) where T : IPnt
+		{
+			WkbGeomWriter geometryWriter = new WkbGeomWriter();
+
+			Ordinates ordinates = typeof(T) == typeof(Pnt3D) ? Ordinates.Xyz : Ordinates.Xy;
+
+			return geometryWriter.WritePoint(point, ordinates);
+		}
+
+		public static void ToWkbFile([NotNull] ISegmentList geometry,
+		                             [NotNull] string filePath)
+		{
+			byte[] bytes = ToWkb(geometry);
+
+			File.WriteAllBytes(filePath, bytes);
+		}
+
+		public static void ToWkbFile<T>([NotNull] Multipoint<T> multipoint,
+		                                [NotNull] string filePath) where T : IPnt
+		{
+			byte[] bytes = ToWkb(multipoint);
+
+			File.WriteAllBytes(filePath, bytes);
+		}
+
+		public static void ToWkbFile<T>([NotNull] T point,
+		                                [NotNull] string filePath) where T : IPnt
+		{
+			byte[] bytes = ToWkb(point);
+
+			File.WriteAllBytes(filePath, bytes);
 		}
 
 		private static bool IsMoreSouthEast(Pnt3D point1, Pnt3D point2)
