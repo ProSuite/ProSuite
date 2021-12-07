@@ -146,7 +146,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		}
 
 		[Test]
-		public void CanCreateQualitySpecificationIgnoringUnkownDatasets()
+		public void CanCreateQualitySpecificationIgnoringUnknownDatasets()
 		{
 			var locator = TestDataLocator.Create("ProSuite", @"QA\TestData");
 			string catalogPath = locator.GetPath("QATestData.mdb");
