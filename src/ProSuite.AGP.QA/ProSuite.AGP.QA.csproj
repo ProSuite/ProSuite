@@ -62,6 +62,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="WindowsBase" />
   </ItemGroup>
@@ -113,6 +114,10 @@
     <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
       <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
       <Name>ProSuite.Commons.Logging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Commons.UI\ProSuite.Commons.UI.csproj">
+      <Project>{FDA8452C-41F0-404C-A17D-FBA8CB56B935}</Project>
+      <Name>ProSuite.Commons.UI</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
       <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>

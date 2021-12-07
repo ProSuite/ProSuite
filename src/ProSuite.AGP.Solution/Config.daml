@@ -305,7 +305,10 @@
                 className="ProSuite.AGP.Solution.QA.VerifyLastCmd" loadOnClick="false"
                 smallImage="Images\VerifyLastCmd16.png" largeImage="Images\VerifyLastCmd32.png">
           <tooltip heading="Verify using previous perimeter">
-            Re-verifies the last verified perimeter based on the selected quality specification.<disabledText />
+            Re-verifies the last verified perimeter based on the selected quality specification.
+
+            ALT: Zoom to the previously verified extent (without starting verification)
+            <disabledText />
           </tooltip>
         </button>
         <button id="ProSuite_AGP_Solution_QA_VerifySelectionCmd" caption="Verify Selection"
