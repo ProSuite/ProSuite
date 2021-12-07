@@ -161,7 +161,7 @@ namespace ProSuite.QA.Tests.Transformers
 			public Tfc(IFeatureClass dissolve)
 				: base(-1, "dissolveResult", dissolve.ShapeType,
 				       createBackingDataset: (t) => new Transformed((Tfc) t, dissolve),
-				       workspace: new GdbWorkspace(new TransformedWs()))
+				       workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
 				InvolvedTables = new List<ITable> {(ITable) dissolve};
 
@@ -234,29 +234,6 @@ namespace ProSuite.QA.Tests.Transformers
 					getBox: x => x?.Shape != null
 						             ? QaGeometryUtils.CreateBox(x.Shape)
 						             : null);
-			}
-		}
-
-		private class TransformedWs : BackingDataStore
-		{
-			public override void ExecuteSql(string sqlStatement)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IEnumerable<IDataset> GetDatasets(esriDatasetType datasetType)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override ITable OpenQueryTable(string relationshipClassName)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override ITable OpenTable(string name)
-			{
-				throw new NotImplementedException();
 			}
 		}
 

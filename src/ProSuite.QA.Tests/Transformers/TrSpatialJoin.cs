@@ -136,7 +136,7 @@ namespace ProSuite.QA.Tests.Transformers
 			public Tfc(IFeatureClass t0, IFeatureClass t1, TrSpatialJoin parent)
 				: base(-1, "intersectResult", t0.ShapeType,
 				       createBackingDataset: (t) => new Transformed((Tfc) t, t0, t1),
-				       workspace: new GdbWorkspace(new TransformedWs()))
+				       workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
 				_parent = parent;
 				InvolvedTables = new List<ITable> {(ITable) t0, (ITable) t1};
@@ -228,29 +228,6 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 
 				return base.get_Value(index);
-			}
-		}
-
-		private class TransformedWs : BackingDataStore
-		{
-			public override void ExecuteSql(string sqlStatement)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IEnumerable<IDataset> GetDatasets(esriDatasetType datasetType)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override ITable OpenQueryTable(string relationshipClassName)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override ITable OpenTable(string name)
-			{
-				throw new NotImplementedException();
 			}
 		}
 

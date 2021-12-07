@@ -48,7 +48,7 @@ namespace ProSuite.QA.Tests.Transformers
 				: base(-1, "intersectResult", intersected.ShapeType,
 				       createBackingDataset: (t) =>
 					       new Transformed((Tfc) t, intersected, intersecting),
-				       workspace: new GdbWorkspace(new TransformedWs()))
+				       workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
 				InvolvedTables = new List<ITable> {(ITable) intersected, (ITable) intersecting};
 
@@ -71,29 +71,6 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			public TransformedFeatureClass BackingDs => (Transformed) BackingDataset;
-		}
-
-		private class TransformedWs : BackingDataStore
-		{
-			public override void ExecuteSql(string sqlStatement)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override IEnumerable<IDataset> GetDatasets(esriDatasetType datasetType)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override ITable OpenQueryTable(string relationshipClassName)
-			{
-				throw new NotImplementedException();
-			}
-
-			public override ITable OpenTable(string name)
-			{
-				throw new NotImplementedException();
-			}
 		}
 
 		private class Transformed : TransformedFeatureClass
