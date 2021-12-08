@@ -6,10 +6,15 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.Core.Processing;
 using ProSuite.Processing;
+using ProSuite.Processing.AGP.Core;
+using ProSuite.Processing.AGP.Core.Domain;
+using ProSuite.Processing.AGP.Core.Utils;
 using ProSuite.Processing.Domain;
 using ProSuite.Processing.Evaluation;
 using ProSuite.Processing.Utils;
+using ProcessDatasetName = ProSuite.Processing.Domain.ProcessDatasetName;
 
 namespace ProSuite.AGP.CartoTrials.CartoProcess
 {
@@ -85,8 +90,8 @@ namespace ProSuite.AGP.CartoTrials.CartoProcess
 				_inputDataset = OpenRequiredDataset(config.InputDataset, nameof(config.InputDataset));
 				_outputMaskDataset = OpenRequiredDataset(config.OutputMaskDataset, nameof(config.OutputMaskDataset));
 				_relationshipClass = OpenAssociation(config.OutputAssociation);
-				_maskAttributes = ProcessingUtils.CreateFieldSetter(
-					config.MaskAttributes, _outputMaskDataset.FeatureClass, nameof(config.MaskAttributes));
+				_maskAttributes = FieldSetter.Create(config.MaskAttributes);
+				_maskAttributes.ValidateTargetFields(_outputMaskDataset.FeatureClass, nameof(config.MaskAttributes));
 				_maskMargin = ImplicitValue.Create(config.MaskMargin, nameof(config.MaskMargin));
 				_maskMargin.Environment = new StandardEnvironment().RegisterConversionFunctions();
 				_simplificationToleranceMu = config.SimplificationTolerance; // TODO convert mm to mu

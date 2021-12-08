@@ -88,6 +88,7 @@
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
           <button refID="ProSuite_AGP_Solution_QA_VerifyVisibleExtentCmd" size="middle" />
           <tool refID="ProSuite_AGP_Solution_QA_VerifyPerimeterTool" size="middle" />
+          <button refID="ProSuite_AGP_Solution_QA_VerifyLastCmd" size="middle" />
           <button refID="ProSuite_AGP_Solution_QA_VerifySelectionCmd" size="middle" />
           <button refID="WorkLists_CreateIssueWorkList" size="large" />
           <tool refID="ProSuite_AGP_Solution_QA_SelectIssueFeaturesTool" size="middle" />
@@ -262,6 +263,16 @@
             Verifies features intersecting a user-defined box, based on the selected quality specification.<disabledText />
           </tooltip>
         </tool>
+        <button id="ProSuite_AGP_Solution_QA_VerifyLastCmd" caption="Verify Last"
+                className="ProSuite.AGP.Solution.QA.VerifyLastCmd" loadOnClick="false"
+                smallImage="Images\VerifyLastCmd16.png" largeImage="Images\VerifyLastCmd32.png">
+          <tooltip heading="Verify using previous perimeter">
+            Re-verifies the last verified perimeter based on the selected quality specification.
+
+            ALT: Zoom to the previously verified extent (without starting verification)
+            <disabledText />
+          </tooltip>
+        </button>
         <button id="ProSuite_AGP_Solution_QA_VerifySelectionCmd" caption="Verify Selection"
                 className="ProSuite.AGP.Solution.QA.VerifySelectionCmd" loadOnClick="false"
                 smallImage="Images\VerifySelectionCmd16.png" largeImage="Images\VerifySelectionCmd32.png">

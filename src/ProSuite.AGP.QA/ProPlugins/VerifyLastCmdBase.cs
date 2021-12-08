@@ -1,44 +1,41 @@
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Forms;
+using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Core.Threading.Tasks;
 using ArcGIS.Desktop.Core;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
-using ProSuite.AGP.Editing;
-using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.QA.VerificationProgress;
 using ProSuite.Commons.AGP;
-using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Progress;
+using ProSuite.Commons.UI.Keyboard;
 using ProSuite.DomainModel.AGP.QA;
 using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainModel.Core.QA.VerificationProgress;
 using ProSuite.UI.QA.VerificationProgress;
+using Button = ArcGIS.Desktop.Framework.Contracts.Button;
 using MessageBox = ArcGIS.Desktop.Framework.Dialogs.MessageBox;
 
 namespace ProSuite.AGP.QA.ProPlugins
 {
-	// todo daro: extract common base class for VerifyPerimeterToolBase, VerifySelectionCmdBase, VerifyVisibleExtentCmdBase
-	// TODO: Move OneClickToolBase to ProSuite.AGP as a shared project instead of using AGP.Editing
-	public abstract class VerifyPerimeterToolBase : OneClickToolBase
+	public abstract class VerifyLastCmdBase : Button
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		protected VerifyPerimeterToolBase()
+		//TODO: improve enabling: disable if qaEnvironment.LastVerificationPerimeter is null
+		protected VerifyLastCmdBase()
 		{
-			IsSketchTool = true;
-			CompleteSketchOnMouseUp = true;
-			RequiresSelection = false;
-
-			//SelectionCursor = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursor);
-			//SelectionCursorShift = ToolUtils.GetCursor(Resources.AdvancedReshapeToolCursorShift);
-
+			// Instead of wiring each single button and tool and calling SessionContext.CanVerifyQuality
+			// for each one, the singleton event aggregator updates all at once:
 			Register();
 		}
 
@@ -49,43 +46,18 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 		protected abstract IMapBasedSessionContext SessionContext { get; }
 
+		protected abstract IProSuiteFacade ProSuiteImpl { get; }
+
 		protected abstract Window CreateProgressWindow(
 			VerificationProgressViewModel progressViewModel);
 
-		protected abstract IProSuiteFacade ProSuiteImpl { get; }
-
-		protected override Task OnToolActivateAsync(bool active)
+		protected override void OnClick()
 		{
-			return base.OnToolActivateAsync(active);
-		}
-
-		protected override bool OnToolActivatedCore(bool hasMapViewChanged)
-		{
-			SetupRectangleSketch();
-
-			return base.OnToolActivatedCore(hasMapViewChanged);
-		}
-
-		protected override Task<bool> OnSketchCompleteCoreAsync(
-			Geometry sketchGeometry,
-			CancelableProgressor progressor)
-		{
-			GeometryUtils.Simplify(sketchGeometry);
-
 			if (SessionContext?.VerificationEnvironment == null)
 			{
 				MessageBox.Show("No quality verification environment is configured.",
-				                "Verify Extent", MessageBoxButton.OK, MessageBoxImage.Warning);
-				return Task.FromResult(false);
-			}
-
-			if (ToolUtils.IsSingleClickSketch(sketchGeometry))
-			{
-				MessageBox.Show(
-					"Invalid perimeter. Please draw a box to define the extent to be verified",
-					"Verify Extent",
-					MessageBoxButton.OK, MessageBoxImage.Warning);
-				return Task.FromResult(false);
+				                "Verify Last", MessageBoxButton.OK, MessageBoxImage.Warning);
+				return;
 			}
 
 			IQualityVerificationEnvironment qaEnvironment =
@@ -96,9 +68,25 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			if (qualitySpecification == null)
 			{
-				MessageBox.Show("No Quality Specification is selected", "Verify Extent",
+				MessageBox.Show("No Quality Specification is selected", "Verify Last",
 				                MessageBoxButton.OK, MessageBoxImage.Warning);
-				return Task.FromResult(false);
+				return;
+			}
+
+			Geometry perimeter = qaEnvironment.LastVerificationPerimeter;
+
+			if (perimeter == null || perimeter.IsEmpty)
+			{
+				MessageBox.Show("No last verification perimeter", "Verify Last",
+				                MessageBoxButton.OK, MessageBoxImage.Warning);
+				return;
+			}
+
+			if (KeyboardUtils.IsModifierPressed(Keys.Alt, exclusive: true))
+			{
+				ZoomTo(perimeter);
+
+				return;
 			}
 
 			var progressTracker = new QualityVerificationProgressTracker
@@ -111,40 +99,24 @@ namespace ProSuite.AGP.QA.ProPlugins
 
 			SpatialReference spatialRef = SessionContext.ProjectWorkspace?.ModelSpatialReference;
 
-			var appController = new AgpBackgroundVerificationController(
-				ProSuiteImpl, MapView.Active, sketchGeometry, spatialRef);
+			var appController =
+				new AgpBackgroundVerificationController(ProSuiteImpl, MapView.Active, perimeter,
+				                                        spatialRef);
 
 			var qaProgressViewmodel =
 				new VerificationProgressViewModel
 				{
 					ProgressTracker = progressTracker,
-					VerificationAction = () => Verify(sketchGeometry, progressTracker, resultsPath),
+					VerificationAction = () => Verify(perimeter, progressTracker, resultsPath),
 					ApplicationController = appController
 				};
 
-			string actionTitle = "Verify Perimeter";
+			string actionTitle = "Verify Last";
 
 			Window window = CreateProgressWindow(qaProgressViewmodel);
 
 			VerifyUtils.ShowProgressWindow(window, qualitySpecification,
 			                               qaEnvironment.BackendDisplayName, actionTitle);
-
-			return Task.FromResult(true);
-		}
-
-		protected override bool HandleEscape()
-		{
-			return true;
-		}
-
-		protected override void LogUsingCurrentSelection()
-		{
-			_msg.Info("Draw a box or press P and draw a polygon");
-		}
-
-		protected override void LogPromptForSelection()
-		{
-			_msg.Info("Draw a box or press P and draw a polygon");
 		}
 
 		private async Task<ServiceCallStatus> Verify(
@@ -152,19 +124,17 @@ namespace ProSuite.AGP.QA.ProPlugins
 			[NotNull] QualityVerificationProgressTracker progressTracker,
 			string resultsPath)
 		{
-			// NOTE: If the background task is not Run( async () => ... but only Run(() => ...
-			// The tool's OnSketchCompleteAsync will be called twice! 
 			Task<ServiceCallStatus> verificationTask =
 				await BackgroundTask.Run(
-					async () =>
+					() =>
 					{
 						IQualityVerificationEnvironment qaEnvironment =
 							SessionContext.VerificationEnvironment;
 
 						Assert.NotNull(qaEnvironment);
 
-						return await qaEnvironment.VerifyPerimeter(
-							       perimeter, progressTracker, resultsPath);
+						return qaEnvironment.VerifyPerimeter(
+							perimeter, progressTracker, resultsPath);
 					},
 					BackgroundProgressor.None);
 
@@ -182,6 +152,38 @@ namespace ProSuite.AGP.QA.ProPlugins
 			}
 
 			return result;
+		}
+
+		private static void ZoomTo([NotNull] Geometry perimeter)
+		{
+			QueuedTaskUtils.Run(
+				async delegate
+				{
+					try
+					{
+						Envelope extent = perimeter.Extent.Expand(1.1, 1.1, true);
+
+						await MapView.Active.ZoomToAsync(extent, TimeSpan.FromSeconds(0.3));
+
+						CIMColor darkGreen = ColorFactory.Instance.CreateRGBColor(0, 128, 0);
+
+						CIMStroke outline =
+							SymbolFactory.Instance.ConstructStroke(
+								darkGreen, 3, SimpleLineStyle.Solid);
+
+						CIMPolygonSymbol polygonSymbol =
+							SymbolFactory.Instance.ConstructPolygonSymbol(
+								darkGreen, SimpleFillStyle.Null, outline);
+
+						await MapUtils.FlashGeometryAsync(MapView.Active, perimeter,
+						                                  polygonSymbol.MakeSymbolReference(),
+						                                  milliseconds: 800);
+					}
+					catch (Exception e)
+					{
+						_msg.Warn($"Error zooming to/flashing verified perimeter: {e.Message}", e);
+					}
+				});
 		}
 	}
 }

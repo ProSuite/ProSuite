@@ -6,9 +6,12 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.Core.Processing;
 using ProSuite.Processing;
-using ProSuite.Processing.Domain;
+using ProSuite.Processing.AGP.Core.Domain;
+using ProSuite.Processing.AGP.Core.Utils;
 using ProSuite.Processing.Utils;
+using ProcessDatasetName = ProSuite.Processing.Domain.ProcessDatasetName;
 
 namespace ProSuite.AGP.CartoTrials.CartoProcess
 {
@@ -76,13 +79,11 @@ namespace ProSuite.AGP.CartoTrials.CartoProcess
 						$"{nameof(config.MaximumAngle)} is {config.MaximumAngle}, not between 0 and 180");
 				}
 
-				_controlPointIdValue = ProcessingUtils.Clip(
-					config.ControlPointIdValue, 1, int.MaxValue,
-					nameof(config.ControlPointIdValue));
+				_controlPointIdValue = config.ControlPointIdValue.Clamp(1, int.MaxValue,
+				                                                        nameof(config.ControlPointIdValue));
 
-				_simplificationTolerance = ProcessingUtils.Clip(
-					config.SimplificationTolerance, 0, double.MaxValue,
-					nameof(config.SimplificationTolerance)); // TODO convert Millimeters (Points) to MapUnits -- how?
+				_simplificationTolerance = config.SimplificationTolerance.Clamp(0, double.MaxValue,
+				                                                                nameof(config.SimplificationTolerance)); // TODO convert Millimeters (Points) to MapUnits -- how?
 			}
 
 			public override void Execute()
