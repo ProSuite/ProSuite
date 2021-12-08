@@ -6,7 +6,6 @@ using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Gdb;
 using ProSuite.Commons.Logging;
-using Path = System.IO.Path;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
@@ -399,10 +398,12 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				{
 					return false;
 				}
-
-				return string.Equals(Path.GetFullPath(PathName),
-				                     Path.GetFullPath(other.PathName),
-				                     StringComparison.OrdinalIgnoreCase);
+				
+				//Determines whether two Uri instances have the same value.
+				// e.g. these paths are equal
+				// C:\Users\daro\AppData\Local\Temp\GdbWorkspaceTest.gdb
+				// file:///C:/Users/daro/AppData/Local/Temp/GdbWorkspaceTest.gdb
+				return Equals(new Uri(PathName), new Uri(other.PathName));
 			}
 
 			// Other workspace is SDE:
