@@ -1057,13 +1057,11 @@ namespace ProSuite.Commons.Geom
 		/// <param name="source"></param>
 		/// <param name="target"></param>
 		/// <param name="tolerance"></param>
-		/// <param name="nonInteriorIntersectingAreas"></param>
 		/// <returns></returns>
 		public static IList<RingGroup> GetIntersectionAreas3D(
-				[NotNull] Polyhedron source,
-				[NotNull] Polyhedron target,
-				double tolerance)
-			// TODO: out IList<RingGroup> nonInteriorIntersectingAreas)
+			[NotNull] Polyhedron source,
+			[NotNull] Polyhedron target,
+			double tolerance)
 		{
 			// First: Split source and target at boundaries in XY.
 			// The 2D intersection assumes 'XY-correct' orientation for the time being (positive outer rings).
