@@ -262,6 +262,40 @@ namespace ProSuite.Commons.Test.Geometry
 		}
 
 		[Test]
+		public void CanDetermineTouchesXYVerticalRingWithinTolerance()
+		{
+			var verticalRing = new Linestring(new List<Pnt3D>
+			                                  {
+				                                  new Pnt3D(0, 0, 0),
+				                                  new Pnt3D(14.99, 50, 0),
+				                                  new Pnt3D(60, 200, 0),
+				                                  new Pnt3D(45, 150, 55),
+				                                  new Pnt3D(0, 0, 55),
+				                                  new Pnt3D(0, 0, 0)
+			                                  });
+
+			var adjacentRing = new Linestring(new List<Pnt3D>
+			                                  {
+				                                  new Pnt3D(0, 0, 0),
+				                                  new Pnt3D(30, 100, 0),
+				                                  new Pnt3D(30, 0, 0),
+				                                  new Pnt3D(0, 0, 0)
+			                                  });
+
+			bool disjoint;
+			Assert.True(GeomRelationUtils.TouchesXY(adjacentRing, verticalRing, 0.01,
+			                                        out disjoint, true,
+			                                        true));
+			Assert.False(disjoint);
+
+			adjacentRing.ReverseOrientation();
+			Assert.True(GeomRelationUtils.TouchesXY(adjacentRing, verticalRing, 0.01,
+			                                        out disjoint, true,
+			                                        true));
+			Assert.False(disjoint);
+		}
+
+		[Test]
 		public void CanDetermineTouchesIdenticalRings()
 		{
 			var ring1 = new List<Pnt3D>();

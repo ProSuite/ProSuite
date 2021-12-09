@@ -639,10 +639,13 @@ namespace ProSuite.Commons.Geom
 
 		public static bool InteriorIntersectXY([NotNull] RingGroup poly1,
 		                                       [NotNull] RingGroup poly2,
-		                                       double tolerance)
+		                                       double tolerance,
+		                                       bool disregardRingOrientation = false,
+		                                       bool ring2CanHaveLinearSelfIntersections = false)
 		{
 			bool disjoint;
-			bool touchXY = TouchesXY(poly1, poly2, tolerance, out disjoint);
+			bool touchXY = TouchesXY(poly1, poly2, tolerance, out disjoint,
+			                         disregardRingOrientation, ring2CanHaveLinearSelfIntersections);
 
 			if (disjoint)
 			{
@@ -698,10 +701,13 @@ namespace ProSuite.Commons.Geom
 		public static bool TouchesXY([NotNull] RingGroup poly1,
 		                             [NotNull] RingGroup poly2,
 		                             double tolerance,
-		                             out bool disjoint)
+		                             out bool disjoint,
+		                             bool disregardRingOrientation = false,
+		                             bool ring2CanHaveLinearSelfIntersections = false)
 		{
 			bool exteriorRingsTouch =
-				TouchesXY(poly1.ExteriorRing, poly2.ExteriorRing, tolerance, out disjoint);
+				TouchesXY(poly1.ExteriorRing, poly2.ExteriorRing, tolerance, out disjoint,
+				          disregardRingOrientation, ring2CanHaveLinearSelfIntersections);
 
 			if (disjoint || exteriorRingsTouch)
 			{
@@ -715,7 +721,8 @@ namespace ProSuite.Commons.Geom
 
 			// Check if the outer ring touches an inner ring from the inside (assuming proper orientation -> from the outside)
 			// and is disjoint from all other inner rings
-			if (TouchesXY(poly1.ExteriorRing, poly2.InteriorRings, tolerance, out disjoint))
+			if (TouchesXY(poly1.ExteriorRing, poly2.InteriorRings, tolerance, out disjoint,
+			              disregardRingOrientation, ring2CanHaveLinearSelfIntersections))
 			{
 				return true;
 			}
@@ -725,7 +732,8 @@ namespace ProSuite.Commons.Geom
 				return false;
 			}
 
-			if (TouchesXY(poly2.ExteriorRing, poly1.InteriorRings, tolerance, out disjoint))
+			if (TouchesXY(poly2.ExteriorRing, poly1.InteriorRings, tolerance, out disjoint,
+			              disregardRingOrientation, ring2CanHaveLinearSelfIntersections))
 			{
 				return true;
 			}
@@ -736,7 +744,9 @@ namespace ProSuite.Commons.Geom
 		public static bool TouchesXY([NotNull] Linestring ring1,
 		                             [NotNull] IEnumerable<Linestring> interiorRings,
 		                             double tolerance,
-		                             out bool disjoint)
+		                             out bool disjoint,
+		                             bool disregardRingOrientation = false,
+		                             bool ring2CanHaveLinearSelfIntersections = false)
 		{
 			disjoint = false;
 
@@ -746,8 +756,8 @@ namespace ProSuite.Commons.Geom
 			{
 				// NOTE: disjoint with interor ring means the outer ring is inside:
 				bool ring1WithinInterior;
-				if (TouchesXY(ring1, interiorRing, tolerance,
-				              out ring1WithinInterior))
+				if (TouchesXY(ring1, interiorRing, tolerance, out ring1WithinInterior,
+				              disregardRingOrientation, ring2CanHaveLinearSelfIntersections))
 				{
 					polyTouchesAnyInnerRing = true;
 				}
@@ -842,7 +852,7 @@ namespace ProSuite.Commons.Geom
 			IList<IntersectionPoint3D> intersectionPoints = GeomTopoOpUtils.GetIntersectionPoints(
 				ring1, ring2, tolerance, allIntersections, false);
 
-			if (HasSourceCrossingIntersections(ring1, ring2, intersectionPoints))
+			if (HasSourceCrossingIntersections(ring1, ring2, intersectionPoints, tolerance))
 			{
 				return false;
 			}
@@ -860,7 +870,8 @@ namespace ProSuite.Commons.Geom
 		private static bool HasSourceCrossingIntersections(
 			[NotNull] Linestring ring1,
 			[NotNull] Linestring ring2,
-			[NotNull] IList<IntersectionPoint3D> intersectionPoints)
+			[NotNull] IList<IntersectionPoint3D> intersectionPoints,
+			double tolerance)
 		{
 			var leftDeviationCount = 0;
 			var rightDeviationCount = 0;
@@ -875,7 +886,7 @@ namespace ProSuite.Commons.Geom
 				}
 
 				bool? targetDeviatesToLeft =
-					intersectionPoint.TargetDeviatesToLeftOfSourceRing(ring1, ring2);
+					intersectionPoint.TargetDeviatesToLeftOfSourceRing(ring1, ring2, tolerance);
 
 				if (targetDeviatesToLeft == null)
 				{

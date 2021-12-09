@@ -685,9 +685,12 @@ namespace ProSuite.Commons.Geom
 				                           : target[nextTargetSegment.Value].EndPoint;
 
 			isInbound = nextPntAlongTarget != null &&
-			            intersectionPoint.IsOnTheRightSide(source, nextPntAlongTarget, true);
+			            true == intersectionPoint.IsOnTheRightSide(
+				            source, nextPntAlongTarget, true);
+
 			isOutbound = previousPntAlongTarget != null &&
-			             intersectionPoint.IsOnTheRightSide(source, previousPntAlongTarget, true);
+			             true == intersectionPoint.IsOnTheRightSide(
+				             source, previousPntAlongTarget, true);
 		}
 
 		private void PreferTargetZ(IntersectionPoint3D atIntersection, Pnt3D resultPoint)

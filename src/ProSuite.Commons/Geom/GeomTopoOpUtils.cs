@@ -738,6 +738,70 @@ namespace ProSuite.Commons.Geom
 			return toTheInside;
 		}
 
+		/// <summary>
+		/// Determines whether the test point is on the right side (inside of positive ring) of the
+		/// two provided segments of a ring.
+		/// </summary>
+		/// <param name="previousSegment">The segment 1</param>
+		/// <param name="nextSegment">The segment 2</param>
+		/// <param name="testPoint">The test point whose location shall be tested.</param>
+		/// <param name="tolerance"></param>
+		/// <returns>True, if the test point is on the right side, i.e. inside of a positive ring.
+		/// False, if the test point is on the left side.
+		/// Null if the test point is within the tolerance of one of the segments.</returns>
+		public static bool? IsOnTheRightSide([NotNull] Line3D previousSegment,
+		                                     [NotNull] Line3D nextSegment,
+		                                     [NotNull] IPnt testPoint,
+		                                     double tolerance)
+		{
+			double distanceFromNext = nextSegment.GetDistanceXYPerpendicularSigned(
+				testPoint, out double distanceAlongNextRatio);
+
+			if (Math.Abs(distanceFromNext) < tolerance &&
+			    distanceAlongNextRatio >= 0 && distanceAlongNextRatio <= 1)
+			{
+				return null;
+			}
+
+			bool isRightOfNextSegment = distanceFromNext < 0;
+
+			double distanceAlongPreviousRatio;
+			double distanceFromPrevious = previousSegment.GetDistanceXYPerpendicularSigned(
+				testPoint, out distanceAlongPreviousRatio);
+
+			if (Math.Abs(distanceFromPrevious) < tolerance &&
+			    distanceAlongPreviousRatio >= 0 && distanceAlongPreviousRatio <= 1)
+			{
+				return null;
+			}
+
+			bool isRightOfPreviousSegment = distanceFromPrevious < 0;
+
+			bool isRightTurn = GeomUtils.IsLeftXY(previousSegment.StartPoint,
+			                                      nextSegment.StartPoint,
+			                                      nextSegment.EndPoint) < 0;
+
+			var toTheInside = true;
+			if (isRightTurn)
+			{
+				if (! isRightOfPreviousSegment || ! isRightOfNextSegment)
+				{
+					// clockwise convex: both must be on the right
+					toTheInside = false;
+				}
+			}
+			else
+			{
+				// clockwise concave: must not be on the left of either
+				if (! isRightOfPreviousSegment && ! isRightOfNextSegment)
+				{
+					toTheInside = false;
+				}
+			}
+
+			return toTheInside;
+		}
+
 		#endregion
 
 		#region 3D Intersection

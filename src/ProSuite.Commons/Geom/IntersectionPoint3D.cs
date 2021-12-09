@@ -588,7 +588,8 @@ namespace ProSuite.Commons.Geom
 		}
 
 		public bool? TargetDeviatesToLeftOfSourceRing([NotNull] Linestring sourceRing,
-		                                              [NotNull] Linestring targetRing)
+		                                              [NotNull] Linestring targetRing,
+		                                              double tolerance = 0)
 		{
 			if (TargetDeviatesToLeftOfSource != null)
 			{
@@ -599,7 +600,7 @@ namespace ProSuite.Commons.Geom
 				Assert.NotNull(GetNonIntersectingTargetPoint(targetRing, 0.5));
 
 			TargetDeviatesToLeftOfSource =
-				! IsOnTheRightSide(sourceRing, nonIntersectingTargetPnt, true);
+				! IsOnTheRightSide(sourceRing, nonIntersectingTargetPnt, true, tolerance);
 
 			return TargetDeviatesToLeftOfSource;
 		}
@@ -685,9 +686,10 @@ namespace ProSuite.Commons.Geom
 			return SegmentIntersection.TargetIndex;
 		}
 
-		public bool IsOnTheRightSide([NotNull] ISegmentList source,
-		                             [NotNull] Pnt3D testPoint,
-		                             bool disregardOrientation = false)
+		public bool? IsOnTheRightSide([NotNull] ISegmentList source,
+		                              [NotNull] Pnt3D testPoint,
+		                              bool disregardOrientation = false,
+		                              double tolerance = 0)
 		{
 			Assert.True(source.IsClosed, "Source must be closed ring(s)");
 
@@ -702,7 +704,14 @@ namespace ProSuite.Commons.Geom
 			if (sourceRatio > 0 && sourceRatio < 1)
 			{
 				// The intersection is on the source segment's interior
-				return sourceSegment.IsLeftXY(testPoint) < 0;
+				if (tolerance == 0)
+				{
+					return sourceSegment.IsLeftXY(testPoint) < 0;
+				}
+
+				double perpDistance = sourceSegment.GetDistanceXYPerpendicularSigned(testPoint);
+
+				return Math.Abs(perpDistance) < tolerance ? (bool?) null : perpDistance < 0;
 			}
 
 			Line3D previousSegment, nextSegment;
@@ -727,8 +736,25 @@ namespace ProSuite.Commons.Geom
 				nextSegment = sourceRing.NextSegmentInRing(sourceSegmentIdx, true);
 			}
 
-			bool result = GeomTopoOpUtils.IsOnTheRightSide(previousSegment.StartPoint, Point,
-			                                               nextSegment.EndPoint, testPoint);
+			bool result;
+			if (tolerance > 0)
+			{
+				// Test if the ring point is within the tolerance -> null
+				bool? onTheRight = GeomTopoOpUtils.IsOnTheRightSide(
+					previousSegment, nextSegment, testPoint, tolerance);
+
+				if (onTheRight == null)
+				{
+					return null;
+				}
+
+				result = onTheRight.Value;
+			}
+			else
+			{
+				result = GeomTopoOpUtils.IsOnTheRightSide(previousSegment.StartPoint, Point,
+				                                          nextSegment.EndPoint, testPoint);
+			}
 
 			if (! disregardOrientation && sourceRing.ClockwiseOriented == false)
 			{
