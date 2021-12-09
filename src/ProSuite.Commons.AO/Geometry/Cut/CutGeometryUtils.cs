@@ -151,7 +151,7 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 				if (zSource == ChangeAlongZSource.SourcePlane)
 				{
 					double zTolerance = GeometryUtils.GetZTolerance(inputPolygon);
-					plane = ChangeZUtils.GetSourcePlane(
+					plane = ChangeZUtils.GetPlane(
 						GeometryConversionUtils.GetPntList(connectedComponent),
 						zTolerance);
 				}
@@ -638,7 +638,7 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 			Plane3D plane = null;
 			if (zSource == ChangeAlongZSource.SourcePlane)
 			{
-				plane = ChangeZUtils.GetSourcePlane(
+				plane = ChangeZUtils.GetPlane(
 					inputMultipoly.GetPoints().ToList(), zTolerance);
 			}
 
@@ -808,8 +808,7 @@ namespace ProSuite.Commons.AO.Geometry.Cut
 			Plane3D plane = null;
 			if (zSource == ChangeAlongZSource.SourcePlane)
 			{
-				plane = ChangeZUtils.GetSourcePlane(
-					ringGroup.ExteriorRing.GetPoints().ToList(), zTolerance);
+				plane = ChangeZUtils.GetPlane(ringGroup.ExteriorRing, zTolerance);
 			}
 
 			GeometryUtils.Simplify(cutLine, true, true);

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -11,12 +12,30 @@ namespace ProSuite.Commons.Geom
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		[CanBeNull]
-		public static Plane3D GetSourcePlane([NotNull] IList<Pnt3D> pntList,
-		                                     double coplanarityTolerance,
-		                                     bool warnIfNotPlanar = true)
+		public static Plane3D GetPlane([NotNull] Linestring linestring,
+		                               double coplanarityTolerance,
+		                               bool warnIfNotPlanar = true)
 		{
-			Plane3D sourcePlane = Plane3D.TryFitPlane(pntList);
+			return GetPlane(linestring.GetPoints().ToList(),
+			                coplanarityTolerance, warnIfNotPlanar, linestring.IsClosed);
+		}
+
+		public static Plane3D GetPlane([NotNull] MultiLinestring multiLinestring,
+		                               double coplanarityTolerance,
+		                               bool warnIfNotPlanar = true)
+		{
+			return GetPlane(multiLinestring.GetPoints().ToList(),
+			                coplanarityTolerance, warnIfNotPlanar,
+			                multiLinestring.IsClosed);
+		}
+
+		[CanBeNull]
+		public static Plane3D GetPlane([NotNull] IList<Pnt3D> pntList,
+		                               double coplanarityTolerance,
+		                               bool warnIfNotPlanar = true,
+		                               bool isRing = false)
+		{
+			Plane3D sourcePlane = Plane3D.TryFitPlane(pntList, isRing);
 
 			if (sourcePlane == null)
 			{

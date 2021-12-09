@@ -297,7 +297,7 @@ namespace ProSuite.Commons.Geom
 			Plane3D plane = null;
 			if (zSource == ChangeAlongZSource.SourcePlane)
 			{
-				plane = ChangeZUtils.GetSourcePlane(sourceRings.GetPoints().ToList(), tolerance);
+				plane = ChangeZUtils.GetPlane(sourceRings, tolerance);
 			}
 
 			var subcurveNavigator = new MultipleRingNavigator(sourceRings, targetRings, tolerance);
