@@ -240,17 +240,51 @@ namespace ProSuite.Commons.Geom
 			return resultXY.SelectMany(r => GetConnectedComponents(r, tolerance)).ToList();
 		}
 
-		public static MultiLinestring GetDifferenceAreasXY([NotNull] MultiLinestring sourceRings,
-		                                                   [NotNull] MultiLinestring targetRings,
-		                                                   double tolerance)
+		public static MultiLinestring GetDifferenceAreasXY(
+			[NotNull] MultiLinestring sourceRings,
+			[NotNull] Polyhedron targetPolyhedron,
+			double tolerance,
+			ChangeAlongZSource zSource = ChangeAlongZSource.Target)
+		{
+			// Use the source rings and iteratively go through all target rings and remove the intersections:
+
+			var result = sourceRings.Clone();
+
+			// TODO: Consider calculating the plane only once.
+			foreach (var targetRingGroup in targetPolyhedron.RingGroups)
+			{
+				result = GetDifferenceAreasXY(result, targetRingGroup, tolerance, zSource);
+
+				if (result.IsEmpty)
+				{
+					return result;
+				}
+			}
+
+			return result;
+		}
+
+		public static MultiLinestring GetDifferenceAreasXY(
+			[NotNull] MultiLinestring sourceRings,
+			[NotNull] MultiLinestring targetRings,
+			double tolerance,
+			ChangeAlongZSource zSource = ChangeAlongZSource.Target)
 		{
 			Assert.ArgumentCondition(sourceRings.IsClosed, "Source must be closed.");
 			Assert.ArgumentCondition(targetRings.IsClosed, "Target must be closed.");
 
-			var subcurveNavigator = new MultipleRingNavigator(sourceRings, targetRings, tolerance);
-			var ringOperator = new RingOperator(subcurveNavigator);
+			MultiLinestring result = ProcessWithZChangesAlongTarget(
+				sourceRings, targetRings,
+				(source, target) =>
+				{
+					var subcurveNavigator =
+						new MultipleRingNavigator(source, target, tolerance);
+					var ringOperator = new RingOperator(subcurveNavigator);
 
-			return ringOperator.DifferenceXY();
+					return ringOperator.DifferenceXY();
+				}, tolerance, zSource);
+
+			return result;
 		}
 
 		public static IList<RingGroup> RemoveXY([NotNull] RingGroup fromSource,
@@ -286,27 +320,6 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
-		public static MultiLinestring GetIntersectionMultipolygonXY(
-			[NotNull] MultiLinestring sourceRings,
-			[NotNull] Polyhedron targetPolyhedron,
-			double tolerance,
-			ChangeAlongZSource zSource = ChangeAlongZSource.Target)
-		{
-			// TODO: Implement that target rings can intersect each other as this is the case for polyhedrons.
-			//       -> performs much better because a single spatial index could be used.
-
-			var result = new List<MultiLinestring>();
-			foreach (var targetRingGroup in targetPolyhedron.RingGroups)
-			{
-				MultiLinestring intersection =
-					GetIntersectionAreasXY(sourceRings, targetRingGroup, tolerance, zSource);
-
-				result.Add(intersection);
-			}
-
-			return new MultiPolycurve(result);
-		}
-
 		public static MultiLinestring GetIntersectionAreasXY(
 			[NotNull] MultiLinestring sourceRings,
 			[NotNull] MultiLinestring targetRings,
@@ -316,6 +329,28 @@ namespace ProSuite.Commons.Geom
 			Assert.ArgumentCondition(sourceRings.IsClosed, "Source must be closed.");
 			Assert.ArgumentCondition(targetRings.IsClosed, "Target must be closed.");
 
+			MultiLinestring result = ProcessWithZChangesAlongTarget(
+				sourceRings, targetRings,
+				(source, target) =>
+				{
+					var subcurveNavigator =
+						new MultipleRingNavigator(source, target, tolerance);
+
+					var ringOperator = new RingOperator(subcurveNavigator);
+
+					return ringOperator.IntersectXY();
+				}, tolerance, zSource);
+
+			return result;
+		}
+
+		private static MultiLinestring ProcessWithZChangesAlongTarget(
+			[NotNull] MultiLinestring sourceRings,
+			[NotNull] MultiLinestring targetRings,
+			Func<MultiLinestring, MultiLinestring, MultiLinestring> processing,
+			double tolerance,
+			ChangeAlongZSource zSource = ChangeAlongZSource.Target)
+		{
 			if (zSource != ChangeAlongZSource.Target)
 			{
 				targetRings = targetRings.Clone();
@@ -328,17 +363,13 @@ namespace ProSuite.Commons.Geom
 				plane = ChangeZUtils.GetPlane(sourceRings, tolerance);
 			}
 
-			var subcurveNavigator = new MultipleRingNavigator(sourceRings, targetRings, tolerance);
-
-			var ringOperator = new RingOperator(subcurveNavigator);
-
-			MultiLinestring result = ringOperator.IntersectXY();
+			MultiLinestring result = processing(sourceRings, targetRings);
 
 			if (plane != null)
 			{
 				result.AssignUndefinedZs(plane);
 			}
-			else
+			else if (zSource == ChangeAlongZSource.InterpolatedSource)
 			{
 				result.InterpolateUndefinedZs();
 			}

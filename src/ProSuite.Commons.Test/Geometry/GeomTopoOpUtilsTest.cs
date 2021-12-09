@@ -3916,7 +3916,7 @@ namespace ProSuite.Commons.Test.Geometry
 			ring1.Add(new Pnt3D(100, 0, 0));
 			ring1.Add(new Pnt3D(0, 0, 0));
 
-			// ring 2: sloping northwards, intersecction line along 100 on the y-axis
+			// ring 2: sloping northwards, plane intersection line along the x-axis on y=100
 			ring2.Add(new Pnt3D(50, 80, 30));
 			ring2.Add(new Pnt3D(50, 200, 0));
 			ring2.Add(new Pnt3D(130, 200, 0));
@@ -3938,20 +3938,35 @@ namespace ProSuite.Commons.Test.Geometry
 			var patch1 = new Polyhedron(new[] {new RingGroup(new Linestring(ring1))});
 			var patch2 = new Polyhedron(new[] {new RingGroup(new Linestring(ring2))});
 
+			const double xyTolerance = 0.001;
+
 			IList<RingGroup> intersection =
-				GeomTopoOpUtils.GetIntersectionAreas3D(patch1, patch2, 0.001);
+				GeomTopoOpUtils.GetIntersectionAreas3D(patch1, patch2, xyTolerance);
 
 			Assert.AreEqual(2, intersection.Count);
 
 			MultiLinestring mergedIntersections =
-				GeomTopoOpUtils.GetUnionAreasXY(intersection[0], intersection[1], 0.001);
+				GeomTopoOpUtils.GetUnionAreasXY(intersection[0], intersection[1], xyTolerance);
 
 			Assert.AreEqual(1000, mergedIntersections.GetArea2D());
 
 			Assert.IsTrue(ChangeZUtils.AreCoplanar(mergedIntersections.GetPoints().ToList(), 0.0001,
 			                                       out double maxDeviation, out string message));
 
-			Assert.IsTrue(maxDeviation < 0.001);
+			Assert.IsTrue(maxDeviation < xyTolerance);
+
+			var xyIntersection =
+				GeomTopoOpUtils.GetIntersectionAreasXY(patch1.RingGroups[0], patch2.RingGroups[0],
+				                                       xyTolerance);
+
+			// TODO: Fix union!
+			//Assert.AreEqual(xyIntersection.GetArea2D(), mergedIntersections.GetArea2D(), .001);
+
+			MultiLinestring diff1 =
+				GeomTopoOpUtils.GetDifferenceAreasXY(patch1, patch2, xyTolerance);
+
+			Assert.AreEqual(patch1.GetArea2D(), diff1.GetArea2D() + xyIntersection.GetArea2D(),
+			                0.001);
 		}
 
 		[Test]
