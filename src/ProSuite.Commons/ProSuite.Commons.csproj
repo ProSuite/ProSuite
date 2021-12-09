@@ -89,6 +89,7 @@
     <Compile Include="Geom\EsriShape\ProSuiteGeometryType.cs" />
     <Compile Include="Geom\GeomRelationUtils.cs" />
     <Compile Include="Geom\IBoundedXY.cs" />
+    <Compile Include="Geom\IntersectionArea3D.cs" />
     <Compile Include="Geom\IPointList.cs" />
     <Compile Include="Geom\ISegmentList.cs" />
     <Compile Include="Geom\MultipleRingNavigator.cs" />

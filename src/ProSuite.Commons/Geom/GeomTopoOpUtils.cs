@@ -260,7 +260,33 @@ namespace ProSuite.Commons.Geom
 			return RemoveXY(fromSource, new List<Linestring> {ringToRemove}, tolerance);
 		}
 
-		public static MultiLinestring GetIntersectionAreasXY(
+		public static IList<IntersectionArea3D> GetIntersectionAreasXY(
+			[NotNull] MultiLinestring sourceRings,
+			[NotNull] Polyhedron targetPolyhedron,
+			double tolerance,
+			ChangeAlongZSource zSource = ChangeAlongZSource.Target)
+		{
+			// TODO: Implement that target rings can intersect each other as this is the case for polyhedrons.
+			//       -> performs much better because a single spatial index could be used.
+
+			var result = new List<IntersectionArea3D>();
+			foreach (var targetRingGroup in targetPolyhedron.RingGroups)
+			{
+				MultiLinestring intersection =
+					GetIntersectionAreasXY(sourceRings, targetRingGroup, tolerance, zSource);
+
+				if (intersection.IsEmpty)
+				{
+					continue;
+				}
+
+				result.Add(new IntersectionArea3D(intersection, sourceRings, targetRingGroup));
+			}
+
+			return result;
+		}
+
+		public static MultiLinestring GetIntersectionMultipolygonXY(
 			[NotNull] MultiLinestring sourceRings,
 			[NotNull] Polyhedron targetPolyhedron,
 			double tolerance,
@@ -272,8 +298,10 @@ namespace ProSuite.Commons.Geom
 			var result = new List<MultiLinestring>();
 			foreach (var targetRingGroup in targetPolyhedron.RingGroups)
 			{
-				result.Add(
-					GetIntersectionAreasXY(sourceRings, targetRingGroup, tolerance, zSource));
+				MultiLinestring intersection =
+					GetIntersectionAreasXY(sourceRings, targetRingGroup, tolerance, zSource);
+
+				result.Add(intersection);
 			}
 
 			return new MultiPolycurve(result);
@@ -998,10 +1026,13 @@ namespace ProSuite.Commons.Geom
 		/// <param name="source"></param>
 		/// <param name="target"></param>
 		/// <param name="tolerance"></param>
+		/// <param name="nonInteriorIntersectingAreas"></param>
 		/// <returns></returns>
-		public static IList<RingGroup> GetIntersectionAreas3D([NotNull] Polyhedron source,
-		                                                      [NotNull] Polyhedron target,
-		                                                      double tolerance)
+		public static IList<RingGroup> GetIntersectionAreas3D(
+				[NotNull] Polyhedron source,
+				[NotNull] Polyhedron target,
+				double tolerance)
+			// TODO: out IList<RingGroup> nonInteriorIntersectingAreas)
 		{
 			// First: Split source and target at boundaries in XY.
 			// The 2D intersection assumes 'XY-correct' orientation for the time being (positive outer rings).
@@ -1009,20 +1040,25 @@ namespace ProSuite.Commons.Geom
 			var xySplitTargetRings = new List<RingGroup>();
 			foreach (RingGroup sourceRingGroup in source.RingGroups)
 			{
-				MultiLinestring intersectionAreasXY =
+				foreach (IntersectionArea3D intersectionArea in
 					GetIntersectionAreasXY(sourceRingGroup, target, tolerance,
-					                       ChangeAlongZSource.SourcePlane);
+					                       ChangeAlongZSource.SourcePlane))
+				{
+					xySplitSourceRings.AddRange(GetConnectedComponents(
+						                            intersectionArea.IntersectionArea, tolerance));
 
-				xySplitSourceRings.AddRange(GetConnectedComponents(intersectionAreasXY, tolerance));
-			}
+					// and the intersection within the target ring's plane:
+					var targetPlane = ChangeZUtils.GetPlane(intersectionArea.Target, tolerance);
 
-			foreach (RingGroup targetRingGroup in target.RingGroups)
-			{
-				MultiLinestring intersectionAreasXY =
-					GetIntersectionAreasXY(targetRingGroup, source, tolerance,
-					                       ChangeAlongZSource.SourcePlane);
+					MultiLinestring intersectionInTargetPlane =
+						intersectionArea.IntersectionArea.Clone();
 
-				xySplitTargetRings.AddRange(GetConnectedComponents(intersectionAreasXY, tolerance));
+					intersectionInTargetPlane.DropZs();
+					intersectionInTargetPlane.AssignUndefinedZs(targetPlane);
+
+					xySplitTargetRings.AddRange(
+						GetConnectedComponents(intersectionInTargetPlane, tolerance));
+				}
 			}
 
 			// Second: Calculate 3D cut lines and cut the source along them
