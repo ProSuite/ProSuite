@@ -3,7 +3,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Microservices.Definitions.QA.Test;
 using ProSuite.QA.Tests.Documentation;
 
-namespace ProSuite.QA.Tests
+namespace ProSuite.QA.Tests.External
 {
 	public class QaExternalGraphicConflict : QaExternalServiceBase
 	{
