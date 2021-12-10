@@ -1,14 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{61704E1C-E13D-45E2-8388-BD3D1F8A1AF5}</ProjectGuid>
+    <ProjectGuid>{FE90B848-F449-47FE-8F3F-FF4C6A3BFF22}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProSuite.QA.TestFactories</RootNamespace>
-    <AssemblyName>ProSuite.QA.TestFactories</AssemblyName>
+    <RootNamespace>ProSuite.QA.Tests.External</RootNamespace>
+    <AssemblyName>ProSuite.QA.Tests.External</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
@@ -35,7 +34,7 @@
     <DefineConstants>TRACE;$(VSArcGISProduct)</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.QA.TestFactories.xml</DocumentationFile>
+    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.QA.Tests.External.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
@@ -63,12 +62,18 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.$(VSArcGISProduct).System.dll</HintPath>
     </Reference>
-    <Reference Include="ESRI.ArcGIS.Version, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+    <Reference Include="ProSuite.Microservices.Definitions.QA.Test, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.ArcGIS.Version.dll</HintPath>
+      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.Test.dll</HintPath>
+    </Reference>
+    <Reference Include="ProSuite.Microservices.Definitions.Shared, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Shared.dll</HintPath>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Core" />
+    <Reference Include="System.Core">
+      <RequiredTargetFramework>3.5</RequiredTargetFramework>
+    </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
@@ -76,95 +81,56 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="ConfiguratorUtils.cs" />
-    <Compile Include="DatasetConstraintConfigurator.cs" />
-    <Compile Include="DocStrings.Designer.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>DocStrings.resx</DependentUpon>
-    </Compile>
-    <Compile Include="HierarchicalConstraintUtils.cs" />
-    <Compile Include="LineConnectionConfigurator.cs" />
-    <Compile Include="LinePolyOverlapConfigurator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QaAngleFactory.cs" />
-    <Compile Include="QaConstraintsListFactory.cs" />
-    <Compile Include="QaDangleFactory.cs" />
-    <Compile Include="QaDatasetConstraintFactory.cs" />
-    <Compile Include="QaExtentFactory.cs" />
-    <Compile Include="QaFactoryPseudoNodes.cs" />
-    <Compile Include="QaGdbConstraintFactory.cs" />
-    <Compile Include="QaLinearUnitFactory.cs" />
-    <Compile Include="QaLineConnection.cs" />
-    <Compile Include="QaLineIntersectAngleFactory.cs" />
-    <Compile Include="QaMaxAreaFactory.cs" />
-    <Compile Include="QaMaxLengthFactory.cs" />
-    <Compile Include="QaMaxSlopeFactory.cs" />
-    <Compile Include="QaMinAreaFactory.cs" />
-    <Compile Include="QaMinIntersectFactory.cs" />
-    <Compile Include="QaMinLengthFactory.cs" />
-    <Compile Include="QaMinNodeAngleFactory.cs" />
-    <Compile Include="QaMinNodeDistanceFactory.cs" />
-    <Compile Include="QaMinSegAngleFactory.cs" />
-    <Compile Include="QaMinSegmentLengthFactory.cs" />
-    <Compile Include="QaRelationTestFactory.cs" />
-    <Compile Include="QaRelConstraint.cs" />
-    <Compile Include="QaRelGroupConnected.cs" />
-    <Compile Include="QaRelGroupConstraints.cs" />
-    <Compile Include="QaRelLineGroupConstraints.cs" />
-    <Compile Include="QaRelMustBeNearOther.cs" />
-    <Compile Include="QaRelRegularExpression.cs" />
-    <Compile Include="QaRelUnique.cs" />
-    <Compile Include="QaTopoNotNearPolyFactory.cs" />
+    <Compile Include="QaExternalGraphicConflict.cs" />
+    <Compile Include="QaExternalService.cs" />
+    <Compile Include="QaExternalServiceBase.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">
       <Project>{7E4B0861-83ED-4D12-BE27-93C9053C88CA}</Project>
       <Name>ProSuite.Commons.AO</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
-      <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
-      <Name>ProSuite.Commons.Essentials</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
-      <Project>{a227d52c-0536-498f-acf2-2a5a67c3d9ff}</Project>
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
+      <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
       <Name>ProSuite.Commons.Logging</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons\ProSuite.Commons.csproj">
       <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
       <Name>ProSuite.Commons</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj">
-      <Project>{d360621d-d792-403b-a625-06a707a89d22}</Project>
-      <Name>ProSuite.DomainModel.AO</Name>
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
+      <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
+      <Name>ProSuite.Commons.Essentials</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
-      <Project>{0B48B56F-3A3D-4367-AA76-A356519AF2AB}</Project>
-      <Name>ProSuite.DomainModel.Core</Name>
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.QA.Core\ProSuite.QA.Core.csproj">
+      <Project>{01CBBA9E-0D4D-439F-9147-6A5685884A65}</Project>
+      <Name>ProSuite.QA.Core</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ProSuite.QA.Container\ProSuite.QA.Container.csproj">
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.QA.Container\ProSuite.QA.Container.csproj">
       <Project>{D51693C1-F9F6-425D-8CD6-8DFBF5A52F6F}</Project>
       <Name>ProSuite.QA.Container</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj">
-      <Project>{01cbba9e-0d4d-439f-9147-6a5685884a65}</Project>
-      <Name>ProSuite.QA.Core</Name>
+    <ProjectReference Include="..\ProSuite.Microservices.AO\ProSuite.Microservices.AO.csproj">
+      <Project>{53E0297E-F959-4D5D-B1CB-33D3A1D96623}</Project>
+      <Name>ProSuite.Microservices.AO</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj">
+      <Project>{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}</Project>
+      <Name>ProSuite.Microservices.Client</Name>
     </ProjectReference>
     <ProjectReference Include="..\ProSuite.QA.Tests\ProSuite.QA.Tests.csproj">
-      <Project>{7a1d3ab3-a9a8-45b0-9452-a0ddea004e2b}</Project>
+      <Project>{7A1D3AB3-A9A8-45B0-9452-A0DDEA004E2B}</Project>
       <Name>ProSuite.QA.Tests</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="DocStrings.de.resx">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-    <EmbeddedResource Include="DocStrings.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>DocStrings.Designer.cs</LastGenOutput>
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
+    <PackageReference Include="Google.Protobuf">
+      <Version>3.14.0</Version>
+    </PackageReference>
+    <PackageReference Include="Grpc">
+      <Version>2.36.4</Version>
+    </PackageReference>
   </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>

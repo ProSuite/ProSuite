@@ -248,6 +248,10 @@
       <Project>{61704E1C-E13D-45E2-8388-BD3D1F8A1AF5}</Project>
       <Name>ProSuite.QA.TestFactories</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.QA.Tests.External\ProSuite.QA.Tests.External.csproj">
+      <Project>{FE90B848-F449-47FE-8F3F-FF4C6A3BFF22}</Project>
+      <Name>ProSuite.QA.Tests.External</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.QA.Tests\ProSuite.QA.Tests.csproj">
       <Project>{7A1D3AB3-A9A8-45B0-9452-A0DDEA004E2B}</Project>
       <Name>ProSuite.QA.Tests</Name>
