@@ -128,7 +128,7 @@ namespace ProSuite.Commons.AO.Surface
 
 		IEnumDataset IDataset.Subsets => throw new NotImplementedException();
 
-		IWorkspace IDataset.Workspace => ((IDataset) DataSources[0]).Workspace;
+		IWorkspace IDataset.Workspace => ((IDataset) DataSources[0].FeatureClass).Workspace;
 
 		IPropertySet IDataset.PropertySet => throw new NotImplementedException();
 
