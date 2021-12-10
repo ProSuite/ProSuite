@@ -1,7 +1,4 @@
-
 namespace ProSuite.DomainModel.Core.DataModel
 {
-	public interface ISimpleRasterDataset : ISpatialDataset
-	{
-	}
+	public interface ISimpleRasterDataset : ISpatialDataset { }
 }

@@ -15,8 +15,8 @@ namespace ProSuite.DomainModel.Core.QA
 		protected IssueFilterConfiguration() { }
 
 		public IssueFilterConfiguration(string name,
-		                              [NotNull] IssueFilterDescriptor issueFilterDescriptor,
-		                              [CanBeNull] string description = "")
+		                                [NotNull] IssueFilterDescriptor issueFilterDescriptor,
+		                                [CanBeNull] string description = "")
 			: base(name, description)
 		{
 			Assert.ArgumentNotNull(issueFilterDescriptor, nameof(issueFilterDescriptor));

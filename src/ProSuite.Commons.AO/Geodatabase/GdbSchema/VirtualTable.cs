@@ -417,7 +417,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			public IWorkspaceName WorkspaceName { get; set; }
 
 			public IEnumDatasetName SubsetNames => VirtualSubsetNames;
-			IEnumDatasetName VirtualSubsetNames => throw new NotImplementedException("implement in derived class");
+
+			IEnumDatasetName VirtualSubsetNames =>
+				throw new NotImplementedException("implement in derived class");
 
 			#endregion
 

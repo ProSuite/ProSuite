@@ -1,6 +1,6 @@
-using ESRI.ArcGIS.Geodatabase;
 using System;
 using System.Collections.Generic;
+using ESRI.ArcGIS.Geodatabase;
 
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
@@ -26,7 +26,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		IRow ICursor.NextRow() => VirtualNextRow();
 
-		IFeature IFeatureCursor.NextFeature() => (IFeature)VirtualNextRow();
+		IFeature IFeatureCursor.NextFeature() => (IFeature) VirtualNextRow();
 
 		protected virtual IRow VirtualNextRow()
 		{

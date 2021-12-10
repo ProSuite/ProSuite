@@ -52,7 +52,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// </summary>
 		/// <remarks>Required for nhibernate, and public to allow adding a new unnamed
 		/// quality specification in the ddx editor.</remarks>
-		public QualitySpecification() : this(assignUuid : false) { }
+		public QualitySpecification() : this(assignUuid: false) { }
 
 		public QualitySpecification(bool assignUuid)
 		{
@@ -436,7 +436,7 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			CustomQualitySpecification clone =
 				InitCustomSpecification($"{Name} (Clone)",
-				                        copyUuid : true);
+				                        copyUuid: true);
 
 			foreach (QualitySpecificationElement element in _elements)
 			{
@@ -480,7 +480,7 @@ namespace ProSuite.DomainModel.Core.QA
 			string name = $"{Name} (Customized)";
 
 			CustomQualitySpecification result =
-				InitCustomSpecification(name, copyUuid : true);
+				InitCustomSpecification(name, copyUuid: true);
 
 			var datasets = new HashSet<Dataset>(verifiedDatasets);
 			foreach (QualitySpecificationElement element in _elements)
@@ -629,7 +629,7 @@ namespace ProSuite.DomainModel.Core.QA
 			}
 
 			return condition.IsApplicableFor(verifiedDatasets,
-			                                 onlyIfNotUsedAsReferenceData : true);
+			                                 onlyIfNotUsedAsReferenceData: true);
 		}
 
 		[NotNull]
@@ -639,7 +639,7 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			var result = new CustomQualitySpecification(BaseSpecification,
 			                                            name,
-			                                            assignUuid : ! copyUuid);
+			                                            assignUuid: ! copyUuid);
 
 			CopyPropertiesTo(result);
 

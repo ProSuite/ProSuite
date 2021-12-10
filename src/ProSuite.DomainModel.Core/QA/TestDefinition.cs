@@ -20,7 +20,7 @@ namespace ProSuite.DomainModel.Core.QA
 		public TestDefinition([NotNull] TestDescriptor testDescriptor)
 		{
 			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
-			
+
 			_testName = testDescriptor.Name;
 
 			if (testDescriptor.TestClass != null)

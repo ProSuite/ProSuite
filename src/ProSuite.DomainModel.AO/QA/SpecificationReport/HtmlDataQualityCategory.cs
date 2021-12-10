@@ -154,10 +154,7 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 
 		public int ListOrder
 		{
-			get
-			{
-				return _category?.ListOrder ?? 0;
-			}
+			get { return _category?.ListOrder ?? 0; }
 		}
 
 		[UsedImplicitly]

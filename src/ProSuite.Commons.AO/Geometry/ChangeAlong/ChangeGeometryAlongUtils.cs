@@ -616,7 +616,6 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 		private static bool CanUseAsTargetFeature(IFeature target)
 		{
-
 			esriGeometryType? shapeType = DatasetUtils.GetShapeType(target.Class);
 
 			return shapeType == esriGeometryType.esriGeometryPolygon ||

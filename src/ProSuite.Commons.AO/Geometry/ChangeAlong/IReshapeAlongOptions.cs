@@ -1,4 +1,3 @@
-using ProSuite.Commons.AO.Geometry.ZAssignment;
 using ProSuite.Commons.Geom;
 
 namespace ProSuite.Commons.AO.Geometry.ChangeAlong

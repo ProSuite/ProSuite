@@ -53,7 +53,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			{
 				const bool dontClonePath = true;
 				IGeometry highLevelPath = GeometryUtils.GetHighLevelGeometry(ReshapePath,
-				                                                             dontClonePath);
+					dontClonePath);
 
 				GeometryUtils.EnsureSpatialReference(highLevelPath,
 				                                     geometryToReshape.SpatialReference);
@@ -404,7 +404,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 					var verticalPoints = (IPointCollection)
 						IntersectionUtils.GetIntersectionPointsNonPlanar(nonPlanarIntersections,
-						                                                 planarPoint);
+							planarPoint);
 
 					if (verticalPoints.PointCount < 2)
 					{
@@ -421,7 +421,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 					for (var i = 0; i < orderedPoints.Count - 1; i++)
 					{
 						IPath verticalPath = GeometryFactory.CreatePath(orderedPoints[i],
-						                                                orderedPoints[++i]);
+							orderedPoints[++i]);
 						GeometryUtils.MakeZAware(verticalPath);
 
 						trimmedVerticalPaths.Add(verticalPath);
@@ -777,7 +777,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			bool tryNonDefaultSide = ReshapeResultFilter != null &&
 			                         (ReshapeResultFilter.UseNonDefaultReshapeSide ||
 			                          ! ReshapeResultFilter.IsReshapeSideAllowed(this, reshapeSide,
-			                                                                     notifications));
+				                          notifications));
 
 			if (tryNonDefaultSide && reshapeSide != RingReshapeSideOfLine.Undefined)
 			{
@@ -848,7 +848,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			const bool dontClone = true;
 			IGeometry highLevelOriginalRing = GeometryUtils.GetHighLevelGeometry(originalRing,
-			                                                                     dontClone);
+				dontClone);
 
 			bool isInterior = ! originalRing.IsExterior;
 
