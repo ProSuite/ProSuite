@@ -183,8 +183,8 @@ namespace ProSuite.DomainModel.Core.QA.DependencyGraph
 				{
 					edgedefault = graphedgedefaulttype.directed,
 					Items = modelNode.DatasetNodes.Select(node => CreateDatasetNode(node,
-					                                                                useQualifiedLabel
-					                                                                : false))
+						                                      useQualifiedLabel
+						                                      : false))
 					                 .Cast<object>()
 					                 .ToArray()
 				};

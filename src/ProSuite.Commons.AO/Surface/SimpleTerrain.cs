@@ -50,6 +50,7 @@ namespace ProSuite.Commons.AO.Surface
 		}
 
 		public double PointDensity { get; set; }
+
 		public Func<IEnvelope, int> EstimatePointsFunc { get; set; }
 
 		public IList<SimpleTerrainDataSource> DataSources { get; }
@@ -128,7 +129,7 @@ namespace ProSuite.Commons.AO.Surface
 
 		IEnumDataset IDataset.Subsets => throw new NotImplementedException();
 
-		IWorkspace IDataset.Workspace => ((IDataset) DataSources[0]).Workspace;
+		IWorkspace IDataset.Workspace => ((IDataset) DataSources[0].FeatureClass).Workspace;
 
 		IPropertySet IDataset.PropertySet => throw new NotImplementedException();
 
@@ -189,7 +190,7 @@ namespace ProSuite.Commons.AO.Surface
 
 		public override bool EqualsCore(TerrainReference terrainReference)
 		{
-			if (this == terrainReference)
+			if (ReferenceEquals(this, terrainReference))
 			{
 				return true;
 			}

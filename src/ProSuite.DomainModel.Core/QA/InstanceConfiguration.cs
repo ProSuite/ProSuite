@@ -9,7 +9,7 @@ using ProSuite.DomainModel.Core.DataModel;
 namespace ProSuite.DomainModel.Core.QA
 {
 	public abstract class InstanceConfiguration : VersionedEntityWithMetadata,
-	                                                           INamed, IAnnotated
+	                                              INamed, IAnnotated
 	{
 		#region Persisted fields
 
@@ -26,7 +26,6 @@ namespace ProSuite.DomainModel.Core.QA
 		#endregion
 
 		protected InstanceConfiguration() { }
-
 
 		protected InstanceConfiguration([NotNull] string name,
 		                                [CanBeNull] string description = "")

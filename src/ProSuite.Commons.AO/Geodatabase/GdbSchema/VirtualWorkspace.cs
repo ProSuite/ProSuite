@@ -459,6 +459,5 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			#endregion
 		}
-
 	}
 }

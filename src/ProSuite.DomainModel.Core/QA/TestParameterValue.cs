@@ -85,7 +85,7 @@ namespace ProSuite.DomainModel.Core.QA
 		[CanBeNull]
 		public TransformerConfiguration ValueSource
 		{
-			get { return _valueSource;}
+			get { return _valueSource; }
 			set { _valueSource = value; }
 		}
 

@@ -221,7 +221,7 @@ namespace ProSuite.DomainModel.Core.QA
 			}
 
 			// either the qualiy condition was deleted, or it was changed since the verification
-			var result = new QualityCondition(assignUuids : true);
+			var result = new QualityCondition(assignUuids: true);
 
 			if (string.IsNullOrEmpty(_qualityConditionName))
 			{

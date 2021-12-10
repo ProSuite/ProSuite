@@ -66,9 +66,9 @@ namespace ProSuite.Commons.AO.Surface
 		                                 params RectangularTileIndex[] tileIndexes)
 		{
 			IEnvelope result = RectangularTilingUtils.GetTileEnvelope(OriginX, OriginY,
-			                                                          TileWidth, TileHeight,
-			                                                          spatialReference,
-			                                                          tileIndexes);
+				TileWidth, TileHeight,
+				spatialReference,
+				tileIndexes);
 
 			return result;
 		}

@@ -85,9 +85,15 @@ namespace ProSuite.Commons.AO.Surface.Raster
 		[NotNull]
 		private IFeatureClass CatalogClass { get; }
 
+		/// <summary>
+		/// An integer field that determines the Z order of the rasters
+		/// </summary>
 		[CanBeNull]
 		private string MosaicRuleZOrderFieldName { get; }
 
+		/// <summary>
+		/// Whether or not the ordering by <see cref="MosaicRuleZOrderFieldName"/> should be descending.
+		/// </summary>
 		private bool MosaicRuleDescending { get; }
 
 		private string CellSizeFieldName { get; }
@@ -372,7 +378,8 @@ namespace ProSuite.Commons.AO.Surface.Raster
 						$"Field {MosaicRuleZOrderFieldName} not found in {DatasetUtils.GetName(rasterCatalog)}");
 				}
 
-				Func<IFeature, object> getFieldValue = f => f.get_Value(fieldIndex);
+				Func<IFeature, int?> getFieldValue =
+					f => GdbObjectUtils.ReadRowValue<int>(f, fieldIndex);
 
 				if (MosaicRuleDescending)
 				{

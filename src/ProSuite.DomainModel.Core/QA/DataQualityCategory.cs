@@ -61,7 +61,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// </summary>
 		/// <remarks>Required for NHibernate</remarks>
 		[UsedImplicitly]
-		protected DataQualityCategory() : this(assignUuid : false) { }
+		protected DataQualityCategory() : this(assignUuid: false) { }
 
 		public DataQualityCategory(bool assignUuid)
 		{

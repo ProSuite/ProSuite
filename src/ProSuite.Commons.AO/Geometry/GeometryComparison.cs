@@ -200,7 +200,7 @@ namespace ProSuite.Commons.AO.Geometry
 			if (_highLevelCompareGeometry == null)
 			{
 				_highLevelCompareGeometry = GeometryUtils.GetHighLevelGeometry(_compareGeometry,
-				                                                               true);
+					true);
 
 				// for _zTolerance == 0 this is not correct but at least it's as small as possible
 				SetZTolerance(_highLevelCompareGeometry, _zTolerance);
@@ -541,15 +541,15 @@ namespace ProSuite.Commons.AO.Geometry
 				if (_baseGeometryCoords3D == null)
 				{
 					_baseGeometryCoords3D = CreateCoordinateDictionary(_baseGeometry, true,
-					                                                   out
-					                                                   _baseCoordinateDuplicates3D);
+						out
+						_baseCoordinateDuplicates3D);
 				}
 
 				if (_compareGeometryCoords3D == null)
 				{
 					_compareGeometryCoords3D = CreateCoordinateDictionary(_compareGeometry, true,
-					                                                      out
-					                                                      _compareCoordinateDuplicates3D);
+						out
+						_compareCoordinateDuplicates3D);
 				}
 
 				baseCoordinates = _baseGeometryCoords3D;
@@ -560,15 +560,15 @@ namespace ProSuite.Commons.AO.Geometry
 				if (_baseGeometryCoords2D == null)
 				{
 					_baseGeometryCoords2D = CreateCoordinateDictionary(_baseGeometry, false,
-					                                                   out
-					                                                   _baseCoordinateDuplicates2D);
+						out
+						_baseCoordinateDuplicates2D);
 				}
 
 				if (_compareGeometryCoords2D == null)
 				{
 					_compareGeometryCoords2D = CreateCoordinateDictionary(_compareGeometry, false,
-					                                                      out
-					                                                      _compareCoordinateDuplicates2D);
+						out
+						_compareCoordinateDuplicates2D);
 				}
 
 				baseCoordinates = _baseGeometryCoords2D;
@@ -699,8 +699,8 @@ namespace ProSuite.Commons.AO.Geometry
 				for (int i = compareIndexStart; i < compareCoords.Length; i++)
 				{
 					bool sameAsPrevious = WKSPointZUtils.ArePointsEqual(compareCoords, i, i - 1,
-					                                                    _xyTolerance,
-					                                                    _zTolerance);
+						_xyTolerance,
+						_zTolerance);
 
 					if (sameAsPrevious && ! reportDuplicateVertices)
 					{
@@ -743,7 +743,8 @@ namespace ProSuite.Commons.AO.Geometry
 				// check if within the tolerance - performance could be improved if comparer could directly handle
 				// the tolerance.
 				bool useTolerance = Math.Abs(_xyTolerance) > double.Epsilon ||
-				                    ! double.IsNaN(_zTolerance) && Math.Abs(_zTolerance) > double.Epsilon;
+				                    ! double.IsNaN(_zTolerance) &&
+				                    Math.Abs(_zTolerance) > double.Epsilon;
 
 				if (useTolerance &&
 				    GeometryUtils.IsSamePoint(currentCoord, coordinateToMatch,

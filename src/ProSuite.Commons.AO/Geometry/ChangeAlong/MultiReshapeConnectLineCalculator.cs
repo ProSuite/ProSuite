@@ -217,7 +217,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 					GeometryUtils.GetHighLevelGeometry(sourceSegment, true);
 
 				IGeometry highLevelReshapePath = GeometryUtils.GetHighLevelGeometry(reshapePath,
-				                                                                    true);
+					true);
 
 				var intersectionPoints =
 					(IPointCollection) IntersectionUtils.GetIntersectionPoints(

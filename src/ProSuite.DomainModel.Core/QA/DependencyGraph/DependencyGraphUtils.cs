@@ -83,8 +83,8 @@ namespace ProSuite.DomainModel.Core.QA.DependencyGraph
 						if (value1.TestParameterName == value2.TestParameterName)
 						{
 							if (ExcludeDependenciesWithinMultiValuedParameter(qualityCondition,
-							                                                  value1
-								                                                  .TestParameterName)
+									value1
+										.TestParameterName)
 							)
 							{
 								continue;
