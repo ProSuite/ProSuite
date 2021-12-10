@@ -21,7 +21,7 @@ using ProSuite.Microservices.Definitions.QA.Test;
 using ProSuite.Microservices.Definitions.Shared;
 using ProSuite.QA.Container;
 
-namespace ProSuite.QA.Tests
+namespace ProSuite.QA.Tests.External
 {
 	public abstract class QaExternalServiceBase : NonContainerTest
 	{
