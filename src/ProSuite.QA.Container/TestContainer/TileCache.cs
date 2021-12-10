@@ -234,8 +234,11 @@ namespace ProSuite.QA.Container.TestContainer
 			IList<BaseRow> ignoredRows = null;
 			if (_testsPerTable.TryGetValue(table, out IList<ContainerTest> tests))
 			{
-				int indexTest = tests.IndexOf(filterHelper.ContainerTest);
-				ignoredRows = IgnoredRowsByTableAndTest[tableIndex][indexTest];
+				if (filterHelper.ContainerTest != null)
+				{
+					int indexTest = tests.IndexOf(filterHelper.ContainerTest);
+					ignoredRows = IgnoredRowsByTableAndTest[tableIndex][indexTest];
+				}
 			}
 
 			foreach (BoxTree<CachedRow>.TileEntry entry in searchList)

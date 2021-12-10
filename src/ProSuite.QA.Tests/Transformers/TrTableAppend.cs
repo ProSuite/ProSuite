@@ -32,7 +32,7 @@ namespace ProSuite.QA.Tests.Transformers
 			return transformedTable;
 		}
 
-		private class AppendedTable : VirtualTable, ITransformedValue
+		private class AppendedTable : VirtualTable, ITransformedValue, ITransformedTable
 		{
 			private IWorkspace _workspace;
 
@@ -107,6 +107,11 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public IList<ITable> InvolvedTables { get; }
 			public ISearchable DataContainer { get; set; }
+
+			bool ITransformedTable.NoCaching => true;
+
+			void ITransformedTable.SetKnownTransformedRows(IEnumerable<IRow> knownRows) { }
+
 			public int BaseRowFieldIndex { get; private set; }
 
 			protected override IWorkspace VirtualWorkspace =>
@@ -194,11 +199,12 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private class AppendedRow : VirtualRow
 		{
-			public static AppendedRow Create(AppendedTable table, int sourceTableIndex, IRow sourceRow)
+			public static AppendedRow Create(AppendedTable table, int sourceTableIndex,
+			                                 IRow sourceRow)
 			{
 				if (table is AppendedFeatureClass fc)
 				{
-					return new AppendedFeature(fc, sourceTableIndex, (IFeature)sourceRow);
+					return new AppendedFeature(fc, sourceTableIndex, (IFeature) sourceRow);
 				}
 
 				if (sourceRow is IFeature f)
@@ -208,6 +214,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				return new AppendedRow(table, sourceTableIndex, sourceRow);
 			}
+
 			protected AppendedRow(AppendedTable table, int sourceTableIndex, IRow sourceRow)
 			{
 				Table = table;

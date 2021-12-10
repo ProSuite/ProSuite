@@ -783,7 +783,7 @@ namespace ProSuite.QA.Container
 				filterHelper.ContainerTest = this;
 			}
 
-			if (DataContainer != null)
+			if (DataContainer != null && (table as ITransformedTable)?.NoCaching != true)
 			{
 				IEnumerable<IRow> rows = DataContainer.Search(table, queryFilter,
 				                                              filterHelper, cacheGeometry);

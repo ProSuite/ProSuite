@@ -281,8 +281,7 @@ namespace ProSuite.DomainModel.AO.QA
 			{
 				object value;
 				if (! TryGetArgumentValue(parameter, parameterValues, datasetContext,
-				                          tableParameters,
-				                          out value))
+				                          tableParameters, out value))
 				{
 					// TODO test; if this can EVER occur: apply DefaultValue?
 					Assert.Fail("no argument value for test parameter {0}",
@@ -334,7 +333,8 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				object valueForParameter = GetValue(parameterValue, parameter, datasetContext);
+				object valueForParameter =
+					GetValue(parameterValue, parameter, datasetContext);
 
 				valuesForParameter.Add(valueForParameter);
 
@@ -385,9 +385,10 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		[CanBeNull]
-		private static object GetValue([NotNull] TestParameterValue paramVal,
-		                               [NotNull] TestParameter parameter,
-		                               [NotNull] IOpenDataset datasetContext)
+		private static object GetValue(
+			[NotNull] TestParameterValue paramVal,
+			[NotNull] TestParameter parameter,
+			[NotNull] IOpenDataset datasetContext)
 		{
 			Assert.ArgumentNotNull(paramVal, nameof(paramVal));
 			Assert.ArgumentNotNull(parameter, nameof(parameter));
@@ -395,17 +396,24 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (paramVal.ValueSource != null)
 			{
-				if (! (InstanceFactoryUtils.CreateTransformerFactory(paramVal.ValueSource)
-					       is TransformerFactory fct))
+				if (! paramVal.ValueSource.HasCashedValue(datasetContext))
 				{
-					throw new ArgumentException(
-						$"Unable to create TransformerFactory for {paramVal.ValueSource}");
+					if (! (InstanceFactoryUtils.CreateTransformerFactory(paramVal.ValueSource)
+						       is TransformerFactory fct))
+					{
+						throw new ArgumentException(
+							$"Unable to create TransformerFactory for {paramVal.ValueSource}");
+					}
+
+					// TODO: implement for other types
+					ITableTransformer sourceInstance =
+						fct.Create(datasetContext, paramVal.ValueSource);
+					// TODO: validate caching
+					paramVal.ValueSource.CacheValue(sourceInstance.GetTransformed(),
+					                                datasetContext);
 				}
 
-				// TODO: implement for other types
-				ITableTransformer sourceInstance = fct.Create(datasetContext, paramVal.ValueSource);
-				// TODO: Harvest sourceInstance in paramVal. 
-				return sourceInstance.GetTransformed();
+				return paramVal.ValueSource.GetCachedValue();
 			}
 
 			if (paramVal is ScalarTestParameterValue scalarParameterValue)
@@ -413,9 +421,8 @@ namespace ProSuite.DomainModel.AO.QA
 				if (scalarParameterValue.DataType == null)
 				{
 					scalarParameterValue.DataType = parameter.Type;
-					_msg.VerboseDebugFormat(
-						"DataType of scalarParameterValue {0} needed to be initialized.",
-						scalarParameterValue.TestParameterName);
+					_msg.VerboseDebug(() =>
+						                  $"DataType of scalarParameterValue {scalarParameterValue.TestParameterName} needed to be initialized.");
 				}
 
 				return scalarParameterValue.GetValue();
