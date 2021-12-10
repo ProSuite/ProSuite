@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -55,7 +56,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		{
 			IList<XmlQualitySpecification> qualitySpecifications;
 			XmlDataQualityDocument document;
-			using (TextReader xmlReader = new StringReader(dataQualityXml))
+
+			using (Stream baseStream = new MemoryStream(Encoding.UTF8.GetBytes(dataQualityXml)))
+			using (StreamReader xmlReader = new StreamReader(baseStream))
 			{
 				document = XmlDataQualityUtils.ReadXmlDocument(xmlReader,
 				                                               out qualitySpecifications);
