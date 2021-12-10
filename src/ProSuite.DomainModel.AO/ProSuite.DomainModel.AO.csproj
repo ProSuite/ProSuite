@@ -107,6 +107,7 @@
     <Compile Include="DataModel\IDatasetMatchCriterion.cs" />
     <Compile Include="DataModel\IFeatureDatasetElement.cs" />
     <Compile Include="DataModel\IFieldIndexCache.cs" />
+    <Compile Include="DataModel\IMasterDatabaseWorkspaceContextFactory.cs" />
     <Compile Include="DataModel\IModelContext.cs" />
     <Compile Include="DataModel\IModelRepository.cs" />
     <Compile Include="DataModel\IQueryTableContext.cs" />
@@ -116,6 +117,7 @@
     <Compile Include="DataModel\IWorkspaceContextLookup.cs" />
     <Compile Include="DataModel\MasterDatabaseDatasetContext.cs" />
     <Compile Include="DataModel\MasterDatabaseWorkspaceContext.cs" />
+    <Compile Include="DataModel\MasterDatabaseWorkspaceContextFactory.cs" />
     <Compile Include="DataModel\MasterDatabaseWorkspaceContextLookup.cs" />
     <Compile Include="DataModel\Model.cs" />
     <Compile Include="DataModel\ModelContextUtils.cs" />

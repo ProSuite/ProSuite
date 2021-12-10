@@ -3,7 +3,6 @@ using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainServices.AO.QA.VerifiedDataModel;
@@ -35,7 +34,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 			IWorkspace workspace = TestUtils.OpenUserWorkspaceOracle();
 
 			VerifiedModelFactory modelFactory =
-				new VerifiedModelFactory(CreateWorkspaceContextSimple,
+				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
 				                         new SimpleVerifiedDatasetHarvester());
 
 			// NOTE: Harvesting the attributes is sometimes just as fast as with the (cached)
@@ -61,13 +60,6 @@ namespace ProSuite.DomainServices.AO.Test.QA.VerifiedDataModel
 			{
 				Assert.IsTrue(objectDataset.Attributes.Count > 0);
 			}
-		}
-
-		private static IWorkspaceContext CreateWorkspaceContextSimple(
-			[NotNull] Model model,
-			[NotNull] IFeatureWorkspace workspace)
-		{
-			return new MasterDatabaseWorkspaceContext(workspace, model);
 		}
 	}
 }

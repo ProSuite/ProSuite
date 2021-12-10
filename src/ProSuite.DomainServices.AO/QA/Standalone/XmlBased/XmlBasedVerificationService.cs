@@ -195,7 +195,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		private static XmlBasedQualitySpecificationFactory CreateSpecificationFactory()
 		{
 			var modelFactory = new VerifiedModelFactory(
-				CreateSimpleWorkspaceContext, new SimpleVerifiedDatasetHarvester());
+				new MasterDatabaseWorkspaceContextFactory(), new SimpleVerifiedDatasetHarvester());
 
 			var datasetOpener = new SimpleDatasetOpener(new MasterDatabaseDatasetContext());
 

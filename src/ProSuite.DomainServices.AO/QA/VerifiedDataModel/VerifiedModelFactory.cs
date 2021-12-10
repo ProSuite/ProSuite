@@ -13,14 +13,14 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 	public class VerifiedModelFactory : IVerifiedModelFactory
 	{
 		[NotNull]
-		private readonly Func<Model, IFeatureWorkspace, IWorkspaceContext> _workspaceContextFactory;
+		private readonly IMasterDatabaseWorkspaceContextFactory _workspaceContextFactory;
 
 		[NotNull] private readonly VerifiedDatasetHarvesterBase _datasetHarvester;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public VerifiedModelFactory(
-			[NotNull] Func<Model, IFeatureWorkspace, IWorkspaceContext> workspaceContextFactory,
+			[NotNull] IMasterDatabaseWorkspaceContextFactory workspaceContextFactory,
 			[NotNull] VerifiedDatasetHarvesterBase datasetHarvester)
 		{
 			Assert.ArgumentNotNull(workspaceContextFactory, nameof(workspaceContextFactory));
