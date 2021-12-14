@@ -39,6 +39,11 @@ namespace ProSuite.Commons.DomainModels
 			_unitOfWork.NewTransaction(procedure);
 		}
 
+		public T ReadOnlyTransaction<T>(Func<T> function)
+		{
+			return _unitOfWork.ReadOnlyTransaction(function);
+		}
+
 		public void Reattach<T>(ICollection<T> collection) where T : class
 		{
 			_unitOfWork.Reattach(collection);

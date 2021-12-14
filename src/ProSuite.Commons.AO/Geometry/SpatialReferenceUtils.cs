@@ -703,7 +703,7 @@ namespace ProSuite.Commons.AO.Geometry
 		{
 			Assert.ArgumentNotNull(sref, nameof(sref));
 
-			sref.SetDomain(xmin, ymin, xmax, ymax);
+			sref.SetDomain(xmin, xmax, ymin, ymax);
 
 			var res = (ISpatialReferenceResolution) sref;
 

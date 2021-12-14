@@ -1407,7 +1407,7 @@ namespace ProSuite.QA.Tests.Test
 		}
 
 		[Test]
-		//[Ignore("uses local data")]
+		[Ignore("uses local data")]
 		public void TestTop5360()
 		{
 			IFeatureWorkspace ws = WorkspaceUtils.OpenFileGdbFeatureWorkspace(

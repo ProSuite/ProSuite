@@ -25,6 +25,11 @@ namespace ProSuite.Commons.DomainModels
 			procedure();
 		}
 
+		public T ReadOnlyTransaction<T>(Func<T> function)
+		{
+			return function();
+		}
+
 		public void Reattach<T>(ICollection<T> collection) where T : class { }
 
 		public void Reattach(Entity entity) { }

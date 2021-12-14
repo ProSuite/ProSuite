@@ -920,6 +920,11 @@ namespace ProSuite.QA.Container.TestContainer
 			foreach (var baseTable in transformed.InvolvedTables)
 			{
 				AddRecursive(baseTable, cachedTables);
+				if ((baseTable as ITransformedTable)?.NoCaching == true)
+				{
+					continue;
+				}
+
 				if (! cachedTables.TryGetValue(baseTable, out double searchDist))
 				{
 					searchDist = 0;
@@ -1021,6 +1026,11 @@ namespace ProSuite.QA.Container.TestContainer
 				{
 					break;
 				}
+			}
+
+			if ((table as ITransformedTable)?.NoCaching == true)
+			{
+				queried = false;
 			}
 		}
 

@@ -216,6 +216,7 @@ namespace ProSuite.QA.Tests.Transformers
 				get => BackingDs.DataContainer;
 				set => BackingDs.DataContainer = value;
 			}
+			bool ITransformedTable.NoCaching => false;
 
 			public TransformedFeatureClass BackingDs => (Transformed) BackingDataset;
 

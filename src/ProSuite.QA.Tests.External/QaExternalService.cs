@@ -3,7 +3,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Definitions.QA.Test;
 
-namespace ProSuite.QA.Tests
+namespace ProSuite.QA.Tests.External
 {
 	/// <summary>
 	/// Test implementation for external service. At some point the features (current tile) could be streamed.

@@ -129,6 +129,8 @@ namespace ProSuite.QA.Tests.Transformers
 				set => BackingDs.DataContainer = value;
 			}
 
+			bool ITransformedTable.NoCaching => false;
+
 			[CanBeNull]
 			public BoxTree<IFeature> KnownRows { get; private set; }
 
