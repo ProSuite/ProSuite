@@ -1,5 +1,9 @@
-using System;
+#if Server
+using ESRI.ArcGIS.DatasourcesRaster;
+#else
 using ESRI.ArcGIS.DataSourcesRaster;
+#endif
+using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -79,8 +83,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 				       dataset.GeometryType is GeometryTypeNoGeometry;
 			}
 
-			var topologyName = datasetName as ITopologyName;
-			if (topologyName != null)
+			if (datasetName.Type == esriDatasetType.esriDTTopology)
 			{
 				return dataset is TopologyDataset &&
 				       dataset.GeometryType is GeometryTypeTopology;
