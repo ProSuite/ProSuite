@@ -17,9 +17,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 		[NotNull] private readonly Dictionary<string, ITable> _tablesByName =
 			new Dictionary<string, ITable>(StringComparer.OrdinalIgnoreCase);
 
-		[NotNull] private readonly Dictionary<string, IFeatureClass> _featureClassesByName =
-			new Dictionary<string, IFeatureClass>(StringComparer.OrdinalIgnoreCase);
-
 		[NotNull] private readonly Dictionary<string, ITopology> _topologiesByName =
 			new Dictionary<string, ITopology>(StringComparer.OrdinalIgnoreCase);
 
@@ -31,9 +28,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[NotNull] private readonly Dictionary<string, IRasterDataset> _rasterDatasetsByName =
 			new Dictionary<string, IRasterDataset>(StringComparer.OrdinalIgnoreCase);
-
-		[NotNull] private readonly Dictionary<string, IRaster> _rastersByName =
-			new Dictionary<string, IRaster>(StringComparer.OrdinalIgnoreCase);
 
 		#region Constructors
 
@@ -70,21 +64,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 			}
 
 			return table;
-		}
-
-		public override IFeatureClass OpenFeatureClass(string name)
-		{
-			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
-
-			IFeatureClass fclass;
-			if (! _featureClassesByName.TryGetValue(name, out fclass))
-			{
-				fclass = DatasetUtils.OpenFeatureClass(FeatureWorkspace, name);
-
-				_featureClassesByName.Add(name, fclass);
-			}
-
-			return fclass;
 		}
 
 		public override IRelationshipClass OpenRelationshipClass(string name)
@@ -142,22 +121,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 			}
 
 			return dataset;
-		}
-
-		public override IRaster OpenRaster(string name,
-		                                   Func<IWorkspace, string, IRaster> openRaster)
-		{
-			Assert.ArgumentNotNullOrEmpty(name, nameof(name));
-			Assert.ArgumentNotNull(openRaster, nameof(openRaster));
-
-			IRaster raster;
-			if (! _rastersByName.TryGetValue(name, out raster))
-			{
-				raster = openRaster((IWorkspace) FeatureWorkspace, name);
-				_rastersByName.Add(name, raster);
-			}
-
-			return raster;
 		}
 	}
 }

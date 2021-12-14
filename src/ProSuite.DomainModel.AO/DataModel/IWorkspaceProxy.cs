@@ -3,7 +3,6 @@ using ESRI.ArcGIS.DatasourcesRaster;
 #else
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -11,12 +10,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 {
 	public interface IWorkspaceProxy
 	{
-		[NotNull]
-		IFeatureWorkspace FeatureWorkspace { get; }
-
-		[NotNull]
-		IWorkspace Workspace { get; }
-
 		/// <summary>
 		/// Opens the table.
 		/// </summary>
@@ -31,9 +24,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 		                 [CanBeNull] SpatialReferenceDescriptor spatialReferenceDescriptor = null);
 
 		[NotNull]
-		IFeatureClass OpenFeatureClass([NotNull] string name);
-
-		[NotNull]
 		IRelationshipClass OpenRelationshipClass([NotNull] string name);
 
 		[NotNull]
@@ -41,10 +31,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[NotNull]
 		IMosaicDataset OpenMosaicDataset([NotNull] string name);
-
-		[NotNull]
-		IRaster OpenRaster([NotNull] string name,
-		                   [NotNull] Func<IWorkspace, string, IRaster> openRaster);
 
 		[NotNull]
 		IRasterDataset OpenRasterDataset(string name);

@@ -3,7 +3,6 @@ using ESRI.ArcGIS.DatasourcesRaster;
 #else
 using ESRI.ArcGIS.DataSourcesRaster;
 #endif
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
@@ -37,11 +36,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 			                                   spatialReferenceDescriptor);
 		}
 
-		public override IFeatureClass OpenFeatureClass(string name)
-		{
-			return DatasetUtils.OpenFeatureClass(FeatureWorkspace, name);
-		}
-
 		public override IRelationshipClass OpenRelationshipClass(string name)
 		{
 			return DatasetUtils.OpenRelationshipClass(FeatureWorkspace, name);
@@ -60,12 +54,6 @@ namespace ProSuite.DomainModel.AO.DataModel
 		public override IRasterDataset OpenRasterDataset(string name)
 		{
 			return DatasetUtils.OpenRasterDataset(Workspace, name);
-		}
-
-		public override IRaster OpenRaster(string name,
-		                                   Func<IWorkspace, string, IRaster> openRaster)
-		{
-			return openRaster(Workspace, name);
 		}
 	}
 }
