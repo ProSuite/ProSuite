@@ -117,6 +117,7 @@ namespace ProSuite.QA.Container
 	public interface ITransformedTable
 	{
 		void SetKnownTransformedRows([CanBeNull] IEnumerable<IRow> knownRows);
+		bool NoCaching { get; }
 	}
 
 	public interface INamedFilter : IInvolvesTables

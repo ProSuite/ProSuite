@@ -62,14 +62,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)ESRI.$(VSArcGISProduct).System.dll</HintPath>
     </Reference>
-    <Reference Include="ProSuite.Microservices.Definitions.QA.Test, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.Test.dll</HintPath>
-    </Reference>
-    <Reference Include="ProSuite.Microservices.Definitions.Shared, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Shared.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core">
       <RequiredTargetFramework>3.5</RequiredTargetFramework>
@@ -209,8 +201,6 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Qa3dConstantZ.cs" />
-    <Compile Include="QaExternalGraphicConflict.cs" />
-    <Compile Include="QaExternalServiceBase.cs" />
     <Compile Include="QaGdbConstraint.cs" />
     <Compile Include="QaSurfaceOffset.cs" />
     <Compile Include="QaSurfacePipe.cs" />
@@ -234,7 +224,6 @@
     <Compile Include="QaEdgeMatchCrossingLines.cs" />
     <Compile Include="QaEmptyNotNullTextFields.cs" />
     <Compile Include="QaExtent.cs" />
-    <Compile Include="QaExternalService.cs" />
     <Compile Include="QaFlowLogic.cs" />
     <Compile Include="QaForeignKey.cs" />
     <Compile Include="QaFullCoincidence.cs" />
@@ -449,14 +438,6 @@
       <Project>{D51693C1-F9F6-425D-8CD6-8DFBF5A52F6F}</Project>
       <Name>ProSuite.QA.Container</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Microservices.AO\ProSuite.Microservices.AO.csproj">
-      <Project>{53E0297E-F959-4D5D-B1CB-33D3A1D96623}</Project>
-      <Name>ProSuite.Microservices.AO</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj">
-      <Project>{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}</Project>
-      <Name>ProSuite.Microservices.Client</Name>
-    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <None Include="Documentation\de\EsriCH.QA.Tests.QuickReference_de.pdf" />
@@ -473,11 +454,6 @@
     <None Include="Documentation\Extended\de\QaMinNodeDistance.pdf" />
     <None Include="Documentation\Extended\de\QaNodeLineCoincidence.docx" />
     <None Include="Documentation\Extended\de\QaNodeLineCoincidence.pdf" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Grpc">
-      <Version>2.36.4</Version>
-    </PackageReference>
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />

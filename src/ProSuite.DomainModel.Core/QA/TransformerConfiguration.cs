@@ -32,5 +32,20 @@ namespace ProSuite.DomainModel.Core.QA
 			get => _transformerDescriptor;
 			set => _transformerDescriptor = value;
 		}
+
+		private object _value;
+		private object _datasetContext;
+		public bool HasCashedValue(object datasetContext)
+		{
+			return ReferenceEquals(datasetContext, _datasetContext) && _value != null;
+		}
+
+		public object GetCachedValue() => _value;
+
+		public void CacheValue(object value, object datasetContext)
+		{
+			_value = value;
+			_datasetContext = datasetContext;
+		} 
 	}
 }

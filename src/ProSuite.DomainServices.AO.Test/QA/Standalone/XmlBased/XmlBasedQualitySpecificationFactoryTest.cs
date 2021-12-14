@@ -239,7 +239,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		[Ignore("Uses local data")]
 		public void CanReadQualitySpecifications()
 		{
-			using (TextReader xmlReader =
+			using (StreamReader xmlReader =
 				new StreamReader(@"c:\temp\QaConfigWithEmptyDatasetsParameters.xml"))
 			{
 				var xmlDoc =

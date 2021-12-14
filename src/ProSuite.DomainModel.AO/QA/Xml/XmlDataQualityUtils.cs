@@ -38,7 +38,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 
 		[NotNull]
 		public static XmlDataQualityDocument ReadXmlDocument(
-			[NotNull] TextReader xml,
+			[NotNull] StreamReader xml,
 			[NotNull] out IList<XmlQualitySpecification> qualitySpecifications)
 		{
 			Assert.ArgumentNotNull(xml, nameof(xml));
@@ -61,7 +61,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		[NotNull]
-		public static XmlDataQualityDocument Deserialize([NotNull] TextReader xml)
+		public static XmlDataQualityDocument Deserialize([NotNull] StreamReader xml)
 		{
 			Assert.ArgumentNotNull(xml, nameof(xml));
 
@@ -104,7 +104,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			}
 		}
 
-		private static string GetSchema(TextReader xml, out QaSpecVersion version)
+		private static string GetSchema(StreamReader xml, out QaSpecVersion version)
 		{
 			string schema = null;
 			version = QaSpecVersion.v3_0;
@@ -132,7 +132,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 						}
 					}
 				}
-
 				r.BaseStream.Seek(0, SeekOrigin.Begin);
 			}
 

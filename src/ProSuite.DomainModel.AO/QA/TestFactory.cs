@@ -252,8 +252,8 @@ namespace ProSuite.DomainModel.AO.QA
 			[NotNull] IList<TestParameter> testParameters,
 			[NotNull] out List<TableConstraint> tableParameters)
 		{
-			return GetConstructorArgs(datasetContext, testParameters, Condition?.ParameterValues,
-			                          out tableParameters);
+			return GetConstructorArgs(datasetContext, testParameters,
+			                          Condition?.ParameterValues, out tableParameters);
 		}
 
 		protected bool TryGetArgumentValue(
@@ -261,8 +261,8 @@ namespace ProSuite.DomainModel.AO.QA
 			[NotNull] IOpenDataset datasetContext,
 			[CanBeNull] out object value)
 		{
-			return TryGetArgumentValue(parameter, Condition?.ParameterValues, datasetContext, null,
-			                           out value);
+			return TryGetArgumentValue(parameter, Condition?.ParameterValues, datasetContext,
+			                           null, out value);
 		}
 
 		[NotNull]
