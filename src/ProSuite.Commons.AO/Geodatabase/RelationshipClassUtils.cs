@@ -282,7 +282,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			foreach (KeyValuePair<IObject, IObject> pair
-				in GetRelatedObjectPairs(sourceObjects, relationshipClass))
+			         in GetRelatedObjectPairs(sourceObjects, relationshipClass))
 			{
 				IObject sourceObject = pair.Key;
 				IObject relatedObject = pair.Value;
@@ -325,7 +325,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			const int sourceInitialCapacity = 100;
 
 			foreach (KeyValuePair<IObject, IObject> pair
-				in GetRelatedObjectPairs(sourceObjects, relClass))
+			         in GetRelatedObjectPairs(sourceObjects, relClass))
 			{
 				IObject thisObject = pair.Key;
 				IObject relatedObject = pair.Value;
@@ -786,27 +786,31 @@ namespace ProSuite.Commons.AO.Geodatabase
 		/// <param name="tables">to be joined</param>
 		/// <param name="joinType">The join type w.r.t. the list order of the tables.</param>
 		/// <param name="whereClause">Optional where clause</param>
+		/// <param name="queryTableName">An optional name for the query table. If not set, it's generated</param>
 		/// <returns></returns>
 		[NotNull]
 		public static ITable GetQueryTable(
 			[NotNull] IRelationshipClass relationshipClass,
 			[NotNull] IList<ITable> tables,
 			JoinType joinType,
-			string whereClause = null)
+			string whereClause = null,
+			string queryTableName = null)
 		{
 			Assert.ArgumentNotNull(relationshipClass, nameof(relationshipClass));
 			Assert.ArgumentNotNull(tables, nameof(tables));
 			Assert.ArgumentCondition(tables.Count > 1, "2 tables required");
 
 			Assert.ArgumentCondition(
-				IsOriginClass(relationshipClass, tables[0]) && IsDestinationClass(relationshipClass, tables[1]) ||
-				IsDestinationClass(relationshipClass, tables[0]) && IsOriginClass(relationshipClass, tables[1]),
+				IsOriginClass(relationshipClass, tables[0]) &&
+				IsDestinationClass(relationshipClass, tables[1]) ||
+				IsDestinationClass(relationshipClass, tables[0]) &&
+				IsOriginClass(relationshipClass, tables[1]),
 				"tables must be origin/destination of relationship class");
 
 			return TableJoinUtils.CreateQueryTable(
 				relationshipClass,
 				AdaptJoinTypeToRelationshipDirection(relationshipClass, tables, joinType),
-				whereClause: whereClause);
+				whereClause: whereClause, queryTableName: queryTableName);
 		}
 
 		#region Private Methods
@@ -874,7 +878,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			foreach (KeyValuePair<T, IObject> pair
-				in GetRelatedObjectPairs(objects, relationshipClass))
+			         in GetRelatedObjectPairs(objects, relationshipClass))
 			{
 				T sourceObject = pair.Key;
 				IObject relatedObject = pair.Value;
@@ -1181,7 +1185,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			            "Objects must be on origin class of relationship");
 
 			IDictionary<IObject, IList<IObject>> result = GetRelatedObjectMap(objects,
-			                                                                  relationshipClass);
+				relationshipClass);
 
 			// TODO check for violations of 1:n constraint
 			// --> do the same related objects appear for more than one source object? -> throw
@@ -1336,7 +1340,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			var sb = new StringBuilder();
 
 			foreach (IObject relatedObject in
-				GetRelatedObjectList(sourceObject, relationshipClass))
+			         GetRelatedObjectList(sourceObject, relationshipClass))
 			{
 				sb.AppendFormat("- {0} = {1}",
 				                relatedObject.Class.OIDFieldName,
@@ -1435,7 +1439,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			// prevented by ArcObjects
 
 			IRelationship existingRelationship = relationshipClass.GetRelationship(originObj,
-			                                                                       destinationObj);
+				destinationObj);
 
 			if (existingRelationship != null && ! relationshipClass.IsAttributed)
 			{

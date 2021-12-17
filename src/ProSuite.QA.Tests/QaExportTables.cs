@@ -6,19 +6,24 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
+using ProSuite.QA.Core;
 using Path = System.IO.Path;
 
 namespace ProSuite.QA.Tests
 {
 	public class QaExportTables : ContainerTest
 	{
+		private const int _tileIdFieldKey = -2;
 		[NotNull] private readonly string _fileGdbPath;
 
 		private IList<ITable> _exportTables;
 		private IList<Dictionary<int, int>> _fieldMappings;
+		private int _tileId;
+		private IFeatureClass _tileFc;
 
 		public QaExportTables(
 			[NotNull] IList<ITable> tables,
@@ -27,10 +32,20 @@ namespace ProSuite.QA.Tests
 			_fileGdbPath = fileGdbPath;
 		}
 
+		[TestParameter]
+		public bool ExportTileIds { get; set; }
+
+		[TestParameter]
+		public bool ExportTiles { get; set; }
+
 		protected override int CompleteTileCore(TileInfo tileInfo)
 		{
+			const string tileIdField = "TileId";
 			if (tileInfo.State == TileState.Initial)
 			{
+				_tileId = 0;
+				_tileFc = null;
+
 				if (File.Exists(_fileGdbPath))
 				{
 					File.Delete(_fileGdbPath);
@@ -84,8 +99,44 @@ namespace ProSuite.QA.Tests
 					tableNames.Add(name, iInvolved);
 					iInvolved++;
 				}
+
+				if (ExportTiles)
+				{
+					ISpatialReference sr = _exportTables.Select(x => x as IGeoDataset)
+					                                    ?.FirstOrDefault(x => x != null)
+					                                    ?.SpatialReference;
+					if (sr != null)
+					{
+						_tileFc = DatasetUtils.CreateSimpleFeatureClass(
+							ws, "_Tiles_", FieldUtils.CreateFields(
+								FieldUtils.CreateOIDField(),
+								FieldUtils.CreateIntegerField(tileIdField),
+								FieldUtils.CreateShapeField(esriGeometryType.esriGeometryPolygon,
+								                            sr)));
+
+						if (tileInfo.AllBox != null)
+						{
+							IFeature fullExtent = _tileFc.CreateFeature();
+							fullExtent.Value[_tileFc.FindField(tileIdField)] = -1;
+							fullExtent.Shape = GeometryFactory.CreatePolygon(tileInfo.AllBox);
+							fullExtent.Store();
+						}
+					}
+				}
 			}
 
+			if (ExportTiles && _tileFc != null)
+			{
+				if (tileInfo.CurrentEnvelope?.IsEmpty == false)
+				{
+					IFeature tileExtent = _tileFc.CreateFeature();
+					tileExtent.Value[_tileFc.FindField(tileIdField)] = _tileId;
+					tileExtent.Shape = GeometryFactory.CreatePolygon(tileInfo.CurrentEnvelope);
+					tileExtent.Store();
+				}
+			}
+
+			_tileId++;
 			return base.CompleteTileCore(tileInfo);
 		}
 
@@ -174,6 +225,13 @@ namespace ProSuite.QA.Tests
 				exportFields.Add(exportField ?? FieldUtils.CreateField(exportName, fieldType));
 			}
 
+			string tileIdFieldName = null;
+			if (ExportTileIds)
+			{
+				tileIdFieldName = GetValidFieldName("__tileId", fieldDict);
+				exportFields.Add(FieldUtils.CreateIntegerField(tileIdFieldName));
+			}
+
 			ITable created;
 			if (fc != null)
 			{
@@ -196,6 +254,11 @@ namespace ProSuite.QA.Tests
 				mappings.Add(iField, mapped);
 			}
 
+			if (ExportTileIds)
+			{
+				mappings.Add(_tileIdFieldKey, created.FindField(tileIdFieldName));
+			}
+
 			fieldMappings = mappings;
 			return created;
 		}
@@ -204,9 +267,10 @@ namespace ProSuite.QA.Tests
 		{
 			ITable target = _exportTables[tableIndex];
 			IRow targetRow = target.CreateRow();
+			Dictionary<int, int> fieldMapping = _fieldMappings[tableIndex];
 			for (int iSourceField = 0; iSourceField < row.Fields.FieldCount; iSourceField++)
 			{
-				if (! _fieldMappings[tableIndex].TryGetValue(
+				if (! fieldMapping.TryGetValue(
 					    iSourceField + 1, out int iTargetField))
 				{
 					continue;
@@ -255,6 +319,12 @@ namespace ProSuite.QA.Tests
 						throw e;
 					}
 				}
+			}
+
+			if (ExportTileIds)
+			{
+				int iTargetField = fieldMapping[_tileIdFieldKey];
+				targetRow.Value[iTargetField] = _tileId;
 			}
 
 			targetRow.Store();

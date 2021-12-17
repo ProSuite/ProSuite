@@ -47,7 +47,8 @@ namespace ProSuite.QA.Tests.Transformers
 					((IFeatureWorkspace) ((IDataset) _t0).Workspace).OpenRelationshipClass(
 						_relationName);
 				_joined = RelationshipClassUtils.GetQueryTable(
-					relClass, _involved, _joinType, whereClause: null);
+					relClass, _involved, _joinType, whereClause: null,
+					queryTableName: _transformerName);
 			}
 
 			return _joined;
@@ -58,14 +59,7 @@ namespace ProSuite.QA.Tests.Transformers
 		string ITableTransformer.TransformerName
 		{
 			get => _transformerName;
-			set
-			{
-				_transformerName = value;
-				if (! string.IsNullOrWhiteSpace(value))
-				{
-					(_joined as IClassSchemaEdit)?.AlterAliasName(value);
-				}
-			}
+			set => _transformerName = value;
 		}
 
 		void IInvolvesTables.SetConstraint(int tableIndex, string condition)
