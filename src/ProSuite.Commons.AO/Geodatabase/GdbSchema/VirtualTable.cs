@@ -358,8 +358,14 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public virtual esriGeometryType ShapeType => VirtualShapeType;
 
-		protected virtual esriGeometryType VirtualShapeType =>
-			throw new NotImplementedException("Implement in derived class");
+		protected virtual esriGeometryType VirtualShapeType
+		{
+			get
+			{
+				IGeometryDef geomDef = Fields.Field[FindField(ShapeFieldName)].GeometryDef;
+				return geomDef.GeometryType;
+			}
+		}
 
 		public string ShapeFieldName => VirtualShapeFieldName;
 		protected virtual string VirtualShapeFieldName => "Shape";

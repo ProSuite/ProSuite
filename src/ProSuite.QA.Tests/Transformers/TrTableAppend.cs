@@ -153,7 +153,7 @@ namespace ProSuite.QA.Tests.Transformers
 					else
 					{
 						foreach (IRow row in DataContainer.Search(table, queryFilter,
-							_filterHelpers[iTable]))
+							         _filterHelpers[iTable]))
 						{
 							yield return AppendedRow.Create(this, iTable, row);
 						}
@@ -239,7 +239,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				if (index == Table.BaseRowFieldIndex)
 				{
-					return new List<IRow> {SourceRow};
+					return new List<IRow> { SourceRow };
 				}
 
 				int sourceFieldIndex = Table.GetSourceFieldIndex(SourceTableIndex, index);
@@ -248,8 +248,74 @@ namespace ProSuite.QA.Tests.Transformers
 					return DBNull.Value;
 				}
 
-				return SourceRow.Value[sourceFieldIndex];
+				object value = SourceRow.Value[sourceFieldIndex];
+				if (value is IGeometry geom)
+				{
+					value = GetGeometry(geom);
+				}
+
+				return value;
 			}
+
+			private IGeometry GetGeometry(IGeometry sourceGeom)
+			{
+				if (! (VirtualTable is IFeatureClass fc))
+				{
+					return sourceGeom;
+				}
+				IGeometry geom = sourceGeom;
+				bool isCloned = false;
+				geom = EnsureZAware(geom, ref isCloned, fc);
+				geom = EnsureMAware(geom, ref isCloned, fc);
+				esriGeometryType targetType = fc.ShapeType;
+				if (geom.GeometryType != targetType)
+				{
+					if (targetType == esriGeometryType.esriGeometryMultiPatch)
+					{
+						geom = GeometryFactory.CreateMultiPatch(geom, 1);
+					}
+					else
+					{
+						throw new NotImplementedException(
+							$"TODO: implement conversion from {geom.GeometryType} to {targetType}");
+					}
+				}
+
+				return geom;
+			}
+
+			private static IGeometry EnsureZAware(IGeometry g, ref bool isCloned, IFeatureClass target)
+			{
+				IField shp = target.Fields.Field[target.FindField(target.ShapeFieldName)];
+				IGeometryDef def = shp.GeometryDef;
+				if (def.HasZ != ((IZAware)g).ZAware)
+				{
+					g = isCloned ? g : GeometryFactory.Clone(g);
+					isCloned = true;
+					if (def.HasZ)
+					{
+						GeometryUtils.MakeZAware(g);
+					}
+					else
+					{
+						GeometryUtils.MakeNonZAware(g);
+					}
+				}
+				return g;
+			}
+			private static IGeometry EnsureMAware(IGeometry geom, ref bool isCloned, IFeatureClass target)
+			{
+				IField shp = target.Fields.Field[target.FindField(target.ShapeFieldName)];
+				IGeometryDef def = shp.GeometryDef;
+				if (def.HasM != ((IMAware)geom).MAware)
+				{
+					geom = isCloned ? geom : GeometryFactory.Clone(geom);
+					isCloned = true;
+					GeometryUtils.MakeMAware(geom, aware: def.HasM);
+				}
+				return geom;
+			}
+
 		}
 
 		private class AppendedFeature : AppendedRow, IFeature
@@ -268,11 +334,11 @@ namespace ProSuite.QA.Tests.Transformers
 				get => _sourceFeature.Shape;
 			}
 		}
-	}
 
-	public class SimpleWorkspace : VirtualWorkspace
-	{
-		protected override esriWorkspaceType VirtualWorkspaceType =>
-			esriWorkspaceType.esriFileSystemWorkspace;
+		public class SimpleWorkspace : VirtualWorkspace
+		{
+			protected override esriWorkspaceType VirtualWorkspaceType =>
+				esriWorkspaceType.esriFileSystemWorkspace;
+		}
 	}
 }

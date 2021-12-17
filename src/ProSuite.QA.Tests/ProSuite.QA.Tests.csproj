@@ -209,6 +209,7 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Qa3dConstantZ.cs" />
+    <Compile Include="QaExportTables.cs" />
     <Compile Include="QaExternalGraphicConflict.cs" />
     <Compile Include="QaExternalServiceBase.cs" />
     <Compile Include="QaGdbConstraint.cs" />
