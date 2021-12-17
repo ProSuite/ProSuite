@@ -1,4 +1,3 @@
-using System;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
@@ -12,13 +11,12 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 {
 	public class VerifiedModel : Model
 	{
-		[NotNull]
-		private readonly Func<Model, IFeatureWorkspace, IWorkspaceContext> _workspaceContextFactory;
+		[NotNull] private readonly IMasterDatabaseWorkspaceContextFactory _workspaceContextFactory;
 
 		public VerifiedModel(
 			[NotNull] string name,
 			[NotNull] IWorkspace workspace,
-			[NotNull] Func<Model, IFeatureWorkspace, IWorkspaceContext> workspaceContextFactory,
+			[NotNull] IMasterDatabaseWorkspaceContextFactory workspaceContextFactory,
 			[CanBeNull] string databaseName = null,
 			[CanBeNull] string schemaOwner = null,
 			SqlCaseSensitivity sqlCaseSensitivity =
@@ -47,9 +45,7 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 
 		protected override IWorkspaceContext CreateMasterDatabaseWorkspaceContext()
 		{
-			IFeatureWorkspace featureWorkspace = UserConnectionProvider.OpenWorkspace();
-
-			var result = _workspaceContextFactory(this, featureWorkspace);
+			IWorkspaceContext result = _workspaceContextFactory.Create(this);
 
 			if (AutoEnableSchemaCache && ! DisableAutomaticSchemaCaching)
 			{

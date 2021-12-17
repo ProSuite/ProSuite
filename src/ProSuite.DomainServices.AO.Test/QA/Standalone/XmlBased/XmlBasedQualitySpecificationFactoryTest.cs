@@ -4,13 +4,11 @@ using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
-using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test;
 using ProSuite.Commons.AO.Test.TestSupport;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.AO.QA.Xml;
@@ -178,7 +176,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			xmlDocument.AddTestDescriptor(_xmlTestDescriptorSimple);
 
 			var modelFactory =
-				new VerifiedModelFactory(CreateWorkspaceContext,
+				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
 				                         new SimpleVerifiedDatasetHarvester());
 
 			var factory = new XmlBasedQualitySpecificationFactory(
@@ -224,7 +222,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			xmlDocument.AddQualitySpecification(xmlQualitySpecification);
 
 			var modelFactory =
-				new VerifiedModelFactory(CreateWorkspaceContext,
+				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
 				                         new SimpleVerifiedDatasetHarvester());
 
 			var factory = new XmlBasedQualitySpecificationFactory(
@@ -249,7 +247,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 						xmlReader, out IList<XmlQualitySpecification> qualitySpecifications);
 
 				var modelFactory =
-					new VerifiedModelFactory(CreateWorkspaceContext,
+					new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
 					                         new SimpleVerifiedDatasetHarvester());
 
 				var factory =
@@ -356,7 +354,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			xmlSubSubCategory.AddQualityCondition(xmlQCon);
 
 			var modelFactory =
-				new VerifiedModelFactory(CreateWorkspaceContext,
+				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
 				                         new SimpleVerifiedDatasetHarvester());
 
 			var factory = new XmlBasedQualitySpecificationFactory(
@@ -407,19 +405,12 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 			Assert.AreEqual(12.34, value.GetValue(typeof(double)));
 		}
 
-		private static IWorkspaceContext CreateWorkspaceContext(
-			[NotNull] Model model,
-			[NotNull] IFeatureWorkspace workspace)
-		{
-			return new MasterDatabaseWorkspaceContext(workspace, model);
-		}
-
 		public static QualitySpecification CreateConditionBasedQualitySpecification(
 			string condition1Name, string featureClassName,
 			string specificationName, string gdbPath)
 		{
 			var modelFactory =
-				new VerifiedModelFactory(CreateWorkspaceContext,
+				new VerifiedModelFactory(new MasterDatabaseWorkspaceContextFactory(),
 				                         new SimpleVerifiedDatasetHarvester());
 
 			var factory = new XmlBasedQualitySpecificationFactory(
