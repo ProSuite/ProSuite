@@ -23,7 +23,7 @@ using ProSuite.QA.Tests.Network;
 
 namespace ProSuite.QA.Tests.Transformers
 {
-	public class TrDissolve : ITableTransformer<IFeatureClass>
+	public class TrDissolve : TableTransformer<IFeatureClass>
 	{
 		public enum SearchOption
 		{
@@ -32,63 +32,73 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		private const SearchOption _defaultSearchOption = SearchOption.Tile;
-		private readonly Tfc _dissolvedFc;
-		private IList<string> _attributes;
 
-		public IList<ITable> InvolvedTables { get; }
+		private readonly IFeatureClass _toDissolve;
 
 		[Doc(nameof(DocStrings.TrDissolve_0))]
-		public TrDissolve([NotNull] [Doc(nameof(DocStrings.TrDissolve_featureclass))]
-		                  IFeatureClass featureclass)
+		public TrDissolve(
+			[NotNull] [Doc(nameof(DocStrings.TrDissolve_featureclass))]
+			IFeatureClass featureclass)
+			: base(new List<ITable> { (ITable) featureclass })
 		{
-			InvolvedTables = new List<ITable> {(ITable) featureclass};
-
-			_dissolvedFc = new Tfc(featureclass);
+			_toDissolve = featureclass;
 			NeighborSearchOption = _defaultSearchOption;
 		}
 
 		[TestParameter]
 		[Doc(nameof(DocStrings.TrDissolve_SearchDistance))]
-		public double Search
-		{
-			get => _dissolvedFc.SearchDistance;
-			set => _dissolvedFc.SearchDistance = value;
-		}
+		public new double Search { get; set; }
 
 		[TestParameter(_defaultSearchOption)]
 		[Doc(nameof(DocStrings.TrDissolve_NeighborSearchOption))]
-		public SearchOption NeighborSearchOption
-		{
-			get => _dissolvedFc.NeighborSearchOption;
-			set => _dissolvedFc.NeighborSearchOption = value;
-		}
+		public SearchOption NeighborSearchOption { get; set; }
 
 		[TestParameter]
 		[Doc(nameof(DocStrings.TrDissolve_Attributes))]
-		public IList<string> Attributes
-		{
-			get => _attributes;
-			set
-			{
-				_attributes = value;
-				AddFields(value, isGrouped: true);
-			}
-		}
+		public IList<string> Attributes { get; set; }
 
 		[TestParameter]
 		[Doc(nameof(DocStrings.TrDissolve_GroupBy))]
-		public IList<string> GroupBy
+		public IList<string> GroupBy { get; set; }
+
+		[TestParameter]
+		[Doc(nameof(DocStrings.TrDissolve_Constraint))]
+		public string Constraint { get; set; }
+
+		[TestParameter]
+		[Doc(nameof(DocStrings.TrDissolve_CreateMultipartFeatures))]
+		public bool CreateMultipartFeatures { get; set; }
+
+		protected override IFeatureClass GetTransformedCore(string name)
 		{
-			get => _dissolvedFc.GroupBy;
-			set
+			var dissolvedFc = new TransformedFc(_toDissolve, name);
+
+			dissolvedFc.SearchDistance = Search;
+			dissolvedFc.NeighborSearchOption = NeighborSearchOption;
+			if (Attributes != null)
 			{
-				AddFields(value, isGrouped: false);
-				_dissolvedFc.GroupBy = value;
+				AddFields(dissolvedFc, Attributes, isGrouped: true);
 			}
+
+			if (GroupBy != null)
+			{
+				AddFields(dissolvedFc, GroupBy, isGrouped: false);
+				dissolvedFc.GroupBy = GroupBy;
+			}
+
+			if (! string.IsNullOrWhiteSpace(Constraint))
+			{
+				dissolvedFc.Constraint = Constraint;
+			}
+
+			dissolvedFc.CreateMultipartFeatures = CreateMultipartFeatures;
+
+			return dissolvedFc;
 		}
 
 		// TODO: Unify with TrSpatialJoin
-		private void AddFields([CanBeNull] IList<string> fieldNames, bool isGrouped)
+		private void AddFields([NotNull] TransformedFc dissolveFc,
+		                       [CanBeNull] IList<string> fieldNames, bool isGrouped)
 		{
 			if (fieldNames == null)
 			{
@@ -101,11 +111,11 @@ namespace ProSuite.QA.Tests.Transformers
 			Dictionary<string, string> aliasFieldDict =
 				ExpressionUtils.CreateAliases(expressionDict);
 
-			TableView tv = _dissolvedFc.TableView;
+			TableView tv = dissolveFc.TableView;
 			if (tv == null)
 			{
 				tv = TableViewFactory.Create(fc, expressionDict, aliasFieldDict, isGrouped);
-				_dissolvedFc.TableView = tv;
+				dissolveFc.TableView = tv;
 			}
 			else
 			{
@@ -118,52 +128,24 @@ namespace ProSuite.QA.Tests.Transformers
 
 			foreach (string field in expressionDict.Keys)
 			{
-				_dissolvedFc.AddCustomField(field);
+				dissolveFc.AddCustomField(field);
 			}
 		}
 
-		[TestParameter]
-		[Doc(nameof(DocStrings.TrDissolve_Constraint))]
-		public string Constraint
-		{
-			get => _dissolvedFc.Constraint;
-			set => _dissolvedFc.Constraint = value;
-		}
-
-		[TestParameter]
-		[Doc(nameof(DocStrings.TrDissolve_CreateMultipartFeatures))]
-		public bool CreateMultipartFeatures
-		{
-			get => _dissolvedFc.CreateMultipartFeatures;
-			set => _dissolvedFc.CreateMultipartFeatures = value;
-		}
-
-		public IFeatureClass GetTransformed() => _dissolvedFc;
-
-		object ITableTransformer.GetTransformed() => GetTransformed();
-
-		void IInvolvesTables.SetConstraint(int tableIndex, string condition)
-		{
-			_dissolvedFc.BackingDs.SetConstraint(tableIndex, condition);
-		}
-
-		void IInvolvesTables.SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql)
-		{
-			_dissolvedFc.BackingDs.SetSqlCaseSensitivity(tableIndex, useCaseSensitiveQaSql);
-		}
-
-		private class Tfc : GdbFeatureClass, ITransformedTable, ITransformedValue,
-		                    IHasSearchDistance
+		private class TransformedFc : GdbFeatureClass, ITransformedTable, ITransformedValue,
+		                              IHasSearchDistance
 		{
 			public TableView TableView { get; set; }
 			[CanBeNull] private IList<string> _groupBy;
 
-			public Tfc(IFeatureClass dissolve)
-				: base(-1, "dissolveResult", dissolve.ShapeType,
-				       createBackingDataset: (t) => new Transformed((Tfc) t, dissolve),
+			public TransformedFc(IFeatureClass dissolve, string name = null)
+				: base(-1, ! string.IsNullOrEmpty(name) ? name : "dissolveResult",
+				       dissolve.ShapeType,
+				       createBackingDataset: (t) =>
+					       new TransformedDataset((TransformedFc) t, dissolve),
 				       workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
-				InvolvedTables = new List<ITable> {(ITable) dissolve};
+				InvolvedTables = new List<ITable> { (ITable) dissolve };
 
 				IGeometryDef geomDef =
 					dissolve.Fields.Field[
@@ -199,10 +181,10 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public string Constraint
 			{
-				get => ((Transformed) BackingDataset)?.Constraint;
+				get => ((TransformedDataset) BackingDataset)?.Constraint;
 				set
 				{
-					if (BackingDs is Transformed ds)
+					if (BackingDs is TransformedDataset ds)
 					{
 						ds.Constraint = value;
 					}
@@ -216,9 +198,10 @@ namespace ProSuite.QA.Tests.Transformers
 				get => BackingDs.DataContainer;
 				set => BackingDs.DataContainer = value;
 			}
+
 			bool ITransformedTable.NoCaching => false;
 
-			public TransformedFeatureClass BackingDs => (Transformed) BackingDataset;
+			public TransformedDataset BackingDs => (TransformedDataset) BackingDataset;
 
 			[CanBeNull]
 			public BoxTree<IFeature> KnownRows { get; private set; }
@@ -238,7 +221,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
-		private class Transformed : TransformedFeatureClass<Tfc>
+		private class TransformedDataset : TransformedBackingDataset<TransformedFc>
 		{
 			private static readonly TableIndexRowComparer
 				_rowComparer = new TableIndexRowComparer();
@@ -248,10 +231,10 @@ namespace ProSuite.QA.Tests.Transformers
 			private string _constraint;
 			private QueryFilterHelper _constraitHelper;
 
-			public Transformed(
-				[NotNull] Tfc gdbTable,
+			public TransformedDataset(
+				[NotNull] TransformedFc gdbTable,
 				[NotNull] IFeatureClass dissolve) :
-				base(gdbTable, ProcessBase.CastToTables(dissolve))
+				base(gdbTable, CastToTables(dissolve))
 			{
 				_dissolve = dissolve;
 
@@ -315,11 +298,11 @@ namespace ProSuite.QA.Tests.Transformers
 					bool isKnown = false;
 					// Alternative: Involved Rows check
 					foreach (Involved knownInvolved in EnumKnownInvolveds(
-						baseFeature, Resulting.KnownRows, involvedDict))
+						         baseFeature, Resulting.KnownRows, involvedDict))
 					{
 						baseInvolved =
 							baseInvolved ??
-							InvolvedRowUtils.EnumInvolved(new[] {baseFeature}).First();
+							InvolvedRowUtils.EnumInvolved(new[] { baseFeature }).First();
 
 						if ((knownInvolved as InvolvedNested)?.BaseRows
 						                                     .Contains(baseInvolved) == true)
@@ -364,7 +347,7 @@ namespace ProSuite.QA.Tests.Transformers
 				if (Resulting.KnownRows != null && filter is ISpatialFilter sp)
 				{
 					foreach (BoxTree<IFeature>.TileEntry entry in
-						Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(sp.Geometry)))
+					         Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(sp.Geometry)))
 					{
 						yield return entry.Value;
 					}
@@ -430,7 +413,7 @@ namespace ProSuite.QA.Tests.Transformers
 						Resulting.FindField(InvolvedRowUtils.BaseRowField),
 						rows);
 
-					Tfc r = Resulting;
+					TransformedFc r = Resulting;
 					if (r.CustomFields?.Count > 0)
 					{
 						r.TableView.ClearRows();
@@ -462,13 +445,13 @@ namespace ProSuite.QA.Tests.Transformers
 			private class ConnectedBuilder
 			{
 				private readonly Dictionary<DirectedRow, List<DirectedRow>> _dissolvedDict;
-				private readonly Transformed _r;
+				private readonly TransformedDataset _r;
 				private readonly HashSet<DirectedRow> _handledRows;
 				private readonly List<DirectedRow> _missing;
 
 				private ISpatialFilter _filter;
 
-				public ConnectedBuilder(Transformed r)
+				public ConnectedBuilder(TransformedDataset r)
 				{
 					_dissolvedDict =
 						new Dictionary<DirectedRow, List<DirectedRow>>(
@@ -517,7 +500,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 						if (baseFeatures.Count == 1)
 						{
-							Add(new List<DirectedRow> {directedRow}, queryEnv: null);
+							Add(new List<DirectedRow> { directedRow }, queryEnv: null);
 							_handledRows.Add(directedRow);
 							continue;
 						}
@@ -526,7 +509,7 @@ namespace ProSuite.QA.Tests.Transformers
 						{
 							if (! _r.Resulting.CreateMultipartFeatures)
 							{
-								Add(new List<DirectedRow> {directedRow}, queryEnv: null);
+								Add(new List<DirectedRow> { directedRow }, queryEnv: null);
 								_handledRows.Add(directedRow);
 								continue;
 							}
@@ -543,7 +526,7 @@ namespace ProSuite.QA.Tests.Transformers
 						localBuilder.BuildNet(box, box, 0);
 
 						foreach (List<DirectedRow> directedRows in localBuilder
-							.ConnectedLinesList)
+							         .ConnectedLinesList)
 						{
 							if (directedRows.FirstOrDefault(x => ! _handledRows.Contains(x)) ==
 							    null)
@@ -595,7 +578,7 @@ namespace ProSuite.QA.Tests.Transformers
 							if (connected0 == null && connected1 == null)
 							{
 								List<DirectedRow> connected =
-									new List<DirectedRow> {groupedRows[0], groupedRows[1]};
+									new List<DirectedRow> { groupedRows[0], groupedRows[1] };
 								_dissolvedDict.Add(groupedRows[0], connected);
 								_dissolvedDict.Add(groupedRows[1], connected);
 							}
@@ -634,7 +617,7 @@ namespace ProSuite.QA.Tests.Transformers
 								if (! _dissolvedDict.ContainsKey(connectedRow))
 								{
 									_dissolvedDict.Add(connectedRow,
-									                   new List<DirectedRow> {connectedRow});
+									                   new List<DirectedRow> { connectedRow });
 								}
 							}
 						}

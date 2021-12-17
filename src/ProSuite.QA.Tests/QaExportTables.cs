@@ -6,7 +6,6 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
@@ -45,18 +44,45 @@ namespace ProSuite.QA.Tests
 				IWorkspaceName wsName = WorkspaceUtils.CreateFileGdbWorkspace(
 					Assert.NotNull(Path.GetDirectoryName(_fileGdbPath)),
 					Path.GetFileName(_fileGdbPath));
-				var ws = (IFeatureWorkspace)((IName)wsName).Open();
+				var ws = (IFeatureWorkspace) ((IName) wsName).Open();
 
 				_exportTables = new List<ITable>();
 				_fieldMappings = new List<Dictionary<int, int>>();
-				int i = 0;
+				Dictionary<string, int> tableNames =
+					new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
+				int iInvolved = 0;
 				foreach (ITable involvedTable in InvolvedTables)
 				{
-					string name = $"table_{i}";
-					_exportTables.Add(CreateTable(ws, involvedTable, name,
-																				out Dictionary<int, int> fieldMappings));
+					string baseName = $"table_{iInvolved}";
+					if (involvedTable is IDataset ds)
+					{
+						baseName = ds.Name;
+						int iP = baseName.LastIndexOf('.');
+						if (iP >= 0)
+						{
+							baseName = baseName.Substring(iP + 1);
+						}
+					}
+
+					if (GetRowFilters(iInvolved).Count > 0 ||
+					    ! string.IsNullOrWhiteSpace(GetConstraint(iInvolved)))
+					{
+						baseName += "_sel";
+					}
+
+					string name = baseName;
+					int j = 0;
+					while (tableNames.ContainsKey(name))
+					{
+						name = $"{baseName}_{j}";
+						j++;
+					}
+
+					_exportTables.Add(CreateTable(ws, involvedTable, baseName,
+					                              out Dictionary<int, int> fieldMappings));
 					_fieldMappings.Add(fieldMappings);
-					i++;
+					tableNames.Add(name, iInvolved);
+					iInvolved++;
 				}
 			}
 
@@ -66,19 +92,19 @@ namespace ProSuite.QA.Tests
 		private string GetValidFieldName(string name, Dictionary<string, IField> fieldDict)
 		{
 			string validRoot = name.Replace(".", "_");
-			if (!fieldDict.ContainsKey(validRoot))
+			if (! fieldDict.ContainsKey(validRoot))
 			{
 				return validRoot;
 			}
 
 			int idx = Enumerable.Range(1, int.MaxValue)
-													.First(x => !fieldDict.ContainsKey($"{validRoot}_{x}"));
+			                    .First(x => ! fieldDict.ContainsKey($"{validRoot}_{x}"));
 			string validIndexed = $"{validRoot}_{idx}";
 			return validIndexed;
 		}
 
 		private ITable CreateTable(IFeatureWorkspace ws, ITable involvedTable, string name,
-															 out Dictionary<int, int> fieldMappings)
+		                           out Dictionary<int, int> fieldMappings)
 		{
 			IFields sourceFields = involvedTable.Fields;
 
@@ -109,15 +135,15 @@ namespace ProSuite.QA.Tests
 					fieldType = esriFieldType.esriFieldTypeInteger;
 				}
 				else if (sourceField.Type ==
-								 esriFieldType.esriFieldTypeGlobalID)
+				         esriFieldType.esriFieldTypeGlobalID)
 				{
 					fieldType = esriFieldType.esriFieldTypeGUID;
 				}
 				else if (sourceField.Type ==
-								 esriFieldType.esriFieldTypeGeometry)
+				         esriFieldType.esriFieldTypeGeometry)
 				{
-					if (!sourceField.Name.Equals(fc?.ShapeFieldName,
-																				StringComparison.InvariantCultureIgnoreCase))
+					if (! sourceField.Name.Equals(fc?.ShapeFieldName,
+					                              StringComparison.InvariantCultureIgnoreCase))
 					{
 						//
 						exportField = FieldUtils.CreateTextField(exportName, 50);
@@ -127,8 +153,8 @@ namespace ProSuite.QA.Tests
 						exportField = sourceField;
 						if (exportField.Name != exportName)
 						{
-							exportField = (IField)((IClone)exportField).Clone();
-							((IFieldEdit)exportField).Name_2 = exportName;
+							exportField = (IField) ((IClone) exportField).Clone();
+							((IFieldEdit) exportField).Name_2 = exportName;
 
 							if (sourceField.Name == fc?.ShapeFieldName)
 							{
@@ -138,8 +164,8 @@ namespace ProSuite.QA.Tests
 					}
 				}
 				else if (sourceField.Type == esriFieldType.esriFieldTypeBlob &&
-								 sourceField.Name.IndexOf(InvolvedRowUtils.BaseRowField,
-																					StringComparison.InvariantCultureIgnoreCase) >= 0)
+				         sourceField.Name.IndexOf(InvolvedRowUtils.BaseRowField,
+				                                  StringComparison.InvariantCultureIgnoreCase) >= 0)
 				{
 					exportName = GetValidFieldName(exportName, fieldDict);
 					exportField = FieldUtils.CreateTextField(exportName, 250);
@@ -151,18 +177,20 @@ namespace ProSuite.QA.Tests
 			ITable created;
 			if (fc != null)
 			{
-				created = (ITable)DatasetUtils.CreateSimpleFeatureClass(
+				created = (ITable) DatasetUtils.CreateSimpleFeatureClass(
 					ws, name, FieldUtils.CreateFields(exportFields),
 					shapeFieldName: shapeFieldName);
 			}
 			else
 			{
 				created = DatasetUtils.CreateTable(ws, name, null,
-																					 FieldUtils.CreateFields(exportFields));
+				                                   FieldUtils.CreateFields(exportFields));
 			}
 
 			var mappings = new Dictionary<int, int>();
-			for (int iField = 1; iField < exportFields.Count; iField++) // Ignore first field : OID-Field !
+			for (int iField = 1;
+			     iField < exportFields.Count;
+			     iField++) // Ignore first field : OID-Field !
 			{
 				int mapped = created.FindField(exportFields[iField].Name);
 				mappings.Add(iField, mapped);
@@ -188,13 +216,14 @@ namespace ProSuite.QA.Tests
 				{
 					continue;
 				}
+
 				object sourceValue = row.Value[iSourceField];
 				object targetValue = sourceValue;
 
 				if (sourceValue is IGeometry)
 				{
 					if (targetRow.Fields.Field[iTargetField].Type !=
-							esriFieldType.esriFieldTypeGeometry)
+					    esriFieldType.esriFieldTypeGeometry)
 					{
 						targetValue = "additional geometry value (supressed)";
 					}
@@ -221,7 +250,7 @@ namespace ProSuite.QA.Tests
 				}
 				catch (Exception e)
 				{
-					if (!ignore)
+					if (! ignore)
 					{
 						throw e;
 					}

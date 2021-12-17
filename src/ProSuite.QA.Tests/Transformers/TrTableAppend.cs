@@ -16,6 +16,7 @@ namespace ProSuite.QA.Tests.Transformers
 	public class TrTableAppend : InvolvesTablesBase, ITableTransformer<ITable>
 	{
 		private AppendedTable _transformedTable;
+		private string _transformerName;
 
 		public TrTableAppend([NotNull] IList<ITable> tables)
 			: base(tables) { }
@@ -25,10 +26,17 @@ namespace ProSuite.QA.Tests.Transformers
 		public ITable GetTransformed() =>
 			_transformedTable ?? (_transformedTable = InitTransformedTable());
 
+		string ITableTransformer.TransformerName
+		{
+			get => _transformerName;
+			set => _transformerName = value;
+		}
+
 		private AppendedTable InitTransformedTable()
 		{
 			CopyFilters(out _, out IList<QueryFilterHelper> helpers);
-			AppendedTable transformedTable = AppendedTable.Create(InvolvedTables, helpers);
+			AppendedTable transformedTable =
+				AppendedTable.Create(InvolvedTables, helpers, _transformerName);
 			return transformedTable;
 		}
 
@@ -38,8 +46,9 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public static AppendedTable Create(
 				IList<ITable> tables, IList<QueryFilterHelper> helpers,
-				string name = "appended")
+				string name = null)
 			{
+				name = name ?? "appended";
 				if (tables.All(x => x is IFeatureClass))
 				{
 					return new AppendedFeatureClass(
@@ -263,6 +272,7 @@ namespace ProSuite.QA.Tests.Transformers
 				{
 					return sourceGeom;
 				}
+
 				IGeometry geom = sourceGeom;
 				bool isCloned = false;
 				geom = EnsureZAware(geom, ref isCloned, fc);
@@ -284,11 +294,12 @@ namespace ProSuite.QA.Tests.Transformers
 				return geom;
 			}
 
-			private static IGeometry EnsureZAware(IGeometry g, ref bool isCloned, IFeatureClass target)
+			private static IGeometry EnsureZAware(IGeometry g, ref bool isCloned,
+			                                      IFeatureClass target)
 			{
 				IField shp = target.Fields.Field[target.FindField(target.ShapeFieldName)];
 				IGeometryDef def = shp.GeometryDef;
-				if (def.HasZ != ((IZAware)g).ZAware)
+				if (def.HasZ != ((IZAware) g).ZAware)
 				{
 					g = isCloned ? g : GeometryFactory.Clone(g);
 					isCloned = true;
@@ -301,21 +312,24 @@ namespace ProSuite.QA.Tests.Transformers
 						GeometryUtils.MakeNonZAware(g);
 					}
 				}
+
 				return g;
 			}
-			private static IGeometry EnsureMAware(IGeometry geom, ref bool isCloned, IFeatureClass target)
+
+			private static IGeometry EnsureMAware(IGeometry geom, ref bool isCloned,
+			                                      IFeatureClass target)
 			{
 				IField shp = target.Fields.Field[target.FindField(target.ShapeFieldName)];
 				IGeometryDef def = shp.GeometryDef;
-				if (def.HasM != ((IMAware)geom).MAware)
+				if (def.HasM != ((IMAware) geom).MAware)
 				{
 					geom = isCloned ? geom : GeometryFactory.Clone(geom);
 					isCloned = true;
 					GeometryUtils.MakeMAware(geom, aware: def.HasM);
 				}
+
 				return geom;
 			}
-
 		}
 
 		private class AppendedFeature : AppendedRow, IFeature

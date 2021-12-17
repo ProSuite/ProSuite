@@ -15,6 +15,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			_rule = rule;
 		}
 
+		string ITableTransformer.TransformerName { get; set; }
+
 		object ITableTransformer.GetTransformed() => GetTransformed();
 
 		public string GetTransformed() => _rule;
@@ -37,10 +39,12 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			int iRule = 0;
 			foreach (string rule in rules)
 			{
-				_rules[iRule] = new[] {rule};
+				_rules[iRule] = new[] { rule };
 				iRule++;
 			}
 		}
+
+		string ITableTransformer.TransformerName { get; set; }
 
 		object ITableTransformer.GetTransformed() => GetTransformed();
 

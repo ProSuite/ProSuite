@@ -15,49 +15,37 @@ using ProSuite.QA.Tests.Documentation;
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
-	public abstract class TrGeometryTransform : ITableTransformer<IFeatureClass>,
+	public abstract class TrGeometryTransform : TableTransformer<IFeatureClass>,
 	                                            IGeometryTransformer, IContainerTransformer
 	{
-		private readonly Tfc _transformedFc;
-
-		public IList<ITable> InvolvedTables { get; }
+		private readonly esriGeometryType _derivedShapeType;
 
 		protected TrGeometryTransform([NotNull] IFeatureClass fc, esriGeometryType derivedShapeType)
+			: base(new List<ITable> { (ITable) fc })
 		{
-			InvolvedTables = new List<ITable> {(ITable) fc};
-
-			_transformedFc = new Tfc(fc, derivedShapeType, this);
-			// ReSharper disable once VirtualMemberCallInConstructor
-			AddCustomAttributes(_transformedFc);
+			_derivedShapeType = derivedShapeType;
 		}
 
 		[TestParameter]
 		[Doc(nameof(DocStrings.TrGeometryTransform_Attributes))]
-		public IList<string> Attributes
+		public IList<string> Attributes { get; set; }
+
+		protected override IFeatureClass GetTransformedCore(string name)
 		{
-			get => ((Transformed) _transformedFc.BackingDs).Attributes;
-			set => ((Transformed) _transformedFc.BackingDs).Attributes = value;
+			IFeatureClass fc = (IFeatureClass) InvolvedTables[0];
+			var transformedFc = new TransformedFc(fc, _derivedShapeType, this, name);
+			// ReSharper disable once VirtualMemberCallInConstructor
+			AddCustomAttributes(transformedFc);
+			transformedFc.BackingDs.Attributes = Attributes;
+
+			return transformedFc;
 		}
-
-		public IFeatureClass GetTransformed() => _transformedFc;
-
-		object ITableTransformer.GetTransformed() => GetTransformed();
 
 		protected virtual void AddCustomAttributes(GdbFeatureClass transformedFc) { }
 
 		protected IFeature CreateFeature()
 		{
-			return _transformedFc.CreateFeature();
-		}
-
-		void IInvolvesTables.SetConstraint(int tableIndex, string condition)
-		{
-			_transformedFc.BackingDs.SetConstraint(tableIndex, condition);
-		}
-
-		void IInvolvesTables.SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql)
-		{
-			_transformedFc.BackingDs.SetSqlCaseSensitivity(tableIndex, useCaseSensitiveQaSql);
+			return GetTransformed().CreateFeature(); // _transformedFc.CreateFeature();
 		}
 
 		IEnumerable<IFeature> IGeometryTransformer.Transform(IGeometry source)
@@ -82,16 +70,17 @@ namespace ProSuite.QA.Tests.Transformers
 		bool IContainerTransformer.HandlesContainer => HandlesContainer;
 		protected virtual bool HandlesContainer => true;
 
-		private class Tfc : GdbFeatureClass, ITransformedValue, ITransformedTable
+		private class TransformedFc : GdbFeatureClass, ITransformedValue, ITransformedTable
 		{
-			public Tfc(IFeatureClass fc, esriGeometryType derivedShapeType,
-			           IGeometryTransformer transformer)
-				: base(-1, "derivedGeometry", derivedShapeType,
-				       createBackingDataset: (t) => new Transformed((Tfc) t, fc),
+			public TransformedFc(IFeatureClass fc, esriGeometryType derivedShapeType,
+			                     IGeometryTransformer transformer, string name)
+				: base(-1, ! string.IsNullOrWhiteSpace(name) ? name : "derivedGeometry",
+				       derivedShapeType,
+				       createBackingDataset: (t) => new TransformedDataset((TransformedFc) t, fc),
 				       workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
 				Transformer = transformer;
-				InvolvedTables = new List<ITable> {(ITable) fc};
+				InvolvedTables = new List<ITable> { (ITable) fc };
 
 				IGeometryDef geomDef =
 					fc.Fields.Field[
@@ -109,7 +98,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			protected override IObject CreateObject(int oid)
 			{
-				return new TfcFeature(oid, this);
+				return new TransformedFeature(oid, this);
 			}
 
 			private void AddFields(IFeatureClass fc)
@@ -143,12 +132,12 @@ namespace ProSuite.QA.Tests.Transformers
 						             : null);
 			}
 
-			public TransformedFeatureClass BackingDs => (Transformed) BackingDataset;
+			public TransformedDataset BackingDs => (TransformedDataset) BackingDataset;
 		}
 
-		private class TfcFeature : GdbFeature
+		private class TransformedFeature : GdbFeature
 		{
-			public TfcFeature(int oid, Tfc featureClass)
+			public TransformedFeature(int oid, TransformedFc featureClass)
 				: base(oid, featureClass) { }
 
 			public override object get_Value(int index)
@@ -168,14 +157,14 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
-		private class Transformed : TransformedFeatureClass<Tfc>
+		private class TransformedDataset : TransformedBackingDataset<TransformedFc>
 		{
 			private readonly IFeatureClass _t0;
 
-			public Transformed(
-				[NotNull] Tfc tfc,
+			public TransformedDataset(
+				[NotNull] TransformedFc tfc,
 				[NotNull] IFeatureClass t0)
-				: base(tfc, ProcessBase.CastToTables(t0))
+				: base(tfc, CastToTables(t0))
 			{
 				_t0 = t0;
 				Resulting.SpatialReference = ((IGeoDataset) t0).SpatialReference;
@@ -259,7 +248,7 @@ namespace ProSuite.QA.Tests.Transformers
 				var involvedDict = new Dictionary<IFeature, Involved>();
 
 				foreach (var row in DataContainer.Search(
-					(ITable) _t0, filter, QueryHelpers[0]))
+					         (ITable) _t0, filter, QueryHelpers[0]))
 				{
 					IFeature baseFeature = (IFeature) row;
 
@@ -270,11 +259,11 @@ namespace ProSuite.QA.Tests.Transformers
 
 					IGeometry geom = baseFeature.Shape;
 					foreach (IFeature featureWithTransformedGeom
-						in Resulting.Transformer.Transform(geom))
+					         in Resulting.Transformer.Transform(geom))
 					{
 						IFeature f = featureWithTransformedGeom;
 
-						List<IRow> involved = new List<IRow> {row};
+						List<IRow> involved = new List<IRow> { row };
 						f.Value[IdxBaseRowField] = involved;
 
 						foreach (var pair in AttrDict)
@@ -294,7 +283,7 @@ namespace ProSuite.QA.Tests.Transformers
 				    Resulting.KnownRows != null && filter is ISpatialFilter sp)
 				{
 					foreach (BoxTree<IFeature>.TileEntry entry in
-						Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(sp.Geometry)))
+					         Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(sp.Geometry)))
 					{
 						yield return entry.Value;
 					}
@@ -312,11 +301,11 @@ namespace ProSuite.QA.Tests.Transformers
 
 				Involved baseInvolved = null;
 				foreach (var knownInvolved in EnumKnownInvolveds(
-					baseFeature, Resulting.KnownRows, involvedDict))
+					         baseFeature, Resulting.KnownRows, involvedDict))
 				{
 					baseInvolved =
 						baseInvolved ??
-						InvolvedRowUtils.EnumInvolved(new[] {baseFeature}).First();
+						InvolvedRowUtils.EnumInvolved(new[] { baseFeature }).First();
 					if (ct.IsGeneratedFrom(knownInvolved, baseInvolved))
 					{
 						return true;

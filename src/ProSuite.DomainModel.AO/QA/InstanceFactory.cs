@@ -92,7 +92,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 				// apply non-constructor arguments
 				foreach (TestParameter parameter in testParameters.Where(
-					p => ! p.IsConstructorParameter))
+					         p => ! p.IsConstructorParameter))
 				{
 					object value;
 					if (! TryGetArgumentValue(
@@ -109,6 +109,11 @@ namespace ProSuite.DomainModel.AO.QA
 						SetNonConstructorConstraints(result, preInvolvedTablesCount,
 						                             tableConstraints);
 					}
+				}
+
+				if (result is ITableTransformer transformer)
+				{
+					transformer.TransformerName = instanceConfiguration.Name;
 				}
 
 				return result;
@@ -235,7 +240,7 @@ namespace ProSuite.DomainModel.AO.QA
 			               "Set method not found for property {0} on test type {1}",
 			               propertyName, testType.Name);
 
-			setMethod.Invoke(test, new[] {value});
+			setMethod.Invoke(test, new[] { value });
 		}
 
 		protected static void SetNonConstructorConstraints(
@@ -277,7 +282,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 			// TODO refactor, clarify
 			foreach (TestParameter parameter in testParameters.Where(
-				p => p.IsConstructorParameter))
+				         p => p.IsConstructorParameter))
 			{
 				object value;
 				if (! TryGetArgumentValue(parameter, parameterValues, datasetContext,

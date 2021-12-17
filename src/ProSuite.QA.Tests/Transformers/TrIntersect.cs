@@ -10,47 +10,36 @@ using ProSuite.QA.Container;
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
-	public class TrIntersect : ITableTransformer<IFeatureClass>
+	public class TrIntersect : TableTransformer<IFeatureClass>
 	{
 		private readonly IFeatureClass _intersected;
 		private readonly IFeatureClass _intersecting;
-		private readonly Tfc _transformedFc;
-
-		public IList<ITable> InvolvedTables { get; }
 
 		public TrIntersect([NotNull] IFeatureClass intersected,
 		                   [NotNull] IFeatureClass intersecting)
+			: base(new List<ITable> { (ITable) intersected, (ITable) intersecting })
 		{
 			_intersected = intersected;
 			_intersecting = intersecting;
-			InvolvedTables = new List<ITable> {(ITable) intersected, (ITable) intersecting};
-
-			_transformedFc = new Tfc(_intersected, _intersecting);
 		}
 
-		public IFeatureClass GetTransformed() => _transformedFc;
-
-		object ITableTransformer.GetTransformed() => GetTransformed();
-
-		void IInvolvesTables.SetConstraint(int tableIndex, string condition)
+		protected override IFeatureClass GetTransformedCore(string name)
 		{
-			_transformedFc.BackingDs.SetConstraint(tableIndex, condition);
+			TransformedFc transformedFc = new TransformedFc(_intersected, _intersecting, name);
+			return transformedFc;
 		}
 
-		void IInvolvesTables.SetSqlCaseSensitivity(int tableIndex, bool useCaseSensitiveQaSql)
+		private class TransformedFc : GdbFeatureClass, ITransformedValue
 		{
-			_transformedFc.BackingDs.SetSqlCaseSensitivity(tableIndex, useCaseSensitiveQaSql);
-		}
-
-		private class Tfc : GdbFeatureClass, ITransformedValue
-		{
-			public Tfc(IFeatureClass intersected, IFeatureClass intersecting)
-				: base(-1, "intersectResult", intersected.ShapeType,
+			public TransformedFc(IFeatureClass intersected, IFeatureClass intersecting,
+			                     string name = null)
+				: base(-1, ! string.IsNullOrWhiteSpace(name) ? name : "intersectResult",
+				       intersected.ShapeType,
 				       createBackingDataset: (t) =>
-					       new Transformed((Tfc) t, intersected, intersecting),
+					       new TransformedDataset((TransformedFc) t, intersected, intersecting),
 				       workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
-				InvolvedTables = new List<ITable> {(ITable) intersected, (ITable) intersecting};
+				InvolvedTables = new List<ITable> { (ITable) intersected, (ITable) intersecting };
 
 				IGeometryDef geomDef =
 					intersected.Fields.Field[
@@ -70,20 +59,20 @@ namespace ProSuite.QA.Tests.Transformers
 				set => BackingDs.DataContainer = value;
 			}
 
-			public TransformedFeatureClass BackingDs => (Transformed) BackingDataset;
+			public TransformedDataset BackingDs => (TransformedDataset) BackingDataset;
 		}
 
-		private class Transformed : TransformedFeatureClass
+		private class TransformedDataset : TransformedBackingDataset
 		{
 			private const string PartIntersectedField = "PartIntersected";
 			private readonly IFeatureClass _intersected;
 			private readonly IFeatureClass _intersecting;
 
-			public Transformed(
-				[NotNull] Tfc gdbTable,
+			public TransformedDataset(
+				[NotNull] TransformedFc gdbTable,
 				[NotNull] IFeatureClass intersected,
 				[NotNull] IFeatureClass intersecting)
-				: base(gdbTable, ProcessBase.CastToTables(intersected, intersecting))
+				: base(gdbTable, CastToTables(intersected, intersecting))
 			{
 				_intersected = intersected;
 				_intersecting = intersecting;
@@ -114,11 +103,11 @@ namespace ProSuite.QA.Tests.Transformers
 				int iPartIntersected = Resulting.FindField(PartIntersectedField);
 
 				foreach (var toIntersect in DataContainer.Search(
-					(ITable) _intersected, filter, QueryHelpers[0]))
+					         (ITable) _intersected, filter, QueryHelpers[0]))
 				{
 					intersectingFilter.Geometry = ((IFeature) toIntersect).Extent;
 					foreach (var intersecting in DataContainer.Search(
-						(ITable) _intersecting, intersectingFilter, QueryHelpers[1]))
+						         (ITable) _intersecting, intersectingFilter, QueryHelpers[1]))
 					{
 						IGeometry intersectingGeom = ((IFeature) intersecting).Shape;
 						var op = (ITopologicalOperator) ((IFeature) toIntersect).Shape;
@@ -146,7 +135,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 						f.set_Value(
 							Resulting.FindField(InvolvedRowUtils.BaseRowField),
-							new List<IRow> {toIntersect, intersecting}); // TODO
+							new List<IRow> { toIntersect, intersecting }); // TODO
 
 						yield return f;
 					}

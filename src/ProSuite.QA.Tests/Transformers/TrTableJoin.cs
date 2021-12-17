@@ -17,6 +17,7 @@ namespace ProSuite.QA.Tests.Transformers
 		private readonly List<ITable> _involved;
 
 		private ITable _joined;
+		private string _transformerName;
 
 		[Doc(nameof(DocStrings.TrTableJoin_0))]
 		public TrTableJoin(
@@ -33,7 +34,7 @@ namespace ProSuite.QA.Tests.Transformers
 			_t1 = t1;
 			_relationName = relationName;
 			_joinType = joinType;
-			_involved = new List<ITable> {t0, t1};
+			_involved = new List<ITable> { t0, t1 };
 		}
 
 		IList<ITable> IInvolvesTables.InvolvedTables => _involved;
@@ -53,6 +54,19 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		object ITableTransformer.GetTransformed() => GetTransformed();
+
+		string ITableTransformer.TransformerName
+		{
+			get => _transformerName;
+			set
+			{
+				_transformerName = value;
+				if (! string.IsNullOrWhiteSpace(value))
+				{
+					(_joined as IClassSchemaEdit)?.AlterAliasName(value);
+				}
+			}
+		}
 
 		void IInvolvesTables.SetConstraint(int tableIndex, string condition)
 		{
