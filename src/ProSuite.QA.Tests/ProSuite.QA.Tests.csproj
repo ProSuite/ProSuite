@@ -201,6 +201,7 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Qa3dConstantZ.cs" />
+    <Compile Include="QaExportTables.cs" />
     <Compile Include="QaGdbConstraint.cs" />
     <Compile Include="QaSurfaceOffset.cs" />
     <Compile Include="QaSurfacePipe.cs" />
@@ -356,7 +357,8 @@
     <Compile Include="Transformers\FieldInfo.cs" />
     <Compile Include="Transformers\IContainerTransformer.cs" />
     <Compile Include="Transformers\IGeometryTransformer.cs" />
-    <Compile Include="Transformers\TransformedFeatureClass.cs" />
+    <Compile Include="Transformers\TableTransformer.cs" />
+    <Compile Include="Transformers\TransformedBackingDataset.cs" />
     <Compile Include="Transformers\TransformerWorkspace.cs" />
     <Compile Include="Transformers\TrDissolve.cs" />
     <Compile Include="Transformers\TrFootprint.cs" />

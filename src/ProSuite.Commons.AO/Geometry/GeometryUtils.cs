@@ -5614,14 +5614,14 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 		}
 
-		public static void MakeMAware([NotNull] IGeometry geometry)
+		public static void MakeMAware([NotNull] IGeometry geometry, bool aware = true)
 		{
 			Assert.ArgumentNotNull(geometry, nameof(geometry));
 
 			var mAware = (IMAware) geometry;
-			if (! mAware.MAware)
+			if (! (mAware.MAware == aware))
 			{
-				mAware.MAware = true;
+				mAware.MAware = aware;
 			}
 		}
 

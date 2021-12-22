@@ -94,6 +94,8 @@ namespace ProSuite.QA.Container
 	public interface ITableTransformer : IInvolvesTables
 	{
 		object GetTransformed();
+
+		string TransformerName { get; set; }
 	}
 
 	public interface ITableTransformer<out T> : ITableTransformer
@@ -117,6 +119,7 @@ namespace ProSuite.QA.Container
 	public interface ITransformedTable
 	{
 		void SetKnownTransformedRows([CanBeNull] IEnumerable<IRow> knownRows);
+
 		bool NoCaching { get; }
 	}
 

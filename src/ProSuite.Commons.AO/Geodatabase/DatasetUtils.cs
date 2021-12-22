@@ -529,8 +529,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			[CanBeNull] string configKeyWord,
 			params IField[] fields)
 		{
-			return CreateSimpleFeatureClass(workspace, fclassName,
-			                                CreateFields(fields), configKeyWord);
+			return CreateSimpleFeatureClass(
+				workspace, fclassName, FieldUtils.CreateFields(fields), configKeyWord);
 		}
 
 		[NotNull]
@@ -538,7 +538,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			[NotNull] IFeatureWorkspace workspace,
 			[NotNull] string fclassName,
 			[NotNull] IFields fields,
-			[CanBeNull] string configKeyWord = null)
+			[CanBeNull] string configKeyWord = null,
+			[CanBeNull] string shapeFieldName = null)
 		{
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 			Assert.ArgumentNotNullOrEmpty(fclassName, nameof(fclassName));
@@ -549,7 +550,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return workspace.CreateFeatureClass(
 					fclassName, fields, GetFeatureUID(), null,
 					esriFeatureType.esriFTSimple,
-					FieldUtils.GetShapeFieldName(), configKeyWord);
+					shapeFieldName ?? FieldUtils.GetShapeFieldName(), configKeyWord);
 			}
 			catch (Exception)
 			{
@@ -568,17 +569,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				throw;
 			}
-		}
-
-		[NotNull]
-		public static IFeatureClass CreateSimpleFeatureClass(
-			[NotNull] IFeatureDataset featureDataset,
-			[NotNull] string fclassName,
-			[CanBeNull] string configKeyWord,
-			params IField[] fields)
-		{
-			return CreateSimpleFeatureClass(featureDataset, fclassName,
-			                                CreateFields(fields), configKeyWord);
 		}
 
 		[NotNull]
@@ -613,7 +603,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		                                 [CanBeNull] string configKeyword,
 		                                 params IField[] fields)
 		{
-			return CreateTable(workspace, name, configKeyword, CreateFields(fields));
+			return CreateTable(workspace, name, configKeyword, FieldUtils.CreateFields(fields));
 		}
 
 		[NotNull]
@@ -3843,21 +3833,6 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(subtypeFieldValue, nameof(subtypeFieldValue));
 
 			return subtypeFieldValue as int? ?? Convert.ToInt32(subtypeFieldValue);
-		}
-
-		[NotNull]
-		private static IFields CreateFields([NotNull] IEnumerable<IField> fields)
-		{
-			Assert.ArgumentNotNull(fields, nameof(fields));
-
-			IFieldsEdit result = new FieldsClass();
-
-			foreach (IField field in fields)
-			{
-				result.AddField(field);
-			}
-
-			return result;
 		}
 
 		[NotNull]
