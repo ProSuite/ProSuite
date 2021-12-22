@@ -258,15 +258,23 @@ namespace ProSuite.Microservices.Server.AO
 				     (a.Equals("-v", StringComparison.InvariantCultureIgnoreCase) ||
 				      a.Equals("--verbose", StringComparison.InvariantCultureIgnoreCase)));
 
-			ConfigureLogging(verboseArg, logConfigFileName);
+			var parsedArgs = Parser.Default.ParseArguments<MicroserverArguments>(commandLineArgs);
+
+			int port = -1;
+			parsedArgs.WithParsed(a => port = a.Port);
+
+			ConfigureLogging(verboseArg, logConfigFileName, port);
 		}
 
 		public static void ConfigureLogging(bool verboseRequired,
-		                                    [NotNull] string logConfigFileName)
+		                                    [NotNull] string logConfigFileName,
+		                                    int port = -1)
 		{
 			int processId = Process.GetCurrentProcess().Id;
 
-			LoggingConfigurator.SetGlobalProperty("LogFileSuffix", $"PID_{processId}");
+			string suffix = port < 0 ? $"PID_{processId}" : $"Port_{port}_PID_{processId}";
+
+			LoggingConfigurator.SetGlobalProperty("LogFileSuffix", suffix);
 
 			LoggingConfigurator.Configure(logConfigFileName,
 			                              GetLogConfigPaths(),
