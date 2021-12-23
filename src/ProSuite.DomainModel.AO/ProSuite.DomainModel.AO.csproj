@@ -135,6 +135,7 @@
     <Compile Include="DataModel\SimpleWorkspaceContext.cs" />
     <Compile Include="DataModel\WorkspaceContextBase.cs" />
     <Compile Include="DataModel\WorkspaceDataset.cs" />
+    <Compile Include="DataModel\WorkspaceModelContext.cs" />
     <Compile Include="DataModel\WorkspaceProxy.cs" />
     <Compile Include="Geodatabase\ConnectionFileConnectionProvider.cs" />
     <Compile Include="Geodatabase\ConnectionProvider.cs" />

@@ -110,6 +110,7 @@
     <Compile Include="QA\DatasetReports\Xml\XmlRange.cs" />
     <Compile Include="QA\DatasetReports\Xml\XmlSpatialReferenceDescriptor.cs" />
     <Compile Include="QA\DatasetReports\Xml\XmlSpatialReferenceDescriptorUtils.cs" />
+    <Compile Include="QA\QualityVerificationUtils.cs" />
     <Compile Include="QA\Standalone\RuleBased\Category.cs" />
     <Compile Include="QA\Standalone\RuleBased\HtmlReportModel.cs" />
     <Compile Include="QA\Standalone\RuleBased\HtmlReportWriter.cs" />
