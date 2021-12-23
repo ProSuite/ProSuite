@@ -104,6 +104,7 @@
     <Compile Include="Geodatabase\GdbSchema\VirtualTable.cs" />
     <Compile Include="Geodatabase\GdbSchema\VirtualWorkspace.cs" />
     <Compile Include="Geodatabase\IWorkspaceDbConnectionProvider.cs" />
+    <Compile Include="Geodatabase\MosaicUtils.cs" />
     <Compile Include="Geodatabase\ObjectClassComparer.cs" />
     <Compile Include="Geodatabase\FeatureStorageUtils.cs" />
     <Compile Include="Geodatabase\FieldComparison.cs" />
@@ -155,6 +156,7 @@
     <Compile Include="Geodatabase\SchemaInfo\WorkspaceProperties.cs" />
     <Compile Include="Geodatabase\SchemaInfo\XYDomainProperties.cs" />
     <Compile Include="Geodatabase\SchemaInfo\ZDomainProperties.cs" />
+    <Compile Include="Geodatabase\SchemaLock.cs" />
     <Compile Include="Geodatabase\SegmentAngleComparisonService.cs" />
     <Compile Include="Geodatabase\Subtype.cs" />
     <Compile Include="Geodatabase\SyntheticFeature.cs" />
