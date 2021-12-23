@@ -6,11 +6,13 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.DomainModel.AO.QA;
+using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Core;
 
 namespace ProSuite.QA.TestFactories
 {
 	[UsedImplicitly]
+	[ProximityTest]
 	public class QaRelMustBeNearOther : QaRelationTestFactory
 	{
 		[NotNull]
@@ -19,7 +21,7 @@ namespace ProSuite.QA.TestFactories
 
 		public override string GetTestTypeDescription()
 		{
-			return typeof(QaRelLineGroupConstraints).Name;
+			return nameof(QaRelMustBeNearOther);
 		}
 
 		protected override IList<TestParameter> CreateParameters()
@@ -32,11 +34,11 @@ namespace ProSuite.QA.TestFactories
 				new List<TestParameter>
 				{
 					new TestParameter("relationTables", typeof(IList<ITable>),
-					                  DocStrings.QaRelGroupConnected_relationTables),
+					                  DocStrings.QaRelMustBeNearOther_relationTables),
 					new TestParameter("relation", typeof(string),
-					                  DocStrings.QaRelGroupConnected_relation),
+					                  DocStrings.QaRelMustBeNearOther_relation),
 					new TestParameter("join", typeof(JoinType),
-					                  DocStrings.QaRelGroupConnected_join),
+					                  DocStrings.QaRelMustBeNearOther_join),
 				};
 			AddConstructorParameters(list, typeof(QaMustBeNearOther),
 			                         constructorIndex: 0,
@@ -50,7 +52,7 @@ namespace ProSuite.QA.TestFactories
 
 		public override string GetTestDescription()
 		{
-			return DocStrings.QaRelConstraint;
+			return DocStrings.QaRelMustBeNearOther;
 		}
 
 		protected override object[] Args(IOpenDataset datasetContext,
