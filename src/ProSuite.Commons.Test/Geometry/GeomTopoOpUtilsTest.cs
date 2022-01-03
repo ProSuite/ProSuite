@@ -1869,6 +1869,84 @@ namespace ProSuite.Commons.Test.Geometry
 		}
 
 		[Test]
+		public void CanGetIntersectionPointsXYWithShortSegments()
+		{
+			var path1 = new List<Pnt3D>();
+			var ring2 = new List<Pnt3D>();
+
+			// Path1: horizontal:
+			path1.Add(new Pnt3D(0, 0, 9));
+			path1.Add(new Pnt3D(0, 100, 9));
+			path1.Add(new Pnt3D(100, 50, 9));
+			path1.Add(new Pnt3D(100, 0, 9));
+			path1.Add(new Pnt3D(0, 0, 9));
+
+			// ring 2: also horizontal, equal except at one point there is a short segment
+			ring2.Add(new Pnt3D(0, 0, 9));
+			ring2.Add(new Pnt3D(0, 100, 9));
+			ring2.Add(new Pnt3D(100, 50.001, 9));
+			ring2.Add(new Pnt3D(100, 49.999, 9));
+			ring2.Add(new Pnt3D(100, 0, 9));
+
+			for (var i = 0; i < 4; i++)
+			{
+				Pnt3D[] array2 = ring2.ToArray();
+				CollectionUtils.Rotate(array2, i);
+				var rotatedRing = new List<Pnt3D>(array2);
+
+				rotatedRing.Add((Pnt3D) rotatedRing[0].Clone());
+
+				Linestring linestring1 = new Linestring(path1);
+				Linestring linestring2 = new Linestring(rotatedRing);
+
+				IList<IntersectionPoint3D> intersectionPoints =
+					GeomTopoOpUtils.GetIntersectionPoints(
+						(ISegmentList) linestring1, (ISegmentList) linestring2,
+						0.01,
+						false);
+
+				Assert.AreEqual(0, intersectionPoints.Count);
+
+				// TODO: Short source segments still lead to gaps in the intersections
+				//intersectionPoints =
+				//	GeomTopoOpUtils.GetIntersectionPoints(
+				//		(ISegmentList) linestring2, (ISegmentList) linestring1,
+				//		0.01,
+				//		false);
+
+				//Assert.AreEqual(0, intersectionPoints.Count);
+
+				intersectionPoints =
+					GeomTopoOpUtils.GetIntersectionPoints(
+						(ISegmentList) linestring1, (ISegmentList) linestring2,
+						0.01,
+						true);
+
+				Assert.IsTrue(intersectionPoints.Count > 0);
+
+				// Inverted order has some extra challenges when sorting the intersections, if the
+				// target is zero-length (requires comparer)
+				linestring2.ReverseOrientation();
+
+				intersectionPoints =
+					GeomTopoOpUtils.GetIntersectionPoints(
+						(ISegmentList) linestring1, (ISegmentList) linestring2,
+						0.01,
+						false);
+
+				Assert.AreEqual(0, intersectionPoints.Count);
+
+				intersectionPoints =
+					GeomTopoOpUtils.GetIntersectionPoints(
+						(ISegmentList) linestring1, (ISegmentList) linestring2,
+						0.01,
+						true);
+
+				Assert.IsTrue(intersectionPoints.Count > 0);
+			}
+		}
+
+		[Test]
 		public void
 			CanGetIntersectionPointsXYWithLinearIntersectionEndpointAtOtherInterior
 			()

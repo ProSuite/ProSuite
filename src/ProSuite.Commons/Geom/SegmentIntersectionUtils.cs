@@ -30,8 +30,8 @@ namespace ProSuite.Commons.Geom
 				                                   predicate);
 
 			foreach (SegmentIntersection intersection in
-				IntersectLineWithLinestringXY(
-					sourceLine, sourceLineGlobalIdx, segmentsByGlobalIdx, tolerance))
+			         IntersectLineWithLinestringXY(
+				         sourceLine, sourceLineGlobalIdx, segmentsByGlobalIdx, tolerance))
 			{
 				int? nextSegmentIndex =
 					containingSegmentList.NextSegmentIndex(intersection.SourceIndex);
@@ -60,8 +60,8 @@ namespace ProSuite.Commons.Geom
 		/// <param name="segmentList1"></param>
 		/// <param name="segmentList2"></param>
 		/// <param name="tolerance"></param>
-		/// <param name="optimizeLinearIntersections">If true, an optimiziation that improves the
-		/// performance when linear intersections are present. If a segmentList1 segment is equal
+		/// <param name="optimizeLinearIntersections">If true, an optimization is employed that improves
+		/// the performance when linear intersections are present. If a segmentList1 segment is equal
 		/// to a linestring2 segment it will directly be used. Other intersections will be missed.
 		/// </param>
 		/// <returns>The segment intersections with the index of the cut part of multiLinestring2</returns>
@@ -83,8 +83,8 @@ namespace ProSuite.Commons.Geom
 				Line3D line = segmentList1.GetSegment(lineIdx);
 
 				foreach (SegmentIntersection result in GetSegmentIntersectionsXY(
-					lineIdx, line, segmentList2, tolerance,
-					previousLinearIntersection))
+					         lineIdx, line, segmentList2, tolerance,
+					         previousLinearIntersection))
 				{
 					if (optimizeLinearIntersections && result.SegmentsAreEqualInXy)
 					{
@@ -310,8 +310,8 @@ namespace ProSuite.Commons.Geom
 				segmentList.FindSegments(sourceLine, tolerance);
 
 			foreach (SegmentIntersection intersection in
-				IntersectLineWithLinestringXY(
-					sourceLine, sourceLineIdx, segmentsByIndex, tolerance))
+			         IntersectLineWithLinestringXY(
+				         sourceLine, sourceLineIdx, segmentsByIndex, tolerance))
 			{
 				yield return intersection;
 			}
@@ -481,6 +481,14 @@ namespace ProSuite.Commons.Geom
 					return;
 				}
 
+				if (intersection.IsTargetZeroLength2D &&
+				    ContainsIntersection(allLinearIntersectionFactors,
+				                         partIndex, linearIntersectionEndFactor))
+				{
+					// avoid double linear segments if the target segment is 2D-'short' (or vertical) 
+					return;
+				}
+
 				AddIntersectionFactor(linearIntersectionStartFactor, partIndex,
 				                      allLinearIntersectionFactors, source);
 
@@ -568,7 +576,7 @@ namespace ProSuite.Commons.Geom
 			// TODO: Test for 0-length lines
 
 			foreach (KeyValuePair<int, Line3D> path2Segment in
-				linestring2Segments.OrderBy(kvp => kvp.Key))
+			         linestring2Segments.OrderBy(kvp => kvp.Key))
 			{
 				int targetIdx = path2Segment.Key;
 				Line3D otherLine = path2Segment.Value;
