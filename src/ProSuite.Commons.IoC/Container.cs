@@ -163,6 +163,11 @@ namespace ProSuite.Commons.IoC
 
 		protected object Inner => _inner;
 
+		protected void Install(IWindsorInstaller installer)
+		{
+			_inner.Install(installer);
+		}
+
 		protected void AddChildRegistry([NotNull] Container childContainer)
 		{
 			IWindsorContainer child = childContainer.Inner as WindsorContainer;
