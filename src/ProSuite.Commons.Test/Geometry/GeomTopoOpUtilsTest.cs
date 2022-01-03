@@ -1907,14 +1907,13 @@ namespace ProSuite.Commons.Test.Geometry
 
 				Assert.AreEqual(0, intersectionPoints.Count);
 
-				// TODO: Short source segments still lead to gaps in the intersections
-				//intersectionPoints =
-				//	GeomTopoOpUtils.GetIntersectionPoints(
-				//		(ISegmentList) linestring2, (ISegmentList) linestring1,
-				//		0.01,
-				//		false);
+				intersectionPoints =
+					GeomTopoOpUtils.GetIntersectionPoints(
+						(ISegmentList)linestring2, (ISegmentList)linestring1,
+						0.01,
+						false);
 
-				//Assert.AreEqual(0, intersectionPoints.Count);
+				Assert.AreEqual(0, intersectionPoints.Count);
 
 				intersectionPoints =
 					GeomTopoOpUtils.GetIntersectionPoints(
