@@ -52,6 +52,9 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		public IList<IntersectionPoint3D> LinearIntersectionPseudoBreaks { get; set; } =
+			new List<IntersectionPoint3D>();
+
 		public IList<IntersectionPoint3D> IntersectionsAlongTarget
 		{
 			get
@@ -187,13 +190,13 @@ namespace ProSuite.Commons.Geom
 						           Tolerance));
 
 					foreach (int sourceIdx in subcurveInfos.Select(
-						i => i.NextIntersection.SourcePartIndex))
+						         i => i.NextIntersection.SourcePartIndex))
 					{
 						IntersectedSourcePartIndexes.Add(sourceIdx);
 					}
 
 					foreach (int targetIdx in subcurveInfos.Select(
-						i => i.NextIntersection.TargetPartIndex))
+						         i => i.NextIntersection.TargetPartIndex))
 					{
 						IntersectedTargetPartIndexes.Add(targetIdx);
 					}
@@ -321,7 +324,30 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		protected static Dictionary<IntersectionPoint3D, KeyValuePair<int, int>>
+		private static IEnumerable<IntersectionPoint3D> GetLinearIntersectionPseudoBreaks(
+			IEnumerable<IntersectionPoint3D> intersectionPointsForPart)
+		{
+			IntersectionPoint3D previous = null;
+
+			foreach (IntersectionPoint3D intersectionPoint in
+			         intersectionPointsForPart.OrderBy(i => i.VirtualSourceVertex))
+			{
+				if (previous != null &&
+				    previous.Type == IntersectionPointType.LinearIntersectionEnd &&
+				    intersectionPoint.Type == IntersectionPointType.LinearIntersectionStart &&
+				    previous.SourcePartIndex == intersectionPoint.SourcePartIndex &&
+				    previous.TargetPartIndex == intersectionPoint.TargetPartIndex &&
+				    previous.Point.Equals(intersectionPoint.Point))
+				{
+					yield return previous;
+					yield return intersectionPoint;
+				}
+
+				previous = intersectionPoint;
+			}
+		}
+
+		private static Dictionary<IntersectionPoint3D, KeyValuePair<int, int>>
 			GetOrderedIntersectionPoints(
 				[NotNull] IList<IntersectionPoint3D> intersectionPoints,
 				out IList<IntersectionPoint3D> intersectionsAlongSource,
@@ -620,7 +646,7 @@ namespace ProSuite.Commons.Geom
 				out _intersectionsAlongTarget);
 		}
 
-		protected void ClassifyIntersections(
+		private void ClassifyIntersections(
 			[NotNull] ISegmentList source,
 			[NotNull] ISegmentList target,
 			[NotNull] out IList<IntersectionPoint3D> intersectionsInboundTarget,
@@ -628,8 +654,19 @@ namespace ProSuite.Commons.Geom
 		{
 			intersectionsInboundTarget = new List<IntersectionPoint3D>();
 			intersectionsOutboundTarget = new List<IntersectionPoint3D>();
+			LinearIntersectionPseudoBreaks.Clear();
 
-			foreach (IntersectionPoint3D intersectionPoint3D in IntersectionsAlongSource)
+			// Filter linear intersection end/start (e.g. at null-points) to avoid
+			//       incorrect inbound/outbound and turn-direction decisions:
+			var intersections = IntersectionsAlongSource.ToList();
+			foreach (IntersectionPoint3D pseudoBreak in GetLinearIntersectionPseudoBreaks(
+				         intersections))
+			{
+				intersections.Remove(pseudoBreak);
+				LinearIntersectionPseudoBreaks.Add(pseudoBreak);
+			}
+
+			foreach (IntersectionPoint3D intersectionPoint3D in intersections)
 			{
 				bool isInbound, isOutbound;
 				ClassifyIntersection(source, target, intersectionPoint3D, out isInbound,

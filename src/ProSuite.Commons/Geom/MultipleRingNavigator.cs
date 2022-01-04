@@ -183,23 +183,33 @@ namespace ProSuite.Commons.Geom
 			bool continueForward,
 			out Linestring subcurve)
 		{
+			IntersectionPoint3D subcurveStart = previousIntersection;
 			IntersectionPoint3D nextIntersection;
+
+			do
+			{
+				nextIntersection =
+					continueOnSource
+						? GetNextIntersectionAlongSource(previousIntersection)
+						: GetNextIntersectionAlongTarget(previousIntersection, continueForward);
+
+				previousIntersection = nextIntersection;
+
+				// Skip pseudo-breaks to avoid going astray due to minimal angle-differences:
+				// Example: GeomTopoOpUtilsTest.CanGetIntersectionAreaXYWithLinearBoundaryIntersection()
+			} while (LinearIntersectionPseudoBreaks.Contains(nextIntersection));
 
 			if (continueOnSource)
 			{
-				nextIntersection = GetNextIntersectionAlongSource(previousIntersection);
-
-				subcurve = GetSourceSubcurve(previousIntersection, nextIntersection);
+				subcurve = GetSourceSubcurve(subcurveStart, nextIntersection);
 			}
 			else
 			{
 				// TODO: Handle verticals?
-				nextIntersection =
-					GetNextIntersectionAlongTarget(previousIntersection, continueForward);
 
-				Linestring targetPart = Target.GetPart(previousIntersection.TargetPartIndex);
+				Linestring targetPart = Target.GetPart(subcurveStart.TargetPartIndex);
 
-				subcurve = GetTargetSubcurve(targetPart, previousIntersection,
+				subcurve = GetTargetSubcurve(targetPart, subcurveStart,
 				                             nextIntersection, continueForward);
 			}
 
@@ -274,7 +284,7 @@ namespace ProSuite.Commons.Geom
 		public override IEnumerable<Linestring> GetEqualSourceRings()
 		{
 			foreach (int unCutSourceIdx in GetUnusedIndexes(
-				Source.PartCount, IntersectedSourcePartIndexes))
+				         Source.PartCount, IntersectedSourcePartIndexes))
 			{
 				// No inbound/outbound, but possibly linear intersection starting/ending in the same point:
 
@@ -301,7 +311,7 @@ namespace ProSuite.Commons.Geom
 		public override IEnumerable<IntersectionPoint3D> GetEqualRingsSourceStartIntersection()
 		{
 			foreach (int unCutSourceIdx in GetUnusedIndexes(
-				Source.PartCount, IntersectedSourcePartIndexes))
+				         Source.PartCount, IntersectedSourcePartIndexes))
 			{
 				// No inbound/outbound, but possibly linear intersection starting/ending in the same point:
 
@@ -320,7 +330,7 @@ namespace ProSuite.Commons.Geom
 		public override IEnumerable<Linestring> GetSourceRingsCompletelyWithinTarget()
 		{
 			foreach (int unCutSourceIdx in GetUnusedIndexes(
-				Source.PartCount, IntersectedSourcePartIndexes))
+				         Source.PartCount, IntersectedSourcePartIndexes))
 			{
 				// No inbound/outbound, but possibly touching or linear intersections
 
@@ -340,7 +350,7 @@ namespace ProSuite.Commons.Geom
 				if (intersectionPoints.Count == 0)
 				{
 					if (GeomRelationUtils.PolycurveContainsXY(
-						Target, sourceRing.StartPoint, Tolerance))
+						    Target, sourceRing.StartPoint, Tolerance))
 					{
 						yield return sourceRing;
 					}
@@ -350,7 +360,7 @@ namespace ProSuite.Commons.Geom
 					// TODO: Handle boundary loops, islands touching outer rings etc.
 
 					foreach (int targetPartIndex in GetIntersectingTargetPartIndexes(
-						intersectionPoints))
+						         intersectionPoints))
 					{
 						Linestring targetRing = Target.GetPart(targetPartIndex);
 
@@ -371,7 +381,7 @@ namespace ProSuite.Commons.Geom
 		public override IEnumerable<Linestring> GetTargetRingsCompletelyWithinSource()
 		{
 			foreach (int unCutTargetIdx in GetUnusedIndexes(
-				Target.PartCount, IntersectedTargetPartIndexes))
+				         Target.PartCount, IntersectedTargetPartIndexes))
 			{
 				// No inbound/outbound, but possibly touching or linear intersections
 
@@ -391,7 +401,7 @@ namespace ProSuite.Commons.Geom
 				if (intersectionPoints.Count == 0)
 				{
 					if (GeomRelationUtils.PolycurveContainsXY(
-						Source, targetRing.StartPoint, Tolerance))
+						    Source, targetRing.StartPoint, Tolerance))
 					{
 						yield return targetRing;
 					}
@@ -620,7 +630,7 @@ namespace ProSuite.Commons.Geom
 			}
 
 			foreach (IntersectionPoint3D intersectionPoint in
-				intersectionPoints.OrderBy(i => i.VirtualSourceVertex))
+			         intersectionPoints.OrderBy(i => i.VirtualSourceVertex))
 			{
 				if (startPoint == null)
 				{
@@ -662,7 +672,7 @@ namespace ProSuite.Commons.Geom
 
 			return true;
 		}
-
+		
 		private static IEnumerable<Linestring> GetUnused(ISegmentList linestrings,
 		                                                 HashSet<int> usedIndexes)
 		{

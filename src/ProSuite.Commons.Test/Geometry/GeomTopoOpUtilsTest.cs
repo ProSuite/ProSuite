@@ -1909,7 +1909,7 @@ namespace ProSuite.Commons.Test.Geometry
 
 				intersectionPoints =
 					GeomTopoOpUtils.GetIntersectionPoints(
-						(ISegmentList)linestring2, (ISegmentList)linestring1,
+						(ISegmentList) linestring2, (ISegmentList) linestring1,
 						0.01,
 						false);
 
@@ -3823,6 +3823,68 @@ namespace ProSuite.Commons.Test.Geometry
 
 			result = GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
 			Assert.IsTrue(result.IsEmpty);
+		}
+
+		[Test]
+		public void CanGetIntersectionAreaXYWithLinearBoundaryIntersection()
+		{
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(100, 100, 9),
+				            new Pnt3D(100, 0, 9),
+				            new Pnt3D(-10, 0, 9),
+				            new Pnt3D(-10, 75, 9),
+				            new Pnt3D(0, 75, 9),
+				            new Pnt3D(0, 100, 9)
+			            };
+
+			RingGroup poly1 = CreatePoly(ring1);
+
+			const double tolerance = 0.01;
+
+			var ring2 = new[]
+			            {
+				            new Pnt3D(0, 100, 9),
+				            new Pnt3D(200, 100, 9),
+				            new Pnt3D(200, 50, 0),
+				            //new Pnt3D(50, 50, 0),
+				            new Pnt3D(0, 50, 0)
+			            }.ToList();
+
+			for (var i = 0; i < 4; i++)
+			{
+				Pnt3D[] array2 = ring2.ToArray();
+				CollectionUtils.Rotate(array2, i);
+				var rotatedRing = new List<Pnt3D>(array2);
+
+				RingGroup poly2 = CreatePoly(rotatedRing);
+
+				MultiLinestring result =
+					GeomTopoOpUtils.GetIntersectionAreasXY(poly1, poly2, tolerance);
+
+				Assert.IsFalse(result.IsEmpty);
+				Assert.AreEqual(1, result.PartCount);
+				Assert.AreEqual(100 * 100 / 2, result.GetArea2D());
+			}
+
+			// Now with the ring2 slightly (below tolerance) off 
+			ring2[3].X += 0.0002;
+
+			for (var i = 0; i < 4; i++)
+			{
+				Pnt3D[] array2 = ring2.ToArray();
+				CollectionUtils.Rotate(array2, i);
+				var rotatedRing = new List<Pnt3D>(array2);
+
+				RingGroup poly2 = CreatePoly(rotatedRing);
+
+				MultiLinestring result =
+					GeomTopoOpUtils.GetIntersectionAreasXY(poly1, poly2, tolerance);
+
+				Assert.IsFalse(result.IsEmpty);
+				Assert.AreEqual(1, result.PartCount);
+				Assert.AreEqual(100 * 100 / 2d, result.GetArea2D(), 0.015);
+			}
 		}
 
 		[Test]
