@@ -281,7 +281,13 @@ namespace ProSuite.Commons.Geom
 				return false;
 			}
 
-			// Each segment must be vertical or completely covered by other segments.
+			if (Math.Abs(area2D) < double.Epsilon)
+			{
+				// It's perfectly snapped and cracked
+				return true;
+			}
+
+			// Each segment must be vertical or completely covered by at least one segment.
 			for (var i = 0; i < _segments.Count; i++)
 			{
 				Line3D segment = _segments[i];
@@ -292,23 +298,11 @@ namespace ProSuite.Commons.Geom
 					continue;
 				}
 
-				var segmentIntersectingLines =
-					GeomTopoOpUtils.GetLinearSelfIntersectionsXY(this, i, tolerance);
-
-				if (segmentIntersectingLines.Count != 1)
+				if (! GeomTopoOpUtils.IsSegmentCoveredWithSelfIntersectionsXY(
+					    this, i, tolerance))
 				{
 					return false;
 				}
-
-				Linestring segmentIntersectingLine = segmentIntersectingLines[0];
-
-				if (segmentIntersectingLine.StartPoint.EqualsXY(segment.StartPoint, tolerance) &&
-				    segmentIntersectingLine.EndPoint.EqualsXY(segment.EndPoint, tolerance))
-				{
-					continue;
-				}
-
-				return false;
 			}
 
 			return true;
@@ -518,7 +512,7 @@ namespace ProSuite.Commons.Geom
 			if (SpatialIndex != null)
 			{
 				foreach (int foundSegmentIdx in SpatialIndex.Search(searchPoint.X, searchPoint.Y,
-					searchPoint.X, searchPoint.Y, xyTolerance))
+					         searchPoint.X, searchPoint.Y, xyTolerance))
 				{
 					Line3D segment = this[foundSegmentIdx];
 
@@ -634,7 +628,7 @@ namespace ProSuite.Commons.Geom
 			if (SpatialIndex != null)
 			{
 				foreach (int index in SpatialIndex.Search(
-					xMin, yMin, xMax, yMax, this, tolerance, predicate))
+					         xMin, yMin, xMax, yMax, this, tolerance, predicate))
 				{
 					Line3D segment = _segments[index];
 					if (segment.ExtentIntersectsXY(xMin, yMin, xMax, yMax, tolerance))

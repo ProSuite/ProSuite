@@ -3115,6 +3115,35 @@ namespace ProSuite.Commons.Geom
 			return intersectionPoints;
 		}
 
+		public static bool IsSegmentCoveredWithSelfIntersectionsXY(
+			[NotNull] ISegmentList segmentList,
+			int sourceSegmentIndex,
+			double tolerance)
+		{
+			Line3D sourceLine = segmentList[sourceSegmentIndex];
+
+			var linearSelfIntersections = new List<SegmentIntersection>(
+				SegmentIntersectionUtils.GetRelevantSelfIntersectionsXY(
+					sourceSegmentIndex, sourceLine, segmentList,
+					tolerance).Where(i => i.HasLinearIntersection));
+
+			var allIntersectionRanges =
+				linearSelfIntersections.Select(
+					i => new Tuple<double, double>(
+						i.GetLinearIntersectionStartFactor(true),
+						i.GetLinearIntersectionEndFactor(true)));
+
+			var unionizedCoveredRange = UnionRanges(allIntersectionRanges);
+
+			if (unionizedCoveredRange.Count == 0)
+			{
+				return false;
+			}
+
+			return unionizedCoveredRange[0].Item1 <= 0 &&
+			       unionizedCoveredRange[0].Item2 >= 1;
+		}
+
 		[NotNull]
 		public static IList<Linestring> GetLinearSelfIntersectionsXY(
 			[NotNull] ISegmentList segmentList,
@@ -3189,6 +3218,60 @@ namespace ProSuite.Commons.Geom
 				intersections.Select(i => IntersectLines3D(segmentList1[i.SourceIndex],
 				                                           segmentList2[i.TargetIndex], tolerance))
 				             .Where(l => l != null));
+		}
+
+		/// <summary>
+		/// Provides the unionized ranges of all the input ranges. This can be used
+		/// to union linear segment intersections of non-simple segments (spaghetti).
+		/// </summary>
+		/// <param name="inputRanges"></param>
+		/// <returns></returns>
+		[NotNull]
+		private static List<Tuple<double, double>> UnionRanges(
+			[NotNull] IEnumerable<Tuple<double, double>> inputRanges)
+		{
+			var result = new List<Tuple<double, double>>();
+
+			foreach (Tuple<double, double> tuple in inputRanges.OrderBy(r => r.Item1))
+			{
+				var overlaps = result.Where(r => RangesOverlap(tuple, r)).ToList();
+
+				if (overlaps.Count == 0)
+				{
+					result.Add(tuple);
+				}
+				else
+				{
+					var merged = new Tuple<double, double>(
+						Math.Min(tuple.Item1, overlaps.Min(r => r.Item1)),
+						Math.Max(tuple.Item2, overlaps.Max(r => r.Item2)));
+
+					result.Add(merged);
+
+					foreach (var overlap in overlaps)
+					{
+						result.Remove(overlap);
+					}
+				}
+			}
+
+			return result;
+		}
+
+		private static bool RangesOverlap(Tuple<double, double> range1,
+		                                  Tuple<double, double> range2)
+		{
+			if (range1.Item2 < range2.Item1)
+			{
+				return false;
+			}
+
+			if (range1.Item1 > range2.Item2)
+			{
+				return false;
+			}
+
+			return true;
 		}
 
 		[NotNull]
@@ -4290,7 +4373,7 @@ namespace ProSuite.Commons.Geom
 				if (startIndex != endIndex &&
 				    previous.GetLinearIntersectionEndFactor(true) < 1)
 				{
-					// add remaining uncovered part of previous source
+					// add remaining uncovered part of previous source segment
 					result.Add(
 						new Line3D(
 							source[previous.SourceIndex].GetPointAlong(
@@ -4341,15 +4424,15 @@ namespace ProSuite.Commons.Geom
 
 		private static IEnumerable<Line3D> GetDifferenceLinesXY(
 			[NotNull] Linestring linestring1,
-			[NotNull] MultiLinestring multiLinestring2,
-			double xytolerance,
+			[NotNull] ISegmentList targetSegmentList,
+			double xyTolerance,
 			[CanBeNull] IList<Line3D> zOnlyDifferences,
 			double zTolerance)
 		{
 			if (! linestring1.ExtentsIntersectXY(
-				    multiLinestring2.XMin, multiLinestring2.YMin,
-				    multiLinestring2.XMax, multiLinestring2.YMax,
-				    xytolerance))
+				    targetSegmentList.XMin, targetSegmentList.YMin,
+				    targetSegmentList.XMax, targetSegmentList.YMax,
+				    xyTolerance))
 			{
 				return linestring1.Segments;
 			}
@@ -4357,7 +4440,7 @@ namespace ProSuite.Commons.Geom
 			var result = new List<Line3D>();
 
 			var intersections = SegmentIntersectionUtils.GetSegmentIntersectionsXY(
-				linestring1, multiLinestring2, xytolerance, true);
+				linestring1, targetSegmentList, xyTolerance, true);
 
 			var orderedIntersections =
 				OrderAlongSourceSegments(
@@ -4388,7 +4471,7 @@ namespace ProSuite.Commons.Geom
 
 				bool differentInZ =
 					IsLinearIntersectionDifferentInZ(intersection, intersectionLine,
-					                                 multiLinestring2, zTolerance2);
+					                                 targetSegmentList, zTolerance2);
 				if (differentInZ)
 				{
 					zOnlyDifferences.Add(intersectionLine);
