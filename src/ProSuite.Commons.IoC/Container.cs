@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Xml;
 using Castle.MicroKernel.Registration;
 using Castle.Windsor;
@@ -191,7 +192,8 @@ namespace ProSuite.Commons.IoC
 
 				// Replace line breaks in config files. This is necessary, otherwise there are parsing errors:
 				// https://github.com/castleproject/Windsor/issues/76
-				configuration = configuration.Replace(Environment.NewLine, string.Empty);
+				// Additionally, replace tabs (and other white space) right next to line breaks to avoid TGS-1518
+				configuration = Regex.Replace(configuration, @"\s*\r\n\s*", string.Empty);
 
 				_msg.VerboseDebug(
 					() => "Configuring container using the following xml configuration:");
