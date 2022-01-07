@@ -668,17 +668,17 @@ namespace ProSuite.Commons.Geom
 
 			foreach (IntersectionPoint3D intersectionPoint3D in intersections)
 			{
-				bool isInbound, isOutbound;
-				ClassifyIntersection(source, target, intersectionPoint3D, out isInbound,
-				                     out isOutbound);
+				intersectionPoint3D.ClassifyTargetTrajectory(source, target,
+				                                             out bool? targetContinuesToRightSide,
+				                                             out bool? targetArrivesFromRightSide);
 
 				// In-bound takes precedence because if the target is both inbound and outbound (i.e. touching from inside)
 				// the resulting part is on the left of the cut line which is consistent with other in-bound intersections.
-				if (isInbound)
+				if (targetContinuesToRightSide == true)
 				{
 					intersectionsInboundTarget.Add(intersectionPoint3D);
 				}
-				else if (isOutbound)
+				else if (targetArrivesFromRightSide == true)
 				{
 					intersectionsOutboundTarget.Add(intersectionPoint3D);
 				}
@@ -689,45 +689,6 @@ namespace ProSuite.Commons.Geom
 				// Remove dangles that cannot cut and would lead to duplicate result rings
 				RemoveDeadEndIntersections(intersectionsInboundTarget, intersectionsOutboundTarget);
 			}
-		}
-
-		private static void ClassifyIntersection([NotNull] ISegmentList source,
-		                                         [NotNull] ISegmentList target,
-		                                         [NotNull] IntersectionPoint3D intersectionPoint,
-		                                         out bool isInbound,
-		                                         out bool isOutbound)
-		{
-			Assert.False(intersectionPoint.Type == IntersectionPointType.Unknown,
-			             "Cannot classify unknown intersection type.");
-
-			if (intersectionPoint.Type ==
-			    IntersectionPointType.LinearIntersectionIntermediate)
-			{
-				isInbound = false;
-				isOutbound = false;
-				return;
-			}
-
-			int? previousTargetSegment =
-				intersectionPoint.GetNonIntersectingTargetSegmentIndex(target, false);
-			int? nextTargetSegment =
-				intersectionPoint.GetNonIntersectingTargetSegmentIndex(target, true);
-
-			Pnt3D previousPntAlongTarget = previousTargetSegment == null
-				                               ? null
-				                               : target[previousTargetSegment.Value].StartPoint;
-
-			Pnt3D nextPntAlongTarget = nextTargetSegment == null
-				                           ? null
-				                           : target[nextTargetSegment.Value].EndPoint;
-
-			isInbound = nextPntAlongTarget != null &&
-			            true == intersectionPoint.IsOnTheRightSide(
-				            source, nextPntAlongTarget, true);
-
-			isOutbound = previousPntAlongTarget != null &&
-			             true == intersectionPoint.IsOnTheRightSide(
-				             source, previousPntAlongTarget, true);
 		}
 
 		private void PreferTargetZ(IntersectionPoint3D atIntersection, Pnt3D resultPoint)
@@ -776,5 +737,7 @@ namespace ProSuite.Commons.Geom
 			Left,
 			Right
 		}
+
+		public abstract IEnumerable<Linestring> GetSourceRingsOutsideTarget();
 	}
 }

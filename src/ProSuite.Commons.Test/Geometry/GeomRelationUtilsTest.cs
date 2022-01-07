@@ -159,6 +159,75 @@ namespace ProSuite.Commons.Test.Geometry
 		}
 
 		[Test]
+		public void
+			CanDeterminePolygonContainsPolygonWithLinearIntersectionOfNonIntersectingSegmentXY()
+		{
+			// The only segment that deviates from the source also has a linear intersection with the
+			// source:
+			//       ____ 	         
+			//       |  |	         
+			//   ____|  |	     _______
+			//  |       |	    |       |
+			//  |_______|	    |_______|
+			//  *               *
+			//  source           target
+
+			// This test makes sure that the 'non-intersecting-target-point' logic is applied correctly
+
+			var sourcePoints = new List<Pnt3D>
+			                   {
+				                   new Pnt3D(0, 0, 10),
+				                   new Pnt3D(0, 50, 20),
+				                   new Pnt3D(60, 50, 10),
+				                   new Pnt3D(60, 100, 10),
+				                   new Pnt3D(100, 100, 10),
+				                   new Pnt3D(100, 0, 10),
+				                   new Pnt3D(0, 0, 10)
+			                   };
+
+			Linestring source = new Linestring(sourcePoints);
+
+			var targetPoints = new List<Pnt3D>()
+			                   {
+				                   new Pnt3D(0, 0, 10),
+				                   new Pnt3D(0, 50, 20),
+				                   new Pnt3D(100, 50, 10),
+				                   new Pnt3D(100, 0, 10),
+				                   new Pnt3D(0, 0, 10)
+			                   };
+
+			Linestring target = new Linestring(targetPoints);
+
+			Assert.IsTrue(GeomRelationUtils.AreaContainsXY(source, target, 0.0001));
+
+			// The target can have a different orientation:
+			Linestring revertedTarget = target.Clone();
+			revertedTarget.ReverseOrientation();
+
+			// Now the source is an island -> Contains should be false!
+			var outerRingPoints = new List<Pnt3D>
+			                      {
+				                      new Pnt3D(-10, -10, 0),
+				                      new Pnt3D(-10, 110, 0),
+				                      new Pnt3D(110, 110, 0),
+				                      new Pnt3D(110, -10, 0),
+				                      new Pnt3D(-10, -10, 0)
+			                      };
+
+			var outerRing = new Linestring(outerRingPoints);
+
+			source.ReverseOrientation();
+
+			var sourcePoly = new MultiPolycurve(new[] {outerRing, source});
+
+			Assert.IsFalse(GeomRelationUtils.AreaContainsXY(sourcePoly, target, 0.0001));
+
+			// And the reverted target:
+			Assert.IsFalse(
+				GeomRelationUtils.AreaContainsXY(sourcePoly, revertedTarget, 0.0001));
+		}
+
+		[Test]
 		public void CanDetermineTouchesXY()
 		{
 			var pnts1 = new List<Pnt3D>();

@@ -58,9 +58,6 @@ namespace ProSuite.Commons.Geom
 			AssignInteriorRings(containedTargetRings, resultPolys, unassignedInnerRings,
 			                    _subcurveNavigator.Tolerance);
 
-			Assert.AreEqual(0, unassignedInnerRings.PartCount,
-			                "Unexpected un-assignable interior ring.");
-
 			// Assign closed cut lines completely contained by an outer ring (and not by an inner ring)
 			List<MultiLinestring> results = new List<MultiLinestring>(resultPolys);
 
@@ -78,51 +75,32 @@ namespace ProSuite.Commons.Geom
 
 			// Based on Weiler–Atherton clipping algorithm, added specific logic for linear intersections and multi-parts.
 
-			IList<Linestring> leftRings = GetLeftSideRings();
+			IList<Linestring> leftRings = GetLeftSideRings(true, true);
 
-			// Assign the cut inner rings (anti-clockwise) to un-cut outer rings...
+			// Build the result polygons from the outer rings:
+			List<RingGroup> resultPolys = ExtractOuterRings(leftRings);
 
-			var unCutOuterRings = _subcurveNavigator.GetNonIntersectedSourceRings()
-			                                        .Where(r => r.ClockwiseOriented != false)
-			                                        .ToList();
+			var containedTargetRings =
+				_subcurveNavigator.GetTargetRingsCompletelyWithinSource().Select(r => r.Clone())
+				                  .ToList();
 
-			IList<RingGroup> leftPolys = AssignToResultRingGroups(leftRings, unCutOuterRings);
-
-			var unCutParts =
-				unCutOuterRings.Count == 1
-					? (MultiLinestring) new RingGroup(unCutOuterRings[0])
-					: new MultiPolycurve(unCutOuterRings);
-
-			// Assign the remaining interior rings;
-			AssignInteriorRings(leftRings, leftPolys, unCutParts, _subcurveNavigator.Tolerance);
-
-			// Assign the inner rings from the original
-			var unCutIslands = _subcurveNavigator.GetNonIntersectedSourceRings()
-			                                     .Where(r => r.ClockwiseOriented == false);
-
-			AssignInteriorRings(unCutIslands, leftPolys, unCutParts, _subcurveNavigator.Tolerance);
-
-			// Assign closed cut lines completely contained by an outer ring (and not by an inner ring)
-			List<MultiLinestring> results = new List<MultiLinestring>(leftPolys);
-
-			var unusedCutRings =
-				_subcurveNavigator.GetNonIntersectedTargets()
-				                  .Where(t => t.ClockwiseOriented == true);
-
-			results.Add(unCutParts);
-
-			foreach (Linestring unusedCutRing in unusedCutRings)
+			foreach (Linestring containedTargetRing in containedTargetRings)
 			{
-				foreach (MultiLinestring resultPoly in results)
-				{
-					if (resultPoly.IsEmpty)
-					{
-						continue;
-					}
-
-					TryCutCookie(unusedCutRing, unCutParts, out _, out _, true);
-				}
+				containedTargetRing.ReverseOrientation();
 			}
+
+			resultPolys.AddRange(ExtractOuterRings(containedTargetRings));
+
+			// Now assign the left over inner rings from the leftRings (cut rings and source islands outside the target)
+			// and from the containedTargetRings (i.e. target islands inside the source).
+			var unassignedInnerRings = new MultiPolycurve(new List<Linestring>(0));
+			AssignInteriorRings(leftRings, resultPolys, unassignedInnerRings,
+			                    _subcurveNavigator.Tolerance);
+
+			AssignInteriorRings(containedTargetRings, resultPolys, unassignedInnerRings,
+			                    _subcurveNavigator.Tolerance);
+
+			List<MultiLinestring> results = new List<MultiLinestring>(resultPolys);
 
 			return new MultiPolycurve(results);
 		}
@@ -393,7 +371,7 @@ namespace ProSuite.Commons.Geom
 			foreach (RingGroup resultPoly in resultPolys)
 			{
 				if (GeomRelationUtils.PolycurveContainsXY(
-					resultPoly.ExteriorRing, interiorRing.StartPoint, tolerance))
+					    resultPoly.ExteriorRing, interiorRing.StartPoint, tolerance))
 				{
 					resultPoly.AddInteriorRing(interiorRing);
 					assignmentCount++;
@@ -545,6 +523,43 @@ namespace ProSuite.Commons.Geom
 				_subcurveNavigator.IntersectionsInboundTarget.ToList());
 		}
 
+		private IList<Linestring> GetLeftSideRings(bool includeEqualRings,
+		                                           bool includeDisjointRings)
+		{
+			IList<Linestring> result = _subcurveNavigator.FollowSubcurvesClockwise(
+				_subcurveNavigator.IntersectionsInboundTarget.ToList());
+
+			if (includeEqualRings)
+			{
+				foreach (IntersectionPoint3D intersectionPoint in
+				         _subcurveNavigator.GetEqualRingsSourceStartIntersection())
+				{
+					Linestring sourceRing =
+						_subcurveNavigator.Source.GetPart(intersectionPoint.SourcePartIndex);
+					Linestring targetRing =
+						_subcurveNavigator.Target.GetPart(intersectionPoint.TargetPartIndex);
+
+					if (sourceRing.ClockwiseOriented != null &&
+					    sourceRing.ClockwiseOriented != targetRing.ClockwiseOriented)
+					{
+						// The interior of a positive ring is on the left side of a negative ring
+						result.Add(sourceRing);
+					}
+				}
+			}
+
+			if (includeDisjointRings)
+			{
+				foreach (Linestring containedSourceRing in
+				         _subcurveNavigator.GetSourceRingsOutsideTarget())
+				{
+					result.Add(containedSourceRing);
+				}
+			}
+
+			return result;
+		}
+
 		private IList<Linestring> GetRightSideRings(bool includeEqualRings = false,
 		                                            bool includeInsideRings = false)
 		{
@@ -554,7 +569,7 @@ namespace ProSuite.Commons.Geom
 			if (includeEqualRings)
 			{
 				foreach (IntersectionPoint3D intersectionPoint in
-					_subcurveNavigator.GetEqualRingsSourceStartIntersection())
+				         _subcurveNavigator.GetEqualRingsSourceStartIntersection())
 				{
 					Linestring sourceRing =
 						_subcurveNavigator.Source.GetPart(intersectionPoint.SourcePartIndex);
@@ -573,7 +588,7 @@ namespace ProSuite.Commons.Geom
 			if (includeInsideRings)
 			{
 				foreach (Linestring containedSourceRing in
-					_subcurveNavigator.GetSourceRingsCompletelyWithinTarget())
+				         _subcurveNavigator.GetSourceRingsCompletelyWithinTarget())
 				{
 					result.Add(containedSourceRing);
 				}
@@ -749,7 +764,7 @@ namespace ProSuite.Commons.Geom
 		{
 			resultCookie = null;
 
-			if (! GeomRelationUtils.PolycurveContainsXY(
+			if (false == GeomRelationUtils.AreaContainsXY(
 				    polygon, cookieCutter, tolerance))
 			{
 				return false;

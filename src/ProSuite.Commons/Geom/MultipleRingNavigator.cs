@@ -319,10 +319,23 @@ namespace ProSuite.Commons.Geom
 				                         .Where(i => i.SourcePartIndex == unCutSourceIdx)
 				                         .ToList();
 
-				if (SourceEqualsTargetXY(intersectionPoints, Tolerance))
+				if (IsSourceCongruentWithTargetXY(intersectionPoints))
 				{
 					yield return intersectionPoints.First(
 						i => i.Type == IntersectionPointType.LinearIntersectionStart);
+				}
+			}
+		}
+
+		public override IEnumerable<Linestring> GetSourceRingsOutsideTarget()
+		{
+			foreach (int unCutSourceIdx in GetUnusedIndexes(
+				         Source.PartCount, IntersectedSourcePartIndexes))
+			{
+				if (false == GeomRelationUtils.IsContainedXY(
+					    Source, Target, Tolerance, IntersectionsAlongSource, unCutSourceIdx))
+				{
+					yield return GetSourcePart(unCutSourceIdx);
 				}
 			}
 		}
@@ -334,46 +347,10 @@ namespace ProSuite.Commons.Geom
 			{
 				// No inbound/outbound, but possibly touching or linear intersections
 
-				var intersectionPoints = IntersectionsAlongSource
-				                         .Where(i => i.SourcePartIndex == unCutSourceIdx)
-				                         .ToList();
-
-				if (SourceEqualsTargetXY(intersectionPoints, Tolerance))
+				if (true == GeomRelationUtils.IsContainedXY(
+					    Source, Target, Tolerance, IntersectionsAlongSource, unCutSourceIdx))
 				{
-					// Equal rings are already provided by GetEqualRingsSourceStartIntersection
-					continue;
-				}
-
-				Linestring sourceRing = GetSourcePart(unCutSourceIdx);
-
-				// Now there should only be linear intersections on the same side and touching intersections
-				if (intersectionPoints.Count == 0)
-				{
-					if (GeomRelationUtils.PolycurveContainsXY(
-						    Target, sourceRing.StartPoint, Tolerance))
-					{
-						yield return sourceRing;
-					}
-				}
-				else
-				{
-					// TODO: Handle boundary loops, islands touching outer rings etc.
-
-					foreach (int targetPartIndex in GetIntersectingTargetPartIndexes(
-						         intersectionPoints))
-					{
-						Linestring targetRing = Target.GetPart(targetPartIndex);
-
-						var relevantIntersections = intersectionPoints.Where(
-							ip => ip.TargetPartIndex == targetPartIndex).ToList();
-
-						if (GeomRelationUtils.WithinAreaXY(
-							    sourceRing, targetRing, relevantIntersections, Tolerance,
-							    false) == true)
-						{
-							yield return sourceRing;
-						}
-					}
+					yield return GetSourcePart(unCutSourceIdx);
 				}
 			}
 		}
@@ -385,35 +362,12 @@ namespace ProSuite.Commons.Geom
 			{
 				// No inbound/outbound, but possibly touching or linear intersections
 
-				var intersectionPoints = IntersectionsAlongTarget
-				                         .Where(i => i.TargetPartIndex == unCutTargetIdx)
-				                         .ToList();
-
-				if (SourceEqualsTargetXY(intersectionPoints, Tolerance))
-				{
-					// Equal rings are already provided by GetEqualRingsSourceStartIntersection
-					continue;
-				}
-
 				Linestring targetRing = Target.GetPart(unCutTargetIdx);
 
-				// Now there should only be linear intersections on the same side and touching intersections
-				if (intersectionPoints.Count == 0)
+				if (true == GeomRelationUtils.AreaContainsXY(Source, Target, Tolerance,
+					    IntersectionsAlongTarget, unCutTargetIdx))
 				{
-					if (GeomRelationUtils.PolycurveContainsXY(
-						    Source, targetRing.StartPoint, Tolerance))
-					{
-						yield return targetRing;
-					}
-				}
-				else
-				{
-					// TODO: Handle boundary loops, islands touching outer rings etc.
-					// TODO: Leverage known intersection points
-					if (GeomRelationUtils.PolycurveContainsXY(Source, targetRing, Tolerance))
-					{
-						yield return targetRing;
-					}
+					yield return targetRing;
 				}
 			}
 		}
@@ -473,7 +427,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		private void GetAlongTargetDirectionChanges(
-			int initialSourcePart,
+			int? initialSourcePartForRingResult,
 			[NotNull] IntersectionPoint3D startingAt,
 			[NotNull] Line3D entryLine,
 			out double? targetForwardDirection,
@@ -482,7 +436,7 @@ namespace ProSuite.Commons.Geom
 			targetForwardDirection = null;
 			targetBackwardDirection = null;
 
-			if (CanFollowTarget(startingAt, true, initialSourcePart))
+			if (CanFollowTarget(startingAt, true, initialSourcePartForRingResult))
 			{
 				int? forwardSegmentIdx =
 					startingAt.GetNonIntersectingTargetSegmentIndex(Target, true);
@@ -495,7 +449,7 @@ namespace ProSuite.Commons.Geom
 				}
 			}
 
-			if (CanFollowTarget(startingAt, false, initialSourcePart))
+			if (CanFollowTarget(startingAt, false, initialSourcePartForRingResult))
 			{
 				int? backwardSegmentIdx =
 					startingAt.GetNonIntersectingTargetSegmentIndex(Target, false);
@@ -513,22 +467,29 @@ namespace ProSuite.Commons.Geom
 
 		private bool CanFollowTarget(IntersectionPoint3D startingAt,
 		                             bool forward,
-		                             int initialSourcePart)
+		                             int? initialSourcePartForRingResult)
 		{
+			if (initialSourcePartForRingResult == null)
+			{
+				return true;
+			}
+
 			if (Target.GetPart(startingAt.TargetPartIndex).IsClosed)
 			{
 				return true;
 			}
 
 			if (forward &&
-			    ! CanConnectToSourcePartAlongTargetForward(startingAt, initialSourcePart))
+			    ! CanConnectToSourcePartAlongTargetForward(startingAt,
+			                                               initialSourcePartForRingResult.Value))
 			{
 				// last intersection along a non-closed target (dangle!), cannot follow
 				return false;
 			}
 
 			if (! forward &&
-			    ! CanConnectToSourcePartAlongTargetBackwards(startingAt, initialSourcePart))
+			    ! CanConnectToSourcePartAlongTargetBackwards(
+				    startingAt, initialSourcePartForRingResult.Value))
 			{
 				// first intersection along a non-closed target, cannot follow
 				return false;
@@ -618,8 +579,17 @@ namespace ProSuite.Commons.Geom
 			return true;
 		}
 
-		private static bool SourceEqualsTargetXY(
-			[NotNull] IList<IntersectionPoint3D> intersectionPoints, double tolerance)
+		/// <summary>
+		/// Determines whether the source segments referenced by the specified intersection points
+		/// are congruent with the respective target part. Make sure that the specified intersection
+		/// points
+		/// - reference a specific source-part/target-part combination
+		/// - are complete, i.e. include linear intersection breaks at the ring start/end
+		/// </summary>
+		/// <param name="intersectionPoints"></param>
+		/// <returns></returns>
+		private static bool IsSourceCongruentWithTargetXY(
+			[NotNull] ICollection<IntersectionPoint3D> intersectionPoints)
 		{
 			IPnt startPoint = null;
 			IntersectionPoint3D previous = null;
@@ -672,7 +642,7 @@ namespace ProSuite.Commons.Geom
 
 			return true;
 		}
-		
+
 		private static IEnumerable<Linestring> GetUnused(ISegmentList linestrings,
 		                                                 HashSet<int> usedIndexes)
 		{
@@ -723,26 +693,6 @@ namespace ProSuite.Commons.Geom
 				currentTargetIdx = nextAlongTargetIdx;
 			} while (IntersectionsAlongTarget[nextAlongTargetIdx].TargetPartIndex !=
 			         current.TargetPartIndex);
-			//int currentTargetIdx = IntersectionOrders[current].Value;
-
-			//int nextAlongTargetIdx = (currentTargetIdx + (continueForward ? 1 : -1)) %
-			//                         IntersectionsAlongTarget.Count;
-
-			//// TODO: CollectionUtils.GetPreviousInCircularList()
-			//if (nextAlongTargetIdx < 0)
-			//{
-			//	nextAlongTargetIdx += IntersectionsAlongTarget.Count;
-			//}
-
-			//IntersectionPoint3D next = IntersectionsAlongTarget[nextAlongTargetIdx];
-
-			//int count = 0;
-			//while (next.TargetPartIndex != partIndex)
-			//{
-			//	next = GetNextIntersectionAlongTarget(next, continueForward, partIndex);
-			//	Assert.True(count < IntersectionsAlongTarget.Count,
-			//	            "Cannot find next intersection in same target part");
-			//}
 
 			return IntersectionsAlongTarget[nextAlongTargetIdx];
 		}

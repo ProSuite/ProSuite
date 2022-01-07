@@ -153,9 +153,9 @@ namespace ProSuite.Commons.Geom
 
 				int nextAlongTargetIdx;
 				if (MathUtils.AreEqual(
-					IntersectionsAlongTarget[otherDirectionIdx].VirtualTargetVertex,
-					IntersectionsAlongTarget[previousTargetIdx].VirtualTargetVertex,
-					epsilon))
+					    IntersectionsAlongTarget[otherDirectionIdx].VirtualTargetVertex,
+					    IntersectionsAlongTarget[previousTargetIdx].VirtualTargetVertex,
+					    epsilon))
 				{
 					// vertical ring, 2 intersections at same XY location
 					nextAlongTargetIdx = otherDirectionIdx;
@@ -218,6 +218,11 @@ namespace ProSuite.Commons.Geom
 		}
 
 		public override IEnumerable<Linestring> GetTargetRingsCompletelyWithinSource()
+		{
+			throw new NotImplementedException();
+		}
+
+		public override IEnumerable<Linestring> GetSourceRingsOutsideTarget()
 		{
 			throw new NotImplementedException();
 		}
