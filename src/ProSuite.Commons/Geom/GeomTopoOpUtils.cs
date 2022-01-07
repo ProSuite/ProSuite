@@ -2504,24 +2504,28 @@ namespace ProSuite.Commons.Geom
 			return intersectionPoints;
 		}
 
-		private static void FilterLinearIntersectionBreaksAtRingStart(
+		public static IEnumerable<IntersectionPoint3D> GetLinearIntersectionBreaksAtRingStart(
 			ISegmentList sourceSegments,
 			ISegmentList targetSegments,
 			IList<IntersectionPoint3D> intersectionPoints)
 		{
 			if (intersectionPoints.Count == 0)
 			{
-				return;
+				yield break;
 			}
 
 			if (! sourceSegments.IsClosed && ! targetSegments.IsClosed)
 			{
-				return;
+				yield break;
 			}
 
 			IntersectionPoint3D previousLinearEnd = null;
 
-			// The last linear intersection can be connected to the first via ring null point:
+			// TODO: Use variables and be more expressive:
+			// bool linearSourceStartIntersection = ...
+			// bool linearTargetStartIntersection = ...
+			// To find source breaks also if a break at the target start exists:
+			// The last linear intersection can be connected to the first via ring null point
 			var intersectionPointsRing = new List<IntersectionPoint3D>(intersectionPoints);
 
 			intersectionPointsRing.Add(intersectionPoints[0]);
@@ -2534,14 +2538,26 @@ namespace ProSuite.Commons.Geom
 				    IsIntersectionAtPartStartOrEnd(sourceSegments, targetSegments,
 				                                   intersectionPoint))
 				{
-					intersectionPoints.Remove(previousLinearEnd);
-					intersectionPoints.Remove(intersectionPoint);
+					yield return previousLinearEnd;
+					yield return intersectionPoint;
 				}
 
 				previousLinearEnd =
 					intersectionPoint.Type == IntersectionPointType.LinearIntersectionEnd
 						? intersectionPoint
 						: null;
+			}
+		}
+
+		private static void FilterLinearIntersectionBreaksAtRingStart(
+			ISegmentList sourceSegments,
+			ISegmentList targetSegments,
+			IList<IntersectionPoint3D> intersectionPoints)
+		{
+			foreach (var linearStartOrEnd in GetLinearIntersectionBreaksAtRingStart(
+				         sourceSegments, targetSegments, intersectionPoints))
+			{
+				intersectionPoints.Remove(linearStartOrEnd);
 			}
 		}
 

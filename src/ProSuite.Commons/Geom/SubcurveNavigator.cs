@@ -325,10 +325,20 @@ namespace ProSuite.Commons.Geom
 		}
 
 		private static IEnumerable<IntersectionPoint3D> GetLinearIntersectionPseudoBreaks(
-			IEnumerable<IntersectionPoint3D> intersectionPointsForPart)
+			IList<IntersectionPoint3D> intersectionPointsForPart,
+			ISegmentList source, ISegmentList target)
 		{
-			IntersectionPoint3D previous = null;
+			// First remove the 'standard' linear intersection breaks at ring start/end:
 
+			foreach (IntersectionPoint3D linearStartBreak in
+			         GeomTopoOpUtils.GetLinearIntersectionBreaksAtRingStart(
+				         source, target, intersectionPointsForPart))
+			{
+				yield return linearStartBreak;
+			}
+
+			// Also, filter other pseudo-breaks (e.g. due to vertical segments):
+			IntersectionPoint3D previous = null;
 			foreach (IntersectionPoint3D intersectionPoint in
 			         intersectionPointsForPart.OrderBy(i => i.VirtualSourceVertex))
 			{
@@ -656,11 +666,15 @@ namespace ProSuite.Commons.Geom
 			intersectionsOutboundTarget = new List<IntersectionPoint3D>();
 			LinearIntersectionPseudoBreaks.Clear();
 
-			// Filter linear intersection end/start (e.g. at null-points) to avoid
-			//       incorrect inbound/outbound and turn-direction decisions:
+			// Filter all non-real linear intersections (i. e. those where no deviation between
+			// source and target exists. This is important to avoid incorrect inbound/outbound
+			// and turn-direction decisions because the two lines continue (almost at the same
+			// angle. TODO: Remove them for good? Or maintain a different list that knows all
+			// part combinations that have boundary intersections?
 			var intersections = IntersectionsAlongSource.ToList();
+
 			foreach (IntersectionPoint3D pseudoBreak in GetLinearIntersectionPseudoBreaks(
-				         intersections))
+				         intersections, Source, Target))
 			{
 				intersections.Remove(pseudoBreak);
 				LinearIntersectionPseudoBreaks.Add(pseudoBreak);
