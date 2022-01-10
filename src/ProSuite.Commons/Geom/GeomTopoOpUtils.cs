@@ -1133,6 +1133,7 @@ namespace ProSuite.Commons.Geom
 		/// <param name="tolerance"></param>
 		/// <param name="excludeBoundaryIntersections"></param>
 		/// <returns></returns>
+		[CanBeNull]
 		public static IList<IntersectionPath3D> GetCoplanarPolygonIntersectionLines3D(
 			[NotNull] RingGroup ringGroup1,
 			[NotNull] RingGroup ringGroup2,
@@ -1222,6 +1223,42 @@ namespace ProSuite.Commons.Geom
 				ringGroup1PlaneIntersections, ringGroup2PlaneIntersections, tolerance);
 
 			return intersections.Count == 0 ? null : intersections;
+		}
+
+		[NotNull]
+		public static IList<Linestring> Get3DIntersectionsAlongBoundary(
+			[NotNull] RingGroup ring1,
+			[NotNull] RingGroup ring2,
+			double tolerance)
+		{
+			// By default, boundary intersections are not excluded:
+			IList<IntersectionPath3D> intersectionLines3D =
+				GetCoplanarPolygonIntersectionLines3D(ring1, ring2, tolerance);
+
+			if (intersectionLines3D == null)
+			{
+				return new List<Linestring>(0);
+			}
+
+			// The two roof parts intersect in 3d. But is it along the boundary?
+			IList<Linestring> boundaryIntersectionsXY =
+				GetIntersectionLinesXY(ring1, ring2, tolerance);
+
+			if (boundaryIntersectionsXY.Count == 0)
+			{
+				return new List<Linestring>(0);
+			}
+
+			MultiPolycurve intersections3d =
+				new MultiPolycurve(intersectionLines3D.Select(i3d => i3d.Segments));
+
+			MultiPolycurve boundaryIntersections2d =
+				new MultiPolycurve(boundaryIntersectionsXY);
+
+			IList<Linestring> result = GetIntersectionLinesXY(
+				intersections3d, boundaryIntersections2d, tolerance);
+
+			return result;
 		}
 
 		/// <summary>
@@ -3077,28 +3114,28 @@ namespace ProSuite.Commons.Geom
 
 		#region 2D Linear intersections (lines / lines)
 
+		[NotNull]
 		public static IList<Linestring> GetIntersectionLinesXY(
-			[NotNull] Linestring linestring1,
+			[NotNull] ISegmentList sourceSegments,
 			[NotNull] ISegmentList targetSegments,
 			double tolerance)
 		{
-			if (! linestring1.ExtentsIntersectXY(
-				    targetSegments.XMin, targetSegments.YMin,
-				    targetSegments.XMax, targetSegments.YMax,
-				    tolerance))
+			if (GeomRelationUtils.AreBoundsDisjoint(sourceSegments,
+			                                        targetSegments, tolerance))
 			{
 				return new List<Linestring>(0);
 			}
 
 			var intersections = SegmentIntersectionUtils.GetSegmentIntersectionsXY(
-				linestring1, targetSegments, tolerance, true);
+				sourceSegments, targetSegments, tolerance, true);
 
 			IEnumerable<SegmentIntersection> orderedIntersections =
 				OrderAlongSourceSegments(intersections.Where(i => i.HasLinearIntersection));
 
 			// Consider getting intersection points and using segmentList1.GetSubcurve()
 			// between linear intersection points. This would yield another ~100ms per 100K segments.
-			IList<Linestring> result = CollectIntersectionPaths(orderedIntersections, linestring1);
+			IList<Linestring> result =
+				CollectIntersectionPaths(orderedIntersections, sourceSegments);
 
 			return result;
 		}
