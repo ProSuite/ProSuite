@@ -373,9 +373,22 @@ namespace ProSuite.Commons.Geom
 			return MathUtils.AreEqual(VirtualSourceVertex % 1, 0);
 		}
 
-		public bool IsTargetVertex()
+		public bool IsTargetVertex(out int localVertexIndex)
 		{
-			return MathUtils.AreEqual(VirtualTargetVertex % 1, 0);
+			double remainder = VirtualTargetVertex % 1;
+
+			bool result = MathUtils.AreEqual(remainder, 0);
+
+			if (result)
+			{
+				localVertexIndex = (int) VirtualTargetVertex;
+			}
+			else
+			{
+				localVertexIndex = -1;
+			}
+
+			return result;
 		}
 
 		public bool IsLinearIntersectionStartAtStartPoint(Linestring source)

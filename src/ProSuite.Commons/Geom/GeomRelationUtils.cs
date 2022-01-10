@@ -524,7 +524,7 @@ namespace ProSuite.Commons.Geom
 			[NotNull] ISegmentList closedPolycurve,
 			[NotNull] ISegmentList targetSegments,
 			double tolerance,
-			ICollection<IntersectionPoint3D> intersectionPoints = null,
+			IList<IntersectionPoint3D> intersectionPoints = null,
 			int? filterTargetByPartIndex = null)
 		{
 			Assert.False(closedPolycurve.IsEmpty, "Input containing polygon is empty.");
@@ -536,19 +536,15 @@ namespace ProSuite.Commons.Geom
 				return false;
 			}
 
-			if (intersectionPoints == null)
-			{
-				intersectionPoints =
-					GeomTopoOpUtils.GetIntersectionPoints(closedPolycurve, targetSegments,
-					                                      tolerance);
-			}
+			Predicate<IntersectionPoint3D> predicate =
+				filterTargetByPartIndex != null
+					? new Predicate<IntersectionPoint3D>(
+						i => i.TargetPartIndex == filterTargetByPartIndex)
+					: null;
 
-			if (filterTargetByPartIndex != null)
-			{
-				intersectionPoints = intersectionPoints
-				                     .Where(i => i.TargetPartIndex == filterTargetByPartIndex)
-				                     .ToList();
-			}
+			intersectionPoints =
+				GetRealIntersectionPoints(closedPolycurve, targetSegments, tolerance,
+				                          intersectionPoints, predicate);
 
 			// if there is no intersection, the boundaries do not intersect: check a single point
 			if (intersectionPoints.Count == 0)
@@ -556,7 +552,7 @@ namespace ProSuite.Commons.Geom
 				int partIndex = filterTargetByPartIndex ?? 0;
 				Pnt3D anyPoint = targetSegments.GetPart(partIndex).GetSegment(0).StartPoint;
 
-				return PolycurveContainsXY(closedPolycurve, anyPoint, tolerance);
+				return AreaContainsXY(closedPolycurve, anyPoint, tolerance);
 			}
 
 			bool hasAnyRightSideDeviation = false;
@@ -703,7 +699,7 @@ namespace ProSuite.Commons.Geom
 			[NotNull] ISegmentList contained,
 			[NotNull] ISegmentList withinClosedPolycurve,
 			double tolerance,
-			ICollection<IntersectionPoint3D> intersectionPoints = null,
+			IList<IntersectionPoint3D> intersectionPoints = null,
 			int? filterSourceByPartIndex = null)
 		{
 			Assert.False(contained.IsEmpty, "Input containing polygon is empty.");
@@ -715,27 +711,23 @@ namespace ProSuite.Commons.Geom
 				return false;
 			}
 
-			if (intersectionPoints == null)
-			{
-				intersectionPoints =
-					GeomTopoOpUtils.GetIntersectionPoints(contained, withinClosedPolycurve,
-					                                      tolerance);
-			}
+			Predicate<IntersectionPoint3D> predicate =
+				filterSourceByPartIndex != null
+					? new Predicate<IntersectionPoint3D>(
+						i => i.SourcePartIndex == filterSourceByPartIndex)
+					: null;
 
-			if (filterSourceByPartIndex != null)
-			{
-				intersectionPoints = intersectionPoints
-				                     .Where(i => i.SourcePartIndex == filterSourceByPartIndex)
-				                     .ToList();
-			}
+			intersectionPoints = GetRealIntersectionPoints(contained, withinClosedPolycurve,
+			                                               tolerance, intersectionPoints,
+			                                               predicate);
 
-			// if there is no intersection, the boundaries do not intersect: check a single point
+			// if there is no real intersection, the boundaries do not intersect at all or everywhere
 			if (intersectionPoints.Count == 0)
 			{
 				int partIndex = filterSourceByPartIndex ?? 0;
 				Pnt3D anyPoint = contained.GetPart(partIndex).GetSegment(0).StartPoint;
 
-				return PolycurveContainsXY(withinClosedPolycurve, anyPoint, tolerance);
+				return AreaContainsXY(withinClosedPolycurve, anyPoint, tolerance);
 			}
 
 			bool hasAnyRightSideDeviation = false;
@@ -1336,6 +1328,33 @@ namespace ProSuite.Commons.Geom
 			{
 				hasRightSideDeviation = true;
 			}
+		}
+
+		private static IList<IntersectionPoint3D> GetRealIntersectionPoints(
+			ISegmentList source,
+			ISegmentList target,
+			double tolerance,
+			IList<IntersectionPoint3D> knownIntersections = null,
+			Predicate<IntersectionPoint3D> predicate = null)
+		{
+			IList<IntersectionPoint3D> intersectionPoints =
+				knownIntersections ??
+				GeomTopoOpUtils.GetIntersectionPoints(source, target, tolerance);
+
+			if (predicate != null)
+			{
+				intersectionPoints = intersectionPoints
+				                     .Where(i => predicate(i))
+				                     .ToList();
+			}
+
+			// Filter pseudo breaks of linear intersection stretches (e.g. at ring start/end)
+			var unusable =
+				GeomTopoOpUtils.GetAllLinearIntersectionBreaks(source, target, intersectionPoints);
+
+			intersectionPoints = intersectionPoints.Where(i => ! unusable.Contains(i)).ToList();
+
+			return intersectionPoints;
 		}
 	}
 }

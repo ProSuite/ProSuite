@@ -45,7 +45,7 @@ namespace ProSuite.Commons.Geom
 						// includeLinearIntersectionIntermediateRingStartEndPoints must be true
 						var intersectionsForSource =
 							GeomTopoOpUtils.GetIntersectionPoints(
-								(ISegmentList) sourceRing, (ISegmentList) Target, Tolerance,
+								(ISegmentList) sourceRing, Target, Tolerance,
 								includeLinearIntersectionIntermediateRingStartEndPoints);
 
 						foreach (IntersectionPoint3D intersectionPoint in intersectionsForSource)
@@ -197,7 +197,7 @@ namespace ProSuite.Commons.Geom
 
 				// Skip pseudo-breaks to avoid going astray due to minimal angle-differences:
 				// Example: GeomTopoOpUtilsTest.CanGetIntersectionAreaXYWithLinearBoundaryIntersection()
-			} while (LinearIntersectionPseudoBreaks.Contains(nextIntersection));
+			} while (IntersectionsNotUsedForNavigation.Contains(nextIntersection));
 
 			if (continueOnSource)
 			{
@@ -308,6 +308,61 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		public override IEnumerable<Linestring> GetUncutSourceRings(bool includeCongruent,
+			bool withSameOrientation,
+			bool includeContained,
+			bool includeNotContained)
+		{
+			foreach (int unCutSourceIdx in GetUnusedIndexes(
+				         Source.PartCount, IntersectedSourcePartIndexes))
+			{
+				// No inbound/outbound, but possibly touching or linear intersections
+
+				bool? isContainedXY = GeomRelationUtils.IsContainedXY(
+					Source, Target, Tolerance, IntersectionsAlongSource, unCutSourceIdx);
+
+				if (isContainedXY == null && includeCongruent)
+				{
+					// congruent
+					Linestring sourceRing = Source.GetPart(unCutSourceIdx);
+
+					int targetIndex =
+						IntersectionsAlongSource
+							.Where(
+								i => i.SourcePartIndex == unCutSourceIdx &&
+								     i.Type == IntersectionPointType.LinearIntersectionStart &&
+								     i.VirtualSourceVertex == 0)
+							.GroupBy(i => i.TargetPartIndex)
+							.Single().Key;
+
+					Linestring targetRing = Target.GetPart(targetIndex);
+
+					if (withSameOrientation &&
+					    sourceRing.ClockwiseOriented != null &&
+					    sourceRing.ClockwiseOriented == targetRing.ClockwiseOriented)
+					{
+						yield return sourceRing;
+					}
+
+					if (! withSameOrientation &&
+					    sourceRing.ClockwiseOriented != null &&
+					    sourceRing.ClockwiseOriented != targetRing.ClockwiseOriented)
+					{
+						// The interior of a positive ring is on the left side of a negative ring
+						yield return sourceRing;
+					}
+				}
+				else if (isContainedXY == true && includeContained)
+				{
+					yield return GetSourcePart(unCutSourceIdx);
+				}
+				else if (isContainedXY == false && includeNotContained)
+				{
+					yield return GetSourcePart(unCutSourceIdx);
+				}
+			}
+		}
+
 		public override IEnumerable<IntersectionPoint3D> GetEqualRingsSourceStartIntersection()
 		{
 			foreach (int unCutSourceIdx in GetUnusedIndexes(
@@ -355,6 +410,11 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
+		/// <summary>
+		/// Returns the target rings that are within a source ring but not equal to a
+		/// source ring
+		/// </summary>
+		/// <returns></returns>
 		public override IEnumerable<Linestring> GetTargetRingsCompletelyWithinSource()
 		{
 			foreach (int unCutTargetIdx in GetUnusedIndexes(
@@ -365,7 +425,8 @@ namespace ProSuite.Commons.Geom
 				Linestring targetRing = Target.GetPart(unCutTargetIdx);
 
 				if (true == GeomRelationUtils.AreaContainsXY(Source, Target, Tolerance,
-					    IntersectionsAlongTarget, unCutTargetIdx))
+				                                             IntersectionsAlongTarget,
+				                                             unCutTargetIdx))
 				{
 					yield return targetRing;
 				}

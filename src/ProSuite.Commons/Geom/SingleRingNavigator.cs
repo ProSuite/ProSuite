@@ -227,6 +227,12 @@ namespace ProSuite.Commons.Geom
 			throw new NotImplementedException();
 		}
 
+		public override IEnumerable<Linestring> GetUncutSourceRings(bool includeCongruent, bool withSameOrientation,
+		                                                            bool includeContained, bool includeNotContained)
+		{
+			throw new NotImplementedException();
+		}
+
 		private void GetAlongTargetDirectionChanges(
 			[NotNull] IntersectionPoint3D intersection,
 			[NotNull] Line3D entryLine,

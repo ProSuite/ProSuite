@@ -52,7 +52,7 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		public IList<IntersectionPoint3D> LinearIntersectionPseudoBreaks { get; set; } =
+		protected IList<IntersectionPoint3D> IntersectionsNotUsedForNavigation { get; set; } =
 			new List<IntersectionPoint3D>();
 
 		public IList<IntersectionPoint3D> IntersectionsAlongTarget
@@ -324,36 +324,38 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		private static IEnumerable<IntersectionPoint3D> GetLinearIntersectionPseudoBreaks(
-			IList<IntersectionPoint3D> intersectionPointsForPart,
-			ISegmentList source, ISegmentList target)
+		private static IEnumerable<IntersectionPoint3D> GetIntersectionsNotUsedForNavigation(
+			[NotNull] IList<IntersectionPoint3D> intersectionPoints,
+			[NotNull] ISegmentList source,
+			[NotNull] ISegmentList target)
 		{
-			// First remove the 'standard' linear intersection breaks at ring start/end:
-
+			// The 'standard' linear intersection breaks at ring start/end:
 			foreach (IntersectionPoint3D linearStartBreak in
 			         GeomTopoOpUtils.GetLinearIntersectionBreaksAtRingStart(
-				         source, target, intersectionPointsForPart))
+				         source, target, intersectionPoints))
 			{
 				yield return linearStartBreak;
 			}
 
-			// Also, filter other pseudo-breaks (e.g. due to vertical segments):
-			IntersectionPoint3D previous = null;
-			foreach (IntersectionPoint3D intersectionPoint in
-			         intersectionPointsForPart.OrderBy(i => i.VirtualSourceVertex))
+			// Other linear intersection breaks that are not real (from a 2D perspective)
+			foreach (var pseudoBreak in GeomTopoOpUtils.GetLinearIntersectionPseudoBreaks(
+				         intersectionPoints))
 			{
-				if (previous != null &&
-				    previous.Type == IntersectionPointType.LinearIntersectionEnd &&
-				    intersectionPoint.Type == IntersectionPointType.LinearIntersectionStart &&
-				    previous.SourcePartIndex == intersectionPoint.SourcePartIndex &&
-				    previous.TargetPartIndex == intersectionPoint.TargetPartIndex &&
-				    previous.Point.Equals(intersectionPoint.Point))
+				yield return pseudoBreak;
+			}
+
+			// Touching intersections that are not used for ring navigation but could be useful to find
+			// completely interior or exterior rings (that touch in just one point).
+			foreach (IntersectionPoint3D intersectionPoint in intersectionPoints)
+			{
+				// Filter touching intersections. They are not useful for navigating
+				// through the rings. They would result in boundary rings. Separate
+				// touching rings are preferable (ogc style). These rings are processed separately.
+				// Exception: The start / end of the non-closed path could be a start intersection
+				if (GeomTopoOpUtils.IsTargetInteriorTouchingIntersection(intersectionPoint, target))
 				{
-					yield return previous;
 					yield return intersectionPoint;
 				}
-
-				previous = intersectionPoint;
 			}
 		}
 
@@ -664,23 +666,22 @@ namespace ProSuite.Commons.Geom
 		{
 			intersectionsInboundTarget = new List<IntersectionPoint3D>();
 			intersectionsOutboundTarget = new List<IntersectionPoint3D>();
-			LinearIntersectionPseudoBreaks.Clear();
+			IntersectionsNotUsedForNavigation.Clear();
 
 			// Filter all non-real linear intersections (i. e. those where no deviation between
 			// source and target exists. This is important to avoid incorrect inbound/outbound
 			// and turn-direction decisions because the two lines continue (almost at the same
-			// angle. TODO: Remove them for good? Or maintain a different list that knows all
-			// part combinations that have boundary intersections?
-			var intersections = IntersectionsAlongSource.ToList();
+			// angle.
+			var usableIntersections = IntersectionsAlongSource.ToList();
 
-			foreach (IntersectionPoint3D pseudoBreak in GetLinearIntersectionPseudoBreaks(
-				         intersections, Source, Target))
+			foreach (IntersectionPoint3D unusable in GetIntersectionsNotUsedForNavigation(
+				         IntersectionsAlongSource, Source, Target))
 			{
-				intersections.Remove(pseudoBreak);
-				LinearIntersectionPseudoBreaks.Add(pseudoBreak);
+				usableIntersections.Remove(unusable);
+				IntersectionsNotUsedForNavigation.Add(unusable);
 			}
 
-			foreach (IntersectionPoint3D intersectionPoint3D in intersections)
+			foreach (IntersectionPoint3D intersectionPoint3D in usableIntersections)
 			{
 				intersectionPoint3D.ClassifyTargetTrajectory(source, target,
 				                                             out bool? targetContinuesToRightSide,
@@ -753,5 +754,10 @@ namespace ProSuite.Commons.Geom
 		}
 
 		public abstract IEnumerable<Linestring> GetSourceRingsOutsideTarget();
+
+		public abstract IEnumerable<Linestring> GetUncutSourceRings(bool includeCongruent,
+			bool withSameOrientation,
+			bool includeContained,
+			bool includeNotContained);
 	}
 }

@@ -179,8 +179,10 @@ namespace ProSuite.Commons.Geom
 			if (! _subcurveNavigator.Target.IsClosed &&
 			    _subcurveNavigator.AreIntersectionPointsNonSequential())
 			{
+				// TODO: Delete, once this really does not happen again
 				// Cut backs result in duplicates which are both on the left and the right!
 				duplicates = RemoveDuplicateRings(leftRings, rightRings);
+				Assert.AreEqual(0, duplicates.Count, "Duplicates found");
 			}
 
 			// Assign the cut inner rings (anti-clockwise) to un-cut outer rings...
@@ -524,36 +526,18 @@ namespace ProSuite.Commons.Geom
 		}
 
 		private IList<Linestring> GetLeftSideRings(bool includeEqualRings,
-		                                           bool includeDisjointRings)
+		                                           bool includeNotContained)
 		{
 			IList<Linestring> result = _subcurveNavigator.FollowSubcurvesClockwise(
 				_subcurveNavigator.IntersectionsInboundTarget.ToList());
 
-			if (includeEqualRings)
+			if (includeEqualRings || includeNotContained)
 			{
-				foreach (IntersectionPoint3D intersectionPoint in
-				         _subcurveNavigator.GetEqualRingsSourceStartIntersection())
+				foreach (Linestring uncutSourceRing in
+				         _subcurveNavigator.GetUncutSourceRings(includeEqualRings, false,
+				                                                false, includeNotContained))
 				{
-					Linestring sourceRing =
-						_subcurveNavigator.Source.GetPart(intersectionPoint.SourcePartIndex);
-					Linestring targetRing =
-						_subcurveNavigator.Target.GetPart(intersectionPoint.TargetPartIndex);
-
-					if (sourceRing.ClockwiseOriented != null &&
-					    sourceRing.ClockwiseOriented != targetRing.ClockwiseOriented)
-					{
-						// The interior of a positive ring is on the left side of a negative ring
-						result.Add(sourceRing);
-					}
-				}
-			}
-
-			if (includeDisjointRings)
-			{
-				foreach (Linestring containedSourceRing in
-				         _subcurveNavigator.GetSourceRingsOutsideTarget())
-				{
-					result.Add(containedSourceRing);
+					result.Add(uncutSourceRing);
 				}
 			}
 
@@ -561,37 +545,22 @@ namespace ProSuite.Commons.Geom
 		}
 
 		private IList<Linestring> GetRightSideRings(bool includeEqualRings = false,
-		                                            bool includeInsideRings = false)
+		                                            bool includeContainedSourceRings = false)
 		{
 			IList<Linestring> result = _subcurveNavigator.FollowSubcurvesClockwise(
 				_subcurveNavigator.IntersectionsOutboundTarget.ToList());
 
-			if (includeEqualRings)
+			if (! includeEqualRings && ! includeContainedSourceRings)
 			{
-				foreach (IntersectionPoint3D intersectionPoint in
-				         _subcurveNavigator.GetEqualRingsSourceStartIntersection())
-				{
-					Linestring sourceRing =
-						_subcurveNavigator.Source.GetPart(intersectionPoint.SourcePartIndex);
-					Linestring targetRing =
-						_subcurveNavigator.Target.GetPart(intersectionPoint.TargetPartIndex);
-
-					if (sourceRing.ClockwiseOriented != null &&
-					    sourceRing.ClockwiseOriented == targetRing.ClockwiseOriented)
-					{
-						// The interior of a positive ring is on the right side of another positive ring
-						result.Add(sourceRing);
-					}
-				}
+				return result;
 			}
 
-			if (includeInsideRings)
+			foreach (Linestring uncutSourceRing in
+			         _subcurveNavigator.GetUncutSourceRings(
+				         includeEqualRings, true,
+				         includeContainedSourceRings, false))
 			{
-				foreach (Linestring containedSourceRing in
-				         _subcurveNavigator.GetSourceRingsCompletelyWithinTarget())
-				{
-					result.Add(containedSourceRing);
-				}
+				result.Add(uncutSourceRing);
 			}
 
 			return result;
