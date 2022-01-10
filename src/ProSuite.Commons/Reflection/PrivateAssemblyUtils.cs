@@ -27,8 +27,8 @@ namespace ProSuite.Commons.Reflection
 		private static readonly Dictionary<string, string> _knownSubstitutes =
 			new Dictionary<string, string>
 			{
-				{"EsriDE.ProSuite.QA.Tests", "ProSuite.QA.Tests"},
-				{"EsriDE.ProSuite.QA.TestFactories", "ProSuite.QA.TestFactories"}
+				{ "EsriDE.ProSuite.QA.Tests", "ProSuite.QA.Tests" },
+				{ "EsriDE.ProSuite.QA.TestFactories", "ProSuite.QA.TestFactories" }
 			};
 
 		[NotNull]
@@ -110,6 +110,30 @@ namespace ProSuite.Commons.Reflection
 			return type;
 		}
 
+		public static string GetSubsituteType(
+			[NotNull] string assemblyName,
+			[NotNull] string typeName,
+			IReadOnlyDictionary<string, string> assemblySubstitutes = null)
+		{
+			Assert.ArgumentNotNullOrEmpty(assemblyName, nameof(assemblyName));
+			Assert.ArgumentNotNullOrEmpty(typeName, nameof(typeName));
+
+			var substitutes = assemblySubstitutes ?? _knownSubstitutes;
+
+			if (substitutes.TryGetValue(assemblyName, out string substituteAssembly))
+			{
+				string substituteType = typeName.Replace(assemblyName, substituteAssembly);
+				return substituteType;
+			}
+			return typeName;
+		}
+
+		[CanBeNull]
+		public static string GetCoreName([CanBeNull] string fullName)
+		{
+			return fullName?.Substring(fullName.LastIndexOf('.') + 1);
+		}
+
 		private static IReadOnlyDictionary<string, string> GetSubstitutes(
 			IReadOnlyDictionary<string, string> assemblySubstitutes)
 		{
@@ -153,7 +177,7 @@ namespace ProSuite.Commons.Reflection
 			string dllFileName = string.Format("{0}.dll", assemblyName);
 			string exeFileName = string.Format("{0}.exe", assemblyName);
 
-			foreach (string fileName in new[] {dllFileName, exeFileName})
+			foreach (string fileName in new[] { dllFileName, exeFileName })
 			{
 				string filePath = Path.Combine(binDirectory, fileName);
 
@@ -167,7 +191,7 @@ namespace ProSuite.Commons.Reflection
 
 				if (fileExists)
 				{
-					return new AssemblyName(assemblyName) {CodeBase = filePath};
+					return new AssemblyName(assemblyName) { CodeBase = filePath };
 				}
 			}
 
