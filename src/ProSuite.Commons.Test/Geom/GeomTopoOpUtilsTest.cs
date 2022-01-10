@@ -5,6 +5,8 @@ using NUnit.Framework;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
+using ProSuite.Commons.Geom.Wkb;
+using ProSuite.Commons.Testing;
 
 namespace ProSuite.Commons.Test.Geom
 {
@@ -611,7 +613,6 @@ namespace ProSuite.Commons.Test.Geom
 			CutPlanarBothWays(poly, target, 2, 0);
 		}
 
-
 		[Test]
 		public void CanCutWithCutlineTouchingIsland()
 		{
@@ -637,10 +638,10 @@ namespace ProSuite.Commons.Test.Geom
 				                     new Pnt3D(25, 50, 0),
 				                     new Pnt3D(35, 30, 0),
 				                     new Pnt3D(50, 50, 0),
-								 };
+			                     };
 
 			var poly = new RingGroup(CreateRing(ring1),
-			                         new[] { CreateRing(inner1) });
+			                         new[] {CreateRing(inner1)});
 
 			Linestring target = new Linestring(touchingIsland);
 
@@ -653,10 +654,10 @@ namespace ProSuite.Commons.Test.Geom
 			// Now touch the island AND the outer ring -> should create a boundary loop in outer ring
 			var touchingIslandAndOuterRing = new List<Pnt3D>
 			                                 {
-												 new Pnt3D(25, 50, 0),
-												 new Pnt3D(35, 0, 0),
-												 new Pnt3D(50, 50, 0),
-											 };
+				                                 new Pnt3D(25, 50, 0),
+				                                 new Pnt3D(35, 0, 0),
+				                                 new Pnt3D(50, 50, 0),
+			                                 };
 
 			target = new Linestring(touchingIslandAndOuterRing);
 
@@ -4144,6 +4145,31 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanGetIntersectionAreaWithLinearIntersectionWithinTolerance()
+		{
+			// Linear intersection is within the tolerance (1 cm)
+			RingGroup ring1 = (RingGroup) GeomUtils.FromWkbFile(
+				GetGeometryTestDataPath("almost_linear_intersection_source.wkb"),
+				out WkbGeometryType wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			RingGroup ring2 = (RingGroup) GeomUtils.FromWkbFile(
+				GetGeometryTestDataPath("almost_linear_intersection_target.wkb"),
+				out wkbType);
+
+			Assert.AreEqual(WkbGeometryType.Polygon, wkbType);
+
+			var poly1 = new MultiPolycurve(ring1.GetLinestrings());
+			var poly2 = new MultiPolycurve(ring2.GetLinestrings());
+			MultiLinestring intersectionAreasXY =
+				GeomTopoOpUtils.GetIntersectionAreasXY(poly1, poly2, 0.01);
+
+			Assert.IsFalse(intersectionAreasXY.IsEmpty);
+			Assert.AreEqual(poly1.GetArea2D(), intersectionAreasXY.GetArea2D());
+		}
+
+		[Test]
 		public void CanGetIntersectionLinesXYLineAlongRing()
 		{
 			// Get the lines within a polygon and a line along & within a polygon:
@@ -5470,6 +5496,13 @@ namespace ProSuite.Commons.Test.Geom
 
 			var ring = new Linestring(points);
 			return ring;
+		}
+
+		public static string GetGeometryTestDataPath(string fileName)
+		{
+			var locator = TestDataLocator.Create("ProSuite", @"TestData\Geom");
+
+			return locator.GetPath(fileName);
 		}
 	}
 }
