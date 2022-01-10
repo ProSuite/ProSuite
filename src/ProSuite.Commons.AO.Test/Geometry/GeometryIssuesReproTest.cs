@@ -9,8 +9,8 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
-using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Testing;
 
 namespace ProSuite.Commons.AO.Test.Geometry
 {
@@ -2082,7 +2082,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		private static IEnumerable<IGeometry> GetAllIntersections(IGeometry g1,
-		                                                          IGeometry g2)
+			IGeometry g2)
 		{
 			IGeometry intersections =
 				((ITopologicalOperator2) g1).IntersectMultidimension(g2);

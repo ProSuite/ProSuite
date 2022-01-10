@@ -12,6 +12,7 @@ using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.IO;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.Testing;
 using ProSuite.Commons.Text;
 using Path = System.IO.Path;
 

@@ -522,7 +522,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			{
 				// separate closed paths (used for remove-polygon) from normal paths
 				foreach (IPath path in GeometryUtils.GetPaths(
-					(IGeometry) simplifiedCurves))
+					         (IGeometry) simplifiedCurves))
 				{
 					if (path.IsClosed)
 					{

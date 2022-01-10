@@ -89,7 +89,7 @@ namespace ProSuite.Commons.Geom
 			}
 
 			if (MathUtils.AreEqual(
-				0, GeomUtils.GetArea3D(points, new Pnt3D(plane.Normal))))
+				    0, GeomUtils.GetArea3D(points, new Pnt3D(plane.Normal))))
 			{
 				// Technically, the plane could be defined, but it is quite random
 				// TODO: This is also the case if the input is 3 points that have been used to create the plane!
