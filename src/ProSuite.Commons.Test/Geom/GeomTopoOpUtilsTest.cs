@@ -6,7 +6,7 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 
-namespace ProSuite.Commons.Test.Geometry
+namespace ProSuite.Commons.Test.Geom
 {
 	[TestFixture]
 	public class GeomTopoOpUtilsTest
@@ -609,6 +609,62 @@ namespace ProSuite.Commons.Test.Geometry
 			var poly = new RingGroup(CreateRing(ring1));
 
 			CutPlanarBothWays(poly, target, 2, 0);
+		}
+
+
+		[Test]
+		public void CanCutWithCutlineTouchingIsland()
+		{
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 0),
+				            new Pnt3D(0, 100, 0),
+				            new Pnt3D(100, 100, 0),
+				            new Pnt3D(100, 0, 0)
+			            };
+
+			var inner1 = new List<Pnt3D>
+			             {
+				             new Pnt3D(25, 50, 0),
+				             new Pnt3D(50, 50, 0),
+				             new Pnt3D(50, 75, 0),
+				             new Pnt3D(25, 75, 0)
+			             };
+
+			// Touching inner1 with start and end point
+			var touchingIsland = new List<Pnt3D>
+			                     {
+				                     new Pnt3D(25, 50, 0),
+				                     new Pnt3D(35, 30, 0),
+				                     new Pnt3D(50, 50, 0),
+								 };
+
+			var poly = new RingGroup(CreateRing(ring1),
+			                         new[] { CreateRing(inner1) });
+
+			Linestring target = new Linestring(touchingIsland);
+
+			IList<MultiLinestring> result = CutXY(poly, target, 2, 1);
+			Assert.AreEqual(3, result.Sum(p => p.Count));
+
+			Assert.AreEqual(poly.GetArea2D(),
+			                result.Sum(r => r.GetArea2D()));
+
+			// Now touch the island AND the outer ring -> should create a boundary loop in outer ring
+			var touchingIslandAndOuterRing = new List<Pnt3D>
+			                                 {
+												 new Pnt3D(25, 50, 0),
+												 new Pnt3D(35, 0, 0),
+												 new Pnt3D(50, 50, 0),
+											 };
+
+			target = new Linestring(touchingIslandAndOuterRing);
+
+			result = CutXY(poly, target, 2, 1);
+			Assert.AreEqual(3, result.Sum(p => p.Count));
+
+			Assert.AreEqual(poly.GetArea2D(),
+			                result.Sum(r => r.GetArea2D()));
 		}
 
 		[Test]
@@ -3818,6 +3874,10 @@ namespace ProSuite.Commons.Test.Geometry
 			result = GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
 			Assert.IsTrue(result.IsEmpty);
 
+			// Compare with difference:
+			result = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target, tolerance);
+			Assert.AreEqual(poly1.GetArea2D(), result.GetArea2D());
+
 			// And vice versa:
 			result = GeomTopoOpUtils.GetIntersectionAreasXY(target, poly1, tolerance);
 			Assert.IsTrue(result.IsEmpty);
@@ -4012,6 +4072,13 @@ namespace ProSuite.Commons.Test.Geometry
 			result = GeomTopoOpUtils.GetIntersectionAreasXY(poly1, target, tolerance);
 			Assert.IsFalse(result.IsEmpty);
 			Assert.AreEqual(target.GetArea2D(), result.GetArea2D(), 0.0001);
+
+			// Compare with difference:
+			// Now we expect either a boundary loop (Esri style) or the outer ring touches the
+			// inner ring (ogc style)
+			result = GeomTopoOpUtils.GetDifferenceAreasXY(poly1, target, tolerance);
+			Assert.AreEqual(2, result.PartCount);
+			Assert.AreEqual(poly1.GetArea2D() - target.GetArea2D(), result.GetArea2D());
 		}
 
 		[Test]

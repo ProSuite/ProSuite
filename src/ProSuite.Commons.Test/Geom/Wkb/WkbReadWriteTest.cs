@@ -4,7 +4,7 @@ using NUnit.Framework;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.Wkb;
 
-namespace ProSuite.Commons.Test.Geometry.Wkb
+namespace ProSuite.Commons.Test.Geom.Wkb
 {
 	[TestFixture]
 	public class WkbReadWriteTest
