@@ -450,7 +450,7 @@ namespace ProSuite.Commons.Geom
 		
 		public IPnt GetTargetPoint(IPointList targetPoints)
 		{
-			Assert.True(IsTargetVertex(), "");
+			Assert.True(IsTargetVertex(out _), "");
 
 			int targetVertex = (int)VirtualTargetVertex;
 
