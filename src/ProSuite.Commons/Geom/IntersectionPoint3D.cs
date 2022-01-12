@@ -43,12 +43,12 @@ namespace ProSuite.Commons.Geom
 
 		public IntersectionPoint3D(
 			[NotNull] Pnt3D point,
-			double virtualRingVertexIndex,
+			double virtualSourceVertexIdx,
 			SegmentIntersection segmentIntersection = null,
 			IntersectionPointType type = IntersectionPointType.Unknown)
 		{
 			Point = point;
-			VirtualSourceVertex = virtualRingVertexIndex;
+			VirtualSourceVertex = virtualSourceVertexIdx;
 			SegmentIntersection = segmentIntersection;
 			Type = type;
 		}
@@ -439,13 +439,22 @@ namespace ProSuite.Commons.Geom
 		/// </summary>
 		/// <param name="target"></param>
 		/// <returns></returns>
-		public Pnt3D GetTargetPoint(ISegmentList target)
+		public Pnt3D GetTargetPoint([NotNull] ISegmentList target)
 		{
 			Linestring targetPart = target.GetPart(TargetPartIndex);
 
 			int segmentIndex = GetLocalTargetIntersectionSegmentIdx(targetPart, out double factor);
 
 			return targetPart.GetSegment(segmentIndex).GetPointAlong(factor, true);
+		}
+		
+		public IPnt GetTargetPoint(IPointList targetPoints)
+		{
+			Assert.True(IsTargetVertex(), "");
+
+			int targetVertex = (int)VirtualTargetVertex;
+
+			return targetPoints.GetPoint(targetVertex);
 		}
 
 		public int GetNextRingVertexIndex(int vertexCount)
@@ -1060,5 +1069,20 @@ namespace ProSuite.Commons.Geom
 			       $"RingVertex: {VirtualSourceVertex}, " +
 			       $"TargetVertex: {VirtualTargetVertex}";
 		}
+
+		public IntersectionPoint3D Clone()
+		{
+			var result = new IntersectionPoint3D(Point.ClonePnt3D(), VirtualSourceVertex,
+			                                     SegmentIntersection, Type)
+			             {
+				             SourcePartIndex = SourcePartIndex,
+				             TargetPartIndex = TargetPartIndex,
+				             VirtualTargetVertex = VirtualTargetVertex,
+				             TargetDeviatesToLeftOfSource = TargetDeviatesToLeftOfSource
+			             };
+
+			return result;
+		}
+
 	}
 }

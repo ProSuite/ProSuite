@@ -2871,7 +2871,7 @@ namespace ProSuite.Commons.Test.Geom
 				Assert.True(sourceSegment.IntersectsPointXY(pointAlong, 0.0001));
 				Assert.True(targetSegment.IntersectsPointXY(pointAlong, 0.0001));
 
-				pointAlong = intersectionPoint.GetTargetPoint(linestring2);
+				pointAlong = intersectionPoint.GetTargetPoint((ISegmentList)linestring2);
 
 				Assert.True(pointAlong.EqualsXY(intersectionPoint.Point, 0.0001));
 			}
