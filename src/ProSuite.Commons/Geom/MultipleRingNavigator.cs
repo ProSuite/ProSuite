@@ -197,7 +197,7 @@ namespace ProSuite.Commons.Geom
 
 				// Skip pseudo-breaks to avoid going astray due to minimal angle-differences:
 				// Example: GeomTopoOpUtilsTest.CanGetIntersectionAreaXYWithLinearBoundaryIntersection()
-			} while (IntersectionsNotUsedForNavigation.Contains(nextIntersection));
+			} while (SkipIntersection(subcurveStart, nextIntersection));
 
 			if (continueOnSource)
 			{
@@ -214,6 +214,42 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return nextIntersection;
+		}
+
+		private bool SkipIntersection(IntersectionPoint3D subcurveStartIntersection,
+		                              IntersectionPoint3D nextIntersection)
+		{
+			if (IntersectionsNotUsedForNavigation.Contains(nextIntersection))
+			{
+				return true;
+			}
+
+			if (nextIntersection.Type == IntersectionPointType.TouchingInPoint &&
+			    subcurveStartIntersection.SourcePartIndex != nextIntersection.SourcePartIndex &&
+			    ! IsUnclosedTargetEnd(nextIntersection))
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		private bool IsUnclosedTargetEnd([NotNull] IntersectionPoint3D intersectionPoint)
+		{
+			Linestring targetPart = Target.GetPart(intersectionPoint.TargetPartIndex);
+
+			if (targetPart.IsClosed)
+			{
+				return false;
+			}
+
+			if (intersectionPoint.VirtualTargetVertex > 0 &&
+			    intersectionPoint.VirtualTargetVertex < targetPart.PointCount - 1)
+			{
+				return false;
+			}
+
+			return true;
 		}
 
 		protected override void RemoveDeadEndIntersections(

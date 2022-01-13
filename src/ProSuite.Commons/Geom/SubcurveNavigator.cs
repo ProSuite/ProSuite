@@ -151,34 +151,20 @@ namespace ProSuite.Commons.Geom
 				IntersectionPoint3D startIntersection = startIntersections.First();
 				startIntersections.Remove(startIntersection);
 
-				IntersectionPoint3D previousIntersection = startIntersection;
-
 				Pnt3D ringStart = null;
 				foreach (IntersectionRun next in NavigateSubcurves(startIntersection))
 				{
-					IntersectionPoint3D nextIntersection = next.NextIntersection;
 					subcurveInfos.Add(next);
 
-					Pnt3D startPoint;
-					if (next.ContainsSourceStart(out startPoint))
+					if (next.ContainsSourceStart(out Pnt3D startPoint))
 					{
 						ringStart = startPoint;
 					}
 
-					if (next.ContinuingOnSource)
-					{
-						if (startIntersections.Contains(previousIntersection))
-						{
-							// Remove, if we follow the source through other start. This happens with vertical rings.
-							//startIntersections.Remove(previousIntersection);
-						}
-					}
-					else
+					if (! next.ContinuingOnSource)
 					{
 						onlyFollowingSource = false;
 					}
-
-					previousIntersection = nextIntersection;
 				}
 
 				// At some point the result must deviate from source otherwise the target does not cut it
@@ -238,20 +224,13 @@ namespace ProSuite.Commons.Geom
 					                 ref continueOnSource, ref partIndex, ref forward);
 				}
 
-				Linestring subcurve;
 				nextIntersection = FollowUntilNextIntersection(
-					previousIntersection, continueOnSource, partIndex, forward, out subcurve);
+					previousIntersection, continueOnSource, partIndex, forward,
+					out Linestring subcurve);
 
-				Pnt3D containedSourceStart = null;
-				if (continueOnSource &&
-				    previousIntersection.SourcePartIndex == nextIntersection.SourcePartIndex &&
-				    (MathUtils.AreEqual(previousIntersection.VirtualSourceVertex, 0) ||
-				     forward && previousIntersection.VirtualSourceVertex >
-				     nextIntersection.VirtualSourceVertex))
-				{
-					Linestring sourcePart = GetSourcePart(previousIntersection.SourcePartIndex);
-					containedSourceStart = sourcePart.StartPoint;
-				}
+				Pnt3D containedSourceStart =
+					GetSourceStartBetween(previousIntersection, nextIntersection, continueOnSource,
+					                      forward);
 
 				if (continueOnSource)
 				{
@@ -270,14 +249,44 @@ namespace ProSuite.Commons.Geom
 				}
 
 				IntersectionRun next =
-					new IntersectionRun(nextIntersection, subcurve, containedSourceStart);
-
-				next.ContinuingOnSource = continueOnSource;
+					new IntersectionRun(nextIntersection, subcurve, containedSourceStart)
+					{
+						ContinuingOnSource = continueOnSource
+					};
 
 				yield return next;
 
 				previousIntersection = nextIntersection;
 			}
+		}
+
+		private Pnt3D GetSourceStartBetween([NotNull] IntersectionPoint3D previousIntersection,
+		                                    [NotNull] IntersectionPoint3D nextIntersection,
+		                                    bool continueOnSource,
+		                                    bool forward)
+		{
+			if (! continueOnSource)
+			{
+				return null;
+			}
+
+			Assert.True(forward, "Continuation on source backward is not allowed!");
+
+			if (previousIntersection.SourcePartIndex != nextIntersection.SourcePartIndex)
+			{
+				return null;
+			}
+
+			Pnt3D containedSourceStart = null;
+
+			if (MathUtils.AreEqual(previousIntersection.VirtualSourceVertex, 0) ||
+			    previousIntersection.VirtualSourceVertex > nextIntersection.VirtualSourceVertex)
+			{
+				Linestring sourcePart = GetSourcePart(previousIntersection.SourcePartIndex);
+				containedSourceStart = sourcePart.StartPoint;
+			}
+
+			return containedSourceStart;
 		}
 
 		public abstract SubcurveNavigator Clone();
@@ -342,20 +351,6 @@ namespace ProSuite.Commons.Geom
 				         intersectionPoints))
 			{
 				yield return pseudoBreak;
-			}
-
-			// Touching intersections that are not used for ring navigation but could be useful to find
-			// completely interior or exterior rings (that touch in just one point).
-			foreach (IntersectionPoint3D intersectionPoint in intersectionPoints)
-			{
-				// Filter touching intersections. They are not useful for navigating
-				// through the rings. They would result in boundary rings. Separate
-				// touching rings are preferable (ogc style). These rings are processed separately.
-				// Exception: The start / end of the non-closed path could be a start intersection
-				if (GeomTopoOpUtils.IsTargetInteriorTouchingIntersection(intersectionPoint, target))
-				{
-					yield return intersectionPoint;
-				}
 			}
 		}
 
