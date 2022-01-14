@@ -78,7 +78,7 @@ namespace ProSuite.QA.Tests.Transformers
 				_hasOid = InvolvedTables.All(x => x.HasOID);
 				if (_hasOid)
 				{
-					VirtualAddField(FieldUtils.CreateOIDField(oidFieldName: VirtualOIDFieldName));
+					AddField(FieldUtils.CreateOIDField(oidFieldName: OIDFieldName));
 				}
 
 				List<Dictionary<int, int>> fieldDicts = new List<Dictionary<int, int>>();
@@ -92,10 +92,10 @@ namespace ProSuite.QA.Tests.Transformers
 						IField field = fields.Field[iField];
 						string fieldName = field.Name;
 
-						int iExisting = VirtualFields.FindField(fieldName);
+						int iExisting = Fields.FindField(fieldName);
 						if (iExisting < 0)
 						{
-							iExisting = VirtualAddField(field);
+							iExisting = AddFieldT(field);
 						}
 						else
 						{
@@ -111,7 +111,7 @@ namespace ProSuite.QA.Tests.Transformers
 				_fieldDicts = fieldDicts;
 
 				BaseRowFieldIndex =
-					VirtualAddField(FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField));
+					AddFieldT(FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField));
 			}
 
 			public IList<ITable> InvolvedTables { get; }
@@ -123,13 +123,13 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public int BaseRowFieldIndex { get; private set; }
 
-			protected override IWorkspace VirtualWorkspace =>
+			public override IWorkspace Workspace =>
 				_workspace ?? (_workspace = new SimpleWorkspace()); // TODO 
 
 			public int GetSourceFieldIndex(int tableIndex, int fieldIndex)
 			{
 				Dictionary<int, int> fieldDict = _fieldDicts[tableIndex];
-				if (! fieldDict.TryGetValue(fieldIndex, out int sourceFieldIndex))
+				if (!fieldDict.TryGetValue(fieldIndex, out int sourceFieldIndex))
 				{
 					sourceFieldIndex = -1;
 				}
@@ -137,16 +137,16 @@ namespace ProSuite.QA.Tests.Transformers
 				return sourceFieldIndex;
 			}
 
-			protected override bool VirtualHasOID => _hasOid;
-			protected override string VirtualOIDFieldName => "AppendedOID";
+			public override bool HasOID => _hasOid;
+			public override string OIDFieldName => "AppendedOID";
 
-			protected override int VirtualRowCount(IQueryFilter QueryFilter)
+			public override int RowCount(IQueryFilter QueryFilter)
 			{
 				int nRows = InvolvedTables.Sum(involved => involved.RowCount(QueryFilter));
 				return nRows;
 			}
 
-			protected override IEnumerable<IRow> VirtualEnumRows(
+			public override IEnumerable<IRow> EnumRows(
 				IQueryFilter queryFilter, bool recycling)
 			{
 				for (int iTable = 0; iTable < InvolvedTables.Count; iTable++)
@@ -162,7 +162,7 @@ namespace ProSuite.QA.Tests.Transformers
 					else
 					{
 						foreach (IRow row in DataContainer.Search(table, queryFilter,
-							         _filterHelpers[iTable]))
+											 _filterHelpers[iTable]))
 						{
 							yield return AppendedRow.Create(this, iTable, row);
 						}
@@ -181,17 +181,17 @@ namespace ProSuite.QA.Tests.Transformers
 				string name = "appended")
 				: base(CastToTables(featureClasses), filterHelpers, name) { }
 
-			protected override ISpatialReference VirtualSpatialReference =>
-				InvolvedTables.Select(x => ((IGeoDataset) x).SpatialReference).FirstOrDefault();
+			public override ISpatialReference SpatialReference =>
+				InvolvedTables.Select(x => ((IGeoDataset)x).SpatialReference).FirstOrDefault();
 
-			protected override IEnvelope VirtualExtent => _extent ?? (_extent = GetExtent());
+			public override IEnvelope Extent => _extent ?? (_extent = GetExtent());
 
 			private IEnvelope GetExtent()
 			{
 				IEnvelope fullExtent = null;
 				foreach (ITable involved in InvolvedTables)
 				{
-					IEnvelope extent = ((IGeoDataset) involved).Extent;
+					IEnvelope extent = ((IGeoDataset)involved).Extent;
 					if (fullExtent == null)
 					{
 						fullExtent = GeometryFactory.Clone(extent);
@@ -209,11 +209,11 @@ namespace ProSuite.QA.Tests.Transformers
 		private class AppendedRow : VirtualRow
 		{
 			public static AppendedRow Create(AppendedTable table, int sourceTableIndex,
-			                                 IRow sourceRow)
+																			 IRow sourceRow)
 			{
 				if (table is AppendedFeatureClass fc)
 				{
-					return new AppendedFeature(fc, sourceTableIndex, (IFeature) sourceRow);
+					return new AppendedFeature(fc, sourceTableIndex, (IFeature)sourceRow);
 				}
 
 				if (sourceRow is IFeature f)
@@ -226,32 +226,32 @@ namespace ProSuite.QA.Tests.Transformers
 
 			protected AppendedRow(AppendedTable table, int sourceTableIndex, IRow sourceRow)
 			{
-				Table = table;
+				TableT = table;
 				SourceTableIndex = sourceTableIndex;
 				SourceRow = sourceRow;
 			}
 
-			public new AppendedTable Table { get; set; } // needed for recycling
-			protected override ITable VirtualTable => Table;
+			public AppendedTable TableT { get; set; } // needed for recycling
+			public override ITable Table => TableT;
 			public int SourceTableIndex { get; set; } // needed for recycling
 			public IRow SourceRow { get; set; } // needed for recycling
 
-			protected override int VirtualOID =>
-				Table.InvolvedTables.Count * SourceRow.OID + SourceTableIndex;
+			public override int OID =>
+				TableT.InvolvedTables.Count * SourceRow.OID + SourceTableIndex;
 
-			protected override object get_VirtualValue(int index)
+			public override object get_Value(int index)
 			{
 				if (index == 0)
 				{
-					return VirtualOID;
+					return OID;
 				}
 
-				if (index == Table.BaseRowFieldIndex)
+				if (index == TableT.BaseRowFieldIndex)
 				{
 					return new List<IRow> { SourceRow };
 				}
 
-				int sourceFieldIndex = Table.GetSourceFieldIndex(SourceTableIndex, index);
+				int sourceFieldIndex = TableT.GetSourceFieldIndex(SourceTableIndex, index);
 				if (sourceFieldIndex < 0)
 				{
 					return DBNull.Value;
@@ -268,7 +268,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			private IGeometry GetGeometry(IGeometry sourceGeom)
 			{
-				if (! (VirtualTable is IFeatureClass fc))
+				if (!(Table is IFeatureClass fc))
 				{
 					return sourceGeom;
 				}
@@ -295,11 +295,11 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			private static IGeometry EnsureZAware(IGeometry g, ref bool isCloned,
-			                                      IFeatureClass target)
+																						IFeatureClass target)
 			{
 				IField shp = target.Fields.Field[target.FindField(target.ShapeFieldName)];
 				IGeometryDef def = shp.GeometryDef;
-				if (def.HasZ != ((IZAware) g).ZAware)
+				if (def.HasZ != ((IZAware)g).ZAware)
 				{
 					g = isCloned ? g : GeometryFactory.Clone(g);
 					isCloned = true;
@@ -317,11 +317,11 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			private static IGeometry EnsureMAware(IGeometry geom, ref bool isCloned,
-			                                      IFeatureClass target)
+																						IFeatureClass target)
 			{
 				IField shp = target.Fields.Field[target.FindField(target.ShapeFieldName)];
 				IGeometryDef def = shp.GeometryDef;
-				if (def.HasM != ((IMAware) geom).MAware)
+				if (def.HasM != ((IMAware)geom).MAware)
 				{
 					geom = isCloned ? geom : GeometryFactory.Clone(geom);
 					isCloned = true;
@@ -337,21 +337,18 @@ namespace ProSuite.QA.Tests.Transformers
 			private readonly IFeature _sourceFeature;
 
 			public AppendedFeature(AppendedTable table, int sourceTableIndex,
-			                       IFeature sourceFeature)
+														 IFeature sourceFeature)
 				: base(table, sourceTableIndex, sourceFeature)
 			{
 				_sourceFeature = sourceFeature;
 			}
 
-			protected override IGeometry VirtualShape
-			{
-				get => _sourceFeature.Shape;
-			}
+			public override IGeometry Shape => _sourceFeature.Shape;
 		}
 
 		public class SimpleWorkspace : VirtualWorkspace
 		{
-			protected override esriWorkspaceType VirtualWorkspaceType =>
+			public override esriWorkspaceType WorkspaceType =>
 				esriWorkspaceType.esriFileSystemWorkspace;
 		}
 	}

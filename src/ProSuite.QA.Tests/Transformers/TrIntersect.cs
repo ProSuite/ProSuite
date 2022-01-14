@@ -16,8 +16,8 @@ namespace ProSuite.QA.Tests.Transformers
 		private readonly IFeatureClass _intersecting;
 
 		public TrIntersect([NotNull] IFeatureClass intersected,
-		                   [NotNull] IFeatureClass intersecting)
-			: base(new List<ITable> { (ITable) intersected, (ITable) intersecting })
+											 [NotNull] IFeatureClass intersecting)
+			: base(new List<ITable> { (ITable)intersected, (ITable)intersecting })
 		{
 			_intersected = intersected;
 			_intersecting = intersecting;
@@ -29,22 +29,22 @@ namespace ProSuite.QA.Tests.Transformers
 			return transformedFc;
 		}
 
-		private class TransformedFc : GdbFeatureClass, ITransformedValue
+		private class TransformedFc : TransformedFeatureClass, ITransformedValue
 		{
 			public TransformedFc(IFeatureClass intersected, IFeatureClass intersecting,
-			                     string name = null)
-				: base(-1, ! string.IsNullOrWhiteSpace(name) ? name : "intersectResult",
-				       intersected.ShapeType,
-				       createBackingDataset: (t) =>
-					       new TransformedDataset((TransformedFc) t, intersected, intersecting),
-				       workspace: new GdbWorkspace(new TransformerWorkspace()))
+													 string name = null)
+				: base(-1, !string.IsNullOrWhiteSpace(name) ? name : "intersectResult",
+							 intersected.ShapeType,
+							 createBackingDataset: (t) =>
+								 new TransformedDataset((TransformedFc)t, intersected, intersecting),
+							 workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
-				InvolvedTables = new List<ITable> { (ITable) intersected, (ITable) intersecting };
+				InvolvedTables = new List<ITable> { (ITable)intersected, (ITable)intersecting };
 
 				IGeometryDef geomDef =
 					intersected.Fields.Field[
 						intersected.Fields.FindField(intersected.ShapeFieldName)].GeometryDef;
-				Fields.AddFields(
+				FieldsT.AddFields(
 					FieldUtils.CreateOIDField(),
 					FieldUtils.CreateShapeField(
 						intersected.ShapeType, // TODO: only true for intersecting is Polygon FC
@@ -59,7 +59,7 @@ namespace ProSuite.QA.Tests.Transformers
 				set => BackingDs.DataContainer = value;
 			}
 
-			public TransformedDataset BackingDs => (TransformedDataset) BackingDataset;
+			public TransformedDataset BackingDs => (TransformedDataset)BackingDataset;
 		}
 
 		private class TransformedDataset : TransformedBackingDataset
@@ -79,12 +79,12 @@ namespace ProSuite.QA.Tests.Transformers
 
 				gdbTable.AddField(FieldUtils.CreateDoubleField(PartIntersectedField));
 
-				Resulting.SpatialReference = ((IGeoDataset) intersected).SpatialReference;
+				Resulting.SpatialReference = ((IGeoDataset)intersected).SpatialReference;
 			}
 
-			public override IEnvelope Extent => ((IGeoDataset) _intersected).Extent;
+			public override IEnvelope Extent => ((IGeoDataset)_intersected).Extent;
 
-			public override IRow GetRow(int id)
+			public override IRow GetUncachedRow(int id)
 			{
 				throw new NotImplementedException();
 			}
@@ -103,15 +103,15 @@ namespace ProSuite.QA.Tests.Transformers
 				int iPartIntersected = Resulting.FindField(PartIntersectedField);
 
 				foreach (var toIntersect in DataContainer.Search(
-					         (ITable) _intersected, filter, QueryHelpers[0]))
+									 (ITable)_intersected, filter, QueryHelpers[0]))
 				{
-					intersectingFilter.Geometry = ((IFeature) toIntersect).Extent;
+					intersectingFilter.Geometry = ((IFeature)toIntersect).Extent;
 					foreach (var intersecting in DataContainer.Search(
-						         (ITable) _intersecting, intersectingFilter, QueryHelpers[1]))
+										 (ITable)_intersecting, intersectingFilter, QueryHelpers[1]))
 					{
-						IGeometry intersectingGeom = ((IFeature) intersecting).Shape;
-						var op = (ITopologicalOperator) ((IFeature) toIntersect).Shape;
-						if (((IRelationalOperator) op).Disjoint(intersectingGeom))
+						IGeometry intersectingGeom = ((IFeature)intersecting).Shape;
+						var op = (ITopologicalOperator)((IFeature)toIntersect).Shape;
+						if (((IRelationalOperator)op).Disjoint(intersectingGeom))
 						{
 							continue;
 						}
@@ -125,10 +125,10 @@ namespace ProSuite.QA.Tests.Transformers
 							continue;
 						}
 
-						double fullLength = ((IPolyline) op).Length;
-						double partLength = ((IPolyline) intersected).Length;
+						double fullLength = ((IPolyline)op).Length;
+						double partLength = ((IPolyline)intersected).Length;
 
-						GdbFeature f = Resulting.CreateFeature();
+						IFeature f = Resulting.CreateFeature();
 						f.Shape = intersected;
 						f.set_Value(iPartIntersected, partLength / fullLength);
 						f.Store();

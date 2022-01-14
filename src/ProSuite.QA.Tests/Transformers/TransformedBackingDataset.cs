@@ -12,7 +12,7 @@ using ProSuite.QA.Container.Geometry;
 namespace ProSuite.QA.Tests.Transformers
 {
 	public abstract class TransformedBackingDataset<T> : TransformedBackingDataset
-		where T : GdbFeatureClass
+		where T : TransformedFeatureClass
 	{
 		protected TransformedBackingDataset([NotNull] T gdbTable,
 		                                    IList<ITable> involvedTables)
@@ -25,14 +25,37 @@ namespace ProSuite.QA.Tests.Transformers
 	{
 		private readonly IList<ITable> _involvedTables;
 		private readonly List<QueryFilterHelper> _queryHelpers;
+		private readonly Dictionary<int, IRow> _rowsCache;
 
-		private readonly GdbFeatureClass _resulting;
+		private readonly TransformedFeatureClass _resulting;
 
 		public ISearchable DataContainer { get; set; }
-		public GdbFeatureClass Resulting => _resulting;
+		public TransformedFeatureClass Resulting => _resulting;
 		protected IReadOnlyList<QueryFilterHelper> QueryHelpers => _queryHelpers;
 
-		protected TransformedBackingDataset([NotNull] GdbFeatureClass gdbTable,
+		public void AddToCache(IRow row)
+		{
+			_rowsCache[row.OID] = row;
+		}
+
+		public bool RemoveFromCache(int oid)
+		{
+			return _rowsCache.Remove(oid);
+		}
+
+		public sealed override IRow GetRow(int id)
+		{
+			if (_rowsCache.TryGetValue(id, out IRow row))
+			{
+				return row;
+			}
+
+			return GetUncachedRow(id);
+		}
+
+		public abstract IRow GetUncachedRow(int id);
+
+		protected TransformedBackingDataset([NotNull] TransformedFeatureClass gdbTable,
 		                                    IList<ITable> involvedTables)
 		{
 			_involvedTables = involvedTables;
@@ -43,6 +66,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			gdbTable.AddField(FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField));
 			_resulting = gdbTable;
+			_rowsCache = new Dictionary<int, IRow>();
 		}
 
 		public void SetConstraint(int tableIndex, string condition)

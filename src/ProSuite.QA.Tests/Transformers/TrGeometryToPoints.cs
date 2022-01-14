@@ -20,19 +20,19 @@ namespace ProSuite.QA.Tests.Transformers
 
 		[Doc(nameof(DocStrings.TrGeometryToPoints_0))]
 		public TrGeometryToPoints([NotNull] [Doc(nameof(DocStrings.TrGeometryToPoints_featureClass))]
-		                          IFeatureClass featureClass,
-		                          [Doc(nameof(DocStrings.TrGeometryToPoints_component))]
-		                          GeometryComponent component)
+															IFeatureClass featureClass,
+															[Doc(nameof(DocStrings.TrGeometryToPoints_component))]
+															GeometryComponent component)
 			: base(featureClass, esriGeometryType.esriGeometryPoint)
 		{
 			_component = component;
 		}
 
-		protected override void AddCustomAttributes(GdbFeatureClass transformedFc)
+		protected override void AddCustomAttributes(TransformedFeatureClass transformedFc)
 		{
-			transformedFc.Fields.AddFields(
+			transformedFc.FieldsT.AddFields(
 				FieldUtils.CreateField(AttrPartIndex, esriFieldType.esriFieldTypeInteger));
-			transformedFc.Fields.AddFields(
+			transformedFc.FieldsT.AddFields(
 				FieldUtils.CreateField(AttrVertexIndex, esriFieldType.esriFieldTypeInteger));
 		}
 

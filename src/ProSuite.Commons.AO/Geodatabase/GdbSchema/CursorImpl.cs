@@ -10,55 +10,55 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public CursorImpl(ITable table, IEnumerable<IRow> rows)
 		{
-			VirtualFields = table.Fields;
+			Fields = table.Fields;
 			_rowEnumerator = rows.GetEnumerator();
 		}
 
-		IFields ICursor.Fields => VirtualFields;
-		IFields IFeatureCursor.Fields => VirtualFields;
-		protected virtual IFields VirtualFields { get; }
+		IFields ICursor.Fields => Fields;
+		IFields IFeatureCursor.Fields => Fields;
+		public virtual IFields Fields { get; }
 
-		int ICursor.FindField(string name) => VirtualFindField(name);
+		int ICursor.FindField(string name) => FindField(name);
 
-		int IFeatureCursor.FindField(string name) => VirtualFindField(name);
+		int IFeatureCursor.FindField(string name) => FindField(name);
 
-		protected virtual int VirtualFindField(string name) => VirtualFields.FindField(name);
+		public virtual int FindField(string name) => Fields.FindField(name);
 
-		IRow ICursor.NextRow() => VirtualNextRow();
+		IRow ICursor.NextRow() => NextRow();
 
-		IFeature IFeatureCursor.NextFeature() => (IFeature) VirtualNextRow();
+		IFeature IFeatureCursor.NextFeature() => (IFeature) NextRow();
 
-		protected virtual IRow VirtualNextRow()
+		public virtual IRow NextRow()
 		{
 			return _rowEnumerator.MoveNext() ? _rowEnumerator.Current : null;
 		}
 
-		void ICursor.UpdateRow(IRow row) => VirtualUpdateRow(row);
+		void ICursor.UpdateRow(IRow row) => UpdateRow(row);
 
-		void IFeatureCursor.UpdateFeature(IFeature row) => VirtualUpdateRow(row);
+		void IFeatureCursor.UpdateFeature(IFeature row) => UpdateRow(row);
 
-		protected virtual void VirtualUpdateRow(IRow row) =>
+		public virtual void UpdateRow(IRow row) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void ICursor.DeleteRow() => VirtualDeleteRow();
+		void ICursor.DeleteRow() => DeleteRow();
 
-		void IFeatureCursor.DeleteFeature() => VirtualDeleteRow();
+		void IFeatureCursor.DeleteFeature() => DeleteRow();
 
-		protected virtual void VirtualDeleteRow() =>
+		public virtual void DeleteRow() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		object ICursor.InsertRow(IRowBuffer row) => VirtualInsertRow(row);
+		object ICursor.InsertRow(IRowBuffer row) => InsertRow(row);
 
-		object IFeatureCursor.InsertFeature(IFeatureBuffer feature) => VirtualInsertRow(feature);
+		object IFeatureCursor.InsertFeature(IFeatureBuffer feature) => InsertRow(feature);
 
-		protected virtual object VirtualInsertRow(IRowBuffer row) =>
+		public virtual object InsertRow(IRowBuffer row) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void ICursor.Flush() => VirtualFlush();
+		void ICursor.Flush() => Flush();
 
-		void IFeatureCursor.Flush() => VirtualFlush();
+		void IFeatureCursor.Flush() => Flush();
 
-		protected virtual void VirtualFlush() =>
+		public virtual void Flush() =>
 			throw new NotImplementedException("Implement in derived class");
 	}
 }

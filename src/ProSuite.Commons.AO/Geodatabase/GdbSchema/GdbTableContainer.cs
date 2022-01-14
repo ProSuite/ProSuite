@@ -70,8 +70,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public override IEnumerable<IDataset> GetDatasets(esriDatasetType datasetType)
 		{
 			return _tablesByName.Values.Where(
-				t => t.Type == datasetType ||
-				     datasetType == esriDatasetType.esriDTAny);
+				t => t.DatasetType == datasetType ||
+						 datasetType == esriDatasetType.esriDTAny);
 		}
 
 		public override ITable OpenTable(string name)

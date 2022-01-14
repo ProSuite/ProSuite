@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -10,23 +9,24 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	public class GdbFeatureClass : GdbTable, IFeatureClass, IGeoDataset
 	{
 		public GdbFeatureClass(int objectClassId,
-		                       [NotNull] string name,
-		                       esriGeometryType shapeType,
-		                       [CanBeNull] string aliasName = null,
-		                       [CanBeNull] Func<GdbTable, BackingDataset> createBackingDataset = null,
-		                       [CanBeNull] IWorkspace workspace = null)
+													 [NotNull] string name,
+													 esriGeometryType shapeType,
+													 [CanBeNull] string aliasName = null,
+													 [CanBeNull] Func<GdbTable, BackingDataset> createBackingDataset = null,
+													 [CanBeNull] IWorkspace workspace = null)
 			: base(objectClassId, name, aliasName, createBackingDataset, workspace)
 		{
 			ShapeType = shapeType;
 		}
 
+		public GdbFields FieldsT => GdbFields;
 		protected override void FieldAddedCore(IField field)
 		{
 			base.FieldAddedCore(field);
 
 			if (field.Type == esriFieldType.esriFieldTypeGeometry)
 			{
-				ShapeFieldName = field.Name;
+				_shapeField = field.Name;
 			}
 		}
 
@@ -35,16 +35,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return new GdbFeature(oid, this);
 		}
 
-		protected override esriDatasetType GetDatasetType()
-		{
-			return esriDatasetType.esriDTFeatureClass;
-		}
+		public override esriDatasetType DatasetType => esriDatasetType.esriDTFeatureClass;
 
 		#region IGeoDataset Members
 
-		public ISpatialReference SpatialReference { get; set; }
-
-		IEnvelope IGeoDataset.Extent
+		public override IEnvelope Extent
 		{
 			get
 			{
@@ -61,108 +56,30 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region IFeatureClass Members
 
-		IFields IFeatureClass.Fields => Fields;
-
-		IFeature IFeatureClass.CreateFeature() => CreateFeature();
-		public GdbFeature CreateFeature()
-		{
-			return (GdbFeature) CreateObject(GetNextOid());
-		}
-
-		public IFeature GetFeature(int id)
-		{
-			return (IFeature) GetRow(id);
-		}
-
-		public IFeatureCursor GetFeatures(object ids, bool Recycling)
-		{
-			throw new NotImplementedException();
-		}
-
-		public IFeatureBuffer CreateFeatureBuffer()
-		{
-			return (IFeatureBuffer) CreateFeature();
-		}
-
-		public int FeatureCount(IQueryFilter queryFilter)
-		{
-			return RowCount(queryFilter);
-		}
-
-		public new IFeatureCursor Search(IQueryFilter filter, bool recycling)
+		public override IFeatureCursor Search(IQueryFilter filter, bool recycling)
 		{
 			if (BackingDataset == null)
 			{
 				throw new NotImplementedException("No backing dataset provided for Search().");
 			}
-
 			var rows = BackingDataset.Search(filter, recycling);
-
-			return new FeatureCursorImpl(this, rows);
+			return new CursorImpl(this, rows);
 		}
 
-		public IFeatureCursor Update(IQueryFilter filter, bool Recycling)
-		{
-			throw new NotImplementedException();
-		}
+		public override esriGeometryType ShapeType { get; }
 
-		public IFeatureCursor Insert(bool useBuffering)
-		{
-			throw new NotImplementedException();
-		}
+		public override esriFeatureType FeatureType => esriFeatureType.esriFTSimple;
 
-		public ISelectionSet Select(IQueryFilter queryFilter,
-		                            esriSelectionType selType,
-		                            esriSelectionOption selOption,
-		                            IWorkspace selectionContainer)
-		{
-			throw new NotImplementedException();
-		}
+		private string _shapeField;
+		public override string ShapeFieldName => _shapeField ?? base.ShapeFieldName;
 
-		public esriGeometryType ShapeType { get; }
+		public override IField AreaField => null;
 
-		public esriFeatureType FeatureType => esriFeatureType.esriFTSimple;
+		public override IField LengthField => null;
 
-		public string ShapeFieldName { get; set; } = "SHAPE";
-
-		public IField AreaField => null;
-
-		public IField LengthField => null;
-
-		public IFeatureDataset FeatureDataset => throw new NotImplementedException();
-
-		public int FeatureClassID => ObjectClassID;
+		public override int FeatureClassID => ObjectClassID;
 
 		#endregion
 
-		#region Nested class FeatureCursorImpl
-
-		protected class FeatureCursorImpl : CursorImpl, IFeatureCursor
-		{
-			public FeatureCursorImpl(GdbFeatureClass gdbFeatureClass, IEnumerable<IRow> rows)
-				: base(gdbFeatureClass, rows) { }
-
-			public IFeature NextFeature()
-			{
-				return (IFeature) NextRow();
-			}
-
-			public void UpdateFeature(IFeature Object)
-			{
-				throw new NotImplementedException();
-			}
-
-			public void DeleteFeature()
-			{
-				throw new NotImplementedException();
-			}
-
-			public object InsertFeature(IFeatureBuffer buffer)
-			{
-				throw new NotImplementedException();
-			}
-		}
-
-		#endregion
 	}
 }

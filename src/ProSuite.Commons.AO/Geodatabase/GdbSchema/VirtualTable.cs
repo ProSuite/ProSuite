@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -11,10 +12,10 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public VirtualFeatureClass(string name) : base(name) { }
 	}
 
-	public class VirtualTable : IDataset, ITable, IObjectClass, ISchemaLock
+	public class VirtualTable : IDataset, ITable, IObjectClass, IDatasetEdit, ISchemaLock, ISubtypes
 	{
 		protected GdbFields _fields;
-		private GdbTableName _tableName;
+		private TableName _tableName;
 		protected GdbFields GdbFields => _fields ?? (_fields = new GdbFields());
 		private string _name;
 
@@ -22,383 +23,437 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		{
 			_name = name;
 		}
+		public override string ToString() => $"{Name} ({base.ToString()})";
 
-		bool IDataset.CanCopy() => VirtualCanCopy();
+		bool IDataset.CanCopy() => CanCopy();
 
-		protected virtual bool VirtualCanCopy() =>
+		public virtual bool CanCopy() =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IDataset IDataset.Copy(string copyName, IWorkspace copyWorkspace) =>
-			VirtualCopy(copyName, copyWorkspace);
+			Copy(copyName, copyWorkspace);
 
-		protected virtual IDataset VirtualCopy(string copyName, IWorkspace copyWorkspace) =>
+		public virtual IDataset Copy(string copyName, IWorkspace copyWorkspace) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		bool IDataset.CanDelete() => VirtualCanDelete();
+		bool IDataset.CanDelete() => CanDelete();
 
-		protected virtual bool VirtualCanDelete() =>
+		public virtual bool CanDelete() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IDataset.Delete() => VirtualDelete();
+		void IDataset.Delete() => Delete();
 
-		protected virtual void VirtualDelete() =>
+		public virtual void Delete() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		bool IDataset.CanRename() => VirtualCanRename();
+		bool IDataset.CanRename() => CanRename();
 
-		protected virtual bool VirtualCanRename() =>
+		public virtual bool CanRename() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IDataset.Rename(string name) => VirtualRename(name);
+		void IDataset.Rename(string name) => Rename(name);
 
-		protected virtual void VirtualRename(string name)
+		public virtual void Rename(string name)
 		{
 			_name = name;
 		}
 
-		string IDataset.Name => VirtualName;
-		protected virtual string VirtualName => _name;
+		string IDataset.Name => Name;
+		public virtual string Name => _name;
 
-		IName IDataset.FullName => VirtualFullName;
+		IName IDataset.FullName => FullName;
 
-		protected virtual IName VirtualFullName =>
-			_tableName ?? (_tableName = new GdbTableName(this));
+		public virtual IName FullName =>
+			_tableName ?? (_tableName = new TableName(this));
 
 		string IDataset.BrowseName
 		{
-			get => VirtualBrowseName;
-			set => VirtualBrowseName = value;
+			get => BrowseName;
+			set => BrowseName = value;
 		}
 
-		protected virtual string VirtualBrowseName
+		public virtual string BrowseName
 		{
 			get => throw new NotImplementedException("Implement in derived class");
 			set => throw new NotImplementedException("Implement in derived class");
 		}
 
-		esriDatasetType IDataset.Type => VirtualType;
-		protected virtual esriDatasetType VirtualType => esriDatasetType.esriDTTable;
+		esriDatasetType IDataset.Type => DatasetType;
+		public virtual esriDatasetType DatasetType => esriDatasetType.esriDTTable;
 
-		string IDataset.Category => VirtualCategory;
+		string IDataset.Category => Category;
 
-		protected virtual string VirtualCategory =>
+		public virtual string Category =>
 			throw new NotImplementedException("Implement in derived class");
 
-		IEnumDataset IDataset.Subsets => VirtualSubsets;
+		IEnumDataset IDataset.Subsets => Subsets;
 
-		protected virtual IEnumDataset VirtualSubsets =>
+		public virtual IEnumDataset Subsets =>
 			throw new NotImplementedException("Implement in derived class");
 
-		IWorkspace IDataset.Workspace => VirtualWorkspace;
+		IWorkspace IDataset.Workspace => Workspace;
 
-		protected virtual IWorkspace VirtualWorkspace =>
+		public virtual IWorkspace Workspace =>
 			throw new NotImplementedException("Implement in derived class");
 
-		IPropertySet IDataset.PropertySet => VirtualPropertySet;
+		IPropertySet IDataset.PropertySet => PropertySet;
 
-		protected virtual IPropertySet VirtualPropertySet =>
+		public virtual IPropertySet PropertySet =>
 			throw new NotImplementedException("Implement in derived class");
 
-		int IClass.FindField(string name) => VirtualFindField(name);
+		int IClass.FindField(string name) => FindField(name);
 
-		int IObjectClass.FindField(string name) => VirtualFindField(name);
+		int IObjectClass.FindField(string name) => FindField(name);
 
-		int ITable.FindField(string name) => VirtualFindField(name);
+		int ITable.FindField(string name) => FindField(name);
 
-		public int FindField(string name) => VirtualFindField(name);
+		public virtual int FindField(string name) => GdbFields.FindField(name);
 
-		protected virtual int VirtualFindField(string name) => GdbFields.FindField(name);
+		void IClass.AddField(IField Field) => AddFieldT(Field);
 
-		void IClass.AddField(IField Field) => VirtualAddField(Field);
+		void IObjectClass.AddField(IField Field) => AddFieldT(Field);
 
-		void IObjectClass.AddField(IField Field) => VirtualAddField(Field);
+		void ITable.AddField(IField Field) => AddFieldT(Field);
 
-		void ITable.AddField(IField Field) => VirtualAddField(Field);
+		public void AddField(IField Field) => AddFieldT(Field);
 
-		public void AddField(IField Field) => VirtualAddField(Field);
+		public virtual int AddFieldT(IField Field) => GdbFields.AddField(Field);
 
-		protected virtual int VirtualAddField(IField Field) => GdbFields.AddField(Field);
+		void IClass.DeleteField(IField Field) => DeleteField(Field);
 
-		void IClass.DeleteField(IField Field) => VirtualDeleteField(Field);
+		void IObjectClass.DeleteField(IField Field) => DeleteField(Field);
 
-		void IObjectClass.DeleteField(IField Field) => VirtualDeleteField(Field);
+		void ITable.DeleteField(IField Field) => DeleteField(Field);
 
-		void ITable.DeleteField(IField Field) => VirtualDeleteField(Field);
-
-		public void DeleteField(IField Field) => VirtualDeleteField(Field);
-
-		protected virtual void VirtualDeleteField(IField Field) =>
+		public virtual void DeleteField(IField Field) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IClass.AddIndex(IIndex Index) => VirtualAddIndex(Index);
+		void IClass.AddIndex(IIndex Index) => AddIndex(Index);
 
-		void IObjectClass.AddIndex(IIndex Index) => VirtualAddIndex(Index);
+		void IObjectClass.AddIndex(IIndex Index) => AddIndex(Index);
 
-		void ITable.AddIndex(IIndex Index) => VirtualAddIndex(Index);
+		void ITable.AddIndex(IIndex Index) => AddIndex(Index);
 
-		public void AddIndex(IIndex Index) => VirtualAddIndex(Index);
-
-		protected virtual void VirtualAddIndex(IIndex Index) =>
+		public virtual void AddIndex(IIndex Index) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IClass.DeleteIndex(IIndex Index) => VirtualDeleteIndex(Index);
+		void IClass.DeleteIndex(IIndex Index) => DeleteIndex(Index);
 
-		void IObjectClass.DeleteIndex(IIndex Index) => VirtualDeleteIndex(Index);
+		void IObjectClass.DeleteIndex(IIndex Index) => DeleteIndex(Index);
 
-		void ITable.DeleteIndex(IIndex Index) => VirtualDeleteIndex(Index);
+		void ITable.DeleteIndex(IIndex Index) => DeleteIndex(Index);
 
-		public void DeleteIndex(IIndex Index) => VirtualDeleteIndex(Index);
-
-		protected virtual void VirtualDeleteIndex(IIndex Index) =>
+		public virtual void DeleteIndex(IIndex Index) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		IFields IClass.Fields => VirtualFields;
-		IFields IObjectClass.Fields => VirtualFields;
-		IFields ITable.Fields => VirtualFields;
-		public IFields Fields => VirtualFields;
-		protected virtual IFields VirtualFields => GdbFields;
+		IFields IClass.Fields => Fields;
+		IFields IObjectClass.Fields => Fields;
+		IFields ITable.Fields => Fields;
+		public virtual IFields Fields => GdbFields;
 
-		IIndexes IClass.Indexes => VirtualIndexes;
-		IIndexes IObjectClass.Indexes => VirtualIndexes;
-		IIndexes ITable.Indexes => VirtualIndexes;
-		public IIndexes Indexes => VirtualIndexes;
+		IIndexes IClass.Indexes => Indexes;
+		IIndexes IObjectClass.Indexes => Indexes;
+		IIndexes ITable.Indexes => Indexes;
 
-		protected virtual IIndexes VirtualIndexes =>
+		public virtual IIndexes Indexes =>
 			throw new NotImplementedException("Implement in derived class");
 
-		bool IClass.HasOID => VirtualHasOID;
-		bool IObjectClass.HasOID => VirtualHasOID;
-		bool ITable.HasOID => VirtualHasOID;
-		public bool HasOID => VirtualHasOID;
+		bool IClass.HasOID => HasOID;
+		bool IObjectClass.HasOID => HasOID;
+		bool ITable.HasOID => HasOID;
 
-		protected virtual bool VirtualHasOID =>
+		public virtual bool HasOID =>
 			throw new NotImplementedException("Implement in derived class");
 
-		string IClass.OIDFieldName => VirtualOIDFieldName;
-		string IObjectClass.OIDFieldName => VirtualOIDFieldName;
-		string ITable.OIDFieldName => VirtualOIDFieldName;
-		public string OIDFieldName => VirtualOIDFieldName;
+		string IClass.OIDFieldName => OIDFieldName;
+		string IObjectClass.OIDFieldName => OIDFieldName;
+		string ITable.OIDFieldName => OIDFieldName;
 
-		protected virtual string VirtualOIDFieldName =>
+		public virtual string OIDFieldName =>
 			throw new NotImplementedException("Implement in derived class");
 
-		UID IClass.CLSID => VirtualCLSID;
-		UID IObjectClass.CLSID => VirtualCLSID;
-		UID ITable.CLSID => VirtualCLSID;
-		public UID CLSID => VirtualCLSID;
+		UID IClass.CLSID => CLSID;
+		UID IObjectClass.CLSID => CLSID;
+		UID ITable.CLSID => CLSID;
 
-		protected virtual UID VirtualCLSID =>
+		public virtual UID CLSID =>
 			throw new NotImplementedException("Implement in derived class");
 
-		UID IClass.EXTCLSID => VirtualEXTCLSID;
-		UID IObjectClass.EXTCLSID => VirtualEXTCLSID;
-		UID ITable.EXTCLSID => VirtualEXTCLSID;
-		public UID EXTCLSID => VirtualEXTCLSID;
+		UID IClass.EXTCLSID => EXTCLSID;
+		UID IObjectClass.EXTCLSID => EXTCLSID;
+		UID ITable.EXTCLSID => EXTCLSID;
 
-		protected virtual UID VirtualEXTCLSID =>
+		public virtual UID EXTCLSID =>
 			throw new NotImplementedException("Implement in derived class");
 
-		object IClass.Extension => VirtualExtension;
-		object IObjectClass.Extension => VirtualExtension;
-		object ITable.Extension => VirtualExtension;
-		public object Extension => VirtualExtension;
+		object IClass.Extension => Extension;
+		object IObjectClass.Extension => Extension;
+		object ITable.Extension => Extension;
 
-		protected virtual object VirtualExtension =>
+		public virtual object Extension =>
 			throw new NotImplementedException("Implement in derived class");
 
-		IPropertySet IClass.ExtensionProperties => VirtualExtensionProperties;
-		IPropertySet IObjectClass.ExtensionProperties => VirtualExtensionProperties;
-		IPropertySet ITable.ExtensionProperties => VirtualExtensionProperties;
-		public IPropertySet ExtensionProperties => VirtualExtensionProperties;
+		IPropertySet IClass.ExtensionProperties => ExtensionProperties;
+		IPropertySet IObjectClass.ExtensionProperties => ExtensionProperties;
+		IPropertySet ITable.ExtensionProperties => ExtensionProperties;
 
-		protected virtual IPropertySet VirtualExtensionProperties =>
+		public virtual IPropertySet ExtensionProperties =>
 			throw new NotImplementedException("Implement in derived class");
 
-		IRow ITable.CreateRow() => VirtualCreateRow();
+		IRow ITable.CreateRow() => CreateRow();
 
-		public IFeature CreateFeature() => (IFeature) VirtualCreateRow();
+		public IFeature CreateFeature() => (IFeature)CreateRow();
 
-		protected virtual IRow VirtualCreateRow() =>
+		public virtual IRow CreateRow() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		IRow ITable.GetRow(int OID) => VirtualGetRow(OID);
+		IRow ITable.GetRow(int OID) => GetRow(OID);
 
-		public IFeature GetFeature(int OID) => (IFeature) VirtualGetRow(OID);
+		public IFeature GetFeature(int OID) => (IFeature)GetRow(OID);
 
-		protected virtual IRow VirtualGetRow(int OID) =>
+		public virtual IRow GetRow(int OID) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		ICursor ITable.GetRows(object oids, bool Recycling) => VirtualGetRows(oids, Recycling);
+		ICursor ITable.GetRows(object oids, bool Recycling) => GetRows(oids, Recycling);
 
 		public IFeatureCursor GetFeatures(object oids, bool Recycling) =>
-			(IFeatureCursor) VirtualGetRows(oids, Recycling);
+			(IFeatureCursor)GetRows(oids, Recycling);
 
-		protected virtual ICursor VirtualGetRows(object oids, bool Recycling) =>
-			throw new NotImplementedException("Implement in derived class");
+		public virtual ICursor GetRows(object oids, bool Recycling)
+		{
+			if (!(oids is IEnumerable<int> oidList))
+			{
+				throw new InvalidOperationException($"Cannot convert oids ({oids})to IEnumerable<int>");
+			}
 
-		IRowBuffer ITable.CreateRowBuffer() => VirtualCreateRowBuffer();
+			return new CursorImpl(this, oidList.Select(oid => GetRow(oid)));
+		}
 
-		public IFeatureBuffer CreateFeatureBuffer() => (IFeatureBuffer) VirtualCreateRowBuffer();
+		IRowBuffer ITable.CreateRowBuffer() => CreateRowBuffer();
 
-		protected virtual IRowBuffer VirtualCreateRowBuffer() =>
+		public IFeatureBuffer CreateFeatureBuffer() => (IFeatureBuffer)CreateRowBuffer();
+
+		public virtual IRowBuffer CreateRowBuffer() =>
 			throw new NotImplementedException("Implement in derived class");
 
 		void ITable.UpdateSearchedRows(IQueryFilter QueryFilter, IRowBuffer buffer) =>
-			VirtualUpdateSearchedRows(QueryFilter, buffer);
+			UpdateSearchedRows(QueryFilter, buffer);
 
-		protected virtual void
-			VirtualUpdateSearchedRows(IQueryFilter QueryFilter, IRowBuffer buffer) =>
+		public virtual void UpdateSearchedRows(IQueryFilter QueryFilter, IRowBuffer buffer) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		void ITable.DeleteSearchedRows(IQueryFilter QueryFilter) =>
-			VirtualDeleteSearchedRows(QueryFilter);
+			DeleteSearchedRows(QueryFilter);
 
-		protected virtual void VirtualDeleteSearchedRows(IQueryFilter QueryFilter) =>
+		public virtual void DeleteSearchedRows(IQueryFilter QueryFilter) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		int ITable.RowCount(IQueryFilter QueryFilter) => VirtualRowCount(QueryFilter);
+		int ITable.RowCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
 
-		public int FeatureCount(IQueryFilter QueryFilter) => VirtualRowCount(QueryFilter);
+		public int FeatureCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
 
-		protected virtual int VirtualRowCount(IQueryFilter QueryFilter) =>
+		public virtual int RowCount(IQueryFilter QueryFilter) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		ICursor ITable.Search(IQueryFilter QueryFilter, bool Recycling) =>
-			VirtualSearch(QueryFilter, Recycling);
+			SearchT(QueryFilter, Recycling);
 
-		public IFeatureCursor Search(IQueryFilter queryFilter, bool recycling) =>
-			VirtualSearch(queryFilter, recycling);
+		public virtual IFeatureCursor Search(IQueryFilter queryFilter, bool recycling) =>
+			SearchT(queryFilter, recycling);
 
-		protected virtual CursorImpl VirtualSearch(IQueryFilter queryFilter, bool recycling) =>
-			new CursorImpl(this, VirtualEnumRows(queryFilter, recycling));
+		public virtual CursorImpl SearchT(IQueryFilter queryFilter, bool recycling) =>
+			new CursorImpl(this, EnumRows(queryFilter, recycling));
 
-		protected virtual IEnumerable<IRow>
-			VirtualEnumRows(IQueryFilter queryFilter, bool recycling) =>
+		public virtual IEnumerable<IRow>
+			EnumRows(IQueryFilter queryFilter, bool recycling) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		ICursor ITable.Update(IQueryFilter QueryFilter, bool Recycling) =>
-			VirtualUpdate(QueryFilter, Recycling);
+			UpdateT(QueryFilter, Recycling);
 
-		public IFeatureCursor Update(IQueryFilter QueryFilter, bool Recycling) =>
-			(IFeatureCursor) VirtualUpdate(QueryFilter, Recycling);
+		public virtual IFeatureCursor Update(IQueryFilter QueryFilter, bool Recycling) =>
+			(IFeatureCursor)UpdateT(QueryFilter, Recycling);
 
-		protected virtual ICursor VirtualUpdate(IQueryFilter QueryFilter, bool Recycling) =>
+		public virtual ICursor UpdateT(IQueryFilter QueryFilter, bool Recycling) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		ICursor ITable.Insert(bool useBuffering) => VirtualInsert(useBuffering);
+		ICursor ITable.Insert(bool useBuffering) => InsertT(useBuffering);
 
 		public IFeatureCursor Insert(bool useBuffering) =>
-			(IFeatureCursor) VirtualInsert(useBuffering);
+			(IFeatureCursor)InsertT(useBuffering);
 
-		protected virtual ICursor VirtualInsert(bool useBuffering) =>
+		public virtual ICursor InsertT(bool useBuffering) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		ISelectionSet ITable.Select(IQueryFilter QueryFilter, esriSelectionType selType,
-		                            esriSelectionOption selOption, IWorkspace selectionContainer) =>
-			VirtualSelect(QueryFilter, selType, selOption, selectionContainer);
+																esriSelectionOption selOption, IWorkspace selectionContainer) =>
+			Select(QueryFilter, selType, selOption, selectionContainer);
 
-		public ISelectionSet Select(IQueryFilter QueryFilter, esriSelectionType selType,
-		                            esriSelectionOption selOption, IWorkspace selectionContainer) =>
-			VirtualSelect(QueryFilter, selType, selOption, selectionContainer);
-
-		protected virtual ISelectionSet VirtualSelect(IQueryFilter QueryFilter,
-		                                              esriSelectionType selType,
-		                                              esriSelectionOption selOption,
-		                                              IWorkspace selectionContainer) =>
+		public virtual ISelectionSet Select(IQueryFilter QueryFilter,
+																				esriSelectionType selType,
+																				esriSelectionOption selOption,
+																				IWorkspace selectionContainer) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		int IObjectClass.ObjectClassID => VirtualObjectClassID;
-		public int ObjectClassID => VirtualObjectClassID;
+		int IObjectClass.ObjectClassID => ObjectClassID;
 
-		protected virtual int VirtualObjectClassID =>
+		public virtual int ObjectClassID =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IEnumRelationshipClass IObjectClass.get_RelationshipClasses(esriRelRole role) =>
-			Virtualget_RelationshipClasses(role);
+			get_RelationshipClasses(role);
 
-		public IEnumRelationshipClass get_RelationshipClasses(esriRelRole role) =>
-			Virtualget_RelationshipClasses(role);
-
-		protected virtual IEnumRelationshipClass Virtualget_RelationshipClasses(esriRelRole role) =>
+		public virtual IEnumRelationshipClass get_RelationshipClasses(esriRelRole role) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		string IObjectClass.AliasName => VirtualAliasName;
-		public string AliasName => VirtualAliasName;
+		string IObjectClass.AliasName => AliasName;
 
-		protected virtual string VirtualAliasName =>
+		public virtual string AliasName =>
 			throw new NotImplementedException("Implement in derived class");
 
 		void ISchemaLock.ChangeSchemaLock(esriSchemaLock schemaLock) =>
-			VirtualChangeSchemaLock(schemaLock);
+			ChangeSchemaLock(schemaLock);
 
-		protected virtual void VirtualChangeSchemaLock(esriSchemaLock schemaLock) =>
+		public virtual void ChangeSchemaLock(esriSchemaLock schemaLock) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		void ISchemaLock.GetCurrentSchemaLocks(out IEnumSchemaLockInfo schemaLockInfo) =>
-			VirtualGetCurrentSchemaLocks(out schemaLockInfo);
+			GetCurrentSchemaLocks(out schemaLockInfo);
 
-		protected virtual void
-			VirtualGetCurrentSchemaLocks(out IEnumSchemaLockInfo schemaLockInfo) =>
+		public virtual void GetCurrentSchemaLocks(out IEnumSchemaLockInfo schemaLockInfo) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		public esriFeatureType FeatureType => VirtualFeatureType;
-
-		protected virtual esriFeatureType VirtualFeatureType =>
+		public virtual esriFeatureType FeatureType =>
 			throw new NotImplementedException("Implement in derived class");
 
-		public IFeatureDataset FeatureDataset => VirtualFeatureDataset;
-
-		protected virtual IFeatureDataset VirtualFeatureDataset =>
+		public virtual IFeatureDataset FeatureDataset =>
 			throw new NotImplementedException("Implement in derived class");
 
-		public int FeatureClassID => VirtualFeatureClassID;
-
-		protected virtual int VirtualFeatureClassID =>
+		public virtual int FeatureClassID =>
 			throw new NotImplementedException("Implement in derived class");
 
-		public virtual esriGeometryType ShapeType => VirtualShapeType;
+		public virtual esriGeometryType ShapeType => GeometryDef.GeometryType;
 
-		protected virtual esriGeometryType VirtualShapeType
+		public virtual IGeometryDef GeometryDef =>
+			Fields.Field[FindField(ShapeFieldName)].GeometryDef;
+
+		public virtual string ShapeFieldName => "Shape";
+		public virtual IField AreaField => Fields.Field[FindField("Area")];
+
+		public virtual IField LengthField =>
+			Fields.Field[FindField("Length")];
+
+		private ISpatialReference _sr;
+		public virtual ISpatialReference SpatialReference
 		{
-			get
-			{
-				IGeometryDef geomDef = Fields.Field[FindField(ShapeFieldName)].GeometryDef;
-				return geomDef.GeometryType;
-			}
+			get => _sr ?? GeometryDef.SpatialReference;
+			set => _sr = value;
 		}
 
-		public string ShapeFieldName => VirtualShapeFieldName;
-		protected virtual string VirtualShapeFieldName => "Shape";
-		public IField AreaField => VirtualAreaField;
-		protected virtual IField VirtualAreaField => VirtualFields.Field[VirtualFindField("Area")];
-
-		public IField LengthField => VirtualLengthField;
-
-		protected virtual IField VirtualLengthField =>
-			VirtualFields.Field[VirtualFindField("Length")];
-
-		public ISpatialReference SpatialReference => VirtualSpatialReference;
-
-		protected virtual ISpatialReference VirtualSpatialReference =>
+		public virtual IEnvelope Extent =>
 			throw new NotImplementedException("Implement in derived class");
 
-		public IEnvelope Extent => VirtualExtent;
+		bool IDatasetEdit.IsBeingEdited() => IsBeingEdited();
 
-		protected virtual IEnvelope VirtualExtent =>
+		public virtual bool IsBeingEdited()
+			=> throw new NotImplementedException("Implement in derived class");
+
+		void ISubtypes.AddSubtype(int SubtypeCode, string SubtypeName)
+			=> AddSubtype(SubtypeCode, SubtypeName);
+		public virtual void AddSubtype(int SubtypeCode, string SubtypeName)
+		{
+			throw new NotImplementedException("Implement in derived class");
+		}
+
+		void ISubtypes.DeleteSubtype(int SubtypeCode) => DeleteSubtype(SubtypeCode);
+
+		public virtual void DeleteSubtype(int SubtypeCode)
+		{
+			throw new NotImplementedException("Implement in derived class");
+		}
+
+		bool ISubtypes.HasSubtype => HasSubtype;
+
+		public virtual bool HasSubtype =>
 			throw new NotImplementedException("Implement in derived class");
 
-		private class GdbTableName : IName, IDatasetName, IObjectClassName, ITableName
+		int ISubtypes.DefaultSubtypeCode
+		{
+			get => DefaultSubtypeCode;
+			set => DefaultSubtypeCode = value;
+		}
+
+		public virtual int DefaultSubtypeCode
+		{
+			get => throw new NotImplementedException("Implement in derived class");
+			set => throw new NotImplementedException("Implement in derived class");
+		}
+
+		object ISubtypes.get_DefaultValue(int SubtypeCode, string FieldName) =>
+			get_DefaultValue(SubtypeCode, FieldName);
+
+		void ISubtypes.set_DefaultValue(int SubtypeCode, string FieldName, object Value) =>
+			set_DefaultValue(SubtypeCode, FieldName, Value);
+		public virtual object get_DefaultValue(int SubtypeCode, string FieldName) => throw new NotImplementedException("Implement in derived class");
+		public virtual void set_DefaultValue(int SubtypeCode, string FieldName, object Value) => throw new NotImplementedException("Implement in derived class");
+
+		public virtual object DefaultValue
+		{
+			get => throw new NotImplementedException("Implement in derived class");
+			set => throw new NotImplementedException("Implement in derived class");
+		}
+
+		IDomain ISubtypes.get_Domain(int SubtypeCode, string FieldName) =>
+			get_Domain(SubtypeCode, FieldName);
+
+		void ISubtypes.set_Domain(int SubtypeCode, string FieldName, IDomain Domain) =>
+			set_Domain(SubtypeCode, FieldName, Domain);
+
+		public virtual IDomain get_Domain(int SubtypeCode, string FieldName)
+			=> throw new NotImplementedException("Implement in derived class");
+
+		public virtual void set_Domain(int SubtypeCode, string FieldName, IDomain Domain)
+			=> throw new NotImplementedException("Implement in derived class");
+
+		string ISubtypes.SubtypeFieldName
+		{
+			get => SubtypeFieldName;
+			set => SubtypeFieldName = value;
+		}
+
+		public virtual string SubtypeFieldName
+		{
+			get => throw new NotImplementedException("Implement in derived class");
+			set => throw new NotImplementedException("Implement in derived class");
+		}
+
+		int ISubtypes.SubtypeFieldIndex => SubtypeFieldIndex;
+
+		public virtual int SubtypeFieldIndex =>
+			throw new NotImplementedException("Implement in derived class");
+
+		string ISubtypes.get_SubtypeName(int subtypeCode) => get_SubtypeName(subtypeCode);
+
+		public virtual string get_SubtypeName(int subtypeCode) =>
+			throw new NotImplementedException("Implement in derived class");
+
+		IEnumSubtype ISubtypes.Subtypes => Subtypes;
+
+		public virtual IEnumSubtype Subtypes =>
+			throw new NotImplementedException("Implement in derived class");
+
+		protected class TableName : IName, IDatasetName, IObjectClassName, ITableName
 		{
 			private readonly VirtualTable _table;
 
-			public GdbTableName(VirtualTable table)
+			public TableName(VirtualTable table)
 			{
 				_table = table;
 				IDataset ds = table;
 				Name = ds.Name;
 
 				IWorkspace workspace = ds.Workspace;
-				WorkspaceName = (IWorkspaceName) ((IDataset) workspace).FullName;
+				WorkspaceName = (IWorkspaceName)((IDataset)workspace).FullName;
 			}
 
 			#region IName members
@@ -416,15 +471,13 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			public string Name { get; set; }
 
-			public esriDatasetType Type => ((IDataset) _table).Type;
+			public esriDatasetType Type => ((IDataset)_table).Type;
 
 			public string Category { get; set; }
 
 			public IWorkspaceName WorkspaceName { get; set; }
 
-			public IEnumDatasetName SubsetNames => VirtualSubsetNames;
-
-			IEnumDatasetName VirtualSubsetNames =>
+			public virtual IEnumDatasetName SubsetNames =>
 				throw new NotImplementedException("implement in derived class");
 
 			#endregion
