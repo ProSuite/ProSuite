@@ -1183,8 +1183,8 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			// The same happens for polylines / polygons:
 			WKSEnvelope wksEnvelope = WksGeometryUtils.CreateWksEnvelope(2600000, 1200000,
-			                                                             2600100,
-			                                                             1200100);
+				2600100,
+				1200100);
 
 			IPolygon perimeter =
 				GeometryFactory.CreatePolygon(GeometryFactory.CreateEnvelope(wksEnvelope),
@@ -1221,8 +1221,8 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			// polygon
 			WKSEnvelope wksEnvelope = WksGeometryUtils.CreateWksEnvelope(2600000, 1200000,
-			                                                             2600100,
-			                                                             1200100);
+				2600100,
+				1200100);
 			// Z/M/ID Awareness of the other should make no difference, the result takes awareness from the source
 			IPolygon perimeter =
 				GeometryFactory.CreatePolygon(GeometryFactory.CreateEnvelope(wksEnvelope),
@@ -1696,7 +1696,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 					TestUtils.GetGeometryTestDataPath("MultipatchWithCutBack.xml")));
 
 			foreach (GeometryPart part in PartExtractionUtils.GetGeometryParts(
-				multipatchWithDangle, false))
+				         multipatchWithDangle, false))
 			{
 				double tolerance = 0.01;
 

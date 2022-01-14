@@ -52,7 +52,7 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		public IList<IntersectionPoint3D> LinearIntersectionPseudoBreaks { get; set; } =
+		protected IList<IntersectionPoint3D> IntersectionsNotUsedForNavigation { get; set; } =
 			new List<IntersectionPoint3D>();
 
 		public IList<IntersectionPoint3D> IntersectionsAlongTarget
@@ -151,34 +151,20 @@ namespace ProSuite.Commons.Geom
 				IntersectionPoint3D startIntersection = startIntersections.First();
 				startIntersections.Remove(startIntersection);
 
-				IntersectionPoint3D previousIntersection = startIntersection;
-
 				Pnt3D ringStart = null;
 				foreach (IntersectionRun next in NavigateSubcurves(startIntersection))
 				{
-					IntersectionPoint3D nextIntersection = next.NextIntersection;
 					subcurveInfos.Add(next);
 
-					Pnt3D startPoint;
-					if (next.ContainsSourceStart(out startPoint))
+					if (next.ContainsSourceStart(out Pnt3D startPoint))
 					{
 						ringStart = startPoint;
 					}
 
-					if (next.ContinuingOnSource)
-					{
-						if (startIntersections.Contains(previousIntersection))
-						{
-							// Remove, if we follow the source through other start. This happens with vertical rings.
-							//startIntersections.Remove(previousIntersection);
-						}
-					}
-					else
+					if (! next.ContinuingOnSource)
 					{
 						onlyFollowingSource = false;
 					}
-
-					previousIntersection = nextIntersection;
 				}
 
 				// At some point the result must deviate from source otherwise the target does not cut it
@@ -238,20 +224,13 @@ namespace ProSuite.Commons.Geom
 					                 ref continueOnSource, ref partIndex, ref forward);
 				}
 
-				Linestring subcurve;
 				nextIntersection = FollowUntilNextIntersection(
-					previousIntersection, continueOnSource, partIndex, forward, out subcurve);
+					previousIntersection, continueOnSource, partIndex, forward,
+					out Linestring subcurve);
 
-				Pnt3D containedSourceStart = null;
-				if (continueOnSource &&
-				    previousIntersection.SourcePartIndex == nextIntersection.SourcePartIndex &&
-				    (MathUtils.AreEqual(previousIntersection.VirtualSourceVertex, 0) ||
-				     forward && previousIntersection.VirtualSourceVertex >
-				     nextIntersection.VirtualSourceVertex))
-				{
-					Linestring sourcePart = GetSourcePart(previousIntersection.SourcePartIndex);
-					containedSourceStart = sourcePart.StartPoint;
-				}
+				Pnt3D containedSourceStart =
+					GetSourceStartBetween(previousIntersection, nextIntersection, continueOnSource,
+					                      forward);
 
 				if (continueOnSource)
 				{
@@ -270,14 +249,44 @@ namespace ProSuite.Commons.Geom
 				}
 
 				IntersectionRun next =
-					new IntersectionRun(nextIntersection, subcurve, containedSourceStart);
-
-				next.ContinuingOnSource = continueOnSource;
+					new IntersectionRun(nextIntersection, subcurve, containedSourceStart)
+					{
+						ContinuingOnSource = continueOnSource
+					};
 
 				yield return next;
 
 				previousIntersection = nextIntersection;
 			}
+		}
+
+		private Pnt3D GetSourceStartBetween([NotNull] IntersectionPoint3D previousIntersection,
+		                                    [NotNull] IntersectionPoint3D nextIntersection,
+		                                    bool continueOnSource,
+		                                    bool forward)
+		{
+			if (! continueOnSource)
+			{
+				return null;
+			}
+
+			Assert.True(forward, "Continuation on source backward is not allowed!");
+
+			if (previousIntersection.SourcePartIndex != nextIntersection.SourcePartIndex)
+			{
+				return null;
+			}
+
+			Pnt3D containedSourceStart = null;
+
+			if (MathUtils.AreEqual(previousIntersection.VirtualSourceVertex, 0) ||
+			    previousIntersection.VirtualSourceVertex > nextIntersection.VirtualSourceVertex)
+			{
+				Linestring sourcePart = GetSourcePart(previousIntersection.SourcePartIndex);
+				containedSourceStart = sourcePart.StartPoint;
+			}
+
+			return containedSourceStart;
 		}
 
 		public abstract SubcurveNavigator Clone();
@@ -324,26 +333,24 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		private static IEnumerable<IntersectionPoint3D> GetLinearIntersectionPseudoBreaks(
-			IEnumerable<IntersectionPoint3D> intersectionPointsForPart)
+		private static IEnumerable<IntersectionPoint3D> GetIntersectionsNotUsedForNavigation(
+			[NotNull] IList<IntersectionPoint3D> intersectionPoints,
+			[NotNull] ISegmentList source,
+			[NotNull] ISegmentList target)
 		{
-			IntersectionPoint3D previous = null;
-
-			foreach (IntersectionPoint3D intersectionPoint in
-			         intersectionPointsForPart.OrderBy(i => i.VirtualSourceVertex))
+			// The 'standard' linear intersection breaks at ring start/end:
+			foreach (IntersectionPoint3D linearStartBreak in
+			         GeomTopoOpUtils.GetLinearIntersectionBreaksAtRingStart(
+				         source, target, intersectionPoints))
 			{
-				if (previous != null &&
-				    previous.Type == IntersectionPointType.LinearIntersectionEnd &&
-				    intersectionPoint.Type == IntersectionPointType.LinearIntersectionStart &&
-				    previous.SourcePartIndex == intersectionPoint.SourcePartIndex &&
-				    previous.TargetPartIndex == intersectionPoint.TargetPartIndex &&
-				    previous.Point.Equals(intersectionPoint.Point))
-				{
-					yield return previous;
-					yield return intersectionPoint;
-				}
+				yield return linearStartBreak;
+			}
 
-				previous = intersectionPoint;
+			// Other linear intersection breaks that are not real (from a 2D perspective)
+			foreach (var pseudoBreak in GeomTopoOpUtils.GetLinearIntersectionPseudoBreaks(
+				         intersectionPoints))
+			{
+				yield return pseudoBreak;
 			}
 		}
 
@@ -654,31 +661,34 @@ namespace ProSuite.Commons.Geom
 		{
 			intersectionsInboundTarget = new List<IntersectionPoint3D>();
 			intersectionsOutboundTarget = new List<IntersectionPoint3D>();
-			LinearIntersectionPseudoBreaks.Clear();
+			IntersectionsNotUsedForNavigation.Clear();
 
-			// Filter linear intersection end/start (e.g. at null-points) to avoid
-			//       incorrect inbound/outbound and turn-direction decisions:
-			var intersections = IntersectionsAlongSource.ToList();
-			foreach (IntersectionPoint3D pseudoBreak in GetLinearIntersectionPseudoBreaks(
-				         intersections))
+			// Filter all non-real linear intersections (i. e. those where no deviation between
+			// source and target exists. This is important to avoid incorrect inbound/outbound
+			// and turn-direction decisions because the two lines continue (almost at the same
+			// angle.
+			var usableIntersections = IntersectionsAlongSource.ToList();
+
+			foreach (IntersectionPoint3D unusable in GetIntersectionsNotUsedForNavigation(
+				         IntersectionsAlongSource, Source, Target))
 			{
-				intersections.Remove(pseudoBreak);
-				LinearIntersectionPseudoBreaks.Add(pseudoBreak);
+				usableIntersections.Remove(unusable);
+				IntersectionsNotUsedForNavigation.Add(unusable);
 			}
 
-			foreach (IntersectionPoint3D intersectionPoint3D in intersections)
+			foreach (IntersectionPoint3D intersectionPoint3D in usableIntersections)
 			{
-				bool isInbound, isOutbound;
-				ClassifyIntersection(source, target, intersectionPoint3D, out isInbound,
-				                     out isOutbound);
+				intersectionPoint3D.ClassifyTargetTrajectory(source, target,
+				                                             out bool? targetContinuesToRightSide,
+				                                             out bool? targetArrivesFromRightSide);
 
 				// In-bound takes precedence because if the target is both inbound and outbound (i.e. touching from inside)
 				// the resulting part is on the left of the cut line which is consistent with other in-bound intersections.
-				if (isInbound)
+				if (targetContinuesToRightSide == true)
 				{
 					intersectionsInboundTarget.Add(intersectionPoint3D);
 				}
-				else if (isOutbound)
+				else if (targetArrivesFromRightSide == true)
 				{
 					intersectionsOutboundTarget.Add(intersectionPoint3D);
 				}
@@ -689,45 +699,6 @@ namespace ProSuite.Commons.Geom
 				// Remove dangles that cannot cut and would lead to duplicate result rings
 				RemoveDeadEndIntersections(intersectionsInboundTarget, intersectionsOutboundTarget);
 			}
-		}
-
-		private static void ClassifyIntersection([NotNull] ISegmentList source,
-		                                         [NotNull] ISegmentList target,
-		                                         [NotNull] IntersectionPoint3D intersectionPoint,
-		                                         out bool isInbound,
-		                                         out bool isOutbound)
-		{
-			Assert.False(intersectionPoint.Type == IntersectionPointType.Unknown,
-			             "Cannot classify unknown intersection type.");
-
-			if (intersectionPoint.Type ==
-			    IntersectionPointType.LinearIntersectionIntermediate)
-			{
-				isInbound = false;
-				isOutbound = false;
-				return;
-			}
-
-			int? previousTargetSegment =
-				intersectionPoint.GetNonIntersectingTargetSegmentIndex(target, false);
-			int? nextTargetSegment =
-				intersectionPoint.GetNonIntersectingTargetSegmentIndex(target, true);
-
-			Pnt3D previousPntAlongTarget = previousTargetSegment == null
-				                               ? null
-				                               : target[previousTargetSegment.Value].StartPoint;
-
-			Pnt3D nextPntAlongTarget = nextTargetSegment == null
-				                           ? null
-				                           : target[nextTargetSegment.Value].EndPoint;
-
-			isInbound = nextPntAlongTarget != null &&
-			            true == intersectionPoint.IsOnTheRightSide(
-				            source, nextPntAlongTarget, true);
-
-			isOutbound = previousPntAlongTarget != null &&
-			             true == intersectionPoint.IsOnTheRightSide(
-				             source, previousPntAlongTarget, true);
 		}
 
 		private void PreferTargetZ(IntersectionPoint3D atIntersection, Pnt3D resultPoint)
@@ -776,5 +747,12 @@ namespace ProSuite.Commons.Geom
 			Left,
 			Right
 		}
+
+		public abstract IEnumerable<Linestring> GetSourceRingsOutsideTarget();
+
+		public abstract IEnumerable<Linestring> GetUncutSourceRings(bool includeCongruent,
+			bool withSameOrientation,
+			bool includeContained,
+			bool includeNotContained);
 	}
 }

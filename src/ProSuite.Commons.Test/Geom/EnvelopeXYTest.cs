@@ -4,7 +4,7 @@ using NUnit.Framework;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Globalization;
 
-namespace ProSuite.Commons.Test.Geometry
+namespace ProSuite.Commons.Test.Geom
 {
 	[TestFixture]
 	public class EnvelopeXYTest
@@ -21,14 +21,12 @@ namespace ProSuite.Commons.Test.Geometry
 			Assert.AreEqual(
 				"XMin: 2600000.1234 YMin: 1200000.987654 XMax: 2601000.12 YMax: 1201000.98", text);
 
-			Console.WriteLine(CultureInfoUtils.GetCultureInfoDescription(CultureInfo.CurrentCulture));
+			Console.WriteLine(
+				CultureInfoUtils.GetCultureInfoDescription(CultureInfo.CurrentCulture));
 
 			string formatted = null;
 			CultureInfoUtils.ExecuteUsing(CultureInfo.GetCultureInfo("de-CH"),
-			                              () =>
-			                              {
-				                              formatted = envelope.Format(envelope, 2);
-			                              });
+			                              () => { formatted = envelope.Format(envelope, 2); });
 
 			Console.WriteLine(formatted);
 			Assert.AreEqual(

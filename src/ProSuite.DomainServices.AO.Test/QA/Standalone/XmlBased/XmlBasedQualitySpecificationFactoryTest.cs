@@ -8,7 +8,7 @@ using NUnit.Framework;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test;
-using ProSuite.Commons.AO.Test.TestSupport;
+using ProSuite.Commons.Testing;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.AO.QA.Xml;
@@ -240,7 +240,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Standalone.XmlBased
 		public void CanReadQualitySpecifications()
 		{
 			using (StreamReader xmlReader =
-				new StreamReader(@"c:\temp\QaConfigWithEmptyDatasetsParameters.xml"))
+			       new StreamReader(@"c:\temp\QaConfigWithEmptyDatasetsParameters.xml"))
 			{
 				var xmlDoc =
 					XmlDataQualityUtils.ReadXmlDocument(

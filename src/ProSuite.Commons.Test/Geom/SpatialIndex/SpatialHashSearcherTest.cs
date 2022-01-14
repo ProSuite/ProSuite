@@ -6,7 +6,7 @@ using NUnit.Framework;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
 
-namespace ProSuite.Commons.Test.Geometry.SpatialIndex
+namespace ProSuite.Commons.Test.Geom.SpatialIndex
 {
 	[TestFixture]
 	public class SpatialHashSearcherTest

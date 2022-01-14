@@ -62,6 +62,11 @@ namespace ProSuite.Commons.Geom.Wkb
 					return ReadMultiPolycurveCore(reader, geometryType, ordinates);
 				}
 
+				if (geometryType == WkbGeometryType.Polygon)
+				{
+					return ReadPolygonCore(reader, ordinates);
+				}
+
 				throw new NotImplementedException(
 					$"Geometry type {geometryType} not yet supported for Wkb deserialization");
 			}

@@ -5,7 +5,7 @@ using NUnit.Framework;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Geom;
 
-namespace ProSuite.Commons.Test.Geometry
+namespace ProSuite.Commons.Test.Geom
 {
 	[TestFixture]
 	public class LinestringTest

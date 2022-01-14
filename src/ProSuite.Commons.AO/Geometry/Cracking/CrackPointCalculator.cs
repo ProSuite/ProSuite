@@ -527,7 +527,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				bool thisPointWithinTolerance, thisPointDifferentInZ;
 				if (IsPerfectlyMatching(
 					atPoint, existingPoint, xyResolution, zResolution, out thisPointWithinTolerance,
-					out thisPointDifferentInZ))
+					    out thisPointDifferentInZ))
 				{
 					pointFound = true;
 					continue;
@@ -605,8 +605,8 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			{
 				bool thisPointWithinTolerance, thisPointDifferentInZ;
 				if (IsPerfectlyMatching(
-					atPoint, existingPoint, xyResolution, zResolution,
-					tolerance, out thisPointWithinTolerance, out thisPointDifferentInZ))
+					    atPoint, existingPoint, xyResolution, zResolution,
+					    tolerance, out thisPointWithinTolerance, out thisPointDifferentInZ))
 				{
 					pointFound = true;
 					continue;
@@ -1502,7 +1502,7 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			double closestDistanceSquared = double.MaxValue;
 
 			foreach (IntersectionPoint3D intersectionPoint in GeomTopoOpUtils.GetIntersectionPoints(
-				point, 0, targetGeometry, snapTolerance.Value, false))
+				         point, 0, targetGeometry, snapTolerance.Value, false))
 			{
 				if (snapType == esriGeometryHitPartType.esriGeometryPartBoundary ||
 				    snapType == esriGeometryHitPartType.esriGeometryPartVertex &&
@@ -1690,30 +1690,40 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				IntersectionPointOption ==
 				IntersectionPointOptions.IncludeLinearIntersectionAllPoints;
 
-			// TODO: Rather than swapping source and target, add method to intersection point that gets the
-			// target point so hte Z value can be taken directly.
-			List<IntersectionPoint3D> intersectionPoints =
-				UseSourceZs
-					? GetIntersectionPoints3d(sourceGeometry, intersectionTarget, snapTolerance,
-					                          omitNonLinearSegments, includeIntermediatePoints)
-					: GetIntersectionPoints3d(intersectionTarget, sourceGeometry, snapTolerance,
-					                          omitNonLinearSegments, includeIntermediatePoints);
+			List<IntersectionWithTargetPoint> intersectionPointsWithTargetPoint =
+				GetIntersectionPoints3d(sourceGeometry, intersectionTarget, snapTolerance,
+				                        omitNonLinearSegments, includeIntermediatePoints);
 
-			if (In3D)
+			List<IntersectionPoint3D> intersectionPoints;
+			if (In3D || ! UseSourceZs)
 			{
-				// add the other intersection set as well - this is to get the intersections 
-				// at the same XY-location with different Z values. For example there could be
-				// a missing point in the source at Z1 but because at Z2 there is already a
-				// vertex that is reported with UseSourceZ we would miss the extra intersection at Z1
+				List<IntersectionPoint3D> intersectionsWithTargetZ =
+					intersectionPointsWithTargetPoint.Select(
+						CreateIntersectionPointWithTargetZ).ToList();
 
-				// TODO: Consider just inverting the intersection points: source->target and vice versa.
-				intersectionPoints.AddRange(
-					UseSourceZs
-						? GetIntersectionPoints3d(intersectionTarget, sourceGeometry, snapTolerance,
-						                          omitNonLinearSegments, includeIntermediatePoints)
-						: GetIntersectionPoints3d(sourceGeometry, intersectionTarget, snapTolerance,
-						                          omitNonLinearSegments,
-						                          includeIntermediatePoints));
+				if (In3D)
+				{
+					// both sets of intersection points:
+					// Use both intersection sets - this is to get the intersections 
+					// at the same XY-location with different Z values. For example there could be
+					// a missing point in the source at Z1 but because at Z2 there is already a
+					// vertex that is reported with UseSourceZ we would miss the extra intersection at Z1
+					intersectionPoints = intersectionPointsWithTargetPoint.Select(
+						ip => ip.Intersection).ToList();
+
+					intersectionPoints.AddRange(intersectionsWithTargetZ);
+				}
+				else
+				{
+					// Use target Z:
+					Assert.False(UseSourceZs, "Unexpected UseSourceZ value");
+					intersectionPoints = intersectionsWithTargetZ;
+				}
+			}
+			else
+			{
+				intersectionPoints = intersectionPointsWithTargetPoint.Select(
+					ip => ip.Intersection).ToList();
 			}
 
 			// 3D-clustering, even if In3D == false, otherwise the averaged Z values result in
@@ -1725,16 +1735,18 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			return clusteredIntersections;
 		}
 
-		private static List<IntersectionPoint3D> GetIntersectionPoints3d(
+		private static List<IntersectionWithTargetPoint> GetIntersectionPoints3d(
 			[NotNull] IGeometry sourceGeometry,
 			[NotNull] IGeometry intersectionTarget,
 			double snapTolerance,
 			bool omitNonLinearSegments,
 			bool includeIntermediatePoints)
 		{
-			List<IntersectionPoint3D> intersectionPoints;
+			List<IntersectionWithTargetPoint> result;
 
 			ISegmentList sourceSegments = ToSegmentList(sourceGeometry, omitNonLinearSegments);
+
+			ISegmentList targetSegments = ToSegmentList(intersectionTarget, omitNonLinearSegments);
 
 			if (sourceSegments == null &&
 			    sourceGeometry is IMultipoint sourceMultipoint)
@@ -1742,28 +1754,38 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 				// Source is multipoint
 				var sourcePnts = GeometryConversionUtils.CreateMultipoint(sourceMultipoint);
 
-				return GeomTopoOpUtils.GetIntersectionPoints(
-					sourcePnts, ToSegmentList(intersectionTarget, omitNonLinearSegments),
+				var intersections = GeomTopoOpUtils.GetIntersectionPoints(
+					sourcePnts, targetSegments,
 					snapTolerance, false).ToList();
+
+				return intersections.Select(i => new IntersectionWithTargetPoint(
+					                            i, i.GetTargetPoint(targetSegments))).ToList();
 			}
 
-			Assert.NotNull(sourceSegments);
+			Assert.NotNull(sourceSegments, "Unsupported source geometry type: {0}",
+			               sourceGeometry.GeometryType);
 
-			ISegmentList targetSegments = ToSegmentList(intersectionTarget, omitNonLinearSegments);
+			List<IntersectionPoint3D> intersectionPoints;
+			Func<IntersectionPoint3D, Pnt3D> getTargetPointFunc;
 
 			if (targetSegments != null)
 			{
 				intersectionPoints =
-					GeomTopoOpUtils.GetIntersectionPoints(sourceSegments, targetSegments,
-					                                      snapTolerance, false,
-					                                      includeIntermediatePoints).ToList();
+					GeomTopoOpUtils.GetIntersectionPoints(
+						sourceSegments, targetSegments, snapTolerance, false,
+						includeIntermediatePoints).ToList();
+
+				getTargetPointFunc = ip => ip.GetTargetPoint(targetSegments);
 			}
 			else if (intersectionTarget is IMultipoint multipoint)
 			{
 				IPointList targetPoints = GeometryConversionUtils.CreateMultipoint(multipoint);
+
 				intersectionPoints =
 					GeomTopoOpUtils.GetIntersectionPoints(sourceSegments, targetPoints,
 					                                      snapTolerance, false).ToList();
+
+				getTargetPointFunc = ip => new Pnt3D(ip.GetTargetPoint(targetPoints));
 			}
 			else
 			{
@@ -1776,9 +1798,11 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 					GeomTopoOpUtils.GetIntersectionPoints(
 						               sourceSegments, pnt, 0, snapTolerance, false)
 					               .ToList();
+
+				getTargetPointFunc = i => new Pnt3D(pnt);
 			}
 
-			return intersectionPoints;
+			return CreateIntersectionsWithTargetPoint(intersectionPoints, getTargetPointFunc);
 		}
 
 		private static ISegmentList ToSegmentList([NotNull] IGeometry polycurveOrMultipatch,
@@ -1798,6 +1822,44 @@ namespace ProSuite.Commons.AO.Geometry.Cracking
 			}
 
 			return result;
+		}
+
+		private static List<IntersectionWithTargetPoint> CreateIntersectionsWithTargetPoint(
+			[NotNull] IEnumerable<IntersectionPoint3D> intersectionPoints,
+			[NotNull] Func<IntersectionPoint3D, Pnt3D> getTargetPointFunc)
+		{
+			var result =
+				intersectionPoints.Select(
+					                  ip => new IntersectionWithTargetPoint(
+						                  ip, getTargetPointFunc(ip)))
+				                  .ToList();
+
+			return result;
+		}
+
+		private static IntersectionPoint3D CreateIntersectionPointWithTargetZ(
+			IntersectionWithTargetPoint intersectionWithTarget)
+		{
+			var result = intersectionWithTarget.Intersection.Clone();
+
+			result.Point.Z = intersectionWithTarget.TargetPoint.Z;
+
+			return result;
+		}
+
+		private class IntersectionWithTargetPoint
+		{
+			public IntersectionWithTargetPoint(
+				[NotNull] IntersectionPoint3D intersection,
+				[NotNull] Pnt3D targetPoint)
+			{
+				Intersection = intersection;
+				TargetPoint = targetPoint;
+			}
+
+			public IntersectionPoint3D Intersection { get; }
+
+			public Pnt3D TargetPoint { get; }
 		}
 	}
 }

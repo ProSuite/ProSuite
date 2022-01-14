@@ -7,7 +7,7 @@ using ProSuite.Commons.Diagnostics;
 using ProSuite.Commons.Geom;
 using ProSuite.Commons.Geom.SpatialIndex;
 
-namespace ProSuite.Commons.Test.Geometry
+namespace ProSuite.Commons.Test.Geom
 {
 	[TestFixture]
 	public class GeomUtilsTest
