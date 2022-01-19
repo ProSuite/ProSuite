@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ESRI.ArcGIS.Geodatabase;
 using Grpc.Core;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.Callbacks;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -175,25 +176,29 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 			foreach (Project<TModel> project in projects)
 			{
-				response.Projects.Add(
-					new ProjectMsg()
+				var projectMsg =
+					new ProjectMsg
 					{
 						ProjectId = project.Id,
 						ModelId = project.ProductionModel.Id,
 						Name = project.Name,
 						ShortName = project.ShortName,
 						MinimumScaleDenominator = project.MinimumScaleDenominator,
-						ToolConfigDirectory = project.ToolConfigDirectory,
 						ExcludeReadOnlyDatasetsFromProjectWorkspace =
 							project.ExcludeReadOnlyDatasetsFromProjectWorkspace
-					});
+					};
+
+				CallbackUtils.DoWithNonNull(
+					projectMsg.ToolConfigDirectory, s => project.ToolConfigDirectory = s);
+
+				response.Projects.Add(projectMsg);
 
 				var srWkId = ProtobufGeometryUtils.ToSpatialReferenceMsg(
 					project.ProductionModel.SpatialReferenceDescriptor.SpatialReference,
 					SpatialReferenceMsg.FormatOneofCase.SpatialReferenceWkid);
 
 				var modelMsg =
-					new ModelMsg()
+					new ModelMsg
 					{
 						ModelId = project.ProductionModel.Id,
 						Name = project.ProductionModel.Name,
@@ -215,12 +220,17 @@ namespace ProSuite.Microservices.Server.AO.QA
 						modelMsg.ErrorDatasetIds.Add(dataset.Id);
 					}
 
-					response.Datasets.Add(new DatasetMsg()
-					                      {
-						                      DatasetId = dataset.Id,
-						                      Name = dataset.Name,
-						                      AliasName = dataset.AliasName
-					                      });
+					var datasetMsg =
+						new DatasetMsg
+						{
+							DatasetId = dataset.Id,
+							Name = dataset.Name,
+						};
+
+					CallbackUtils.DoWithNonNull(
+						datasetMsg.AliasName, s => dataset.AliasName = s);
+
+					response.Datasets.Add(datasetMsg);
 				}
 
 				response.Models.Add(modelMsg);
