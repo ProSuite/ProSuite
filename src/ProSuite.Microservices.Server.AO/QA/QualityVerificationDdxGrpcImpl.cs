@@ -56,8 +56,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 		public IVerificationDataDictionary<TModel> VerificationDdx { get; set; }
 
 		public override async Task<GetProjectWorkspacesResponse> GetProjectWorkspaces(
-			GetProjectWorkspacesRequest request,
-			ServerCallContext context)
+			GetProjectWorkspacesRequest request, ServerCallContext context)
 		{
 			GetProjectWorkspacesResponse response;
 
@@ -65,10 +64,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				await StartRequestAsync(context.Peer, request);
 
-				_msg.InfoFormat("Getting project workspaces for {0}", context.Peer);
-				_msg.VerboseDebug(() => $"Request details: {request}");
-
-				response = GetProjectWorkspacesCore(request);
+				using (_msg.IncrementIndentation("Getting project workspaces for {0}",
+				                                 context.Peer))
+				{
+					response = GetProjectWorkspacesCore(request);
+				}
 
 				_msg.InfoFormat("Returning {0} project workspaces",
 				                response.ProjectWorkspaces.Count);
@@ -90,37 +90,26 @@ namespace ProSuite.Microservices.Server.AO.QA
 		}
 
 		public override async Task<GetSpecificationsResponse> GetQualitySpecifications(
-			GetSpecificationsRequest request,
-			ServerCallContext context)
+			GetSpecificationsRequest request, ServerCallContext context)
 		{
-			var response = new GetSpecificationsResponse();
+			GetSpecificationsResponse response;
 
 			try
 			{
 				await StartRequestAsync(context.Peer, request);
 
-				_msg.InfoFormat("Getting quality specifications for {0}", context.Peer);
+				using (_msg.IncrementIndentation("Getting quality specifications for {0}",
+				                                 context.Peer))
+				{
+					response = GetQualitySpecificationsCore(request);
+				}
 
-				IVerificationDataDictionary<TModel> verificationDataDictionary =
-					Assert.NotNull(VerificationDdx);
-
-				IList<QualitySpecification> foundSpecifications =
-					verificationDataDictionary.GetQualitySpecifications(
-						request.DatasetIds, request.IncludeHidden);
-
-				response.QualitySpecifications.AddRange(
-					foundSpecifications.Select(qs => new QualitySpecificationRefMsg
-					                                 {
-						                                 Name = qs.Name,
-						                                 QualitySpecificationId = qs.Id
-					                                 }));
-
-				_msg.InfoFormat("Returning {0} specifications",
+				_msg.InfoFormat("Returning {0} quality specifications",
 				                response.QualitySpecifications.Count);
 			}
 			catch (Exception e)
 			{
-				_msg.Error($"Error verifying quality for request {request}", e);
+				_msg.Error($"Error getting quality specifications {request}", e);
 
 				SetUnhealthy();
 
@@ -154,19 +143,17 @@ namespace ProSuite.Microservices.Server.AO.QA
 			var projectWorkspaces =
 				verificationDataDictionary.GetProjectWorkspaceCandidates(objectClasses);
 
-			var projects = new HashSet<Project<TModel>>();
-
-			GetProjectWorkspacesResponse response =
-				PackProjectWorkspaceResponse(projectWorkspaces, projects);
+			GetProjectWorkspacesResponse response = PackProjectWorkspaceResponse(projectWorkspaces);
 
 			return response;
 		}
 
 		private static GetProjectWorkspacesResponse PackProjectWorkspaceResponse(
-			[NotNull] IList<ProjectWorkspaceBase<Project<TModel>, TModel>> projectWorkspaces,
-			[NotNull] HashSet<Project<TModel>> projects)
+			[NotNull] IList<ProjectWorkspaceBase<Project<TModel>, TModel>> projectWorkspaces)
 		{
 			var response = new GetProjectWorkspacesResponse();
+
+			var projects = new HashSet<Project<TModel>>();
 
 			foreach (var projectWorkspace in projectWorkspaces)
 			{
@@ -238,6 +225,28 @@ namespace ProSuite.Microservices.Server.AO.QA
 
 				response.Models.Add(modelMsg);
 			}
+
+			return response;
+		}
+
+		private GetSpecificationsResponse GetQualitySpecificationsCore(
+			GetSpecificationsRequest request)
+		{
+			var response = new GetSpecificationsResponse();
+
+			IVerificationDataDictionary<TModel> verificationDataDictionary =
+				Assert.NotNull(VerificationDdx);
+
+			IList<QualitySpecification> foundSpecifications =
+				verificationDataDictionary.GetQualitySpecifications(
+					request.DatasetIds, request.IncludeHidden);
+
+			response.QualitySpecifications.AddRange(
+				foundSpecifications.Select(qs => new QualitySpecificationRefMsg
+				                                 {
+					                                 Name = qs.Name,
+					                                 QualitySpecificationId = qs.Id
+				                                 }));
 
 			return response;
 		}
