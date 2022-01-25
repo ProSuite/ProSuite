@@ -380,6 +380,7 @@ namespace ProSuite.Microservices.Client.AGP
 			if (defaultVersion != null)
 			{
 				result.DefaultVersionCreationTicks = defaultVersion.GetCreatedDate().Ticks;
+				// Careful: Version.GetDescription() appears to be localized/translated if run in Pro with localized UI
 				result.DefaultVersionDescription = defaultVersion.GetDescription() ?? string.Empty;
 				result.DefaultVersionName = defaultVersion.GetName();
 			}
