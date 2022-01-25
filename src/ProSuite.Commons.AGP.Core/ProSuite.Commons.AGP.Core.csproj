@@ -50,6 +50,7 @@
     <Compile Include="Carto\SymbolUtils.cs" />
     <Compile Include="Geodatabase\DatasetUtils.cs" />
     <Compile Include="Geodatabase\GdbObjectUtils.cs" />
+    <Compile Include="Geodatabase\WorkspaceUtils.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Spatial\ControlPointUtils.cs" />
     <Compile Include="Spatial\GeomConversionUtils.cs" />

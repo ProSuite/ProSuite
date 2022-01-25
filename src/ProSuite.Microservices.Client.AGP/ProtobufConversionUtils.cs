@@ -2,11 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Reflection;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using Google.Protobuf;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -22,7 +22,7 @@ namespace ProSuite.Microservices.Client.AGP
 {
 	public static class ProtobufConversionUtils
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static SpatialReference FromSpatialReferenceMsg(
 			[CanBeNull] SpatialReferenceMsg spatialRefMsg,
@@ -365,16 +365,17 @@ namespace ProSuite.Microservices.Client.AGP
 			return result;
 		}
 
-		public static WorkspaceMsg ToWorkspaceRefMsg(Datastore datastore)
+		[NotNull]
+		public static WorkspaceMsg ToWorkspaceRefMsg([NotNull] Datastore datastore)
 		{
-			Version defaultVersion = GetDefaultVersion(datastore);
-
 			var result =
 				new WorkspaceMsg
 				{
 					WorkspaceHandle = datastore.Handle.ToInt64(),
 					WorkspaceDbType = (int) ToWorkspaceDbType(datastore)
 				};
+
+			Version defaultVersion = WorkspaceUtils.GetDefaultVersion(datastore);
 
 			if (defaultVersion != null)
 			{
@@ -439,26 +440,6 @@ namespace ProSuite.Microservices.Client.AGP
 			}
 
 			return WorkspaceDbType.Unknown;
-		}
-
-		private static Version GetDefaultVersion(Datastore datastore)
-		{
-			if (datastore is Geodatabase geodatabase && geodatabase.IsVersioningSupported())
-			{
-				using (VersionManager versionManager = geodatabase.GetVersionManager())
-				{
-					Version version = versionManager.GetCurrentVersion();
-					Version parent;
-					while ((parent = version.GetParent()) != null)
-					{
-						version = parent;
-					}
-
-					return version;
-				}
-			}
-
-			return null;
 		}
 
 		private static esriGeometryType TranslateAGPShapeType(Table objectClass)
