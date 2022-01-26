@@ -68,7 +68,7 @@ namespace ProSuite.QA.Container
 
 		[NotNull]
 		public static IEnumerable<string> GetExpressionFieldNames(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] string expression,
 			bool toUpper = false)
 		{
@@ -86,7 +86,7 @@ namespace ProSuite.QA.Container
 
 		[NotNull]
 		public static IEnumerable<KeyValuePair<IField, int>> GetExpressionFields(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] string expression)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
@@ -107,12 +107,12 @@ namespace ProSuite.QA.Container
 		[NotNull]
 		public static IEnumerable<string> GetExpressionFieldNames(
 			[NotNull] string expression,
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] string alias)
 		{
 			var tableFieldNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-			foreach (IField field in DatasetUtils.GetFields(table))
+			foreach (IField field in DatasetUtils.GetFields(table.Fields))
 			{
 				tableFieldNames.Add(field.Name);
 			}

@@ -13,7 +13,7 @@ namespace ProSuite.QA.Container.TestSupport
 		[ThreadStatic] private static IEnvelope _envelope; // always access via property
 
 		protected ShapeEnvelopePropertyAliasColumnInfoBase(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] string columnName)
 			: base(table, columnName, typeof(double))
 		{
@@ -29,9 +29,9 @@ namespace ProSuite.QA.Container.TestSupport
 
 		public override IEnumerable<string> BaseFieldNames => _baseFieldNames;
 
-		protected override object ReadValueCore(IRow row)
+		protected override object ReadValueCore(IReadOnlyRow row)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 
 			IGeometry shape = feature?.Shape;
 

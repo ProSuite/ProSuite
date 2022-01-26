@@ -6,7 +6,7 @@ namespace ProSuite.QA.Container.TestSupport
 {
 	public class ShapeZMaxAliasColumnInfo : ShapeEnvelopePropertyAliasColumnInfoBase
 	{
-		public ShapeZMaxAliasColumnInfo([NotNull] ITable table,
+		public ShapeZMaxAliasColumnInfo([NotNull] IReadOnlyTable table,
 		                                [NotNull] string columnName)
 			: base(table, columnName) { }
 

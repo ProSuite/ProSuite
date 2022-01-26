@@ -11,7 +11,7 @@ namespace ProSuite.QA.Container.TestSupport
 	{
 		private readonly List<string> _baseFieldNames = new List<string>();
 
-		public ObjectIdAliasColumnInfo([NotNull] ITable table,
+		public ObjectIdAliasColumnInfo([NotNull] IReadOnlyTable table,
 		                               [NotNull] string columnName)
 			: base(table, columnName, typeof(int))
 		{
@@ -28,7 +28,7 @@ namespace ProSuite.QA.Container.TestSupport
 
 		public override IEnumerable<string> BaseFieldNames => _baseFieldNames;
 
-		protected override object ReadValueCore(IRow row)
+		protected override object ReadValueCore(IReadOnlyRow row)
 		{
 			return row.HasOID ? (object) row.OID : DBNull.Value;
 		}

@@ -8,7 +8,7 @@ namespace ProSuite.QA.Container
 	{
 		private readonly TableView _tableView;
 
-		public QueryFilterHelper([NotNull] ITable table,
+		public QueryFilterHelper([NotNull] IReadOnlyTable table,
 		                         [CanBeNull] string constraint,
 		                         bool caseSensitive)
 		{
@@ -31,7 +31,7 @@ namespace ProSuite.QA.Container
 
 		public bool AttributeFirst { get; set; } = true;
 
-		public bool MatchesConstraint([NotNull] IRow row)
+		public bool MatchesConstraint([NotNull] IReadOnlyRow row)
 		{
 			bool match = _tableView.MatchesConstraint(row);
 			return match;

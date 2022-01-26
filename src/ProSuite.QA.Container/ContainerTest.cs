@@ -22,7 +22,7 @@ namespace ProSuite.QA.Container
 		private IList<ISpatialFilter> _defaultFilters;
 		private IList<QueryFilterHelper> _defaultFilterHelpers;
 
-		private Dictionary<ITable, RelatedTables> _dictRelated;
+		private Dictionary<IReadOnlyTable, RelatedTables> _dictRelated;
 
 		private IEnvelope _lastCompleteTileBox;
 		private bool _completeTileInitialized;
@@ -89,12 +89,12 @@ namespace ProSuite.QA.Container
 			IssueFiltersExpression = expression;
 		}
 
-		public IEnumerable<IGeoDataset> GetInvolvedGeoDatasets()
+		public IEnumerable<IReadOnlyGeoDataset> GetInvolvedGeoDatasets()
 		{
-			IGeoDataset geoDataset;
-			foreach (ITable table in InvolvedTables)
+			IReadOnlyGeoDataset geoDataset;
+			foreach (IReadOnlyTable table in InvolvedTables)
 			{
-				geoDataset = table as IGeoDataset;
+				geoDataset = table as IReadOnlyGeoDataset;
 				if (geoDataset != null)
 				{
 					yield return geoDataset;
@@ -244,7 +244,7 @@ namespace ProSuite.QA.Container
 			BeginTile(new BeginTileParameters(testRunEnvelope, testRunEnvelope));
 
 			var tableIndex = 0;
-			foreach (ITable table in InvolvedTables)
+			foreach (IReadOnlyTable table in InvolvedTables)
 			{
 				if (! GetQueriedOnly(tableIndex))
 				{
@@ -290,7 +290,7 @@ namespace ProSuite.QA.Container
 
 			var tableIndex = 0;
 			// TODO revise - run over all tables, even if equals --> multiple runs for same row in same involved table in Execute(row)
-			foreach (ITable table in InvolvedTables)
+			foreach (IReadOnlyTable table in InvolvedTables)
 			{
 				IQueryFilter filter = TestUtils.CreateFilter(boundingBox, AreaOfInterest,
 				                                             GetConstraint(tableIndex),
@@ -322,7 +322,7 @@ namespace ProSuite.QA.Container
 			BeginTile(new BeginTileParameters(boundingBox, boundingBox));
 
 			var tableIndex = 0;
-			foreach (ITable table in InvolvedTables)
+			foreach (IReadOnlyTable table in InvolvedTables)
 			{
 				IQueryFilter filter = TestUtils.CreateFilter(area, AreaOfInterest,
 				                                             GetConstraint(tableIndex),
@@ -340,7 +340,7 @@ namespace ProSuite.QA.Container
 			return errorCount;
 		}
 
-		public override int Execute(IEnumerable<IRow> selectedRows)
+		public override int Execute(IEnumerable<IReadOnlyRow> selectedRows)
 		{
 			Assert.ArgumentNotNull(selectedRows, nameof(selectedRows));
 
@@ -351,28 +351,27 @@ namespace ProSuite.QA.Container
 
 			for (var tableIndex = 0; tableIndex < tableCount; tableIndex++)
 			{
-				ITable table = InvolvedTables[tableIndex];
+				IReadOnlyTable table = InvolvedTables[tableIndex];
 				helpers[tableIndex] = new QueryFilterHelper(table,
 				                                            GetConstraint(tableIndex),
 				                                            GetSqlCaseSensitivity(tableIndex));
 			}
 
-			foreach (IRow row in selectedRows)
+			foreach (IReadOnlyRow row in selectedRows)
 			{
 				if (CancelTestingRow(row))
 				{
 					continue;
 				}
 
-				var feature = row as IFeature;
-				if (feature != null && AreaOfInterest != null &&
-				    ((IRelationalOperator) AreaOfInterest).Disjoint(feature.Shape))
+				if (row is IReadOnlyFeature feature && AreaOfInterest != null &&
+						((IRelationalOperator)AreaOfInterest).Disjoint(feature.Shape))
 				{
 					continue;
 				}
 
 				var occurrence = 0;
-				ITable table = row.Table;
+				IReadOnlyTable table = row.Table;
 				for (int tableIndex = GetTableIndex(table, occurrence);
 				     tableIndex >= 0;
 				     tableIndex = GetTableIndex(table, occurrence))
@@ -391,7 +390,7 @@ namespace ProSuite.QA.Container
 			return errorCount;
 		}
 
-		public override int Execute(IRow row)
+		public override int Execute(IReadOnlyRow row)
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
 
@@ -422,22 +421,22 @@ namespace ProSuite.QA.Container
 
 		#endregion
 
-		public void AddRelatedTables([NotNull] ITable joined,
-		                             [NotNull] IList<ITable> related)
+		public void AddRelatedTables([NotNull] IReadOnlyTable joined,
+		                             [NotNull] IList<IReadOnlyTable> related)
 		{
 			Assert.ArgumentNotNull(joined, nameof(joined));
 			Assert.ArgumentNotNull(related, nameof(related));
 
 			if (_dictRelated == null)
 			{
-				_dictRelated = new Dictionary<ITable, RelatedTables>();
+				_dictRelated = new Dictionary<IReadOnlyTable, RelatedTables>();
 			}
 
 			RelatedTables relatedTables = RelatedTables.Create(related, joined);
 			_dictRelated.Add(joined, relatedTables);
 		}
 
-		public RelatedTables GetRelatedTables(IRow row)
+		public RelatedTables GetRelatedTables(IReadOnlyRow row)
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
 
@@ -449,7 +448,7 @@ namespace ProSuite.QA.Container
 		/// </summary>
 		/// <param name="row"></param>
 		/// <returns></returns>
-		protected InvolvedRows GetInvolvedRows([NotNull] IRow row)
+		protected InvolvedRows GetInvolvedRows([NotNull] IReadOnlyRow row)
 		{
 			RelatedTables related = GetRelatedTables(row);
 
@@ -458,7 +457,7 @@ namespace ProSuite.QA.Container
 			return involvedRows;
 		}
 
-		internal int GetTableIndex([CanBeNull] ITable table, int occurrence)
+		internal int GetTableIndex([CanBeNull] IReadOnlyTable table, int occurrence)
 		{
 			// TODO there are calls with null from TestContainer.ExecuteCore()
 			return GetIndex(table, InvolvedTables, occurrence);
@@ -509,7 +508,7 @@ namespace ProSuite.QA.Container
 		/// <param name="table">The table.</param>
 		/// <returns></returns>
 		[NotNull]
-		internal IEnumerable<int> GetTableIndexes([NotNull] ITable table)
+		internal IEnumerable<int> GetTableIndexes([NotNull] IReadOnlyTable table)
 		{
 			int tableCount = InvolvedTables.Count;
 
@@ -522,13 +521,13 @@ namespace ProSuite.QA.Container
 			}
 		}
 
-		protected int GetTableIndex([NotNull] IRow row)
+		protected int GetTableIndex([NotNull] IReadOnlyRow row)
 		{
 			int tableCount = InvolvedTables.Count;
 
 			for (var tableIndex = 0; tableIndex < tableCount; tableIndex++)
 			{
-				ITable table = InvolvedTables[tableIndex];
+				IReadOnlyTable table = InvolvedTables[tableIndex];
 
 				if (table != row.Table)
 				{
@@ -549,7 +548,7 @@ namespace ProSuite.QA.Container
 			return -1;
 		}
 
-		internal bool IsOutsideAreaOfInterest([NotNull] IRow row)
+		internal bool IsOutsideAreaOfInterest([NotNull] IReadOnlyRow row)
 		{
 			if (AreaOfInterest == null)
 			{
@@ -557,7 +556,7 @@ namespace ProSuite.QA.Container
 				return false;
 			}
 
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 
 			if (feature == null)
 			{
@@ -659,7 +658,7 @@ namespace ProSuite.QA.Container
 		/// Checks if the specified row fulfils the test constraints
 		/// </summary>
 		/// <returns></returns>
-		internal bool CheckConstraint(IRow row, int tableIndex)
+		internal bool CheckConstraint(IReadOnlyRow row, int tableIndex)
 		{
 			if (row.Table == null)
 			{
@@ -686,78 +685,6 @@ namespace ProSuite.QA.Container
 				requireEqualVerticalCoordinateSystems: false);
 		}
 
-		protected void CopyFilters([NotNull] out IList<ISpatialFilter> spatialFilters,
-		                           [NotNull] out IList<QueryFilterHelper> filterHelpers)
-		{
-			int tableCount = InvolvedTables.Count;
-
-			spatialFilters = new ISpatialFilter[tableCount];
-			filterHelpers = new QueryFilterHelper[tableCount];
-
-			for (var tableIndex = 0; tableIndex < tableCount; tableIndex++)
-			{
-				ITable table = InvolvedTables[tableIndex];
-
-				filterHelpers[tableIndex] = new QueryFilterHelper(table,
-					GetConstraint(tableIndex),
-					GetSqlCaseSensitivity(
-						tableIndex));
-				spatialFilters[tableIndex] = new SpatialFilterClass();
-
-				ConfigureQueryFilter(tableIndex, spatialFilters[tableIndex]);
-			}
-		}
-
-		/// <summary>
-		/// Adapts IQueryFilter so that it conforms to the needs of the test
-		/// </summary>
-		protected virtual void ConfigureQueryFilter(int tableIndex,
-		                                            [NotNull] IQueryFilter queryFilter)
-		{
-			Assert.ArgumentNotNull(queryFilter, nameof(queryFilter));
-
-			ITable table = InvolvedTables[tableIndex];
-			string constraint = GetConstraint(tableIndex);
-
-			queryFilter.AddField(table.OIDFieldName);
-
-			var featureClass = table as IFeatureClass;
-
-			// add shape field
-			if (featureClass != null)
-			{
-				queryFilter.AddField(featureClass.ShapeFieldName);
-			}
-
-			// add subtype field
-			var subtypes = table as ISubtypes;
-			if (subtypes != null)
-			{
-				if (subtypes.HasSubtype)
-				{
-					queryFilter.AddField(subtypes.SubtypeFieldName);
-				}
-			}
-
-			// add where clause fields
-			if (constraint != null)
-			{
-				foreach (
-					string fieldName in
-					ExpressionUtils.GetExpressionFieldNames(table, constraint))
-				{
-					queryFilter.AddField(fieldName);
-					// .AddField checks for multiple entries !					
-				}
-
-				queryFilter.WhereClause = constraint;
-			}
-			else
-			{
-				queryFilter.WhereClause = constraint;
-			}
-		}
-
 		/// <summary>
 		/// Gets the rows in table conforming to filter. 
 		/// If the tests belongs to a test container, the data are searched
@@ -769,7 +696,7 @@ namespace ProSuite.QA.Container
 		/// <param name="cacheGeometry">geometry of feature, from which queryFilter.Geometry was derived</param>
 		/// <returns></returns>
 		[NotNull]
-		protected IEnumerable<IRow> Search([NotNull] ITable table,
+		protected IEnumerable<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
 		                                   [NotNull] IQueryFilter queryFilter,
 		                                   [NotNull] QueryFilterHelper filterHelper,
 		                                   [CanBeNull] IGeometry cacheGeometry = null)
@@ -785,7 +712,7 @@ namespace ProSuite.QA.Container
 
 			if (DataContainer != null && (table as ITransformedTable)?.NoCaching != true)
 			{
-				IEnumerable<IRow> rows = DataContainer.Search(table, queryFilter,
+				IEnumerable<IReadOnlyRow> rows = DataContainer.Search(table, queryFilter,
 				                                              filterHelper, cacheGeometry);
 
 				if (rows != null)
@@ -797,7 +724,7 @@ namespace ProSuite.QA.Container
 			// this could be controlled by a flag on the filterHelper or a parameter
 			// on the Search() method: AllowRecycling
 			const bool recycle = false;
-			var cursor = new EnumCursor(table, queryFilter, recycle);
+			var cursor = table.EnumRows(queryFilter, recycle);
 
 			// TestUtils.AddGarbageCollectionRequest();
 
@@ -823,7 +750,7 @@ namespace ProSuite.QA.Container
 		/// <param name="where">additional where clause ('involvedTableConstraint' AND 'where')</param>
 		/// <returns></returns>
 		[NotNull]
-		protected IEnumerable<IRow> Search(
+		protected IEnumerable<IReadOnlyRow> Search(
 			int involvedTableIndex,
 			[NotNull] IGeometry geometry,
 			esriSpatialRelEnum spatialRelation = esriSpatialRelEnum.esriSpatialRelIntersects,
@@ -831,7 +758,7 @@ namespace ProSuite.QA.Container
 		{
 			EnsureDefaultFilters();
 
-			ITable table = InvolvedTables[involvedTableIndex];
+			IReadOnlyTable table = InvolvedTables[involvedTableIndex];
 			ISpatialFilter filter = _defaultFilters[involvedTableIndex];
 			QueryFilterHelper defaultHelper = _defaultFilterHelpers[involvedTableIndex];
 
@@ -851,14 +778,14 @@ namespace ProSuite.QA.Container
 			}
 		}
 
-		protected abstract int ExecuteCore([NotNull] IRow row, int tableIndex);
+		protected abstract int ExecuteCore([NotNull] IReadOnlyRow row, int tableIndex);
 
 		protected virtual int ExecuteCore([NotNull] ISurfaceRow row, int surfaceIndex)
 		{
 			return 0;
 		}
 
-		internal int Execute([NotNull] IRow row, int tableIndex, Guid? recycledUnique = null)
+		internal int Execute([NotNull] IReadOnlyRow row, int tableIndex, Guid? recycledUnique = null)
 		{
 			if (CancelTestingRow(row, recycledUnique))
 			{
@@ -896,13 +823,13 @@ namespace ProSuite.QA.Container
 			return ExecuteCore(terrainRow, terrainIndex);
 		}
 
-		protected sealed override void AddInvolvedTableCore(ITable table, string constraint,
+		protected sealed override void AddInvolvedTableCore(IReadOnlyTable table, string constraint,
 		                                                    bool sqlCaseSensitivity)
 		{
 			_filterHelpers.Add(new QueryFilterHelper(table, constraint, sqlCaseSensitivity));
 		}
 
-		protected override void SetConstraintCore([NotNull] ITable table, int tableIndex,
+		protected override void SetConstraintCore([NotNull] IReadOnlyTable table, int tableIndex,
 		                                          [CanBeNull] string constraint)
 		{
 			_filterHelpers[tableIndex] = new QueryFilterHelper(table, constraint,
@@ -928,15 +855,15 @@ namespace ProSuite.QA.Container
 			return rowFilters ?? new List<IRowFilter>();
 		}
 
-		private int Execute([NotNull] ITable table, int tableIndex,
+		private int Execute([NotNull] IReadOnlyTable table, int tableIndex,
 		                    [CanBeNull] IQueryFilter queryFilter)
 		{
-			var cursor = new EnumCursor(table, queryFilter, ! KeepRows);
+			var cursor = table.EnumRows(queryFilter, ! KeepRows);
 			var errorCount = 0;
 
-			foreach (IRow row in cursor)
+			foreach (IReadOnlyRow row in cursor)
 			{
-				if (row is IFeature feature)
+				if (row is IReadOnlyFeature feature)
 				{
 					// TODO revise
 
@@ -965,7 +892,7 @@ namespace ProSuite.QA.Container
 			return errorCount;
 		}
 
-		public bool RowFiltersCancel(IRow row, int tableIndex)
+		public bool RowFiltersCancel(IReadOnlyRow row, int tableIndex)
 		{
 			bool cancel = false;
 			RowFiltersDict.TryGetValue(tableIndex, out IReadOnlyList<IRowFilter> filters);

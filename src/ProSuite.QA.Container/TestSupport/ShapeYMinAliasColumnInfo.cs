@@ -6,7 +6,7 @@ namespace ProSuite.QA.Container.TestSupport
 {
 	public class ShapeYMinAliasColumnInfo : ShapeEnvelopePropertyAliasColumnInfoBase
 	{
-		public ShapeYMinAliasColumnInfo([NotNull] ITable table,
+		public ShapeYMinAliasColumnInfo([NotNull] IReadOnlyTable table,
 		                                [NotNull] string columnName)
 			: base(table, columnName) { }
 

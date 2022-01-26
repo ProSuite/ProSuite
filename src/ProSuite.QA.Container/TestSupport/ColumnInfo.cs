@@ -12,7 +12,7 @@ namespace ProSuite.QA.Container.TestSupport
 	{
 		private const string _nullString = "<null>";
 
-		protected ColumnInfo([NotNull] ITable table,
+		protected ColumnInfo([NotNull] IReadOnlyTable table,
 		                     [NotNull] string columnName,
 		                     [NotNull] Type columnType)
 		{
@@ -31,13 +31,13 @@ namespace ProSuite.QA.Container.TestSupport
 		public Type ColumnType { get; }
 
 		[NotNull]
-		public ITable Table { get; }
+		public IReadOnlyTable Table { get; }
 
 		[NotNull]
 		public abstract IEnumerable<string> BaseFieldNames { get; }
 
 		[NotNull]
-		public object ReadValue([NotNull] IRow row)
+		public object ReadValue([NotNull] IReadOnlyRow row)
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
 			AssertExpectedTable(row);
@@ -45,7 +45,7 @@ namespace ProSuite.QA.Container.TestSupport
 			return ReadValueCore(row) ?? DBNull.Value;
 		}
 
-		public string FormatValue([NotNull] IRow row)
+		public string FormatValue([NotNull] IReadOnlyRow row)
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
 			AssertExpectedTable(row);
@@ -58,14 +58,14 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		protected virtual string FormatValueCore([NotNull] IRow row,
+		protected virtual string FormatValueCore([NotNull] IReadOnlyRow row,
 		                                         [NotNull] object rawValue)
 		{
 			return FormatFieldValue(rawValue);
 		}
 
 		[CanBeNull]
-		protected abstract object ReadValueCore([NotNull] IRow row);
+		protected abstract object ReadValueCore([NotNull] IReadOnlyRow row);
 
 		[NotNull]
 		protected static string FormatFieldValue([NotNull] object value)
@@ -75,7 +75,7 @@ namespace ProSuite.QA.Container.TestSupport
 				       : string.Format(CultureInfo.InvariantCulture, "{0}", value);
 		}
 
-		private void AssertExpectedTable([NotNull] IRow row)
+		private void AssertExpectedTable([NotNull] IReadOnlyRow row)
 		{
 			if (Table == row.Table)
 			{
@@ -84,8 +84,8 @@ namespace ProSuite.QA.Container.TestSupport
 
 			throw new AssertionException(
 				string.Format("Row is from unexpected table: {0} - expected: {1}",
-				              DatasetUtils.GetName(row.Table),
-				              DatasetUtils.GetName(Table)));
+				              row.Table.Name,
+				              Table.Name));
 		}
 	}
 }

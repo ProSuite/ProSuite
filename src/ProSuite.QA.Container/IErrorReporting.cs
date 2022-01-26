@@ -11,41 +11,41 @@ namespace ProSuite.QA.Container
 	public interface IErrorReporting
 	{
 		int Report([NotNull] string description,
-		           params IRow[] rows);
+		           params IReadOnlyRow[] rows);
 
 		int Report([NotNull] string description,
 		           [CanBeNull] IssueCode issueCode,
 		           [CanBeNull] string affectedComponent,
-		           params IRow[] rows);
+		           params IReadOnlyRow[] rows);
 
 		int Report([NotNull] string description,
 		           [CanBeNull] IGeometry errorGeometry,
-		           params IRow[] rows);
+		           params IReadOnlyRow[] rows);
 
 		int Report([NotNull] string description,
 		           [CanBeNull] IGeometry errorGeometry,
 		           [CanBeNull] IssueCode issueCode,
 		           [CanBeNull] string affectedComponent,
-		           params IRow[] rows);
+		           params IReadOnlyRow[] rows);
 
 		int Report([NotNull] string description,
 		           [CanBeNull] IGeometry errorGeometry,
 		           [CanBeNull] IssueCode issueCode,
 		           bool reportIndividualParts,
-		           params IRow[] rows);
+		           params IReadOnlyRow[] rows);
 
 		int Report([NotNull] string description,
 		           [CanBeNull] IGeometry errorGeometry,
 		           [CanBeNull] IssueCode issueCode,
 		           [CanBeNull] string affectedComponent,
 		           [CanBeNull] IEnumerable<object> values,
-		           params IRow[] rows);
+		           params IReadOnlyRow[] rows);
 
 		int Report([NotNull] string description,
 		           [CanBeNull] IGeometry errorGeometry,
 		           [CanBeNull] IssueCode issueCode,
 		           [CanBeNull] string affectedComponent,
 		           bool reportIndividualParts,
-		           params IRow[] rows);
+		           params IReadOnlyRow[] rows);
 	}
 }

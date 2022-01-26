@@ -126,6 +126,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 		protected override int ExecuteCore(IRow row, int tableIndex)
 		{
+			base.ExecuteCore(row, r);
 			IList<ISpatialFilter> filters = _filter;
 			if (filters == null)
 			{
@@ -188,7 +189,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				ISpatialFilter filter = filters[involvedTableIndex];
 				filter.Geometry = box0;
 
-				foreach (IRow neighborRow in Search((ITable) fcNeighbor, filter, helper, geom0))
+				foreach (IReadOnlyRow neighborRow in Search(fcNeighbor, filter, helper, geom0))
 				{
 					double maxNear = rowsDistance.GetAddedDistance(neighborRow,
 					                                               involvedTableIndex);
@@ -198,7 +199,7 @@ namespace ProSuite.QA.Tests.Coincidence
 						continue;
 					}
 
-					var neighborFeature = (IFeature) neighborRow;
+					var neighborFeature = (IReadOnlyFeature) neighborRow;
 
 					if (IgnoreNeighbor(row, tableIndex, neighborRow, involvedTableIndex))
 					{
@@ -216,7 +217,7 @@ namespace ProSuite.QA.Tests.Coincidence
 					    row.OID == neighborFeature.OID)
 					{
 						NeighborhoodFinder finder = GetNeighborhoodFinder(
-							rowsDistance, (IFeature) row, tableIndex, null, 0);
+							rowsDistance, (IReadOnlyFeature) row, tableIndex, null, 0);
 						errorCount += FindSelfNeighborhood(finder, tableIndex, processed0, maxNear);
 					}
 					else
@@ -231,7 +232,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 						NeighborhoodFinder finder =
 							GetNeighborhoodFinder(
-								rowsDistance, (IFeature) row, tableIndex,
+								rowsDistance, (IReadOnlyFeature) row, tableIndex,
 								neighborFeature, involvedTableIndex);
 
 						errorCount += FindNeighborhood(finder, tableIndex,
@@ -247,11 +248,11 @@ namespace ProSuite.QA.Tests.Coincidence
 
 		protected abstract NeighborhoodFinder GetNeighborhoodFinder(
 			[NotNull] IFeatureRowsDistance distanceProvider,
-			[NotNull] IFeature feature, int rowTableIndex,
-			[NotNull] IFeature neighbor, int neighborTableIndex);
+			[NotNull] IReadOnlyFeature feature, int rowTableIndex,
+			[NotNull] IReadOnlyFeature neighbor, int neighborTableIndex);
 
-		private bool IgnoreNeighbor([NotNull] IRow row, int rowTableIndex,
-		                            [NotNull] IRow neighbor, int neighborTableIndex)
+		private bool IgnoreNeighbor([NotNull] IReadOnlyRow row, int rowTableIndex,
+		                            [NotNull] IReadOnlyRow neighbor, int neighborTableIndex)
 		{
 			EnsureIgnoreNeighborConditionsFullMatrixInitialized();
 

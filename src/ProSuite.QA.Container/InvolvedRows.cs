@@ -9,8 +9,8 @@ namespace ProSuite.QA.Container
 		public bool HasAdditionalRows { get; set; }
 
 		[NotNull]
-		public List<IRow> TestedRows => _testedRows ?? (_testedRows = new List<IRow>());
+		public List<IReadOnlyRow> TestedRows => _testedRows ?? (_testedRows = new List<IReadOnlyRow>());
 
-		private List<IRow> _testedRows;
+		private List<IReadOnlyRow> _testedRows;
 	}
 }

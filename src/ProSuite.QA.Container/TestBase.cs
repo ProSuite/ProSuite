@@ -19,7 +19,7 @@ namespace ProSuite.QA.Container
 		protected event EventHandler<QaErrorEventArgs> PostProcessError;
 		public virtual event EventHandler<QaErrorEventArgs> QaError;
 
-		protected TestBase([NotNull] IEnumerable<ITable> tables)
+		protected TestBase([NotNull] IEnumerable<IReadOnlyTable> tables)
 			: base(tables) { }
 
 		public abstract int Execute();
@@ -28,9 +28,9 @@ namespace ProSuite.QA.Container
 
 		public abstract int Execute(IPolygon area);
 
-		public abstract int Execute(IEnumerable<IRow> selectedRows);
+		public abstract int Execute(IEnumerable<IReadOnlyRow> selectedRows);
 
-		public abstract int Execute(IRow row);
+		public abstract int Execute(IReadOnlyRow row);
 
 		protected virtual void OnQaError([NotNull] QaErrorEventArgs args)
 		{
@@ -38,12 +38,12 @@ namespace ProSuite.QA.Container
 		}
 
 		int IErrorReporting.Report(string description,
-		                           params IRow[] rows)
+		                           params IReadOnlyRow[] rows)
 		{
 			return ReportError(description, null, null, null, rows);
 		}
 
-		protected bool CancelTestingRow([NotNull] IRow row, Guid? recycleUnique = null,
+		protected bool CancelTestingRow([NotNull] IReadOnlyRow row, Guid? recycleUnique = null,
 		                                bool ignoreTestArea = false)
 		{
 			EventHandler<RowEventArgs> handler = TestingRow;
@@ -134,7 +134,7 @@ namespace ProSuite.QA.Container
 		                          [CanBeNull] IssueCode issueCode,
 		                          [CanBeNull] string affectedComponent,
 		                          bool reportIndividualParts,
-		                          params IRow[] rows)
+		                          params IReadOnlyRow[] rows)
 		{
 			return ReportError(description, errorGeometry,
 			                   issueCode, affectedComponent, null,
@@ -147,7 +147,7 @@ namespace ProSuite.QA.Container
 		                          [CanBeNull] string affectedComponent,
 		                          [CanBeNull] IEnumerable<object> values,
 		                          bool reportIndividualParts,
-		                          params IRow[] rows)
+		                          params IReadOnlyRow[] rows)
 		{
 			ICollection<object> valueCollection =
 				values == null
@@ -179,7 +179,7 @@ namespace ProSuite.QA.Container
 		protected int ReportError([NotNull] string description,
 		                          [CanBeNull] IssueCode issueCode,
 		                          [CanBeNull] string affectedComponent,
-		                          [NotNull] IRow row)
+		                          [NotNull] IReadOnlyRow row)
 		{
 			return ReportError(description, TestUtils.GetShapeCopy(row),
 			                   issueCode, affectedComponent, row);
@@ -188,7 +188,7 @@ namespace ProSuite.QA.Container
 		[Obsolete("call overload with issueCode and affectedComponent")]
 		protected int ReportError([NotNull] string description,
 		                          [CanBeNull] IGeometry errorGeometry,
-		                          params IRow[] rows)
+		                          params IReadOnlyRow[] rows)
 		{
 			return ReportError(description, errorGeometry, null, null, rows);
 		}
@@ -197,7 +197,7 @@ namespace ProSuite.QA.Container
 		                          [CanBeNull] IGeometry errorGeometry,
 		                          [CanBeNull] IssueCode issueCode,
 		                          [CanBeNull] string affectedComponent,
-		                          params IRow[] rows)
+		                          params IReadOnlyRow[] rows)
 		{
 			return ReportError(description, errorGeometry,
 			                   issueCode, affectedComponent,
@@ -209,7 +209,7 @@ namespace ProSuite.QA.Container
 		                          [CanBeNull] IssueCode issueCode,
 		                          [CanBeNull] string affectedComponent,
 		                          [CanBeNull] IEnumerable<object> values,
-		                          params IRow[] rows)
+		                          params IReadOnlyRow[] rows)
 		{
 			return ReportError(description, errorGeometry,
 			                   issueCode, affectedComponent,
@@ -252,7 +252,7 @@ namespace ProSuite.QA.Container
 		}
 
 		protected int ReportError([NotNull] string description,
-		                          [NotNull] ITable table,
+		                          [NotNull] IReadOnlyTable table,
 		                          [CanBeNull] IssueCode issueCode,
 		                          [CanBeNull] string affectedComponent,
 		                          [CanBeNull] IEnumerable<object> values = null)

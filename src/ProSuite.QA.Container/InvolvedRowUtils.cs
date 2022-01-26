@@ -27,14 +27,14 @@ namespace ProSuite.QA.Container
 		}
 
 		[NotNull]
-		public static InvolvedRows GetInvolvedRows(params IRow[] rows)
+		public static InvolvedRows GetInvolvedRows(params IReadOnlyRow[] rows)
 		{
-			return GetInvolvedRows((IEnumerable<IRow>) rows);
+			return GetInvolvedRows((IEnumerable<IReadOnlyRow>) rows);
 		}
 
 		[NotNull]
 		public static InvolvedRows GetInvolvedRows<T>([NotNull] IEnumerable<T> rows)
-			where T : IRow
+			where T : IReadOnlyRow
 		{
 			Assert.ArgumentNotNull(rows, nameof(rows));
 
@@ -49,7 +49,7 @@ namespace ProSuite.QA.Container
 		}
 
 		public static IEnumerable<Involved> EnumInvolved<T>([NotNull] IEnumerable<T> rows)
-			where T : IRow
+			where T : IReadOnlyRow
 		{
 			foreach (T row in rows)
 			{
@@ -59,10 +59,10 @@ namespace ProSuite.QA.Container
 
 		public const string BaseRowField = "__BaseRows__";
 
-		private static Involved GetInvolvedCore(IRow row)
+		private static Involved GetInvolvedCore(IReadOnlyRow row)
 		{
-			int baseRowsField = row.Fields.FindField(BaseRowField);
-			if (baseRowsField >= 0 && row.get_Value(baseRowsField) is IList<IRow> baseRows)
+			int baseRowsField = row.Table.Fields.FindField(BaseRowField);
+			if (baseRowsField >= 0 && row.get_Value(baseRowsField) is IList<IReadOnlyRow> baseRows)
 			{
 				List<Involved> involveds = new List<Involved>();
 				foreach (var baseRow in baseRows)

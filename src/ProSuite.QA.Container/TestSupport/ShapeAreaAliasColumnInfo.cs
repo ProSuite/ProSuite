@@ -14,7 +14,7 @@ namespace ProSuite.QA.Container.TestSupport
 		private readonly esriGeometryType _shapeType;
 		private readonly List<string> _baseFieldNames = new List<string>();
 
-		public ShapeAreaAliasColumnInfo([NotNull] ITable table,
+		public ShapeAreaAliasColumnInfo([NotNull] IReadOnlyTable table,
 		                                [NotNull] string columnName)
 			: base(table, columnName, typeof(double))
 		{
@@ -51,7 +51,7 @@ namespace ProSuite.QA.Container.TestSupport
 
 		public override IEnumerable<string> BaseFieldNames => _baseFieldNames;
 
-		protected override object ReadValueCore(IRow row)
+		protected override object ReadValueCore(IReadOnlyRow row)
 		{
 			if (_fieldIndex >= 0)
 			{
@@ -60,7 +60,7 @@ namespace ProSuite.QA.Container.TestSupport
 
 			// there is no "shape area" field (e.g. for shapefiles)
 
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 
 			IGeometry shape = feature?.Shape;
 

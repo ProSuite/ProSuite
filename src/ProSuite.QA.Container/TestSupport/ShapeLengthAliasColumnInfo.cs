@@ -15,7 +15,7 @@ namespace ProSuite.QA.Container.TestSupport
 		private readonly esriGeometryType _shapeType;
 		private readonly List<string> _baseFieldNames = new List<string>();
 
-		public ShapeLengthAliasColumnInfo([NotNull] ITable table,
+		public ShapeLengthAliasColumnInfo([NotNull] IReadOnlyTable table,
 		                                  [NotNull] string columnName)
 			: base(table, columnName, typeof(double))
 		{
@@ -55,7 +55,7 @@ namespace ProSuite.QA.Container.TestSupport
 			get { return _baseFieldNames; }
 		}
 
-		protected override object ReadValueCore(IRow row)
+		protected override object ReadValueCore(IReadOnlyRow row)
 		{
 			if (_fieldIndex >= 0)
 			{
@@ -64,7 +64,7 @@ namespace ProSuite.QA.Container.TestSupport
 
 			// there is no "shape length" field (e.g. for shapefiles)
 
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return 0;

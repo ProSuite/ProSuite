@@ -19,15 +19,15 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		public static RelatedTables Create([NotNull] IList<ITable> relatedTables,
-		                                   [NotNull] ITable joinedTable)
+		public static RelatedTables Create([NotNull] IList<IReadOnlyTable> relatedTables,
+		                                   [NotNull] IReadOnlyTable joinedTable)
 		{
 			Assert.ArgumentNotNull(relatedTables, nameof(relatedTables));
 			Assert.ArgumentNotNull(joinedTable, nameof(joinedTable));
 
 			var list = new List<RelatedTable>();
 
-			foreach (ITable table in relatedTables)
+			foreach (IReadOnlyTable table in relatedTables)
 			{
 				if (! table.HasOID)
 				{
@@ -51,7 +51,7 @@ namespace ProSuite.QA.Container.TestSupport
 		public IList<RelatedTable> Related => _relTables.AsReadOnly();
 
 		[NotNull]
-		public InvolvedRows GetInvolvedRows([NotNull] IRow row)
+		public InvolvedRows GetInvolvedRows([NotNull] IReadOnlyRow row)
 		{
 			InvolvedRows involved = new InvolvedRows();
 			involved.TestedRows.Add(row);
@@ -70,7 +70,7 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[CanBeNull]
-		public IGeometry GetGeometry([NotNull] IRow row)
+		public IGeometry GetGeometry([NotNull] IReadOnlyRow row)
 		{
 			IGeometry geometry = TestUtils.GetShapeCopy(row);
 			if (geometry != null)

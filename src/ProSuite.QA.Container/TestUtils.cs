@@ -98,12 +98,12 @@ namespace ProSuite.QA.Container
 		public static IQueryFilter CreateFilter([CanBeNull] IGeometry queryArea,
 		                                        [CanBeNull] IPolygon constraintArea,
 		                                        [CanBeNull] string constraint,
-		                                        [NotNull] ITable table,
+		                                        [NotNull] IReadOnlyTable table,
 		                                        [CanBeNull] TableView tableView)
 		{
 			IQueryFilter filter;
 			if (constraintArea != null ||
-			    queryArea != null && table is IFeatureClass)
+			    queryArea != null && table is IReadOnlyFeatureClass)
 			{
 				ISpatialFilter s = new SpatialFilterClass();
 
@@ -119,7 +119,7 @@ namespace ProSuite.QA.Container
 				}
 
 				s.Geometry = queryArea;
-				s.GeometryField = ((IFeatureClass) table).ShapeFieldName;
+				s.GeometryField = ((IReadOnlyFeatureClass) table).ShapeFieldName;
 				s.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
 
 				filter = s;
@@ -193,7 +193,7 @@ namespace ProSuite.QA.Container
 				                 datasetName,
 				                 GeometryUtils.Format(datasetExtent));
 
-				if (geoDataset is IFeatureClass featureClass)
+				if (geoDataset is IReadOnlyFeatureClass featureClass)
 				{
 					double xyTolerance;
 					if (DatasetUtils.TryGetXyTolerance(featureClass, out xyTolerance))
@@ -234,9 +234,9 @@ namespace ProSuite.QA.Container
 		}
 
 		[CanBeNull]
-		public static IGeometry GetShapeCopy([NotNull] IRow row)
+		public static IGeometry GetShapeCopy([NotNull] IReadOnlyRow row)
 		{
-			if (row is IFeature feature)
+			if (row is IReadOnlyFeature feature)
 			{
 				// TODO optimize
 				// - feature.Extent creates a copy (feature.Shape.QueryEnvelope() does not)
@@ -247,7 +247,7 @@ namespace ProSuite.QA.Container
 					if (row.HasOID && row.Table.HasOID)
 					{
 						feature =
-							GdbQueryUtils.GetFeature((IFeatureClass) row.Table, row.OID);
+							GdbQueryUtils.GetFeature((IReadOnlyFeatureClass) row.Table, row.OID);
 
 						if (feature != null)
 						{
@@ -265,7 +265,7 @@ namespace ProSuite.QA.Container
 		}
 
 		[CanBeNull]
-		public static IGeometry GetShapeCopy([NotNull] IRow row,
+		public static IGeometry GetShapeCopy([NotNull] IReadOnlyRow row,
 		                                     [CanBeNull] RelatedTables relatedTables)
 		{
 			return relatedTables == null
@@ -313,7 +313,7 @@ namespace ProSuite.QA.Container
 			}
 			else
 			{
-				foreach (ITable table in test.InvolvedTables)
+				foreach (IReadOnlyTable table in test.InvolvedTables)
 				{
 					if (table is IGeoDataset geoDataset)
 					{

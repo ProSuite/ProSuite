@@ -8,7 +8,7 @@ namespace ProSuite.QA.Container.TestSupport
 {
 	public class ColumnInfoFactory
 	{
-		private readonly ITable _table;
+		private readonly IReadOnlyTable _table;
 		private readonly IFields _fields;
 
 		private const string _shapeAreaFieldAlias = "$ShapeArea";
@@ -31,14 +31,14 @@ namespace ProSuite.QA.Container.TestSupport
 		private const string _aliasPrefix = "$";
 
 		[NotNull] private static readonly
-			IDictionary<string, Func<ITable, string, ColumnInfo>> _propertyAliases
+			IDictionary<string, Func<IReadOnlyTable, string, ColumnInfo>> _propertyAliases
 				= GetPropertyAliases();
 
 		[NotNull]
-		private static IDictionary<string, Func<ITable, string, ColumnInfo>>
+		private static IDictionary<string, Func<IReadOnlyTable, string, ColumnInfo>>
 			GetPropertyAliases()
 		{
-			return new Dictionary<string, Func<ITable, string, ColumnInfo>>(
+			return new Dictionary<string, Func<IReadOnlyTable, string, ColumnInfo>>(
 				       StringComparer.OrdinalIgnoreCase)
 			       {
 				       {
@@ -100,7 +100,7 @@ namespace ProSuite.QA.Container.TestSupport
 			       };
 		}
 
-		public ColumnInfoFactory([NotNull] ITable table)
+		public ColumnInfoFactory([NotNull] IReadOnlyTable table)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
@@ -121,7 +121,7 @@ namespace ProSuite.QA.Container.TestSupport
 
 			// the field is not found - check if it is an alias
 
-			Func<ITable, string, ColumnInfo> constructor;
+			Func<IReadOnlyTable, string, ColumnInfo> constructor;
 			if (expressionToken.StartsWith(_aliasPrefix, StringComparison.OrdinalIgnoreCase) &&
 			    _propertyAliases.TryGetValue(expressionToken, out constructor))
 			{

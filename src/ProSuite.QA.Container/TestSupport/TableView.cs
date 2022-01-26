@@ -31,7 +31,7 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[CanBeNull]
-		public DataRow Add([NotNull] IRow row,
+		public DataRow Add([NotNull] IReadOnlyRow row,
 		                   [CanBeNull] ICollection<ColumnInfo> columnInfos = null)
 		{
 			if (ConstraintView == null)
@@ -112,7 +112,7 @@ namespace ProSuite.QA.Container.TestSupport
 			return added;
 		}
 
-		public bool MatchesConstraint([NotNull] IRow row)
+		public bool MatchesConstraint([NotNull] IReadOnlyRow row)
 		{
 			DataView dataView = ConstraintView;
 
@@ -128,7 +128,7 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		public string ToString([NotNull] IRow row, bool constraintOnly = false)
+		public string ToString([NotNull] IReadOnlyRow row, bool constraintOnly = false)
 		{
 			HashSet<string> fieldNames = constraintOnly
 				                             ? new HashSet<string>(
@@ -139,7 +139,7 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		public string ToString([NotNull] IRow row,
+		public string ToString([NotNull] IReadOnlyRow row,
 		                       bool constraintOnly,
 		                       [CanBeNull] ICollection<string> addedConstraintFieldNames)
 		{
@@ -210,7 +210,7 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[CanBeNull]
-		private DataRow CreateDataRow([NotNull] IRow row,
+		private DataRow CreateDataRow([NotNull] IReadOnlyRow row,
 		                              [NotNull] IEnumerable<ColumnInfo> columnInfos)
 		{
 			if (ConstraintView == null)

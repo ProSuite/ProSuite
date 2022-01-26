@@ -15,16 +15,16 @@ namespace ProSuite.QA.Container
 		///// </summary>
 		WKSEnvelope CurrentTileExtent { get; }
 
-		IEnvelope GetLoadedExtent(ITable table);
+		IEnvelope GetLoadedExtent(IReadOnlyTable table);
 
-		double GetSearchTolerance(ITable table);
+		double GetSearchTolerance(IReadOnlyTable table);
 
-		IEnumerable<IRow> Search([NotNull] ITable table,
+		IEnumerable<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
 		                         [NotNull] IQueryFilter queryFilter,
 		                         [NotNull] QueryFilterHelper filterHelper,
 		                         [CanBeNull] IGeometry cacheGeometry = null);
 
 		[CanBeNull]
-		UniqueIdProvider GetUniqueIdProvider([NotNull] ITable table);
+		UniqueIdProvider GetUniqueIdProvider([NotNull] IReadOnlyTable table);
 	}
 }
