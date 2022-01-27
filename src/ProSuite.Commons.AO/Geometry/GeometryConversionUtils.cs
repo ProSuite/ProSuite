@@ -302,46 +302,43 @@ namespace ProSuite.Commons.AO.Geometry
 				return CreateMultiPolycurve(polycurve, tolerance, aoi);
 			}
 
-			if (! omitNonLinearSegments)
-			{
-				// Linearize:
-				polycurve = GeometryFactory.Clone(polycurve);
-				GeometryUtils.EnsureLinearized(polycurve, tolerance);
-
-				return CreateMultiPolycurve(polycurve, tolerance, aoi);
-			}
-
-			// Omit non-linear segments:
 			IEnumerable<IPath> paths = GeometryUtils.GetPaths(polycurve);
 
 			foreach (IPath path in paths.Where(p => ! IsDisjoint(p, aoi)))
 			{
-				List<Linestring> pathLinestrings =
-					GetLinearLinestrings(path).ToList();
-
-				// allow merging the last with the first in case the second segment is omitted
-				// (e.g. because it is non-linear)
-				int lastIdx = pathLinestrings.Count - 1;
-
-				if (pathLinestrings.Count > 1 &&
-				    pathLinestrings[0].StartPoint.Equals(
-					    pathLinestrings[lastIdx].EndPoint))
+				if (! omitNonLinearSegments)
 				{
-					var lastAndFirst = new List<Linestring>
-					                   {
-						                   pathLinestrings[lastIdx],
-						                   pathLinestrings[0]
-					                   };
-
-					Linestring newFirst =
-						GeomTopoOpUtils.MergeConnectedLinestrings(
-							lastAndFirst, null, tolerance);
-
-					pathLinestrings[0] = newFirst;
-					pathLinestrings.RemoveAt(lastIdx);
+					result.Add(new Linestring(GetLinearized(path, tolerance)));
 				}
+				else
+				{
+					List<Linestring> pathLinestrings =
+						GetLinearLinestrings(path).ToList();
 
-				result.AddRange(pathLinestrings);
+					// allow merging the last with the first in case the second segment is omitted
+					// (e.g. because it is non-linear)
+					int lastIdx = pathLinestrings.Count - 1;
+
+					if (pathLinestrings.Count > 1 &&
+					    pathLinestrings[0].StartPoint.Equals(
+						    pathLinestrings[lastIdx].EndPoint))
+					{
+						var lastAndFirst = new List<Linestring>
+						                   {
+							                   pathLinestrings[lastIdx],
+							                   pathLinestrings[0]
+						                   };
+
+						Linestring newFirst =
+							GeomTopoOpUtils.MergeConnectedLinestrings(
+								lastAndFirst, null, tolerance);
+
+						pathLinestrings[0] = newFirst;
+						pathLinestrings.RemoveAt(lastIdx);
+					}
+
+					result.AddRange(pathLinestrings);
+				}
 			}
 
 			return new MultiPolycurve(result);
@@ -572,9 +569,59 @@ namespace ProSuite.Commons.AO.Geometry
 			return GeometryFactory.CreatePoint(pnt.X, pnt.Y, z, double.NaN, spatialReference);
 		}
 
-		private static IEnumerable<Linestring> GetLinearLinestrings(
-			[NotNull] IPath path,
-			[CanBeNull] IEnvelope aoi = null)
+		private static IEnumerable<Line3D> GetLinearized([NotNull] IPath path,
+		                                                 double maxDeviation)
+		{
+			IPoint fromPoint = new PointClass();
+			IPoint toPoint = new PointClass();
+
+			Pnt3D startPnt = null;
+
+			bool zAware = GeometryUtils.IsZAware(path);
+
+			const double defaultToleranceFactor = 10000;
+
+			IEnvelope envelope = path.Envelope;
+
+			if (path.SpatialReference == null)
+			{
+				if (maxDeviation == 0)
+				{
+					maxDeviation = Math.Max(envelope.Width, envelope.Height) /
+					               defaultToleranceFactor;
+				}
+			}
+			else
+			{
+				if (maxDeviation == 0)
+				{
+					double tolerance = GeometryUtils.GetXyTolerance(path);
+					maxDeviation = tolerance;
+				}
+			}
+
+			ISegmentCollection segmentCollection = (ISegmentCollection) path;
+			foreach (ILine line in
+			         GeometryUtils.GetLinearizedSegments(segmentCollection, maxDeviation))
+			{
+				if (startPnt == null)
+				{
+					line.QueryFromPoint(fromPoint);
+					startPnt = CreatePnt3d(fromPoint, zAware);
+				}
+
+				line.QueryToPoint(toPoint);
+
+				Pnt3D endPnt = CreatePnt3d(toPoint, zAware);
+				Line3D line3D = new Line3D(startPnt, endPnt);
+
+				yield return line3D;
+
+				startPnt = endPnt;
+			}
+		}
+
+		private static IEnumerable<Linestring> GetLinearLinestrings([NotNull] IPath path)
 		{
 			IPoint fromPoint = new PointClass();
 			IPoint toPoint = new PointClass();
