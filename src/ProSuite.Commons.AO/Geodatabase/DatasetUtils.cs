@@ -2082,18 +2082,23 @@ namespace ProSuite.Commons.AO.Geodatabase
 		[NotNull]
 		public static IWorkspace GetWorkspace([NotNull] ITable table)
 		{
-			Assert.ArgumentNotNull(table, nameof(table));
-
-			return Assert.NotNull(((IDataset) table).Workspace);
+			return GetWorkspace((IDataset) table);
 		}
 
 		[NotNull]
 		public static IWorkspace GetWorkspace([NotNull] IObjectClass objectClass)
 		{
-			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
+			return GetWorkspace((IDataset) objectClass);
+		}
 
-			return Assert.NotNull(((IDataset) objectClass).Workspace,
-			                      "Workspace of {0} is null", GetName(objectClass));
+		[NotNull]
+		public static IWorkspace GetWorkspace([NotNull] IDataset dataset)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			// Null in case of image server layers
+			var workspace = dataset.Workspace;
+			return Assert.NotNull(workspace, "Workspace of {0} is null", GetName(dataset));
 		}
 
 		[NotNull]
