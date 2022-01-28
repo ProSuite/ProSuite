@@ -9,13 +9,13 @@ namespace ProSuite.QA.Container.TestSupport
 	public abstract class FieldExpressionBase
 	{
 		private const string _columnName = "__expression";
-		private readonly ITable _table;
+		private readonly IReadOnlyTable _table;
 		private readonly string _expression;
 		private readonly bool _caseSensitive;
 
 		private TableView _tableView;
 
-		protected FieldExpressionBase([NotNull] ITable table,
+		protected FieldExpressionBase([NotNull] IReadOnlyTable table,
 		                              [NotNull] string expression,
 		                              bool evaluateImmediately = false,
 		                              bool caseSensitive = false)
@@ -43,7 +43,7 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[CanBeNull]
-		protected object GetValue([NotNull] IRow row)
+		protected object GetValue([NotNull] IReadOnlyRow row)
 		{
 			if (_tableView == null)
 			{
@@ -63,7 +63,7 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		private TableView CreateTableView([NotNull] ITable table,
+		private TableView CreateTableView([NotNull] IReadOnlyTable table,
 		                                  [NotNull] string expression,
 		                                  bool caseSensitive)
 		{

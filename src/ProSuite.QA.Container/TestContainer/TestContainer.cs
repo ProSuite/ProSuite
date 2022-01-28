@@ -315,18 +315,17 @@ namespace ProSuite.QA.Container.TestContainer
 
 					try
 					{
-						foreach (ITable table in test.InvolvedTables)
+						foreach (IReadOnlyTable table in test.InvolvedTables)
 						{
 							foreach (ISelectionSet selectionSet in selectionsList)
 							{
-								if (selectionSet.Target != table)
+								if (ReadOnlyTableFactory.Create(selectionSet.Target) != table)
 								{
 									continue;
 								}
 
-								const bool recycle = false;
 								errorCount +=
-									test.Execute(new EnumCursor(selectionSet, null, recycle));
+									test.Execute(ReadOnlyTableFactory.EnumRows(new EnumCursor(selectionSet, null, recycle:false)));
 							}
 						}
 					}
@@ -536,9 +535,8 @@ namespace ProSuite.QA.Container.TestContainer
 			var involvedRows = new List<InvolvedRow>();
 			IGeometry errorGeometry = null;
 
-			IRow row = null;
-			var rowReference = dataReference as RowReference;
-			if (rowReference != null)
+			IReadOnlyRow row = null;
+			if (dataReference is RowReference rowReference)
 			{
 				row = rowReference.Row;
 			}

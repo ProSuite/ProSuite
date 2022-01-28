@@ -67,13 +67,13 @@ namespace ProSuite.QA.Container.TestContainer
 			}
 		}
 
-		[NotNull] private readonly IDictionary<int, ITable> _baseTablePerOidFieldIndex;
+		[NotNull] private readonly IDictionary<int, IReadOnlyTable> _baseTablePerOidFieldIndex;
 		[NotNull] private readonly IDictionary<IList<int?>, int> _keysToId;
 		[NotNull] private readonly IDictionary<int, IList<int?>> _idToKeys;
 
 		private int _uniqueIdCount;
 
-		public UniqueIdProvider([NotNull] IDictionary<int, ITable> baseTablePerOidFieldIndex)
+		public UniqueIdProvider([NotNull] IDictionary<int, IReadOnlyTable> baseTablePerOidFieldIndex)
 		{
 			Assert.ArgumentNotNull(baseTablePerOidFieldIndex, nameof(baseTablePerOidFieldIndex));
 
@@ -91,13 +91,13 @@ namespace ProSuite.QA.Container.TestContainer
 			return new List<int>(_baseTablePerOidFieldIndex.Keys);
 		}
 
-		public IList<int?> GetKeys(IFeature feature)
+		public IList<int?> GetKeys(IReadOnlyFeature feature)
 		{
 			var keys = new List<int?>(5); // _keysToId.Count);
 
 			foreach (int fieldIndex in _baseTablePerOidFieldIndex.Keys)
 			{
-				object oidValue = feature.Value[fieldIndex];
+				object oidValue = feature.get_Value(fieldIndex);
 
 				keys.Add(oidValue as int?);
 			}
@@ -105,7 +105,7 @@ namespace ProSuite.QA.Container.TestContainer
 			return keys;
 		}
 
-		public int GetUniqueId([NotNull] IFeature feature)
+		public int GetUniqueId([NotNull] IReadOnlyFeature feature)
 		{
 			IList<int?> keys = GetKeys(feature);
 			int uniqueId = GetUniqueId(keys);
@@ -135,7 +135,7 @@ namespace ProSuite.QA.Container.TestContainer
 		{
 			var iKey = 0;
 			List<InvolvedRow> involvedRows = new InvolvedRows();
-			foreach (ITable baseTable in _baseTablePerOidFieldIndex.Values)
+			foreach (var baseTable in _baseTablePerOidFieldIndex.Values)
 			{
 				int? key = keys[iKey];
 				iKey++;
@@ -145,7 +145,7 @@ namespace ProSuite.QA.Container.TestContainer
 					continue;
 				}
 
-				involvedRows.Add(new InvolvedRow(((IDataset) baseTable).Name, key.Value));
+				involvedRows.Add(new InvolvedRow(baseTable.Name, key.Value));
 			}
 
 			return involvedRows;

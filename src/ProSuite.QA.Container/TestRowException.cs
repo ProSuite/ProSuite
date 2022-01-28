@@ -5,7 +5,7 @@ namespace ProSuite.QA.Container
 {
 	public class TestRowException : Exception
 	{
-		public TestRowException(ITest test, IRow row, string msg)
+		public TestRowException(ITest test, IReadOnlyRow row, string msg)
 			: base(msg)
 		{
 			Test = test;
@@ -14,6 +14,6 @@ namespace ProSuite.QA.Container
 
 		public ITest Test { get; }
 
-		public IRow Row { get; }
+		public IReadOnlyRow Row { get; }
 	}
 }

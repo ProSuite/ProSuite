@@ -7,11 +7,11 @@ namespace ProSuite.QA.Container.TestSupport
 {
 	public class RowCondition
 	{
-		[NotNull] private readonly ITable _table;
+		[NotNull] private readonly IReadOnlyTable _table;
 		private readonly bool _undefinedConstraintIsFulfilled;
 		[CanBeNull] private readonly TableView _tableView;
 
-		public RowCondition([NotNull] ITable table,
+		public RowCondition([NotNull] IReadOnlyTable table,
 		                    [CanBeNull] string condition,
 		                    bool undefinedConstraintIsFulfilled = false,
 		                    bool caseSensitive = false)
@@ -29,7 +29,7 @@ namespace ProSuite.QA.Container.TestSupport
 			}
 		}
 
-		public bool IsFulfilled([NotNull] IRow row)
+		public bool IsFulfilled([NotNull] IReadOnlyRow row)
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
 			Assert.ArgumentCondition(row.Table == _table, "table does not match");

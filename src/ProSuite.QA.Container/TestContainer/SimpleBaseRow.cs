@@ -9,7 +9,7 @@ namespace ProSuite.QA.Container.TestContainer
 {
 	public class SimpleBaseRow : BaseRow
 	{
-		public SimpleBaseRow([NotNull] IFeature feature)
+		public SimpleBaseRow([NotNull] IReadOnlyFeature feature)
 			: base(feature, QaGeometryUtils.CreateBox(feature.Shape), GetOidList(feature)) { }
 
 		protected override Box GetExtent()

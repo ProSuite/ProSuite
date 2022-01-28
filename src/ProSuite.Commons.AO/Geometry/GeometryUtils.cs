@@ -6710,7 +6710,15 @@ namespace ProSuite.Commons.AO.Geometry
 			               "The geometry has no spatial reference, " +
 			               "unable to determine xy tolerance");
 
-			return ((ISpatialReferenceTolerance) sref).XYTolerance;
+			return GetXyTolerance(sref);
+		}
+		public static double GetXyTolerance([NotNull] ISpatialReference spatialReference)
+		{
+			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
+
+			ISpatialReference sref = spatialReference;
+
+			return ((ISpatialReferenceTolerance)sref).XYTolerance;
 		}
 
 		/// <summary>
@@ -6768,8 +6776,14 @@ namespace ProSuite.Commons.AO.Geometry
 
 			ISpatialReference spatialReference = geoDataset.SpatialReference;
 
-			return ((ISpatialReferenceTolerance) spatialReference)?.XYTolerance ?? defaultTolerance;
+			return GetXyTolerance(spatialReference, defaultTolerance);
 		}
+
+		public static double GetXyTolerance([CanBeNull] ISpatialReference spatialReference,	double defaultTolerance)
+		{
+			return ((ISpatialReferenceTolerance)spatialReference)?.XYTolerance ?? defaultTolerance;
+		}
+
 
 		public static void SetMinimumXyTolerance([NotNull] IGeometry geometry)
 		{

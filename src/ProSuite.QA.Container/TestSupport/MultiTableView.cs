@@ -83,11 +83,11 @@ namespace ProSuite.QA.Container.TestSupport
 			    showTableAliasNameIfDiffers)
 			{
 				IWorkspace commonWorkspace = null;
-				IDataset commonDataset = null;
+				IReadOnlyDataset commonDataset = null;
 				string commonAlias = null;
 				foreach (ColumnInfo columnInfo in ColumnInfos)
 				{
-					var dataset = (IDataset) columnInfo.Table;
+					var dataset = columnInfo.Table;
 
 					if (commonWorkspace == null || commonWorkspace == dataset.Workspace)
 					{
@@ -150,12 +150,12 @@ namespace ProSuite.QA.Container.TestSupport
 				var name = new StringBuilder();
 				if (showWorkspaceName || workspaceNamesDiffer)
 				{
-					name.AppendFormat("{0}.", ((IDataset) columnInfo.Table).Workspace.PathName);
+					name.AppendFormat("{0}.", columnInfo.Table.Workspace.PathName);
 				}
 
 				if (showTableName || tableNamesDiffer)
 				{
-					name.AppendFormat("{0}.", ((IDataset) columnInfo.Table).Name);
+					name.AppendFormat("{0}.", columnInfo.Table.Name);
 				}
 
 				if (showTableAliasName || aliasNameDiffers)

@@ -10,12 +10,12 @@ namespace ProSuite.QA.Container.TestSupport
 	{
 		private const string _expressionColumnName = "__valueExpression";
 
-		private readonly ITable _table;
+		private readonly IReadOnlyTable _table;
 		private readonly string _expression;
 
 		private readonly TableView _expressionView;
 
-		public ExpressionValueProvider([NotNull] ITable table,
+		public ExpressionValueProvider([NotNull] IReadOnlyTable table,
 		                               [NotNull] string expression,
 		                               bool caseSensitive = false)
 		{
@@ -47,7 +47,7 @@ namespace ProSuite.QA.Container.TestSupport
 			return valueView;
 		}
 
-		T? IValueProvider<T>.GetValue(IRow row)
+		T? IValueProvider<T>.GetValue(IReadOnlyRow row)
 		{
 			_expressionView.ClearRows();
 

@@ -9,7 +9,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 
 		public NetPoint(TableIndexRow row) : base(row)
 		{
-			_point = new NetPoint_((IPoint) ((IFeature) row.Row).Shape);
+			_point = new NetPoint_((IPoint) ((IReadOnlyFeature) row.Row).Shape);
 		}
 
 		protected override NetPoint_ NetPoint__

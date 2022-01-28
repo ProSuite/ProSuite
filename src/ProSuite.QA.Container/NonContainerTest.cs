@@ -9,6 +9,6 @@ namespace ProSuite.QA.Container
 	/// </summary>
 	public abstract class NonContainerTest : TestBase
 	{
-		protected NonContainerTest([NotNull] IEnumerable<ITable> tables) : base(tables) { }
+		protected NonContainerTest([NotNull] IEnumerable<IReadOnlyTable> tables) : base(tables) { }
 	}
 }

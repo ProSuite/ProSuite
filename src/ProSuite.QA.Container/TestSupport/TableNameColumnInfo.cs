@@ -23,7 +23,7 @@ namespace ProSuite.QA.Container.TestSupport
 		{
 			return _qualified
 				       ? Table.Name
-				       : DatasetUtils.GetUnqualifiedName(Table.Name);
+				       : DatasetUtils.GetTableName(Table.Workspace, Table.Name);
 		}
 	}
 }

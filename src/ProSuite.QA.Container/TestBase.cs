@@ -66,7 +66,7 @@ namespace ProSuite.QA.Container
 		int IErrorReporting.Report(string description,
 		                           IssueCode issueCode,
 		                           string affectedComponent,
-		                           params IRow[] rows)
+		                           params IReadOnlyRow[] rows)
 		{
 			const IGeometry errorGeometry = null;
 			const bool reportIndividualParts = false;
@@ -79,7 +79,7 @@ namespace ProSuite.QA.Container
 
 		int IErrorReporting.Report(string description,
 		                           IGeometry errorGeometry,
-		                           params IRow[] rows)
+		                           params IReadOnlyRow[] rows)
 		{
 			return ReportError(description, errorGeometry, null, null, rows);
 		}
@@ -88,7 +88,7 @@ namespace ProSuite.QA.Container
 		                           IGeometry errorGeometry,
 		                           IssueCode issueCode,
 		                           string affectedComponent,
-		                           params IRow[] rows)
+		                           params IReadOnlyRow[] rows)
 		{
 			const bool reportIndividualParts = false;
 
@@ -101,7 +101,7 @@ namespace ProSuite.QA.Container
 		                           IGeometry errorGeometry,
 		                           IssueCode issueCode,
 		                           bool reportIndividualParts,
-		                           params IRow[] rows)
+		                           params IReadOnlyRow[] rows)
 		{
 			return ReportError(description, errorGeometry,
 			                   issueCode, null,
@@ -110,7 +110,7 @@ namespace ProSuite.QA.Container
 
 		public int Report(string description, IGeometry errorGeometry, IssueCode issueCode,
 		                  string affectedComponent, IEnumerable<object> values,
-		                  params IRow[] rows)
+		                  params IReadOnlyRow[] rows)
 		{
 			return ReportError(description, errorGeometry,
 			                   issueCode, affectedComponent, values,
@@ -122,7 +122,7 @@ namespace ProSuite.QA.Container
 		                           IssueCode issueCode,
 		                           string affectedComponent,
 		                           bool reportIndividualParts,
-		                           params IRow[] rows)
+		                           params IReadOnlyRow[] rows)
 		{
 			return ReportError(description, errorGeometry,
 			                   issueCode, affectedComponent,
@@ -277,11 +277,11 @@ namespace ProSuite.QA.Container
 		}
 
 		[NotNull]
-		private static InvolvedRow CreateInvolvedRowForTable([NotNull] ITable table)
+		private static InvolvedRow CreateInvolvedRowForTable([NotNull] IReadOnlyTable table)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
-			return new InvolvedRow(DatasetUtils.GetName(table));
+			return new InvolvedRow(table.Name);
 		}
 	}
 }

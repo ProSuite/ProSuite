@@ -10,7 +10,7 @@ namespace ProSuite.QA.Container.TestContainer
 		[CanBeNull] private IList<int> _oidList;
 		[CanBeNull] private Box _box;
 
-		protected BaseRow([NotNull] IFeature feature,
+		protected BaseRow([NotNull] IReadOnlyFeature feature,
 		                  [CanBeNull] Box box = null,
 		                  [CanBeNull] IList<int> oidList = null)
 		{
@@ -25,7 +25,7 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		[CanBeNull]
-		public ITable Table { get; }
+		public IReadOnlyTable Table { get; }
 
 		public int OID { get; }
 
@@ -33,15 +33,15 @@ namespace ProSuite.QA.Container.TestContainer
 		public IList<int> OidList => _oidList ?? (_oidList = GetOidList());
 
 		[NotNull]
-		protected static IList<int> GetOidList([NotNull] IFeature feature)
+		protected static IList<int> GetOidList([NotNull] IReadOnlyFeature feature)
 		{
-			ITable table = feature.Table;
+			IReadOnlyTable table = feature.Table;
 			if (table.HasOID)
 			{
 				return new int[] { };
 			}
 
-			var fc = (IFeatureClass) table;
+			var fc = (IReadOnlyFeatureClass) table;
 			IFields fields = fc.Fields;
 			int fieldCount = fields.FieldCount;
 
@@ -59,7 +59,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 				// TODO check field type first instead of reading all values? 
 				// TODO keep list of int fields in dictionary somewhere (per table?)
-				object value = feature.Value[fieldIndex];
+				object value = feature.get_Value(fieldIndex);
 				if (value is int)
 				{
 					result.Add((int) value);

@@ -202,10 +202,10 @@ namespace ProSuite.QA.Container.PolygonGrower
 			return tree;
 		}
 
-		public LineListPolygon AssignCentroid(IRow pointRow, out TopologicalLine line,
+		public LineListPolygon AssignCentroid(IReadOnlyRow pointRow, out TopologicalLine line,
 		                                      out int side)
 		{
-			var point = (Ao.IPoint) ((IFeature) pointRow).Shape;
+			var point = (Ao.IPoint) ((IReadOnlyFeature) pointRow).Shape;
 			line = NearestLine(_spatialIndex, point, false, out side);
 			if (line == null)
 			{

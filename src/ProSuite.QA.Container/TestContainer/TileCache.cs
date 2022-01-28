@@ -15,14 +15,14 @@ namespace ProSuite.QA.Container.TestContainer
 {
 	internal class TileCache
 	{
-		private readonly IList<ITable> _cachedTables;
+		private readonly IList<IReadOnlyTable> _cachedTables;
 		private readonly RowBoxTree[] _rowBoxTrees;
 		private readonly IEnvelope _envelopeTemplate = new EnvelopeClass();
 		private readonly IBox _testRunBox;
 		private readonly double[] _xyToleranceByTableIndex;
 		private readonly ITestContainer _container;
 		private readonly int _cachedTableCount;
-		private readonly IDictionary<ITable, IList<ContainerTest>> _testsPerTable;
+		private readonly IDictionary<IReadOnlyTable, IList<ContainerTest>> _testsPerTable;
 		private readonly IEnvelope[] _loadedExtents;
 
 		private double _maximumSearchTolerance;
@@ -33,9 +33,9 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private BoxSelection[] _currentRowNeighbors;
 
-		public TileCache([NotNull] IList<ITable> cachedTables, [NotNull] IBox testRunBox,
+		public TileCache([NotNull] IList<IReadOnlyTable> cachedTables, [NotNull] IBox testRunBox,
 		                 [NotNull] ITestContainer container,
-		                 [NotNull] IDictionary<ITable, IList<ContainerTest>> testsPerTable)
+		                 [NotNull] IDictionary<IReadOnlyTable, IList<ContainerTest>> testsPerTable)
 		{
 			_cachedTables = cachedTables;
 			_testRunBox = testRunBox;
@@ -69,7 +69,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		[NotNull]
 		private static double[] GetXYTolerancePerTable(
-			[NotNull] ICollection<ITable> tables)
+			[NotNull] ICollection<IReadOnlyTable> tables)
 		{
 			Assert.ArgumentNotNull(tables, nameof(tables));
 
@@ -78,12 +78,12 @@ namespace ProSuite.QA.Container.TestContainer
 			const double defaultTolerance = 0;
 
 			var tableIndex = 0;
-			foreach (ITable table in tables)
+			foreach (IReadOnlyTable table in tables)
 			{
-				var geoDataset = table as IGeoDataset;
+				var geoDataset = table as IReadOnlyGeoDataset;
 				result[tableIndex] = geoDataset == null
 					                     ? defaultTolerance
-					                     : GeometryUtils.GetXyTolerance(geoDataset,
+					                     : GeometryUtils.GetXyTolerance(geoDataset.SpatialReference,
 						                     defaultTolerance);
 
 				tableIndex++;
@@ -105,7 +105,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 				_searchToleranceFromTo[queriedTableIndex] = searchToleranceByTable;
 
-				ITable table = GetCachedTable(queriedTableIndex);
+				IReadOnlyTable table = GetCachedTable(queriedTableIndex);
 				if (! _testsPerTable.TryGetValue(table, out IList<ContainerTest> tableTests))
 				{
 					continue;
@@ -121,7 +121,7 @@ namespace ProSuite.QA.Container.TestContainer
 					_maximumSearchTolerance = Math.Max(_maximumSearchTolerance,
 					                                   containerTest.SearchDistance);
 
-					foreach (ITable involvedTable in containerTest.InvolvedTables)
+					foreach (IReadOnlyTable involvedTable in containerTest.InvolvedTables)
 					{
 						int involvedTableIndex = _cachedTables.IndexOf(involvedTable);
 
@@ -142,7 +142,7 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		[NotNull]
-		private ITable GetCachedTable(int tableIndex)
+		private IReadOnlyTable GetCachedTable(int tableIndex)
 		{
 			return _cachedTables[tableIndex];
 		}
@@ -153,7 +153,7 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		[CanBeNull]
-		public IList<IRow> Search([NotNull] ITable table,
+		public IList<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
 		                          int tableIndex,
 		                          [NotNull] IQueryFilter queryFilter,
 		                          [NotNull] QueryFilterHelper filterHelper,
@@ -162,7 +162,7 @@ namespace ProSuite.QA.Container.TestContainer
 			var spatialFilter = (ISpatialFilter) queryFilter;
 			IGeometry filterGeometry = spatialFilter.Geometry;
 
-			IList<IRow> result = new List<IRow>();
+			IList<IReadOnlyRow> result = new List<IReadOnlyRow>();
 
 			// TODO explain network queries
 			bool repeatCachedRows = filterHelper.RepeatCachedRows ?? filterHelper.ForNetwork;
@@ -271,7 +271,7 @@ namespace ProSuite.QA.Container.TestContainer
 					continue;
 				}
 
-				IFeature targetFeature = cachedRow.Feature;
+				IReadOnlyFeature targetFeature = cachedRow.Feature;
 
 				if (targetFeature.OID < filterHelper.MinimumOID)
 				{

@@ -7,21 +7,21 @@ namespace ProSuite.QA.Container.PolygonGrower
 {
 	public sealed class TableIndexRow : ITableIndexRow
 	{
-		public TableIndexRow([NotNull] IRow row, int tableIndex)
+		public TableIndexRow([NotNull] IReadOnlyRow row, int tableIndex)
 		{
 			Row = row;
 			TableIndex = tableIndex;
 		}
 
 		[NotNull]
-		public IRow Row { get; }
+		public IReadOnlyRow Row { get; }
 
-		IRow ITableIndexRow.GetRow(IList<ITable> tables)
+		IReadOnlyRow ITableIndexRow.GetRow(IList<IReadOnlyTable> tables)
 		{
 			return Row;
 		}
 
-		IRow ITableIndexRow.CachedRow => Row;
+		IReadOnlyRow ITableIndexRow.CachedRow => Row;
 
 		public int RowOID
 		{

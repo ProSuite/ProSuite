@@ -70,10 +70,10 @@ namespace ProSuite.QA.Container
 					involveds.Add(GetInvolvedCore(baseRow));
 				}
 
-				return new InvolvedNested(((IDataset) row.Table).Name, involveds);
+				return new InvolvedNested(row.Table.Name, involveds);
 			}
 
-			if (((IDataset) row.Table).FullName is IQueryName qn)
+			if (row.Table.FullName is IQueryName qn)
 			{
 				List<Involved> involveds = new List<Involved>();
 				foreach (string table in qn.QueryDef.Tables.Split(','))
@@ -83,11 +83,11 @@ namespace ProSuite.QA.Container
 					int iOid = row.Table.FindField(oidField);
 					if (iOid >= 0)
 					{
-						involveds.Add(new InvolvedRow(t, (int) row.Value[iOid]));
+						involveds.Add(new InvolvedRow(t, (int) row.get_Value(iOid)));
 					}
 				}
 
-				return new InvolvedNested(((IDataset) row.Table).Name, involveds);
+				return new InvolvedNested(row.Table.Name, involveds);
 			}
 
 			return new InvolvedRow(row);

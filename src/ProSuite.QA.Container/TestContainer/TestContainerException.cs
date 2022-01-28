@@ -9,7 +9,7 @@ namespace ProSuite.QA.Container.TestContainer
 	public class TestContainerException : Exception
 	{
 		private readonly IEnvelope _box;
-		private readonly IRow _row;
+		private readonly IReadOnlyRow _row;
 		private readonly ITest _test;
 
 		#region Constructors
@@ -22,7 +22,7 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		public TestContainerException([NotNull] ITest test,
-		                              [NotNull] IRow row,
+		                              [NotNull] IReadOnlyRow row,
 		                              [CanBeNull] Exception innerException)
 			: base(GetMessage(test, row), innerException)
 		{
@@ -46,7 +46,7 @@ namespace ProSuite.QA.Container.TestContainer
 			get { return _test; }
 		}
 
-		public IRow Row
+		public IReadOnlyRow Row
 		{
 			get { return _row; }
 		}
@@ -61,22 +61,22 @@ namespace ProSuite.QA.Container.TestContainer
 			return string.Format("Error while processing test {0}", test);
 		}
 
-		private static string GetMessage([NotNull] ITest test, [NotNull] IRow row)
+		private static string GetMessage([NotNull] ITest test, [NotNull] IReadOnlyRow row)
 		{
 			Assert.ArgumentNotNull(test, nameof(test));
 			Assert.ArgumentNotNull(row, nameof(row));
 
-			ITable table = row.Table;
+			IReadOnlyTable table = row.Table;
 
-			if (table is IDataset)
+			if (table is IReadOnlyDataset dataset)
 			{
 				return table.HasOID
 					       ? string.Format(
 						       "Error in test {0} while processing row of table {1}, OID = {2}",
-						       test, ((IDataset) table).Name, row.OID)
+						       test, dataset.Name, row.OID)
 					       : string.Format(
 						       "Error in test {0} while processing row of table {1} (no OID)",
-						       test, ((IDataset) table).Name);
+						       test, dataset.Name);
 			}
 
 			if (row is TerrainRow)

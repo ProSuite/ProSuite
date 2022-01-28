@@ -3193,29 +3193,30 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return WorkspaceUtils.GetConnectedUser(GetWorkspace(objectClass));
 		}
 
-		public static bool TryGetXyTolerance([NotNull] IFeatureClass featureClass,
-		                                     out double xyTolerance)
-		{
-			const bool requireBigEnough = false;
-			return TryGetXyTolerance(featureClass, out xyTolerance, requireBigEnough);
-		}
 
 		public static bool TryGetXyTolerance([NotNull] IFeatureClass featureClass,
-		                                     out double xyTolerance,
-		                                     bool requireBigEnough)
+																				 out double xyTolerance,
+																				 bool requireBigEnough = false)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
-			ISpatialReference spatialReference = ((IGeoDataset) featureClass).SpatialReference;
+			ISpatialReference spatialReference = ((IGeoDataset)featureClass).SpatialReference;
+			return TryGetXyTolerance(spatialReference, out xyTolerance, requireBigEnough);
+		}
+		public static bool TryGetXyTolerance([NotNull] ISpatialReference spatialReference,
+																				 out double xyTolerance,
+																				 bool requireBigEnough = false)
+		{
+			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
 
 			var spatialReferenceTolerance = spatialReference as ISpatialReferenceTolerance;
 
 			if (spatialReferenceTolerance != null &&
-			    IsToleranceValid(spatialReferenceTolerance.XYToleranceValid,
-			                     requireBigEnough))
+					IsToleranceValid(spatialReferenceTolerance.XYToleranceValid,
+													 requireBigEnough))
 			{
 				xyTolerance = spatialReferenceTolerance.XYTolerance;
-				return ! double.IsNaN(xyTolerance);
+				return !double.IsNaN(xyTolerance);
 			}
 
 			xyTolerance = double.NaN;
@@ -3265,13 +3266,20 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return false;
 		}
 
-		public static bool TryGetMTolerance([NotNull] IFeatureClass featureClass,
-		                                    out double mTolerance,
-		                                    bool requireBigEnough = false)
+		public static bool TryGetMTolerance([NotNull] IFeatureClass s,
+																				out double mTolerance,
+																				bool requireBigEnough = false)
 		{
-			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+			Assert.ArgumentNotNull(s, nameof(s));
 
-			ISpatialReference spatialReference = ((IGeoDataset) featureClass).SpatialReference;
+			ISpatialReference spatialReference = ((IGeoDataset)s).SpatialReference;
+			return TryGetMTolerance(spatialReference, out mTolerance, requireBigEnough);
+		}
+		public static bool TryGetMTolerance([NotNull] ISpatialReference spatialReference,
+																				out double mTolerance,
+																				bool requireBigEnough = false)
+		{
+			Assert.ArgumentNotNull(spatialReference, nameof(spatialReference));
 
 			var spatialReferenceTolerance = spatialReference as ISpatialReferenceTolerance;
 

@@ -46,8 +46,8 @@ namespace ProSuite.QA.Container.TestSupport
 
 		#endregion
 
-		public int ReportErrors([NotNull] IFeature feature1, int tableIndex1,
-		                        [NotNull] IFeature feature2, int tableIndex2,
+		public int ReportErrors([NotNull] IReadOnlyFeature feature1, int tableIndex1,
+		                        [NotNull] IReadOnlyFeature feature2, int tableIndex2,
 		                        [NotNull] IErrorReporting reportError,
 		                        [CanBeNull] IssueCode issueCode,
 		                        bool reportIndividualErrors)
@@ -180,8 +180,8 @@ namespace ProSuite.QA.Container.TestSupport
 		}
 
 		[NotNull]
-		private IEnumerable<IGeometry> GetIntersections([NotNull] IFeature feature1,
-		                                                [NotNull] IFeature feature2)
+		private IEnumerable<IGeometry> GetIntersections([NotNull] IReadOnlyFeature feature1,
+		                                                [NotNull] IReadOnlyFeature feature2)
 		{
 			IGeometry g1 = feature1.Shape;
 			IGeometry g2 = feature2.Shape;

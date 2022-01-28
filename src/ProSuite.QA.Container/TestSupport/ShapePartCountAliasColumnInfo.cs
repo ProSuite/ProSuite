@@ -17,7 +17,7 @@ namespace ProSuite.QA.Container.TestSupport
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNullOrEmpty(columnName, nameof(columnName));
 
-			var featureClass = table as IFeatureClass;
+			var featureClass = table as IReadOnlyFeatureClass;
 			if (featureClass != null)
 			{
 				_baseFieldNames.Add(featureClass.ShapeFieldName);

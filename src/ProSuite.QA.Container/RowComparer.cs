@@ -7,7 +7,7 @@ using ProSuite.QA.Container.TestSupport;
 
 namespace ProSuite.QA.Container
 {
-	public class RowComparer : IComparer<IRow>
+	public class RowComparer : IComparer<IReadOnlyRow>
 	{
 		private readonly IRelatedTablesProvider _relatedTablesProvider;
 
@@ -24,7 +24,7 @@ namespace ProSuite.QA.Container
 
 		#region IComparer<IRow> Members
 
-		public int Compare(IRow row0, IRow row1)
+		public int Compare(IReadOnlyRow row0, IReadOnlyRow row1)
 		{
 			if (row0 == row1)
 			{
@@ -38,8 +38,8 @@ namespace ProSuite.QA.Container
 			}
 
 			// oids are equal
-			ITable table0 = row0.Table;
-			ITable table1 = row1.Table;
+			IReadOnlyTable table0 = row0.Table;
+			IReadOnlyTable table1 = row1.Table;
 
 			if (table0 == table1)
 			{
@@ -50,14 +50,14 @@ namespace ProSuite.QA.Container
 			}
 
 			// TODO names might not be unique (if multiple workspaces are involved)
-			string name0 = ((IDataset) table0).Name;
-			string name1 = ((IDataset) table1).Name;
+			string name0 = table0.Name;
+			string name1 = table1.Name;
 
 			return string.Compare(name0, name1, StringComparison.Ordinal);
 		}
 
-		private static int CompareRelatedRows([NotNull] IRow row0,
-		                                      [NotNull] IRow row1,
+		private static int CompareRelatedRows([NotNull] IReadOnlyRow row0,
+		                                      [NotNull] IReadOnlyRow row1,
 		                                      [NotNull] RelatedTables relTables)
 		{
 			IList<InvolvedRow> relatedList0 = relTables.GetInvolvedRows(row0);

@@ -36,7 +36,7 @@ namespace ProSuite.QA.Container.TestSupport
 			//					 ? row.Table.FindField(ColumnName)
 			//					 : _fieldIndex;
 
-			return row.Value[_fieldIndex];
+			return row.get_Value(_fieldIndex);
 		}
 
 		protected override string FormatValueCore(IReadOnlyRow row, object rawValue)

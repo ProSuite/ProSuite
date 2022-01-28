@@ -34,7 +34,7 @@ namespace ProSuite.QA.Container.TestSupport
 					continue;
 				}
 
-				string tableName = ((IDataset) table).Name;
+				string tableName = table.Name;
 				string oidFieldName = tableName + "." + table.OIDFieldName;
 				int oidFieldIndex = joinedTable.FindField(oidFieldName);
 
@@ -58,7 +58,7 @@ namespace ProSuite.QA.Container.TestSupport
 
 			foreach (RelatedTable relatedTable in _relTables)
 			{
-				object oid = row.Value[relatedTable.OidFieldIndex];
+				object oid = row.get_Value(relatedTable.OidFieldIndex);
 
 				if (oid is int)
 				{
@@ -85,7 +85,7 @@ namespace ProSuite.QA.Container.TestSupport
 					continue;
 				}
 
-				object oid = row.Value[relatedTable.OidFieldIndex];
+				object oid = row.get_Value(relatedTable.OidFieldIndex);
 				if (! (oid is int))
 				{
 					continue;

@@ -11,9 +11,9 @@ namespace ProSuite.QA.Container.PolygonGrower
 		int TableIndex { get; }
 
 		[NotNull]
-		IRow GetRow([NotNull] IList<ITable> tableIndexTables);
+		IReadOnlyRow GetRow([NotNull] IList<IReadOnlyTable> tableIndexTables);
 
 		[CanBeNull]
-		IRow CachedRow { get; }
+		IReadOnlyRow CachedRow { get; }
 	}
 }

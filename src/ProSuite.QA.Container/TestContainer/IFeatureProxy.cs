@@ -6,6 +6,6 @@ namespace ProSuite.QA.Container.TestContainer
 	public interface IFeatureProxy
 	{
 		[NotNull]
-		IFeature Inner { get; }
+		IReadOnlyFeature Inner { get; }
 	}
 }

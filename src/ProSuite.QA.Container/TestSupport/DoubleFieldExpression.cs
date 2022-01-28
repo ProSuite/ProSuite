@@ -6,14 +6,14 @@ namespace ProSuite.QA.Container.TestSupport
 {
 	public class DoubleFieldExpression : FieldExpressionBase
 	{
-		public DoubleFieldExpression([NotNull] ITable table,
+		public DoubleFieldExpression([NotNull] IReadOnlyTable table,
 		                             [NotNull] string expression,
 		                             bool evaluateImmediately = false,
 		                             bool caseSensitive = false)
 			: base(table, expression, evaluateImmediately, caseSensitive) { }
 
 		[CanBeNull]
-		public double? GetDouble([NotNull] IRow row)
+		public double? GetDouble([NotNull] IReadOnlyRow row)
 		{
 			object value = GetValue(row);
 

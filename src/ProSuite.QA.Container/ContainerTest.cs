@@ -36,7 +36,7 @@ namespace ProSuite.QA.Container
 		/// Initializes a new instance of the <see cref="ContainerTest"/> class.
 		/// </summary>
 		/// <param name="tables">The tables.</param>
-		protected ContainerTest([NotNull] IEnumerable<ITable> tables)
+		protected ContainerTest([NotNull] IEnumerable<IReadOnlyTable> tables)
 			: base(tables)
 		{
 			Assert.ArgumentNotNull(tables, nameof(tables));
@@ -51,7 +51,7 @@ namespace ProSuite.QA.Container
 		/// Initializes a new instance of the <see cref="ContainerTest"/> class.
 		/// </summary>
 		/// <param name="table">The table.</param>
-		protected ContainerTest(ITable table) : this(new[] {table}) { }
+		protected ContainerTest(IReadOnlyTable table) : this(new[] {table}) { }
 
 		#endregion
 

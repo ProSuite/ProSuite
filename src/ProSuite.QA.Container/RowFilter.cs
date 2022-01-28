@@ -8,9 +8,9 @@ namespace ProSuite.QA.Container
 	{
 		public string Name { get; set; }
 
-		protected RowFilter([NotNull] IEnumerable<ITable> tables)
+		protected RowFilter([NotNull] IEnumerable<IReadOnlyTable> tables)
 			: base(tables) { }
 
-		public abstract bool VerifyExecute(IRow row);
+		public abstract bool VerifyExecute(IReadOnlyRow row);
 	}
 }

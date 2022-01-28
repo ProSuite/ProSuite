@@ -9,10 +9,9 @@ namespace ProSuite.QA.Container.TestContainer
 	public static class UniqueIdProviderFactory
 	{
 		[CanBeNull]
-		public static UniqueIdProvider Create([NotNull] ITable table)
+		public static UniqueIdProvider Create([NotNull] IReadOnlyTable table)
 		{
-			var dataset = (IDataset) table;
-			var queryName = dataset.FullName as IQueryName2;
+			var queryName = table.FullName as IQueryName2;
 
 			if (queryName?.PrimaryKey == null)
 			{
@@ -24,7 +23,7 @@ namespace ProSuite.QA.Container.TestContainer
 				return null;
 			}
 
-			Dictionary<int, ITable> baseTablePerOidFieldIndex =
+			Dictionary<int, IReadOnlyTable> baseTablePerOidFieldIndex =
 				GetBaseTablePerOIDFieldIndex(table);
 
 			return baseTablePerOidFieldIndex.Count < 2
@@ -33,13 +32,13 @@ namespace ProSuite.QA.Container.TestContainer
 		}
 
 		[NotNull]
-		private static Dictionary<int, ITable> GetBaseTablePerOIDFieldIndex(
-			[NotNull] ITable table)
+		private static Dictionary<int, IReadOnlyTable> GetBaseTablePerOIDFieldIndex(
+			[NotNull] IReadOnlyTable table)
 		{
-			var workspace = (IFeatureWorkspace) DatasetUtils.GetWorkspace(table);
+			var workspace = (IFeatureWorkspace) table.Workspace;
 
-			var result = new Dictionary<int, ITable>();
-			var tableDict = new Dictionary<string, ITable>();
+			var result = new Dictionary<int, IReadOnlyTable>();
+			var tableDict = new Dictionary<string, IReadOnlyTable>();
 
 			IFields fields = table.Fields;
 			int fieldCount = fields.FieldCount;
@@ -58,13 +57,13 @@ namespace ProSuite.QA.Container.TestContainer
 				string tableName = fieldName.Substring(0, splitPos);
 				string unqualifiedFieldName = fieldName.Substring(splitPos + 1);
 
-				ITable joinedTable;
+				IReadOnlyTable joinedTable;
 
 				if (! tableDict.TryGetValue(tableName, out joinedTable))
 				{
 					string typedName = tableName;
 					joinedTable = ExistsDataset(workspace, tableName)
-						              ? workspace.OpenTable(typedName)
+						              ? ReadOnlyTableFactory.Create(workspace.OpenTable(typedName))
 						              : null;
 
 					tableDict.Add(tableName, joinedTable);

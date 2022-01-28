@@ -6,14 +6,14 @@ namespace ProSuite.QA.Container.TestSupport
 {
 	public class IntFieldExpression : FieldExpressionBase
 	{
-		public IntFieldExpression([NotNull] ITable table,
+		public IntFieldExpression([NotNull] IReadOnlyTable table,
 		                          [NotNull] string expression,
 		                          bool evaluateImmediately = false,
 		                          bool caseSensitive = false)
 			: base(table, expression, evaluateImmediately, caseSensitive) { }
 
 		[CanBeNull]
-		public int? GetInt([NotNull] IRow row)
+		public int? GetInt([NotNull] IReadOnlyRow row)
 		{
 			object value = GetValue(row);
 

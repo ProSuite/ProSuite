@@ -5,6 +5,6 @@ namespace ProSuite.QA.Container.TestSupport
 {
 	public interface IValueProvider<T> where T : struct
 	{
-		T? GetValue([NotNull] IRow row);
+		T? GetValue([NotNull] IReadOnlyRow row);
 	}
 }

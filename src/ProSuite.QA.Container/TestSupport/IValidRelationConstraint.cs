@@ -7,8 +7,8 @@ namespace ProSuite.QA.Container.TestSupport
 	{
 		bool HasConstraint { get; }
 
-		bool IsFulfilled([NotNull] IRow row1, int tableIndex1,
-		                 [NotNull] IRow row2, int tableIndex2,
+		bool IsFulfilled([NotNull] IReadOnlyRow row1, int tableIndex1,
+		                 [NotNull] IReadOnlyRow row2, int tableIndex2,
 		                 [NotNull] out string conditionMessage);
 	}
 }

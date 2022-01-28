@@ -34,7 +34,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 		/// <param name="row"></param>
 		/// <param name="partIndex">part index of row.Shape, -1: full line</param>
 		public TopologicalLine([NotNull] TableIndexRow row, int partIndex)
-			: this(row, (IPolyline) ((IFeature) row.Row).Shape, partIndex)
+			: this(row, (IPolyline) ((IReadOnlyFeature) row.Row).Shape, partIndex)
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
 		}

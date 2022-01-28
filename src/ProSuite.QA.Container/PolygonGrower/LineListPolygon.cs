@@ -9,7 +9,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 {
 	public abstract class LineListPolygon
 	{
-		private readonly List<IRow> _centroids = new List<IRow>();
+		private readonly List<IReadOnlyRow> _centroids = new List<IReadOnlyRow>();
 
 		private readonly bool _isInnerRing;
 
@@ -23,7 +23,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 			get { return _isInnerRing; }
 		}
 
-		public List<IRow> Centroids
+		public List<IReadOnlyRow> Centroids
 		{
 			get { return _centroids; }
 		}

@@ -9,7 +9,7 @@ namespace ProSuite.QA.Container
 {
 	public abstract class InvolvesTablesBase : ProcessBase, IInvolvesTables
 	{
-		protected InvolvesTablesBase([NotNull] IEnumerable<ITable> tables)
+		protected InvolvesTablesBase([NotNull] IEnumerable<IReadOnlyTable> tables)
 			: base(tables) { }
 
 		internal ISearchable DataContainer { get; set; }
@@ -22,7 +22,7 @@ namespace ProSuite.QA.Container
 		}
 
 		[NotNull]
-		protected IEnumerable<IRow> Search([NotNull] ITable table,
+		protected IEnumerable<IReadOnlyRow> Search([NotNull] IReadOnlyTable table,
 		                                   [NotNull] IQueryFilter queryFilter,
 		                                   [NotNull] QueryFilterHelper filterHelper,
 		                                   [CanBeNull] IGeometry cacheGeometry = null)
@@ -33,7 +33,7 @@ namespace ProSuite.QA.Container
 
 			if (DataContainer != null)
 			{
-				IEnumerable<IRow> rows = DataContainer.Search(table, queryFilter,
+				IEnumerable<IReadOnlyRow> rows = DataContainer.Search(table, queryFilter,
 				                                              filterHelper, cacheGeometry);
 
 				if (rows != null)
@@ -44,8 +44,7 @@ namespace ProSuite.QA.Container
 
 			// this could be controlled by a flag on the filterHelper or a parameter
 			// on the Search() method: AllowRecycling
-			const bool recycle = false;
-			var cursor = new EnumCursor(table, queryFilter, recycle);
+			var cursor = table.EnumRows(queryFilter, recycle: false);
 
 			// TestUtils.AddGarbageCollectionRequest();
 

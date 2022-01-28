@@ -14,7 +14,7 @@ namespace ProSuite.QA.Container
 
 			public ContainsPostProcessor(
 				[NotNull] ContainerTest test,
-				[NotNull] IFeatureClass featureClass)
+				[NotNull] IReadOnlyFeatureClass featureClass)
 				: base(test, featureClass) { }
 
 			protected sealed override void ValidateError(object sender, QaErrorEventArgs args)
@@ -23,9 +23,9 @@ namespace ProSuite.QA.Container
 				{
 					EnsureFilter();
 					_filter.Geometry = args.QaError.Geometry;
-					foreach (IRow row in Test.Search((ITable) FeatureClass, _filter, _helper))
+					foreach (IReadOnlyRow row in Test.Search(FeatureClass, _filter, _helper))
 					{
-						if (! (row is IFeature f)) continue;
+						if (! (row is IReadOnlyFeature f)) continue;
 
 						if (((IRelationalOperator2) f.Shape).ContainsEx(
 							args.QaError.Geometry,
@@ -45,7 +45,7 @@ namespace ProSuite.QA.Container
 					return;
 				}
 
-				ITable table = (ITable) FeatureClass;
+				IReadOnlyTable table = FeatureClass;
 				_helper = new QueryFilterHelper(
 					table, Test.GetConstraint(TableIndex), Test.GetSqlCaseSensitivity(TableIndex));
 				_filter = new SpatialFilterClass();
@@ -60,12 +60,12 @@ namespace ProSuite.QA.Container
 
 			protected ErrorPostProcessor(
 				[NotNull] ContainerTest test,
-				[NotNull] IFeatureClass featureClass)
+				[NotNull] IReadOnlyFeatureClass featureClass)
 			{
 				Test = test;
 				FeatureClass = featureClass;
 
-				ITable table = (ITable) FeatureClass;
+				IReadOnlyTable table = FeatureClass;
 				_tableIndex = Test.AddInvolvedTable(
 					table, default, default, queriedOnly: true);
 
@@ -78,7 +78,7 @@ namespace ProSuite.QA.Container
 			public ContainerTest Test { get; }
 
 			[NotNull]
-			public IFeatureClass FeatureClass { get; }
+			public IReadOnlyFeatureClass FeatureClass { get; }
 
 			protected int TableIndex => _tableIndex;
 

@@ -21,7 +21,7 @@ namespace ProSuite.QA.Container.TestSupport
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNullOrEmpty(columnName, nameof(columnName));
 
-			var featureClass = table as IFeatureClass;
+			var featureClass = table as IReadOnlyFeatureClass;
 
 			if (featureClass == null)
 			{
@@ -30,7 +30,7 @@ namespace ProSuite.QA.Container.TestSupport
 			}
 			else
 			{
-				IField areaField = DatasetUtils.GetAreaField(featureClass);
+				IField areaField = featureClass.AreaField;
 
 				if (areaField != null)
 				{
@@ -55,7 +55,7 @@ namespace ProSuite.QA.Container.TestSupport
 		{
 			if (_fieldIndex >= 0)
 			{
-				return row.Value[_fieldIndex];
+				return row.get_Value(_fieldIndex);
 			}
 
 			// there is no "shape area" field (e.g. for shapefiles)
