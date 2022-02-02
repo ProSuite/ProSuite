@@ -349,8 +349,11 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			{
 				if (test.Categories.Count <= 0)
 				{
-					AddTestToCategory(test, _noCategory, categories);
+					AddTestToCategory(
+						test, test.Title.ToLower().StartsWith("tr") ? "Transformers" : _noCategory,
+						categories);
 				}
+
 				else
 				{
 					foreach (string category in test.Categories)

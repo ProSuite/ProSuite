@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
@@ -160,10 +161,11 @@ namespace ProSuite.DomainModel.AO.QA
 			Assert.ArgumentNotNull(assembly, nameof(assembly));
 
 			Type testType = typeof(ITest);
+			Type transformerType = typeof(ITableTransformer);
 
 			foreach (Type candidateType in assembly.GetTypes())
 			{
-				if (! IsTestType(candidateType, testType))
+				if (! IsTestType(candidateType, testType) && ! IsTestType(candidateType, transformerType))
 				{
 					continue;
 				}
