@@ -161,11 +161,10 @@ namespace ProSuite.DomainModel.AO.QA
 			Assert.ArgumentNotNull(assembly, nameof(assembly));
 
 			Type testType = typeof(ITest);
-			Type transformerType = typeof(ITableTransformer);
 
 			foreach (Type candidateType in assembly.GetTypes())
 			{
-				if (! IsTestType(candidateType, testType) && ! IsTestType(candidateType, transformerType))
+				if (! IsTestType(candidateType, testType))
 				{
 					continue;
 				}
@@ -176,6 +175,36 @@ namespace ProSuite.DomainModel.AO.QA
 				}
 
 				if (! includeInternallyUsed && HasInternallyUsedAttribute(candidateType))
+				{
+					continue;
+				}
+
+				yield return candidateType;
+			}
+		}
+
+		[NotNull]
+		public static IEnumerable<Type> GetTransformerClasses([NotNull] Assembly assembly,
+		                                               bool includeObsolete,
+		                                               bool includeInternallyUsed)
+		{
+			Assert.ArgumentNotNull(assembly, nameof(assembly));
+
+			Type transformerType = typeof(ITableTransformer);
+
+			foreach (Type candidateType in assembly.GetTypes())
+			{
+				if (!IsTestType(candidateType, transformerType))
+				{
+					continue;
+				}
+
+				if (!includeObsolete && ReflectionUtils.IsObsolete(candidateType))
+				{
+					continue;
+				}
+
+				if (!includeInternallyUsed && HasInternallyUsedAttribute(candidateType))
 				{
 					continue;
 				}

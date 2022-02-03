@@ -44,6 +44,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			builder.IncludeAssemblyInfo = true;
 
 			IncludeTestClasses(builder, assemblies);
+			IncludeTransformerClasses(builder, assemblies);
 			IncludeTestFactories(builder, assemblies);
 
 			builder.WriteReport();
@@ -130,6 +131,30 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				}
 			}
 		}
+
+		private static void IncludeTransformerClasses([NotNull] IReportBuilder reportBuilder,
+		                                       [NotNull] IEnumerable<Assembly> assemblies)
+		{
+			const bool includeObsolete = true;
+			const bool includeInternallyUsed = true;
+
+			foreach (Assembly assembly in assemblies)
+			{
+				foreach (Type testType in TestFactoryUtils.GetTransformerClasses(
+					assembly, includeObsolete, includeInternallyUsed))
+				{
+					foreach (int ctorIndex in TestFactoryUtils.GetTestConstructorIndexes(
+						testType,
+						includeObsolete,
+						includeInternallyUsed))
+					{
+						reportBuilder.IncludeTransformer(testType, ctorIndex);
+					}
+				}
+			}
+		}
+
+
 
 		private static void IncludeTestFactories([NotNull] IReportBuilder reportBuilder,
 		                                         [NotNull] IEnumerable<Assembly> assemblies)
