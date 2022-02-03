@@ -133,7 +133,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		}
 
 		private static void IncludeTransformerClasses([NotNull] IReportBuilder reportBuilder,
-		                                       [NotNull] IEnumerable<Assembly> assemblies)
+		                                              [NotNull] IEnumerable<Assembly> assemblies)
 		{
 			const bool includeObsolete = true;
 			const bool includeInternallyUsed = true;
@@ -153,8 +153,6 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				}
 			}
 		}
-
-
 
 		private static void IncludeTestFactories([NotNull] IReportBuilder reportBuilder,
 		                                         [NotNull] IEnumerable<Assembly> assemblies)

@@ -91,11 +91,20 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			List<IncludedTestBase> includedTests =
 				GetSortedTestClasses().Cast<IncludedTestBase>().ToList();
 
+			List<IncludedTestBase> includedTransformers =
+				GetSortedTransformerClasses().Cast<IncludedTestBase>().ToList();
+
 			includedTests.AddRange(IncludedTestFactories.Cast<IncludedTestBase>());
 
 			WriteHeader();
 
+			WriteSubSectionHeader("Tests");
+
 			WriteCategoryIndex();
+
+			WriteSubSectionHeader("Transformers");
+
+			WriteTransformerIndex();
 
 			AppendSeparator();
 
@@ -139,6 +148,30 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 						AppendSeparator();
 					}
+				}
+
+				foreach (IncludedTestBase testBase in includedTransformers)
+				{
+					var includedTransformer = (IncludedTransformer) testBase;
+					if (includedTransformer.TestConstructors.Count <= 0)
+					{
+						continue;
+					}
+
+					AppendTransformerClassTitle(includedTransformer);
+
+					AppendTestClassDescription(includedTransformer);
+
+					foreach (
+						IncludedTestConstructor includedTestConstructor in
+						includedTransformer.TestConstructors)
+					{
+						AppendTestConstructorTitle(includedTestConstructor);
+
+						AppendTestParameters(includedTestConstructor);
+					}
+
+					AppendSeparator();
 				}
 
 				AppendIndexTitle("Index");
@@ -193,7 +226,12 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				" td.sectionTitle { font-size: 1.1em; font-weight: bold; vertical-align: middle; height: 35px; background-color:SlateBlue; color:white; }");
 
 			sb.Append(
+				" td.subSectionTitle { font-size: 1.1em; font-weight: bold; vertical-align: middle; height: 32px; background-color:rebeccapurple; color:white; }");
+
+			sb.Append(
 				" .indexSectionTitle {font-weight: bold; font-size: 1.05em; margin-top:10px; margin-bottom:4px; } ");
+
+			sb.Append(" .indexTable {table-layout: fixed; } ");
 
 			sb.Append(
 				"td.separator { border-left-style: none; border-right-style: none; height: 20px; }");
@@ -221,7 +259,33 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				             .ToString(CultureInfo.InvariantCulture));
 			AddHeaderRow("Test Factories",
 			             IncludedTestFactories.Count.ToString(CultureInfo.InvariantCulture));
+			AddHeaderRow("Transformer Classes",
+			             IncludedTransformerClasses.Count.ToString(CultureInfo.InvariantCulture));
 			AddHeaderRow("Report Created", DateTime.Now.ToString(CultureInfo.InvariantCulture));
+		}
+
+		private void WriteSubSectionHeader(string sectionTitle)
+		{
+			XmlElement sectionRow = CreateTableRow();
+			sectionRow.AppendChild(CreateTableCell(sectionTitle, 3, "subSectionTitle"));
+			_htmlTable.AppendChild(sectionRow);
+		}
+
+		private void WriteTransformerIndex()
+		{
+			var indexEntries = new List<IndexEntry>();
+
+			foreach (IncludedTransformer transformer in GetSortedTransformerClasses())
+			{
+				indexEntries.Add(new TestIndexEntry(transformer));
+			}
+
+			if (indexEntries.Count == 0)
+			{
+				return;
+			}
+
+			RenderIndexEntries(indexEntries);
 		}
 
 		private void WriteCategoryIndex()
@@ -282,6 +346,15 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				}
 			}
 
+			if (IncludedTransformerClasses.Count > 0)
+			{
+				indexEntries.Add(new SectionTitleIndexEntry("Transformers:"));
+				foreach (IncludedTransformer transformer in GetSortedTransformerClasses())
+				{
+					indexEntries.Add(new TestIndexEntry(transformer));
+				}
+			}
+
 			if (indexEntries.Count == 0)
 			{
 				return;
@@ -318,6 +391,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			XmlElement indexTable = _xmlDocument.CreateElement("table");
 			indexTable.SetAttribute("width", "100%");
+			indexTable.SetAttribute("class", "indexTable");
 
 			indexTable.AppendChild(indexRow);
 
@@ -638,6 +712,18 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 				                                                 : "title");
 			row.AppendChild(cell);
 			cell.AppendChild(CreateAnchor(test.Key));
+
+			_htmlTable.AppendChild(row);
+		}
+
+		private void AppendTransformerClassTitle([NotNull] IncludedTransformer transformer)
+		{
+			XmlElement row = CreateTableRow();
+			XmlElement cell = CreateTableCell(transformer.Title, 3, transformer.Obsolete
+				                                  ? "obsoleteTitle"
+				                                  : "title");
+			row.AppendChild(cell);
+			cell.AppendChild(CreateAnchor(transformer.Key));
 
 			_htmlTable.AppendChild(row);
 		}

@@ -157,5 +157,16 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			return result;
 		}
+
+		[NotNull]
+		protected IEnumerable<IncludedTransformer> GetSortedTransformerClasses()
+		{
+			var result = new List<IncludedTransformer>(IncludedTransformerClasses.Values);
+
+			result.Sort();
+
+			return result;
+		}
+
 	}
 }
