@@ -577,6 +577,12 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 
 			_feedback.Update(ChangeAlongCurves);
 
+			if (updatedFeatures.Count == 0)
+			{
+				// Probably an additional yellow line needs to be selected
+				return false;
+			}
+
 			HashSet<long> editableClassHandles =
 				MapUtils.GetLayers<BasicFeatureLayer>(bfl => bfl.IsEditable)
 				        .Select(l => l.GetTable().Handle.ToInt64()).ToHashSet();
