@@ -30,6 +30,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			List<IncludedTestBase> includedTests =
 				GetSortedTestClasses().Cast<IncludedTestBase>().ToList();
 
+			
 			includedTests.AddRange(IncludedTestFactories);
 
 			if (includedTests.Count <= 0)
@@ -46,13 +47,37 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			_textWriter.Write(sb.ToString());
 		}
 
+		public void WriteTransformerClassFile()
+		{
+			List<IncludedTestBase> includedTransformers =
+				GetSortedTransformerClasses().Cast<IncludedTestBase>().ToList();
+
+			if (includedTransformers.Count <= 0)
+			{
+				return;
+			}
+
+			var sb = new StringBuilder();
+
+			WriteTransformerHeader(sb);
+
+			CreatePythonTransformerClass(includedTransformers, sb);
+
+			_textWriter.Write(sb.ToString());
+		}
+
+		private static void WriteTransformerHeader(StringBuilder sb)
+		{
+			// add import statements
+		}
+
 		private static void WriteHeader(StringBuilder sb)
 		{
 			sb.AppendLine("from datetime import datetime");
 			sb.AppendLine("from typing import List");
-			sb.AppendLine("from ProPy.Condition import Condition");
-			sb.AppendLine("from ProPy.Parameter import Parameter");
-			sb.AppendLine("from ProPy.Dataset import Dataset");
+			sb.AppendLine("from prosuite.condition import Condition");
+			sb.AppendLine("from prosuite.parameter import Parameter");
+			sb.AppendLine("from prosuite.dataset import Dataset");
 
 			sb.AppendLine();
 			sb.AppendLine();
@@ -61,7 +86,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		private static void CreatePythonClass(IEnumerable<IncludedTestBase> includedTests,
 		                                      StringBuilder sb)
 		{
-			sb.AppendLine("class ProSuite:");
+			sb.AppendLine("class ConditionFactory:");
 
 			foreach (IncludedTestBase includedTest in includedTests)
 			{
@@ -85,6 +110,48 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			}
 		}
 
+		private static void CreatePythonTransformerClass(IEnumerable<IncludedTestBase> includedTransformers,
+		                                      StringBuilder sb)
+		{
+			sb.AppendLine("class Transformer:");
+
+			foreach (IncludedTestBase includedTest in includedTransformers)
+			{
+				if (includedTest is IncludedTransformer includedTransformer)
+				{
+					if (includedTransformer.TestConstructors.Count <= 0)
+					{
+						continue;
+					}
+
+					foreach (IncludedTestConstructor constructor in includedTransformer
+						.TestConstructors)
+					{
+						AppendTransformerClassMethod(includedTransformer, constructor, sb);
+					}
+				}
+				
+			}
+		}
+
+		private static void AppendTransformerClassMethod(IncludedTestBase includedTransformerClass,
+		                                          IncludedTestConstructor constructor,
+		                                          StringBuilder sb)
+		{
+			TestFactory testFactory = constructor.TestFactory;
+
+			string methodName =
+				$"{ToUnderscoreCase(includedTransformerClass.TestType.Name)}_{constructor.ConstructorIndex}";
+
+			string methodSignature = GetConstructorSignature(testFactory);
+			string conditionConstructorSignature =
+				$"\"{includedTransformerClass.TestType.Name}({constructor.ConstructorIndex})\"";
+
+			AppendTransformerMethod(methodName, methodSignature, testFactory, conditionConstructorSignature,
+			             sb);
+		}
+
+
 		private static void AppendTestClassMethod(IncludedTestBase includedTestClass,
 		                                          IncludedTestConstructor constructor,
 		                                          StringBuilder sb)
@@ -101,44 +168,28 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			AppendMethod(methodName, methodSignature, testFactory, conditionConstructorSignature,
 			             sb);
 		}
-
-		//TODO improve text wrapper. Need to handle existing carriage returns, take care intendation is always correct. 
-		private static string WrapText(string text, int myLimit)
+		
+		private static void AppendTransformerMethod(string methodName, string methodSignature,
+		                                            TestFactory testFactory,
+		                                            string conditionConstructorSignature,
+		                                            StringBuilder sb)
 		{
-			if (text == null || ! text.Contains(" ")) return text;
-
-			string[] words = text.Split(' ');
-
-			StringBuilder wrappedText = new StringBuilder();
-
-			string line = "";
-			foreach (string word in words)
-			{
-				if ((line + word).Length > myLimit)
-				{
-					wrappedText.AppendLine(line);
-					line = "        ";
-				}
-
-				line += string.Format("{0} ", word);
-			}
-
-			if (line.Length > 0)
-				wrappedText.AppendLine(line);
-			return wrappedText.ToString();
+			sb.AppendLine();
+			sb.AppendLine($"    @classmethod");
+			sb.AppendLine($"    def {methodName}({methodSignature}):");
+			sb.AppendLine($"        pass");
 		}
 
 		private static void AppendMethod(string methodName, string methodSignature,
 		                                 TestFactory testFactory,
 		                                 string conditionConstructorSignature, StringBuilder sb)
 		{
-			//string testDescription = WrapText(testFactory.GetTestDescription(), 100);
 
 			sb.AppendLine();
 			sb.AppendLine($"    @classmethod");
 			sb.AppendLine($"    def {methodName}({methodSignature}) -> Condition:");
-			//sb.AppendLine($"        \"\"\"");
-			//sb.AppendLine($"        {testDescription}        \"\"\"");
+			sb.AppendLine($"        \"\"\"");
+			sb.AppendLine($"        {testFactory.GetTestDescription()}        \"\"\"");
 			sb.AppendLine($"        result = Condition({conditionConstructorSignature})");
 
 			foreach (TestParameter testParameter in testFactory.Parameters)
