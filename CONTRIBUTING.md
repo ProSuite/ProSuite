@@ -35,6 +35,7 @@ In order to facilitate using these projects in a git subtree configuration in ot
 In order to compile the solution with a different identity, the environment variable **ProSuiteKeyFile** can be adapted.
 
 ### Symmetric Encryption
+
 In case encryption functionality is used, provide the encryptors with their secret keys using a separate EncryptorFactory.cs file residing outside the repository and configure the directory using the environment variable ProSuiteEncryptorFactoryDir.
 For details consult the default implementation in EncryptorFactory.cs.
 

@@ -20,7 +20,8 @@ See the [Contributing Guidelines](CONTRIBUTING.md)
 
 ## Authors
 
-The ProSuite Authors.
+ProSuite is written by The ProSuite Authors
+and maintained by [Dira GeoSystems](https://dirageosystems.ch).
 
 ## License
 
