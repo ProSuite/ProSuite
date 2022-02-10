@@ -391,6 +391,7 @@
     </Compile>
     <Compile Include="WPF\BindableRadioButton.cs" />
     <Compile Include="WPF\BoolToColorBrushConverter.cs" />
+    <Compile Include="WPF\DisplayUtils.cs" />
     <Compile Include="WPF\DropDownButtonBehaviour.cs" />
     <Compile Include="WPF\IWinFormHostable.cs" />
     <Compile Include="WPF\RelayCommand.cs" />
