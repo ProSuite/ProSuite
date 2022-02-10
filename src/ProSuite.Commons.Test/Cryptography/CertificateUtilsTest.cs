@@ -25,9 +25,10 @@ namespace ProSuite.Commons.Test.Cryptography
 		[Test]
 		public void CanFindCertificateByCommonName()
 		{
-			var found = CertificateUtils.FindValidCertificates(
+			var found = CertificateUtils.FindCertificates(
 				                            StoreName.Root, StoreLocation.CurrentUser,
-				                            "CN=Microsoft Root Certificate Authority, DC=microsoft, DC=com")
+				                            "CN=Microsoft Root Certificate Authority, DC=microsoft, DC=com",
+				                            X509FindType.FindBySubjectDistinguishedName, false)
 			                            .ToList();
 
 			Assert.IsTrue(found.Count > 0);
@@ -43,9 +44,9 @@ namespace ProSuite.Commons.Test.Cryptography
 			string certificateThumbprint = certificate.Thumbprint;
 
 			var found =
-				CertificateUtils.FindValidCertificates(
+				CertificateUtils.FindCertificates(
 					StoreName.My, StoreLocation.CurrentUser, certificateThumbprint,
-					X509FindType.FindByThumbprint).ToList();
+					X509FindType.FindByThumbprint, false).ToList();
 
 			Assert.AreEqual(1, found.Count);
 
@@ -68,9 +69,11 @@ namespace ProSuite.Commons.Test.Cryptography
 		[Test]
 		public void CanGetPrivateKeyFromCertificate()
 		{
-			var found = CertificateUtils.FindValidCertificates(
+			// Finds the localhost developer certificate that is used for ASP.NET:
+			var found = CertificateUtils.FindCertificates(
 				                            StoreName.Root, StoreLocation.CurrentUser,
-				                            "CN=Microsoft Root Certificate Authority, DC=microsoft, DC=com")
+				                            "CN=Microsoft Root Certificate Authority, DC=microsoft, DC=com",
+				                            X509FindType.FindBySubjectDistinguishedName, false)
 			                            .ToList();
 
 			Assert.IsTrue(found.Count > 0);
@@ -82,7 +85,7 @@ namespace ProSuite.Commons.Test.Cryptography
 				CertificateUtils.TryExportPrivateKey(certificate, out string _, out string _));
 
 			foreach (X509Certificate2 certWithPrivateKey in CertificateUtils.GetCertificates(
-				StoreName.My, StoreLocation.LocalMachine, c => c.HasPrivateKey))
+				         StoreName.My, StoreLocation.LocalMachine, c => c.HasPrivateKey))
 			{
 				// No access (must run as admin):
 
@@ -100,7 +103,7 @@ namespace ProSuite.Commons.Test.Cryptography
 		public void CanGetPrivateKeyFromPersonalCertificate()
 		{
 			foreach (X509Certificate2 certWithPrivateKey in CertificateUtils.GetCertificates(
-				StoreName.My, StoreLocation.CurrentUser, c => c.HasPrivateKey))
+				         StoreName.My, StoreLocation.CurrentUser, c => c.HasPrivateKey))
 			{
 				// The key might not be exportable...
 
@@ -125,5 +128,7 @@ namespace ProSuite.Commons.Test.Cryptography
 				Console.WriteLine(cert);
 			}
 		}
+
+		// For extra unit tests see 
 	}
 }
