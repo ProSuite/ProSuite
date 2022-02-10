@@ -134,7 +134,7 @@
                DockPanel.Dock="Top"
                ItemsSource="{Binding Path=PickableItems}"
                ItemTemplate="{StaticResource SinglePickTemplate}"
-               SelectedItem="{Binding Path=SelectedItem, Mode=TwoWay}"
+               SelectedItem="{Binding Path=SelectedPickableItem, Mode=TwoWay}"
                Style="{StaticResource ListBox}"
                Visibility="{Binding IsSingleMode, Converter={StaticResource VisibleIfTrueConverter}}">
 

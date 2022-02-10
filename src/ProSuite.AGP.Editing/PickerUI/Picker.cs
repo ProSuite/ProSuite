@@ -62,7 +62,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 			_viewModel.DisposeOverlays();
 
-			return _viewModel.SelectedItem;
+			return _viewModel.SelectedPickableItem;
 		}
 
 		[CanBeNull]
@@ -152,7 +152,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 			if (accepted == false)
 			{
-				vm.SelectedItem = null;
+				vm.SelectedPickableItem = null;
 			}
 
 			vm.DisposeOverlays();
