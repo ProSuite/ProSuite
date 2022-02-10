@@ -20,7 +20,9 @@
         BorderThickness="1"
         AllowsTransparency="True"
         FontWeight="Normal"
-        Foreground="Black" Deactivated="Window_Deactivated">
+        Foreground="Black" 
+        Deactivated="PickerWindow_Deactivated" 
+        Closing="PickerWindow_Closing">
 
   <Window.Background>
     <SolidColorBrush Opacity="0.7" Color="White" />
