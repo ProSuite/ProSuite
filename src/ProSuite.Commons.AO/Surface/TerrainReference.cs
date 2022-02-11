@@ -1,13 +1,33 @@
+using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.AO.Surface
 {
+	public class ReadOnlyGeodataset : IReadOnlyGeoDataset, IEquatable<ReadOnlyGeodataset>
+	{
+		private IGeoDataset Dataset { get; }
+
+		public ReadOnlyGeodataset([NotNull]IGeoDataset dataset)
+		{
+			Dataset = dataset;
+		}
+		ISpatialReference IReadOnlyGeoDataset.SpatialReference => Dataset.SpatialReference;
+		IEnvelope IReadOnlyGeoDataset.Extent => Dataset.Extent;
+
+		bool IEquatable<ReadOnlyGeodataset>.Equals(ReadOnlyGeodataset other)
+		{
+			return other?.Dataset == Dataset;
+		}
+	}
 	public abstract class TerrainReference
 	{
 		[NotNull]
 		public abstract IGeoDataset Dataset { get; }
+
+		public IReadOnlyGeoDataset GetReadOnlyDataset() => new ReadOnlyGeodataset(Dataset);
 
 		[NotNull]
 		public abstract RectangularTilingStructure Tiling { get; }

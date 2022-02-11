@@ -1,5 +1,5 @@
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -15,11 +15,11 @@ namespace ProSuite.QA.Container.PolygonGrower
 		private double _fromAngle;
 		private bool _fromAngleKnown;
 
-		private IRow _leftCentroid;
+		private IReadOnlyRow _leftCentroid;
 		private LineListPolygon _leftPoly;
 
 		private int _maxCode;
-		private IRow _rightCentroid;
+		private IReadOnlyRow _rightCentroid;
 		private LineListPolygon _rightPoly;
 		private double _toAngle;
 		private bool _toAngleKnown;
@@ -172,7 +172,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 			internal set { _leftPoly = value; }
 		}
 
-		public IRow LeftCentroid
+		public IReadOnlyRow LeftCentroid
 		{
 			get { return _leftCentroid; }
 			internal set { _leftCentroid = value; }
@@ -184,7 +184,7 @@ namespace ProSuite.QA.Container.PolygonGrower
 			internal set { _rightPoly = value; }
 		}
 
-		public IRow RightCentroid
+		public IReadOnlyRow RightCentroid
 		{
 			get { return _rightCentroid; }
 			internal set { _rightCentroid = value; }

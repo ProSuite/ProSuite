@@ -246,7 +246,7 @@ namespace ProSuite.QA.Container
 					// this may be the case when the ShapeField was not queried (i.e. QueryFilter.SubFields = 'OID, Field') 
 					if (row.HasOID && row.Table.HasOID)
 					{
-						feature = GdbQueryUtils.GetFeature(feature.Table, row.OID);
+						feature = GdbQueryUtils.GetFeature((IReadOnlyFeatureClass)feature.Table, row.OID);
 
 						if (feature != null)
 						{

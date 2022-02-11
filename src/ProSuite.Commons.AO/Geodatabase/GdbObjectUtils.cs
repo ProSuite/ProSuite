@@ -1224,6 +1224,34 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		[NotNull]
+		public static string ToString([NotNull] IReadOnlyRow row)
+		{
+			string oid;
+			try
+			{
+				oid = row.HasOID
+					      ? row.OID.ToString(CultureInfo.InvariantCulture)
+					      : @"[n/a]";
+			}
+			catch (Exception e)
+			{
+				oid = string.Format("[error getting OID: {0}]", e.Message);
+			}
+
+			string tableName;
+			try
+			{
+				tableName = row.Table.Name;
+			}
+			catch (Exception e)
+			{
+				tableName = string.Format("[error getting table name: {0}]", e.Message);
+			}
+
+			return string.Format("oid={0} table={1}", oid, tableName);
+		}
+
+		[NotNull]
 		public static string ToString([NotNull] IFeatureBuffer featureBuffer)
 		{
 			IFeature feature = featureBuffer as IFeature;

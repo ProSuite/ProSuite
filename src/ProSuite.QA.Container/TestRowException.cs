@@ -1,5 +1,5 @@
 using System;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Container
 {

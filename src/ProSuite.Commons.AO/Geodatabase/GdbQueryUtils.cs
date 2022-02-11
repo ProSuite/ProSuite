@@ -810,6 +810,32 @@ namespace ProSuite.Commons.AO.Geodatabase
 			//}
 		}
 
+		[CanBeNull]
+		public static IReadOnlyFeature GetFeature([NotNull] IReadOnlyFeatureClass featureClass,
+		                                  int featureId)
+		{
+			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+
+			return (IReadOnlyFeature) featureClass.GetRow(featureId);
+
+			// NOTE: the GetFeature() based implementations cause massive memory growth
+			// with large geometries since features remain in cache until the end of 
+			// the edit operation
+
+			//try
+			//{
+			//    return featureClass.GetFeature(featureId);
+			//}
+			//catch (COMException e)
+			//{
+			//    if (e.ErrorCode == (int) fdoError.FDO_E_FEATURE_NOT_FOUND)
+			//    {
+			//        return null;
+			//    }
+			//    throw;
+			//}
+		}
+
 		/// <summary>
 		/// Gets the features for a given collection of object ids
 		/// </summary>

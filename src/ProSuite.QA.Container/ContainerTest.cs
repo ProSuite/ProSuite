@@ -4,6 +4,7 @@ using System.Data;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -105,7 +106,7 @@ namespace ProSuite.QA.Container
 			{
 				foreach (TerrainReference terrain in InvolvedTerrains)
 				{
-					geoDataset = terrain.Dataset;
+					geoDataset = terrain.GetReadOnlyDataset();
 					yield return geoDataset;
 				}
 			}
