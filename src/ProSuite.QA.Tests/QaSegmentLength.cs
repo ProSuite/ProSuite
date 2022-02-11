@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
@@ -11,6 +10,7 @@ using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -49,10 +49,10 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaSegmentLength_0))]
 		public QaSegmentLength(
-			[Doc(nameof(DocStrings.QaSegmentLength_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSegmentLength_featureClass))] IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSegmentLength_limit))] double limit,
 			[Doc(nameof(DocStrings.QaSegmentLength_is3D))] bool is3D)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			_limit = limit;
 			_is3D = is3D;
@@ -62,7 +62,7 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaSegmentLength_0))]
 		public QaSegmentLength(
-			[Doc(nameof(DocStrings.QaSegmentLength_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSegmentLength_featureClass))] IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSegmentLength_limit))] double limit)
 			: this(
 				featureClass, limit,
@@ -80,9 +80,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			using (SegmentLengthProvider provider = GetSegmentLengthProvider((IFeature) row))
+			using (SegmentLengthProvider provider = GetSegmentLengthProvider((IReadOnlyFeature) row))
 			{
 				int errorCount = 0;
 				var errorSegments = new List<SegmentLength>();
@@ -123,7 +123,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private SegmentLengthProvider GetSegmentLengthProvider(IFeature row)
+		private SegmentLengthProvider GetSegmentLengthProvider(IReadOnlyFeature row)
 		{
 			SegmentLengthProvider provider;
 
@@ -151,7 +151,7 @@ namespace ProSuite.QA.Tests
 		private int ReportError(
 			[NotNull] SegmentLengthProvider segmentLengthProvider,
 			[NotNull] List<SegmentLength> errorSegments,
-			double minSegmentLength, [NotNull] IRow row)
+			double minSegmentLength, [NotNull] IReadOnlyRow row)
 		{
 			int part = errorSegments[0].PartIndex;
 			int startSegmentIndex = errorSegments[0].SegmentIndex;
@@ -162,7 +162,7 @@ namespace ProSuite.QA.Tests
 			return ReportError(row, line, minSegmentLength);
 		}
 
-		private int ReportError([NotNull] IRow row,
+		private int ReportError([NotNull] IReadOnlyRow row,
 		                        [NotNull] IGeometry errorGeometry,
 		                        double minLength)
 		{

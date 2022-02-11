@@ -7,6 +7,7 @@ using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -52,8 +53,8 @@ namespace ProSuite.QA.Tests
 			       zRelationConstraint, expressionCaseSensitivity,
 			       errorReporting, formatComparisonFunction) { }
 
-		protected override int ReportErrors(IFeature feature1, int tableIndex1,
-		                                    IFeature feature2, int tableIndex2)
+		protected override int ReportErrors(IReadOnlyFeature feature1, int tableIndex1,
+		                                    IReadOnlyFeature feature2, int tableIndex2)
 		{
 			var zRangeFeature1 =
 				new ZRangeFeature(feature1, tableIndex1, _envelopeTemplate);
@@ -179,7 +180,7 @@ namespace ProSuite.QA.Tests
 				       : 0;
 		}
 
-		private static void GetZRange([NotNull] IFeature feature,
+		private static void GetZRange([NotNull] IReadOnlyFeature feature,
 		                              [NotNull] IEnvelope template,
 		                              out double zMin,
 		                              out double zMax)
@@ -195,7 +196,7 @@ namespace ProSuite.QA.Tests
 			private readonly double _zMin;
 			private readonly double _zMax;
 
-			public ZRangeFeature([NotNull] IFeature feature,
+			public ZRangeFeature([NotNull] IReadOnlyFeature feature,
 			                     int tableIndex,
 			                     [NotNull] IEnvelope template)
 			{
@@ -213,7 +214,7 @@ namespace ProSuite.QA.Tests
 			public IGeometry Shape => Feature.Shape;
 
 			[NotNull]
-			public IFeature Feature { get; }
+			public IReadOnlyFeature Feature { get; }
 
 			public int TableIndex { get; }
 		}

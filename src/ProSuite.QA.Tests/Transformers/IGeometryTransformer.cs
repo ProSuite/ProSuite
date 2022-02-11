@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -10,7 +11,7 @@ namespace ProSuite.QA.Tests.Transformers
 {
 	public interface IGeometryTransformer
 	{
-		IEnumerable<IFeature> Transform(IGeometry source);
+		IEnumerable<IReadOnlyFeature> Transform(IGeometry source);
 	}
 
 	public class TransformedFeatureClass : GdbFeatureClass, IRowsCache
@@ -24,7 +25,7 @@ namespace ProSuite.QA.Tests.Transformers
 		                               [CanBeNull] IWorkspace workspace = null)
 			: base(objectClassId, name, shapeType, aliasName, createBackingDataset, workspace) { }
 
-		void IRowsCache.Add(IRow row)
+		void IRowsCache.Add(IReadOnlyRow row)
 		{
 			Assert.NotNull((TransformedBackingDataset) BackingDataset,
 			               $"{nameof(BackingDataset)} not set").AddToCache(row);
@@ -41,6 +42,6 @@ namespace ProSuite.QA.Tests.Transformers
 	{
 		bool Remove(int oid);
 
-		void Add(IRow row);
+		void Add(IReadOnlyRow row);
 	}
 }

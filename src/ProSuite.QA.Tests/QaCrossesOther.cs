@@ -8,6 +8,7 @@ using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.SpatialRelations;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -31,24 +32,24 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaCrossesOther_0))]
 		public QaCrossesOther(
-				[Doc(nameof(DocStrings.QaCrossesOther_crossedClasses))] IList<IFeatureClass> crossed,
+				[Doc(nameof(DocStrings.QaCrossesOther_crossedClasses))] IList<IReadOnlyFeatureClass> crossed,
 				[Doc(nameof(DocStrings.QaCrossesOther_crossingClasses))]
-				IList<IFeatureClass> crossing)
+				IList<IReadOnlyFeatureClass> crossing)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(crossed, crossing, null) { }
 
 		[Doc(nameof(DocStrings.QaCrossesOther_1))]
 		public QaCrossesOther(
-				[Doc(nameof(DocStrings.QaCrossesOther_crossedClass))] IFeatureClass crossed,
-				[Doc(nameof(DocStrings.QaCrossesOther_crossingClass))] IFeatureClass crossing)
+				[Doc(nameof(DocStrings.QaCrossesOther_crossedClass))] IReadOnlyFeatureClass crossed,
+				[Doc(nameof(DocStrings.QaCrossesOther_crossingClass))] IReadOnlyFeatureClass crossing)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(crossed, crossing, null) { }
 
 		[Doc(nameof(DocStrings.QaCrossesOther_2))]
 		public QaCrossesOther(
-			[Doc(nameof(DocStrings.QaCrossesOther_crossedClasses))] IList<IFeatureClass> crossedClasses,
+			[Doc(nameof(DocStrings.QaCrossesOther_crossedClasses))] IList<IReadOnlyFeatureClass> crossedClasses,
 			[Doc(nameof(DocStrings.QaCrossesOther_crossingClasses))]
-			IList<IFeatureClass> crossingClasses,
+			IList<IReadOnlyFeatureClass> crossingClasses,
 			[Doc(nameof(DocStrings.QaCrossesOther_validRelationConstraint))]
 			string validRelationConstraint)
 			: base(crossedClasses, crossingClasses, esriSpatialRelEnum.esriSpatialRelCrosses)
@@ -60,15 +61,15 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaCrossesOther_3))]
 		public QaCrossesOther(
-			[Doc(nameof(DocStrings.QaCrossesOther_crossedClass))] IFeatureClass crossedClass,
-			[Doc(nameof(DocStrings.QaCrossesOther_crossingClass))] IFeatureClass crossingClass,
+			[Doc(nameof(DocStrings.QaCrossesOther_crossedClass))] IReadOnlyFeatureClass crossedClass,
+			[Doc(nameof(DocStrings.QaCrossesOther_crossingClass))] IReadOnlyFeatureClass crossingClass,
 			[Doc(nameof(DocStrings.QaCrossesOther_validRelationConstraint))]
 			string validRelationConstraint)
 			: this(new[] {crossedClass}, new[] {crossingClass}, validRelationConstraint) { }
 
 		#region Overrides of QaSpatialRelationOtherBase
 
-		protected override int FindErrors(IRow row1, int tableIndex1, IRow row2,
+		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1, IReadOnlyRow row2,
 		                                  int tableIndex2)
 		{
 			if (_validRelationConstraint == null)

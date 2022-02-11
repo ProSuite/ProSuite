@@ -14,7 +14,7 @@ namespace ProSuite.QA.Tests
 	[SchemaTest]
 	public class QaGdbRelease : QaSchemaTestBase
 	{
-		private readonly ITable _table;
+		private readonly IReadOnlyTable _table;
 		private readonly VersionSpecification _minimumVersion;
 		private readonly VersionSpecification _maximumVersion;
 		private readonly bool _singleVersion;
@@ -40,7 +40,7 @@ namespace ProSuite.QA.Tests
 
 		[UsedImplicitly]
 		[Doc(nameof(DocStrings.QaGdbRelease_0))]
-		public QaGdbRelease([Doc(nameof(DocStrings.QaGdbRelease_table))] [NotNull] ITable table,
+		public QaGdbRelease([Doc(nameof(DocStrings.QaGdbRelease_table))] [NotNull] IReadOnlyTable table,
 		                    [Doc(nameof(DocStrings.QaGdbRelease_expectedVersion))] [CanBeNull]
 		                    string
 			                    expectedVersion)
@@ -48,7 +48,7 @@ namespace ProSuite.QA.Tests
 
 		[UsedImplicitly]
 		[Doc(nameof(DocStrings.QaGdbRelease_1))]
-		public QaGdbRelease([Doc(nameof(DocStrings.QaGdbRelease_table))] [NotNull] ITable table,
+		public QaGdbRelease([Doc(nameof(DocStrings.QaGdbRelease_table))] [NotNull] IReadOnlyTable table,
 		                    [Doc(nameof(DocStrings.QaGdbRelease_minimumVersion))] [CanBeNull]
 		                    string
 			                    minimumVersion,
@@ -73,7 +73,7 @@ namespace ProSuite.QA.Tests
 
 		public override int Execute()
 		{
-			IWorkspace workspace = DatasetUtils.GetWorkspace(_table);
+			IWorkspace workspace = _table.Workspace;
 
 			IGeodatabaseRelease gdbRelease;
 			if (! WorkspaceUtils.HasGeodatabaseReleaseInformation(workspace, out gdbRelease))

@@ -28,7 +28,7 @@ namespace ProSuite.QA.Tests.Constraints
 
 		[NotNull]
 		public static List<ConstraintNode> GetGdbConstraints(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			bool allowNullForCodedValueDomains = true,
 			bool allowNullForRangeDomains = true,
 			HashSet<string> checkFields = null)
@@ -59,13 +59,13 @@ namespace ProSuite.QA.Tests.Constraints
 		}
 
 		[NotNull]
-		public static IList<string> GetUuidFields([NotNull] ITable table)
+		public static IList<string> GetUuidFields([NotNull] IReadOnlyTable table)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
 			var result = new List<string>();
 
-			foreach (IField field in DatasetUtils.GetFields(table))
+			foreach (IField field in DatasetUtils.GetFields(table.Fields))
 			{
 				if (field.Type == esriFieldType.esriFieldTypeGlobalID ||
 				    field.Type == esriFieldType.esriFieldTypeGUID)
@@ -79,7 +79,7 @@ namespace ProSuite.QA.Tests.Constraints
 
 		[NotNull]
 		private static IEnumerable<ConstraintNode> GetAttributeRuleNodes(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] ISubtypes subtypes,
 			bool allowNullForCodedValueDomains,
 			bool allowNullForRangeDomains,
@@ -98,7 +98,7 @@ namespace ProSuite.QA.Tests.Constraints
 			}
 
 			var subtypeNodes = new Dictionary<int, ConstraintNode>();
-			var workspaceDomains = DatasetUtils.GetWorkspace(table) as IWorkspaceDomains;
+			var workspaceDomains = table.Workspace as IWorkspaceDomains;
 
 			DomainConstraints domainConstraints =
 				workspaceDomains != null
@@ -206,7 +206,7 @@ namespace ProSuite.QA.Tests.Constraints
 		}
 
 		[NotNull]
-		private static ConstraintNode CreateObjectIDConstraint([NotNull] ITable table)
+		private static ConstraintNode CreateObjectIDConstraint([NotNull] IReadOnlyTable table)
 		{
 			// Note: for shapefiles, valid FIDs start at 0
 			// TODO test for > 0 if in a gdb?
@@ -219,7 +219,7 @@ namespace ProSuite.QA.Tests.Constraints
 		}
 
 		[CanBeNull]
-		private static IField TryGetField([NotNull] ITable table,
+		private static IField TryGetField([NotNull] IReadOnlyTable table,
 		                                  [NotNull] IAttributeRule attributeRule)
 		{
 			string fieldName = attributeRule.FieldName;

@@ -15,10 +15,10 @@ namespace ProSuite.QA.Tests.IssueFilters
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		private readonly string _constraint;
-		private Dictionary<ITable, TableView> _tableViews;
+		private Dictionary<IReadOnlyTable, TableView> _tableViews;
 
 		public IfInvolvedRows(string constraint)
-			: base(new ITable[] { })
+			: base(new IReadOnlyTable[] { })
 		{
 			_constraint = constraint;
 		}
@@ -33,12 +33,12 @@ namespace ProSuite.QA.Tests.IssueFilters
 				return false;
 			}
 
-			foreach (IRow row in error.TestedRows)
+			foreach (IReadOnlyRow row in error.TestedRows)
 			{
-				_tableViews = _tableViews ?? new Dictionary<ITable, TableView>();
+				_tableViews = _tableViews ?? new Dictionary<IReadOnlyTable, TableView>();
 				if (! _tableViews.TryGetValue(row.Table, out TableView helper))
 				{
-					string tableName = DatasetUtils.GetName(row.Table);
+					string tableName = row.Table.Name;
 					if (! (TableNames?.Count > 0) || TableNames.Contains(tableName))
 					{
 						bool caseSensitivity = false; // TODO;

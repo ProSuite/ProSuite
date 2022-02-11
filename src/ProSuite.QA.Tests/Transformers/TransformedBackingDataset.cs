@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -15,7 +14,7 @@ namespace ProSuite.QA.Tests.Transformers
 		where T : TransformedFeatureClass
 	{
 		protected TransformedBackingDataset([NotNull] T gdbTable,
-		                                    IList<ITable> involvedTables)
+		                                    IList<IReadOnlyTable> involvedTables)
 			: base(gdbTable, involvedTables) { }
 
 		public new T Resulting => (T) base.Resulting;
@@ -23,9 +22,9 @@ namespace ProSuite.QA.Tests.Transformers
 
 	public abstract class TransformedBackingDataset : BackingDataset
 	{
-		private readonly IList<ITable> _involvedTables;
+		private readonly IList<IReadOnlyTable> _involvedTables;
 		private readonly List<QueryFilterHelper> _queryHelpers;
-		private readonly Dictionary<int, IRow> _rowsCache;
+		private readonly Dictionary<int, IReadOnlyRow> _rowsCache;
 
 		private readonly TransformedFeatureClass _resulting;
 
@@ -33,7 +32,7 @@ namespace ProSuite.QA.Tests.Transformers
 		public TransformedFeatureClass Resulting => _resulting;
 		protected IReadOnlyList<QueryFilterHelper> QueryHelpers => _queryHelpers;
 
-		public void AddToCache(IRow row)
+		public void AddToCache(IReadOnlyRow row)
 		{
 			_rowsCache[row.OID] = row;
 		}
@@ -43,9 +42,9 @@ namespace ProSuite.QA.Tests.Transformers
 			return _rowsCache.Remove(oid);
 		}
 
-		public sealed override IRow GetRow(int id)
+		public sealed override IReadOnlyRow GetRow(int id)
 		{
-			if (_rowsCache.TryGetValue(id, out IRow row))
+			if (_rowsCache.TryGetValue(id, out IReadOnlyRow row))
 			{
 				return row;
 			}
@@ -53,10 +52,10 @@ namespace ProSuite.QA.Tests.Transformers
 			return GetUncachedRow(id);
 		}
 
-		public abstract IRow GetUncachedRow(int id);
+		public abstract IReadOnlyRow GetUncachedRow(int id);
 
 		protected TransformedBackingDataset([NotNull] TransformedFeatureClass gdbTable,
-		                                    IList<ITable> involvedTables)
+		                                    IList<IReadOnlyTable> involvedTables)
 		{
 			_involvedTables = involvedTables;
 			_queryHelpers = _involvedTables
@@ -66,7 +65,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			gdbTable.AddField(FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField));
 			_resulting = gdbTable;
-			_rowsCache = new Dictionary<int, IRow>();
+			_rowsCache = new Dictionary<int, IReadOnlyRow>();
 		}
 
 		public void SetConstraint(int tableIndex, string condition)
@@ -102,16 +101,16 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		protected IEnumerable<Involved> EnumKnownInvolveds(
-			[NotNull] IFeature baseFeature,
-			[CanBeNull] BoxTree<IFeature> knownRows,
-			[NotNull] Dictionary<IFeature, Involved> involvedDict)
+			[NotNull] IReadOnlyFeature baseFeature,
+			[CanBeNull] BoxTree<IReadOnlyFeature> knownRows,
+			[NotNull] Dictionary<IReadOnlyFeature, Involved> involvedDict)
 		{
 			if (knownRows == null)
 			{
 				yield break;
 			}
 
-			foreach (BoxTree<IFeature>.TileEntry entry in
+			foreach (BoxTree<IReadOnlyFeature>.TileEntry entry in
 			         knownRows.Search(QaGeometryUtils.CreateBox(baseFeature.Extent)))
 			{
 				if (! involvedDict.TryGetValue(entry.Value, out Involved knownInvolved))

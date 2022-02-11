@@ -19,6 +19,7 @@ using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
 using IPnt = ProSuite.Commons.Geom.IPnt;
 using Pnt = ProSuite.Commons.Geom.Pnt;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -91,18 +92,18 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPointNotNear_0))]
 		public QaPointNotNear(
 			[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_pointClass))]
-			IFeatureClass pointClass,
+			IReadOnlyFeatureClass pointClass,
 			[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_referenceClass))]
-			IFeatureClass referenceClass,
+			IReadOnlyFeatureClass referenceClass,
 			[Doc(nameof(DocStrings.QaPointNotNear_limit))] double limit)
 			: this(pointClass, new[] {referenceClass}, limit) { }
 
 		[Doc(nameof(DocStrings.QaPointNotNear_1))]
 		public QaPointNotNear(
 			[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_pointClass))]
-			IFeatureClass pointClass,
+			IReadOnlyFeatureClass pointClass,
 			[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_referenceClasses))]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				referenceClasses,
 			[Doc(nameof(DocStrings.QaPointNotNear_limit))] double limit)
 			: base(CastToTables(new[] {pointClass}, referenceClasses))
@@ -111,7 +112,7 @@ namespace ProSuite.QA.Tests
 			Assert.ArgumentNotNull(referenceClasses, nameof(referenceClasses));
 
 			_shapeFieldName = pointClass.ShapeFieldName;
-			_spatialReference = ((IGeoDataset) pointClass).SpatialReference;
+			_spatialReference = pointClass.SpatialReference;
 			SearchDistance = limit;
 			_filter = null;
 			_tableCount = InvolvedTables.Count;
@@ -126,9 +127,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPointNotNear_2))]
 		public QaPointNotNear(
 				[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_pointClass))]
-				IFeatureClass pointClass,
+				IReadOnlyFeatureClass pointClass,
 				[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_referenceClasses))]
-				IList<IFeatureClass>
+				IList<IReadOnlyFeatureClass>
 					referenceClasses,
 				[Doc(nameof(DocStrings.QaPointNotNear_searchDistance))] double searchDistance,
 				[CanBeNull] [Doc(nameof(DocStrings.QaPointNotNear_pointDistanceExpression))]
@@ -146,9 +147,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPointNotNear_3))]
 		public QaPointNotNear(
 			[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_pointClass))]
-			IFeatureClass pointClass,
+			IReadOnlyFeatureClass pointClass,
 			[NotNull] [Doc(nameof(DocStrings.QaPointNotNear_referenceClasses))]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				referenceClasses,
 			[Doc(nameof(DocStrings.QaPointNotNear_searchDistance))] double searchDistance,
 			[CanBeNull] [Doc(nameof(DocStrings.QaPointNotNear_pointDistanceExpression))]
@@ -190,7 +191,7 @@ namespace ProSuite.QA.Tests
 			                         "(must be 0, 1, or equal to the number of reference classes");
 
 			_shapeFieldName = pointClass.ShapeFieldName;
-			_spatialReference = ((IGeoDataset) pointClass).SpatialReference;
+			_spatialReference = pointClass.SpatialReference;
 			SearchDistance = searchDistance;
 			_pointDistanceExpressionSql = pointDistanceExpression;
 			_referenceDistanceExpressionsSql = referenceDistanceExpressions;
@@ -264,7 +265,7 @@ namespace ProSuite.QA.Tests
 		public double MinimumErrorLineLength { get; set; } =
 			_defaultMinimumErrorLineLength;
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			// preparing
 			if (_filter == null)
@@ -289,7 +290,7 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 
 			if (feature == null)
 			{
@@ -301,7 +302,7 @@ namespace ProSuite.QA.Tests
 			     referencedClassIndex < _tableCount;
 			     referencedClassIndex++)
 			{
-				var referenceClass = (IFeatureClass) InvolvedTables[referencedClassIndex];
+				var referenceClass = (IReadOnlyFeatureClass) InvolvedTables[referencedClassIndex];
 				_helper[referencedClassIndex].MinimumOID = -1;
 
 				errorCount += CheckTable(feature, referenceClass, referencedClassIndex);
@@ -427,8 +428,8 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		private int CheckTable([NotNull] IFeature feature,
-		                       [NotNull] IFeatureClass referenceClass,
+		private int CheckTable([NotNull] IReadOnlyFeature feature,
+		                       [NotNull] IReadOnlyFeatureClass referenceClass,
 		                       int referenceClassIndex)
 		{
 			GeometryComponent geometryComponent =
@@ -450,7 +451,7 @@ namespace ProSuite.QA.Tests
 				QueryFilterHelper helper = _helper[referenceClassIndex];
 
 				const int pointClassIndex = 0;
-				foreach (IRow referenceRow in Search((ITable) referenceClass,
+				foreach (IReadOnlyRow referenceRow in Search(referenceClass,
 				                                     filter, helper, point))
 				{
 					if (TestUtils.IsSameRow(feature, referenceRow))
@@ -458,7 +459,7 @@ namespace ProSuite.QA.Tests
 						continue;
 					}
 
-					var referenceFeature = (IFeature) referenceRow;
+					var referenceFeature = (IReadOnlyFeature) referenceRow;
 
 					if (validConstraint != null &&
 					    validConstraint.HasConstraint &&
@@ -540,8 +541,8 @@ namespace ProSuite.QA.Tests
 			return distance <= xyTolerance;
 		}
 
-		private double GetMaxNeededDistance([NotNull] IFeature pointFeature,
-		                                    [NotNull] IFeature referenceFeature,
+		private double GetMaxNeededDistance([NotNull] IReadOnlyFeature pointFeature,
+		                                    [NotNull] IReadOnlyFeature referenceFeature,
 		                                    int referenceClassIndex,
 		                                    out double standardDistance,
 		                                    out double? rightSideDistance)
@@ -599,8 +600,8 @@ namespace ProSuite.QA.Tests
 			return Math.Max(standardDistance, rightSideDistance ?? 0);
 		}
 
-		private int ReportError([NotNull] IFeature pointFeature,
-		                        [NotNull] IFeature referenceFeature,
+		private int ReportError([NotNull] IReadOnlyFeature pointFeature,
+		                        [NotNull] IReadOnlyFeature referenceFeature,
 		                        [NotNull] IPoint point,
 		                        [NotNull] IPoint nearPoint,
 		                        double distance,
@@ -724,7 +725,7 @@ namespace ProSuite.QA.Tests
 		/// otherwise returns distance.
 		/// </summary>
 		private static double GetDistance([NotNull] IPoint point,
-		                                  [NotNull] IFeature neighbourFeature,
+		                                  [NotNull] IReadOnlyFeature neighbourFeature,
 		                                  [NotNull] IPoint nearestPoint,
 		                                  GeometryComponent geometryComponent,
 		                                  double maxNeededDistance,
@@ -786,7 +787,7 @@ namespace ProSuite.QA.Tests
 
 		private static double GetDistanceToCurve(
 			[NotNull] IPoint point,
-			[NotNull] IFeature neighbourFeature,
+			[NotNull] IReadOnlyFeature neighbourFeature,
 			[NotNull] IPoint nearestPoint,
 			double maxNeededDistance,
 			out bool onRightSide)
@@ -942,7 +943,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private static double GetDistanceToVertices([NotNull] IPoint point,
-		                                            [NotNull] IFeature neighbourFeature,
+		                                            [NotNull] IReadOnlyFeature neighbourFeature,
 		                                            [NotNull] IPoint nearestPoint,
 		                                            double maxNeededDistance)
 		{
@@ -993,7 +994,7 @@ namespace ProSuite.QA.Tests
 
 		private static IEnumerable<SegmentProxy> EnumSegments(
 			[NotNull] Pnt point,
-			[NotNull] IFeature neighbourFeature,
+			[NotNull] IReadOnlyFeature neighbourFeature,
 			double maxNeededDistance)
 		{
 			IIndexedSegments segments = IndexedSegmentUtils.GetIndexedGeometry(

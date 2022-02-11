@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests
 	[TopologyTest]
 	public class QaDuplicateGeometrySelf : QaSpatialRelationSelfBase
 	{
-		private readonly IFeatureClass _featureClass;
+		private readonly IReadOnlyFeatureClass _featureClass;
 		private readonly bool _reportSingleErrorPerDuplicateSet;
 		private readonly string _shapeFieldName;
 		private readonly string _validRelationConstraintSql;
@@ -57,13 +57,13 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_0))]
 		public QaDuplicateGeometrySelf(
 			[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_featureClass))] [NotNull]
-			IFeatureClass featureClass)
+			IReadOnlyFeatureClass featureClass)
 			: this(featureClass, string.Empty) { }
 
 		[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_1))]
 		public QaDuplicateGeometrySelf(
 				[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_featureClass))] [NotNull]
-				IFeatureClass featureClass,
+				IReadOnlyFeatureClass featureClass,
 				[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_validDuplicateConstraint))] [CanBeNull]
 				string
 					validDuplicateConstraint)
@@ -73,7 +73,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_2))]
 		public QaDuplicateGeometrySelf(
 			[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaDuplicateGeometrySelf_validDuplicateConstraint))] [CanBeNull]
 			string
 				validDuplicateConstraint,
@@ -98,8 +98,8 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int FindErrors(IRow row1, int tableIndex1,
-		                                  IRow row2, int tableIndex2)
+		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
+										  IReadOnlyRow row2, int tableIndex2)
 		{
 			if (_validRelationConstraint == null)
 			{
@@ -244,9 +244,9 @@ namespace ProSuite.QA.Tests
 			Dictionary<int, HashSet<int>> duplicatesByFirstOid =
 				GetDuplicatesByFirstOid(_duplicateSets);
 
-			string tableName = DatasetUtils.GetName(_featureClass);
+			string tableName = _featureClass.Name;
 			const bool recycle = true;
-			foreach (IFeature feature in GdbQueryUtils.GetFeatures(
+			foreach (IReadOnlyFeature feature in GdbQueryUtils.GetFeatures(
 				_featureClass, duplicatesByFirstOid.Keys, recycle))
 			{
 				HashSet<int> duplicates = duplicatesByFirstOid[feature.OID];

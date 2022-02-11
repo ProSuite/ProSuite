@@ -1,4 +1,4 @@
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests
@@ -6,6 +6,6 @@ namespace ProSuite.QA.Tests
 	public interface IValueTransformation
 	{
 		[CanBeNull]
-		object TransformValue([NotNull] IRow row, [CanBeNull] object value);
+		object TransformValue([NotNull] IReadOnlyRow row, [CanBeNull] object value);
 	}
 }

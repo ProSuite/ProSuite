@@ -1,4 +1,4 @@
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -6,7 +6,7 @@ namespace ProSuite.QA.Tests.EdgeMatch
 {
 	internal abstract class EdgeMatchBorderConnection
 	{
-		protected EdgeMatchBorderConnection([NotNull] IFeature feature,
+		protected EdgeMatchBorderConnection([NotNull] IReadOnlyFeature feature,
 		                                    int classIndex,
 		                                    int borderClassIndex)
 		{
@@ -18,7 +18,7 @@ namespace ProSuite.QA.Tests.EdgeMatch
 		}
 
 		[NotNull]
-		public IFeature Feature { get; }
+		public IReadOnlyFeature Feature { get; }
 
 		public int ClassIndex { get; }
 

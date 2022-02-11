@@ -284,7 +284,23 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(row, nameof(row));
 
 			object value = row.Value[fieldIndex];
+			return ReadRowValue<T>(value, fieldIndex, () => GetObjectId(row),
+			                       () => DatasetUtils.GetName(row.Table));
+		}
+		[CanBeNull]
+		public static T? ReadRowValue<T>([NotNull] IReadOnlyRow row, int fieldIndex)
+			where T : struct
+		{
+			Assert.ArgumentNotNull(row, nameof(row));
 
+			object value = row.get_Value(fieldIndex);
+			return ReadRowValue<T>(value, fieldIndex, () => row.OID, () => row.Table.Name);
+		}
+
+		[CanBeNull]
+		private static T? ReadRowValue<T>([NotNull] object value, int fieldIndex, Func<int?> getOid, Func<string> getTableName)
+			where T : struct
+		{
 			if (value == DBNull.Value)
 			{
 				_msg.VerboseDebug(
@@ -320,12 +336,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 			catch (Exception ex)
 			{
-				int? rowOid = GetObjectId(row);
+				int? rowOid = getOid();
 
 				_msg.ErrorFormat(
 					"ReadRowValue: Error casting value {0} of type {1} into type {2} for row <oid> {3} at field index {4} in {5}: {6}",
-					value, value.GetType(), typeof(T), fieldIndex, rowOid,
-					((IDataset) row.Table).Name, ex.Message);
+					value, value.GetType(), typeof(T), fieldIndex, rowOid, getTableName(), ex.Message);
 
 				throw;
 			}

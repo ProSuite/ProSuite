@@ -15,11 +15,11 @@ namespace ProSuite.QA.Tests
 	[UsedImplicitly]
 	public class QaRowCount : NonContainerTest
 	{
-		private readonly ITable _table;
+		private readonly IReadOnlyTable _table;
 		private readonly int _minimumRowCount;
 		private readonly int _maximumRowCount;
 
-		private readonly IList<ITable> _referenceTables;
+		private readonly IList<IReadOnlyTable> _referenceTables;
 		private readonly OffsetSpecification _minimumValueOffset;
 		private readonly OffsetSpecification _maximumValueOffset;
 
@@ -43,7 +43,7 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaRowCount_0))]
 		public QaRowCount(
-			[Doc(nameof(DocStrings.QaRowCount_table))] [NotNull] ITable table,
+			[Doc(nameof(DocStrings.QaRowCount_table))] [NotNull] IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaRowCount_minimumRowCount))] int minimumRowCount,
 			[Doc(nameof(DocStrings.QaRowCount_maximumRowCount))] int maximumRowCount)
 			: base(new[] {table})
@@ -57,9 +57,9 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaRowCount_1))]
 		public QaRowCount(
-			[Doc(nameof(DocStrings.QaRowCount_table))] [NotNull] ITable table,
+			[Doc(nameof(DocStrings.QaRowCount_table))] [NotNull] IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaRowCount_referenceTables))] [NotNull]
-			IList<ITable> referenceTables,
+			IList<IReadOnlyTable> referenceTables,
 			[Doc(nameof(DocStrings.QaRowCount_minimumValueOffset))] [CanBeNull]
 			string minimumValueOffset,
 			[Doc(nameof(DocStrings.QaRowCount_maximumValueOffset))] [CanBeNull]
@@ -70,7 +70,7 @@ namespace ProSuite.QA.Tests
 			Assert.ArgumentNotNull(referenceTables, nameof(referenceTables));
 
 			_table = table;
-			_referenceTables = new List<ITable>(referenceTables);
+			_referenceTables = new List<IReadOnlyTable>(referenceTables);
 
 			CultureInfo formatProvider = CultureInfo.InvariantCulture;
 			_minimumValueOffset = OffsetSpecification.Parse(minimumValueOffset, formatProvider);
@@ -96,13 +96,13 @@ namespace ProSuite.QA.Tests
 			return ExecuteGeometry(area);
 		}
 
-		public override int Execute(IEnumerable<IRow> selectedRows)
+		public override int Execute(IEnumerable<IReadOnlyRow> selectedRows)
 		{
 			// TODO what to do with selection?
 			return NoError;
 		}
 
-		public override int Execute(IRow row)
+		public override int Execute(IReadOnlyRow row)
 		{
 			// TODO what to do with individual row?
 			return NoError;
@@ -110,11 +110,9 @@ namespace ProSuite.QA.Tests
 
 		protected override ISpatialReference GetSpatialReference()
 		{
-			var featureClass = _table as IFeatureClass;
+			var featureClass = _table as IReadOnlyFeatureClass;
 
-			return featureClass == null
-				       ? null
-				       : DatasetUtils.GetSpatialReference(featureClass);
+			return featureClass?.SpatialReference;
 		}
 
 		private int ExecuteGeometry([CanBeNull] IGeometry geometry)
@@ -142,7 +140,7 @@ namespace ProSuite.QA.Tests
 			var result = 0;
 
 			var referenceTableIndex = 1;
-			foreach (ITable referenceTable in _referenceTables)
+			foreach (IReadOnlyTable referenceTable in _referenceTables)
 			{
 				result += GetRowCount(referenceTable, referenceTableIndex, geometry);
 
@@ -152,11 +150,11 @@ namespace ProSuite.QA.Tests
 			return result;
 		}
 
-		private int GetRowCount([NotNull] ITable table,
+		private int GetRowCount([NotNull] IReadOnlyTable table,
 		                        int tableIndex,
 		                        [CanBeNull] IGeometry geometry)
 		{
-			var featureClass = table as IFeatureClass;
+			var featureClass = table as IReadOnlyFeatureClass;
 
 			IGeometry searchGeometry = featureClass == null
 				                           ? null
@@ -229,7 +227,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IQueryFilter CreateQueryFilter([NotNull] ITable table,
+		private IQueryFilter CreateQueryFilter([NotNull] IReadOnlyTable table,
 		                                       int tableIndex,
 		                                       [CanBeNull] IGeometry geometry)
 		{

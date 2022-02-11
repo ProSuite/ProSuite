@@ -20,13 +20,13 @@ namespace ProSuite.QA.Tests
 		private const int _tileIdFieldKey = -2;
 		[NotNull] private readonly string _fileGdbPath;
 
-		private IList<ITable> _exportTables;
+		private IList<ESRI.ArcGIS.Geodatabase.ITable> _exportTables;
 		private IList<Dictionary<int, int>> _fieldMappings;
 		private int _tileId;
-		private IFeatureClass _tileFc;
+		private ESRI.ArcGIS.Geodatabase.IFeatureClass _tileFc;
 
 		public QaExportTables(
-			[NotNull] IList<ITable> tables,
+			[NotNull] IList<IReadOnlyTable> tables,
 			[NotNull] string fileGdbPath) : base(tables)
 		{
 			_fileGdbPath = fileGdbPath;
@@ -61,15 +61,15 @@ namespace ProSuite.QA.Tests
 					Path.GetFileName(_fileGdbPath));
 				var ws = (IFeatureWorkspace) ((IName) wsName).Open();
 
-				_exportTables = new List<ITable>();
+				_exportTables = new List<ESRI.ArcGIS.Geodatabase.ITable>();
 				_fieldMappings = new List<Dictionary<int, int>>();
 				Dictionary<string, int> tableNames =
 					new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
 				int iInvolved = 0;
-				foreach (ITable involvedTable in InvolvedTables)
+				foreach (IReadOnlyTable involvedTable in InvolvedTables)
 				{
 					string baseName = $"table_{iInvolved}";
-					if (involvedTable is IDataset ds)
+					if (involvedTable is IReadOnlyDataset ds)
 					{
 						baseName = ds.Name;
 						int iP = baseName.LastIndexOf('.');
@@ -102,7 +102,7 @@ namespace ProSuite.QA.Tests
 
 				if (ExportTiles)
 				{
-					ISpatialReference sr = _exportTables.Select(x => x as IGeoDataset)
+					ISpatialReference sr = _exportTables.Select(x => x as ESRI.ArcGIS.Geodatabase.IGeoDataset)
 					                                    ?.FirstOrDefault(x => x != null)
 					                                    ?.SpatialReference;
 					if (sr != null)
@@ -116,7 +116,7 @@ namespace ProSuite.QA.Tests
 
 						if (tileInfo.AllBox != null)
 						{
-							IFeature fullExtent = _tileFc.CreateFeature();
+							ESRI.ArcGIS.Geodatabase.IFeature fullExtent = _tileFc.CreateFeature();
 							fullExtent.Value[_tileFc.FindField(tileIdField)] = -1;
 							fullExtent.Shape = GeometryFactory.CreatePolygon(tileInfo.AllBox);
 							fullExtent.Store();
@@ -129,7 +129,7 @@ namespace ProSuite.QA.Tests
 			{
 				if (tileInfo.CurrentEnvelope?.IsEmpty == false)
 				{
-					IFeature tileExtent = _tileFc.CreateFeature();
+					ESRI.ArcGIS.Geodatabase.IFeature tileExtent = _tileFc.CreateFeature();
 					tileExtent.Value[_tileFc.FindField(tileIdField)] = _tileId;
 					tileExtent.Shape = GeometryFactory.CreatePolygon(tileInfo.CurrentEnvelope);
 					tileExtent.Store();
@@ -154,7 +154,7 @@ namespace ProSuite.QA.Tests
 			return validIndexed;
 		}
 
-		private ITable CreateTable(IFeatureWorkspace ws, ITable involvedTable, string name,
+		private ESRI.ArcGIS.Geodatabase.ITable CreateTable(IFeatureWorkspace ws, IReadOnlyTable involvedTable, string name,
 		                           out Dictionary<int, int> fieldMappings)
 		{
 			IFields sourceFields = involvedTable.Fields;
@@ -167,7 +167,7 @@ namespace ProSuite.QA.Tests
 				fieldDict.Add(GetValidFieldName(sourceField.Name, fieldDict), sourceField);
 			}
 
-			IFeatureClass fc = involvedTable as IFeatureClass;
+			IReadOnlyFeatureClass fc = involvedTable as IReadOnlyFeatureClass;
 			string shapeFieldName = fc?.ShapeFieldName;
 
 			string oidFieldName = GetValidFieldName("OBJECTID", fieldDict);
@@ -232,10 +232,10 @@ namespace ProSuite.QA.Tests
 				exportFields.Add(FieldUtils.CreateIntegerField(tileIdFieldName));
 			}
 
-			ITable created;
+			ESRI.ArcGIS.Geodatabase.ITable created;
 			if (fc != null)
 			{
-				created = (ITable) DatasetUtils.CreateSimpleFeatureClass(
+				created = (ESRI.ArcGIS.Geodatabase.ITable) DatasetUtils.CreateSimpleFeatureClass(
 					ws, name, FieldUtils.CreateFields(exportFields),
 					shapeFieldName: shapeFieldName);
 			}
@@ -263,12 +263,12 @@ namespace ProSuite.QA.Tests
 			return created;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			ITable target = _exportTables[tableIndex];
-			IRow targetRow = target.CreateRow();
+			ESRI.ArcGIS.Geodatabase.ITable target = _exportTables[tableIndex];
+			ESRI.ArcGIS.Geodatabase.IRow targetRow = target.CreateRow();
 			Dictionary<int, int> fieldMapping = _fieldMappings[tableIndex];
-			for (int iSourceField = 0; iSourceField < row.Fields.FieldCount; iSourceField++)
+			for (int iSourceField = 0; iSourceField < row.Table.Fields.FieldCount; iSourceField++)
 			{
 				if (! fieldMapping.TryGetValue(
 					    iSourceField + 1, out int iTargetField))
@@ -281,7 +281,7 @@ namespace ProSuite.QA.Tests
 					continue;
 				}
 
-				object sourceValue = row.Value[iSourceField];
+				object sourceValue = row.get_Value(iSourceField);
 				object targetValue = sourceValue;
 
 				if (sourceValue is IGeometry)
@@ -292,7 +292,7 @@ namespace ProSuite.QA.Tests
 						targetValue = "additional geometry value (supressed)";
 					}
 				}
-				else if (sourceValue is IList<IRow> baseRows)
+				else if (sourceValue is IList<IReadOnlyRow> baseRows)
 				{
 					InvolvedRows involveds = InvolvedRowUtils.GetInvolvedRows(baseRows);
 					string fullList = string.Concat(involveds.Select(x => $"{x};"));

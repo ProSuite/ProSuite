@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
@@ -17,6 +16,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -29,10 +29,10 @@ namespace ProSuite.QA.Tests
 		private readonly double _subtileWidth;
 		private readonly int _tileSubdivisionCount;
 		private readonly bool _findGapsBelowTolerance;
-		private readonly IList<IFeatureClass> _areaOfInterestClasses;
+		private readonly IList<IReadOnlyFeatureClass> _areaOfInterestClasses;
 
 		private readonly List<IPolygon> _tileAreasOfInterest;
-		private readonly List<IFeature> _tileFeatures;
+		private readonly List<IReadOnlyFeature> _tileFeatures;
 		private readonly ISpatialReference _spatialReference;
 		private readonly double _tolerance;
 		private readonly double _minimumSubtileWidth;
@@ -67,7 +67,7 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaNoGaps_0))]
 		public QaNoGaps([Doc(nameof(DocStrings.QaNoGaps_polygonClass))] [NotNull]
-		                IFeatureClass polygonClass,
+						IReadOnlyFeatureClass polygonClass,
 		                [Doc(nameof(DocStrings.QaNoGaps_sliverLimit))] double sliverLimit,
 		                [Doc(nameof(DocStrings.QaNoGaps_maxArea))] double maxArea)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -76,7 +76,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaNoGaps_1))]
 		public QaNoGaps(
 				[Doc(nameof(DocStrings.QaNoGaps_polygonClasses))] [NotNull]
-				IList<IFeatureClass> polygonClasses,
+				IList<IReadOnlyFeatureClass> polygonClasses,
 				[Doc(nameof(DocStrings.QaNoGaps_sliverLimit))] double sliverLimit,
 				[Doc(nameof(DocStrings.QaNoGaps_maxArea))] double maxArea)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -84,20 +84,20 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaNoGaps_2))]
 		public QaNoGaps([Doc(nameof(DocStrings.QaNoGaps_polygonClass))] [NotNull]
-		                IFeatureClass polygonClass,
+						IReadOnlyFeatureClass polygonClass,
 		                [Doc(nameof(DocStrings.QaNoGaps_sliverLimit))] double sliverLimit,
 		                [Doc(nameof(DocStrings.QaNoGaps_maxArea))] double maxArea,
 		                [Doc(nameof(DocStrings.QaNoGaps_subtileWidth))] double subtileWidth,
 		                [Doc(nameof(DocStrings.QaNoGaps_findGapsBelowTolerance))]
 		                bool findGapsBelowTolerance)
-			: this(new List<IFeatureClass> {polygonClass}, sliverLimit, maxArea,
+			: this(new List<IReadOnlyFeatureClass> {polygonClass}, sliverLimit, maxArea,
 			       subtileWidth, 0,
-			       findGapsBelowTolerance, new List<IFeatureClass>(0)) { }
+			       findGapsBelowTolerance, new List<IReadOnlyFeatureClass>(0)) { }
 
 		[Doc(nameof(DocStrings.QaNoGaps_3))]
 		public QaNoGaps(
 			[Doc(nameof(DocStrings.QaNoGaps_polygonClasses))] [NotNull]
-			IList<IFeatureClass> polygonClasses,
+			IList<IReadOnlyFeatureClass> polygonClasses,
 			[Doc(nameof(DocStrings.QaNoGaps_sliverLimit))] double sliverLimit,
 			[Doc(nameof(DocStrings.QaNoGaps_maxArea))] double maxArea,
 			[Doc(nameof(DocStrings.QaNoGaps_subtileWidth))] double subtileWidth,
@@ -105,57 +105,57 @@ namespace ProSuite.QA.Tests
 			bool findGapsBelowTolerance)
 			: this(polygonClasses, sliverLimit, maxArea,
 			       subtileWidth, 0,
-			       findGapsBelowTolerance, new List<IFeatureClass>(0)) { }
+			       findGapsBelowTolerance, new List<IReadOnlyFeatureClass>(0)) { }
 
 		[Doc(nameof(DocStrings.QaNoGaps_4))]
 		public QaNoGaps(
 			[Doc(nameof(DocStrings.QaNoGaps_polygonClasses))] [NotNull]
-			IList<IFeatureClass> polygonClasses,
+			IList<IReadOnlyFeatureClass> polygonClasses,
 			[Doc(nameof(DocStrings.QaNoGaps_sliverLimit))] double sliverLimit,
 			[Doc(nameof(DocStrings.QaNoGaps_maxArea))] double maxArea,
 			[Doc(nameof(DocStrings.QaNoGaps_areaOfInterestClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				areaOfInterestClasses)
 			: this(polygonClasses, sliverLimit, maxArea, 0d, false, areaOfInterestClasses) { }
 
 		[Doc(nameof(DocStrings.QaNoGaps_5))]
 		public QaNoGaps(
 			[Doc(nameof(DocStrings.QaNoGaps_polygonClasses))] [NotNull]
-			IList<IFeatureClass> polygonClasses,
+			IList<IReadOnlyFeatureClass> polygonClasses,
 			[Doc(nameof(DocStrings.QaNoGaps_sliverLimit))] double sliverLimit,
 			[Doc(nameof(DocStrings.QaNoGaps_maxArea))] double maxArea,
 			[Doc(nameof(DocStrings.QaNoGaps_subtileWidth))] double subtileWidth,
 			[Doc(nameof(DocStrings.QaNoGaps_findGapsBelowTolerance))]
 			bool findGapsBelowTolerance,
 			[Doc(nameof(DocStrings.QaNoGaps_areaOfInterestClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				areaOfInterestClasses)
 			: this(polygonClasses, sliverLimit, maxArea,
 			       subtileWidth, 0,
 			       findGapsBelowTolerance, areaOfInterestClasses) { }
 
 		[Obsolete]
-		public QaNoGaps([NotNull] IFeatureClass polygonClass,
+		public QaNoGaps([NotNull] IReadOnlyFeatureClass polygonClass,
 		                double sliverLimit,
 		                double maxArea,
 		                int tileSubdivisionCount)
 			: this(
-				new List<IFeatureClass> {polygonClass}, sliverLimit, maxArea,
-				0, tileSubdivisionCount, false, new List<IFeatureClass>()) { }
+				new List<IReadOnlyFeatureClass> {polygonClass}, sliverLimit, maxArea,
+				0, tileSubdivisionCount, false, new List<IReadOnlyFeatureClass>()) { }
 
 		[Obsolete]
-		public QaNoGaps([NotNull] IList<IFeatureClass> polygonClasses,
+		public QaNoGaps([NotNull] IList<IReadOnlyFeatureClass> polygonClasses,
 		                double sliverLimit,
 		                double maxArea,
 		                int tileSubdivisionCount)
 			: this(polygonClasses, sliverLimit, maxArea, 0,
-			       tileSubdivisionCount, false, new List<IFeatureClass>()) { }
+			       tileSubdivisionCount, false, new List<IReadOnlyFeatureClass>()) { }
 
-		private QaNoGaps([NotNull] IList<IFeatureClass> polygonClasses,
+		private QaNoGaps([NotNull] IList<IReadOnlyFeatureClass> polygonClasses,
 		                 double sliverLimit, double maxArea,
 		                 double subtileWidth, int tileSubdivisionCount,
 		                 bool findGapsBelowTolerance,
-		                 [NotNull] IList<IFeatureClass> areaOfInterestClasses)
+		                 [NotNull] IList<IReadOnlyFeatureClass> areaOfInterestClasses)
 			: base(CastToTables(polygonClasses, areaOfInterestClasses))
 		{
 			Assert.ArgumentNotNull(polygonClasses, nameof(polygonClasses));
@@ -169,7 +169,7 @@ namespace ProSuite.QA.Tests
 			_findGapsBelowTolerance = findGapsBelowTolerance;
 			_areaOfInterestClasses = areaOfInterestClasses;
 
-			_tileFeatures = new List<IFeature>();
+			_tileFeatures = new List<IReadOnlyFeature>();
 			_tileAreasOfInterest = new List<IPolygon>();
 
 			if (findGapsBelowTolerance)
@@ -190,9 +190,9 @@ namespace ProSuite.QA.Tests
 			KeepRows = true;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature != null)
 			{
 				if (tableIndex >= _firstAreaOfInterestClassIndex)
@@ -396,7 +396,7 @@ namespace ProSuite.QA.Tests
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		private int CheckSubtile([NotNull] IEnvelope tileEnvelope,
 		                         [NotNull] Box allBox,
-		                         [NotNull] IEnumerable<IFeature> features,
+		                         [NotNull] IEnumerable<IReadOnlyFeature> features,
 		                         [NotNull] KnownGaps knownGaps)
 		{
 			Assert.ArgumentNotNull(tileEnvelope, nameof(tileEnvelope));
@@ -455,14 +455,14 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private static IList<IGeometry> GetClippedPolygons(
 			[NotNull] IEnvelope clipEnvelope,
-			[NotNull] IEnumerable<IFeature> features,
+			[NotNull] IEnumerable<IReadOnlyFeature> features,
 			[NotNull] out IList<IGeometry> copiedGeometries)
 		{
 			var result = new List<IGeometry>();
 
 			copiedGeometries = new List<IGeometry>();
 
-			foreach (IFeature tileRow in features)
+			foreach (IReadOnlyFeature tileRow in features)
 			{
 				var polygon = (IPolygon) tileRow.Shape;
 
@@ -483,11 +483,11 @@ namespace ProSuite.QA.Tests
 		private static IList<IGeometry> GetClippedPolygonCopies(
 			[NotNull] IEnvelope clipEnvelope,
 			[NotNull] ISpatialReference spatialReference,
-			[NotNull] IEnumerable<IFeature> features)
+			[NotNull] IEnumerable<IReadOnlyFeature> features)
 		{
 			var result = new List<IGeometry>();
 
-			foreach (IFeature tileRow in features)
+			foreach (IReadOnlyFeature tileRow in features)
 			{
 				var polygon = (IPolygon) tileRow.Shape;
 
@@ -745,16 +745,16 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static ISpatialReference GetSpatialReferenceAtMaximumResolution(
-			[NotNull] IEnumerable<IFeatureClass> featureClasses,
+			[NotNull] IEnumerable<IReadOnlyFeatureClass> featureClasses,
 			out double maxResolution)
 		{
 			Assert.ArgumentNotNull(featureClasses, nameof(featureClasses));
 
 			ISpatialReference result = null;
 			maxResolution = 0;
-			foreach (IFeatureClass featureClass in featureClasses)
+			foreach (IReadOnlyFeatureClass featureClass in featureClasses)
 			{
-				var geoDataset = (IGeoDataset) featureClass;
+				var geoDataset = (IReadOnlyGeoDataset) featureClass;
 				ISpatialReference spatialReference = geoDataset.SpatialReference;
 				Assert.NotNull(spatialReference, "Dataset without spatial reference");
 
@@ -777,16 +777,16 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static ISpatialReference GetUniqueSpatialReference(
-			[NotNull] IEnumerable<IFeatureClass> featureClasses, out double tolerance)
+			[NotNull] IEnumerable<IReadOnlyFeatureClass> featureClasses, out double tolerance)
 		{
 			Assert.ArgumentNotNull(featureClasses, nameof(featureClasses));
 
 			ISpatialReference result = null;
 			tolerance = 0;
 
-			foreach (IFeatureClass featureClass in featureClasses)
+			foreach (IReadOnlyFeatureClass featureClass in featureClasses)
 			{
-				var geoDataset = (IGeoDataset) featureClass;
+				var geoDataset = (IReadOnlyGeoDataset) featureClass;
 				ISpatialReference spatialReference = geoDataset.SpatialReference;
 				Assert.NotNull(spatialReference, "Dataset without spatial reference");
 

@@ -6,6 +6,7 @@ using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -41,13 +42,13 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPointOnLine_0))]
 		public QaPointOnLine(
 			[NotNull] [Doc(nameof(DocStrings.QaPointOnLine_pointClass))]
-			IFeatureClass pointClass,
+			IReadOnlyFeatureClass pointClass,
 			[NotNull] [Doc(nameof(DocStrings.QaPointOnLine_nearClasses))]
-			IList<IFeatureClass> nearClasses,
+			IList<IReadOnlyFeatureClass> nearClasses,
 			[Doc(nameof(DocStrings.QaPointOnLine_near))] double near)
 			: base(CastToTables(new[] {pointClass}, nearClasses))
 		{
-			_spatialReference = ((IGeoDataset) pointClass).SpatialReference;
+			_spatialReference = pointClass.SpatialReference;
 			SearchDistance = near;
 			_filter = null;
 
@@ -55,7 +56,7 @@ namespace ProSuite.QA.Tests
 			_nearPoint = new PointClass();
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			// preparing
 			if (_filter == null)
@@ -68,7 +69,7 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 
 			if (feature == null)
 			{
@@ -82,7 +83,7 @@ namespace ProSuite.QA.Tests
 			     involvedTableIndex < _tableCount;
 			     involvedTableIndex++)
 			{
-				var featureClass = (IFeatureClass) InvolvedTables[involvedTableIndex];
+				var featureClass = (IReadOnlyFeatureClass) InvolvedTables[involvedTableIndex];
 				_helper[involvedTableIndex].MinimumOID = -1;
 
 				if (! CheckTable(point, featureClass, involvedTableIndex))
@@ -113,7 +114,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private bool CheckTable([NotNull] IPoint point,
-		                        [NotNull] IFeatureClass neighbor,
+		                        [NotNull] IReadOnlyFeatureClass neighbor,
 		                        int tableIndex)
 		{
 			ISpatialFilter filter = _filter[tableIndex];
@@ -123,10 +124,10 @@ namespace ProSuite.QA.Tests
 
 			filter.Geometry = _box;
 
-			foreach (IRow row in
-				Search((ITable) neighbor, _filter[tableIndex], _helper[tableIndex], point))
+			foreach (IReadOnlyRow row in
+				Search(neighbor, _filter[tableIndex], _helper[tableIndex], point))
 			{
-				var neighborFeature = (IFeature) row;
+				var neighborFeature = (IReadOnlyFeature) row;
 				double distance = GetDistance(point, neighborFeature);
 
 				if (distance <= SearchDistance)
@@ -139,7 +140,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private double GetDistance([NotNull] IPoint point,
-		                           [NotNull] IFeature neighborFeature)
+		                           [NotNull] IReadOnlyFeature neighborFeature)
 		{
 			double along = 0;
 			double distance = 0;

@@ -22,7 +22,7 @@ namespace ProSuite.QA.Tests.KeySets
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		[NotNull]
-		public static IKeySet ReadKeySet([NotNull] ITable table,
+		public static IKeySet ReadKeySet([NotNull] IReadOnlyTable table,
 		                                 [NotNull] string keyField,
 		                                 [CanBeNull] string whereClause)
 		{
@@ -31,14 +31,14 @@ namespace ProSuite.QA.Tests.KeySets
 
 			int keyFieldIndex = table.FindField(keyField);
 			Assert.ArgumentCondition(keyFieldIndex >= 0, "Field {0} not found in table {1}",
-			                         keyField, DatasetUtils.GetName(table));
+			                         keyField, table.Name);
 
 			esriFieldType keyFieldType = GetFieldValueType(table, keyFieldIndex);
 
 			return ReadKeySet(table, keyField, whereClause, keyFieldType, keyFieldIndex);
 		}
 
-		public static esriFieldType GetFieldValueType([NotNull] ITable table,
+		public static esriFieldType GetFieldValueType([NotNull] IReadOnlyTable table,
 		                                              int fieldIndex)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
@@ -64,7 +64,7 @@ namespace ProSuite.QA.Tests.KeySets
 		}
 
 		[NotNull]
-		internal static IKeySet ReadKeySet([NotNull] ITable table,
+		internal static IKeySet ReadKeySet([NotNull] IReadOnlyTable table,
 		                                   [NotNull] string keyField,
 		                                   [CanBeNull] string whereClause,
 		                                   esriFieldType keyFieldType,
@@ -89,12 +89,12 @@ namespace ProSuite.QA.Tests.KeySets
 				                  SubFields = keyField,
 				                  WhereClause = whereClause
 			                  };
-			string tableName = DatasetUtils.GetName(table);
+			string tableName = table.Name;
 
 			const bool recycle = true;
-			foreach (IRow row in GdbQueryUtils.GetRows(table, queryFilter, recycle))
+			foreach (IReadOnlyRow row in table.EnumRows(queryFilter, recycle))
 			{
-				object key = row.Value[keyFieldIndex];
+				object key = row.get_Value(keyFieldIndex);
 
 				if (key == DBNull.Value || key == null)
 				{
@@ -116,7 +116,7 @@ namespace ProSuite.QA.Tests.KeySets
 				_msg.DebugStopTiming(watch,
 				                     "Reading {0:N0} {1} keys from field '{2}' in table '{3}'",
 				                     result.Count, keyFieldType, keyField,
-				                     DatasetUtils.GetName(table));
+				                     table.Name);
 				_msg.DebugFormat("Memory usage of keys: {0}", memoryUsage);
 			}
 
@@ -167,7 +167,7 @@ namespace ProSuite.QA.Tests.KeySets
 
 		[NotNull]
 		internal static ITupleKeySet ReadTupleKeySet(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] ICollection<string> keyFields,
 			[CanBeNull] string whereClause,
 			[NotNull] IList<esriFieldType> keyFieldTypes,
@@ -193,7 +193,7 @@ namespace ProSuite.QA.Tests.KeySets
 			{
 				int fieldIndex = table.FindField(keyField);
 				Assert.True(fieldIndex >= 0, "field '{0}' not found in table {1}",
-				            keyField, DatasetUtils.GetName(table));
+				            keyField, table.Name);
 				fieldIndices.Add(fieldIndex);
 			}
 
@@ -202,10 +202,10 @@ namespace ProSuite.QA.Tests.KeySets
 			IQueryFilter queryFilter = GetQueryFilter(keyFields, whereClause);
 
 			string keyFieldsString = StringUtils.Concatenate(keyFields, ",");
-			string tableName = DatasetUtils.GetName(table);
+			string tableName = table.Name;
 
 			const bool recycle = true;
-			foreach (IRow row in GdbQueryUtils.GetRows(table, queryFilter, recycle))
+			foreach (IReadOnlyRow row in table.EnumRows(queryFilter, recycle))
 			{
 				Tuple tuple = ReadTuple(row, fieldIndices);
 
@@ -224,7 +224,7 @@ namespace ProSuite.QA.Tests.KeySets
 				_msg.DebugStopTiming(watch,
 				                     "Reading {0:N0} keys from fields '{1}' in table '{2}'",
 				                     result.Count, queryFilter.SubFields,
-				                     DatasetUtils.GetName(table));
+				                     table.Name);
 				_msg.DebugFormat("Memory usage of keys: {0}", memoryUsage);
 			}
 
@@ -269,12 +269,12 @@ namespace ProSuite.QA.Tests.KeySets
 		}
 
 		[NotNull]
-		private static Tuple ReadTuple([NotNull] IRow row,
+		private static Tuple ReadTuple([NotNull] IReadOnlyRow row,
 		                               [NotNull] ICollection<int> fieldIndices)
 		{
 			var values = new List<object>(fieldIndices.Count);
 
-			values.AddRange(fieldIndices.Select(fieldIndex => row.Value[fieldIndex]));
+			values.AddRange(fieldIndices.Select(fieldIndex => row.get_Value(fieldIndex)));
 
 			return new Tuple(values);
 		}

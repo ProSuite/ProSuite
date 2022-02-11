@@ -1,6 +1,6 @@
 using System;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -49,7 +49,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[CanBeNull]
-		public static IGeometry GetGeometryComponent([NotNull] IFeature feature,
+		public static IGeometry GetGeometryComponent([NotNull] IReadOnlyFeature feature,
 		                                             GeometryComponent component)
 		{
 			IGeometry shape = feature.Shape;

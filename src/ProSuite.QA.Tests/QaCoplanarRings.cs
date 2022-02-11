@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
@@ -11,6 +10,7 @@ using ProSuite.QA.Tests.PointEnumerators;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using IPnt = ProSuite.Commons.Geom.IPnt;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -50,19 +50,18 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaCoplanarRings_0))]
 		public QaCoplanarRings(
 			[Doc(nameof(DocStrings.QaCoplanarRings_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaCoplanarRings_coplanarityTolerance))]
 			double coplanarityTolerance,
 			[Doc(nameof(DocStrings.QaCoplanarRings_includeAssociatedParts))]
 			bool includeAssociatedParts)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			_coplanarityTolerance = coplanarityTolerance;
 			_includeAssociatedParts = includeAssociatedParts;
 			_shapeType = featureClass.ShapeType;
 
-			var geodataset = (IGeoDataset) featureClass;
-			var srt = (ISpatialReferenceResolution) geodataset.SpatialReference;
+			var srt = (ISpatialReferenceResolution) featureClass.SpatialReference;
 			_xyResolution = srt.XYResolution[false];
 			_zResolution = srt.XYResolution[false];
 		}
@@ -77,10 +76,10 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			int errorCount = 0;
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return errorCount;
@@ -179,7 +178,7 @@ namespace ProSuite.QA.Tests
 
 		private int ReportInvalidPlane([NotNull] string description,
 		                               [NotNull] SegmentsPlane segmentsPlane,
-		                               [NotNull] IFeature feature)
+		                               [NotNull] IReadOnlyFeature feature)
 		{
 			IGeometry errorGeometry = GetErrorGeometry(feature.Shape.GeometryType,
 			                                           segmentsPlane.Segments);
@@ -200,7 +199,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private SegmentsPlaneProvider GetPlaneProvider([NotNull] IFeature feature)
+		private SegmentsPlaneProvider GetPlaneProvider([NotNull] IReadOnlyFeature feature)
 		{
 			return SegmentsPlaneProvider.Create(feature, _shapeType,
 			                                    _includeAssociatedParts);

@@ -14,6 +14,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -67,7 +68,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaLineIntersect_0))]
 		public QaLineIntersect(
 				[Doc(nameof(DocStrings.QaLineIntersect_polylineClasses))] [NotNull]
-				IList<IFeatureClass>
+				IList<IReadOnlyFeatureClass>
 					polylineClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, null, AllowedEndpointInteriorIntersections.All, false) { }
@@ -75,14 +76,14 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaLineIntersect_1))]
 		public QaLineIntersect(
 				[Doc(nameof(DocStrings.QaLineIntersect_polylineClass))] [NotNull]
-				IFeatureClass polylineClass)
+				IReadOnlyFeatureClass polylineClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClass, null) { }
 
 		[Doc(nameof(DocStrings.QaLineIntersect_2))]
 		public QaLineIntersect(
 			[Doc(nameof(DocStrings.QaLineIntersect_polylineClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				polylineClasses,
 			[Doc(nameof(DocStrings.QaLineIntersect_validRelationConstraint))] [CanBeNull]
 			string
@@ -95,7 +96,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaLineIntersect_3))]
 		public QaLineIntersect(
 			[Doc(nameof(DocStrings.QaLineIntersect_polylineClass))] [NotNull]
-			IFeatureClass polylineClass,
+			IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaLineIntersect_validRelationConstraint))] [CanBeNull]
 			string
 				validRelationConstraint)
@@ -104,7 +105,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaLineIntersect_4))]
 		public QaLineIntersect(
 			[Doc(nameof(DocStrings.QaLineIntersect_polylineClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				polylineClasses,
 			[Doc(nameof(DocStrings.QaLineIntersect_validRelationConstraint))] [CanBeNull]
 			string
@@ -129,10 +130,10 @@ namespace ProSuite.QA.Tests
 			_xyTolerances = new List<double>(polylineClasses.Count);
 			_xyResolutions = new List<double>(polylineClasses.Count);
 
-			foreach (IFeatureClass polylineClass in polylineClasses)
+			foreach (IReadOnlyFeatureClass polylineClass in polylineClasses)
 			{
-				_xyTolerances.Add(GeometryUtils.GetXyTolerance(polylineClass));
-				_xyResolutions.Add(GeometryUtils.GetXyResolution(polylineClass));
+				_xyTolerances.Add(GeometryUtils.GetXyTolerance(polylineClass.SpatialReference));
+				_xyResolutions.Add(SpatialReferenceUtils.GetXyResolution(polylineClass.SpatialReference));
 			}
 		}
 
@@ -140,8 +141,8 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaLineIntersect_AllowedInteriorIntersections))]
 		public AllowedLineInteriorIntersections AllowedInteriorIntersections { get; set; }
 
-		protected override int FindErrors(IRow row1, int tableIndex1,
-		                                  IRow row2, int tableIndex2)
+		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
+										  IReadOnlyRow row2, int tableIndex2)
 		{
 			if (row1 == row2)
 			{
@@ -149,8 +150,8 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			var polyline1 = (IPolyline) ((IFeature) row1).Shape;
-			var polyline2 = (IPolyline) ((IFeature) row2).Shape;
+			var polyline1 = (IPolyline) ((IReadOnlyFeature) row1).Shape;
+			var polyline2 = (IPolyline) ((IReadOnlyFeature) row2).Shape;
 
 			double vertexIntersectionTolerance =
 				GetVertexIntersectionTolerance(
@@ -208,8 +209,8 @@ namespace ProSuite.QA.Tests
 		private int ReportIntersections([NotNull] string message,
 		                                [NotNull] IGeometry errorGeometry,
 		                                [CanBeNull] IssueCode issueCode,
-		                                [NotNull] IRow row1,
-		                                [NotNull] IRow row2)
+		                                [NotNull] IReadOnlyRow row1,
+		                                [NotNull] IReadOnlyRow row2)
 		{
 			if (errorGeometry.IsEmpty)
 			{
@@ -228,8 +229,8 @@ namespace ProSuite.QA.Tests
 			return ReportError(message, errorGeometry, issueCode, null, row1, row2);
 		}
 
-		private bool HasFulfilledConstraint([NotNull] IRow row1, int tableIndex1,
-		                                    [NotNull] IRow row2, int tableIndex2,
+		private bool HasFulfilledConstraint([NotNull] IReadOnlyRow row1, int tableIndex1,
+		                                    [NotNull] IReadOnlyRow row2, int tableIndex2,
 		                                    [NotNull] string description,
 		                                    [NotNull] out string formattedMessage)
 		{

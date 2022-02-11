@@ -5,6 +5,7 @@ using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -26,9 +27,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMustIntersectOther_0))]
 		public QaMustIntersectOther(
 			[Doc(nameof(DocStrings.QaMustIntersectOther_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMustIntersectOther_otherFeatureClass))] [NotNull]
-			IFeatureClass otherFeatureClass,
+			IReadOnlyFeatureClass otherFeatureClass,
 			[Doc(nameof(DocStrings.QaMustIntersectOther_relevantRelationCondition))] [CanBeNull]
 			string relevantRelationCondition)
 			: base(featureClass, otherFeatureClass, relevantRelationCondition) { }
@@ -36,9 +37,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMustIntersectOther_1))]
 		public QaMustIntersectOther(
 			[Doc(nameof(DocStrings.QaMustIntersectOther_featureClasses))] [NotNull]
-			ICollection<IFeatureClass> featureClasses,
+			ICollection<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaMustIntersectOther_otherFeatureClasses))] [NotNull]
-			ICollection<IFeatureClass> otherFeatureClasses,
+			ICollection<IReadOnlyFeatureClass> otherFeatureClasses,
 			[Doc(nameof(DocStrings.QaMustIntersectOther_relevantRelationCondition))] [CanBeNull]
 			string relevantRelationCondition)
 			: base(featureClasses, otherFeatureClasses, relevantRelationCondition) { }
@@ -49,7 +50,7 @@ namespace ProSuite.QA.Tests
 			return new SimpleCrossTileFeatureState();
 		}
 
-		protected override string GetErrorDescription(IFeature feature,
+		protected override string GetErrorDescription(IReadOnlyFeature feature,
 		                                              int tableIndex,
 		                                              PendingFeature pendingFeature,
 		                                              out IssueCode issueCode,
@@ -61,7 +62,7 @@ namespace ProSuite.QA.Tests
 						            .NoIntersectingFeature_WithFulfilledConstraint]
 				            : Codes[MustIntersectIssueCodes.NoIntersectingFeature];
 
-			affectedComponent = ((IFeatureClass) feature.Class).ShapeFieldName;
+			affectedComponent = ((IReadOnlyFeatureClass) feature.Table).ShapeFieldName;
 
 			return HasRelevantRelationCondition
 				       ? "Feature does not intersect another feature that fulfills the constraint"

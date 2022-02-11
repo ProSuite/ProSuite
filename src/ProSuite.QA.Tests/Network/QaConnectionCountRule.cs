@@ -1,11 +1,11 @@
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests.Network
 {
 	public class QaConnectionCountRule
 	{
-		public QaConnectionCountRule([NotNull] ITable table,
+		public QaConnectionCountRule([NotNull] IReadOnlyTable table,
 		                             [NotNull] string countSelectionExpression)
 		{
 			Table = table;
@@ -13,7 +13,7 @@ namespace ProSuite.QA.Tests.Network
 		}
 
 		[NotNull]
-		public ITable Table { get; }
+		public IReadOnlyTable Table { get; }
 
 		[NotNull]
 		public string CountSelectionExpression { get; }

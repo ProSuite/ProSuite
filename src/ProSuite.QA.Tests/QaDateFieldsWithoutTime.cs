@@ -41,13 +41,13 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_0))]
 		public QaDateFieldsWithoutTime(
 			[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_table))] [NotNull]
-			ITable table)
+			IReadOnlyTable table)
 			: this(table, GetAllDateFieldNames(table)) { }
 
 		[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_1))]
 		public QaDateFieldsWithoutTime(
 			[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_dateFieldName))] [NotNull]
 			string dateFieldName)
 			: this(table, new[] {dateFieldName}) { }
@@ -55,7 +55,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_2))]
 		public QaDateFieldsWithoutTime(
 			[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaDateFieldsWithoutTime_dateFieldNames))] [NotNull]
 			IEnumerable<string>
 				dateFieldNames)
@@ -74,7 +74,7 @@ namespace ProSuite.QA.Tests
 				{
 					throw new ArgumentException(
 						string.Format("Field not found in table {0}: {1}",
-						              DatasetUtils.GetName(table), fieldName),
+						              table.Name, fieldName),
 						nameof(dateFieldNames));
 				}
 
@@ -82,7 +82,7 @@ namespace ProSuite.QA.Tests
 				{
 					throw new ArgumentException(
 						string.Format("Field {0} in table {1} is not a date field",
-						              fieldName, DatasetUtils.GetName(table)),
+						              fieldName, table.Name),
 						nameof(dateFieldNames));
 				}
 
@@ -107,7 +107,7 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			var errorCount = 0;
 
@@ -119,9 +119,9 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int Checkfield([NotNull] IRow row, int fieldIndex)
+		private int Checkfield([NotNull] IReadOnlyRow row, int fieldIndex)
 		{
-			object value = row.Value[fieldIndex];
+			object value = row.get_Value(fieldIndex);
 
 			if (value == null || value is DBNull)
 			{
@@ -167,9 +167,9 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static IEnumerable<string> GetAllDateFieldNames([NotNull] ITable table)
+		private static IEnumerable<string> GetAllDateFieldNames([NotNull] IReadOnlyTable table)
 		{
-			return DatasetUtils.GetFields(table)
+			return DatasetUtils.GetFields(table.Fields)
 			                   .Where(f => f.Type == esriFieldType.esriFieldTypeDate)
 			                   .Select(f => f.Name)
 			                   .ToArray();

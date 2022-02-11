@@ -8,6 +8,7 @@ using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.SpatialRelations;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -37,7 +38,7 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMinIntersect_0))]
 		public QaMinIntersect(
-			[Doc(nameof(DocStrings.QaMinIntersect_polygonClasses))] IList<IFeatureClass> polygonClasses,
+			[Doc(nameof(DocStrings.QaMinIntersect_polygonClasses))] IList<IReadOnlyFeatureClass> polygonClasses,
 			[Doc(nameof(DocStrings.QaMinIntersect_limit))] double limit)
 			: base(polygonClasses, esriSpatialRelEnum.esriSpatialRelIntersects)
 		{
@@ -46,20 +47,20 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMinIntersect_1))]
 		public QaMinIntersect(
-			[Doc(nameof(DocStrings.QaMinIntersect_polygonClass))] IFeatureClass polygonClass,
+			[Doc(nameof(DocStrings.QaMinIntersect_polygonClass))] IReadOnlyFeatureClass polygonClass,
 			[Doc(nameof(DocStrings.QaMinIntersect_limit))] double limit)
 			: this(new[] {polygonClass}, limit) { }
 
-		protected override int FindErrors(IRow row1, int tableIndex1,
-		                                  IRow row2, int tableIndex2)
+		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
+										  IReadOnlyRow row2, int tableIndex2)
 		{
 			if (row1 == row2)
 			{
 				return NoError;
 			}
 
-			IGeometry shape1 = ((IFeature) row1).Shape;
-			IGeometry shape2 = ((IFeature) row2).Shape;
+			IGeometry shape1 = ((IReadOnlyFeature) row1).Shape;
+			IGeometry shape2 = ((IReadOnlyFeature) row2).Shape;
 
 			var intersection = ((ITopologicalOperator) shape1).Intersect(
 				                   shape2,
@@ -87,8 +88,8 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int CheckIntersectionArea([NotNull] IGeometry intersection,
-		                                  [NotNull] IRow row1,
-		                                  [NotNull] IRow row2,
+		                                  [NotNull] IReadOnlyRow row1,
+		                                  [NotNull] IReadOnlyRow row2,
 		                                  [NotNull] IGeometry shape2)
 		{
 			if (intersection.IsEmpty)

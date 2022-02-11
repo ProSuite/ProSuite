@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
@@ -44,21 +45,25 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMustBeNearOther_0))]
 		public QaMustBeNearOther(
 			[NotNull] [Doc(nameof(DocStrings.QaMustBeNearOther_featureClass))]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[NotNull] [Doc(nameof(DocStrings.QaMustBeNearOther_nearClasses))]
-			ICollection<IFeatureClass>
+			ICollection<IReadOnlyFeatureClass>
 				nearClasses,
 			[Doc(nameof(DocStrings.QaMustBeNearOther_maximumDistance))]
 			double maximumDistance,
 			[Doc(nameof(DocStrings.QaMustBeNearOther_relevantRelationCondition))] [CanBeNull]
 			string relevantRelationCondition)
-			: base(new[] {featureClass}, nearClasses, relevantRelationCondition)
+			: base(new[] { featureClass }, nearClasses, relevantRelationCondition)
 		{
 			_maximumDistance = maximumDistance;
 			SearchDistance = maximumDistance;
 			_shapeFieldName = featureClass.ShapeFieldName;
 
-			_maximumXyTolerance = DatasetUtils.GetMaximumXyTolerance(nearClasses);
+			_maximumXyTolerance =
+				nearClasses.Max(
+					c => DatasetUtils.TryGetXyTolerance(c.SpatialReference, out double xy)
+						     ? xy
+						     : 0);
 		}
 
 		[CanBeNull]
@@ -72,7 +77,7 @@ namespace ProSuite.QA.Tests
 			return new SimpleCrossTileFeatureState();
 		}
 
-		protected override string GetErrorDescription(IFeature feature,
+		protected override string GetErrorDescription(IReadOnlyFeature feature,
 		                                              int tableIndex,
 		                                              PendingFeature pendingFeature,
 		                                              out IssueCode issueCode,
@@ -94,7 +99,7 @@ namespace ProSuite.QA.Tests
 			spatialFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelIntersects;
 		}
 
-		protected override IGeometry GetSearchGeometry(IFeature feature, int tableIndex,
+		protected override IGeometry GetSearchGeometry(IReadOnlyFeature feature, int tableIndex,
 		                                               out bool isExpanded)
 		{
 			IGeometry shape = feature.Shape;
@@ -116,7 +121,7 @@ namespace ProSuite.QA.Tests
 			return _envelopeTemplate;
 		}
 
-		protected override bool IsValidRelation(IGeometry shape, IFeature relatedFeature)
+		protected override bool IsValidRelation(IGeometry shape, IReadOnlyFeature relatedFeature)
 		{
 			var proximity = (IProximityOperator) shape;
 

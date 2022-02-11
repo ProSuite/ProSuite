@@ -4,6 +4,7 @@ using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -49,7 +50,7 @@ namespace ProSuite.QA.Tests
 			double maxSlopeDegrees,
 			[Doc(nameof(DocStrings.QaTerrainSpikes_maxDeltaZ))]
 			double maxDeltaZ)
-			: base(new ITable[] { })
+			: base(new IReadOnlyTable[] { })
 		{
 			_maxSlopeDegrees = maxSlopeDegrees;
 			_maxDeltaZ = maxDeltaZ;
@@ -60,7 +61,7 @@ namespace ProSuite.QA.Tests
 			_maxSlopeRadians = MathUtils.ToRadians(maxSlopeDegrees);
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			return NoError;
 		}

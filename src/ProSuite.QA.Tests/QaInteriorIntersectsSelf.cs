@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Container.TestSupport;
@@ -10,6 +9,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -37,13 +37,13 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_0))]
 		public QaInteriorIntersectsSelf(
 			[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_featureClass))] [NotNull]
-			IFeatureClass featureClass)
+			IReadOnlyFeatureClass featureClass)
 			: this(featureClass, string.Empty) { }
 
 		[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_1))]
 		public QaInteriorIntersectsSelf(
 			[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_constraint))]
 			string constraint)
 			: this(new[] {featureClass}, constraint) { }
@@ -51,14 +51,14 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_2))]
 		public QaInteriorIntersectsSelf(
 			[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_featureClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				featureClasses)
 			: this(featureClasses, string.Empty) { }
 
 		[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_3))]
 		public QaInteriorIntersectsSelf(
 				[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_featureClasses))] [NotNull]
-				IList<IFeatureClass>
+				IList<IReadOnlyFeatureClass>
 					featureClasses,
 				[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_constraint))]
 				string constraint)
@@ -68,7 +68,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_4))]
 		public QaInteriorIntersectsSelf(
 			[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_featureClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				featureClasses,
 			[Doc(nameof(DocStrings.QaInteriorIntersectsSelf_constraint))]
 			string constraint,
@@ -98,8 +98,8 @@ namespace ProSuite.QA.Tests
 
 		#region Overrides of QaSpatialRelationSelfBase
 
-		protected override int FindErrors(IRow row1, int tableIndex1,
-		                                  IRow row2, int tableIndex2)
+		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
+										  IReadOnlyRow row2, int tableIndex2)
 		{
 			Assert.ArgumentNotNull(row1, nameof(row1));
 			Assert.ArgumentNotNull(row2, nameof(row2));
@@ -119,8 +119,8 @@ namespace ProSuite.QA.Tests
 			}
 
 			bool reportIndividualErrors = ! _reportIntersectionsAsMultipart;
-			return _matrixHelper.ReportErrors((IFeature) row1, tableIndex1,
-			                                  (IFeature) row2, tableIndex2,
+			return _matrixHelper.ReportErrors((IReadOnlyFeature) row1, tableIndex1,
+			                                  (IReadOnlyFeature) row2, tableIndex2,
 			                                  this, GetIssueCode(),
 			                                  reportIndividualErrors);
 		}

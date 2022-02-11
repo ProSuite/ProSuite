@@ -13,6 +13,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -156,7 +157,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaLineGroupConstraints_0))]
 		public QaLineGroupConstraints(
 			[Doc(nameof(DocStrings.QaLineGroupConstraints_networkFeatureClasses))] [NotNull]
-			IList<IFeatureClass> networkFeatureClasses,
+			IList<IReadOnlyFeatureClass> networkFeatureClasses,
 			[Doc(nameof(DocStrings.QaLineGroupConstraints_minGap))] double minGap,
 			[Doc(nameof(DocStrings.QaLineGroupConstraints_minGroupLength))]
 			double minGroupLength,
@@ -164,7 +165,7 @@ namespace ProSuite.QA.Tests
 			double minDangleLength,
 			[Doc(nameof(DocStrings.QaLineGroupConstraints_groupBy))] [NotNull]
 			IList<string> groupBy)
-			: base(CastToTables((IEnumerable<IFeatureClass>) networkFeatureClasses), groupBy)
+			: base(CastToTables((IEnumerable<IReadOnlyFeatureClass>) networkFeatureClasses), groupBy)
 		{
 			Assert.ArgumentCondition(minGap >= 0, "Invalid minGap value: {0}", minGap);
 			Assert.ArgumentCondition(minGroupLength >= 0, "Invalid minGroupLength value: {0}",
@@ -1062,7 +1063,7 @@ namespace ProSuite.QA.Tests
 				ISpatialFilter filter = _endFilters[tableIndex];
 				filter.Geometry = search;
 
-				foreach (IRow row in Search(InvolvedTables[tableIndex],
+				foreach (IReadOnlyRow row in Search(InvolvedTables[tableIndex],
 				                            filter,
 				                            _endHelpers[tableIndex]))
 				{
@@ -1780,12 +1781,12 @@ namespace ProSuite.QA.Tests
 
 			public int TableIndex { get; }
 
-			public IRow GetRow(IList<ITable> tableIndexTables)
+			public IReadOnlyRow GetRow(IList<IReadOnlyTable> tableIndexTables)
 			{
 				return tableIndexTables[TableIndex].GetRow(RowOID);
 			}
 
-			public IRow CachedRow => null;
+			public IReadOnlyRow CachedRow => null;
 
 			public int RowOID { get; }
 		}

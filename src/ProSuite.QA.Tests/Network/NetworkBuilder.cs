@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container.PolygonGrower;
@@ -51,7 +51,7 @@ namespace ProSuite.QA.Tests.Network
 			ConnectedElementsList.Clear();
 		}
 
-		public void AddNetElements([NotNull] IRow feature, int iTable)
+		public void AddNetElements([NotNull] IReadOnlyRow feature, int iTable)
 		{
 			AddNetElements(new TableIndexRow(feature, iTable), _netCache);
 		}
@@ -59,7 +59,7 @@ namespace ProSuite.QA.Tests.Network
 		private void AddNetElements([NotNull] TableIndexRow row,
 		                            [NotNull] List<NetElement> netElems)
 		{
-			IGeometry geom = ((IFeature) row.Row).Shape;
+			IGeometry geom = ((IReadOnlyFeature) row.Row).Shape;
 
 			switch (geom.GeometryType)
 			{
@@ -84,7 +84,7 @@ namespace ProSuite.QA.Tests.Network
 
 		protected IEnumerable<DirectedRow> GetDirectedRows(TableIndexRow row)
 		{
-			IGeometry geom = ((IFeature) row.Row).Shape;
+			IGeometry geom = ((IReadOnlyFeature) row.Row).Shape;
 			var paths = (IGeometryCollection) geom;
 
 			if (! UseMultiParts)

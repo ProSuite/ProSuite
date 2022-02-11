@@ -9,6 +9,7 @@ using ProSuite.QA.Tests.SpatialRelations;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -35,27 +36,27 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIntersectsOther_0))]
 		public QaIntersectsOther(
 				[Doc(nameof(DocStrings.QaIntersectsOther_intersectedClasses))] [NotNull]
-				IList<IFeatureClass> intersected,
+				IList<IReadOnlyFeatureClass> intersected,
 				[Doc(nameof(DocStrings.QaIntersectsOther_intersectingClasses))] [NotNull]
-				IList<IFeatureClass> intersecting)
+				IList<IReadOnlyFeatureClass> intersecting)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(intersected, intersecting, null) { }
 
 		[Doc(nameof(DocStrings.QaIntersectsOther_1))]
 		public QaIntersectsOther(
 				[Doc(nameof(DocStrings.QaIntersectsOther_intersectedClass))] [NotNull]
-				IFeatureClass intersected,
+				IReadOnlyFeatureClass intersected,
 				[Doc(nameof(DocStrings.QaIntersectsOther_intersectingClass))] [NotNull]
-				IFeatureClass intersecting)
+				IReadOnlyFeatureClass intersecting)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(intersected, intersecting, null) { }
 
 		[Doc(nameof(DocStrings.QaIntersectsOther_2))]
 		public QaIntersectsOther(
 			[Doc(nameof(DocStrings.QaIntersectsOther_intersectedClasses))] [NotNull]
-			IList<IFeatureClass> intersectedClasses,
+			IList<IReadOnlyFeatureClass> intersectedClasses,
 			[Doc(nameof(DocStrings.QaIntersectsOther_intersectingClasses))] [NotNull]
-			IList<IFeatureClass> intersectingClasses,
+			IList<IReadOnlyFeatureClass> intersectingClasses,
 			[Doc(nameof(DocStrings.QaIntersectsOther_validRelationConstraint))]
 			string validRelationConstraint)
 			: base(
@@ -70,9 +71,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIntersectsOther_3))]
 		public QaIntersectsOther(
 			[Doc(nameof(DocStrings.QaIntersectsOther_intersectedClass))] [NotNull]
-			IFeatureClass intersectedClass,
+			IReadOnlyFeatureClass intersectedClass,
 			[Doc(nameof(DocStrings.QaIntersectsOther_intersectingClass))] [NotNull]
-			IFeatureClass intersectingClass,
+			IReadOnlyFeatureClass intersectingClass,
 			[Doc(nameof(DocStrings.QaIntersectsOther_validRelationConstraint))]
 			string validRelationConstraint)
 			: this(new[] {intersectedClass}, new[] {intersectingClass}, validRelationConstraint
@@ -80,8 +81,8 @@ namespace ProSuite.QA.Tests
 
 		#region Overrides of QaSpatialRelationOtherBase
 
-		protected override int FindErrors(IRow row1, int tableIndex1,
-		                                  IRow row2, int tableIndex2)
+		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
+										  IReadOnlyRow row2, int tableIndex2)
 		{
 			if (_validRelationConstraint == null)
 			{
@@ -123,7 +124,7 @@ namespace ProSuite.QA.Tests
 
 		[TestParameter]
 		[Doc(nameof(DocStrings.QaIntersectsOther_IgnoreArea))]
-		public IFeatureClass IgnoreArea
+		public IReadOnlyFeatureClass IgnoreArea
 		{
 			get { return _ignoreAreaProcessor?.FeatureClass; }
 			set

@@ -11,6 +11,7 @@ using ProSuite.Commons;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -69,24 +70,24 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMinNodeDistance_0))]
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClass))]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))] bool is3D)
-			: this(featureClass, near, GeometryUtils.GetXyTolerance(featureClass),
+			: this(featureClass, near, GeometryUtils.GetXyTolerance(featureClass.SpatialReference),
 			       is3D, _noMaxZDifference, null) { }
 
 		[Doc(nameof(DocStrings.QaMinNodeDistance_1))]
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
-			IList<IFeatureClass> featureClasses,
+			IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))] bool is3D)
-			: this(featureClasses, near, GeometryUtils.GetXyTolerance(featureClasses[0]), is3D) { }
+			: this(featureClasses, near, GeometryUtils.GetXyTolerance(featureClasses[0].SpatialReference), is3D) { }
 
 		[Doc(nameof(DocStrings.QaMinNodeDistance_2))]
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClass))]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))] bool is3D)
@@ -95,7 +96,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMinNodeDistance_3))]
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
-			IList<IFeatureClass> featureClasses,
+			IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))] bool is3D)
@@ -104,27 +105,27 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMinNodeDistance_4))]
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClass))]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_maxZDifference))]
 			double maxZDifference)
-			: this(featureClass, near, GeometryUtils.GetXyTolerance(featureClass), false,
+			: this(featureClass, near, GeometryUtils.GetXyTolerance(featureClass.SpatialReference), false,
 			       maxZDifference, null) { }
 
 		[Doc(nameof(DocStrings.QaMinNodeDistance_5))]
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
-			IList<IFeatureClass> featureClasses,
+			IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_maxZDifference))]
 			double maxZDifference)
-			: this(featureClasses, near, GeometryUtils.GetXyTolerance(featureClasses[0]),
+			: this(featureClasses, near, GeometryUtils.GetXyTolerance(featureClasses[0].SpatialReference),
 			       maxZDifference) { }
 
 		[Doc(nameof(DocStrings.QaMinNodeDistance_6))]
 		public QaMinNodeDistance(
 				[Doc(nameof(DocStrings.QaMinNodeDistance_featureClass))]
-				IFeatureClass featureClass,
+				IReadOnlyFeatureClass featureClass,
 				[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
 				[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
 				[Doc(nameof(DocStrings.QaMinNodeDistance_maxZDifference))]
@@ -135,7 +136,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMinNodeDistance_7))]
 		public QaMinNodeDistance(
 				[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
-				IList<IFeatureClass> featureClasses,
+				IList<IReadOnlyFeatureClass> featureClasses,
 				[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
 				[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
 				[Doc(nameof(DocStrings.QaMinNodeDistance_maxZDifference))]
@@ -146,15 +147,15 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMinNodeDistance_1))]
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
-			IList<IFeatureClass> featureClasses,
+			IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near)
 			: this(featureClasses, near,
-			       GeometryUtils.GetXyTolerance(featureClasses[0]), false) { }
+			       GeometryUtils.GetXyTolerance(featureClasses[0].SpatialReference), false) { }
 
 		[Doc(nameof(DocStrings.QaMinNodeDistance_9))]
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClass))]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_maxZDifference))]
@@ -168,7 +169,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMinNodeDistance_10))]
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
-			IList<IFeatureClass> featureClasses,
+			IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_maxZDifference))]
@@ -182,7 +183,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMinNodeDistance_11))]
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClass))]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))] bool is3D,
@@ -195,7 +196,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMinNodeDistance_12))]
 		public QaMinNodeDistance(
 			[Doc(nameof(DocStrings.QaMinNodeDistance_featureClasses))]
-			IList<IFeatureClass> featureClasses,
+			IList<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_near))] double near,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_tolerance))] double tolerance,
 			[Doc(nameof(DocStrings.QaMinNodeDistance_is3D))] bool is3D,
@@ -207,17 +208,17 @@ namespace ProSuite.QA.Tests
 				validRelationConstraint) { }
 
 		private QaMinNodeDistance(
-			[NotNull] IFeatureClass featureClass,
+			[NotNull] IReadOnlyFeatureClass featureClass,
 			double near, double tolerance, bool is3D, double maxZDifference,
 			[CanBeNull] string validRelationConstraint)
 			: this(new[] {featureClass}, near, tolerance, is3D, maxZDifference,
 			       validRelationConstraint) { }
 
 		private QaMinNodeDistance(
-			[NotNull] IList<IFeatureClass> featureClasses,
+			[NotNull] IList<IReadOnlyFeatureClass> featureClasses,
 			double near, double tolerance, bool is3D, double maxZDifference,
 			[CanBeNull] string validRelationConstraint)
-			: base(CastToTables((IEnumerable<IFeatureClass>) featureClasses))
+			: base(CastToTables((IEnumerable<IReadOnlyFeatureClass>) featureClasses))
 		{
 			SearchDistance = near;
 
@@ -238,7 +239,7 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			// preparing
 			int errorCount = 0;
@@ -258,7 +259,7 @@ namespace ProSuite.QA.Tests
 
 			IPoint p0;
 			IPoint p1;
-			QueryPoints(((IFeature) row).Shape,
+			QueryPoints(((IReadOnlyFeature) row).Shape,
 			            _sourceP0Template, _sourceP1Template,
 			            out p0, out p1);
 
@@ -266,9 +267,9 @@ namespace ProSuite.QA.Tests
 			int involvedTableIndex = -1;
 			bool bSkip = IgnoreUndirected;
 
-			foreach (ITable table in InvolvedTables)
+			foreach (IReadOnlyTable table in InvolvedTables)
 			{
-				var fcNeighbor = (IFeatureClass) table;
+				var fcNeighbor = (IReadOnlyFeatureClass) table;
 
 				involvedTableIndex++;
 				_helper[involvedTableIndex].MinimumOID = -1;
@@ -300,9 +301,9 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int ExecutePoint([NotNull] IPoint point, int pointIndex,
-		                         [NotNull] IFeatureClass neighbor,
+		                         [NotNull] IReadOnlyFeatureClass neighbor,
 		                         int neighborTableIndex,
-		                         [NotNull] IRow row0,
+		                         [NotNull] IReadOnlyRow row0,
 		                         int tableIndex0)
 		{
 			ISpatialFilter filter = _filter[neighborTableIndex];
@@ -314,11 +315,11 @@ namespace ProSuite.QA.Tests
 
 			int errorCount = 0;
 
-			foreach (IRow neighborRow in Search((ITable) neighbor,
+			foreach (IReadOnlyRow neighborRow in Search(neighbor,
 			                                    _filter[neighborTableIndex],
 			                                    _helper[neighborTableIndex], point))
 			{
-				var neighborFeature = (IFeature) neighborRow;
+				var neighborFeature = (IReadOnlyFeature) neighborRow;
 				bool sameFeature = tableIndex0 == neighborTableIndex &&
 				                   row0 == neighborFeature;
 
@@ -413,8 +414,8 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int CheckDistance([NotNull] IPoint p0, [NotNull] IPoint p1,
-		                          [NotNull] IRow row0, int tableIndex0,
-		                          [NotNull] IRow row1, int tableIndex1,
+		                          [NotNull] IReadOnlyRow row0, int tableIndex0,
+		                          [NotNull] IReadOnlyRow row1, int tableIndex1,
 		                          bool coincidentIsError,
 		                          out bool validRelationConstraintFulfilled)
 		{

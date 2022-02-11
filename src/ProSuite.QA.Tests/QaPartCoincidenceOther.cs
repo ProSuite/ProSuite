@@ -9,6 +9,7 @@ using ProSuite.QA.Tests.Documentation;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -16,7 +17,7 @@ namespace ProSuite.QA.Tests
 	[ProximityTest]
 	public class QaPartCoincidenceOther : QaNearCoincidenceBase
 	{
-		private readonly IFeatureClass _reference;
+		private readonly IReadOnlyFeatureClass _reference;
 		private ISpatialFilter _filter;
 		private QueryFilterHelper _helper;
 
@@ -26,8 +27,8 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPartCoincidenceOther_0))]
 		public QaPartCoincidenceOther(
 				[Doc(nameof(DocStrings.QaPartCoincidence_featureClass))]
-				IFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaPartCoincidence_reference))] IFeatureClass reference,
+				IReadOnlyFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaPartCoincidence_reference))] IReadOnlyFeatureClass reference,
 				[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
 				[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength,
 				[Doc(nameof(DocStrings.QaPartCoincidence_is3D))] bool is3D)
@@ -37,8 +38,8 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPartCoincidenceOther_0))]
 		public QaPartCoincidenceOther(
 			[Doc(nameof(DocStrings.QaPartCoincidence_featureClass))]
-			IFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaPartCoincidence_reference))] IFeatureClass reference,
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaPartCoincidence_reference))] IReadOnlyFeatureClass reference,
 			[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
 			[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength,
 			[Doc(nameof(DocStrings.QaPartCoincidence_is3D))] bool is3D,
@@ -51,8 +52,8 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPartCoincidenceOther_0))]
 		public QaPartCoincidenceOther(
 				[Doc(nameof(DocStrings.QaPartCoincidence_featureClass))]
-				IFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaPartCoincidence_reference))] IFeatureClass reference,
+				IReadOnlyFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaPartCoincidence_reference))] IReadOnlyFeatureClass reference,
 				[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
 				[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -61,8 +62,8 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPartCoincidenceOther_0))]
 		public QaPartCoincidenceOther(
 			[Doc(nameof(DocStrings.QaPartCoincidence_featureClass))]
-			IFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaPartCoincidence_reference))] IFeatureClass reference,
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaPartCoincidence_reference))] IReadOnlyFeatureClass reference,
 			[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
 			[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength,
 			[Doc(nameof(DocStrings.QaPartCoincidence_tileSize))] double tileSize)
@@ -71,8 +72,8 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPartCoincidenceOther_4))]
 		public QaPartCoincidenceOther(
 			[Doc(nameof(DocStrings.QaPartCoincidence_featureClass))]
-			IFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaPartCoincidence_reference))] IFeatureClass reference,
+			IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaPartCoincidence_reference))] IReadOnlyFeatureClass reference,
 			[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
 			[Doc(nameof(DocStrings.QaPartCoincidence_connectedMinLength))]
 			double connectedMinLength,
@@ -98,7 +99,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPartCoincidenceOther_IgnoreNeighborCondition))]
 		public string IgnoreNeighborCondition { get; set; }
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (tableIndex > 0)
 			{
@@ -114,7 +115,7 @@ namespace ProSuite.QA.Tests
 
 			var processed0 = new SegmentNeighbors(new SegmentPartComparer());
 
-			IGeometry geom0 = ((IFeature) row).Shape;
+			IGeometry geom0 = ((IReadOnlyFeature) row).Shape;
 			IEnvelope box0 = geom0.Envelope;
 			box0.Expand(SearchDistance, SearchDistance, false);
 
@@ -127,10 +128,10 @@ namespace ProSuite.QA.Tests
 
 			IFeatureRowsDistance rowsDistance =
 				NearDistanceProvider.GetRowsDistance(row, tableIndex);
-			foreach (IRow neighborRow in
-				Search((ITable) _reference, filter, _helper, geom0))
+			foreach (IReadOnlyRow neighborRow in
+				Search(_reference, filter, _helper, geom0))
 			{
-				var rowNeighbor = (IFeature) neighborRow;
+				var rowNeighbor = (IReadOnlyFeature) neighborRow;
 
 				if (IgnoreNeighbor(row, neighborRow))
 				{
@@ -146,7 +147,7 @@ namespace ProSuite.QA.Tests
 				}
 
 				NeighborhoodFinder finder =
-					GetNeighborhoodFinder(rowsDistance, (IFeature) row, tableIndex,
+					GetNeighborhoodFinder(rowsDistance, (IReadOnlyFeature) row, tableIndex,
 					                      rowNeighbor, neighborTableIndex);
 				errorCount += FindNeighborhood(finder, tableIndex, processed0,
 				                               neighborTableIndex, processed1,
@@ -156,7 +157,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private bool IgnoreNeighbor(IRow row, IRow neighbor)
+		private bool IgnoreNeighbor(IReadOnlyRow row, IReadOnlyRow neighbor)
 		{
 			EnsureIgnoreNeighborInitialized();
 			if (_ignoreNeighborCondition == null)

@@ -22,7 +22,7 @@ namespace ProSuite.QA.Tests
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private readonly IFeatureClass _featureClass;
+		private readonly IReadOnlyFeatureClass _featureClass;
 		private readonly bool _dontFilterPolycurvesByZeroLength;
 		private readonly string _shapeFieldName;
 		private readonly ISpatialReference _spatialReference;
@@ -48,18 +48,18 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaNonEmptyGeometry_0))]
 		public QaNonEmptyGeometry(
 				[NotNull] [Doc(nameof(DocStrings.QaNonEmptyGeometry_featureClass))]
-				IFeatureClass featureClass)
+				IReadOnlyFeatureClass featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, false) { }
 
 		[Doc(nameof(DocStrings.QaNonEmptyGeometry_0))]
 		public QaNonEmptyGeometry(
 			[NotNull] [Doc(nameof(DocStrings.QaNonEmptyGeometry_featureClass))]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaNonEmptyGeometry_dontFilterPolycurvesByZeroLength))]
 			bool
 				dontFilterPolycurvesByZeroLength)
-			: base(new[] {(ITable) featureClass})
+			: base(new[] {(IReadOnlyTable) featureClass})
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
@@ -74,7 +74,7 @@ namespace ProSuite.QA.Tests
 					"PROSUITE_QA_NONEMPTYGEOMETRY_DONTFILTERBYSHAPELENGTH");
 
 			_shapeFieldName = featureClass.ShapeFieldName;
-			_spatialReference = ((IGeoDataset) featureClass).SpatialReference;
+			_spatialReference = featureClass.SpatialReference;
 		}
 
 		#region ITest Members
@@ -94,11 +94,11 @@ namespace ProSuite.QA.Tests
 			return TestFeatures(_featureClass);
 		}
 
-		public override int Execute(IEnumerable<IRow> selectedRows)
+		public override int Execute(IEnumerable<IReadOnlyRow> selectedRows)
 		{
 			var errorCount = 0;
 
-			foreach (IRow row in selectedRows)
+			foreach (IReadOnlyRow row in selectedRows)
 			{
 				if (CancelTestingRow(row))
 				{
@@ -111,9 +111,9 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		public override int Execute(IRow row)
+		public override int Execute(IReadOnlyRow row)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 
 			// if row is not a feature: no error
 			return feature == null
@@ -128,7 +128,7 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		private int TestFeatures([NotNull] IFeatureClass featureClass)
+		private int TestFeatures([NotNull] IReadOnlyFeatureClass featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
@@ -148,16 +148,16 @@ namespace ProSuite.QA.Tests
 
 			try
 			{
-				foreach (IFeature feature in
-					GdbQueryUtils.GetFeatures(featureClass, filter, recycling))
+				foreach (IReadOnlyRow feature in
+					featureClass.EnumRows(filter, recycling))
 				{
-					errorCount += TestFeature(feature);
+					errorCount += TestFeature((IReadOnlyFeature)feature);
 					previousOid = feature.OID;
 				}
 			}
 			catch (COMException e)
 			{
-				_msg.Debug($"Error getting feature from {DatasetUtils.GetName(featureClass)}. " +
+				_msg.Debug($"Error getting feature from {featureClass.Name}. " +
 				           $"Previous successful object id: {previousOid}", e);
 
 				if (e.ErrorCode == -2147220959)
@@ -180,12 +180,12 @@ namespace ProSuite.QA.Tests
 			// Read all features without geometry, get geometry separately for each feature:
 			filter.SubFields = featureClass.OIDFieldName;
 
-			foreach (IFeature feature in
-				GdbQueryUtils.GetFeatures(featureClass, filter, recycling))
+			foreach (IReadOnlyRow feature in
+				featureClass.EnumRows(filter, recycling))
 			{
 				try
 				{
-					IFeature featureWithGeometry = featureClass.GetFeature(feature.OID);
+					var featureWithGeometry = (IReadOnlyFeature)featureClass.GetRow(feature.OID);
 					Marshal.ReleaseComObject(featureWithGeometry);
 				}
 				catch (Exception e)
@@ -200,7 +200,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int TestFeature([NotNull] IFeature feature)
+		private int TestFeature([NotNull] IReadOnlyFeature feature)
 		{
 			Assert.ArgumentNotNull(feature, nameof(feature));
 
@@ -221,7 +221,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IQueryFilter CreateFilter([NotNull] IFeatureClass featureClass,
+		private IQueryFilter CreateFilter([NotNull] IReadOnlyFeatureClass featureClass,
 		                                  [CanBeNull] string filterExpression)
 		{
 			IQueryFilter filter =
@@ -245,7 +245,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static string GetWhereClause([NotNull] IFeatureClass featureClass,
+		private static string GetWhereClause([NotNull] IReadOnlyFeatureClass featureClass,
 		                                     [CanBeNull] string filterExpression,
 		                                     bool dontFilterPolycurvesByZeroLength)
 		{
@@ -266,14 +266,14 @@ namespace ProSuite.QA.Tests
 
 		[CanBeNull]
 		private static string GetEmptyGeometryWhereClause(
-			[NotNull] IFeatureClass featureClass)
+			[NotNull] IReadOnlyFeatureClass featureClass)
 		{
 			esriGeometryType shapeType = featureClass.ShapeType;
 
 			if (shapeType == esriGeometryType.esriGeometryPolygon ||
 			    shapeType == esriGeometryType.esriGeometryPolyline)
 			{
-				IField lengthField = DatasetUtils.GetLengthField(featureClass);
+				IField lengthField = featureClass.LengthField;
 
 				if (lengthField != null)
 				{

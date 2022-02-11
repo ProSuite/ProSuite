@@ -41,13 +41,13 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_0))]
 		public QaEmptyNotNullTextFields(
 			[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_table))] [NotNull]
-			ITable table)
+			IReadOnlyTable table)
 			: this(table, GetNotNullTextFields(table)) { }
 
 		[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_1))]
 		public QaEmptyNotNullTextFields(
 			[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaEmptyNotNullTextFields_notNullTextFields))] [NotNull]
 			string[]
 				notNullTextFields)
@@ -60,7 +60,7 @@ namespace ProSuite.QA.Tests
 			{
 				int fieldIndex = table.FindField(notNullTextField);
 				Assert.True(fieldIndex >= 0, "field '{0}' not found in table '{1}'",
-				            notNullTextField, DatasetUtils.GetName(table));
+				            notNullTextField, table.Name);
 
 				fieldIndices.Add(fieldIndex);
 			}
@@ -70,7 +70,7 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (_notNullTextFieldIndices.Count == 0)
 			{
@@ -80,7 +80,7 @@ namespace ProSuite.QA.Tests
 			int errorCount = 0;
 			foreach (int fieldIndex in _notNullTextFieldIndices)
 			{
-				object value = row.Value[fieldIndex];
+				object value = row.get_Value(fieldIndex);
 
 				string fieldName;
 
@@ -125,12 +125,12 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static string[] GetNotNullTextFields([NotNull] ITable table)
+		private static string[] GetNotNullTextFields([NotNull] IReadOnlyTable table)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
 			var list = new List<string>();
-			foreach (IField field in DatasetUtils.GetFields(table))
+			foreach (IField field in DatasetUtils.GetFields(table.Fields))
 			{
 				if (field.Type != esriFieldType.esriFieldTypeString)
 				{

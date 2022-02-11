@@ -13,6 +13,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using IPnt = ProSuite.Commons.Geom.IPnt;
 using Pnt = ProSuite.Commons.Geom.Pnt;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
@@ -38,7 +39,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 		private class SegmentsSubpart
 		{
-			public SegmentsSubpart([NotNull] IFeature baseFeature,
+			public SegmentsSubpart([NotNull] IReadOnlyFeature baseFeature,
 			                       int tableIndex,
 			                       [NotNull] IIndexedSegments baseSegments,
 			                       int partIndex,
@@ -64,7 +65,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			}
 
 			[NotNull]
-			public IFeature BaseFeature { get; }
+			public IReadOnlyFeature BaseFeature { get; }
 
 			public int TableIndex { get; }
 
@@ -354,7 +355,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			public int TableIndex => _subpart.TableIndex;
 
 			[NotNull]
-			public IFeature BaseFeature => _subpart.BaseFeature;
+			public IReadOnlyFeature BaseFeature => _subpart.BaseFeature;
 
 			[NotNull]
 			public SegmentProxy Segment => _subpart.GetSegment(_subpartIndex);
@@ -609,7 +610,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			public int TableIndex => SegmentsSubpart.TableIndex;
 
 			[NotNull]
-			public IFeature BaseFeature => SegmentsSubpart.BaseFeature;
+			public IReadOnlyFeature BaseFeature => SegmentsSubpart.BaseFeature;
 
 			public int PartIndex => SegmentsSubpart.PartIndex;
 
@@ -1074,7 +1075,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 				var neighbors = new List<FeaturePoint>();
 
-				IFeature nbFeature = search.SegmentPart.NeighborFeature;
+				IReadOnlyFeature nbFeature = search.SegmentPart.NeighborFeature;
 				int nbTableIdx = search.SegmentPart.NeighborTableIndex;
 
 				var searchSeg = (SegmentProxy) search.SegmentPart.NeighborProxy;
@@ -1843,7 +1844,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 				if (continuation != null)
 				{
-					var lineFeatures = new Dictionary<IFeature, List<SegmentsSubpart>>();
+					var lineFeatures = new Dictionary<IReadOnlyFeature, List<SegmentsSubpart>>();
 
 					foreach (ConnectedSegmentsSubpart linePart in connectedParts)
 					{
@@ -2025,7 +2026,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 		protected class FeaturePoint
 		{
-			public FeaturePoint([NotNull] IFeature feature, int tableIndex, int part,
+			public FeaturePoint([NotNull] IReadOnlyFeature feature, int tableIndex, int part,
 			                    double fullFraction)
 			{
 				Feature = feature;
@@ -2035,7 +2036,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			}
 
 			[NotNull]
-			public IFeature Feature { get; }
+			public IReadOnlyFeature Feature { get; }
 
 			public int TableIndex { get; }
 
@@ -2133,7 +2134,7 @@ namespace ProSuite.QA.Tests.Coincidence
 		private class Junction : FeaturePoint
 		{
 			[NotNull]
-			public IFeature NeighborFeature { get; }
+			public IReadOnlyFeature NeighborFeature { get; }
 
 			public int NeighborTableIndex { get; }
 
@@ -2141,9 +2142,9 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			public double NeighborFullFraction { get; }
 
-			public Junction([NotNull] IFeature feature, int tableIndex,
+			public Junction([NotNull] IReadOnlyFeature feature, int tableIndex,
 			                int part, double fullFraction,
-			                [NotNull] IFeature neighborFeature, int neighborTableIndex,
+			                [NotNull] IReadOnlyFeature neighborFeature, int neighborTableIndex,
 			                int neighborPart, double neighborFullFraction)
 				: base(feature, tableIndex, part, fullFraction)
 			{
@@ -2451,8 +2452,8 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			public TopoNeighborhoodFinder(
 				[NotNull] IFeatureRowsDistance distanceProvider,
-				[NotNull] IFeature feature, int tableIndex,
-				[CanBeNull] IFeature neighbor, int neighborTableIndex,
+				[NotNull] IReadOnlyFeature feature, int tableIndex,
+				[CanBeNull] IReadOnlyFeature neighbor, int neighborTableIndex,
 				[NotNull] IList<FeaturePoint> junctions,
 				double junctionCoincidenceSquare,
 				ConnectionMode connectionMode, bool searchJunctions)
@@ -2755,7 +2756,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			public SegmentPartWithNeighbor(
 				[NotNull] ISegmentProxy segmentProxy,
 				double minFraction, double maxFraction, bool complete,
-				[NotNull] IFeature neighborFeature, int neighborTableIndex,
+				[NotNull] IReadOnlyFeature neighborFeature, int neighborTableIndex,
 				[NotNull] ISegmentProxy neighborProxy) :
 				base(segmentProxy, minFraction, maxFraction, complete)
 			{
@@ -2768,7 +2769,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			public bool NeighborIsCoincident { get; }
 
-			public IFeature NeighborFeature { get; }
+			public IReadOnlyFeature NeighborFeature { get; }
 
 			public int NeighborTableIndex { get; }
 

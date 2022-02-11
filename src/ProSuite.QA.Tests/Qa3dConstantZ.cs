@@ -3,7 +3,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
@@ -12,6 +11,7 @@ using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -47,9 +47,9 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.Qa3dConstantZ_0))]
 		public Qa3dConstantZ(
-			[Doc(nameof(DocStrings.Qa3dConstantZ_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.Qa3dConstantZ_featureClass))] IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.Qa3dConstantZ_tolerance))] double tolerance)
-			: base((ITable) featureClass)
+			: base((IReadOnlyTable) featureClass)
 		{
 			Assert.ArgumentCondition(tolerance >= 0, "tolerance must be >= 0");
 
@@ -66,9 +66,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			IGeometry shape = ((IFeature) row).Shape;
+			IGeometry shape = ((IReadOnlyFeature) row).Shape;
 			if (! ((IZAware) shape).ZAware)
 			{
 				// Not z aware, consider as constant

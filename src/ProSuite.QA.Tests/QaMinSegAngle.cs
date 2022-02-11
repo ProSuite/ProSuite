@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -48,10 +48,10 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMinSegAngle_0))]
 		public QaMinSegAngle(
-			[Doc(nameof(DocStrings.QaMinSegAngle_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaMinSegAngle_featureClass))] IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMinSegAngle_limit))] double limit,
 			[Doc(nameof(DocStrings.QaMinSegAngle_is3D))] bool is3D)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			_settings = new Settings(limit, _defaultAngularUnit, is3D);
 			_shapeFieldName = featureClass.ShapeFieldName;
@@ -63,7 +63,7 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMinSegAngle_0))]
 		public QaMinSegAngle(
-				[Doc(nameof(DocStrings.QaMinSegAngle_featureClass))] IFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaMinSegAngle_featureClass))] IReadOnlyFeatureClass featureClass,
 				[Doc(nameof(DocStrings.QaMinSegAngle_limit))] double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, limit, false) { }
@@ -94,9 +94,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			IGeometry shape = ((IFeature) row).Shape;
+			IGeometry shape = ((IReadOnlyFeature) row).Shape;
 
 			switch (_shapeType)
 			{
@@ -114,7 +114,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		private int CheckMultiPatch([NotNull] IMultiPatch shape, [NotNull] IRow row)
+		private int CheckMultiPatch([NotNull] IMultiPatch shape, [NotNull] IReadOnlyRow row)
 		{
 			var errorCount = 0;
 
@@ -132,7 +132,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int CheckPolygon([NotNull] IPolygon shape, [NotNull] IRow row)
+		private int CheckPolygon([NotNull] IPolygon shape, [NotNull] IReadOnlyRow row)
 		{
 			var errorCount = 0;
 
@@ -146,7 +146,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int CheckPolyline([NotNull] IPolyline shape, [NotNull] IRow row)
+		private int CheckPolyline([NotNull] IPolyline shape, [NotNull] IReadOnlyRow row)
 		{
 			var errorCount = 0;
 
@@ -160,7 +160,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int CheckAngles([NotNull] IPointCollection points, [NotNull] IRow row)
+		private int CheckAngles([NotNull] IPointCollection points, [NotNull] IReadOnlyRow row)
 		{
 			AngleProvider provider = GetAngleProvider(points);
 

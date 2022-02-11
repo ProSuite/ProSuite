@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
@@ -22,7 +21,7 @@ namespace ProSuite.QA.Tests
 	public class QaMonotonicMeasures : ContainerTest
 	{
 		private readonly bool _hasM;
-		private readonly IFeatureClass _lineClass;
+		private readonly IReadOnlyFeatureClass _lineClass;
 		private readonly MonotonicityDirection _expectedMonotonicity;
 		private readonly string _flipExpression;
 
@@ -50,7 +49,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMonotonicMeasures_0))]
 		public QaMonotonicMeasures(
 				[Doc(nameof(DocStrings.QaMonotonicMeasures_lineClass))] [NotNull]
-				IFeatureClass lineClass,
+				IReadOnlyFeatureClass lineClass,
 				[Doc(nameof(DocStrings.QaMonotonicMeasures_allowConstantValues))]
 				bool allowConstantValues)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -59,7 +58,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMonotonicMeasures_1))]
 		public QaMonotonicMeasures(
 			[Doc(nameof(DocStrings.QaMonotonicMeasures_lineClass))] [NotNull]
-			IFeatureClass lineClass,
+			IReadOnlyFeatureClass lineClass,
 			[Doc(nameof(DocStrings.QaMonotonicMeasures_allowConstantValues))]
 			bool allowConstantValues,
 			[Doc(nameof(DocStrings.QaMonotonicMeasures_expectedMonotonicity))]
@@ -67,7 +66,7 @@ namespace ProSuite.QA.Tests
 				expectedMonotonicity,
 			[Doc(nameof(DocStrings.QaMonotonicMeasures_flipExpression))] [CanBeNull]
 			string flipExpression)
-			: base((ITable) lineClass)
+			: base(lineClass)
 		{
 			Assert.ArgumentNotNull(lineClass, nameof(lineClass));
 
@@ -77,7 +76,7 @@ namespace ProSuite.QA.Tests
 				                  ? flipExpression
 				                  : null;
 
-			_hasM = DatasetUtils.HasM(lineClass);
+			_hasM = DatasetUtils.GetGeometryDef(lineClass).HasM;
 
 			_allowConstantValues = allowConstantValues;
 		}
@@ -94,14 +93,14 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (! _hasM)
 			{
 				return NoError;
 			}
 
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -116,7 +115,7 @@ namespace ProSuite.QA.Tests
 			if (_flipCondition == null)
 			{
 				const bool undefinedConstraintIsFulfilled = false;
-				_flipCondition = new RowCondition((ITable) _lineClass, _flipExpression,
+				_flipCondition = new RowCondition(_lineClass, _flipExpression,
 				                                  undefinedConstraintIsFulfilled,
 				                                  GetSqlCaseSensitivity(tableIndex));
 			}

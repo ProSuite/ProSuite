@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests
 	[MValuesTest]
 	public class QaMeasuresAtPoints : ContainerTest
 	{
-		private readonly IFeatureClass _pointClass;
+		private readonly IReadOnlyFeatureClass _pointClass;
 		private readonly string _expectedMValueExpression;
 		private readonly LineMSource _lineMSource;
 		private readonly bool _requireLine;
@@ -71,12 +71,12 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMeasuresAtPoints_0))]
 		public QaMeasuresAtPoints(
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_pointClass))] [NotNull]
-			IFeatureClass pointClass,
+			IReadOnlyFeatureClass pointClass,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_expectedMValueExpression))] [CanBeNull]
 			string
 				expectedMValueExpression,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_lineClasses))] [NotNull]
-			IList<IFeatureClass> lineClasses,
+			IList<IReadOnlyFeatureClass> lineClasses,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_searchDistance))]
 			double searchDistance,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_mTolerance))] double mTolerance,
@@ -92,12 +92,12 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMeasuresAtPoints_0))]
 		public QaMeasuresAtPoints(
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_pointClass))] [NotNull]
-			IFeatureClass pointClass,
+			IReadOnlyFeatureClass pointClass,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_expectedMValueExpression))] [CanBeNull]
 			string
 				expectedMValueExpression,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_lineClasses))] [NotNull]
-			IList<IFeatureClass> lineClasses,
+			IList<IReadOnlyFeatureClass> lineClasses,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_searchDistance))]
 			double searchDistance,
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_mTolerance))] double mTolerance,
@@ -111,7 +111,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaMeasuresAtPoints_matchExpression))] [CanBeNull]
 			string matchExpression)
 			: base(
-				CastToTables((IEnumerable<IFeatureClass>) Union(new[] {pointClass}, lineClasses)))
+				CastToTables((IEnumerable<IReadOnlyFeatureClass>) Union(new[] {pointClass}, lineClasses)))
 		{
 			Assert.NotNull(pointClass, "pointClass");
 			Assert.NotNull(lineClasses, "lineClasses");
@@ -132,7 +132,7 @@ namespace ProSuite.QA.Tests
 
 			SearchDistance = searchDistance;
 
-			_spatialReference = ((IGeoDataset) pointClass).SpatialReference;
+			_spatialReference = pointClass.SpatialReference;
 
 			_mTolerance = GetMTolerances(lineClasses, mTolerance, _tableCount);
 		}
@@ -149,7 +149,7 @@ namespace ProSuite.QA.Tests
 
 		[CanBeNull]
 		private DoubleFieldExpression GetMExpression(
-			[NotNull] IFeatureClass pointClass,
+			[NotNull] IReadOnlyFeatureClass pointClass,
 			[CanBeNull] string expression)
 		{
 			Assert.ArgumentNotNull(pointClass, nameof(pointClass));
@@ -158,13 +158,13 @@ namespace ProSuite.QA.Tests
 			{
 				const bool evaluateImmediately = true;
 
-				var table = (ITable) pointClass;
+				var table = (IReadOnlyTable) pointClass;
 				return new DoubleFieldExpression(table, expression,
 				                                 evaluateImmediately,
 				                                 GetSqlCaseSensitivity(table));
 			}
 
-			if (DatasetUtils.HasM(pointClass))
+			if (DatasetUtils.GetGeometryDef(pointClass).HasM)
 			{
 				return null;
 			}
@@ -172,12 +172,12 @@ namespace ProSuite.QA.Tests
 			throw new ArgumentException(
 				string.Format(
 					"'pointClass' {0} is not M-aware and there is no 'expectedMValueExpression' defined",
-					DatasetUtils.GetName(pointClass)));
+					pointClass.Name));
 		}
 
 		[NotNull]
 		private static double[] GetMTolerances(
-			[NotNull] IEnumerable<IFeatureClass> lineClasses,
+			[NotNull] IEnumerable<IReadOnlyFeatureClass> lineClasses,
 			double mTolerance,
 			int totalTableCount)
 		{
@@ -186,15 +186,15 @@ namespace ProSuite.QA.Tests
 			var result = new double[totalTableCount];
 
 			int tableIndex = 0;
-			foreach (IFeatureClass lineClass in lineClasses)
+			foreach (IReadOnlyFeatureClass lineClass in lineClasses)
 			{
 				tableIndex++; // skip point class (index=0)
 
-				if (! DatasetUtils.HasM(lineClass))
+				if (! DatasetUtils.GetGeometryDef(lineClass).HasM)
 				{
 					throw new ArgumentException(
 						string.Format("{0} is not M-aware",
-						              DatasetUtils.GetName(lineClass)));
+						              lineClass.Name));
 				}
 
 				if (mTolerance >= 0)
@@ -204,14 +204,14 @@ namespace ProSuite.QA.Tests
 				else
 				{
 					double datasetMTolerance;
-					bool hasValidMTolerance = DatasetUtils.TryGetMTolerance(lineClass,
+					bool hasValidMTolerance = DatasetUtils.TryGetMTolerance(lineClass.SpatialReference,
 					                                                        out datasetMTolerance);
 
 					if (! hasValidMTolerance)
 					{
 						throw new ArgumentException(
 							string.Format("{0} has an undefined or invalid M tolerance",
-							              DatasetUtils.GetName(lineClass)));
+							              lineClass.Name));
 					}
 
 					result[tableIndex] = datasetMTolerance;
@@ -221,7 +221,7 @@ namespace ProSuite.QA.Tests
 			return result;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			// preparing
 			if (_filter == null)
@@ -236,7 +236,7 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			var pointFeature = row as IFeature;
+			var pointFeature = row as IReadOnlyFeature;
 
 			if (pointFeature == null)
 			{
@@ -315,7 +315,7 @@ namespace ProSuite.QA.Tests
 			     neighborTableIndex < _tableCount;
 			     neighborTableIndex++)
 			{
-				var neighborClass = (IFeatureClass) InvolvedTables[neighborTableIndex];
+				var neighborClass = (IReadOnlyFeatureClass) InvolvedTables[neighborTableIndex];
 				_helper[neighborTableIndex].MinimumOID = -1;
 
 				int neighborFeatureCount;
@@ -368,11 +368,11 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		private int CheckTable([NotNull] IFeature pointFeature,
+		private int CheckTable([NotNull] IReadOnlyFeature pointFeature,
 		                       int pointTableIndex,
 		                       [NotNull] IPoint point,
 		                       double expectedMValue,
-		                       [NotNull] IFeatureClass neighborClass,
+		                       [NotNull] IReadOnlyFeatureClass neighborClass,
 		                       int neighborTableIndex,
 		                       out int neighborCount)
 		{
@@ -387,11 +387,11 @@ namespace ProSuite.QA.Tests
 			ISpatialFilter filter = _filter[neighborTableIndex];
 			filter.Geometry = _box;
 
-			foreach (IRow row in Search((ITable) neighborClass,
+			foreach (IReadOnlyRow row in Search(neighborClass,
 			                            _filter[neighborTableIndex],
 			                            _helper[neighborTableIndex], point))
 			{
-				var neighborFeature = (IFeature) row;
+				var neighborFeature = (IReadOnlyFeature) row;
 
 				if (_matchExpressionHelper != null &&
 				    ! _matchExpressionHelper.IsFulfilled(
@@ -461,7 +461,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private double GetDistance([NotNull] IPoint point,
-		                           [NotNull] IFeature neighborFeature,
+		                           [NotNull] IReadOnlyFeature neighborFeature,
 		                           [CanBeNull] out IPoint nearestPoint)
 		{
 			var neighborCurve = (ICurve) neighborFeature.Shape;

@@ -4,7 +4,6 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
@@ -25,7 +24,7 @@ namespace ProSuite.QA.Tests
 	public class QaMonotonicZ : ContainerTest
 	{
 		private readonly bool _hasZ;
-		[NotNull] private readonly IFeatureClass _lineClass;
+		[NotNull] private readonly IReadOnlyFeatureClass _lineClass;
 
 		[CanBeNull] private RowCondition _flipCondition;
 
@@ -55,14 +54,14 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMonotonicZ_0))]
 		public QaMonotonicZ(
 			[Doc(nameof(DocStrings.QaMonotonicZ_lineClass))] [NotNull]
-			IFeatureClass lineClass)
-			: base((ITable) lineClass)
+			IReadOnlyFeatureClass lineClass)
+			: base(lineClass)
 		{
 			Assert.ArgumentNotNull(lineClass, nameof(lineClass));
 
 			_lineClass = lineClass;
 
-			_hasZ = DatasetUtils.HasZ(lineClass);
+			_hasZ = DatasetUtils.GetGeometryDef(lineClass).HasZ;
 
 			AllowConstantValues = _defaultAllowConstantValues;
 			ExpectedMonotonicity = _defaultExpectedMonotonicity;
@@ -93,14 +92,14 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (! _hasZ)
 			{
 				return NoError;
 			}
 
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -115,7 +114,7 @@ namespace ProSuite.QA.Tests
 			if (_flipCondition == null)
 			{
 				const bool undefinedConstraintIsFulfilled = false;
-				_flipCondition = new RowCondition((ITable) _lineClass, FlipExpression,
+				_flipCondition = new RowCondition(_lineClass, FlipExpression,
 				                                  undefinedConstraintIsFulfilled,
 				                                  GetSqlCaseSensitivity(tableIndex));
 			}

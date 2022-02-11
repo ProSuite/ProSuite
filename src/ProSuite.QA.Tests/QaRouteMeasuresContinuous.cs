@@ -9,6 +9,7 @@ using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -53,7 +54,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaRouteMeasuresContinuous_0))]
 		public QaRouteMeasuresContinuous(
 			[Doc(nameof(DocStrings.QaRouteMeasuresContinuous_polylineClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				polylineClass,
 			[Doc(nameof(DocStrings.QaRouteMeasuresContinuous_routeIdField))] [NotNull]
 			string routeIdField)
@@ -62,7 +63,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaRouteMeasuresContinuous_1))]
 		public QaRouteMeasuresContinuous(
 			[Doc(nameof(DocStrings.QaRouteMeasuresContinuous_polylineClasses))] [NotNull]
-			ICollection<IFeatureClass>
+			ICollection<IReadOnlyFeatureClass>
 				polylineClasses,
 			[Doc(nameof(DocStrings.QaRouteMeasuresContinuous_routeIdFields))] [NotNull]
 			IEnumerable<string>
@@ -80,9 +81,9 @@ namespace ProSuite.QA.Tests
 
 		#region Overrides of ContainerTest
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -137,7 +138,7 @@ namespace ProSuite.QA.Tests
 			yield return toPointTemplate;
 		}
 
-		private int FindErrors([NotNull] IRow row,
+		private int FindErrors([NotNull] IReadOnlyRow row,
 		                       [NotNull] IPolyline polyline,
 		                       int tableIndex,
 		                       int searchTableIndex)
@@ -145,7 +146,7 @@ namespace ProSuite.QA.Tests
 			Assert.ArgumentNotNull(row, nameof(row));
 			Assert.ArgumentNotNull(polyline, nameof(polyline));
 
-			ITable searchTable = InvolvedTables[searchTableIndex];
+			IReadOnlyTable searchTable = InvolvedTables[searchTableIndex];
 
 			ISpatialFilter searchFilter = _filter[searchTableIndex];
 			QueryFilterHelper searchFilterHelper = _helper[searchTableIndex];
@@ -164,7 +165,7 @@ namespace ProSuite.QA.Tests
 			{
 				searchFilter.Geometry = endPoint;
 
-				foreach (IRow searchRow in Search(searchTable, searchFilter, searchFilterHelper))
+				foreach (IReadOnlyRow searchRow in Search(searchTable, searchFilter, searchFilterHelper))
 				{
 					errorCount += FindErrors(endPoint, row, routeId,
 					                         tableIndex, searchRow, searchTableIndex);
@@ -175,13 +176,13 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int FindErrors([NotNull] IPoint endPoint,
-		                       [NotNull] IRow row,
+		                       [NotNull] IReadOnlyRow row,
 		                       [NotNull] object routeId,
 		                       int tableIndex,
-		                       [NotNull] IRow searchRow,
+		                       [NotNull] IReadOnlyRow searchRow,
 		                       int searchTableIndex)
 		{
-			var searchFeature = searchRow as IFeature;
+			var searchFeature = searchRow as IReadOnlyFeature;
 			if (searchFeature == null)
 			{
 				return NoError;

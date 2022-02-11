@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
@@ -39,7 +40,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaGdbConstraint_0))]
 		public QaGdbConstraint(
 			[Doc(nameof(DocStrings.QaGdbConstraint_table))]
-			ITable table)
+			IReadOnlyTable table)
 			: base(table)
 		{
 			_attrRules = new List<IAttributeRule>();
@@ -75,7 +76,7 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			int errorCount = 0;
 			int? iSubtype = null;

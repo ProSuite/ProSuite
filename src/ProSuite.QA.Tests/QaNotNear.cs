@@ -9,6 +9,7 @@ using ProSuite.QA.Tests.Documentation;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -16,7 +17,7 @@ namespace ProSuite.QA.Tests
 	[ProximityTest]
 	public class QaNotNear : QaNearCoincidenceBase
 	{
-		private readonly IFeatureClass _reference;
+		private readonly IReadOnlyFeatureClass _reference;
 
 		[NotNull] private readonly bool? _self;
 		// nullable/notnull to ensure initialization in constructors
@@ -26,7 +27,7 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaNotNear_0))]
 		public QaNotNear(
-				[Doc(nameof(DocStrings.QaNotNear_featureClass))] IFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
 				[Doc(nameof(DocStrings.QaNotNear_near))] double near,
 				[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength,
 				[Doc(nameof(DocStrings.QaNotNear_is3D))] bool is3D)
@@ -35,7 +36,7 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaNotNear_0))]
 		public QaNotNear(
-			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaNotNear_near))] double near,
 			[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength,
 			[Doc(nameof(DocStrings.QaNotNear_is3D))] bool is3D,
@@ -52,8 +53,8 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaNotNear_2))]
 		public QaNotNear(
-				[Doc(nameof(DocStrings.QaNotNear_featureClass))] IFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaNotNear_reference))] IFeatureClass reference,
+				[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaNotNear_reference))] IReadOnlyFeatureClass reference,
 				[Doc(nameof(DocStrings.QaNotNear_near))] double near,
 				[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength,
 				[Doc(nameof(DocStrings.QaNotNear_is3D))] bool is3D)
@@ -63,8 +64,8 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaNotNear_2))]
 		public QaNotNear(
-			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaNotNear_reference))] IFeatureClass reference,
+			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaNotNear_reference))] IReadOnlyFeatureClass reference,
 			[Doc(nameof(DocStrings.QaNotNear_near))] double near,
 			[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength,
 			[Doc(nameof(DocStrings.QaNotNear_is3D))] bool is3D,
@@ -80,7 +81,7 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaNotNear_0))]
 		public QaNotNear(
-				[Doc(nameof(DocStrings.QaNotNear_featureClass))] IFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
 				[Doc(nameof(DocStrings.QaNotNear_near))] double near,
 				[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -88,7 +89,7 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaNotNear_0))]
 		public QaNotNear(
-			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaNotNear_near))] double near,
 			[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength,
 			[Doc(nameof(DocStrings.QaNotNear_tileSize))] double tileSize)
@@ -96,8 +97,8 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaNotNear_2))]
 		public QaNotNear(
-				[Doc(nameof(DocStrings.QaNotNear_featureClass))] IFeatureClass featureClass,
-				[Doc(nameof(DocStrings.QaNotNear_reference))] IFeatureClass reference,
+				[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaNotNear_reference))] IReadOnlyFeatureClass reference,
 				[Doc(nameof(DocStrings.QaNotNear_near))] double near,
 				[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -105,8 +106,8 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaNotNear_2))]
 		public QaNotNear(
-			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IFeatureClass featureClass,
-			[Doc(nameof(DocStrings.QaNotNear_reference))] IFeatureClass reference,
+			[Doc(nameof(DocStrings.QaNotNear_featureClass))] IReadOnlyFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaNotNear_reference))] IReadOnlyFeatureClass reference,
 			[Doc(nameof(DocStrings.QaNotNear_near))] double near,
 			[Doc(nameof(DocStrings.QaNotNear_minLength))] double minLength,
 			[Doc(nameof(DocStrings.QaNotNear_tileSize))] double tileSize)
@@ -121,14 +122,14 @@ namespace ProSuite.QA.Tests
 		private IgnoreRowNeighborCondition _ignoreNeighborCondition;
 		private bool _isIgnoreNeighborConditionInitialized;
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (tableIndex > 0)
 			{
 				return NoError;
 			}
 
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -158,9 +159,9 @@ namespace ProSuite.QA.Tests
 			IFeatureRowsDistance rowsDistance =
 				NearDistanceProvider.GetRowsDistance(feature, tableIndex);
 
-			foreach (IRow neighborRow in Search((ITable) _reference, filter, _helper, geom0))
+			foreach (IReadOnlyRow neighborRow in Search(_reference, filter, _helper, geom0))
 			{
-				var neighborFeature = (IFeature) neighborRow;
+				var neighborFeature = (IReadOnlyFeature) neighborRow;
 
 				if (neighborFeature == feature)
 				{
@@ -194,14 +195,14 @@ namespace ProSuite.QA.Tests
 		}
 
 		protected override NeighborhoodFinder GetNeighborhoodFinder(
-			IFeatureRowsDistance rowsDistance, IFeature feature, int tableIndex,
-			IFeature neighbor, int neighborTableIndex)
+			IFeatureRowsDistance rowsDistance, IReadOnlyFeature feature, int tableIndex,
+			IReadOnlyFeature neighbor, int neighborTableIndex)
 		{
 			return new NotNearNeighborhoodFinder(
 				rowsDistance, feature, tableIndex, neighbor, neighborTableIndex);
 		}
 
-		private bool IgnoreNeighbor(IRow row, IRow neighbor)
+		private bool IgnoreNeighbor(IReadOnlyRow row, IReadOnlyRow neighbor)
 		{
 			EnsureIgnoreNeighborInitialized();
 			if (_ignoreNeighborCondition == null)
@@ -229,9 +230,9 @@ namespace ProSuite.QA.Tests
 		}
 
 		protected override int Check(
-			IFeature feat0, int tableIndex,
+			IReadOnlyFeature feat0, int tableIndex,
 			SortedDictionary<SegmentPart, SegmentParts> processed0,
-			IFeature feat1, int neighborTableIndex,
+			IReadOnlyFeature feat1, int neighborTableIndex,
 			SortedDictionary<SegmentPart, SegmentParts> processed1,
 			double near)
 		{
@@ -269,8 +270,8 @@ namespace ProSuite.QA.Tests
 		{
 			public NotNearNeighborhoodFinder(
 				[NotNull] IFeatureRowsDistance rowsDistance,
-				[NotNull] IFeature feature, int tableIndex,
-				[CanBeNull] IFeature neighbor, int neighborTableIndex)
+				[NotNull] IReadOnlyFeature feature, int tableIndex,
+				[CanBeNull] IReadOnlyFeature neighbor, int neighborTableIndex)
 				: base(rowsDistance, feature, tableIndex, neighbor, neighborTableIndex) { }
 
 			protected override bool VerifyContinue(SegmentProxy seg0, SegmentProxy seg1,

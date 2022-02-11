@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
@@ -10,6 +9,7 @@ using ProSuite.QA.Tests.SpatialRelations;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -37,7 +37,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_0))]
 		public QaIntersectionMatrixSelf(
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_featureClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				featureClasses,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_intersectionMatrix))] [NotNull]
 			string
@@ -47,7 +47,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_1))]
 		public QaIntersectionMatrixSelf(
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_featureClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				featureClasses,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_intersectionMatrix))] [NotNull]
 			string
@@ -64,7 +64,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_2))]
 		public QaIntersectionMatrixSelf(
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_intersectionMatrix))] [NotNull]
 			string
 				intersectionMatrix)
@@ -73,7 +73,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_3))]
 		public QaIntersectionMatrixSelf(
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_intersectionMatrix))] [NotNull]
 			string
 				intersectionMatrix,
@@ -84,7 +84,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_4))]
 		public QaIntersectionMatrixSelf(
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_featureClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				featureClasses,
 			[Doc(nameof(DocStrings.QaIntersectionMatrixSelf_intersectionMatrix))] [NotNull]
 			string
@@ -106,8 +106,8 @@ namespace ProSuite.QA.Tests
 
 		#region Overrides of QaSpatialRelationSelfBase
 
-		protected override int FindErrors(IRow row1, int tableIndex1,
-		                                  IRow row2, int tableIndex2)
+		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
+										  IReadOnlyRow row2, int tableIndex2)
 		{
 			Assert.ArgumentNotNull(row1, nameof(row1));
 			Assert.ArgumentNotNull(row2, nameof(row2));
@@ -128,8 +128,8 @@ namespace ProSuite.QA.Tests
 			}
 
 			const bool reportIndividualErrors = true;
-			return _matrixHelper.ReportErrors((IFeature) row1, tableIndex1,
-			                                  (IFeature) row2, tableIndex2,
+			return _matrixHelper.ReportErrors((IReadOnlyFeature) row1, tableIndex1,
+			                                  (IReadOnlyFeature) row2, tableIndex2,
 			                                  this, GetIssueCode(),
 			                                  reportIndividualErrors);
 		}
@@ -146,9 +146,9 @@ namespace ProSuite.QA.Tests
 				       : Codes[IntersectionMatrixIssueCodes.GeometriesIntersectWithMatrix];
 		}
 
-		protected override int FindErrorsNoRelated(IRow row)
+		protected override int FindErrorsNoRelated(IReadOnlyRow row)
 		{
-			IGeometry errorGeometry = ((IFeature) row).ShapeCopy;
+			IGeometry errorGeometry = ((IReadOnlyFeature) row).ShapeCopy;
 
 			const string description = "No intersection";
 

@@ -16,6 +16,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
 using IPnt = ProSuite.Commons.Geom.IPnt;
 using Pnt = ProSuite.Commons.Geom.Pnt;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Coincidence
 {
@@ -78,7 +79,7 @@ namespace ProSuite.QA.Tests.Coincidence
 		/// <param name="is3D">if true, use z coordinates</param>
 		/// <remarks>All feature classes must have the same spatial reference</remarks>
 		protected QaPolycurveCoincidenceBase(
-			[NotNull] IEnumerable<IFeatureClass> featureClasses,
+			[NotNull] IEnumerable<IReadOnlyFeatureClass> featureClasses,
 			double searchDistance,
 			[NotNull] IFeatureDistanceProvider nearDistanceProvider,
 			bool is3D)
@@ -124,7 +125,7 @@ namespace ProSuite.QA.Tests.Coincidence
 		[NotNull]
 		protected Dictionary<RowKey, SegmentNeighbors> ProcessedList => _processedList;
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			base.ExecuteCore(row, r);
 			IList<ISpatialFilter> filters = _filter;
@@ -153,7 +154,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				_handledNeighbors.Add(rowEquatable, handledNeighbors);
 			}
 
-			IGeometry geom0 = ((IFeature) row).Shape;
+			IGeometry geom0 = ((IReadOnlyFeature) row).Shape;
 
 			IEnvelope box0 = geom0.Envelope;
 			box0.Expand(SearchDistance, SearchDistance, false);
@@ -164,9 +165,9 @@ namespace ProSuite.QA.Tests.Coincidence
 			var errorCount = 0;
 
 			int involvedTableIndex = -1;
-			foreach (ITable table in InvolvedTables)
+			foreach (IReadOnlyTable table in InvolvedTables)
 			{
-				var fcNeighbor = (IFeatureClass) table;
+				var fcNeighbor = (IReadOnlyFeatureClass) table;
 				involvedTableIndex++;
 				QueryFilterHelper helper = _helper[involvedTableIndex];
 				helper.MinimumOID = -1;
@@ -463,9 +464,9 @@ namespace ProSuite.QA.Tests.Coincidence
 		}
 
 		protected virtual int Check(
-			[NotNull] IFeature feat0, int tableIndex,
+			[NotNull] IReadOnlyFeature feat0, int tableIndex,
 			[NotNull] SortedDictionary<SegmentPart, SegmentParts> processed0,
-			[NotNull] IFeature feat1, int neighborTableIndex,
+			[NotNull] IReadOnlyFeature feat1, int neighborTableIndex,
 			[NotNull] SortedDictionary<SegmentPart, SegmentParts> processed1,
 			double near)
 		{
@@ -481,8 +482,8 @@ namespace ProSuite.QA.Tests.Coincidence
 			}
 		}
 
-		private static double GetTolerance([NotNull] IFeature feature0,
-		                                   [NotNull] IFeature feature1)
+		private static double GetTolerance([NotNull] IReadOnlyFeature feature0,
+		                                   [NotNull] IReadOnlyFeature feature1)
 		{
 			// TODO debug why the spatial references on the geometries sometimes become null because of preceding tests
 			// TODO get appropriate tolerance for *projected* geometries
@@ -491,8 +492,8 @@ namespace ProSuite.QA.Tests.Coincidence
 			const double defaultTolerance = 0;
 			return
 				Math.Max(
-					GeometryUtils.GetXyTolerance((IGeoDataset) feature0.Class, defaultTolerance),
-					GeometryUtils.GetXyTolerance((IGeoDataset) feature1.Class, defaultTolerance));
+					GeometryUtils.GetXyTolerance(((IReadOnlyFeatureClass) feature0.Table).SpatialReference, defaultTolerance),
+					GeometryUtils.GetXyTolerance(((IReadOnlyFeatureClass) feature1.Table).SpatialReference, defaultTolerance));
 		}
 
 		private static bool IsDirectNeighbor([NotNull] SegmentProxy neighbor,
@@ -551,7 +552,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			var remove = new List<RowKey>();
 			foreach (RowKey rowKey in _processedList.Keys)
 			{
-				((IFeature) rowKey.Row).Shape.QueryEnvelope(_removeBox);
+				((IReadOnlyFeature) rowKey.Row).Shape.QueryEnvelope(_removeBox);
 				IEnvelope box = args.CurrentEnvelope;
 				if (box == null ||
 				    _removeBox.XMax + SearchDistance <= box.XMax &&
@@ -581,9 +582,9 @@ namespace ProSuite.QA.Tests.Coincidence
 		protected abstract class NeighborhoodFinder
 		{
 			private readonly IFeatureRowsDistance _rowsDistance;
-			private readonly IFeature _feature;
+			private readonly IReadOnlyFeature _feature;
 			private readonly double _featureNear;
-			private readonly IFeature _neighbor;
+			private readonly IReadOnlyFeature _neighbor;
 			private readonly double _neighborNear;
 			private readonly IIndexedSegments _featureGeom;
 			private readonly IIndexedSegments _neighborGeom;
@@ -591,8 +592,8 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			protected NeighborhoodFinder(
 				[NotNull] IFeatureRowsDistance rowsDistance,
-				[NotNull] IFeature feature, int featureTableIndex,
-				[CanBeNull] IFeature neighbor, int neighborTableIndex)
+				[NotNull] IReadOnlyFeature feature, int featureTableIndex,
+				[CanBeNull] IReadOnlyFeature neighbor, int neighborTableIndex)
 			{
 				double featureNear = rowsDistance.GetRowDistance();
 				double near = neighbor != null
@@ -613,9 +614,9 @@ namespace ProSuite.QA.Tests.Coincidence
 				}
 			}
 
-			public IFeature Feature => _feature;
+			public IReadOnlyFeature Feature => _feature;
 
-			public IFeature NeighborFeature => _neighbor;
+			public IReadOnlyFeature NeighborFeature => _neighbor;
 
 			public IIndexedSegments FeatureGeometry => _featureGeom;
 
@@ -673,7 +674,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				// TODO debug why the spatial references on the geometries sometimes become null because of preceding tests
 				// TODO get appropriate tolerance for *projected* geometries
 				const double defaultTolerance = 0;
-				double tolerance = GeometryUtils.GetXyTolerance((IGeoDataset) _feature.Class,
+				double tolerance = GeometryUtils.GetXyTolerance(((IReadOnlyFeatureClass) _feature.Table).SpatialReference,
 				                                                defaultTolerance);
 
 				IBox testAreaBox = null;
@@ -972,17 +973,17 @@ namespace ProSuite.QA.Tests.Coincidence
 
 		protected class RowKey
 		{
-			private readonly IRow _row;
+			private readonly IReadOnlyRow _row;
 			private readonly int _tableIndex;
 
-			public RowKey([NotNull] IRow row, int tableIndex)
+			public RowKey([NotNull] IReadOnlyRow row, int tableIndex)
 			{
 				_row = row;
 				_tableIndex = tableIndex;
 			}
 
 			[NotNull]
-			public IRow Row => _row;
+			public IReadOnlyRow Row => _row;
 
 			public int TableIndex => _tableIndex;
 
@@ -1553,7 +1554,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			[NotNull]
 			public static IList<Subcurve> GetMissingSubcurves(
-				[NotNull] IFeature feature,
+				[NotNull] IReadOnlyFeature feature,
 				[NotNull] IIndexedSegments geometry,
 				[NotNull] SortedDictionary<SegmentPart, SegmentParts> partlyMissing,
 				[CanBeNull] IPnt maxProcessed)
@@ -1628,7 +1629,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			[CanBeNull]
 			// ReSharper disable once UnusedMethodReturnValue.Local
 			private static Subcurve TryAddSegment([NotNull] ICollection<Subcurve> curveList,
-			                                      [NotNull] IFeature feature,
+			                                      [NotNull] IReadOnlyFeature feature,
 			                                      [NotNull] IIndexedSegments geom,
 			                                      int partIndex, int startSegment,
 			                                      double startFraction, int endSegment,
@@ -1672,12 +1673,12 @@ namespace ProSuite.QA.Tests.Coincidence
 
 		protected interface IFeatureDistanceProvider
 		{
-			IFeatureRowsDistance GetRowsDistance([NotNull] IRow row1, int tableIndex);
+			IFeatureRowsDistance GetRowsDistance([NotNull] IReadOnlyRow row1, int tableIndex);
 		}
 
 		protected interface IPairDistanceProvider
 		{
-			IPairRowsDistance GetRowsDistance([NotNull] IRow row1, int tableIndex);
+			IPairRowsDistance GetRowsDistance([NotNull] IReadOnlyRow row1, int tableIndex);
 		}
 
 		protected interface IConstantDistanceProvider
@@ -1687,14 +1688,14 @@ namespace ProSuite.QA.Tests.Coincidence
 
 		protected interface IPairRowsDistance
 		{
-			double GetAddedDistance([NotNull] IRow neighborRow, int neighborTableIndex);
+			double GetAddedDistance([NotNull] IReadOnlyRow neighborRow, int neighborTableIndex);
 		}
 
 		protected interface IFeatureRowsDistance : IPairRowsDistance
 		{
 			double GetRowDistance();
 
-			double GetNearDistance([NotNull] IRow neighborRow, int neighborTableIndex);
+			double GetNearDistance([NotNull] IReadOnlyRow neighborRow, int neighborTableIndex);
 		}
 
 		protected interface IAssymetricFeatureRowsDistance : IFeatureRowsDistance
@@ -1703,9 +1704,9 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			double GetRightSideDistance();
 
-			double GetLeftSideDistance([NotNull] IRow neighborRow, int neighborTableIndex);
+			double GetLeftSideDistance([NotNull] IReadOnlyRow neighborRow, int neighborTableIndex);
 
-			double GetRightSideDistance([NotNull] IRow neighborRow, int neighborTableIndex);
+			double GetRightSideDistance([NotNull] IReadOnlyRow neighborRow, int neighborTableIndex);
 		}
 
 		protected static SegmentHull CreateSegmentHull(
@@ -1723,7 +1724,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 		protected static SegmentHull CreateNeighborSegmentHull(
 			[NotNull] SegmentProxy segment, IFeatureRowsDistance rowsDistance,
-			[NotNull] IFeature neighborFeature, int neighborTableIndex,
+			[NotNull] IReadOnlyFeature neighborFeature, int neighborTableIndex,
 			[NotNull] SegmentCap startCap, [NotNull] SegmentCap endCap)
 		{
 			var assym = rowsDistance as IAssymetricFeatureRowsDistance;
@@ -1746,19 +1747,19 @@ namespace ProSuite.QA.Tests.Coincidence
 			public ConstantFeatureDistanceProvider(double featureDistance)
 				: base(featureDistance, featureDistance) { }
 
-			public IFeatureRowsDistance GetRowsDistance(IRow row1, int tableIndex)
+			public IFeatureRowsDistance GetRowsDistance(IReadOnlyRow row1, int tableIndex)
 			{
 				return this;
 			}
 
 			double IFeatureRowsDistance.GetRowDistance() => SelfDistance;
 
-			double IFeatureRowsDistance.GetNearDistance(IRow neighbor, int tableIndex)
+			double IFeatureRowsDistance.GetNearDistance(IReadOnlyRow neighbor, int tableIndex)
 			{
 				return NeighborDistance;
 			}
 
-			double IPairRowsDistance.GetAddedDistance(IRow neighbor, int tableIndex)
+			double IPairRowsDistance.GetAddedDistance(IReadOnlyRow neighbor, int tableIndex)
 			{
 				return SelfDistance + NeighborDistance;
 			}
@@ -1771,12 +1772,12 @@ namespace ProSuite.QA.Tests.Coincidence
 			public ConstantPairDistanceProvider(double pairDistance)
 				: base(pairDistance, 0) { }
 
-			public IPairRowsDistance GetRowsDistance(IRow row1, int tableIndex)
+			public IPairRowsDistance GetRowsDistance(IReadOnlyRow row1, int tableIndex)
 			{
 				return this;
 			}
 
-			double IPairRowsDistance.GetAddedDistance(IRow row, int tableIndex)
+			double IPairRowsDistance.GetAddedDistance(IReadOnlyRow row, int tableIndex)
 			{
 				return SelfDistance;
 			}
@@ -1813,10 +1814,10 @@ namespace ProSuite.QA.Tests.Coincidence
 				_rightSideDistanceProvider = rightSideDistanceProvider;
 			}
 
-			IFeatureRowsDistance IFeatureDistanceProvider.GetRowsDistance(IRow row, int tableIndex)
+			IFeatureRowsDistance IFeatureDistanceProvider.GetRowsDistance(IReadOnlyRow row, int tableIndex)
 				=> GetRowsDistance(row, tableIndex);
 
-			public SideRowsDistance GetRowsDistance(IRow row, int tableIndex)
+			public SideRowsDistance GetRowsDistance(IReadOnlyRow row, int tableIndex)
 			{
 				return new SideRowsDistance(
 					_defaultDistanceProvider.GetRowsDistance(row, tableIndex),
@@ -1847,10 +1848,10 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			public double GetRightSideDistance() => _rightSideDistance.GetRowDistance();
 
-			public double GetLeftSideDistance(IRow neighborfeature, int neighborTableIndex)
+			public double GetLeftSideDistance(IReadOnlyRow neighborfeature, int neighborTableIndex)
 				=> _defaultDistance.GetNearDistance(neighborfeature, neighborTableIndex);
 
-			public double GetRightSideDistance(IRow neighborfeature, int neighborTableIndex) =>
+			public double GetRightSideDistance(IReadOnlyRow neighborfeature, int neighborTableIndex) =>
 				_rightSideDistance.GetNearDistance(neighborfeature, neighborTableIndex);
 
 			double IFeatureRowsDistance.GetRowDistance() => _maxRowDistance;
@@ -1867,7 +1868,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				return maxDistance;
 			}
 
-			public double GetNearDistance(IRow neighborRow, int neighborTableIndex)
+			public double GetNearDistance(IReadOnlyRow neighborRow, int neighborTableIndex)
 			{
 				double maxDistance = 0;
 				foreach (IFeatureRowsDistance featureRowsDistance in _rowsDistances)
@@ -1880,7 +1881,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				return maxDistance;
 			}
 
-			public double GetAddedDistance(IRow neighborRow, int neighborTableIndex)
+			public double GetAddedDistance(IReadOnlyRow neighborRow, int neighborTableIndex)
 			{
 				double maxDistance = 0;
 				foreach (IFeatureRowsDistance featureRowsDistance in _rowsDistances)
@@ -1908,7 +1909,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				_baseDistanceProvider = baseDistanceProvider;
 			}
 
-			public IPairRowsDistance GetRowsDistance(IRow row, int tableIndex)
+			public IPairRowsDistance GetRowsDistance(IReadOnlyRow row, int tableIndex)
 			{
 				IPairRowsDistance baseRowsDistance =
 					_baseDistanceProvider.GetRowsDistance(row, tableIndex);
@@ -1944,7 +1945,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				_baseRowsDistance = baseRowsDistance;
 			}
 
-			public double GetAddedDistance(IRow neighborRow, int neighborTableIndex)
+			public double GetAddedDistance(IReadOnlyRow neighborRow, int neighborTableIndex)
 			{
 				return _factor *
 				       _baseRowsDistance.GetAddedDistance(neighborRow, neighborTableIndex);
@@ -1954,7 +1955,7 @@ namespace ProSuite.QA.Tests.Coincidence
 		protected class ExpressionBasedDistanceProvider : IFeatureDistanceProvider,
 		                                                  IPairDistanceProvider
 		{
-			[NotNull] private readonly ICollection<IFeatureClass> _featureClasses;
+			[NotNull] private readonly ICollection<IReadOnlyFeatureClass> _featureClasses;
 			[NotNull] private readonly List<string> _expressionsSql;
 
 			[NotNull] private Func<int, bool> _getSqlCaseSensitivityForTableIndex;
@@ -1962,7 +1963,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			public ExpressionBasedDistanceProvider(
 				[NotNull] IEnumerable<string> expressions,
-				[NotNull] ICollection<IFeatureClass> featureClasses)
+				[NotNull] ICollection<IReadOnlyFeatureClass> featureClasses)
 			{
 				Assert.ArgumentNotNull(expressions, nameof(expressions));
 				Assert.ArgumentNotNull(featureClasses, nameof(featureClasses));
@@ -1994,18 +1995,18 @@ namespace ProSuite.QA.Tests.Coincidence
 				set { _getSqlCaseSensitivityForTableIndex = value; }
 			}
 
-			IPairRowsDistance IPairDistanceProvider.GetRowsDistance(IRow row1, int tableIndex)
+			IPairRowsDistance IPairDistanceProvider.GetRowsDistance(IReadOnlyRow row1, int tableIndex)
 			{
 				return GetRowsDistance(row1, tableIndex);
 			}
 
-			IFeatureRowsDistance IFeatureDistanceProvider.GetRowsDistance(IRow row1,
+			IFeatureRowsDistance IFeatureDistanceProvider.GetRowsDistance(IReadOnlyRow row1,
 			                                                              int tableIndex)
 			{
 				return GetRowsDistance(row1, tableIndex);
 			}
 
-			public ExpressionBasedRowsDistance GetRowsDistance(IRow row1, int tableIndex)
+			public ExpressionBasedRowsDistance GetRowsDistance(IReadOnlyRow row1, int tableIndex)
 			{
 				double distance1 = Expressions[tableIndex].GetDouble(row1) ?? 0;
 				return GetExpressionBasedRowsDistance(row1, tableIndex, distance1);
@@ -2013,7 +2014,7 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			[NotNull]
 			protected virtual ExpressionBasedRowsDistance GetExpressionBasedRowsDistance(
-				[NotNull] IRow row1, int tableIndex, double distance1)
+				[NotNull] IReadOnlyRow row1, int tableIndex, double distance1)
 			{
 				return new ExpressionBasedRowsDistance(row1, tableIndex, distance1, Expressions);
 			}
@@ -2025,7 +2026,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				var result = new List<DoubleFieldExpression>();
 				var tableIndex = 0;
 
-				foreach (IFeatureClass featureClass in _featureClasses)
+				foreach (IReadOnlyFeatureClass featureClass in _featureClasses)
 				{
 					int expressionIndex = expressions.Count == 1
 						                      ? 0
@@ -2033,7 +2034,7 @@ namespace ProSuite.QA.Tests.Coincidence
 					string expression = expressions[expressionIndex];
 
 					result.Add(new DoubleFieldExpression(
-						           (ITable) featureClass, expression,
+						           (IReadOnlyTable) featureClass, expression,
 						           caseSensitive: GetSqlCaseSensitivityForTableIndex(tableIndex)));
 					tableIndex++;
 				}
@@ -2049,7 +2050,7 @@ namespace ProSuite.QA.Tests.Coincidence
 			private static readonly bool _combined = false;
 
 			public ExpressionBasedRowsDistance(
-				[NotNull] IRow row1, int tableIndex1, double distance1,
+				[NotNull] IReadOnlyRow row1, int tableIndex1, double distance1,
 				[NotNull] List<DoubleFieldExpression> expressions)
 			{
 				Row1 = row1;
@@ -2060,14 +2061,14 @@ namespace ProSuite.QA.Tests.Coincidence
 
 			[NotNull]
 			[PublicAPI]
-			public IRow Row1 { get; }
+			public IReadOnlyRow Row1 { get; }
 
 			[PublicAPI]
 			public int TableIndex1 { get; }
 
 			public double GetRowDistance() => _combined ? 0 : _distance1;
 
-			public virtual double GetNearDistance(IRow neighborRow, int neighborTableIndex)
+			public virtual double GetNearDistance(IReadOnlyRow neighborRow, int neighborTableIndex)
 			{
 				double nearDistance;
 				if (_combined)
@@ -2087,7 +2088,7 @@ namespace ProSuite.QA.Tests.Coincidence
 				return nearDistance;
 			}
 
-			public virtual double GetAddedDistance(IRow neighborRow, int neighborTableIndex)
+			public virtual double GetAddedDistance(IReadOnlyRow neighborRow, int neighborTableIndex)
 			{
 				if (Row1 == neighborRow)
 				{

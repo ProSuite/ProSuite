@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
@@ -11,6 +10,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -53,13 +53,13 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMpSinglePartFootprint_0))]
 		public QaMpSinglePartFootprint(
 			[Doc(nameof(DocStrings.QaMpSinglePartFootprint_multiPatchClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				multiPatchClass)
-			: base((ITable) multiPatchClass)
+			: base(multiPatchClass)
 		{
 			Assert.ArgumentNotNull(multiPatchClass, nameof(multiPatchClass));
 
-			_spatialReference = ((IGeoDataset) multiPatchClass).SpatialReference;
+			_spatialReference = multiPatchClass.SpatialReference;
 			_shapeFieldName = multiPatchClass.ShapeFieldName;
 		}
 
@@ -87,9 +87,9 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -131,7 +131,7 @@ namespace ProSuite.QA.Tests
 			return CheckMultiPatch(feature, multiPatch);
 		}
 
-		private int CheckMultiPatch([NotNull] IFeature feature,
+		private int CheckMultiPatch([NotNull] IReadOnlyFeature feature,
 		                            [NotNull] IMultiPatch multiPatch)
 		{
 			IPolyline tooSmallRings;
@@ -196,7 +196,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int ReportDisjointFootprintPolygon([NotNull] IFeature feature,
+		private int ReportDisjointFootprintPolygon([NotNull] IReadOnlyFeature feature,
 		                                           [NotNull] IPolygon footprintPolygon,
 		                                           [NotNull] IMultiPatch multiPatch)
 		{

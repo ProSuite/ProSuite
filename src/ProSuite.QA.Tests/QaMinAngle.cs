@@ -4,6 +4,7 @@ using System.Runtime.InteropServices;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
@@ -50,17 +51,17 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMinAngle_0))]
 		public QaMinAngle(
-			[Doc(nameof(DocStrings.QaMinAngle_polylineClass))] IFeatureClass polylineClass,
+			[Doc(nameof(DocStrings.QaMinAngle_polylineClass))] IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaMinAngle_limit))] double limit,
 			[Doc(nameof(DocStrings.QaMinAngle_is3D))] bool is3D)
-			: base((ITable) polylineClass)
+			: base(polylineClass)
 		{
 			Init(limit, is3D);
 		}
 
 		[Doc(nameof(DocStrings.QaMinAngle_1))]
 		public QaMinAngle(
-				[Doc(nameof(DocStrings.QaMinAngle_polylineClasses))] IList<IFeatureClass> polylineClasses,
+				[Doc(nameof(DocStrings.QaMinAngle_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses,
 				[Doc(nameof(DocStrings.QaMinAngle_limit))] double limit,
 				[Doc(nameof(DocStrings.QaMinAngle_is3D))] bool is3D)
 			// ReSharper disable once PossiblyMistakenUseOfParamsMethod
@@ -71,7 +72,7 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMinAngle_1))]
 		public QaMinAngle(
-				[Doc(nameof(DocStrings.QaMinAngle_polylineClasses))] IList<IFeatureClass> polylineClasses,
+				[Doc(nameof(DocStrings.QaMinAngle_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses,
 				[Doc(nameof(DocStrings.QaMinAngle_limit))] double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, limit, false) { }
@@ -98,7 +99,7 @@ namespace ProSuite.QA.Tests
 			_comparePointTemplate = new PointClass();
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			// preparing
 			int errorCount = 0;
@@ -108,7 +109,7 @@ namespace ProSuite.QA.Tests
 			}
 
 			// iterating over all needed tables
-			var feature = (IFeature) row;
+			var feature = (IReadOnlyFeature) row;
 
 			var polyline = (IPolyline) feature.Shape;
 
@@ -120,7 +121,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int CheckPathEndPoints([NotNull] IFeature feature, [NotNull] IPath path)
+		private int CheckPathEndPoints([NotNull] IReadOnlyFeature feature, [NotNull] IPath path)
 		{
 			var vertices = (IPointCollection) path;
 
@@ -148,7 +149,7 @@ namespace ProSuite.QA.Tests
 
 			foreach (var table in InvolvedTables)
 			{
-				var compareFeatureClass = (IFeatureClass) table;
+				var compareFeatureClass = (IReadOnlyFeatureClass) table;
 				compareTableIndex++;
 				_helper[compareTableIndex].MinimumOID = -1;
 
@@ -181,9 +182,9 @@ namespace ProSuite.QA.Tests
 		private int ExecutePoint([NotNull] IPoint connectPoint,
 		                         [NotNull] IPoint otherSegmentEndPoint,
 		                         double squaredSegmentLength,
-		                         [NotNull] IFeatureClass compareFeatureClass,
+		                         [NotNull] IReadOnlyFeatureClass compareFeatureClass,
 		                         int compareTableIndex,
-		                         [NotNull] IFeature feature)
+		                         [NotNull] IReadOnlyFeature feature)
 		{
 			ISpatialFilter filter = _filter[compareTableIndex];
 
@@ -191,11 +192,11 @@ namespace ProSuite.QA.Tests
 
 			int errorCount = 0;
 
-			foreach (var row in Search((ITable) compareFeatureClass,
+			foreach (var row in Search(compareFeatureClass,
 			                           _filter[compareTableIndex],
 			                           _helper[compareTableIndex]))
 			{
-				var compareFeature = (IFeature) row;
+				var compareFeature = (IReadOnlyFeature) row;
 				errorCount += CheckFeature(connectPoint, feature, compareFeature,
 				                           otherSegmentEndPoint, squaredSegmentLength);
 			}
@@ -204,8 +205,8 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int CheckFeature([NotNull] IPoint connectPoint,
-		                         [NotNull] IFeature feature,
-		                         [NotNull] IFeature compareFeature,
+		                         [NotNull] IReadOnlyFeature feature,
+		                         [NotNull] IReadOnlyFeature compareFeature,
 		                         [NotNull] IPoint otherSegmentEndPoint,
 		                         double squaredSegmentLength)
 		{
@@ -305,8 +306,8 @@ namespace ProSuite.QA.Tests
 		                       [NotNull] IPoint otherSegmentEndPoint,
 		                       double squaredSegmentLength,
 		                       [NotNull] IPoint comparePoint,
-		                       [NotNull] IRow feature,
-		                       [NotNull] IRow compareFeature)
+		                       [NotNull] IReadOnlyRow feature,
+		                       [NotNull] IReadOnlyRow compareFeature)
 		{
 			double distanceSquaredToComparePoint;
 			double prod = GetProd(connectPoint, otherSegmentEndPoint, comparePoint,

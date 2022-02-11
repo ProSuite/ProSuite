@@ -19,8 +19,8 @@ namespace ProSuite.QA.Tests
 	[AttributeTest]
 	public class QaForeignKey : NonContainerTest
 	{
-		[NotNull] private readonly ITable _table;
-		[NotNull] private readonly ITable _referencedTable;
+		[NotNull] private readonly IReadOnlyTable _table;
+		[NotNull] private readonly IReadOnlyTable _referencedTable;
 		private readonly bool _referenceIsError;
 
 		[NotNull] private readonly List<string> _foreignKeyFields;
@@ -59,23 +59,23 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaForeignKey_0))]
 		public QaForeignKey(
-			[Doc(nameof(DocStrings.QaForeignKey_table))] [NotNull] ITable table,
+			[Doc(nameof(DocStrings.QaForeignKey_table))] [NotNull] IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaForeignKey_foreignKeyField))] [NotNull]
 			string foreignKeyField,
 			[Doc(nameof(DocStrings.QaForeignKey_referencedTable))] [NotNull]
-			ITable referencedTable,
+			IReadOnlyTable referencedTable,
 			[Doc(nameof(DocStrings.QaForeignKey_referencedKeyField))] [NotNull]
 			string referencedKeyField)
 			: this(table, new[] {foreignKeyField}, referencedTable, new[] {referencedKeyField}) { }
 
 		[Doc(nameof(DocStrings.QaForeignKey_1))]
 		public QaForeignKey(
-				[Doc(nameof(DocStrings.QaForeignKey_table))] [NotNull] ITable table,
+				[Doc(nameof(DocStrings.QaForeignKey_table))] [NotNull] IReadOnlyTable table,
 				[Doc(nameof(DocStrings.QaForeignKey_foreignKeyFields))] [NotNull]
 				IEnumerable<string>
 					foreignKeyFields,
 				[Doc(nameof(DocStrings.QaForeignKey_referencedTable))] [NotNull]
-				ITable referencedTable,
+				IReadOnlyTable referencedTable,
 				[Doc(nameof(DocStrings.QaForeignKey_referencedKeyFields))] [NotNull]
 				IEnumerable<string>
 					referencedKeyFields)
@@ -84,12 +84,12 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaForeignKey_2))]
 		public QaForeignKey(
-			[Doc(nameof(DocStrings.QaForeignKey_table))] [NotNull] ITable table,
+			[Doc(nameof(DocStrings.QaForeignKey_table))] [NotNull] IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaForeignKey_foreignKeyFields))] [NotNull]
 			IEnumerable<string>
 				foreignKeyFields,
 			[Doc(nameof(DocStrings.QaForeignKey_referencedTable))] [NotNull]
-			ITable referencedTable,
+			IReadOnlyTable referencedTable,
 			[Doc(nameof(DocStrings.QaForeignKey_referencedKeyFields))] [NotNull]
 			IEnumerable<string>
 				referencedKeyFields,
@@ -142,11 +142,11 @@ namespace ProSuite.QA.Tests
 			return ExecuteGeometry(area);
 		}
 
-		public override int Execute(IEnumerable<IRow> selectedRows)
+		public override int Execute(IEnumerable<IReadOnlyRow> selectedRows)
 		{
 			int errorCount = 0;
 
-			foreach (IRow row in selectedRows)
+			foreach (IReadOnlyRow row in selectedRows)
 			{
 				if (row.Table != _table)
 				{
@@ -161,7 +161,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		public override int Execute(IRow row)
+		public override int Execute(IReadOnlyRow row)
 		{
 			if (row.Table != _table)
 			{
@@ -175,15 +175,15 @@ namespace ProSuite.QA.Tests
 
 		protected override ISpatialReference GetSpatialReference()
 		{
-			var geoDataset = _table as IGeoDataset;
+			var geoDataset = _table as IReadOnlyGeoDataset;
 			return geoDataset?.SpatialReference;
 		}
 
 		#endregion
 
 		private static void GetFieldInformation(
-			[NotNull] ITable table,
-			[NotNull] ITable referencedTable,
+			[NotNull] IReadOnlyTable table,
+			[NotNull] IReadOnlyTable referencedTable,
 			[NotNull] IList<string> fkFields,
 			[NotNull] IList<string> pkFields,
 			[NotNull] out List<int> foreignKeyFieldIndices,
@@ -206,9 +206,9 @@ namespace ProSuite.QA.Tests
 
 				const string format = "'field '{0}' not found in table '{1}'";
 				Assert.ArgumentCondition(fkIndex >= 0, format,
-				                         fkField, DatasetUtils.GetName(table));
+				                         fkField, table.Name);
 				Assert.ArgumentCondition(pkIndex >= 0, format,
-				                         pkField, DatasetUtils.GetName(referencedTable));
+				                         pkField, referencedTable.Name);
 
 				esriFieldType fkType = KeySetUtils.GetFieldValueType(table, fkIndex);
 				esriFieldType pkType = KeySetUtils.GetFieldValueType(referencedTable, pkIndex);
@@ -231,7 +231,7 @@ namespace ProSuite.QA.Tests
 		{
 			EnsureKeySet();
 
-			if (! (_table is IFeatureClass))
+			if (! (_table is IReadOnlyFeatureClass))
 			{
 				geometry = null;
 			}
@@ -242,7 +242,7 @@ namespace ProSuite.QA.Tests
 			const bool recycle = true;
 			int errorCount = 0;
 
-			foreach (IRow row in GdbQueryUtils.GetRows(_table, filter, recycle))
+			foreach (IReadOnlyRow row in _table.EnumRows(filter, recycle))
 			{
 				errorCount += VerifyRow(row);
 			}
@@ -273,14 +273,14 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		private int VerifyRow([NotNull] IRow row)
+		private int VerifyRow([NotNull] IReadOnlyRow row)
 		{
 			return _usesSingleKey
 				       ? VerifySingleKey(row)
 				       : VerifyTupleKey(row);
 		}
 
-		private int VerifySingleKey([NotNull] IRow row)
+		private int VerifySingleKey([NotNull] IReadOnlyRow row)
 		{
 			Assert.NotNull(_keySet, "keyset is null");
 
@@ -290,7 +290,7 @@ namespace ProSuite.QA.Tests
 			esriFieldType fkType = _foreignKeyFieldTypes[0];
 			esriFieldType pkType = _referencedKeyFieldTypes[0];
 
-			object foreignKey = row.Value[fkIndex];
+			object foreignKey = row.get_Value(fkIndex);
 
 			if (foreignKey == null || foreignKey is DBNull)
 			{
@@ -324,7 +324,7 @@ namespace ProSuite.QA.Tests
 				       : ReportMissingReference(row, foreignKey, fkField, pkField);
 		}
 
-		private int VerifyTupleKey([NotNull] IRow row)
+		private int VerifyTupleKey([NotNull] IReadOnlyRow row)
 		{
 			Assert.NotNull(_tupleKeySet, "tuple keyset is null");
 
@@ -363,7 +363,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int ReportMissingReference(
-			[NotNull] IRow row,
+			[NotNull] IReadOnlyRow row,
 			[NotNull] object foreignKey,
 			[NotNull] string fkField,
 			[NotNull] string pkField)
@@ -372,7 +372,7 @@ namespace ProSuite.QA.Tests
 				string.Format(
 					"Value [{0}] in field '{1}' does not reference any value in field '{2}' of table '{3}'{4}",
 					FieldValueUtils.FormatValue(foreignKey), fkField, pkField,
-					DatasetUtils.GetName(_referencedTable),
+					_referencedTable.Name,
 					StringUtils.IsNotEmpty(_whereClause)
 						? string.Format(" (in rows matching '{0}')", _whereClause)
 						: string.Empty);
@@ -383,7 +383,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int ReportUnallowedReference(
-			[NotNull] IRow row,
+			[NotNull] IReadOnlyRow row,
 			[NotNull] object foreignKey,
 			[NotNull] string fkField,
 			[NotNull] string pkField)
@@ -392,7 +392,7 @@ namespace ProSuite.QA.Tests
 				string.Format(
 					"Value [{0}] in field '{1}' references a value in field '{2}' of table '{3}'{4}",
 					FieldValueUtils.FormatValue(foreignKey), fkField, pkField,
-					DatasetUtils.GetName(_referencedTable),
+					_referencedTable.Name,
 					StringUtils.IsNotEmpty(_whereClause)
 						? string.Format(" (in rows matching '{0}')", _whereClause)
 						: string.Empty);
@@ -402,7 +402,7 @@ namespace ProSuite.QA.Tests
 			                   fkField, row);
 		}
 
-		private int ReportMissingReference([NotNull] IRow row,
+		private int ReportMissingReference([NotNull] IReadOnlyRow row,
 		                                   [NotNull] Tuple fkTuple)
 		{
 			string description =
@@ -410,7 +410,7 @@ namespace ProSuite.QA.Tests
 					"Values [{0}] in fields '{1}' do not match a value combination in fields '{2}' of table '{3}'{4}",
 					FormatTuple(fkTuple),
 					_foreignKeyFieldNamesString, _referencedKeyFieldNamesString,
-					DatasetUtils.GetName(_referencedTable),
+					_referencedTable.Name,
 					StringUtils.IsNotEmpty(_whereClause)
 						? string.Format(" (in rows matching '{0}')", _whereClause)
 						: string.Empty);
@@ -420,7 +420,7 @@ namespace ProSuite.QA.Tests
 			                   _foreignKeyFieldNamesString, row);
 		}
 
-		private int ReportUnallowedReference([NotNull] IRow row,
+		private int ReportUnallowedReference([NotNull] IReadOnlyRow row,
 		                                     [NotNull] Tuple fkTuple)
 		{
 			string description =
@@ -428,7 +428,7 @@ namespace ProSuite.QA.Tests
 					"Values [{0}] in fields '{1}' references a value combination in fields '{2}' of table '{3}'{4}",
 					FormatTuple(fkTuple),
 					_foreignKeyFieldNamesString, _referencedKeyFieldNamesString,
-					DatasetUtils.GetName(_referencedTable),
+					_referencedTable.Name,
 					StringUtils.IsNotEmpty(_whereClause)
 						? string.Format(" (in rows matching '{0}')", _whereClause)
 						: string.Empty);
@@ -445,7 +445,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[CanBeNull]
-		private Tuple TryReadForeignKeyTuple([NotNull] IRow row,
+		private Tuple TryReadForeignKeyTuple([NotNull] IReadOnlyRow row,
 		                                     [NotNull] IList<int> foreignKeyFieldIndices,
 		                                     [NotNull] IList<esriFieldType> fieldTypes,
 		                                     [NotNull] IList<esriFieldType> outputTypes,
@@ -461,7 +461,7 @@ namespace ProSuite.QA.Tests
 				esriFieldType fieldType = fieldTypes[i];
 				esriFieldType outputType = outputTypes[i];
 
-				object value = row.Value[fieldIndex];
+				object value = row.get_Value(fieldIndex);
 
 				object convertedValue;
 				try

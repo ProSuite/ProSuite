@@ -11,6 +11,7 @@ using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Network
 {
@@ -33,7 +34,7 @@ namespace ProSuite.QA.Tests.Network
 		[UsedImplicitly]
 		public static TestIssueCodes Codes => _codes ?? (_codes = new FieldValueCode());
 
-		protected QaGroupNetworkBase([NotNull] IEnumerable<ITable> featureClasses)
+		protected QaGroupNetworkBase([NotNull] IEnumerable<IReadOnlyTable> featureClasses)
 			: base(featureClasses, false) { }
 	}
 
@@ -299,7 +300,7 @@ namespace ProSuite.QA.Tests.Network
 
 			[NotNull]
 			public static Dictionary<int, List<int>> GetTableFieldIndexes(
-				[NotNull] IList<ITable> tables,
+				[NotNull] IList<IReadOnlyTable> tables,
 				[NotNull] IList<GroupBy> groupBys)
 			{
 				int groupByCount = groupBys.Count;
@@ -308,7 +309,7 @@ namespace ProSuite.QA.Tests.Network
 
 				for (var tableIndex = 0; tableIndex < tables.Count; tableIndex++)
 				{
-					ITable table = tables[tableIndex];
+					IReadOnlyTable table = tables[tableIndex];
 
 					var fieldInfos = new List<int>(groupByCount);
 					result.Add(tableIndex, fieldInfos);
@@ -322,7 +323,7 @@ namespace ProSuite.QA.Tests.Network
 						{
 							throw new ArgumentException(
 								string.Format("Cannot find field {0} in table {1}",
-								              fieldName, ((IDataset) table).Name));
+								              fieldName, table.Name));
 						}
 
 						fieldInfos.Add(fieldIndex);
@@ -590,7 +591,7 @@ namespace ProSuite.QA.Tests.Network
 
 		private List<DataView> _groupConditionViews;
 
-		protected QaGroupNetworkBase([NotNull] IEnumerable<ITable> featureClasses,
+		protected QaGroupNetworkBase([NotNull] IEnumerable<IReadOnlyTable> featureClasses,
 		                             [NotNull] IList<string> groupBy)
 			: base(featureClasses)
 		{
@@ -830,14 +831,14 @@ namespace ProSuite.QA.Tests.Network
 
 		[CanBeNull]
 		private List<List<object>> ReadGroupValues(
-			[NotNull] IRow row, int tableIndex)
+			[NotNull] IReadOnlyRow row, int tableIndex)
 		{
 			return ReadGroupValues(row, tableIndex, out int _, false);
 		}
 
 		[CanBeNull]
 		private List<List<object>> ReadGroupValues(
-			[NotNull] IRow row, int tableIndex,
+			[NotNull] IReadOnlyRow row, int tableIndex,
 			out int errorCount, bool reportErrors)
 		{
 			List<int> fieldIndexes = TableFieldIndexes[tableIndex];
@@ -861,7 +862,7 @@ namespace ProSuite.QA.Tests.Network
 
 					if (nonUniqueValues != null && reportErrors)
 					{
-						string fieldName = row.Fields.get_Field(fieldIndex).Name;
+						string fieldName = row.Table.Fields.get_Field(fieldIndex).Name;
 
 						foreach (DistinctValue<object> nonUniqueValue in nonUniqueValues.Values)
 						{
@@ -871,7 +872,7 @@ namespace ProSuite.QA.Tests.Network
 
 							errorCount += ReportError(
 								description,
-								((IFeature) row).ShapeCopy,
+								((IReadOnlyFeature) row).ShapeCopy,
 								Codes[FieldValueCode.InvalidFieldValue_DuplicateGroupValueInField],
 								fieldName,
 								row);
@@ -905,7 +906,7 @@ namespace ProSuite.QA.Tests.Network
 		}
 
 		[NotNull]
-		private static List<object> ReadFieldValues([NotNull] IRow row,
+		private static List<object> ReadFieldValues([NotNull] IReadOnlyRow row,
 		                                            int fieldIndex,
 		                                            [CanBeNull] string[] separator)
 		{
@@ -934,12 +935,12 @@ namespace ProSuite.QA.Tests.Network
 
 		protected abstract TDirectedRow Reverse(TDirectedRow row);
 
-		private int ReportValueError([NotNull] IRow row,
+		private int ReportValueError([NotNull] IReadOnlyRow row,
 		                             int tableIndex,
 		                             int valueFieldIndex)
 		{
 			int tableFieldIndex = TableFieldIndexes[tableIndex][valueFieldIndex];
-			string fieldName = row.Fields.get_Field(tableFieldIndex).Name;
+			string fieldName = row.Table.Fields.get_Field(tableFieldIndex).Name;
 
 			string description = string.Format(
 				"Invalid value {0}='{1}' for separator {2}.",
@@ -948,7 +949,7 @@ namespace ProSuite.QA.Tests.Network
 				GroupBys[valueFieldIndex].GetFieldSeparator(tableIndex));
 
 			int errorCount = ReportError(description,
-			                             ((IFeature) row).ShapeCopy,
+			                             ((IReadOnlyFeature) row).ShapeCopy,
 			                             Codes[
 				                             FieldValueCode
 					                             .InvalidFieldValue_InvalidValueForSeparator],
@@ -975,7 +976,7 @@ namespace ProSuite.QA.Tests.Network
 		}
 
 		[NotNull]
-		protected IList<Group> GetGroups(IRow row, int tableIndex)
+		protected IList<Group> GetGroups(IReadOnlyRow row, int tableIndex)
 		{
 			List<List<object>> values = ReadGroupValues(row, tableIndex);
 
@@ -1125,12 +1126,12 @@ namespace ProSuite.QA.Tests.Network
 
 		[NotNull]
 		protected IEnumerable<InvolvedRow> GetUniqueInvolvedRows(
-			[NotNull] ICollection<IRow> rows)
+			[NotNull] ICollection<IReadOnlyRow> rows)
 		{
 			var result = new List<InvolvedRow>(rows.Count);
 			var set = new HashSet<InvolvedRow>();
 
-			foreach (IRow row in rows)
+			foreach (IReadOnlyRow row in rows)
 			{
 				foreach (InvolvedRow involvedRow in GetInvolvedRows(row))
 				{

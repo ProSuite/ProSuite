@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
@@ -11,6 +10,7 @@ using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Network;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -52,15 +52,15 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaBorderSense_0))]
 		public QaBorderSense(
-			[Doc(nameof(DocStrings.QaBorderSense_polylineClass))] IFeatureClass polylineClass,
+			[Doc(nameof(DocStrings.QaBorderSense_polylineClass))] IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaBorderSense_clockwise))] bool clockwise)
 			: this(new[] {polylineClass}, clockwise) { }
 
 		[Doc(nameof(DocStrings.QaBorderSense_1))]
 		public QaBorderSense(
-			[Doc(nameof(DocStrings.QaBorderSense_polylineClasses))] IList<IFeatureClass> polylineClasses,
+			[Doc(nameof(DocStrings.QaBorderSense_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses,
 			[Doc(nameof(DocStrings.QaBorderSense_clockwise))] bool clockwise)
-			: base(CastToTables((IEnumerable<IFeatureClass>) polylineClasses), true)
+			: base(CastToTables((IEnumerable<IReadOnlyFeatureClass>) polylineClasses), true)
 		{
 			_orientation = clockwise;
 			_grower = new RingGrower<DirectedRow>(DirectedRow.Reverse);
@@ -93,7 +93,7 @@ namespace ProSuite.QA.Tests
 				                          CreateUnclosedErrorGeometry(list),
 				                          Codes[Code.IncompleteLine],
 				                          TestUtils.GetShapeFieldName(
-					                          (IFeature) list.DirectedRows.First.Value.Row.Row),
+					                          (IReadOnlyFeature) list.DirectedRows.First.Value.Row.Row),
 				                          InvolvedRow.CreateList(
 					                          list.GetUniqueRows(InvolvedTables)));
 			}

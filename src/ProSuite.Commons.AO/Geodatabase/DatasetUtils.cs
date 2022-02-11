@@ -1913,16 +1913,30 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public static IGeometryDef GetGeometryDef([NotNull] IFeatureClass featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+			return GetGeometryDef(featureClass.Fields, featureClass.ShapeFieldName,
+			                      () => GetName(featureClass));
+		}
+		public static IGeometryDef GetGeometryDef([NotNull] IReadOnlyFeatureClass featureClass)
+		{
+			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+			return GetGeometryDef(featureClass.Fields, featureClass.ShapeFieldName,
+			                      () => featureClass.Name);
+		}
 
-			string shapeFieldName = featureClass.ShapeFieldName;
+		[NotNull]
+		private static IGeometryDef GetGeometryDef([NotNull] IFields fields, [NotNull] string shapeFieldName,
+		                                           Func<string> getDatasetName)
+		{
+			Assert.ArgumentNotNull(fields, nameof(fields));
+			Assert.ArgumentNotNull(shapeFieldName, nameof(shapeFieldName));
 
-			IFields fields = featureClass.Fields;
+
 			int shapeIndex = fields.FindField(shapeFieldName);
 
 			// TODO: test with QueryFeatureClass etc.
 			Assert.True(shapeIndex >= 0,
 			            "Shape field not found in FeatureClass {0}.",
-			            ((IDataset) featureClass).Name);
+			            getDatasetName());
 
 			IGeometryDef geometryDef = fields.Field[shapeIndex].GeometryDef;
 

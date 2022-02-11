@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
@@ -79,13 +78,13 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaSimpleGeometry_0))]
 		public QaSimpleGeometry(
-				[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))] IFeatureClass featureClass)
+				[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))] IReadOnlyFeatureClass featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, false, _defaultToleranceFactor) { }
 
 		[Doc(nameof(DocStrings.QaSimpleGeometry_1))]
 		public QaSimpleGeometry(
-				[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))] IFeatureClass featureClass,
+				[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))] IReadOnlyFeatureClass featureClass,
 				[Doc(nameof(DocStrings.QaSimpleGeometry_allowNonPlanarLines))]
 				bool allowNonPlanarLines)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -93,12 +92,12 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaSimpleGeometry_2))]
 		public QaSimpleGeometry(
-			[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSimpleGeometry_featureClass))] IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSimpleGeometry_allowNonPlanarLines))]
 			bool allowNonPlanarLines,
 			[Doc(nameof(DocStrings.QaSimpleGeometry_toleranceFactor))]
 			double toleranceFactor)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 			Assert.ArgumentCondition(toleranceFactor >= _minimumToleranceFactor &&
@@ -110,7 +109,7 @@ namespace ProSuite.QA.Tests
 
 			_shapeType = featureClass.ShapeType;
 			_allowNonPlanarLines = allowNonPlanarLines;
-			_spatialReference = ((IGeoDataset) featureClass).SpatialReference;
+			_spatialReference =  featureClass.SpatialReference;
 			_shapeFieldName = featureClass.ShapeFieldName;
 
 			Assert.ArgumentCondition(_spatialReference != null,
@@ -118,7 +117,7 @@ namespace ProSuite.QA.Tests
 
 			_xyResolution = SpatialReferenceUtils.GetXyResolution(_spatialReference);
 
-			_zResolution = DatasetUtils.HasZ(featureClass)
+			_zResolution = DatasetUtils.GetGeometryDef(featureClass).HasZ
 				               ? GeometryUtils.GetZResolution(_spatialReference)
 				               : double.NaN;
 
@@ -147,9 +146,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -235,7 +234,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private bool TryGetErrorGeometry([NotNull] IGeometry shape,
-		                                 [NotNull] IFeature feature,
+		                                 [NotNull] IReadOnlyFeature feature,
 		                                 bool allowNonPlanarLines,
 		                                 [NotNull] ISpatialReference targetSpatialReference,
 		                                 [CanBeNull] IssueCode issueCode,
@@ -507,13 +506,13 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		private static IGeometry GetErrorGeometry(
 			[NotNull] ICollection<WKSPointZ> changedPoints,
-			[NotNull] IFeature feature)
+			[NotNull] IReadOnlyFeature feature)
 		{
 			var changedPointArray = new WKSPointZ[changedPoints.Count];
 			changedPoints.CopyTo(changedPointArray, 0);
 
 			IGeometry result = GeometryFactory.CreateMultipoint(
-				changedPointArray, DatasetUtils.GetGeometryDef(feature));
+				changedPointArray, DatasetUtils.GetGeometryDef((IReadOnlyFeatureClass)feature.Table));
 
 			// duplicate points are returned for self-intersections -> simplify
 			GeometryUtils.Simplify(result);

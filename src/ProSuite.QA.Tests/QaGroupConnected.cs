@@ -310,7 +310,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaGroupConnected_0))]
 		public QaGroupConnected(
 			[Doc(nameof(DocStrings.QaGroupConnected_polylineClass))]
-			IFeatureClass polylineClass,
+			IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaGroupConnected_groupBy))] [NotNull]
 			IList<string> groupBy,
 			[Doc(nameof(DocStrings.QaGroupConnected_allowedShape))] ShapeAllowed allowedShape)
@@ -320,7 +320,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaGroupConnected_1))]
 		public QaGroupConnected(
 			[Doc(nameof(DocStrings.QaGroupConnected_polylineClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				polylineClasses,
 			[Doc(nameof(DocStrings.QaGroupConnected_groupBy))] [NotNull]
 			IList<string> groupBy,
@@ -333,7 +333,7 @@ namespace ProSuite.QA.Tests
 			[Doc(nameof(DocStrings.QaGroupConnected_minimumErrorConnectionLineLength))]
 			double
 				minimumErrorConnectionLineLength)
-			: base(CastToTables((IEnumerable<IFeatureClass>) polylineClasses), groupBy)
+			: base(CastToTables((IEnumerable<IReadOnlyFeatureClass>) polylineClasses), groupBy)
 		{
 			Assert.ArgumentNotNull(groupBy, nameof(groupBy));
 
@@ -404,7 +404,7 @@ namespace ProSuite.QA.Tests
 			IList<QueryFilterHelper> filterHelpers = null;
 			for (var tableIndex = 0; tableIndex < InvolvedTables.Count; tableIndex++)
 			{
-				ITable polylineClass = InvolvedTables[tableIndex];
+				IReadOnlyTable polylineClass = InvolvedTables[tableIndex];
 				UniqueIdProvider uniqueIdProvider = GetUniqueIdProvider(tableIndex);
 
 				#region init handlig of table constraint
@@ -427,7 +427,7 @@ namespace ProSuite.QA.Tests
 
 				#endregion
 
-				foreach (IRow row in new EnumCursor(polylineClass, filter, recycle: true))
+				foreach (IReadOnlyRow row in polylineClass.EnumRows(filter, recycle: true))
 				{
 					if (filterHelper?.MatchesConstraint(row) == false)
 					{
@@ -463,14 +463,14 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IQueryFilter GetQueryFilter([NotNull] ITable polylineClass,
+		private IQueryFilter GetQueryFilter([NotNull] IReadOnlyTable polylineClass,
 		                                    int tableIndex,
 		                                    [CanBeNull] UniqueIdProvider uniqueIdProvider,
 		                                    bool getAllFields)
 		{
 			IQueryFilter filter = new QueryFilterClass();
 
-			if (WorkspaceUtils.IsInMemoryWorkspace(((IDataset) polylineClass).Workspace)
+			if (WorkspaceUtils.IsInMemoryWorkspace(polylineClass.Workspace)
 			    || getAllFields)
 			{
 				// filter for inMemoryWorkspace does not allow specific subfields
@@ -487,7 +487,7 @@ namespace ProSuite.QA.Tests
 				}
 			}
 
-			filter.AddField(((IFeatureClass) polylineClass).ShapeFieldName);
+			filter.AddField(((IReadOnlyFeatureClass) polylineClass).ShapeFieldName);
 
 			foreach (GroupBy groupBy in GroupBys)
 			{
@@ -500,7 +500,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private List<ConnectedLine> GetLineParts(
-			[NotNull] IRow row, int tableIndex,
+			[NotNull] IReadOnlyRow row, int tableIndex,
 			[CanBeNull] UniqueIdProvider uniqueIdProvider)
 		{
 			bool? cancelledRow = null;
@@ -512,7 +512,7 @@ namespace ProSuite.QA.Tests
 			{
 				rowKeys = rowKeys ??
 				          (uniqueIdProvider != null
-					           ? uniqueIdProvider.GetKeys((IFeature) row)
+					           ? uniqueIdProvider.GetKeys((IReadOnlyFeature) row)
 					           : new[] {(int?) row.OID});
 				cancelledRow = cancelledRow ??
 				               RecheckMultiplePartIssues
@@ -746,7 +746,7 @@ namespace ProSuite.QA.Tests
 			return line.UniqueIdProvider?.GetInvolvedRows(line.Keys) ??
 			       new List<InvolvedRow>
 			       {
-				       new InvolvedRow(((IDataset) InvolvedTables[line.TableIndex]).Name,
+				       new InvolvedRow(InvolvedTables[line.TableIndex].Name,
 				                       line.RowIndex)
 			       };
 		}
@@ -1951,12 +1951,12 @@ namespace ProSuite.QA.Tests
 
 			int ITableIndexRow.TableIndex => TableIndex;
 
-			IRow ITableIndexRow.GetRow(IList<ITable> tableIndexTables)
+			IReadOnlyRow ITableIndexRow.GetRow(IList<IReadOnlyTable> tableIndexTables)
 			{
 				return tableIndexTables[TableIndex].GetRow(RowIndex);
 			}
 
-			IRow ITableIndexRow.CachedRow => null;
+			IReadOnlyRow ITableIndexRow.CachedRow => null;
 
 			public override string ToString()
 			{

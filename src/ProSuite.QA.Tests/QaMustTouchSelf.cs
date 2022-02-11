@@ -43,7 +43,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMustTouchSelf_0))]
 		public QaMustTouchSelf(
 			[Doc(nameof(DocStrings.QaMustTouchSelf_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMustTouchSelf_relevantRelationCondition))] [CanBeNull]
 			string
 				relevantRelationCondition)
@@ -55,12 +55,12 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMustTouchSelf_1))]
 		public QaMustTouchSelf(
 			[Doc(nameof(DocStrings.QaMustTouchSelf_featureClasses))] [NotNull]
-			ICollection<IFeatureClass>
+			ICollection<IReadOnlyFeatureClass>
 				featureClasses,
 			[Doc(nameof(DocStrings.QaMustTouchSelf_relevantRelationCondition))] [CanBeNull]
 			string
 				relevantRelationCondition)
-			: base(featureClasses.Cast<ITable>())
+			: base(featureClasses)
 		{
 			Assert.ArgumentNotNull(featureClasses, nameof(featureClasses));
 
@@ -72,7 +72,7 @@ namespace ProSuite.QA.Tests
 
 		#endregion
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (_queryFilter == null)
 			{
@@ -87,7 +87,7 @@ namespace ProSuite.QA.Tests
 					                              GetSqlCaseSensitivity());
 			}
 
-			var feature = (IFeature) row;
+			var feature = (IReadOnlyFeature) row;
 
 			if (_crossTileFeatureState.IsFeatureKnownOK(tableIndex, feature.OID))
 			{
@@ -105,7 +105,7 @@ namespace ProSuite.QA.Tests
 			     relatedTableIndex < _totalClassesCount;
 			     relatedTableIndex++)
 			{
-				foreach (IFeature relatedFeature in GetRelatedFeatures(shape, relatedTableIndex))
+				foreach (IReadOnlyFeature relatedFeature in GetRelatedFeatures(shape, relatedTableIndex))
 				{
 					if (! _relevantRelationCondition.IsFulfilled(row, tableIndex,
 					                                             relatedFeature, relatedTableIndex))
@@ -142,10 +142,10 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IEnumerable<IFeature> GetRelatedFeatures([NotNull] IGeometry shape,
+		private IEnumerable<IReadOnlyFeature> GetRelatedFeatures([NotNull] IGeometry shape,
 		                                                 int relatedTableIndex)
 		{
-			ITable table = InvolvedTables[relatedTableIndex];
+			IReadOnlyTable table = InvolvedTables[relatedTableIndex];
 
 			ISpatialFilter spatialFilter = _queryFilter[relatedTableIndex];
 			spatialFilter.Geometry = shape;
@@ -163,7 +163,7 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			var featureClass = (IFeatureClass) InvolvedTables[tableIndex];
+			var featureClass = (IReadOnlyFeatureClass) InvolvedTables[tableIndex];
 			List<int> oids = errorFeatures.Select(feature => feature.OID).ToList();
 
 			// TODO extract base class (QaRequiredSpatialRelationSelf)

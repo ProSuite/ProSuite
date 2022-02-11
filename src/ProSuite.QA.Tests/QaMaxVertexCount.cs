@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
@@ -8,6 +7,7 @@ using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -39,10 +39,10 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMaxVertexCount_0))]
 		public QaMaxVertexCount(
 			[Doc(nameof(DocStrings.QaMaxVertexCount_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMaxVertexCount_limit))] double limit,
 			[Doc(nameof(DocStrings.QaMaxVertexCount_perPart))] bool perPart)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
@@ -61,9 +61,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -103,7 +103,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int CheckPoints([NotNull] IPointCollection points,
-		                        [NotNull] IRow row)
+		                        [NotNull] IReadOnlyRow row)
 		{
 			int pointCount = points.PointCount;
 

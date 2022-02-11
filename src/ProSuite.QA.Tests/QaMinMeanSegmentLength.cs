@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
@@ -12,6 +11,7 @@ using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -49,7 +49,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMinMeanSegmentLength_0))]
 		public QaMinMeanSegmentLength(
 			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_limit))] double limit,
 			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_perPart))]
 			bool perPart)
@@ -60,12 +60,12 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMinMeanSegmentLength_0))]
 		public QaMinMeanSegmentLength(
 			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_limit))] double limit,
 			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_perPart))]
 			bool perPart,
 			[Doc(nameof(DocStrings.QaMinMeanSegmentLength_is3D))] bool is3D)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
@@ -73,7 +73,7 @@ namespace ProSuite.QA.Tests
 			_perPart = perPart;
 			_is3D = is3D;
 
-			_spatialReference = ((IGeoDataset) featureClass).SpatialReference;
+			_spatialReference = featureClass.SpatialReference;
 		}
 
 		#endregion
@@ -88,10 +88,10 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			using (
-				MeanSegmentLengthProvider provider = GetMeanSegmentLengthProvider((IFeature) row))
+				MeanSegmentLengthProvider provider = GetMeanSegmentLengthProvider((IReadOnlyFeature) row))
 			{
 				int errorCount = 0;
 				foreach (MeanSegmentLength meanSegmentLength in provider.ReadSegmentLength())
@@ -104,7 +104,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private MeanSegmentLengthProvider GetMeanSegmentLengthProvider(IFeature row)
+		private MeanSegmentLengthProvider GetMeanSegmentLengthProvider(IReadOnlyFeature row)
 		{
 			MeanSegmentLengthProvider provider;
 
@@ -140,7 +140,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int CheckLength([NotNull] MeanSegmentLength meanSegmentLength,
-		                        [NotNull] IRow row)
+		                        [NotNull] IReadOnlyRow row)
 		{
 			int segmentCount = meanSegmentLength.SegmentCount;
 			double length = meanSegmentLength.FullLength;

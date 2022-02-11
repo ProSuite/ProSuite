@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Coincidence;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -15,7 +15,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPartCoincidenceSelf_0))]
 		public QaPartCoincidenceSelf(
 				[Doc(nameof(DocStrings.QaPartCoincidence_featureClass))]
-				IFeatureClass featureClass,
+				IReadOnlyFeatureClass featureClass,
 				[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
 				[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength,
 				[Doc(nameof(DocStrings.QaPartCoincidence_is3D))] bool is3D)
@@ -25,7 +25,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPartCoincidenceSelf_0))]
 		public QaPartCoincidenceSelf(
 			[Doc(nameof(DocStrings.QaPartCoincidence_featureClass))]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
 			[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength,
 			[Doc(nameof(DocStrings.QaPartCoincidence_is3D))] bool is3D,
@@ -35,7 +35,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPartCoincidenceSelf_2))]
 		public QaPartCoincidenceSelf(
 				[Doc(nameof(DocStrings.QaPartCoincidence_featureClasses))]
-				IEnumerable<IFeatureClass>
+				IEnumerable<IReadOnlyFeatureClass>
 					featureClasses,
 				[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
 				[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength,
@@ -46,7 +46,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPartCoincidenceSelf_2))]
 		public QaPartCoincidenceSelf(
 			[Doc(nameof(DocStrings.QaPartCoincidence_featureClasses))]
-			IEnumerable<IFeatureClass> featureClasses,
+			IEnumerable<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
 			[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength,
 			[Doc(nameof(DocStrings.QaPartCoincidence_is3D))] bool is3D,
@@ -56,7 +56,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPartCoincidenceSelf_2))]
 		public QaPartCoincidenceSelf(
 				[Doc(nameof(DocStrings.QaPartCoincidence_featureClasses))]
-				IEnumerable<IFeatureClass>
+				IEnumerable<IReadOnlyFeatureClass>
 					featureClasses,
 				[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
 				[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength)
@@ -66,7 +66,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPartCoincidenceSelf_2))]
 		public QaPartCoincidenceSelf(
 			[Doc(nameof(DocStrings.QaPartCoincidence_featureClasses))]
-			IEnumerable<IFeatureClass> featureClasses,
+			IEnumerable<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
 			[Doc(nameof(DocStrings.QaPartCoincidence_minLength))] double minLength,
 			[Doc(nameof(DocStrings.QaPartCoincidence_tileSize))] double tileSize)
@@ -75,7 +75,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPartCoincidenceSelf_6))]
 		public QaPartCoincidenceSelf(
 			[Doc(nameof(DocStrings.QaPartCoincidence_featureClasses))]
-			IEnumerable<IFeatureClass> featureClasses,
+			IEnumerable<IReadOnlyFeatureClass> featureClasses,
 			[Doc(nameof(DocStrings.QaPartCoincidence_near))] double near,
 			[Doc(nameof(DocStrings.QaPartCoincidence_connectedMinLength))]
 			double connectedMinLength,
@@ -96,7 +96,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPartCoincidenceSelf_7))]
 		public QaPartCoincidenceSelf(
 			[Doc(nameof(DocStrings.QaPartCoincidence_featureClasses))]
-			ICollection<IFeatureClass> featureClasses,
+			ICollection<IReadOnlyFeatureClass> featureClasses,
 			double searchDistance,
 			[NotNull] IEnumerable<string> nearExpressions,
 			[NotNull] IEnumerable<string> connectedMinLengthExpressions,
@@ -116,7 +116,7 @@ namespace ProSuite.QA.Tests
 		/// needed to set sqlCaseSensitivity
 		/// </summary>
 		private QaPartCoincidenceSelf(
-			[NotNull] IEnumerable<IFeatureClass> featureClasses,
+			[NotNull] IEnumerable<IReadOnlyFeatureClass> featureClasses,
 			double searchDistance,
 			[NotNull] ExpressionBasedDistanceProvider nearExpressionsProvider,
 			[NotNull] ExpressionBasedDistanceProvider connectedMinLengthExpressionsProvider,
@@ -145,7 +145,7 @@ namespace ProSuite.QA.Tests
 			set { IgnoreNeighborConditionsSqlFullMatrix = value; }
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			IgnoreUndirected = false;
 			return base.ExecuteCore(row, tableIndex);

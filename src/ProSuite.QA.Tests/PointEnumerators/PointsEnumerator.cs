@@ -1,6 +1,6 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Geom;
@@ -10,12 +10,12 @@ namespace ProSuite.QA.Tests.PointEnumerators
 {
 	internal abstract class PointsEnumerator : IPointsEnumerator
 	{
-		protected PointsEnumerator([NotNull] IFeature feature)
+		protected PointsEnumerator([NotNull] IReadOnlyFeature feature)
 		{
 			Assert.ArgumentNotNull(feature, nameof(feature));
 
 			Feature = feature;
-			SpatialReference = ((IGeoDataset) feature.Class).SpatialReference;
+			SpatialReference = ((IReadOnlyGeoDataset) feature.Table).SpatialReference;
 
 			const bool bStandardUnits = true;
 			XYResolution =
@@ -23,7 +23,7 @@ namespace ProSuite.QA.Tests.PointEnumerators
 			XYTolerance = ((ISpatialReferenceTolerance) SpatialReference).XYTolerance;
 		}
 
-		public IFeature Feature { get; }
+		public IReadOnlyFeature Feature { get; }
 
 		public ISpatialReference SpatialReference { get; }
 

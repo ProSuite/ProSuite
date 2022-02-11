@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -71,8 +71,8 @@ namespace ProSuite.QA.Tests
 				expressionCaseSensitivity);
 		}
 
-		public int ReportErrors([NotNull] IRow row1, int tableIndex1,
-		                        [NotNull] IRow row2, int tableIndex2)
+		public int ReportErrors([NotNull] IReadOnlyRow row1, int tableIndex1,
+		                        [NotNull] IReadOnlyRow row2, int tableIndex2)
 		{
 			Assert.ArgumentNotNull(row1, nameof(row1));
 			Assert.ArgumentNotNull(row2, nameof(row2));
@@ -82,17 +82,17 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			var feature1 = (IFeature) row1;
-			var feature2 = (IFeature) row2;
+			var feature1 = (IReadOnlyFeature) row1;
+			var feature2 = (IReadOnlyFeature) row2;
 
 			return ReportErrors(feature1, tableIndex1, feature2, tableIndex2);
 		}
 
-		protected abstract int ReportErrors([NotNull] IFeature feature1, int tableIndex1,
-		                                    [NotNull] IFeature feature2, int tableIndex2);
+		protected abstract int ReportErrors([NotNull] IReadOnlyFeature feature1, int tableIndex1,
+		                                    [NotNull] IReadOnlyFeature feature2, int tableIndex2);
 
-		protected bool IsZRelationConditionFulfilled(IRow row1, int tableIndex1,
-		                                             IRow row2, int tableIndex2,
+		protected bool IsZRelationConditionFulfilled(IReadOnlyRow row1, int tableIndex1,
+		                                             IReadOnlyRow row2, int tableIndex2,
 		                                             double zDifference,
 		                                             out string conditionMessage)
 		{
@@ -117,9 +117,9 @@ namespace ProSuite.QA.Tests
 		[NotNull]
 		protected IErrorReporting ErrorReporting { get; }
 
-		protected double GetMinimumZDifference([NotNull] IFeature upper,
+		protected double GetMinimumZDifference([NotNull] IReadOnlyFeature upper,
 		                                       int tableIndexUpper,
-		                                       [NotNull] IFeature lower,
+		                                       [NotNull] IReadOnlyFeature lower,
 		                                       int tableIndexLower)
 		{
 			return _minimumZDifferenceExpression == null
@@ -129,9 +129,9 @@ namespace ProSuite.QA.Tests
 					         lower, tableIndexLower) ?? 0;
 		}
 
-		protected double GetMaximumZDifference([NotNull] IFeature upper,
+		protected double GetMaximumZDifference([NotNull] IReadOnlyFeature upper,
 		                                       int tableIndexUpper,
-		                                       [NotNull] IFeature lower,
+		                                       [NotNull] IReadOnlyFeature lower,
 		                                       int tableIndexLower)
 		{
 			return _maximumZDifferenceExpression == null
@@ -148,7 +148,7 @@ namespace ProSuite.QA.Tests
 				: base(zRelationConstraint, true, true, "U", "L", caseSensitive) { }
 
 			protected override void AddUnboundColumns(Action<string, Type> addColumn,
-			                                          IList<ITable> tables)
+			                                          IList<IReadOnlyTable> tables)
 			{
 				addColumn(_zDifferenceColumn, typeof(double));
 			}

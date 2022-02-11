@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
@@ -11,6 +10,7 @@ using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -45,16 +45,16 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaSmooth_0))]
 		public QaSmooth(
-			[Doc(nameof(DocStrings.QaSmooth_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaSmooth_featureClass))] IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaSmooth_limit))] double limit)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			_limit = limit;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			IGeometry shape = ((IFeature) row).Shape;
+			IGeometry shape = ((IReadOnlyFeature) row).Shape;
 
 			switch (shape.GeometryType)
 			{
@@ -69,7 +69,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		private int CheckPolygon([NotNull] IPolygon polygon, [NotNull] IRow row)
+		private int CheckPolygon([NotNull] IPolygon polygon, [NotNull] IReadOnlyRow row)
 		{
 			int errorCount = 0;
 
@@ -102,7 +102,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int CheckAllSegments([NotNull] ISegmentCollection segments,
-		                             [NotNull] IRow row)
+		                             [NotNull] IReadOnlyRow row)
 		{
 			int errorCount = 0;
 			var threeSegments = new ISegment[3];
@@ -129,7 +129,7 @@ namespace ProSuite.QA.Tests
 		/// <param name="row"></param>
 		/// <returns>Are segments smooth?</returns>
 		private int CheckThreeSegments([NotNull] IList<ISegment> threeSegments,
-		                               [NotNull] IRow row)
+		                               [NotNull] IReadOnlyRow row)
 		{
 			double anglechange = GeometryMathUtils.CalculateSmoothness(threeSegments[0],
 			                                                           threeSegments[1],

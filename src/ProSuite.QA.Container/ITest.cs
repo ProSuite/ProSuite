@@ -32,7 +32,13 @@ namespace ProSuite.QA.Container
 
 	public class ReadOnlyTableFactory : ReadOnlyFeatureClass
 	{
-		protected static Dictionary<ESRI.ArcGIS.Geodatabase.ITable, ReadOnlyTable> Cache = new Dictionary<ESRI.ArcGIS.Geodatabase.ITable, ReadOnlyTable>();
+		protected static readonly Dictionary<ESRI.ArcGIS.Geodatabase.ITable, ReadOnlyTable> Cache = new Dictionary<ESRI.ArcGIS.Geodatabase.ITable, ReadOnlyTable>();
+
+		public static ReadOnlyFeatureClass Create(
+			[NotNull] ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass)
+		{
+			return (ReadOnlyFeatureClass)Create((ESRI.ArcGIS.Geodatabase.ITable) featureClass);
+		}
 		public static ReadOnlyTable Create([NotNull] ESRI.ArcGIS.Geodatabase.ITable table)
 		{
 			if (!Cache.TryGetValue(table, out ReadOnlyTable existing))

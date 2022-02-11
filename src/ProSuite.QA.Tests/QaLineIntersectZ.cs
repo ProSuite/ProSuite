@@ -11,6 +11,7 @@ using ProSuite.QA.Tests.SpatialRelations;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -65,21 +66,21 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaLineIntersectZ_0))]
 		public QaLineIntersectZ(
 			[Doc(nameof(DocStrings.QaLineIntersectZ_polylineClasses))]
-			IList<IFeatureClass> polylineClasses,
+			IList<IReadOnlyFeatureClass> polylineClasses,
 			[Doc(nameof(DocStrings.QaLineIntersectZ_limit_0))] double limit)
 			: this(polylineClasses, limit, string.Empty) { }
 
 		[Doc(nameof(DocStrings.QaLineIntersectZ_1))]
 		public QaLineIntersectZ(
 			[Doc(nameof(DocStrings.QaLineIntersectZ_polylineClass))]
-			IFeatureClass polylineClass,
+			IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaLineIntersectZ_limit_0))] double limit)
 			: this(polylineClass, limit, string.Empty) { }
 
 		[Doc(nameof(DocStrings.QaLineIntersectZ_2))]
 		public QaLineIntersectZ(
 			[Doc(nameof(DocStrings.QaLineIntersectZ_polylineClass))]
-			IFeatureClass polylineClass,
+			IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaLineIntersectZ_limit_1))] double limit,
 			[Doc(nameof(DocStrings.QaLineIntersectZ_constraint))] string constraint)
 			: this(new[] {polylineClass}, limit, constraint) { }
@@ -87,7 +88,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaLineIntersectZ_3))]
 		public QaLineIntersectZ(
 			[Doc(nameof(DocStrings.QaLineIntersectZ_polylineClasses))]
-			IList<IFeatureClass> polylineClasses,
+			IList<IReadOnlyFeatureClass> polylineClasses,
 			[Doc(nameof(DocStrings.QaLineIntersectZ_limit_1))] double limit,
 			[Doc(nameof(DocStrings.QaLineIntersectZ_constraint))] string constraint)
 			: this(polylineClasses, limit, 0, constraint) { }
@@ -95,7 +96,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaLineIntersectZ_4))]
 		public QaLineIntersectZ(
 			[Doc(nameof(DocStrings.QaLineIntersectZ_polylineClasses))]
-			IList<IFeatureClass> polylineClasses,
+			IList<IReadOnlyFeatureClass> polylineClasses,
 			[Doc(nameof(DocStrings.QaLineIntersectZ_minimumZDifference))]
 			double minimumZDifference,
 			[Doc(nameof(DocStrings.QaLineIntersectZ_maximumZDifference))]
@@ -147,16 +148,16 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		protected override int FindErrors(IRow row1, int tableIndex1,
-		                                  IRow row2, int tableIndex2)
+		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
+										  IReadOnlyRow row2, int tableIndex2)
 		{
 			if (row1 == row2)
 			{
 				return NoError;
 			}
 
-			var feature1 = (IFeature) row1;
-			var feature2 = (IFeature) row2;
+			var feature1 = (IReadOnlyFeature) row1;
+			var feature2 = (IReadOnlyFeature) row2;
 
 			IGeometry crossings = GetLineCrossings(feature1, feature2);
 
@@ -182,8 +183,8 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static IGeometry GetLineCrossings([NotNull] IFeature feature1,
-		                                          [NotNull] IFeature feature2)
+		private static IGeometry GetLineCrossings([NotNull] IReadOnlyFeature feature1,
+		                                          [NotNull] IReadOnlyFeature feature2)
 		{
 			var shape1 = (IPolyline) feature1.Shape;
 			var shape2 = (IPolyline) feature2.Shape;
@@ -192,8 +193,8 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int CheckIntersection([NotNull] IPoint intersectionPoint,
-		                              [NotNull] IFeature feature1, int tableIndex1,
-		                              [NotNull] IFeature feature2, int tableIndex2)
+		                              [NotNull] IReadOnlyFeature feature1, int tableIndex1,
+		                              [NotNull] IReadOnlyFeature feature2, int tableIndex2)
 		{
 			double feature1Z = intersectionPoint.Z;
 
@@ -204,7 +205,7 @@ namespace ProSuite.QA.Tests
 
 			double feature2Z = GeometryUtils.GetZValueFromGeometry(
 				feature2.Shape, intersectionPoint,
-				GeometryUtils.GetXyTolerance(feature2));
+				GeometryUtils.GetXyTolerance(feature2.Shape.SpatialReference));
 
 			if (double.IsNaN(feature2Z))
 			{
@@ -260,9 +261,9 @@ namespace ProSuite.QA.Tests
 				                          intersectionPoint, dz));
 		}
 
-		private double GetMinimumZDifference([NotNull] IFeature upper,
+		private double GetMinimumZDifference([NotNull] IReadOnlyFeature upper,
 		                                     int tableIndexUpper,
-		                                     [NotNull] IFeature lower,
+		                                     [NotNull] IReadOnlyFeature lower,
 		                                     int tableIndexLower)
 		{
 			if (string.IsNullOrEmpty(_minimumZDifferenceExpressionSql))
@@ -282,9 +283,9 @@ namespace ProSuite.QA.Tests
 				       lower, tableIndexLower) ?? 0;
 		}
 
-		private double GetMaximumZDifference([NotNull] IFeature upper,
+		private double GetMaximumZDifference([NotNull] IReadOnlyFeature upper,
 		                                     int tableIndexUpper,
-		                                     [NotNull] IFeature lower,
+		                                     [NotNull] IReadOnlyFeature lower,
 		                                     int tableIndexLower)
 		{
 			if (string.IsNullOrEmpty(_maximumZDifferenceExpressionSql))
@@ -304,8 +305,8 @@ namespace ProSuite.QA.Tests
 				       lower, tableIndexLower) ?? 0;
 		}
 
-		private int CheckConstraint([NotNull] IRow upperRow, int upperTableIndex,
-		                            [NotNull] IRow lowerRow, int lowerTableIndex,
+		private int CheckConstraint([NotNull] IReadOnlyRow upperRow, int upperTableIndex,
+		                            [NotNull] IReadOnlyRow lowerRow, int lowerTableIndex,
 		                            [NotNull] IPoint intersection, double zDifference)
 		{
 			if (string.IsNullOrEmpty(_zOrderConstraintSql))
@@ -348,7 +349,7 @@ namespace ProSuite.QA.Tests
 		                        IssueCode issueCode,
 		                        [CanBeNull] string affectedComponent,
 		                        double zDifference,
-		                        params IRow[] rows)
+		                        params IReadOnlyRow[] rows)
 		{
 			// May be intersectionPoint == _intersectionPointTemplate
 			// --> create a clone, so that not the same errorGeometry instance exists in different errors
@@ -367,7 +368,7 @@ namespace ProSuite.QA.Tests
 				       caseSensitive) { }
 
 			protected override void AddUnboundColumns(Action<string, Type> addColumn,
-			                                          IList<ITable> tables)
+			                                          IList<IReadOnlyTable> tables)
 			{
 				addColumn(_zDifferenceColumn, typeof(double));
 			}

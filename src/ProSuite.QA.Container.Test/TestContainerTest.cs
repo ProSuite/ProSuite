@@ -1,7 +1,8 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -31,11 +32,11 @@ namespace ProSuite.QA.Container.Test
 		[Test]
 		public void CanExecuteContainerOneDiagonalLine()
 		{
-			IFeatureClass featureClass =
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass =
 				CreatePolylineFeatureClass("CanExecuteContainerOneDiagonalLine", 0.01);
 
 			// Create error Feature
-			IFeature row = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature row = featureClass.CreateFeature();
 			const double x = 2600000;
 			const double y = 1200000;
 			row.Shape = GeometryFactory.CreateLine(
@@ -46,7 +47,7 @@ namespace ProSuite.QA.Container.Test
 			var helper = new CanExecuteContainerHelper();
 			helper.ExpectedMaximumRowCountPerTile = 1;
 
-			var test = new VerifyingContainerTest((ITable) featureClass)
+			var test = new VerifyingContainerTest(ReadOnlyTableFactory.Create(featureClass))
 			           {
 				           OnExecuteCore = helper.ExecuteRow,
 				           OnCompleteTile = helper.CompleteTile
@@ -65,19 +66,19 @@ namespace ProSuite.QA.Container.Test
 		[Test]
 		public void CanExecuteContainerTwoVerticalLines()
 		{
-			IFeatureClass featureClass =
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass =
 				CreatePolylineFeatureClass("CanExecuteContainerTwoVerticalLines", 0.01);
 
 			// Create error Feature
 			const double x = 2600000;
 			const double y = 1200000;
-			IFeature row1 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature row1 = featureClass.CreateFeature();
 			row1.Shape = GeometryFactory.CreateLine(
 				GeometryFactory.CreatePoint(x, y),
 				GeometryFactory.CreatePoint(x, y + 800));
 			row1.Store();
 
-			IFeature row2 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature row2 = featureClass.CreateFeature();
 			row2.Shape = GeometryFactory.CreateLine(
 				GeometryFactory.CreatePoint(x + 1000, y),
 				GeometryFactory.CreatePoint(x + 1000, y + 800));
@@ -86,7 +87,7 @@ namespace ProSuite.QA.Container.Test
 			var helper = new CanExecuteContainerHelper();
 			helper.ExpectedMaximumRowCountPerTile = 1;
 
-			var test = new VerifyingContainerTest((ITable) featureClass)
+			var test = new VerifyingContainerTest(ReadOnlyTableFactory.Create(featureClass))
 			           {
 				           OnExecuteCore = helper.ExecuteRow,
 				           OnCompleteTile = helper.CompleteTile
@@ -105,26 +106,26 @@ namespace ProSuite.QA.Container.Test
 		[Test]
 		public void CanExecuteContainerLineNearTileBoundary()
 		{
-			IFeatureClass featureClass =
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass =
 				CreatePolylineFeatureClass("CanExecuteContainerLineNearTileBoundary", 0.01);
 
 			// Create error Feature
 			const double x = 2600000;
 			const double y = 1200000;
-			IFeature row1 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature row1 = featureClass.CreateFeature();
 			row1.Shape = GeometryFactory.CreateLine(
 				GeometryFactory.CreatePoint(x, y),
 				GeometryFactory.CreatePoint(x, y + 800));
 			row1.Store();
 
-			IFeature row2 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature row2 = featureClass.CreateFeature();
 			row2.Shape = GeometryFactory.CreateLine(
 				GeometryFactory.CreatePoint(x + 1000, y),
 				GeometryFactory.CreatePoint(x + 1000, y + 800));
 			row2.Store();
 
 			// row3 is within tile[0,0], but within the search tolerance from tile[0,1]
-			IFeature row3 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature row3 = featureClass.CreateFeature();
 			row3.Shape = GeometryFactory.CreateLine(
 				GeometryFactory.CreatePoint(x + 300, y),
 				GeometryFactory.CreatePoint(x + 300, y + 599.000));
@@ -133,7 +134,7 @@ namespace ProSuite.QA.Container.Test
 			var helper = new CanExecuteContainerHelper();
 			helper.ExpectedMaximumRowCountPerTile = 2;
 
-			var test = new VerifyingContainerTest((ITable) featureClass)
+			var test = new VerifyingContainerTest(ReadOnlyTableFactory.Create(featureClass))
 			           {
 				           OnExecuteCore = helper.ExecuteRow,
 				           OnCompleteTile = helper.CompleteTile,
@@ -155,7 +156,7 @@ namespace ProSuite.QA.Container.Test
 		[Test]
 		public void CanExecuteContainePointFeatures()
 		{
-			IFeatureClass featureClass =
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass =
 				CreatePointFeatureClass("CanExecuteContainePointFeatures", 0.01);
 
 			// Create error Feature
@@ -171,7 +172,7 @@ namespace ProSuite.QA.Container.Test
 			var helper = new CanExecuteContainerHelper();
 			helper.ExpectedMaximumRowCountPerTile = 1;
 
-			var test = new VerifyingContainerTest((ITable) featureClass)
+			var test = new VerifyingContainerTest(ReadOnlyTableFactory.Create(featureClass))
 			           {
 				           OnExecuteCore = helper.ExecuteRow,
 				           OnCompleteTile = helper.CompleteTile
@@ -189,28 +190,28 @@ namespace ProSuite.QA.Container.Test
 		[Test]
 		public void CanHandleCachedPointCount()
 		{
-			IFeatureClass featureClass = CreatePolylineFeatureClass(
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass = CreatePolylineFeatureClass(
 				"CanHandleCachedPointCount", 0.01);
 
 			const double x = 2600000;
 			const double y = 1200000;
 			// Create features
 
-			IFeature in4Tiles = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature in4Tiles = featureClass.CreateFeature();
 			in4Tiles.Shape =
 				GeometryFactory.CreateLine(
 					GeometryFactory.CreatePoint(x, y),
 					GeometryFactory.CreatePoint(x + 1000, y + 800));
 			in4Tiles.Store();
 
-			IFeature inTiles_00_01 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature inTiles_00_01 = featureClass.CreateFeature();
 			inTiles_00_01.Shape =
 				GeometryFactory.CreateLine(
 					GeometryFactory.CreatePoint(x + 100, y + 100),
 					GeometryFactory.CreatePoint(x + 800, y + 200));
 			inTiles_00_01.Store();
 
-			IFeature inTiles_00_10 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature inTiles_00_10 = featureClass.CreateFeature();
 			inTiles_00_10.Shape =
 				GeometryFactory.CreateLine(
 					GeometryFactory.CreatePoint(x + 100, y + 100),
@@ -223,7 +224,7 @@ namespace ProSuite.QA.Container.Test
 					GeometryFactory.CreatePoint(x + 300, y + 800));
 			inTiles_00_10.Store();
 
-			IFeature inTiles_01_11 = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature inTiles_01_11 = featureClass.CreateFeature();
 			inTiles_01_11.Shape =
 				GeometryFactory.CreateLine(
 					GeometryFactory.CreatePoint(x + 800, y + 100),
@@ -232,7 +233,7 @@ namespace ProSuite.QA.Container.Test
 			inTiles_01_11.Store();
 
 			var helper = new CanHandleCachedPointCountHelper();
-			var test = new VerifyingContainerTest((ITable) featureClass)
+			var test = new VerifyingContainerTest(ReadOnlyTableFactory.Create(featureClass))
 			           {
 				           OnExecuteCore = helper.HandleRows,
 				           OnCompleteTile = helper.HandleTiles
@@ -311,7 +312,7 @@ namespace ProSuite.QA.Container.Test
 		[Test]
 		public void CanIndexManyCoincidentPointsTest()
 		{
-			IFeatureClass featureClass =
+			ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass =
 				CreatePointFeatureClass("CanIndexManyCoincidentPointsTest", 0.001);
 
 			AddPointFeature(featureClass, 2637000, 1193000);
@@ -325,7 +326,7 @@ namespace ProSuite.QA.Container.Test
 			}
 
 			// when encountering many coincident points, the BoxTree for the features must not be split "eternally"
-			var test = new CacheTest(featureClass);
+			var test = new CacheTest(ReadOnlyTableFactory.Create(featureClass));
 			var container = new TestContainer.TestContainer();
 			container.AddTest(test);
 
@@ -333,7 +334,7 @@ namespace ProSuite.QA.Container.Test
 		}
 
 		[NotNull]
-		private IFeatureClass CreatePolylineFeatureClass([NotNull] string name,
+		private ESRI.ArcGIS.Geodatabase.IFeatureClass CreatePolylineFeatureClass([NotNull] string name,
 		                                                 double tolerance)
 		{
 			return TestWorkspaceUtils.CreateSimpleFeatureClass(
@@ -344,7 +345,7 @@ namespace ProSuite.QA.Container.Test
 		}
 
 		[NotNull]
-		private IFeatureClass CreatePointFeatureClass([NotNull] string name,
+		private ESRI.ArcGIS.Geodatabase.IFeatureClass CreatePointFeatureClass([NotNull] string name,
 		                                              double tolerance)
 		{
 			return TestWorkspaceUtils.CreateSimpleFeatureClass(
@@ -353,26 +354,26 @@ namespace ProSuite.QA.Container.Test
 				esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95, tolerance);
 		}
 
-		private static void AddPointFeature([NotNull] IFeatureClass featureClass,
+		private static void AddPointFeature([NotNull] ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass,
 		                                    double x,
 		                                    double y)
 		{
-			IFeature feature = featureClass.CreateFeature();
+			ESRI.ArcGIS.Geodatabase.IFeature feature = featureClass.CreateFeature();
 			feature.Shape = GeometryFactory.CreatePoint(x, y);
 			feature.Store();
 		}
 
 		private class CacheTest : ContainerTest
 		{
-			public CacheTest(IFeatureClass dummy)
-				: base((ITable) dummy) { }
+			public CacheTest(IReadOnlyFeatureClass dummy)
+				: base((IReadOnlyTable) dummy) { }
 
 			public override bool IsQueriedTable(int tableIndex)
 			{
 				return true;
 			}
 
-			protected override int ExecuteCore(IRow row, int tableIndex)
+			protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 			{
 				return 0;
 			}
@@ -398,14 +399,14 @@ namespace ProSuite.QA.Container.Test
 				return 0;
 			}
 
-			public int ExecuteRow(IRow row, int tableIndex)
+			public int ExecuteRow(IReadOnlyRow row, int tableIndex)
 			{
 				_rowTileCount++;
 				ExecuteRowCount++;
 				return 0;
 			}
 
-			public int CachedRow(TileInfo args, IRow row, int tableIndex)
+			public int CachedRow(TileInfo args, IReadOnlyRow row, int tableIndex)
 			{
 				CachedRowCount++;
 				return 0;
@@ -439,7 +440,7 @@ namespace ProSuite.QA.Container.Test
 				return 0;
 			}
 
-			public int HandleRows(IRow row, int tableIndex)
+			public int HandleRows(IReadOnlyRow row, int tableIndex)
 			{
 				Assert.IsNotNull(row);
 

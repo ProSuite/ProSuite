@@ -1,15 +1,15 @@
 using System;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container.TestContainer;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.PointEnumerators
 {
 	public static class PointsEnumeratorFactory
 	{
 		[NotNull]
-		public static IPointsEnumerator Create([NotNull] IFeature feature,
+		public static IPointsEnumerator Create([NotNull] IReadOnlyFeature feature,
 		                                       [CanBeNull] IEnvelope tileEnvelope)
 		{
 			var indexedSegmentsFeature = feature as IIndexedSegmentsFeature;

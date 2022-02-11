@@ -55,17 +55,17 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaSliverPolygon_0))]
 		public QaSliverPolygon(
-				[Doc(nameof(DocStrings.QaSliverPolygon_polygonClass))] IFeatureClass polygonClass,
+				[Doc(nameof(DocStrings.QaSliverPolygon_polygonClass))] IReadOnlyFeatureClass polygonClass,
 				[Doc(nameof(DocStrings.QaSliverPolygon_limit))] double limit)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polygonClass, limit, -1) { }
 
 		[Doc(nameof(DocStrings.QaSliverPolygon_0))]
 		public QaSliverPolygon(
-			[Doc(nameof(DocStrings.QaSliverPolygon_polygonClass))] IFeatureClass polygonClass,
+			[Doc(nameof(DocStrings.QaSliverPolygon_polygonClass))] IReadOnlyFeatureClass polygonClass,
 			[Doc(nameof(DocStrings.QaSliverPolygon_limit))] double limit,
 			[Doc(nameof(DocStrings.QaSliverPolygon_maxArea))] double maxArea)
-			: base((ITable) polygonClass)
+			: base(polygonClass)
 		{
 			Assert.ArgumentNotNull(polygonClass, nameof(polygonClass));
 			Assert.ArgumentCondition(
@@ -77,8 +77,8 @@ namespace ProSuite.QA.Tests
 			_maxArea = maxArea;
 			_shapeFieldName = polygonClass.ShapeFieldName;
 
-			IField areaField = DatasetUtils.GetAreaField(polygonClass);
-			IField lengthField = DatasetUtils.GetLengthField(polygonClass);
+			IField areaField = polygonClass.AreaField;
+			IField lengthField = polygonClass.LengthField;
 
 			_areaFieldIndex = areaField == null
 				                  ? -1
@@ -99,7 +99,7 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (_maxArea <= 0 && _limit <= 0)
 			{
@@ -107,7 +107,7 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -199,7 +199,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private SliverAreaProvider GetSliverAreaProvider([NotNull] IFeature feature)
+		private SliverAreaProvider GetSliverAreaProvider([NotNull] IReadOnlyFeature feature)
 		{
 			Assert.ArgumentNotNull(feature, nameof(feature));
 
@@ -231,7 +231,7 @@ namespace ProSuite.QA.Tests
 
 		private class FromFieldsSliverAreaProvider : SliverAreaProvider
 		{
-			private readonly IFeature _feature;
+			private readonly IReadOnlyFeature _feature;
 			private readonly int _areaFieldIndex;
 			private readonly int _lengthFieldIndex;
 
@@ -239,7 +239,7 @@ namespace ProSuite.QA.Tests
 
 			public override void Dispose() { }
 
-			public FromFieldsSliverAreaProvider([NotNull] IFeature feature,
+			public FromFieldsSliverAreaProvider([NotNull] IReadOnlyFeature feature,
 			                                    int areaFieldIndex,
 			                                    int lengthFieldIndex)
 			{

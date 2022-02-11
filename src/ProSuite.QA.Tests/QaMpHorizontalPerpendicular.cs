@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
@@ -13,6 +12,7 @@ using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -55,7 +55,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMpHorizontalPerpendicular_0))]
 		public QaMpHorizontalPerpendicular(
 			[Doc(nameof(DocStrings.QaMpHorizontalPerpendicular_multiPatchClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				multiPatchClass,
 			[Doc(nameof(DocStrings.QaMpHorizontalPerpendicular_nearAngle))]
 			double nearAngle,
@@ -67,7 +67,7 @@ namespace ProSuite.QA.Tests
 			bool connectedOnly,
 			[Doc(nameof(DocStrings.QaMpHorizontalPerpendicular_connectedTolerance))]
 			double connectedTolerance)
-			: base((ITable) multiPatchClass)
+			: base(multiPatchClass)
 		{
 			_connectedOnly = connectedOnly;
 			_connectedTolerance = connectedTolerance;
@@ -75,7 +75,7 @@ namespace ProSuite.QA.Tests
 			_azimuthToleranceRad = MathUtils.ToRadians(azimuthTolerance);
 			_horizontalToleranceRad = MathUtils.ToRadians(horizontalTolerance);
 
-			_xyResolution = GeometryUtils.GetXyResolution(multiPatchClass);
+			_xyResolution = SpatialReferenceUtils.GetXyResolution(multiPatchClass.SpatialReference);
 
 			AngleUnit = AngleUnit.Degree;
 		}
@@ -90,10 +90,10 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			var errorCount = 0;
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return errorCount;
@@ -141,7 +141,7 @@ namespace ProSuite.QA.Tests
 
 		private int ReportErrors(
 			[NotNull] IEnumerable<PerpendicularSegmentPair> errorSegments,
-			[NotNull] IRow row)
+			[NotNull] IReadOnlyRow row)
 		{
 			var errorCount = 0;
 			var unhandledPairs = new List<PerpendicularSegmentPair>(errorSegments);
@@ -160,7 +160,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int ReportError([NotNull] IList<PerpendicularSegmentPair> relatedPairs,
-		                        [NotNull] IRow row)
+		                        [NotNull] IReadOnlyRow row)
 		{
 			if (relatedPairs.Count == 0)
 			{
@@ -219,7 +219,7 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private PerpendicularSegmentsProvider GetPerpendicularSegmentsProvider(
-			IFeature feature)
+			IReadOnlyFeature feature)
 		{
 			var indexedFeature = feature as IIndexedMultiPatchFeature;
 			IIndexedMultiPatch multiPatch = indexedFeature?.IndexedMultiPatch ??

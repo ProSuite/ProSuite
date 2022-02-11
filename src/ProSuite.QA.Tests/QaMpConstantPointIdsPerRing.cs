@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
@@ -8,6 +7,7 @@ using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -45,11 +45,11 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMpConstantPointIdsPerRing_0))]
 		public QaMpConstantPointIdsPerRing(
 			[Doc(nameof(DocStrings.QaMpConstantPointIdsPerRing_multiPatchClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				multiPatchClass,
 			[Doc(nameof(DocStrings.QaMpConstantPointIdsPerRing_includeInnerRings))]
 			bool includeInnerRings)
-			: base((ITable) multiPatchClass)
+			: base(multiPatchClass)
 		{
 			_includeInnerRings = includeInnerRings;
 		}
@@ -66,9 +66,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -116,7 +116,7 @@ namespace ProSuite.QA.Tests
 		private int ReportError(
 			[NotNull] Rings rings,
 			[NotNull] Dictionary<int, List<int>> pointIndexesById,
-			[NotNull] IRow row)
+			[NotNull] IReadOnlyRow row)
 		{
 			int firstId;
 			if (RingsHaveDifferentIds(pointIndexesById, rings, out firstId))
@@ -158,7 +158,7 @@ namespace ProSuite.QA.Tests
 			[NotNull] Rings rings,
 			[NotNull] IDictionary<int, List<int>> pointIndexesById,
 			int maxPointsId,
-			[NotNull] IRow row)
+			[NotNull] IReadOnlyRow row)
 		{
 			int totalPointCount = 0;
 			int errorPointCount = 0;
@@ -210,7 +210,7 @@ namespace ProSuite.QA.Tests
 			[NotNull] IDictionary<int, List<int>> pointIndexesById,
 			int maxPointsId,
 			[NotNull] Rings rings,
-			[NotNull] IRow row)
+			[NotNull] IReadOnlyRow row)
 		{
 			object missing = Type.Missing;
 

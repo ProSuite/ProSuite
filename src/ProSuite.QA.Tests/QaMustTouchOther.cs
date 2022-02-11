@@ -5,6 +5,7 @@ using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -25,9 +26,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMustTouchOther_0))]
 		public QaMustTouchOther(
 			[Doc(nameof(DocStrings.QaMustTouchOther_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMustTouchOther_otherFeatureClass))] [NotNull]
-			IFeatureClass
+			IReadOnlyFeatureClass
 				otherFeatureClass,
 			[Doc(nameof(DocStrings.QaMustTouchOther_relevantRelationCondition))] [CanBeNull]
 			string
@@ -37,10 +38,10 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMustTouchOther_1))]
 		public QaMustTouchOther(
 			[Doc(nameof(DocStrings.QaMustTouchOther_featureClass))] [NotNull]
-			ICollection<IFeatureClass>
+			ICollection<IReadOnlyFeatureClass>
 				featureClasses,
 			[Doc(nameof(DocStrings.QaMustTouchOther_otherFeatureClass))] [NotNull]
-			ICollection<IFeatureClass>
+			ICollection<IReadOnlyFeatureClass>
 				otherFeatureClasses,
 			[Doc(nameof(DocStrings.QaMustTouchOther_relevantRelationCondition))] [CanBeNull]
 			string
@@ -53,7 +54,7 @@ namespace ProSuite.QA.Tests
 			return new SimpleCrossTileFeatureState();
 		}
 
-		protected override string GetErrorDescription(IFeature feature,
+		protected override string GetErrorDescription(IReadOnlyFeature feature,
 		                                              int tableIndex,
 		                                              PendingFeature pendingFeature,
 		                                              out IssueCode issueCode,
@@ -63,7 +64,7 @@ namespace ProSuite.QA.Tests
 				            ? Codes[MustTouchIssueCodes.NoTouchingFeature_WithFulfilledConstraint]
 				            : Codes[MustTouchIssueCodes.NoTouchingFeature];
 
-			affectedComponent = ((IFeatureClass) feature.Class).ShapeFieldName;
+			affectedComponent = ((IReadOnlyFeatureClass) feature.Table).ShapeFieldName;
 
 			return HasRelevantRelationCondition
 				       ? "Feature is not touched by another feature that fulfills the constraint"

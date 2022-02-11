@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
@@ -13,6 +12,7 @@ using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.QA.Tests.Network;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -26,7 +26,7 @@ namespace ProSuite.QA.Tests
 	[PolygonNetworkTest]
 	public class QaCentroids : QaNetworkBase
 	{
-		private List<IRow> _centroids;
+		private List<IReadOnlyRow> _centroids;
 
 		private string _constraint;
 		private MultiTableView _constraintHelper;
@@ -57,15 +57,15 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaCentroids_0))]
 		public QaCentroids(
-				[Doc(nameof(DocStrings.QaCentroids_polylineClass))] IFeatureClass polylineClass,
-				[Doc(nameof(DocStrings.QaCentroids_pointClass))] IFeatureClass pointClass)
+				[Doc(nameof(DocStrings.QaCentroids_polylineClass))] IReadOnlyFeatureClass polylineClass,
+				[Doc(nameof(DocStrings.QaCentroids_pointClass))] IReadOnlyFeatureClass pointClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClass, pointClass, null) { }
 
 		[Doc(nameof(DocStrings.QaCentroids_0))]
 		public QaCentroids(
-			[Doc(nameof(DocStrings.QaCentroids_polylineClass))] IFeatureClass polylineClass,
-			[Doc(nameof(DocStrings.QaCentroids_pointClass))] IFeatureClass pointClass,
+			[Doc(nameof(DocStrings.QaCentroids_polylineClass))] IReadOnlyFeatureClass polylineClass,
+			[Doc(nameof(DocStrings.QaCentroids_pointClass))] IReadOnlyFeatureClass pointClass,
 			[Doc(nameof(DocStrings.QaCentroids_constraint))] string constraint)
 			: base(CastToTables(polylineClass, pointClass), false)
 		{
@@ -74,15 +74,15 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaCentroids_2))]
 		public QaCentroids(
-				[Doc(nameof(DocStrings.QaCentroids_polylineClasses))] IList<IFeatureClass> polylineClasses,
-				[Doc(nameof(DocStrings.QaCentroids_pointClasses))] IList<IFeatureClass> pointClasses)
+				[Doc(nameof(DocStrings.QaCentroids_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses,
+				[Doc(nameof(DocStrings.QaCentroids_pointClasses))] IList<IReadOnlyFeatureClass> pointClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(polylineClasses, pointClasses, null) { }
 
 		[Doc(nameof(DocStrings.QaCentroids_2))]
 		public QaCentroids(
-			[Doc(nameof(DocStrings.QaCentroids_polylineClasses))] IList<IFeatureClass> polylineClasses,
-			[Doc(nameof(DocStrings.QaCentroids_pointClasses))] IList<IFeatureClass> pointClasses,
+			[Doc(nameof(DocStrings.QaCentroids_polylineClasses))] IList<IReadOnlyFeatureClass> polylineClasses,
+			[Doc(nameof(DocStrings.QaCentroids_pointClasses))] IList<IReadOnlyFeatureClass> pointClasses,
 			[Doc(nameof(DocStrings.QaCentroids_constraint))] string constraint)
 			: base(CastToTables(polylineClasses, pointClasses), false)
 		{
@@ -95,7 +95,7 @@ namespace ProSuite.QA.Tests
 				new RingGrower<DirectedRow>(
 					DirectedRow.Reverse);
 			_grower.GeometryCompleted += RingCompleted;
-			_centroids = new List<IRow>();
+			_centroids = new List<IReadOnlyRow>();
 			_innerRings = new List<LineList<DirectedRow>>();
 			_outerRings = new List<LineList<DirectedRow>>();
 			KeepRows = true;
@@ -103,9 +103,9 @@ namespace ProSuite.QA.Tests
 			_constraint = constraint;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			IGeometry geometry = ((IFeature) row).Shape;
+			IGeometry geometry = ((IReadOnlyFeature) row).Shape;
 
 			var errorCount = 0;
 			if (geometry is IPoint)
@@ -201,9 +201,9 @@ namespace ProSuite.QA.Tests
 		{
 			var errorCount = 0;
 
-			var unprocessedCentroids = new List<IRow>();
+			var unprocessedCentroids = new List<IReadOnlyRow>();
 
-			foreach (IRow pointRow in _centroids)
+			foreach (IReadOnlyRow pointRow in _centroids)
 			{
 				int side;
 				TopologicalLine line;
@@ -221,7 +221,7 @@ namespace ProSuite.QA.Tests
 					Assert.Null(poly, "poly is not null");
 
 					const string description = "Centroid lies on border";
-					errorCount += ReportError(description, ((IFeature) pointRow).Shape,
+					errorCount += ReportError(description, ((IReadOnlyFeature) pointRow).Shape,
 					                          Codes[Code.CentroidLiesOnBorder],
 					                          TestUtils.GetShapeFieldName(pointRow),
 					                          pointRow);
@@ -286,9 +286,9 @@ namespace ProSuite.QA.Tests
 
 			IPointCollection multiPoint = new MultipointClass();
 
-			foreach (IRow pointRow in poly.Centroids)
+			foreach (IReadOnlyRow pointRow in poly.Centroids)
 			{
-				multiPoint.AddPoint(((IFeature) pointRow).Shape as Point, ref missing,
+				multiPoint.AddPoint(((IReadOnlyFeature) pointRow).Shape as Point, ref missing,
 				                    ref missing);
 			}
 
@@ -298,18 +298,18 @@ namespace ProSuite.QA.Tests
 		/// <summary>
 		/// Centroids near Tile borders may exist twice
 		/// </summary>
-		private static int GetReducedCount([NotNull] ICollection<IRow> centroids)
+		private static int GetReducedCount([NotNull] ICollection<IReadOnlyRow> centroids)
 		{
 			if (centroids.Count < 2)
 			{
 				return centroids.Count;
 			}
 
-			var reducedList = new Dictionary<BaseRow, IRow>(new BaseRowComparer());
+			var reducedList = new Dictionary<BaseRow, IReadOnlyRow>(new BaseRowComparer());
 
-			foreach (IRow row in centroids)
+			foreach (IReadOnlyRow row in centroids)
 			{
-				var centroid = (IFeature) row;
+				var centroid = (IReadOnlyFeature) row;
 				var add = new CachedRow(centroid);
 				if (reducedList.ContainsKey(add) == false)
 				{
@@ -328,7 +328,7 @@ namespace ProSuite.QA.Tests
 
 			foreach (LineListPolygon<DirectedRow> poly in polyList)
 			{
-				IRow centroid = GetUniqueCentroid(poly);
+				IReadOnlyRow centroid = GetUniqueCentroid(poly);
 
 				errorCount += poly.OuterRing.DirectedRows.Sum(
 					line => CheckConstraint(line, centroid));
@@ -344,7 +344,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[CanBeNull]
-		private static IRow GetUniqueCentroid([NotNull] LineListPolygon lineListPolygon)
+		private static IReadOnlyRow GetUniqueCentroid([NotNull] LineListPolygon lineListPolygon)
 		{
 			return lineListPolygon.Centroids.Count != 1
 				       ? null
@@ -352,7 +352,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int CheckConstraint([NotNull] DirectedRow line,
-		                            [CanBeNull] IRow centroid)
+		                            [CanBeNull] IReadOnlyRow centroid)
 		{
 			if (_constraintHelper == null && centroid != null)
 			{
@@ -366,7 +366,7 @@ namespace ProSuite.QA.Tests
 
 			if (line.RightCentroid != null)
 			{
-				var lineFeature = (IFeature) line.Row.Row;
+				var lineFeature = (IReadOnlyFeature) line.Row.Row;
 
 				if (centroid != null &&
 				    ! _constraintHelper.MatchesConstraint(lineFeature,
@@ -394,8 +394,8 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private MultiTableView CreateConstraintHelper([NotNull] ITable lineTable,
-		                                              [NotNull] ITable polyTable)
+		private MultiTableView CreateConstraintHelper([NotNull] IReadOnlyTable lineTable,
+		                                              [NotNull] IReadOnlyTable polyTable)
 		{
 			return TableViewFactory.Create(
 				new[] {lineTable, polyTable, polyTable},

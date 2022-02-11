@@ -29,7 +29,7 @@ namespace ProSuite.QA.Tests
 		/// <param name="featureClass">The feature class.</param>
 		/// <param name="limit">The length limit.</param>
 		/// <param name="is3D">if set to <c>true</c> [is3 D].</param>
-		protected QaLengthBase([NotNull] IFeatureClass featureClass,
+		protected QaLengthBase([NotNull] IReadOnlyFeatureClass featureClass,
 		                       double limit,
 		                       bool is3D)
 			: this(featureClass, limit, is3D, false) { }
@@ -39,7 +39,7 @@ namespace ProSuite.QA.Tests
 		/// </summary>
 		/// <param name="featureClass">The feature class.</param>
 		/// <param name="limit">The limit.</param>
-		protected QaLengthBase([NotNull] IFeatureClass featureClass,
+		protected QaLengthBase([NotNull] IReadOnlyFeatureClass featureClass,
 		                       double limit)
 			: this(featureClass, limit, false) { }
 
@@ -50,11 +50,11 @@ namespace ProSuite.QA.Tests
 		/// <param name="limit">The limit.</param>
 		/// <param name="is3D">if set to <c>true</c> [is3 D].</param>
 		/// <param name="perPart">if set to <c>true</c> [per part].</param>
-		protected QaLengthBase([NotNull] IFeatureClass featureClass,
+		protected QaLengthBase([NotNull] IReadOnlyFeatureClass featureClass,
 		                       double limit,
 		                       bool is3D,
 		                       bool perPart)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
@@ -63,7 +63,7 @@ namespace ProSuite.QA.Tests
 			_perPart = perPart;
 			_shapeFieldName = featureClass.ShapeFieldName;
 
-			IField lengthField = DatasetUtils.GetLengthField(featureClass);
+			IField lengthField = featureClass.LengthField;
 
 			_lengthFieldIndex = lengthField == null
 				                    ? -1
@@ -85,9 +85,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 
 			if (feature == null)
 			{
@@ -140,19 +140,19 @@ namespace ProSuite.QA.Tests
 
 		protected abstract int CheckLength(double length,
 		                                   [NotNull] ICurve curve,
-		                                   [NotNull] IRow row);
+		                                   [NotNull] IReadOnlyRow row);
 
 		protected int ReportError([NotNull] ICurve curve,
 		                          [NotNull] string description,
 		                          [CanBeNull] IssueCode issueCode,
-		                          [NotNull] IRow row)
+		                          [NotNull] IReadOnlyRow row)
 		{
 			return ReportError(description, GetErrorGeometry(curve),
 			                   issueCode, _shapeFieldName,
 			                   row);
 		}
 
-		private int CheckLength([NotNull] IRow row, [NotNull] ICurve curve)
+		private int CheckLength([NotNull] IReadOnlyRow row, [NotNull] ICurve curve)
 		{
 			double length = GeometryUtils.GetLength(curve, _is3D);
 

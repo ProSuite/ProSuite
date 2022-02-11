@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
@@ -50,16 +49,16 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaMeasures_0))]
 		public QaMeasures(
 				[Doc(nameof(DocStrings.QaMeasures_featureClass))] [NotNull]
-				IFeatureClass featureClass)
+				IReadOnlyFeatureClass featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, double.NaN) { }
 
 		[Doc(nameof(DocStrings.QaMeasures_1))]
 		public QaMeasures(
 			[Doc(nameof(DocStrings.QaMeasures_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMeasures_invalidValue))] double invalidValue)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
@@ -87,14 +86,14 @@ namespace ProSuite.QA.Tests
 			return double.IsNaN(_invalidValue) && mAware.MSimple;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			if (! _hasM)
 			{
 				return NoError;
 			}
 
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -145,7 +144,7 @@ namespace ProSuite.QA.Tests
 		#endregion
 
 		private int ReportInvalidPoint([NotNull] IPoint point,
-		                               [NotNull] IRow row)
+		                               [NotNull] IReadOnlyRow row)
 		{
 			double m = point.M;
 			string error;
@@ -177,7 +176,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int ReportInvalidPoints([NotNull] IPointCollection points,
-		                                [NotNull] IRow row)
+		                                [NotNull] IReadOnlyRow row)
 		{
 			var points5 = points as IPointCollection5;
 			if (points5 == null)
@@ -289,7 +288,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		protected virtual bool IsInvalidValue(double m,
-		                                      [NotNull] IRow row,
+		                                      [NotNull] IReadOnlyRow row,
 		                                      bool isNewRow,
 		                                      [CanBeNull] out string error,
 		                                      [CanBeNull] out IssueCode issueCode)
@@ -369,7 +368,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int ReportInvalidSegments([NotNull] ISegmentCollection segments,
-		                                  [NotNull] IRow row)
+		                                  [NotNull] IReadOnlyRow row)
 		{
 			var errorCount = 0;
 
@@ -432,7 +431,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int ReportInvalidSequence([NotNull] ICollection<ISegment> invalidMSegments,
-		                                  [NotNull] IRow row,
+		                                  [NotNull] IReadOnlyRow row,
 		                                  double invalidValue)
 		{
 			Assert.ArgumentNotNull(invalidMSegments, nameof(invalidMSegments));

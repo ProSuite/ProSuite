@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
@@ -8,6 +7,7 @@ using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -40,9 +40,9 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.QaMaxSlope_0))]
 		public QaMaxSlope(
-			[Doc(nameof(DocStrings.QaMaxSlope_featureClass))] IFeatureClass featureClass,
+			[Doc(nameof(DocStrings.QaMaxSlope_featureClass))] IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaMaxSlope_limit))] double limit)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			_limit = limit;
 		}
@@ -57,9 +57,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			IGeometry shape = ((IFeature) row).Shape;
+			IGeometry shape = ((IReadOnlyFeature) row).Shape;
 
 			if (! (shape is IPolycurve))
 			{
@@ -72,7 +72,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int CheckSegments([NotNull] ISegmentCollection segments,
-		                          [NotNull] IRow row)
+		                          [NotNull] IReadOnlyRow row)
 		{
 			IEnumSegment enumSegments = segments.EnumSegments;
 			enumSegments.Reset();
