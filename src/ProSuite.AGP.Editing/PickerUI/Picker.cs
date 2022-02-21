@@ -7,8 +7,10 @@ using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Picker;
+using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.WPF;
@@ -95,6 +97,34 @@ namespace ProSuite.AGP.Editing.PickerUI
 			return _viewModel.SelectedItems.ToList();
 		}
 
+		/// <summary>
+		/// Picks a single feature from the list of features in the provided selection sets.
+		/// Must be called on the UI thread.
+		/// </summary>
+		/// <param name="selectionByClass"></param>
+		/// <param name="pickerWindowLocation"></param>
+		/// <returns></returns>
+		public static async Task<PickableFeatureItem> PickSingleFeatureAsync(
+			[NotNull] IEnumerable<FeatureClassSelection> selectionByClass,
+			Point pickerWindowLocation)
+		{
+			List<IPickableItem> pickableItems =
+				await QueuedTaskUtils.Run(
+					delegate
+					{
+						selectionByClass =
+							GeometryReducer.ReduceByGeometryDimension(selectionByClass)
+							               .ToList();
+
+						return CreatePickableFeatureItems(selectionByClass);
+					});
+
+			Picker picker = new Picker(pickableItems, pickerWindowLocation);
+
+			// Must not be called from a background Task!
+			return await picker.PickSingle() as PickableFeatureItem;
+		}
+
 		public static List<IPickableItem> CreatePickableFeatureItems(
 			KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer)
 		{
@@ -117,18 +147,21 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 			foreach (FeatureClassSelection classSelection in selectionByClasses)
 			{
-				foreach (Feature feature in classSelection.Features)
-				{
-					var text = GetPickerItemText(feature, classSelection.FeatureLayer);
-
-					var featureItem =
-						new PickableFeatureItem(classSelection.FeatureLayer, feature, text);
-
-					pickCandidates.Add(featureItem);
-				}
+				pickCandidates.AddRange(CreatePickableFeatureItems(classSelection));
 			}
 
 			return pickCandidates;
+		}
+
+		public static IEnumerable<IPickableItem> CreatePickableFeatureItems(
+			[NotNull] FeatureClassSelection classSelection)
+		{
+			foreach (Feature feature in classSelection.GetFeatures())
+			{
+				var text = GetPickerItemText(feature, classSelection.FeatureLayer);
+
+				yield return new PickableFeatureItem(classSelection.FeatureLayer, feature, text);
+			}
 		}
 
 		private static string GetPickerItemText([NotNull] Feature feature,

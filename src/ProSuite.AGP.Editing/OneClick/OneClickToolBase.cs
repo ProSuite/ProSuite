@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
@@ -33,8 +32,7 @@ namespace ProSuite.AGP.Editing.OneClick
 	{
 		private const Key _keyShowOptionsPane = Key.O;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected readonly List<IDisposable> _overlays = new List<IDisposable>();
 
@@ -274,7 +272,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected void StartSelectionPhase()
 		{
 			SetupSketch(SelectionSettings.SketchGeometryType, SelectionSettings.SketchOutputMode);
-			
+
 			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
 			{
 				SetCursor(SelectionCursorShift);
@@ -301,7 +299,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		                           bool completeSketchOnMouseUp = true,
 		                           bool enforceSimpleSketch = false)
 		{
-
 			SketchOutputMode = sketchOutputMode;
 
 			// NOTE: CompleteSketchOnMouseUp must be set before the sketch geometry type,
@@ -313,7 +310,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			UseSnapping = useSnapping;
 
 			GeomIsSimpleAsFeature = enforceSimpleSketch;
-
 		}
 
 		protected virtual void OnSelectionPhaseStarted() { }
@@ -463,7 +459,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			Geometry selectionGeometry;
 			var pickerWindowLocation = new Point(0, 0);
 
-			Dictionary<BasicFeatureLayer, List<long>> candidatesOfManyLayers =
+			List<FeatureClassSelection> candidatesOfManyLayers =
 				await QueuedTaskUtils.Run(() =>
 				{
 					DisposeOverlays();
@@ -472,8 +468,10 @@ namespace ProSuite.AGP.Editing.OneClick
 					pickerWindowLocation =
 						MapView.Active.MapToScreen(selectionGeometry.Extent.Center);
 
-					// find all features spatially related with selectionGeometry
-					return FindFeaturesOfAllLayers(selectionGeometry, spatialRelationship);
+					// find all features spatially related with searchGeometry
+					// TODO: 1. Find all features in point layers, if count > 0 -> skip the rest
+					//       2. Find all features in polyline layers, ...
+					return FindFeaturesOfAllLayers(selectionGeometry, spatialRelationship).ToList();
 				});
 
 			if (! candidatesOfManyLayers.Any())
@@ -507,35 +505,23 @@ namespace ProSuite.AGP.Editing.OneClick
 				// select a single feature using feature reduction and picker
 				else
 				{
-					IEnumerable<KeyValuePair<BasicFeatureLayer, List<long>>> candidatesOfLayers =
+					var candidatesOfLayers =
 						await QueuedTask.Run(
-							() => GeometryReducer.GetReducedset(candidatesOfManyLayers));
+							() => GeometryReducer.ReduceByGeometryDimension(
+								candidatesOfManyLayers));
 
 					// show picker if more than one candidate
 					if (GeometryReducer.ContainsManyFeatures(candidatesOfManyLayers))
 					{
-						List<IPickableItem> pickables = new List<IPickableItem>();
-						foreach (var layerCandidates in candidatesOfLayers)
+						var picked = await PickerUI.Picker.PickSingleFeatureAsync(
+							             candidatesOfLayers, pickerWindowLocation);
+
+						if (picked != null)
 						{
-							pickables.AddRange(
-								await QueuedTask.Run(
-									() => PickerUI.Picker.CreatePickableFeatureItems(
-										layerCandidates)));
-						}
-
-						var picker = new PickerUI.Picker(pickables, pickerWindowLocation);
-
-						var item = await picker.PickSingle() as PickableFeatureItem;
-
-						if (item != null)
-						{
-							var kvp = new KeyValuePair<BasicFeatureLayer, List<long>>(
-								item.Layer, new List<long> {item.Oid});
-
 							await QueuedTask.Run(() =>
 							{
-								Selector.SelectLayersFeaturesByOids(
-									kvp, selectionMethod);
+								Selector.SelectFeature(
+									picked.Layer, selectionMethod, picked.Oid);
 							});
 						}
 					}
@@ -569,9 +555,11 @@ namespace ProSuite.AGP.Editing.OneClick
 						{
 							item.BelongingFeatureLayers.ForEach(layer =>
 							{
-								List<long> oids = candidatesOfManyLayers[layer];
+								FeatureClassSelection selection =
+									candidatesOfManyLayers.Single(s => s.FeatureLayer == layer);
 
-								SelectionUtils.SelectFeatures(layer, selectionMethod, oids);
+								SelectionUtils.SelectFeatures(
+									layer, selectionMethod, selection.ObjectIds);
 							});
 						});
 					}
@@ -596,46 +584,40 @@ namespace ProSuite.AGP.Editing.OneClick
 		}
 
 		private List<FeatureClassInfo> GetFcCandidates(
-			Dictionary<BasicFeatureLayer, List<long>> candidatesOfManyLayers)
+			IList<FeatureClassSelection> candidatesOfManyLayers)
 		{
 			List<FeatureClassInfo> featureClassInfos =
 				Selector.GetSelectableFeatureclassInfos();
+
+			var candidateLayers = candidatesOfManyLayers.Select(c => c.FeatureLayer).ToList();
+
 			return featureClassInfos.Where(fcInfo =>
 			{
 				return fcInfo.BelongingLayers.Any(
-					layer => candidatesOfManyLayers.Keys.Contains(layer));
+					layer => candidateLayers.Contains(layer));
 			}).ToList();
 		}
 
-		private Dictionary<BasicFeatureLayer, List<long>> FindFeaturesOfAllLayers(
-			[NotNull] Geometry selectionGeometry,
+		private IEnumerable<FeatureClassSelection> FindFeaturesOfAllLayers(
+			[NotNull] Geometry searchGeometry,
 			SpatialRelationship spatialRelationship)
 		{
-			var featuresPerLayer = new Dictionary<BasicFeatureLayer, List<long>>();
-
 			MapView mapView = MapView.Active;
 
 			if (mapView == null)
 			{
-				return featuresPerLayer;
+				return new List<FeatureClassSelection>(0);
 			}
 
-			foreach (BasicFeatureLayer layer in mapView.Map.GetLayersAsFlattenedList()
-			                                           .OfType<BasicFeatureLayer>()
-			                                           .Where(layer => CanSelectFromLayer(layer)))
-			{
-				List<long> oids =
-					MapUtils.FilterLayerOidsByGeometry(layer,
-					                                   selectionGeometry,
-					                                   spatialRelationship).ToList();
+			FeatureFinder featureFinder = new FeatureFinder(mapView)
+			                              {
+				                              SpatialRelationship = spatialRelationship,
+				                              DelayFeatureFetching = true
+			                              };
 
-				if (oids.Any())
-				{
-					featuresPerLayer.Add(layer, oids);
-				}
-			}
-
-			return featuresPerLayer;
+			return featureFinder.FindFeaturesByLayer(
+				searchGeometry,
+				fl => CanSelectFromLayer(fl));
 		}
 
 		protected bool IsInSelectionPhase()
@@ -810,7 +792,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				}
 
 				foreach (Feature feature in MapUtils.GetFeatures(
-					oidsByLayer.Key, oidsByLayer.Value))
+					         oidsByLayer.Key, oidsByLayer.Value))
 				{
 					yield return feature;
 					selectionCount++;

@@ -4,6 +4,7 @@ using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Editing.Selection
@@ -49,15 +50,15 @@ namespace ProSuite.AGP.Editing.Selection
 		}
 
 		public static void SelectLayersFeaturesByOids(
-			[CanBeNull] Dictionary<BasicFeatureLayer, List<long>> featuresPerLayer,
-			SelectionCombinationMethod method)
+			[CanBeNull] List<FeatureClassSelection> featuresPerLayer,
+			SelectionCombinationMethod selectionCombinationMethod)
 		{
 			if (featuresPerLayer == null)
 			{
 				return;
 			}
 
-			if (method == SelectionCombinationMethod.New)
+			if (selectionCombinationMethod == SelectionCombinationMethod.New)
 			{
 				//since SelectionCombinationMethod.New is only applied to
 				//the current layer but selections of other layers remain,
@@ -65,22 +66,23 @@ namespace ProSuite.AGP.Editing.Selection
 				SelectionUtils.ClearSelection();
 			}
 
-			foreach (KeyValuePair<BasicFeatureLayer, List<long>> kvp in featuresPerLayer)
+			foreach (var layerFeatures in featuresPerLayer)
 			{
-				SelectionUtils.SelectFeatures(kvp.Key, method, kvp.Value);
+				SelectionUtils.SelectFeatures(Assert.NotNull(layerFeatures.FeatureLayer),
+				                              selectionCombinationMethod, layerFeatures.ObjectIds);
 			}
 		}
 
 		public static void SelectLayersFeaturesByOids(
-			KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer,
-			SelectionCombinationMethod method)
+			FeatureClassSelection featuresOfLayer,
+			SelectionCombinationMethod selectionCombinationMethod)
 		{
-			if (! featuresOfLayer.Value.Any())
+			if (! featuresOfLayer.ObjectIds.Any())
 			{
 				return;
 			}
 
-			if (method == SelectionCombinationMethod.New)
+			if (selectionCombinationMethod == SelectionCombinationMethod.New)
 			{
 				//since SelectionCombinationMethod.New is only applied to
 				//the current layer but selections of other layers remain,
@@ -88,7 +90,24 @@ namespace ProSuite.AGP.Editing.Selection
 				SelectionUtils.ClearSelection();
 			}
 
-			SelectionUtils.SelectFeatures(featuresOfLayer.Key, method, featuresOfLayer.Value);
+			SelectionUtils.SelectFeatures(Assert.NotNull(featuresOfLayer.FeatureLayer),
+			                              selectionCombinationMethod,
+			                              featuresOfLayer.ObjectIds);
+		}
+
+		public static void SelectFeature(FeatureLayer featureLayer,
+		                                 SelectionCombinationMethod selectionCombinationMethod,
+		                                 long oid)
+		{
+			if (selectionCombinationMethod == SelectionCombinationMethod.New)
+			{
+				//since SelectionCombinationMethod.New is only applied to
+				//the current layer but selections of other layers remain,
+				//we manually need to clear all selections first. 
+				SelectionUtils.ClearSelection();
+			}
+
+			SelectionUtils.SelectFeature(featureLayer, selectionCombinationMethod, oid);
 		}
 	}
 }

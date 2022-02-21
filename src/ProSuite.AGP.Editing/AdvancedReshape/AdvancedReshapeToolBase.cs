@@ -409,7 +409,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 
 			foreach (var keyValuePair in featureClassSelections)
 			{
-				foundFeatures.AddRange(keyValuePair.Features);
+				foundFeatures.AddRange(keyValuePair.GetFeatures());
 			}
 
 			foundFeatures.RemoveAll(

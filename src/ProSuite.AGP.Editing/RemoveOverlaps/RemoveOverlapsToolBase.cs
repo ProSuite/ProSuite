@@ -462,7 +462,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			foreach (var classSelection in featureClassSelections)
 			{
-				foundFeatures.AddRange(classSelection.Features);
+				foundFeatures.AddRange(classSelection.GetFeatures());
 			}
 
 			// Remove the selected features from the set of overlapping features.

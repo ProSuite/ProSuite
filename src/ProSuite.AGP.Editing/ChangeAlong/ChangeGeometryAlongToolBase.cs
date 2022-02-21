@@ -326,18 +326,19 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			if (isSingleClick &&
 			    selectionByClass.Sum(s => s.FeatureCount) > 1)
 			{
-				Feature feature = await PickSingleFeature(selectionByClass, pickerWindowLocation);
+				var picked = await PickerUI.Picker.PickSingleFeatureAsync(
+					                  selectionByClass, pickerWindowLocation);
 
-				if (feature == null)
+				if (picked == null)
 				{
 					return false;
 				}
 
-				targetFeatures = new[] {feature};
+				targetFeatures = new[] {picked.Feature};
 			}
 			else
 			{
-				targetFeatures = selectionByClass.SelectMany(fcs => fcs.Features);
+				targetFeatures = selectionByClass.SelectMany(fcs => fcs.GetFeatures());
 			}
 
 			ChangeAlongCurves =
@@ -366,29 +367,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 				                      targetFeatureSelection, CanUseAsTargetLayer,
 				                      canUseAsTargetFeature, selectedFeatures, progressor).ToList();
 			return selectionByClass;
-		}
-
-		private static async Task<Feature> PickSingleFeature(
-			[NotNull] List<FeatureClassSelection> selectionByClass,
-			Point pickerWindowLocation)
-		{
-			List<IPickableItem> pickables =
-				await QueuedTaskUtils.Run(
-					delegate
-					{
-						selectionByClass =
-							GeometryReducer.ReduceByGeometryDimension(selectionByClass)
-							               .ToList();
-
-						return PickerUI.Picker.CreatePickableFeatureItems(selectionByClass);
-					});
-
-			PickerUI.Picker picker = new PickerUI.Picker(pickables, pickerWindowLocation);
-
-			// Must not be called from a background Task!
-			PickableFeatureItem item = await picker.PickSingle() as PickableFeatureItem;
-
-			return item?.Feature;
 		}
 
 		private ChangeAlongCurves RefreshChangeAlongCurves(

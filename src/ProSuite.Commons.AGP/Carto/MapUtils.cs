@@ -85,7 +85,7 @@ namespace ProSuite.Commons.AGP.Carto
 
 				if (! result.ContainsKey(geodatabase))
 				{
-					result.Add(geodatabase, new SimpleSet<Table> { table });
+					result.Add(geodatabase, new SimpleSet<Table> {table});
 				}
 				else
 				{
@@ -218,8 +218,9 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 
 			foreach (var keyValuePair in FindFeatures(
-				mapView, searchGeometry, SpatialRelationship.Intersects, targetSelectionType,
-				layerPredicate, null, selectedFeatures, cancelableProgressor))
+				         mapView, searchGeometry, SpatialRelationship.Intersects,
+				         targetSelectionType,
+				         layerPredicate, null, selectedFeatures, cancelableProgressor))
 			{
 				yield return keyValuePair;
 			}
@@ -258,8 +259,9 @@ namespace ProSuite.Commons.AGP.Carto
 			// -> Get the distinct feature classes (TODO: include layer definition queries)
 
 			IEnumerable<FeatureLayer> featureLayers =
-				GetLayers<FeatureLayer>(fl => IsLayerApplicable(fl, targetSelectionType, layerPredicate,
-				                                                selectedFeatures));
+				GetLayers<FeatureLayer>(fl => IsLayerApplicable(
+					                        fl, targetSelectionType, layerPredicate,
+					                        selectedFeatures));
 
 			IEnumerable<IGrouping<IntPtr, FeatureLayer>> layersGroupedByClass =
 				featureLayers.GroupBy(fl => fl.GetFeatureClass().Handle);
@@ -272,7 +274,7 @@ namespace ProSuite.Commons.AGP.Carto
 				FeatureLayer featureLayer = null;
 				List<Feature> features = new List<Feature>();
 				foreach (IGrouping<string, FeatureLayer> layers in layersInClass.GroupBy(
-					fl => fl.DefinitionQuery))
+					         fl => fl.DefinitionQuery))
 				{
 					if (cancelableProgressor != null
 					    && cancelableProgressor.CancellationToken.IsCancellationRequested)
@@ -290,7 +292,7 @@ namespace ProSuite.Commons.AGP.Carto
 					IEnumerable<Feature> foundFeatures = GdbQueryUtils
 					                                     .GetFeatures(featureClass, filter, false)
 					                                     .Where(f => featurePredicate == null ||
-					                                                 featurePredicate(f));
+						                                            featurePredicate(f));
 					features.AddRange(foundFeatures);
 				}
 
@@ -303,10 +305,15 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
-		public static IEnumerable<T> GetLayers<T>([CanBeNull] Predicate<T> layerPredicate)
+		public static IEnumerable<T> GetLayers<T>([CanBeNull] Predicate<T> layerPredicate,
+		                                          [CanBeNull] MapView mapView = null)
 			where T : Layer
 		{
-			MapView mapView = MapView.Active;
+			if (mapView == null)
+			{
+				// Only take the active map if no other map has been provided.
+				mapView = MapView.Active;
+			}
 
 			if (mapView == null)
 			{
