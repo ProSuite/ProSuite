@@ -12,6 +12,16 @@ namespace ProSuite.AGP.Editing.PickerUI
 {
 	public static class PickerUtils
 	{
+		// TODOs:
+		// - Improve item text (subtype, expression)
+		// - Consider tool tip for pickable items with all attributes
+		// - Check performance, consider not just clipping but also weeding
+		// - Configurable selection tolerance (consider using snapping?)
+		// - The highlighting in the map happens after the hovering over the list item
+		//   -> About 1-2 pixels of extra tolerance.
+		// - All tools: Select by polygon (currently just for  RAEF). Decide on mode vs keep P pressed.
+		//              Use sketch output mode Screen (and convert before selection)
+
 		/// <summary>
 		/// Picks a single feature from the list of features in the provided selection sets.
 		/// Must be called on the UI thread.
