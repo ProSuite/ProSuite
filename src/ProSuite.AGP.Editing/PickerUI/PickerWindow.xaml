@@ -82,7 +82,7 @@
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="MouseEnter">
                             <i:InvokeCommandAction
-                                Command="{Binding Path=DataContext.FlashItemCmd,
+                                Command="{Binding Path=DataContext.FlashItemCommand,
                                 RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
                                 CommandParameter="{Binding}" />
                         </i:EventTrigger>
@@ -100,7 +100,7 @@
                     <i:Interaction.Triggers>
                         <i:EventTrigger EventName="MouseEnter">
                             <i:InvokeCommandAction
-                                Command="{Binding Path=DataContext.FlashItemCmd,
+                                Command="{Binding Path=DataContext.FlashItemCommand,
                                 RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
                                 CommandParameter="{Binding}" />
                         </i:EventTrigger>

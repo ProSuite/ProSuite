@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Picker;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.WPF;
@@ -44,7 +44,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 		public PickerViewModel(IList<IPickableItem> pickingCandidates,
 		                       bool isSingleMode)
 		{
-			FlashItemCmd = new RelayCommand(FlashItem, () => true, false);
+			FlashItemCommand = new RelayCommand<IPickableItem>(FlashItem);
 
 			CloseCommand = new RelayCommand<PickerWindow>(Close);
 
@@ -72,7 +72,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 			_resultTaskCompletionSource = new TaskCompletionSource<bool>();
 		}
 
-		public RelayCommand FlashItemCmd { get; internal set; }
+		public ICommand FlashItemCommand { get; }
 
 		public ICommand CloseCommand { get; }
 
@@ -185,29 +185,48 @@ namespace ProSuite.AGP.Editing.PickerUI
 			}
 		}
 
-		private void FlashItem(object param)
+		private void FlashItem(IPickableItem candidate)
 		{
-			var candidate = (IPickableItem) param;
-			if (candidate.Geometry == null)
+			try
 			{
-				return;
+				Geometry flashGeometry = candidate.Geometry;
+
+				if (flashGeometry == null)
+				{
+					return;
+				}
+
+				DisposeOverlays();
+
+				CIMSymbol symbol = _highlightPointSymbol;
+
+				if (flashGeometry is Polygon)
+				{
+					symbol = _highlightPolygonSymbol;
+
+					Envelope clipExtent = MapView.Active?.Extent;
+
+					if (clipExtent != null)
+					{
+						double mapRotation = MapView.Active.Camera.Heading;
+
+						flashGeometry =
+							GeometryUtils.GetClippedPolygon((Polygon) flashGeometry, clipExtent,
+							                                mapRotation);
+					}
+				}
+
+				if (flashGeometry is Polyline)
+				{
+					symbol = _highlightLineSymbol;
+				}
+
+				QueuedTask.Run(() => { AddOverlay(flashGeometry, symbol); });
 			}
-
-			DisposeOverlays();
-
-			CIMSymbol symbol = _highlightPointSymbol;
-
-			if (candidate.Geometry is Polygon)
+			catch (Exception exception)
 			{
-				symbol = _highlightPolygonSymbol;
+				_msg.Warn("Error flashing pickable candidate", exception);
 			}
-
-			if (candidate.Geometry is Polyline)
-			{
-				symbol = _highlightLineSymbol;
-			}
-
-			QueuedTask.Run(() => { AddOverlay(candidate.Geometry, symbol); });
 		}
 
 		public void OnWindowDeactivated(object sender, EventArgs e)

@@ -118,9 +118,34 @@ namespace ProSuite.Commons.AGP.Core.Spatial
 			return GeometryEngine.Instance.Disjoint(geometry1, geometry2);
 		}
 
-		public static Polygon GetClippedPolygon(Polygon polygon, Envelope clipExtent)
+		/// <summary>
+		/// Clips the polygon using the provided envelope. The envelope can be rotated
+		/// by the specified degrees before the clip is applied. This is useful for rotated
+		/// map extents.
+		/// </summary>
+		/// <param name="polygon">The polygon to be clipped.</param>
+		/// <param name="clipExtent">The clip extent.</param>
+		/// <param name="clipExtentRotationDeg">The rotation to be applied to the clip extent before
+		/// clipping. The unit is degrees.</param>
+		/// <returns></returns>
+		public static Polygon GetClippedPolygon([NotNull] Polygon polygon,
+		                                        [NotNull] Envelope clipExtent,
+		                                        double clipExtentRotationDeg = 0)
 		{
-			return (Polygon) Engine.Clip(polygon, clipExtent);
+			if (clipExtentRotationDeg == 0)
+			{
+				return (Polygon) Engine.Clip(polygon, clipExtent);
+			}
+
+			// It's a polygon:
+			Polygon envelopeAsPoly =
+				GeometryFactory.CreatePolygon(clipExtent, clipExtent.SpatialReference);
+
+			double rotationInRadians = MathUtils.ToRadians(clipExtentRotationDeg);
+
+			Geometry rotated = Engine.Rotate(envelopeAsPoly, clipExtent.Center, rotationInRadians);
+
+			return (Polygon) Engine.Intersection(polygon, rotated);
 		}
 
 		public static Polyline GetClippedPolyline(Polyline polyline, Envelope clipExtent)
