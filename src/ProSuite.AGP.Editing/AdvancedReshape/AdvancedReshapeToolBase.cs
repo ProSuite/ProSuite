@@ -393,10 +393,11 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 			// TODO: Use linear network classes as defined in reshape options
 			TargetFeatureSelection targetFeatureSelection = TargetFeatureSelection.SameClass;
 
+			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection);
+
 			IEnumerable<FeatureClassSelection> featureClassSelections =
-				MapUtils.FindFeatures(
-					ActiveMapView, selection, targetFeatureSelection,
-					layer => layer.ShapeType == esriGeometryType.esriGeometryPolyline,
+				featureFinder.FindIntersectingFeaturesByFeatureClass(
+					selection, layer => layer.ShapeType == esriGeometryType.esriGeometryPolyline,
 					inExtent, cancellabelProgressor);
 
 			if (cancellabelProgressor != null &&

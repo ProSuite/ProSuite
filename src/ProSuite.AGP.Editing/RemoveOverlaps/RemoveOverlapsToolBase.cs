@@ -173,8 +173,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				if (updatedTargets.Count > 0)
 				{
 					_msg.InfoFormat("Target features with potential vertex insertions: {0}",
-				                 StringUtils.Concatenate(updatedTargets,
-				                                         GdbObjectUtils.GetDisplayValue, ", "));
+					                StringUtils.Concatenate(updatedTargets,
+					                                        GdbObjectUtils.GetDisplayValue, ", "));
 				}
 			}
 
@@ -448,9 +448,11 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			const TargetFeatureSelection targetFeatureSelection =
 				TargetFeatureSelection.VisibleSelectableFeatures;
 
+			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection);
+
 			IEnumerable<FeatureClassSelection> featureClassSelections =
-				MapUtils.FindFeatures(ActiveMapView, selection, targetFeatureSelection,
-				                      CanOverlapLayer, inExtent, cancellabelProgressor);
+				featureFinder.FindIntersectingFeaturesByFeatureClass(
+					selection, CanOverlapLayer, inExtent, cancellabelProgressor);
 
 			if (cancellabelProgressor != null &&
 			    ! cancellabelProgressor.CancellationToken.IsCancellationRequested)

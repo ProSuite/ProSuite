@@ -361,10 +361,17 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 					? SpatialRelationship.Contains
 					: SpatialRelationship.Intersects;
 
+			FeatureFinder featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection)
+			                              {
+				                              SelectedFeatures = selectedFeatures,
+				                              SpatialRelationship = spatialRel
+			                              };
+
 			var selectionByClass =
-				MapUtils.FindFeatures(ActiveMapView, sketch, spatialRel,
-				                      targetFeatureSelection, CanUseAsTargetLayer,
-				                      canUseAsTargetFeature, selectedFeatures, progressor).ToList();
+				featureFinder.FindFeaturesByFeatureClass(sketch, CanUseAsTargetLayer,
+				                                         canUseAsTargetFeature, progressor)
+				             .ToList();
+
 			return selectionByClass;
 		}
 
