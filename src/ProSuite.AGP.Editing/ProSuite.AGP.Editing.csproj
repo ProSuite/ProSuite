@@ -89,6 +89,7 @@
     <Compile Include="OneClick\OneClickToolBase.cs" />
     <Compile Include="OneClick\TwoPhaseEditToolBase.cs" />
     <Compile Include="PickerUI\Picker.cs" />
+    <Compile Include="PickerUI\PickerUtils.cs" />
     <Compile Include="PickerUI\PickerViewModel.cs" />
     <Compile Include="PickerUI\PickerWindow.xaml.cs">
       <DependentUpon>PickerWindow.xaml</DependentUpon>
@@ -98,7 +99,7 @@
     <Compile Include="Picker\IPicker.cs" />
     <Compile Include="Picker\PickableFeatureClassItem.cs" />
     <Compile Include="Picker\PickableFeatureItem.cs" />
-    <Compile Include="Picker\PickableItemAdapter.cs" />
+    <Compile Include="Picker\PickableItemsFactory.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Erase\EraseToolBase.cs" />
     <Compile Include="Properties\LocalizableStrings.Designer.cs">
@@ -110,7 +111,6 @@
     <Compile Include="RemoveOverlaps\RemoveOverlapsFeedback.cs" />
     <Compile Include="RemoveOverlaps\RemoveOverlapsOptions.cs" />
     <Compile Include="RemoveOverlaps\RemoveOverlapsToolBase.cs" />
-    <Compile Include="Selection\FeatureClassInfo.cs" />
     <Compile Include="Selection\GeometryReducer.cs" />
     <Compile Include="Selection\GeometryTypeComparer.cs" />
     <Compile Include="Selection\Selector.cs" />

@@ -16,8 +16,8 @@ using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Picker;
+using ProSuite.AGP.Editing.PickerUI;
 using ProSuite.AGP.Editing.Properties;
-using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.Commons.AGP.Framework;
@@ -303,8 +303,6 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			List<FeatureClassSelection> selectionByClass =
 				await QueuedTaskUtils.Run(() =>
 				{
-					DisposeOverlays();
-
 					sketch = ToolUtils.SketchToSearchGeometry(
 						sketch, GetSelectionTolerancePixels(), out isSingleClick);
 
@@ -326,8 +324,9 @@ namespace ProSuite.AGP.Editing.ChangeAlong
 			if (isSingleClick &&
 			    selectionByClass.Sum(s => s.FeatureCount) > 1)
 			{
-				var picked = await PickerUI.Picker.PickSingleFeatureAsync(
-					                  selectionByClass, pickerWindowLocation);
+				PickableFeatureItem picked =
+					await PickerUtils.PickSingleFeatureAsync(
+						selectionByClass, pickerWindowLocation);
 
 				if (picked == null)
 				{

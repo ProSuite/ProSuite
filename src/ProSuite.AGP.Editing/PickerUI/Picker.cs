@@ -3,14 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
-using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Picker;
-using ProSuite.AGP.Editing.Selection;
-using ProSuite.Commons.AGP.Carto;
-using ProSuite.Commons.AGP.Core.Geodatabase;
-using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.UI.WPF;
@@ -96,84 +90,6 @@ namespace ProSuite.AGP.Editing.PickerUI
 			return _viewModel.SelectedItems.ToList();
 		}
 
-		/// <summary>
-		/// Picks a single feature from the list of features in the provided selection sets.
-		/// Must be called on the UI thread.
-		/// </summary>
-		/// <param name="selectionByClass"></param>
-		/// <param name="pickerWindowLocation"></param>
-		/// <returns></returns>
-		public static async Task<PickableFeatureItem> PickSingleFeatureAsync(
-			[NotNull] IEnumerable<FeatureClassSelection> selectionByClass,
-			Point pickerWindowLocation)
-		{
-			List<IPickableItem> pickableItems =
-				await QueuedTaskUtils.Run(
-					delegate
-					{
-						selectionByClass =
-							GeometryReducer.ReduceByGeometryDimension(selectionByClass)
-							               .ToList();
-
-						return CreatePickableFeatureItems(selectionByClass);
-					});
-
-			var picker = new Picker(pickableItems, pickerWindowLocation);
-
-			// Must not be called from a background Task!
-			return await picker.PickSingle() as PickableFeatureItem;
-		}
-
-		public static List<IPickableItem> CreatePickableFeatureItems(
-			KeyValuePair<BasicFeatureLayer, List<long>> featuresOfLayer)
-		{
-			var pickCandidates = new List<IPickableItem>();
-			foreach (Feature feature in MapUtils.GetFeatures(featuresOfLayer))
-			{
-				string text = GetPickerItemText(feature, featuresOfLayer.Key);
-				var featureItem =
-					new PickableFeatureItem(featuresOfLayer.Key, feature, text);
-				pickCandidates.Add(featureItem);
-			}
-
-			return pickCandidates;
-		}
-
-		public static List<IPickableItem> CreatePickableFeatureItems(
-			IEnumerable<FeatureClassSelection> selectionByClasses)
-		{
-			var pickCandidates = new List<IPickableItem>();
-
-			foreach (FeatureClassSelection classSelection in selectionByClasses)
-			{
-				pickCandidates.AddRange(CreatePickableFeatureItems(classSelection));
-			}
-
-			return pickCandidates;
-		}
-
-		public static IEnumerable<IPickableItem> CreatePickableFeatureItems(
-			[NotNull] FeatureClassSelection classSelection)
-		{
-			foreach (Feature feature in classSelection.GetFeatures())
-			{
-				string text = GetPickerItemText(feature, classSelection.FeatureLayer);
-
-				yield return new PickableFeatureItem(classSelection.FeatureLayer, feature, text);
-			}
-		}
-
-		private static string GetPickerItemText([NotNull] Feature feature,
-		                                        [CanBeNull] BasicFeatureLayer layer = null)
-		{
-			// TODO: Alternatively allow using layer.QueryDisplayExpressions. But typically this is just the OID which is not very useful -> Requires configuration
-			// string[] displayExpressions = layer.QueryDisplayExpressions(new[] { feature.GetObjectID() });
-
-			string className = layer == null ? feature.GetTable().GetName() : layer.Name;
-
-			return GdbObjectUtils.GetDisplayValue(feature, className);
-		}
-
 		private async Task<bool?> ShowPickerControl(PickerViewModel vm)
 		{
 			var window = new PickerWindow(vm);
@@ -208,11 +124,15 @@ namespace ProSuite.AGP.Editing.PickerUI
 		private static void RunOnUIThread(Action action)
 		{
 			if (Application.Current.Dispatcher.CheckAccess())
+			{
 				action(); //No invoke needed
+			}
 			else
 				//We are not on the UI
+			{
 				Application.Current.Dispatcher.BeginInvoke(action);
 			}
+		}
 
 		private static bool IsUnknownLocation(Point location)
 		{

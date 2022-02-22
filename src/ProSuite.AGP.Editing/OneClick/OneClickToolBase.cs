@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
-using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Events;
@@ -13,6 +12,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Picker;
+using ProSuite.AGP.Editing.PickerUI;
 using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
@@ -33,8 +33,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		private const Key _keyShowOptionsPane = Key.O;
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
-		protected readonly List<IDisposable> _overlays = new List<IDisposable>();
 
 		protected OneClickToolBase()
 		{
@@ -60,7 +58,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// <summary>
 		/// Whether selected features that are not applicable (e.g. due to wrong geometry type) are
 		/// allowed. Otherwise the selection phase will continue until all selected features are
-		/// usable by the tool. 
+		/// usable by the tool.
 		/// </summary>
 		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
 
@@ -68,7 +66,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			new SelectionSettings();
 
 		/// <summary>
-		/// The list of handled keys, i.e. the keys for which <see cref="MapTool.HandleKeyDownAsync"/>
+		/// The list of handled keys, i.e. the keys for which <see cref="MapTool.HandleKeyDownAsync" />
 		/// will be called (and potentially in the future also MapTool.HandleKeyUpAsync)
 		/// </summary>
 		protected List<Key> HandledKeys { get; } = new List<Key>();
@@ -389,7 +387,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		[CanBeNull]
 		protected virtual CancelableProgressor GetCancelableProgressor()
 		{
-			return null;
+			return new CancelableProgressorSource().Progressor;
 		}
 
 		protected virtual Task<bool> OnSketchCompleteCoreAsync(
@@ -421,10 +419,8 @@ namespace ProSuite.AGP.Editing.OneClick
 				return ToolUtils.GetSinglePickSelectionArea(
 					sketchGeometry, SelectionSettings.SelectionTolerancePixels);
 			}
-			else
-			{
-				return sketchGeometry;
-			}
+
+			return sketchGeometry;
 		}
 
 		private SelectionMode GetSelectionSketchMode()
@@ -462,8 +458,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			List<FeatureClassSelection> candidatesOfManyLayers =
 				await QueuedTaskUtils.Run(() =>
 				{
-					DisposeOverlays();
-
 					selectionGeometry = GetSelectionGeometry(sketchGeometry);
 					pickerWindowLocation =
 						MapView.Active.MapToScreen(selectionGeometry.Extent.Center);
@@ -476,14 +470,15 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (! candidatesOfManyLayers.Any())
 			{
-				if (selectionMethod != SelectionCombinationMethod.XOR)
+				// No candidate (user clicked into empty space):
+				if (selectionMethod == SelectionCombinationMethod.XOR)
 				{
-					//no candidate (user clicked into empty space): clear selection
-					await QueuedTask.Run(
-						() => { SelectionUtils.ClearSelection(); });
-
+					// No addition to, and no removal from selection
 					return false;
 				}
+
+				// clear selection
+				await QueuedTask.Run(SelectionUtils.ClearSelection);
 
 				return false;
 			}
@@ -493,19 +488,18 @@ namespace ProSuite.AGP.Editing.OneClick
 				//note if necessary add a virtual core method here for overriding 
 
 				if (GetSelectionSketchMode() == SelectionMode.Original)
-					//alt was pressed: select all xy
 				{
+					// ALT was pressed: select all at xy location, do not show picker
 					await QueuedTask.Run(() =>
 					{
 						Selector.SelectLayersFeaturesByOids(
 							candidatesOfManyLayers, selectionMethod);
 					});
 				}
-
-				// select a single feature using feature reduction and picker
 				else
 				{
-					var candidatesOfLayers =
+					// Select a single feature using feature reduction and picker
+					IEnumerable<FeatureClassSelection> candidatesOfLayers =
 						await QueuedTask.Run(
 							() => GeometryReducer.ReduceByGeometryDimension(
 								candidatesOfManyLayers));
@@ -513,8 +507,9 @@ namespace ProSuite.AGP.Editing.OneClick
 					// show picker if more than one candidate
 					if (GeometryReducer.ContainsManyFeatures(candidatesOfManyLayers))
 					{
-						var picked = await PickerUI.Picker.PickSingleFeatureAsync(
-							             candidatesOfLayers, pickerWindowLocation);
+						PickableFeatureItem picked =
+							await PickerUtils.PickSingleFeatureAsync(
+								candidatesOfLayers, pickerWindowLocation);
 
 						if (picked != null)
 						{
@@ -541,13 +536,9 @@ namespace ProSuite.AGP.Editing.OneClick
 				//CTRL was pressed: picker shows FC's to select from
 				if (GetSelectionSketchMode() == SelectionMode.UserSelect)
 				{
-					List<IPickableItem> pickingCandidates =
-						await QueuedTask.Run(
-							() => PickableItemAdapter.Get(GetFcCandidates(candidatesOfManyLayers)));
-
-					var picker = new PickerUI.Picker(pickingCandidates, pickerWindowLocation);
-
-					var item = await picker.PickSingle() as PickableFeatureClassItem;
+					var item =
+						await PickerUtils.PickSingleFeatureClassItemsAsync(
+							candidatesOfManyLayers, pickerWindowLocation);
 
 					if (item != null)
 					{
@@ -583,21 +574,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			return true;
 		}
 
-		private List<FeatureClassInfo> GetFcCandidates(
-			IList<FeatureClassSelection> candidatesOfManyLayers)
-		{
-			List<FeatureClassInfo> featureClassInfos =
-				Selector.GetSelectableFeatureclassInfos();
-
-			var candidateLayers = candidatesOfManyLayers.Select(c => c.FeatureLayer).ToList();
-
-			return featureClassInfos.Where(fcInfo =>
-			{
-				return fcInfo.BelongingLayers.Any(
-					layer => candidateLayers.Contains(layer));
-			}).ToList();
-		}
-
 		private IEnumerable<FeatureClassSelection> FindFeaturesOfAllLayers(
 			[NotNull] Geometry searchGeometry,
 			SpatialRelationship spatialRelationship)
@@ -609,11 +585,11 @@ namespace ProSuite.AGP.Editing.OneClick
 				return new List<FeatureClassSelection>(0);
 			}
 
-			FeatureFinder featureFinder = new FeatureFinder(mapView)
-			                              {
-				                              SpatialRelationship = spatialRelationship,
-				                              DelayFeatureFetching = true
-			                              };
+			var featureFinder = new FeatureFinder(mapView)
+			                    {
+				                    SpatialRelationship = spatialRelationship,
+				                    DelayFeatureFetching = true
+			                    };
 
 			return featureFinder.FindFeaturesByLayer(
 				searchGeometry,
@@ -661,7 +637,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			Dictionary<MapMember, List<long>> selectionByLayer = activeMapView.Map.GetSelection();
 
-			NotificationCollection notifications = new NotificationCollection();
+			var notifications = new NotificationCollection();
 			List<Feature> applicableSelection =
 				GetApplicableSelectedFeatures(selectionByLayer, notifications).ToList();
 
@@ -780,10 +756,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] Dictionary<MapMember, List<long>> selectionByLayer,
 			[CanBeNull] NotificationCollection notifications = null)
 		{
-			int filteredCount = 0;
-			int selectionCount = 0;
+			var filteredCount = 0;
+			var selectionCount = 0;
 
-			foreach (var oidsByLayer in selectionByLayer)
+			foreach (KeyValuePair<MapMember, List<long>> oidsByLayer in selectionByLayer)
 			{
 				if (! CanSelectFromLayer(oidsByLayer.Key as Layer, notifications))
 				{
@@ -829,38 +805,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual bool CanSelectFromLayerCore([NotNull] FeatureLayer featureLayer)
 		{
 			return true;
-		}
-
-		private void AddOverlay(Geometry geometry,
-		                        CIMSymbol symbol)
-		{
-			IDisposable addedOverlay =
-				MapView.Active.AddOverlay(geometry, symbol.MakeSymbolReference());
-
-			_overlays.Add(addedOverlay);
-		}
-
-		public void DisposeOverlays()
-		{
-			foreach (IDisposable overlay in _overlays)
-			{
-				overlay.Dispose();
-			}
-
-			_overlays.Clear();
-		}
-
-		private CIMPolygonSymbol CreatePolygonSymbol()
-		{
-			CIMColor magenta = ColorFactory.Instance.CreateRGBColor(255, 0, 255);
-
-			CIMStroke outline = SymbolFactory.Instance.ConstructStroke(
-				magenta, 2, SimpleLineStyle.Solid);
-
-			CIMPolygonSymbol highlightPolygonSymbol =
-				SymbolFactory.Instance.ConstructPolygonSymbol(
-					magenta, SimpleFillStyle.Null, outline);
-			return highlightPolygonSymbol;
 		}
 	}
 }

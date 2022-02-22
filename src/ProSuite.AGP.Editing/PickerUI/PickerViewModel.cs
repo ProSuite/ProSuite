@@ -21,15 +21,24 @@ namespace ProSuite.AGP.Editing.PickerUI
 	public class PickerViewModel : PropertyChangedBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+		private readonly CIMLineSymbol _highlightLineSymbol;
 
 		private readonly CIMPointSymbol _highlightPointSymbol;
-		private readonly CIMLineSymbol _highlightLineSymbol;
 		private readonly CIMPolygonSymbol _highlightPolygonSymbol;
+
+		private readonly List<IDisposable> _overlays = new List<IDisposable>();
+		private readonly TaskCompletionSource<bool> _resultTaskCompletionSource;
+
+		private bool? _dialogResult;
 
 		private bool _isClosing;
 
-		private readonly TaskCompletionSource<bool> _resultTaskCompletionSource;
-		
+		private bool _isSingleMode;
+
+		private ObservableCollection<IPickableItem> _pickableItems;
+
+		private IPickableItem _selectedPickableItem;
+
 		public PickerViewModel() : this(new List<IPickableItem>(), true) { }
 
 		public PickerViewModel(List<IPickableItem> pickingCandidates,
@@ -62,21 +71,11 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 			_resultTaskCompletionSource = new TaskCompletionSource<bool>();
 		}
-		
-		private bool? _dialogResult;
-
-		private ObservableCollection<IPickableItem> _pickableItems;
-
-		protected IPickableItem _selectedPickableItem;
-
-		protected bool _isSingleMode;
-
-		protected readonly List<IDisposable> _overlays = new List<IDisposable>();
 
 		public RelayCommand FlashItemCmd { get; internal set; }
 
 		public ICommand CloseCommand { get; }
-		
+
 		[CanBeNull]
 		public IPickableItem SelectedPickableItem
 		{
@@ -87,14 +86,16 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 				try
 				{
-					if (value != null)
+					if (value == null)
 					{
-						DialogResult = true;
+						return;
+					}
 
-						if (IsSingleMode)
-						{
-							CloseAction();
-						}
+					DialogResult = true;
+
+					if (IsSingleMode)
+					{
+						CloseAction();
 					}
 				}
 				catch (Exception e)
@@ -113,10 +114,23 @@ namespace ProSuite.AGP.Editing.PickerUI
 		public ObservableCollection<IPickableItem> PickableItems
 		{
 			get => _pickableItems;
-			set { SetProperty(ref _pickableItems, value, () => PickableItems); }
+			private set { SetProperty(ref _pickableItems, value, () => PickableItems); }
 		}
 
-		public bool? DialogResult
+		public IEnumerable<IPickableItem> SelectedItems
+		{
+			get { return _pickableItems.Where(item => item.IsSelected); }
+		}
+
+		/// <summary>
+		/// The awaitable task that provides the result when the dialog is closed.
+		/// True means a selection has been made, false means nothing was picked.
+		/// </summary>
+		public Task<bool> ResultTask => _resultTaskCompletionSource.Task;
+
+		public Action CloseAction { get; set; }
+
+		private bool? DialogResult
 		{
 			get => _dialogResult;
 			set
@@ -128,18 +142,6 @@ namespace ProSuite.AGP.Editing.PickerUI
 				_resultTaskCompletionSource.SetResult(taskResult);
 			}
 		}
-
-		public List<IPickableItem> SelectedItems
-		{
-			get { return _pickableItems.Where(item => item.IsSelected).ToList(); }
-		}
-
-		/// <summary>
-		/// The awaitable task that provides the result once
-		/// </summary>
-		public Task<bool> ResultTask => _resultTaskCompletionSource.Task;
-
-		public Action CloseAction { get; set; }
 
 		private void AddOverlay(Geometry geometry,
 		                        CIMSymbol symbol)
@@ -158,7 +160,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 				_overlays.Clear();
 			}
 		}
-		
+
 		private void Close([CanBeNull] PickerWindow window)
 		{
 			try
@@ -183,7 +185,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 			}
 		}
 
-		protected void FlashItem(object param)
+		private void FlashItem(object param)
 		{
 			var candidate = (IPickableItem) param;
 			if (candidate.Geometry == null)
