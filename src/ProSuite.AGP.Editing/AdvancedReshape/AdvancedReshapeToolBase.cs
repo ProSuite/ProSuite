@@ -401,7 +401,7 @@ namespace ProSuite.AGP.Editing.AdvancedReshape
 					inExtent, cancellabelProgressor);
 
 			if (cancellabelProgressor != null &&
-			    ! cancellabelProgressor.CancellationToken.IsCancellationRequested)
+			    cancellabelProgressor.CancellationToken.IsCancellationRequested)
 			{
 				return new List<Feature>();
 			}

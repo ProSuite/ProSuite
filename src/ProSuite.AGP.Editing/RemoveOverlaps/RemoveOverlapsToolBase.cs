@@ -81,7 +81,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			IList<Feature> overlappingFeatures =
 				GetOverlappingFeatures(selectedFeatures, progressor);
 
-			if (progressor != null && ! progressor.CancellationToken.IsCancellationRequested)
+			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 			{
 				_msg.Warn("Calculation of removable overlaps was cancelled.");
 				return;
@@ -455,7 +455,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 					selection, CanOverlapLayer, inExtent, cancellabelProgressor);
 
 			if (cancellabelProgressor != null &&
-			    ! cancellabelProgressor.CancellationToken.IsCancellationRequested)
+			    cancellabelProgressor.CancellationToken.IsCancellationRequested)
 			{
 				return new List<Feature>();
 			}

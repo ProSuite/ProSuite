@@ -157,13 +157,13 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		private void DerivedGeometriesCalculated([CanBeNull] CancelableProgressor progressor)
 		{
-			if (progressor == null || ! progressor.CancellationToken.IsCancellationRequested)
+			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 			{
-				_msg.DebugFormat("{0}: Derived geometries calculated.", Caption);
+				_msg.DebugFormat("{0}: Derived geometry calculation was cancelled.", Caption);
 			}
 			else
 			{
-				_msg.DebugFormat("{0}: Derived geometry calculation was cancelled.", Caption);
+				_msg.DebugFormat("{0}: Derived geometries calculated.", Caption);
 			}
 
 			if (CanUseDerivedGeometries())
