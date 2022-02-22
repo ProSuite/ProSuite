@@ -17,11 +17,11 @@ using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.AGP.Editing.PickerUI
 {
-	class Picker : IPicker
+	public class Picker : IPicker
 	{
-		private PickerViewModel _viewModel;
 		private readonly List<IPickableItem> _candidateList;
 		private readonly Point _pickerScreenLocation = new Point(double.NaN, double.NaN);
+		private PickerViewModel _viewModel;
 
 		public Picker([NotNull] List<IPickableItem> candidateList)
 		{
@@ -29,11 +29,12 @@ namespace ProSuite.AGP.Editing.PickerUI
 		}
 
 		/// <summary>
-		/// Initializes a new instance of the <see cref="Picker"/> class.
+		/// Initializes a new instance of the <see cref="Picker" /> class.
 		/// </summary>
 		/// <param name="candidateList">The list of pickable items</param>
-		/// <param name="pickerScreenCoordinates">The location  of the picker dialog's top left
-		/// corner in screen coordinates.</param>
+		/// <param name="pickerScreenCoordinates">
+		/// The location  of the picker dialog's top left corner in screen coordinates.
+		/// </param>
 		public Picker([NotNull] List<IPickableItem> candidateList,
 		              Point pickerScreenCoordinates)
 		{
@@ -60,19 +61,17 @@ namespace ProSuite.AGP.Editing.PickerUI
 					new PickerViewModel(_candidateList, true);
 			});
 
-			RunOnUIThread(() => { ShowPickerControl(_viewModel); });
+			bool? dialogResult = await ShowPickerControl(_viewModel);
 
-			_viewModel.DisposeOverlays();
-
-			return _viewModel.SelectedPickableItem;
+			return dialogResult == true ? _viewModel.SelectedPickableItem : null;
 		}
 
-		[CanBeNull]
+		[NotNull]
 		public async Task<List<IPickableItem>> PickMany()
 		{
 			if (_candidateList.Count == 0)
 			{
-				return null;
+				return new List<IPickableItem>(0);
 			}
 
 			if (_candidateList.Count == 1)
@@ -119,7 +118,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 						return CreatePickableFeatureItems(selectionByClass);
 					});
 
-			Picker picker = new Picker(pickableItems, pickerWindowLocation);
+			var picker = new Picker(pickableItems, pickerWindowLocation);
 
 			// Must not be called from a background Task!
 			return await picker.PickSingle() as PickableFeatureItem;
@@ -131,7 +130,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 			var pickCandidates = new List<IPickableItem>();
 			foreach (Feature feature in MapUtils.GetFeatures(featuresOfLayer))
 			{
-				var text = GetPickerItemText(feature, featuresOfLayer.Key);
+				string text = GetPickerItemText(feature, featuresOfLayer.Key);
 				var featureItem =
 					new PickableFeatureItem(featuresOfLayer.Key, feature, text);
 				pickCandidates.Add(featureItem);
@@ -158,7 +157,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 		{
 			foreach (Feature feature in classSelection.GetFeatures())
 			{
-				var text = GetPickerItemText(feature, classSelection.FeatureLayer);
+				string text = GetPickerItemText(feature, classSelection.FeatureLayer);
 
 				yield return new PickableFeatureItem(classSelection.FeatureLayer, feature, text);
 			}
@@ -175,20 +174,15 @@ namespace ProSuite.AGP.Editing.PickerUI
 			return GdbObjectUtils.GetDisplayValue(feature, className);
 		}
 
-		private void ShowPickerControl(PickerViewModel vm)
+		private async Task<bool?> ShowPickerControl(PickerViewModel vm)
 		{
-			PickerWindow window = new PickerWindow(vm);
+			var window = new PickerWindow(vm);
 
 			SetWindowLocation(window);
 
-			bool? accepted = window.ShowDialog();
+			window.Show();
 
-			if (accepted == false)
-			{
-				vm.SelectedPickableItem = null;
-			}
-
-			vm.DisposeOverlays();
+			return await vm.ResultTask;
 		}
 
 		private void SetWindowLocation(Window window)
@@ -218,7 +212,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 			else
 				//We are not on the UI
 				Application.Current.Dispatcher.BeginInvoke(action);
-		}
+			}
 
 		private static bool IsUnknownLocation(Point location)
 		{

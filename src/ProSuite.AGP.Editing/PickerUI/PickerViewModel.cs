@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Framework;
@@ -11,6 +14,7 @@ using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.AGP.Editing.PickerUI
 {
@@ -18,16 +22,22 @@ namespace ProSuite.AGP.Editing.PickerUI
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		private readonly CIMPointSymbol _highlightPointSymbol;
 		private readonly CIMLineSymbol _highlightLineSymbol;
 		private readonly CIMPolygonSymbol _highlightPolygonSymbol;
-		private readonly CIMPointSymbol _highlightPointSymbol;
+
+		private bool _isClosing;
+
+		private readonly TaskCompletionSource<bool> _resultTaskCompletionSource;
+		
+		public PickerViewModel() : this(new List<IPickableItem>(), true) { }
 
 		public PickerViewModel(List<IPickableItem> pickingCandidates,
 		                       bool isSingleMode)
 		{
 			FlashItemCmd = new RelayCommand(FlashItem, () => true, false);
 
-			CloseCommand = new RelayCommand(Close, () => true, false);
+			CloseCommand = new RelayCommand<PickerWindow>(Close);
 
 			PickableItems =
 				new ObservableCollection<IPickableItem>(pickingCandidates);
@@ -49,8 +59,10 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 			_highlightPointSymbol =
 				SymbolFactory.Instance.ConstructPointSymbol(magenta, 6);
-		}
 
+			_resultTaskCompletionSource = new TaskCompletionSource<bool>();
+		}
+		
 		private bool? _dialogResult;
 
 		private ObservableCollection<IPickableItem> _pickableItems;
@@ -62,8 +74,9 @@ namespace ProSuite.AGP.Editing.PickerUI
 		protected readonly List<IDisposable> _overlays = new List<IDisposable>();
 
 		public RelayCommand FlashItemCmd { get; internal set; }
-		public RelayCommand CloseCommand { get; set; }
 
+		public ICommand CloseCommand { get; }
+		
 		[CanBeNull]
 		public IPickableItem SelectedPickableItem
 		{
@@ -71,13 +84,17 @@ namespace ProSuite.AGP.Editing.PickerUI
 			set
 			{
 				SetProperty(ref _selectedPickableItem, value, () => SelectedPickableItem);
-				DisposeOverlays();
 
 				try
 				{
 					if (value != null)
 					{
 						DialogResult = true;
+
+						if (IsSingleMode)
+						{
+							CloseAction();
+						}
 					}
 				}
 				catch (Exception e)
@@ -102,13 +119,27 @@ namespace ProSuite.AGP.Editing.PickerUI
 		public bool? DialogResult
 		{
 			get => _dialogResult;
-			set { SetProperty(ref _dialogResult, value, () => DialogResult); }
+			set
+			{
+				SetProperty(ref _dialogResult, value, () => DialogResult);
+
+				bool taskResult = _dialogResult ?? false;
+
+				_resultTaskCompletionSource.SetResult(taskResult);
+			}
 		}
 
 		public List<IPickableItem> SelectedItems
 		{
 			get { return _pickableItems.Where(item => item.IsSelected).ToList(); }
 		}
+
+		/// <summary>
+		/// The awaitable task that provides the result once
+		/// </summary>
+		public Task<bool> ResultTask => _resultTaskCompletionSource.Task;
+
+		public Action CloseAction { get; set; }
 
 		private void AddOverlay(Geometry geometry,
 		                        CIMSymbol symbol)
@@ -123,15 +154,33 @@ namespace ProSuite.AGP.Editing.PickerUI
 		{
 			if (_overlays.Any())
 			{
-				_overlays.ForEach((overlay) => overlay.Dispose());
+				_overlays.ForEach(overlay => overlay.Dispose());
 				_overlays.Clear();
 			}
 		}
-
-		protected void Close()
+		
+		private void Close([CanBeNull] PickerWindow window)
 		{
-			_overlays.Clear();
-			DialogResult = true;
+			try
+			{
+				if (_isClosing)
+				{
+					return;
+				}
+
+				if (window != null)
+				{
+					window.Close();
+				}
+				else
+				{
+					CloseAction();
+				}
+			}
+			catch (Exception exception)
+			{
+				_msg.Error("Error closing picker window", exception);
+			}
 		}
 
 		protected void FlashItem(object param)
@@ -157,6 +206,38 @@ namespace ProSuite.AGP.Editing.PickerUI
 			}
 
 			QueuedTask.Run(() => { AddOverlay(candidate.Geometry, symbol); });
+		}
+
+		public void OnWindowDeactivated(object sender, EventArgs e)
+		{
+			_msg.DebugFormat("PickerWindow_Deactivated. Already closing: {0}", _isClosing);
+
+			Close((PickerWindow) sender);
+		}
+
+		public void OnWindowClosing(object sender, CancelEventArgs e)
+		{
+			_msg.DebugFormat("PickerWindow_Closing");
+
+			DisposeOverlays();
+
+			// Ensure The task completes and the main UI thread continues
+			if (DialogResult == null)
+			{
+				DialogResult = false;
+			}
+
+			_isClosing = true;
+		}
+
+		public void OnPreviewKeyDown(object sender, KeyEventArgs e)
+		{
+			// NOTE: This event is not fired if it is a normal WPF window (the active tool
+			// receives ESC). It only works for ProWindows!
+			if (e.Key == Key.Escape)
+			{
+				Close((PickerWindow) sender);
+			}
 		}
 	}
 }

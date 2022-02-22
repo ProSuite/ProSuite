@@ -88,7 +88,6 @@
     <Compile Include="OneClick\ConstructionToolBase.cs" />
     <Compile Include="OneClick\OneClickToolBase.cs" />
     <Compile Include="OneClick\TwoPhaseEditToolBase.cs" />
-    <Compile Include="PickerUI\DialogCloser.cs" />
     <Compile Include="PickerUI\Picker.cs" />
     <Compile Include="PickerUI\PickerViewModel.cs" />
     <Compile Include="PickerUI\PickerWindow.xaml.cs">
