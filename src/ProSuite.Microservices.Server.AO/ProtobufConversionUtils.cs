@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -21,7 +20,7 @@ namespace ProSuite.Microservices.Server.AO
 {
 	public static class ProtobufConversionUtils
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		/// <summary>
 		/// Converts the specified messages into a list of features that reference
@@ -157,8 +156,6 @@ namespace ProSuite.Microservices.Server.AO
 			                                    EmptyToNull(workspaceMessage.Path),
 			                                    EmptyToNull(workspaceMessage.VersionName),
 			                                    EmptyToNull(workspaceMessage.DefaultVersionName),
-			                                    EmptyToNull(
-				                                    workspaceMessage.DefaultVersionDescription),
 			                                    defaultCreationDate);
 
 			foreach (ObjectClassMsg objectClassMsg in objectClassMessages)

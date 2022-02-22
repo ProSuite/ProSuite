@@ -8,11 +8,14 @@ using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.Core.Processing;
 using ProSuite.Processing;
-using ProSuite.Processing.Domain;
-using ProSuite.Processing.Evaluation;
+using ProSuite.Processing.AGP.Core;
+using ProSuite.Processing.AGP.Core.Domain;
+using ProSuite.Processing.AGP.Core.Utils;
 using ProSuite.Processing.Utils;
 using MapPoint = ArcGIS.Core.Geometry.MapPoint;
+using ProcessDatasetName = ProSuite.Processing.Domain.ProcessDatasetName;
 
 namespace ProSuite.AGP.CartoTrials.CartoProcess
 {
@@ -82,13 +85,10 @@ namespace ProSuite.AGP.CartoTrials.CartoProcess
 
 				_referenceDatasets = OpenDatasets(config.ReferenceDatasets);
 
-				_searchDistance = ProcessingUtils.Clip(
-					config.SearchDistance, 0, double.MaxValue,
-					nameof(config.SearchDistance));
+				_searchDistance = config.SearchDistance.Clamp(0, double.MaxValue, nameof(config.SearchDistance));
 
-				_markerFieldSetter = ProcessingUtils.CreateFieldSetter(
-					config.MarkerAttributes, _inputDataset.FeatureClass,
-					nameof(config.MarkerAttributes));
+				_markerFieldSetter = FieldSetter.Create(config.MarkerAttributes);
+				_markerFieldSetter.ValidateTargetFields(_inputDataset.FeatureClass, nameof(config.MarkerAttributes));
 			}
 
 			public int FeaturesAligned { get; private set; }
@@ -171,10 +171,10 @@ namespace ProSuite.AGP.CartoTrials.CartoProcess
 				// zero point at North: add 90° to ILine.Angle to fix:
 
 				double normalOffset = MathUtils.ToDegrees(normal.Angle) - 90;
-				double normalAngle = ProcessingUtils.ToPositiveDegrees(normalOffset);
+				double normalAngle = NumberUtils.ToPositiveDegrees(normalOffset);
 
 				double tangentOffset = MathUtils.ToDegrees(tangent.Angle) - 90;
-				double tangentAngle = ProcessingUtils.ToPositiveDegrees(tangentOffset);
+				double tangentAngle = NumberUtils.ToPositiveDegrees(tangentOffset);
 
 				_markerFieldSetter.ForgetAll()
 				                  .DefineFields(feature, InputQualifier)

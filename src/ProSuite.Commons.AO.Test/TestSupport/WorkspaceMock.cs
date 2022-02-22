@@ -8,7 +8,15 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 {
 	public class WorkspaceMock : IWorkspaceEdit2, IFeatureWorkspace, IWorkspace
 	{
+		private readonly string _pathName;
 		private Dictionary<string, IDataset> _datasets;
+
+		public WorkspaceMock() { }
+
+		public WorkspaceMock(string pathName)
+		{
+			_pathName = pathName;
+		}
 
 		#region IWorkspaceEdit Members
 
@@ -205,10 +213,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			throw new NotImplementedException();
 		}
 
-		string IWorkspace.PathName
-		{
-			get { throw new NotImplementedException(); }
-		}
+		string IWorkspace.PathName => _pathName;
 
 		esriWorkspaceType IWorkspace.Type
 		{

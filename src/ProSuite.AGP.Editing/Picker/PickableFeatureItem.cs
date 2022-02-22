@@ -35,25 +35,25 @@ namespace ProSuite.AGP.Editing.Picker
 
 		private static Uri GetImagePath(Geometry geometry)
 		{
-			if (geometry.GeometryType == GeometryType.Point)
+			switch (geometry.GeometryType)
 			{
-				return new Uri(
-					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PointGeometry.bmp");
+				case GeometryType.Point:
+				case GeometryType.Multipoint:
+					return new Uri(
+						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PointGeometry.bmp");
+				case GeometryType.Polyline:
+					return new Uri(
+						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/LineGeometry.bmp");
+				case GeometryType.Polygon:
+					return new Uri(
+						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PolygonGeometry.bmp");
+				case GeometryType.Multipatch:
+					return new Uri(
+						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/MultipatchGeometry.bmp");
+				default:
+					throw new ArgumentOutOfRangeException(
+						$"Unsupported geometry type: {geometry.GeometryType}");
 			}
-
-			if (geometry.GeometryType == GeometryType.Polyline)
-			{
-				return new Uri(
-					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/LineGeometry.bmp");
-			}
-
-			if (geometry.GeometryType == GeometryType.Polygon)
-			{
-				return new Uri(
-					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PolygonGeometry.bmp");
-			}
-
-			return new Uri("");
 		}
 
 		public bool IsSelected

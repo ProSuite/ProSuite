@@ -1011,9 +1011,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 					return false;
 				}
 
-				return string.Equals(Path.GetFullPath(workspace1.PathName),
-				                     Path.GetFullPath(workspace2.PathName),
-				                     StringComparison.OrdinalIgnoreCase);
+				//Determines whether two Uri instances have the same value.
+				// e.g. these paths are equal
+				// C:\Users\daro\AppData\Local\Temp\GdbWorkspaceTest.gdb
+				// file:///C:/Users/daro/AppData/Local/Temp/GdbWorkspaceTest.gdb
+				return Equals(new Uri(workspace1.PathName), new Uri(workspace2.PathName));
 			}
 
 			if (versionedWorkspace1 == null || versionedWorkspace2 == null)

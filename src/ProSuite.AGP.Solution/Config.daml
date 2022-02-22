@@ -85,11 +85,10 @@
           <button refID="ProSuiteTools_Logger_ProSuiteLogPane_ShowButton" size="large" />
         </group>
         <group id="ProSuiteTools_QA" caption="Quality Assurance" keytip="G1">
-          <button refID="ProSuiteTools_QA_StartGPServer" size="middle" />
-          <button refID="ProSuiteTools_QA_StartExtent" size="middle" />
           <comboBox refID="ProSuiteTools_QA_SpecsComboBox" size="middle" />
           <button refID="ProSuite_AGP_Solution_QA_VerifyVisibleExtentCmd" size="middle" />
           <tool refID="ProSuite_AGP_Solution_QA_VerifyPerimeterTool" size="middle" />
+          <button refID="ProSuite_AGP_Solution_QA_VerifyLastCmd" size="middle" />
           <button refID="ProSuite_AGP_Solution_QA_VerifySelectionCmd" size="middle" />
           <button refID="WorkLists_CreateIssueWorkList" size="large" />
           <tool refID="ProSuite_AGP_Solution_QA_SelectIssueFeaturesTool" size="middle" />
@@ -110,34 +109,6 @@
         </group>
       </groups>
       <controls>
-        <button id="ProSuiteTools_Commons_ShowLog" caption="Configuration" className="ShowConfigWindow"
-                loadOnClick="true"
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GeodatabaseFeatureDataset16.png"
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GeodatabaseFeatureDataset32.png"
-                keytip="B1">
-          <tooltip heading="Show Config">ProSuite Configuration<disabledText /></tooltip>
-        </button>
-        <!--<button id="ProSuiteTools_QA_StartErrorsDockPane" caption="QA Error Processing"
-                className="StartQAErrorsDockPane" loadOnClick="true"
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerSession16.png"
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerSession32.png"
-                keytip="B1">
-          <tooltip heading="QA GP Tool">Show QA error worklist<disabledText /></tooltip>
-        </button>-->
-        <button id="ProSuiteTools_QA_StartGPServer" caption="Start QA GPService" className="StartQAGPTool"
-                loadOnClick="true" condition="prosuite_qa_gpservice_enabled"
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerConnection16.png"
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerConnection32.png"
-                keytip="B1">
-          <tooltip heading="QA GP Tool">Execute QA GP Tool on Server with XML<disabledText /></tooltip>
-        </button>
-        <button id="ProSuiteTools_QA_StartExtent" caption="Start QA" className="StartQAGPExtent" loadOnClick="true"
-                condition="prosuite_qa_gplocal_enabled"
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerBatchJobFile16.png"
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/DataReviewerBatchJobFile32.png"
-                keytip="B1">
-          <tooltip heading="QA GP Tool">Check QA for local selection<disabledText /></tooltip>
-        </button>
         <comboBox id="ProSuiteTools_QA_SpecsComboBox" caption=" Specification"
                   className="QA.QualitySpecificationsComboBox" itemWidth="90" extendedCaption="Extended Caption"
                   isEditable="false" isReadOnly="true" resizable="true" rows="32">
@@ -149,14 +120,6 @@
                 largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/ItemInformation32.png">
           <tooltip heading="Show Logs Window">Show Logs Window.<disabledText /></tooltip>
         </button>
-        <!--<button id="Clients_AGP_ProSuiteSolution_AddWorkList" caption="Import WorkList" className="ImportWorkListFile"
-                loadOnClick="true"
-                smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png"
-                largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple32.png">
-          <tooltip heading="Import Worklist file">
-            Import and add worklist file(wl) to project<disabledText />
-          </tooltip>
-        </button>-->
         <button id="WorkLists_ShowWorkListsButton" caption="Open Work List"
                 className="WorkLists.ShowWorkListsButton" loadOnClick="true" condition="esri_mapping_mapPane"
                 smallImage="pack://application:,,,/ProSuiteSolution;component/Images/NavigateWorklistCmd16.png"
@@ -270,6 +233,13 @@
             Select features.<disabledText />
           </tooltip>
         </tool>
+        <button id="ProSuiteTools_Selection_SelectionToolButton" caption="Select" className="Selection.SelectionToolButton"
+                loadOnClick="true" smallImage="Images\SelectionTool16.png" largeImage="Images\SelectionTool32.png"
+                condition="esri_mapping_mapPane">
+          <tooltip heading="Select">
+            Select features.<disabledText />
+          </tooltip>
+        </button>
         <tool id="ProSuiteTools_PickWorkItemTool" caption="Pick Work Item" className="Selection.PickWorkListItemTool"
               loadOnClick="true"
               smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/GenericButtonPurple16.png"
@@ -293,6 +263,16 @@
             Verifies features intersecting a user-defined box, based on the selected quality specification.<disabledText />
           </tooltip>
         </tool>
+        <button id="ProSuite_AGP_Solution_QA_VerifyLastCmd" caption="Verify Last"
+                className="ProSuite.AGP.Solution.QA.VerifyLastCmd" loadOnClick="false"
+                smallImage="Images\VerifyLastCmd16.png" largeImage="Images\VerifyLastCmd32.png">
+          <tooltip heading="Verify using previous perimeter">
+            Re-verifies the last verified perimeter based on the selected quality specification.
+
+            ALT: Zoom to the previously verified extent (without starting verification)
+            <disabledText />
+          </tooltip>
+        </button>
         <button id="ProSuite_AGP_Solution_QA_VerifySelectionCmd" caption="Verify Selection"
                 className="ProSuite.AGP.Solution.QA.VerifySelectionCmd" loadOnClick="false"
                 smallImage="Images\VerifySelectionCmd16.png" largeImage="Images\VerifySelectionCmd32.png">
@@ -328,7 +308,6 @@
               largeImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/TaskItem32.png"
               smallImage="pack://application:,,,/ArcGIS.Desktop.Resources;component/Images/TaskItem16.png">
           <tooltip heading="Folder">Add items to project.</tooltip>
-          <!--<button refID="Clients_AGP_ProSuiteSolution_AddWorkList" />-->
           <button refID="esri_folderConnectionAddButton" />
           <!--<button refID="esri_DeleteItem" />-->
         </menu>

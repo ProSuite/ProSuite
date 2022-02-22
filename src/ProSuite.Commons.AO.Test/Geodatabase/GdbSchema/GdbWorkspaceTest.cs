@@ -1,3 +1,4 @@
+using System;
 using System.IO;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
@@ -5,6 +6,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Licensing;
+using ProSuite.Commons.AO.Test.TestSupport;
 
 namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 {
@@ -41,6 +43,24 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 			                                             WorkspaceComparison.AnyUserSameVersion));
 			Assert.IsTrue(WorkspaceUtils.IsSameWorkspace(realWorkspace, gdbWorkspace,
 			                                             WorkspaceComparison.AnyUserSameVersion));
+		}
+		
+		[Test]
+		public void CanCompareWorkspacePaths()
+		{
+			string fgdbName = "GdbWorkspaceTest.CanCompareWorkspacePaths";
+
+			IWorkspace realWorkspace = (IWorkspace) CreateTestWorkspace(fgdbName);
+			Console.WriteLine(realWorkspace.PathName);
+
+			string path = new Uri(realWorkspace.PathName).AbsoluteUri;
+			IWorkspace mock = new WorkspaceMock(path);
+			Console.WriteLine(mock.PathName);
+			
+			GdbWorkspace gdbWorkspace = GdbWorkspace.CreateFromFgdb(mock);
+
+			Assert.IsTrue(WorkspaceUtils.IsSameDatabase(realWorkspace, gdbWorkspace));
+			Assert.IsTrue(WorkspaceUtils.IsSameDatabase(gdbWorkspace, realWorkspace));
 		}
 
 		[Test]
@@ -106,7 +126,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase.GdbSchema
 		private static IFeatureWorkspace CreateTestWorkspace(string fgdbName)
 		{
 			string dir = Path.GetTempPath();
-
+			
 			string mdb = Path.Combine(dir, fgdbName) + ".gdb";
 
 			if (Directory.Exists(mdb))

@@ -36,6 +36,13 @@ namespace ProSuite.DomainModel.AGP.QA
 		event EventHandler QualitySpecificationsRefreshed;
 
 		/// <summary>
+		/// Gets or sets the last verification perimeter.
+		/// </summary>
+		/// <value>The last verification perimeter.</value>
+		[CanBeNull]
+		Geometry LastVerificationPerimeter { get; set; }
+
+		/// <summary>
 		/// Display name of the backend, such as 'localhost'
 		/// </summary>
 		string BackendDisplayName { get; }

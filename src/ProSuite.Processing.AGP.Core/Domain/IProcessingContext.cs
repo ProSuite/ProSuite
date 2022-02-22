@@ -2,7 +2,9 @@ using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.Core.Processing;
 using ProSuite.Processing.Domain;
+using ProcessDatasetName = ProSuite.Processing.Domain.ProcessDatasetName;
 
 namespace ProSuite.Processing.AGP.Core.Domain
 {
