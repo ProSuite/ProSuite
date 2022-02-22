@@ -10,7 +10,7 @@ namespace ProSuite.AGP.Editing.Selection
 	public class Selector
 	{
 		public static void SelectLayersFeaturesByOids(
-			[CanBeNull] List<FeatureClassSelection> featuresPerLayer,
+			[CanBeNull] IList<FeatureClassSelection> featuresPerLayer,
 			SelectionCombinationMethod selectionCombinationMethod)
 		{
 			if (featuresPerLayer == null)
