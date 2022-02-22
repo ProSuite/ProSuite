@@ -536,29 +536,27 @@ namespace ProSuite.AGP.Editing.OneClick
 				//CTRL was pressed: picker shows FC's to select from
 				if (GetSelectionSketchMode() == SelectionMode.UserSelect)
 				{
-					var item =
+					var picked =
 						await PickerUtils.PickSingleFeatureClassItemsAsync(
 							candidatesOfManyLayers, pickerWindowLocation);
 
-					if (item != null)
+					if (picked != null)
 					{
 						await QueuedTask.Run(() =>
 						{
-							item.BelongingFeatureLayers.ForEach(layer =>
-							{
-								FeatureClassSelection selection =
-									candidatesOfManyLayers.Single(s => s.FeatureLayer == layer);
+							List<FeatureClassSelection> selectionsToApply =
+								picked.BelongingFeatureLayers.Select(
+									      layer => candidatesOfManyLayers.Single(
+										      s => s.FeatureLayer == layer))
+								      .ToList();
 
-								SelectionUtils.SelectFeatures(
-									layer, selectionMethod, selection.ObjectIds);
-							});
+							Selector.SelectLayersFeaturesByOids(selectionsToApply, selectionMethod);
 						});
 					}
 				}
-
-				//no modifier pressed: select all in envelope
 				else
 				{
+					//no modifier pressed: select all in envelope
 					await QueuedTask.Run(() =>
 					{
 						Selector.SelectLayersFeaturesByOids(

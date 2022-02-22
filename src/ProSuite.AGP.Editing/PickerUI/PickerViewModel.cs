@@ -41,7 +41,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 		public PickerViewModel() : this(new List<IPickableItem>(), true) { }
 
-		public PickerViewModel(List<IPickableItem> pickingCandidates,
+		public PickerViewModel(IList<IPickableItem> pickingCandidates,
 		                       bool isSingleMode)
 		{
 			FlashItemCmd = new RelayCommand(FlashItem, () => true, false);

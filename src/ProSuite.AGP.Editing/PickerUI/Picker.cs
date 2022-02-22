@@ -13,7 +13,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 {
 	public class Picker : IPicker
 	{
-		private readonly List<IPickableItem> _candidateList;
+		private readonly IList<IPickableItem> _candidateList;
 		private readonly Point _pickerScreenLocation = new Point(double.NaN, double.NaN);
 		private PickerViewModel _viewModel;
 
@@ -29,7 +29,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 		/// <param name="pickerScreenCoordinates">
 		/// The location  of the picker dialog's top left corner in screen coordinates.
 		/// </param>
-		public Picker([NotNull] List<IPickableItem> candidateList,
+		public Picker([NotNull] IList<IPickableItem> candidateList,
 		              Point pickerScreenCoordinates)
 		{
 			_candidateList = candidateList;
@@ -61,7 +61,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 		}
 
 		[NotNull]
-		public async Task<List<IPickableItem>> PickMany()
+		public async Task<IList<IPickableItem>> PickMany()
 		{
 			if (_candidateList.Count == 0)
 			{
