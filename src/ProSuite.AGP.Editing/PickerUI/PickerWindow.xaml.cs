@@ -1,5 +1,6 @@
 using System;
-using System.Windows.Input;
+using System.ComponentModel;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing.PickerUI
 {
@@ -8,6 +9,10 @@ namespace ProSuite.AGP.Editing.PickerUI
 	/// </summary>
 	public partial class PickerWindow
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private bool IsClosing { get; set; }
+
 		public PickerWindow(PickerViewModel vm)
 		{
 			InitializeComponent();
@@ -18,21 +23,24 @@ namespace ProSuite.AGP.Editing.PickerUI
 			}
 		}
 
-		private void OnCloseExecuted(object sender, ExecutedRoutedEventArgs e)
-		{
-			Close();
-		}
-
-		private void Window_Deactivated(object sender, EventArgs e)
+		private void PickerWindow_Deactivated(object sender, EventArgs e)
 		{
 			try
 			{
-				Close();
+				if (! IsClosing)
+				{
+					Close();
+				}
 			}
-			catch (Exception)
+			catch (Exception exception)
 			{
-				// ignored
+				_msg.Error("Error deactivating picker window", exception);
 			}
+		}
+
+		private void PickerWindow_Closing(object sender, CancelEventArgs e)
+		{
+			IsClosing = true;
 		}
 	}
 }

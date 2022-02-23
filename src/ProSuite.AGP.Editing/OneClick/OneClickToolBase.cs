@@ -40,6 +40,8 @@ namespace ProSuite.AGP.Editing.OneClick
 
 		protected OneClickToolBase()
 		{
+			ContextMenuID = "esri_mapping_selection2DContextMenu";
+
 			UseSnapping = false;
 			HandledKeys.Add(Key.Escape);
 			HandledKeys.Add(_keyShowOptionsPane);

@@ -109,8 +109,7 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 		[NotNull]
 		public static Image GetImage([NotNull] string key)
 		{
-			Image image;
-			return _mapKeyToImage.TryGetValue(key, out image)
+			return _mapKeyToImage.TryGetValue(key, out Image image)
 				       ? image
 				       : _mapKeyToImage[_keyUnknown];
 		}
@@ -141,7 +140,7 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 		}
 
 		[NotNull]
-		public static Image GetImage(GeometryType geometryType)
+		public static Image GetImage([CanBeNull] GeometryType geometryType)
 		{
 			if (geometryType is GeometryTypeTerrain)
 			{
@@ -163,9 +162,9 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 				return GetImage(_keyTable);
 			}
 
-			if (geometryType is GeometryTypeShape)
+			if (geometryType is GeometryTypeShape geometryTypeShape)
 			{
-				return GetImage(((GeometryTypeShape)geometryType).ShapeType);
+				return GetImage(geometryTypeShape.ShapeType);
 			}
 
 			if (geometryType is GeometryTypeRasterMosaic)
@@ -210,8 +209,7 @@ namespace ProSuite.UI.DataModel.ResourceLookup
 		[NotNull]
 		public static string GetImageKey([NotNull] Image image)
 		{
-			string key;
-			return _mapImageToKey.TryGetValue(image, out key)
+			return _mapImageToKey.TryGetValue(image, out string key)
 				       ? key
 				       : _keyUnknown;
 		}

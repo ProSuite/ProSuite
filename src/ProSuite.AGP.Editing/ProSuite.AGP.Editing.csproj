@@ -182,6 +182,7 @@
     <Resource Include="PickerUI\Images\LineGeometry.bmp" />
     <Resource Include="PickerUI\Images\PointGeometry.bmp" />
     <Resource Include="PickerUI\Images\PolygonGeometry.bmp" />
+    <Resource Include="PickerUI\Images\MultipatchGeometry.bmp" />
     <None Include="Properties\Images\AdvancedReshapeToolCursor.cur" />
     <None Include="Properties\Images\AdvancedReshapeToolCursorShift.cur" />
     <None Include="Properties\Images\CutPolygonAlongToolCursor.cur" />

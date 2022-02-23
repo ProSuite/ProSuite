@@ -184,6 +184,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		                                 TestFactory testFactory,
 		                                 string conditionConstructorSignature, StringBuilder sb)
 		{
+			string testDescription = testFactory.GetTestDescription();
 
 			sb.AppendLine();
 			sb.AppendLine($"    @classmethod");
