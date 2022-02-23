@@ -679,13 +679,13 @@ namespace ProSuite.Commons.AO.Geometry
 			else if (! leaveOldZ)
 			{
 				// ensure Z value is identical to avoid gaps resulting in non-simple geometry
-				UpdateVertex(vertex, localSegmentIndex, (ICurve) geometry, vertexIsFromPoint);
+				EnsureVertex(vertex, localSegmentIndex, (ICurve) geometry, vertexIsFromPoint);
 			}
 
 			return result;
 		}
 
-		public static void EnsureVertexExists([NotNull] IPoint vertex,
+		public static bool EnsureVertexExists([NotNull] IPoint vertex,
 		                                      [NotNull] IGeometry inGeometry,
 		                                      int localSegmentIndex,
 		                                      int partIndex,
@@ -717,12 +717,11 @@ namespace ProSuite.Commons.AO.Geometry
 				// the point is on the segment but neither the to nor the from point -> add the point
 				InsertVertex(vertex, localSegmentIndex, partIndex, (ISegmentCollection) inGeometry,
 				             leaveOldZ);
+				return true;
 			}
-			else
-			{
-				bool updateFromPoint = vertexDistanceToFromPoint < vertexDistanceToToPoint;
-				UpdateVertex(vertex, localSegmentIndex, (ICurve) geometry, updateFromPoint);
-			}
+
+			bool updateFromPoint = vertexDistanceToFromPoint < vertexDistanceToToPoint;
+			return EnsureVertex(vertex, localSegmentIndex, (ICurve) geometry, updateFromPoint);
 		}
 
 		/// <summary>
@@ -800,7 +799,7 @@ namespace ProSuite.Commons.AO.Geometry
 				int globalPointIndex = GeometryUtils.GetGlobalIndex((IGeometry) allSegments,
 					partIndex, localSegmentIndex);
 
-				UpdateVertex(vertex, globalPointIndex, (ICurve) allSegments, false);
+				EnsureVertex(vertex, globalPointIndex, (ICurve) allSegments, false);
 			}
 
 			return true;
@@ -1125,11 +1124,11 @@ namespace ProSuite.Commons.AO.Geometry
 			if (AreEqual(replacementStartsAt, replacementCurve.FromPoint, nonPlanar))
 			{
 				// no re-orientation needed, just update vertex
-				UpdateVertex(replacementCurve.FromPoint, firstSegmentIndex, originalCurve, true);
+				EnsureVertex(replacementCurve.FromPoint, firstSegmentIndex, originalCurve, true);
 			}
 			else if (AreEqual(replacementStartsAt, replacementCurve.ToPoint, nonPlanar))
 			{
-				UpdateVertex(replacementCurve.ToPoint, firstSegmentIndex, originalCurve, true);
+				EnsureVertex(replacementCurve.ToPoint, firstSegmentIndex, originalCurve, true);
 
 				_msg.Debug(
 					"EnsureReplacementCurveFits: Flipping replacement curve because to point equals replacement start.");
@@ -1146,11 +1145,11 @@ namespace ProSuite.Commons.AO.Geometry
 			// connection at last segment index 
 			if (AreEqual(replacementEndsAt, replacementCurve.ToPoint, nonPlanar))
 			{
-				UpdateVertex(replacementCurve.ToPoint, lastSegmentIndex, originalCurve, false);
+				EnsureVertex(replacementCurve.ToPoint, lastSegmentIndex, originalCurve, false);
 			}
 			else if (AreEqual(replacementEndsAt, replacementCurve.FromPoint, nonPlanar))
 			{
-				UpdateVertex(replacementCurve.FromPoint, lastSegmentIndex, originalCurve, false);
+				EnsureVertex(replacementCurve.FromPoint, lastSegmentIndex, originalCurve, false);
 
 				_msg.Debug(
 					"EnsureReplacementCurveFits: Flipping replacement curve because from point equals replacement end.");
@@ -1406,12 +1405,14 @@ namespace ProSuite.Commons.AO.Geometry
 			EnsureVertexExists(lastCutPoint, curveToReshape, lastSegmentIndex, partIndex);
 		}
 
-		private static void UpdateVertex([NotNull] IPoint vertex,
+		private static bool EnsureVertex([NotNull] IPoint vertex,
 		                                 int segmentIndex,
 		                                 [NotNull] ICurve inGeometry,
 		                                 bool vertexIsFromPoint)
 		{
 			int pointIdx;
+
+			double epsilon = MathUtils.GetDoubleSignificanceEpsilon(vertex.X, vertex.Y);
 
 			if (vertexIsFromPoint)
 			{
@@ -1429,24 +1430,43 @@ namespace ProSuite.Commons.AO.Geometry
 
 			IPoint point = ((IPointCollection) inGeometry).Point[pointIdx];
 
-			point.X = vertex.X;
-			point.Y = vertex.Y;
+			bool pointEnsured = false;
+			if (! MathUtils.AreEqual(point.X, vertex.X, epsilon))
+			{
+				point.X = vertex.X;
+				pointEnsured = true;
+			}
 
-			if (! double.IsNaN(vertex.Z))
+			if (! MathUtils.AreEqual(point.Y, vertex.Y, epsilon))
+			{
+				point.Y = vertex.Y;
+				pointEnsured = true;
+			}
+
+			if (! double.IsNaN(vertex.Z) &&
+			    ! MathUtils.AreEqual(point.Z, vertex.Z, epsilon))
 			{
 				// keep the old Z if the new vertex is not from a Z-aware geometry
 				point.Z = vertex.Z;
+				pointEnsured = true;
 			}
 
-			if (! double.IsNaN(vertex.M))
+			if (! double.IsNaN(vertex.M) &&
+			    ! MathUtils.AreEqual(point.M, vertex.M, epsilon))
 			{
 				// keep the old M value, if the new value is NaN. But otherwise, if the old value is not 
 				// updated, the end point of the last non-replaced segment does not fit the start point (different M)
 				// of the first replaced segment -> simplify will create separate parts!
 				point.M = vertex.M;
+				pointEnsured = true;
 			}
 
-			((IPointCollection) inGeometry).UpdatePoint(pointIdx, point);
+			if (pointEnsured)
+			{
+				((IPointCollection) inGeometry).UpdatePoint(pointIdx, point);
+			}
+
+			return pointEnsured;
 		}
 
 		#region Remove Short Segments

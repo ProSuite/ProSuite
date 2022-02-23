@@ -316,7 +316,7 @@ namespace ProSuite.Commons.Geom
 			{
 				bool anyFound = false;
 				foreach (int foundIdx in
-					multipoint2.FindPointIndexes(point, xyTolerance, true))
+				         multipoint2.FindPointIndexes(point, xyTolerance, true))
 				{
 					Pnt3D searchPoint = point as Pnt3D;
 					Pnt3D foundPoint = multipoint2.GetPoint(foundIdx) as Pnt3D;
@@ -385,7 +385,7 @@ namespace ProSuite.Commons.Geom
 			{
 				bool anyFound = false;
 				foreach (int foundIdx in
-					multipoint2.FindPointIndexes(point, tolerance, true))
+				         multipoint2.FindPointIndexes(point, tolerance, true))
 				{
 					anyFound = true;
 
@@ -415,7 +415,7 @@ namespace ProSuite.Commons.Geom
 		                                  double tolerance)
 		{
 			foreach (KeyValuePair<int, Line3D> segmentsAroundPoint in
-				segments.FindSegments(testPoint, tolerance))
+			         segments.FindSegments(testPoint, tolerance))
 			{
 				Line3D segment = segmentsAroundPoint.Value;
 
@@ -504,6 +504,84 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
+		/// Determines whether the specified closed polycurve contains (including the boundary) the
+		/// specified test geometry.
+		/// </summary>
+		/// <param name="closedPolycurve">The closed and properly oriented polycurve.</param>
+		/// <param name="targetSegments">The target curve to be checked whether it is contained or not.</param>
+		/// <param name="tolerance"></param>
+		/// <param name="intersectionPoints">The known intersection points, including linear intersection
+		/// breaks at the start end point (if congruence should be detected correctly).</param>
+		/// <param name="filterTargetByPartIndex">Specify the target part, that should be checked.
+		/// If null, the entire target geometry is checked.</param>
+		/// <returns>true, if the <paramref name="targetSegments"/> are contained inside the
+		/// <paramref name="closedPolycurve"/>.
+		/// false, if the <paramref name="targetSegments"/> is not contained inside the
+		/// <paramref name="closedPolycurve"/>.
+		/// null, if the <paramref name="targetSegments"/> are congnruent with the
+		/// <paramref name="closedPolycurve"/></returns>
+		public static bool? AreaContainsXY(
+			[NotNull] ISegmentList closedPolycurve,
+			[NotNull] ISegmentList targetSegments,
+			double tolerance,
+			IList<IntersectionPoint3D> intersectionPoints = null,
+			int? filterTargetByPartIndex = null)
+		{
+			Assert.False(closedPolycurve.IsEmpty, "Input containing polygon is empty.");
+			Assert.False(targetSegments.IsEmpty, "Input contained curve is empty.");
+			Assert.True(closedPolycurve.IsClosed, "Input containing polygon is not closed.");
+
+			if (AreBoundsDisjoint(closedPolycurve, targetSegments, tolerance))
+			{
+				return false;
+			}
+
+			Predicate<IntersectionPoint3D> predicate =
+				filterTargetByPartIndex != null
+					? new Predicate<IntersectionPoint3D>(
+						i => i.TargetPartIndex == filterTargetByPartIndex)
+					: null;
+
+			intersectionPoints =
+				GetRealIntersectionPoints(closedPolycurve, targetSegments, tolerance,
+				                          intersectionPoints, predicate);
+
+			// if there is no intersection, the boundaries do not intersect: check a single point
+			if (intersectionPoints.Count == 0)
+			{
+				int partIndex = filterTargetByPartIndex ?? 0;
+				Pnt3D anyPoint = targetSegments.GetPart(partIndex).GetSegment(0).StartPoint;
+
+				return AreaContainsXY(closedPolycurve, anyPoint, tolerance);
+			}
+
+			bool hasAnyRightSideDeviation = false;
+			foreach (IntersectionPoint3D intersectionPoint in intersectionPoints)
+			{
+				DetermineTargetDeviationAtIntersection(intersectionPoint, closedPolycurve,
+				                                       targetSegments,
+				                                       tolerance,
+				                                       out bool hasRightSideDeviation,
+				                                       out bool hasLeftSideDeviation);
+				if (hasLeftSideDeviation)
+				{
+					return false;
+				}
+
+				hasAnyRightSideDeviation |= hasRightSideDeviation;
+			}
+
+			// There were boundary intersections, but none has a target deviation to the left
+			if (hasAnyRightSideDeviation)
+			{
+				return true;
+			}
+
+			// No deviations to the left nor to the right -> congruent
+			return null;
+		}
+
+		/// <summary>
 		/// Determines whether the test point is completely contained (true) or
 		/// on the boundary of the specified ring (i.e. intersecting the linestring).
 		/// </summary>
@@ -549,7 +627,7 @@ namespace ProSuite.Commons.Geom
 
 		/// <summary>
 		/// Determines whether the test point is completely contained (true) or
-		/// on the boundary of the specified rings (e.e. intersecting the boundary).
+		/// on the boundary of the specified rings (i.e. intersecting the boundary).
 		/// </summary>
 		/// <param name="closedRings">The containing rings.</param>
 		/// <param name="testPoint"></param>
@@ -602,6 +680,82 @@ namespace ProSuite.Commons.Geom
 		}
 
 		/// <summary>
+		/// Determines whether the specified closed polycurve contains (including the boundary) the
+		/// specified test geometry.
+		/// </summary>
+		/// <param name="contained">The source curve to be checked whether it is contained or not.</param>
+		/// <param name="withinClosedPolycurve">The closed and properly oriented polycurve.</param>
+		/// <param name="tolerance"></param>
+		/// <param name="intersectionPoints">The known intersection points, including linear intersection
+		/// breaks at the start end point (if congruence should be detected correctly).</param>
+		/// <param name="filterSourceByPartIndex">Specify the source (contained) part, that should be checked.
+		/// If null, the entire source geometry is checked.</param>
+		/// <returns>true, if the <paramref name="contained"/> are contained inside the
+		/// <paramref name="withinClosedPolycurve"/>.
+		/// false, if the <paramref name="contained"/> is not contained inside the
+		/// <paramref name="withinClosedPolycurve"/>.
+		/// null, if <paramref name="withinClosedPolycurve"/> is congruent with <paramref name="contained"/></returns>
+		public static bool? IsContainedXY(
+			[NotNull] ISegmentList contained,
+			[NotNull] ISegmentList withinClosedPolycurve,
+			double tolerance,
+			IList<IntersectionPoint3D> intersectionPoints = null,
+			int? filterSourceByPartIndex = null)
+		{
+			Assert.False(contained.IsEmpty, "Input containing polygon is empty.");
+			Assert.False(withinClosedPolycurve.IsEmpty, "Input contained curve is empty.");
+			Assert.True(withinClosedPolycurve.IsClosed, "Input within-polygon is not closed.");
+
+			if (AreBoundsDisjoint(contained, withinClosedPolycurve, tolerance))
+			{
+				return false;
+			}
+
+			Predicate<IntersectionPoint3D> predicate =
+				filterSourceByPartIndex != null
+					? new Predicate<IntersectionPoint3D>(
+						i => i.SourcePartIndex == filterSourceByPartIndex)
+					: null;
+
+			intersectionPoints = GetRealIntersectionPoints(contained, withinClosedPolycurve,
+			                                               tolerance, intersectionPoints,
+			                                               predicate);
+
+			// if there is no real intersection, the boundaries do not intersect at all or everywhere
+			if (intersectionPoints.Count == 0)
+			{
+				int partIndex = filterSourceByPartIndex ?? 0;
+				Pnt3D anyPoint = contained.GetPart(partIndex).GetSegment(0).StartPoint;
+
+				return AreaContainsXY(withinClosedPolycurve, anyPoint, tolerance);
+			}
+
+			bool hasAnyRightSideDeviation = false;
+			foreach (IntersectionPoint3D intersectionPoint in intersectionPoints)
+			{
+				DetermineSourceDeviationAtIntersection(intersectionPoint, contained,
+				                                       withinClosedPolycurve, tolerance,
+				                                       out bool hasRightSideDeviation,
+				                                       out bool hasLeftSideDeviation);
+				if (hasLeftSideDeviation)
+				{
+					return false;
+				}
+
+				hasAnyRightSideDeviation |= hasRightSideDeviation;
+			}
+
+			// There were boundary intersections, but none has a target deviation to the left
+			if (hasAnyRightSideDeviation)
+			{
+				return true;
+			}
+
+			// No deviations to the left nor to the right -> congruent
+			return null;
+		}
+
+		/// <summary>
 		/// Determines whether the source ring is contained within the target.
 		/// </summary>
 		/// <param name="sourceRing"></param>
@@ -610,7 +764,7 @@ namespace ProSuite.Commons.Geom
 		/// <param name="tolerance"></param>
 		/// <param name="disregardRingOrientation"></param>
 		/// <returns></returns>
-		public static bool? WithinAreaXY(
+		public static bool? IsWithinAreaXY(
 			[NotNull] Linestring sourceRing,
 			[NotNull] Linestring targetRing,
 			[NotNull] IEnumerable<IntersectionPoint3D> intersectionPoints,
@@ -885,8 +1039,22 @@ namespace ProSuite.Commons.Geom
 					return true;
 				}
 
-				bool? targetDeviatesToLeft =
-					intersectionPoint.TargetDeviatesToLeftOfSourceRing(ring1, ring2, tolerance);
+				bool? continuesToRightSide =
+					intersectionPoint.TargetContinuesToRightSide(ring1, ring2, tolerance);
+
+				bool? arrivesFromRightSide =
+					intersectionPoint.TargetArrivesFromRightSide(ring1, ring2, tolerance);
+
+				bool? targetDeviatesToLeft = null;
+
+				if (continuesToRightSide == true || arrivesFromRightSide == true)
+				{
+					targetDeviatesToLeft = false;
+				}
+				else if (continuesToRightSide == false || arrivesFromRightSide == false)
+				{
+					targetDeviatesToLeft = true;
+				}
 
 				if (targetDeviatesToLeft == null)
 				{
@@ -928,8 +1096,8 @@ namespace ProSuite.Commons.Geom
 
 			if (! ring2IsVertical)
 			{
-				ring2ContainsRing1 = WithinAreaXY(ring1, ring2, intersectionPoints, tolerance,
-				                                  disregardRingOrientation);
+				ring2ContainsRing1 = IsWithinAreaXY(ring1, ring2, intersectionPoints, tolerance,
+				                                    disregardRingOrientation);
 
 				if (ring2ContainsRing1 == true)
 				{
@@ -1063,7 +1231,7 @@ namespace ProSuite.Commons.Geom
 				                      tolerance);
 
 			foreach (KeyValuePair<int, Line3D> path2Segment in intersectingSegments.OrderBy(
-				kvp => kvp.Key))
+				         kvp => kvp.Key))
 			{
 				Line3D segment = path2Segment.Value;
 
@@ -1086,6 +1254,107 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return result;
+		}
+
+		private static void DetermineTargetDeviationAtIntersection(
+			[NotNull] IntersectionPoint3D intersection,
+			[NotNull] ISegmentList source,
+			[NotNull] ISegmentList target,
+			double tolerance,
+			out bool hasRightSideDeviation,
+			out bool hasLeftSideDeviation)
+		{
+			if (intersection.Type == IntersectionPointType.Crossing)
+			{
+				hasLeftSideDeviation = true;
+				hasRightSideDeviation = true;
+
+				return;
+			}
+
+			// If the target arrives or continues to the outside (i.e. left side) then it's not contained
+			bool? continuesToRightSide =
+				intersection.TargetContinuesToRightSide(source, target, tolerance);
+
+			hasLeftSideDeviation = continuesToRightSide == false;
+			hasRightSideDeviation = continuesToRightSide == true;
+
+			bool? arrivesFromRightSide =
+				intersection.TargetArrivesFromRightSide(source, target, tolerance);
+
+			if (arrivesFromRightSide == false)
+			{
+				hasLeftSideDeviation = true;
+			}
+
+			if (arrivesFromRightSide == true)
+			{
+				hasRightSideDeviation = true;
+			}
+		}
+
+		private static void DetermineSourceDeviationAtIntersection(
+			[NotNull] IntersectionPoint3D intersection,
+			[NotNull] ISegmentList source,
+			[NotNull] ISegmentList target,
+			double tolerance,
+			out bool hasRightSideDeviation,
+			out bool hasLeftSideDeviation)
+		{
+			if (intersection.Type == IntersectionPointType.Crossing)
+			{
+				hasLeftSideDeviation = true;
+				hasRightSideDeviation = true;
+
+				return;
+			}
+
+			// If the source arrives or continues to the outside (i.e. left side) then it's not contained
+			bool? continuesToRightSide =
+				intersection.SourceContinuesToRightSide(source, target, tolerance);
+
+			hasLeftSideDeviation = continuesToRightSide == false;
+			hasRightSideDeviation = continuesToRightSide == true;
+
+			bool? arrivesFromRightSide =
+				intersection.SourceArrivesFromRightSide(source, target, tolerance);
+
+			if (arrivesFromRightSide == false)
+			{
+				hasLeftSideDeviation = true;
+			}
+
+			if (arrivesFromRightSide == true)
+			{
+				hasRightSideDeviation = true;
+			}
+		}
+
+		private static IList<IntersectionPoint3D> GetRealIntersectionPoints(
+			ISegmentList source,
+			ISegmentList target,
+			double tolerance,
+			IList<IntersectionPoint3D> knownIntersections = null,
+			Predicate<IntersectionPoint3D> predicate = null)
+		{
+			IList<IntersectionPoint3D> intersectionPoints =
+				knownIntersections ??
+				GeomTopoOpUtils.GetIntersectionPoints(source, target, tolerance);
+
+			if (predicate != null)
+			{
+				intersectionPoints = intersectionPoints
+				                     .Where(i => predicate(i))
+				                     .ToList();
+			}
+
+			// Filter pseudo breaks of linear intersection stretches (e.g. at ring start/end)
+			var unusable =
+				GeomTopoOpUtils.GetAllLinearIntersectionBreaks(source, target, intersectionPoints);
+
+			intersectionPoints = intersectionPoints.Where(i => ! unusable.Contains(i)).ToList();
+
+			return intersectionPoints;
 		}
 	}
 }

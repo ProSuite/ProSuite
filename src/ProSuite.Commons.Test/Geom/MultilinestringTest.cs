@@ -3,7 +3,7 @@ using System.Linq;
 using NUnit.Framework;
 using ProSuite.Commons.Geom;
 
-namespace ProSuite.Commons.Test.Geometry
+namespace ProSuite.Commons.Test.Geom
 {
 	[TestFixture]
 	public class MultilinestringTest

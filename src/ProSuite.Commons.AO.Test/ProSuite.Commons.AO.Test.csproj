@@ -122,7 +122,6 @@
     <Compile Include="TestSupport\ObjectMock.cs" />
     <Compile Include="TestSupport\Part.cs" />
     <Compile Include="TestSupport\Pt.cs" />
-    <Compile Include="TestSupport\TestDataLocator.cs" />
     <Compile Include="TestSupport\WorkspaceFactoryMock.cs" />
     <Compile Include="TestSupport\WorkspaceMock.cs" />
     <Compile Include="TestUtils.cs" />

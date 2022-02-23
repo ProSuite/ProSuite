@@ -8,212 +8,213 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	public class VirtualWorkspace : IWorkspace, IWorkspaceEdit, IFeatureWorkspace,
 	                                IWorkspaceDomains, IDataset
 	{
-		bool IDataset.CanCopy() => VirtualCanCopy();
+		bool IDataset.CanCopy() => CanCopy();
 
-		protected virtual bool VirtualCanCopy() =>
+		public virtual bool CanCopy() =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IDataset IDataset.Copy(string copyName, IWorkspace copyWorkspace) =>
-			VirtualCopy(copyName, copyWorkspace);
+			Copy(copyName, copyWorkspace);
 
-		protected virtual IDataset VirtualCopy(string copyName, IWorkspace copyWorkspace) =>
+		public virtual IDataset Copy(string copyName, IWorkspace copyWorkspace) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		bool IDataset.CanDelete() => VirtualCanDelete();
+		bool IDataset.CanDelete() => CanDelete();
 
-		protected virtual bool VirtualCanDelete() =>
+		public virtual bool CanDelete() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IDataset.Delete() => VirtualDelete();
+		void IDataset.Delete() => Delete();
 
-		protected virtual void VirtualDelete() =>
+		public virtual void Delete() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		bool IDataset.CanRename() => VirtualCanRename();
+		bool IDataset.CanRename() => CanRename();
 
-		protected virtual bool VirtualCanRename() =>
+		public virtual bool CanRename() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IDataset.Rename(string name) => VirtualRename(name);
+		void IDataset.Rename(string name) => Rename(name);
 
-		protected virtual void VirtualRename(string name) =>
+		public virtual void Rename(string name) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		string IDataset.Name => VirtualName;
+		string IDataset.Name => Name;
 
-		protected virtual string VirtualName =>
+		public virtual string Name =>
 			throw new NotImplementedException("Implement in derived class");
 
-		IName IDataset.FullName => VirtualFullName;
+		IName IDataset.FullName => FullName;
 
 		private IName _name;
-		protected virtual IName VirtualFullName => _name ?? (_name = new Name(this));
+		public virtual IName FullName =>
+			_name ?? (_name = new WorkspaceName(this));
 
-		protected virtual long? VirtualWorkspaceHandle { get; set; }
+		protected virtual long? WorkspaceHandle { get; set; }
 
 		string IDataset.BrowseName
 		{
-			get => VirtualBrowseName;
-			set => VirtualBrowseName = value;
+			get => BrowseName;
+			set => BrowseName = value;
 		}
 
-		protected virtual string VirtualBrowseName
+		public virtual string BrowseName
 		{
 			get => throw new NotImplementedException("Implement in derived class");
 			set => throw new NotImplementedException("Implement in derived class");
 		}
 
-		esriDatasetType IDataset.Type => VirtualType;
+		esriDatasetType IDataset.Type => Type;
 
-		protected virtual esriDatasetType VirtualType =>
+		public virtual esriDatasetType Type =>
 			throw new NotImplementedException("Implement in derived class");
 
-		string IDataset.Category => VirtualCategory;
+		string IDataset.Category => Category;
 
-		protected virtual string VirtualCategory =>
+		public virtual string Category =>
 			throw new NotImplementedException("Implement in derived class");
 
-		IEnumDataset IDataset.Subsets => VirtualSubsets;
+		IEnumDataset IDataset.Subsets => Subsets;
 
-		protected virtual IEnumDataset VirtualSubsets =>
+		public virtual IEnumDataset Subsets =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IWorkspace IDataset.Workspace => this;
 
-		IPropertySet IDataset.PropertySet => VirtualPropertySet;
+		IPropertySet IDataset.PropertySet => PropertySet;
 
-		protected virtual IPropertySet VirtualPropertySet =>
+		public virtual IPropertySet PropertySet =>
 			throw new NotImplementedException("Implement in derived class");
 
-		bool IWorkspace.IsDirectory() => VirtualIsDirectory();
+		bool IWorkspace.IsDirectory() => IsDirectory();
 
-		protected virtual bool VirtualIsDirectory() =>
+		public virtual bool IsDirectory() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		bool IWorkspace.Exists() => VirtualExists();
+		bool IWorkspace.Exists() => Exists();
 
-		protected virtual bool VirtualExists() =>
+		public virtual bool Exists() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IWorkspace.ExecuteSQL(string sqlStmt) => VirtualExecuteSql(sqlStmt);
+		void IWorkspace.ExecuteSQL(string sqlStmt) => ExecuteSql(sqlStmt);
 
-		protected virtual void VirtualExecuteSql(string sqlStmt) =>
+		public virtual void ExecuteSql(string sqlStmt) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		IPropertySet IWorkspace.ConnectionProperties => VirtualConnectionProperties;
+		IPropertySet IWorkspace.ConnectionProperties => ConnectionProperties;
 
-		protected virtual IPropertySet VirtualConnectionProperties =>
+		public virtual IPropertySet ConnectionProperties =>
 			throw new NotImplementedException("Implement in derived class");
 
-		IWorkspaceFactory IWorkspace.WorkspaceFactory => VirtualWorkspaceFactory;
+		IWorkspaceFactory IWorkspace.WorkspaceFactory => WorkspaceFactory;
 
-		protected virtual IWorkspaceFactory VirtualWorkspaceFactory =>
+		public virtual IWorkspaceFactory WorkspaceFactory =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IEnumDataset IWorkspace.get_Datasets(esriDatasetType datasetType) =>
-			VirtualGet_Datasets(datasetType);
+			get_Datasets(datasetType);
 
-		protected virtual IEnumDataset VirtualGet_Datasets(esriDatasetType datasetType) =>
+		public virtual IEnumDataset get_Datasets(esriDatasetType datasetType) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IEnumDatasetName IWorkspace.get_DatasetNames(esriDatasetType datasetType) =>
-			VirtualGet_DatasetNames(datasetType);
+			get_DatasetNames(datasetType);
 
-		protected virtual IEnumDatasetName VirtualGet_DatasetNames(esriDatasetType datasetType) =>
+		public virtual IEnumDatasetName get_DatasetNames(esriDatasetType datasetType) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		string IWorkspace.PathName => VirtualPathName;
+		string IWorkspace.PathName => PathName;
 
-		protected virtual string VirtualPathName =>
+		public virtual string PathName =>
 			throw new NotImplementedException("Implement in derived class");
 
-		esriWorkspaceType IWorkspace.Type => VirtualWorkspaceType;
+		esriWorkspaceType IWorkspace.Type => WorkspaceType;
 
-		protected virtual esriWorkspaceType VirtualWorkspaceType =>
+		public virtual esriWorkspaceType WorkspaceType =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IWorkspaceEdit.StartEditing(bool withUndoRedo) => VirtualStartEditing(withUndoRedo);
+		void IWorkspaceEdit.StartEditing(bool withUndoRedo) => StartEditing(withUndoRedo);
 
-		protected virtual void VirtualStartEditing(bool withUndoRedo) =>
+		public virtual void StartEditing(bool withUndoRedo) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IWorkspaceEdit.StopEditing(bool saveEdits) => VirtualStopEditing(saveEdits);
+		void IWorkspaceEdit.StopEditing(bool saveEdits) => StopEditing(saveEdits);
 
-		protected virtual void VirtualStopEditing(bool saveEdits) =>
+		public virtual void StopEditing(bool saveEdits) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		bool IWorkspaceEdit.IsBeingEdited() => VirtualIsBeingEdited();
+		bool IWorkspaceEdit.IsBeingEdited() => IsBeingEdited();
 
-		protected virtual bool VirtualIsBeingEdited() =>
+		public virtual bool IsBeingEdited() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IWorkspaceEdit.StartEditOperation() => VirtualStartEditOperation();
+		void IWorkspaceEdit.StartEditOperation() => StartEditOperation();
 
-		protected virtual void VirtualStartEditOperation() =>
+		public virtual void StartEditOperation() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IWorkspaceEdit.StopEditOperation() => VirtualStopEditOperation();
+		void IWorkspaceEdit.StopEditOperation() => StopEditOperation();
 
-		protected virtual void VirtualStopEditOperation() =>
+		public virtual void StopEditOperation() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IWorkspaceEdit.AbortEditOperation() => VirtualAbortEditOperation();
+		void IWorkspaceEdit.AbortEditOperation() => AbortEditOperation();
 
-		protected virtual void VirtualAbortEditOperation() =>
+		public virtual void AbortEditOperation() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IWorkspaceEdit.HasUndos(ref bool hasUndos) => VirtualHasUndos(ref hasUndos);
+		void IWorkspaceEdit.HasUndos(ref bool hasUndos) => HasUndos(ref hasUndos);
 
-		protected virtual void VirtualHasUndos(ref bool hasUndos) =>
+		public virtual void HasUndos(ref bool hasUndos) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IWorkspaceEdit.UndoEditOperation() => VirtualUndoEditOperation();
+		void IWorkspaceEdit.UndoEditOperation() => UndoEditOperation();
 
-		protected virtual void VirtualUndoEditOperation() =>
+		public virtual void UndoEditOperation() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IWorkspaceEdit.HasRedos(ref bool hasRedos) => VirtualHasRedos(ref hasRedos);
+		void IWorkspaceEdit.HasRedos(ref bool hasRedos) => HasRedos(ref hasRedos);
 
-		protected virtual void VirtualHasRedos(ref bool hasRedos) =>
+		public virtual void HasRedos(ref bool hasRedos) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IWorkspaceEdit.RedoEditOperation() => VirtualRedoEditOperation();
+		void IWorkspaceEdit.RedoEditOperation() => RedoEditOperation();
 
-		protected virtual void VirtualRedoEditOperation() =>
+		public virtual void RedoEditOperation() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IWorkspaceEdit.EnableUndoRedo() => VirtualEnableUndoRedo();
+		void IWorkspaceEdit.EnableUndoRedo() => EnableUndoRedo();
 
-		protected virtual void VirtualEnableUndoRedo() =>
+		public virtual void EnableUndoRedo() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IWorkspaceEdit.DisableUndoRedo() => VirtualDisableUndoRedo();
+		void IWorkspaceEdit.DisableUndoRedo() => DisableUndoRedo();
 
-		protected virtual void VirtualDisableUndoRedo() =>
+		public virtual void DisableUndoRedo() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IWorkspaceEdit.HasEdits(ref bool hasEdits) => VirtualHasEdits(ref hasEdits);
+		void IWorkspaceEdit.HasEdits(ref bool hasEdits) => HasEdits(ref hasEdits);
 
-		protected virtual void VirtualHasEdits(ref bool hasEdits) =>
+		public virtual void HasEdits(ref bool hasEdits) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		ITable IFeatureWorkspace.OpenTable(string name) => VirtualOpenTable(name);
+		ITable IFeatureWorkspace.OpenTable(string name) => OpenTable(name);
 
-		protected virtual ITable VirtualOpenTable(string name) =>
+		public virtual ITable OpenTable(string name) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		ITable IFeatureWorkspace.CreateTable(string name, IFields fields, UID clsid, UID extclsid,
 		                                     string configKeyword) =>
-			VirtualCreateTable(name, fields, clsid, extclsid, configKeyword);
+			CreateTable(name, fields, clsid, extclsid, configKeyword);
 
-		protected virtual ITable VirtualCreateTable(string name, IFields fields, UID clsid,
+		public virtual ITable CreateTable(string name, IFields fields, UID clsid,
 		                                            UID extclsid, string configKeyword) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IFeatureClass IFeatureWorkspace.OpenFeatureClass(string name) =>
-			VirtualOpenFeatureClass(name);
+			OpenFeatureClass(name);
 
-		protected virtual IFeatureClass VirtualOpenFeatureClass(string name) =>
+		public virtual IFeatureClass OpenFeatureClass(string name) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IFeatureClass IFeatureWorkspace.CreateFeatureClass(string name, IFields fields, UID clsid,
@@ -221,44 +222,44 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		                                                   esriFeatureType featureType,
 		                                                   string shapeFieldName,
 		                                                   string configKeyword) =>
-			VirtualCreateFeatureClass(name, fields, clsid, extclsid, featureType, shapeFieldName,
+			CreateFeatureClass(name, fields, clsid, extclsid, featureType, shapeFieldName,
 			                          configKeyword);
 
-		protected virtual IFeatureClass VirtualCreateFeatureClass(
+		public virtual IFeatureClass CreateFeatureClass(
 			string name, IFields fields, UID clsid, UID extclsid,
 			esriFeatureType featureType, string shapeFieldName, string configKeyword) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IFeatureDataset IFeatureWorkspace.OpenFeatureDataset(string name) =>
-			VirtualOpenFeatureDataset(name);
+			OpenFeatureDataset(name);
 
-		protected virtual IFeatureDataset VirtualOpenFeatureDataset(string name) =>
+		public virtual IFeatureDataset OpenFeatureDataset(string name) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IFeatureDataset IFeatureWorkspace.CreateFeatureDataset(
 			string name, ISpatialReference spatialReference) =>
-			VirtualCreateFeatureDataset(name, spatialReference);
+			CreateFeatureDataset(name, spatialReference);
 
-		protected virtual IFeatureDataset
-			VirtualCreateFeatureDataset(string name, ISpatialReference spatialReference) =>
+		public virtual IFeatureDataset
+			CreateFeatureDataset(string name, ISpatialReference spatialReference) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		IQueryDef IFeatureWorkspace.CreateQueryDef() => VirtualCreateQueryDef();
+		IQueryDef IFeatureWorkspace.CreateQueryDef() => CreateQueryDef();
 
-		protected virtual IQueryDef VirtualCreateQueryDef() =>
+		public virtual IQueryDef CreateQueryDef() =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IFeatureDataset IFeatureWorkspace.OpenFeatureQuery(string queryName, IQueryDef queryDef) =>
-			VirtualOpenFeatureQuery(queryName, queryDef);
+			OpenFeatureQuery(queryName, queryDef);
 
-		protected virtual IFeatureDataset
-			VirtualOpenFeatureQuery(string queryName, IQueryDef queryDef) =>
+		public virtual IFeatureDataset
+			OpenFeatureQuery(string queryName, IQueryDef queryDef) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IRelationshipClass IFeatureWorkspace.OpenRelationshipClass(string name) =>
-			VirtualOpenRelationshipClass(name);
+			OpenRelationshipClass(name);
 
-		protected virtual IRelationshipClass VirtualOpenRelationshipClass(string name) =>
+		public virtual IRelationshipClass OpenRelationshipClass(string name) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IRelationshipClass IFeatureWorkspace.CreateRelationshipClass(
@@ -268,14 +269,14 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			bool isComposite, bool isAttributed, IFields relAttrFields,
 			string originPrimaryKey, string destPrimaryKey, string originForeignKey,
 			string destForeignKey)
-			=> VirtualCreateRelationshipClass(relClassName, originClass, destinationClass,
+			=> CreateRelationshipClass(relClassName, originClass, destinationClass,
 			                                  forwardLabel, backwardLabel, cardinality,
 			                                  notification,
 			                                  isComposite, isAttributed, relAttrFields,
 			                                  originPrimaryKey, destPrimaryKey, originForeignKey,
 			                                  destForeignKey);
 
-		protected virtual IRelationshipClass VirtualCreateRelationshipClass(
+		public virtual IRelationshipClass CreateRelationshipClass(
 			string relClassName, IObjectClass originClass, IObjectClass destinationClass,
 			string forwardLabel, string backwardLabel, esriRelCardinality cardinality,
 			esriRelNotification notification,
@@ -289,61 +290,61 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		                                               IQueryFilter srcQueryFilter,
 		                                               ISelectionSet srcSelectionSet,
 		                                               string targetColumns, bool doNotPushJoinToDb)
-			=> VirtualOpenRelationshipQuery(relClass, joinForward, srcQueryFilter, srcSelectionSet,
+			=> OpenRelationshipQuery(relClass, joinForward, srcQueryFilter, srcSelectionSet,
 			                                targetColumns, doNotPushJoinToDb);
 
-		protected virtual ITable VirtualOpenRelationshipQuery(
+		public virtual ITable OpenRelationshipQuery(
 			IRelationshipClass relClass, bool joinForward,
 			IQueryFilter srcQueryFilter, ISelectionSet srcSelectionSet, string targetColumns,
 			bool doNotPushJoinToDb) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		int IWorkspaceDomains.AddDomain(IDomain domain) => VirtualAddDomain(domain);
+		int IWorkspaceDomains.AddDomain(IDomain domain) => AddDomain(domain);
 
-		protected virtual int VirtualAddDomain(IDomain domain) =>
+		public virtual int AddDomain(IDomain domain) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IWorkspaceDomains.DeleteDomain(string domainName) => VirtualDeleteDomain(domainName);
+		void IWorkspaceDomains.DeleteDomain(string domainName) => DeleteDomain(domainName);
 
-		protected virtual void VirtualDeleteDomain(string domainName) =>
+		public virtual void DeleteDomain(string domainName) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		bool IWorkspaceDomains.get_CanDeleteDomain(string domainName) =>
-			Virtualget_CanDeleteDomain(domainName);
+			get_CanDeleteDomain(domainName);
 
-		protected virtual bool Virtualget_CanDeleteDomain(string domainName) =>
+		public virtual bool get_CanDeleteDomain(string domainName) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		IEnumDomain IWorkspaceDomains.Domains => VirtualDomains;
+		IEnumDomain IWorkspaceDomains.Domains => Domains;
 
-		protected virtual IEnumDomain VirtualDomains =>
+		public virtual IEnumDomain Domains =>
 			throw new NotImplementedException("Implement in derived class");
 
-		IDomain IWorkspaceDomains.get_DomainByName(string name) => Virtualget_DomainByName(name);
+		IDomain IWorkspaceDomains.get_DomainByName(string name) => get_DomainByName(name);
 
-		protected virtual IDomain Virtualget_DomainByName(string name) =>
+		public virtual IDomain get_DomainByName(string name) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IEnumDomain IWorkspaceDomains.get_DomainsByFieldType(esriFieldType fieldType) =>
-			Virtualget_DomainsByFieldType(fieldType);
+			get_DomainsByFieldType(fieldType);
 
-		protected virtual IEnumDomain Virtualget_DomainsByFieldType(esriFieldType fieldType) =>
+		public virtual IEnumDomain get_DomainsByFieldType(esriFieldType fieldType) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		private class Name : IName, IWorkspaceName2
+		protected class WorkspaceName : IName, IWorkspaceName2
 		{
 			private readonly VirtualWorkspace _workspace;
 
 			private string _connectionString;
 
-			public Name(VirtualWorkspace workspace)
+			public WorkspaceName(VirtualWorkspace workspace)
 			{
 				_workspace = workspace;
 
 				// Used for comparison. Assumption: model-workspace relationship is 1-1
 				// Once various versions should be supported, this will have to be more fancy.
 				_connectionString =
-					$"Provider=VirtualWorkspace.Name;Data Source={workspace.VirtualWorkspaceHandle}";
+					$"Provider=VirtualWorkspace.WorkspaceName;Data Source={workspace.WorkspaceHandle}";
 			}
 
 			#region IName members
@@ -353,13 +354,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				return _workspace;
 			}
 
-			public string ConnectionString
-			{
-				get { return VirtualConnectionString; }
-				set { VirtualConnectionString = value; }
-			}
-
-			protected virtual string VirtualConnectionString
+			public virtual string ConnectionString
 			{
 				get { return _connectionString; }
 				set { _connectionString = value; }
@@ -373,35 +368,35 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			string IWorkspaceName.PathName
 			{
-				get => VirtualPathName;
-				set => VirtualPathName = value;
+				get => PathName;
+				set => PathName = value;
 			}
 
 			string IWorkspaceName2.PathName
 			{
-				get => VirtualPathName;
-				set => VirtualPathName = value;
+				get => PathName;
+				set => PathName = value;
 			}
 
-			protected virtual string VirtualPathName
+			public virtual string PathName
 			{
-				get => _workspace.VirtualPathName;
+				get => _workspace.PathName;
 				set => throw new NotImplementedException("Implement in derived class");
 			}
 
 			string IWorkspaceName.WorkspaceFactoryProgID
 			{
-				get => VirtualWorkspaceFactoryProgID;
-				set => VirtualWorkspaceFactoryProgID = value;
+				get => WorkspaceFactoryProgID;
+				set => WorkspaceFactoryProgID = value;
 			}
 
 			string IWorkspaceName2.WorkspaceFactoryProgID
 			{
-				get => VirtualWorkspaceFactoryProgID;
-				set => VirtualWorkspaceFactoryProgID = value;
+				get => WorkspaceFactoryProgID;
+				set => WorkspaceFactoryProgID = value;
 			}
 
-			protected virtual string VirtualWorkspaceFactoryProgID
+			public virtual string WorkspaceFactoryProgID
 			{
 				get => throw new NotImplementedException("Implement in derived class");
 				set => throw new NotImplementedException("Implement in derived class");
@@ -409,52 +404,52 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			string IWorkspaceName.BrowseName
 			{
-				get => VirtualBrowseName;
-				set => VirtualBrowseName = value;
+				get => BrowseName;
+				set => BrowseName = value;
 			}
 
 			string IWorkspaceName2.BrowseName
 			{
-				get => VirtualBrowseName;
-				set => VirtualBrowseName = value;
+				get => BrowseName;
+				set => BrowseName = value;
 			}
 
-			protected virtual string VirtualBrowseName
+			public virtual string BrowseName
 			{
 				get => throw new NotImplementedException("Implement in derived class");
 				set => throw new NotImplementedException("Implement in derived class");
 			}
 
-			IWorkspaceFactory IWorkspaceName.WorkspaceFactory => VirtualWorkspaceFactory;
-			IWorkspaceFactory IWorkspaceName2.WorkspaceFactory => VirtualWorkspaceFactory;
+			IWorkspaceFactory IWorkspaceName.WorkspaceFactory => WorkspaceFactory;
+			IWorkspaceFactory IWorkspaceName2.WorkspaceFactory => WorkspaceFactory;
 
-			protected virtual IWorkspaceFactory VirtualWorkspaceFactory =>
+			public virtual IWorkspaceFactory WorkspaceFactory =>
 				throw new NotImplementedException("Implement in derived class");
 
 			IPropertySet IWorkspaceName.ConnectionProperties
 			{
-				get => VirtualConnectionProperties;
-				set => VirtualConnectionProperties = value;
+				get => ConnectionProperties;
+				set => ConnectionProperties = value;
 			}
 
 			IPropertySet IWorkspaceName2.ConnectionProperties
 			{
-				get => VirtualConnectionProperties;
-				set => VirtualConnectionProperties = value;
+				get => ConnectionProperties;
+				set => ConnectionProperties = value;
 			}
 
-			protected virtual IPropertySet VirtualConnectionProperties
+			public virtual IPropertySet ConnectionProperties
 			{
 				get => throw new NotImplementedException("Implement in derived class");
 				set => throw new NotImplementedException("Implement in derived class");
 			}
 
-			public esriWorkspaceType Type => _workspace.VirtualWorkspaceType;
+			public esriWorkspaceType Type => _workspace.WorkspaceType;
 
-			string IWorkspaceName.Category => VirtualCategory;
-			string IWorkspaceName2.Category => VirtualCategory;
+			string IWorkspaceName.Category => Category;
+			string IWorkspaceName2.Category => Category;
 
-			protected virtual string VirtualCategory =>
+			public virtual string Category =>
 				throw new NotImplementedException("Implement in derived class");
 
 			#endregion

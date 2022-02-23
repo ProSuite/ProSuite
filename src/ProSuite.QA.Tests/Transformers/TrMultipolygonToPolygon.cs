@@ -37,11 +37,11 @@ namespace ProSuite.QA.Tests.Transformers
 			IFeatureClass featureClass)
 			: base(featureClass, esriGeometryType.esriGeometryPolygon) { }
 
-		protected override void AddCustomAttributes(GdbFeatureClass transformedFc)
+		protected override void AddCustomAttributes(TransformedFeatureClass transformedFc)
 		{
-			transformedFc.Fields.AddFields(
+			transformedFc.FieldsT.AddFields(
 				FieldUtils.CreateField(AttrOuterRingIndex, esriFieldType.esriFieldTypeInteger));
-			transformedFc.Fields.AddFields(
+			transformedFc.FieldsT.AddFields(
 				FieldUtils.CreateField(AttrInnerRingIndex, esriFieldType.esriFieldTypeInteger));
 		}
 
@@ -51,15 +51,15 @@ namespace ProSuite.QA.Tests.Transformers
 
 		protected override IEnumerable<IFeature> Transform(IGeometry source)
 		{
-			IPolygon4 poly = (IPolygon4) source;
+			IPolygon4 poly = (IPolygon4)source;
 
-			IGeometryCollection extRings = (IGeometryCollection) poly.ExteriorRingBag;
+			IGeometryCollection extRings = (IGeometryCollection)poly.ExteriorRingBag;
 
 			for (int iExtRing = 0; iExtRing < extRings.GeometryCount; iExtRing++)
 			{
-				IRing extRing = (IRing) extRings.Geometry[iExtRing];
+				IRing extRing = (IRing)extRings.Geometry[iExtRing];
 				if (TransformedParts == PolygonPart.OuterRings
-				    || TransformedParts == PolygonPart.AllRings)
+						|| TransformedParts == PolygonPart.AllRings)
 				{
 					IPolygon ring = GeometryFactory.CreatePolygon(GeometryFactory.Clone(extRing));
 					IFeature feature = CreateFeature();
@@ -80,15 +80,15 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 
 				IGeometryCollection innerRings =
-					(IGeometryCollection) poly.InteriorRingBag[extRing];
+					(IGeometryCollection)poly.InteriorRingBag[extRing];
 				for (int iInnRing = 0; iInnRing < innerRings.GeometryCount; iInnRing++)
 				{
-					IRing innRing = (IRing) GeometryFactory.Clone(innerRings.Geometry[iInnRing]);
+					IRing innRing = (IRing)GeometryFactory.Clone(innerRings.Geometry[iInnRing]);
 
 					if (TransformedParts == PolygonPart.InnerRings
-					    || TransformedParts == PolygonPart.AllRings)
+							|| TransformedParts == PolygonPart.AllRings)
 					{
-						((ICurve) innRing).ReverseOrientation();
+						((ICurve)innRing).ReverseOrientation();
 						IPolygon ring = GeometryFactory.CreatePolygon(innRing);
 						IFeature feature = CreateFeature();
 						feature.Shape = ring;

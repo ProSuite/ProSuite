@@ -9,6 +9,9 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		private readonly IDictionary<Type, IncludedTestClass> _includedTestClasses =
 			new Dictionary<Type, IncludedTestClass>();
 
+		private readonly IDictionary<Type, IncludedTransformer> _includedTransformerClasses =
+			new Dictionary<Type, IncludedTransformer>();
+
 		private readonly List<IncludedTestFactory> _includedTestFactories =
 			new List<IncludedTestFactory>();
 
@@ -22,6 +25,8 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		public bool IncludeObsolete { get; set; }
 
 		protected IDictionary<Type, IncludedTestClass> IncludedTestClasses => _includedTestClasses;
+
+		protected IDictionary<Type, IncludedTransformer> IncludedTransformerClasses => _includedTransformerClasses;
 
 		protected List<IncludedTestFactory> IncludedTestFactories => _includedTestFactories;
 
@@ -40,6 +45,55 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			}
 
 			IncludedTestFactories.Add(testFactory);
+		}
+
+		public void IncludeTransformer(Type testType, int constructorIndex)
+		{
+			var newTransformer = false;
+			IncludedTransformer transformerClass;
+			if (!IncludedTransformerClasses.TryGetValue(testType, out transformerClass))
+			{
+				transformerClass = new IncludedTransformer(testType);
+
+				if (!IncludeObsolete && transformerClass.Obsolete)
+				{
+					return;
+				}
+
+				if (transformerClass.InternallyUsed)
+				{
+					return;
+				}
+
+				// this test class is to be added, if the constructor is not obsolete
+				newTransformer = true;
+			}
+
+			if (transformerClass.Obsolete)
+			{
+				return;
+			}
+
+			IncludedTestConstructor testConstructor =
+				transformerClass.CreateTestConstructor(constructorIndex);
+
+			if (!IncludeObsolete && testConstructor.Obsolete)
+			{
+				return;
+			}
+
+			if (testConstructor.InternallyUsed)
+			{
+				return;
+			}
+
+			transformerClass.IncludeConstructor(testConstructor);
+
+			if (newTransformer)
+			{
+				IncludedTransformerClasses.Add(testType, transformerClass);
+			}
+
 		}
 
 		public void IncludeTest(Type testType, int constructorIndex)
@@ -103,5 +157,16 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 
 			return result;
 		}
+
+		[NotNull]
+		protected IEnumerable<IncludedTransformer> GetSortedTransformerClasses()
+		{
+			var result = new List<IncludedTransformer>(IncludedTransformerClasses.Values);
+
+			result.Sort();
+
+			return result;
+		}
+
 	}
 }

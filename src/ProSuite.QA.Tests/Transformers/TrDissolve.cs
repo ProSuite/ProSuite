@@ -39,7 +39,7 @@ namespace ProSuite.QA.Tests.Transformers
 		public TrDissolve(
 			[NotNull] [Doc(nameof(DocStrings.TrDissolve_featureclass))]
 			IFeatureClass featureclass)
-			: base(new List<ITable> { (ITable) featureclass })
+			: base(new List<ITable> { (ITable)featureclass })
 		{
 			_toDissolve = featureclass;
 			NeighborSearchOption = _defaultSearchOption;
@@ -86,7 +86,7 @@ namespace ProSuite.QA.Tests.Transformers
 				dissolvedFc.GroupBy = GroupBy;
 			}
 
-			if (! string.IsNullOrWhiteSpace(Constraint))
+			if (!string.IsNullOrWhiteSpace(Constraint))
 			{
 				dissolvedFc.Constraint = Constraint;
 			}
@@ -98,7 +98,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		// TODO: Unify with TrSpatialJoin
 		private void AddFields([NotNull] TransformedFc dissolveFc,
-		                       [CanBeNull] IList<string> fieldNames, bool isGrouped)
+													 [CanBeNull] IList<string> fieldNames, bool isGrouped)
 		{
 			if (fieldNames == null)
 			{
@@ -132,25 +132,25 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
-		private class TransformedFc : GdbFeatureClass, ITransformedTable, ITransformedValue,
+		private class TransformedFc : TransformedFeatureClass, ITransformedTable, ITransformedValue,
 		                              IHasSearchDistance
 		{
 			public TableView TableView { get; set; }
 			[CanBeNull] private IList<string> _groupBy;
 
 			public TransformedFc(IFeatureClass dissolve, string name = null)
-				: base(-1, ! string.IsNullOrEmpty(name) ? name : "dissolveResult",
-				       dissolve.ShapeType,
-				       createBackingDataset: (t) =>
-					       new TransformedDataset((TransformedFc) t, dissolve),
-				       workspace: new GdbWorkspace(new TransformerWorkspace()))
+				: base(-1, !string.IsNullOrEmpty(name) ? name : "dissolveResult",
+							 dissolve.ShapeType,
+							 createBackingDataset: (t) =>
+								 new TransformedDataset((TransformedFc)t, dissolve),
+							 workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
-				InvolvedTables = new List<ITable> { (ITable) dissolve };
+				InvolvedTables = new List<ITable> { (ITable)dissolve };
 
 				IGeometryDef geomDef =
 					dissolve.Fields.Field[
 						dissolve.Fields.FindField(dissolve.ShapeFieldName)].GeometryDef;
-				Fields.AddFields(
+				FieldsT.AddFields(
 					FieldUtils.CreateOIDField(),
 					FieldUtils.CreateShapeField(
 						dissolve.ShapeType,
@@ -173,7 +173,7 @@ namespace ProSuite.QA.Tests.Transformers
 				IField f =
 					FieldUtils.CreateField(
 						field, FieldUtils.GetFieldType(TableView.GetColumn(field).DataType));
-				Fields.AddFields(f);
+				FieldsT.AddFields(f);
 
 				CustomFields = CustomFields ?? new List<FieldInfo>();
 				CustomFields.Add(new FieldInfo(field, Fields.FindField(field), -1));
@@ -181,7 +181,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public string Constraint
 			{
-				get => ((TransformedDataset) BackingDataset)?.Constraint;
+				get => ((TransformedDataset)BackingDataset)?.Constraint;
 				set
 				{
 					if (BackingDs is TransformedDataset ds)
@@ -201,7 +201,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			bool ITransformedTable.NoCaching => false;
 
-			public TransformedDataset BackingDs => (TransformedDataset) BackingDataset;
+			public TransformedDataset BackingDs => (TransformedDataset)BackingDataset;
 
 			[CanBeNull]
 			public BoxTree<IFeature> KnownRows { get; private set; }
@@ -216,8 +216,8 @@ namespace ProSuite.QA.Tests.Transformers
 				KnownRows = BoxTreeUtils.CreateBoxTree(
 					knownRows?.Select(x => x as IFeature),
 					getBox: x => x?.Shape != null
-						             ? QaGeometryUtils.CreateBox(x.Shape)
-						             : null);
+												 ? QaGeometryUtils.CreateBox(x.Shape)
+												 : null);
 			}
 		}
 
@@ -238,12 +238,12 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				_dissolve = dissolve;
 
-				Resulting.SpatialReference = ((IGeoDataset) _dissolve).SpatialReference;
+				Resulting.SpatialReference = ((IGeoDataset)_dissolve).SpatialReference;
 			}
 
-			public override IEnvelope Extent => ((IGeoDataset) _dissolve).Extent;
+			public override IEnvelope Extent => ((IGeoDataset)_dissolve).Extent;
 
-			public override IRow GetRow(int id)
+			public override IRow GetUncachedRow(int id)
 			{
 				throw new NotImplementedException();
 			}
@@ -268,18 +268,18 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				if (DataContainer != null)
 				{
-					var ext = DataContainer.GetLoadedExtent((ITable) _dissolve);
+					var ext = DataContainer.GetLoadedExtent((ITable)_dissolve);
 					if (filter is ISpatialFilter sf &&
-					    ((IRelationalOperator) ext).Contains(sf.Geometry))
+							((IRelationalOperator)ext).Contains(sf.Geometry))
 					{
 						return DataContainer.Search(
-							(ITable) _dissolve, filter, QueryHelpers[0]);
+							(ITable)_dissolve, filter, QueryHelpers[0]);
 					}
 				}
 
-				IQueryFilter f = (IQueryFilter) ((IClone) filter).Clone();
+				IQueryFilter f = (IQueryFilter)((IClone)filter).Clone();
 				f.WhereClause = QueryHelpers[0].TableView.Constraint;
-				return new EnumCursor((ITable) _dissolve, f, recycle: recycling);
+				return new EnumCursor((ITable)_dissolve, f, recycle: recycling);
 			}
 
 			public override IEnumerable<IRow> Search(IQueryFilter filter, bool recycling)
@@ -288,24 +288,24 @@ namespace ProSuite.QA.Tests.Transformers
 				_builder = _builder ?? new NetworkBuilder(includeBorderNodes: true);
 				_builder.ClearAll();
 				IRelationalOperator queryEnv =
-					(IRelationalOperator) (filter as ISpatialFilter)?.Geometry.Envelope;
+					(IRelationalOperator)(filter as ISpatialFilter)?.Geometry.Envelope;
 				IEnvelope fullBox = null;
 				Dictionary<IFeature, Involved> involvedDict = new Dictionary<IFeature, Involved>();
 				foreach (var baseRow in GetBaseFeatures(filter, recycling))
 				{
-					IFeature baseFeature = (IFeature) baseRow;
+					IFeature baseFeature = (IFeature)baseRow;
 					Involved baseInvolved = null;
 					bool isKnown = false;
 					// Alternative: Involved Rows check
 					foreach (Involved knownInvolved in EnumKnownInvolveds(
-						         baseFeature, Resulting.KnownRows, involvedDict))
+										 baseFeature, Resulting.KnownRows, involvedDict))
 					{
 						baseInvolved =
 							baseInvolved ??
 							InvolvedRowUtils.EnumInvolved(new[] { baseFeature }).First();
 
 						if ((knownInvolved as InvolvedNested)?.BaseRows
-						                                     .Contains(baseInvolved) == true)
+																								 .Contains(baseInvolved) == true)
 						{
 							isKnown = true;
 							break;
@@ -347,7 +347,7 @@ namespace ProSuite.QA.Tests.Transformers
 				if (Resulting.KnownRows != null && filter is ISpatialFilter sp)
 				{
 					foreach (BoxTree<IFeature>.TileEntry entry in
-					         Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(sp.Geometry)))
+									 Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(sp.Geometry)))
 					{
 						yield return entry.Value;
 					}
@@ -395,16 +395,16 @@ namespace ProSuite.QA.Tests.Transformers
 						rows.Add(dirRow.Row.Row);
 					}
 
-					GdbFeature dissolved = Resulting.CreateFeature();
+					IFeature dissolved = Resulting.CreateFeature();
 					if (rows.Count == 1)
 					{
-						dissolved.Shape = ((IFeature) rows[0]).Shape;
+						dissolved.Shape = ((IFeature)rows[0]).Shape;
 					}
 					else
 					{
-						List<IPolyline> paths = rows.Select(x => (IPolyline) ((IFeature) x).Shape)
-						                            .ToList();
-						IPolyline line = (IPolyline) GeometryFactory.CreateUnion(paths);
+						List<IPolyline> paths = rows.Select(x => (IPolyline)((IFeature)x).Shape)
+																				.ToList();
+						IPolyline line = (IPolyline)GeometryFactory.CreateUnion(paths);
 						line.SimplifyNetwork();
 						dissolved.Shape = line;
 					}
@@ -507,7 +507,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 						if (baseFeatures.Count > 2)
 						{
-							if (! _r.Resulting.CreateMultipartFeatures)
+							if (!_r.Resulting.CreateMultipartFeatures)
 							{
 								Add(new List<DirectedRow> { directedRow }, queryEnv: null);
 								_handledRows.Add(directedRow);
@@ -526,10 +526,10 @@ namespace ProSuite.QA.Tests.Transformers
 						localBuilder.BuildNet(box, box, 0);
 
 						foreach (List<DirectedRow> directedRows in localBuilder
-							         .ConnectedLinesList)
+											 .ConnectedLinesList)
 						{
-							if (directedRows.FirstOrDefault(x => ! _handledRows.Contains(x)) ==
-							    null)
+							if (directedRows.FirstOrDefault(x => !_handledRows.Contains(x)) ==
+									null)
 							{
 								continue;
 							}
@@ -542,7 +542,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				private void Add(List<DirectedRow> connectedRows, IRelationalOperator queryEnv)
 				{
-					if (! _r.Resulting.CreateMultipartFeatures)
+					if (!_r.Resulting.CreateMultipartFeatures)
 					{
 						AddSinglepart(connectedRows, queryEnv);
 					}
@@ -553,13 +553,13 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 
 				private void AddSinglepart(List<DirectedRow> connectedRows,
-				                           IRelationalOperator queryEnv)
+																	 IRelationalOperator queryEnv)
 				{
 					List<List<DirectedRow>> groups =
 						new List<List<DirectedRow>>(GetGroupedRows(connectedRows));
 					if (_r.Resulting.NeighborSearchOption == SearchOption.All &&
-					    queryEnv?.Contains(connectedRows[0].FromPoint) == false &&
-					    groups.Any(x => x.Count < 3))
+							queryEnv?.Contains(connectedRows[0].FromPoint) == false &&
+							groups.Any(x => x.Count < 3))
 					{
 						_missing.Add(connectedRows[0]);
 						return;
@@ -570,10 +570,10 @@ namespace ProSuite.QA.Tests.Transformers
 						if (groupedRows.Count == 2)
 						{
 							_dissolvedDict.TryGetValue(groupedRows[0],
-							                           out List<DirectedRow> connected0);
+																				 out List<DirectedRow> connected0);
 
 							_dissolvedDict.TryGetValue(groupedRows[1],
-							                           out List<DirectedRow> connected1);
+																				 out List<DirectedRow> connected1);
 
 							if (connected0 == null && connected1 == null)
 							{
@@ -614,10 +614,10 @@ namespace ProSuite.QA.Tests.Transformers
 						{
 							foreach (DirectedRow connectedRow in groupedRows)
 							{
-								if (! _dissolvedDict.ContainsKey(connectedRow))
+								if (!_dissolvedDict.ContainsKey(connectedRow))
 								{
 									_dissolvedDict.Add(connectedRow,
-									                   new List<DirectedRow> { connectedRow });
+																		 new List<DirectedRow> { connectedRow });
 								}
 							}
 						}
@@ -625,7 +625,7 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 
 				private void JoinConnectedRows(List<DirectedRow> connectedRows,
-				                               IRelationalOperator queryEnv)
+																			 IRelationalOperator queryEnv)
 				{
 					foreach (List<DirectedRow> groupedRows in GetGroupedRows(connectedRows))
 					{
@@ -634,7 +634,7 @@ namespace ProSuite.QA.Tests.Transformers
 						foreach (DirectedRow connectedRow in groupedRows)
 						{
 							if (_dissolvedDict.TryGetValue(connectedRow,
-							                               out List<DirectedRow> connecteds))
+																						 out List<DirectedRow> connecteds))
 							{
 								if (allRows == null)
 								{
@@ -671,8 +671,8 @@ namespace ProSuite.QA.Tests.Transformers
 					}
 
 					if (_r.Resulting.NeighborSearchOption == SearchOption.All &&
-					    connectedRows.Count > 0 &&
-					    queryEnv?.Contains(connectedRows[0].FromPoint) == false)
+							connectedRows.Count > 0 &&
+							queryEnv?.Contains(connectedRows[0].FromPoint) == false)
 					{
 						_missing.Add(connectedRows[0]);
 					}
@@ -684,7 +684,7 @@ namespace ProSuite.QA.Tests.Transformers
 					List<DirectedRow> connectedRows)
 				{
 					IList<string> groupBys = _r.Resulting.GroupBy;
-					if (! (groupBys?.Count > 0))
+					if (!(groupBys?.Count > 0))
 					{
 						yield return connectedRows;
 						yield break;
@@ -715,7 +715,7 @@ namespace ProSuite.QA.Tests.Transformers
 							key.Add(r.Value[idx]);
 						}
 
-						if (! groupDict.TryGetValue(key, out List<DirectedRow> group))
+						if (!groupDict.TryGetValue(key, out List<DirectedRow> group))
 						{
 							group = new List<DirectedRow>();
 							groupDict.Add(key, group);

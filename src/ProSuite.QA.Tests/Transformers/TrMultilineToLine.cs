@@ -20,9 +20,9 @@ namespace ProSuite.QA.Tests.Transformers
 		                         IFeatureClass featureClass)
 			: base(featureClass, esriGeometryType.esriGeometryPolyline) { }
 
-		protected override void AddCustomAttributes(GdbFeatureClass transformedFc)
+		protected override void AddCustomAttributes(TransformedFeatureClass transformedFc)
 		{
-			transformedFc.Fields.AddFields(
+			transformedFc.FieldsT.AddFields(
 				FieldUtils.CreateField(AttrPartIndex, esriFieldType.esriFieldTypeInteger));
 		}
 
@@ -31,10 +31,10 @@ namespace ProSuite.QA.Tests.Transformers
 			IGeometry transform = source;
 			if (source is IPolygon poly)
 			{
-				transform = ((ITopologicalOperator) poly).Boundary;
+				transform = ((ITopologicalOperator)poly).Boundary;
 			}
 
-			IGeometryCollection geom = (IGeometryCollection) transform;
+			IGeometryCollection geom = (IGeometryCollection)transform;
 			for (int i = 0; i < geom.GeometryCount; i++)
 			{
 				IGeometry singleLine = GeometryFactory.Clone(geom.Geometry[i]);

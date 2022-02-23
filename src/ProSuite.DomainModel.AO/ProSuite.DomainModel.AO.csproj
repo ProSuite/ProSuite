@@ -220,6 +220,7 @@
     <Compile Include="QA\TestReport\HtmlReportBuilder.cs" />
     <Compile Include="QA\TestReport\IncludedTest.cs" />
     <Compile Include="QA\TestReport\IncludedTestBase.cs" />
+    <Compile Include="QA\TestReport\IncludedTransformer.cs" />
     <Compile Include="QA\TestReport\IncludedTestClass.cs" />
     <Compile Include="QA\TestReport\IncludedTestConstructor.cs" />
     <Compile Include="QA\TestReport\IncludedTestFactory.cs" />

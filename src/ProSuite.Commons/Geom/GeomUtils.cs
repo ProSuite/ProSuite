@@ -757,7 +757,7 @@ return : Point2D : lines cut each other at Point (non parallel)
 				Linestring linestring = segmentList.GetPart(partIdx);
 
 				foreach (int localIndex in GetShortSegmentIndexes(
-					linestring, minimumSegmentLength, use3dLength, perimeter))
+					         linestring, minimumSegmentLength, use3dLength, perimeter))
 				{
 					yield return new SegmentIndex(partIdx, localIndex);
 				}
@@ -979,6 +979,16 @@ return : Point2D : lines cut each other at Point (non parallel)
 			return geometryWriter.WritePoint(point, ordinates);
 		}
 
+		public static IBoundedXY FromWkb([NotNull] byte[] wkb,
+		                                 out WkbGeometryType wkbType)
+		{
+			WkbGeomReader reader = new WkbGeomReader();
+
+			IBoundedXY geometry = reader.ReadGeometry(new MemoryStream(wkb), out wkbType);
+
+			return geometry;
+		}
+
 		public static void ToWkbFile([NotNull] ISegmentList geometry,
 		                             [NotNull] string filePath)
 		{
@@ -1001,6 +1011,14 @@ return : Point2D : lines cut each other at Point (non parallel)
 			byte[] bytes = ToWkb(point);
 
 			File.WriteAllBytes(filePath, bytes);
+		}
+
+		public static IBoundedXY FromWkbFile(string filePath,
+		                                     out WkbGeometryType wkbType)
+		{
+			byte[] bytes = File.ReadAllBytes(filePath);
+
+			return FromWkb(bytes, out wkbType);
 		}
 
 		private static bool IsMoreSouthEast(Pnt3D point1, Pnt3D point2)

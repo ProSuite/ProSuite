@@ -15,95 +15,70 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	/// </summary>
 	public class VirtualRow : IObject
 	{
-		void IRow.Store() => VirtualStore();
+		void IRow.Store() => Store();
 
-		void IObject.Store() => VirtualStore();
+		void IObject.Store() => Store();
 
-		public void Store() => VirtualStore();
-
-		protected virtual void VirtualStore() =>
+		public virtual void Store() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		void IRow.Delete() => VirtualDelete();
+		void IRow.Delete() => Delete();
 
-		void IObject.Delete() => VirtualDelete();
+		void IObject.Delete() => Delete();
 
-		public void Delete() => VirtualDelete();
-
-		protected virtual void VirtualDelete() =>
+		public virtual void Delete() =>
 			throw new NotImplementedException("Implement in derived class");
 
-		object IRow.get_Value(int index) => get_VirtualValue(index);
+		object IRow.get_Value(int index) => get_Value(index);
 
-		object IObject.get_Value(int index) => get_VirtualValue(index);
+		object IObject.get_Value(int index) => get_Value(index);
 
-		object IRowBuffer.get_Value(int index) => get_VirtualValue(index);
+		object IRowBuffer.get_Value(int index) => get_Value(index);
 
-		public object get_Value(int index) => get_VirtualValue(index);
+		void IRow.set_Value(int index, object value) => set_Value(index, value);
 
-		void IRow.set_Value(int index, object value) => set_VirtualValue(index, value);
+		void IObject.set_Value(int index, object value) => set_Value(index, value);
 
-		void IObject.set_Value(int index, object value) => set_VirtualValue(index, value);
+		void IRowBuffer.set_Value(int index, object value) => set_Value(index, value);
 
-		void IRowBuffer.set_Value(int index, object value) => set_VirtualValue(index, value);
-
-		public void set_Value(int index, object value) => set_VirtualValue(index, value);
-
-		protected virtual object get_VirtualValue(int Index) =>
+		public virtual object get_Value(int Index) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		protected virtual void set_VirtualValue(int Index, object value) =>
+		public virtual void set_Value(int Index, object value) =>
 			throw new NotImplementedException("Implement in derived class");
 
-		IFields IRow.Fields => VirtualFields;
-		IFields IObject.Fields => VirtualFields;
-		IFields IRowBuffer.Fields => VirtualFields;
-		public IFields Fields => VirtualFields;
-		protected virtual IFields VirtualFields => VirtualTable.Fields;
+		IFields IRow.Fields => Fields;
+		IFields IObject.Fields => Fields;
+		IFields IRowBuffer.Fields => Fields;
+		public virtual IFields Fields => Table.Fields;
 
-		bool IRow.HasOID => VirtualHasOID;
-		bool IObject.HasOID => VirtualHasOID;
-		public bool HasOID => VirtualHasOID;
-		protected virtual bool VirtualHasOID => VirtualTable.HasOID;
+		bool IRow.HasOID => HasOID;
+		bool IObject.HasOID => HasOID;
+		public virtual bool HasOID => Table.HasOID;
 
-		int IRow.OID => VirtualOID;
-		int IObject.OID => VirtualOID;
-		public int OID => VirtualOID;
-
-		protected virtual int VirtualOID =>
+		int IRow.OID => OID;
+		int IObject.OID => OID;
+		public virtual int OID =>
 			throw new NotImplementedException("Implement in derived class");
 
-		ITable IRow.Table => VirtualTable;
-		ITable IObject.Table => VirtualTable;
-		public ITable Table => VirtualTable;
-
-		protected virtual ITable VirtualTable =>
+		ITable IRow.Table => Table;
+		ITable IObject.Table => Table;
+		public virtual ITable Table =>
 			throw new NotImplementedException("Implement in derived class");
 
-		IObjectClass IObject.Class => VirtualObjectClass;
-		public IObjectClass Class => VirtualObjectClass;
-		protected virtual IObjectClass VirtualObjectClass => (IObjectClass) VirtualTable;
+		IObjectClass IObject.Class => Class;
+		public virtual IObjectClass Class => (IObjectClass) Table;
 
-		public IGeometry Shape
-		{
-			get => VirtualShape;
-			set => VirtualShape = value;
-		}
-
-		protected virtual IGeometry VirtualShape
+		public virtual IGeometry Shape
 		{
 			get => throw new NotImplementedException("Implement in derived class");
 			set => throw new NotImplementedException("Implement in derived class");
 		}
 
-		public IGeometry ShapeCopy => VirtualShapeCopy;
-		protected virtual IGeometry VirtualShapeCopy => GeometryFactory.Clone(VirtualShape);
-		public IEnvelope Extent => VirtualExtent;
-		protected virtual IEnvelope VirtualExtent => VirtualShape.Envelope;
+		public virtual IGeometry ShapeCopy => GeometryFactory.Clone(Shape);
+		public virtual IEnvelope Extent => Shape.Envelope;
 
-		public esriFeatureType FeatureType => VirtualFeatureType;
-
-		protected esriFeatureType VirtualFeatureType =>
+		public esriFeatureType FeatureType =>
 			throw new NotImplementedException("Implement in derived class");
 	}
 }

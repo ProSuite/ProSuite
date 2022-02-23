@@ -249,6 +249,28 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
+		public void CanGetLinearSelfIntersectionForNonLinearSegments()
+		{
+			var polyWithExtremelyAcuteAngle =
+				(IPolygon)
+				TestUtils.ReadGeometryFromXml(
+					TestUtils.GetGeometryTestDataPath("SelfIntersectingCircularArcs.xml"));
+
+			// Idea: Either add this to qaSimpleGeometry or probably better a separate test
+			//       that works for all geometries in the same way.
+			// NOTE: In order to have a relatively exact result, the pieces must be not much
+			//       more than a cm long which requires 2 orders of magnitude below the tolerance
+			//       as maximum deviation for densification!
+			var multiPolycurve = GeometryConversionUtils.CreateMultiPolycurve(
+				polyWithExtremelyAcuteAngle, false, 0.00001);
+
+			IList<Line3D> selfIntersections =
+				GeomTopoOpUtils.GetLinearSelfIntersectionsXY(multiPolycurve, 0.001);
+
+			Assert.IsTrue(selfIntersections.Count > 0);
+		}
+
+		[Test]
 		public void CanIgnorePointIntersectionForLinearSelfIntersection()
 		{
 			var polyline = new PolylineClass();
@@ -1183,8 +1205,8 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			// The same happens for polylines / polygons:
 			WKSEnvelope wksEnvelope = WksGeometryUtils.CreateWksEnvelope(2600000, 1200000,
-			                                                             2600100,
-			                                                             1200100);
+				2600100,
+				1200100);
 
 			IPolygon perimeter =
 				GeometryFactory.CreatePolygon(GeometryFactory.CreateEnvelope(wksEnvelope),
@@ -1221,8 +1243,8 @@ namespace ProSuite.Commons.AO.Test.Geometry
 
 			// polygon
 			WKSEnvelope wksEnvelope = WksGeometryUtils.CreateWksEnvelope(2600000, 1200000,
-			                                                             2600100,
-			                                                             1200100);
+				2600100,
+				1200100);
 			// Z/M/ID Awareness of the other should make no difference, the result takes awareness from the source
 			IPolygon perimeter =
 				GeometryFactory.CreatePolygon(GeometryFactory.CreateEnvelope(wksEnvelope),
@@ -1696,7 +1718,7 @@ namespace ProSuite.Commons.AO.Test.Geometry
 					TestUtils.GetGeometryTestDataPath("MultipatchWithCutBack.xml")));
 
 			foreach (GeometryPart part in PartExtractionUtils.GetGeometryParts(
-				multipatchWithDangle, false))
+				         multipatchWithDangle, false))
 			{
 				double tolerance = 0.01;
 

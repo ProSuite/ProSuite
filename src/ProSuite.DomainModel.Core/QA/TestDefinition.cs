@@ -1,6 +1,7 @@
 using System;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using static ProSuite.Commons.Reflection.PrivateAssemblyUtils;
 
 namespace ProSuite.DomainModel.Core.QA
 {
@@ -53,12 +54,61 @@ namespace ProSuite.DomainModel.Core.QA
 				return true;
 			}
 
-			return Equals(other._testTypeName, _testTypeName) &&
-			       Equals(other._testAssemblyName, _testAssemblyName) &&
-			       other._testConstructorIndex == _testConstructorIndex &&
-			       Equals(other._testFactoryTypeName, _testFactoryTypeName) &&
-			       Equals(other._testFactoryAssemblyName, _testFactoryAssemblyName) ||
-			       Equals(other._testName, _testName);
+			if (other._testConstructorIndex != _testConstructorIndex)
+			{
+				return false;
+			}
+
+			if (Equals(other._testTypeName, _testTypeName) &&
+			    Equals(other._testAssemblyName, _testAssemblyName) &&
+			    Equals(other._testFactoryTypeName, _testFactoryTypeName) &&
+			    Equals(other._testFactoryAssemblyName, _testFactoryAssemblyName))
+			{
+				return true;
+			}
+
+			if (Equals(other._testTypeName, _testTypeName) &&
+			    Equals(other._testAssemblyName, _testAssemblyName) &&
+			    Equals(other._testFactoryTypeName, _testFactoryTypeName) &&
+			    Equals(other._testFactoryAssemblyName, _testFactoryAssemblyName))
+			{
+				return true;
+			}
+
+			if (PrivateTypeEquals(other._testAssemblyName, other._testTypeName,
+			                      _testAssemblyName, _testTypeName)
+			    && PrivateTypeEquals(other._testFactoryAssemblyName, other._testFactoryTypeName,
+			                         _testFactoryAssemblyName, _testFactoryTypeName))
+			{
+				return true;
+			}
+
+			return false;
+		}
+
+		private bool PrivateTypeEquals([CanBeNull] string xAssembly, [CanBeNull] string xType,
+		                               [CanBeNull] string yAssembly, [CanBeNull] string yType)
+		{
+			if ((xType == null) != (yType == null)) return false;
+			if ((xAssembly == null) != (yAssembly == null)) return false;
+
+			if (xType == yType && xAssembly == yAssembly)
+			{
+				return true;
+			}
+
+			if (GetCoreName(xType) != GetCoreName(yType))
+			{
+				return false;
+			}
+
+			if (GetSubsituteType(Assert.NotNull(xAssembly), Assert.NotNull(xType))
+			    != GetSubsituteType(yAssembly, yType))
+			{
+				return false;
+			}
+
+			return true;
 		}
 
 		#endregion
@@ -87,18 +137,13 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			unchecked
 			{
-				int result = _testTypeName != null ? _testTypeName.GetHashCode() : 0;
-				result = (result * 397) ^ (_testAssemblyName != null
-					                           ? _testAssemblyName.GetHashCode()
-					                           : 0);
+				int result = GetCoreName(_testTypeName)?.GetHashCode() ?? 0;
+				result = (result * 397) ^ (GetCoreName(_testAssemblyName)?.GetHashCode() ?? 0);
 				result = (result * 397) ^ _testConstructorIndex;
-				result = (result * 397) ^ (_testFactoryTypeName != null
-					                           ? _testFactoryTypeName.GetHashCode()
-					                           : 0);
-				result = (result * 397) ^ (_testFactoryAssemblyName != null
-					                           ? _testFactoryAssemblyName.GetHashCode()
-					                           : 0);
-				result = (result * 397) ^ (_testName != null ? _testName.GetHashCode() : 0);
+				result = (result * 397) ^ (GetCoreName(_testFactoryTypeName)?.GetHashCode() ?? 0);
+				result = (result * 397) ^
+				         (GetCoreName(_testFactoryAssemblyName)?.GetHashCode() ?? 0);
+				result = (result * 397) ^ (GetCoreName(_testName)?.GetHashCode() ?? 0);
 				return result;
 			}
 		}

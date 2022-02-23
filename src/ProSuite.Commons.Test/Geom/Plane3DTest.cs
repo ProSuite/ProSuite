@@ -4,7 +4,7 @@ using System.Linq;
 using NUnit.Framework;
 using ProSuite.Commons.Geom;
 
-namespace ProSuite.Commons.Test.Geometry
+namespace ProSuite.Commons.Test.Geom
 {
 	[TestFixture]
 	public class Plane3DTest
@@ -19,13 +19,13 @@ namespace ProSuite.Commons.Test.Geometry
 				             new Pnt3D(2577629.794, 1183438.723, 635.800000000003)
 			             };
 
-			Plane3D plane = Plane3D.FitPlane(points, isRing : false);
+			Plane3D plane = Plane3D.FitPlane(points, isRing: false);
 
 			Assert.True(plane.IsDefined);
 			Assert.False(MathUtils.AreEqual(0, plane.LengthOfNormalSquared, plane.Epsilon));
 
 			points.Add(points[0]);
-			plane = Plane3D.FitPlane(points, isRing : true);
+			plane = Plane3D.FitPlane(points, isRing: true);
 
 			Assert.True(plane.IsDefined);
 			Assert.False(MathUtils.AreEqual(0, plane.LengthOfNormalSquared, plane.Epsilon));
@@ -42,7 +42,7 @@ namespace ProSuite.Commons.Test.Geometry
 				             new Pnt3D(2577627.794, 1183434.723, 635.800000000003)
 			             };
 
-			Plane3D plane = Plane3D.FitPlane(points, isRing : false);
+			Plane3D plane = Plane3D.FitPlane(points, isRing: false);
 
 			Assert.False(plane.IsDefined);
 			Assert.AreEqual(0, plane.LengthOfNormalSquared, plane.Epsilon);
@@ -57,13 +57,13 @@ namespace ProSuite.Commons.Test.Geometry
 			Pnt3D pnt3D = points[0] + (points[1] - points[0]) * 3.5;
 			points.Add(pnt3D);
 
-			plane = Plane3D.FitPlane(points, isRing : false);
+			plane = Plane3D.FitPlane(points, isRing: false);
 
 			Assert.False(plane.IsDefined);
 			Assert.AreEqual(0, plane.LengthOfNormalSquared, plane.Epsilon);
 
 			points.Add(points[0]);
-			plane = Plane3D.FitPlane(points, isRing : true);
+			plane = Plane3D.FitPlane(points, isRing: true);
 
 			Assert.False(plane.IsDefined);
 			Assert.AreEqual(0, plane.LengthOfNormalSquared, plane.Epsilon);

@@ -513,7 +513,7 @@ namespace ProSuite.Commons.Geom
 		/// </summary>
 		/// <param name="testPoint"></param>
 		/// <returns></returns>
-		public double GetDistanceXYPerpendicularSigned([NotNull] Pnt testPoint)
+		public double GetDistanceXYPerpendicularSigned([NotNull] IPnt testPoint)
 		{
 			double vX = testPoint.X - StartPoint.X;
 			double vY = testPoint.Y - StartPoint.Y;

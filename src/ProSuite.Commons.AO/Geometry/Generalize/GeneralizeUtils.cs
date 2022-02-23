@@ -516,7 +516,7 @@ namespace ProSuite.Commons.AO.Geometry.Generalize
 
 				shortSegments = new List<esriSegmentInfo>();
 				foreach (SegmentIndex segmentIndex in GeomUtils.GetShortSegmentIndexes(
-					multiPolycurve, minimumSegmentLength, use3DLength, aoi))
+					         multiPolycurve, minimumSegmentLength, use3DLength, aoi))
 				{
 					esriSegmentInfo segInfo = new esriSegmentInfo();
 					segInfo.iPart = segmentIndex.PartIndex;

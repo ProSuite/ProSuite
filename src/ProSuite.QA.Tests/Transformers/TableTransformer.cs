@@ -27,7 +27,7 @@ namespace ProSuite.QA.Tests.Transformers
 			if (_transformed == null)
 			{
 				T transformed = GetTransformedCore(_transformerName);
-				if ((transformed as GdbFeatureClass)?.BackingDataset is TransformedBackingDataset
+				if ((transformed as TransformedFeatureClass)?.BackingDataset is TransformedBackingDataset
 				    tbds)
 				{
 					foreach (var pair in _tableConstraints)

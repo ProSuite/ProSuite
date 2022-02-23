@@ -1,8 +1,8 @@
 using System.IO;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
-using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Testing;
 
 namespace ProSuite.QA.Tests.Test.TestData
 {
