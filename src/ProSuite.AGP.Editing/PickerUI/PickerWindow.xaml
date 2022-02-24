@@ -20,7 +20,9 @@
         BorderThickness="1"
         AllowsTransparency="True"
         FontWeight="Normal"
-        Foreground="Black" Deactivated="Window_Deactivated">
+        Foreground="Black" 
+        Deactivated="PickerWindow_Deactivated" 
+        Closing="PickerWindow_Closing">
 
   <Window.Background>
     <SolidColorBrush Opacity="0.7" Color="White" />
@@ -132,7 +134,7 @@
                DockPanel.Dock="Top"
                ItemsSource="{Binding Path=PickableItems}"
                ItemTemplate="{StaticResource SinglePickTemplate}"
-               SelectedItem="{Binding Path=SelectedItem, Mode=TwoWay}"
+               SelectedItem="{Binding Path=SelectedPickableItem, Mode=TwoWay}"
                Style="{StaticResource ListBox}"
                Visibility="{Binding IsSingleMode, Converter={StaticResource VisibleIfTrueConverter}}">
 

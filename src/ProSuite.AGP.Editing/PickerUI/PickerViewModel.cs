@@ -10,11 +10,14 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.AGP.Editing.PickerUI
 {
 	public class PickerViewModel : PropertyChangedBase
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		private readonly CIMLineSymbol _highlightLineSymbol;
 		private readonly CIMPolygonSymbol _highlightPolygonSymbol;
 		private readonly CIMPointSymbol _highlightPointSymbol;
@@ -52,7 +55,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 		private ObservableCollection<IPickableItem> _pickableItems;
 
-		protected IPickableItem _selectedItem;
+		protected IPickableItem _selectedPickableItem;
 
 		protected bool _isSingleMode;
 
@@ -62,19 +65,25 @@ namespace ProSuite.AGP.Editing.PickerUI
 		public RelayCommand CloseCommand { get; set; }
 
 		[CanBeNull]
-		public IPickableItem SelectedItem
+		public IPickableItem SelectedPickableItem
 		{
-			get => _selectedItem;
+			get => _selectedPickableItem;
 			set
 			{
-				SetProperty(ref _selectedItem, value, () => SelectedItem);
+				SetProperty(ref _selectedPickableItem, value, () => SelectedPickableItem);
 				DisposeOverlays();
+
 				try
 				{
-					//TODO STS when Picker is canceled, Dialog is already closed here and setting DialogResult in this point is not applicable -> throws exception. Can we set DialogResult in better place?
-					DialogResult = true;
+					if (value != null)
+					{
+						DialogResult = true;
+					}
 				}
-				catch { }
+				catch (Exception e)
+				{
+					_msg.Error("Error setting SelectedPickableItem", e);
+				}
 			}
 		}
 

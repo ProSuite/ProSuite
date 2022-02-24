@@ -126,8 +126,10 @@ namespace ProSuite.QA.TestFactories
 
 			var result = new List<ITest>(2);
 
-			HashSet<string> fieldsToCheckDict =
-				fieldsToCheck?.ToHashSet(StringComparer.InvariantCultureIgnoreCase);
+			var fieldsToCheckDict =
+				fieldsToCheck != null
+					? new HashSet<string>(fieldsToCheck, StringComparer.InvariantCultureIgnoreCase)
+					: null;
 
 			IList<ConstraintNode> nodes = GdbConstraintUtils.GetGdbConstraints(
 				table, allowNullValuesForCodedValueDomains,

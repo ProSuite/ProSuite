@@ -47,7 +47,7 @@ namespace ProSuite.AGP.Solution.Selection
 
 			WorkListLayer = featureLayer;
 
-			LayerUtils.SetLayerSelectability(WorkListLayer);
+			WorkListLayer.SetSelectable(true);
 
 			return true;
 		}
@@ -60,7 +60,7 @@ namespace ProSuite.AGP.Solution.Selection
 			                                            .OfType<FeatureLayer>()
 			                                            .Where(lyr => module.IsWorklistLayer(lyr)))
 			{
-				LayerUtils.SetLayerSelectability(layer);
+				layer.SetSelectable(true);
 			}
 
 			SelectionUtils.ClearSelection();
@@ -71,7 +71,7 @@ namespace ProSuite.AGP.Solution.Selection
 		{
 			if (WorkListLayer != null)
 			{
-				LayerUtils.SetLayerSelectability(WorkListLayer, false);
+				WorkListLayer.SetSelectable(false);
 			}
 		}
 

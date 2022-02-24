@@ -87,13 +87,16 @@ namespace ProSuite.AGP.Solution.QA
 		public IList<IQualitySpecificationReference> QualitySpecifications =>
 			_qualitySpecifications ?? new List<IQualitySpecificationReference>(0);
 
-		public string BackendDisplayName => SpecificationProvider.BackendDisplayName;
-		public event EventHandler QualitySpecificationsRefreshed;
-
 		public void RefreshQualitySpecifications()
 		{
 			LoadQualitySpecifications();
 		}
+
+		public event EventHandler QualitySpecificationsRefreshed;
+
+		public Geometry LastVerificationPerimeter { get; set; }
+
+		public string BackendDisplayName => SpecificationProvider.BackendDisplayName;
 
 		public async Task<ServiceCallStatus> VerifyPerimeter(
 			Geometry perimeter,
@@ -110,6 +113,8 @@ namespace ProSuite.AGP.Solution.QA
 
 			var result = await VerificationService.VerifyPerimeter(
 				             specification, perimeter, projectWorkspace, progress, resultsPath);
+
+			LastVerificationPerimeter = perimeter;
 
 			return result;
 		}
@@ -132,11 +137,15 @@ namespace ProSuite.AGP.Solution.QA
 				             specification, objectsToVerify, perimeter, projectWorkspace, progress,
 				             resultsPath);
 
+			LastVerificationPerimeter = perimeter;
+
 			return result;
 		}
 
 		private void ContextProjectWorkspaceChanged(object sender, EventArgs e)
 		{
+			LastVerificationPerimeter = null;
+
 			LoadQualitySpecifications();
 		}
 

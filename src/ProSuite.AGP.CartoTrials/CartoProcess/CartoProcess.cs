@@ -11,9 +11,12 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 using ProSuite.Commons.Logging;
+using ProSuite.DomainModel.Core.Processing;
 using ProSuite.Processing;
+using ProSuite.Processing.AGP.Core.Domain;
+using ProSuite.Processing.AGP.Core.Utils;
 using ProSuite.Processing.Domain;
-using ProSuite.Processing.Utils;
+using ProcessDatasetName = ProSuite.Processing.Domain.ProcessDatasetName;
 
 namespace ProSuite.AGP.CartoTrials.CartoProcess
 {
@@ -265,7 +268,7 @@ namespace ProSuite.AGP.CartoTrials.CartoProcess
 
 		public string CurrentGroup { get; set; }
 		public string CurrentProcess { get; set; }
-		public Feature CurrentFeature { get; set; }
+		public FeatureProxy CurrentFeature { get; set; }
 
 		public void ReportInfo(string text)
 		{
@@ -552,7 +555,7 @@ namespace ProSuite.AGP.CartoTrials.CartoProcess
 		{
 			FeaturesStarted += 1;
 
-			Feedback.CurrentFeature = feature;
+			Feedback.CurrentFeature = null; //TODO feature as FeatureProxy;
 
 			ReportFeatureProgress();
 		}

@@ -60,7 +60,7 @@ namespace ProSuite.AGP.WorkList
 			FeatureLayer worklistLayer =
 				CreateWorklistLayer(worklist, path, GetContainer());
 
-			LayerUtils.SetLayerSelectability(worklistLayer, false);
+			worklistLayer.SetSelectable(false);
 
 			LayerUtils.ApplyRenderer(worklistLayer, GetLayerDocument());
 

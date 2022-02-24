@@ -128,6 +128,14 @@
       <Project>{66e5d99b-26ab-4fff-834d-d96347df4fa4}</Project>
       <Name>ProSuite.Commons</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
+      <Project>{0B48B56F-3A3D-4367-AA76-A356519AF2AB}</Project>
+      <Name>ProSuite.DomainModel.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.Processing.AGP.Core\ProSuite.Processing.AGP.Core.csproj">
+      <Project>{24d24089-c337-43ff-be11-2f01af1e6783}</Project>
+      <Name>ProSuite.Processing.AGP.Core</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Processing\ProSuite.Processing.csproj">
       <Project>{0b72e886-b428-48ed-ba96-9cd6fcc5e171}</Project>
       <Name>ProSuite.Processing</Name>

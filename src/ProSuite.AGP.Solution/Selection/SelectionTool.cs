@@ -1,10 +1,12 @@
 using System.Collections.Generic;
 using ArcGIS.Core.Data;
 using ProSuite.AGP.Editing.Selection;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.AGP.Solution.Selection
 {
-	class SelectionTool : SelectionToolBase
+	[UsedImplicitly]
+	public class SelectionTool : SelectionToolBase
 	{
 		/*
 		Select features by clicking or dragging a box.
