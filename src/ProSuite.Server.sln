@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30128.74
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Commons.Essentials", "ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj", "{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}"
 EndProject
@@ -65,6 +65,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Application.Configuration", "ProSuite.Application.Configuration\ProSuite.Application.Configuration.csproj", "{EAB868E4-D8FD-4AB4-9EDA-A9291E7CFEAB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Microservices.Client", "ProSuite.Microservices.Client\ProSuite.Microservices.Client.csproj", "{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.QA.Tests.External", "ProSuite.QA.Tests.External\ProSuite.QA.Tests.External.csproj", "{FE90B848-F449-47FE-8F3F-FF4C6A3BFF22}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -298,6 +300,14 @@ Global
 		{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}.Release|Any CPU.Build.0 = Release|Any CPU
 		{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}.Release|x86.ActiveCfg = Release|Any CPU
 		{413917C0-7EB3-4D86-8448-0A3CA70C2ED4}.Release|x86.Build.0 = Release|Any CPU
+		{FE90B848-F449-47FE-8F3F-FF4C6A3BFF22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE90B848-F449-47FE-8F3F-FF4C6A3BFF22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE90B848-F449-47FE-8F3F-FF4C6A3BFF22}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FE90B848-F449-47FE-8F3F-FF4C6A3BFF22}.Debug|x86.Build.0 = Debug|Any CPU
+		{FE90B848-F449-47FE-8F3F-FF4C6A3BFF22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE90B848-F449-47FE-8F3F-FF4C6A3BFF22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE90B848-F449-47FE-8F3F-FF4C6A3BFF22}.Release|x86.ActiveCfg = Release|Any CPU
+		{FE90B848-F449-47FE-8F3F-FF4C6A3BFF22}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

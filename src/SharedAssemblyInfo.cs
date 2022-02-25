@@ -2,7 +2,7 @@ using System.Reflection;
 
 [assembly: AssemblyProduct("ProSuite")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyCopyright("© 2020-2021 The ProSuite Authors")]
+[assembly: AssemblyCopyright("© 2020-2022 The ProSuite Authors")]
 [assembly: AssemblyTrademark("")]
 
 #if DEBUG

@@ -444,7 +444,9 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			Envelope inExtent = ActiveMapView.Extent;
 
-			TargetFeatureSelection targetFeatureSelection = TargetFeatureSelection.VisibleFeatures;
+			// todo daro To tool Options? See ChangeGeometryAlongToolBase.SelectTargetsAsync() as well.
+			const TargetFeatureSelection targetFeatureSelection =
+				TargetFeatureSelection.VisibleSelectableFeatures;
 
 			IEnumerable<FeatureClassSelection> featureClassSelections =
 				MapUtils.FindFeatures(ActiveMapView, selection, targetFeatureSelection,

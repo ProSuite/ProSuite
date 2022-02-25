@@ -203,9 +203,6 @@ namespace ProSuite.AGP.Solution.LoggerUI
 			{
 				_disabledLogTypes.Add(LogType.Verbose);
 			}
-
-			_msg.Info(DebugLogsAreVisible ? "Debug logs visible" : "Debug logs hidden");
-			_msg.Info(VerboseLogsAreVisible ? "Verbose logs visible" : "Verbose logs hidden");
 		}
 
 		// todo daro inline

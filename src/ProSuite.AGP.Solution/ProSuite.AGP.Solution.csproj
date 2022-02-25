@@ -152,6 +152,7 @@
     <Compile Include="QA\QualityVerificationEnvironment.cs" />
     <Compile Include="QA\SelectInvolvedObjectsCmd.cs" />
     <Compile Include="QA\SelectIssueFeaturesTool.cs" />
+    <Compile Include="QA\VerifyLastCmd.cs" />
     <Compile Include="QA\VerifyPerimeterTool.cs" />
     <Compile Include="QA\VerifySelectionCmd.cs" />
     <Compile Include="QA\VerifyVisibleExtentCmd.cs" />
@@ -167,6 +168,7 @@
     <Compile Include="Selection\SelectionTool.cs" />
     <Compile Include="ProSuiteFacadeImpl.cs" />
     <Compile Include="ProSuiteUtils.cs" />
+    <Compile Include="Selection\SelectionToolButton.cs" />
     <Compile Include="Workflow\MapBasedSessionContext.cs" />
     <Compile Include="WorkLists\CreateIssueWorkListButton.cs" />
     <Compile Include="WorkLists\CreateSelectionWorkListButton.cs" />
@@ -511,6 +513,8 @@
     <AddInContent Include="Images\SelectInvolvedObjectsCmd32.png" />
     <AddInContent Include="Images\SelectIssueFeaturesTool16.png" />
     <AddInContent Include="Images\SelectIssueFeaturesTool32.png" />
+    <AddInContent Include="Images\VerifyLastCmd16.png" />
+    <AddInContent Include="Images\VerifyLastCmd32.png" />
     <AddInContent Include="Images\VerifyPerimeterTool16.png" />
     <AddInContent Include="Images\VerifyPerimeterTool32.png" />
     <AddInContent Include="Images\VerifySelectionCmd16.png" />

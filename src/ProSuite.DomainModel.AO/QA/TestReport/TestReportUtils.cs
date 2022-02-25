@@ -44,9 +44,29 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 			builder.IncludeAssemblyInfo = true;
 
 			IncludeTestClasses(builder, assemblies);
+			IncludeTransformerClasses(builder, assemblies);
 			IncludeTestFactories(builder, assemblies);
 
 			builder.WriteReport();
+		}
+
+		public static void WritePythonTransformerClass([NotNull] IList<Assembly> assemblies,
+		                                          [NotNull] TextWriter writer)
+		{
+			Assert.ArgumentNotNull(assemblies, nameof(assemblies));
+
+			var builder = new PythonClassBuilder(writer);
+
+			builder.AddHeaderItem("ProSuite Version",
+			                      ReflectionUtils.GetAssemblyVersionString(
+				                      Assembly.GetExecutingAssembly()));
+
+			builder.IncludeObsolete = false;
+			builder.IncludeAssemblyInfo = true;
+
+			IncludeTransformerClasses(builder, assemblies);
+			
+			builder.WriteTransformerClassFile();
 		}
 
 		public static void WritePythonTestClasses([NotNull] IList<Assembly> assemblies,
@@ -126,6 +146,28 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 						includeInternallyUsed))
 					{
 						reportBuilder.IncludeTest(testType, ctorIndex);
+					}
+				}
+			}
+		}
+
+		private static void IncludeTransformerClasses([NotNull] IReportBuilder reportBuilder,
+		                                              [NotNull] IEnumerable<Assembly> assemblies)
+		{
+			const bool includeObsolete = true;
+			const bool includeInternallyUsed = true;
+
+			foreach (Assembly assembly in assemblies)
+			{
+				foreach (Type testType in TestFactoryUtils.GetTransformerClasses(
+					assembly, includeObsolete, includeInternallyUsed))
+				{
+					foreach (int ctorIndex in TestFactoryUtils.GetTestConstructorIndexes(
+						testType,
+						includeObsolete,
+						includeInternallyUsed))
+					{
+						reportBuilder.IncludeTransformer(testType, ctorIndex);
 					}
 				}
 			}

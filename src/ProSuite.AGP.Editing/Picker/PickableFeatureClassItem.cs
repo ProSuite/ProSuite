@@ -65,32 +65,27 @@ namespace ProSuite.AGP.Editing.Picker
 
 		private static Uri GetImagePath(esriGeometryType geometryType)
 		{
-			if (geometryType == esriGeometryType.esriGeometryPoint ||
-			    geometryType == esriGeometryType.esriGeometryMultipoint)
+			switch (geometryType)
 			{
-				return new Uri(
-					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PointGeometry.bmp");
-				//this one here works directly in xaml
-				//pack://application:,,,/Properties/Images/PointGeometry.bmp 
+				case esriGeometryType.esriGeometryPoint:
+				case esriGeometryType.esriGeometryMultipoint:
+					return new Uri(
+						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PointGeometry.bmp");
+				case esriGeometryType.esriGeometryLine:
+				case esriGeometryType.esriGeometryPolyline:
+					return new Uri(
+						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/LineGeometry.bmp");
+				case esriGeometryType.esriGeometryPolygon:
+					return new Uri(
+						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PolygonGeometry.bmp",
+						UriKind.Absolute);
+				case esriGeometryType.esriGeometryMultiPatch:
+					return new Uri(
+						@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/MultipatchGeometry.bmp");
+				default:
+					throw new ArgumentOutOfRangeException(
+						$"Unsupported geometry type: {geometryType}");
 			}
-
-			if (geometryType == esriGeometryType.esriGeometryLine ||
-			    geometryType == esriGeometryType.esriGeometryPolyline)
-			{
-				return new Uri(
-					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/LineGeometry.bmp");
-			}
-
-			if (geometryType == esriGeometryType.esriGeometryPolygon ||
-			    geometryType == esriGeometryType.esriGeometryMultiPatch)
-			{
-				return new Uri(
-					@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PolygonGeometry.bmp",
-					UriKind.Absolute);
-			}
-
-			return new Uri(
-				@"pack://application:,,,/ProSuite.AGP.Editing;component/PickerUI/Images/PointGeometry.bmp");
 		}
 
 		public event PropertyChangedEventHandler PropertyChanged;

@@ -3303,6 +3303,33 @@ namespace ProSuite.Commons.Geom
 		}
 
 		[NotNull]
+		public static IList<Line3D> GetLinearSelfIntersectionsXY(
+			[NotNull] ISegmentList segmentList,
+			double tolerance,
+			bool in3D = false)
+		{
+			var result = new List<Line3D>();
+
+			for (int partIdx = 0; partIdx < segmentList.PartCount; partIdx++)
+			{
+				Linestring linestring = segmentList.GetPart(partIdx);
+
+				for (int i = 0; i < linestring.SegmentCount; i++)
+				{
+					IList<Linestring> linearSelfIntersections =
+						GetLinearSelfIntersectionsXY(linestring, i, tolerance, in3D);
+
+					foreach (Linestring selfIntersection in linearSelfIntersections)
+					{
+						result.AddRange(selfIntersection.Segments);
+					}
+				}
+			}
+
+			return result;
+		}
+
+		[NotNull]
 		public static IList<Linestring> GetLinearSelfIntersectionsXY(
 			[NotNull] ISegmentList segmentList,
 			int sourceSegmentIndex,

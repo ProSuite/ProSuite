@@ -1,23 +1,16 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
-using ArcGIS.Desktop.Catalog;
 using ArcGIS.Desktop.Core;
 using ArcGIS.Desktop.Core.Events;
 using ArcGIS.Desktop.Framework;
-using ArcGIS.Desktop.Framework.Contracts;
-using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ProSuite.AGP.Solution.ConfigUI;
 using ProSuite.AGP.Solution.LoggerUI;
 using ProSuite.AGP.Solution.ProjectItem;
 using ProSuite.AGP.Solution.Workflow;
-using ProSuite.AGP.Solution.WorkLists;
 using ProSuite.Application.Configuration;
-using ProSuite.Commons.AGP.WPF;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -26,7 +19,6 @@ using ProSuite.DomainModel.AGP.Workflow;
 using ProSuite.Microservices.Client.AGP;
 using ProSuite.Microservices.Client.QA;
 using ProSuite.QA.Configurator;
-using ProSuite.QA.ServiceManager;
 using ProSuite.QA.ServiceManager.Types;
 using Module = ArcGIS.Desktop.Framework.Contracts.Module;
 
@@ -42,39 +34,18 @@ namespace ProSuite.AGP.Solution
 
 		private const string _microserverQaExeName = "prosuite_microserver_qa.exe";
 
-		const string _microserviceToolClientConfigXml =
+		private const string _microserviceToolClientConfigXml =
 			"prosuite.microservice.geometry_processing.client.config.xml";
 
 		private const string _microserviceQaClientConfigXml =
 			"prosuite.microservice.qa.client.config.xml";
 
-		public static event EventHandler<ProSuiteQAConfigEventArgs> OnQAConfigurationChanged;
-
-		private static ProSuiteQAManager _qaManager;
-
-		public static ProSuiteQAManager QAManager
-		{
-			get
-			{
-				if (_qaManager != null)
-				{
-					return _qaManager;
-				}
-
-				_qaManager = new ProSuiteQAManager(
-					QAConfiguration.Current.GetQAServiceProviders(
-						QAProjectItem?.ServerConfigurations),
-					QAConfiguration.Current.GetQASpecificationsProvider(
-						QAProjectItem?.SpecificationConfiguration));
-
-				_qaManager.OnStatusChanged += QAManager_OnStatusChanged;
-
-				OnQAConfigurationChanged = _qaManager.OnConfigurationChanged;
-				return _qaManager;
-			}
-		}
-
 		private static ProSuiteProjectItemConfiguration _qaProjectItem;
+
+		private static ProSuiteToolsModule _this;
+
+		private static IMsg msg;
+		private static MapBasedSessionContext _sessionContext;
 
 		public static ProSuiteProjectItemConfiguration QAProjectItem
 		{
@@ -108,20 +79,17 @@ namespace ProSuite.AGP.Solution
 			}
 		}
 
-		private static ProSuiteToolsModule _this;
-
-		private static IMsg msg;
-		private static MapBasedSessionContext _sessionContext;
-
 		private static IMsg _msg
 		{
 			get
 			{
 				if (msg == null)
+				{
 					msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+				}
+
 				return msg;
 			}
-			set => msg = value;
 		}
 
 		public GeometryProcessingClient ToolMicroserviceClient { get; private set; }
@@ -131,17 +99,14 @@ namespace ProSuite.AGP.Solution
 		/// <summary>
 		/// Retrieve the singleton instance to this module here
 		/// </summary>
-		public static ProSuiteToolsModule Current
-		{
-			get
-			{
-				return _this ?? (_this = (ProSuiteToolsModule) FrameworkApplication.FindModule(
-					                 "ProSuiteSolution_Module"));
-			}
-		}
+		public static ProSuiteToolsModule Current =>
+			_this ?? (_this = (ProSuiteToolsModule) FrameworkApplication.FindModule(
+				          "ProSuiteSolution_Module"));
 
 		public IMapBasedSessionContext SessionContext =>
 			_sessionContext ?? (_sessionContext = new MapBasedSessionContext());
+
+		public static event EventHandler<ProSuiteQAConfigEventArgs> OnQAConfigurationChanged;
 
 		private static void UpdateServiceUI(ProSuiteProjectItemConfiguration projectItem = null)
 		{
@@ -152,210 +117,35 @@ namespace ProSuite.AGP.Solution
 			}
 			else
 			{
-				var localService =
+				ProSuiteQAServerConfiguration localService =
 					projectItem.ServerConfigurations.FirstOrDefault(
 						s => s.ServiceType == ProSuiteQAServiceType.GPLocal && s.IsValid);
 				if (localService != null)
+				{
 					FrameworkApplication.State.Activate(ConfigIDs.QA_GPLocal_State);
+				}
 				else
+				{
 					FrameworkApplication.State.Deactivate(ConfigIDs.QA_GPLocal_State);
+				}
 
-				var serverService =
+				ProSuiteQAServerConfiguration serverService =
 					projectItem.ServerConfigurations.FirstOrDefault(
 						s => s.ServiceType == ProSuiteQAServiceType.GPService && s.IsValid);
 				if (serverService != null)
+				{
 					FrameworkApplication.State.Activate(ConfigIDs.QA_GPService_State);
+				}
 				else
+				{
 					FrameworkApplication.State.Deactivate(ConfigIDs.QA_GPService_State);
-			}
-		}
-
-		#region Overrides
-
-		/// <summary>
-		/// Initialize logic for the custom module
-		/// </summary>
-		/// <returns></returns>
-		protected override bool Initialize()
-		{
-			InitLoggerConfiguration();
-
-			//ProjectItemsChangedEvent.Subscribe(OnProjectItemsChanged);
-			
-			ProSuiteConfigChangedEvent.Subscribe(OnConfigurationChanged);
-			LogMessageActionEvent.Subscribe(OnLogMessageActionRequested);
-
-			// TODO: Task.Run async?
-			SetupBackend().ConfigureAwait(false);
-
-			return base.Initialize();
-		}
-
-		private void InitLoggerConfiguration()
-		{
-			LoggingConfigurator.UsePrivateConfiguration = false;
-			AppLoggingConfigurator.Configure(_loggingConfigFile);
-
-			// this will instantiate IMsg (should be after log4net configuration) 
-			_msg.Debug("Logging configured");
-		}
-
-		/// <summary>
-		/// Uninitialize method.  Make sure the module unsubscribes from the events.
-		/// </summary>
-		protected override void Uninitialize()
-		{
-			base.Uninitialize();
-			
-			ProSuiteConfigChangedEvent.Unsubscribe(OnConfigurationChanged);
-			LogMessageActionEvent.Unsubscribe(OnLogMessageActionRequested);
-
-			ToolMicroserviceClient?.Disconnect();
-			QaMicroserviceClient?.Disconnect();
-		}
-
-		/// <summary>
-		/// Called by Framework when ArcGIS Pro is closing
-		/// </summary>
-		/// <returns>False to prevent Pro from closing, otherwise True</returns>
-		protected override bool CanUnload()
-		{
-			//TODO - add your business logic
-			//return false to ~cancel~ Application close
-			return true;
-		}
-
-		#endregion
-
-		#region Event handlers
-
-		private static void QAManager_OnStatusChanged(object sender, ProSuiteQAServiceEventArgs e)
-		{
-			//_msg.Info($"ProSuiteModule: {e.State}");
-		}
-
-		private void OnProjectItemsChanged(ProjectItemsChangedEventArgs obj)
-		{
-			//_msg.Info($"OnProjectItemsChanged Name: {obj.ProjectItem.Name} Action: {obj.Action}");
-		}
-
-		private void OnConfigurationChanged(ProSuiteConfigEventArgs configArgs)
-		{
-			// save changed configuration
-			QAProjectItem.ServerConfigurations = configArgs.ServerConfigurations;
-			QAProjectItem.SpecificationConfiguration = configArgs.SpecificationsConfiguration;
-
-			UpdateServiceUI(QAProjectItem);
-
-			// notify QAManager than config is changed via
-			OnQAConfigurationChanged?.Invoke(
-				this, new ProSuiteQAConfigEventArgs(configArgs.ServerConfigurations));
-		}
-
-		private void OnLogMessageActionRequested(LogMessageActionEventArgs logActionArgs)
-		{
-			if (logActionArgs.MessageAction == LogMessageAction.Details)
-			{
-				// TODO create dialog only once?
-				var _prosuiteconfigdialog = new LogMessageDetailsDialog();
-				var logDetailsViewModel = new LogMessageDetailsViewModel(logActionArgs.LogMessage);
-				_prosuiteconfigdialog.DataContext = logDetailsViewModel;
-				if (_prosuiteconfigdialog.ShowDialog() ?? true)
-				{
-					Clipboard.SetText(logDetailsViewModel.ClipboardMessage);
-					_msg.Debug("Log message copied into clipboard");
 				}
 			}
-			else
-				_msg.Debug("Unkown LogMessage action");
-		}
-
-		internal static void StartQAGPServer(ProSuiteQAServiceType type)
-		{
-			_msg.Info("StartQAGPServer is called");
-
-			// TODO temporary 
-			var serviceConfig = _qaProjectItem.ServerConfigurations.FirstOrDefault(
-				c => c.ServiceType == ProSuiteQAServiceType.GPService);
-			if (serviceConfig == null)
-			{
-				_msg.Error("Server config does not exist");
-				return;
-			}
-
-			var xml = @"\\vsdev2414\prosuite_server_trials\xml\polygonCovering.qa.xml";
-
-			var qaParams =
-				$"{serviceConfig.ServiceConnection},{xml},{serviceConfig.DefaultTileSize},,,{serviceConfig.DefaultOutputFolder},,,,{serviceConfig.DefaultCompressValue}";
-			var response = QAManager.StartQATesting(new ProSuiteQARequest(type, qaParams));
-			_msg.Info("StartQAGPServer is ended");
-		}
-
-		#endregion
-
-		internal static async Task StartQAGPServerAsync(ProSuiteQAServiceType type,
-		                                                string specificationName)
-		{
-			_msg.Info("StartQAGPServerAsync is called");
-
-			// TODO get envelope, selected data, selected QA spec, config,  ....
-			var serviceConfig = _qaProjectItem.ServerConfigurations.FirstOrDefault(
-				c => c.ServiceType == ProSuiteQAServiceType.GPLocal);
-			if (serviceConfig == null)
-			{
-				_msg.Error("Server config does not exist");
-				return;
-			}
-
-			// temporary - give path to XML specifications
-			var qaSpecificationsConnection =
-				QAManager.GetQASpecificationsConnection(specificationName);
-
-			// TODO select only available workspaces 
-			var qaParams =
-				$"{qaSpecificationsConnection},{serviceConfig.DefaultTileSize},,,{serviceConfig.DefaultOutputFolder},,,,{serviceConfig.DefaultCompressValue}";
-
-			var response =
-				await QAManager.StartQATestingAsync(new ProSuiteQARequest(type, qaParams));
-			if (response.Error == ProSuiteQAError.None)
-			{
-				_msg.Info($"StartQAGPServerAsync result {response.ResponseData}");
-
-				if (response.ResponseData != null)
-				{
-					var issuesGdb = Path.Combine(response.ResponseData.ToString(), "issues.gdb");
-					if (Directory.Exists(issuesGdb))
-					{
-						// TODO fire event to open worklist?
-						await OpenIssuesWorklist(issuesGdb);
-					}
-				}
-			}
-			else
-			{
-				_msg.Error($"StartQAGPServerAsync is failed: ${response.Error}");
-			}
-		}
-
-		public static async Task OpenIssuesWorklist([NotNull] string wlpath)
-		{
-			await ViewUtils.TryAsync(async () =>
-			{
-				throw new NotImplementedException();
-			}, _msg);
-		}
-
-		public async Task ShowSelectionWorkList()
-		{
-			await ViewUtils.TryAsync(async () =>
-			{
-				throw new NotImplementedException();
-			}, _msg);
 		}
 
 		private async Task<bool> SetupBackend()
 		{
-			bool toolsClientStarted = false;
+			var toolsClientStarted = false;
 
 			// NOTE: This method is used with ConfigureAwait(false) and must not throw or the application will crash!
 			try
@@ -455,159 +245,106 @@ namespace ProSuite.AGP.Solution
 				return null;
 			}
 		}
-	}
 
-	#region UI commands
+		#region Overrides
 
-	internal class StartQAGPTool : Button
-	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
-
-		protected override async void OnClick()
+		/// <summary>
+		/// Initialize logic for the custom module
+		/// </summary>
+		/// <returns></returns>
+		protected override bool Initialize()
 		{
-			try
-			{
-				string specificationName =
-					ProSuiteToolsModule.Current.SessionContext.VerificationEnvironment
-					                   ?.CurrentQualitySpecification?.Name;
+			InitLoggerConfiguration();
 
-				if (specificationName != null)
+			//ProjectItemsChangedEvent.Subscribe(OnProjectItemsChanged);
+
+			ProSuiteConfigChangedEvent.Subscribe(OnConfigurationChanged);
+			LogMessageActionEvent.Subscribe(OnLogMessageActionRequested);
+			ProjectOpenedAsyncEvent.Subscribe(OnProjectOpenedAsync);
+
+			// TODO: Task.Run async?
+			SetupBackend().ConfigureAwait(false);
+
+			return base.Initialize();
+		}
+
+		private void InitLoggerConfiguration()
+		{
+			LoggingConfigurator.UsePrivateConfiguration = false;
+			AppLoggingConfigurator.Configure(_loggingConfigFile);
+
+			// this will instantiate IMsg (should be after log4net configuration) 
+			_msg.Debug("Logging configured");
+		}
+
+		/// <summary>
+		/// Uninitialize method.  Make sure the module unsubscribes from the events.
+		/// </summary>
+		protected override void Uninitialize()
+		{
+			base.Uninitialize();
+
+			ProSuiteConfigChangedEvent.Unsubscribe(OnConfigurationChanged);
+			LogMessageActionEvent.Unsubscribe(OnLogMessageActionRequested);
+			ProjectOpenedAsyncEvent.Unsubscribe(OnProjectOpenedAsync);
+
+			ToolMicroserviceClient?.Disconnect();
+			QaMicroserviceClient?.Disconnect();
+		}
+
+		/// <summary>
+		/// Called by Framework when ArcGIS Pro is closing
+		/// </summary>
+		/// <returns>False to prevent Pro from closing, otherwise True</returns>
+		protected override bool CanUnload()
+		{
+			//TODO - add your business logic
+			//return false to ~cancel~ Application close
+			return true;
+		}
+
+		#endregion
+
+		#region Event handlers
+
+		private void OnConfigurationChanged(ProSuiteConfigEventArgs configArgs)
+		{
+			// save changed configuration
+			QAProjectItem.ServerConfigurations = configArgs.ServerConfigurations;
+			QAProjectItem.SpecificationConfiguration = configArgs.SpecificationsConfiguration;
+
+			UpdateServiceUI(QAProjectItem);
+
+			// notify QAManager than config is changed via
+			OnQAConfigurationChanged?.Invoke(
+				this, new ProSuiteQAConfigEventArgs(configArgs.ServerConfigurations));
+		}
+
+		private void OnLogMessageActionRequested(LogMessageActionEventArgs logActionArgs)
+		{
+			if (logActionArgs.MessageAction == LogMessageAction.Details)
+			{
+				// TODO create dialog only once?
+				var _prosuiteconfigdialog = new LogMessageDetailsDialog();
+				var logDetailsViewModel = new LogMessageDetailsViewModel(logActionArgs.LogMessage);
+				_prosuiteconfigdialog.DataContext = logDetailsViewModel;
+				if (_prosuiteconfigdialog.ShowDialog() ?? true)
 				{
-					await ProSuiteToolsModule.StartQAGPServerAsync(
-						ProSuiteQAServiceType.GPService, specificationName);
+					Clipboard.SetText(logDetailsViewModel.ClipboardMessage);
+					_msg.Debug("Log message copied into clipboard");
 				}
 			}
-			catch (Exception ex)
+			else
 			{
-				_msg.Error(ex.Message);
+				_msg.Debug("Unkown LogMessage action");
 			}
 		}
-	}
 
-	internal class StartQAGPExtent : Button
-	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
-
-		protected override async void OnClick()
+		private async Task OnProjectOpenedAsync(ProjectEventArgs arg)
 		{
-			try
-			{
-				string specificationName = ProSuiteToolsModule.Current.SessionContext
-				                                              .VerificationEnvironment
-				                                              ?.CurrentQualitySpecification?.Name;
-
-				if (specificationName != null)
-				{
-					await ProSuiteToolsModule.StartQAGPServerAsync(
-						ProSuiteQAServiceType.GPLocal, specificationName);
-				}
-			}
-			catch (Exception ex)
-			{
-				_msg.Error(ex.Message);
-			}
+			await SetupBackend();
 		}
+
+		#endregion
 	}
-
-	internal class StartQAErrorsDockPane : Button
-	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
-
-		StartQAErrorsDockPane()
-		{
-			//Enabled = false;
-		}
-
-		protected override async void OnClick()
-		{
-			try
-			{
-				// performance test
-				//QueuedTask.Run(() =>
-				//{
-				//	ProSuiteLogPaneViewModel.GenerateMockMessages(10000);
-				//});
-
-				// temporary solution for WorkList
-				//await QueuedTask.Run(() =>
-				//{
-				//	var pane = FrameworkApplication.DockPaneManager.Find("esri_dataReviewer_evaluateFeaturesPane");
-				//	bool visible = pane.IsVisible;
-				//	pane.Activate();
-				//});
-
-				await ProSuiteToolsModule.Current.ShowSelectionWorkList();
-			}
-			catch (Exception ex)
-			{
-				_msg.Error(ex.Message);
-			}
-		}
-	}
-
-	internal class ShowConfigWindow : Button
-	{
-		private ProSuiteConfigDialog _prosuiteconfigdialog;
-
-		protected override void OnClick()
-		{
-			//already open?
-			if (_prosuiteconfigdialog != null)
-				return;
-
-			// clone 
-			var tempQAConfiguration = ProSuiteToolsModule.QAProjectItem.ServerConfigurations
-			                                             .ToList().ConvertAll(
-				                                             x => new ProSuiteQAServerConfiguration(
-					                                             x));
-
-			_prosuiteconfigdialog = new ProSuiteConfigDialog();
-			_prosuiteconfigdialog.Owner = FrameworkApplication.Current.MainWindow;
-			_prosuiteconfigdialog.DataContext = new ProSuiteConfigViewModel(tempQAConfiguration);
-			_prosuiteconfigdialog.Closed += (o, e) => { _prosuiteconfigdialog = null; };
-
-			if (_prosuiteconfigdialog.ShowDialog() ?? true)
-			{
-				ProSuiteConfigChangedEvent.Publish(
-					new ProSuiteConfigEventArgs(tempQAConfiguration, null));
-			}
-		}
-	}
-
-	internal class ImportWorkListFile : Button
-	{
-		// TODO algr: temporary tests
-		protected override void OnClick()
-		{
-			var bf = new BrowseProjectFilter();
-			bf.AddCanBeTypeId(
-				"ProSuiteItem_ProjectItem"); //TypeID for the ".wlist" custom project item
-
-			// for subitem allow to browse inside and add as type
-			//bf.AddDoBrowseIntoTypeId("ProSuiteItem_ProjectItemWorkListFile");
-			//bf.AddCanBeTypeId("ProSuiteItem_WorkListItem"); //subitem 
-			bf.Name = "Work List";
-
-			var openItemDialog = new OpenItemDialog
-			                     {
-				                     Title = "Add Work List",
-				                     //InitialLocation = "",
-				                     BrowseFilter = bf
-			                     };
-			bool? result = openItemDialog.ShowDialog();
-			if (result != null && (result.Value == false || ! openItemDialog.Items.Any())) return;
-
-			var item = openItemDialog.Items.FirstOrDefault();
-			string filePath = item?.Path;
-
-			QueuedTask.Run(() =>
-			{
-				ProjectRepository.Current.AddProjectFileItems(
-					ProjectItemType.WorkListDefinition,
-					new List<string> {filePath});
-			});
-		}
-	}
-
-	#endregion
 }

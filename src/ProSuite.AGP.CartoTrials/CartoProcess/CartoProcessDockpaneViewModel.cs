@@ -12,8 +12,8 @@ using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DomainModel.Core.Processing;
 using ProSuite.Processing;
-using ProSuite.Processing.Domain;
 
 namespace ProSuite.AGP.CartoTrials.CartoProcess
 {

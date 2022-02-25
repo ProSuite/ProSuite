@@ -12,19 +12,25 @@ namespace ProSuite.AGP.WorkList
 
 		protected override async void OnClick()
 		{
-			// has to be outside QueuedTask because of OpenItemDialog
-			// AND ouside of Task.Run because OptenItemDialog has to be
-			// in UI thread.
-
 			string path = null;
 			WorkEnvironmentBase environment = null;
 
 			ViewUtils.Try(() =>
 			{
 				path = GetWorklistPathCore();
-
+				
+				// has to be outside QueuedTask because of OpenItemDialog
+				// AND outside of Task.Run because OptenItemDialog has to be
+				// in UI thread.
 				environment = CreateEnvironment(path);
 			}, _msg);
+
+			if (environment == null)
+			{
+				_msg.Debug("Cannot open work list: environment is null");
+
+				return;
+			}
 
 			await ViewUtils.TryAsync(OnClickCore(environment, path), _msg);
 		}

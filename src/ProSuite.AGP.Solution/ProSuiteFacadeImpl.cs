@@ -22,9 +22,7 @@ namespace ProSuite.AGP.Solution
 
 		public async Task OpenIssueWorkListAsync(string issuesGdbPath)
 		{
-			WorkEnvironmentBase environment = string.IsNullOrEmpty(issuesGdbPath)
-				                                  ? new IssueWorkListEnvironment()
-				                                  : new IssueWorkListEnvironment(issuesGdbPath);
+			WorkEnvironmentBase environment = new IssueWorkListEnvironment(issuesGdbPath);
 
 			await CreateWorkList(environment);
 		}

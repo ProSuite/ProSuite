@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using ArcGIS.Core.Data;
+using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
@@ -22,12 +24,23 @@ namespace ProSuite.AGP.Editing.Selection
 			SelectOnlyEditFeatures = false;
 
 			SetCursor(SelectionCursor);
-			
 		}
 
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		private SelectionSettings _selectionSettings;
+		protected override async Task OnToolActivateAsync(bool hasMapViewChanged)
+		{
+			SetCheckState("ProSuiteTools_Selection_SelectionToolButton", true);
+
+			await base.OnToolActivateAsync(hasMapViewChanged);
+		}
+
+		protected override async Task OnToolDeactivateAsync(bool hasMapViewChanged)
+		{
+			SetCheckState("ProSuiteTools_Selection_SelectionToolButton", false);
+
+			await base.OnToolDeactivateAsync(hasMapViewChanged);
+		}
 
 		protected override bool IsInSelectionPhase(bool shiftIsPressed)
 		{
@@ -86,10 +99,18 @@ namespace ProSuite.AGP.Editing.Selection
 				"<br>-Press ALT and click to select all features at the click point.");
 		}
 
-		protected override SelectionSettings SelectionSettings
+		protected override SelectionSettings SelectionSettings { get; set; }
+
+		// todo daro: to DamlUtils?
+		private static void SetCheckState(string damlId, bool isChecked)
 		{
-			get => _selectionSettings;
-			set => _selectionSettings = value;
+			IPlugInWrapper plugin =
+				FrameworkApplication.GetPlugInWrapper(damlId);
+
+			if (plugin != null)
+			{
+				plugin.Checked = isChecked;
+			}
 		}
 	}
 }

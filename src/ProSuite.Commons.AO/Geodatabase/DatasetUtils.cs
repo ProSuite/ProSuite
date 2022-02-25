@@ -1143,6 +1143,43 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return ((ISQLSyntax) workspace).QualifyColumnName(tableName, unqualifiedFieldName);
 		}
 
+		[CanBeNull]
+		public static string GetGdbWorkspaceCatalogPath(
+			[NotNull] string objectClassCatalogPath,
+			[CanBeNull] out string featureDataset,
+			[CanBeNull] out string featureClass)
+		{
+			Assert.ArgumentNotNullOrEmpty(objectClassCatalogPath,
+			                              nameof(objectClassCatalogPath));
+
+			// Shave off the last part until it is a valid connection file / file workspace
+			string candidateWorkspace = objectClassCatalogPath;
+
+			featureClass = null;
+			featureDataset = null;
+			do
+			{
+				if (IsGdbWorkspacePath(candidateWorkspace))
+				{
+					return candidateWorkspace;
+				}
+
+				if (featureClass == null)
+				{
+					featureClass = Path.GetFileName(candidateWorkspace);
+				}
+				else
+				{
+					featureDataset = Path.GetFileName(candidateWorkspace);
+				}
+
+				candidateWorkspace =
+					Path.GetDirectoryName(candidateWorkspace);
+			} while (candidateWorkspace != null);
+
+			return null;
+		}
+
 		public static void ParseTableName([NotNull] IFeatureWorkspace featureWorkspace,
 		                                  [NotNull] string fullTableName,
 		                                  [CanBeNull] out string databaseName,
@@ -1309,9 +1346,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 			foreach (esriDatasetType datasetType in datasetTypes)
 			{
 				foreach (IDatasetName datasetName in GetDatasetNames(featureWorkspace,
-					datasetType,
-					featureDatasetNames,
-					owner))
+					         datasetType,
+					         featureDatasetNames,
+					         owner))
 				{
 					yield return datasetName;
 				}
@@ -1456,9 +1493,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 
 			foreach (IDataset dataset in
-				GetDatasets(workspace,
-				            esriDatasetType.esriDTFeatureClass,
-				            esriDatasetType.esriDTTable))
+			         GetDatasets(workspace,
+			                     esriDatasetType.esriDTFeatureClass,
+			                     esriDatasetType.esriDTTable))
 			{
 				if (dataset is IObjectClass objectClass)
 				{
@@ -1467,7 +1504,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			foreach (IDataset dataset in
-				GetDatasets(workspace, esriDatasetType.esriDTFeatureDataset))
+			         GetDatasets(workspace, esriDatasetType.esriDTFeatureDataset))
 			{
 				foreach (
 					IFeatureClass featureClass in GetFeatureClasses((IFeatureDataset) dataset))
@@ -2094,18 +2131,23 @@ namespace ProSuite.Commons.AO.Geodatabase
 		[NotNull]
 		public static IWorkspace GetWorkspace([NotNull] ITable table)
 		{
-			Assert.ArgumentNotNull(table, nameof(table));
-
-			return Assert.NotNull(((IDataset) table).Workspace);
+			return GetWorkspace((IDataset) table);
 		}
 
 		[NotNull]
 		public static IWorkspace GetWorkspace([NotNull] IObjectClass objectClass)
 		{
-			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
+			return GetWorkspace((IDataset) objectClass);
+		}
 
-			return Assert.NotNull(((IDataset) objectClass).Workspace,
-			                      "Workspace of {0} is null", GetName(objectClass));
+		[NotNull]
+		public static IWorkspace GetWorkspace([NotNull] IDataset dataset)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			// Null in case of image server layers
+			var workspace = dataset.Workspace;
+			return Assert.NotNull(workspace, "Workspace of {0} is null", GetName(dataset));
 		}
 
 		[NotNull]
@@ -3956,6 +3998,29 @@ namespace ProSuite.Commons.AO.Geodatabase
 			table.DeleteSearchedRows(filter);
 
 			_msg.DebugStopTiming(watch, "Rows deleted");
+		}
+
+		private static bool IsGdbWorkspacePath(string catalogPath)
+		{
+			if (catalogPath.EndsWith(".sde",
+			                         StringComparison.InvariantCultureIgnoreCase))
+			{
+				return true;
+			}
+
+			if (catalogPath.EndsWith(".gdb",
+			                         StringComparison.InvariantCultureIgnoreCase))
+			{
+				return true;
+			}
+
+			if (catalogPath.EndsWith(".mdb",
+			                         StringComparison.InvariantCultureIgnoreCase))
+			{
+				return true;
+			}
+
+			return Directory.Exists(catalogPath);
 		}
 
 		#endregion

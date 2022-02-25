@@ -1,5 +1,6 @@
 using System.Collections.Generic;
-using ProSuite.Processing.Domain;
+using ProSuite.DomainModel.Core.Processing;
+using ProcessDatasetName = ProSuite.Processing.Domain.ProcessDatasetName;
 
 namespace ProSuite.Processing.AGP.Core.Domain
 {
