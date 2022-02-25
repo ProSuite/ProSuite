@@ -185,7 +185,6 @@ namespace ProSuite.QA.Tests
 			_interpolateTolerance = 2 * SpatialReferenceUtils.GetXyResolution(featureClass.SpatialReference);
 		}
 
-			IReadOnlyFeatureClass featureClass,
 		private static void ValidateAsRatio(double startEndIgnoreLength, bool asRatio)
 		{
 			if (! asRatio || ! (startEndIgnoreLength >= 0.5))
