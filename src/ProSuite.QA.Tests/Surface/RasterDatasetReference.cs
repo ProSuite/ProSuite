@@ -1,6 +1,8 @@
 using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.AO.Surface.Raster;
@@ -23,8 +25,11 @@ namespace ProSuite.QA.Tests.Surface
 			_rasterDataset = rasterDataset;
 		}
 
-		public override IDataset Dataset => (IDataset) _rasterDataset;
-		public override IGeoDataset GeoDataset => (IGeoDataset) _rasterDataset;
+		public override IReadOnlyDataset Dataset => new ReadOnlyDataset((ESRI.ArcGIS.Geodatabase.IDataset)_rasterDataset);
+
+		public override IReadOnlyGeoDataset GeoDataset => new ReadOnlyGeoDataset(
+			(ESRI.ArcGIS.Geodatabase.IGeoDataset)_rasterDataset);
+
 		public override double CellSize => RasterUtils.GetMeanCellSize(FullRaster);
 
 		private IRaster FullRaster =>

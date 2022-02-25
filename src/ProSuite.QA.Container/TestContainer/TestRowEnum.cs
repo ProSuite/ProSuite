@@ -327,7 +327,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			foreach (var terrainReference in _testsPerTerrain.Keys)
 			{
-				yield return terrainReference.GetReadOnlyDataset();
+				yield return terrainReference.Dataset;
 			}
 
 			foreach (RasterReference rasterReference in _testsPerRaster.Keys)

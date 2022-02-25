@@ -138,6 +138,7 @@
     <Compile Include="Geodatabase\ManyToManyAssociationDescription.cs" />
     <Compile Include="Geodatabase\NullCodedValue.cs" />
     <Compile Include="Geodatabase\ObjectClassEquality.cs" />
+    <Compile Include="Geodatabase\GdbSchema\ReadOnlyDataset.cs" />
     <Compile Include="Geodatabase\ReadRow.cs" />
     <Compile Include="Geodatabase\RelationshipClassJoinDefinition.cs" />
     <Compile Include="Geodatabase\RelationshipClassUtils.cs" />
@@ -325,6 +326,7 @@
     <Compile Include="Surface\Raster\SimpleRasterDataset.cs" />
     <Compile Include="Surface\Raster\SimpleRasterMosaic.cs" />
     <Compile Include="Surface\Raster\SimpleRasterSurface.cs" />
+    <Compile Include="Geodatabase\GdbSchema\ReadOnlyGeoDataset.cs" />
     <Compile Include="Surface\RectangularTileIndex.cs" />
     <Compile Include="Surface\RectangularTilingStructure.cs" />
     <Compile Include="Surface\RectangularTilingUtils.cs" />
