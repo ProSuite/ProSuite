@@ -55,48 +55,44 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.Qa3dSmoothing_0))]
 		public QaSurfaceVertex(
-			[Doc(nameof(DocStrings.Qa3dSmoothing_featureClass))] [NotNull]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
 			IFeatureClass featureClass,
 			[Doc(nameof(DocStrings.Qa3dSmoothing_terrain))] [NotNull]
 			TerrainReference terrain,
-			[Doc(nameof(DocStrings.Qa3dSmoothing_terrainTolerance))]
-			double terrainTolerance,
-			[Doc(nameof(DocStrings.Qa3dSmoothing_limit))]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
 			double limit,
-			[Doc(nameof(DocStrings.Qa3dSmoothing_mustBeLarger))]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_mustBeLarger))]
 			bool mustBeLarger)
 			:
-			this(featureClass, terrain, terrainTolerance, limit,
+			this(featureClass, terrain, limit,
 			     mustBeLarger
 				     ? ZOffsetConstraint.AboveLimit
 				     : ZOffsetConstraint.WithinLimit) { }
 
 		[Doc(nameof(DocStrings.Qa3dSmoothing_0))]
 		public QaSurfaceVertex(
-			[Doc(nameof(DocStrings.Qa3dSmoothing_featureClass))] [NotNull]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
 			IFeatureClass featureClass,
 			[Doc(nameof(DocStrings.Qa3dSmoothing_terrain))] [NotNull]
 			TerrainReference terrain,
-			[Doc(nameof(DocStrings.Qa3dSmoothing_terrainTolerance))]
-			double terrainTolerance,
-			[Doc(nameof(DocStrings.Qa3dSmoothing_limit))]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
 			double limit,
-			[Doc(nameof(DocStrings.Qa3dSmoothing_zOffsetConstraint))]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_zOffsetConstraint))]
 			ZOffsetConstraint zOffsetConstraint)
-			: base(featureClass, terrain, terrainTolerance, limit, zOffsetConstraint)
+			: base(featureClass, terrain, 0, limit, zOffsetConstraint)
 		{
 			_shapeType = featureClass.ShapeType;
 		}
 
-		[Doc(nameof(DocStrings.Qa3dSmoothing_2))]
+		[Doc(nameof(DocStrings.QaSurfaceVertex_2))]
 		public QaSurfaceVertex(
-			[Doc(nameof(DocStrings.Qa3dSmoothing_featureClass))] [NotNull]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc(nameof(DocStrings.Qa3dSmoothing_raster))] [NotNull]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_raster))] [NotNull]
 			IRasterDataset2 raster,
-			[Doc(nameof(DocStrings.Qa3dSmoothing_limit))]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
 			double limit,
-			[Doc(nameof(DocStrings.Qa3dSmoothing_mustBeLarger))]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_mustBeLarger))]
 			bool mustBeLarger)
 			:
 			this(featureClass, raster, limit,
@@ -104,48 +100,48 @@ namespace ProSuite.QA.Tests
 				     ? ZOffsetConstraint.AboveLimit
 				     : ZOffsetConstraint.WithinLimit) { }
 
-		[Doc(nameof(DocStrings.Qa3dSmoothing_2))]
+		[Doc(nameof(DocStrings.QaSurfaceVertex_2))]
 		public QaSurfaceVertex(
-			[Doc(nameof(DocStrings.Qa3dSmoothing_featureClass))] [NotNull]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc(nameof(DocStrings.Qa3dSmoothing_raster))] [NotNull]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_raster))] [NotNull]
 			IRasterDataset2 raster,
-			[Doc(nameof(DocStrings.Qa3dSmoothing_limit))]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
 			double limit,
-			[Doc(nameof(DocStrings.Qa3dSmoothing_zOffsetConstraint))]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_zOffsetConstraint))]
 			ZOffsetConstraint zOffsetConstraint)
 			: base(featureClass, new RasterDatasetReference(raster), limit, zOffsetConstraint)
 		{
 			_shapeType = featureClass.ShapeType;
 		}
 
-		[Doc(nameof(DocStrings.Qa3dSmoothing_4))]
+		[Doc(nameof(DocStrings.QaSurfaceVertex_4))]
 		public QaSurfaceVertex(
-			[Doc(nameof(DocStrings.Qa3dSmoothing_featureClass))] [NotNull]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc(nameof(DocStrings.Qa3dSmoothing_mosaicLayer))] [NotNull]
-			SimpleRasterMosaic mosaicLayer,
-			[Doc(nameof(DocStrings.Qa3dSmoothing_limit))]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_mosaic))] [NotNull]
+			SimpleRasterMosaic rasterMosaic,
+			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
 			double limit,
-			[Doc(nameof(DocStrings.Qa3dSmoothing_mustBeLarger))]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_mustBeLarger))]
 			bool mustBeLarger)
 			:
-			this(featureClass, mosaicLayer, limit,
+			this(featureClass, rasterMosaic, limit,
 			     mustBeLarger
 				     ? ZOffsetConstraint.AboveLimit
 				     : ZOffsetConstraint.WithinLimit) { }
 
-		[Doc(nameof(DocStrings.Qa3dSmoothing_4))]
+		[Doc(nameof(DocStrings.QaSurfaceVertex_4))]
 		public QaSurfaceVertex(
-			[Doc(nameof(DocStrings.Qa3dSmoothing_featureClass))] [NotNull]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc(nameof(DocStrings.Qa3dSmoothing_mosaicLayer))] [NotNull]
-			SimpleRasterMosaic mosaicLayer,
-			[Doc(nameof(DocStrings.Qa3dSmoothing_limit))]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_mosaic))] [NotNull]
+			SimpleRasterMosaic rasterMosaic,
+			[Doc(nameof(DocStrings.QaSurfaceVertex_limit))]
 			double limit,
-			[Doc(nameof(DocStrings.Qa3dSmoothing_zOffsetConstraint))]
+			[Doc(nameof(DocStrings.QaSurfaceVertex_zOffsetConstraint))]
 			ZOffsetConstraint zOffsetConstraint)
-			: base(featureClass, new MosaicRasterReference(mosaicLayer),
+			: base(featureClass, new MosaicRasterReference(rasterMosaic),
 			       limit, zOffsetConstraint)
 		{
 			_shapeType = featureClass.ShapeType;
