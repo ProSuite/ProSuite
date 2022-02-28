@@ -56,7 +56,10 @@ namespace ProSuite.DomainModel.AO.QA
 					return _datasetContext.OpenTopology(topologyDataset);
 				}
 
-				// TODO: Raster
+				if (dataset is IDdxRasterDataset rasterDataset)
+				{
+					return _datasetContext.OpenRasterDataset(rasterDataset);
+				}
 
 				return null;
 			}

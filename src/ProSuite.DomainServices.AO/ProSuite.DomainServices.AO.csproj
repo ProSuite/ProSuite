@@ -323,6 +323,7 @@
     <Compile Include="QA\VerifiedDataModel\VerifiedDatasetHarvesterBase.cs" />
     <Compile Include="QA\VerifiedDataModel\VerifiedModel.cs" />
     <Compile Include="QA\VerifiedDataModel\VerifiedModelFactory.cs" />
+    <Compile Include="QA\VerifiedDataModel\VerifiedRasterDataset.cs" />
     <Compile Include="QA\VerifiedDataModel\VerifiedRasterMosaicDataset.cs" />
     <Compile Include="QA\VerifiedDataModel\VerifiedTableDataset.cs" />
     <Compile Include="QA\VerifiedDataModel\VerifiedTopologyDataset.cs" />

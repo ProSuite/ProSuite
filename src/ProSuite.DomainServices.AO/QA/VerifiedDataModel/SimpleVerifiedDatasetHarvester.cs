@@ -46,6 +46,11 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 				return GetRasterMosaicDataset(datasetName);
 			}
 
+			if (datasetName.Type == esriDatasetType.esriDTRasterDataset)
+			{
+				return GetRasterDataset(datasetName);
+			}
+
 			return null;
 		}
 	}

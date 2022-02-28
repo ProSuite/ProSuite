@@ -92,6 +92,14 @@ namespace ProSuite.DomainServices.AO.QA.VerifiedDataModel
 			       };
 		}
 
+		protected Dataset GetRasterDataset(IDatasetName datasetName)
+		{
+			return new VerifiedRasterDataset(datasetName.Name)
+			       {
+				       GeometryType = GetGeometryType<GeometryTypeRasterDataset>()
+			       };
+		}
+
 		protected Dataset GetTopologyDataset(IDatasetName datasetName)
 		{
 			return new VerifiedTopologyDataset(datasetName.Name)
