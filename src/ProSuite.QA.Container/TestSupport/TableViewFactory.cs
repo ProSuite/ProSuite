@@ -262,7 +262,10 @@ namespace ProSuite.QA.Container.TestSupport
 					alias = columnInfo.ColumnName;
 				}
 
-				dataTable.Columns.Add(alias, columnInfo.ColumnType);
+				Type dataColumnType = columnInfo.ColumnType != typeof(Guid)
+					                      ? columnInfo.ColumnType
+					                      : typeof(object);
+				dataTable.Columns.Add(alias, dataColumnType);
 			}
 
 			var dataView = new DataView(dataTable);

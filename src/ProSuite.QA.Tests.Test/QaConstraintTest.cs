@@ -2,14 +2,18 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using ESRI.ArcGIS.Geodatabase;
+using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests.Constraints;
 using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Tests.Test.TestData;
+using ProSuite.QA.Container.Test;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -304,6 +308,57 @@ namespace ProSuite.QA.Tests.Test
 			caseInsensitiveRunner.ClearErrors();
 		}
 
+		[Test]
+		public void CanHaveGuidConstraints()
+		{
+			const string uuidField = "UUID";
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("m"); //.CreateTestFgdbWorkspace("QaConstraint");//
+			IFeatureClass fc =
+				DatasetUtils.CreateSimpleFeatureClass(
+					ws, "FcConstraing", null,
+					FieldUtils.CreateOIDField(),
+					FieldUtils.CreateIntegerField("ObjektArt"),
+					FieldUtils.CreateField(uuidField, esriFieldType.esriFieldTypeGUID),
+					FieldUtils.CreateShapeField(
+						esriGeometryType.esriGeometryPoint,
+						SpatialReferenceUtils.CreateSpatialReference(2056)));
+
+			Guid uuid = Guid.NewGuid();
+			IFeature f = fc.CreateFeature();
+			f.Value[1] = 1;
+			f.Value[2] = $"{uuid:B}";
+			f.Shape = GeometryFactory.CreatePoint(2600500, 1200500);
+			f.Store();
+
+			var test = new QaConstraint((ITable)fc, "OBJEKTART IN (3)");
+			string constraint = $"UUID IN ('{uuid:B}')";
+			test.SetConstraint(0, constraint);
+			var runner = new QaContainerTestRunner(10000, test);
+			runner.Execute(GeometryFactory.CreateEnvelope(2600000, 1200000, 2601000, 1201000));
+			Assert.AreEqual(1, runner.Errors.Count);
+
+			test = new QaConstraint((ITable)fc, "OBJEKTART IN (3)");
+			constraint = $"UUID NOT IN ('{Guid.NewGuid():B}')";
+			test.SetConstraint(0, constraint);
+			runner = new QaContainerTestRunner(10000, test);
+			runner.Execute(GeometryFactory.CreateEnvelope(2600000, 1200000, 2601000, 1201000));
+			Assert.AreEqual(1, runner.Errors.Count);
+
+			test = new QaConstraint((ITable)fc, $"UUID NOT IN ('{uuid:B}')");
+			constraint = "OBJECTID IN (1)";
+			test.SetConstraint(0, constraint);
+			runner = new QaContainerTestRunner(10000, test);
+			runner.Execute(GeometryFactory.CreateEnvelope(2600000, 1200000, 2601000, 1201000));
+			Assert.AreEqual(1, runner.Errors.Count);
+
+			test = new QaConstraint((ITable)fc, $"UUID IN ('{Guid.NewGuid():B}')");
+			constraint = "OBJECTID NOT IN (2)";
+			test.SetConstraint(0, constraint);
+			runner = new QaContainerTestRunner(10000, test);
+			runner.Execute(GeometryFactory.CreateEnvelope(2600000, 1200000, 2601000, 1201000));
+			Assert.AreEqual(1, runner.Errors.Count);
+
+		}
 		private static double GetReferencePerformance([NotNull] string textFieldName,
 		                                              [NotNull] string value,
 		                                              [NotNull] IObject row,
