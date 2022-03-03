@@ -1,5 +1,4 @@
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
@@ -8,6 +7,7 @@ using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -45,7 +45,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaWithinBox_0))]
 		public QaWithinBox(
 				[Doc(nameof(DocStrings.QaWithinBox_featureClass))] [NotNull]
-				IFeatureClass featureClass,
+				IReadOnlyFeatureClass featureClass,
 				[Doc(nameof(DocStrings.QaWithinBox_xMin))] double xMin,
 				[Doc(nameof(DocStrings.QaWithinBox_yMin))] double yMin,
 				[Doc(nameof(DocStrings.QaWithinBox_xMax))] double xMax,
@@ -56,14 +56,14 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaWithinBox_0))]
 		public QaWithinBox(
 			[Doc(nameof(DocStrings.QaWithinBox_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaWithinBox_xMin))] double xMin,
 			[Doc(nameof(DocStrings.QaWithinBox_yMin))] double yMin,
 			[Doc(nameof(DocStrings.QaWithinBox_xMax))] double xMax,
 			[Doc(nameof(DocStrings.QaWithinBox_yMax))] double yMax,
 			[Doc(nameof(DocStrings.QaWithinBox_reportOnlyOutsideParts))]
 			bool reportOnlyOutsideParts)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			Assert.ArgumentNotNaN(xMin, nameof(xMin));
 			Assert.ArgumentNotNaN(yMin, nameof(yMin));
@@ -90,9 +90,9 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			var feature = row as IFeature;
+			var feature = row as IReadOnlyFeature;
 			if (feature == null)
 			{
 				return NoError;
@@ -189,7 +189,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private IGeometry GetErrorGeometry([NotNull] IFeature feature,
+		private IGeometry GetErrorGeometry([NotNull] IReadOnlyFeature feature,
 		                                   [NotNull] IEnvelope box)
 		{
 			if (! _reportOnlyOutsideParts)

@@ -17,7 +17,7 @@ namespace ProSuite.QA.Tests
 	[UsedImplicitly]
 	public class QaValidNonLinearSegments : NonContainerTest
 	{
-		private readonly IFeatureClass _featureClass;
+		private readonly IReadOnlyFeatureClass _featureClass;
 		private readonly double _minimumChordHeight;
 		private readonly ISpatialReference _spatialReference;
 		private readonly bool _canHaveNonLinearSegments;
@@ -46,17 +46,17 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaValidNonLinearSegments_0))]
 		public QaValidNonLinearSegments(
 				[Doc(nameof(DocStrings.QaValidNonLinearSegments_featureClass))] [NotNull]
-				IFeatureClass featureClass)
+				IReadOnlyFeatureClass featureClass)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClass, 0d) { }
 
 		[Doc(nameof(DocStrings.QaValidNonLinearSegments_1))]
 		public QaValidNonLinearSegments(
 			[Doc(nameof(DocStrings.QaValidNonLinearSegments_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaValidNonLinearSegments_minimumChordHeight))]
 			double minimumChordHeight)
-			: base(new[] {(ITable) featureClass})
+			: base(new[] {(IReadOnlyTable) featureClass})
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
@@ -68,8 +68,8 @@ namespace ProSuite.QA.Tests
 				shapeType == esriGeometryType.esriGeometryPolyline ||
 				shapeType == esriGeometryType.esriGeometryPolygon;
 
-			_spatialReference = ((IGeoDataset) featureClass).SpatialReference;
-			_xyTolerance = GeometryUtils.GetXyTolerance(featureClass);
+			_spatialReference = featureClass.SpatialReference;
+			_xyTolerance = GeometryUtils.GetXyTolerance(featureClass.SpatialReference);
 		}
 
 		#region Overrides of TestBase
@@ -89,7 +89,7 @@ namespace ProSuite.QA.Tests
 			return ExecuteGeometry(area);
 		}
 
-		public override int Execute(IEnumerable<IRow> selectedRows)
+		public override int Execute(IEnumerable<IReadOnlyRow> selectedRows)
 		{
 			if (! _canHaveNonLinearSegments)
 			{
@@ -98,23 +98,23 @@ namespace ProSuite.QA.Tests
 
 			int errorCount = 0;
 
-			foreach (IRow row in selectedRows)
+			foreach (IReadOnlyRow row in selectedRows)
 			{
 				if (row.Table != _featureClass)
 				{
 					continue;
 				}
 
-				errorCount += VerifyFeature((IFeature) row);
+				errorCount += VerifyFeature((IReadOnlyFeature) row);
 			}
 
 			return errorCount;
 		}
 
-		public override int Execute(IRow row)
+		public override int Execute(IReadOnlyRow row)
 		{
 			return _canHaveNonLinearSegments
-				       ? VerifyFeature((IFeature) row)
+				       ? VerifyFeature((IReadOnlyFeature) row)
 				       : NoError;
 		}
 
@@ -134,7 +134,7 @@ namespace ProSuite.QA.Tests
 
 			IQueryFilter filter = TestUtils.CreateFilter(geometry, AreaOfInterest,
 			                                             GetConstraint(0),
-			                                             (ITable) _featureClass,
+			                                             _featureClass,
 			                                             null);
 
 			GdbQueryUtils.SetSubFields(filter,
@@ -144,8 +144,8 @@ namespace ProSuite.QA.Tests
 			int errorCount = 0;
 
 			const bool recycle = true;
-			foreach (IFeature feature in
-				GdbQueryUtils.GetFeatures(_featureClass, filter, recycle))
+			foreach (IReadOnlyFeature feature in
+				_featureClass.EnumRows(filter, recycle).Cast<IReadOnlyFeature>())
 			{
 				errorCount += VerifyFeature(feature);
 			}
@@ -153,7 +153,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int VerifyFeature([NotNull] IFeature feature)
+		private int VerifyFeature([NotNull] IReadOnlyFeature feature)
 		{
 			// don't cancel based on stop conditions, since this test will usually 
 			// be a stop condition itself - would only find the first segment per feature
@@ -175,7 +175,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int ReportCorruptNonLinearSegments([NotNull] ISegmentCollection segments,
-		                                           [NotNull] IRow row)
+		                                           [NotNull] IReadOnlyRow row)
 		{
 			return ! HasNonLinearSegments(segments)
 				       ? NoError
@@ -194,7 +194,7 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		private int CheckSegment([NotNull] ISegment segment, [NotNull] IRow row)
+		private int CheckSegment([NotNull] ISegment segment, [NotNull] IReadOnlyRow row)
 		{
 			esriGeometryType segmentType = segment.GeometryType;
 
@@ -217,7 +217,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private int CheckCircularArc([NotNull] ICircularArc circularArc,
-		                             [NotNull] IRow row)
+		                             [NotNull] IReadOnlyRow row)
 		{
 			IPoint centerPoint = circularArc.CenterPoint;
 

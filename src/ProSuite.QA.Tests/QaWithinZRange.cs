@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
@@ -49,7 +48,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaWithinZRange_0))]
 		public QaWithinZRange(
 				[Doc(nameof(DocStrings.QaWithinZRange_featureClass))] [NotNull]
-				IFeatureClass featureClass,
+				IReadOnlyFeatureClass featureClass,
 				[Doc(nameof(DocStrings.QaWithinZRange_minimumZValue))] double minimumZValue,
 				[Doc(nameof(DocStrings.QaWithinZRange_maximumZValue))] double maximumZValue)
 			// ReSharper disable once IntroduceOptionalParameters.Global
@@ -58,19 +57,19 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaWithinZRange_1))]
 		public QaWithinZRange(
 			[Doc(nameof(DocStrings.QaWithinZRange_featureClass))] [NotNull]
-			IFeatureClass featureClass,
+			IReadOnlyFeatureClass featureClass,
 			[Doc(nameof(DocStrings.QaWithinZRange_minimumZValue))] double minimumZValue,
 			[Doc(nameof(DocStrings.QaWithinZRange_maximumZValue))] double maximumZValue,
 			[Doc(nameof(DocStrings.QaWithinZRange_allowedZValues))] [CanBeNull]
 			IEnumerable<double>
 				allowedZValues)
-			: base((ITable) featureClass)
+			: base(featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 			Assert.ArgumentCondition(maximumZValue >= minimumZValue,
 			                         "Maximum z value must be equal or larger than minimum z value");
 
-			_hasZ = DatasetUtils.HasZ(featureClass);
+			_hasZ = DatasetUtils.GetGeometryDef(featureClass).HasZ;
 			_shapeFieldName = featureClass.ShapeFieldName;
 
 			_minimumZValue = minimumZValue;
@@ -79,7 +78,7 @@ namespace ProSuite.QA.Tests
 			if (allowedZValues != null)
 			{
 				double zTolerance;
-				if (DatasetUtils.TryGetZTolerance(featureClass, out zTolerance))
+				if (DatasetUtils.TryGetZTolerance(featureClass.SpatialReference, out zTolerance))
 				{
 					_zValueComparer = new ZValueComparer(zTolerance);
 				}
@@ -102,7 +101,7 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			Assert.ArgumentNotNull(row, nameof(row));
 
@@ -111,7 +110,7 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
-			var feature = (IFeature) row;
+			var feature = (IReadOnlyFeature) row;
 
 			IGeometry shape = feature.Shape;
 			if (shape == null || shape.IsEmpty)
@@ -144,7 +143,7 @@ namespace ProSuite.QA.Tests
 			       _allowedZValues.BinarySearch(z, _zValueComparer) >= 0;
 		}
 
-		private int CheckZRange([NotNull] IFeature feature, [NotNull] IGeometry shape)
+		private int CheckZRange([NotNull] IReadOnlyFeature feature, [NotNull] IGeometry shape)
 		{
 			if (IsWithinZRange(shape))
 			{
@@ -194,19 +193,19 @@ namespace ProSuite.QA.Tests
 			}
 		}
 
-		private int CheckZRange([NotNull] IFeature feature,
+		private int CheckZRange([NotNull] IReadOnlyFeature feature,
 		                        [NotNull] IMultipoint multipoint)
 		{
 			return CheckZRange(feature, (IPointCollection) multipoint);
 		}
 
-		private int CheckZRange([NotNull] IFeature feature,
+		private int CheckZRange([NotNull] IReadOnlyFeature feature,
 		                        [NotNull] IMultiPatch multiPatch)
 		{
 			return CheckZRange(feature, (IPointCollection) multiPatch);
 		}
 
-		private int CheckZRange([NotNull] IFeature feature,
+		private int CheckZRange([NotNull] IReadOnlyFeature feature,
 		                        [NotNull] IPointCollection points)
 		{
 			IEnumVertex enumPoints = points.EnumVertices;
@@ -272,7 +271,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int CheckZRange([NotNull] IFeature feature, [NotNull] IPolygon polygon)
+		private int CheckZRange([NotNull] IReadOnlyFeature feature, [NotNull] IPolygon polygon)
 		{
 			var errorCount = 0;
 
@@ -297,7 +296,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int CheckZRange([NotNull] IFeature feature,
+		private int CheckZRange([NotNull] IReadOnlyFeature feature,
 		                        [NotNull] IPolyline polyline)
 		{
 			var errorCount = 0;
@@ -323,7 +322,7 @@ namespace ProSuite.QA.Tests
 			return errorCount;
 		}
 
-		private int ReportError([NotNull] IFeature feature, [NotNull] IPoint point)
+		private int ReportError([NotNull] IReadOnlyFeature feature, [NotNull] IPoint point)
 		{
 			double z = point.Z;
 
@@ -353,7 +352,7 @@ namespace ProSuite.QA.Tests
 			                   feature);
 		}
 
-		private int ReportError([NotNull] IFeature feature,
+		private int ReportError([NotNull] IReadOnlyFeature feature,
 		                        [NotNull] ZRangeErrorSegments errorSegments)
 		{
 			IGeometry errorGeometry = GetErrorGeometry(errorSegments);

@@ -3265,7 +3265,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
 			ISpatialReference spatialReference = ((IGeoDataset) featureClass).SpatialReference;
+			return TryGetZTolerance(spatialReference, out zTolerance, requireBigEnough);
+		}
 
+		public static bool TryGetZTolerance([CanBeNull] ISpatialReference spatialReference,
+		                                    out double zTolerance,
+		                                    bool requireBigEnough = false)
+		{
 			var spatialReferenceTolerance = spatialReference as ISpatialReferenceTolerance;
 
 			if (spatialReferenceTolerance != null &&
@@ -3281,8 +3287,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		public static bool TryGetMTolerance([NotNull] IFeatureClass s,
-																				out double mTolerance,
-																				bool requireBigEnough = false)
+		                                    out double mTolerance,
+		                                    bool requireBigEnough = false)
 		{
 			Assert.ArgumentNotNull(s, nameof(s));
 

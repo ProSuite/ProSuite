@@ -12,6 +12,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 using ProSuite.QA.Core;
 using ProSuite.Commons.AO.Geometry;
+using System.Linq;
 
 namespace ProSuite.QA.Tests
 {
@@ -46,13 +47,13 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaVertexCoincidenceSelf_0))]
 		public QaVertexCoincidenceSelf(
 			[Doc(nameof(DocStrings.QaVertexCoincidenceSelf_featureClass))] [NotNull]
-			IFeatureClass featureClass)
+			IReadOnlyFeatureClass featureClass)
 			: this(new[] {featureClass}) { }
 
 		[Doc(nameof(DocStrings.QaVertexCoincidenceSelf_1))]
 		public QaVertexCoincidenceSelf(
 				[Doc(nameof(DocStrings.QaVertexCoincidenceSelf_featureClasses))] [NotNull]
-				IList<IFeatureClass>
+				IList<IReadOnlyFeatureClass>
 					featureClasses)
 			// ReSharper disable once IntroduceOptionalParameters.Global
 			: this(featureClasses, null) { }
@@ -60,17 +61,23 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaVertexCoincidenceSelf_2))]
 		public QaVertexCoincidenceSelf(
 			[Doc(nameof(DocStrings.QaVertexCoincidenceSelf_featureClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				featureClasses,
 			[Doc(nameof(DocStrings.QaVertexCoincidenceSelf_allowedNonCoincidenceCondition))] [CanBeNull]
 			string
 				allowedNonCoincidenceCondition)
 			: base(featureClasses, esriSpatialRelEnum.esriSpatialRelIntersects)
 		{
+			double maxXYTolerance = featureClasses
+			                        .Select(fc => DatasetUtils.TryGetXyTolerance(
+				                                      fc.SpatialReference, out double xyTolerance)
+				                                      ? xyTolerance
+				                                      : 0).Max();
+
 			_vertexCoincidenceChecker =
 				new VertexCoincidenceChecker(
 					this, FormatComparison,
-					DatasetUtils.GetMaximumXyTolerance(featureClasses))
+					maxXYTolerance)
 				{
 					Is3D = _defaultIs3D,
 					VerifyWithinFeature = _defaultVerifyWithinFeature,
@@ -187,14 +194,14 @@ namespace ProSuite.QA.Tests
 			_pointSearchEnvelope?.Expand(SearchDistance, SearchDistance, asRatio: false);
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			IgnoreUndirected = false;
 
 			return base.ExecuteCore(row, tableIndex);
 		}
 
-		protected override IGeometry GetSearchGeometry(IFeature feature, int tableIndex)
+		protected override IGeometry GetSearchGeometry(IReadOnlyFeature feature, int tableIndex)
 		{
 			IGeometry shape = feature.Shape;
 
@@ -218,11 +225,11 @@ namespace ProSuite.QA.Tests
 			return result;
 		}
 
-		protected override int FindErrors(IRow row1, int tableIndex1,
-		                                  IRow row2, int tableIndex2)
+		protected override int FindErrors(IReadOnlyRow row1, int tableIndex1,
+										  IReadOnlyRow row2, int tableIndex2)
 		{
-			var feature1 = row1 as IFeature;
-			var feature2 = row2 as IFeature;
+			var feature1 = row1 as IReadOnlyFeature;
+			var feature2 = row2 as IReadOnlyFeature;
 			if (feature1 == null || feature2 == null)
 			{
 				return NoError;

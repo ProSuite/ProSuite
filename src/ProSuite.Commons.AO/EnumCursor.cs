@@ -47,9 +47,17 @@ namespace ProSuite.Commons.AO
 			}
 		}
 
+		public EnumCursor([NotNull] ITable table, [NotNull] ICursor cursor)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNull(cursor, nameof(cursor));
+			_table = table;
+			_cursor = cursor;
+		}
+
 		public EnumCursor([NotNull] ITable table,
-											[CanBeNull] IQueryFilter queryFilter,
-											bool recycle) : this(table, queryFilter)
+		                  [CanBeNull] IQueryFilter queryFilter,
+		                  bool recycle) : this(table, queryFilter)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 

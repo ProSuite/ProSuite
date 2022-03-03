@@ -1316,15 +1316,18 @@ namespace ProSuite.QA.Tests
 			{
 				int firstUniqueFieldIndex = table.FindField(firstUniqueFieldName);
 
-				ITableSort tableSort =
-					TableSortUtils.CreateTableSort((ESRI.ArcGIS.Geodatabase.ITable)table.FullName.Open(), firstUniqueFieldName);
+				ESRI.ArcGIS.Geodatabase.ITable aoTable = (ESRI.ArcGIS.Geodatabase.ITable) table.FullName.Open();
+				ReadOnlyTable roTable = ReadOnlyTableFactory.Create(aoTable);
+				ITableSort tableSort = TableSortUtils.CreateTableSort(aoTable, firstUniqueFieldName);
 
 				tableSort.Compare = new FieldSortCallback(comparer);
 				tableSort.QueryFilter = filter;
 				tableSort.Sort(null);
 
-				return new RowEnumerator(tableSort.Rows, firstUniqueFieldIndex,
-				                         tableIndex);
+				return new RowEnumerator(
+					new EnumCursor(aoTable, tableSort.Rows).Select(
+						r => new ReadOnlyRow(roTable, r)),
+					firstUniqueFieldIndex, tableIndex);
 			}
 
 			[NotNull] private readonly IEnumerator<IReadOnlyRow> _cursor;

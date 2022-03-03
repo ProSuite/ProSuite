@@ -44,7 +44,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaValidDateValues_0))]
 		public QaValidDateValues(
 			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateValue))]
 			DateTime minimumDateValue,
 			[Doc(nameof(DocStrings.QaValidDateValues_maximumDateValue))]
@@ -54,7 +54,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaValidDateValues_1))]
 		public QaValidDateValues(
 			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateValue))]
 			DateTime minimumDateValue,
 			[Doc(nameof(DocStrings.QaValidDateValues_maximumDateValue))]
@@ -76,7 +76,7 @@ namespace ProSuite.QA.Tests
 				{
 					throw new ArgumentException(
 						string.Format("Date field not found in table {0}: {1}",
-						              DatasetUtils.GetName(table), dateFieldName),
+						              table.Name, dateFieldName),
 						nameof(dateFieldNames));
 				}
 
@@ -87,7 +87,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaValidDateValues_2))]
 		public QaValidDateValues(
 			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateValue))]
 			DateTime minimumDateValue,
 			[Doc(nameof(DocStrings.QaValidDateValues_maximumDateValue))]
@@ -101,7 +101,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaValidDateValues_3))]
 		public QaValidDateValues(
 			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateValue))]
 			DateTime minimumDateValue,
 			[Doc(nameof(DocStrings.QaValidDateValues_maximumDateTimeRelativeToNow))] [CanBeNull]
@@ -114,7 +114,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaValidDateValues_4))]
 		public QaValidDateValues(
 			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateValue))]
 			DateTime minimumDateValue,
 			[Doc(nameof(DocStrings.QaValidDateValues_maximumDateTimeRelativeToNow))] [CanBeNull]
@@ -131,7 +131,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaValidDateValues_5))]
 		public QaValidDateValues(
 			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateTimeRelativeToNow))] [CanBeNull]
 			string
 				minimumDateTimeRelativeToNow,
@@ -148,7 +148,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaValidDateValues_6))]
 		public QaValidDateValues(
 			[Doc(nameof(DocStrings.QaValidDateValues_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaValidDateValues_minimumDateTimeRelativeToNow))] [CanBeNull]
 			string
 				minimumDateTimeRelativeToNow,
@@ -178,13 +178,13 @@ namespace ProSuite.QA.Tests
 			return false;
 		}
 
-		protected override int ExecuteCore(IRow row, int tableIndex)
+		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
 			var errorCount = 0;
 
 			foreach (int dateFieldIndex in _dateFieldIndices)
 			{
-				object dateValue = row.Value[dateFieldIndex];
+				object dateValue = row.get_Value(dateFieldIndex);
 
 				if (dateValue == null || dateValue is DBNull)
 				{
@@ -262,11 +262,11 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private static IEnumerable<string> GetAllDateFieldNames([NotNull] ITable table)
+		private static IEnumerable<string> GetAllDateFieldNames([NotNull] IReadOnlyTable table)
 		{
 			var result = new List<string>();
 
-			foreach (IField field in DatasetUtils.GetFields(table))
+			foreach (IField field in DatasetUtils.GetFields(table.Fields))
 			{
 				if (field.Type == esriFieldType.esriFieldTypeDate)
 				{
