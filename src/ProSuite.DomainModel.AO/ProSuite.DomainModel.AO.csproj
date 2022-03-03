@@ -83,6 +83,7 @@
     </Compile>
     <Compile Include="DataModel\ApplicableAttributes.cs" />
     <Compile Include="DataModel\AttributeUtils.cs" />
+    <Compile Include="DataModel\CachedWorkspaceProxy.cs" />
     <Compile Include="DataModel\FieldIndexCache.cs" />
     <Compile Include="DataModel\GlobalDatasetLookup.cs" />
     <Compile Include="DataModel\Harvesting\DatasetFeatureDatasetMatchCriterion.cs" />
@@ -115,6 +116,7 @@
     <Compile Include="DataModel\IVirtualModelContext.cs" />
     <Compile Include="DataModel\IWorkspaceContext.cs" />
     <Compile Include="DataModel\IWorkspaceContextLookup.cs" />
+    <Compile Include="DataModel\IWorkspaceProxy.cs" />
     <Compile Include="DataModel\MasterDatabaseDatasetContext.cs" />
     <Compile Include="DataModel\MasterDatabaseWorkspaceContext.cs" />
     <Compile Include="DataModel\MasterDatabaseWorkspaceContextFactory.cs" />
@@ -125,6 +127,7 @@
     <Compile Include="DataModel\ObjectObject.cs" />
     <Compile Include="DataModel\ProductionModel.cs" />
     <Compile Include="DataModel\ProSuiteGeometryTypeExtensions.cs" />
+    <Compile Include="DataModel\SimpleWorkspaceProxy.cs" />
     <Compile Include="DataModel\SpatialReferenceDescriptor.cs" />
     <Compile Include="DataModel\TableObject.cs" />
     <Compile Include="DataModel\VectorObject.cs" />
@@ -132,6 +135,8 @@
     <Compile Include="DataModel\SimpleWorkspaceContext.cs" />
     <Compile Include="DataModel\WorkspaceContextBase.cs" />
     <Compile Include="DataModel\WorkspaceDataset.cs" />
+    <Compile Include="DataModel\WorkspaceModelContext.cs" />
+    <Compile Include="DataModel\WorkspaceProxy.cs" />
     <Compile Include="Geodatabase\ConnectionFileConnectionProvider.cs" />
     <Compile Include="Geodatabase\ConnectionProvider.cs" />
     <Compile Include="Geodatabase\DatabaseType.cs" />
@@ -215,6 +220,7 @@
     <Compile Include="QA\TestReport\HtmlReportBuilder.cs" />
     <Compile Include="QA\TestReport\IncludedTest.cs" />
     <Compile Include="QA\TestReport\IncludedTestBase.cs" />
+    <Compile Include="QA\TestReport\IncludedTransformer.cs" />
     <Compile Include="QA\TestReport\IncludedTestClass.cs" />
     <Compile Include="QA\TestReport\IncludedTestConstructor.cs" />
     <Compile Include="QA\TestReport\IncludedTestFactory.cs" />

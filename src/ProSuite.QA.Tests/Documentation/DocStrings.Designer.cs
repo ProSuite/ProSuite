@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests.Documentation {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class DocStrings {
@@ -135,123 +135,6 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Finds all line segments in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;terrain&apos;
-        ///
-        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;terrain&apos; must have the same spatial reference..
-        /// </summary>
-        public static string Qa3dPipe_1 {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_1", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Finds all line segments in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;raster&apos;
-        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;raster&apos; must have the same spatial reference..
-        /// </summary>
-        public static string Qa3dPipe_2 {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_2", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Finds all line segments in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;mosaicLayer&apos;
-        ///
-        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;mosaicLayer&apos; must have the same spatial reference..
-        /// </summary>
-        public static string Qa3dPipe_4 {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_4", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to True: &apos;startEndIgnoreLength&apos; is given as ratio of the shape length
-        ///False: &apos;startEndIgnoreLength&apos; is the absolute length in units of &apos;featureClass&apos;.
-        /// </summary>
-        public static string Qa3dPipe_asRatio {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_asRatio", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to polyline or polygon feature class with heights.
-        /// </summary>
-        public static string Qa3dPipe_featureClass {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_featureClass", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to maximum allowed difference (in z-units).
-        /// </summary>
-        public static string Qa3dPipe_limit {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_limit", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to mosaicLayer, from which the previewlayer raster is used to process.
-        /// </summary>
-        public static string Qa3dPipe_mosaicLayer {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_mosaicLayer", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to raster to compare.
-        /// </summary>
-        public static string Qa3dPipe_raster {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_raster", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Ignore line parts closer than &apos;startEndIgnoreLength&apos; to the start/end point of the shape.
-        /// </summary>
-        public static string Qa3dPipe_startEndIgnoreLength {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_startEndIgnoreLength", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to terrain to compare.
-        /// </summary>
-        public static string Qa3dPipe_terrain {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_terrain", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to terrain tolerance (in z-Units).
-        /// </summary>
-        public static string Qa3dPipe_terrainTolerance {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_terrainTolerance", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AboveLimit : All z-values must be above Terrain + &apos;limit&apos;
-        ///BelowLimit : All z-values must be below Terrain + &apos;limit&apos; (For underground, &apos;limit&apos; must be &lt; 0)
-        ///WithinLimit: All z-values must be below Terrain + &apos;limit&apos; and above Terrain - &apos;limit&apos;
-        ///OutsideLimt: All z-values must be either above Terrani + &apos;limit&apos; or below Terrain - &apos;limit&apos;.
-        /// </summary>
-        public static string Qa3dPipe_zOffsetConstraint {
-            get {
-                return ResourceManager.GetString("Qa3dPipe_zOffsetConstraint", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Finds all points or vertices in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;terrain&apos;
         ///
         ///Remark: The feature classes in &apos;featureClass&apos; and &apos;terrain&apos; must have the same spatial reference..
@@ -259,28 +142,6 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string Qa3dSmoothing_0 {
             get {
                 return ResourceManager.GetString("Qa3dSmoothing_0", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Finds all points or vertices in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;raster&apos;
-        ///
-        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;raster&apos; must have the same spatial reference..
-        /// </summary>
-        public static string Qa3dSmoothing_2 {
-            get {
-                return ResourceManager.GetString("Qa3dSmoothing_2", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Finds all points or vertices in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;mosaicLayer&apos;
-        ///
-        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;mosaicLayer&apos; must have the same spatial reference..
-        /// </summary>
-        public static string Qa3dSmoothing_4 {
-            get {
-                return ResourceManager.GetString("Qa3dSmoothing_4", resourceCulture);
             }
         }
         
@@ -295,78 +156,11 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to feature class with heights.
-        /// </summary>
-        public static string Qa3dSmoothing_featureClass {
-            get {
-                return ResourceManager.GetString("Qa3dSmoothing_featureClass", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to limit (in z-units).
-        /// </summary>
-        public static string Qa3dSmoothing_limit {
-            get {
-                return ResourceManager.GetString("Qa3dSmoothing_limit", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to mosaicLayer, from which the previewlayer raster is used to process.
-        /// </summary>
-        public static string Qa3dSmoothing_mosaicLayer {
-            get {
-                return ResourceManager.GetString("Qa3dSmoothing_mosaicLayer", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to true : the difference must be larger than limit
-        ///false : the difference must be smaller than limit.
-        /// </summary>
-        public static string Qa3dSmoothing_mustBeLarger {
-            get {
-                return ResourceManager.GetString("Qa3dSmoothing_mustBeLarger", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to raster to compare.
-        /// </summary>
-        public static string Qa3dSmoothing_raster {
-            get {
-                return ResourceManager.GetString("Qa3dSmoothing_raster", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to terrain to compare.
         /// </summary>
         public static string Qa3dSmoothing_terrain {
             get {
                 return ResourceManager.GetString("Qa3dSmoothing_terrain", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to terrain tolerance (in z-Units).
-        /// </summary>
-        public static string Qa3dSmoothing_terrainTolerance {
-            get {
-                return ResourceManager.GetString("Qa3dSmoothing_terrainTolerance", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to AboveLimit : All z-values must be above Terrain + &apos;limit&apos;
-        ///BelowLimit : All z-values must be below Terrain + &apos;limit&apos; (For underground, &apos;limit&apos; must be &lt; 0)
-        ///WithinLimit: All z-values must be below Terrain + &apos;limit&apos; and above Terrain - &apos;limit&apos;
-        ///OutsideLimt: All z-values must be either above Terrani + &apos;limit&apos; or below Terrain - &apos;limit&apos;.
-        /// </summary>
-        public static string Qa3dSmoothing_zOffsetConstraint {
-            get {
-                return ResourceManager.GetString("Qa3dSmoothing_zOffsetConstraint", resourceCulture);
             }
         }
         
@@ -9293,6 +9087,194 @@ namespace ProSuite.QA.Tests.Documentation {
         public static string QaSmooth_limit {
             get {
                 return ResourceManager.GetString("QaSmooth_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all line segments in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;terrain&apos;
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;terrain&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaSurfacePipe_1 {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_1", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all line segments in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;raster&apos;
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;raster&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaSurfacePipe_2 {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all line segments in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;rasterMosaic&apos;
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;rasterMosaic&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaSurfacePipe_4 {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to True: &apos;startEndIgnoreLength&apos; is given as ratio of the shape length
+        ///False: &apos;startEndIgnoreLength&apos; is the absolute length in units of &apos;featureClass&apos;.
+        /// </summary>
+        public static string QaSurfacePipe_asRatio {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_asRatio", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to polyline or polygon feature class with heights.
+        /// </summary>
+        public static string QaSurfacePipe_featureClass {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to maximum allowed difference (in z-units).
+        /// </summary>
+        public static string QaSurfacePipe_limit {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Raster mosaic that provides the surface to compare.
+        /// </summary>
+        public static string QaSurfacePipe_mosaic {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_mosaic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to raster to compare.
+        /// </summary>
+        public static string QaSurfacePipe_raster {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_raster", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Ignore line parts closer than &apos;startEndIgnoreLength&apos; to the start/end point of the shape.
+        /// </summary>
+        public static string QaSurfacePipe_startEndIgnoreLength {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_startEndIgnoreLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to terrain to compare.
+        /// </summary>
+        public static string QaSurfacePipe_terrain {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_terrain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AboveLimit : All z-values must be above surface height + &apos;limit&apos;
+        ///BelowLimit : All z-values must be below surface height + &apos;limit&apos; (For underground, &apos;limit&apos; must be &lt; 0)
+        ///WithinLimit: All z-values must be below surface height + &apos;limit&apos; and above surface height - &apos;limit&apos;
+        ///OutsideLimit: All z-values must be either above surface height + &apos;limit&apos; or below surface height - &apos;limit&apos;.
+        /// </summary>
+        public static string QaSurfacePipe_zOffsetConstraint {
+            get {
+                return ResourceManager.GetString("QaSurfacePipe_zOffsetConstraint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all points or vertices in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;raster&apos;
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;raster&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaSurfaceVertex_2 {
+            get {
+                return ResourceManager.GetString("QaSurfaceVertex_2", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Finds all points or vertices in &apos;featureClass&apos; that differ more than &apos;limit&apos; from &apos;rasterMosaic&apos;
+        ///
+        ///Remark: The feature classes in &apos;featureClass&apos; and &apos;rasterMosaic&apos; must have the same spatial reference..
+        /// </summary>
+        public static string QaSurfaceVertex_4 {
+            get {
+                return ResourceManager.GetString("QaSurfaceVertex_4", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to feature class with heights.
+        /// </summary>
+        public static string QaSurfaceVertex_featureClass {
+            get {
+                return ResourceManager.GetString("QaSurfaceVertex_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to limit (in z-units).
+        /// </summary>
+        public static string QaSurfaceVertex_limit {
+            get {
+                return ResourceManager.GetString("QaSurfaceVertex_limit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Raster mosaic that provides the surface to compare.
+        /// </summary>
+        public static string QaSurfaceVertex_mosaic {
+            get {
+                return ResourceManager.GetString("QaSurfaceVertex_mosaic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to true : the difference must be larger than limit
+        ///false : the difference must be smaller than limit.
+        /// </summary>
+        public static string QaSurfaceVertex_mustBeLarger {
+            get {
+                return ResourceManager.GetString("QaSurfaceVertex_mustBeLarger", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to raster to compare.
+        /// </summary>
+        public static string QaSurfaceVertex_raster {
+            get {
+                return ResourceManager.GetString("QaSurfaceVertex_raster", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to AboveLimit : All z-values must be above surface height + &apos;limit&apos;
+        ///BelowLimit : All z-values must be below surface height + &apos;limit&apos; (For underground, &apos;limit&apos; must be &lt; 0)
+        ///WithinLimit: All z-values must be below surface height + &apos;limit&apos; and above surface height - &apos;limit&apos;
+        ///OutsideLimit: All z-values must be either above surface height + &apos;limit&apos; or below surface height - &apos;limit&apos;.
+        /// </summary>
+        public static string QaSurfaceVertex_zOffsetConstraint {
+            get {
+                return ResourceManager.GetString("QaSurfaceVertex_zOffsetConstraint", resourceCulture);
             }
         }
         

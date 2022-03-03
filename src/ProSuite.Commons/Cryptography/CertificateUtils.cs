@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -13,13 +12,14 @@ namespace ProSuite.Commons.Cryptography
 {
 	public static class CertificateUtils
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
-		public static IEnumerable<X509Certificate2> FindValidCertificates(
+		public static IEnumerable<X509Certificate2> FindCertificates(
 			StoreName storeName,
 			StoreLocation storeLocation,
 			[NotNull] string searchString,
-			X509FindType findType = X509FindType.FindBySubjectDistinguishedName)
+			X509FindType findType = X509FindType.FindBySubjectDistinguishedName,
+			bool validOnly = true)
 		{
 			X509Certificate2Collection certificates;
 
@@ -30,7 +30,7 @@ namespace ProSuite.Commons.Cryptography
 
 				X509Certificate2Collection certCollection = store.Certificates;
 
-				certificates = certCollection.Find(findType, searchString, true);
+				certificates = certCollection.Find(findType, searchString, validOnly);
 			}
 			catch (Exception e)
 			{
@@ -59,8 +59,8 @@ namespace ProSuite.Commons.Cryptography
 				_msg.DebugFormat("Searching certificate store ({0}/{1}) trying {2} ({3})",
 				                 storeName, storeLocation, findType, searchString);
 
-				foreach (X509Certificate2 certificate in FindValidCertificates(
-					storeName, storeLocation, searchString, findType))
+				foreach (X509Certificate2 certificate in FindCertificates(
+					         storeName, storeLocation, searchString, findType))
 				{
 					yield return certificate;
 				}
@@ -73,7 +73,7 @@ namespace ProSuite.Commons.Cryptography
 			[NotNull] string searchString,
 			X509FindType findType = X509FindType.FindBySubjectDistinguishedName)
 		{
-			IEnumerable<X509Certificate2> certificates = FindValidCertificates(
+			IEnumerable<X509Certificate2> certificates = FindCertificates(
 				storeName, storeLocation, searchString, findType);
 
 			foreach (X509Certificate2 certificate in certificates)
@@ -360,28 +360,33 @@ namespace ProSuite.Commons.Cryptography
 			}
 
 			// To PEM format 
-			StringBuilder privateKey = new StringBuilder();
-			TextWriter writer = new StringWriter(privateKey);
-
-			ExportPrivateKey(parameters, writer);
-
-			privateKeyValue = privateKey.ToString();
+			privateKeyValue = ExportParameters(parameters);
 
 			return true;
 		}
 
-		// https://stackoverflow.com/questions/23734792/c-sharp-export-private-public-rsa-key-from-rsacryptoserviceprovider-to-pem-strin
-
-		private static void ExportPrivateKey(RSAParameters parameters, TextWriter outputStream)
+		/// <summary>
+		/// Exports the RSA to the PEM format (PKCS#1)
+		/// Adapted version of https://stackoverflow.com/a/23739932/2860309
+		/// </summary>
+		/// <param name="parameters"></param>
+		/// <returns></returns>
+		private static string ExportParameters(RSAParameters parameters)
 		{
+			TextWriter resultStream = new StringWriter();
+
 			using (var stream = new MemoryStream())
 			{
 				var writer = new BinaryWriter(stream);
-				writer.Write((byte) 0x30); // SEQUENCE
+
+				// Sequence
+				writer.Write((byte) 0x30);
 				using (var innerStream = new MemoryStream())
 				{
 					var innerWriter = new BinaryWriter(innerStream);
-					EncodeIntegerBigEndian(innerWriter, new byte[] {0x00}); // Version
+
+					// Version
+					EncodeIntegerBigEndian(innerWriter, new byte[] {0x00});
 					EncodeIntegerBigEndian(innerWriter, parameters.Modulus);
 					EncodeIntegerBigEndian(innerWriter, parameters.Exponent);
 					EncodeIntegerBigEndian(innerWriter, parameters.D);
@@ -395,18 +400,30 @@ namespace ProSuite.Commons.Cryptography
 					writer.Write(innerStream.GetBuffer(), 0, length);
 				}
 
-				var base64 = Convert.ToBase64String(stream.GetBuffer(), 0, (int) stream.Length)
-				                    .ToCharArray();
+				char[] base64 = Convert.ToBase64String(stream.GetBuffer(), 0, (int) stream.Length)
+				                       .ToCharArray();
 
-				outputStream.WriteLine("-----BEGIN RSA PRIVATE KEY-----");
-				// Output as Base64 with lines chopped at 64 characters
+				// NOTE: In https://gist.github.com/therightstuff/aa65356e95f8d0aae888e9f61aa29414
+				// .Write with \n rather than WriteLine (which results in \r\n) is used. But not in
+				// https://github.com/Azure/azure-powershell/blob/91ece8f6138350a8fd5a9db93710766aa498a1ac/src/KeyVault/KeyVault/Helpers/JwkHelper.cs#L29
+				// However, the new .net 6 method PemEncoding.Write only writes \n
+				// -> For consistent behaviour with the future implementation, use \n
+				// See unit test in Quaestor.Utilities.Tests.CertificateUtilsTest
+				// END NOTE
+
+				resultStream.Write("-----BEGIN RSA PRIVATE KEY-----\n");
+
+				// Base64 which means a new line after 64 characters
 				for (var i = 0; i < base64.Length; i += 64)
 				{
-					outputStream.WriteLine(base64, i, Math.Min(64, base64.Length - i));
+					resultStream.Write(base64, i, Math.Min(64, base64.Length - i));
+					resultStream.Write("\n");
 				}
 
-				outputStream.WriteLine("-----END RSA PRIVATE KEY-----");
+				resultStream.Write("-----END RSA PRIVATE KEY-----");
 			}
+
+			return resultStream.ToString();
 		}
 
 		private static void EncodeLength(BinaryWriter stream, int length)

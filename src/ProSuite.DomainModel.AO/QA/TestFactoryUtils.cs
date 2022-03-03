@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Reflection;
@@ -174,6 +175,36 @@ namespace ProSuite.DomainModel.AO.QA
 				}
 
 				if (! includeInternallyUsed && HasInternallyUsedAttribute(candidateType))
+				{
+					continue;
+				}
+
+				yield return candidateType;
+			}
+		}
+
+		[NotNull]
+		public static IEnumerable<Type> GetTransformerClasses([NotNull] Assembly assembly,
+		                                               bool includeObsolete,
+		                                               bool includeInternallyUsed)
+		{
+			Assert.ArgumentNotNull(assembly, nameof(assembly));
+
+			Type transformerType = typeof(ITableTransformer);
+
+			foreach (Type candidateType in assembly.GetTypes())
+			{
+				if (!IsTestType(candidateType, transformerType))
+				{
+					continue;
+				}
+
+				if (!includeObsolete && ReflectionUtils.IsObsolete(candidateType))
+				{
+					continue;
+				}
+
+				if (!includeInternallyUsed && HasInternallyUsedAttribute(candidateType))
 				{
 					continue;
 				}

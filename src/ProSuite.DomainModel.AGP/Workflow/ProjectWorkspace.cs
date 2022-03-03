@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
+using ProSuite.Commons.AGP.Core.Geodatabase;
 using ProSuite.DomainModel.AGP.DataModel;
 
 namespace ProSuite.DomainModel.AGP.Workflow
@@ -33,15 +34,7 @@ namespace ProSuite.DomainModel.AGP.Workflow
 
 		public string GetVersionName()
 		{
-			if (Workspace is Geodatabase geodatabase &&
-			    geodatabase.IsVersioningSupported())
-			{
-				VersionManager versionManager = geodatabase.GetVersionManager();
-
-				return versionManager.GetCurrentVersion().GetName();
-			}
-
-			return null;
+			return WorkspaceUtils.GetCurrentVersion(Workspace)?.GetName();
 		}
 
 		public IList<int> GetDatasetIds()

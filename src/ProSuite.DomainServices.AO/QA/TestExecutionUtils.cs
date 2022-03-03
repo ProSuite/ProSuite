@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -93,9 +94,9 @@ namespace ProSuite.DomainServices.AO.QA
 
 			// Assign load time
 			foreach (
-				KeyValuePair<IDataset, double> pair in verificationTimeStats.DatasetLoadTimes)
+				KeyValuePair<IReadOnlyDataset, double> pair in verificationTimeStats.DatasetLoadTimes)
 			{
-				IDataset gdbDataset = pair.Key;
+				IReadOnlyDataset gdbDataset = pair.Key;
 
 				Dataset dataset = datasetLookup.GetDataset((IDatasetName) gdbDataset.FullName);
 
@@ -163,7 +164,7 @@ namespace ProSuite.DomainServices.AO.QA
 							break;
 
 						case Step.DataLoading:
-							var dataset = args.Tag as IDataset;
+							var dataset = args.Tag as IReadOnlyDataset;
 							if (dataset != null)
 							{
 								_msg.DebugFormat("Loading data: {0}", dataset.Name);
@@ -250,7 +251,7 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			object tag = args.Tag;
 
-			var dataset = tag as IDataset;
+			var dataset = tag as IReadOnlyDataset;
 			if (dataset != null)
 			{
 				return dataset.Name;

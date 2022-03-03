@@ -4,13 +4,14 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using ArcGIS.Core.Data;
-using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Picker;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.AGP.Editing.PickerUI
 {
@@ -18,21 +19,24 @@ namespace ProSuite.AGP.Editing.PickerUI
 	{
 		private PickerViewModel _viewModel;
 		private readonly List<IPickableItem> _candidateList;
-		private Point _windowLocation;
-		private const double _unknownLoc = -1.0;
+		private readonly Point _pickerScreenLocation = new Point(double.NaN, double.NaN);
 
 		public Picker([NotNull] List<IPickableItem> candidateList)
 		{
 			_candidateList = candidateList;
-			_windowLocation.X = _unknownLoc;
-			_windowLocation.Y = _unknownLoc;
 		}
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="Picker"/> class.
+		/// </summary>
+		/// <param name="candidateList">The list of pickable items</param>
+		/// <param name="pickerScreenCoordinates">The location  of the picker dialog's top left
+		/// corner in screen coordinates.</param>
 		public Picker([NotNull] List<IPickableItem> candidateList,
-		              Point pickerWindowLocation)
+		              Point pickerScreenCoordinates)
 		{
 			_candidateList = candidateList;
-			_windowLocation = pickerWindowLocation;
+			_pickerScreenLocation = pickerScreenCoordinates;
 		}
 
 		[ItemCanBeNull]
@@ -58,7 +62,7 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 			_viewModel.DisposeOverlays();
 
-			return _viewModel.SelectedItem;
+			return _viewModel.SelectedPickableItem;
 		}
 
 		[CanBeNull]
@@ -141,37 +145,51 @@ namespace ProSuite.AGP.Editing.PickerUI
 		private void ShowPickerControl(PickerViewModel vm)
 		{
 			PickerWindow window = new PickerWindow(vm);
-			ManageWindowLocation(window);
+
+			SetWindowLocation(window);
+
 			bool? accepted = window.ShowDialog();
+
 			if (accepted == false)
 			{
-				vm.SelectedItem = null;
+				vm.SelectedPickableItem = null;
 			}
 
 			vm.DisposeOverlays();
 		}
 
-		private void ManageWindowLocation(Window window)
+		private void SetWindowLocation(Window window)
 		{
-			Window ownerWindow = FrameworkApplication.Current.MainWindow;
+			Window ownerWindow = Assert.NotNull(Application.Current.MainWindow);
+
 			window.Owner = ownerWindow;
-			if (_windowLocation.X == _unknownLoc && _windowLocation.Y == _unknownLoc)
+
+			if (IsUnknownLocation(_pickerScreenLocation))
 			{
 				window.WindowStartupLocation = WindowStartupLocation.CenterOwner;
 				return;
 			}
 
-			window.Left = _windowLocation.X;
-			window.Top = _windowLocation.Y;
+			// NOTE: The window's Top/Left coordinates must be set in logical units or DIP (1/96 inch)
+			Point dipLocation =
+				DisplayUtils.ToDeviceIndependentPixels(_pickerScreenLocation, ownerWindow);
+
+			window.Left = dipLocation.X;
+			window.Top = dipLocation.Y;
 		}
 
 		private static void RunOnUIThread(Action action)
 		{
-			if (FrameworkApplication.Current.Dispatcher.CheckAccess())
+			if (Application.Current.Dispatcher.CheckAccess())
 				action(); //No invoke needed
 			else
 				//We are not on the UI
-				FrameworkApplication.Current.Dispatcher.BeginInvoke(action);
+				Application.Current.Dispatcher.BeginInvoke(action);
+		}
+
+		private static bool IsUnknownLocation(Point location)
+		{
+			return double.IsNaN(location.X) || double.IsNaN(location.Y);
 		}
 	}
 }

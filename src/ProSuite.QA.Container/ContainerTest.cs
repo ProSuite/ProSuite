@@ -106,7 +106,7 @@ namespace ProSuite.QA.Container
 			{
 				foreach (TerrainReference terrain in InvolvedTerrains)
 				{
-					geoDataset = terrain.GetReadOnlyDataset();
+					geoDataset = terrain.Dataset;
 					yield return geoDataset;
 				}
 			}

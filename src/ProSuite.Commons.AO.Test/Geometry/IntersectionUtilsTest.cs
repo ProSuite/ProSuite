@@ -249,6 +249,28 @@ namespace ProSuite.Commons.AO.Test.Geometry
 		}
 
 		[Test]
+		public void CanGetLinearSelfIntersectionForNonLinearSegments()
+		{
+			var polyWithExtremelyAcuteAngle =
+				(IPolygon)
+				TestUtils.ReadGeometryFromXml(
+					TestUtils.GetGeometryTestDataPath("SelfIntersectingCircularArcs.xml"));
+
+			// Idea: Either add this to qaSimpleGeometry or probably better a separate test
+			//       that works for all geometries in the same way.
+			// NOTE: In order to have a relatively exact result, the pieces must be not much
+			//       more than a cm long which requires 2 orders of magnitude below the tolerance
+			//       as maximum deviation for densification!
+			var multiPolycurve = GeometryConversionUtils.CreateMultiPolycurve(
+				polyWithExtremelyAcuteAngle, false, 0.00001);
+
+			IList<Line3D> selfIntersections =
+				GeomTopoOpUtils.GetLinearSelfIntersectionsXY(multiPolycurve, 0.001);
+
+			Assert.IsTrue(selfIntersections.Count > 0);
+		}
+
+		[Test]
 		public void CanIgnorePointIntersectionForLinearSelfIntersection()
 		{
 			var polyline = new PolylineClass();

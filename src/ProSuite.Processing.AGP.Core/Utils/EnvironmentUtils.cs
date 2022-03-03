@@ -164,7 +164,7 @@ namespace ProSuite.Processing.AGP.Core.Utils
 		{
 			if (value is string text)
 			{
-				return ColorUtils.ParseHexColor(text);
+				return ColorUtils.ParseHexColorRGB(text);
 			}
 
 			if (value is CIMRGBColor rgb)

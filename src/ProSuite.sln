@@ -84,6 +84,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.UI", "ProSuite.UI\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Microservices.Client.AGP.Test", "ProSuite.Microservices.Client.AGP.Test\ProSuite.Microservices.Client.AGP.Test.csproj", "{8FB162AA-3A08-4279-901E-7B2ED158ECA6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Processing.AGP.Core", "ProSuite.Processing.AGP.Core\ProSuite.Processing.AGP.Core.csproj", "{24D24089-C337-43FF-BE11-2F01AF1E6783}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProSuite.Processing.Test", "ProSuite.Processing.Test\ProSuite.Processing.Test.csproj", "{12C7BA8F-E068-43B6-AC41-F02F0DE49152}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -228,6 +232,14 @@ Global
 		{8FB162AA-3A08-4279-901E-7B2ED158ECA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8FB162AA-3A08-4279-901E-7B2ED158ECA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8FB162AA-3A08-4279-901E-7B2ED158ECA6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24D24089-C337-43FF-BE11-2F01AF1E6783}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24D24089-C337-43FF-BE11-2F01AF1E6783}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24D24089-C337-43FF-BE11-2F01AF1E6783}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24D24089-C337-43FF-BE11-2F01AF1E6783}.Release|Any CPU.Build.0 = Release|Any CPU
+		{12C7BA8F-E068-43B6-AC41-F02F0DE49152}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{12C7BA8F-E068-43B6-AC41-F02F0DE49152}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{12C7BA8F-E068-43B6-AC41-F02F0DE49152}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{12C7BA8F-E068-43B6-AC41-F02F0DE49152}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

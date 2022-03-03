@@ -16,6 +16,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 		[CanBeNull]
 		DatasetCategory DatasetCategory { get; set; }
 
+		[CanBeNull]
 		GeometryType GeometryType { get; set; }
 
 		[NotNull]
