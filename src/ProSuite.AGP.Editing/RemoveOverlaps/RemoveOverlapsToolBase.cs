@@ -81,7 +81,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			IList<Feature> overlappingFeatures =
 				GetOverlappingFeatures(selectedFeatures, progressor);
 
-			if (progressor != null && ! progressor.CancellationToken.IsCancellationRequested)
+			if (progressor != null && progressor.CancellationToken.IsCancellationRequested)
 			{
 				_msg.Warn("Calculation of removable overlaps was cancelled.");
 				return;
@@ -173,8 +173,8 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 				if (updatedTargets.Count > 0)
 				{
 					_msg.InfoFormat("Target features with potential vertex insertions: {0}",
-				                 StringUtils.Concatenate(updatedTargets,
-				                                         GdbObjectUtils.GetDisplayValue, ", "));
+					                StringUtils.Concatenate(updatedTargets,
+					                                        GdbObjectUtils.GetDisplayValue, ", "));
 				}
 			}
 
@@ -448,12 +448,14 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 			const TargetFeatureSelection targetFeatureSelection =
 				TargetFeatureSelection.VisibleSelectableFeatures;
 
+			var featureFinder = new FeatureFinder(ActiveMapView, targetFeatureSelection);
+
 			IEnumerable<FeatureClassSelection> featureClassSelections =
-				MapUtils.FindFeatures(ActiveMapView, selection, targetFeatureSelection,
-				                      CanOverlapLayer, inExtent, cancellabelProgressor);
+				featureFinder.FindIntersectingFeaturesByFeatureClass(
+					selection, CanOverlapLayer, inExtent, cancellabelProgressor);
 
 			if (cancellabelProgressor != null &&
-			    ! cancellabelProgressor.CancellationToken.IsCancellationRequested)
+			    cancellabelProgressor.CancellationToken.IsCancellationRequested)
 			{
 				return new List<Feature>();
 			}
@@ -462,7 +464,7 @@ namespace ProSuite.AGP.Editing.RemoveOverlaps
 
 			foreach (var classSelection in featureClassSelections)
 			{
-				foundFeatures.AddRange(classSelection.Features);
+				foundFeatures.AddRange(classSelection.GetFeatures());
 			}
 
 			// Remove the selected features from the set of overlapping features.

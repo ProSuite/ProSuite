@@ -1,12 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Forms;
 using System.Windows.Input;
-using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Editing.Events;
@@ -14,6 +12,7 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ArcGIS.Desktop.Mapping.Events;
 using ProSuite.AGP.Editing.Picker;
+using ProSuite.AGP.Editing.PickerUI;
 using ProSuite.AGP.Editing.Selection;
 using ProSuite.Commons.AGP.Carto;
 using ProSuite.Commons.AGP.Core.Geodatabase;
@@ -33,10 +32,7 @@ namespace ProSuite.AGP.Editing.OneClick
 	{
 		private const Key _keyShowOptionsPane = Key.O;
 
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
-
-		protected readonly List<IDisposable> _overlays = new List<IDisposable>();
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		protected OneClickToolBase()
 		{
@@ -46,8 +42,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			HandledKeys.Add(Key.Escape);
 			HandledKeys.Add(_keyShowOptionsPane);
 		}
-
-		private SketchingMoveType SketchingMoveType { get; set; }
 
 		/// <summary>
 		/// Whether this tool requires a selection and the base class should handle the selection phase.
@@ -62,7 +56,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		/// <summary>
 		/// Whether selected features that are not applicable (e.g. due to wrong geometry type) are
 		/// allowed. Otherwise the selection phase will continue until all selected features are
-		/// usable by the tool. 
+		/// usable by the tool.
 		/// </summary>
 		protected bool AllowNotApplicableFeaturesInSelection { get; set; } = true;
 
@@ -70,7 +64,7 @@ namespace ProSuite.AGP.Editing.OneClick
 			new SelectionSettings();
 
 		/// <summary>
-		/// The list of handled keys, i.e. the keys for which <see cref="MapTool.HandleKeyDownAsync"/>
+		/// The list of handled keys, i.e. the keys for which <see cref="MapTool.HandleKeyDownAsync" />
 		/// will be called (and potentially in the future also MapTool.HandleKeyUpAsync)
 		/// </summary>
 		protected List<Key> HandledKeys { get; } = new List<Key>();
@@ -222,7 +216,6 @@ namespace ProSuite.AGP.Editing.OneClick
 
 			if (sketchGeometry == null)
 			{
-				// TODO: if in selection phase select at the current mouse location?
 				return false;
 			}
 
@@ -235,8 +228,6 @@ namespace ProSuite.AGP.Editing.OneClick
 					// Otherwise relational operators and spatial queries return the wrong result
 					sketchGeometry = GeometryUtils.Simplify(sketchGeometry);
 				}
-
-				SketchingMoveType = GetSketchingMoveType(sketchGeometry);
 
 				if (RequiresSelection && IsInSelectionPhase())
 				{
@@ -274,7 +265,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected void StartSelectionPhase()
 		{
 			SetupSketch(SelectionSettings.SketchGeometryType, SelectionSettings.SketchOutputMode);
-			
+
 			if (KeyboardUtils.IsModifierPressed(Keys.Shift, true))
 			{
 				SetCursor(SelectionCursorShift);
@@ -301,7 +292,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		                           bool completeSketchOnMouseUp = true,
 		                           bool enforceSimpleSketch = false)
 		{
-
 			SketchOutputMode = sketchOutputMode;
 
 			// NOTE: CompleteSketchOnMouseUp must be set before the sketch geometry type,
@@ -313,7 +303,6 @@ namespace ProSuite.AGP.Editing.OneClick
 			UseSnapping = useSnapping;
 
 			GeomIsSimpleAsFeature = enforceSimpleSketch;
-
 		}
 
 		protected virtual void OnSelectionPhaseStarted() { }
@@ -393,7 +382,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		[CanBeNull]
 		protected virtual CancelableProgressor GetCancelableProgressor()
 		{
-			return null;
+			return new CancelableProgressorSource().Progressor;
 		}
 
 		protected virtual Task<bool> OnSketchCompleteCoreAsync(
@@ -403,35 +392,12 @@ namespace ProSuite.AGP.Editing.OneClick
 			return Task.FromResult(true);
 		}
 
-		private static SketchingMoveType GetSketchingMoveType(Geometry geometry)
-		{
-			if (ToolUtils.IsSingleClickSketch(geometry))
-			{
-				return SketchingMoveType.Click;
-			}
-
-			return SketchingMoveType.Drag;
-		}
-
 		protected int GetSelectionTolerancePixels()
 		{
 			return SelectionSettings.SelectionTolerancePixels;
 		}
 
-		private Geometry GetSelectionGeometry(Geometry sketchGeometry)
-		{
-			if (SketchingMoveType == SketchingMoveType.Click)
-			{
-				return ToolUtils.GetSinglePickSelectionArea(
-					sketchGeometry, SelectionSettings.SelectionTolerancePixels);
-			}
-			else
-			{
-				return sketchGeometry;
-			}
-		}
-
-		private SelectionMode GetSelectionSketchMode()
+		private static SelectionMode GetSelectionSketchMode()
 		{
 			if (KeyboardUtils.IsModifierPressed(Keys.Alt))
 			{
@@ -463,179 +429,159 @@ namespace ProSuite.AGP.Editing.OneClick
 			Geometry selectionGeometry;
 			var pickerWindowLocation = new Point(0, 0);
 
-			Dictionary<BasicFeatureLayer, List<long>> candidatesOfManyLayers =
+			bool singlePick = false;
+			List<FeatureClassSelection> candidatesOfManyLayers =
 				await QueuedTaskUtils.Run(() =>
 				{
-					DisposeOverlays();
+					selectionGeometry = ToolUtils.SketchToSearchGeometry(sketchGeometry,
+						GetSelectionTolerancePixels(), out singlePick);
 
-					selectionGeometry = GetSelectionGeometry(sketchGeometry);
 					pickerWindowLocation =
 						MapView.Active.MapToScreen(selectionGeometry.Extent.Center);
 
-					// find all features spatially related with selectionGeometry
-					return FindFeaturesOfAllLayers(selectionGeometry, spatialRelationship);
+					// find all features spatially related with searchGeometry
+					// TODO: 1. Find all features in point layers, if count > 0 -> skip the rest
+					//       2. Find all features in polyline layers, ...
+					return FindFeaturesOfAllLayers(selectionGeometry, spatialRelationship).ToList();
 				});
 
 			if (! candidatesOfManyLayers.Any())
 			{
-				if (selectionMethod != SelectionCombinationMethod.XOR)
+				// No candidate (user clicked into empty space):
+				if (selectionMethod == SelectionCombinationMethod.XOR)
 				{
-					//no candidate (user clicked into empty space): clear selection
-					await QueuedTask.Run(
-						() => { SelectionUtils.ClearSelection(); });
-
+					// No addition to, and no removal from selection
 					return false;
 				}
+
+				await QueuedTask.Run(SelectionUtils.ClearSelection);
 
 				return false;
 			}
 
-			if (SketchingMoveType == SketchingMoveType.Click)
-			{
-				//note if necessary add a virtual core method here for overriding 
-
-				if (GetSelectionSketchMode() == SelectionMode.Original)
-					//alt was pressed: select all xy
-				{
-					await QueuedTask.Run(() =>
-					{
-						Selector.SelectLayersFeaturesByOids(
-							candidatesOfManyLayers, selectionMethod);
-					});
-				}
-
-				// select a single feature using feature reduction and picker
-				else
-				{
-					IEnumerable<KeyValuePair<BasicFeatureLayer, List<long>>> candidatesOfLayers =
-						await QueuedTask.Run(
-							() => GeometryReducer.GetReducedset(candidatesOfManyLayers));
-
-					// show picker if more than one candidate
-					if (GeometryReducer.ContainsManyFeatures(candidatesOfManyLayers))
-					{
-						List<IPickableItem> pickables = new List<IPickableItem>();
-						foreach (var layerCandidates in candidatesOfLayers)
-						{
-							pickables.AddRange(
-								await QueuedTask.Run(
-									() => PickerUI.Picker.CreatePickableFeatureItems(
-										layerCandidates)));
-						}
-
-						var picker = new PickerUI.Picker(pickables, pickerWindowLocation);
-
-						var item = await picker.PickSingle() as PickableFeatureItem;
-
-						if (item != null)
-						{
-							var kvp = new KeyValuePair<BasicFeatureLayer, List<long>>(
-								item.Layer, new List<long> {item.Oid});
-
-							await QueuedTask.Run(() =>
-							{
-								Selector.SelectLayersFeaturesByOids(
-									kvp, selectionMethod);
-							});
-						}
-					}
-					else
-					{
-						await QueuedTask.Run(() =>
-						{
-							Selector.SelectLayersFeaturesByOids(
-								candidatesOfLayers.First(), selectionMethod);
-						});
-					}
-				}
-			}
-
-			if (SketchingMoveType == SketchingMoveType.Drag)
-			{
-				//CTRL was pressed: picker shows FC's to select from
-				if (GetSelectionSketchMode() == SelectionMode.UserSelect)
-				{
-					List<IPickableItem> pickingCandidates =
-						await QueuedTask.Run(
-							() => PickableItemAdapter.Get(GetFcCandidates(candidatesOfManyLayers)));
-
-					var picker = new PickerUI.Picker(pickingCandidates, pickerWindowLocation);
-
-					var item = await picker.PickSingle() as PickableFeatureClassItem;
-
-					if (item != null)
-					{
-						await QueuedTask.Run(() =>
-						{
-							item.BelongingFeatureLayers.ForEach(layer =>
-							{
-								List<long> oids = candidatesOfManyLayers[layer];
-
-								SelectionUtils.SelectFeatures(layer, selectionMethod, oids);
-							});
-						});
-					}
-				}
-
-				//no modifier pressed: select all in envelope
-				else
-				{
-					await QueuedTask.Run(() =>
-					{
-						Selector.SelectLayersFeaturesByOids(
-							candidatesOfManyLayers, selectionMethod);
-					});
-				}
-			}
+			bool result = singlePick
+				              ? await SingleClickSelect(candidatesOfManyLayers,
+				                                        pickerWindowLocation, selectionMethod)
+				              : await AreaSelect(candidatesOfManyLayers, pickerWindowLocation,
+				                                 selectionMethod);
 
 			MapView activeMapView = MapView.Active;
 
 			await QueuedTask.Run(() => ProcessSelection(activeMapView, progressor));
 
+			return result;
+		}
+
+		private static async Task<bool> SingleClickSelect(
+			[NotNull] List<FeatureClassSelection> candidatesOfManyLayers,
+			Point pickerWindowLocation,
+			SelectionCombinationMethod selectionMethod)
+		{
+			if (GetSelectionSketchMode() == SelectionMode.Original)
+			{
+				// ALT was pressed: select all at xy location, do not show picker
+				await QueuedTask.Run(() =>
+				{
+					Selector.SelectLayersFeaturesByOids(
+						candidatesOfManyLayers, selectionMethod);
+				});
+			}
+			else
+			{
+				// Select a single feature using feature reduction and picker
+				IEnumerable<FeatureClassSelection> candidatesOfLayers =
+					await QueuedTask.Run(
+						() => GeometryReducer.ReduceByGeometryDimension(
+							candidatesOfManyLayers));
+
+				// show picker if more than one candidate
+				if (GeometryReducer.ContainsManyFeatures(candidatesOfManyLayers))
+				{
+					PickableFeatureItem picked =
+						await PickerUtils.PickSingleFeatureAsync(
+							candidatesOfLayers, pickerWindowLocation);
+
+					if (picked != null)
+					{
+						await QueuedTask.Run(() =>
+						{
+							Selector.SelectFeature(
+								picked.Layer, selectionMethod, picked.Oid);
+						});
+					}
+				}
+				else
+				{
+					await QueuedTask.Run(() =>
+					{
+						Selector.SelectLayersFeaturesByOids(
+							candidatesOfLayers.First(), selectionMethod);
+					});
+				}
+			}
+
 			return true;
 		}
 
-		private List<FeatureClassInfo> GetFcCandidates(
-			Dictionary<BasicFeatureLayer, List<long>> candidatesOfManyLayers)
+		private static async Task<bool> AreaSelect(
+			[NotNull] IList<FeatureClassSelection> candidatesOfManyLayers,
+			Point pickerWindowLocation,
+			SelectionCombinationMethod selectionMethod)
 		{
-			List<FeatureClassInfo> featureClassInfos =
-				Selector.GetSelectableFeatureclassInfos();
-			return featureClassInfos.Where(fcInfo =>
+			//CTRL was pressed: picker shows FC's to select from
+			if (GetSelectionSketchMode() == SelectionMode.UserSelect)
 			{
-				return fcInfo.BelongingLayers.Any(
-					layer => candidatesOfManyLayers.Keys.Contains(layer));
-			}).ToList();
+				var picked =
+					await PickerUtils.PickSingleFeatureClassItemsAsync(
+						candidatesOfManyLayers, pickerWindowLocation);
+
+				if (picked != null)
+				{
+					await QueuedTask.Run(() =>
+					{
+						List<FeatureClassSelection> selectionsToApply =
+							picked.BelongingFeatureLayers.Select(
+								      layer => candidatesOfManyLayers.Single(
+									      s => s.FeatureLayer == layer))
+							      .ToList();
+
+						Selector.SelectLayersFeaturesByOids(selectionsToApply, selectionMethod);
+					});
+				}
+			}
+			else
+			{
+				//no modifier pressed: select all in envelope
+				await QueuedTask.Run(() =>
+				{
+					Selector.SelectLayersFeaturesByOids(
+						candidatesOfManyLayers, selectionMethod);
+				});
+			}
+
+			return true;
 		}
 
-		private Dictionary<BasicFeatureLayer, List<long>> FindFeaturesOfAllLayers(
-			[NotNull] Geometry selectionGeometry,
+		private IEnumerable<FeatureClassSelection> FindFeaturesOfAllLayers(
+			[NotNull] Geometry searchGeometry,
 			SpatialRelationship spatialRelationship)
 		{
-			var featuresPerLayer = new Dictionary<BasicFeatureLayer, List<long>>();
-
 			MapView mapView = MapView.Active;
 
 			if (mapView == null)
 			{
-				return featuresPerLayer;
+				return new List<FeatureClassSelection>(0);
 			}
 
-			foreach (BasicFeatureLayer layer in mapView.Map.GetLayersAsFlattenedList()
-			                                           .OfType<BasicFeatureLayer>()
-			                                           .Where(layer => CanSelectFromLayer(layer)))
-			{
-				List<long> oids =
-					MapUtils.FilterLayerOidsByGeometry(layer,
-					                                   selectionGeometry,
-					                                   spatialRelationship).ToList();
+			var featureFinder = new FeatureFinder(mapView)
+			                    {
+				                    SpatialRelationship = spatialRelationship,
+				                    DelayFeatureFetching = true
+			                    };
 
-				if (oids.Any())
-				{
-					featuresPerLayer.Add(layer, oids);
-				}
-			}
-
-			return featuresPerLayer;
+			return featureFinder.FindFeaturesByLayer(
+				searchGeometry,
+				fl => CanSelectFromLayer(fl));
 		}
 
 		protected bool IsInSelectionPhase()
@@ -679,7 +625,7 @@ namespace ProSuite.AGP.Editing.OneClick
 		{
 			Dictionary<MapMember, List<long>> selectionByLayer = activeMapView.Map.GetSelection();
 
-			NotificationCollection notifications = new NotificationCollection();
+			var notifications = new NotificationCollection();
 			List<Feature> applicableSelection =
 				GetApplicableSelectedFeatures(selectionByLayer, notifications).ToList();
 
@@ -798,10 +744,10 @@ namespace ProSuite.AGP.Editing.OneClick
 			[NotNull] Dictionary<MapMember, List<long>> selectionByLayer,
 			[CanBeNull] NotificationCollection notifications = null)
 		{
-			int filteredCount = 0;
-			int selectionCount = 0;
+			var filteredCount = 0;
+			var selectionCount = 0;
 
-			foreach (var oidsByLayer in selectionByLayer)
+			foreach (KeyValuePair<MapMember, List<long>> oidsByLayer in selectionByLayer)
 			{
 				if (! CanSelectFromLayer(oidsByLayer.Key as Layer, notifications))
 				{
@@ -810,7 +756,7 @@ namespace ProSuite.AGP.Editing.OneClick
 				}
 
 				foreach (Feature feature in MapUtils.GetFeatures(
-					oidsByLayer.Key, oidsByLayer.Value))
+					         oidsByLayer.Key, oidsByLayer.Value))
 				{
 					yield return feature;
 					selectionCount++;
@@ -847,38 +793,6 @@ namespace ProSuite.AGP.Editing.OneClick
 		protected virtual bool CanSelectFromLayerCore([NotNull] FeatureLayer featureLayer)
 		{
 			return true;
-		}
-
-		private void AddOverlay(Geometry geometry,
-		                        CIMSymbol symbol)
-		{
-			IDisposable addedOverlay =
-				MapView.Active.AddOverlay(geometry, symbol.MakeSymbolReference());
-
-			_overlays.Add(addedOverlay);
-		}
-
-		public void DisposeOverlays()
-		{
-			foreach (IDisposable overlay in _overlays)
-			{
-				overlay.Dispose();
-			}
-
-			_overlays.Clear();
-		}
-
-		private CIMPolygonSymbol CreatePolygonSymbol()
-		{
-			CIMColor magenta = ColorFactory.Instance.CreateRGBColor(255, 0, 255);
-
-			CIMStroke outline = SymbolFactory.Instance.ConstructStroke(
-				magenta, 2, SimpleLineStyle.Solid);
-
-			CIMPolygonSymbol highlightPolygonSymbol =
-				SymbolFactory.Instance.ConstructPolygonSymbol(
-					magenta, SimpleFillStyle.Null, outline);
-			return highlightPolygonSymbol;
 		}
 	}
 }

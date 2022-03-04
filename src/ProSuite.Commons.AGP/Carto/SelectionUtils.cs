@@ -35,6 +35,12 @@ namespace ProSuite.Commons.AGP.Carto
 			}
 		}
 
+		public static void SelectFeature(FeatureLayer featureLayer,
+		                                 SelectionCombinationMethod selectionMethod, long objectId)
+		{
+			SelectFeatures(featureLayer, selectionMethod, new[] {objectId});
+		}
+
 		/// <summary>
 		/// Selects the requested features from the specified layer and immediately disposes
 		/// the selection to avoid selection and immediate de-selection (for selection method XOR)
@@ -67,14 +73,14 @@ namespace ProSuite.Commons.AGP.Carto
 		                                  [NotNull] IList<BasicFeatureLayer> inLayers)
 		{
 			foreach (IGrouping<IntPtr, Feature> featuresByClassHandle in features.GroupBy(
-				f => f.GetTable().Handle))
+				         f => f.GetTable().Handle))
 			{
 				long classHandle = featuresByClassHandle.Key.ToInt64();
 
 				List<long> objectIds = featuresByClassHandle.Select(f => f.GetObjectID()).ToList();
 
 				foreach (var layer in inLayers.Where(
-					fl => fl.GetTable().Handle.ToInt64() == classHandle))
+					         fl => fl.GetTable().Handle.ToInt64() == classHandle))
 				{
 					SelectFeatures(layer, SelectionCombinationMethod.Add, objectIds);
 				}

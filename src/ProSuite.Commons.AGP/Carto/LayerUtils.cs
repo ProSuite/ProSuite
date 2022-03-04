@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Data;
 using ArcGIS.Desktop.Mapping;
@@ -12,27 +13,84 @@ namespace ProSuite.Commons.AGP.Carto
 {
 	public static class LayerUtils
 	{
-		public static IEnumerable<T> GetRows<T>([NotNull] BasicFeatureLayer layer,
-		                                        [CanBeNull] QueryFilter filter = null)
+		/// <summary>
+		/// Returns the Rows or features found by the layer search. Honors definition queries,
+		/// layer time, etc. defined on the layer. According to the documentation, valid rows returned
+		/// by a cursor should be disposed.
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="layer"></param>
+		/// <param name="filter"></param>
+		/// <param name="predicate"></param>
+		/// <param name="cancellationToken"></param>
+		/// <returns></returns>
+		public static IEnumerable<T> SearchRows<T>([NotNull] BasicFeatureLayer layer,
+		                                           [CanBeNull] QueryFilter filter = null,
+		                                           [CanBeNull] Predicate<T> predicate = null,
+		                                           CancellationToken cancellationToken = default)
 			where T : Row
 		{
 			Assert.ArgumentNotNull(layer, nameof(layer));
+
+			if (predicate == null)
+			{
+				predicate = f => true;
+			}
 
 			using (RowCursor cursor = layer.Search(filter))
 			{
 				while (cursor.MoveNext())
 				{
-					yield return (T) cursor.Current;
+					if (cancellationToken.IsCancellationRequested)
+					{
+						yield break;
+					}
+
+					T currentRow = (T) cursor.Current;
+
+					if (predicate(currentRow))
+					{
+						yield return currentRow;
+					}
 				}
 			}
 		}
 
-		//private static CIMUniqueValueRenderer GetUniqueValueRenderer(LayerDocument template)
-		//{
-		//	CIMLayerDocument templateLayerDocument = template.GetCIMLayerDocument();
-		//	CIMDefinition templateLayerDefinition = templateLayerDocument.LayerDefinitions[0];
-		//	return (CIMUniqueValueRenderer) ((CIMFeatureLayer) templateLayerDefinition).Renderer;
-		//}
+		/// <summary>
+		/// Returns the Object IDs of features found by the layer search. Honors definition queries,
+		/// layer time, etc. defined on the layer. 
+		/// </summary>
+		public static IEnumerable<long> SearchObjectIds(
+			[NotNull] BasicFeatureLayer layer,
+			[CanBeNull] QueryFilter filter = null,
+			[CanBeNull] Predicate<Feature> predicate = null,
+			CancellationToken cancellationToken = default)
+		{
+			if (filter == null)
+			{
+				filter = new QueryFilter
+				         {
+					         SubFields = layer.GetTable().GetDefinition()?.GetObjectIDField()
+				         };
+			}
+			else if (string.IsNullOrEmpty(filter.SubFields))
+			{
+				filter.SubFields = layer.GetTable().GetDefinition()?.GetObjectIDField();
+			}
+
+			foreach (Feature row in SearchRows(layer, filter, predicate))
+			{
+				if (cancellationToken.IsCancellationRequested)
+				{
+					yield break;
+				}
+
+				yield return row.GetObjectID();
+
+				// Documentation: If a valid Row is returned by RowCursor.Current, it should be Disposed.
+				row.Dispose();
+			}
+		}
 
 		[CanBeNull]
 		public static T GetRenderer<T>([NotNull] LayerDocument template) where T : CIMRenderer

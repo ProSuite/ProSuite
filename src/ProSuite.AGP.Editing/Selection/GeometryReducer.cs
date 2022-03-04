@@ -21,13 +21,13 @@ namespace ProSuite.AGP.Editing.Selection
 		/// <summary>
 		/// Reduces the specified selection to the selection classes with the lowest dimension (the classic picker behaviour).
 		/// </summary>
-		/// <param name="selectionByClass"></param>
+		/// <param name="selectionSets"></param>
 		/// <returns></returns>
 		public static IEnumerable<FeatureClassSelection> ReduceByGeometryDimension(
-			IEnumerable<FeatureClassSelection> selectionByClass)
+			IEnumerable<FeatureClassSelection> selectionSets)
 		{
 			// Group by shape dimension to make sure {points, multipoints} and {polygons, multipatches} end up in the same group:
-			var shapeGroups = selectionByClass
+			var shapeGroups = selectionSets
 			                  .GroupBy(classSelection => classSelection.ShapeDimension)
 			                  .OrderBy(group => group.Key);
 
@@ -36,16 +36,16 @@ namespace ProSuite.AGP.Editing.Selection
 		}
 
 		public static bool ContainsManyFeatures(
-			IEnumerable<KeyValuePair<BasicFeatureLayer, List<long>>> candidates)
+			ICollection<FeatureClassSelection> selectionSets)
 		{
 			//several features of different layers
-			if (candidates.Count() > 1)
+			if (selectionSets.Count() > 1)
 			{
 				return true;
 			}
 
 			//several features of the same layer
-			if (candidates.First().Value.Count > 1)
+			if (selectionSets.First().FeatureCount > 1)
 			{
 				return true;
 			}
