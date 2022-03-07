@@ -94,7 +94,7 @@ namespace ProSuite.Commons.Geom
 
 		public int SegmentCount => _segments.Count;
 
-		public int PointCount => SegmentCount + 1;
+		public int PointCount => SegmentCount == 0 ? 0 : SegmentCount + 1;
 
 		public double XMin { get; private set; } = double.MaxValue;
 		public double YMin { get; private set; } = double.MaxValue;
@@ -385,6 +385,12 @@ namespace ProSuite.Commons.Geom
 
 			if (startPointIndex == lastPoint)
 			{
+				if (lastPoint == 0)
+				{
+					// no point
+					yield break;
+				}
+
 				// last point is start:
 				Assert.ArgumentCondition(pointCount == null || pointCount <= 1,
 				                         "Requested point count out of range");
