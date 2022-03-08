@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
@@ -6,7 +7,7 @@ using ProSuite.Commons.Geom;
 namespace ProSuite.Commons.Test.Geom
 {
 	[TestFixture]
-	public class MultilinestringTest
+	public class MultiLinestringTest
 	{
 		[Test]
 		public void CanUseBasicProperties()
@@ -85,6 +86,57 @@ namespace ProSuite.Commons.Test.Geom
 
 			Assert.AreEqual(multilinestring.GetLinestrings().Sum(l => l.GetLength2D()),
 			                multilinestring.GetLength2D());
+		}
+
+		[Test]
+		public void CanGetSegmentsAndPointsWithEmptyParts()
+		{
+			var multilinestring = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(Array.Empty<Pnt3D>()),
+					new Linestring(new[]
+					               {
+						               new Pnt3D(44, 45, 123),
+						               new Pnt3D(33, 33, 123),
+						               new Pnt3D(22, 22, 12)
+					               })
+				});
+
+			Linestring linestring = multilinestring.GetPart(0);
+			Assert.IsTrue(linestring.IsEmpty);
+
+			// Segments
+			//
+			// This should return the first segment of the second linestring (the first part is empty)
+			Line3D firstSegment = multilinestring.GetSegment(0);
+			Assert.AreEqual(new Pnt3D(44, 45, 123), firstSegment.StartPoint);
+
+			Assert.Throws<ArgumentOutOfRangeException>(
+				() => multilinestring.GetGlobalSegmentIndex(0, 0));
+
+			int firstSegmentIdx = multilinestring.GetGlobalSegmentIndex(1, 0);
+			Assert.AreEqual(0, firstSegmentIdx);
+
+			int firstSegmentLocalIdx = multilinestring.GetLocalSegmentIndex(0, out int partIdx);
+			Assert.AreEqual(1, partIdx);
+			Assert.AreEqual(0, firstSegmentLocalIdx);
+
+			// Points
+			//
+			// This should return the first point of the second linestring (the first part is empty)
+			IPnt firstPoint = multilinestring.GetPoint(0);
+			Assert.AreEqual(new Pnt3D(44, 45, 123), firstPoint);
+
+			Assert.Throws<ArgumentOutOfRangeException>(
+				() => multilinestring.GetGlobalPointIndex(0, 0));
+
+			int firstPointIdx = multilinestring.GetGlobalPointIndex(1, 0);
+			Assert.AreEqual(0, firstPointIdx);
+
+			int firstPointLocalIdx = multilinestring.GetLocalPointIndex(0, out partIdx);
+			Assert.AreEqual(1, partIdx);
+			Assert.AreEqual(0, firstPointLocalIdx);
 		}
 
 		[Test]

@@ -17,6 +17,9 @@ namespace ProSuite.Commons.Geom
 		public double XMax { get; private set; } = double.MinValue;
 		public double YMax { get; private set; } = double.MinValue;
 
+		// The global segment indexes of the start of each linestring or
+		// -1 for empty linestrings.
+		private const int _emptyLinestring = -1;
 		private readonly List<int> _startSegmentIndexes = new List<int>();
 
 		protected MultiLinestring(IEnumerable<Linestring> linestrings)
@@ -167,11 +170,14 @@ namespace ProSuite.Commons.Geom
 			partIndex = 0;
 			foreach (int startSegmentIndex in _startSegmentIndexes)
 			{
-				int startPointIdx = GetSegmentStartPointIndex(startSegmentIndex);
-
-				if (vertexIndex == startPointIdx)
+				if (startSegmentIndex >= 0)
 				{
-					return true;
+					int startPointIdx = GetSegmentStartPointIndex(startSegmentIndex);
+
+					if (vertexIndex == startPointIdx)
+					{
+						return true;
+					}
 				}
 
 				partIndex++;
@@ -188,6 +194,11 @@ namespace ProSuite.Commons.Geom
 			for (var partIdx = 0; partIdx < _startSegmentIndexes.Count; partIdx++)
 			{
 				int startSegmentIndex = _startSegmentIndexes[partIdx];
+
+				if (startSegmentIndex == _emptyLinestring)
+				{
+					continue;
+				}
 
 				int startPointIdx = GetSegmentStartPointIndex(startSegmentIndex);
 
@@ -247,7 +258,7 @@ namespace ProSuite.Commons.Geom
 			if (SpatialIndex != null)
 			{
 				foreach (var foundSegmentIdx in SpatialIndex.Search(searchPoint.X, searchPoint.Y,
-					searchPoint.X, searchPoint.Y, xyTolerance))
+					         searchPoint.X, searchPoint.Y, xyTolerance))
 				{
 					Line3D segment =
 						GetSegment(foundSegmentIdx.PartIndex, foundSegmentIdx.LocalIndex);
@@ -279,7 +290,7 @@ namespace ProSuite.Commons.Geom
 					Linestring linestring = Linestrings[i];
 
 					foreach (int localIndex in linestring.FindPointIndexes(
-						searchPoint, xyTolerance, useSearchCircle, allowIndexing))
+						         searchPoint, xyTolerance, useSearchCircle, allowIndexing))
 					{
 						yield return GetGlobalPointIndex(i, localIndex);
 					}
@@ -311,7 +322,22 @@ namespace ProSuite.Commons.Geom
 		public int GetGlobalPointIndex(int partIndex, int localPointIndex)
 		{
 			// TODO: Unit tests
-			int partStartIndex = _startSegmentIndexes[partIndex] + partIndex;
+
+			int startSegmentIndex = _startSegmentIndexes[partIndex];
+
+			if (startSegmentIndex == _emptyLinestring)
+			{
+				throw new ArgumentOutOfRangeException(nameof(partIndex), partIndex,
+				                                      "The part is empty.");
+			}
+
+			// TODO: Check performance, consider fall back to non-optimized implementation
+			//       i.e _startSegmentIndexes remains null if there are empty parts.
+			// All previous parts that are empty do not have the extra point:
+			int emptyPartCount =
+				_startSegmentIndexes.Take(partIndex).Count(i => i == _emptyLinestring);
+
+			int partStartIndex = startSegmentIndex + partIndex - emptyPartCount;
 
 			return partStartIndex + localPointIndex;
 		}
@@ -480,14 +506,24 @@ namespace ProSuite.Commons.Geom
 			linestringIndex = GetLowerBound(_startSegmentIndexes, globalSegmentIndex);
 
 			if (linestringIndex < 0)
-				throw new IndexOutOfRangeException();
+			{
+				throw new IndexOutOfRangeException("Invalid result of binary search.");
+			}
 
 			return globalSegmentIndex - _startSegmentIndexes[linestringIndex];
 		}
 
 		public int GetGlobalSegmentIndex(int linestringIndex, int localSegmentIndex)
 		{
-			return _startSegmentIndexes[linestringIndex] + localSegmentIndex;
+			int startSegmentIndex = _startSegmentIndexes[linestringIndex];
+
+			if (startSegmentIndex == _emptyLinestring)
+			{
+				throw new ArgumentOutOfRangeException(nameof(linestringIndex), linestringIndex,
+				                                      "The linestring is empty.");
+			}
+
+			return startSegmentIndex + localSegmentIndex;
 		}
 
 		public IEnumerable<KeyValuePair<int, Line3D>> FindSegments(
@@ -528,12 +564,12 @@ namespace ProSuite.Commons.Geom
 			if (SpatialIndex != null)
 			{
 				foreach (SegmentIndex segmentIndex in SpatialIndex.Search(
-					xMin, yMin, xMax, yMax, this, tolerance, multipartIndexPredicate))
+					         xMin, yMin, xMax, yMax, this, tolerance, multipartIndexPredicate))
 				{
 					Line3D segment = GetSegment(segmentIndex.PartIndex, segmentIndex.LocalIndex);
 
 					if (segment.ExtentIntersectsXY(
-						xMin, yMin, xMax, yMax, tolerance))
+						    xMin, yMin, xMax, yMax, tolerance))
 					{
 						yield return new KeyValuePair<int, Line3D>(
 							GetGlobalSegmentIndex(segmentIndex.PartIndex, segmentIndex.LocalIndex),
@@ -553,7 +589,7 @@ namespace ProSuite.Commons.Geom
 					Line3D segment = this[i];
 
 					if (segment.ExtentIntersectsXY(
-						xMin, yMin, xMax, yMax, tolerance))
+						    xMin, yMin, xMax, yMax, tolerance))
 					{
 						//var identifier = new SegmentIndex(p, s);
 						yield return new KeyValuePair<int, Line3D>(i, segment);
@@ -591,9 +627,9 @@ namespace ProSuite.Commons.Geom
 			if (SpatialIndex != null)
 			{
 				foreach (SegmentIndex segmentIndex in SpatialIndex.Search(
-					searchGeometry.XMin, searchGeometry.YMin, searchGeometry.XMax,
-					searchGeometry.YMax,
-					this, tolerance))
+					         searchGeometry.XMin, searchGeometry.YMin, searchGeometry.XMax,
+					         searchGeometry.YMax,
+					         this, tolerance))
 				{
 					if (foundParts.Contains(segmentIndex.PartIndex))
 					{
@@ -707,6 +743,11 @@ namespace ProSuite.Commons.Geom
 
 			if (additionalLinestring != null)
 			{
+				if (additionalLinestring.IsEmpty)
+				{
+					_startSegmentIndexes.Add(_emptyLinestring);
+				}
+
 				globalIndex = SegmentCount;
 
 				_startSegmentIndexes.Add(globalIndex);
@@ -718,9 +759,16 @@ namespace ProSuite.Commons.Geom
 
 			foreach (Linestring linestring in Linestrings)
 			{
-				_startSegmentIndexes.Add(globalIndex);
+				if (linestring.IsEmpty)
+				{
+					_startSegmentIndexes.Add(_emptyLinestring);
+				}
+				else
+				{
+					_startSegmentIndexes.Add(globalIndex);
 
-				globalIndex += linestring.SegmentCount;
+					globalIndex += linestring.SegmentCount;
+				}
 			}
 		}
 

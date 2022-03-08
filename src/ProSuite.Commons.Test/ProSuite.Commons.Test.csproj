@@ -60,7 +60,7 @@
     <Compile Include="Geom\GeomUtilsTest.cs" />
     <Compile Include="Geom\Line3DTest.cs" />
     <Compile Include="Geom\LinestringTest.cs" />
-    <Compile Include="Geom\MultilinestringTest.cs" />
+    <Compile Include="Geom\MultiLinestringTest.cs" />
     <Compile Include="Geom\Plane3DTest.cs" />
     <Compile Include="Geom\SegmentIntersectionTest.cs" />
     <Compile Include="Geom\SpatialIndex\SpatialHashSearcherTest.cs" />
