@@ -229,6 +229,7 @@ namespace ProSuite.Commons.Geom
 			{
 				var verticalCutlines = new MultiPolycurve(
 					xyClusters
+						.Where(c => c.Count >= 2)
 						.Select(c => new Linestring(c.OrderBy(p => p.Z)))
 						.ToList());
 
