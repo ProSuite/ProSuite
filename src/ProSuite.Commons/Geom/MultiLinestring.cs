@@ -17,9 +17,7 @@ namespace ProSuite.Commons.Geom
 		public double XMax { get; private set; } = double.MinValue;
 		public double YMax { get; private set; } = double.MinValue;
 
-		// The global segment indexes of the start of each linestring or
-		// -1 for empty linestrings.
-		private const int _emptyLinestring = -1;
+		private List<int> _emptyPartIndexes;
 		private readonly List<int> _startSegmentIndexes = new List<int>();
 
 		protected MultiLinestring(IEnumerable<Linestring> linestrings)
@@ -195,7 +193,8 @@ namespace ProSuite.Commons.Geom
 			{
 				int startSegmentIndex = _startSegmentIndexes[partIdx];
 
-				if (startSegmentIndex == _emptyLinestring)
+				if (_emptyPartIndexes != null &&
+				    _emptyPartIndexes.Contains(partIdx))
 				{
 					continue;
 				}
@@ -321,21 +320,19 @@ namespace ProSuite.Commons.Geom
 
 		public int GetGlobalPointIndex(int partIndex, int localPointIndex)
 		{
-			// TODO: Unit tests
-
 			int startSegmentIndex = _startSegmentIndexes[partIndex];
 
-			if (startSegmentIndex == _emptyLinestring)
+			if (_emptyPartIndexes != null &&
+			    _emptyPartIndexes.Contains(partIndex))
 			{
 				throw new ArgumentOutOfRangeException(nameof(partIndex), partIndex,
 				                                      "The part is empty.");
 			}
 
-			// TODO: Check performance, consider fall back to non-optimized implementation
-			//       i.e _startSegmentIndexes remains null if there are empty parts.
 			// All previous parts that are empty do not have the extra point:
-			int emptyPartCount =
-				_startSegmentIndexes.Take(partIndex).Count(i => i == _emptyLinestring);
+			int emptyPartCount = _emptyPartIndexes == null
+				                     ? 0
+				                     : _emptyPartIndexes.Count(i => i < partIndex);
 
 			int partStartIndex = startSegmentIndex + partIndex - emptyPartCount;
 
@@ -446,7 +443,7 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		public void AddLinestring(Linestring linestring)
+		public void AddLinestring([NotNull] Linestring linestring)
 		{
 			Linestrings.Add(linestring);
 
@@ -461,7 +458,7 @@ namespace ProSuite.Commons.Geom
 
 		protected virtual void AddLinestringCore(Linestring linestring) { }
 
-		public void InsertLinestring(int index, Linestring linestring)
+		public void InsertLinestring(int index, [NotNull] Linestring linestring)
 		{
 			Linestrings.Insert(index, linestring);
 
@@ -510,14 +507,41 @@ namespace ProSuite.Commons.Geom
 				throw new IndexOutOfRangeException("Invalid result of binary search.");
 			}
 
-			return globalSegmentIndex - _startSegmentIndexes[linestringIndex];
+			if (_emptyPartIndexes != null &&
+			    _emptyPartIndexes.Contains(linestringIndex))
+			{
+				if (linestringIndex > 0)
+				{
+					// It's the last segment of the previous part
+					linestringIndex--;
+				}
+				else
+				{
+					// The first part is empty: Find the next non-empty part
+					do
+					{
+						linestringIndex++;
+					} while (_emptyPartIndexes.Contains(linestringIndex));
+
+					if (linestringIndex >= _startSegmentIndexes.Count)
+					{
+						throw new IndexOutOfRangeException(
+							"Invalid global segment index. One or more parts are empty.");
+					}
+				}
+			}
+
+			int startSegmentIndex = _startSegmentIndexes[linestringIndex];
+
+			return globalSegmentIndex - startSegmentIndex;
 		}
 
 		public int GetGlobalSegmentIndex(int linestringIndex, int localSegmentIndex)
 		{
 			int startSegmentIndex = _startSegmentIndexes[linestringIndex];
 
-			if (startSegmentIndex == _emptyLinestring)
+			if (_emptyPartIndexes != null &&
+			    _emptyPartIndexes.Contains(linestringIndex))
 			{
 				throw new ArgumentOutOfRangeException(nameof(linestringIndex), linestringIndex,
 				                                      "The linestring is empty.");
@@ -745,7 +769,8 @@ namespace ProSuite.Commons.Geom
 			{
 				if (additionalLinestring.IsEmpty)
 				{
-					_startSegmentIndexes.Add(_emptyLinestring);
+					AddEmptyPartIndex(PartCount - 1);
+					_startSegmentIndexes.Add(globalIndex);
 				}
 
 				globalIndex = SegmentCount;
@@ -756,12 +781,16 @@ namespace ProSuite.Commons.Geom
 			}
 
 			_startSegmentIndexes.Clear();
+			_emptyPartIndexes = null;
 
-			foreach (Linestring linestring in Linestrings)
+			for (var partIndex = 0; partIndex < Linestrings.Count; partIndex++)
 			{
+				Linestring linestring = Linestrings[partIndex];
+
 				if (linestring.IsEmpty)
 				{
-					_startSegmentIndexes.Add(_emptyLinestring);
+					AddEmptyPartIndex(partIndex);
+					_startSegmentIndexes.Add(globalIndex);
 				}
 				else
 				{
@@ -770,6 +799,16 @@ namespace ProSuite.Commons.Geom
 					globalIndex += linestring.SegmentCount;
 				}
 			}
+		}
+
+		private void AddEmptyPartIndex(int partIndex)
+		{
+			if (_emptyPartIndexes == null)
+			{
+				_emptyPartIndexes = new List<int>();
+			}
+
+			_emptyPartIndexes.Add(partIndex);
 		}
 
 		private static int GetLowerBound<T>(List<T> values, T target) where T : IComparable<T>

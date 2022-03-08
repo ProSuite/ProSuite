@@ -137,6 +137,53 @@ namespace ProSuite.Commons.Test.Geom
 			int firstPointLocalIdx = multilinestring.GetLocalPointIndex(0, out partIdx);
 			Assert.AreEqual(1, partIdx);
 			Assert.AreEqual(0, firstPointLocalIdx);
+
+			// Add empty linestring at the end
+			multilinestring.AddLinestring(Linestring.CreateEmpty());
+
+			// Segments
+			//
+			// This should return the first segment of the second linestring (the first part is empty)
+			firstSegment = multilinestring.GetSegment(0);
+			Assert.AreEqual(new Pnt3D(44, 45, 123), firstSegment.StartPoint);
+
+			Assert.Throws<ArgumentOutOfRangeException>(
+				() => multilinestring.GetGlobalSegmentIndex(0, 0));
+
+			firstSegmentIdx = multilinestring.GetGlobalSegmentIndex(1, 0);
+			Assert.AreEqual(0, firstSegmentIdx);
+
+			int lastSegmentIdx = multilinestring.GetGlobalSegmentIndex(1, 1);
+			Assert.AreEqual(1, lastSegmentIdx);
+
+			Assert.Throws<ArgumentOutOfRangeException>(
+				() => multilinestring.GetGlobalSegmentIndex(2, 0));
+
+			int lastSegmentLocalIdx = multilinestring.GetLocalSegmentIndex(2, out partIdx);
+			Assert.AreEqual(1, partIdx);
+			Assert.AreEqual(2, lastSegmentLocalIdx);
+
+			// Points
+			//
+			// This should return the first point of the second linestring (the first part is empty)
+			firstPoint = multilinestring.GetPoint(0);
+			Assert.AreEqual(new Pnt3D(44, 45, 123), firstPoint);
+
+			Assert.Throws<ArgumentOutOfRangeException>(
+				() => multilinestring.GetGlobalPointIndex(0, 0));
+
+			firstPointIdx = multilinestring.GetGlobalPointIndex(1, 0);
+			Assert.AreEqual(0, firstPointIdx);
+
+			firstPointLocalIdx = multilinestring.GetLocalPointIndex(0, out partIdx);
+			Assert.AreEqual(1, partIdx);
+			Assert.AreEqual(0, firstPointLocalIdx);
+
+			int lastPointIdx = multilinestring.GetGlobalPointIndex(1, 2);
+			Assert.AreEqual(2, lastPointIdx);
+
+			Assert.Throws<ArgumentOutOfRangeException>(
+				() => multilinestring.GetGlobalPointIndex(2, 0));
 		}
 
 		[Test]
