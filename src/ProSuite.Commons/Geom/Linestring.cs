@@ -963,15 +963,16 @@ namespace ProSuite.Commons.Geom
 
 		public void AssignUndefinedZs(Plane3D fromPlane)
 		{
-			foreach (Pnt3D point in GetPoints())
+			for (int i = 0; i < PointCount; i++)
 			{
+				Pnt3D point = GetPoint3D(i);
+
 				if (double.IsNaN(point.Z))
 				{
 					point.Z = fromPlane.GetZ(point.X, point.Y);
+					ReplacePoint(i, point);
 				}
 			}
-
-			// UpdateBounds() not needed because no XY values change
 		}
 
 		public bool TryInterpolateUndefinedZs()
