@@ -94,7 +94,7 @@ namespace ProSuite.Commons.Test.Geom
 			var multilinestring = new MultiPolycurve(
 				new[]
 				{
-					new Linestring(Array.Empty<Pnt3D>()),
+					Linestring.CreateEmpty(),
 					new Linestring(new[]
 					               {
 						               new Pnt3D(44, 45, 123),

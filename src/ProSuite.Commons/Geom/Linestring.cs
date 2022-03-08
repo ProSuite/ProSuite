@@ -938,6 +938,8 @@ namespace ProSuite.Commons.Geom
 			segment1?.SetEndPoint(newPoint);
 			segment2?.SetStartPoint(newPoint);
 
+			// TODO: Separate method 'CoordinatesUpdated(bool zOnly)' similar to Line3D
+			// TODO: Set spatial index to null, consider making bounds lazy, deal with spatial index on Multilinestring
 			// TODO: To avoid grow-only bounds changes, make sure the replaced point was not an extreme point
 			//       ... if replacedPoint.X == XMax -> re-create envelope
 			UpdateBounds(newPoint, pointIndex, Segments, null);
