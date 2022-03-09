@@ -92,7 +92,6 @@
     <Compile Include="Geom\IntersectionArea3D.cs" />
     <Compile Include="Geom\IPointList.cs" />
     <Compile Include="Geom\ISegmentList.cs" />
-    <Compile Include="Geom\MultipleRingNavigator.cs" />
     <Compile Include="Geom\Multipoint.cs" />
     <Compile Include="Geom\PntComparer.cs" />
     <Compile Include="Geom\Polyhedron.cs" />

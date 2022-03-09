@@ -142,7 +142,7 @@ namespace ProSuite.Commons.Geom
 			                         "sourceRings must be closed.");
 
 			subcurveNavigator = subcurveNavigator == null
-				                    ? new MultipleRingNavigator(sourceRings, cutLines, tolerance)
+				                    ? new SubcurveNavigator(sourceRings, cutLines, tolerance)
 				                    : subcurveNavigator.Clone();
 
 			subcurveNavigator.PreferTargetZsAtIntersections = true;
@@ -216,12 +216,13 @@ namespace ProSuite.Commons.Geom
 				return CutVerticalRingGroup(sourcePoly, cutLines, tolerance).ToList();
 			}
 
-			MultipleRingNavigator ringNavigator =
-				new MultipleRingNavigator(sourcePoly, cutLines, tolerance);
+			var ringNavigator =
+				new SubcurveNavigator(sourcePoly, cutLines, tolerance);
 
 			List<List<Pnt3D>> xyClusters;
 			bool hasVerticalPoints = HasVerticalPoints(
-				ringNavigator.IntersectionPointNavigator.IntersectionsAlongTarget.Select(i => i.Point),
+				ringNavigator.IntersectionPointNavigator.IntersectionsAlongTarget.Select(
+					i => i.Point),
 				tolerance, out xyClusters);
 
 			if (hasVerticalPoints)
@@ -278,7 +279,7 @@ namespace ProSuite.Commons.Geom
 				(source, target) =>
 				{
 					var subcurveNavigator =
-						new MultipleRingNavigator(source, target, tolerance);
+						new SubcurveNavigator(source, target, tolerance);
 					var ringOperator = new RingOperator(subcurveNavigator);
 
 					return ringOperator.DifferenceXY();
@@ -327,7 +328,7 @@ namespace ProSuite.Commons.Geom
 				(source, target) =>
 				{
 					var subcurveNavigator =
-						new MultipleRingNavigator(source, target, tolerance);
+						new SubcurveNavigator(source, target, tolerance);
 
 					var ringOperator = new RingOperator(subcurveNavigator);
 
@@ -377,7 +378,7 @@ namespace ProSuite.Commons.Geom
 			Assert.ArgumentCondition(sourceRings.IsClosed, "Source must be closed.");
 			Assert.ArgumentCondition(targetRings.IsClosed, "Target must be closed.");
 
-			var subcurveNavigator = new MultipleRingNavigator(sourceRings, targetRings, tolerance);
+			var subcurveNavigator = new SubcurveNavigator(sourceRings, targetRings, tolerance);
 
 			var ringOperator = new RingOperator(subcurveNavigator);
 
@@ -425,8 +426,7 @@ namespace ProSuite.Commons.Geom
 		                                            Linestring target,
 		                                            double tolerance)
 		{
-			MultipleRingNavigator ringNavigator =
-				new MultipleRingNavigator(sourceRing, target, tolerance);
+			var ringNavigator = new SubcurveNavigator(sourceRing, target, tolerance);
 
 			var ringOperator = new RingOperator(ringNavigator);
 
@@ -449,7 +449,7 @@ namespace ProSuite.Commons.Geom
 		                             [NotNull] out IList<Linestring> leftRings,
 		                             [NotNull] out IList<Linestring> rightRings)
 		{
-			var ringNavigator = new MultipleRingNavigator(sourceRing, cutLine, tolerance);
+			var ringNavigator = new SubcurveNavigator(sourceRing, cutLine, tolerance);
 			RingOperator ringOperator = new RingOperator(ringNavigator);
 
 			return ringOperator.CutXY(out leftRings, out rightRings);
