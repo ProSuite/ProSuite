@@ -4,7 +4,6 @@ using System.Linq;
 using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
-using ProSuite.Commons.Geom.SpatialIndex;
 
 namespace ProSuite.Commons.Geom
 {
@@ -288,13 +287,6 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
-		public static IList<RingGroup> RemoveXY([NotNull] RingGroup fromSource,
-		                                        [NotNull] Linestring ringToRemove,
-		                                        double tolerance)
-		{
-			return RemoveXY(fromSource, new List<Linestring> {ringToRemove}, tolerance);
-		}
-
 		public static IList<IntersectionArea3D> GetIntersectionAreasXY(
 			[NotNull] MultiLinestring sourceRings,
 			[NotNull] Polyhedron targetPolyhedron,
@@ -392,82 +384,6 @@ namespace ProSuite.Commons.Geom
 			return ringOperator.UnionXY();
 		}
 
-		/// <summary>
-		/// Returns the areas which are part of the source source but not part of the
-		/// specified ringsToRemove (difference).
-		/// </summary>
-		/// <param name="fromSource"></param>
-		/// <param name="ringsToRemove"></param>
-		/// <param name="tolerance"></param>
-		/// <returns></returns>
-		public static IList<RingGroup> RemoveXY([NotNull] RingGroup fromSource,
-		                                        [NotNull] List<Linestring> ringsToRemove,
-		                                        double tolerance)
-		{
-			Linestring mainRing = fromSource.ExteriorRing;
-
-			Assert.True(mainRing.ClockwiseOriented == true,
-			            "The source is not oriented clockwise or it is vertical.");
-
-			List<Linestring> allRingsToRemove = ringsToRemove.ToList();
-			allRingsToRemove.AddRange(fromSource.InteriorRings);
-
-			// Remove all the overlapping (boundary crossing) inner rings (i.e. non-contained, non-disjoint)
-			var usedTargets = new HashSet<Linestring>();
-			IList<Linestring> remainingPositiveRings = TryProcessAll(
-				RemoveOverlapXY, mainRing, allRingsToRemove, tolerance,
-				usedTargets);
-
-			List<Linestring> disjointOrContainedIslands =
-				allRingsToRemove.Where(i => ! usedTargets.Contains(i)).ToList();
-
-			List<RingGroup> result = new List<RingGroup>();
-			foreach (Linestring remainingPositiveRing in remainingPositiveRings)
-			{
-				Func<Linestring, bool> completelyWithin =
-					r => GeomRelationUtils.AreaContainsXY(remainingPositiveRing, r.StartPoint,
-					                                      tolerance, true) == true;
-
-				var containedRings =
-					disjointOrContainedIslands.Where(completelyWithin).ToList();
-
-				IList<Linestring> innerRings;
-				if (containedRings.Count > 1)
-				{
-					innerRings = UnionInteriorRings(containedRings, tolerance);
-				}
-				else
-				{
-					innerRings = containedRings;
-				}
-
-				var resultRingGroup = CreateRingGroup(remainingPositiveRing,
-				                                      innerRings,
-				                                      tolerance);
-
-				result.Add(resultRingGroup);
-			}
-
-			return result;
-		}
-
-		public static IList<Linestring> RemoveOverlapXY(Linestring sourceRing,
-		                                                Linestring ringToRemove,
-		                                                double tolerance)
-		{
-			var ringOperator = new RingOperator(sourceRing, ringToRemove, tolerance);
-
-			IList<Linestring> result = ringOperator.RemoveOverlapXY();
-
-			foreach (Linestring linestring in result)
-			{
-				linestring.SpatialIndex =
-					SpatialHashSearcher<int>.CreateSpatialSearcher(linestring);
-			}
-
-			return result;
-		}
-
 		[NotNull]
 		public static IList<Linestring> IntersectPlanar(
 			[NotNull] Linestring sourceRing,
@@ -494,11 +410,11 @@ namespace ProSuite.Commons.Geom
 				var rotatedTarget = Rotate(targetRing, rotationAxis);
 
 				var rotatedResults =
-					RemoveOverlapXY(rotatedSource, rotatedTarget, tolerance);
+					IntersectXY(rotatedSource, rotatedTarget, tolerance);
 
 				return rotatedResults
 				       .Select(rotatedResult =>
-					               Rotate(rotatedResult, rotationAxis))
+					               RotateBack(rotatedResult, rotationAxis))
 				       .ToList();
 			}
 
@@ -533,7 +449,8 @@ namespace ProSuite.Commons.Geom
 		                             [NotNull] out IList<Linestring> leftRings,
 		                             [NotNull] out IList<Linestring> rightRings)
 		{
-			RingOperator ringOperator = new RingOperator(sourceRing, cutLine, tolerance);
+			var ringNavigator = new MultipleRingNavigator(sourceRing, cutLine, tolerance);
+			RingOperator ringOperator = new RingOperator(ringNavigator);
 
 			return ringOperator.CutXY(out leftRings, out rightRings);
 		}
@@ -4164,45 +4081,6 @@ namespace ProSuite.Commons.Geom
 
 		#endregion
 
-		[NotNull]
-		private static IList<Linestring> TryProcessAll(
-			Func<Linestring, Linestring, double, IList<Linestring>> func,
-			[NotNull] Linestring sourceRing,
-			[NotNull] IList<Linestring> targetLines,
-			double tolerance,
-			HashSet<Linestring> usedTargets)
-		{
-			var input = new List<Linestring> {sourceRing};
-
-			var result = new List<Linestring>();
-
-			// TODO: while-loop that re-tries un-used targets after each removal
-			foreach (Linestring target in targetLines)
-			{
-				result.Clear();
-
-				foreach (Linestring inputRing in input)
-				{
-					IList<Linestring> cutRings =
-						func(inputRing, target, tolerance);
-
-					if (cutRings.Count > 0)
-					{
-						result.AddRange(cutRings);
-						usedTargets.Add(target);
-					}
-					else
-					{
-						result.Add(inputRing);
-					}
-				}
-
-				input = result.ToList();
-			}
-
-			return result;
-		}
-
 		private static bool HasVerticalPoints(
 			IEnumerable<Pnt3D> orderedPoints,
 			double tolerance,
@@ -4374,40 +4252,6 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return result;
-		}
-
-		private static IList<Linestring> UnionInteriorRings(
-			List<Linestring> interiorRings, double tolerance)
-		{
-			List<Linestring> other = interiorRings.GetRange(1, interiorRings.Count - 1);
-
-			HashSet<Linestring> usedInMerge = new HashSet<Linestring>();
-			IList<Linestring> merged = TryProcessAll(RemoveOverlapXY, interiorRings[0],
-			                                         other, tolerance, usedInMerge);
-
-			return merged.Concat(other.Where(o => ! usedInMerge.Contains(o))).ToList();
-		}
-
-		private static RingGroup CreateRingGroup(
-			[NotNull] Linestring mainRing,
-			[NotNull] IEnumerable<Linestring> nonBoundaryCrossingPotentialIslands,
-			double tolerance)
-		{
-			var resultRingGroup = new RingGroup(mainRing);
-
-			foreach (Linestring disjointOrWithin in nonBoundaryCrossingPotentialIslands)
-			{
-				bool contained =
-					GeomRelationUtils.AreaContainsXY(mainRing, disjointOrWithin.StartPoint,
-					                                 tolerance, true) == true;
-				if (contained)
-				{
-					// TODO: Decide on copy policy. Currently the cut segments are not cloned 
-					resultRingGroup.AddInteriorRing(disjointOrWithin);
-				}
-			}
-
-			return resultRingGroup;
 		}
 
 		private static IEnumerable<Pnt3D> GetConnectedPoints(
