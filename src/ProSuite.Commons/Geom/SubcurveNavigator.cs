@@ -36,7 +36,7 @@ namespace ProSuite.Commons.Geom
 		/// All intersection points between the source and the target.
 		/// </summary>
 		public abstract IList<IntersectionPoint3D> IntersectionPoints { get; }
-		
+
 		protected HashSet<int> IntersectedSourcePartIndexes { get; } = new HashSet<int>();
 		protected HashSet<int> IntersectedTargetPartIndexes { get; } = new HashSet<int>();
 
@@ -99,6 +99,7 @@ namespace ProSuite.Commons.Geom
 					_intersectionPointNavigator =
 						new SubcurveIntersectionPointNavigator(IntersectionPoints, Source, Target);
 				}
+
 				return _intersectionPointNavigator;
 			}
 		}
@@ -179,6 +180,8 @@ namespace ProSuite.Commons.Geom
 
 			IntersectionPoint3D previousIntersection = startIntersection;
 			IntersectionPoint3D nextIntersection = null;
+
+			IntersectionPointNavigator.SetStartIntersection(startIntersection);
 
 			int count = 0;
 			// Start by following the source:
@@ -291,7 +294,8 @@ namespace ProSuite.Commons.Geom
 			IList<IntersectionPoint3D> intersectionsInboundTarget,
 			IList<IntersectionPoint3D> intersectionsOutboundTarget)
 		{
-			var firstAlongTarget = IntersectionPointNavigator.IntersectionsAlongTarget.FirstOrDefault();
+			var firstAlongTarget =
+				IntersectionPointNavigator.IntersectionsAlongTarget.FirstOrDefault();
 
 			if (firstAlongTarget != null &&
 			    intersectionsOutboundTarget.Contains(firstAlongTarget))
@@ -299,7 +303,8 @@ namespace ProSuite.Commons.Geom
 				intersectionsOutboundTarget.Remove(firstAlongTarget);
 			}
 
-			var lastAlongTarget = IntersectionPointNavigator.IntersectionsAlongTarget.LastOrDefault();
+			var lastAlongTarget =
+				IntersectionPointNavigator.IntersectionsAlongTarget.LastOrDefault();
 
 			if (lastAlongTarget != null &&
 			    intersectionsInboundTarget.Contains(lastAlongTarget))
@@ -719,6 +724,5 @@ namespace ProSuite.Commons.Geom
 			bool withSameOrientation,
 			bool includeContained,
 			bool includeNotContained);
-
 	}
 }

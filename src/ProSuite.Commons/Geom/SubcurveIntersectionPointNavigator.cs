@@ -62,6 +62,10 @@ namespace ProSuite.Commons.Geom
 			private set;
 		}
 
+		public void SetStartIntersection(IntersectionPoint3D startIntersection)
+		{
+			VisitedIntersections.Add(startIntersection);
+		}
 
 		public IntersectionPoint3D GetNextIntersection(IntersectionPoint3D previousIntersection,
 		                                               bool continueOnSource, bool continueForward)
@@ -83,6 +87,8 @@ namespace ProSuite.Commons.Geom
 				// Example: GeomTopoOpUtilsTest.CanGetIntersectionAreaXYWithLinearBoundaryIntersection()
 			} while (SkipIntersection(subcurveStart, nextIntersection));
 
+			VisitedIntersections.Add(nextIntersection);
+
 			return nextIntersection;
 		}
 
@@ -96,13 +102,39 @@ namespace ProSuite.Commons.Geom
 
 			if (nextIntersection.Type == IntersectionPointType.TouchingInPoint &&
 			    subcurveStartIntersection.SourcePartIndex != nextIntersection.SourcePartIndex &&
-			    !IsUnclosedTargetEnd(nextIntersection))
+			    ! IsUnclosedTargetEnd(nextIntersection))
 			{
+				return true;
+			}
+
+			if (_multiIntersection != null &&
+			    _multiIntersection.Contains(nextIntersection) &&
+			    HasDuplicateBeenVisited(nextIntersection))
+			{
+				// Skip it
 				return true;
 			}
 
 			return false;
 		}
+
+		private bool HasDuplicateBeenVisited(IntersectionPoint3D intersection)
+		{
+			foreach (IntersectionPoint3D visitedIntersection in VisitedIntersections)
+			{
+				// ReSharper disable once CompareOfFloatsByEqualityOperator
+				if (visitedIntersection != intersection &&
+				    visitedIntersection.ReferencesSameTargetVertex(intersection, Target))
+				{
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		public HashSet<IntersectionPoint3D> VisitedIntersections { get; } =
+			new HashSet<IntersectionPoint3D>();
 
 		private bool IsUnclosedTargetEnd([NotNull] IntersectionPoint3D intersectionPoint)
 		{
@@ -152,7 +184,6 @@ namespace ProSuite.Commons.Geom
 			return result;
 		}
 
-
 		private IntersectionPoint3D GetNextIntersectionInSourceList(
 			IntersectionPoint3D thisIntersection)
 		{
@@ -175,7 +206,6 @@ namespace ProSuite.Commons.Geom
 
 			return IntersectionsAlongSource.First(i => i.SourcePartIndex == thisPartIdx);
 		}
-
 
 		public IntersectionPoint3D GetNextIntersectionInTargetList(
 			IntersectionPoint3D current, bool continueForward)
@@ -215,7 +245,7 @@ namespace ProSuite.Commons.Geom
 				out _multiIntersection);
 		}
 
-		private static Dictionary<IntersectionPoint3D, KeyValuePair<int, int>>
+		private Dictionary<IntersectionPoint3D, KeyValuePair<int, int>>
 			GetOrderedIntersectionPoints(
 				[NotNull] IList<IntersectionPoint3D> intersectionPoints,
 				out IList<IntersectionPoint3D> intersectionsAlongSource,
@@ -253,7 +283,7 @@ namespace ProSuite.Commons.Geom
 			return intersectionOrders;
 		}
 
-		private static HashSet<IntersectionPoint3D> DetermineDuplicateIntersections(
+		private HashSet<IntersectionPoint3D> DetermineDuplicateIntersections(
 			IList<IntersectionPoint3D> intersectionsAlongTarget)
 		{
 			HashSet<IntersectionPoint3D> result = new HashSet<IntersectionPoint3D>();
@@ -264,7 +294,7 @@ namespace ProSuite.Commons.Geom
 				if (previous != null)
 				{
 					// ReSharper disable once CompareOfFloatsByEqualityOperator
-					if (previous.VirtualTargetVertex == intersection.VirtualTargetVertex)
+					if (previous.ReferencesSameTargetVertex(intersection, Target))
 					{
 						result.Add(previous);
 						result.Add(intersection);
@@ -279,7 +309,7 @@ namespace ProSuite.Commons.Geom
 				// Compare last with first
 
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
-				if (previous.VirtualTargetVertex == intersectionsAlongTarget[0].VirtualTargetVertex)
+				if (previous.ReferencesSameTargetVertex(intersectionsAlongTarget[0], Target))
 				{
 					result.Add(previous);
 					result.Add(intersectionsAlongTarget[0]);
