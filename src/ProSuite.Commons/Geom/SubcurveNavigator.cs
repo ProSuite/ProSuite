@@ -8,8 +8,6 @@ namespace ProSuite.Commons.Geom
 {
 	public abstract class SubcurveNavigator
 	{
-		private IList<IntersectionPoint3D> _intersectionsInboundTarget;
-		private IList<IntersectionPoint3D> _intersectionsOutboundTarget;
 		private SubcurveIntersectionPointNavigator _intersectionPointNavigator;
 
 		protected SubcurveNavigator(ISegmentList source,
@@ -51,40 +49,16 @@ namespace ProSuite.Commons.Geom
 		/// from the inside. The target linestring does not necessarily have to continue
 		/// to the outside.
 		/// </summary>
-		public virtual IEnumerable<IntersectionPoint3D> IntersectionsOutboundTarget
-		{
-			get
-			{
-				if (_intersectionsOutboundTarget == null)
-				{
-					ClassifyIntersections(Source, Target,
-					                      out _intersectionsInboundTarget,
-					                      out _intersectionsOutboundTarget);
-				}
-
-				return Assert.NotNull(_intersectionsOutboundTarget);
-			}
-		}
+		public IEnumerable<IntersectionPoint3D> IntersectionsOutboundTarget =>
+			Assert.NotNull(IntersectionPointNavigator.IntersectionsOutboundTarget);
 
 		/// <summary>
 		/// Intersections at which the target 'departs' from the source ring boundary
 		/// to the inside. The target linestring does not necessarily have to arrive
 		/// from the outside.
 		/// </summary>
-		public virtual IEnumerable<IntersectionPoint3D> IntersectionsInboundTarget
-		{
-			get
-			{
-				if (_intersectionsInboundTarget == null)
-				{
-					ClassifyIntersections(Source, Target,
-					                      out _intersectionsInboundTarget,
-					                      out _intersectionsOutboundTarget);
-				}
-
-				return _intersectionsInboundTarget;
-			}
-		}
+		public IEnumerable<IntersectionPoint3D> IntersectionsInboundTarget =>
+			Assert.NotNull(IntersectionPointNavigator.IntersectionsInboundTarget);
 
 		// TODO: Once the SingleRingNavigator is removed, this could be a parameter of
 		//       SetTurnDirection()
@@ -283,92 +257,6 @@ namespace ProSuite.Commons.Geom
 			int partIndex,
 			bool continueForward,
 			out Linestring subcurve);
-
-		/// <summary>
-		/// Removes the inbound/outbound target intersections that would allow going into a dead-end.
-		/// This analysis has to be performed on a per-source-ring basis.
-		/// </summary>
-		/// <param name="intersectionsInboundTarget"></param>
-		/// <param name="intersectionsOutboundTarget"></param>
-		protected virtual void RemoveDeadEndIntersections(
-			IList<IntersectionPoint3D> intersectionsInboundTarget,
-			IList<IntersectionPoint3D> intersectionsOutboundTarget)
-		{
-			var firstAlongTarget =
-				IntersectionPointNavigator.IntersectionsAlongTarget.FirstOrDefault();
-
-			if (firstAlongTarget != null &&
-			    intersectionsOutboundTarget.Contains(firstAlongTarget))
-			{
-				intersectionsOutboundTarget.Remove(firstAlongTarget);
-			}
-
-			var lastAlongTarget =
-				IntersectionPointNavigator.IntersectionsAlongTarget.LastOrDefault();
-
-			if (lastAlongTarget != null &&
-			    intersectionsInboundTarget.Contains(lastAlongTarget))
-			{
-				// dangle at the end of the cut line
-				intersectionsInboundTarget.Remove(lastAlongTarget);
-			}
-		}
-
-		private static IEnumerable<IntersectionPoint3D> GetIntersectionsNotUsedForNavigation(
-			[NotNull] IList<IntersectionPoint3D> intersectionPoints,
-			[NotNull] ISegmentList source,
-			[NotNull] ISegmentList target)
-		{
-			// The 'standard' linear intersection breaks at ring start/end:
-			foreach (IntersectionPoint3D linearStartBreak in
-			         GeomTopoOpUtils.GetLinearIntersectionBreaksAtRingStart(
-				         source, target, intersectionPoints))
-			{
-				yield return linearStartBreak;
-			}
-
-			// Other linear intersection breaks that are not real (from a 2D perspective)
-			foreach (var pseudoBreak in GeomTopoOpUtils.GetLinearIntersectionPseudoBreaks(
-				         intersectionPoints))
-			{
-				yield return pseudoBreak;
-			}
-		}
-
-		private static Dictionary<IntersectionPoint3D, KeyValuePair<int, int>>
-			GetOrderedIntersectionPoints(
-				[NotNull] IList<IntersectionPoint3D> intersectionPoints,
-				out IList<IntersectionPoint3D> intersectionsAlongSource,
-				out IList<IntersectionPoint3D> intersectionsAlongTarget)
-		{
-			intersectionsAlongSource =
-				intersectionPoints.OrderBy(i => i.SourcePartIndex)
-				                  .ThenBy(i => i.VirtualSourceVertex).ToList();
-
-			intersectionsAlongTarget =
-				intersectionPoints.OrderBy(i => i.TargetPartIndex)
-				                  .ThenBy(i => i.VirtualTargetVertex).ToList();
-
-			var intersectionOrders =
-				new Dictionary<IntersectionPoint3D, KeyValuePair<int, int>>();
-
-			var sourceIndex = 0;
-			foreach (IntersectionPoint3D intersection in intersectionsAlongSource)
-			{
-				intersectionOrders.Add(intersection,
-				                       new KeyValuePair<int, int>(sourceIndex++, -1));
-			}
-
-			var targetIndex = 0;
-			foreach (IntersectionPoint3D intersection in intersectionsAlongTarget)
-			{
-				sourceIndex = intersectionOrders[intersection].Key;
-				intersectionOrders[intersection] =
-					new KeyValuePair<int, int>(sourceIndex, targetIndex++);
-			}
-
-			return intersectionOrders;
-		}
 
 		/// <summary>
 		///   Gets the line that enters the intersection point when moving along as specified
@@ -622,54 +510,6 @@ namespace ProSuite.Commons.Geom
 		public abstract IEnumerable<Linestring> GetSourceRingsCompletelyWithinTarget();
 
 		public abstract IEnumerable<Linestring> GetTargetRingsCompletelyWithinSource();
-
-		private void ClassifyIntersections(
-			[NotNull] ISegmentList source,
-			[NotNull] ISegmentList target,
-			[NotNull] out IList<IntersectionPoint3D> intersectionsInboundTarget,
-			[NotNull] out IList<IntersectionPoint3D> intersectionsOutboundTarget)
-		{
-			intersectionsInboundTarget = new List<IntersectionPoint3D>();
-			intersectionsOutboundTarget = new List<IntersectionPoint3D>();
-			IntersectionPointNavigator.IntersectionsNotUsedForNavigation.Clear();
-
-			// Filter all non-real linear intersections (i. e. those where no deviation between
-			// source and target exists. This is important to avoid incorrect inbound/outbound
-			// and turn-direction decisions because the two lines continue (almost at the same
-			// angle.
-			var usableIntersections = IntersectionPointNavigator.IntersectionsAlongSource.ToList();
-
-			foreach (IntersectionPoint3D unusable in GetIntersectionsNotUsedForNavigation(
-				         IntersectionPointNavigator.IntersectionsAlongSource, Source, Target))
-			{
-				usableIntersections.Remove(unusable);
-				IntersectionPointNavigator.IntersectionsNotUsedForNavigation.Add(unusable);
-			}
-
-			foreach (IntersectionPoint3D intersectionPoint3D in usableIntersections)
-			{
-				intersectionPoint3D.ClassifyTargetTrajectory(source, target,
-				                                             out bool? targetContinuesToRightSide,
-				                                             out bool? targetArrivesFromRightSide);
-
-				// In-bound takes precedence because if the target is both inbound and outbound (i.e. touching from inside)
-				// the resulting part is on the left of the cut line which is consistent with other in-bound intersections.
-				if (targetContinuesToRightSide == true)
-				{
-					intersectionsInboundTarget.Add(intersectionPoint3D);
-				}
-				else if (targetArrivesFromRightSide == true)
-				{
-					intersectionsOutboundTarget.Add(intersectionPoint3D);
-				}
-			}
-
-			if (! target.IsClosed)
-			{
-				// Remove dangles that cannot cut and would lead to duplicate result rings
-				RemoveDeadEndIntersections(intersectionsInboundTarget, intersectionsOutboundTarget);
-			}
-		}
 
 		private void PreferTargetZ(IntersectionPoint3D atIntersection, Pnt3D resultPoint)
 		{

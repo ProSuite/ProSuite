@@ -200,7 +200,7 @@ namespace ProSuite.Commons.Geom
 		/// Returns the distance of the point along the line expressed as ratio (factor).
 		/// If the point is within the tolerance of the line's start or end point, the 
 		/// factor will be snapped to 0 or 1, respectively. If the point is not on the line,
-		/// NaN is  returned.
+		/// NaN is returned.
 		/// </summary>
 		/// <param name="line"></param>
 		/// <param name="point"></param>

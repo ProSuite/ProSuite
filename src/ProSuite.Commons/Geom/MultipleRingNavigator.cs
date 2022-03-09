@@ -184,7 +184,8 @@ namespace ProSuite.Commons.Geom
 			out Linestring subcurve)
 		{
 			IntersectionPoint3D nextIntersection =
-				IntersectionPointNavigator.GetNextIntersection(previousIntersection, continueOnSource, continueForward);
+				IntersectionPointNavigator.GetNextIntersection(
+					previousIntersection, continueOnSource, continueForward);
 
 			if (continueOnSource)
 			{
@@ -203,44 +204,6 @@ namespace ProSuite.Commons.Geom
 			return nextIntersection;
 		}
 
-
-		protected override void RemoveDeadEndIntersections(
-			IList<IntersectionPoint3D> intersectionsInboundTarget,
-			IList<IntersectionPoint3D> intersectionsOutboundTarget)
-		{
-			foreach (int sourcePartIdx in _intersectionPoints
-			                              .Select(ip => ip.SourcePartIndex).Distinct())
-			{
-				var firstAlongTarget =
-					IntersectionPointNavigator.IntersectionsAlongTarget.FirstOrDefault(
-						ip => ip.SourcePartIndex == sourcePartIdx);
-
-				if (firstAlongTarget != null &&
-				    intersectionsOutboundTarget.Contains(firstAlongTarget))
-				{
-					// The first intersection is outbound -> cannot cut, unless this part is closed
-					if (! Target.GetPart(firstAlongTarget.TargetPartIndex).IsClosed)
-					{
-						intersectionsOutboundTarget.Remove(firstAlongTarget);
-					}
-				}
-
-				var lastAlongTarget =
-					IntersectionPointNavigator.IntersectionsAlongTarget.LastOrDefault(
-						ip => ip.SourcePartIndex == sourcePartIdx);
-
-				if (lastAlongTarget != null &&
-				    intersectionsInboundTarget.Contains(lastAlongTarget))
-				{
-					// dangle at the end of the cut line: cannot cut, unless the part is closed
-					if (! Target.GetPart(lastAlongTarget.TargetPartIndex).IsClosed)
-					{
-						intersectionsInboundTarget.Remove(lastAlongTarget);
-					}
-				}
-			}
-		}
-
 		public override IEnumerable<Linestring> GetNonIntersectedSourceRings()
 		{
 			return GetUnused(Source, IntersectedSourcePartIndexes);
@@ -254,8 +217,8 @@ namespace ProSuite.Commons.Geom
 				// No inbound/outbound, but possibly linear intersection starting/ending in the same point:
 
 				var intersectionPoints = IntersectionPointNavigator.IntersectionsAlongSource
-				                         .Where(i => i.SourcePartIndex == unCutSourceIdx)
-				                         .ToList();
+					.Where(i => i.SourcePartIndex == unCutSourceIdx)
+					.ToList();
 
 				if (intersectionPoints.Count == 2 &&
 				    intersectionPoints[0].TargetPartIndex ==
@@ -284,7 +247,8 @@ namespace ProSuite.Commons.Geom
 				// No inbound/outbound, but possibly touching or linear intersections
 
 				bool? isContainedXY = GeomRelationUtils.IsContainedXY(
-					Source, Target, Tolerance, IntersectionPointNavigator.IntersectionsAlongSource, unCutSourceIdx);
+					Source, Target, Tolerance, IntersectionPointNavigator.IntersectionsAlongSource,
+					unCutSourceIdx);
 
 				if (isContainedXY == null && includeCongruent)
 				{
@@ -295,7 +259,8 @@ namespace ProSuite.Commons.Geom
 						IntersectionPointNavigator.IntersectionsAlongSource
 						                          .Where(
 							                          i => i.SourcePartIndex == unCutSourceIdx &&
-							                               i.Type == IntersectionPointType.LinearIntersectionStart &&
+							                               i.Type == IntersectionPointType
+								                               .LinearIntersectionStart &&
 							                               i.VirtualSourceVertex == 0)
 						                          .GroupBy(i => i.TargetPartIndex)
 						                          .Single().Key;
@@ -336,8 +301,8 @@ namespace ProSuite.Commons.Geom
 				// No inbound/outbound, but possibly linear intersection starting/ending in the same point:
 
 				var intersectionPoints = IntersectionPointNavigator.IntersectionsAlongSource
-				                         .Where(i => i.SourcePartIndex == unCutSourceIdx)
-				                         .ToList();
+					.Where(i => i.SourcePartIndex == unCutSourceIdx)
+					.ToList();
 
 				if (IsSourceCongruentWithTargetXY(intersectionPoints))
 				{
@@ -353,7 +318,8 @@ namespace ProSuite.Commons.Geom
 				         Source.PartCount, IntersectedSourcePartIndexes))
 			{
 				if (false == GeomRelationUtils.IsContainedXY(
-					    Source, Target, Tolerance, IntersectionPointNavigator.IntersectionsAlongSource, unCutSourceIdx))
+					    Source, Target, Tolerance,
+					    IntersectionPointNavigator.IntersectionsAlongSource, unCutSourceIdx))
 				{
 					yield return GetSourcePart(unCutSourceIdx);
 				}
@@ -368,7 +334,8 @@ namespace ProSuite.Commons.Geom
 				// No inbound/outbound, but possibly touching or linear intersections
 
 				if (true == GeomRelationUtils.IsContainedXY(
-					    Source, Target, Tolerance, IntersectionPointNavigator.IntersectionsAlongSource, unCutSourceIdx))
+					    Source, Target, Tolerance,
+					    IntersectionPointNavigator.IntersectionsAlongSource, unCutSourceIdx))
 				{
 					yield return GetSourcePart(unCutSourceIdx);
 				}
@@ -390,7 +357,8 @@ namespace ProSuite.Commons.Geom
 				Linestring targetRing = Target.GetPart(unCutTargetIdx);
 
 				if (true == GeomRelationUtils.AreaContainsXY(Source, Target, Tolerance,
-				                                             IntersectionPointNavigator.IntersectionsAlongTarget,
+				                                             IntersectionPointNavigator
+					                                             .IntersectionsAlongTarget,
 				                                             unCutTargetIdx))
 				{
 					yield return targetRing;
@@ -506,15 +474,15 @@ namespace ProSuite.Commons.Geom
 			}
 
 			if (forward &&
-			    ! CanConnectToSourcePartAlongTargetForward(startingAt,
-			                                               initialSourcePartForRingResult.Value))
+			    ! IntersectionPointNavigator.CanConnectToSourcePartAlongTargetForward(startingAt,
+				    initialSourcePartForRingResult.Value))
 			{
 				// last intersection along a non-closed target (dangle!), cannot follow
 				return false;
 			}
 
 			if (! forward &&
-			    ! CanConnectToSourcePartAlongTargetBackwards(
+			    ! IntersectionPointNavigator.CanConnectToSourcePartAlongTargetBackwards(
 				    startingAt, initialSourcePartForRingResult.Value))
 			{
 				// first intersection along a non-closed target, cannot follow
@@ -522,27 +490,6 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return true;
-		}
-
-		private bool CanConnectToSourcePartAlongTargetForward(
-			[NotNull] IntersectionPoint3D fromIntersection,
-			int initialSourcePartIdx)
-		{
-			int targetIdx = IntersectionPointNavigator.IntersectionOrders[fromIntersection].Value;
-
-			// Any following intersection along the same target part that intersects the required source part?
-			while (++targetIdx < IntersectionPointNavigator.IntersectionsAlongTarget.Count)
-			{
-				IntersectionPoint3D laterIntersection = IntersectionPointNavigator.IntersectionsAlongTarget[targetIdx];
-
-				if (laterIntersection.TargetPartIndex == fromIntersection.TargetPartIndex &&
-				    laterIntersection.SourcePartIndex == initialSourcePartIdx)
-				{
-					return true;
-				}
-			}
-
-			return false;
 		}
 
 		private bool IsLastIntersectionInTargetPart(IntersectionPoint3D intersection,
@@ -553,7 +500,8 @@ namespace ProSuite.Commons.Geom
 			// Any following intersection in the same target part that intersects the same source part?
 			while (++targetIdx < IntersectionPointNavigator.IntersectionsAlongTarget.Count)
 			{
-				IntersectionPoint3D laterIntersection = IntersectionPointNavigator.IntersectionsAlongTarget[targetIdx];
+				IntersectionPoint3D laterIntersection =
+					IntersectionPointNavigator.IntersectionsAlongTarget[targetIdx];
 
 				if (laterIntersection.TargetPartIndex == intersection.TargetPartIndex &&
 				    laterIntersection.SourcePartIndex == initialSourcePartIdx)
@@ -565,27 +513,6 @@ namespace ProSuite.Commons.Geom
 			return true;
 		}
 
-		private bool CanConnectToSourcePartAlongTargetBackwards(
-			IntersectionPoint3D fromIntersection,
-			int initialSourcePartIdx)
-		{
-			int targetIdx = IntersectionPointNavigator.IntersectionOrders[fromIntersection].Value;
-
-			// Any previous intersection in the same part that intersects the same source part?
-			while (--targetIdx >= 0)
-			{
-				IntersectionPoint3D previousIntersection = IntersectionPointNavigator.IntersectionsAlongTarget[targetIdx];
-
-				if (previousIntersection.TargetPartIndex == fromIntersection.TargetPartIndex &&
-				    previousIntersection.SourcePartIndex == initialSourcePartIdx)
-				{
-					return true;
-				}
-			}
-
-			return false;
-		}
-
 		private bool IsFirstIntersectionInTargetPart(IntersectionPoint3D intersection)
 		{
 			int targetIdx = IntersectionPointNavigator.IntersectionOrders[intersection].Value;
@@ -593,7 +520,8 @@ namespace ProSuite.Commons.Geom
 			// Any previous intersection in the same part that intersects the same source part?
 			while (--targetIdx >= 0)
 			{
-				IntersectionPoint3D previousIntersection = IntersectionPointNavigator.IntersectionsAlongTarget[targetIdx];
+				IntersectionPoint3D previousIntersection =
+					IntersectionPointNavigator.IntersectionsAlongTarget[targetIdx];
 
 				if (previousIntersection.TargetPartIndex == intersection.TargetPartIndex &&
 				    previousIntersection.SourcePartIndex == intersection.SourcePartIndex)
@@ -693,7 +621,7 @@ namespace ProSuite.Commons.Geom
 				yield return i;
 			}
 		}
-		
+
 		private static IEnumerable<int> GetIntersectingTargetPartIndexes(
 			IEnumerable<IntersectionPoint3D> intersectionPoints)
 		{
