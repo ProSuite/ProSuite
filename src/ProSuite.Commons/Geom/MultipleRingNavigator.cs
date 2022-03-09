@@ -183,74 +183,26 @@ namespace ProSuite.Commons.Geom
 			bool continueForward,
 			out Linestring subcurve)
 		{
-			IntersectionPoint3D subcurveStart = previousIntersection;
-			IntersectionPoint3D nextIntersection;
-
-			do
-			{
-				nextIntersection =
-					continueOnSource
-						? GetNextIntersectionAlongSource(previousIntersection)
-						: GetNextIntersectionAlongTarget(previousIntersection, continueForward);
-
-				previousIntersection = nextIntersection;
-
-				// Skip pseudo-breaks to avoid going astray due to minimal angle-differences:
-				// Example: GeomTopoOpUtilsTest.CanGetIntersectionAreaXYWithLinearBoundaryIntersection()
-			} while (SkipIntersection(subcurveStart, nextIntersection));
+			IntersectionPoint3D nextIntersection =
+				IntersectionPointNavigator.GetNextIntersection(previousIntersection, continueOnSource, continueForward);
 
 			if (continueOnSource)
 			{
-				subcurve = GetSourceSubcurve(subcurveStart, nextIntersection);
+				subcurve = GetSourceSubcurve(previousIntersection, nextIntersection);
 			}
 			else
 			{
 				// TODO: Handle verticals?
 
-				Linestring targetPart = Target.GetPart(subcurveStart.TargetPartIndex);
+				Linestring targetPart = Target.GetPart(previousIntersection.TargetPartIndex);
 
-				subcurve = GetTargetSubcurve(targetPart, subcurveStart,
+				subcurve = GetTargetSubcurve(targetPart, previousIntersection,
 				                             nextIntersection, continueForward);
 			}
 
 			return nextIntersection;
 		}
 
-		private bool SkipIntersection(IntersectionPoint3D subcurveStartIntersection,
-		                              IntersectionPoint3D nextIntersection)
-		{
-			if (IntersectionsNotUsedForNavigation.Contains(nextIntersection))
-			{
-				return true;
-			}
-
-			if (nextIntersection.Type == IntersectionPointType.TouchingInPoint &&
-			    subcurveStartIntersection.SourcePartIndex != nextIntersection.SourcePartIndex &&
-			    ! IsUnclosedTargetEnd(nextIntersection))
-			{
-				return true;
-			}
-
-			return false;
-		}
-
-		private bool IsUnclosedTargetEnd([NotNull] IntersectionPoint3D intersectionPoint)
-		{
-			Linestring targetPart = Target.GetPart(intersectionPoint.TargetPartIndex);
-
-			if (targetPart.IsClosed)
-			{
-				return false;
-			}
-
-			if (intersectionPoint.VirtualTargetVertex > 0 &&
-			    intersectionPoint.VirtualTargetVertex < targetPart.PointCount - 1)
-			{
-				return false;
-			}
-
-			return true;
-		}
 
 		protected override void RemoveDeadEndIntersections(
 			IList<IntersectionPoint3D> intersectionsInboundTarget,
@@ -260,7 +212,7 @@ namespace ProSuite.Commons.Geom
 			                              .Select(ip => ip.SourcePartIndex).Distinct())
 			{
 				var firstAlongTarget =
-					IntersectionsAlongTarget.FirstOrDefault(
+					IntersectionPointNavigator.IntersectionsAlongTarget.FirstOrDefault(
 						ip => ip.SourcePartIndex == sourcePartIdx);
 
 				if (firstAlongTarget != null &&
@@ -274,7 +226,7 @@ namespace ProSuite.Commons.Geom
 				}
 
 				var lastAlongTarget =
-					IntersectionsAlongTarget.LastOrDefault(
+					IntersectionPointNavigator.IntersectionsAlongTarget.LastOrDefault(
 						ip => ip.SourcePartIndex == sourcePartIdx);
 
 				if (lastAlongTarget != null &&
@@ -289,29 +241,6 @@ namespace ProSuite.Commons.Geom
 			}
 		}
 
-		protected override IntersectionPoint3D GetNextIntersectionAlongSource(
-			IntersectionPoint3D thisIntersection)
-		{
-			int previousSourceIdx = IntersectionOrders[thisIntersection].Key;
-
-			int nextSourceIdx = previousSourceIdx + 1;
-
-			if (nextSourceIdx == IntersectionsAlongSource.Count)
-			{
-				nextSourceIdx = 0;
-			}
-
-			int thisPartIdx = thisIntersection.SourcePartIndex;
-
-			if (nextSourceIdx < IntersectionsAlongSource.Count &&
-			    IntersectionsAlongSource[nextSourceIdx].SourcePartIndex == thisPartIdx)
-			{
-				return IntersectionsAlongSource[nextSourceIdx];
-			}
-
-			return IntersectionsAlongSource.First(i => i.SourcePartIndex == thisPartIdx);
-		}
-
 		public override IEnumerable<Linestring> GetNonIntersectedSourceRings()
 		{
 			return GetUnused(Source, IntersectedSourcePartIndexes);
@@ -324,7 +253,7 @@ namespace ProSuite.Commons.Geom
 			{
 				// No inbound/outbound, but possibly linear intersection starting/ending in the same point:
 
-				var intersectionPoints = IntersectionsAlongSource
+				var intersectionPoints = IntersectionPointNavigator.IntersectionsAlongSource
 				                         .Where(i => i.SourcePartIndex == unCutSourceIdx)
 				                         .ToList();
 
@@ -355,7 +284,7 @@ namespace ProSuite.Commons.Geom
 				// No inbound/outbound, but possibly touching or linear intersections
 
 				bool? isContainedXY = GeomRelationUtils.IsContainedXY(
-					Source, Target, Tolerance, IntersectionsAlongSource, unCutSourceIdx);
+					Source, Target, Tolerance, IntersectionPointNavigator.IntersectionsAlongSource, unCutSourceIdx);
 
 				if (isContainedXY == null && includeCongruent)
 				{
@@ -363,13 +292,13 @@ namespace ProSuite.Commons.Geom
 					Linestring sourceRing = Source.GetPart(unCutSourceIdx);
 
 					int targetIndex =
-						IntersectionsAlongSource
-							.Where(
-								i => i.SourcePartIndex == unCutSourceIdx &&
-								     i.Type == IntersectionPointType.LinearIntersectionStart &&
-								     i.VirtualSourceVertex == 0)
-							.GroupBy(i => i.TargetPartIndex)
-							.Single().Key;
+						IntersectionPointNavigator.IntersectionsAlongSource
+						                          .Where(
+							                          i => i.SourcePartIndex == unCutSourceIdx &&
+							                               i.Type == IntersectionPointType.LinearIntersectionStart &&
+							                               i.VirtualSourceVertex == 0)
+						                          .GroupBy(i => i.TargetPartIndex)
+						                          .Single().Key;
 
 					Linestring targetRing = Target.GetPart(targetIndex);
 
@@ -406,7 +335,7 @@ namespace ProSuite.Commons.Geom
 			{
 				// No inbound/outbound, but possibly linear intersection starting/ending in the same point:
 
-				var intersectionPoints = IntersectionsAlongSource
+				var intersectionPoints = IntersectionPointNavigator.IntersectionsAlongSource
 				                         .Where(i => i.SourcePartIndex == unCutSourceIdx)
 				                         .ToList();
 
@@ -424,7 +353,7 @@ namespace ProSuite.Commons.Geom
 				         Source.PartCount, IntersectedSourcePartIndexes))
 			{
 				if (false == GeomRelationUtils.IsContainedXY(
-					    Source, Target, Tolerance, IntersectionsAlongSource, unCutSourceIdx))
+					    Source, Target, Tolerance, IntersectionPointNavigator.IntersectionsAlongSource, unCutSourceIdx))
 				{
 					yield return GetSourcePart(unCutSourceIdx);
 				}
@@ -439,7 +368,7 @@ namespace ProSuite.Commons.Geom
 				// No inbound/outbound, but possibly touching or linear intersections
 
 				if (true == GeomRelationUtils.IsContainedXY(
-					    Source, Target, Tolerance, IntersectionsAlongSource, unCutSourceIdx))
+					    Source, Target, Tolerance, IntersectionPointNavigator.IntersectionsAlongSource, unCutSourceIdx))
 				{
 					yield return GetSourcePart(unCutSourceIdx);
 				}
@@ -461,7 +390,7 @@ namespace ProSuite.Commons.Geom
 				Linestring targetRing = Target.GetPart(unCutTargetIdx);
 
 				if (true == GeomRelationUtils.AreaContainsXY(Source, Target, Tolerance,
-				                                             IntersectionsAlongTarget,
+				                                             IntersectionPointNavigator.IntersectionsAlongTarget,
 				                                             unCutTargetIdx))
 				{
 					yield return targetRing;
@@ -483,14 +412,14 @@ namespace ProSuite.Commons.Geom
 
 			var alongSourceIndexes = new List<double>();
 
-			foreach (var intersectionPoint in IntersectionsAlongTarget)
+			foreach (var intersectionPoint in IntersectionPointNavigator.IntersectionsAlongTarget)
 			{
 				alongSourceIndexes.Add(intersectionPoint.VirtualSourceVertex);
 			}
 
 			int startIdx = alongSourceIndexes.IndexOf(alongSourceIndexes.Min());
 
-			int nextIdx = startIdx == IntersectionsAlongSource.Count - 1
+			int nextIdx = startIdx == IntersectionPointNavigator.IntersectionsAlongSource.Count - 1
 				              ? 0
 				              : startIdx + 1;
 
@@ -599,12 +528,12 @@ namespace ProSuite.Commons.Geom
 			[NotNull] IntersectionPoint3D fromIntersection,
 			int initialSourcePartIdx)
 		{
-			int targetIdx = IntersectionOrders[fromIntersection].Value;
+			int targetIdx = IntersectionPointNavigator.IntersectionOrders[fromIntersection].Value;
 
 			// Any following intersection along the same target part that intersects the required source part?
-			while (++targetIdx < IntersectionsAlongTarget.Count)
+			while (++targetIdx < IntersectionPointNavigator.IntersectionsAlongTarget.Count)
 			{
-				IntersectionPoint3D laterIntersection = IntersectionsAlongTarget[targetIdx];
+				IntersectionPoint3D laterIntersection = IntersectionPointNavigator.IntersectionsAlongTarget[targetIdx];
 
 				if (laterIntersection.TargetPartIndex == fromIntersection.TargetPartIndex &&
 				    laterIntersection.SourcePartIndex == initialSourcePartIdx)
@@ -619,12 +548,12 @@ namespace ProSuite.Commons.Geom
 		private bool IsLastIntersectionInTargetPart(IntersectionPoint3D intersection,
 		                                            int initialSourcePartIdx)
 		{
-			int targetIdx = IntersectionOrders[intersection].Value;
+			int targetIdx = IntersectionPointNavigator.IntersectionOrders[intersection].Value;
 
 			// Any following intersection in the same target part that intersects the same source part?
-			while (++targetIdx < IntersectionsAlongTarget.Count)
+			while (++targetIdx < IntersectionPointNavigator.IntersectionsAlongTarget.Count)
 			{
-				IntersectionPoint3D laterIntersection = IntersectionsAlongTarget[targetIdx];
+				IntersectionPoint3D laterIntersection = IntersectionPointNavigator.IntersectionsAlongTarget[targetIdx];
 
 				if (laterIntersection.TargetPartIndex == intersection.TargetPartIndex &&
 				    laterIntersection.SourcePartIndex == initialSourcePartIdx)
@@ -640,12 +569,12 @@ namespace ProSuite.Commons.Geom
 			IntersectionPoint3D fromIntersection,
 			int initialSourcePartIdx)
 		{
-			int targetIdx = IntersectionOrders[fromIntersection].Value;
+			int targetIdx = IntersectionPointNavigator.IntersectionOrders[fromIntersection].Value;
 
 			// Any previous intersection in the same part that intersects the same source part?
 			while (--targetIdx >= 0)
 			{
-				IntersectionPoint3D previousIntersection = IntersectionsAlongTarget[targetIdx];
+				IntersectionPoint3D previousIntersection = IntersectionPointNavigator.IntersectionsAlongTarget[targetIdx];
 
 				if (previousIntersection.TargetPartIndex == fromIntersection.TargetPartIndex &&
 				    previousIntersection.SourcePartIndex == initialSourcePartIdx)
@@ -659,12 +588,12 @@ namespace ProSuite.Commons.Geom
 
 		private bool IsFirstIntersectionInTargetPart(IntersectionPoint3D intersection)
 		{
-			int targetIdx = IntersectionOrders[intersection].Value;
+			int targetIdx = IntersectionPointNavigator.IntersectionOrders[intersection].Value;
 
 			// Any previous intersection in the same part that intersects the same source part?
 			while (--targetIdx >= 0)
 			{
-				IntersectionPoint3D previousIntersection = IntersectionsAlongTarget[targetIdx];
+				IntersectionPoint3D previousIntersection = IntersectionPointNavigator.IntersectionsAlongTarget[targetIdx];
 
 				if (previousIntersection.TargetPartIndex == intersection.TargetPartIndex &&
 				    previousIntersection.SourcePartIndex == intersection.SourcePartIndex)
@@ -764,36 +693,7 @@ namespace ProSuite.Commons.Geom
 				yield return i;
 			}
 		}
-
-		protected IntersectionPoint3D GetNextIntersectionAlongTarget(
-			IntersectionPoint3D current, bool continueForward)
-		{
-			int nextAlongTargetIdx;
-			int count = 0;
-
-			int currentTargetIdx = IntersectionOrders[current].Value;
-
-			do
-			{
-				nextAlongTargetIdx = (currentTargetIdx + (continueForward ? 1 : -1)) %
-				                     IntersectionsAlongTarget.Count;
-
-				// TODO: CollectionUtils.GetPreviousInCircularList()
-				if (nextAlongTargetIdx < 0)
-				{
-					nextAlongTargetIdx += IntersectionsAlongTarget.Count;
-				}
-
-				Assert.True(count++ <= IntersectionsAlongTarget.Count,
-				            "Cannot find next intersection in same target part");
-
-				currentTargetIdx = nextAlongTargetIdx;
-			} while (IntersectionsAlongTarget[nextAlongTargetIdx].TargetPartIndex !=
-			         current.TargetPartIndex);
-
-			return IntersectionsAlongTarget[nextAlongTargetIdx];
-		}
-
+		
 		private static IEnumerable<int> GetIntersectingTargetPartIndexes(
 			IEnumerable<IntersectionPoint3D> intersectionPoints)
 		{

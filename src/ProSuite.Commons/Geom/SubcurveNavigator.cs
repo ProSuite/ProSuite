@@ -8,11 +8,9 @@ namespace ProSuite.Commons.Geom
 {
 	public abstract class SubcurveNavigator
 	{
-		private IList<IntersectionPoint3D> _intersectionsAlongSource;
-
-		private IList<IntersectionPoint3D> _intersectionsAlongTarget;
 		private IList<IntersectionPoint3D> _intersectionsInboundTarget;
 		private IList<IntersectionPoint3D> _intersectionsOutboundTarget;
+		private SubcurveIntersectionPointNavigator _intersectionPointNavigator;
 
 		protected SubcurveNavigator(ISegmentList source,
 		                            ISegmentList target,
@@ -38,42 +36,7 @@ namespace ProSuite.Commons.Geom
 		/// All intersection points between the source and the target.
 		/// </summary>
 		public abstract IList<IntersectionPoint3D> IntersectionPoints { get; }
-
-		public IList<IntersectionPoint3D> IntersectionsAlongSource
-		{
-			get
-			{
-				if (_intersectionsAlongSource == null)
-				{
-					CalculateIntersections();
-				}
-
-				return _intersectionsAlongSource;
-			}
-		}
-
-		protected IList<IntersectionPoint3D> IntersectionsNotUsedForNavigation { get; set; } =
-			new List<IntersectionPoint3D>();
-
-		public IList<IntersectionPoint3D> IntersectionsAlongTarget
-		{
-			get
-			{
-				if (_intersectionsAlongTarget == null)
-				{
-					CalculateIntersections();
-				}
-
-				return _intersectionsAlongTarget;
-			}
-		}
-
-		protected Dictionary<IntersectionPoint3D, KeyValuePair<int, int>> IntersectionOrders
-		{
-			get;
-			private set;
-		}
-
+		
 		protected HashSet<int> IntersectedSourcePartIndexes { get; } = new HashSet<int>();
 		protected HashSet<int> IntersectedTargetPartIndexes { get; } = new HashSet<int>();
 
@@ -126,6 +89,19 @@ namespace ProSuite.Commons.Geom
 		// TODO: Once the SingleRingNavigator is removed, this could be a parameter of
 		//       SetTurnDirection()
 		internal TurnDirection PreferredTurnDirection { get; set; } = TurnDirection.Right;
+
+		public SubcurveIntersectionPointNavigator IntersectionPointNavigator
+		{
+			get
+			{
+				if (_intersectionPointNavigator == null)
+				{
+					_intersectionPointNavigator =
+						new SubcurveIntersectionPointNavigator(IntersectionPoints, Source, Target);
+				}
+				return _intersectionPointNavigator;
+			}
+		}
 
 		/// <summary>
 		/// Moves from one intersection to the next by
@@ -315,7 +291,7 @@ namespace ProSuite.Commons.Geom
 			IList<IntersectionPoint3D> intersectionsInboundTarget,
 			IList<IntersectionPoint3D> intersectionsOutboundTarget)
 		{
-			var firstAlongTarget = IntersectionsAlongTarget.FirstOrDefault();
+			var firstAlongTarget = IntersectionPointNavigator.IntersectionsAlongTarget.FirstOrDefault();
 
 			if (firstAlongTarget != null &&
 			    intersectionsOutboundTarget.Contains(firstAlongTarget))
@@ -323,7 +299,7 @@ namespace ProSuite.Commons.Geom
 				intersectionsOutboundTarget.Remove(firstAlongTarget);
 			}
 
-			var lastAlongTarget = IntersectionsAlongTarget.LastOrDefault();
+			var lastAlongTarget = IntersectionPointNavigator.IntersectionsAlongTarget.LastOrDefault();
 
 			if (lastAlongTarget != null &&
 			    intersectionsInboundTarget.Contains(lastAlongTarget))
@@ -546,9 +522,6 @@ namespace ProSuite.Commons.Geom
 			return angleDifference;
 		}
 
-		protected abstract IntersectionPoint3D GetNextIntersectionAlongSource(
-			IntersectionPoint3D thisIntersection);
-
 		protected Linestring GetSourceSubcurve(
 			[NotNull] IntersectionPoint3D fromIntersection,
 			[NotNull] IntersectionPoint3D toIntersection)
@@ -645,14 +618,6 @@ namespace ProSuite.Commons.Geom
 
 		public abstract IEnumerable<Linestring> GetTargetRingsCompletelyWithinSource();
 
-		private void CalculateIntersections()
-		{
-			IntersectionOrders = GetOrderedIntersectionPoints(
-				IntersectionPoints,
-				out _intersectionsAlongSource,
-				out _intersectionsAlongTarget);
-		}
-
 		private void ClassifyIntersections(
 			[NotNull] ISegmentList source,
 			[NotNull] ISegmentList target,
@@ -661,19 +626,19 @@ namespace ProSuite.Commons.Geom
 		{
 			intersectionsInboundTarget = new List<IntersectionPoint3D>();
 			intersectionsOutboundTarget = new List<IntersectionPoint3D>();
-			IntersectionsNotUsedForNavigation.Clear();
+			IntersectionPointNavigator.IntersectionsNotUsedForNavigation.Clear();
 
 			// Filter all non-real linear intersections (i. e. those where no deviation between
 			// source and target exists. This is important to avoid incorrect inbound/outbound
 			// and turn-direction decisions because the two lines continue (almost at the same
 			// angle.
-			var usableIntersections = IntersectionsAlongSource.ToList();
+			var usableIntersections = IntersectionPointNavigator.IntersectionsAlongSource.ToList();
 
 			foreach (IntersectionPoint3D unusable in GetIntersectionsNotUsedForNavigation(
-				         IntersectionsAlongSource, Source, Target))
+				         IntersectionPointNavigator.IntersectionsAlongSource, Source, Target))
 			{
 				usableIntersections.Remove(unusable);
-				IntersectionsNotUsedForNavigation.Add(unusable);
+				IntersectionPointNavigator.IntersectionsNotUsedForNavigation.Add(unusable);
 			}
 
 			foreach (IntersectionPoint3D intersectionPoint3D in usableIntersections)
@@ -754,5 +719,6 @@ namespace ProSuite.Commons.Geom
 			bool withSameOrientation,
 			bool includeContained,
 			bool includeNotContained);
+
 	}
 }

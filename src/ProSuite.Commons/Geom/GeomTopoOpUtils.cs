@@ -221,7 +221,7 @@ namespace ProSuite.Commons.Geom
 
 			List<List<Pnt3D>> xyClusters;
 			bool hasVerticalPoints = HasVerticalPoints(
-				ringNavigator.IntersectionsAlongTarget.Select(i => i.Point),
+				ringNavigator.IntersectionPointNavigator.IntersectionsAlongTarget.Select(i => i.Point),
 				tolerance, out xyClusters);
 
 			if (hasVerticalPoints)

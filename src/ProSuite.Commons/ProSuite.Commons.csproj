@@ -98,6 +98,7 @@
     <Compile Include="Geom\Polyhedron.cs" />
     <Compile Include="Geom\SegmentIntersectionFilter.cs" />
     <Compile Include="Geom\SegmentIntersectionUtils.cs" />
+    <Compile Include="Geom\SubcurveIntersectionPointNavigator.cs" />
     <Compile Include="Geom\SubcurveNavigator.cs" />
     <Compile Include="Geom\Wkb\GeomBuilder.cs" />
     <Compile Include="Geom\Wkb\IPointFactory.cs" />
