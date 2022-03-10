@@ -438,6 +438,17 @@ namespace ProSuite.DomainServices.AO.QA
 					Assert.NotNull(TestFactoryUtils.CreateTestFactory(condition),
 					               $"Cannot create test factory for condition {condition.Name}");
 
+				// This test can only be performed here because the DataType must be initialized:
+				// It should probably be deleted once no IMosaicLayer, ITerrain is used any more
+				if (QualitySpecificationUtils.HasUnsupportedDatasetParameterValues(
+					    condition, datasetOpener, out string message))
+				{
+					_msg.WarnFormat(
+						"Condition '{0}' has unsupported parameter value(s) and is ignored: {1}",
+						condition.Name, message);
+					continue;
+				}
+
 				IList<ITest> tests = factory.CreateTests(datasetOpener);
 				if (tests.Count == 0)
 				{

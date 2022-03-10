@@ -17,5 +17,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 		[CanBeNull]
 		IRelationshipClass OpenRelationshipClass([NotNull] Association association);
+
+		bool IsSupportedType([NotNull] Type dataType);
 	}
 }

@@ -62,7 +62,6 @@ namespace ProSuite.DomainServices.AO.QA
 				}
 
 				// try to open the datasets
-
 				ICollection<Dataset> missingDatasets = GetMissingDatasets(
 					condition, datasetOpener,
 					knownMissingDatasets, knownExistingDatasets);
@@ -310,6 +309,42 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			_msg.Warn(sb.ToString());
+		}
+
+		public static bool HasUnsupportedDatasetParameterValues(
+			[NotNull] QualityCondition condition,
+			IOpenDataset datasetOpener,
+			out string message)
+		{
+			bool result = false;
+			var sb = new StringBuilder();
+
+			foreach (TestParameterValue parameterValue in condition.ParameterValues)
+			{
+				if (parameterValue is DatasetTestParameterValue datasetParameterValue)
+				{
+					Type dataType = datasetParameterValue.DataType;
+
+					if (dataType == null)
+					{
+						continue;
+					}
+
+					// TODO: ValueSource? Alternative TestParameterValue!
+
+					if (! datasetOpener.IsSupportedType(dataType))
+					{
+						sb.AppendFormat("Dataset type '{0}' is not supported.",
+						                dataType);
+
+						result = true;
+					}
+				}
+			}
+
+			message = result ? sb.ToString() : null;
+
+			return result;
 		}
 
 		private static void ReportInvalidConditionWarning(
