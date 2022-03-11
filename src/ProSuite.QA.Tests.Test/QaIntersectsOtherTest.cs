@@ -1,3 +1,4 @@
+using System;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container.Test;
@@ -122,11 +123,54 @@ namespace ProSuite.QA.Tests.Test
 			}
 		}
 
-		private IFeature Create(IFeatureClass fc, int objekart, IGeometry geom)
+		[Test]
+		public void CanHaveUuidConstraint()
+		{
+//			IFeatureWorkspace ws = TestWorkspaceUtils.CreateTestFgdbWorkspace("IntersectSelf");
+			IFeatureWorkspace ws = TestWorkspaceUtils.CreateInMemoryWorkspace("IntersectSelf");
+			IFeatureClass fg = DatasetUtils.CreateSimpleFeatureClass(
+				ws, "Fliessgewaesser", null,
+				FieldUtils.CreateOIDField(),
+				FieldUtils.CreateIntegerField("OBJEKTART"),
+				FieldUtils.CreateField("TLM_GEWAESSER_NAME_UUID", esriFieldType.esriFieldTypeGUID),
+				FieldUtils.CreateShapeField(
+					esriGeometryType.esriGeometryPolyline,
+					SpatialReferenceUtils.CreateSpatialReference(
+						(int) esriSRProjCS2Type.esriSRProjCS_CH1903Plus_LV95),
+					hasZ: true));
+
+			Guid nameUuid = Guid.NewGuid();
+			Create(fg, 10, CurveConstruction.StartLine(0, 0, 400)
+			                                .LineTo(10, 10, 405)
+			                                .Curve, $"{nameUuid:B}");
+			Create(fg, 10, CurveConstruction.StartLine(10, 0, 405)
+			                                .LineTo(0, 10, 400)
+			                                .Curve, $"{nameUuid:B}");
+
+
+			var test = new QaInteriorIntersectsSelf(
+				new[] { fg },
+				constraint:
+				"G1.TLM_GEWAESSER_NAME_UUID IS NULL OR G2.TLM_GEWAESSER_NAME_UUID IS NULL OR G1.TLM_GEWAESSER_NAME_UUID <> G2.TLM_GEWAESSER_NAME_UUID OR G1.TLM_GEWAESSER_NAME_UUID IN ('{8228BCF8-C4E1-4779-8309-389B0172DEC6}', '{6E1224EE-2E67-4B95-B5EE-58806BBD41B1}') AND G2.TLM_GEWAESSER_NAME_UUID IN ('{8228BCF8-C4E1-4779-8309-389B0172DEC6}','{6E1224EE-2E67-4B95-B5EE-58806BBD41B1}')");
+			test.SetConstraint(0, "OBJEKTART <> 0");
+
+			var runner = new QaContainerTestRunner(1000, test);
+			runner.Execute();
+		}
+
+		private IFeature Create(IFeatureClass fc, int objekart, IGeometry geom, params object[] values)
 		{
 			IFeature f1 = fc.CreateFeature();
 			f1.set_Value(1, objekart);
 			f1.Shape = geom;
+			if (values != null)
+			{
+				for (int iVal = 0; iVal < values.Length; iVal++)
+				{
+					f1.set_Value(iVal + 2, values[iVal]);
+				}
+			}
+
 			f1.Store();
 
 			return f1;
