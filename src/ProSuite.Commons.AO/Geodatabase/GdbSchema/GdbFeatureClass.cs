@@ -6,7 +6,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
 	/// <inheritdoc cref="GdbTable" />
-	public class GdbFeatureClass : GdbTable, IFeatureClass, IGeoDataset
+	public class GdbFeatureClass : GdbTable, IFeatureClass, IGeoDataset, IReadOnlyFeatureClass, IRowCreator<GdbFeature>
 	{
 		public GdbFeatureClass(int objectClassId,
 													 [NotNull] string name,

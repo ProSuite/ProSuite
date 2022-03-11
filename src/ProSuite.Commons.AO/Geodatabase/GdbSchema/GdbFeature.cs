@@ -32,6 +32,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		#region IFeature implementation
 
 		public IGeometry ShapeCopy => Shape != null ? GeometryFactory.Clone(Shape) : null;
+		ITable IFeature.Table => Table;
 
 		public IGeometry Shape
 		{

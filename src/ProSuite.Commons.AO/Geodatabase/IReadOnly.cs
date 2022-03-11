@@ -11,6 +11,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 		ESRI.ArcGIS.esriSystem.IName FullName { get; }
 		IWorkspace Workspace { get; }
 	}
+
+	public interface IRowCreator<T>
+		where T : IRow, IReadOnlyRow
+	{
+		T CreateRow();
+	}
 	public interface IReadOnlyTable : IReadOnlyDataset
 	{
 		IFields Fields { get; }

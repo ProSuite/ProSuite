@@ -11,7 +11,7 @@ namespace ProSuite.QA.Tests.Transformers
 {
 	public interface IGeometryTransformer
 	{
-		IEnumerable<IReadOnlyFeature> Transform(IGeometry source);
+		IEnumerable<GdbFeature> Transform(IGeometry source);
 	}
 
 	public class TransformedFeatureClass : GdbFeatureClass, IRowsCache

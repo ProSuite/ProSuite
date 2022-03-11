@@ -20,7 +20,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		[Doc(nameof(DocStrings.TrGeometryToPoints_0))]
 		public TrGeometryToPoints([NotNull] [Doc(nameof(DocStrings.TrGeometryToPoints_featureClass))]
-															IFeatureClass featureClass,
+															IReadOnlyFeatureClass featureClass,
 															[Doc(nameof(DocStrings.TrGeometryToPoints_component))]
 															GeometryComponent component)
 			: base(featureClass, esriGeometryType.esriGeometryPoint)
@@ -36,12 +36,12 @@ namespace ProSuite.QA.Tests.Transformers
 				FieldUtils.CreateField(AttrVertexIndex, esriFieldType.esriFieldTypeInteger));
 		}
 
-		protected override IEnumerable<IFeature> Transform(IGeometry source)
+		protected override IEnumerable<GdbFeature> Transform(IGeometry source)
 		{
 			IGeometry geom = GeometryComponentUtils.GetGeometryComponent(source, _component);
 			if (geom is IPoint pnt)
 			{
-				IFeature feature = CreateFeature();
+				GdbFeature feature = CreateFeature();
 				feature.Shape = pnt;
 				yield return feature;
 			}
@@ -57,13 +57,13 @@ namespace ProSuite.QA.Tests.Transformers
 						break;
 					}
 
-					IFeature feature = CreateFeature();
+					GdbFeature feature = CreateFeature();
 					feature.Shape = p;
 
 					_iAttrPart = _iAttrPart ?? feature.Fields.FindField(AttrPartIndex);
 					_iAttrVertex = _iAttrVertex ?? feature.Fields.FindField(AttrVertexIndex);
-					feature.Value[_iAttrPart.Value] = partIndex;
-					feature.Value[_iAttrVertex.Value] = vertexIndex;
+					feature.set_Value(_iAttrPart.Value, partIndex);
+					feature.set_Value(_iAttrVertex.Value, vertexIndex);
 
 					yield return feature;
 				} while (true);

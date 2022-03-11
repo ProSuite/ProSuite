@@ -14,12 +14,13 @@ using ProSuite.QA.Tests.Documentation;
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
-	public class TrSpatialJoin : TableTransformer<IFeatureClass>
+	public class TrSpatialJoin : TableTransformer<IReadOnlyFeatureClass>
 	{
 		[Doc(nameof(DocStrings.TrSpatialJoin_0))]
-		public TrSpatialJoin([NotNull][Doc(nameof(DocStrings.TrSpatialJoin_t0))] IFeatureClass t0,
-												 [NotNull] [Doc(nameof(DocStrings.TrSpatialJoin_t1))]
-												 IFeatureClass t1)
+		public TrSpatialJoin(
+			[NotNull] [Doc(nameof(DocStrings.TrSpatialJoin_t0))] IReadOnlyFeatureClass t0,
+			[NotNull] [Doc(nameof(DocStrings.TrSpatialJoin_t1))]
+			IReadOnlyFeatureClass t1)
 			: base(CastToTables(t0, t1)) { }
 
 		[TestParameter]
@@ -43,11 +44,12 @@ namespace ProSuite.QA.Tests.Transformers
 		[Doc(nameof(DocStrings.TrSpatialJoin_T1Attributes))]
 		public IList<string> T1Attributes { get; set; }
 
-		protected override IFeatureClass GetTransformedCore(string name)
+		protected override IReadOnlyFeatureClass GetTransformedCore(string name)
 		{
-			TransformedFc transformedFc = new TransformedFc((IFeatureClass)InvolvedTables[0],
-																											(IFeatureClass)InvolvedTables[1], this,
-																											name);
+			TransformedFc transformedFc = new TransformedFc(
+				(IReadOnlyFeatureClass) InvolvedTables[0],
+				(IReadOnlyFeatureClass) InvolvedTables[1], this,
+				name);
 			transformedFc.Constraint = Constraint;
 			transformedFc.OuterJoin = OuterJoin;
 			transformedFc.Grouped = Grouped;
@@ -57,8 +59,8 @@ namespace ProSuite.QA.Tests.Transformers
 		}
 
 		private void AddFields([NotNull] TransformedFc transformedFc,
-													 [CanBeNull] IList<string> fieldNames,
-													 ITable sourceTable, bool isGrouped)
+		                       [CanBeNull] IList<string> fieldNames,
+							   IReadOnlyTable sourceTable, bool isGrouped)
 		{
 			if (fieldNames == null)
 			{
@@ -73,7 +75,7 @@ namespace ProSuite.QA.Tests.Transformers
 				TableViewFactory.Create(sourceTable, expressionDict, aliasFieldDict, isGrouped);
 
 			transformedFc.TableViews =
-				transformedFc.TableViews ?? new Dictionary<ITable, TableView>();
+				transformedFc.TableViews ?? new Dictionary<IReadOnlyTable, TableView>();
 			transformedFc.TableViews[sourceTable] = tv;
 
 			foreach (string field in expressionDict.Keys)
@@ -86,9 +88,8 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			public JoinConstraint([NotNull] string constraint, bool caseSensitive)
 				: base(constraint, isDirected: true, undefinedConditionIsFulfilled: true,
-							 row1Alias: "T0", row2Alias: "T1", caseSensitive: caseSensitive,
-							 conciseMessage: true)
-			{ }
+				       row1Alias: "T0", row2Alias: "T1", caseSensitive: caseSensitive,
+				       conciseMessage: true) { }
 		}
 
 		private class TransformedFc : TransformedFeatureClass, ITransformedValue
@@ -97,16 +98,17 @@ namespace ProSuite.QA.Tests.Transformers
 			private JoinConstraint _constraint;
 			private readonly TrSpatialJoin _parent;
 
-			public TransformedFc(IFeatureClass t0, IFeatureClass t1, TrSpatialJoin parent,
-													 string name = null)
-				: base(-1, !string.IsNullOrWhiteSpace(name) ? name : "intersectResult",
-							 t0.ShapeType,
-							 createBackingDataset: (t) =>
-								 new TransformedDataset((TransformedFc)t, t0, t1),
-							 workspace: new GdbWorkspace(new TransformerWorkspace()))
+			public TransformedFc(IReadOnlyFeatureClass t0, IReadOnlyFeatureClass t1,
+			                     TrSpatialJoin parent,
+			                     string name = null)
+				: base(-1, ! string.IsNullOrWhiteSpace(name) ? name : "intersectResult",
+				       t0.ShapeType,
+				       createBackingDataset: (t) =>
+					       new TransformedDataset((TransformedFc) t, t0, t1),
+				       workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
 				_parent = parent;
-				InvolvedTables = new List<ITable> { (ITable)t0, (ITable)t1 };
+				InvolvedTables = new List<IReadOnlyTable> { t0, t1 };
 
 				IGeometryDef geomDef =
 					t0.Fields.Field[
@@ -118,7 +120,7 @@ namespace ProSuite.QA.Tests.Transformers
 						geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM));
 			}
 
-			public Dictionary<ITable, TableView> TableViews { get; set; }
+			public Dictionary<IReadOnlyTable, TableView> TableViews { get; set; }
 			public bool Grouped { get; set; }
 			public bool OuterJoin { get; set; }
 
@@ -132,11 +134,11 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 			}
 
-			public bool HasFulfilledConstraint(IRow t0, IRow t1)
+			public bool HasFulfilledConstraint(IReadOnlyRow t0, IReadOnlyRow t1)
 			{
 				_constraint = _constraint
-											?? new JoinConstraint(Constraint,
-																						caseSensitive: _parent.GetSqlCaseSensitivity());
+				              ?? new JoinConstraint(Constraint,
+				                                    caseSensitive: _parent.GetSqlCaseSensitivity());
 				return _constraint.IsFulfilled(t0, 0, t1, 1, out string conditionMessage);
 			}
 
@@ -156,7 +158,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				CalcFields = CalcFields ?? new Dictionary<TableView, List<FieldInfo>>();
 
-				if (!CalcFields.TryGetValue(tableView, out List<FieldInfo> fieldInfos))
+				if (! CalcFields.TryGetValue(tableView, out List<FieldInfo> fieldInfos))
 				{
 					fieldInfos = new List<FieldInfo>();
 					CalcFields.Add(tableView, fieldInfos);
@@ -165,7 +167,7 @@ namespace ProSuite.QA.Tests.Transformers
 				fieldInfos.Add(new FieldInfo(field, Fields.FindField(field), -1));
 			}
 
-			public IList<ITable> InvolvedTables { get; }
+			public IList<IReadOnlyTable> InvolvedTables { get; }
 
 			public ISearchable DataContainer
 			{
@@ -173,7 +175,7 @@ namespace ProSuite.QA.Tests.Transformers
 				set => BackingDs.DataContainer = value;
 			}
 
-			public TransformedDataset BackingDs => (TransformedDataset)BackingDataset;
+			public TransformedDataset BackingDs => (TransformedDataset) BackingDataset;
 		}
 
 		private class TfcFeature : GdbFeature
@@ -187,8 +189,8 @@ namespace ProSuite.QA.Tests.Transformers
 				if (f.Name.StartsWith("t0.") || f.Name.StartsWith("t1."))
 				{
 					int baseRowsIdx = Table.Fields.FindField(InvolvedRowUtils.BaseRowField);
-					IList<IRow> baseRows = (IList<IRow>)get_Value(baseRowsIdx);
-					IRow sourceRow = f.Name.StartsWith("t0.") ? baseRows[0] : baseRows[1];
+					IList<IReadOnlyRow> baseRows = (IList<IReadOnlyRow>) get_Value(baseRowsIdx);
+					IReadOnlyRow sourceRow = f.Name.StartsWith("t0.") ? baseRows[0] : baseRows[1];
 
 					int idx = sourceRow.Table.FindField(f.Name.Substring(3));
 					return sourceRow.get_Value(idx);
@@ -200,24 +202,24 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private class TransformedDataset : TransformedBackingDataset
 		{
-			private readonly IFeatureClass _t0;
-			private readonly IFeatureClass _t1;
+			private readonly IReadOnlyFeatureClass _t0;
+			private readonly IReadOnlyFeatureClass _t1;
 
 			public TransformedDataset(
 				[NotNull] TransformedFc gdbTable,
-				[NotNull] IFeatureClass t0,
-				[NotNull] IFeatureClass t1)
+				[NotNull] IReadOnlyFeatureClass t0,
+				[NotNull] IReadOnlyFeatureClass t1)
 				: base(gdbTable, CastToTables(t0, t1))
 			{
 				_t0 = t0;
 				_t1 = t1;
 
-				Resulting.SpatialReference = ((IGeoDataset)t0).SpatialReference;
+				Resulting.SpatialReference = t0.SpatialReference;
 			}
 
-			public override IEnvelope Extent => ((IGeoDataset)_t0).Extent;
+			public override IEnvelope Extent => _t0.Extent;
 
-			public override IRow GetUncachedRow(int id)
+			public override IReadOnlyRow GetUncachedRow(int id)
 			{
 				throw new NotImplementedException();
 			}
@@ -225,44 +227,44 @@ namespace ProSuite.QA.Tests.Transformers
 			public override int GetRowCount(IQueryFilter queryFilter)
 			{
 				// TODO
-				return _t0.FeatureCount(queryFilter);
+				return _t0.RowCount(queryFilter);
 			}
 
-			public override IEnumerable<IRow> Search(IQueryFilter filter, bool recycling)
+			public override IEnumerable<IReadOnlyRow> Search(IQueryFilter filter, bool recycling)
 			{
 				ISpatialFilter joinFilter = new SpatialFilterClass();
 				joinFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 
-				TransformedFc res = (TransformedFc)this.Resulting;
+				TransformedFc res = (TransformedFc) this.Resulting;
 				bool grouped = res.Grouped;
 				foreach (var toJoin in DataContainer.Search(
-									 (ITable)_t0, filter, QueryHelpers[0]))
+					         _t0, filter, QueryHelpers[0]))
 				{
-					joinFilter.Geometry = ((IFeature)toJoin).Extent;
-					var op = (IRelationalOperator)((IFeature)toJoin).Shape;
+					joinFilter.Geometry = ((IReadOnlyFeature) toJoin).Extent;
+					var op = (IRelationalOperator) ((IReadOnlyFeature) toJoin).Shape;
 
-					List<IRow> joineds = new List<IRow>();
+					List<IReadOnlyRow> joineds = new List<IReadOnlyRow>();
 					bool outerJoin = res.OuterJoin;
 					foreach (var joined in DataContainer.Search(
-										 (ITable)_t1, joinFilter, QueryHelpers[1]))
+						         _t1, joinFilter, QueryHelpers[1]))
 					{
-						if (!res.HasFulfilledConstraint(toJoin, joined))
+						if (! res.HasFulfilledConstraint(toJoin, joined))
 						{
 							continue;
 						}
 
 						outerJoin = false;
 
-						IGeometry joinedGeom = ((IFeature)joined).Shape;
+						IGeometry joinedGeom = ((IReadOnlyFeature) joined).Shape;
 						// TODO implement different relations
 						if (op.Disjoint(joinedGeom))
 						{
 							continue;
 						}
 
-						if (!grouped)
+						if (! grouped)
 						{
-							IFeature f = CreateFeature(toJoin, new[] { joined });
+							IReadOnlyFeature f = CreateFeature(toJoin, new[] { joined });
 							//res.CreateFeature();
 							yield return f;
 						}
@@ -274,19 +276,19 @@ namespace ProSuite.QA.Tests.Transformers
 
 					if (joineds.Count > 0 || outerJoin)
 					{
-						IFeature f = CreateFeature(toJoin, joineds);
+						IReadOnlyFeature f = CreateFeature(toJoin, joineds);
 						yield return f;
 					}
 				}
 			}
 
-			private IFeature CreateFeature(IRow toJoin, IList<IRow> joineds)
+			private IReadOnlyFeature CreateFeature(IReadOnlyRow toJoin, IList<IReadOnlyRow> joineds)
 			{
-				IFeature f = Resulting.CreateFeature();
-				f.Shape = ((IFeature)toJoin).Shape;
+				ESRI.ArcGIS.Geodatabase.IFeature f = Resulting.CreateFeature();
+				f.Shape = ((IReadOnlyFeature) toJoin).Shape;
 				f.Store();
 
-				List<IRow> involved = new List<IRow>(joineds.Count + 1);
+				List<IReadOnlyRow> involved = new List<IReadOnlyRow>(joineds.Count + 1);
 				involved.Add(toJoin);
 				involved.AddRange(joineds);
 				f.set_Value(
@@ -299,13 +301,13 @@ namespace ProSuite.QA.Tests.Transformers
 				return f;
 			}
 
-			private void SetValues(IFeature feature, IList<IRow> sources)
+			private void SetValues(ESRI.ArcGIS.Geodatabase.IFeature feature, IList<IReadOnlyRow> sources)
 			{
-				TransformedFc r = (TransformedFc)Resulting;
+				TransformedFc r = (TransformedFc) Resulting;
 
 				TableView tv = null;
 				DataRow tableRow = null;
-				foreach (IRow row in sources)
+				foreach (IReadOnlyRow row in sources)
 				{
 					if (tv == null)
 					{

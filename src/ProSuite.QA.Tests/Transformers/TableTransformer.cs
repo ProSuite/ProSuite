@@ -1,17 +1,16 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 
 namespace ProSuite.QA.Tests.Transformers
 {
-	public abstract class TableTransformer<T> : InvolvesTablesBase, ITableTransformer<T>
+	public abstract class TableTransformer<T> : InvolvesTablesBase, ITableTransformer<TransformedFeatureClass>
 	{
-		private T _transformed;
+		private TransformedFeatureClass _transformed;
 
-		protected TableTransformer(IList<ITable> involvedTables)
+		protected TableTransformer(IList<IReadOnlyTable> involvedTables)
 			: base(involvedTables)
 		{
 			_tableConstraints = new Dictionary<int, string>();
@@ -22,11 +21,11 @@ namespace ProSuite.QA.Tests.Transformers
 		[NotNull] private readonly Dictionary<int, bool> _tableCaseSensitivity;
 		private string _transformerName;
 
-		public T GetTransformed()
+		public TransformedFeatureClass GetTransformed()
 		{
 			if (_transformed == null)
 			{
-				T transformed = GetTransformedCore(_transformerName);
+				TransformedFeatureClass transformed = GetTransformedCore(_transformerName);
 				if ((transformed as TransformedFeatureClass)?.BackingDataset is TransformedBackingDataset
 				    tbds)
 				{
@@ -47,7 +46,7 @@ namespace ProSuite.QA.Tests.Transformers
 			return _transformed;
 		}
 
-		protected abstract T GetTransformedCore(string name);
+		protected abstract TransformedFeatureClass GetTransformedCore(string name);
 
 		object ITableTransformer.GetTransformed() => GetTransformed();
 

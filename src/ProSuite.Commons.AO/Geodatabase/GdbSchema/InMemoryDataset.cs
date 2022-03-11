@@ -8,17 +8,17 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
 	public class InMemoryDataset : BackingDataset
 	{
-		private readonly ITable _schema;
+		private readonly IReadOnlyTable _schema;
 		private IEnvelope _extent;
 
-		public InMemoryDataset(ITable schema,
-		                       IList<IRow> allRows)
+		public InMemoryDataset(IReadOnlyTable schema,
+		                       IList<IReadOnlyRow> allRows)
 		{
 			_schema = schema;
 			AllRows = allRows;
 		}
 
-		public IList<IRow> AllRows { get; }
+		public IList<IReadOnlyRow> AllRows { get; }
 
 		public override IEnvelope Extent
 		{
@@ -33,7 +33,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 		}
 
-		public override IRow GetRow(int id)
+		public override IReadOnlyRow GetRow(int id)
 		{
 			return AllRows.First(r => r.OID == id);
 
@@ -45,7 +45,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return Search(filter, true).Count();
 		}
 
-		public override IEnumerable<IRow> Search(IQueryFilter filter, bool recycling)
+		public override IEnumerable<IReadOnlyRow> Search(IQueryFilter filter, bool recycling)
 		{
 			var filterHelper = FilterHelper.Create(_schema, filter.WhereClause);
 
@@ -69,9 +69,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				             SpatialReference = DatasetUtils.GetSpatialReference(featureClass)
 			             };
 
-			foreach (IRow row in AllRows)
+			foreach (IReadOnlyRow row in AllRows)
 			{
-				IFeature feature = (IFeature) row;
+				IReadOnlyFeature feature = (IReadOnlyFeature) row;
 				result.Union(feature.Extent);
 			}
 

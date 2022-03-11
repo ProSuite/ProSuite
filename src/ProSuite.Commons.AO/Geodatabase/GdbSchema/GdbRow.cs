@@ -10,9 +10,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	/// an existing feature on the client. Its parent can be a real object class or a fake
 	/// <see cref="GdbTable"/> also provided through the wire.
 	/// </summary>
-	public class GdbRow : IObject, IRowSubtypes, IEquatable<IObject>
+	public class GdbRow : VirtualRow, IRowSubtypes // IObject, IEquatable<IObject>, IReadOnlyRow
 	{
-		[NotNull] private readonly IObjectClass _gdbTable;
+		[NotNull] private readonly GdbTable _gdbTable;
 
 		// Using property set to support the same COM-release calls (e.g. on GdbFeature.Shape) as
 		// on a real feature. Otherwise InvalidComObjectException can happen when accessing the same
@@ -21,7 +21,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region Constructors
 
-		public GdbRow(int oid, [NotNull] IObjectClass gdbTable)
+		public GdbRow(int oid, [NotNull] GdbTable gdbTable)
 		{
 			OID = oid;
 			_gdbTable = gdbTable;
@@ -72,7 +72,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region IObject implementation
 
-		public void Store()
+		public override void Store()
 		{
 			StoreCalled = true;
 
@@ -81,22 +81,16 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		protected virtual void StoreCore() { }
 
-		public void Delete()
+		public override void Delete()
 		{
 			DeleteCalled = true;
 		}
 
-		public IFields Fields => _gdbTable.Fields;
-
-		public bool HasOID => _gdbTable.HasOID;
-
 		public int OID { get; }
 
-		public ITable Table => (ITable) _gdbTable;
+		public GdbTable Table => _gdbTable;
 
-		public IObjectClass Class => _gdbTable;
-
-		public virtual object get_Value(int index)
+		public override object get_Value(int index)
 		{
 			var name = Convert.ToString(index);
 
@@ -113,7 +107,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return result;
 		}
 
-		public void set_Value(int index, object value)
+		public override void set_Value(int index, object value)
 		{
 			if (value == null)
 			{

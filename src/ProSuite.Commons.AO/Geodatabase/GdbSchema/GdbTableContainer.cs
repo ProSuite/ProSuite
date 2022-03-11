@@ -67,19 +67,19 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			throw new NotImplementedException();
 		}
 
-		public override IEnumerable<IDataset> GetDatasets(esriDatasetType datasetType)
+		public override IEnumerable<IReadOnlyDataset> GetDatasets(esriDatasetType datasetType)
 		{
 			return _tablesByName.Values.Where(
 				t => t.DatasetType == datasetType ||
 						 datasetType == esriDatasetType.esriDTAny);
 		}
 
-		public override ITable OpenTable(string name)
+		public override IReadOnlyTable OpenTable(string name)
 		{
 			return _tablesByName[name];
 		}
 
-		public override ITable OpenQueryTable(string relationshipClassName)
+		public override IReadOnlyTable OpenQueryTable(string relationshipClassName)
 		{
 			return _relClassesByName[relationshipClassName];
 		}

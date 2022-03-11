@@ -12,7 +12,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public VirtualFeatureClass(string name) : base(name) { }
 	}
 
-	public class VirtualTable : IDataset, ITable, IObjectClass, IDatasetEdit, ISchemaLock, ISubtypes
+	public class VirtualTable : IDataset, ITable, IObjectClass, IDatasetEdit, ISchemaLock, ISubtypes, IReadOnlyTable, IRowCreator<VirtualRow>
 	{
 		protected GdbFields _fields;
 		private TableName _tableName;
@@ -204,7 +204,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public IFeature CreateFeature() => (IFeature)CreateRow();
 
-		public virtual IRow CreateRow() =>
+		public virtual VirtualRow CreateRow() =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IRow ITable.GetRow(int OID) => GetRow(OID);
@@ -212,6 +212,10 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public IFeature GetFeature(int OID) => (IFeature)GetRow(OID);
 
 		public virtual IRow GetRow(int OID) =>
+			throw new NotImplementedException("Implement in derived class");
+
+		IReadOnlyRow IReadOnlyTable.GetRow(int OID) => GetReadOnlyRow(OID);
+		public virtual IReadOnlyRow GetReadOnlyRow(int OID)=>
 			throw new NotImplementedException("Implement in derived class");
 
 		ICursor ITable.GetRows(object oids, bool Recycling) => GetRows(oids, Recycling);
@@ -266,6 +270,12 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public virtual IEnumerable<IRow>
 			EnumRows(IQueryFilter queryFilter, bool recycling) =>
+			throw new NotImplementedException("Implement in derived class");
+
+		IEnumerable<IReadOnlyRow> IReadOnlyTable.EnumRows(IQueryFilter filter, bool recycling)
+			=> EnumReadOnlyRows(filter, recycling);
+		public virtual IEnumerable<IReadOnlyRow>
+			EnumReadOnlyRows(IQueryFilter queryFilter, bool recycling) =>
 			throw new NotImplementedException("Implement in derived class");
 
 		ICursor ITable.Update(IQueryFilter QueryFilter, bool Recycling) =>

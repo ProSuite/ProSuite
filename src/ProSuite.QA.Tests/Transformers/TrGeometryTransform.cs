@@ -15,13 +15,12 @@ using ProSuite.QA.Tests.Documentation;
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
-	public abstract class TrGeometryTransform : TableTransformer<IFeatureClass>,
-																							IGeometryTransformer, IContainerTransformer
+	public abstract class TrGeometryTransform : TableTransformer<IReadOnlyFeatureClass>, IGeometryTransformer, IContainerTransformer
 	{
 		private readonly esriGeometryType _derivedShapeType;
 
-		protected TrGeometryTransform([NotNull] IFeatureClass fc, esriGeometryType derivedShapeType)
-			: base(new List<ITable> { (ITable)fc })
+		protected TrGeometryTransform([NotNull] IReadOnlyFeatureClass fc, esriGeometryType derivedShapeType)
+			: base(new List<IReadOnlyTable> { fc })
 		{
 			_derivedShapeType = derivedShapeType;
 		}
@@ -30,9 +29,9 @@ namespace ProSuite.QA.Tests.Transformers
 		[Doc(nameof(DocStrings.TrGeometryTransform_Attributes))]
 		public IList<string> Attributes { get; set; }
 
-		protected override IFeatureClass GetTransformedCore(string name)
+		protected override TransformedFeatureClass GetTransformedCore(string name)
 		{
-			IFeatureClass fc = (IFeatureClass)InvolvedTables[0];
+			IReadOnlyFeatureClass fc = (IReadOnlyFeatureClass)InvolvedTables[0];
 			var transformedFc = new TransformedFc(fc, _derivedShapeType, this, name);
 			// ReSharper disable once VirtualMemberCallInConstructor
 			AddCustomAttributes(transformedFc);
@@ -43,15 +42,15 @@ namespace ProSuite.QA.Tests.Transformers
 
 		protected virtual void AddCustomAttributes(TransformedFeatureClass transformedFc) { }
 
-		protected IFeature CreateFeature()
+		protected GdbFeature CreateFeature()
 		{
 			return GetTransformed().CreateFeature(); // _transformedFc.CreateFeature();
 		}
 
-		IEnumerable<IFeature> IGeometryTransformer.Transform(IGeometry source)
+		IEnumerable<GdbFeature> IGeometryTransformer.Transform(IGeometry source)
 			=> Transform(source);
 
-		protected abstract IEnumerable<IFeature> Transform(IGeometry source);
+		protected abstract IEnumerable<GdbFeature> Transform(IGeometry source);
 
 		bool IContainerTransformer.IsGeneratedFrom(Involved involved, Involved source) =>
 			IsGeneratedFrom(involved, source);
@@ -72,7 +71,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private class TransformedFc : TransformedFeatureClass, ITransformedValue, ITransformedTable
 		{
-			public TransformedFc(IFeatureClass fc, esriGeometryType derivedShapeType,
+			public TransformedFc(IReadOnlyFeatureClass fc, esriGeometryType derivedShapeType,
 													 IGeometryTransformer transformer, string name)
 				: base(-1, !string.IsNullOrWhiteSpace(name) ? name : "derivedGeometry",
 							 derivedShapeType,
@@ -80,7 +79,7 @@ namespace ProSuite.QA.Tests.Transformers
 							 workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
 				Transformer = transformer;
-				InvolvedTables = new List<ITable> { (ITable)fc };
+				InvolvedTables = new List<IReadOnlyTable> { fc };
 
 				IGeometryDef geomDef =
 					fc.Fields.Field[
@@ -101,7 +100,7 @@ namespace ProSuite.QA.Tests.Transformers
 				return new TransformedFeature(oid, this);
 			}
 
-			private void AddFields(IFeatureClass fc)
+			private void AddFields(IReadOnlyFeatureClass fc)
 			{
 				for (int iField = 0; iField < fc.Fields.FieldCount; iField++)
 				{
@@ -110,7 +109,7 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 			}
 
-			public IList<ITable> InvolvedTables { get; }
+			public IList<IReadOnlyTable> InvolvedTables { get; }
 
 			public ISearchable DataContainer
 			{
@@ -121,12 +120,12 @@ namespace ProSuite.QA.Tests.Transformers
 			bool ITransformedTable.NoCaching => false;
 
 			[CanBeNull]
-			public BoxTree<IFeature> KnownRows { get; private set; }
+			public BoxTree<IReadOnlyFeature> KnownRows { get; private set; }
 
-			public void SetKnownTransformedRows(IEnumerable<IRow> knownRows)
+			public void SetKnownTransformedRows(IEnumerable<IReadOnlyRow> knownRows)
 			{
 				KnownRows = BoxTreeUtils.CreateBoxTree(
-					knownRows?.Select(x => x as IFeature),
+					knownRows?.Select(x => x as IReadOnlyFeature),
 					getBox: x => x?.Shape != null
 												 ? QaGeometryUtils.CreateBox(x.Shape)
 												 : null);
@@ -146,8 +145,8 @@ namespace ProSuite.QA.Tests.Transformers
 				if (f.Name.StartsWith("t0."))
 				{
 					int baseRowsIdx = Table.Fields.FindField(InvolvedRowUtils.BaseRowField);
-					IList<IRow> baseRows = (IList<IRow>)get_Value(baseRowsIdx);
-					IRow sourceRow = baseRows[0];
+					IList<IReadOnlyRow> baseRows = (IList<IReadOnlyRow>)get_Value(baseRowsIdx);
+					IReadOnlyRow sourceRow = baseRows[0];
 
 					int idx = sourceRow.Table.FindField(f.Name.Substring(3));
 					return sourceRow.get_Value(idx);
@@ -159,20 +158,20 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private class TransformedDataset : TransformedBackingDataset<TransformedFc>
 		{
-			private readonly IFeatureClass _t0;
+			private readonly IReadOnlyFeatureClass _t0;
 
 			public TransformedDataset(
 				[NotNull] TransformedFc tfc,
-				[NotNull] IFeatureClass t0)
+				[NotNull] IReadOnlyFeatureClass t0)
 				: base(tfc, CastToTables(t0))
 			{
 				_t0 = t0;
-				Resulting.SpatialReference = ((IGeoDataset)t0).SpatialReference;
+				Resulting.SpatialReference = t0.SpatialReference;
 			}
 
-			public override IEnvelope Extent => ((IGeoDataset)_t0).Extent;
+			public override IEnvelope Extent => _t0.Extent;
 
-			public override IRow GetUncachedRow(int id)
+			public override IReadOnlyRow GetUncachedRow(int id)
 			{
 				throw new NotImplementedException();
 			}
@@ -180,7 +179,7 @@ namespace ProSuite.QA.Tests.Transformers
 			public override int GetRowCount(IQueryFilter queryFilter)
 			{
 				// TODO
-				return _t0.FeatureCount(queryFilter);
+				return _t0.RowCount(queryFilter);
 			}
 
 			private IList<string> _attributes;
@@ -199,7 +198,7 @@ namespace ProSuite.QA.Tests.Transformers
 							if (iSource < 0)
 							{
 								throw new InvalidOperationException(
-									$"Field {attr} does not exist in {DatasetUtils.GetName(_t0)}");
+									$"Field {attr} does not exist in {_t0.Name}");
 							}
 
 							Resulting.AddField(_t0.Fields.Field[iSource]);
@@ -243,14 +242,13 @@ namespace ProSuite.QA.Tests.Transformers
 				_idxBaseRowField ??
 				(_idxBaseRowField = Resulting.FindField(InvolvedRowUtils.BaseRowField)).Value;
 
-			public override IEnumerable<IRow> Search(IQueryFilter filter, bool recycling)
+			public override IEnumerable<IReadOnlyRow> Search(IQueryFilter filter, bool recycling)
 			{
-				var involvedDict = new Dictionary<IFeature, Involved>();
+				var involvedDict = new Dictionary<IReadOnlyFeature, Involved>();
 
-				foreach (var row in DataContainer.Search(
-									 (ITable)_t0, filter, QueryHelpers[0]))
+				foreach (var row in DataContainer.Search(_t0, filter, QueryHelpers[0]))
 				{
-					IFeature baseFeature = (IFeature)row;
+					IReadOnlyFeature baseFeature = (IReadOnlyFeature)row;
 
 					if (IsKnown(baseFeature, involvedDict))
 					{
@@ -258,19 +256,19 @@ namespace ProSuite.QA.Tests.Transformers
 					}
 
 					IGeometry geom = baseFeature.Shape;
-					foreach (IFeature featureWithTransformedGeom
+					foreach (GdbFeature featureWithTransformedGeom
 									 in Resulting.Transformer.Transform(geom))
 					{
-						IFeature f = featureWithTransformedGeom;
+						GdbFeature f = featureWithTransformedGeom;
 
-						List<IRow> involved = new List<IRow> { row };
-						f.Value[IdxBaseRowField] = involved;
+						List<IReadOnlyRow> involved = new List<IReadOnlyRow> { row };
+						f.set_Value(IdxBaseRowField, involved);
 
 						foreach (var pair in AttrDict)
 						{
 							int iTarget = pair.Key;
 							int iSource = pair.Value;
-							f.Value[iTarget] = baseFeature.Value[iSource];
+							f.set_Value(iTarget, baseFeature.get_Value(iSource));
 						}
 
 						f.Store();
@@ -282,7 +280,7 @@ namespace ProSuite.QA.Tests.Transformers
 				if ((Resulting.Transformer as IContainerTransformer)?.HandlesContainer == true &&
 						Resulting.KnownRows != null && filter is ISpatialFilter sp)
 				{
-					foreach (BoxTree<IFeature>.TileEntry entry in
+					foreach (BoxTree<IReadOnlyFeature>.TileEntry entry in
 									 Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(sp.Geometry)))
 					{
 						yield return entry.Value;
@@ -291,8 +289,8 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			private bool IsKnown(
-				[NotNull] IFeature baseFeature,
-				[NotNull] Dictionary<IFeature, Involved> involvedDict)
+				[NotNull] IReadOnlyFeature baseFeature,
+				[NotNull] Dictionary<IReadOnlyFeature, Involved> involvedDict)
 			{
 				if (!(Resulting.Transformer is IContainerTransformer ct))
 				{

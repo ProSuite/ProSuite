@@ -23,7 +23,7 @@ using ProSuite.QA.Tests.Network;
 
 namespace ProSuite.QA.Tests.Transformers
 {
-	public class TrDissolve : TableTransformer<IFeatureClass>
+	public class TrDissolve : TableTransformer<IReadOnlyFeatureClass>
 	{
 		public enum SearchOption
 		{
@@ -33,13 +33,13 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private const SearchOption _defaultSearchOption = SearchOption.Tile;
 
-		private readonly IFeatureClass _toDissolve;
+		private readonly IReadOnlyFeatureClass _toDissolve;
 
 		[Doc(nameof(DocStrings.TrDissolve_0))]
 		public TrDissolve(
 			[NotNull] [Doc(nameof(DocStrings.TrDissolve_featureclass))]
-			IFeatureClass featureclass)
-			: base(new List<ITable> { (ITable)featureclass })
+			IReadOnlyFeatureClass featureclass)
+			: base(new List<IReadOnlyTable> { featureclass })
 		{
 			_toDissolve = featureclass;
 			NeighborSearchOption = _defaultSearchOption;
@@ -69,7 +69,7 @@ namespace ProSuite.QA.Tests.Transformers
 		[Doc(nameof(DocStrings.TrDissolve_CreateMultipartFeatures))]
 		public bool CreateMultipartFeatures { get; set; }
 
-		protected override IFeatureClass GetTransformedCore(string name)
+		protected override TransformedFeatureClass GetTransformedCore(string name)
 		{
 			var dissolvedFc = new TransformedFc(_toDissolve, name);
 
@@ -105,7 +105,7 @@ namespace ProSuite.QA.Tests.Transformers
 				return;
 			}
 
-			ITable fc = InvolvedTables[0];
+			IReadOnlyTable fc = InvolvedTables[0];
 
 			Dictionary<string, string> expressionDict = ExpressionUtils.GetFieldDict(fieldNames);
 			Dictionary<string, string> aliasFieldDict =
@@ -138,14 +138,14 @@ namespace ProSuite.QA.Tests.Transformers
 			public TableView TableView { get; set; }
 			[CanBeNull] private IList<string> _groupBy;
 
-			public TransformedFc(IFeatureClass dissolve, string name = null)
+			public TransformedFc(IReadOnlyFeatureClass dissolve, string name = null)
 				: base(-1, !string.IsNullOrEmpty(name) ? name : "dissolveResult",
 							 dissolve.ShapeType,
 							 createBackingDataset: (t) =>
 								 new TransformedDataset((TransformedFc)t, dissolve),
 							 workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
-				InvolvedTables = new List<ITable> { (ITable)dissolve };
+				InvolvedTables = new List<IReadOnlyTable> { dissolve };
 
 				IGeometryDef geomDef =
 					dissolve.Fields.Field[
@@ -191,7 +191,7 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 			}
 
-			public IList<ITable> InvolvedTables { get; }
+			public IList<IReadOnlyTable> InvolvedTables { get; }
 
 			public ISearchable DataContainer
 			{
@@ -204,9 +204,9 @@ namespace ProSuite.QA.Tests.Transformers
 			public TransformedDataset BackingDs => (TransformedDataset)BackingDataset;
 
 			[CanBeNull]
-			public BoxTree<IFeature> KnownRows { get; private set; }
+			public BoxTree<IReadOnlyFeature> KnownRows { get; private set; }
 
-			public void SetKnownTransformedRows(IEnumerable<IRow> knownRows)
+			public void SetKnownTransformedRows(IEnumerable<IReadOnlyRow> knownRows)
 			{
 				if (NeighborSearchOption != SearchOption.All)
 				{
@@ -214,7 +214,7 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 
 				KnownRows = BoxTreeUtils.CreateBoxTree(
-					knownRows?.Select(x => x as IFeature),
+					knownRows?.Select(x => x as IReadOnlyFeature),
 					getBox: x => x?.Shape != null
 												 ? QaGeometryUtils.CreateBox(x.Shape)
 												 : null);
@@ -226,24 +226,24 @@ namespace ProSuite.QA.Tests.Transformers
 			private static readonly TableIndexRowComparer
 				_rowComparer = new TableIndexRowComparer();
 
-			private readonly IFeatureClass _dissolve;
+			private readonly IReadOnlyFeatureClass _dissolve;
 			private NetworkBuilder _builder;
 			private string _constraint;
 			private QueryFilterHelper _constraitHelper;
 
 			public TransformedDataset(
 				[NotNull] TransformedFc gdbTable,
-				[NotNull] IFeatureClass dissolve) :
+				[NotNull] IReadOnlyFeatureClass dissolve) :
 				base(gdbTable, CastToTables(dissolve))
 			{
 				_dissolve = dissolve;
 
-				Resulting.SpatialReference = ((IGeoDataset)_dissolve).SpatialReference;
+				Resulting.SpatialReference = _dissolve.SpatialReference;
 			}
 
-			public override IEnvelope Extent => ((IGeoDataset)_dissolve).Extent;
+			public override IEnvelope Extent => _dissolve.Extent;
 
-			public override IRow GetUncachedRow(int id)
+			public override IReadOnlyRow GetUncachedRow(int id)
 			{
 				throw new NotImplementedException();
 			}
@@ -251,7 +251,7 @@ namespace ProSuite.QA.Tests.Transformers
 			public override int GetRowCount(IQueryFilter queryFilter)
 			{
 				// TODO
-				return _dissolve.FeatureCount(queryFilter);
+				return _dissolve.RowCount(queryFilter);
 			}
 
 			public string Constraint
@@ -264,25 +264,24 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 			}
 
-			private IEnumerable<IRow> GetBaseFeatures(IQueryFilter filter, bool recycling)
+			private IEnumerable<IReadOnlyRow> GetBaseFeatures(IQueryFilter filter, bool recycling)
 			{
 				if (DataContainer != null)
 				{
-					var ext = DataContainer.GetLoadedExtent((ITable)_dissolve);
+					var ext = DataContainer.GetLoadedExtent(_dissolve);
 					if (filter is ISpatialFilter sf &&
 							((IRelationalOperator)ext).Contains(sf.Geometry))
 					{
-						return DataContainer.Search(
-							(ITable)_dissolve, filter, QueryHelpers[0]);
+						return DataContainer.Search(_dissolve, filter, QueryHelpers[0]);
 					}
 				}
 
 				IQueryFilter f = (IQueryFilter)((IClone)filter).Clone();
 				f.WhereClause = QueryHelpers[0].TableView.Constraint;
-				return new EnumCursor((ITable)_dissolve, f, recycle: recycling);
+				return _dissolve.EnumRows(f, recycle: recycling);
 			}
 
-			public override IEnumerable<IRow> Search(IQueryFilter filter, bool recycling)
+			public override IEnumerable<IReadOnlyRow> Search(IQueryFilter filter, bool recycling)
 			{
 				// TODO: implement GroupBy
 				_builder = _builder ?? new NetworkBuilder(includeBorderNodes: true);
@@ -290,10 +289,10 @@ namespace ProSuite.QA.Tests.Transformers
 				IRelationalOperator queryEnv =
 					(IRelationalOperator)(filter as ISpatialFilter)?.Geometry.Envelope;
 				IEnvelope fullBox = null;
-				Dictionary<IFeature, Involved> involvedDict = new Dictionary<IFeature, Involved>();
+				Dictionary<IReadOnlyFeature, Involved> involvedDict = new Dictionary<IReadOnlyFeature, Involved>();
 				foreach (var baseRow in GetBaseFeatures(filter, recycling))
 				{
-					IFeature baseFeature = (IFeature)baseRow;
+					IReadOnlyFeature baseFeature = (IReadOnlyFeature)baseRow;
 					Involved baseInvolved = null;
 					bool isKnown = false;
 					// Alternative: Involved Rows check
@@ -346,7 +345,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				if (Resulting.KnownRows != null && filter is ISpatialFilter sp)
 				{
-					foreach (BoxTree<IFeature>.TileEntry entry in
+					foreach (BoxTree<IReadOnlyFeature>.TileEntry entry in
 									 Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(sp.Geometry)))
 					{
 						yield return entry.Value;
@@ -389,20 +388,20 @@ namespace ProSuite.QA.Tests.Transformers
 
 				foreach (List<DirectedRow> dissolvedRows in dissolvedSet)
 				{
-					List<IRow> rows = new List<IRow>(dissolvedRows.Count);
+					List<IReadOnlyRow> rows = new List<IReadOnlyRow>(dissolvedRows.Count);
 					foreach (DirectedRow dirRow in dissolvedRows)
 					{
 						rows.Add(dirRow.Row.Row);
 					}
 
-					IFeature dissolved = Resulting.CreateFeature();
+					ESRI.ArcGIS.Geodatabase.IFeature dissolved = Resulting.CreateFeature();
 					if (rows.Count == 1)
 					{
-						dissolved.Shape = ((IFeature)rows[0]).Shape;
+						dissolved.Shape = ((IReadOnlyFeature)rows[0]).Shape;
 					}
 					else
 					{
-						List<IPolyline> paths = rows.Select(x => (IPolyline)((IFeature)x).Shape)
+						List<IPolyline> paths = rows.Select(x => (IPolyline)((IReadOnlyFeature)x).Shape)
 																				.ToList();
 						IPolyline line = (IPolyline)GeometryFactory.CreateUnion(paths);
 						line.SimplifyNetwork();
@@ -418,7 +417,7 @@ namespace ProSuite.QA.Tests.Transformers
 					{
 						r.TableView.ClearRows();
 						DataRow tableRow = null;
-						foreach (IRow row in rows)
+						foreach (IReadOnlyRow row in rows)
 						{
 							tableRow = r.TableView.Add(row);
 						}
@@ -495,8 +494,8 @@ namespace ProSuite.QA.Tests.Transformers
 						double tolerance = GeometryUtils.GetXyTolerance(queryGeom);
 						queryGeom.Expand(tolerance, tolerance, false);
 						f.Geometry = queryGeom;
-						List<IRow> baseFeatures =
-							new List<IRow>(_r.GetBaseFeatures(f, recycling: false));
+						List<IReadOnlyRow> baseFeatures =
+							new List<IReadOnlyRow>(_r.GetBaseFeatures(f, recycling: false));
 
 						if (baseFeatures.Count == 1)
 						{
@@ -692,7 +691,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 					if (_fields == null)
 					{
-						IFields f = connectedRows.First().Row.Row.Fields;
+						IFields f = connectedRows.First().Row.Row.Table.Fields;
 						var fields = new Dictionary<string, int>();
 						foreach (string groupBy in groupBys)
 						{
@@ -709,10 +708,10 @@ namespace ProSuite.QA.Tests.Transformers
 					foreach (DirectedRow connectedRow in connectedRows)
 					{
 						List<object> key = new List<object>(groupBys.Count);
-						IRow r = connectedRow.Row.Row;
+						IReadOnlyRow r = connectedRow.Row.Row;
 						foreach (int idx in _fields.Values)
 						{
-							key.Add(r.Value[idx]);
+							key.Add(r.get_Value(idx));
 						}
 
 						if (!groupDict.TryGetValue(key, out List<DirectedRow> group))

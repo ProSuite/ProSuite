@@ -77,7 +77,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return ++_lastUsedOid;
 		}
 
-		protected virtual IObject CreateObject(int oid)
+		protected virtual VirtualRow CreateObject(int oid)
 		{
 			return new GdbRow(oid, this);
 		}
@@ -198,12 +198,12 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region ITable members
 
-		public override IRow CreateRow()
+		public override VirtualRow CreateRow()
 		{
 			return CreateObject(GetNextOid());
 		}
 
-		public override IRow GetRow(int id)
+		public override IReadOnlyRow GetReadOnlyRow(int id)
 		{
 			if (BackingDataset == null)
 			{
@@ -235,7 +235,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				throw new NotImplementedException("No backing dataset provided for Search().");
 			}
 
-			IEnumerable<IRow> rows = BackingDataset.Search(queryFilter, recycling);
+			IEnumerable<IReadOnlyRow> rows = BackingDataset.Search(queryFilter, recycling);
 
 			return new CursorImpl(this, rows);
 		}

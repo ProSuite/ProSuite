@@ -10,20 +10,20 @@ using ProSuite.QA.Container;
 namespace ProSuite.QA.Tests.Transformers
 {
 	[UsedImplicitly]
-	public class TrIntersect : TableTransformer<IFeatureClass>
+	public class TrIntersect : TableTransformer<IReadOnlyFeatureClass>
 	{
-		private readonly IFeatureClass _intersected;
-		private readonly IFeatureClass _intersecting;
+		private readonly IReadOnlyFeatureClass _intersected;
+		private readonly IReadOnlyFeatureClass _intersecting;
 
-		public TrIntersect([NotNull] IFeatureClass intersected,
-											 [NotNull] IFeatureClass intersecting)
-			: base(new List<ITable> { (ITable)intersected, (ITable)intersecting })
+		public TrIntersect([NotNull] IReadOnlyFeatureClass intersected,
+											 [NotNull] IReadOnlyFeatureClass intersecting)
+			: base(new List<IReadOnlyTable> { intersected, intersecting })
 		{
 			_intersected = intersected;
 			_intersecting = intersecting;
 		}
 
-		protected override IFeatureClass GetTransformedCore(string name)
+		protected override IReadOnlyFeatureClass GetTransformedCore(string name)
 		{
 			TransformedFc transformedFc = new TransformedFc(_intersected, _intersecting, name);
 			return transformedFc;
@@ -31,7 +31,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		private class TransformedFc : TransformedFeatureClass, ITransformedValue
 		{
-			public TransformedFc(IFeatureClass intersected, IFeatureClass intersecting,
+			public TransformedFc(IReadOnlyFeatureClass intersected, IReadOnlyFeatureClass intersecting,
 													 string name = null)
 				: base(-1, !string.IsNullOrWhiteSpace(name) ? name : "intersectResult",
 							 intersected.ShapeType,
@@ -39,7 +39,7 @@ namespace ProSuite.QA.Tests.Transformers
 								 new TransformedDataset((TransformedFc)t, intersected, intersecting),
 							 workspace: new GdbWorkspace(new TransformerWorkspace()))
 			{
-				InvolvedTables = new List<ITable> { (ITable)intersected, (ITable)intersecting };
+				InvolvedTables = new List<IReadOnlyTable> { intersected, intersecting };
 
 				IGeometryDef geomDef =
 					intersected.Fields.Field[
@@ -51,7 +51,7 @@ namespace ProSuite.QA.Tests.Transformers
 						geomDef.SpatialReference, geomDef.GridSize[0], geomDef.HasZ, geomDef.HasM));
 			}
 
-			public IList<ITable> InvolvedTables { get; }
+			public IList<IReadOnlyTable> InvolvedTables { get; }
 
 			public ISearchable DataContainer
 			{
@@ -65,13 +65,13 @@ namespace ProSuite.QA.Tests.Transformers
 		private class TransformedDataset : TransformedBackingDataset
 		{
 			private const string PartIntersectedField = "PartIntersected";
-			private readonly IFeatureClass _intersected;
-			private readonly IFeatureClass _intersecting;
+			private readonly IReadOnlyFeatureClass _intersected;
+			private readonly IReadOnlyFeatureClass _intersecting;
 
 			public TransformedDataset(
 				[NotNull] TransformedFc gdbTable,
-				[NotNull] IFeatureClass intersected,
-				[NotNull] IFeatureClass intersecting)
+				[NotNull] IReadOnlyFeatureClass intersected,
+				[NotNull] IReadOnlyFeatureClass intersecting)
 				: base(gdbTable, CastToTables(intersected, intersecting))
 			{
 				_intersected = intersected;
@@ -79,12 +79,12 @@ namespace ProSuite.QA.Tests.Transformers
 
 				gdbTable.AddField(FieldUtils.CreateDoubleField(PartIntersectedField));
 
-				Resulting.SpatialReference = ((IGeoDataset)intersected).SpatialReference;
+				Resulting.SpatialReference = intersected.SpatialReference;
 			}
 
-			public override IEnvelope Extent => ((IGeoDataset)_intersected).Extent;
+			public override IEnvelope Extent => _intersected.Extent;
 
-			public override IRow GetUncachedRow(int id)
+			public override IReadOnlyRow GetUncachedRow(int id)
 			{
 				throw new NotImplementedException();
 			}
@@ -92,10 +92,10 @@ namespace ProSuite.QA.Tests.Transformers
 			public override int GetRowCount(IQueryFilter queryFilter)
 			{
 				// TODO
-				return _intersected.FeatureCount(queryFilter);
+				return _intersected.RowCount(queryFilter);
 			}
 
-			public override IEnumerable<IRow> Search(IQueryFilter filter, bool recycling)
+			public override IEnumerable<IReadOnlyRow> Search(IQueryFilter filter, bool recycling)
 			{
 				ISpatialFilter intersectingFilter = new SpatialFilterClass();
 				intersectingFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
@@ -103,14 +103,14 @@ namespace ProSuite.QA.Tests.Transformers
 				int iPartIntersected = Resulting.FindField(PartIntersectedField);
 
 				foreach (var toIntersect in DataContainer.Search(
-									 (ITable)_intersected, filter, QueryHelpers[0]))
+									 _intersected, filter, QueryHelpers[0]))
 				{
-					intersectingFilter.Geometry = ((IFeature)toIntersect).Extent;
+					intersectingFilter.Geometry = ((IReadOnlyFeature)toIntersect).Extent;
 					foreach (var intersecting in DataContainer.Search(
-										 (ITable)_intersecting, intersectingFilter, QueryHelpers[1]))
+										 _intersecting, intersectingFilter, QueryHelpers[1]))
 					{
-						IGeometry intersectingGeom = ((IFeature)intersecting).Shape;
-						var op = (ITopologicalOperator)((IFeature)toIntersect).Shape;
+						IGeometry intersectingGeom = ((IReadOnlyFeature)intersecting).Shape;
+						var op = (ITopologicalOperator)((IReadOnlyFeature)toIntersect).Shape;
 						if (((IRelationalOperator)op).Disjoint(intersectingGeom))
 						{
 							continue;
@@ -128,14 +128,14 @@ namespace ProSuite.QA.Tests.Transformers
 						double fullLength = ((IPolyline)op).Length;
 						double partLength = ((IPolyline)intersected).Length;
 
-						IFeature f = Resulting.CreateFeature();
+						ESRI.ArcGIS.Geodatabase.IFeature f = Resulting.CreateFeature();
 						f.Shape = intersected;
 						f.set_Value(iPartIntersected, partLength / fullLength);
 						f.Store();
 
 						f.set_Value(
 							Resulting.FindField(InvolvedRowUtils.BaseRowField),
-							new List<IRow> { toIntersect, intersecting }); // TODO
+							new List<IReadOnlyRow> { toIntersect, intersecting }); // TODO
 
 						yield return f;
 					}

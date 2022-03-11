@@ -11,10 +11,10 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	{
 		public abstract void ExecuteSql(string sqlStatement);
 
-		public abstract IEnumerable<IDataset> GetDatasets(esriDatasetType datasetType);
+		public abstract IEnumerable<IReadOnlyDataset> GetDatasets(esriDatasetType datasetType);
 
-		public abstract ITable OpenTable(string name);
+		public abstract IReadOnlyTable OpenTable(string name);
 
-		public abstract ITable OpenQueryTable(string relationshipClassName);
+		public abstract IReadOnlyTable OpenQueryTable(string relationshipClassName);
 	}
 }

@@ -1,4 +1,5 @@
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using System;
 using System.Collections.Generic;
@@ -12,17 +13,17 @@ namespace ProSuite.QA.Tests.Transformers
 			throw new NotImplementedException();
 		}
 
-		public override IEnumerable<IDataset> GetDatasets(esriDatasetType datasetType)
+		public override IEnumerable<IReadOnlyDataset> GetDatasets(esriDatasetType datasetType)
 		{
 			throw new NotImplementedException();
 		}
 
-		public override ITable OpenQueryTable(string relationshipClassName)
+		public override IReadOnlyTable OpenQueryTable(string relationshipClassName)
 		{
 			throw new NotImplementedException();
 		}
 
-		public override ITable OpenTable(string name)
+		public override IReadOnlyTable OpenTable(string name)
 		{
 			throw new NotImplementedException();
 		}

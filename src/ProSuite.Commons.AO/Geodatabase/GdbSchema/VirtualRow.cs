@@ -8,12 +8,15 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	/// <summary>
 	/// template for Feature derived from an implementation of VirtualRow 
 	/// </summary>
-	public class VirtualFeature : VirtualRow, IFeature { }
+	public class VirtualFeature : VirtualRow, IFeature
+	{
+		ITable IFeature.Table => Table;
+	}
 
 	/// <summary>
 	/// see VirtualFeature for template for Feature derived from an implementation of VirtualRow 
 	/// </summary>
-	public class VirtualRow : IObject
+	public class VirtualRow : IObject, IReadOnlyRow
 	{
 		void IRow.Store() => Store();
 
@@ -63,7 +66,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		ITable IRow.Table => Table;
 		ITable IObject.Table => Table;
-		public virtual ITable Table =>
+		IReadOnlyTable IReadOnlyRow.Table => Table;
+		public virtual VirtualTable Table =>
 			throw new NotImplementedException("Implement in derived class");
 
 		IObjectClass IObject.Class => Class;
