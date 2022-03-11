@@ -791,6 +791,17 @@ namespace ProSuite.Commons.Geom
 			return segmentIntersection.HasSourceInteriorIntersection;
 		}
 
+		public static bool SourceInteriorIntersectsTargetInteriorXY([NotNull] Line3D line1,
+			[NotNull] Line3D line2,
+			double tolerance)
+		{
+			SegmentIntersection segmentIntersection =
+				SegmentIntersection.CalculateIntersectionXY(
+					0, 0, line1, line2, tolerance);
+
+			return segmentIntersection.SingleInteriorIntersectionFactor != null;
+		}
+
 		public static bool InteriorIntersectXY([NotNull] RingGroup poly1,
 		                                       [NotNull] RingGroup poly2,
 		                                       double tolerance,

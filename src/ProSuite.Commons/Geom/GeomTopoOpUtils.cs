@@ -508,7 +508,7 @@ namespace ProSuite.Commons.Geom
 					Pnt3D segmentStart = ringPoints[i];
 					Pnt3D segmentEnd = ringPoints[NextIndexInRing(i, ringPoints.Count)];
 
-					if (GeomRelationUtils.SourceInteriorIntersectsXY(
+					if (GeomRelationUtils.SourceInteriorIntersectsTargetInteriorXY(
 						    cutLine, new Line3D(segmentStart, segmentEnd),
 						    tolerance))
 					{
