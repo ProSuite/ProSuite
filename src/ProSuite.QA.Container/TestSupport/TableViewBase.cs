@@ -107,7 +107,7 @@ namespace ProSuite.QA.Container.TestSupport
 
 			ColumnInfo ci = columnInfo;
 			_columnInfos.Add(columnInfo);
-			return view.Table.Columns.Add(ci.ColumnName, ci.ColumnType);
+			return view.Table.Columns.Add(ci.ColumnName, ci.DataColumnType);
 		}
 
 		public void ClearRows()

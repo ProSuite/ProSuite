@@ -77,7 +77,7 @@ namespace ProSuite.QA.Container.TestSupport
 				columnInfos.Add(columnInfo);
 
 				// add column using fully qualified name
-				dataTable.Columns.Add(expressionToken, columnInfo.ColumnType);
+				dataTable.Columns.Add(expressionToken, columnInfo.DataColumnType);
 				tableAliasIndexes.Add(tableAliasIndex);
 
 				addedFields.Add(expressionToken);
@@ -262,10 +262,7 @@ namespace ProSuite.QA.Container.TestSupport
 					alias = columnInfo.ColumnName;
 				}
 
-				Type dataColumnType = columnInfo.ColumnType != typeof(Guid)
-					                      ? columnInfo.ColumnType
-					                      : typeof(object);
-				dataTable.Columns.Add(alias, dataColumnType);
+				dataTable.Columns.Add(alias, columnInfo.DataColumnType);
 			}
 
 			var dataView = new DataView(dataTable);
