@@ -82,7 +82,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public virtual IGeometry ShapeCopy => GeometryFactory.Clone(Shape);
 		public virtual IEnvelope Extent => Shape.Envelope;
 
-		public esriFeatureType FeatureType =>
+		public virtual esriFeatureType FeatureType =>
 			throw new NotImplementedException("Implement in derived class");
 	}
 }

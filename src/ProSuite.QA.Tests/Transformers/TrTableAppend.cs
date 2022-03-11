@@ -118,7 +118,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			bool ITransformedTable.NoCaching => true;
 
-			void ITransformedTable.SetKnownTransformedRows(IEnumerable<IReadOnlyRow> knownRows) { }
+			void ITransformedTable.SetKnownTransformedRows(IEnumerable<VirtualRow> knownRows) { }
 
 			public int BaseRowFieldIndex { get; private set; }
 
@@ -231,7 +231,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			public AppendedTable TableT { get; set; } // needed for recycling
-			public override IReadOnlyTable Table => TableT;
+			public override VirtualTable Table => TableT;
 			public int SourceTableIndex { get; set; } // needed for recycling
 			public IReadOnlyRow SourceRow { get; set; } // needed for recycling
 
@@ -343,6 +343,7 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 
 			public override IGeometry Shape => _sourceFeature.Shape;
+			public IReadOnlyFeatureClass FeatureClass => (IReadOnlyFeatureClass) Table;
 		}
 
 		public class SimpleWorkspace : VirtualWorkspace

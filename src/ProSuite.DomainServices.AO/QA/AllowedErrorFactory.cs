@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -21,7 +20,7 @@ namespace ProSuite.DomainServices.AO.QA
 		[NotNull] private readonly IQualityConditionObjectDatasetResolver _datasetResolver;
 
 		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
 
 		/// <summary>
 		/// Initializes a new instance of the <see cref="AllowedErrorFactory"/> class.
@@ -42,7 +41,7 @@ namespace ProSuite.DomainServices.AO.QA
 		[CanBeNull]
 		public AllowedError CreateAllowedError(
 			[NotNull] IssueDatasetWriter issueWriter,
-			[NotNull] IRow errorRow)
+			[NotNull] ESRI.ArcGIS.Geodatabase.IRow errorRow)
 		{
 			Assert.ArgumentNotNull(issueWriter, nameof(issueWriter));
 			Assert.ArgumentNotNull(errorRow, nameof(errorRow));
@@ -66,7 +65,7 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			IGeometry geometry = null;
-			var errorFeature = errorRow as IFeature;
+			var errorFeature = errorRow as ESRI.ArcGIS.Geodatabase.IFeature;
 			if (errorFeature != null)
 			{
 				geometry = errorFeature.Shape.Envelope;

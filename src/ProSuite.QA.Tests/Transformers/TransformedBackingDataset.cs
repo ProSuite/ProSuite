@@ -24,7 +24,7 @@ namespace ProSuite.QA.Tests.Transformers
 	{
 		private readonly IList<IReadOnlyTable> _involvedTables;
 		private readonly List<QueryFilterHelper> _queryHelpers;
-		private readonly Dictionary<int, IReadOnlyRow> _rowsCache;
+		private readonly Dictionary<int, VirtualRow> _rowsCache;
 
 		private readonly TransformedFeatureClass _resulting;
 
@@ -32,7 +32,7 @@ namespace ProSuite.QA.Tests.Transformers
 		public TransformedFeatureClass Resulting => _resulting;
 		protected IReadOnlyList<QueryFilterHelper> QueryHelpers => _queryHelpers;
 
-		public void AddToCache(IReadOnlyRow row)
+		public void AddToCache(VirtualRow row)
 		{
 			_rowsCache[row.OID] = row;
 		}
@@ -42,9 +42,9 @@ namespace ProSuite.QA.Tests.Transformers
 			return _rowsCache.Remove(oid);
 		}
 
-		public sealed override IReadOnlyRow GetRow(int id)
+		public sealed override VirtualRow GetRow(int id)
 		{
-			if (_rowsCache.TryGetValue(id, out IReadOnlyRow row))
+			if (_rowsCache.TryGetValue(id, out VirtualRow row))
 			{
 				return row;
 			}
@@ -52,7 +52,7 @@ namespace ProSuite.QA.Tests.Transformers
 			return GetUncachedRow(id);
 		}
 
-		public abstract IReadOnlyRow GetUncachedRow(int id);
+		public abstract VirtualRow GetUncachedRow(int id);
 
 		protected TransformedBackingDataset([NotNull] TransformedFeatureClass gdbTable,
 		                                    IList<IReadOnlyTable> involvedTables)
@@ -65,7 +65,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			gdbTable.AddField(FieldUtils.CreateBlobField(InvolvedRowUtils.BaseRowField));
 			_resulting = gdbTable;
-			_rowsCache = new Dictionary<int, IReadOnlyRow>();
+			_rowsCache = new Dictionary<int, VirtualRow>();
 		}
 
 		public void SetConstraint(int tableIndex, string condition)
@@ -102,15 +102,15 @@ namespace ProSuite.QA.Tests.Transformers
 
 		protected IEnumerable<Involved> EnumKnownInvolveds(
 			[NotNull] IReadOnlyFeature baseFeature,
-			[CanBeNull] BoxTree<IReadOnlyFeature> knownRows,
-			[NotNull] Dictionary<IReadOnlyFeature, Involved> involvedDict)
+			[CanBeNull] BoxTree<VirtualRow> knownRows,
+			[NotNull] Dictionary<VirtualRow, Involved> involvedDict)
 		{
 			if (knownRows == null)
 			{
 				yield break;
 			}
 
-			foreach (BoxTree<IReadOnlyFeature>.TileEntry entry in
+			foreach (BoxTree<VirtualRow>.TileEntry entry in
 			         knownRows.Search(QaGeometryUtils.CreateBox(baseFeature.Extent)))
 			{
 				if (! involvedDict.TryGetValue(entry.Value, out Involved knownInvolved))

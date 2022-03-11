@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests
 	[SchemaTest]
 	public class QaSchemaFieldDomainCodedValues : QaSchemaTestBase
 	{
-		private readonly ITable _table;
+		private readonly IReadOnlyTable _table;
 		private readonly int _maximumNameLength;
 		private readonly UniqueStringsConstraint _uniqueNamesConstraint;
 		private readonly int _minimumValueCount;
@@ -54,7 +54,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_0))]
 		public QaSchemaFieldDomainCodedValues(
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_maximumNameLength))]
 			int maximumNameLength,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainCodedValues_uniqueNamesConstraint))]

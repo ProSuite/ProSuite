@@ -13,10 +13,10 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	{
 		public abstract IEnvelope Extent { get; }
 
-		public abstract IReadOnlyRow GetRow(int id);
+		public abstract VirtualRow GetRow(int id);
 
 		public abstract int GetRowCount(IQueryFilter queryFilter);
 
-		public abstract IEnumerable<IReadOnlyRow> Search(IQueryFilter filter, bool recycling);
+		public abstract IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling);
 	}
 }

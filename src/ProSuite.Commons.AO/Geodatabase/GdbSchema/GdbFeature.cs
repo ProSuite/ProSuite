@@ -19,7 +19,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region Constructors
 
-		public GdbFeature(int oid, [NotNull] IFeatureClass featureClass)
+		public GdbFeature(int oid, [NotNull] GdbFeatureClass featureClass)
 			: base(oid, featureClass)
 		{
 			_featureClass = featureClass;
@@ -31,10 +31,10 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region IFeature implementation
 
-		public IGeometry ShapeCopy => Shape != null ? GeometryFactory.Clone(Shape) : null;
+		public override IGeometry ShapeCopy => Shape != null ? GeometryFactory.Clone(Shape) : null;
 		ITable IFeature.Table => Table;
 
-		public IGeometry Shape
+		public override IGeometry Shape
 		{
 			get
 			{
@@ -74,9 +74,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 		}
 
-		public IEnvelope Extent => Shape?.Envelope;
 
-		public esriFeatureType FeatureType => _featureClass.FeatureType;
+		public override esriFeatureType FeatureType => _featureClass.FeatureType;
 
 		#endregion
 

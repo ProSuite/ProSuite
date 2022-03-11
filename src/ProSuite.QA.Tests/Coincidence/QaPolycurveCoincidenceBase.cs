@@ -127,7 +127,6 @@ namespace ProSuite.QA.Tests.Coincidence
 
 		protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 		{
-			base.ExecuteCore(row, r);
 			IList<ISpatialFilter> filters = _filter;
 			if (filters == null)
 			{

@@ -12,13 +12,13 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		private IEnvelope _extent;
 
 		public InMemoryDataset(IReadOnlyTable schema,
-		                       IList<IReadOnlyRow> allRows)
+		                       IList<VirtualRow> allRows)
 		{
 			_schema = schema;
 			AllRows = allRows;
 		}
 
-		public IList<IReadOnlyRow> AllRows { get; }
+		public IList<VirtualRow> AllRows { get; }
 
 		public override IEnvelope Extent
 		{
@@ -33,7 +33,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 		}
 
-		public override IReadOnlyRow GetRow(int id)
+		public override VirtualRow GetRow(int id)
 		{
 			return AllRows.First(r => r.OID == id);
 
@@ -45,7 +45,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return Search(filter, true).Count();
 		}
 
-		public override IEnumerable<IReadOnlyRow> Search(IQueryFilter filter, bool recycling)
+		public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
 		{
 			var filterHelper = FilterHelper.Create(_schema, filter.WhereClause);
 

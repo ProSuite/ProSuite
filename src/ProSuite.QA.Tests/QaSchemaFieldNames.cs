@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests
 	[SchemaTest]
 	public class QaSchemaFieldNames : QaSchemaTestBase
 	{
-		private readonly ITable _table;
+		private readonly IReadOnlyTable _table;
 		private readonly int _maximumLength;
 		private readonly ExpectedCase _expectedCase;
 		private readonly int _uniqueSubstringLength;
@@ -51,7 +51,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaFieldNames_0))]
 		public QaSchemaFieldNames(
 			[Doc(nameof(DocStrings.QaSchemaFieldNames_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaSchemaFieldNames_maximumLength))]
 			int maximumLength,
 			[Doc(nameof(DocStrings.QaSchemaFieldNames_expectedCase))]
@@ -71,7 +71,7 @@ namespace ProSuite.QA.Tests
 
 		public override int Execute()
 		{
-			IList<IField> fields = DatasetUtils.GetFields(_table);
+			IList<IField> fields = DatasetUtils.GetFields(_table.Fields);
 
 			int errorCount = fields.Sum(field => ValidateFieldName(field));
 
@@ -264,7 +264,7 @@ namespace ProSuite.QA.Tests
 				return true;
 			}
 
-			var featureClass = _table as IFeatureClass;
+			var featureClass = _table as IReadOnlyFeatureClass;
 
 			if (featureClass != null)
 			{

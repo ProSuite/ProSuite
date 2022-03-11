@@ -261,7 +261,7 @@ namespace ProSuite.QA.Tests
 			var errorCount = 0;
 
 			const bool recycling = false;
-			foreach (IReadOnlyRow row in GdbQueryUtils.GetRowsByObjectIds(_table, oids, recycling))
+			foreach (IReadOnlyRow row in GdbQueryUtils.GetRows(_table, oids, recycling))
 			{
 				errorCount += ReportError(errorsByOid[row.OID], row);
 			}

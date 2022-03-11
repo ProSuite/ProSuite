@@ -1,6 +1,7 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Core;
@@ -16,7 +17,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		[Doc(nameof(DocStrings.TrLineToPoly_0))]
 		public TrLineToPoly(
-			[NotNull][Doc(nameof(DocStrings.TrLineToPoly_closedLineClass))] IFeatureClass closedLineClass)
+			[NotNull][Doc(nameof(DocStrings.TrLineToPoly_closedLineClass))] IReadOnlyFeatureClass closedLineClass)
 			: base(closedLineClass, esriGeometryType.esriGeometryPolygon)
 		{
 			PolylineUsage = _defaultPolylineUsage;
@@ -26,7 +27,7 @@ namespace ProSuite.QA.Tests.Transformers
 		[Doc(nameof(DocStrings.TrLineToPoly_PolylineUsage))]
 		public PolylineUsage PolylineUsage { get; set; }
 
-		protected override IEnumerable<IFeature> Transform(IGeometry source)
+		protected override IEnumerable<GdbFeature> Transform(IGeometry source)
 		{
 			IPolyline line = (IPolyline) source;
 			if (PolylineUsage == PolylineUsage.AsPolygonIfClosedElseIgnore && ! line.IsClosed)
@@ -34,7 +35,7 @@ namespace ProSuite.QA.Tests.Transformers
 				yield break;
 			}
 
-			IFeature feature = CreateFeature();
+			GdbFeature feature = CreateFeature();
 			feature.Shape = GeometryFactory.CreatePolygon(line);
 			yield return feature;
 		}

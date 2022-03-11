@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
@@ -23,8 +24,8 @@ namespace ProSuite.QA.Tests
 	public class QaPseudoNodes : QaNetworkBase
 	{
 		private readonly IList<IList<string>> _ignoreFields;
-		private readonly IList<IFeatureClass> _polylineClasses;
-		private Dictionary<ITable, Dictionary<int, esriFieldType>> _compareFieldsPerTable;
+		private readonly IList<IReadOnlyFeatureClass> _polylineClasses;
+		private Dictionary<IReadOnlyTable, Dictionary<int, esriFieldType>> _compareFieldsPerTable;
 
 		private Dictionary<int, ISpatialFilter> _filters;
 		private Dictionary<int, QueryFilterHelper> _helpers;
@@ -50,13 +51,13 @@ namespace ProSuite.QA.Tests
 		[InternallyUsedTest]
 		public QaPseudoNodes(
 			[Doc(nameof(DocStrings.QaPseudoNodes_polylineClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				polylineClasses,
 			[Doc(nameof(DocStrings.QaPseudoNodes_ignoreFields_0))] [NotNull]
 			IList<IList<string>>
 				ignoreFields,
 			[Doc(nameof(DocStrings.QaPseudoNodes_validPseudoNodes))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				validPseudoNodes)
 			: base(CastToTables(polylineClasses, validPseudoNodes), false,
 			       GetPolycurveClassIndices(polylineClasses, validPseudoNodes))
@@ -70,11 +71,11 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPseudoNodes_1))]
 		public QaPseudoNodes(
 			[Doc(nameof(DocStrings.QaPseudoNodes_polylineClass))] [NotNull]
-			IFeatureClass polylineClass,
+			IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaPseudoNodes_ignoreFields_1))] [NotNull]
 			string[] ignoreFields,
 			[Doc(nameof(DocStrings.QaPseudoNodes_validPseudoNode))] [NotNull]
-			IFeatureClass validPseudoNode)
+			IReadOnlyFeatureClass validPseudoNode)
 			: base(
 				CastToTables(polylineClass, validPseudoNode), false,
 				GetPolycurveClassIndices(new[] {polylineClass},
@@ -88,7 +89,7 @@ namespace ProSuite.QA.Tests
 		[InternallyUsedTest]
 		public QaPseudoNodes(
 				[Doc(nameof(DocStrings.QaPseudoNodes_polylineClasses))] [NotNull]
-				IList<IFeatureClass>
+				IList<IReadOnlyFeatureClass>
 					polylineClasses,
 				[Doc(nameof(DocStrings.QaPseudoNodes_ignoreFields_0))] [NotNull]
 				IList<IList<string>>
@@ -105,7 +106,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPseudoNodes_3))]
 		public QaPseudoNodes(
 			[Doc(nameof(DocStrings.QaPseudoNodes_polylineClass))] [NotNull]
-			IFeatureClass polylineClass,
+			IReadOnlyFeatureClass polylineClass,
 			[Doc(nameof(DocStrings.QaPseudoNodes_ignoreFields_1))] [NotNull]
 			string[] ignoreFields)
 			: base(polylineClass, false)
@@ -117,12 +118,12 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaPseudoNodes_0))]
 		public QaPseudoNodes(
 			[Doc(nameof(DocStrings.QaPseudoNodes_polylineClasses))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				polylineClasses,
 			[Doc(nameof(DocStrings.QaPseudoNodes_ignoreFieldLists))] [NotNull]
 			IList<string> ignoreFieldLists,
 			[Doc(nameof(DocStrings.QaPseudoNodes_validPseudoNodes))] [NotNull]
-			IList<IFeatureClass>
+			IList<IReadOnlyFeatureClass>
 				validPseudoNodes)
 			: this(polylineClasses, ParseFieldLists(ignoreFieldLists), validPseudoNodes)
 		{ }
@@ -147,8 +148,8 @@ namespace ProSuite.QA.Tests
 
 		[NotNull]
 		private static IList<int> GetPolycurveClassIndices(
-			[NotNull] IList<IFeatureClass> networkEdgeClasses,
-			[NotNull] IList<IFeatureClass> exceptionClasses)
+			[NotNull] IList<IReadOnlyFeatureClass> networkEdgeClasses,
+			[NotNull] IList<IReadOnlyFeatureClass> exceptionClasses)
 		{
 			var result = new List<int>();
 
@@ -158,7 +159,7 @@ namespace ProSuite.QA.Tests
 			     exceptionClassIndex < exceptionClassCount;
 			     exceptionClassIndex++)
 			{
-				IFeatureClass exceptionClass = exceptionClasses[exceptionClassIndex];
+				IReadOnlyFeatureClass exceptionClass = exceptionClasses[exceptionClassIndex];
 
 				if (exceptionClass.ShapeType != esriGeometryType.esriGeometryPoint)
 				{
@@ -173,7 +174,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private static void AssertEqualCount(
-			[NotNull] ICollection<IFeatureClass> polylineClasses,
+			[NotNull] ICollection<IReadOnlyFeatureClass> polylineClasses,
 			[NotNull] ICollection<IList<string>> ignoreFields)
 		{
 			Assert.ArgumentNotNull(polylineClasses, nameof(polylineClasses));
@@ -204,8 +205,8 @@ namespace ProSuite.QA.Tests
 		private int CheckRows([NotNull] IList<NetElement> connectedRows,
 		                      bool ignoreLoopEndpoints)
 		{
-			IRow lineFeature1;
-			IRow lineFeature2;
+			IReadOnlyRow lineFeature1;
+			IReadOnlyRow lineFeature2;
 			if (! IsPseudoNode(connectedRows, ignoreLoopEndpoints,
 			                   out lineFeature1, out lineFeature2))
 			{
@@ -229,8 +230,8 @@ namespace ProSuite.QA.Tests
 					continue;
 				}
 
-				if (! Equals(lineFeature1.Value[fieldIndex],
-				             lineFeature2.Value[fieldIndex]))
+				if (! Equals(lineFeature1.get_Value(fieldIndex),
+				             lineFeature2.get_Value(fieldIndex)))
 				{
 					// one of the relevant fields has a different value --> pseudo node is allowed
 					return NoError;
@@ -247,7 +248,7 @@ namespace ProSuite.QA.Tests
 
 				QueryFilterHelper relatedFilterHelper = Helpers[nonNetworkClassIndex];
 
-				IEnumerable<IRow> searchResult = Search(InvolvedTables[nonNetworkClassIndex],
+				IEnumerable<IReadOnlyRow> searchResult = Search(InvolvedTables[nonNetworkClassIndex],
 				                                        relatedFilter,
 				                                        relatedFilterHelper);
 
@@ -266,8 +267,8 @@ namespace ProSuite.QA.Tests
 
 		private static bool IsPseudoNode([NotNull] IEnumerable<NetElement> connectedRows,
 		                                 bool ignoreLoopEndpoints,
-		                                 [CanBeNull] out IRow lineFeature1,
-		                                 [CanBeNull] out IRow lineFeature2)
+		                                 [CanBeNull] out IReadOnlyRow lineFeature1,
+		                                 [CanBeNull] out IReadOnlyRow lineFeature2)
 		{
 			lineFeature1 = null;
 			lineFeature2 = null;
@@ -360,7 +361,7 @@ namespace ProSuite.QA.Tests
 
 			foreach (int tableIndex in NonNetworkClassIndexList)
 			{
-				ITable nonNetworkClass = InvolvedTables[tableIndex];
+				IReadOnlyTable nonNetworkClass = InvolvedTables[tableIndex];
 				ISpatialFilter filter = new SpatialFilterClass();
 
 				var helper = new QueryFilterHelper(nonNetworkClass,
@@ -370,7 +371,7 @@ namespace ProSuite.QA.Tests
 				ConfigureQueryFilter(tableIndex, filter);
 
 				esriGeometryType geometryType =
-					((IFeatureClass) nonNetworkClass).ShapeType;
+					((IReadOnlyFeatureClass) nonNetworkClass).ShapeType;
 
 				switch (geometryType)
 				{
@@ -393,12 +394,12 @@ namespace ProSuite.QA.Tests
 		}
 
 		private Dictionary<int, esriFieldType> GetFieldIndexesToCompare(
-			[NotNull] ITable table)
+			[NotNull] IReadOnlyTable table)
 		{
 			if (_compareFieldsPerTable == null)
 			{
 				_compareFieldsPerTable =
-					new Dictionary<ITable, Dictionary<int, esriFieldType>>();
+					new Dictionary<IReadOnlyTable, Dictionary<int, esriFieldType>>();
 			}
 
 			Dictionary<int, esriFieldType> result;
@@ -408,7 +409,7 @@ namespace ProSuite.QA.Tests
 				int featureClassIndex = 0;
 				if (_polylineClasses != null)
 				{
-					featureClassIndex = _polylineClasses.IndexOf((IFeatureClass) table);
+					featureClassIndex = _polylineClasses.IndexOf((IReadOnlyFeatureClass) table);
 				}
 
 				IList<string> ignoreFieldNames = _ignoreFields[featureClassIndex];

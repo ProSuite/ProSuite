@@ -33,7 +33,7 @@ namespace ProSuite.QA.Tests
 		private IList<ReferencingTableInfo> _referencingTableInfos;
 
 		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
 
 		#region issue codes
 
@@ -188,12 +188,12 @@ namespace ProSuite.QA.Tests
 			}
 
 			const bool recycle = true;
-			foreach (IReadOnlyRow row in GdbQueryUtils.GetRowsInList(referencedTableInfo.Table,
-			                                                 referencedTableInfo
-				                                                 .KeyFieldName,
-			                                                 referencedTableInfo.KeySet,
-			                                                 recycle,
-			                                                 _referencedTableFilter))
+			foreach (IReadOnlyRow row in GdbQueryUtils.GetRowsInList(
+				         referencedTableInfo.Table,
+				         referencedTableInfo.KeyFieldName,
+				         referencedTableInfo.KeySet,
+				         recycle,
+				         _referencedTableFilter))
 			{
 				if (CancelTestingRow(row, recycleUnique: Guid.NewGuid()))
 				{

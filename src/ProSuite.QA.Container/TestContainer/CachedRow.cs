@@ -153,6 +153,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 			public IReadOnlyTable Table => _table ?? (_table = _feature.Table);
 
+			public IReadOnlyFeatureClass FeatureClass => (IReadOnlyFeatureClass) Table;
 			public IObjectClass Class => (IObjectClass) Table;
 
 			public IGeometry ShapeCopy => _feature.ShapeCopy;

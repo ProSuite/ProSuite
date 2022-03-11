@@ -16,7 +16,7 @@ namespace ProSuite.QA.Tests
 	[SchemaTest]
 	public class QaSchemaFieldNameRegex : QaSchemaTestBase
 	{
-		private readonly ITable _table;
+		private readonly IReadOnlyTable _table;
 		private readonly string _pattern;
 		private readonly bool _matchIsError;
 		private readonly string _patternDescription;
@@ -43,7 +43,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaFieldNameRegex_0))]
 		public QaSchemaFieldNameRegex(
 			[Doc(nameof(DocStrings.QaSchemaFieldNameRegex_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaSchemaFieldNameRegex_pattern))] [NotNull]
 			string pattern,
 			[Doc(nameof(DocStrings.QaSchemaFieldNameRegex_matchIsError))]
@@ -68,7 +68,7 @@ namespace ProSuite.QA.Tests
 		{
 			int errorCount = 0;
 
-			foreach (IField field in DatasetUtils.GetFields(_table))
+			foreach (IField field in DatasetUtils.GetFields(_table.Fields))
 			{
 				// TODO ignore the system fields?
 

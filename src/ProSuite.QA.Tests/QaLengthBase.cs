@@ -70,7 +70,7 @@ namespace ProSuite.QA.Tests
 				                    : featureClass.FindField(lengthField.Name);
 
 			_useField = _lengthFieldIndex >= 0 &&
-			            (! is3D || ! DatasetUtils.HasZ(featureClass));
+			            (! is3D || ! DatasetUtils.GetGeometryDef(featureClass).HasZ);
 		}
 
 		#endregion

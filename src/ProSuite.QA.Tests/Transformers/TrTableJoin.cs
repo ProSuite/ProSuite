@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests.Documentation;
@@ -43,12 +45,19 @@ namespace ProSuite.QA.Tests.Transformers
 		{
 			if (_joined == null)
 			{
+				IWorkspace ws = _involved.Select(x => x.Workspace).FirstOrDefault();
+				Assert.NotNull(ws);
+				List<ESRI.ArcGIS.Geodatabase.ITable> involved = new List<ESRI.ArcGIS.Geodatabase.ITable>();
+				_involved.ForEach(x => involved.Add(((IFeatureWorkspace) ws).OpenTable(x.Name)));
+
 				IRelationshipClass relClass =
 					((IFeatureWorkspace) _t0.Workspace).OpenRelationshipClass(
 						_relationName);
-				_joined = RelationshipClassUtils.GetQueryTable(
-					relClass, _involved, _joinType, whereClause: null,
+				var joined = RelationshipClassUtils.GetQueryTable(
+					relClass, involved, _joinType, whereClause: null,
 					queryTableName: _transformerName);
+
+				_joined = ReadOnlyTableFactory.Create(joined);
 			}
 
 			return _joined;

@@ -14,7 +14,7 @@ namespace ProSuite.QA.Tests
 	[SchemaTest]
 	public class QaSchemaFieldDomains : QaSchemaTestBase
 	{
-		[NotNull] private readonly ITable _table;
+		[NotNull] private readonly IReadOnlyTable _table;
 
 		#region issue codes
 
@@ -36,7 +36,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaFieldDomains_0))]
 		public QaSchemaFieldDomains(
 			[Doc(nameof(DocStrings.QaSchemaFieldDomains_table))] [NotNull]
-			ITable table)
+			IReadOnlyTable table)
 			: base(table)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));

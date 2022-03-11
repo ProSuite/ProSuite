@@ -96,7 +96,7 @@ namespace ProSuite.QA.Tests
 
 		public override int Execute(IEnumerable<IReadOnlyRow> selectedRows)
 		{
-			return CheckFeatures(GetFeatures(selectedRows.Cast<IFeature>()));
+			return CheckFeatures(GetFeatures(selectedRows.Cast<IReadOnlyFeature>()));
 		}
 
 		public override int Execute(IReadOnlyRow row)

@@ -23,7 +23,7 @@ namespace ProSuite.QA.Tests.Transformers
 			_intersecting = intersecting;
 		}
 
-		protected override IReadOnlyFeatureClass GetTransformedCore(string name)
+		protected override TransformedFeatureClass GetTransformedCore(string name)
 		{
 			TransformedFc transformedFc = new TransformedFc(_intersected, _intersecting, name);
 			return transformedFc;
@@ -84,7 +84,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override IEnvelope Extent => _intersected.Extent;
 
-			public override IReadOnlyRow GetUncachedRow(int id)
+			public override VirtualRow GetUncachedRow(int id)
 			{
 				throw new NotImplementedException();
 			}
@@ -95,7 +95,7 @@ namespace ProSuite.QA.Tests.Transformers
 				return _intersected.RowCount(queryFilter);
 			}
 
-			public override IEnumerable<IReadOnlyRow> Search(IQueryFilter filter, bool recycling)
+			public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
 			{
 				ISpatialFilter intersectingFilter = new SpatialFilterClass();
 				intersectingFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
@@ -128,7 +128,7 @@ namespace ProSuite.QA.Tests.Transformers
 						double fullLength = ((IPolyline)op).Length;
 						double partLength = ((IPolyline)intersected).Length;
 
-						ESRI.ArcGIS.Geodatabase.IFeature f = Resulting.CreateFeature();
+						GdbFeature f = Resulting.CreateFeature();
 						f.Shape = intersected;
 						f.set_Value(iPartIntersected, partLength / fullLength);
 						f.Store();

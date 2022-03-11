@@ -13,17 +13,17 @@ namespace ProSuite.QA.Tests.Transformers
 			throw new NotImplementedException();
 		}
 
-		public override IEnumerable<IReadOnlyDataset> GetDatasets(esriDatasetType datasetType)
+		public override IEnumerable<VirtualTable> GetDatasets(esriDatasetType datasetType)
 		{
 			throw new NotImplementedException();
 		}
 
-		public override IReadOnlyTable OpenQueryTable(string relationshipClassName)
+		public override VirtualTable OpenQueryTable(string relationshipClassName)
 		{
 			throw new NotImplementedException();
 		}
 
-		public override IReadOnlyTable OpenTable(string name)
+		public override VirtualTable OpenTable(string name)
 		{
 			throw new NotImplementedException();
 		}

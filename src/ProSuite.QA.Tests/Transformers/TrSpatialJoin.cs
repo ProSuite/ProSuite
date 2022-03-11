@@ -44,7 +44,7 @@ namespace ProSuite.QA.Tests.Transformers
 		[Doc(nameof(DocStrings.TrSpatialJoin_T1Attributes))]
 		public IList<string> T1Attributes { get; set; }
 
-		protected override IReadOnlyFeatureClass GetTransformedCore(string name)
+		protected override TransformedFeatureClass GetTransformedCore(string name)
 		{
 			TransformedFc transformedFc = new TransformedFc(
 				(IReadOnlyFeatureClass) InvolvedTables[0],
@@ -142,7 +142,7 @@ namespace ProSuite.QA.Tests.Transformers
 				return _constraint.IsFulfilled(t0, 0, t1, 1, out string conditionMessage);
 			}
 
-			protected override IObject CreateObject(int oid)
+			protected override VirtualRow CreateObject(int oid)
 			{
 				return new TfcFeature(oid, this);
 			}
@@ -219,7 +219,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override IEnvelope Extent => _t0.Extent;
 
-			public override IReadOnlyRow GetUncachedRow(int id)
+			public override VirtualRow GetUncachedRow(int id)
 			{
 				throw new NotImplementedException();
 			}
@@ -230,7 +230,7 @@ namespace ProSuite.QA.Tests.Transformers
 				return _t0.RowCount(queryFilter);
 			}
 
-			public override IEnumerable<IReadOnlyRow> Search(IQueryFilter filter, bool recycling)
+			public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
 			{
 				ISpatialFilter joinFilter = new SpatialFilterClass();
 				joinFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
@@ -264,7 +264,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 						if (! grouped)
 						{
-							IReadOnlyFeature f = CreateFeature(toJoin, new[] { joined });
+							var f = CreateFeature(toJoin, new[] { joined });
 							//res.CreateFeature();
 							yield return f;
 						}
@@ -276,15 +276,15 @@ namespace ProSuite.QA.Tests.Transformers
 
 					if (joineds.Count > 0 || outerJoin)
 					{
-						IReadOnlyFeature f = CreateFeature(toJoin, joineds);
+						GdbFeature f = CreateFeature(toJoin, joineds);
 						yield return f;
 					}
 				}
 			}
 
-			private IReadOnlyFeature CreateFeature(IReadOnlyRow toJoin, IList<IReadOnlyRow> joineds)
+			private GdbFeature CreateFeature(IReadOnlyRow toJoin, IList<IReadOnlyRow> joineds)
 			{
-				ESRI.ArcGIS.Geodatabase.IFeature f = Resulting.CreateFeature();
+				GdbFeature f = Resulting.CreateFeature();
 				f.Shape = ((IReadOnlyFeature) toJoin).Shape;
 				f.Store();
 

@@ -17,7 +17,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 		[Doc(nameof(DocStrings.TrMultilineToLine_0))]
 		public TrMultilineToLine([NotNull] [Doc(nameof(DocStrings.TrMultilineToLine_featureClass))]
-		                         IFeatureClass featureClass)
+		                         IReadOnlyFeatureClass featureClass)
 			: base(featureClass, esriGeometryType.esriGeometryPolyline) { }
 
 		protected override void AddCustomAttributes(TransformedFeatureClass transformedFc)
@@ -26,7 +26,7 @@ namespace ProSuite.QA.Tests.Transformers
 				FieldUtils.CreateField(AttrPartIndex, esriFieldType.esriFieldTypeInteger));
 		}
 
-		protected override IEnumerable<IFeature> Transform(IGeometry source)
+		protected override IEnumerable<GdbFeature> Transform(IGeometry source)
 		{
 			IGeometry transform = source;
 			if (source is IPolygon poly)
@@ -40,11 +40,11 @@ namespace ProSuite.QA.Tests.Transformers
 				IGeometry singleLine = GeometryFactory.Clone(geom.Geometry[i]);
 				IPolyline line = GeometryFactory.CreatePolyline(singleLine);
 
-				IFeature feature = CreateFeature();
+				GdbFeature feature = CreateFeature();
 				feature.Shape = line;
 
 				_iAttrPart = _iAttrPart ?? feature.Fields.FindField(AttrPartIndex);
-				feature.Value[_iAttrPart.Value] = i;
+				feature.set_Value(_iAttrPart.Value, i);
 
 				yield return feature;
 			}

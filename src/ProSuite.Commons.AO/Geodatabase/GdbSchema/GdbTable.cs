@@ -59,7 +59,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			if (createBackingDataset == null)
 			{
-				BackingDataset = new InMemoryDataset(this, new List<IRow>(0));
+				BackingDataset = new InMemoryDataset(this, new List<VirtualRow>(0));
 			}
 			else
 			{
@@ -235,7 +235,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				throw new NotImplementedException("No backing dataset provided for Search().");
 			}
 
-			IEnumerable<IReadOnlyRow> rows = BackingDataset.Search(queryFilter, recycling);
+			IEnumerable<VirtualRow> rows = BackingDataset.Search(queryFilter, recycling);
 
 			return new CursorImpl(this, rows);
 		}
@@ -261,54 +261,6 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				}
 
 				return FindField(SubtypeFieldName);
-			}
-		}
-
-		#endregion
-
-		#region Nested class CursorImpl
-
-		protected class CursorImpl_ : ICursor
-		{
-			private readonly IEnumerator<IRow> _rowEnumerator;
-
-			public CursorImpl_(ITable table, IEnumerable<IRow> rows)
-			{
-				Fields = table.Fields;
-
-				_rowEnumerator = rows.GetEnumerator();
-			}
-
-			public IFields Fields { get; }
-
-			public int FindField(string name)
-			{
-				return Fields.FindField(name);
-			}
-
-			public IRow NextRow()
-			{
-				return _rowEnumerator.MoveNext() ? _rowEnumerator.Current : null;
-			}
-
-			public void UpdateRow(IRow row)
-			{
-				throw new NotImplementedException();
-			}
-
-			public void DeleteRow()
-			{
-				throw new NotImplementedException();
-			}
-
-			public object InsertRow(IRowBuffer buffer)
-			{
-				throw new NotImplementedException();
-			}
-
-			public void Flush()
-			{
-				throw new NotImplementedException();
 			}
 		}
 

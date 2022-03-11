@@ -10,6 +10,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Surface;
 using ProSuite.Commons.Essentials.Assertions;
@@ -1519,7 +1520,7 @@ namespace ProSuite.QA.Container.TestContainer
 			try
 			{
 				(table as ITransformedTable)?.SetKnownTransformedRows(
-					cachedRows.Values.Select(x => x.Feature));
+					cachedRows.Values.Select(x => x.Feature as VirtualRow));
 				foreach (IReadOnlyRow row in GetRows(table, filter))
 				{
 					var feature = (IReadOnlyFeature)row;

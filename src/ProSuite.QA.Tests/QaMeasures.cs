@@ -62,7 +62,7 @@ namespace ProSuite.QA.Tests
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
-			_hasM = DatasetUtils.HasM(featureClass);
+			_hasM = DatasetUtils.GetGeometryDef(featureClass).HasM;
 			_shapeType = featureClass.ShapeType;
 			_shapeFieldName = featureClass.ShapeFieldName;
 

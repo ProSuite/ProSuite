@@ -15,7 +15,7 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 			private readonly IFeatureWorkspace _ws;
 			private readonly string _name;
 			private readonly esriGeometryType _geometryType;
-			private ITable _table;
+			private ESRI.ArcGIS.Geodatabase.ITable _table;
 
 			private QaError _currentError;
 
@@ -33,10 +33,10 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 			{
 				((IWorkspaceEdit) _ws).StartEditing(false);
 				_currentError = qaError;
-				IRow row = Table.CreateRow();
+				ESRI.ArcGIS.Geodatabase.IRow row = Table.CreateRow();
 				if (qaError.Geometry != null)
 				{
-					((IFeature) row).Shape = qaError.Geometry;
+					((ESRI.ArcGIS.Geodatabase.IFeature) row).Shape = qaError.Geometry;
 				}
 
 				row.set_Value(1, qaError.Description);
@@ -44,7 +44,7 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 				((IWorkspaceEdit) _ws).StopEditing(true);
 			}
 
-			private ITable Table
+			private ESRI.ArcGIS.Geodatabase.ITable Table
 			{
 				get
 				{
@@ -65,7 +65,7 @@ namespace ProSuite.QA.Tests.Test.TestRunners
 								                "Shape", _geometryType, sr, 1000, true, false));
 
 							_table =
-								(ITable) DatasetUtils.CreateSimpleFeatureClass(
+								(ESRI.ArcGIS.Geodatabase.ITable) DatasetUtils.CreateSimpleFeatureClass(
 									_ws, _name, fields, null);
 						}
 						else

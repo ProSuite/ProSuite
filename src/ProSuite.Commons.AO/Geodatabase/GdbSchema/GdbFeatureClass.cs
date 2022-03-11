@@ -30,7 +30,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 		}
 
-		protected override IObject CreateObject(int oid)
+		GdbFeature IRowCreator<GdbFeature>.CreateRow() => (GdbFeature)CreateRow();
+		public new GdbFeature CreateFeature() => (GdbFeature)CreateRow();
+		protected override VirtualRow CreateObject(int oid) => CreateFeature(oid);
+
+		public GdbFeature CreateFeature(int oid)
 		{
 			return new GdbFeature(oid, this);
 		}

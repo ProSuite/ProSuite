@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
@@ -45,7 +46,9 @@ namespace ProSuite.QA.Tests
 		{
 			_attrRules = new List<IAttributeRule>();
 
-			if (table is IValidation validation)
+			ESRI.ArcGIS.Geodatabase.ITable baseTable =
+				Assert.NotNull(table as ReadOnlyTable).BaseTable;
+			if (baseTable is IValidation validation)
 			{
 				IEnumRule rules = validation.Rules;
 				rules.Reset();
@@ -106,12 +109,13 @@ namespace ProSuite.QA.Tests
 						}
 						else if (iSubtype.Value == rule.SubtypeCode)
 						{
-							valid = rule.Validate(row, out message);
+							valid = rule.Validate(Assert.NotNull(row as ReadOnlyRow).BaseRow, out message);
 						}
 					}
 					else
 					{
-						valid = rule.Validate(row, out message);
+						valid = rule.Validate(Assert.NotNull(row as ReadOnlyRow).BaseRow,
+						                      out message);
 					}
 				}
 				catch (Exception exp)

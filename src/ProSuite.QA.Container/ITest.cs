@@ -4,6 +4,7 @@ using System.Runtime.Serialization;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
@@ -30,134 +31,6 @@ namespace ProSuite.QA.Container
 	public class IDataset
 	{ }
 
-	public class ReadOnlyTableFactory : ReadOnlyFeatureClass
-	{
-		protected static readonly Dictionary<ESRI.ArcGIS.Geodatabase.ITable, ReadOnlyTable> Cache = new Dictionary<ESRI.ArcGIS.Geodatabase.ITable, ReadOnlyTable>();
-
-		public static ReadOnlyFeatureClass Create(
-			[NotNull] ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass)
-		{
-			return (ReadOnlyFeatureClass)Create((ESRI.ArcGIS.Geodatabase.ITable) featureClass);
-		}
-		public static ReadOnlyTable Create([NotNull] ESRI.ArcGIS.Geodatabase.ITable table)
-		{
-			if (!Cache.TryGetValue(table, out ReadOnlyTable existing))
-			{
-				if (table is ESRI.ArcGIS.Geodatabase.IFeatureClass fc)
-				{ existing = CreateReadOnlyFeatureClass(fc); }
-				else
-				{ existing = CreateReadOnlyTable(table); }
-
-				Cache.Add(table, existing);
-			}
-			return existing;
-		}
-		public static void ClearCache()
-		{
-			Cache.Clear();
-		}
-
-		private ReadOnlyTableFactory() : base(null)
-		{ }
-	}
-	public class ReadOnlyFeatureClass : ReadOnlyTable, IReadOnlyFeatureClass
-	{
-		protected static ReadOnlyFeatureClass CreateReadOnlyFeatureClass(ESRI.ArcGIS.Geodatabase.IFeatureClass fc)
-		{ return new ReadOnlyFeatureClass(fc); }
-		protected ReadOnlyFeatureClass(ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass)
-			: base((ESRI.ArcGIS.Geodatabase.ITable)featureClass)
-		{ }
-
-		public string ShapeFieldName => FeatureClass.ShapeFieldName;
-		public IField AreaField => Commons.AO.Geodatabase.DatasetUtils.GetAreaField(FeatureClass);
-		public IField LengthField => Commons.AO.Geodatabase.DatasetUtils.GetLengthField(FeatureClass);
-		public IEnvelope Extent => ((ESRI.ArcGIS.Geodatabase.IGeoDataset)FeatureClass).Extent;
-		public ISpatialReference SpatialReference => ((ESRI.ArcGIS.Geodatabase.IGeoDataset)FeatureClass).SpatialReference;
-		public esriGeometryType ShapeType => FeatureClass.ShapeType;
-		protected ESRI.ArcGIS.Geodatabase.IFeatureClass FeatureClass => (ESRI.ArcGIS.Geodatabase.IFeatureClass)Table;
-		protected override ReadOnlyRow CreateRow(ESRI.ArcGIS.Geodatabase.IRow row)
-		{
-			return new ReadOnlyFeature(this, (ESRI.ArcGIS.Geodatabase.IFeature)row);
-		}
-	}
-	public class ReadOnlyTable : IReadOnlyTable
-	{
-		public static IEnumerable<IReadOnlyRow> EnumRows(IEnumerable<ESRI.ArcGIS.Geodatabase.IRow> rows)
-		{
-			ESRI.ArcGIS.Geodatabase.ITable current = null;
-			ReadOnlyTable table = null;
-			foreach (var row in rows)
-			{
-				ESRI.ArcGIS.Geodatabase.ITable t = row.Table;
-				if (t != current)
-				{
-					table = CreateReadOnlyTable(row.Table);
-					current = t;
-				}
-				yield return table.CreateRow(row);
-			}
-		}
-
-		protected static ReadOnlyTable CreateReadOnlyTable(ESRI.ArcGIS.Geodatabase.ITable table)
-		{ return new ReadOnlyTable(table); }
-
-		private readonly ESRI.ArcGIS.Geodatabase.ITable _table;
-		protected ReadOnlyTable(ESRI.ArcGIS.Geodatabase.ITable table)
-		{
-			_table = table;
-		}
-		protected ESRI.ArcGIS.Geodatabase.ITable Table => _table;
-		ESRI.ArcGIS.esriSystem.IName IReadOnlyDataset.FullName => ((ESRI.ArcGIS.Geodatabase.IDataset)_table).FullName;
-		IWorkspace IReadOnlyDataset.Workspace => ((ESRI.ArcGIS.Geodatabase.IDataset)_table).Workspace;
-		public string Name => Commons.AO.Geodatabase.DatasetUtils.GetName(_table);
-		public IFields Fields => _table.Fields;
-		public int FindField(string name) => _table.FindField(name);
-		public bool HasOID => _table.HasOID;
-		public string OIDFieldName => _table.OIDFieldName;
-		public IReadOnlyRow GetRow(int oid) => CreateRow(_table.GetRow(oid));
-		public int RowCount(IQueryFilter filter) => _table.RowCount(filter);
-
-		protected virtual ReadOnlyRow CreateRow(ESRI.ArcGIS.Geodatabase.IRow row)
-		{
-			return new ReadOnlyRow(this, row);
-		}
-
-		public IEnumerable<IReadOnlyRow> EnumRows(IQueryFilter filter, bool recycle)
-		{
-			foreach (var row in new Commons.AO.EnumCursor(_table, filter, recycle))
-			{
-				yield return CreateRow(row);
-			}
-		}
-	}
-	public class ReadOnlyRow : IReadOnlyRow
-	{
-		public ReadOnlyRow(ReadOnlyTable table, ESRI.ArcGIS.Geodatabase.IRow row)
-		{
-			Table = table;
-			Row = row;
-		}
-
-		protected ESRI.ArcGIS.Geodatabase.IRow Row { get; }
-		public bool HasOID => Row.HasOID;
-		public int OID => Row.OID;
-		public object get_Value(int field) => Row.Value[field];
-		IReadOnlyTable IReadOnlyRow.Table => Table;
-		public ReadOnlyTable Table { get; }
-	}
-
-	public class ReadOnlyFeature : ReadOnlyRow, IReadOnlyFeature
-	{
-		public ReadOnlyFeature(ReadOnlyFeatureClass featureClass, ESRI.ArcGIS.Geodatabase.IFeature feature)
-			: base(featureClass, feature)
-		{ }
-		protected ESRI.ArcGIS.Geodatabase.IFeature Feature => (ESRI.ArcGIS.Geodatabase.IFeature)Row;
-		public IEnvelope Extent => Feature.Extent;
-		public IGeometry Shape => Feature.Shape;
-		public IGeometry ShapeCopy => Feature.ShapeCopy;
-		public ReadOnlyFeatureClass FeatureClass => (ReadOnlyFeatureClass)Table;
-		public esriFeatureType FeatureType => Feature.FeatureType;
-	}
 	public interface IInvolvesTables
 	{
 		[NotNull]
@@ -270,7 +143,7 @@ namespace ProSuite.QA.Container
 
 	public interface ITransformedTable
 	{
-		void SetKnownTransformedRows([CanBeNull] IEnumerable<IReadOnlyRow> knownRows);
+		void SetKnownTransformedRows([CanBeNull] IEnumerable<VirtualRow> knownRows);
 
 		bool NoCaching { get; }
 	}

@@ -108,7 +108,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public WorkspaceDbType DbType { get; }
 
-		public IEnumerable<IDataset> GetDatasets()
+		public IEnumerable<VirtualTable> GetDatasets()
 		{
 			return _backingDataStore.GetDatasets(esriDatasetType.esriDTAny);
 		}

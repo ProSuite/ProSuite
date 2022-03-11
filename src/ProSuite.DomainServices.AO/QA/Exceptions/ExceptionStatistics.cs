@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.QA;
@@ -19,8 +20,8 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			_conditionExceptionStatistics =
 				new Dictionary<QualityCondition, QualityConditionExceptionStatistics>();
 
-		[NotNull] private readonly IDictionary<ITable, HashSet<object>>
-			_nonUniqueKeysByTable = new Dictionary<ITable, HashSet<object>>();
+		[NotNull] private readonly IDictionary<IReadOnlyTable, HashSet<object>>
+			_nonUniqueKeysByTable = new Dictionary<IReadOnlyTable, HashSet<object>>();
 
 		[NotNull] private readonly IDictionary<string, int> _usedExceptionsByExceptionCategory =
 			new Dictionary<string, int>();
@@ -72,10 +73,10 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 				       : result;
 		}
 
-		ICollection<ITable> IExceptionStatistics.TablesWithNonUniqueKeys
+		ICollection<IReadOnlyTable> IExceptionStatistics.TablesWithNonUniqueKeys
 			=> _nonUniqueKeysByTable.Keys;
 
-		ICollection<object> IExceptionStatistics.GetNonUniqueKeys(ITable table)
+		ICollection<object> IExceptionStatistics.GetNonUniqueKeys(IReadOnlyTable table)
 		{
 			HashSet<object> keys;
 			return _nonUniqueKeysByTable.TryGetValue(table, out keys)
@@ -130,7 +131,7 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			InactiveExceptionObjectCount++;
 		}
 
-		public void ReportNonUniqueKey([NotNull] ITable table, [NotNull] object key)
+		public void ReportNonUniqueKey([NotNull] IReadOnlyTable table, [NotNull] object key)
 		{
 			HashSet<object> keys;
 			if (! _nonUniqueKeysByTable.TryGetValue(table, out keys))

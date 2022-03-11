@@ -128,9 +128,42 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return null;
 			}
 		}
+		[CanBeNull]
+		public static IField GetLengthField([NotNull] IReadOnlyFeatureClass featureClass)
+		{
+			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+
+			try
+			{
+				return featureClass.LengthField;
+			}
+			catch (NotImplementedException)
+			{
+				// property is not implemented for feature classes from non-Gdb workspaces 
+				// ("query layers")
+				return null;
+			}
+		}
 
 		[CanBeNull]
 		public static IField GetAreaField([NotNull] IFeatureClass featureClass)
+		{
+			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
+
+			try
+			{
+				return featureClass.AreaField;
+			}
+			catch (NotImplementedException)
+			{
+				// property is not implemented for feature classes from non-Gdb workspaces 
+				// ("query layers")
+				return null;
+			}
+		}
+
+		[CanBeNull]
+		public static IField GetAreaField([NotNull] IReadOnlyFeatureClass featureClass)
 		{
 			Assert.ArgumentNotNull(featureClass, nameof(featureClass));
 
@@ -2976,6 +3009,18 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return Assert.NotNull(field, "field '{0}' not found in '{1}'",
 			                      fieldName, GetName(table));
 		}
+		[NotNull]
+		public static IField GetField([NotNull] IReadOnlyTable table,
+		                              [NotNull] string fieldName)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNullOrEmpty(fieldName, nameof(fieldName));
+
+			IField field = table.Fields.Field[GetFieldIndex(table, fieldName)];
+
+			return Assert.NotNull(field, "field '{0}' not found in '{1}'",
+			                      fieldName, table.Name);
+		}
 
 		/// <summary>
 		/// Gets the fields.
@@ -3090,6 +3135,24 @@ namespace ProSuite.Commons.AO.Geodatabase
 			{
 				throw new ArgumentException(
 					string.Format("Field '{0}' not found in '{1}'", fieldName, GetName(table)),
+					nameof(fieldName));
+			}
+
+			return fieldIndex;
+		}
+
+		public static int GetFieldIndex([NotNull] IReadOnlyTable table,
+		                                [NotNull] string fieldName)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNullOrEmpty(fieldName, nameof(fieldName));
+
+			int fieldIndex = table.FindField(fieldName);
+
+			if (fieldIndex < 0)
+			{
+				throw new ArgumentException(
+					string.Format("Field '{0}' not found in '{1}'", fieldName, table.Name),
 					nameof(fieldName));
 			}
 

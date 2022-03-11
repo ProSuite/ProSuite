@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
@@ -21,7 +21,7 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 		private HashSet<string> _verifiedDatasetNames;
 
 		[CanBeNull] private IEnvelope _currentTile;
-		[CanBeNull] private IFeature _currentFeature;
+		[CanBeNull] private IReadOnlyFeature _currentFeature;
 		private Guid _currentRecycleUnique;
 
 		[CanBeNull] private ICollection<AreaSpecification> _currentFeatureAreaSpecifications;
@@ -63,7 +63,7 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 			}
 		}
 
-		public bool IsFeatureToBeTested(IFeature feature,
+		public bool IsFeatureToBeTested(IReadOnlyFeature feature,
 		                                bool recycled, Guid recycleUnique,
 		                                QualityCondition qualityCondition,
 		                                bool ignoreTestArea)
@@ -130,12 +130,12 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 		}
 
 		[NotNull]
-		private static string GetDatasetName([NotNull] IFeature feature)
+		private static string GetDatasetName([NotNull] IReadOnlyFeature feature)
 		{
 			//return feature is TerrainRow
 			//		   ? ((TerrainRow) feature).DatasetName
 			//		   : ((IDataset) feature.Class).Name;
-			return ((IDataset) feature.Class).Name;
+			return feature.Table.Name;
 		}
 
 		[NotNull]
@@ -163,7 +163,7 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 
 		[CanBeNull]
 		private List<AreaSpecification> CalculateAreaSpecifications(
-			[NotNull] IFeature feature, bool ignoreTestPerimeter)
+			[NotNull] IReadOnlyFeature feature, bool ignoreTestPerimeter)
 		{
 			if (_areaSpecifications.Count == 0)
 			{
@@ -327,7 +327,7 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 
 		[CanBeNull]
 		private IEnumerable<AreaSpecification> GetAreaSpecifications(
-			[NotNull] IFeature feature, bool recycled, Guid recycleUnique, bool ignoreTestArea)
+			[NotNull] IReadOnlyFeature feature, bool recycled, Guid recycleUnique, bool ignoreTestArea)
 		{
 			if (feature != _currentFeature ||
 			    recycled && _currentRecycleUnique != recycleUnique)
@@ -385,7 +385,7 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 
 		private class FeaturePerimeterRelation
 		{
-			private readonly IFeature _feature;
+			private readonly IReadOnlyFeature _feature;
 			private readonly IEnvelope _featureEnvelopeTemplate;
 			private readonly IEnvelope _tileEnvelope;
 			private readonly bool _ignoreCurrentTileRelation;
@@ -400,7 +400,7 @@ namespace ProSuite.DomainServices.AO.QA.AreaSpecification
 			/// <param name="featureEnvelopeTemplate">The template for the feature envelope.</param>
 			/// <param name="tileEnvelope">The envelope of the currently processed tile.</param>
 			/// <param name="ignoreCurrentTileRelation"></param>
-			public FeaturePerimeterRelation([NotNull] IFeature feature,
+			public FeaturePerimeterRelation([NotNull] IReadOnlyFeature feature,
 			                                [NotNull] IEnvelope featureEnvelopeTemplate,
 			                                [CanBeNull] IEnvelope tileEnvelope,
 			                                bool ignoreCurrentTileRelation)

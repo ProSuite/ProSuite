@@ -475,9 +475,10 @@ namespace ProSuite.QA.Tests
 
 				const bool recycle = true;
 				foreach (
-					IReadOnlyFeature polygonFeature in
-					GdbQueryUtils.GetFeatures(featureClass, errorsByOid.Keys, recycle))
+					IReadOnlyRow polygonRow in
+					GdbQueryUtils.GetRows(featureClass, errorsByOid.Keys, recycle))
 				{
+					IReadOnlyFeature polygonFeature = (IReadOnlyFeature) polygonRow;
 					IGeometry errorGeometry = polygonFeature.ShapeCopy;
 
 					PolygonPointsError error = errorsByOid[polygonFeature.OID];

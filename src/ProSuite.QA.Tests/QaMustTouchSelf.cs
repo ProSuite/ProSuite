@@ -152,7 +152,7 @@ namespace ProSuite.QA.Tests
 
 			QueryFilterHelper filterHelper = _helper[relatedTableIndex];
 
-			return Search(table, spatialFilter, filterHelper).Cast<IFeature>();
+			return Search(table, spatialFilter, filterHelper).Cast<IReadOnlyFeature>();
 		}
 
 		private int ReportErrors(int tableIndex,
@@ -169,7 +169,7 @@ namespace ProSuite.QA.Tests
 			// TODO extract base class (QaRequiredSpatialRelationSelf)
 			// TODO use issue code NoTouchingFeature_WithFulfilledConstraint
 			const bool recycling = true;
-			return GdbQueryUtils.GetFeatures(featureClass, oids, recycling)
+			return GdbQueryUtils.GetRows(featureClass, oids, recycling).Cast<IReadOnlyFeature>()
 			                    .Sum(feature => ReportError(
 				                         "Feature is not touched by another feature",
 				                         feature.ShapeCopy,

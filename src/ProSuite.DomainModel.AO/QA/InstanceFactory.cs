@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
@@ -190,7 +191,7 @@ namespace ProSuite.DomainModel.AO.QA
 				{
 					TableConstraint tableConstraint = sortedTableConstraints[tableIndex];
 
-					ITable table = tableConstraint.Table;
+					IReadOnlyTable table = tableConstraint.Table;
 
 					if (table != instance.InvolvedTables[tableIndex])
 					{
@@ -198,8 +199,8 @@ namespace ProSuite.DomainModel.AO.QA
 							string.Format(
 								"Error in implementation of {0}: table #{1} in instance is {2}, expected is {3}",
 								instance.GetType(), tableIndex,
-								((IDataset) instance.InvolvedTables[tableIndex]).Name,
-								((IDataset) table).Name));
+								instance.InvolvedTables[tableIndex].Name,
+								table.Name));
 					}
 
 					if (StringUtils.IsNotEmpty(tableConstraint.FilterExpression))
@@ -357,7 +358,7 @@ namespace ProSuite.DomainModel.AO.QA
 			// if correct type, add to dataSetList
 			if (tableConstraints != null &&
 			    valuesForParameter.Count > 0 &&
-			    valuesForParameter[0] is ITable)
+			    valuesForParameter[0] is IReadOnlyTable)
 			{
 				for (int iValue = 0; iValue < valuesForParameter.Count; iValue++)
 				{
@@ -365,7 +366,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 					Dataset dataset = datasetParameterValue.DatasetValue;
 
-					var table = (ITable) valuesForParameter[iValue];
+					var table = (IReadOnlyTable) valuesForParameter[iValue];
 
 					DdxModel dataModel = dataset?.Model;
 
@@ -560,7 +561,7 @@ namespace ProSuite.DomainModel.AO.QA
 			/// <param name="qaSqlIsCaseSensitive">Indicates if SQL statements referring to this table should be treated as case-sensitive (only if evaluated by the QA sql engine)</param>
 			/// <param name="rowFiltersExpression">condition of the non text based filters, formulated by AND/OR combinations of IRowFilter.Name </param>
 			/// <param name="rowFilters">non text based filters</param>
-			public TableConstraint([NotNull] ITable table,
+			public TableConstraint([NotNull] IReadOnlyTable table,
 			                       [CanBeNull] string filterExpression,
 			                       bool qaSqlIsCaseSensitive,
 			                       [CanBeNull] string rowFiltersExpression = null,
@@ -576,7 +577,7 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 
 			[NotNull]
-			public ITable Table { get; }
+			public IReadOnlyTable Table { get; }
 
 			[CanBeNull]
 			public string FilterExpression { get; }

@@ -836,6 +836,27 @@ namespace ProSuite.Commons.AO.Geodatabase
 			//}
 		}
 
+		public static IEnumerable<IReadOnlyRow> GetRows(
+			[NotNull] IReadOnlyTable table,
+			[NotNull] IEnumerable<int> objectIds,
+			bool recycling)
+		{
+			if (table is ReadOnlyTable roTable)
+			{
+				foreach (IRow baseFeature in GetRowsByObjectIds(roTable.BaseTable, objectIds, recycling))
+				{
+					yield return roTable.CreateRow(baseFeature);
+				}
+			}
+			else
+			{
+				foreach (int oid in objectIds)
+				{
+					yield return table.GetRow(oid);
+				}
+			}
+		}
+
 		/// <summary>
 		/// Gets the features for a given collection of object ids
 		/// </summary>
@@ -1131,10 +1152,48 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNullOrEmpty(fieldName, nameof(fieldName));
 			Assert.ArgumentNotNull(valueList, nameof(valueList));
 
+			foreach (IRow row in GetRowsInList(DatasetUtils.GetWorkspace(table),
+			                                DatasetUtils.GetField(table, fieldName), valueList,
+			                                (q) => GetRows(table, q, recycle), queryFilter))
+			{
+				yield return (T)row;
+			}
+		}
+
+		[NotNull]
+		public static IEnumerable<IReadOnlyRow> GetRowsInList(
+			[NotNull] IReadOnlyTable table,
+			[NotNull] string fieldName,
+			[NotNull] IEnumerable valueList,
+			bool recycle,
+			[CanBeNull] IQueryFilter queryFilter = null)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNullOrEmpty(fieldName, nameof(fieldName));
+			Assert.ArgumentNotNull(valueList, nameof(valueList));
+
+			foreach (IReadOnlyRow row in GetRowsInList(
+				         table.Workspace, DatasetUtils.GetField(table, fieldName), valueList,
+				         (q) => table.EnumRows(q, recycle), queryFilter))
+			{
+				yield return row;
+			}
+		}
+
+
+		private static IEnumerable<T> GetRowsInList<T>(
+			[NotNull] IWorkspace workspace,
+			[NotNull] IField field,
+			[NotNull] IEnumerable valueList,
+			[NotNull] Func<IQueryFilter, IEnumerable<T>> getRows,
+			[CanBeNull] IQueryFilter queryFilter = null)
+		{
+			Assert.ArgumentNotNull(workspace, nameof(workspace));
+			Assert.ArgumentNotNull(valueList, nameof(valueList));
+			Assert.ArgumentNotNull(getRows, nameof(getRows));
+
 			// TODO: assert that the values match the field type
 
-			IWorkspace workspace = ((IDataset) table).Workspace;
-			IField field = DatasetUtils.GetField(table, fieldName);
 			esriFieldType fieldType = field.Type;
 
 			if (queryFilter == null)
@@ -1163,9 +1222,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 							sb.Append(")");
 							queryFilter.WhereClause = sb.ToString();
 
-							foreach (IRow row in GetRows(table, queryFilter, recycle))
+							foreach (T row in getRows(queryFilter))
 							{
-								yield return (T) row;
+								yield return row;
 							}
 						}
 
@@ -1175,7 +1234,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 							sb.AppendFormat("({0}) AND ", origWhereClause);
 						}
 
-						sb.AppendFormat("{0} ", fieldName);
+						sb.AppendFormat("{0} ", field.Name);
 						sb.Append("IN (");
 						valueCount = 0;
 					}
@@ -1193,9 +1252,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 					sb.Append(")");
 					queryFilter.WhereClause = sb.ToString();
 
-					foreach (IRow row in GetRows(table, queryFilter, recycle))
+					foreach (T row in getRows(queryFilter))
 					{
-						yield return (T) row;
+						yield return row;
 					}
 				}
 			}

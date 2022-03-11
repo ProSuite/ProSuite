@@ -95,7 +95,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public IGeometryTransformer Transformer { get; }
 
-			protected override IObject CreateObject(int oid)
+			protected override VirtualRow CreateObject(int oid)
 			{
 				return new TransformedFeature(oid, this);
 			}
@@ -120,12 +120,12 @@ namespace ProSuite.QA.Tests.Transformers
 			bool ITransformedTable.NoCaching => false;
 
 			[CanBeNull]
-			public BoxTree<IReadOnlyFeature> KnownRows { get; private set; }
+			public BoxTree<VirtualRow> KnownRows { get; private set; }
 
-			public void SetKnownTransformedRows(IEnumerable<IReadOnlyRow> knownRows)
+			public void SetKnownTransformedRows(IEnumerable<VirtualRow> knownRows)
 			{
 				KnownRows = BoxTreeUtils.CreateBoxTree(
-					knownRows?.Select(x => x as IReadOnlyFeature),
+					knownRows?.Select(x => x as VirtualRow),
 					getBox: x => x?.Shape != null
 												 ? QaGeometryUtils.CreateBox(x.Shape)
 												 : null);
@@ -171,7 +171,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override IEnvelope Extent => _t0.Extent;
 
-			public override IReadOnlyRow GetUncachedRow(int id)
+			public override VirtualRow GetUncachedRow(int id)
 			{
 				throw new NotImplementedException();
 			}
@@ -242,9 +242,9 @@ namespace ProSuite.QA.Tests.Transformers
 				_idxBaseRowField ??
 				(_idxBaseRowField = Resulting.FindField(InvolvedRowUtils.BaseRowField)).Value;
 
-			public override IEnumerable<IReadOnlyRow> Search(IQueryFilter filter, bool recycling)
+			public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
 			{
-				var involvedDict = new Dictionary<IReadOnlyFeature, Involved>();
+				var involvedDict = new Dictionary<VirtualRow, Involved>();
 
 				foreach (var row in DataContainer.Search(_t0, filter, QueryHelpers[0]))
 				{
@@ -280,7 +280,7 @@ namespace ProSuite.QA.Tests.Transformers
 				if ((Resulting.Transformer as IContainerTransformer)?.HandlesContainer == true &&
 						Resulting.KnownRows != null && filter is ISpatialFilter sp)
 				{
-					foreach (BoxTree<IReadOnlyFeature>.TileEntry entry in
+					foreach (BoxTree<VirtualRow>.TileEntry entry in
 									 Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(sp.Geometry)))
 					{
 						yield return entry.Value;
@@ -290,7 +290,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			private bool IsKnown(
 				[NotNull] IReadOnlyFeature baseFeature,
-				[NotNull] Dictionary<IReadOnlyFeature, Involved> involvedDict)
+				[NotNull] Dictionary<VirtualRow, Involved> involvedDict)
 			{
 				if (!(Resulting.Transformer is IContainerTransformer ct))
 				{

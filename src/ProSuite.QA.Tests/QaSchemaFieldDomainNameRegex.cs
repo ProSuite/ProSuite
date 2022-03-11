@@ -1,5 +1,4 @@
 using System.Text.RegularExpressions;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
@@ -8,6 +7,7 @@ using ProSuite.QA.Tests.Schema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -15,7 +15,7 @@ namespace ProSuite.QA.Tests
 	[SchemaTest]
 	public class QaSchemaFieldDomainNameRegex : QaSchemaTestBase
 	{
-		private readonly ITable _table;
+		private readonly IReadOnlyTable _table;
 		private readonly string _pattern;
 		private readonly bool _matchIsError;
 		private readonly string _patternDescription;
@@ -42,7 +42,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaFieldDomainNameRegex_0))]
 		public QaSchemaFieldDomainNameRegex(
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainNameRegex_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainNameRegex_pattern))] [NotNull]
 			string pattern,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainNameRegex_matchIsError))]

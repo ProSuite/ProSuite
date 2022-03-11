@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests
 	[SchemaTest]
 	public class QaSchemaFieldAliases : QaSchemaTestBase
 	{
-		private readonly ITable _table;
+		private readonly IReadOnlyTable _table;
 		private readonly int _maximumLength;
 		private readonly ExpectedCase _expectedCase;
 		private readonly bool _requireUniqueAliasNames;
@@ -59,7 +59,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaFieldAliases_0))]
 		public QaSchemaFieldAliases(
 			[Doc(nameof(DocStrings.QaSchemaFieldAliases_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaSchemaFieldAliases_maximumLength))]
 			int maximumLength,
 			[Doc(nameof(DocStrings.QaSchemaFieldAliases_expectedCase))]
@@ -77,7 +77,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaFieldAliases_0))]
 		public QaSchemaFieldAliases(
 			[Doc(nameof(DocStrings.QaSchemaFieldAliases_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaSchemaFieldAliases_maximumLength))]
 			int maximumLength,
 			[Doc(nameof(DocStrings.QaSchemaFieldAliases_expectedCase))]
@@ -104,7 +104,7 @@ namespace ProSuite.QA.Tests
 
 		public override int Execute()
 		{
-			IList<IField> fields = DatasetUtils.GetFields(_table);
+			IList<IField> fields = DatasetUtils.GetFields(_table.Fields);
 
 			int errorCount = fields.Sum(field => CheckField(field));
 
@@ -360,7 +360,7 @@ namespace ProSuite.QA.Tests
 				string description =
 					string.Format(
 						LocalizableStrings.QaSchemaFieldAliases_NotUnique,
-						aliasName, DatasetUtils.GetName(_table),
+						aliasName, _table.Name,
 						StringUtils.Concatenate(GetFieldNames(fieldsForAlias), ", "));
 
 				errorCount += ReportSchemaError(Codes[Code.NotUnique], description);
@@ -377,7 +377,7 @@ namespace ProSuite.QA.Tests
 		}
 
 		private static bool IsSystemField([NotNull] IField field,
-		                                  [NotNull] ITable table)
+		                                  [NotNull] IReadOnlyTable table)
 		{
 			switch (field.Type)
 			{
@@ -386,7 +386,7 @@ namespace ProSuite.QA.Tests
 					return true;
 			}
 
-			var featureClass = table as IFeatureClass;
+			var featureClass = table as IReadOnlyFeatureClass;
 			if (featureClass != null)
 			{
 				if (field == DatasetUtils.GetLengthField(featureClass) ||

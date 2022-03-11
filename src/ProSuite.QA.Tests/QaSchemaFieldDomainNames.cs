@@ -8,6 +8,7 @@ using ProSuite.QA.Tests.Schema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -15,7 +16,7 @@ namespace ProSuite.QA.Tests
 	[SchemaTest]
 	public class QaSchemaFieldDomainNames : QaSchemaTestBase
 	{
-		private readonly ITable _table;
+		private readonly IReadOnlyTable _table;
 		private readonly string _expectedPrefix;
 		private readonly int _maximumLength;
 		private readonly bool _mustContainFieldName;
@@ -51,7 +52,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaFieldDomainNames_0))]
 		public QaSchemaFieldDomainNames(
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainNames_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainNames_expectedPrefix))] [CanBeNull]
 			string expectedPrefix,
 			[Doc(nameof(DocStrings.QaSchemaFieldDomainNames_maximumLength))]

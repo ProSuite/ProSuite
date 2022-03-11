@@ -34,7 +34,7 @@ namespace ProSuite.QA.Tests.Transformers
 		[Doc(nameof(DocStrings.TrMultipolygonToPolygon_0))]
 		public TrMultipolygonToPolygon(
 			[NotNull] [Doc(nameof(DocStrings.TrMultipolygonToPolygon_featureClass))]
-			IFeatureClass featureClass)
+			IReadOnlyFeatureClass featureClass)
 			: base(featureClass, esriGeometryType.esriGeometryPolygon) { }
 
 		protected override void AddCustomAttributes(TransformedFeatureClass transformedFc)
@@ -49,7 +49,7 @@ namespace ProSuite.QA.Tests.Transformers
 		[Doc(nameof(DocStrings.TrMultipolygonToPolygon_TransformedParts))]
 		public PolygonPart TransformedParts { get; set; }
 
-		protected override IEnumerable<IFeature> Transform(IGeometry source)
+		protected override IEnumerable<GdbFeature> Transform(IGeometry source)
 		{
 			IPolygon4 poly = (IPolygon4)source;
 
@@ -62,7 +62,7 @@ namespace ProSuite.QA.Tests.Transformers
 						|| TransformedParts == PolygonPart.AllRings)
 				{
 					IPolygon ring = GeometryFactory.CreatePolygon(GeometryFactory.Clone(extRing));
-					IFeature feature = CreateFeature();
+					GdbFeature feature = CreateFeature();
 					feature.Shape = ring;
 					SetAttr(feature, iExtRing, OuterRing);
 
@@ -90,7 +90,7 @@ namespace ProSuite.QA.Tests.Transformers
 					{
 						((ICurve)innRing).ReverseOrientation();
 						IPolygon ring = GeometryFactory.CreatePolygon(innRing);
-						IFeature feature = CreateFeature();
+						GdbFeature feature = CreateFeature();
 						feature.Shape = ring;
 						SetAttr(feature, iExtRing, iInnRing);
 
@@ -104,7 +104,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				if (TransformedParts == PolygonPart.SinglePolygons)
 				{
-					IFeature feature = CreateFeature();
+					GdbFeature feature = CreateFeature();
 					feature.Shape = GeometryFactory.CreatePolygon(rings);
 					SetAttr(feature, iExtRing, SinglePolygon);
 					yield return feature;
@@ -112,12 +112,12 @@ namespace ProSuite.QA.Tests.Transformers
 			}
 		}
 
-		private void SetAttr(IFeature feature, int outRing, int inRing)
+		private void SetAttr(GdbFeature feature, int outRing, int inRing)
 		{
 			_iAttrOuterRing = _iAttrOuterRing ?? feature.Fields.FindField(AttrOuterRingIndex);
 			_iAttrInnerRing = _iAttrInnerRing ?? feature.Fields.FindField(AttrInnerRingIndex);
-			feature.Value[_iAttrOuterRing.Value] = outRing;
-			feature.Value[_iAttrInnerRing.Value] = inRing;
+			feature.set_Value(_iAttrOuterRing.Value, outRing);
+			feature.set_Value(_iAttrInnerRing.Value, inRing);
 		}
 	}
 }

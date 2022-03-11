@@ -28,7 +28,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		#region Fields
 
 		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
 
 		private readonly IVerificationContext _verificationContext;
 
@@ -198,7 +198,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 					foreach (KeyValuePair<IObjectClass, IList<IObject>> pair in objectsByClass)
 					{
 						IObjectClass issueClass = pair.Key;
-						bool isFeatureClass = issueClass is IFeatureClass;
+						bool isFeatureClass = issueClass is ESRI.ArcGIS.Geodatabase.IFeatureClass;
 
 						int fieldIndexErrorType = issueClass.Fields.FindField(FieldNameErrorType);
 
@@ -216,9 +216,9 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 								// move to issue table without geometry
 								IssueDatasetWriter issueWriter =
 									IssueDatasets.GetIssueWriterNoGeometry();
-								ITable issueTable = issueWriter.Table;
+								ESRI.ArcGIS.Geodatabase.ITable issueTable = issueWriter.Table;
 
-								IRow row = issueTable.CreateRow();
+								ESRI.ArcGIS.Geodatabase.IRow row = issueTable.CreateRow();
 								GdbObjectUtils.CopyAttributeValues(issueObject, row);
 
 								RemoveReferenceGeometryFlag(row);
@@ -275,7 +275,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			}
 		}
 
-		private void RemoveReferenceGeometryFlag([NotNull] IRow row)
+		private void RemoveReferenceGeometryFlag([NotNull] ESRI.ArcGIS.Geodatabase.IRow row)
 		{
 			int fieldIndex = row.Fields.FindField(FieldNameDescription);
 
@@ -295,7 +295,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 			row.set_Value(fieldIndex, newIssueDescription);
 		}
 
-		private bool IsTableIssueStoredWithReferenceGeometry([NotNull] IRow issueRow)
+		private bool IsTableIssueStoredWithReferenceGeometry([NotNull] ESRI.ArcGIS.Geodatabase.IRow issueRow)
 		{
 			string issueDescription = GetIssueDescription(issueRow);
 
@@ -304,7 +304,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 		}
 
 		[NotNull]
-		private string GetIssueDescription([NotNull] IRow issueRow)
+		private string GetIssueDescription([NotNull] ESRI.ArcGIS.Geodatabase.IRow issueRow)
 		{
 			int fieldIndex = issueRow.Fields.FindField(FieldNameDescription);
 
@@ -1046,7 +1046,7 @@ namespace ProSuite.DomainServices.AO.QA.IssuePersistence
 				_objectSelection = objectSelection;
 			}
 
-			public bool IsDeletable(IRow errorRow,
+			public bool IsDeletable(ESRI.ArcGIS.Geodatabase.IRow errorRow,
 			                        QualityCondition qualityCondition)
 			{
 				var hasUnknownTables = false;

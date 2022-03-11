@@ -204,9 +204,9 @@ namespace ProSuite.QA.Tests.Transformers
 			public TransformedDataset BackingDs => (TransformedDataset)BackingDataset;
 
 			[CanBeNull]
-			public BoxTree<IReadOnlyFeature> KnownRows { get; private set; }
+			public BoxTree<VirtualRow> KnownRows { get; private set; }
 
-			public void SetKnownTransformedRows(IEnumerable<IReadOnlyRow> knownRows)
+			public void SetKnownTransformedRows(IEnumerable<VirtualRow> knownRows)
 			{
 				if (NeighborSearchOption != SearchOption.All)
 				{
@@ -214,7 +214,7 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 
 				KnownRows = BoxTreeUtils.CreateBoxTree(
-					knownRows?.Select(x => x as IReadOnlyFeature),
+					knownRows?.Select(x => x as VirtualRow),
 					getBox: x => x?.Shape != null
 												 ? QaGeometryUtils.CreateBox(x.Shape)
 												 : null);
@@ -243,7 +243,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override IEnvelope Extent => _dissolve.Extent;
 
-			public override IReadOnlyRow GetUncachedRow(int id)
+			public override VirtualRow GetUncachedRow(int id)
 			{
 				throw new NotImplementedException();
 			}
@@ -281,7 +281,7 @@ namespace ProSuite.QA.Tests.Transformers
 				return _dissolve.EnumRows(f, recycle: recycling);
 			}
 
-			public override IEnumerable<IReadOnlyRow> Search(IQueryFilter filter, bool recycling)
+			public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
 			{
 				// TODO: implement GroupBy
 				_builder = _builder ?? new NetworkBuilder(includeBorderNodes: true);
@@ -289,7 +289,7 @@ namespace ProSuite.QA.Tests.Transformers
 				IRelationalOperator queryEnv =
 					(IRelationalOperator)(filter as ISpatialFilter)?.Geometry.Envelope;
 				IEnvelope fullBox = null;
-				Dictionary<IReadOnlyFeature, Involved> involvedDict = new Dictionary<IReadOnlyFeature, Involved>();
+				Dictionary<VirtualRow, Involved> involvedDict = new Dictionary<VirtualRow, Involved>();
 				foreach (var baseRow in GetBaseFeatures(filter, recycling))
 				{
 					IReadOnlyFeature baseFeature = (IReadOnlyFeature)baseRow;
@@ -345,7 +345,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 				if (Resulting.KnownRows != null && filter is ISpatialFilter sp)
 				{
-					foreach (BoxTree<IReadOnlyFeature>.TileEntry entry in
+					foreach (BoxTree<VirtualRow>.TileEntry entry in
 									 Resulting.KnownRows.Search(QaGeometryUtils.CreateBox(sp.Geometry)))
 					{
 						yield return entry.Value;
@@ -394,7 +394,7 @@ namespace ProSuite.QA.Tests.Transformers
 						rows.Add(dirRow.Row.Row);
 					}
 
-					ESRI.ArcGIS.Geodatabase.IFeature dissolved = Resulting.CreateFeature();
+					GdbFeature dissolved = Resulting.CreateFeature();
 					if (rows.Count == 1)
 					{
 						dissolved.Shape = ((IReadOnlyFeature)rows[0]).Shape;
