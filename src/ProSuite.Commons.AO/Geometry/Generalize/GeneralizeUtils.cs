@@ -88,7 +88,8 @@ namespace ProSuite.Commons.AO.Geometry.Generalize
 					$"Getting short segments for {GdbObjectUtils.ToString(forFeatureVertexInfo.Feature)}");
 
 			var minimumSegmentLength =
-				(double) Assert.NotNull(forFeatureVertexInfo.MinimumSegmentLength);
+				(double) Assert.NotNull(forFeatureVertexInfo.MinimumSegmentLength,
+				                        "Minimum segment length not set.");
 
 			IList<esriSegmentInfo> shortSegments = GetShortSegments(
 				forFeatureVertexInfo.Feature, perimeter, minimumSegmentLength, use2DLengthOnly);
