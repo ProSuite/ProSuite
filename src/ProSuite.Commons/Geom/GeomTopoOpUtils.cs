@@ -1036,7 +1036,9 @@ namespace ProSuite.Commons.Geom
 				{
 					var cutLines = new MultiPolycurve(intersectionPaths.Select(ip => ip.Segments));
 
-					result.AddRange(CutPlanar(sourceRing, cutLines, tolerance));
+					MultiLinestring planarCutlines = PlanarizeLines(cutLines, tolerance);
+
+					result.AddRange(CutPlanar(sourceRing, planarCutlines, tolerance));
 				}
 			}
 
@@ -3520,6 +3522,70 @@ namespace ProSuite.Commons.Geom
 
 		#region Simplify
 
+		public static MultiLinestring PlanarizeLines([NotNull] ISegmentList segmentList,
+		                                             double tolerance)
+		{
+			var result = new List<Line3D>();
+
+			var intersectionPoints1D = new List<Pnt3D>();
+			var orderedIntersections = new List<SegmentIntersection>();
+
+			for (int segmentIdx = 0; segmentIdx < segmentList.SegmentCount; segmentIdx++)
+			{
+				Line3D sourceLine = segmentList[segmentIdx];
+
+				var selfIntersectionsXY =
+					SegmentIntersectionUtils.GetRelevantSelfIntersectionsXY(
+						                        segmentIdx, sourceLine, segmentList, tolerance)
+					                        .ToList();
+
+				if (selfIntersectionsXY.Count == 0)
+				{
+					continue;
+				}
+
+				// TODO: Get actual points and check if they still need cracking at the end
+				foreach (var pointIntersection in selfIntersectionsXY
+					         .Where(i => ! i.HasLinearIntersection &&
+					                     i.HasSourceInteriorIntersection))
+				{
+					intersectionPoints1D.Add(IntersectionPoint3D.CreateSingleIntersectionPoint(
+						                         pointIntersection, segmentList, segmentList,
+						                         tolerance).Point);
+				}
+
+				// Linear intersections are symmetrical: Exclude the latter half
+				selfIntersectionsXY = selfIntersectionsXY.Where(i => i.SourceIndex > i.TargetIndex)
+				                                         .ToList();
+
+				var linearSelfIntersections = new List<SegmentIntersection>(
+					selfIntersectionsXY.Where(i => i.HasLinearIntersection));
+
+				if (linearSelfIntersections.Count != 0)
+				{
+					orderedIntersections.AddRange(
+						OrderAlongSourceSegments(linearSelfIntersections));
+				}
+			}
+
+			SegmentIntersection previousIntersection = null;
+			foreach (SegmentIntersection intersection in orderedIntersections)
+			{
+				// Add non-intersecting source lines between the previous and this intersection:
+				AddSegmentsBetween(segmentList, intersection, previousIntersection,
+				                   result);
+
+				previousIntersection = intersection;
+			}
+
+			AddSegmentsBetween(segmentList, null, previousIntersection,
+			                   result);
+
+			// TODO: Crack at intersectionPoints1D where still necessary
+
+			return new MultiPolycurve(CollectIntersectionPaths(result));
+		}
+
 		/// <summary>
 		/// Performs basic clustering on the specified points using the provided tolerances as
 		/// minimum distance. M values and PointIDs are disregarded and lost in the output!
@@ -4391,7 +4457,7 @@ namespace ProSuite.Commons.Geom
 		}
 
 		private static void AddSegmentsBetween(
-			[NotNull] Linestring source,
+			[NotNull] ISegmentList source,
 			[CanBeNull] SegmentIntersection current,
 			[CanBeNull] SegmentIntersection previous,
 			[NotNull] List<Line3D> result)

@@ -834,6 +834,53 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanCutWithSeveralTargetsParallel()
+		{
+			var ring1 = new List<Pnt3D>
+			            {
+				            new Pnt3D(0, 0, 0),
+				            new Pnt3D(0, 100, 0),
+				            new Pnt3D(100, 100, 0),
+				            new Pnt3D(100, 0, 0)
+			            };
+
+			var target1 = new List<Pnt3D>
+			              {
+				              new Pnt3D(80, 100, 0),
+				              new Pnt3D(80, 80, 0),
+				              new Pnt3D(100, 70, 0)
+			              };
+
+			var target2 = new List<Pnt3D>
+			              {
+				              new Pnt3D(50, 100, 0),
+				              new Pnt3D(50, 50, 0),
+				              new Pnt3D(100, 20, 0)
+			              };
+
+			MultiLinestring target = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(target1),
+					new Linestring(target2)
+				});
+
+			var poly = new RingGroup(CreateRing(ring1));
+
+			CutXY(poly, target, 3, 0);
+
+			target2.Reverse();
+			target = new MultiPolycurve(
+				new[]
+				{
+					new Linestring(target1),
+					new Linestring(target2)
+				});
+
+			CutXY(poly, target, 3, 0);
+		}
+
+		[Test]
 		public void CanCutTouchingInLineFromInside()
 		{
 			var ring1 = new List<Pnt3D>

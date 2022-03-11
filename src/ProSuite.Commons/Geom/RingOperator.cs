@@ -164,10 +164,12 @@ namespace ProSuite.Commons.Geom
 			if (! _subcurveNavigator.Target.IsClosed &&
 			    _subcurveNavigator.AreIntersectionPointsNonSequential())
 			{
-				// TODO: Delete, once this really does not happen again
-				// Cut backs result in duplicates which are both on the left and the right!
+				// Delete this, when no assertion is thrown ever again...
+				// Cut backs and non-planar cut lines result in duplicates which are both on the
+				// left and the right! -> Planarize cut lines first (TOP-)!
 				duplicates = RemoveDuplicateRings(leftRings, rightRings);
-				Assert.AreEqual(0, duplicates.Count, "Duplicates found");
+				Assert.AreEqual(0, duplicates.Count,
+				                "Duplicate results. Make sure the input is simple.");
 			}
 
 			// Assign the cut inner rings (anti-clockwise) to un-cut outer rings...
