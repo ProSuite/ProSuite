@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
@@ -9,28 +7,6 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
 {
-	[Obsolete("remove")]
-	public class IRow
-	{ }
-	[Obsolete("remove")]
-	public class IFeature
-	{ }
-
-	[Obsolete("remove")]
-	public class ITable
-	{ }
-
-	[Obsolete("remove")]
-	public class IFeatureClass
-	{ }
-	[Obsolete("remove")]
-	public class IGeoDataset
-	{ }
-
-	[Obsolete("remove")]
-	public class IDataset
-	{ }
-
 	public interface IInvolvesTables
 	{
 		[NotNull]

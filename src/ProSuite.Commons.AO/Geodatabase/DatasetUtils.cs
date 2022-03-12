@@ -838,6 +838,25 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return versionedObj != null && versionedObj.IsRegisteredAsVersioned;
 		}
 
+		public static bool IsRegisteredAsObjectClass([NotNull] IReadOnlyTable readOnlyTable)
+		{
+			Assert.ArgumentNotNull(readOnlyTable, nameof(readOnlyTable));
+			if (! (readOnlyTable is ReadOnlyTable ro))
+			{
+				return false;
+			}
+
+			ITable table = ro.BaseTable;
+			if (table == null)
+			{
+				return false;
+			}
+
+			return table is IObjectClass objectClass
+				       ? IsRegisteredAsObjectClass(objectClass)
+				       : IsRegisteredAsObjectClass(GetWorkspace(table), GetName(table));
+		}
+
 		public static bool IsRegisteredAsObjectClass([NotNull] ITable table)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));

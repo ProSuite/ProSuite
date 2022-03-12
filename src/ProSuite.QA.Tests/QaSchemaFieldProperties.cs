@@ -4,6 +4,7 @@ using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.Schema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -16,7 +17,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaFieldProperties_0))]
 		public QaSchemaFieldProperties(
 			[Doc(nameof(DocStrings.QaSchemaFieldProperties_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaSchemaFieldProperties_fieldName))] [NotNull]
 			string fieldName,
 			[Doc(nameof(DocStrings.QaSchemaFieldProperties_expectedFieldType))]

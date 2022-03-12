@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests.Test.TestRunners;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test.SpatialRelations
 {
@@ -21,7 +21,7 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 			Errors.Clear();
 		}
 
-		public int Report(string description, params IRow[] rows)
+		public int Report(string description, params IReadOnlyRow[] rows)
 		{
 			return ReportCore(description, null, null, null,
 			                  false,
@@ -30,14 +30,14 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 
 		public int Report(string description, IssueCode issueCode,
 		                  string affectedComponent,
-		                  params IRow[] rows)
+		                  params IReadOnlyRow[] rows)
 		{
 			return ReportCore(description, null, issueCode, affectedComponent,
 			                  false,
 			                  null, rows);
 		}
 
-		public int Report(string description, IGeometry errorGeometry, params IRow[] rows)
+		public int Report(string description, IGeometry errorGeometry, params IReadOnlyRow[] rows)
 		{
 			return ReportCore(description, errorGeometry, null, null,
 			                  false,
@@ -46,7 +46,7 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 
 		public int Report(string description, IGeometry errorGeometry,
 		                  IssueCode issueCode,
-		                  string affectedComponent, params IRow[] rows)
+		                  string affectedComponent, params IReadOnlyRow[] rows)
 		{
 			return ReportCore(description, errorGeometry, issueCode, null,
 			                  false,
@@ -55,7 +55,7 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 
 		public int Report(string description, IGeometry errorGeometry,
 		                  IssueCode issueCode,
-		                  bool reportIndividualParts, params IRow[] rows)
+		                  bool reportIndividualParts, params IReadOnlyRow[] rows)
 		{
 			return ReportCore(description, errorGeometry, issueCode, null,
 			                  reportIndividualParts,
@@ -65,7 +65,7 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 		public int Report(string description, IGeometry errorGeometry,
 		                  IssueCode issueCode,
 		                  string affectedComponent, IEnumerable<object> values,
-		                  params IRow[] rows)
+		                  params IReadOnlyRow[] rows)
 		{
 			return ReportCore(description, errorGeometry, issueCode, affectedComponent,
 			                  false,
@@ -75,7 +75,7 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 		public int Report(string description, IGeometry errorGeometry,
 		                  IssueCode issueCode,
 		                  string affectedComponent, bool reportIndividualParts,
-		                  params IRow[] rows)
+		                  params IReadOnlyRow[] rows)
 		{
 			return ReportCore(description, errorGeometry, issueCode, affectedComponent,
 			                  reportIndividualParts,
@@ -88,7 +88,7 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 		                       [CanBeNull] string affectedComponent,
 		                       bool reportIndividualParts,
 		                       [CanBeNull] IEnumerable<object> values,
-		                       [NotNull] params IRow[] rows)
+		                       [NotNull] params IReadOnlyRow[] rows)
 		{
 			var errors = CreateErrors(description, errorGeometry, issueCode,
 			                          affectedComponent, reportIndividualParts, values,
@@ -108,7 +108,7 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 		                                          [CanBeNull] string affectedComponent,
 		                                          bool reportIndividualParts,
 		                                          [CanBeNull] IEnumerable<object> values,
-		                                          [NotNull] IRow[] rows)
+		                                          [NotNull] IReadOnlyRow[] rows)
 		{
 			return reportIndividualParts && errorGeometry != null
 				       ? GeometryUtils.Explode(errorGeometry)
@@ -129,7 +129,7 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 
 		private class DummyTest : TestBase
 		{
-			public DummyTest() : base(new ITable[] { }) { }
+			public DummyTest() : base(new IReadOnlyTable[] { }) { }
 
 			public override int Execute()
 			{
@@ -146,12 +146,12 @@ namespace ProSuite.QA.Tests.Test.SpatialRelations
 				throw new NotImplementedException();
 			}
 
-			public override int Execute(IEnumerable<IRow> selectedRows)
+			public override int Execute(IEnumerable<IReadOnlyRow> selectedRows)
 			{
 				throw new NotImplementedException();
 			}
 
-			public override int Execute(IRow row)
+			public override int Execute(IReadOnlyRow row)
 			{
 				throw new NotImplementedException();
 			}

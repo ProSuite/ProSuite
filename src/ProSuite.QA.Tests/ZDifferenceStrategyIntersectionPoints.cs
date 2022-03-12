@@ -175,8 +175,8 @@ namespace ProSuite.QA.Tests
 			}
 
 			return GetIntersections(feature1.Shape, feature2.Shape,
-			                        DatasetUtils.GetSpatialReference(feature1),
-			                        GeometryUtils.GetXyTolerance(feature1),
+			                        feature1.FeatureClass.SpatialReference,
+			                        GeometryUtils.GetXyTolerance(feature1.FeatureClass.SpatialReference),
 			                        () => GetLineStrings(feature1),
 			                        () => GetLineStrings(feature2))
 				.Sum(ip => CheckIntersection(ip.Point,
@@ -278,7 +278,7 @@ namespace ProSuite.QA.Tests
 				return true;
 			}
 
-			var sref = Assert.NotNull(DatasetUtils.GetSpatialReference(planarFeature));
+			var sref = Assert.NotNull(planarFeature.FeatureClass.SpatialReference);
 
 			var xyResolution = SpatialReferenceUtils.GetXyResolution(sref);
 			var zResolution = SpatialReferenceUtils.GetZResolution(sref);

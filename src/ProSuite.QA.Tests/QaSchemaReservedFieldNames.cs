@@ -1,9 +1,9 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.Schema;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests
 {
@@ -14,7 +14,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_0))]
 		public QaSchemaReservedFieldNames(
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedNames))] [NotNull]
 			IEnumerable<string> reservedNames)
 			: base(table, reservedNames) { }
@@ -22,7 +22,7 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_1))]
 		public QaSchemaReservedFieldNames(
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedNamesString))] [NotNull]
 			string reservedNamesString)
 			: base(table, reservedNamesString) { }
@@ -30,9 +30,9 @@ namespace ProSuite.QA.Tests
 		[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_2))]
 		public QaSchemaReservedFieldNames(
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_table))] [NotNull]
-			ITable table,
+			IReadOnlyTable table,
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedNamesTable))] [NotNull]
-			ITable reservedNamesTable,
+			IReadOnlyTable reservedNamesTable,
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedNameFieldName))] [NotNull]
 			string reservedNameFieldName,
 			[Doc(nameof(DocStrings.QaSchemaReservedFieldNames_reservedReasonFieldName))] [CanBeNull]

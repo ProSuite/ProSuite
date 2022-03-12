@@ -28,7 +28,7 @@ namespace ProSuite.QA.Tests.Transformers
 		void IRowsCache.Add(IReadOnlyRow row)
 		{
 			Assert.NotNull((TransformedBackingDataset) BackingDataset,
-			               $"{nameof(BackingDataset)} not set").AddToCache(row);
+			               $"{nameof(BackingDataset)} not set").AddToCache((VirtualRow)row);
 		}
 
 		bool IRowsCache.Remove(int oid)

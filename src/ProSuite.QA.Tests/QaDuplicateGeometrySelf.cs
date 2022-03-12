@@ -246,9 +246,10 @@ namespace ProSuite.QA.Tests
 
 			string tableName = _featureClass.Name;
 			const bool recycle = true;
-			foreach (IReadOnlyFeature feature in GdbQueryUtils.GetFeatures(
+			foreach (IReadOnlyRow r in GdbQueryUtils.GetRows(
 				_featureClass, duplicatesByFirstOid.Keys, recycle))
 			{
+				IReadOnlyFeature feature = (IReadOnlyFeature) r;
 				HashSet<int> duplicates = duplicatesByFirstOid[feature.OID];
 
 				string errorDescription = _validRelationConstraintSql == null

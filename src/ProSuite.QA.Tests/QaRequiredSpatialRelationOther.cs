@@ -243,11 +243,10 @@ namespace ProSuite.QA.Tests
 				errorFeatures.ToDictionary(errorFeature => errorFeature.OID);
 
 			const bool recycling = true;
-			return GdbQueryUtils.GetFeatures(featureClass, oids, recycling)
-			                    .Sum(
-				                    feature =>
-					                    ReportError(feature, tableIndex,
-					                                errorFeaturesByOid[feature.OID]));
+			return GdbQueryUtils
+			       .GetRows(featureClass, oids, recycling)
+			       .Sum(feature => ReportError((IReadOnlyFeature) feature, tableIndex,
+			                                   errorFeaturesByOid[feature.OID]));
 		}
 
 		private int ReportError([NotNull] IReadOnlyFeature feature,
