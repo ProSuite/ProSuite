@@ -109,6 +109,8 @@
     <Compile Include="Geom\Wkb\WkbGeomWriter.cs" />
     <Compile Include="Geom\Wkb\BigEndianBinaryReader.cs" />
     <Compile Include="Geom\Wkb\WkbWriter.cs" />
+    <Compile Include="IoC\IComponentInstaller.cs" />
+    <Compile Include="IoC\IoCContainer.cs" />
     <Compile Include="IO\ZipStorer.cs" />
     <Compile Include="IO\ZipUtils.cs" />
     <Compile Include="ManagedOptions\DatasetSpecificValue.cs" />
