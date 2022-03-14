@@ -252,10 +252,10 @@ namespace ProSuite.DomainModel.Core.DataModel
 		}
 
 		[UsedImplicitly]
-		private Association End1Association => _end1Association;
+		public Association End1Association => _end1Association;
 
 		[UsedImplicitly]
-		private Association End2Association => _end2Association;
+		public Association End2Association => _end2Association;
 
 		public void CopyPropertiesTo([NotNull] AssociationEnd other)
 		{
