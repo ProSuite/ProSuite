@@ -10,7 +10,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// Gets the test implementation info. Requires the test class or the test factory descriptor to be defined.
 		/// </summary>
 		/// <param name="testDescriptor"></param>
-		/// <returns>TestImplementationInfo or null if neither the test class nor the test factory descriptor are defined.</returns>
+		/// <returns>InstanceInfo or null if neither the test class nor the test factory descriptor are defined.</returns>
 		[CanBeNull]
 		public static ITestImplementationInfo GetTestImplementationInfo(
 			[NotNull] TestDescriptor testDescriptor)
@@ -19,7 +19,7 @@ namespace ProSuite.DomainModel.Core.QA
 
 			if (testDescriptor.TestClass != null)
 			{
-				return new TestImplementationInfo(testDescriptor.TestClass.AssemblyName,
+				return new InstanceInfo(testDescriptor.TestClass.AssemblyName,
 				                                  testDescriptor.TestClass.TypeName,
 				                                  testDescriptor.TestConstructorId);
 			}
