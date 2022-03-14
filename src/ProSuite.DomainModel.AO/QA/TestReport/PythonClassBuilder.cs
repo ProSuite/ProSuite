@@ -245,7 +245,7 @@ namespace ProSuite.DomainModel.AO.QA.TestReport
 		}
 
 		[NotNull]
-		private static string GetConstructorSignature([NotNull] ITestImplementationInfo testInfo)
+		private static string GetConstructorSignature([NotNull] IInstanceInfo testInfo)
 		{
 			Assert.ArgumentNotNull(testInfo, nameof(testInfo));
 

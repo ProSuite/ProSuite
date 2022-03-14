@@ -7,7 +7,7 @@ namespace ProSuite.QA.Core
 	/// Provides implementation details of the parameterized instance created by this
 	/// implementation, mainly for display purposes.
 	/// </summary>
-	public interface ITestImplementationInfo
+	public interface IInstanceInfo
 	{
 		IList<TestParameter> Parameters { get; }
 

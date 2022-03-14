@@ -12,7 +12,7 @@ namespace ProSuite.DomainModel.Core.QA
 		/// <param name="testDescriptor"></param>
 		/// <returns>InstanceInfo or null if neither the test class nor the test factory descriptor are defined.</returns>
 		[CanBeNull]
-		public static ITestImplementationInfo GetTestImplementationInfo(
+		public static IInstanceInfo GetInstanceInfo(
 			[NotNull] TestDescriptor testDescriptor)
 		{
 			Assert.ArgumentNotNull(testDescriptor, nameof(testDescriptor));
@@ -20,14 +20,14 @@ namespace ProSuite.DomainModel.Core.QA
 			if (testDescriptor.TestClass != null)
 			{
 				return new InstanceInfo(testDescriptor.TestClass.AssemblyName,
-				                                  testDescriptor.TestClass.TypeName,
-				                                  testDescriptor.TestConstructorId);
+				                        testDescriptor.TestClass.TypeName,
+				                        testDescriptor.TestConstructorId);
 			}
 
 			if (testDescriptor.TestFactoryDescriptor != null)
 			{
 				return testDescriptor.TestFactoryDescriptor
-				                     .CreateInstance<ITestImplementationInfo>();
+				                     .CreateInstance<IInstanceInfo>();
 			}
 
 			return null;

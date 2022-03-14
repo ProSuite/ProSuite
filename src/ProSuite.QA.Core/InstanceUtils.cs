@@ -156,7 +156,7 @@ namespace ProSuite.QA.Core
 		}
 
 		[NotNull]
-		public static string GetTestSignature([NotNull] ITestImplementationInfo testInfo)
+		public static string GetTestSignature([NotNull] IInstanceInfo testInfo)
 		{
 			Assert.ArgumentNotNull(testInfo, nameof(testInfo));
 

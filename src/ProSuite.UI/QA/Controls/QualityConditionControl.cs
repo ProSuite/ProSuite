@@ -119,14 +119,14 @@ namespace ProSuite.UI.QA.Controls
 			{
 				TestDescriptor testDescriptor = condition.TestDescriptor;
 
-				ITestImplementationInfo testImplementationInfo =
+				IInstanceInfo instanceInfo =
 					testDescriptor == null
 						? null
-						: TestDescriptorUtils.GetTestImplementationInfo(testDescriptor);
+						: TestDescriptorUtils.GetInstanceInfo(testDescriptor);
 
-				description = testImplementationInfo == null
+				description = instanceInfo == null
 					              ? string.Empty
-					              : testImplementationInfo.GetTestDescription();
+					              : instanceInfo.GetTestDescription();
 			}
 			else
 			{
