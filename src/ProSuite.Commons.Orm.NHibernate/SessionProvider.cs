@@ -19,8 +19,8 @@ namespace ProSuite.Commons.Orm.NHibernate
 	{
 		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-		// Session factory is thread-safe and global (maintains 2nd level cache)
-		private static ISessionFactory _sessionFactory;
+		// Session factory is thread-safe and global (maintains 2nd level cache) per DDX connection
+		private readonly ISessionFactory _sessionFactory;
 
 		private readonly string _sessionFactoryErrorMessage = "Session factory is null";
 
