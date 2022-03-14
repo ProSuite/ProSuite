@@ -52,6 +52,7 @@
     <Compile Include="EntityRepository.cs" />
     <Compile Include="IMappingConfigurator.cs" />
     <Compile Include="INHConfigurationBuilder.cs" />
+    <Compile Include="MappingByCodeConfigurator.cs" />
     <Compile Include="MappingConfigurator.cs" />
     <Compile Include="NHConfigurationBuilder.cs" />
     <Compile Include="SessionWrapper.cs" />
