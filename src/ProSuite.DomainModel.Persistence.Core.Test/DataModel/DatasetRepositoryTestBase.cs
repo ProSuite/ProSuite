@@ -86,13 +86,16 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 					Assert.AreEqual(2, ds.Attributes.Count);
 					Assert.AreEqual(2, new List<ObjectAttribute>(ds.GetAttributes()).Count);
 
-					ObjectAttribute field1 = ds.GetAttribute("field1");
-					ObjectAttribute field2 = ds.GetAttribute("field2");
+					ObjectAttribute field1 = result.GetAttribute("field1");
+					ObjectAttribute field2 = result.GetAttribute("field2");
 					Assert.IsNotNull(field1, "field1");
 					Assert.IsNotNull(field2, "field2");
 
 					Assert.IsFalse(field1.ReadOnly);
 					Assert.IsTrue(field2.ReadOnly);
+
+					Assert.IsTrue(field1.IsPersistent);
+					Assert.IsTrue(field2.IsPersistent);
 				});
 		}
 
@@ -115,6 +118,9 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 			m.AddAssociation(new ForeignKeyAssociation(associationName,
 			                                           AssociationCardinality.OneToMany,
 			                                           fk, pk));
+
+			Assert.AreEqual(1, ds1.AssociationEnds.Count);
+			Assert.AreEqual(1, new List<AssociationEnd>(ds1.GetAssociationEnds()).Count);
 
 			CreateSchema(m);
 
