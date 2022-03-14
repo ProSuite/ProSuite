@@ -197,6 +197,7 @@
     <Compile Include="QA\InstanceConfiguration.cs" />
     <Compile Include="QA\IssueFilterConfiguration.cs" />
     <Compile Include="QA\IssueFilterDescriptor.cs" />
+    <Compile Include="QA\InstanceConfigurationUtils.cs" />
     <Compile Include="QA\Repositories\IDataQualityCategoryRepository.cs" />
     <Compile Include="QA\Repositories\IQualitySpecificationRepository.cs" />
     <Compile Include="QA\Repositories\IQualityVerificationRepository.cs" />
@@ -215,7 +216,7 @@
     <Compile Include="QA\ScalarTestParameterValue.cs" />
     <Compile Include="QA\TestDefinition.cs" />
     <Compile Include="QA\TestDescriptor.cs" />
-    <Compile Include="QA\TestDescriptorUtils.cs" />
+    <Compile Include="QA\InstanceDescriptorUtils.cs" />
     <Compile Include="QA\TestParameterType.cs" />
     <Compile Include="QA\TestParameterStringUtils.cs" />
     <Compile Include="QA\TestParameterValue.cs" />

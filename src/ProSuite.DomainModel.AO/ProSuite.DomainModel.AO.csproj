@@ -189,7 +189,6 @@
     <Compile Include="QA\IVerificationContext.cs" />
     <Compile Include="QA\InstanceFactory.cs" />
     <Compile Include="QA\QualityConditionObjectDatasetResolver.cs" />
-    <Compile Include="QA\QualityConditionParameterUtils.cs" />
     <Compile Include="QA\RowFilterFactory.cs" />
     <Compile Include="QA\RowParser.cs" />
     <Compile Include="QA\SimpleDatasetOpener.cs" />

@@ -51,7 +51,7 @@ namespace ProSuite.UI.QA.Controls
 			_textBoxImplementation.Text = GetImplementation(testDescriptor);
 
 			var testImplementationInfo =
-				TestDescriptorUtils.GetInstanceInfo(testDescriptor);
+				InstanceDescriptorUtils.GetInstanceInfo(testDescriptor);
 
 			_textBoxTestDescription.Text = testImplementationInfo == null
 				                               ? string.Empty

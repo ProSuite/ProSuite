@@ -122,7 +122,7 @@ namespace ProSuite.UI.QA.Controls
 				IInstanceInfo instanceInfo =
 					testDescriptor == null
 						? null
-						: TestDescriptorUtils.GetInstanceInfo(testDescriptor);
+						: InstanceDescriptorUtils.GetInstanceInfo(testDescriptor);
 
 				description = instanceInfo == null
 					              ? string.Empty

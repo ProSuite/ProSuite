@@ -158,10 +158,10 @@ namespace ProSuite.QA.Tests.Test
 			var clsDesc = new ClassDescriptor(typeof(QaSurfaceSpikes));
 			var tstDesc = new TestDescriptor("QaSurfaceSpikes", clsDesc, testConstructorId: 0);
 			var condition = new QualityCondition("QaSurfaceSpikes", tstDesc);
-			QualityConditionParameterUtils.AddParameterValue(condition, "terrain", mds1);
-			QualityConditionParameterUtils.AddParameterValue(condition, "terrainTolerance", 0.1);
-			QualityConditionParameterUtils.AddParameterValue(condition, "maxSlopeDegrees", 30);
-			QualityConditionParameterUtils.AddParameterValue(condition, "maxDeltaZ", 10);
+			InstanceConfigurationUtils.AddParameterValue(condition, "terrain", mds1);
+			InstanceConfigurationUtils.AddParameterValue(condition, "terrainTolerance", 0.1);
+			InstanceConfigurationUtils.AddParameterValue(condition, "maxSlopeDegrees", 30);
+			InstanceConfigurationUtils.AddParameterValue(condition, "maxDeltaZ", 10);
 
 			var fact = new DefaultTestFactory(typeof(QaSurfaceSpikes));
 			fact.Condition = condition;

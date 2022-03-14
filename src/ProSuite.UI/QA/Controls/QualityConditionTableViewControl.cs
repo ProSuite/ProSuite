@@ -80,7 +80,7 @@ namespace ProSuite.UI.QA.Controls
 				return null;
 			}
 
-			var testFactory = TestDescriptorUtils.GetInstanceInfo(_testDescriptor);
+			var testFactory = InstanceDescriptorUtils.GetInstanceInfo(_testDescriptor);
 			return testFactory?.Parameters
 			                  .FirstOrDefault(x => x.Name == parameterName)
 			                  ?.Description;

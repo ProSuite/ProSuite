@@ -200,17 +200,17 @@ namespace ProSuite.QA.Tests.Test
 				var clsDesc = new ClassDescriptor(typeof(QaRelRegularExpression));
 				var tstDesc = new TestDescriptor("GroupEnds", clsDesc);
 				var condition = new QualityCondition("cndGroupEnds", tstDesc);
-				QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mds1);
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(condition, "relationTables", mds1);
+				InstanceConfigurationUtils.AddParameterValue(
 					condition, "relationTables", mdsRel);
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					condition, "relation", relClassName);
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					condition, "join", JoinType.InnerJoin);
-				QualityConditionParameterUtils.AddParameterValue(condition, "pattern", "A");
-				QualityConditionParameterUtils.AddParameterValue(condition, "fieldNames",
+				InstanceConfigurationUtils.AddParameterValue(condition, "pattern", "A");
+				InstanceConfigurationUtils.AddParameterValue(condition, "fieldNames",
 				                                                 $"{tableName}.{_textFieldName}");
-				QualityConditionParameterUtils.AddParameterValue(condition, "MatchIsError", false);
+				InstanceConfigurationUtils.AddParameterValue(condition, "MatchIsError", false);
 				//condition.AddParameterValue("PatternDescription", "Hallo");
 
 				var factory = new QaRelRegularExpression {Condition = condition};
