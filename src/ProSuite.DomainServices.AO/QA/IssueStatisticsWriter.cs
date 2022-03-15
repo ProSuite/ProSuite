@@ -45,7 +45,8 @@ namespace ProSuite.DomainServices.AO.QA
 		                              [NotNull] IssueStatistics issueStatistics,
 		                              [NotNull] IIssueStatisticsTableFieldNames fieldNames)
 		{
-			const bool useBuffering = true;
+			// NOTE: Avoid locks due to buffering!
+			const bool useBuffering = false;
 			ICursor insertCursor = table.Insert(useBuffering);
 
 			IRowBuffer rowBuffer = table.CreateRowBuffer();

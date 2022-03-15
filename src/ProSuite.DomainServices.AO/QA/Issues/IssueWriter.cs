@@ -21,6 +21,13 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 		[CanBeNull] private ICursor _insertCursor;
 		[CanBeNull] private IRowBuffer _rowBuffer;
 
+		/// <summary>
+		/// Wether the resulting (file) geodatabase is allowed to be left with locks
+		/// as long as the writing process is not stopped. A slight performance increase
+		/// can be expected if set to true (due to inserts being buffered).
+		/// </summary>
+		public bool AllowLocks { get; set; }
+
 		protected IssueWriter([NotNull] IObjectClass objectClass,
 		                      [NotNull] IIssueAttributeWriter issueAttributeWriter)
 		{
@@ -44,7 +51,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 			{
 				_rowBuffer = CreateRowBuffer();
 
-				const bool useBuffering = true;
+				bool useBuffering = AllowLocks;
 				_insertCursor = ((ITable) ObjectClass).Insert(useBuffering);
 			}
 
@@ -52,6 +59,7 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 
 			WriteCount++;
 			Assert.NotNull(_insertCursor).InsertRow(_rowBuffer);
+
 			_pendingInserts++;
 			_pendingPointCount += GetPointCount(errorGeometry);
 
@@ -69,6 +77,8 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 		public void Dispose()
 		{
 			Close();
+
+			Marshal.ReleaseComObject(ObjectClass);
 		}
 
 		#endregion
@@ -88,6 +98,12 @@ namespace ProSuite.DomainServices.AO.QA.Issues
 			{
 				Marshal.ReleaseComObject(_insertCursor);
 				_insertCursor = null;
+			}
+
+			if (_rowBuffer != null)
+			{
+				Marshal.ReleaseComObject(_rowBuffer);
+				_rowBuffer = null;
 			}
 
 			OnClosed();

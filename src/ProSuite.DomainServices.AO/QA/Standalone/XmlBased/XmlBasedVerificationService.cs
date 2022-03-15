@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -306,7 +307,10 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 						var issueStatisticsWriter =
 							new IssueStatisticsWriter(issueRepository.FeatureWorkspace);
 
-						issueStatisticsWriter.WriteStatistics(issueStatistics);
+						var statisticsTable =
+							issueStatisticsWriter.WriteStatistics(issueStatistics);
+
+						statisticsTable.Dispose();
 
 						if (spatialReference != null &&
 						    areaOfInterest != null &&
@@ -314,7 +318,11 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 						{
 							var aoiWriter =
 								new AreaOfInterestWriter(issueRepository.FeatureWorkspace);
-							aoiWriter.WriteAreaOfInterest(areaOfInterest, spatialReference);
+
+							IFeatureClass aoiFeatureClass =
+								aoiWriter.WriteAreaOfInterest(areaOfInterest, spatialReference);
+
+							Marshal.ReleaseComObject(aoiFeatureClass);
 						}
 					}
 

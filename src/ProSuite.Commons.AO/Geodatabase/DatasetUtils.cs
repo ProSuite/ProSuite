@@ -931,7 +931,17 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(dataset, nameof(dataset));
 
-			return Assert.NotNull(GetTableName(dataset.Workspace, dataset.Name));
+			IWorkspace workspace = dataset.Workspace;
+
+			try
+			{
+				return Assert.NotNull(GetTableName(workspace, dataset.Name));
+			}
+			finally
+			{
+				// Avoid locking the workspace
+				Marshal.ReleaseComObject(workspace);
+			}
 		}
 
 		/// <summary>
@@ -946,7 +956,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			var workspace = (IWorkspace) ((IName) datasetName.WorkspaceName).Open();
 
-			return GetTableName(workspace, datasetName.Name);
+			try
+			{
+				return GetTableName(workspace, datasetName.Name);
+			}
+			finally
+			{
+				// Avoid locking the workspace
+				Marshal.ReleaseComObject(workspace);
+			}
 		}
 
 		/// <summary>
