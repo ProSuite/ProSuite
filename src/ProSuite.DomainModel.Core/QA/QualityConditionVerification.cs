@@ -149,22 +149,22 @@ namespace ProSuite.DomainModel.Core.QA
 		}
 
 		[UsedImplicitly]
-		private int QualityConditionId => _qualityConditionId;
+		public int QualityConditionId => _qualityConditionId;
 
 		[UsedImplicitly]
-		private string QualityConditionName => _qualityConditionName;
+		public string QualityConditionName => _qualityConditionName;
 
 		[UsedImplicitly]
-		private int QualityConditionVersion => _qualityConditionVersion;
+		public int QualityConditionVersion => _qualityConditionVersion;
 
 		[UsedImplicitly]
-		private string QualityConditionParamValues => _qualityConditionParamValues;
+		public string QualityConditionParamValues => _qualityConditionParamValues;
 
 		[UsedImplicitly]
-		private string TestType => _testType;
+		public string TestType => _testType;
 
 		[UsedImplicitly]
-		private int ConstructorId => _constructorId;
+		public int ConstructorId => _constructorId;
 
 		public double LoadTime([NotNull] QualityVerification verification)
 		{
@@ -221,7 +221,7 @@ namespace ProSuite.DomainModel.Core.QA
 			}
 
 			// either the qualiy condition was deleted, or it was changed since the verification
-			var result = new QualityCondition(assignUuids : true);
+			var result = new QualityCondition(assignUuids: true);
 
 			if (string.IsNullOrEmpty(_qualityConditionName))
 			{
@@ -235,8 +235,8 @@ namespace ProSuite.DomainModel.Core.QA
 			result.Name = _qualityConditionName;
 
 			foreach (TestParameterValue testParameterValue
-				in TestParameterStringUtils.ParseTestParameterValues(
-					_qualityConditionParamValues))
+			         in TestParameterStringUtils.ParseTestParameterValues(
+				         _qualityConditionParamValues))
 			{
 				result.AddParameterValue(testParameterValue);
 			}
