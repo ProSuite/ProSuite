@@ -104,6 +104,7 @@
     <Compile Include="Geodatabase\GdbSchema\VirtualTable.cs" />
     <Compile Include="Geodatabase\GdbSchema\VirtualWorkspace.cs" />
     <Compile Include="Geodatabase\IWorkspaceDbConnectionProvider.cs" />
+    <Compile Include="Geodatabase\JoinedDataset.cs" />
     <Compile Include="Geodatabase\MosaicUtils.cs" />
     <Compile Include="Geodatabase\ObjectClassComparer.cs" />
     <Compile Include="Geodatabase\FeatureStorageUtils.cs" />

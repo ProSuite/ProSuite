@@ -23,5 +23,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		[NotNull]
 		public string ReferencedKeyName => _referencedKeyName;
+
+		public ITable ReferencingTable => Table1;
+
+		public ITable ReferencedTable => Table2;
 	}
 }
