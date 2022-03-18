@@ -25,6 +25,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		private readonly AssociationDescription _associationDescription;
 
+		readonly bool _fetchByFts = EnvironmentUtils.GetBooleanEnvironmentVariableValue(
+			"PROSUITE_EXPERIMENTAL_JOIN_FTS");
+
 		public JoinedDataset([NotNull] IRelationshipClass relationshipClass,
 		                     [NotNull] IFeatureClass geometryEndClass,
 		                     [NotNull] IFeatureClass joinedSchema)
@@ -63,6 +66,15 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			string originalSubfields = filter.SubFields;
 			filter.SubFields = featureClassKeyField;
+
+			// TODO: More testing, does not seem to make a difference:
+			//esriSpatialRelEnum originalSpatialRel = esriSpatialRelEnum.esriSpatialRelUndefined;
+			//if (filter is ISpatialFilter spatialFilter  &&
+			//    spatialFilter.SpatialRel == esriSpatialRelEnum.esriSpatialRelIntersects)
+			//{
+			//	originalSpatialRel = spatialFilter.SpatialRel;
+			//	spatialFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
+			//}
 
 			int featureClassKeyIdx = _geometryEndClass.FindField(featureClassKeyField);
 			Assert.True(featureClassKeyIdx >= 0, $"Key field not found: {featureClassKeyIdx}");
@@ -221,7 +233,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 				_msg.DebugStopTiming(
 					watch,
 					"Searched with {0} geo-keys, found {1} other keys.",
-					fClassKeys.Count, geoKeysByOtherKey);
+					fClassKeys.Count, geoKeysByOtherKey.Count);
 
 				watch = _msg.DebugStartTiming();
 
@@ -264,7 +276,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		}
 
 		private Dictionary<string, List<string>> GeoKeysByOtherKeyManyToMany(
-			[NotNull] IEnumerable<string> geoKeys,
+			[NotNull] HashSet<string> geoKeys,
 			[NotNull] ManyToManyAssociationDescription m2nAssociation)
 		{
 			Dictionary<string, List<string>> geoKeysByOtherKey =
@@ -295,8 +307,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.True(bridgeTableGeoKeyIdx >= 0,
 			            $"Key field {bridgeTableGeoKeyField} not found in {bridgeTable}");
 
-			foreach (IRow row in GdbQueryUtils.GetRowsInList(
-				         bridgeTable, bridgeTableGeoKeyField, geoKeys, false))
+			foreach (IRow row in FetchRowsByKey(geoKeys, bridgeTable, bridgeTableGeoKeyField))
 			{
 				// The primary key of the other table:
 				object bridgeOtherKey = row.get_Value(bridgeTableOtherKeyIdx);
@@ -311,6 +322,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 				// The primary key of the geo table:
 				string bridgeGeoKeyValue = Convert.ToString(bridgeGeoKey);
 
+				// Double check, the fetch might use a FTS or deliver the full cache:
+				if (! geoKeys.Contains(bridgeGeoKeyValue))
+				{
+					continue;
+				}
+
 				// Collect the list of geo-end keys per other-table key
 				if (! geoKeysByOtherKey.TryGetValue(bridgeOtherKeyValue, out List<string> other))
 				{
@@ -322,6 +339,31 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 
 			return geoKeysByOtherKey;
+		}
+
+		private IEnumerable<IRow> FetchRowsByKey(
+			[NotNull] HashSet<string> keys,
+			[NotNull] ITable table,
+			[NotNull] string keyFieldName)
+		{
+			// TODO: Switch depending on previous input-output count ratio with count
+			// Empirical values (dev machine with local docker):
+			// 150K rows in bridge table: FTS: ~1s
+			// 4K rows in key list: Select-in: ~1s
+			// --> Use 3% as threshold to to switch to FTS?
+
+			if (_fetchByFts)
+			{
+				_msg.DebugFormat("Fetching rows from {0} using full-table-scan",
+				                 DatasetUtils.GetName(table));
+
+				return GdbQueryUtils.GetRows(table, true);
+			}
+
+			_msg.DebugFormat("Fetching rows from {0} using select-in-list strategy",
+			                 DatasetUtils.GetName(table));
+
+			return GdbQueryUtils.GetRowsInList(table, keyFieldName, keys, true);
 		}
 
 		private IDictionary<int, int> GeometryEndCopyMatrix
