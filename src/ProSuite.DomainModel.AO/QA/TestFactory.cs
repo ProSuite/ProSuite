@@ -228,8 +228,8 @@ namespace ProSuite.DomainModel.AO.QA
 				if (! (test is IFilterEditTest filterTest)) continue;
 
 				IList<IIssueFilter> filters = new List<IIssueFilter>();
-				foreach (var issueFilterConfiguration in
-					c.GetIssueFilterConfigurations())
+
+				foreach (var issueFilterConfiguration in c.IssueFilterConfigurations)
 				{
 					DefaultTestFactory factory = (DefaultTestFactory)
 						TestFactoryUtils.CreateTestFactory(issueFilterConfiguration);

@@ -11,9 +11,9 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 		[Test]
 		public void CanGetByName()
 		{
-			const string dsName1 = "TOPGIS.TLM_DATASET1";
-			const string dsName2 = "TOPGIS.TLM_DATASET2";
-			const string dsName3 = "TOPGIS.TLM_DATASET3";
+			const string dsName1 = "SCHEMA.TLM_DATASET1";
+			const string dsName2 = "SCHEMA.TLM_DATASET2";
+			const string dsName3 = "SCHEMA.TLM_DATASET3";
 			DdxModel m = CreateModel();
 
 			m.AddDataset(CreateObjectDataset(dsName1));
@@ -57,7 +57,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 		[Test]
 		public void CanGetAttributes()
 		{
-			const string dsName = "TOPGIS.TLM_DATASET";
+			const string dsName = "SCHEMA.TLM_DATASET";
 			DdxModel m = CreateModel();
 
 			ObjectDataset ds = m.AddDataset(CreateObjectDataset(dsName));

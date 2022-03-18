@@ -270,7 +270,7 @@ namespace ProSuite.DomainModel.Core.QA
 			return TestParameterStringUtils.FormatParameterValues(ParameterValues, maxLength);
 		}
 
-		private readonly List<IssueFilterConfiguration> _issueFilterConfigurations =
+		private readonly IList<IssueFilterConfiguration> _issueFilterConfigurations =
 			new List<IssueFilterConfiguration>();
 
 		public void AddIssueFilterConfiguration(
@@ -283,9 +283,9 @@ namespace ProSuite.DomainModel.Core.QA
 		public string IssueFilterExpression { get; set; }
 
 		[NotNull]
-		public IReadOnlyList<IssueFilterConfiguration> GetIssueFilterConfigurations()
+		public IList<IssueFilterConfiguration> IssueFilterConfigurations
 		{
-			return _issueFilterConfigurations;
+			get => new ReadOnlyList<IssueFilterConfiguration>(_issueFilterConfigurations);
 		}
 
 		[NotNull]
@@ -478,7 +478,7 @@ namespace ProSuite.DomainModel.Core.QA
 		protected override IEnumerable<Dataset> EnumReferencedDatasetParameterValues()
 		{
 			foreach (IssueFilterConfiguration issueFilterConfiguration in
-				GetIssueFilterConfigurations())
+			         IssueFilterConfigurations)
 			{
 				foreach (Dataset dataset in issueFilterConfiguration.GetDatasetParameterValues(
 					includeReferencedProcessors: true))

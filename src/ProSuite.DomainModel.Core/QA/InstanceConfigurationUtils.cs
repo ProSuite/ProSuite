@@ -7,7 +7,7 @@ namespace ProSuite.DomainModel.Core.QA
 {
 	public static class InstanceConfigurationUtils
 	{
-		public static TestParameterValue AddParameterValue(
+		public static DatasetTestParameterValue AddParameterValue(
 			[NotNull] InstanceConfiguration instanceConfiguration,
 			[NotNull] string parameterName,
 			[CanBeNull] Dataset value,
@@ -28,7 +28,9 @@ namespace ProSuite.DomainModel.Core.QA
 				                     DataType = parameter.Type
 			                     };
 
-			return instanceConfiguration.AddParameterValue(parameterValue);
+			instanceConfiguration.AddParameterValue(parameterValue);
+
+			return parameterValue;
 		}
 
 		public static DatasetTestParameterValue AddParameterValue(

@@ -78,7 +78,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 		[Test]
 		public void CanCreateQualityConditionFromTest()
 		{
-			const string dsName = "TOPGIS.TLM_DATASET1";
+			const string dsName = "SCHEMA.TLM_DATASET1";
 			const string qconName = "qcon1";
 			const string testName = "test1";
 
@@ -152,6 +152,196 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 
 					// expect 3 constructor parameters plus 2 optional test parameters (properties)
 					Assert.AreEqual(5, testInfo.Parameters.Count);
+				}
+			);
+		}
+
+		[Test]
+		public void CanSaveConditionWithRowFilter()
+		{
+			const string ds1Name = "SCHEMA.TLM_DATASET1";
+			const string ds2Name = "SCHEMA.TLM_DATASET2";
+			const string qconName = "qcon1";
+			const string testName = "test1";
+			const string filterDefName = "intersects";
+			const string filterConfigName = "intersectsDataset2";
+
+			const bool stopOnError = true;
+			const bool allowErrors = false;
+
+			DdxModel m = CreateModel();
+
+			VectorDataset ds1 = m.AddDataset(CreateVectorDataset(ds1Name));
+			VectorDataset ds2 = m.AddDataset(CreateVectorDataset(ds2Name));
+
+			var testDescriptor = new TestDescriptor(testName,
+			                                        new ClassDescriptor(
+				                                        "ProSuite.QA.Tests.QaMinSegAngle",
+				                                        "ProSuite.QA.Tests"), 0,
+			                                        stopOnError, allowErrors);
+
+			var condition = new QualityCondition(qconName, testDescriptor);
+			const double limit = 1;
+			const bool is3D = true;
+			InstanceConfigurationUtils.AddParameterValue(condition, "limit", limit);
+			InstanceConfigurationUtils.AddParameterValue(condition, "is3D", is3D);
+
+			DatasetTestParameterValue datasetParameterValue =
+				InstanceConfigurationUtils.AddParameterValue(condition, "featureClass", ds1);
+
+			RowFilterDescriptor filterDescriptor = new RowFilterDescriptor(
+				filterDefName, new ClassDescriptor("ProSuite.QA.Tests.RowFilters.RfExecuteArea",
+				                                   "ProSuite.QA.Tests"), 0);
+
+			var filterConfig = new RowFilterConfiguration(filterConfigName, filterDescriptor);
+			InstanceConfigurationUtils.AddParameterValue(filterConfig, "areaFc", ds2);
+
+			Assert.NotNull(datasetParameterValue.RowFilterConfigurations);
+			datasetParameterValue.RowFilterConfigurations.Add(filterConfig);
+
+			CreateSchema(testDescriptor, filterDescriptor, filterConfig, condition, m);
+
+			UnitOfWork.NewTransaction(
+				delegate
+				{
+					QualityCondition readCondition = Repository.Get(condition.Id);
+
+					Assert.IsNotNull(readCondition);
+					Assert.AreNotSame(readCondition, condition);
+					Assert.AreEqual(qconName, readCondition.Name);
+					Assert.AreEqual(testName, readCondition.TestDescriptor.Name);
+					Assert.AreEqual(3, readCondition.ParameterValues.Count);
+					Assert.AreEqual(allowErrors, readCondition.TestDescriptor.AllowErrors);
+					Assert.AreEqual(stopOnError, readCondition.TestDescriptor.StopOnError);
+					Assert.AreEqual(allowErrors, readCondition.AllowErrors);
+					Assert.AreEqual(stopOnError, readCondition.StopOnError);
+
+					var value0 = readCondition.ParameterValues[0] as ScalarTestParameterValue;
+					var value1 = readCondition.ParameterValues[1] as ScalarTestParameterValue;
+					var value2 = readCondition.ParameterValues[2] as DatasetTestParameterValue;
+
+					Assert.IsNotNull(value0);
+					Assert.IsNotNull(value1);
+					Assert.IsNotNull(value2);
+
+					Assert.AreEqual("featureClass", value2.TestParameterName);
+
+					Assert.NotNull(value2.RowFilterConfigurations);
+					Assert.AreEqual(1, value2.RowFilterConfigurations.Count);
+
+					var readFilterConfig = value2.RowFilterConfigurations[0];
+					var filteredByDatasetParameter =
+						readFilterConfig.ParameterValues[0] as DatasetTestParameterValue;
+					Assert.NotNull(filteredByDatasetParameter);
+					var dataset = filteredByDatasetParameter.DatasetValue;
+
+					Assert.IsNotNull(dataset);
+					Assert.AreEqual(ds2Name, dataset.Name);
+
+					Assert.AreEqual(filterDefName, readFilterConfig.InstanceDescriptor.Name);
+
+					IInstanceInfo filterInfo =
+						InstanceDescriptorUtils.GetInstanceInfo(
+							readFilterConfig.InstanceDescriptor);
+					Assert.IsNotNull(filterInfo);
+
+					Assert.AreEqual(1, filterInfo.Parameters.Count);
+				}
+			);
+		}
+
+		[Test]
+		public void CanSaveConditionWithIssueFilter()
+		{
+			const string ds1Name = "SCHEMA.TLM_DATASET1";
+			const string ds2Name = "SCHEMA.TLM_DATASET2";
+			const string qconName = "qcon1";
+			const string testName = "test1";
+			const string filterDefName = "intersects";
+			const string filterDescription = "Filter by ObjId";
+			const string filterConfigName = "intersectsDataset2";
+			const string constraint = "OBJECTID = 42";
+
+			const bool stopOnError = true;
+			const bool allowErrors = false;
+
+			DdxModel m = CreateModel();
+
+			VectorDataset ds1 = m.AddDataset(CreateVectorDataset(ds1Name));
+			VectorDataset ds2 = m.AddDataset(CreateVectorDataset(ds2Name));
+
+			var testDescriptor = new TestDescriptor(testName,
+			                                        new ClassDescriptor(
+				                                        "ProSuite.QA.Tests.QaMinSegAngle",
+				                                        "ProSuite.QA.Tests"), 0,
+			                                        stopOnError, allowErrors);
+
+			var condition = new QualityCondition(qconName, testDescriptor);
+			const double limit = 1;
+			const bool is3D = true;
+			InstanceConfigurationUtils.AddParameterValue(condition, "limit", limit);
+			InstanceConfigurationUtils.AddParameterValue(condition, "is3D", is3D);
+
+			DatasetTestParameterValue datasetParameterValue =
+				InstanceConfigurationUtils.AddParameterValue(condition, "featureClass", ds1);
+
+			var filterDescriptor = new IssueFilterDescriptor(
+				filterDefName, new ClassDescriptor("ProSuite.QA.Tests.IssueFilters.IfInvolvedRows",
+				                                   "ProSuite.QA.Tests"), 0,
+				filterDescription);
+
+			var filterConfig = new IssueFilterConfiguration(filterConfigName, filterDescriptor);
+
+			InstanceConfigurationUtils.AddParameterValue(filterConfig, "constraint",
+			                                             constraint);
+
+			condition.AddIssueFilterConfiguration(filterConfig);
+
+			CreateSchema(testDescriptor, filterDescriptor, filterConfig, condition, m);
+
+			UnitOfWork.NewTransaction(
+				delegate
+				{
+					QualityCondition readCondition = Repository.Get(condition.Id);
+
+					Assert.IsNotNull(readCondition);
+					Assert.AreNotSame(readCondition, condition);
+					Assert.AreEqual(qconName, readCondition.Name);
+					Assert.AreEqual(testName, readCondition.TestDescriptor.Name);
+					Assert.AreEqual(3, readCondition.ParameterValues.Count);
+					Assert.AreEqual(allowErrors, readCondition.TestDescriptor.AllowErrors);
+					Assert.AreEqual(stopOnError, readCondition.TestDescriptor.StopOnError);
+					Assert.AreEqual(allowErrors, readCondition.AllowErrors);
+					Assert.AreEqual(stopOnError, readCondition.StopOnError);
+
+					var value0 = readCondition.ParameterValues[0] as ScalarTestParameterValue;
+					var value1 = readCondition.ParameterValues[1] as ScalarTestParameterValue;
+					var value2 = readCondition.ParameterValues[2] as DatasetTestParameterValue;
+
+					Assert.IsNotNull(value0);
+					Assert.IsNotNull(value1);
+					Assert.IsNotNull(value2);
+
+					Assert.AreEqual(1, readCondition.IssueFilterConfigurations.Count);
+
+					var readFilterConfig = readCondition.IssueFilterConfigurations[0];
+					var filterConstraint =
+						readFilterConfig.ParameterValues[0] as ScalarTestParameterValue;
+
+					Assert.NotNull(filterConstraint);
+					Assert.AreEqual(constraint, filterConstraint.PersistedStringValue);
+
+					Assert.NotNull(readFilterConfig.InstanceDescriptor);
+					Assert.AreEqual(filterDescription,
+					                readFilterConfig.InstanceDescriptor.Description);
+					IInstanceInfo filterInfo =
+						InstanceDescriptorUtils.GetInstanceInfo(
+							readFilterConfig.InstanceDescriptor);
+
+					Assert.NotNull(filterInfo);
+
+					// TODO: Add Description
+					Assert.AreEqual(null, filterInfo.GetTestDescription());
 				}
 			);
 		}

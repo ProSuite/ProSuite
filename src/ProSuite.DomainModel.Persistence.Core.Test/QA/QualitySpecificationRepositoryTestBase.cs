@@ -20,8 +20,8 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 		[Test]
 		public void CanGetSpecificationsFromDatasets()
 		{
-			const string dsName0 = "TOPGIS.TLM_DATASET0";
-			const string dsName1 = "TOPGIS.TLM_DATASET1";
+			const string dsName0 = "SCHEMA.TLM_DATASET0";
+			const string dsName1 = "SCHEMA.TLM_DATASET1";
 			DdxModel m = CreateModel();
 
 			Dataset ds0 = m.AddDataset(CreateVectorDataset(dsName0));
@@ -231,7 +231,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 			const string specName = "specName";
 			const string specDesc = "specDesc";
 
-			const string dsName = "TOPGIS.TLM_DATASET1";
+			const string dsName = "SCHEMA.GEO_DATASET1";
 
 			DdxModel model = CreateModel();
 
