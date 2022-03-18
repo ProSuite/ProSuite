@@ -253,14 +253,14 @@ namespace ProSuite.QA.Tests.Test
 			var clsDesc = new ClassDescriptor(typeof(QaRelMustBeNearOther));
 			var tstDesc = new TestDescriptor("testNear", clsDesc);
 			var condition = new QualityCondition("cndNear", tstDesc);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mds1);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mdsRel,
+			InstanceConfigurationUtils.AddParameterValue(condition, "relationTables", mds1);
+			InstanceConfigurationUtils.AddParameterValue(condition, "relationTables", mdsRel,
 			                                                 $"{relTableName}.{IdField} = 12"); // --> only f11 get's checked
-			QualityConditionParameterUtils.AddParameterValue(condition, "relation", relName);
-			QualityConditionParameterUtils.AddParameterValue(condition, "join", JoinType.InnerJoin);
-			QualityConditionParameterUtils.AddParameterValue(condition, "nearClasses", mds2);
-			QualityConditionParameterUtils.AddParameterValue(condition, "maximumDistance", 5);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relevantRelationCondition",
+			InstanceConfigurationUtils.AddParameterValue(condition, "relation", relName);
+			InstanceConfigurationUtils.AddParameterValue(condition, "join", JoinType.InnerJoin);
+			InstanceConfigurationUtils.AddParameterValue(condition, "nearClasses", mds2);
+			InstanceConfigurationUtils.AddParameterValue(condition, "maximumDistance", 5);
+			InstanceConfigurationUtils.AddParameterValue(condition, "relevantRelationCondition",
 			                                                 string.Empty);
 
 			var fact = new QaRelMustBeNearOther();

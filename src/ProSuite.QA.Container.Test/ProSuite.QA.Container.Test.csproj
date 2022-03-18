@@ -59,6 +59,7 @@
     <Compile Include="ExpressionUtilsTest.cs" />
     <Compile Include="FormatUtilsTest.cs" />
     <Compile Include="GeometryConstraintTest.cs" />
+    <Compile Include="InvolvedTest.cs" />
     <Compile Include="IssueCodeDescriptions.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

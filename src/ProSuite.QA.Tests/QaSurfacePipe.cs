@@ -2,11 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using System.Text;
-#if Server
-using ESRI.ArcGIS.DatasourcesRaster;
-#else
-using ESRI.ArcGIS.DataSourcesRaster;
-#endif
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -78,35 +73,31 @@ namespace ProSuite.QA.Tests
 
 		[Doc(nameof(DocStrings.Qa3dPipe_0))]
 		public QaSurfacePipe(
-			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
+			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc(nameof(DocStrings.Qa3dPipe_terrain))] [NotNull]
+			[Doc(nameof(DocStrings.QaSurfacePipe_terrain))] [NotNull]
 			TerrainReference terrain,
-			[Doc(nameof(DocStrings.Qa3dPipe_terrainTolerance))]
-			double terrainTolerance,
-			[Doc(nameof(DocStrings.Qa3dPipe_limit))]
+			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit)
-			: this(featureClass, terrain, terrainTolerance, limit,
+			: this(featureClass, terrain, limit,
 			       // ReSharper disable once IntroduceOptionalParameters.Global
 			       ZOffsetConstraint.WithinLimit, 0, false) { }
 
-		[Doc(nameof(DocStrings.Qa3dPipe_1))]
+		[Doc(nameof(DocStrings.QaSurfacePipe_1))]
 		public QaSurfacePipe(
-			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
+			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc(nameof(DocStrings.Qa3dPipe_terrain))] [NotNull]
+			[Doc(nameof(DocStrings.QaSurfacePipe_terrain))] [NotNull]
 			TerrainReference terrain,
-			[Doc(nameof(DocStrings.Qa3dPipe_terrainTolerance))]
-			double terrainTolerance,
-			[Doc(nameof(DocStrings.Qa3dPipe_limit))]
+			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit,
-			[Doc(nameof(DocStrings.Qa3dPipe_zOffsetConstraint))]
+			[Doc(nameof(DocStrings.QaSurfacePipe_zOffsetConstraint))]
 			ZOffsetConstraint zOffsetConstraint,
-			[Doc(nameof(DocStrings.Qa3dPipe_startEndIgnoreLength))]
+			[Doc(nameof(DocStrings.QaSurfacePipe_startEndIgnoreLength))]
 			double startEndIgnoreLength,
-			[Doc(nameof(DocStrings.Qa3dPipe_asRatio))]
+			[Doc(nameof(DocStrings.QaSurfacePipe_asRatio))]
 			bool asRatio)
-			: base(featureClass, terrain, terrainTolerance, limit, zOffsetConstraint)
+			: base(featureClass, terrain, 0, limit, zOffsetConstraint)
 		{
 			ValidateAsRatio(startEndIgnoreLength, asRatio);
 
@@ -117,31 +108,31 @@ namespace ProSuite.QA.Tests
 			_interpolateTolerance = 2 * GeometryUtils.GetXyResolution(featureClass);
 		}
 
-		[Doc(nameof(DocStrings.Qa3dPipe_2))]
+		[Doc(nameof(DocStrings.QaSurfacePipe_2))]
 		public QaSurfacePipe(
-			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
+			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc(nameof(DocStrings.Qa3dPipe_raster))] [NotNull]
+			[Doc(nameof(DocStrings.QaSurfacePipe_raster))] [NotNull]
 			IRasterDataset2 raster,
-			[Doc(nameof(DocStrings.Qa3dPipe_limit))]
+			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit)
 			: this(featureClass, raster, limit,
 			       // ReSharper disable once IntroduceOptionalParameters.Global
 			       ZOffsetConstraint.WithinLimit, 0, false) { }
 
-		[Doc(nameof(DocStrings.Qa3dPipe_2))]
+		[Doc(nameof(DocStrings.QaSurfacePipe_2))]
 		public QaSurfacePipe(
-			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
+			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc(nameof(DocStrings.Qa3dPipe_raster))] [NotNull]
+			[Doc(nameof(DocStrings.QaSurfacePipe_raster))] [NotNull]
 			IRasterDataset2 raster,
-			[Doc(nameof(DocStrings.Qa3dPipe_limit))]
+			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit,
-			[Doc(nameof(DocStrings.Qa3dPipe_zOffsetConstraint))]
+			[Doc(nameof(DocStrings.QaSurfacePipe_zOffsetConstraint))]
 			ZOffsetConstraint zOffsetConstraint,
-			[Doc(nameof(DocStrings.Qa3dPipe_startEndIgnoreLength))]
+			[Doc(nameof(DocStrings.QaSurfacePipe_startEndIgnoreLength))]
 			double startEndIgnoreLength,
-			[Doc(nameof(DocStrings.Qa3dPipe_asRatio))]
+			[Doc(nameof(DocStrings.QaSurfacePipe_asRatio))]
 			bool asRatio)
 			: base(featureClass, new RasterDatasetReference(raster), limit, zOffsetConstraint)
 		{
@@ -154,71 +145,35 @@ namespace ProSuite.QA.Tests
 			_interpolateTolerance = 2 * GeometryUtils.GetXyResolution(featureClass);
 		}
 
-		[Doc(nameof(DocStrings.Qa3dPipe_4))]
+		[Doc(nameof(DocStrings.QaSurfacePipe_4))]
 		public QaSurfacePipe(
-			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
+			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc(nameof(DocStrings.Qa3dPipe_mosaicLayer))] [NotNull]
-			SimpleRasterMosaic simpleRasterMosaic,
-			[Doc(nameof(DocStrings.Qa3dPipe_limit))]
+			[Doc(nameof(DocStrings.QaSurfacePipe_mosaic))] [NotNull]
+			SimpleRasterMosaic rasterMosaic,
+			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit)
-			: this(featureClass, simpleRasterMosaic, limit,
+			: this(featureClass, rasterMosaic, limit,
 			       // ReSharper disable once IntroduceOptionalParameters.Global
 			       ZOffsetConstraint.WithinLimit, 0, false) { }
 
-		[Doc(nameof(DocStrings.Qa3dPipe_4))]
+		[Doc(nameof(DocStrings.QaSurfacePipe_4))]
 		public QaSurfacePipe(
-			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
+			[Doc(nameof(DocStrings.QaSurfacePipe_featureClass))] [NotNull]
 			IFeatureClass featureClass,
-			[Doc(nameof(DocStrings.Qa3dPipe_mosaicLayer))] [NotNull]
-			SimpleRasterMosaic simpleRasterMosaic,
-			[Doc(nameof(DocStrings.Qa3dPipe_limit))]
+			[Doc(nameof(DocStrings.QaSurfacePipe_mosaic))] [NotNull]
+			SimpleRasterMosaic rasterMosaic,
+			[Doc(nameof(DocStrings.QaSurfacePipe_limit))]
 			double limit,
-			[Doc(nameof(DocStrings.Qa3dPipe_zOffsetConstraint))]
+			[Doc(nameof(DocStrings.QaSurfacePipe_zOffsetConstraint))]
 			ZOffsetConstraint zOffsetConstraint,
-			[Doc(nameof(DocStrings.Qa3dPipe_startEndIgnoreLength))]
+			[Doc(nameof(DocStrings.QaSurfacePipe_startEndIgnoreLength))]
 			double startEndIgnoreLength,
-			[Doc(nameof(DocStrings.Qa3dPipe_asRatio))]
+			[Doc(nameof(DocStrings.QaSurfacePipe_asRatio))]
 			bool asRatio)
 			: base(
-				featureClass, new MosaicRasterReference(simpleRasterMosaic), limit,
+				featureClass, new MosaicRasterReference(rasterMosaic), limit,
 				zOffsetConstraint)
-		{
-			ValidateAsRatio(startEndIgnoreLength, asRatio);
-
-			_shapeType = featureClass.ShapeType;
-			_startEndIgnoreLength = startEndIgnoreLength;
-			_asRatio = asRatio;
-
-			_interpolateTolerance = 2 * GeometryUtils.GetXyResolution(featureClass);
-		}
-
-		public QaSurfacePipe(
-			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
-			IFeatureClass featureClass,
-			[Doc(nameof(DocStrings.Qa3dPipe_mosaicLayer))] [NotNull]
-			IMosaicDataset mosaicLayer,
-			[Doc(nameof(DocStrings.Qa3dPipe_limit))]
-			double limit)
-			: this(featureClass, mosaicLayer, limit,
-			       // ReSharper disable once IntroduceOptionalParameters.Global
-			       ZOffsetConstraint.WithinLimit, 0, false) { }
-
-		public QaSurfacePipe(
-			[Doc(nameof(DocStrings.Qa3dPipe_featureClass))] [NotNull]
-			IFeatureClass featureClass,
-			[Doc(nameof(DocStrings.Qa3dPipe_mosaicLayer))] [NotNull]
-			IMosaicDataset mosaicLayer,
-			[Doc(nameof(DocStrings.Qa3dPipe_limit))]
-			double limit,
-			[Doc(nameof(DocStrings.Qa3dPipe_zOffsetConstraint))]
-			ZOffsetConstraint zOffsetConstraint,
-			[Doc(nameof(DocStrings.Qa3dPipe_startEndIgnoreLength))]
-			double startEndIgnoreLength,
-			[Doc(nameof(DocStrings.Qa3dPipe_asRatio))]
-			bool asRatio)
-			: base(
-				featureClass, new MosaicRasterReference(new SimpleRasterMosaic(mosaicLayer)), limit, zOffsetConstraint)
 		{
 			ValidateAsRatio(startEndIgnoreLength, asRatio);
 
@@ -390,7 +345,7 @@ namespace ProSuite.QA.Tests
 			for (var patchIndex = 0; patchIndex < patchCount; patchIndex++)
 			{
 				foreach (IPolygon face in MultiPatchUtils.GetFaces(
-					indexedMultiPatch, patchIndex))
+					         indexedMultiPatch, patchIndex))
 				{
 					errorCount += CheckTruncatedPolycurve(surface, face, face,
 					                                      searchedRow, wksBox);

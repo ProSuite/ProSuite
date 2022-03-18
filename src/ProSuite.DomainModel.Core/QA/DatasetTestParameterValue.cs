@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.QA.Core;
@@ -11,6 +12,11 @@ namespace ProSuite.DomainModel.Core.QA
 		[UsedImplicitly] private Dataset _datasetValue;
 		[UsedImplicitly] private string _filterExpression;
 		[UsedImplicitly] private bool _usedAsReferenceData;
+
+		[UsedImplicitly] private IList<RowFilterConfiguration> _rowFilterConfigurations =
+			new List<RowFilterConfiguration>();
+
+		[UsedImplicitly] private string _rowFiltersExpression;
 
 		#region Constructors
 
@@ -128,6 +134,20 @@ namespace ProSuite.DomainModel.Core.QA
 		{
 			get { return _filterExpression; }
 			set { _filterExpression = value; }
+		}
+
+		[CanBeNull]
+		public IList<RowFilterConfiguration> RowFilterConfigurations
+		{
+			get => _rowFilterConfigurations;
+			set => _rowFilterConfigurations = value;
+		}
+
+		[CanBeNull]
+		public string RowFiltersExpression
+		{
+			get => _rowFiltersExpression;
+			set => _rowFiltersExpression = value;
 		}
 
 		public bool UsedAsReferenceData

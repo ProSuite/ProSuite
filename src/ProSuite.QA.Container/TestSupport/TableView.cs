@@ -50,6 +50,68 @@ namespace ProSuite.QA.Container.TestSupport
 			return dataRow;
 		}
 
+		internal void AddDummyRow()
+		{
+			if (ConstraintView == null)
+			{
+				return;
+			}
+
+			DataRow r = ConstraintView.Table.NewRow();
+			foreach (DataColumn col in ConstraintView.Table.Columns)
+			{
+				if (!string.IsNullOrEmpty(col.Expression))
+				{
+					continue;
+				}
+
+				if (col.DataType == typeof(short))
+					r[col] = 1;
+				else if (col.DataType == typeof(int))
+					r[col] = 1;
+				else if (col.DataType == typeof(float))
+					r[col] = 0.1f;
+				else if (col.DataType == typeof(double))
+					r[col] = 0.1;
+				else if (col.DataType == typeof(string))
+					r[col] = "a";
+				else if (col.DataType == typeof(object))
+					r[col] = new object();
+				else
+					throw new NotImplementedException();
+			}
+
+			ConstraintView.Table.Rows.Add(r);
+		}
+		[CanBeNull]
+		internal DataColumn AddExpressionColumn([NotNull] string columnName,
+		                                      [NotNull] string expression,
+		                                        bool isGroupExpression)
+		{
+			if (ConstraintView == null)
+			{
+				return null;
+			}
+
+			object dummy;
+			try
+			{
+				string expr = isGroupExpression
+					              ? expression
+					              : $"MIN({expression})";
+				dummy = ConstraintView.Table.Compute(expr, null);
+			}
+			catch (Exception exception)
+			{
+				throw new InvalidOperationException($"Invalid aggregate '{expression}'", exception);
+			}
+
+			DataColumn added =
+				ConstraintView.Table.Columns.Add(columnName, dummy.GetType(), expression);
+
+			return added;
+		}
+
 		public bool MatchesConstraint([NotNull] IRow row)
 		{
 			DataView dataView = ConstraintView;

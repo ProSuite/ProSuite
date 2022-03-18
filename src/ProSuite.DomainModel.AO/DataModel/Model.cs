@@ -1343,7 +1343,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 		protected abstract IWorkspaceContext CreateMasterDatabaseWorkspaceContext();
 
 		[NotNull]
-		protected MasterDatabaseWorkspaceContext CreateDefaultMasterDatabaseWorkspaceContext()
+		protected IWorkspaceContext CreateDefaultMasterDatabaseWorkspaceContext()
 		{
 			IFeatureWorkspace featureWorkspace = UserConnectionProvider.OpenWorkspace();
 

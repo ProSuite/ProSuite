@@ -1444,7 +1444,7 @@ namespace ProSuite.Commons.AO.Geometry
 		{
 			return
 				(IPointCollection) IntersectionUtils.GetIntersectionPoints((IGeometry) lineTopoOp,
-				                                                           lineOfInterest);
+					lineOfInterest);
 		}
 
 		/// <summary>
@@ -1634,7 +1634,9 @@ namespace ProSuite.Commons.AO.Geometry
 
 				if (_msg.IsVerboseDebugEnabled)
 				{
-					_msg.VerboseDebug(() => $"Geometry that needed 2 SimplifyNetwork calls: {ToString(polyline)}");
+					_msg.VerboseDebug(
+						() =>
+							$"Geometry that needed 2 SimplifyNetwork calls: {ToString(polyline)}");
 				}
 			}
 		}
@@ -5497,7 +5499,7 @@ namespace ProSuite.Commons.AO.Geometry
 				surface, projectedGeometry, expansionDistance);
 
 			IPolygon bufferedDomain = GeometryFactory.CreateBuffer(relevantDomain,
-			                                                       -domainEpsilon);
+				-domainEpsilon);
 
 			Simplify(bufferedDomain);
 			AllowIndexing(bufferedDomain);
@@ -5612,14 +5614,14 @@ namespace ProSuite.Commons.AO.Geometry
 			}
 		}
 
-		public static void MakeMAware([NotNull] IGeometry geometry)
+		public static void MakeMAware([NotNull] IGeometry geometry, bool aware = true)
 		{
 			Assert.ArgumentNotNull(geometry, nameof(geometry));
 
 			var mAware = (IMAware) geometry;
-			if (! mAware.MAware)
+			if (! (mAware.MAware == aware))
 			{
-				mAware.MAware = true;
+				mAware.MAware = aware;
 			}
 		}
 
@@ -5971,7 +5973,8 @@ namespace ProSuite.Commons.AO.Geometry
 
 					if (pointCount > 2)
 					{
-						_msg.VerboseDebug(() => $"Interpolating path {partIndex} with {pointCount} points");
+						_msg.VerboseDebug(
+							() => $"Interpolating path {partIndex} with {pointCount} points");
 
 						polyLineZ.InterpolateZsBetween(partIndex, 0, partIndex,
 						                               pointCount - 1);
@@ -5979,7 +5982,8 @@ namespace ProSuite.Commons.AO.Geometry
 					else
 					{
 						_msg.VerboseDebug(
-							() => $"Path {partIndex} has insufficient point count for interpolation: {pointCount}");
+							() =>
+								$"Path {partIndex} has insufficient point count for interpolation: {pointCount}");
 					}
 				}
 				else
@@ -8715,6 +8719,61 @@ namespace ProSuite.Commons.AO.Geometry
 			polycurve.Densify(maxSegmentLength, maxDeviation);
 		}
 
+		public static IEnumerable<ILine> GetLinearizedSegments(
+			[NotNull] ISegmentCollection segments,
+			double maxDeviation)
+		{
+			foreach (ISegment segment in GetSegments(segments.EnumSegments))
+			{
+				if (segment.GeometryType == esriGeometryType.esriGeometryLine)
+				{
+					yield return (ILine) segment;
+				}
+				else
+				{
+					ILine[] result;
+					if (segment is ICircularArc circularArc)
+					{
+						double radius = circularArc.Radius;
+						double ratio = maxDeviation / radius;
+						double angle = Math.Acos(1 - ratio);
+
+						if (angle == 0)
+						{
+							angle = Math.PI / 96;
+						}
+
+						double densifiedLength = radius * angle;
+						int segmentCount = (int) (segment.Length / densifiedLength) + 1;
+						result = new ILine[segmentCount];
+
+						// NOTE: If a maxDeviation is supplied to Densify() and the internal
+						// algorithm determines that less segments are required for the given
+						// deviation, the segment count is decreased!
+						GeometryBridge.Densify(segment, 0, ref segmentCount, ref result);
+					}
+					else
+					{
+						double length = Math.Sqrt(2) * maxDeviation;
+						int segmentCount = (int) (segment.Length / length);
+
+						// The size of the array / segment count seems to be the upper bound
+						result = new ILine[segmentCount];
+						GeometryBridge.Densify(
+							segment, maxDeviation, ref segmentCount, ref result);
+					}
+
+					foreach (ILine line in result)
+					{
+						if (line != null)
+						{
+							yield return line;
+						}
+					}
+				}
+			}
+		}
+
 		/// <summary>
 		/// Splits the provided path into several paths at the specified splitting points.
 		/// </summary>
@@ -8967,7 +9026,9 @@ namespace ProSuite.Commons.AO.Geometry
 				//    exists at the desired split point' rather than 'a split was needed at the desired split point'
 				result.Add(usablePoint.Key);
 
-				_msg.VerboseDebug(() => $"Split happened at {usablePoint.Key.X}|{usablePoint.Key.Y}: {splitHappened}");
+				_msg.VerboseDebug(
+					() =>
+						$"Split happened at {usablePoint.Key.X}|{usablePoint.Key.Y}: {splitHappened}");
 			}
 
 			if (result.Count > 0)
@@ -9025,7 +9086,8 @@ namespace ProSuite.Commons.AO.Geometry
 
 				if (! enumSplitPoints.SplitHappened && _msg.IsVerboseDebugEnabled)
 				{
-					_msg.VerboseDebug(() => $"Path not split at point {splitPoint.X}/{splitPoint.Y}");
+					_msg.VerboseDebug(
+						() => $"Path not split at point {splitPoint.X}/{splitPoint.Y}");
 				}
 
 				enumSplitPoints.Next(out splitPoint, out int _, out int _);
@@ -9264,13 +9326,13 @@ namespace ProSuite.Commons.AO.Geometry
 
 		#region Non-public members
 
-		private static double GetSmallButValidToleranceFactor([NotNull] IPolycurve polyCurve)
+		private static double GetSmallButValidToleranceFactor([NotNull] IGeometry geometry)
 		{
 			const double defaultResolutionToTolerance = 0.1;
 
 			double resolutionToTolerance =
-				polyCurve.SpatialReference != null
-					? GetXyResolution(polyCurve) / GetXyTolerance(polyCurve)
+				geometry.SpatialReference != null
+					? GetXyResolution(geometry) / GetXyTolerance(geometry)
 					: defaultResolutionToTolerance;
 
 			// add safety margin to make sure only points on (almost) completely straight lines are weeded

@@ -28,23 +28,29 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return _fields[index];
 		}
 
+		public int AddField(IField field)
+		{
+			if (string.IsNullOrEmpty(field.Name))
+			{
+				throw new ArgumentException("The field has no name");
+			}
+
+			if (_fields.Any(
+				f => f.Name.Equals(field.Name, StringComparison.InvariantCultureIgnoreCase)))
+			{
+				throw new ArgumentException(
+					$"The field list already contains a field with name {field.Name}");
+			}
+
+			_fields.Add(field);
+			return _fields.Count - 1;
+		}
+
 		public void AddFields(params IField[] fields)
 		{
 			foreach (var field in fields)
 			{
-				if (string.IsNullOrEmpty(field.Name))
-				{
-					throw new ArgumentException("The field has no name");
-				}
-
-				if (_fields.Any(
-					f => f.Name.Equals(field.Name, StringComparison.InvariantCultureIgnoreCase)))
-				{
-					throw new ArgumentException(
-						$"The field list already contains a field with name {field.Name}");
-				}
-
-				_fields.Add(field);
+				AddField(field);
 			}
 		}
 	}

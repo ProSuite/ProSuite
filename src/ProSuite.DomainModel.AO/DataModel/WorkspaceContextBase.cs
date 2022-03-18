@@ -35,12 +35,14 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		public abstract IObjectClass OpenObjectClass(IObjectDataset dataset);
 
+		public abstract ITopology OpenTopology(ITopologyDataset dataset);
+
 		public abstract IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset);
 
 		public abstract TerrainReference OpenTerrainReference(ISimpleTerrainDataset dataset);
 
 		public abstract SimpleRasterMosaic OpenSimpleRasterMosaic(
-			ISimpleRasterMosaicDataset dataset);
+			IRasterMosaicDataset dataset);
 
 		public abstract IRelationshipClass OpenRelationshipClass(Association association);
 

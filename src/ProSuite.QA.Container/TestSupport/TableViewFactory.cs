@@ -35,7 +35,7 @@ namespace ProSuite.QA.Container.TestSupport
 			// read/remove case sensitivity override from expression
 			bool? caseSensitivityOverride;
 			expression = ExpressionUtils.ParseCaseSensitivityHint(expression,
-			                                                      out caseSensitivityOverride);
+				out caseSensitivityOverride);
 
 			if (caseSensitivityOverride != null)
 			{
@@ -77,7 +77,7 @@ namespace ProSuite.QA.Container.TestSupport
 				columnInfos.Add(columnInfo);
 
 				// add column using fully qualified name
-				dataTable.Columns.Add(expressionToken, columnInfo.ColumnType);
+				dataTable.Columns.Add(expressionToken, columnInfo.DataColumnType);
 				tableAliasIndexes.Add(tableAliasIndex);
 
 				addedFields.Add(expressionToken);
@@ -145,8 +145,44 @@ namespace ProSuite.QA.Container.TestSupport
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
-			const bool useAsConstraint = true;
-			return Create(table, constraint, useAsConstraint);
+			return Create(table, constraint, useAsConstraint: true);
+		}
+
+		[NotNull]
+		public static TableView Create([NotNull] ITable table,
+		                               [NotNull] Dictionary<string, string> expressionDict,
+		                               [NotNull] Dictionary<string, string> aliasFieldDict,
+		                               bool isGrouped)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+			Assert.ArgumentNotNull(expressionDict, nameof(expressionDict));
+			Assert.ArgumentNotNull(aliasFieldDict, nameof(aliasFieldDict));
+
+			string joined = string.Concat(expressionDict.Values.Select(x => $"{x} ")) +
+			                string.Concat(aliasFieldDict.Values.Select(x => $"{x} "));
+
+			Dictionary<string, string> fieldAliasDict =
+				new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+			foreach (KeyValuePair<string, string> pair in aliasFieldDict)
+			{
+				fieldAliasDict.Add(pair.Value, pair.Key);
+			}
+
+			TableView tv = Create(table, joined, aliasDict: fieldAliasDict, useAsConstraint: false);
+
+			if (expressionDict.Count > 0)
+			{
+				tv.AddDummyRow();
+
+				foreach (KeyValuePair<string, string> pair in expressionDict)
+				{
+					tv.AddExpressionColumn(pair.Key, pair.Value, isGrouped);
+				}
+
+				tv.ClearRows();
+			}
+
+			return tv;
 		}
 
 		[NotNull]
@@ -154,19 +190,26 @@ namespace ProSuite.QA.Container.TestSupport
 		                               [CanBeNull] string expression,
 		                               bool useAsConstraint,
 		                               bool caseSensitive = false)
+			=> Create(table, expression, null, useAsConstraint, caseSensitive);
+
+		private static TableView Create([NotNull] ITable table,
+		                                [CanBeNull] string expression,
+		                                [CanBeNull] Dictionary<string, string> aliasDict,
+		                                bool useAsConstraint,
+		                                bool caseSensitive = false)
+
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 
-			if (expression == null || expression.Trim().Length == 0)
+			if (string.IsNullOrWhiteSpace(expression))
 			{
 				// this filter helper won't do much
 				return new TableView(new ColumnInfo[] { }, null);
 			}
 
 			// read/remove case sensitivity override from expression
-			bool? caseSensitivityOverride;
 			expression = ExpressionUtils.ParseCaseSensitivityHint(expression,
-			                                                      out caseSensitivityOverride);
+				out bool? caseSensitivityOverride);
 
 			if (caseSensitivityOverride != null)
 			{
@@ -213,7 +256,13 @@ namespace ProSuite.QA.Container.TestSupport
 
 			foreach (ColumnInfo columnInfo in columnInfos)
 			{
-				dataTable.Columns.Add(columnInfo.ColumnName, columnInfo.ColumnType);
+				string alias = null;
+				if (aliasDict?.TryGetValue(columnInfo.ColumnName, out alias) != true)
+				{
+					alias = columnInfo.ColumnName;
+				}
+
+				dataTable.Columns.Add(alias, columnInfo.DataColumnType);
 			}
 
 			var dataView = new DataView(dataTable);

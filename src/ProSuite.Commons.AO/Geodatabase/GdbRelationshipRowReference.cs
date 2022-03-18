@@ -65,7 +65,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.ArgumentNotNull(workspace, nameof(workspace));
 
 			IObjectClass objectClass = DatasetUtils.OpenObjectClass(workspace,
-			                                                        RelationshipClassId);
+				RelationshipClassId);
 
 			// TODO consider using ITable.GetRow(oid) and handling exception if not found
 			// faster?

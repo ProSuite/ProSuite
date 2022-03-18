@@ -1,15 +1,71 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ArcGIS.Core.Data;
 using ArcGIS.Core.Geometry;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.Commons.AGP.Core.Spatial;
+using ProSuite.Commons.AGP.Gdb;
+using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 
 namespace ProSuite.Commons.AGP.Carto
 {
+	/// <summary>
+	/// Encapsulates a set of selected features that belong to the same FeatureClass and possibly
+	/// to the same layer.
+	/// </summary>
 	public class FeatureClassSelection
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		private List<Feature> _features;
+		private List<long> _objectIds;
+
+		private readonly GeometryType _shapeType;
+		private readonly SpatialReference _outputSpatialReference;
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="FeatureClassSelection"/> class.
+		/// This method must be called on the Main CIM Thread.
+		/// </summary>
+		/// <param name="featureClass"></param>
+		/// <param name="features"></param>
+		/// <param name="featureLayer"></param>
+		public FeatureClassSelection([NotNull] FeatureClass featureClass,
+		                             [NotNull] List<Feature> features,
+		                             [CanBeNull] BasicFeatureLayer featureLayer)
+			: this(featureClass, featureLayer)
+		{
+			_features = features;
+		}
+
+		/// <summary>
+		/// Initializes a new instance of the <see cref="FeatureClassSelection"/> class.
+		/// This method must be called on the Main CIM Thread.
+		/// </summary>
+		/// <param name="featureClass"></param>
+		/// <param name="objectIds"></param>
+		/// <param name="featureLayer"></param>
+		public FeatureClassSelection([NotNull] FeatureClass featureClass,
+		                             [NotNull] List<long> objectIds,
+		                             [CanBeNull] BasicFeatureLayer featureLayer)
+			: this(featureClass, featureLayer)
+		{
+			_objectIds = objectIds;
+		}
+
+		private FeatureClassSelection([NotNull] FeatureClass featureClass,
+		                              [CanBeNull] BasicFeatureLayer featureLayer)
+		{
+			FeatureClass = featureClass;
+			FeatureLayer = featureLayer;
+
+			_shapeType = GetShapeType();
+			_outputSpatialReference = FeatureLayer?.GetSpatialReference();
+		}
+
 		/// <summary>
 		/// The feature class.
 		/// </summary>
@@ -17,39 +73,65 @@ namespace ProSuite.Commons.AGP.Carto
 		public FeatureClass FeatureClass { get; }
 
 		/// <summary>
-		/// The list of features from <see cref="FeatureClass"/>. They do not all necessarily belong to the same layer.
-		/// </summary>
-		[NotNull]
-		public List<Feature> Features { get; }
-
-		/// <summary>
 		/// The (top-most) layer which references the FeatureClass of the selected features.
 		/// </summary>
 		[CanBeNull]
 		public BasicFeatureLayer FeatureLayer { get; }
 
-		public int FeatureCount => Features.Count;
+		public int FeatureCount => _objectIds?.Count ?? _features.Count;
 
-		public int ShapeDimension
+		public IReadOnlyList<long> ObjectIds
 		{
 			get
 			{
-				GeometryType shapeType =
-					FeatureLayer != null
-						? GeometryUtils.TranslateEsriGeometryType(FeatureLayer.ShapeType)
-						: FeatureClass.GetDefinition().GetShapeType();
+				if (_objectIds == null)
+				{
+					_objectIds = new List<long>();
 
-				return GetShapeDimension(shapeType);
+					foreach (Feature feature in GetFeatures())
+					{
+						_objectIds.Add(feature.GetObjectID());
+					}
+				}
+
+				return _objectIds.AsReadOnly();
 			}
 		}
 
-		public FeatureClassSelection([NotNull] FeatureClass featureClass,
-		                             [NotNull] List<Feature> features,
-		                             [CanBeNull] BasicFeatureLayer featureLayer)
+		public int ShapeDimension => GetShapeDimension(_shapeType);
+
+		/// <summary>
+		/// The list of features from <see cref="FeatureClass"/>. They do not all necessarily belong to the same layer.
+		/// Must be called on a CIM thread.
+		/// </summary>
+		[NotNull]
+		public IEnumerable<Feature> GetFeatures()
 		{
-			FeatureClass = featureClass;
-			Features = features;
-			FeatureLayer = featureLayer;
+			if (_features == null)
+			{
+				Assert.NotNull(_outputSpatialReference, "No spatial reference");
+
+				_features = GdbQueryUtils.GetFeatures(
+					                         FeatureClass, _objectIds,
+					                         _outputSpatialReference, false)
+				                         .ToList();
+
+				if (_features.Count != _objectIds.Count)
+				{
+					_msg.DebugFormat(
+						"FeatureClassSelection: Some features of might have been deleted. FeatureCount: {0}, ObjectIdCount: {1}",
+						_features.Count, _objectIds.Count);
+				}
+			}
+
+			return _features;
+		}
+
+		private GeometryType GetShapeType()
+		{
+			return FeatureLayer != null
+				       ? GeometryUtils.TranslateEsriGeometryType(FeatureLayer.ShapeType)
+				       : FeatureClass.GetDefinition().GetShapeType();
 		}
 
 		private static int GetShapeDimension(GeometryType geometryType)

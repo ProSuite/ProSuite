@@ -4,10 +4,9 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.QA.Xml
 {
-	public class XmlTestDescriptor : IXmlEntityMetadata
+	public class XmlDescriptor : IXmlEntityMetadata
 	{
 		private string _description;
-		private const int _nullExecutionPriority = -1;
 
 		[XmlAttribute("name")]
 		public string Name { get; set; }
@@ -25,6 +24,67 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			set { _description = value; }
 		}
 
+		[XmlAttribute("createdDate")]
+		public string CreatedDate { get; set; }
+
+		[XmlAttribute("createdByUser")]
+		public string CreatedByUser { get; set; }
+
+		[XmlAttribute("lastChangedDate")]
+		public string LastChangedDate { get; set; }
+
+		[XmlAttribute("lastChangedByUser")]
+		public string LastChangedByUser { get; set; }
+
+		[XmlIgnore]
+		public XmlClassDescriptor ClassDescriptor { get; protected set; }
+	}
+
+	public class XmlRowFilterDescriptor : XmlDescriptor
+	{
+		[XmlElement("RowFilterClass")]
+		[CanBeNull]
+		public XmlClassDescriptor RowFilterClass
+		{
+			get => ClassDescriptor;
+			set => ClassDescriptor = value;
+		}
+	}
+
+	public class XmlIssueFilterDescriptor : XmlDescriptor
+	{
+		[XmlElement("IssueFilterClass")]
+		[CanBeNull]
+		public XmlClassDescriptor IssueFilterClass
+		{
+			get => ClassDescriptor;
+			set => ClassDescriptor = value;
+		}
+	}
+
+	public class XmlTransformerDescriptor : XmlDescriptor
+	{
+		[XmlElement("TransformerClass")]
+		[CanBeNull]
+		public XmlClassDescriptor TransformerClass
+		{
+			get => ClassDescriptor;
+			set => ClassDescriptor = value;
+		}
+	}
+
+	public class XmlTestDescriptor : XmlDescriptor
+	{
+		private const int _nullExecutionPriority = -1;
+
+		[XmlElement("TestClass")]
+		[CanBeNull]
+		public XmlClassDescriptor TestClass
+		{
+			get => ClassDescriptor;
+			set => ClassDescriptor = value;
+		}
+
 		[XmlAttribute("executionPriority")]
 		[DefaultValue(_nullExecutionPriority)]
 		public int ExecutionPriority { get; set; }
@@ -37,10 +97,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[DefaultValue(false)]
 		public bool AllowErrors { get; set; }
 
-		[XmlElement("TestClass")]
-		[CanBeNull]
-		public XmlClassDescriptor TestClass { get; set; }
-
 		[XmlElement("TestFactory")]
 		[CanBeNull]
 		public XmlClassDescriptor TestFactoryDescriptor { get; set; }
@@ -48,18 +104,6 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		[XmlElement("TestConfigurator")]
 		[CanBeNull]
 		public XmlClassDescriptor TestConfigurator { get; set; }
-
-		[XmlAttribute("createdDate")]
-		public string CreatedDate { get; set; }
-
-		[XmlAttribute("createdByUser")]
-		public string CreatedByUser { get; set; }
-
-		[XmlAttribute("lastChangedDate")]
-		public string LastChangedDate { get; set; }
-
-		[XmlAttribute("lastChangedByUser")]
-		public string LastChangedByUser { get; set; }
 
 		public int? GetExecutionPriority()
 		{

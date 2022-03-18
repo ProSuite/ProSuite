@@ -383,10 +383,7 @@ namespace ProSuite.QA.Container.TestContainer
 
 		private void OnQaError(QaErrorEventArgs e)
 		{
-			if (QaError != null)
-			{
-				QaError(this, e);
-			}
+			QaError?.Invoke(this, e);
 		}
 
 		private void OnProgressChanged(Step step, int current, int total, string info)
@@ -711,6 +708,10 @@ namespace ProSuite.QA.Container.TestContainer
 			{
 				OnQaError(errorEventArgs);
 				cancel = errorEventArgs.Cancel;
+				if (errorEventArgs.Cancel) // If errorEventArgs.Cancel == true, no error will be reported
+				{
+					_errorEventCount--;
+				}
 			}
 
 			if (! cancel)

@@ -103,7 +103,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			foreach (QualitySpecificationElement element in qualitySpecification.Elements)
 			{
 				QualityCondition condition = element.QualityCondition;
-				foreach (Dataset dataset in condition.GetDatasetParameterValues())
+				foreach (Dataset dataset in condition.GetDatasetParameterValues(
+					includeReferencedProcessors: true))
 				{
 					if (! referenceCountByModel.ContainsKey((Model) dataset.Model))
 					{
@@ -185,15 +186,12 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 			Assert.ArgumentNotNull(document, nameof(document));
 			Assert.ArgumentNotNull(xmlQualitySpecification, nameof(xmlQualitySpecification));
 
-			IList<XmlQualityCondition> referencedConditions =
-				XmlDataQualityUtils.GetReferencedXmlQualityConditions(
-					                   document, new[] {xmlQualitySpecification})
-				                   .Select(p => p.Key)
-				                   .ToList();
+			XmlQualityConditionsCache conditionsCache = XmlDataQualityUtils.GetReferencedXmlQualityConditions(
+				document, new[] {xmlQualitySpecification});
 
 			bool hasUndefinedWorkspaceReference;
 			IList<XmlWorkspace> xmlWorkspaces = XmlDataQualityUtils.GetReferencedWorkspaces(
-				document, referencedConditions, out hasUndefinedWorkspaceReference);
+				conditionsCache.QualityConditions, conditionsCache, out hasUndefinedWorkspaceReference);
 
 			var result = new List<DataSource>();
 			if (hasUndefinedWorkspaceReference)

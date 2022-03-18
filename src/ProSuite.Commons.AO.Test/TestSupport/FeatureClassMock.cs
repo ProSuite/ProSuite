@@ -82,23 +82,28 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 
 		ISpatialReference IGeoDataset.SpatialReference => _spatialReference;
 
-		IEnvelope IGeoDataset.Extent
-		{
-			get { throw new NotImplementedException(); }
-		}
+		IEnvelope IGeoDataset.Extent => Extent;
+		protected virtual IEnvelope Extent => throw new NotImplementedException();
 
 		#endregion
 
 		#region IFeatureClass Members
 
-		public IFeature CreateFeature()
+		IFeature IFeatureClass.CreateFeature() => CreateFeature();
+
+		public FeatureMock CreateFeature()
 		{
-			return (IFeature) CreateObject(GetNextOID());
+			return CreateFeature(GetNextOID());
+		}
+
+		private FeatureMock CreateFeature(int oid)
+		{
+			return new FeatureMock(oid, this);
 		}
 
 		public override IObject CreateObject(int oid)
 		{
-			return new FeatureMock(oid, this);
+			return CreateFeature(oid);
 		}
 
 		public IRow CreateRow()
@@ -126,10 +131,8 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			throw new NotImplementedException();
 		}
 
-		public IFeatureCursor Search(IQueryFilter filter, bool Recycling)
-		{
-			throw new NotImplementedException();
-		}
+		IFeatureCursor IFeatureClass.Search(IQueryFilter filter, bool Recycling) =>
+			(IFeatureCursor) Search(filter, Recycling);
 
 		public IFeatureCursor Update(IQueryFilter filter, bool Recycling)
 		{

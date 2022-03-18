@@ -51,6 +51,7 @@
     <Compile Include="DataModel\AssociationEndRepository.cs" />
     <Compile Include="DataModel\AssociationRepository.cs" />
     <Compile Include="DataModel\AttributeRepository.cs" />
+    <Compile Include="DataModel\AttributeRoleType.cs" />
     <Compile Include="DataModel\AttributeTypeRepository.cs" />
     <Compile Include="DataModel\DatasetCategoryRepository.cs" />
     <Compile Include="DataModel\DatasetRepository.cs" />

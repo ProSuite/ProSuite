@@ -119,7 +119,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.RuleBased
 
 			// no need to specify databaseName/schemaOwner, as dataset names will be fully qualified
 			return new VerifiedModel(modelName, workspace,
-			                         (m, w) => new MasterDatabaseWorkspaceContext(w, m));
+			                         new MasterDatabaseWorkspaceContextFactory());
 		}
 	}
 }

@@ -419,6 +419,39 @@ namespace ProSuite.Commons.AO.Test.Geometry
 			                      (double) watch.ElapsedMilliseconds / iterations);
 		}
 
+		[Test]
+		public void LearningTestCanAddEmptyPartToPolygon()
+		{
+			ISpatialReference sref =
+				SpatialReferenceUtils.CreateSpatialReference(WellKnownHorizontalCS.LV95);
+
+			IPolygon poly = GeometryFactory.CreatePolygon(sref, true, false);
+
+			IGeometryCollection collection = (IGeometryCollection) poly;
+
+			IRing emptyRing = GeometryFactory.CreateEmptyRing(poly);
+
+			object missing = Type.Missing;
+			collection.AddGeometry(emptyRing, ref missing, ref missing);
+
+			IRing ring = GeometryFactory.CreateRing(new[]
+			                                        {
+				                                        WKSPointZUtils.CreatePoint(1, 2, 3),
+				                                        WKSPointZUtils.CreatePoint(2, 4, 6),
+				                                        WKSPointZUtils.CreatePoint(1, 2, 3)
+			                                        });
+
+			collection.AddGeometry(ring, ref missing, ref missing);
+
+			Assert.AreEqual(2, collection.GeometryCount);
+
+			ISegmentCollection segmentCollection = (ISegmentCollection) collection;
+
+			IPoint point = GeometryFactory.CreatePoint(1.001, 2.001, sref);
+			IList<int> found = GeometryUtils.FindSegmentIndices(segmentCollection, point, 0.01);
+			Assert.AreEqual(2, found.Count);
+		}
+
 		private static void CanCreateUnionWithPointsAndPolylinesFastEnoughCore()
 		{
 			var input = new List<IGeometry>();

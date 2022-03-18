@@ -86,7 +86,7 @@ namespace ProSuite.QA.Tests.Test
 			//                                            "TOPGIS_TLM.TLM_DTM_TERRAIN",
 			//                                            "TOPGIS_TLM.TLM_DTM");
 
-			var test = new QaSurfaceVertex(fc, terrain, 0.1, 5,
+			var test = new QaSurfaceVertex(fc, terrain, 5,
 			                               ZOffsetConstraint.AboveLimit);
 			var runner = new QaContainerTestRunner(10000, test) {KeepGeometry = true};
 

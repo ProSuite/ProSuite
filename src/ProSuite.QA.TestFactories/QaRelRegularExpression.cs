@@ -169,7 +169,7 @@ namespace ProSuite.QA.TestFactories
 			return objects;
 		}
 
-		protected override void SetPropertyValue(ITest test, TestParameter parameter,
+		protected override void SetPropertyValue(object test, TestParameter parameter,
 		                                         object value)
 		{
 			if (parameter.Name.Equals(MatchIsErrorName,

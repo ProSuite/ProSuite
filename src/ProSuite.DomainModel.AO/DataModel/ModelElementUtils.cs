@@ -115,12 +115,22 @@ namespace ProSuite.DomainModel.AO.DataModel
 
 		[CanBeNull]
 		public static SimpleRasterMosaic TryOpenFromMasterDatabase(
-			ISimpleRasterMosaicDataset dataset, bool allowAlways = false)
+			IRasterMosaicDataset dataset, bool allowAlways = false)
 		{
 			IDatasetContext context = GetMasterDatabaseWorkspaceContext(dataset,
 				allowAlways);
 
 			return context?.OpenSimpleRasterMosaic(dataset);
+		}
+
+		[CanBeNull]
+		public static ITopology TryOpenFromMasterDatabase(
+			ITopologyDataset dataset, bool allowAlways = false)
+		{
+			IDatasetContext context = GetMasterDatabaseWorkspaceContext(dataset,
+				allowAlways);
+
+			return context?.OpenTopology(dataset);
 		}
 
 		[NotNull]

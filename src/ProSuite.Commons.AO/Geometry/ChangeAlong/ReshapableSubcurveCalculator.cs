@@ -740,7 +740,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				var candidate = (IPath) targetCollection.Geometry[hitPartIndex];
 
 				double distanceTo = GeometryUtils.GetDistanceFromCurve(toPoint, candidate,
-				                                                       nearPoint);
+					nearPoint);
 
 				if (distanceTo < tolerance)
 				{

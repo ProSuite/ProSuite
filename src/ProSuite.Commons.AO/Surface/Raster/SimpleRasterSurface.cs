@@ -344,7 +344,8 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			if (HasNoDataValues(noDataValue, v00, v10, v01, v11))
 			{
 				// Try loading neighbouring raster datasets:
-				double searchTolerance = Math.Max(simpleRaster.PixelSizeX, simpleRaster.PixelSizeY);
+				double searchTolerance = Math.Max(Math.Abs(simpleRaster.PixelSizeX),
+				                                  Math.Abs(simpleRaster.PixelSizeY));
 
 				// This should return the rasters in descending priority:
 				foreach (ISimpleRaster otherRaster in GetRasters(x, y, searchTolerance))
@@ -477,7 +478,7 @@ namespace ProSuite.Commons.AO.Surface.Raster
 
 			foreach (ISimpleRaster r in GetRasters(_queryEnvelope))
 			{
-				return Math.Min(r.PixelSizeX, r.PixelSizeY);
+				return Math.Min(Math.Abs(r.PixelSizeX), Math.Abs(r.PixelSizeY));
 			}
 
 			double tolerance = GeometryUtils.GetXyTolerance(shape);
@@ -523,7 +524,7 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			}
 
 			foreach (ISimpleRaster simpleRaster in _rasterIndex.Search(new Pnt2D(x, y),
-				_searchTolerance))
+				         _searchTolerance))
 			{
 				if (GeomRelationUtils.AreBoundsDisjoint(simpleRaster.GetEnvelope(), x, y,
 				                                        _searchTolerance))
@@ -546,7 +547,7 @@ namespace ProSuite.Commons.AO.Surface.Raster
 			                     out double xMax, out double yMax);
 
 			foreach (ISimpleRaster simpleRaster in _rasterIndex.Search(
-				xMin, yMin, xMax, yMax, _searchTolerance))
+				         xMin, yMin, xMax, yMax, _searchTolerance))
 			{
 				yield return simpleRaster;
 			}

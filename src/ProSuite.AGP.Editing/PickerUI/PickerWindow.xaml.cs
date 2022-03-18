@@ -1,7 +1,3 @@
-using System;
-using System.ComponentModel;
-using ProSuite.Commons.Logging;
-
 namespace ProSuite.AGP.Editing.PickerUI
 {
 	/// <summary>
@@ -9,38 +5,21 @@ namespace ProSuite.AGP.Editing.PickerUI
 	/// </summary>
 	public partial class PickerWindow
 	{
-		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
-		private bool IsClosing { get; set; }
-
 		public PickerWindow(PickerViewModel vm)
 		{
 			InitializeComponent();
 
-			if (vm is PickerViewModel pickerViewModel)
-			{
-				DataContext = pickerViewModel;
-			}
-		}
+			vm.CloseAction = Close;
 
-		private void PickerWindow_Deactivated(object sender, EventArgs e)
-		{
-			try
-			{
-				if (! IsClosing)
-				{
-					Close();
-				}
-			}
-			catch (Exception exception)
-			{
-				_msg.Error("Error deactivating picker window", exception);
-			}
-		}
+			DataContext = vm;
 
-		private void PickerWindow_Closing(object sender, CancelEventArgs e)
-		{
-			IsClosing = true;
+			// The Deactivated event should be fired if the user clicks outside the window.
+			// However, this sometimes does not work. The failing condition is:
+			// - Debugger NOT attached
+			// - The window is opened with ShowDialog() instead of Show()
+			Deactivated += vm.OnWindowDeactivated;
+			PreviewKeyDown += vm.OnPreviewKeyDown;
+			Closing += vm.OnWindowClosing;
 		}
 	}
 }

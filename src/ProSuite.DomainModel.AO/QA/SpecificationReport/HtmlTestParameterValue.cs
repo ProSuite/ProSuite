@@ -1,4 +1,4 @@
-using ProSuite.Commons.Essentials.Assertions;
+using System;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
@@ -10,22 +10,37 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 		internal HtmlTestParameterValue([NotNull] TestParameterValue testParameterValue,
 		                                [NotNull] HtmlTestParameter testParameter)
 		{
-			Name = testParameterValue.TestParameterName;
-			Value = testParameterValue.StringValue;
-
 			TestParameter = testParameter;
-			var datasetParameterValue = testParameterValue as DatasetTestParameterValue;
-			if (datasetParameterValue != null)
+
+			Name = testParameterValue.TestParameterName;
+
+			if (testParameterValue is ScalarTestParameterValue scalarParameterValue)
 			{
-				Dataset dataset = Assert.NotNull(datasetParameterValue.DatasetValue);
-				DatasetValue = dataset;
-				Dataset = dataset.Name;
+				Value = scalarParameterValue.GetDisplayValue();
+				return;
+			}
+
+			if (testParameterValue is DatasetTestParameterValue datasetParameterValue)
+			{
 				IsDatasetParameter = true;
 				FilterExpression = datasetParameterValue.FilterExpression;
-				DataModel = dataset.Model.Name;
 				UsedAsReferenceData = datasetParameterValue.UsedAsReferenceData;
-				DatasetGeometryType = HtmlDataset.GetGeometryTypeName(dataset);
+
+				Dataset dataset = datasetParameterValue.DatasetValue;
+				if (dataset != null)
+				{
+					Dataset = dataset.Name;
+					DataModel = dataset.Model?.Name;
+					DatasetGeometryType = HtmlDataset.GetGeometryTypeName(dataset);
+					Value = dataset.Name;
+				}
+
+				DatasetValue = dataset;
+
+				return;
 			}
+
+			throw new ArgumentException($"Unhandled type {testParameterValue.GetType()}");
 		}
 
 		[NotNull]

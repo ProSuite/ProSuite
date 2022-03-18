@@ -71,6 +71,12 @@ namespace ProSuite.QA.Container
 				return 0;
 			}
 
+			if (containerTest.RowFiltersCancel(row, involvedTableIndex))
+			{
+				applicable = false;
+				return 0;
+			}
+
 			// the test is applicable for the row, run it
 			applicable = true;
 			return containerTest.Execute(row, involvedTableIndex, RecycleUnique);

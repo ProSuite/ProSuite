@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.Essentials.Assertions;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
 using ProSuite.QA.Container.TestSupport;
-using ProSuite.Commons.Essentials.Assertions;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Tests.Network
 {
@@ -18,9 +18,12 @@ namespace ProSuite.QA.Tests.Network
 	{
 		private readonly bool _includeBorderNodes;
 
-		private List<NetElement> _netCache;
+		private NetworkBuilder _networkBuilder;
 
-		[NotNull] private readonly IPoint _queryPnt = new PointClass();
+		[NotNull]
+		private NetworkBuilder NetworkBuilder =>
+			_networkBuilder ?? (_networkBuilder = new NetworkBuilder(_includeBorderNodes));
+
 		[NotNull] private readonly IEnvelope _queryEnv = new EnvelopeClass();
 
 		private IList<ISpatialFilter> _filters;
@@ -55,13 +58,19 @@ namespace ProSuite.QA.Tests.Network
 
 		#endregion
 
-		public bool UseMultiParts { get; set; }
+		public bool UseMultiParts
+		{
+			get => NetworkBuilder.UseMultiParts;
+			set => NetworkBuilder.UseMultiParts = value;
+		}
 
 		[CanBeNull]
-		public List<List<DirectedRow>> ConnectedLinesList { get; private set; }
+		public IReadOnlyList<List<DirectedRow>> ConnectedLinesList =>
+			_networkBuilder?.ConnectedLinesList;
 
 		[CanBeNull]
-		public List<List<NetElement>> ConnectedElementsList { get; private set; }
+		public IReadOnlyList<List<NetElement>> ConnectedElementsList =>
+			_networkBuilder?.ConnectedElementsList;
 
 		protected double Tolerance { get; }
 
@@ -75,42 +84,14 @@ namespace ProSuite.QA.Tests.Network
 				return 0;
 			}
 
-			if (_netCache == null)
+			if (_networkBuilder == null)
 			{
-				_netCache = new List<NetElement>();
-				ConnectedLinesList = new List<List<DirectedRow>>();
-				ConnectedElementsList = new List<List<NetElement>>();
+				_networkBuilder = new NetworkBuilder(_includeBorderNodes);
 			}
 
-			AddNetElements(new TableIndexRow(row, tableIndex), _netCache);
+			NetworkBuilder.AddNetElements(row, tableIndex);
 
 			return 0;
-		}
-
-		private void AddNetElements([NotNull] TableIndexRow row,
-		                            [NotNull] List<NetElement> netElems)
-		{
-			IGeometry geom = ((IFeature) row.Row).Shape;
-
-			switch (geom.GeometryType)
-			{
-				case esriGeometryType.esriGeometryPoint:
-					netElems.Add(new NetPoint(row));
-					break;
-
-				case esriGeometryType.esriGeometryPolyline:
-
-					foreach (DirectedRow directedRow in GetDirectedRows(row))
-					{
-						netElems.Add(directedRow);
-						netElems.Add(directedRow.Reverse());
-					}
-
-					break;
-
-				default:
-					throw new ArgumentException("Invalid geometry type " + geom.GeometryType);
-			}
 		}
 
 		protected IEnumerable<DirectedRow> GetDirectedRows(TableIndexRow row)
@@ -135,19 +116,16 @@ namespace ProSuite.QA.Tests.Network
 		{
 			if (args.State == TileState.Initial)
 			{
-				_netCache?.Clear();
-				ConnectedLinesList?.Clear();
-				ConnectedElementsList?.Clear();
+				_networkBuilder?.ClearAll();
 				return 0;
 			}
 
-			if (_netCache == null)
+			if (_networkBuilder == null)
 			{
 				return 0;
 			}
 
-			ConnectedLinesList?.Clear();
-			ConnectedElementsList?.Clear();
+			_networkBuilder.ClearConnected();
 
 			IEnvelope verificationBox = Assert.NotNull(args.AllBox, "AllBox");
 			WKSEnvelope verificationEnvelope;
@@ -159,25 +137,10 @@ namespace ProSuite.QA.Tests.Network
 
 			BuildToleranceCache(tileEnvelope);
 
-			BuildNet(verificationEnvelope, tileEnvelope, Tolerance);
-			_netCache.Clear();
+			_networkBuilder.BuildNet(verificationEnvelope, tileEnvelope, Tolerance);
+			_networkBuilder.ClearCache();
 
 			return 0;
-		}
-
-		private void BuildNet(WKSEnvelope verificationEnvelope,
-		                      WKSEnvelope tileEnvelope,
-		                      double tolerance)
-		{
-			var xElements = new List<NetElementXY>(_netCache.Count);
-			foreach (NetElement elem in _netCache)
-			{
-				var elemXY = new NetElementXY(elem, _queryPnt);
-				xElements.Add(elemXY);
-			}
-
-			SortElements(xElements, tolerance,
-			             neigbors => AddElements(neigbors, verificationEnvelope, tileEnvelope));
 		}
 
 		protected void SortElements<T>([NotNull] List<T> xElements, double tolerance,
@@ -272,7 +235,7 @@ namespace ProSuite.QA.Tests.Network
 
 			InitFilters();
 
-			_netCache.Clear();
+			_networkBuilder.ClearCache();
 			_queryEnv.PutCoords(tileEnvelope.XMin - Tolerance, tileEnvelope.YMin - Tolerance,
 			                    tileEnvelope.XMax + Tolerance, tileEnvelope.YMax + Tolerance);
 
@@ -288,107 +251,9 @@ namespace ProSuite.QA.Tests.Network
 					IRow feature in
 					Search(InvolvedTables[iTable], _filters[iTable], _helpers[iTable]))
 				{
-					AddNetElements(new TableIndexRow(feature, iTable), _netCache);
+					_networkBuilder.AddNetElements(feature, iTable);
 				}
 			}
-		}
-
-		private void AddElements([CanBeNull] IList<NetElementXY> netElems,
-		                         WKSEnvelope verificationEnvelope,
-		                         WKSEnvelope tileEnvelope)
-		{
-			if (netElems == null || netElems.Count == 0)
-			{
-				return;
-			}
-
-			if (! HandleInCurrentTile(netElems[0], verificationEnvelope, tileEnvelope))
-			{
-				// Border object, handled in other tile
-				return;
-			}
-
-			var lines = new List<DirectedRow>(netElems.Count);
-			var elems = new List<NetElement>(netElems.Count);
-
-			foreach (NetElementXY elem in netElems)
-			{
-				if (elem.Element is DirectedRow)
-				{
-					lines.Add((DirectedRow) elem.Element);
-				}
-
-				elems.Add(elem.Element);
-			}
-
-			Assert.NotNull(ConnectedLinesList).Add(lines);
-			Assert.NotNull(ConnectedElementsList).Add(elems);
-		}
-
-		private bool HandleInCurrentTile([NotNull] NetElementXY netElem,
-		                                 WKSEnvelope verificationEnvelope,
-		                                 WKSEnvelope tileEnvelope)
-		{
-			double x = netElem.X;
-			double y = netElem.Y;
-
-			if (Math.Abs(verificationEnvelope.XMin - tileEnvelope.XMin) < double.Epsilon)
-			{
-				if (_includeBorderNodes == false &&
-				    x < verificationEnvelope.XMin)
-				{
-					return false;
-				}
-			}
-			else if (x <= tileEnvelope.XMin)
-			{
-				// the point was handled in a previous tile
-				return false;
-			}
-
-			if (Math.Abs(tileEnvelope.XMax - verificationEnvelope.XMax) < double.Epsilon)
-			{
-				if (_includeBorderNodes == false &&
-				    x > verificationEnvelope.XMax)
-				{
-					return false;
-				}
-			}
-			else if (x > tileEnvelope.XMax)
-			{
-				// the point will be handled in a following tile
-				return false;
-			}
-
-			if (Math.Abs(verificationEnvelope.YMin - tileEnvelope.YMin) < double.Epsilon)
-			{
-				if (_includeBorderNodes == false &&
-				    y < verificationEnvelope.YMin)
-				{
-					return false;
-				}
-			}
-			else if (y <= tileEnvelope.YMin)
-			{
-				// the point was handled in a previous tile
-				return false;
-			}
-
-			if (Math.Abs(tileEnvelope.YMax - verificationEnvelope.YMax) < double.Epsilon)
-			{
-				if (_includeBorderNodes == false &&
-				    y > verificationEnvelope.YMax)
-				{
-					return false;
-				}
-			}
-			else if (y > tileEnvelope.YMax)
-			{
-				// the point will be handled in a following tile
-				return false;
-			}
-
-			return true;
 		}
 
 		[NotNull]
@@ -411,7 +276,7 @@ namespace ProSuite.QA.Tests.Network
 			IRow row = tableIndexRow.GetRow(InvolvedTables);
 			RelatedTables related = GetRelatedTables(row);
 
-			return related?.GetInvolvedRows(row) ?? new[] {new InvolvedRow(row)};
+			return related?.GetInvolvedRows(row) ?? new InvolvedRows {new InvolvedRow(row)};
 		}
 
 		#region nested classes

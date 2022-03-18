@@ -658,16 +658,16 @@ namespace ProSuite.QA.Tests.Test
 				var clsDesc = new ClassDescriptor(typeof(QaRelLineGroupConstraints));
 				var tstDesc = new TestDescriptor("GroupEnds", clsDesc);
 				var condition = new QualityCondition("cndGroupEnds", tstDesc);
-				QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mds1);
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(condition, "relationTables", mds1);
+				InstanceConfigurationUtils.AddParameterValue(
 					condition, "relationTables", mdsRel);
-				QualityConditionParameterUtils.AddParameterValue(condition, "relation", relName);
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(condition, "relation", relName);
+				InstanceConfigurationUtils.AddParameterValue(
 					condition, "join", JoinType.InnerJoin);
-				QualityConditionParameterUtils.AddParameterValue(condition, "minGap", 1);
-				QualityConditionParameterUtils.AddParameterValue(condition, "minGroupLength", 5);
-				QualityConditionParameterUtils.AddParameterValue(condition, "minDangleLength", 2);
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(condition, "minGap", 1);
+				InstanceConfigurationUtils.AddParameterValue(condition, "minGroupLength", 5);
+				InstanceConfigurationUtils.AddParameterValue(condition, "minDangleLength", 2);
+				InstanceConfigurationUtils.AddParameterValue(
 					condition, "groupBy", string.Format("{0}.{1}", dsRel.Name, _textFieldName));
 
 				var fact = new QaRelLineGroupConstraints();
@@ -736,44 +736,44 @@ namespace ProSuite.QA.Tests.Test
 				var clsDesc = new ClassDescriptor(typeof(QaRelLineGroupConstraints));
 				var tstDesc = new TestDescriptor("GroupEnds", clsDesc);
 				var condition = new QualityCondition("cndGroupEnds", tstDesc);
-				QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mds1);
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(condition, "relationTables", mds1);
+				InstanceConfigurationUtils.AddParameterValue(
 					condition, "relationTables", mdsRel);
-				QualityConditionParameterUtils.AddParameterValue(condition, "relation", relName);
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(condition, "relation", relName);
+				InstanceConfigurationUtils.AddParameterValue(
 					condition, "join", JoinType.InnerJoin);
-				QualityConditionParameterUtils.AddParameterValue(condition, "minGap", 1);
-				QualityConditionParameterUtils.AddParameterValue(condition, "minGroupLength", 5);
-				QualityConditionParameterUtils.AddParameterValue(condition, "minDangleLength", 2);
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(condition, "minGap", 1);
+				InstanceConfigurationUtils.AddParameterValue(condition, "minGroupLength", 5);
+				InstanceConfigurationUtils.AddParameterValue(condition, "minDangleLength", 2);
+				InstanceConfigurationUtils.AddParameterValue(
 					condition, "groupBy", string.Format("{0}.{1}", dsRel.Name, _textFieldName));
 
-				QualityConditionParameterUtils.AddParameterValue(condition, "GroupCondition", "");
-				QualityConditionParameterUtils.AddParameterValue(condition, "ValueSeparator", "#");
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(condition, "GroupCondition", "");
+				InstanceConfigurationUtils.AddParameterValue(condition, "ValueSeparator", "#");
+				InstanceConfigurationUtils.AddParameterValue(
 					condition, "MinGapToOtherGroupType", 0);
 
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					condition, "MinDangleLengthContinued", 0);
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					condition, "MinDangleLengthAtForkContinued",
 					0);
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					condition, "MinDangleLengthAtFork", 0);
 
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					condition, "MinGapToSameGroupTypeCovered",
 					0);
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					condition, "MinGapToSameGroupTypeAtFork",
 					0);
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					condition, "MinGapToSameGroupTypeAtForkCovered", 0);
 
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					condition, "MinGapToOtherGroupTypeAtFork",
 					0);
-				QualityConditionParameterUtils.AddParameterValue(condition, "MinGapToSameGroup", 0);
+				InstanceConfigurationUtils.AddParameterValue(condition, "MinGapToSameGroup", 0);
 
 				var fact = new QaRelLineGroupConstraints();
 				Assert.AreEqual(
@@ -1107,19 +1107,19 @@ namespace ProSuite.QA.Tests.Test
 			var clsDesc = new ClassDescriptor(typeof(QaRelLineGroupConstraints));
 			var tstDesc = new TestDescriptor("GroupEnds", clsDesc);
 			var condition = new QualityCondition("cndGroupEnds", tstDesc);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mds1);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mdsRel);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relation", relName);
-			QualityConditionParameterUtils.AddParameterValue(condition, "join", JoinType.LeftJoin);
-			QualityConditionParameterUtils.AddParameterValue(condition, "minGap", 10);
-			QualityConditionParameterUtils.AddParameterValue(condition, "minGroupLength", 10);
-			QualityConditionParameterUtils.AddParameterValue(condition, "minLeafLength", 20);
-			QualityConditionParameterUtils.AddParameterValue(
+			InstanceConfigurationUtils.AddParameterValue(condition, "relationTables", mds1);
+			InstanceConfigurationUtils.AddParameterValue(condition, "relationTables", mdsRel);
+			InstanceConfigurationUtils.AddParameterValue(condition, "relation", relName);
+			InstanceConfigurationUtils.AddParameterValue(condition, "join", JoinType.LeftJoin);
+			InstanceConfigurationUtils.AddParameterValue(condition, "minGap", 10);
+			InstanceConfigurationUtils.AddParameterValue(condition, "minGroupLength", 10);
+			InstanceConfigurationUtils.AddParameterValue(condition, "minLeafLength", 20);
+			InstanceConfigurationUtils.AddParameterValue(
 				condition, "groupBy",
 				string.Format("{0}", "TOPGIS_TLM.TLM_STRASSENROUTE.OBJECTID"));
-			QualityConditionParameterUtils.AddParameterValue(condition, "GroupCondition",
+			InstanceConfigurationUtils.AddParameterValue(condition, "GroupCondition",
 			                                                 "TOPGIS_TLM.TLM_STRASSENROUTE.OBJECTID IS NOT NULL");
-			QualityConditionParameterUtils.AddParameterValue(condition, "MinGapToOtherGroup", 10);
+			InstanceConfigurationUtils.AddParameterValue(condition, "MinGapToOtherGroup", 10);
 
 			var fact = new QaRelLineGroupConstraints();
 			fact.Condition = condition;
@@ -1377,18 +1377,18 @@ namespace ProSuite.QA.Tests.Test
 			var clsDesc = new ClassDescriptor(typeof(QaRelLineGroupConstraints));
 			var tstDesc = new TestDescriptor("GroupEnds", clsDesc);
 			var condition = new QualityCondition("cndGroupEnds", tstDesc);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mds1);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mdsRel);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relation", relName);
-			QualityConditionParameterUtils.AddParameterValue(condition, "join", JoinType.LeftJoin);
-			QualityConditionParameterUtils.AddParameterValue(condition, "minGap", 10);
-			QualityConditionParameterUtils.AddParameterValue(condition, "minGroupLength", 10);
-			QualityConditionParameterUtils.AddParameterValue(condition, "minLeafLength", 20);
-			QualityConditionParameterUtils.AddParameterValue(
+			InstanceConfigurationUtils.AddParameterValue(condition, "relationTables", mds1);
+			InstanceConfigurationUtils.AddParameterValue(condition, "relationTables", mdsRel);
+			InstanceConfigurationUtils.AddParameterValue(condition, "relation", relName);
+			InstanceConfigurationUtils.AddParameterValue(condition, "join", JoinType.LeftJoin);
+			InstanceConfigurationUtils.AddParameterValue(condition, "minGap", 10);
+			InstanceConfigurationUtils.AddParameterValue(condition, "minGroupLength", 10);
+			InstanceConfigurationUtils.AddParameterValue(condition, "minLeafLength", 20);
+			InstanceConfigurationUtils.AddParameterValue(
 				condition, "groupBy", string.Format("{0}", "TOPGIS_TLM.TLM_WANDERWEG.OBJEKTART"));
-			QualityConditionParameterUtils.AddParameterValue(condition, "GroupCondition",
+			InstanceConfigurationUtils.AddParameterValue(condition, "GroupCondition",
 			                                                 "TOPGIS_TLM.TLM_WANDERWEG.OBJEKTART IS NOT NULL");
-			QualityConditionParameterUtils.AddParameterValue(condition, "MinGapToOtherGroup", 10);
+			InstanceConfigurationUtils.AddParameterValue(condition, "MinGapToOtherGroup", 10);
 
 			var fact = new QaRelLineGroupConstraints();
 			fact.Condition = condition;
@@ -1458,18 +1458,18 @@ namespace ProSuite.QA.Tests.Test
 			var clsDesc = new ClassDescriptor(typeof(QaRelLineGroupConstraints));
 			var tstDesc = new TestDescriptor("GroupEnds", clsDesc);
 			var condition = new QualityCondition("cndGroupEnds", tstDesc);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mds1);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mdsRel);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relation", relName);
-			QualityConditionParameterUtils.AddParameterValue(condition, "join", JoinType.LeftJoin);
-			QualityConditionParameterUtils.AddParameterValue(condition, "minGap", 10);
-			QualityConditionParameterUtils.AddParameterValue(condition, "minGroupLength", 10);
-			QualityConditionParameterUtils.AddParameterValue(condition, "minLeafLength", 20);
-			QualityConditionParameterUtils.AddParameterValue(
+			InstanceConfigurationUtils.AddParameterValue(condition, "relationTables", mds1);
+			InstanceConfigurationUtils.AddParameterValue(condition, "relationTables", mdsRel);
+			InstanceConfigurationUtils.AddParameterValue(condition, "relation", relName);
+			InstanceConfigurationUtils.AddParameterValue(condition, "join", JoinType.LeftJoin);
+			InstanceConfigurationUtils.AddParameterValue(condition, "minGap", 10);
+			InstanceConfigurationUtils.AddParameterValue(condition, "minGroupLength", 10);
+			InstanceConfigurationUtils.AddParameterValue(condition, "minLeafLength", 20);
+			InstanceConfigurationUtils.AddParameterValue(
 				condition, "groupBy", string.Format("{0}", "TOPGIS_TLM.TLM_WANDERWEG.OBJEKTART"));
-			QualityConditionParameterUtils.AddParameterValue(
+			InstanceConfigurationUtils.AddParameterValue(
 				condition, "GroupCondition", "TOPGIS_TLM.TLM_WANDERWEG.OBJEKTART IS NOT NULL");
-			QualityConditionParameterUtils.AddParameterValue(condition, "MinGapToOtherGroup", 10);
+			InstanceConfigurationUtils.AddParameterValue(condition, "MinGapToOtherGroup", 10);
 
 			var fact = new QaRelLineGroupConstraints();
 			fact.Condition = condition;

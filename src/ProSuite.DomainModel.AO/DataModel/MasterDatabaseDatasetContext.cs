@@ -28,17 +28,23 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return ModelElementUtils.TryOpenFromMasterDatabase(dataset);
 		}
 
+		public ITopology OpenTopology(ITopologyDataset dataset)
+		{
+			return ModelElementUtils.TryOpenFromMasterDatabase(dataset);
+		}
+
 		public IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset)
 		{
 			return ModelElementUtils.TryOpenFromMasterDatabase(dataset);
 		}
 
 		private Dictionary<ISimpleTerrainDataset, TerrainReference> _terrainDict;
+
 		public TerrainReference OpenTerrainReference(ISimpleTerrainDataset dataset)
 		{
 			_terrainDict =
 				_terrainDict ?? new Dictionary<ISimpleTerrainDataset, TerrainReference>();
-			if (!_terrainDict.TryGetValue(dataset, out TerrainReference terrainRef))
+			if (! _terrainDict.TryGetValue(dataset, out TerrainReference terrainRef))
 			{
 				terrainRef = ModelElementUtils.TryOpenFromMasterDatabase(dataset);
 				_terrainDict.Add(dataset, terrainRef);
@@ -47,7 +53,7 @@ namespace ProSuite.DomainModel.AO.DataModel
 			return terrainRef;
 		}
 
-		public SimpleRasterMosaic OpenSimpleRasterMosaic(ISimpleRasterMosaicDataset dataset)
+		public SimpleRasterMosaic OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
 			return ModelElementUtils.TryOpenFromMasterDatabase(dataset);
 		}

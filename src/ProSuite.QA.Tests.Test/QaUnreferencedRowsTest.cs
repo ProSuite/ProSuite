@@ -1,11 +1,11 @@
 using System;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.QA.Container.Test;
-using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container.Test;
+using ProSuite.QA.Tests.Test.TestRunners;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -18,7 +18,7 @@ namespace ProSuite.QA.Tests.Test
 		[OneTimeSetUp]
 		public void SetupFixture()
 		{
-			_lic.Checkout();
+			_lic.Checkout(EsriProduct.ArcEditor);
 
 			_testWs = TestWorkspaceUtils.CreateTestFgdbWorkspace("TestUnreferencedRows");
 		}

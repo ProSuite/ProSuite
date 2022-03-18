@@ -522,7 +522,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			{
 				// separate closed paths (used for remove-polygon) from normal paths
 				foreach (IPath path in GeometryUtils.GetPaths(
-					(IGeometry) simplifiedCurves))
+					         (IGeometry) simplifiedCurves))
 				{
 					if (path.IsClosed)
 					{
@@ -808,10 +808,13 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 			double xyTolerance = Assert.NotNull(XyTolerance).Value;
 
+			// NOTE: Non-linear geometries report Equal == true despite changed
+			// vertices! -> Do NOT use GeometryUtils.AreEqual(targetFeature.Shape, targetGeometry)
+			// to check if something has been changed!
+			// See unit test: CanReshapeAndAdjustAlongNonLinearSegmentsPolygonCircleWithMinimumToleranceAndTargetPointInsertion()
 			if (ReshapeUtils.EnsurePointsExistInTarget(
 				    targetGeometry, _potentialTargetInsertPoints, xyTolerance) &&
-			    ! updatedTargets.ContainsKey(targetFeature) &&
-			    ! GeometryUtils.AreEqual(targetFeature.Shape, targetGeometry))
+			    ! updatedTargets.ContainsKey(targetFeature))
 			{
 				updatedTargets.Add(targetFeature, targetGeometry);
 			}

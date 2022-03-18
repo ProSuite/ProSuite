@@ -74,6 +74,11 @@
     <Compile Include="AggregatedTestIssueCodes.cs" />
     <Compile Include="BeginTileParameters.cs" />
     <Compile Include="ContainerTest.Nested.cs" />
+    <Compile Include="Involved.cs" />
+    <Compile Include="InvolvedNested.cs" />
+    <Compile Include="InvolvesTablesBase.cs" />
+    <Compile Include="IssueFilter.cs" />
+    <Compile Include="ProcessBase.cs" />
     <Compile Include="QaErrorGeometry.cs" />
     <Compile Include="ExpressionUtils.cs" />
     <Compile Include="GeometryConstraint.cs" />
@@ -158,6 +163,7 @@
     <Compile Include="Geometry\SegmentProxy.cs" />
     <Compile Include="RasterReference.cs" />
     <Compile Include="RasterRow.cs" />
+    <Compile Include="RowFilter.cs" />
     <Compile Include="RowReference.cs" />
     <Compile Include="TestBase.cs" />
     <Compile Include="TestCategories\AttributeTestAttribute.cs" />

@@ -20,8 +20,10 @@ namespace ProSuite.QA.Container
 		}
 
 		public ContainerTest ContainerTest { get; set; }
+		public TableView TableView => _tableView;
 
 		public bool ForNetwork { get; set; }
+		public bool? RepeatCachedRows { get; set; }
 
 		public string SubFields { get; }
 

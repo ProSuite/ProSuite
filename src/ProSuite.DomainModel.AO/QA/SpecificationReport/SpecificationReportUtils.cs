@@ -16,8 +16,7 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 {
 	public static class SpecificationReportUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
 		[NotNull]
 		public static string RenderHtmlQualitySpecification(
@@ -105,19 +104,21 @@ namespace ProSuite.DomainModel.AO.QA.SpecificationReport
 						continue;
 					}
 
-					Dataset dataset = Assert.NotNull(parameterValue.DatasetValue);
+					Dataset dataset = parameterValue.DatasetValue;
 
-					DdxModel model = dataset.Model;
-					HtmlDataModel htmlDataModel;
-					if (! models.TryGetValue(model, out htmlDataModel))
+					if (dataset != null)
 					{
-						htmlDataModel = new HtmlDataModel(model);
-						models.Add(model, htmlDataModel);
+						DdxModel model = dataset.Model;
+						if (! models.TryGetValue(model, out HtmlDataModel htmlDataModel))
+						{
+							htmlDataModel = new HtmlDataModel(model);
+							models.Add(model, htmlDataModel);
+						}
+
+						HtmlDataset htmlDataset = htmlDataModel.GetHtmlDataset(dataset);
+
+						htmlDataset.AddReference(new HtmlDatasetReference(element, parameterValue));
 					}
-
-					HtmlDataset htmlDataset = htmlDataModel.GetHtmlDataset(dataset);
-
-					htmlDataset.AddReference(new HtmlDatasetReference(element, parameterValue));
 				}
 			}
 

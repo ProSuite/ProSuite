@@ -114,7 +114,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			if (! Directory.Exists(directory))
 			{
-				throw new DirectoryNotFoundException($"Directory not found: {directory}");
+				Directory.CreateDirectory(directory);
 			}
 
 			// Instantiate an FileGdb workspace factory and create a new file geodatabase.

@@ -7,6 +7,6 @@ namespace ProSuite.AGP.Editing.Picker
 	{
 		Task<IPickableItem> PickSingle();
 
-		Task<List<IPickableItem>> PickMany();
+		Task<IList<IPickableItem>> PickMany();
 	}
 }

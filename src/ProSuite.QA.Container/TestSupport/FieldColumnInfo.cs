@@ -10,6 +10,13 @@ namespace ProSuite.QA.Container.TestSupport
 	{
 		private readonly int _fieldIndex;
 
+		public static FieldColumnInfo Create(ITable table, string fieldName)
+		{
+			int fieldIndex = table.FindField(fieldName);
+			IField field = table.Fields.Field[fieldIndex];
+			return new FieldColumnInfo(table, field, fieldIndex);
+		}
+
 		public FieldColumnInfo([NotNull] ITable table,
 		                       [NotNull] IField field,
 		                       int fieldIndex)

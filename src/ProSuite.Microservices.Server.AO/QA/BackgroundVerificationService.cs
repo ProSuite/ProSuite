@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
@@ -58,8 +59,10 @@ namespace ProSuite.Microservices.Server.AO.QA
 				delegate
 				{
 					ICollection<Dataset> datasets =
-						QualitySpecificationUtils.GetQualityConditionDatasets(specification);
+						QualitySpecificationUtils.GetQualityConditionDatasets(
+							specification, out ICollection<QualityCondition> conditions);
 
+					_domainTransactions.Reattach(conditions);
 					_domainTransactions.Reattach(datasets);
 
 					_backgroundVerificationInputs.InitializeSchema(datasets);

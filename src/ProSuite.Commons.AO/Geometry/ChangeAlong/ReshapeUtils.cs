@@ -398,7 +398,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 
 				// No vertex in source but could still be ok in 3D -> 
 				if (targetComparison.CompareGeometryContainsPoint3D(
-					differentPointOnTarget.Key))
+					    differentPointOnTarget.Key))
 				{
 					continue;
 				}
@@ -445,8 +445,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 					new WKSPointZComparer(spatialReference, false));
 
 			foreach (KeyValuePair<WKSPointZ, VertexIndex> keyValuePair in
-				differentOnPathPoints
-			)
+			         differentOnPathPoints
+			        )
 			{
 				// beware of vertical segments in 10.0
 				if (! sourceDifferences2D.ContainsKey(keyValuePair.Key))
@@ -546,23 +546,18 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				const bool allowZDifference = true;
 
 				if (EnsurePointsExistInTarget(
-					targetGeometryToUpdate,
-					GeometryUtils.GetPoints(crackPointsByTarget.Value),
-					GeometryUtils.GetXyTolerance(targetGeometryToUpdate),
-					allowZDifference))
+					    targetGeometryToUpdate,
+					    GeometryUtils.GetPoints(crackPointsByTarget.Value),
+					    GeometryUtils.GetXyTolerance(targetGeometryToUpdate),
+					    allowZDifference))
 				{
-					// TODO: Equality comparison should not be necessary if EnsurePointsExistInTarget)= method returns false
-					// if no update happened (e.g. because vertex is replaced by the very same point)
-					if (! GeometryUtils.AreEqual(targetGeometryToUpdate, targetFeature.Shape))
+					if (resultingTargets.ContainsKey(targetFeature))
 					{
-						if (resultingTargets.ContainsKey(targetFeature))
-						{
-							resultingTargets[targetFeature] = targetGeometryToUpdate;
-						}
-						else
-						{
-							resultingTargets.Add(targetFeature, targetGeometryToUpdate);
-						}
+						resultingTargets[targetFeature] = targetGeometryToUpdate;
+					}
+					else
+					{
+						resultingTargets.Add(targetFeature, targetGeometryToUpdate);
 					}
 				}
 			}
@@ -576,7 +571,12 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 		{
 			var pointEnsured = false;
 
+			// This needs some more testing and additional considerations
+			// -> prevent the Simplify from shaking it all up again?
 			double simplificationDistance = xyTolerance * 2 * Math.Sqrt(2);
+			//double simplificationDistance = IntersectionUtils.UseCustomIntersect
+			//	                                ? xyTolerance
+			//	                                : xyTolerance * 2 * Math.Sqrt(2);
 
 			if (targetGeometry.GeometryType == esriGeometryType.esriGeometryMultiPatch)
 			{
@@ -622,20 +622,21 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 						continue;
 					}
 
-					SegmentReplacementUtils.EnsureVertexExists(
-						potentialTargetPoint, targetGeometry,
-						segmentIdx.Value, partIndex, allowZDifference,
-						simplificationDistance);
-
-					// make sure that new vertices on target geometries
-					// get interpolated z values (if they are z aware and the inserted point had NaN Z) 
-					var zValues = targetGeometry as IZ;
-					if (zValues != null && GeometryUtils.IsZAware(targetGeometry))
+					if (SegmentReplacementUtils.EnsureVertexExists(
+						    potentialTargetPoint, targetGeometry,
+						    segmentIdx.Value, partIndex, allowZDifference,
+						    simplificationDistance))
 					{
-						zValues.CalculateNonSimpleZs();
-					}
+						// make sure that new vertices on target geometries
+						// get interpolated z values (if they are z aware and the inserted point had NaN Z) 
+						var zValues = targetGeometry as IZ;
+						if (zValues != null && GeometryUtils.IsZAware(targetGeometry))
+						{
+							zValues.CalculateNonSimpleZs();
+						}
 
-					pointEnsured = true;
+						pointEnsured = true;
+					}
 				}
 
 				if (pointEnsured && originalKnownSimple)
@@ -1997,7 +1998,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			ringsToRemove = new List<int>();
 
 			foreach (KeyValuePair<ReshapeInfo, ReshapeInfo> combinedReshape in
-				combinedReshapes)
+			         combinedReshapes)
 			{
 				ReshapeInfo innerReshape = combinedReshape.Key;
 				ReshapeInfo outerReshape = combinedReshape.Value;
@@ -2012,7 +2013,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 					innerReshape.PartIndexToReshape, outerReshape.PartIndexToReshape);
 
 				innerReshape.RingReshapeSide = DetermineInnerRingReshapeSide(innerReshape,
-				                                                             outerReshape);
+					outerReshape);
 
 				if (innerReshape.RingReshapeSide == RingReshapeSideOfLine.Undefined)
 				{
@@ -2477,7 +2478,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			IRing result;
 
 			RingReshapeSideOfLine reshapeSide = GetReshapeSideOfPath(reshapeInfo,
-			                                                         out result);
+				out result);
 
 			if (reshapeSide == RingReshapeSideOfLine.Undefined)
 			{
@@ -2634,10 +2635,10 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				}
 
 				useFromPoint = ReplaceFromPointInMultiIntersectionOpenJaw(pathToReshape,
-				                                                          firstSplitPoint,
-				                                                          lastSplitPoint,
-				                                                          startDangle,
-				                                                          endDangle);
+					firstSplitPoint,
+					lastSplitPoint,
+					startDangle,
+					endDangle);
 			}
 
 			return useFromPoint
@@ -2680,7 +2681,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			                lastSplitPoint, out IPath _, out IPath _);
 
 			foreach (IPath path in GeometryUtils.GetPaths((IGeometry) splittedReshapeLine)
-			)
+			        )
 			{
 				IGeometry highLevelPath = GeometryUtils.GetHighLevelGeometry(path, true);
 
@@ -2766,7 +2767,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			// is more significant when re-using intersection points and thus not creating the 
 			// high-level geometry and calculating the intersection points
 			IPointCollection intersectionPoints = GetIntersectionPoints(reshapeInfo,
-			                                                            highLevelCurveToSplit);
+				highLevelCurveToSplit);
 
 			// open-jaw reshape has single cut point:
 			if (IsOpenJawReshapeAllowed(reshapeInfo) &&
@@ -2819,7 +2820,8 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 			}
 
 			_msg.VerboseDebug(
-				() => $"The reshape path was split into {splittedReshapeLine.GeometryCount} parts by the geometry to reshape, the trimmed reshape path's length is {trimmedLine.Length}");
+				() =>
+					$"The reshape path was split into {splittedReshapeLine.GeometryCount} parts by the geometry to reshape, the trimmed reshape path's length is {trimmedLine.Length}");
 
 			Marshal.ReleaseComObject(splittedReshapeLine);
 
@@ -3039,7 +3041,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				distanceMessage =
 					string.Format("The line's start point is moved by {0} <map units>",
 					              MathUtils.RoundToSignificantDigits(fromPointDistance,
-					                                                 significantDigits));
+						              significantDigits));
 			}
 			else
 			{
@@ -3049,7 +3051,7 @@ namespace ProSuite.Commons.AO.Geometry.ChangeAlong
 				distanceMessage =
 					string.Format("The line's end point is moved by {0} <map units>",
 					              MathUtils.RoundToSignificantDigits(toPointDistance,
-					                                                 significantDigits));
+						              significantDigits));
 			}
 
 			return distanceMessage;

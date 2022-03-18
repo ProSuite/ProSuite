@@ -130,22 +130,38 @@ namespace ProSuite.QA.Tests.Test
 			IWorkspace dtmWs = TestDataUtils.OpenTopgisTlm();
 
 			var model = new SimpleModel("model", dtmWs);
-			model.AddDataset(new ModelVectorDataset("TOPGIS_TLM.TLM_DTM_MASSENPUNKTE"));
-			model.AddDataset(new ModelVectorDataset("TOPGIS_TLM.TLM_DTM_BRUCHKANTE"));
-			Dataset mds1 =
-				model.AddDataset(
-					//new ModelSimpleTerrainDataset("TOPGIS_TLM.TLM_DTM_TERRAIN",
-					//                              "TOPGIS_TLM.TLM_DTM")
-					SimpleTerrainDatasetUtils.Create(
-						sb.ToString(), (n) => model.GetDatasetByModelName(n) as VectorDataset));
+
+			var masspts = new ModelVectorDataset("TOPGIS_TLM.TLM_DTM_MASSENPUNKTE");
+			var breaklns = new ModelVectorDataset("TOPGIS_TLM.TLM_DTM_BRUCHKANTE");
+
+			model.AddDataset(masspts);
+			model.AddDataset(breaklns);
+
+			var ts1 = new TerrainSourceDataset(masspts, TinSurfaceType.MassPoint);
+			var ts2 = new TerrainSourceDataset(breaklns, TinSurfaceType.HardLine);
+
+			var simpleTerrainDataset = new ModelSimpleTerrainDataset(
+				                           "TestSimpleTerrainDs", new[] {ts1, ts2})
+			                           {
+				                           Abbreviation = "DTM",
+				                           PointDensity = 7.8125
+			                           };
+
+			SimpleTerrainDataset terrainDatasetFromXml =
+				ModelSimpleTerrainDataset.Create(
+					sb.ToString(), model, (n) => model.GetDatasetByModelName(n) as VectorDataset);
+
+			Assert.IsTrue(simpleTerrainDataset.Equals(terrainDatasetFromXml));
+
+			Dataset mds1 = model.AddDataset(terrainDatasetFromXml);
 
 			var clsDesc = new ClassDescriptor(typeof(QaSurfaceSpikes));
 			var tstDesc = new TestDescriptor("QaSurfaceSpikes", clsDesc, testConstructorId: 0);
 			var condition = new QualityCondition("QaSurfaceSpikes", tstDesc);
-			QualityConditionParameterUtils.AddParameterValue(condition, "terrain", mds1);
-			QualityConditionParameterUtils.AddParameterValue(condition, "terrainTolerance", 0.1);
-			QualityConditionParameterUtils.AddParameterValue(condition, "maxSlopeDegrees", 30);
-			QualityConditionParameterUtils.AddParameterValue(condition, "maxDeltaZ", 10);
+			InstanceConfigurationUtils.AddParameterValue(condition, "terrain", mds1);
+			InstanceConfigurationUtils.AddParameterValue(condition, "terrainTolerance", 0.1);
+			InstanceConfigurationUtils.AddParameterValue(condition, "maxSlopeDegrees", 30);
+			InstanceConfigurationUtils.AddParameterValue(condition, "maxDeltaZ", 10);
 
 			var fact = new DefaultTestFactory(typeof(QaSurfaceSpikes));
 			fact.Condition = condition;
@@ -159,7 +175,15 @@ namespace ProSuite.QA.Tests.Test
 			const double xMin = 2751000;
 			const double yMin = 1238000;
 			IEnvelope box = GeometryFactory.CreateEnvelope(xMin, yMin, xMin + 100, yMin + 100);
-			runner.Execute(box);
+			int errorCount = runner.Execute(box);
+
+			Assert.AreEqual(0, errorCount);
+
+			// Can we load the tests again, now that the simple terrain is part of the model datasets?
+
+			tests =
+				fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));
+			Assert.AreEqual(1, tests.Count);
 		}
 	}
 }

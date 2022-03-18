@@ -166,7 +166,7 @@ namespace ProSuite.QA.TestFactories
 			return result;
 		}
 
-		protected override void SetPropertyValue(ITest test, TestParameter testParameter,
+		protected override void SetPropertyValue(object test, TestParameter testParameter,
 		                                         object value)
 		{
 			var ignoredParameters = new[]

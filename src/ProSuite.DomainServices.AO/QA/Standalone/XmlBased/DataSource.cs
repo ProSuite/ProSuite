@@ -123,6 +123,9 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 		{
 			if (! string.IsNullOrEmpty(_catalogPath))
 			{
+				Assert.True(File.Exists(_catalogPath) || Directory.Exists(_catalogPath),
+				            $"The catalog path {_catalogPath} does not exist.");
+
 				return WorkspaceUtils.OpenWorkspace(_catalogPath);
 			}
 

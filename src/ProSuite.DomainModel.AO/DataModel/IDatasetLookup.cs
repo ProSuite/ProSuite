@@ -39,6 +39,15 @@ namespace ProSuite.DomainModel.AO.DataModel
 		ObjectDataset GetDataset([NotNull] IObjectClass objectClass);
 
 		/// <summary>
+		/// Gets the topology dataset for a given gdb topology.
+		/// </summary>
+		/// <param name="topology">The topology to get the dataset for.</param>
+		/// <returns>TopologyDataset instance, or null if no dataset found for 
+		/// the given topology.</returns>
+		[CanBeNull]
+		TopologyDataset GetDataset([NotNull] ITopology topology);
+
+		/// <summary>
 		/// Gets the dataset for a fully qualified name within a feature workspace
 		/// </summary>
 		/// <param name="workspace">The workspace the named dataset belongs to.</param>

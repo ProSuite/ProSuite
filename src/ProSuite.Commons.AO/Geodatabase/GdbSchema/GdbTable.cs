@@ -13,17 +13,18 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	/// provided  <see cref="BackingDataset"/> allows for actual data-access, such as GetRow()
 	/// or Search().
 	/// </summary>
-	public class GdbTable : IObjectClass, ITable, IDataset, ISubtypes, IDatasetEdit,
-	                        IEquatable<IObjectClass>
+	public class GdbTable : VirtualTable, IEquatable<IObjectClass>
 	{
-		// TODO: Extra interfaces IGdbTable, IGdbFeatureClass, etc. in Commons with all the relevant properties
-		//private const string _defaultOidFieldName = "OBJECTID";
+		private const string _defaultOidFieldName = "OBJECTID";
 
-		private readonly GdbFields _gdbFields = new GdbFields();
 		private int _lastUsedOid;
 		private readonly IWorkspace _workspace;
 
 		private IName _fullName;
+		private bool _hasOID;
+		private string _oidFieldName;
+
+		private static int _nextObjectClassId;
 
 		/// <summary>
 		///     Initializes a new instance of the <see cref="GdbTable" /> class.
@@ -34,13 +35,24 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		/// <param name="createBackingDataset">The factory method that creates the backing dataset.</param>
 		/// <param name="workspace"></param>
 		public GdbTable(int objectClassId,
-		                [NotNull] string name,
-		                [CanBeNull] string aliasName = null,
-		                [CanBeNull] Func<ITable, BackingDataset> createBackingDataset = null,
-		                [CanBeNull] IWorkspace workspace = null)
+										[NotNull] string name,
+										[CanBeNull] string aliasName = null,
+										[CanBeNull] Func<GdbTable, BackingDataset> createBackingDataset = null,
+										[CanBeNull] IWorkspace workspace = null)
+				: base(name)
 		{
-			ObjectClassID = objectClassId;
-			Name = name;
+			if (objectClassId > 0)
+			{
+				ObjectClassID = objectClassId;
+			}
+			else
+			{
+				// TODO: this is a workaround for default GdbWorkspace-instances are considered equal in some cases
+				// TODO how should GdbWorkspaces be distinguished ? (BackingWorkspace?)
+				_nextObjectClassId++;
+				ObjectClassID = _nextObjectClassId;
+			}
+
 			AliasName = aliasName;
 
 			_workspace = workspace;
@@ -70,11 +82,6 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return new GdbRow(oid, this);
 		}
 
-		protected virtual esriDatasetType GetDatasetType()
-		{
-			return esriDatasetType.esriDTTable;
-		}
-
 		protected virtual void FieldAddedCore(IField field) { }
 
 		#endregion
@@ -82,7 +89,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public bool Equals(GdbTable other)
 		{
 			return Equals(_workspace, other._workspace) &&
-			       ObjectClassID == other.ObjectClassID;
+						 ObjectClassID == other.ObjectClassID;
 		}
 
 		public bool Equals(IObjectClass other)
@@ -96,8 +103,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 
 			return ObjectClassID == other.ObjectClassID &&
-			       WorkspaceUtils.IsSameWorkspace(_workspace, ((IDataset) other).Workspace,
-			                                      WorkspaceComparison.Exact);
+						 WorkspaceUtils.IsSameWorkspace(_workspace, ((IDataset)other).Workspace,
+																						WorkspaceComparison.Exact);
 		}
 
 		public override bool Equals(object obj)
@@ -108,7 +115,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			if (obj.GetType() != GetType()) return false;
 
-			return Equals((GdbTable) obj);
+			return Equals((GdbTable)obj);
 		}
 
 		public override int GetHashCode()
@@ -116,123 +123,63 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			unchecked
 			{
 				return ((_workspace != null ? _workspace.GetHashCode() : 0) * 397) ^
-				       ObjectClassID;
+							 ObjectClassID;
 			}
 		}
 
 		#region IDatasetEdit Member
 
-		public bool IsBeingEdited()
+		public override bool IsBeingEdited()
 		{
-			return ! (_workspace is IWorkspaceEdit workspaceEdit) || workspaceEdit.IsBeingEdited();
+			return !(_workspace is IWorkspaceEdit workspaceEdit) || workspaceEdit.IsBeingEdited();
 		}
 
 		#endregion
 
 		#region IClass members
 
-		public int FindField(string name)
+		public override int AddFieldT(IField field)
 		{
-			return _gdbFields.FindField(name);
-		}
-
-		public void AddField(IField field)
-		{
-			_gdbFields.AddFields(field);
+			int i = base.AddFieldT(field);
 
 			if (field.Type == esriFieldType.esriFieldTypeOID)
 			{
 				// Probably the same logic as AO (query) classes:
 				// The last one to be added determines the OID field
-				HasOID = true;
-				OIDFieldName = field.Name;
+				_hasOID = true;
+				_oidFieldName = field.Name;
 			}
 
 			FieldAddedCore(field);
+			return i;
 		}
 
-		public void DeleteField(IField field)
-		{
-			throw new NotImplementedException();
-		}
+		public override bool HasOID => _hasOID;
 
-		public void AddIndex(IIndex index)
-		{
-			throw new NotImplementedException();
-		}
-
-		public void DeleteIndex(IIndex index)
-		{
-			throw new NotImplementedException();
-		}
-
-		public IFields Fields => _gdbFields;
-
-		public IIndexes Indexes => throw new NotImplementedException();
-
-		public bool HasOID { get; private set; }
-
-		public string OIDFieldName { get; private set; }
-
-		public UID CLSID => throw new NotImplementedException();
-
-		public UID EXTCLSID => throw new NotImplementedException();
-
-		public object Extension => throw new NotImplementedException();
-
-		public IPropertySet ExtensionProperties => throw new NotImplementedException();
-
+		public override string OIDFieldName => _oidFieldName;
 		#endregion
 
 		#region IObjectClass members
 
-		public int ObjectClassID { get; }
+		public override int ObjectClassID { get; }
 
-		public string AliasName { get; }
-
-		public IEnumRelationshipClass get_RelationshipClasses(esriRelRole role)
-		{
-			throw new NotImplementedException();
-		}
+		public override string AliasName { get; }
 
 		#endregion
 
 		#region IDataset Members
 
-		bool IDataset.CanCopy()
+		public override bool CanCopy()
 		{
 			return false;
 		}
 
-		IDataset IDataset.Copy(string copyName, IWorkspace copyWorkspace)
-		{
-			throw new NotImplementedException();
-		}
-
-		bool IDataset.CanDelete()
+		public override bool CanDelete()
 		{
 			return false;
 		}
 
-		void IDataset.Delete()
-		{
-			throw new NotImplementedException();
-		}
-
-		bool IDataset.CanRename()
-		{
-			return false;
-		}
-
-		void IDataset.Rename(string name)
-		{
-			throw new NotImplementedException();
-		}
-
-		[NotNull]
-		public string Name { get; }
-
-		IName IDataset.FullName
+		public override IName FullName
 		{
 			get
 			{
@@ -245,32 +192,18 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 		}
 
-		string IDataset.BrowseName
-		{
-			get => throw new NotImplementedException();
-			set => throw new NotImplementedException();
-		}
-
-		public esriDatasetType Type => GetDatasetType();
-
-		string IDataset.Category => throw new NotImplementedException();
-
-		IEnumDataset IDataset.Subsets => throw new NotImplementedException();
-
-		IWorkspace IDataset.Workspace => _workspace;
-
-		IPropertySet IDataset.PropertySet => throw new NotImplementedException();
+		public override IWorkspace Workspace => _workspace;
 
 		#endregion
 
 		#region ITable members
 
-		public IRow CreateRow()
+		public override IRow CreateRow()
 		{
 			return CreateObject(GetNextOid());
 		}
 
-		public IRow GetRow(int id)
+		public override IRow GetRow(int id)
 		{
 			if (BackingDataset == null)
 			{
@@ -280,27 +213,12 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return BackingDataset?.GetRow(id);
 		}
 
-		ICursor ITable.GetRows(object oids, bool recycling)
-		{
-			throw new NotImplementedException();
-		}
-
-		IRowBuffer ITable.CreateRowBuffer()
+		public override IRowBuffer CreateRowBuffer()
 		{
 			return CreateRow();
 		}
 
-		void ITable.UpdateSearchedRows(IQueryFilter queryFilter, IRowBuffer buffer)
-		{
-			throw new NotImplementedException();
-		}
-
-		void ITable.DeleteSearchedRows(IQueryFilter queryFilter)
-		{
-			throw new NotImplementedException();
-		}
-
-		public int RowCount(IQueryFilter queryFilter)
+		public override int RowCount(IQueryFilter queryFilter)
 		{
 			if (BackingDataset == null)
 			{
@@ -310,7 +228,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return BackingDataset.GetRowCount(queryFilter);
 		}
 
-		public ICursor Search(IQueryFilter queryFilter, bool recycling)
+		public override CursorImpl SearchT(IQueryFilter queryFilter, bool recycling)
 		{
 			if (BackingDataset == null)
 			{
@@ -322,44 +240,18 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			return new CursorImpl(this, rows);
 		}
 
-		ICursor ITable.Update(IQueryFilter queryFilter, bool recycling)
-		{
-			throw new NotImplementedException();
-		}
-
-		ICursor ITable.Insert(bool useBuffering)
-		{
-			throw new NotImplementedException();
-		}
-
-		ISelectionSet ITable.Select(IQueryFilter queryFilter, esriSelectionType selType,
-		                            esriSelectionOption selOption,
-		                            IWorkspace selectionContainer)
-		{
-			throw new NotImplementedException();
-		}
-
 		#endregion
 
 		#region ISubtypes Members
 
-		public void AddSubtype(int subtypeCode, string subtypeName)
-		{
-			throw new NotImplementedException();
-		}
+		private bool _hasSubtype;
+		public override bool HasSubtype => _hasSubtype;
 
-		public void DeleteSubtype(int subtypeCode)
-		{
-			throw new NotImplementedException();
-		}
+		public override int DefaultSubtypeCode { get; set; }
 
-		public bool HasSubtype { get; set; }
+		public override string SubtypeFieldName { get; set; }
 
-		int ISubtypes.DefaultSubtypeCode { get; set; }
-
-		public string SubtypeFieldName { get; set; }
-
-		int ISubtypes.SubtypeFieldIndex
+		public override int SubtypeFieldIndex
 		{
 			get
 			{
@@ -372,42 +264,15 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 		}
 
-		IEnumSubtype ISubtypes.Subtypes => throw new NotImplementedException();
-
-		object ISubtypes.get_DefaultValue(int subtypeCode, string fieldName)
-		{
-			throw new NotImplementedException();
-		}
-
-		void ISubtypes.set_DefaultValue(int subtypeCode, string fieldName, object value)
-		{
-			throw new NotImplementedException();
-		}
-
-		IDomain ISubtypes.get_Domain(int subtypeCode, string fieldName)
-		{
-			throw new NotImplementedException();
-		}
-
-		void ISubtypes.set_Domain(int subtypeCode, string fieldName, IDomain domain)
-		{
-			throw new NotImplementedException();
-		}
-
-		string ISubtypes.get_SubtypeName(int subtypeCode)
-		{
-			throw new NotImplementedException();
-		}
-
 		#endregion
 
 		#region Nested class CursorImpl
 
-		protected class CursorImpl : ICursor
+		protected class CursorImpl_ : ICursor
 		{
 			private readonly IEnumerator<IRow> _rowEnumerator;
 
-			public CursorImpl(ITable table, IEnumerable<IRow> rows)
+			public CursorImpl_(ITable table, IEnumerable<IRow> rows)
 			{
 				Fields = table.Fields;
 
@@ -460,8 +325,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				_table = table;
 				Name = table.Name;
 
-				IWorkspace workspace = ((IDataset) _table).Workspace;
-				WorkspaceName = (IWorkspaceName) ((IDataset) workspace).FullName;
+				IWorkspace workspace = ((IDataset)_table).Workspace;
+				WorkspaceName = (IWorkspaceName)((IDataset)workspace).FullName;
 			}
 
 			#region IName members
@@ -479,7 +344,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			public string Name { get; set; }
 
-			public esriDatasetType Type => _table.Type;
+			public esriDatasetType Type => _table.DatasetType;
 
 			public string Category { get; set; }
 

@@ -4,6 +4,8 @@ using ProSuite.QA.Tests.Test.TestData;
 using ProSuite.QA.Tests.Test.TestRunners;
 using NUnit.Framework;
 using ProSuite.Commons.AO.Licensing;
+using ProSuite.QA.Container;
+using System.Collections.Generic;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -35,12 +37,12 @@ namespace ProSuite.QA.Tests.Test
 
 			IWorkspace coverWs = TestDataUtils.OpenPgdb("validfields.mdb");
 			IFeatureClass covers =
-				((IFeatureWorkspace) coverWs).OpenFeatureClass("Kanton_Luzern_Buffer_00010m");
+				((IFeatureWorkspace)coverWs).OpenFeatureClass("Kanton_Luzern_Buffer_00010m");
 
 			IWorkspace withinWs =
 				TestDataUtils.OpenPgdb("20111201_Produkte_SDE_zALL_bereinigt.mdb");
 			IFeatureClass within =
-				((IFeatureWorkspace) withinWs).OpenFeatureClass("GEO_00100420001");
+				((IFeatureWorkspace)withinWs).OpenFeatureClass("GEO_00100420001");
 
 			var test = new QaContainsOther(covers, within);
 			test.SetConstraint(0, "OBJECTID = 1");

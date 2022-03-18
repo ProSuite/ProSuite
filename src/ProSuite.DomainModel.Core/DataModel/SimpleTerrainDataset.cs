@@ -6,75 +6,8 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
-	public class ModelSimpleTerrainDataset : SimpleTerrainDataset { }
-
 	public abstract class SimpleTerrainDataset : Dataset, ISimpleTerrainDataset
 	{
-		public class Comparer : IEqualityComparer<SimpleTerrainDataset>
-		{
-			bool IEqualityComparer<SimpleTerrainDataset>.Equals(
-				SimpleTerrainDataset x, SimpleTerrainDataset y)
-			{
-				if (x == null || y == null)
-				{
-					return false;
-				}
-
-				if (x == y)
-				{
-					return true;
-				}
-
-				//if (x.Name != y.Name)
-				//{
-				//	return false;
-				//}
-				if (x.PointDensity != y.PointDensity)
-				{
-					return false;
-				}
-
-				if (x.Sources.Count != y.Sources.Count)
-				{
-					return false;
-				}
-
-				for (int iSource = 0; iSource < x.Sources.Count; iSource++)
-				{
-					TerrainSourceDataset xSource = x.Sources[iSource];
-					TerrainSourceDataset ySource = y.Sources[iSource];
-
-					if (xSource.SurfaceFeatureType != ySource.SurfaceFeatureType)
-					{
-						return false;
-					}
-
-					if (xSource.Dataset != ySource.Dataset)
-					{
-						return false;
-					}
-
-					if (xSource.WhereClause != ySource.WhereClause)
-					{
-						return false;
-					}
-				}
-
-				return true;
-			}
-
-			int IEqualityComparer<SimpleTerrainDataset>.GetHashCode(SimpleTerrainDataset obj)
-			{
-				if (obj.Sources.Count > 0)
-				{
-					return obj.Sources[0].Dataset.GetHashCode() +
-					       29 * obj.Sources.Count.GetHashCode();
-				}
-
-				return obj.PointDensity.GetHashCode();
-			}
-		}
-
 		private static readonly string _geometryTypeName = "Terrain";
 
 		[UsedImplicitly] private LayerFile _defaultSymbology;
@@ -93,30 +26,11 @@ namespace ProSuite.DomainModel.Core.DataModel
 			GeometryType = new GeometryTypeTerrain(_geometryTypeName);
 		}
 
-		protected SimpleTerrainDataset(IList<TerrainSourceDataset> sources)
+		protected SimpleTerrainDataset([NotNull] string name,
+		                               [NotNull] IEnumerable<TerrainSourceDataset> sources)
+			: base(name)
 		{
 			_sources = new List<TerrainSourceDataset>(sources);
-			GeometryType = new GeometryTypeTerrain(_geometryTypeName);
-		}
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="SimpleTerrainDataset"/> class.
-		/// </summary>
-		/// <param name="name">The name.</param>
-		protected SimpleTerrainDataset([NotNull] string name)
-			: this(name, name) { }
-
-		/// <summary>
-		/// Initializes a new instance of the <see cref="SimpleTerrainDataset"/> class.
-		/// </summary>
-		/// <param name="name">The name.</param>
-		/// <param name="abbreviation">The dataset abbreviation.</param>
-		/// <param name="aliasName">Alias name for the dataset.</param>
-		protected SimpleTerrainDataset([NotNull] string name,
-		                               [CanBeNull] string abbreviation,
-		                               [CanBeNull] string aliasName = null)
-			: base(name, abbreviation, aliasName)
-		{
 			GeometryType = new GeometryTypeTerrain(_geometryTypeName);
 		}
 
@@ -125,19 +39,6 @@ namespace ProSuite.DomainModel.Core.DataModel
 		public override string TypeDescription => "SimpleTerrain";
 
 		#region ISimpleTerrainDataset Members
-
-		public int TerrainId => Id;
-
-		//TODO : set Abbreviation
-		public string NameAndAbbr
-		{
-			get => Name;
-			set
-			{
-				Name = value;
-				Abbreviation = value;
-			}
-		}
 
 		public double PointDensity
 		{
@@ -148,35 +49,6 @@ namespace ProSuite.DomainModel.Core.DataModel
 		public IReadOnlyList<TerrainSourceDataset> Sources =>
 			_sources as IReadOnlyList<TerrainSourceDataset> ??
 			new List<TerrainSourceDataset>(_sources);
-
-		public void AddSourceDataset(TerrainSourceDataset sourceDataset)
-		{
-			Assert.ArgumentNotNull(sourceDataset, nameof(sourceDataset));
-
-			if (Sources.Count > 0 && sourceDataset.Dataset.Model.Id != ModelId)
-			{
-				throw new ArgumentException(
-					"Cannot add a dataset to the surface from a different model than the existing datasets.");
-			}
-
-			_sources.Add(sourceDataset);
-			Assert.AreEqual(ModelId, sourceDataset.Dataset.Model.Id, "Invalid ModelId");
-		}
-
-		public bool RemoveSourceDataset([NotNull] IVectorDataset dataset)
-		{
-			Assert.ArgumentNotNull(dataset, nameof(dataset));
-
-			TerrainSourceDataset sourceDataset =
-				_sources.FirstOrDefault(ds => ds.Dataset.Equals(dataset));
-			if (sourceDataset != null)
-			{
-				_sources.Remove(sourceDataset);
-				return true;
-			}
-
-			return false;
-		}
 
 		public override DdxModel Model
 		{
@@ -208,9 +80,38 @@ namespace ProSuite.DomainModel.Core.DataModel
 			set => base.Model = value;
 		}
 
-		public int ModelId => Model?.Id ?? -1;
-
 		#endregion
+
+		public void AddSourceDataset(TerrainSourceDataset sourceDataset)
+		{
+			Assert.ArgumentNotNull(sourceDataset, nameof(sourceDataset));
+
+			if (Sources.Count > 0 && sourceDataset.Dataset.Model.Id != ModelId)
+			{
+				throw new ArgumentException(
+					"Cannot add a dataset to the surface from a different model than the existing datasets.");
+			}
+
+			_sources.Add(sourceDataset);
+			Assert.AreEqual(ModelId, sourceDataset.Dataset.Model.Id, "Invalid ModelId");
+		}
+
+		public bool RemoveSourceDataset([NotNull] IVectorDataset dataset)
+		{
+			Assert.ArgumentNotNull(dataset, nameof(dataset));
+
+			TerrainSourceDataset sourceDataset =
+				_sources.FirstOrDefault(ds => ds.Dataset.Equals(dataset));
+			if (sourceDataset != null)
+			{
+				_sources.Remove(sourceDataset);
+				return true;
+			}
+
+			return false;
+		}
+
+		public int ModelId => Model?.Id ?? -1;
 
 		public IEnumerable<IDdxDataset> ContainedDatasets => Sources.Select(s => s.Dataset);
 
@@ -226,18 +127,79 @@ namespace ProSuite.DomainModel.Core.DataModel
 		private LayerFile DefaultSymbology => _defaultSymbology;
 
 		#endregion
-	}
 
-	public class XmlSimpleTerrainDataset
-	{
-		public string Name { get; set; }
-		public double PointDensity { get; set; }
-		public List<XmlTerrainSource> Sources { get; set; }
-	}
+		#region Equality members
 
-	public class XmlTerrainSource
-	{
-		public string Dataset { get; set; }
-		public TinSurfaceType Type { get; set; }
+		protected bool Equals(SimpleTerrainDataset other)
+		{
+			return base.Equals(other) &&
+			       _pointDensity.Equals(other._pointDensity) &&
+			       SourcesAreEqual(_sources, other._sources);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj))
+			{
+				return false;
+			}
+
+			if (ReferenceEquals(this, obj))
+			{
+				return true;
+			}
+
+			if (obj.GetType() != this.GetType())
+			{
+				return false;
+			}
+
+			return Equals((SimpleTerrainDataset) obj);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				int hashCode = base.GetHashCode();
+				hashCode = (hashCode * 397) ^ _pointDensity.GetHashCode();
+				hashCode = (hashCode * 397) ^ (_sources != null ? _sources.GetHashCode() : 0);
+				return hashCode;
+			}
+		}
+
+		private static bool SourcesAreEqual([NotNull] IList<TerrainSourceDataset> a,
+		                                    [NotNull] IList<TerrainSourceDataset> b)
+		{
+			if (a.Count != b.Count)
+			{
+				return false;
+			}
+
+			for (int iSource = 0; iSource < a.Count; iSource++)
+			{
+				TerrainSourceDataset sourceA = a[iSource];
+				TerrainSourceDataset sourceB = b[iSource];
+
+				if (sourceA.SurfaceFeatureType != sourceB.SurfaceFeatureType)
+				{
+					return false;
+				}
+
+				if (! sourceA.Dataset.Equals(sourceB.Dataset))
+				{
+					return false;
+				}
+
+				if (sourceA.WhereClause != sourceB.WhereClause)
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		#endregion
 	}
 }

@@ -141,6 +141,11 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return (IObjectClass) OpenTable(dataset);
 		}
 
+		public ITopology OpenTopology(ITopologyDataset dataset)
+		{
+			throw new NotImplementedException();
+		}
+
 		public IRasterDataset OpenRasterDataset(IDdxRasterDataset dataset)
 		{
 			throw new NotImplementedException();
@@ -154,7 +159,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			return new SimpleTerrain(dataset.Name, terrainSources, dataset.PointDensity, null);
 		}
 
-		public SimpleRasterMosaic OpenSimpleRasterMosaic(ISimpleRasterMosaicDataset dataset)
+		public SimpleRasterMosaic OpenSimpleRasterMosaic(IRasterMosaicDataset dataset)
 		{
 			// TODO: Just send the catalog & boundary feature class, assuming the raster paths
 			//       are accessible from anywhere

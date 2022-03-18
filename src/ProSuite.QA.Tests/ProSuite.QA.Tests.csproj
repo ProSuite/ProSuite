@@ -154,6 +154,7 @@
     <Compile Include="IssueCodes\MustTouchIssueCodes.cs" />
     <Compile Include="IssueCodes\OverlapsIssueCodes.cs" />
     <Compile Include="IssueCodes\TouchesIssueCodes.cs" />
+    <Compile Include="IssueFilters\IfInvolvedRows.cs" />
     <Compile Include="IValueTransformation.cs" />
     <Compile Include="KeySets\GuidKeySet.cs" />
     <Compile Include="KeySets\IKeySet.cs" />
@@ -172,6 +173,7 @@
     <Compile Include="MonotonicityDirection.cs" />
     <Compile Include="MonotonicitySequence.cs" />
     <Compile Include="MultiPatchUtils.cs" />
+    <Compile Include="Network\NetworkBuilder.cs" />
     <Compile Include="Network\QaConnectionCountRule.cs" />
     <Compile Include="Network\QaConnectionRule.cs" />
     <Compile Include="Network\QaConnectionRuleHelper.cs" />
@@ -199,6 +201,7 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Qa3dConstantZ.cs" />
+    <Compile Include="QaExportTables.cs" />
     <Compile Include="QaGdbConstraint.cs" />
     <Compile Include="QaSurfaceOffset.cs" />
     <Compile Include="QaSurfacePipe.cs" />
@@ -333,6 +336,7 @@
     <Compile Include="QaZDifferenceOther.cs" />
     <Compile Include="QaZDifferenceSelf.cs" />
     <Compile Include="RouteMeasures.cs" />
+    <Compile Include="RowFilters\RfExecuteArea.cs" />
     <Compile Include="Schema\DomainUsage.cs" />
     <Compile Include="Schema\FieldSpecification.cs" />
     <Compile Include="Schema\FieldSpecifications.cs" />
@@ -350,6 +354,24 @@
     <Compile Include="Surface\RasterDatasetReference.cs" />
     <Compile Include="Surface\SurfaceUtils.cs" />
     <Compile Include="TestRowReference.cs" />
+    <Compile Include="Transformers\FieldInfo.cs" />
+    <Compile Include="Transformers\IContainerTransformer.cs" />
+    <Compile Include="Transformers\IGeometryTransformer.cs" />
+    <Compile Include="Transformers\TableTransformer.cs" />
+    <Compile Include="Transformers\TransformedBackingDataset.cs" />
+    <Compile Include="Transformers\TransformerWorkspace.cs" />
+    <Compile Include="Transformers\TrDissolve.cs" />
+    <Compile Include="Transformers\TrFootprint.cs" />
+    <Compile Include="Transformers\TrPolyToLine.cs" />
+    <Compile Include="Transformers\TrMultilineToLine.cs" />
+    <Compile Include="Transformers\TrGeometryTransform.cs" />
+    <Compile Include="Transformers\TrGeometryToPoints.cs" />
+    <Compile Include="Transformers\TrLineToPoly.cs" />
+    <Compile Include="Transformers\TrSpatialJoin.cs" />
+    <Compile Include="Transformers\TrIntersect.cs" />
+    <Compile Include="Transformers\TrTableAppend.cs" />
+    <Compile Include="Transformers\TrTableJoin.cs" />
+    <Compile Include="Transformers\TrMultipolygonToPolygon.cs" />
     <Compile Include="UnequalField.cs" />
     <Compile Include="UniqueStringsConstraint.cs" />
     <Compile Include="VersionSpecification.cs" />

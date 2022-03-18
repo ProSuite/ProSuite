@@ -3,15 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.QA.Container;
-using ProSuite.QA.Container.TestCategories;
-using ProSuite.QA.Tests.Documentation;
-using ProSuite.QA.Tests.IssueCodes;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container;
+using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Tests.Documentation;
+using ProSuite.QA.Tests.IssueCodes;
 
 namespace ProSuite.QA.Tests
 {
@@ -277,9 +277,9 @@ namespace ProSuite.QA.Tests
 
 			IPolyline lineErrorGeometry;
 			IMultipoint pointErrorGeometry;
-			ICollection<InvolvedRow> involvedRows = GetInvolvedRows(overlap,
-			                                                        out lineErrorGeometry,
-			                                                        out pointErrorGeometry);
+			InvolvedRows involvedRows = GetInvolvedRows(overlap,
+			                                            out lineErrorGeometry,
+			                                            out pointErrorGeometry);
 
 			string description =
 				string.Format(
@@ -315,14 +315,14 @@ namespace ProSuite.QA.Tests
 		}
 
 		[NotNull]
-		private ICollection<InvolvedRow> GetInvolvedRows(
+		private InvolvedRows GetInvolvedRows(
 			[NotNull] OverlappingMeasures overlap,
 			[CanBeNull] out IPolyline lineErrorGeometry,
 			[CanBeNull] out IMultipoint pointErrorGeometry)
 		{
 			Assert.ArgumentNotNull(overlap, nameof(overlap));
 
-			var involvedRows = new List<InvolvedRow>();
+			var involvedRows = new InvolvedRows();
 			var polylines = new List<IPolyline>();
 			var allPoints = new List<IPoint>();
 
@@ -330,7 +330,7 @@ namespace ProSuite.QA.Tests
 			{
 				IFeature feature = GetFeature(testRowReference);
 
-				involvedRows.Add(new InvolvedRow(feature));
+				involvedRows.AddRange(InvolvedRowUtils.GetInvolvedRows(feature));
 
 				var polyline = (IPolyline) feature.Shape;
 
