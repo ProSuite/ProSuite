@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.DataModel;
@@ -221,6 +222,110 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 					Assert.AreEqual(paramValue, value.PersistedStringValue);
 					Assert.AreEqual(paramValue, value.GetDisplayValue());
 					Assert.AreEqual(paramValue, value.GetValue(typeof(string)));
+				});
+		}
+
+		[Test]
+		public void CanSaveQualitySpecificationWithTransformer()
+		{
+			const string specName = "specName";
+			const string specDesc = "specDesc";
+
+			const string dsName = "TOPGIS.TLM_DATASET1";
+
+			DdxModel model = CreateModel();
+
+			VectorDataset ds = model.AddDataset(CreateVectorDataset(dsName));
+
+			var specification = new QualitySpecification(specName);
+			specification.Description = specDesc;
+
+			const bool stopOnError = false;
+			const bool allowErrors = true;
+			const string conName = "conName";
+			const string paramValue = "400";
+
+			const string transName = "transName";
+
+			TransformerDescriptor transformerDescriptor = new TransformerDescriptor(
+				transName, new ClassDescriptor("ProSuite.QA.Tests.Transformers.TrMultilineToLine",
+				                               "ProSuite.QA.Tests"), 0);
+
+			TransformerConfiguration transformerConfig = new TransformerConfiguration(
+				"transformedBB",
+				transformerDescriptor);
+			InstanceConfigurationUtils.AddParameterValue(transformerConfig,
+			                                             "featureClass", ds);
+
+			var condition = new QualityCondition(
+				conName,
+				new TestDescriptor("name",
+				                   new ClassDescriptor(
+					                   "ProSuite.QA.Tests.QaMinLength",
+					                   "ProSuite.QA.Tests"), 0, stopOnError, allowErrors));
+
+			// Add transformer configuration as dataset parameter value
+			DatasetTestParameterValue dsParameterValue =
+				InstanceConfigurationUtils.AddParameterValue(
+					condition, "featureClass", transformerConfig);
+
+			Assert.NotNull(dsParameterValue.ValueSource);
+			Assert.Null(dsParameterValue.DatasetValue);
+
+			Assert.AreEqual(dsParameterValue,
+			                condition.ParameterValues.Single(v => v is DatasetTestParameterValue));
+
+			InstanceConfigurationUtils.AddParameterValue(condition, "limit", paramValue);
+
+			specification.AddElement(condition);
+
+			CreateSchema(model, condition.TestDescriptor, transformerDescriptor,
+			             transformerConfig, condition, specification);
+
+			UnitOfWork.NewTransaction(
+				delegate
+				{
+					QualitySpecification readSpecification =
+						Repository.Get(specification.Id);
+
+					Assert.IsNotNull(readSpecification);
+					Assert.AreNotSame(readSpecification, specification);
+					Assert.AreEqual(specName, readSpecification.Name);
+					Assert.AreEqual(specDesc, readSpecification.Description);
+					Assert.AreEqual(1, readSpecification.Elements.Count);
+					Assert.AreEqual(conName,
+					                readSpecification.Elements[0].QualityCondition.Name);
+
+					var value =
+						(ScalarTestParameterValue) readSpecification
+						                           .Elements[0].QualityCondition
+						                           .ParameterValues
+						                           .Single(v => v is ScalarTestParameterValue);
+
+					// Unsolved problem: In order to know the data type the TestFactory is needed
+					// -> To allow AO-independent access, the data type probably has to be encoded
+					//    in the persisted sring value
+					Assert.AreEqual(paramValue, value.PersistedStringValue);
+					Assert.AreEqual(paramValue, value.GetDisplayValue());
+					Assert.AreEqual(paramValue, value.GetValue(typeof(string)));
+
+					var transformedDatasetParameterValue =
+						(DatasetTestParameterValue) readSpecification
+						                            .Elements[0].QualityCondition.ParameterValues
+						                            .Single(v => v is DatasetTestParameterValue);
+
+					Assert.IsNotNull(transformedDatasetParameterValue.ValueSource);
+					Assert.IsNotNull(transformedDatasetParameterValue.ValueSource
+						                 .TransformerDescriptor);
+					Assert.AreEqual(
+						1, transformedDatasetParameterValue.ValueSource.ParameterValues.Count);
+
+					DatasetTestParameterValue originalDatasetParameterValue =
+						transformedDatasetParameterValue.ValueSource.ParameterValues[0] as
+							DatasetTestParameterValue;
+
+					Assert.NotNull(originalDatasetParameterValue);
+					Assert.AreEqual(ds, originalDatasetParameterValue.DatasetValue);
 				});
 		}
 	}

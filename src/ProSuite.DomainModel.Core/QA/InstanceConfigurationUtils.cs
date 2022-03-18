@@ -31,6 +31,33 @@ namespace ProSuite.DomainModel.Core.QA
 			return instanceConfiguration.AddParameterValue(parameterValue);
 		}
 
+		public static DatasetTestParameterValue AddParameterValue(
+			[NotNull] InstanceConfiguration instanceConfiguration,
+			[NotNull] string parameterName,
+			[CanBeNull] TransformerConfiguration transformerConfig,
+			string filterExpression = null,
+			bool usedAsReferenceData = false)
+		{
+			Assert.ArgumentNotNullOrEmpty(parameterName, nameof(parameterName));
+
+			IInstanceInfo instanceInfo =
+				InstanceDescriptorUtils.GetInstanceInfo(instanceConfiguration.InstanceDescriptor);
+
+			TestParameter parameter = Assert.NotNull(instanceInfo).GetParameter(parameterName);
+
+			var parameterValue = new DatasetTestParameterValue(parameter, null,
+			                                                   filterExpression,
+			                                                   usedAsReferenceData)
+			                     {
+				                     ValueSource = transformerConfig,
+				                     DataType = parameter.Type
+			                     };
+
+			instanceConfiguration.AddParameterValue(parameterValue);
+
+			return parameterValue;
+		}
+
 		public static void AddParameterValue(IssueFilterConfiguration qualityCondition,
 		                                     [NotNull] string parameterName,
 		                                     [CanBeNull] string value)
@@ -42,10 +69,13 @@ namespace ProSuite.DomainModel.Core.QA
 		                                     [NotNull] string parameterName,
 		                                     object value)
 		{
-			var dataset = value as Dataset;
-			if (dataset != null)
+			if (value is Dataset dataset)
 			{
 				AddParameterValue(instanceConfiguration, parameterName, dataset);
+			}
+			else if (value is TransformerConfiguration transformerConfig)
+			{
+				AddParameterValue(instanceConfiguration, parameterName, transformerConfig);
 			}
 			else
 			{
