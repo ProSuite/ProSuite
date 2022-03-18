@@ -41,13 +41,13 @@ namespace ProSuite.QA.Tests.Test
 
 			ITable referencedTable = DatasetUtils.CreateTable(
 				_workspace,
-				string.Format("{0}_key", MethodBase.GetCurrentMethod().Name),
+				string.Format("{0}_key", MethodBase.GetCurrentMethod()?.Name),
 				FieldUtils.CreateOIDField(),
 				FieldUtils.CreateIntegerField(key));
 
 			ITable referencingTable = DatasetUtils.CreateTable(
 				_workspace,
-				string.Format("{0}_fkey", MethodBase.GetCurrentMethod().Name),
+				string.Format("{0}_fkey", MethodBase.GetCurrentMethod()?.Name),
 				FieldUtils.CreateOIDField(),
 				FieldUtils.CreateTextField(fkey, 10));
 
@@ -65,7 +65,8 @@ namespace ProSuite.QA.Tests.Test
 			                         new Dictionary<string, object> {{fkey, "3000"}}).Store();
 
 			var runner = new QaTestRunner(
-				new QaForeignKey(referencingTable, fkey, referencedTable, key));
+				new QaForeignKey(ReadOnlyTableFactory.Create(referencingTable), fkey,
+				                 ReadOnlyTableFactory.Create(referencedTable), key));
 
 			runner.Execute();
 
@@ -82,14 +83,14 @@ namespace ProSuite.QA.Tests.Test
 
 			ITable referencedTable = DatasetUtils.CreateTable(
 				_workspace,
-				string.Format("{0}_keys", MethodBase.GetCurrentMethod().Name),
+				string.Format("{0}_keys", MethodBase.GetCurrentMethod()?.Name),
 				FieldUtils.CreateOIDField(),
 				FieldUtils.CreateIntegerField(key1),
 				FieldUtils.CreateTextField(key2, 10));
 
 			ITable referencingTable = DatasetUtils.CreateTable(
 				_workspace,
-				string.Format("{0}_fkeys", MethodBase.GetCurrentMethod().Name),
+				string.Format("{0}_fkeys", MethodBase.GetCurrentMethod()?.Name),
 				FieldUtils.CreateOIDField(),
 				FieldUtils.CreateTextField(fkey1, 10),
 				FieldUtils.CreateTextField(fkey2, 10));
@@ -128,8 +129,10 @@ namespace ProSuite.QA.Tests.Test
 			                         }).Store();
 
 			var runner = new QaTestRunner(
-				new QaForeignKey(referencingTable, new[] {fkey1, fkey2},
-				                 referencedTable, new[] {key1, key2}));
+				new QaForeignKey(ReadOnlyTableFactory.Create(referencingTable),
+				                 new[] { fkey1, fkey2 },
+				                 ReadOnlyTableFactory.Create(referencedTable),
+				                 new[] { key1, key2 }));
 
 			runner.Execute();
 
@@ -146,14 +149,14 @@ namespace ProSuite.QA.Tests.Test
 
 			ITable referencedTable = DatasetUtils.CreateTable(
 				_workspace,
-				string.Format("{0}_keys", MethodBase.GetCurrentMethod().Name),
+				string.Format("{0}_keys", MethodBase.GetCurrentMethod()?.Name),
 				FieldUtils.CreateOIDField(),
 				FieldUtils.CreateIntegerField(key1),
 				FieldUtils.CreateTextField(key2, 10));
 
 			ITable referencingTable = DatasetUtils.CreateTable(
 				_workspace,
-				string.Format("{0}_fkeys", MethodBase.GetCurrentMethod().Name),
+				string.Format("{0}_fkeys", MethodBase.GetCurrentMethod()?.Name),
 				FieldUtils.CreateOIDField(),
 				FieldUtils.CreateTextField(fkey1, 10),
 				FieldUtils.CreateTextField(fkey2, 10));
@@ -193,8 +196,10 @@ namespace ProSuite.QA.Tests.Test
 			                         }).Store();
 
 			var runner = new QaTestRunner(
-				new QaForeignKey(referencingTable, new[] {fkey1, fkey2},
-				                 referencedTable, new[] {key1, key2}));
+				new QaForeignKey(ReadOnlyTableFactory.Create(referencingTable),
+				                 new[] { fkey1, fkey2 },
+				                 ReadOnlyTableFactory.Create(referencedTable),
+				                 new[] { key1, key2 }));
 
 			runner.Execute();
 

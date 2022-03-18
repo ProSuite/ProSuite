@@ -6,6 +6,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -38,7 +39,7 @@ namespace ProSuite.QA.Tests.Test
 			            .Add(8, 4, 1);
 			IFeature f = fc.CreateFeature(construction.MultiPatch);
 
-			var test = new QaCoplanarRings(fc, 0, false);
+			var test = new QaCoplanarRings(ReadOnlyTableFactory.Create(fc), 0, false);
 			var runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -50,7 +51,7 @@ namespace ProSuite.QA.Tests.Test
 			            .Add(8, 4, 1.01);
 			f = fc.CreateFeature(construction.MultiPatch);
 
-			test = new QaCoplanarRings(fc, 0, false);
+			test = new QaCoplanarRings(ReadOnlyTableFactory.Create(fc), 0, false);
 			runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -67,7 +68,7 @@ namespace ProSuite.QA.Tests.Test
 			            .Add(2579198.27, 1079775.7675, 2484.82375);
 			IFeature f = fc.CreateFeature(construction.MultiPatch);
 
-			var test = new QaCoplanarRings(fc, 0, false);
+			var test = new QaCoplanarRings(ReadOnlyTableFactory.Create(fc), 0, false);
 			var runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -85,7 +86,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeature f = fc.CreateFeature(construction.ClosePolygon());
 			GeometryUtils.EnsureSpatialReference(f.Shape, fc);
 
-			var test = new QaCoplanarRings(fc, 0, false);
+			var test = new QaCoplanarRings(ReadOnlyTableFactory.Create(fc), 0, false);
 			var runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -97,7 +98,7 @@ namespace ProSuite.QA.Tests.Test
 			f = fc.CreateFeature(construction.ClosePolygon());
 			GeometryUtils.EnsureSpatialReference(f.Shape, fc);
 
-			test = new QaCoplanarRings(fc, 0, false);
+			test = new QaCoplanarRings(ReadOnlyTableFactory.Create(fc), 0, false);
 			runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -115,12 +116,12 @@ namespace ProSuite.QA.Tests.Test
 			            .Add(8, 4, 1.01);
 			IFeature f = fc.CreateFeature(construction.MultiPatch);
 
-			var test = new QaCoplanarRings(fc, 0.005, false);
+			var test = new QaCoplanarRings(ReadOnlyTableFactory.Create(fc), 0.005, false);
 			var runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(0, runner.Errors.Count);
 
-			test = new QaCoplanarRings(fc, 0.002, false);
+			test = new QaCoplanarRings(ReadOnlyTableFactory.Create(fc), 0.002, false);
 			runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(1, runner.Errors.Count);
@@ -144,7 +145,7 @@ namespace ProSuite.QA.Tests.Test
 			// was: 4x (but end point now no longer repeated)
 			IFeature f = fc.CreateFeature(construction.MultiPatch);
 
-			var test = new QaCoplanarRings(fc, 0, false);
+			var test = new QaCoplanarRings(ReadOnlyTableFactory.Create(fc), 0, false);
 			var runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(1, runner.Errors.Count); // NOTE failed with Plane3D (0 errors)
@@ -156,7 +157,7 @@ namespace ProSuite.QA.Tests.Test
 			            .Add(8, 4, 1 + 2 * zSrResolution);
 			f = fc.CreateFeature(construction.MultiPatch);
 
-			test = new QaCoplanarRings(fc, 0, false);
+			test = new QaCoplanarRings(ReadOnlyTableFactory.Create(fc), 0, false);
 			runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -170,7 +171,7 @@ namespace ProSuite.QA.Tests.Test
 			// was: 2x (but end point now no longer repeated)
 			f = fc.CreateFeature(construction.MultiPatch);
 
-			test = new QaCoplanarRings(fc, 0, false);
+			test = new QaCoplanarRings(ReadOnlyTableFactory.Create(fc), 0, false);
 			runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(1, runner.Errors.Count); // NOTE failed with Plane3D (0 errors)
@@ -182,7 +183,7 @@ namespace ProSuite.QA.Tests.Test
 			            .Add(0 + xySrResolution, 0 - xySrResolution, 8);
 			f = fc.CreateFeature(construction.MultiPatch);
 
-			test = new QaCoplanarRings(fc, 0, false);
+			test = new QaCoplanarRings(ReadOnlyTableFactory.Create(fc), 0, false);
 			runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -200,7 +201,7 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature f = fc.CreateFeature(construction.MultiPatch);
 
-			var test = new QaCoplanarRings(fc, 0, false);
+			var test = new QaCoplanarRings(ReadOnlyTableFactory.Create(fc), 0, false);
 			var runner = new QaTestRunner(test);
 			runner.Execute(f);
 			Assert.AreEqual(0, runner.Errors.Count);

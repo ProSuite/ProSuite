@@ -1,4 +1,3 @@
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -8,10 +7,10 @@ namespace ProSuite.Commons.AO.Geodatabase
 	{
 		void CompareSegmentAngles([NotNull] IPolyline sourceShape,
 		                          [NotNull] IPolyline transformedShape,
-		                          [NotNull] IFeature transformedFeature);
+		                          [NotNull] IReadOnlyFeature transformedFeature);
 
 		void CompareSegmentAngles([NotNull] IPolygon sourceShape,
 		                          [NotNull] IPolygon transformedShape,
-		                          [NotNull] IFeature transformedFeature);
+		                          [NotNull] IReadOnlyFeature transformedFeature);
 	}
 }

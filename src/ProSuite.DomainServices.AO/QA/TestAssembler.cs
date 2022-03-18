@@ -235,13 +235,13 @@ namespace ProSuite.DomainServices.AO.QA
 				return new List<TestsWithRelatedGeometry>();
 			}
 
-			Dictionary<ITable, IList<ITest>> testsByTable =
+			Dictionary<IReadOnlyTable, IList<ITest>> testsByTable =
 				TestUtils.GetTestsByTable(tests);
 
 			var testsWithRelatedGeometry = new List<TestsWithRelatedGeometry>();
-			foreach (KeyValuePair<ITable, IList<ITest>> pair in testsByTable)
+			foreach (KeyValuePair<IReadOnlyTable, IList<ITest>> pair in testsByTable)
 			{
-				ITable table = pair.Key;
+				IReadOnlyTable table = pair.Key;
 				IList<ITest> tableTests = pair.Value;
 				TestsWithRelatedGeometry testsWithRelGeom =
 					CreateTestsWithRelatedGeometry(table, tableTests, datasetResolver);
@@ -263,7 +263,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 		[CanBeNull]
 		private TestsWithRelatedGeometry CreateTestsWithRelatedGeometry(
-			[NotNull] ITable table, [NotNull] IList<ITest> tests,
+			[NotNull] IReadOnlyTable table, [NotNull] IList<ITest> tests,
 			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver)
 		{
 			ITest testWithTable = tests[0];

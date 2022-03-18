@@ -103,8 +103,10 @@ namespace ProSuite.QA.Tests.Test
 
 			List<ITable> tables = new[] {fcBahn, fcStrasse}.Cast<ITable>().ToList();
 
-			var test = new QaExternalGraphicConflict(fcBahn, lyrEisenbahn, fcStrasse, lyrStrasse,
-			                                         "100 meters", "20 meters", 50000, connectionUrl);
+			var test = new QaExternalGraphicConflict(
+				ReadOnlyTableFactory.Create(fcBahn), lyrEisenbahn,
+				ReadOnlyTableFactory.Create(fcStrasse), lyrStrasse,
+				"100 meters", "20 meters", 50000, connectionUrl);
 
 			using (var testRunner = new QaTestRunner(test))
 			{
@@ -137,9 +139,14 @@ namespace ProSuite.QA.Tests.Test
 
 			string connectionUrl = $"http://{Localhost}:{Port}";
 
-			List<ITable> tables = new[] { fcBahn, fcStr }.Cast<ITable>().ToList();
+			List<IReadOnlyTable> tables = new[]
+			                              {
+				                              ReadOnlyTableFactory.Create(fcBahn),
+				                              ReadOnlyTableFactory.Create(fcStr)
+			                              }.Cast<IReadOnlyTable>().ToList();
 
-			var test = new QaExternalService(tables, connectionUrl, string.Empty);
+			var test = new QaExternalService(
+				tables, connectionUrl, string.Empty);
 
 			using (var testRunner = new QaTestRunner(test))
 			{

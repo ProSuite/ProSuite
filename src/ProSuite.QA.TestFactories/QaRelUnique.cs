@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Tests;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -36,7 +35,7 @@ namespace ProSuite.QA.TestFactories
 			var list =
 				new List<TestParameter>
 				{
-					new TestParameter("relationTables", typeof(IList<ITable>),
+					new TestParameter("relationTables", typeof(IList<IReadOnlyTable>),
 					                  DocStrings.QaRelUnique_relationTables),
 					new TestParameter("relation", typeof(string),
 					                  DocStrings.QaRelUnique_relation),
@@ -67,7 +66,7 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams.Length));
 			}
 
-			if (objParams[0] as IList<ITable> == null)
+			if (objParams[0] as IList<IReadOnlyTable> == null)
 			{
 				throw new ArgumentException(string.Format("expected IList<ITable>, got {0}",
 				                                          objParams[0].GetType()));
@@ -100,13 +99,13 @@ namespace ProSuite.QA.TestFactories
 
 			var objects = new object[4];
 
-			var tables = (IList<ITable>) objParams[0];
+			var tables = (IList<IReadOnlyTable>) objParams[0];
 			var associationName = (string) objParams[1];
 			var join = (JoinType) objParams[2];
 
-			ITable queryTable = CreateQueryTable(datasetContext, associationName, tables, join);
+			IReadOnlyTable queryTable = CreateQueryTable(datasetContext, associationName, tables, join);
 
-			if (queryTable is IFeatureClass == false)
+			if (queryTable is IReadOnlyFeatureClass == false)
 			{
 				throw new InvalidOperationException(
 					"Relation table is not a FeatureClass, try change join type");
@@ -132,7 +131,7 @@ namespace ProSuite.QA.TestFactories
 
 		protected override ITest CreateTestInstance(object[] args)
 		{
-			var table = (ITable) args[0];
+			var table = (IReadOnlyTable) args[0];
 			var unique = (string) args[1];
 			var maxRows = (int) args[2];
 
@@ -140,7 +139,7 @@ namespace ProSuite.QA.TestFactories
 				                ? new QaUnique(table, unique, maxRows)
 				                : new QaUnique(table, unique);
 
-			test.SetRelatedTables((IList<ITable>) args[3]);
+			test.SetRelatedTables((IList<IReadOnlyTable>) args[3]);
 			return test;
 		}
 	}

@@ -35,7 +35,7 @@ namespace ProSuite.QA.TestFactories
 			var list =
 				new List<TestParameter>
 				{
-					new TestParameter("relationTables", typeof(IList<ITable>)),
+					new TestParameter("relationTables", typeof(IList<IReadOnlyTable>)),
 					new TestParameter("relation", typeof(string)),
 					new TestParameter("join", typeof(JoinType)),
 					new TestParameter("groupByExpression", typeof(string)),
@@ -72,11 +72,11 @@ namespace ProSuite.QA.TestFactories
 
 			var objects = new object[6];
 
-			var tables = ValidateType<IList<ITable>>(objParams[0]);
+			var tables = ValidateType<IList<IReadOnlyTable>>(objParams[0]);
 			var associationName = ValidateType<string>(objParams[1]);
 			var join = ValidateType<JoinType>(objParams[2]);
 
-			ITable queryTable = CreateQueryTable(datasetContext, associationName, tables, join);
+			IReadOnlyTable queryTable = CreateQueryTable(datasetContext, associationName, tables, join);
 
 			if (queryTable is IFeatureClass == false)
 			{
@@ -106,13 +106,13 @@ namespace ProSuite.QA.TestFactories
 
 		protected override ITest CreateTestInstance(object[] args)
 		{
-			var test = new QaGroupConstraints((ITable) args[0],
+			var test = new QaGroupConstraints((IReadOnlyTable) args[0],
 			                                  (string) args[1],
 			                                  (string) args[2],
 			                                  (int) args[3],
 			                                  (bool) args[4]);
 
-			test.SetRelatedTables((IList<ITable>) args[5]);
+			test.SetRelatedTables((IList<IReadOnlyTable>) args[5]);
 			return test;
 		}
 

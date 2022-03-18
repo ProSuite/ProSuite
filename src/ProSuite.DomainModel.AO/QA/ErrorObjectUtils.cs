@@ -20,7 +20,7 @@ namespace ProSuite.DomainModel.AO.QA
 	public static class ErrorObjectUtils
 	{
 		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
 
 		[NotNull]
 		public static IErrorObject CreateErrorObject(
@@ -35,15 +35,15 @@ namespace ProSuite.DomainModel.AO.QA
 				case ErrorTableDataset dataset:
 					return new ErrorTableObject(errorObject, dataset, fieldIndexCache);
 				case ErrorLineDataset dataset:
-					return new ErrorLineObject((ESRI.ArcGIS.Geodatabase.IFeature) errorObject, dataset, fieldIndexCache);
+					return new ErrorLineObject((IFeature) errorObject, dataset, fieldIndexCache);
 				case ErrorMultiPatchDataset dataset:
-					return new ErrorMultiPatchObject((ESRI.ArcGIS.Geodatabase.IFeature) errorObject, dataset,
+					return new ErrorMultiPatchObject((IFeature) errorObject, dataset,
 					                                 fieldIndexCache);
 				case ErrorMultipointDataset dataset:
-					return new ErrorMultipointObject((ESRI.ArcGIS.Geodatabase.IFeature) errorObject, dataset,
+					return new ErrorMultipointObject((IFeature) errorObject, dataset,
 					                                 fieldIndexCache);
 				case ErrorPolygonDataset dataset:
-					return new ErrorPolygonObject((ESRI.ArcGIS.Geodatabase.IFeature) errorObject, dataset, fieldIndexCache);
+					return new ErrorPolygonObject((IFeature) errorObject, dataset, fieldIndexCache);
 				default:
 					throw new ArgumentOutOfRangeException(
 						$"Unknown IErrorDataset: {errorDataset.GetType()}");
@@ -66,7 +66,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 		// NOTE must be called in a domain transaction
 		[NotNull]
-		public static IEnumerable<IReadOnlyRow> GetInvolvedRows(
+		public static IEnumerable<IRow> GetInvolvedRows(
 			[NotNull] IErrorObject errorObject,
 			[NotNull] IModelContext modelContext,
 			[NotNull] IQualityConditionRepository qualityConditionRepository)
@@ -81,7 +81,7 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		[NotNull]
-		public static IEnumerable<IReadOnlyFeature> GetDerivedTableGeometryFeatures(
+		public static IEnumerable<IFeature> GetDerivedTableGeometryFeatures(
 			[NotNull] IObject obj,
 			[NotNull] ObjectDataset dataset,
 			[NotNull] IModelContext modelContext)
@@ -136,7 +136,7 @@ namespace ProSuite.DomainModel.AO.QA
 		/// Must be called within a domain transaction
 		/// </remarks>
 		[NotNull]
-		public static IList<IReadOnlyFeature> GetInvolvedOrRelatedFeatures(
+		public static IList<IFeature> GetInvolvedOrRelatedFeatures(
 			[NotNull] IObject errorObject,
 			[NotNull] IDatasetLookup datasetLookup,
 			[NotNull] IModelContext modelContext,
@@ -146,17 +146,16 @@ namespace ProSuite.DomainModel.AO.QA
 			Assert.ArgumentNotNull(datasetLookup, nameof(datasetLookup));
 			Assert.ArgumentNotNull(modelContext, nameof(modelContext));
 
-			var list = new List<IReadOnlyFeature>();
+			var list = new List<IFeature>();
 
 			IErrorDataset errorTable = GetErrorDataset(errorObject, datasetLookup);
 
 			IErrorObject errorRow = CreateErrorObject(errorObject, errorTable, null);
 
-			foreach (
-				IReadOnlyRow involvedRow in
+			foreach (IRow involvedRow in
 				GetInvolvedRows(errorRow, modelContext, qualityConditionRepository))
 			{
-				var feature = involvedRow as IReadOnlyFeature;
+				var feature = involvedRow as IFeature;
 
 				if (feature != null)
 				{
@@ -164,7 +163,7 @@ namespace ProSuite.DomainModel.AO.QA
 				}
 				else
 				{
-					list.AddRange(GetDerivedTableGeometryFeatures(involvedRow,
+					list.AddRange(GetDerivedTableGeometryFeatures((IObject)involvedRow,
 					                                              datasetLookup,
 					                                              modelContext));
 				}
@@ -209,7 +208,7 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		[NotNull]
-		private static IEnumerable<IReadOnlyRow> GetInvolvedRows(
+		private static IEnumerable<IRow> GetInvolvedRows(
 			[NotNull] IErrorObject errorObject,
 			[NotNull] IDatasetContext datasetContext,
 			[NotNull] IQualityConditionRepository qualityConditionRepository,
@@ -238,7 +237,7 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				IReadOnlyTable table;
+				ITable table;
 				try
 				{
 					table = datasetContext.OpenTable(dataset);
@@ -255,7 +254,7 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				IEnumerable<IReadOnlyRow> rows = TryGetRows(table, objectIDs);
+				IEnumerable<IRow> rows = TryGetRows(table, objectIDs);
 
 				if (rows == null)
 				{
@@ -263,7 +262,7 @@ namespace ProSuite.DomainModel.AO.QA
 					continue;
 				}
 
-				foreach (IReadOnlyRow row in rows)
+				foreach (IRow row in rows)
 				{
 					if (GdbObjectUtils.IsDeleted(row))
 					{
@@ -329,7 +328,7 @@ namespace ProSuite.DomainModel.AO.QA
 		/// <returns></returns>
 		/// <remarks>Must be called within a domain transaction</remarks>
 		[NotNull]
-		private static IEnumerable<IReadOnlyFeature> GetDerivedTableGeometryFeatures(
+		private static IEnumerable<IFeature> GetDerivedTableGeometryFeatures(
 			[NotNull] IObject obj,
 			[NotNull] IDatasetLookup datasetLookup,
 			[NotNull] IModelContext modelContext)
@@ -343,7 +342,7 @@ namespace ProSuite.DomainModel.AO.QA
 				yield break;
 			}
 
-			foreach (IReadOnlyFeature feature in GetDerivedTableGeometryFeatures(
+			foreach (IFeature feature in GetDerivedTableGeometryFeatures(
 				obj, dataset, modelContext))
 			{
 				yield return feature;
@@ -351,8 +350,8 @@ namespace ProSuite.DomainModel.AO.QA
 		}
 
 		[CanBeNull]
-		private static IEnumerable<IReadOnlyRow> TryGetRows(
-			[NotNull] IReadOnlyTable table,
+		private static IEnumerable<IRow> TryGetRows(
+			[NotNull] ITable table,
 			[NotNull] ICollection<int> objectIDs)
 		{
 			if (objectIDs.Count == 0)
@@ -370,7 +369,7 @@ namespace ProSuite.DomainModel.AO.QA
 			{
 				_msg.WarnFormat(
 					"Error getting involved rows for table {0}: {1} (see log for details)",
-					table.Name,
+					DatasetUtils.GetName(table),
 					e.Message);
 				using (_msg.IncrementIndentation())
 				{
@@ -390,7 +389,7 @@ namespace ProSuite.DomainModel.AO.QA
 				catch (Exception e2)
 				{
 					_msg.WarnFormat("Error getting involved rows for table {0}: {1}",
-					                table.Name,
+					                DatasetUtils.GetName( table),
 					                e2.Message);
 					using (_msg.IncrementIndentation())
 					{
@@ -403,14 +402,14 @@ namespace ProSuite.DomainModel.AO.QA
 			}
 		}
 
-		private static void LogTableDebugInfo([NotNull] IReadOnlyTable table)
+		private static void LogTableDebugInfo([NotNull] ITable table)
 		{
 			try
 			{
-				_msg.DebugFormat("Table name: {0}", table.Name);
+				_msg.DebugFormat("Table name: {0}", DatasetUtils.GetName(table));
 				_msg.DebugFormat("Workspace: {0}",
 				                 WorkspaceUtils.GetConnectionString(
-					                 table.Workspace, true));
+					                 DatasetUtils.GetWorkspace(table), true));
 				_msg.DebugFormat("OID field name: {0}", table.OIDFieldName);
 				_msg.DebugFormat("Registered with geodatabase: {0}",
 				                 DatasetUtils.IsRegisteredAsObjectClass(table));

@@ -41,9 +41,9 @@ namespace ProSuite.QA.TestFactories
 			var list =
 				new List<TestParameter>
 				{
-					new TestParameter(_tableAttribute, typeof(ITable),
+					new TestParameter(_tableAttribute, typeof(IReadOnlyTable),
 					                  DocStrings.QaConstraintsListFactory_table),
-					new TestParameter(_constraintsTableAttribute, typeof(ITable),
+					new TestParameter(_constraintsTableAttribute, typeof(IReadOnlyTable),
 					                  DocStrings.QaConstraintsListFactory_constraintsTable),
 					new TestParameter(_expressionField, typeof(string),
 					                  DocStrings.QaConstraintsListFactory_expressionField),
@@ -68,8 +68,8 @@ namespace ProSuite.QA.TestFactories
 			object[] args = base.Args(datasetContext, testParameters, out tableParameters);
 
 			Assert.True(args.Length == 5, "expected 5 arguments, got {0}", args.Length);
-			Assert.True(args[0] is ITable, "arg0 is {0}, expected ITable", args[0].GetType());
-			Assert.True(args[1] is ITable, "arg1 is {0}, expected ITable", args[1].GetType());
+			Assert.True(args[0] is IReadOnlyTable, "arg0 is {0}, expected ITable", args[0].GetType());
+			Assert.True(args[1] is IReadOnlyTable, "arg1 is {0}, expected ITable", args[1].GetType());
 			Assert.True(args[2] is string, "arg2 is {0}, expected string", args[2].GetType());
 			Assert.True(args[3] is bool, "arg3 is {0}, expected boolean", args[3].GetType());
 			Assert.True(args[4] is string, "arg4 is {0}, expected string", args[4].GetType());
@@ -81,7 +81,7 @@ namespace ProSuite.QA.TestFactories
 
 			var invertCondition = (bool) args[3];
 			testArgs[0] = args[0];
-			testArgs[1] = GetConstraints((ITable) args[1],
+			testArgs[1] = GetConstraints((IReadOnlyTable) args[1],
 			                             filterExpression,
 			                             (string) args[2],
 			                             args[4] as string,
@@ -92,7 +92,7 @@ namespace ProSuite.QA.TestFactories
 
 		[NotNull]
 		private static IList<ConstraintNode> GetConstraints(
-			[NotNull] ITable constraintsTable,
+			[NotNull] IReadOnlyTable constraintsTable,
 			[CanBeNull] string filterExpression,
 			[NotNull] string constraintField,
 			[CanBeNull] string constraintDescriptionField,
@@ -102,7 +102,7 @@ namespace ProSuite.QA.TestFactories
 
 			int constraintIndex = constraintsTable.FindField(constraintField);
 			Assert.True(constraintIndex >= 0, "Field {0} not found in table {1}",
-			            constraintField, DatasetUtils.GetName(constraintsTable));
+			            constraintField, constraintsTable.Name);
 
 			int descriptionIndex = -1;
 			if (StringUtils.IsNotEmpty(constraintDescriptionField))
@@ -110,16 +110,16 @@ namespace ProSuite.QA.TestFactories
 				descriptionIndex = constraintsTable.FindField(constraintDescriptionField);
 				Assert.True(descriptionIndex >= 0,
 				            "Field {0} not found in table {1}",
-				            constraintDescriptionField, DatasetUtils.GetName(constraintsTable));
+				            constraintDescriptionField, constraintsTable.Name);
 			}
 
 			IQueryFilter filter = CreateQueryFilter(filterExpression, constraintField,
 			                                        constraintDescriptionField);
 
 			const bool recycling = true;
-			foreach (IRow row in GdbQueryUtils.GetRows(constraintsTable, filter, recycling))
+			foreach (IReadOnlyRow row in constraintsTable.EnumRows(filter, recycling))
 			{
-				var constraint = row.Value[constraintIndex] as string;
+				var constraint = row.get_Value(constraintIndex) as string;
 
 				if (constraint == null || constraint.Trim().Length == 0)
 				{
@@ -128,7 +128,7 @@ namespace ProSuite.QA.TestFactories
 
 				string constraintDescription =
 					descriptionIndex >= 0
-						? row.Value[descriptionIndex] as string
+						? row.get_Value(descriptionIndex) as string
 						: null;
 
 				result.Add(
@@ -220,7 +220,7 @@ namespace ProSuite.QA.TestFactories
 
 		protected override ITest CreateTestInstance(object[] args)
 		{
-			return new QaConstraint((ITable) args[0], (IList<ConstraintNode>) args[1]);
+			return new QaConstraint((IReadOnlyTable) args[0], (IList<ConstraintNode>) args[1]);
 		}
 	}
 }

@@ -59,9 +59,10 @@ namespace ProSuite.QA.Tests.Test
 					_doubleFieldName,
 					_dateFieldName
 				}, ",");
-			var condition = new EqualFieldValuesCondition(fieldNames, null,
-			                                              new[] {table1, table2},
-			                                              caseSensitive: true);
+			var condition = new EqualFieldValuesCondition(
+				fieldNames, null,
+				new[] { ReadOnlyTableFactory.Create(table1), ReadOnlyTableFactory.Create(table2) },
+				caseSensitive: true);
 
 			string message;
 			var unequalFieldNames = new HashSet<string>();
@@ -87,8 +88,8 @@ namespace ProSuite.QA.Tests.Test
 			StringBuilder sb = null;
 
 			foreach (UnequalField unequalField in condition.GetNonEqualFields(
-				row1, tableIndex1,
-				row2, tableIndex2))
+				         ReadOnlyRow.Create(row1), tableIndex1,
+				ReadOnlyRow.Create(row2), tableIndex2))
 			{
 				if (sb == null)
 				{
@@ -132,13 +133,14 @@ namespace ProSuite.QA.Tests.Test
 					_dateFieldName
 				}, ",");
 
-			var condition = new EqualFieldValuesCondition(fieldNames,
-			                                              new[]
-			                                              {
-				                                              _textFieldName + ":ignore=[ ]"
-			                                              },
-			                                              new[] {table1, table2},
-			                                              caseSensitive: true);
+			var condition = new EqualFieldValuesCondition(
+				fieldNames,
+				new[]
+				{
+					_textFieldName + ":ignore=[ ]"
+				},
+				new[] { ReadOnlyTableFactory.Create(table1), ReadOnlyTableFactory.Create(table2) },
+				caseSensitive: true);
 
 			string message;
 			var unequalFieldNames = new HashSet<string>();
@@ -171,9 +173,10 @@ namespace ProSuite.QA.Tests.Test
 					_dateFieldName
 				}, ",");
 
-			var condition = new EqualFieldValuesCondition(fieldNames, null,
-			                                              new[] {table1, table2},
-			                                              caseSensitive: true);
+			var condition = new EqualFieldValuesCondition(
+				fieldNames, null,
+				new[] { ReadOnlyTableFactory.Create(table1), ReadOnlyTableFactory.Create(table2) },
+				caseSensitive: true);
 
 			string message;
 			var unequalFieldNames = new HashSet<string>();
@@ -535,11 +538,11 @@ namespace ProSuite.QA.Tests.Test
 			Assert.AreEqual("FLD_DOUBLE", fieldInfos[1].FieldName);
 			Assert.AreEqual("FLD_DATE", fieldInfos[2].FieldName);
 
-			Assert.True(fieldInfos[0].AreValuesEqual(row1, 0, "x y", row2, 1, "xy ", false));
+			Assert.True(fieldInfos[0].AreValuesEqual(ReadOnlyRow.Create(row1), 0, "x y", ReadOnlyRow.Create(row2), 1, "xy ", false));
 			Assert.False(fieldInfos[1]
-				             .AreValuesEqual(row1, 0, 0.0001, row2, 1, 0.0002, false));
-			Assert.False(fieldInfos[2].AreValuesEqual(row1, 0, null, row2, 1, DateTime.Now,
-			                                          false));
+				             .AreValuesEqual(ReadOnlyRow.Create(row1), 0, 0.0001, ReadOnlyRow.Create(row2), 1, 0.0002, false));
+			Assert.False(fieldInfos[2].AreValuesEqual(
+				             ReadOnlyRow.Create(row1), 0, null, ReadOnlyRow.Create(row2), 1, DateTime.Now, false));
 		}
 
 		[Test]
@@ -573,9 +576,14 @@ namespace ProSuite.QA.Tests.Test
 				              "FLD_TEXT:ignoreCondition=_VALUE IS NULL OR Len(Trim(_VALUE)) = 0",
 				              "FLD_TEXT:allowedDifferenceCondition=G1.LAND = 'XX' AND G1._VALUE IS NOT NULL AND G2._VALUE IS NULL"
 			              };
-			var condition = new EqualFieldValuesCondition(fieldName, options,
-			                                              new[] {row1.Table, row2.Table},
-			                                              caseSensitive: true);
+			var condition = new EqualFieldValuesCondition(
+				fieldName, options,
+				new[]
+				{
+					ReadOnlyTableFactory.Create(row1.Table),
+					ReadOnlyTableFactory.Create(row2.Table)
+				},
+				caseSensitive: true);
 
 			string message;
 			bool equal = AreValuesEqual(condition,
@@ -611,9 +619,14 @@ namespace ProSuite.QA.Tests.Test
 				              "FLD_DOUBLE:ignoreCondition=_VALUE IS NULL OR _VALUE = -9998",
 				              "FLD_DOUBLE:allowedDifferenceCondition=G1.LAND = 'XX' AND G1._VALUE IS NOT NULL AND G2._VALUE IS NULL"
 			              };
-			var condition = new EqualFieldValuesCondition(_doubleFieldName, options,
-			                                              new[] {row1.Table, row2.Table},
-			                                              caseSensitive: true);
+			var condition = new EqualFieldValuesCondition(
+				_doubleFieldName, options,
+				new[]
+				{
+					ReadOnlyTableFactory.Create(row1.Table),
+					ReadOnlyTableFactory.Create(row2.Table)
+				},
+				caseSensitive: true);
 
 			string message;
 			bool equal = AreValuesEqual(condition,
@@ -662,10 +675,11 @@ namespace ProSuite.QA.Tests.Test
 
 			Assert.AreEqual(1, fieldInfos.Count);
 			EqualFieldValuesCondition.FieldInfo fieldInfo = fieldInfos[0];
-			fieldInfo.AddComparedTable(table1);
-			fieldInfo.AddComparedTable(table2);
+			fieldInfo.AddComparedTable(ReadOnlyTableFactory.Create(table1));
+			fieldInfo.AddComparedTable(ReadOnlyTableFactory.Create(table2));
 
-			bool equal = fieldInfo.AreValuesEqual(row1, 0, row2, 1,
+			bool equal = fieldInfo.AreValuesEqual(ReadOnlyRow.Create(row1), 0,
+			                                      ReadOnlyRow.Create(row2), 1,
 			                                      true, out message);
 
 			if (! equal)

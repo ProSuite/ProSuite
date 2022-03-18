@@ -360,7 +360,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 		private static void InvalidateIfAnyInvolvedObjectChanged(
 			[NotNull] IEnumerable<AllowedError> allowedErrors,
-			[NotNull] IReadOnlyRow involvedRow,
+			[NotNull] IRow involvedRow,
 			int dateOfChangeFieldIndex)
 		{
 			DateTime? dateOfInvolvedRowChange =
@@ -417,7 +417,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 			IQueryFilter queryFilter;
 			int dateOfChangeFieldIndex;
-			IReadOnlyTable involvedTable = GetInvolvedTableAndQueryFilter(
+			ITable involvedTable = GetInvolvedTableAndQueryFilter(
 				involvedObjectDataset, datasetContext,
 				invalidateIfAnyInvolvedObjectChanged,
 				out queryFilter, out dateOfChangeFieldIndex);
@@ -446,14 +446,14 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		private static IReadOnlyTable GetInvolvedTableAndQueryFilter(
+		private static ITable GetInvolvedTableAndQueryFilter(
 			[NotNull] IObjectDataset involvedObjectDataset,
 			[NotNull] IDatasetContext datasetContext,
 			bool includeDateOfChangeField,
 			[NotNull] out IQueryFilter queryFilter,
 			out int dateOfChangeFieldIndex)
 		{
-			IReadOnlyTable result;
+			ITable result;
 			try
 			{
 				result = datasetContext.OpenTable(involvedObjectDataset);

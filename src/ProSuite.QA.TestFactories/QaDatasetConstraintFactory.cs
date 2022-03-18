@@ -11,6 +11,7 @@ using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -35,7 +36,7 @@ namespace ProSuite.QA.TestFactories
 			var list =
 				new List<TestParameter>
 				{
-					new TestParameter(TableAttribute, typeof(ITable),
+					new TestParameter(TableAttribute, typeof(IReadOnlyTable),
 					                  DocStrings.QaDatasetConstraintFactory_table),
 					new TestParameter(ConstraintAttribute, typeof(IList<string>),
 					                  DocStrings.QaDatasetConstraintFactory_constraint)
@@ -61,13 +62,13 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams.Length));
 			}
 
-			if (objParams[0] is ITable == false)
+			if (objParams[0] is IReadOnlyTable == false)
 			{
-				throw new ArgumentException(string.Format("expected ITable, got {0}",
+				throw new ArgumentException(string.Format("expected IReadOnlyTable, got {0}",
 				                                          objParams[0].GetType()));
 			}
 
-			if (objParams[1] as IList<string> == null)
+			if (objParams[1] is IList<string> == false)
 			{
 				throw new ArgumentException(string.Format("expected IList<string>, got {0}",
 				                                          objParams[1].GetType()));
@@ -86,7 +87,7 @@ namespace ProSuite.QA.TestFactories
 
 		protected override ITest CreateTestInstance(object[] args)
 		{
-			var test = new QaConstraint((ITable) args[0],
+			var test = new QaConstraint((IReadOnlyTable) args[0],
 			                            (IList<ConstraintNode>) args[1]);
 			return test;
 		}

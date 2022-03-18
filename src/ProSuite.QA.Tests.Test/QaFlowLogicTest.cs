@@ -93,7 +93,7 @@ namespace ProSuite.QA.Tests.Test
 				lastPoint = ((IPolyline) row.Shape).ToPoint;
 			}
 
-			var test = new QaFlowLogic(new[] {featureClass}, new[] {"FlowDir > 6"});
+			var test = new QaFlowLogic(new[] { ReadOnlyTableFactory.Create(featureClass)}, new[] {"FlowDir > 6"});
 			test.QaError += Test_QaError;
 			_errorCount = 0;
 			test.Execute();
@@ -187,7 +187,7 @@ namespace ProSuite.QA.Tests.Test
 
 			{
 				var test = new QaFlowLogic(
-					new[] {fc1, fc2},
+					new[] { ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2)},
 					new[] {"FlowDir > 6", "FlowDir < 6"}
 					// no feature fc1 will be inverted, feature of fc2 will be inverted
 				);
@@ -207,7 +207,7 @@ namespace ProSuite.QA.Tests.Test
 
 			{
 				var test = new QaFlowLogic(
-					new[] {fc1, fc2},
+					new[] { ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2)},
 					new[] {"FlowDir > 6"}
 					// no feature will be inverted
 				);
@@ -255,7 +255,7 @@ namespace ProSuite.QA.Tests.Test
 
 			// expect counter-clockwise: 0 errors
 			var runner = new QaContainerTestRunner(
-				1000, new QaFlowLogic(linesFc));
+				1000, new QaFlowLogic(ReadOnlyTableFactory.Create(linesFc)));
 			Assert.AreEqual(3, runner.Execute());
 		}
 

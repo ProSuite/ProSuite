@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.DomainServices.AO.QA.Issues;
@@ -27,10 +26,10 @@ namespace ProSuite.DomainServices.AO.QA.Exceptions
 			[NotNull] QualityCondition qualityCondition);
 
 		[NotNull]
-		ICollection<IReadOnlyTable> TablesWithNonUniqueKeys { get; }
+		ICollection<ITable> TablesWithNonUniqueKeys { get; }
 
 		[NotNull]
-		ICollection<object> GetNonUniqueKeys([NotNull] IReadOnlyTable table);
+		ICollection<object> GetNonUniqueKeys([NotNull] ITable table);
 
 		IDictionary<IssueGroupKey, List<ExceptionObject>> GetUsedExceptions();
 	}

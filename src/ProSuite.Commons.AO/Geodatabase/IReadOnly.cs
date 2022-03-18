@@ -62,11 +62,12 @@ namespace ProSuite.Commons.AO.Geodatabase
 	{
 		protected static readonly Dictionary<ESRI.ArcGIS.Geodatabase.ITable, ReadOnlyTable> Cache = new Dictionary<ESRI.ArcGIS.Geodatabase.ITable, ReadOnlyTable>();
 
-		public static ReadOnlyFeatureClass Create(
-			[NotNull] ESRI.ArcGIS.Geodatabase.IFeatureClass featureClass)
+		public static ReadOnlyFeatureClass Create<T>([NotNull] T featureClass)
+			where T : IFeatureClass
 		{
-			return (ReadOnlyFeatureClass)Create((ESRI.ArcGIS.Geodatabase.ITable)featureClass);
+			return (ReadOnlyFeatureClass) Create((ESRI.ArcGIS.Geodatabase.ITable) featureClass);
 		}
+
 		public static ReadOnlyTable Create([NotNull] ESRI.ArcGIS.Geodatabase.ITable table)
 		{
 			if (!Cache.TryGetValue(table, out ReadOnlyTable existing))
@@ -162,6 +163,16 @@ namespace ProSuite.Commons.AO.Geodatabase
 	}
 	public class ReadOnlyRow : IReadOnlyRow
 	{
+		public static ReadOnlyRow Create(IRow row)
+		{
+			ReadOnlyTable tbl = ReadOnlyTableFactory.Create(row.Table);
+			if (tbl is ReadOnlyFeatureClass fc)
+			{
+				return new ReadOnlyFeature(fc, (IFeature) row);
+			}
+
+			return new ReadOnlyRow(tbl, row);
+		}
 		public ReadOnlyRow(ReadOnlyTable table, ESRI.ArcGIS.Geodatabase.IRow row)
 		{
 			Table = table;
@@ -179,6 +190,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 	public class ReadOnlyFeature : ReadOnlyRow, IReadOnlyFeature
 	{
+		public static ReadOnlyFeature Create(IFeature feature)
+		{
+			return new ReadOnlyFeature(
+				ReadOnlyTableFactory.Create((IFeatureClass) feature.Table), feature);
+		}
 		public ReadOnlyFeature(ReadOnlyFeatureClass featureClass, ESRI.ArcGIS.Geodatabase.IFeature feature)
 			: base(featureClass, feature)
 		{ }

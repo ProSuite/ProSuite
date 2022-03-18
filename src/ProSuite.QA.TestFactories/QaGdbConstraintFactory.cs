@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
@@ -48,7 +49,7 @@ namespace ProSuite.QA.TestFactories
 		{
 			return new List<TestParameter>
 			       {
-				       new TestParameter("table", typeof(ITable),
+				       new TestParameter("table", typeof(IReadOnlyTable),
 				                         DocStrings.QaGdbConstraintFactory_table),
 				       new TestParameter(_allowNullValuesForCodedValueDomains,
 				                         typeof(bool),
@@ -119,7 +120,7 @@ namespace ProSuite.QA.TestFactories
 		{
 			Assert.AreEqual(4, args.Length, "Unexpected argument count");
 
-			var table = (ITable) args[0];
+			var table = (IReadOnlyTable) args[0];
 			var allowNullValuesForCodedValueDomains = (bool) args[1];
 			var allowNullValuesForRangeDomains = (bool) args[2];
 			var fieldsToCheck = (IList<string>) args[3];

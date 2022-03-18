@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
@@ -32,7 +33,7 @@ namespace ProSuite.QA.TestFactories
 
 		protected override ContainerTest CreateAngleTest(object[] args)
 		{
-			var test = new QaMinSegAngle((IFeatureClass) args[0], (double) args[1],
+			var test = new QaMinSegAngle((IReadOnlyFeatureClass) args[0], (double) args[1],
 			                             (bool) args[2]);
 			return test;
 		}

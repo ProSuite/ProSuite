@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainServices.AO.QA.Exceptions;
@@ -17,7 +18,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 		                                    [CanBeNull] string affectedComponent,
 		                                    [CanBeNull] IEnumerable<object> values = null)
 		{
-			return new QaError(new DummyTest(tableMock), "error description",
+			return new QaError(new DummyTest(ReadOnlyTableFactory.Create(tableMock)), "error description",
 			                   new List<InvolvedRow>(), null,
 			                   issueCode == null
 				                   ? null
@@ -30,7 +31,7 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 		public static QaError CreateQaError([NotNull] ITable tableMock,
 		                                    [NotNull] IEnumerable<InvolvedRow> involvedRows)
 		{
-			return new QaError(new DummyTest(tableMock), "error description",
+			return new QaError(new DummyTest(ReadOnlyTableFactory.Create(tableMock)), "error description",
 			                   involvedRows, null, null, null);
 		}
 
@@ -56,9 +57,9 @@ namespace ProSuite.DomainServices.AO.Test.QA.Exceptions
 
 		private class DummyTest : ContainerTest
 		{
-			public DummyTest([NotNull] ITable table) : base(table) { }
+			public DummyTest([NotNull] IReadOnlyTable table) : base(table) { }
 
-			protected override int ExecuteCore(IRow row, int tableIndex)
+			protected override int ExecuteCore(IReadOnlyRow row, int tableIndex)
 			{
 				return 0;
 			}

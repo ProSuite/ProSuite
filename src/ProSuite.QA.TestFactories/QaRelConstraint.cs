@@ -40,7 +40,7 @@ namespace ProSuite.QA.TestFactories
 
 			var list = new List<TestParameter>
 			           {
-				           new TestParameter("relationTables", typeof(IList<ITable>),
+				           new TestParameter("relationTables", typeof(IList<IReadOnlyTable>),
 				                             DocStrings.QaRelConstraint_relationTables),
 				           new TestParameter("relation", typeof(string),
 				                             DocStrings.QaRelConstraint_relation),
@@ -74,7 +74,7 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams.Length));
 			}
 
-			if (! (objParams[0] is IList<ITable>))
+			if (! (objParams[0] is IList<IReadOnlyTable>))
 			{
 				throw new ArgumentException(string.Format("expected IList<ITable>, got {0}",
 				                                          objParams[0].GetType()));
@@ -101,7 +101,7 @@ namespace ProSuite.QA.TestFactories
 
 			var objects = new object[3];
 
-			var tables = (IList<ITable>) objParams[0];
+			var tables = (IList<IReadOnlyTable>) objParams[0];
 			var associationName = (string) objParams[1];
 			var join = (JoinType) objParams[2];
 			var constraints = (IList<string>) objParams[3];
@@ -116,7 +116,7 @@ namespace ProSuite.QA.TestFactories
 
 			string whereClause = applyFilterInDatabase ? tableConstraint : null;
 
-			ITable queryTable = CreateQueryTable(datasetContext, associationName, tables, join,
+			IReadOnlyTable queryTable = CreateQueryTable(datasetContext, associationName, tables, join,
 			                                     whereClause, out string relationshipClassName);
 
 			IList<string> translatedConstraints = TranslateConstraints(
@@ -137,8 +137,9 @@ namespace ProSuite.QA.TestFactories
 				                  ? new List<TableConstraint>()
 				                  : new List<TableConstraint>
 				                    {
-					                    new TableConstraint(queryTable, tableConstraint,
-					                                        useCaseSensitiveQaSql)
+					                    new TableConstraint(
+						                    queryTable,
+						                    tableConstraint, useCaseSensitiveQaSql)
 				                    };
 
 			return objects;
@@ -229,9 +230,9 @@ namespace ProSuite.QA.TestFactories
 
 		protected override ITest CreateTestInstance(object[] args)
 		{
-			var test = new QaRelationConstraint((ITable) args[0],
+			var test = new QaRelationConstraint((IReadOnlyTable) args[0],
 			                                    (IList<ConstraintNode>) args[1],
-			                                    (IList<ITable>) args[2]);
+			                                    (IList<IReadOnlyTable>) args[2]);
 			return test;
 		}
 

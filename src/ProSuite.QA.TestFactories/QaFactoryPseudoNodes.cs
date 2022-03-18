@@ -8,6 +8,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.QA.Core;
 using ProSuite.QA.Tests;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -40,9 +41,9 @@ namespace ProSuite.QA.TestFactories
 
 		protected override ITest CreateTestInstance(object[] args)
 		{
-			var test = new QaPseudoNodes((IList<IFeatureClass>) args[0],
+			var test = new QaPseudoNodes((IList<IReadOnlyFeatureClass>) args[0],
 			                             (string[][]) args[1],
-			                             (IList<IFeatureClass>) args[2]);
+			                             (IList<IReadOnlyFeatureClass>) args[2]);
 
 			if (args.Length > 3 && args[3] is bool)
 			{
@@ -56,11 +57,11 @@ namespace ProSuite.QA.TestFactories
 		{
 			var list = new List<TestParameter>
 			           {
-				           new TestParameter(PolylineClassesParam, typeof(IFeatureClass[]),
+				           new TestParameter(PolylineClassesParam, typeof(IReadOnlyFeatureClass[]),
 				                             DocStrings.QaFactoryPseudoNodes_polylineClasses),
 				           new TestParameter(IgnoreFieldsParam, typeof(string[]),
 				                             DocStrings.QaFactoryPseudoNodes_ignoreFields),
-				           new TestParameter(ValidPseudoNodesParam, typeof(IFeatureClass[]),
+				           new TestParameter(ValidPseudoNodesParam, typeof(IReadOnlyFeatureClass[]),
 				                             DocStrings.QaFactoryPseudoNodes_validPseudoNodes),
 				           new TestParameter(IgnoreLoopEndPointsParam, typeof(bool),
 				                             DocStrings.QaFactoryPseudoNodes_IgnoreLoopEndpoints,
@@ -88,7 +89,7 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams.Length));
 			}
 
-			if (! (objParams[0] is IFeatureClass[]))
+			if (! (objParams[0] is IReadOnlyFeatureClass[]))
 			{
 				throw new ArgumentException(string.Format("expected IFeatureClass[], got {0}",
 				                                          objParams[0].GetType()));
@@ -100,7 +101,7 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams[1].GetType()));
 			}
 
-			if (! (objParams[2] is IFeatureClass[]))
+			if (! (objParams[2] is IReadOnlyFeatureClass[]))
 			{
 				throw new ArgumentException(string.Format("expected IFeatureClass[], got {0}",
 				                                          objParams[2].GetType()));

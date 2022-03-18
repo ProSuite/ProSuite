@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Tests;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -38,7 +37,7 @@ namespace ProSuite.QA.TestFactories
 
 			var list = new List<TestParameter>
 			           {
-				           new TestParameter("relationTables", typeof(IList<ITable>),
+				           new TestParameter("relationTables", typeof(IList<IReadOnlyTable>),
 				                             DocStrings.QaRelConstraint_relationTables),
 				           new TestParameter("relation", typeof(string),
 				                             DocStrings.QaRelConstraint_relation),
@@ -79,7 +78,7 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams.Length));
 			}
 
-			if (objParams[0] as IList<ITable> == null)
+			if (objParams[0] as IList<IReadOnlyTable> == null)
 			{
 				throw new ArgumentException(string.Format("expected IList<ITable>, got {0}",
 				                                          objParams[0].GetType()));
@@ -110,7 +109,7 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams[4].GetType()));
 			}
 
-			var tables = (IList<ITable>) objParams[0];
+			var tables = (IList<IReadOnlyTable>) objParams[0];
 			var associationName = (string) objParams[1];
 			var join = (JoinType) objParams[2];
 			var pattern = (string) objParams[3];
@@ -145,7 +144,7 @@ namespace ProSuite.QA.TestFactories
 				}
 			}
 
-			ITable queryTable = CreateQueryTable(datasetContext, associationName, tables, join);
+			IReadOnlyTable queryTable = CreateQueryTable(datasetContext, associationName, tables, join);
 
 			var objects = new object[6];
 
@@ -185,12 +184,12 @@ namespace ProSuite.QA.TestFactories
 
 		protected override ITest CreateTestInstance(object[] args)
 		{
-			var test = new QaRegularExpression((ITable) args[0],
+			var test = new QaRegularExpression((IReadOnlyTable) args[0],
 			                                   (string) args[1],
 			                                   (IEnumerable<string>) args[2],
 			                                   (bool) args[3],
 			                                   (string) args[4]);
-			test.AddRelatedTables((ITable) args[0], (IList<ITable>) args[5]);
+			test.AddRelatedTables((IReadOnlyTable) args[0], (IList<IReadOnlyTable>) args[5]);
 			return test;
 		}
 	}

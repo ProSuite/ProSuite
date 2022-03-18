@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Microservices.Definitions.QA.Test;
 
@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests.External
 	{
 		private readonly string _parameters;
 
-		public QaExternalService([NotNull] IList<ITable> tables,
+		public QaExternalService([NotNull] IList<IReadOnlyTable> tables,
 		                         string connectionUrl,
 		                         string parameters) : base(tables, connectionUrl)
 		{

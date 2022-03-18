@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
@@ -36,7 +36,7 @@ namespace ProSuite.QA.TestFactories
 		protected override ContainerTest CreateAngleTest(object[] args)
 		{
 			ContainerTest test = new QaLineIntersectAngle(
-				(IList<IFeatureClass>) args[0], (double) args[1], (bool) args[2]);
+				(IList<IReadOnlyFeatureClass>) args[0], (double) args[1], (bool) args[2]);
 
 			return test;
 		}

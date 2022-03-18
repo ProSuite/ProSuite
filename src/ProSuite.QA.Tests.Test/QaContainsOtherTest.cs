@@ -6,6 +6,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.QA.Container;
 using System.Collections.Generic;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -44,7 +45,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass within =
 				((IFeatureWorkspace)withinWs).OpenFeatureClass("GEO_00100420001");
 
-			var test = new QaContainsOther(covers, within);
+			var test = new QaContainsOther(ReadOnlyTableFactory.Create(covers),
+			                               ReadOnlyTableFactory.Create(within));
 			test.SetConstraint(0, "OBJECTID = 1");
 			test.SetConstraint(1, "OBJECTID = 69157");
 

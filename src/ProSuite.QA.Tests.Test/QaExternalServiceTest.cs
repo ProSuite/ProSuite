@@ -68,7 +68,11 @@ namespace ProSuite.QA.Tests.Test
 
 			string connectionUrl = $"http://{Localhost}:{Port}";
 
-			List<ITable> tables = new[] {fcBahn, fcStr}.Cast<ITable>().ToList();
+			List<IReadOnlyTable> tables = new[]
+			                      {
+				                      ReadOnlyTableFactory.Create(fcBahn),
+				                      ReadOnlyTableFactory.Create(fcStr)
+			                      }.Cast<IReadOnlyTable>().ToList();
 
 			var test = new QaExternalService(tables, connectionUrl, string.Empty);
 
@@ -97,7 +101,11 @@ namespace ProSuite.QA.Tests.Test
 
 			string connectionUrl = $"http://{Localhost}:{Port}";
 
-			List<ITable> tables = new[] {fcBahn, fcStr}.Cast<ITable>().ToList();
+			List<IReadOnlyTable> tables = new[]
+			                              {
+				                              ReadOnlyTableFactory.Create(fcBahn),
+				                              ReadOnlyTableFactory.Create(fcStr)
+			                              }.Cast<IReadOnlyTable>().ToList();
 
 			var test = new QaExternalService(tables, connectionUrl, string.Empty);
 
@@ -125,7 +133,11 @@ namespace ProSuite.QA.Tests.Test
 
 			string connectionUrl = $"http://{Localhost}:{Port}";
 
-			List<ITable> tables = new[] {fcBahn, fcStr}.Cast<ITable>().ToList();
+			List<IReadOnlyTable> tables = new[]
+			                              {
+				                              ReadOnlyTableFactory.Create(fcBahn),
+				                              ReadOnlyTableFactory.Create(fcStr)
+			                              }.Cast<IReadOnlyTable>().ToList();
 
 			var test = new QaExternalService(tables, connectionUrl, string.Empty);
 

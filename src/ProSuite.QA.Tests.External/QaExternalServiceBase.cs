@@ -28,7 +28,7 @@ namespace ProSuite.QA.Tests.External
 		private readonly ExternalTestClient _externalService;
 		private ConcurrentBag<DetectedIssueMsg> _foundIssues;
 
-		protected QaExternalServiceBase([NotNull] IEnumerable<ITable> tables,
+		protected QaExternalServiceBase([NotNull] IEnumerable<IReadOnlyTable> tables,
 		                                string connectionUrl)
 			: base(tables)
 		{
@@ -50,13 +50,13 @@ namespace ProSuite.QA.Tests.External
 			return RunTest(_externalService.TestClient, area);
 		}
 
-		public override int Execute(IEnumerable<IRow> selectedRows)
+		public override int Execute(IEnumerable<IReadOnlyRow> selectedRows)
 		{
 			// TODO, if this is ever called
 			throw new NotImplementedException();
 		}
 
-		public override int Execute(IRow row)
+		public override int Execute(IReadOnlyRow row)
 		{
 			// TODO, if this is ever called
 			throw new NotImplementedException();
@@ -108,9 +108,9 @@ namespace ProSuite.QA.Tests.External
 
 			var testDatasets = new List<TestDatasetMsg>();
 
-			foreach (ITable table in InvolvedTables)
+			foreach (IReadOnlyTable table in InvolvedTables)
 			{
-				IWorkspace tableWorkspace = DatasetUtils.GetWorkspace(table);
+				IWorkspace tableWorkspace = table.Workspace;
 
 				int wsIndex = workspaces.FindIndex(w => w == tableWorkspace);
 
@@ -141,7 +141,7 @@ namespace ProSuite.QA.Tests.External
 			return request;
 		}
 
-		private TestDatasetMsg ToInvolvedTable(ITable table, int workspaceIndex)
+		private TestDatasetMsg ToInvolvedTable(IReadOnlyTable table, int workspaceIndex)
 		{
 			var testDataset = new TestDatasetMsg();
 

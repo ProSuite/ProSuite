@@ -1560,6 +1560,21 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
+		public static int Count([NotNull] IReadOnlyTable table,
+		                        [CanBeNull] string whereClause = null)
+		{
+			Assert.ArgumentNotNull(table, nameof(table));
+
+			IQueryFilter filter = new QueryFilterClass
+			                      {
+				                      WhereClause = whereClause,
+				                      SubFields = table.OIDFieldName
+			                      };
+
+			return table.RowCount(filter);
+
+		}
+
 		public static int Count([NotNull] IObjectClass objectClass,
 		                        [CanBeNull] string whereClause = null)
 		{

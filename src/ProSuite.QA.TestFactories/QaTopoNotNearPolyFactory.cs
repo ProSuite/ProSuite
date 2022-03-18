@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.QA.Container;
 using ProSuite.QA.Tests;
 using ProSuite.QA.Tests.Coincidence;
@@ -13,6 +12,7 @@ using ProSuite.DomainModel.AO.QA;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.TestFactories
 {
@@ -53,9 +53,9 @@ namespace ProSuite.QA.TestFactories
 			var list =
 				new List<TestParameter>
 				{
-					new TestParameter(FeatureClassParamName, typeof(IFeatureClass),
+					new TestParameter(FeatureClassParamName, typeof(IReadOnlyFeatureClass),
 					                  DocStrings.QaTopoNotNearPolyFactory_featureClass),
-					new TestParameter(ReferenceParamName, typeof(IFeatureClass),
+					new TestParameter(ReferenceParamName, typeof(IReadOnlyFeatureClass),
 					                  DocStrings.QaTopoNotNearPolyFactory_reference),
 					new TestParameter(ReferenceSubtypesParamName, typeof(int[]),
 					                  DocStrings.QaTopoNotNearPolyFactory_referenceSubtypes),
@@ -77,13 +77,13 @@ namespace ProSuite.QA.TestFactories
 				                                          objParams.Length));
 			}
 
-			if (objParams[0] is IFeatureClass == false)
+			if (objParams[0] is IReadOnlyFeatureClass == false)
 			{
 				throw new ArgumentException(string.Format("expected IFeatureClass, got {0}",
 				                                          objParams[0].GetType()));
 			}
 
-			if (objParams[1] is IFeatureClass == false)
+			if (objParams[1] is IReadOnlyFeatureClass == false)
 			{
 				throw new ArgumentException(string.Format("expected IFeatureClass, got {0}",
 				                                          objParams[1].GetType()));
@@ -103,8 +103,8 @@ namespace ProSuite.QA.TestFactories
 
 			var objects = new object[4];
 
-			var featureClass = (IFeatureClass) objParams[0];
-			var referenceClass = (IFeatureClass) objParams[1];
+			var featureClass = (IReadOnlyFeatureClass) objParams[0];
+			var referenceClass = (IReadOnlyFeatureClass) objParams[1];
 			var referenceSubtypes = (int[]) objParams[2];
 			var rules = (string[]) objParams[3];
 
@@ -129,12 +129,12 @@ namespace ProSuite.QA.TestFactories
 			public List<string> RightSideNears { get; private set; }
 			public string IgnoreNeighborCondition { get; private set; }
 
-			public static ConstrParams Create(IFeatureClass featureClass,
+			public static ConstrParams Create(IReadOnlyFeatureClass featureClass,
 			                                  IList<int> referenceSubtypes,
 			                                  IList<string> featureClassRules)
 			{
-				string featureClassField = ((ISubtypes) featureClass).SubtypeFieldName;
-				string referenceClassField = ((ISubtypes) featureClass).SubtypeFieldName;
+				string featureClassField = ((ESRI.ArcGIS.Geodatabase.ISubtypes) featureClass).SubtypeFieldName;
+				string referenceClassField = ((ESRI.ArcGIS.Geodatabase.ISubtypes) featureClass).SubtypeFieldName;
 
 				double maxNear = 0;
 
@@ -259,8 +259,8 @@ namespace ProSuite.QA.TestFactories
 
 		protected override IList<ITest> CreateTestInstances(object[] args)
 		{
-			var featureClass = (IFeatureClass) args[0];
-			var referenceClass = (IFeatureClass) args[1];
+			var featureClass = (IReadOnlyFeatureClass) args[0];
+			var referenceClass = (IReadOnlyFeatureClass) args[1];
 			var referenceSubtypes = (int[]) args[2];
 			var featureClassRules = (string[]) args[3];
 

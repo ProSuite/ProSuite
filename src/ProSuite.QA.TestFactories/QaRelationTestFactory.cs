@@ -57,22 +57,33 @@ namespace ProSuite.QA.TestFactories
 			                               " AND ");
 		}
 
-		protected ITable CreateQueryTable([NotNull] IOpenDataset datasetContext,
+		protected IReadOnlyTable CreateQueryTable([NotNull] IOpenDataset datasetContext,
 		                                  [NotNull] string associationName,
-		                                  [NotNull] IList<ITable> tables,
+		                                  [NotNull] IList<IReadOnlyTable> tables,
 		                                  JoinType joinType)
 		{
 			return CreateQueryTable(datasetContext, associationName, tables, joinType, null, out _);
 		}
 
-		protected ITable CreateQueryTable([NotNull] IOpenDataset datasetContext,
+		protected IReadOnlyTable CreateQueryTable([NotNull] IOpenDataset datasetContext,
 		                                  [NotNull] string associationName,
-		                                  [NotNull] IList<ITable> tables,
+		                                  [NotNull] IList<IReadOnlyTable> tables,
 		                                  JoinType joinType,
 		                                  [CanBeNull] string whereClause,
 		                                  out string relationshipClassName)
 		{
 			ITable queryTable;
+			List<ITable> baseTables = new List<ITable>();
+			foreach (IReadOnlyTable readOnlyTable in tables)
+			{
+				if (! (readOnlyTable is ReadOnlyTable roTable))
+				{
+					Assert.Fail($"{readOnlyTable.Name} is not {nameof(ReadOnlyTable)} cannot be used in Relation");
+					continue;
+				}
+
+				baseTables.Add(roTable.BaseTable);
+			}
 			if (datasetContext is IQueryTableContext queryContext &&
 			    queryContext.CanOpenQueryTables())
 			{
@@ -83,19 +94,19 @@ namespace ProSuite.QA.TestFactories
 					queryContext.GetRelationshipClassName(associationName, uniqueModel);
 
 				queryTable = queryContext.OpenQueryTable(relationshipClassName, uniqueModel,
-				                                         tables, joinType, whereClause);
+				                                         baseTables, joinType, whereClause);
 			}
 			else
 			{
 				IRelationshipClass relationshipClass = OpenRelationshipClass(associationName,
 				                                                             datasetContext);
 				queryTable = RelationshipClassUtils.GetQueryTable(
-					relationshipClass, tables, joinType, whereClause);
+					relationshipClass, baseTables, joinType, whereClause);
 
 				relationshipClassName = DatasetUtils.GetName(relationshipClass);
 			}
 
-			return queryTable;
+			return ReadOnlyTableFactory.Create(queryTable);
 		}
 
 		[NotNull]
