@@ -15,8 +15,10 @@ namespace ProSuite.DomainServices.AO.QA
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		public static ICollection<Dataset> GetQualityConditionDatasets(
-			QualitySpecification qualitySpecification)
+			QualitySpecification qualitySpecification,
+			out ICollection<QualityCondition> conditions)
 		{
+			conditions = new List<QualityCondition>();
 			var datasets = new List<Dataset>();
 			foreach (QualitySpecificationElement element in qualitySpecification.Elements)
 			{
@@ -26,10 +28,13 @@ namespace ProSuite.DomainServices.AO.QA
 				}
 
 				QualityCondition condition = element.QualityCondition;
+
 				foreach (Dataset dataset in condition.GetDatasetParameterValues())
 				{
 					datasets.Add(dataset);
 				}
+
+				conditions.Add(condition);
 			}
 
 			return datasets;
