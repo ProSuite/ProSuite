@@ -3,7 +3,7 @@ set TargetFrameworkVersion=v4.8
 set TargetFrameworkVersionShort=net48
 
 set VSArcGISProduct=ArcGIS
-set VSArcGISVersion=10.8\
+set VSArcGISVersion=10.8
 set ArcGISAssemblyPath=..\..\..\EsriDE.Commons\lib\ESRI\ArcGIS
 
 rem set ProSuiteEncryptorFactoryDir=..\..\..\EsriCH.ProSuiteSolution\src\EsriCH.ProSuiteSolution.Core\SymmetricEncryption 
