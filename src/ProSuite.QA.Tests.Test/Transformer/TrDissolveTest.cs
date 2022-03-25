@@ -66,7 +66,8 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 			TrDissolve dissolve =
-				new TrDissolve(fc) {Search = 1, NeighborSearchOption = TrDissolve.SearchOption.All};
+				new TrDissolve(ReadOnlyTableFactory.Create(fc))
+				{Search = 1, NeighborSearchOption = TrDissolve.SearchOption.All};
 			QaMinLength test = new QaMinLength(dissolve.GetTransformed(), 100);
 
 			{
@@ -129,7 +130,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 			TrDissolve dissolve =
-				new TrDissolve(fc)
+				new TrDissolve(ReadOnlyTableFactory.Create(fc))
 				{
 					Search = 1,
 					NeighborSearchOption = TrDissolve.SearchOption.All,
@@ -296,9 +297,9 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 			TrTableJoin joined =
-				new TrTableJoin((ITable) lineFc, table, relRoute, JoinType.InnerJoin);
+				new TrTableJoin(ReadOnlyTableFactory.Create(lineFc), ReadOnlyTableFactory.Create(table), relRoute, JoinType.InnerJoin);
 			TrDissolve dissolve =
-				new TrDissolve((IFeatureClass) joined.GetTransformed())
+				new TrDissolve((IReadOnlyFeatureClass)joined.GetTransformed())
 				{
 					Search = 1,
 					Attributes = new List<string> {"Min(RouteTbl.RouteFk) AS MinRouteFk"},
@@ -406,13 +407,15 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 			TrDissolve dissolve =
-				new TrDissolve(lineFc)
+				new TrDissolve(ReadOnlyTableFactory.Create(lineFc))
 				{
 					Search = 1,
 					NeighborSearchOption = TrDissolve.SearchOption.All
 				};
 			TrLineToPoly lineToPoly = new TrLineToPoly(dissolve.GetTransformed());
-			QaIntersectsOther test = new QaIntersectsOther(lineToPoly.GetTransformed(), ptFc);
+			QaIntersectsOther test = new QaIntersectsOther(
+				lineToPoly.GetTransformed(),
+				ReadOnlyTableFactory.Create(ptFc));
 
 			{
 				var runner = new QaContainerTestRunner(1000, test);

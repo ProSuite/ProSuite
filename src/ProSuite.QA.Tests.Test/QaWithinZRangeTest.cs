@@ -8,6 +8,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -262,7 +263,7 @@ namespace ProSuite.QA.Tests.Test
 		                                        double maxZValue,
 		                                        int expectedErrorCount)
 		{
-			var test = new QaWithinZRange(featureClass, minZValue, maxZValue);
+			var test = new QaWithinZRange(ReadOnlyTableFactory.Create(featureClass), minZValue, maxZValue);
 
 			var runner = new QaTestRunner(test) {KeepGeometry = true};
 			runner.Execute();

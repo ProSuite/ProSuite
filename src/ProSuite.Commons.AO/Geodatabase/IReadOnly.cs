@@ -163,6 +163,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 	}
 	public class ReadOnlyRow : IReadOnlyRow
 	{
+		public static ReadOnlyFeature Create(IFeature row)
+		{
+			ReadOnlyTable tbl = ReadOnlyTableFactory.Create(row.Table);
+			ReadOnlyFeatureClass fc = (ReadOnlyFeatureClass) tbl;
+			return new ReadOnlyFeature(fc, row);
+		}
+
 		public static ReadOnlyRow Create(IRow row)
 		{
 			ReadOnlyTable tbl = ReadOnlyTableFactory.Create(row.Table);

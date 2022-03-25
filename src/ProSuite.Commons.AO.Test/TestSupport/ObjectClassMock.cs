@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase;
@@ -6,7 +8,7 @@ using ProSuite.Commons.AO.Geodatabase;
 namespace ProSuite.Commons.AO.Test.TestSupport
 {
 	public class ObjectClassMock : IObjectClass, ITable, IDataset, ISubtypes, IDatasetEdit,
-	                               IEquatable<IObjectClass>
+	                               IEquatable<IObjectClass>, IReadOnlyTable
 	{
 		private readonly FieldsMock _fieldsMock = new FieldsMock();
 		private const string _oidFieldName = "OBJECTID";
@@ -158,8 +160,10 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		}
 
 		string IDataset.Name => _name;
+		string IReadOnlyDataset.Name => _name;
 
 		IName IDataset.FullName => null;
+		IName IReadOnlyDataset.FullName => null;
 
 		string IDataset.BrowseName
 		{
@@ -180,6 +184,7 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 		}
 
 		IWorkspace IDataset.Workspace => _workspaceMock;
+		IWorkspace IReadOnlyDataset.Workspace => _workspaceMock;
 
 		internal void SetWorkspace(WorkspaceMock workspaceMock)
 		{
@@ -200,6 +205,10 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			return CreateObject(GetNextOID());
 		}
 
+		IReadOnlyRow IReadOnlyTable.GetRow(int oid)
+		{
+			throw new NotImplementedException();
+		}
 		IRow ITable.GetRow(int OID)
 		{
 			throw new NotImplementedException();
@@ -225,7 +234,10 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			throw new NotImplementedException();
 		}
 
-		int ITable.RowCount(IQueryFilter QueryFilter)
+		int IReadOnlyTable.RowCount(IQueryFilter filter) => RowCount(filter);
+
+		int ITable.RowCount(IQueryFilter QueryFilter) => RowCount(QueryFilter);
+		private int RowCount(IQueryFilter QueryFilter)
 		{
 			if (RowCountResult.HasValue)
 			{
@@ -235,6 +247,8 @@ namespace ProSuite.Commons.AO.Test.TestSupport
 			throw new InvalidOperationException("No row count result specified for mock");
 		}
 
+		IEnumerable<IReadOnlyRow> IReadOnlyTable.EnumRows(IQueryFilter filter, bool recycle) =>
+			throw new NotImplementedException();
 		ICursor ITable.Search(IQueryFilter QueryFilter, bool Recycling) =>
 			Search(QueryFilter, Recycling);
 

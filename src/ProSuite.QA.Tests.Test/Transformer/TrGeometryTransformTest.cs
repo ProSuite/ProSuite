@@ -57,16 +57,20 @@ namespace ProSuite.QA.Tests.Test.Transformer
 			}
 
 			{
-				TrGeometryToPoints tr = new TrGeometryToPoints(lineFc, GeometryComponent.Vertices);
-				QaPointNotNear test = new QaPointNotNear(tr.GetTransformed(), refFc, 2);
+				TrGeometryToPoints tr = new TrGeometryToPoints(
+					ReadOnlyTableFactory.Create(lineFc), GeometryComponent.Vertices);
+				QaPointNotNear test = new QaPointNotNear(
+					tr.GetTransformed(),
+					ReadOnlyTableFactory.Create(refFc), 2);
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(2, runner.Errors.Count);
 			}
 			{
-				TrGeometryToPoints tr =
-					new TrGeometryToPoints(pntFc, GeometryComponent.EntireGeometry);
-				QaPointNotNear test = new QaPointNotNear(tr.GetTransformed(), refFc, 2);
+				TrGeometryToPoints tr = new TrGeometryToPoints(
+					ReadOnlyTableFactory.Create(pntFc), GeometryComponent.EntireGeometry);
+				QaPointNotNear test = new QaPointNotNear(
+					tr.GetTransformed(), ReadOnlyTableFactory.Create(refFc), 2);
 				var runner = new QaContainerTestRunner(1000, test);
 				runner.Execute();
 				Assert.AreEqual(1, runner.Errors.Count);
@@ -88,7 +92,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				f.Store();
 			}
 
-			TrMultilineToLine tr = new TrMultilineToLine(lineFc);
+			TrMultilineToLine tr = new TrMultilineToLine(ReadOnlyTableFactory.Create(lineFc));
 			QaMinLength test = new QaMinLength(tr.GetTransformed(), 100);
 			{
 				var runner = new QaContainerTestRunner(1000, test);
@@ -124,7 +128,7 @@ namespace ProSuite.QA.Tests.Test.Transformer
 				f.Store();
 			}
 
-			TrMultipolygonToPolygon tr = new TrMultipolygonToPolygon(lineFc);
+			TrMultipolygonToPolygon tr = new TrMultipolygonToPolygon(ReadOnlyTableFactory.Create(lineFc));
 			QaMinArea test = new QaMinArea(tr.GetTransformed(), 850);
 			{
 				var runner = new QaContainerTestRunner(1000, test);

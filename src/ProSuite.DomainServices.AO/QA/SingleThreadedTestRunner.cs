@@ -35,7 +35,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 		private TestContainer _executeContainer;
 
-		private IRow _currentRow;
+		private IReadOnlyRow _currentRow;
 
 		public SingleThreadedTestRunner(
 			Dictionary<ITest, TestVerification> testVerifications,
@@ -164,10 +164,10 @@ namespace ProSuite.DomainServices.AO.QA
 					continue;
 				}
 
-				ITable table = relGeomTest.Table;
+				IReadOnlyTable table = relGeomTest.Table;
 				IList<ITest> testsForTable = relGeomTest.Tests;
 
-				IList<IRow> rows;
+				IList<IReadOnlyRow> rows;
 				using (progressWatch.MakeTransaction(
 					Step.DataLoading, Step.DataLoaded, tableIndex, tableCount, table))
 				{
@@ -225,7 +225,7 @@ namespace ProSuite.DomainServices.AO.QA
 			_msg.DebugStopTiming(watch, "VerifyByRelatedGeometry()");
 		}
 
-		private void Verify([NotNull] ITest test, [NotNull] IEnumerable<IRow> rows)
+		private void Verify([NotNull] ITest test, [NotNull] IEnumerable<IReadOnlyRow> rows)
 		{
 			Assert.ArgumentNotNull(test, nameof(test));
 			Assert.ArgumentNotNull(rows, nameof(rows));
@@ -266,8 +266,8 @@ namespace ProSuite.DomainServices.AO.QA
 		}
 
 		[NotNull]
-		private IList<IRow> GetRowsByRelatedGeometry(
-			[NotNull] ITable table,
+		private IList<IReadOnlyRow> GetRowsByRelatedGeometry(
+			[NotNull] IReadOnlyTable table,
 			[NotNull] IObjectDataset objectDataset,
 			[NotNull] ITest testWithTable,
 			[NotNull] IEnumerable<IList<IRelationshipClass>> relClassChains)
@@ -287,10 +287,10 @@ namespace ProSuite.DomainServices.AO.QA
 
 			if (oids.Count == 0)
 			{
-				return new List<IRow>();
+				return new List<IReadOnlyRow>();
 			}
 
-			return new List<IRow>(GdbQueryUtils.GetRowsInList(
+			return new List<IReadOnlyRow>(GdbQueryUtils.GetRowsInList(
 				                      table, table.OIDFieldName, oids,
 				                      recycle: false));
 		}
@@ -422,7 +422,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 			if (LocationBasedQualitySpecification != null)
 			{
-				var feature = e.Row as IFeature;
+				var feature = e.Row as IReadOnlyFeature;
 
 				if (feature != null &&
 				    ! LocationBasedQualitySpecification.IsFeatureToBeTested(
@@ -518,7 +518,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 		private bool TryReportStopInfo(
 			[NotNull] StopInfo stopInfo,
-			[NotNull] IRow row,
+			[NotNull] IReadOnlyRow row,
 			[NotNull] QualityConditionVerification qualityConditionVerification)
 		{
 			Assert.ArgumentNotNull(stopInfo, nameof(stopInfo));

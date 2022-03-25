@@ -289,17 +289,17 @@ namespace ProSuite.DomainServices.AO.QA
 
 		[CanBeNull]
 		private IObjectDataset GetInvolvedObjectDataset(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] ITest testWithTable,
 			[NotNull] IQualityConditionObjectDatasetResolver datasetResolver)
 		{
 			return datasetResolver.GetDatasetByGdbTableName(
-				DatasetUtils.GetName(table), _getQualityCondition(testWithTable));
+				table.Name, _getQualityCondition(testWithTable));
 		}
 
 		[NotNull]
 		private IEnumerable<IList<IRelationshipClass>> GetRelClassChains(
-			[NotNull] ITable table,
+			[NotNull] IReadOnlyTable table,
 			[NotNull] IObjectDataset objectDataset,
 			[NotNull] ITest testWithTable,
 			out bool hasAnyAssociationsToFeatureClasses)

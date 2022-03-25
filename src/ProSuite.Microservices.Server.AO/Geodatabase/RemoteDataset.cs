@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
-using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -15,12 +14,13 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 {
 	public class RemoteDataset : BackingDataset
 	{
-		private readonly ITable _schema;
+		private readonly GdbTable _schema;
 		[CanBeNull] private readonly ClassDef _classDefinition;
 		[CanBeNull] private readonly RelationshipClassQuery _queryDefinition;
 
 		private IEnvelope _extent;
 
+		// TODO: use GdbTable instead of ITable in Constr
 		public RemoteDataset(
 			[NotNull] ITable schema,
 			[NotNull] Func<DataVerificationResponse, DataVerificationRequest> getRemoteDataFunc,
@@ -30,7 +30,7 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			Assert.True(classDefinition != null | queryDefinition != null,
 			            "Either the class definition or the query definition must be provided.");
 
-			_schema = schema;
+			_schema = (GdbTable)schema;
 			_classDefinition = classDefinition;
 			_queryDefinition = queryDefinition;
 
@@ -52,11 +52,11 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			}
 		}
 
-		public override IRow GetRow(int id)
+		public override VirtualRow GetRow(int id)
 		{
-			Assert.True(_schema.HasOID, "The table {0} has no OID", DatasetUtils.GetName(_schema));
+			Assert.True(_schema.HasOID, "The table {0} has no OID", _schema.Name);
 			Assert.False(string.IsNullOrEmpty(_schema.OIDFieldName),
-			             "The table {0} has no OID Field Name", DatasetUtils.GetName(_schema));
+			             "The table {0} has no OID Field Name", _schema.Name);
 
 			DataVerificationResponse response =
 				new DataVerificationResponse
@@ -110,7 +110,7 @@ namespace ProSuite.Microservices.Server.AO.Geodatabase
 			return moreData.Data.GdbObjectCount;
 		}
 
-		public override IEnumerable<IRow> Search(IQueryFilter filter, bool recycling)
+		public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
 		{
 			DataRequest dataRequest = CreateDataRequest(filter);
 

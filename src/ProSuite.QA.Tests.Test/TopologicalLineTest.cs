@@ -9,6 +9,7 @@ using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -473,7 +474,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeature feature = featureClassMock.CreateFeature(polyline);
 
 			const int tableIndex = 0;
-			return new TopologicalLine(new TableIndexRow(feature, tableIndex), -1);
+			return new TopologicalLine(new TableIndexRow(ReadOnlyRow.Create(feature), tableIndex), -1);
 		}
 
 		private static ISpatialReference CreateSpatialReference()

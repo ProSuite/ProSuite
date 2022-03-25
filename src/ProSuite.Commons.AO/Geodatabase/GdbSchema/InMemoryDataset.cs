@@ -12,10 +12,14 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		private IEnvelope _extent;
 
 		public InMemoryDataset(IReadOnlyTable schema,
-		                       IList<VirtualRow> allRows)
+		                       IList<IRow> allRows)
 		{
 			_schema = schema;
-			AllRows = allRows;
+			AllRows = allRows.Select(r =>
+			{
+				VirtualRow v = CachedRow.Create(schema, r);
+				return v;
+			}).ToList();
 		}
 
 		public IList<VirtualRow> AllRows { get; }
@@ -69,7 +73,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				             SpatialReference = DatasetUtils.GetSpatialReference(featureClass)
 			             };
 
-			foreach (IReadOnlyRow row in AllRows)
+			foreach (var row in AllRows)
 			{
 				IReadOnlyFeature feature = (IReadOnlyFeature) row;
 				result.Union(feature.Extent);
@@ -91,6 +95,35 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			IGeometry searchGeometry = spatialFilter.Geometry;
 
 			return GeometryUtils.Intersects(searchGeometry, feature.Shape);
+		}
+
+		private class CachedFeature : CachedRow, IReadOnlyFeature
+		{
+			public CachedFeature(IReadOnlyFeatureClass schema, IFeature sourceFeature)
+				: base(schema, sourceFeature) { }
+
+			public IReadOnlyFeatureClass FeatureClass =>
+				(IReadOnlyFeatureClass)_schema;
+		}
+		private class CachedRow : VirtualRow
+		{
+			public static CachedRow Create(IReadOnlyTable schema, IRow row)
+			{
+				if (row is IFeature f)
+				{
+					return new CachedFeature((IReadOnlyFeatureClass)schema, f);
+				}
+
+				return new CachedRow(schema, row);
+			}
+			private readonly IRow _sourceRow;
+			protected readonly IReadOnlyTable _schema;
+
+			protected CachedRow(IReadOnlyTable schema, IRow sourceRow)
+			{
+				_sourceRow = sourceRow;
+				_schema = schema;
+			}
 		}
 	}
 }

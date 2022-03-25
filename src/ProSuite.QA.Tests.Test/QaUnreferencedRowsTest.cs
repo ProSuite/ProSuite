@@ -72,9 +72,10 @@ namespace ProSuite.QA.Tests.Test
 			CreateRow(tbl3, 2);
 			CreateRow(tbl3, 4);
 
-			var test = new QaUnreferencedRows(tbl1,
-			                                  new[] {tbl2, tbl3},
-			                                  new[] {"pk,fk", "pk,fk"});
+			var test = new QaUnreferencedRows(
+				ReadOnlyTableFactory.Create(tbl1),
+				new[] { ReadOnlyTableFactory.Create(tbl2), ReadOnlyTableFactory.Create(tbl3) },
+				new[] { "pk,fk", "pk,fk" });
 
 			using (var r = new QaTestRunner(test))
 			{
@@ -132,9 +133,10 @@ namespace ProSuite.QA.Tests.Test
 				}
 			}
 
-			var test = new QaUnreferencedRows(tbl1,
-			                                  new[] {tbl2, tbl3},
-			                                  new[] {"pk,fk", "pk,fk"});
+			var test = new QaUnreferencedRows(
+				ReadOnlyTableFactory.Create(tbl1),
+				new[] { ReadOnlyTableFactory.Create(tbl2), ReadOnlyTableFactory.Create(tbl3) },
+				new[] { "pk,fk", "pk,fk" });
 
 			using (var r = new QaTestRunner(test))
 			{
@@ -190,9 +192,10 @@ namespace ProSuite.QA.Tests.Test
 			CreateRow(tbl3, 2);
 			CreateRow(tbl3, 4);
 
-			var test = new QaUnreferencedRows(tbl1,
-			                                  new[] {tbl2, tbl3},
-			                                  new[] {"pk,fk", "pk,fk"});
+			var test = new QaUnreferencedRows(
+				ReadOnlyTableFactory.Create(tbl1),
+				new[] { ReadOnlyTableFactory.Create(tbl2), ReadOnlyTableFactory.Create(tbl3) },
+				new[] { "pk,fk", "pk,fk" });
 
 			using (var r = new QaTestRunner(test))
 			{
@@ -248,9 +251,10 @@ namespace ProSuite.QA.Tests.Test
 
 			((IWorkspaceEdit) ws).StopEditing(true);
 
-			var test = new QaUnreferencedRows(tbl1,
-			                                  new[] {tbl2},
-			                                  new[] {"pk,pk,TestNMRelationRel,fk,fk"});
+			var test = new QaUnreferencedRows(
+				ReadOnlyTableFactory.Create(tbl1),
+				new[] { ReadOnlyTableFactory.Create(tbl2) },
+				new[] { "pk,pk,TestNMRelationRel,fk,fk" });
 
 			using (var r = new QaTestRunner(test))
 			{

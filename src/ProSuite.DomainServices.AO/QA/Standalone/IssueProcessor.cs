@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -29,7 +29,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		[NotNull] private readonly IIssueWriter _issueWriter;
 
 		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+			new Msg(MethodBase.GetCurrentMethod()?.DeclaringType);
 
 		public IssueProcessor(
 			[NotNull] IIssueWriter issueWriter,
@@ -186,7 +186,7 @@ namespace ProSuite.DomainServices.AO.QA.Standalone
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global
 		public bool Fulfilled { get; private set; }
 
-		public bool HasStopCondition([NotNull] IRow row)
+		public bool HasStopCondition([NotNull] IReadOnlyRow row)
 		{
 			return _rowsWithStopConditions.GetStopInfo(row) != null;
 		}

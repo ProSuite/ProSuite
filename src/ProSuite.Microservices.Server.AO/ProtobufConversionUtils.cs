@@ -34,7 +34,7 @@ namespace ProSuite.Microservices.Server.AO
 			[NotNull] ICollection<GdbObjectMsg> gdbObjectMessages,
 			[NotNull] ICollection<ObjectClassMsg> objectClassMessages)
 		{
-			IDictionary<long, IFeatureClass> classesByHandle =
+			IDictionary<long, GdbFeatureClass> classesByHandle =
 				CreateGdbClassByHandleDictionary(objectClassMessages);
 
 			var result = new List<IFeature>();
@@ -50,16 +50,16 @@ namespace ProSuite.Microservices.Server.AO
 			return result;
 		}
 
-		private static IDictionary<long, IFeatureClass> CreateGdbClassByHandleDictionary(
+		private static IDictionary<long, GdbFeatureClass> CreateGdbClassByHandleDictionary(
 			[NotNull] ICollection<ObjectClassMsg> objectClassMsgs)
 		{
-			var result = new Dictionary<long, IFeatureClass>();
+			var result = new Dictionary<long, GdbFeatureClass>();
 
 			foreach (ObjectClassMsg classMsg in objectClassMsgs)
 			{
 				if (! result.ContainsKey(classMsg.ClassHandle))
 				{
-					IFeatureClass gdbTable = (IFeatureClass) FromObjectClassMsg(classMsg, null);
+					GdbFeatureClass gdbTable = (GdbFeatureClass) FromObjectClassMsg(classMsg, null);
 
 					result.Add(classMsg.ClassHandle, gdbTable);
 				}
@@ -80,7 +80,7 @@ namespace ProSuite.Microservices.Server.AO
 			{
 				GdbFeature remoteFeature = FromGdbFeatureMsg(
 					gdbObjectMsg,
-					() => (IFeatureClass) container.GetByClassId((int) gdbObjectMsg.ClassHandle));
+					() => (GdbFeatureClass) container.GetByClassId((int) gdbObjectMsg.ClassHandle));
 
 				result.Add(remoteFeature);
 			}
@@ -293,9 +293,9 @@ namespace ProSuite.Microservices.Server.AO
 
 		public static GdbFeature FromGdbFeatureMsg(
 			[NotNull] GdbObjectMsg gdbObjectMsg,
-			[NotNull] Func<IFeatureClass> getClass)
+			[NotNull] Func<GdbFeatureClass> getClass)
 		{
-			IFeatureClass featureClass = getClass();
+			GdbFeatureClass featureClass = getClass();
 				//(IFeatureClass) tableContainer.GetByClassId((int) gdbObjectMsg.ClassHandle);
 
 			GdbFeature result = CreateGdbFeature(gdbObjectMsg, featureClass);
@@ -305,16 +305,16 @@ namespace ProSuite.Microservices.Server.AO
 
 		public static GdbRow FromGdbObjectMsg(
 			[NotNull] GdbObjectMsg gdbObjectMsg,
-			[NotNull] ITable table)
+			[NotNull] GdbTable table)
 		{
 			GdbRow result;
-			if (table is IFeatureClass featureClass)
+			if (table is GdbFeatureClass featureClass)
 			{
 				result = CreateGdbFeature(gdbObjectMsg, featureClass);
 			}
 			else
 			{
-				result = new GdbRow((int) gdbObjectMsg.ObjectId, (IObjectClass) table);
+				result = new GdbRow((int) gdbObjectMsg.ObjectId, table);
 			}
 
 			ReadMsgValues(gdbObjectMsg, result, table);
@@ -323,7 +323,7 @@ namespace ProSuite.Microservices.Server.AO
 		}
 
 		private static GdbFeature CreateGdbFeature(GdbObjectMsg gdbObjectMsg,
-		                                           IFeatureClass featureClass)
+		                                           GdbFeatureClass featureClass)
 		{
 			ISpatialReference classSpatialRef = DatasetUtils.GetSpatialReference(featureClass);
 

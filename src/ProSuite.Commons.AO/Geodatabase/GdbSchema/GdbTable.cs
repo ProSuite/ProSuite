@@ -59,7 +59,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			if (createBackingDataset == null)
 			{
-				BackingDataset = new InMemoryDataset(this, new List<VirtualRow>(0));
+				BackingDataset = new InMemoryDataset(this, new List<IRow>(0));
 			}
 			else
 			{

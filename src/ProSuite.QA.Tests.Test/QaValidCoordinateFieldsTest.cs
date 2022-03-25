@@ -58,9 +58,10 @@ namespace ProSuite.QA.Tests.Test
 			                                 y, y,
 			                                 z, z);
 
-			var test = new QaValidCoordinateFields(featureClass,
-			                                       _fieldNameX, _fieldNameY, _fieldNameZ,
-			                                       _xyTolerance, _zTolerance, _culture);
+			var test = new QaValidCoordinateFields(
+				ReadOnlyTableFactory.Create(featureClass),
+				_fieldNameX, _fieldNameY, _fieldNameZ,
+				_xyTolerance, _zTolerance, _culture);
 
 			var runner = new QaTestRunner(test);
 
@@ -86,9 +87,10 @@ namespace ProSuite.QA.Tests.Test
 			                                 y, null,
 			                                 z, null);
 
-			var test = new QaValidCoordinateFields(featureClass,
-			                                       _fieldNameX, null, null,
-			                                       _xyTolerance, _zTolerance, _culture);
+			var test = new QaValidCoordinateFields(
+				ReadOnlyTableFactory.Create(featureClass),
+				_fieldNameX, null, null,
+				_xyTolerance, _zTolerance, _culture);
 
 			var runner = new QaTestRunner(test);
 
@@ -118,9 +120,10 @@ namespace ProSuite.QA.Tests.Test
 			                                 y, y + 1.01 * _xyTolerance,
 			                                 z, null);
 
-			var test = new QaValidCoordinateFields(featureClass,
-			                                       null, _fieldNameY, null,
-			                                       _xyTolerance, _zTolerance, _culture);
+			var test = new QaValidCoordinateFields(
+				ReadOnlyTableFactory.Create(featureClass),
+				null, _fieldNameY, null,
+				_xyTolerance, _zTolerance, _culture);
 
 			var runner = new QaTestRunner(test);
 
@@ -150,9 +153,10 @@ namespace ProSuite.QA.Tests.Test
 			                                 y, null,
 			                                 z, z + 1.01 * _zTolerance);
 
-			var test = new QaValidCoordinateFields(featureClass,
-			                                       null, null, _fieldNameZ,
-			                                       _xyTolerance, _zTolerance, _culture);
+			var test = new QaValidCoordinateFields(
+				ReadOnlyTableFactory.Create(featureClass),
+				null, null, _fieldNameZ,
+				_xyTolerance, _zTolerance, _culture);
 
 			var runner = new QaTestRunner(test);
 
@@ -184,9 +188,10 @@ namespace ProSuite.QA.Tests.Test
 				y, string.Format(_cultureInfo, "{0:N3}", y),
 				z, string.Format(_cultureInfo, "{0:N3}", z));
 
-			var test = new QaValidCoordinateFields(featureClass,
-			                                       _fieldNameX, _fieldNameY, _fieldNameZ,
-			                                       _xyTolerance, _zTolerance, _culture);
+			var test = new QaValidCoordinateFields(
+				ReadOnlyTableFactory.Create(featureClass),
+				_fieldNameX, _fieldNameY, _fieldNameZ,
+				_xyTolerance, _zTolerance, _culture);
 
 			var runner = new QaTestRunner(test);
 
@@ -215,9 +220,10 @@ namespace ProSuite.QA.Tests.Test
 				y, string.Format(_cultureInfo, "{0:N3}", y),
 				z, string.Format(_cultureInfo, "{0:N3}", z + 1.01 * _zTolerance));
 
-			var test = new QaValidCoordinateFields(featureClass,
-			                                       _fieldNameX, _fieldNameY, _fieldNameZ,
-			                                       _xyTolerance, _zTolerance, _culture);
+			var test = new QaValidCoordinateFields(
+				ReadOnlyTableFactory.Create(featureClass),
+				_fieldNameX, _fieldNameY, _fieldNameZ,
+				_xyTolerance, _zTolerance, _culture);
 
 			var runner = new QaTestRunner(test);
 
@@ -259,9 +265,10 @@ namespace ProSuite.QA.Tests.Test
 				y, string.Format(_cultureInfo, "{0:N3}", y - 1.01 * _xyTolerance),
 				z: 100, zFieldValue: "100");
 
-			var test = new QaValidCoordinateFields(featureClass,
-			                                       _fieldNameX, _fieldNameY, _fieldNameZ,
-			                                       _xyTolerance, _zTolerance, _culture);
+			var test = new QaValidCoordinateFields(
+				ReadOnlyTableFactory.Create(featureClass),
+				_fieldNameX, _fieldNameY, _fieldNameZ,
+				_xyTolerance, _zTolerance, _culture);
 
 			var runner = new QaTestRunner(test);
 
@@ -290,9 +297,10 @@ namespace ProSuite.QA.Tests.Test
 				y, string.Format(_cultureInfo, "{0:N3}", y - 0.9 * _xyTolerance),
 				z: 100, zFieldValue: "100");
 
-			var test = new QaValidCoordinateFields(featureClass,
-			                                       _fieldNameX, _fieldNameY, _fieldNameZ,
-			                                       _xyTolerance, _zTolerance, _culture);
+			var test = new QaValidCoordinateFields(
+				ReadOnlyTableFactory.Create(featureClass),
+				_fieldNameX, _fieldNameY, _fieldNameZ,
+				_xyTolerance, _zTolerance, _culture);
 
 			var runner = new QaTestRunner(test);
 
@@ -321,9 +329,10 @@ namespace ProSuite.QA.Tests.Test
 			                                 y, "b",
 			                                 z, "c");
 
-			var test = new QaValidCoordinateFields(featureClass,
-			                                       _fieldNameX, _fieldNameY, _fieldNameZ,
-			                                       _xyTolerance, _zTolerance, _culture);
+			var test = new QaValidCoordinateFields(
+				ReadOnlyTableFactory.Create(featureClass),
+				_fieldNameX, _fieldNameY, _fieldNameZ,
+				_xyTolerance, _zTolerance, _culture);
 
 			var runner = new QaTestRunner(test);
 
@@ -364,9 +373,10 @@ namespace ProSuite.QA.Tests.Test
 			                                 z, z);
 			feature.Shape.SetEmpty();
 
-			var test = new QaValidCoordinateFields(featureClass,
-			                                       _fieldNameX, _fieldNameY, _fieldNameZ,
-			                                       _xyTolerance, _zTolerance, _culture);
+			var test = new QaValidCoordinateFields(
+				ReadOnlyTableFactory.Create(featureClass),
+				_fieldNameX, _fieldNameY, _fieldNameZ,
+				_xyTolerance, _zTolerance, _culture);
 
 			var runner = new QaTestRunner(test);
 
@@ -407,9 +417,10 @@ namespace ProSuite.QA.Tests.Test
 			                                 y, null,
 			                                 z, z);
 
-			var test = new QaValidCoordinateFields(featureClass,
-			                                       _fieldNameX, _fieldNameY, _fieldNameZ,
-			                                       _xyTolerance, _zTolerance, _culture)
+			var test = new QaValidCoordinateFields(
+				           ReadOnlyTableFactory.Create(featureClass),
+				           _fieldNameX, _fieldNameY, _fieldNameZ,
+				           _xyTolerance, _zTolerance, _culture)
 			           {
 				           AllowMissingXYFieldValueForDefinedShape = false,
 				           AllowMissingZFieldValueForDefinedShape = false
@@ -453,9 +464,10 @@ namespace ProSuite.QA.Tests.Test
 			                                 y, y,
 			                                 z, null);
 
-			var test = new QaValidCoordinateFields(featureClass,
-			                                       _fieldNameX, _fieldNameY, _fieldNameZ,
-			                                       _xyTolerance, _zTolerance, _culture)
+			var test = new QaValidCoordinateFields(
+				           ReadOnlyTableFactory.Create(featureClass),
+				           _fieldNameX, _fieldNameY, _fieldNameZ,
+				           _xyTolerance, _zTolerance, _culture)
 			           {
 				           AllowMissingXYFieldValueForDefinedShape = false,
 				           AllowMissingZFieldValueForDefinedShape = false
@@ -497,9 +509,10 @@ namespace ProSuite.QA.Tests.Test
 			                                 z, z);
 			feature.Shape.SetEmpty();
 
-			var test = new QaValidCoordinateFields(featureClass,
-			                                       _fieldNameX, _fieldNameY, _fieldNameZ,
-			                                       _xyTolerance, _zTolerance, _culture)
+			var test = new QaValidCoordinateFields(
+				           ReadOnlyTableFactory.Create(featureClass),
+				           _fieldNameX, _fieldNameY, _fieldNameZ,
+				           _xyTolerance, _zTolerance, _culture)
 			           {
 				           AllowXYFieldValuesForUndefinedShape = true,
 				           AllowZFieldValueForUndefinedShape = true
