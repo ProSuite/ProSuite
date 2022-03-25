@@ -243,15 +243,23 @@
     <Compile Include="QA\Xml\XmlDataQualityDocument.cs" />
     <Compile Include="QA\Xml\XmlDataQualityUtils.cs" />
     <Compile Include="QA\Xml\XmlDatasetTestParameterValue.cs" />
+    <Compile Include="QA\Xml\XmlDescriptor.cs" />
     <Compile Include="QA\Xml\XmlDeserializationException.cs" />
     <Compile Include="QA\Xml\XmlFilterExpression.cs" />
+    <Compile Include="QA\Xml\XmlInstanceConfiguration.cs" />
+    <Compile Include="QA\Xml\XmlIssueFilterConfiguration.cs" />
+    <Compile Include="QA\Xml\XmlIssueFilterDescriptor.cs" />
     <Compile Include="QA\Xml\XmlQualityCondition.cs" />
     <Compile Include="QA\Xml\XmlQualityConditionsCache.cs" />
     <Compile Include="QA\Xml\XmlQualitySpecification.cs" />
     <Compile Include="QA\Xml\XmlQualitySpecificationElement.cs" />
+    <Compile Include="QA\Xml\XmlRowFilterConfiguration.cs" />
+    <Compile Include="QA\Xml\XmlRowFilterDescriptor.cs" />
     <Compile Include="QA\Xml\XmlScalarTestParameterValue.cs" />
     <Compile Include="QA\Xml\XmlTestDescriptor.cs" />
     <Compile Include="QA\Xml\XmlTestParameterValue.cs" />
+    <Compile Include="QA\Xml\XmlTransformerConfiguration.cs" />
+    <Compile Include="QA\Xml\XmlTransformerDescriptor.cs" />
     <Compile Include="QA\Xml\XmlWorkspace.cs" />
     <Compile Include="Schemas\Schema.Designer.cs">
       <AutoGen>True</AutoGen>
