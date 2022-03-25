@@ -102,8 +102,9 @@ namespace ProSuite.QA.Tests.Test
 			                                      .LineTo(6, 7)
 			                                      .ClosePolygon());
 
-			var test = new QaIntersectsOther(lineFc, areaFc);
-			test.IgnoreArea = ignoreFc;
+			var test = new QaIntersectsOther(ReadOnlyTableFactory.Create(lineFc),
+			                                 ReadOnlyTableFactory.Create(areaFc));
+			test.IgnoreArea = ReadOnlyTableFactory.Create(ignoreFc);
 			test.SetConstraint(2, "objektart in (10)");
 			{
 				// Container test

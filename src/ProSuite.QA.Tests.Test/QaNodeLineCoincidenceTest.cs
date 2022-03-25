@@ -40,7 +40,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass lineClass = CreateFeatureClass(string.Format("{0}_near", testName),
 			                                             esriGeometryType.esriGeometryPolyline);
 
-			var nearClasses = new List<IFeatureClass> {lineClass};
+			var nearClasses = new [] { ReadOnlyTableFactory.Create(lineClass)};
 
 			IPolycurve multipartLine = CurveConstruction.StartLine(0, 0)
 			                                            .LineTo(100, 0)
@@ -56,7 +56,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaNodeLineCoincidence(lineClass, nearClasses, 2);
+			var test = new QaNodeLineCoincidence(
+				ReadOnlyTableFactory.Create(lineClass), nearClasses, 2);
 
 			var runner = new QaContainerTestRunner(200, test);
 			runner.Execute(verificationEnvelope);
@@ -75,7 +76,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass nearClass = CreateFeatureClass(string.Format("{0}_near", testName),
 			                                             esriGeometryType.esriGeometryPolyline);
 
-			var nearClasses = new List<IFeatureClass> {nearClass};
+			var nearClasses = new [] { ReadOnlyTableFactory.Create(nearClass)};
 
 			IFeature nodeRow = nodeClass.CreateFeature();
 			nodeRow.Shape = GeometryFactory.CreatePoint(201, 100);
@@ -91,7 +92,7 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaNodeLineCoincidence(nodeClass, nearClasses, 2.1);
+			var test = new QaNodeLineCoincidence(ReadOnlyTableFactory.Create(nodeClass), nearClasses, 2.1);
 
 			var runner = new QaContainerTestRunner(200, test);
 			runner.Execute(verificationEnvelope);
@@ -110,7 +111,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass nearClass = CreateFeatureClass(string.Format("{0}_near", testName),
 			                                             esriGeometryType.esriGeometryPolyline);
 
-			var nearClasses = new List<IFeatureClass> {nearClass};
+			var nearClasses = new [] { ReadOnlyTableFactory.Create(nearClass)};
 
 			IFeature nodeRow = nodeClass.CreateFeature();
 			nodeRow.Shape = GeometryFactory.CreatePoint(199, 100);
@@ -124,7 +125,7 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaNodeLineCoincidence(nodeClass, nearClasses, 3);
+			var test = new QaNodeLineCoincidence(ReadOnlyTableFactory.Create(nodeClass), nearClasses, 3);
 
 			var runner = new QaContainerTestRunner(200, test);
 			runner.Execute(verificationEnvelope);
@@ -143,7 +144,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass nearClass = CreateFeatureClass(string.Format("{0}_near", testName),
 			                                             esriGeometryType.esriGeometryPolyline);
 
-			var nearClasses = new List<IFeatureClass> {nearClass};
+			var nearClasses = new [] { ReadOnlyTableFactory.Create(nearClass)};
 
 			IFeature nodeRow = nodeClass.CreateFeature();
 			nodeRow.Shape = GeometryFactory.CreatePoint(1, 0.1);
@@ -157,7 +158,7 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaNodeLineCoincidence(nodeClass, nearClasses, 2)
+			var test = new QaNodeLineCoincidence(ReadOnlyTableFactory.Create(nodeClass), nearClasses, 2)
 			           {
 				           CoincidenceTolerance = 0.2
 			           };
@@ -178,7 +179,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass nearClass = CreateFeatureClass(string.Format("{0}_near", testName),
 			                                             esriGeometryType.esriGeometryPolyline);
 
-			var nearClasses = new List<IFeatureClass> {nearClass};
+			var nearClasses = new [] { ReadOnlyTableFactory.Create(nearClass)};
 
 			IFeature nodeRow = nodeClass.CreateFeature();
 			nodeRow.Shape = GeometryFactory.CreatePoint(0, 0);
@@ -192,7 +193,7 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaNodeLineCoincidence(nodeClass, nearClasses, 2);
+			var test = new QaNodeLineCoincidence(ReadOnlyTableFactory.Create(nodeClass), nearClasses, 2);
 
 			var runner = new QaContainerTestRunner(1000, test);
 			runner.Execute(verificationEnvelope);
@@ -223,7 +224,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaNodeLineCoincidence(lineClass, new[] {lineClass}, 2, false);
+			var test = new QaNodeLineCoincidence(
+				ReadOnlyTableFactory.Create(lineClass),
+			                                     new[] { ReadOnlyTableFactory.Create(lineClass)}, 2, false);
 
 			var runner = new QaContainerTestRunner(1000, test);
 			runner.Execute(verificationEnvelope);
@@ -244,7 +247,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass nearClass = CreateFeatureClass(string.Format("{0}_near", testName),
 			                                             esriGeometryType.esriGeometryPolyline);
 
-			var nearClasses = new List<IFeatureClass> {nearClass};
+			var nearClasses = new [] { ReadOnlyTableFactory.Create(nearClass)};
 
 			IFeature nodeRow = nodeClass.CreateFeature();
 			nodeRow.Shape = GeometryFactory.CreatePoint(0, 0);
@@ -259,7 +262,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaNodeLineCoincidence(nodeClass, nearClasses, 2);
+			var test = new QaNodeLineCoincidence(
+				ReadOnlyTableFactory.Create(nodeClass), nearClasses, 2);
 
 			var runner = new QaContainerTestRunner(1000, test);
 			runner.Execute(verificationEnvelope);
@@ -279,7 +283,11 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass nearClass1 = CreateFeatureClass(string.Format("{0}_near1", testName),
 			                                              esriGeometryType.esriGeometryPolyline);
 
-			var nearClasses = new List<IFeatureClass> {nearClass, nearClass1};
+			var nearClasses = new []
+			                  {
+				                  ReadOnlyTableFactory.Create(nearClass),
+				                  ReadOnlyTableFactory.Create(nearClass1)
+			                  };
 
 			IFeature nodeRow = nodeClass.CreateFeature();
 			nodeRow.Shape = GeometryFactory.CreatePoint(100, 100);
@@ -300,8 +308,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaNodeLineCoincidence(nodeClass, nearClasses,
-			                                     new List<double> {1.0, 2.0}, 0, true, false);
+			var test = new QaNodeLineCoincidence(ReadOnlyTableFactory.Create(nodeClass), nearClasses,
+				                                     new List<double> {1.0, 2.0}, 0, true, false);
 
 			var runner = new QaContainerTestRunner(1000, test);
 			runner.Execute(verificationEnvelope);
@@ -322,7 +330,11 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass nearClass1 = CreateFeatureClass(string.Format("{0}_near1", testName),
 			                                              esriGeometryType.esriGeometryPolyline);
 
-			var nearClasses = new List<IFeatureClass> {nearClass, nearClass1};
+			var nearClasses = new []
+			                  {
+				                  ReadOnlyTableFactory.Create(nearClass),
+				                  ReadOnlyTableFactory.Create(nearClass1)
+			                  };
 
 			IFeature nodeRow = nodeClass.CreateFeature();
 			nodeRow.Shape = GeometryFactory.CreatePoint(199, 199);
@@ -343,8 +355,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaNodeLineCoincidence(nodeClass, nearClasses,
-			                                     new List<double> {5.0, 1.0}, 0, false, false);
+			var test = new QaNodeLineCoincidence(
+				ReadOnlyTableFactory.Create(nodeClass), nearClasses,
+				                            new List<double> {5.0, 1.0}, 0, false, false);
 
 			var runner = new QaContainerTestRunner(200, test);
 			runner.Execute(verificationEnvelope);
@@ -363,7 +376,7 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass nearClass = CreateFeatureClass(string.Format("{0}_near", testName),
 			                                             esriGeometryType.esriGeometryPolyline);
 
-			var nearClasses = new List<IFeatureClass> {nearClass};
+			var nearClasses = new [] { ReadOnlyTableFactory.Create(nearClass)};
 
 			IFeature nodeRow = nodeClass.CreateFeature();
 			nodeRow.Shape = GeometryFactory.CreatePoint(0, 0);
@@ -389,7 +402,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaNodeLineCoincidence(nodeClass, nearClasses, 4);
+			var test = new QaNodeLineCoincidence(
+				ReadOnlyTableFactory.Create(nodeClass), nearClasses, 4);
 
 			var runner = new QaContainerTestRunner(1000, test);
 			runner.Execute(verificationEnvelope);
@@ -409,7 +423,11 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass nearClass1 = CreateFeatureClass(string.Format("{0}_near1", testName),
 			                                              esriGeometryType.esriGeometryPolyline);
 
-			var nearClasses = new List<IFeatureClass> {nearClass, nearClass1};
+			var nearClasses = new []
+			                  {
+				                  ReadOnlyTableFactory.Create(nearClass),
+				                  ReadOnlyTableFactory.Create(nearClass1)
+			                  };
 
 			IFeature nodeRow = nodeClass.CreateFeature();
 			nodeRow.Shape = GeometryFactory.CreatePoint(201, 199);
@@ -430,8 +448,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IEnvelope verificationEnvelope = GeometryFactory.CreateEnvelope(0, 0, 500, 500);
 
-			var test = new QaNodeLineCoincidence(nodeClass, nearClasses,
-			                                     new List<double> {2.0, 3.0}, 0, false, false);
+			var test = new QaNodeLineCoincidence(
+				ReadOnlyTableFactory.Create(nodeClass), nearClasses,
+				                            new List<double> {2.0, 3.0}, 0, false, false);
 
 			var runner = new QaContainerTestRunner(200, test);
 			runner.Execute(verificationEnvelope);

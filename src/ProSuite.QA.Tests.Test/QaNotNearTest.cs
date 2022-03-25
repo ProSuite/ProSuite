@@ -78,13 +78,13 @@ namespace ProSuite.QA.Tests.Test
 			row2.Shape = line2;
 			row2.Store();
 
-			var test = new QaNotNear(featureClass, 0.1, 0.5);
+			var test = new QaNotNear(ReadOnlyTableFactory.Create(featureClass), 0.1, 0.5);
 
 			var runners =
 				new List<QaTestRunnerBase>
 				{
-					new QaTestRunner(test) {KeepGeometry = true},
-					new QaContainerTestRunner(1000, test) {KeepGeometry = true}
+					new QaTestRunner(test) { KeepGeometry = true },
+					new QaContainerTestRunner(1000, test) { KeepGeometry = true }
 				};
 
 			foreach (QaTestRunnerBase runner in runners)
@@ -138,14 +138,16 @@ namespace ProSuite.QA.Tests.Test
 			row2.Shape = poly2;
 			row2.Store();
 
-			var test = new QaNotNear(featureClass, featureClass, 0.1, 0.1, is3D: true);
+			var test = new QaNotNear(
+				ReadOnlyTableFactory.Create(featureClass),
+				ReadOnlyTableFactory.Create(featureClass), 0.1, 0.1, is3D: true);
 			test.IgnoreNeighborCondition = "G1.ObjectId = G2.ObjectId";
 
 			var runners =
 				new List<QaTestRunnerBase>
 				{
-					new QaTestRunner(test) {KeepGeometry = true},
-					new QaContainerTestRunner(1000, test) {KeepGeometry = true}
+					new QaTestRunner(test) { KeepGeometry = true },
+					new QaContainerTestRunner(1000, test) { KeepGeometry = true }
 				};
 
 			foreach (QaTestRunnerBase runner in runners)
@@ -203,13 +205,15 @@ namespace ProSuite.QA.Tests.Test
 			}
 
 			// test without ignore conditions --> line is near
-			var test = new QaNotNear(fc1, fc2, 1, 10);
+			var test = new QaNotNear(
+				ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2), 1, 10);
 			var testRunner = new QaTestRunner(test);
 			testRunner.Execute();
 			Assert.AreEqual(1, testRunner.Errors.Count);
 
 			// Same test with ignore conditions --> nothing near
-			test = new QaNotNear(fc1, fc2, 1, 10);
+			test = new QaNotNear(
+				ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2), 1, 10);
 			test.IgnoreNeighborCondition = "G1.LandID = G2.LandID";
 
 			testRunner = new QaTestRunner(test);

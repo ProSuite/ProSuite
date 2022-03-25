@@ -131,8 +131,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureWorkspace workspace = WorkspaceUtils.OpenPgdbFeatureWorkspace(path);
 
 			ITable table = workspace.OpenTable(tableName);
-			var test = new QaSchemaFieldDomainNameRegex(table, pattern, matchIsError,
-			                                            patternDescription);
+			var test = new QaSchemaFieldDomainNameRegex(
+				ReadOnlyTableFactory.Create(table), pattern, matchIsError, patternDescription);
 
 			var runner = new QaTestRunner(test);
 			runner.Execute();

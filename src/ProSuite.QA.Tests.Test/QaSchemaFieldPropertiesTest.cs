@@ -107,8 +107,10 @@ namespace ProSuite.QA.Tests.Test
 			ITable fieldSpecificationsTable = workspace.OpenTable("S_011");
 
 			const bool matchAliasName = true;
-			var test = new QaSchemaFieldPropertiesFromTable(table, fieldSpecificationsTable,
-			                                                matchAliasName);
+			var test = new QaSchemaFieldPropertiesFromTable(
+				ReadOnlyTableFactory.Create(table),
+				ReadOnlyTableFactory.Create(fieldSpecificationsTable),
+				                            matchAliasName);
 
 			var runner = new QaTestRunner(test);
 			runner.Execute();
@@ -120,10 +122,10 @@ namespace ProSuite.QA.Tests.Test
 
 		private class QaSchemaFieldPropertiesFromTable : QaSchemaFieldPropertiesBase
 		{
-			private readonly ITable _fieldSpecificationsTable;
+			private readonly IReadOnlyTable _fieldSpecificationsTable;
 
-			public QaSchemaFieldPropertiesFromTable([NotNull] ITable table,
-			                                        [NotNull] ITable fieldSpecificationsTable,
+			public QaSchemaFieldPropertiesFromTable([NotNull] IReadOnlyTable table,
+			                                        [NotNull] IReadOnlyTable fieldSpecificationsTable,
 			                                        bool matchAliasName)
 				: base(table, matchAliasName, fieldSpecificationsTable)
 			{
@@ -132,7 +134,7 @@ namespace ProSuite.QA.Tests.Test
 
 			[NotNull]
 			private IEnumerable<FieldSpecification> ReadFieldSpecifications(
-				[NotNull] ITable table)
+				[NotNull] IReadOnlyTable table)
 			{
 				int nameFieldIndex = table.FindField("ATTRIBUTE");
 				int typeStringFieldIndex = table.FindField("FIELDTYPE_ARCGIS");
@@ -140,9 +142,9 @@ namespace ProSuite.QA.Tests.Test
 				int accessTypeFieldIndex = table.FindField("FIELDTYPE_ACCESS");
 
 				const bool recycle = true;
-				foreach (IRow row in GdbQueryUtils.GetRows(table, GetQueryFilter(), recycle))
+				foreach (var row in table.EnumRows(GetQueryFilter(), recycle))
 				{
-					var name = row.Value[nameFieldIndex] as string;
+					var name = row.get_Value(nameFieldIndex) as string;
 
 					Console.WriteLine(name);
 					if (string.IsNullOrEmpty(name))
@@ -150,7 +152,7 @@ namespace ProSuite.QA.Tests.Test
 						continue;
 					}
 
-					object type = row.Value[typeStringFieldIndex];
+					object type = row.get_Value(typeStringFieldIndex);
 					var typeString = type as string;
 
 					if (string.IsNullOrEmpty(typeString))
@@ -159,10 +161,10 @@ namespace ProSuite.QA.Tests.Test
 							string.Format("Expected type is undefined: '{0}'", type));
 					}
 
-					var alias = row.Value[aliasFieldIndex] as string;
+					var alias = row.get_Value(aliasFieldIndex) as string;
 					esriFieldType expectedType = GetFieldType(typeString);
 
-					var accessTypeString = row.Value[accessTypeFieldIndex] as string;
+					var accessTypeString = row.get_Value(accessTypeFieldIndex) as string;
 
 					int length = expectedType == esriFieldType.esriFieldTypeString
 						             ? GetTextLength(accessTypeString)

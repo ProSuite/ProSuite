@@ -119,7 +119,8 @@ namespace ProSuite.QA.Tests.Test
 			IMosaicDataset mosaicDataset = DatasetUtils.OpenMosaicDataset(workspace,
 				"TOPGIS_TLM.TLM_DTM_MOSAIC");
 
-			var test = new QaSurfacePipe(fc, new SimpleRasterMosaic(mosaicDataset), 4);
+			var test = new QaSurfacePipe(
+				ReadOnlyTableFactory.Create(fc), new SimpleRasterMosaic(mosaicDataset), 4);
 
 			var runner = new QaContainerTestRunner(10000, test);
 			runner.Execute();

@@ -58,7 +58,7 @@ namespace ProSuite.QA.Tests.Test
 				                 .Curve;
 			row1.Store();
 
-			var test = new QaMinSegAngle(fc, 0.1, true);
+			var test = new QaMinSegAngle(ReadOnlyTableFactory.Create(fc), 0.1, true);
 
 			var runner = new QaContainerTestRunner(1000, test);
 
@@ -84,7 +84,7 @@ namespace ProSuite.QA.Tests.Test
 			row1.Store();
 
 			double limit = FormatUtils.Radians2AngleInUnits(0.1, AngleUnit.Degree);
-			var test = new QaMinSegAngle(fc, limit, true);
+			var test = new QaMinSegAngle(ReadOnlyTableFactory.Create(fc), limit, true);
 			test.AngularUnit = AngleUnit.Degree;
 
 			var runner = new QaContainerTestRunner(1000, test);
@@ -169,7 +169,7 @@ namespace ProSuite.QA.Tests.Test
 				                 .Curve;
 			row1.Store();
 
-			var test = new QaMinSegAngle(fc, 0.1, true) {UseTangents = true};
+			var test = new QaMinSegAngle(ReadOnlyTableFactory.Create(fc), 0.1, true) {UseTangents = true};
 
 			var runner = new QaContainerTestRunner(1000, test);
 
@@ -202,7 +202,7 @@ namespace ProSuite.QA.Tests.Test
 			row1.Shape = polyline;
 			row1.Store();
 
-			var test = new QaMinSegAngle(fc, 0.1, true);
+			var test = new QaMinSegAngle(ReadOnlyTableFactory.Create(fc), 0.1, true);
 
 			var runner = new QaContainerTestRunner(1000, test);
 
@@ -226,7 +226,7 @@ namespace ProSuite.QA.Tests.Test
 			row1.Shape = CreatePolyLine((ISegment) arc);
 			row1.Store();
 
-			var test = new QaMinSegAngle(fc, 0.1, true);
+			var test = new QaMinSegAngle(ReadOnlyTableFactory.Create(fc), 0.1, true);
 
 			var runner = new QaContainerTestRunner(1000, test);
 
@@ -248,7 +248,7 @@ namespace ProSuite.QA.Tests.Test
 			row1.Shape = CreatePolyLine((ISegment) arc);
 			row1.Store();
 
-			var test = new QaMinSegAngle(fc, 0.1, true);
+			var test = new QaMinSegAngle(ReadOnlyTableFactory.Create(fc), 0.1, true);
 
 			var runner = new QaContainerTestRunner(1000, test);
 

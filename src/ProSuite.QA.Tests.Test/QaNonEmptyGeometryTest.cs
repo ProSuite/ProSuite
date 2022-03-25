@@ -53,7 +53,7 @@ namespace ProSuite.QA.Tests.Test
 			feature.Shape = CurveConstruction.StartLine(0, 0).LineTo(10, 10).Curve;
 			feature.Store();
 
-			var test = new QaNonEmptyGeometry(fc);
+			var test = new QaNonEmptyGeometry(ReadOnlyTableFactory.Create(fc));
 			var runner = new QaTestRunner(test);
 			runner.Execute(feature);
 
@@ -71,7 +71,7 @@ namespace ProSuite.QA.Tests.Test
 			feature.Shape = GeometryFactory.CreatePoint(0, 0);
 			feature.Store();
 
-			var test = new QaNonEmptyGeometry(fc);
+			var test = new QaNonEmptyGeometry(ReadOnlyTableFactory.Create(fc));
 			var runner = new QaTestRunner(test);
 			runner.Execute(feature);
 
@@ -89,7 +89,7 @@ namespace ProSuite.QA.Tests.Test
 			feature.Shape = null;
 			feature.Store();
 
-			var test = new QaNonEmptyGeometry(fc);
+			var test = new QaNonEmptyGeometry(ReadOnlyTableFactory.Create(fc));
 			var runner = new QaTestRunner(test);
 			runner.Execute(feature);
 
@@ -108,7 +108,7 @@ namespace ProSuite.QA.Tests.Test
 			feature.Shape = new PolylineClass();
 			feature.Store();
 
-			var test = new QaNonEmptyGeometry(fc);
+			var test = new QaNonEmptyGeometry(ReadOnlyTableFactory.Create(fc));
 			var runner = new QaTestRunner(test);
 			runner.Execute(feature);
 
@@ -128,7 +128,7 @@ namespace ProSuite.QA.Tests.Test
 			feature.Store();
 
 			const bool dontFilterPolycurvesByZeroLength = true;
-			var test = new QaNonEmptyGeometry(fc, dontFilterPolycurvesByZeroLength);
+			var test = new QaNonEmptyGeometry(ReadOnlyTableFactory.Create(fc), dontFilterPolycurvesByZeroLength);
 
 			var runner = new QaTestRunner(test);
 			runner.Execute(feature);
@@ -226,7 +226,7 @@ namespace ProSuite.QA.Tests.Test
 
 		private static void AssertOneErrorEmptyGeometry(IFeatureClass featureClass)
 		{
-			var test = new QaNonEmptyGeometry(featureClass);
+			var test = new QaNonEmptyGeometry(ReadOnlyTableFactory.Create(featureClass));
 			var runner = new QaTestRunner(test);
 			runner.Execute();
 

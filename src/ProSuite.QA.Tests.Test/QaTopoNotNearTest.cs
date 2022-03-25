@@ -52,13 +52,13 @@ namespace ProSuite.QA.Tests.Test
 		public void TestNotNear()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(0, 0).LineTo(10, 10).Curve);
 			AddFeature(fc1, CurveConstruction.StartLine(0, 5).LineTo(10, 5).Curve);
 
-			var test = new QaTopoNotNear(fc1, 1, 2);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, 2);
 
 			AssertErrors(2, Run(test, 1000));
 		}
@@ -67,14 +67,13 @@ namespace ProSuite.QA.Tests.Test
 		public void TestCrossing()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(0, 0).LineTo(10, 10).Curve);
 			AddFeature(fc1, CurveConstruction.StartLine(0, 5).LineTo(4.5, 5).Curve);
 			AddFeature(fc1, CurveConstruction.StartLine(4.5, 5).LineTo(10, 5).Curve);
 
-			var test = new QaTopoNotNear(fc1, 1, 2.1);
+			var test = new QaTopoNotNear(ReadOnlyTableFactory.Create(fc1), 1, 2.1);
 			test.CrossingMinLengthFactor = 20;
 
 			AssertErrors(0, Run(test, 1000));
@@ -84,8 +83,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestCrossingMultiple()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(0, 5)
 			                                 .LineTo(10, 5)
@@ -105,7 +103,8 @@ namespace ProSuite.QA.Tests.Test
 			           doubleValue: 1);
 
 			// var test = new QaTopoNotNear(fc1, 1, 0.3);
-			var test = new QaTopoNotNear(fc1, 1, _doubleFieldName, 5, 0, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 5, 0, false);
 
 			//var test = new QaTopoNotNear(fc1, 1, "IIF(ObjectId=1, 1, IIF(ObjectId=2, 1, IIF(ObjectId=3, 1, 1)))", 5, 0, false);
 
@@ -118,8 +117,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestCrossingMultiple1()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(2, 0)
 			                                 .LineTo(2, 5)
@@ -141,7 +139,8 @@ namespace ProSuite.QA.Tests.Test
 			           doubleValue: 2);
 
 			// var test = new QaTopoNotNear(fc1, 1, 0.3);
-			var test = new QaTopoNotNear(fc1, 1, _doubleFieldName, 5, 0, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 5, 0, false);
 			test.CrossingMinLengthFactor = 20;
 
 			Run(test, 1000);
@@ -151,8 +150,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestNotReported()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			//AddFeature(fc1, CurveConstruction.StartLine(2, 0).LineTo(2, 10).Curve,
 			//		   doubleValue: 1, textFieldValue: "A");
@@ -174,7 +172,8 @@ namespace ProSuite.QA.Tests.Test
 			                            .Curve,
 			           doubleValue: 1, textFieldValue: "A");
 
-			var test = new QaTopoNotNear(fc1, 1, _doubleFieldName, 5, 1.6, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 5, 1.6, false);
 			test.NotReportedCondition =
 				$"G1.{_textFieldName} = 'A' OR G2.{_textFieldName} = 'A'";
 
@@ -185,8 +184,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestSmallConnected()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(0, 0)
 			                                 .LineTo(10, 10)
@@ -201,7 +199,8 @@ namespace ProSuite.QA.Tests.Test
 			                                 .Curve,
 			           doubleValue: 1);
 
-			var test = new QaTopoNotNear(fc1, 1, _doubleFieldName, 5, 1.6, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 5, 1.6, false);
 
 			Assert.AreEqual(1, Run(test, 1000).Count);
 		}
@@ -210,8 +209,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestSmallDisjoint()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(0, 0)
 			                                 .LineTo(10, 10)
@@ -227,7 +225,8 @@ namespace ProSuite.QA.Tests.Test
 			                                 .Curve,
 			           doubleValue: 1);
 
-			var test = new QaTopoNotNear(fc1, 1, _doubleFieldName, 5, 5, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 5, 5, false);
 
 			Assert.AreEqual(1, Run(test, 1000).Count);
 		}
@@ -236,8 +235,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestNotReportedCoincident()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1,
 			           CurveConstruction.StartLine(0, 5)
@@ -258,7 +256,8 @@ namespace ProSuite.QA.Tests.Test
 			//AddFeature(fc1, CurveConstruction.StartLine(10, 5).LineTo(10, 8).Curve,
 			//		   doubleValue: 3);
 
-			var test = new QaTopoNotNear(fc1, 1, _doubleFieldName, 1, 0, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 1, 0, false);
 			test.NotReportedCondition =
 				$"G1.{_textFieldName} = 'A' OR G2.{_textFieldName} = 'A'";
 
@@ -269,8 +268,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestNotReportedNearCoincident()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(1, 5)
 			                                 .LineTo(10, 5)
@@ -287,7 +285,8 @@ namespace ProSuite.QA.Tests.Test
 			                            .Curve,
 			           doubleValue: 1);
 
-			var test = new QaTopoNotNear(fc1, 1, _doubleFieldName, 4, 3, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 4, 3, false);
 			test.CrossingMinLengthFactor = 3.5;
 			test.NotReportedCondition =
 				$"G1.{_textFieldName} = 'A' OR G2.{_textFieldName} = 'A'";
@@ -299,8 +298,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestNotReportedLineCapSimple()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(5, 5)
 			                                 .LineTo(5, 10)
@@ -322,7 +320,8 @@ namespace ProSuite.QA.Tests.Test
 			                            .Curve,
 			           doubleValue: 1);
 
-			var test = new QaTopoNotNear(fc1, 1, _doubleFieldName, 4, 1, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 4, 1, false);
 			Assert.AreEqual(1, Run(test, 1000).Count);
 
 			test.UnconnectedLineCapStyle = LineCapStyle.Butt;
@@ -333,8 +332,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestNotReportedLineCapWithAura()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(5, 5)
 			                                 .LineTo(5, 10)
@@ -361,7 +359,8 @@ namespace ProSuite.QA.Tests.Test
 			                                 .Curve,
 			           doubleValue: 0, textFieldValue: "A");
 
-			var test = new QaTopoNotNear(fc1, 1, _doubleFieldName, 4, 1, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 4, 1, false);
 			test.NotReportedCondition =
 				$"G1.{_textFieldName} = 'A' OR G2.{_textFieldName} = 'A'";
 
@@ -375,8 +374,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestNotReportedNearCoincidentLineCap()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(1, 5)
 			                                 .LineTo(10, 5)
@@ -393,7 +391,8 @@ namespace ProSuite.QA.Tests.Test
 			                            .Curve,
 			           doubleValue: 1);
 
-			var test = new QaTopoNotNear(fc1, 1, _doubleFieldName, 4, 1, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 4, 1, false);
 			test.UnconnectedLineCapStyle = LineCapStyle.Butt;
 			test.NotReportedCondition =
 				$"G1.{_textFieldName} = 'A' OR G2.{_textFieldName} = 'A'";
@@ -405,8 +404,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestNotReportedNearCoincident2()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(10, 9.9)
 			                                 .LineTo(10, 12.1)
@@ -424,7 +422,8 @@ namespace ProSuite.QA.Tests.Test
 			//AddFeature(fc1, CurveConstruction.StartLine(10.5, 11).LineTo(20, 11).Curve,
 			//		   doubleValue: 1);
 
-			var test = new QaTopoNotNear(fc1, 1, _doubleFieldName, 4, 0, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 4, 0, false);
 			test.CrossingMinLengthFactor = 2;
 			//test.NotReportedCondition =
 			//	$"G1.{_textFieldName} = 'A' OR G2.{_textFieldName} = 'A'";
@@ -436,8 +435,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestNotReportedConnnected()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(0, 0)
 			                                 .LineTo(5, 5)
@@ -452,7 +450,8 @@ namespace ProSuite.QA.Tests.Test
 			                                 .Curve,
 			           doubleValue: 1);
 
-			var test = new QaTopoNotNear(fc1, 1, _doubleFieldName, 2, 0, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 2, 0, false);
 			test.NotReportedCondition =
 				$"G1.{_textFieldName} = 'A' OR G2.{_textFieldName} = 'A'";
 
@@ -463,8 +462,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestNotReportedConnnected1()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(0, 0)
 			                                 .LineTo(100, 0)
@@ -479,7 +477,8 @@ namespace ProSuite.QA.Tests.Test
 			                                 .Curve,
 			           doubleValue: 1);
 
-			var test = new QaTopoNotNear(fc1, 1, _doubleFieldName, 3, 1.5, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 3, 1.5, false);
 			test.NotReportedCondition =
 				$"G1.{_textFieldName} = 'A' OR G2.{_textFieldName} = 'A'";
 
@@ -490,8 +489,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestLineCaps()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(0, 5)
 			                                 .LineTo(20, 5)
@@ -515,7 +513,8 @@ namespace ProSuite.QA.Tests.Test
 			                                 .Curve,
 			           doubleValue: 1);
 
-			var test = new QaTopoNotNear(fc1, 1, _doubleFieldName, 1, 0, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 1, 0, false);
 
 			IList<QaError> errors = Run(test, 1000);
 			Assert.AreEqual(8, errors.Count);
@@ -529,8 +528,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestLineCaps1()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(2, 4.8)
 			                                 .LineTo(2, 0)
@@ -541,7 +539,8 @@ namespace ProSuite.QA.Tests.Test
 			                                 .Curve,
 			           doubleValue: 1);
 
-			var test = new QaTopoNotNear(fc1, 1, _doubleFieldName, 1, 0, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 1, 0, false);
 
 			IList<QaError> errors = Run(test, 1000);
 			Assert.AreEqual(2, errors.Count);
@@ -555,8 +554,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestLineCaps2()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(2, 4.8)
 			                                 .LineTo(2, 4.75)
@@ -569,7 +567,8 @@ namespace ProSuite.QA.Tests.Test
 			                                 .Curve,
 			           doubleValue: 1);
 
-			var test = new QaTopoNotNear(fc1, 1, _doubleFieldName, 1, 0, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 1, 0, false);
 
 			IList<QaError> errors = Run(test, 1000);
 			Assert.AreEqual(2, errors.Count);
@@ -583,8 +582,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestLineCapsShortSegment()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(2, 4.8)
 			                                 .LineTo(2, 4.75)
@@ -596,7 +594,8 @@ namespace ProSuite.QA.Tests.Test
 			                                 .Curve,
 			           doubleValue: 1);
 
-			var test = new QaTopoNotNear(fc1, 1, _doubleFieldName, 1, 0, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 1, 0, false);
 			test.UnconnectedLineCapStyle = LineCapStyle.Butt;
 
 			IList<QaError> errors = Run(test, 1000);
@@ -607,8 +606,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestLineCapsAngledEnds()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(2, 4.8)
 			                                 .LineTo(2, 4.75)
@@ -621,7 +619,8 @@ namespace ProSuite.QA.Tests.Test
 			                                 .Curve,
 			           doubleValue: 1);
 
-			var test = new QaTopoNotNear(fc1, 1, _doubleFieldName, 1, 0, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, _doubleFieldName, 1, 0, false);
 			test.UnconnectedLineCapStyle = LineCapStyle.Butt;
 
 			IList<QaError> errors = Run(test, 1000);
@@ -632,8 +631,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestNotNearSplit()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1,
 			           CurveConstruction.StartLine(0, 0)
@@ -653,7 +651,7 @@ namespace ProSuite.QA.Tests.Test
 			                                 .LineTo(10, 5)
 			                                 .Curve);
 
-			var test = new QaTopoNotNear(fc1, 1, 2.6);
+			var test = new QaTopoNotNear(ReadOnlyTableFactory.Create(fc1), 1, 2.6);
 
 			AssertErrors(2, Run(test, 1000));
 		}
@@ -662,8 +660,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestNotNearJoined()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			double x0 = 0;
 			double x1 = 100;
@@ -693,7 +690,7 @@ namespace ProSuite.QA.Tests.Test
 				                                 .Curve);
 			}
 
-			var test = new QaTopoNotNear(fc1, 1, 2.6);
+			var test = new QaTopoNotNear(ReadOnlyTableFactory.Create(fc1), 1, 2.6);
 
 			AssertErrors(20, Run(test, 1000));
 		}
@@ -702,8 +699,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestNotNearCoincidenceTuple()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			var pts = new List<IPoint>
 			          {
@@ -723,7 +719,9 @@ namespace ProSuite.QA.Tests.Test
 				AddFeature(fc1, reverse);
 			}
 
-			var test = new QaTopoNotNear(fc1, 1, 2.6) {AllowCoincidentSections = true};
+			var test = new QaTopoNotNear(
+				           ReadOnlyTableFactory.Create(fc1), 1, 2.6)
+			           { AllowCoincidentSections = true };
 
 			AssertErrors(0, Run(test, 1000));
 		}
@@ -732,8 +730,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestNotNearCoincidenceTriple()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			var pts = new List<IPoint>
 			          {
@@ -763,7 +760,9 @@ namespace ProSuite.QA.Tests.Test
 			                                 .LineTo(14.9, 15)
 			                                 .Curve);
 
-			var test = new QaTopoNotNear(fc1, 1, 2.6) {AllowCoincidentSections = true};
+			var test = new QaTopoNotNear(
+				           ReadOnlyTableFactory.Create(fc1), 1, 2.6)
+			           { AllowCoincidentSections = true };
 
 			AssertErrors(5, Run(test, 1000));
 		}
@@ -772,8 +771,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestNotNearGrid()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 			var n = 3;
 			var dx = 10.0;
 
@@ -801,7 +799,8 @@ namespace ProSuite.QA.Tests.Test
 			                            .LineTo(0.5 + dx, n * dx + 0.5)
 			                            .Curve);
 
-			var test = new QaTopoNotNear(fc1, 1, 2.6);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, 2.6);
 
 			AssertErrors(8, Run(test, 1000));
 
@@ -812,8 +811,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestCircular()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(0, 0).LineTo(5, 0.2).Curve);
 			AddFeature(fc1, CurveConstruction.StartLine(5, 0.2).LineTo(10, 0).Curve);
@@ -821,7 +819,7 @@ namespace ProSuite.QA.Tests.Test
 			AddFeature(fc1, CurveConstruction.StartLine(5, 0.2).LineTo(18, 0.8).Curve);
 			AddFeature(fc1, CurveConstruction.StartLine(10, 0).LineTo(18, 0).Curve);
 
-			var test = new QaTopoNotNear(fc1, 1, 15);
+			var test = new QaTopoNotNear(ReadOnlyTableFactory.Create(fc1), 1, 15);
 
 			Run(test, 1000);
 			//			AssertErrors(0, Run(test, 1000));
@@ -831,8 +829,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestCircularCombined()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			const int nx = 3;
 			const int ny = 3;
@@ -860,7 +857,7 @@ namespace ProSuite.QA.Tests.Test
 			           CurveConstruction.StartLine(d, ny * d)
 			                            .LineTo(d, ny * d + 100)
 			                            .Curve);
-			var test = new QaTopoNotNear(fc1, 1.5, 15);
+			var test = new QaTopoNotNear(ReadOnlyTableFactory.Create(fc1), 1.5, 15);
 
 			Run(test, 1000);
 			//			AssertErrors(0, Run(test, 1000));
@@ -870,8 +867,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestCircular2()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(-10, 0)
 			                                 .LineTo(-10, 0.4)
@@ -885,7 +881,7 @@ namespace ProSuite.QA.Tests.Test
 			           doubleValue: 1);
 
 			var test = new QaTopoNotNear(
-				fc1, 2, _doubleFieldName,
+				ReadOnlyTableFactory.Create(fc1), 2, _doubleFieldName,
 				10, 0, false);
 
 			AssertErrors(1, Run(test, 1000));
@@ -895,8 +891,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestCircular3()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(-10, 0)
 			                                 .LineTo(-10, 0.9)
@@ -911,7 +906,7 @@ namespace ProSuite.QA.Tests.Test
 			           doubleValue: 1);
 
 			var test = new QaTopoNotNear(
-				fc1, 2, _doubleFieldName,
+				ReadOnlyTableFactory.Create(fc1), 2, _doubleFieldName,
 				10, 0, false);
 
 			AssertErrors(1, Run(test, 1000));
@@ -921,8 +916,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestAuraConnected()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(0, 100)
 			                                 .LineTo(0, 10)
@@ -959,7 +953,7 @@ namespace ProSuite.QA.Tests.Test
 			           doubleValue: 10); // 8
 
 			var test = new QaTopoNotNear(
-				fc1, 10, _doubleFieldName,
+				ReadOnlyTableFactory.Create(fc1), 10, _doubleFieldName,
 				10, 0, false);
 			test.CrossingMinLengthFactor = 3;
 			test.SetConstraint(0, "ObjectId in (1,2,4,8)");
@@ -971,8 +965,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestWithAura()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1,
 			           CurveConstruction.StartLine(0, 0)
@@ -987,7 +980,7 @@ namespace ProSuite.QA.Tests.Test
 			           doubleValue: 1);
 
 			var test = new QaTopoNotNear(
-				fc1, 2, _doubleFieldName,
+				ReadOnlyTableFactory.Create(fc1), 2, _doubleFieldName,
 				10, 0, false);
 
 			AssertErrors(0, Run(test, 1000));
@@ -997,8 +990,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestWithAuraCoincident()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1,
 			           CurveConstruction.StartLine(0, 0)
@@ -1014,9 +1006,9 @@ namespace ProSuite.QA.Tests.Test
 			           doubleValue: 1);
 
 			var test = new QaTopoNotNear(
-				           fc1, 2, _doubleFieldName,
+				           ReadOnlyTableFactory.Create(fc1), 2, _doubleFieldName,
 				           10, 0, false)
-			           {AllowCoincidentSections = true};
+			           { AllowCoincidentSections = true };
 
 			AssertErrors(0, Run(test, 1000));
 		}
@@ -1025,8 +1017,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestWithAuraMultiparts()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(0, 0)
 			                                 .LineTo(0, 0.2)
@@ -1056,9 +1047,9 @@ namespace ProSuite.QA.Tests.Test
 			           doubleValue: 1);
 
 			var test = new QaTopoNotNear(
-				           fc1, 2, _doubleFieldName,
+				           ReadOnlyTableFactory.Create(fc1), 2, _doubleFieldName,
 				           10, 0, false)
-			           {AllowCoincidentSections = true};
+			           { AllowCoincidentSections = true };
 
 			AssertErrors(0, Run(test, 1000));
 		}
@@ -1132,14 +1123,10 @@ namespace ProSuite.QA.Tests.Test
 			var pairAsym = new SegmentPair2D(hull1Asym, hull2);
 
 			IList<double[]> limitsAsym;
-			NearSegment startNear;
-			NearSegment endNear;
-			bool coincident;
-			pairAsym.CutCurveHull(0, out limitsAsym, out startNear, out endNear, out coincident);
+			pairAsym.CutCurveHull(0, out limitsAsym, out _, out _, out _);
 
 			var pairSym = new SegmentPair2D(hull1Sym, hull2);
-			IList<double[]> limitsSym;
-			pairSym.CutCurveHull(0, out limitsSym, out startNear, out endNear, out coincident);
+			pairSym.CutCurveHull(0, out _, out _, out _, out _);
 
 			IPolycurve lineP1 =
 				CurveConstruction.StartLine(0, 0).LineTo(1.001 * limitsAsym[0][0] * 10, 0).Curve;
@@ -1149,8 +1136,7 @@ namespace ProSuite.QA.Tests.Test
 
 			var pairP1 = new SegmentPair2D(hullP1, hull2);
 
-			IList<double[]> limitsP1;
-			pairP1.CutCurveHull(0, out limitsP1, out startNear, out endNear, out coincident);
+			pairP1.CutCurveHull(0, out _, out _, out _, out _);
 		}
 
 		[Test]
@@ -1159,7 +1145,7 @@ namespace ProSuite.QA.Tests.Test
 			var y = new LineHullPart(new Pnt2D(4, 4), new Pnt2D(7, 7));
 			{
 				var x =
-					new HullLineSimple {Lin = new Lin2D(new Pnt2D(0, 5), new Pnt2D(10, 5))};
+					new HullLineSimple { Lin = new Lin2D(new Pnt2D(0, 5), new Pnt2D(10, 5)) };
 				double tMin = double.MaxValue;
 				double tMax = double.MinValue;
 				Assert.IsTrue(y.Cut(x, ref tMin, ref tMax));
@@ -1168,14 +1154,14 @@ namespace ProSuite.QA.Tests.Test
 			}
 			{
 				var x =
-					new HullLineSimple {Lin = new Lin2D(new Pnt2D(0, 3.9), new Pnt2D(10, 3.9))};
+					new HullLineSimple { Lin = new Lin2D(new Pnt2D(0, 3.9), new Pnt2D(10, 3.9)) };
 				double tMin = double.MaxValue;
 				double tMax = double.MinValue;
 				Assert.IsFalse(y.Cut(x, ref tMin, ref tMax));
 			}
 			{
 				var x =
-					new HullLineSimple {Lin = new Lin2D(new Pnt2D(0, 7.1), new Pnt2D(10, 7.1))};
+					new HullLineSimple { Lin = new Lin2D(new Pnt2D(0, 7.1), new Pnt2D(10, 7.1)) };
 				double tMin = double.MaxValue;
 				double tMax = double.MinValue;
 				Assert.IsFalse(y.Cut(x, ref tMin, ref tMax));
@@ -1183,7 +1169,7 @@ namespace ProSuite.QA.Tests.Test
 			{
 				// parallel intersect
 				var x =
-					new HullLineSimple {Lin = new Lin2D(new Pnt2D(5, 5), new Pnt2D(9, 9))};
+					new HullLineSimple { Lin = new Lin2D(new Pnt2D(5, 5), new Pnt2D(9, 9)) };
 				double tMin = double.MaxValue;
 				double tMax = double.MinValue;
 				Assert.IsTrue(y.Cut(x, ref tMin, ref tMax));
@@ -1193,7 +1179,7 @@ namespace ProSuite.QA.Tests.Test
 			{
 				// parallel no intersect
 				var x =
-					new HullLineSimple {Lin = new Lin2D(new Pnt2D(5.1, 5), new Pnt2D(9.1, 9))};
+					new HullLineSimple { Lin = new Lin2D(new Pnt2D(5.1, 5), new Pnt2D(9.1, 9)) };
 				double tMin = double.MaxValue;
 				double tMax = double.MinValue;
 				Assert.IsFalse(y.Cut(x, ref tMin, ref tMax));
@@ -1393,7 +1379,7 @@ namespace ProSuite.QA.Tests.Test
 			        };
 			{
 				var x =
-					new HullLineSimple {Lin = new Lin2D(new Pnt2D(0, 7), new Pnt2D(10, 7))};
+					new HullLineSimple { Lin = new Lin2D(new Pnt2D(0, 7), new Pnt2D(10, 7)) };
 				double tMin = double.MaxValue;
 				double tMax = double.MinValue;
 				Assert.IsTrue(y.Cut(x, ref tMin, ref tMax));
@@ -1402,7 +1388,7 @@ namespace ProSuite.QA.Tests.Test
 			}
 			{
 				var x =
-					new HullLineSimple {Lin = new Lin2D(new Pnt2D(8, 0), new Pnt2D(8, 10))};
+					new HullLineSimple { Lin = new Lin2D(new Pnt2D(8, 0), new Pnt2D(8, 10)) };
 				double tMin = double.MaxValue;
 				double tMax = double.MinValue;
 				Assert.IsTrue(y.Cut(x, ref tMin, ref tMax));
@@ -1411,14 +1397,14 @@ namespace ProSuite.QA.Tests.Test
 			}
 			{
 				var x =
-					new HullLineSimple {Lin = new Lin2D(new Pnt2D(0, 8), new Pnt2D(10, 8))};
+					new HullLineSimple { Lin = new Lin2D(new Pnt2D(0, 8), new Pnt2D(10, 8)) };
 				double tMin = double.MaxValue;
 				double tMax = double.MinValue;
 				Assert.IsFalse(y.Cut(x, ref tMin, ref tMax));
 			}
 			{
 				var x =
-					new HullLineSimple {Lin = new Lin2D(new Pnt2D(0, -1.1), new Pnt2D(10, -1.1))};
+					new HullLineSimple { Lin = new Lin2D(new Pnt2D(0, -1.1), new Pnt2D(10, -1.1)) };
 				double tMin = double.MaxValue;
 				double tMax = double.MinValue;
 				Assert.IsFalse(y.Cut(x, ref tMin, ref tMax));
@@ -1614,8 +1600,7 @@ namespace ProSuite.QA.Tests.Test
 		public void TestRightSide()
 		{
 			IFeatureClass fc1;
-			IFeatureClass fc2;
-			CreateFeatureClasses(out fc1, out fc2);
+			CreateFeatureClasses(out fc1, out _);
 
 			AddFeature(fc1, CurveConstruction.StartLine(1, 1)
 			                                 .LineTo(0, 1)
@@ -1627,20 +1612,22 @@ namespace ProSuite.QA.Tests.Test
 			                                 .LineTo(1, 1.1)
 			                                 .Curve);
 
-			var test = new QaTopoNotNear(fc1, 1, "0.1", 0.5, 0.5, false);
+			var test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, "0.1", 0.5, 0.5, false);
 
 			IList<QaError> errors = Run(test, 1000);
 			Assert.AreEqual(2, errors.Count);
 
-			test.RightSideNears = new[] {"0.01"};
+			test.RightSideNears = new[] { "0.01" };
 			errors = Run(test, 1000);
 			Assert.AreEqual(0, errors.Count);
 
-			test = new QaTopoNotNear(fc1, 1, "0.01", 0.5, 0.5, false);
+			test = new QaTopoNotNear(
+				ReadOnlyTableFactory.Create(fc1), 1, "0.01", 0.5, 0.5, false);
 			errors = Run(test, 1000);
 			Assert.AreEqual(0, errors.Count);
 
-			test.RightSideNears = new[] {"0.10"};
+			test.RightSideNears = new[] { "0.10" };
 			errors = Run(test, 1000);
 			Assert.AreEqual(2, errors.Count);
 		}
@@ -1668,22 +1655,28 @@ namespace ProSuite.QA.Tests.Test
 			                                 .Curve);
 
 			{
-				var test = new QaTopoNotNear(fc1, fc2, 1, "IIF(objectId = 1, 0.8, 0)", "0", 0.1,
-				                             0.1, false);
+				var test = new QaTopoNotNear(
+					ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2), 1,
+					"IIF(objectId = 1, 0.8, 0)", "0", 0.1,
+					0.1, false);
 				IList<QaError> errors = Run(test, 1000);
 				Assert.AreEqual(1, errors.Count);
 			}
 			{
-				var test = new QaTopoNotNear(fc1, fc2, 1, "IIF(objectId = 1, 0.8, 0)", "0", 0.1,
-				                             0.1, false);
+				var test = new QaTopoNotNear(
+					ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2), 1,
+					"IIF(objectId = 1, 0.8, 0)", "0", 0.1,
+					0.1, false);
 				test.SetConstraint(0, "ObjectId = 1");
 				// test.UnconnectedLineCapStyle = LineCapStyle.Round;
 				IList<QaError> errors = Run(test, 1000);
 				Assert.AreEqual(1, errors.Count);
 			}
 			{
-				var test = new QaTopoNotNear(fc1, fc2, 1, "IIF(objectId = 1, 0.8, 0)", "0", 0.1,
-				                             0.1, false);
+				var test = new QaTopoNotNear(
+					ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2), 1,
+					"IIF(objectId = 1, 0.8, 0)", "0", 0.1,
+					0.1, false);
 				test.SetConstraint(0, "ObjectId = 1");
 				test.UnconnectedLineCapStyle = LineCapStyle.Butt;
 				//test.JunctionIsEndExpression = "n0:true; n1:ObjectId=2; n0 = 2 AND n1 = 1";
@@ -1693,8 +1686,10 @@ namespace ProSuite.QA.Tests.Test
 				Assert.AreEqual(0, errors.Count);
 			}
 			{
-				var test = new QaTopoNotNear(fc1, fc2, 1, "IIF(objectId = 1, 0.8, 0)", "0", 0.1,
-				                             0.1, false);
+				var test = new QaTopoNotNear(
+					ReadOnlyTableFactory.Create(fc1), ReadOnlyTableFactory.Create(fc2), 1,
+					"IIF(objectId = 1, 0.8, 0)", "0", 0.1,
+					0.1, false);
 				//test.SetConstraint(0, "ObjectId = 1");
 				//test.UnconnectedLineCapStyle = LineCapStyle.Butt;
 				test.JunctionIsEndExpression = "true;n0:true; n1:ObjectId=2; n0 = 2 AND n1 = 1";

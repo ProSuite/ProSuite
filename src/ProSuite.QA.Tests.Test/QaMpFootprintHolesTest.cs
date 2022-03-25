@@ -7,6 +7,7 @@ using NUnit.Framework;
 using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.AO.Licensing;
 using ProSuite.Commons.AO.Test.TestSupport;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.QA.Tests.Test
 {
@@ -59,7 +60,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row2 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpFootprintHoles(featureClassMock, InnerRingHandling.None);
+			var test = new QaMpFootprintHoles(ReadOnlyTableFactory.Create(featureClassMock),
+			                                  InnerRingHandling.None);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -108,8 +110,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row2 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpFootprintHoles(featureClassMock,
-			                                  InnerRingHandling.IgnoreInnerRings);
+			var test = new QaMpFootprintHoles(
+				ReadOnlyTableFactory.Create(featureClassMock),
+				InnerRingHandling.IgnoreInnerRings);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -150,8 +153,9 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row2 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpFootprintHoles(featureClassMock,
-			                                  InnerRingHandling.IgnoreHorizontalInnerRings);
+			var test = new QaMpFootprintHoles(
+				ReadOnlyTableFactory.Create(featureClassMock),
+				InnerRingHandling.IgnoreHorizontalInnerRings);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -193,7 +197,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeature row2 = featureClassMock.CreateFeature(construction.MultiPatch);
 
 			var test = new QaMpFootprintHoles(
-				           featureClassMock, InnerRingHandling.IgnoreHorizontalInnerRings)
+				           ReadOnlyTableFactory.Create(featureClassMock),
+				           InnerRingHandling.IgnoreHorizontalInnerRings)
 			           {
 				           HorizontalZTolerance = 0.2
 			           };
@@ -276,7 +281,8 @@ namespace ProSuite.QA.Tests.Test
 
 			IFeature row4 = featureClassMock.CreateFeature(construction.MultiPatch);
 
-			var test = new QaMpFootprintHoles(featureClassMock, InnerRingHandling.None);
+			var test = new QaMpFootprintHoles(
+				ReadOnlyTableFactory.Create(featureClassMock), InnerRingHandling.None);
 			var runner = new QaTestRunner(test);
 			runner.Execute(row1);
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -301,8 +307,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				((IFeatureWorkspace) ws).OpenFeatureClass("TLM_GEBAEUDE");
 
-			var test =
-				new QaMpFootprintHoles(fc, InnerRingHandling.IgnoreHorizontalInnerRings);
+			var test = new QaMpFootprintHoles(
+				ReadOnlyTableFactory.Create(fc), InnerRingHandling.IgnoreHorizontalInnerRings);
 			test.SetConstraint(0, "OBJECTID = 1219794");
 			var runner = new QaTestRunner(test);
 			runner.Execute();
@@ -322,7 +328,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				((IFeatureWorkspace) ws).OpenFeatureClass("TLM_GEBAEUDE");
 
-			var test = new QaMpFootprintHoles(fc, InnerRingHandling.None);
+			var test = new QaMpFootprintHoles(
+				ReadOnlyTableFactory.Create(fc), InnerRingHandling.None);
 			var runner = new QaTestRunner(test);
 			runner.Execute();
 			Assert.AreEqual(0, runner.Errors.Count);
@@ -336,7 +343,8 @@ namespace ProSuite.QA.Tests.Test
 			IFeatureClass fc =
 				((IFeatureWorkspace) ws).OpenFeatureClass("TLM_GEBAEUDE");
 
-			var test = new QaMpFootprintHoles(fc, InnerRingHandling.None);
+			var test = new QaMpFootprintHoles(
+				ReadOnlyTableFactory.Create(fc), InnerRingHandling.None);
 			var runner = new QaTestRunner(test);
 			runner.Execute();
 			Assert.AreEqual(0, runner.Errors.Count);

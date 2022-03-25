@@ -97,9 +97,9 @@ namespace ProSuite.QA.Tests.Test
 
 			// configure and run the test
 			var test = new QaLineConnectionFieldValues(
-				lineFc, "FromVal",
+				ReadOnlyTableFactory.Create(lineFc), "FromVal",
 				LineFieldValuesConstraint.AllEqualOrValidPointExists,
-				pointFc, "Name",
+				ReadOnlyTableFactory.Create(pointFc), "Name",
 				PointFieldValuesConstraint.AllEqualAndMatchAnyLineValue);
 
 			var runner = new QaTestRunner(test);
@@ -186,9 +186,9 @@ namespace ProSuite.QA.Tests.Test
 
 			// configure and run the test
 			var test = new QaLineConnectionFieldValues(
-				lineFc, "FromVal",
+				ReadOnlyTableFactory.Create(lineFc), "FromVal",
 				LineFieldValuesConstraint.AllEqualOrValidPointExists,
-				pointFc, "Name",
+				ReadOnlyTableFactory.Create(pointFc), "Name",
 				PointFieldValuesConstraint.AllEqualAndMatchMostFrequentLineValue);
 
 			var runner = new QaTestRunner(test);
@@ -266,9 +266,9 @@ namespace ProSuite.QA.Tests.Test
 
 			// configure and run the test
 			var test = new QaLineConnectionFieldValues(
-				lineFc, "Name",
+				ReadOnlyTableFactory.Create(lineFc), "Name",
 				LineFieldValuesConstraint.UniqueOrValidPointExists,
-				pointFc, null,
+				ReadOnlyTableFactory.Create(pointFc), null,
 				PointFieldValuesConstraint.NoConstraint);
 
 			var runner = new QaTestRunner(test);
@@ -343,9 +343,9 @@ namespace ProSuite.QA.Tests.Test
 
 			string lineField = $"IIF({QaConnections.StartsIn}, FromVal, ToVal)";
 			var test = new QaLineConnectionFieldValues(
-				lineFc, lineField,
+				ReadOnlyTableFactory.Create(lineFc), lineField,
 				LineFieldValuesConstraint.AllEqualOrValidPointExists,
-				pointFc, "Name",
+				ReadOnlyTableFactory.Create(pointFc), "Name",
 				PointFieldValuesConstraint.AllEqualAndMatchAnyLineValue);
 
 			var runner = new QaTestRunner(test);
@@ -418,9 +418,9 @@ namespace ProSuite.QA.Tests.Test
 
 			string lineField = $"IIF({QaConnections.StartsIn}, FromVal, ToVal)";
 			var test = new QaLineConnectionFieldValues(
-				lineFc, lineField,
+				ReadOnlyTableFactory.Create(lineFc), lineField,
 				LineFieldValuesConstraint.AllEqualOrValidPointExists,
-				pointFc, "Name",
+				ReadOnlyTableFactory.Create(pointFc), "Name",
 				PointFieldValuesConstraint.AllEqualAndMatchAnyLineValue);
 
 			test.UseMultiParts = false;
@@ -531,11 +531,17 @@ namespace ProSuite.QA.Tests.Test
 			string lineField = string.Format("IIF({0}, FromVal1, ToVal1)",
 			                                 QaConnections.StartsIn);
 			var test = new QaLineConnectionFieldValues(
-				new[] {lineFc1, lineFc2}, new[] {lineField, "FromVal2"},
+				new[]
+				{
+					ReadOnlyTableFactory.Create(lineFc1), ReadOnlyTableFactory.Create(lineFc2)
+				}, new[] { lineField, "FromVal2" },
 				LineFieldValuesConstraint.AllEqualOrValidPointExists,
-				new[] {pointFc1, pointFc2}, new[] {"Name1", "Name2"},
+				new[]
+				{
+					ReadOnlyTableFactory.Create(pointFc1), ReadOnlyTableFactory.Create(pointFc2)
+				}, new[] { "Name1", "Name2" },
 				PointFieldValuesConstraint.AllEqualAndMatchAnyLineValue,
-				new[] {null, "Name2 = 'Ignore2'"});
+				new[] { null, "Name2 = 'Ignore2'" });
 
 			var runner = new QaTestRunner(test);
 			runner.Execute();
