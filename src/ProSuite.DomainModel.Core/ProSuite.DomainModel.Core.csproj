@@ -227,6 +227,9 @@
     <Compile Include="QA\VerificationProgress\VerificationProgressStep.cs" />
     <Compile Include="QA\VerificationProgress\VerificationProgressType.cs" />
     <Compile Include="DataModel\TerrainSourceDataset.cs" />
+    <Compile Include="QA\XML\IXmlDataQualityExporter.cs" />
+    <Compile Include="QA\XML\IXmlDataQualityImporter.cs" />
+    <Compile Include="QA\XML\QualitySpecificationImportType.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
@@ -246,5 +249,6 @@
       <Name>ProSuite.QA.Core</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
 </Project>
