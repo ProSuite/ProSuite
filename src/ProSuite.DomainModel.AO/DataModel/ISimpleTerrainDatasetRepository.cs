@@ -8,8 +8,8 @@ namespace ProSuite.DomainModel.AO.DataModel
 	{
 		IList<SimpleTerrainDataset> GetByModelId(int modelId);
 
-		IList<SimpleTerrainDataset> GetByDatsets(IEnumerable<Dataset> datasets);
+		IList<SimpleTerrainDataset> GetByDatasets(IEnumerable<Dataset> datasets);
 
-		IEnumerable<SimpleTerrainDataset> GetByDatsetIds(ICollection<int> datasetIds);
+		IEnumerable<SimpleTerrainDataset> GetByDatasetIds(ICollection<int> datasetIds);
 	}
 }
