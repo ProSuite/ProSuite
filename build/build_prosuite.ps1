@@ -80,7 +80,7 @@ if ($Info) {
 if ($Product -eq 'Microserver') {
 	
 	$Solution = 'ProSuite.Server.sln'
-	$env:VSArcGISVersion="${ArcGISVers}\"
+	$env:VSArcGISVersion="${ArcGISVers}"
 	
 	# 
 	if ($ArcObjects -eq '10') {
@@ -112,7 +112,7 @@ if ($Product -eq 'Microserver') {
 		Write-Host "VSArcGISProduct:		${env:VSArcGISProduct}"
 		Write-Host "ArcGISAssemblyPath:		${env:ArcGISAssemblyPath}"
 		Write-Host "ArcObjects version:		${ArcObjects}"
-		Write-Host "ESRI DLLs:			${env:ArcGISAssemblyPath}\${env:VSArcGISVersion}ESRI.${env:VSArcGISProduct}.*.dll"
+		Write-Host "ESRI DLLs:			${env:ArcGISAssemblyPath}\${env:VSArcGISVersion}\ESRI.${env:VSArcGISProduct}.*.dll"
 	}
 }
 Write-Host "`n`rBuild parameters:"
