@@ -59,6 +59,7 @@
     <Compile Include="DataModel\LinearNetworkRepository.cs" />
     <Compile Include="DataModel\ObjectCategoryAttributeConstraintRepository.cs" />
     <Compile Include="DataModel\ObjectCategoryRepository.cs" />
+    <Compile Include="DataModel\SimpleTerrainDatasetRepository.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QA\DataQualityCategoryRepository.cs" />
     <Compile Include="QA\QualityConditionRepository.cs" />

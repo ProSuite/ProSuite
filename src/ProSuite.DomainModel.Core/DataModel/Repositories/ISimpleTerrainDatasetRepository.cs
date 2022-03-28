@@ -1,8 +1,7 @@
-using ProSuite.Commons.DomainModels;
-using ProSuite.DomainModel.Core.DataModel;
 using System.Collections.Generic;
+using ProSuite.Commons.DomainModels;
 
-namespace ProSuite.DomainModel.AO.DataModel
+namespace ProSuite.DomainModel.Core.DataModel.Repositories
 {
 	public interface ISimpleTerrainDatasetRepository : IRepository<SimpleTerrainDataset>
 	{

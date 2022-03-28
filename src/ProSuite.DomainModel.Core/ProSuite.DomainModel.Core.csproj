@@ -54,6 +54,7 @@
     <Compile Include="DataModel\ModelSimpleTerrainDataset.cs" />
     <Compile Include="DataModel\RasterDataset.cs" />
     <Compile Include="DataModel\Repositories\ILinearNetworkRepository.cs" />
+    <Compile Include="DataModel\Repositories\ISimpleTerrainDatasetRepository.cs" />
     <Compile Include="DataModel\TopologyDataset.cs" />
     <Compile Include="Processing\CartoProcess.cs" />
     <Compile Include="Commands\CommandDescriptor.cs" />
