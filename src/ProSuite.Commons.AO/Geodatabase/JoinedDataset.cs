@@ -222,22 +222,13 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		private IFeature CreateJoinedFeature(IFeature feature, IRow otherRow)
 		{
+			var joinedValueList = new JoinedValueList {Readonly = true};
+
+			joinedValueList.AddRow(feature, GeometryEndCopyMatrix);
+			joinedValueList.AddRow(otherRow, OtherEndCopyMatrix);
+
 			IFeature resultFeature = new GdbFeature(feature.OID, _joinedSchema,
-			                                        new ValueList(_joinedSchema.Fields.FieldCount));
-
-			for (int i = 0; i < feature.Fields.FieldCount; i++)
-			{
-				int targetIndex = GeometryEndCopyMatrix[i];
-				if (targetIndex >= 0)
-					resultFeature.Value[targetIndex] = feature.Value[i];
-			}
-
-			for (int i = 0; i < otherRow.Fields.FieldCount; i++)
-			{
-				int targetIndex = OtherEndCopyMatrix[i];
-				if (targetIndex >= 0)
-					resultFeature.Value[targetIndex] = otherRow.Value[i];
-			}
+			                                        joinedValueList);
 
 			return resultFeature;
 		}

@@ -101,6 +101,7 @@
     <Compile Include="Geodatabase\GdbSchema\GdbWorkspace.cs" />
     <Compile Include="Geodatabase\GdbSchema\InMemoryDataset.cs" />
     <Compile Include="Geodatabase\GdbSchema\IValueList.cs" />
+    <Compile Include="Geodatabase\GdbSchema\JoinedValueList.cs" />
     <Compile Include="Geodatabase\GdbSchema\ValueList.cs" />
     <Compile Include="Geodatabase\GdbSchema\PropertySetValueList.cs" />
     <Compile Include="Geodatabase\GdbSchema\VirtualRow.cs" />
