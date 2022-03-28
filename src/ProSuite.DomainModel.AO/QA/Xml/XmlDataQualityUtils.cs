@@ -686,6 +686,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				qualityConditions = document.GetAllQualityConditions()
 				                            .Where(pair => referencedConditionNames.Contains(
 					                                   pair.Key.Name?.Trim()));
+
 			return new XmlQualityConditionsCache(document, qualityConditions);
 		}
 
