@@ -35,11 +35,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		/// <param name="createBackingDataset">The factory method that creates the backing dataset.</param>
 		/// <param name="workspace"></param>
 		public GdbTable(int objectClassId,
-										[NotNull] string name,
-										[CanBeNull] string aliasName = null,
-										[CanBeNull] Func<GdbTable, BackingDataset> createBackingDataset = null,
-										[CanBeNull] IWorkspace workspace = null)
-				: base(name)
+		                [NotNull] string name,
+		                [CanBeNull] string aliasName = null,
+		                [CanBeNull] Func<GdbTable, BackingDataset> createBackingDataset = null,
+		                [CanBeNull] IWorkspace workspace = null)
+			: base(name)
 		{
 			if (objectClassId > 0)
 			{
@@ -86,10 +86,15 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#endregion
 
+		public void SetOIDFieldName(string fieldName)
+		{
+			_oidFieldName = fieldName;
+		}
+
 		public bool Equals(GdbTable other)
 		{
 			return Equals(_workspace, other._workspace) &&
-						 ObjectClassID == other.ObjectClassID;
+			       ObjectClassID == other.ObjectClassID;
 		}
 
 		public bool Equals(IObjectClass other)
@@ -103,8 +108,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			}
 
 			return ObjectClassID == other.ObjectClassID &&
-						 WorkspaceUtils.IsSameWorkspace(_workspace, ((IDataset)other).Workspace,
-																						WorkspaceComparison.Exact);
+			       WorkspaceUtils.IsSameWorkspace(_workspace, ((IDataset) other).Workspace,
+			                                      WorkspaceComparison.Exact);
 		}
 
 		public override bool Equals(object obj)
@@ -115,7 +120,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 			if (obj.GetType() != GetType()) return false;
 
-			return Equals((GdbTable)obj);
+			return Equals((GdbTable) obj);
 		}
 
 		public override int GetHashCode()
@@ -123,7 +128,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			unchecked
 			{
 				return ((_workspace != null ? _workspace.GetHashCode() : 0) * 397) ^
-							 ObjectClassID;
+				       ObjectClassID;
 			}
 		}
 
@@ -131,7 +136,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public override bool IsBeingEdited()
 		{
-			return !(_workspace is IWorkspaceEdit workspaceEdit) || workspaceEdit.IsBeingEdited();
+			return ! (_workspace is IWorkspaceEdit workspaceEdit) || workspaceEdit.IsBeingEdited();
 		}
 
 		#endregion
@@ -157,6 +162,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public override bool HasOID => _hasOID;
 
 		public override string OIDFieldName => _oidFieldName;
+
 		#endregion
 
 		#region IObjectClass members
@@ -325,8 +331,8 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				_table = table;
 				Name = table.Name;
 
-				IWorkspace workspace = ((IDataset)_table).Workspace;
-				WorkspaceName = (IWorkspaceName)((IDataset)workspace).FullName;
+				IWorkspace workspace = ((IDataset) _table).Workspace;
+				WorkspaceName = (IWorkspaceName) ((IDataset) workspace).FullName;
 			}
 
 			#region IName members
