@@ -24,8 +24,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 		private readonly AssociationDescription _associationDescription;
 
-		readonly bool _fetchByFts = EnvironmentUtils.GetBooleanEnvironmentVariableValue(
-			"PROSUITE_EXPERIMENTAL_JOIN_FTS");
+		private readonly string
+			_joinStrategy = Environment.GetEnvironmentVariable("PROSUITE_MEMORY_JOIN_STRATEGY");
+
+		private readonly Dictionary<ITable, int> _tableRowStatistics =
+			new Dictionary<ITable, int>(3);
 
 		public JoinedDataset([NotNull] IRelationshipClass relationshipClass,
 		                     [NotNull] IFeatureClass geometryEndClass,
@@ -139,16 +142,24 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			HashSet<string> fClassKeys = new HashSet<string>();
 
-			// TODO: If the filter is null or it's no spatial filter: compare row count
+			// TODO: If the filter is null or it's no spatial filter: compare row count to determine
+			//       which table should be queried first.
+
+			int featureCount = 0;
 			foreach (IFeature feature in GdbQueryUtils.GetFeatures(_geometryEndClass, filter, true))
 			{
+				featureCount++;
+
 				string keyValue = GetKeyValue(feature, featureClassKeyIdx);
 
 				if (keyValue != null)
+				{
 					fClassKeys.Add(keyValue);
+				}
 			}
 
-			_msg.DebugStopTiming(watch, "Initial search found {0} geo-keys", fClassKeys.Count);
+			_msg.DebugStopTiming(watch, "Initial search found {0} geo-keys in {1} features",
+			                     fClassKeys.Count, featureCount);
 
 			IDictionary<string, IList<IRow>> otherRows =
 				GetOtherRowListsByFeatureKey(otherClassKeyField, fClassKeys);
@@ -170,9 +181,25 @@ namespace ProSuite.Commons.AO.Geodatabase
 			int featureClassKeyIdx = _geometryEndClass.FindField(featureClassKeyField);
 			Assert.True(featureClassKeyIdx >= 0, $"Key field not found: {featureClassKeyIdx}");
 
+			bool clientSideKeyFiltering;
+			if (_joinStrategy == "INDEX")
+			{
+				clientSideKeyFiltering = true;
+			}
+			else if (_joinStrategy == "FTS")
+			{
+				clientSideKeyFiltering = false;
+			}
+			else
+			{
+				// TODO: if number of keys is large-ish, compare with
+				// initial read's feature count
+				clientSideKeyFiltering = false;
+			}
+
 			IEnumerable<IRow> resultGeoFeatures = FetchRowsByKey(
 				(ITable) _geometryEndClass, otherRowsByGeoKey.Keys, featureClassKeyField, true,
-				_useClientFiltering, filter);
+				clientSideKeyFiltering, filter);
 
 			foreach (IRow row in resultGeoFeatures)
 			{
@@ -256,7 +283,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 			return otherRows;
 		}
-		
+
 		private IDictionary<string, IList<IRow>> GetOtherRowListsByFeatureKey(
 			string otherClassKeyField,
 			HashSet<string> fClassKeys)
@@ -357,7 +384,8 @@ namespace ProSuite.Commons.AO.Geodatabase
 			Assert.True(bridgeTableGeoKeyIdx >= 0,
 			            $"Key field {bridgeTableGeoKeyField} not found in {bridgeTable}");
 
-			foreach (IRow row in FetchRowsByKey(geoKeys, bridgeTable, bridgeTableGeoKeyField))
+			foreach (IRow row in FetchBridgeTableRowsByKey(geoKeys, bridgeTable,
+			                                               bridgeTableGeoKeyField))
 			{
 				// The primary key of the other table:
 				object bridgeOtherKey = row.get_Value(bridgeTableOtherKeyIdx);
@@ -391,12 +419,33 @@ namespace ProSuite.Commons.AO.Geodatabase
 			return geoKeysByOtherKey;
 		}
 
-		private IEnumerable<IRow> FetchRowsByKey(
+		private IEnumerable<IRow> FetchBridgeTableRowsByKey(
 			[NotNull] HashSet<string> keys,
-			[NotNull] ITable table,
+			[NotNull] ITable bridgeTable,
 			[NotNull] string keyFieldName)
 		{
-			return FetchRowsByKey(table, keys, keyFieldName, true, _useClientFiltering);
+			bool clientSideKeyFiltering;
+
+			if (_joinStrategy == "INDEX")
+			{
+				clientSideKeyFiltering = true;
+			}
+			else if (_joinStrategy == "FTS")
+			{
+				clientSideKeyFiltering = false;
+			}
+			else if (keys.Count < 1000)
+			{
+				clientSideKeyFiltering = false;
+			}
+			else
+			{
+				int ftsCount = GetTableRowCount(bridgeTable);
+
+				clientSideKeyFiltering = (double) keys.Count / ftsCount > 0.025;
+			}
+
+			return FetchRowsByKey(bridgeTable, keys, keyFieldName, true, clientSideKeyFiltering);
 		}
 
 		private static IEnumerable<IRow> FetchRowsByKey(
@@ -504,6 +553,22 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				return _otherEndCopyMatrix;
 			}
+		}
+
+		private int GetTableRowCount(ITable table)
+		{
+			if (! _tableRowStatistics.TryGetValue(table, out int rowCount))
+			{
+				Stopwatch watch = _msg.DebugStartTiming();
+
+				rowCount = GdbQueryUtils.Count((IObjectClass) table);
+				_tableRowStatistics.Add(table, rowCount);
+
+				_msg.DebugStopTiming(watch, "Determined row count of {0}",
+				                     DatasetUtils.GetName(table));
+			}
+
+			return rowCount;
 		}
 
 		private static string GetKeyValue(IRow row, int fieldIndex)
