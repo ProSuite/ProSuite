@@ -56,6 +56,7 @@
     <Compile Include="DataModel\DatasetCategoryRepository.cs" />
     <Compile Include="DataModel\DatasetRepository.cs" />
     <Compile Include="DataModel\GeometryTypeRepository.cs" />
+    <Compile Include="DataModel\LinearNetworkRepository.cs" />
     <Compile Include="DataModel\ObjectCategoryAttributeConstraintRepository.cs" />
     <Compile Include="DataModel\ObjectCategoryRepository.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

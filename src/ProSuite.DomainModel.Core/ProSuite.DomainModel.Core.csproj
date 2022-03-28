@@ -49,8 +49,11 @@
     <Compile Include="ClassDescriptor.cs" />
     <Compile Include="Commands\ICommandDescriptorRepository.cs" />
     <Compile Include="DataModel\ITopologyDataset.cs" />
+    <Compile Include="DataModel\LinearNetwork.cs" />
+    <Compile Include="DataModel\LinearNetworkDataset.cs" />
     <Compile Include="DataModel\ModelSimpleTerrainDataset.cs" />
     <Compile Include="DataModel\RasterDataset.cs" />
+    <Compile Include="DataModel\Repositories\ILinearNetworkRepository.cs" />
     <Compile Include="DataModel\TopologyDataset.cs" />
     <Compile Include="Processing\CartoProcess.cs" />
     <Compile Include="Commands\CommandDescriptor.cs" />
