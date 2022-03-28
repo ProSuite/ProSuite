@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
@@ -15,8 +15,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 {
 	public static class TableJoinUtils
 	{
-		private static readonly IMsg _msg =
-			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		private const int _maxNameLength = 59;
 
@@ -46,7 +45,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			string queryTableName = null)
 
 		{
-			return CreateQueryTable(new[] { relationshipClass }, joinType,
+			return CreateQueryTable(new[] {relationshipClass}, joinType,
 			                        includeOnlyOIDFields, excludeShapeField,
 			                        whereClause, queryTableName);
 		}
@@ -94,7 +93,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNull(relClass, nameof(relClass));
 
-			return CreateQueryDef(new List<IRelationshipClass> { relClass },
+			return CreateQueryDef(new List<IRelationshipClass> {relClass},
 			                      joinType, includeOnlyOIDFields, excludeShapeField,
 			                      out string _, out esriGeometryType _, out string _);
 		}
@@ -220,7 +219,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			[NotNull] IRelationshipClass relationshipClass,
 			JoinType joinType)
 		{
-			return CanCreateQueryFeatureClass(new[] { relationshipClass }, joinType);
+			return CanCreateQueryFeatureClass(new[] {relationshipClass}, joinType);
 		}
 
 		public static bool CanCreateQueryFeatureClass(
@@ -270,6 +269,54 @@ namespace ProSuite.Commons.AO.Geodatabase
 			                              primaryKeyFieldName, workspace, queryDef);
 		}
 
+		public static GdbFeatureClass CreateJoinedGdbFeatureClass(
+			[NotNull] IRelationshipClass relationshipClass,
+			[NotNull] IFeatureClass geometryEndClass,
+			[NotNull] string name)
+		{
+			IObjectClass otherEndClass =
+				RelationshipClassUtils.GetOtherEndObjectClass(relationshipClass, geometryEndClass);
+
+			var result = new GdbFeatureClass(-1, name, geometryEndClass.ShapeType,
+			                                 null,
+			                                 t => new JoinedDataset(
+				                                 relationshipClass, geometryEndClass,
+				                                 (IFeatureClass) t));
+
+			for (int i = 0; i < geometryEndClass.Fields.FieldCount; i++)
+			{
+				IField field = geometryEndClass.Fields.Field[i];
+				result.AddField(CreateQualifiedField(field, geometryEndClass));
+			}
+
+			for (int i = 0; i < otherEndClass.Fields.FieldCount; i++)
+			{
+				IField field = otherEndClass.Fields.Field[i];
+
+				if (field.Type == esriFieldType.esriFieldTypeGeometry)
+				{
+					continue;
+				}
+
+				result.AddField(CreateQualifiedField(field, otherEndClass));
+			}
+
+			// Make sure the OID field name is the one from the feature class
+			result.SetOIDFieldName(
+				DatasetUtils.QualifyFieldName(geometryEndClass, geometryEndClass.OIDFieldName));
+
+			return result;
+		}
+
+		private static IField CreateQualifiedField(IField prototype, IObjectClass table)
+		{
+			var result = (IField) ((IClone) prototype).Clone();
+
+			((IFieldEdit) result).Name_2 = DatasetUtils.QualifyFieldName(table, prototype.Name);
+
+			return result;
+		}
+
 		[NotNull]
 		private static IQueryDef CreateQueryDef([NotNull] IRelationshipClass relClass,
 		                                        JoinType joinType,
@@ -296,7 +343,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			result.WhereClause = joinDefinition.GetJoinCondition();
 
 			result.SubFields = GetSubFieldsString(
-				new List<IRelationshipClass> { relClass },
+				new List<IRelationshipClass> {relClass},
 				baseFeatureClass);
 
 			return result;
@@ -436,7 +483,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		{
 			Assert.ArgumentNotNullOrEmpty(concatenatedTokens, nameof(concatenatedTokens));
 
-			var separators = new[] { ' ', ',', ';' };
+			var separators = new[] {' ', ',', ';'};
 			return concatenatedTokens.Split(separators, StringSplitOptions.RemoveEmptyEntries);
 		}
 
