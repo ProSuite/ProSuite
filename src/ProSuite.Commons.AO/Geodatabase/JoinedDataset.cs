@@ -149,20 +149,23 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		private IRow CreateJoinedFeature(IFeature feature, IRow otherRow)
+		private IFeature CreateJoinedFeature(IFeature feature, IRow otherRow)
 		{
-			IFeature resultFeature = new GdbFeature(feature.OID, _joinedSchema);
+			IFeature resultFeature = new GdbFeature(feature.OID, _joinedSchema,
+			                                        new ValueList(_joinedSchema.Fields.FieldCount));
 
 			for (int i = 0; i < feature.Fields.FieldCount; i++)
 			{
 				int targetIndex = GeometryEndCopyMatrix[i];
-				resultFeature.set_Value(targetIndex, feature.Value[i]);
+				if (targetIndex >= 0)
+					resultFeature.Value[targetIndex] = feature.Value[i];
 			}
 
 			for (int i = 0; i < otherRow.Fields.FieldCount; i++)
 			{
 				int targetIndex = OtherEndCopyMatrix[i];
-				resultFeature.set_Value(targetIndex, otherRow.Value[i]);
+				if (targetIndex >= 0)
+					resultFeature.Value[targetIndex] = otherRow.Value[i];
 			}
 
 			return resultFeature;
