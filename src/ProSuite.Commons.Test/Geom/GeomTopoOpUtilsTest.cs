@@ -1419,6 +1419,7 @@ namespace ProSuite.Commons.Test.Geom
 			// almost-XY intersection (within tolerance) of boundary
 			ring[1] = new Pnt3D(-0.006, 50, 2.7);
 			Assert.False(GeomTopoOpUtils.CanCutRing3D(ring, nonCutLine1, 0.01));
+			Assert.False(CanCutXY(sourceRing, cutLineNonCut1));
 
 			// with the small difference at a proper corner:
 			ring.RemoveAt(1);
