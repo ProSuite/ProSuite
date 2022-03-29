@@ -119,8 +119,16 @@ namespace ProSuite.Commons.Geom
 			IntersectionPoint3D nextIntersection;
 			IntersectionPoint3D subcurveStart = previousIntersection;
 
+			int circuitBreaker = 0;
 			do
 			{
+				if (circuitBreaker++ > 10000)
+				{
+					throw new StackOverflowException(
+						"Breaking the circuit of skipping intersections. " +
+						"The input is probably not simple.");
+				}
+
 				nextIntersection =
 					continueOnSource
 						? GetNextIntersectionAlongSource(previousIntersection)
