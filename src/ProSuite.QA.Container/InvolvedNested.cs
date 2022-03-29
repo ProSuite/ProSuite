@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.QA.Container
@@ -62,8 +61,9 @@ namespace ProSuite.QA.Container
 				return false;
 			}
 
-			HashSet<Involved> thisBaseRows = BaseRows.ToHashSet();
-			HashSet<Involved> otherBaseRows = other.BaseRows.ToHashSet();
+			var thisBaseRows = new HashSet<Involved>(BaseRows);
+			var otherBaseRows = new HashSet<Involved>(other.BaseRows);
+
 			if (thisBaseRows.Count != otherBaseRows.Count)
 			{
 				return false;
