@@ -80,7 +80,7 @@ if ($Info) {
 if ($Product -eq 'Microserver') {
 	
 	$Solution = 'ProSuite.Server.sln'
-	$env:VSArcGISVersion="${ArcGISVers}\"
+	$env:VSArcGISVersion="${ArcGISVers}"
 	
 	# 
 	if ($ArcObjects -eq '10') {
@@ -91,12 +91,12 @@ if ($Product -eq 'Microserver') {
 			$env:VSArcGISProduct="Server"
 			if ($Cpu -eq "x86") {
 				Print-Error("ArcObjects 11 supports only x64 build!")
-				exit(1)					
+				exit(1)
 			}
 		}
 		else {
 			Print-Error("Version of ArcObjects can be only 10 or 11!")
-			exit(1)		
+			exit(1)
 		}
 	}
 	$ServerAssemblyPath = "..\..\EsriDE.Commons\lib\ESRI\${env:VSArcGISProduct}\"
@@ -106,13 +106,13 @@ if ($Product -eq 'Microserver') {
 		exit(1)
 	}
 	
-	$env:ArcGISAssemblyPath="..\${ServerAssemblyPath}"		
+	$env:ArcGISAssemblyPath="..\${ServerAssemblyPath}"
 	if ($Info) {
 		Write-Host "VSArcGISVersion:		${env:VSArcGISVersion}"
 		Write-Host "VSArcGISProduct:		${env:VSArcGISProduct}"
 		Write-Host "ArcGISAssemblyPath:		${env:ArcGISAssemblyPath}"
 		Write-Host "ArcObjects version:		${ArcObjects}"
-		Write-Host "ESRI DLLs:			${env:ArcGISAssemblyPath}\${env:VSArcGISVersion}ESRI.${env:VSArcGISProduct}.*.dll"
+		Write-Host "ESRI DLLs:			${env:ArcGISAssemblyPath}\${env:VSArcGISVersion}\ESRI.${env:VSArcGISProduct}.*.dll"
 	}
 }
 Write-Host "`n`rBuild parameters:"

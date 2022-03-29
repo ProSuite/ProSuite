@@ -11,7 +11,7 @@
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -49,8 +49,12 @@
     <Compile Include="ClassDescriptor.cs" />
     <Compile Include="Commands\ICommandDescriptorRepository.cs" />
     <Compile Include="DataModel\ITopologyDataset.cs" />
+    <Compile Include="DataModel\LinearNetwork.cs" />
+    <Compile Include="DataModel\LinearNetworkDataset.cs" />
     <Compile Include="DataModel\ModelSimpleTerrainDataset.cs" />
     <Compile Include="DataModel\RasterDataset.cs" />
+    <Compile Include="DataModel\Repositories\ILinearNetworkRepository.cs" />
+    <Compile Include="DataModel\Repositories\ISimpleTerrainDatasetRepository.cs" />
     <Compile Include="DataModel\TopologyDataset.cs" />
     <Compile Include="Processing\CartoProcess.cs" />
     <Compile Include="Commands\CommandDescriptor.cs" />
