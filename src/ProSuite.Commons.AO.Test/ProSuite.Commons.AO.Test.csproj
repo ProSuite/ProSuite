@@ -27,14 +27,6 @@
     <Optimize>false</Optimize>
     <DefineConstants>TRACE;$(VSArcGISProduct)</DefineConstants>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DefineConstants>DEBUG;TRACE;ArcGIS</DefineConstants>
-    <DebugType>full</DebugType>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
-    <DefineConstants>TRACE;ArcGIS</DefineConstants>
-    <DebugType>pdbonly</DebugType>
-  </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="ESRI.ArcGIS.DataSourcesRaster, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
