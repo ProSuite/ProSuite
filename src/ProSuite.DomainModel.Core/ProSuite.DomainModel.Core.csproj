@@ -46,3 +46,4 @@
     <Compile Remove="QA\DependencyGraph\GraphML\graphml-structure.cs" />
   </ItemGroup>
 </Project>
+

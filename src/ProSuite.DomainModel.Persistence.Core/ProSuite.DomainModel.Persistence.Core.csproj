@@ -48,3 +48,4 @@
     <PackageReference Include="NHibernate" Version="5.2.7" />
   </ItemGroup>
 </Project>
+
