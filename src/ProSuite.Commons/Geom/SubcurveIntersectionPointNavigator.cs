@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
@@ -15,6 +16,7 @@ namespace ProSuite.Commons.Geom
 
 		private IList<IntersectionPoint3D> _intersectionsInboundTarget;
 		private IList<IntersectionPoint3D> _intersectionsOutboundTarget;
+		private IntersectionPoint3D _currentStartIntersection;
 
 		public SubcurveIntersectionPointNavigator(
 			IList<IntersectionPoint3D> intersectionPoints, ISegmentList source, ISegmentList target)
@@ -110,6 +112,7 @@ namespace ProSuite.Commons.Geom
 
 		public void SetStartIntersection(IntersectionPoint3D startIntersection)
 		{
+			_currentStartIntersection = startIntersection;
 			VisitedIntersections.Add(startIntersection);
 		}
 
@@ -203,6 +206,12 @@ namespace ProSuite.Commons.Geom
 			    ! IsUnclosedTargetEnd(nextIntersection))
 			{
 				return true;
+			}
+
+			if (nextIntersection == _currentStartIntersection)
+			{
+				// Always allow navigation back to start
+				return false;
 			}
 
 			if (_multiIntersection != null &&
