@@ -4918,4 +4918,10 @@ If false: ignore features from t0 that have no spatial relation to any feature o
 The involved features are aliased using "T0" and T1".
 Example: T0.Level = T1.Level</value>
   </data>
+  <data name="IfIntersects_0" xml:space="preserve">
+    <value>Filters errors that intersect any feature in a 'featureClass'</value>
+  </data>
+  <data name="IfIntersects_featureClass" xml:space="preserve">
+    <value>point, multipoint, polyline or polygon feature class</value>
+  </data>
 </root>
