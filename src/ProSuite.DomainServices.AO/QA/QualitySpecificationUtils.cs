@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.QA;
@@ -13,6 +14,30 @@ namespace ProSuite.DomainServices.AO.QA
 	public static class QualitySpecificationUtils
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
+		/// <summary>
+		/// Initializes all persistent entities that are part of the specified quality
+		/// specification are loaded and initialized. The entities are quality conditions,
+		/// their issue filters, transformers, row filters and their respective
+		/// TestParameterValues and finally all the referenced datasets.
+		/// </summary>
+		/// <param name="specification"></param>
+		/// <param name="domainTransactions"></param>
+		/// <returns>All datasets that are involved in any associated entity of the
+		/// conditions in the specification.</returns>
+		public static ICollection<Dataset> InitializeAssociatedEntitiesTx(
+			[NotNull] QualitySpecification specification,
+			[NotNull] IDomainTransactionManager domainTransactions)
+		{
+			ICollection<Dataset> datasets =
+				GetQualityConditionDatasets(
+					specification, out ICollection<QualityCondition> conditions);
+
+			domainTransactions.Reattach(conditions);
+			domainTransactions.Reattach(datasets);
+
+			return datasets;
+		}
 
 		public static ICollection<Dataset> GetQualityConditionDatasets(
 			QualitySpecification qualitySpecification,
@@ -29,6 +54,7 @@ namespace ProSuite.DomainServices.AO.QA
 
 				QualityCondition condition = element.QualityCondition;
 
+				// TODO: Make sure Issue filter datasets are also included (and IssueFilters initialized)
 				foreach (Dataset dataset in condition.GetDatasetParameterValues())
 				{
 					datasets.Add(dataset);
