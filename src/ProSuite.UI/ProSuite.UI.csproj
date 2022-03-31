@@ -311,6 +311,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\..\lib\licenses\Microsoft.MIT.license.txt">
+      <Link>Licenses\Microsoft.Xaml.Behaviors.Wpf.license.txt</Link>
+    </Content>
     <Content Include="Properties\AssociationEndImages\AssociationEndDeleted.png" />
     <Content Include="Properties\AssociationEndImages\AssociationEndManyToMany1.png" />
     <Content Include="Properties\AssociationEndImages\AssociationEndManyToMany2.png" />
@@ -375,5 +378,6 @@
       <Version>1.1.31</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
