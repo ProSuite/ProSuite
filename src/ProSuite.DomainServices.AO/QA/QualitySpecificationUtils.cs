@@ -67,7 +67,11 @@ namespace ProSuite.DomainServices.AO.QA
 					datasets.Add(dataset);
 				}
 
-				conditions.Add(condition);
+				if (condition.IsPersistent)
+				{
+					// Do not re-attach un-persisted (e.g. customized) conditions.
+					conditions.Add(condition);
+				}
 			}
 
 			return datasets;
