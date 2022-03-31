@@ -242,6 +242,14 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\..\lib\licenses\Microsoft.MIT.license.txt">
+
+      <Link>Licenses\Microsoft.Xaml.Behaviors.Wpf.license.txt</Link>
+
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+
+    </Content>
+
     <Content Include="Properties\AssociationEndImages\AssociationEndDeleted.png" />
     <Content Include="Properties\AssociationEndImages\AssociationEndManyToMany1.png" />
     <Content Include="Properties\AssociationEndImages\AssociationEndManyToMany2.png" />
@@ -304,4 +312,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.31" />
   </ItemGroup>
+  <ItemGroup />
+
 </Project>

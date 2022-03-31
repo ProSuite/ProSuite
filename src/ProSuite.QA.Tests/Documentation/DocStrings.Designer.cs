@@ -61,6 +61,24 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Filters errors that intersect any feature in a &apos;featureClass&apos;.
+        /// </summary>
+        public static string IfIntersects_0 {
+            get {
+                return ResourceManager.GetString("IfIntersects_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to point, multipoint, polyline or polygon feature class.
+        /// </summary>
+        public static string IfIntersects_featureClass {
+            get {
+                return ResourceManager.GetString("IfIntersects_featureClass", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Finds all points in &apos;featureClass&apos; with a Z range larger than &apos;tolerance&apos;.
         /// </summary>
         public static string Qa3dConstantZ_0 {

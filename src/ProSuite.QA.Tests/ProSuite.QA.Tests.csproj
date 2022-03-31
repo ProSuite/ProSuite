@@ -85,6 +85,8 @@
       <DependentUpon>IssueCodeDescriptions.resx</DependentUpon>
     </Compile>
     <Compile Update="Properties\LocalizableStrings.Designer.cs">
+    <Compile Include="IssueFilters\IfIntersects.cs" />
+
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>LocalizableStrings.resx</DependentUpon>

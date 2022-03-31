@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using ProSuite.Commons.DomainModels;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.QA;
@@ -14,12 +15,44 @@ namespace ProSuite.DomainServices.AO.QA
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
+		/// <summary>
+		/// Initializes all persistent entities that are part of the specified quality
+		/// specification are loaded and initialized. The entities are quality conditions,
+		/// their issue filters, transformers, row filters and their respective
+		/// TestParameterValues and finally all the referenced datasets.
+		/// </summary>
+		/// <param name="specification"></param>
+		/// <param name="domainTransactions"></param>
+		/// <returns>All datasets that are involved in any associated entity of the
+		/// conditions in the specification.</returns>
+		public static ICollection<Dataset> InitializeAssociatedEntitiesTx(
+			[NotNull] QualitySpecification specification,
+			[NotNull] IDomainTransactionManager domainTransactions)
+		{
+			ICollection<Dataset> datasets =
+				GetQualityConditionDatasets(
+					specification, out ICollection<QualityCondition> persistentConditions);
+
+			domainTransactions.Reattach(persistentConditions);
+
+			// Re-attach conditions because otherwise a LazyLoadException occurs when getting
+			// the issue filters
+			foreach (QualityCondition condition in persistentConditions)
+			{
+				InitializeIssueFilters(condition, datasets);
+			}
+
+			domainTransactions.Reattach(datasets);
+
+			return datasets;
+		}
+
 		public static ICollection<Dataset> GetQualityConditionDatasets(
 			QualitySpecification qualitySpecification,
 			out ICollection<QualityCondition> conditions)
 		{
 			conditions = new List<QualityCondition>();
-			var datasets = new List<Dataset>();
+			var datasets = new HashSet<Dataset>();
 			foreach (QualitySpecificationElement element in qualitySpecification.Elements)
 			{
 				if (! element.Enabled)
@@ -34,10 +67,27 @@ namespace ProSuite.DomainServices.AO.QA
 					datasets.Add(dataset);
 				}
 
-				conditions.Add(condition);
+				if (condition.IsPersistent)
+				{
+					// Do not re-attach un-persisted (e.g. customized) conditions.
+					conditions.Add(condition);
+				}
 			}
 
 			return datasets;
+		}
+
+		private static void InitializeIssueFilters([NotNull] QualityCondition condition,
+		                                           [NotNull] ICollection<Dataset> allDatasets)
+		{
+			// Initialize Issue filters:
+			foreach (var issueFilterConfig in condition.IssueFilterConfigurations)
+			{
+				foreach (Dataset dataset in issueFilterConfig.GetDatasetParameterValues(true))
+				{
+					allDatasets.Add(dataset);
+				}
+			}
 		}
 
 		[NotNull]
