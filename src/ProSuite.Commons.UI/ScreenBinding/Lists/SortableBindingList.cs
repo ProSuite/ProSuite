@@ -6,7 +6,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 
-namespace ProSuite.Commons.Collections
+namespace ProSuite.Commons.UI.ScreenBinding.Lists
 {
 	/// <summary>
 	/// A sortable BindingList implementation, using the

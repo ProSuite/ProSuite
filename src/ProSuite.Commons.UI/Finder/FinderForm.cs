@@ -11,6 +11,7 @@ using ProSuite.Commons.Misc;
 using ProSuite.Commons.Text;
 using ProSuite.Commons.UI.Persistence.WinForms;
 using ProSuite.Commons.UI.Properties;
+using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.Commons.Xml;

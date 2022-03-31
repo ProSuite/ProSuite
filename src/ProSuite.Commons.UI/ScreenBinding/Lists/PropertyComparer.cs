@@ -2,14 +2,15 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Reflection;
+using ProSuite.Commons.Collections;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Commons.Collections
+namespace ProSuite.Commons.UI.ScreenBinding.Lists
 {
 	internal class PropertyComparer<T> : IComparer<T>
 	{
-		// The following code contains code implemented by Rockford Lhotka:
+		// The following code is adapted code based on code that contains code implemented by Rockford Lhotka:
 		// http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnadvnet/html/vbnet01272004.asp
 
 		private readonly ListSortDirection _direction;
