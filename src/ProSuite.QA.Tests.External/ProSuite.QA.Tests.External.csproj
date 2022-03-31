@@ -90,23 +90,14 @@
   <ItemGroup />
 
   <ItemGroup>
-
     <Content Include="..\..\lib\licenses\Google.Protobuf.txt">
-
       <Link>Licenses\Google.Protobuf.txt</Link>
-
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-
     </Content>
-
     <Content Include="..\..\lib\licenses\grpc_Apache2.txt">
-
       <Link>Licenses\grpc_Apache2.txt</Link>
-
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-
     </Content>
-
   </ItemGroup>
 
 </Project>
