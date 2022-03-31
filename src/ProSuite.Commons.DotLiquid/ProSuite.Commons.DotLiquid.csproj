@@ -27,13 +27,6 @@
     <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Commons.DotLiquid.xml</DocumentationFile>
     <NoWarn>1591</NoWarn>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Reference Include="DotLiquid, Version=1.7.0.0, Culture=neutral, PublicKeyToken=82e46016ecf9f07c, processorArchitecture=MSIL">
-      <HintPath>..\..\lib\DotLiquid\DotLiquid.dll</HintPath>
-      <SpecificVersion>False</SpecificVersion>
-    </Reference>
-  </ItemGroup>
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
@@ -46,5 +39,8 @@
       <Link>Licenses\DotLiquid.license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="DotLiquid" Version="2.2.602" />
   </ItemGroup>
 </Project>
