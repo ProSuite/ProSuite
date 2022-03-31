@@ -31,9 +31,17 @@ namespace ProSuite.DomainServices.AO.QA
 		{
 			ICollection<Dataset> datasets =
 				GetQualityConditionDatasets(
-					specification, out ICollection<QualityCondition> conditions);
+					specification, out ICollection<QualityCondition> persistentConditions);
 
-			domainTransactions.Reattach(conditions);
+			domainTransactions.Reattach(persistentConditions);
+
+			// Re-attach conditions because otherwise a LazyLoadException occurs when getting
+			// the issue filters
+			foreach (QualityCondition condition in persistentConditions)
+			{
+				InitializeIssueFilters(condition, datasets);
+			}
+
 			domainTransactions.Reattach(datasets);
 
 			return datasets;
@@ -44,7 +52,7 @@ namespace ProSuite.DomainServices.AO.QA
 			out ICollection<QualityCondition> conditions)
 		{
 			conditions = new List<QualityCondition>();
-			var datasets = new List<Dataset>();
+			var datasets = new HashSet<Dataset>();
 			foreach (QualitySpecificationElement element in qualitySpecification.Elements)
 			{
 				if (! element.Enabled)
@@ -54,7 +62,6 @@ namespace ProSuite.DomainServices.AO.QA
 
 				QualityCondition condition = element.QualityCondition;
 
-				// TODO: Make sure Issue filter datasets are also included (and IssueFilters initialized)
 				foreach (Dataset dataset in condition.GetDatasetParameterValues())
 				{
 					datasets.Add(dataset);
@@ -64,6 +71,19 @@ namespace ProSuite.DomainServices.AO.QA
 			}
 
 			return datasets;
+		}
+
+		private static void InitializeIssueFilters([NotNull] QualityCondition condition,
+		                                           [NotNull] ICollection<Dataset> allDatasets)
+		{
+			// Initialize Issue filters:
+			foreach (var issueFilterConfig in condition.IssueFilterConfigurations)
+			{
+				foreach (Dataset dataset in issueFilterConfig.GetDatasetParameterValues(true))
+				{
+					allDatasets.Add(dataset);
+				}
+			}
 		}
 
 		[NotNull]

@@ -96,9 +96,6 @@ namespace ProSuite.DomainServices.AO.Test.QA
 			Assert.AreEqual(2, datasets.Count);
 
 			uowSubstitute.Received(1).Reattach(datasets);
-
-			// TODO: Depending on the context, re-attaching issue filters should probably be done
-			// as well
 		}
 
 		private class MockModel : Model
