@@ -11,6 +11,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.DomainModel.AO.QA
 {
@@ -78,9 +79,19 @@ namespace ProSuite.DomainModel.AO.QA
 
 			if (typeof(IFeatureClass) == knownType)
 				return _datasetContext.OpenFeatureClass((IVectorDataset) dataset);
+			if (typeof(IReadOnlyFeatureClass) == knownType)
+			{
+				IFeatureClass fc = _datasetContext.OpenFeatureClass((IVectorDataset) dataset);
+				return fc != null ? ReadOnlyTableFactory.Create(fc) : null;
+			}
 
 			if (typeof(ITable) == knownType)
 				return _datasetContext.OpenTable((IObjectDataset) dataset);
+			if (typeof(IReadOnlyTable) == knownType)
+			{
+				ITable tbl = _datasetContext.OpenTable((IObjectDataset)dataset);
+				return tbl != null ? ReadOnlyTableFactory.Create(tbl) : null;
+			}
 
 			if (typeof(ITopology) == knownType)
 				return _datasetContext.OpenTopology((ITopologyDataset) dataset);

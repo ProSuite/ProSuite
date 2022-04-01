@@ -9,7 +9,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 {
 	/// <inheritdoc cref="GdbRow" />
-	public class GdbFeature : GdbRow, IFeature, IFeatureBuffer, IFeatureChanges
+	public class GdbFeature : GdbRow, IFeature, IFeatureBuffer, IFeatureChanges, IReadOnlyFeature
 	{
 		private readonly int _shapeFieldIndex;
 
@@ -33,6 +33,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		public override IGeometry ShapeCopy => Shape != null ? GeometryFactory.Clone(Shape) : null;
 		ITable IFeature.Table => Table;
+		IReadOnlyFeatureClass IReadOnlyFeature.FeatureClass => (IReadOnlyFeatureClass)Table;
 
 		public override IGeometry Shape
 		{

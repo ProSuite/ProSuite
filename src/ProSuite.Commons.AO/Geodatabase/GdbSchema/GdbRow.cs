@@ -86,9 +86,10 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			DeleteCalled = true;
 		}
 
-		public int OID { get; }
+		public override int OID { get; }
 
-		public GdbTable Table => _gdbTable;
+		public override VirtualTable Table => _gdbTable;
+//		public GdbTable Table => _gdbTable;
 
 		public override object get_Value(int index)
 		{

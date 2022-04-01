@@ -12,6 +12,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
+using ProSuite.Commons.AO.Geodatabase;
 
 namespace ProSuite.DomainModel.AO.QA
 {
@@ -38,8 +39,13 @@ namespace ProSuite.DomainModel.AO.QA
 
 			// NOTE: test more specific types first, base types last
 
+			if (typeof(IReadOnlyFeatureClass).IsAssignableFrom(dataType))
+				return TestParameterType.VectorDataset;
 			if (typeof(IFeatureClass).IsAssignableFrom(dataType))
 				return TestParameterType.VectorDataset;
+
+			if (typeof(IReadOnlyTable).IsAssignableFrom(dataType))
+				return TestParameterType.ObjectDataset;
 			if (typeof(ITable).IsAssignableFrom(dataType))
 				return TestParameterType.ObjectDataset;
 			if (typeof(IObjectClass).IsAssignableFrom(dataType))
