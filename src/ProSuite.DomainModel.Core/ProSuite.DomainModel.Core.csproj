@@ -31,9 +31,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="netstandard" />
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
