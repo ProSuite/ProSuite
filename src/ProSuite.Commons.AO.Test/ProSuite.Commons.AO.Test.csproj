@@ -61,8 +61,8 @@
     <Content Include="TestData\README.txt" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="GDAL" Version="2.4.4" />
-    <PackageReference Include="GDAL.Native" Version="2.4.4" />
+    <PackageReference Include="GDAL" Version="3.4.2" />
+    <PackageReference Include="GDAL.Native" Version="3.4.2" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
     <PackageReference Include="NUnit" Version="3.12.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />

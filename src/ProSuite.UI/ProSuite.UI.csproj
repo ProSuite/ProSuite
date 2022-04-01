@@ -243,8 +243,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="..\..\lib\licenses\Microsoft.MIT.license.txt">
-      <Link>Licenses\Microsoft.Xaml.Behaviors.Wpf.license.txt</Link>
+    <Content Include="..\..\lib\licenses\Microsoft.MIT.XamlBehaviorsWpf.license.txt">
+      <Link>Licenses\Microsoft.MIT.XamlBehaviorsWpf.license.txt</Link>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
 
@@ -308,7 +308,7 @@
     <Content Include="Properties\TestTypeImages\TestTypeWarning.png" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.31" />
+    <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />
   </ItemGroup>
   <ItemGroup />
 
