@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.DomainModel.AO.QA;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.Geometry;
@@ -20,7 +21,7 @@ namespace ProSuite.QA.TestFactories
 				var list = new List<TestParameter>
 				           {
 					           new TestParameter(
-						           "featureClasses", typeof(IFeatureClass[]),
+						           "featureClasses", typeof(IReadOnlyFeatureClass[]),
 						           DocStrings.QaAngleFactory_featureClasses),
 					           new TestParameter("limit", typeof(double),
 					                             DocStrings.QaAngleFactory_limit),

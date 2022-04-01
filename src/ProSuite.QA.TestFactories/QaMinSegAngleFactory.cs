@@ -44,7 +44,7 @@ namespace ProSuite.QA.TestFactories
 			{
 				var list = new List<TestParameter>
 				           {
-					           new TestParameter("featureClass", typeof(IFeatureClass),
+					           new TestParameter("featureClass", typeof(IReadOnlyFeatureClass),
 					                             DocStrings.QaMinSegAngleFactory_featureClass),
 					           new TestParameter("limit", typeof(double),
 					                             DocStrings.QaMinSegAngleFactory_limit),

@@ -79,13 +79,13 @@ namespace ProSuite.QA.TestFactories
 
 			if (objParams[0] is IReadOnlyFeatureClass == false)
 			{
-				throw new ArgumentException(string.Format("expected IFeatureClass, got {0}",
+				throw new ArgumentException(string.Format("expected IReadOnlyFeatureClass, got {0}",
 				                                          objParams[0].GetType()));
 			}
 
 			if (objParams[1] is IReadOnlyFeatureClass == false)
 			{
-				throw new ArgumentException(string.Format("expected IFeatureClass, got {0}",
+				throw new ArgumentException(string.Format("expected IReadOnlyFeatureClass, got {0}",
 				                                          objParams[1].GetType()));
 			}
 

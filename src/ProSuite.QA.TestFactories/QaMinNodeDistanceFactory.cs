@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using ESRI.ArcGIS.esriSystem;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestCategories;
 using ProSuite.QA.Tests;
@@ -32,7 +33,7 @@ namespace ProSuite.QA.TestFactories
 			int n = args.Length;
 
 			// get constructor arguments
-			var tables = (IList<IFeatureClass>) args[0];
+			var tables = (IList<IReadOnlyFeatureClass>) args[0];
 			var fc = (IGeoDataset) tables[0];
 			var near = (double) args[1];
 

@@ -78,7 +78,7 @@ namespace ProSuite.QA.TestFactories
 
 			IReadOnlyTable queryTable = CreateQueryTable(datasetContext, associationName, tables, join);
 
-			if (queryTable is IFeatureClass == false)
+			if (queryTable is IReadOnlyFeatureClass == false)
 			{
 				throw new InvalidOperationException(
 					"Relation table is not a FeatureClass, try change join type");

@@ -91,7 +91,7 @@ namespace ProSuite.QA.TestFactories
 
 			if (! (objParams[0] is IReadOnlyFeatureClass[]))
 			{
-				throw new ArgumentException(string.Format("expected IFeatureClass[], got {0}",
+				throw new ArgumentException(string.Format("expected IReadOnlyFeatureClass[], got {0}",
 				                                          objParams[0].GetType()));
 			}
 
@@ -103,7 +103,7 @@ namespace ProSuite.QA.TestFactories
 
 			if (! (objParams[2] is IReadOnlyFeatureClass[]))
 			{
-				throw new ArgumentException(string.Format("expected IFeatureClass[], got {0}",
+				throw new ArgumentException(string.Format("expected IReadOnlyFeatureClass[], got {0}",
 				                                          objParams[2].GetType()));
 			}
 
@@ -114,7 +114,7 @@ namespace ProSuite.QA.TestFactories
 			objects[2] = objParams[2];
 			objects[3] = ignoreLoopEndpoints;
 
-			var layers = (IFeatureClass[]) objParams[0];
+			var layers = (IReadOnlyFeatureClass[]) objParams[0];
 			var ignoreFields = (string[]) objParams[1];
 
 			objects[1] = GetIgnoreFieldsPerFeatureClass(layers, ignoreFields);
@@ -144,7 +144,7 @@ namespace ProSuite.QA.TestFactories
 
 		[NotNull]
 		private static string[][] GetIgnoreFieldsPerFeatureClass(
-			[NotNull] ICollection<IFeatureClass> layers,
+			[NotNull] ICollection<IReadOnlyFeatureClass> layers,
 			[NotNull] IEnumerable<string> ignoreFields)
 		{
 			var result = new string[layers.Count][];
