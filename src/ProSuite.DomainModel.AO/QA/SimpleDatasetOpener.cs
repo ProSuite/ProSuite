@@ -80,6 +80,12 @@ namespace ProSuite.DomainModel.AO.QA
 		{
 			Assert.ArgumentNotNull(dataType, nameof(dataType));
 
+			if (typeof(IReadOnlyFeatureClass) == dataType)
+				return true;
+
+			if (typeof(IReadOnlyTable) == dataType)
+				return true;
+
 			if (typeof(IFeatureClass) == dataType)
 				return true;
 
