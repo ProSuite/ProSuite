@@ -58,7 +58,5 @@
   <ItemGroup>
     <PackageReference Include="NHibernate" Version="5.2.7" />
   </ItemGroup>
-  <ItemGroup>
-    <Compile Remove="OracleDialect.cs" />
-  </ItemGroup>
+
 </Project>
