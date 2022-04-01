@@ -783,7 +783,7 @@ namespace ProSuite.Commons.Collections
 		}
 
 		[NotNull]
-		public static List<T> Zip<T>([NotNull] this IEnumerable<T> first,
+		public static List<T> Zip<T>([NotNull] IEnumerable<T> first,
 		                             [NotNull] IEnumerable<T> second)
 		{
 			Assert.ArgumentNotNull(first, nameof(first));
@@ -816,7 +816,7 @@ namespace ProSuite.Commons.Collections
 		}
 
 		[NotNull]
-		public static List<T> Zip<T>([NotNull] this IEnumerable<T> first,
+		public static List<T> Zip<T>([NotNull] IEnumerable<T> first,
 		                             [NotNull] IEnumerable<T> second,
 		                             [NotNull] IEnumerable<T> third)
 		{
