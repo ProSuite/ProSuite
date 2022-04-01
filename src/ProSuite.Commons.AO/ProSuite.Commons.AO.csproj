@@ -71,17 +71,12 @@
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
     <Compile Update="Properties\LocalizableStrings.Designer.cs">
-    <Compile Include="Geodatabase\IReadOnly.cs" />
-
-    <Compile Include="Geodatabase\GdbSchema\ReadOnlyDataset.cs" />
-
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
     </Compile>
-
-    <Compile Include="Geodatabase\GdbSchema\ReadOnlyGeoDataset.cs" />
   </ItemGroup>
+  
   <ItemGroup>
     <EmbeddedResource Update="Properties\LocalizableStrings.resx">
       <Generator>ResXFileCodeGenerator</Generator>

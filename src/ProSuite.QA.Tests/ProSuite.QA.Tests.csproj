@@ -89,10 +89,6 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>LocalizableStrings.resx</DependentUpon>
     </Compile>
-    <Compile Include="Transformers\IRowsCache.cs" />
-
-
-    <Compile Include="Transformers\TransformedFeatureClass.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Update="Documentation\DocStrings.resx">
