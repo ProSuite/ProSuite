@@ -106,7 +106,7 @@ namespace ProSuite.Application.Configuration
 				return fullPath;
 			}
 
-			if (TryGetExecutablePathFromRegisteredInstallDir(exeName, out fullPath))
+			if (TryGetExecutablePathFromStandardInstallDir(exeName, out fullPath))
 			{
 				return fullPath;
 			}
@@ -118,22 +118,16 @@ namespace ProSuite.Application.Configuration
 			return searcher.GetConfigFilePath(exeName, false);
 		}
 
-		private static bool TryGetExecutablePathFromRegisteredInstallDir([NotNull] string exeName,
+		private static bool TryGetExecutablePathFromStandardInstallDir([NotNull] string exeName,
 			out string fullPath)
 		{
 			fullPath = null;
 
-			string registeredInstallDir = GetRegisteredInstallDirectory();
+			const string wellKnownPath = @"C:\ProSuite\ArcGISPro\Microserver";
 
-			if (string.IsNullOrEmpty(registeredInstallDir))
-			{
-				_msg.DebugFormat("ProSuite QA Extension installation is not installed.");
-				return false;
-			}
+			string result = Path.Combine(wellKnownPath, exeName);
 
-			string exeLocation = Path.Combine(registeredInstallDir, "bin", exeName);
-
-			if (string.IsNullOrEmpty(exeLocation))
+			if (! Directory.Exists(wellKnownPath))
 			{
 				_msg.DebugFormat(
 					"Executable {0} was not found in ProSuite QA Extension installation. Please consider installing the latest version.",
@@ -142,35 +136,20 @@ namespace ProSuite.Application.Configuration
 				return false;
 			}
 
-			string result = Path.Combine(exeLocation, exeName);
-
-			if (File.Exists(result))
+			if (! File.Exists(result))
 			{
-				_msg.DebugFormat(
-					"Using executable from ProSuite QA Extension install directory: {0}",
-					exeLocation);
-
-				fullPath = result;
-				return true;
+				_msg.DebugFormat("ProSuite Microserver {0} not found in standard directory {1}.",
+				                 exeName, wellKnownPath);
+				return false;
 			}
 
-			return false;
-		}
+			_msg.DebugFormat(
+				"Using executable {0} from ProSuite Microserver standard directory: {1}",
+				exeName, wellKnownPath);
 
-		[CanBeNull]
-		public static string GetRegisteredInstallDirectory()
-		{
-			string path =
-				RegistryUtils.GetString(RegistryRootKey.LocalMachine,
-				                        $@"SOFTWARE\Wow6432Node\{CompanyName}\{ProductName}",
-				                        "InstallDirectory");
+			fullPath = result;
 
-			if (string.IsNullOrEmpty(path) || ! Directory.Exists(path))
-			{
-				return null;
-			}
-
-			return path;
+			return true;
 		}
 
 		private static bool TryGetExecutablePathFromEnvVar(string exeName, out string fullPath)
