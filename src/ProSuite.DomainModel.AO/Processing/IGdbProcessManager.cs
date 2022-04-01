@@ -21,8 +21,13 @@ namespace ProSuite.DomainModel.AO.Processing
 		[NotNull]
 		ICollection<string> GetGroupNames();
 
+		// TODO: Test in a solution with implementations:
+#if NETFRAMEWORK || NET6_0_OR_GREATER
+
 		[CanBeNull]
 		Image GetProcessIcon([NotNull] string processName);
+
+#endif
 
 		string AllProcessesGroupName { get; }
 		string GroupProcessGroupName { get; }
