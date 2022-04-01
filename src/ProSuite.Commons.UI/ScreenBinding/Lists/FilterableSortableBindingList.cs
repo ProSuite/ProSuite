@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
-namespace ProSuite.Commons.Collections
+namespace ProSuite.Commons.UI.ScreenBinding.Lists
 {
 	public class FilterableSortableBindingList<T> : SortableBindingList<T>
 	{

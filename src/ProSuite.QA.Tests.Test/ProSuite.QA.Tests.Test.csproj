@@ -1,352 +1,91 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{5F00BBDF-0E58-4547-90F0-E5E8BC2512EE}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProSuite.QA.Tests.Test</RootNamespace>
-    <AssemblyName>ProSuite.QA.Tests.Test</AssemblyName>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
+
     <VSArcGISVersion Condition=" '$(VSArcGISVersion)' == '' ">10.8</VSArcGISVersion>
     <VSArcGISProduct Condition=" '$(VSArcGISProduct)' == ''">ArcGIS</VSArcGISProduct>
-    <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.6\DotNet</ArcGISAssemblyPath>
-    <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">C:\Program Files\ArcGIS\Pro</ProAssemblyPath>
+    <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.8\DotNet</ArcGISAssemblyPath>
+
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+    <!-- Temporary solution until the switch to .net standard is done: -->
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == 'v4.7' ">net47</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == 'v4.6.2' ">net462</TargetFrameworkVersion>
+
+    <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(OutputDirectory)\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE;$(VSArcGISProduct)</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>$(OutputDirectory)\Release\</OutputPath>
     <DefineConstants>TRACE;$(VSArcGISProduct)</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ESRI.ArcGIS.DataSourcesGDB, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).DataSourcesGDB.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ESRI.ArcGIS.DataSourcesRaster, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).DataSourcesRaster.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ESRI.ArcGIS.Geodatabase, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).Geodatabase.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ESRI.ArcGIS.GeoDatabaseExtensions, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).GeoDatabaseExtensions.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ESRI.ArcGIS.Geometry, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).Geometry.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ESRI.ArcGIS.System, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).System.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ProSuite.Microservices.Definitions.QA.Test, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.Test.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ProSuite.Microservices.Definitions.Shared, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Shared.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.IO.Compression.FileSystem" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AssertUtils.cs" />
-    <Compile Include="Constraints\GdbConstraintUtilsTest.cs" />
-    <Compile Include="Construction\Coords.cs" />
-    <Compile Include="Construction\CurveConstruction.cs" />
-    <Compile Include="Construction\MultiPatchConstruction.cs" />
-    <Compile Include="EqualFieldValuesConditionTest.cs" />
-    <Compile Include="GeometryComponentUtilsTest.cs" />
-    <Compile Include="KeySets\TupleKeySetTest.cs" />
-    <Compile Include="KeySets\TupleTest.cs" />
-    <Compile Include="KnownGapsTest.cs" />
-    <Compile Include="LineIntersectionUtilsTest.cs" />
-    <Compile Include="MathUtilsTest.cs" />
-    <Compile Include="MeasureUtilsTest.cs" />
-    <Compile Include="MultipatchUtilsTest.cs" />
-    <Compile Include="OffsetSpecificationTest.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="QaExternalGraphicConflictTest.cs" />
-    <Compile Include="QaSurfacePipeTest.cs" />
-    <Compile Include="QaBorderSenseTest.cs" />
-    <Compile Include="QaCentroidsTest.cs" />
-    <Compile Include="QaConnectionsTest.cs" />
-    <Compile Include="QaConstraintTest.cs" />
-    <Compile Include="QaContainedPointsCountTest.cs" />
-    <Compile Include="QaContainsOtherTest.cs" />
-    <Compile Include="QaCoplanarRingsTest.cs" />
-    <Compile Include="QaCurveTest.cs" />
-    <Compile Include="QaDuplicateGeometrySelfTest.cs" />
-    <Compile Include="QaEdgeMatchBorderingLinesTest.cs" />
-    <Compile Include="QaEdgeMatchBorderingPointsTest.cs" />
-    <Compile Include="QaEdgeMatchCrossingAreasTest.cs" />
-    <Compile Include="QaEdgeMatchCrossingLinesTest.cs" />
-    <Compile Include="QaExternalServiceTest.cs" />
-    <Compile Include="QaFlowLogicTest.cs" />
-    <Compile Include="QaForeignKeyTest.cs" />
-    <Compile Include="QaFullCoincidenceTest.cs" />
-    <Compile Include="QaGdbConstraintFactoryTest.cs" />
-    <Compile Include="QaGeometryConstraintTest.cs" />
-    <Compile Include="QaGeometryUtilsTest.cs" />
-    <Compile Include="QaGroupConnectedTest.cs" />
-    <Compile Include="QaGroupConstraintsTest.cs" />
-    <Compile Include="QaHorizontalSegmentsTest.cs" />
-    <Compile Include="QaInteriorRingsTest.cs" />
-    <Compile Include="QaIntersectsOtherTest.cs" />
-    <Compile Include="QaIsCoveredByOtherTest.cs" />
-    <Compile Include="QaLineConnectionFieldValuesTest.cs" />
-    <Compile Include="QaLineGroupConstraintsTest.cs" />
-    <Compile Include="QaLineIntersectZTest.cs" />
-    <Compile Include="QaMeasuresAtPointsTest.cs" />
-    <Compile Include="QaMinMeanSegmentLengthTest.cs" />
-    <Compile Include="QaMinSegAngleTest.cs" />
-    <Compile Include="QaMonotonicZTest.cs" />
-    <Compile Include="QaMpConstantPointIdsPerRingTest.cs" />
-    <Compile Include="QaMpFootprintHolesTest.cs" />
-    <Compile Include="QaMpHorizontalAzimuthsTest.cs" />
-    <Compile Include="QaMpHorizontalHeightsTest.cs" />
-    <Compile Include="QaMpHorizontalPerpendicularTest.cs" />
-    <Compile Include="QaMpNonIntersectingRingFootprintsTest.cs" />
-    <Compile Include="QaMpSinglePartFootprintTest.cs" />
-    <Compile Include="QaMpVertexNotNearFaceTest.cs" />
-    <Compile Include="QaMpVerticalFacesTest.cs" />
-    <Compile Include="QaMustBeNearOtherTest.cs" />
-    <Compile Include="QaNodeLineCoincidenceTest.cs" />
-    <Compile Include="QaNoGapsTest.cs" />
-    <Compile Include="QaNonEmptyGeometryTest.cs" />
-    <Compile Include="QaNotNearTest.cs" />
-    <Compile Include="QaPartCoincidenceOtherTest.cs" />
-    <Compile Include="QaPartCoincidenceSelfTest.cs" />
-    <Compile Include="QaPartCoincidenceVolumeTest.cs" />
-    <Compile Include="QaPointNotNearTest.cs" />
-    <Compile Include="QaPointOnLineTest.cs" />
-    <Compile Include="QaPseudoNodesTest.cs" />
-    <Compile Include="QaRegularExpressionTest.cs" />
-    <Compile Include="QaRelConstraintTest.cs" />
-    <Compile Include="QaRowCountTest.cs" />
-    <Compile Include="QaSchemaFieldAliasesTest.cs" />
-    <Compile Include="QaSchemaFieldDomainCodedValuesTest.cs" />
-    <Compile Include="QaSchemaFieldDomainDescriptionsTest.cs" />
-    <Compile Include="QaSchemaFieldDomainNameRegexTest.cs" />
-    <Compile Include="QaSchemaFieldDomainNamesTest.cs" />
-    <Compile Include="QaSchemaFieldDomainsTest.cs" />
-    <Compile Include="QaSchemaFieldNameRegexTest.cs" />
-    <Compile Include="QaSchemaFieldNamesTest.cs" />
-    <Compile Include="QaSchemaFieldPropertiesTest.cs" />
-    <Compile Include="QaSchemaReservedFieldNamesTest.cs" />
-    <Compile Include="QaSchemaSpatialReferenceTest.cs" />
-    <Compile Include="QaSegmentLengthTest.cs" />
-    <Compile Include="QaSimpleGeometryTest.cs" />
-    <Compile Include="QaSliverPolgonTest.cs" />
-    <Compile Include="QaSurfaceSpikesTest.cs" />
-    <Compile Include="QaSurfaceVertexTest.cs" />
-    <Compile Include="QaTopoNotNearTest.cs" />
-    <Compile Include="QaUniqueTest.cs" />
-    <Compile Include="QaUnreferencedRowsTest.cs" />
-    <Compile Include="QaValidCoordinateFieldsTest.cs" />
-    <Compile Include="QaValidUrlsTest.cs" />
-    <Compile Include="QaVertexCoincidenceSelfTest.cs" />
-    <Compile Include="QaWithinZRangeTest.cs" />
-    <Compile Include="QaZDifferenceSelfTest.cs" />
-    <Compile Include="RouteMeasuresTest.cs" />
-    <Compile Include="SpatialRelations\QaSpatialRelationUtilsTest.cs" />
-    <Compile Include="SpatialRelations\TestErrorReporter.cs" />
-    <Compile Include="TestData\TestDataUtils.cs" />
-    <Compile Include="TestRunners\ModelMosaicDefinitionDataset.cs" />
-    <Compile Include="TestRunners\ModelMosaicRasterDataset.cs" />
-    <Compile Include="TestRunners\ModelTableDataset.cs" />
-    <Compile Include="TestRunners\ModelVectorDataset.cs" />
-    <Compile Include="TestRunners\QaContainerTestRunner.cs" />
-    <Compile Include="TestRunners\QaTestRunner.cs" />
-    <Compile Include="TestRunners\QaTestRunnerBase.cs" />
-    <Compile Include="TestRunners\SimpleErrorWorkspace.cs" />
-    <Compile Include="TestRunners\SimpleModel.cs" />
-    <Compile Include="TestRunners\TestRunnerUtils.cs" />
-    <Compile Include="TopologicalLineTest.cs" />
-    <Compile Include="Transformer\TrGeometryTransformTest.cs" />
-    <Compile Include="Transformer\TrDissolveTest.cs" />
-    <Compile Include="Transformer\TrRule.cs" />
-    <Compile Include="VersionSpecificationTest.cs" />
-    <Compile Include="WebServer.cs" />
-    <Compile Include="ZDifferenceStrategyIntersectionPointsTest.cs" />
-    <Compile Include="ZRangeUtilsTest.cs" />
+    <PackageReference Include="Grpc" Version="2.44.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
+    <PackageReference Include="NUnit" Version="3.12.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Grpc">
-      <Version>2.44.0</Version>
-    </PackageReference>
-    <PackageReference Include="NUnit">
-      <Version>3.12.0</Version>
-    </PackageReference>
+    <ProjectReference Include="..\ProSuite.Commons.AO.Test\ProSuite.Commons.AO.Test.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
+    <ProjectReference Include="..\ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj" />
+    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
+    <ProjectReference Include="..\ProSuite.Microservices.AO\ProSuite.Microservices.AO.csproj" />
+    <ProjectReference Include="..\ProSuite.Microservices.Server.AO\ProSuite.Microservices.Server.AO.csproj" />
+    <ProjectReference Include="..\ProSuite.QA.Container.Test\ProSuite.QA.Container.Test.csproj" />
+    <ProjectReference Include="..\ProSuite.QA.Container\ProSuite.QA.Container.csproj" />
+    <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj" />
+    <ProjectReference Include="..\ProSuite.QA.TestFactories\ProSuite.QA.TestFactories.csproj" />
+    <ProjectReference Include="..\ProSuite.QA.Tests.External\ProSuite.QA.Tests.External.csproj" />
+    <ProjectReference Include="..\ProSuite.QA.Tests\ProSuite.QA.Tests.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ProSuite.Commons.AO.Test\ProSuite.Commons.AO.Test.csproj">
-      <Project>{E9137523-483C-44D6-BE53-ADAACEFBBF5F}</Project>
-      <Name>ProSuite.Commons.AO.Test</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">
-      <Project>{7E4B0861-83ED-4D12-BE27-93C9053C88CA}</Project>
-      <Name>ProSuite.Commons.AO</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
-      <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
-      <Name>ProSuite.Commons.Essentials</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
-      <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
-      <Name>ProSuite.Commons</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj">
-      <Project>{D360621D-D792-403B-A625-06A707A89D22}</Project>
-      <Name>ProSuite.DomainModel.AO</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
-      <Project>{0B48B56F-3A3D-4367-AA76-A356519AF2AB}</Project>
-      <Name>ProSuite.DomainModel.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Microservices.AO\ProSuite.Microservices.AO.csproj">
-      <Project>{53E0297E-F959-4D5D-B1CB-33D3A1D96623}</Project>
-      <Name>ProSuite.Microservices.AO</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Microservices.Server.AO\ProSuite.Microservices.Server.AO.csproj">
-      <Project>{F997B55F-C442-4224-A573-AE39F72BEB4A}</Project>
-      <Name>ProSuite.Microservices.Server.AO</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.QA.Container.Test\ProSuite.QA.Container.Test.csproj">
-      <Project>{F7D731C0-8A36-4B2C-A8C0-AFEB81FA8DD1}</Project>
-      <Name>ProSuite.QA.Container.Test</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.QA.Container\ProSuite.QA.Container.csproj">
-      <Project>{D51693C1-F9F6-425D-8CD6-8DFBF5A52F6F}</Project>
-      <Name>ProSuite.QA.Container</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.QA.Core\ProSuite.QA.Core.csproj">
-      <Project>{01cbba9e-0d4d-439f-9147-6a5685884a65}</Project>
-      <Name>ProSuite.QA.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.QA.TestFactories\ProSuite.QA.TestFactories.csproj">
-      <Project>{61704E1C-E13D-45E2-8388-BD3D1F8A1AF5}</Project>
-      <Name>ProSuite.QA.TestFactories</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.QA.Tests.External\ProSuite.QA.Tests.External.csproj">
-      <Project>{FE90B848-F449-47FE-8F3F-FF4C6A3BFF22}</Project>
-      <Name>ProSuite.QA.Tests.External</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.QA.Tests\ProSuite.QA.Tests.csproj">
-      <Project>{7A1D3AB3-A9A8-45B0-9452-A0DDEA004E2B}</Project>
-      <Name>ProSuite.QA.Tests</Name>
-    </ProjectReference>
+    <Content Remove="TestData\**" />
+    <EmbeddedResource Remove="TestData\**" />
+    <None Remove="TestData\**" />
   </ItemGroup>
-  <ItemGroup>
-    <Content Include="TestData\DKM25_HOEHENKURVE_OID_1216.xml" />
-    <Content Include="TestData\DKM25_HOEHENKURVE_OID_2178.xml" />
-    <Content Include="TestData\QaPartCoincidenceVolumeTest.mdb" />
-    <Content Include="TestData\QaSchemaTests.mdb" />
-    <Content Include="TestData\QaSchemaTestsTableNames.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="TestData\QaBorderSense.gdb\a00000001.gdbindexes" />
-    <None Include="TestData\QaBorderSense.gdb\a00000001.gdbtable" />
-    <None Include="TestData\QaBorderSense.gdb\a00000001.gdbtablx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000001.TablesByName.atx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000002.gdbtable" />
-    <None Include="TestData\QaBorderSense.gdb\a00000002.gdbtablx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000003.gdbindexes" />
-    <None Include="TestData\QaBorderSense.gdb\a00000003.gdbtable" />
-    <None Include="TestData\QaBorderSense.gdb\a00000003.gdbtablx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000004.CatItemsByPhysicalName.atx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000004.CatItemsByType.atx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000004.FDO_UUID.atx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000004.gdbindexes" />
-    <None Include="TestData\QaBorderSense.gdb\a00000004.gdbtable" />
-    <None Include="TestData\QaBorderSense.gdb\a00000004.gdbtablx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000004.spx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000005.CatRelsByDestinationID.atx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000005.CatRelsByOriginID.atx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000005.CatRelsByType.atx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000005.FDO_UUID.atx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000005.gdbindexes" />
-    <None Include="TestData\QaBorderSense.gdb\a00000005.gdbtable" />
-    <None Include="TestData\QaBorderSense.gdb\a00000005.gdbtablx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000006.CatRelTypesByBackwardLabel.atx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000006.CatRelTypesByDestItemTypeID.atx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000006.CatRelTypesByForwardLabel.atx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000006.CatRelTypesByName.atx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000006.CatRelTypesByOriginItemTypeID.atx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000006.CatRelTypesByUUID.atx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000006.gdbindexes" />
-    <None Include="TestData\QaBorderSense.gdb\a00000006.gdbtable" />
-    <None Include="TestData\QaBorderSense.gdb\a00000006.gdbtablx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000007.CatItemTypesByName.atx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000007.CatItemTypesByParentTypeID.atx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000007.CatItemTypesByUUID.atx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000007.gdbindexes" />
-    <None Include="TestData\QaBorderSense.gdb\a00000007.gdbtable" />
-    <None Include="TestData\QaBorderSense.gdb\a00000007.gdbtablx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000009.gdbindexes" />
-    <None Include="TestData\QaBorderSense.gdb\a00000009.gdbtable" />
-    <None Include="TestData\QaBorderSense.gdb\a00000009.gdbtablx" />
-    <None Include="TestData\QaBorderSense.gdb\a00000009.spx" />
-    <None Include="TestData\QaBorderSense.gdb\gdb" />
-    <None Include="TestData\QaBorderSense.gdb\timestamps" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000001.gdbindexes" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000001.gdbtable" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000001.gdbtablx" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000002.gdbtable" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000002.gdbtablx" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000003.gdbindexes" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000003.gdbtable" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000003.gdbtablx" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000004.gdbtable" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000004.gdbtablx" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000005.gdbindexes" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000005.gdbtable" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000005.gdbtablx" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000006.gdbindexes" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000006.gdbtable" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000006.gdbtablx" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000007.gdbtable" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000007.gdbtablx" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000008.gdbtable" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000008.gdbtablx" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000026.gdbindexes" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000026.gdbtable" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000026.gdbtablx" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\a00000026.spx" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\gdb" />
-    <None Include="TestData\QaPartCoincidendeCurveTest.gdb\timestamps" />
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

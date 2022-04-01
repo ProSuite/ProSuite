@@ -10,6 +10,7 @@ using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.Reflection;
+using ProSuite.Commons.UI.ScreenBinding.Lists;
 
 namespace ProSuite.Commons.UI.Finder
 {

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ProSuite.Commons.Essentials.CodeAnnotations;
 using NUnit.Framework;
 using ProSuite.Commons.Collections;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
 
 namespace ProSuite.Commons.Test.Collections
@@ -312,7 +312,7 @@ namespace ProSuite.Commons.Test.Collections
 			var values = new[] {"a", "b", "c", "b", null, "x", null};
 			int nullCount;
 			IDictionary<string, int> frequencies = CollectionUtils.GetFrequencies(values,
-			                                                                      out nullCount);
+				out nullCount);
 
 			Assert.AreEqual(2, nullCount);
 			Assert.AreEqual(1, frequencies["a"]);
@@ -327,7 +327,7 @@ namespace ProSuite.Commons.Test.Collections
 			var values = new object[] {"a", 1, "c", 1.11, null, "c", null};
 			int nullCount;
 			IDictionary<object, int> frequencies = CollectionUtils.GetFrequencies(values,
-			                                                                      out nullCount);
+				out nullCount);
 
 			Assert.AreEqual(2, nullCount);
 			Assert.AreEqual(1, frequencies["a"]);
@@ -421,7 +421,7 @@ namespace ProSuite.Commons.Test.Collections
 
 			int[] array1 = {10, 20, 30, 40, 50};
 
-			List<int> result = array.Zip(array1);
+			List<int> result = CollectionUtils.Zip(array, array1);
 
 			for (int index = 0; index < array.Length; index++)
 			{
@@ -437,7 +437,7 @@ namespace ProSuite.Commons.Test.Collections
 
 			result.Clear();
 
-			result = array.Zip(array2);
+			result = CollectionUtils.Zip(array, array2);
 
 			Assert.AreEqual(array.Length + array2.Length, result.Count);
 		}
@@ -451,7 +451,7 @@ namespace ProSuite.Commons.Test.Collections
 
 			int[] array2 = {100, 200, 300, 400, 500};
 
-			List<int> result = array.Zip(array1, array2);
+			List<int> result = CollectionUtils.Zip(array, array1, array2);
 
 			for (int index = 0; index < array.Length; index++)
 			{
@@ -472,7 +472,7 @@ namespace ProSuite.Commons.Test.Collections
 
 			result.Clear();
 
-			result = array.Zip(array4, array2);
+			result = CollectionUtils.Zip(array, array4, array2);
 
 			Assert.AreEqual(array.Length + array4.Length + array2.Length, result.Count);
 		}

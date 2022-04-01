@@ -10,6 +10,7 @@ using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Misc;
 using ProSuite.Commons.Reflection;
 using ProSuite.Commons.Text;
+using ProSuite.Commons.UI.ScreenBinding.Lists;
 using ProSuite.Commons.UI.WinForms.Controls;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;

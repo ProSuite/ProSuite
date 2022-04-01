@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.Commons.IO
 {
@@ -47,6 +48,17 @@ namespace ProSuite.Commons.IO
 						Directory.CreateDirectory(parentPath);
 					entry.ExtractToFile(fullPath);
 				}
+			}
+		}
+
+		public static void ExtractToDirectory(
+			[NotNull] string zipFilePath,
+			[NotNull] string targetDirectory,
+			[CanBeNull] Func<string, bool> callback = null)
+		{
+			using (ZipArchive zip = ZipFile.OpenRead(zipFilePath))
+			{
+				ExtractToDirectory(zip, targetDirectory, callback);
 			}
 		}
 

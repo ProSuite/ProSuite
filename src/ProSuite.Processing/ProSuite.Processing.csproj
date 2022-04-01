@@ -1,93 +1,39 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{0B72E886-B428-48ED-BA96-9CD6FCC5E171}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProSuite.Processing</RootNamespace>
-    <AssemblyName>ProSuite.Processing</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
     <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">C:\Program Files\ArcGIS\Pro</ProAssemblyPath>
+
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
-  </PropertyGroup>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+    <NoWarn>1591</NoWarn>
+
+    <!-- Temporary solution until the switch to .net standard is done: -->
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == 'v4.7' ">net47</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == 'v4.6.2' ">net462</TargetFrameworkVersion>
+
+    <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+
+	</PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(OutputDirectory)\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-	<NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>$(OutputDirectory)\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.Processing.xml</DocumentationFile>
-	<NoWarn>1591</NoWarn>
+    <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Processing.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\SharedAssemblyInfo.cs">
-      <Link>Properties\SharedAssemblyInfo.cs</Link>
-    </Compile>
-    <Compile Include="CartoProcessConfig.cs" />
-    <Compile Include="Constants.cs" />
-    <Compile Include="Domain\IMapContext.cs" />
-    <Compile Include="Domain\MaskOutlineType.cs" />
-    <Compile Include="Evaluation\CommonValues.cs" />
-    <Compile Include="Evaluation\EnvironmentBase.cs" />
-    <Compile Include="Evaluation\EvaluationException.cs" />
-    <Compile Include="Evaluation\EvaluatorEngine.cs" />
-    <Compile Include="Evaluation\ExpressionEvaluator.cs" />
-    <Compile Include="Evaluation\Function.cs" />
-    <Compile Include="Evaluation\IEvaluationEnvironment.cs" />
-    <Compile Include="Evaluation\ImplicitValue.cs" />
-    <Compile Include="Evaluation\INamedValues.cs" />
-    <Compile Include="Evaluation\Label.cs" />
-    <Compile Include="Evaluation\LiteralPool.cs" />
-    <Compile Include="Evaluation\NullEnvironment.cs" />
-    <Compile Include="Evaluation\OpCode.cs" />
-    <Compile Include="Evaluation\StandardEnvironment.cs" />
-    <Compile Include="Domain\ProcessDatasetName.cs" />
-    <Compile Include="Domain\ProcessDatasetNameConverter.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Utils\ClusterUtils.cs" />
-    <Compile Include="Utils\ExtremityType.cs" />
-    <Compile Include="Utils\FieldSetter.cs" />
-    <Compile Include="Utils\GapList.cs" />
-    <Compile Include="Utils\Interval.cs" />
-    <Compile Include="Utils\IRowValues.cs" />
-    <Compile Include="Utils\NumberUtils.cs" />
-    <Compile Include="Utils\WhereClauseMatcher.cs" />
+    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
-      <Project>{384763d9-f7a1-4aa2-9abd-ee338cd8d4c1}</Project>
-      <Name>ProSuite.Commons.Essentials</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
-      <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
-      <Name>ProSuite.Commons.Logging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj">
-      <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
-      <Name>ProSuite.Commons</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

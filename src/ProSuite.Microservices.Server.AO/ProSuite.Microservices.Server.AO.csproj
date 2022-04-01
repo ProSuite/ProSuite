@@ -1,120 +1,106 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="15.0">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{F997B55F-C442-4224-A573-AE39F72BEB4A}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProSuite.Microservices.Server.AO</RootNamespace>
-    <AssemblyName>ProSuite.Microservices.Server.AO</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
+
     <VSArcGISVersion Condition=" '$(VSArcGISVersion)' == '' ">10.8</VSArcGISVersion>
     <VSArcGISProduct Condition=" '$(VSArcGISProduct)' == ''">ArcGIS</VSArcGISProduct>
     <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.6\DotNet</ArcGISAssemblyPath>
-    <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">C:\Program Files\ArcGIS\Pro</ProAssemblyPath>
+
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+    <NoWarn>1591</NoWarn>
+
+    <!-- Temporary solution until the switch to .net standard is done: -->
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == 'v4.7' ">net47</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == 'v4.6.2' ">net462</TargetFrameworkVersion>
+
+    <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(OutputDirectory)\Debug\</OutputPath>
     <DefineConstants>DEBUG;TRACE;$(VSArcGISProduct)</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <NoWarn>1591</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>$(OutputDirectory)\Release\</OutputPath>
     <DefineConstants>TRACE;$(VSArcGISProduct)</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.Microservices.Server.AO.xml</DocumentationFile>
-    <NoWarn>1591</NoWarn>
+    <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Microservices.Server.AO.xml</DocumentationFile>
   </PropertyGroup>
+
   <ItemGroup>
     <Reference Include="ESRI.ArcGIS.DataSourcesRaster, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).DataSourcesRaster.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ESRI.ArcGIS.Geodatabase, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).Geodatabase.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ESRI.ArcGIS.Geometry, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).Geometry.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ESRI.ArcGIS.System, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).System.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ProSuite.Microservices.Definitions.Geometry, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Geometry.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ProSuite.Microservices.Definitions.QA, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ProSuite.Microservices.Definitions.QA.Test, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.QA.Test.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ProSuite.Microservices.Definitions.Shared, Culture=neutral, PublicKeyToken=82d2e1509f982a73, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\ProSuite.Microservices.ServiceDefinitions\ProSuite.Microservices.Definitions.Shared.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="Quaestor.LoadReporting, Culture=neutral, PublicKeyToken=225b4ed5a615a65b, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\lib\Quaestor\Quaestor.LoadReporting.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
     <Reference Include="System.ServiceProcess" />
     <Reference Include="Microsoft.CSharp" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="..\SharedAssemblyInfo.cs">
-      <Link>Properties\SharedAssemblyInfo.cs</Link>
-    </Compile>
-    <Compile Include="Geodatabase\RemoteDataset.cs" />
-    <Compile Include="Geometry\AdvancedReshape\AdvancedReshapeGrpcImpl.cs" />
-    <Compile Include="Geometry\AdvancedReshape\AdvancedReshapeServiceUtils.cs" />
-    <Compile Include="Geometry\ChangeAlong\ChangeAlongGrpcImpl.cs" />
-    <Compile Include="Geometry\ChangeAlong\ChangeAlongServiceUtils.cs" />
-    <Compile Include="Geometry\RemoveOverlaps\RemoveOverlapsGrpcImpl.cs" />
-    <Compile Include="Geometry\RemoveOverlaps\RemoveOverlapsServiceUtils.cs" />
-    <Compile Include="GrpcServerUtils.cs" />
-    <Compile Include="GrpcWindowsService.cs">
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+    <Compile Update="GrpcWindowsService.cs">
       <SubType>Component</SubType>
     </Compile>
-    <Compile Include="IServiceHealth.cs" />
-    <Compile Include="MessagingUtils.cs" />
-    <Compile Include="MicroserverArguments.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="ProtobufConversionUtils.cs" />
-    <Compile Include="QA\BackgroundVerificationService.cs" />
-    <Compile Include="QA\DistributedTestRunner.cs" />
-    <Compile Include="QA\IBackgroundVerificationInputs.cs" />
-    <Compile Include="QA\QualityVerificationDdxGrpcImpl.cs" />
-    <Compile Include="QA\QualityVerificationGrpcImpl.cs" />
-    <Compile Include="QA\SubResponse.cs" />
-    <Compile Include="QA\VerificationServiceParameters.cs" />
-    <Compile Include="QA\VirtualModelContext.cs" />
-    <Compile Include="QA\VirtualWorkspacesModelContext.cs" />
-    <Compile Include="QualityTestService\QualityTestGrpcImpl.cs" />
-    <Compile Include="ServerSetupUtils.cs" />
-    <Compile Include="ServiceHealth.cs" />
-    <Compile Include="StartedGrpcServer.cs" />
-    <Compile Include="TrackCancellationToken.cs" />
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommandLineParser" Version="2.8.0" />
+    <PackageReference Include="Google.Protobuf" Version="3.19.2" />
+    <PackageReference Include="Grpc" Version="2.44.0" />
+    <PackageReference Include="Grpc.HealthCheck" Version="2.44.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj" />
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons\ProSuite.Commons.csproj" />
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
+    <ProjectReference Include="..\ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj" />
+    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj" />
+    <ProjectReference Include="..\ProSuite.DomainServices.AO\ProSuite.DomainServices.AO.csproj" />
+    <ProjectReference Include="..\ProSuite.Microservices.AO\ProSuite.Microservices.AO.csproj" />
+    <ProjectReference Include="..\ProSuite.QA.Container\ProSuite.QA.Container.csproj" />
+  </ItemGroup>
+
   <ItemGroup>
     <Content Include="..\..\lib\licenses\CommandLineParser.license.txt">
       <Link>Licenses\CommandLineParser.license.txt</Link>
@@ -129,58 +115,4 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="CommandLineParser">
-      <Version>2.8.0</Version>
-    </PackageReference>
-    <PackageReference Include="Google.Protobuf">
-      <Version>3.19.2</Version>
-    </PackageReference>
-    <PackageReference Include="Grpc">
-      <Version>2.44.0</Version>
-    </PackageReference>
-    <PackageReference Include="Grpc.HealthCheck">
-      <Version>2.44.0</Version>
-    </PackageReference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">
-      <Project>{7e4b0861-83ed-4d12-be27-93c9053c88ca}</Project>
-      <Name>ProSuite.Commons.AO</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
-      <Project>{384763d9-f7a1-4aa2-9abd-ee338cd8d4c1}</Project>
-      <Name>ProSuite.Commons.Essentials</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons\ProSuite.Commons.csproj">
-      <Project>{66e5d99b-26ab-4fff-834d-d96347df4fa4}</Project>
-      <Name>ProSuite.Commons</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
-      <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
-      <Name>ProSuite.Commons.Logging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj">
-      <Project>{D360621D-D792-403B-A625-06A707A89D22}</Project>
-      <Name>ProSuite.DomainModel.AO</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.DomainModel.Core\ProSuite.DomainModel.Core.csproj">
-      <Project>{0B48B56F-3A3D-4367-AA76-A356519AF2AB}</Project>
-      <Name>ProSuite.DomainModel.Core</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.DomainServices.AO\ProSuite.DomainServices.AO.csproj">
-      <Project>{F931824E-C6AC-4E8E-B30B-F903C23600F5}</Project>
-      <Name>ProSuite.DomainServices.AO</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Microservices.AO\ProSuite.Microservices.AO.csproj">
-      <Project>{53E0297E-F959-4D5D-B1CB-33D3A1D96623}</Project>
-      <Name>ProSuite.Microservices.AO</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.QA.Container\ProSuite.QA.Container.csproj">
-      <Project>{D51693C1-F9F6-425D-8CD6-8DFBF5A52F6F}</Project>
-      <Name>ProSuite.QA.Container</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

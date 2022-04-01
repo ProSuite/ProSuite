@@ -1,341 +1,78 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <ProjectGuid>{D51693C1-F9F6-425D-8CD6-8DFBF5A52F6F}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProSuite.QA.Container</RootNamespace>
-    <AssemblyName>ProSuite.QA.Container</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
+
     <VSArcGISVersion Condition=" '$(VSArcGISVersion)' == '' ">10.8</VSArcGISVersion>
     <VSArcGISProduct Condition=" '$(VSArcGISProduct)' == ''">ArcGIS</VSArcGISProduct>
-    <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.6\DotNet</ArcGISAssemblyPath>
-    <ProAssemblyPath Condition=" '$(ProAssemblyPath)' == '' ">C:\Program Files\ArcGIS\Pro</ProAssemblyPath>
+    <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.8\DotNet</ArcGISAssemblyPath>
+    
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(OutputDirectory)\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE;$(VSArcGISProduct)</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
     <NoWarn>1591</NoWarn>
+
+    <!-- Temporary solution until the switch to .net standard is done: -->
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == 'v4.7' ">net47</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == 'v4.6.2' ">net462</TargetFrameworkVersion>
+
+    <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugType>full</DebugType>
+    <DefineConstants>DEBUG;TRACE;$(VSArcGISProduct)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>$(OutputDirectory)\Release\</OutputPath>
     <DefineConstants>TRACE;$(VSArcGISProduct)</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.QA.Container.xml</DocumentationFile>
-    <NoWarn>1591</NoWarn>
+    <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.QA.Container.xml</DocumentationFile>
   </PropertyGroup>
+
   <ItemGroup>
     <Reference Include="ESRI.ArcGIS.DataSourcesRaster, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).DataSourcesRaster.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ESRI.ArcGIS.Geodatabase, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).Geodatabase.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ESRI.ArcGIS.Geometry, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).Geometry.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
     <Reference Include="ESRI.ArcGIS.System, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
       <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).System.dll</HintPath>
-    </Reference>
-    <Reference Include="System">
-      <Name>System</Name>
-    </Reference>
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data">
-      <Name>System.Data</Name>
-    </Reference>
-    <Reference Include="System.Xml">
-      <Name>System.XML</Name>
+      <SpecificVersion>False</SpecificVersion>
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\SharedAssemblyInfo.cs">
-      <Link>Properties\SharedAssemblyInfo.cs</Link>
-    </Compile>
-    <Compile Include="AggregatedTestIssueCodes.cs" />
-    <Compile Include="BeginTileParameters.cs" />
-    <Compile Include="ContainerTest.Nested.cs" />
-    <Compile Include="Involved.cs" />
-    <Compile Include="InvolvedNested.cs" />
-    <Compile Include="InvolvesTablesBase.cs" />
-    <Compile Include="IssueFilter.cs" />
-    <Compile Include="ProcessBase.cs" />
-    <Compile Include="QaErrorGeometry.cs" />
-    <Compile Include="ExpressionUtils.cs" />
-    <Compile Include="GeometryConstraint.cs" />
-    <Compile Include="Geometry\AngleUnit.cs" />
-    <Compile Include="Geometry\AoSegmentProxy.cs" />
-    <Compile Include="Geometry\CircleHullPart.cs" />
-    <Compile Include="Geometry\CutPart.cs" />
-    <Compile Include="Geometry\DummySegmentProxy.cs" />
-    <Compile Include="Geometry\HullLine.cs" />
-    <Compile Include="Geometry\HullLineArc.cs" />
-    <Compile Include="Geometry\HullLineLine.cs" />
-    <Compile Include="Geometry\HullLineSimple.cs" />
-    <Compile Include="Geometry\IHullPart.cs" />
-    <Compile Include="Geometry\IIndexedMultiPatch.cs" />
-    <Compile Include="Geometry\IndexedMultiPatch.cs" />
-    <Compile Include="Geometry\ISegmentProxy.cs" />
-    <Compile Include="Geometry\ISegmentsCache.cs" />
-    <Compile Include="Geometry\IWKSPointCollection.cs" />
-    <Compile Include="Geometry\Lin.cs" />
-    <Compile Include="Geometry\Lin2D.cs" />
-    <Compile Include="Geometry\Lin3D.cs" />
-    <Compile Include="Geometry\LineHullPart.cs" />
-    <Compile Include="Geometry\LinPair.cs" />
-    <Compile Include="Geometry\LinPair2D.cs" />
-    <Compile Include="Geometry\LinPair3D.cs" />
-    <Compile Include="Geometry\PartProxy.cs" />
-    <Compile Include="Geometry\PatchProxy.cs" />
-    <Compile Include="Geometry\PlaneProxy.cs" />
-    <Compile Include="Geometry\QaGeometryUtils.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Geometry\RectCap.cs" />
-    <Compile Include="Geometry\RingPlaneProxy.cs" />
-    <Compile Include="Geometry\RoundCap.cs" />
-    <Compile Include="Geometry\SegmentCap.cs" />
-    <Compile Include="Geometry\SegmentHull.cs" />
-    <Compile Include="Geometry\SegmentPair.cs" />
-    <Compile Include="Geometry\SegmentPair2D.cs" />
-    <Compile Include="Geometry\SegmentPair3D.cs" />
-    <Compile Include="Geometry\SegmentPartComparer.cs" />
-    <Compile Include="Geometry\SegmentProxyNeighborhood.cs" />
-    <Compile Include="Geometry\SegmentsEnumerable.cs" />
-    <Compile Include="Geometry\SegmentsEnumerator.cs" />
-    <Compile Include="Geometry\TriPlaneProxy.cs" />
-    <Compile Include="Geometry\SegmentUtils.cs" />
-    <Compile Include="Geometry\WksFromToSegmentProxy.cs" />
-    <Compile Include="Geometry\WksSegmentProxy.cs" />
-    <Compile Include="Geometry\WksSegmentProxyBase.cs" />
-    <Compile Include="ICompareInvolvedRows.cs" />
-    <Compile Include="IDataReference.cs" />
-    <Compile Include="IEditing.cs" />
-    <Compile Include="IErrorReporting.cs" />
-    <Compile Include="IMockRow.cs" />
-    <Compile Include="InvolvedRowUtils.cs" />
-    <Compile Include="IRelatedTablesProvider.cs" />
-    <Compile Include="IssueCode.cs" />
-    <Compile Include="IssueCodeUtils.cs" />
-    <Compile Include="ISurfaceRow.cs" />
-    <Compile Include="ITestIssueCodes.cs" />
-    <Compile Include="NonContainerTest.cs" />
-    <Compile Include="PolygonGrower\DirectedRowComparer.cs" />
-    <Compile Include="PolygonGrower\IDirectedRow.cs" />
-    <Compile Include="PolygonGrower\IHasPolyline.cs" />
-    <Compile Include="PolygonGrower\ILineDirectedRow.cs" />
-    <Compile Include="PolygonGrower\INodesDirectedRow.cs" />
-    <Compile Include="PolygonGrower\IPolygonDirectedRow.cs" />
-    <Compile Include="PolygonGrower\ITableIndexRow.cs" />
-    <Compile Include="PolygonGrower\ITopologicalLine.cs" />
-    <Compile Include="PolygonGrower\NetGrower.cs" />
-    <Compile Include="PolygonGrower\NetNode.cs" />
-    <Compile Include="PolygonGrower\NodesDirectedRow.cs" />
-    <Compile Include="PolygonGrower\PathRowComparer.cs" />
-    <Compile Include="PolygonGrower\SimpleDirectedRow.cs" />
-    <Compile Include="PolygonGrower\TableIndexRow.cs" />
-    <Compile Include="PolygonGrower\TableIndexRowComparer.cs" />
-    <Compile Include="PolygonGrower\TopologicalLineUtils.cs" />
-    <Compile Include="PolygonPartType.cs" />
-    <Compile Include="Geometry\IIndexedSegments.cs" />
-    <Compile Include="Geometry\IndexedPolycurve.cs" />
-    <Compile Include="Geometry\SegmentPart.cs" />
-    <Compile Include="Geometry\SegmentPartList.cs" />
-    <Compile Include="Geometry\SegmentProxy.cs" />
-    <Compile Include="RasterReference.cs" />
-    <Compile Include="RasterRow.cs" />
-    <Compile Include="RowFilter.cs" />
-    <Compile Include="RowReference.cs" />
-    <Compile Include="TestBase.cs" />
-    <Compile Include="TestCategories\AttributeTestAttribute.cs" />
-    <Compile Include="TestCategories\EdgeMatchTestAttribute.cs" />
-    <Compile Include="TestCategories\MValuesTestAttribute.cs" />
-    <Compile Include="TestCategories\SymbologyTestAttribute.cs" />
-    <Compile Include="TestCategories\GeometryTestAttribute.cs" />
-    <Compile Include="TestCategories\InternallyUsedTestAttribute.cs" />
-    <Compile Include="TestCategories\LinearNetworkTestAttribute.cs" />
-    <Compile Include="TestCategories\PolygonNetworkTestAttribute.cs" />
-    <Compile Include="TestCategories\ProximityTestAttribute.cs" />
-    <Compile Include="TestCategories\SchemaTestAttribute.cs" />
-    <Compile Include="TestCategories\IntersectionParameterTestAttribute.cs" />
-    <Compile Include="TestCategories\TerrainTestAttribute.cs" />
-    <Compile Include="TestCategories\TestCategoryAttribute.cs" />
-    <Compile Include="TestCategories\TestCategoryNames.Designer.cs">
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+    <Compile Update="TestCategories\TestCategoryNames.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>TestCategoryNames.resx</DependentUpon>
     </Compile>
-    <Compile Include="TestCategories\TopologyTestAttribute.cs" />
-    <Compile Include="TestCategories\ZValuesTestAttribute.cs" />
-    <Compile Include="TestContainer\BaseRow.cs" />
-    <Compile Include="TestContainer\BaseRowComparer.cs" />
-    <Compile Include="TestContainer\CachedRow.cs" />
-    <Compile Include="TestContainer\IFeatureProxy.cs" />
-    <Compile Include="TestContainer\IIndexedSegmentsFeature.cs" />
-    <Compile Include="TestContainer\IIndexedMultiPatchFeature.cs" />
-    <Compile Include="TestContainer\IIndexedPolycurveFeature.cs" />
-    <Compile Include="TestContainer\ITestContainer.cs" />
-    <Compile Include="TestContainer\ITestProgress.cs" />
-    <Compile Include="TestContainer\IUniqueIdObject.cs" />
-    <Compile Include="TestContainer\OverlappingFeatures.cs" />
-    <Compile Include="TestContainer\ProgressWatch.cs" />
-    <Compile Include="TestContainer\RastersRowEnumerable.cs" />
-    <Compile Include="TestContainer\SimpleBaseRow.cs" />
-    <Compile Include="InvolvedRows.cs" />
-    <Compile Include="TestContainer\TerrainRowEnumerable.cs" />
-    <Compile Include="TestContainer\TestRowEnum.cs" />
-    <Compile Include="TestContainer\TileCache.cs" />
-    <Compile Include="TestContainer\UniqueId.cs" />
-    <Compile Include="TestContainer\UniqueIdProvider.cs" />
-    <Compile Include="TestContainer\UniqueIdProviderFactory.cs" />
-    <Compile Include="TestIssueCodes.cs" />
-    <Compile Include="TestSupport\CodedDomainValueProvider.cs" />
-    <Compile Include="TestSupport\ColumnInfo.cs" />
-    <Compile Include="TestSupport\ColumnInfoFactory.cs" />
-    <Compile Include="TestSupport\DateFieldExpression.cs" />
-    <Compile Include="TestSupport\DoubleFieldExpression.cs" />
-    <Compile Include="TestSupport\ExpressionValueProvider.cs" />
-    <Compile Include="TestSupport\FieldColumnInfo.cs" />
-    <Compile Include="TestSupport\MultiTableDoubleFieldExpression.cs" />
-    <Compile Include="TestSupport\MultiTableFieldExpressionBase.cs" />
-    <Compile Include="TestSupport\FieldExpressionBase.cs" />
-    <Compile Include="TestSupport\IColumnNames.cs" />
-    <Compile Include="TestSupport\IntFieldExpression.cs" />
-    <Compile Include="TestSupport\IValueProvider.cs" />
-    <Compile Include="TestSupport\ObjectIdAliasColumnInfo.cs" />
-    <Compile Include="TestSupport\RelatedTable.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="TestSupport\RowCondition.cs" />
-    <Compile Include="TestSupport\ShapeEnvelopePropertyAliasColumnInfoBase.cs" />
-    <Compile Include="TestSupport\ShapeExteriorRingCountAliasColumnInfo.cs" />
-    <Compile Include="TestSupport\ShapeInteriorRingCountAliasColumnInfo.cs" />
-    <Compile Include="TestSupport\ShapeMMaxAliasColumnInfo.cs" />
-    <Compile Include="TestSupport\ShapeMMinAliasColumnInfo.cs" />
-    <Compile Include="TestSupport\ShapePartCountAliasColumnInfo.cs" />
-    <Compile Include="TestSupport\ShapeVertexCountAliasColumnInfo.cs" />
-    <Compile Include="TestSupport\ShapeLengthAliasColumnInfo.cs" />
-    <Compile Include="TestSupport\ShapeAreaAliasColumnInfo.cs" />
-    <Compile Include="TestSupport\ShapeXMaxAliasColumnInfo.cs" />
-    <Compile Include="TestSupport\ShapeXMinAliasColumnInfo.cs" />
-    <Compile Include="TestSupport\ShapeYMaxAliasColumnInfo.cs" />
-    <Compile Include="TestSupport\ShapeYMinAliasColumnInfo.cs" />
-    <Compile Include="TestSupport\ShapeZMaxAliasColumnInfo.cs" />
-    <Compile Include="TestSupport\ShapeZMinAliasColumnInfo.cs" />
-    <Compile Include="TestSupport\StringFieldExpression.cs" />
-    <Compile Include="TestSupport\TableNameColumnInfo.cs" />
-    <Compile Include="TestSupport\TableViewFactory.cs" />
-    <Compile Include="TestSupport\ValidRelationConstraint.cs" />
-    <Compile Include="TestSupport\RowPairCondition.cs" />
-    <Compile Include="TestSupport\FormatUtils.cs" />
-    <Compile Include="TestSupport\IntersectionMatrixHelper.cs" />
-    <Compile Include="ISearchable.cs" />
-    <Compile Include="Geometry\NearSegment.cs" />
-    <Compile Include="TestSupport\IValidRelationConstraint.cs" />
-    <Compile Include="TestSupport\MultiTableView.cs" />
-    <Compile Include="PolygonGrower\GeometryCompletedEventHandler.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="InvolvedRow.cs" />
-    <Compile Include="ITest.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="PolygonGrower\LineList.cs" />
-    <Compile Include="PolygonGrower\LineListPolygon.cs" />
-    <Compile Include="PolygonGrower\NetElement.cs" />
-    <Compile Include="PolygonGrower\NetPoint.cs" />
-    <Compile Include="PolygonGrower\PolygonNet.cs" />
-    <Compile Include="PolygonGrower\TopologicalLine.cs" />
-    <Compile Include="PolygonGrower\DirectedRow.cs" />
-    <Compile Include="PolygonGrower\RingGrower.cs" />
-    <Compile Include="QaError.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="QaErrorAdministrator.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="QaErrorEventArgs.cs" />
-    <Compile Include="QueryFilterHelper.cs" />
-    <Compile Include="RowComparer.cs" />
-    <Compile Include="TestSupport\RelatedTables.cs" />
-    <Compile Include="TestSupport\TableIndexPair.cs" />
-    <Compile Include="TestSupport\TableView.cs" />
-    <Compile Include="TestSupport\TableViewBase.cs" />
-    <Compile Include="TerrainRow.cs" />
-    <Compile Include="TestContainer\GeometryEngine.cs" />
-    <Compile Include="TestContainer\IGeometryEngine.cs" />
-    <Compile Include="TestContainer\ProgressArgs.cs" />
-    <Compile Include="RowEventArgs.cs" />
-    <Compile Include="ContainerTest.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="TestContainer\ProgressHandler.cs" />
-    <Compile Include="TestContainer\Step.cs" />
-    <Compile Include="TestContainer\TestContainer.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="TestContainer\TestContainerException.cs" />
-    <Compile Include="TestException.cs" />
-    <Compile Include="TestRow.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="TestRowException.cs" />
-    <Compile Include="TestUtils.cs" />
-    <Compile Include="TileInfo.cs" />
-    <Compile Include="TileState.cs" />
-    <Compile Include="TinSurface.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj">
-      <Project>{7E4B0861-83ED-4D12-BE27-93C9053C88CA}</Project>
-      <Name>ProSuite.Commons.AO</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
-      <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
-      <Name>ProSuite.Commons.Logging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons\ProSuite.Commons.csproj">
-      <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
-      <Name>ProSuite.Commons</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
-      <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
-      <Name>ProSuite.Commons.Essentials</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.AO\ProSuite.Commons.AO.csproj" />
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons\ProSuite.Commons.csproj" />
+    <ProjectReference Include="..\..\..\ProSuite\src\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
   </ItemGroup>
+
   <ItemGroup>
-    <EmbeddedResource Include="TestCategories\TestCategoryNames.resx">
+    <EmbeddedResource Update="TestCategories\TestCategoryNames.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>TestCategoryNames.Designer.cs</LastGenOutput>
       <SubType>Designer</SubType>
     </EmbeddedResource>
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PreBuildEvent>
-    </PreBuildEvent>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
 </Project>

@@ -1,294 +1,57 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="12.0">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ProSuite.Commons</RootNamespace>
-    <AssemblyName>ProSuite.Commons</AssemblyName>
     <SignAssembly>true</SignAssembly>
     <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
     <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
+
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    
     <ProSuiteEncryptorFactoryDir Condition=" '$(ProSuiteEncryptorFactoryDir)' == '' ">Cryptography</ProSuiteEncryptorFactoryDir>
+
+    <NoWarn>1591</NoWarn>
+
+    <!-- Temporary solution until the switch to .net standard is done: -->
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == 'v4.7' ">net47</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == 'v4.6.2' ">net462</TargetFrameworkVersion>
+
+    <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>$(OutputDirectory)\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <NoWarn>1591</NoWarn>
-    <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>$(OutputDirectory)\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DocumentationFile>$(OutputDirectory)\Release\ProSuite.Commons.xml</DocumentationFile>
-    <NoWarn>1591</NoWarn>
+    <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Commons.xml</DocumentationFile>
   </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Core">
-      <RequiredTargetFramework>3.5</RequiredTargetFramework>
-    </Reference>
-    <Reference Include="System.Data" />
-    <Reference Include="System.Drawing" />
-    <Reference Include="System.IO.Compression" />
-    <Reference Include="System.Xml" />
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
   </ItemGroup>
+
+  <!-- Allow using a product-specific EncryptorFactory: -->
+  <ItemGroup Condition=" '$(ProSuiteEncryptorFactoryDir)' != '' ">
+    <Compile Remove="Cryptography\EncryptorFactory.cs" />
+    <Compile Include="$(ProSuiteEncryptorFactoryDir)\EncryptorFactory.cs" Link="Cryptography\EncryptorFactory.cs" />
+  </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="..\SharedAssemblyInfo.cs">
-      <Link>Properties\SharedAssemblyInfo.cs</Link>
-    </Compile>
-    <Compile Include="$(ProSuiteEncryptorFactoryDir)\EncryptorFactory.cs">
-      <Link Condition=" '$(ProSuiteEncryptorFactoryDir)' != 'Cryptography' ">Cryptography\EncryptorFactory.cs</Link>
-    </Compile>
-    <Compile Include="Ado\AdoTransactionLevel.cs" />
-    <Compile Include="Ado\AdoUtils.cs" />
-    <Compile Include="Ado\ConnectionStringBuilder.cs" />
-    <Compile Include="Ado\ConnectionStringEncryptionUtils.cs" />
-    <Compile Include="AppDataFolder.cs" />
-    <Compile Include="Callbacks\CallbackUtils.cs" />
-    <Compile Include="Collections\ConsistentHashLargeDictionary.cs" />
-    <Compile Include="Collections\DistinctValue.cs" />
-    <Compile Include="Collections\DistinctValues.cs" />
-    <Compile Include="Collections\FilterableSortableBindingList.cs" />
-    <Compile Include="Collections\HashHelpers.cs" />
-    <Compile Include="Collections\LargeDictionaryFactory.cs" />
-    <Compile Include="Collections\NumericStringComparer.cs" />
-    <Compile Include="Collections\PriorityQueue.cs" />
-    <Compile Include="Com\StaTaskScheduler.cs" />
-    <Compile Include="ConfigurationDirectoryProvider.cs" />
-    <Compile Include="ConfigurationDirectorySearcher.cs" />
-    <Compile Include="Cryptography\CertificateUtils.cs" />
-    <Compile Include="Cryptography\KeyPair.cs" />
-    <Compile Include="Cryptography\PropertyValueEncryptionUtils.cs" />
-    <Compile Include="Cryptography\StringEncryptor.cs" />
-    <Compile Include="Cryptography\StringEncryptorBase.cs" />
-    <Compile Include="Cryptography\IStringEncryptor.cs" />
-    <Compile Include="Com\ComUtils.cs" />
-    <Compile Include="DomainModels\ModelElementNameUtils.cs" />
-    <Compile Include="Exceptions\ExceptionUtils.cs" />
-    <Compile Include="Gdb\WorkspaceDbType.cs" />
-    <Compile Include="Geom\ChangeAlongZSource.cs" />
-    <Compile Include="Geom\ChangeZUtils.cs" />
-    <Compile Include="Geom\CrackPoint.cs" />
-    <Compile Include="Geom\EnvelopeXY.cs" />
-    <Compile Include="Geom\EsriShape\EsriShapeFormatUtils.cs" />
-    <Compile Include="Geom\EsriShape\EsriShapeType.cs" />
-    <Compile Include="Geom\EsriShape\ProSuiteGeometryType.cs" />
-    <Compile Include="Geom\GeomRelationUtils.cs" />
-    <Compile Include="Geom\IBoundedXY.cs" />
-    <Compile Include="Geom\IntersectionArea3D.cs" />
-    <Compile Include="Geom\IPointList.cs" />
-    <Compile Include="Geom\ISegmentList.cs" />
-    <Compile Include="Geom\Multipoint.cs" />
-    <Compile Include="Geom\PntComparer.cs" />
-    <Compile Include="Geom\Polyhedron.cs" />
-    <Compile Include="Geom\SegmentIntersectionFilter.cs" />
-    <Compile Include="Geom\SegmentIntersectionUtils.cs" />
-    <Compile Include="Geom\SubcurveIntersectionPointNavigator.cs" />
-    <Compile Include="Geom\SubcurveNavigator.cs" />
-    <Compile Include="Geom\Wkb\GeomBuilder.cs" />
-    <Compile Include="Geom\Wkb\IPointFactory.cs" />
-    <Compile Include="Geom\Wkb\Ordinates.cs" />
-    <Compile Include="Geom\Wkb\PntFactory.cs" />
-    <Compile Include="Geom\Wkb\GeometryBuilderBase.cs" />
-    <Compile Include="Geom\Wkb\WkbGeometryType.cs" />
-    <Compile Include="Geom\Wkb\WkbGeomReader.cs" />
-    <Compile Include="Geom\Wkb\WkbReader.cs" />
-    <Compile Include="Geom\Wkb\WkbGeomWriter.cs" />
-    <Compile Include="Geom\Wkb\BigEndianBinaryReader.cs" />
-    <Compile Include="Geom\Wkb\WkbWriter.cs" />
-    <Compile Include="IO\ZipStorer.cs" />
-    <Compile Include="IO\ZipUtils.cs" />
-    <Compile Include="ManagedOptions\DatasetSpecificValue.cs" />
-    <Compile Include="Misc\Either.cs" />
-    <Compile Include="Geom\Box.cs" />
-    <Compile Include="Geom\GeomTopoOpUtils.cs" />
-    <Compile Include="Geom\MultiLinestring.cs" />
-    <Compile Include="Geom\MultiPolycurve.cs" />
-    <Compile Include="Geom\RingGroup.cs" />
-    <Compile Include="Geom\GeomUtils.cs" />
-    <Compile Include="Geom\IBox.cs" />
-    <Compile Include="Geom\IGmtry.cs" />
-    <Compile Include="Geom\IntersectionPoint3D.cs" />
-    <Compile Include="Geom\IntersectionPointType.cs" />
-    <Compile Include="Geom\IPnt.cs" />
-    <Compile Include="Geom\Line3D.cs" />
-    <Compile Include="Geom\IntersectionPath3D.cs" />
-    <Compile Include="Geom\Linestring.cs" />
-    <Compile Include="Geom\Plane3D.cs" />
-    <Compile Include="Geom\Pnt.cs" />
-    <Compile Include="Geom\Pnt2D.cs" />
-    <Compile Include="Geom\Pnt3D.cs" />
-    <Compile Include="Geom\RingOperator.cs" />
-    <Compile Include="Geom\RotationAxis.cs" />
-    <Compile Include="Geom\SegmentIndex.cs" />
-    <Compile Include="Geom\SegmentIntersection.cs" />
-    <Compile Include="Geom\SpatialIndex\ISpatialSearcher.cs" />
-    <Compile Include="Geom\SpatialIndex\SpatialHashSearcher.cs" />
-    <Compile Include="Geom\SpatialIndex\BoxTree.cs" />
-    <Compile Include="Geom\SpatialIndex\BoxTree.Neighborhood.cs" />
-    <Compile Include="Geom\SpatialIndex\BoxTree.TileEnumerator.cs" />
-    <Compile Include="Geom\SpatialIndex\BoxTreeUtils.cs" />
-    <Compile Include="Geom\SpatialIndex\SpatialHashIndex.cs" />
-    <Compile Include="Geom\SpatialIndex\TileIndex.cs" />
-    <Compile Include="Geom\SpatialIndex\TilingDefinition.cs" />
-    <Compile Include="Geom\SpatialIndex\BoxTreeSearcher.cs" />
-    <Compile Include="Geom\Vector.cs" />
-    <Compile Include="Globalization\CultureInfoUtils.cs" />
-    <Compile Include="DateTimeUtils.cs" />
-    <Compile Include="DomainModels\EncryptedStringBase.cs" />
-    <Compile Include="DomainModels\EntityWithMetadata.cs" />
-    <Compile Include="DomainModels\IEntityMetadata.cs" />
-    <Compile Include="DomainModels\IPersistenceAware.cs" />
-    <Compile Include="DomainModels\StatelessDomainTransactionManager.cs" />
-    <Compile Include="DomainModels\VersionedEntityWithMetadata.cs" />
-    <Compile Include="Globalization\LocalizedCategoryAttribute.cs" />
-    <Compile Include="Globalization\LocalizedDescriptionAttribute.cs" />
-    <Compile Include="IConfigurationDirectoryProvider.cs" />
-    <Compile Include="IO\CsvReader.cs" />
-    <Compile Include="IO\CsvWriter.cs" />
-    <Compile Include="IUserEmailProvider.cs" />
-    <Compile Include="IUserNameProvider.cs" />
-    <Compile Include="ManagedOptions\CentralizableSetting.cs" />
-    <Compile Include="ManagedOptions\IOptionsRepository.cs" />
-    <Compile Include="ManagedOptions\OptionsBase.cs" />
-    <Compile Include="ManagedOptions\OptionsRepository.cs" />
-    <Compile Include="ManagedOptions\OverridableSetting.cs" />
-    <Compile Include="ManagedOptions\OverridableSettingsProvider.cs" />
-    <Compile Include="ManagedOptions\PartialOptionsBase.cs" />
-    <Compile Include="MathUtils.cs" />
-    <Compile Include="Misc\BlockingPeriod.cs" />
-    <Compile Include="DomainModels\DetachedState.cs" />
-    <Compile Include="DomainModels\EncryptedString.cs" />
-    <Compile Include="DomainModels\Entity.cs" />
-    <Compile Include="DomainModels\IAnnotated.cs" />
-    <Compile Include="DomainModels\IDetachedState.cs" />
-    <Compile Include="DomainModels\IDomainTransactionManager.cs" />
-    <Compile Include="DomainModels\IEntity.cs" />
-    <Compile Include="DomainModels\IEntityRepository.cs" />
-    <Compile Include="DomainModels\IEntityTest.cs" />
-    <Compile Include="DomainModels\IMemoryDb.cs" />
-    <Compile Include="DomainModels\INamed.cs" />
-    <Compile Include="DomainModels\IRepository.cs" />
-    <Compile Include="DomainModels\IUnitOfWork.cs" />
-    <Compile Include="DomainModels\IVersionedEntity.cs" />
-    <Compile Include="DomainModels\MemoryDb.cs" />
-    <Compile Include="DomainModels\NopDomainTransactionManager.cs" />
-    <Compile Include="DomainModels\ReadOnlyList.cs" />
-    <Compile Include="DomainModels\ReattachStateOption.cs" />
-    <Compile Include="DomainModels\VariantValue.cs" />
-    <Compile Include="DomainModels\VariantValueType.cs" />
-    <Compile Include="DomainModels\VersionedEntity.cs" />
-    <Compile Include="Diagnostics\MemoryUsageInfo.cs" />
-    <Compile Include="EnvironmentUtils.cs" />
-    <Compile Include="CommandLine\Arguments.cs" />
-    <Compile Include="CommandLine\UsageWriter.cs" />
-    <Compile Include="CommandLine\UsageTarget.cs" />
-    <Compile Include="ConversionUtils.cs" />
-    <Compile Include="Cryptography\CryptoUtils.cs" />
-    <Compile Include="EnumUtils.cs" />
-    <Compile Include="Exceptions\Ex.cs" />
-    <Compile Include="Exceptions\InvalidConfigurationException.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Exceptions\InvalidDataException.cs">
-      <SubType>Code</SubType>
-    </Compile>
-    <Compile Include="Exceptions\RuleViolationException.cs" />
-    <Compile Include="IO\FileSystemUtils.cs" />
-    <Compile Include="NamedValuesExpressions\NamedValues.cs" />
-    <Compile Include="NamedValuesExpressions\NamedValuesConjunctionExpression.cs" />
-    <Compile Include="NamedValuesExpressions\NamedValuesExpression.cs" />
-    <Compile Include="NamedValuesExpressions\NamedValuesParser.cs" />
-    <Compile Include="NamedValuesExpressions\SimpleNamedValuesExpression.cs" />
-    <Compile Include="NotifyPropertyChangedBase.cs" />
-    <Compile Include="OsUserNameProvider.cs" />
-    <Compile Include="Progress\IProgressFeedback.cs" />
-    <Compile Include="Progress\LoggingProgressFeedback.cs" />
-    <Compile Include="Progress\NopProgressFeedback.cs" />
-    <Compile Include="Progress\ProgressFeedbackBase.cs" />
-    <Compile Include="Progress\ServiceCallStatus.cs" />
-    <Compile Include="Reflection\PrivateAssemblyUtils.cs" />
-    <Compile Include="Reflection\ReflectionUtils.cs" />
-    <Compile Include="RegistryRootKey.cs" />
-    <Compile Include="RegistryUtils.cs" />
-    <Compile Include="SimpleUserNameProvider.cs" />
-    <Compile Include="SystemUtils.cs" />
-    <Compile Include="Testing\TestDataLocator.cs" />
-    <Compile Include="Text\RegexUtils.cs" />
-    <Compile Include="Text\RichTextBuilder.cs" />
-    <Compile Include="Text\StringUtils.cs" />
-    <Compile Include="Misc\IContextAware.cs" />
-    <Compile Include="Keyboard\IKeyTranslator.cs" />
-    <Compile Include="Collections\CollectionUtils.cs" />
-    <Compile Include="Keyboard\KeyboardShortcut.cs" />
-    <Compile Include="Misc\Latch.cs" />
-    <Compile Include="Notifications\INotification.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Notifications\Notification.cs" />
-    <Compile Include="Notifications\NotificationCollection.cs" />
-    <Compile Include="Notifications\NotificationUtils.cs" />
-    <Compile Include="Collections\SimpleSet.cs" />
-    <Compile Include="Collections\PropertyComparer.cs" />
-    <Compile Include="Collections\SortableBindingList.cs" />
-    <Compile Include="Text\TaggingUtils.cs" />
-    <Compile Include="ThreadAffineUseNameProvider.cs" />
-    <Compile Include="Validation\DateMustBeAfterAttribute.cs" />
-    <Compile Include="Validation\DateMustBeOnOrAfterAttribute.cs" />
-    <Compile Include="Validation\GreaterOrEqualToZeroAttribute.cs" />
-    <Compile Include="Validation\GreaterThanZeroAttribute.cs" />
-    <Compile Include="Validation\IValidated.cs" />
-    <Compile Include="Validation\IValidator.cs" />
-    <Compile Include="Validation\LessThanOrEqualAttribute.cs" />
-    <Compile Include="Validation\MaximumStringLengthAttribute.cs" />
-    <Compile Include="Validation\MessageBag.cs" />
-    <Compile Include="Validation\Notification.cs" />
-    <Compile Include="Validation\NotificationMessage.cs" />
-    <Compile Include="Validation\RequiredAttribute.cs" />
-    <Compile Include="Validation\Severity.cs" />
-    <Compile Include="Validation\ValidatedChildAttribute.cs" />
-    <Compile Include="Validation\ValidationAction.cs" />
-    <Compile Include="Validation\ValidationAttribute.cs" />
-    <Compile Include="Validation\ValidationUtils.cs" />
-    <Compile Include="Validation\Validator.cs" />
-    <Compile Include="Validation\ValidNameAttribute.cs" />
-    <Compile Include="Validation\ValidTokenAttribute.cs" />
-    <Compile Include="ISettingsPersister.cs" />
-    <Compile Include="Xml\XmlColor.cs" />
-    <Compile Include="Xml\XmlNamedEntity.cs" />
-    <Compile Include="Xml\XmlSettingsPersister.cs" />
-    <Compile Include="Xml\XmlSerializationHelper.cs" />
-    <Compile Include="Xml\XmlUtils.cs" />
+    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
   </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj">
-      <Project>{384763D9-F7A1-4AA2-9ABD-EE338CD8D4C1}</Project>
-      <Name>ProSuite.Commons.Essentials</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj">
-      <Project>{A227D52C-0536-498F-ACF2-2A5A67C3D9FF}</Project>
-      <Name>ProSuite.Commons.Logging</Name>
-    </ProjectReference>
+    <PackageReference Include="C5" Version="2.5.3" />
+    <PackageReference Include="System.IO.Compression" Version="4.3.0" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="C5">
-      <Version>2.5.3</Version>
-    </PackageReference>
-  </ItemGroup>
-  <ItemGroup />
+
+  <!-- License files: -->
   <ItemGroup>
     <Content Include="..\..\lib\licenses\C5.license.txt">
       <Link>Licenses\C5.license.txt</Link>
@@ -303,12 +66,5 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
-  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+
 </Project>
