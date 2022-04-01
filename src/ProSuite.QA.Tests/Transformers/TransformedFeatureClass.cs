@@ -6,6 +6,7 @@ using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.QA.Container.TestContainer;
 
 namespace ProSuite.QA.Tests.Transformers
 {
@@ -22,8 +23,9 @@ namespace ProSuite.QA.Tests.Transformers
 
 		void IRowsCache.Add(IReadOnlyRow row)
 		{
+			VirtualRow baseRow = (VirtualRow) ((row as IFeatureProxy)?.Inner ?? row);
 			Assert.NotNull((TransformedBackingDataset) BackingDataset,
-			               $"{nameof(BackingDataset)} not set").AddToCache((VirtualRow)row);
+			               $"{nameof(BackingDataset)} not set").AddToCache(baseRow);
 		}
 
 		bool IRowsCache.Remove(int oid)
