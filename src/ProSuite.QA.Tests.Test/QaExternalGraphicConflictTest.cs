@@ -2,7 +2,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Security.AccessControl;
 using System.Security.Principal;
@@ -75,7 +74,8 @@ namespace ProSuite.QA.Tests.Test
 			{
 				// caught deliberately
 			}
-			ZipFile.ExtractToDirectory(zippedTestdata, unitTestData);
+
+			ZipUtils.ExtractToDirectory(zippedTestdata, unitTestData);
 
 			// Get directory access info
 			DirectoryInfo dinfo = new DirectoryInfo(unitTestData);
