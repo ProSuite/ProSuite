@@ -8,7 +8,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ProSuite.DomainModel.Persistence.Core.Test</RootNamespace>
     <AssemblyName>ProSuite.DomainModel.Persistence.Core.Test</AssemblyName>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' ">v4.8</TargetFrameworkVersion>
     <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -42,6 +42,7 @@
     <Compile Include="DataModel\AssociationRepositoryTestBase.cs" />
     <Compile Include="DataModel\AttributeTypeRepositoryTestBase.cs" />
     <Compile Include="DataModel\DatasetRepositoryTestBase.cs" />
+    <Compile Include="DataModel\LinearNetworkRepositoryTestBase.cs" />
     <Compile Include="QA\DataQualityCategoryRepositoryTestBase.cs" />
     <Compile Include="IRepositoryTestController.cs" />
     <Compile Include="QA\QualityConditionRepositoryTestBase.cs" />

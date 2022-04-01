@@ -1,9 +1,16 @@
 using ProSuite.Commons.DomainModels;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 
 namespace ProSuite.DomainModel.AO.DataModel
 {
 	public interface IModelRepository : IRepository<Model>
 	{
-		Model Get(string name);
+		/// <summary>
+		/// Gets the model having the specified name.
+		/// </summary>
+		/// <param name="name">The name of the model.</param>
+		/// <returns>the model for the given name, or null if no model found.</returns>
+		[CanBeNull]
+		Model Get([NotNull] string name);
 	}
 }

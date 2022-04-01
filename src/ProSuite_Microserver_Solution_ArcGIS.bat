@@ -2,7 +2,7 @@
 
 set TargetFrameworkVersion=v4.8
 set VSArcGISProduct=ArcGIS
-set VSArcGISVersion=10.8\
+set VSArcGISVersion=10.8
 set OutputDirectory=..\..\bin
 set ArcGISAssemblyPath=C:\Program Files (x86)\ArcGIS\DeveloperKit10.8\DotNet\
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using ESRI.ArcGIS.esriSystem;
@@ -479,7 +480,7 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 		[Test]
 		public void CanCreateQueryTableNTo1InnerJoin()
 		{
-			const string relClassName = "TOPGIS_TLM.TLM_STRASSE_NAME";
+			const string relClassName = "TOPGIS_TLM.TLM_STRASSE_STRASSE_AVS";
 
 			IFeatureWorkspace ws = OpenTestWorkspace();
 			IRelationshipClass rc = ws.OpenRelationshipClass(relClassName);
@@ -505,6 +506,12 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			                                               includeOnlyOIDFields,
 			                                               excludeShapeField);
 			Assert.AreEqual(featureCount, GetRowCount(table));
+
+			IFeatureClass inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
+				rc, RelationshipClassUtils.GetFeatureClasses(rc).Single(),
+				"inMemoryJoined");
+
+			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
 		}
 
 		[Test]
@@ -609,6 +616,12 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			                                               includeOnlyOIDFields,
 			                                               excludeShapeField);
 			Assert.AreEqual(featureCount, GetRowCount(table));
+
+			IFeatureClass inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
+				rc, RelationshipClassUtils.GetFeatureClasses(rc).Single(),
+				"inMemoryJoined");
+
+			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
 		}
 
 		[Test]
@@ -759,6 +772,12 @@ namespace ProSuite.Commons.AO.Test.Geodatabase
 			                                               includeOnlyOIDFields,
 			                                               excludeShapeField);
 			Assert.AreEqual(featureCount, GetRowCount(table));
+
+			IFeatureClass inMemoryJoinedClass = TableJoinUtils.CreateJoinedGdbFeatureClass(
+				rc, RelationshipClassUtils.GetFeatureClasses(rc).Single(),
+				"inMemoryJoined");
+
+			Assert.AreEqual(featureCount, GetRowCount((ITable) inMemoryJoinedClass));
 		}
 
 		[Test]

@@ -400,7 +400,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 
 				case DirectConnectDriver.PostgreSQL:
 					props.SetProperty("INSTANCE",
-					                  GetSdeInstancePostgresSQL(
+					                  GetSdeInstancePostgreSQL(
 						                  driver, databaseServerName));
 					props.SetProperty("DATABASE", repositoryName);
 					props.SetProperty("PASSWORD", password);
@@ -496,7 +496,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 					break;
 
 				case DirectConnectDriver.PostgreSQL:
-					instance = GetSdeInstancePostgresSQL(driver, databaseServerName);
+					instance = GetSdeInstancePostgreSQL(driver, databaseServerName);
 					props.SetProperty("DATABASE", repositoryName);
 					if (StringUtils.IsNullOrEmptyOrBlank(versionName))
 					{
@@ -2878,7 +2878,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 		//}
 
 		[NotNull]
-		private static string GetSdeInstancePostgresSQL(DirectConnectDriver driver,
+		private static string GetSdeInstancePostgreSQL(DirectConnectDriver driver,
 		                                                [NotNull] string serverName)
 		{
 			return string.Format(@"{0}:{1}", GetSdeInstance(driver), serverName);

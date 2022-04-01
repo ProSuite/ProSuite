@@ -127,10 +127,10 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Google.Protobuf">
-      <Version>3.14.0</Version>
+      <Version>3.19.2</Version>
     </PackageReference>
     <PackageReference Include="Grpc">
-      <Version>2.36.4</Version>
+      <Version>2.44.0</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup />

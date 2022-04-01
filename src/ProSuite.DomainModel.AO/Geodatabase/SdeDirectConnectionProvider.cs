@@ -116,7 +116,7 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 				case DatabaseType.SqlServer:
 					return esriConnectionDBMS.esriDBMS_SQLServer;
 
-				case DatabaseType.PostgresSQL:
+				case DatabaseType.PostgreSQL:
 					return esriConnectionDBMS.esriDBMS_PostgreSQL;
 
 				default:
@@ -144,7 +144,7 @@ namespace ProSuite.DomainModel.AO.Geodatabase
 				case DatabaseType.SqlServer:
 					return DirectConnectDriver.SqlServer;
 
-				case DatabaseType.PostgresSQL:
+				case DatabaseType.PostgreSQL:
 					return DirectConnectDriver.PostgreSQL;
 
 				default:

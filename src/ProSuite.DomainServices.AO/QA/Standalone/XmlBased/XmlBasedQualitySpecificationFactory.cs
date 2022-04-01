@@ -217,6 +217,8 @@ namespace ProSuite.DomainServices.AO.QA.Standalone.XmlBased
 			IDictionary<string, TestDescriptor> testDescriptorsByName =
 				GetReferencedTestDescriptorsByName(xmlConditions, xmlTestDescriptorsByName);
 
+			// TODO: GetReferencedRowFiltersByName, GetReferencedTransformers, etc.
+
 			List<KeyValuePair<XmlQualityCondition, DataQualityCategory>> conditionsWithCategory =
 				GetConditionsWithCategory(specificationElements);
 

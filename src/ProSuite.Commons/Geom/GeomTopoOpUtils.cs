@@ -503,17 +503,36 @@ namespace ProSuite.Commons.Geom
 			if (! isVerticalRing)
 			{
 				// Check if the cutLine intersects an existing segment which would result in non-simple rings
+
+				var linearCutLineIntersections = new List<SegmentIntersection>();
+
 				for (var i = 0; i < ringPoints.Count - 1; i++)
 				{
 					Pnt3D segmentStart = ringPoints[i];
 					Pnt3D segmentEnd = ringPoints[NextIndexInRing(i, ringPoints.Count)];
 
-					if (GeomRelationUtils.SourceInteriorIntersectsTargetInteriorXY(
-						    cutLine, new Line3D(segmentStart, segmentEnd),
-						    tolerance))
+					var ringSegment = new Line3D(segmentStart, segmentEnd);
+
+					SegmentIntersection segmentIntersection =
+						SegmentIntersection.CalculateIntersectionXY(
+							0, i, cutLine, ringSegment, tolerance);
+
+					// Crossing:
+					if (segmentIntersection.SingleInteriorIntersectionFactor != null)
 					{
 						return false;
 					}
+
+					if (segmentIntersection.HasLinearIntersection)
+					{
+						linearCutLineIntersections.Add(segmentIntersection);
+					}
+				}
+
+				// The cut line does not deviate from the ring in XY;
+				if (IsSegmentCoveredXY(linearCutLineIntersections))
+				{
+					return false;
 				}
 			}
 
@@ -3205,21 +3224,7 @@ namespace ProSuite.Commons.Geom
 					sourceSegmentIndex, sourceLine, segmentList,
 					tolerance).Where(i => i.HasLinearIntersection));
 
-			var allIntersectionRanges =
-				linearSelfIntersections.Select(
-					i => new Tuple<double, double>(
-						i.GetLinearIntersectionStartFactor(true),
-						i.GetLinearIntersectionEndFactor(true)));
-
-			var unionizedCoveredRange = UnionRanges(allIntersectionRanges);
-
-			if (unionizedCoveredRange.Count == 0)
-			{
-				return false;
-			}
-
-			return unionizedCoveredRange[0].Item1 <= 0 &&
-			       unionizedCoveredRange[0].Item2 >= 1;
+			return IsSegmentCoveredXY(linearSelfIntersections);
 		}
 
 		[NotNull]
@@ -3323,6 +3328,35 @@ namespace ProSuite.Commons.Geom
 				intersections.Select(i => IntersectLines3D(segmentList1[i.SourceIndex],
 				                                           segmentList2[i.TargetIndex], tolerance))
 				             .Where(l => l != null));
+		}
+
+		/// <summary>
+		/// Whether the the segment has linear intersections from the Start until the End point.
+		/// The specified intersections must contain only intersections for the segment of interest.
+		/// </summary>
+		/// <param name="intersectionsForSegment">The intersections that have the segment of
+		/// interest as the source.</param>
+		/// <returns></returns>
+		private static bool IsSegmentCoveredXY(
+			[NotNull] IEnumerable<SegmentIntersection> intersectionsForSegment)
+		{
+			var allIntersectionRanges =
+				intersectionsForSegment
+					.Where(i => i.HasLinearIntersection)
+					.Select(
+						i => new Tuple<double, double>(
+							i.GetLinearIntersectionStartFactor(true),
+							i.GetLinearIntersectionEndFactor(true)));
+
+			var unionizedCoveredRange = UnionRanges(allIntersectionRanges);
+
+			if (unionizedCoveredRange.Count == 0)
+			{
+				return false;
+			}
+
+			return unionizedCoveredRange[0].Item1 <= 0 &&
+			       unionizedCoveredRange[0].Item2 >= 1;
 		}
 
 		/// <summary>
