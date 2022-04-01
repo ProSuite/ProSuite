@@ -419,6 +419,35 @@ namespace ProSuite.Commons.Geom
 			return sourcePart.PointCount - 1 == VirtualSourceVertex && source.IsClosed;
 		}
 
+		public bool ReferencesSameTargetVertex([CanBeNull] IntersectionPoint3D other,
+		                                       ISegmentList target)
+		{
+			if (other == null)
+			{
+				return false;
+			}
+
+			if (other.TargetPartIndex != TargetPartIndex)
+			{
+				return false;
+			}
+
+			if (VirtualTargetVertex == 0 &&
+			    other.IsAtTargetRingEndPoint(target))
+			{
+				return true;
+			}
+
+			if (other.VirtualTargetVertex == 0 &&
+			    IsAtTargetRingEndPoint(target))
+			{
+				return true;
+			}
+
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
+			return VirtualTargetVertex == other.VirtualTargetVertex;
+		}
+
 		public int GetLocalSourceIntersectionSegmentIdx(Linestring source,
 		                                                out double distanceAlongAsRatio)
 		{
@@ -447,12 +476,12 @@ namespace ProSuite.Commons.Geom
 
 			return targetPart.GetSegment(segmentIndex).GetPointAlong(factor, true);
 		}
-		
+
 		public IPnt GetTargetPoint(IPointList targetPoints)
 		{
 			Assert.True(IsTargetVertex(out _), "");
 
-			int targetVertex = (int)VirtualTargetVertex;
+			int targetVertex = (int) VirtualTargetVertex;
 
 			return targetPoints.GetPoint(targetVertex);
 		}
@@ -1083,6 +1112,5 @@ namespace ProSuite.Commons.Geom
 
 			return result;
 		}
-
 	}
 }

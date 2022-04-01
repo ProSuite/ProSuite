@@ -36,8 +36,6 @@ namespace ProSuite.DomainServices.AO.QA
 			// write rows
 			WriteRows(table, issueStatistics, _fieldNames);
 
-			// create indexes (?)
-
 			return new IssueStatisticsTable(table, _fieldNames);
 		}
 

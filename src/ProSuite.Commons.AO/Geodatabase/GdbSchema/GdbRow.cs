@@ -14,17 +14,17 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 	{
 		[NotNull] private readonly GdbTable _gdbTable;
 
-		// Using property set to support the same COM-release calls (e.g. on GdbFeature.Shape) as
-		// on a real feature. Otherwise InvalidComObjectException can happen when accessing the same
-		// object again (e.g. by calling GdbFeature.Shape again)
-		protected IPropertySet ValueSet { get; } = new PropertySet();
+		protected IValueList ValueSet { get; }
 
 		#region Constructors
 
-		public GdbRow(int oid, [NotNull] GdbTable gdbTable)
+		public GdbRow(int oid, [NotNull] GdbTable gdbTable,
+		              [CanBeNull] IValueList valueList = null)
 		{
-			OID = oid;
+			_oid = oid;
 			_gdbTable = gdbTable;
+
+			ValueSet = valueList ?? new PropertySetValueList();
 
 			var oidFieldIndex = _gdbTable.FindField(_gdbTable.OIDFieldName);
 
@@ -39,6 +39,18 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public bool StoreCalled { get; private set; }
 
 		public bool DeleteCalled { get; private set; }
+
+		/// <summary>
+		/// Sets a new OID but does not change the value list. It is the caller's
+		/// responsibility to ensure the correctness of the values.
+		/// </summary>
+		/// <param name="newOid"></param>
+		public void Recycle(int newOid)
+		{
+			_oid = newOid;
+
+			RecycleCore();
+		}
 
 		public bool Equals(IObject other)
 		{
@@ -86,18 +98,15 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 			DeleteCalled = true;
 		}
 
-		public override int OID { get; }
+		private int _oid;
+		public override int OID => _oid;
 
 		public override VirtualTable Table => _gdbTable;
 //		public GdbTable Table => _gdbTable;
 
 		public override object get_Value(int index)
 		{
-			var name = Convert.ToString(index);
-
-			var result = PropertySetUtils.HasProperty(ValueSet, name)
-				             ? ValueSet.GetProperty(name)
-				             : null;
+			var result = ValueSet.GetValue(index);
 
 			var uidResult = result as IUID;
 
@@ -115,7 +124,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 				value = DBNull.Value;
 			}
 
-			ValueSet.SetProperty(Convert.ToString(index), value);
+			ValueSet.SetValue(index, value);
 		}
 
 		#endregion
@@ -127,5 +136,7 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public int SubtypeCode { get; set; }
 
 		#endregion
+
+		protected virtual void RecycleCore() { }
 	}
 }

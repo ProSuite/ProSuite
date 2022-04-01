@@ -99,13 +99,13 @@ namespace ProSuite.QA.Tests.Test
 			var clsDesc = new ClassDescriptor(typeof(QaRelConstraint));
 			var tstDesc = new TestDescriptor("RelConstraint", clsDesc);
 			QualityCondition condition = new QualityCondition("fc_table_constraints", tstDesc);
-			QualityConditionParameterUtils.AddParameterValue(
+			InstanceConfigurationUtils.AddParameterValue(
 				condition, "relationTables", vectorDataset);
-			QualityConditionParameterUtils.AddParameterValue(
+			InstanceConfigurationUtils.AddParameterValue(
 				condition, "relationTables", tableDataset);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relation", "rc");
-			QualityConditionParameterUtils.AddParameterValue(condition, "join", JoinType.InnerJoin);
-			QualityConditionParameterUtils.AddParameterValue(condition, "constraint",
+			InstanceConfigurationUtils.AddParameterValue(condition, "relation", "rc");
+			InstanceConfigurationUtils.AddParameterValue(condition, "join", JoinType.InnerJoin);
+			InstanceConfigurationUtils.AddParameterValue(condition, "constraint",
 			                                                 "(fc.OBJECTID = 1 AND table.OBJECTID = 1) AND (table.TEXT = 'table')");
 
 			var factory = new QaRelConstraint {Condition = condition};

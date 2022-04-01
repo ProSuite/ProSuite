@@ -58,9 +58,8 @@ namespace ProSuite.Microservices.Server.AO.QA
 				delegate
 				{
 					ICollection<Dataset> datasets =
-						QualitySpecificationUtils.GetQualityConditionDatasets(specification);
-
-					_domainTransactions.Reattach(datasets);
+						QualitySpecificationUtils.InitializeAssociatedEntitiesTx(
+							specification, _domainTransactions);
 
 					_backgroundVerificationInputs.InitializeSchema(datasets);
 

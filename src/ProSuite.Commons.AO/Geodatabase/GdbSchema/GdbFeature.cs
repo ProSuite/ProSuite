@@ -19,8 +19,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 
 		#region Constructors
 
-		public GdbFeature(int oid, [NotNull] GdbFeatureClass featureClass)
-			: base(oid, featureClass)
+		public GdbFeature(int oid, [NotNull] GdbFeatureClass featureClass,
+		                  [CanBeNull] IValueList valueList = null)
+			: base(oid, featureClass, valueList)
 		{
 			_featureClass = featureClass;
 			_shapeFieldIndex =
@@ -39,12 +40,9 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		{
 			get
 			{
-				// Make sure that the marshal-reference-count is increased by exactyl 1 (i.e. do not call PropertySetUtils.HasProperty)
-				string name = Convert.ToString(_shapeFieldIndex);
-
 				try
 				{
-					object shapeProperty = ValueSet.GetProperty(name);
+					object shapeProperty = ValueSet.GetValue(_shapeFieldIndex, true);
 
 					if (shapeProperty == DBNull.Value)
 					{
@@ -83,6 +81,11 @@ namespace ProSuite.Commons.AO.Geodatabase.GdbSchema
 		public bool ShapeChanged { get; private set; }
 
 		IGeometry IFeatureChanges.OriginalShape => _originalShape;
+
+		protected override void RecycleCore()
+		{
+			_originalShape = null;
+		}
 
 		protected override void StoreCore()
 		{

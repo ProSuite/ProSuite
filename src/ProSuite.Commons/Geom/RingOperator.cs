@@ -8,22 +8,7 @@ namespace ProSuite.Commons.Geom
 {
 	public class RingOperator
 	{
-		// TODO: Remove single-ring operations, get rid of these fields:
-		private readonly Linestring _sourceRing;
-		private readonly Linestring _target;
-
 		private readonly SubcurveNavigator _subcurveNavigator;
-
-		public RingOperator([NotNull] Linestring sourceRing,
-		                    [NotNull] Linestring target,
-		                    double tolerance)
-			: this(new SingleRingNavigator(sourceRing, target, tolerance))
-		{
-			Assert.ArgumentCondition(sourceRing.IsClosed, "Source ring must be closed.");
-
-			_sourceRing = sourceRing;
-			_target = target;
-		}
 
 		public RingOperator(SubcurveNavigator subcurveNavigator)
 		{
@@ -179,10 +164,12 @@ namespace ProSuite.Commons.Geom
 			if (! _subcurveNavigator.Target.IsClosed &&
 			    _subcurveNavigator.AreIntersectionPointsNonSequential())
 			{
-				// TODO: Delete, once this really does not happen again
-				// Cut backs result in duplicates which are both on the left and the right!
+				// Delete this, when no assertion is thrown ever again...
+				// Cut backs and non-planar cut lines result in duplicates which are both on the
+				// left and the right! -> Planarize cut lines first (TOP-)!
 				duplicates = RemoveDuplicateRings(leftRings, rightRings);
-				Assert.AreEqual(0, duplicates.Count, "Duplicates found");
+				Assert.AreEqual(0, duplicates.Count,
+				                "Duplicate results. Make sure the input is simple.");
 			}
 
 			// Assign the cut inner rings (anti-clockwise) to un-cut outer rings...
@@ -259,38 +246,6 @@ namespace ProSuite.Commons.Geom
 		}
 
 		#region Single ring operations - remove dependency on correct subcurve navigator!
-
-		/// <summary>
-		/// Removes the overlap between the source and the target from the source.
-		/// - Vertical targets are not supported.
-		/// - Counter-clockwise oriented (interior) rings are supported. The counter-clockwise
-		///   rings have their 'interior' on the outside, i.e. their overlap 'removed' on the
-		///   outside, if the target is also counter-clockwise (i.e. inner rings are unioned).
-		/// - If the target is equal to the source in XY, the result is one empty Linestring.
-		/// - If the target is disjoint or completely within the source, an empty list is returned.
-		/// </summary>
-		/// <returns></returns>
-		public IList<Linestring> RemoveOverlapXY()
-		{
-			Assert.True(_target.IsClosed, "The target is not a closed linestring.");
-
-			Assert.NotNull(_target.ClockwiseOriented, "The target is vertical");
-
-			if (SourceEqualsTargetXY())
-			{
-				// Target equals source in XY - positive rings cancel each other out:
-				Linestring resultRing =
-					IsExterior(_sourceRing) && IsExterior(_target)
-						? Linestring.CreateEmpty()
-						: _sourceRing.Clone();
-
-				return new List<Linestring> {resultRing};
-			}
-
-			return _target.ClockwiseOriented.Value
-				       ? GetLeftSideRings()
-				       : GetRightSideRings();
-		}
 
 		/// <summary>
 		/// Cuts the source ring using the target and returns separate lists 
@@ -480,20 +435,6 @@ namespace ProSuite.Commons.Geom
 			}
 
 			return duplicates;
-		}
-
-		private bool SourceEqualsTargetXY()
-		{
-			return _subcurveNavigator.IntersectionPoints.Count == 2 &&
-			       _subcurveNavigator.IntersectionPoints[0]
-			                         .IsLinearIntersectionStartAtStartPoint(_sourceRing) &&
-			       _subcurveNavigator.IntersectionPoints[1]
-			                         .IsLinearIntersectionEndAtEndPoint(_sourceRing);
-		}
-
-		private static bool IsExterior(Linestring ring)
-		{
-			return ring.ClockwiseOriented == true;
 		}
 
 		/// <summary>

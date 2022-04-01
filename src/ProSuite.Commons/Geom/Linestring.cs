@@ -94,7 +94,7 @@ namespace ProSuite.Commons.Geom
 
 		public int SegmentCount => _segments.Count;
 
-		public int PointCount => SegmentCount + 1;
+		public int PointCount => SegmentCount == 0 ? 0 : SegmentCount + 1;
 
 		public double XMin { get; private set; } = double.MaxValue;
 		public double YMin { get; private set; } = double.MaxValue;
@@ -385,6 +385,12 @@ namespace ProSuite.Commons.Geom
 
 			if (startPointIndex == lastPoint)
 			{
+				if (lastPoint == 0)
+				{
+					// no point
+					yield break;
+				}
+
 				// last point is start:
 				Assert.ArgumentCondition(pointCount == null || pointCount <= 1,
 				                         "Requested point count out of range");
@@ -932,6 +938,8 @@ namespace ProSuite.Commons.Geom
 			segment1?.SetEndPoint(newPoint);
 			segment2?.SetStartPoint(newPoint);
 
+			// TODO: Separate method 'CoordinatesUpdated(bool zOnly)' similar to Line3D
+			// TODO: Set spatial index to null, consider making bounds lazy, deal with spatial index on Multilinestring
 			// TODO: To avoid grow-only bounds changes, make sure the replaced point was not an extreme point
 			//       ... if replacedPoint.X == XMax -> re-create envelope
 			UpdateBounds(newPoint, pointIndex, Segments, null);
@@ -957,15 +965,16 @@ namespace ProSuite.Commons.Geom
 
 		public void AssignUndefinedZs(Plane3D fromPlane)
 		{
-			foreach (Pnt3D point in GetPoints())
+			for (int i = 0; i < PointCount; i++)
 			{
+				Pnt3D point = GetPoint3D(i);
+
 				if (double.IsNaN(point.Z))
 				{
 					point.Z = fromPlane.GetZ(point.X, point.Y);
+					ReplacePoint(i, point);
 				}
 			}
-
-			// UpdateBounds() not needed because no XY values change
 		}
 
 		public bool TryInterpolateUndefinedZs()

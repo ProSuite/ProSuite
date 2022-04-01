@@ -31,6 +31,9 @@ namespace ProSuite.QA.Container.TestSupport
 		public Type ColumnType { get; }
 
 		[NotNull]
+		public Type DataColumnType => ColumnType != typeof(Guid) ? ColumnType : typeof(object);
+
+		[NotNull]
 		public IReadOnlyTable Table { get; }
 
 		[NotNull]

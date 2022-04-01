@@ -168,9 +168,9 @@ namespace ProSuite.QA.Tests.Test
 			var clsDesc = new ClassDescriptor(typeof(QaSurfacePipe));
 			var tstDesc = new TestDescriptor("QaSurfacePipe", clsDesc, testConstructorId: 4);
 			var condition = new QualityCondition("QaSurfacePipe", tstDesc);
-			QualityConditionParameterUtils.AddParameterValue(condition, "featureClass", mds0);
-			QualityConditionParameterUtils.AddParameterValue(condition, "simpleRasterMosaic", mds1);
-			QualityConditionParameterUtils.AddParameterValue(condition, "limit", 2);
+			InstanceConfigurationUtils.AddParameterValue(condition, "featureClass", mds0);
+			InstanceConfigurationUtils.AddParameterValue(condition, "simpleRasterMosaic", mds1);
+			InstanceConfigurationUtils.AddParameterValue(condition, "limit", 2);
 
 			var fact = new DefaultTestFactory(typeof(QaSurfacePipe), constructorId: 4);
 			fact.Condition = condition;
@@ -200,9 +200,9 @@ namespace ProSuite.QA.Tests.Test
 			var clsDesc = new ClassDescriptor(typeof(QaSurfacePipe));
 			var tstDesc = new TestDescriptor("QaSurfacePipe", clsDesc, testConstructorId: 6);
 			var condition = new QualityCondition("QaSurfacePipe", tstDesc);
-			QualityConditionParameterUtils.AddParameterValue(condition, "featureClass", mds0);
-			QualityConditionParameterUtils.AddParameterValue(condition, "mosaicLayer", mds1);
-			QualityConditionParameterUtils.AddParameterValue(condition, "limit", 2);
+			InstanceConfigurationUtils.AddParameterValue(condition, "featureClass", mds0);
+			InstanceConfigurationUtils.AddParameterValue(condition, "mosaicLayer", mds1);
+			InstanceConfigurationUtils.AddParameterValue(condition, "limit", 2);
 
 			var fact = new DefaultTestFactory(typeof(QaSurfacePipe), 6);
 			fact.Condition = condition;

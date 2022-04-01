@@ -492,6 +492,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="..\..\lib\licenses\Microsoft.MIT.license.txt">
+      <Link>Licenses\Microsoft.Xaml.Behaviors.Wpf.license.txt</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="Properties\Images\Browse.png" />
     <Content Include="Properties\Images\ClearFilter.png" />
     <Content Include="Properties\Images\Collapse.png" />

@@ -64,6 +64,7 @@ namespace ProSuite.DomainModel.Core.QA
 			Assert.ArgumentNotNull(parameterValue, nameof(parameterValue));
 
 			_parameterValues.Add(parameterValue);
+
 			return parameterValue;
 		}
 

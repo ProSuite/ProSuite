@@ -6876,6 +6876,29 @@ namespace ProSuite.Commons.AO.Geometry
 				       : double.NaN;
 		}
 
+		public static esriSRToleranceEnum SetZTolerance([NotNull] IGeometry geometry,
+		                                                double tolerance)
+		{
+			Assert.ArgumentNotNull(geometry, nameof(geometry));
+
+			ISpatialReference spatialReference = geometry.SpatialReference;
+
+			Assert.NotNull(spatialReference,
+			               "The geometry has no spatial reference, unable to set the minimum tolerance.");
+
+			var srTolerance =
+				(ISpatialReferenceTolerance) ((IClone) spatialReference).Clone();
+
+			srTolerance.ZTolerance = tolerance;
+
+			esriSRToleranceEnum validity = srTolerance.ZToleranceValid;
+
+			// EnsureSpatialRefeerence does not compare Z-tolerance, project directly:
+			geometry.Project((ISpatialReference) srTolerance);
+
+			return validity;
+		}
+
 		/// <summary>
 		/// Gets the xy resolution for a geometry object, as defined by its
 		/// spatial reference.

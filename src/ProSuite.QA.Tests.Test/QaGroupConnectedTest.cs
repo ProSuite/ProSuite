@@ -1217,13 +1217,13 @@ namespace ProSuite.QA.Tests.Test
 			var clsDesc = new ClassDescriptor(typeof(QaRelGroupConnected));
 			var tstDesc = new TestDescriptor("GroupConnected", clsDesc);
 			var condition = new QualityCondition("cndGroupConnected", tstDesc);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mds1);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relationTables", mdsRel);
-			QualityConditionParameterUtils.AddParameterValue(condition, "relation", relName);
-			QualityConditionParameterUtils.AddParameterValue(condition, "join", JoinType.InnerJoin);
-			QualityConditionParameterUtils.AddParameterValue(
+			InstanceConfigurationUtils.AddParameterValue(condition, "relationTables", mds1);
+			InstanceConfigurationUtils.AddParameterValue(condition, "relationTables", mdsRel);
+			InstanceConfigurationUtils.AddParameterValue(condition, "relation", relName);
+			InstanceConfigurationUtils.AddParameterValue(condition, "join", JoinType.InnerJoin);
+			InstanceConfigurationUtils.AddParameterValue(
 				condition, "groupBy", string.Format("{0}.{1}", dsRel.Name, _groupField));
-			QualityConditionParameterUtils.AddParameterValue(condition, "allowedShape",
+			InstanceConfigurationUtils.AddParameterValue(condition, "allowedShape",
 			                                                 QaGroupConnected.ShapeAllowed.All);
 
 			var fact = new QaRelGroupConnected();
@@ -2084,10 +2084,10 @@ namespace ProSuite.QA.Tests.Test
 			                   true);
 
 			// test optional parameters
-			QualityConditionParameterUtils.AddParameterValue(
+			InstanceConfigurationUtils.AddParameterValue(
 				condition, nameof(QaGroupConnected.ErrorReporting),
 				QaGroupConnected.GroupErrorReporting.ShortestGaps);
-			QualityConditionParameterUtils.AddParameterValue(
+			InstanceConfigurationUtils.AddParameterValue(
 				condition, nameof(QaGroupConnected.CompleteGroupsOutsideTestArea), true);
 
 			tests = fact.CreateTests(new SimpleDatasetOpener(model.MasterDatabaseWorkspaceContext));

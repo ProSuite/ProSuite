@@ -686,6 +686,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 				qualityConditions = document.GetAllQualityConditions()
 				                            .Where(pair => referencedConditionNames.Contains(
 					                                   pair.Key.Name?.Trim()));
+
 			return new XmlQualityConditionsCache(document, qualityConditions);
 		}
 
@@ -1423,7 +1424,7 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 		}
 
 		[NotNull]
-		public static XmlDataQualityDocument CreateXmlDataQualityDocument(
+		public static void CreateXmlDataQualityDocument<T>(
 			[NotNull] IEnumerable<QualitySpecification> qualitySpecifications,
 			[NotNull] IEnumerable<TestDescriptor> testDescriptors,
 			[NotNull] IEnumerable<DataQualityCategory> categories,
@@ -1431,12 +1432,14 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			bool exportConnections,
 			bool exportConnectionFilePaths,
 			bool exportAllCategories,
-			bool exportNotes)
+			bool exportNotes,
+			out T result)
+		where T: XmlDataQualityDocument, new()
 		{
 			Assert.ArgumentNotNull(qualitySpecifications, nameof(qualitySpecifications));
 			Assert.ArgumentNotNull(testDescriptors, nameof(testDescriptors));
 
-			var result = new XmlDataQualityDocument();
+			result = new T();
 
 			Populate(result,
 			         qualitySpecifications.ToList(),
@@ -1447,12 +1450,11 @@ namespace ProSuite.DomainModel.AO.QA.Xml
 			         exportConnectionFilePaths,
 			         exportAllCategories,
 			         exportNotes);
-
-			return result;
 		}
 
-		public static void ExportDocument([NotNull] XmlDataQualityDocument document,
-		                                  [NotNull] string xmlFilePath)
+		public static void ExportDocument<T>([NotNull] T document,
+		                                     [NotNull] string xmlFilePath)
+			where T : XmlDataQualityDocument
 		{
 			Assert.ArgumentNotNull(document, nameof(document));
 			Assert.ArgumentNotNullOrEmpty(xmlFilePath, nameof(xmlFilePath));

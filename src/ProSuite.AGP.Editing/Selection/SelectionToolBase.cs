@@ -7,6 +7,8 @@ using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.OneClick;
 using ProSuite.AGP.Editing.Properties;
+using ProSuite.Commons.AGP.Carto;
+using ProSuite.Commons.AGP.Framework;
 using ProSuite.Commons.Logging;
 using ProSuite.Commons.UI.Keyboard;
 
@@ -47,7 +49,8 @@ namespace ProSuite.AGP.Editing.Selection
 			return true;
 		}
 
-		protected override void AfterSelection(IList<Feature> selectedFeatures, CancelableProgressor progressor)
+		protected override void AfterSelection(IList<Feature> selectedFeatures,
+		                                       CancelableProgressor progressor)
 		{
 			StartSelectionPhase();
 		}
@@ -80,7 +83,16 @@ namespace ProSuite.AGP.Editing.Selection
 
 		protected override bool HandleEscape()
 		{
-			// throw new NotImplementedException();
+			QueuedTaskUtils.Run(
+				() =>
+				{
+					SelectionUtils.ClearSelection();
+
+					StartSelectionPhase();
+
+					return true;
+				});
+
 			return true;
 		}
 

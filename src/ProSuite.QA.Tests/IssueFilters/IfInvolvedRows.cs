@@ -6,6 +6,7 @@ using ProSuite.Commons.Logging;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
 using ProSuite.QA.Core;
+using ProSuite.QA.Tests.Documentation;
 
 namespace ProSuite.QA.Tests.IssueFilters
 {
@@ -17,6 +18,7 @@ namespace ProSuite.QA.Tests.IssueFilters
 		private readonly string _constraint;
 		private Dictionary<IReadOnlyTable, TableView> _tableViews;
 
+		[Doc("TODO - Filter the issues by a constraint on the involved rows")]
 		public IfInvolvedRows(string constraint)
 			: base(new IReadOnlyTable[] { })
 		{

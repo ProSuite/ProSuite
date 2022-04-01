@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using ESRI.ArcGIS.Geometry;
+using ProSuite.Commons.AO.Geometry;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.PolygonGrower;
 using ProSuite.QA.Container.TestCategories;
@@ -26,6 +28,7 @@ namespace ProSuite.QA.Tests
 		private readonly RingGrower<DirectedRow> _grower;
 		private readonly bool _orientation;
 		private int _errorCount;
+		[CanBeNull] private IRelationalOperator _checkArea;
 
 		#region issue codes
 
@@ -74,6 +77,8 @@ namespace ProSuite.QA.Tests
 				return NoError;
 			}
 
+			_checkArea = (IRelationalOperator) args.AllBox;
+
 			int errorCount = base.CompleteTileCore(args);
 
 			if (ConnectedLinesList == null)
@@ -84,7 +89,7 @@ namespace ProSuite.QA.Tests
 			errorCount += ConnectedLinesList.Sum(connectedRows => ResolveRows(connectedRows));
 
 			foreach (LineList<DirectedRow> list in
-				_grower.GetAndRemoveCollectionsInside(args.ProcessedEnvelope))
+			         _grower.GetAndRemoveCollectionsInside(args.ProcessedEnvelope))
 			{
 				// these are all not closed polygons and hence errors
 				const string description = "Incomplete line";
@@ -122,7 +127,8 @@ namespace ProSuite.QA.Tests
 
 			int lineCount = connectedRows.Count;
 
-			if (lineCount == 1)
+			if (lineCount == 1 &&
+			    _checkArea?.Disjoint(connectedRows[0].FromPoint) != true)
 			{
 				const string description = "Dangling line";
 
@@ -168,12 +174,18 @@ namespace ProSuite.QA.Tests
 
 			if (clockwise == 0)
 			{
-				const string description = "Empty polygon created";
+				IPolyline border = polygonLineList.GetBorder();
+				if (_checkArea?.Disjoint(border.FromPoint) != true)
+				{
+					const string description = "Empty polygon created";
 
-				return ReportError(description, polygonLineList.GetBorder(),
-				                   Codes[Code.EmptyPolygonCreated], null,
-				                   InvolvedRow.CreateList(
-					                   polygonLineList.GetUniqueRows(InvolvedTables)));
+					return ReportError(description, border,
+					                   Codes[Code.EmptyPolygonCreated], null,
+					                   InvolvedRow.CreateList(
+						                   polygonLineList.GetUniqueRows(InvolvedTables)));
+				}
+
+				return 0;
 			}
 
 			if (polygonLineList.DirectedRows.Count > 1 || ! FirstReversed(polygonLineList))
@@ -201,7 +213,8 @@ namespace ProSuite.QA.Tests
 
 			foreach (DirectedRow row1 in polygonLineList.DirectedRows)
 			{
-				if (row0.IsBackward != row1.IsBackward)
+				if (row0.IsBackward != row1.IsBackward
+				    && _checkArea?.Disjoint(row0.ToPoint) != true)
 				{
 					const string description = "Inconsistent orientation";
 

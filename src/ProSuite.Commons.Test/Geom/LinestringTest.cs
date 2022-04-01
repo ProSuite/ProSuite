@@ -84,6 +84,21 @@ namespace ProSuite.Commons.Test.Geom
 		}
 
 		[Test]
+		public void CanGetPointsFromEmptyLinestring()
+		{
+			var startPoint = new Pnt3D(-5, -15, -25);
+			var endPoint = new Pnt3D(10, 20, 30);
+
+			var line1 = new Line3D(startPoint, endPoint);
+
+			Linestring linestring = new Linestring(Array.Empty<Pnt3D>());
+
+			List<Pnt3D> returnedPoints = linestring.GetPoints().ToList();
+
+			Assert.AreEqual(0, returnedPoints.Count);
+		}
+
+		[Test]
 		public void CanCalculateExtent()
 		{
 			var line1 = new Line3D(new Pnt3D(-5, -15, -25), new Pnt3D(10, 20, 30));

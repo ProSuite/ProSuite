@@ -2,7 +2,6 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Reflection;
 using NHibernate;
 using NHibernate.Collection;
 using NHibernate.Proxy;
@@ -16,7 +15,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 	[UsedImplicitly]
 	public class NHibernateUnitOfWork : NHibernateUnitOfWorkBase, IUnitOfWork
 	{
-		private static readonly IMsg _msg = new Msg(MethodBase.GetCurrentMethod().DeclaringType);
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
 
 		#region Constructors
 
@@ -83,7 +82,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 
 		public void Reattach<T>(ICollection<T> collection) where T : class
 		{
-			ICollection innerCollection = GetInnerCollection(collection);
+			ICollection<T> innerCollection = GetInnerCollection(collection);
 
 			if (! NHibernateUtil.IsInitialized(innerCollection))
 			{
@@ -171,7 +170,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 
 		public void Initialize<T>(ICollection<T> collection) where T : class
 		{
-			ICollection inner = GetInnerCollection(collection);
+			ICollection inner = (ICollection) GetInnerCollection(collection);
 
 			Initialize(inner);
 		}
@@ -378,14 +377,14 @@ namespace ProSuite.Commons.Orm.NHibernate
 		#endregion
 
 		[NotNull]
-		private static ICollection GetInnerCollection<T>(
+		private static ICollection<T> GetInnerCollection<T>(
 			[NotNull] ICollection<T> collection)
 			where T : class
 		{
 			var readOnlyList = collection as ReadOnlyList<T>;
 			if (readOnlyList != null)
 			{
-				return (ICollection) readOnlyList.Inner;
+				return readOnlyList.Inner;
 			}
 
 			if (collection is ReadOnlyCollection<T>)
@@ -395,7 +394,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 					@"use ReadOnlyList instead", nameof(collection));
 			}
 
-			return (ICollection) collection;
+			return collection;
 		}
 
 		private void AssertNoExistingTransaction()

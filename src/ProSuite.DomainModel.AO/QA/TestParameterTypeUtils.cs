@@ -33,6 +33,20 @@ namespace ProSuite.DomainModel.AO.QA
 			            testParameter.Name);
 		}
 
+		public static void AssertValidDataset([NotNull] Type testParameterType,
+		                                      [CanBeNull] Dataset dataset)
+		{
+			Assert.ArgumentNotNull(testParameterType, nameof(testParameterType));
+
+			if (dataset == null) return;
+
+			TestParameterType parameterType = GetParameterType(testParameterType);
+
+			Assert.True(IsValidDataset(parameterType, dataset),
+			            "Invalid dataset for test parameter type {0}: {1}",
+			            Enum.GetName(typeof(TestParameterType), parameterType), dataset);
+		}
+
 		public static TestParameterType GetParameterType([NotNull] Type dataType)
 		{
 			Assert.ArgumentNotNull(dataType, nameof(dataType));

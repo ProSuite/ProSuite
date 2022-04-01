@@ -1,33 +1,52 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
+using System.Windows.Input;
 using ArcGIS.Core.CIM;
 using ArcGIS.Core.Geometry;
-using ArcGIS.Desktop.Framework;
 using ArcGIS.Desktop.Framework.Contracts;
 using ArcGIS.Desktop.Framework.Threading.Tasks;
 using ArcGIS.Desktop.Mapping;
 using ProSuite.AGP.Editing.Picker;
+using ProSuite.Commons.AGP.Core.Spatial;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Logging;
+using ProSuite.Commons.UI.WPF;
 
 namespace ProSuite.AGP.Editing.PickerUI
 {
 	public class PickerViewModel : PropertyChangedBase
 	{
 		private static readonly IMsg _msg = Msg.ForCurrentClass();
-
 		private readonly CIMLineSymbol _highlightLineSymbol;
-		private readonly CIMPolygonSymbol _highlightPolygonSymbol;
-		private readonly CIMPointSymbol _highlightPointSymbol;
 
-		public PickerViewModel(List<IPickableItem> pickingCandidates,
+		private readonly CIMPointSymbol _highlightPointSymbol;
+		private readonly CIMPolygonSymbol _highlightPolygonSymbol;
+
+		private readonly List<IDisposable> _overlays = new List<IDisposable>();
+		private readonly TaskCompletionSource<bool> _resultTaskCompletionSource;
+
+		private bool? _dialogResult;
+
+		private bool _isClosing;
+
+		private bool _isSingleMode;
+
+		private ObservableCollection<IPickableItem> _pickableItems;
+
+		private IPickableItem _selectedPickableItem;
+
+		public PickerViewModel() : this(new List<IPickableItem>(), true) { }
+
+		public PickerViewModel(IList<IPickableItem> pickingCandidates,
 		                       bool isSingleMode)
 		{
-			FlashItemCmd = new RelayCommand(FlashItem, () => true, false);
+			FlashItemCommand = new RelayCommand<IPickableItem>(FlashItem);
 
-			CloseCommand = new RelayCommand(Close, () => true, false);
+			CloseCommand = new RelayCommand<PickerWindow>(Close);
 
 			PickableItems =
 				new ObservableCollection<IPickableItem>(pickingCandidates);
@@ -49,20 +68,13 @@ namespace ProSuite.AGP.Editing.PickerUI
 
 			_highlightPointSymbol =
 				SymbolFactory.Instance.ConstructPointSymbol(magenta, 6);
+
+			_resultTaskCompletionSource = new TaskCompletionSource<bool>();
 		}
 
-		private bool? _dialogResult;
+		public ICommand FlashItemCommand { get; }
 
-		private ObservableCollection<IPickableItem> _pickableItems;
-
-		protected IPickableItem _selectedPickableItem;
-
-		protected bool _isSingleMode;
-
-		protected readonly List<IDisposable> _overlays = new List<IDisposable>();
-
-		public RelayCommand FlashItemCmd { get; internal set; }
-		public RelayCommand CloseCommand { get; set; }
+		public ICommand CloseCommand { get; }
 
 		[CanBeNull]
 		public IPickableItem SelectedPickableItem
@@ -71,13 +83,19 @@ namespace ProSuite.AGP.Editing.PickerUI
 			set
 			{
 				SetProperty(ref _selectedPickableItem, value, () => SelectedPickableItem);
-				DisposeOverlays();
 
 				try
 				{
-					if (value != null)
+					if (value == null)
 					{
-						DialogResult = true;
+						return;
+					}
+
+					DialogResult = true;
+
+					if (IsSingleMode)
+					{
+						CloseAction();
 					}
 				}
 				catch (Exception e)
@@ -96,18 +114,33 @@ namespace ProSuite.AGP.Editing.PickerUI
 		public ObservableCollection<IPickableItem> PickableItems
 		{
 			get => _pickableItems;
-			set { SetProperty(ref _pickableItems, value, () => PickableItems); }
+			private set { SetProperty(ref _pickableItems, value, () => PickableItems); }
 		}
 
-		public bool? DialogResult
+		public IEnumerable<IPickableItem> SelectedItems
+		{
+			get { return _pickableItems.Where(item => item.IsSelected); }
+		}
+
+		/// <summary>
+		/// The awaitable task that provides the result when the dialog is closed.
+		/// True means a selection has been made, false means nothing was picked.
+		/// </summary>
+		public Task<bool> ResultTask => _resultTaskCompletionSource.Task;
+
+		public Action CloseAction { get; set; }
+
+		private bool? DialogResult
 		{
 			get => _dialogResult;
-			set { SetProperty(ref _dialogResult, value, () => DialogResult); }
-		}
+			set
+			{
+				SetProperty(ref _dialogResult, value, () => DialogResult);
 
-		public List<IPickableItem> SelectedItems
-		{
-			get { return _pickableItems.Where(item => item.IsSelected).ToList(); }
+				bool taskResult = _dialogResult ?? false;
+
+				_resultTaskCompletionSource.SetResult(taskResult);
+			}
 		}
 
 		private void AddOverlay(Geometry geometry,
@@ -123,40 +156,109 @@ namespace ProSuite.AGP.Editing.PickerUI
 		{
 			if (_overlays.Any())
 			{
-				_overlays.ForEach((overlay) => overlay.Dispose());
+				_overlays.ForEach(overlay => overlay.Dispose());
 				_overlays.Clear();
 			}
 		}
 
-		protected void Close()
+		private void Close([CanBeNull] PickerWindow window)
 		{
-			_overlays.Clear();
-			DialogResult = true;
+			try
+			{
+				if (_isClosing)
+				{
+					return;
+				}
+
+				if (window != null)
+				{
+					window.Close();
+				}
+				else
+				{
+					CloseAction();
+				}
+			}
+			catch (Exception exception)
+			{
+				_msg.Error("Error closing picker window", exception);
+			}
 		}
 
-		protected void FlashItem(object param)
+		private void FlashItem(IPickableItem candidate)
 		{
-			var candidate = (IPickableItem) param;
-			if (candidate.Geometry == null)
+			try
 			{
-				return;
+				Geometry flashGeometry = candidate.Geometry;
+
+				if (flashGeometry == null)
+				{
+					return;
+				}
+
+				DisposeOverlays();
+
+				CIMSymbol symbol = _highlightPointSymbol;
+
+				if (flashGeometry is Polygon)
+				{
+					symbol = _highlightPolygonSymbol;
+
+					Envelope clipExtent = MapView.Active?.Extent;
+
+					if (clipExtent != null)
+					{
+						double mapRotation = MapView.Active.Camera.Heading;
+
+						flashGeometry =
+							GeometryUtils.GetClippedPolygon((Polygon) flashGeometry, clipExtent,
+							                                mapRotation);
+					}
+				}
+
+				if (flashGeometry is Polyline)
+				{
+					symbol = _highlightLineSymbol;
+				}
+
+				QueuedTask.Run(() => { AddOverlay(flashGeometry, symbol); });
 			}
+			catch (Exception exception)
+			{
+				_msg.Warn("Error flashing pickable candidate", exception);
+			}
+		}
+
+		public void OnWindowDeactivated(object sender, EventArgs e)
+		{
+			_msg.DebugFormat("PickerWindow_Deactivated. Already closing: {0}", _isClosing);
+
+			Close((PickerWindow) sender);
+		}
+
+		public void OnWindowClosing(object sender, CancelEventArgs e)
+		{
+			_msg.DebugFormat("PickerWindow_Closing");
 
 			DisposeOverlays();
 
-			CIMSymbol symbol = _highlightPointSymbol;
-
-			if (candidate.Geometry is Polygon)
+			// Ensure The task completes and the main UI thread continues
+			if (DialogResult == null)
 			{
-				symbol = _highlightPolygonSymbol;
+				DialogResult = false;
 			}
 
-			if (candidate.Geometry is Polyline)
-			{
-				symbol = _highlightLineSymbol;
-			}
+			_isClosing = true;
+		}
 
-			QueuedTask.Run(() => { AddOverlay(candidate.Geometry, symbol); });
+		public void OnPreviewKeyDown(object sender, KeyEventArgs e)
+		{
+			// NOTE: This event is not fired if it is a normal WPF window (the active tool
+			// receives ESC). It only works for ProWindows!
+			if (e.Key == Key.Escape)
+			{
+				Close((PickerWindow) sender);
+			}
 		}
 	}
 }

@@ -57,7 +57,10 @@ namespace ProSuite.DomainModel.AO.QA
 					return _datasetContext.OpenTopology(topologyDataset);
 				}
 
-				// TODO: Raster
+				if (dataset is IDdxRasterDataset rasterDataset)
+				{
+					return _datasetContext.OpenRasterDataset(rasterDataset);
+				}
 
 				return null;
 			}
@@ -71,6 +74,37 @@ namespace ProSuite.DomainModel.AO.QA
 		public IRelationshipClass OpenRelationshipClass(Association association)
 		{
 			return _datasetContext.OpenRelationshipClass(association);
+		}
+
+		public bool IsSupportedType(Type dataType)
+		{
+			Assert.ArgumentNotNull(dataType, nameof(dataType));
+
+			if (typeof(IFeatureClass) == dataType)
+				return true;
+
+			if (typeof(ITable) == dataType)
+				return true;
+
+			if (typeof(ITopology) == dataType)
+				return true;
+
+			if (typeof(IMosaicDataset) == dataType)
+				return true;
+
+			if (typeof(IRasterDataset) == dataType)
+				return true;
+
+			if (typeof(IRasterDataset2) == dataType)
+				return true;
+
+			if (typeof(SimpleRasterMosaic) == dataType)
+				return true;
+
+			if (typeof(TerrainReference) == dataType)
+				return true;
+
+			return false;
 		}
 
 		private object OpenKnownDatasetType(IDdxDataset dataset, Type knownType)

@@ -66,8 +66,8 @@ namespace ProSuite.QA.Tests.Test
 				new TestDescriptor("testdescriptor",
 				                   new ClassDescriptor(typeof(QaGdbConstraintFactory))));
 
-			QualityConditionParameterUtils.AddParameterValue(condition, "table", tableDataset);
-			QualityConditionParameterUtils.AddParameterValue(
+			InstanceConfigurationUtils.AddParameterValue(condition, "table", tableDataset);
+			InstanceConfigurationUtils.AddParameterValue(
 				condition, "AllowNullValuesForCodedValueDomains", false);
 
 			{
@@ -97,7 +97,7 @@ namespace ProSuite.QA.Tests.Test
 
 			{
 				QualityCondition condWithFields = condition.CreateCopy();
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					condWithFields, "Fields", "CvField");
 
 				var factory = new QaGdbConstraintFactory {Condition = condWithFields};
@@ -113,9 +113,9 @@ namespace ProSuite.QA.Tests.Test
 			}
 			{
 				QualityCondition condWithFields = condition.CreateCopy();
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					condWithFields, "Fields", "CvField");
-				QualityConditionParameterUtils.AddParameterValue(
+				InstanceConfigurationUtils.AddParameterValue(
 					condWithFields, "Fields", "RangeField");
 
 				var factory = new QaGdbConstraintFactory {Condition = condWithFields};
@@ -162,8 +162,8 @@ namespace ProSuite.QA.Tests.Test
 				new TestDescriptor("testdescriptor",
 				                   new ClassDescriptor(typeof(QaGdbConstraintFactory))));
 
-			QualityConditionParameterUtils.AddParameterValue(condition, "table", tableDataset);
-			QualityConditionParameterUtils.AddParameterValue(
+			InstanceConfigurationUtils.AddParameterValue(condition, "table", tableDataset);
+			InstanceConfigurationUtils.AddParameterValue(
 				condition, "AllowNullValuesForRangeDomains", false);
 
 			var factory = new QaGdbConstraintFactory {Condition = condition};
@@ -219,7 +219,7 @@ namespace ProSuite.QA.Tests.Test
 				new TestDescriptor("testdescriptor",
 				                   new ClassDescriptor(typeof(QaGdbConstraintFactory))));
 
-			QualityConditionParameterUtils.AddParameterValue(condition, "table", tableDataset);
+			InstanceConfigurationUtils.AddParameterValue(condition, "table", tableDataset);
 
 			var factory = new QaGdbConstraintFactory {Condition = condition};
 

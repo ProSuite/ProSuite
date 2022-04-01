@@ -110,11 +110,11 @@ namespace ProSuite.QA.Tests.Test
 			var clsDesc = new ClassDescriptor(typeof(QaFactoryPseudoNodes));
 			var tstDesc = new TestDescriptor("GroupEnds", clsDesc);
 			var condition = new QualityCondition("cndPseudoNodes", tstDesc);
-			QualityConditionParameterUtils.AddParameterValue(
+			InstanceConfigurationUtils.AddParameterValue(
 				condition, QaFactoryPseudoNodes.PolylineClassesParam, mds1);
-			QualityConditionParameterUtils.AddParameterValue(
+			InstanceConfigurationUtils.AddParameterValue(
 				condition, QaFactoryPseudoNodes.IgnoreFieldsParam, _nrFieldName);
-			QualityConditionParameterUtils.AddParameterValue(
+			InstanceConfigurationUtils.AddParameterValue(
 				condition, QaFactoryPseudoNodes.IgnoreFieldsParam,
 				QaFactoryPseudoNodes.EndLayerFields);
 			// implicit: ignoreLoopEndPoints = false
@@ -132,7 +132,7 @@ namespace ProSuite.QA.Tests.Test
 			Assert.AreEqual(1, runner.Errors.Count);
 
 			// set ignoreLoopEndPoints = true and rerun
-			QualityConditionParameterUtils.AddParameterValue(
+			InstanceConfigurationUtils.AddParameterValue(
 				condition, QaFactoryPseudoNodes.IgnoreLoopEndPointsParam, true);
 			fact.Condition = condition;
 
