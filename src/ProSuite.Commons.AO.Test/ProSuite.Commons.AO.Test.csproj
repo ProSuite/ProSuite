@@ -63,7 +63,9 @@
   <ItemGroup>
     <PackageReference Include="GDAL" Version="2.4.4" />
     <PackageReference Include="GDAL.Native" Version="2.4.4" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.1.0" />
     <PackageReference Include="NUnit" Version="3.12.0" />
+    <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
     <PackageReference Include="Wkx" Version="0.5.1" />
   </ItemGroup>
 </Project>
