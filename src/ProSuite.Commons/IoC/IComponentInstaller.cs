@@ -1,3 +1,5 @@
+using ProSuite.Commons.Essentials.CodeAnnotations;
+
 namespace ProSuite.Commons.IoC
 {
 	/// <summary>
@@ -7,6 +9,6 @@ namespace ProSuite.Commons.IoC
 	/// </summary>
 	public interface IComponentInstaller
 	{
-		void Install(IoCContainer ioCContainer);
+		void Install([NotNull] IoCContainer ioCContainer);
 	}
 }

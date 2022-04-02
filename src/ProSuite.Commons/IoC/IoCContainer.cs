@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
 
 namespace ProSuite.Commons.IoC
@@ -47,7 +48,7 @@ namespace ProSuite.Commons.IoC
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="componentFactory"></param>
-		public void Register<T>(Func<object> componentFactory)
+		public void Register<T>([NotNull] Func<object> componentFactory)
 		{
 			_transientComponents[typeof(T)] = componentFactory;
 		}
@@ -59,7 +60,7 @@ namespace ProSuite.Commons.IoC
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="component"></param>
-		public void Register<T>(object component)
+		public void Register<T>([NotNull] object component)
 		{
 			_singletonComponents[typeof(T)] = component;
 		}
@@ -84,7 +85,7 @@ namespace ProSuite.Commons.IoC
 			}
 		}
 
-		public void Install(IComponentInstaller installer)
+		public void Install([NotNull] IComponentInstaller installer)
 		{
 			installer.Install(this);
 		}
