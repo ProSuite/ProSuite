@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using NUnit.Framework;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.DataModel.Repositories;
@@ -11,9 +12,9 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 		[Test]
 		public void CanGetByName()
 		{
-			const string dsName1 = "SCHEMA.TLM_DATASET1";
-			const string dsName2 = "SCHEMA.TLM_DATASET2";
-			const string dsName3 = "SCHEMA.TLM_DATASET3";
+			const string dsName1 = "SCHEMA.DATASET1";
+			const string dsName2 = "SCHEMA.DATASET2";
+			const string dsName3 = "SCHEMA.DATASET3";
 			DdxModel m = CreateModel();
 
 			m.AddDataset(CreateObjectDataset(dsName1));
@@ -38,6 +39,38 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 		}
 
 		[Test]
+		public void CanGetErrorDatasets()
+		{
+			const string dsPoints = "SCHEMA.ERROR_POINTS";
+			const string dsLines = "SCHEMA.ERROR_LINE";
+			const string dsPolys = "SCHEMA.ERROR_POLYGONS";
+			const string dsPatches = "SCHEMA.ERROR_MULTIPATCHES";
+			const string dsRows = "SCHEMA.ERROR_ROWS";
+
+			DdxModel m = CreateModel();
+
+			m.AddDataset(new ErrorMultipointDataset(dsPoints));
+			m.AddDataset(new ErrorLineDataset(dsLines));
+			m.AddDataset(new ErrorPolygonDataset(dsPolys));
+			m.AddDataset(new ErrorMultiPatchDataset(dsPatches));
+			m.AddDataset(new ErrorTableDataset(dsRows));
+
+			CreateSchema(m);
+
+			UnitOfWork.NewTransaction(
+				delegate
+				{
+					Assert.IsFalse(UnitOfWork.HasChanges);
+
+					CheckErrorDataset<ErrorMultipointDataset>(dsPoints);
+					CheckErrorDataset<ErrorLineDataset>(dsLines);
+					CheckErrorDataset<ErrorPolygonDataset>(dsPolys);
+					CheckErrorDataset<ErrorMultiPatchDataset>(dsPatches);
+					CheckErrorDataset<ErrorTableDataset>(dsRows);
+				});
+		}
+
+		[Test]
 		public void CanGetByUnknownName()
 		{
 			DdxModel m = CreateModel();
@@ -57,7 +90,7 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 		[Test]
 		public void CanGetAttributes()
 		{
-			const string dsName = "SCHEMA.TLM_DATASET";
+			const string dsName = "SCHEMA.DATASET";
 			DdxModel m = CreateModel();
 
 			ObjectDataset ds = m.AddDataset(CreateObjectDataset(dsName));
@@ -148,5 +181,23 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.DataModel
 		protected abstract ObjectDataset CreateObjectDataset(string name);
 
 		protected abstract DdxModel CreateModel();
+
+		private void CheckErrorDataset<T>(string datasetName) where T : Dataset, IErrorDataset
+		{
+			IList<Dataset> list = Repository.Get(datasetName);
+			Assert.AreEqual(1, list.Count);
+
+			var result = list[0] as T;
+
+			Assert.IsNotNull(result);
+			Assert.AreEqual(datasetName, result.Name);
+
+			var resultErrorDataset =
+				Repository.Get<T>(result.Model).Single();
+
+			Assert.NotNull(resultErrorDataset);
+			Assert.AreEqual(datasetName, result.Name);
+			Assert.AreEqual(result, resultErrorDataset);
+		}
 	}
 }
