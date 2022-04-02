@@ -83,5 +83,11 @@ namespace ProSuite.DomainModel.AO.QA
 		{
 			return InstanceUtils.CreateInstance<T>(FilterType, _constructorId, args);
 		}
+
+		public override string ToString()
+		{
+			return
+				$"Instance {FilterType.Name} with parameters: {InstanceUtils.GetTestSignature(this)}";
+		}
 	}
 }
