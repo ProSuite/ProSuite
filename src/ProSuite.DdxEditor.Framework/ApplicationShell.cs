@@ -11,6 +11,7 @@ using ProSuite.DdxEditor.Framework.Help;
 using ProSuite.DdxEditor.Framework.Items;
 using ProSuite.DdxEditor.Framework.Menus;
 using ProSuite.DdxEditor.Framework.NavigationPanel;
+using ProSuite.DdxEditor.Framework.Options;
 using ProSuite.DdxEditor.Framework.Search;
 
 namespace ProSuite.DdxEditor.Framework
@@ -26,6 +27,66 @@ namespace ProSuite.DdxEditor.Framework
 
 		private readonly List<CommandToolStripButton> _commandButtons =
 			new List<CommandToolStripButton>();
+
+		#region Factory methods
+
+		[NotNull]
+		public static ApplicationShell Create(
+			[NotNull] Control logWindowControl,
+			[NotNull] string title,
+			[NotNull] IItemModelBuilder modelBuilder,
+			[NotNull] IUnitOfWork unitOfWork,
+			[CanBeNull] IHelpProvider helpProvider = null,
+			[CanBeNull] IOptionsManager optionsManager = null)
+		{
+			return Create(logWindowControl, title, modelBuilder, unitOfWork,
+			              helpProvider == null
+				              ? null
+				              : new[] {helpProvider},
+			              optionsManager);
+		}
+
+		public static ApplicationShell Create(
+			[NotNull] Control logWindowControl,
+			[NotNull] string title,
+			[NotNull] IItemModelBuilder modelBuilder,
+			[NotNull] IUnitOfWork unitOfWork,
+			[CanBeNull] IEnumerable<IHelpProvider> helpProviders = null,
+			[CanBeNull] IOptionsManager optionsManager = null,
+			[CanBeNull] IEnumerable<IItemLocator> itemLocators = null,
+			[CanBeNull] IEnumerable<ISearchProvider> searchProviders = null)
+		{
+			Assert.ArgumentNotNull(logWindowControl, nameof(logWindowControl));
+			Assert.ArgumentNotNullOrEmpty(title, nameof(title));
+			Assert.ArgumentNotNull(modelBuilder, nameof(modelBuilder));
+			Assert.ArgumentNotNull(unitOfWork, nameof(unitOfWork));
+
+			var navigationControl = new NavigationControl(itemLocators);
+			var contentControl = new ContentControl();
+
+			var shell = new ApplicationShell(navigationControl,
+			                                 contentControl,
+			                                 logWindowControl)
+			            {Text = title};
+
+			var applicationController =
+				new ApplicationController(shell, unitOfWork,
+				                          new MessageBoxImpl(),
+				                          helpProviders,
+				                          optionsManager,
+				                          searchProviders);
+
+			IMenuManager menuManager = new MenuManager(applicationController);
+			navigationControl.MenuManager = menuManager;
+			contentControl.MenuManager = menuManager;
+
+			new NavigationController(navigationControl, applicationController, modelBuilder);
+			new ContentController(contentControl, applicationController);
+
+			return shell;
+		}
+
+		#endregion
 
 		#region Constructors
 
@@ -201,13 +262,13 @@ namespace ProSuite.DdxEditor.Framework
 		}
 
 		void IApplicationShell.AddHelpMenuItems(
-			IEnumerable<Help.IHelpProvider> helpProviders)
+			IEnumerable<IHelpProvider> helpProviders)
 		{
 			Assert.ArgumentNotNull(helpProviders, nameof(helpProviders));
 
 			var menuItems = new List<ToolStripItem>();
 
-			foreach (Help.IHelpProvider hp in helpProviders)
+			foreach (IHelpProvider hp in helpProviders)
 			{
 				if (! (hp is NopHelpProvider))
 				{
