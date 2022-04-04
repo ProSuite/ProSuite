@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Logging;
 using ProSuite.DomainModel.Core;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Core;
@@ -10,6 +11,8 @@ namespace ProSuite.DomainModel.AO.QA
 {
 	public static class InstanceFactoryUtils
 	{
+		private static readonly IMsg _msg = Msg.ForCurrentClass();
+
 		/// <summary>
 		/// Gets the row filter factory, sets the row filter configuration for it and initializes
 		/// its  parameter values.
@@ -78,6 +81,12 @@ namespace ProSuite.DomainModel.AO.QA
 				                                 out testParameter))
 				{
 					parameterValue.DataType = testParameter.Type;
+				}
+				else
+				{
+					_msg.WarnFormat(
+						"Test parameter value {0}: No parameter found in {1}. The constructor Id might be incorrect.",
+						parameterValue.TestParameterName, factory);
 				}
 			}
 		}

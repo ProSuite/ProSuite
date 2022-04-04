@@ -228,11 +228,11 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 			if (reportConditionsInSummary)
 			{
 				foreach (XmlVerifiedQualityCondition verifiedCondition in
-					GetVerifiedQualityConditions(_verifiedQualityConditions,
-					                             reportIssuesPerQualityCondition,
-					                             reportParameters: true,
-					                             reportDescription: true)
-						.OrderBy(qc => qc.Name))
+				         GetVerifiedQualityConditions(_verifiedQualityConditions,
+				                                      reportIssuesPerQualityCondition,
+				                                      reportParameters: true,
+				                                      reportDescription: true)
+					         .OrderBy(qc => qc.Name))
 				{
 					result.AddVerifiedCondition(verifiedCondition);
 				}
@@ -256,11 +256,11 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 			if (reportQualityConditionsWithIssues)
 			{
 				foreach (XmlVerifiedQualityCondition verifiedCondition in
-					GetVerifiedQualityConditions(_verifiedQualityConditions,
-					                             reportIssues: true,
-					                             reportParameters: false,
-					                             reportDescription: true)
-						.OrderBy(qc => qc.Name))
+				         GetVerifiedQualityConditions(_verifiedQualityConditions,
+				                                      reportIssues: true,
+				                                      reportParameters: false,
+				                                      reportDescription: true)
+					         .OrderBy(qc => qc.Name))
 				{
 					if (verifiedCondition.IssueCount > 0)
 					{
@@ -346,10 +346,10 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 			if (reportVerifiedConditions)
 			{
 				foreach (XmlVerifiedQualityCondition verifiedCondition in
-					GetVerifiedQualityConditions(qualitySpecificationElements,
-					                             reportIssues,
-					                             reportParameters,
-					                             reportDescription))
+				         GetVerifiedQualityConditions(qualitySpecificationElements,
+				                                      reportIssues,
+				                                      reportParameters,
+				                                      reportDescription))
 				{
 					result.AddVerifiedCondition(verifiedCondition);
 				}
@@ -417,56 +417,63 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 		{
 			QualityCondition qualityCondition = element.QualityCondition;
 
-			var result =
-				new XmlVerifiedQualityCondition
-				{
-					Name = Escape(qualityCondition.Name),
-					Guid = qualityCondition.Uuid,
-					VersionGuid = qualityCondition.VersionUuid,
-					Type = element.AllowErrors
-						       ? XmlQualityConditionType.Soft
-						       : XmlQualityConditionType.Hard,
-					StopCondition = element.StopOnError,
-					Category = qualityCondition.Category
-				};
-
-			if (issues.Count > 0)
+			try
 			{
-				if (reportIssues)
-				{
-					result.AddIssues(issues, element.ReportIndividualErrors);
-				}
-				else
-				{
-					result.IssueCount = issues.Count;
-				}
-			}
+				var result = new XmlVerifiedQualityCondition
+				             {
+					             Name = Escape(qualityCondition.Name),
+					             Guid = qualityCondition.Uuid,
+					             VersionGuid = qualityCondition.VersionUuid,
+					             Type = element.AllowErrors
+						                    ? XmlQualityConditionType.Soft
+						                    : XmlQualityConditionType.Hard,
+					             StopCondition = element.StopOnError,
+					             Category = qualityCondition.Category
+				             };
 
-			if (reportParameters)
-			{
-				result.TestDescriptor = GetTestDescriptor(qualityCondition.TestDescriptor);
-				result.AddParameters(GetParameters(qualityCondition));
-			}
-
-			if (reportDescription)
-			{
-				if (StringUtils.IsNotEmpty(qualityCondition.Description))
+				if (issues.Count > 0)
 				{
-					result.Description = Escape(qualityCondition.Description);
+					if (reportIssues)
+					{
+						result.AddIssues(issues, element.ReportIndividualErrors);
+					}
+					else
+					{
+						result.IssueCount = issues.Count;
+					}
 				}
 
-				if (StringUtils.IsNotEmpty(qualityCondition.Url))
+				if (reportParameters)
 				{
-					result.Url = Escape(qualityCondition.Url);
+					result.TestDescriptor = GetTestDescriptor(qualityCondition.TestDescriptor);
+					result.AddParameters(GetParameters(qualityCondition));
 				}
-			}
 
-			if (exceptionStatistics != null)
+				if (reportDescription)
+				{
+					if (StringUtils.IsNotEmpty(qualityCondition.Description))
+					{
+						result.Description = Escape(qualityCondition.Description);
+					}
+
+					if (StringUtils.IsNotEmpty(qualityCondition.Url))
+					{
+						result.Url = Escape(qualityCondition.Url);
+					}
+				}
+
+				if (exceptionStatistics != null)
+				{
+					result.ExceptionCount = exceptionStatistics.ExceptionCount;
+				}
+
+				return result;
+			}
+			catch (Exception e)
 			{
-				result.ExceptionCount = exceptionStatistics.ExceptionCount;
+				_msg.Debug($"Error creating XML quality condition from {qualityCondition.Name}", e);
+				throw;
 			}
-
-			return result;
 		}
 
 		[NotNull]
@@ -629,6 +636,7 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 
 			return result;
 		}
+
 		[NotNull]
 		private static XmlTestDescriptor GetInstanceDescriptor(
 			[NotNull] InstanceDescriptor instanceDescriptor)
@@ -695,11 +703,13 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 
 					xmlValue.Value = scalarParameter.StringValue;
 				}
+
 				yield return xmlValue;
 			}
 		}
 
-		private static XmlInstanceConfiguration GetValueSource([CanBeNull] TransformerConfiguration transformerConfiguration)
+		private static XmlInstanceConfiguration GetValueSource(
+			[CanBeNull] TransformerConfiguration transformerConfiguration)
 		{
 			if (transformerConfiguration == null)
 			{
@@ -712,7 +722,8 @@ namespace ProSuite.DomainServices.AO.QA.VerificationReports.Xml
 					Name = Escape(transformerConfiguration.Name)
 				};
 
-			result.TestDescriptor = GetInstanceDescriptor(transformerConfiguration.InstanceDescriptor);
+			result.TestDescriptor =
+				GetInstanceDescriptor(transformerConfiguration.InstanceDescriptor);
 			result.AddParameters(GetParameters(transformerConfiguration));
 
 			return result;

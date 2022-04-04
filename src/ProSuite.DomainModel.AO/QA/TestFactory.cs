@@ -1,18 +1,13 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Exceptions;
-using ProSuite.Commons.Logging;
 using ProSuite.Commons.Reflection;
-using ProSuite.Commons.Text;
-using ProSuite.DomainModel.AO.DataModel;
 using ProSuite.DomainModel.Core.DataModel;
 using ProSuite.DomainModel.Core.QA;
 using ProSuite.QA.Container;
@@ -292,7 +287,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 				// apply non-constructor arguments
 				foreach (TestParameter parameter in testParameters.Where(
-					p => ! p.IsConstructorParameter))
+					         p => ! p.IsConstructorParameter))
 				{
 					object value;
 					if (! TryGetArgumentValue(
@@ -363,8 +358,11 @@ namespace ProSuite.DomainModel.AO.QA
 
 		#endregion
 
-		#region Nested types
-
-		#endregion
+		public override string ToString()
+		{
+			return Condition == null
+				       ? base.ToString()
+				       : $"TestFactory for {Condition} with parameters: {InstanceUtils.GetTestSignature(this)}";
+		}
 	}
 }
