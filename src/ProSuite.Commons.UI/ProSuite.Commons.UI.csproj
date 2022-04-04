@@ -12,10 +12,9 @@
 
     <NoWarn>1591</NoWarn>
 
-    <!-- NOTE: Multi-targeting leads to problems in build. Just use net48 OR net6.0-windows -->
+    <!-- NOTE: Multi-targeting leads to problems in build if Winforms are included. 
+		Supported target frameworks: net48 (v4.8) or net6.0-windows -->
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == 'v4.7' ">net47</TargetFrameworkVersion>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == 'v4.6.2' ">net462</TargetFrameworkVersion>
 
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
 
