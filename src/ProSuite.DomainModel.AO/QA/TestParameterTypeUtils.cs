@@ -105,6 +105,35 @@ namespace ProSuite.DomainModel.AO.QA
 			return TestParameterType.CustomScalar;
 		}
 
+
+		public static bool IsDatasetType([NotNull] Type type)
+		{
+			Assert.ArgumentNotNull(type, nameof(type));
+
+			if (type.IsValueType)
+			{
+				return false;
+			}
+
+			return typeof(IFeatureClass).IsAssignableFrom(type) ||
+			       typeof(ITable).IsAssignableFrom(type) ||
+			       typeof(IObjectClass).IsAssignableFrom(type) ||
+			       typeof(ITopology).IsAssignableFrom(type) ||
+			       typeof(IRasterDataset).IsAssignableFrom(type) ||
+			       typeof(IRasterDataset2).IsAssignableFrom(type) ||
+			       typeof(IMosaicDataset).IsAssignableFrom(type) ||
+
+			       // Remove once all 3d and GdbNetwork tests are officially de-supported:
+#if ArcGIS // 10.x:
+			       type.Name == "IMosaicLayer" ||
+			       type.Name == "ITerrain" ||
+			       type.Name == "IGeometricNetwork" ||
+#endif
+			       typeof(TerrainReference).IsAssignableFrom(type) ||
+			       typeof(SimpleRasterMosaic).IsAssignableFrom(type);
+		}
+
+
 		public static bool IsValidDataset(TestParameterType parameterType,
 		                                  [NotNull] Dataset dataset)
 		{
