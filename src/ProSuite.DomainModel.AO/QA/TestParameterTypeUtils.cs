@@ -105,7 +105,6 @@ namespace ProSuite.DomainModel.AO.QA
 			return TestParameterType.CustomScalar;
 		}
 
-
 		public static bool IsDatasetType([NotNull] Type type)
 		{
 			Assert.ArgumentNotNull(type, nameof(type));
@@ -132,7 +131,6 @@ namespace ProSuite.DomainModel.AO.QA
 			       typeof(TerrainReference).IsAssignableFrom(type) ||
 			       typeof(SimpleRasterMosaic).IsAssignableFrom(type);
 		}
-
 
 		public static bool IsValidDataset(TestParameterType parameterType,
 		                                  [NotNull] Dataset dataset)
@@ -171,6 +169,59 @@ namespace ProSuite.DomainModel.AO.QA
 						string.Format("Unsupported parameter type: {0}",
 						              Enum.GetName(typeof(TestParameterType), parameterType)));
 			}
+		}
+
+		[NotNull]
+		public static TestParameterValue GetEmptyParameterValue(
+			[NotNull] TestParameter testParameter)
+		{
+			Assert.ArgumentNotNull(testParameter, nameof(testParameter));
+
+			if (IsDatasetType(testParameter.Type))
+			{
+				return new DatasetTestParameterValue(testParameter);
+			}
+
+			if (testParameter.Type == typeof(double) ||
+			    testParameter.Type == typeof(int) ||
+			    testParameter.Type == typeof(bool) ||
+			    testParameter.Type == typeof(string) ||
+			    testParameter.Type == typeof(DateTime) ||
+			    testParameter.Type.IsEnum)
+			{
+				return new ScalarTestParameterValue(testParameter,
+				                                    $"{testParameter.DefaultValue ?? GetDefault(testParameter.Type)}");
+			}
+
+			return new ScalarTestParameterValue(testParameter,
+			                                    $"{testParameter.DefaultValue ?? GetDefault(testParameter.Type)}");
+			//throw new ArgumentException("Unhandled type " + _type);
+		}
+
+		[CanBeNull]
+		private static object GetDefault([NotNull] Type type)
+		{
+			if (! type.IsValueType)
+			{
+				return null;
+			}
+
+			object defaultValue = Activator.CreateInstance(type);
+
+			if (type.IsEnum)
+			{
+				// Ensure valid value for enums: if default value (0) is not in list, return the first enum item value
+				if (! Enum.IsDefined(type, defaultValue))
+				{
+					string[] values = Enum.GetNames(type);
+					if (values.Length > 0)
+					{
+						return values[0];
+					}
+				}
+			}
+
+			return defaultValue;
 		}
 	}
 }

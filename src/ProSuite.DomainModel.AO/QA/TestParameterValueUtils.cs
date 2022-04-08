@@ -68,7 +68,7 @@ namespace ProSuite.DomainModel.AO.QA
 
 				if (values.Count == 0 && testParam.ArrayDimension == 0)
 				{
-					validValues.Add(CreateEmptyParameterValue(testParam));
+					validValues.Add(TestParameterTypeUtils.GetEmptyParameterValue(testParam));
 					newParameters = true;
 				}
 				else
@@ -219,7 +219,7 @@ namespace ProSuite.DomainModel.AO.QA
 		[CanBeNull]
 		private static object GetDefault([NotNull] Type type)
 		{
-			if (! type.IsValueType)
+			if (!type.IsValueType)
 			{
 				return null;
 			}
@@ -229,7 +229,7 @@ namespace ProSuite.DomainModel.AO.QA
 			if (type.IsEnum)
 			{
 				// Ensure valid value for enums: if default value (0) is not in list, return the first enum item value
-				if (! Enum.IsDefined(type, defaultValue))
+				if (!Enum.IsDefined(type, defaultValue))
 				{
 					string[] values = Enum.GetNames(type);
 					if (values.Length > 0)

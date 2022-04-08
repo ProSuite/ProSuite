@@ -1,0 +1,43 @@
+using System.Collections.Generic;
+using System.ComponentModel;
+using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.DdxEditor.Framework.ItemViews;
+using ProSuite.DomainModel.AO.QA;
+using ProSuite.DomainModel.Core.QA;
+using ProSuite.UI.QA;
+
+namespace ProSuite.DdxEditor.Content.QA.QCon
+{
+	public interface IQualityConditionObserver : IViewObserver
+	{
+		void OnTestDescriptorChanged();
+
+		void SetTestParameterValues([NotNull] IList<TestParameterValue> values);
+
+		[CanBeNull]
+		ITestConfigurator GetTestConfigurator();
+
+		[NotNull]
+		BindingList<ParameterValueListItem> GetTestParameterItems();
+
+		void ExportQualityCondition([NotNull] string exportFileName);
+
+		void ImportQualityCondition([NotNull] string importFileName);
+
+		void AssignToQualitySpecificationsClicked();
+
+		void RemoveFromQualitySpecificationsClicked();
+
+		void QualitySpecificationSelectionChanged();
+
+		void QualitySpecificationReferenceDoubleClicked(
+			[NotNull] QualitySpecificationReferenceTableRow
+				qualitySpecificationReferenceTableRow);
+
+		void TestDescriptorLinkClicked([CanBeNull] TestDescriptor testDescriptor);
+
+		void OpenUrlClicked();
+
+		void NewVersionUuidClicked();
+	}
+}
