@@ -144,7 +144,7 @@ namespace ProSuite.QA.Tests.Schema
 
 			var subtypes = table as ISubtypes;
 
-			IList<Subtype> subtypeValues = DatasetUtils.GetSubtypes((IObjectClass) table);
+			IList<Subtype> subtypeValues = DatasetUtils.GetSubtypes(subtypes);
 
 			foreach (IField field in DatasetUtils.GetFields(table.Fields))
 			{

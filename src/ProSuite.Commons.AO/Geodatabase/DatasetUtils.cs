@@ -1760,10 +1760,14 @@ namespace ProSuite.Commons.AO.Geodatabase
 		public static IList<Subtype> GetSubtypes([NotNull] IObjectClass objectClass)
 		{
 			Assert.ArgumentNotNull(objectClass, nameof(objectClass));
+			return GetSubtypes(objectClass as ISubtypes);
+		}
 
+		[NotNull]
+		public static IList<Subtype> GetSubtypes([CanBeNull] ISubtypes subtypes)
+		{
 			var result = new List<Subtype>();
 
-			var subtypes = objectClass as ISubtypes;
 			if (subtypes == null || ! subtypes.HasSubtype)
 			{
 				return result;
