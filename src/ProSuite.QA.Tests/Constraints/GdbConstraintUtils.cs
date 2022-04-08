@@ -83,7 +83,7 @@ namespace ProSuite.QA.Tests.Constraints
 			[NotNull] ISubtypes subtypes,
 			bool allowNullForCodedValueDomains,
 			bool allowNullForRangeDomains,
-			[CanBeNull] HashSet<string> checkFields_)
+			[CanBeNull] HashSet<string> checkFields)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(subtypes, nameof(subtypes));
@@ -107,7 +107,7 @@ namespace ProSuite.QA.Tests.Constraints
 					                        allowNullForRangeDomains)
 					: null;
 
-			IEnumRule rules = ((IValidation) table).Rules;
+			IEnumRule rules = ((IValidation) ((ReadOnlyTable)table).BaseTable).Rules;
 			rules.Reset();
 
 			IRule rule;
@@ -122,7 +122,7 @@ namespace ProSuite.QA.Tests.Constraints
 				int subtype = attributeRule.SubtypeCode;
 
 				IField field = TryGetField(table, attributeRule);
-				if (field == null || checkFields_?.Contains(field.Name) == false)
+				if (field == null || checkFields?.Contains(field.Name) == false)
 				{
 					continue;
 				}
