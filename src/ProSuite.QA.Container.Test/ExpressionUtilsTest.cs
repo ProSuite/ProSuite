@@ -1,5 +1,10 @@
 using System.Collections.Generic;
+using ESRI.ArcGIS.Geodatabase;
 using NUnit.Framework;
+using ProSuite.Commons.AO.Geodatabase;
+using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Licensing;
+using ProSuite.QA.Container.TestSupport;
 
 namespace ProSuite.QA.Container.Test
 {
@@ -187,6 +192,26 @@ namespace ProSuite.QA.Container.Test
 				                expression + ExpressionUtils.IgnoreCaseHint,
 				                out caseSensitive));
 			Assert.False(caseSensitive != null && caseSensitive.Value);
+		}
+	}
+
+	[TestFixture]
+	public class TableViewFactoryTest
+	{
+		[Test]
+		public void Gaga()
+		{
+			new ArcGISLicenses().Checkout();
+			GdbTable t = new GdbTable(1, "t");
+			t.AddField(FieldUtils.CreateField("a", esriFieldType.esriFieldTypeInteger));
+			t.AddField(FieldUtils.CreateField("b", esriFieldType.esriFieldTypeInteger));
+			TableView v = TableViewFactory.Create(t, "a+b=5");
+			v = TableViewFactory.Create(t, "a-b=5");
+			v = TableViewFactory.Create(t, "a*b=5");
+			v = TableViewFactory.Create(t, "a/b=5");
+			v = TableViewFactory.Create(t, "a%b=5");
+
+			v.AddExpressionColumn("tt", "SUM(IIF(a=0,1,2))", isGroupExpression: true);
 		}
 	}
 }

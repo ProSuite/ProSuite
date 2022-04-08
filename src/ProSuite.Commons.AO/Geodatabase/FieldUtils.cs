@@ -382,6 +382,11 @@ namespace ProSuite.Commons.AO.Geodatabase
 				return esriFieldType.esriFieldTypeString;
 			if (dataType == typeof(Guid))
 				return esriFieldType.esriFieldTypeGUID;
+
+			// can exist for datatable-expression columns, i.e. SUM(...)
+			if (dataType == typeof(long))
+				return esriFieldType.esriFieldTypeInteger;
+
 			throw new NotImplementedException($"Unhandled type {dataType}");
 		}
 

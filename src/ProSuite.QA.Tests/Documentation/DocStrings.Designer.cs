@@ -19,7 +19,7 @@ namespace ProSuite.QA.Tests.Documentation {
     // class via a tool like ResGen or Visual Studio.
     // To add or remove a member, edit your .ResX file then rerun ResGen
     // with the /str option, or rebuild your VS project.
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "16.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
     public class DocStrings {
@@ -11155,11 +11155,25 @@ namespace ProSuite.QA.Tests.Documentation {
         
         /// <summary>
         ///   Looks up a localized string similar to See T0Attributes.
-        ///If &apos;Grouped&apos;=true, the attributes must be defined by Group-Expressions like COUNT(),MIN(),MAX()... .
+        ///If &apos;Grouped&apos;=true, the attributes must be defined by Group-Expressions like COUNT(),MIN(),MAX()... 
+        ///Remark: Group expressions can only containt a single field expression. If a more complex expression is needed, use the parameter T1CalcAttributes.
+        ///Example: Count the number of joined features with a specific objecttype &apos;x&apos; would be: 
+        ///T1CalcAttributes: &quot;IIF(objecttype=&apos;x&apos;,1,0) AS X_VALUE&quot;
+        ///T1Attributes: &quot;SUM(X_VALUE) AS X_COUNT&quot;.
         /// </summary>
         public static string TrSpatialJoin_T1Attributes {
             get {
                 return ResourceManager.GetString("TrSpatialJoin_T1Attributes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Calculations with attributes of &apos;t1&apos; that are used in Group-Expressions.
+        ///See T1Attributes.
+        /// </summary>
+        public static string TrSpatialJoin_T1CalcAttributes {
+            get {
+                return ResourceManager.GetString("TrSpatialJoin_T1CalcAttributes", resourceCulture);
             }
         }
         

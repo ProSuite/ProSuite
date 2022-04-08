@@ -172,7 +172,7 @@ namespace ProSuite.QA.Tests.Transformers
 			{
 				IField f =
 					FieldUtils.CreateField(
-						field, FieldUtils.GetFieldType(TableView.GetColumn(field).DataType));
+						field, FieldUtils.GetFieldType(TableView.GetColumnType(field)));
 				FieldsT.AddFields(f);
 
 				CustomFields = CustomFields ?? new List<FieldInfo>();

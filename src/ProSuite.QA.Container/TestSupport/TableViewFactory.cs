@@ -152,7 +152,8 @@ namespace ProSuite.QA.Container.TestSupport
 		public static TableView Create([NotNull] IReadOnlyTable table,
 		                               [NotNull] Dictionary<string, string> expressionDict,
 		                               [NotNull] Dictionary<string, string> aliasFieldDict,
-		                               bool isGrouped)
+		                               bool isGrouped,
+		                               [CanBeNull] Dictionary<string,string> calcExpressionDict = null)
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentNotNull(expressionDict, nameof(expressionDict));
@@ -160,6 +161,10 @@ namespace ProSuite.QA.Container.TestSupport
 
 			string joined = string.Concat(expressionDict.Values.Select(x => $"{x} ")) +
 			                string.Concat(aliasFieldDict.Values.Select(x => $"{x} "));
+			if (calcExpressionDict != null)
+			{
+				joined += string.Concat(calcExpressionDict.Values.Select(x => $"{x} "));
+			}
 
 			Dictionary<string, string> fieldAliasDict =
 				new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
@@ -173,6 +178,14 @@ namespace ProSuite.QA.Container.TestSupport
 			if (expressionDict.Count > 0)
 			{
 				tv.AddDummyRow();
+
+				if (calcExpressionDict != null)
+				{
+					foreach (KeyValuePair<string, string> pair in calcExpressionDict)
+					{
+						tv.AddExpressionColumn(pair.Key, pair.Value, isGroupExpression: false);
+					}
+				}
 
 				foreach (KeyValuePair<string, string> pair in expressionDict)
 				{

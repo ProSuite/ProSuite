@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
@@ -44,6 +45,10 @@ namespace ProSuite.QA.Tests.Transformers
 		[Doc(nameof(DocStrings.TrSpatialJoin_T1Attributes))]
 		public IList<string> T1Attributes { get; set; }
 
+		[TestParameter]
+		[Doc(nameof(DocStrings.TrSpatialJoin_T1CalcAttributes))]
+		public IList<string> T1CalcAttributes { get; set; }
+
 		protected override TransformedFeatureClass GetTransformedCore(string name)
 		{
 			TransformedFc transformedFc = new TransformedFc(
@@ -54,13 +59,14 @@ namespace ProSuite.QA.Tests.Transformers
 			transformedFc.OuterJoin = OuterJoin;
 			transformedFc.Grouped = Grouped;
 			AddFields(transformedFc, T0Attributes, InvolvedTables[0], isGrouped: false);
-			AddFields(transformedFc, T1Attributes, InvolvedTables[1], isGrouped: Grouped);
+			AddFields(transformedFc, T1Attributes, InvolvedTables[1], isGrouped: Grouped, T1CalcAttributes);
 			return transformedFc;
 		}
 
 		private void AddFields([NotNull] TransformedFc transformedFc,
 		                       [CanBeNull] IList<string> fieldNames,
-							   IReadOnlyTable sourceTable, bool isGrouped)
+							   IReadOnlyTable sourceTable, bool isGrouped,
+							   [CanBeNull] IList<string> calcAttributes = null)
 		{
 			if (fieldNames == null)
 			{
@@ -70,9 +76,22 @@ namespace ProSuite.QA.Tests.Transformers
 			Dictionary<string, string> expressionDict = ExpressionUtils.GetFieldDict(fieldNames);
 			Dictionary<string, string> aliasFieldDict =
 				ExpressionUtils.CreateAliases(expressionDict);
+			Dictionary<string, string> calcExpressionDict = null;
+
+			if (calcAttributes?.Count > 0)
+			{
+				calcExpressionDict = ExpressionUtils.GetFieldDict(calcAttributes);
+				Dictionary<string, string> calcAliasFieldDict = ExpressionUtils.CreateAliases(calcExpressionDict);
+
+				foreach (KeyValuePair<string, string> pair in aliasFieldDict)
+				{
+					calcAliasFieldDict.Add(pair.Key, pair.Value);
+				}
+				aliasFieldDict = calcAliasFieldDict;
+			}
 
 			TableView tv =
-				TableViewFactory.Create(sourceTable, expressionDict, aliasFieldDict, isGrouped);
+				TableViewFactory.Create(sourceTable, expressionDict, aliasFieldDict, isGrouped, calcExpressionDict);
 
 			transformedFc.TableViews =
 				transformedFc.TableViews ?? new Dictionary<IReadOnlyTable, TableView>();

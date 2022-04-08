@@ -76,6 +76,8 @@ namespace ProSuite.QA.Container.TestSupport
 					r[col] = 0.1;
 				else if (col.DataType == typeof(string))
 					r[col] = "a";
+				else if (col.DataType == typeof(bool))
+					r[col] = true;
 				else if (col.DataType == typeof(object))
 					r[col] = new object();
 				else
@@ -84,31 +86,72 @@ namespace ProSuite.QA.Container.TestSupport
 
 			ConstraintView.Table.Rows.Add(r);
 		}
+
 		[CanBeNull]
-		internal DataColumn AddExpressionColumn([NotNull] string columnName,
+		public DataColumn AddExpressionColumn([NotNull] string columnName,
 		                                      [NotNull] string expression,
-		                                        bool isGroupExpression)
+		                                      bool isGroupExpression)
 		{
 			if (ConstraintView == null)
 			{
 				return null;
 			}
 
-			object dummy;
-			try
+			Type columnType;
+			if (isGroupExpression)
 			{
-				string expr = isGroupExpression
-					              ? expression
-					              : $"MIN({expression})";
-				dummy = ConstraintView.Table.Compute(expr, null);
+				try
+				{
+					object dummy = ConstraintView.Table.Compute(expression, null);
+					columnType = dummy.GetType();
+				}
+				catch (Exception exception)
+				{
+					throw new InvalidOperationException($"Invalid aggregate '{expression}'",
+					                                    exception);
+				}
 			}
-			catch (Exception exception)
+			else
 			{
-				throw new InvalidOperationException($"Invalid aggregate '{expression}'", exception);
+				DataView v = new DataView(ConstraintView.Table);
+				v.RowFilter = "false"; // ensure v.Count == 0
+				try
+				{
+					v.RowFilter = $"({expression} < 0) OR ({expression} >= 0)";
+				}
+				catch { }
+
+				if (v.Count == v.Table.Rows.Count)
+				{
+					columnType = typeof(double);
+				}
+				else
+				{
+					v.RowFilter = "false";
+					try
+					{
+						v.RowFilter = $"({expression} = true) OR ({expression} = false)";
+					}
+					catch { }
+
+					if (v.Count == v.Table.Rows.Count)
+					{
+						columnType = typeof(bool);
+					}
+					else
+					{
+						columnType = typeof(string);
+					}
+				}
+			}
+
+			if (columnName.Equals(expression.Trim(), StringComparison.InvariantCultureIgnoreCase))
+			{
+				return ConstraintView.Table.Columns[columnName];
 			}
 
 			DataColumn added =
-				ConstraintView.Table.Columns.Add(columnName, dummy.GetType(), expression);
+				ConstraintView.Table.Columns.Add(columnName, columnType, expression);
 
 			return added;
 		}

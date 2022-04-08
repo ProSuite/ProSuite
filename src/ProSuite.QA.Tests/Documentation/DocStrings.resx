@@ -4888,7 +4888,11 @@ In the resulting feature class, only attributes defined in T0Attributes or T1Att
   </data>
   <data name="TrSpatialJoin_T1Attributes" xml:space="preserve">
     <value>See T0Attributes.
-If 'Grouped'=true, the attributes must be defined by Group-Expressions like COUNT(),MIN(),MAX()... </value>
+If 'Grouped'=true, the attributes must be defined by Group-Expressions like COUNT(),MIN(),MAX()... 
+Remark: Group expressions can only containt a single field expression. If a more complex expression is needed, use the parameter T1CalcAttributes.
+Example: Count the number of joined features with a specific objecttype 'x' would be: 
+T1CalcAttributes: "IIF(objecttype='x',1,0) AS X_VALUE"
+T1Attributes: "SUM(X_VALUE) AS X_COUNT"</value>
   </data>
   <data name="TrTableJoin_0" xml:space="preserve">
     <value>Transforms table 't0' and table 't1', which must be related by 'relationName', to a joined table</value>
@@ -4923,5 +4927,9 @@ Example: T0.Level = T1.Level</value>
   </data>
   <data name="IfIntersects_featureClass" xml:space="preserve">
     <value>point, multipoint, polyline or polygon feature class</value>
+  </data>
+  <data name="TrSpatialJoin_T1CalcAttributes" xml:space="preserve">
+    <value>Calculations with attributes of 't1' that are used in Group-Expressions.
+See T1Attributes</value>
   </data>
 </root>

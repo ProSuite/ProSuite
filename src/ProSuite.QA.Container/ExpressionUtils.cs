@@ -27,7 +27,12 @@ namespace ProSuite.QA.Container
 			' ',
 			'[',
 			']',
-			'`'
+			'`',
+			'+',
+			'-',
+			'*',
+			'/',
+			'%'
 		};
 
 		[CanBeNull] private static Regex _tableNameMatchRegex;
