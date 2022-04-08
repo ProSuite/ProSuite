@@ -1173,9 +1173,9 @@ namespace ProSuite.Commons.AO.Geodatabase
 					featureDataset = Path.GetFileName(candidateWorkspace);
 				}
 
-				candidateWorkspace =
-					Path.GetDirectoryName(candidateWorkspace);
-			} while (candidateWorkspace != null);
+				candidateWorkspace = Path.GetDirectoryName(candidateWorkspace);
+
+			} while (! string.IsNullOrEmpty(candidateWorkspace));
 
 			return null;
 		}
