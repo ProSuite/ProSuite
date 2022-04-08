@@ -11115,6 +11115,17 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to (Default = Tile)
+        ///-Tile: join features only within the current tile
+        ///- All: if features lie partially outside tile, load additional connected features .
+        /// </summary>
+        public static string TrSpatialJoin_NeighborSearchOption {
+            get {
+                return ResourceManager.GetString("TrSpatialJoin_NeighborSearchOption", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Default = false.Left outer Join.
         ///If true: transform features from t0-features that have no spatial relation to any feature of t1
         ///If false: ignore features from t0 that have no spatial relation to any feature of t1.

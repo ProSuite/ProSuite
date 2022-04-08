@@ -55,7 +55,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			}
 		}
 
-		private ISubtypes _subtypes => (ISubtypes)_table;
+		private ISubtypes _subtypes => _table as ISubtypes;
 
 		void ISubtypes.AddSubtype(int SubtypeCode, string SubtypeName)
 		{
@@ -67,7 +67,7 @@ namespace ProSuite.Commons.AO.Geodatabase
 			_subtypes.DeleteSubtype(SubtypeCode);
 		}
 
-		bool ISubtypes.HasSubtype => _subtypes.HasSubtype;
+		bool ISubtypes.HasSubtype => _subtypes?.HasSubtype ?? false;
 
 		int ISubtypes.DefaultSubtypeCode { get => _subtypes.DefaultSubtypeCode; set => _subtypes.DefaultSubtypeCode = value; }
 

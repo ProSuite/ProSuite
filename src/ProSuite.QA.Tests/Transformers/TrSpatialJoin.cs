@@ -6,6 +6,7 @@ using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.AO.Geodatabase.GdbSchema;
+using ProSuite.Commons.AO.Geometry;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.QA.Container;
 using ProSuite.QA.Container.TestSupport;
@@ -17,6 +18,14 @@ namespace ProSuite.QA.Tests.Transformers
 	[UsedImplicitly]
 	public class TrSpatialJoin : TableTransformer<IReadOnlyFeatureClass>
 	{
+		public enum SearchOption
+		{
+			Tile,
+			All
+		}
+
+		private const SearchOption _defaultSearchOption = SearchOption.Tile;
+
 		[Doc(nameof(DocStrings.TrSpatialJoin_0))]
 		public TrSpatialJoin(
 			[NotNull] [Doc(nameof(DocStrings.TrSpatialJoin_t0))] IReadOnlyFeatureClass t0,
@@ -31,6 +40,11 @@ namespace ProSuite.QA.Tests.Transformers
 		[TestParameter]
 		[Doc(nameof(DocStrings.TrSpatialJoin_OuterJoin))]
 		public bool OuterJoin { get; set; }
+
+		[TestParameter(_defaultSearchOption)]
+		[Doc(nameof(DocStrings.TrSpatialJoin_NeighborSearchOption))]
+		public SearchOption NeighborSearchOption { get; set; }
+
 
 		// Remark: Grouped must come in Code before T1Attributes !
 		[TestParameter]
@@ -58,6 +72,8 @@ namespace ProSuite.QA.Tests.Transformers
 			transformedFc.Constraint = Constraint;
 			transformedFc.OuterJoin = OuterJoin;
 			transformedFc.Grouped = Grouped;
+			transformedFc.NeighborSearchOption = NeighborSearchOption;
+
 			AddFields(transformedFc, T0Attributes, InvolvedTables[0], isGrouped: false);
 			AddFields(transformedFc, T1Attributes, InvolvedTables[1], isGrouped: Grouped, T1CalcAttributes);
 			return transformedFc;
@@ -142,6 +158,7 @@ namespace ProSuite.QA.Tests.Transformers
 			public Dictionary<IReadOnlyTable, TableView> TableViews { get; set; }
 			public bool Grouped { get; set; }
 			public bool OuterJoin { get; set; }
+			public SearchOption NeighborSearchOption { get; set; }
 
 			public string Constraint
 			{
@@ -251,10 +268,18 @@ namespace ProSuite.QA.Tests.Transformers
 
 			public override IEnumerable<VirtualRow> Search(IQueryFilter filter, bool recycling)
 			{
+				IRelationalOperator t1LoadedExtent = null;
+				TransformedFc r = (TransformedFc)Resulting;
+				if (r.NeighborSearchOption == SearchOption.All)
+				{
+					t1LoadedExtent = (IRelationalOperator)DataContainer.GetLoadedExtent(_t1);
+				}
+
+
 				ISpatialFilter joinFilter = new SpatialFilterClass();
 				joinFilter.SpatialRel = esriSpatialRelEnum.esriSpatialRelEnvelopeIntersects;
 
-				TransformedFc res = (TransformedFc) this.Resulting;
+				TransformedFc res = (TransformedFc) Resulting;
 				bool grouped = res.Grouped;
 				foreach (var toJoin in DataContainer.Search(
 					         _t0, filter, QueryHelpers[0]))
@@ -264,8 +289,7 @@ namespace ProSuite.QA.Tests.Transformers
 
 					List<IReadOnlyRow> joineds = new List<IReadOnlyRow>();
 					bool outerJoin = res.OuterJoin;
-					foreach (var joined in DataContainer.Search(
-						         _t1, joinFilter, QueryHelpers[1]))
+					foreach (var joined in EnumNeighbors(joinFilter, t1LoadedExtent))
 					{
 						if (! res.HasFulfilledConstraint(toJoin, joined))
 						{
@@ -301,6 +325,39 @@ namespace ProSuite.QA.Tests.Transformers
 				}
 			}
 
+			private IEnumerable<IReadOnlyRow> EnumNeighbors(
+				[NotNull]ISpatialFilter joinFilter,
+				[CanBeNull] IRelationalOperator loaded)
+			{
+				foreach (var joined in DataContainer.Search(
+					         _t1, joinFilter, QueryHelpers[1]))
+				{
+					yield return joined;
+				}
+
+				if (loaded == null)
+				{
+					yield break;
+				}
+				if (loaded.Contains(joinFilter.Geometry))
+				{
+					yield break;
+				}
+
+				IEnvelope queryGeom = joinFilter.Geometry.Envelope;
+				double tolerance = GeometryUtils.GetXyTolerance(queryGeom);
+				queryGeom.Expand(tolerance, tolerance, false);
+
+				foreach (var row in _t1.EnumRows(joinFilter, recycle: false))
+				{
+					var neighbor = (IReadOnlyFeature) row;
+					if (loaded.Disjoint(neighbor.Extent))
+					{
+						yield return neighbor;
+					}
+				}
+			}
+
 			private GdbFeature CreateFeature(IReadOnlyRow toJoin, IList<IReadOnlyRow> joineds)
 			{
 				GdbFeature f = Resulting.CreateFeature();
@@ -320,7 +377,7 @@ namespace ProSuite.QA.Tests.Transformers
 				return f;
 			}
 
-			private void SetValues(ESRI.ArcGIS.Geodatabase.IFeature feature, IList<IReadOnlyRow> sources)
+			private void SetValues(IFeature feature, IList<IReadOnlyRow> sources)
 			{
 				TransformedFc r = (TransformedFc) Resulting;
 
