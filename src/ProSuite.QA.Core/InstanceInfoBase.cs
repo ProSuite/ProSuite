@@ -65,5 +65,10 @@ namespace ProSuite.QA.Core
 		public abstract string GetTestTypeDescription();
 
 		protected abstract IList<TestParameter> CreateParameters();
+
+		public override string ToString()
+		{
+			return $"{GetType().Name} with parameters: {InstanceUtils.GetTestSignature(this)}";
+		}
 	}
 }

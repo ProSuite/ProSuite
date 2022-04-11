@@ -55,5 +55,11 @@ namespace ProSuite.QA.Core
 
 			return InstanceUtils.GetDescription(ctor);
 		}
+
+		public override string ToString()
+		{
+			return
+				$"Instance {TestType.Name} with parameters: {InstanceUtils.GetTestSignature(this)}";
+		}
 	}
 }

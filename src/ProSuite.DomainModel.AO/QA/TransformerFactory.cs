@@ -80,5 +80,11 @@ namespace ProSuite.DomainModel.AO.QA
 			return InstanceUtils.CreateInstance<T>(
 				TransformerType, _constructorId, args);
 		}
+
+		public override string ToString()
+		{
+			return
+				$"Instance {TransformerType.Name} with parameters: {InstanceUtils.GetTestSignature(this)}";
+		}
 	}
 }
