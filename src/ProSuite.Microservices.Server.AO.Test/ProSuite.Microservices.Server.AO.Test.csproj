@@ -103,6 +103,14 @@
       <Project>{66E5D99B-26AB-4FFF-834D-D96347DF4FA4}</Project>
       <Name>ProSuite.Commons</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj">
+      <Project>{D360621D-D792-403B-A625-06A707A89D22}</Project>
+      <Name>ProSuite.DomainModel.AO</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\ProSuite.DomainServices.AO\ProSuite.DomainServices.AO.csproj">
+      <Project>{F931824E-C6AC-4E8E-B30B-F903C23600F5}</Project>
+      <Name>ProSuite.DomainServices.AO</Name>
+    </ProjectReference>
     <ProjectReference Include="..\ProSuite.Microservices.AO\ProSuite.Microservices.AO.csproj">
       <Project>{53E0297E-F959-4D5D-B1CB-33D3A1D96623}</Project>
       <Name>ProSuite.Microservices.AO</Name>
