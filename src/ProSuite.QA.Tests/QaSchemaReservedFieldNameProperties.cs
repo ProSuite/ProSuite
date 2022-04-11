@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
@@ -32,7 +33,7 @@ namespace ProSuite.QA.Tests
 		{
 			string constraint = GetConstraint(_fieldSpecificationsTable);
 
-			IQueryFilter result = new QueryFilter();
+			IQueryFilter result = new QueryFilterClass();
 
 			if (StringUtils.IsNotEmpty(constraint))
 			{
@@ -45,7 +46,7 @@ namespace ProSuite.QA.Tests
 		protected override IEnumerable<FieldSpecification> GetFieldSpecifications()
 		{
 			return _fieldSpecificationsTable == null
-				       ? new List<FieldSpecification>()
+				       ? Enumerable.Empty<FieldSpecification>()
 				       : FieldSpecificationUtils.ReadFieldSpecifications(
 					       _fieldSpecificationsTable, GetQueryFilter());
 		}

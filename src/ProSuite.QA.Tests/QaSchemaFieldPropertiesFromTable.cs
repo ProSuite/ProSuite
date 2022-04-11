@@ -33,7 +33,7 @@ namespace ProSuite.QA.Tests
 		{
 			string constraint = GetConstraint(_fieldSpecificationsTable);
 
-			IQueryFilter result = new QueryFilter();
+			IQueryFilter result = new QueryFilterClass();
 
 			if (StringUtils.IsNotEmpty(constraint))
 			{
