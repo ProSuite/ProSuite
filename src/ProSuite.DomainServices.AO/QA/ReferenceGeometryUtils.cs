@@ -86,6 +86,20 @@ namespace ProSuite.DomainServices.AO.QA
 
 			var result = new HashSet<int>();
 
+			IObjectClass objectClass = table as IObjectClass;
+
+			if (objectClass == null)
+			{
+				ReadOnlyTable roTable = table as ReadOnlyTable;
+
+				if (roTable != null)
+				{
+					objectClass = (IObjectClass) roTable.BaseTable;
+				}
+			}
+
+			Assert.NotNull(objectClass, "Unknown IReadOnlyTable implementation");
+
 			foreach (IList<IRelationshipClass> relClassChain in relClassChains)
 			{
 				// NOTE:
@@ -94,7 +108,7 @@ namespace ProSuite.DomainServices.AO.QA
 				// - if only the OID plus the Shape field of the involved feature class are in the subfields, then
 				//   in those same cases a "Shape Integrity Error" exception is thrown.
 				foreach (FieldMappingRowProxy row in
-					GdbQueryUtils.GetRowProxys((IObjectClass) table,
+					GdbQueryUtils.GetRowProxys(objectClass,
 					                           testPerimeter,
 					                           whereClause,
 					                           relClassChain,
