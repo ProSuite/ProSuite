@@ -120,7 +120,9 @@ namespace ProSuite.DomainModel.AO.QA
 				return false;
 			}
 
-			return typeof(IFeatureClass).IsAssignableFrom(type) ||
+			return typeof(IReadOnlyFeatureClass).IsAssignableFrom(type) ||
+			       typeof(IReadOnlyTable).IsAssignableFrom(type) ||
+			       typeof(IFeatureClass).IsAssignableFrom(type) ||
 			       typeof(ITable).IsAssignableFrom(type) ||
 			       typeof(IObjectClass).IsAssignableFrom(type) ||
 			       typeof(ITopology).IsAssignableFrom(type) ||
