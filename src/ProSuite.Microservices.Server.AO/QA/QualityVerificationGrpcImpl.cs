@@ -6,7 +6,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using ESRI.ArcGIS.esriSystem;
-using ESRI.ArcGIS.Geodatabase;
 using ESRI.ArcGIS.Geometry;
 using Grpc.Core;
 using log4net.Core;
@@ -1271,7 +1270,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 					//SetOverallStep(currentProgress, e);
 					SetDetailStep(currentProgress, e);
 					currentProgress.ProcessingStepMessage = "Loading data";
-					currentProgress.Message = ((IDataset) e.Tag).Name;
+					currentProgress.Message = ((IReadOnlyDataset) e.Tag).Name;
 					break;
 
 				case VerificationProgressStep.Testing:
@@ -1331,7 +1330,7 @@ namespace ProSuite.Microservices.Server.AO.QA
 			{
 				SetOverallStep(currentProgress, e);
 				ResetDetailStep(currentProgress);
-				currentProgress.Message = $"Loading {((IDataset) e.Tag).Name}";
+				currentProgress.Message = $"Loading {((IReadOnlyDataset) e.Tag).Name}";
 			}
 			else if (newProgressStep == VerificationProgressStep.Testing)
 			{
