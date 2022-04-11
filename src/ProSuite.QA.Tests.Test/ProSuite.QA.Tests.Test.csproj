@@ -91,6 +91,7 @@
     <Compile Include="OffsetSpecificationTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="QaExternalGraphicConflictTest.cs" />
+    <Compile Include="QaSchemaFieldPropertiesFromTableTest.cs" />
     <Compile Include="QaSurfacePipeTest.cs" />
     <Compile Include="QaBorderSenseTest.cs" />
     <Compile Include="QaCentroidsTest.cs" />
@@ -266,7 +267,6 @@
     <Content Include="TestData\DKM25_HOEHENKURVE_OID_2178.xml" />
     <Content Include="TestData\QaPartCoincidenceVolumeTest.mdb" />
     <Content Include="TestData\QaSchemaTests.mdb" />
-    <Content Include="TestData\QaSchemaTestsTableNames.txt" />
   </ItemGroup>
   <ItemGroup>
     <None Include="TestData\QaBorderSense.gdb\a00000001.gdbindexes" />
