@@ -3,24 +3,27 @@ using ESRI.ArcGIS.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 using ProSuite.Commons.Text;
+using ProSuite.QA.Container.TestCategories;
+using ProSuite.QA.Tests.Documentation;
 using ProSuite.QA.Tests.Schema;
 
 namespace ProSuite.QA.Tests
 {
 	[UsedImplicitly]
+	[SchemaTest]
 	public class QaSchemaFieldPropertiesFromTable : QaSchemaFieldPropertiesBase
 	{
 		private readonly ITable _fieldSpecificationsTable;
 
-		/// <summary>
-		/// Initializes a new instance of the <see cref="QaSchemaFieldPropertiesFromTable"/> class.
-		/// </summary>
-		/// <param name="table">The table.</param>
-		/// <param name="fieldSpecificationsTable">The field specifications table.</param>
-		/// <param name="matchAliasName">if set to <c>true</c>, a field specification is looked up by alias name also.</param>
-		public QaSchemaFieldPropertiesFromTable([NotNull] ITable table,
-		                                        [NotNull] ITable fieldSpecificationsTable,
-		                                        bool matchAliasName)
+		[Doc(nameof(DocStrings.QaSchemaFieldPropertiesFromTable_0))]
+		public QaSchemaFieldPropertiesFromTable(
+			[Doc(nameof(DocStrings.QaSchemaFieldPropertiesFromTable_table))] [NotNull]
+			ITable table,
+			[Doc(nameof(DocStrings.QaSchemaFieldPropertiesFromTable_fieldSpecificationsTable))]
+			[NotNull]
+			ITable fieldSpecificationsTable,
+			[Doc(nameof(DocStrings.QaSchemaFieldPropertiesFromTable_matchAliasName))]
+			bool matchAliasName)
 			: base(table, matchAliasName, fieldSpecificationsTable)
 		{
 			Assert.ArgumentNotNull(fieldSpecificationsTable, nameof(fieldSpecificationsTable));

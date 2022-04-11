@@ -8785,6 +8785,42 @@ namespace ProSuite.QA.Tests.Documentation {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Verifies that fields have expected properties based on a list of field specifications defined in another table. The field specifications table can be filtered to a subset of rows relevant for the verified table..
+        /// </summary>
+        public static string QaSchemaFieldPropertiesFromTable_0 {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldPropertiesFromTable_0", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The table that contains the list of field specifications..
+        /// </summary>
+        public static string QaSchemaFieldPropertiesFromTable_fieldSpecificationsTable {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldPropertiesFromTable_fieldSpecificationsTable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Indicates if a field specification is looked up by alias name also..
+        /// </summary>
+        public static string QaSchemaFieldPropertiesFromTable_matchAliasName {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldPropertiesFromTable_matchAliasName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to The table to check the field properties in..
+        /// </summary>
+        public static string QaSchemaFieldPropertiesFromTable_table {
+            get {
+                return ResourceManager.GetString("QaSchemaFieldPropertiesFromTable_table", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Finds fields that have a reserved field name, based on a list of reserved names..
         /// </summary>
         public static string QaSchemaReservedFieldNames_0 {
