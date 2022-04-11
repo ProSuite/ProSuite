@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NHibernate.Cfg;
 using ProSuite.Commons.Essentials.CodeAnnotations;
 
@@ -34,6 +34,9 @@ namespace ProSuite.Commons.Orm.NHibernate
 		protected string Dialect { get; }
 		protected string ShowSql { get; }
 		protected string UseSecondLevelCache { get; }
+
+		protected string CacheProviderClass { get; set; } =
+			"NHibernate.Caches.SysCache.SysCacheProvider, NHibernate.Caches.SysCache";
 
 		/// <summary>
 		/// Builds the Configuration object from the specified configuration
@@ -84,8 +87,7 @@ namespace ProSuite.Commons.Orm.NHibernate
 			props.Add("connection.provider",
 			          "ProSuite.Commons.Orm.NHibernate.EncryptedDriverConnectionProvider, ProSuite.Commons.Orm.NHibernate");
 			props.Add("cache.use_second_level_cache", UseSecondLevelCache);
-			props.Add("cache.provider_class",
-			          "NHibernate.Caches.SysCache.SysCacheProvider, NHibernate.Caches.SysCache");
+			props.Add("cache.provider_class", CacheProviderClass);
 			props.Add("show_sql", ShowSql);
 
 			return props;

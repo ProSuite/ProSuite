@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
+using ProSuite.Commons.Validation;
 
 namespace ProSuite.DomainModel.Core.DataModel
 {
@@ -40,6 +41,7 @@ namespace ProSuite.DomainModel.Core.DataModel
 
 		#region ISimpleTerrainDataset Members
 
+		[GreaterThanZero]
 		public double PointDensity
 		{
 			get => _pointDensity;

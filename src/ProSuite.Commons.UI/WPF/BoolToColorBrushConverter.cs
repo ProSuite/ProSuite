@@ -11,26 +11,51 @@ namespace ProSuite.Commons.UI.WPF
 	[ValueConversion(typeof(bool), typeof(SolidColorBrush))]
 	public class BoolToColorBrushConverter : IValueConverter
 	{
+		public Color DefaultColorIfTrue { get; set; } = Colors.LimeGreen;
+
+		public Color DefaultColorIfFalse { get; set; } = Colors.Red;
+
+		public double DefaultOpacity { get; set; } = 1;
+
 		#region Implementation of IValueConverter
 
 		/// <summary>
-		/// Converts a boolean value to a SolidColorBrush.
+		/// Converts a boolean value to a SolidColorBrush. This can be used for example to enable
+		/// and disable text.
 		/// </summary>
 		/// <param name="value">Bolean value controlling which color should be returned.</param>
 		/// <param name="targetType"></param>
 		/// <param name="parameter">A string in the format [ColorNameIfTrue;ColorNameIfFalse;OpacityNumber]
-		/// may be provided for customization, default is [LimeGreen;DarkGray;1.0].</param>
+		/// may be provided for customization, default is [LimeGreen;Red;1.0].</param>
 		/// <param name="culture"></param>
 		/// <returns>A SolidColorBrush in the supplied or default colors depending on the state of value.</returns>
 		public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
 		{
-			SolidColorBrush color;
-			// Setting default values
-			var colorIfTrue = Colors.LimeGreen;
-			var colorIfFalse = Colors.DarkGray;
-			double opacity = 1;
+			bool isTrue = value != null && (bool) value;
 
-			// Parsing converter parameter
+			SolidColorBrush color = CreateSolidColorBrush(isTrue, parameter);
+
+			return color;
+		}
+
+		public object ConvertBack(object value, Type targetType, object parameter,
+		                          CultureInfo culture)
+		{
+			bool isTrue = value != null && (bool) value;
+
+			return CreateSolidColorBrush(isTrue, parameter);
+		}
+
+		#endregion
+
+		private SolidColorBrush CreateSolidColorBrush(bool isTrue, object parameter)
+		{
+			// Defaults:
+			Color colorIfTrue = DefaultColorIfTrue;
+			Color colorIfFalse = DefaultColorIfFalse;
+			double opacity = DefaultOpacity;
+
+			// Parse converter parameter
 			if (parameter != null)
 			{
 				// Parameter format: [ColorNameIfTrue;ColorNameIfFalse;OpacityNumber]
@@ -53,10 +78,10 @@ namespace ProSuite.Commons.UI.WPF
 					if (parameters.Length > 2 && ! string.IsNullOrEmpty(parameters[2]))
 					{
 						string transparencyString = parameters[2];
-						double parseResult;
+
 						if (double.TryParse(transparencyString, NumberStyles.AllowDecimalPoint,
 						                    CultureInfo.InvariantCulture.NumberFormat,
-						                    out parseResult))
+						                    out double parseResult))
 						{
 							opacity = parseResult;
 						}
@@ -64,22 +89,13 @@ namespace ProSuite.Commons.UI.WPF
 				}
 			}
 
-			color = value != null && (bool) value
-				        ? new SolidColorBrush(colorIfTrue)
-				        : new SolidColorBrush(colorIfFalse);
+			SolidColorBrush color = isTrue
+				                        ? new SolidColorBrush(colorIfTrue)
+				                        : new SolidColorBrush(colorIfFalse);
 
 			color.Opacity = opacity;
-
 			return color;
 		}
-
-		public object ConvertBack(object value, Type targetType, object parameter,
-		                          CultureInfo culture)
-		{
-			throw new NotImplementedException();
-		}
-
-		#endregion
 
 		private static Color ColorFromName(string colorName)
 		{

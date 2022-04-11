@@ -23,7 +23,6 @@ namespace ProSuite.DomainModel.AO.Workflow
 		private static readonly IMsg _msg =
 			new Msg(MethodBase.GetCurrentMethod().DeclaringType);
 
-
 		[CanBeNull]
 		public static ObjectDataset GetDataset<P, M>(
 			[NotNull] P project,
@@ -73,7 +72,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 				return null;
 			}
 
-			if (!ModelContextUtils.HasMatchingGeometryType(objectDataset, objectClass))
+			if (! ModelContextUtils.HasMatchingGeometryType(objectDataset, objectClass))
 			{
 				_msg.DebugFormat(
 					"Matching dataset for {0} in model {1} has a different geometry type, ignore",
@@ -111,7 +110,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 
 			var count = 0;
 			foreach (IDatasetName datasetName in DatasetUtils.GetDatasetNames(
-				workspace, esriDatasetType.esriDTRelationshipClass))
+				         workspace, esriDatasetType.esriDTRelationshipClass))
 			{
 				if (isModelMasterDatabase == null)
 				{
@@ -200,7 +199,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 
 			Dataset dataset = model.GetDatasetByModelName(modelDatasetName);
 
-			if (dataset != null && (ignoreDataset == null || !ignoreDataset(dataset)))
+			if (dataset != null && (ignoreDataset == null || ! ignoreDataset(dataset)))
 			{
 				if (ModelContextUtils.IsModelDefaultDatabase(workspace, model))
 				{
@@ -209,6 +208,11 @@ namespace ProSuite.DomainModel.AO.Workflow
 						       ? null
 						       : dataset;
 				}
+
+				_msg.VerboseDebug(
+					() =>
+						$"Found matching model dataset {dataset.Name} in model {model.Name} but it is either not " +
+						"accessible or not from the model's master workspace.");
 			}
 
 			// the object class is not from the model master database
@@ -233,7 +237,8 @@ namespace ProSuite.DomainModel.AO.Workflow
 				gdbDatasetName, model, datasetNameTransformer);
 
 			_msg.VerboseDebug(
-				() => $"Dataset name for {gdbDatasetName} in model {model.Name} (non-master db): {datasetName ?? "<null>"}");
+				() =>
+					$"Dataset name for {gdbDatasetName} in model {model.Name} (non-master db): {datasetName ?? "<null>"}");
 
 			return datasetName == null
 				       ? null
@@ -247,7 +252,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 		{
 			Dataset dataset = model.GetDatasetByModelName(datasetModelName);
 
-			return ignoreDataset == null || !ignoreDataset(dataset)
+			return ignoreDataset == null || ! ignoreDataset(dataset)
 				       ? dataset
 				       : null;
 		}
@@ -282,7 +287,8 @@ namespace ProSuite.DomainModel.AO.Workflow
 			                    StringComparison.OrdinalIgnoreCase))
 			{
 				_msg.VerboseDebug(
-					() => $"Dataset {gdbElementName} is from master database of model {model.Name}, but from a different schema: {owner} (<> {masterDatabaseSchemaOwner})");
+					() =>
+						$"Dataset {gdbElementName} is from master database of model {model.Name}, but from a different schema: {owner} (<> {masterDatabaseSchemaOwner})");
 
 				return true;
 			}
@@ -311,7 +317,8 @@ namespace ProSuite.DomainModel.AO.Workflow
 				model, isModelMasterDatabase);
 
 			_msg.VerboseDebug(
-				() => $"Association name for {datasetName.Name} in model {model.Name} (from master db: {isModelMasterDatabase}): {modelName ?? "<null>"}");
+				() =>
+					$"Association name for {datasetName.Name} in model {model.Name} (from master db: {isModelMasterDatabase}): {modelName ?? "<null>"}");
 
 			if (modelName == null)
 			{
@@ -342,7 +349,7 @@ namespace ProSuite.DomainModel.AO.Workflow
 			if (DoNotMatchChildDatabaseForQualifiedModelElements())
 			{
 				_msg.VerboseDebug(() =>
-					"Matching child database datasets for qualified model elements is disabled");
+					                  "Matching child database datasets for qualified model elements is disabled");
 
 				// restore previous behavior: don't try to match child database elements for
 				// model that was harvested with *qualified* element names
@@ -351,7 +358,8 @@ namespace ProSuite.DomainModel.AO.Workflow
 
 			if (ModelElementNameUtils.IsQualifiedName(gdbElementName))
 			{
-				_msg.VerboseDebug(() => "Gdb element name is qualified, and model uses qualified names");
+				_msg.VerboseDebug(
+					() => "Gdb element name is qualified, and model uses qualified names");
 
 				// gdb element name is also qualified, but from child database
 				// rely on transformer for changing schema owner/database name, if required.
@@ -370,7 +378,8 @@ namespace ProSuite.DomainModel.AO.Workflow
 				return null; // give up
 			}
 
-			_msg.VerboseDebug(() => "Using unique master database schema information to qualify dataset name");
+			_msg.VerboseDebug(
+				() => "Using unique master database schema information to qualify dataset name");
 
 			string transformedName = datasetNameTransformer.TransformName(gdbElementName);
 

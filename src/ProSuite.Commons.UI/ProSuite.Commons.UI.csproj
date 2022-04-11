@@ -12,10 +12,9 @@
 
     <NoWarn>1591</NoWarn>
 
-    <!-- Temporary solution until the switch to .net standard is done: -->
+    <!-- NOTE: Multi-targeting leads to problems in build if Winforms are included. 
+		Supported target frameworks: net48 (v4.8) or net6.0-windows -->
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == 'v4.7' ">net47</TargetFrameworkVersion>
-    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == 'v4.6.2' ">net462</TargetFrameworkVersion>
 
     <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
 
@@ -29,7 +28,13 @@
     <Optimize>false</Optimize>
     <DocumentationFile>$(OutputDirectory)\$(Configuration)\ProSuite.Commons.UI.xml</DocumentationFile>
   </PropertyGroup>
-  <ItemGroup>
+
+  <PropertyGroup>
+    <UseWpf>true</UseWpf>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System.Windows.Forms" />
@@ -37,6 +42,7 @@
     <Reference Include="WindowsBase" />
     <Reference Include="WindowsFormsIntegration" />
   </ItemGroup>
+
   <ItemGroup>
     <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
     <Compile Update="Properties\LocalizableStrings.Designer.cs">
@@ -218,11 +224,13 @@
       <DependentUpon>LogEventItemDetailsForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\ProSuite.Commons.Logging\ProSuite.Commons.Logging.csproj" />
     <ProjectReference Include="..\ProSuite.Commons\ProSuite.Commons.csproj" />
     <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
   </ItemGroup>
+
   <ItemGroup>
     <Content Include="..\..\lib\licenses\Microsoft.MIT.XamlBehaviorsWpf.license.txt">
       <Link>Licenses\Microsoft.MIT.XamlBehaviorsWpf.license.txt</Link>
@@ -242,6 +250,7 @@
     <Content Include="Properties\Images\SelectAll.png" />
     <Content Include="Properties\Images\UpArrow.png" />
   </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="log4net" Version="2.0.12" />
     <PackageReference Include="Microsoft.Xaml.Behaviors.Wpf" Version="1.1.39" />

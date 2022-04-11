@@ -1,0 +1,314 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ProjectGuid>{4B1FE874-5C47-4850-AF42-F1100780C029}</ProjectGuid>
+
+    <SignAssembly>true</SignAssembly>
+    <ProSuiteKeyFile Condition=" '$(ProSuiteKeyFile)' == '' ">..\ProSuite.Key.snk</ProSuiteKeyFile>
+    <AssemblyOriginatorKeyFile>$(ProSuiteKeyFile)</AssemblyOriginatorKeyFile>
+
+    <VSArcGISVersion Condition=" '$(VSArcGISVersion)' == '' ">10.8</VSArcGISVersion>
+    <VSArcGISProduct Condition=" '$(VSArcGISProduct)' == ''">ArcGIS</VSArcGISProduct>
+    <ArcGISAssemblyPath Condition=" '$(ArcGISAssemblyPath)' == '' ">C:\Program Files (x86)\ArcGIS\DeveloperKit10.6\DotNet</ArcGISAssemblyPath>
+
+    <OutputDirectory Condition=" '$(OutputDirectory)' == '' ">..\..\bin</OutputDirectory>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <OutputPath>$(OutputDirectory)\$(Configuration)\</OutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+    <NoWarn>1591</NoWarn>
+
+    <!-- NOTE: Multi-targeting leads to problems in build if Winforms are included. 
+		Supported target frameworks: net48 (v4.8) or net6.0-windows -->
+    <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' Or '$(TargetFrameworkVersion)' == 'v4.8' ">net48</TargetFrameworkVersion>
+
+    <TargetFramework>$(TargetFrameworkVersion)</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <UseWpf>true</UseWpf>
+    <UseWindowsForms>true</UseWindowsForms>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
+    <Reference Include="PresentationCore" />
+    <Reference Include="PresentationFramework" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xaml" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="WindowsFormsIntegration" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ProSuite.Commons.Essentials\ProSuite.Commons.Essentials.csproj" />
+    <ProjectReference Include="..\ProSuite.Commons.UI\ProSuite.Commons.UI.csproj" />
+    <ProjectReference Include="..\ProSuite.DdxEditor.Framework\ProSuite.DdxEditor.Framework.csproj" />
+    <ProjectReference Include="..\ProSuite.DomainModel.AO\ProSuite.DomainModel.AO.csproj" />
+    <ProjectReference Include="..\ProSuite.UI\ProSuite.UI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="ESRI.ArcGIS.DataSourcesRaster, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).DataSourcesRaster.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="ESRI.ArcGIS.Geodatabase, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).Geodatabase.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="ESRI.ArcGIS.Geometry, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).Geometry.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+    <Reference Include="ESRI.ArcGIS.System, Culture=neutral, PublicKeyToken=8fc3cc631e44ad86, processorArchitecture=MSIL">
+      <HintPath>$(ArcGISAssemblyPath)\$(VSArcGISVersion)\ESRI.$(VSArcGISProduct).System.dll</HintPath>
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\SharedAssemblyInfo.cs" Link="Properties\SharedAssemblyInfo.cs" />
+    <Compile Update="AssociationEnds\AssociationEndControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Associations\AssociationControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Attributes\AssociationAttributeControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Attributes\AttributeControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Attributes\ObjectAttributeControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="AttributeTypes\AttributeTypeControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="AttributeTypes\ObjectAttributeTypeControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Connections\ConnectionProviderControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Connections\FilePathConnectionProviderControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Connections\SdeConnProviderCtrl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Connections\SdeDirectConnProviderCtrl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Connections\SdeDirectDbUserConnProviderCtrl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Controls\MoveListItemsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="DatasetCategories\DatasetCategoryControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Datasets\DatasetControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Datasets\ObjectDatasetControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Datasets\TableDatasetControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Datasets\TopologyDatasetControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Datasets\VectorDatasetControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="LinearNetworks\LinearNetworkControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Models\ModelControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="Models\ProductionModelControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="ObjectCategories\ObjectCategoryControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="ObjectCategories\ObjectSubtypeControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="ObjectCategoryAttributeConstraints\ObjectCategoryAttributeConstraintsControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="ObjectCategoryAttributeConstraints\RotatedHeadersDataGridView.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Update="Projects\DeleteVerificationsBeforeDateForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Projects\TestDatasetNameTransformationForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Update="QA\Categories\DataQualityCategoryControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="QA\QCon\FindQualityConditionByNameForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="QA\QCon\QualityConditionControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="QA\QSpec\ExportDatasetDependenciesForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="QA\QSpec\ExportQualitySpecificationsCommand.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="QA\QSpec\ExportQualitySpecificationsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="QA\QSpec\ImportQualitySpecificationsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="QA\QSpec\QualitySpecificationControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="QA\TestDescriptors\CreateQualityConditions\CreateQualityConditionsForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Update="QA\TestDescriptors\CreateQualityConditions\QualityConditionParameters.cs">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Update="QA\TestDescriptors\TestDescriptorControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="SimpleTerrains\SimpleTerrainDatasetControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="SpatialRef\SpatialReferenceDescriptorControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Update="SpatialRef\XmlPrettyPrint.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>XmlPrettyPrint.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Properties\Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="AssociationEnds\AssociationEndControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Associations\AssociationControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Attributes\AttributeControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Attributes\ObjectAttributeControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="AttributeTypes\AttributeTypeControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="AttributeTypes\ObjectAttributeTypeControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Connections\ConnectionProviderControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Connections\FilePathConnectionProviderControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Connections\SdeConnProviderCtrl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Connections\SdeDirectConnProviderCtrl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Connections\SdeDirectDbUserConnProviderCtrl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Controls\MoveListItemsControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="DatasetCategories\DatasetCategoryControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Datasets\DatasetControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Datasets\ObjectDatasetControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Datasets\TableDatasetControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Datasets\TopologyDatasetControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Datasets\VectorDatasetControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Models\ModelControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Models\ProductionModelControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="ObjectCategories\ObjectCategoryControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="ObjectCategories\ObjectSubtypeControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="ObjectCategoryAttributeConstraints\ObjectCategoryAttributeConstraintsControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="QA\QCon\QualityConditionControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="QA\QSpec\ExportQualitySpecificationsForm.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="QA\QSpec\QualitySpecificationControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="QA\TestDescriptors\CreateQualityConditions\CreateQualityConditionsForm.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="QA\TestDescriptors\TestDescriptorControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="SimpleTerrains\SimpleTerrainDatasetControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="SpatialRef\SpatialReferenceDescriptorControl.resx">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <EmbeddedResource Update="SpatialRef\XmlPrettyPrint.resx">
+      <SubType>Designer</SubType>
+      <LastGenOutput>XmlPrettyPrint.Designer.cs</LastGenOutput>
+      <Generator>ResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <Generator>PublicResXFileCodeGenerator</Generator>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

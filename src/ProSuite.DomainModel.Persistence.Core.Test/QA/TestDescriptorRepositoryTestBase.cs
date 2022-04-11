@@ -17,9 +17,10 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 			TestDescriptor d1 = new TestDescriptor(
 				"test1", new ClassDescriptor("factTypeName", "factAssemblyName"));
 
+			const int testConstructorId = 2;
 			TestDescriptor d2 = new TestDescriptor(
 				"test2", new ClassDescriptor("factTypeName", "factAssemblyName__"),
-				0, true, false, "desc");
+				testConstructorId, true, false, "desc");
 
 			CreateSchema(d1, d2);
 
@@ -31,8 +32,10 @@ namespace ProSuite.DomainModel.Persistence.Core.Test.QA
 
 					Assert.AreEqual(2, foundDescriptors.Count);
 
-					Assert.AreEqual(
-						"desc", foundDescriptors.Single(d => d.Name == "test2").Description);
+					TestDescriptor foundTest2 = foundDescriptors.Single(d => d.Name == "test2");
+					Assert.AreEqual("desc", foundTest2.Description);
+					Assert.AreEqual(testConstructorId, foundTest2.TestConstructorId);
+					Assert.AreEqual(d2.Class, foundTest2.Class);
 				});
 		}
 
