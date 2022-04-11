@@ -22,7 +22,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
     [global::System.CodeDom.Compiler.GeneratedCodeAttribute("System.Resources.Tools.StronglyTypedResourceBuilder", "17.0.0.0")]
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    internal class Resources {
+    public class Resources {
         
         private static global::System.Resources.ResourceManager resourceMan;
         
@@ -36,7 +36,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         ///   Returns the cached ResourceManager instance used by this class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Resources.ResourceManager ResourceManager {
+        public static global::System.Resources.ResourceManager ResourceManager {
             get {
                 if (object.ReferenceEquals(resourceMan, null)) {
                     global::System.Resources.ResourceManager temp = new global::System.Resources.ResourceManager("ProSuite.DdxEditor.Framework.Properties.Resources", typeof(Resources).Assembly);
@@ -51,7 +51,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         ///   resource lookups using this strongly typed resource class.
         /// </summary>
         [global::System.ComponentModel.EditorBrowsableAttribute(global::System.ComponentModel.EditorBrowsableState.Advanced)]
-        internal static global::System.Globalization.CultureInfo Culture {
+        public static global::System.Globalization.CultureInfo Culture {
             get {
                 return resourceCulture;
             }
@@ -63,7 +63,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Add {
+        public static System.Drawing.Bitmap Add {
             get {
                 object obj = ResourceManager.GetObject("Add", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -73,7 +73,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap CannotRemoveDependency {
+        public static System.Drawing.Bitmap CannotRemoveDependency {
             get {
                 object obj = ResourceManager.GetObject("CannotRemoveDependency", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -83,7 +83,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap DefaultItemImage {
+        public static System.Drawing.Bitmap DefaultItemImage {
             get {
                 object obj = ResourceManager.GetObject("DefaultItemImage", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -93,7 +93,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Delete {
+        public static System.Drawing.Bitmap Delete {
             get {
                 object obj = ResourceManager.GetObject("Delete", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -103,7 +103,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap DiscardChanges {
+        public static System.Drawing.Bitmap DiscardChanges {
             get {
                 object obj = ResourceManager.GetObject("DiscardChanges", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -113,7 +113,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Exit {
+        public static System.Drawing.Bitmap Exit {
             get {
                 object obj = ResourceManager.GetObject("Exit", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -123,7 +123,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Find {
+        public static System.Drawing.Bitmap Find {
             get {
                 object obj = ResourceManager.GetObject("Find", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -133,7 +133,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap GoToLastVisited {
+        public static System.Drawing.Bitmap GoToLastVisited {
             get {
                 object obj = ResourceManager.GetObject("GoToLastVisited", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -143,7 +143,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap GoToNextVisited {
+        public static System.Drawing.Bitmap GoToNextVisited {
             get {
                 object obj = ResourceManager.GetObject("GoToNextVisited", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -153,7 +153,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap GoToParent {
+        public static System.Drawing.Bitmap GoToParent {
             get {
                 object obj = ResourceManager.GetObject("GoToParent", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -163,7 +163,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap GroupItem {
+        public static System.Drawing.Bitmap GroupItem {
             get {
                 object obj = ResourceManager.GetObject("GroupItem", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -173,7 +173,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap GroupItemSelected {
+        public static System.Drawing.Bitmap GroupItemSelected {
             get {
                 object obj = ResourceManager.GetObject("GroupItemSelected", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -183,7 +183,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Options {
+        public static System.Drawing.Bitmap Options {
             get {
                 object obj = ResourceManager.GetObject("Options", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -193,7 +193,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Properties {
+        public static System.Drawing.Bitmap Properties {
             get {
                 object obj = ResourceManager.GetObject("Properties", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -203,7 +203,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Reload {
+        public static System.Drawing.Bitmap Reload {
             get {
                 object obj = ResourceManager.GetObject("Reload", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -213,7 +213,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap RemoveDependencyByCascadingDeletion {
+        public static System.Drawing.Bitmap RemoveDependencyByCascadingDeletion {
             get {
                 object obj = ResourceManager.GetObject("RemoveDependencyByCascadingDeletion", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -223,7 +223,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap RemoveDependencyByDeletingAssociation {
+        public static System.Drawing.Bitmap RemoveDependencyByDeletingAssociation {
             get {
                 object obj = ResourceManager.GetObject("RemoveDependencyByDeletingAssociation", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -233,7 +233,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap Save {
+        public static System.Drawing.Bitmap Save {
             get {
                 object obj = ResourceManager.GetObject("Save", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -243,7 +243,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ShowAboutBoxCmd {
+        public static System.Drawing.Bitmap ShowAboutBoxCmd {
             get {
                 object obj = ResourceManager.GetObject("ShowAboutBoxCmd", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
@@ -253,7 +253,7 @@ namespace ProSuite.DdxEditor.Framework.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap ShowOnlineHelpCmd {
+        public static System.Drawing.Bitmap ShowOnlineHelpCmd {
             get {
                 object obj = ResourceManager.GetObject("ShowOnlineHelpCmd", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
