@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ESRI.ArcGIS.Geodatabase;
+using ProSuite.Commons;
 using ProSuite.Commons.AO.Geodatabase;
 using ProSuite.Commons.Essentials.Assertions;
 using ProSuite.Commons.Essentials.CodeAnnotations;
@@ -13,14 +14,14 @@ namespace ProSuite.QA.Tests.Schema
 	{
 		[NotNull]
 		public static IEnumerable<FieldSpecification> ReadFieldSpecifications(
-			[NotNull] ITable table,
-			[NotNull] IQueryFilter queryFilter)
+			[NotNull] ITable table, [NotNull] IQueryFilter queryFilter)
 		{
 			int nameFieldIndex = GetRequiredFieldIndex(table, "ATTRIBUTE");
-			int typeStringFieldIndex = GetRequiredFieldIndex(table,
-			                                                 "FIELDTYPE_ARCGIS",
-			                                                 "ARCGIS_FIELDTYPE");
-			int aliasFieldIndex = GetRequiredFieldIndex(table, "ALIAS");
+
+			int typeFieldIndex = GetRequiredFieldIndex(table,
+			                                           "FIELDTYPE_ARCGIS",
+			                                           "ARCGIS_FIELDTYPE");
+
 			int accessTypeFieldIndex = GetRequiredFieldIndex(table,
 			                                                 "FIELDTYPE_ACCESS",
 			                                                 "ACCESS_FIELDTYPE");
@@ -28,50 +29,41 @@ namespace ProSuite.QA.Tests.Schema
 			                                                 "FIELDTYPE_ORACLE",
 			                                                 "ORACLE_FIELDTYPE");
 
+			int aliasFieldIndex = GetRequiredFieldIndex(table, "ALIAS");
+
 			IWorkspace workspace = DatasetUtils.GetWorkspace(table);
 			bool isAccessWorkspace = WorkspaceUtils.IsPersonalGeodatabase(workspace);
 			bool isSdeWorkspace = WorkspaceUtils.IsSDEGeodatabase(workspace);
 
-			foreach (IRow row in GdbQueryUtils.GetRows(table, queryFilter, recycle : true))
+			foreach (IRow row in GdbQueryUtils.GetRows(table, queryFilter, recycle: true))
 			{
 				var name = row.Value[nameFieldIndex] as string;
-
 				if (string.IsNullOrEmpty(name))
 				{
 					continue;
 				}
 
-				object type = row.Value[typeStringFieldIndex];
-				var typeString = type as string;
-
-				if (string.IsNullOrEmpty(typeString))
-				{
-					throw new InvalidConfigurationException(
-						$"Expected type is undefined: '{type}'");
-				}
-
-				var alias = row.Value[aliasFieldIndex] as string;
+				var typeString = row.Value[typeFieldIndex] as string;
+				Assert.NotNull(typeString, "Undefined value in field {0} (for ATTRIBUTE={1})",
+				               row.Fields.Field[typeFieldIndex].Name, name);
 				esriFieldType expectedType = GetFieldType(typeString);
 
 				var accessTypeString = row.Value[accessTypeFieldIndex] as string;
 				var oracleTypeString = row.Value[oracleTypeFieldIndex] as string;
 
-				Assert.NotNull(accessTypeString, "Undefined value in field {0}",
-				               row.Fields.Field[accessTypeFieldIndex].Name);
-				Assert.NotNull(oracleTypeString, "Undefined value in field {0}",
-				               row.Fields.Field[oracleTypeFieldIndex].Name);
+				Assert.NotNull(accessTypeString, "Undefined value in field {0} (for ATTRIBUTE={1})",
+				               row.Fields.Field[accessTypeFieldIndex].Name, name);
+				Assert.NotNull(oracleTypeString, "Undefined value in field {0} (for ATTRIBUTE={1})",
+				               row.Fields.Field[oracleTypeFieldIndex].Name, name);
 
 				int length = expectedType != esriFieldType.esriFieldTypeString
 					             ? -1
-					             : GetTextLength(accessTypeString,
-					                             oracleTypeString,
-					                             isAccessWorkspace,
-					                             isSdeWorkspace);
+					             : GetTextLength(accessTypeString, oracleTypeString,
+					                             isAccessWorkspace, isSdeWorkspace);
 
-				yield return new FieldSpecification(name, expectedType,
-				                                    length, alias,
-				                                    null,
-				                                    true);
+				var alias = row.Value[aliasFieldIndex] as string;
+
+				yield return new FieldSpecification(name, expectedType, length, alias, null, true);
 			}
 		}
 
@@ -80,8 +72,7 @@ namespace ProSuite.QA.Tests.Schema
 		{
 			Assert.ArgumentNotNull(table, nameof(table));
 			Assert.ArgumentCondition(fieldNames.Length > 0,
-			                         "At least one field name required",
-			                         nameof(fieldNames));
+			                         "At least one field name required", nameof(fieldNames));
 
 			foreach (var fieldName in fieldNames)
 			{
@@ -140,8 +131,7 @@ namespace ProSuite.QA.Tests.Schema
 			                           .Replace(")", string.Empty)
 			                           .Trim();
 
-			int result;
-			if (! int.TryParse(trimmed, out result))
+			if (! int.TryParse(trimmed, out int result))
 			{
 				throw new InvalidConfigurationException(
 					$"Unable to parse text length from string '{typeString}'");
@@ -150,16 +140,18 @@ namespace ProSuite.QA.Tests.Schema
 			return result;
 		}
 
-		private static esriFieldType GetFieldType([NotNull] string typeString)
+		private static esriFieldType GetFieldType([NotNull] string fieldTypeString)
 		{
-			Assert.ArgumentNotNullOrEmpty(typeString, nameof(typeString));
+			Assert.ArgumentNotNullOrEmpty(fieldTypeString, nameof(fieldTypeString));
 
-			switch (typeString.ToUpper())
+			switch (fieldTypeString.ToUpper())
 			{
 				case "SHORT INTEGER":
+				case "SHORTINTEGER":
 					return esriFieldType.esriFieldTypeSmallInteger;
 
 				case "LONG INTEGER":
+				case "LONGINTEGER":
 					return esriFieldType.esriFieldTypeInteger;
 
 				case "FLOAT":
@@ -174,30 +166,37 @@ namespace ProSuite.QA.Tests.Schema
 				case "DATE":
 					return esriFieldType.esriFieldTypeDate;
 
-				case "GUID":
-					return esriFieldType.esriFieldTypeGUID;
-
-				case "GLOBAL ID":
-					return esriFieldType.esriFieldTypeGlobalID;
-
 				case "OBJECT ID":
+				case "OBJECTID":
 					return esriFieldType.esriFieldTypeOID;
-
-				case "BLOB":
-					return esriFieldType.esriFieldTypeBlob;
-
-				case "XML":
-					return esriFieldType.esriFieldTypeXML;
 
 				case "GEOMETRY":
 					return esriFieldType.esriFieldTypeGeometry;
 
+				case "BLOB":
+					return esriFieldType.esriFieldTypeBlob;
+
 				case "RASTER":
 					return esriFieldType.esriFieldTypeRaster;
+
+				case "GUID":
+					return esriFieldType.esriFieldTypeGUID;
+
+				case "GLOBAL ID":
+				case "GLOBALID":
+					return esriFieldType.esriFieldTypeGlobalID;
+
+				case "XML":
+					return esriFieldType.esriFieldTypeXML;
+			}
+
+			if (EnumUtils.TryParse(fieldTypeString, true, out esriFieldType result))
+			{
+				return result;
 			}
 
 			throw new ArgumentException(
-				$@"Unsupported type string: {typeString}", nameof(typeString));
+				$@"Unsupported field type string: {fieldTypeString}", nameof(fieldTypeString));
 		}
 	}
 }
